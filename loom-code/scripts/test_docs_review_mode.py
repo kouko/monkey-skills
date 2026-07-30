@@ -1,28 +1,33 @@
-"""Structural grep-window test guarding the docs-only dispatch mode added
-to `requesting-code-review/SKILL.md` at the diff-scope step (Task 4 of
-`docs/loom/plans/2026-07-28-docs-citation-check-and-review-mode.md`).
+"""Structural grep-window test guarding requesting-code-review's Step 1
+three-way review routing and the narrowed trivial-skip boundary (Task 3
+of `docs/loom/plans/2026-07-30-requesting-docs-review-standalone-skill.md`).
 
 SKILL.md is a prompt/contract artifact, not executable code: nothing
-importable observes whether a dispatched reviewer actually reads a
-changed doc whole rather than diff-only. This file IS the instruction
-the orchestrator reads before dispatching, so its correctness condition
-is the PRESENCE of the load-bearing phrases that make the docs-only mode
-executable by that reader -- same convention as
+importable observes whether the orchestrator actually delegates a
+docs-only branch to `requesting-docs-review` instead of running the code
+panel. This file IS the instruction the orchestrator reads at the
+routing moment, so its correctness condition is the PRESENCE of the
+load-bearing routing phrases -- same convention as
 `test_plan_fact_grounding.py`.
 
-Scope: the guard isolates the ADDED section (the "Docs-only dispatch
-mode" sub-bullet under Process Step 1) rather than grepping the whole
-file, so an incidental match elsewhere in SKILL.md (e.g. the word
-"omission" in unrelated prose) cannot keep this test green after the
-added section is deleted. Section text is whitespace-normalized before
-matching -- the addition is written as one long logical line (the
-hard-wrap lesson from `test_plan_fact_grounding.py`), but a future
-editor could still re-wrap it, and the guard must survive that.
+History: this file previously pinned the INLINE docs-only dispatch mode
+(whole-artifact scope, five prose dimensions, citation pre-pass). That
+content relocated to `requesting-docs-review/SKILL.md` and its pins now
+live in `test_requesting_docs_review_skill.py`; this file's absence
+assertions guard against the relocated paragraph drifting back (the
+anti-drift one-line-pointer convention).
 
-Polarity: `test_whole_artifact_polarity_guard` proves the whole-artifact
-assertion is sensitive to the regression it exists to catch -- inverting
-the instruction to "review only the diff" must fail the same check that
-passes on the real text.
+Scope: assertions are window-scoped to the Process Step 1 sub-bullet and
+the two trivial-skip table rows, per
+`docs/loom/memory/grep-tests-scope-to-measured-neighborhood.md`; the
+absence assertions alone run whole-file, because absence must hold
+everywhere. Section text is whitespace-normalized before matching so a
+re-wrapped line still matches.
+
+Polarity: `test_worse_of_polarity_guard` proves the mixed-branch verdict
+join assertion is sensitive to the regression it exists to catch --
+inverting "the WORSE of the two arm verdicts" to "the better" must fail
+the same check that passes on the real text.
 
 Stdlib + pytest only (pathlib, re).
 """
@@ -46,23 +51,24 @@ def _text() -> str:
     return SKILL_MD.read_text(encoding="utf-8")
 
 
-def _docs_mode_section(text: str) -> str:
-    """Isolate the docs-only dispatch mode sub-bullet under Process Step 1.
+def _step1_section(text: str) -> str:
+    """Isolate Process Step 1 (the diff-scope + routing step).
 
-    Runs from the line naming "Docs-only dispatch mode" to the next
-    top-level Process step (a line starting with `<digit>. ` at column
-    0), or end of file if none follows.
+    Runs from the column-0 line starting `1. **Determine diff scope` to
+    the next top-level Process step (a line starting with `<digit>. ` at
+    column 0), or end of file if none follows. Sub-bullets are indented,
+    so they stay inside the window.
     """
     lines = text.splitlines(keepends=True)
     start = None
     for i, line in enumerate(lines):
-        if "docs-only dispatch mode" in line.lower():
+        if re.match(r"^1\.\s+\*\*Determine diff scope", line):
             start = i
             break
     assert start is not None, (
-        "requesting-code-review/SKILL.md carries no 'Docs-only dispatch "
-        "mode' text -- Task 4's amendment must be a findable section, "
-        "not absent"
+        "requesting-code-review/SKILL.md carries no Process Step 1 "
+        "'Determine diff scope' line -- the routing step must be "
+        "findable, not absent"
     )
     end = len(lines)
     for j in range(start + 1, len(lines)):
@@ -77,109 +83,199 @@ def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
-def _assert_whole_artifact(low: str) -> None:
-    """Raise AssertionError unless `low` instructs whole-artifact reading
-    (not diff-only) plus the unchanged-claim question."""
-    assert "whole" in low, (
-        "must instruct reviewers to read each changed artifact whole"
-    )
-    assert "diff only as context" in low or "diff as context" in low, (
-        "must state the diff is context, not the review boundary"
+def _assert_worse_of(low: str) -> None:
+    """Raise AssertionError unless `low` states the mixed-branch verdict
+    join: branch verdict = the WORSE of the two arm verdicts."""
+    assert "worse of the two arm verdicts" in low, (
+        "must state the mixed-branch join: the branch verdict is the "
+        "WORSE of the two arm verdicts"
     )
     assert (
-        "does any unchanged claim in this file contradict the change, "
-        "or the current code?" in low
+        "either arm `needs_revision` → branch `needs_revision`" in low
     ), (
-        "must ask the explicit unchanged-claim question verbatim -- this "
-        "is the question that caught rounds 5-7 in the source audit "
-        "(docs/loom/audits/2026-07-28-doc-branch-review-loop-audit.md "
-        "§3.1)"
+        "must spell out the consequence: either arm NEEDS_REVISION → "
+        "branch NEEDS_REVISION"
     )
 
 
-def test_rcr_carries_docs_only_mode():
-    """The docs-only dispatch mode names its trigger, the whole-artifact
-    instruction, all five prose defect dimensions with inline
-    definitions, and the citation-check invocation."""
+def test_step1_routes_three_ways():
+    """Step 1 dispatches three ways off the changed-file list: docs-only
+    delegates whole to requesting-docs-review (code panel NOT run),
+    mixed splits per file across both arms with a worse-of verdict
+    join, code-only keeps the unchanged default path."""
     text = _text()
-    low = _norm(_docs_mode_section(text)).lower()
+    low = _norm(_step1_section(text)).lower()
 
-    # trigger condition
+    # routing input: the mechanical trigger command.
     assert "git diff main...head --name-only" in low, (
-        "must name the exact trigger command -- an orchestrator at any "
-        "tier must be able to run this mechanically"
+        "must name the exact file-list command -- an orchestrator at "
+        "any tier must be able to route mechanically"
     )
+
+    # arm 1: docs-only branch delegates WHOLE to requesting-docs-review.
     assert "non-empty" in low, (
-        "must state the diff must be non-empty to trigger docs-only mode "
-        "(empty diff is vacuously true for 'all files end in .md')"
+        "docs-only arm must require a non-empty file list (empty diff "
+        "is vacuously true for 'all files end in .md')"
     )
     assert re.search(r"ends in `?\.md`?", low), (
-        "must state the trigger predicate: every changed file ends in "
-        "`.md`"
+        "docs-only arm must state its predicate: every changed file "
+        "ends in `.md`"
     )
-    assert "non-`.md`" in low or "non-.md" in low, (
-        "must state the fallback: any non-.md file in the diff keeps "
-        "the default code path"
+    assert "requesting-docs-review" in low, (
+        "docs-only arm must name the sibling skill it delegates to"
     )
-
-    # (a) whole-artifact scope
-    _assert_whole_artifact(low)
-
-    # (b) five prose dimensions, each named AND defined inline
-    assert "omission" in low and "obligation or referent" in low, (
-        "omission must be named and defined inline (an obligation or "
-        "referent the text needs and lacks)"
+    assert "delegate" in low and "whole" in low, (
+        "docs-only arm must delegate the WHOLE review, not a slice"
     )
-    assert "ambiguity" in low and "without support" in low, (
-        "ambiguity must be named and defined inline (an absolute "
-        "without support)"
-    )
-    for absolute in ("only", "never", "zero"):
-        assert absolute in low, (
-            f"ambiguity's inline definition must enumerate {absolute!r} "
-            f"as an example unsupported absolute"
-        )
-    assert "inconsistency" in low and "changed-vs-unchanged" in low, (
-        "inconsistency must be named and defined inline, including the "
-        "changed-vs-unchanged case"
-    )
-    assert "incorrect-fact" in low and "does not support its claim" in low, (
-        "incorrect-fact must be named and defined inline (a citation "
-        "that does not support its claim)"
-    )
-    assert "missing population" in low and (
-        "denominator" in low or "scope" in low
-    ), (
-        "missing population must be named and defined inline (a "
-        "measured number without its denominator or scope)"
+    assert "do not dispatch the code-reviewer panel" in low, (
+        "docs-only arm must forbid running the code panel alongside "
+        "the delegation"
     )
 
-    # (c) mechanical pre-pass
-    assert "check_doc_citations.py" in low, (
-        "must invoke the citation-check script by name"
+    # arm 2: mixed branch splits per file, joins verdicts worse-of.
+    assert "per-file split" in low, (
+        "mixed arm must be a per-file split, not a whole-branch pick"
     )
-    assert "dispatch packet" in low, (
-        "must state that the script's output rides the dispatch packet"
+    assert "code-reviewer panel" in low, (
+        "mixed arm must send non-.md files to the code-reviewer panel"
+    )
+    assert "docs-reviewer" in low, (
+        "mixed arm must send .md files to the docs-reviewer agent"
+    )
+    assert "unions both arms' findings" in low, (
+        "mixed arm must union both arms' findings for the surfaced "
+        "report"
+    )
+    _assert_worse_of(low)
+
+    # arm 3: code-only branch keeps the current path.
+    assert re.search(r"no `?\.md`?", low) and "unchanged" in low, (
+        "code-only arm must state the default code path is unchanged"
     )
 
 
-def test_whole_artifact_polarity_guard():
-    """Inverting the whole-artifact instruction to 'review only the
-    diff' must fail the same check that passes on the real text --
+def test_worse_of_polarity_guard():
+    """Inverting the verdict join to 'the better of the two arm
+    verdicts' must fail the same check that passes on the real text --
     proves the guard is sensitive to the regression it exists to catch,
     not just to the section's absence."""
     text = _text()
-    low = _norm(_docs_mode_section(text)).lower()
+    low = _norm(_step1_section(text)).lower()
 
     # sanity: the real text passes.
-    _assert_whole_artifact(low)
+    _assert_worse_of(low)
 
-    key_phrase = "reads every changed artifact whole, the diff only as context"
+    key_phrase = "worse of the two arm verdicts"
     assert key_phrase in low, (
         "test fixture assumption broken -- SKILL.md wording changed "
         "under this test; update key_phrase to match"
     )
-    mutated = low.replace(key_phrase, "reviews only the diff")
+    mutated = low.replace(key_phrase, "better of the two arm verdicts")
 
     with pytest.raises(AssertionError):
-        _assert_whole_artifact(mutated)
+        _assert_worse_of(mutated)
+
+
+def test_old_inline_docs_mode_paragraph_absent():
+    """The relocated docs-mode content must be ABSENT from this file --
+    requesting-docs-review owns those semantics now (pinned in
+    test_requesting_docs_review_skill.py); a copy here is drift."""
+    low = _norm(_text()).lower()
+
+    assert "docs-only dispatch mode" not in low, (
+        "the old 'Docs-only dispatch mode' inline paragraph must be "
+        "deleted, not kept alongside the delegation"
+    )
+    assert "score these five prose dimensions" not in low, (
+        "the five-prose-dimensions instruction relocated to "
+        "requesting-docs-review; it must not survive here"
+    )
+    assert "an obligation or referent the text needs and lacks" not in low, (
+        "the inline dimension definitions relocated to "
+        "requesting-docs-review; they must not survive here"
+    )
+    assert (
+        "does any unchanged claim in this file contradict the change"
+        not in low
+    ), (
+        "the whole-artifact unchanged-claim question relocated to "
+        "requesting-docs-review; it must not survive here"
+    )
+    assert "check_doc_citations.py" not in low, (
+        "the citation pre-pass invocation relocated to "
+        "requesting-docs-review; it must not survive here"
+    )
+
+
+def _when_to_use_trivial_row(text: str) -> str:
+    """The §When to use table row for trivial diffs."""
+    for line in text.splitlines():
+        if "diff is trivial" in line.lower():
+            return _norm(line).lower()
+    raise AssertionError(
+        "requesting-code-review/SKILL.md carries no 'Diff is trivial' "
+        "row in §When to use"
+    )
+
+
+def _when_not_to_use_trivial_row(text: str) -> str:
+    """The §When NOT to use table row for trivial diffs."""
+    for line in text.splitlines():
+        if "**trivial diffs**" in line.lower():
+            return _norm(line).lower()
+    raise AssertionError(
+        "requesting-code-review/SKILL.md carries no '**Trivial diffs**' "
+        "row in §When NOT to use"
+    )
+
+
+def test_trivial_skip_narrowed_to_mechanical_doc_edits():
+    """The trivial-skip exemptions no longer blanket-exempt doc
+    changes: only mechanical doc edits (typo fix, version bump,
+    generated/sync output) skip; authored prose routes to docs
+    review."""
+    text = _text()
+
+    row_use = _when_to_use_trivial_row(text)
+    assert "mechanical doc edits" in row_use, (
+        "the §When to use trivial row must scope its doc exemption to "
+        "mechanical doc edits"
+    )
+    assert "authored prose" in row_use, (
+        "the §When to use trivial row must state that authored prose "
+        "is not exempt"
+    )
+    assert "requesting-docs-review" in row_use, (
+        "the §When to use trivial row must route authored prose to "
+        "requesting-docs-review"
+    )
+    assert "doc change" not in row_use, (
+        "the blanket 'doc change' exemption must be gone from the "
+        "§When to use trivial row"
+    )
+
+    row_not = _when_not_to_use_trivial_row(text)
+    assert "mechanical doc edits" in row_not, (
+        "the §When NOT to use trivial row must scope its doc "
+        "exemption to mechanical doc edits"
+    )
+    assert "generated/sync output" in row_not, (
+        "the §When NOT to use trivial row must enumerate "
+        "generated/sync output as the mechanical category"
+    )
+    assert "authored prose" in row_not, (
+        "the §When NOT to use trivial row must state that authored "
+        "prose does not qualify"
+    )
+
+    # whole-file: the blanket phrases must be gone everywhere,
+    # including the Red Flags restatement of the same exemption.
+    low = _norm(text).lower()
+    assert "doc-only changes" not in low, (
+        "the blanket 'doc-only changes' exemption must be gone"
+    )
+    assert "doc-only" not in low, (
+        "no bare 'doc-only' exemption phrasing may survive (note: "
+        "'docs-only' with an s, the routing term, is a different "
+        "string and allowed)"
+    )

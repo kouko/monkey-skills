@@ -1,31 +1,28 @@
-"""Structural grep-window test guarding the finding-class taxonomy added to
-`requesting-code-review/SKILL.md`'s docs-only dispatch mode (Task 1 of
-`docs/loom/plans/2026-07-30-docs-review-blocking-class.md`).
+"""Structural grep-window test guarding what remains of the finding-class
+taxonomy in `requesting-code-review/SKILL.md` after the docs semantics
+relocated to `requesting-docs-review` (Task 3 of
+`docs/loom/plans/2026-07-30-requesting-docs-review-standalone-skill.md`).
 
-SKILL.md is a prompt/contract artifact: nothing importable observes
-whether a dispatched reviewer actually tags a finding `class: instruction
-| evidence`. This file IS the instruction the orchestrator and the
-dispatched reviewers read, so its correctness condition is the PRESENCE
-of the load-bearing phrases that make the class taxonomy executable by
-that reader -- same convention as `test_docs_review_mode.py`.
+History: this file previously pinned the inline class taxonomy (clause
+(d) definitions, the audit §2 / §4.3 worked examples, the fail-closed
+default) and the §Aggregation rule docs-mode paragraph. That content
+relocated to `requesting-docs-review/SKILL.md` and its pins now live in
+`test_requesting_docs_review_skill.py`; here only two things remain
+load-bearing:
 
-Scope: two measured neighbourhood windows, per
-`docs/loom/memory/grep-tests-scope-to-measured-neighborhood.md` --
-whole-file substring greps go false-green when the asserted phrase
-pre-exists elsewhere (e.g. "evidence" already appears once in this file's
-prose at the §Asking the user boundary note, well outside either window
-below).
+1. The `findings:` block in §Verdict structure keeps the `class:` key --
+   the mixed-branch per-file split unions `.md`-arm findings (which
+   carry `class:`) into the surfaced report, so the schema must still
+   document the key, scoped to the docs arm with a pointer to the
+   owning skill.
+2. The §Aggregation rule section carries a one-line pointer to
+   `requesting-docs-review` §Aggregation rule instead of a copy of the
+   docs-mode paragraph (anti-drift convention); the relocated phrases
+   must be ABSENT.
 
-1. The "Docs-only dispatch mode" sub-bullet under Process Step 1 (same
-   section `test_docs_review_mode.py` isolates) -- covers both class
-   names, both worked examples, and the fail-closed sentence.
-2. The `findings:` YAML key in §Verdict structure -- covers the new
-   `class:` line and its docs-mode-only marker comment.
-
-Both windows are proven RED against the pre-change file via
-`git show HEAD:loom-code/skills/requesting-code-review/SKILL.md` before
-the SKILL.md edit landed (see implementer report) -- a green suite alone
-never demonstrates a grep test is load-bearing.
+Scope: measured neighbourhood windows per
+`docs/loom/memory/grep-tests-scope-to-measured-neighborhood.md`;
+absence assertions run whole-file because absence must hold everywhere.
 
 Stdlib + pytest only (pathlib, re).
 """
@@ -33,8 +30,6 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-
-import pytest
 
 SKILL_MD = (
     Path(__file__).parents[1]
@@ -47,32 +42,6 @@ SKILL_MD = (
 def _text() -> str:
     assert SKILL_MD.is_file(), f"SKILL.md is absent at {SKILL_MD}"
     return SKILL_MD.read_text(encoding="utf-8")
-
-
-def _docs_mode_section(text: str) -> str:
-    """Isolate the docs-only dispatch mode sub-bullet under Process Step 1.
-
-    Runs from the line naming "Docs-only dispatch mode" to the next
-    top-level Process step (a line starting with `<digit>. ` at column
-    0), or end of file if none follows. Mirrors
-    `test_docs_review_mode.py::_docs_mode_section`.
-    """
-    lines = text.splitlines(keepends=True)
-    start = None
-    for i, line in enumerate(lines):
-        if "docs-only dispatch mode" in line.lower():
-            start = i
-            break
-    assert start is not None, (
-        "requesting-code-review/SKILL.md carries no 'Docs-only dispatch "
-        "mode' text -- this section must be findable, not absent"
-    )
-    end = len(lines)
-    for j in range(start + 1, len(lines)):
-        if re.match(r"^\d+\.\s", lines[j]):
-            end = j
-            break
-    return "".join(lines[start:end])
 
 
 def _findings_block(text: str) -> str:
@@ -109,14 +78,9 @@ def _aggregation_rule_section(text: str) -> str:
     """Isolate the `**Aggregation rule**` section in §Verdict structure.
 
     Runs from the line naming "**Aggregation rule**" (column 0) to the
-    line naming its actual next sibling heading, "**Panel union**"
-    (measured against the real file -- Task 2 adds a "**Docs-only
-    mode**" sub-heading INSIDE this section, so a generic
-    next-bold-heading-at-column-0 scan would stop early and exclude
-    it; anchoring on the real sibling name is deliberate, not a
-    shortcut). Preceding this section is an unrelated
-    `standards_version` paragraph, which the start anchor already
-    excludes.
+    line naming its actual next sibling heading, "**Panel union**".
+    Preceding this section is an unrelated `standards_version`
+    paragraph, which the start anchor already excludes.
     """
     lines = text.splitlines(keepends=True)
     start = None
@@ -141,157 +105,70 @@ def _aggregation_rule_section(text: str) -> str:
     return "".join(lines[start:end])
 
 
-def test_docs_dispatch_defines_finding_classes():
-    """The docs-only dispatch mode's clause (d) names both finding
-    classes with inline definitions, one worked example per class drawn
-    from the source audit, and the fail-closed default; the
-    `findings:` block in §Verdict structure documents the same `class:`
-    key as present for docs-mode dispatches only."""
-    text = _text()
-
-    # --- window 1: the docs-only dispatch mode sub-bullet ---
-    dispatch_low = _norm(_docs_mode_section(text)).lower()
-
-    assert "class: instruction | evidence" in dispatch_low, (
-        "clause (d) must state the tag literally as `class: instruction "
-        "| evidence`"
-    )
-
-    # instruction class: named, defined, and one worked example from
-    # audit §2 (kpi_id derived from a canonical field slug vs. shipped
-    # code doing the opposite).
-    assert "instruction" in dispatch_low and (
-        "text a reader or executor will act on" in dispatch_low
-    ), (
-        "instruction must be named and defined inline (text a reader or "
-        "executor will act on)"
-    )
-    assert (
-        "kpi_id" in dispatch_low and "canonical field slug" in dispatch_low
-    ), (
-        "instruction's worked example must be the audit §2 finding: a "
-        "bullet instructing an implementer to derive `kpi_id` from a "
-        "canonical field slug while the shipped code does the opposite"
-    )
-    assert "audit §2" in dispatch_low, (
-        "instruction's worked example must cite its source, audit §2"
-    )
-
-    # evidence class: named, defined, and one worked example from audit
-    # §4.3 (a claim attributed to a source section that does not state
-    # it -- the audit attributed a variant to the brief's §Users, which
-    # says "three comparative years" with no statement-type distinction).
-    assert "evidence" in dispatch_low and (
-        "narrative claim about what happened or is true" in dispatch_low
-    ), (
-        "evidence must be named and defined inline (a narrative claim "
-        "about what happened or is true)"
-    )
-    assert "audit §4.3" in dispatch_low, (
-        "evidence's worked example must cite its source, audit §4.3"
-    )
-    assert "attributed" in dispatch_low and (
-        "§users" in dispatch_low or "attribution was wrong" in dispatch_low
-    ), (
-        "evidence's worked example must be a claim attributed to a "
-        "source section that does not state it"
-    )
-
-    # fail-closed default.
-    assert "is tagged `instruction`" in dispatch_low or (
-        "tagged instruction" in dispatch_low
-    ), (
-        "a finding whose class is unclear must be tagged `instruction` "
-        "(fail closed)"
-    )
-    assert "fail closed" in dispatch_low, (
-        "the fail-closed rationale must be stated explicitly"
-    )
-
-    # --- window 2: the `findings:` block in §Verdict structure ---
-    findings_low = _norm(_findings_block(text)).lower()
+def test_findings_class_key_scoped_to_docs_arm():
+    """The `findings:` block still documents the `class:` key (the
+    mixed-branch union carries `.md`-arm findings tagged with it), but
+    its comment now scopes it to docs-arm findings and points at
+    requesting-docs-review as the semantics owner."""
+    findings_low = _norm(_findings_block(_text())).lower()
 
     assert "class: instruction | evidence" in findings_low, (
-        "the `findings:` block must document `class: instruction | "
-        "evidence` as a key, in the same shape as the existing `where:` "
-        "key's inline comment"
+        "the `findings:` block must keep documenting `class: "
+        "instruction | evidence` -- mixed branches union docs-arm "
+        "findings that carry it"
     )
-    assert "docs-mode" in findings_low and (
-        "only" in findings_low
-    ), (
-        "the `class:` line's comment must mark it present for docs-mode "
-        "dispatches only"
+    assert "docs-arm" in findings_low, (
+        "the `class:` line's comment must scope the key to docs-arm "
+        "findings"
+    )
+    assert "requesting-docs-review" in findings_low, (
+        "the `class:` line's comment must point at "
+        "requesting-docs-review as the semantics owner, not restate "
+        "the semantics"
     )
 
 
-def test_aggregation_filters_to_instruction_class():
-    """The `**Aggregation rule**` section states that in docs-only mode
-    the rule is applied to instruction-class findings only, that the
-    rule itself is unchanged (docs mode selects its input, not its
-    thresholds), that a finding missing `class:` fails closed to
-    instruction, and that an evidence-class finding against settled
-    narrative prose is superseded by an appended correction rather than
-    edited in place (Task 2 of
-    docs/loom/plans/2026-07-30-docs-review-blocking-class.md)."""
+def test_aggregation_pointer_replaces_docs_paragraph():
+    """The §Aggregation rule section carries a one-line pointer to
+    requesting-docs-review instead of the relocated docs-mode
+    paragraph; the relocated phrases are absent from the whole file."""
     text = _text()
     section = _norm(_aggregation_rule_section(text)).lower()
 
-    # docs-mode filter sentence: rule applies to instruction-class
-    # findings only; evidence-class findings are recorded, not a veto.
-    assert "instruction-class findings only" in section, (
-        "the Aggregation rule section must state that in docs-only "
-        "mode the rule applies to instruction-class findings only"
-    )
-    assert "evidence-class findings" in section and "do not gate" in section, (
-        "the Aggregation rule section must state that evidence-class "
-        "findings are carried into the verdict as recorded "
-        "observations that do not gate"
+    # the pointer.
+    assert "requesting-docs-review" in section, (
+        "the Aggregation rule section must point docs findings at "
+        "requesting-docs-review §Aggregation rule"
     )
 
-    # aggregation-rule-unchanged statement.
-    assert "rule above is unchanged" in section, (
-        "the section must state explicitly that the aggregation rule "
-        "itself is unchanged"
+    # relocated phrases must be gone -- whole file, not just the window.
+    low = _norm(text).lower()
+    assert "instruction-class findings only" not in low, (
+        "the instruction-only filter sentence relocated to "
+        "requesting-docs-review; it must not survive here"
     )
-    assert "docs mode selects what is fed into it" in section, (
-        "the section must state that docs mode selects the rule's "
-        "input, not its thresholds"
+    assert "docs mode selects what is fed into it" not in low, (
+        "the rule-unchanged sentence relocated to "
+        "requesting-docs-review; it must not survive here"
     )
-
-    # fail-closed sentence, consistent with the existing `where:` rule.
-    assert "missing `class:` counts as instruction" in section, (
-        "a finding missing `class:` must count as instruction (fail "
-        "closed)"
+    assert "missing `class:` counts as instruction" not in low, (
+        "the fail-closed class sentence relocated to "
+        "requesting-docs-review; it must not survive here"
     )
-    assert (
-        "finding missing `where:` flipping the whole verdict" in section
-    ), (
-        "the fail-closed sentence must draw the explicit parallel to "
-        "the existing missing-`where:` rule"
+    assert "superseded by an appended correction" not in low, (
+        "the appended-corrections rule relocated to "
+        "requesting-docs-review; it must not survive here"
     )
-
-    # supersede-not-edit sentence.
-    assert "superseded by an appended correction" in section, (
-        "an evidence-class finding against settled narrative prose "
-        "must be superseded by an appended correction"
+    assert "text a reader or executor will act on" not in low, (
+        "the instruction-class inline definition relocated to "
+        "requesting-docs-review; it must not survive here"
     )
-    assert "naming what it replaces" in section, (
-        "the correction must name what it replaces"
-    )
-    assert "never edited in place" in section, (
-        "the supersede sentence must forbid editing in place"
+    assert "kpi_id" not in low and "audit §4.3" not in low, (
+        "the audit worked examples relocated to requesting-docs-review; "
+        "they must not survive here"
     )
 
-    # "settled" must be operationally defined, not left to judgment:
-    # tied to the docs-only dispatch's UNCHANGED-claim vocabulary
-    # (§Process Step 1(a)), not a free-standing undefined term.
-    assert "left unchanged" in section and "§process step 1(a)" in section, (
-        "the supersede sentence must anchor 'settled' to §Process "
-        "Step 1(a)'s UNCHANGED-claim vocabulary, not leave it "
-        "undefined"
-    )
-
-    # --- window precision: excludes the nearest sibling sections ---
+    # window precision: the pointer window excludes its siblings.
     following_sibling = "each arm's own `verdict:` is advisory only"
     preceding_paragraph = (
         "lets downstream readers tell whether a verdict was scored "
@@ -338,16 +215,15 @@ def test_plugin_version_and_changelog_at_0_41_0():
     )
 
 
-def test_finding_class_window_excludes_unrelated_evidence_mention():
-    """Sanity guard: window 1 and window 2 do not accidentally swallow
-    the pre-existing, unrelated use of the word 'evidence' in this
-    file's §Asking the user boundary note -- proves the windows are
-    narrow, not whole-file greps in disguise."""
+def test_findings_window_excludes_unrelated_evidence_mention():
+    """Sanity guard: the `findings:` window does not accidentally
+    swallow the pre-existing, unrelated use of the word 'evidence' in
+    this file's §Asking the user boundary note -- proves the window is
+    narrow, not a whole-file grep in disguise."""
     text = _text()
     unrelated_anchor = "MUST stay machine-precise and keep every evidence citation"
     assert unrelated_anchor in text, (
         "test fixture assumption broken -- the unrelated 'evidence' "
         "mention this test checks for moved or was reworded"
     )
-    assert unrelated_anchor not in _docs_mode_section(text)
     assert unrelated_anchor not in _findings_block(text)
