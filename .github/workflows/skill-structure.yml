@@ -116,6 +116,18 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install test deps
+        run: python3 -m pip install --quiet pytest
+
+      - name: Run copywriting-toolkit pytest suite
+        # First pytest suite for this plugin (107 tests, scripts/ only —
+        # kept as its own invocation, not merged with scripts/ or
+        # loom-code/scripts/, per the repo's existing per-plugin pytest
+        # job pattern, e.g. investing-toolkit-pytest-offline below).
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest copywriting-toolkit/scripts/ -q
+
       - name: Lint voice anchor library (v1.13.3 canonical format)
         # Baseline file lists 3 known-failing anchors (2 dual-quadrant schema
         # ambiguity + 1 Examples count < 5) accepted as backlog. Failures outside
@@ -125,6 +137,12 @@ jobs:
         run: |
           python3 copywriting-toolkit/scripts/lint-anchor-library.py \
             --baseline copywriting-toolkit/scripts/lint-baseline.txt
+
+      - name: Check psychology-anchor copy sync (byte-identity)
+        # Verifies the 5 copies of persuasion-psychology-anchor.md and the
+        # 2 copies of sns-evolution-aisas-ulssas.md stay byte-identical to
+        # their canonical (CLAUDE.md's Inline-Duplication Drift Risk note).
+        run: python3 copywriting-toolkit/scripts/check_anchor_copies.py
 
   scraper-deps:
     name: Scraper dependency freshness (report-only)
