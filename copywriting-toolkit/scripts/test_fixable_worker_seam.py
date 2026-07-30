@@ -88,6 +88,15 @@ def test_orchestrator_self_apply_is_explicitly_prohibited():
     )
 
 
+def test_worker_dispatch_carries_nested_dispatch_stop_path():
+    """Review 🟡: in a nested-subagent context the Agent tool is absent
+    AND self-apply is prohibited — without a STOP clause the instruction
+    dead-ends. The copywriter dispatch must carry the same
+    STOP-and-surface path as the evaluator dispatch guard."""
+    window = _verdict_handling_window(_text())
+    assert "STOP and surface to the parent orchestrator" in window
+
+
 def test_gate_reverifies_affected_checklist_items_after_fix():
     window = _verdict_handling_window(_text())
     assert "the gate re-verifies the affected checklist items" in window
