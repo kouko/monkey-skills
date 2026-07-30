@@ -90,3 +90,14 @@ def test_points_at_claude_md_without_restating_mechanics():
     assert "${TMPDIR:-/tmp}/copywriting-run-<run_id>/envelope-<seq>.json" not in section
     assert "phase-audit-entry" not in section
     assert "ENFORCES" not in section
+
+
+def test_intro_distinguishes_the_two_validation_layers():
+    """Review 🟡 (T10 quality): the intro's responsibilities list must name
+    the envelope-file validation as its own duty, distinct from the
+    per-skill Preconditions check — a weak orchestrator otherwise runs one
+    layer and believes it satisfied both."""
+    intro = _text().split(SECTION_HEADING, 1)[0]
+    assert "Four responsibilities" in intro
+    assert "SEPARATE layer" in intro
+    assert "passing one never satisfies the other" in intro

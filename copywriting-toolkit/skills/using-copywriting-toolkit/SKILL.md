@@ -10,11 +10,12 @@ description: |
 
 # using-copywriting-toolkit
 
-Entry router + validator for the `copywriting-toolkit` plugin. Three responsibilities:
+Entry router + validator for the `copywriting-toolkit` plugin. Four responsibilities:
 
 1. **Route** — inspect the user's raw request, place it on the 9-phase pipeline (plus audit alt-entry), hand off to the correct skill with a structured envelope.
-2. **Validate** — before every skill launch, load the target skill's `## Preconditions` schema and check the envelope. On violation, emit a bounce-back envelope (see `../../CLAUDE.md §Envelope Violation`) and route upstream instead of launching.
-3. **Qualify for Express Mode** — on a raw new brief, check whether Level 1 fields are all present (`protocols/phase-decision-tree.md §Step 0.5`). If yes, dispatch `copywriting-intake` in Express Mode; otherwise default to Q1-Q10 full intake.
+2. **Validate preconditions** — before every skill launch, load the target skill's `## Preconditions` schema and check the envelope. On violation, emit a bounce-back envelope (see `../../CLAUDE.md §Envelope Violation`) and route upstream instead of launching.
+3. **Validate the envelope file** — at every stage boundary, run the envelope validator script (§Envelope Validation below). This is a SEPARATE layer from responsibility 2: the script checks structure/counters/history against the previous boundary file; the Preconditions check verifies the target skill's field requirements. Both run at their own moments — passing one never satisfies the other.
+4. **Qualify for Express Mode** — on a raw new brief, check whether Level 1 fields are all present (`protocols/phase-decision-tree.md §Step 0.5`). If yes, dispatch `copywriting-intake` in Express Mode; otherwise default to Q1-Q10 full intake.
 
 This skill does NOT draft copy, run gates, or produce verdicts. It only routes, validates, and packages the handoff envelope. Each downstream skill owns its own SKILL.md, standards, and (where applicable) gates.
 
