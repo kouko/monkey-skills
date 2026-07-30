@@ -5,6 +5,67 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.42.0] — 2026-07-30 — standalone requesting-docs-review skill + SDD prose review-weight
+
+### Added
+
+- **`requesting-docs-review` skill** (`skills/requesting-docs-review/SKILL.md`) —
+  the docs arm of whole-branch review, extracted out of
+  `requesting-code-review` into a standalone skill with clean jurisdiction
+  (docs/loom/BACKLOG.md, "Standalone docs-review skill" — shape decided
+  2026-07-30). Owns the five prose dimensions (omission / ambiguity /
+  inconsistency / incorrect-fact / missing-population), the
+  instruction/evidence finding-class taxonomy (blocking is scoped to
+  instruction-class findings; evidence-class findings are recorded, never
+  gate), whole-artifact scope (every changed `.md` file read in full, the
+  diff as context, unchanged claims checked against the change), and a
+  `check_doc_citations.py` pre-pass folded into the dispatch packet.
+- **`docs-reviewer` agent** (`agents/docs-reviewer.md`) — a prose-native
+  reviewer contract (mirrors `code-reviewer.md`'s structure: verdict-only
+  role, the three injection blocks — baseline-v1, reviewer-discipline-v1,
+  rule-sheet-v1 — registered in `distribute.py`), replacing the ~900-word
+  per-dispatch code-rubric override the prior docs mode ran on
+  `code-reviewer`.
+- **Convergence contract** inside `requesting-docs-review`: a hard 2-round
+  cap (round 2 ending in `NEEDS_REVISION` STOPs and surfaces the surviving
+  findings to the user instead of looping a third time), round-2 handoff
+  carrying round-1 findings verbatim with a re-litigation ban, an
+  oscillation stop (a finding that resurfaces after being fix-verified ends
+  the loop immediately), and appended corrections for evidence-class fixes
+  to unchanged prose (never in-place rewrites). This closes the pathology
+  the arc started from — a 9-round non-converging docs-review loop
+  (`docs/loom/audits/2026-07-28-doc-branch-review-loop-audit.md`).
+- **SDD `Review-weight: prose`** (`skills/subagent-driven-development/SKILL.md`)
+  — a plan task may declare `Review-weight: prose`, keeping
+  implementer + spec-reviewer and substituting the `docs-reviewer` agent for
+  code-quality-reviewer; allowed only when every task's Files touched are
+  `.md` authored prose, fails closed to the full triad on any violation
+  (mirrors the existing mechanical review-weight's fail-closed rule).
+  `writing-plans/references/plan-format.md` documents the value in the
+  `Review-weight` field enum and its own §Review-weight section, so a plan
+  author consulting the schema alone discovers it is legal.
+
+### Changed
+
+- **Three-way routing in `requesting-code-review`** (Step 1): docs-only
+  branches (every changed file `.md`) now delegate whole to
+  `requesting-docs-review`; mixed branches (`.md` + code) split per-file —
+  `.md` files to the docs arm, code files to the code arm — and mint the
+  gate marker once from the joined verdict; code-only branches are
+  unchanged. The inline finding-class taxonomy and the docs-mode
+  Aggregation-rule paragraph relocated to `requesting-docs-review`;
+  `requesting-code-review` keeps only a `class:` key mention (scoped to the
+  docs arm, mixed-branch unions carry it) and a one-line pointer at its
+  Aggregation rule section (anti-drift — no copy of the relocated
+  semantics).
+- **Trivial-skip boundary** narrowed: only mechanical doc edits (typo fix,
+  version bump, generated/sync output regen) are exempt from docs review;
+  any length of authored-prose edit routes through the skill.
+- **`finishing-a-development-branch`** flow text now names the three-way
+  review dispatch and its docs-arm outcome: a 2-round-cap STOP from
+  `requesting-docs-review` surfaces to the user with surviving findings,
+  instead of entering the silent fix→re-review loop.
+
 ## [0.41.0] — 2026-07-30 — docs-only review: instruction/evidence finding classes
 
 ### Changed

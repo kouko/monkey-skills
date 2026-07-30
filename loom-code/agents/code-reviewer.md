@@ -45,8 +45,9 @@ These rules apply to every verdict this reviewer agent produces. They
 are output discipline that the role-contract above amplifies, not
 replaces. Unlike the 12-rule engineering baseline (which applies to
 every plugin-level agent), this block ships ONLY in reviewer agents
-(code-quality-reviewer / code-reviewer / spec-reviewer) — the
-implementer does not produce verdicts and does not carry it.
+(code-quality-reviewer / code-reviewer / spec-reviewer /
+docs-reviewer) — the implementer does not produce verdicts and does
+not carry it.
 
 ## Rule R1 — Stamp every verdict with `standards_version`
 

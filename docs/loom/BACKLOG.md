@@ -2223,9 +2223,15 @@ agreement of the per-task + whole-branch reviewers.
   reports 40–73% of tasks losing previously-correct behaviour across 8 turns. Neither is a
   like-for-like comparison to the audit's 6-of-9 round-level figure, which remains n=1 branch.
 
-## Standalone docs-review skill — shape decided, PARKED behind 0.41.0 measurement (PARKED)
-- Status: PARKED
-- Start: unpark if, after 0.41.0's blocking-class change has governed 2–3 docs-heavy branch
+## Standalone docs-review skill — shape decided, SHIPPED this arc (0.42.0) (SHIPPED)
+- Status: SHIPPED — landed in loom-code 0.42.0. Brief:
+  `docs/loom/specs/2026-07-30-requesting-docs-review-standalone-skill.md`; plan:
+  `docs/loom/plans/2026-07-30-requesting-docs-review-standalone-skill.md`. Both
+  independently-actionable items below shipped in this arc: the whole-branch round cap
+  (as the docs-arm's 2-round cap inside `requesting-docs-review`) and the mixed-branch
+  per-file split (in `requesting-code-review`'s three-way routing).
+- Start (historical — the unpark condition that was in force before this arc shipped,
+  kept for record): unpark if, after 0.41.0's blocking-class change has governed 2–3 docs-heavy branch
   close-outs, either (a) a mixed (`.md`+code) branch runs a pathological review loop — the
   second measured loop was mixed and 0.41.0's docs-only trigger does not cover it
   (`docs/loom/specs/2026-07-30-docs-review-blocking-class.md:196-201`) — or (b) the docs-mode
