@@ -18,7 +18,7 @@ Pause points the user **does** see:
 
 Everything else — RED-GREEN-REFACTOR cycles, reviewer rounds, re-dispatch on `NEEDS_REVISION` — runs without user intervention.
 
-**Subagent capacity errors (usage limit / "529 Overloaded").** If a subagent dispatch fails with a monthly-limit or 529 error mid-run: (1) do not silently retry in a loop; (2) finish and commit any tasks already `DONE` in the current wave; (3) surface ONE recovery question to the user with three options: wait for capacity to recover; proceed with explicit B2 orchestrator self-review (mark every verdict "[self-review — confirmation bias risk]"); or push the branch as-is and rely on CI. Phrase this per [§Asking the user](#asking-the-user). **After capacity recovers / 恢復後:** once the user confirms capacity is back, retrospectively dispatch the blocked reviewers on the already-committed artifacts (same subagent types, same inputs) — the commits are durable, so no work is lost. Treat any returned `NEEDS_REVISION` as a **new fix commit** (not a revert of the committed work), then proceed as if the verdicts had arrived on time.
+**Subagent capacity errors (usage limit / "529 Overloaded") mid-run.** Do not silently retry in a loop — finish and commit any tasks already `DONE` in the current wave, then surface a recovery question per [§Asking the user](#asking-the-user). Full protocol (the three recovery options, and the retrospective-reviewer-dispatch step once capacity returns): [`references/dispatch-hygiene-notes.md`](references/dispatch-hygiene-notes.md) §Capacity-error recovery.
 
 ## Asking the user
 
@@ -39,8 +39,6 @@ When you ask a technical decision (a bug-fix approach, a design choice, error ha
 
 **Complex fork → brief before you ask.** When the fork is genuinely complex (≥3 trade-offs, ≥2 implementation paths, or architectural blast radius), a `(Recommended)` option alone still hands the user a choice they cannot evaluate — run `dev-workflow:brief-before-asking` (6-block briefing, Mental Model first) **before** firing the `AskUserQuestion`. Same trigger as `brainstorming`'s rule — `brainstorming` carries the canonical trigger rule; `dev-workflow:brief-before-asking` owns the 6-block format. This is a floor, not politeness: an unbriefed complex fork is the "technical choices I can't really evaluate" failure mode.
 
-*(Grounded: Horvitz, Principles of Mixed-Initiative User Interfaces, CHI 1999 — scope precision to your confidence; "do less but correctly" beats punting wide.)*
-
 ### ③ How to phrase
 
 1. **Outcome, not mechanism.** Each option describes what the user *gets* ("you'll get the two skills edited and tests green"), not the internal machinery ("uses SDD triad dispatch").
@@ -51,19 +49,7 @@ When you ask a technical decision (a bug-fix approach, a design choice, error ha
 6. **Compound asks only when sub-questions share one topic** or are jointly judgeable. Split unrelated decisions into separate rounds.
 7. **Channel: default to the `AskUserQuestion` tool** for any non-trivial decision ask — that channel carries the ask-triage card and structured options. A prose-text ask is legitimate only when its first line is rule 4's state anchor + stakes line; a bare prose fork question（「A 還是 B？」with zero context）is the same violation as an unanchored tool ask, and it is invisible to the mechanical triage layer — which is why it defaults to the tool.
 
-**Worked example — the built-in `/recap` style is the target:**
-
-```
-✅ Standard (outcome-framed, no jargon, plain status, term-explained-on-use):
-   "The first three pieces are done and checked out clean — the parser, the new flag, and the
-    error path. The next one needs a call from you: when a tag is malformed, should the build
-    just warn, or stop and fail?"
-
-❌ Avoid (jargon-dense status-report style):
-   "Wave 1 DONE: T1/T3/T4 PASS 3/3, reviewers green. T5 BLOCKED — NEEDS_CONTEXT on malformed-tag policy. Independent:false. 下一步？"
-```
-
-This ✅ example is the calibration target for every question and hand-off the orchestrator surfaces below.
+**Worked example — the built-in `/recap` style is the target.** Full ✅/❌ pair (the calibration target for every question and hand-off the orchestrator surfaces below): [`references/dispatch-hygiene-notes.md`](references/dispatch-hygiene-notes.md) §Worked example.
 
 **Delivery form.** Every per-wave status report and checkpoint sign-off surfaced under this gate is delivered as the user-rollup card, filled in the live conversation language — see `loom-pipeline/hooks/family-relay.md §Family relay discipline`. Never copy the card template body here; point at it. Internal machine traffic (verdict tokens, wave labels) stays precise below the card.
 
@@ -74,22 +60,7 @@ Auto-routed by [`using-loom-code`](../using-loom-code/SKILL.md) when **either** 
 - The user's task is estimated to take **>1 hour**.
 - The task touches **>1 module / >1 file boundary**.
 
-```mermaid
-flowchart TD
-    A[User request] --> B{">1 hour<br/>OR<br/>>1 module?"}
-    B -- No --> C["Direct implementation<br/>(still under tdd-iron-law)"]
-    B -- Yes --> D[writing-plans<br/>splits into atomic tasks]
-    D --> E[SDD orchestration loop]
-    E --> F["per task:<br/>dispatch implementer"]
-    F --> G["dispatch spec-reviewer<br/>+ code-quality-reviewer<br/>(parallel)"]
-    G --> H{"both verdicts<br/>PASS?"}
-    H -- Yes --> I[next task]
-    H -- No --> J[re-dispatch implementer<br/>with gaps + findings]
-    J --> F
-    I --> K{more tasks?}
-    K -- Yes --> F
-    K -- No --> L[final summary to user]
-```
+Flowchart of this trigger + the per-task loop below: [`references/dispatch-hygiene-notes.md`](references/dispatch-hygiene-notes.md) §SDD flow diagram.
 
 If neither trigger fires, the user goes straight to `tdd-iron-law` for implementation. SDD's overhead is not free; do not dispatch three subagents for a one-line change.
 
@@ -99,7 +70,7 @@ Dispatch every subagent call below as a one-shot, blocking call that waits for a
 
 For each atomic task in the plan:
 
-1. **Dispatch an `implementer` subagent** (role identifier `loom-code:implementer`; input contract defined in the plugin-level agent at [`loom-code/agents/implementer.md`](../../agents/implementer.md), which also carries the 12-rule engineering baseline from [`loom-code/scripts/_baseline.md`](../../scripts/_baseline.md)) with the task description + context paths + resource paths. Before dispatching, the orchestrator resolves the project's test command once via `verification-before-completion`'s declared-first rule (consult the declared surface; trust only if it runs and emits a test count; else fall back to detection), caches it **session-scoped** (re-resolve across sessions because declarations rot), and passes it into the implementer dispatch as a **`Resolved test command`** line so the implementer runs the project's real test command instead of re-detecting. (Optional optimization: invalidate the session cache mid-session if the declaring file's content-hash changes.) Relevant `Kickoff decision:` lines from the plan's `## Notes` ride the implementer's task packet. Wait for return.
+1. **Dispatch an `implementer` subagent** (role identifier `loom-code:implementer`; input contract defined in the plugin-level agent at [`loom-code/agents/implementer.md`](../../agents/implementer.md), which also carries the 12-rule engineering baseline from [`loom-code/scripts/_baseline.md`](../../scripts/_baseline.md)) with the task description + context paths + resource paths. Before dispatching, the orchestrator resolves the project's test command once via `verification-before-completion`'s declared-first rule (consult the declared surface; trust only if it runs and emits a test count; else fall back to detection), caches it **session-scoped** (re-resolve across sessions because declarations rot), and passes it into the implementer dispatch as a **`Resolved test command`** line so the implementer runs the project's real test command instead of re-detecting. Relevant `Kickoff decision:` lines from the plan's `## Notes` ride the implementer's task packet. Wait for return.
 2. **Read the implementer's output.** If `status: NEEDS_CONTEXT` → do not dispatch reviewers; triage the relayed question FIRST per gate ①: a task-scoped checkable fact → resolve it yourself and re-dispatch the implementer (no user ask); a researchable design fork → research per gate ②, then surface with the cited recommendation; otherwise surface directly, phrased per [§Asking the user](#asking-the-user). A surfaced question with product stakes also applies gate ①'s two-axis framing to decide the escalation format. **NEEDS_CONTEXT re-dispatch cap:** task-scoped-fact re-dispatches on the same task are capped at 2 rounds; if the re-dispatched implementer returns NEEDS_CONTEXT a 3rd time on that task, the spec/plan is missing information, not a resolvable fact — stop re-dispatching and surface to the user per §Asking the user, mirroring the 3-round NEEDS_REVISION escalation below (a separate, independent counter — the two budgets never share rounds). If `status: BLOCKED` → apply the unblock step or surface to user.
 3. **If `status: DONE` or `DONE_WITH_CONCERNS`**, dispatch **`spec-reviewer`** and **`code-quality-reviewer`** **in parallel** (same fan-out step — see `dispatching-parallel-agents` §3) — both plugin-level agents (v0.6.0 / P15-12 Phase 2), role identifiers `loom-code:spec-reviewer` and `loom-code:code-quality-reviewer`. See [`loom-code/agents/spec-reviewer.md`](../../agents/spec-reviewer.md) + [`loom-code/agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md) for input/output contracts. Wait for both.
 4. **Resolve verdicts** per the rule below.
