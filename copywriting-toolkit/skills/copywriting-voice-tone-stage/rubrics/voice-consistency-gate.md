@@ -267,7 +267,7 @@ When Pass 3 rewrites the draft (any branch: Craft Gate / Register Signal / Axis 
 
 ## Verdict Rules
 
-Verdict aggregation is contract-class-only — see `../../CLAUDE.md
+Verdict aggregation is contract-class-only — see `../../../CLAUDE.md
 §Gate Convergence Vocabulary` for the canonical `class: contract |
 craft` definitions (not restated here; CLAUDE.md wins on any
 disagreement). Each dimension above carries its own `**Class**`

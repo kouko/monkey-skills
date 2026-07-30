@@ -50,7 +50,7 @@ def test_verdict_rules_pointer_to_claude_md_vocabulary():
     # Convergence Vocabulary; this rubric must point at it, not restate a
     # second (and now contradicting) local definition.
     window = _verdict_window()
-    assert "../../CLAUDE.md" in window and "Gate Convergence Vocabulary" in window, (
+    assert "../../../CLAUDE.md" in window and "Gate Convergence Vocabulary" in window, (
         "Verdict Rules must pointer-cite CLAUDE.md §Gate Convergence Vocabulary"
     )
 
