@@ -65,8 +65,9 @@ This is the same cross-family absorption mechanism documented on
 (「設計に入る前に」), which ties into `loom-pipeline:loom-memory`'s
 standing description clause "check prior experience **before loom
 work**". At 493 chars the zh and en records (#1, #2) survived — unlike
-the 170-char leg on 2026-07-14 where all three records died, and unlike
-the 217-char remedy candidate where zh and ja both died. At 493 chars a
+the 170-char leg on 2026-07-14 where two of the three records died (zh,
+en; the ja record #8 survived via the router at 170), and unlike the
+217-char remedy candidate where zh and ja both died. At 493 chars a
 **different** record (ja) dies instead. No band tested so far (170, 217,
 493) has cleared zero-MISS; each band loses a different member of the
 3-record set to the same attractor.
