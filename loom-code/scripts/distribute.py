@@ -219,7 +219,7 @@ AGENT_RULE_SHEET_BEGIN = (
 )
 AGENT_RULE_SHEET_END = "<!-- END rule-sheet-v1 -->"
 AGENT_RULE_SHEET_TARGETS: list[str] = list(AGENT_BASELINE_TARGETS)
-# ^ routes to all 4 agents (implementer + 3 reviewers). Single canonical
+# ^ routes to all agent files (implementer + reviewers). Single canonical
 #   text — implementer reads same content as reviewers; verdict aggregation
 #   rules are informational for implementer (self-check during TDD reduces
 #   reviewer NEEDS_REVISION rate).

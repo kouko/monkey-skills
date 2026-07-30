@@ -50,6 +50,20 @@ def _output_contract() -> str:
     return text[start:end]
 
 
+def _role_contract_window() -> str:
+    """Isolate `## Role contract — behavioral rules` — from its heading
+    to the injected reviewer-discipline-v1 marker. Bounding on the
+    marker (not the next `## ` heading, which lives further down inside
+    the injected block) keeps this window to the hand-authored
+    behavioral-rules list only, so a mutation that deletes the
+    hand-authored role-contract sentence can't be masked by injected
+    boilerplate re-using the same words elsewhere in the file."""
+    text = _text()
+    start = text.index("## Role contract")
+    end = text.index("<!-- BEGIN reviewer-discipline", start)
+    return text[start:end]
+
+
 # ── file shape ─────────────────────────────────────────────────────────
 
 
@@ -143,12 +157,20 @@ def test_findings_carry_class_taxonomy():
 def test_verdict_only_role_never_edits_never_runs_tests():
     """Evaluator role: produces verdicts, does NOT modify reviewed files,
     does NOT run tests (prose has no test suite to run — and running
-    code tests is verification-before-completion's job)."""
-    text = _text()
-    assert "verdict-only" in text
-    assert "may not" in text.lower()
-    assert "edit" in text.lower() or "modify" in text.lower()
-    assert "run tests" in text.lower()
+    code tests is verification-before-completion's job).
+
+    Windowed to `## Role contract` (not the whole file): the frontmatter
+    description and the injected reviewer-discipline-v1 block both reuse
+    "verdict-only" / "may not" / "run tests" independently, so a
+    whole-file grep stays green even if the hand-authored role-contract
+    sentence stating this is deleted -- narrowing to the window closes
+    that false-green (T1 quality review, tests finding)."""
+    window = _role_contract_window()
+    low = window.lower()
+    assert "verdict-only" in low
+    assert "may not" in low
+    assert "edit" in low or "modify" in low
+    assert "run tests" in low
 
 
 def test_whole_artifact_scope_duty():

@@ -349,6 +349,74 @@ def test_verdict_minting_same_marker():
     )
 
 
+def _assert_reaggregate_never_adopt_one_arm(low: str) -> None:
+    """Raise AssertionError unless `low` forbids adopting either arm's
+    own verdict outright -- re-aggregation over the union is mandatory,
+    not stricter-arm selection (mutation probe M4, T2 quality review:
+    'adopt the stricter arm's verdict' must NOT satisfy this pin)."""
+    assert "re-run" in low and "aggregation rule" in low, (
+        "must instruct re-running §Aggregation rule on the union"
+    )
+    assert "never adopt one arm's own verdict" in low, (
+        "must forbid adopting either arm's own verdict verbatim -- "
+        "picking the stricter arm's verdict still skips re-aggregation"
+    )
+
+
+def test_union_reaggregation_never_adopts_one_arm():
+    """Step 4 forbids shortcutting re-aggregation by adopting one arm's
+    own verdict, even the stricter one."""
+    low = _norm(_steps_window(_text())).lower()
+    _assert_reaggregate_never_adopt_one_arm(low)
+
+
+def test_union_reaggregation_mutation_guard():
+    """Mutation probe M4 (T2 quality review): rewriting 'never adopt one
+    arm's own verdict' to 'adopt the stricter arm's verdict' survived all
+    15 pre-existing pins as a false green. This pin must fail under that
+    exact mutation -- tested in-memory only, no file is mutated."""
+    low = _norm(_steps_window(_text())).lower()
+
+    # sanity: the real text passes.
+    _assert_reaggregate_never_adopt_one_arm(low)
+
+    key_phrase = (
+        "re-run §aggregation rule on the union (per-dimension score = "
+        "the worse of the two arms' scores) — never adopt one arm's "
+        "own verdict"
+    )
+    assert key_phrase in low, (
+        "test fixture assumption broken -- SKILL.md wording changed "
+        "under this test; update key_phrase to match"
+    )
+    mutated = low.replace(key_phrase, "adopt the stricter arm's verdict")
+
+    with pytest.raises(AssertionError):
+        _assert_reaggregate_never_adopt_one_arm(mutated)
+
+
+def _assert_per_dimension_worse_score(low: str) -> None:
+    """Raise AssertionError unless `low` states each minted dimension
+    score is the WORSE of the two arms' scores (mirrors
+    requesting-code-review's wording, T2 quality review correctness
+    finding)."""
+    assert "per-dimension score" in low, (
+        "must state how the orchestrator computes per-dimension panel "
+        "scores for the minted verdict"
+    )
+    assert "worse of the two arms" in low, (
+        "per-dimension score must be the WORSE of the two arms' scores, "
+        "mirroring requesting-code-review's wording verbatim"
+    )
+
+
+def test_per_dimension_score_is_worse_of_two_arms():
+    """The minted per-dimension score is the WORSE of the two arms'
+    scores -- same rule as requesting-code-review's panel aggregation."""
+    low = _norm(_steps_window(_text())).lower()
+    _assert_per_dimension_worse_score(low)
+
+
 def test_convergence_directives():
     """The four convergence directives sit at the dispatch moment (the
     window extraction pins placement): 2-round hard cap with

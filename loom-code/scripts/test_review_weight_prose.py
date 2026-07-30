@@ -180,6 +180,32 @@ def test_sdd_carries_review_weight_prose():
     )
 
 
+def test_prose_substitution_still_uses_verdict_resolution_table():
+    """Unlike the mechanical exemption (which bypasses §Verdict
+    resolution entirely -- see the earlier paragraph in this same file),
+    the prose substitution still resolves through that table: the
+    docs-reviewer's verdict substitutes into the table's
+    code-quality-reviewer column, spec-reviewer's column unchanged (T5
+    quality review, architecture finding)."""
+    text = _text()
+    low = _norm(_prose_section(text)).lower()
+    assert "verdict resolution" in low, (
+        "must reference the §Verdict resolution table"
+    )
+    assert "still applies" in low, (
+        "must state the table still applies on this path -- unlike the "
+        "mechanical exemption, which bypasses it entirely"
+    )
+    assert "code-quality-reviewer" in low and "column" in low, (
+        "must state the docs-reviewer's verdict substitutes into the "
+        "table's code-quality-reviewer column"
+    )
+    assert "mechanical" in low, (
+        "must contrast this path with the mechanical exemption, which "
+        "bypasses the table entirely"
+    )
+
+
 def test_spec_reviewer_stays_polarity_guard():
     """Inverting the "spec-reviewer stays" text to claim spec-reviewer is
     ALSO replaced must fail the same check that passes on the real

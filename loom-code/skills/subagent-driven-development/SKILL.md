@@ -122,6 +122,8 @@ Eligibility is narrow: this substitution applies only when **all** files listed 
 
 This substitution is gated upstream by `plan-document-reviewer` Check 16 (see `writing-plans/references/plan-document-reviewer-prompt.md`), the same trust model as the mechanical exemption above: a plan setting `Review-weight: prose` without satisfying Check 16's eligibility test never reaches SDD, so the orchestrator trusts the marker's presence without re-validating the all-`.md` condition itself.
 
+Unlike the mechanical exemption, this substitution does **not** bypass the §Verdict resolution table below — the table still applies on this path, with the docs-reviewer's verdict substituting into the table's `code-quality-reviewer` column (the `spec-reviewer` column is unchanged).
+
 **Progress ledger — maintain `Status` per task + resume from it (v0.10.0+, optional).** When the plan carries the optional per-task `Status` field (see `writing-plans/references/plan-format.md` §Progress ledger), the orchestrator **writes it back into the plan as it executes** so the plan becomes a durable, shared progress record:
 
 - On dispatch → set `Status: claimed(@<agent>)` (`<agent>` = the worktree branch name, unique per agent; for a single-orchestrator run use the current branch).
