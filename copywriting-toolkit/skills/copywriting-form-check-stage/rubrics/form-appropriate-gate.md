@@ -5,8 +5,18 @@ Changes in copywriting-toolkit:
   - v1.1.0: ADDED §copywriting-toolkit additional dimensions (migrated from
     copywriting-form-check-stage/SKILL.md §Gate Definition §8b additional
     dimensions — word-count band adherence + schwartz_alignment consumer)
-Original content preserved verbatim below. All divergences are additive;
-no deletion or re-order of original prose. Search for "v1.1.0 addition"
+  - v1.x (convergence-modernization arc): ADDED `Class: contract | craft`
+    annotation under every dimension heading (additive, no deletion) — see
+    "v1.x addition" markers. The ## Verdict Rules count-based accumulation
+    bullets (the retired yellow-flag-count rule) are REPLACED — this is a
+    non-additive exception, explicitly authorized because CLAUDE.md's
+    §Gate Convergence Vocabulary states "If a gate document and this
+    section ever disagree, this section wins," and this arc retires the
+    count-based accumulation rule repo-wide (not a copywriting-toolkit-only
+    execution-mechanics divergence). See docs/loom/plans/
+    2026-07-30-copywriting-convergence-modernization.md Task 3.
+Original content preserved verbatim below EXCEPT the ## Verdict Rules
+exception noted above. Search for "v1.x addition" / "v1.1.0 addition"
 markers to locate plugin-specific additions.
 -->
 
@@ -67,6 +77,9 @@ checklist's responsibility).
 
 ### RUB-CTW-FA-L1: Flow / Progression
 
+<!-- v1.x addition: convergence-vocabulary class annotation -->
+Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
+
 Whether inter-stage transitions are smooth. Whether conjunctions /
 subheadings / questions provide an explicit "bridge to the next stage."
 
@@ -84,6 +97,9 @@ subheadings / questions provide an explicit "bridge to the next stage."
 
 ### RUB-CTW-FA-L2: Drop-off Prevention Design
 
+<!-- v1.x addition: convergence-vocabulary class annotation -->
+Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
+
 In long-form copy, readers tend to drop off at stage endings. Whether
 each stage ending has a "hook to keep reading the next stage."
 
@@ -99,6 +115,9 @@ each stage ending has a "hook to keep reading the next stage."
   connections).
 
 ### RUB-CTW-FA-L3: Word-Count Ratios
+
+<!-- v1.x addition: convergence-vocabulary class annotation -->
+Class: `contract` (per `../../../CLAUDE.md §Gate Convergence Vocabulary` — an objective, checkable length/ratio referent)
 
 Whether the artifact follows the canonical ratio guidelines from
 `long-form-pasona-canon.md` §段階間 flow 設計原則.
@@ -118,6 +137,9 @@ Whether the artifact follows the canonical ratio guidelines from
   explicitly justified in artifact metadata.
 
 ### RUB-CTW-FA-L4: PASBECONA Mid-Stage B/E/C Persuasion Depth
+
+<!-- v1.x addition: convergence-vocabulary class annotation -->
+Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 Applies to PASBECONA artifacts only. B (Benefit) / E (Evidence) /
 C (Contents) are the 3 stages PASBECONA adds to 新 PASONA; their
@@ -144,6 +166,9 @@ persuasion depth is the source of long-form superiority.
 
 ### RUB-CTW-FA-M1: Benefit-first Clarity
 
+<!-- v1.x addition: convergence-vocabulary class annotation -->
+Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
+
 Whether the first paragraph / first sentence is purely a Benefit, with
 no Feature contamination.
 
@@ -157,6 +182,9 @@ no Feature contamination.
   Example: "Covers a full day's hydration in your commuter bag."
 
 ### RUB-CTW-FA-M2: Evidence Concreteness
+
+<!-- v1.x addition: convergence-vocabulary class annotation -->
+Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 Whether the Evidence stage is composed of verifiable objective
 information.
@@ -173,6 +201,9 @@ information.
   retention (n=120, University of X, 2023)." Verifiable.
 
 ### RUB-CTW-FA-M3: Advantage Comparison Clarity
+
+<!-- v1.x addition: convergence-vocabulary class annotation -->
+Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 Whether the Advantage stage presents concrete differences from
 competitors.
@@ -194,6 +225,9 @@ competitors.
 
 ### RUB-CTW-FA-S1: 3-Second Land Ability
 
+<!-- v1.x addition: convergence-vocabulary class annotation -->
+Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
+
 Whether the 3-second rule (1st second: attention grab, 2nd second:
 main message, 3rd second: action trigger) is met. Whether it captures
 attention at first glance.
@@ -212,6 +246,9 @@ attention at first glance.
 
 ### RUB-CTW-FA-S2: 7-15 字 Discipline
 
+<!-- v1.x addition: convergence-vocabulary class annotation -->
+Class: `contract` (per `../../../CLAUDE.md §Gate Convergence Vocabulary` — an explicit, objective char-count limit)
+
 Per `short-form-catchcopy-canon.md` §7-15 字 黃金範囲.
 
 - 🔴 **Fatal**: Under 5 字 or over 20 字. Under 5 字 means
@@ -228,6 +265,9 @@ Per `short-form-catchcopy-canon.md` §7-15 字 黃金範囲.
   satisfied even within range."
 
 ### RUB-CTW-FA-S3: 掛詞 / Phonetic Technique Recognition
+
+<!-- v1.x addition: convergence-vocabulary class annotation -->
+Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 When 眞木準 style (掛詞 / phonetics) or 岩崎 style (seasonal feel /
 rhythm) techniques are declared, whether the technique functions
@@ -250,6 +290,9 @@ effectively. For artifacts with no technique declaration →
 
 ### RUB-CTW-FA-S4: 5-Type 切入点 Clarity
 
+<!-- v1.x addition: convergence-vocabulary class annotation -->
+Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
+
 Whether the adopted approach (利益／願望, 恐怖／痛点, 顛覆常識,
 目標呼喚, 提問互動) is discernible from the output.
 
@@ -268,10 +311,18 @@ Whether the adopted approach (利益／願望, 恐怖／痛点, 顛覆常識,
 
 ## Verdict Rules
 
-- Any single 🔴 fatal → `NEEDS_REVISION` (escalate to user)
-- **2 or more** 🟡 warnings → `NEEDS_REVISION`
-- **1** 🟡 warning (no 🔴) → `PASS_WITH_NOTES` (auto-revise trigger)
-- All 🟢 clear → `PASS`
+<!-- v1.x addition: this section's rule text is superseded — the
+     original count-based accumulation rule is retired repo-wide, not
+     just for this plugin. Gate verdicts now aggregate over
+     `contract`-class findings ONLY, per `../../../CLAUDE.md §Gate
+     Convergence Vocabulary` (canonical; this section does not
+     restate the class definitions). `craft`-class findings (see each
+     dimension's `Class:` annotation above) are recorded observations
+     that never gate, alone or in accumulation. -->
+
+- Any `contract`-class 🔴 → `NEEDS_REVISION` (escalate to user)
+- Any `contract`-class 🟡 (no `contract`-class 🔴) → `PASS_WITH_NOTES` (auto-revise trigger)
+- No `contract`-class findings → `PASS` (`craft`-class findings recorded as notes)
 - `not_applicable` dimensions (form not applicable or no technique
   declaration) are excluded from verdict calculation.
 
@@ -322,6 +373,8 @@ The dimension sets above cover the canon form-appropriate assessment. The follow
 
 ### Dimension — Word-count band adherence (v1.0.2 rule)
 
+Class: `contract` (per `../../../CLAUDE.md §Gate Convergence Vocabulary` — an explicit, objective length-band referent)
+
 Check draft length against the framework's canonical band (per `long-form-pasona-canon.md §Three-framework applicability matrix`: 旧 PASONA ≤3000 chars / 新 PASONA 3000-10000 / PASBECONA 10000+). Threshold rules (apply in order — first match wins):
 
 - Draft ≤ 60% of band floor (e.g. 新 PASONA at ≤1800 chars against 3000 floor) → **🔴 far-below**. Recommend downgrading framework or substantially expanding the draft.
@@ -335,6 +388,8 @@ Examples:
 The gate does NOT reject outright — it surfaces the mismatch so the user can choose to downgrade framework or expand the draft. But 🔴 triggers `NEEDS_REVISION` per the verdict rules above.
 
 ### Dimension — `schwartz_alignment: conflict_flagged` carry-forward (v1.0.1 rule; v1.2.0 sole consumer)
+
+Class: `contract` (per `../../../CLAUDE.md §Gate Convergence Vocabulary` — checks fidelity to a declared voice target)
 
 **v1.2.0 change**: This is now the SOLE authoritative consumer of `schwartz_alignment == "conflict_flagged"` (per §Verification Density Principle — §Consolidatable tier). Phase 6 Pre-pass was downgraded to lightweight awareness note in v1.2.0; this 8b check is where the fidelity verdict fires.
 

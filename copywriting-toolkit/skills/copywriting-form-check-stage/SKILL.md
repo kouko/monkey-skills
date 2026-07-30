@@ -121,10 +121,12 @@ See `rubrics/form-appropriate-gate.md §copywriting-toolkit additional dimension
 
 The evaluator agent reads the rubric directly — these dimensions fire automatically without cross-reference. Prior to v1.1.0 these lived in this SKILL.md section because the rubric was Tier 1 unmodifiable; v1.1.0 Provenance & Divergence principle allows Tier 2 additive modification, so they migrated to their natural home. See `../../CLAUDE.md §Provenance & Divergence Principle`.
 
-Gate 8b runs in **flag mode**: it surfaces weaknesses but does not
-block on a single 🟡. Verdict rules are per the rubric
-(`rubrics/form-appropriate-gate.md`): 1 🔴 → `NEEDS_REVISION`;
-2+ 🟡 → `NEEDS_REVISION`; 1 🟡 → `PASS_WITH_NOTES`; all 🟢 → `PASS`.
+Gate 8b runs in **flag mode**: it surfaces weaknesses but a craft-class
+🟡 never blocks, alone or in accumulation. Verdict rules follow
+contract-class aggregation per `../../CLAUDE.md §Gate Convergence Vocabulary`
+(canonical; this passage does not restate it) — the rubric's dimension
+rows (`rubrics/form-appropriate-gate.md`) are annotated `contract` /
+`craft` per that vocabulary.
 
 ## Evaluator Launch — Pass 8a (MUST)
 
