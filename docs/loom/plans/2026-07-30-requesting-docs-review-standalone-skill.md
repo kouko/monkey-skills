@@ -1,10 +1,10 @@
 # Plan: requesting-docs-review — standalone docs-review skill
 
 Source brief: docs/loom/specs/2026-07-30-requesting-docs-review-standalone-skill.md
-Total tasks: 7
-Critical-path depth: 5 (T1→T2→T3→T4→T7)
+Total tasks: 8
+Critical-path depth: 5 (T1→T2→T3→T4→T7 and T1→T5→T6→T8→T7)
 Execution order: parallel-where-possible (T2 ∥ T5 after T1)
-Plan-document-reviewer verdict: PASS (2026-07-30, round 1, 14/14)
+Plan-document-reviewer verdict: PASS (2026-07-30, round 1, 14/14); amendment (Task 8 added) re-reviewed: PASS (2026-07-30, 14/14)
 
 ## Task 1 — docs-reviewer agent contract + distribution registration
 - Description: Create the prose-native reviewer agent `loom-code/agents/docs-reviewer.md`
@@ -219,16 +219,45 @@ Plan-document-reviewer verdict: PASS (2026-07-30, round 1, 14/14)
     clean; BACKLOG entry updated.
 - External surfaces: None (repo-internal CI scripts; marketplace.json is a committed
   file, publishing happens on merge to main per the GitHub-source marketplace flow).
-- Dependencies: Tasks 3, 4, 6 complete first
+- Dependencies: Tasks 3, 4, 6, 8 complete first
 - Independent: false
 - Brief item covered: "Test migration + release: … bump plugin.json to 0.42.0
   (+ CHANGELOG, marketplace description sync, codex manifest sync)" + "What Becomes
   Obsolete … BACKLOG.md §'Standalone docs-review skill' PARKED entry — flips"
 
+## Task 8 — plan-format.md documents the prose review-weight
+- Description: Document `Review-weight: prose` in the plan schema so a plan author
+  consulting plan-format.md alone discovers the value is legal: extend the field
+  enum at plan-format.md:60 (`<mechanical | prose | OMIT>`) and add the prose case
+  to §Review-weight (~:81-87) — eligibility wording transcribed from the SDD SSOT
+  (subagent-driven-development/SKILL.md "Prose review-weight substitution" block),
+  consistent with Check 16's shipped row. Origin: Task 6 code-quality-review 🟡
+  finding (plan-format.md never documents the value Check 16 validates; no original
+  task touched plan-format.md).
+- Module: loom-code/skills/writing-plans
+- Files touched: loom-code/skills/writing-plans/references/plan-format.md,
+  loom-code/scripts/test_plan_format_prose_weight.py
+- Context paths:
+  - loom-code/skills/writing-plans/references/plan-format.md
+  - loom-code/skills/subagent-driven-development/SKILL.md
+  - loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md
+- Acceptance:
+  - RED: new `pytest loom-code/scripts/test_plan_format_prose_weight.py` fails
+    (enum lacks prose; §Review-weight lacks the prose case).
+  - GREEN: test passes — window-scoped pins on the enum line and the §Review-weight
+    prose sentence matching SDD's eligibility wording.
+- External surfaces: None.
+- Dependencies: Task 6 completes first
+- Independent: false
+- Brief item covered: "Plan-side gate: extend Check 16 … with the prose row (allowed
+  only when the task's Files touched are all `.md` authored prose …)" — the schema
+  file Check 16's own Behavioral rule 1 charters must document the same value.
+
 ## Notes
 
-- Verdict stamped PASS (round 1) — stamping the verdict, no re-review (amendment
-  kind 1). Reviewer advisory notes: T3∥T6 / T4∥T6 left unmarked intentionally
+- Verdict history: original PASS stamped round 1 (stamping = amendment kind 1, no
+  re-review). The LATER Task-8 addition was a substantive amendment and DID
+  re-review — PASS, stamped in the header. Reviewer advisory notes: T3∥T6 / T4∥T6 left unmarked intentionally
   (T6 transcribes from T5's shipped text; release join stays simple at T7);
   keep the post-ship cold-read dogfood commitment visible at close-out.
 - Kickoff decision: docs-arm verdict minting → SAME review-pass marker via
