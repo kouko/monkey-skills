@@ -147,6 +147,26 @@ class TestVerdictRoutingSurfacesCapStop:
             "explicit" in bullet.lower() and "authoriz" in bullet.lower()
         ), "a third review round must require explicit user authorization"
 
+    def test_cap_stop_bullet_states_needs_revision_trigger(self):
+        """T4 code-quality review finding: the cap-STOP bullet must state
+        its trigger explicitly as round-2 NEEDS_REVISION, and name that a
+        round-2 PASS_WITH_NOTES auto-proceeds per the bullet above -- so no
+        precedence question survives between the two bullets."""
+        bullet = _norm(_cap_stop_bullet(_step3_window(_text()))).lower()
+        assert "round 2 ended with needs_revision" in bullet, (
+            "cap-STOP bullet must state the trigger explicitly: round 2 "
+            "ended with NEEDS_REVISION"
+        )
+        assert "pass_with_notes" in bullet and "auto-proceeds" in bullet, (
+            "cap-STOP bullet must state that a round-2 PASS_WITH_NOTES "
+            "auto-proceeds per the bullet above, resolving the precedence "
+            "question against the PASS_WITH_NOTES bullet"
+        )
+        assert "ended without pass" not in bullet, (
+            "polarity guard: bullet must not read bare 'ended without "
+            "PASS' -- ambiguous about whether PASS_WITH_NOTES counts"
+        )
+
     def test_cap_stop_not_folded_into_digest_silently_loop(self):
         """Polarity guard: the cap-STOP bullet must NOT itself say 'digest
         silently' (that would fold it back into the very loop it exists to

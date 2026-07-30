@@ -106,7 +106,8 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      into the PR body and the final close-out report as noted debt.
    - If PASS (all 🟢): proceed silently.
    - If the docs arm (requesting-docs-review) returns its 2-round-cap STOP (round 2 ended
-     without PASS): surface the surviving findings to the user now — do NOT fold this into
+     with NEEDS_REVISION — a round-2 PASS_WITH_NOTES auto-proceeds per the bullet above):
+     surface the surviving findings to the user now — do NOT fold this into
      the fix→re-review loop below. A third review round runs only on explicit user
      authorization.
    - Budget/quota failure fallback: if the code-reviewer subagent fails to launch due to

@@ -35,7 +35,7 @@ Owns the **docs arm** of whole-branch review. Dispatches **two `docs-reviewer` s
 
 **CONVERGENCE CONTRACT — four binding directives. Apply them at every dispatch and verdict moment; they override any impulse to run another round.**
 
-**1. Hard cap: 2 review rounds.** After round 2 ends without PASS → STOP. Surface the surviving findings to the user and hand them the decision. A third round runs ONLY on explicit user authorization (the critics' user-authorized breach precedent) — never silently.
+**1. Hard cap: 2 review rounds.** After round 2 ends with NEEDS_REVISION (PASS and PASS_WITH_NOTES are both passing verdicts and end the review) → STOP and surface the surviving findings to the user. Hand them the decision. A third round runs ONLY on explicit user authorization (the critics' user-authorized breach precedent) — never silently.
 
 **2. Round-2 handoff.** The round-2 dispatch packet carries round 1's findings verbatim. Reviewers verify each prior finding against the quoted current text of the artifact BEFORE raising anything new. Re-raising a closed finding in new words is forbidden — that is re-litigation, not review.
 

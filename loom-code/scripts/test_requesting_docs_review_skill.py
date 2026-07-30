@@ -429,9 +429,23 @@ def test_convergence_directives():
     assert "2 review rounds" in low, (
         "directive (a) must state the hard cap: 2 review rounds"
     )
+    assert "ends with needs_revision" in low, (
+        "directive (a) must state the cap-STOP trigger explicitly: round 2 "
+        "ending with NEEDS_REVISION -- not a bare 'without PASS' that leaves "
+        "PASS_WITH_NOTES ambiguous (T4 code-quality review finding)"
+    )
+    assert "pass_with_notes" in low and "passing verdict" in low, (
+        "directive (a) must state PASS and PASS_WITH_NOTES are both "
+        "passing verdicts that end the review"
+    )
     assert "stop" in low and "surviving findings" in low, (
-        "after round 2 without PASS the orchestrator must STOP and "
-        "surface the surviving findings to the user"
+        "after round 2 ends with NEEDS_REVISION the orchestrator must STOP "
+        "and surface the surviving findings to the user"
+    )
+    assert "without pass" not in low, (
+        "polarity guard: directive (a) must not read bare 'without PASS' -- "
+        "ambiguous on whether PASS_WITH_NOTES counts; must name "
+        "NEEDS_REVISION explicitly"
     )
     assert "third round" in low and "explicit user authorization" in low, (
         "a third round runs ONLY on explicit user authorization "
