@@ -123,8 +123,10 @@ def test_skill_verdict_rule_is_contract_class_pointer_no_restatement():
     )
     assert "contract-class" in window, "8b verdict passage lacks contract-class aggregation wording"
     # no local restatement of the canonical definition prose
-    assert "objective checkable referent" not in window
-    assert "qualitative observation" not in window
+    # (case-insensitive — a capitalization-only rephrasing must not
+    # false-pass; same fix class as commit 7f13682c)
+    assert "objective checkable referent" not in window.lower()
+    assert "qualitative observation" not in window.lower()
 
 
 def test_old_yellow_accumulation_rule_absent_skill():

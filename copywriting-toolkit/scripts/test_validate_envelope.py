@@ -311,6 +311,34 @@ def test_pass_with_matching_evaluator_entry_passes(tmp_path):
     assert r.returncode == 0, r.stderr
 
 
+def test_manual_ethics_verdict_pass_without_evaluator_entry_fails(tmp_path):
+    # WHY: form-check gates Phase-8 entry on ethics_verdict == "PASS" — a
+    # hand-set ethics_verdict is the same silent bypass as a hand-set
+    # gate_verdict and must hit the same ban (whole-branch review 🟡:
+    # the ban previously pinned gate_verdict only).
+    envelope = canonical_envelope()
+    envelope["ethics_verdict"] = "PASS"
+    r = run_validator(tmp_path, envelope)
+    assert r.returncode == 7
+    assert "ethics_verdict" in r.stderr
+
+
+def test_manual_form_verdict_pass_without_evaluator_entry_fails(tmp_path):
+    envelope = canonical_envelope()
+    envelope["form_verdict"] = "PASS_WITH_NOTES"
+    r = run_validator(tmp_path, envelope)
+    assert r.returncode == 7
+    assert "form_verdict" in r.stderr
+
+
+def test_ethics_verdict_with_matching_evaluator_entry_passes(tmp_path):
+    envelope = canonical_envelope()
+    envelope["ethics_verdict"] = "PASS"
+    envelope["audit_trail"].append(_gate_verdict_entry("PASS"))
+    r = run_validator(tmp_path, envelope)
+    assert r.returncode == 0, r.stderr
+
+
 def test_pass_verdict_does_not_match_pass_with_notes_entry(tmp_path):
     # WHY: substring matching would let a PASS_WITH_NOTES trail entry
     # legitimize a bare PASS field — the match must be exact-token.
@@ -377,9 +405,13 @@ def test_form_verdict_passed_token_fails_schema(tmp_path):
 
 def test_canonical_verdict_tokens_still_pass_schema(tmp_path):
     # WHY: the enum guard must not reject the legitimate canonical tokens.
+    # (The passing ethics_verdict carries its evaluator entry — the widened
+    # manual-PASS ban covers all three verdict fields; NEEDS_REVISION needs
+    # none, the ban only guards PASSING verdicts.)
     envelope = canonical_envelope()
     envelope["ethics_verdict"] = "PASS_WITH_NOTES"
     envelope["form_verdict"] = "NEEDS_REVISION"
+    envelope["audit_trail"].append(_gate_verdict_entry("PASS_WITH_NOTES"))
     r = run_validator(tmp_path, envelope)
     assert r.returncode == 0, r.stderr
 

@@ -242,26 +242,39 @@ def check_append_only(env: dict, prev: dict) -> list[str]:
     return []
 
 
+MANUAL_PASS_FIELDS = ("gate_verdict", "ethics_verdict", "form_verdict")
+
+
 def check_manual_pass(env: dict) -> list[str]:
-    verdict = env.get("gate_verdict")
-    if verdict not in PASSING_VERDICTS:
-        return []
+    # All three verdict fields carry the same PASS tokens and each can
+    # unlock a downstream phase (form-check gates Phase-8 entry on
+    # ethics_verdict), so the ban covers all of them, not just
+    # gate_verdict.
+    problems = []
     trail = env.get("audit_trail")
-    token = re.compile(rf"\b{re.escape(verdict)}\b")
-    if isinstance(trail, list):
-        for entry in trail:
-            if (
-                isinstance(entry, dict)
-                and entry.get("event") == "gate-verdict"
-                and entry.get("skill") == EVALUATOR_SKILL
-                and isinstance(entry.get("detail"), str)
-                and token.search(entry["detail"])
-            ):
-                return []
-    return [
-        f"gate_verdict {verdict!r} has no matching evaluator-written gate-verdict "
-        "audit_trail entry — manual PASS is banned (CLAUDE.md §What NOT to do)"
-    ]
+    for field in MANUAL_PASS_FIELDS:
+        verdict = env.get(field)
+        if verdict not in PASSING_VERDICTS:
+            continue
+        token = re.compile(rf"\b{re.escape(verdict)}\b")
+        matched = False
+        if isinstance(trail, list):
+            for entry in trail:
+                if (
+                    isinstance(entry, dict)
+                    and entry.get("event") == "gate-verdict"
+                    and entry.get("skill") == EVALUATOR_SKILL
+                    and isinstance(entry.get("detail"), str)
+                    and token.search(entry["detail"])
+                ):
+                    matched = True
+                    break
+        if not matched:
+            problems.append(
+                f"{field} {verdict!r} has no matching evaluator-written gate-verdict "
+                "audit_trail entry — manual PASS is banned (CLAUDE.md §What NOT to do)"
+            )
+    return problems
 
 
 def check_round2(env: dict) -> list[str]:

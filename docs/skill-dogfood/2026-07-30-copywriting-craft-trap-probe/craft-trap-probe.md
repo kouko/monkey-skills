@@ -54,3 +54,8 @@ count-accumulation-retired, in one run.
 - The evaluator was simulated via a general-purpose subagent reading the
   agent contract (the in-session dispatch path), not a headless
   end-to-end pipeline run.
+- Post-run fixture correction (whole-branch review 🟢): the
+  `audit_trail` entries were re-sorted into chronological order — the
+  as-probed file listed the round-2 `skill-entered` entry first, an
+  order an append-only trail cannot produce. Entry contents unchanged;
+  the probe verdict did not depend on trail order.

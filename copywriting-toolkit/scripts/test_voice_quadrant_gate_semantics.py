@@ -67,8 +67,10 @@ def test_gate_passage_points_at_claude_md_vocabulary_no_restatement():
         "Gate passage missing a pointer to CLAUDE.md's canonical vocabulary section"
     )
     # no local restatement of the canonical definition prose
-    assert "objective checkable referent" not in window
-    assert "qualitative observation" not in window
+    # (case-insensitive — a capitalization-only rephrasing must not
+    # false-pass; same fix class as commit 7f13682c)
+    assert "objective checkable referent" not in window.lower()
+    assert "qualitative observation" not in window.lower()
 
 
 def test_old_yellow_accumulation_rule_absent():

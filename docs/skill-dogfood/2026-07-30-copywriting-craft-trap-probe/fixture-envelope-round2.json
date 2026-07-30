@@ -22,9 +22,9 @@
   },
   "express_mode_used": false,
   "audit_trail": [
-    { "at": "2026-07-30T09:00:00Z", "event": "skill-entered", "skill": "copywriting-voice-tone-stage", "detail": "Phase 6 re-gate, round 2" },
     { "at": "2026-07-30T08:40:00Z", "event": "gate-verdict", "skill": "copywriter-evaluator", "detail": "Voice Consistency SHOULD gate round 1: NEEDS_REVISION" },
-    { "at": "2026-07-30T08:50:00Z", "event": "auto-revise", "skill": "copywriter", "detail": "round-1 contract finding remediation applied" }
+    { "at": "2026-07-30T08:50:00Z", "event": "auto-revise", "skill": "copywriter", "detail": "round-1 contract finding remediation applied" },
+    { "at": "2026-07-30T09:00:00Z", "event": "skill-entered", "skill": "copywriting-voice-tone-stage", "detail": "Phase 6 re-gate, round 2" }
   ],
   "retries": { "bounce_round": 0, "revise_round_count": 1, "total_retries": 1 },
   "prior_findings": [

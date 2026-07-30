@@ -120,10 +120,10 @@ jobs:
         run: python3 -m pip install --quiet pytest
 
       - name: Run copywriting-toolkit pytest suite
-        # First pytest suite for this plugin (107 tests, scripts/ only —
-        # kept as its own invocation, not merged with scripts/ or
-        # loom-code/scripts/, per the repo's existing per-plugin pytest
-        # job pattern, e.g. investing-toolkit-pytest-offline below).
+        # First pytest suite for this plugin (scripts/ only — kept as its
+        # own invocation, not merged with scripts/ or loom-code/scripts/,
+        # per the repo's existing per-plugin pytest job pattern, e.g.
+        # investing-toolkit-pytest-offline below).
         env:
           PYTHONDONTWRITEBYTECODE: "1"
         run: python3 -m pytest copywriting-toolkit/scripts/ -q
