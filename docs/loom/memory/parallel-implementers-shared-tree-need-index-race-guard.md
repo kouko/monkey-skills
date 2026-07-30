@@ -26,4 +26,7 @@ the bare ban was violated exactly by an agent that classified its stash use as
 testing, not workflow, and `stash pop` then grabbed a foreign stash — recovery:
 `git show HEAD:<path> >` restore + single-path `git add` clears the orphan
 UU without touching the stash stack.
-Related: [[untracked-replacement-while-deletion-staged]].
+Related: [[parallel-wave-commit-discipline]] (the orchestrator-serial layer of
+the same defense — that entry governs who commits when; this one governs what
+each agent must do inside its own add→commit window),
+[[untracked-replacement-while-deletion-staged]].

@@ -233,10 +233,10 @@ On `NEEDS_REVISION`: envelope returned to Phase 4 drafter with
   abstract Evidence, generic catchcopy) are the whole point of a
   separate SHOULD gate.
 - Do NOT paraphrase `checklists/persuasion-framework-adherence-checklist.md`
-  (byte-identical copy from `domain-teams/skills/copywriting-team/`) or
-  `rubrics/form-appropriate-gate.md` (Tier-2 DIVERGED since v1.15.0 — its
-  header logs the sanctioned divergences; do NOT "restore" it to the
-  upstream bytes). <!-- CHK-SKL-011-exempt: provenance citation -->
+  (byte-identical copy from `domain-teams/skills/copywriting-team/`) <!-- CHK-SKL-011-exempt: provenance citation -->
+  or `rubrics/form-appropriate-gate.md` (Tier-2 DIVERGED since v1.15.0 —
+  its header logs the sanctioned divergences; do NOT "restore" it to the
+  upstream bytes).
 - Do NOT run this skill before `ethics_verdict == "PASS"`.
 - Do NOT exceed 2 revise rounds silently — escalate to the user on
   round 3.

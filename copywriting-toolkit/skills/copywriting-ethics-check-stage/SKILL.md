@@ -232,11 +232,10 @@ unchanged envelope plus the findings block to the user, then stop.
 
 - Do NOT modify the draft beyond applying literal FIXABLE notes.
 - Do NOT paraphrase `standards/persuasion-ethics.md` (byte-identical
-  copy from `domain-teams/skills/copywriting-team/`; drift is a
-  CLAUDE.md violation) or `checklists/ethics-checklist.md` (Tier-2
-  DIVERGED since v1.1.0 — its header logs the sanctioned divergences;
-  do NOT "restore" it to the upstream
-  bytes). <!-- CHK-SKL-011-exempt: provenance citation -->
+  copy from `domain-teams/skills/copywriting-team/`; <!-- CHK-SKL-011-exempt: provenance citation -->
+  drift is a CLAUDE.md violation) or `checklists/ethics-checklist.md`
+  (Tier-2 DIVERGED since v1.1.0 — its header logs the sanctioned
+  divergences; do NOT "restore" it to the upstream bytes).
 - Do NOT launch `copywriting-form-check-stage` until this gate
   returns `PASS`.
 - Do NOT merge this skill's evaluator logic into Phase 8 to save a
