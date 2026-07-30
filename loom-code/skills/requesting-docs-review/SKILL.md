@@ -1,7 +1,14 @@
 ---
 name: requesting-docs-review
 description: |
-  Use BEFORE any push/merge/PR on a docs-heavy branch — whole-artifact review of every changed `.md` file across five prose dimensions, with a hard 2-round convergence cap. Fires when `git diff main...HEAD --name-only` is non-empty AND every changed file ends in `.md`; invoked by requesting-code-review's three-way routing (the docs arm) and directly: 'review my docs', 'are these docs ready to merge?'. Refuses 'just one more round' — after round 2 ends with NEEDS_REVISION it STOPs and surfaces surviving findings to the user.
+  Use BEFORE any push/merge/PR on a docs-heavy branch — whole-artifact review
+  of every changed `.md` file across five prose dimensions, with a hard
+  2-round convergence cap. Fires when `git diff main...HEAD --name-only` is
+  non-empty AND every changed file ends in `.md`; invoked by
+  requesting-code-review's three-way routing (the docs arm) and directly:
+  'review my docs', 'are these docs ready to merge?'. Refuses 'just one more
+  round' — after round 2 ends with NEEDS_REVISION it STOPs and surfaces
+  surviving findings to the user.
 version: 0.1.0
 ---
 

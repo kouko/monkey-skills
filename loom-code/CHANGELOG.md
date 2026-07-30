@@ -5,6 +5,21 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.42.1] - 2026-07-30
+
+### Fixed
+- `requesting-docs-review` frontmatter description hard-wrapped at ~76 chars
+  per physical line (words byte-identical). The skill rendered name-only in a
+  live listing; two candidate mechanisms, not yet discriminated: (a) the
+  listing drops `description: |` blocks with a single overlong content line
+  (4/4 correlation across plugins: unwrapped ui-verification / dbt-wiki:ingest
+  blank, wrapped user-insights / data-markets display — but confounded with
+  usage), vs (b) the documented least-used-first budget eviction, which hits a
+  brand-new skill hardest. Wrapping removes variable (a) for free; the
+  discriminating test is a post-merge cache refresh + fresh-session listing —
+  if the description stays absent, route via the eviction playbook (shrink the
+  global skill surface) instead of further wording edits.
+
 ## [0.42.0] — 2026-07-30 — standalone requesting-docs-review skill + SDD prose review-weight
 
 ### Added
