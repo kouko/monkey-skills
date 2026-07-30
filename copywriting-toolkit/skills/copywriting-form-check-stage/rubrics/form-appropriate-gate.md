@@ -9,11 +9,11 @@ Changes in copywriting-toolkit:
     annotation under every dimension heading (additive, no deletion) — see
     "v1.x addition" markers. The ## Verdict Rules count-based accumulation
     bullets (the retired yellow-flag-count rule) are REPLACED — this is a
-    non-additive exception, explicitly authorized because CLAUDE.md's
-    §Gate Convergence Vocabulary states "If a gate document and this
-    section ever disagree, this section wins," and this arc retires the
-    count-based accumulation rule repo-wide (not a copywriting-toolkit-only
-    execution-mechanics divergence). See docs/loom/plans/
+    non-additive exception, sanctioned by CLAUDE.md §Tier 2
+    "Exception — plugin-owned gate verdict rules" (verdict-aggregation
+    blocks are plugin-owned enforcement mechanics, replaceable in place
+    under a plan mandate) and consistent with §Gate Convergence
+    Vocabulary's "this section wins" precedence. See docs/loom/plans/
     2026-07-30-copywriting-convergence-modernization.md Task 3.
 Original content preserved verbatim below EXCEPT the ## Verdict Rules
 exception noted above. Search for "v1.x addition" / "v1.1.0 addition"

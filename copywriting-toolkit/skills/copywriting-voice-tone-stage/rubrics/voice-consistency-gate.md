@@ -1,3 +1,19 @@
+<!--
+DIVERGED FROM domain-teams:copywriting-team
+Original source: domain-teams/skills/copywriting-team/rubrics/voice-consistency-gate.md
+Changes in copywriting-toolkit:
+  - v1.15.0 (convergence-modernization arc): ADDED a `**Class**:
+    contract | craft` annotation per dimension (additive). The
+    Verdict-Rules count-based bullets ("2 or more 🟡 warnings →
+    NEEDS_REVISION" / "1 🟡 warning → PASS_WITH_NOTES") are REPLACED
+    with contract-class-only aggregation — sanctioned by CLAUDE.md
+    §Tier 2 "Exception — plugin-owned gate verdict rules" + docs/loom/
+    plans/2026-07-30-copywriting-convergence-modernization.md.
+Original content preserved verbatim below EXCEPT the Verdict-Rules
+replacement noted above. Search for "v1.15.0 addition" markers where
+present.
+-->
+
 # Rubric: Voice Consistency Gate
 
 SHOULD gate (qualitative flag-based). Triggers: multi-stage / multi-

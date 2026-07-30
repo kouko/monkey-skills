@@ -61,6 +61,8 @@ Files in this tier MAY be modified to adopt plugin-specific execution mechanics.
 3. Mark plugin-specific additions clearly with `<!-- v1.x.y addition: <topic> -->` blocks
 4. Log every divergence in `CHANGELOG.md` per version bump
 
+**Exception — plugin-owned gate verdict rules (v1.15.0, convergence-modernization arc):** a rubric's verdict-aggregation block (`## Verdict Rules` and equivalents) is plugin-owned enforcement mechanics — this plugin's gates execute it — not upstream editorial prose, so the raise-upstream duty does not fit it. When a user-ratified brief/plan retires its semantics (the 2026-07-30 contract-class port obsoleted the count-based verdict rules toolkit-wide), the block MAY be replaced in place, provided the file's DIVERGED header names exactly what was replaced and cites this exception plus the plan, and the CHANGELOG logs it. This is the only sanctioned non-additive edit class; all other original prose keeps the additive-only rule and the raise-upstream discipline.
+
 Covers:
 - `skills/*/protocols/*.md` — execution SOPs; plugin-specific mechanics are legitimate divergence
 - `skills/*/checklists/*.md` — gate items; plugin-specific hint subitems OK
