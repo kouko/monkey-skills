@@ -118,6 +118,13 @@ Between-skill artifact shape (JSON):
   "ideation_pool": ["... optional if Phase 2 ran ..."],
   "neta_candidates": ["... optional if Phase 3 ran pre-draft ..."],
   "draft": "...",
+  "express_mode_used": true,
+  "audit_trail": [
+    { "at": "2026-07-30T02:00:00Z", "event": "skill-entered", "skill": "copywriting-intake", "detail": "Express Mode" },
+    { "at": "2026-07-30T02:00:12Z", "event": "skill-exited", "skill": "copywriting-intake", "detail": "brief synthesized" },
+    { "at": "2026-07-30T02:00:13Z", "event": "skill-entered", "skill": "copywriting-long-form-pasona", "detail": "Phase 4 draft" }
+  ],
+  "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "next_stage": "copywriting-voice-quadrant-stage"
 }
 ```

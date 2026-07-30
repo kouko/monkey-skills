@@ -65,6 +65,9 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
   "voice_quadrant": { "primary": "Q1 | Q2 | Q3 | Q4", "edge": "...", "rationale": "...", "schwartz_alignment": "..." },
   "tone_notes": "...",
   "ethics_verdict": "PASS",
+  "express_mode_used": true,
+  "audit_trail": ["... append-only event log through Phase 7, see CLAUDE.md §Audit Trail ..."],
+  "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "next_stage": "copywriting-form-check-stage"
 }
 ```
@@ -208,6 +211,12 @@ On final `PASS` / `PASS_WITH_NOTES`:
   "ethics_verdict": "PASS",
   "form_verdict": "PASS | PASS_WITH_NOTES",
   "form_findings": "<optional 8b flag notes>",
+  "express_mode_used": true,
+  "audit_trail": [
+    "... prior entries unchanged ...",
+    { "at": "2026-07-30T02:10:00Z", "event": "gate-verdict", "skill": "copywriting-form-check-stage", "detail": "PASS" }
+  ],
+  "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "next_stage": null
 }
 ```

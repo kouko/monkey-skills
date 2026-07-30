@@ -54,6 +54,9 @@ Envelope`). At this phase the envelope MUST already carry:
     "schwartz_alignment": "ok | hard_rule_applied | conflict_flagged"
   },
   "tone_notes": "<from Phase 6>",
+  "express_mode_used": true,
+  "audit_trail": ["... append-only event log through Phase 6, see CLAUDE.md §Audit Trail ..."],
+  "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "next_stage": "copywriting-ethics-check-stage"
 }
 ```
@@ -212,6 +215,12 @@ On `PASS` (or `PASS` after a FIXABLE auto-revise round):
   "tone_notes": "...",
   "ethics_verdict": "PASS",
   "ethics_findings": "<optional FIXABLE notes applied>",
+  "express_mode_used": true,
+  "audit_trail": [
+    "... prior entries unchanged ...",
+    { "at": "2026-07-30T02:05:00Z", "event": "gate-verdict", "skill": "copywriting-ethics-check-stage", "detail": "PASS" }
+  ],
+  "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "next_stage": "copywriting-form-check-stage"
 }
 ```

@@ -335,6 +335,9 @@ Shape inherited from `copywriting-toolkit/CLAUDE.md §Handoff Envelope`, post-Ph
     "schwartz_alignment": "ok | hard_rule_applied | conflict_flagged"
   },
   "draft": "the Phase 4 draft",
+  "express_mode_used": true,
+  "audit_trail": ["... append-only event log through Phase 5, see CLAUDE.md §Audit Trail ..."],
+  "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "next_stage": "copywriting-voice-tone-stage"
 }
 ```
@@ -381,6 +384,12 @@ Required keys: `voice_quadrant`, `draft`. Missing either → return to orchestra
   },
   "gate_verdict": "PASS | PASS_WITH_NOTES | NEEDS_REVISION",
   "gate_report": { "...see rubric §Output Format..." },
+  "express_mode_used": true,
+  "audit_trail": [
+    "... prior entries unchanged ...",
+    { "at": "2026-07-30T02:04:30Z", "event": "gate-verdict", "skill": "copywriting-voice-tone-stage", "detail": "PASS" }
+  ],
+  "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "next_stage": "copywriting-ethics-check-stage"
 }
 ```

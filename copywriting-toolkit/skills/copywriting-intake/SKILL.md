@@ -222,6 +222,9 @@ Schema mirrors `copywriting-toolkit/CLAUDE.md §Handoff Envelope`:
   "message_thesis": "1-2 sentence core message derived from value prop + audience + framework",
   "planning_team_recommended": false,
   "gate_verdict": "PASS | PASS_WITH_NOTES",
+  "express_mode_used": true,
+  "audit_trail": ["... append-only event log for this intake run, see CLAUDE.md §Audit Trail ..."],
+  "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "next_stage": "copywriting-ideation | copywriting-neta-injection | copywriting-long-form-pasona | copywriting-long-form-extended | copywriting-mid-form | copywriting-short-form | copywriting-light-action | copywriting-audit-stage"
 }
 ```

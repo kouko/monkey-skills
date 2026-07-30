@@ -155,6 +155,9 @@ Hand off to `copywriting-<form>` with envelope:
   "message_thesis": "...",
   "ideation_pool": ["... if Phase 2 ran ..."],
   "neta_candidates": ["... if Phase 3 ran pre-draft ..."],
+  "express_mode_used": true,
+  "audit_trail": ["... append-only event log through Phase 3, see CLAUDE.md §Audit Trail ..."],
+  "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "next_stage": "copywriting-<form>"
 }
 ```
@@ -192,10 +195,12 @@ Hand off to `copywriting-audit-stage` with envelope:
 
 ```json
 {
-  "phase": "audit",
-  "existing_copy": "...",
-  "audit_focus": "<framework | ethics | voice | form | all>",
-  "form_hint": "<if known>",
+  "phase": "phase-audit-entry",
+  "form": "<if known>",
+  "brief": {
+    "review_focus": "<framework | ethics | voice | form | all>"
+  },
+  "external_copy": "...",
   "next_stage": "copywriting-audit-stage"
 }
 ```
