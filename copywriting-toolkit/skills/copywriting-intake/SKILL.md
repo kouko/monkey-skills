@@ -66,7 +66,15 @@ When Q8 grill surfaces a FATAL candidate (景表法 / FTC / ステマ / dark-pat
    - **(B) Rewrite to avoid** — drop the claim and replace with experiential / factual framing the writer can defend.
    - **(C) Drop the claim** — remove entirely; brief proceeds without it.
 3. User picks → agent records decision in `Confirmed Assumptions` → continues to Q9 Summary.
-4. If user cannot decide after one probe round (replies vague, off-topic, or asks agent to decide) → agent BLOCKED status, halt and ask human partner per `superpowers:executing-plans §When to Stop and Ask for Help`.
+4. If, after one probe round, any of the three options (A/B/C) has not
+   been recorded as a decision in `Confirmed Assumptions` (reply was
+   vague, off-topic, or asked the agent to decide) → agent BLOCKED
+   status. Halt and emit the concrete list of still-empty required
+   fields driving the halt (e.g., the Q8 grill item itself plus any
+   Level 1 field per §Field tiers left unresolved by it) — the halt is
+   verifiable by checking exactly those named fields, not by judging
+   whether the user "could decide." Then ask human partner per
+   `superpowers:executing-plans §When to Stop and Ask for Help`.
 
 **Q1-Q10 has NO tier concept** (T1/T2/T3). Tier classification is an Express Mode output contract (see `protocols/express-mode.md §Tiered FATAL handling §Scope note`). In Q1-Q10, every FATAL candidate is resolved interactively — there is no "carry to Phase 7 with benchmark-required flag" because Q8 probe-and-resolve already surfaced the benchmark requirement to the user in the same session.
 
