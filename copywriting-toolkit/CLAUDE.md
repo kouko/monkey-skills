@@ -322,6 +322,18 @@ Used by:
 
 Does NOT draft or soften — only judges.
 
+> **MUST — every gate evaluation REQUIRES a real `Agent`-tool dispatch of
+> `copywriter-evaluator`; never degrade to reviewing your own draft.** A
+> subagent has no `Agent`/`Task`/`Workflow` tool (live-probed 2026-07-23,
+> repo memory `skill-in-subagent-loses-internal-orchestration.md`), so a
+> gate skill (`copywriting-ethics-check-stage`, `copywriting-form-check-stage`,
+> `copywriting-audit-stage`) executed entirely inside one subagent loses its
+> writer≠evaluator separation SILENTLY: the same agent that produced the
+> draft ends up also producing the gate verdict — self-certification with no
+> error surfaced. If you are running inside a subagent and cannot confirm the
+> `Agent` tool is available, STOP and surface this to the parent orchestrator
+> instead of proceeding with a self-reviewed verdict.
+
 ### Why two agents, two personas
 
 Separation keeps each role honest:

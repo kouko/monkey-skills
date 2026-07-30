@@ -24,6 +24,11 @@ before delivery**. It runs only after `copywriting-ethics-check-stage`
 - **Preconditions** — `envelope.ethics_verdict == "PASS"`. If this
   field is missing or not `PASS`, stop and return to the orchestrator;
   the pipeline MUST pass Phase 7 first.
+- **Nested-dispatch guard** — gate evaluations REQUIRE a real Agent-tool
+  dispatch of `copywriter-evaluator`; if you are running inside a subagent
+  (no Agent tool), STOP and surface to the parent orchestrator — never
+  degrade to reviewing your own draft (full rationale: `../../CLAUDE.md
+  §agents/copywriter-evaluator.md (evaluator)`).
 
 ## Preconditions
 
@@ -218,7 +223,7 @@ On `NEEDS_REVISION`: envelope returned to Phase 4 drafter with
   separate SHOULD gate.
 - Do NOT paraphrase `checklists/persuasion-framework-adherence-checklist.md`
   or `rubrics/form-appropriate-gate.md` — byte-identical copies from
-  `domain-teams/skills/copywriting-team/`.
+  `domain-teams/skills/copywriting-team/`. <!-- CHK-SKL-011-exempt: provenance citation -->
 - Do NOT run this skill before `ethics_verdict == "PASS"`.
 - Do NOT exceed 2 revise rounds silently — escalate to the user on
   round 3.

@@ -29,6 +29,11 @@ whether Phase 8 (form gate) may run.
   小霜「嘘をつかない」) boundaries are not subject to user override.
   The user may edit the draft and re-submit, but cannot waive a
   `FAIL_FATAL`.
+- **Nested-dispatch guard** — gate evaluations REQUIRE a real Agent-tool
+  dispatch of `copywriter-evaluator`; if you are running inside a subagent
+  (no Agent tool), STOP and surface to the parent orchestrator — never
+  degrade to reviewing your own draft (full rationale: `../../CLAUDE.md
+  §agents/copywriter-evaluator.md (evaluator)`).
 
 ## Input — Envelope Shape
 
@@ -219,8 +224,8 @@ unchanged envelope plus the findings block to the user, then stop.
 - Do NOT modify the draft beyond applying literal FIXABLE notes.
 - Do NOT paraphrase `checklists/ethics-checklist.md` or
   `standards/persuasion-ethics.md` — they are byte-identical copies
-  from `domain-teams/skills/copywriting-team/`. Drift is a CLAUDE.md
-  violation.
+  from `domain-teams/skills/copywriting-team/`. <!-- CHK-SKL-011-exempt: provenance citation -->
+  Drift is a CLAUDE.md violation.
 - Do NOT launch `copywriting-form-check-stage` until this gate
   returns `PASS`.
 - Do NOT merge this skill's evaluator logic into Phase 8 to save a

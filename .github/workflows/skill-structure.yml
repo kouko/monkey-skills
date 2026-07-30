@@ -58,6 +58,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: python3 scripts/check-skill-structure.py loom-product-principles
 
+      - name: Run check-skill-structure.py against copywriting-toolkit
+        if: ${{ !cancelled() }}
+        run: python3 scripts/check-skill-structure.py copywriting-toolkit
+
   shared-conventions-drift:
     name: dev-workflow shared conventions drift
     runs-on: ubuntu-latest

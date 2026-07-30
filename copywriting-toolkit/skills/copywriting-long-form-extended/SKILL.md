@@ -19,7 +19,7 @@ Run this skill when the brief targets any of:
 - Content-marketing long-form with a soft sell at the end
 - Any long-form brief where PASONA's problem-agitation arc feels culturally wrong for the audience
 
-Source workflow: `domain-teams/skills/copywriting-team/SKILL.md` § Long-Form Extended (QUEST / PASTOR).
+Source workflow: `domain-teams/skills/copywriting-team/SKILL.md` § Long-Form Extended (QUEST / PASTOR). <!-- CHK-SKL-011-exempt: provenance citation -->
 
 Route away when:
 - Audience is JP-first with strong problem-agitation tolerance → `copywriting-long-form-pasona`
@@ -98,7 +98,7 @@ See `standards/long-form-extended-frameworks.md` for the full canon and `protoco
 
 ## Inline Duplication Notice
 
-`standards/persuasion-psychology-anchor.md` is a byte-identical copy of the source in `domain-teams/skills/copywriting-team/standards/`. Drift-sync across the 5 Phase-4 workflow skills is accepted cost — see `copywriting-toolkit/CLAUDE.md` § Inline-Duplication Drift Risk.
+`standards/persuasion-psychology-anchor.md` is a byte-identical copy of the source in `domain-teams/skills/copywriting-team/standards/`. Drift-sync across the 5 Phase-4 workflow skills is accepted cost — see `copywriting-toolkit/CLAUDE.md` § Inline-Duplication Drift Risk. <!-- CHK-SKL-011-exempt: provenance citation -->
 
 Note: this skill shares `protocols/write-long-form-copy.md` verbatim with `copywriting-long-form-pasona`. The protocol dispatches on `framework_selected` — each skill's own Type-A standard (pasona-canon vs extended-frameworks) carries the framework-specific stage definitions.
 

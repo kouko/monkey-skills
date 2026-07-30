@@ -20,7 +20,7 @@ Run this skill when the brief targets any of:
 - Article-format content with light action prompt at the end
 - Light LP click-through copy
 
-Source workflow: `domain-teams/skills/copywriting-team/SKILL.md` § Light-Action Copy Writing (PREP / CREMA).
+Source workflow: `domain-teams/skills/copywriting-team/SKILL.md` § Light-Action Copy Writing (PREP / CREMA). <!-- CHK-SKL-011-exempt: provenance citation -->
 
 Route away when:
 - Brief is heavy-action (purchase, high-ticket) → `copywriting-long-form-pasona` or `copywriting-long-form-extended`
@@ -101,7 +101,7 @@ See `standards/light-action-frameworks.md` for the full canon, `standards/sns-ev
 
 ## Inline Duplication Notice
 
-`standards/persuasion-psychology-anchor.md` (5-way duplicate across Phase-4 workflow skills) and `standards/sns-evolution-aisas-ulssas.md` (2-way duplicate with `copywriting-long-form-pasona`) are byte-identical copies of the source in `domain-teams/skills/copywriting-team/standards/`. Drift-sync is accepted cost — see `copywriting-toolkit/CLAUDE.md` § Inline-Duplication Drift Risk.
+`standards/persuasion-psychology-anchor.md` (5-way duplicate across Phase-4 workflow skills) and `standards/sns-evolution-aisas-ulssas.md` (2-way duplicate with `copywriting-long-form-pasona`) are byte-identical copies of the source in `domain-teams/skills/copywriting-team/standards/`. Drift-sync is accepted cost — see `copywriting-toolkit/CLAUDE.md` § Inline-Duplication Drift Risk. <!-- CHK-SKL-011-exempt: provenance citation -->
 
 Note: this skill shares `protocols/write-short-form-copy.md` verbatim with `copywriting-short-form`. The protocol dispatches on `form` — each skill's own Type-A standard (catchcopy-canon vs light-action-frameworks) carries the framework-specific stage definitions.
 

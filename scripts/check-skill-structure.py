@@ -44,7 +44,14 @@ gate, not here):
                             inline backticks (path resolution examples,
                             anti-pattern documentation, primary source
                             citations to repo SSOT files outside the
-                            plugin)
+                            plugin). A line carrying the literal marker
+                            `<!-- CHK-SKL-011-exempt:` is exempted from
+                            THIS check only (e.g. an intentional
+                            provenance citation to the byte-identical
+                            source tier — see copywriting-toolkit
+                            CLAUDE.md §Provenance & Divergence
+                            Principle); the marker does not exempt any
+                            other CHK-SKL-* rule
     CHK-SKL-012 (FATAL)  — directory layout: required subdirectories
                             `standards/`, `protocols/`, `checklists/`,
                             `rubrics/`; optional `research/`; any
@@ -326,10 +333,18 @@ PLUGIN_ROOTED_PATH = re.compile(r"\bdomain-teams/skills/[A-Za-z0-9_./-]+")
 # Subdirectories whose files are read by worker/evaluator at runtime.
 RUNTIME_SUBDIRS = ("standards", "protocols", "checklists", "rubrics")
 
+# Literal marker that exempts a single line from CHK-SKL-011 only. Used for
+# intentional provenance citations (e.g. copywriting-toolkit's Tier-1
+# byte-identical policy naming its domain-teams source) that are not runtime
+# path dependencies. Does not exempt any other CHK-SKL-* rule.
+CHK_SKL_011_EXEMPT_MARKER = "<!-- CHK-SKL-011-exempt:"
+
 
 def _path_check_lines(text: str, file_label: Path) -> list[CheckError]:
     errors: list[CheckError] = []
     for lineno, line in enumerate(text.splitlines(), start=1):
+        if CHK_SKL_011_EXEMPT_MARKER in line:
+            continue
         for match in ABSOLUTE_PATH.finditer(line):
             errors.append(
                 CheckError(

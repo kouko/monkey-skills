@@ -18,7 +18,7 @@ Run this skill when the brief targets any of:
 - Mid-form EC content where Benefit-first ordering is required
 - Product description with evidence / spec layering (not pure feature bullets)
 
-Source workflow: `domain-teams/skills/copywriting-team/SKILL.md` § Mid-Form EC Copy Writing.
+Source workflow: `domain-teams/skills/copywriting-team/SKILL.md` § Mid-Form EC Copy Writing. <!-- CHK-SKL-011-exempt: provenance citation -->
 
 Route away when:
 - Brief is a 7-15 char headline → `copywriting-short-form`
@@ -92,7 +92,7 @@ See `standards/mid-form-beaf-canon.md` for the full canon and `protocols/write-m
 
 ## Inline Duplication Notice
 
-`standards/persuasion-psychology-anchor.md` is a byte-identical copy of the source in `domain-teams/skills/copywriting-team/standards/`. Drift-sync across the 5 Phase-4 workflow skills is accepted cost — see `copywriting-toolkit/CLAUDE.md` § Inline-Duplication Drift Risk.
+`standards/persuasion-psychology-anchor.md` is a byte-identical copy of the source in `domain-teams/skills/copywriting-team/standards/`. Drift-sync across the 5 Phase-4 workflow skills is accepted cost — see `copywriting-toolkit/CLAUDE.md` § Inline-Duplication Drift Risk. <!-- CHK-SKL-011-exempt: provenance citation -->
 
 ## Output
 

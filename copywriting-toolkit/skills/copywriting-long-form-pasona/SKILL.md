@@ -19,7 +19,7 @@ Run this skill when the brief targets any of:
 - Long CM copy / video script prose
 - High-ticket purchase (heavy-action) flows where PASONA-family fits best
 
-Source workflow: `domain-teams/skills/copywriting-team/SKILL.md` § Long-Form Copy Writing.
+Source workflow: `domain-teams/skills/copywriting-team/SKILL.md` § Long-Form Copy Writing. <!-- CHK-SKL-011-exempt: provenance citation -->
 
 Route away when:
 - Audience is EN / international or brief favors education-first / story-first positioning → `copywriting-long-form-extended` (QUEST / PASTOR)
@@ -100,7 +100,7 @@ See `standards/long-form-pasona-canon.md` for the full canon, `standards/sns-evo
 
 ## Inline Duplication Notice
 
-`standards/persuasion-psychology-anchor.md` (5-way duplicate across Phase-4 workflow skills) and `standards/sns-evolution-aisas-ulssas.md` (2-way duplicate with `copywriting-light-action`) are byte-identical copies of the source in `domain-teams/skills/copywriting-team/standards/`. Drift-sync is accepted cost — see `copywriting-toolkit/CLAUDE.md` § Inline-Duplication Drift Risk.
+`standards/persuasion-psychology-anchor.md` (5-way duplicate across Phase-4 workflow skills) and `standards/sns-evolution-aisas-ulssas.md` (2-way duplicate with `copywriting-light-action`) are byte-identical copies of the source in `domain-teams/skills/copywriting-team/standards/`. Drift-sync is accepted cost — see `copywriting-toolkit/CLAUDE.md` § Inline-Duplication Drift Risk. <!-- CHK-SKL-011-exempt: provenance citation -->
 
 ## Output
 

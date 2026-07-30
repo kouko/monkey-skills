@@ -1,7 +1,11 @@
 ---
 name: using-copywriting-toolkit
 description: |
-  Router for copywriting — use BEFORE any draft, ideation, audit, or tagline/headline work on a raw brief (landing page / email / sales letter / SNS / voice guide / audit). Routes new briefs, audits, or resumed pipelines via a 9-phase decision tree.
+  Router for copywriting — use BEFORE any draft, ideation, audit, or
+  tagline/headline work on a raw brief (landing page / email / sales letter /
+  SNS / voice guide / audit). Routes new briefs, audits, or resumed pipelines
+  via a 9-phase decision tree. Triggers: 寫文案 / 廣告文案 / 文案發想 / コピーライティング /
+  キャッチコピー / セールスコピー.
 ---
 
 # using-copywriting-toolkit
@@ -202,6 +206,8 @@ The audit skill runs its own Phase 0 intake (light — review focus), identifies
 
 Canonical between-skill artifact. Every downstream skill reads this envelope, appends its layer, updates `next_stage`, and returns. Envelope is the single source of truth — no side-channel state.
 
+**Canonical schema + field obligations: `../../CLAUDE.md §Handoff Envelope` + `§Immutable fields — preservation contract`.** The block below is an illustrative example only — it does not restate per-field semantics. On any conflict, the CLAUDE.md schema wins.
+
 ```json
 {
   "phase": "phase-N-<name>",
@@ -234,6 +240,9 @@ Canonical between-skill artifact. Every downstream skill reads this envelope, ap
     "form_appropriate": "...",
     "neta_safety": "..."
   },
+  "express_mode_used": true,
+  "audit_trail": ["... append-only event log, see CLAUDE.md §Audit Trail ..."],
+  "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "notes": ["loose-coupling recommendations, reroute hints, etc."],
   "next_stage": "copywriting-<skill-name>"
 }

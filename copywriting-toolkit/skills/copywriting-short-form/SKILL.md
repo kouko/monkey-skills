@@ -17,7 +17,7 @@ Run this skill when the brief targets any of:
 - Product naming catchcopy
 - Short キャッチコピー for campaigns (landing-page hero copy stays in long-form)
 
-Source workflow: `domain-teams/skills/copywriting-team/SKILL.md` § Short-Form キャッチコピー Writing.
+Source workflow: `domain-teams/skills/copywriting-team/SKILL.md` § Short-Form キャッチコピー Writing. <!-- CHK-SKL-011-exempt: provenance citation -->
 
 Route away when:
 - Brief needs mid-form EC product body → `copywriting-mid-form`
@@ -92,7 +92,7 @@ See `standards/short-form-catchcopy-canon.md` for the full canon and `protocols/
 
 ## Inline Duplication Notice
 
-`standards/persuasion-psychology-anchor.md` is a byte-identical copy of the source in `domain-teams/skills/copywriting-team/standards/`. Drift-sync across the 5 Phase-4 workflow skills is accepted cost — see `copywriting-toolkit/CLAUDE.md` § Inline-Duplication Drift Risk.
+`standards/persuasion-psychology-anchor.md` is a byte-identical copy of the source in `domain-teams/skills/copywriting-team/standards/`. Drift-sync across the 5 Phase-4 workflow skills is accepted cost — see `copywriting-toolkit/CLAUDE.md` § Inline-Duplication Drift Risk. <!-- CHK-SKL-011-exempt: provenance citation -->
 
 ## Output
 

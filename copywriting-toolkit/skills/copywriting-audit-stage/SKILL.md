@@ -77,7 +77,7 @@ Audit-stage reuses Phase 5-8 gates. If any downstream gate bounces (e.g. `voice_
 
 ## Workflow
 
-Uses `protocols/copy-audit.md` (cp'd verbatim from `domain-teams/skills/copywriting-team/`).
+Uses `protocols/copy-audit.md` (cp'd verbatim from `domain-teams/skills/copywriting-team/`). <!-- CHK-SKL-011-exempt: provenance citation -->
 
 ```
 Phase 1 — Type ID            protocol Step 1   form type + framework detected
@@ -168,6 +168,11 @@ If the user asks for revised rewrites (not just findings):
 - **Ethics gate verdict on original is reported even if NEEDS_REVISION** — a failing audit is a valid audit; the user needs to know the legal / ethical exposure.
 - **Framework detection before gates** — form-check-stage cannot run without knowing the framework. If the copy resists classification, the protocol's Phase 1 returns "framework_detected: unknown" and form-check-stage runs in exploratory mode per its own §Unknown-form handling.
 - **Do NOT duplicate gate files here** — this skill reuses `copywriting-ethics-check-stage/` + `copywriting-form-check-stage/` + `copywriting-voice-tone-stage/` gates via the orchestrator. Drift-sync risk avoided.
+- **Nested-dispatch guard** — gate evaluations REQUIRE a real Agent-tool
+  dispatch of `copywriter-evaluator`; if you are running inside a subagent
+  (no Agent tool), STOP and surface to the parent orchestrator — never
+  degrade to reviewing your own draft (full rationale: `../../CLAUDE.md
+  §agents/copywriter-evaluator.md (evaluator)`).
 
 ## Next Stage
 
