@@ -325,8 +325,9 @@ Neta Safety gate before advancing.** The gate is evaluator-only.
 Verdict enum: `PASS` | `PASS_WITH_NOTES` | `NEEDS_REVISION`. On
 `NEEDS_REVISION`, worker addresses specific dimension feedback and
 re-runs Phase C-D (not A-B — candidate catalog stays stable). On
-`PASS_WITH_NOTES`, craft-class notes travel with the envelope as
-recorded observations — no re-run duty.
+`PASS_WITH_NOTES`, the verdict's notes (the triggering contract-class
+🟡 detail plus any craft-class observations) travel with the envelope
+as recorded observations — no re-run duty.
 
 ## Handoff
 
