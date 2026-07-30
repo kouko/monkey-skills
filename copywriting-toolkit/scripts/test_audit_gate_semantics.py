@@ -122,9 +122,9 @@ def test_no_local_restatement_of_class_definitions():
     # WHY: audit-stage POINTS at the CLAUDE.md vocabulary; it does not
     # transcribe the full contract/craft definitions (that privilege is
     # copywriter-evaluator.md's alone, per CLAUDE.md's own wording).
-    window = _norm(_variant_window(_text()))
+    window = _norm(_variant_window(_text())).lower()
     for phrase in CLAUDE_MD_DEFINITION_PHRASES_NOT_RESTATED:
-        assert phrase not in window, (
+        assert phrase.lower() not in window, (
             f"full definition phrase {phrase!r} must not be restated in "
             "copywriting-audit-stage/SKILL.md"
         )
