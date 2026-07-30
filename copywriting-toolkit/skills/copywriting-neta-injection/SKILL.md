@@ -196,7 +196,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
     }
   ],
   "express_mode_used": true,
-  "audit_trail": ["... append-only event log through Phase 2, see CLAUDE.md §Audit Trail ..."],
+  "audit_trail": ["... append-only event log through Phase 3, see CLAUDE.md §Audit Trail ..."],
   "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "next_stage": "copywriting-<form>"
 }

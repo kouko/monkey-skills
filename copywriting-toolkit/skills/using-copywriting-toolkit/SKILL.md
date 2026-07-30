@@ -198,7 +198,7 @@ Hand off to `copywriting-audit-stage` with envelope:
   "phase": "phase-audit-entry",
   "form": "<if known>",
   "brief": {
-    "review_focus": "<framework | ethics | voice | form | all>"
+    "review_focus": "<structure | ethics | voice | all>"
   },
   "external_copy": "...",
   "next_stage": "copywriting-audit-stage"

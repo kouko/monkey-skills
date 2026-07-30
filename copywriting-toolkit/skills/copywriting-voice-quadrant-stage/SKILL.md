@@ -139,10 +139,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
     "user_intent_signal": "original cross-language maestro the user cited, preserved for audit — e.g. '糸井重里'. null when no cross-language signal."
   },
   "express_mode_used": true,
-  "audit_trail": [
-    "... prior entries unchanged ...",
-    { "at": "2026-07-30T02:03:00Z", "event": "skill-exited", "skill": "copywriting-voice-quadrant-stage", "detail": "Phase 5 positioned" }
-  ],
+  "audit_trail": ["... prior entries unchanged, see CLAUDE.md §Audit Trail (router appends skill-exited after return) ..."],
   "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "next_stage": "copywriting-voice-tone-stage"
 }
