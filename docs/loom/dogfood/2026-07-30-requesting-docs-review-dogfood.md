@@ -67,6 +67,36 @@ in place — softened wording, date removed, number kept, no source.
 - Bonus precision: flagged the corrected citation now pointing at the function
   header (:10) instead of the clamp line (:16) as a 🟢 nit — right severity.
 
+## Haiku addendum (post-close-out, user-requested weak-tier coverage)
+
+D1 and D3 re-ran at **haiku** (the weakest tier) against the same fixtures,
+cold. Both pass:
+
+- **D1-haiku**: both planted instruction defects caught 🔴 (incl. the
+  outside-diff contradiction — whole-artifact duty holds at haiku); 43% claim
+  correctly `evidence`/missing-population; verdict NEEDS_REVISION correct.
+  Observed weak-tier characteristic, recorded not fixed: one borderline extra
+  instruction-🟡 ("upload the artifact printed on the last line" flagged as
+  ambiguous) that the sonnet run did not raise — haiku arms run slightly
+  noisier, and in production a noisy arm's extra instruction-🟡s enter the
+  union and can push a branch toward NEEDS_REVISION. A measurement item for
+  real-branch data, not a contract defect.
+- **D3-haiku**: F1 fix-verified with quotes; F2 `not-fixed`, carried as the
+  same evidence-class record, no re-litigation; verdict **PASS — the strictly
+  correct token** (zero instruction findings), i.e. the evidence-class trap
+  holds at the weakest tier, with cleaner token discipline than the sonnet
+  run. One metadata slip: standards_version reported 0.41.0 (stale plugin
+  cache read) — cosmetic.
+
+Coverage after addendum: agent-contract layer verified at haiku AND sonnet;
+Check 16 at haiku. The remaining weak-tier gap is unchanged and structural:
+the ORCHESTRATOR layer (cap/STOP, round-2 packet, union/worse-of/mint-once)
+has only run under the session model (Fable) — including the live close-out's
+four arms. It is a post-merge probe by necessity (subagents cannot dispatch
+subagents; headless sessions install the marketplace's GitHub-main plugin, so
+a pre-merge headless probe would exercise 0.41.0). Re-trigger recorded in
+docs/loom/BACKLOG.md §"Standalone docs-review skill".
+
 ## Conclusions
 
 1. The agent-contract layer of the convergence design survives cold weak-tier
