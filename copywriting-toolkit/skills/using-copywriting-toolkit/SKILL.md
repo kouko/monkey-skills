@@ -18,6 +18,20 @@ Entry router + validator for the `copywriting-toolkit` plugin. Three responsibil
 
 This skill does NOT draft copy, run gates, or produce verdicts. It only routes, validates, and packages the handoff envelope. Each downstream skill owns its own SKILL.md, standards, and (where applicable) gates.
 
+## Envelope Validation
+
+At EVERY stage boundary — before handing an envelope off to the next skill, and after a skill returns one — serialize the current envelope to the run's work file and run:
+
+```
+python3 <plugin-root>/scripts/validate_envelope.py <file> [--prev <file>]
+```
+
+Proceed ONLY on exit 0. Any non-zero exit is STOP and surface to the operator — never hand-repair the envelope silently.
+
+Once `seq > 1`, passing `--prev <previous-seq-file>` is a MUST — omitting it does not fail the call, it silently weakens it. Only the very first call (`envelope-1.json`) may omit `--prev`.
+
+Mechanics — work-file convention, exit-code meanings, alt-entry minimal shape — are NOT restated here: see `../../CLAUDE.md §Envelope Validation`.
+
 ## When to Use
 
 - User arrives with a copywriting request but has not chosen a specific skill (raw intent: "write an LP", "headline options", "audit this email").
