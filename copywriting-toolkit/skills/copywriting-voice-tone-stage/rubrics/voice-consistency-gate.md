@@ -44,6 +44,10 @@ This gate does NOT review:
 
 ### Dimension 1: Brand Voice Stability (RUB-CTW-VC-001)
 
+**Class**: contract — checked against the declared voice guide's 4-axis
+SSOT (Formality / Seriousness / Respectfulness / Enthusiasm); an
+objective checkable referent when a guide is provided.
+
 Whether voice maintains a stable persona across multiple stages /
 candidates. Mailchimp principle: "Voice doesn't change much from day
 to day."
@@ -63,6 +67,11 @@ to day."
   tone adjustment.
 
 ### Dimension 2: Tone Contextual Appropriateness (RUB-CTW-VC-002)
+
+**Class**: craft — qualitative register/nuance fit against context;
+no artifact-declared referent (the Mailchimp table is guidance, not a
+metadata field this artifact commits to), and warnings turn on taste
+calls ("adjustment range insufficient", "too serious").
 
 Against the Mailchimp Tone context-switching table (onboarding / error /
 crisis / celebration), whether context-specific tone is appropriate.
@@ -85,6 +94,10 @@ Voice is constant, Tone varies (Mailchimp canonical).
   embrace," all explicitly designed.
 
 ### Dimension 3: Voice Maestro Reference Fidelity (RUB-CTW-VC-003)
+
+**Class**: contract — checked against a maestro reference declared in
+artifact metadata or input brief; an objective checkable referent when
+declared, `not_applicable` otherwise.
 
 When a voice maestro (糸井重里 / 岩崎俊一 / 眞木準 / 谷山雅計) is
 declared as the reference voice in artifact metadata or input brief,
@@ -116,6 +129,10 @@ whether the output is faithful to that maestro's canonical style.
 
 ### Dimension 4: Clarity of Voice Tradition Choice (RUB-CTW-VC-004)
 
+**Class**: contract — checked against the voice tradition declared in
+artifact metadata; an objective checkable referent (tradition stated
+vs. tradition executed).
+
 Whether the voice tradition is clearly chosen for the target audience.
 Three recognized traditions: **JP emotional** (糸井 / 岩崎 — 余韻,
 state-proposal, impermanence), **Anglo benefit-clear** (Ogilvy long-
@@ -143,6 +160,10 @@ cross-tradition transplant errors.
   output. If hybrid, the intent and proportion are explicitly stated.
 
 ### Dimension 5: Voice Quadrant Coherence (RUB-CTW-VC-005)
+
+**Class**: contract — checked against a declared quadrant position via
+the mechanical distinguishability table below (numeric thresholds); an
+objective checkable referent, `not_applicable` without a declaration.
 
 When a voice quadrant position (Q1 Authority-Reason / Q2 Authority-
 Emotion / Q3 Affinity-Emotion / Q4 Affinity-Reason) is declared in
@@ -178,6 +199,11 @@ declared quadrant. Grounded in `voice-quadrant-positioning.md`.
   dimension is `not_applicable` (excluded from verdict calculation).
 
 ### Dimension 6: Over-Mimic Adherence (RUB-CTW-VC-006) — v1.13.0 (simplified)
+
+**Class**: contract — checked against the anchor's registered
+mitigation clause (explicit forbidden-trope list); an objective
+checkable referent when a mitigation is active, `not_applicable`
+otherwise.
 
 When Pass 3 runs (unified flow, v1.13.0), the selected anchor may carry over-mimic mitigation clauses. This dimension checks the output for leaked tropes forbidden by the applicable mitigation.
 
@@ -216,6 +242,10 @@ Full 20-entry registry in [voice-anchor-meta.md §Over-mimic mitigation registry
 
 ### Dimension 7: Thesis Alignment (RUB-CTW-VC-007) — v1.3.4
 
+**Class**: contract — checked against the declared
+`envelope.message_thesis` field; an objective checkable referent when
+present, `not_applicable` otherwise.
+
 When Pass 3 rewrites the draft (any branch: Craft Gate / Register Signal / Axis Extreme), the anchor's voice signature can pull the text toward register-canonical tropes that **subtly contradict** `envelope.message_thesis`. This dimension checks the Pass 3 output against the thesis to catch anchor-induced thesis drift.
 
 **Scope**: applies ONLY when `envelope.message_thesis` is non-empty AND Pass 3 ran (i.e., `tone_notes.register_signal_applied` is non-null). If Pass 3 skipped, `not_applicable`.
@@ -237,10 +267,18 @@ When Pass 3 rewrites the draft (any branch: Craft Gate / Register Signal / Axis 
 
 ## Verdict Rules
 
-- Any single 🔴 fatal → `NEEDS_REVISION` (escalate to user)
-- **2 or more** 🟡 warnings → `NEEDS_REVISION`
-- **1** 🟡 warning (no 🔴) → `PASS_WITH_NOTES` (auto-revise trigger)
-- All 🟢 clear → `PASS`
+Verdict aggregation is contract-class-only — see `../../CLAUDE.md
+§Gate Convergence Vocabulary` for the canonical `class: contract |
+craft` definitions (not restated here; CLAUDE.md wins on any
+disagreement). Each dimension above carries its own `**Class**`
+annotation; craft-class findings (Dimension 2) are recorded as notes
+for the operator and downstream stages but never gate, alone or in
+accumulation.
+
+- Any contract-class 🔴 fatal → `NEEDS_REVISION` (escalate to user)
+- Any contract-class 🟡 warning (no contract-class 🔴) → `PASS_WITH_NOTES` (auto-revise trigger)
+- No contract-class 🔴/🟡 findings → `PASS` (craft-class findings, if
+  any, travel as recorded notes)
 - Dimensions 3 (maestro reference), 5 (quadrant coherence), 6
   (over-mimic adherence), and 7 (thesis alignment) are
   `not_applicable` for artifacts without the respective declaration /
