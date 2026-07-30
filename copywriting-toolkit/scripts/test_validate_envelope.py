@@ -338,6 +338,88 @@ def test_needs_revision_verdict_needs_no_entry(tmp_path):
     assert r.returncode == 0, r.stderr
 
 
+# ------------------------------------------- exit 3 non-canonical verdict tokens
+
+
+def test_gate_verdict_lowercase_variant_fails_schema(tmp_path):
+    # WHY: T8 probe — {"gate_verdict": "Pass"} never hit the enum, so the
+    # manual-PASS ban (exit 7) silently never fired on non-canonical tokens.
+    envelope = canonical_envelope()
+    envelope["gate_verdict"] = "Pass"
+    r = run_validator(tmp_path, envelope)
+    assert r.returncode == 3
+    assert "gate_verdict" in r.stderr
+
+
+def test_gate_verdict_passed_token_fails_schema(tmp_path):
+    envelope = canonical_envelope()
+    envelope["gate_verdict"] = "PASSED"
+    r = run_validator(tmp_path, envelope)
+    assert r.returncode == 3
+    assert "gate_verdict" in r.stderr
+
+
+def test_ethics_verdict_emoji_token_fails_schema(tmp_path):
+    envelope = canonical_envelope()
+    envelope["ethics_verdict"] = "✅ PASS"
+    r = run_validator(tmp_path, envelope)
+    assert r.returncode == 3
+    assert "ethics_verdict" in r.stderr
+
+
+def test_form_verdict_passed_token_fails_schema(tmp_path):
+    envelope = canonical_envelope()
+    envelope["form_verdict"] = "PASSED"
+    r = run_validator(tmp_path, envelope)
+    assert r.returncode == 3
+    assert "form_verdict" in r.stderr
+
+
+def test_canonical_verdict_tokens_still_pass_schema(tmp_path):
+    # WHY: the enum guard must not reject the legitimate canonical tokens.
+    envelope = canonical_envelope()
+    envelope["ethics_verdict"] = "PASS_WITH_NOTES"
+    envelope["form_verdict"] = "NEEDS_REVISION"
+    r = run_validator(tmp_path, envelope)
+    assert r.returncode == 0, r.stderr
+
+
+# -------------------------------- exit 7 gate-verdict entry skill authorship pin
+
+
+def test_gate_verdict_entry_from_non_evaluator_skill_fails(tmp_path):
+    # WHY: CLAUDE.md §Audit Trail pins copywriter-evaluator as the sole writer
+    # of gate-verdict events; a router-authored entry (e.g.
+    # "using-copywriting-toolkit") must not legitimize a PASS. The positive
+    # direction (skill == "copywriter-evaluator" legitimizes PASS) is already
+    # pinned by test_pass_with_matching_evaluator_entry_passes above.
+    envelope = canonical_envelope()
+    envelope["gate_verdict"] = "PASS"
+    entry = _gate_verdict_entry("PASS")
+    entry["skill"] = "using-copywriting-toolkit"
+    envelope["audit_trail"].append(entry)
+    r = run_validator(tmp_path, envelope)
+    assert r.returncode == 7
+    assert "gate-verdict" in r.stderr
+
+
+# ------------------------------------------ multi-class aggregation + exit pin
+
+
+def test_multiple_violation_classes_all_reported_exit_is_first_class(tmp_path):
+    # WHY: pins the "all violation classes printed to stderr, exit code is the
+    # FIRST failing class in evaluation order" contract from the module
+    # docstring — previously exercised only implicitly, never asserted.
+    envelope = canonical_envelope()
+    del envelope["express_mode_used"]  # schema violation (class 3)
+    envelope["retries"]["total_retries"] = 99  # counters violation (class 4)
+    envelope["gate_verdict"] = "PASS"  # manual-PASS violation (class 7)
+    r = run_validator(tmp_path, envelope)
+    assert r.returncode == 3  # schema is first in evaluation order
+    lines = [l for l in r.stderr.splitlines() if l.strip()]
+    assert len(lines) >= 3, r.stderr
+
+
 # ------------------------------------------------- exit 8 round-2 prior_findings
 
 

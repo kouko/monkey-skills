@@ -38,9 +38,14 @@ is the FIRST failing class in this order):
      non-empty prior_findings block (Gate Convergence Vocabulary round-2
      duty, enforced structurally per plan Open Q3)
 
-Enum SSOT: phase + audit event enums are read from
-.claude-plugin/envelope.schema.json next to this plugin — no hardcoded
-copy to drift. Stdlib only.
+Enum SSOT: phase + audit event enums, plus the gate_verdict / ethics_verdict
+/ form_verdict enums, are read from .claude-plugin/envelope.schema.json next
+to this plugin — no hardcoded copy to drift. Stdlib only.
+
+Known-permissive check: retries.* counters are validated as non-negative
+integers only (schema also declares maxima 3/2/4) — the router re-checks
+those maxima itself for its own HALT decision, so this validator leaves
+them unenforced here rather than duplicating that authority.
 """
 from __future__ import annotations
 
@@ -55,6 +60,8 @@ SCHEMA_PATH = Path(__file__).resolve().parent.parent / ".claude-plugin" / "envel
 ALT_ENTRY_PHASE = "phase-audit-entry"
 REGATE_PHASES = {"phase-7-ethics", "phase-8-form"}
 PASSING_VERDICTS = {"PASS", "PASS_WITH_NOTES"}
+VERDICT_FIELDS = ("gate_verdict", "ethics_verdict", "form_verdict")
+EVALUATOR_SKILL = "copywriter-evaluator"
 COUNTERS = ("bounce_round", "revise_round_count", "total_retries")
 IMMUTABLE_PATHS = (
     "express_mode_used",
@@ -89,14 +96,17 @@ def _load_json_object(path: Path, label: str) -> dict:
     return data
 
 
-def _schema_enums() -> tuple[list, list]:
+def _schema_enums() -> tuple[list, list, dict[str, list]]:
     schema = _load_json_object(SCHEMA_PATH, f"envelope schema {SCHEMA_PATH}")
     try:
         phases = schema["properties"]["phase"]["enum"]
         events = schema["properties"]["audit_trail"]["items"]["properties"]["event"]["enum"]
+        verdict_enums = {
+            field: schema["properties"][field]["enum"] for field in VERDICT_FIELDS
+        }
     except (KeyError, TypeError) as exc:
         _fail_usage(f"envelope schema missing expected enum: {exc}")
-    return phases, events
+    return phases, events, verdict_enums
 
 
 def _dig(obj, dotted: str):
@@ -109,7 +119,9 @@ def _dig(obj, dotted: str):
     return True, node
 
 
-def check_schema(env: dict, phases: list, events: list) -> list[str]:
+def check_schema(
+    env: dict, phases: list, events: list, verdict_enums: dict[str, list]
+) -> list[str]:
     problems = []
     phase = env.get("phase")
     if not isinstance(phase, str) or phase not in phases:
@@ -157,6 +169,11 @@ def check_schema(env: dict, phases: list, events: list) -> list[str]:
                 value = retries.get(counter)
                 if not isinstance(value, int) or isinstance(value, bool) or value < 0:
                     problems.append(f"retries.{counter} missing or not a non-negative integer")
+
+    for field in VERDICT_FIELDS:
+        value = env.get(field)
+        if value is not None and value not in verdict_enums.get(field, []):
+            problems.append(f"{field} must be one of the schema enum values, got {value!r}")
     return problems
 
 
@@ -236,6 +253,7 @@ def check_manual_pass(env: dict) -> list[str]:
             if (
                 isinstance(entry, dict)
                 and entry.get("event") == "gate-verdict"
+                and entry.get("skill") == EVALUATOR_SKILL
                 and isinstance(entry.get("detail"), str)
                 and token.search(entry["detail"])
             ):
@@ -274,10 +292,10 @@ def main(argv: list[str] | None = None) -> int:
 
     env = _load_json_object(Path(args.envelope), f"envelope {args.envelope}")
     prev = _load_json_object(Path(args.prev), f"--prev {args.prev}") if args.prev else None
-    phases, events = _schema_enums()
+    phases, events, verdict_enums = _schema_enums()
 
     classes: list[tuple[int, list[str]]] = [
-        (EXIT_SCHEMA, check_schema(env, phases, events)),
+        (EXIT_SCHEMA, check_schema(env, phases, events, verdict_enums)),
         (EXIT_COUNTERS, check_counters(env, prev)),
         (EXIT_IMMUTABLE, check_immutable(env, prev) if prev is not None else []),
         (EXIT_APPEND_ONLY, check_append_only(env, prev) if prev is not None else []),
