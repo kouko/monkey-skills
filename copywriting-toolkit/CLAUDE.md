@@ -172,7 +172,7 @@ python3 <plugin-root>/scripts/validate_envelope.py <file> [--prev <file>]
 
 Proceed ONLY on exit 0. Any non-zero exit is STOP and surface to the
 operator — never hand-repair the envelope silently. This mirrors the
-manual-PASS ban above (§What NOT to do): a human patching the JSON so the
+manual-PASS ban (§External Caller Guide → What NOT to do, below): a human patching the JSON so the
 next call passes is the same failure as a manual `gate_verdict: PASS`.
 
 ### Work-file convention
@@ -194,7 +194,8 @@ append-only (exit codes 4 / 5 / 6) are checked ONLY when `--prev` names
 the previous stage-boundary file — calling the validator on a single file
 in isolation silently SKIPS all three check classes; it is a weaker,
 insufficient validation, not an equivalent one. Every validation call at
-seq > 1 MUST pass `--prev <previous-seq-file>`. Only the very first call
+seq > 1 MUST pass `--prev envelope-<seq-1>.json` (the previous boundary
+file in the same run directory). Only the very first call
 (`envelope-1.json`, no predecessor) may omit it.
 
 ### What the validator ENFORCES vs what stays prose

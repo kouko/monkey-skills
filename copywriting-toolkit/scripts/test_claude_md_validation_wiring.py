@@ -27,7 +27,7 @@ def test_envelope_validation_section_exists_with_must_language():
     # and the exit-0 gate explicitly.
     text = _text()
     assert "## Envelope Validation" in text
-    section = text.split("## Envelope Validation", 1)[1]
+    section = text.split("## Envelope Validation", 1)[1].split("\n## ", 1)[0]
     assert "every stage boundary" in section.lower() or "EVERY stage boundary" in section
     assert "validate_envelope.py" in section
     assert "exit 0" in section
@@ -51,7 +51,7 @@ def test_prev_is_must_for_seq_greater_than_1():
     # calling it single-file at seq>1 silently SKIPS those classes. The
     # doc must make --prev a MUST, not an option, once seq>1.
     text = _text()
-    section = text.split("## Envelope Validation", 1)[1]
+    section = text.split("## Envelope Validation", 1)[1].split("\n## ", 1)[0]
     assert "--prev" in section
     assert "MUST" in section
     # the seq>1 condition must be named explicitly, not left implicit
@@ -66,7 +66,7 @@ def test_counter_enforcement_warnings_point_to_validator():
     # checks it.
     text = _text()
     assert "Monotonic — counters only increment" in text  # original prose preserved
-    section = text.split("## Envelope Validation", 1)[1]
+    section = text.split("## Envelope Validation", 1)[1].split("\n## ", 1)[0]
     assert "ENFORCES" in section or "enforces" in section
     assert "retries" in section.lower()
 
@@ -88,7 +88,7 @@ def test_alt_entry_minimal_shape_interaction_stated():
     # this must be stated so a caller doesn't assume alt-entry needs a
     # separate validation path.
     text = _text()
-    section = text.split("## Envelope Validation", 1)[1]
+    section = text.split("## Envelope Validation", 1)[1].split("\n## ", 1)[0]
     assert "phase-audit-entry" in section
     assert "express_mode_used" in section
     assert "omissible" in section
