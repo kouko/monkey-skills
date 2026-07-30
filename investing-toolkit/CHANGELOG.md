@@ -10,8 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed — `data-markets` description diet
 
 - Frontmatter `description` reworded and hard-wrapped at ≤76 chars/line
-  (no content dropped) — part of a cross-plugin pass trimming five
-  outlier skill descriptions.
+  (no trigger hook dropped; trimmed wording survives in each SKILL body)
+  — part of a cross-plugin pass trimming four outlier skill
+  descriptions.
 
 ## [v2.39.1] — 2026-07-27
 

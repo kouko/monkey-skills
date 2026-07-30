@@ -6,14 +6,6 @@ file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
-## [0.4.1] — 2026-07-30 — description diet
-
-### Changed
-
-- **`user-insights`**: frontmatter `description` reworded and
-  hard-wrapped at ≤76 chars/line (no content dropped) — part of a
-  cross-plugin pass trimming five outlier skill descriptions.
-
 ## [0.4.0] — 2026-07-25 — bba imperative in entry router
 
 ### Added
