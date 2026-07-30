@@ -228,7 +228,7 @@ Express Mode replaces Q1-Q10 **elicitation** with synthesis-plus-single-turn-con
 
 ## Gate Convergence Vocabulary (contract / craft) — canonical
 
-Canonical convergence semantics for EVERY gate in this plugin (Intake Completeness, Neta Safety, Voice Consistency, Ethics, Form 8a/8b, audit-stage reuse). Gate skills, rubrics, and the `copywriter-evaluator` contract POINT at this section — they do not restate it. If a gate document and this section ever disagree, this section wins.
+Canonical convergence semantics for EVERY gate in this plugin (Intake Completeness, Neta Safety, Voice Consistency, Ethics, Form 8a/8b, audit-stage reuse). Gate skills and rubrics POINT at this section; the `copywriter-evaluator` contract TRANSCRIBES these definitions verbatim with drift-pinned copies (a sanctioned exception to pointing-only, so the evaluator carries the definitions inline where it reads them) — either way, if a gate document and this section ever disagree, this section wins.
 
 **1. Every gate finding carries `class: contract | craft`.**
 

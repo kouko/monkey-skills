@@ -114,6 +114,21 @@ def test_old_yellow_accumulation_rule_absent():
     assert not re.search(r"two or more 🟡", text)
 
 
+def test_first_action_precedence_over_gate_file_verdict_rules():
+    # WHY: Mode 2 (:81-89) hardcodes contract-class aggregation, and mid-arc
+    # gate rubrics / future gates may still carry the retired verdict-rules
+    # block — :145 must scope to criteria only and state that Mode 2's
+    # aggregation wins over any verdict-rules block a gate_file carries.
+    window = _window("## First Action")
+    assert "defines your evaluation criteria" in window
+    assert "verdict rules" not in _norm(window).split("Precedence")[0], (
+        "First Action step 2 should scope to criteria only, not bundle "
+        "'verdict rules' before the precedence clause"
+    )
+    assert re.search(r"Mode 2['’]s contract-class aggregation", window)
+    assert re.search(r"WINS over any verdict-rules block", window)
+
+
 def test_prior_findings_check_round2_duty():
     # WHY: the round-2 duty is what makes the gate loop converge — prior
     # findings verified against quoted current draft text before anything new.

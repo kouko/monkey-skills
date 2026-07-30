@@ -142,7 +142,11 @@ Before evaluating:
 
 1. Read the gate_file and each standards file listed under Resource
    Paths.
-2. The gate_file defines your evaluation criteria and verdict rules.
+2. The gate_file defines your evaluation criteria.
+   **Precedence:** Mode 2's contract-class aggregation (§Mode 2 above)
+   WINS over any verdict-rules block a gate_file may carry — this
+   protects against both mid-arc gate rubrics that still carry the
+   retired count-based rule and future gates shipped with stale rules.
 3. If any path fails to read, report it — do NOT evaluate without
    criteria.
 
