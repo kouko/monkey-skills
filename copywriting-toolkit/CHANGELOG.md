@@ -1,5 +1,18 @@
 # copywriting-toolkit — CHANGELOG
 
+## v1.15.0 — 2026-07-30 (contract/craft gate convergence + envelope validator)
+
+Minor bump: new validator surface (first pytest suite for this plugin) plus a verdict-aggregation semantics change across every gate.
+
+- **Gate Convergence Vocabulary** (`CLAUDE.md` §Gate Convergence Vocabulary, canonical): every gate finding now carries `class: contract | craft`. Verdicts aggregate `contract`-class findings ONLY — `craft`-class findings are recorded but never gate, alone or in accumulation. A finding whose class is unclear is tagged `contract` (fail-closed). Adds a round-2 duty (a re-gate dispatch verifies prior findings verbatim against the current draft before raising anything new — re-litigation of a closed finding is forbidden) and an oscillation stop (a finding that resurfaces after being fix-verified ends the loop and surfaces to the operator regardless of remaining round headroom). Ethics FATAL/FIXABLE checklist semantics are unchanged by this vocabulary — it governs verdict aggregation, not what the ethics checklist means.
+- **Adopted across every gate surface**: `copywriter-evaluator.md` Mode-2 aggregation + prior-findings-check gains precedence over its own stale count-based verdict rules; `copywriting-form-check-stage` SKILL + rubric (rows annotated `Class:`, count-based Verdict Rules replaced); `copywriting-voice-quadrant-stage` + `copywriting-voice-tone-stage` SKILL gate passages; `copywriting-voice-consistency` rubric (rows annotated + verdict rules replaced + new DIVERGED header); `copywriting-audit-stage` variant re-gating aggregation.
+- **Tier-2 provenance amendment**: `CLAUDE.md` §Provenance & Divergence Principle gains a scoped "Exception — plugin-owned gate verdict rules" sanctioning this plan-mandated verdict-rules replacement (a rubric's `## Verdict Rules` block is plugin-owned enforcement mechanics, not upstream editorial prose — the additive-only + raise-upstream discipline is unchanged everywhere else). Logging the two rubric verdict-rules replacements (form-check, voice-consistency) here satisfies the exception's CHANGELOG-logging requirement.
+- **Envelope validator** (`scripts/validate_envelope.py`): schema / counter-monotonicity / immutable-field / append-only `audit_trail` / manual-PASS-ban / round-2-structural-duty checks, exit codes 0/2/3/4/5/6/7/8, verdict-token enum check, evaluator-only gate-verdict-authorship pin. First pytest suite for this plugin (`scripts/`). New `CLAUDE.md` §Envelope Validation documents the stage-boundary MUST, the work-file convention (`${TMPDIR:-/tmp}/copywriting-run-<run_id>/envelope-<seq>.json`), and the `--prev` duty at `seq > 1`. Router gains validator invocation as a fourth Router Validation duty.
+- **FIXABLE worker≠judge seam**: copywriter dispatch + evaluator re-check now closes findings explicitly, plus a nested-dispatch STOP path when the Agent tool is unavailable inside a subagent.
+- **Ride-alongs**: `copywriting-intake` BLOCKED path names concrete empty fields (was generic); `copywriting-neta-injection` overlay example passthrough fix; `scripts/check_anchor_copies.py` drift check (new, for the 5×/2× inline-duplicated standards) + CI wiring (pytest + anchor-check steps).
+- `plugin.json`: 1.14.2 → 1.15.0
+- Codex manifest synced: `python3 scripts/sync_codex_manifests.py copywriting-toolkit`
+
 ## v1.14.2 — 2026-07-30 (schema SSOT pointer + CI structure scan + nested-dispatch guard + router zh/ja hooks)
 
 Four independently-audited quick fixes, no behavior change to any pipeline phase's draft/gate logic.
