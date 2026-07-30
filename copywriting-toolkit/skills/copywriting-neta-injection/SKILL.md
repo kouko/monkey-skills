@@ -322,9 +322,11 @@ Neta Safety gate before advancing.** The gate is evaluator-only.
   2. 景品表示法 ステマ (undisclosed endorsement / stealth marketing
      failing to label sponsored references)
 
-Verdict enum: `PASS` | `NEEDS_REVISION`. On `NEEDS_REVISION`, worker
-addresses specific dimension feedback and re-runs Phase C-D (not A-B —
-candidate catalog stays stable).
+Verdict enum: `PASS` | `PASS_WITH_NOTES` | `NEEDS_REVISION`. On
+`NEEDS_REVISION`, worker addresses specific dimension feedback and
+re-runs Phase C-D (not A-B — candidate catalog stays stable). On
+`PASS_WITH_NOTES`, craft-class notes travel with the envelope as
+recorded observations — no re-run duty.
 
 ## Handoff
 

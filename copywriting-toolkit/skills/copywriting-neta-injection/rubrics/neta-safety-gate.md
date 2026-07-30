@@ -3,6 +3,24 @@ title: Neta Safety Gate (SHOULD)
 tier: gate
 ---
 
+<!--
+DIVERGED FROM domain-teams:copywriting-team
+Original source: domain-teams/skills/copywriting-team/rubrics/neta-safety-gate.md
+Changes in copywriting-toolkit:
+  - v1.15.0 (convergence-modernization arc): ADDED a `**Class**:
+    contract | craft` annotation per dimension (additive). The Step 2
+    count-based soft-dimension bullets ("All 3 soft dimensions 🟢 →
+    PASS" / "1-2 soft dimensions 🟡 → PASS_WITH_NOTES" / "Any soft
+    dimension 🔴 → NEEDS_REVISION" / "3 soft dimensions 🟡 →
+    NEEDS_REVISION") are REPLACED with contract-class-only aggregation
+    over Step 2 — sanctioned by CLAUDE.md §Tier 2 "Exception —
+    plugin-owned gate verdict rules" + plan
+    docs/loom/plans/2026-07-30-copywriting-convergence-modernization.md.
+Original content preserved verbatim below EXCEPT the Step 2 replacement
+noted above (Step 1 hard-veto mechanics unchanged). Search for
+"v1.15.0 addition" markers where present.
+-->
+
 # Neta Safety Gate Rubric (SHOULD)
 
 ## Evaluation Instructions
@@ -86,6 +104,10 @@ allusion / classical quotation / famous phrase / 固有名詞), return
 
 ### Dimension 1: Copyright / Trademark Risk (HARD VETO)
 
+**Class**: contract — checked against objective checkable referents
+(17 USC § 107 fair-use factors, Campbell / Louis Vuitton case tests,
+著作権法 32条 doctrine); hard veto by nature, no taste call involved.
+
 **What to evaluate**: Does the neta injection create copyright or
 trademark infringement exposure?
 
@@ -126,6 +148,10 @@ trademark infringement exposure?
 
 ### Dimension 2: 景品表示法 ステマ Risk (HARD VETO, JP)
 
+**Class**: contract — checked against the objective two-prong test
+(brand-influence + identifiability) from 消費者庁's 告示; hard veto by
+nature, no taste call involved.
+
 **What to evaluate**: For JP-market copy, could this content be
 interpreted as stealth marketing under 消費者庁 2023-10-01 告示?
 
@@ -164,6 +190,10 @@ advisory rather than hard veto; but cross-reference
 `persuasion-ethics.md` for FTC rules.
 
 ### Dimension 3: Cringe Index (soft)
+
+**Class**: craft — no artifact-declared referent to check against;
+"reads as authentically in-tune" vs. "performative / out-of-touch" is
+a qualitative register judgment call, not a checkable fact.
 
 **What to evaluate**: does the copy read as earnestly clever, or
 as cringingly out-of-touch / forced / misaligned?
@@ -221,6 +251,11 @@ Literary-specific patterns:
 
 ### Dimension 4: Audience Capital Match (soft)
 
+**Class**: craft — no declared metadata field states the audience's
+subcultural/cultural-capital level to check against; "earned in-group
+connection" vs. "performed / cultural-appropriation risk" is a taste
+call applying the Thornton/Bourdieu framework, not a fact lookup.
+
 **What to evaluate**: does the reference match the target audience's
 recognition profile? This dimension operates on **two signaling axes**
 depending on source type (per `neta-source-taxonomy.md`):
@@ -260,6 +295,11 @@ contradictory, but the failure modes differ.
   case: brand uses cultural token without genuine connection.
 
 ### Dimension 5: Timeliness / Currency (soft)
+
+**Class**: contract — checked against an objective checkable referent:
+a WebSearch-verified reference date compared to the explicit numeric
+thresholds per source type below (e.g. ≤6 months / 6-12 months / >12
+months for SNS-Meme).
 
 **What to evaluate**: is the reference timely for its source type?
 Timeliness criteria differ by source category (per
@@ -314,16 +354,22 @@ JP-market)** is unmitigated 🔴:
 → Mandatory fix: resolve the legal risk before any other
   consideration. Other dimensions are moot until legal vetoes clear.
 
-### Step 2: Aggregate soft dimensions (Dim 3/4/5)
+### Step 2: Aggregate contract-class soft dimensions
 
 Only if hard vetoes clear (all Green or Yellow, or Red with
-documented mitigation):
+documented mitigation). Aggregation runs over contract-class findings
+ONLY — see `../../../CLAUDE.md §Gate Convergence Vocabulary` for the
+canonical `class: contract | craft` definitions (not restated here;
+CLAUDE.md wins on any disagreement). Of the three soft dimensions,
+only Dimension 5 (Timeliness/Currency) is contract-class; Dimension 3
+(Cringe Index) and Dimension 4 (Audience Capital Match) are craft-class
+and are recorded as notes for the operator but never gate, alone or in
+accumulation.
 
-- All 3 soft dimensions 🟢 → `PASS`
-- 1-2 soft dimensions 🟡, rest 🟢, no 🔴 → `PASS_WITH_NOTES`
-- Any soft dimension 🔴 → `NEEDS_REVISION`
-- 3 soft dimensions 🟡 → `NEEDS_REVISION` (too many concerns to
-  ship without revision)
+- Contract-class 🔴 (Timeliness) → `NEEDS_REVISION`
+- Contract-class 🟡 (Timeliness), no contract-class 🔴 → `PASS_WITH_NOTES`
+- No contract-class 🔴/🟡 findings → `PASS` (craft-class findings, if
+  any, travel as recorded notes)
 
 ### Step 3: Confidence caveat
 
