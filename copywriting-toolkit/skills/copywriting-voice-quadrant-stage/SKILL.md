@@ -194,6 +194,8 @@ This skill does **not** own a voice-consistency gate. The SHOULD-tier Voice Cons
 
 If the Phase 6 evaluator returns NEEDS_REVISION citing quadrant mismatch, the revision loop can bounce back here to re-diagnose — but the gate lives in the tone skill, not here.
 
+**Convergence vocabulary**: a declared-voice-target (quadrant) mismatch is `contract` — checkable directly against the `voice_quadrant` this skill emitted; positioning nuance (edge polish, register feel) is `craft` — recorded, never gates, alone or in accumulation. Full class definitions + verdict-aggregation rules live in `../../CLAUDE.md § Gate Convergence Vocabulary` — this section points there, it does not restate it.
+
 ## Anti-patterns
 
 - **Inlining the 658-line canon into this SKILL.md, the envelope, or the chat.** The standard is the canonical source; link to it.
