@@ -94,11 +94,21 @@ instruction defects at all, and reported the class clean", and round 9
 independently re-verified that the class was clean and it held. Rounds 8 and 9
 blocked only on evidence defects.
 
-**Retrodiction against the nine-round loop**: rounds 1, 3, 5, 6 and 8 ship with
-their findings recorded; round 7's 🔴 — a live bullet instructing an implementer to
-derive `kpi_id` from a canonical field slug while the shipped code does the
-opposite — still blocks. Nine rounds become roughly two, and the one genuine
-hazard is still caught.
+**Retrodiction against the nine-round loop**: round 2 (PASS_WITH_NOTES, 1 🟡)
+never blocked, with or without classification. Round 4 was a focused check that
+carried no dimension scores (audit §3.3), so it sits outside this framework's
+per-finding accounting. Rounds 1, 3, 5, 6 and 8 ship with their findings
+recorded; round 7's 🔴 — a live bullet instructing an implementer to derive
+`kpi_id` from a canonical field slug while the shipped code does the opposite —
+is instruction-class by the definition above and still blocks. Round 9's 🔴 was
+a repair written into only one of the two artifacts that carried the claim
+round 8's remediation was meant to fix. The audit does not classify this
+finding outright, but chaining §1 (round 9's finding source: "round 8's
+remediation, applied to one of two artifacts") with §6b (round 8's four
+findings "were evidence defects in original text") makes evidence-class the
+supportable reading — an incompletely-applied repair to an evidence-class claim
+is itself evidence-class, not a new instruction. On that reading, nine rounds
+become roughly two, and the one genuine hazard round 7 caught is still caught.
 
 ## Current State Evidence
 

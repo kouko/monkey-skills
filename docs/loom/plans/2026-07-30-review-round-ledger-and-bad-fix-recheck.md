@@ -4,7 +4,7 @@
 **Total tasks**: 8
 **Critical-path depth**: 5 (≤5 ✓ — longest chain Task 1 → 2 → 3 → 7 → 8)
 **Execution order**: parallel-where-possible
-**Plan-document-reviewer verdict**: PENDING
+**Plan-document-reviewer verdict**: NEEDS_REVISION (2026-07-30, round 1, 13/14) — never re-reviewed; this plan was PARKED before its five fixes were applied. The fixes are listed in `docs/loom/BACKLOG.md`'s park entry for this slice. Do not treat this plan as review-clean if it is ever unparked.
 
 ## Task 1 — Append a review-round ledger entry on every review-pass invocation
 

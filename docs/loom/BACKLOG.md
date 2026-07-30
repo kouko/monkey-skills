@@ -2211,6 +2211,14 @@ agreement of the per-task + whole-branch reviewers.
   human reviewers fixing human-written code. The nearest LLM-era peer-reviewed fragments are
   structurally different metrics: ICSE 2026 (*Are "Solved Issues" in SWE-bench Really Solved
   Correctly?*) reports regressive patches at 11/77 of a manually inspected suspicious-patch
-  sample; ASE 2026 (*Regression Accumulation in Multi-Turn LLM Programming Conversations*)
+  sample — the paper's Table 8 (§4.4) names this category "Regressive Patches" verbatim, so
+  both the figure and the label are the paper's own, not a transcription. Note a version split
+  in the inflation figure this same paper reports elsewhere: the arXiv abstract (v2, the page
+  at arxiv.org/abs/2503.15223) states these weaknesses inflate reported resolution rates by 6.2
+  absolute percentage points, while the paper's RQ4 body and the ICSE '26 camera-ready abstract
+  (software-lab.org/publications/icse2026_SWE-bench-correctness.pdf) both state 6.4 — this
+  citation keeps neither number since it is not otherwise used here, but a future editor should
+  not "correct" one to the other; they are two live versions, not an error. ASE 2026
+  (*Regression Accumulation in Multi-Turn LLM Programming Conversations*)
   reports 40–73% of tasks losing previously-correct behaviour across 8 turns. Neither is a
   like-for-like comparison to the audit's 6-of-9 round-level figure, which remains n=1 branch.

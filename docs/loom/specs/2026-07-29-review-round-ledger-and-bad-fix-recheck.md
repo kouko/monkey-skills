@@ -201,8 +201,12 @@ comparison to our 67% round-level figure:**
   plausible patches this is roughly 4%, a number the paper does not state
   directly. Separately, 7.8% of plausible patches fail against all developer
   tests, extrapolating to an 11.0% incorrect rate that inflates reported
-  resolution rates by 6.4 points. Note that "wrong fix" and "newly injected
-  defect" are different metrics; the literature routinely blurs them.
+  resolution rates by 6.4 points — this is the paper's RQ4 body and its ICSE '26
+  camera-ready abstract; the arXiv preprint's own abstract (v2) states 6.2
+  instead. Both numbers are the paper's own across its two live versions, not a
+  transcription error, so a future editor should not "correct" one to the
+  other. Note that "wrong fix" and "newly injected defect" are different
+  metrics; the literature routinely blurs them.
 - **ASE 2026** (Huang et al., *Regression Accumulation in Multi-Turn LLM
   Programming Conversations*, **peer-reviewed**): 542 tasks × 6 models × 8 turns;
   **40–73% of tasks lose previously-correct behaviour over the conversation**;
