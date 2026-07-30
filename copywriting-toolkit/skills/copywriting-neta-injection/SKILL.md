@@ -234,10 +234,7 @@ Formal schema used by `using-copywriting-toolkit` router for bounce-back routing
     }
   ],
   "express_mode_used": true,
-  "audit_trail": [
-    "... prior entries unchanged ...",
-    { "at": "2026-07-30T02:02:00Z", "event": "skill-exited", "skill": "copywriting-neta-injection", "detail": "Phase 3 overlaid" }
-  ],
+  "audit_trail": ["... prior entries unchanged, see CLAUDE.md §Audit Trail (router appends skill-exited after return) ..."],
   "retries": { "bounce_round": 0, "revise_round_count": 0, "total_retries": 0 },
   "next_stage": "copywriting-voice-quadrant-stage"
 }
