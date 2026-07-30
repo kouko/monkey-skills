@@ -414,11 +414,12 @@ Downstream (`copywriting-ethics-check-stage`) reads `draft` + `tone_notes` + `br
 - **Position**: runs AFTER all 3 passes, as the last voice-layer check before Phase 7 legal gates pick up the artifact.
 - **Dimensions** (per rubric): brand voice stability, tone contextual appropriateness, anchor style fidelity (if Pass 3 ran), JP emotional-resonance vs Anglo benefit-clear fit, voice quadrant coherence, over-mimic adherence (scoped to Pass 3), and **thesis alignment** (scoped to Pass 3 — catches anchor-induced drift from `envelope.message_thesis`).
 
-Verdict handling:
+Verdict handling — contract-class aggregation only (see `../../CLAUDE.md §Gate Convergence Vocabulary` for the canonical `class: contract | craft` definitions; not restated here):
 
-- `PASS` → emit envelope; `next_stage: copywriting-ethics-check-stage`.
-- `PASS_WITH_NOTES` (≤2 WARNINGS, no FATAL) → apply named fixes in one auto-revise round, re-run gate; if still `PASS_WITH_NOTES`, emit with notes disclosed (handoff-format §Section 3 max-2-rounds rule).
-- `NEEDS_REVISION` (any FATAL or ≥3 WARNINGS) → BLOCKED. Return to the specific pass the rubric's `next_action` names. Do not forward to Phase 7.
+- A finding citing a declared tone-target violation — the `tone_notes.axis_target` vector, `voice_quadrant`, or an anchor's binding mechanics the draft contradicts — is `contract`-class. Tone nuance (register polish, cadence taste, phrasing preference not traceable to a declared target) is `craft`-class: recorded in the envelope for the operator and downstream stages, never gates, alone or in accumulation.
+- `PASS` → no unresolved contract-class findings; emit envelope; `next_stage: copywriting-ethics-check-stage`.
+- `PASS_WITH_NOTES` (craft-class findings only) → apply named fixes in one auto-revise round, re-run gate; if still `PASS_WITH_NOTES`, emit with notes disclosed (handoff-format §Section 3 max-2-rounds rule).
+- `NEEDS_REVISION` (any unresolved contract-class finding) → BLOCKED. Return to the specific pass the rubric's `next_action` names. Do not forward to Phase 7.
 
 ## Anti-Patterns
 
