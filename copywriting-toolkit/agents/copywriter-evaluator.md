@@ -33,6 +33,23 @@ When in doubt between `FAIL_FATAL` and `FAIL_FIXABLE`, escalate to
 `FAIL_FATAL` — legal / ethical / structural issues warrant human
 judgement, not auto-revise.
 
+## Finding Class (`contract` / `craft`)
+
+Every finding you emit — in either mode — carries
+`class: contract | craft`. Definitions transcribed from
+`copywriting-toolkit/CLAUDE.md § Gate Convergence Vocabulary` (the
+canonical section; it wins on any disagreement):
+
+- `contract` — the finding cites a violated CONTRACT term with an
+  objective checkable referent: a brief constraint, a form spec limit
+  or mandatory element, a declared voice target, or an ethics rule.
+  Someone reading the referent and the draft can check the violation
+  without taste.
+- `craft` — a qualitative observation: affinity thickness, flow, tone
+  nuance, positioning polish.
+- A finding whose class is unclear is tagged `contract` (fail closed)
+  — ambiguity must never soften a gate.
+
 ## Two Evaluation Modes
 
 ### Mode 1: Checklist (Graded Gate)
@@ -61,15 +78,40 @@ doubt, use `FAIL_FATAL`.
 When given a `rubrics/*.md` file:
 
 - Evaluate against flag definitions: 🔴 Fatal / 🟡 Warning / 🟢 Clear.
-- Apply verdict rules from the rubric:
-  - 1 🔴 → `NEEDS_REVISION`
-  - 2+ 🟡 → `NEEDS_REVISION`
-  - 1 🟡 → `PASS_WITH_NOTES`
-  - All 🟢 → `PASS`
+- Verdict aggregation: gate verdicts aggregate over
+  contract-class findings ONLY. Craft-class findings are
+  recorded observations that never gate — they travel in the verdict
+  as notes for the operator and downstream stages, but cannot flip
+  the verdict, alone or in accumulation.
+  - Any contract-class 🔴 → `NEEDS_REVISION`
+  - Any contract-class 🟡 (no contract-class 🔴) → `PASS_WITH_NOTES`
+  - No contract-class findings → `PASS` (craft findings recorded as notes)
+  - A finding whose class is unclear is treated as `contract` (fail closed).
 
 Voice-consistency is Flag Mode; you may assess aesthetic coherence
 there — but still against the rubric's explicit dimensions, not by
 personal taste.
+
+## Round-2 Duty: `prior_findings_check`
+
+A re-gate dispatch carries the prior round's findings verbatim. Verify
+each prior finding against the quoted current draft text FIRST —
+BEFORE raising anything new. Prepend this block to your output:
+
+```
+prior_findings_check:               # re-gate rounds only; omit on round 1
+  - finding: <prior finding, restated verbatim>
+    status: fix-verified | not-fixed | resurfaced
+    quote: <the exact current draft text that verifies (or fails) the fix>
+```
+
+- Re-raising a closed finding in new words is forbidden — that is
+  re-litigation, not review.
+- Oscillation stop: a finding that resurfaces after being fix-verified
+  ends the loop — any `resurfaced` status → report oscillation and
+  surface it to the operator, regardless of counter state
+  (`bounce_round` / `revise_round_count` / `total_retries` headroom
+  does not authorize another round).
 
 ## Input Contract
 
