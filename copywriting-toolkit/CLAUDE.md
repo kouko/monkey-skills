@@ -157,6 +157,63 @@ If a skill must transform a field (e.g., edit `draft` at Phase 6), it creates a 
 
 **Enforcement**: router bounces any envelope with a dropped immutable field back to the skill that last wrote it, per §2.4. This is cheap (presence check, not semantic) and makes drops auditable.
 
+## Envelope Validation
+
+`scripts/validate_envelope.py` (stdlib-only, `loom_gate_markers`-style) is
+the file-borne enforcement medium for the handoff envelope.
+At EVERY stage boundary, the orchestrator serializes the current
+envelope to the run's work file and runs:
+
+```
+python3 <plugin-root>/scripts/validate_envelope.py <file> [--prev <file>]
+```
+
+Proceed ONLY on exit 0. Any non-zero exit is STOP and surface to the
+operator — never hand-repair the envelope silently. This mirrors the
+manual-PASS ban above (§What NOT to do): a human patching the JSON so the
+next call passes is the same failure as a manual `gate_verdict: PASS`.
+
+### Work-file convention
+
+One `run_id` is minted at intake for the run's lifetime. Every
+stage-boundary envelope is written under:
+
+```
+${TMPDIR:-/tmp}/copywriting-run-<run_id>/envelope-<seq>.json
+```
+
+`<seq>` increments once per stage boundary (`envelope-1.json`,
+`envelope-2.json`, ...).
+
+### `--prev` is a MUST once seq > 1
+
+Counter monotonicity, immutable-field preservation, and `audit_trail`
+append-only (exit codes 4 / 5 / 6) are checked ONLY when `--prev` names
+the previous stage-boundary file — calling the validator on a single file
+in isolation silently SKIPS all three check classes; it is a weaker,
+insufficient validation, not an equivalent one. Every validation call at
+seq > 1 MUST pass `--prev <previous-seq-file>`. Only the very first call
+(`envelope-1.json`, no predecessor) may omit it.
+
+### What the validator ENFORCES vs what stays prose
+
+The retries.* counters table row above ("Monotonic — counters only
+increment, never reset by a downstream skill") and the External Caller
+Guide's "Do NOT omit `retries: {...}`" warning describe the intended
+behavior in prose; `validate_envelope.py`'s counter-monotonicity check
+(`--prev`, exit 4) is what actually ENFORCES it — a downstream skill that
+resets a counter now fails the validator's exit code at the next stage
+boundary, it does not merely violate an unread warning.
+
+### Alt-entry minimal shape
+
+Alt-entry envelopes (`phase: "phase-audit-entry"`, see External Caller
+Guide below) validate with the SAME script. The schema's minimal-shape
+allowance for this phase means `express_mode_used` / `audit_trail` /
+`retries` are omissible there — the validator's schema check (exit 3)
+recognizes `phase-audit-entry` and requires only a non-empty
+`external_copy`; it does not relax any other phase.
+
 ## Envelope Violation (bounce-back contract)
 
 Every downstream skill declares its `## Preconditions` schema in its own SKILL.md. The `using-copywriting-toolkit` router validates the envelope against that schema BEFORE launching the skill. On violation, the router does not launch; instead it emits a bounce-back envelope and re-routes upstream.
@@ -374,7 +431,7 @@ Running a single multi-role agent blurs both. Using `domain-teams:worker` / `dom
 
 ## Inline-Duplication Drift Risk
 
-`persuasion-psychology-anchor.md` appears 5× identical in workflow skills. If drift observed later, a sync script is acceptable — do not attempt cross-skill loading at runtime.
+`persuasion-psychology-anchor.md` appears 5× identical in workflow skills (plus `sns-evolution-aisas-ulssas.md` 2×). Drift is checked by `scripts/check_anchor_copies.py` (landed commit `7d064a4c`) — do not attempt cross-skill loading at runtime; run the script instead.
 
 ## Verification Density Principle (v1.2.0)
 
