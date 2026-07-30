@@ -90,11 +90,13 @@ def test_retired_count_based_verdict_rules_absent_whole_file():
     # WHY: absence pin (whole-file on purpose) — the retired count-based
     # soft-dimension accumulation rules must not survive anywhere in this
     # file, including under a renamed heading or moved position.
-    text = _text()
-    assert RETIRED_ALL_GREEN not in text, "retired 'All 3 soft dimensions 🟢' rule present"
-    assert RETIRED_1_2_YELLOW not in text, "retired '1-2 soft dimensions 🟡' rule present"
-    assert RETIRED_ANY_RED not in text, "retired 'Any soft dimension 🔴' rule present"
-    assert RETIRED_3_YELLOW not in text, "retired '3 soft dimensions 🟡' rule present"
+    # case-insensitive — a capitalization-only revival must not
+    # false-pass (same fix class as commit 7f13682c / 0e85e073)
+    text = _text().lower()
+    assert RETIRED_ALL_GREEN.lower() not in text, "retired 'All 3 soft dimensions 🟢' rule present"
+    assert RETIRED_1_2_YELLOW.lower() not in text, "retired '1-2 soft dimensions 🟡' rule present"
+    assert RETIRED_ANY_RED.lower() not in text, "retired 'Any soft dimension 🔴' rule present"
+    assert RETIRED_3_YELLOW.lower() not in text, "retired '3 soft dimensions 🟡' rule present"
 
 
 def test_each_dimension_carries_contract_craft_class_annotation():
