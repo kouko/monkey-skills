@@ -5,9 +5,9 @@ Changes in copywriting-toolkit:
   - v1.1.0: ADDED §copywriting-toolkit additional dimensions (migrated from
     copywriting-form-check-stage/SKILL.md §Gate Definition §8b additional
     dimensions — word-count band adherence + schwartz_alignment consumer)
-  - v1.x (convergence-modernization arc): ADDED `Class: contract | craft`
+  - v1.15.0 (convergence-modernization arc): ADDED `Class: contract | craft`
     annotation under every dimension heading (additive, no deletion) — see
-    "v1.x addition" markers. The ## Verdict Rules count-based accumulation
+    "v1.15.0 addition" markers. The ## Verdict Rules count-based accumulation
     bullets (the retired yellow-flag-count rule) are REPLACED — this is a
     non-additive exception, sanctioned by CLAUDE.md §Tier 2
     "Exception — plugin-owned gate verdict rules" (verdict-aggregation
@@ -16,7 +16,7 @@ Changes in copywriting-toolkit:
     Vocabulary's "this section wins" precedence. See docs/loom/plans/
     2026-07-30-copywriting-convergence-modernization.md Task 3.
 Original content preserved verbatim below EXCEPT the ## Verdict Rules
-exception noted above. Search for "v1.x addition" / "v1.1.0 addition"
+exception noted above. Search for "v1.15.0 addition" / "v1.1.0 addition"
 markers to locate plugin-specific additions.
 -->
 
@@ -77,7 +77,7 @@ checklist's responsibility).
 
 ### RUB-CTW-FA-L1: Flow / Progression
 
-<!-- v1.x addition: convergence-vocabulary class annotation -->
+<!-- v1.15.0 addition: convergence-vocabulary class annotation -->
 Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 Whether inter-stage transitions are smooth. Whether conjunctions /
@@ -97,7 +97,7 @@ subheadings / questions provide an explicit "bridge to the next stage."
 
 ### RUB-CTW-FA-L2: Drop-off Prevention Design
 
-<!-- v1.x addition: convergence-vocabulary class annotation -->
+<!-- v1.15.0 addition: convergence-vocabulary class annotation -->
 Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 In long-form copy, readers tend to drop off at stage endings. Whether
@@ -116,7 +116,7 @@ each stage ending has a "hook to keep reading the next stage."
 
 ### RUB-CTW-FA-L3: Word-Count Ratios
 
-<!-- v1.x addition: convergence-vocabulary class annotation -->
+<!-- v1.15.0 addition: convergence-vocabulary class annotation -->
 Class: `contract` (per `../../../CLAUDE.md §Gate Convergence Vocabulary` — an objective, checkable length/ratio referent)
 
 Whether the artifact follows the canonical ratio guidelines from
@@ -138,7 +138,7 @@ Whether the artifact follows the canonical ratio guidelines from
 
 ### RUB-CTW-FA-L4: PASBECONA Mid-Stage B/E/C Persuasion Depth
 
-<!-- v1.x addition: convergence-vocabulary class annotation -->
+<!-- v1.15.0 addition: convergence-vocabulary class annotation -->
 Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 Applies to PASBECONA artifacts only. B (Benefit) / E (Evidence) /
@@ -166,7 +166,7 @@ persuasion depth is the source of long-form superiority.
 
 ### RUB-CTW-FA-M1: Benefit-first Clarity
 
-<!-- v1.x addition: convergence-vocabulary class annotation -->
+<!-- v1.15.0 addition: convergence-vocabulary class annotation -->
 Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 Whether the first paragraph / first sentence is purely a Benefit, with
@@ -183,7 +183,7 @@ no Feature contamination.
 
 ### RUB-CTW-FA-M2: Evidence Concreteness
 
-<!-- v1.x addition: convergence-vocabulary class annotation -->
+<!-- v1.15.0 addition: convergence-vocabulary class annotation -->
 Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 Whether the Evidence stage is composed of verifiable objective
@@ -202,7 +202,7 @@ information.
 
 ### RUB-CTW-FA-M3: Advantage Comparison Clarity
 
-<!-- v1.x addition: convergence-vocabulary class annotation -->
+<!-- v1.15.0 addition: convergence-vocabulary class annotation -->
 Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 Whether the Advantage stage presents concrete differences from
@@ -225,7 +225,7 @@ competitors.
 
 ### RUB-CTW-FA-S1: 3-Second Land Ability
 
-<!-- v1.x addition: convergence-vocabulary class annotation -->
+<!-- v1.15.0 addition: convergence-vocabulary class annotation -->
 Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 Whether the 3-second rule (1st second: attention grab, 2nd second:
@@ -246,7 +246,7 @@ attention at first glance.
 
 ### RUB-CTW-FA-S2: 7-15 字 Discipline
 
-<!-- v1.x addition: convergence-vocabulary class annotation -->
+<!-- v1.15.0 addition: convergence-vocabulary class annotation -->
 Class: `contract` (per `../../../CLAUDE.md §Gate Convergence Vocabulary` — an explicit, objective char-count limit)
 
 Per `short-form-catchcopy-canon.md` §7-15 字 黃金範囲.
@@ -266,7 +266,7 @@ Per `short-form-catchcopy-canon.md` §7-15 字 黃金範囲.
 
 ### RUB-CTW-FA-S3: 掛詞 / Phonetic Technique Recognition
 
-<!-- v1.x addition: convergence-vocabulary class annotation -->
+<!-- v1.15.0 addition: convergence-vocabulary class annotation -->
 Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 When 眞木準 style (掛詞 / phonetics) or 岩崎 style (seasonal feel /
@@ -290,7 +290,7 @@ effectively. For artifacts with no technique declaration →
 
 ### RUB-CTW-FA-S4: 5-Type 切入点 Clarity
 
-<!-- v1.x addition: convergence-vocabulary class annotation -->
+<!-- v1.15.0 addition: convergence-vocabulary class annotation -->
 Class: `craft` (recorded — never gates; per `../../../CLAUDE.md §Gate Convergence Vocabulary`)
 
 Whether the adopted approach (利益／願望, 恐怖／痛点, 顛覆常識,
@@ -311,7 +311,7 @@ Whether the adopted approach (利益／願望, 恐怖／痛点, 顛覆常識,
 
 ## Verdict Rules
 
-<!-- v1.x addition: this section's rule text is superseded — the
+<!-- v1.15.0 addition: this section's rule text is superseded — the
      original count-based accumulation rule is retired repo-wide, not
      just for this plugin. Gate verdicts now aggregate over
      `contract`-class findings ONLY, per `../../../CLAUDE.md §Gate

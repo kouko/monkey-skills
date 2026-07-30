@@ -268,11 +268,12 @@ If several fields are missing, list them all in `missing[]`. Router picks the SI
 
 ## Router Validation
 
-`using-copywriting-toolkit` is the single enforcement point for precondition validation. It performs three checks before every skill launch:
+`using-copywriting-toolkit` is the single enforcement point for precondition validation. It performs three checks before every skill launch, plus a fourth duty at a different moment (item 4):
 
 1. **Aggregate retry cap** — read `envelope.retries.total_retries`; if `>= 4`, HALT and ask the user (do not launch any skill, do not bounce). Present the retries breakdown (`bounce_round` / `revise_round_count`) so the user can see why progress stalled.
 2. **Preconditions check** — load the target skill's `## Preconditions § Required envelope fields` table from its SKILL.md, verify every row against the current envelope. On any missing / malformed field → emit `violation` envelope, do NOT launch the target skill, route to the `bounce_to` skill named in the target's Preconditions, increment `bounce_round` and `total_retries`.
 3. **Express qualification (Shape A only)** — per `using-copywriting-toolkit/protocols/phase-decision-tree.md §Step 0.5`, inspect raw brief against intake's Level 1 field set. If qualified, dispatch intake in Express Mode (`copywriting-intake/protocols/express-mode.md`); otherwise default to Q1-Q10 full intake.
+4. **Envelope-file validation** — at every STAGE BOUNDARY (not skill launch), serialize the envelope and run the validator per §Envelope Validation above. A separate layer from check 2: the script checks structure/counters/history against the previous boundary file; the Preconditions check verifies the target skill's field requirements. Both run at their own moments — passing one never satisfies the other.
 
 Router does not draft, does not judge gate verdicts, does not rewrite. It routes, validates, and bounces.
 
@@ -302,7 +303,7 @@ Canonical convergence semantics for EVERY gate in this plugin (Intake Completene
 
 **4. Oscillation stop.** A finding that resurfaces after being fix-verified ends the loop → surface to the operator, regardless of counter state (`bounce_round` / `revise_round_count` / `total_retries` headroom does not authorize another round).
 
-**Ethics semantics unchanged:** ethics-check's FATAL/FIXABLE checklist semantics are UNCHANGED by this vocabulary — FATAL still blocks unconditionally; FIXABLE still follows its own auto-revise rule. This vocabulary governs how findings aggregate into verdicts, not what the ethics checklist means.
+**Ethics semantics unchanged:** ethics-check's FATAL/FIXABLE checklist semantics are UNCHANGED by this vocabulary — FATAL still blocks unconditionally; FIXABLE still follows its own auto-revise rule. The same holds for the other checklist-mode gate, Intake Completeness: status-based checklist items are already contract-shaped referents, and their mechanics are not rewritten. This vocabulary governs how findings aggregate into verdicts in flag-mode gates, not what any checklist means.
 
 ## Audit Trail
 
