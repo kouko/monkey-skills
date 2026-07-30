@@ -113,6 +113,8 @@ For each `rewrite_variants[i]`:
 5. **Per-variant revise budget**: `revise_round_count < 2` → allow auto-revise for FIXABLE at Phase 7 or 8; `>= 2` → stop for that variant.
 6. **Aggregate total_retries**: sum across main + all variants. If `total_retries >= 4` at ANY point (main audit + variant gates combined), HALT entire audit and ask user — do not silently keep re-gating.
 
+**Verdict aggregation (contract/craft)** — `rewrite_variants[i].ethics_verdict` and `rewrite_variants[i].form_verdict` each aggregate **contract-class findings ONLY**, per `../../CLAUDE.md § Gate Convergence Vocabulary` (canonical; pointer only, not restated here). Craft-class findings from the same Phase 7/8 evaluations are carried into the audit report's `issues[]` as recorded notes — they inform the report but never flip a variant's verdict, alone or in accumulation.
+
 **Execution strategy** — serial by default. Parallel execution is permitted if the orchestrator supports isolated variant sub-envelopes AND guarantees `retries.total_retries` aggregation atomicity. Default to serial to keep the counter coherent.
 
 **Voice Consistency SHOULD gate runs cross-variant** — once after all variants are evaluated, the Phase 6 voice-consistency rubric checks that the variants collectively deliver a stable voice. This is one gate per audit run, not per variant.
