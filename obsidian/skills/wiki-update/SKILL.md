@@ -1,6 +1,12 @@
 ---
 name: wiki-update
-description: One-verb wiki maintenance orchestrator — delegates wiki-ingest → wiki-cross-linker, runs the mechanical fix loop (safe-tier repairs on a proposal branch), triages work orders, reports a structural scorecard. Use for "update my wiki" / 整理 wiki / wiki 維護 / 維護 wiki / ウィキ更新・ウィキメンテナンス. Do NOT use for a single-purpose run — new-note ingest → wiki-ingest; link strengthening → wiki-cross-linker; read-only health check → wiki-lint; near-dup pair merge → wiki-merge; questions → wiki-query; research gap-fill → wiki-auto-research; first-time scaffold → wiki-setup.
+description: |
+  One-verb wiki maintenance orchestrator — delegates wiki-ingest →
+  wiki-cross-linker, runs the mechanical fix loop on a proposal branch,
+  triages work orders, reports a structural scorecard. Use for 'update my
+  wiki' / 整理 wiki / 維護 wiki / ウィキ更新・メンテナンス. NOT for single-purpose runs —
+  invoke that wiki-* skill directly (new-note ingest → wiki-ingest;
+  read-only health check → wiki-lint).
 ---
 
 # Wiki Update — One-Verb Wiki Maintenance

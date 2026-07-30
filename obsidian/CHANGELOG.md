@@ -4,6 +4,14 @@ All notable changes to the `obsidian` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.20.2] — 2026-07-30 description diet
+
+### Changed — `wiki-update` / `daily-news-digest` descriptions
+
+- Both frontmatter `description` blocks reworded and hard-wrapped at
+  ≤76 chars/line (no content dropped) — part of a cross-plugin pass
+  trimming five outlier skill descriptions.
+
 ## [3.20.1] — 2026-07-24 wikilink-target-insensitive word counter
 
 ### Changed — `wiki-lint` conservation-counter semantics (words)

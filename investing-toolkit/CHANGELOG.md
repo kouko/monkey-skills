@@ -5,6 +5,14 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.39.2] — 2026-07-30
+
+### Changed — `data-markets` description diet
+
+- Frontmatter `description` reworded and hard-wrapped at ≤76 chars/line
+  (no content dropped) — part of a cross-plugin pass trimming five
+  outlier skill descriptions.
+
 ## [v2.39.1] — 2026-07-27
 
 ### Fixed — a filer's history stopped where SEC's `recent` block did

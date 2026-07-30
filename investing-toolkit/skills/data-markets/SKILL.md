@@ -2,19 +2,13 @@
 name: data-markets
 description: |
   Layer-1 unified data fetch across US/JP/TW/KR/CN equities + macro — one
-  pack.py facade, auto market detection from ticker suffix (.TW/.KS/.SS/.T/
-  bare-4-digit), 9 pack types (snapshot / memo-fetch / comps-multiples /
-  screener-batch / regime-pack / kpi-quarterly / kpi-topline-backfill /
-  statement-backfill / reconstruct).
-  Emits a raw data pack（原始資料包，非渲染卡片）—
-  structured JSON straight from source clients including SEC EDGAR,
-  EDINET, TWSE, and FRED (+14 more) through a shared cache layer; use
-  this for a 資料層 health check, verifying cache writes/hits (快取),
-  or fetching by source name (EDINET/EDGAR/TWSE/etc). Pure I/O, no
-  analysis — for regime classification/判斷 (e.g. an Investment Clock
-  verdict), use analysis-macro-regime instead. Consolidates the
-  per-country data-{us,jp,tw,kr,cn} client scripts behind one CLI +
-  shared cache layer.
+  pack.py facade, market auto-detected from ticker suffix, 9 pack types
+  (snapshot / memo-fetch / comps-multiples / screener-batch / regime-pack /
+  kpi-quarterly / kpi-topline-backfill / statement-backfill / reconstruct).
+  Emits a raw data pack（原始資料包，非渲染卡片）from SEC EDGAR, EDINET, TWSE, FRED and
+  14 more sources through a shared cache layer. Use for 資料層 health checks,
+  cache (快取) verification, or fetch-by-source-name. Pure I/O, no analysis —
+  regime 判斷 → analysis-macro-regime.
 ---
 
 # data-markets

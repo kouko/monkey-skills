@@ -5,6 +5,13 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.42.2] - 2026-07-30
+
+### Changed
+- `requesting-docs-review` frontmatter description reworded and
+  hard-wrapped at ≤76 chars/line (no content dropped) — part of a
+  cross-plugin pass trimming five outlier skill descriptions.
+
 ## [0.42.1] - 2026-07-30
 
 ### Fixed
