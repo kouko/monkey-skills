@@ -2293,12 +2293,19 @@ agreement of the per-task + whole-branch reviewers.
   is green in isolation. Fix via per-dir conftest sys.path isolation, unique
   module names, or packageizing the scripts dirs.
 
-## copywriting-toolkit modernization arc — port the 0.42.0 convergence lessons (COMMITTED-NEXT)
-- Status: COMMITTED-NEXT (knife 2 of the 2026-07-30 two-knife plan; knife 1 = PR #632, 1.14.2, MERGED)
-- Start: next copywriting-toolkit work session — inputs are ready (three-stream audit
-  2026-07-30, in-session; key points mirrored below). Inner order is FIXED: P3 verdict
-  semantics FIRST, then P2 validator (the validator must pin the post-P3 vocabulary,
-  not the old one).
+## copywriting-toolkit modernization arc — port the 0.42.0 convergence lessons (SHIPPED)
+- Status: SHIPPED as copywriting-toolkit 1.15.0 (branch feat-copywriting-convergence-modernization,
+  2026-07-30; knife 2 of the two-knife plan; knife 1 = PR #632, 1.14.2, MERGED). All three
+  What-items landed: contract/craft Gate Convergence Vocabulary across every gate surface +
+  round-2 duty/oscillation stop; validate_envelope.py (exit 0/2/3/4/5/6/7/8 incl. manual-PASS
+  ban + round-2 structural duty) + CLAUDE.md §Envelope Validation + router fourth-duty wiring;
+  all five ride-alongs (FIXABLE worker≠judge seam w/ nested-dispatch STOP, intake mechanical
+  BLOCKED, alt-entry handled in validator schema, check_anchor_copies.py + CI, neta overlay
+  passthrough fix). First plugin pytest suite (108) wired into CI. Tier-2 provenance gained
+  the scoped "Exception — plugin-owned gate verdict rules" clause (both rubric replacements
+  CHANGELOG-logged per its own requirement).
+- Original inner order held: P3 verdict semantics FIRST, then P2 validator pinning the
+  post-P3 vocabulary.
 - Origin: 2026-07-30 three-stream audit (structure/mechanics, architecture/convergence,
   knowledge layer) after the description-diet arc; user committed to both knives.
 - What:
