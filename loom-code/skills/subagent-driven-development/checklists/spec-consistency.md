@@ -92,3 +92,18 @@ For each atomic task in the plan:
 - [ ] If task `Description` OR `Files touched` references a **non-stdlib external surface** in one of the five categories (HTTP API / SDK package / MCP tool / CLI flag / internal sibling-team contract), the `External surfaces:` field is present and non-empty
 - [ ] Each declared external surface names its **category**, its **specific name / identifier** (function name, endpoint, tool name, flag name), AND its **grounding source** (one of: Live verification / MCP schema / Pinned reference / In-repo evidence — per the standard's §Four Grounding Sources)
 - [ ] Pure internal-logic tasks (renames within one module, markdown-only edits with no external references, refactors with no new external calls) MAY omit the field — opt-in by surface presence, not mandatory on every task
+
+## CHK-SPEC-009: Reuse-adequacy Block in Plan Tasks [FIXABLE]
+
+Grounded in the `writing-plans` §`Reuse-adequacy` schema — the plan-time declaration paired with `plan-document-reviewer` Check 17. Applies to plan documents produced by `writing-plans` and consumed by `subagent-driven-development`.
+
+For each atomic task in the plan:
+
+- [ ] If task `Description` instructs the implementer to reuse an existing helper, function, or selector on a call path other than the one it was originally written for, the `Reuse-adequacy` block is present and non-empty
+- [ ] The block's `Observed` slot ends in a source marker from the closed vocabulary of exactly three:
+  ```
+  read <repo-relative-path>:<line>
+  inferred from docstring
+  unverified assumption — <what would settle it>
+  ```
+- [ ] Tasks that author new logic instead of reusing an existing helper across lanes MAY omit the block — opt-in by reuse presence, not mandatory on every task
