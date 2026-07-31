@@ -46,8 +46,6 @@ SDD_SKILL_MD = (
     / "SKILL.md"
 )
 
-LOOM_CODE_ROOT = Path(__file__).parents[1]
-
 # The three marker tokens, transcribed VERBATIM from the plan's ## Notes PIN
 # (docs/loom/plans/2026-07-31-reuse-adequacy-declaration-hardening.md), the
 # same source Task 1 already transcribed from into plan-format.md.
@@ -170,47 +168,93 @@ _TIER_FLOOR_VALUE_PATTERN = re.compile(
 )
 
 
+def _model_selection_lines(skill_text: str) -> list[str]:
+    return _section(skill_text, "## Model selection").splitlines()
+
+
+def _pointer_line_index(lines: list[str]) -> int:
+    """Isolate the single line carrying the Check-17 pointer sentence --
+    the one line naming both `Check 17` and the reviewer-prompt filename
+    together -- same isolation convention as `_check17_row` above. A
+    mutant that scatters those tokens across separate, unrelated sentences
+    has no line satisfying both conditions and fails here, rather than
+    passing on section-wide membership."""
+    for i, line in enumerate(lines):
+        if "Check 17" in line and "plan-document-reviewer-prompt.md" in line:
+            return i
+    raise AssertionError(
+        "no single line in Model selection names both Check 17 and "
+        "plan-document-reviewer-prompt.md together -- a pointer scattered "
+        "across separate sentences is not a coherent pointer"
+    )
+
+
+def _preceding_nonblank_line(lines: list[str], idx: int) -> str:
+    """The last line of the paragraph immediately before `lines[idx]`,
+    skipping the blank line(s) Markdown uses as a paragraph separator."""
+    for i in range(idx - 1, -1, -1):
+        if lines[i].strip():
+            return lines[i]
+    return ""
+
+
 def test_sdd_skill_points_at_check17_without_restating_the_floor():
     """SDD's Model selection section must carry a pointer -- beside the
     existing most-capable-tier exception -- naming Check 17 (c2) and the
     plan-document-reviewer prompt as the SSOT for the (c2) tier floor,
     without restating the floor's value (sonnet-or-above) itself.
 
-    Point-don't-copy is only real if it is checked by searching, not by
-    trusting the edit: the post-condition is that the tier-floor value
-    (the phrase tying "sonnet" to "tier floor") appears in exactly one
-    file under loom-code/ -- the Check 17 row -- not two."""
+    The identifying tokens (Check 17, (c2), plan-document-reviewer-
+    prompt.md) must co-occur on the pointer's own line -- not merely be
+    present somewhere in the section -- and that line's paragraph must sit
+    immediately after the paragraph carrying the existing most-capable-tier
+    exception. A mutant that scatters the tokens into unrelated sentences
+    (tokens present, no coherent pointer) passes a section-wide membership
+    check but fails this line-level co-occurrence-plus-adjacency check."""
     assert SDD_SKILL_MD.is_file(), f"SDD SKILL.md is absent at {SDD_SKILL_MD}"
     skill_text = SDD_SKILL_MD.read_text(encoding="utf-8")
 
-    model_selection = _section(skill_text, "## Model selection")
+    lines = _model_selection_lines(skill_text)
+    idx = _pointer_line_index(lines)
+    pointer_line = lines[idx]
 
-    assert "Check 17" in model_selection, (
-        "Model selection section must name Check 17"
-    )
-    assert "(c2)" in model_selection, (
-        "the pointer must name graded part (c2) specifically -- (a)/(b)/(c1) "
+    assert "(c2)" in pointer_line, (
+        "the pointer line must name graded part (c2) specifically -- (a)/(b)/(c1) "
         "carry no floor per Check 17's own row"
     )
-    assert "plan-document-reviewer-prompt.md" in model_selection, (
-        "the pointer must name the reviewer prompt file as the SSOT"
-    )
-    assert "most-capable tier" in model_selection or "most capable tier" in model_selection, (
-        "the pointer line must sit beside the existing most-capable-tier "
-        "exception, not float elsewhere in the section"
+
+    preceding_line = _preceding_nonblank_line(lines, idx)
+    assert "most-capable tier" in preceding_line or "most capable tier" in preceding_line, (
+        "the pointer's paragraph must sit immediately beside the existing "
+        "most-capable-tier exception paragraph, not float elsewhere in the "
+        "section"
     )
 
     # Post-condition: search, don't assume. The tier floor's actual value
-    # must appear in exactly one file -- the Check 17 row is the SSOT.
-    hits = []
-    for md in sorted(LOOM_CODE_ROOT.rglob("*.md")):
-        text = md.read_text(encoding="utf-8")
-        if _TIER_FLOOR_VALUE_PATTERN.search(text):
-            hits.append(md)
-
+    # (the phrase tying "sonnet" to "tier floor") must appear in exactly
+    # one of the two files structurally relevant to this point-don't-copy
+    # relation -- the Check 17 row is the SSOT, SDD's SKILL.md must not
+    # restate it. Scoped to these two named files rather than
+    # rglob("*.md") across all of loom-code/, per this module's own
+    # isolation convention (see module docstring `Scope`) -- an unrelated
+    # third doc mentioning the phrase is not this task's concern and would
+    # otherwise fail this test with a message that points nowhere useful.
+    #
+    # This is a forward regression guard, not a RED-then-GREEN check this
+    # task's own TDD cycle exercised: the baseline (worktree of the parent
+    # commit 2c7e7f17, same pattern applied) is already 1 hit -- Task 3's
+    # Check 17 row -- before Task 5 touches anything, and Task 5's own
+    # edit (a pointer, not a restatement) leaves the count at 1. It still
+    # does real work going forward: restating the tier value in SDD's
+    # SKILL.md flips the count to 2 and this assertion fails.
+    hits = [
+        md
+        for md in (SDD_SKILL_MD, PROMPT_MD)
+        if _TIER_FLOOR_VALUE_PATTERN.search(md.read_text(encoding="utf-8"))
+    ]
     assert hits == [PROMPT_MD], (
-        "the (c2) tier floor value must appear in exactly one file "
-        f"(plan-document-reviewer-prompt.md); found in {hits}"
+        "the (c2) tier floor value must appear in exactly one of the two "
+        f"structurally relevant files (plan-document-reviewer-prompt.md); found in {hits}"
     )
 
 
