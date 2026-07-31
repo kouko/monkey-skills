@@ -12,9 +12,17 @@ Task 3 amends Check 8 of plan-document-reviewer-prompt.md IN PLACE (no
 renumbering — see docs/loom/memory/retire-numbered-checks-dont-renumber.md,
 whose precedent is Check 5 in this same file). The third assertion below is
 an append-only guard: it parses every numbered row in the checks table and
-fails if the amendment introduced any number above the pre-existing maximum
-(16) — proving Task 3 amended a row in place rather than appending a new
-check number.
+fails if Check 8's amendment introduced any number above the maximum this
+table is expected to carry — proving that amendment happened in place
+rather than appending a new check number.
+
+`PRE_EXISTING_MAX_CHECK_NUMBER` is updated, not frozen at 16 forever: a
+later, legitimately NEW check (Check 17, added by
+docs/loom/plans/2026-07-31-reuse-adequacy-declaration-hardening.md Task 3)
+is an authorized append, not the renumbering-during-Check-8-edit regression
+this guard exists to catch. The guard's job is "no *extra* numbers beyond
+what the table is supposed to have," so the constant tracks the table's
+current legitimate maximum.
 """
 
 import re
@@ -27,9 +35,11 @@ PLAN_DOCUMENT_REVIEWER_PROMPT = (
     / "loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md"
 )
 
-# Pre-existing maximum check number before this task's amendment. Task 3 must
-# not raise this — it amends Check 8's row in place.
-PRE_EXISTING_MAX_CHECK_NUMBER = 16
+# Current legitimate maximum check number in the table. Check 8's own
+# amendment must not raise this further — it amends Check 8's row in place.
+# Bumped 16 -> 17 when Check 17 (Reuse-adequacy) shipped, an authorized
+# append, not a renumbering.
+PRE_EXISTING_MAX_CHECK_NUMBER = 17
 
 
 def _read(path: Path) -> str:
@@ -47,7 +57,7 @@ def test_check8_sweeps_brief_obligations():
         (e.g. modal-obligation words and deferred-verification phrases),
         so the reviewer can classify a sentence without judgment.
     And the checks table as a whole must show no renumbering: no row number
-    exceeds the pre-existing maximum of 16.
+    exceeds the table's current legitimate maximum (17, since Check 17 shipped).
     """
     text = _read(PLAN_DOCUMENT_REVIEWER_PROMPT)
 
