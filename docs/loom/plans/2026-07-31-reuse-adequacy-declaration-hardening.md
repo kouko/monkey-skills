@@ -1,14 +1,14 @@
 # Plan: Reuse-adequacy declaration hardening
 
 Source brief: docs/loom/specs/2026-07-31-reuse-adequacy-declaration-hardening.md
-Total tasks: 6
-Critical-path depth: 4 (≤5) — T1 → T3 → T5 → T6
+Total tasks: 7
+Critical-path depth: 4 (≤5) — T1 → T3 → T7 → T6
 Execution order: parallel-where-possible
-Plan-document-reviewer verdict: PASS (2026-08-01, round 2, 14/14)
+Plan-document-reviewer verdict: PASS (2026-08-01, post-repair round, 15/15)
 
 ## Task 1 — rewrite the `Reuse-adequacy` schema into two slots plus a source marker
 
-- **Description**: Replace §`Reuse-adequacy` at `loom-code/skills/writing-plans/references/plan-format.md:141-147` and its field-list entry at `loom-code/skills/writing-plans/references/plan-format.md:57` with the two-slot block. `Observed` reports (present tense, existing code) and ends in a source marker from the pinned vocabulary in ## Notes; `Intended` specifies. There is no author-written adequacy field — the verdict belongs to the reviewer. State the malformed-block consequence verbatim from the pin, and route `unverified assumption` at the §Stated facts convention already at `loom-code/skills/writing-plans/references/plan-format.md:157-159` rather than inventing a parallel rule.
+- **Description**: Replace §`Reuse-adequacy` at `loom-code/skills/writing-plans/references/plan-format.md:141-147` and its field-list entry at `loom-code/skills/writing-plans/references/plan-format.md:57` with the two-slot block. `Observed` reports (present tense, existing code) and ends in a source marker from the pinned vocabulary in the plan's `## Notes` PIN; `Intended` specifies. There is no author-written adequacy field — the verdict belongs to the reviewer. State the malformed-block consequence verbatim from the pin, and route `unverified assumption` at the §Stated facts convention already at `loom-code/skills/writing-plans/references/plan-format.md:157-159` rather than inventing a parallel rule.
 - **Module**: `loom-code/skills/writing-plans/references/plan-format.md`
 - **Files touched**: `loom-code/skills/writing-plans/references/plan-format.md`, `loom-code/scripts/test_plan_fact_grounding.py`
 - **Context paths**:
@@ -43,7 +43,7 @@ Plan-document-reviewer verdict: PASS (2026-08-01, round 2, 14/14)
 
 - **Description**: Append Check 17 to the checks table in `loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md`, with the four graded parts (a) presence, (b) marker, (c1) cross-read, (c2) adequacy, each carrying its own failure consequence. (c2)'s consequence states that a reuse whose semantics do not carry over is a `gaps` entry and never a `notes` entry, and that this holds even when the plan is internally consistent and every existing test passes. Check 17 is also the SSOT for the tier floor on (c2) — see ## Notes. Update the output contract's `checks_passed` denominator, the `check_id` range, and the verdict mapping so they stay consistent with the new check.
 - **Module**: `loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md`
-- **Files touched**: `loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md`, `loom-code/scripts/test_plan_document_reviewer_check17.py`
+- **Files touched**: `loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md`, `loom-code/scripts/test_plan_document_reviewer_check17.py`, `loom-code/scripts/test_plan_obligation_sweep.py`, `loom-code/scripts/test_sdd_review_weight_marker.py` — **corrected 2026-08-01**: the last two pin the pre-Check-17 state (a max-check-number guard and a `checks_passed` denominator) and move with any appended check. Declaring only the first two understated the disjointness oracle.
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md`
   - `/Users/kouko/GitHub/monkey-skills/docs/loom/specs/2026-07-31-reuse-adequacy-declaration-hardening.md`
@@ -57,8 +57,8 @@ Plan-document-reviewer verdict: PASS (2026-08-01, round 2, 14/14)
 ## Task 4 — add the matching spec-consistency checklist item
 
 - **Description**: Add `CHK-SPEC-009: Reuse-adequacy Block in Plan Tasks [FIXABLE]` to `loom-code/skills/subagent-driven-development/checklists/spec-consistency.md`, following the shape of its sibling `CHK-SPEC-008` at `loom-code/skills/subagent-driven-development/checklists/spec-consistency.md:86`. It requires the block on any task whose Description instructs cross-call-path reuse, and requires the `Observed` slot to carry a marker from the pinned vocabulary. Transcribe the marker tokens verbatim from the ## Notes pin.
-- **Module**: `loom-code/skills/subagent-driven-development/checklists/spec-consistency.md`
-- **Files touched**: `loom-code/skills/subagent-driven-development/checklists/spec-consistency.md`, `loom-code/scripts/test_spec_consistency_reuse_adequacy.py`
+- **Module**: `domain-teams/skills/code-team/checklists/spec-consistency.md` — **corrected 2026-08-01**: the loom-code path this task originally named is a FUNCTIONAL COPY; the canonical file lives in `domain-teams` and the copy is regenerated by `loom-code/scripts/distribute.py`, with `loom-code/scripts/verify-drift.py` enforcing byte-identity in CI. Hand-editing the copy passes the pytest command and fails a CI job that command cannot see.
+- **Files touched**: `domain-teams/skills/code-team/checklists/spec-consistency.md`, `loom-code/skills/subagent-driven-development/checklists/spec-consistency.md` (regenerated, never hand-edited), `loom-code/scripts/test_spec_consistency_reuse_adequacy.py`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/loom-code/skills/subagent-driven-development/checklists/spec-consistency.md`
 - **Acceptance**:
@@ -95,9 +95,25 @@ Plan-document-reviewer verdict: PASS (2026-08-01, round 2, 14/14)
 - **Acceptance**:
   - **RED**: `loom-code/scripts/test_docs_review_blocking_class.py::test_plugin_version_and_changelog_at_0_43_0` fails
   - **GREEN**: `plugin.json` reads 0.43.0, `CHANGELOG.md` carries `## [0.43.0]`, and the whole `loom-code` suite is green
-- **Dependencies**: Tasks 2, 4, 5 complete first
+- **Dependencies**: Tasks 2, 4, 5, 7 complete first
 - **Independent**: false
 - **Brief item covered**: "**Shipping is part of this change, not a follow-up.** … a skill-content change without a `plugin.json` bump and its matching CHANGELOG entry is a silent no-op for every installed copy. The current-version pin at `loom-code/scripts/test_docs_review_blocking_class.py:200` tracks the shipping version by design, so it moves in the same change."
+
+## Task 7 — close the three gaps this plan's own reviewers found
+
+- **Description**: Three findings from the Task 2/3/4 review round, fixed together because two of them are one line each and the third is a deletion. (1) **Delete** the "the reviewer runs 16 checks (… 14 can actually fail)" sentence from `loom-code/skills/writing-plans/README.md`, `README.ja.md` and `README.zh-TW.md` — Check 17 made it false, and the count is a derived number no reader acts on, so removing the sentence removes the drift surface permanently rather than adding a guard for it. (2) Add an ordering/adjacency assertion to `test_readmes_mirror_the_two_slot_shape` so it fails on a mutant that swaps which slot is the report and which is the specification — a reviewer demonstrated that mutant currently passes. (3) Add an assertion to `test_chk_spec_009_requires_the_source_marker` covering the opt-in "MAY omit" bullet, whose deletion currently leaves the test green while flipping CHK-SPEC-009 to mandatory-on-every-task.
+- **Module**: `loom-code/skills/writing-plans/README.md` — **deliberate deviation from one-module-per-task**, recorded under `## Notes` §Task 7's module boundary.
+- **Files touched**: `loom-code/skills/writing-plans/README.md`, `loom-code/skills/writing-plans/README.ja.md`, `loom-code/skills/writing-plans/README.zh-TW.md`, `loom-code/scripts/test_writing_plans_readme_sync.py`, `loom-code/scripts/test_spec_consistency_reuse_adequacy.py`
+- **Context paths**:
+  - `/Users/kouko/GitHub/monkey-skills/loom-code/skills/writing-plans/README.md`
+  - `/Users/kouko/GitHub/monkey-skills/loom-code/scripts/test_writing_plans_readme_sync.py`
+  - `/Users/kouko/GitHub/monkey-skills/loom-code/scripts/test_spec_consistency_reuse_adequacy.py`
+- **Acceptance**:
+  - **RED**: `loom-code/scripts/test_writing_plans_readme_sync.py::test_readmes_mirror_the_two_slot_shape` fails against a slot-swapped mutant of a README before the ordering assertion is added — demonstrate the mutant passing first, then failing.
+  - **GREEN**: no README states a check count; the slot-swap mutant fails the README test; deleting CHK-SPEC-009's "MAY omit" bullet fails the checklist test; the whole resolved test command is green.
+- **Dependencies**: Tasks 2, 3, 4 complete first
+- **Independent**: false
+- **Brief item covered**: "**(c2) carries a tier floor; (a), (b) and (c1) do not.**" — this task protects the guard tests for the two-slot shape and the opt-in scoping the brief's §Smallest End State specifies.
 
 ## Notes
 
@@ -161,6 +177,64 @@ retire-in-place convention as the check numbers above.
 in lockstep by `loom-code/scripts/test_writing_plans_readme_sync.py:56`. They are
 one artifact for splitting purposes; splitting per-locale would produce three
 tasks that cannot be verified independently of each other.
+
+Verdict re-stamped after the post-repair PASS — stamping the verdict, no
+re-review (writing-plans §Amending a PASS plan, kind 1).
+
+### A `replace()` on a heading string hit an inline mention (2026-08-01)
+
+Task 7 was inserted with `text.replace("## Notes", task7 + "## Notes", 1)`. The
+**first** literal `## Notes` in this file was not the heading — it was inside
+Task 1's own Description, which said "from the pinned vocabulary in ## Notes".
+Task 7's whole block landed mid-sentence, splitting Task 1 in two and turning the
+rest of its Description into a heading reading `## Notes; \`Intended\` specifies…`.
+
+Everything reported success. The script's `assert` passed — the string *did*
+exist, just not where it was meant. `check_doc_citations.py` stayed green because
+no citation was touched. The damage was found only by the next
+plan-document-reviewer, which correctly reported a dependency **cycle**
+(Task 1 → 2,3,4 → Task 1), a missing `## Task 7` heading, and a stale PASS stamp.
+
+Two rules out of it: anchor structural edits on line-start-plus-newline
+(`"\n## Notes\n"`), never a bare substring that can appear in prose; and assert
+the **post-condition** (one `## Notes` heading, N task headings, acyclic
+dependencies), not merely that the anchor was found. The repair asserted all
+three before writing. Task 1's Description now writes the reference as
+`` `## Notes` `` so the trap is not left armed for the next editor.
+
+### Task 7's module boundary, and why three findings became one task
+
+`dev-workflow:complexity-critique` was run on the first proposal, which was three
+separate tasks. Verdict: **RESHAPE**. Two reasons.
+
+The README check-count finding was going to be fixed by updating the number and
+adding a derived-count test to guard it. The smaller end state is to **delete the
+sentence**: the count is derived from the reviewer prompt's own table, no reader
+acts on it, and it was wrong the first time it was exercised. Deleting removes
+the drift surface; guarding it adds ~30 lines of machinery to maintain a number
+nobody consumes. Net shipped content goes from +32 lines to −1.
+
+The other two findings are one assertion each. Splitting them into their own
+tasks would spend a full implementer+two-reviewer triad per line. Task 7
+therefore spans two test files plus the three READMEs, against the
+one-module-per-task rule. The rule exists to keep diffs reviewable and dispatch
+atomic; five files totalling one deletion and two assertions stays inside that
+intent. Recorded rather than silently deviated from.
+
+### `Files touched` under-declared twice in one wave (2026-08-01)
+
+Of the three tasks dispatched in parallel, **two touched files their `Files
+touched` did not declare** — T3 by two guard tests, T4 by the canonical checklist
+behind a functional copy. Both additions were legitimate and both implementers
+reported them; no collision occurred, but only because the undeclared files
+happened not to overlap.
+
+`Files touched` is the oracle that authorizes parallel dispatch at all. An oracle
+that is right two times in three is not an oracle. Recorded here rather than
+quietly patched: the fields above are corrected, and the general lesson —
+plan-time `Files touched` systematically misses guard tests that pin the state a
+change alters, and misses SSOT files behind functional copies — belongs in the
+repo's practice store at close-out.
 
 ### Parallel wave
 
