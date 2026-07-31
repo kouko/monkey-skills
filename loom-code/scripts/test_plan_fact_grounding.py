@@ -44,6 +44,7 @@ Stdlib only (pathlib). plan-format.md is resolved relative to this
 test file.
 """
 
+import re
 from pathlib import Path
 
 PLAN_FORMAT = (
@@ -227,58 +228,39 @@ def _per_task_block_section(text: str) -> str:
     return "".join(lines[start:end])
 
 
-def test_reuse_adequacy_field_present():
-    """plan-format.md's per-task block documents a reuse-adequacy
-    declaration: the behaviour-match claim, the why-acceptable clause,
-    and an inline definition of what counts as a behaviour difference
-    (Task 2, brief item 'Reuse-adequacy declaration'; motivating
-    evidence: #619 reused the top-line lane's selector in the
-    statement lane without re-checking its semantics --
-    `docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md`
-    §3.7 A-2)."""
-    text = _text()
-    section = _per_task_block_section(text)
-    low = section.lower()
+def _reuse_adequacy_subsection(text: str) -> str:
+    """Isolate the live `#### `Reuse-adequacy`` subsection only --
+    narrower than `_per_task_block_section`.
 
-    # field name
-    assert "reuse-adequacy" in low, (
-        "the per-task block must name a Reuse-adequacy field -- a task "
-        "instructed to reuse an existing helper must declare whether its "
-        "behaviour still holds in the new lane"
+    The absence assertion in
+    `test_reuse_adequacy_block_pins_two_slots_and_marker_vocabulary`
+    needs a scope that excludes the OTHER five per-task field
+    subsections (Files touched, Review-weight, External surfaces,
+    ...), each of which legitimately carries its own bulleted
+    sub-items -- checking "no extra bulleted field" against the whole
+    per-task block would false-positive on those. The section runs
+    from the field's own `####` heading to the next heading of the
+    same or shallower depth (`### Stated facts ...`).
+    """
+    lines = text.splitlines(keepends=True)
+    start = None
+    depth = 0
+    for i, line in enumerate(lines):
+        if line.startswith("#") and "reuse-adequacy" in line.lower():
+            start = i
+            depth = len(line) - len(line.lstrip("#"))
+            break
+    assert start is not None, (
+        "plan-format.md carries no heading naming the Reuse-adequacy "
+        "field's own subsection"
     )
-
-    # behaviour-match claim
-    assert "behaviour-match claim" in low, (
-        "must name the behaviour-match claim -- the one-line statement of "
-        "whether the helper's behaviour in the new lane matches its "
-        "behaviour in the old one"
-    )
-    match_para = _first_paragraph_at(section, "behaviour-match claim").lower()
-    assert "new lane" in match_para and "old" in match_para, (
-        "the behaviour-match claim must be defined against the concrete "
-        "old-lane vs new-lane comparison, not left abstract"
-    )
-
-    # why-acceptable clause
-    assert "why-acceptable clause" in low, (
-        "must name the why-acceptable clause -- the stated reason a "
-        "behaviour difference, if any, is acceptable for this task"
-    )
-    accept_para = _first_paragraph_at(section, "why-acceptable clause").lower()
-    assert "acceptable" in accept_para, (
-        "the why-acceptable clause must require a stated reason the "
-        "difference is acceptable, not just record that one exists"
-    )
-
-    # inline definition of "behaviour difference"
-    diff_para = _first_paragraph_at(section, "behaviour difference").lower()
-    for cue in ("different value", "different branch", "different default"):
-        assert cue in diff_para, (
-            f"'behaviour difference' must be defined inline at its first "
-            f"use by enumerating what counts ({cue!r} missing) -- a "
-            f"weak-tier reader cannot classify a helper's divergence from "
-            f"the bare term"
-        )
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        line = lines[j]
+        if line.startswith("#") and len(line) - len(line.lstrip("#")) <= depth:
+            end = j
+            break
+    return "".join(lines[start:end])
 
 
 def _normalize_ws(s: str) -> str:
@@ -307,6 +289,15 @@ def test_reuse_adequacy_block_pins_two_slots_and_marker_vocabulary():
     text = _text()
     section = _per_task_block_section(text)
     low = section.lower()
+
+    # field name (property moved from the retired
+    # `test_reuse_adequacy_field_present`: the per-task schema
+    # documents a Reuse-adequacy declaration)
+    assert "reuse-adequacy" in low, (
+        "the per-task block must name a Reuse-adequacy field -- a task "
+        "instructed to reuse an existing helper must declare whether its "
+        "behaviour still holds in the new lane"
+    )
 
     # both slots named
     assert "observed" in low, "must name the `Observed` slot"
@@ -355,4 +346,25 @@ def test_reuse_adequacy_block_pins_two_slots_and_marker_vocabulary():
         "must say explicitly that there is no author-written "
         "adequacy/justification field -- the verdict is the reviewer's, "
         "not the author's"
+    )
+
+    # ABSENCE assertion: the live subsection must declare NO bulleted
+    # field beyond `Observed` / `Intended`. A disclaiming sentence is
+    # not enough -- mutation-tested by inserting a literal
+    # `- **`Adequacy`**: <verdict>` bullet right after the `Intended`
+    # slot while leaving the disclaimer sentence untouched; that
+    # mutation must fail exactly this assertion (code-quality-reviewer
+    # finding on fd37f788: the other 9 assertions above stay green
+    # against it).
+    live_subsection = _reuse_adequacy_subsection(text)
+    field_names = re.findall(
+        r"^-\s+\*\*`([^`]+)`\*\*", live_subsection, flags=re.MULTILINE
+    )
+    allowed_fields = {"observed", "intended"}
+    extra_fields = [f for f in field_names if f.strip().lower() not in allowed_fields]
+    assert not extra_fields, (
+        f"the live `Reuse-adequacy` subsection declares bulleted "
+        f"field(s) {extra_fields!r} beyond `Observed` / `Intended` -- "
+        f"the schema has NO author-written adequacy field; saying so "
+        f"in prose is not enough, the field itself must be absent"
     )
