@@ -30,6 +30,7 @@ pre-existing field bullets are also one-line summaries, not full specs.
 Stdlib only (pathlib). Resolve READMEs relative to this test file.
 """
 
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -112,8 +113,34 @@ def test_readmes_mirror_the_two_slot_shape():
         # precede `Intended` (the specification), and the source markers --
         # which close out the `Observed` clause -- must sit between the two
         # labels, not after `Intended`.
-        observed_idx = section.index("Observed")
-        intended_idx = section.index("Intended")
+        #
+        # Anchored on the bare word, this over-fires on two legitimate
+        # edits (Task 7 revision round 1, reproduced against scratch
+        # mutants before this fix): (a) a semantically-faithful rephrasing
+        # that *previews* the bare word "Intended" ahead of the real
+        # `Observed` clause, with no label/meaning swap; (b) a
+        # cross-reference to the word "Intended" inside `Observed`'s own
+        # prose -- exactly the phrasing plan-format.md §`Reuse-adequacy`
+        # itself uses ("... belongs in `Intended`, not here"), so mirroring
+        # the SSOT's own wording into a README would break CI for no
+        # defect. Anchoring on the backtick-wrapped label *as it opens its
+        # own slot* -- `` `Observed`( `` / `` `Intended`( `` (half- or
+        # full-width paren, ja/zh-TW use the full-width `（` with no space)
+        # -- ignores bare mentions and cross-references while still
+        # catching a real slot swap, since a swap moves which label opens
+        # which clause.
+        observed_match = re.search(r"`Observed`\s*[(（]", section)
+        intended_match = re.search(r"`Intended`\s*[(（]", section)
+        assert observed_match, (
+            f"{name}: no backtick-wrapped `Observed` slot opener found "
+            "(expected `Observed` immediately followed by '(' or full-width '（')"
+        )
+        assert intended_match, (
+            f"{name}: no backtick-wrapped `Intended` slot opener found "
+            "(expected `Intended` immediately followed by '(' or full-width '（')"
+        )
+        observed_idx = observed_match.start()
+        intended_idx = intended_match.start()
         assert observed_idx < intended_idx, (
             f"{name}: `Observed` (report) must appear before `Intended` "
             "(specification) -- slot order looks inverted"
