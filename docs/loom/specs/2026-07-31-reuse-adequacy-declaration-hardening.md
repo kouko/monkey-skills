@@ -297,8 +297,33 @@ it does not address direction-of-fit ambiguity at all.
 - The single free-prose `Reuse-adequacy` line at `loom-code/skills/writing-plans/references/plan-format.md:141-147` — it is
   replaced, not extended; leaving both shapes documented would give authors a
   compliant way to keep writing the ambiguous form.
-- Nothing else. The two doc-string tests stay (they pin mirror-sync, which is
-  still true); they gain a behavioural sibling rather than being deleted.
+- `test_reuse_adequacy_field_present` in
+  `loom-code/scripts/test_plan_fact_grounding.py` — **retired**. It pinned the
+  retired field's vocabulary (`behaviour-match claim`, `why-acceptable clause`,
+  and an inline definition of `behaviour difference`), none of which survives
+  this change. Its one surviving property — that the per-task block names a
+  `Reuse-adequacy` field — moves into the new behavioural test rather than being
+  dropped.
+- `test_readmes_list_reuse_adequacy_field` in
+  `loom-code/scripts/test_writing_plans_readme_sync.py` — **stays**. It genuinely
+  pins mirror-sync across the three locales, which is still true after the field
+  changes shape.
+- Nothing else.
+
+**Correction (2026-08-01, reviewer-driven).** This section first read: *"Nothing
+else. The two doc-string tests stay (they pin mirror-sync, which is still true);
+they gain a behavioural sibling rather than being deleted."* That justification
+was **false when it was written** — only the readme-sync test pins mirror-sync;
+the other pinned the retired vocabulary, so "still true" never applied to it.
+Task 1's code-quality reviewer found the consequence first (the test stayed green
+only by keeping the retired vocabulary alive in a historical paragraph, and its
+own docstring had become inaccurate); its spec-reviewer sibling then enforced the
+sentence's letter and blocked the correct fix. The two verdicts pointing opposite
+ways is what localised the defect to this sentence rather than to the artifact.
+
+Recorded here rather than silently overwritten: a brief-level fact that was false
+and carried faithfully downstream is the exact defect class this change exists to
+intercept. This one was caught by the gate, not at close-out.
 
 ## Out of Scope
 
