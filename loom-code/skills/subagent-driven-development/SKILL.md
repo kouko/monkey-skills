@@ -160,6 +160,8 @@ Pick the cheapest model that meets the task's actual reasoning load.
 
 Reviewers usually run at one tier below the implementer — they grade against fixed rubrics, which is cheaper than producing the artifact. **Exception**: when the implementer ran at the most-capable tier on an architectural task, the code-quality-reviewer also runs at most-capable (subtle design errors need the same horsepower to catch).
 
+A second, unrelated tier floor applies to `plan-document-reviewer`'s Check 17 (c2) — see [`writing-plans/references/plan-document-reviewer-prompt.md`](../writing-plans/references/plan-document-reviewer-prompt.md), Check 17 row, which is the SSOT for that floor's value.
+
 ## Status handling — implementer states
 
 ```

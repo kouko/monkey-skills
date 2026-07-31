@@ -39,6 +39,15 @@ PROMPT_MD = (
     / "plan-document-reviewer-prompt.md"
 )
 
+SDD_SKILL_MD = (
+    Path(__file__).parents[1]
+    / "skills"
+    / "subagent-driven-development"
+    / "SKILL.md"
+)
+
+LOOM_CODE_ROOT = Path(__file__).parents[1]
+
 # The three marker tokens, transcribed VERBATIM from the plan's ## Notes PIN
 # (docs/loom/plans/2026-07-31-reuse-adequacy-declaration-hardening.md), the
 # same source Task 1 already transcribed from into plan-format.md.
@@ -136,6 +145,73 @@ def test_check17_c2_carries_the_tier_floor_others_do_not():
     assert "carry no floor" in lower or "carries no floor" in lower or (
         "no floor" in lower
     ), "Check 17 must state (a), (b), (c1) carry no floor"
+
+
+def _section(text: str, heading: str) -> str:
+    """Return the body of the first Markdown section starting at `heading`
+    (a line beginning with that exact heading text), up to the next `## `
+    heading or end of file."""
+    lines = text.splitlines()
+    start = next((i for i, line in enumerate(lines) if line.strip() == heading), None)
+    assert start is not None, f"heading {heading!r} not found"
+    end = next(
+        (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
+        len(lines),
+    )
+    return "\n".join(lines[start:end])
+
+
+# Task 5 (docs/loom/plans/2026-07-31-reuse-adequacy-declaration-hardening.md):
+# a pointer, not a restatement -- so the (c2) tier floor value stays SSOT'd
+# in the Check 17 row above and is never copied into SDD's SKILL.md.
+_TIER_FLOOR_VALUE_PATTERN = re.compile(
+    r"sonnet[^.\n]{0,60}tier floor|tier floor[^.\n]{0,60}sonnet",
+    re.IGNORECASE,
+)
+
+
+def test_sdd_skill_points_at_check17_without_restating_the_floor():
+    """SDD's Model selection section must carry a pointer -- beside the
+    existing most-capable-tier exception -- naming Check 17 (c2) and the
+    plan-document-reviewer prompt as the SSOT for the (c2) tier floor,
+    without restating the floor's value (sonnet-or-above) itself.
+
+    Point-don't-copy is only real if it is checked by searching, not by
+    trusting the edit: the post-condition is that the tier-floor value
+    (the phrase tying "sonnet" to "tier floor") appears in exactly one
+    file under loom-code/ -- the Check 17 row -- not two."""
+    assert SDD_SKILL_MD.is_file(), f"SDD SKILL.md is absent at {SDD_SKILL_MD}"
+    skill_text = SDD_SKILL_MD.read_text(encoding="utf-8")
+
+    model_selection = _section(skill_text, "## Model selection")
+
+    assert "Check 17" in model_selection, (
+        "Model selection section must name Check 17"
+    )
+    assert "(c2)" in model_selection, (
+        "the pointer must name graded part (c2) specifically -- (a)/(b)/(c1) "
+        "carry no floor per Check 17's own row"
+    )
+    assert "plan-document-reviewer-prompt.md" in model_selection, (
+        "the pointer must name the reviewer prompt file as the SSOT"
+    )
+    assert "most-capable tier" in model_selection or "most capable tier" in model_selection, (
+        "the pointer line must sit beside the existing most-capable-tier "
+        "exception, not float elsewhere in the section"
+    )
+
+    # Post-condition: search, don't assume. The tier floor's actual value
+    # must appear in exactly one file -- the Check 17 row is the SSOT.
+    hits = []
+    for md in sorted(LOOM_CODE_ROOT.rglob("*.md")):
+        text = md.read_text(encoding="utf-8")
+        if _TIER_FLOOR_VALUE_PATTERN.search(text):
+            hits.append(md)
+
+    assert hits == [PROMPT_MD], (
+        "the (c2) tier floor value must appear in exactly one file "
+        f"(plan-document-reviewer-prompt.md); found in {hits}"
+    )
 
 
 def test_output_contract_names_check_17():
