@@ -80,14 +80,33 @@ all three mechanical parts correctly in every reviewer cell, and had zero
 discriminating power on (c2) — it answered "adequate" on both the defect and the
 legitimate material, reaching the defect answer by fabricating a behaviour the
 code does not have. The floor has precedent in this plugin:
-`loom-code/skills/subagent-driven-development/SKILL.md:182` already carries a
+`loom-code/skills/subagent-driven-development/SKILL.md:161` already carries a
 most-capable-tier exception for one reviewer role on architectural tasks.
+
+**A live instance of the defect, found in this brief.** The line above first
+cited line 182 — the number `docs/loom/dogfood/2026-07-27-plan-fact-grounding-coldread.md`
+cites for the same sentence. It was correct when that note was written and has
+since drifted; the text now sits at line 161. `check_doc_citations.py` passed the
+brief with an unqualified all-clear both times, because it bounds-checks that the
+path resolves and the line exists — never that the line says what the citing text
+claims. That gap is exactly what this change's `(c1)` sub-check exists to close,
+and it was caught here only because a human-directed recon happened to open the
+file. It is also the source audit's own argument for `§N` anchors over line
+numbers, arriving unprompted.
 
 Mechanising (c2) instead was considered and ruled out: "does this helper drop
 information the new call path needs" is the un-greppable classification named in
 `docs/loom/memory/prose-only-enforcement-dies-on-weak-executors.md`.
 
 And a matching `spec-consistency.md` item.
+
+**Shipping is part of this change, not a follow-up.** The schema, the three
+READMEs, the new check and the checklist item are all skill content, and this
+marketplace publishes by version — a skill-content change without a
+`plugin.json` bump and its matching CHANGELOG entry is a silent no-op for every
+installed copy. The current-version pin at
+`loom-code/scripts/test_docs_review_blocking_class.py:200` tracks the shipping
+version by design, so it moves in the same change.
 
 **Design correction found while drafting the contract (2026-07-31)**: an earlier
 sketch made the adequacy verdict a *third field in the plan*, filled by the
