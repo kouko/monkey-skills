@@ -43,7 +43,7 @@ brainstorming → brief                             (Discovery 階段)
 
 ## 宣告 DONE 前的自審
 
-Plan 寫好後，writing-plans 派 [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) 當 evaluator subagent。Reviewer 跑 16 項檢查（其中 2 項 non-blocking——1 項已退役、1 項僅供參考，實際會擋審的是 14 項），涵蓋每任務的失敗測試驗收條件、brief-任務 coverage map、DAG 無 cycle 等，回 PASS / NEEDS_REVISION。NEEDS_REVISION 就修 plan + 重審。最多 2 輪；還沒過就 escalate 給 user（多半是 brief 本身需要重想）。
+Plan 寫好後，writing-plans 派 [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) 當 evaluator subagent。Reviewer 跑檢查，涵蓋每任務的失敗測試驗收條件、brief-任務 coverage map、DAG 無 cycle 等，回 PASS / NEEDS_REVISION。NEEDS_REVISION 就修 plan + 重審。最多 2 輪；還沒過就 escalate 給 user（多半是 brief 本身需要重想）。
 
 plan-document-reviewer 與 SDD 的 spec-reviewer / code-quality-reviewer **不同** — 後者評 code，這個評 plan 結構。
 

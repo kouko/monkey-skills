@@ -43,7 +43,7 @@ This shape is what `subagent-driven-development` consumes when dispatching the t
 
 ## Self-review before declaring DONE
 
-After producing the plan, writing-plans dispatches [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent. The reviewer runs 16 checks (2 non-blocking: one retired, one advisory — 14 can actually fail) covering per-task one-failing-test acceptance, brief-task coverage map, DAG no-cycles, etc., and returns PASS / NEEDS_REVISION. If NEEDS_REVISION, writing-plans patches the plan and re-reviews. Up to 2 rounds; if still failing, escalate to user (the brief itself likely needs revisiting).
+After producing the plan, writing-plans dispatches [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent. The reviewer runs checks covering per-task one-failing-test acceptance, brief-task coverage map, DAG no-cycles, etc., and returns PASS / NEEDS_REVISION. If NEEDS_REVISION, writing-plans patches the plan and re-reviews. Up to 2 rounds; if still failing, escalate to user (the brief itself likely needs revisiting).
 
 The plan-document-reviewer is **separate from** SDD's spec-reviewer / code-quality-reviewer — those evaluate code; this one evaluates plan structure.
 

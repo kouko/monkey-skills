@@ -101,3 +101,28 @@ def test_readmes_mirror_the_two_slot_shape():
                 f"{name}: per-task field list is missing the verbatim "
                 f"marker token {marker!r}"
             )
+
+        # Presence alone cannot catch a slot swap: a mutant that relabels
+        # the report clause `Intended` and the specification clause
+        # `Observed` still contains both words and all three marker tokens,
+        # so it passes every assertion above -- verified empirically against
+        # such a mutant before this assertion was added (Task 7 of
+        # docs/loom/plans/2026-07-31-reuse-adequacy-declaration-hardening.md).
+        # `Observed` (the report, per plan-format.md §`Reuse-adequacy`) must
+        # precede `Intended` (the specification), and the source markers --
+        # which close out the `Observed` clause -- must sit between the two
+        # labels, not after `Intended`.
+        observed_idx = section.index("Observed")
+        intended_idx = section.index("Intended")
+        assert observed_idx < intended_idx, (
+            f"{name}: `Observed` (report) must appear before `Intended` "
+            "(specification) -- slot order looks inverted"
+        )
+        for marker in MARKER_TOKENS:
+            marker_idx = section.index(marker)
+            assert observed_idx < marker_idx < intended_idx, (
+                f"{name}: source marker {marker!r} must sit between the "
+                "`Observed` and `Intended` labels (it closes out the "
+                "`Observed` report clause) -- found outside that span, "
+                "suggesting a slot swap"
+            )

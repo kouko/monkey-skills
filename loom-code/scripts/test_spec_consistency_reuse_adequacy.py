@@ -62,3 +62,16 @@ def test_chk_spec_009_requires_the_source_marker():
         assert token in section, (
             f"CHK-SPEC-009 is missing the verbatim source marker: {token!r}"
         )
+
+    # Deleting the opt-in scoping bullet leaves every assertion above green
+    # while silently flipping CHK-SPEC-009 from "applies when the task
+    # reuses a helper across lanes" to mandatory-on-every-task -- verified
+    # empirically against a mutant with the bullet removed before this
+    # assertion was added (Task 7 of docs/loom/plans/
+    # 2026-07-31-reuse-adequacy-declaration-hardening.md).
+    assert "MAY omit the block" in section, (
+        "CHK-SPEC-009 must state the opt-in-by-reuse-presence scoping "
+        "bullet (tasks that author new logic instead of reusing an "
+        "existing helper across lanes MAY omit the block) -- its absence "
+        "flips the item to mandatory on every task"
+    )

@@ -43,7 +43,7 @@ brainstorming → brief                            (Discovery 段階)
 
 ## DONE 宣言前の自己レビュー
 
-プラン作成後、writing-plans は [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) を evaluator サブエージェントとして派遣する。レビュアは 16 個のチェック（うち 2 つは non-blocking — 1 つは廃止済み、1 つは advisory、実際に落ちうるのは 14 個）を実行し、タスクあたりの failing-test 受入条件、ブリーフ-タスクカバレッジ map、DAG 循環なし等をカバーしたうえで PASS / NEEDS_REVISION を返す。NEEDS_REVISION なら writing-plans がプランをパッチして再レビュー。最大 2 ラウンド；まだ通らなければユーザにエスカレーション（ブリーフ自体の再考が必要な可能性が高い）。
+プラン作成後、writing-plans は [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) を evaluator サブエージェントとして派遣する。レビュアはチェックを実行し、タスクあたりの failing-test 受入条件、ブリーフ-タスクカバレッジ map、DAG 循環なし等をカバーしたうえで PASS / NEEDS_REVISION を返す。NEEDS_REVISION なら writing-plans がプランをパッチして再レビュー。最大 2 ラウンド；まだ通らなければユーザにエスカレーション（ブリーフ自体の再考が必要な可能性が高い）。
 
 plan-document-reviewer は SDD の spec-reviewer / code-quality-reviewer と **別物** — 後者はコードを評価、こちらはプラン構造を評価。
 
