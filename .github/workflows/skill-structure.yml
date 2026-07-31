@@ -326,9 +326,27 @@ jobs:
         run: |
           python3 scripts/check_version_bump.py --base "$BASE_SHA" --head "$HEAD_SHA"
 
+  loom-memory-store-integrity:
+    name: loom memory store integrity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Check loom-memory store integrity
-        # The store-integrity checker (scripts/check_loom_memory_integrity.py)
-        # exists and has its own unit tests, but nothing ran it against the
-        # real store — a drifted docs/loom/memory/ could merge unnoticed.
+        # Split out of `plugin version bump` (which it used to ride as a second
+        # step) because a failure there reported a job name that describes a
+        # DIFFERENT check — twice, a missing §Index line surfaced as
+        # "plugin version bump failed" and cost a diagnosis round before anyone
+        # looked at the store. A gate's job name is the first thing a reader
+        # sees; it has to name what actually broke.
+        #
+        # Unlike its former host this job is not PR-gated: the store can drift
+        # on a direct push to main too, and the check needs no PR context.
         run: |
           python3 scripts/check_loom_memory_integrity.py

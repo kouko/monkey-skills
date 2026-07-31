@@ -25,6 +25,8 @@ on:
     branches: [main]
     paths:
       - 'loom-code/**'
+      - '.claude/hooks/**'
+      - '.claude/settings.json'
       # The living-spec gates scan the repo root and check the committed
       # docs/loom/INDEX.md, so a docs/loom/** change must also trigger CI —
       # else an index drift or a spec-tree edit could merge ungated.
@@ -58,6 +60,8 @@ on:
     branches: [main]
     paths:
       - 'loom-code/**'
+      - '.claude/hooks/**'
+      - '.claude/settings.json'
       - 'docs/loom/**'
       - '**/.claude-plugin/plugin.json'
       - '**/.codex-plugin/plugin.json'

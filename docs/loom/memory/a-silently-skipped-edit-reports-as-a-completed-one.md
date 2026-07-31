@@ -1,0 +1,16 @@
+---
+name: a-silently-skipped-edit-reports-as-a-completed-one
+description: Tools that no-op on a non-match instead of erroring turn a skipped fix into a reported one — a Python str.replace whose search string differed by one word left a correction applied to one of two files while the run reported success, and a mutation-battery slice that matched the wrong `EOF` produced syntactically broken mutants whose failures were reported as kills; prefer the tool that errors on a non-match, and verify the fix landed rather than that the command exited
+type: practice
+origin: mechanize-memory-store-integrity-gate whole-branch review (2026-07-31), rounds 3-4
+---
+
+Two instances in one branch, both in the *verification* layer rather than the code under test:
+
+1. **A prose correction applied to one of two files.** The same wrong citation appeared in a hook and its test module. A Python script did `t.replace(old, new)` on both. The hook's actual text read `followed the prose`; the search string said `followed prose`. `str.replace` returns the string unchanged on a non-match, so the script printed "corrections applied" while the hook kept the wrong citation. Review caught it a round later — by then the two files stated the same history two incompatible ways.
+
+2. **A mutation battery reporting kills that were syntax errors.** The battery cut a heredoc with `orig.index('EOF\n', start)`, which matches the `EOF` in the *opening* `cat >&2 <<EOF` line, not the closing delimiter. Every "mutant" was a script with its heredoc head removed and its body promoted to shell commands. The reported `2 red` was bash failing, not an assertion discriminating — and it was cited in a comment as evidence that two assertions were load-bearing. Re-run with the correct delimiter (`'\nEOF\n'`), the honest result was `1 red`, and the mutation that actually isolates those assertions is a different one entirely.
+
+**Why:** both tools fail by doing nothing, and doing nothing is indistinguishable from success at the call site — the script exits 0, the batch prints its summary, the suite still runs. The damage is worse than a plain miss because the run *produces a report*, and the report is then quoted downstream: a comment asserting test coverage, a convergence claim to a reviewer. Neither instance was caught by the thing that should catch it — the first survived a whole review round, the second was caught only because a reviewer traced which stream `$REPORT` reaches.
+
+**How to apply:** (1) For file edits, prefer the tool that errors on a non-match (this harness's `Edit` refuses; `str.replace`/`sed -i` do not) — and when a script must do it, assert the text changed, don't assume. (2) After any batch edit, grep for what should now be *absent*; "applied" is not evidence, absence is. (3) A mutation battery is code under test too: check each mutant still parses (`bash -n`, `py_compile`) before believing its result, or a broken mutant reads as a kill. (4) When a mutation is cited as proof that an assertion is load-bearing, confirm the assertion is the one that failed — not merely that the suite went red, since an earlier assertion failing first hides the one you meant to test. Related: [[a-test-can-be-correct-and-still-unable-to-fail]], [[construction-guaranteed-invariant-proves-nothing]].
