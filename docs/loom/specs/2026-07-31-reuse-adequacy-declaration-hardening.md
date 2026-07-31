@@ -119,6 +119,15 @@ draft. No new agent, no new dispatch.
 
 ## Current State Evidence
 
+**Every citation in this section describes the state BEFORE this change, pinned
+at base commit `293d446c`.** Several no longer resolve to the content described
+once the change lands — `loom-code/scripts/test_plan_fact_grounding.py:230` is
+the clearest case: the test named there was retired by Task 1, so that line now
+holds something else. Read this section with `git show 293d446c:<path>`, not
+against the working tree. The section is a dated snapshot by design; leaving its
+line numbers unqualified would reproduce, one document over, the drift this
+change exists to catch.
+
 - **Forward** — `writing-plans` authors a task; `loom-code/skills/writing-plans/references/plan-format.md:57` lists
   `Reuse-adequacy` in the per-task field list; `loom-code/skills/writing-plans/references/plan-format.md:141-147` defines
   it (v0.39.0+); `plan-document-reviewer-prompt.md` Checks 1–16 grade the plan.
