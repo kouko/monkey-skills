@@ -5,6 +5,113 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.42.4] - 2026-07-31
+
+### Added
+
+- **Memory-store integrity checkpoint in `finishing-a-development-branch`
+  Step 8.** When a branch adds or edits a file under `docs/loom/memory/`,
+  the orchestrator now runs `scripts/check_loom_memory_integrity.py` from
+  the repo root **before** the close-out commit. The store's §Index
+  invariant requires one index line per memory file in its `README.md`,
+  with the description copied byte-identical from the file's frontmatter
+  — writing the memory file alone leaves the store invalid.
+
+  The bullet fires only when the branch touched the store (skip silently
+  otherwise; it is not a per-branch ritual) and sits beside the two
+  structurally identical Step 8 bullets that already existed: living-spec
+  index regen and archive-on-close. The memory store simply had no
+  equivalent, which is why the same miss recurred.
+
+  **Recurrence is the reason it exists.** The invariant was violated
+  twice; the second time (0.42.3, PR #634) a new entry shipped without
+  its index line, the close-out commit was green locally, and CI failed
+  only after push — under a job named `plugin version bump`, which names
+  a different check, so the failure did not point at the store and cost
+  a diagnosis round. The bullet says this explicitly, so a reader knows
+  why running it locally beats letting CI find it.
+
+  **It caught the third occurrence on its own branch.** Closing this
+  branch out, the memory entry below was written and its index line
+  forgotten again — the new checkpoint failed at exit 1 naming the file,
+  locally, before the commit, which is precisely the position the two
+  prior occurrences were missed from.
+
+  Guarded by eight structural tests
+  (`loom-code/scripts/test_finishing_memory_store_integrity.py`), written
+  RED-first. Mutation-verified: deleting the bullet turns all eight red, and
+  a benign prose addition — including +3000 characters — keeps all eight
+  green. Deleting any load-bearing clause (the trigger condition, the
+  concurrency tag, the N/A line, the "No such file" caveat, the
+  `byte-identical` requirement, the do-not-commit action, the invocation
+  path, the skip clause) turns at least one test red; the N/A line and the
+  "No such file" caveat share a test rather than each having their own.
+
+  Two of those assertions had to be re-pinned during review because they
+  matched a token that appears elsewhere in the same bullet — `byte-identical`
+  (the fix that added invariant (d) to the failure enumeration put a second
+  copy in, silently disarming the guard on the run instruction) and the bare
+  store path (which the parallel-wave and §Index clauses both satisfy). The
+  general shape: a substring assertion over a prompt must pin the phrase its
+  own failure message names, not a token that happens to occur in it.
+
+  Assertions are scoped by **bullet boundary**, delimited structurally —
+  the next sibling `   - ` marker, or any non-blank line dedented out of
+  the list. Two earlier drafts got this wrong and are worth recording,
+  because both were caught by review rather than by the tests:
+
+  1. A ±600-char neighborhood window copied from
+     `test_finishing_archive_step.py` was false-green — the Memory-timing
+     bullet directly above contains both `docs/loom/memory/README.md` and
+     "lands in THIS close-out commit" within ~4 lines of its end, so the
+     window satisfied the store-path, README and commit assertions with
+     the guarded bullet deleted. A radius must be re-checked against its
+     actual neighbors, never inherited. (The sibling test is not itself
+     false-green — deleting the archive bullet turns all eight of its
+     tests red.)
+  2. Replacing that radius with a `_MAX_BULLET_CHARS` cap was worse: it
+     shipped with 6 characters of headroom against a comment claiming
+     ~570, so a 7-character prose edit turned every test red under a
+     message blaming the anchor — and it masked the path assertion added
+     in the same change, which never got to evaluate. A structural
+     terminator needs no recalibration as the prose grows.
+
+  Next-touch, deferred under Rule 3 (surgical) rather than fixed here: the
+  plugin version pin lives in `test_docs_review_blocking_class.py`, a
+  feature-named file, so every unrelated bump edits it and its docstring
+  now carries a four-link supersede chain. A neutral
+  `test_plugin_version_pin.py` would end that.
+
+- **`docs/loom/memory/substring-assertions-must-pin-the-phrase-their-message-names`**
+  — the durable lesson this branch's own review rounds produced. Four
+  substring assertions guarding a prompt artifact passed while the clause
+  each claimed to guard was deletable, because the asserted token also
+  occurred elsewhere in the same bullet; each instance was introduced by
+  the fix for the previous one, and the sentence-level mutation battery
+  caught none of them (a duplicate token survives sentence deletion). The
+  entry records the assertion-shaping rule and the word-level probe shape
+  that does catch it.
+
+### Changed
+
+- `docs/loom/BACKLOG.md` gains **"Citation checking has no answer for
+  anchor-only documents"** (OPEN), carrying forward 0.42.3's documented
+  Known gap plus the three non-blocking next-touch items from that PR's
+  review. The entry records why this is a design question rather than a
+  patch: line-number citations are machine-verifiable and human-fragile,
+  `§N` anchors are human-robust and machine-opaque, and the repo's own
+  erratum convention mandates the form the checker cannot read. It also
+  records the already-ruled-out non-starter (defaulting `--sections` on:
+  measured at 0.42.4 on the tracked `docs/loom/plans/` corpus, the flag
+  examines 19 more refs, finds zero additional defects, and pushes 108
+  refs into `unchecked` — 108 of the 127 `§N` refs it meets, ≈85%, are
+  unresolvable). The entry carries a re-derive-don't-cite rule and the
+  reason: it was wrong about the absolutes twice, first quoting pre-0.42.3
+  numbers, then quoting an untracked-inclusive working tree under a
+  "quote the deltas" rule that whole-branch review falsified — the deltas
+  move with the population too (+28/+153 vs +19/+108). Only the ≈85%
+  share held across both.
+
 ## [0.42.3] - 2026-07-31
 
 ### Fixed

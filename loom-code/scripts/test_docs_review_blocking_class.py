@@ -197,12 +197,13 @@ PLUGIN_JSON = Path(__file__).parents[1] / ".claude-plugin" / "plugin.json"
 CHANGELOG_MD = Path(__file__).parents[1] / "CHANGELOG.md"
 
 
-def test_plugin_version_and_changelog_at_0_42_3():
+def test_plugin_version_and_changelog_at_0_42_4():
     """Task 7 of docs/loom/plans/2026-07-30-requesting-docs-review-standalone-skill.md
-    (superseded by the 2026-07-30 description-diet bump, then again by the
-    2026-07-31 citation-checker pathless-shorthand fix):
-    plugin.json is bumped to 0.42.3 and CHANGELOG.md carries a matching
-    `## [0.42.3]` heading. Both read from the WORKING TREE, never a
+    (superseded by the 2026-07-30 description-diet bump, then the 2026-07-31
+    citation-checker pathless-shorthand fix, then the 2026-07-31
+    memory-store integrity checkpoint):
+    plugin.json is bumped to 0.42.4 and CHANGELOG.md carries a matching
+    `## [0.42.4]` heading. Both read from the WORKING TREE, never a
     committed blob -- an implementer cannot commit, so a test that reads
     committed content can never go green in this workflow
     (docs/loom/BACKLOG.md, "what 0.39.0 does NOT close", item 2).
@@ -211,13 +212,13 @@ def test_plugin_version_and_changelog_at_0_42_3():
     rewrites it (see the supersede chain above), which is what makes a
     missing bump fail CI rather than ship a silent marketplace no-op."""
     plugin_text = PLUGIN_JSON.read_text(encoding="utf-8")
-    assert '"version": "0.42.3"' in plugin_text, (
-        "loom-code/.claude-plugin/plugin.json must read version 0.42.3"
+    assert '"version": "0.42.4"' in plugin_text, (
+        "loom-code/.claude-plugin/plugin.json must read version 0.42.4"
     )
 
     changelog_text = CHANGELOG_MD.read_text(encoding="utf-8")
-    assert "## [0.42.3]" in changelog_text, (
-        "loom-code/CHANGELOG.md must carry a `## [0.42.3]` heading"
+    assert "## [0.42.4]" in changelog_text, (
+        "loom-code/CHANGELOG.md must carry a `## [0.42.4]` heading"
     )
 
 

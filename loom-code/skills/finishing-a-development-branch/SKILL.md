@@ -201,6 +201,34 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      you reach this bullet at Step 8 and the question was NOT already asked at Step 6, ask it now
      — late is still better than never — but treat that as a process miss to avoid next time, not
      the intended flow.
+   - Memory-store integrity (orchestrator-only, ONCE per branch, same as its Step 8
+     siblings — the check only reads, but its failure action edits
+     `docs/loom/memory/README.md`, which a parallel wave would race). Fires ONLY when
+     this branch added or edited a file under `docs/loom/memory/`; otherwise skip
+     silently — unlike `ui-verification` and archive-on-close, which state their N/A
+     loudly, this trigger is auditable straight from the diff, so a loud N/A on every
+     branch that never touched the store would be pure noise.
+     **First, does the checker exist here?** `scripts/check_loom_memory_integrity.py`
+     lives at the monkey-skills repo root and ships inside no plugin, so a consuming repo
+     that adopted the portable store may not have it. If that path is absent, say
+     `memory-store integrity: N/A — checker not present in this repo` loudly and move on
+     — never read a "No such file" nonzero as a store violation.
+     Otherwise run `python3 scripts/check_loom_memory_integrity.py` from the repo root
+     **before** the close-out commit. The store's §Index invariant requires one index line
+     per memory file in `docs/loom/memory/README.md`, whose description is that file's
+     frontmatter `description` copied **byte-identical** — writing the memory file alone
+     leaves the store invalid. Exit 0 is the gate; a nonzero exit names the offending file
+     and which invariant broke (missing index line, description not byte-identical,
+     dangling line, filename ≠ frontmatter `name`, duplicate lines). **On nonzero: fix the
+     store, re-run until exit 0, then `git add` the corrected
+     `docs/loom/memory/README.md` — do not commit on a violation.** The checker validates
+     the WORKING TREE, so exit 0 is not on its own evidence the commit is clean: fixing the
+     index line and forgetting to stage it ships exactly the defect this bullet exists to
+     prevent, while passing its own gate. Run it yourself rather
+     than letting CI find it: the CI job that catches this is named for a different check
+     (`plugin version bump`), so a post-push failure does not point at the store and costs
+     a diagnosis round. Recurrence is the reason this bullet exists — the same miss
+     shipped twice.
    - Run `git status --short` to confirm exactly which files are staged and untracked.
    - Stage with an explicit file list (`git add <file1> <file2> …`) — avoid `git add -A <dir>`
      which sweeps unrelated untracked files into the commit.
