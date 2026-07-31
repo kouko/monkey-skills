@@ -36,7 +36,7 @@ Per [`references/plan-format.md`](references/plan-format.md), every task ships w
 - **Context paths**: existing code the implementer reads (paths-not-content)
 - **Acceptance**: RED test name + GREEN observable condition
 - **Dependencies**: `none` | `Task N completes first` | `Tasks N, M parallel`
-- **Reuse-adequacy**: when reusing an existing helper in a new lane, one line on whether its behaviour still matches and why any difference is acceptable (see `references/plan-format.md` §`Reuse-adequacy`)
+- **Reuse-adequacy**: when the task's Description instructs reusing an existing helper in a new lane, two author-written slots — `Observed` (a report on what the helper does today, ending in a source marker from the closed vocabulary `read <repo-relative-path>:<line>` / `inferred from docstring` / `unverified assumption — <what would settle it>`) and `Intended` (a specification of what the new call path will do). No author-side adequacy verdict — that's the reviewer's judgment (see `references/plan-format.md` §`Reuse-adequacy`)
 - **Brief item covered**: quote / reference from the brief's Smallest End State / Decision
 
 This shape is what `subagent-driven-development` consumes when dispatching the three subagents per task.

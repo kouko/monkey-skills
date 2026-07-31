@@ -66,3 +66,38 @@ def test_readmes_list_reuse_adequacy_field():
             "Reuse-adequacy (scoped to the section between the "
             "Description bullet and the next '## ' heading)"
         )
+
+
+# The three marker tokens, transcribed verbatim from the ## Notes PIN in
+# docs/loom/plans/2026-07-31-reuse-adequacy-declaration-hardening.md --
+# never translated, never re-derived, checkable character-for-character
+# against that one source.
+MARKER_TOKENS = [
+    "read <repo-relative-path>:<line>",
+    "inferred from docstring",
+    "unverified assumption — <what would settle it>",
+]
+
+
+def test_readmes_mirror_the_two_slot_shape():
+    """The single-line `Reuse-adequacy` schema (behaviour-match claim +
+    why-acceptable clause in one author-written field) was replaced in
+    plan-format.md by a two-slot block: `Observed` (report, ends in a
+    source marker) and `Intended` (specification) -- with no author-side
+    adequacy verdict. Each README's field-list section must mirror this:
+    name both slots and carry all three marker tokens verbatim (English
+    tokens even in the ja/zh-TW locales -- only the surrounding prose is
+    localized)."""
+    for name, path in READMES.items():
+        section = _field_list_section(path)
+        assert "Observed" in section, (
+            f"{name}: per-task field list does not name the `Observed` slot"
+        )
+        assert "Intended" in section, (
+            f"{name}: per-task field list does not name the `Intended` slot"
+        )
+        for marker in MARKER_TOKENS:
+            assert marker in section, (
+                f"{name}: per-task field list is missing the verbatim "
+                f"marker token {marker!r}"
+            )
