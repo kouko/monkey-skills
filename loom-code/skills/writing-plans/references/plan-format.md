@@ -54,7 +54,7 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
   - **RED**: <failing test name OR diagnostic the implementer writes first>
   - **GREEN**: <observable condition when the task is done>
 - **External surfaces**: <v0.9.0+ — required when task touches non-stdlib external surface. See §External surfaces below. Omit field entirely if task is pure internal logic.>
-- **Reuse-adequacy**: <v0.39.0+ — required when the task's Description instructs the implementer to reuse an existing helper in a new lane. See §`Reuse-adequacy` below. Omit field entirely if the task authors new logic instead of reusing an existing helper across lanes.>
+- **Reuse-adequacy**: <v0.43.0+ — required when the task's Description instructs the implementer to reuse an existing helper in a new lane. Two author-written slots, `Observed` (ends in a source marker) and `Intended`; no author-side adequacy verdict — that judgement is the reviewer's, not the plan's. See §`Reuse-adequacy` below. Omit field entirely if the task authors new logic instead of reusing an existing helper across lanes.>
 - **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M complete first" (multi-prerequisite — N and M must both finish before this task starts) | "Tasks N, M parallel" (both are prerequisites, may run in parallel). Cross-part ordering: use "none" at task level + a plan-level `Notes` entry; the field is within-plan only and cannot reference a sibling part's tasks.>
 - **Independent**: <true | false>  # v0.8.0+ — opt-in marker for `dispatching-parallel-agents`. Default false.
 - **Review-weight**: <mechanical | prose | OMIT>  # v0.11.0+ — opt-in, default absent = full triad (implementer + spec-reviewer + code-quality-reviewer). `mechanical` may ONLY be set when this task is an identical or near-identical edit reproducible from an exact spec — never for logic, heuristic, hook, or security-surface changes. `prose` (v0.42.0+) may ONLY be set when every file in `Files touched` is `.md` authored prose. See §`Review-weight` below.
@@ -138,11 +138,27 @@ Each bullet declares **category** + **specific name / identifier** + **grounding
 
 Per-task `code-quality-reviewer.md` D7 enforces that any external call in the task's diff carries a grounding cite. Whole-branch `code-reviewer.md` D7 additionally checks for cross-task surface-consistency conflicts. The `spec-consistency.md` checklist (`CHK-SPEC-008`) requires this field's presence when the task description / `Files touched` reference any of the five surface categories.
 
-#### `Reuse-adequacy` (v0.39.0+)
+#### `Reuse-adequacy` (v0.43.0+)
 
-When a task's Description instructs the implementer to reuse an existing helper, function, or selector in a **new lane** — a different call site, a different data shape, or a different code path than the one the helper was originally written for — the task MUST carry a **Reuse-adequacy** declaration: one line stating the **behaviour-match claim** (whether the helper's behaviour in the new lane matches its behaviour in the old one) and, when it does not fully match, the **why-acceptable clause** (the stated reason the difference is acceptable for this task — not merely that one exists).
+When a task's Description instructs the implementer to reuse an existing helper, function, or selector in a **new lane** — a different call site, a different data shape, or a different code path than the one the helper was originally written for — the task MUST carry a **Reuse-adequacy** declaration made of two author-written slots with opposite directions of fit:
 
-A **behaviour difference** is any case where the helper returns a different value, takes a different branch, or applies a different default between the old lane and the new lane on the same or analogous input. Reuse copies the helper's *code*; it does not copy its *semantics* into the new lane for free — the two can diverge silently, and every test inside the new lane's own slice can stay green while it does. Motivating case: PR #619 reused the top-line lane's selector in the statement lane without re-checking whether its old-lane behaviour still held; the selector's semantics did not carry over, and 1165 passing tests never crossed the seam to notice (`docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md` §3.7 A-2).
+- **`Observed`** — a report: words answer to the code. State, in the present tense, what the helper does **today**, about code that already exists, and end the slot in one **source marker** from a closed vocabulary of exactly three:
+
+  ```
+  read <repo-relative-path>:<line>
+  inferred from docstring
+  unverified assumption — <what would settle it>
+  ```
+
+  The `<repo-relative-path>` in the `read` form is **repo-relative** — an absolute path resolves on no other machine and `check_doc_citations.py` cannot bounds-check it. A sentence about what the **new** code will do belongs in `Intended`, not here: writing it here is the direction-of-fit mistake this slot exists to prevent. `unverified assumption` reuses the escape hatch already defined in §Stated facts below (name what would settle it) rather than a parallel rule.
+
+  An absent marker, a marker outside this vocabulary, or an absolute path in the `read` form makes the block malformed: the reviewer returns NEEDS_REVISION on that ground alone and does not evaluate adequacy.
+
+- **`Intended`** — a specification: code answers to the words. State what the new call path will do with the behaviour `Observed` reported.
+
+**There is no author-written adequacy or justification field.** Whether the reuse is adequate — whether the behaviour `Observed` reports still holds on the call path `Intended` names — is the reviewer's verdict (`plan-document-reviewer` Check 17 (c2)), not a claim the plan author gets to make about their own work.
+
+Before v0.43.0, this field was one free-prose line combining a **behaviour-match claim** (whether the helper's behaviour in the new lane matches its behaviour in the old one) and, when it did not fully match, a **why-acceptable clause** (the stated reason the difference was acceptable). That combined line let the same sentence read as both a report and a specification — a live weak-tier author took the specification reading and invented a reassuring **behaviour difference** (any case where the helper returns a different value, takes a different branch, or applies a different default between the old lane and the new lane on the same or analogous input) that the code did not have. The combined field is retired, not extended: `Observed` / `Intended` replace it. Motivating case: PR #619 reused the top-line lane's selector in the statement lane without re-checking whether its old-lane behaviour still held; the selector's semantics did not carry over, and 1165 passing tests never crossed the seam to notice (`docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md` §3.7 A-2).
 
 **Omit the field entirely** when the task authors new logic rather than reusing an existing helper across lanes. The field is opt-in by reuse presence, not by every task.
 

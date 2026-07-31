@@ -279,3 +279,80 @@ def test_reuse_adequacy_field_present():
             f"weak-tier reader cannot classify a helper's divergence from "
             f"the bare term"
         )
+
+
+def _normalize_ws(s: str) -> str:
+    """Collapse all whitespace runs to single spaces.
+
+    The malformed-block consequence sentence is pinned verbatim in the
+    plan's `## Notes` section as hard-wrapped prose; plan-format.md is
+    free to wrap it differently. Comparing on collapsed whitespace
+    checks the pinned WORDS, not an incidental line-wrap column choice.
+    """
+    return " ".join(s.split())
+
+
+def test_reuse_adequacy_block_pins_two_slots_and_marker_vocabulary():
+    """The `Reuse-adequacy` schema is TWO author-written slots --
+    `Observed` (a report, ending in an obligatory source marker from a
+    closed vocabulary of exactly three) and `Intended` (a specification)
+    -- with no author-side adequacy/justification field left to write;
+    that verdict moves to the reviewer (Task 1,
+    `docs/loom/plans/2026-07-31-reuse-adequacy-declaration-hardening.md`;
+    brief `docs/loom/specs/2026-07-31-reuse-adequacy-declaration-hardening.md`
+    §Smallest End State). This guards against the single free-prose line
+    the schema replaces, whose direction of fit was ambiguous enough that
+    a live weak-tier author wrote a specification where a report belonged
+    (brief §Problem)."""
+    text = _text()
+    section = _per_task_block_section(text)
+    low = section.lower()
+
+    # both slots named
+    assert "observed" in low, "must name the `Observed` slot"
+    assert "intended" in low, "must name the `Intended` slot"
+    assert "belongs in `intended`, not here" in _normalize_ws(low), (
+        "must state explicitly that a sentence about what the new code "
+        "WILL do belongs in `Intended`, not `Observed` -- otherwise the "
+        "direction-of-fit ambiguity this schema exists to remove is still "
+        "available to a plan author"
+    )
+
+    # the three marker tokens, verbatim from the plan's `## Notes` pin
+    assert "read <repo-relative-path>:<line>" in low, (
+        "must carry the `read <repo-relative-path>:<line>` marker token "
+        "verbatim from the pin"
+    )
+    assert "inferred from docstring" in low, (
+        "must carry the `inferred from docstring` marker token verbatim "
+        "from the pin"
+    )
+    assert "unverified assumption — <what would settle it>" in low, (
+        "must carry the `unverified assumption — <what would settle it>` "
+        "marker token verbatim from the pin"
+    )
+
+    # <path> pinned repo-relative
+    assert "repo-relative" in low, (
+        "the `read` marker's path must be pinned as repo-relative -- an "
+        "absolute path resolves on no other machine"
+    )
+
+    # malformed-block consequence, verbatim from the pin (whitespace-normalized)
+    consequence = (
+        "an absent marker, a marker outside this vocabulary, or an "
+        "absolute path in the `read` form makes the block malformed: the "
+        "reviewer returns needs_revision on that ground alone and does "
+        "not evaluate adequacy."
+    )
+    assert consequence in _normalize_ws(low), (
+        "must state the malformed-block consequence verbatim from the "
+        "plan's `## Notes` pin"
+    )
+
+    # no author-side adequacy/justification field
+    assert "there is no author-written adequacy" in low, (
+        "must say explicitly that there is no author-written "
+        "adequacy/justification field -- the verdict is the reviewer's, "
+        "not the author's"
+    )
