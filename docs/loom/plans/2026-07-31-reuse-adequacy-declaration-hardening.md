@@ -87,7 +87,7 @@ Plan-document-reviewer verdict: PASS (2026-08-01, post-repair round, 15/15)
 
 - **Description**: Bump `loom-code/.claude-plugin/plugin.json` from 0.42.4 to 0.43.0, add the matching `## [0.43.0]` entry to `loom-code/CHANGELOG.md` describing the schema change and the new check, and update the current-version pin at `loom-code/scripts/test_docs_review_blocking_class.py:200` (the test name embeds the version, so both the name and its two assertions change).
 - **Module**: `loom-code/.claude-plugin/plugin.json`
-- **Files touched**: `loom-code/.claude-plugin/plugin.json`, `loom-code/CHANGELOG.md`, `loom-code/scripts/test_docs_review_blocking_class.py`
+- **Files touched**: `loom-code/.claude-plugin/plugin.json`, `loom-code/CHANGELOG.md`, `loom-code/scripts/test_docs_review_blocking_class.py`, `loom-code/.codex-plugin/plugin.json` — **corrected 2026-08-01**: a `PostToolUse` hook blocked the `plugin.json` edit until the codex mirror was regenerated, and `test_sync_codex_manifest.py` fails independently without it.
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/loom-code/.claude-plugin/plugin.json`
   - `/Users/kouko/GitHub/monkey-skills/loom-code/CHANGELOG.md`
@@ -202,6 +202,38 @@ dependencies), not merely that the anchor was found. The repair asserted all
 three before writing. Task 1's Description now writes the reference as
 `` `## Notes` `` so the trap is not left armed for the next editor.
 
+The third instance (T6) names the shape the other two only hinted at. What
+`Files touched` missed each time:
+
+| task | missed | what coupled it to the task |
+|---|---|---|
+| T3 | two guard tests | they pin the state the change alters |
+| T4 | the canonical checklist | SSOT behind a functional copy |
+| T6 | the codex plugin manifest | a hook and a drift test enforce the mirror |
+
+None appears in the task's own description; none is enforced by the task's own
+tests. **`Files touched` misses what is coupled by machinery rather than by
+topic** — which is also why a mechanical `git show --stat` versus the declared
+field would have caught all three, with no judgement involved.
+
+### Three residual over-fires accepted as debt (2026-08-01)
+
+A verification pass over the Task 5 and Task 7 revisions confirmed all seven
+of their mutation claims, and raised three new 🟡 — all the same shape: each
+revision replaced a semantic check with a literal-form check and introduced a
+new over-fire on a stylistically valid rendering (a bolded label, a
+definition-list form, two exception clauses merged into one paragraph), plus a
+rescoping that cannot see the SDD README trio.
+
+Closed as debt rather than revised again. The sequence
+presence-only → over-fire → tighten → new over-fire is a pendulum, and
+`judgment-rubrics.md` §4 reads "each iteration adds a special case instead of
+removing one" as a change-approach signal, not a retry signal. The root cause is
+that these tests enforce a **semantic** property over **prose**, whose valid
+renderings are unbounded. The asymmetry decides which residual to keep: a false
+alarm is loud, self-explaining and cheap; the hole it guards — a silent slot
+inversion — is the defect this whole change exists to prevent.
+
 ### Task 7's module boundary, and why three findings became one task
 
 `dev-workflow:complexity-critique` was run on the first proposal, which was three
@@ -221,10 +253,10 @@ one-module-per-task rule. The rule exists to keep diffs reviewable and dispatch
 atomic; five files totalling one deletion and two assertions stays inside that
 intent. Recorded rather than silently deviated from.
 
-### `Files touched` under-declared twice in one wave (2026-08-01)
+### `Files touched` under-declared three times in this plan (2026-08-01)
 
-Of the three tasks dispatched in parallel, **two touched files their `Files
-touched` did not declare** — T3 by two guard tests, T4 by the canonical checklist
+T6 later made it three. Of the three tasks dispatched in parallel, **two
+touched files their `Files touched` did not declare** — T3 by two guard tests, T4 by the canonical checklist
 behind a functional copy. Both additions were legitimate and both implementers
 reported them; no collision occurred, but only because the undeclared files
 happened not to overlap.
