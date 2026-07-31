@@ -2384,3 +2384,96 @@ agreement of the per-task + whole-branch reviewers.
   a fix costs a paired edit; the "pathless `:N` shorthand, ambiguous path, or
   absent target" parenthetical is now duplicated across two branches — below
   Rule of Three, extract only if a third appears.
+
+## `Reuse-adequacy` is a schema field with no gate behind it (COMMITTED-NEXT)
+- Status: COMMITTED-NEXT
+- Start: now — design is briefed at
+  `docs/loom/specs/2026-07-31-reuse-adequacy-declaration-hardening.md`, pending
+  the user's pick between its options A / B / D.
+- Origin: source audit
+  `docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md` §8
+  candidate 3; retargeted by
+  `docs/loom/audits/2026-07-31-a-class-interceptability-backtest.md`, which
+  ruled out candidate 1 as structurally unable to reach PR #619 A-2.
+- What: the field shipped in loom-code 0.39.0 (`loom-code/skills/writing-plans/references/plan-format.md:141-147`) and
+  **nothing enforces it**. No check in `loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md` names
+  it, so a plan omitting it returns `PASS`; the nearest sibling
+  `loom-code/skills/subagent-driven-development/checklists/spec-consistency.md:86` (`CHK-SPEC-008`) covers `External surfaces` only. Its
+  two tests (`loom-code/scripts/test_plan_fact_grounding.py:230`,
+  `loom-code/scripts/test_writing_plans_readme_sync.py:56`) assert the string is present in the
+  document, not that any behaviour follows.
+- Second, separable defect: the field's **direction of fit is ambiguous** — it
+  reads equally as a report about existing code and as a spec for intended code.
+  Measured 2026-07-31 on a sandbox reproducing the #619 A-2 shape: haiku asserted
+  a match and invented a supporting behaviour in the future tense ("the archive
+  **will** record all results including skipped entries"), sonnet read it as a
+  report and refused the why-acceptable clause. Presence enforcement alone does
+  not touch this half.
+- Do not re-run the superseded experiment: stage 2 was designed to test a
+  "two closed questions" contract, which the research round falsified before it
+  ran (a declaration whose author also judges it is Chain-of-Verification's
+  weakest variant). Stage 2 tests the brief's option D.
+
+## Institutionalise the implementer's refusal to work (OPEN)
+- Status: OPEN
+- Start: after the `Reuse-adequacy` arc closes, or the next time an implementer
+  returns `NEEDS_CONTEXT` / `BLOCKED` on a plan-fact defect and the refusal reads
+  as a judgment call rather than a contract obligation.
+- Origin: `docs/loom/audits/2026-07-31-a-class-interceptability-backtest.md`
+  §候選 6, proposed there and left unadjudicated.
+- What: 5 of the 9 plan-layer fact problems in that backtest were stopped by an
+  implementer declining to proceed — at the cheapest point, before execution —
+  and its reach was **wider** than the PIN-cross-read candidate: it also caught a
+  design gap, which cross-reading a source cannot see, because the refusal is not
+  "these disagree" but "I cannot build from this". `NEEDS_CONTEXT` / `BLOCKED`
+  already exist in the SDD contract; **what should trigger a refusal does not**.
+- Read the selection effect before costing it: those 5 are in the record
+  *because* refusal surfaced them. Cases refusal missed leave no
+  "refusal case" trace, so the backtest has no denominator and does not claim a
+  hit rate.
+- Needs a design round plus cross-tier behavioural validation (will a weak tier
+  fail to refuse when it should?) — the same 2×2 shape as
+  `docs/loom/dogfood/2026-07-27-plan-fact-grounding-coldread.md`.
+- Overlap note: candidate 6 and candidate 1 are substitutes on 4 of those 5
+  cases; candidate 6 and the `Reuse-adequacy` work do **not** overlap.
+
+## Four repo hooks carry a copy-pasted stdin-parse preamble (OPEN)
+- Status: OPEN
+- Start: the next time a fifth hook is added, or any change is needed to how a
+  hook reads its stdin payload — that change is a four-file edit today.
+- Origin: PR #636 (`check-memory-store-integrity.sh`), which deliberately copied
+  the sibling shape rather than extracting, because extraction touches all four
+  and was out of that branch's scope.
+- What: `.claude/hooks/check-codex-manifest-drift.sh:25-27`,
+  `.claude/hooks/check-memory-store-integrity.sh:44-46`, `.claude/hooks/remind-memory-mirror.sh:26-28` and
+  `.claude/hooks/validate-skill-folder-structure.sh:26-28` each carry a byte-identical three
+  lines (`FILE_PATH=""`, the `command -v jq` guard, and the same
+  `jq -r '.tool_input.file_path // .tool_input.notebook_path // empty'`). Four
+  copies is past Rule of Three.
+- Constraint on the fix: the copies are what make each hook a **standalone**
+  file that no-ops safely in a repo without the others. A shared helper must keep
+  that property — a sourced file that is missing has to degrade to `exit 0`, not
+  to a shell error, and each hook's `[ -f … ] || exit 0` portability exit must
+  survive.
+
+## The shipping version is pinned inside a topically unrelated test (OPEN)
+- Status: OPEN
+- Start: the next version bump that has to edit this file, if the edit is ever
+  missed or lands in the wrong file.
+- Origin: PR #629 (docs-review standalone skill), carried forward through three
+  subsequent bumps.
+- What: `loom-code/scripts/test_docs_review_blocking_class.py:200` defines
+  `test_plugin_version_and_changelog_at_0_42_4`, pinning `"version": "0.42.4"`
+  and the matching `## [0.42.4]` CHANGELOG heading. **The pin itself is
+  deliberate and correct** — its docstring states the purpose plainly: tracking
+  the current shipping version is what makes a missing bump fail CI instead of
+  shipping a silent marketplace no-op — the same failure
+  `docs/loom/memory/version-bump-packets-must-name-changelog-entry.md` records
+  from the packet side.
+- The cost is **placement, not the pin**: the file is about the docs-review
+  blocking class, so every bump forces an edit to a file about something else,
+  and the version number is baked into the test's own name (already rewritten
+  four times — the supersede chain is in its docstring). A plugin-version guard
+  belongs in a file named for that job.
+- Do not "fix" this by loosening the assertion to a regex — the exact-version
+  pin is the mechanism. Move it; do not weaken it.
