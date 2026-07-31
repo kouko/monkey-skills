@@ -146,6 +146,32 @@ def extract_citations(text: str) -> list[tuple[int, str, int, int | None]]:
     return citations
 
 
+# Matches a backtick-quoted citation shorthand carrying NO path segment
+# — `` `:170-179` `` — the form authors use when the path is named in the
+# surrounding prose. `_CITATION_RE` cannot match it (its path group needs
+# at least one character), so before this it was dropped silently: a doc
+# citing entirely in this form reported `checked 0 / unchecked 0` and
+# exit 0, indistinguishable from a genuine all-clear.
+_PATHLESS_CITATION_RE = re.compile(r"`:(\d+)(?:-(\d+))?`")
+
+
+def count_pathless_citations(text: str) -> int:
+    """Return how many pathless `` `:N` `` / `` `:N-M` `` spans `text` has.
+
+    These are counted UNCHECKED rather than resolved: with no path inside
+    the backticks there is no target to bounds-check.
+
+    The governing rule is the one `check_doc_report` states for omitted
+    `§N` refs — the counts must never imply a citation was checked when it
+    was not — but note the TREATMENT differs and deliberately so: omitted
+    `§N` refs are extracted into neither bucket (a full, documented
+    omission), whereas a pathless shorthand IS a `path:line`-family span
+    the reader wrote as a citation, so dropping it from both buckets is
+    exactly the silent-pass this function exists to end.
+    """
+    return sum(1 for _ in _PATHLESS_CITATION_RE.finditer(text))
+
+
 def list_repo_files(repo_root: Path) -> list[str]:
     """Return every file's path relative to `repo_root`, POSIX-style.
 
@@ -337,6 +363,11 @@ def check_doc_report(
     <lineno> -> <target>:§N section not found` for unresolvable `§N`
     anchors.
 
+    Pathless `` `:N` ``/`` `:N-M` `` shorthands (see
+    `count_pathless_citations`) add to `unchecked` regardless of
+    `check_sections` — they are `path:line`-family spans with the path
+    left to prose, never resolvable, and never findings.
+
     `check_sections` (default `False`, round 4): the `§N` anchor check
     is opt-in and experimental (see module docstring's Round 4 note).
     When `False`, `§N` refs are never even extracted from `text` — they
@@ -358,6 +389,7 @@ def check_doc_report(
             continue
         cited_repr = f"{start}-{end}" if end is not None else str(start)
         findings.append(f"{doc_path}:{lineno} -> {cited_path}:{cited_repr} {reason}")
+    unchecked += count_pathless_citations(text)
     if check_sections:
         for lineno, target_doc_name, major, minor in extract_section_refs(text):
             was_checked, tail = check_section_anchor(
@@ -460,7 +492,28 @@ def main(argv: list[str] | None = None) -> int:
             print(finding)
         return 1
 
-    print("OK: all citations resolve.")
+    # The success line must never claim more than was actually verified.
+    # "all citations resolve" is only unqualified when NOTHING was skipped;
+    # with any unchecked citation the line states its own scope. Mixed
+    # documents are the typical case, and these counts are summed across
+    # every document in one invocation (requesting-docs-review runs this
+    # over all changed .md files at once), so an unscoped success line
+    # would let one resolvable citation vouch for a whole batch.
+    # Exit stays 0 in every branch below: "unverifiable" is not "wrong",
+    # and exit 1 is reserved for findings.
+    if total_unchecked == 0:
+        print("OK: all citations resolve.")
+    elif total_checked == 0:
+        print(
+            "NOTE: nothing verified — every citation found was unresolvable "
+            "(pathless `:N` shorthand, ambiguous path, or absent target)."
+        )
+    else:
+        print(
+            f"OK: all {total_checked} checked citations resolve "
+            f"({total_unchecked} unchecked — pathless `:N` shorthand, "
+            "ambiguous path, or absent target)."
+        )
     return 0
 
 

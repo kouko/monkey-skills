@@ -1,0 +1,20 @@
+---
+name: cite-only-after-reading-what-the-source-tells-you-to-read-first
+description: A source document can carry standing instructions to its citers — an erratum, a "read X before citing this" pointer, a mandated citation form — and those instructions sit in the header block that every efficient reading pattern skips; a backtest cited such a document, saw the erratum's first line in a grep result, started reading below it, and shipped a draft that violated all three of its instructions plus inherited two undisclosed contradictions that sat directly under its own load-bearing sentence
+type: practice
+origin: fix-citation-checker-pathless-shorthand whole-branch review (2026-07-31), docs arm rounds 1-3
+---
+
+A backtest note cited `docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md`. That audit carries an **erratum block between its header bullets and §1**, which states three things to anyone citing it:
+
+1. the audit has three confirmed unrepaired internal contradictions, and **`docs/loom/BACKLOG.md` must be read before citing it**;
+2. downstream documents must cite it **by §N anchor, never by line number** (adding the erratum itself pushed every line below it down);
+3. **do not write self-referential quantities** (including round counts), because they must be re-measured on every edit.
+
+The draft violated all three. It cited by line number at five sites — one of which had already drifted off the sentence it was offered as the source for. It wrote its own checker output into itself (`checked 5 / unchecked 0`, actually 6/1). And it claimed to inherit "§7 的全部限制" while never reading the louder banner above §7 — so it missed that the BACKLOG entry catalogues a dispute (§1 scoreboard `A×2` vs §3.7's three enumerated instances) covering **the single case its whole verdict rested on**.
+
+The reading pattern that caused it is the ordinary efficient one: a `grep -n "^#"` for structure, then `sed -n '25,60p'` to start at §1. The erratum's first line *was* in the grep output. It was seen, classified as front-matter, and stepped over.
+
+**Why:** a document's instructions to its citers are not part of the content you came for, so every read optimised for "get to the section I need" structurally skips them — and they are exactly the part that governs whether your citation is valid. The failure is invisible at authoring time (the citations resolve, the numbers check out) and only surfaces when a reviewer opens the source from the top. In this case it produced two instruction-class review findings and a substantive rewrite, and the note's own subject was A-class defects — a plan asserting something false and having it faithfully carried downstream. Citing a source without reading its citation instructions is the same defect one layer up.
+
+**How to apply:** (1) When you first open a source you intend to cite, read from **line 1** to the first content section — errata, "status", "how to cite", and supersession notes live there, and they are short. Do not start at the section you need. (2) If the source names another document as a prerequisite for citing it, that document is now in your reading set — not optional context. (3) If the source mandates a citation form, follow it even when it costs you mechanical verifiability: `check_doc_citations.py` can bounds-check `path:line` but not `§N`, so an anchor-cited document returns `checked 0` — record that trade-off rather than reverting to the form the source forbade. (4) When a source declares its own contradictions unrepaired, inherit that disclosure explicitly and say which of them touch your conclusion; "I inherit §7's limits" is not inheritance if the limits you skipped are the ones that matter. Related: [[asserting-absence-needs-full-text-not-an-abstract]] (same shallow-read family, different mechanism — that one is about absence claims from an abstract, this one is about a document's own meta-instructions), [[a-passage-that-describes-itself-decays-on-every-edit]] (the erratum's third instruction).

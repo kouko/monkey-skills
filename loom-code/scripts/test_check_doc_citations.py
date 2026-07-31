@@ -76,6 +76,48 @@ def test_missing_file_zero_suffix_match_is_unchecked(tmp_path: Path) -> None:
     assert report.checked == 0
 
 
+def test_pathless_shorthand_citation_is_unchecked_not_dropped(
+    tmp_path: Path,
+) -> None:
+    # 2026-07-31: a citation written as a bare `` `:N-M` `` shorthand (the
+    # path named in surrounding prose instead of inside the backticks) did
+    # not match `_CITATION_RE` at all — its path group requires at least
+    # one character — so it was dropped before extraction, contributing to
+    # neither `checked` nor `unchecked`. A document whose citations are ALL
+    # in this form reported `checked 0 / unchecked 0 / findings 0` and
+    # exit 0: a silent pass byte-identical to "all citations resolve".
+    # Counting it UNCHECKED (not a finding) follows the same principle
+    # `check_doc_report`'s docstring already states for omitted `§N` refs —
+    # never let the counts imply a citation was checked when it was not.
+    doc = tmp_path / "doc.md"
+    _write(doc, "See that audit's §8 (`:170-179`).\n")
+
+    report = check_doc_report(doc, tmp_path, list_repo_files(tmp_path))
+
+    assert report.findings == []
+    assert report.unchecked == 1
+    assert report.checked == 0
+
+
+def test_pathless_regex_does_not_double_count_a_real_citation(
+    tmp_path: Path,
+) -> None:
+    # Parity with `_CITATION_RE`'s over-match guards: a resolvable
+    # `path:line` citation must register once, as `checked` — never also as
+    # a pathless shorthand, which would inflate both counters off one span.
+    # Structurally guaranteed (the pathless pattern requires the backtick to
+    # be immediately followed by `:`), pinned so a future relaxation of
+    # either pattern cannot silently break it.
+    _write(tmp_path / "target.py", "line1\n")
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `target.py:1`.\n")
+
+    report = check_doc_report(doc, tmp_path, list_repo_files(tmp_path))
+
+    assert report.checked == 1
+    assert report.unchecked == 0
+
+
 def test_flags_out_of_range_line_range_end(tmp_path: Path) -> None:
     _write(tmp_path / "target.py", "line1\nline2\nline3\n")
     doc = tmp_path / "doc.md"
@@ -157,8 +199,68 @@ def test_main_exits_0_on_clean_doc(tmp_path: Path, capsys) -> None:
     _write(doc, "See `target.py:1`.\n")
 
     rc = main([str(doc), "--repo-root", str(tmp_path)])
+    out = capsys.readouterr().out
 
     assert rc == 0
+    # Positive half of the success-line contract. Before 0.42.3 this test
+    # took `capsys` and never read it, so BOTH print statements could be
+    # deleted with the whole suite still green (whole-branch review,
+    # 2026-07-31). The unqualified wording is correct here and only here:
+    # nothing was skipped, so "all" ranges over everything examined.
+    assert "OK: all citations resolve." in out
+
+
+def test_main_scopes_the_ok_line_when_some_citations_were_unchecked(
+    tmp_path: Path, capsys
+) -> None:
+    # Whole-branch review, 2026-07-31 — both code-arm reviewers independently
+    # landed on this: the first cut of the fix guarded only `checked == 0`,
+    # but the defect is the word "all" ranging over checked ∪ unchecked.
+    # Mixed documents are the TYPICAL case (68 of the 72 files carrying a
+    # pathless shorthand also carry a resolvable citation), and `main` sums
+    # counts across every document in one invocation — requesting-docs-review
+    # runs it over all changed .md files at once — so a single resolvable
+    # citation anywhere re-armed the unqualified OK line for the whole batch.
+    # The success line must state its own scope instead.
+    _write(tmp_path / "target.py", "line1\n")
+    doc = tmp_path / "doc.md"
+    _write(doc, "Real `target.py:1`, plus a shorthand (`:170-179`).\n")
+
+    rc = main([str(doc), "--repo-root", str(tmp_path)])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert "checked 1 / unchecked 1" in out
+    assert "all 1 checked citations resolve" in out
+    assert "1 unchecked" in out
+    # The unqualified claim must NOT appear when anything was skipped.
+    assert "OK: all citations resolve." not in out
+
+
+def test_main_does_not_claim_all_resolve_when_nothing_was_checked(
+    tmp_path: Path, capsys
+) -> None:
+    # 2026-07-31, second face of the pathless-shorthand bug: a doc whose
+    # citations were ALL unresolvable still printed "OK: all citations
+    # resolve." on exit 0. Nothing resolved — nothing was even checked —
+    # so that line asserted a verification that never ran, which is the
+    # exact misread the shorthand bug caused downstream (a docs-review
+    # pre-pass folding this output into a dispatch packet reads it as a
+    # clean bill). Exit code deliberately stays 0: "unverifiable" is not
+    # "wrong", and flipping it would break every consumer of the current
+    # contract. Only the claim is withdrawn.
+    doc = tmp_path / "doc.md"
+    _write(doc, "See that audit's §8 (`:170-179`).\n")
+
+    rc = main([str(doc), "--repo-root", str(tmp_path)])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert "checked 0 / unchecked 1" in out
+    assert "all citations resolve" not in out
+    # Positive assertion added after whole-branch review: pinning only the
+    # absence let the NOTE branch be deleted with the suite still green.
+    assert "nothing verified" in out
 
 
 def test_main_exits_2_on_no_args() -> None:

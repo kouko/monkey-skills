@@ -5,6 +5,76 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.42.3] - 2026-07-31
+
+### Fixed
+
+- **`check_doc_citations.py` no longer drops pathless `:N` citation
+  shorthands, and its success line no longer claims more than it
+  verified.** Two faces of one defect, each pinned by a RED test.
+  Scope note up front: this closes the *pathless-shorthand* family only —
+  a document citing purely by `§N` anchor or bare prose reference still
+  has zero recognized citations and still prints the unqualified
+  all-clear (see "Known gap" below):
+  1. A citation written as a pathless shorthand — a backtick span
+     carrying only `:N` / `:N-M`, with the path named in surrounding
+     prose — did not match `_CITATION_RE` (its path group requires at
+     least one character), so it was dropped before extraction and
+     contributed to neither `checked` nor `unchecked`. New
+     `count_pathless_citations` counts these as **unchecked** (never
+     findings — with no path inside the backticks there is no target to
+     bounds-check). This applies the rule `check_doc_report`'s docstring
+     already stated for omitted `§N` refs: the counts must never imply a
+     citation was checked when it was not.
+  2. The success line asserted universality over a population it had not
+     examined: `OK: all citations resolve.` printed whenever there were
+     no findings, regardless of how many citations went unresolved. It
+     now states its own scope, branching in this order — unqualified when
+     `unchecked == 0` (which includes the zero-recognized-citation case,
+     see "Known gap"); `NOTE: nothing verified — …` when
+     `checked == 0 and unchecked > 0`; and
+     `OK: all N checked citations resolve (M unchecked — …)` in the mixed
+     case. The mixed case is the typical one, and `main` sums counts
+     across every document in one invocation, so before this a single
+     resolvable citation anywhere could vouch for a whole batch.
+     **Exit code deliberately unchanged (still 0) in all three branches**:
+     "unverifiable" is not "wrong", and exit 1 stays reserved for
+     findings. No consumer branches on this script's exit code —
+     `requesting-docs-review/SKILL.md:54` folds its *stdout* into the
+     dispatch packet and `agents/docs-reviewer.md` consumes that text —
+     so the reader-facing fix had to land in the message, not the code.
+
+  Found by dogfooding the checker on a freshly authored audit note whose
+  citations were all written in the shorthand form: it returned
+  `checked 0 / unchecked 0 / findings 0` and exit 0, byte-identical to a
+  genuine clean bill. Corpus scale on the pre-existing `docs/loom/` tree
+  (excluding this branch's own new note, which cites by section anchor
+  and contributes none): **387** pathless shorthands across **71** files
+  — an existing authoring convention, not isolated typos, and none of
+  those references had ever been bounds-checked by this script. The fix
+  makes them visible as `unchecked`; it does not make them verified.
+  Package suite 463 passed.
+
+  **Known gap — the silent all-clear still exists one level up.** In
+  default mode (the only mode any consumer invokes — `--sections` is
+  experimental and off), a document with *zero recognized citations*
+  (one citing purely by `§N` anchor, or naming files in prose) hits the
+  `unchecked == 0` branch and
+  prints `checked 0 / unchecked 0 / findings 0` + `OK: all citations
+  resolve.` + exit 0 — byte-identical to the pre-fix output this entry
+  cites as the bug. Only the pathless-`:N` family was closed. This is
+  reachable in practice, not hypothetical: whole-branch review
+  demonstrated it on this branch's own audit note, which cites by `§N`
+  because the source audit's erratum mandates that form for downstream
+  documents. Closing it means deciding what "a citation" is when nothing
+  in the text is machine-recognizable — out of scope here, recorded
+  rather than silently left.
+
+  Known limitation (unchanged in kind): a document *quoting* the
+  shorthand as an example also counts toward `unchecked` — the same
+  advisory-not-defect caveat `requesting-docs-review/SKILL.md` already
+  documents for pre-pass hits inside fenced blocks, quotes, and tables.
+
 ## [0.42.2] - 2026-07-30
 
 ### Changed
