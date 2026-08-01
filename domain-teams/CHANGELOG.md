@@ -5,6 +5,21 @@ All notable changes to the `domain-teams` plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v5.11.0] — 2026-08-01
+
+### Added
+
+- **`CHK-SPEC-009: Reuse-adequacy Block in Plan Tasks`** (code-team
+  `checklists/spec-consistency.md`): a plan task whose Description instructs
+  reuse of an existing helper on a call path other than the one it was written
+  for must carry a `Reuse-adequacy` block, and that block's `Observed` slot must
+  end in a source marker from a closed vocabulary of exactly three —
+  `read <repo-relative-path>:<line>` / `inferred from docstring` /
+  `unverified assumption — <what would settle it>`. Tasks authoring new logic
+  MAY omit the block; it is opt-in by reuse presence. Mirrors the plan-side
+  contract shipped in loom-code 0.43.0, whose `plan-document-reviewer` Check 17
+  grades the same block and owns the adequacy verdict.
+
 ## [v5.10.1] — 2026-07-24
 
 ### Added
