@@ -12,7 +12,7 @@
 
 | Knowledge shape | Home |
 |---|---|
-| Open item / debt / re-trigger | `docs/loom/BACKLOG.md` (cross-plugin) or plugin README §parked (local) |
+| Open item / debt / re-trigger | an entry file in `docs/loom/backlog/` per its charter (`docs/loom/backlog/README.md`, cross-plugin) or plugin README §parked (local) |
 | Decision bound to a commit | git-memory trailers (`Decision:`) |
 | Distilled practice / habit / process / recurring gotcha | **`docs/loom/memory/`** (this store) |
 | One-off event artifact | `docs/loom/{specs,plans,audits,dogfood,research}/` |

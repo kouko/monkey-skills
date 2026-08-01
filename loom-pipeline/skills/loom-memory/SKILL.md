@@ -46,11 +46,12 @@ Given a fact worth keeping:
 
 1. **Classify against the charter's jurisdiction table** (read it
    first). Not everything belongs in the store — e.g. a backlog-shaped
-   item (open item / debt / re-trigger) routes to `docs/loom/BACKLOG.md`,
-   and harness/dcg friction routes to the loom-code plugin-shipped
-   gotchas reference. Everything else: classify per the charter's
-   jurisdiction table (read it — it wins). Tell the user where you
-   routed the fact and why.
+   item (open item / debt / re-trigger) routes to creating an entry
+   file in `docs/loom/backlog/` per its own charter
+   (`docs/loom/backlog/README.md`), and harness/dcg friction routes to
+   the loom-code plugin-shipped gotchas reference. Everything else:
+   classify per the charter's jurisdiction table (read it — it wins).
+   Tell the user where you routed the fact and why.
 2. **Check the store for contradictions.** Before writing, grep the
    store — the index and the file bodies — for entries the new fact
    contradicts. On a hit, update or replace that entry (delete and

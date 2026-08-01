@@ -762,6 +762,44 @@ def test_start_field_disagreeing_with_its_body_bullet_is_rejected(tmp_path):
     assert "2026-08-01-alpha.md" in result.stdout
 
 
+# ---------------------------------------------------------------------------
+# Task 8 -- loom-pipeline's loom-memory skill must route a backlog-shaped item
+# to the store (docs/loom/backlog/), not to the now-generated
+# docs/loom/BACKLOG.md. Scoped to the "## record" section's classification
+# step, not a whole-file substring search, so a stray historical mention
+# elsewhere in the file cannot mask a live write-instruction, and so this
+# test would still fail if someone reverted the wording back to naming the
+# generated file as a write target.
+# ---------------------------------------------------------------------------
+
+
+LOOM_MEMORY_SKILL_PATH = (
+    REPO_ROOT / "loom-pipeline" / "skills" / "loom-memory" / "SKILL.md"
+)
+
+
+def _loom_memory_record_section() -> str:
+    text = LOOM_MEMORY_SKILL_PATH.read_text(encoding="utf-8")
+    _, _, after = text.partition("## record")
+    assert after, "loom-memory SKILL.md has no '## record' section"
+    body, _, _ = after.partition("\n## ")
+    return body
+
+
+def test_loom_memory_skill_does_not_route_writes_to_the_generated_index():
+    section = _loom_memory_record_section()
+    assert "docs/loom/BACKLOG.md" not in section, (
+        "loom-memory's '## record' step still instructs writing to the "
+        "generated index docs/loom/BACKLOG.md -- it must route a "
+        "backlog-shaped item to the docs/loom/backlog/ store instead"
+    )
+    assert "docs/loom/backlog/" in section, (
+        "loom-memory's '## record' step does not name docs/loom/backlog/ "
+        "(the store's entry-per-file directory) as the routing target for "
+        "a backlog-shaped item"
+    )
+
+
 def test_agreement_check_is_a_noop_when_body_has_no_matching_bullet(tmp_path):
     """The invariant fires only when BOTH copies are present. An entry whose
     frontmatter carries `origin:` but whose body never restates it as a

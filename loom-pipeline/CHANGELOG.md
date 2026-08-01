@@ -6,6 +6,16 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.12.0] — 2026-08-02 — loom-memory routes backlog items to the entry-per-file store
+
+### Changed
+
+- **loom-memory's `## record` step no longer routes a backlog-shaped item
+  to `docs/loom/BACKLOG.md`**: that file is now generated output
+  (`docs/loom/backlog/README.md`) and must never be hand-edited. The
+  classification step now routes such an item to creating an entry file in
+  `docs/loom/backlog/` per its own charter.
+
 ## [0.11.0] — 2026-07-22 — loom-memory recall staleness caveat
 
 ### Changed
