@@ -6,8 +6,8 @@
 - **Plan**: `docs/loom/plans/2026-08-01-declared-vs-actual-files-touched-check.md`
 - **Freeze provenance**: this answer key was frozen BEFORE the comparator
   existed. Verified at freeze time (2026-08-01, Task 1):
-  `test -f scripts/check_files_touched.py` exits 1 — the path does not
-  exist anywhere in the working tree. Same discipline as the 8-cell
+  `test -f scripts/check_files_touched.py` exits 1 — the comparator's
+  planned path was absent. Same discipline as the 8-cell
   Reuse-adequacy measurement
   (`docs/loom/dogfood/2026-07-27-plan-fact-grounding-coldread.md`).
 
@@ -73,14 +73,210 @@ corpus and the measurement could not tell the two variants apart.
 
 ## Results
 
-RESULTS-PENDING — frozen before implementation; results land in Task 5.
+**The run** (2026-08-01, Task 5): the parametrized cell matrix IS the
+measurement — each of the 30 tests builds its cell with real
+`git init/add/commit` in a sandbox repo and asserts that variant's
+comparator verdict equals the frozen column above.
+
+```
+$ PYTHONDONTWRITEBYTECODE=1 python3 -m pytest scripts/test_check_files_touched.py -q -k cells
+30 passed, 25 deselected in 3.90s
+```
+
+Node IDs `test_cells_match_frozen_answer_key[<cell>-<variant>]` cover all
+10 cells × 3 variants; 30/30 passing means the comparator's output per
+cell per variant is EXACTLY the R1/R2/R3 columns of the frozen key —
+no cell deviated, so the tables below classify the frozen columns as
+measured output.
+
+Per-cell classification (flag-worthy = the key's ground-truth column;
+`hit` = flag-worthy flagged, `FA` = false alarm = not-flag-worthy
+flagged, `ok` = not-flag-worthy passed, `miss` = flag-worthy passed;
+NO_JOIN counts as neither, reported separately):
+
+| cell | flag-worthy? | R1 → class | R2 → class | R3 → class |
+|---|---|---|---|---|
+| 1 | no | OK → ok | OK → ok | OK → ok |
+| 2 | yes | UNDER → hit | UNDER → hit | UNDER → hit |
+| 3 | yes | UNDER → hit | UNDER → hit | UNDER → hit |
+| 4 | yes | UNDER → hit | UNDER → hit | UNDER → hit |
+| 5 | no | OVER → **FA** | OK → ok | OK → ok |
+| 6 | no | OK → ok | OK → ok | OK → ok |
+| 7 | loud non-verdict | NO_JOIN (neither) | NO_JOIN (neither) | NO_JOIN (neither) |
+| 8 | yes | UNDER → hit | UNDER → hit | UNDER → hit |
+| 9 | no | OK → ok | OK → ok | OK → ok |
+| 10 | no | UNDER → **FA** | UNDER → **FA** | OK → ok |
+
+Per-variant confusion tables over the 9 verdict-bearing cells (cell 7 is
+the NO_JOIN cell in every variant — 1 loud non-verdict each, correct per
+the key, outside the 2×2):
+
+| R1 | flagged | passed |
+|---|---|---|
+| flag-worthy (2,3,4,8) | 4 hits | 0 misses |
+| not flag-worthy (1,5,6,9,10) | 2 FA (cells 5, 10) | 3 ok |
+
+| R2 | flagged | passed |
+|---|---|---|
+| flag-worthy (2,3,4,8) | 4 hits | 0 misses |
+| not flag-worthy (1,5,6,9,10) | 1 FA (cell 10) | 4 ok |
+
+| R3 | flagged | passed |
+|---|---|---|
+| flag-worthy (2,3,4,8) | 4 hits | 0 misses |
+| not flag-worthy (1,5,6,9,10) | 0 FA | 5 ok |
+
+Recount arithmetic: 4 + 0 + 2 + 3 = 9 (R1), 4 + 0 + 1 + 4 = 9 (R2),
+4 + 0 + 0 + 5 = 9 (R3); 9 verdict cells + cell 7 = 10 rows. Summary —
+**false alarms: R1 = 2, R2 = 1, R3 = 0; misses: 0 under every variant.**
+This matches the expectation the frozen key's construction encoded
+(cells 5 and 10 are the discriminators by design); the measurement
+confirms rather than contradicts it.
 
 ## Retro-fit
-
-RESULTS-PENDING — frozen before implementation; results land in Task 5.
 
 Selection-bias label (standing, applies to everything in this section):
 the three known real instances (reuse-adequacy branch T3 `c82c93cd`-family,
 T4 `0c03c0e8`, T6 manifest commit — machine-local shas, branch was
 squash-merged) are on this list BECAUSE they were found; retro-fit results
 never enter the headline numbers.
+
+**Provenance and harness work** (2026-08-01):
+
+- Original plan recovered with `git show 293d446c:docs/loom/plans/2026-07-31-reuse-adequacy-declaration-hardening.md`
+  into a scratchpad copy — the ORIGINAL declarations, not the corrected
+  ones that `2c7e7f17` ("correct the plan's declarations…") later wrote
+  into the committed plan.
+- The original plan predates the Status ledger: it carries zero
+  `Status:` lines (verified by grep over the recovered copy). Join keys
+  were therefore injected manually into the scratchpad copy —
+  three `- **Status**: done(<sha>)` lines: T3 → `c82c93cd`,
+  T4 → `0c03c0e8`, T6 → `e8194146`. T6 was identified from
+  `git log --oneline docs-reuse-adequacy-brief-and-backlog` as the
+  version-bump commit and verified:
+  `git show --name-only --no-renames --format= e8194146` lists
+  `loom-code/.codex-plugin/plugin.json`. This sha-injection is harness
+  work on a scratchpad copy only; no repo file was patched.
+- All these shas are **machine-local**: the branch was squash-merged, so
+  they resolve only in this machine's local clone (local branch
+  `docs-reuse-adequacy-brief-and-backlog`), not on origin/main.
+
+**The run** — `python3 scripts/check_files_touched.py <scratchpad-copy> --repo /Users/kouko/GitHub/monkey-skills`,
+exit 1. Verdict lines for the three joined tasks, verbatim:
+
+```
+Task 3 [R1] UNDER  under: loom-code/scripts/test_plan_obligation_sweep.py, loom-code/scripts/test_sdd_review_weight_marker.py
+Task 3 [R2] UNDER  under: loom-code/scripts/test_plan_obligation_sweep.py, loom-code/scripts/test_sdd_review_weight_marker.py
+Task 3 [R3] UNDER  under: loom-code/scripts/test_plan_obligation_sweep.py, loom-code/scripts/test_sdd_review_weight_marker.py
+Task 4 [R1] UNDER  under: domain-teams/skills/code-team/checklists/spec-consistency.md
+Task 4 [R2] UNDER  under: domain-teams/skills/code-team/checklists/spec-consistency.md
+Task 4 [R3] UNDER  under: domain-teams/skills/code-team/checklists/spec-consistency.md
+Task 6 [R1] UNDER  under: loom-code/.codex-plugin/plugin.json
+Task 6 [R2] UNDER  under: loom-code/.codex-plugin/plugin.json
+Task 6 [R3] UNDER  under: loom-code/.codex-plugin/plugin.json
+```
+
+All three real instances flag UNDER under every variant — including R3:
+the guard tests (T3), the domain-teams functional copy (T4) and the
+codex-manifest mirror (T6) are under-declaration TARGETS that the
+standing excludes correctly do NOT absorb (they are the live shapes of
+frozen-key cells 2, 3 and 4 respectively). The unjoined tasks (1, 2, 5)
+each printed the loud non-verdict, e.g. verbatim:
+`Task 1 [R1] NO_JOIN  (no done(<sha>) join key — never OK)`.
+
+## Limitations
+
+- **One sha per task.** The parser keeps a single join key per task
+  (multiple `done(<sha>)` lines are a reported parse error, last one
+  kept). A task resolved across several commits — the normal fix-round
+  pattern — compares only the joined commit. Live example from the
+  retro-fit branch: follow-up commits `0c3e809b`, `5505c26f`, `e8934767`
+  touched the same surfaces after the joined commits and enter no
+  comparison at all. The check under-measures multi-commit tasks by
+  construction.
+- **The ledger is optional, so the check can only be as loud as its
+  non-verdicts.** Measured behavior, not hoped-for behavior: a plan with
+  tasks but zero join keys exits 2 with (verbatim, from a sha-less
+  fixture run on 2026-08-01)
+  `EMPTY: 0 join keys — no task in <plan-path> carries Status: done(<sha>); nothing joins the plan to commits`
+  — pinned at CLI level by
+  `test_cli_exit_2_on_zero_join_keys_names_what_was_empty` (frozen-key
+  cell 7). A partially-ledgered plan prints a per-task
+  `NO_JOIN  (no done(<sha>) join key — never OK)` line but does NOT gate
+  on it while ≥1 join key exists (EXIT_CONTRACT's documented decision —
+  gating would fail every plan mid-flight). Consequence: a team that
+  never stamps the ledger gets a loud refusal, but a team that stamps it
+  selectively gets verdicts only on what it stamped.
+- **Retro-fit provenance is machine-local.** The three instances join to
+  shas that exist only in this clone (squash-merged branch); nobody else
+  can re-run that half of this audit. The 10-cell fixture half is fully
+  reproducible (`scripts/test_check_files_touched.py` builds it from
+  scratch).
+- **Hit during the runs:** (a) the recovered plan lives in a scratchpad
+  outside `--repo`, so the R3 plan-file exclude keeps the given spelling
+  and can never match a committed path — harmless here (the joined
+  commits don't touch the plan document) but it means the retro-fit run
+  never exercised that exclude; the fixture's
+  `test_cli_absolute_plan_path_still_hits_r3_plan_file_exclude` covers
+  it. (b) The injected bolded `- **Status**:` form parsed identically to
+  the plain form, as cell 9 predicts. (c) Corpus size is 10 cells,
+  authored inside the same arc that built the comparator — frozen before
+  implementation, but still one author's threat model.
+
+## Recommendation
+
+Argued strictly from the tables above (the measurement matched the
+key's constructed expectation; nothing below rests on the expectation
+alone).
+
+- **R1 — no-ship.** 2 false alarms out of 5 not-flag-worthy cells, and
+  its extra strictness buys zero recall: misses are 0 for all three
+  variants, so R1's OVER direction (cell 5) and exclude-blindness
+  (cell 10) are pure noise cost on this corpus.
+- **R2 — no-ship as the default, R3's excludes cost nothing.** 1 false
+  alarm (cell 10) with recall identical to R3. Honesty note (docs-review
+  correction): cell 10's noise classes are CONSTRUCTED, not observed —
+  this repo's history carries zero committed `__pycache__` paths and the
+  measured branch's task commits never contain the plan file (ledger
+  updates land as separate commits; a same-commit `done(<sha>)` stamp is
+  mechanically impossible — the sha is unknown pre-commit). So R2's
+  false alarm is a hypothetical cost, not a recurring one. The ranking
+  is unchanged on the corpus numbers alone: R3 dominates R2 (equal
+  recall, ≤ false alarms) and its two fixed excludes carry no observed
+  miss risk (cells 3/4 stay flagged).
+- **R3 — ship candidate.** 0 false alarms, 0 misses on the corpus, and
+  in the retro-fit it flags all three known real instances with the
+  offending paths named. The excludes are exactly two fixed classes;
+  nothing shape-specific leaked into them (cells 3/4 stay flagged).
+- **Placement options** (either consumes R3's output; not mutually
+  exclusive):
+  - *SDD per-task step* — run right after the implementer's commit,
+    when the ledger sha is freshest. Catches under-declaration while the
+    fix is one commit away and while sibling-task disjointness still
+    matters (the oracle this exists to protect). Cost: one comparator
+    run per task and a hard dependency on stamping `done(<sha>)` at
+    task-close time.
+  - *Finishing-branch batch* — one run over the whole plan at
+    finishing time. Cheaper, tolerates mid-flight NO_JOIN rows
+    naturally, and gives a single report; but it discovers collisions
+    only after the parallel waves that could have collided already ran,
+    so it protects the record, not the dispatch decision.
+- **Ship-arc obligations** (restated from the brief — whichever
+  placement is chosen): absorb or delete the prose subset rule at
+  `loom-code/skills/subagent-driven-development/SKILL.md:86` (its
+  "MUST be a subset of the task's declared `Files touched`" is R2-shaped
+  prose with no excludes and no tooling — two sources of truth
+  otherwise); and supersede the manual-diff advice in
+  `docs/loom/memory/files-touched-misses-machinery-coupled-files.md`
+  §How-to-apply ("diff `git show --stat <sha>` against the declared
+  field") by pointing it at the comparator.
+
+The decision — which variant (if any) to ship, and where to place it —
+is explicitly left to the user.
+
+---
+
+Citation check (2026-08-01):
+`python3 loom-code/scripts/check_doc_citations.py docs/loom/audits/2026-08-01-declared-vs-actual-check-measurement.md`
+→ `checked 10 / unchecked 0 / findings 0` / `OK: all citations resolve.`
+(exit 0).
