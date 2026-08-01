@@ -17,8 +17,14 @@ description: <one line; what the item is>
 status: <COMMITTED-NEXT | OPEN | PARKED | UPSTREAM | SHIPPED | CLOSED — SUPERSEDED | archived>
 origin: <optional; where the item came from>
 start: <optional; the start / re-trigger condition>
+archived: <optional; required when status is archived — YYYY-MM-DD the entry was archived>
 ---
 ```
+
+`archived` is stamped when an entry is closed (see the Archive rule
+below) and is what the generated index's compact `## Archived` line
+(`- <name> (archived <date>)`) reads its date from. It carries no
+meaning on a live entry and must not be set on one.
 
 Live entries — those directly under `docs/loom/backlog/`, excluding
 `archive/` — carry any status **except** `archived`. Entries under
@@ -76,6 +82,9 @@ Closing an entry means:
 1. Move the entry file from `docs/loom/backlog/<name>.md` to
    `docs/loom/backlog/archive/<name>.md`.
 2. Stamp `status: archived` into the moved file's frontmatter.
+3. Stamp `archived: <YYYY-MM-DD>` (the archive date) into the same
+   frontmatter — the generated index's `## Archived` line needs it and
+   has no other source for it.
 
 Archiving **never renames** the file (the filename rule above still
 applies) and **never deletes** the file. The entry's full body and

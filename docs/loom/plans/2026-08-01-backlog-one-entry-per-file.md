@@ -192,7 +192,11 @@ Plan-document-reviewer verdict: PASS (2026-08-01, round 5, 15/15)
   carry name + archive date only. Section order is fixed and deterministic so
   two runs over identical input produce byte-identical output.
 - Module: scripts/backlog_index.py
-- Files touched: scripts/backlog_index.py, scripts/test_backlog_index.py
+- Files touched: scripts/backlog_index.py, scripts/test_backlog_index.py, docs/loom/backlog/README.md
+  <!-- Declaration corrected mid-execution (2026-08-01): the charter edit was
+       authorized at dispatch ("ONLY IF your date decision requires a charter
+       change") and both reviewers judged it required, but the field was not
+       updated to match. Third declared-vs-actual gap in this arc. -->
 - Context paths:
   - docs/loom/backlog/README.md
 - Acceptance:
@@ -290,15 +294,31 @@ Plan-document-reviewer verdict: PASS (2026-08-01, round 5, 15/15)
   backlog entry already carries its creation date, and prefixing the archive
   date produces the observed double-date defect. The file-unit path moves
   `docs/loom/backlog/<name>.md` to `docs/loom/backlog/archive/<name>.md`
-  unrenamed and stamps `status: archived` into its frontmatter, with the same
-  rollback-on-stamp-failure guarantee.
+  unrenamed and stamps **two** fields into its frontmatter — `status: archived`
+  **and `archived: <YYYY-MM-DD>`** — with the same rollback-on-stamp-failure
+  guarantee.
+
+  **Mid-execution spec correction (2026-08-01, post-PASS).** The second field
+  did not exist when this plan passed review. Task 3 introduced it: the pinned
+  index shape's compact archived line (`- <name> (archived <date>)`) needs a
+  date, the frontmatter contract had no field carrying one, and deriving it
+  from git history would have made `build_index()` impure and untestable
+  against non-git temp stores. Task 3 therefore added `archived:` to the
+  charter's frontmatter contract and to its Archive rule as step 3, and made
+  `--write` fail loud on an archive-tier entry missing it. Task 7's text was
+  written before that field existed, so implementing Task 7 literally would
+  produce archived entries that break index generation on the next run. Gap
+  confirmed independently by Task 3's spec-reviewer against
+  `docs/loom/backlog/README.md:85-87` and `scripts/backlog_index.py:200-206`.
+  Recorded here rather than silently carried in a dispatch packet, so the
+  plan and the charter do not disagree.
 - Module: loom-code/scripts/archive_change_folder.py
 - Files touched: loom-code/scripts/archive_change_folder.py, loom-code/scripts/test_archive_change_folder.py
 - Context paths:
   - docs/loom/backlog/README.md
   - loom-code/skills/finishing-a-development-branch/SKILL.md
 - Acceptance:
-  - RED: `loom-code/scripts/test_archive_change_folder.py::test_file_unit_archive_keeps_the_filename_unchanged` — archives `2026-08-01-alpha.md`, asserts the destination is `docs/loom/backlog/archive/2026-08-01-alpha.md` with no second date prefix and `status: archived` stamped.
+  - RED: `loom-code/scripts/test_archive_change_folder.py::test_file_unit_archive_keeps_the_filename_unchanged` — archives `2026-08-01-alpha.md`, asserts the destination is `docs/loom/backlog/archive/2026-08-01-alpha.md` with no second date prefix and **both** `status: archived` and `archived: <YYYY-MM-DD>` stamped (see the mid-execution spec correction in this task's Description).
   - GREEN: both units work from one script, Task 6's folder-unit tests still pass unchanged, the refusals fire on both paths, and a file-unit archive that cannot write the stamp **fails loudly** rather than leaving an unstamped file at the destination (pinned by its own case — an unstamped archived entry reads as live to a grepping agent). The module docstring (`:121-127`) and the identifier-guard error text (which today says *"must be a non-empty folder name"*) both describe two units, not one — a file-unit caller must not receive an error message about folders. Behaviour note, verified: `_validate_change_id` does **not** reject dots, so a `<name>.md` identifier passes it unchanged; only the wording needs updating, not the guard.
 - Reuse-adequacy:
   - Observed: the script moves `docs/loom/<change-id>/` to `docs/loom/archive/<date>-<change-id>/`, stamps `status: archived` into the moved `proposal.md`'s frontmatter, and validates every path before any filesystem mutation — `read loom-code/scripts/archive_change_folder.py:4-9`
