@@ -125,6 +125,7 @@
 - **Dependencies**: Task 6 completes first
 - **Independent**: false
 - **Brief item covered**: brief §Addendum — "a trailing parenthetical annotation after the final path token … that contaminates the token"
+- **Status**: done(dfa1002e)
 
 ## Task 8 — Re-sweep the repo and record the dogfood report
 
