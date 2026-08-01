@@ -142,6 +142,7 @@
 - **Independent**: false
 - **Review-weight**: prose
 - **Brief item covered**: brief §Addendum — "re-run the sweep, and record the results — the true wild under-declaration rate is the load-bearing evidence for the next arc's wire-in decision"
+- **Status**: done(0b4bdb31)
 
 ## Notes
 
