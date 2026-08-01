@@ -304,6 +304,103 @@ def test_real_wrapped_plan_task1_parses_full_declared_set():
                 if "Task 1" in e and "Files touched" in e]
 
 
+# --- Task 7: trailing parenthetical annotation is not a path token ---------
+#
+# WHY these tests exist: a REAL plan (docs/loom/plans/2026-07-26-us-as-
+# reported-statement-lane.md:24) ends its `Files touched` value with a
+# post-PASS amendment note `(added in the review round … — see §Post-PASS
+# amendment note)` after the final backticked path. A parser blind to the
+# annotation contaminates the final token (false UNDER/OVER on an honest
+# plan). Rule (plan Task 7): after a backtick-closed FINAL token, a
+# parenthesized tail at END of value is an annotation — stripped, no
+# parse_error; a NON-parenthetical tail after a backtick-closed token stays
+# a parse_error; bare (unbackticked) tokens keep current behavior.
+
+_LINE24_ANNOTATION = ("(added in the review round that froze the pre-fix "
+                      "selector — see §Post-PASS amendment note)")
+_LINE24_PATHS = frozenset({
+    "investing-toolkit/tests/data/fixtures/capture_us_statement_shapes_probe.py",
+    "investing-toolkit/tests/data/fixtures/us_statement_shapes_probe_2026-07-26.json",
+    "investing-toolkit/tests/data/test_us_statement_probe_fixture.py",
+    "investing-toolkit/tests/data/test_capture_us_statement_shapes_legacy_selector.py",
+})
+
+
+def test_trailing_parenthetical_annotation_not_a_token():
+    """The line-24 shape: four backticked paths, the last followed by the
+    real annotation text. The annotation is plan prose, not a path — the
+    declared set is exactly the four paths, with zero parse errors."""
+    files_value = ", ".join(f"`{p}`" for p in sorted(_LINE24_PATHS))
+    result = parse_plan_text(_single_task(
+        f"- **Files touched**: {files_value} {_LINE24_ANNOTATION}"))
+
+    assert result.tasks[1].declared_paths == _LINE24_PATHS
+    assert result.parse_errors == []
+
+
+def test_non_parenthetical_tail_after_backticked_token_is_parse_error():
+    """A NON-parenthetical tail after a backtick-closed token is not an
+    annotation — it must land in parse_errors, never contaminate the path
+    and never vanish (plan Task 7 Description, pinned)."""
+    result = parse_plan_text(_single_task(
+        "- **Files touched**: `src/a.py`, `src/b.py` stray trailing prose"))
+
+    assert result.tasks[1].declared_paths == frozenset({"src/a.py"})
+    assert len(result.parse_errors) == 1
+    assert "Task 1" in result.parse_errors[0]
+    assert "src/b.py" in result.parse_errors[0]
+
+
+def test_comma_inside_annotation_does_not_fragment_the_value():
+    """The strip happens at VALUE level BEFORE comma-split, so a comma
+    inside the annotation is prose, not a token separator — a per-token
+    refactor of the strip would break exactly this shape (reviewer 🟡,
+    2026-08-01: the real line-24 annotation is comma-free, so nothing
+    else pins the ordering)."""
+    result = parse_plan_text(_single_task(
+        "- **Files touched**: `src/a.py`, `src/b.py` (amended, see note)"))
+
+    assert result.tasks[1].declared_paths == frozenset(
+        {"src/a.py", "src/b.py"})
+    assert result.parse_errors == []
+
+
+def test_annotation_on_final_continuation_line_of_wrapped_value_strips():
+    """Task 6 × Task 7 interaction: concatenation happens FIRST, so an
+    annotation ending the final continuation line of a wrapped value is the
+    end of the (joined) value — stripped, no parse_error."""
+    corpus = (
+        "# Plan: fixture\n\n"
+        "## Task 1 — wrapped, annotated last continuation line\n\n"
+        "- Files touched: `src/a.py`,\n"
+        f"  `src/b.py` {_LINE24_ANNOTATION}\n"
+        "- Status: done(abc1234)\n"
+    )
+    result = parse_plan_text(corpus)
+
+    assert result.tasks[1].declared_paths == frozenset(
+        {"src/a.py", "src/b.py"})
+    assert result.parse_errors == []
+
+
+def test_real_annotated_plan_task1_parses_exact_declared_set():
+    """INTEGRATION guard against the COMMITTED repo file whose line 24 IS
+    the real annotation shape (real producer output,
+    docs/loom/memory/fixtures-mirror-producer-shape.md): Task 1's declared
+    set is exactly the four backticked paths — the annotation reaches
+    neither the set nor parse_errors."""
+    repo_root = Path(__file__).resolve().parent.parent
+    plan = (repo_root / "docs" / "loom" / "plans"
+            / "2026-07-26-us-as-reported-statement-lane.md")
+    assert plan.is_file(), f"committed fixture plan missing: {plan}"
+
+    result = parse_plan(plan)
+
+    assert result.tasks[1].declared_paths == _LINE24_PATHS
+    assert not [e for e in result.parse_errors
+                if "Task 1" in e and "Files touched" in e]
+
+
 # --- Task 3: verdict engine (pure — no git) -------------------------------
 #
 # WHY these tests exist: the three rule variants are only worth measuring if

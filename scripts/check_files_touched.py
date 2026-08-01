@@ -107,6 +107,21 @@ _STATUS_SHALESS = re.compile(r"^(?:pending|claimed\(@[^)]+\)|blocked)$")
 
 _NEW_TOKEN_PREFIX = re.compile(r"^NEW\s*:\s*")
 
+# Trailing parenthetical annotation (Task 7) — real shape:
+# docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md:24, a
+# post-PASS amendment note after the FINAL backticked path. The greedy
+# `.*\`` pins group 1 to the LAST backtick in the value, so the rule only
+# fires when a backtick-CLOSED token precedes a parenthesized group at END
+# of value. Bare (unbackticked) tokens never match — their behavior is
+# unchanged, parens inside them are NOT disambiguated.
+_TRAILING_PAREN_ANNOTATION = re.compile(r"^(.*`)\s*\(.*\)\s*$")
+
+# A backtick-CLOSED token followed by anything non-blank (after the
+# annotation strip above has already run) is malformed — the tail is
+# neither path nor sanctioned annotation. Only fires on backticked tokens;
+# bare tokens keep their current behavior.
+_BACKTICKED_TOKEN_TAIL = re.compile(r"^`[^`]+`\s*\S")
+
 
 def _is_continuation_line(line: str) -> bool:
     """True when `line` continues a wrapped field value (Task 6).
@@ -164,8 +179,19 @@ def _parse_files_touched(task_no: int, value: str,
         errors.append(
             f"Task {task_no}: 'Files touched' line has no parseable value")
         return frozenset()
+    annotated = _TRAILING_PAREN_ANNOTATION.match(value)
+    if annotated:
+        # Annotation stripped at VALUE level, before the comma-split — its
+        # inner characters (em-dash, `§`, even commas) are prose, not tokens.
+        value = annotated.group(1)
     paths: set[str] = set()
     for raw in value.split(","):
+        token = _NEW_TOKEN_PREFIX.sub("", raw.strip()).strip()
+        if _BACKTICKED_TOKEN_TAIL.match(token):
+            errors.append(
+                f"Task {task_no}: 'Files touched' token {raw.strip()!r} has "
+                f"a non-annotation tail after its closing backtick")
+            continue
         normalized = _normalize_token(raw)
         if normalized:
             paths.add(normalized)
