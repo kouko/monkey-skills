@@ -63,6 +63,9 @@
 - [2026-08-01-declared-vs-actual-files-touched-check-measured-wire-in-decision-pending](backlog/2026-08-01-declared-vs-actual-files-touched-check-measured-wire-in-decision-pending.md) — Declared-vs-actual `Files touched` check — measured, wire-in decision pending
 - [2026-08-01-four-repo-hooks-carry-a-copy-pasted-stdin-parse-preamble](backlog/2026-08-01-four-repo-hooks-carry-a-copy-pasted-stdin-parse-preamble.md) — Four repo hooks carry a copy-pasted stdin-parse preamble
 - [2026-08-01-the-shipping-version-is-pinned-inside-a-topically-unrelated-test](backlog/2026-08-01-the-shipping-version-is-pinned-inside-a-topically-unrelated-test.md) — The shipping version is pinned inside a topically unrelated test
+- [2026-08-02-archive-script-residual-hardening-symlinked-dest-parent-and-guards](backlog/2026-08-02-archive-script-residual-hardening-symlinked-dest-parent-and-guards.md) — three residual guard gaps in loom-code/scripts/archive_change_folder.py that the two-unit generalization left behind
+- [2026-08-02-backlog-index-two-frontmatter-readers-disagree-on-duplicate-keys](backlog/2026-08-02-backlog-index-two-frontmatter-readers-disagree-on-duplicate-keys.md) — four generator and reader nits in scripts/backlog_index.py and its neighbours, all latent today
+- [2026-08-02-citations-into-the-generated-backlog-index-by-line-number](backlog/2026-08-02-citations-into-the-generated-backlog-index-by-line-number.md) — six documents still cite docs/loom/BACKLOG.md by line number, which is now a generated file whose line numbers move on every regeneration
 
 ## PARKED
 - [2026-07-08-automate-research-toolkit-s-sync-primitives-sh](backlog/2026-07-08-automate-research-toolkit-s-sync-primitives-sh.md) — Automate research-toolkit's sync-primitives.sh
@@ -71,7 +74,7 @@
 - [2026-07-23-general-goal-loop-harness-extraction](backlog/2026-07-23-general-goal-loop-harness-extraction.md) — General goal-loop harness extraction
 - [2026-07-25-bba-trigger-calibration-loop-needs-a-two-sided-metric](backlog/2026-07-25-bba-trigger-calibration-loop-needs-a-two-sided-metric.md) — bba trigger calibration loop — needs a two-sided metric
 - [2026-07-25-dev-workflow-loom-workflow-rename-evaluated-not-recommended](backlog/2026-07-25-dev-workflow-loom-workflow-rename-evaluated-not-recommended.md) — dev-workflow → loom-workflow rename — evaluated, NOT recommended
-- [2026-07-28-whole-branch-review-round-ledger-bad-fix-re-check-planned-parked-before](backlog/2026-07-28-whole-branch-review-round-ledger-bad-fix-re-check-planned-parked-before.md) — Whole-branch review round ledger + bad-fix re-check — planned, PARKED before implementation
+- [2026-07-28-whole-branch-review-round-ledger-bad-fix-re-check-planned-parked-before](backlog/2026-07-28-whole-branch-review-round-ledger-bad-fix-re-check-planned-parked-before.md) — Whole-branch review round ledger + bad-fix re-check — planned but not yet implemented
 
 ## UPSTREAM
 - [2026-07-04-validate-design-output-py-dual-root-mode](backlog/2026-07-04-validate-design-output-py-dual-root-mode.md) — validate_design_output.py dual-root mode
@@ -83,7 +86,7 @@
 - [2026-07-19-investing-toolkit-quarterly-jnj-restatementaxis-signature-blind-spot](backlog/2026-07-19-investing-toolkit-quarterly-jnj-restatementaxis-signature-blind-spot.md) — investing-toolkit quarterly — JNJ RestatementAxis signature blind spot
 - [2026-07-27-reuse-adequacy-got-the-gate-it-had-been-missing](backlog/2026-07-27-reuse-adequacy-got-the-gate-it-had-been-missing.md) — `Reuse-adequacy` got the gate it had been missing
 - [2026-07-30-copywriting-toolkit-modernization-arc-port-the-0-42-0-convergence-lesson](backlog/2026-07-30-copywriting-toolkit-modernization-arc-port-the-0-42-0-convergence-lesson.md) — copywriting-toolkit modernization arc — port the 0.42.0 convergence lessons
-- [2026-07-30-standalone-docs-review-skill-shape-decided-shipped-this-arc-0-42-0](backlog/2026-07-30-standalone-docs-review-skill-shape-decided-shipped-this-arc-0-42-0.md) — Standalone docs-review skill — shape decided, SHIPPED this arc (0.42.0)
+- [2026-07-30-standalone-docs-review-skill-shape-decided-shipped-this-arc-0-42-0](backlog/2026-07-30-standalone-docs-review-skill-shape-decided-shipped-this-arc-0-42-0.md) — Standalone docs-review skill — shape decided this arc (0.42.0)
 
 ## CLOSED — SUPERSEDED
 - [2026-07-26-investing-toolkit-spine-chain-misses-33-filer-years-of-reported-history](backlog/2026-07-26-investing-toolkit-spine-chain-misses-33-filer-years-of-reported-history.md) — investing-toolkit — spine chain misses 33 filer-years of reported history

@@ -277,8 +277,9 @@ trust anchor — the hash is load-bearing, the version supplementary.
 
 ## What Becomes Obsolete
 
-- `docs/loom/BACKLOG.md:167` — the "≥10yr, industry norm" claim. **Delete it**;
-  unevidenced and currently reads as fact.
+- `docs/loom/backlog/2026-07-20-investing-toolkit-non-monetary-operational-kpi-automation.md`
+  — the "≥10yr, industry norm" claim. **Delete it**; unevidenced and currently
+  reads as fact.
 - The BACKLOG's "Slice C = coverage file + retention + tearsheet" framing.
 - Honest flag: **no code becomes obsolete.** Almost purely additive, which Axis 5
   calls a YAGNI smell. Mitigation: each capability traces to a measured finding,

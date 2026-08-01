@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Deterministic archive step for a loom-spec change-folder OR a single
 loom-family store entry file — two units, selected via the ``unit``
-parameter (Python API only; the CLI stays folder-unit-only, see below).
+parameter (Python API) or the CLI's ``--unit`` flag (see below; defaults to
+``folder``).
 
 - ``unit="folder"`` (default, unchanged from the original single-unit
   script): moves ``docs/loom/<change-id>/`` ->
@@ -56,15 +57,17 @@ If the post-move stamp write fails, the moved object is moved back to its
 original location before ``ArchiveError`` is raised, so a failure never
 leaves a stranded moved-but-unstamped object with no recovery path.
 
-CLI: unchanged, folder-unit only —
-``archive_change_folder.py <change-id> [root] [--date YYYY-MM-DD]`` ->
-exit 0 on success (prints the destination), exit 1 with an actionable
-stderr message on any refusal. ``root`` defaults to ``Path.cwd()``; ``--date``
+CLI: ``archive_change_folder.py <identifier> [root] [--date YYYY-MM-DD]
+[--unit folder|file]`` -> exit 0 on success (prints the destination), exit 1
+with an actionable stderr message on any refusal (including an unrecognized
+``--unit`` value — ``ArchiveError``'s ``invalid unit`` message, not a
+separate CLI-level check). ``root`` defaults to ``Path.cwd()``; ``--date``
 defaults to today (UTC-naive local date) and exists mainly so callers/tests
-get deterministic destinations. The file unit is reachable only through the
-Python API (``archive_change_folder(..., unit="file")``) — no CLI flag
-exists for it; the finishing-a-development-branch archive-on-close step and
-AGENTS.md's declared command surface both only ever use the folder unit.
+get deterministic destinations; ``--unit`` defaults to ``folder``, so every
+existing caller (the finishing-a-development-branch archive-on-close step,
+AGENTS.md's declared command surface) keeps working unchanged with no flag
+added. Pass ``--unit file`` to archive a single
+``docs/loom/backlog/<name>.md`` entry instead of a change-folder.
 
 Stdlib only (pathlib, re, shutil, datetime).
 """
@@ -303,9 +306,15 @@ def archive_change_folder(
 
 def main(argv: list[str] | None = None) -> int:
     # argv shapes:
-    #   [change-id]                            -> archive under cwd, today's date
-    #   [change-id, root]                      -> archive under root, today's date
-    #   [change-id, [root], --date YYYY-MM-DD] -> pin the date (tests/callers)
+    #   [identifier]                                        -> archive under
+    #       cwd, today's date, folder unit
+    #   [identifier, root]                                  -> archive under
+    #       root, today's date, folder unit
+    #   [identifier, [root], --date YYYY-MM-DD]              -> pin the date
+    #       (tests/callers)
+    #   [identifier, [root], --unit folder|file]             -> select the
+    #       unit; defaults to folder when omitted (every existing caller
+    #       keeps working unchanged)
     args = list(sys.argv[1:] if argv is None else argv)
 
     date_override = None
@@ -320,9 +329,22 @@ def main(argv: list[str] | None = None) -> int:
         date_override = args[i + 1]
         del args[i : i + 2]
 
+    unit = _UNIT_FOLDER
+    if "--unit" in args:
+        i = args.index("--unit")
+        if i + 1 >= len(args):
+            print(
+                "archive_change_folder: --unit requires a value (folder|file)",
+                file=sys.stderr,
+            )
+            return 1
+        unit = args[i + 1]
+        del args[i : i + 2]
+
     if not args:
         print(
-            "usage: archive_change_folder.py <change-id> [root] [--date YYYY-MM-DD]",
+            "usage: archive_change_folder.py <identifier> [root] "
+            "[--date YYYY-MM-DD] [--unit folder|file]",
             file=sys.stderr,
         )
         return 1
@@ -331,12 +353,15 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(args[1]) if len(args) > 1 else Path.cwd()
 
     try:
-        dest = archive_change_folder(root, change_id, date=date_override)
+        dest = archive_change_folder(root, change_id, date=date_override, unit=unit)
     except ArchiveError as exc:
         print(f"archive_change_folder: {exc}", file=sys.stderr)
         return 1
 
-    print(f"OK: archived docs/loom/{change_id} -> {dest}")
+    source_desc = (
+        f"docs/loom/backlog/{change_id}" if unit == _UNIT_FILE else f"docs/loom/{change_id}"
+    )
+    print(f"OK: archived {source_desc} -> {dest}")
     return 0
 
 

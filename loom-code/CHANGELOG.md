@@ -5,6 +5,39 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.44.0] — 2026-08-02 — archive a single store entry, not only a change-folder
+
+### Added
+
+- **`scripts/archive_change_folder.py` archives two units**, selected by a
+  new `--unit folder|file` flag (Python API: `unit=`). `--unit file` moves
+  `docs/loom/backlog/<name>.md` to `docs/loom/backlog/archive/<name>.md`
+  **unrenamed** — the entry already carries its creation date in its
+  filename, and prefixing the archive date reproduces the double-date defect
+  visible at `docs/loom/archive/2026-07-18-2026-07-16-…/` — and stamps both
+  `status: archived` and `archived: <YYYY-MM-DD>` into the moved file,
+  unconditionally. The folder unit is unchanged in every respect, including
+  its date prefix and its tolerance of a change-folder with no
+  `proposal.md`; that tolerance deliberately does NOT carry over, because an
+  archived backlog entry that is moved but not stamped reads as live to any
+  agent that greps the store. `--unit` defaults to `folder`, so the
+  `finishing-a-development-branch` archive-on-close step and `AGENTS.md`'s
+  declared command surface keep working with no flag added.
+
+### Fixed
+
+- **The frontmatter stamp no longer corrupts two shapes of input.** Its
+  value pattern was a single whitespace-free token, so it silently missed
+  the backlog store's one multi-word status, `CLOSED — SUPERSEDED`, and
+  *appended* a duplicate `status:` line instead of replacing the existing
+  one — a file that passes `--validate` (the reader is last-wins) while
+  `grep -m1 '^status:'` and any strict YAML reader still see the live
+  status. The same fix removed a second, previously unnoticed corruption:
+  the old trailing `\s*` matched newlines, so when the stamped key was the
+  frontmatter block's last field the match swallowed the line terminator and
+  glued the closing `---` onto the value, destroying the block. Both are now
+  pinned by tests that were verified to go red against the old pattern.
+
 ## [0.43.0] — 2026-08-01 — reuse-adequacy declaration hardening
 
 ### Changed

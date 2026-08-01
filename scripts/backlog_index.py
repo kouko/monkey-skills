@@ -30,6 +30,16 @@ subdirectory):
         all is a migration-completeness gap (GAP 1), not an agreement gap,
         and is deliberately out of this invariant's scope. See
         `_find_body_bullet` for the extraction rule.
+  (vi)  `description` is present and non-blank. The charter's frontmatter
+        contract (docs/loom/backlog/README.md:16) lists `description` with
+        no `<optional; ...>` marker — it is contractual like `name`/
+        `status`. Without this check a missing OR blank value passed
+        --validate clean, then build_index() rendered a dangling
+        `- [name](backlog/name.md) — ` line (em dash, trailing space, no
+        text) at --write, and --check regenerated that identical malformed
+        string and called it clean — laundering it into the committed
+        baseline. Missing and blank are treated identically: both produce
+        the same malformed line.
 
 Deliberately narrower than `scripts/check_loom_memory_integrity.py`'s five
 invariants: this store's index is *generated* from the entry files (Task 3),
@@ -142,7 +152,7 @@ STATUS_SECTION_ORDER = [
 
 @dataclass(frozen=True)
 class Violation:
-    kind: str  # "name" | "status" | "archive-tier" | "archived-date" | "field-agreement"
+    kind: str  # "name" | "status" | "archive-tier" | "archived-date" | "description" | "field-agreement"
     file: str
     detail: str
 
@@ -233,6 +243,122 @@ def _entry_files(store: Path) -> list[tuple[Path, bool]]:
     return [(p, False) for p in live] + [(p, True) for p in archived]
 
 
+def _check_name(display: str, frontmatter: dict[str, str], stem: str) -> list[Violation]:
+    """(i) filename stem == frontmatter name."""
+    name = frontmatter.get("name")
+    if name is None:
+        return [Violation("name", display, "frontmatter missing 'name' key")]
+    if name != stem:
+        return [Violation("name", display, f"frontmatter name '{name}' != filename stem '{stem}'")]
+    return []
+
+
+def _check_status(display: str, status: str | None) -> list[Violation]:
+    """(ii) status is a member of the closed vocabulary."""
+    if status is None:
+        return [Violation("status", display, "frontmatter missing 'status' key")]
+    if status not in CLOSED_STATUS_VOCABULARY:
+        return [Violation("status", display, f"status '{status}' is not in the closed vocabulary")]
+    return []
+
+
+def _check_archive_tier(display: str, status: str | None, is_archived: bool) -> list[Violation]:
+    """(iii) archive-tier <-> status: archived agreement."""
+    if status is None:
+        return []
+    if is_archived and status != ARCHIVED_STATUS:
+        return [
+            Violation(
+                "archive-tier",
+                display,
+                f"entry is under archive/ but status is '{status}', not 'archived'",
+            )
+        ]
+    if not is_archived and status == ARCHIVED_STATUS:
+        return [
+            Violation(
+                "archive-tier",
+                display,
+                "entry carries status: archived but is not under archive/",
+            )
+        ]
+    return []
+
+
+def _check_archived_date(
+    display: str, frontmatter: dict[str, str], is_archived: bool
+) -> list[Violation]:
+    """(iv) archived: <date> is required (and date-shaped) on every
+    archive-tier entry, and must be absent on every live entry. Charter:
+    docs/loom/backlog/README.md:20,24-27 — "It carries no meaning on a live
+    entry and must not be set on one."
+    """
+    archived_value = frontmatter.get("archived")
+    if is_archived:
+        if archived_value is None:
+            return [
+                Violation(
+                    "archived-date",
+                    display,
+                    "archive-tier entry missing required 'archived: <YYYY-MM-DD>' field",
+                )
+            ]
+        if not _is_valid_date_shape(archived_value):
+            return [
+                Violation(
+                    "archived-date",
+                    display,
+                    f"'archived' field {archived_value!r} is not a valid YYYY-MM-DD date",
+                )
+            ]
+        return []
+    if archived_value is not None:
+        return [
+            Violation(
+                "archived-date",
+                display,
+                f"live entry carries 'archived: {archived_value}' but must not set it",
+            )
+        ]
+    return []
+
+
+def _check_description(display: str, frontmatter: dict[str, str]) -> list[Violation]:
+    """(vi) description is a required, non-blank field (charter:
+    docs/loom/backlog/README.md:16 lists it with no <optional; ...> marker).
+    Missing and blank are both violations — they render the identical
+    dangling-em-dash line in build_index() (module docstring point (vi))."""
+    description = frontmatter.get("description")
+    if description is None:
+        return [Violation("description", display, "frontmatter missing 'description' key")]
+    if not description:
+        return [Violation("description", display, "frontmatter 'description' field is blank")]
+    return []
+
+
+def _check_field_agreement(display: str, frontmatter: dict[str, str], body: str) -> list[Violation]:
+    """(v) frontmatter <-> body-bullet agreement, only when both are present
+    (revision-round-1 DECISION — see module docstring)."""
+    violations: list[Violation] = []
+    for field_key, field_label in (("origin", "Origin"), ("start", "Start")):
+        fm_value = frontmatter.get(field_key)
+        if fm_value is None:
+            continue
+        bullet_value = _find_body_bullet(body, field_label)
+        if bullet_value is None:
+            continue
+        if _normalize_field_text(fm_value) != bullet_value:
+            violations.append(
+                Violation(
+                    "field-agreement",
+                    display,
+                    f"frontmatter '{field_key}' disagrees with the body's "
+                    f"'- {field_label}' bullet after normalization",
+                )
+            )
+    return violations
+
+
 def find_violations(store: Path) -> list[Violation]:
     violations: list[Violation] = []
 
@@ -240,97 +366,85 @@ def find_violations(store: Path) -> list[Violation]:
         display = str(path.relative_to(store))
         text = path.read_text(encoding="utf-8")
         frontmatter = parse_frontmatter(text)
-        name = frontmatter.get("name")
         status = frontmatter.get("status")
-        stem = path.stem
 
-        # (i) filename stem == frontmatter name
-        if name is None:
-            violations.append(Violation("name", display, "frontmatter missing 'name' key"))
-        elif name != stem:
-            violations.append(
-                Violation("name", display, f"frontmatter name '{name}' != filename stem '{stem}'")
-            )
-
-        # (ii) status is a member of the closed vocabulary
-        if status is None:
-            violations.append(Violation("status", display, "frontmatter missing 'status' key"))
-        elif status not in CLOSED_STATUS_VOCABULARY:
-            violations.append(
-                Violation("status", display, f"status '{status}' is not in the closed vocabulary")
-            )
-
-        # (iii) archive-tier <-> status: archived agreement
-        if status is not None:
-            if is_archived and status != ARCHIVED_STATUS:
-                violations.append(
-                    Violation(
-                        "archive-tier",
-                        display,
-                        f"entry is under archive/ but status is '{status}', not 'archived'",
-                    )
-                )
-            elif not is_archived and status == ARCHIVED_STATUS:
-                violations.append(
-                    Violation(
-                        "archive-tier",
-                        display,
-                        "entry carries status: archived but is not under archive/",
-                    )
-                )
-
-        # (iv) archived: <date> is required (and date-shaped) on every
-        # archive-tier entry, and must be absent on every live entry.
-        # Charter: docs/loom/backlog/README.md:20,24-27 — "It carries no
-        # meaning on a live entry and must not be set on one."
-        archived_value = frontmatter.get("archived")
-        if is_archived:
-            if archived_value is None:
-                violations.append(
-                    Violation(
-                        "archived-date",
-                        display,
-                        "archive-tier entry missing required 'archived: <YYYY-MM-DD>' field",
-                    )
-                )
-            elif not _is_valid_date_shape(archived_value):
-                violations.append(
-                    Violation(
-                        "archived-date",
-                        display,
-                        f"'archived' field {archived_value!r} is not a valid YYYY-MM-DD date",
-                    )
-                )
-        elif archived_value is not None:
-            violations.append(
-                Violation(
-                    "archived-date",
-                    display,
-                    f"live entry carries 'archived: {archived_value}' but must not set it",
-                )
-            )
-
-        # (v) frontmatter <-> body-bullet agreement, only when both are
-        # present (revision-round-1 DECISION — see module docstring).
-        body = _body_text(text)
-        for field_key, field_label in (("origin", "Origin"), ("start", "Start")):
-            fm_value = frontmatter.get(field_key)
-            if fm_value is None:
-                continue
-            bullet_value = _find_body_bullet(body, field_label)
-            if bullet_value is None:
-                continue
-            if _normalize_field_text(fm_value) != bullet_value:
-                violations.append(
-                    Violation(
-                        "field-agreement",
-                        display,
-                        f"frontmatter '{field_key}' disagrees with the body's "
-                        f"'- {field_label}' bullet after normalization",
-                    )
-                )
+        violations.extend(_check_name(display, frontmatter, path.stem))
+        violations.extend(_check_status(display, status))
+        violations.extend(_check_archive_tier(display, status, is_archived))
+        violations.extend(_check_archived_date(display, frontmatter, is_archived))
+        violations.extend(_check_description(display, frontmatter))
+        violations.extend(_check_field_agreement(display, frontmatter, _body_text(text)))
 
     return violations
+
+
+def _bucket_entry(
+    path: Path,
+    is_archived: bool,
+    by_status: dict[str, list[tuple[str, str]]],
+    archived_entries: list[tuple[str, str]],
+) -> None:
+    """Classify one entry file into `by_status` (live) or `archived_entries`
+    (archive-tier) in place. Raises ValueError (see
+    `_collect_index_entries()`'s docstring for the conditions) rather than
+    mutating either collection on a bad entry."""
+    frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
+    name = frontmatter.get("name", path.stem)
+
+    if is_archived:
+        archived_date = frontmatter.get("archived")
+        if not archived_date:
+            raise ValueError(
+                f"{path.name}: archived entry has no 'archived: <date>' "
+                "frontmatter field; cannot render its Archived line"
+            )
+        # Shape, not just presence. `--write` is documented as usable on
+        # its own, so a malformed value reaching here would be rendered
+        # verbatim into the committed index — and `--check` would then
+        # regenerate the same bogus string and call the file clean, making
+        # the laundered value the new baseline. Reject at the writer.
+        if not _is_valid_date_shape(archived_date):
+            raise ValueError(
+                f"{path.name}: archived entry's 'archived: {archived_date}' "
+                "is not a real YYYY-MM-DD date; refusing to render it"
+            )
+        archived_entries.append((name, archived_date))
+        return
+
+    status = frontmatter.get("status")
+    if status not in by_status:
+        raise ValueError(
+            f"{path.name}: live entry has status {status!r}, outside the "
+            "closed vocabulary of live statuses"
+        )
+    description = frontmatter.get("description", "")
+    by_status[status].append((name, description))
+
+
+def _collect_index_entries(
+    store: Path,
+) -> tuple[dict[str, list[tuple[str, str]]], list[tuple[str, str]]]:
+    """Walk `store`'s entry files and bucket them for `build_index()`'s
+    render step: live entries grouped by status, archive-tier entries as
+    (name, archived-date) pairs. Both live groups and the archived list
+    come back sorted by name.
+
+    Raises ValueError (never exits the process itself — the caller decides
+    exit codes) when an entry cannot be rendered: a live entry whose status
+    falls outside the closed vocabulary, or an archived entry missing (or
+    carrying a malformed) `archived: <date>` field its Archived line needs.
+    """
+    by_status: dict[str, list[tuple[str, str]]] = {status: [] for status in STATUS_SECTION_ORDER}
+    archived_entries: list[tuple[str, str]] = []
+
+    for path, is_archived in _entry_files(store):
+        _bucket_entry(path, is_archived, by_status, archived_entries)
+
+    for entries in by_status.values():
+        entries.sort(key=lambda item: item[0])
+    archived_entries.sort(key=lambda item: item[0])
+
+    return by_status, archived_entries
 
 
 def build_index(store: Path) -> str:
@@ -344,6 +458,7 @@ def build_index(store: Path) -> str:
     decides exit codes) when an entry cannot be rendered: a live entry
     whose status falls outside the closed vocabulary, or an archived
     entry missing the `archived: <date>` field its Archived line needs.
+    See `_collect_index_entries()` for the collection/validation step.
 
     Note the division of labor with `find_violations()`: this function
     does NOT re-check `name` (it falls back to `path.stem`) or re-check
@@ -351,45 +466,7 @@ def build_index(store: Path) -> str:
     are `--validate`'s job. Run `--validate` before `--write` if those
     invariants have not already been checked.
     """
-    by_status: dict[str, list[tuple[str, str]]] = {status: [] for status in STATUS_SECTION_ORDER}
-    archived_entries: list[tuple[str, str]] = []
-
-    for path, is_archived in _entry_files(store):
-        frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
-        name = frontmatter.get("name", path.stem)
-
-        if is_archived:
-            archived_date = frontmatter.get("archived")
-            if not archived_date:
-                raise ValueError(
-                    f"{path.name}: archived entry has no 'archived: <date>' "
-                    "frontmatter field; cannot render its Archived line"
-                )
-            # Shape, not just presence. `--write` is documented as usable on
-            # its own, so a malformed value reaching here would be rendered
-            # verbatim into the committed index — and `--check` would then
-            # regenerate the same bogus string and call the file clean, making
-            # the laundered value the new baseline. Reject at the writer.
-            if not _is_valid_date_shape(archived_date):
-                raise ValueError(
-                    f"{path.name}: archived entry's 'archived: {archived_date}' "
-                    "is not a real YYYY-MM-DD date; refusing to render it"
-                )
-            archived_entries.append((name, archived_date))
-            continue
-
-        status = frontmatter.get("status")
-        if status not in by_status:
-            raise ValueError(
-                f"{path.name}: live entry has status {status!r}, outside the "
-                "closed vocabulary of live statuses"
-            )
-        description = frontmatter.get("description", "")
-        by_status[status].append((name, description))
-
-    for entries in by_status.values():
-        entries.sort(key=lambda item: item[0])
-    archived_entries.sort(key=lambda item: item[0])
+    by_status, archived_entries = _collect_index_entries(store)
 
     lines = [
         "# loom family backlog",

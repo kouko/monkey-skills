@@ -236,7 +236,8 @@ Why this shape, and why the date must not be added at archive time:
 - **Observed locally, in this repo**: the one existing archived change-folder
   is `docs/loom/archive/2026-07-18-2026-07-16-operational-kpi-quarterly/` — a
   **double date**, because `archive_change_folder.py` prefixes the archive
-  date onto a name that already carried its creation date. `BACKLOG.md:1252`
+  date onto a name that already carried its creation date.
+  `docs/loom/backlog/2026-07-17-investing-toolkit-quarterly-parked-capability-arcs.md`
   now cites that archive-date-bearing path, so the reference is pinned to
   when it was archived rather than to what it is.
 

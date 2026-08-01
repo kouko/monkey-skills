@@ -250,8 +250,8 @@ from kpi_equity_terms import (  # noqa: E402
 #     rule goes beside `_revenue_total` and this list serves fewer fields;
 #     `test_spine_field_chains_has_a_stated_disposition` measures the split and
 #     fails when this paragraph stops matching the code.
-#   - SUPERSEDED, and no longer the plan: docs/loom/backlog/2026-07-26-
-#     investing-toolkit-spine-chain-misses-33-filer-years-of-reported-history.md
+#   - SUPERSEDED, and no longer the plan:
+#     docs/loom/backlog/2026-07-26-investing-toolkit-spine-chain-misses-33-filer-years-of-reported-history.md
 #     proposed widening these chains with early-era synonyms.
 #     The brief above replaces that fix with the reconstruction and the entry
 #     is closed against it -- widening `revenue` here to chase early-era

@@ -602,6 +602,86 @@ def test_file_unit_stamp_write_failure_restores_source_file(tmp_path, monkeypatc
     ).exists()
 
 
+# --- CLI --unit selector (Finding 4: the file unit was reachable only via
+# the Python API; the docs arm's README.md Archive rule now documents a
+# manual mv + hand-edit instead of this script, which is exactly the unsafe
+# path the module docstring's OpenSpec #412 citation argues against). Pinned
+# shape: `archive_change_folder.py <identifier> [root] [--date YYYY-MM-DD]
+# [--unit folder|file]`, --unit defaulting to folder so every existing
+# caller keeps working unchanged. -----------------------------------------
+
+def test_cli_unit_file_exit_zero_on_success(tmp_path):
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_entry_file(
+        tmp_path, "2026-08-01-alpha.md",
+        "---\nname: 2026-08-01-alpha\nstatus: OPEN\n---\n\nBody.\n",
+    )
+
+    rc = mod.main(
+        ["2026-08-01-alpha.md", str(tmp_path), "--date", "2026-08-02", "--unit", "file"]
+    )
+
+    assert rc == 0
+    dest = tmp_path / "docs" / "loom" / "backlog" / "archive" / "2026-08-01-alpha.md"
+    assert dest.is_file()
+    text = dest.read_text(encoding="utf-8")
+    assert "status: archived" in text
+    assert "archived: 2026-08-02" in text
+
+
+def test_cli_unit_file_exit_one_on_missing_entry_with_actionable_stderr(tmp_path, capsys):
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    (tmp_path / "docs" / "loom" / "backlog").mkdir(parents=True)
+
+    rc = mod.main(
+        ["no-such-entry.md", str(tmp_path), "--date", "2026-08-02", "--unit", "file"]
+    )
+
+    assert rc == 1
+    captured = capsys.readouterr()
+    assert "no-such-entry.md" in captured.err
+    assert "does not exist" in captured.err
+
+
+def test_cli_rejects_invalid_unit_value_without_touching_filesystem(tmp_path, capsys):
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_change_folder(tmp_path, "add-widget", "## Why\nBecause.\n")
+    before = sorted(p.relative_to(tmp_path) for p in tmp_path.rglob("*"))
+
+    rc = mod.main(["add-widget", str(tmp_path), "--date", "2026-07-10", "--unit", "bogus"])
+
+    assert rc == 1
+    captured = capsys.readouterr()
+    assert "invalid unit" in captured.err
+    after = sorted(p.relative_to(tmp_path) for p in tmp_path.rglob("*"))
+    assert before == after  # refusal is a no-op: no filesystem mutation
+
+
+def test_cli_unit_omitted_defaults_to_folder(tmp_path):
+    """Every existing caller (finishing-a-development-branch, AGENTS.md's
+    prior declared command surface) invokes this script with no --unit flag
+    at all; the CLI must keep archiving a change-folder by default."""
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_change_folder(tmp_path, "add-widget", "## Why\nBecause.\n")
+
+    rc = mod.main(["add-widget", str(tmp_path), "--date", "2026-07-10"])
+
+    assert rc == 0
+    assert (tmp_path / "docs" / "loom" / "archive" / "2026-07-10-add-widget").is_dir()
+
+
+def test_cli_unit_requires_a_value(tmp_path, capsys):
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_change_folder(tmp_path, "add-widget", "## Why\nBecause.\n")
+
+    rc = mod.main(["add-widget", str(tmp_path), "--unit"])
+
+    assert rc == 1
+    captured = capsys.readouterr()
+    assert "--unit" in captured.err
+    assert (tmp_path / "docs" / "loom" / "add-widget").is_dir()  # untouched
+
+
 # --- living-spec-index interaction ----------------------------------------
 
 def test_living_spec_index_still_green_after_archive(tmp_path):

@@ -27,8 +27,9 @@ quirk cannot silently merge two series NOR blank out the filer's entire
 breakdown."**
 
 Live cost: **2 of 7 filers** lost their dimensional lane on the arc's original
-end-to-end run (`BACKLOG.md:204-222`), and **23 of 47** on the wider probe run
-for this brief (§Probe evidence).
+end-to-end run
+(`docs/loom/backlog/2026-07-26-investing-toolkit-kpi-id-identity-2-37-0-post-ship-follow-ups.md`),
+and **23 of 47** on the wider probe run for this brief (§Probe evidence).
 
 - **XOM** — `us-gaap:Revenues` + `(StatementBusinessSegments=Upstream,
   StatementGeographical=US)` under `OperatingSegmentsMember` and under
@@ -223,8 +224,9 @@ kind of constraint no unit test models.
   `ValueError` when a *different* `_signature_key` lands on an already-claimed
   `kpi_id`. Because `ingest_pack` builds every point before appending any, that
   raise aborts **both lanes of the whole pack** — the live INTC run landed 0 of
-  473 facts on one collision (BACKLOG item (l), `BACKLOG.md:325-341`). XOM and
-  JPM fail this way today.
+  473 facts on one collision (BACKLOG item (l), now
+  `docs/loom/backlog/2026-07-25-investing-toolkit-top-line-revenue-lane-2-36-0-post-ship-follow-ups.md`).
+  XOM and JPM fail this way today.
 - **Data (what is stored)** — one JSON file per series under
   `resolve_store_dir()` (`_store_fs.py:43-64`): `KPI_STORE_DIR` →
   `$XDG_DATA_HOME/investing-toolkit/kpi-store` →
@@ -247,7 +249,8 @@ kind of constraint no unit test models.
 {`kpi_xbrl_ingest.py`, `kpi_xbrl.py`, `kpi_store.py`, `kpi_tw.py`,
 `_store_fs.py`}; `investing-toolkit/skills/report-kpi-tearsheet/scripts/tearsheet_format.py`;
 `investing-toolkit/tests/analysis/test_kpi_xbrl_ingest.py`;
-`docs/loom/BACKLOG.md:197-244, 325-341`.
+`docs/loom/backlog/2026-07-26-investing-toolkit-kpi-id-identity-2-37-0-post-ship-follow-ups.md`,
+`docs/loom/backlog/2026-07-25-investing-toolkit-top-line-revenue-lane-2-36-0-post-ship-follow-ups.md`.
 
 ## Decision
 
@@ -315,8 +318,9 @@ Removed or rewritten **in the same change**:
 - `test_ingest_raises_on_kpi_id_collision` (:171) — re-read its scenario: if its
   two signatures differ only by case, its polarity flips too (they must now fold
   into one series). If they differ structurally, it stays as-is.
-- The BACKLOG COMMITTED-NEXT section (`BACKLOG.md:197-244`) — resolved, moves
-  out at close-out.
+- The BACKLOG COMMITTED-NEXT section (now
+  `docs/loom/backlog/2026-07-26-investing-toolkit-kpi-id-identity-2-37-0-post-ship-follow-ups.md`)
+  — resolved, moves out at close-out.
 - The probe scripts now in the session scratchpad (`fetch_packs.sh`,
   `analyze_ids.py`) — per the repo precedent set by
   `tests/data/fixtures/capture_companyconcept_form_domain.py`, the arc commits a

@@ -56,14 +56,19 @@ Role boundaries enforced by behavior, not reading restrictions:
   plan's `Brief item covered` join keys; rc=1 names every dropped
   scenario on stderr, rc=0 on full coverage (or a vacuous zero-scenario
   folder).
-- **Archive a shipped change-folder** (finishing-a-development-branch
-  archive-on-close step, orchestrator-only, once per branch):
-  `python3 loom-code/scripts/archive_change_folder.py <change-id> [root] [--date YYYY-MM-DD]`
-  — moves `docs/loom/<change-id>/` to
-  `docs/loom/archive/<date>-<change-id>/` and stamps `status: archived`
-  into the moved `proposal.md`'s frontmatter; rc=1 with actionable
-  stderr on any refusal (missing source, already-archived, destination
-  collision, unsafe change-id/date), zero filesystem mutation on
+- **Archive a shipped change-folder, or a single backlog entry file**
+  (finishing-a-development-branch archive-on-close step, orchestrator-only,
+  once per branch; the file unit is also used to close a
+  `docs/loom/backlog/` entry per that store's README.md Archive rule):
+  `python3 loom-code/scripts/archive_change_folder.py <identifier> [root] [--date YYYY-MM-DD] [--unit folder|file]`
+  — `--unit` defaults to `folder` (`docs/loom/<identifier>/` moves to
+  `docs/loom/archive/<date>-<identifier>/`, stamping `status: archived`
+  into the moved `proposal.md`'s frontmatter); `--unit file` moves
+  `docs/loom/backlog/<identifier>` to `docs/loom/backlog/archive/<identifier>`
+  unrenamed, stamping both `status: archived` and `archived: <date>` into
+  the moved file itself. rc=1 with actionable stderr on any refusal
+  (missing source, already-archived, destination collision, unsafe
+  identifier/date, unrecognized `--unit`), zero filesystem mutation on
   refusal.
 - **Sync a plugin's Codex manifest from its Claude SSOT**:
   `python3 scripts/sync_codex_manifests.py <plugin>` — copies the 8

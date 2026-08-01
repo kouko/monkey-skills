@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed — stale `docs/loom/BACKLOG.md` §-anchor / item-line references
 
 - `docs/loom/BACKLOG.md` became a generated index over `docs/loom/backlog/`
-  (one entry per file); repointed the five in-repo comments/docs that cited
-  a specific heading or item inside the old monolith
+  (one entry per file); repointed six citation sites across five in-repo
+  files that cited a specific heading or item inside the old monolith
   (`data-markets/scripts/sec_edgar_client.py` ×2, `analysis-kpi/scripts/
   kpi_spine_view.py`, `analysis-kpi/scripts/kpi_tw.py`,
   `data-markets/SKILL.md`, `tests/analysis/test_top_line_two_lane_e2e.py`)

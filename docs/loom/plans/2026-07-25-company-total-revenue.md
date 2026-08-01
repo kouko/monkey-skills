@@ -440,7 +440,7 @@ Amendment note 5 (post-PASS, schema-safe → re-review skipped per writing-plans
   - docs/loom/BACKLOG.md  (§"investing-toolkit KPI tearsheet — company total (top-line) revenue lane")
   - docs/loom/specs/2026-07-25-company-total-revenue.md  (§What Becomes Obsolete — the exact items to remove)
 - Acceptance:
-  - RED: `grep -c "The only shipped source is" docs/loom/BACKLOG.md` returns 1 (the disproved premise is still present at `docs/loom/BACKLOG.md:234`; note the capital `T` — a lowercase pattern matches nothing and would make this task look already-done), AND `grep -c "kpi_tw_ingest.py:54" docs/loom/BACKLOG.md` returns 0 (the `source_kind` naming-debt entry does not exist yet).
+  - RED: `grep -c "The only shipped source is" docs/loom/BACKLOG.md` returns 1 (the disproved premise is still present at `docs/loom/backlog/2026-07-25-investing-toolkit-top-line-revenue-lane-2-36-0-post-ship-follow-ups.md`; note the capital `T` — a lowercase pattern matches nothing and would make this task look already-done), AND `grep -c "kpi_tw_ingest.py:54" docs/loom/BACKLOG.md` returns 0 (the `source_kind` naming-debt entry — now `docs/loom/backlog/2026-07-25-investing-toolkit-source-kind-naming-debt-endpoint-name-axis-vs-shape-ax.md` — does not exist yet).
   - GREEN: that grep returns 0; the section states the two-lane decision and cites the probe; the arc (d) brief carries the superseded pointer; and `grep -c "kpi_tw_ingest.py:54" docs/loom/BACKLOG.md` returns >=1 (the `source_kind` naming-debt entry exists).
 - Dependencies: none
 - Independent: true

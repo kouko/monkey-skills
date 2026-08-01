@@ -5,6 +5,20 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.8.1] — 2026-08-02 — citation repoint after the backlog store split
+
+### Changed
+
+- **`scripts/validate_spec_output.py` and `scripts/test_consistency_lens.py`**:
+  comment citations that pointed at a heading inside the old
+  `docs/loom/BACKLOG.md` monolith now name the entry file that owns that
+  item under `docs/loom/backlog/`. The monolith became generated output in
+  the same arc, so the old in-file anchors no longer resolve. Comments only
+  — no executable line changed. Each filename is kept on a single line so
+  `grep` for it finds the citation; an earlier pass wrapped them mid-path,
+  which silently reintroduced the un-findable-reference problem the repoint
+  existed to fix.
+
 ## [0.8.0] — 2026-07-25 — bba imperative in entry router
 
 ### Added

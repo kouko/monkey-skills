@@ -136,7 +136,7 @@ Key seam facts from recon (2026-07-22):
 - Brief item covered: §Constraints 4 (normalize unit before comparing) + §Problem (no fabricated value) — the write-side guarantee T6's history docstring trusts
 
 ## Task 7 — BACKLOG correction + brief-obsolescence cleanup
-- Description: Delete the unevidenced "≥10yr, industry norm" claim from `docs/loom/BACKLOG.md:167`, replace the "Slice C = coverage file + retention + tearsheet" framing with this slice's shipped shape, and log the five pre-existing defects the recon found (from brief §Pre-existing defects) as next-touch items. Docs-only.
+- Description: Delete the unevidenced "≥10yr, industry norm" claim from `docs/loom/backlog/2026-07-20-investing-toolkit-non-monetary-operational-kpi-automation.md`, replace the "Slice C = coverage file + retention + tearsheet" framing with this slice's shipped shape, and log the five pre-existing defects the recon found (from brief §Pre-existing defects) as next-touch items. Docs-only.
 - Module: docs/loom/BACKLOG.md
 - Files touched: docs/loom/BACKLOG.md
 - Context paths:

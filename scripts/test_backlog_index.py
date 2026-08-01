@@ -172,6 +172,38 @@ def test_status_outside_the_closed_vocabulary_is_rejected(tmp_path):
     assert "2026-08-01-alpha.md" in result.stdout
 
 
+def test_entry_missing_description_key_is_rejected(tmp_path):
+    """Charter (docs/loom/backlog/README.md:16) lists `description` with no
+    `<optional; ...>` marker -- it is contractual, like `name`/`status`. An
+    entry that omits it entirely must fail --validate, not pass clean and
+    then render a dangling `- [name](...) -- ` line at --write."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(
+        store,
+        "2026-08-01-alpha.md",
+        "---\nname: 2026-08-01-alpha\nstatus: OPEN\n---\n\nBody text.\n",
+    )
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1
+    assert "2026-08-01-alpha.md" in result.stdout
+
+
+def test_entry_with_blank_description_is_rejected(tmp_path):
+    """A present-but-empty `description:` value renders the exact same
+    dangling-em-dash line as a missing key, so it is rejected the same way."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(store, "2026-08-01-alpha.md", _entry("2026-08-01-alpha", "OPEN", description=""))
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1
+    assert "2026-08-01-alpha.md" in result.stdout
+
+
 def test_readme_md_directly_under_store_is_never_treated_as_an_entry(tmp_path):
     """README.md carries no frontmatter at all; it must be excluded from
     scanning, not reported as a violation."""
@@ -626,20 +658,33 @@ def test_check_against_real_store_reflects_current_migration_phase():
 def test_real_store_has_every_migrated_entry_and_validates_clean():
     """RED while docs/loom/backlog/ holds no entry files (only README.md):
     Task 5 splits BACKLOG.md's 73 `## ` entries into one file per entry, so
-    the real store must hold exactly 73 entry files and `--validate` over it
-    must exit 0 (every migrated entry's frontmatter is well-formed). Task 9
-    adds the store's first hand-authored entry (the institution-maintenance.md
-    follow-up), bumping the count to 74."""
+    the real store must hold at least 73 entry files and `--validate` over
+    it must exit 0 (every migrated entry's frontmatter is well-formed).
+    Task 9 adds the store's first hand-authored entry (the
+    institution-maintenance.md follow-up), bumping the floor to 74.
+
+    Deliberately a floor (`>=`), not `== 74`: this same branch ships two
+    workflows that legitimately change the count going forward --
+    loom-memory (loom-pipeline/skills/loom-memory/SKILL.md) routes a new
+    backlog-shaped fact to a new entry file, and
+    archive_change_folder.py's file unit MOVES a live entry into
+    backlog/archive/. An exact-equality assertion would turn either
+    legitimate action into a CI failure that reads as a defect report.
+    The invariant worth pinning is migration completeness (no entry went
+    missing), not a specific cardinality -- so entries are counted via
+    `backlog_index._entry_files()`, which walks BOTH the live tier and
+    archive/. Archiving moves a file between those two tiers without
+    deleting it, so the combined total across both can only grow or hold
+    steady from a legitimate archive; only real entry loss (corruption,
+    accidental deletion) can drop it below the migration baseline."""
     real_store = REPO_ROOT / "docs" / "loom" / "backlog"
 
-    entry_files = [
-        p for p in real_store.glob("*.md")
-        if p.name != "README.md"
-    ]
-    assert len(entry_files) == 74, (
-        f"expected 74 entry files (73 migrated + Task 9's hand-authored "
-        f"entry) directly under {real_store}, found {len(entry_files)}: "
-        f"{sorted(p.name for p in entry_files)}"
+    entry_files = backlog_index._entry_files(real_store)
+    assert len(entry_files) >= 74, (
+        f"expected at least 74 entry files (73 migrated + Task 9's "
+        f"hand-authored entry) across the live tier and archive/ under "
+        f"{real_store}, found {len(entry_files)} -- entries appear to have "
+        f"gone missing from the store"
     )
 
     result = _run_validate(real_store)
