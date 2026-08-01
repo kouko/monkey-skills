@@ -76,6 +76,7 @@
 - **Dependencies**: Tasks 1, 3 complete first
 - **Independent**: false
 - **Brief item covered**: "runs `git show --name-only --format= <sha>`, and emits a per-task verdict: `OK` / `UNDER` / `OVER` / `NO_JOIN`" + "the comparator fails LOUD on empty parses (0 tasks, 0 join keys)"
+- **Status**: done(eedf33d3)
 
 ## Task 5 — Run the measurement, retro-fit the three real instances, complete the report
 
