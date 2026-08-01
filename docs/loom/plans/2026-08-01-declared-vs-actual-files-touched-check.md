@@ -94,6 +94,7 @@
 - **Independent**: false
 - **Review-weight**: prose
 - **Brief item covered**: "A measurement report … per-rule-variant confusion table on the independent cells, the retro-fit on the three known instances reported separately and labeled selection-biased, and a ship/no-ship recommendation"
+- **Status**: done(712c9aed)
 
 ## Notes
 
