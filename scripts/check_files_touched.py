@@ -6,9 +6,13 @@ check (docs/loom/specs/2026-08-01-declared-vs-actual-files-touched-check.md):
 join each plan task's declared file set to the commit that resolved it, so a
 later layer can compare declaration against `git show` reality.
 
-SCOPE — this module is the PARSE LAYER ONLY: plan markdown in, per-task
-`(declared_paths, sha_or_None)` structures out. No git calls, no verdict
-logic — those are later tasks and build on `PlanParse` without changing it.
+SCOPE — two pure layers, no git calls (the git layer + CLI are Task 4):
+  * PARSE: plan markdown in, per-task `(declared_paths, sha_or_None)`
+    structures out (`parse_plan` / `parse_plan_text` -> `PlanParse`);
+  * VERDICT: pure set arithmetic over (declared, actual, plan_path) per
+    rule variant R1/R2/R3 (`verdict_r1/r2/r3`, `evaluate_task`) — variant
+    semantics frozen in
+    docs/loom/audits/2026-08-01-declared-vs-actual-check-measurement.md.
 
 Field lines that match a field name but fail to parse are collected into
 `PlanParse.parse_errors`, never silently dropped (the citation-checker
@@ -158,6 +162,10 @@ def parse_plan_text(text: str) -> PlanParse:
         for match in _STATUS_LINE.finditer(block):
             parsed = _parse_status(task_no, match.group(1), result.parse_errors)
             if parsed is not None:
+                if sha is not None:
+                    result.parse_errors.append(
+                        f"Task {task_no}: multiple 'Status: done(<sha>)' "
+                        f"lines — ambiguous join key, keeping the last")
                 sha = parsed
 
         result.tasks[task_no] = TaskDeclaration(declared_paths=declared, sha=sha)
@@ -167,3 +175,98 @@ def parse_plan_text(text: str) -> PlanParse:
 def parse_plan(path: Path | str) -> PlanParse:
     """Read a plan file and parse it — thin wrapper over `parse_plan_text`."""
     return parse_plan_text(Path(path).read_text(encoding="utf-8"))
+
+
+# --- Verdict layer (Task 3) — pure set arithmetic, no git calls -------------
+#
+# Variant semantics are the frozen key's §Rule variants table
+# (docs/loom/audits/2026-08-01-declared-vs-actual-check-measurement.md):
+#   R1 strict     — flags any set difference, both directions;
+#   R2 under-only — flags only `actual − declared ≠ ∅` (the dangerous
+#                   direction; OVER may be legitimate drift);
+#   R3            — R2 computed after removing the standing excludes from
+#                   the ACTUAL set (the plan file under check, and any path
+#                   containing `__pycache__/`).
+# A task whose sha is None yields NO_JOIN under every variant, never OK.
+
+OK = "OK"
+UNDER = "UNDER"
+OVER = "OVER"
+NO_JOIN = "NO_JOIN"
+
+VARIANTS = ("R1", "R2", "R3")
+
+
+@dataclass(frozen=True)
+class Verdict:
+    """One variant's verdict on one task.
+
+    `under` / `over` carry only the paths THIS variant flags (sorted):
+    R2/R3 never populate `over` — their verdict ignores that direction.
+    When R1 flags both directions at once, `verdict` carries the dominant
+    token UNDER (the dangerous direction — matches the frozen key's cell
+    rows, which record one dominant token per cell) while both lists stay
+    populated for reporting.
+    """
+    variant: str
+    verdict: str  # OK | UNDER | OVER | NO_JOIN
+    under: tuple[str, ...] = ()
+    over: tuple[str, ...] = ()
+
+
+def verdict_r1(declared: frozenset[str], actual: frozenset[str]) -> Verdict:
+    """R1 strict: any symmetric difference flags."""
+    under = tuple(sorted(actual - declared))
+    over = tuple(sorted(declared - actual))
+    verdict = UNDER if under else (OVER if over else OK)
+    return Verdict(variant="R1", verdict=verdict, under=under, over=over)
+
+
+def verdict_r2(declared: frozenset[str], actual: frozenset[str]) -> Verdict:
+    """R2 under-only: flags only `actual − declared ≠ ∅`."""
+    under = tuple(sorted(actual - declared))
+    return Verdict(variant="R2", verdict=UNDER if under else OK, under=under)
+
+
+def _normalize_plan_path(plan_path: Path | str) -> str:
+    """Normalize the plan path for the R3 exclude comparison — POSIX
+    separators, no leading `./` (Path() collapses it) — the same family of
+    rules `_normalize_token` applies to declared tokens."""
+    return Path(str(plan_path).strip()).as_posix()
+
+
+def verdict_r3(declared: frozenset[str], actual: frozenset[str],
+               plan_path: Path | str) -> Verdict:
+    """R3: R2 after removing the standing excludes from the ACTUAL set.
+
+    Exactly two exclude classes (frozen key §Rule variants): the plan file
+    under check (normalized-path comparison), and any path containing
+    `__pycache__/`. Nothing else — regenerated functional copies and
+    manifest mirrors are under-declaration TARGETS, never excludes.
+    """
+    plan_norm = _normalize_plan_path(plan_path)
+    kept = frozenset(
+        p for p in actual
+        if _normalize_plan_path(p) != plan_norm and "__pycache__/" not in p)
+    under = tuple(sorted(kept - declared))
+    return Verdict(variant="R3", verdict=UNDER if under else OK, under=under)
+
+
+def evaluate_task(declaration: TaskDeclaration,
+                  actual_paths: frozenset[str] | None,
+                  plan_path: Path | str) -> dict[str, Verdict]:
+    """Run all three variants on one task; the seam Task 4's CLI calls.
+
+    A declaration with no join key (`sha is None`) yields NO_JOIN under
+    every variant — never OK (frozen key cell 7); `actual_paths` is
+    ignored in that case because nothing joins the task to a commit.
+    """
+    if declaration.sha is None:
+        return {v: Verdict(variant=v, verdict=NO_JOIN) for v in VARIANTS}
+    actual = frozenset(actual_paths or ())
+    declared = declaration.declared_paths
+    return {
+        "R1": verdict_r1(declared, actual),
+        "R2": verdict_r2(declared, actual),
+        "R3": verdict_r3(declared, actual, plan_path),
+    }
