@@ -110,6 +110,7 @@
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
 - **Brief item covered**: brief §Addendum — "continuation-line (wrapped) `Files touched` values … whose continuation paths are invisible to the parser and so produce false UNDER verdicts"
+- **Status**: done(3b3970ac)
 
 ## Task 7 — Trailing parenthetical annotation is not a path token
 
