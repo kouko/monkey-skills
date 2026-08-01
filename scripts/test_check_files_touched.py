@@ -192,6 +192,118 @@ def test_parse_plan_reads_a_file(tmp_path):
     assert result.tasks[1].sha == "abc1234"
 
 
+# --- Task 6: continuation-line (wrapped) `Files touched` values ------------
+#
+# WHY these tests exist: two REAL plans in this repo wrap the `Files
+# touched` value across indented continuation lines (trailing-comma form:
+# docs/loom/plans/2026-07-11-investing-toolkit-data-consolidation.md:48-49;
+# no-value form: docs/loom/plans/2026-07-26-as-filed-statement-
+# reconstruction.md Task 10). A parser blind to continuation lines sees a
+# truncated declared set and renders FALSE UNDER verdicts on honest plans
+# (brief §Addendum).
+
+
+def test_wrapped_files_touched_value_spans_continuation_lines():
+    """Mirror of the 07-11 shape: plain field form ending in a trailing
+    comma, one indented continuation path, immediately followed by a
+    `- Context paths:` bullet whose nested items must NOT be swallowed
+    into the declared set."""
+    corpus = (
+        "# Plan: fixture\n\n"
+        "## Task 1 — wrapped declaration\n\n"
+        "- Description: fixture\n"
+        "- Files touched: skills/data-markets/scripts/cache_util.py,\n"
+        "  tests/data/test_cache_util.py\n"
+        "- Context paths:\n"
+        "  - skills/data-us/scripts/yfinance_client.py (reference)\n"
+        "- Status: done(abc1234)\n"
+    )
+    result = parse_plan_text(corpus)
+
+    assert result.tasks[1].declared_paths == frozenset({
+        "skills/data-markets/scripts/cache_util.py",
+        "tests/data/test_cache_util.py",  # the continuation path
+    })
+    assert result.parse_errors == []
+
+
+def test_wrapped_files_touched_no_value_all_paths_on_continuation_lines():
+    """Mirror of the as-filed Task-10 shape: bolded field line carries NO
+    value at all; every path sits on an indented continuation line. The
+    trailing comma on the first continuation line is list syntax, not an
+    empty token."""
+    corpus = (
+        "# Plan: fixture\n\n"
+        "## Task 1 — no-value wrapped declaration\n\n"
+        "- **Description**: fixture\n"
+        "- **Files touched**:\n"
+        "  tests/analysis/test_fidelity.py,\n"
+        "  tests/data/fixtures/ko_fy2017.json\n"
+        "- **Context paths**:\n"
+        "  - /abs/path/kpi_us_statement_shape.py\n"
+        "- **Status**: done(abc1234)\n"
+    )
+    result = parse_plan_text(corpus)
+
+    assert result.tasks[1].declared_paths == frozenset({
+        "tests/analysis/test_fidelity.py",
+        "tests/data/fixtures/ko_fy2017.json",
+    })
+    assert result.parse_errors == []
+
+
+def test_trailing_comma_on_final_continuation_line_is_list_syntax():
+    """The wrapped value's FINAL continuation line may itself end in a
+    trailing comma — list syntax, not an empty token. Pins the
+    continuation-present branch of the trailing-comma rule: deleting the
+    `removesuffix(",")` makes this red (empty-token parse_error)."""
+    corpus = (
+        "# Plan: fixture\n\n"
+        "## Task 1 — wrapped, comma on last continuation line\n\n"
+        "- Files touched: src/a.py,\n"
+        "  src/b.py,\n"
+        "- Status: done(abc1234)\n"
+    )
+    result = parse_plan_text(corpus)
+
+    assert result.tasks[1].declared_paths == frozenset(
+        {"src/a.py", "src/b.py"})
+    assert result.parse_errors == []
+
+
+def test_trailing_comma_with_no_continuation_stays_a_parse_error():
+    """A genuinely empty final token with NO continuation line is still a
+    parse_error (current behavior preserved, plan Task 6 GREEN). Pins the
+    OTHER side of the rule: making the trailing-comma strip unconditional
+    makes this red (the error vanishes)."""
+    result = parse_plan_text(_single_task("- Files touched: src/a.py,"))
+
+    assert result.tasks[1].declared_paths == frozenset({"src/a.py"})
+    assert len(result.parse_errors) == 1
+    assert "Task 1" in result.parse_errors[0]
+    assert "Files touched" in result.parse_errors[0]
+
+
+def test_real_wrapped_plan_task1_parses_full_declared_set():
+    """INTEGRATION guard against a COMMITTED repo file (real producer
+    output, docs/loom/memory/fixtures-mirror-producer-shape.md): the 07-11
+    plan's Task 1 wraps its declaration at lines 48-49; both paths must
+    reach the declared set with zero Files-touched parse errors for that
+    task."""
+    repo_root = Path(__file__).resolve().parent.parent
+    plan = (repo_root / "docs" / "loom" / "plans"
+            / "2026-07-11-investing-toolkit-data-consolidation.md")
+
+    result = parse_plan(plan)
+
+    declared = result.tasks[1].declared_paths
+    assert ("investing-toolkit/skills/data-markets/scripts/cache_util.py"
+            in declared)
+    assert "investing-toolkit/tests/data/test_cache_util.py" in declared
+    assert not [e for e in result.parse_errors
+                if "Task 1" in e and "Files touched" in e]
+
+
 # --- Task 3: verdict engine (pure — no git) -------------------------------
 #
 # WHY these tests exist: the three rule variants are only worth measuring if

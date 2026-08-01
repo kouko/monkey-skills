@@ -108,6 +108,26 @@ _STATUS_SHALESS = re.compile(r"^(?:pending|claimed\(@[^)]+\)|blocked)$")
 _NEW_TOKEN_PREFIX = re.compile(r"^NEW\s*:\s*")
 
 
+def _is_continuation_line(line: str) -> bool:
+    """True when `line` continues a wrapped field value (Task 6).
+
+    A continuation line is an INDENTED line that is not a new `- ` bullet,
+    not a heading, and not blank — real wrapped shapes:
+    docs/loom/plans/2026-07-11-investing-toolkit-data-consolidation.md:48-49
+    (trailing comma + indented path) and
+    docs/loom/plans/2026-07-26-as-filed-statement-reconstruction.md Task 10
+    (no value on the field line at all). The `- ` exclusion is what keeps a
+    following `- Context paths:` bullet — and its indented `- ` sub-items —
+    OUT of the declared set.
+    """
+    if line[:1] not in (" ", "\t"):
+        return False
+    stripped = line.strip()
+    if not stripped or stripped.startswith("- ") or stripped.startswith("#"):
+        return False
+    return True
+
+
 @dataclass(frozen=True)
 class TaskDeclaration:
     """One task's parsed declaration: normalized declared paths + join key."""
@@ -191,9 +211,27 @@ def parse_plan_text(text: str) -> PlanParse:
             continue
 
         declared: frozenset[str] = frozenset()
-        for match in _FILES_TOUCHED_LINE.finditer(block):
+        lines = block.splitlines()
+        i = 0
+        while i < len(lines):
+            match = _FILES_TOUCHED_LINE.match(lines[i])
+            i += 1
+            if not match:
+                continue
+            value = match.group(1)
+            continuation: list[str] = []
+            while i < len(lines) and _is_continuation_line(lines[i]):
+                continuation.append(lines[i].strip())
+                i += 1
+            if continuation:
+                # Wrapped value (Task 6): concatenate field value +
+                # continuation lines, then comma-split as usual. A trailing
+                # comma is list syntax here, not an empty token — only the
+                # NO-continuation empty final token stays a parse error.
+                value = " ".join(filter(None, [value, *continuation]))
+                value = value.rstrip().removesuffix(",")
             declared |= _parse_files_touched(
-                task_no, match.group(1), result.parse_errors)
+                task_no, value, result.parse_errors)
 
         sha: str | None = None
         for match in _STATUS_LINE.finditer(block):
