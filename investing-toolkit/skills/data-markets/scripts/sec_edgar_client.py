@@ -3008,8 +3008,8 @@ def _is_near_new_year_boundary(period_end_date: date) -> bool:
     API's XBRL window — but not for the older comparative-only years this
     lane exists to reach, and only by reading a field this module forbids
     by name. That partial route is recorded, and not taken, in
-    `docs/loom/BACKLOG.md` ("investing-toolkit top-line revenue lane
-    2.36.0", item (j)); Lane B, which HAS the calendar, stays the authority
+    `docs/loom/backlog/2026-07-25-investing-toolkit-top-line-revenue-lane-2-36-0-post-ship-follow-ups.md`
+    item (j); Lane B, which HAS the calendar, stays the authority
     wherever both lanes cover one year.
 
     Pinned in both directions by
@@ -3239,7 +3239,8 @@ def build_top_line_backfill(ticker: str) -> dict:
     lane cannot detect — such a year is labelled one lower than Lane B
     labels it, which is a spurious restatement dagger rather than a gap.
     See that helper's docstring for the measured cases and
-    `docs/loom/BACKLOG.md` item (j) for what would close it.
+    `docs/loom/backlog/2026-07-25-investing-toolkit-top-line-revenue-lane-2-36-0-post-ship-follow-ups.md`
+    item (j) for what would close it.
 
     Returns the per-accession `fiscal_calendars` map alongside `facts`
     (Task 3 + seam fix 18fc47fd) — the SAME envelope key Lane B emits, and

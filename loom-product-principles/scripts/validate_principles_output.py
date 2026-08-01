@@ -118,8 +118,9 @@ _PRINCIPLE_MARKER = "— principle:"
 _OPEN_QUESTIONS = "## Open Questions"
 _RE_TRIGGER_MARKER = "— re-trigger:"
 
-# Knowledge-triage marker whitelist (docs/loom/BACKLOG.md §knowledge-triage
-# v2.1 cut (d); doctrine in references/knowledge-triage.md). Mirrors
+# Knowledge-triage marker whitelist (docs/loom/backlog/2026-07-18-knowledge-
+# triage-v2-1-mechanize-enforcement-semantics.md cut (d); doctrine in
+# references/knowledge-triage.md). Mirrors
 # loom-spec's sibling cut (a) check (`validate_spec_output.py`
 # `_EVIDENCE_NEEDED`/`_EVIDENCE_WHITELIST`) — same pinned three-bucket enum,
 # same real leg-1 failure mode (a weak executor inventing an out-of-enum

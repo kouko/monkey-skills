@@ -5,6 +5,7 @@ scripts/backlog_index.py. Later tasks (3-5, 8, 9) extend this file with
 generator/check/migration tests.
 """
 
+import importlib.util
 import subprocess
 import sys
 from pathlib import Path
@@ -12,6 +13,14 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CHARTER_PATH = REPO_ROOT / "docs" / "loom" / "backlog" / "README.md"
 BACKLOG_SCRIPT = REPO_ROOT / "scripts" / "backlog_index.py"
+
+# Direct import (not subprocess) so the revision-round-1 tests below can reuse
+# the production parse/extract helpers instead of duplicating their regex —
+# duplicating it in the test would let the two drift silently.
+_SPEC = importlib.util.spec_from_file_location("backlog_index", BACKLOG_SCRIPT)
+backlog_index = importlib.util.module_from_spec(_SPEC)
+sys.modules["backlog_index"] = backlog_index  # dataclass() needs this pre-registered
+_SPEC.loader.exec_module(backlog_index)
 
 # Transcribed VERBATIM from the plan's §Pinned frontmatter contract
 # (docs/loom/plans/2026-08-01-backlog-one-entry-per-file.md, ## Notes).
@@ -592,24 +601,183 @@ def test_check_fails_loudly_on_build_error_without_writing(tmp_path):
 
 
 def test_check_against_real_store_reflects_current_migration_phase():
-    """docs/loom/backlog/ holds no entries yet -- Task 5 migrates the 73
-    docs/loom/BACKLOG.md entries into it. Regenerating the index from the
-    currently-empty store and comparing it against the current hand-written
-    2500+-line monolith is REAL drift, not a false negative caused by test
-    scaffolding, so --check must currently report FAIL (exit 1).
+    """Task 5 landed: docs/loom/backlog/ now holds the 73 migrated entries and
+    docs/loom/BACKLOG.md was regenerated from them with `--write`. Regenerating
+    the index again and comparing it against the committed file must therefore
+    show NO drift (exit 0) -- this is the post-migration steady state the CI
+    pytest step (loom-code-ci.yml:98) gates on every future PR.
 
-    Task 5 must invert this assertion to `== 0` once the store is populated
-    and docs/loom/BACKLOG.md is regenerated from it -- do not delete this
-    test and do not leave it asserting drift once the migration lands; a
-    test that still says "expect drift" after Task 5 ships is itself a bug.
+    Inverted from the pre-Task-5 assertion (`== 1`, expected drift while the
+    store was still empty) per that assertion's own docstring instruction.
     """
     real_store = REPO_ROOT / "docs" / "loom" / "backlog"
     real_output = REPO_ROOT / "docs" / "loom" / "BACKLOG.md"
 
     result = _run_check(real_store, real_output)
 
-    assert result.returncode == 1, (
-        "expected drift while docs/loom/backlog/ is still empty (pre-Task-5); "
-        "if this now returns 0, Task 5 has landed -- invert this assertion to "
-        "`== 0` per Task 5's own acceptance criteria, per this test's docstring"
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+# ---------------------------------------------------------------------------
+# Task 5 -- migrate the 73 docs/loom/BACKLOG.md entries into docs/loom/backlog/
+# ---------------------------------------------------------------------------
+
+
+def test_real_store_has_every_migrated_entry_and_validates_clean():
+    """RED while docs/loom/backlog/ holds no entry files (only README.md):
+    Task 5 splits BACKLOG.md's 73 `## ` entries into one file per entry, so
+    the real store must hold exactly 73 entry files and `--validate` over it
+    must exit 0 (every migrated entry's frontmatter is well-formed)."""
+    real_store = REPO_ROOT / "docs" / "loom" / "backlog"
+
+    entry_files = [
+        p for p in real_store.glob("*.md")
+        if p.name != "README.md"
+    ]
+    assert len(entry_files) == 73, (
+        f"expected 73 migrated entry files directly under {real_store}, "
+        f"found {len(entry_files)}: {sorted(p.name for p in entry_files)}"
     )
+
+    result = _run_validate(real_store)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+# ---------------------------------------------------------------------------
+# Revision round 1 — GAP 1 (migration completeness sweep) + DECISION (a 5th
+# --validate invariant: a frontmatter field and its matching body bullet must
+# agree, when both are present).
+# ---------------------------------------------------------------------------
+
+
+def test_real_store_entries_with_a_body_bullet_have_the_matching_frontmatter_field():
+    """GAP 1: two migrated entries carried a substantive `- Origin`/`- Start`
+    body bullet but no matching frontmatter field at all (Task 5's own rule:
+    "Origin and Start map to their fields where present"). Sweep the full
+    73-entry corpus for the same class of gap -- this must find nothing once
+    the two named entries are fixed to carry the field."""
+    real_store = REPO_ROOT / "docs" / "loom" / "backlog"
+    entry_files = sorted(p for p in real_store.glob("*.md") if p.name != "README.md")
+
+    missing = []
+    for path in entry_files:
+        text = path.read_text(encoding="utf-8")
+        frontmatter = backlog_index.parse_frontmatter(text)
+        body = backlog_index._body_text(text)
+        for field_key, field_label in (("origin", "Origin"), ("start", "Start")):
+            if (
+                backlog_index._find_body_bullet(body, field_label) is not None
+                and frontmatter.get(field_key) is None
+            ):
+                missing.append(
+                    f"{path.name}: has a '- {field_label}' bullet but no "
+                    f"'{field_key}:' frontmatter field"
+                )
+
+    assert not missing, "\n".join(missing)
+
+
+def _entry_with_body(name: str, status: str, extra_frontmatter: str, body: str) -> str:
+    return (
+        "---\n"
+        f"name: {name}\n"
+        "description: A fixture entry for field-agreement tests.\n"
+        f"status: {status}\n"
+        f"{extra_frontmatter}"
+        "---\n\n"
+        f"{body}\n"
+    )
+
+
+def test_origin_field_matching_a_line_wrapped_body_bullet_is_accepted(tmp_path):
+    """The comparison must normalize whitespace: the frontmatter value is a
+    single line, but the body bullet it was transcribed from typically wraps
+    across several lines (exactly the shape of the two GAP-1 fixed entries)."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    text = _entry_with_body(
+        "2026-08-01-alpha",
+        "OPEN",
+        "origin: found during the whole-branch review of feat-x (PR #999).\n",
+        "- Origin: found during the whole-branch review of feat-x\n  (PR #999).",
+    )
+    _write(store, "2026-08-01-alpha.md", text)
+
+    result = _run_validate(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_origin_field_disagreeing_with_its_body_bullet_is_rejected(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    text = _entry_with_body(
+        "2026-08-01-alpha",
+        "OPEN",
+        "origin: a DIFFERENT origin than the body states.\n",
+        "- Origin: found during the whole-branch review of feat-x (PR #999).",
+    )
+    _write(store, "2026-08-01-alpha.md", text)
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1
+    assert "2026-08-01-alpha.md" in result.stdout
+
+
+def test_start_field_matching_body_bullet_ignoring_parenthetical_qualifier_is_accepted(tmp_path):
+    """The bullet's `(re-trigger)`-style parenthetical qualifier is metadata
+    about the field, not part of its value, and must be stripped on both
+    sides of the comparison (same rule the migration used to populate the
+    field from the bullet in the first place)."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    text = _entry_with_body(
+        "2026-08-01-alpha",
+        "PARKED",
+        "start: a third real thing happens (Rule of Three).\n",
+        "- Start (re-trigger): a third real thing happens\n  (Rule of Three).",
+    )
+    _write(store, "2026-08-01-alpha.md", text)
+
+    result = _run_validate(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_start_field_disagreeing_with_its_body_bullet_is_rejected(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    text = _entry_with_body(
+        "2026-08-01-alpha",
+        "PARKED",
+        "start: a DIFFERENT re-trigger condition entirely.\n",
+        "- Start (re-trigger): a third real thing happens (Rule of Three).",
+    )
+    _write(store, "2026-08-01-alpha.md", text)
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1
+    assert "2026-08-01-alpha.md" in result.stdout
+
+
+def test_agreement_check_is_a_noop_when_body_has_no_matching_bullet(tmp_path):
+    """The invariant fires only when BOTH copies are present. An entry whose
+    frontmatter carries `origin:` but whose body never restates it as a
+    `- Origin:` bullet has nothing to disagree with -- this is not GAP 1's
+    class (that is a missing-field gap, not an agreement gap) and is out of
+    this invariant's scope by the orchestrator's own ruling."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    text = _entry_with_body(
+        "2026-08-01-alpha",
+        "OPEN",
+        "origin: found during a review, not restated in the body.\n",
+        "- What: some unrelated bullet with no Origin/Start label at all.",
+    )
+    _write(store, "2026-08-01-alpha.md", text)
+
+    result = _run_validate(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr

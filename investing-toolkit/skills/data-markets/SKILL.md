@@ -339,7 +339,8 @@ disqualifier, never a fabricated one:
   `companyconcept` rows carry no dei calendar, and their `fy`/`fp` are the
   carrying filing's focus, not the fact's), so **treat `kpi-quarterly` as
   the authority for any fiscal year both lanes cover.** Tracked in
-  `docs/loom/BACKLOG.md` under the 2.36.0 follow-ups, item (j).
+  `docs/loom/backlog/2026-07-25-investing-toolkit-top-line-revenue-lane-2-36-0-post-ship-follow-ups.md`,
+  item (j).
 
 The filing-identity checks run first — a filer this lane cannot serve
 at all (a 20-F-only foreign private issuer) reports one actionable

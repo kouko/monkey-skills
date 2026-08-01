@@ -207,7 +207,8 @@ def test_plugin_version_and_changelog_at_0_43_0():
     `## [0.43.0]` heading. Both read from the WORKING TREE, never a
     committed blob -- an implementer cannot commit, so a test that reads
     committed content can never go green in this workflow
-    (docs/loom/BACKLOG.md, "what 0.39.0 does NOT close", item 2).
+    (docs/loom/backlog/2026-07-28-plan-stage-fact-grounding-what-0-39-0-does-not-close.md,
+    item 2).
 
     This pin tracks the CURRENT shipping version by design: each bump
     rewrites it (see the supersede chain above), which is what makes a

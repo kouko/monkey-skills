@@ -702,7 +702,8 @@ def test_anchors_and_deviation_ledger_combined_valid(tmp_path):
 
 
 # --- evidence_needed: / — assumption: marker whitelist (Task 16, cut (d)) --
-# BACKLOG.md §knowledge-triage v2.1 cut (d): mechanize the two duties that
+# docs/loom/backlog/2026-07-18-knowledge-triage-v2-1-mechanize-enforcement-
+# semantics.md cut (d): mechanize the two duties that
 # died in prose on the real leg-3 haiku dogfood run (docs/loom/dogfood/
 # 2026-07-18-knowledge-triage-live-spec-leg.md) — an invented
 # `evidence_needed:` bucket (leg-1's real failure, same enum) and a bare

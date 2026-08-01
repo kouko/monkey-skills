@@ -5,6 +5,19 @@ All notable changes to investing-toolkit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.39.3] — 2026-08-02
+
+### Fixed — stale `docs/loom/BACKLOG.md` §-anchor / item-line references
+
+- `docs/loom/BACKLOG.md` became a generated index over `docs/loom/backlog/`
+  (one entry per file); repointed the five in-repo comments/docs that cited
+  a specific heading or item inside the old monolith
+  (`data-markets/scripts/sec_edgar_client.py` ×2, `analysis-kpi/scripts/
+  kpi_spine_view.py`, `analysis-kpi/scripts/kpi_tw.py`,
+  `data-markets/SKILL.md`, `tests/analysis/test_top_line_two_lane_e2e.py`)
+  at the entry file that now owns that content. Comment/doc-only — no
+  behavior change.
+
 ## [v2.39.2] — 2026-07-30
 
 ### Changed — `data-markets` description diet

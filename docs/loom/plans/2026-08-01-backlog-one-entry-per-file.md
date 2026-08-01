@@ -342,7 +342,7 @@ Plan-document-reviewer verdict: PASS (2026-08-01, round 5, 15/15)
 - Independent: false
 - Brief item covered: "Closing an item **moves** it to `docs/loom/backlog/archive/` and stamps `status: archived` into the moved file."
 
-## Task 8 — Redirect the only write-instruction, and bump the plugin
+## Task 8 — Redirect the skill's write-instruction, and bump the plugin
 
 - Description: Rewrite `loom-pipeline/skills/loom-memory/SKILL.md:49` so a
   backlog-shaped item routes to "create an entry file in
@@ -361,7 +361,7 @@ Plan-document-reviewer verdict: PASS (2026-08-01, round 5, 15/15)
   - GREEN: the skill routes to the store directory, the plugin version is bumped, and a repo-wide grep by content (no `--include` filter) surfaces no remaining instruction to hand-write the generated index.
 - Dependencies: Task 1 completes first
 - Independent: false
-- Brief item covered: "`loom-pipeline/skills/loom-memory/SKILL.md:49` is rewritten — it is the only write-instruction in the repo"
+- Brief item covered: "`loom-pipeline/skills/loom-memory/SKILL.md:49` is rewritten" — note the brief's "only write-instruction in the repo" wording was falsified in Task 5 (a hook was a second one, since repointed); see the brief's correction block.
 
 ## Task 9 — Record the deferred follow-up as the store's first hand-authored entry
 

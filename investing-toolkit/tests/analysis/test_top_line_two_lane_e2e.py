@@ -35,7 +35,8 @@ load-bearing enough to spell out rather than let a reader assume symmetry:
     BY INSPECTION of `pack_kpi_quarterly`'s merge + return
     (`pack_us.py:1017-1020,1038`, verified 2026-07-25), not because this test
     executed the producer that builds it. Filed as a BACKLOG follow-up
-    (`docs/loom/BACKLOG.md`, Lane B extractor→ingest seam gap) rather than
+    (`docs/loom/backlog/2026-07-25-investing-toolkit-top-line-revenue-lane-2-36-0-post-ship-follow-ups.md`,
+    item (c), Lane B's envelope contract) rather than
     left as a silent hole; closing it needs a `Filing`-level fixture, which is
     a task of its own and deliberately NOT attempted here.
 

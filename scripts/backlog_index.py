@@ -20,6 +20,16 @@ subdirectory):
         the gap where a store passed --validate clean and then failed
         loudly at --write (build_index()'s own `archived` check below) —
         the two modes must agree on what "clean" means.
+  (v)   when an entry's body carries a `- Origin:`/`- Start:` bullet (any
+        parenthetical-qualifier variant, e.g. `- Start (re-trigger):`) AND
+        its frontmatter carries the matching `origin`/`start` field, the two
+        must agree after normalization (whitespace collapsed to single
+        spaces, the bullet's label + optional parenthetical qualifier
+        stripped). Revision-round-1 DECISION: this fires only when BOTH
+        copies are present — a bullet with no matching frontmatter field at
+        all is a migration-completeness gap (GAP 1), not an agreement gap,
+        and is deliberately out of this invariant's scope. See
+        `_find_body_bullet` for the extraction rule.
 
 Deliberately narrower than `scripts/check_loom_memory_integrity.py`'s five
 invariants: this store's index is *generated* from the entry files (Task 3),
@@ -132,9 +142,62 @@ STATUS_SECTION_ORDER = [
 
 @dataclass(frozen=True)
 class Violation:
-    kind: str  # "name" | "status" | "archive-tier" | "archived-date"
+    kind: str  # "name" | "status" | "archive-tier" | "archived-date" | "field-agreement"
     file: str
     detail: str
+
+
+def _body_text(text: str) -> str:
+    """Everything after the frontmatter's closing `---` fence.
+
+    Returns the whole text unchanged when it does not open with a `---`
+    fence at line 1 (not frontmatter at all), and "" when the fence never
+    closes (malformed file) — callers of this function only care about
+    entries that already passed the (i)-(iv) frontmatter checks, so a
+    malformed file yields "no bullet found" rather than an exception.
+    """
+    lines = text.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "---":
+        return text
+    for i, line in enumerate(lines[1:], start=1):
+        if line.strip() == "---":
+            return "".join(lines[i + 1:])
+    return ""
+
+
+# A top-level body bullet naming one of these fields, in any of the
+# corpus's observed shapes: `- Origin: ...`, `- Start (re-trigger): ...`,
+# `- **Origin**: ...`, `- Start: (calc-linkbase) ...`. Captures everything
+# after the (label + optional parenthetical qualifier + colon) up to the
+# next column-0 `- ` bullet or end of string — which is what lets the
+# captured group span a bullet that line-wraps across several indented
+# continuation lines, exactly the shape the migrated entries use.
+_FIELD_BULLET_PATTERNS = {
+    field: re.compile(
+        rf"^-\s*\**{field}\**\s*(?:\([^)]*\))?\s*:\s*(.*?)(?=\n-\s|\Z)",
+        re.MULTILINE | re.DOTALL,
+    )
+    for field in ("Origin", "Start")
+}
+
+
+def _normalize_field_text(value: str) -> str:
+    """Collapse all whitespace (including the newlines of a wrapped body
+    bullet) to single spaces and strip. This is what makes a multi-line body
+    bullet comparable to its single-line frontmatter counterpart."""
+    return " ".join(value.split())
+
+
+def _find_body_bullet(body: str, field_label: str) -> str | None:
+    """The normalized value of a `- <field_label>[ (qualifier)]: ...`
+    top-level bullet in `body`, or None if no such bullet exists.
+
+    `field_label` is "Origin" or "Start" (matches `_FIELD_BULLET_PATTERNS`).
+    """
+    match = _FIELD_BULLET_PATTERNS[field_label].search(body)
+    if match is None:
+        return None
+    return _normalize_field_text(match.group(1))
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
@@ -175,7 +238,8 @@ def find_violations(store: Path) -> list[Violation]:
 
     for path, is_archived in _entry_files(store):
         display = str(path.relative_to(store))
-        frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
+        text = path.read_text(encoding="utf-8")
+        frontmatter = parse_frontmatter(text)
         name = frontmatter.get("name")
         status = frontmatter.get("status")
         stem = path.stem
@@ -245,6 +309,26 @@ def find_violations(store: Path) -> list[Violation]:
                     f"live entry carries 'archived: {archived_value}' but must not set it",
                 )
             )
+
+        # (v) frontmatter <-> body-bullet agreement, only when both are
+        # present (revision-round-1 DECISION — see module docstring).
+        body = _body_text(text)
+        for field_key, field_label in (("origin", "Origin"), ("start", "Start")):
+            fm_value = frontmatter.get(field_key)
+            if fm_value is None:
+                continue
+            bullet_value = _find_body_bullet(body, field_label)
+            if bullet_value is None:
+                continue
+            if _normalize_field_text(fm_value) != bullet_value:
+                violations.append(
+                    Violation(
+                        "field-agreement",
+                        display,
+                        f"frontmatter '{field_key}' disagrees with the body's "
+                        f"'- {field_label}' bullet after normalization",
+                    )
+                )
 
     return violations
 

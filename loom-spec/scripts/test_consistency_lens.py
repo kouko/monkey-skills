@@ -1,5 +1,6 @@
 """Behavioral grep-test for the cross-layer consistency lens (Task 14, cut
-(c) — docs/loom/BACKLOG.md §knowledge-triage v2.1).
+(c) — docs/loom/backlog/2026-07-18-knowledge-triage-v2-1-mechanize-
+enforcement-semantics.md).
 
 completeness-critic is prose-enforced (Claude reads SKILL.md + a references
 file and applies the instruction; no Python resolver) — behavioral pytest

@@ -4,7 +4,7 @@ The hook (``remind-memory-mirror.sh``) is host-neutral: it reads a
 PostToolUse stdin-JSON payload, and when a project-type memory note
 (``*/.claude/projects/*/memory/*.md`` whose frontmatter says
 ``type: project``) was written, it exits 2 with a stderr reminder to
-mirror the note into the repo's committed store (``docs/loom/BACKLOG.md``
+mirror the note into the repo's committed store (``docs/loom/backlog/``
 / ``docs/loom/memory/``). Everything else — other note types, MEMORY.md
 index writes, non-memory paths, malformed or alternate-shaped payloads —
 must be a silent exit-0 no-op (a hook must never break the session).
@@ -61,7 +61,11 @@ def test_project_type_note_triggers_reminder(tmp_path):
     )
     result = run_hook_on(str(note))
     assert result.returncode == 2
-    assert "docs/loom/BACKLOG.md" in result.stderr
+    # GAP 2 (revision round 1): docs/loom/BACKLOG.md became generated output
+    # (docs/loom/backlog/README.md) -- the hook must route a backlog-shaped
+    # mirror to the store directory, never to the generated index.
+    assert "docs/loom/BACKLOG.md" not in result.stderr
+    assert "docs/loom/backlog/" in result.stderr
     assert "docs/loom/memory/" in result.stderr
 
 
@@ -75,7 +79,8 @@ def test_project_type_under_metadata_key_triggers_reminder(tmp_path):
     )
     result = run_hook_on(str(note))
     assert result.returncode == 2
-    assert "docs/loom/BACKLOG.md" in result.stderr
+    assert "docs/loom/BACKLOG.md" not in result.stderr
+    assert "docs/loom/backlog/" in result.stderr
     assert "docs/loom/memory/" in result.stderr
 
 

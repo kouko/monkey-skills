@@ -138,8 +138,9 @@ def _tw_kpi_id(field: str, basis: str | None) -> str:
     case-insensitively equal claimant (this one still raises). The divergence is
     deliberate for now — TW ids come from a repo-canonical field allowlist, not
     filer-authored qnames, so they carry no namespace or case-drift source. See
-    the "TW producer" line under BACKLOG §"full three-statement + management-KPI
-    history in kpi_store" before assuming the two should be re-aligned.
+    the "TW producer" line under
+    docs/loom/backlog/2026-07-26-investing-toolkit-full-three-statement-management-kpi-history-in-kpi-sto.md
+    before assuming the two should be re-aligned.
     """
     slug = field.lower()
     return f"{slug}__basis-{basis}" if basis else slug

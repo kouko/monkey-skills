@@ -113,7 +113,8 @@ PreToolUse/PostToolUse events; hooks fire only for Bash) and #20204
 mirrored repo hooks (`remind-memory-mirror.sh` AND
 `validate-skill-folder-structure.sh`) are currently inert on Codex — the
 mirror wiring is dormant-correct, blocked on the upstream fix. Tracked in
-`docs/loom/BACKLOG.md` §Codex hook events (UPSTREAM).
+`docs/loom/backlog/2026-07-06-codex-hook-events-apply-patch-handler-emits-none.md`
+(UPSTREAM).
 
 ## Conclusion
 

@@ -46,8 +46,9 @@ _REQ_BLOCK_HDR = re.compile(
     r"^##\s+(?:ADDED|MODIFIED|REMOVED)\s+Requirements\s*$", re.MULTILINE)
 _REQUIREMENT_HDR = re.compile(r"^###\s+Requirement:", re.MULTILINE)
 
-# Knowledge-triage `evidence_needed:` tag (docs/loom/BACKLOG.md §knowledge-
-# triage v2.1 cut (a); doctrine in spec-expansion/references/domain-tag-
+# Knowledge-triage `evidence_needed:` tag (docs/loom/backlog/2026-07-18-
+# knowledge-triage-v2-1-mechanize-enforcement-semantics.md cut (a); doctrine
+# in spec-expansion/references/domain-tag-
 # triage.md). Pinned bucket vocabulary — any other value is a weak-executor
 # invention (real failure: leg-1 haiku dogfood emitted `technical-constraint`
 # / `audit-log-format`, see docs/loom/dogfood/2026-07-18-knowledge-triage-

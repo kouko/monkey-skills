@@ -75,11 +75,22 @@ existing CI lane, and archive-on-close. Specifically:
    step.
 4. Closing an item **moves** it to `docs/loom/backlog/archive/` and stamps
    `status: archived` into the moved file.
-5. **`loom-pipeline/skills/loom-memory/SKILL.md:49` is rewritten** — it is the
-   only write-instruction in the repo, and it currently routes backlog-shaped
-   items to `docs/loom/BACKLOG.md`, which after this change is a **generated**
-   file. Left unchanged it directs every future agent to hand-edit generated
-   output, corrupting the index on first use. **This forces a `loom-pipeline`
+5. **`loom-pipeline/skills/loom-memory/SKILL.md:49` is rewritten** — it routes
+   backlog-shaped items to `docs/loom/BACKLOG.md`, which after this change is a
+   **generated** file. Left unchanged it directs every future agent to
+   hand-edit generated output, corrupting the index on first use.
+
+   **Correction (2026-08-02, found by Task 5's spec-reviewer).** This brief
+   originally called it *the only* write-instruction in the repo. That was
+   **false**: `.claude/hooks/remind-memory-mirror.sh:58` and its `.codex/`
+   mirror fire automatically on every project-memory write and instructed the
+   same thing — an automated instruction to hand-edit generated output, worse
+   than a skill line because no human decides to follow it. Task 5's revision
+   repointed both. The false claim traces to a `--include`-restricted grep
+   that structurally could not see a `.sh` hook — the exact mistake named in
+   §Recorded practice's first entry
+   (`migration-acceptance-greps-scope-by-content-not-filetype.md`), quoted in
+   this same brief. Citing a practice is not following it. **This forces a `loom-pipeline`
    plugin version bump** (repo rule: a PR changing skill content must bump the
    plugin version) — accepted as a necessary cost; nothing else in this arc
    touches a plugin.
