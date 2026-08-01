@@ -1,4 +1,6 @@
-"""Tests for check_files_touched.py — parse layer only (Task 2).
+"""Tests for check_files_touched.py — parse layer, verdict engine (R1/R2/R3),
+git layer, CLI exit contract, and parser hardening (wrapped values,
+trailing annotations, frozen-key cells 1-10).
 
 WHY these tests exist: the declared-vs-actual `Files touched` comparator
 joins a plan's per-task declarations to real commits. If the parse layer
@@ -840,6 +842,47 @@ def test_cli_absolute_plan_path_still_hits_r3_plan_file_exclude(tmp_path):
 
     assert res.returncode == 0, res.stdout + res.stderr
     assert "OK" in res.stdout
+
+
+def test_parse_errors_gate_an_otherwise_clean_exit(tmp_path):
+    """Post-review fix (2026-08-01 whole-branch finding): one clean done()
+    task (all variants OK) plus one task whose Status line carries the
+    space typo `done (sha)` — a parse error and no join key. The corrupt
+    ledger must gate: exit 1 with the parse-error line reported. An
+    all-clear here would leave that task's commit silently uncompared
+    (the escape path: parse_error -> sha None -> non-gating NO_JOIN)."""
+    repo, plan_rel, _ = _build_cell(1, tmp_path)
+    sha = _git(repo, "rev-parse", "HEAD").strip()
+    _write_plan(repo, plan_rel, [
+        _bold("src/a.py, tests/test_a.py", sha),
+        ["- **Description**: corrupt ledger line",
+         "- **Files touched**: src/a.py",
+         "- **Status**: done (abc1234)"],  # space typo — outside vocabulary
+    ])
+
+    res = _run_cli(str(repo / plan_rel), "--repo", str(repo))
+
+    assert res.returncode == 1, res.stdout + res.stderr
+    assert "parse-error" in res.stderr
+    assert "Status" in res.stderr
+
+
+def test_zero_join_keys_with_parse_errors_still_exits_2(tmp_path):
+    """Precedence pin (named explicitly per the same finding): loud-empty
+    exit 2 WINS over the parse-error gate — a plan whose only task has the
+    corrupt `done (sha)` line carries parse errors AND 0 join keys; the
+    louder empty-verdict must not be downgraded to 1 by the new rule."""
+    repo = _repo(tmp_path, ["src/a.py"])
+    _write_plan(repo, "plan.md", [
+        ["- **Files touched**: src/a.py",
+         "- **Status**: done (abc1234)"],
+    ])
+
+    res = _run_cli(str(repo / "plan.md"), "--repo", str(repo))
+
+    assert res.returncode == 2, res.stdout + res.stderr
+    assert "0 join keys" in res.stderr
+    assert "parse-error" in res.stderr
 
 
 def test_cli_unresolvable_join_key_fails_loud(tmp_path):

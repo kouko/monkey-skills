@@ -72,10 +72,13 @@ Exit contract:
      (documented decision: the un-joinable task never renders OK, and
      gating on it would fail every plan still mid-flight)
   1  at least one task flagged (UNDER or OVER) under a selected variant,
-     or a done(<sha>) join key that did not resolve in --repo
+     a done(<sha>) join key that did not resolve in --repo, or >=1 parse
+     error — a corrupt ledger line (e.g. `done (sha)`) must never yield
+     an all-clear, unlike a well-formed sha-less Status (mid-flight
+     pending/claimed/blocked) which stays a non-gating NO_JOIN
   2  loud-empty: the parse yielded 0 tasks, or 0 join keys (no task
      carries Status: done(<sha>)) — a plan with no ledger must never
-     produce an all-clear (source brief §Decision)
+     produce an all-clear (source brief §Decision); wins over exit 1
 """
 
 __doc__ += "\n" + EXIT_CONTRACT
@@ -467,7 +470,10 @@ def main(argv: list[str] | None = None) -> int:
             print(line)
             if verdict.verdict in (UNDER, OVER):
                 flagged = True
-    return 1 if flagged else 0
+    # Parse errors gate an otherwise-clean run (exit contract): a corrupt
+    # ledger line means some declaration/join key was unreadable, so an
+    # all-clear would be unearned. The exit-2 checks above still win.
+    return 1 if (flagged or parse.parse_errors) else 0
 
 
 if __name__ == "__main__":
