@@ -1,47 +1,70 @@
 #!/usr/bin/env python3
-"""Deterministic archive step for a loom-spec change-folder.
+"""Deterministic archive step for a loom-spec change-folder OR a single
+loom-family store entry file — two units, selected via the ``unit``
+parameter (Python API only; the CLI stays folder-unit-only, see below).
 
-Moves ``docs/loom/<change-id>/`` -> ``docs/loom/archive/<date>-<change-id>/``
-and stamps a ``status: archived`` field into the moved ``proposal.md``'s YAML
-frontmatter — a single-command move, not a manual ``mv`` (OpenSpec's own
-``archive`` command exists for the same reason: issue #412 shows path
-handling is the move approach's real risk, so every path is validated before
-any filesystem mutation happens).
+- ``unit="folder"`` (default, unchanged from the original single-unit
+  script): moves ``docs/loom/<change-id>/`` ->
+  ``docs/loom/archive/<date>-<change-id>/`` and stamps a ``status:
+  archived`` field into the moved ``proposal.md``'s YAML frontmatter — a
+  single-command move, not a manual ``mv`` (OpenSpec's own ``archive``
+  command exists for the same reason: issue #412 shows path handling is the
+  move approach's real risk, so every path is validated before any
+  filesystem mutation happens).
+- ``unit="file"``: moves ``docs/loom/backlog/<name>.md`` ->
+  ``docs/loom/backlog/archive/<name>.md`` **unrenamed** — no date prefix,
+  since the entry already carries its creation date in its filename and
+  prefixing the archive date produces a double-date defect — and stamps
+  BOTH ``status: archived`` and ``archived: <date>`` into the moved file's
+  own frontmatter, unconditionally: an unstamped archived entry reads as
+  live to any agent that greps the store, so a stamp failure rolls the move
+  back and raises loudly rather than tolerating a silent skip (contrast the
+  folder unit, which tolerates a missing ``proposal.md`` child).
 
-Frontmatter handling (proposal.md may or may not have one — both are
-handled): if ``proposal.md`` already opens with a ``---\\n...\\n---\\n``
-block, ``status:`` is updated in place (or appended to the block if absent);
-if there is no frontmatter block at all, a minimal one (``---\\nstatus:
-archived\\n---\\n\\n``) is prepended ahead of the original body. The body
-itself is not rewritten, but note Python's text-mode read/write applies
-universal newline translation, so a CRLF-authored file normalizes to LF
-along the way — it is not preserved byte-for-byte.
+Frontmatter handling (identical for both units; the object being stamped is
+``proposal.md`` for the folder unit and the moved file itself for the file
+unit): if it already opens with a ``---\\n...\\n---\\n`` block, each field is
+updated in place (or appended to the block if absent); if there is no
+frontmatter block at all, a minimal one is prepended ahead of the original
+body. The body itself is not rewritten, but note Python's text-mode
+read/write applies universal newline translation, so a CRLF-authored file
+normalizes to LF along the way — it is not preserved byte-for-byte.
 
-Refusals (raise ``ArchiveError``, never touch the filesystem):
+Refusals (raise ``ArchiveError``, never touch the filesystem) — shared by
+both units, one copy of each guard:
 
-- the source change-folder does not exist;
-- the source change-folder is a symlink (never archive a live symlink —
-  only a real folder);
-- the source ``proposal.md`` frontmatter already reads ``status: archived``
-  (idempotency guard against double-archiving);
+- the source (a folder for ``unit="folder"``, a file for ``unit="file"``)
+  does not exist;
+- the source is a symlink (never archive a live symlink — only a real
+  folder/file);
+- the source's frontmatter already reads ``status: archived`` (idempotency
+  guard against double-archiving);
 - the destination path already exists (would silently clobber a prior
-  archive of the same change-id + date);
-- the change-id is not a single, safe path segment — empty, ``.``/``..``,
+  archive);
+- the identifier (a change-id for the folder unit, an entry filename for
+  the file unit) is not a single, safe path segment — empty, ``.``/``..``,
   containing a path separator, or absolute. This is the path-safety guard:
-  a change-id is never allowed to escape ``docs/loom/`` via traversal.
-- the date stamp does not match ``YYYY-MM-DD`` exactly. The date is
-  interpolated straight into the destination path, so it gets the same
-  path-safety guard as the change-id (both API arg and CLI ``--date``).
+  an identifier is never allowed to escape its base directory via
+  traversal (OpenSpec #412 bug class).
+- the date stamp does not match ``YYYY-MM-DD`` exactly. For the folder
+  unit the date is interpolated straight into the destination path, so it
+  gets the same path-safety guard as the identifier; for the file unit the
+  date is only ever written into the ``archived:`` frontmatter field, but
+  it is validated identically so that field is never malformed.
 
-If the post-move status stamp write fails, the moved folder is moved back
-to its original location before ``ArchiveError`` is raised, so a failure
-never leaves a stranded moved-but-unstamped folder with no recovery path.
+If the post-move stamp write fails, the moved object is moved back to its
+original location before ``ArchiveError`` is raised, so a failure never
+leaves a stranded moved-but-unstamped object with no recovery path.
 
-CLI: ``archive_change_folder.py <change-id> [root] [--date YYYY-MM-DD]`` ->
+CLI: unchanged, folder-unit only —
+``archive_change_folder.py <change-id> [root] [--date YYYY-MM-DD]`` ->
 exit 0 on success (prints the destination), exit 1 with an actionable
 stderr message on any refusal. ``root`` defaults to ``Path.cwd()``; ``--date``
 defaults to today (UTC-naive local date) and exists mainly so callers/tests
-get deterministic destinations.
+get deterministic destinations. The file unit is reachable only through the
+Python API (``archive_change_folder(..., unit="file")``) — no CLI flag
+exists for it; the finishing-a-development-branch archive-on-close step and
+AGENTS.md's declared command surface both only ever use the folder unit.
 
 Stdlib only (pathlib, re, shutil, datetime).
 """
@@ -52,10 +75,15 @@ import re
 import shutil
 import sys
 from pathlib import Path
+from typing import Callable
 
 _FRONTMATTER_RE = re.compile(r"\A---\n(.*?\n)---\n", re.DOTALL)
 _STATUS_LINE_RE = re.compile(r"^status\s*:\s*(\S+)\s*$", re.MULTILINE)
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+_UNIT_FOLDER = "folder"
+_UNIT_FILE = "file"
+_UNITS = (_UNIT_FOLDER, _UNIT_FILE)
 
 
 class ArchiveError(Exception):
@@ -63,21 +91,24 @@ class ArchiveError(Exception):
 
 
 def _validate_change_id(change_id: str) -> None:
-    """Path-safety guard (OpenSpec #412 bug class): a change-id MUST be a
-    single, non-empty, non-special path segment with no separators and no
-    absolute-path form — never allowed to escape ``docs/loom/``."""
+    """Path-safety guard (OpenSpec #412 bug class), shared by both units: an
+    identifier — a change-id for the folder unit, an entry filename for the
+    file unit — MUST be a single, non-empty, non-special path segment with
+    no separators and no absolute-path form, never allowed to escape its
+    base directory. Wording is unit-agnostic on purpose: a file-unit caller
+    must never receive an error message about folders."""
     if not change_id or change_id in (".", ".."):
         raise ArchiveError(
-            f"invalid change-id {change_id!r}: must be a non-empty folder name"
+            f"invalid identifier {change_id!r}: must be a non-empty name"
         )
     if "/" in change_id or "\\" in change_id:
         raise ArchiveError(
-            f"invalid change-id {change_id!r}: must be a single path segment "
+            f"invalid identifier {change_id!r}: must be a single path segment "
             f"(no '/' or '\\\\')"
         )
     if Path(change_id).is_absolute():
         raise ArchiveError(
-            f"invalid change-id {change_id!r}: must not be an absolute path"
+            f"invalid identifier {change_id!r}: must not be an absolute path"
         )
 
 
@@ -102,84 +133,170 @@ def _read_status(proposal_text: str) -> str | None:
     return status_match.group(1) if status_match else None
 
 
-def _stamp_status(proposal_text: str, status: str) -> str:
-    """Return ``proposal_text`` with its frontmatter ``status:`` field set to
-    ``status``, adding a minimal frontmatter block first if none exists."""
-    match = _FRONTMATTER_RE.match(proposal_text)
+def _stamp_field(text: str, key: str, value: str) -> str:
+    """Return ``text`` with its frontmatter ``key:`` field set to ``value``,
+    adding a minimal frontmatter block first if none exists. Generalizes the
+    original single-field ``status:`` stamp to any frontmatter key, so the
+    file unit can stamp both ``status`` and ``archived`` by calling this
+    twice.
+
+    The line-matching pattern deliberately does NOT reuse ``_STATUS_LINE_RE``
+    (whose ``(\\S+)`` value is a single whitespace-free token): the backlog
+    store's closed status vocabulary has one multi-word member, ``CLOSED —
+    SUPERSEDED`` (em dash), and a single-token pattern misses that line
+    entirely, causing this function to APPEND a duplicate ``key:`` line
+    instead of replacing the existing one. The pattern below requires the
+    value to start with a non-whitespace character (so an empty/whitespace-
+    only value still does not count as "present", matching the original
+    single-token pattern's behaviour on that edge) and then allows the rest
+    of the line verbatim up to end-of-line.
+
+    Two properties keep that widening safe. ``.`` does not match a newline
+    (no ``re.DOTALL``), so a match can never run past its own line; and the
+    pattern is applied to ``body``, the frontmatter block extracted at the
+    top of this function, so a ``status:``-shaped line further down in the
+    document body is out of reach either way.
+
+    Ending the pattern at ``.*$`` rather than the original ``(\\S+)\\s*$``
+    also fixes a second, previously unnoticed corruption: ``\\s`` matches
+    newlines, so the old trailing ``\\s*`` swallowed the line terminator
+    whenever ``key:`` was the block's LAST field, and the replacement then
+    glued the closing ``---`` fence onto the value. Pinned by
+    ``test_stamping_the_last_frontmatter_field_keeps_the_closing_fence``."""
+    match = _FRONTMATTER_RE.match(text)
     if match is None:
-        return f"---\nstatus: {status}\n---\n\n" + proposal_text
+        return f"---\n{key}: {value}\n---\n\n" + text
 
     body = match.group(1)
-    if _STATUS_LINE_RE.search(body):
-        new_body = _STATUS_LINE_RE.sub(f"status: {status}", body)
+    field_re = re.compile(rf"^{re.escape(key)}\s*:\s*\S.*$", re.MULTILINE)
+    if field_re.search(body):
+        new_body = field_re.sub(f"{key}: {value}", body)
     else:
-        new_body = body + f"status: {status}\n"
-    return f"---\n{new_body}---\n" + proposal_text[match.end():]
+        new_body = body + f"{key}: {value}\n"
+    return f"---\n{new_body}---\n" + text[match.end():]
 
 
-def archive_change_folder(root: Path, change_id: str, date: str | None = None) -> Path:
-    """Move ``<root>/docs/loom/<change_id>/`` to
-    ``<root>/docs/loom/archive/<date>-<change_id>/`` and stamp
-    ``status: archived`` into the moved ``proposal.md``.
+def _write_stamp_or_restore(
+    status_path: Path,
+    dest: Path,
+    source: Path,
+    noun: str,
+    mutate: Callable[[str], str],
+) -> None:
+    """Read ``status_path``, apply ``mutate`` to its text, and write the
+    result back — the same rollback-on-stamp-failure guarantee for both
+    units. If either the read or the write fails, move ``dest`` back to
+    ``source`` before raising ``ArchiveError``, so a stamp failure never
+    leaves a stranded moved-but-unstamped object with no recovery path.
+    ``noun`` customizes the stranded-object wording — pass the SAME noun
+    used for this unit's other refusal messages ("change-folder" /
+    "entry file"), not a shorthand, so all of a unit's messages describe
+    the object the same way. ``status_path`` and ``dest`` are two distinct
+    parameters (not one) because they genuinely differ for the folder unit
+    (``dest_proposal`` vs ``dest`` itself) even though the file unit passes
+    the same object for both."""
+    try:
+        status_path.write_text(mutate(status_path.read_text(encoding="utf-8")), encoding="utf-8")
+    except OSError as exc:
+        try:
+            shutil.move(str(dest), str(source))
+        except OSError as restore_exc:
+            raise ArchiveError(
+                f"status stamp failed for {status_path} ({exc}); restore "
+                f"to {source} ALSO failed ({restore_exc}) — the {noun} is "
+                f"stranded, unstamped, at {dest}; manually add the required "
+                f"frontmatter fields (see this script's module docstring) "
+                f"to {status_path}"
+            ) from restore_exc
+        raise ArchiveError(
+            f"status stamp failed for {status_path} ({exc}); restored "
+            f"the original {noun} to {source}"
+        ) from exc
+
+
+def archive_change_folder(
+    root: Path,
+    change_id: str,
+    date: str | None = None,
+    *,
+    unit: str = _UNIT_FOLDER,
+) -> Path:
+    """Move a change-folder (``unit="folder"``, the default) or a single
+    entry file (``unit="file"``) into its unit's archive location, and stamp
+    the moved object's frontmatter as archived.
+
+    ``unit="folder"``: ``<root>/docs/loom/<change_id>/`` moves to
+    ``<root>/docs/loom/archive/<date>-<change_id>/``; ``status: archived`` is
+    stamped into the moved ``proposal.md``.
+
+    ``unit="file"``: ``<root>/docs/loom/backlog/<change_id>`` moves to
+    ``<root>/docs/loom/backlog/archive/<change_id>`` unrenamed (no date
+    prefix); both ``status: archived`` and ``archived: <date>`` are stamped
+    into the moved file itself, unconditionally.
 
     Returns the destination path on success. Raises ``ArchiveError`` (no
-    filesystem mutation) on any refusal: unsafe change-id, missing source,
+    filesystem mutation) on any refusal: unsafe identifier, missing source,
     already-archived source, or a destination collision.
     """
+    if unit not in _UNITS:
+        raise ArchiveError(f"invalid unit {unit!r}: must be one of {_UNITS}")
+
     _validate_change_id(change_id)
     root = Path(root)
     stamp = date if date is not None else datetime.date.today().isoformat()
     _validate_date(stamp)
 
-    source = root / "docs" / "loom" / change_id
-    if not source.is_dir():
-        raise ArchiveError(
-            f"change-folder does not exist: {source} (nothing to archive)"
-        )
+    is_file_unit = unit == _UNIT_FILE
+    noun = "entry file" if is_file_unit else "change-folder"
+
+    if is_file_unit:
+        source = root / "docs" / "loom" / "backlog" / change_id
+        dest = root / "docs" / "loom" / "backlog" / "archive" / change_id
+    else:
+        source = root / "docs" / "loom" / change_id
+        dest = root / "docs" / "loom" / "archive" / f"{stamp}-{change_id}"
+
+    source_exists = source.is_file() if is_file_unit else source.is_dir()
+    if not source_exists:
+        raise ArchiveError(f"{noun} does not exist: {source} (nothing to archive)")
     if source.is_symlink():
+        kind_word = "files" if is_file_unit else "folders"
         raise ArchiveError(
-            f"refusing to archive a symlink: {source} (only real folders "
+            f"refusing to archive a symlink: {source} (only real {kind_word} "
             f"may be archived)"
         )
 
-    proposal_path = source / "proposal.md"
-    proposal_text = (
-        proposal_path.read_text(encoding="utf-8") if proposal_path.is_file() else ""
+    status_source = source if is_file_unit else source / "proposal.md"
+    status_text = (
+        status_source.read_text(encoding="utf-8") if status_source.is_file() else ""
     )
-    if _read_status(proposal_text) == "archived":
+    if _read_status(status_text) == "archived":
         raise ArchiveError(
-            f"change-folder is already archived: {proposal_path} carries "
-            f"status: archived"
+            f"{noun} is already archived: {status_source} carries status: archived"
         )
 
-    dest = root / "docs" / "loom" / "archive" / f"{stamp}-{change_id}"
     if dest.exists():
         raise ArchiveError(f"archive destination already exists: {dest}")
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(str(source), str(dest))
 
-    dest_proposal = dest / "proposal.md"
-    if dest_proposal.is_file():
-        try:
-            dest_proposal.write_text(
-                _stamp_status(dest_proposal.read_text(encoding="utf-8"), "archived"),
-                encoding="utf-8",
+    if is_file_unit:
+        # Unconditional: the moved object IS the file being stamped, so
+        # there is no "missing child" case to tolerate (contrast the folder
+        # unit's `if dest_proposal.is_file():` below) — a failure here must
+        # fail loudly rather than leave an unstamped file at dest.
+        _write_stamp_or_restore(
+            dest, dest, source, noun,
+            lambda text: _stamp_field(_stamp_field(text, "status", "archived"), "archived", stamp),
+        )
+    else:
+        dest_proposal = dest / "proposal.md"
+        if dest_proposal.is_file():
+            _write_stamp_or_restore(
+                dest_proposal, dest, source, noun,
+                lambda text: _stamp_field(text, "status", "archived"),
             )
-        except OSError as exc:
-            try:
-                shutil.move(str(dest), str(source))
-            except OSError as restore_exc:
-                raise ArchiveError(
-                    f"status stamp failed for {dest_proposal} ({exc}); restore "
-                    f"to {source} ALSO failed ({restore_exc}) — the folder is "
-                    f"stranded, unstamped, at {dest}; manually add "
-                    f"'status: archived' to {dest_proposal}"
-                ) from restore_exc
-            raise ArchiveError(
-                f"status stamp failed for {dest_proposal} ({exc}); restored "
-                f"the original folder to {source}"
-            ) from exc
 
     return dest
 

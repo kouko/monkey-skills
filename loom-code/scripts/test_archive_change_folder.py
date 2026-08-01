@@ -106,6 +106,39 @@ def test_happy_path_stamps_over_existing_non_archived_status(tmp_path):
     assert "status: proposed" not in text
 
 
+def test_stamping_the_last_frontmatter_field_keeps_the_closing_fence(tmp_path):
+    """Pins that stamping the FINAL field of a frontmatter block leaves the
+    closing `---` on its own line.
+
+    Added 2026-08-02 by Task 7's orchestrator, from a code-quality-reviewer
+    finding. Task 7 replaced `_stamp_status`'s `^status\\s*:\\s*(\\S+)\\s*$`
+    with `_stamp_field`'s `\\S.*$` to fix a multi-word-value bug, and that
+    swap silently fixed a SECOND corruption nobody had noticed: `\\s*`
+    matches newlines, so on the old pattern the match ran past the value and
+    swallowed the line terminator whenever `status:` was the block's last
+    field — the replacement then glued the closing fence onto the value
+    (`status: archived---`), destroying the frontmatter block.
+
+    The three sibling stamp tests above all pass against that corrupted
+    output (`"status: archived" in text` is true either way), which is how
+    the bug survived. This test asserts the fence's own line, so reverting
+    `_stamp_field`'s pattern to the `\\s*$` shape turns it red. Verified
+    discriminating: run against the pre-Task-7 pattern, this fails with
+    `'---\\nstatus: archived---\\n\\n## Why\\n'`.
+    """
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_change_folder(
+        tmp_path, "add-widget",
+        "---\nstatus: proposed\n---\n\n## Why\nBecause.\n",  # status is LAST
+    )
+
+    dest = mod.archive_change_folder(tmp_path, "add-widget", date="2026-07-10")
+
+    text = (dest / "proposal.md").read_text(encoding="utf-8")
+    assert text.startswith("---\nstatus: archived\n---\n")
+    assert "archived---" not in text  # the fence was not glued to the value
+
+
 def test_date_prefixed_destination_is_the_current_contract(tmp_path):
     """Pins the CURRENT destination-naming contract: the archived folder's
     name is always `<date>-<change-id>` (date first). This is a
@@ -360,6 +393,213 @@ def test_cli_exit_one_on_missing_folder_with_actionable_stderr(tmp_path, capsys)
     captured = capsys.readouterr()
     assert "no-such-change" in captured.err
     assert "does not exist" in captured.err
+
+
+# --- file unit (Task 7 generalization) -------------------------------------
+
+def _make_entry_file(root: Path, name: str, frontmatter_and_body: str) -> Path:
+    store = root / "docs" / "loom" / "backlog"
+    store.mkdir(parents=True, exist_ok=True)
+    path = store / name
+    path.write_text(frontmatter_and_body, encoding="utf-8")
+    return path
+
+
+def test_file_unit_archive_keeps_the_filename_unchanged(tmp_path):
+    """The file unit must not carry over the folder unit's date-prefixed
+    destination naming: prefixing the archive date onto a backlog entry
+    (which already carries its creation date in the filename) produces the
+    double-date defect observed at
+    docs/loom/archive/2026-07-18-2026-07-16-operational-kpi-quarterly/. It
+    must also stamp BOTH `status: archived` and `archived: <date>` — the
+    second field is required by scripts/backlog_index.py's --write mode
+    (mid-execution spec correction recorded in this task's plan entry)."""
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_entry_file(
+        tmp_path, "2026-08-01-alpha.md",
+        "---\nname: 2026-08-01-alpha\nstatus: OPEN\n---\n\nBody.\n",
+    )
+
+    dest = mod.archive_change_folder(
+        tmp_path, "2026-08-01-alpha.md", date="2026-08-02", unit="file"
+    )
+
+    assert dest == tmp_path / "docs" / "loom" / "backlog" / "archive" / "2026-08-01-alpha.md"
+    assert dest.name == "2026-08-01-alpha.md"  # unrenamed: no second date prefix
+    text = dest.read_text(encoding="utf-8")
+    assert "status: archived" in text
+    assert "archived: 2026-08-02" in text
+
+
+def test_file_unit_stamp_replaces_multi_word_status_without_duplicating_the_field(tmp_path):
+    """`CLOSED — SUPERSEDED` (em dash, U+2014) is a real member of the
+    backlog store's closed status vocabulary (scripts/backlog_index.py,
+    docs/loom/backlog/README.md) — the one member that is not a single
+    whitespace-free token. A `(\\S+)` value pattern in the stamp regex
+    misses this line entirely, so the stamp APPENDS a second `status:` line
+    instead of replacing the first. parse_frontmatter is last-wins, so
+    --validate would resolve 'archived' and pass — but any first-match
+    reader (`grep -m1 '^status:'`, a human opening the file, a strict YAML
+    loader) sees 'CLOSED — SUPERSEDED', a live-looking status on an
+    archived entry. Assert exactly one status: line survives — not just
+    that 'status: archived' appears somewhere, which passes even with the
+    duplicate-line defect present."""
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_entry_file(
+        tmp_path, "2026-08-01-alpha.md",
+        "---\nname: 2026-08-01-alpha\nstatus: CLOSED — SUPERSEDED\n---\n\nBody.\n",
+    )
+
+    dest = mod.archive_change_folder(
+        tmp_path, "2026-08-01-alpha.md", date="2026-08-02", unit="file"
+    )
+
+    text = dest.read_text(encoding="utf-8")
+    status_lines = [line for line in text.splitlines() if line.startswith("status:")]
+    assert status_lines == ["status: archived"]
+
+
+def test_file_unit_refuses_missing_entry_file(tmp_path):
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    (tmp_path / "docs" / "loom" / "backlog").mkdir(parents=True)
+
+    with pytest.raises(mod.ArchiveError, match="does not exist"):
+        mod.archive_change_folder(
+            tmp_path, "no-such-entry.md", date="2026-08-02", unit="file"
+        )
+
+
+def test_file_unit_refuses_already_archived_status(tmp_path):
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_entry_file(
+        tmp_path, "2026-08-01-alpha.md",
+        "---\nname: 2026-08-01-alpha\nstatus: archived\narchived: 2026-08-01\n---\n\nBody.\n",
+    )
+
+    with pytest.raises(mod.ArchiveError, match="already archived"):
+        mod.archive_change_folder(
+            tmp_path, "2026-08-01-alpha.md", date="2026-08-02", unit="file"
+        )
+
+    assert (tmp_path / "docs" / "loom" / "backlog" / "2026-08-01-alpha.md").is_file()
+
+
+def test_refuses_unrecognized_unit_without_touching_filesystem(tmp_path):
+    """The `unit not in _UNITS` guard is production code and needs its own
+    driving test (Three Laws of TDD, law 3) — an untested refusal branch is
+    how a typo'd `unit="files"` could silently fall through to the folder
+    path in a future caller instead of being refused."""
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_change_folder(tmp_path, "add-widget", "## Why\nBecause.\n")
+
+    with pytest.raises(mod.ArchiveError, match="invalid unit"):
+        mod.archive_change_folder(
+            tmp_path, "add-widget", date="2026-07-10", unit="files"
+        )
+
+    # refusal is a no-op: source folder untouched, nothing moved
+    assert (tmp_path / "docs" / "loom" / "add-widget").is_dir()
+
+
+def test_file_unit_refuses_destination_collision(tmp_path):
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_entry_file(tmp_path, "2026-08-01-alpha.md", "---\nstatus: OPEN\n---\n\nBody.\n")
+    archive_dir = tmp_path / "docs" / "loom" / "backlog" / "archive"
+    archive_dir.mkdir(parents=True)
+    (archive_dir / "2026-08-01-alpha.md").write_text("pre-existing", encoding="utf-8")
+
+    with pytest.raises(mod.ArchiveError, match="already exists"):
+        mod.archive_change_folder(
+            tmp_path, "2026-08-01-alpha.md", date="2026-08-02", unit="file"
+        )
+
+    assert (archive_dir / "2026-08-01-alpha.md").read_text(encoding="utf-8") == "pre-existing"
+
+
+def test_file_unit_refuses_symlinked_entry_file(tmp_path):
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    store = tmp_path / "docs" / "loom" / "backlog"
+    store.mkdir(parents=True)
+    real_file = tmp_path / "real-elsewhere.md"
+    real_file.write_text("---\nstatus: OPEN\n---\n\nBody.\n", encoding="utf-8")
+    symlink_source = store / "2026-08-01-alpha.md"
+    symlink_source.symlink_to(real_file)
+
+    with pytest.raises(mod.ArchiveError, match="symlink"):
+        mod.archive_change_folder(
+            tmp_path, "2026-08-01-alpha.md", date="2026-08-02", unit="file"
+        )
+
+    assert symlink_source.is_symlink()
+    assert real_file.is_file()
+
+
+def test_file_unit_refuses_unsafe_identifiers_without_touching_filesystem(tmp_path):
+    """Obligation-B discriminating test. Task 6's folder-unit parametrize
+    (`test_refuses_unsafe_change_ids_without_touching_filesystem`) fails
+    closed on all 7 of its cases via the is_dir() existence check alone —
+    it never actually exercises the identifier guard once that check is
+    branched by unit, so it cannot prove the file-unit path is guarded.
+
+    This test picks a traversal identifier (`../outside.md`) that ESCAPES
+    docs/loom/backlog/ to a file that genuinely exists one level up
+    (`outside.md`, created below) — so if the identifier guard were
+    removed, the existence check would find that file, the move would
+    genuinely succeed (relocating it to a wrong, unstamped-as-intended
+    location outside the archive/ subtree), and no ArchiveError would be
+    raised at all. That is exactly what distinguishes this from Task 6's
+    parametrize: here, only the guard stands between the identifier and a
+    real filesystem mutation. Verified by temporarily commenting out the
+    `_validate_change_id` call: this test goes red (DID NOT RAISE) with
+    the guard removed, and green with it restored."""
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    (tmp_path / "docs" / "loom" / "backlog").mkdir(parents=True)
+    outside = tmp_path / "docs" / "loom" / "outside.md"
+    outside.write_text("---\nstatus: OPEN\n---\n\nBody.\n", encoding="utf-8")
+    before = sorted(p.relative_to(tmp_path) for p in tmp_path.rglob("*"))
+
+    with pytest.raises(mod.ArchiveError, match="invalid identifier"):
+        mod.archive_change_folder(
+            tmp_path, "../outside.md", date="2026-08-02", unit="file"
+        )
+
+    after = sorted(p.relative_to(tmp_path) for p in tmp_path.rglob("*"))
+    assert before == after  # no filesystem mutation on a rejected identifier
+
+
+def test_file_unit_stamp_write_failure_restores_source_file(tmp_path, monkeypatch):
+    """When the stamp write fails, the file unit must fail loudly and roll
+    the move back rather than leave an unstamped file at the destination —
+    an unstamped archived entry reads as live to any agent that greps the
+    store. (This test does NOT pin unconditionality — after the move, dest
+    is always a file, so a hypothetical `if dest.is_file():` wrapper around
+    the file-unit stamp would stay green here too; unconditionality is a
+    code-shape property, not something a missing-child fixture can
+    distinguish for this unit.)"""
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    source = _make_entry_file(
+        tmp_path, "2026-08-01-alpha.md", "---\nstatus: OPEN\n---\n\nBody.\n"
+    )
+
+    original_write_text = Path.write_text
+
+    def failing_write_text(self, *args, **kwargs):
+        if self.name == "2026-08-01-alpha.md" and "archive" in self.parts:
+            raise OSError("disk full (simulated)")
+        return original_write_text(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", failing_write_text)
+
+    with pytest.raises(mod.ArchiveError, match="stamp"):
+        mod.archive_change_folder(
+            tmp_path, "2026-08-01-alpha.md", date="2026-08-02", unit="file"
+        )
+
+    # source restored, dest gone — no stranded moved-but-unstamped state
+    assert source.is_file()
+    assert not (
+        tmp_path / "docs" / "loom" / "backlog" / "archive" / "2026-08-01-alpha.md"
+    ).exists()
 
 
 # --- living-spec-index interaction ----------------------------------------

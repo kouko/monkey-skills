@@ -310,9 +310,31 @@ Plan-document-reviewer verdict: PASS (2026-08-01, round 5, 15/15)
   written before that field existed, so implementing Task 7 literally would
   produce archived entries that break index generation on the next run. Gap
   confirmed independently by Task 3's spec-reviewer against
-  `docs/loom/backlog/README.md:85-87` and `scripts/backlog_index.py:200-206`.
-  Recorded here rather than silently carried in a dispatch packet, so the
-  plan and the charter do not disagree.
+  `docs/loom/backlog/README.md:85-87` and `scripts/backlog_index.py:286-302`
+  (the `--validate` invariant) plus `:343-346` (the `--write` fail-loud
+  docstring). Recorded here rather than silently carried in a dispatch packet,
+  so the plan and the charter do not disagree.
+
+  **Citation correction (2026-08-02, during Task 7 execution).** The
+  `scripts/backlog_index.py` pointer above originally read `:200-206`, which is
+  `parse_frontmatter`'s header, not the fail-loud behaviour it was cited for.
+  The content was present in the cited file all along — only the line anchor
+  had drifted. Caught by Task 7's code-quality-reviewer and re-verified against
+  the file before amending.
+
+  **Eighth carry-over site, found during Task 7 (2026-08-02).** The
+  `Reuse-adequacy` block below enumerates seven hard-coded sites, all of them
+  *path* expressions, and Task 7's first implementation branched all seven
+  correctly. It missed an eighth: the frontmatter stamp regex's **value
+  pattern** (`(\S+)` — a single whitespace-free token, inherited from
+  `_STATUS_LINE_RE`). That was behaviour-preserving for the folder unit, whose
+  `proposal.md` statuses are single tokens, and became wrong the moment the
+  stamp was pointed at the backlog store's vocabulary, whose
+  `CLOSED — SUPERSEDED` value contains spaces — the regex missed, so the stamp
+  *appended* a second `status:` line instead of replacing the first, and
+  `parse_frontmatter`'s last-wins reading let `--validate` pass on the
+  corrupted file. Any later task reusing this stamp against a different
+  vocabulary must re-audit that pattern.
 - Module: loom-code/scripts/archive_change_folder.py
 - Files touched: loom-code/scripts/archive_change_folder.py, loom-code/scripts/test_archive_change_folder.py
 - Context paths:
