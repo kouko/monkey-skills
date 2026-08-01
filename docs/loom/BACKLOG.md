@@ -2385,7 +2385,7 @@ agreement of the per-task + whole-branch reviewers.
   absent target" parenthetical is now duplicated across two branches — below
   Rule of Three, extract only if a third appears.
 
-## `Reuse-adequacy` is a schema field with no gate behind it (SHIPPED)
+## `Reuse-adequacy` got the gate it had been missing (SHIPPED)
 - Status: SHIPPED — loom-code 0.43.0, branch `docs-reuse-adequacy-brief-and-backlog`.
 - What shipped: the field became two slots (`Observed` + an obligatory source
   marker from a closed three-value vocabulary, `Intended`), the author-side
@@ -2410,8 +2410,12 @@ agreement of the per-task + whole-branch reviewers.
   candidate 3; retargeted by
   `docs/loom/audits/2026-07-31-a-class-interceptability-backtest.md`, which
   ruled out candidate 1 as structurally unable to reach PR #619 A-2.
-- What: the field shipped in loom-code 0.39.0 (`loom-code/skills/writing-plans/references/plan-format.md:141-147`) and
-  **nothing enforces it**. No check in `loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md` names
+- What (the problem, as it stood **before** this entry shipped — pinned at
+  `f5d9800e`, read with `git show f5d9800e:<path>`; the line numbers below no
+  longer resolve to the content they describe, and
+  `test_reuse_adequacy_field_present` was retired by the fix): the field shipped
+  in loom-code 0.39.0 (`loom-code/skills/writing-plans/references/plan-format.md:141-147`) and
+  **nothing enforced it**. No check in `loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md` names
   it, so a plan omitting it returns `PASS`; the nearest sibling
   `loom-code/skills/subagent-driven-development/checklists/spec-consistency.md:86` (`CHK-SPEC-008`) covers `External surfaces` only. Its
   two tests (`loom-code/scripts/test_plan_fact_grounding.py:230`,

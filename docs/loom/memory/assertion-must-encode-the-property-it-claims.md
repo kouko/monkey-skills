@@ -44,10 +44,14 @@ Related: [[grep-tests-scope-to-measured-neighborhood]] (scope the pin to
 the block that must carry the phrase, not the whole file — the sibling
 discipline that makes co-occurrence claims testable).
 
-**Increment (2026-08-01, branch `docs-reuse-adequacy-brief-and-backlog`).** Six
-grep-tests over prose contracts shipped in one branch with this exact hole, each
-missing precisely the relation its own task existed to protect (a reintroduced
-field, a slot-semantics swap, a deleted opt-in bullet). Adding the relational
+**Increment (2026-08-01, branch `docs-reuse-adequacy-brief-and-backlog`).** Two
+of that branch's four new or amended guard tests over prose contracts shipped
+with *this* hole — a relational property (which slot is the report, whether a
+pointer sits beside its neighbour) asserted by membership alone. Two more shipped
+the sibling failure this entry's body already distinguishes: a missing
+absence assertion, where a reintroduced field or a deleted opt-in bullet left
+every check green. A first draft of this paragraph called it "six" and merged the
+two kinds; a docs review traced it to four and separated them. Adding the relational
 predicate closed each one — and opened a new **over-fire** on a valid
 re-rendering: a bolded label, a definition-list form, two paragraphs merged into
 one, a locale reordering. Tightening again just swings it back.
