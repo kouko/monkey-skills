@@ -198,6 +198,27 @@ subset rule and the manual-diff advice in
 superseded the day the script is wired in; the ship arc must absorb or
 delete them (cross-file §-ref debt otherwise).
 
+## Addendum — repo-wide dogfood extension (2026-08-01, user-approved)
+
+After the five planned tasks completed (R3: 4 hits / 0 miss / 0 false
+alarms), the user asked for dogfooding on more test data. A sweep of all
+170 real plans in the repo found: (a) the loud-empty contract held on
+all 165 ledger-less plans; (b) two parser blind spots the 10-cell corpus
+could not see, both failing toward false alarms — continuation-line
+(wrapped) `Files touched` values (real shape:
+`docs/loom/plans/2026-07-11-investing-toolkit-data-consolidation.md:48-49`)
+whose continuation paths are invisible to the parser and so produce
+false UNDER verdicts, and a trailing parenthetical annotation after the
+final path token (real shape:
+`docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md:24`) that
+contaminates the token. The user approved: fix both parser gaps (TDD),
+re-run the sweep, and record the results — the true wild
+under-declaration rate is the load-bearing evidence for the next arc's
+wire-in decision, and the pre-fix numbers are contaminated. The
+weak-model consumption probe is explicitly deferred to the ship arc
+(the mechanism itself is a deterministic script; tier only matters at
+the consumption seam, which does not exist until wiring is decided).
+
 ## Open Questions
 
 1. `done(<sha>)` is optional — on plans without a ledger the check is

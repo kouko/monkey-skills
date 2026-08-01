@@ -1,10 +1,10 @@
 # Plan: Measure the declared-vs-actual `Files touched` check
 
 **Source brief**: docs/loom/specs/2026-08-01-declared-vs-actual-files-touched-check.md
-**Total tasks**: 5
-**Critical-path depth**: 4 (≤5 ✓)
+**Total tasks**: 8
+**Critical-path depth**: 4 (≤5 ✓ — longest chains T1→T3→T4→T5 and T2→T6→T7→T8, both 4)
 **Execution order**: sequential
-**Plan-document-reviewer verdict**: PASS (2026-08-01, round 1, 15/15)
+**Plan-document-reviewer verdict**: PASS (2026-08-01, round 2, 15/15)
 
 ## Task 1 — Freeze the answer key in the audit document
 
@@ -96,8 +96,55 @@
 - **Brief item covered**: "A measurement report … per-rule-variant confusion table on the independent cells, the retro-fit on the three known instances reported separately and labeled selection-biased, and a ship/no-ship recommendation"
 - **Status**: done(712c9aed)
 
+## Task 6 — Parse continuation-line (wrapped) `Files touched` values
+
+- **Description**: Extend the parser in `scripts/check_files_touched.py` so a `Files touched` value that wraps across continuation lines parses to the FULL declared set. Real shapes to support, both live in this repo: (a) field line ends in a trailing comma, paths continue on indented following lines (`docs/loom/plans/2026-07-11-investing-toolkit-data-consolidation.md:48-49`); (b) field line carries NO value at all and every path sits on indented continuation lines (`docs/loom/plans/2026-07-26-as-filed-statement-reconstruction.md`, Task 10 block). A continuation line is an indented line that is not a new `- ` bullet, not a heading, and not blank; the wrapped value is the concatenation, then comma-split as today. With continuation present, a trailing comma is list syntax, not an empty token — no parse_error; a genuinely empty final token with NO continuation stays a parse_error (current behavior preserved).
+- **Module**: `scripts/check_files_touched.py`
+- **Files touched**: `scripts/check_files_touched.py`, `scripts/test_check_files_touched.py`
+- **Context paths**:
+  - /Users/kouko/GitHub/monkey-skills/docs/loom/plans/2026-07-11-investing-toolkit-data-consolidation.md (real wrapped shape, lines 48-49)
+  - /Users/kouko/GitHub/monkey-skills/docs/loom/plans/2026-07-26-as-filed-statement-reconstruction.md (Task 10: no-value + continuation shape)
+- **Acceptance**:
+  - **RED**: `scripts/test_check_files_touched.py::test_wrapped_files_touched_value_spans_continuation_lines` fails (continuation paths missing from declared set)
+  - **GREEN**: both real shapes parse to their full declared sets with zero parse_errors; the no-continuation empty-token parse_error behavior is preserved by an existing-or-new pinning test; whole `scripts/` suite green
+- **Dependencies**: Task 2 completes first
+- **Independent**: false
+- **Brief item covered**: brief §Addendum — "continuation-line (wrapped) `Files touched` values … whose continuation paths are invisible to the parser and so produce false UNDER verdicts"
+
+## Task 7 — Trailing parenthetical annotation is not a path token
+
+- **Description**: A trailing parenthetical annotation after the FINAL path token of a `Files touched` value — real shape `docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md:24`, a post-PASS amendment note `(added in the review round … — see §Post-PASS amendment note)` — must not contaminate the token. Rule: after a backtick-closed token, a tail matching a parenthesized group at end of value is an annotation — stripped, no parse_error (legitimate plan practice). A non-parenthetical trailing tail after a backtick-closed token stays a parse_error. Bare (unbackticked) tokens keep current behavior.
+- **Module**: `scripts/check_files_touched.py`
+- **Files touched**: `scripts/check_files_touched.py`, `scripts/test_check_files_touched.py`
+- **Context paths**:
+  - /Users/kouko/GitHub/monkey-skills/docs/loom/plans/2026-07-26-us-as-reported-statement-lane.md (real annotation shape, line 24)
+- **Acceptance**:
+  - **RED**: `scripts/test_check_files_touched.py::test_trailing_parenthetical_annotation_not_a_token` fails (annotation text contaminates the final token)
+  - **GREEN**: the real line-24 shape parses to exactly its four backticked paths, zero parse_errors; a non-parenthetical tail still errors (pinned); whole `scripts/` suite green
+- **Dependencies**: Task 6 completes first
+- **Independent**: false
+- **Brief item covered**: brief §Addendum — "a trailing parenthetical annotation after the final path token … that contaminates the token"
+
+## Task 8 — Re-sweep the repo and record the dogfood report
+
+- **Description**: With the fixed parser, re-run the comparator over ALL plan documents (`docs/loom/plans/*.md`, `docs/plans/*.md`) and author `docs/loom/dogfood/2026-08-01-declared-vs-actual-repo-sweep.md`: methodology (command loop, machine-local sha caveat); exit-code distribution pre-fix vs post-fix; per-plan verdict table for the ledgered plans; a TRUE wild under-declaration list where each UNDER is verified against the plan's actual declared text INCLUDING continuation lines (artifact-vs-true separation is the whole point); the two parser gaps as findings (both failing toward false alarms, found only by wild data); the weak-model consumption probe deferred to the ship arc (explicit); selection caveats (sha resolvability is gc-dependent and machine-local; ledgered plans skew recent). Every number from an executed command. Run `python3 loom-code/scripts/check_doc_citations.py` on the new doc and record its output.
+- **Module**: `docs/loom/dogfood/2026-08-01-declared-vs-actual-repo-sweep.md`
+- **Files touched**: NEW: `docs/loom/dogfood/2026-08-01-declared-vs-actual-repo-sweep.md`
+- **Context paths**:
+  - /Users/kouko/GitHub/monkey-skills/docs/loom/audits/2026-08-01-declared-vs-actual-check-measurement.md (the frozen-corpus measurement this sweep complements)
+  - /Users/kouko/GitHub/monkey-skills/scripts/check_files_touched.py
+- **Acceptance**:
+  - **RED**: diagnostic — `test -f docs/loom/dogfood/2026-08-01-declared-vs-actual-repo-sweep.md` exits 1
+  - **GREEN**: file exists with the sweep table, the verified true-UNDER list, both parser-gap findings, the deferred-probe statement, and the citation-checker output recorded; zero unverified numbers
+- **Dependencies**: Task 7 completes first
+- **Independent**: false
+- **Review-weight**: prose
+- **Brief item covered**: brief §Addendum — "re-run the sweep, and record the results — the true wild under-declaration rate is the load-bearing evidence for the next arc's wire-in decision"
+
 ## Notes
 
+- **Amendment (2026-08-01, round 2)**: Tasks 6-8 added after the user approved the dogfood extension recorded in brief §Addendum; the five original tasks are done (see their `Status` lines) and are not re-opened. This is a substantive amendment → re-reviewed by plan-document-reviewer (round 2, PASS 15/15).
+- Annotation-shape referent corrected `:11` → `:24` in Task 7 and brief §Addendum after the round-2 reviewer's own note flagged the drift and directed the correction ("writing-plans should correct both referents on next touch; the RED test should target the line-24 shape") — reviewer-adjudicated fix, no further round.
 - Verdict stamped PASS (2026-08-01, round 1) — stamping the verdict, no re-review (amendment kind 1).
 - Kickoff decision: rename accounting in `actual_files()` → use `git show --name-only --no-renames --format= <sha>` so a rename contributes BOTH the old and the new path (probed 2026-08-01 in a sandbox repo: with default rename detection `--name-only` prints only the new path; the old path's deletion still collides with a sibling task touching it, so the disjointness oracle needs both). Cell 8's frozen expectation follows this convention; Task 4's Description's `--format=` invocation gains `--no-renames`.
 - Kickoff sweep 2026-08-01: zero one-way-door decisions collected (the genuine one-way door — institutional wiring — is explicitly next-arc per the brief §Decision); no briefing fired per kickoff-briefing.md §c. No PRINCIPLES.md in this repo → default appetite applied.
