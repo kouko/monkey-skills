@@ -161,7 +161,8 @@ constructed fixture corpus with a frozen answer key + audit report with
 a ship/no-ship recommendation. Use `git show --name-only --format=` as
 the mechanical form (the memory file's `--stat` phrasing is human
 shorthand; `--name-only` is the stable machine surface — rename handling
-measured in cell 8). The comparator fails LOUD on empty parses (0 tasks,
+measured in cell 8; amended at kickoff to add `--no-renames` so a rename
+contributes both paths — see the plan's Notes, Kickoff decision). The comparator fails LOUD on empty parses (0 tasks,
 0 join keys) — "nothing to check" must never render as all-clear.
 
 We will NOT: wire the check into SDD/reviewer prompts/hooks/CI, change
@@ -203,7 +204,8 @@ delete them (cross-file §-ref debt otherwise).
 After the five planned tasks completed (R3: 4 hits / 0 miss / 0 false
 alarms), the user asked for dogfooding on more test data. A sweep of all
 170 real plans in the repo found: (a) the loud-empty contract held on
-all 165 ledger-less plans; (b) two parser blind spots the 10-cell corpus
+all 165 exit-2 plans (164 ledger-less, plus one whose ledger the parser
+could not read — sweep §5c); (b) two parser blind spots the 10-cell corpus
 could not see, both failing toward false alarms — continuation-line
 (wrapped) `Files touched` values (real shape:
 `docs/loom/plans/2026-07-11-investing-toolkit-data-consolidation.md:48-49`)

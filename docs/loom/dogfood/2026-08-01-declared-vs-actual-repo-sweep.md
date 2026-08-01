@@ -21,8 +21,13 @@ done
 ```
 
 169 plans under `docs/loom/plans/` + 1 under `docs/plans/` = 170 plans.
-Exit contract: 0 all-OK / 1 flagged / 2 loud-empty (0 tasks or 0 join
-keys) — `scripts/check_files_touched.py` `EXIT_CONTRACT`.
+Exit contract: 0 all-OK (tolerates non-gating NO_JOIN rows while ≥1
+join key exists) / 1 flagged, an unresolvable `done(<sha>)`, or — added
+by the whole-branch review fix AFTER this sweep ran — ≥1 parse error on
+an otherwise-clean run / 2 loud-empty (0 tasks or 0 join keys; wins
+over 1) — `scripts/check_files_touched.py` `EXIT_CONTRACT`. The
+distribution below was re-derived after that post-review amendment:
+unchanged (the lone exit-0 plan has zero parse errors).
 
 **Machine-local sha caveat**: `done(<sha>)` join keys resolve against
 this machine's object store. Squash-merged branches' original commits
@@ -170,7 +175,8 @@ not verdicts.)
   `2026-07-25-company-total-revenue.md` all 11 tasks carry such tails →
   0 join keys → a fully-ledgered plan exits 2 as "no ledger". Loud (11
   parse errors on stderr) but the plan is indistinguishable from the
-  155 genuinely ledger-less plans at the exit-code level.
+  154 genuinely ledger-less plans in the same zero-join-key bucket at
+  the exit-code level.
 - *Nested-bullet declarations*: `- Files touched:` followed by indented
   `- <path>` sub-bullets (`2026-07-13-us-sec-narrative-memo-wiring.md`,
   8 tasks). The continuation rule excludes `- `-prefixed lines by
@@ -202,10 +208,12 @@ arc, to be run against the chosen consumption point.
 - **Sha resolvability is machine-local and gc-dependent** (§1): the 16
   UNDER verdicts and the 10-commit TRUE list depend on objects only
   this clone holds.
-- **165 ledger-less plans exercise only the loud-empty path**: exit 2
-  proves the comparator refuses an all-clear without a ledger, and
-  nothing else about those plans. Coverage of the actual comparison
-  logic comes from 6 plans (5 with joins post-fix).
+- **The 165 exit-2 plans exercise only the loud-empty path** (164
+  ledger-less + one fully-ledgered plan whose 11 join keys the parser
+  drops, §5c): exit 2 proves the comparator refuses an all-clear
+  without a readable ledger, and nothing else about those plans.
+  Coverage of the actual comparison logic comes from 6 plans (5 with
+  joins post-fix).
 
 ## 8. Citation-checker output
 
