@@ -462,3 +462,154 @@ def test_write_fails_loudly_on_live_entry_with_unrecognized_status(tmp_path):
     assert result.returncode == 1
     assert "2026-08-01-alpha.md" in (result.stdout + result.stderr)
     assert not output.exists()
+
+
+# ---------------------------------------------------------------------------
+# Task 4 — scripts/backlog_index.py --check
+#
+# doctoc --dryrun pattern: regenerate the index in memory and compare it
+# against the committed docs/loom/BACKLOG.md. Exit 1 with a diff summary on
+# drift, 0 when identical. Never writes --output.
+# ---------------------------------------------------------------------------
+
+
+def _run_check(store: Path, output: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(BACKLOG_SCRIPT),
+            "--check",
+            "--store",
+            str(store),
+            "--output",
+            str(output),
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_check_passes_on_a_freshly_generated_index(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(store, "2026-08-01-alpha.md", _entry("2026-08-01-alpha", "OPEN"))
+
+    output = tmp_path / "BACKLOG.md"
+    write_result = _run_write(store, output)
+    assert write_result.returncode == 0, write_result.stdout + write_result.stderr
+
+    check_result = _run_check(store, output)
+    assert check_result.returncode == 0, check_result.stdout + check_result.stderr
+
+
+def test_check_detects_a_hand_edited_index(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(store, "2026-08-01-alpha.md", _entry("2026-08-01-alpha", "OPEN"))
+
+    output = tmp_path / "BACKLOG.md"
+    _run_write(store, output)
+    # Hand-edit: append a line a human might add directly to the generated
+    # index instead of authoring a new entry file.
+    with output.open("a", encoding="utf-8") as f:
+        f.write("- a hand-added line that did not come from any entry file\n")
+
+    result = _run_check(store, output)
+
+    assert result.returncode == 1
+    assert "drift" in result.stdout.lower()
+
+
+def test_check_detects_whitespace_only_drift(tmp_path):
+    """A trailing-newline difference is exactly what a hand-edit or an
+    editor's save-on-exit produces. --check must compare byte-for-byte, not
+    a whitespace-normalized form, or this exact drift shape would silently
+    pass."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(store, "2026-08-01-alpha.md", _entry("2026-08-01-alpha", "OPEN"))
+
+    output = tmp_path / "BACKLOG.md"
+    _run_write(store, output)
+    with output.open("a", encoding="utf-8") as f:
+        f.write("\n")  # one extra trailing blank line -- no visible content change
+
+    result = _run_check(store, output)
+
+    assert result.returncode == 1
+
+
+def test_check_does_not_write_anything(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(store, "2026-08-01-alpha.md", _entry("2026-08-01-alpha", "OPEN"))
+
+    output = tmp_path / "BACKLOG.md"
+    _run_write(store, output)
+    with output.open("a", encoding="utf-8") as f:
+        f.write("- hand edit\n")
+    drifted_text = output.read_text(encoding="utf-8")
+    mtime_before = output.stat().st_mtime_ns
+
+    result = _run_check(store, output)
+
+    assert result.returncode == 1
+    assert output.read_text(encoding="utf-8") == drifted_text, (
+        "--check must never rewrite --output, even when it finds drift"
+    )
+    assert output.stat().st_mtime_ns == mtime_before
+
+
+def test_check_fails_loudly_when_output_is_missing(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(store, "2026-08-01-alpha.md", _entry("2026-08-01-alpha", "OPEN"))
+
+    output = tmp_path / "BACKLOG.md"  # never written
+
+    result = _run_check(store, output)
+
+    assert result.returncode == 1
+    assert not output.exists()
+
+
+def test_check_fails_loudly_on_build_error_without_writing(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(
+        store,
+        "archive/2026-07-01-closed-thing.md",
+        _entry("2026-07-01-closed-thing", "archived"),  # no `archived:` field
+    )
+
+    output = tmp_path / "BACKLOG.md"
+    output.write_text("placeholder\n", encoding="utf-8")
+
+    result = _run_check(store, output)
+
+    assert result.returncode == 1
+    assert output.read_text(encoding="utf-8") == "placeholder\n"
+
+
+def test_check_against_real_store_reflects_current_migration_phase():
+    """docs/loom/backlog/ holds no entries yet -- Task 5 migrates the 73
+    docs/loom/BACKLOG.md entries into it. Regenerating the index from the
+    currently-empty store and comparing it against the current hand-written
+    2500+-line monolith is REAL drift, not a false negative caused by test
+    scaffolding, so --check must currently report FAIL (exit 1).
+
+    Task 5 must invert this assertion to `== 0` once the store is populated
+    and docs/loom/BACKLOG.md is regenerated from it -- do not delete this
+    test and do not leave it asserting drift once the migration lands; a
+    test that still says "expect drift" after Task 5 ships is itself a bug.
+    """
+    real_store = REPO_ROOT / "docs" / "loom" / "backlog"
+    real_output = REPO_ROOT / "docs" / "loom" / "BACKLOG.md"
+
+    result = _run_check(real_store, real_output)
+
+    assert result.returncode == 1, (
+        "expected drift while docs/loom/backlog/ is still empty (pre-Task-5); "
+        "if this now returns 0, Task 5 has landed -- invert this assertion to "
+        "`== 0` per Task 5's own acceptance criteria, per this test's docstring"
+    )

@@ -54,19 +54,30 @@ exercised by a temp-store test that is not itself a git repository. An
 archived entry missing the field fails `--write` loudly (exit 1) rather
 than emitting a blank or fabricated date.
 
-`--check` mode lands in a later task.
+`--check` mode (this task) is the doctoc `--dryrun` pattern: regenerate the
+index from the entry files in memory (same `build_index()` as --write) and
+compare it, byte-for-byte, against the committed `--output` file. Exits 0
+when identical, 1 with a unified diff when they differ (a hand-edit to the
+committed file, or any drift), 1 if `--output` does not exist yet, and 1 on
+the same build errors `--write` rejects. `--check` never calls
+`Path.write_text` — it only reads `--output` and compares; the committed
+index stays readable by agents, and a hand-edit is blocked rather than
+merely discouraged.
 
 Usage:
     python3 scripts/backlog_index.py --validate [--store docs/loom/backlog]
     python3 scripts/backlog_index.py --write [--store docs/loom/backlog] [--output docs/loom/BACKLOG.md]
+    python3 scripts/backlog_index.py --check [--store docs/loom/backlog] [--output docs/loom/BACKLOG.md]
 
-Exit codes: 0 = clean/written, 1 = at least one invariant violation
-(--validate) or a build error (--write).
+Exit codes: 0 = clean/written/matches, 1 = at least one invariant violation
+(--validate), a build error (--write, --check), or drift / a missing
+committed file (--check).
 """
 
 from __future__ import annotations
 
 import argparse
+import difflib
 import re
 import sys
 from dataclasses import dataclass
@@ -337,14 +348,19 @@ def main() -> int:
         help="regenerate the index and write it to --output",
     )
     parser.add_argument(
+        "--check",
+        action="store_true",
+        help="regenerate the index and compare it to --output without writing; exit 1 on drift",
+    )
+    parser.add_argument(
         "--output",
         default="docs/loom/BACKLOG.md",
-        help="path to write the generated index (only used with --write)",
+        help="path to write (--write) or compare against (--check) the generated index",
     )
     args = parser.parse_args()
 
-    if not args.validate and not args.write:
-        parser.error("no mode specified; pass --validate or --write")
+    if not args.validate and not args.write and not args.check:
+        parser.error("no mode specified; pass --validate, --write, or --check")
 
     if args.validate:
         violations = find_violations(Path(args.store))
@@ -364,6 +380,38 @@ def main() -> int:
             return 1
         Path(args.output).write_text(text, encoding="utf-8")
         print(f"backlog_index --write: wrote {args.output}")
+
+    if args.check:
+        try:
+            generated = build_index(Path(args.store))
+        except ValueError as exc:
+            print(f"backlog_index --check: FAIL — {exc}")
+            return 1
+
+        output_path = Path(args.output)
+        if not output_path.is_file():
+            print(
+                f"backlog_index --check: FAIL — {output_path} does not exist; "
+                "run --write first"
+            )
+            return 1
+
+        committed = output_path.read_text(encoding="utf-8")
+        if committed != generated:
+            print(
+                "backlog_index --check: FAIL — the committed index has "
+                f"drifted from the entry files (compare against {output_path}).\n"
+            )
+            diff = difflib.unified_diff(
+                committed.splitlines(keepends=True),
+                generated.splitlines(keepends=True),
+                fromfile=f"{output_path} (committed)",
+                tofile="<regenerated from entry files>",
+            )
+            sys.stdout.writelines(diff)
+            return 1
+
+        print(f"backlog_index --check: OK — {output_path} matches the entry files.")
 
     return 0
 

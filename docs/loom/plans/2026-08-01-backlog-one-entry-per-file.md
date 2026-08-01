@@ -64,8 +64,9 @@ Plan-document-reviewer verdict: PASS (2026-08-01, round 5, 15/15)
 
 - **Kickoff decision — no CI file is edited.** Verified: `loom-code-ci.yml:98`
   runs `python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -v`, and
-  its `paths:` filter already covers `scripts/**` and `docs/loom/**`
-  (`:28,44,62,63,68`). A test placed in `scripts/` gates with no workflow
+  its `paths:` filter already covers `scripts/**` (`:44` pull_request, `:68`
+  push) and `docs/loom/**` (`:33` pull_request, `:65` push). A test placed in
+  `scripts/` gates with no workflow
   change. The real-store drift gate is a pytest case, not a new CI step.
 
 - **Kickoff decision — no change-folder is bound.** Two non-archived
