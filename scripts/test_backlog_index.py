@@ -627,16 +627,19 @@ def test_real_store_has_every_migrated_entry_and_validates_clean():
     """RED while docs/loom/backlog/ holds no entry files (only README.md):
     Task 5 splits BACKLOG.md's 73 `## ` entries into one file per entry, so
     the real store must hold exactly 73 entry files and `--validate` over it
-    must exit 0 (every migrated entry's frontmatter is well-formed)."""
+    must exit 0 (every migrated entry's frontmatter is well-formed). Task 9
+    adds the store's first hand-authored entry (the institution-maintenance.md
+    follow-up), bumping the count to 74."""
     real_store = REPO_ROOT / "docs" / "loom" / "backlog"
 
     entry_files = [
         p for p in real_store.glob("*.md")
         if p.name != "README.md"
     ]
-    assert len(entry_files) == 73, (
-        f"expected 73 migrated entry files directly under {real_store}, "
-        f"found {len(entry_files)}: {sorted(p.name for p in entry_files)}"
+    assert len(entry_files) == 74, (
+        f"expected 74 entry files (73 migrated + Task 9's hand-authored "
+        f"entry) directly under {real_store}, found {len(entry_files)}: "
+        f"{sorted(p.name for p in entry_files)}"
     )
 
     result = _run_validate(real_store)
@@ -819,3 +822,69 @@ def test_agreement_check_is_a_noop_when_body_has_no_matching_bullet(tmp_path):
     result = _run_validate(store)
 
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+# ---------------------------------------------------------------------------
+# Task 9 -- the store's first hand-authored entry (the store's own authoring
+# dogfood): a REQUIRED follow-up recording that institution-maintenance.md's
+# BACKLOG.md-header pointer is now stale, tracked outside this repo.
+# ---------------------------------------------------------------------------
+
+
+def test_the_deferred_rules_follow_up_is_tracked_in_the_store():
+    """A future agent must find and understand this follow-up by grepping
+    the store alone -- no plan reference required. Discriminating: fails if
+    the entry is deleted (no match), if it is given a non-live status (it
+    would render under no live section), or if it drops out of the
+    regenerated index (present as a file but not surfaced)."""
+    real_store = REPO_ROOT / "docs" / "loom" / "backlog"
+    entry_files = [p for p in real_store.glob("*.md") if p.name != "README.md"]
+
+    # Substring-match on "institution-maintenance.md" alone is not
+    # discriminating: 2026-07-25-dev-workflow-loom-workflow-rename-evaluated-
+    # not-recommended.md already cites that path incidentally, for an
+    # unrelated rename-blast-radius concern (RED-run finding -- the first
+    # draft of this test passed on a store with no follow-up entry at all).
+    # Requiring BOTH markers together -- the rules file AND the generated
+    # index it wrongly still claims defines the format -- is what pins the
+    # match to THIS follow-up.
+    matches = []
+    for path in entry_files:
+        text = path.read_text(encoding="utf-8")
+        body = backlog_index._body_text(text)
+        if "institution-maintenance.md" in body and "docs/loom/backlog/README.md" in body:
+            matches.append(path)
+
+    assert matches, (
+        "no live entry under docs/loom/backlog/ has a body naming both "
+        "'institution-maintenance.md' and 'docs/loom/backlog/README.md' -- "
+        "the deferred rules-file follow-up is not tracked in the store"
+    )
+    assert len(matches) == 1, (
+        f"expected exactly one entry to track this follow-up, found "
+        f"{[p.name for p in matches]}"
+    )
+    entry_path = matches[0]
+
+    frontmatter = backlog_index.parse_frontmatter(entry_path.read_text(encoding="utf-8"))
+    status = frontmatter.get("status")
+    assert status in backlog_index.STATUS_SECTION_ORDER, (
+        f"{entry_path.name}: status {status!r} is not a live status -- it "
+        "would not render under any live section of the generated index"
+    )
+
+    violations = [
+        v for v in backlog_index.find_violations(real_store) if v.file == entry_path.name
+    ]
+    assert not violations, f"{entry_path.name} fails --validate: {violations}"
+
+    generated = backlog_index.build_index(real_store)
+    name = frontmatter.get("name", entry_path.stem)
+    assert f"## {status}\n" in generated, f"generated index has no '## {status}' section at all"
+    _, _, after_heading = generated.partition(f"## {status}\n")
+    next_heading = after_heading.find("\n## ")
+    section_body = after_heading if next_heading == -1 else after_heading[:next_heading]
+    assert f"[{name}](backlog/{name}.md)" in section_body, (
+        f"{name} does not appear under its '## {status}' section in the "
+        "regenerated index -- present as a file but not surfaced"
+    )

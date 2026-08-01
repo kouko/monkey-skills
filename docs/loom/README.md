@@ -8,7 +8,8 @@ truth.
 
 | Entry | Content |
 |---|---|
-| [`BACKLOG.md`](BACKLOG.md) | Open items SSOT — cross-plugin debts, parked decisions, re-triggers |
+| [`backlog/`](backlog/) | Open items SSOT — cross-plugin debts, parked decisions, re-triggers; one entry per file, format contract in [`backlog/README.md`](backlog/README.md) |
+| [`BACKLOG.md`](BACKLOG.md) | **Generated** index over `backlog/` — never hand-edit it; run `python3 scripts/backlog_index.py --write` |
 | [`memory/`](memory/) | Practice-memory store — repo-native home for distilled loom-* practices, habits, processes, and recurring gotchas (one fact per file) |
 | [`discovery/`](discovery/) | Problem-space artifacts per run: `user-insights.md` + evidence + research reports; `business-value.md` when the worth-it check fires — see loom-discovery plugin |
 | [`specs/`](specs/) | Brainstorming briefs (5-axis output) |

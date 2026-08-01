@@ -38,18 +38,47 @@ is reclassified, and the generated index already renders each entry under
 its status heading. The same applies to the `name` slug — no `-open`,
 no `-shipped` suffix.
 
+## The body below the frontmatter is freeform
+
+Only the frontmatter above is contractual. Below it, write whatever
+the item needs — prose, headings, bullets, a quoted excerpt — with no
+required sections and no fixed order. This is deliberate: the store
+holds heterogeneous items (a pointer to a fix that lives elsewhere, a
+self-contained debt, a re-trigger condition), and a fixed section
+schema would over-constrain content that legitimately varies.
+
+The one standard the body must meet is a **retrieval** standard, not a
+shape one: a future agent who finds this entry by grep, has never seen
+the work that produced it, and has no access to any plan must be able
+to act on it. State what the item is, why it matters, and what the
+next step is, inside the entry itself. Do not write a body that only
+makes sense to someone who already knows the context.
+
 ## Closed status vocabulary
 
 The `status` field is a closed enum — exactly these seven values, no
-others:
+others. Pick by what is *blocking the item*, not by how important it
+feels:
 
-- `COMMITTED-NEXT`
-- `OPEN`
-- `PARKED`
-- `UPSTREAM`
-- `SHIPPED`
-- `CLOSED — SUPERSEDED`
-- `archived`
+- `COMMITTED-NEXT` — decided, scheduled, and next in line. Nothing is
+  blocking it but our own turn to start.
+- `OPEN` — agreed to be worth doing, not yet scheduled. Anyone may
+  pick it up.
+- `PARKED` — deliberately not being done for now, with the reason
+  recorded in the body. Distinct from `OPEN`: a parked item needs a
+  condition to change before it is eligible again, which is what
+  `start:` records.
+- `UPSTREAM` — the fix belongs to something this repo does not own (an
+  external tool, another project, a file outside this repo). We can
+  describe and track it here; we cannot land it here.
+- `SHIPPED` — the work is done and merged, but the entry is being kept
+  live deliberately, usually because a follow-up or measurement is
+  still attached to it. An entry with nothing left attached should be
+  archived instead.
+- `CLOSED — SUPERSEDED` — no longer applicable because a later
+  decision replaced it. The body should name what superseded it.
+- `archived` — closed and moved to `archive/`; see the Archive rule
+  below. Never used on a live entry.
 
 The first six are live statuses. `archived` is reserved for entries
 that have been closed and moved to `archive/` (see below) — a live

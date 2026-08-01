@@ -76,6 +76,7 @@
 ## UPSTREAM
 - [2026-07-04-validate-design-output-py-dual-root-mode](backlog/2026-07-04-validate-design-output-py-dual-root-mode.md) — validate_design_output.py dual-root mode
 - [2026-07-06-codex-hook-events-apply-patch-handler-emits-none](backlog/2026-07-06-codex-hook-events-apply-patch-handler-emits-none.md) — Codex hook events — apply_patch handler emits none
+- [2026-08-01-institution-maintenance-backlog-pointer](backlog/2026-08-01-institution-maintenance-backlog-pointer.md) — institution-maintenance.md §1 still says BACKLOG.md's header defines the entry format, which this arc made false
 
 ## SHIPPED
 - [2026-07-18-investing-toolkit-52-53-week-filer-support-2-24-0-post-ship-debt](backlog/2026-07-18-investing-toolkit-52-53-week-filer-support-2-24-0-post-ship-debt.md) — investing-toolkit 52/53-week filer support 2.24.0 — post-ship debt
