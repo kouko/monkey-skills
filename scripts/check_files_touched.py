@@ -6,13 +6,30 @@ check (docs/loom/specs/2026-08-01-declared-vs-actual-files-touched-check.md):
 join each plan task's declared file set to the commit that resolved it, so a
 later layer can compare declaration against `git show` reality.
 
-SCOPE — two pure layers, no git calls (the git layer + CLI are Task 4):
+SCOPE — three layers:
   * PARSE: plan markdown in, per-task `(declared_paths, sha_or_None)`
     structures out (`parse_plan` / `parse_plan_text` -> `PlanParse`);
   * VERDICT: pure set arithmetic over (declared, actual, plan_path) per
     rule variant R1/R2/R3 (`verdict_r1/r2/r3`, `evaluate_task`) — variant
     semantics frozen in
-    docs/loom/audits/2026-08-01-declared-vs-actual-check-measurement.md.
+    docs/loom/audits/2026-08-01-declared-vs-actual-check-measurement.md;
+  * GIT + CLI: `actual_files(repo, sha)` reads the commit's touched paths
+    via `git show --name-only --no-renames --format= <sha>` (`--no-renames`
+    is a plan-Kickoff decision: a rename contributes BOTH the old and the
+    new path — frozen key cell 8); `main()` joins the layers into a
+    per-task per-variant verdict report.
+
+CLI:
+  python3 scripts/check_files_touched.py <plan-path>
+      [--repo <path>] [--variant R1|R2|R3|all]
+  --repo defaults to the current directory; --variant defaults to all.
+  At the CLI boundary an ABSOLUTE plan path is reconciled to its
+  repo-relative spelling (relative to --repo) before verdicts run — the
+  R3 plan-file exclude compares against git's repo-relative actual paths
+  and would silently no-op on the absolute spelling.
+
+The exit contract is `EXIT_CONTRACT` below (appended to this docstring at
+import time and shown in --help).
 
 Field lines that match a field name but fail to parse are collected into
 `PlanParse.parse_errors`, never silently dropped (the citation-checker
@@ -39,9 +56,29 @@ token (plan-format.md:79) normalizes to the proposed path itself.
 Stdlib only (re / dataclasses / pathlib).
 """
 
+import argparse
 import re
+import subprocess
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+
+# Single source for the CLI exit contract — shown in --help (epilog) and
+# appended to the module docstring below.
+EXIT_CONTRACT = """\
+Exit contract:
+  0  every compared task is OK under the selected variant(s); NO_JOIN rows
+     report loudly but do not gate while the plan retains >=1 join key
+     (documented decision: the un-joinable task never renders OK, and
+     gating on it would fail every plan still mid-flight)
+  1  at least one task flagged (UNDER or OVER) under a selected variant,
+     or a done(<sha>) join key that did not resolve in --repo
+  2  loud-empty: the parse yielded 0 tasks, or 0 join keys (no task
+     carries Status: done(<sha>)) — a plan with no ledger must never
+     produce an all-clear (source brief §Decision)
+"""
+
+__doc__ += "\n" + EXIT_CONTRACT
 
 # `## Task <N>` opens a task block (plan-format.md:45).
 _TASK_HDR = re.compile(r"^##\s+Task\s+(\d+)\b.*$", re.MULTILINE)
@@ -270,3 +307,104 @@ def evaluate_task(declaration: TaskDeclaration,
         "R2": verdict_r2(declared, actual),
         "R3": verdict_r3(declared, actual, plan_path),
     }
+
+
+# --- Git layer + CLI (Task 4) ------------------------------------------------
+
+def actual_files(repo: Path | str, sha: str) -> frozenset[str]:
+    """Repo-relative paths touched by commit `sha`.
+
+    Runs `git show --name-only --no-renames --format= <sha>`. The
+    `--no-renames` flag is the plan-Kickoff decision (plan §Notes): with
+    default rename detection `--name-only` prints only the rename's NEW
+    path, but the old path's deletion still collides with a sibling task
+    touching it — the disjointness oracle needs BOTH sides (frozen key
+    cell 8). Raises `subprocess.CalledProcessError` when the sha does not
+    resolve; the CLI reports that loudly, never as an all-clear.
+    """
+    out = subprocess.run(
+        ["git", "-C", str(repo), "show", "--name-only", "--no-renames",
+         "--format=", sha],
+        check=True, capture_output=True, text=True).stdout
+    return frozenset(line for line in out.splitlines() if line)
+
+
+def _repo_relative_plan_path(plan_arg: Path, repo: Path) -> str:
+    """Reconcile the CLI's plan-path spelling to repo-relative.
+
+    The R3 plan-file exclude compares against git's repo-relative actual
+    paths, so an ABSOLUTE plan argument must be re-spelled relative to
+    --repo or the exclude silently no-ops (Task-3 reviewer seam). A plan
+    outside --repo keeps its given spelling — it cannot appear in a commit
+    of that repo anyway.
+    """
+    try:
+        return plan_arg.resolve().relative_to(repo).as_posix()
+    except ValueError:
+        return plan_arg.as_posix()
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description=("Compare each plan task's declared `Files touched` "
+                     "set against the files its done(<sha>) commit "
+                     "actually touched, under rule variants R1/R2/R3."),
+        epilog=EXIT_CONTRACT,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("plan_path", help="plan markdown file to check")
+    parser.add_argument("--repo", default=".",
+                        help="git repository the shas resolve in "
+                             "(default: current directory)")
+    parser.add_argument("--variant", choices=[*VARIANTS, "all"],
+                        default="all",
+                        help="rule variant to report (default: all)")
+    args = parser.parse_args(argv)
+
+    repo = Path(args.repo).resolve()
+    plan_rel = _repo_relative_plan_path(Path(args.plan_path), repo)
+
+    parse = parse_plan(args.plan_path)
+    for err in parse.parse_errors:
+        print(f"parse-error: {err}", file=sys.stderr)
+
+    if not parse.tasks:
+        print(f"EMPTY: 0 tasks parsed from {args.plan_path} — refusing to "
+              f"report an all-clear on an empty parse", file=sys.stderr)
+        return 2
+    if all(decl.sha is None for decl in parse.tasks.values()):
+        print(f"EMPTY: 0 join keys — no task in {args.plan_path} carries "
+              f"Status: done(<sha>); nothing joins the plan to commits",
+              file=sys.stderr)
+        return 2
+
+    variants = VARIANTS if args.variant == "all" else (args.variant,)
+    flagged = False
+    for task_no in sorted(parse.tasks):
+        decl = parse.tasks[task_no]
+        actual: frozenset[str] | None = None
+        if decl.sha is not None:
+            try:
+                actual = actual_files(repo, decl.sha)
+            except subprocess.CalledProcessError as exc:
+                print(f"Task {task_no}: join key {decl.sha} did not resolve "
+                      f"in {repo}: {exc.stderr.strip()}", file=sys.stderr)
+                flagged = True
+                continue
+        verdicts = evaluate_task(decl, actual, plan_rel)
+        for variant in variants:
+            verdict = verdicts[variant]
+            line = f"Task {task_no} [{variant}] {verdict.verdict}"
+            if verdict.verdict == NO_JOIN:
+                line += "  (no done(<sha>) join key — never OK)"
+            if verdict.under:
+                line += "  under: " + ", ".join(verdict.under)
+            if verdict.over:
+                line += "  over: " + ", ".join(verdict.over)
+            print(line)
+            if verdict.verdict in (UNDER, OVER):
+                flagged = True
+    return 1 if flagged else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

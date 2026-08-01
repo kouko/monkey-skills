@@ -348,3 +348,298 @@ def test_double_done_status_is_loud_and_keeps_last():
     assert len(result.parse_errors) == 1
     assert "Task 1" in result.parse_errors[0]
     assert "done(" in result.parse_errors[0]
+
+
+# --- Task 4: git layer, CLI, ten-cell corpus end-to-end --------------------
+#
+# WHY these tests exist: cells 1-10 and their expected verdicts were FROZEN
+# in docs/loom/audits/2026-08-01-declared-vs-actual-check-measurement.md
+# BEFORE this layer existed. The sandbox repos below are real git producers
+# (git init/add/commit — never hand-typed diffs, per
+# docs/loom/memory/fixtures-mirror-producer-shape.md). On any disagreement
+# the comparator is wrong, never the key. Fixture plans embed no fenced
+# blocks containing `## Task` lines (parser limitation, frozen key §Frozen
+# answer key preamble).
+
+import subprocess  # noqa: E402
+
+import pytest  # noqa: E402
+
+from check_files_touched import actual_files, main  # noqa: E402
+
+SCRIPT = HERE / "check_files_touched.py"
+_GIT_ID = ("-c", "user.email=t@t", "-c", "user.name=t")
+
+
+def _git(repo, *args) -> str:
+    return subprocess.run(
+        ["git", "-C", str(repo), *_GIT_ID, *args],
+        check=True, capture_output=True, text=True).stdout
+
+
+def _write(repo, rel, content="x\n"):
+    path = repo / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def _repo(tmp_path, baseline=()):
+    """Sandbox repo; baseline files land in a first commit so the measured
+    commit can EDIT them (the frozen key's cells say 'edits', not 'adds')."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    for rel in baseline:
+        _write(repo, rel)
+    if baseline:
+        _git(repo, "add", "--", *baseline)
+        _git(repo, "commit", "-q", "-m", "baseline")
+    return repo
+
+
+def _commit(repo, paths, msg="measured"):
+    _git(repo, "add", "--", *paths)
+    _git(repo, "commit", "-q", "-m", msg)
+    return _git(repo, "rev-parse", "HEAD").strip()
+
+
+def _edit(repo, *rels):
+    for rel in rels:
+        _write(repo, rel, "edited\n")
+
+
+def _task_lines(files_line, status_line=None):
+    lines = ["- **Description**: fixture", files_line]
+    if status_line:
+        lines.append(status_line)
+    return lines
+
+
+def _bold(files_value, sha):
+    return _task_lines(
+        f"- **Files touched**: {files_value}",
+        f"- **Status**: done({sha})" if sha else None)
+
+
+def _write_plan(repo, rel, task_line_groups):
+    out = ["# Plan: fixture", ""]
+    for i, lines in enumerate(task_line_groups, 1):
+        out += [f"## Task {i} — fixture", "", *lines, ""]
+    _write(repo, rel, "\n".join(out) + "\n")
+
+
+_OK3 = {"R1": OK, "R2": OK, "R3": OK}
+_UNDER3 = {"R1": UNDER, "R2": UNDER, "R3": UNDER}
+_NOJOIN3 = {"R1": NO_JOIN, "R2": NO_JOIN, "R3": NO_JOIN}
+
+
+def _build_cell(cell, tmp_path):
+    """Construct one frozen-key cell in a sandbox git repo.
+
+    Returns (repo, plan_rel, expected) with expected mapping
+    task_no -> {variant: frozen verdict token}. Construction specs are the
+    SSOT rows of the frozen key (audit doc §Frozen answer key)."""
+    if cell == 1:  # clean exact match
+        repo = _repo(tmp_path, ["src/a.py", "tests/test_a.py"])
+        _edit(repo, "src/a.py", "tests/test_a.py")
+        sha = _commit(repo, ["src/a.py", "tests/test_a.py"])
+        _write_plan(repo, "plan.md", [_bold("src/a.py, tests/test_a.py", sha)])
+        return repo, "plan.md", {1: _OK3}
+    if cell == 2:  # under-declaration, guard-test shape
+        repo = _repo(tmp_path, ["src/limits.py", "tests/test_limits_guard.py"])
+        _edit(repo, "src/limits.py", "tests/test_limits_guard.py")
+        sha = _commit(repo, ["src/limits.py", "tests/test_limits_guard.py"])
+        _write_plan(repo, "plan.md", [_bold("src/limits.py", sha)])
+        return repo, "plan.md", {1: _UNDER3}
+    if cell == 3:  # under-declaration, SSOT-functional-copy shape
+        repo = _repo(tmp_path, ["canonical/checklists/spec.md",
+                                "mirror/checklists/spec.md"])
+        _edit(repo, "canonical/checklists/spec.md", "mirror/checklists/spec.md")
+        sha = _commit(repo, ["canonical/checklists/spec.md",
+                             "mirror/checklists/spec.md"])
+        _write_plan(repo, "plan.md",
+                    [_bold("canonical/checklists/spec.md", sha)])
+        return repo, "plan.md", {1: _UNDER3}
+    if cell == 4:  # under-declaration, manifest-mirror shape
+        repo = _repo(tmp_path, ["plugin/plugin.json",
+                                "plugin/.codex-plugin/plugin.json"])
+        _edit(repo, "plugin/plugin.json", "plugin/.codex-plugin/plugin.json")
+        sha = _commit(repo, ["plugin/plugin.json",
+                             "plugin/.codex-plugin/plugin.json"])
+        _write_plan(repo, "plan.md", [_bold("plugin/plugin.json", sha)])
+        return repo, "plan.md", {1: _UNDER3}
+    if cell == 5:  # over-declaration — the R1 vs R2/R3 discriminator
+        repo = _repo(tmp_path, ["src/b.py", "src/never_touched.py"])
+        _edit(repo, "src/b.py")
+        sha = _commit(repo, ["src/b.py"])
+        _write_plan(repo, "plan.md",
+                    [_bold("src/b.py, src/never_touched.py", sha)])
+        return repo, "plan.md", {1: {"R1": OVER, "R2": OK, "R3": OK}}
+    if cell == 6:  # NEW: <path> token — commit CREATES the file
+        repo = _repo(tmp_path)
+        _write(repo, "src/new_module.py")
+        sha = _commit(repo, ["src/new_module.py"])
+        _write_plan(repo, "plan.md", [_bold("NEW: src/new_module.py", sha)])
+        return repo, "plan.md", {1: _OK3}
+    if cell == 7:  # missing done(<sha>) — a commit exists, nothing joins
+        repo = _repo(tmp_path, ["src/c.py"])
+        _edit(repo, "src/c.py")
+        _commit(repo, ["src/c.py"])
+        _write_plan(repo, "plan.md", [_bold("src/c.py", None)])
+        return repo, "plan.md", {1: _NOJOIN3}
+    if cell == 8:  # rename — --no-renames yields BOTH paths
+        repo = _repo(tmp_path, ["src/old_name.py"])
+        _git(repo, "mv", "src/old_name.py", "src/new_name.py")
+        _write(repo, "src/new_name.py", "edited after move\n")
+        sha = _commit(repo, ["src/new_name.py"])
+        _write_plan(repo, "plan.md", [_bold("src/new_name.py", sha)])
+        return repo, "plan.md", {1: _UNDER3}
+    if cell == 9:  # field-form variance — one plan, two tasks, both clean
+        repo = _repo(tmp_path, ["src/d.py", "src/e.py"])
+        _edit(repo, "src/d.py")
+        sha_a = _commit(repo, ["src/d.py"], "task A")
+        _edit(repo, "src/e.py")
+        sha_b = _commit(repo, ["src/e.py"], "task B")
+        _write_plan(repo, "plan.md", [
+            _bold("src/d.py", sha_a),
+            ["- Description: plain real-plan form",
+             "- Files touched: src/e.py",
+             f"- Status: done({sha_b})"],
+        ])
+        return repo, "plan.md", {1: _OK3, 2: _OK3}
+    if cell == 10:  # path normalization + the two standing excludes
+        repo = _repo(tmp_path, ["src/f.py", "src/g.py", "src/h.py"])
+        plan_rel = "plans/cell10.md"
+        _edit(repo, "src/f.py", "src/g.py", "src/h.py")
+        _write(repo, "src/__pycache__/f.cpython-312.pyc", "bytecode\n")
+        declared = "./src/f.py, `src/g.py` , src/h.py "
+        # The plan file itself is IN the measured commit, but the commit's
+        # sha cannot be known before committing — commit the plan with a
+        # sha-less ledger, then rewrite the working-tree plan with the real
+        # join key. The comparator reads the working tree; the actual set
+        # carries the committed PATH either way.
+        _write_plan(repo, plan_rel, [_task_lines(
+            f"- **Files touched**: {declared}", "- **Status**: pending")])
+        # -f: a machine-global gitignore may ignore __pycache__; the frozen
+        # key REQUIRES the artifact in the commit (it is what R3's exclude
+        # class absorbs), so force it past any inherited ignore rule.
+        _git(repo, "add", "-f", "--", "src/__pycache__/f.cpython-312.pyc")
+        sha = _commit(repo, ["src/f.py", "src/g.py", "src/h.py", plan_rel])
+        _write_plan(repo, plan_rel, [_bold(declared, sha)])
+        return repo, plan_rel, {1: {"R1": UNDER, "R2": UNDER, "R3": OK}}
+    raise AssertionError(f"unknown cell {cell}")
+
+
+@pytest.mark.parametrize("variant", VARIANTS)
+@pytest.mark.parametrize("cell", range(1, 11))
+def test_cells_match_frozen_answer_key(cell, variant, tmp_path):
+    """Every frozen-key cell produces exactly its frozen verdict under this
+    variant (audit doc §Frozen answer key, rows 1-10). The key predates the
+    comparator, so a mismatch here means the comparator drifted — the test
+    can fail on any semantic regression in parse, git, or verdict layers."""
+    repo, plan_rel, expected = _build_cell(cell, tmp_path)
+
+    parse = parse_plan(repo / plan_rel)
+
+    assert parse.parse_errors == []
+    assert set(parse.tasks) == set(expected)
+    for task_no, decl in sorted(parse.tasks.items()):
+        actual = actual_files(repo, decl.sha) if decl.sha else None
+        verdicts = evaluate_task(decl, actual, plan_rel)
+        assert verdicts[variant].verdict == expected[task_no][variant], (
+            f"cell {cell} task {task_no} variant {variant}: got "
+            f"{verdicts[variant].verdict}, frozen key says "
+            f"{expected[task_no][variant]}")
+
+
+def test_actual_files_no_renames_returns_both_rename_sides(tmp_path):
+    """Kickoff decision (plan §Notes): `--no-renames` makes a rename
+    contribute BOTH old and new paths — a sibling task touching the old
+    path collides with this task's deletion of it (frozen key cell 8).
+    With default rename detection git prints only the new path."""
+    repo = _repo(tmp_path, ["src/old_name.py"])
+    _git(repo, "mv", "src/old_name.py", "src/new_name.py")
+    _write(repo, "src/new_name.py", "edited\n")
+    sha = _commit(repo, ["src/new_name.py"])
+
+    assert actual_files(repo, sha) == frozenset(
+        {"src/old_name.py", "src/new_name.py"})
+
+
+# --- CLI-level tests (subprocess — the real entry point) -------------------
+
+def _run_cli(*args):
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), *args], capture_output=True, text=True)
+
+
+def test_cli_exit_0_on_clean_plan(tmp_path):
+    """All tasks OK under every variant -> exit 0."""
+    repo, plan_rel, _ = _build_cell(1, tmp_path)
+
+    res = _run_cli(str(repo / plan_rel), "--repo", str(repo))
+
+    assert res.returncode == 0, res.stdout + res.stderr
+    assert "OK" in res.stdout
+
+
+def test_cli_exit_1_on_under_and_names_offending_path(tmp_path):
+    """An UNDER verdict must exit 1 AND name the offending path — a flag
+    without the path is unactionable."""
+    repo, plan_rel, _ = _build_cell(2, tmp_path)
+
+    res = _run_cli(str(repo / plan_rel), "--repo", str(repo))
+
+    assert res.returncode == 1
+    assert "UNDER" in res.stdout
+    assert "tests/test_limits_guard.py" in res.stdout
+
+
+def test_cli_exit_2_on_zero_tasks_names_what_was_empty(tmp_path):
+    """Loud-empty duty (source brief §Decision): a plan that parses to no
+    tasks must exit 2 with a message NAMING the emptiness — never an
+    all-clear (the citation-checker empty-pass lesson)."""
+    repo = _repo(tmp_path, ["src/a.py"])
+    _write(repo, "plan.md", "# Plan: fixture\n\nNo task sections at all.\n")
+
+    res = _run_cli(str(repo / "plan.md"), "--repo", str(repo))
+
+    assert res.returncode == 2
+    assert "0 tasks" in res.stderr
+
+
+def test_cli_exit_2_on_zero_join_keys_names_what_was_empty(tmp_path):
+    """Frozen-key cell 7 at CLI level: a task exists but NO task anywhere
+    carries done(<sha>) — 0 join keys, exit 2, named."""
+    repo, plan_rel, _ = _build_cell(7, tmp_path)
+
+    res = _run_cli(str(repo / plan_rel), "--repo", str(repo))
+
+    assert res.returncode == 2
+    assert "0 join keys" in res.stderr
+
+
+def test_cli_absolute_plan_path_still_hits_r3_plan_file_exclude(tmp_path):
+    """Task-3 reviewer seam: an ABSOLUTE plan-path argument must be
+    reconciled to its repo-relative spelling before evaluate_task —
+    otherwise the R3 plan-file exclude silently no-ops and cell 10's
+    committed plan file renders UNDER instead of excluded."""
+    repo, plan_rel, _ = _build_cell(10, tmp_path)
+    absolute = str((repo / plan_rel).resolve())
+
+    res = _run_cli(absolute, "--repo", str(repo), "--variant", "R3")
+
+    assert res.returncode == 0, res.stdout + res.stderr
+    assert "OK" in res.stdout
+
+
+def test_cli_unresolvable_join_key_fails_loud(tmp_path):
+    """A done(<sha>) that does not resolve in --repo must not vanish into
+    an all-clear: exit 1 with the sha named (fail-loud, Rule 12)."""
+    repo, plan_rel, _ = _build_cell(1, tmp_path)
+    _write_plan(repo, plan_rel, [_bold("src/a.py", "deadbeefcafe1234")])
+
+    res = _run_cli(str(repo / plan_rel), "--repo", str(repo))
+
+    assert res.returncode == 1
+    assert "deadbeefcafe1234" in res.stderr
