@@ -44,9 +44,9 @@ Versioning: [Semantic Versioning](https://semver.org/).
   reuse whose semantics do not carry over is a `gaps` entry, never a
   `notes` entry, even when the plan is internally consistent and every
   existing test passes — that combination is exactly how this defect class
-  ships. **(c2) carries a tier floor** (most-capable-tier, pointed at from
-  `subagent-driven-development/SKILL.md` beside its existing exception,
-  never duplicated); (a), (b) and (c1) do not — measured across 8 graded
+  ships. **(c2) carries a tier floor** (its value is stated once, in Check 17's
+  own row; `subagent-driven-development/SKILL.md` points at it beside its
+  existing exception rather than restating it); (a), (b) and (c1) do not — measured across 8 graded
   cells, a weaker tier executed the three mechanical parts correctly every
   time but had zero discriminating power on (c2), reaching the right
   answer on the defect case only by fabricating a behaviour the code does

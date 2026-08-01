@@ -2385,11 +2385,26 @@ agreement of the per-task + whole-branch reviewers.
   absent target" parenthetical is now duplicated across two branches — below
   Rule of Three, extract only if a third appears.
 
-## `Reuse-adequacy` is a schema field with no gate behind it (COMMITTED-NEXT)
-- Status: COMMITTED-NEXT
-- Start: now — design is briefed at
-  `docs/loom/specs/2026-07-31-reuse-adequacy-declaration-hardening.md`, pending
-  the user's pick between its options A / B / D.
+## `Reuse-adequacy` is a schema field with no gate behind it (SHIPPED)
+- Status: SHIPPED — loom-code 0.43.0, branch `docs-reuse-adequacy-brief-and-backlog`.
+- What shipped: the field became two slots (`Observed` + an obligatory source
+  marker from a closed three-value vocabulary, `Intended`), the author-side
+  adequacy claim was removed, and `plan-document-reviewer` Check 17 now grades
+  presence / marker / source cross-read / adequacy — the last carrying a tier
+  floor. `CHK-SPEC-009` mirrors it on the SDD side. Design and measurement:
+  `docs/loom/specs/2026-07-31-reuse-adequacy-declaration-hardening.md`.
+- **Read this before treating the class as closed**: the change covers ONE slice
+  of A-class — a plan instructing reuse of an existing helper on a new call path.
+  The branch that shipped it generated seven A-class defects of its own, and the
+  new machinery would have caught **none** of them (three under-declared `Files
+  touched`, a false justification in a brief, an unowned derived sentence, an
+  acceptance criterion specifying an impossible outcome, a drifted line-number
+  citation). An eighth incident on the same branch — a scripted edit that
+  corrupted the plan — is deliberately **excluded**: the next gate caught it, and
+  evading the downstream gates is what makes A-class A-class. The first draft of
+  this caveat counted it anyway, and a docs review caught that — a warning about
+  one mechanism's narrow reach had padded its own evidence. The slice is real and
+  was measured; the population around it is wide and mostly ungated.
 - Origin: source audit
   `docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md` §8
   candidate 3; retargeted by

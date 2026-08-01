@@ -107,9 +107,6 @@ def test_check17_adequacy_failure_is_a_gap_not_a_note():
     assert "`gaps`" in row.lower() or "gaps" in lower, (
         "(c2) must name the `gaps` entry outcome"
     )
-    assert "never" in lower and "`notes`" in row.lower() or "notes" in lower, (
-        "(c2) must explicitly rule out filing as `notes`"
-    )
     assert re.search(r"never.{0,20}notes|notes.{0,20}never", lower), (
         "(c2) must state the gaps-vs-notes consequence as a direct "
         "never-notes rule, not merely mention both words separately"
