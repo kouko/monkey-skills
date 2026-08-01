@@ -106,6 +106,23 @@ def test_happy_path_stamps_over_existing_non_archived_status(tmp_path):
     assert "status: proposed" not in text
 
 
+def test_date_prefixed_destination_is_the_current_contract(tmp_path):
+    """Pins the CURRENT destination-naming contract: the archived folder's
+    name is always `<date>-<change-id>` (date first). This is a
+    characterization test over existing behaviour, not new production
+    code — it exists so Task 7 (single-file generalization, which makes the
+    date prefix a parameter that is OFF for the file-unit caller) must
+    consciously touch and re-justify this assertion rather than silently
+    changing the naming rule."""
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_change_folder(tmp_path, "add-widget", "## Why\nBecause.\n")
+
+    dest = mod.archive_change_folder(tmp_path, "add-widget", date="2026-07-10")
+
+    assert dest.name == "2026-07-10-add-widget"
+    assert dest.parent == tmp_path / "docs" / "loom" / "archive"
+
+
 def test_crlf_proposal_normalizes_to_lf_on_write(tmp_path):
     """Pins current behavior: Path.read_text/write_text apply universal
     newline translation, so a CRLF-authored proposal.md is NOT left
@@ -145,9 +162,13 @@ def test_unclosed_frontmatter_treated_as_plain_body(tmp_path):
 def test_refuses_missing_change_folder(tmp_path):
     mod = _load(_MODULE_PATH, "archive_change_folder")
     (tmp_path / "docs" / "loom").mkdir(parents=True)
+    before = sorted(p.relative_to(tmp_path) for p in tmp_path.rglob("*"))
 
     with pytest.raises(mod.ArchiveError, match="does not exist"):
         mod.archive_change_folder(tmp_path, "no-such-change", date="2026-07-10")
+
+    after = sorted(p.relative_to(tmp_path) for p in tmp_path.rglob("*"))
+    assert before == after  # refusal is a no-op: no filesystem mutation
 
 
 def test_refuses_already_archived_status(tmp_path):
