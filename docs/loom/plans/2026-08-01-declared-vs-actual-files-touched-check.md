@@ -58,6 +58,7 @@
 - **Dependencies**: Tasks 1, 2 complete first
 - **Independent**: false
 - **Brief item covered**: "Rule variants measured (all three run over the same cells)" (brief §Rule variants table)
+- **Status**: done(88423c32)
 
 ## Task 4 — Git layer, CLI, and the ten-cell corpus end-to-end
 
