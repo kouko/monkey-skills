@@ -42,6 +42,7 @@
 - **Dependencies**: none
 - **Independent**: false  # NEW paths — plan-format.md:79
 - **Brief item covered**: "parses a real plan's per-task `Files touched` + `Status: done(<sha>)`" (brief §Smallest End State item 1)
+- **Status**: done(9b45b937)
 
 ## Task 3 — Verdict engine with the three rule variants
 
