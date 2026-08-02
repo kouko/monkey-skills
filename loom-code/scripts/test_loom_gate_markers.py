@@ -7,11 +7,17 @@ asserted field-by-field against the frozen contract.
 
 External-surface grounding (source a — live verification): the git
 flags the CLI depends on (`rev-parse --git-dir`, `rev-parse
---abbrev-ref HEAD`, `rev-parse HEAD`) are exercised LIVE by this suite
-against the throwaway repos above — every happy-path test both drives
-them through the CLI and re-runs them directly via `_git()` to
-cross-check branch/sha values, so a flag regression in the installed
-git surfaces here, not via belief.
+--abbrev-ref HEAD`, `rev-parse HEAD`, `git show <rev>:<path>`, `git
+cat-file -t <rev>:<path>`) are exercised LIVE by this suite against the
+throwaway repos above — every happy-path test both drives them through
+the CLI and re-runs them directly via `_git()` to cross-check
+branch/sha values, so a flag regression in the installed git surfaces
+here, not via belief. `git show <rev>:<path>` and `git cat-file -t
+<rev>:<path>` back the origin-quote verification path
+(`_show_committed_file`) added in Task 2; their failure-mode shapes
+(sha-unresolvable / file-absent / non-blob / undecodable-blob) are each
+exercised against a real throwaway repo by the tests below, not
+asserted from documentation.
 """
 from __future__ import annotations
 
@@ -351,6 +357,11 @@ def test_finding_with_unparseable_dimension_refuses_without_origin(
 )
 def test_origin_none_and_quoted_value_validate(tmp_path, origin_line):
     repo = _init_repo(tmp_path)
+    if "::" in origin_line:
+        # A quoted origin now must also verify against committed content
+        # (Task 2) — commit the file the quote names so this test keeps
+        # asserting its original intent (a grammar-valid origin mints).
+        _commit_file(repo, "docs/loom/plans/x.md", "seven call sites\n")
     verdict_file = _write_verdict(
         tmp_path,
         _verdict_with_finding(dimension_line="correctness", origin_line=origin_line),
@@ -400,6 +411,9 @@ def test_origin_quote_containing_separator_splits_on_first_occurrence(tmp_path):
     # containing the separator string is accepted whole rather than
     # mis-parsed into a truncated path and an unquoted remainder.
     repo = _init_repo(tmp_path)
+    # Quote verification (Task 2) now needs the quote to actually be
+    # committed under this path for the finding to mint.
+    _commit_file(repo, "p.md", "a :: b\n")
     verdict_file = _write_verdict(
         tmp_path,
         _verdict_with_finding(
@@ -639,6 +653,518 @@ def test_arm_dimension_partition_check_raises_on_overlap():
 
     with pytest.raises(AssertionError):
         _check_arm_disjoint({"x", "y"}, {"y", "z"})
+
+
+# ------------------------------------------------- origin quote verification
+
+
+def _commit_file(repo: Path, rel_path: str, content: str) -> None:
+    """Write `content` to `rel_path` inside `repo` and commit it."""
+    full = repo / rel_path
+    full.parent.mkdir(parents=True, exist_ok=True)
+    full.write_text(content, encoding="utf-8")
+    _git(repo, "add", rel_path)
+    _git(repo, "commit", "-q", "-m", f"add {rel_path}")
+
+
+def test_origin_quote_present_only_in_worktree_refuses_to_mint(tmp_path):
+    # Committed content lacks the quoted sentence; the on-disk (uncommitted)
+    # file contains it. The check must read the commit, never the worktree —
+    # a Path.read_text() implementation would wrongly pass this.
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/note.md", "Nothing quotable here.\n")
+    (repo / "docs" / "note.md").write_text(
+        "Nothing quotable here. The quoted sentence appears now.\n",
+        encoding="utf-8",
+    )
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs/note.md :: "The quoted sentence appears now."',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+def test_validate_dry_run_reports_quote_verification_did_not_run(tmp_path, capsys):
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs/note.md :: "some quote"',
+        ),
+    )
+
+    rc = main(["validate", "--verdict-file", str(verdict_file)])
+
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "quote verification did not run" in out.lower()
+
+
+def test_origin_quote_present_in_commit_mints(tmp_path):
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/note.md", "The exact quoted sentence is here.\n")
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs/note.md :: "The exact quoted sentence is here."',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+def test_origin_quote_absent_at_sha_refuses_with_distinct_message(tmp_path, capsys):
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/note.md", "Nothing like the quote in here.\n")
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs/note.md :: "a totally different sentence"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    err = capsys.readouterr().err
+    assert "docs/note.md" in err
+    assert "a totally different sentence" in err
+
+
+def test_origin_file_absent_at_sha_refuses_with_distinct_message(tmp_path, capsys):
+    repo = _init_repo(tmp_path)  # docs/note.md never committed
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line=(
+                'docs/note.md :: "a quote from a file that never existed"'
+            ),
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    err = capsys.readouterr().err
+    assert "docs/note.md" in err
+    assert "does not exist" in err
+
+
+def test_origin_none_skips_quote_verification_entirely(tmp_path):
+    repo = _init_repo(tmp_path)  # no files beyond the init commit
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(dimension_line="correctness", origin_line="none"),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+def test_show_committed_file_sha_unresolvable_distinguished_from_absent(tmp_path):
+    # Unreachable through _cmd_review_pass: the existing `if branch is None
+    # or head_sha is None` guard returns 2 before quote verification runs,
+    # since head_sha always comes from a live `rev-parse HEAD` on a real
+    # repo. Exercised directly on the helper instead (plan Task 2 GREEN).
+    from loom_gate_markers import _show_committed_file
+
+    repo = _init_repo(tmp_path)
+    bad_sha = "0" * 40  # well-formed hex, does not resolve to any commit
+
+    content, failure_kind = _show_committed_file(repo, bad_sha, "docs/note.md")
+
+    assert content is None
+    assert failure_kind == "sha-unresolvable"
+
+
+def test_show_committed_file_distinguishes_file_absent_from_sha_unresolvable(
+    tmp_path,
+):
+    from loom_gate_markers import _show_committed_file
+
+    repo = _init_repo(tmp_path)
+    head = _head(repo)
+
+    content, failure_kind = _show_committed_file(repo, head, "nope.md")
+
+    assert content is None
+    assert failure_kind == "file-absent"
+
+
+def test_show_committed_file_classifies_gitlink_with_object_present_as_not_a_file(
+    tmp_path,
+):
+    # A gitlink's classification is CONDITIONAL on whether the linked
+    # commit object is present in this repo's local object store, not a
+    # fixed property of gitlinks (see the THIRD verified quirk in
+    # _show_committed_file's docstring — a prior version of this
+    # docstring wrongly stated the object-absent outcome as the only
+    # outcome). This test constructs the PRESENT branch: fetch the
+    # linked commit into `repo`'s own object store before reading the
+    # gitlink path, so `cat-file -t` finds a real object and reports
+    # `commit` (non-blob) — landing in `_NOT_A_FILE`, the same branch a
+    # directory takes, not `_FILE_ABSENT`.
+    from loom_gate_markers import _show_committed_file
+
+    sub = tmp_path / "subrepo"
+    sub.mkdir()
+    _git(sub, "init", "-q")
+    _git(sub, "config", "user.email", "test@example.com")
+    _git(sub, "config", "user.name", "Test User")
+    _git(sub, "commit", "--allow-empty", "-m", "sub init")
+    sub_sha = _git(sub, "rev-parse", "HEAD")
+    sub_branch = _git(sub, "rev-parse", "--abbrev-ref", "HEAD")
+
+    repo = _init_repo(tmp_path)
+    _git(repo, "update-index", "--add", "--cacheinfo", f"160000,{sub_sha},mysub")
+    _git(repo, "commit", "-m", "add gitlink")
+    head = _head(repo)
+
+    # Bring the linked commit object into repo's own object store by
+    # fetching the subrepo's branch tip. This is what distinguishes the
+    # PRESENT branch from the ABSENT one — without this fetch, `sub_sha`
+    # stays an object `repo` never learned about.
+    _git(
+        repo,
+        "fetch",
+        str(sub),
+        f"{sub_branch}:refs/remotes/subrepo/{sub_branch}",
+    )
+    assert _git(repo, "cat-file", "-t", sub_sha) == "commit"
+
+    content, failure_kind = _show_committed_file(repo, head, "mysub")
+
+    assert content is None
+    assert failure_kind == "not-a-file"
+
+
+def test_normalized_tier_matches_across_hard_wrapped_lines_and_is_recorded(
+    tmp_path, capsys
+):
+    # This repo hard-wraps prose, so a truthful one-line quote of a
+    # multi-line passage fails byte-exact matching by construction — the
+    # normalised tier (whitespace runs collapsed to one space) must still
+    # mint, and the output must record that it matched only at that tier
+    # (§Notes kickoff decision: the tier is the observable that separates
+    # "no quotable origins" from "the matcher rejected true ones").
+    repo = _init_repo(tmp_path)
+    _commit_file(
+        repo,
+        "docs/note.md",
+        "This function computes the discounted cash flow across all\n"
+        "periods for the given schedule.\n",
+    )
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line=(
+                'docs/note.md :: "This function computes the discounted '
+                'cash flow across all periods for the given schedule."'
+            ),
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    out = capsys.readouterr().out
+    assert "normalis" in out.lower()  # "normalised"/"normalisation"
+
+
+def test_normalized_tier_folds_typographic_quotes_dashes_and_nbsp(tmp_path):
+    repo = _init_repo(tmp_path)
+    _commit_file(
+        repo,
+        "docs/note.md",
+        "It’s the pre–flight check — done.\n",
+    )
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs/note.md :: "It\'s the pre-flight check - done."',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+def test_normalized_match_is_case_sensitive_and_refuses(tmp_path):
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/note.md", "Hello World, this is committed.\n")
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs/note.md :: "hello world, this is committed."',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+def test_normalizer_does_not_strip_markdown_emphasis_or_backticks(tmp_path):
+    # The normaliser folds whitespace/typography only — it must not strip
+    # `**`/backticks, or a quote of the rendered prose would wrongly match
+    # markdown source that never contained that literal text.
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/note.md", "plain text, no markdown here.\n")
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs/note.md :: "**plain text, no markdown here.**"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+def test_normalizer_does_not_strip_backticks(tmp_path):
+    # Sibling case to the `**` test above: backticks must survive the
+    # normaliser too, or a quote of rendered prose could wrongly match
+    # markdown source that never contained that literal text.
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/note.md", "plain text, no markdown here.\n")
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs/note.md :: "`plain text, no markdown here.`"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+def test_normalizer_folds_nfd_needle_against_nfc_haystack(tmp_path):
+    # NFC-normalize both sides: an NFD-decomposed quote (e.g. combining
+    # accent as a separate codepoint) must still match NFC-composed
+    # committed content.
+    import unicodedata
+
+    repo = _init_repo(tmp_path)
+    composed = "café committed here.\n"  # NFC: e + U+00E9 (é)
+    assert unicodedata.is_normalized("NFC", composed)
+    _commit_file(repo, "docs/note.md", composed)
+    decomposed_quote = "café committed here."  # NFD: e + combining acute
+    assert not unicodedata.is_normalized("NFC", decomposed_quote)
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line=f'docs/note.md :: "{decomposed_quote}"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+def test_normalize_for_quote_match_is_symmetric_on_typographic_marks(tmp_path):
+    # The SAME normaliser must be applied to both the quote and the
+    # haystack (§Notes kickoff decision) — verified directly on the
+    # helper rather than through the CLI: normalising a string already
+    # containing the ASCII-folded forms must be idempotent, and folding
+    # each typographic mark individually must equal folding all of them
+    # together (order-independence of the substitution).
+    from loom_gate_markers import _normalize_for_quote_match
+
+    marks = "It’s the pre–flight check — done. Really."
+    once = _normalize_for_quote_match(marks)
+    twice = _normalize_for_quote_match(once)
+    assert once == twice  # idempotent
+    assert once == _normalize_for_quote_match(
+        "It's the pre-flight check - done. Really."
+    )
+
+
+def test_origin_directory_path_refuses_to_mint(tmp_path):
+    # `git show <sha>:<dir>` exits 0 and prints a git-generated tree
+    # listing, not repository content — a directory path must never be
+    # treated as a readable origin (FATAL: this mints a quote from thin
+    # air, since the listing's filenames are content the reviewer never
+    # read).
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/a.md", "hello\n")
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs :: "a.md"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+def test_origin_directory_path_trailing_slash_refuses_to_mint(tmp_path):
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/a.md", "hello\n")
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs/ :: "a.md"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+def test_origin_directory_tree_header_word_refuses_to_mint(tmp_path, capsys):
+    # The header word `git show` prints for ANY tree object is the
+    # literal string "tree" — a quote of exactly that word needs no
+    # knowledge of the directory's contents to "match", which is the
+    # sharpest form of the bypass.
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/a.md", "hello\n")
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs :: "tree"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    err = capsys.readouterr().err
+    assert "docs" in err
+
+
+def test_origin_quote_undecodable_blob_refuses_without_crash(tmp_path, capsys):
+    # A non-UTF-8 blob must be refused as its own explicit failure kind,
+    # never an uncaught UnicodeDecodeError traceback (which would leak
+    # interpreter paths and mint no marker only by accident of the crash).
+    repo = _init_repo(tmp_path)
+    (repo / "bin.dat").write_bytes(b"\x80\x81\x82PNGtail")
+    _git(repo, "add", "bin.dat")
+    _git(repo, "commit", "-q", "-m", "add binary")
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='bin.dat :: "PNG"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    err = capsys.readouterr().err
+    assert "bin.dat" in err
+
+
+def test_review_pass_marker_carries_origin_quote_tier_counts(tmp_path):
+    # §Notes kickoff decision: the tier count must be collected from the
+    # first finding, or the pre-registered ≥40-finding stop rule has no
+    # observable separating "no quotable origins existed" from "the
+    # matcher rejected true ones".
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/exact.md", "The exact quoted sentence is here.\n")
+    _commit_file(repo, "docs/norm.md", "It’s the pre–flight check.\n")
+    text = "\n".join(
+        [
+            "standards_version: 2026-06",
+            "verdict: PASS",
+            "dimension_scores:",
+            "  security: 5",
+            "findings:",
+            "  - severity: red",
+            "    where: loom-code/scripts/foo.py:12",
+            "    dimension: correctness",
+            '    origin: docs/exact.md :: "The exact quoted sentence is here."',
+            "    note: exact-tier finding",
+            "  - severity: yellow",
+            "    where: loom-code/scripts/bar.py:5",
+            "    dimension: correctness",
+            "    origin: docs/norm.md :: \"It's the pre-flight check.\"",
+            "    note: normalised-tier finding",
+        ]
+    ) + "\n"
+    verdict_file = _write_verdict(tmp_path, text)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    marker = _marker_dir(repo) / "review-pass.json"
+    data = json.loads(marker.read_text(encoding="utf-8"))
+    assert data["origin_quote_tiers"] == {"exact": 1, "normalised": 1}
 
 
 # ------------------------------------------------------------------- verified

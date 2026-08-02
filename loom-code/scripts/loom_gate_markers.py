@@ -9,11 +9,16 @@ Dir: `<git-dir>/loom/` resolved via `git rev-parse --git-dir` from
 `--repo` (default cwd); created if missing.
 
 - `review-pass.json`  {"schema": 1, "branch", "head_sha", "verdict",
-  "written_at", optional "base_sha"/"patch_id"} — written ONLY after
-  the reviewer's verdict text passes schema validation (the audit's
-  schema gate: a marker can only exist if a schema-valid verdict text
-  exists). NEEDS_REVISION never mints a marker (exit 3); a malformed
-  verdict never mints one either (exit 4, missing keys listed).
+  "written_at", optional "base_sha"/"patch_id",
+  optional "origin_quote_tiers": {"exact": n, "normalised": m}} —
+  written ONLY after the reviewer's verdict text passes schema
+  validation (the audit's schema gate: a marker can only exist if a
+  schema-valid verdict text exists). NEEDS_REVISION never mints a
+  marker (exit 3); a malformed verdict never mints one either (exit 4,
+  missing keys listed). `origin_quote_tiers` is omitted when no finding
+  carries a verified quoted `origin:` (same optionality pattern as
+  `base_sha`/`patch_id`); see `_origin_quote_problems` for why it must
+  be collected into the marker rather than left on stdout.
 - `verified.json`     {"schema": 1, "head_sha", "run_cmd", "exit_code",
   "output_tail", "written_at", optional "base_sha"/"patch_id"} — minted
   ONLY after `--run "<cmd>"` actually executes in `--repo` and exits 0;
@@ -59,6 +64,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -139,6 +145,128 @@ def _git(repo: Path, *args: str) -> str | None:
     if result.returncode != 0:
         return None
     return result.stdout.strip()
+
+
+_SHA_UNRESOLVABLE = "sha-unresolvable"
+_FILE_ABSENT = "file-absent"
+_NOT_A_FILE = "not-a-file"
+_UNDECODABLE_BLOB = "undecodable-blob"
+
+
+def _show_committed_file(
+    repo: Path, head_sha: str, path: str
+) -> tuple[str | None, str | None]:
+    """Read `path` as it exists at `head_sha` in the git object store —
+    NEVER the worktree (brief §Resolved Questions 1: an uncommitted edit
+    must not be able to satisfy the quote check).
+
+    Returns `(content, failure_kind)`: `failure_kind` is None on success,
+    `_SHA_UNRESOLVABLE` when `head_sha` does not resolve to a commit,
+    `_FILE_ABSENT` when `git cat-file -t <sha>:<path>` exits non-zero —
+    which covers both "path genuinely absent at that sha" AND, when the
+    linked commit object is NOT present in the local object store,
+    "path is a submodule gitlink" (see the THIRD verified quirk below;
+    the two are NOT distinguished by this helper in that state),
+    `_NOT_A_FILE` when `cat-file -t` exits zero but reports a type
+    other than `blob` — a directory (git tree) is one measured case,
+    and a submodule gitlink whose linked commit object IS present in
+    the local object store (type `commit`) is a second, also covered
+    below — or `_UNDECODABLE_BLOB` when the blob is not valid UTF-8.
+
+    Reuses `_git`'s subprocess invocation shape but NOT its collapse-to-
+    `None` contract (Task 2 Reuse-adequacy) — GREEN needs these failure
+    modes distinguishable. The sha is checked to resolve to a commit
+    FIRST, independently of the file read: `git show <sha>:<path>` on an
+    unresolvable sha can print a misleading "exists on disk, but not in"
+    message (a verified git quirk — a 40-hex-char string that resolves
+    to no object still gets treated as a treeish by `<rev>:<path>`
+    parsing), so failure-kind is never inferred from that command's
+    stderr text.
+
+    A SECOND verified quirk, caught in code-quality review: `git show
+    <sha>:<dir>` also exits 0 — it prints a git-generated tree listing
+    (`tree <hash>:<dir>` followed by the directory's entries), not
+    repository content. Without a type check, a quote naming any
+    filename in that listing (or the literal word "tree") mints with no
+    knowledge of any real document. `git cat-file -t <sha>:<path>` is
+    checked and must report `blob` before `git show` ever runs, so a
+    directory is refused as `_NOT_A_FILE` before its listing is read.
+
+    A THIRD verified quirk, caught in code-quality review round 2 and
+    CORRECTED in round 3 after a reviewer reproduced the opposite of an
+    earlier, unconditional version of this paragraph: a submodule path
+    (a gitlink, git tree entry mode 160000) classifies CONDITIONALLY on
+    whether the linked commit object happens to be present in this
+    repo's local object store — that is state, not a fixed property of
+    gitlinks, and both states are real:
+
+    - Object ABSENT locally (the common case — nobody has fetched the
+      submodule into this repo): `git cat-file -t <sha>:<path>` exits
+      128 ("could not get object info") instead of exiting 0 with a
+      non-blob type, and `git show <sha>:<path>` fails outright too.
+      Measured against a throwaway repo holding a gitlink whose target
+      commit is never fetched (`git update-index --add --cacheinfo
+      160000,<sub-sha>,mysub` then commit, object store otherwise
+      lacking `<sub-sha>`): both commands fail outright rather than
+      reporting a type or a listing. This lands in `_FILE_ABSENT`.
+    - Object PRESENT locally (e.g. after `git fetch <path-to-submodule-
+      repo> <branch>:refs/remotes/<name>/<branch>` pulls the linked
+      commit into THIS repo's own object store — an ordinary fetch, no
+      exotic config): `git cat-file -t <sha>:<path>` exits 0 and
+      reports type `commit`, and `git show <sha>:<path>` exits 0 and
+      prints that commit's log rather than failing. This lands in
+      `_NOT_A_FILE`, the same branch a directory takes, just with type
+      `commit` instead of `tree`. Exercised by a live test (grep
+      `classifies_gitlink_with_object_present` in the test module).
+
+    Either way this helper never returns real repository content for a
+    gitlink, so no code path mints a quote from one — but the "does not
+    exist" message the caller prints for `_FILE_ABSENT` is imprecise in
+    the object-absent state (the path does exist, just not as a
+    `<sha>:<path>`-resolvable object this helper can read), and this
+    helper cannot tell "path genuinely absent" from "path is a
+    submodule whose object is missing locally" apart in that state.
+
+    SYMLINK POLICY (decided here, not left implicit): a symlink's git
+    object type is ALSO `blob` — its content is the literal target path
+    string, e.g. `../other.md`. This helper does not special-case that:
+    `git cat-file -t` reports `blob`, so a symlink is read and matched
+    like any other blob. This is a deliberate policy choice, not a gap
+    the type check missed. The contract this helper serves is "verify
+    the quote against `path`'s committed content at `head_sha`" — a
+    symlink's committed content genuinely IS its target string, so
+    matching against it is correct per that contract's letter, and
+    distinguishing symlinks would need a second `ls-tree`/mode lookup
+    for a case with no measured incidence in this repo's findings.
+    """
+    if _git(repo, "rev-parse", "--verify", "-q", f"{head_sha}^{{commit}}") is None:
+        return None, _SHA_UNRESOLVABLE
+    try:
+        type_result = subprocess.run(
+            ["git", "-C", str(repo), "cat-file", "-t", f"{head_sha}:{path}"],
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return None, _SHA_UNRESOLVABLE
+    if type_result.returncode != 0:
+        return None, _FILE_ABSENT
+    if type_result.stdout.strip() != "blob":
+        return None, _NOT_A_FILE
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo), "show", f"{head_sha}:{path}"],
+            capture_output=True,
+        )
+    except OSError:
+        return None, _SHA_UNRESOLVABLE
+    if result.returncode != 0:
+        return None, _FILE_ABSENT
+    try:
+        content = result.stdout.decode("utf-8")
+    except UnicodeDecodeError:
+        return None, _UNDECODABLE_BLOB
+    return content, None
 
 
 def _default_branch_ref(repo: Path) -> str | None:
@@ -304,14 +432,108 @@ def _origin_grammar_problem(origin_value: str | None) -> str | None:
     return None
 
 
-def _finding_problems(text: str) -> list[str]:
-    """Every `- severity:` finding block must carry a path-like `where:`,
-    and — unless its `dimension:` both parses and falls in the docs-arm
-    set — an `origin:` line valued `none` or `<path> :: "<quote>"`
-    (§Pinned dimension partition; requirement is the default, the
-    docs-arm exemption is the explicit branch)."""
+def _origin_path_quote(origin_value: str | None) -> tuple[str, str] | None:
+    """`(path, quote)` — quote WITHOUT its wrapping `"` — if `origin_value`
+    is a grammar-valid `<path> :: "<quote>"`; None for `none`, an absent
+    value, or anything `_origin_grammar_problem` would reject. Mirrors
+    that function's parse exactly; kept separate because this one
+    EXTRACTS the parts for quote verification (Task 2) rather than
+    validating grammar (Task 1) — callers only reach it after
+    `validate_verdict_text` has already required grammar validity where
+    `origin:` is required, but it stays defensive rather than assuming
+    that ordering."""
+    if origin_value is None:
+        return None
+    value = origin_value.strip()
+    if value == "none":
+        return None
+    idx = value.find(" :: ")
+    if idx == -1:
+        return None
+    path, quote = value[:idx], value[idx + 4 :]
+    if len(quote) < 2 or quote[0] != '"' or quote[-1] != '"':
+        return None
+    inner = quote[1:-1]
+    if not inner.strip():
+        return None
+    return path, inner
+
+
+# §Notes kickoff decision (quote-match strictness): fold typographic
+# quotes/dashes/NBSP to their ASCII equivalents. Deliberately narrow —
+# only the marks the decision names, nothing broader.
+_TYPOGRAPHIC_FOLD = {
+    "‘": "'",  # LEFT SINGLE QUOTATION MARK
+    "’": "'",  # RIGHT SINGLE QUOTATION MARK
+    "“": '"',  # LEFT DOUBLE QUOTATION MARK
+    "”": '"',  # RIGHT DOUBLE QUOTATION MARK
+    "–": "-",  # EN DASH
+    "—": "-",  # EM DASH
+    " ": " ",  # NO-BREAK SPACE
+}
+
+
+def _normalize_for_quote_match(text: str) -> str:
+    """NFC-normalize, fold typographic quotes/dashes/NBSP to ASCII, then
+    collapse each run of whitespace to a single space. Case-sensitive;
+    does NOT strip `**` or backticks (§Notes kickoff decision — the SAME
+    normaliser is applied to both the quote and the haystack)."""
+    text = unicodedata.normalize("NFC", text)
+    for typographic, ascii_form in _TYPOGRAPHIC_FOLD.items():
+        text = text.replace(typographic, ascii_form)
+    return re.sub(r"\s+", " ", text)
+
+
+def _quote_match_tier(haystack: str, quote: str) -> str | None:
+    """"exact" if `quote` occurs byte-for-byte in `haystack`; "normalised"
+    if it occurs only after both sides pass through the identical
+    normaliser; else None. Two-stage per §Notes kickoff decision — this
+    repo hard-wraps prose, so a truthful one-line quote of a multi-line
+    passage fails byte-exact matching by construction."""
+    if quote in haystack:
+        return "exact"
+    if _normalize_for_quote_match(quote) in _normalize_for_quote_match(haystack):
+        return "normalised"
+    return None
+
+
+class _FindingInfo:
+    """One `- severity:` finding block's sibling-field values, as read by
+    `_iter_findings`. `dimension_value`/`origin_value` are None when the
+    field is absent OR duplicated (a duplicate is unparseable, not
+    resolved first/last-wins — see `_iter_findings`)."""
+
+    __slots__ = (
+        "start_line",
+        "where_ok",
+        "dimension_value",
+        "origin_value",
+        "duplicate_origin",
+    )
+
+    def __init__(
+        self,
+        start_line: int,
+        where_ok: bool,
+        dimension_value: str | None,
+        origin_value: str | None,
+        duplicate_origin: bool,
+    ) -> None:
+        self.start_line = start_line
+        self.where_ok = where_ok
+        self.dimension_value = dimension_value
+        self.origin_value = origin_value
+        self.duplicate_origin = duplicate_origin
+
+
+def _iter_findings(text: str):
+    """Yield one `_FindingInfo` per `- severity:` finding block. Shared by
+    `_finding_problems` (Task 1's grammar/requirement checks) and
+    `_origin_quote_problems` (Task 2's quote verification) so both read
+    `origin:` through the identical block-scoping rule — a value nested
+    inside e.g. a `note: |` block-literal must never count as a sibling
+    field of either reader."""
     lines = text.splitlines()
-    problems: list[str] = []
     starts = [i for i, line in enumerate(lines) if _FINDING_RE.match(line)]
     for n, start in enumerate(starts):
         end = starts[n + 1] if n + 1 < len(starts) else len(lines)
@@ -351,29 +573,127 @@ def _finding_problems(text: str) -> list[str]:
                 om = _ORIGIN_RE.match(line)
                 if om:
                     origin_values.append(om.group(1))
-        if not where_ok:
+        yield _FindingInfo(
+            start_line=start + 1,
+            where_ok=where_ok,
+            # Two or more `dimension:` (or `origin:`) lines in one block is
+            # malformed: YAML readers disagree on which value wins (first
+            # vs last), so a duplicate is treated as unparseable rather
+            # than resolved either way — fail closed (§Pinned dimension
+            # partition).
+            dimension_value=(
+                dimension_values[0] if len(dimension_values) == 1 else None
+            ),
+            origin_value=origin_values[0] if len(origin_values) == 1 else None,
+            duplicate_origin=len(origin_values) > 1,
+        )
+
+
+def _finding_problems(text: str) -> list[str]:
+    """Every `- severity:` finding block must carry a path-like `where:`,
+    and — unless its `dimension:` both parses and falls in the docs-arm
+    set — an `origin:` line valued `none` or `<path> :: "<quote>"`
+    (§Pinned dimension partition; requirement is the default, the
+    docs-arm exemption is the explicit branch)."""
+    problems: list[str] = []
+    for info in _iter_findings(text):
+        if not info.where_ok:
             problems.append(
-                f"finding at line {start + 1}: no where: line with a "
+                f"finding at line {info.start_line}: no where: line with a "
                 "path-like token in its block"
             )
-        # Two or more `dimension:` (or `origin:`) lines in one block is
-        # malformed: YAML readers disagree on which value wins (first vs
-        # last), so a duplicate is treated as unparseable rather than
-        # resolved either way — fail closed, same direction as the rest
-        # of this predicate (§Pinned dimension partition, fail-closed
-        # clause).
-        dimension_value = dimension_values[0] if len(dimension_values) == 1 else None
-        if len(origin_values) > 1:
+        if info.duplicate_origin:
             problems.append(
-                f"finding at line {start + 1}: duplicate origin: lines "
+                f"finding at line {info.start_line}: duplicate origin: lines "
                 "(exactly one is required)"
             )
-        elif _origin_required(dimension_value):
-            origin_value = origin_values[0] if origin_values else None
-            origin_problem = _origin_grammar_problem(origin_value)
+        elif _origin_required(info.dimension_value):
+            origin_problem = _origin_grammar_problem(info.origin_value)
             if origin_problem:
-                problems.append(f"finding at line {start + 1}: {origin_problem}")
+                problems.append(
+                    f"finding at line {info.start_line}: {origin_problem}"
+                )
     return problems
+
+
+def _origin_quote_problems(
+    text: str, repo: Path, head_sha: str
+) -> tuple[list[str], list[str], dict[str, int]]:
+    """For every finding whose `origin:` names a path and quote, verify
+    the quote occurs in that path's COMMITTED content at `head_sha` —
+    never the worktree (brief §Resolved Questions 1). Returns
+    `(problems, notes, tier_counts)`: `problems` is one message per
+    failing finding, naming path, sha and quote — [] iff every quoted
+    origin verifies (or there are none). `origin: none` is skipped
+    entirely — nothing to verify, no git call made. `notes` records, per
+    §Notes kickoff decision, every finding whose quote matched ONLY at
+    the normalised tier. `tier_counts` is `{"exact": n, "normalised": m}`
+    over every finding in THIS call's `text` that verified (either
+    tier), pooling both the code arm and the docs arm — a per-run
+    snapshot, not a running total. It is threaded into the marker
+    payload (rather than left as a `notes`-only stdout line) because the
+    payload is machine-readable where stdout text is not — NOT because
+    it accumulates: `_write_marker` overwrites the one fixed marker file
+    on every `review-pass`, so nothing recorded here survives past the
+    next run on the same checkout. The pre-registered ≥40-finding stop
+    rule needs a count that persists across runs; this field is not
+    that ledger (caller's job to add one, separately, if needed)."""
+    problems: list[str] = []
+    notes: list[str] = []
+    tier_counts = {"exact": 0, "normalised": 0}
+    file_cache: dict[str, tuple[str | None, str | None]] = {}
+    for info in _iter_findings(text):
+        spec = _origin_path_quote(info.origin_value)
+        if spec is None:
+            continue
+        path, quote = spec
+        if path not in file_cache:
+            file_cache[path] = _show_committed_file(repo, head_sha, path)
+        content, failure_kind = file_cache[path]
+        if failure_kind == _SHA_UNRESOLVABLE:
+            problems.append(
+                f"finding at line {info.start_line}: origin path {path!r} "
+                f"could not be verified — sha {head_sha!r} does not "
+                "resolve to a commit"
+            )
+            continue
+        if failure_kind == _FILE_ABSENT:
+            problems.append(
+                f"finding at line {info.start_line}: origin path {path!r} "
+                f"does not exist as a readable file at {head_sha!r} — or "
+                "is a submodule gitlink, which this check cannot "
+                f"distinguish from absent (quote {quote!r} unverifiable)"
+            )
+            continue
+        if failure_kind == _NOT_A_FILE:
+            problems.append(
+                f"finding at line {info.start_line}: origin path {path!r} "
+                f"is not a file at {head_sha!r} (quote {quote!r} "
+                "unverifiable)"
+            )
+            continue
+        if failure_kind == _UNDECODABLE_BLOB:
+            problems.append(
+                f"finding at line {info.start_line}: origin path {path!r} "
+                f"at {head_sha!r} is not valid UTF-8 (quote {quote!r} "
+                "unverifiable)"
+            )
+            continue
+        tier = _quote_match_tier(content, quote)
+        if tier is None:
+            problems.append(
+                f"finding at line {info.start_line}: quote {quote!r} not "
+                f"found in {path!r} at {head_sha!r} (checked exact and "
+                "normalised)"
+            )
+        else:
+            tier_counts[tier] += 1
+            if tier == "normalised":
+                notes.append(
+                    f"finding at line {info.start_line}: origin quote in "
+                    f"{path!r} matched only after normalisation"
+                )
+    return problems, notes, tier_counts
 
 
 def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int:
@@ -406,6 +726,20 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
     if branch is None or head_sha is None:
         print("loom-gate-markers: cannot resolve HEAD.", file=sys.stderr)
         return 2
+
+    origin_problems, origin_notes, origin_tiers = _origin_quote_problems(
+        text, repo, head_sha
+    )
+    if origin_problems:
+        print(
+            "loom-gate-markers: origin quote verification failed; no "
+            "marker written:",
+            file=sys.stderr,
+        )
+        for problem in origin_problems:
+            print(f"  - {problem}", file=sys.stderr)
+        return 4
+
     payload = {
         "schema": 1,
         "branch": branch,
@@ -416,8 +750,18 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
     patch_id_fields = compute_patch_id(repo)
     if patch_id_fields is not None:
         payload["base_sha"], payload["patch_id"] = patch_id_fields
+    # Optional, same shape as base_sha/patch_id: omitted entirely when no
+    # quoted origin was verified, so the frozen-field-set test on a
+    # quote-free verdict is untouched. Present whenever at least one
+    # quote matched (either tier) — a per-run snapshot count (both
+    # arms), overwritten by the next review-pass on this checkout, not
+    # a durable ledger for the stop rule (see `_origin_quote_problems`).
+    if origin_tiers["exact"] or origin_tiers["normalised"]:
+        payload["origin_quote_tiers"] = origin_tiers
     path = _write_marker(marker_dir, "review-pass.json", payload)
     print(path)
+    for note in origin_notes:
+        print(f"loom-gate-markers: {note}")
     return 0
 
 
@@ -547,6 +891,22 @@ def _cmd_validate(args: argparse.Namespace) -> int:
     _, problems = validate_verdict_text(text)
     if args.suite_line is not None:
         problems += validate_suite_line(args.suite_line)
+
+    # `validate` takes no --repo, so it has no HEAD to verify a quote
+    # against — quote verification is a `review-pass`-only step. Say so
+    # loudly here rather than passing silently: a silent skip on exactly
+    # the pre-flight path `requesting-code-review` Step 3 tells reviewers
+    # to use would be a fail-open (§Notes kickoff decision).
+    quoted_origin_count = sum(
+        1 for info in _iter_findings(text) if _origin_path_quote(info.origin_value)
+    )
+    if quoted_origin_count:
+        print(
+            "loom-gate-markers: quote verification did not run for "
+            f"{quoted_origin_count} quoted origin(s) — `validate` takes "
+            "no --repo and cannot check committed content. Run "
+            "review-pass to verify."
+        )
 
     if problems:
         print("loom-gate-markers: validation found problems:", file=sys.stderr)
