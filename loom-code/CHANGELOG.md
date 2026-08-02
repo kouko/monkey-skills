@@ -18,8 +18,15 @@ Versioning: [Semantic Versioning](https://semver.org/).
   code-arm and required to carry the field, fail-closed — and for an
   `origin:` line that is malformed or duplicated. A docs-arm dimension is
   exempt from carrying `origin:` at all; a field that IS present there is
-  grammar-checked the same as on the code arm. Grammar has no false
-  positives, which is why it is the only remaining refusal.
+  grammar-checked the same as on the code arm. Grammar is not flawless either
+  — two known false-refusal shapes are filed and left open at
+  `docs/loom/backlog/2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift.md`
+  — but it is the only remaining mint-time refusal because quote verification
+  was demoted for a measured reason of its own: 0 of 24 severity-🔴 findings on
+  this repo ever reached it (a transcript tally, not a script — population and
+  method at `docs/loom/plans/2026-08-02-finding-origin-attribution.md`
+  §Re-cut after Tasks 1-6), so it was blocking a push on exactly the tail of
+  findings it could never see anyway.
 - **A quote that fails to verify no longer blocks the mint — it is
   recorded instead.** `_finding_quote_status` checks each grammar-valid
   `origin:` against the file's committed content at `head_sha`, never the
@@ -38,7 +45,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
   states loudly that verification did not run rather than passing
   silently.
 - **A new durable, append-only, branch-keyed ledger —
-  `<git-dir>/loom/origin-ledger.json` — is the record of truth**,
+  `<git-common-dir>/loom/origin-ledger.json` — is the record of truth**,
   superseding the marker-carried per-run `origin_quote_tiers` snapshot,
   which is REMOVED (it restated the same population-mismatch defect this
   arc exists to fix). `_append_origin_ledger` appends one entry per

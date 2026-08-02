@@ -21,13 +21,19 @@ asserted from documentation.
 """
 from __future__ import annotations
 
+import errno
+import fcntl
 import json
+import os
 import subprocess
+import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
 import pytest
 
+import loom_gate_markers
 from loom_gate_markers import _origin_path_quote, main
 
 
@@ -662,6 +668,41 @@ def test_duplicate_dimension_lines_treated_as_unparseable_requires_origin(tmp_pa
     assert not (_marker_dir(repo) / "review-pass.json").exists()
 
 
+def test_duplicate_dimension_lines_refuses_to_mint_even_with_origin_satisfied(
+    tmp_path,
+):
+    # Whole-branch review finding 3: the existing duplicate-dimension test
+    # above only exercises the case where origin: is ALSO absent, so the
+    # "no origin: line" problem masks whether duplicate dimension: is
+    # itself checked at all. Here origin: is present and grammar-valid
+    # ("none") — with no dedicated duplicate-dimension check in
+    # `_finding_problems`, this used to mint clean at exit 0, recording
+    # byte-identical to a finding with NO dimension: line at all (arm
+    # "code", dimension null) and silently contaminating the population
+    # partition the ledger exists to keep clean.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path,
+        "standards_version: 2026-06\n"
+        "verdict: PASS\n"
+        "dimension_scores:\n"
+        "  security: 5\n"
+        "findings:\n"
+        "  - severity: red\n"
+        "    where: loom-code/scripts/foo.py:12\n"
+        "    dimension: omission\n"
+        "    dimension: correctness\n"
+        "    origin: none\n",
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
 def test_duplicate_origin_lines_refuses_to_mint(tmp_path):
     # Same question as duplicate dimension:, decided the same way: two
     # origin: lines in one block is malformed input, not "first one
@@ -1198,6 +1239,101 @@ def test_normalized_tier_matches_across_hard_wrapped_lines_and_is_recorded(
     assert (_marker_dir(repo) / "review-pass.json").is_file()
     out = capsys.readouterr().out
     assert "normalis" in out.lower()  # "normalised"/"normalisation"
+
+
+def test_normalised_advisory_aggregates_across_findings(tmp_path, capsys):
+    # Whole-branch review finding: two normalised-tier findings in one
+    # round used to print the identical advisory line twice with nothing
+    # distinguishing which finding either line referred to. Aggregate into
+    # one line naming the count instead.
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/a.md", "It’s the pre–flight check.\n")
+    _commit_file(repo, "docs/b.md", "Another em—dash sentence here.\n")
+    text = "\n".join(
+        [
+            "standards_version: 2026-06",
+            "verdict: PASS",
+            "dimension_scores:",
+            "  security: 5",
+            "findings:",
+            "  - severity: yellow",
+            "    where: a.py:1",
+            "    dimension: correctness",
+            "    origin: docs/a.md :: \"It's the pre-flight check.\"",
+            "  - severity: yellow",
+            "    where: b.py:2",
+            "    dimension: correctness",
+            "    origin: docs/b.md :: \"Another em-dash sentence here.\"",
+        ]
+    ) + "\n"
+    verdict_file = _write_verdict(tmp_path, text)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    out = capsys.readouterr().out
+    # Filter on the advisory's own fixed phrase, not a bare "normalis"
+    # substring — the marker path line pytest prints also contains that
+    # substring here, since this test's own name/tmp_path does.
+    advisory_lines = [
+        line for line in out.splitlines() if "matched only after" in line.lower()
+    ]
+    assert len(advisory_lines) == 1
+    assert "2" in advisory_lines[0]
+
+
+def test_normalised_advisory_prints_resolved_ledger_path(tmp_path, capsys):
+    # Whole-branch review finding 4: the advisory used to print the bare
+    # string "origin-ledger.json" right after the review-pass.json path,
+    # implying the same directory — false from a worktree, where the
+    # ledger lives under the MAIN checkout's git-common-dir while
+    # review-pass.json lives under the worktree's own private git-dir.
+    # Print the resolved path so a reader can actually find the file.
+    repo = _init_repo(tmp_path)
+    # Commit BEFORE branching the worktree: the worktree's own HEAD is
+    # whatever commit it was created from, so the quoted file must
+    # already be committed on `repo`'s branch first, or the worktree's
+    # HEAD would predate it and quote verification would (correctly)
+    # report file-absent instead of a normalised match.
+    _commit_file(repo, "docs/a.md", "It's the pre-flight check.\n")
+    worktree = tmp_path / "wt"
+    _git(repo, "worktree", "add", "-q", "-b", "wt-branch", str(worktree))
+    text = "\n".join(
+        [
+            "standards_version: 2026-06",
+            "verdict: PASS",
+            "dimension_scores:",
+            "  security: 5",
+            "findings:",
+            "  - severity: yellow",
+            "    where: a.py:1",
+            "    dimension: correctness",
+            "    origin: docs/a.md :: \"It's the pre–flight check.\"",
+        ]
+    ) + "\n"
+    verdict_file = _write_verdict(tmp_path, text)
+
+    rc = main(
+        ["review-pass", "--repo", str(worktree), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    out = capsys.readouterr().out
+    advisory_lines = [
+        line for line in out.splitlines() if "matched only after" in line.lower()
+    ]
+    assert len(advisory_lines) == 1
+    expected_ledger_path = _ledger_path(repo)
+    assert str(expected_ledger_path) in advisory_lines[0]
+    # The old bare-filename advisory implied the WORKTREE's own private
+    # git-dir (right next to review-pass.json, printed just above) — assert
+    # that directory is NOT what's named now.
+    worktree_git_dir = Path(_git(worktree, "rev-parse", "--git-dir"))
+    if not worktree_git_dir.is_absolute():
+        worktree_git_dir = worktree / worktree_git_dir
+    assert str(worktree_git_dir) not in advisory_lines[0]
 
 
 def test_normalized_tier_folds_typographic_quotes_dashes_and_nbsp(tmp_path):
@@ -1761,6 +1897,75 @@ def test_origin_ledger_keys_separate_branches_independently(tmp_path):
     assert [r["round"] for r in ledger["branches"]["feat-other"]] == [1]
 
 
+def test_origin_ledger_shared_across_worktrees_via_git_common_dir(tmp_path):
+    # Whole-branch review finding: `resolve_marker_dir` (`--git-dir`) is
+    # correct for review-pass.json/verified.json (per-checkout, must die
+    # with the checkout) but WRONG for the ledger — a round run from a
+    # `git worktree` checkout (the normal case; this plugin ships a
+    # `using-git-worktrees` skill for exactly this) must land in the SAME
+    # ledger the main checkout reads, not a private copy under
+    # `<main>/.git/worktrees/<name>/loom/` that `git worktree remove`
+    # deletes outright.
+    repo = _init_repo(tmp_path)
+    worktree = tmp_path / "wt"
+    _git(repo, "worktree", "add", "-q", "-b", "wt-branch", str(worktree))
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(
+        ["review-pass", "--repo", str(worktree), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    # review-pass.json is unaffected: still per-checkout, under the
+    # WORKTREE's own private git-dir.
+    worktree_git_dir = Path(_git(worktree, "rev-parse", "--git-dir"))
+    if not worktree_git_dir.is_absolute():
+        worktree_git_dir = worktree / worktree_git_dir
+    assert (worktree_git_dir / "loom" / "review-pass.json").is_file()
+    # The ledger must land under the MAIN checkout's .git/loom (keyed by
+    # the worktree's branch), and must NOT exist at the worktree's own
+    # private location.
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    assert "wt-branch" in ledger["branches"]
+    assert not (worktree_git_dir / "loom" / "origin-ledger.json").exists()
+
+
+def test_concurrent_review_pass_rounds_all_survive_the_shared_ledger(tmp_path):
+    # Whole-branch review finding 1: `_append_origin_ledger` was an
+    # unlocked read-modify-write. Reproduced with real OS PROCESSES (not
+    # threads — the GIL would mask the race) hammering the SAME ledger
+    # file concurrently, mirroring the reviewer's own four-worktree
+    # repro (only one of four rounds survived). Confirmed pre-fix on this
+    # exact fixture: 8 concurrent invocations recorded only 2 of 8
+    # rounds, all exiting 0 with nothing on stderr. Every round must
+    # survive after the fix.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    script = tmp_path / "run_one.py"
+    script.write_text(
+        "import sys\n"
+        f"sys.path.insert(0, {str(Path(__file__).parent)!r})\n"
+        "from loom_gate_markers import main\n"
+        "raise SystemExit(main(['review-pass', '--repo', "
+        f"{str(repo)!r}, '--verdict-file', {str(verdict_file)!r}]))\n",
+        encoding="utf-8",
+    )
+    n = 8
+
+    procs = [subprocess.Popen([sys.executable, str(script)]) for _ in range(n)]
+    rcs = [p.wait() for p in procs]
+
+    assert rcs == [0] * n
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    rounds = ledger["branches"][branch]
+    assert len(rounds) == n, (
+        f"expected {n} recorded rounds, got {len(rounds)}: "
+        f"{[r['round'] for r in rounds]}"
+    )
+    assert sorted(r["round"] for r in rounds) == list(range(1, n + 1))
+
+
 def test_origin_ledger_unparseable_dimension_records_null_dimension_arm_code(
     tmp_path,
 ):
@@ -1835,8 +2040,11 @@ def test_origin_ledger_records_origin_raw_null_when_absent_on_docs_arm(tmp_path)
 
 def test_origin_ledger_records_malformed_quote_status_on_grammar_failure(tmp_path):
     # A grammar-invalid origin: (Task 8's "malformed" label) still
-    # refuses the round (exit 4, deterministic, no false positives) —
-    # but the ledger docstring (Task 7) promises an entry on EVERY
+    # refuses the round (exit 4, deterministically — this bare-path
+    # shape is unambiguously malformed; the grammar checker is NOT
+    # false-positive-free in general, see the column-anchoring gap
+    # tracked in docs/loom/backlog/) — but the ledger docstring (Task 7)
+    # promises an entry on EVERY
     # invocation, schema-failure paths included, so this needs its own
     # distinct quote_status rather than colliding with "none" or one of
     # the five real unverified-<reason> values, none of which apply when
@@ -1862,19 +2070,107 @@ def test_origin_ledger_records_malformed_quote_status_on_grammar_failure(tmp_pat
     assert entry["findings"][0]["quote_status"] == "malformed"
 
 
-def test_origin_ledger_write_failure_swallowed_leaves_exit_code_and_marker_unchanged(
+def test_origin_ledger_duplicate_origin_not_recorded_as_absent(tmp_path):
+    # Whole-branch review finding: two `origin:` lines in one block is
+    # malformed (refuses to mint, exit 4) — but before this fix the ledger
+    # recorded it byte-identical to a finding that carried NO origin: line
+    # at all (`origin_raw: null, quote_status: "absent"`), silently
+    # discarding both quotes the reviewer actually wrote under a label
+    # that means, per the module docstring and `_finding_quote_status`,
+    # "no origin: line exists at all" — affirmatively false here. The
+    # reviewer's own reproduction (two real quotes on one finding).
+    repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    verdict_file = _write_verdict(
+        tmp_path,
+        "standards_version: 2026-06\n"
+        "verdict: PASS\n"
+        "dimension_scores:\n"
+        "  security: 5\n"
+        "findings:\n"
+        "  - severity: yellow\n"
+        "    dimension: correctness\n"
+        "    where: doc.md:1\n"
+        '    origin: doc.md :: "names the upstream document"\n'
+        '    origin: doc.md :: "A second line of prose"\n',
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    # Not "absent" (that would falsely claim no origin: line existed) and
+    # not silently dropped — its own honest label, with both discarded
+    # quotes reflected by a null origin_raw (which of the two is intended
+    # is genuinely ambiguous; neither is kept).
+    assert entry["findings"][0]["quote_status"] == "duplicate"
+    assert entry["findings"][0]["origin_raw"] is None
+
+
+def test_origin_ledger_corrupt_json_recovered_not_permanently_dropped(
     tmp_path, capsys
 ):
-    # A literal chmod-unwritable marker_dir would ALSO break review-pass.json's
-    # own write (both go through the same directory via tmpfile+os.replace),
-    # which would falsify "marker unchanged". Colliding only the ledger's own
-    # path — pre-creating it as a directory — isolates the failure to the
-    # ledger while leaving review-pass.json's write path untouched.
+    # Whole-branch review finding: `json.loads` throwing into the blanket
+    # `except Exception` means one corrupted ledger file permanently ends
+    # every future append — loudly on stderr, but forever, contradicting
+    # the module docstring's promise that the sample "is never biased".
+    # Recovery: move the corrupt file aside and start a fresh ledger, and
+    # prove a SECOND round afterward still lands (not merely masked once).
+    repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    marker_dir = _marker_dir(repo)
+    marker_dir.mkdir(parents=True, exist_ok=True)
+    (marker_dir / "origin-ledger.json").write_text(
+        "{not valid json", encoding="utf-8"
+    )
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    assert ledger["branches"][branch][0]["round"] == 1
+    err = capsys.readouterr().err
+    assert "corrupt" in err.lower()
+    corrupt_siblings = [
+        p
+        for p in marker_dir.iterdir()
+        if p.name.startswith("origin-ledger.json.corrupt")
+    ]
+    assert len(corrupt_siblings) == 1
+
+    rc2 = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc2 == 0
+    ledger2 = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    assert [r["round"] for r in ledger2["branches"][branch]] == [1, 2]
+
+
+def test_origin_ledger_lock_directory_falls_back_to_unlocked_append(
+    tmp_path, capsys
+):
+    # Round-3 review finding A: a directory sitting at the lock path is a
+    # STRUCTURAL reason locking is impossible here (not contention) —
+    # `open(lock_path, "a+")` raises `IsADirectoryError` before `flock` is
+    # ever attempted, and this state never self-heals. The OLD behavior
+    # swallowed the round forever on every future invocation too (reproduced
+    # live: 4 consecutive runs, no ledger ever created) — a lossy-under-
+    # concurrency ledger regressing to total loss always, worse than no
+    # lock. The fix: fall back to an unlocked append with a loud stderr
+    # line instead of losing the record.
     repo = _init_repo(tmp_path)
     verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
     marker_dir = _marker_dir(repo)
     marker_dir.mkdir(parents=True, exist_ok=True)
-    (marker_dir / "origin-ledger.json").mkdir()
+    (marker_dir / "origin-ledger.json.lock").mkdir()
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
 
     rc = main(
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
@@ -1883,10 +2179,246 @@ def test_origin_ledger_write_failure_swallowed_leaves_exit_code_and_marker_uncha
     assert rc == 0
     marker = marker_dir / "review-pass.json"
     assert marker.is_file()
-    data = json.loads(marker.read_text(encoding="utf-8"))
-    assert set(data) == {"schema", "branch", "head_sha", "verdict", "written_at"}
     err = capsys.readouterr().err
-    assert "could not record origin ledger entry" in err
+    assert "lock" in err.lower()
+    assert "could not record origin ledger entry" not in err
+    ledger = json.loads(
+        (marker_dir / "origin-ledger.json").read_text(encoding="utf-8")
+    )
+    assert ledger["branches"][branch][0]["round"] == 1
+
+
+def test_origin_ledger_lock_permission_denied_falls_back_to_unlocked_append(
+    tmp_path, capsys
+):
+    # Round-3 review finding A, second environment: a lock file the caller
+    # cannot write (e.g. another user's umask in a shared checkout) raises
+    # `PermissionError` at `open()`, same permanence as the directory shape
+    # above. Same fallback applies.
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        pytest.skip("root bypasses filesystem permission checks")
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+    marker_dir = _marker_dir(repo)
+    marker_dir.mkdir(parents=True, exist_ok=True)
+    lock_path = marker_dir / "origin-ledger.json.lock"
+    lock_path.touch()
+    lock_path.chmod(0o000)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+
+    try:
+        rc = main(
+            ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+        )
+    finally:
+        lock_path.chmod(0o644)
+
+    assert rc == 0
+    marker = marker_dir / "review-pass.json"
+    assert marker.is_file()
+    err = capsys.readouterr().err
+    assert "lock" in err.lower()
+    ledger = json.loads(
+        (marker_dir / "origin-ledger.json").read_text(encoding="utf-8")
+    )
+    assert ledger["branches"][branch][0]["round"] == 1
+
+
+def test_origin_ledger_lock_flock_unsupported_falls_back_immediately(
+    tmp_path, capsys, monkeypatch
+):
+    # Round-3 review finding A, third environment: a filesystem where
+    # `flock` is unsupported (NFS/CIFS/some FUSE mounts return
+    # ENOLCK/ENOSYS/EOPNOTSUPP). Before the fix, EVERY OSError from
+    # flock() — structural or genuinely contended — was treated as
+    # contention and retried until the 10s timeout, so this shape stalled
+    # every single invocation for the full timeout AND still lost the
+    # round. The fix recognizes the errno as structural and falls back
+    # immediately, without waiting out the timeout.
+    def _always_enolck(*args, **kwargs):
+        raise OSError(errno.ENOLCK, "No locks available")
+
+    monkeypatch.setattr(fcntl, "flock", _always_enolck)
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+
+    start = time.monotonic()
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+    elapsed = time.monotonic() - start
+
+    assert rc == 0
+    assert elapsed < 2.0, (
+        f"a structural flock failure must not wait out the contention "
+        f"timeout, took {elapsed}s"
+    )
+    marker = _marker_dir(repo) / "review-pass.json"
+    assert marker.is_file()
+    err = capsys.readouterr().err
+    assert "lock" in err.lower()
+    ledger = json.loads(
+        (_marker_dir(repo) / "origin-ledger.json").read_text(encoding="utf-8")
+    )
+    assert ledger["branches"][branch][0]["round"] == 1
+
+
+def test_origin_ledger_lock_fcntl_module_unavailable_falls_back(
+    tmp_path, capsys, monkeypatch
+):
+    # 🟢: `import fcntl` at module scope would take `validate`/`waiver`/
+    # `verified` down on a host without it (none of which touch the
+    # ledger). Simulated here by monkeypatching the module's own `fcntl`
+    # binding to None — the degrade path finding A already needs covers
+    # this too.
+    monkeypatch.setattr(loom_gate_markers, "fcntl", None)
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    marker = _marker_dir(repo) / "review-pass.json"
+    assert marker.is_file()
+    err = capsys.readouterr().err
+    assert "fcntl" in err.lower()
+    ledger = json.loads(
+        (_marker_dir(repo) / "origin-ledger.json").read_text(encoding="utf-8")
+    )
+    assert ledger["branches"][branch][0]["round"] == 1
+
+
+def test_ledger_lock_raises_timeout_when_genuinely_contended(
+    tmp_path, monkeypatch, capsys
+):
+    # Round-3 review finding B: the timeout path (`_LedgerLockTimeout`,
+    # `_LEDGER_LOCK_TIMEOUT_SECONDS`, `_ledger_lock`'s poll loop) had zero
+    # coverage — a reviewer deleted the whole branch and the suite stayed
+    # green. Genuine contention (a REAL separate process holding the
+    # exclusive flock, not a simulated structural errno) must still wait
+    # then raise after the timeout elapses.
+    ledger_dir = tmp_path / "loom"
+    ledger_dir.mkdir()
+    lock_path = ledger_dir / "origin-ledger.json.lock"
+    ready_path = tmp_path / "ready"
+    release_path = tmp_path / "release"
+    holder_script = tmp_path / "hold_lock.py"
+    holder_script.write_text(
+        "import fcntl, pathlib, time\n"
+        f"lock_path = pathlib.Path({str(lock_path)!r})\n"
+        f"ready_path = pathlib.Path({str(ready_path)!r})\n"
+        f"release_path = pathlib.Path({str(release_path)!r})\n"
+        "f = open(lock_path, 'a+')\n"
+        "fcntl.flock(f.fileno(), fcntl.LOCK_EX)\n"
+        "ready_path.write_text('1')\n"
+        "while not release_path.exists():\n"
+        "    time.sleep(0.02)\n",
+        encoding="utf-8",
+    )
+    proc = subprocess.Popen([sys.executable, str(holder_script)])
+    try:
+        deadline = time.monotonic() + 5
+        while not ready_path.exists():
+            if time.monotonic() > deadline:
+                pytest.fail("holder subprocess never acquired the lock")
+            time.sleep(0.02)
+
+        monkeypatch.setattr(loom_gate_markers, "_LEDGER_LOCK_TIMEOUT_SECONDS", 0.2)
+        monkeypatch.setattr(loom_gate_markers, "_LEDGER_LOCK_POLL_SECONDS", 0.02)
+
+        with pytest.raises(loom_gate_markers._LedgerLockTimeout):
+            with loom_gate_markers._ledger_lock(ledger_dir):
+                pass
+    finally:
+        release_path.write_text("1")
+        proc.wait(timeout=5)
+
+    err = capsys.readouterr().err
+    assert "held by another process" in err.lower() or "waiting" in err.lower()
+
+
+@pytest.mark.parametrize(
+    "corrupt_contents",
+    [
+        "[]",
+        "null",
+        '{"schema": 1, "branches": []}',
+        '{"schema": 1, "branches": {"main": {}}}',
+    ],
+    ids=["top-level-list", "top-level-null", "branches-list", "branch-value-dict"],
+)
+def test_origin_ledger_wrong_shape_json_recovered_not_permanently_dropped(
+    tmp_path, capsys, corrupt_contents
+):
+    # Whole-branch review finding 2: the recovery caught `json.JSONDecodeError`
+    # only, missing four VALID-JSON-but-wrong-shape variants. Each used to
+    # raise deep inside `.setdefault`/`.append` (AttributeError) and fall
+    # through to the blanket swallow-and-report, permanently dropping every
+    # future round exactly like the pre-recovery JSONDecodeError bug this
+    # test's sibling (test_origin_ledger_corrupt_json_recovered_not_permanently_dropped)
+    # already fixed — contrary to the docstring's "a single corruption cannot
+    # bias every future round to empty" claim, which was false for these
+    # shapes. Recovery must move the file aside and start fresh, then prove a
+    # SECOND round afterward still lands (not merely masked once).
+    repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    marker_dir = _marker_dir(repo)
+    marker_dir.mkdir(parents=True, exist_ok=True)
+    (marker_dir / "origin-ledger.json").write_text(corrupt_contents, encoding="utf-8")
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    assert ledger["branches"][branch][0]["round"] == 1
+    err = capsys.readouterr().err
+    assert "corrupt" in err.lower()
+    corrupt_siblings = [
+        p
+        for p in marker_dir.iterdir()
+        if p.name.startswith("origin-ledger.json.corrupt")
+    ]
+    assert len(corrupt_siblings) == 1
+
+    rc2 = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc2 == 0
+    ledger2 = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    assert [r["round"] for r in ledger2["branches"][branch]] == [1, 2]
+
+
+def test_origin_ledger_directory_at_path_recovered_not_permanently_dropped(
+    tmp_path, capsys
+):
+    # Fifth shape from finding 2's table: a directory sitting at the ledger
+    # path raises IsADirectoryError from the read itself (before json.loads
+    # ever runs) — must recover exactly like corrupt JSON, not swallow-and-
+    # report forever.
+    repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    marker_dir = _marker_dir(repo)
+    marker_dir.mkdir(parents=True, exist_ok=True)
+    (marker_dir / "origin-ledger.json").mkdir()
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    assert ledger["branches"][branch][0]["round"] == 1
+    err = capsys.readouterr().err
+    assert "corrupt" in err.lower()
 
 
 # ------------------------------------------------------------------- verified

@@ -145,7 +145,7 @@ govern.
   `missing-population`) are **disjoint** — verified. A finding carrying a
   code-arm dimension must carry `origin:`; one carrying a docs-arm dimension
   is untouched. This follows the existing arm-scoping precedent for `class:`
-  (`requesting-code-review/SKILL.md:150`).
+  (`requesting-code-review/SKILL.md:151`).
 - **The quote check runs after the sha exists, and says so when it cannot.**
   `validate_verdict_text` runs at `_cmd_review_pass:257`, before `head_sha` is
   resolved at `:275`, and the `validate` dry-run subcommand takes no `--repo`
@@ -179,6 +179,25 @@ that is confidently wrong is worse than an absent one. We will **not** make it
 optional, because this repo has already recorded that prose-only duties are
 dropped by weak executors. The quote gate is what makes "required" safe: it
 demands an action the reviewer can either perform or truthfully decline.
+
+> **Correction 2026-08-02, after the Tasks 7-9 re-cut.** Two claims above and
+> in Alternative C's row no longer hold at their strongest reading. "Enforced
+> ... in the same fail-closed way `where:` already is" is true of the field's
+> **presence and grammar** — a missing or malformed `origin:` on a code-arm
+> finding still refuses to mint — but no longer true of the **quote**: Task 8
+> demoted quote verification from a mint refusal to a recorded fact (0 of 24
+> severity-🔴 findings on this repo ever reached it, so it was refusing on
+> exactly the tail it could never see — a transcript tally, not a script;
+> population and method at `docs/loom/plans/2026-08-02-finding-origin-attribution.md`
+> §Re-cut after Tasks 1-6). Alternative C's stated ground for
+> beating option B — "a quote the validator greps cannot be faked" — is
+> therefore also weaker than written: a fabricated quote that fails to verify
+> now mints regardless and is merely recorded as `unverified-quote-absent` in
+> the origin ledger, not refused. The field still cannot be satisfied with a
+> judgment-only `origin:` value (grammar still requires `none` or a quoted
+> `<path> :: "<quote>"`), so C still beats A and B on the kappa/junk grounds
+> this section argues from; what changed is narrower — unfakeability is now a
+> property of the ledger's record, not of the mint gate.
 
 ## Out of Scope
 
@@ -274,12 +293,15 @@ lands:
 > the moment `_cmd_review_pass` first wrote `review-pass.json`. Two
 > independent soundness reviews of the shipped Tasks 1-6 found that moment
 > never arrives for most rounds: 0 of 24 severity-🔴 findings on this repo
-> ever reached quote verification, because a `NEEDS_REVISION` round returned
+> ever reached quote verification (a transcript tally, not a script;
+> population and method at
+> `docs/loom/plans/2026-08-02-finding-origin-attribution.md` §Re-cut after
+> Tasks 1-6), because a `NEEDS_REVISION` round returned
 > before minting or verifying anything, and the marker file itself was
 > overwritten every run rather than accumulated. **The start condition is
 > now: counting begins when the durable ledger
-> (`<git-dir>/loom/origin-ledger.json`, Task 7) holds code-arm entries, not
-> at first mint.** Only the start condition changes — the **≥40** threshold,
+> (`<git-common-dir>/loom/origin-ledger.json`, Task 7) holds code-arm entries,
+> not at first mint.** Only the start condition changes — the **≥40** threshold,
 > the verdict (all-`none` ⇒ delete the field; ≥1 human-confirmed true origin
 > ⇒ keep it), and the explicit refusal to judge on hit rate above are all
 > untouched.

@@ -1,10 +1,27 @@
 ---
 name: 2026-08-02-a-one-character-origin-quote-still-verifies
 description: the origin field's anti-fabrication property rests on a quote being hard to invent, but the validator accepts any non-blank substring, so a one-character quote verifies against almost any file and counts as a genuine origin
-status: OPEN
+status: CLOSED — SUPERSEDED
 origin: Task 2 of the finding-origin-attribution arc (docs/loom/plans/2026-08-02-finding-origin-attribution.md), code-quality review round 2 — routed to the user rather than fixed in-task
-start: a user decision on whether to constrain quote length or specificity — take it before the ≥40-finding tally is adjudicated, since the rule is uneditable once data lands
 ---
+
+## Superseded 2026-08-02 — the decision below was taken: no floor
+
+The decision `## The decision to take` asked for has been made, and this
+entry is kept as the record of the question rather than as an open item.
+The user chose **no length or width floor** (plan
+`docs/loom/plans/2026-08-02-finding-origin-attribution.md` §Notes,
+"Amendment 2026-08-02, user decision — no length or width floor"), and Tasks
+3-5 already shipped that grammar verbatim into `code-reviewer.md`,
+`code-quality-reviewer.md`, and `requesting-code-review/SKILL.md`. Option
+(b) below was tried — four separate constraint shapes, in fact, not the one
+sketched here — and none of them shipped: see
+`docs/loom/backlog/2026-08-02-quote-informativeness-needs-corpus-selectivity-not-length.md`
+for the measurement that closed the length/width axis entirely and for the
+corpus-selectivity mechanism that is now the open successor to this
+question.
+
+## What follows is the original entry, kept for context
 
 ## The residue
 

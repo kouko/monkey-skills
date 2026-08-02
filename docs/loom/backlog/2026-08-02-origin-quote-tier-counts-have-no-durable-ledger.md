@@ -1,12 +1,38 @@
 ---
 name: 2026-08-02-origin-quote-tier-counts-have-no-durable-ledger
 description: the origin-quote match-tier counts are written to a marker the next review-pass overwrites, so the observable the pre-registered stop rule depends on does not accumulate
-status: OPEN
+status: SHIPPED
 origin: Task 2 of the finding-origin-attribution arc (docs/loom/plans/2026-08-02-finding-origin-attribution.md), code-quality review rounds 1-2
 start: before the origin field's ≥40-finding tally is read — or the moment the second arc using the field begins, whichever comes first
 ---
 
-## What exists today
+## Shipped (Tasks 7-8 of the same arc, commit 517a4777)
+
+The gap this entry describes is fixed. `loom_gate_markers.py` now writes an
+append-only, branch-keyed `origin-ledger.json` (schema documented in the
+module's top docstring) on EVERY `review-pass` invocation — including
+NEEDS_REVISION and schema-failure rounds, which mint no `review-pass.json` at
+all. `payload["origin_quote_tiers"]` (described below as "what exists today")
+is REMOVED from `review-pass.json`; the ledger supersedes it entirely.
+
+The two further gaps this entry named are both closed by the same shape:
+
+- **Population mismatch** — each ledger finding now carries its own `"arm"`
+  (`"code"` / `"docs"`), so a consumer computing the stop rule filters to
+  code-arm findings directly instead of trusting an undifferentiated counter.
+- **Zero state** — every round leaves an explicit `"findings"` list (possibly
+  empty-of-verified-quotes but never simply absent), so a round with zero
+  verified quotes is no longer byte-identical to a marker written before the
+  field existed.
+
+One accumulation-correctness gap surfaced by whole-branch review after this
+shipped: the ledger initially lived under `git rev-parse --git-dir`, which
+forks a private, deletable copy per `git worktree` checkout instead of the
+one shared ledger every checkout must append to. Fixed via
+`resolve_common_marker_dir` (`git rev-parse --git-common-dir`) — no
+separate backlog entry needed.
+
+## What existed before (Task 2 shape — superseded, kept for context)
 
 `loom_gate_markers.py` verifies a finding's `origin:` quote in two stages —
 byte-exact first, then a normalised retry — and records which stage matched as

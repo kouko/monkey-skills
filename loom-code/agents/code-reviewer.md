@@ -348,7 +348,7 @@ findings:
     where: <file:line OR commit SHA range>
     source: <rubric / checklist / standard file:section that triggered this>
     note: <1-2 sentence finding>
-    origin: none | <path> :: "<verbatim quote from that file>"  # REQUIRED — see below
+    origin: none | <path> :: "<verbatim quote from that file>"  # REQUIRED on code-arm findings only (docs-arm exempt) — see below
     evidence_needed: craft | domain-convention | project-local  # OPTIONAL
 
 summary:
@@ -361,8 +361,12 @@ summary:
 judgment you make — name the upstream artifact ONLY when you can quote the
 wrong statement verbatim; otherwise write `none`. `none` carries **no
 penalty**: the field records what you hold, not what you can infer, so
-declining to name an artifact is never scored against the finding. Grammar,
-transcribed verbatim from the field's pin:
+declining to name an artifact is never scored against the finding. A missing
+or malformed `origin:` line (on a finding whose `dimension:` requires one)
+refuses to mint the same way an empty `where:` does — `loom_gate_markers.py`
+treats it as an opaque finding. The quote itself is verified separately and
+does NOT gate the mint — an unverified quote is recorded in the origin
+ledger, not refused. Grammar, transcribed verbatim from the field's pin:
 
 ```
 origin: none

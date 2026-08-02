@@ -1,10 +1,18 @@
 # Plan: reviewer findings carry a quote-gated origin
 
 Source brief: docs/loom/specs/2026-08-02-finding-origin-attribution.md
-Total tasks: 6
-Critical-path depth: 5 (≤5) — Task 1 → 2 → 3 → 5 → 6; Task 4 is a depth-3 leaf
+Total tasks: 10
+Critical-path depth: 5 (≤5) — Task 1 → 2 → 3 → 5 → 6; Task 4 is a depth-3 leaf.
+The Task 7-10 re-cut adds a second chain, Task 7 → 8 → 10 (depth 3), with
+Task 9 an independent depth-1 leaf feeding Task 10's dependency; neither
+exceeds the depth-5 critical path above.
 Execution order: sequential
-Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; supersedes the round-3 PASS that the round-3-note amendment made stale
+Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps,
+for Tasks 1-6 only; supersedes the round-3 PASS that the round-3-note
+amendment made stale. Tasks 7-10 (the ledger-first re-cut below) were added
+after that round and have not been through a plan-review round of their own —
+adding tasks is outside `writing-plans`' no-re-review list (see the Round-3
+amendment note below for the precedent this follows).
 
 ## Notes
 
@@ -225,11 +233,13 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
   buy two percentage points, ahead of a human check that catches the whole
   class, is the wrong place to spend the branch.
 
-  **What the five rounds did buy, and it is worth keeping.** The
-  false-refusal side was measured clean: over 3000 real committed sentences
-  per language, the refusal rate was **0.00% for English, Japanese and
-  Chinese alike**, and at the single-token level English is now refused MORE
-  often (33.5%) than Japanese (10.1%) or Chinese (10.6%). The script
+  **What the five rounds did buy, and it is worth keeping.** This measured
+  the display-width-≥4 rule (rule 4, since superseded — no floor ships; see
+  below). The false-refusal side was measured clean: over 3000 real
+  committed sentences per language, the refusal rate was **0.00% for
+  English, Japanese and Chinese alike**, and at the single-token level
+  English was refused MORE often (33.5%) than Japanese (10.1%) or Chinese
+  (10.6%). The script
   discrimination this arc manufactured three times is gone — measured, not
   assumed. And the two-canonicalisation defect class is closed: the floor and
   the verifier were made to share one normaliser, an idempotence sweep over
@@ -324,7 +334,7 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
 - Reuse-adequacy:
   - Observed: `_finding_problems` already splits the verdict into per-finding blocks and requires a path-like `where:` in each, refusing to mint otherwise — `read loom-code/scripts/loom_gate_markers.py:224-247`
   - Observed (blast radius): the docs arm mints the SAME marker through the same validator — `read loom-code/skills/requesting-docs-review/SKILL.md:56`
-  - Observed (precedent): a per-finding field scoped by arm already ships, annotated inline — `read loom-code/skills/requesting-code-review/SKILL.md:150`
+  - Observed (precedent): a per-finding field scoped by arm already ships, annotated inline — `read loom-code/skills/requesting-code-review/SKILL.md:151`
   - Intended: reuse the per-finding block split and the refuse-to-mint path unchanged; the `where:` check's **unconditional** shape does NOT carry over — `origin:` must carry an exemption branch keyed on the finding's own `dimension:` value, or it breaks every docs-only and mixed branch. Note the asymmetry with `where:`: because `where:`'s requirement is unconditional, its parse cannot fail open, whereas `origin:`'s can — so the exemption must be what the code tests for, never the requirement (§Pinned dimension partition, fail-closed clause).
 - Dependencies: none
 - Independent: false
@@ -414,7 +424,7 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
   `principles-conformance` entries, which the per-task agent's block does not
   carry). Point at the agent for the quote-gate rule rather than restating it;
   a second copy of the rule is a second source of truth. Annotate the scoping
-  inline, following the `class:` precedent at `:150`.
+  inline, following the `class:` precedent at `:151`.
 - Module: loom-code/skills/requesting-code-review/SKILL.md
 - Files touched: loom-code/skills/requesting-code-review/SKILL.md, loom-code/scripts/test_finding_origin_attribution.py
 - Context paths:
@@ -426,7 +436,7 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
 - External surfaces: none.
 - Dependencies: Task 3 completes first
 - Independent: false
-- Brief item covered: "Enforcement is scoped by dimension family … This follows the existing arm-scoping precedent for `class:` (`requesting-code-review/SKILL.md:150`)."
+- Brief item covered: "Enforcement is scoped by dimension family, not applied globally. … This follows the existing arm-scoping precedent for `class:` (`requesting-code-review/SKILL.md:151`)."
 
 ## Task 6 — Bump the plugin and record the change
 
@@ -477,6 +487,27 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
 > Tasks 1, 3, 4 and 5 are unchanged; Task 2's verification code is kept and its
 > output redirected.
 
+**Correction on the `51.5%` figure above.** It states no reproduction
+method and a reviewer recomputing it over the last 40 merges got **53.1%**
+(first-parent, 423/796 files) and **56.6%** (unique paths) — close enough
+that the argument it supports (a mixed branch routinely has a `.md`
+majority) survives, but the exact figure does not. Treat the number above
+as illustrative, not a reproducible measurement.
+
+**Population/method note (this is the canonical site for the `0 of 24`
+figure; other mentions in this arc's docs cite here rather than restate
+the bare number).** The 24 is a tally of severity-🔴 findings across this
+arc's own Tasks 1-6 review rounds, made by the two soundness reviews named
+above reading the round history as it happened. It is a **transcript
+measurement, not a script or a corpus artifact committed to this repo** —
+there is no re-runnable extractor for it the way
+`docs/loom/dogfood/2026-08-02-transcript-corpus-feasibility-probe.md`'s
+`probe_extract.py` re-runs the docs-side "24" (a different, unrelated
+count — see that dogfood's §Oracle check: raw 24 / deduped 14 A-class
+*docs-arm* findings on the 2026-08-02 day, not severity-🔴 findings from
+this arc). The two numbers are the same digit by coincidence, not the same
+population; neither this plan nor the spec derives one from the other.
+
 - **Kickoff decision:** stop-rule start condition → **counting begins when the
   durable ledger holds code-arm entries, not at first mint.** *(agent, taken
   now because this is the last moment it is legitimately editable — the rule's
@@ -486,7 +517,7 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
   (≥40), the verdict (all-`none` ⇒ delete; ≥1 human-confirmed true origin ⇒
   keep) and the explicit refusal to judge on hit RATE are untouched.
 
-- **Kickoff decision:** ledger file → **`<git-dir>/loom/origin-ledger.json`,
+- **Kickoff decision:** ledger file → **`<git-common-dir>/loom/origin-ledger.json`,
   separate from the parked `review-rounds.json`.** *(agent.)*
   `docs/loom/plans/2026-07-30-review-round-ledger-and-bad-fix-recheck.md:11`
   already specifies a branch-keyed, append-only, never-reset round ledger that
@@ -499,7 +530,7 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
 ## Task 7 — A durable origin ledger, written on every round
 
 - Description: Extend `_cmd_review_pass` in `loom_gate_markers.py` so **every**
-  invocation appends one entry to `<git-dir>/loom/origin-ledger.json` —
+  invocation appends one entry to `<git-common-dir>/loom/origin-ledger.json` —
   including the `NEEDS_REVISION` path that currently returns 3 writing nothing,
   and including invocations whose verdict text fails schema validation only in
   ways that still leave findings parseable. The file is keyed by branch name,
@@ -532,8 +563,13 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
 
 - Description: Demote quote verification from a mint refusal to a recorded
   fact. A **grammar** problem (malformed `origin:` value, duplicate lines) still
-  refuses — it is deterministic and has no false positives. A **quote that does
-  not verify** — absent, file absent, not a file, undecodable, sha unresolvable
+  refuses. Grammar is not flawless either — two known false-refusal shapes are
+  filed and left open at
+  `docs/loom/backlog/2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift.md`
+  — but they fail in the safe direction (over-refusal, never a fail-open
+  escape), which is why grammar stays the one remaining mint-time refusal. A
+  **quote that does not verify** — absent, file absent, not a file,
+  undecodable, sha unresolvable
   — no longer returns 4; it is recorded in the ledger as
   `quote_status: unverified-<reason>` and the mint proceeds. A quote that
   verifies records `verified-exact` or `verified-normalised`; `origin: none`
@@ -551,7 +587,7 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
 - External surfaces: none.
 - Dependencies: Task 7 completes first
 - Independent: false
-- Brief item covered: re-cut above — "moves the value from a mint-time refusal to a durable record, and demotes the refusal"; removes the push-blocking failure class whose two false-refusal shapes are filed at `docs/loom/backlog/2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift.md`.
+- Brief item covered: re-cut above — "moves the value from a mint-time refusal to a durable record, and demotes the refusal"; removes a push-blocking check that, per the re-cut above, was blocking on exactly the tail of findings it could never see (0 of 24 severity-🔴 findings ever reached it). Not to be confused with the two false-refusal shapes filed at `docs/loom/backlog/2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift.md` — those belong to `_finding_problems`'s column-anchored field scanner (grammar/structure), which this task deliberately leaves refusing.
 
 ## Task 9 — The reviewer can reach the documents it is asked to quote
 

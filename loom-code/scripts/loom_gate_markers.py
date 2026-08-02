@@ -6,7 +6,9 @@ allowing a push. Marker contract (frozen; every field asserted by
 `test_loom_gate_markers.py`):
 
 Dir: `<git-dir>/loom/` resolved via `git rev-parse --git-dir` from
-`--repo` (default cwd); created if missing.
+`--repo` (default cwd); created if missing. Exception: `origin-ledger.json`
+(below) resolves its directory via `git rev-parse --git-common-dir`
+instead (`resolve_common_marker_dir`) — see its own entry for why.
 
 - `review-pass.json`  {"schema": 1, "branch", "head_sha", "verdict",
   "written_at", optional "base_sha"/"patch_id"} — written ONLY after the
@@ -47,14 +49,45 @@ Dir: `<git-dir>/loom/` resolved via `git rev-parse --git-dir` from
   NEEDS_REVISION and schema-failure paths, both of which mint no
   `review-pass.json`) so the sample of recorded findings is never
   biased by which rounds happened to pass (see `_append_origin_ledger`).
-  A write failure here is reported on stderr and swallowed — it never
-  changes the exit code or blocks `review-pass.json` (unlike every
-  other marker above, whose write failures ARE fatal). `quote_status`
+  Its directory is resolved via `git rev-parse --git-common-dir`, NOT
+  `--git-dir` like the three markers above (`resolve_common_marker_dir`)
+  — every `git worktree` checkout of a repo shares one git-common-dir,
+  so a round run from a worktree (the normal case this plugin's
+  `using-git-worktrees` skill exists for) lands in the SAME ledger the
+  main checkout reads, and `git worktree remove` cannot delete it (a
+  worktree's own `--git-dir` is a private
+  `<main>/.git/worktrees/<name>/` that DOES vanish with `remove` — the
+  three per-checkout markers correctly keep using it; only the ledger
+  needs the shared directory). The read-modify-write is held under an
+  exclusive `fcntl.flock` on a dedicated `origin-ledger.json.lock` file
+  (`_ledger_lock`) — concurrent `review-pass` invocations from separate
+  worktrees are the normal case this ledger's shared directory exists
+  for, and an unlocked read-modify-write silently loses every
+  concurrent round but one (whole-branch review finding 1, reproduced
+  live: 8 concurrent processes recorded only 2 of 8 rounds). Lock
+  contention beyond 10s degrades through the same swallow-and-report
+  path as any other write failure rather than blocking forever. A write
+  failure here is reported on stderr and swallowed — it never changes
+  the exit code or blocks `review-pass.json` (unlike every other marker
+  above, whose write failures ARE fatal). Five corrupt-ledger shapes are
+  recovered, not silently dropped forever (`_load_or_recover_ledger`):
+  unparseable JSON, a directory sitting at the ledger path, and three
+  valid-JSON-but-wrong-shape variants (non-dict top level, non-dict
+  `branches`, a non-list per-branch value) — each is moved aside as
+  `origin-ledger.json.corrupt-<UTC timestamp>` and a fresh ledger
+  starts, both reported on stderr, so no single corruption shape can
+  bias every future round to empty (see `_append_origin_ledger`).
+  `quote_status`
   (Task 8) is a REAL verification result, computed on every round (even
   NEEDS_REVISION ones — quote verification no longer only runs on a
   round that already made it past the mint gate): `"absent"` (no
-  `origin:` line), `"none"` (the literal value `none`), `"malformed"`
-  (an `origin:` line present but not grammar-valid — the round refuses
+  `origin:` line), `"none"` (the literal value `none`), `"duplicate"`
+  (two or more `origin:` lines in the block — also grammar-refused, see
+  `_finding_problems`, but distinct from `"absent"`: that label means no
+  `origin:` line existed at all, which is false here — neither of the
+  two quotes is kept since which one was intended is ambiguous, so
+  `origin_raw` is `null`), `"malformed"`
+  (a single `origin:` line present but not grammar-valid — the round refuses
   on that ground regardless, see `_finding_problems`), `"verified-exact"`
   / `"verified-normalised"` (the quote matched the committed file at
   that tier), or `"unverified-<reason>"` for the five ways a
@@ -82,15 +115,27 @@ Stdlib only.
 from __future__ import annotations
 
 import argparse
+import contextlib
+import errno
 import json
 import os
 import re
 import subprocess
 import sys
 import tempfile
+import time
 import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - fcntl is POSIX-only; a host
+    # without it must not lose `validate`/`waiver`/`verified` (none of
+    # which touch the ledger) just because the ledger's locking helper
+    # imports a module those subcommands never call. `_ledger_lock`
+    # checks this sentinel and degrades to an unlocked append instead.
+    fcntl = None
 
 ALLOWED_VERDICTS = {"PASS", "PASS_WITH_NOTES", "NEEDS_REVISION"}
 MIN_WAIVER_REASON_CHARS = 10
@@ -358,6 +403,30 @@ def resolve_marker_dir(repo: Path) -> Path | None:
     return git_path / "loom"
 
 
+def resolve_common_marker_dir(repo: Path) -> Path | None:
+    """Return `<git-common-dir>/loom` for `repo`, or None if not a git repo.
+
+    Used ONLY for the origin ledger (`_append_origin_ledger`) — every
+    other marker keeps using `resolve_marker_dir` (`--git-dir`), which is
+    correct for them (per-checkout, must die with the checkout). The
+    ledger's contract is the opposite: it must accumulate across every
+    `git worktree` checkout of the same repo. `git rev-parse
+    --git-common-dir` resolves to the ONE directory every worktree
+    agrees on — verified empirically: from a worktree, `--git-dir` prints
+    `<main>/.git/worktrees/<name>` (a private directory `git worktree
+    remove` deletes outright) while `--git-common-dir` prints `<main>/.git`
+    (absolute); from the main checkout itself both print `.git` (relative,
+    identical) — so this function's behavior never regresses the
+    non-worktree case, it only changes the worktree one."""
+    git_common_dir = _git(repo, "rev-parse", "--git-common-dir")
+    if git_common_dir is None:
+        return None
+    git_path = Path(git_common_dir)
+    if not git_path.is_absolute():
+        git_path = repo / git_path
+    return git_path / "loom"
+
+
 def _write_marker(marker_dir: Path, name: str, payload: dict) -> Path:
     """Atomically write `payload` as JSON to `marker_dir/name`; return path."""
     marker_dir.mkdir(parents=True, exist_ok=True)
@@ -379,22 +448,255 @@ def _now_iso() -> str:
 
 
 _ORIGIN_LEDGER_FILENAME = "origin-ledger.json"
+_LEDGER_LOCK_FILENAME = "origin-ledger.json.lock"
+_LEDGER_LOCK_TIMEOUT_SECONDS = 10.0
+_LEDGER_LOCK_POLL_SECONDS = 0.05
+
+
+class _LedgerLockTimeout(Exception):
+    """Raised by `_ledger_lock` when the exclusive lock is genuinely
+    CONTENDED (another process holds it) and stays held past
+    `_LEDGER_LOCK_TIMEOUT_SECONDS` — caught by `_append_origin_ledger`'s
+    existing swallow-and-report `except Exception`, so contention
+    degrades exactly like any other ledger-write failure (reported on
+    stderr, mint proceeds regardless) instead of hanging the caller
+    forever. NOT raised when locking is structurally impossible (see
+    `_STRUCTURAL_LOCK_ERRNOS` and `_ledger_lock`'s fallback) — that case
+    degrades immediately to an unlocked append instead of waiting out
+    this timeout, since waiting cannot change a structural outcome."""
+
+
+# Round-3 review finding A: errno values observed when `flock` itself is
+# unsupported by the underlying filesystem (some NFS/CIFS/FUSE mounts) —
+# NOT contention. Before this set existed, `_ledger_lock` treated every
+# `OSError` from `flock()` identically to "someone else holds it", so a
+# filesystem in this state stalled every single invocation for the full
+# `_LEDGER_LOCK_TIMEOUT_SECONDS` and still lost the round afterward
+# (measured: 10.2s stall per invocation). `ENOLCK` ("no locks available",
+# the common NFSv3-without-lockd case), `ENOSYS`/`EOPNOTSUPP` (the
+# operation is not implemented/supported at all) are recognized here and
+# fall back to an unlocked append immediately — waiting cannot change a
+# structural outcome. Genuine contention still raises `EAGAIN`/
+# `EWOULDBLOCK` under `LOCK_NB`, which is NOT in this set and keeps
+# polling/timing out exactly as before.
+_STRUCTURAL_LOCK_ERRNOS = frozenset({errno.ENOLCK, errno.ENOSYS, errno.EOPNOTSUPP})
+
+
+def _warn_ledger_lock_unavailable(lock_path: Path, reason: str) -> None:
+    """One stderr line: the origin ledger append is proceeding WITHOUT its
+    exclusive lock because acquiring it is structurally impossible here —
+    NOT contention (`_ledger_lock`'s docstring covers the three observed
+    shapes: a directory sitting at `lock_path`, a lock file this process
+    cannot open/write, `fcntl` itself unavailable, or a filesystem that
+    rejects `flock` outright). An unlocked append is strictly better than
+    losing the round: locking is impossible in these environments
+    regardless of how long a caller waits, so refusing to record would
+    regress the ledger from "lossy under concurrency" (the pre-lock
+    state) to "total loss always" — worse than shipping with no lock at
+    all, and the inverse of this branch's own binding constraint
+    (persistence, not enforcement)."""
+    print(
+        f"loom-gate-markers: origin ledger lock unavailable at {lock_path} "
+        f"({reason}); appending to the ledger WITHOUT a lock instead of "
+        "losing this round — see _ledger_lock's docstring.",
+        file=sys.stderr,
+    )
+
+
+@contextlib.contextmanager
+def _ledger_lock(ledger_dir: Path):
+    """Hold an exclusive `fcntl.flock` on `<ledger_dir>/origin-ledger.json.lock`
+    for the duration of the read-modify-write below — the real mutual
+    exclusion whole-branch review found missing (finding 1): concurrent
+    `review-pass` invocations from different worktrees (the ledger's whole
+    reason for living under `--git-common-dir` — every worktree of a repo
+    shares one) used to race an unlocked read-modify-write and silently
+    lose every round but one. Reproduced live: 8 concurrent processes
+    against one repo recorded only 2 of 8 rounds, all exiting 0, nothing
+    on stderr. (Parameter renamed from `marker_dir` — round-3 review
+    finding C: every OTHER marker's directory is `<git-dir>/loom`, but
+    this ledger's directory is `<git-common-dir>/loom`
+    (`resolve_common_marker_dir`) — a genuinely different directory, and
+    the old shared name invited exactly the conflation this branch
+    already fixed once.)
+
+    A DEDICATED lock file, never the ledger file itself: locking the
+    ledger file directly would mean a reader that opens it for its own
+    `flock` attempt (rather than `flock`ing before ANY read) still races
+    the writer's tmpfile+`os.replace` swap, and would conflate "I hold the
+    lock" with "the ledger's bytes are mid-write" in a single fd's
+    lifecycle. A separate file sidesteps both.
+
+    Polls `LOCK_EX | LOCK_NB` in a loop rather than a blocking `flock` —
+    a blocking call has no timeout on POSIX, so a wedged holder (crashed
+    mid-critical-section, holding the fd) would hang every future caller
+    forever. Beyond `_LEDGER_LOCK_TIMEOUT_SECONDS` this raises
+    `_LedgerLockTimeout` for GENUINE contention (`EAGAIN`/`EWOULDBLOCK`),
+    which the caller's existing swallow-and-report path handles like any
+    other ledger-write failure — recording is allowed to be lost under a
+    stuck lock (never silently, always on stderr), but the mint itself
+    must never be blocked by it. One stderr line fires at the FIRST
+    contended attempt (round-3 review 🟢) — before this, the wait was
+    silent until it gave up, so a caller at 9s into a 10s wait had no way
+    to distinguish "about to succeed" from "about to time out".
+
+    Round-3 review finding A — acquiring the lock at all can be
+    STRUCTURALLY impossible, a different failure class than contention:
+    `fcntl` unavailable on this platform (see the module-level
+    try/except import), a directory sitting at `lock_path`
+    (`IsADirectoryError` from `open()`), a lock file this process cannot
+    write (`PermissionError` from `open()`, e.g. another user's umask in
+    a shared checkout), or a filesystem that rejects `flock` outright
+    (`_STRUCTURAL_LOCK_ERRNOS`, e.g. NFS without a lock daemon). None of
+    these can be waited out — the OLD behavior treated every one of them
+    as contention (or, for `open()` failures, let the exception escape
+    uncaught into the caller's blanket swallow, losing the round on
+    EVERY future invocation too, since the directory/permission problem
+    never self-heals). The fix: recognize each shape and fall back to an
+    unlocked append with `_warn_ledger_lock_unavailable`, immediately —
+    an unlocked append is strictly better than losing the round in an
+    environment where locking can never succeed."""
+    lock_path = ledger_dir / _LEDGER_LOCK_FILENAME
+    if fcntl is None:
+        _warn_ledger_lock_unavailable(lock_path, "fcntl module unavailable")
+        yield
+        return
+    try:
+        lock_file = open(lock_path, "a+")
+    except OSError as exc:
+        _warn_ledger_lock_unavailable(lock_path, str(exc))
+        yield
+        return
+    try:
+        deadline = time.monotonic() + _LEDGER_LOCK_TIMEOUT_SECONDS
+        warned_contention = False
+        locked = False
+        while True:
+            try:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                locked = True
+                break
+            except OSError as exc:
+                if exc.errno in _STRUCTURAL_LOCK_ERRNOS:
+                    _warn_ledger_lock_unavailable(lock_path, str(exc))
+                    break
+                if not warned_contention:
+                    print(
+                        f"loom-gate-markers: origin ledger lock at "
+                        f"{lock_path} is held by another process; "
+                        f"waiting up to {_LEDGER_LOCK_TIMEOUT_SECONDS}s...",
+                        file=sys.stderr,
+                    )
+                    warned_contention = True
+                if time.monotonic() >= deadline:
+                    raise _LedgerLockTimeout(
+                        f"could not acquire {lock_path} within "
+                        f"{_LEDGER_LOCK_TIMEOUT_SECONDS}s"
+                    ) from None
+                time.sleep(_LEDGER_LOCK_POLL_SECONDS)
+        try:
+            yield
+        finally:
+            if locked:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+    finally:
+        lock_file.close()
+
+
+def _is_valid_ledger_shape(data: object) -> bool:
+    """True iff `data` has the ledger's minimal load-bearing shape: a
+    dict with a dict `branches`, each of whose values is a list. The
+    read-modify-write below needs `.setdefault`/`.append` to succeed on
+    exactly this shape — a schema-1 ledger that is valid JSON but has any
+    other shape (top-level list/null, non-dict `branches`, or a
+    per-branch value that isn't a list) is corrupt in the same
+    load-bearing sense a JSON syntax error is (whole-branch review
+    finding 2 — the docstring's "a single corruption cannot bias every
+    future round to empty" claim was false for exactly these four
+    shapes, each of which used to raise deep inside `.setdefault`/
+    `.append` and fall through to the blanket swallow, permanently
+    dropping every future round)."""
+    if not isinstance(data, dict):
+        return False
+    branches = data.get("branches")
+    if not isinstance(branches, dict):
+        return False
+    return all(isinstance(value, list) for value in branches.values())
+
+
+def _recover_corrupt_ledger(path: Path, reason: str) -> dict:
+    """Move `path` aside as `origin-ledger.json.corrupt-<UTC timestamp>`
+    (preserved for a human to inspect, never deleted) and return a fresh
+    empty ledger dict. Shared by every recoverable corruption shape
+    (unparseable JSON, a directory sitting at the ledger path, and the
+    four valid-JSON-wrong-shape variants) — all are corrupt in the same
+    load-bearing sense, so all get the identical treatment and stderr
+    wording."""
+    corrupt_path = path.with_name(
+        f"{_ORIGIN_LEDGER_FILENAME}.corrupt-"
+        f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%f')}"
+    )
+    path.replace(corrupt_path)
+    print(
+        "loom-gate-markers: origin-ledger.json was corrupt "
+        f"({reason}); moved aside to {corrupt_path.name} and started "
+        "a fresh ledger — future rounds keep recording instead of "
+        "being dropped forever.",
+        file=sys.stderr,
+    )
+    return {"schema": 1, "branches": {}}
+
+
+def _load_or_recover_ledger(path: Path) -> dict:
+    """Read `<ledger_dir>/origin-ledger.json`, recovering a fresh empty
+    ledger from any of five corrupt shapes (whole-branch review finding
+    2) instead of raising into the caller's blanket swallow: unparseable
+    JSON text, a directory sitting at the ledger path (`IsADirectoryError`
+    from the read itself, before `json.loads` ever runs), and three
+    valid-JSON-but-wrong-shape variants — see `_is_valid_ledger_shape`."""
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return {"schema": 1, "branches": {}}
+    except IsADirectoryError as exc:
+        return _recover_corrupt_ledger(path, str(exc))
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        return _recover_corrupt_ledger(path, str(exc))
+    if not _is_valid_ledger_shape(data):
+        return _recover_corrupt_ledger(
+            path, f"unexpected ledger shape ({type(data).__name__})"
+        )
+    return data
 
 
 def _append_origin_ledger(
-    marker_dir: Path,
+    ledger_dir: Path,
     branch: str,
     verdict: str | None,
     head_sha: str | None,
     findings: list[dict],
 ) -> None:
-    """Append one round entry to `<marker_dir>/origin-ledger.json`, keyed
+    """Append one round entry to `<ledger_dir>/origin-ledger.json`, keyed
     by `branch`; append-only, never reset (Task 7 — the re-cut's binding
     constraint: persistence, not enforcement). Deliberately NOT built on
     `_write_marker`: that helper's whole-file overwrite is exactly the
     semantic the ledger must not have — this reads the existing file
     (if any), appends, and writes the merged result back, still via
-    tmpfile+`os.replace` for atomicity.
+    tmpfile+`os.replace` for atomicity, and the whole read-modify-write
+    is held under `_ledger_lock` (finding 1) so concurrent invocations —
+    the normal case from separate `git worktree` checkouts sharing this
+    one file — cannot race and silently lose each other's round.
+
+    Parameter renamed from `marker_dir` (round-3 review finding C): every
+    OTHER marker's directory really is `<git-dir>/loom`
+    (`resolve_marker_dir`), but the caller always passes THIS function
+    `resolve_common_marker_dir(repo) or marker_dir` — a different
+    directory (`<git-common-dir>/loom`) in the normal (non-fallback)
+    case. Naming the parameter `marker_dir` here invited exactly the
+    conflation between the two directories this branch already fixed
+    once (see the module docstring's `origin-ledger.json` entry).
 
     `findings` is precomputed by the caller (`_ledger_finding_entries`,
     Task 8: real quote verification against `head_sha`) rather than
@@ -404,37 +706,38 @@ def _append_origin_ledger(
     caller does with the same results.
 
     Recording must NEVER block a mint or change an exit code: every
-    failure (unwritable directory, a corrupt or unreadable existing
-    ledger, anything) is reported on stderr and swallowed here — this
-    function raises nothing to its caller."""
-    path = marker_dir / _ORIGIN_LEDGER_FILENAME
+    failure (unwritable directory, a wedged lock, anything not handled
+    by `_load_or_recover_ledger`) is reported on stderr and swallowed
+    here — this function raises nothing to its caller. Five corrupt
+    ledger shapes ARE recovered rather than swallowed-and-forgotten
+    (moved aside, never deleted, fresh ledger starts) — see
+    `_load_or_recover_ledger`."""
+    path = ledger_dir / _ORIGIN_LEDGER_FILENAME
     try:
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except FileNotFoundError:
-            data = {"schema": 1, "branches": {}}
-        rounds = data.setdefault("branches", {}).setdefault(branch, [])
-        rounds.append(
-            {
-                "round": len(rounds) + 1,
-                "verdict": verdict,
-                "head_sha": head_sha,
-                "written_at": _now_iso(),
-                "findings": findings,
-            }
-        )
-        marker_dir.mkdir(parents=True, exist_ok=True)
-        fd, tmp = tempfile.mkstemp(
-            dir=str(marker_dir), prefix=_ORIGIN_LEDGER_FILENAME, suffix=".tmp"
-        )
-        try:
-            with os.fdopen(fd, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
-                f.write("\n")
-            os.replace(tmp, path)
-        finally:
-            if os.path.exists(tmp):
-                os.unlink(tmp)
+        ledger_dir.mkdir(parents=True, exist_ok=True)
+        with _ledger_lock(ledger_dir):
+            data = _load_or_recover_ledger(path)
+            rounds = data.setdefault("branches", {}).setdefault(branch, [])
+            rounds.append(
+                {
+                    "round": len(rounds) + 1,
+                    "verdict": verdict,
+                    "head_sha": head_sha,
+                    "written_at": _now_iso(),
+                    "findings": findings,
+                }
+            )
+            fd, tmp = tempfile.mkstemp(
+                dir=str(ledger_dir), prefix=_ORIGIN_LEDGER_FILENAME, suffix=".tmp"
+            )
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2)
+                    f.write("\n")
+                os.replace(tmp, path)
+            finally:
+                if os.path.exists(tmp):
+                    os.unlink(tmp)
     except Exception as exc:  # noqa: BLE001 — recording must never block a mint
         print(
             f"loom-gate-markers: could not record origin ledger entry: {exc}",
@@ -670,6 +973,7 @@ class _FindingInfo:
         "dimension_value",
         "origin_value",
         "duplicate_origin",
+        "duplicate_dimension",
     )
 
     def __init__(
@@ -679,12 +983,14 @@ class _FindingInfo:
         dimension_value: str | None,
         origin_value: str | None,
         duplicate_origin: bool,
+        duplicate_dimension: bool,
     ) -> None:
         self.start_line = start_line
         self.where_ok = where_ok
         self.dimension_value = dimension_value
         self.origin_value = origin_value
         self.duplicate_origin = duplicate_origin
+        self.duplicate_dimension = duplicate_dimension
 
 
 def _iter_findings(text: str):
@@ -747,6 +1053,7 @@ def _iter_findings(text: str):
             ),
             origin_value=origin_values[0] if len(origin_values) == 1 else None,
             duplicate_origin=len(origin_values) > 1,
+            duplicate_dimension=len(dimension_values) > 1,
         )
 
 
@@ -764,13 +1071,39 @@ def _finding_problems(text: str) -> list[str]:
     blank quote). Skipping this on the exempt branch was a real bug: a
     docs-arm finding with a malformed `origin:` used to sail through
     with no `origin:` requirement AND no grammar check on the one it
-    carried, minting clean."""
+    carried, minting clean.
+
+    A duplicate `dimension:` line is refused here for the SAME reason a
+    duplicate `origin:` is (whole-branch review finding 3, mirroring the
+    prior `origin:` fix onto `dimension:`): which of two `dimension:`
+    values is intended is genuinely ambiguous, and `dimension` directly
+    drives the arm partition (`_finding_arm`) that decides whether
+    `origin:` is even required. Before this check, a duplicate
+    `dimension:` line was invisible to `_finding_problems` — as long as
+    `origin:` was ALSO present and valid (or dimension's own fail-closed
+    default happened to already force an `origin:` requirement that was
+    separately satisfied), the finding minted at exit 0, landing in the
+    ledger byte-identical to a finding with no `dimension:` line at all
+    (`dimension: null`, `arm: "code"`) and silently contaminating the
+    population partition the ledger exists to keep clean. The ledger's
+    OWN recording needs no schema change for this: `dimension_value` is
+    already `None` for a duplicate exactly as it is for an absent line
+    (`_iter_findings`), and `_finding_arm`'s fail-closed default already
+    treats every unparseable dimension — absent, blank, or duplicate —
+    identically as `"code"` (§Pinned dimension partition); the gap was
+    purely that nothing refused the MINT on this ambiguity the way
+    `duplicate_origin` already does."""
     problems: list[str] = []
     for info in _iter_findings(text):
         if not info.where_ok:
             problems.append(
                 f"finding at line {info.start_line}: no where: line with a "
                 "path-like token in its block"
+            )
+        if info.duplicate_dimension:
+            problems.append(
+                f"finding at line {info.start_line}: duplicate dimension: "
+                "lines (exactly one is required)"
             )
         if info.duplicate_origin:
             problems.append(
@@ -807,19 +1140,115 @@ def _ledger_finding_entries(
     record; measured on this repo, 0 of 24 severity-🔴 findings ever
     reached the old mint-time-only verification call. One file-content
     cache shared across every finding in this call's `text` — a path
-    quoted by more than one finding is read from committed content once."""
+    quoted by more than one finding is read from committed content once.
+
+    A duplicate `origin:` (`info.duplicate_origin`) is special-cased
+    BEFORE `_finding_quote_status` ever runs: that function's own
+    `origin_value is None` branch returns `"absent"`, which is correct
+    for a finding with no `origin:` line but wrong for one with TWO —
+    `_iter_findings` sets `origin_value` to `None` in both cases (see its
+    docstring), so without this guard a duplicate would be recorded
+    byte-identically to "no origin: line existed", discarding both
+    quotes under a false label. `origin_raw` is `null` for a duplicate:
+    which of the two quotes was intended is genuinely ambiguous, so
+    neither is kept rather than guessing first-or-last."""
     file_cache: dict[str, tuple[str | None, str | None]] = {}
-    return [
-        {
-            "arm": _finding_arm(info.dimension_value),
-            "dimension": info.dimension_value,
-            "origin_raw": info.origin_value,
-            "quote_status": _finding_quote_status(
-                info.origin_value, repo, head_sha, file_cache
-            ),
-        }
-        for info in _iter_findings(text)
-    ]
+    entries = []
+    for info in _iter_findings(text):
+        if info.duplicate_origin:
+            entries.append(
+                {
+                    "arm": _finding_arm(info.dimension_value),
+                    "dimension": info.dimension_value,
+                    "origin_raw": None,
+                    "quote_status": "duplicate",
+                }
+            )
+            continue
+        entries.append(
+            {
+                "arm": _finding_arm(info.dimension_value),
+                "dimension": info.dimension_value,
+                "origin_raw": info.origin_value,
+                "quote_status": _finding_quote_status(
+                    info.origin_value, repo, head_sha, file_cache
+                ),
+            }
+        )
+    return entries
+
+
+def _record_origin_ledger_round(
+    repo: Path,
+    marker_dir: Path,
+    branch: str | None,
+    verdict: str | None,
+    text: str,
+) -> tuple[str | None, Path, list[dict]]:
+    """Resolve `head_sha`, compute this round's ledger findings (Task 8's
+    real quote verification), and append them to the origin ledger —
+    extracted out of `_cmd_review_pass` (round-3 review finding D: that
+    function exceeded the house 50-line ceiling with no documented
+    rationale; this block and the normalised-quote advisory below were
+    both self-contained and extractable, so the standard's
+    document-an-exception escape hatch does not apply).
+
+    Ledger recording — INCLUDING real quote verification (Task 8) —
+    happens on EVERY invocation that got this far, ahead of every early
+    return the caller takes below it (NEEDS_REVISION, schema-failure,
+    unresolvable HEAD), all of which used to return before writing
+    anything or verifying anything (Task 7/8 re-cut: the binding
+    constraint is persistence, not enforcement; verification is a
+    recorded fact, not a mint-time-only refusal). `_ledger_finding_entries`
+    is safe to call even when `head_sha` is `None` — it never touches
+    git in that case (`_finding_quote_status`'s own guard) — so no
+    ordering dependency on the caller's HEAD-resolution check is needed.
+
+    The ledger lives under git-common-dir, not git-dir (see
+    `resolve_common_marker_dir`) — a worktree checkout must append to
+    the SAME ledger the main checkout reads. Falls back to `marker_dir`
+    only if common-dir resolution itself fails, which should not happen
+    given `resolve_marker_dir` already succeeded to reach `_cmd_review_pass`
+    at all. Computed unconditionally (not just when `branch` resolves)
+    so the caller's advisory can always name the real path — printing
+    the bare filename used to imply the same directory as
+    `review-pass.json`, which is false from a worktree (whole-branch
+    review finding 4).
+
+    Returns `(head_sha, ledger_dir, ledger_findings)` — all three are
+    needed by the caller after this returns, for the marker payload, the
+    branch/head_sha resolvability check, and the normalised-quote
+    advisory respectively."""
+    head_sha = _git(repo, "rev-parse", "HEAD")
+    ledger_findings = _ledger_finding_entries(text, repo, head_sha)
+    ledger_dir = resolve_common_marker_dir(repo) or marker_dir
+    if branch is not None:
+        _append_origin_ledger(ledger_dir, branch, verdict, head_sha, ledger_findings)
+    return head_sha, ledger_dir, ledger_findings
+
+
+def _print_normalised_quote_advisory(
+    ledger_findings: list[dict], ledger_dir: Path
+) -> None:
+    """Print one aggregated advisory line naming how many findings this
+    round matched only after normalisation — printing the identical
+    sentence once per finding gave a reader no way to tell which
+    finding(s) it referred to. Extracted out of `_cmd_review_pass`
+    (round-3 review finding D, alongside `_record_origin_ledger_round`
+    above) — self-contained and does not need any of that function's
+    other local state."""
+    normalised_count = sum(
+        1 for entry in ledger_findings if entry["quote_status"] == "verified-normalised"
+    )
+    if normalised_count:
+        plural = "" if normalised_count == 1 else "s"
+        ledger_path = ledger_dir / _ORIGIN_LEDGER_FILENAME
+        print(
+            f"loom-gate-markers: {normalised_count} origin quote{plural} "
+            f"matched only after normalisation — see {ledger_path} for "
+            "detail. (This entry may be missing if the ledger write "
+            "above was itself swallowed — see stderr.)"
+        )
 
 
 def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int:
@@ -830,24 +1259,10 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
         return 4
 
     verdict, problems = validate_verdict_text(text)
-
-    # Ledger recording — INCLUDING real quote verification (Task 8) —
-    # happens on EVERY invocation that got this far, ahead of every
-    # early return below (NEEDS_REVISION, schema-failure, unresolvable
-    # HEAD), all of which used to return before writing anything or
-    # verifying anything (Task 7/8 re-cut: the binding constraint is
-    # persistence, not enforcement; verification is a recorded fact, not
-    # a mint-time-only refusal). `_ledger_finding_entries` is safe to
-    # call even when `head_sha` is `None` — it never touches git in that
-    # case (`_finding_quote_status`'s own guard) — so no ordering
-    # dependency on the HEAD-resolution check further down is needed.
-    # `branch`/`head_sha` are re-used below for the marker itself once/
-    # if minting proceeds.
     branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
-    head_sha = _git(repo, "rev-parse", "HEAD")
-    ledger_findings = _ledger_finding_entries(text, repo, head_sha)
-    if branch is not None:
-        _append_origin_ledger(marker_dir, branch, verdict, head_sha, ledger_findings)
+    head_sha, ledger_dir, ledger_findings = _record_origin_ledger_round(
+        repo, marker_dir, branch, verdict, text
+    )
 
     if problems:
         print(
@@ -874,10 +1289,16 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
     # whose quote does not verify — absent, file absent, not a file,
     # undecodable, sha unresolvable — is recorded above in the ledger as
     # `unverified-<reason>`, and the mint proceeds regardless. Only the
-    # deterministic grammar check (`problems`, above) still refuses —
-    # it has no false positives; quote verification, measured on this
-    # repo, has two known-unfixed false-refusal shapes and was blocking
-    # a push on exactly the tail of findings it could never see anyway.
+    # deterministic grammar check (`problems`, above) still refuses — it
+    # fails CLOSED (never a silent fail-open exemption), but is NOT
+    # false-positive-free: two indent-drift shapes (an outlier first
+    # field; a tab against spaces) over-refuse a well-formed verdict,
+    # tracked OPEN at
+    # docs/loom/backlog/2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift.md.
+    # Quote verification, measured on this repo, has its own five
+    # known-unfixed false-refusal shapes and was blocking a push on
+    # exactly the tail of findings it could never see anyway — which is
+    # why it no longer gates.
     payload = {
         "schema": 1,
         "branch": branch,
@@ -890,12 +1311,7 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
         payload["base_sha"], payload["patch_id"] = patch_id_fields
     path = _write_marker(marker_dir, "review-pass.json", payload)
     print(path)
-    for entry in ledger_findings:
-        if entry["quote_status"] == "verified-normalised":
-            print(
-                "loom-gate-markers: an origin quote matched only after "
-                "normalisation — see origin-ledger.json for detail."
-            )
+    _print_normalised_quote_advisory(ledger_findings, ledger_dir)
     return 0
 
 

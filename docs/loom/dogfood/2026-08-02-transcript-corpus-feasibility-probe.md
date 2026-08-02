@@ -123,6 +123,14 @@ And that is precisely what the blocked metric needs. Its input is the share of
 
 ## Honest limits
 
+- **S3 (a human turn correcting a stated fact) is computed by the
+  extractor and printed by `main()`, but not reported above.** §Method
+  states the three signals are counted separately on purpose because the
+  open question is *who* currently catches this class — S3 is the
+  half of that question this record does not answer. Re-running the
+  extractor against the private transcript corpus to fill it in is out
+  of scope here; this bullet records the gap rather than passing over
+  it silently.
 - The other 53 projects (~1.2 GB) were **not scanned**. The format is
   identical so it should work, but that is unverified.
 - **56 is (dimension × file) pairs, not distinct defects.** The mapping was

@@ -8,7 +8,11 @@ task 6 — the requirements previously lived only in code (discovered by
 exit-4 retries); this file is the readable version.
 
 All markers live under `<git-dir>/loom/`, resolved via `git rev-parse
---git-dir` from the target repo.
+--git-dir` from the target repo — **except** `origin-ledger.json` (below),
+which resolves via `git rev-parse --git-common-dir` instead, so every
+`git worktree` checkout of the repo appends to the SAME ledger rather than
+forking a private, per-checkout copy that `git worktree remove` would
+delete.
 
 ## Verdict-text schema (`review-pass --verdict-file`)
 
@@ -22,10 +26,85 @@ The reviewer's verdict text (not the marker JSON) must contain:
 - Every `- severity:` finding block needs a `where:` line whose value
   is path-like (contains `/` or `.`, or is a bare 7-40 char hex commit
   SHA). A finding without one is an opaque finding and fails schema.
+- Every `- severity:` finding block whose `dimension:` is absent, or does
+  not fall in the docs-arm set (`omission`, `ambiguity`, `inconsistency`,
+  `incorrect-fact`, `missing-population`), must carry an `origin:` line
+  valued `none` or `<path> :: "<verbatim quote from that file>"` — a
+  missing one fails schema the same way a missing `where:` does. A
+  docs-arm finding is exempt from carrying `origin:` at all.
+- Whenever an `origin:` line IS present, its value is grammar-checked on
+  **every** arm, docs included — the docs-arm exemption governs only
+  whether `origin:` must be carried, never excuses a malformed value a
+  docs-arm finding chose to write (bare path, unterminated quote, blank
+  quote). A malformed `origin:` fails schema the same way a missing
+  `where:` does, regardless of arm.
+- A duplicate `dimension:` line fails schema (exactly one is required):
+  which of two values is intended is ambiguous, and `dimension` drives
+  the arm partition that decides whether `origin:` is even required.
+- A duplicate `origin:` line fails schema (exactly one is required) for
+  the same reason — which of two quotes is intended is ambiguous.
+
+The quote itself is verified separately (see §Quote verification below)
+and does NOT gate schema validity or the mint.
 
 `NEEDS_REVISION` never mints a marker (exit 3) — a failed review can't
 produce a pass marker. A schema-invalid verdict text never mints one
 either (exit 4, every violation listed — see `validate` below).
+
+## Quote verification
+
+A grammar-valid `origin:` whose value is `<path> :: "<quote>"` (not
+`none`) is checked against the file's content **at `head_sha`** — via
+`git show <head_sha>:<path>`, never the worktree — so the recorded
+result reflects what was actually reviewed, not a since-edited file.
+Matching is two-stage: byte-exact first, then one shared normaliser
+(NFC, whitespace collapse, typographic-quote/dash folding) on a miss.
+A match records `verified-exact` or `verified-normalised` in the origin
+ledger (below).
+
+A quote that does NOT verify is recorded, never refused — this used to
+be a mint-time refusal and was demoted (0 of 24 severity-🔴 findings
+measured on this repo ever reached it — a transcript tally, not a
+script; population and method at
+`docs/loom/plans/2026-08-02-finding-origin-attribution.md` §Re-cut after
+Tasks 1-6). Five reasons are distinguished, each recorded as
+`unverified-<reason>`:
+`sha-unresolvable`, `file-absent`, `not-a-file`, `undecodable-blob` (the
+committed blob couldn't be read as text), and `quote-absent` (the file
+read fine but never contained the quote). `origin: none` records
+`none`; an absent `origin:` on an exempt docs-arm finding records
+`absent`; a duplicate `origin:` records `duplicate` (also
+grammar-refused — see above — but distinct from `absent`, since an
+`origin:` line did exist, just twice).
+
+`validate` (below) takes no `--repo` and therefore has no `head_sha` to
+verify a quote against — it says so loudly rather than skipping
+silently.
+
+## Origin ledger (`origin-ledger.json`)
+
+`{"schema": 1, "branches": {<branch>: [{"round", "verdict", "head_sha",
+"written_at", "findings": [{"arm", "dimension", "origin_raw",
+"quote_status"}, ...]}, ...]}}` — append-only, **never reset**, one
+entry appended per `review-pass` invocation, on EVERY invocation
+including the `NEEDS_REVISION` and schema-failure paths that mint no
+`review-pass.json` at all, so the recorded sample is never biased by
+which rounds happened to pass.
+
+Its directory resolves via `--git-common-dir` (not `--git-dir` like the
+three markers above), so every `git worktree` checkout of a repo shares
+the same ledger, and `git worktree remove` cannot delete it. The
+read-modify-write is held under an exclusive `flock` on a dedicated
+lock file — concurrent `review-pass` invocations from separate
+worktrees are the normal case this exists for. A write failure here
+(including lock contention beyond 10s) is reported on stderr and
+swallowed: unlike every other marker, **it never changes the exit code
+or blocks the mint**. Five corrupt-ledger shapes (unparseable JSON, a
+directory sitting at the ledger path, and three valid-JSON-but-wrong-
+shape variants) are recovered by moving the bad file aside as
+`origin-ledger.json.corrupt-<UTC timestamp>` and starting fresh, both
+reported on stderr — no single corruption shape biases every future
+round to empty.
 
 ## Run-command binding (`verified --run`)
 

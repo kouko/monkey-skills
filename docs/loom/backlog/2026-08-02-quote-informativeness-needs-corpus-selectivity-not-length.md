@@ -40,8 +40,8 @@ Best document frequency at each width, same corpus:
 The tail is markdown table boilerplate (`|---|---|`), which no width threshold
 distinguishes from prose. Length answers *how many columns*; the gate needs
 *how surprising in this corpus*. The two coincide for CJK and diverge by
-roughly 200× for Latin — a width-4 Latin 4-gram sits at 97.7% while the plan's
-own width-4 CJK example `引述` sits at 0.5%.
+roughly 200× for Latin — a width-4 Latin 4-gram sits at 97.7% while a
+width-4 CJK example measured in this same pass, `引述`, sits at 0.5%.
 
 ## The successor mechanism
 
