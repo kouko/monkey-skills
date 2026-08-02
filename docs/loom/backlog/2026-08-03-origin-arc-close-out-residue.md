@@ -1,6 +1,6 @@
 ---
 name: 2026-08-03-origin-arc-close-out-residue
-description: four small claim-accuracy items left open when the finding-origin-attribution arc shipped, each a one-clause edit that a fifth review round would have cost more to catch than to fix later
+description: four small claim-accuracy items filed at the finding-origin-attribution arc's close-out, each a one-clause edit that a fifth review round would have cost more to catch than to fix later
 status: OPEN
 origin: the finding-origin-attribution arc (loom-code 0.45.0), whole-branch review rounds 4-5 — carried forward under the PASS_WITH_NOTES rule rather than fixed, to stop a fix-generates-findings loop
 start: the next time anyone opens one of the named files for another reason
@@ -16,7 +16,16 @@ while justifying itself. Each item below is a one-clause edit, and each edit
 would write new prose — which is why they are filed rather than applied on the
 way out the door.
 
-## 🟡 The plan's `Reuse-adequacy` bullet cites a policy its source does not state
+## ✅ RESOLVED — the plan's `Reuse-adequacy` bullet cited a policy its source does not state
+
+**Struck 2026-08-03.** The bullet now says outright that
+`plan-format.md` §`Reuse-adequacy` records no refresh policy in either
+direction, that its present-tense `Observed` wording if anything leans the
+other way, and that as-of-authoring is **this plan's own recorded choice**
+(`docs/loom/plans/2026-08-02-finding-origin-attribution.md:78-91`). The
+prescribed fix below is what shipped; no marker was refreshed. Kept as a
+struck record rather than deleted because the three 🟢 below are still open
+under this same entry. The original finding read:
 
 `docs/loom/plans/2026-08-02-finding-origin-attribution.md:80` explains why the
 plan's eight `read <file>:<line>` markers are deliberately not refreshed
