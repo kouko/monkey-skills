@@ -47,11 +47,14 @@ both units, one copy of each guard:
   containing a path separator, or absolute. This is the path-safety guard:
   an identifier is never allowed to escape its base directory via
   traversal (OpenSpec #412 bug class).
-- the date stamp does not match ``YYYY-MM-DD`` exactly. For the folder
-  unit the date is interpolated straight into the destination path, so it
-  gets the same path-safety guard as the identifier; for the file unit the
-  date is only ever written into the ``archived:`` frontmatter field, but
-  it is validated identically so that field is never malformed.
+- the date stamp does not match ``YYYY-MM-DD`` exactly, OR is shape-valid
+  but not a real calendar date (e.g. ``2026-02-30``). For the folder unit
+  the date is interpolated straight into the destination path, so it gets
+  the same path-safety guard as the identifier; for the file unit the date
+  is only ever written into the ``archived:`` frontmatter field, but it is
+  validated identically so that field is never malformed — and never
+  rejected downstream by ``scripts/backlog_index.py``'s stricter check
+  after the move has already happened.
 
 If the post-move stamp write fails, the moved object is moved back to its
 original location before ``ArchiveError`` is raised, so a failure never
@@ -119,10 +122,31 @@ def _validate_date(date: str) -> None:
     """Path-safety guard: ``date`` is interpolated straight into the
     destination path (``.../archive/<date>-<change-id>/``), so it MUST match
     ``YYYY-MM-DD`` exactly — refuse anything else (including traversal-shaped
-    values like ``../../etc``) before any filesystem use."""
+    values like ``../../etc``) before any filesystem use. For the file unit
+    the date is only ever written into the ``archived:`` frontmatter field
+    (never interpolated into a path), but it is validated identically here.
+
+    Calendar-strict, not just shape-strict: a shape-valid but
+    calendar-impossible date (``2026-02-30``, February has no 30th) must
+    also be refused BEFORE any filesystem mutation. Without this,
+    ``scripts/backlog_index.py``'s ``--validate``/``--write`` (which run
+    ``strptime``) would reject the ALREADY-MOVED entry after the fact,
+    leaving the store unregenerable until a human hand-edited the archived
+    file — the exact hand-edit the generated-index design exists to
+    eliminate. Duplicates ``scripts/backlog_index.py``'s
+    ``_is_valid_date_shape`` (the twin strict-date check) rather than
+    importing it: loom-code ships as a standalone marketplace plugin, and
+    importing a monkey-skills-repo-root script would couple this
+    self-contained plugin script to one specific host repo's layout."""
     if not _DATE_RE.match(date):
         raise ArchiveError(
             f"invalid --date {date!r}: must match YYYY-MM-DD"
+        )
+    try:
+        datetime.datetime.strptime(date, "%Y-%m-%d")
+    except ValueError:
+        raise ArchiveError(
+            f"invalid --date {date!r}: not a real calendar date"
         )
 
 

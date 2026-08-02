@@ -267,6 +267,7 @@ def test_refuses_unsafe_change_ids_without_touching_filesystem(tmp_path, bad_cha
         "2026/07/10",
         "",
         "2026-07-10-extra",
+        "2026-02-30",  # shape-valid, calendar-invalid (February has no 30th)
     ],
 )
 def test_refuses_unsafe_or_malformed_dates_without_touching_filesystem(tmp_path, bad_date):
@@ -457,6 +458,34 @@ def test_file_unit_stamp_replaces_multi_word_status_without_duplicating_the_fiel
     text = dest.read_text(encoding="utf-8")
     status_lines = [line for line in text.splitlines() if line.startswith("status:")]
     assert status_lines == ["status: archived"]
+
+
+def test_file_unit_refuses_calendar_invalid_date_without_touching_filesystem(tmp_path):
+    """Round-2 whole-branch review bug: `_validate_date` checked only
+    YYYY-MM-DD SHAPE, so a shape-valid but calendar-invalid date
+    (2026-02-30, February has no 30th) passed the guard, the file-unit move
+    proceeded, and `archived: 2026-02-30` was stamped into the moved entry
+    -- then scripts/backlog_index.py's --validate/--write (which run
+    strptime) rejected the already-moved entry, leaving the store
+    unregenerable until a human hand-edited the archived file. Refuse the
+    date up front, before any filesystem mutation, exactly like a
+    traversal-shaped one."""
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    source = _make_entry_file(
+        tmp_path, "2026-08-01-alpha.md",
+        "---\nname: 2026-08-01-alpha\nstatus: OPEN\n---\n\nBody.\n",
+    )
+
+    with pytest.raises(mod.ArchiveError):
+        mod.archive_change_folder(
+            tmp_path, "2026-08-01-alpha.md", date="2026-02-30", unit="file"
+        )
+
+    # refusal is a no-op: source untouched, nothing moved to archive/
+    assert source.is_file()
+    assert not (
+        tmp_path / "docs" / "loom" / "backlog" / "archive" / "2026-08-01-alpha.md"
+    ).exists()
 
 
 def test_file_unit_refuses_missing_entry_file(tmp_path):

@@ -8,8 +8,10 @@ start: the next substantive edit to scripts/backlog_index.py, or the first time 
 
 Four things the whole-branch review found in and around the backlog
 store's generator. All are latent: none affects any of the entries in
-the store as it stands today, and all 74 were scanned for the first
-one specifically.
+the store as it stands today. The duplicate-key scan (finding 1) was
+re-run against every entry file in the store on 2026-08-02, including
+the three this same remediation round added (this entry among them) —
+found none.
 
 **1. Two readers of the same frontmatter disagree on duplicate keys.**
 `scripts/backlog_index.py`'s `parse_frontmatter` is **last-wins**;
@@ -40,8 +42,10 @@ An agent that lands there mid-task learns what it must not do and not
 what to do instead: that content belongs in `backlog/<name>.md`, and
 that `--write` regenerates. The positive instruction currently lives
 only in `docs/loom/README.md` and the store charter. This one is worth
-weighing against banner length — `docs/loom/BACKLOG.md` is the path
-roughly 394 references point at.
+weighing against banner length — `grep -rn "BACKLOG\.md" --exclude-dir=.git .`
+(2026-08-02) finds 236 references across 81 files elsewhere in the repo,
+so the file is widely cited, but the banner is the one place an agent
+editing it mid-task is guaranteed to land on.
 
 **4. A stale transcription in the arc's plan.** The `§Pinned index
 shape` block in

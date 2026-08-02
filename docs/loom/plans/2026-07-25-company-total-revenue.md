@@ -440,7 +440,24 @@ Amendment note 5 (post-PASS, schema-safe → re-review skipped per writing-plans
   - docs/loom/BACKLOG.md  (§"investing-toolkit KPI tearsheet — company total (top-line) revenue lane")
   - docs/loom/specs/2026-07-25-company-total-revenue.md  (§What Becomes Obsolete — the exact items to remove)
 - Acceptance:
-  - RED: `grep -c "The only shipped source is" docs/loom/BACKLOG.md` returns 1 (the disproved premise is still present at `docs/loom/backlog/2026-07-25-investing-toolkit-top-line-revenue-lane-2-36-0-post-ship-follow-ups.md`; note the capital `T` — a lowercase pattern matches nothing and would make this task look already-done), AND `grep -c "kpi_tw_ingest.py:54" docs/loom/BACKLOG.md` returns 0 (the `source_kind` naming-debt entry — now `docs/loom/backlog/2026-07-25-investing-toolkit-source-kind-naming-debt-endpoint-name-axis-vs-shape-ax.md` — does not exist yet).
+  - RED: `grep -c "The only shipped source is" docs/loom/BACKLOG.md` returns 1 (the disproved premise was present at `docs/loom/BACKLOG.md:234` when this task was written, 2026-07-25 — the monolith predates the one-entry-per-file store; note the capital `T` — a lowercase pattern matches nothing and would make this task look already-done), AND `grep -c "kpi_tw_ingest.py:54" docs/loom/BACKLOG.md` returns 0 (the `source_kind` naming-debt entry — now `docs/loom/backlog/2026-07-25-investing-toolkit-source-kind-naming-debt-endpoint-name-axis-vs-shape-ax.md` — does not exist yet).
+  **Correction (2026-08-02, whole-branch review remediation).** A citation
+  sweep had repointed this RED clause's "still present at" location to
+  `docs/loom/backlog/2026-07-25-investing-toolkit-top-line-revenue-lane-2-36-0-post-ship-follow-ups.md`
+  — wrong: that entry never carried this text (`grep -rn "The only shipped
+  source is" .` returns exactly one repo-wide hit, this line itself). The
+  premise was deleted from the BACKLOG.md monolith by this very task, before
+  the later byte-preserving migration into per-entry files, so no entry file
+  ever held it. Restored above to the original `docs/loom/BACKLOG.md:234`
+  anchor, which was true when written. Left in place as a dated correction
+  rather than a silent edit, matching the convention this arc's own plan
+  uses elsewhere (`docs/loom/plans/2026-08-01-backlog-one-entry-per-file.md`).
+  This also resolves why `Module:`, `Files touched:`, and `Context paths:`
+  below still name `docs/loom/BACKLOG.md`: this task genuinely ran against
+  the hand-edited monolith on 2026-07-25, which predates the 2026-08-01
+  one-entry-per-file migration that made `docs/loom/BACKLOG.md` generated
+  output. Do not use this block as a guide to editing `docs/loom/BACKLOG.md`
+  today — see `docs/loom/backlog/README.md`.
   - GREEN: that grep returns 0; the section states the two-lane decision and cites the probe; the arc (d) brief carries the superseded pointer; and `grep -c "kpi_tw_ingest.py:54" docs/loom/BACKLOG.md` returns >=1 (the `source_kind` naming-debt entry exists).
 - Dependencies: none
 - Independent: true

@@ -2,7 +2,7 @@
 """Validate + (later) generate the loom family backlog store's index.
 
 `docs/loom/backlog/README.md` is the store's format SSOT (charter). This
-script's `--validate` mode enforces the four invariants the charter's
+script's `--validate` mode enforces the six invariants the charter's
 frontmatter contract implies, over every entry file under `--store`
 (default `docs/loom/backlog`, both the live tier and its `archive/`
 subdirectory):
@@ -179,12 +179,16 @@ def _body_text(text: str) -> str:
 # corpus's observed shapes: `- Origin: ...`, `- Start (re-trigger): ...`,
 # `- **Origin**: ...`, `- Start: (calc-linkbase) ...`. Captures everything
 # after the (label + optional parenthetical qualifier + colon) up to the
-# next column-0 `- ` bullet or end of string — which is what lets the
-# captured group span a bullet that line-wraps across several indented
-# continuation lines, exactly the shape the migrated entries use.
+# FIRST of: a blank line, the next column-0 `- ` bullet, or end of string.
+# The blank-line stop is what keeps ordinary prose that follows the bullet
+# (the store charter's own escape hatch for a value too long for one
+# bullet) OUT of the captured value; the no-next-bullet/no-blank-line case
+# is what lets the captured group still span a bullet that line-wraps
+# across several indented continuation lines with no blank line between
+# them, exactly the shape the migrated entries use.
 _FIELD_BULLET_PATTERNS = {
     field: re.compile(
-        rf"^-\s*\**{field}\**\s*(?:\([^)]*\))?\s*:\s*(.*?)(?=\n-\s|\Z)",
+        rf"^-\s*\**{field}\**\s*(?:\([^)]*\))?\s*:\s*(.*?)(?=\n[ \t]*\n|\n-\s|\Z)",
         re.MULTILINE | re.DOTALL,
     )
     for field in ("Origin", "Start")

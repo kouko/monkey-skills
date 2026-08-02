@@ -848,6 +848,33 @@ def test_loom_memory_skill_does_not_route_writes_to_the_generated_index():
     )
 
 
+def test_origin_field_matching_bullet_followed_by_trailing_prose_is_accepted(tmp_path):
+    """Round-2 whole-branch review bug: `_FIELD_BULLET_PATTERNS`'s capture
+    group ran to `(?=\\n-\\s|\\Z)` under DOTALL -- everything up to the next
+    column-0 bullet or end of body -- so ordinary prose that follows the
+    bullet (separated by a blank line) got swallowed into the captured
+    value, even though the bullet itself is byte-identical to its
+    frontmatter twin. Worse, the store charter's own escape hatch --
+    'fold the same information into ordinary prose instead' -- produces
+    exactly this failing layout. Pinned semantics: the captured value ends
+    at the FIRST of (1) a blank line, (2) a column-0 '- ' bullet, (3) end of
+    text."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    text = _entry_with_body(
+        "2026-08-01-alpha",
+        "OPEN",
+        "origin: the CI lane drops coverage\n",
+        "- Origin: the CI lane drops coverage\n\n"
+        "Then a paragraph that follows the bullet.",
+    )
+    _write(store, "2026-08-01-alpha.md", text)
+
+    result = _run_validate(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_agreement_check_is_a_noop_when_body_has_no_matching_bullet(tmp_path):
     """The invariant fires only when BOTH copies are present. An entry whose
     frontmatter carries `origin:` but whose body never restates it as a

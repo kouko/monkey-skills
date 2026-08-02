@@ -33,6 +33,24 @@ branches" shape that the same review already caught for the identifier
 guard — the identifier guard now has a discriminating file-unit test,
 and the date guard does not.
 
+**Correction (2026-08-02, whole-branch review remediation round 2).**
+"Both units are genuinely guarded today and there is no live defect"
+was false. `_validate_date` checked shape only (the `YYYY-MM-DD`
+pattern), not calendar validity — `--unit file --date 2026-02-30`
+passed it, and the file unit then moved the entry, stamped the
+malformed date into its frontmatter, and returned success. The live
+defect: `--validate` and `--write` both then refused (they DO reject
+impossible calendar dates), so the store could no longer be regenerated
+from the entry files — the only way back was hand-editing the archived
+file, the exact operation this store's charter says never to do. The
+guard is fixed in this same remediation round (calendar-validity
+checking added to the shared `_validate_date` path). What genuinely
+remains deferred, unchanged by that fix: the discriminating file-unit
+test this item originally asked for — a red test that pins
+`--unit file --date <a shape-valid, calendar-impossible date>` refusing
+before any move, so a future refactor that re-separates the two units'
+date handling cannot silently reopen this.
+
 **3. The store's own charter is archivable.** Nothing stops
 `--unit file` with the identifier `README.md`, which would move
 `docs/loom/backlog/README.md` — the store's format SSOT — into

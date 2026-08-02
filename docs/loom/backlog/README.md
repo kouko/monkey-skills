@@ -49,17 +49,29 @@ content that legitimately varies.
 
 **The one exception, machine-enforced by `scripts/backlog_index.py
 --validate`:** if the body repeats `Origin` or `Start` as a top-level
-bullet — `- Origin: …`, `- **Origin**: …`, `- Start (re-trigger): …`,
-or any similar parenthetical-qualifier variant — **and** the
-frontmatter also carries the matching `origin`/`start` field, the two
-must agree after whitespace normalization (line wraps and indentation
-collapsed to single spaces). A bullet that disagrees with its
-frontmatter twin fails `--validate` with a `[field-agreement]`
-violation. This fires **only when both copies exist**: a body with no
-such bullet is untouched by this rule, and so is a bullet naming any
-field other than `Origin`/`Start`. If an entry doesn't need the
-constraint, don't restate `Origin`/`Start` as a labelled bullet — fold
-the same information into ordinary prose instead.
+bullet — the *label* may vary (`- Origin: …`, `- **Origin**: …`,
+`- Start (re-trigger): …`, or a similar parenthetical-qualifier on the
+label) — **and** the frontmatter also carries the matching
+`origin`/`start` field, the two must agree after whitespace
+normalization (line wraps and indentation collapsed to single
+spaces). A qualifier written *after* the colon is part of the value,
+not the label, and is compared as part of it.
+
+The captured value runs from after the label to the first of: a blank
+line, a line starting with `- ` at column 0, or end of text. A wrapped
+bullet — indented continuation lines, no blank line before the next
+bullet — still captures in full; so does any prose or heading placed
+directly after the bullet with no blank line separating them. If the
+bullet must stand alone, put a blank line between it and whatever
+follows.
+
+A bullet that disagrees with its frontmatter twin fails `--validate`
+with a `[field-agreement]` violation. This fires **only when both
+copies exist**: a body with no such bullet is untouched by this rule,
+and so is a bullet naming any field other than `Origin`/`Start`. If an
+entry doesn't need the constraint, don't restate `Origin`/`Start` as a
+labelled bullet at all — fold the same information into ordinary
+prose instead.
 
 The one standard the body must meet otherwise is a **retrieval**
 standard, not a shape one: a future agent who finds this entry by grep,

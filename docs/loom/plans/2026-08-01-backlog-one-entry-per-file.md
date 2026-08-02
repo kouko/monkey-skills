@@ -64,16 +64,20 @@ Plan-document-reviewer verdict: PASS (2026-08-01, round 5, 15/15)
 
   **Correction (2026-08-02, whole-branch review remediation).** This claim did
   not hold past kickoff. `scripts/backlog_index.py --validate` shipped with
-  five invariant families, not one: (i) name, (ii) status enum, (iii)
-  archive-tier agreement, (iv) `archived:` date shape, and (v) frontmatter <->
+  six invariant families, not one: (i) name, (ii) status enum, (iii)
+  archive-tier agreement, (iv) `archived:` date shape, (v) frontmatter <->
   body field-agreement (`_FIELD_BULLET_PATTERNS`, added during Task 3's
   drafting to close a real drift the charter's freeform-body rule otherwise
-  permitted). A sixth — the archive script's file-unit stamp guard — is being
-  added by Task 7 concurrently with this remediation. "The store needs fewer
-  invariants, not more" is therefore false as a durable claim; it described
-  the plan's *starting* comparison to the memory store's four, not a ceiling
-  the shipped validator respected. Left in place above rather than rewritten,
-  per this plan's own convention of dated correction blocks over silent edits.
+  permitted), and (vi) `description` presence (added by this same
+  remediation commit, closing a gap where a missing `description` rendered a
+  dangling em dash into the index). Separately — outside `--validate`'s six
+  families, since it lives in the archive script, not the generator — a
+  file-unit stamp guard is being added by Task 7 concurrently with this
+  remediation. "The store needs fewer invariants, not more" is therefore
+  false as a durable claim; it described the plan's *starting* comparison to
+  the memory store's four, not a ceiling the shipped validator respected.
+  Left in place above rather than rewritten, per this plan's own convention
+  of dated correction blocks over silent edits.
 
 - **Kickoff decision — no CI file is edited.** Verified: `loom-code-ci.yml:98`
   runs `python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -v`, and

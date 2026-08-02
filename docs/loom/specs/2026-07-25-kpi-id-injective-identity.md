@@ -27,9 +27,11 @@ quirk cannot silently merge two series NOR blank out the filer's entire
 breakdown."**
 
 Live cost: **2 of 7 filers** lost their dimensional lane on the arc's original
-end-to-end run
-(`docs/loom/backlog/2026-07-26-investing-toolkit-kpi-id-identity-2-37-0-post-ship-follow-ups.md`),
-and **23 of 47** on the wider probe run for this brief (§Probe evidence).
+end-to-end run (measured at the predecessor arc's close-out, 2026-07-26; no
+entry in the backlog store records the per-filer breakdown — the original
+`BACKLOG.md:204-222` anchor pointed at the follow-up section header, not at
+this figure, so there is no source to repoint), and **23 of 47** on the wider
+probe run for this brief (§Probe evidence).
 
 - **XOM** — `us-gaap:Revenues` + `(StatementBusinessSegments=Upstream,
   StatementGeographical=US)` under `OperatingSegmentsMember` and under
