@@ -289,6 +289,71 @@ def test_review_skill_verdict_structure_names_origin_without_restating_the_rule(
 
 
 # ---------------------------------------------------------------------------
+# Task 9 — loom-code/agents/code-reviewer.md self-derives upstream artifacts.
+#
+# The dispatch packet carries diff/rubrics/checklists/branch context but no
+# plan/brief/spec path (packet-passing was rejected: the orchestrator has no
+# branch→plan resolution rule, and plans are dated-and-slugged and plural).
+# The fix mirrors D8's self-derivation shape for `docs/loom/PRINCIPLES.md`:
+# the reviewer derives candidate upstream artifacts itself, and finding none
+# is an ordinary `none`, not a defect. Reuses the same `_windows()` prose
+# window as Task 3 (this content lives in the same origin: explanatory
+# paragraph, before "### Aggregation rule") and the same anchoring shape:
+# one contiguous ordered-word clause joined by `\s+`, not keyword presence —
+# a passage inverting the meaning while reusing the same vocabulary must NOT
+# satisfy it.
+# ---------------------------------------------------------------------------
+
+
+def test_code_reviewer_self_derives_upstream_artifacts():
+    _schema_fields, prose = _windows()
+
+    # States WHERE the reviewer looks: it derives candidates from
+    # docs/loom/plans/ and docs/loom/specs/ itself — not a path the
+    # orchestrator hands it.
+    _SELF_DERIVE_CLAUSE_RE = re.compile(
+        r"derives\s+candidate\s+upstream\s+planning\s+artifacts\s+from\s+"
+        r"`docs/loom/plans/`\s+and\s+`docs/loom/specs/`\s+itself"
+    )
+    assert _SELF_DERIVE_CLAUSE_RE.search(prose), (
+        "surrounding text does not state that the reviewer self-derives "
+        "candidate upstream planning artifacts from docs/loom/plans/ and "
+        "docs/loom/specs/"
+    )
+
+    # Cites the D8 self-derivation precedent rather than re-deriving a
+    # fresh mechanism (e.g. restating the git rev-parse anchor logic).
+    _D8_CITATION_RE = re.compile(
+        r"self-derivation\s+shape\s+D8\s+already\s+uses\s+for\s+"
+        r"`docs/loom/PRINCIPLES\.md`"
+    )
+    assert _D8_CITATION_RE.search(prose), (
+        "surrounding text does not cite the D8 self-derivation precedent "
+        "rather than re-deriving its own mechanism"
+    )
+
+    # Finding none is stated as ordinary, not a defect — one contiguous
+    # clause, same anchoring discipline as the clauses above.
+    _NONE_NOT_DEFECT_RE = re.compile(
+        r"[Ff]inding\s+none\s+there\s+is\s+an\s+ordinary\s+`none`,?\s+"
+        r"not\s+a\s+defect"
+    )
+    assert _NONE_NOT_DEFECT_RE.search(prose), (
+        "surrounding text does not state that finding no upstream artifact "
+        "is an ordinary `none`, not a defect"
+    )
+
+    # Negative control: guards against an inversion instructing the
+    # reviewer to keep searching / treat an empty result as a gap. Uses a
+    # fixed-width negative lookbehind for "not " so it does not trip on
+    # this task's own sanctioned phrasing ("must not search harder").
+    assert not re.search(r"(?<!not )search\s+harder", prose), (
+        "surrounding text appears to instruct the reviewer to search "
+        "harder rather than accept an ordinary `none`"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Drift guard — the plan's §Pinned field grammar is the SSOT (plan's own
 # words: "Transcribe VERBATIM from this pin, never from each other and never
 # re-derived"). The three tests above each pin their own file in isolation;

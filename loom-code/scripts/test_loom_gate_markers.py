@@ -597,7 +597,7 @@ def test_origin_quote_containing_separator_splits_on_first_occurrence(tmp_path):
     assert (_marker_dir(repo) / "review-pass.json").is_file()
 
 
-def test_origin_quote_containing_separator_refuses_when_absent_from_committed_file(
+def test_origin_quote_containing_separator_records_unverified_when_absent(
     tmp_path,
 ):
     # Same shape as the test above, but the committed file does NOT
@@ -606,12 +606,14 @@ def test_origin_quote_containing_separator_refuses_when_absent_from_committed_fi
     # cause: if `_origin_path_quote` ever split on a DIFFERENT ` :: `
     # occurrence than the grammar check (e.g. last instead of first), the
     # quoted-check would fail on this value, `_origin_path_quote` would
-    # return None, and `_origin_quote_problems` would silently SKIP the
-    # finding — treating an unverifiable quote as if it had nothing to
-    # verify — and the marker would mint anyway (rc 0) despite the quote
-    # never appearing in the file. Both parses now run through the same
-    # single site, so this must always refuse: rc 4, no marker written.
+    # return None, and `_finding_quote_status` would record `"malformed"`
+    # instead of a real quote-absent verdict — treating an unverifiable
+    # quote as if it had nothing to verify. Both parses now run through
+    # the same single site, so this must always record the real
+    # verification failure (Task 8: it no longer refuses to mint either
+    # way, but which label lands is still load-bearing).
     repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     _commit_file(repo, "p.md", "nothing matching here\n")
     verdict_file = _write_verdict(
         tmp_path,
@@ -625,8 +627,11 @@ def test_origin_quote_containing_separator_refuses_when_absent_from_committed_fi
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
 
-    assert rc == 4
-    assert not (_marker_dir(repo) / "review-pass.json").is_file()
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "unverified-quote-absent"
 
 
 def test_duplicate_dimension_lines_treated_as_unparseable_requires_origin(tmp_path):
@@ -866,11 +871,15 @@ def _commit_file(repo: Path, rel_path: str, content: str) -> None:
     _git(repo, "commit", "-q", "-m", f"add {rel_path}")
 
 
-def test_origin_quote_present_only_in_worktree_refuses_to_mint(tmp_path):
+def test_origin_quote_present_only_in_worktree_records_unverified(tmp_path):
     # Committed content lacks the quoted sentence; the on-disk (uncommitted)
     # file contains it. The check must read the commit, never the worktree —
-    # a Path.read_text() implementation would wrongly pass this.
+    # a Path.read_text() implementation would wrongly report this quote
+    # verified. Task 8: the mint no longer refuses either way, but the
+    # ledger must still say "unverified", not "verified" — that is the
+    # only observable proof the worktree copy was never consulted.
     repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     _commit_file(repo, "docs/note.md", "Nothing quotable here.\n")
     (repo / "docs" / "note.md").write_text(
         "Nothing quotable here. The quoted sentence appears now.\n",
@@ -888,8 +897,11 @@ def test_origin_quote_present_only_in_worktree_refuses_to_mint(tmp_path):
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
 
-    assert rc == 4
-    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "unverified-quote-absent"
 
 
 def test_validate_dry_run_reports_quote_verification_did_not_run(tmp_path, capsys):
@@ -927,8 +939,14 @@ def test_origin_quote_present_in_commit_mints(tmp_path):
     assert (_marker_dir(repo) / "review-pass.json").is_file()
 
 
-def test_origin_quote_absent_at_sha_refuses_with_distinct_message(tmp_path, capsys):
+def test_unverifiable_quote_records_and_still_mints(tmp_path):
+    # Task 8 RED: a well-formed origin: whose quote is absent from the
+    # cited file must exit 0, write the marker, and leave a ledger entry
+    # with quote_status: unverified-quote-absent — quote verification is
+    # demoted from a mint refusal to a recorded fact. Fails today (rc 4,
+    # no marker written).
     repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     _commit_file(repo, "docs/note.md", "Nothing like the quote in here.\n")
     verdict_file = _write_verdict(
         tmp_path,
@@ -942,15 +960,16 @@ def test_origin_quote_absent_at_sha_refuses_with_distinct_message(tmp_path, caps
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
 
-    assert rc == 4
-    assert not (_marker_dir(repo) / "review-pass.json").exists()
-    err = capsys.readouterr().err
-    assert "docs/note.md" in err
-    assert "a totally different sentence" in err
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "unverified-quote-absent"
 
 
-def test_origin_file_absent_at_sha_refuses_with_distinct_message(tmp_path, capsys):
+def test_origin_file_absent_at_sha_records_unverified_and_mints(tmp_path):
     repo = _init_repo(tmp_path)  # docs/note.md never committed
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     verdict_file = _write_verdict(
         tmp_path,
         _verdict_with_finding(
@@ -965,11 +984,11 @@ def test_origin_file_absent_at_sha_refuses_with_distinct_message(tmp_path, capsy
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
 
-    assert rc == 4
-    assert not (_marker_dir(repo) / "review-pass.json").exists()
-    err = capsys.readouterr().err
-    assert "docs/note.md" in err
-    assert "does not exist" in err
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "unverified-file-absent"
 
 
 def test_origin_none_skips_quote_verification_entirely(tmp_path):
@@ -1001,6 +1020,86 @@ def test_show_committed_file_sha_unresolvable_distinguished_from_absent(tmp_path
 
     assert content is None
     assert failure_kind == "sha-unresolvable"
+
+
+def test_ledger_finding_entries_sha_unresolvable_recorded_distinctly(tmp_path):
+    # Fifth of the five unverifiable reasons (Task 8). Same unreachable-
+    # through-the-CLI reasoning as the test above — `head_sha` inside
+    # `_cmd_review_pass` always comes from a live `rev-parse HEAD` on a
+    # real repo, so it is never a well-formed-but-unresolvable sha —
+    # exercised directly on `_ledger_finding_entries` instead.
+    from loom_gate_markers import _ledger_finding_entries
+
+    repo = _init_repo(tmp_path)
+    bad_sha = "0" * 40  # well-formed hex, does not resolve to any commit
+    text = _verdict_with_finding(
+        dimension_line="correctness",
+        origin_line='docs/note.md :: "anything"',
+    )
+
+    entries = _ledger_finding_entries(text, repo, bad_sha)
+
+    assert entries[0]["quote_status"] == "unverified-sha-unresolvable"
+
+
+def test_ledger_finding_entries_head_sha_none_records_unverified_without_crash(
+    tmp_path, monkeypatch
+):
+    # Defensive guard (Task 8): `_append_origin_ledger` is only invoked
+    # when `branch` resolved, and in every observed git state `branch`
+    # and `head_sha` resolve or fail together (both fail on an unborn
+    # HEAD — see test_review_pass_unborn_head_exits_2_and_writes_nothing
+    # below) — so this state should be unreachable through the CLI. The
+    # guard must never call `_show_committed_file` with a `None` sha —
+    # asserting only the final `quote_status` is NOT enough to pin this:
+    # `_show_committed_file(repo, None, path)` happens to ALSO resolve to
+    # `sha-unresolvable` (git fails to verify the literal revision string
+    # "None"), so a mutant that deletes the guard produces the identical
+    # output and would survive an output-only assertion. Monkeypatching
+    # `_show_committed_file` to raise if called is what actually proves
+    # the short-circuit runs before any git subprocess is invoked.
+    import loom_gate_markers
+    from loom_gate_markers import _ledger_finding_entries
+
+    def _boom(*_args, **_kwargs):
+        raise AssertionError("_show_committed_file must not be called")
+
+    monkeypatch.setattr(loom_gate_markers, "_show_committed_file", _boom)
+
+    repo = _init_repo(tmp_path)
+    text = _verdict_with_finding(
+        dimension_line="correctness",
+        origin_line='docs/note.md :: "anything"',
+    )
+
+    entries = _ledger_finding_entries(text, repo, None)
+
+    assert entries[0]["quote_status"] == "unverified-sha-unresolvable"
+
+
+def test_review_pass_unborn_head_exits_2_and_writes_nothing(tmp_path):
+    # Watch item from the Task 8 plan: moving quote verification earlier
+    # (into the ledger, computed ahead of every early return) must not
+    # disturb the pre-existing "cannot resolve HEAD" exit-2 path. A git
+    # repo with no commits yet resolves neither `--abbrev-ref HEAD` nor
+    # `HEAD` itself (both fail with the same "ambiguous argument HEAD"
+    # error) — `resolve_marker_dir` still succeeds (`rev-parse --git-dir`
+    # needs no commit), so `_cmd_review_pass` is reached and must hit its
+    # own `branch is None or head_sha is None` guard, not crash inside
+    # quote verification and not write a ledger entry (guarded on
+    # `branch is not None`, which is also None here).
+    repo = tmp_path / "unborn"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 2
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert not (_marker_dir(repo) / "origin-ledger.json").exists()
 
 
 def test_show_committed_file_distinguishes_file_absent_from_sha_unresolvable(
@@ -1124,8 +1223,9 @@ def test_normalized_tier_folds_typographic_quotes_dashes_and_nbsp(tmp_path):
     assert (_marker_dir(repo) / "review-pass.json").is_file()
 
 
-def test_normalized_match_is_case_sensitive_and_refuses(tmp_path):
+def test_normalized_match_is_case_sensitive_and_records_unverified(tmp_path):
     repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     _commit_file(repo, "docs/note.md", "Hello World, this is committed.\n")
     verdict_file = _write_verdict(
         tmp_path,
@@ -1139,8 +1239,11 @@ def test_normalized_match_is_case_sensitive_and_refuses(tmp_path):
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
 
-    assert rc == 4
-    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "unverified-quote-absent"
 
 
 def test_normalizer_does_not_strip_markdown_emphasis_or_backticks(tmp_path):
@@ -1148,6 +1251,7 @@ def test_normalizer_does_not_strip_markdown_emphasis_or_backticks(tmp_path):
     # `**`/backticks, or a quote of the rendered prose would wrongly match
     # markdown source that never contained that literal text.
     repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     _commit_file(repo, "docs/note.md", "plain text, no markdown here.\n")
     verdict_file = _write_verdict(
         tmp_path,
@@ -1161,8 +1265,11 @@ def test_normalizer_does_not_strip_markdown_emphasis_or_backticks(tmp_path):
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
 
-    assert rc == 4
-    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "unverified-quote-absent"
 
 
 def test_normalizer_does_not_strip_backticks(tmp_path):
@@ -1170,6 +1277,7 @@ def test_normalizer_does_not_strip_backticks(tmp_path):
     # normaliser too, or a quote of rendered prose could wrongly match
     # markdown source that never contained that literal text.
     repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     _commit_file(repo, "docs/note.md", "plain text, no markdown here.\n")
     verdict_file = _write_verdict(
         tmp_path,
@@ -1183,8 +1291,11 @@ def test_normalizer_does_not_strip_backticks(tmp_path):
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
 
-    assert rc == 4
-    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "unverified-quote-absent"
 
 
 def test_normalizer_folds_nfd_needle_against_nfc_haystack(tmp_path):
@@ -1271,14 +1382,16 @@ def test_origin_quote_japanese_present_mints(tmp_path):
     assert (_marker_dir(repo) / "review-pass.json").is_file()
 
 
-def test_origin_quote_cjk_absent_from_committed_file_refuses(tmp_path):
+def test_origin_quote_cjk_absent_from_committed_file_records_unverified(tmp_path):
     # Discriminating case for the two mint tests above: same shape, but
     # the committed file does not contain the quoted text. Manually
     # verified during development that pointing this fixture's content at
-    # text which DOES contain the quote flips this to rc == 0 — i.e. the
-    # refusal below is the matcher actually rejecting an absent quote,
-    # not an unrelated failure (grammar, sha resolution, file-not-found).
+    # text which DOES contain the quote flips the ledger status to
+    # verified-exact — i.e. the unverified status asserted below is the
+    # matcher actually rejecting an absent quote, not an unrelated
+    # failure (grammar, sha resolution, file-not-found).
     repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     _commit_file(repo, "docs/note.md", "這份文件與引用的字句完全無關。\n")
     verdict_file = _write_verdict(
         tmp_path,
@@ -1292,8 +1405,11 @@ def test_origin_quote_cjk_absent_from_committed_file_refuses(tmp_path):
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
 
-    assert rc == 4
-    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "unverified-quote-absent"
 
 
 def test_origin_quote_nfd_kana_needle_matches_nfc_haystack_mints(tmp_path):
@@ -1348,20 +1464,22 @@ def test_normalize_for_quote_match_is_symmetric_on_typographic_marks(tmp_path):
     )
 
 
-def test_origin_directory_path_refuses_to_mint(tmp_path):
+def test_origin_directory_path_records_not_a_file_and_mints(tmp_path):
     # `git show <sha>:<dir>` exits 0 and prints a git-generated tree
     # listing, not repository content — a directory path must never be
-    # treated as a readable origin (FATAL: this mints a quote from thin
-    # air, since the listing's filenames are content the reviewer never
-    # read). Two committed files so the listing has two entries, quoted
-    # as "a.md b.md" — a non-blank quote, so this test still reaches
-    # the directory-type check it names rather than being shadowed by
-    # the grammar refusal. This quote is also not arbitrary filler: the
-    # listing's two lines
-    # normalise (newline -> space) to exactly this string, so if the
-    # type check that refuses this finding were ever bypassed, this
-    # quote would go on to match at the normalised tier and mint.
+    # treated as a readable origin (FATAL if it were: this would mint a
+    # quote from thin air, since the listing's filenames are content the
+    # reviewer never read). Two committed files so the listing has two
+    # entries, quoted as "a.md b.md" — a non-blank quote, so this test
+    # still reaches the directory-type check it names rather than being
+    # shadowed by the grammar refusal. This quote is also not arbitrary
+    # filler: the listing's two lines normalise (newline -> space) to
+    # exactly this string, so if the type check that classifies this
+    # finding were ever bypassed, this quote would go on to match at the
+    # normalised tier and record verified-normalised instead of the
+    # unverified-not-a-file asserted below.
     repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     _commit_file(repo, "docs/a.md", "hello\n")
     _commit_file(repo, "docs/b.md", "world\n")
     verdict_file = _write_verdict(
@@ -1376,17 +1494,21 @@ def test_origin_directory_path_refuses_to_mint(tmp_path):
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
 
-    assert rc == 4
-    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "unverified-not-a-file"
 
 
-def test_origin_directory_path_trailing_slash_refuses_to_mint(tmp_path):
+def test_origin_directory_path_trailing_slash_records_not_a_file_and_mints(tmp_path):
     # Same construction as the sibling test above (two committed files,
     # quote = the normalised listing) for the same reason: an arbitrary
     # filler quote would be non-blank but never actually exercise a
     # bypass, so it would not prove this test still reaches the
     # directory-type check when the path carries a trailing slash.
     repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     _commit_file(repo, "docs/a.md", "hello\n")
     _commit_file(repo, "docs/b.md", "world\n")
     verdict_file = _write_verdict(
@@ -1401,11 +1523,14 @@ def test_origin_directory_path_trailing_slash_refuses_to_mint(tmp_path):
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
 
-    assert rc == 4
-    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "unverified-not-a-file"
 
 
-def test_origin_directory_tree_header_word_refuses_to_mint(tmp_path, capsys):
+def test_origin_directory_tree_header_word_records_not_a_file_and_mints(tmp_path):
     # The header `git show` prints for ANY tree object is literally
     # "tree <hash>:<dir>" — a quote of "tree <hash>" needs no knowledge
     # of the directory's actual contents, only the header's fixed format
@@ -1415,10 +1540,11 @@ def test_origin_directory_tree_header_word_refuses_to_mint(tmp_path, capsys):
     # directory-type check it names, rather than being shadowed by the
     # grammar refusal. This quote is also an
     # EXACT substring of the real `git show` output (verified live
-    # below) — if the type check that refuses this finding were ever
-    # bypassed, THIS quote would go on to match and mint, unlike an
-    # arbitrary filler would.
+    # below) — if the type check that classifies this finding were ever
+    # bypassed, THIS quote would go on to match and record
+    # verified-exact instead of the unverified-not-a-file asserted below.
     repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     _commit_file(repo, "docs/a.md", "hello\n")
     head_sha = _head(repo)
     tree_header = _git(repo, "show", f"{head_sha}:docs")
@@ -1435,22 +1561,26 @@ def test_origin_directory_tree_header_word_refuses_to_mint(tmp_path, capsys):
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
 
-    assert rc == 4
-    assert not (_marker_dir(repo) / "review-pass.json").exists()
-    err = capsys.readouterr().err
-    assert "docs" in err
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "unverified-not-a-file"
 
 
-def test_origin_quote_undecodable_blob_refuses_without_crash(tmp_path, capsys):
-    # A non-UTF-8 blob must be refused as its own explicit failure kind,
-    # never an uncaught UnicodeDecodeError traceback (which would leak
-    # interpreter paths and mint no marker only by accident of the crash).
-    # "PNG tail" is a non-blank quote, so this test still reaches the
-    # decode-failure path it names, rather than being shadowed by the
-    # grammar refusal (the decode never runs far enough to check quote
-    # content anyway — decoding fails before any match attempt — so the
-    # quote's actual words are immaterial).
+def test_origin_quote_undecodable_blob_records_unverified_without_crash(tmp_path):
+    # A non-UTF-8 blob must record its own explicit failure reason, never
+    # an uncaught UnicodeDecodeError traceback (which would leak
+    # interpreter paths and mint no marker only by accident of the crash —
+    # Task 8: the mint never depended on this outcome anyway, but "does
+    # not crash" is still the load-bearing property). "PNG tail" is a
+    # non-blank quote, so this test still reaches the decode-failure path
+    # it names, rather than being shadowed by the grammar refusal (the
+    # decode never runs far enough to check quote content anyway —
+    # decoding fails before any match attempt — so the quote's actual
+    # words are immaterial).
     repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     (repo / "bin.dat").write_bytes(b"\x80\x81\x82PNGtail")
     _git(repo, "add", "bin.dat")
     _git(repo, "commit", "-q", "-m", "add binary")
@@ -1466,18 +1596,22 @@ def test_origin_quote_undecodable_blob_refuses_without_crash(tmp_path, capsys):
         ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
 
-    assert rc == 4
-    assert not (_marker_dir(repo) / "review-pass.json").exists()
-    err = capsys.readouterr().err
-    assert "bin.dat" in err
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "unverified-undecodable-blob"
 
 
-def test_review_pass_marker_carries_origin_quote_tier_counts(tmp_path):
-    # §Notes kickoff decision: the tier count must be collected from the
-    # first finding, or the pre-registered ≥40-finding stop rule has no
-    # observable separating "no quotable origins existed" from "the
-    # matcher rejected true ones".
+def test_review_pass_marker_no_longer_carries_origin_quote_tier_counts(tmp_path):
+    # Task 8: `origin_quote_tiers` is REMOVED from review-pass.json — the
+    # origin ledger supersedes it (see the finding-level `quote_status`
+    # values asserted below), and leaving both would restate the
+    # per-run-snapshot population-mismatch defect the ledger exists to
+    # fix (docs/loom/backlog/2026-08-02-origin-quote-tier-counts-have-no-
+    # durable-ledger.md).
     repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     _commit_file(repo, "docs/exact.md", "The exact quoted sentence is here.\n")
     _commit_file(repo, "docs/norm.md", "It’s the pre–flight check.\n")
     text = "\n".join(
@@ -1508,7 +1642,251 @@ def test_review_pass_marker_carries_origin_quote_tier_counts(tmp_path):
     assert rc == 0
     marker = _marker_dir(repo) / "review-pass.json"
     data = json.loads(marker.read_text(encoding="utf-8"))
-    assert data["origin_quote_tiers"] == {"exact": 1, "normalised": 1}
+    assert "origin_quote_tiers" not in data
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert [f["quote_status"] for f in entry["findings"]] == [
+        "verified-exact",
+        "verified-normalised",
+    ]
+
+
+# -------------------------------------------------------------- origin ledger
+
+
+def _ledger_path(repo: Path) -> Path:
+    return _marker_dir(repo) / "origin-ledger.json"
+
+
+def test_origin_ledger_appends_on_a_needs_revision_round(tmp_path):
+    # RED (Task 7): NEEDS_REVISION returns 3 and writes no review-pass.json
+    # today, but the ledger's whole point is recording rounds that FAIL —
+    # that path must still get one entry.
+    repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    verdict_file = _write_verdict(
+        tmp_path, VALID_VERDICT.replace("verdict: PASS", "verdict: NEEDS_REVISION")
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 3
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    rounds = ledger["branches"][branch]
+    assert len(rounds) == 1
+    entry = rounds[0]
+    assert entry["round"] == 1
+    assert entry["verdict"] == "NEEDS_REVISION"
+    assert entry["head_sha"] == _head(repo)
+    datetime.fromisoformat(entry["written_at"])
+    assert entry["findings"] == [
+        {
+            "arm": "code",
+            "dimension": "correctness",
+            "origin_raw": "none",
+            "quote_status": "none",
+        }
+    ]
+
+
+def test_origin_ledger_needs_revision_round_carries_real_quote_verification(
+    tmp_path,
+):
+    # Task 8: verification is no longer only reachable on a round that
+    # already made it past the mint gate — a NEEDS_REVISION round (exit
+    # 3, no marker) must still carry a REAL verified/unverified result
+    # into the ledger, not Task 7's placeholder. Measured on this repo:
+    # 0 of 24 severity-🔴 findings ever reached the old mint-time-only
+    # verification call, because every one of them forced NEEDS_REVISION
+    # first.
+    repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    _commit_file(repo, "docs/note.md", "The exact quoted sentence is here.\n")
+    text = (
+        "standards_version: 2026-06\n"
+        "verdict: NEEDS_REVISION\n"
+        "dimension_scores:\n"
+        "  security: 1\n"
+        "findings:\n"
+        "  - severity: red\n"
+        "    where: loom-code/scripts/foo.py:12\n"
+        "    dimension: correctness\n"
+        '    origin: docs/note.md :: "The exact quoted sentence is here."\n'
+        "    note: real finding\n"
+    )
+    verdict_file = _write_verdict(tmp_path, text)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 3
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["verdict"] == "NEEDS_REVISION"
+    assert entry["findings"][0]["quote_status"] == "verified-exact"
+
+
+def test_origin_ledger_appends_second_round_without_rewriting_first(tmp_path):
+    repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    main(["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)])
+    main(["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)])
+
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    rounds = ledger["branches"][branch]
+    assert [r["round"] for r in rounds] == [1, 2]
+    assert rounds[0]["verdict"] == "PASS"
+    assert rounds[1]["verdict"] == "PASS"
+
+
+def test_origin_ledger_keys_separate_branches_independently(tmp_path):
+    repo = _init_repo(tmp_path)
+    first_branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+    main(["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)])
+
+    _git(repo, "checkout", "-b", "feat-other")
+    main(["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)])
+
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    assert set(ledger["branches"]) == {first_branch, "feat-other"}
+    assert [r["round"] for r in ledger["branches"][first_branch]] == [1]
+    assert [r["round"] for r in ledger["branches"]["feat-other"]] == [1]
+
+
+def test_origin_ledger_unparseable_dimension_records_null_dimension_arm_code(
+    tmp_path,
+):
+    repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    text = "\n".join(
+        [
+            "standards_version: 2026-06",
+            "verdict: PASS",
+            "dimension_scores:",
+            "  security: 5",
+            "findings:",
+            "  - severity: yellow",
+            "    where: loom-code/scripts/foo.py:12",
+            "    origin: none",
+            "    note: no dimension: line at all",
+        ]
+    ) + "\n"
+    verdict_file = _write_verdict(tmp_path, text)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"] == [
+        {
+            "arm": "code",
+            "dimension": None,
+            "origin_raw": "none",
+            "quote_status": "none",
+        }
+    ]
+
+
+def test_origin_ledger_records_origin_raw_null_when_absent_on_docs_arm(tmp_path):
+    repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    text = "\n".join(
+        [
+            "standards_version: 2026-06",
+            "verdict: PASS",
+            "dimension_scores:",
+            "  security: 5",
+            "findings:",
+            "  - severity: yellow",
+            "    where: docs/foo.md:12",
+            "    dimension: omission",
+            "    note: docs-arm finding, no origin: line",
+        ]
+    ) + "\n"
+    verdict_file = _write_verdict(tmp_path, text)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"] == [
+        {
+            "arm": "docs",
+            "dimension": "omission",
+            "origin_raw": None,
+            "quote_status": "absent",
+        }
+    ]
+
+
+def test_origin_ledger_records_malformed_quote_status_on_grammar_failure(tmp_path):
+    # A grammar-invalid origin: (Task 8's "malformed" label) still
+    # refuses the round (exit 4, deterministic, no false positives) —
+    # but the ledger docstring (Task 7) promises an entry on EVERY
+    # invocation, schema-failure paths included, so this needs its own
+    # distinct quote_status rather than colliding with "none" or one of
+    # the five real unverified-<reason> values, none of which apply when
+    # there was never a valid path/quote pair to check.
+    repo = _init_repo(tmp_path)
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line="docs/loom/plans/x.md",  # bare path, no ` :: `
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    ledger = json.loads(_ledger_path(repo).read_text(encoding="utf-8"))
+    entry = ledger["branches"][branch][0]
+    assert entry["findings"][0]["quote_status"] == "malformed"
+
+
+def test_origin_ledger_write_failure_swallowed_leaves_exit_code_and_marker_unchanged(
+    tmp_path, capsys
+):
+    # A literal chmod-unwritable marker_dir would ALSO break review-pass.json's
+    # own write (both go through the same directory via tmpfile+os.replace),
+    # which would falsify "marker unchanged". Colliding only the ledger's own
+    # path — pre-creating it as a directory — isolates the failure to the
+    # ledger while leaving review-pass.json's write path untouched.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+    marker_dir = _marker_dir(repo)
+    marker_dir.mkdir(parents=True, exist_ok=True)
+    (marker_dir / "origin-ledger.json").mkdir()
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    marker = marker_dir / "review-pass.json"
+    assert marker.is_file()
+    data = json.loads(marker.read_text(encoding="utf-8"))
+    assert set(data) == {"schema", "branch", "head_sha", "verdict", "written_at"}
+    err = capsys.readouterr().err
+    assert "could not record origin ledger entry" in err
 
 
 # ------------------------------------------------------------------- verified

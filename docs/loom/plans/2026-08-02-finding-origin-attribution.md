@@ -450,6 +450,156 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
 - Independent: false
 - Brief item covered: "enforced by `loom_gate_markers.py` in the same fail-closed way `where:` already is" — the shipped-content bump this repo's rule requires for any PR changing agent or skill content. Depends on Task 5 rather than Task 1 so the CHANGELOG describes the whole shipped contract, not just its enforcement half.
 
+## Re-cut after Tasks 1-6: ledger-first, gate-second
+
+> **User decision 2026-08-02, after two independent soundness reviews of the
+> shipped Tasks 1-6.** The mechanism as built enforces and verifies, but never
+> **collects**. Measured on this repo: **0 of 24** severity-🔴 findings ever
+> reach quote verification, because `_cmd_review_pass` returns 3 on
+> `NEEDS_REVISION` before verification runs and the aggregation rule sends every
+> 🔴 there; **51.5%** of files changed across the last 40 merges are `.md`, which
+> a mixed branch routes to the exempt docs arm; and the marker file that holds
+> the only machine-readable output is overwritten every run, with the human
+> record living in 30-day-rolling transcripts.
+>
+> The consequence is not a smaller sample but a **biased** one: the findings that
+> survive to verification are those still present in a round carrying no 🔴 and
+> at most one 🟡 — the nit tail. Plan-caused defects concentrate in the
+> severities that force `NEEDS_REVISION`, are fixed, and vanish from the next
+> round's text. The pre-registered stop rule reads an all-`none` result as
+> "delete the field", and the sampling bias points exactly that way. A null
+> result would be the sampling rule restating itself, not evidence about plans.
+>
+> **The binding constraint is persistence, not enforcement.** Both code-arm
+> contracts already require `origin:` on every finding in every round, so the
+> datum is produced everywhere; nothing keeps it. Tasks 7-10 therefore move the
+> value from a mint-time refusal to a durable record, and demote the refusal.
+> Tasks 1, 3, 4 and 5 are unchanged; Task 2's verification code is kept and its
+> output redirected.
+
+- **Kickoff decision:** stop-rule start condition → **counting begins when the
+  durable ledger holds code-arm entries, not at first mint.** *(agent, taken
+  now because this is the last moment it is legitimately editable — the rule's
+  own binding clause is "must not be edited **after data lands**", and no data
+  has landed: the branch is unpushed, the marker is per-checkout, and nothing in
+  the repo reads the field.)* Only the start condition changes. The threshold
+  (≥40), the verdict (all-`none` ⇒ delete; ≥1 human-confirmed true origin ⇒
+  keep) and the explicit refusal to judge on hit RATE are untouched.
+
+- **Kickoff decision:** ledger file → **`<git-dir>/loom/origin-ledger.json`,
+  separate from the parked `review-rounds.json`.** *(agent.)*
+  `docs/loom/plans/2026-07-30-review-round-ledger-and-bad-fix-recheck.md:11`
+  already specifies a branch-keyed, append-only, never-reset round ledger that
+  explicitly covers the `NEEDS_REVISION` path. That plan is PARKED for reasons
+  orthogonal to this arc, and implementing half of it here would both pre-empt
+  its unpark and braid two arcs. A separate purpose-scoped file avoids that;
+  whoever unparks the round ledger can merge the two, and this decision is the
+  note telling them to.
+
+## Task 7 — A durable origin ledger, written on every round
+
+- Description: Extend `_cmd_review_pass` in `loom_gate_markers.py` so **every**
+  invocation appends one entry to `<git-dir>/loom/origin-ledger.json` —
+  including the `NEEDS_REVISION` path that currently returns 3 writing nothing,
+  and including invocations whose verdict text fails schema validation only in
+  ways that still leave findings parseable. The file is keyed by branch name,
+  append-only, never reset. Each entry carries `round` (1-based per branch),
+  `verdict`, `head_sha`, `written_at`, and a `findings` list; each finding
+  carries `arm` (`code` | `docs`, derived from its `dimension:` against §Pinned
+  dimension partition), `dimension` (raw, or `null` when unparseable),
+  `origin_raw` (the value as written, or `null` when the line is absent) and
+  `quote_status`. Recording is **never** allowed to change an exit code or block
+  a mint: wrap the write so any failure is reported on stderr and swallowed.
+- Module: loom-code/scripts/loom_gate_markers.py
+- Files touched: loom-code/scripts/loom_gate_markers.py, loom-code/scripts/test_loom_gate_markers.py
+- Context paths:
+  - loom-code/scripts/loom_gate_markers.py
+  - loom-code/scripts/test_loom_gate_markers.py
+  - docs/loom/plans/2026-07-30-review-round-ledger-and-bad-fix-recheck.md
+- Acceptance:
+  - RED: `loom-code/scripts/test_loom_gate_markers.py::test_origin_ledger_appends_on_a_needs_revision_round` — a `NEEDS_REVISION` invocation must still exit 3 AND leave one ledger entry recording its findings. Fails today: the early return writes nothing.
+  - GREEN: a second invocation appends `round: 2` under the same branch without rewriting round 1; a different branch gets its own key; each finding's `arm` is derived from the pinned partition with an unparseable `dimension:` recorded as `null` arm `code` (fail closed, matching §Pinned dimension partition); `origin_raw` is the value verbatim, `null` when the field is absent; a ledger write failure (make the directory unwritable) prints to stderr, leaves the exit code and the marker unchanged, and is asserted; `python3 -m pytest loom-code/scripts/` passes.
+- External surfaces: none — stdlib `json` and `pathlib`, both already imported by this module.
+- Reuse-adequacy:
+  - Observed: `_iter_findings` already segments a verdict into per-finding blocks and resolves `dimension`/`origin`/duplicate state, and both the validating lane and the extraction lane already go through it — `read loom-code/scripts/loom_gate_markers.py:488-550`
+  - Observed: `_write_marker` writes JSON via `os.replace` to a fixed name, which is a whole-file overwrite — `read loom-code/scripts/loom_gate_markers.py:337-350`
+  - Intended: reuse `_iter_findings` unchanged — it is the only segmentation and the ledger must agree with the gate about what a finding is. `_write_marker`'s overwrite semantics do NOT carry over: the ledger must read-modify-write to append, and its failure must be non-fatal where `_write_marker`'s is fatal.
+- Dependencies: none
+- Independent: false
+- Brief item covered: re-cut above — "the binding constraint is persistence, not enforcement"; unblocks §Resolved Questions 3's tally, which the brief requires be "collected from the first finding or not at all".
+
+## Task 8 — Verification records instead of refusing
+
+- Description: Demote quote verification from a mint refusal to a recorded
+  fact. A **grammar** problem (malformed `origin:` value, duplicate lines) still
+  refuses — it is deterministic and has no false positives. A **quote that does
+  not verify** — absent, file absent, not a file, undecodable, sha unresolvable
+  — no longer returns 4; it is recorded in the ledger as
+  `quote_status: unverified-<reason>` and the mint proceeds. A quote that
+  verifies records `verified-exact` or `verified-normalised`; `origin: none`
+  records `none`; an absent field on an exempt docs-arm finding records
+  `absent`. Move the verification call ABOVE the `NEEDS_REVISION` return so it
+  runs on every round.
+- Module: loom-code/scripts/loom_gate_markers.py
+- Files touched: loom-code/scripts/loom_gate_markers.py, loom-code/scripts/test_loom_gate_markers.py
+- Context paths:
+  - loom-code/scripts/loom_gate_markers.py
+  - loom-code/scripts/test_loom_gate_markers.py
+- Acceptance:
+  - RED: `loom-code/scripts/test_loom_gate_markers.py::test_unverifiable_quote_records_and_still_mints` — a well-formed `origin:` whose quote is absent from the cited file must exit 0, write the marker, and leave a ledger entry with `quote_status: unverified-quote-absent`. Fails today: it exits 4 and writes nothing.
+  - GREEN: a malformed `origin:` still exits 4 and writes no marker; the five unverifiable reasons are recorded distinctly; verification runs on a `NEEDS_REVISION` round and its results reach the ledger even though exit stays 3; the `validate` dry-run still states it could not verify; the previously-shipped `origin_quote_tiers` marker key is **removed** — the ledger supersedes it, and leaving both would restate the population-mismatch defect already filed; `python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/` passes.
+- External surfaces: none.
+- Dependencies: Task 7 completes first
+- Independent: false
+- Brief item covered: re-cut above — "moves the value from a mint-time refusal to a durable record, and demotes the refusal"; removes the push-blocking failure class whose two false-refusal shapes are filed at `docs/loom/backlog/2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift.md`.
+
+## Task 9 — The reviewer can reach the documents it is asked to quote
+
+- Description: The `code-reviewer` dispatch packet carries the diff, rubrics,
+  checklists and branch context — **no plan, brief or spec path**. The agent is
+  asked to quote documents it was never handed, which predicts a near-total
+  `none` yield for a reason that is the input contract rather than the idea.
+  Fix it by **self-derivation**, copying the shape already used for
+  `docs/loom/PRINCIPLES.md` (`code-reviewer.md` D8, "Activation is
+  self-derived") rather than by passing paths: the orchestrator has no
+  branch→plan resolution rule and plans are dated-and-slugged and plural, so
+  packet-passing would require inventing one. State in the agent contract that
+  the reviewer derives candidate upstream artifacts from `docs/loom/plans/` and
+  `docs/loom/specs/`, and that finding none is an ordinary `none`, not a defect.
+- Module: loom-code/agents/code-reviewer.md
+- Files touched: loom-code/agents/code-reviewer.md, loom-code/scripts/test_finding_origin_attribution.py
+- Context paths:
+  - loom-code/agents/code-reviewer.md
+  - loom-code/skills/requesting-code-review/SKILL.md
+- Acceptance:
+  - RED: `loom-code/scripts/test_finding_origin_attribution.py::test_code_reviewer_self_derives_upstream_artifacts` — asserts the contract tells the reviewer where to look for upstream planning artifacts and that finding none is not a defect; fails against the current file.
+  - GREEN: the assertion holds as one contiguous ordered clause (the shape Tasks 3-5 landed, not keyword presence); the D8 self-derivation precedent is cited rather than re-derived; no dimension is asked to score against a plan; `python3 -m pytest loom-code/scripts/` passes.
+- External surfaces: none.
+- Dependencies: none
+- Independent: true
+- Brief item covered: re-cut above — without it the field's yield is governed by the input contract rather than by whether documents cause defects.
+
+## Task 10 — Make the shipped record match the shipped mechanism
+
+- Description: Rewrite the `## [0.45.0]` CHANGELOG entry to describe what
+  actually ships after Tasks 7-9 — a recorded origin with a durable per-branch
+  ledger, a grammar-only refusal, and no `origin_quote_tiers` marker key — and
+  amend the brief's §Resolved Questions 3 to carry the corrected stop-rule start
+  condition. The existing entry describes the pre-re-cut behaviour and would be
+  a shipped false claim.
+- Module: loom-code/CHANGELOG.md
+- Files touched: loom-code/CHANGELOG.md, docs/loom/specs/2026-08-02-finding-origin-attribution.md, loom-code/scripts/test_docs_review_blocking_class.py
+- Context paths:
+  - loom-code/CHANGELOG.md
+  - docs/loom/specs/2026-08-02-finding-origin-attribution.md
+- Acceptance:
+  - RED: `loom-code/scripts/test_docs_review_blocking_class.py::test_changelog_0_45_0_describes_the_ledger_not_a_mint_refusal` — asserts the entry names the ledger and does NOT claim a quote failure refuses to mint; fails against the current entry.
+  - GREEN: the entry matches the shipped behaviour clause by clause; no mention of `origin_quote_tiers`; the brief's start condition reads as amended; the version stays 0.45.0 (one unreleased bump covers the whole arc); `python3 scripts/check_version_bump.py --base main --head HEAD` reports OK; `python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/` passes.
+- External surfaces: none.
+- Dependencies: Tasks 7, 8, 9 complete first
+- Independent: false
+- Brief item covered: re-cut above — a release note describing behaviour the release does not have is the defect class this arc exists to count.
+
 ## Decision Log
 
 1. chose to make every field in a review finding count only when it sits in that finding's own column, including the one field that already worked the old way, because leaving two different rules inside one reader is worse than the flaw it fixes — cost-of-change: the day a reviewer writes a finding whose lines drift out of alignment, this choice costs them a blocked submission whose message names a missing field rather than the misalignment that hid it

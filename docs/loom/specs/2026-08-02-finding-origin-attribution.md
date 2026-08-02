@@ -268,3 +268,27 @@ lands:
   few are the expensive defects, which is the entire hypothesis. Recording the
   expected base rate here is what stops a low number from being misread as
   failure later.
+
+> **Correction 2026-08-02, after the Tasks 7-9 re-cut.** The start condition
+> above read, as first written, "accumulate from first mint" — implicitly
+> the moment `_cmd_review_pass` first wrote `review-pass.json`. Two
+> independent soundness reviews of the shipped Tasks 1-6 found that moment
+> never arrives for most rounds: 0 of 24 severity-🔴 findings on this repo
+> ever reached quote verification, because a `NEEDS_REVISION` round returned
+> before minting or verifying anything, and the marker file itself was
+> overwritten every run rather than accumulated. **The start condition is
+> now: counting begins when the durable ledger
+> (`<git-dir>/loom/origin-ledger.json`, Task 7) holds code-arm entries, not
+> at first mint.** Only the start condition changes — the **≥40** threshold,
+> the verdict (all-`none` ⇒ delete the field; ≥1 human-confirmed true origin
+> ⇒ keep it), and the explicit refusal to judge on hit rate above are all
+> untouched.
+>
+> It was legitimate to make this change now, and only now: the rule's own
+> binding clause is that it "cannot be rationalised after the data lands,"
+> and no data has landed under either version of the start condition — the
+> branch was unpushed, `review-pass.json` is per-checkout, and nothing in
+> the repo reads the field yet. Editing the finish line before the race
+> starts is not the thing that clause forbids; editing it once a runner is
+> partway down the track is. This correction is the record of which side of
+> that line the edit falls on.

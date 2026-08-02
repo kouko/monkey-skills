@@ -9,16 +9,16 @@ Dir: `<git-dir>/loom/` resolved via `git rev-parse --git-dir` from
 `--repo` (default cwd); created if missing.
 
 - `review-pass.json`  {"schema": 1, "branch", "head_sha", "verdict",
-  "written_at", optional "base_sha"/"patch_id",
-  optional "origin_quote_tiers": {"exact": n, "normalised": m}} —
-  written ONLY after the reviewer's verdict text passes schema
-  validation (the audit's schema gate: a marker can only exist if a
-  schema-valid verdict text exists). NEEDS_REVISION never mints a
-  marker (exit 3); a malformed verdict never mints one either (exit 4,
-  missing keys listed). `origin_quote_tiers` is omitted when no finding
-  carries a verified quoted `origin:` (same optionality pattern as
-  `base_sha`/`patch_id`); see `_origin_quote_problems` for why it must
-  be collected into the marker rather than left on stdout.
+  "written_at", optional "base_sha"/"patch_id"} — written ONLY after the
+  reviewer's verdict text passes schema validation (the audit's schema
+  gate: a marker can only exist if a schema-valid verdict text exists).
+  NEEDS_REVISION never mints a marker (exit 3); a malformed verdict
+  never mints one either (exit 4, missing keys listed). Quote
+  verification (below) does NOT gate this marker (Task 8) — the
+  `origin_quote_tiers` field this marker used to carry is REMOVED; the
+  origin ledger below supersedes it (a per-run snapshot restated the
+  same population-mismatch defect the ledger exists to fix — see
+  `docs/loom/backlog/2026-08-02-origin-quote-tier-counts-have-no-durable-ledger.md`).
 - `verified.json`     {"schema": 1, "head_sha", "run_cmd", "exit_code",
   "output_tail", "written_at", optional "base_sha"/"patch_id"} — minted
   ONLY after `--run "<cmd>"` actually executes in `--repo` and exits 0;
@@ -40,11 +40,35 @@ Dir: `<git-dir>/loom/` resolved via `git rev-parse --git-dir` from
 - `waiver.json`       {"schema": 1, "scope": "push", "reason",
   "written_at"} — requires a real justification (>= 10 chars) and
   shouts on stderr that the review gate is being bypassed one-shot.
+- `origin-ledger.json` {"schema": 1, "branches": {<branch>: [{"round",
+  "verdict", "head_sha", "written_at", "findings": [{"arm", "dimension",
+  "origin_raw", "quote_status"}, ...]}, ...]}} — append-only, never
+  reset, written on EVERY `review-pass` invocation (including
+  NEEDS_REVISION and schema-failure paths, both of which mint no
+  `review-pass.json`) so the sample of recorded findings is never
+  biased by which rounds happened to pass (see `_append_origin_ledger`).
+  A write failure here is reported on stderr and swallowed — it never
+  changes the exit code or blocks `review-pass.json` (unlike every
+  other marker above, whose write failures ARE fatal). `quote_status`
+  (Task 8) is a REAL verification result, computed on every round (even
+  NEEDS_REVISION ones — quote verification no longer only runs on a
+  round that already made it past the mint gate): `"absent"` (no
+  `origin:` line), `"none"` (the literal value `none`), `"malformed"`
+  (an `origin:` line present but not grammar-valid — the round refuses
+  on that ground regardless, see `_finding_problems`), `"verified-exact"`
+  / `"verified-normalised"` (the quote matched the committed file at
+  that tier), or `"unverified-<reason>"` for the five ways a
+  grammar-valid quote can fail to verify — `sha-unresolvable`,
+  `file-absent`, `not-a-file`, `undecodable-blob` (all four named after
+  `_show_committed_file`'s failure kinds) and `quote-absent` (the file
+  read fine but never contained the quote). None of the
+  `unverified-<reason>` outcomes block the mint (see `_finding_quote_status`).
 
 Exit codes: 0 marker written; 2 not a git repo; 3 NEEDS_REVISION
 verdict; 4 malformed/nonconforming input. Writes are atomic
 (tmp file + os.replace); existing markers are overwritten silently
-(latest wins).
+(latest wins) — except `origin-ledger.json`, which is read-modify-write
+appended, never overwritten wholesale.
 
 `validate --verdict-file <path> [--suite-line "<text>"]` is a
 dry-run of the exact same schema checks, but reports EVERY violation
@@ -354,6 +378,70 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+_ORIGIN_LEDGER_FILENAME = "origin-ledger.json"
+
+
+def _append_origin_ledger(
+    marker_dir: Path,
+    branch: str,
+    verdict: str | None,
+    head_sha: str | None,
+    findings: list[dict],
+) -> None:
+    """Append one round entry to `<marker_dir>/origin-ledger.json`, keyed
+    by `branch`; append-only, never reset (Task 7 — the re-cut's binding
+    constraint: persistence, not enforcement). Deliberately NOT built on
+    `_write_marker`: that helper's whole-file overwrite is exactly the
+    semantic the ledger must not have — this reads the existing file
+    (if any), appends, and writes the merged result back, still via
+    tmpfile+`os.replace` for atomicity.
+
+    `findings` is precomputed by the caller (`_ledger_finding_entries`,
+    Task 8: real quote verification against `head_sha`) rather than
+    derived here from raw text — this function only assembles the round
+    envelope and writes it, so the one git-touching computation is never
+    duplicated between the ledger write and any stdout reporting the
+    caller does with the same results.
+
+    Recording must NEVER block a mint or change an exit code: every
+    failure (unwritable directory, a corrupt or unreadable existing
+    ledger, anything) is reported on stderr and swallowed here — this
+    function raises nothing to its caller."""
+    path = marker_dir / _ORIGIN_LEDGER_FILENAME
+    try:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            data = {"schema": 1, "branches": {}}
+        rounds = data.setdefault("branches", {}).setdefault(branch, [])
+        rounds.append(
+            {
+                "round": len(rounds) + 1,
+                "verdict": verdict,
+                "head_sha": head_sha,
+                "written_at": _now_iso(),
+                "findings": findings,
+            }
+        )
+        marker_dir.mkdir(parents=True, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(
+            dir=str(marker_dir), prefix=_ORIGIN_LEDGER_FILENAME, suffix=".tmp"
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+                f.write("\n")
+            os.replace(tmp, path)
+        finally:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+    except Exception as exc:  # noqa: BLE001 — recording must never block a mint
+        print(
+            f"loom-gate-markers: could not record origin ledger entry: {exc}",
+            file=sys.stderr,
+        )
+
+
 def validate_verdict_text(text: str) -> tuple[str | None, list[str]]:
     """Validate reviewer verdict text against the schema gate.
 
@@ -399,6 +487,16 @@ def _origin_required(dimension_value: str | None) -> bool:
     if not value:
         return True
     return value not in _DOCS_ARM_DIMENSIONS
+
+
+def _finding_arm(dimension_value: str | None) -> str:
+    """`"docs"` iff `_origin_required` would exempt this dimension (i.e. it
+    both parses and falls in the docs-arm set); `"code"` otherwise —
+    reuses `_origin_required` rather than re-deriving the partition, so
+    the ledger's arm classification can never drift from the gate's own
+    requirement/exemption logic (§Pinned dimension partition, fail
+    closed: absent/blank/unrecognized all land on `"code"`)."""
+    return "docs" if not _origin_required(dimension_value) else "code"
 
 
 def _parse_origin(
@@ -463,6 +561,63 @@ def _origin_grammar_problem(origin_value: str | None) -> str | None:
 def _origin_path_quote(origin_value: str | None) -> tuple[str, str] | None:
     """Thin wrapper over `_parse_origin`: the extracted spec (Task 2)."""
     return _parse_origin(origin_value)[0]
+
+
+def _finding_quote_status(
+    origin_value: str | None,
+    repo: Path,
+    head_sha: str | None,
+    file_cache: dict[str, tuple[str | None, str | None]],
+) -> str:
+    """The origin ledger's `quote_status` (Task 7 shape, Task 8
+    verification): `"absent"` when no `origin:` line exists at all,
+    `"none"` when the value is literally `none`, `"malformed"` when a
+    value is present but not grammar-valid (the round refuses on that
+    ground regardless — see `_finding_problems` — but the ledger still
+    gets an entry for it, so this needs its own label, distinct from
+    the five real verification-failure reasons below which all
+    presuppose a grammar-valid path/quote pair to check).
+
+    Otherwise this is real verification against `head_sha`'s committed
+    content, reusing `_show_committed_file`'s failure-kind constants
+    directly as the `unverified-<reason>` suffix so the ledger's wording
+    can never drift from that helper's own vocabulary:
+    `unverified-sha-unresolvable`, `unverified-file-absent`,
+    `unverified-not-a-file`, `unverified-undecodable-blob`, or (the file
+    read fine but never contained the quote) `unverified-quote-absent`.
+    A verifying quote records `verified-exact` or `verified-normalised`.
+
+    NONE of the `unverified-<reason>` outcomes are returned to the
+    caller as a mint-blocking problem (Task 8 re-cut: verification is a
+    recorded fact, not a refusal) — only the caller's own grammar check
+    still refuses.
+
+    `head_sha` may be `None` (an unresolvable HEAD) even though in
+    every observed git state that happens exactly when `branch` is also
+    `None` — and the caller only appends to the ledger when `branch` is
+    not `None` — so this path should be unreachable in practice. Guarded
+    explicitly anyway rather than assumed: a quote needs a real sha to
+    check against, and this function must never call `_show_committed_file`
+    with one it does not have."""
+    if origin_value is None:
+        return "absent"
+    if origin_value.strip() == "none":
+        return "none"
+    spec = _origin_path_quote(origin_value)
+    if spec is None:
+        return "malformed"
+    path, quote = spec
+    if head_sha is None:
+        return f"unverified-{_SHA_UNRESOLVABLE}"
+    if path not in file_cache:
+        file_cache[path] = _show_committed_file(repo, head_sha, path)
+    content, failure_kind = file_cache[path]
+    if failure_kind is not None:
+        return f"unverified-{failure_kind}"
+    tier = _quote_match_tier(content, quote)
+    if tier is None:
+        return "unverified-quote-absent"
+    return f"verified-{tier}"
 
 
 # §Notes kickoff decision (quote-match strictness): fold typographic
@@ -535,8 +690,8 @@ class _FindingInfo:
 def _iter_findings(text: str):
     """Yield one `_FindingInfo` per `- severity:` finding block. Shared by
     `_finding_problems` (Task 1's grammar/requirement checks) and
-    `_origin_quote_problems` (Task 2's quote verification) so both read
-    `origin:` through the identical block-scoping rule — a value nested
+    `_ledger_finding_entries` (Task 8's real quote verification) so both
+    read `origin:` through the identical block-scoping rule — a value nested
     inside e.g. a `note: |` block-literal must never count as a sibling
     field of either reader."""
     lines = text.splitlines()
@@ -636,84 +791,35 @@ def _finding_problems(text: str) -> list[str]:
     return problems
 
 
-def _origin_quote_problems(
-    text: str, repo: Path, head_sha: str
-) -> tuple[list[str], list[str], dict[str, int]]:
-    """For every finding whose `origin:` names a path and quote, verify
-    the quote occurs in that path's COMMITTED content at `head_sha` —
-    never the worktree (brief §Resolved Questions 1). Returns
-    `(problems, notes, tier_counts)`: `problems` is one message per
-    failing finding, naming path, sha and quote — [] iff every quoted
-    origin verifies (or there are none). `origin: none` is skipped
-    entirely — nothing to verify, no git call made. `notes` records, per
-    §Notes kickoff decision, every finding whose quote matched ONLY at
-    the normalised tier. `tier_counts` is `{"exact": n, "normalised": m}`
-    over every finding in THIS call's `text` that verified (either
-    tier), pooling both the code arm and the docs arm — a per-run
-    snapshot, not a running total. It is threaded into the marker
-    payload (rather than left as a `notes`-only stdout line) because the
-    payload is machine-readable where stdout text is not — NOT because
-    it accumulates: `_write_marker` overwrites the one fixed marker file
-    on every `review-pass`, so nothing recorded here survives past the
-    next run on the same checkout. The pre-registered ≥40-finding stop
-    rule needs a count that persists across runs; this field is not
-    that ledger (caller's job to add one, separately, if needed)."""
-    problems: list[str] = []
-    notes: list[str] = []
-    tier_counts = {"exact": 0, "normalised": 0}
+def _ledger_finding_entries(
+    text: str, repo: Path, head_sha: str | None
+) -> list[dict]:
+    """One dict per `- severity:` finding block, for the origin ledger
+    (Task 7 shape) — reuses `_iter_findings` unchanged so the ledger's
+    notion of "a finding" never diverges from the gate's. `dimension`
+    and `origin_raw` are the values verbatim (or `null`); `arm` is
+    derived via `_finding_arm`. `quote_status` (Task 8) is REAL
+    verification against `head_sha`'s committed content via
+    `_finding_quote_status` — never the worktree (brief §Resolved
+    Questions 1) — computed here (not left as Task 7's `"pending"`
+    placeholder) so a round that never reaches the mint step (schema
+    failure, NEEDS_REVISION) still leaves a real verified/unverified
+    record; measured on this repo, 0 of 24 severity-🔴 findings ever
+    reached the old mint-time-only verification call. One file-content
+    cache shared across every finding in this call's `text` — a path
+    quoted by more than one finding is read from committed content once."""
     file_cache: dict[str, tuple[str | None, str | None]] = {}
-    for info in _iter_findings(text):
-        spec = _origin_path_quote(info.origin_value)
-        if spec is None:
-            continue
-        path, quote = spec
-        if path not in file_cache:
-            file_cache[path] = _show_committed_file(repo, head_sha, path)
-        content, failure_kind = file_cache[path]
-        if failure_kind == _SHA_UNRESOLVABLE:
-            problems.append(
-                f"finding at line {info.start_line}: origin path {path!r} "
-                f"could not be verified — sha {head_sha!r} does not "
-                "resolve to a commit"
-            )
-            continue
-        if failure_kind == _FILE_ABSENT:
-            problems.append(
-                f"finding at line {info.start_line}: origin path {path!r} "
-                f"does not exist as a readable file at {head_sha!r} — or "
-                "is a submodule gitlink, which this check cannot "
-                f"distinguish from absent (quote {quote!r} unverifiable)"
-            )
-            continue
-        if failure_kind == _NOT_A_FILE:
-            problems.append(
-                f"finding at line {info.start_line}: origin path {path!r} "
-                f"is not a file at {head_sha!r} (quote {quote!r} "
-                "unverifiable)"
-            )
-            continue
-        if failure_kind == _UNDECODABLE_BLOB:
-            problems.append(
-                f"finding at line {info.start_line}: origin path {path!r} "
-                f"at {head_sha!r} is not valid UTF-8 (quote {quote!r} "
-                "unverifiable)"
-            )
-            continue
-        tier = _quote_match_tier(content, quote)
-        if tier is None:
-            problems.append(
-                f"finding at line {info.start_line}: quote {quote!r} not "
-                f"found in {path!r} at {head_sha!r} (checked exact and "
-                "normalised)"
-            )
-        else:
-            tier_counts[tier] += 1
-            if tier == "normalised":
-                notes.append(
-                    f"finding at line {info.start_line}: origin quote in "
-                    f"{path!r} matched only after normalisation"
-                )
-    return problems, notes, tier_counts
+    return [
+        {
+            "arm": _finding_arm(info.dimension_value),
+            "dimension": info.dimension_value,
+            "origin_raw": info.origin_value,
+            "quote_status": _finding_quote_status(
+                info.origin_value, repo, head_sha, file_cache
+            ),
+        }
+        for info in _iter_findings(text)
+    ]
 
 
 def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int:
@@ -724,6 +830,25 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
         return 4
 
     verdict, problems = validate_verdict_text(text)
+
+    # Ledger recording — INCLUDING real quote verification (Task 8) —
+    # happens on EVERY invocation that got this far, ahead of every
+    # early return below (NEEDS_REVISION, schema-failure, unresolvable
+    # HEAD), all of which used to return before writing anything or
+    # verifying anything (Task 7/8 re-cut: the binding constraint is
+    # persistence, not enforcement; verification is a recorded fact, not
+    # a mint-time-only refusal). `_ledger_finding_entries` is safe to
+    # call even when `head_sha` is `None` — it never touches git in that
+    # case (`_finding_quote_status`'s own guard) — so no ordering
+    # dependency on the HEAD-resolution check further down is needed.
+    # `branch`/`head_sha` are re-used below for the marker itself once/
+    # if minting proceeds.
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    head_sha = _git(repo, "rev-parse", "HEAD")
+    ledger_findings = _ledger_finding_entries(text, repo, head_sha)
+    if branch is not None:
+        _append_origin_ledger(marker_dir, branch, verdict, head_sha, ledger_findings)
+
     if problems:
         print(
             "loom-gate-markers: verdict text failed schema validation; "
@@ -741,25 +866,18 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
         )
         return 3
 
-    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
-    head_sha = _git(repo, "rev-parse", "HEAD")
     if branch is None or head_sha is None:
         print("loom-gate-markers: cannot resolve HEAD.", file=sys.stderr)
         return 2
 
-    origin_problems, origin_notes, origin_tiers = _origin_quote_problems(
-        text, repo, head_sha
-    )
-    if origin_problems:
-        print(
-            "loom-gate-markers: origin quote verification failed; no "
-            "marker written:",
-            file=sys.stderr,
-        )
-        for problem in origin_problems:
-            print(f"  - {problem}", file=sys.stderr)
-        return 4
-
+    # Quote verification no longer gates the mint (Task 8): a finding
+    # whose quote does not verify — absent, file absent, not a file,
+    # undecodable, sha unresolvable — is recorded above in the ledger as
+    # `unverified-<reason>`, and the mint proceeds regardless. Only the
+    # deterministic grammar check (`problems`, above) still refuses —
+    # it has no false positives; quote verification, measured on this
+    # repo, has two known-unfixed false-refusal shapes and was blocking
+    # a push on exactly the tail of findings it could never see anyway.
     payload = {
         "schema": 1,
         "branch": branch,
@@ -770,18 +888,14 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
     patch_id_fields = compute_patch_id(repo)
     if patch_id_fields is not None:
         payload["base_sha"], payload["patch_id"] = patch_id_fields
-    # Optional, same shape as base_sha/patch_id: omitted entirely when no
-    # quoted origin was verified, so the frozen-field-set test on a
-    # quote-free verdict is untouched. Present whenever at least one
-    # quote matched (either tier) — a per-run snapshot count (both
-    # arms), overwritten by the next review-pass on this checkout, not
-    # a durable ledger for the stop rule (see `_origin_quote_problems`).
-    if origin_tiers["exact"] or origin_tiers["normalised"]:
-        payload["origin_quote_tiers"] = origin_tiers
     path = _write_marker(marker_dir, "review-pass.json", payload)
     print(path)
-    for note in origin_notes:
-        print(f"loom-gate-markers: {note}")
+    for entry in ledger_findings:
+        if entry["quote_status"] == "verified-normalised":
+            print(
+                "loom-gate-markers: an origin quote matched only after "
+                "normalisation — see origin-ledger.json for detail."
+            )
     return 0
 
 

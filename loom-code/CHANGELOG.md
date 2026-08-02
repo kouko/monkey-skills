@@ -5,34 +5,65 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
-## [0.45.0] — 2026-08-02 — a review finding must name where it came from
+## [0.45.0] — 2026-08-02 — a review finding names its origin, durably
 
 ### Added
 
-- **Every code-arm review finding now carries `origin:`, valued `none` or
-  `<path> :: "<verbatim quote from that file>"`.** `_finding_problems` in
-  `loom_gate_markers.py` refuses to mint `review-pass.json` for a finding
-  whose `dimension:` line is absent, empty, duplicated, or names a value
-  outside the pinned code-arm/docs-arm partition — that finding is treated
-  as code-arm and required to carry the field, fail-closed. A docs-arm
-  dimension is exempt from carrying `origin:` at all, but a field that IS
-  present is grammar-checked on both arms alike.
-- **A quoted origin is verified against the file's committed content at
-  `head_sha`, never the working tree** — `git show <head_sha>:<path>`, run
-  as a distinct step in `_cmd_review_pass` after the sha resolves. Matching
-  is two-stage: byte-exact first, then one shared normaliser (NFC,
-  whitespace collapse, typographic-quote/dash folding) on a miss; which
-  stage matched is recorded per run in the marker payload as
-  `origin_quote_tiers: {"exact": n, "normalised": m}`. Refusals distinguish
-  quote-absent-at-sha, file-absent-at-sha, not-a-file, an undecodable blob,
-  and sha-unresolvable — each names path, sha and quote in its own message
-  rather than collapsing to one generic failure. The `validate` dry-run has
-  no `--repo` to check a quote against, so it now states loudly that quote
-  verification did not run, rather than passing silently.
-- **The field lands in three contracts.** `code-reviewer.md` (the
-  whole-branch agent whose output the marker validates) owns the rule and
-  states it as an action, not a judgment: name the file only when you can
-  quote the wrong statement verbatim, otherwise write `none` — with no
+- **Every code-arm review finding carries `origin:`, valued `none` or
+  `<path> :: "<verbatim quote from that file>"`, and grammar is the only
+  thing that still refuses the mint.** `_finding_problems` in
+  `loom_gate_markers.py` refuses to mint `review-pass.json` (exit 4) for a
+  finding whose `dimension:` line is absent, empty, duplicated, or names a
+  value outside the pinned code-arm/docs-arm partition — treated as
+  code-arm and required to carry the field, fail-closed — and for an
+  `origin:` line that is malformed or duplicated. A docs-arm dimension is
+  exempt from carrying `origin:` at all; a field that IS present there is
+  grammar-checked the same as on the code arm. Grammar has no false
+  positives, which is why it is the only remaining refusal.
+- **A quote that fails to verify no longer blocks the mint — it is
+  recorded instead.** `_finding_quote_status` checks each grammar-valid
+  `origin:` against the file's committed content at `head_sha`, never the
+  working tree (`git show <head_sha>:<path>`; §Resolved Questions 1).
+  Matching is two-stage: byte-exact first, then one shared normaliser
+  (NFC, whitespace collapse, typographic-quote/dash folding) on a miss,
+  recorded as `verified-exact` / `verified-normalised`. The five ways a
+  grammar-valid quote can still fail to verify —
+  `unverified-sha-unresolvable`, `unverified-file-absent`,
+  `unverified-not-a-file`, `unverified-undecodable-blob`,
+  `unverified-quote-absent` — are each recorded in the ledger below, and
+  `review-pass.json` mints regardless (exit 0). Verification now runs on
+  every round, including `NEEDS_REVISION`, ahead of every early return, so
+  the recorded sample is never gated by which rounds happened to pass. The
+  `validate` dry-run still has no `--repo` to check a quote against, and
+  states loudly that verification did not run rather than passing
+  silently.
+- **A new durable, append-only, branch-keyed ledger —
+  `<git-dir>/loom/origin-ledger.json` — is the record of truth**,
+  superseding the marker-carried per-run `origin_quote_tiers` snapshot,
+  which is REMOVED (it restated the same population-mismatch defect this
+  arc exists to fix). `_append_origin_ledger` appends one entry per
+  `review-pass` invocation — round number, verdict, `head_sha`, timestamp,
+  and one `findings` list entry per finding (`arm`, `dimension`,
+  `origin_raw`, `quote_status`) — on EVERY invocation, including the
+  `NEEDS_REVISION` and schema-failure paths that mint no
+  `review-pass.json` at all. A write failure here is reported on stderr
+  and swallowed; unlike every other marker, it never changes the exit code
+  or blocks the mint. `quote_status` also covers the non-verification
+  cases: `absent` (no `origin:` line), `none` (the literal value), and
+  `malformed` (present but ungrammatical — the one case still counted
+  above as a refusal).
+- **The whole-branch reviewer now self-derives which upstream planning
+  artifacts to check a quote against**, instead of being asked to quote
+  documents its dispatch packet never carried (no plan, brief, or spec
+  path). `code-reviewer.md` now states, following the same self-derivation
+  shape already used for `docs/loom/PRINCIPLES.md` (D8, "Activation is
+  self-derived"), that the reviewer looks under `docs/loom/plans/` and
+  `docs/loom/specs/` for itself, and that finding none there is an
+  ordinary `none`, not a defect.
+- **The field still lands in the same three contracts.** `code-reviewer.md`
+  (the whole-branch agent whose output the marker validates) owns the rule
+  and states it as an action, not a judgment: name the file only when you
+  can quote the wrong statement verbatim, otherwise write `none` — with no
   penalty for `none`. `code-quality-reviewer.md` (per-task) emits the same
   field and says explicitly that it is **not** marker-enforced there, since
   per-task verdicts never reach `loom_gate_markers.py`. `requesting-code-review/SKILL.md`

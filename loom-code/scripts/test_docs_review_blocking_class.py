@@ -237,3 +237,130 @@ def test_findings_window_excludes_unrelated_evidence_mention():
         "mention this test checks for moved or was reworded"
     )
     assert unrelated_anchor not in _findings_block(text)
+
+
+# ---------------------------------------------------------------------------
+# Task 10 of docs/loom/plans/2026-08-02-finding-origin-attribution.md.
+#
+# The `## [0.45.0]` CHANGELOG entry was written after Task 6 and describes
+# the PRE-re-cut behaviour (a quote failure refuses to mint; an
+# `origin_quote_tiers` marker key). Tasks 7-9 replaced both with a durable
+# per-branch ledger, a grammar-only refusal, and reviewer self-derivation of
+# upstream artifacts. This test pins the entry to the SHIPPED mechanism.
+#
+# Scope: measured window from the `## [0.45.0]` heading to the next `## [`
+# heading, per `docs/loom/memory/grep-tests-scope-to-measured-neighborhood.md`
+# -- never the whole file, which would let an unrelated older entry's prose
+# satisfy either half of this assertion by accident.
+# ---------------------------------------------------------------------------
+
+
+def _changelog_0_45_0_section() -> str:
+    text = CHANGELOG_MD.read_text(encoding="utf-8")
+    start = text.index("## [0.45.0]")
+    next_heading = re.search(r"\n## \[", text[start + 1 :])
+    assert next_heading is not None, (
+        "no `## [` heading follows `## [0.45.0]` -- window end anchor "
+        "must be findable, not absent"
+    )
+    end = start + 1 + next_heading.start()
+    return text[start:end]
+
+
+def _sentences(text: str) -> list[str]:
+    """Coarse sentence split on '.', '!', '?' followed by whitespace --
+    good enough for the prose in this changelog (no abbreviations that
+    end a bullet mid-sentence)."""
+    return re.split(r"(?<=[.!?])\s+", text)
+
+
+# A sentence claiming a quote-verification FAILURE still blocks the mint --
+# the exact false claim the pre-re-cut entry made. Matched per-sentence
+# (not merely "somewhere in the window") so two true, unrelated statements
+# elsewhere -- "a malformed origin: line still refuses to mint" (still
+# true) and "a quote is checked against head_sha" (still true) -- cannot
+# combine to trip this; only a SINGLE sentence asserting both halves does.
+_QUOTE_FAIL_RE = re.compile(
+    r"quote[^.!?]{0,80}?"
+    r"(?:does\s+not\s+verify|fails?\s+to\s+verify|is\s+unverif\w+|"
+    r"unverifiable|is\s+absent|not\s+found|does\s+not\s+match)",
+    re.IGNORECASE,
+)
+_MINT_REFUSAL_CORE_RE = re.compile(
+    r"refus\w*\s+to\s+mint|block\w*\s+the\s+mint|prevent\w*\s+the\s+mint|"
+    r"no\s+marker\s+is\s+written|exit\w*\s+4",
+    re.IGNORECASE,
+)
+# A refusal-shaped phrase immediately preceded by a negator ("no longer
+# blocks the mint", "never refuses to mint") is the TRUE, shipped claim,
+# not the false one -- excluded via a fixed-width lookbehind-style check
+# on the text right before the match (re's lookbehind must be fixed
+# width, so this is done as a plain slice-and-match instead of baking the
+# negation into one regex).
+_NEGATED_JUST_BEFORE_RE = re.compile(
+    r"(?:no\s+longer|never|does\s+not|doesn't|won't|will\s+not)\s*$",
+    re.IGNORECASE,
+)
+
+
+def _claims_mint_refusal(sentence: str) -> bool:
+    for m in _MINT_REFUSAL_CORE_RE.finditer(sentence):
+        preceding = sentence[max(0, m.start() - 20) : m.start()]
+        if _NEGATED_JUST_BEFORE_RE.search(preceding):
+            continue
+        return True
+    return False
+
+
+def test_changelog_0_45_0_describes_the_ledger_not_a_mint_refusal():
+    section = _changelog_0_45_0_section()
+
+    # Positive half: the entry names the durable, append-only, branch-keyed
+    # ledger that Tasks 7-8 shipped as the record of truth.
+    assert "origin-ledger.json" in section, (
+        "0.45.0 entry does not name origin-ledger.json -- the durable "
+        "record Tasks 7-8 shipped"
+    )
+    assert re.search(r"append-only", section, re.IGNORECASE), (
+        "0.45.0 entry does not describe the ledger as append-only"
+    )
+    assert re.search(r"branch", section, re.IGNORECASE), (
+        "0.45.0 entry does not describe the ledger as branch-keyed"
+    )
+    assert "NEEDS_REVISION" in section, (
+        "0.45.0 entry does not state the ledger is written even on a "
+        "NEEDS_REVISION round"
+    )
+    for status in (
+        "verified-exact",
+        "verified-normalised",
+        "unverified-",
+    ):
+        assert status in section, (
+            f"0.45.0 entry does not name the recorded quote_status {status!r}"
+        )
+    assert "self-deriv" in section.lower(), (
+        "0.45.0 entry does not describe Task 9's reviewer self-derivation "
+        "of upstream planning artifacts"
+    )
+    assert "origin_quote_tiers" not in section or "REMOVED" in section, (
+        "0.45.0 entry mentions origin_quote_tiers without stating it was "
+        "removed"
+    )
+
+    # Negative half, made to DISCRIMINATE rather than check a literal
+    # string's absence (which would be satisfied trivially and forever by
+    # construction once this entry is rewritten). Scans every sentence in
+    # the window for the co-occurrence of a quote-failure clause and a
+    # mint-refusal clause -- the actual false claim the pre-re-cut entry
+    # made ("Refusals distinguish quote-absent-at-sha, file-absent-at-sha,
+    # ... rather than collapsing to one generic failure"). Proven to fire:
+    # pasting a sentence like "A quote that does not verify refuses to
+    # mint the marker." into the entry makes this loop fail (see the
+    # implementer's report for the before/after run).
+    for sentence in _sentences(section):
+        if _QUOTE_FAIL_RE.search(sentence):
+            assert not _claims_mint_refusal(sentence), (
+                "0.45.0 entry has a sentence claiming a quote-verification "
+                f"failure still refuses/blocks the mint: {sentence!r}"
+            )

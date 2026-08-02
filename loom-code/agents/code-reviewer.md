@@ -369,6 +369,15 @@ origin: none
 origin: <path> :: "<verbatim quote from that file>"
 ```
 
+To find a quotable upstream artifact, the reviewer derives candidate
+upstream planning artifacts from `docs/loom/plans/` and `docs/loom/specs/`
+itself — the dispatch packet carries no plan, brief, or spec path, and none
+is added for this. This follows the same self-derivation shape D8 already
+uses for `docs/loom/PRINCIPLES.md` below, not a fresh mechanism. Finding
+none there is an ordinary `none`, not a defect: no dimension scores the
+branch against a plan, and the reviewer must not search harder to
+manufacture a hit.
+
 ### Aggregation rule
 
 Aligned with `rubrics/quality-gate.md` §Verdict Rules — the rubric is
