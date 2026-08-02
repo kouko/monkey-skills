@@ -112,3 +112,284 @@ def test_code_reviewer_schema_carries_origin_and_the_quote_gate():
         assert field in schema_fields, (
             f"existing schema field {field!r} missing from schema block"
         )
+
+
+# ---------------------------------------------------------------------------
+# Task 4 — loom-code/agents/code-quality-reviewer.md (per-task reviewer).
+#
+# Same `origin:` field, but this agent's verdicts never reach
+# `loom_gate_markers.py` (only whole-branch verdicts mint a marker), so the
+# contract must say the field is emitted here but NOT marker-enforced. That
+# asymmetry statement is the load-bearing sentence this task adds — anchored
+# the same way as Task 3's quote-gate clause: one contiguous, ordered-word
+# regex spanning the whole clause, joined by `\s+` so it tolerates this
+# repo's ~80-column hard wrap but cannot be satisfied by reordered or
+# scattered fragments.
+# ---------------------------------------------------------------------------
+
+CODE_QUALITY_REVIEWER_MD = (
+    Path(__file__).parents[1] / "agents" / "code-quality-reviewer.md"
+)
+
+# `findings:` here carries a trailing `# ...` comment before its newline
+# (code-reviewer.md's does not), so the field-block regex tolerates any
+# trailing text on that line rather than requiring a bare `findings:\n`.
+_QUALITY_SCHEMA_FIELDS_RE = re.compile(r"findings:[^\n]*\n(.*?)\n```", re.DOTALL)
+
+
+def _quality_windows() -> tuple[str, str]:
+    text = CODE_QUALITY_REVIEWER_MD.read_text(encoding="utf-8")
+    fields_match = _QUALITY_SCHEMA_FIELDS_RE.search(text)
+    assert fields_match, (
+        f"could not locate the findings:...``` schema block in {CODE_QUALITY_REVIEWER_MD}"
+    )
+    agg_idx = text.index("### Verdict aggregation rule")
+    assert agg_idx > fields_match.end(), (
+        "### Verdict aggregation rule appears before the schema fence "
+        "closes — window assumption broken"
+    )
+    prose = text[fields_match.end():agg_idx]
+    return fields_match.group(1), prose
+
+
+def test_code_quality_reviewer_states_origin_is_not_marker_enforced():
+    schema_fields, prose = _quality_windows()
+
+    # The schema block itself declares the field, as an indented field
+    # line (not merely a mention elsewhere in the window).
+    assert re.search(r"^\s+origin:", schema_fields, re.MULTILINE), (
+        "finding schema block does not declare an `origin:` field"
+    )
+
+    # Surrounding prose states the not-marker-enforced asymmetry as ONE
+    # contiguous instruction, anchored the same way as Task 3's clause —
+    # not three independently-satisfiable fragments, so a passage stating
+    # the opposite ("per-task verdicts always reach ... IS marker-enforced")
+    # cannot satisfy this by reusing the same vocabulary out of order.
+    _NOT_MARKER_ENFORCED_CLAUSE_RE = re.compile(
+        r"Per-task\s+verdicts\s+never\s+reach\s+`loom_gate_markers\.py`,?\s+"
+        r"so\s+`origin:`\s+is\s+emitted\s+here\s+but\s+not\s+"
+        r"marker-enforced"
+    )
+    assert _NOT_MARKER_ENFORCED_CLAUSE_RE.search(prose), (
+        "surrounding text does not state the not-marker-enforced "
+        "asymmetry as one contiguous instruction (per-task verdicts "
+        "never reach `loom_gate_markers.py`, so `origin:` is emitted "
+        "here but not marker-enforced)"
+    )
+
+    # Negative control (supplement, not the fix by itself — the positive
+    # anchor above is what actually catches an inversion). Catches the
+    # specific case where nearby wording claims the opposite of "never
+    # reach": that per-task verdicts DO reach the marker minter.
+    assert not re.search(r"always\s+reach\s+`loom_gate_markers\.py`", prose), (
+        "surrounding text appears to claim per-task verdicts DO reach "
+        "loom_gate_markers.py"
+    )
+
+    # Existing schema fields must remain unchanged by this addition.
+    for field in ("severity:", "dimension:", "where:", "source:", "note:"):
+        assert field in schema_fields, (
+            f"existing schema field {field!r} missing from schema block"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Task 5 — loom-code/skills/requesting-code-review/SKILL.md (whole-branch
+# verdict structure — the block confirmed by its `cross-task-coherence` and
+# `principles-conformance` dimension_scores entries, which the per-task
+# agent's block does not carry).
+#
+# This block must NOT restate code-reviewer.md's quote-gate rule — it must
+# point at the agent instead (the `class:` field at :150 is the existing
+# precedent for scoping a field inline rather than re-deriving its rule).
+# The negative assertion below reuses the exact clause regex from
+# test_code_reviewer_schema_carries_origin_and_the_quote_gate above: it is
+# discriminating because it is anchored to the actual rule text, not a
+# generic keyword — pasting the full rule into this block trips it.
+# ---------------------------------------------------------------------------
+
+REVIEW_SKILL_MD = (
+    Path(__file__).parents[1] / "skills" / "requesting-code-review" / "SKILL.md"
+)
+
+_REVIEW_FIELDS_RE = re.compile(r"findings:\n(.*?)\nsimplification_ledger:", re.DOTALL)
+
+
+def _review_windows() -> tuple[str, str]:
+    text = REVIEW_SKILL_MD.read_text(encoding="utf-8")
+    section_start_idx = text.index("## Verdict structure")
+    fields_match = _REVIEW_FIELDS_RE.search(text, section_start_idx)
+    assert fields_match, (
+        "could not locate the findings:...simplification_ledger: schema "
+        f"block in {REVIEW_SKILL_MD}"
+    )
+    fence_close_idx = text.index("```", fields_match.end())
+    red_flags_idx = text.index("## Red Flags", fence_close_idx)
+    assert red_flags_idx > fence_close_idx, (
+        "## Red Flags appears before the schema fence closes — window "
+        "assumption broken"
+    )
+    # `section` spans the WHOLE §Verdict structure section — heading
+    # through the next heading, fence interior included. A negative
+    # assertion anchored only to the fence-close-onward prose is blind to
+    # a restatement pasted inside the fence (e.g. after
+    # `simplification_ledger:`) or between the heading and the fence
+    # open; all three placements are real, measured escapes (see the
+    # finding this test closes).
+    section = text[section_start_idx:red_flags_idx]
+    return fields_match.group(1), section
+
+
+def test_review_skill_verdict_structure_names_origin_without_restating_the_rule():
+    schema_fields, section = _review_windows()
+
+    # The schema block declares the field, as an indented field line (not
+    # merely a mention elsewhere in the window) — same shape as the
+    # `class:` precedent it sits next to.
+    assert re.search(r"^\s+origin:", schema_fields, re.MULTILINE), (
+        "requesting-code-review §Verdict structure findings block does "
+        "not declare an `origin:` field"
+    )
+
+    # The field's own line points at code-reviewer.md rather than staying
+    # silent about where the rule lives — the same inline-comment shape as
+    # `class:` ("semantics owned by requesting-docs-review").
+    origin_line_match = re.search(r"^\s+origin:.*$", schema_fields, re.MULTILINE)
+    assert origin_line_match, "origin: field line not found"
+    assert re.search(r"code-reviewer\.md", origin_line_match.group(0)), (
+        "origin: field line does not point at code-reviewer.md as the "
+        "owner of the quote-gate rule"
+    )
+
+    # Negative: the quote-gate rule itself must NOT be restated in full
+    # anywhere in §Verdict structure — heading through the next heading,
+    # fence interior included, not merely the prose after the fence
+    # closes. Anchored as the exact contiguous clause from code-reviewer.md
+    # (same regex as the positive assertion in
+    # test_code_reviewer_schema_carries_origin_and_the_quote_gate) so it is
+    # discriminating: a generic substring check on a word like "quote"
+    # would go false-red on the field's own grammar recap, and a bare
+    # "not restated" claim with no anchor would go false-green forever
+    # without ever being exercised. This one fires exactly when someone
+    # pastes the rule in — including inside the fence (e.g. spliced into
+    # the `origin:` line itself, or after `simplification_ledger:`) or
+    # between the heading and the fence open, all three measured to slip
+    # past a fence-close-onward-only window.
+    _QUOTE_GATE_CLAUSE_RE = re.compile(
+        r"name\s+the\s+upstream\s+artifact\s+ONLY\s+when\s+you\s+can\s+"
+        r"quote\s+the\s+wrong\s+statement\s+verbatim;\s*otherwise\s+"
+        r"write\s+`none`"
+    )
+    assert not _QUOTE_GATE_CLAUSE_RE.search(section), (
+        "requesting-code-review/SKILL.md restates code-reviewer.md's "
+        "quote-gate rule in full instead of pointing at the agent — a "
+        "second copy of the rule is a second source of truth"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Drift guard — the plan's §Pinned field grammar is the SSOT (plan's own
+# words: "Transcribe VERBATIM from this pin, never from each other and never
+# re-derived"). The three tests above each pin their own file in isolation;
+# none of them compares a copy against the pin, or against each other, so a
+# copy that drifts from the pin — while still being internally well-formed —
+# passes every existing test. This test closes that gap directly.
+#
+# The three copies are NOT the same shape (by design, per Task 5's
+# Description): code-reviewer.md and code-quality-reviewer.md each carry the
+# full two-line grammar fence verbatim; requesting-code-review/SKILL.md
+# carries only the schema FIELD LINE — folding both grammar values into one
+# `|`-separated line — because restating the two-line fence there would be
+# the same "second copy of the rule" problem the test above already guards
+# against. So this test pins each copy against what it is actually supposed
+# to carry, not one assertion forcing all three into one shape.
+#
+# "Match" is defined operationally, not by a regex: the plan's fence is
+# indented two spaces (it sits inside a `- **§Pinned field grammar**` bullet)
+# while both agent-file fences sit at column 0, so a byte-for-byte compare
+# needs an explicit dedent — done here by stripping exactly a two-space
+# prefix per line, not str.strip() (which would also silently swallow a
+# real indentation drift inside the fence).
+# ---------------------------------------------------------------------------
+
+PLAN_MD = (
+    Path(__file__).parents[2]
+    / "docs"
+    / "loom"
+    / "plans"
+    / "2026-08-02-finding-origin-attribution.md"
+)
+
+
+def _fence_lines_after(text: str, marker: str) -> list[str]:
+    """Non-blank lines inside the first ``` fence found after `marker`."""
+    marker_idx = text.index(marker)
+    fence_open_idx = text.index("```", marker_idx)
+    content_start = fence_open_idx + 3
+    fence_close_idx = text.index("```", content_start)
+    content = text[content_start:fence_close_idx]
+    return [line for line in content.splitlines() if line.strip()]
+
+
+def _dedent_two_spaces(line: str) -> str:
+    # The plan's pin fence sits inside a bullet, so every content line is
+    # prefixed with exactly two spaces of list-continuation indent.
+    assert line.startswith("  "), (
+        f"pin fence line {line!r} does not carry the expected 2-space "
+        "bullet-continuation indent — dedent assumption broken"
+    )
+    return line[2:]
+
+
+def test_pinned_field_grammar_matches_across_all_three_shipped_copies():
+    pin_lines = [
+        _dedent_two_spaces(line)
+        for line in _fence_lines_after(
+            PLAN_MD.read_text(encoding="utf-8"), "**§Pinned field grammar**"
+        )
+    ]
+    assert pin_lines == [
+        "origin: none",
+        'origin: <path> :: "<verbatim quote from that file>"',
+    ], f"unexpected pin shape in {PLAN_MD} — did §Pinned field grammar change?"
+    pin_value_none, pin_value_quoted = (
+        line.split("origin: ", 1)[1] for line in pin_lines
+    )
+
+    # code-reviewer.md and code-quality-reviewer.md: full two-line fence,
+    # transcribed verbatim — compared line-for-line against the pin.
+    for agent_path, marker in (
+        (CODE_REVIEWER_MD, "transcribed verbatim from the field's pin:"),
+        (CODE_QUALITY_REVIEWER_MD, "transcribed verbatim from the field's pin:"),
+    ):
+        agent_lines = _fence_lines_after(
+            agent_path.read_text(encoding="utf-8"), marker
+        )
+        assert agent_lines == pin_lines, (
+            f"{agent_path} grammar fence has drifted from the plan's "
+            f"§Pinned field grammar: {agent_lines!r} != {pin_lines!r}"
+        )
+
+    # requesting-code-review/SKILL.md: by design carries only the schema
+    # FIELD LINE, not the two-line fence (Task 5 — a second copy of the
+    # fence would itself be "restating the rule"). Its value portion, after
+    # stripping the `origin: ` key and the trailing inline comment, must
+    # equal the pin's two values joined by " | " in the same order the
+    # field line already uses.
+    schema_fields, _section = _review_windows()
+    origin_line_match = re.search(r"^\s+origin:\s*(.+)$", schema_fields, re.MULTILINE)
+    assert origin_line_match, "origin: field line not found in SKILL.md schema block"
+    value_and_comment = origin_line_match.group(1)
+    value_part = value_and_comment.split("  #", 1)[0].strip()
+    assert value_part == f"{pin_value_none} | {pin_value_quoted}", (
+        "requesting-code-review/SKILL.md's origin: field line value has "
+        f"drifted from the plan's §Pinned field grammar: {value_part!r} "
+        f"!= {pin_value_none!r} | {pin_value_quoted!r}"
+    )
+
+    # Existing schema fields must remain unchanged by this addition.
+    for field in ("severity:", "dimension:", "where:", "source:", "note:", "class:"):
+        assert field in schema_fields, (
+            f"existing schema field {field!r} missing from schema block"
+        )

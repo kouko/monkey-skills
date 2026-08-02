@@ -341,12 +341,32 @@ findings:                        # one entry per concern; order does not matter
     where: "{file:line or commit SHA}"
     source: "{rubric / checklist / standard file:section that triggered this finding}"
     note: "{1-2 sentence description}"
+    origin: none | <path> :: "<verbatim quote from that file>"  # REQUIRED — see below
     evidence_needed: craft | domain-convention | project-local  # OPTIONAL
 notes:                           # optional; ≤3 bullets, e.g. cross-dimension observation, spec-side hint to forward
   - …
 ```
 
 `evidence_needed` (OPTIONAL): set it when the finding's correct resolution is owned by an authority outside this codebase (engineering literature / domain authority / this repo's own docs) rather than by the diff itself — the reviewer never runs the research; it flags.
+
+`origin:` (REQUIRED): state the quote gate as an action you perform, not a
+judgment you make — name the upstream artifact ONLY when you can quote the
+wrong statement verbatim; otherwise write `none`. `none` carries **no
+penalty**: the field records what you hold, not what you can infer, so
+declining to name an artifact is never scored against the finding. Grammar,
+transcribed verbatim from the field's pin:
+
+```
+origin: none
+origin: <path> :: "<verbatim quote from that file>"
+```
+
+**Not marker-enforced at this scope.** Per-task verdicts never reach
+`loom_gate_markers.py`, so `origin:` is emitted here but not
+marker-enforced: only whole-branch verdicts mint a marker, and this
+agent's own pipeline never refuses a verdict for omitting or
+malforming the field. Emit it anyway — do not assume the omission
+here carries the same consequence it does in `code-reviewer.md`.
 
 ### Verdict aggregation rule
 

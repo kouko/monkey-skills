@@ -147,6 +147,7 @@ findings:
     where: <file:line OR commit SHA range>     # REQUIRED — empty/missing flips verdict to NEEDS_REVISION
     source: <rubric / checklist / standard file:section that triggered this>
     note: <1-2 sentence finding>
+    origin: none | <path> :: "<verbatim quote from that file>"  # REQUIRED — quote-gate rule owned by `code-reviewer.md` §Output contract — what you return `origin:` field; not restated here
     class: instruction | evidence              # docs-arm findings only (mixed branches, per Step 1) — semantics owned by requesting-docs-review; omitted for code-branch findings
 
 simplification_ledger:                         # grep -rn "LOOM-SIMPLIFY:" over the branch diff (Step 4); [] when none
