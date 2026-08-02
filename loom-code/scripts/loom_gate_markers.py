@@ -401,6 +401,73 @@ def _origin_required(dimension_value: str | None) -> bool:
     return value not in _DOCS_ARM_DIMENSIONS
 
 
+# Correction 2026-08-02 (plan §Notes, same-day correction beneath the
+# "quote must be a phrase" amendment): a whitespace-only token count
+# systematically refuses every CJK quote, since Chinese/Japanese prose has
+# no inter-word spaces. Corrected definition: "a token is a whitespace-
+# separated run OR a single CJK character." Ranges included — measured
+# against this repo's own trilingual prose (Traditional Chinese / Japanese
+# / English, per CLAUDE.md), not assumed:
+#   - Hiragana (U+3040-U+309F), Katakana (U+30A0-U+30FF)
+#   - CJK Unified Ideographs (U+4E00-U+9FFF) and Extension A
+#     (U+3400-U+4DBF) — Han, shared by Chinese and Japanese text
+#   - CJK Compatibility Ideographs (U+F900-U+FAFF)
+# Deliberately excluded:
+#   - Hangul: not one of this repo's working languages and never part of
+#     the 2746-run measurement that motivated this correction — including
+#     it would be scope creep with no evidence behind it.
+#   - CJK punctuation (e.g. `。` U+3002, `、` U+3001, `「`/`」` U+300C/300D,
+#     fullwidth Latin punctuation in U+FF00-FFEF): these codepoints are
+#     simply absent from the ranges above, so a character is never
+#     counted as a CJK letter by being punctuation. `_count_quote_tokens`
+#     (Second correction 2026-08-02, plan §Notes) counts ONLY the CJK
+#     letters inside a whitespace-separated run, skipping any punctuation
+#     in that run rather than requiring the run to be ALL CJK letters —
+#     the earlier all-or-nothing version still refused 75% of the
+#     corpus's CJK runs because CJK prose is full of `。`/`、`/`：`/`「」`.
+#     So `"引。"` (one Han character, one period) still refuses at one —
+#     the period contributes nothing, not because the whole run falls
+#     back — while `"引。引"` (two Han characters, one period) now passes
+#     at two.
+_CJK_LETTER_RANGES = (
+    (0x3040, 0x309F),  # Hiragana
+    (0x30A0, 0x30FF),  # Katakana
+    (0x3400, 0x4DBF),  # CJK Unified Ideographs Extension A
+    (0x4E00, 0x9FFF),  # CJK Unified Ideographs
+    (0xF900, 0xFAFF),  # CJK Compatibility Ideographs
+)
+
+
+def _is_cjk_letter(ch: str) -> bool:
+    """True iff `ch` falls in one of `_CJK_LETTER_RANGES` — a Han
+    ideograph or a kana syllable, never punctuation (see the block
+    comment above `_CJK_LETTER_RANGES` for the included/excluded
+    ranges and why)."""
+    return any(lo <= ord(ch) <= hi for lo, hi in _CJK_LETTER_RANGES)
+
+
+def _count_quote_tokens(text: str) -> int:
+    """Token count under the twice-corrected rule (plan §Notes, "Second
+    correction"): for each whitespace-separated run, if it contains ANY
+    CJK letter (`_is_cjk_letter`), the run's token count is the NUMBER OF
+    CJK LETTERS in it — punctuation inside the run is skipped, never
+    counted itself; otherwise the whole run counts as one token, same as
+    an ordinary Latin word. This is a deliberate loosening from the first
+    fix, which required a run to be ALL CJK letters before counting
+    per-character and so still refused any CJK sentence containing `。`,
+    `、`, `：` or `「」` — measured to still refuse 2065 of 2746 (75%) of
+    the corpus's CJK runs. Examples (plan §Notes second correction):
+    "引述" -> 2, "引" -> 1, "引。" -> 1 (one CJK letter, period skipped),
+    "引。引" -> 2 (two CJK letters, period skipped), "the" -> 1,
+    "the 引" -> 1 + 1 = 2, "push 再說" -> 1 + 2 = 3, "한글" -> 1 (no CJK
+    letters in the Hangul run, falls to the "otherwise" branch)."""
+    count = 0
+    for run in text.split():
+        cjk_letters = sum(1 for ch in run if _is_cjk_letter(ch))
+        count += cjk_letters if cjk_letters > 0 else 1
+    return count
+
+
 def _origin_grammar_problem(origin_value: str | None) -> str | None:
     """None if `origin_value` is `none` or `<path> :: "<quote>"`; else a
     description of the violation. Grammar only — the quote is not
@@ -412,7 +479,17 @@ def _origin_grammar_problem(origin_value: str | None) -> str | None:
     backslash-escape convention. The quote's interior must be non-blank:
     `""` and `"   "` are refused — an empty quote is not a verbatim
     quote, and Task 2 verifies by substring, so an empty quote would
-    match every file and pass the whole gate as a well-formed origin."""
+    match every file and pass the whole gate as a well-formed origin.
+
+    Amendment 2026-08-02, user decision (§Notes kickoff decision, "a
+    quote must be a phrase, not a token"): the interior must ALSO
+    contain at least two whitespace-separated tokens (`str.split()`,
+    which already treats a run of spaces/tabs and a non-breaking space
+    as whitespace — measured, not assumed). A one-token quote verifies
+    against almost any file and would enter the pre-registered ≥40
+    tally as a genuine origin. Deliberately weak (`"the a"` passes) —
+    not a meaningfulness filter, only a floor against values carrying
+    no information at all."""
     if origin_value is None:
         return "no origin: line"
     value = origin_value.strip()
@@ -427,8 +504,16 @@ def _origin_grammar_problem(origin_value: str | None) -> str | None:
     path, quote = value[:idx], value[idx + 4 :]
     if len(quote) < 2 or quote[0] != '"' or quote[-1] != '"':
         return f"origin: {origin_value!r} quote is not fully quoted"
-    if not quote[1:-1].strip():
+    inner = quote[1:-1]
+    if not inner.strip():
         return f"origin: {origin_value!r} quote is empty or blank"
+    if _count_quote_tokens(inner) < 2:
+        return (
+            f"origin: {origin_value!r} quote is a single token — a "
+            "quote must be a phrase (at least two tokens: a "
+            "whitespace-separated word, or a single CJK character, "
+            "each counts as one)"
+        )
     return None
 
 
@@ -455,6 +540,8 @@ def _origin_path_quote(origin_value: str | None) -> tuple[str, str] | None:
         return None
     inner = quote[1:-1]
     if not inner.strip():
+        return None
+    if _count_quote_tokens(inner) < 2:
         return None
     return path, inner
 

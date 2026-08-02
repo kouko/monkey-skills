@@ -193,6 +193,63 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
   would put an escaping rule into three shipped contracts to buy a case
   reviewers can avoid by quoting a shorter span.
 
+  **Amendment 2026-08-02, user decision — a quote must be a phrase, not a
+  token.** The interior must contain **at least two whitespace-separated
+  tokens**. `"e"`, `"the"` and `"."` are refused; `"seven call sites"` and
+  `"not supported"` pass. Reason: the design's whole load-bearing property is
+  that a quote cannot be produced without having read the document, and Task
+  2's review measured that `origin: docs/l.md :: "e"` verifies against almost
+  any file and would enter the pre-registered ≥40 tally as a genuine origin —
+  the same fabrication class already closed for `""`, for a directory path
+  whose `git show` output is a tree listing, and for that listing's constant
+  header word `tree`. Rejected: a character-count threshold. The Axis-4
+  research behind the matching decision found that unfakeability comes from a
+  quote's length and specificity, but named no defensible number, and a
+  threshold this arc invented would be arbitrary precision dressed as rigour.
+  "A phrase rather than a token" is a floor that can be stated as a reason
+  rather than a magic number. It is deliberately **weak**: `"the a"` passes.
+  It is not a filter for meaningfulness — that remains the stop rule's human
+  check (brief §Resolved Questions 3) — only a floor against values carrying
+  no information at all. **Timing**: taken before Task 3, because the grammar
+  is still pinned in one place; after Tasks 3-5 transcribe it the same change
+  costs a sweep across three shipped contracts plus a second version bump.
+  **Reversal condition, observable:** if a truthful origin is ever refused
+  because the wrong statement it quotes genuinely is one token — a single
+  identifier, a lone numeral — drop the floor and record that case, rather
+  than widening it to a token count nobody can justify.
+
+  **Correction 2026-08-02, same day, before Task 3.** The first version of
+  this amendment defined a token as a whitespace-separated run, which
+  **systematically refuses every CJK quote**: Chinese and Japanese prose has
+  no inter-word spaces, so `"引述無法憑空捏造"` is one token by that measure.
+  Measured across the documents this field will actually cite — every `.md`
+  under `loom-code/` plus `docs/loom/specs/` and `docs/loom/plans/` — there
+  are **2746** whitespace-free CJK runs of six characters or more, including
+  throughout `loom-code/PRODUCT-SPEC.md`, a prime upstream artifact. The rule
+  as first written was not a weak floor; it was a language filter, and it
+  would have made the field unusable for exactly the trilingual prose this
+  repo is written in. Corrected definition: **a token is a whitespace-
+  separated run OR a single CJK character.** `"引述"` passes at two, `"引"`
+  refuses at one, `"the"` still refuses, `"seven call sites"` still passes.
+  No new threshold is introduced — the floor stays "at least two" and only
+  the unit changes, matching how each writing system actually delimits
+  meaning (a CJK character is roughly a morpheme; an alphabetic word is not).
+
+  **Second correction, same day.** The first implementation of the corrected
+  rule counted characters individually only when a whitespace-separated run
+  was **entirely** CJK letters, and otherwise counted the whole run as one.
+  That re-created the language filter for any CJK sentence containing
+  punctuation — and CJK prose is full of `。`, `、`, `：` and `「」`. Measured
+  against the same corpus: of the 2746 whitespace-free CJK runs, **2065 (75%)**
+  were still refused, among them `角色分離。但實際使用` and
+  `時暴露三個結構性缺口：` — both from `loom-code/PRODUCT-SPEC.md`. Final rule:
+  **for each whitespace-separated run, if it contains any CJK letter, its
+  token count is the number of CJK letters it contains; otherwise it counts as
+  one.** Punctuation is never itself a token, so `"引。"` still refuses at one
+  and `"引。引"` passes at two. This is the third pass over the same floor; the
+  recurring error each time was applying a rule shaped by one writing system's
+  spacing to prose written in another.
+
   > **Correction 2026-08-02, from Task 1's code-quality review.** This decision
   > first said "split on the LAST ` :: `", which contradicts the rationale
   > stated in its own next sentence: if the path cannot contain the separator
