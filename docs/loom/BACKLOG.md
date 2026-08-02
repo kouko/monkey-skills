@@ -68,6 +68,7 @@
 - [2026-08-02-citations-into-the-generated-backlog-index-by-line-number](backlog/2026-08-02-citations-into-the-generated-backlog-index-by-line-number.md) — documents still cite docs/loom/BACKLOG.md by line number or heading anchor, both of which are invalidated by the generated file — six by line number (resolve silently wrong), eleven more by a §-heading the generated index has no headings for
 - [2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift](backlog/2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift.md) — loom_gate_markers' per-finding field scanner anchors on one column, so two shapes of benign indentation drift refuse a well-formed verdict and blame the wrong field
 - [2026-08-02-quote-informativeness-needs-corpus-selectivity-not-length](backlog/2026-08-02-quote-informativeness-needs-corpus-selectivity-not-length.md) — no length or width threshold can separate an informative origin quote from a corpus-universal fragment — the measured axis is document frequency, and a selectivity gate is the successor mechanism
+- [2026-08-03-origin-arc-close-out-residue](backlog/2026-08-03-origin-arc-close-out-residue.md) — four small claim-accuracy items left open when the finding-origin-attribution arc shipped, each a one-clause edit that a fifth review round would have cost more to catch than to fix later
 
 ## PARKED
 - [2026-07-08-automate-research-toolkit-s-sync-primitives-sh](backlog/2026-07-08-automate-research-toolkit-s-sync-primitives-sh.md) — Automate research-toolkit's sync-primitives.sh
