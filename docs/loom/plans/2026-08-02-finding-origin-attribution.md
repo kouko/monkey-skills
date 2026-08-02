@@ -180,17 +180,32 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
   few lines, ship the matching rule alone and report the downgrade — the tiers
   are the measurement, the matching rule is the contract.
 
-- **Kickoff decision:** `origin:` value escaping → **split on the LAST ` :: `
-  and require the quote to be the fully-quoted remainder.** *(agent — two-way
-  door per `kickoff-briefing.md` §a; the user delegated brief §Resolved
+- **Kickoff decision:** `origin:` value escaping → **split on the FIRST ` :: `,
+  and require the remainder to be a fully-quoted, non-empty quote.** *(agent —
+  two-way door per `kickoff-briefing.md` §a; the user delegated brief §Resolved
   Questions 2, the field-grammar question, at message 19 of the 2026-08-02
   session: 「第 2、3 題你決定」.)* A path may not contain ` :: `; a quote may.
-  So parse right-to-left on the last separator, then require the remainder to
-  open and close with `"` — a quote containing an interior `"` is accepted as
-  its own content, and no escape character is introduced. Rejected: adding a
-  backslash-escape convention, which would put an escaping rule into three
-  shipped contracts to buy a case reviewers can avoid by quoting a shorter
-  span.
+  So parse left-to-right on the first separator, then require the remainder to
+  open and close with `"` — a quote containing an interior `"`, or containing
+  ` :: ` itself, is accepted as its own content, and no escape character is
+  introduced. The quote's interior must additionally be non-blank: `""` and
+  `"   "` are refused. Rejected: adding a backslash-escape convention, which
+  would put an escaping rule into three shipped contracts to buy a case
+  reviewers can avoid by quoting a shorter span.
+
+  > **Correction 2026-08-02, from Task 1's code-quality review.** This decision
+  > first said "split on the LAST ` :: `", which contradicts the rationale
+  > stated in its own next sentence: if the path cannot contain the separator
+  > and the quote can, the FIRST occurrence is the boundary, and splitting on
+  > the last one mis-parses exactly the case the rationale allows
+  > (`p.md :: "a :: b"` → path `p.md :: "a`, quote `b"`, refused as
+  > "not fully quoted"). The non-blank requirement is the same round's other
+  > correction: `""` satisfied "opens and closes with a quote character", and
+  > because Task 2 verifies by substring, an empty quote occurs in every file —
+  > a finding could have carried a well-formed-looking origin that passes the
+  > whole gate and enters the pre-registered ≥40 tally as a true origin. Both
+  > were wrong-and-silent in the decision text, not in the implementation that
+  > faithfully followed it.
 
 - **Kickoff decision:** in-flight branches at the version boundary → **hard
   cutover, no grace period.** *(agent — two-way door per §a.)* A verdict
@@ -371,3 +386,8 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
 - Dependencies: Task 5 completes first
 - Independent: false
 - Brief item covered: "enforced by `loom_gate_markers.py` in the same fail-closed way `where:` already is" — the shipped-content bump this repo's rule requires for any PR changing agent or skill content. Depends on Task 5 rather than Task 1 so the CHANGELOG describes the whole shipped contract, not just its enforcement half.
+
+## Decision Log
+
+1. chose to make every field in a review finding count only when it sits in that finding's own column, including the one field that already worked the old way, because leaving two different rules inside one reader is worse than the flaw it fixes — cost-of-change: the day a reviewer writes a finding whose lines drift out of alignment, this choice costs them a blocked submission whose message names a missing field rather than the misalignment that hid it
+2. chose to stop tightening the field reader after the blank-line case and to record the two remaining misalignment shapes as a known debt, because closing them requires the reader to guess the layout a person intended, and that guess would sit inside the very check whose job is to refuse whenever it is unsure — cost-of-change: the day those shapes become common, this choice costs a move to a real structured reader rather than one more patch

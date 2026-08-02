@@ -63,6 +63,8 @@ dimension_scores:
 findings:
   - severity: yellow
     where: loom-code/scripts/foo.py:12
+    dimension: correctness
+    origin: none
     note: naming nit
 """
 
@@ -215,7 +217,9 @@ def test_review_finding_where_commit_sha_accepted(tmp_path):
         "  security: 5\n"
         "findings:\n"
         "  - severity: yellow\n"
-        "    where: 610dbc409c7e\n",
+        "    where: 610dbc409c7e\n"
+        "    dimension: correctness\n"
+        "    origin: none\n",
     )
 
     rc = main(
@@ -226,7 +230,11 @@ def test_review_finding_where_commit_sha_accepted(tmp_path):
     assert (_marker_dir(repo) / "review-pass.json").is_file()
 
 
-def test_review_finding_where_without_pathlike_token_exits_4(tmp_path):
+def test_review_finding_where_without_pathlike_token_exits_4(tmp_path, capsys):
+    # dimension: correctness + origin: none are present and well-formed so
+    # this fixture refuses ONLY on the not-path-like where: — otherwise a
+    # broken _PATHLIKE_RE would still exit 4 via the (absent) origin
+    # requirement and this test would pass for the wrong reason.
     repo = _init_repo(tmp_path)
     verdict_file = _write_verdict(
         tmp_path,
@@ -236,7 +244,9 @@ def test_review_finding_where_without_pathlike_token_exits_4(tmp_path):
         "  security: 5\n"
         "findings:\n"
         "  - severity: red\n"
-        "    where: everywhere\n",
+        "    where: everywhere\n"
+        "    dimension: correctness\n"
+        "    origin: none\n",
     )
 
     rc = main(
@@ -244,6 +254,391 @@ def test_review_finding_where_without_pathlike_token_exits_4(tmp_path):
     )
 
     assert rc == 4
+    assert "where" in capsys.readouterr().err
+
+
+# ------------------------------------------------------- origin (code-arm gate)
+
+
+def _verdict_with_finding(
+    *,
+    where="loom-code/scripts/foo.py:12",
+    severity="red",
+    dimension_line=None,
+    origin_line=None,
+):
+    """Build verdict text with one finding block. `dimension_line`/
+    `origin_line` are None to omit the key entirely, "" to include the
+    key with an empty value, or a string to include the key with that
+    value — this distinguishes "no dimension: line" from "dimension:
+    with nothing after it" for the fail-closed partition tests."""
+    lines = [
+        "standards_version: 2026-06",
+        "verdict: PASS",
+        "dimension_scores:",
+        "  security: 5",
+        "findings:",
+        f"  - severity: {severity}",
+        f"    where: {where}",
+    ]
+    if dimension_line is not None:
+        lines.append(f"    dimension: {dimension_line}")
+    if origin_line is not None:
+        lines.append(f"    origin: {origin_line}")
+    lines.append("    note: finding note")
+    return "\n".join(lines) + "\n"
+
+
+def test_code_arm_finding_without_origin_refuses_to_mint(tmp_path):
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path, _verdict_with_finding(dimension_line="correctness")
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+def test_docs_arm_finding_without_origin_still_mints(tmp_path):
+    # Discriminating case against over-reach: a naive GLOBAL origin:
+    # requirement satisfies every other criterion and fails only this
+    # one, blocking every docs-only and mixed-branch push.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path, _verdict_with_finding(dimension_line="omission")
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+@pytest.mark.parametrize(
+    "dimension_line",
+    [None, "performance", ""],
+    ids=["no-dimension-line", "unrecognized-value", "empty-value"],
+)
+def test_finding_with_unparseable_dimension_refuses_without_origin(
+    tmp_path, dimension_line
+):
+    # Discriminating case against under-reach (§Pinned dimension
+    # partition, fail-closed clause): a finding with no parseable
+    # dimension: must refuse without origin:, not escape the check.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path, _verdict_with_finding(dimension_line=dimension_line)
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+@pytest.mark.parametrize(
+    "origin_line",
+    ["none", 'docs/loom/plans/x.md :: "seven call sites"'],
+    ids=["none-value", "path-and-quote"],
+)
+def test_origin_none_and_quoted_value_validate(tmp_path, origin_line):
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(dimension_line="correctness", origin_line=origin_line),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+@pytest.mark.parametrize(
+    "origin_line",
+    [
+        "docs/loom/plans/x.md",
+        '"seven call sites"',
+        'docs/loom/plans/x.md :: ""',
+        'docs/loom/plans/x.md :: "   "',
+    ],
+    ids=[
+        "path-value-no-separator",
+        "quote-value-no-separator",
+        "empty-quote",
+        "whitespace-only-quote",
+    ],
+)
+def test_origin_bare_path_or_bare_quote_refuses(tmp_path, origin_line):
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(dimension_line="correctness", origin_line=origin_line),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+def test_origin_quote_containing_separator_splits_on_first_occurrence(tmp_path):
+    # A path may not contain ` :: `; a quote may. Splitting on the FIRST
+    # ` :: ` treats everything after it as the quote, so a quote
+    # containing the separator string is accepted whole rather than
+    # mis-parsed into a truncated path and an unquoted remainder.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='p.md :: "a :: b"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+def test_duplicate_dimension_lines_treated_as_unparseable_requires_origin(tmp_path):
+    # Two `dimension:` lines in one block must not resolve first-wins (or
+    # last-wins) into a docs-arm exemption — YAML readers disagree on
+    # which value wins, so a duplicate is unparseable and, by the
+    # fail-closed clause, requires origin: like any other unparseable
+    # dimension.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path,
+        "standards_version: 2026-06\n"
+        "verdict: PASS\n"
+        "dimension_scores:\n"
+        "  security: 5\n"
+        "findings:\n"
+        "  - severity: red\n"
+        "    where: loom-code/scripts/foo.py:12\n"
+        "    dimension: omission\n"
+        "    dimension: correctness\n",
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+def test_duplicate_origin_lines_refuses_to_mint(tmp_path):
+    # Same question as duplicate dimension:, decided the same way: two
+    # origin: lines in one block is malformed input, not "first one
+    # wins" — refuse rather than silently pick either value.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path,
+        "standards_version: 2026-06\n"
+        "verdict: PASS\n"
+        "dimension_scores:\n"
+        "  security: 5\n"
+        "findings:\n"
+        "  - severity: red\n"
+        "    where: loom-code/scripts/foo.py:12\n"
+        "    dimension: correctness\n"
+        "    origin: none\n"
+        '    origin: p.md :: "quoted text"\n',
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+# --------------------------------------------- field column anchoring (nesting)
+
+
+def test_dimension_nested_inside_note_does_not_grant_exemption(tmp_path):
+    # A `dimension:` line quoted inside a note's YAML block-literal (e.g. a
+    # pasted verdict-schema example) is NOT a sibling field of this finding
+    # block — the block has no dimension: of its own, so the fail-closed
+    # clause must refuse it, not read the nested line as a docs-arm grant.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path,
+        "standards_version: 2026-06\n"
+        "verdict: PASS\n"
+        "dimension_scores:\n"
+        "  security: 5\n"
+        "findings:\n"
+        "  - severity: red\n"
+        "    where: a/b.py:12\n"
+        "    note: |\n"
+        "      ```\n"
+        "      dimension: omission\n"
+        "      ```\n",
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+def test_origin_nested_inside_note_does_not_satisfy_requirement(tmp_path):
+    # Mirror case: a code-arm finding (dimension: correctness, sibling)
+    # with an `origin:` line only inside the nested note block-literal.
+    # The finding has no origin: of its own and must refuse.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path,
+        "standards_version: 2026-06\n"
+        "verdict: PASS\n"
+        "dimension_scores:\n"
+        "  security: 5\n"
+        "findings:\n"
+        "  - severity: red\n"
+        "    where: a/b.py:12\n"
+        "    dimension: correctness\n"
+        "    note: |\n"
+        "      ```\n"
+        "      origin: none\n"
+        "      ```\n",
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+def test_where_nested_inside_note_does_not_satisfy_requirement(tmp_path, capsys):
+    # The pre-existing where: check carries the identical weakness — a
+    # `where:` line quoted inside a nested note must not count as this
+    # finding's own where:. Deliberately tightened alongside dimension:/
+    # origin: rather than left as a second convention.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path,
+        "standards_version: 2026-06\n"
+        "verdict: PASS\n"
+        "dimension_scores:\n"
+        "  security: 5\n"
+        "findings:\n"
+        "  - severity: red\n"
+        "    dimension: correctness\n"
+        "    origin: none\n"
+        "    note: |\n"
+        "      ```\n"
+        "      where: a/b.py:12\n"
+        "      ```\n",
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert "where" in capsys.readouterr().err
+
+
+def test_finding_fields_at_consistent_nonstandard_indent_still_mints(tmp_path):
+    # The rule is same-column-as-siblings, never a hardcoded column count —
+    # a well-formed finding whose fields all sit at 6 spaces (not the usual
+    # 4) must still mint.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path,
+        "standards_version: 2026-06\n"
+        "verdict: PASS\n"
+        "dimension_scores:\n"
+        "  security: 5\n"
+        "findings:\n"
+        "  - severity: red\n"
+        "      where: a/b.py:12\n"
+        "      dimension: correctness\n"
+        "      origin: none\n",
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+def test_finding_with_blank_line_before_first_field_still_mints(tmp_path):
+    # A blank line directly after `- severity:` is ordinary formatting.
+    # The old column-detection read `lines[start + 1]` literally, so a
+    # blank line there set column = "" and every real field line (all
+    # indented) was then skipped as "wrong column" — a false refusal
+    # even though where:/dimension:/origin: are all present, correctly
+    # indented, and mutually consistent.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path,
+        "standards_version: 2026-06\n"
+        "verdict: PASS\n"
+        "dimension_scores:\n"
+        "  security: 5\n"
+        "findings:\n"
+        "  - severity: red\n"
+        "\n"
+        "    where: a/b.py:12\n"
+        "    dimension: correctness\n"
+        "    origin: none\n",
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+def test_arm_dimension_partition_is_disjoint():
+    # §Pinned dimension partition claims "verified disjoint 2026-08-02" —
+    # mechanically enforced here rather than trusted as a comment, and
+    # via the module's own runtime check so a future edit to either set
+    # fails loud at import time, not just in this one test.
+    from loom_gate_markers import (
+        _CODE_ARM_DIMENSIONS,
+        _DOCS_ARM_DIMENSIONS,
+        _check_arm_disjoint,
+    )
+
+    assert _CODE_ARM_DIMENSIONS.isdisjoint(_DOCS_ARM_DIMENSIONS)
+    _check_arm_disjoint(_CODE_ARM_DIMENSIONS, _DOCS_ARM_DIMENSIONS)  # no raise
+
+
+def test_arm_dimension_partition_check_raises_on_overlap():
+    from loom_gate_markers import _check_arm_disjoint
+
+    with pytest.raises(AssertionError):
+        _check_arm_disjoint({"x", "y"}, {"y", "z"})
 
 
 # ------------------------------------------------------------------- verified

@@ -77,6 +77,44 @@ _KEY_RE = {
 }
 _FINDING_RE = re.compile(r"^\s*-\s*severity\s*:")
 _WHERE_RE = re.compile(r"^\s*where\s*:[^\S\n]*(\S.*)$")
+_DIMENSION_RE = re.compile(r"^\s*dimension\s*:[^\S\n]*(.*)$")
+_ORIGIN_RE = re.compile(r"^\s*origin\s*:[^\S\n]*(.*)$")
+_INDENT_RE = re.compile(r"^[ \t]*")
+
+# §Pinned dimension partition (verified disjoint 2026-08-02). A finding
+# whose `dimension:` both parses and falls in the docs-arm set is
+# exempt from `origin:`; everything else — code-arm, unrecognized, or
+# unparseable (absent/empty) — requires it (fail closed, see
+# `_origin_required`).
+_CODE_ARM_DIMENSIONS = {
+    "security", "architecture", "correctness", "naming", "tests",
+    "refactoring", "cross-task-coherence", "external-surface-grounding",
+    "principles-conformance", "deliberate-simplification",
+}
+_DOCS_ARM_DIMENSIONS = {
+    "omission", "ambiguity", "inconsistency", "incorrect-fact",
+    "missing-population",
+}
+
+
+def _check_arm_disjoint(code_arm: set[str], docs_arm: set[str]) -> None:
+    """Raise if `code_arm` and `docs_arm` share any dimension name.
+
+    Makes the pin's "verified disjoint" claim load-bearing rather than
+    a comment: a future edit that lets a dimension into both sets would
+    make `_origin_required`'s docs-arm lookup ambiguous. Not an `assert`
+    statement — those are stripped under `python -O`, and this check
+    must still fire then."""
+    overlap = code_arm & docs_arm
+    if overlap:
+        raise AssertionError(
+            "_CODE_ARM_DIMENSIONS and _DOCS_ARM_DIMENSIONS overlap on "
+            f"{sorted(overlap)} — §Pinned dimension partition requires "
+            "them disjoint"
+        )
+
+
+_check_arm_disjoint(_CODE_ARM_DIMENSIONS, _DOCS_ARM_DIMENSIONS)
 _TOP_KEY_RE = re.compile(r"^\S+\s*:")
 _PASSED_RE = re.compile(r"(\d+) passed")
 # where: value counts as location-like if it has a path separator /
@@ -221,8 +259,57 @@ def validate_verdict_text(text: str) -> tuple[str | None, list[str]]:
     return verdict, problems
 
 
+def _origin_required(dimension_value: str | None) -> bool:
+    """True unless `dimension_value` both parses and is in the docs-arm
+    set. The requirement is the default; the docs-arm exemption is the
+    only branch that returns False — an absent (`None`), empty/
+    whitespace-only, or unrecognized value all require `origin:`
+    (§Pinned dimension partition, fail-closed clause)."""
+    if dimension_value is None:
+        return True
+    value = dimension_value.strip()
+    if not value:
+        return True
+    return value not in _DOCS_ARM_DIMENSIONS
+
+
+def _origin_grammar_problem(origin_value: str | None) -> str | None:
+    """None if `origin_value` is `none` or `<path> :: "<quote>"`; else a
+    description of the violation. Grammar only — the quote is not
+    checked against any file here (Task 2). Split on the FIRST ` :: `:
+    a path may not contain it, a quote may — so the first occurrence is
+    the boundary (§Notes kickoff decision, corrected 2026-08-02: the
+    earlier "split on the LAST ` :: `" mis-parsed a quote containing the
+    separator into a truncated path and an unquoted remainder). No
+    backslash-escape convention. The quote's interior must be non-blank:
+    `""` and `"   "` are refused — an empty quote is not a verbatim
+    quote, and Task 2 verifies by substring, so an empty quote would
+    match every file and pass the whole gate as a well-formed origin."""
+    if origin_value is None:
+        return "no origin: line"
+    value = origin_value.strip()
+    if value == "none":
+        return None
+    idx = value.find(" :: ")
+    if idx == -1:
+        return f"origin: {origin_value!r} is not 'none' or '<path> :: \"<quote>\"'"
+    # `path` is always non-empty here: `value` is already stripped (so
+    # value[0] is non-whitespace) and the separator starts with a space,
+    # so idx can never be 0 — value[:idx] always contains value[0].
+    path, quote = value[:idx], value[idx + 4 :]
+    if len(quote) < 2 or quote[0] != '"' or quote[-1] != '"':
+        return f"origin: {origin_value!r} quote is not fully quoted"
+    if not quote[1:-1].strip():
+        return f"origin: {origin_value!r} quote is empty or blank"
+    return None
+
+
 def _finding_problems(text: str) -> list[str]:
-    """Every `- severity:` finding block must carry a path-like `where:`."""
+    """Every `- severity:` finding block must carry a path-like `where:`,
+    and — unless its `dimension:` both parses and falls in the docs-arm
+    set — an `origin:` line valued `none` or `<path> :: "<quote>"`
+    (§Pinned dimension partition; requirement is the default, the
+    docs-arm exemption is the explicit branch)."""
     lines = text.splitlines()
     problems: list[str] = []
     starts = [i for i, line in enumerate(lines) if _FINDING_RE.match(line)]
@@ -234,16 +321,58 @@ def _finding_problems(text: str) -> list[str]:
                 end = j
                 break
         where_ok = False
-        for line in lines[start:end]:
-            wm = _WHERE_RE.match(line)
-            if wm and _PATHLIKE_RE.search(wm.group(1)):
-                where_ok = True
+        dimension_values: list[str] = []
+        origin_values: list[str] = []
+        # Sibling fields (where:/dimension:/origin:) must sit at the SAME
+        # column as the first NON-BLANK line following `- severity:` — not
+        # at any indentation. A line nested deeper (e.g. inside a `note: |`
+        # block-literal that happens to quote `dimension: ...` from a
+        # pasted verdict-schema example) is content, not a sibling field,
+        # and must not be read as one. The column is whatever indent the
+        # block actually uses (never a hardcoded width), so a well-formed
+        # finding indented at 6 spaces mints exactly like one at 4. A blank
+        # line right after `- severity:` is ordinary formatting, not a
+        # signal — it is skipped when hunting for the column.
+        column = None
+        for line in lines[start + 1 : end]:
+            if line.strip():
+                column = _INDENT_RE.match(line).group(0)
                 break
+        if column is not None:
+            for line in lines[start + 1 : end]:
+                if _INDENT_RE.match(line).group(0) != column:
+                    continue
+                wm = _WHERE_RE.match(line)
+                if wm and _PATHLIKE_RE.search(wm.group(1)):
+                    where_ok = True
+                dm = _DIMENSION_RE.match(line)
+                if dm:
+                    dimension_values.append(dm.group(1))
+                om = _ORIGIN_RE.match(line)
+                if om:
+                    origin_values.append(om.group(1))
         if not where_ok:
             problems.append(
                 f"finding at line {start + 1}: no where: line with a "
                 "path-like token in its block"
             )
+        # Two or more `dimension:` (or `origin:`) lines in one block is
+        # malformed: YAML readers disagree on which value wins (first vs
+        # last), so a duplicate is treated as unparseable rather than
+        # resolved either way — fail closed, same direction as the rest
+        # of this predicate (§Pinned dimension partition, fail-closed
+        # clause).
+        dimension_value = dimension_values[0] if len(dimension_values) == 1 else None
+        if len(origin_values) > 1:
+            problems.append(
+                f"finding at line {start + 1}: duplicate origin: lines "
+                "(exactly one is required)"
+            )
+        elif _origin_required(dimension_value):
+            origin_value = origin_values[0] if origin_values else None
+            origin_problem = _origin_grammar_problem(origin_value)
+            if origin_problem:
+                problems.append(f"finding at line {start + 1}: {origin_problem}")
     return problems
 
 

@@ -66,6 +66,7 @@
 - [2026-08-02-archive-script-residual-hardening-symlinked-dest-parent-and-guards](backlog/2026-08-02-archive-script-residual-hardening-symlinked-dest-parent-and-guards.md) — three residual guard gaps in loom-code/scripts/archive_change_folder.py that the two-unit generalization left behind
 - [2026-08-02-backlog-index-two-frontmatter-readers-disagree-on-duplicate-keys](backlog/2026-08-02-backlog-index-two-frontmatter-readers-disagree-on-duplicate-keys.md) — four generator and reader nits in scripts/backlog_index.py and its neighbours, all latent today
 - [2026-08-02-citations-into-the-generated-backlog-index-by-line-number](backlog/2026-08-02-citations-into-the-generated-backlog-index-by-line-number.md) — documents still cite docs/loom/BACKLOG.md by line number or heading anchor, both of which are invalidated by the generated file — six by line number (resolve silently wrong), eleven more by a §-heading the generated index has no headings for
+- [2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift](backlog/2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift.md) — loom_gate_markers' per-finding field scanner anchors on one column, so two shapes of benign indentation drift refuse a well-formed verdict and blame the wrong field
 
 ## PARKED
 - [2026-07-08-automate-research-toolkit-s-sync-primitives-sh](backlog/2026-07-08-automate-research-toolkit-s-sync-primitives-sh.md) — Automate research-toolkit's sync-primitives.sh
