@@ -75,6 +75,16 @@ amendment note below for the precedent this follows).
   a task's Description and GREEN is outside `writing-plans`' three-item
   no-re-review list), so the header returns to PENDING for round 4.
 
+- **`Reuse-adequacy` `Observed` line citations below are as-of-authoring, not
+  refreshed against this branch's own later edits to `loom_gate_markers.py`**
+  (`writing-plans/references/plan-format.md` §`Reuse-adequacy`: `Observed`
+  reports what the code did when the citation was written; `check_doc_citations.py`
+  only bounds-checks a citation against the file's current length, never its
+  content) — fix (d) above corrected a citation that was wrong *at authoring
+  time* (an off-by-one), which is a different thing from the line drift this
+  branch's own implementation work causes afterward, and only the former is
+  in scope for correction.
+
 - **Change-folder binding: none, by recorded decision — not by a fresh skip.**
   Detection layer (ii) finds two non-archived folders
   (`docs/loom/2026-07-12-us-sec-primary-source-layer/`,

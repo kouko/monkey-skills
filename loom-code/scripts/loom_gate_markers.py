@@ -563,10 +563,16 @@ def _ledger_lock(ledger_dir: Path):
         return
     try:
         lock_file = open(lock_path, "a+")
-    except OSError as exc:
+    except (IsADirectoryError, PermissionError) as exc:
         _warn_ledger_lock_unavailable(lock_path, str(exc))
         yield
         return
+    except OSError as exc:
+        if exc.errno in _STRUCTURAL_LOCK_ERRNOS:
+            _warn_ledger_lock_unavailable(lock_path, str(exc))
+            yield
+            return
+        raise
     try:
         deadline = time.monotonic() + _LEDGER_LOCK_TIMEOUT_SECONDS
         warned_contention = False
@@ -612,7 +618,7 @@ def _is_valid_ledger_shape(data: object) -> bool:
     per-branch value that isn't a list) is corrupt in the same
     load-bearing sense a JSON syntax error is (whole-branch review
     finding 2 — the docstring's "a single corruption cannot bias every
-    future round to empty" claim was false for exactly these four
+    future round to empty" claim was false for exactly these three
     shapes, each of which used to raise deep inside `.setdefault`/
     `.append` and fall through to the blanket swallow, permanently
     dropping every future round)."""
@@ -629,7 +635,7 @@ def _recover_corrupt_ledger(path: Path, reason: str) -> dict:
     (preserved for a human to inspect, never deleted) and return a fresh
     empty ledger dict. Shared by every recoverable corruption shape
     (unparseable JSON, a directory sitting at the ledger path, and the
-    four valid-JSON-wrong-shape variants) — all are corrupt in the same
+    three valid-JSON-wrong-shape variants) — all are corrupt in the same
     load-bearing sense, so all get the identical treatment and stderr
     wording."""
     corrupt_path = path.with_name(
@@ -1295,8 +1301,7 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
     # field; a tab against spaces) over-refuse a well-formed verdict,
     # tracked OPEN at
     # docs/loom/backlog/2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift.md.
-    # Quote verification, measured on this repo, has its own five
-    # known-unfixed false-refusal shapes and was blocking a push on
+    # Quote verification, measured on this repo, was blocking a push on
     # exactly the tail of findings it could never see anyway — which is
     # why it no longer gates.
     payload = {

@@ -9,8 +9,10 @@
   reason it fails on the code side is the finding that produced
   `docs/loom/specs/2026-08-02-finding-origin-attribution.md`.
 - **Status**: measurement record. The numbers below are a 2026-08-02
-  snapshot, not a ceiling — the corpus grows daily and every count here is
-  re-runnable with the script in §Method.
+  snapshot, not a ceiling — the corpus grows daily and the raw counts here
+  are re-runnable with the script in §Method; the deduped and day-specific
+  counts additionally need the manual dedupe procedure in §Appendix, which
+  the script itself does not apply.
 
 ## Definition used
 

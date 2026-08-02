@@ -51,7 +51,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
   arc exists to fix). `_append_origin_ledger` appends one entry per
   `review-pass` invocation — round number, verdict, `head_sha`, timestamp,
   and one `findings` list entry per finding (`arm`, `dimension`,
-  `origin_raw`, `quote_status`) — on EVERY invocation, including the
+  `origin_raw`, `quote_status`) — on every invocation whose verdict file
+  is readable and whose branch resolves, including the
   `NEEDS_REVISION` and schema-failure paths that mint no
   `review-pass.json` at all. A write failure here is reported on stderr
   and swallowed; unlike every other marker, it never changes the exit code

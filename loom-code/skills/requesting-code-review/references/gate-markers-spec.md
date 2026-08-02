@@ -72,10 +72,12 @@ Tasks 1-6). Five reasons are distinguished, each recorded as
 `sha-unresolvable`, `file-absent`, `not-a-file`, `undecodable-blob` (the
 committed blob couldn't be read as text), and `quote-absent` (the file
 read fine but never contained the quote). `origin: none` records
-`none`; an absent `origin:` on an exempt docs-arm finding records
-`absent`; a duplicate `origin:` records `duplicate` (also
-grammar-refused — see above — but distinct from `absent`, since an
-`origin:` line did exist, just twice).
+`none`; a malformed `origin:` value records `malformed`; an absent
+`origin:` line records `absent` regardless of arm — a code-arm finding
+that refuses the mint for a missing `origin:` still lands an `absent`
+entry, the same as an exempt docs-arm finding's absence; a duplicate
+`origin:` records `duplicate` (also grammar-refused — see above — but
+distinct from `absent`, since an `origin:` line did exist, just twice).
 
 `validate` (below) takes no `--repo` and therefore has no `head_sha` to
 verify a quote against — it says so loudly rather than skipping
@@ -86,10 +88,10 @@ silently.
 `{"schema": 1, "branches": {<branch>: [{"round", "verdict", "head_sha",
 "written_at", "findings": [{"arm", "dimension", "origin_raw",
 "quote_status"}, ...]}, ...]}}` — append-only, **never reset**, one
-entry appended per `review-pass` invocation, on EVERY invocation
-including the `NEEDS_REVISION` and schema-failure paths that mint no
-`review-pass.json` at all, so the recorded sample is never biased by
-which rounds happened to pass.
+entry appended per `review-pass` invocation whose verdict file is
+readable and whose branch resolves — including the `NEEDS_REVISION`
+and schema-failure paths that mint no `review-pass.json` at all, so the
+recorded sample is never biased by which rounds happened to pass.
 
 Its directory resolves via `--git-common-dir` (not `--git-dir` like the
 three markers above), so every `git worktree` checkout of a repo shares
