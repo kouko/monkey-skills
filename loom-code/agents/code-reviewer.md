@@ -348,6 +348,7 @@ findings:
     where: <file:line OR commit SHA range>
     source: <rubric / checklist / standard file:section that triggered this>
     note: <1-2 sentence finding>
+    origin: none | <path> :: "<verbatim quote from that file>"  # REQUIRED — see below
     evidence_needed: craft | domain-convention | project-local  # OPTIONAL
 
 summary:
@@ -355,6 +356,18 @@ summary:
 ```
 
 `evidence_needed` (OPTIONAL): set it when the finding's correct resolution is owned by an authority outside this codebase (engineering literature / domain authority / this repo's own docs) rather than by the diff itself — the reviewer never runs the research; it flags.
+
+`origin:` (REQUIRED): state the quote gate as an action you perform, not a
+judgment you make — name the upstream artifact ONLY when you can quote the
+wrong statement verbatim; otherwise write `none`. `none` carries **no
+penalty**: the field records what you hold, not what you can infer, so
+declining to name an artifact is never scored against the finding. Grammar,
+transcribed verbatim from the field's pin:
+
+```
+origin: none
+origin: <path> :: "<verbatim quote from that file>"
+```
 
 ### Aggregation rule
 
