@@ -42,10 +42,13 @@ An agent that lands there mid-task learns what it must not do and not
 what to do instead: that content belongs in `backlog/<name>.md`, and
 that `--write` regenerates. The positive instruction currently lives
 only in `docs/loom/README.md` and the store charter. This one is worth
-weighing against banner length — `grep -rn "BACKLOG\.md" --exclude-dir=.git .`
-(2026-08-02) finds 236 references across 81 files elsewhere in the repo,
-so the file is widely cited, but the banner is the one place an agent
-editing it mid-task is guaranteed to land on.
+weighing against banner length: `grep -rn "BACKLOG\.md" --exclude-dir=.git .`
+finds the path cited across most of `docs/loom/` and several plugins, so
+it is widely referenced — but the banner is the one place an agent
+editing the file mid-task is guaranteed to land on. (No count is stated
+here on purpose. This sentence carried an exact figure through two
+commits and was wrong in both, because the commit that measured it also
+changed it. Run the grep yourself when the trade-off actually matters.)
 
 **4. A stale transcription in the arc's plan.** The `§Pinned index
 shape` block in

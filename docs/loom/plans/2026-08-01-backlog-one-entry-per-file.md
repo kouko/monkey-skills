@@ -327,14 +327,22 @@ Plan-document-reviewer verdict: PASS (2026-08-01, round 5, 15/15)
   written before that field existed, so implementing Task 7 literally would
   produce archived entries that break index generation on the next run. Gap
   confirmed independently by Task 3's spec-reviewer against
-  `docs/loom/backlog/README.md:85-87` and `scripts/backlog_index.py:286-302`
-  (the `--validate` invariant) plus `:343-346` (the `--write` fail-loud
-  docstring). Recorded here rather than silently carried in a dispatch packet,
-  so the plan and the charter do not disagree.
+  `docs/loom/backlog/README.md` §Frontmatter contract (the `archived:` line and
+  the paragraph below it) and §Archive rule step 3, plus
+  `scripts/backlog_index.py`'s `_check_archived_date` (the `--validate`
+  invariant) and `_bucket_entry`'s archive-tier branch (the `--write` fail-loud
+  path). Recorded here rather than silently carried in a dispatch packet, so the
+  plan and the charter do not disagree.
 
-  **Citation correction (2026-08-02, during Task 7 execution).** The
-  `scripts/backlog_index.py` pointer above originally read `:200-206`, which is
-  `parse_frontmatter`'s header, not the fail-loud behaviour it was cited for.
+  **Citation correction (2026-08-02, twice).** The `scripts/backlog_index.py`
+  pointer above originally read `:200-206`, which is `parse_frontmatter`'s
+  header, not the fail-loud behaviour it was cited for. It was repointed at
+  `:286-302` / `:343-346` during Task 7, and those anchors had drifted again by
+  the time the whole-branch review read them — `:343-346` had become
+  `_check_field_agreement`'s definition. The third round replaced all four
+  anchors with **symbol and section names**, which do not move when the files
+  are edited. Line anchors into files this arc is actively changing were the
+  wrong carrier from the start; that is the durable fix, not a third repoint.
   The content was present in the cited file all along — only the line anchor
   had drifted. Caught by Task 7's code-quality-reviewer and re-verified against
   the file before amending.

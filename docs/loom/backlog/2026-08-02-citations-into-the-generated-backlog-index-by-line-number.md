@@ -32,6 +32,24 @@ docs/loom/specs/2026-07-19-jnj-restatement-axis-signature.md
 (`loom-code/scripts/check_doc_citations.py` also matches the grep, but
 its hit is a docstring example of the citation syntax, not a citation.)
 
+**The recipe below returns more hits than that list — the extras are
+deliberate, not missed.** Running it at the arc's final commit also
+surfaces this entry's own prose, plus four lines the arc's own
+remediation rounds *added on purpose*, each naming the pre-migration
+monolith as a historical fact rather than as a live pointer:
+
+```
+docs/loom/specs/2026-07-25-kpi-id-injective-identity.md      (the dropped-anchor note)
+docs/loom/plans/2026-07-22-kpi-observation-history.md        (dated correction note)
+docs/loom/plans/2026-07-25-company-total-revenue.md ×2       (restored historical anchor)
+```
+
+Do **not** repoint those four. Two review rounds went into establishing
+that a completed task block records what was true on the day it ran, and
+that a measurement whose original anchor pointed at a section header has
+no owner to be repointed to. Repointing them would fabricate provenance
+— the specific defect the rest of this entry exists to prevent.
+
 The fix is the same one the sweep applied elsewhere: repoint each at
 the entry file under `docs/loom/backlog/` that now owns the cited
 content, without a line number — entry files are short and are the

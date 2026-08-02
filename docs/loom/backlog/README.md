@@ -60,10 +60,11 @@ not the label, and is compared as part of it.
 The captured value runs from after the label to the first of: a blank
 line, a line starting with `- ` at column 0, or end of text. A wrapped
 bullet — indented continuation lines, no blank line before the next
-bullet — still captures in full; so does any prose or heading placed
-directly after the bullet with no blank line separating them. If the
-bullet must stand alone, put a blank line between it and whatever
-follows.
+bullet — still captures in full. Prose or a heading placed directly
+after the bullet with **no** blank line between them is captured too,
+which means it is compared against the frontmatter field as if it were
+part of the value — so a bullet that agrees with its twin word for word
+still fails. Put a blank line between the bullet and whatever follows.
 
 A bullet that disagrees with its frontmatter twin fails `--validate`
 with a `[field-agreement]` violation. This fires **only when both

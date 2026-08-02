@@ -44,12 +44,25 @@ impossible calendar dates), so the store could no longer be regenerated
 from the entry files — the only way back was hand-editing the archived
 file, the exact operation this store's charter says never to do. The
 guard is fixed in this same remediation round (calendar-validity
-checking added to the shared `_validate_date` path). What genuinely
-remains deferred, unchanged by that fix: the discriminating file-unit
-test this item originally asked for — a red test that pins
-`--unit file --date <a shape-valid, calendar-impossible date>` refusing
-before any move, so a future refactor that re-separates the two units'
-date handling cannot silently reopen this.
+checking added to the shared `_validate_date` path), and the
+discriminating test landed with it —
+`test_file_unit_refuses_calendar_invalid_date_without_touching_filesystem`
+pins `--unit file --date <a shape-valid, calendar-impossible date>`
+refusing before any move.
+
+**Second correction (same day, third review round).** The paragraph
+above originally closed by saying that discriminating test "genuinely
+remains deferred". It did not: it was written in the very commit that
+fixed the guard, by a parallel agent, and this text was authored before
+that landed. Nothing about item 2 remains deferred — **except** the
+direction the new test does not cover: it pins that the archiver stays
+at least as strict as the validator, not that the validator stays no
+stricter than the archiver. The two calendar checks are deliberately
+duplicated rather than shared (`loom-code` ships as a standalone
+plugin and must not import a host-repo script), so tightening
+`backlog_index._is_valid_date_shape` without tightening
+`archive_change_folder._validate_date` reopens this bug's exact class
+with nothing going red. That asymmetry is what is left.
 
 **3. The store's own charter is archivable.** Nothing stops
 `--unit file` with the identifier `README.md`, which would move
