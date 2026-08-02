@@ -5,6 +5,41 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.45.0] — 2026-08-02 — a review finding must name where it came from
+
+### Added
+
+- **Every code-arm review finding now carries `origin:`, valued `none` or
+  `<path> :: "<verbatim quote from that file>"`.** `_finding_problems` in
+  `loom_gate_markers.py` refuses to mint `review-pass.json` for a finding
+  whose `dimension:` line is absent, empty, duplicated, or names a value
+  outside the pinned code-arm/docs-arm partition — that finding is treated
+  as code-arm and required to carry the field, fail-closed. A docs-arm
+  dimension is exempt from carrying `origin:` at all, but a field that IS
+  present is grammar-checked on both arms alike.
+- **A quoted origin is verified against the file's committed content at
+  `head_sha`, never the working tree** — `git show <head_sha>:<path>`, run
+  as a distinct step in `_cmd_review_pass` after the sha resolves. Matching
+  is two-stage: byte-exact first, then one shared normaliser (NFC,
+  whitespace collapse, typographic-quote/dash folding) on a miss; which
+  stage matched is recorded per run in the marker payload as
+  `origin_quote_tiers: {"exact": n, "normalised": m}`. Refusals distinguish
+  quote-absent-at-sha, file-absent-at-sha, not-a-file, an undecodable blob,
+  and sha-unresolvable — each names path, sha and quote in its own message
+  rather than collapsing to one generic failure. The `validate` dry-run has
+  no `--repo` to check a quote against, so it now states loudly that quote
+  verification did not run, rather than passing silently.
+- **The field lands in three contracts.** `code-reviewer.md` (the
+  whole-branch agent whose output the marker validates) owns the rule and
+  states it as an action, not a judgment: name the file only when you can
+  quote the wrong statement verbatim, otherwise write `none` — with no
+  penalty for `none`. `code-quality-reviewer.md` (per-task) emits the same
+  field and says explicitly that it is **not** marker-enforced there, since
+  per-task verdicts never reach `loom_gate_markers.py`. `requesting-code-review/SKILL.md`
+  §Verdict structure mirrors the schema by pointer to `code-reviewer.md`
+  rather than restating the quote-gate rule, following the existing
+  `class:` scoping precedent.
+
 ## [0.44.0] — 2026-08-02 — archive a single store entry, not only a change-folder
 
 ### Added
