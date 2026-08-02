@@ -170,7 +170,8 @@ shows it is already extractable via its own dimensions), `spec-reviewer`
 Add a quote-gated `origin:` field to the code-arm finding schema, enforced by
 `loom_gate_markers.py` in the same fail-closed way `where:` already is,
 **scoped by dimension family** so the shared validator cannot break the docs
-arm, and with the quote check placed after the reviewed sha resolves.
+arm, and with the quote check placed after `_cmd_review_pass` resolves the sha
+it stamps into the marker.
 
 We will **not** ask the reviewer to judge causation, because the measured
 agreement for that judgment by a downstream rater is fair-to-poor, and a field
@@ -212,11 +213,25 @@ filled with real quotes, the correct response is deletion, not reinforcement.
 All three were open when this brief was first written; each is now decided and
 the reasoning is recorded here rather than in a dispatch packet.
 
-**1 — Verify the quote against the reviewed commit, not HEAD.** *(user, 2026-08-02)*
-The reviewed commit is the only correct anchor: an upstream document that
-changed mid-branch would otherwise produce a false `none`, and this session
-produced several such mid-branch document changes. The cost is one `git show`
-per quoted finding.
+**1 — Verify the quote against committed content, not the working tree.**
+*(user, 2026-08-02)*
+Committed content is the only correct anchor: reading the working tree would let
+an uncommitted edit satisfy the check, so a quote could be manufactured at
+verdict-writing time and never exist in the history the marker attests. The cost
+is one `git show` per quoted finding.
+
+> **Correction 2026-08-02, after the plan-document-reviewer's round 2.** The
+> question actually put to the user framed this as *"the reviewed commit vs
+> HEAD"*, and the first version of this answer was written in those terms.
+> **That distinction does not exist.** `_cmd_review_pass` resolves exactly one
+> sha — `head_sha` from `rev-parse HEAD` — and stamps it into the marker, so
+> "the committed content at that sha" and "the reviewed content" are the same
+> thing; there is no second anchor to prefer over it. The decision the user made
+> is unchanged and so is its force; what changed is the alternative it rejects,
+> which is **reading the worktree**, never "reading HEAD". The superseded
+> rationale — that a mid-branch document change would otherwise produce a false
+> `none` — depended on the two-sha framing and does not survive it, so it is not
+> preserved as a live reason. This note is the record.
 
 **2 — One `none`, no second escape value.** *(agent decision)*
 Rejecting the Azure DevOps `Unknown` precedent here, because the reason that

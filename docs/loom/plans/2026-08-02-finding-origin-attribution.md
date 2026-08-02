@@ -4,7 +4,7 @@ Source brief: docs/loom/specs/2026-08-02-finding-origin-attribution.md
 Total tasks: 6
 Critical-path depth: 5 (≤5) — Task 1 → 2 → 3 → 5 → 6; Task 4 is a depth-3 leaf
 Execution order: sequential
-Plan-document-reviewer verdict: PENDING
+Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; supersedes the round-3 PASS that the round-3-note amendment made stale
 
 ## Notes
 
@@ -18,6 +18,54 @@ Plan-document-reviewer verdict: PENDING
   further round-1 gaps (shared-validator blast radius, sha-unavailable-at-
   validation, `requesting-code-review` §Verdict structure being the
   whole-branch schema) are addressed by Tasks 1, 2 and 5 respectively.
+
+- **Round-2 fixes (2026-08-02), applied before this round-3 dispatch.** Four
+  gaps and two advisory notes, all closed in this document rather than in a
+  dispatch packet (a packet is ephemeral; every later gate reads only this
+  file). (a) Task 1's RED was already GREEN today — re-cut to the code-arm case
+  that fails now, with the docs-arm case kept as a *named* GREEN regression
+  assertion so its discriminating power is not lost. (b) Task 2's RED was
+  **unconstructible**: it posited a quote "present at HEAD but not at the
+  reviewed sha", and there is no separate reviewed sha — re-cut to
+  committed-content-vs-worktree, which fails today and passes only a `git show`
+  implementation. (c) The dimension-gated requirement **failed open** — see
+  §Pinned dimension partition's new fail-closed clause and Task 1's second named
+  GREEN assertion. (d) A `head_sha` line citation was off by one (`:275` is
+  `branch`), and its Intended slot repeated the wrong number as a *placement*
+  instruction, which would have put the check between the two `_git` calls.
+  Advisory 1 (Task 2's GREEN spanning two behaviours) is closed by naming a
+  second RED, with the reason it stays one task written into that entry;
+  advisory 2 (unreachable sha-unresolvable branch) is closed by pinning it to a
+  helper-level unit test in GREEN.
+
+  Fix (b) had a **wider blast radius than the finding named**: the same
+  non-existent distinction was carried at eight sites — the brief's §Decision
+  and §Resolved Questions 1, and this plan's §Pinned field grammar (which Tasks
+  1, 3, 4 and 5 transcribe VERBATIM into shipped contracts), Task 2's title,
+  Description, RED, GREEN and External surfaces. All eight are corrected;
+  correcting only the two the reviewer pointed at would have shipped the wrong
+  wording through the pin into three agent/skill files.
+
+- **Round-3 amendment (2026-08-02) — the plan misstated a fact about its own
+  target suite.** Round 3 returned PASS with a non-fatal note that the
+  fail-closed clause's closing phrase — *"invisible to a suite whose fixtures
+  all carry well-formed dimensions"* — reads as a claim that
+  `test_loom_gate_markers.py`'s fixtures carry dimensions. They do not:
+  independently measured, that file contains **zero** per-finding `dimension:`
+  lines. Two consequences, both now written down rather than left for the
+  implementer to hit: the clause is replaced by the measurement, and Task 1
+  declares the fixture updates the fail-closed rule forces (every pre-existing
+  finding fixture refuses to mint under it, and several tests assert a
+  successful mint). Task 1's GREEN also gains the present-but-empty
+  `dimension:` case, closing the one divergence round 3 flagged between the
+  pin's "no *parseable* `dimension:`" and the naive "no `dimension:` line".
+
+  Worth naming, because it is this arc's own subject matter: the phrase was a
+  **plan fact that was wrong, actionable and silent** — introduced by the very
+  edit that closed round 2's fail-open gap, and caught one stage before any code
+  existed. The PASS it arrived with is superseded by this amendment (a change to
+  a task's Description and GREEN is outside `writing-plans`' three-item
+  no-re-review list), so the header returns to PENDING for round 4.
 
 - **Change-folder binding: none, by recorded decision — not by a fresh skip.**
   Detection layer (ii) finds two non-archived folders
@@ -42,8 +90,14 @@ Plan-document-reviewer verdict: PENDING
   ```
 
   `none` is the only permitted no-quote value (brief §Resolved Questions 2).
-  The quote is matched at the **reviewed commit**, never at HEAD (§Resolved
-  Questions 1).
+  The quote is matched against **committed content**, never against the working
+  tree (brief §Resolved Questions 1) — an uncommitted edit must not be able to
+  satisfy the check. There is **no separate "reviewed sha"** to prefer over
+  HEAD: `_cmd_review_pass` resolves exactly one sha, `head_sha` from
+  `rev-parse HEAD`, and stamps it into the marker, so the committed content at
+  that sha *is* the reviewed content. Any wording in a transcribed copy that
+  contrasts "the reviewed commit" with "HEAD" is stale — see the brief's dated
+  correction under §Resolved Questions 1.
 
 - **§Pinned dimension partition** — the discriminator Task 1 branches on.
   Transcribe VERBATIM; do not re-derive from the agent files, and do not
@@ -59,6 +113,26 @@ Plan-document-reviewer verdict: PENDING
 
   Verified disjoint 2026-08-02. A finding carrying a code-arm dimension must
   carry `origin:`; a docs-arm dimension is untouched.
+
+  **Fail closed on everything else — the requirement is the default, the
+  docs-arm exemption is the branch.** A finding whose block carries no parseable
+  `dimension:` line, or a `dimension:` value in neither set, is treated as
+  **code-arm**: it refuses without `origin:`. This is not a detail — today
+  `_finding_problems` never reads a per-finding `dimension:` at all (the
+  module's only `dimension` reads are the `dimension_scores:` block-header
+  check), so an implementation that grants the requirement only on a successful
+  lookup into the code-arm set lets **every** unparseable finding escape it
+  silently. Measured on the target suite 2026-08-02:
+  `loom-code/scripts/test_loom_gate_markers.py` contains **zero** per-finding
+  `dimension:` lines — every finding fixture in it *is* the unparseable case —
+  so a fail-open implementation would leave the whole existing suite green while
+  requiring `origin:` of nothing at all, and nothing in the suite would ever
+  surface the hole. Write the exemption as the explicit branch
+  (`dimension:` parses AND is in the docs-arm set → skip) rather than letting
+  fail-closed emerge from a lookup happening to miss. Same shape as the `class:`
+  precedent, verbatim: *"A finding whose class is unclear is tagged
+  `instruction` (fail closed)"*
+  (`loom-code/skills/requesting-docs-review/SKILL.md:55`).
 
 - **Kickoff decision — enforcement lands before prose.** Tasks 1-2 ship before
   Tasks 3-5. Shipping the contract first would promise a field nothing
@@ -82,11 +156,21 @@ Plan-document-reviewer verdict: PENDING
 
 ## Task 1 — Require `origin:` on code-arm findings only
 
-- Description: Extend `_finding_problems` in `loom_gate_markers.py` so a
-  finding block whose `dimension:` is in the code-arm set must carry an
-  `origin:` line valued either `none` or `<path> :: "<quote>"`. A finding
-  carrying a docs-arm dimension is untouched. Grammar only — the quote is not
-  yet checked against any file (Task 2). Transcribe both pins VERBATIM.
+- Description: Extend `_finding_problems` in `loom_gate_markers.py` so every
+  finding block must carry an `origin:` line valued either `none` or
+  `<path> :: "<quote>"`, **except** a block whose `dimension:` both parses and
+  falls in the docs-arm set, which is untouched. Write it in that direction —
+  requirement first, exemption as the explicit branch — so a block with an
+  absent or unrecognised `dimension:` refuses rather than escaping (§Pinned
+  dimension partition, fail-closed clause). Grammar only: the quote is not yet
+  checked against any file (Task 2). Transcribe both pins VERBATIM.
+  **Declared collateral — not incidental drift.** No finding fixture in
+  `test_loom_gate_markers.py` carries a `dimension:` line today (measured
+  2026-08-02: zero occurrences in the file), so under the fail-closed rule every
+  pre-existing fixture refuses to mint and every test asserting a successful
+  mint goes red. Updating those fixtures — give each one a code-arm `dimension:`
+  and an `origin:`, keeping each test's original intent — is part of this task,
+  and the file is already in `Files touched` for exactly this reason.
 - Module: loom-code/scripts/loom_gate_markers.py
 - Files touched: loom-code/scripts/loom_gate_markers.py, loom-code/scripts/test_loom_gate_markers.py
 - Context paths:
@@ -94,43 +178,47 @@ Plan-document-reviewer verdict: PENDING
   - loom-code/scripts/test_loom_gate_markers.py
   - loom-code/skills/requesting-docs-review/SKILL.md
 - Acceptance:
-  - RED: `loom-code/scripts/test_loom_gate_markers.py::test_docs_arm_finding_without_origin_still_mints` — a verdict whose findings all carry docs-arm dimensions and no `origin:` must still validate. This is the discriminating case: a naive global requirement passes every other test and fails only this one, and failing it would block docs-only and mixed-branch pushes.
-  - GREEN: a code-arm finding without `origin:` refuses; `origin: none` and `origin: docs/loom/plans/x.md :: "seven call sites"` both validate; a bare path with no quote and a quote with no path both refuse; docs-arm findings are unaffected; `python3 -m pytest loom-code/scripts/` passes.
+  - RED: `loom-code/scripts/test_loom_gate_markers.py::test_code_arm_finding_without_origin_refuses_to_mint` — a verdict whose finding carries a code-arm `dimension:` (`correctness`) and no `origin:` line must fail validation. This fails **today**: no `origin:` requirement exists, so that verdict validates clean and mints.
+  - GREEN: `origin: none` and `origin: docs/loom/plans/x.md :: "seven call sites"` both validate; a bare path with no quote and a quote with no path both refuse; `python3 -m pytest loom-code/scripts/` passes. Two assertions inside GREEN are **named, and each is load-bearing on its own**:
+    - `test_docs_arm_finding_without_origin_still_mints` — a verdict whose findings all carry docs-arm dimensions and no `origin:` must still validate. This is the discriminating case against over-reach: a naive **global** requirement satisfies every other criterion in this task and fails only this one, and shipping it would block every docs-only and mixed-branch push.
+    - `test_finding_with_unparseable_dimension_refuses_without_origin` — three cases must **each** refuse without `origin:`: a finding block carrying no `dimension:` line at all, one carrying a value in neither pinned set, and one carrying a `dimension:` key with an empty or whitespace-only value. This is the discriminating case against under-reach (§Pinned dimension partition, fail-closed clause): an implementation that requires `origin:` only on a successful code-arm lookup passes every other criterion here and fails only this one. The third case is what keeps "no *parseable* `dimension:`" (the pin's wording) and "no `dimension:` line" (the naive reading) from diverging — a present-but-empty key must not read as a docs-arm exemption.
+    - Pre-existing fixtures updated per the Description's declared collateral, each keeping its original assertion intent, and `python3 -m pytest loom-code/scripts/` green with them.
 - External surfaces: none — stdlib `re`, matching the module's existing imports.
 - Reuse-adequacy:
   - Observed: `_finding_problems` already splits the verdict into per-finding blocks and requires a path-like `where:` in each, refusing to mint otherwise — `read loom-code/scripts/loom_gate_markers.py:224-247`
   - Observed (blast radius): the docs arm mints the SAME marker through the same validator — `read loom-code/skills/requesting-docs-review/SKILL.md:56`
   - Observed (precedent): a per-finding field scoped by arm already ships, annotated inline — `read loom-code/skills/requesting-code-review/SKILL.md:150`
-  - Intended: reuse the per-finding block split and the refuse-to-mint path unchanged; the `where:` check's **unconditional** shape does NOT carry over — `origin:` must branch on the finding's own `dimension:` value, or it breaks every docs-only and mixed branch.
+  - Intended: reuse the per-finding block split and the refuse-to-mint path unchanged; the `where:` check's **unconditional** shape does NOT carry over — `origin:` must carry an exemption branch keyed on the finding's own `dimension:` value, or it breaks every docs-only and mixed branch. Note the asymmetry with `where:`: because `where:`'s requirement is unconditional, its parse cannot fail open, whereas `origin:`'s can — so the exemption must be what the code tests for, never the requirement (§Pinned dimension partition, fail-closed clause).
 - Dependencies: none
 - Independent: false
 - Brief item covered: "A finding carrying a code-arm dimension must carry `origin:`; one carrying a docs-arm dimension is untouched."
 
-## Task 2 — Verify the quote at the reviewed commit, and say so when you cannot
+## Task 2 — Verify the quote against committed content, and say so when you cannot
 
 - Description: Add quote verification as a distinct step in `_cmd_review_pass`,
   **after** `head_sha` resolves — not inside `validate_verdict_text`, which
   runs before the sha exists and is also reachable from a subcommand that has
-  no repo. For each code-arm finding whose `origin:` names a path and quote,
-  read that path at the reviewed sha and refuse to mint unless the quote
-  occurs, naming path, sha and quote in the message. Distinguish "file absent
-  at that sha" from "sha unresolvable" — the current git helper collapses both
-  to `None`. On the `validate` dry-run path, state in the output that quote
-  verification did not run.
+  no repo. For each finding whose `origin:` names a path and quote, read that
+  path **out of the commit** (`git show <head_sha>:<path>`), never off disk, and
+  refuse to mint unless the quote occurs, naming path, sha and quote in the
+  message. Distinguish "file absent at that sha" from "sha unresolvable" — the
+  current git helper collapses both to `None`. On the `validate` dry-run path,
+  state in the output that quote verification did not run.
 - Module: loom-code/scripts/loom_gate_markers.py
 - Files touched: loom-code/scripts/loom_gate_markers.py, loom-code/scripts/test_loom_gate_markers.py
 - Context paths:
   - loom-code/scripts/loom_gate_markers.py
   - loom-code/scripts/test_loom_gate_markers.py
 - Acceptance:
-  - RED: `loom-code/scripts/test_loom_gate_markers.py::test_origin_quote_present_only_at_head_refuses_to_mint` — a temp repo where the quoted sentence exists at HEAD but NOT at the reviewed sha must refuse. This is the case that distinguishes reviewed-commit lookup from HEAD lookup; a HEAD-based implementation passes every other case and fails only this one.
-  - GREEN: a quote present at the reviewed sha mints; absent-at-sha, file-absent-at-sha and unresolvable-sha each refuse with distinct messages; `origin: none` skips verification; `validate --verdict-file <f>` prints that quote verification did not run and does not silently pass; `python3 -m pytest loom-code/scripts/` passes.
-- External surfaces: `git` CLI via `subprocess` — already the module's mechanism, no new dependency. Use `git show <sha>:<path>`; reading the worktree is wrong by construction.
+  - RED: `loom-code/scripts/test_loom_gate_markers.py::test_origin_quote_present_only_in_worktree_refuses_to_mint` — a temp repo whose **committed** content at `head_sha` lacks the quoted sentence while the on-disk file contains it must refuse to mint. This is the discriminating case: it fails today (nothing verifies quotes), it still fails a `Path.read_text()` implementation, and it passes only a `git show`-based one.
+  - RED (second entry point, same contract): `loom-code/scripts/test_loom_gate_markers.py::test_validate_dry_run_reports_quote_verification_did_not_run` — `validate --verdict-file <f>` on a verdict carrying a quoted `origin:` must print that quote verification did not run. Fails today: the subcommand is silent about it. **Why this stays inside Task 2 rather than becoming its own task**: the `validate` path has no `--repo`, so its only behaviour here is announcing the absence of the check the mint path performs — it is meaningless before that check exists and therefore cannot precede it; and splitting it out would place it on the enforcement-before-prose chain (§Notes kickoff decision), pushing critical-path depth from 5 to 6. Two entry points into one fail-loud contract, one module, one implementer move.
+  - GREEN: a quote present in the committed content at `head_sha` mints; quote-absent-at-sha and file-absent-at-sha each refuse with **distinct** messages naming path, sha and quote; `origin: none` skips verification entirely; the `validate` dry-run does not silently pass; `python3 -m pytest loom-code/scripts/` passes. The **sha-unresolvable** refusal is exercised by a direct unit test on the new helper, **not** through `_cmd_review_pass` — on the integrated path the existing `if branch is None or head_sha is None` guard returns 2 before the check is reached, so that branch is unreachable end-to-end and an integration test for it would be untestable-by-construction rather than merely absent.
+- External surfaces: `git` CLI via `subprocess` — already the module's mechanism, no new dependency. Use `git show <head_sha>:<path>`; reading the worktree is wrong by construction (brief §Resolved Questions 1).
 - Reuse-adequacy:
   - Observed: `_git` shells out and returns `None` on ANY failure, discarding stderr — `read loom-code/scripts/loom_gate_markers.py:90-103`
-  - Observed: `_cmd_review_pass` validates at `:257` and only resolves `head_sha` at `:275` — the sha does not exist when validation runs — `read loom-code/scripts/loom_gate_markers.py:254-276`
+  - Observed: `_cmd_review_pass` validates at `:257` and only resolves `head_sha` at `:276` (`:275` resolves `branch`, not the sha) — the sha does not exist when validation runs — `read loom-code/scripts/loom_gate_markers.py:257-279`
   - Observed: the `validate` subcommand registers only `--verdict-file` and `--suite-line`; it has no repo and no HEAD — `read loom-code/scripts/loom_gate_markers.py:468-470`
-  - Intended: reuse `_git`'s subprocess mechanism, but NOT its collapse-to-`None` contract — Task 2's GREEN needs "file absent at sha" and "sha unresolvable" to be distinguishable, so this call site must inspect the failure rather than inherit `None`. Reuse of `_cmd_review_pass`'s ordering does not carry over either: the check must be placed after `:275`, not alongside the `:257` validation.
+  - Intended: reuse `_git`'s subprocess mechanism, but NOT its collapse-to-`None` contract — Task 2's GREEN needs "file absent at sha" and "sha unresolvable" to be distinguishable, so this call site must inspect the failure rather than inherit `None`. Reuse of `_cmd_review_pass`'s ordering does not carry over either: place the check **after the `if branch is None or head_sha is None` guard at `:277-279`** — i.e. at the first point where `head_sha` is known non-`None` — never alongside the `:257` validation, and never between the two `_git` calls at `:275-276`, where `head_sha` is not yet bound.
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: "It runs as a distinct step in `_cmd_review_pass` after the sha resolves; the `validate` path reports loudly that quote verification did not run"
