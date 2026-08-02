@@ -376,12 +376,12 @@ def test_origin_none_and_quoted_value_validate(tmp_path, origin_line):
 
 
 @pytest.mark.parametrize(
-    "origin_line",
+    "origin_line,expected_reason",
     [
-        "docs/loom/plans/x.md",
-        '"seven call sites"',
-        'docs/loom/plans/x.md :: ""',
-        'docs/loom/plans/x.md :: "   "',
+        ("docs/loom/plans/x.md", "is not 'none' or"),
+        ('"seven call sites"', "is not 'none' or"),
+        ('docs/loom/plans/x.md :: ""', "quote is empty or blank"),
+        ('docs/loom/plans/x.md :: "   "', "quote is empty or blank"),
     ],
     ids=[
         "path-value-no-separator",
@@ -390,7 +390,17 @@ def test_origin_none_and_quoted_value_validate(tmp_path, origin_line):
         "whitespace-only-quote",
     ],
 )
-def test_origin_bare_path_or_bare_quote_refuses(tmp_path, origin_line):
+def test_origin_bare_path_or_bare_quote_refuses(
+    tmp_path, capsys, origin_line, expected_reason
+):
+    # `expected_reason` pins WHY this refuses (a grammar failure raised
+    # during schema validation, before HEAD is even resolved) rather
+    # than just asserting the final rc — the target path is never
+    # committed in this repo, so an rc-only assertion would pass just
+    # as well if the grammar check silently let the value through and
+    # a later, unrelated file-absent check caught it instead. That
+    # masking is exactly how the blank-check and quoted-check mutants
+    # inside the shared origin parser would otherwise survive.
     repo = _init_repo(tmp_path)
     verdict_file = _write_verdict(
         tmp_path,
@@ -403,157 +413,135 @@ def test_origin_bare_path_or_bare_quote_refuses(tmp_path, origin_line):
 
     assert rc == 4
     assert not (_marker_dir(repo) / "review-pass.json").exists()
-
-
-# --------------------------------------------------- origin (phrase amendment)
-#
-# Amendment 2026-08-02 (plan §Notes, "Kickoff decision: `origin:` value
-# escaping"): the quote's interior must contain at least two
-# whitespace-separated tokens — a single token (e.g. a lone identifier)
-# verifies against almost any file and would enter the pre-registered
-# ≥40-finding tally as a genuine origin. Grammar only, so these use
-# `validate` (no --repo needed) rather than `review-pass`.
-
-
-@pytest.mark.parametrize("quote", ["e", "the", "."], ids=["e", "the", "period"])
-def test_origin_single_token_quote_refuses_to_mint(tmp_path, quote):
-    verdict_file = _write_verdict(
-        tmp_path,
-        _verdict_with_finding(
-            dimension_line="correctness",
-            origin_line=f'docs/loom/plans/x.md :: "{quote}"',
-        ),
-    )
-
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
-
-    assert rc == 4
-
-
-def test_origin_single_token_quote_message_does_not_reuse_blank_wording(
-    tmp_path, capsys
-):
-    # The refusal must name the actual reason (a phrase is required, not
-    # a token) — not the "empty or blank" wording the blank-quote case
-    # uses, which would misdescribe a well-formed single-word quote.
-    verdict_file = _write_verdict(
-        tmp_path,
-        _verdict_with_finding(
-            dimension_line="correctness", origin_line='p.md :: "e"'
-        ),
-    )
-
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
-
-    assert rc == 4
     err = capsys.readouterr().err
-    assert "empty or blank" not in err
-    assert "token" in err or "phrase" in err
+    assert "verdict text failed schema validation" in err
+    assert expected_reason in err
+
+
+# ------------------------------------- origin (docs-arm grammar-when-present)
+#
+# Task 1's docs-arm exemption excuses a docs-arm finding from CARRYING an
+# origin: line — it does not excuse one it DOES carry from being
+# well-formed. Before this fix, `_finding_problems` only ran
+# `_origin_grammar_problem` inside the `_origin_required(...)` branch, so
+# a docs-arm finding with a malformed origin: (bare path, unterminated
+# quote, blank quote) skipped grammar validation entirely and minted
+# clean — the docs-arm silent-accept bug found in review.
 
 
 @pytest.mark.parametrize(
-    "quote",
-    ["one\ttwo", "one    two"],
-    ids=["tab-separated", "multi-space-separated"],
+    "origin_line,expected_reason",
+    [
+        ("docs/loom/plans/x.md", "is not 'none' or"),
+        ('docs/loom/plans/x.md :: "abc', "quote is not fully quoted"),
+        ('docs/loom/plans/x.md :: "   "', "quote is empty or blank"),
+    ],
+    ids=["bare-path", "unterminated-quote", "blank-quote"],
 )
-def test_origin_two_token_quote_various_whitespace_separators_passes(
-    tmp_path, quote
+def test_docs_arm_finding_with_malformed_origin_refuses_to_mint(
+    tmp_path, capsys, origin_line, expected_reason
 ):
-    # A tab or a run of several spaces between the two tokens is still a
-    # separator — str.split() collapses runs and treats a tab like any
-    # other whitespace (measured 2026-08-02). A literal newline cannot
-    # occur here: `origin:` values are read one text line at a time
-    # (`_ORIGIN_RE` is matched per-line against `text.splitlines()`
-    # output in `_iter_findings`), so a quote can never contain an
-    # embedded newline in the first place — the newline-separator case
-    # is architecturally unreachable, not merely untested.
+    # `expected_reason` pins the grammar-check failure text (see the
+    # comment on test_origin_bare_path_or_bare_quote_refuses for why
+    # rc alone is not enough — the target path is never committed here
+    # either, so a masked quoted-check/blank-check mutant would still
+    # produce rc==4 via file-absence).
+    repo = _init_repo(tmp_path)
     verdict_file = _write_verdict(
         tmp_path,
-        _verdict_with_finding(
-            dimension_line="correctness",
-            origin_line=f'docs/loom/plans/x.md :: "{quote}"',
-        ),
+        _verdict_with_finding(dimension_line="omission", origin_line=origin_line),
     )
 
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
-
-    assert rc == 0
-
-
-def test_origin_quote_leading_trailing_whitespace_single_word_refuses(tmp_path):
-    # " one " has leading/trailing whitespace INSIDE the quote marks but
-    # still only one token once split — must refuse, same as "one".
-    verdict_file = _write_verdict(
-        tmp_path,
-        _verdict_with_finding(
-            dimension_line="correctness",
-            origin_line='docs/loom/plans/x.md :: " one "',
-        ),
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
-
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
 
     assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    err = capsys.readouterr().err
+    assert "verdict text failed schema validation" in err
+    assert expected_reason in err
 
 
-def test_origin_quote_leading_trailing_whitespace_two_words_passes(tmp_path):
-    # " one two " carries the same leading/trailing whitespace but two
-    # tokens — must pass; leading/trailing whitespace alone is not the
-    # refusal reason, token count is.
+def test_docs_arm_finding_with_duplicate_origin_refuses_to_mint(tmp_path):
+    # Mirrors test_duplicate_origin_lines_refuses_to_mint (code-arm) on the
+    # docs arm — duplicate handling was already arm-agnostic before this
+    # fix; pinned here so it stays that way.
+    repo = _init_repo(tmp_path)
     verdict_file = _write_verdict(
         tmp_path,
-        _verdict_with_finding(
-            dimension_line="correctness",
-            origin_line='docs/loom/plans/x.md :: " one two "',
-        ),
+        "standards_version: 2026-06\n"
+        "verdict: PASS\n"
+        "dimension_scores:\n"
+        "  security: 5\n"
+        "findings:\n"
+        "  - severity: red\n"
+        "    where: docs/x.md:1\n"
+        "    dimension: omission\n"
+        "    origin: none\n"
+        '    origin: p.md :: "quoted text"\n',
     )
 
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
 
-    assert rc == 0
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
 
 
-def test_origin_quote_nbsp_between_words_passes(tmp_path):
-    # A non-breaking space (U+00A0) between two words. Deliberate choice:
-    # str.split() with no argument already treats NBSP as whitespace
-    # (measured 2026-08-02 — "one two".split() == ["one", "two"]),
-    # and the quote-VERIFICATION step (`_normalize_for_quote_match`)
-    # separately folds NBSP to a plain space before comparing against
-    # committed content. Both agree NBSP splits — a grammar step that
-    # treated NBSP as non-splitting would refuse a quote the verifier
-    # would go on to match, which would be an inconsistency, not a
-    # feature.
-    quote = "one two"
+@pytest.mark.parametrize(
+    "origin_line,expected_reason",
+    [
+        ("loom-code/scripts/foo.py:12", "is not 'none' or"),
+        ('loom-code/scripts/foo.py:12 :: "abc', "quote is not fully quoted"),
+        ('loom-code/scripts/foo.py:12 :: "   "', "quote is empty or blank"),
+    ],
+    ids=["bare-path", "unterminated-quote", "blank-quote"],
+)
+def test_code_arm_finding_with_malformed_origin_refuses_to_mint(
+    tmp_path, capsys, origin_line, expected_reason
+):
+    # Sibling to the docs-arm parametrization above — pins that the same
+    # malformed shapes refuse identically on the arm whose requirement
+    # check already forced grammar validation, so both arms are pinned
+    # side by side. `expected_reason` pins the grammar-check failure
+    # text for the same masking reason documented there.
+    repo = _init_repo(tmp_path)
     verdict_file = _write_verdict(
         tmp_path,
-        _verdict_with_finding(
-            dimension_line="correctness",
-            origin_line=f'docs/loom/plans/x.md :: "{quote}"',
-        ),
+        _verdict_with_finding(dimension_line="correctness", origin_line=origin_line),
     )
 
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
 
-    assert rc == 0
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    err = capsys.readouterr().err
+    assert "verdict text failed schema validation" in err
+    assert expected_reason in err
 
 
-# --------------------------------------------- origin (CJK token correction)
+# ------------------------------------------- origin (no length/width floor)
 #
-# Correction 2026-08-02 (plan §Notes, same-day correction beneath the phrase
-# amendment): a whitespace-only token count systematically refuses every
-# CJK quote, since Chinese/Japanese prose has no inter-word spaces — "a
-# token is a whitespace-separated run OR a single CJK character."
+# Amendment 2026-08-02, user decision: the grammar rule is exactly
+# split-on-first-` :: `-then-require-a-non-blank-quoted-interior. Five
+# review rounds tried four length/width-shaped floors on top of that and
+# each one either excluded whole scripts (CJK) or, at display width >= 4,
+# bought 2.1 percentage points of refusal while accepting 97.7% of this
+# repo's committed .md files. The floor is deleted outright, not
+# replaced — the successor (corpus selectivity) is a separate backlog
+# item, not a sixth patch here.
 
 
-def test_origin_cjk_two_char_quote_passes(tmp_path):
-    # "引述" is two CJK characters with no whitespace between them — two
-    # tokens under the corrected definition, so it must pass the same as
-    # any other two-token quote.
+def test_origin_quote_no_length_or_width_floor(tmp_path):
     verdict_file = _write_verdict(
         tmp_path,
         _verdict_with_finding(
             dimension_line="correctness",
-            origin_line='docs/loom/plans/x.md :: "引述"',
+            origin_line='docs/loom/plans/x.md :: "e"',
         ),
     )
 
@@ -562,153 +550,26 @@ def test_origin_cjk_two_char_quote_passes(tmp_path):
     assert rc == 0
 
 
-def test_origin_cjk_single_char_quote_refuses(tmp_path):
-    # "引" is a single CJK character — one token, same floor as a single
-    # Latin word.
+def test_origin_quote_short_but_non_blank_mints_end_to_end(tmp_path):
+    # The reviewer's own repro (§Notes History): "e" is exactly the
+    # quote the display-width floor used to refuse. It now mints like any
+    # other grammatically valid, verified origin.
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/l.md", "some prose containing the letter e.\n")
     verdict_file = _write_verdict(
         tmp_path,
         _verdict_with_finding(
             dimension_line="correctness",
-            origin_line='docs/loom/plans/x.md :: "引"',
+            origin_line='docs/l.md :: "e"',
         ),
     )
 
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
-
-    assert rc == 4
-
-
-def test_origin_mixed_latin_and_cjk_quote_passes(tmp_path):
-    # "the 引" — one whitespace-separated Latin word plus one CJK
-    # character — is two tokens (one of each kind), so it must pass even
-    # though neither half would pass alone ("the" is refused elsewhere;
-    # "引" is refused above).
-    verdict_file = _write_verdict(
-        tmp_path,
-        _verdict_with_finding(
-            dimension_line="correctness",
-            origin_line='docs/loom/plans/x.md :: "the 引"',
-        ),
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
     )
-
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
 
     assert rc == 0
-
-
-def test_origin_cjk_word_plus_latin_word_three_tokens_passes(tmp_path):
-    # "push 再說" — a Latin word plus a two-character CJK run with no
-    # space inside it — is three tokens (1 + 2), the plan's own worked
-    # example for the corrected rule.
-    verdict_file = _write_verdict(
-        tmp_path,
-        _verdict_with_finding(
-            dimension_line="correctness",
-            origin_line='docs/loom/plans/x.md :: "push 再說"',
-        ),
-    )
-
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
-
-    assert rc == 0
-
-
-def test_origin_cjk_char_plus_fullwidth_period_refuses(tmp_path):
-    # "引。" is one Han character plus one full-width period (U+3002) with
-    # no whitespace between them — deliberately must NOT squeak through
-    # on punctuation. The period is not counted as a CJK letter, so the
-    # whole no-whitespace run falls back to the default "one token"
-    # count, same as a bare Latin word — it must refuse.
-    verdict_file = _write_verdict(
-        tmp_path,
-        _verdict_with_finding(
-            dimension_line="correctness",
-            origin_line='docs/loom/plans/x.md :: "引。"',
-        ),
-    )
-
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
-
-    assert rc == 4
-
-
-def test_origin_cjk_punctuation_separated_two_char_quote_passes(tmp_path):
-    # Second correction 2026-08-02: the first fix to the CJK rule counted
-    # a whitespace-separated run character-by-character only when EVERY
-    # character in it was a CJK letter, so a single full-width period
-    # anywhere in the run collapsed the whole run back to one token —
-    # recreating the language filter for ordinary CJK prose, which is
-    # full of `。`, `、`, `：` and `「」`. "引。引" is two Han characters
-    # split by a full-width period with no whitespace anywhere in the
-    # run — the corrected rule counts CJK letters within the run
-    # (ignoring the punctuation) and must pass at two.
-    verdict_file = _write_verdict(
-        tmp_path,
-        _verdict_with_finding(
-            dimension_line="correctness",
-            origin_line='docs/loom/plans/x.md :: "引。引"',
-        ),
-    )
-
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
-
-    assert rc == 0
-
-
-def test_origin_cjk_prose_run_with_punctuation_passes(tmp_path):
-    # Real corpus example from the measurement that motivated the second
-    # correction (plan §Notes): "角色分離。但實際使用" is a genuine
-    # sentence fragment from `loom-code/PRODUCT-SPEC.md`, refused by the
-    # first (all-CJK-or-nothing) fix because of the embedded `。`. It
-    # must pass under the corrected per-run CJK-letter count.
-    verdict_file = _write_verdict(
-        tmp_path,
-        _verdict_with_finding(
-            dimension_line="correctness",
-            origin_line='docs/loom/plans/x.md :: "角色分離。但實際使用"',
-        ),
-    )
-
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
-
-    assert rc == 0
-
-
-def test_origin_path_quote_accepts_cjk_punctuation_separated_quote():
-    # `_origin_path_quote` (Task 2's extractor) mirrors
-    # `_origin_grammar_problem`'s (Task 1's validator) token-counting by
-    # calling the same `_count_quote_tokens` helper, but nothing exercised
-    # it directly for the CJK-plus-punctuation case — a future divergence
-    # between the two (e.g. one is edited and the other is not) would be
-    # caught by nothing, since every other test in this file drives the
-    # extractor only indirectly through `review-pass`. Pin it directly:
-    # "引。引" (two Han characters split by a full-width period, no
-    # whitespace) must be accepted and extracted, not just accepted by
-    # the grammar check above.
-    result = _origin_path_quote('docs/loom/plans/x.md :: "引。引"')
-
-    assert result == ("docs/loom/plans/x.md", "引。引")
-
-
-def test_origin_hangul_two_char_quote_refuses(tmp_path):
-    # Hangul is deliberately NOT included in the CJK character set: it is
-    # not one of this repo's working languages (Traditional Chinese /
-    # Japanese / English) and was never part of the 2746-run measurement
-    # that motivated the correction. "한글" — two Hangul characters, no
-    # whitespace between them — falls back to the default "one token"
-    # count and must refuse, the same as any other unrecognised
-    # no-whitespace run.
-    verdict_file = _write_verdict(
-        tmp_path,
-        _verdict_with_finding(
-            dimension_line="correctness",
-            origin_line='docs/loom/plans/x.md :: "한글"',
-        ),
-    )
-
-    rc = main(["validate", "--verdict-file", str(verdict_file)])
-
-    assert rc == 4
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
 
 
 def test_origin_quote_containing_separator_splits_on_first_occurrence(tmp_path):
@@ -734,6 +595,38 @@ def test_origin_quote_containing_separator_splits_on_first_occurrence(tmp_path):
 
     assert rc == 0
     assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+def test_origin_quote_containing_separator_refuses_when_absent_from_committed_file(
+    tmp_path,
+):
+    # Same shape as the test above, but the committed file does NOT
+    # contain the quote. Pins the exact consequence a split-position
+    # divergence between the grammar check and the extraction path would
+    # cause: if `_origin_path_quote` ever split on a DIFFERENT ` :: `
+    # occurrence than the grammar check (e.g. last instead of first), the
+    # quoted-check would fail on this value, `_origin_path_quote` would
+    # return None, and `_origin_quote_problems` would silently SKIP the
+    # finding — treating an unverifiable quote as if it had nothing to
+    # verify — and the marker would mint anyway (rc 0) despite the quote
+    # never appearing in the file. Both parses now run through the same
+    # single site, so this must always refuse: rc 4, no marker written.
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "p.md", "nothing matching here\n")
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='p.md :: "a :: b"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").is_file()
 
 
 def test_duplicate_dimension_lines_treated_as_unparseable_requires_origin(tmp_path):
@@ -1322,6 +1215,121 @@ def test_normalizer_folds_nfd_needle_against_nfc_haystack(tmp_path):
     assert (_marker_dir(repo) / "review-pass.json").is_file()
 
 
+# ---------------------------------------------- CJK coverage (not a floor)
+#
+# The nine tests that used to pin the deleted length/width floor's CJK
+# carve-out were removed with the floor itself — correctly, since they
+# pinned a rule that no longer exists. But `_normalize_for_quote_match`
+# (NFC + typographic fold + whitespace collapse) is still live code, and
+# without these it would be exercised only by the Latin `café` case above.
+# These pin, end-to-end through `review-pass`, that a CJK quote mints, a
+# CJK quote absent from the file refuses, and NFD/NFC composition
+# differences on CJK content are normalised away — NOT any length, width,
+# or token rule (§Notes kickoff decision: not being a language filter is
+# the property five review rounds bought; see the plan's §Notes).
+
+
+def test_origin_quote_traditional_chinese_present_mints(tmp_path):
+    repo = _init_repo(tmp_path)
+    _commit_file(
+        repo, "docs/note.md", "這份文件說明如何重新設計資料匯入流程。\n"
+    )
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs/note.md :: "重新設計資料匯入流程"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+def test_origin_quote_japanese_present_mints(tmp_path):
+    repo = _init_repo(tmp_path)
+    _commit_file(
+        repo, "docs/note.md", "このスクリプトは正規化処理が必要になる場合を扱う。\n"
+    )
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs/note.md :: "正規化処理が必要になる場合"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+def test_origin_quote_cjk_absent_from_committed_file_refuses(tmp_path):
+    # Discriminating case for the two mint tests above: same shape, but
+    # the committed file does not contain the quoted text. Manually
+    # verified during development that pointing this fixture's content at
+    # text which DOES contain the quote flips this to rc == 0 — i.e. the
+    # refusal below is the matcher actually rejecting an absent quote,
+    # not an unrelated failure (grammar, sha resolution, file-not-found).
+    repo = _init_repo(tmp_path)
+    _commit_file(repo, "docs/note.md", "這份文件與引用的字句完全無關。\n")
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line='docs/note.md :: "完全不存在於檔案中的字句"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
+def test_origin_quote_nfd_kana_needle_matches_nfc_haystack_mints(tmp_path):
+    # Mirrors test_normalizer_folds_nfd_needle_against_nfc_haystack (the
+    # café case) on CJK content: proves NFC normalisation runs on BOTH
+    # sides, not just the Latin one. が (U+304C, NFC) decomposes to か
+    # (U+304B) + the combining voiced-sound mark (U+3099) under NFD — the
+    # haystack is committed in composed (NFC) form, the quote is the
+    # decomposed (NFD) spelling of the same text.
+    import unicodedata
+
+    repo = _init_repo(tmp_path)
+    composed = "これは合成された「が」を含む文です。\n"  # NFC が
+    assert unicodedata.is_normalized("NFC", composed)
+    _commit_file(repo, "docs/note.md", composed)
+    # NFD spelling built from separate codepoints (\u304b + \u3099)
+    # rather than typed as one literal character, per the composed-vs-
+    # decomposed distinction this test exists to pin.
+    decomposed_quote = "合成された「が」を含む文"
+    assert not unicodedata.is_normalized("NFC", decomposed_quote)
+    verdict_file = _write_verdict(
+        tmp_path,
+        _verdict_with_finding(
+            dimension_line="correctness",
+            origin_line=f'docs/note.md :: "{decomposed_quote}"',
+        ),
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
 def test_normalize_for_quote_match_is_symmetric_on_typographic_marks(tmp_path):
     # The SAME normaliser must be applied to both the quote and the
     # haystack (§Notes kickoff decision) — verified directly on the
@@ -1346,10 +1354,10 @@ def test_origin_directory_path_refuses_to_mint(tmp_path):
     # treated as a readable origin (FATAL: this mints a quote from thin
     # air, since the listing's filenames are content the reviewer never
     # read). Two committed files so the listing has two entries, quoted
-    # as "a.md b.md" — two tokens, clearing the phrase-floor grammar
-    # check, so this test still reaches the directory-type check it
-    # names rather than being shadowed by the grammar refusal. This
-    # quote is also not arbitrary filler: the listing's two lines
+    # as "a.md b.md" — a non-blank quote, so this test still reaches
+    # the directory-type check it names rather than being shadowed by
+    # the grammar refusal. This quote is also not arbitrary filler: the
+    # listing's two lines
     # normalise (newline -> space) to exactly this string, so if the
     # type check that refuses this finding were ever bypassed, this
     # quote would go on to match at the normalised tier and mint.
@@ -1374,10 +1382,10 @@ def test_origin_directory_path_refuses_to_mint(tmp_path):
 
 def test_origin_directory_path_trailing_slash_refuses_to_mint(tmp_path):
     # Same construction as the sibling test above (two committed files,
-    # quote = the normalised listing) for the same reason: a filler
-    # two-token quote would clear the grammar check but never actually
-    # exercise a bypass, so it would not prove this test still reaches
-    # the directory-type check when the path carries a trailing slash.
+    # quote = the normalised listing) for the same reason: an arbitrary
+    # filler quote would be non-blank but never actually exercise a
+    # bypass, so it would not prove this test still reaches the
+    # directory-type check when the path carries a trailing slash.
     repo = _init_repo(tmp_path)
     _commit_file(repo, "docs/a.md", "hello\n")
     _commit_file(repo, "docs/b.md", "world\n")
@@ -1402,14 +1410,14 @@ def test_origin_directory_tree_header_word_refuses_to_mint(tmp_path, capsys):
     # "tree <hash>:<dir>" — a quote of "tree <hash>" needs no knowledge
     # of the directory's actual contents, only the header's fixed format
     # plus the commit's own sha (already known to whoever writes the
-    # verdict), which is the sharpest form of the bypass. Two tokens
-    # ("tree" and the hex sha) so the quote clears the phrase-floor
-    # grammar check and this test still reaches the directory-type check
-    # it names, rather than being shadowed by the grammar refusal. This
-    # quote is also an EXACT substring of the real `git show` output
-    # (verified live below) — if the type check that refuses this
-    # finding were ever bypassed, THIS quote would go on to match and
-    # mint, unlike an arbitrary two-token filler would.
+    # verdict), which is the sharpest form of the bypass. "tree " plus
+    # the hex sha is a non-blank quote, so this test still reaches the
+    # directory-type check it names, rather than being shadowed by the
+    # grammar refusal. This quote is also an
+    # EXACT substring of the real `git show` output (verified live
+    # below) — if the type check that refuses this finding were ever
+    # bypassed, THIS quote would go on to match and mint, unlike an
+    # arbitrary filler would.
     repo = _init_repo(tmp_path)
     _commit_file(repo, "docs/a.md", "hello\n")
     head_sha = _head(repo)
@@ -1437,11 +1445,11 @@ def test_origin_quote_undecodable_blob_refuses_without_crash(tmp_path, capsys):
     # A non-UTF-8 blob must be refused as its own explicit failure kind,
     # never an uncaught UnicodeDecodeError traceback (which would leak
     # interpreter paths and mint no marker only by accident of the crash).
-    # Quote is two tokens so it clears the phrase-floor grammar check and
-    # this test still reaches the decode-failure path it names, rather
-    # than being shadowed by the grammar refusal (the decode never runs
-    # far enough to check quote content anyway — decoding fails before
-    # any match attempt — so the quote's actual words are immaterial).
+    # "PNG tail" is a non-blank quote, so this test still reaches the
+    # decode-failure path it names, rather than being shadowed by the
+    # grammar refusal (the decode never runs far enough to check quote
+    # content anyway — decoding fails before any match attempt — so the
+    # quote's actual words are immaterial).
     repo = _init_repo(tmp_path)
     (repo / "bin.dat").write_bytes(b"\x80\x81\x82PNGtail")
     _git(repo, "add", "bin.dat")

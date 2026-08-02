@@ -401,149 +401,68 @@ def _origin_required(dimension_value: str | None) -> bool:
     return value not in _DOCS_ARM_DIMENSIONS
 
 
-# Correction 2026-08-02 (plan §Notes, same-day correction beneath the
-# "quote must be a phrase" amendment): a whitespace-only token count
-# systematically refuses every CJK quote, since Chinese/Japanese prose has
-# no inter-word spaces. Corrected definition: "a token is a whitespace-
-# separated run OR a single CJK character." Ranges included — measured
-# against this repo's own trilingual prose (Traditional Chinese / Japanese
-# / English, per CLAUDE.md), not assumed:
-#   - Hiragana (U+3040-U+309F), Katakana (U+30A0-U+30FF)
-#   - CJK Unified Ideographs (U+4E00-U+9FFF) and Extension A
-#     (U+3400-U+4DBF) — Han, shared by Chinese and Japanese text
-#   - CJK Compatibility Ideographs (U+F900-U+FAFF)
-# Deliberately excluded:
-#   - Hangul: not one of this repo's working languages and never part of
-#     the 2746-run measurement that motivated this correction — including
-#     it would be scope creep with no evidence behind it.
-#   - CJK punctuation (e.g. `。` U+3002, `、` U+3001, `「`/`」` U+300C/300D,
-#     fullwidth Latin punctuation in U+FF00-FFEF): these codepoints are
-#     simply absent from the ranges above, so a character is never
-#     counted as a CJK letter by being punctuation. `_count_quote_tokens`
-#     (Second correction 2026-08-02, plan §Notes) counts ONLY the CJK
-#     letters inside a whitespace-separated run, skipping any punctuation
-#     in that run rather than requiring the run to be ALL CJK letters —
-#     the earlier all-or-nothing version still refused 75% of the
-#     corpus's CJK runs because CJK prose is full of `。`/`、`/`：`/`「」`.
-#     So `"引。"` (one Han character, one period) still refuses at one —
-#     the period contributes nothing, not because the whole run falls
-#     back — while `"引。引"` (two Han characters, one period) now passes
-#     at two.
-_CJK_LETTER_RANGES = (
-    (0x3040, 0x309F),  # Hiragana
-    (0x30A0, 0x30FF),  # Katakana
-    (0x3400, 0x4DBF),  # CJK Unified Ideographs Extension A
-    (0x4E00, 0x9FFF),  # CJK Unified Ideographs
-    (0xF900, 0xFAFF),  # CJK Compatibility Ideographs
-)
+def _parse_origin(
+    origin_value: str | None,
+) -> tuple[tuple[str, str] | None, str | None]:
+    """The ONE place `origin:` values parse — collapses what were two
+    duplicate split/blank-check/quoted-check copies (grammar validation,
+    quote extraction), whose drift let three mutants survive undetected
+    in the extraction copy alone (deleted blank-check, deleted
+    quoted-check, `find`->`rfind` split). One parse site makes that
+    mutant class impossible to express.
 
+    Returns `(spec, problem)`: `problem` is None iff `origin_value` is
+    `none` or a grammar-valid `<path> :: "<quote>"`, else a violation
+    description. `spec` is `(path, quote)` — quote WITHOUT its wrapping
+    `"` — when extracted; None for `none`, absent, or malformed.
 
-def _is_cjk_letter(ch: str) -> bool:
-    """True iff `ch` falls in one of `_CJK_LETTER_RANGES` — a Han
-    ideograph or a kana syllable, never punctuation (see the block
-    comment above `_CJK_LETTER_RANGES` for the included/excluded
-    ranges and why)."""
-    return any(lo <= ord(ch) <= hi for lo, hi in _CJK_LETTER_RANGES)
+    Split on the FIRST ` :: `: a path may not contain it, a quote may —
+    so the first occurrence is the boundary (§Notes kickoff decision,
+    corrected 2026-08-02: the earlier "split on the LAST ` :: `"
+    mis-parsed a quote containing the separator into a truncated path
+    and an unquoted remainder). No backslash-escape convention. The
+    quote's interior must be non-blank: `""` and `"   "` are refused —
+    an empty quote is not a verbatim quote, and Task 2 verifies by
+    substring, so an empty quote would match every file and pass the
+    whole gate as a well-formed origin.
 
-
-def _count_quote_tokens(text: str) -> int:
-    """Token count under the twice-corrected rule (plan §Notes, "Second
-    correction"): for each whitespace-separated run, if it contains ANY
-    CJK letter (`_is_cjk_letter`), the run's token count is the NUMBER OF
-    CJK LETTERS in it — punctuation inside the run is skipped, never
-    counted itself; otherwise the whole run counts as one token, same as
-    an ordinary Latin word. This is a deliberate loosening from the first
-    fix, which required a run to be ALL CJK letters before counting
-    per-character and so still refused any CJK sentence containing `。`,
-    `、`, `：` or `「」` — measured to still refuse 2065 of 2746 (75%) of
-    the corpus's CJK runs. Examples (plan §Notes second correction):
-    "引述" -> 2, "引" -> 1, "引。" -> 1 (one CJK letter, period skipped),
-    "引。引" -> 2 (two CJK letters, period skipped), "the" -> 1,
-    "the 引" -> 1 + 1 = 2, "push 再說" -> 1 + 2 = 3, "한글" -> 1 (no CJK
-    letters in the Hangul run, falls to the "otherwise" branch)."""
-    count = 0
-    for run in text.split():
-        cjk_letters = sum(1 for ch in run if _is_cjk_letter(ch))
-        count += cjk_letters if cjk_letters > 0 else 1
-    return count
-
-
-def _origin_grammar_problem(origin_value: str | None) -> str | None:
-    """None if `origin_value` is `none` or `<path> :: "<quote>"`; else a
-    description of the violation. Grammar only — the quote is not
-    checked against any file here (Task 2). Split on the FIRST ` :: `:
-    a path may not contain it, a quote may — so the first occurrence is
-    the boundary (§Notes kickoff decision, corrected 2026-08-02: the
-    earlier "split on the LAST ` :: `" mis-parsed a quote containing the
-    separator into a truncated path and an unquoted remainder). No
-    backslash-escape convention. The quote's interior must be non-blank:
-    `""` and `"   "` are refused — an empty quote is not a verbatim
-    quote, and Task 2 verifies by substring, so an empty quote would
-    match every file and pass the whole gate as a well-formed origin.
-
-    Amendment 2026-08-02, user decision (§Notes kickoff decision, "a
-    quote must be a phrase, not a token"): the interior must ALSO
-    contain at least two whitespace-separated tokens (`str.split()`,
-    which already treats a run of spaces/tabs and a non-breaking space
-    as whitespace — measured, not assumed). A one-token quote verifies
-    against almost any file and would enter the pre-registered ≥40
-    tally as a genuine origin. Deliberately weak (`"the a"` passes) —
-    not a meaningfulness filter, only a floor against values carrying
-    no information at all."""
+    No minimum length or width beyond non-blank (amendment 2026-08-02,
+    user decision, deleting a display-width floor that shipped and was
+    then measured against this repo's committed `.md` files: the
+    benefit it bought was small next to the review cost of getting
+    there. The axis was wrong, not the constant — see the plan's
+    §Notes for the measurement and the four superseded token/width
+    rules it replaced)."""
     if origin_value is None:
-        return "no origin: line"
+        return None, "no origin: line"
     value = origin_value.strip()
     if value == "none":
-        return None
+        return None, None
     idx = value.find(" :: ")
     if idx == -1:
-        return f"origin: {origin_value!r} is not 'none' or '<path> :: \"<quote>\"'"
+        return None, (
+            f"origin: {origin_value!r} is not 'none' or '<path> :: \"<quote>\"'"
+        )
     # `path` is always non-empty here: `value` is already stripped (so
     # value[0] is non-whitespace) and the separator starts with a space,
     # so idx can never be 0 — value[:idx] always contains value[0].
     path, quote = value[:idx], value[idx + 4 :]
     if len(quote) < 2 or quote[0] != '"' or quote[-1] != '"':
-        return f"origin: {origin_value!r} quote is not fully quoted"
+        return None, f"origin: {origin_value!r} quote is not fully quoted"
     inner = quote[1:-1]
     if not inner.strip():
-        return f"origin: {origin_value!r} quote is empty or blank"
-    if _count_quote_tokens(inner) < 2:
-        return (
-            f"origin: {origin_value!r} quote is a single token — a "
-            "quote must be a phrase (at least two tokens: a "
-            "whitespace-separated word, or a single CJK character, "
-            "each counts as one)"
-        )
-    return None
+        return None, f"origin: {origin_value!r} quote is empty or blank"
+    return (path, inner), None
+
+
+def _origin_grammar_problem(origin_value: str | None) -> str | None:
+    """Thin wrapper over `_parse_origin`: the problem text (Task 1)."""
+    return _parse_origin(origin_value)[1]
 
 
 def _origin_path_quote(origin_value: str | None) -> tuple[str, str] | None:
-    """`(path, quote)` — quote WITHOUT its wrapping `"` — if `origin_value`
-    is a grammar-valid `<path> :: "<quote>"`; None for `none`, an absent
-    value, or anything `_origin_grammar_problem` would reject. Mirrors
-    that function's parse exactly; kept separate because this one
-    EXTRACTS the parts for quote verification (Task 2) rather than
-    validating grammar (Task 1) — callers only reach it after
-    `validate_verdict_text` has already required grammar validity where
-    `origin:` is required, but it stays defensive rather than assuming
-    that ordering."""
-    if origin_value is None:
-        return None
-    value = origin_value.strip()
-    if value == "none":
-        return None
-    idx = value.find(" :: ")
-    if idx == -1:
-        return None
-    path, quote = value[:idx], value[idx + 4 :]
-    if len(quote) < 2 or quote[0] != '"' or quote[-1] != '"':
-        return None
-    inner = quote[1:-1]
-    if not inner.strip():
-        return None
-    if _count_quote_tokens(inner) < 2:
-        return None
-    return path, inner
+    """Thin wrapper over `_parse_origin`: the extracted spec (Task 2)."""
+    return _parse_origin(origin_value)[0]
 
 
 # §Notes kickoff decision (quote-match strictness): fold typographic
@@ -681,7 +600,16 @@ def _finding_problems(text: str) -> list[str]:
     and — unless its `dimension:` both parses and falls in the docs-arm
     set — an `origin:` line valued `none` or `<path> :: "<quote>"`
     (§Pinned dimension partition; requirement is the default, the
-    docs-arm exemption is the explicit branch)."""
+    docs-arm exemption is the explicit branch).
+
+    That exemption governs only whether `origin:` must be CARRIED. An
+    `origin:` line that IS present is grammar-checked on every arm,
+    docs included — the exemption never excuses a malformed value a
+    docs-arm finding chose to write (bare path, unterminated quote,
+    blank quote). Skipping this on the exempt branch was a real bug: a
+    docs-arm finding with a malformed `origin:` used to sail through
+    with no `origin:` requirement AND no grammar check on the one it
+    carried, minting clean."""
     problems: list[str] = []
     for info in _iter_findings(text):
         if not info.where_ok:
@@ -694,7 +622,12 @@ def _finding_problems(text: str) -> list[str]:
                 f"finding at line {info.start_line}: duplicate origin: lines "
                 "(exactly one is required)"
             )
-        elif _origin_required(info.dimension_value):
+        elif info.origin_value is None:
+            if _origin_required(info.dimension_value):
+                problems.append(
+                    f"finding at line {info.start_line}: no origin: line"
+                )
+        else:
             origin_problem = _origin_grammar_problem(info.origin_value)
             if origin_problem:
                 problems.append(

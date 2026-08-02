@@ -193,77 +193,83 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
   would put an escaping rule into three shipped contracts to buy a case
   reviewers can avoid by quoting a shorter span.
 
-  **Amendment 2026-08-02, user decision — a quote must be a phrase, not a
-  token.** The interior must contain **at least two whitespace-separated
-  tokens**. `"e"`, `"the"` and `"."` are refused; `"seven call sites"` and
-  `"not supported"` pass. Reason: the design's whole load-bearing property is
-  that a quote cannot be produced without having read the document, and Task
-  2's review measured that `origin: docs/l.md :: "e"` verifies against almost
-  any file and would enter the pre-registered ≥40 tally as a genuine origin —
-  the same fabrication class already closed for `""`, for a directory path
-  whose `git show` output is a tree listing, and for that listing's constant
-  header word `tree`. Rejected: a character-count threshold. The Axis-4
-  research behind the matching decision found that unfakeability comes from a
-  quote's length and specificity, but named no defensible number, and a
-  threshold this arc invented would be arbitrary precision dressed as rigour.
-  "A phrase rather than a token" is a floor that can be stated as a reason
-  rather than a magic number. It is deliberately **weak**: `"the a"` passes.
-  It is not a filter for meaningfulness — that remains the stop rule's human
-  check (brief §Resolved Questions 3) — only a floor against values carrying
-  no information at all. **Timing**: taken before Task 3, because the grammar
-  is still pinned in one place; after Tasks 3-5 transcribe it the same change
-  costs a sweep across three shipped contracts plus a second version bump.
-  **Reversal condition, observable:** if a truthful origin is ever refused
-  because the wrong statement it quotes genuinely is one token — a single
-  identifier, a lone numeral — drop the floor and record that case, rather
-  than widening it to a token count nobody can justify.
+  **Amendment 2026-08-02, user decision — no length or width floor. The
+  grammar rule is exactly the two lines above: split on the first ` :: `,
+  require a fully-quoted, non-blank interior.** Transcribe THAT. There is no
+  minimum size, and the absence is deliberate — five rounds of review
+  established that no length-shaped rule can do the job this one was asked to
+  do.
 
-  **Correction 2026-08-02, same day, before Task 3.** The first version of
-  this amendment defined a token as a whitespace-separated run, which
-  **systematically refuses every CJK quote**: Chinese and Japanese prose has
-  no inter-word spaces, so `"引述無法憑空捏造"` is one token by that measure.
-  Measured across the documents this field will actually cite — every `.md`
-  under `loom-code/` plus `docs/loom/specs/` and `docs/loom/plans/` — there
-  are **2746** whitespace-free CJK runs of six characters or more, including
-  throughout `loom-code/PRODUCT-SPEC.md`, a prime upstream artifact. The rule
-  as first written was not a weak floor; it was a language filter, and it
-  would have made the field unusable for exactly the trilingual prose this
-  repo is written in. Corrected definition: **a token is a whitespace-
-  separated run OR a single CJK character.** `"引述"` passes at two, `"引"`
-  refuses at one, `"the"` still refuses, `"seven call sites"` still passes.
-  No new threshold is introduced — the floor stays "at least two" and only
-  the unit changes, matching how each writing system actually delimits
-  meaning (a CJK character is roughly a morpheme; an alphabetic word is not).
+  **Why there is no floor.** The intent was real: a quote so short that anyone
+  could write it without opening the cited document verifies against almost
+  any file, and would enter the pre-registered ≥40 tally as a genuine origin.
+  Four rules were tried — two whitespace tokens; characters in all-CJK runs;
+  CJK letters within a run; display width ≥4 — and the fifth review measured
+  what they actually bought. `origin: <any .md> :: "tion"` has display width
+  exactly 4, clears the floor, and mints: **2581 of this repo's 2642 committed
+  `.md` files contain it (97.7%)**. The value the floor refuses, `"e"`, is in
+  99.8%. **The floor's measured benefit was 2.1 percentage points.**
 
-  **Second correction, same day.** The first implementation of the corrected
-  rule counted characters individually only when a whitespace-separated run
-  was **entirely** CJK letters, and otherwise counted the whole run as one.
-  That re-created the language filter for any CJK sentence containing
-  punctuation — and CJK prose is full of `。`, `、`, `：` and `「」`. Measured
-  against the same corpus: of the 2746 whitespace-free CJK runs, **2065 (75%)**
-  were still refused, among them `角色分離。但實際使用` and
-  `時暴露三個結構性缺口：` — both from `loom-code/PRODUCT-SPEC.md`. Final rule:
-  **for each whitespace-separated run, if it contains any CJK letter, its
-  token count is the number of CJK letters it contains; otherwise it counts as
-  one.** Punctuation is never itself a token, so `"引。"` still refuses at one
-  and `"引。引"` passes at two. This is the third pass over the same floor; the
-  recurring error each time was applying a rule shaped by one writing system's
-  spacing to prose written in another.
+  Raising the number does not rescue it. The best-document-frequency span at
+  each width, measured over the same corpus: 4 → 97.7%, 6 → 84.4%, 8 → 61.7%,
+  10 → 40.4%, 12 → 39.9%, 16 → 33.1%, 20 → 16.5% — and the tail is markdown
+  table boilerplate, which no width threshold separates from prose. The
+  failing thing is the **axis**, not the constant: length answers "how many
+  columns", and the property being gated is "how surprising in this corpus".
+  Those coincide for CJK and diverge by roughly 200× for Latin.
 
-  > **Correction 2026-08-02, from Task 1's code-quality review.** This decision
-  > first said "split on the LAST ` :: `", which contradicts the rationale
-  > stated in its own next sentence: if the path cannot contain the separator
-  > and the quote can, the FIRST occurrence is the boundary, and splitting on
-  > the last one mis-parses exactly the case the rationale allows
-  > (`p.md :: "a :: b"` → path `p.md :: "a`, quote `b"`, refused as
-  > "not fully quoted"). The non-blank requirement is the same round's other
-  > correction: `""` satisfied "opens and closes with a quote character", and
-  > because Task 2 verifies by substring, an empty quote occurs in every file —
-  > a finding could have carried a well-formed-looking origin that passes the
-  > whole gate and enters the pre-registered ≥40 tally as a true origin. Both
-  > were wrong-and-silent in the decision text, not in the implementation that
-  > faithfully followed it.
+  **What the floor was never doing.** It was a screen, never the gate. The
+  brief's stop rule (§Resolved Questions 3) keeps the field only when at least
+  one non-`none` origin **survives a human check** — and `"tion"` does not
+  survive one for a second. Shipping a rule that costs five review rounds to
+  buy two percentage points, ahead of a human check that catches the whole
+  class, is the wrong place to spend the branch.
 
+  **What the five rounds did buy, and it is worth keeping.** The
+  false-refusal side was measured clean: over 3000 real committed sentences
+  per language, the refusal rate was **0.00% for English, Japanese and
+  Chinese alike**, and at the single-token level English is now refused MORE
+  often (33.5%) than Japanese (10.1%) or Chinese (10.6%). The script
+  discrimination this arc manufactured three times is gone — measured, not
+  assumed. And the two-canonicalisation defect class is closed: the floor and
+  the verifier were made to share one normaliser, an idempotence sweep over
+  all 0x110000 codepoints found no separating input, and eight independent
+  attacks on that seam held.
+
+  **The successor, if one is wanted**: gate on **corpus selectivity** — refuse
+  a quote that matches more than some fraction of the repo's documents — which
+  is the axis the measurement points at, and whose threshold the
+  document-frequency curve above can actually calibrate. That is a new
+  mechanism and a new decision, not a sixth patch to this one; it belongs in
+  its own brief. Filed at
+  `docs/loom/backlog/2026-08-02-quote-informativeness-needs-corpus-selectivity-not-length.md`.
+
+  **Reversal condition, observable:** if the ≥40 tally fills with quotes a
+  human check rejects as uninformative — rather than with `none` — the screen
+  was load-bearing after all, and the selectivity mechanism above becomes
+  COMMITTED-NEXT rather than a backlog item.
+
+  **History.** Four superseded rules, kept because the pattern is the lesson.
+  (1) "Two whitespace-separated tokens" refused **every** Chinese and Japanese
+  quote — CJK prose has no inter-word spaces. (2) "Count characters when a run
+  is entirely CJK letters" still refused ~75% of them, because CJK prose is
+  dense with `。`, `、`, `：`, `「」`. (3) "Count CJK letters within a run"
+  refused `push再` while passing `push 再` — same content, decided by a space —
+  and shipped a hole with it: the decomposed spelling of `が` counted 2 and
+  cleared a 2-unit floor, so a one-character quote passed the check built to
+  stop one-character quotes. (4) Display width ≥4 closed all of that, then
+  fell to `"e   "` — the rejected `"e"` plus three spaces — which measured 4
+  because grammar counted spaces the verifier collapses away.
+
+  Rules 1-3 each answered "where does a token end?", a question Unicode
+  (UAX #29: default word segmentation "is not adequate" for Chinese and
+  Japanese), the linguistics (a lone Han character is frequently a bound
+  morpheme), and Japan's own national corpus (BCCWJ annotates every sample
+  twice, 短単位 and 長単位; Sudachi ships three modes) all decline to answer
+  with one number. Rules 3 and 4 each failed the same second way: two
+  canonicalisations, one gate. Superseded corpus figures from those attempts
+  are **not** reproducible and must not be re-cited — their units were never
+  stated, and this file has since absorbed the examples it measured.
 - **Kickoff decision:** in-flight branches at the version boundary → **hard
   cutover, no grace period.** *(agent — two-way door per §a.)* A verdict
   written by a 0.44.0 reviewer carries no `origin:` and will refuse to mint
