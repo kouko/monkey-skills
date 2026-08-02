@@ -134,21 +134,80 @@ Plan-document-reviewer verdict: PASS (2026-08-02, round 4) — 15/15, no gaps; s
   `instruction` (fail closed)"*
   (`loom-code/skills/requesting-docs-review/SKILL.md:55`).
 
-- **Kickoff decision — enforcement lands before prose.** Tasks 1-2 ship before
+- **Kickoff decision:** enforcement lands before prose. Tasks 1-2 ship before
   Tasks 3-5. Shipping the contract first would promise a field nothing
   enforces, which is the defect class this change exists to make countable.
   Hard dependency, not preference.
 
-- **Kickoff decision — the `validate` dry-run must fail loud, never silent.**
+- **Kickoff decision:** the `validate` dry-run must fail loud, never silent.
   `validate` takes no `--repo`, so it cannot verify a quote. It must say so in
   its output. A silent pass there would be a fail-open on exactly the
   pre-flight path `requesting-code-review` Step 3 tells reviewers to use.
 
-- **Kickoff decision — the stop rule is pre-registered and must not be edited
-  after data lands.** Brief §Resolved Questions 3: accumulate ≥40 code-arm
+- **Kickoff decision:** the stop rule is pre-registered and must not be edited
+  after data lands. Brief §Resolved Questions 3: accumulate ≥40 code-arm
   findings; all-`none` ⇒ delete the field; ≥1 human-confirmed true origin ⇒
   keep; the hit RATE is explicitly not the test (expected base rate ≈7%,
   measured n=14 on the 2026-08-02 arc).
+
+- **Kickoff decision:** quote-match strictness → **two-stage, exact then
+  normalised, recording which stage matched.** *(user, 2026-08-02, kickoff
+  briefing; one-way-door escalation per `kickoff-briefing.md` §a — the repo has
+  no `docs/loom/PRINCIPLES.md`, so §d's brief-everything default applied.)*
+  Try byte-exact substring first; on a miss, retry under one **identical**
+  normaliser applied to BOTH sides — NFC, collapse each run of whitespace to a
+  single space, fold typographic quotes / dashes / non-breaking spaces to
+  ASCII. The normaliser is **case-sensitive** and does **not** strip `**` or
+  backticks; matching is scoped to the cited file's content, not widened. A
+  quote that matches only after normalisation still mints, but the message
+  records that it did. **Why the tier is recorded, not just the boolean:** the
+  stop rule above is pre-registered and uneditable after data lands, so once 40
+  findings accumulate there is otherwise no observable that separates "no
+  quotable origins existed" from "the matcher rejected true ones" — the tier
+  count is that observable, and it must be collected from the first finding or
+  not at all. Byte-exact-only was rejected on a measured ground: this repo
+  hard-wraps prose at 72-80 columns, so a truthful one-line quote of a
+  multi-line passage fails it by construction. Industry grounding: two-stage
+  exact→normalised is the shipped shape in arXiv 2605.16881 (95.2% of segments
+  matched verbatim or after minor normalisation, and it is the only surveyed
+  source that names the typographic-quote/dash class); scoping the search to
+  the cited region rather than the whole file follows the shipped RAG validator
+  surveyed in the same pass. **Reversal condition, observable:** if a red-team
+  pass shows a quote with altered meaning (inserted or removed negation, a
+  renamed identifier) passing the normaliser, drop to per-line byte-exact
+  within the cited range. **Downgrade clause:** if recording the tier turns out
+  to require threading a new return type through the mint path rather than a
+  few lines, ship the matching rule alone and report the downgrade — the tiers
+  are the measurement, the matching rule is the contract.
+
+- **Kickoff decision:** `origin:` value escaping → **split on the LAST ` :: `
+  and require the quote to be the fully-quoted remainder.** *(agent — two-way
+  door per `kickoff-briefing.md` §a; the user delegated brief §Resolved
+  Questions 2, the field-grammar question, at message 19 of the 2026-08-02
+  session: 「第 2、3 題你決定」.)* A path may not contain ` :: `; a quote may.
+  So parse right-to-left on the last separator, then require the remainder to
+  open and close with `"` — a quote containing an interior `"` is accepted as
+  its own content, and no escape character is introduced. Rejected: adding a
+  backslash-escape convention, which would put an escaping rule into three
+  shipped contracts to buy a case reviewers can avoid by quoting a shorter
+  span.
+
+- **Kickoff decision:** in-flight branches at the version boundary → **hard
+  cutover, no grace period.** *(agent — two-way door per §a.)* A verdict
+  written by a 0.44.0 reviewer carries no `origin:` and will refuse to mint
+  under the 0.45.0 validator; the remedy is to re-run the review, which is a
+  bounded, already-supported action. Rejected: a warn-only grace window, which
+  is a fail-open on the enforcement path for as long as it lasts and would need
+  its own removal task. Implementers do not need to handle this; it is recorded
+  so the first person to hit the refusal recognises it as expected rather than
+  as a bug.
+
+- **Format-fix skip note (no re-review).** The three kickoff decisions above
+  this round's additions were written `**Kickoff decision — …**`; SDD's
+  dispatch step reads the literal key `Kickoff decision:`
+  (`subagent-driven-development/SKILL.md:73`), so they would not have ridden
+  any implementer packet. Repunctuated to carry the key. Formatting only, no
+  field's assertion changed — `writing-plans` §Amending a PASS plan, kind 2.
 
 - **No CI file is edited.** `loom-code-ci.yml:98` already runs
   `python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -v` and its
