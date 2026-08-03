@@ -16,11 +16,17 @@ start: next time a planning-origin defect reaches close-out despite 0.39.0's con
   1. **The preventive half of the citation rule is unenforced.**
      `writing-plans/references/plan-format.md:149` ("Any verifiable technical assertion in a
      plan carries a `file:line` citation…") requires a citation on every verifiable
-     assertion, but no plan-document-reviewer check verifies compliance — the checks table
-     stays at 16 rows and `loom-code/scripts/test_plan_obligation_sweep.py:68` pins
-     `max(row_numbers) == PRE_EXISTING_MAX_CHECK_NUMBER` (the constant, `= 16`, at
-     `test_plan_obligation_sweep.py:32`). Reviewer item 7 is by design a no-op when no
-     citation is present.
+     assertion, but no plan-document-reviewer check verifies compliance. Reviewer item 7
+     is by design a no-op when no citation is present.
+     - **Evidence corrected 2026-08-03.** This item originally read "the checks table stays
+       at 16 rows" and cited the append-only pin's constant as `= 16`. Check 17
+       (`Reuse-adequacy`) shipped as an authorized append, so the table's maximum and
+       `loom-code/scripts/test_plan_obligation_sweep.py:78`'s pin both now read 17
+       (constant at `test_plan_obligation_sweep.py:42`). **The conclusion is unchanged** —
+       no check verifies citation compliance, and Check 17 grades a different obligation
+       (reuse declarations, not citations). Only the row count that was offered as proof
+       had gone stale. Corrected while completing the §8 candidate backtest
+       (`docs/loom/audits/2026-08-03-remediation-candidate-status-and-live-population.md`).
      Net effect: 0.39.0 catches a **cited** false fact (measured — see the dogfood note's
      §Re-run) and misses an **uncited** one, which is the cheaper authoring path and the
      shape of the audit's own §3.8 instance ("15 fields" asserted three times where
@@ -58,8 +64,13 @@ start: next time a planning-origin defect reaches close-out despite 0.39.0's con
        checked identically, producing false findings. 2/2 observed on this branch's own
        dogfood notes. Reviewers must treat pre-pass findings inside fenced code blocks, blockquotes, table cells, and inline examples as
        advisory, not as defects (see `requesting-code-review/SKILL.md:97`).
-  4. **`Reuse-adequacy` is declarative-only.** Nothing enforces that a task carrying a reuse
-     instruction fills the field.
+  4. ~~**`Reuse-adequacy` is declarative-only.** Nothing enforces that a task carrying a reuse
+     instruction fills the field.~~ **CLOSED 2026-08-03** — Check 17 (v0.43.0+) grades the
+     block in four parts, the first being **presence**: a task whose Description instructs
+     reuse of an existing helper on a new call path must carry the block. Shipped via
+     `docs/loom/plans/2026-07-31-reuse-adequacy-declaration-hardening.md`; the SHIPPED
+     backlog entry is `2026-07-27-reuse-adequacy-got-the-gate-it-had-been-missing.md`.
+     Left struck rather than deleted so the remaining open items keep their numbering.
   5. **Implementer test counts are not reproducible.** Two implementers reported "437 passed";
      no scope reproduces it. The reproducible ones, each with the command that yields it:
      `python3 -m pytest loom-code/scripts/ -q` → 363 at the time of that report, and
