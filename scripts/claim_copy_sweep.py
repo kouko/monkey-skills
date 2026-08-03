@@ -26,11 +26,15 @@ the tool's own core failure mode, in the tool. Deriving `normalize` from
 of input**: the needle is typed by a human and the haystack is on disk, so a
 non-folding rule still splits one word into two needles. `str.lower()` is a
 case MAPPING; the mirror case (`ΟΔΟΣ` typed against `οδος` on disk) still
-missed. The rule is now `str.casefold()`, a case FOLDING, which maps `ς` and
-`σ` to the same character. Verified context-free (per-character == whole-string
-across ΟΔΟΣ / οδος / Straße / STRASSE / İstanbul / ﬁle / ǅ / ẞ / Ὀδυσσεύς), so
-the per-emitted-character loop below stays valid — and it already absorbs the
-1→2 expansions casefold introduces (`ß` → `ss`).
+missed. The rule is now the canonical caseless match of UAX#15 D145 —
+**NFC → casefold → NFC**. The second normalization is not decoration:
+`casefold` EXPANDS some precomposed characters back into a decomposed sequence
+(the Greek dialytika+tonos set), so folding without re-normalizing leaves a
+precomposed copy on disk and a decomposed needle sitting on different
+codepoints — another silent `operative locations (0)`, found by review after
+the first normalization pass had already shipped. The per-emitted-character map
+absorbs every length change either pass introduces, expansions (`ß` → `ss`) and
+compositions alike.
 
 WHY this reports and never edits: `docs/loom/memory/big-rename-operative-frozen-sweep.md`
 records an automated sweep rewriting prose ABOUT the sweep into
@@ -82,25 +86,34 @@ def normalize_with_lines(text: str) -> tuple[str, list[int]]:
     """
     out: list[str] = []
     lines: list[int] = []
-    line = 1
     in_run = False
-    # NFC first: casefold is not a Unicode normalization, so an NFD copy on
-    # disk (macOS copy-paste produces NFD, and this corpus carries 中/日 prose)
-    # would miss an NFC needle. NFC preserves newlines, so line numbers are
-    # unaffected. Both sides run this same pipeline — see the module docstring.
-    for ch in unicodedata.normalize("NFC", text):
-        if ch.isspace():
-            if not in_run:
-                out.append(" ")
-                lines.append(line)
-                in_run = True
-            if ch == "\n":
-                line += 1
-        else:
-            for folded_ch in ch.casefold():
-                out.append(folded_ch)
-                lines.append(line)
-            in_run = False
+    # NFC -> casefold -> NFC, per line. The canonical caseless match of
+    # UAX#15 D145: casefold is NOT a normalization, and it EXPANDS some
+    # precomposed characters back into a decomposed sequence, so folding
+    # without re-normalizing leaves the two sides on different codepoints
+    # (observed on the Greek dialytika+tonos set). Running it per line keeps
+    # one map entry per EMITTED character while letting each pass see a whole
+    # line: NFC never alters newline count or position, so line numbers are
+    # unaffected and `fence_state_by_line` still indexes the same lines.
+    for lineno, raw_line in enumerate(
+        unicodedata.normalize("NFC", text).split("\n"), start=1
+    ):
+        for ch in unicodedata.normalize("NFC", raw_line.casefold()):
+            if ch.isspace():
+                if not in_run:
+                    out.append(" ")
+                    lines.append(lineno)
+                    in_run = True
+            else:
+                out.append(ch)
+                lines.append(lineno)
+                in_run = False
+        # The newline that ended this line is whitespace too, and a run
+        # spanning a hard wrap carries the line it STARTED on.
+        if not in_run:
+            out.append(" ")
+            lines.append(lineno)
+            in_run = True
     start = 0
     end = len(out)
     while start < end and out[start] == " ":

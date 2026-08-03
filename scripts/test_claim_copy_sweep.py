@@ -327,21 +327,57 @@ def test_a_directory_it_cannot_enter_is_named_not_skipped(tmp_path):
     assert "locked" in result.stdout, result.stdout
 
 
-def test_markup_interior_to_the_claim_is_a_named_leak():
+def test_markup_interior_to_the_claim_is_a_named_leak(tmp_path):
     """`the resolver **refuses** when …` is the same words, so the synonym leak
-    does not cover it. Not fixed — named, per this module's own contract."""
+    does not cover it. Deliberately NOT fixed — named, per this module's own
+    contract. Both halves are pinned: the miss must still happen, and LEAKS must
+    still name it. A substring check on LEAKS alone cannot fail when the
+    behaviour changes, which is the prose-drifts-from-behaviour shape this
+    module's own docstring warns about."""
+    write(
+        tmp_path,
+        "docs/loom/specs/markup.md",
+        "the resolver **refuses** when freshness cannot be established\n",
+    )
+    write(tmp_path, "docs/loom/specs/sentinel.md", f"{CLAIM}\n")
+    result = run(tmp_path, "--claim", CLAIM)
+    assert "docs/loom/specs/sentinel.md:1" in result.stdout, result.stdout
+    assert "docs/loom/specs/markup.md" not in result.stdout, result.stdout
     assert "markup" in claim_copy_sweep.LEAKS.lower(), claim_copy_sweep.LEAKS
+
+
+def test_canonical_caseless_match_survives_precomposed_vs_decomposed(tmp_path):
+    """Folding without re-normalizing is not a canonical caseless match
+    (UAX#15 D145 normalizes AFTER folding). `casefold` expands some precomposed
+    characters back into a decomposed sequence; without a final NFC the two
+    sides land on different codepoints and the sweep reports a clean all-clear
+    on a document that carries the claim."""
+    on_disk = "ΐς"  # ΐς — precomposed iota with dialytika and tonos
+    typed = "Ϊ́Σ"  # the uppercase form, decomposed
+    write(tmp_path, "docs/loom/specs/greek2.md", f"reads {on_disk} here\n")
+    result = run(tmp_path, "--claim", f"reads {typed} here")
+    assert "docs/loom/specs/greek2.md:1" in result.stdout, result.stdout
+
+
+def test_normalization_is_idempotent():
+    """A non-idempotent fold means the two sides can never be relied on to meet."""
+    for text in ["ΐ", "Ϊ́", "Straße", "İstanbul", "ΟΔΟΣ"]:
+        once = claim_copy_sweep.normalize(text)
+        assert claim_copy_sweep.normalize(once) == once, text
 
 
 @pytest.mark.parametrize(
     "text", ["ΟΔΟΣ", "οδος", "ΣΣΣ", "Straße", "STRASSE", "İstanbul", "ﬁle", "ǅ", "ẞ"]
 )
-def test_normalization_equals_whole_string_casefold(text):
-    """The per-EMITTED-character loop is only valid if folding one character at
-    a time equals folding the whole string. Pinning `normalize == casefold`
-    fails immediately on a revert to `.lower()`: `"ΟΔΟΣ".lower()` is `οδος`
-    while `.casefold()` is `οδοσ`."""
-    assert claim_copy_sweep.normalize(text) == text.casefold()
+def test_normalization_is_canonical_caseless_match(text):
+    """The pipeline is NFC → casefold → NFC, the canonical caseless match of
+    UAX#15 D145. Pinning it against an independently computed reference fails
+    immediately on a revert to `.lower()` (`"ΟΔΟΣ".lower()` is `οδος` while
+    `.casefold()` is `οδοσ`) and on dropping either normalization pass."""
+    reference = unicodedata.normalize(
+        "NFC", unicodedata.normalize("NFC", text).casefold()
+    )
+    assert claim_copy_sweep.normalize(text) == reference
 
 
 # --- --frozen is a declaration, and it is visible --------------------------
