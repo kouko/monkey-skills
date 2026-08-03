@@ -97,6 +97,17 @@ Plan-document-reviewer verdict: PASS (2026-08-03, round 2; amendment re-review P
   contract contradicts its own behaviour, and nothing downstream is looking for
   that contradiction — both of this task's grep-window tests passed.
 
+- **`file:line` citations in this plan and its brief are as-of-authoring.**
+  Task 1 lengthened `default_branch_ref`'s docstring, which shifted every line
+  below it in `loom_gate_markers.py` — so citations written before that task
+  landed now point a few lines off, including this plan's Task 1 GREEN and
+  Task 2 `Reuse-adequacy` markers and the brief's §Current State Evidence.
+  They were accurate when written and are **not** being refreshed: chasing
+  them means re-editing on every subsequent change, and this arc has already
+  demonstrated what a treadmill of number-corrections produces. Stated once
+  here rather than left for a reader to discover. This is this plan's own
+  choice; `plan-format.md` records no refresh policy in either direction.
+
 - **Kickoff sweep result: zero one-way-door decisions to brief.** The round's
   two genuinely irreversible choices — the resolver runs the fetch itself, and
   it refuses rather than warns — were both ratified by the user at brief stage

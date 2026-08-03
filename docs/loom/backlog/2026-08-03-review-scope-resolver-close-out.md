@@ -37,7 +37,10 @@ The branch is complete and verified but **cannot honestly be pushed yet**:
 2. **Push and PR are outward-facing.** They need the user's word regardless of
    the above.
 
-Close-out verification that IS complete: 806 tests pass; backlog index validate
+Close-out verification that IS complete: the suite this branch runs against —
+`PYTHONDONTWRITEBYTECODE=1 python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/` —
+passes (806 at the time of writing; the figure moves with the suite, the command
+does not); backlog index validate
 and check, loom-memory integrity, living-spec index, Codex manifest sync, and
 the skill-content version-bump gate all exit 0; every commit on the branch
 carries retrievable memory trailers. (No commit count is stated: this entry is
@@ -74,8 +77,10 @@ the same self-referential-count trap this arc hit four times before.)
    Those transcripts still exist as of 2026-08-03; the oldest surviving file in
    that directory is from 2026-07-04, so retention appears to be about thirty
    days. **If the baseline is wanted, it must be reconstructed before roughly
-   2026-08-21.** The audit it depends on also has four internal inconsistencies
-   filed separately, one of which is judgment-shaped rather than arithmetic.
+   2026-08-21.** The audit it depends on also has internal inconsistencies filed
+   separately — three live, a fourth filed and then withdrawn as not a
+   contradiction — and one of the live three is judgment-shaped rather than
+   arithmetic.
 
 ## Residual notes carried, not fixed
 
