@@ -15,7 +15,9 @@
 
 ## Verdict（一句話）
 
-六個候選裡**三個已經出貨**，而前作與 §8 都還把它們當未裁決選項在排序；
+六個候選裡**三個已經出貨**，而前作與 §8 就其今日的文字而言，仍把它們陳列為
+未裁決選項——**不是**說那兩份文件曾在出貨之後還去推薦它們（§8 寫於任何一次出貨
+之前，不可能；前作的推薦標的當時確實還開著，而且正是那份推薦促成了它出貨）。
 真正還活著的是**候選 1 的未執行半邊、候選 5、候選 6**——其中候選 5 的招牌案例
 已被已出貨的候選 2 蓋掉。
 
@@ -33,7 +35,7 @@
 
 | 候選 | 內容（§8 原文摘要） | 狀態 | 證據 |
 |---|---|---|---|
-| 1 | 技術 PIN 強制標註 `file:line` ＋ 獨立 agent 對讀來源 | **半出貨** | 規則在 `loom-code/skills/writing-plans/references/plan-format.md:149`；**無任何 plan-document-reviewer 檢查驗證合規** |
+| 1 | 技術 PIN 強制標註 `file:line` ＋ 獨立 agent 對讀來源 | **半出貨** | 規則在 `loom-code/skills/writing-plans/references/plan-format.md:169`；**無任何 plan-document-reviewer 檢查驗證合規** |
 | 2 | check 8 的取材從 `Smallest End State` ＋ `Decision` 擴大到 brief 全文的義務句 | **已出貨**（0.39.0） | `loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md` Check 8 的 Obligation sweep，逐字寫著 "regardless of which brief section it sits in" |
 | 3 | 重用既有 helper 的指令強制附語意適配聲明 | **已出貨**（v0.43.0） | Check 17（四部分評分：presence / marker / …）＋ backlog 條目 `2026-07-27-reuse-adequacy-got-the-gate-it-had-been-missing.md` 狀態為 SHIPPED，其 origin 明指 §8 候選 3 |
 | 4 | 收緊 P5：post-PASS 修訂動到技術內容必須重審 | **已出貨**（0.39.0，同一 commit） | `loom-code/skills/writing-plans/SKILL.md` §Amending a PASS plan：三種豁免的**封閉清單**，其餘一律重審，「特別是…被引用的事實（`file:line`、數字、對既有行為的宣稱）」 |
@@ -48,8 +50,10 @@ item 1 以「檢查表停在 16 列，且 `test_plan_obligation_sweep.py` 把上
 （Check 17 隨 `Reuse-adequacy` 硬化出貨，是被授權的 append）。
 
 item 1 的**結論仍然成立**——沒有任何檢查驗證「每個可驗證主張都帶引用」——
-但它引用的那個數字不再支持它。同一條 entry 的 item 4（`Reuse-adequacy`
-declarative-only）則因 Check 17 而**應改記為已關閉**。
+但它引用的那個數字不再支持它。**本次已改**：該 entry 的 item 4
+（`Reuse-adequacy` declarative-only）因 Check 17 出貨而標為 CLOSED，item 1 的
+過期證據附上更正註記，且其修法處方原本寫「Check 17」——那個號碼現在已被佔用，
+一併改為「新檢查，下一個可用號碼是 18」。三處都在本 commit 內完成。
 
 ## 逐案判定：尚存的三個機制
 
@@ -94,7 +98,11 @@ declarative-only）則因 Check 17 而**應改記為已關閉**。
 `required` / `should`，加上前述片語）。本 repo 的 brief 語料裡有一小部分帶
 中文義務句（`docs/loom/specs/` 下含「必要／必須／需要／應該」的檔案是少數，
 但非零）。**一句只用中文表達義務的 brief 句子是否會從 sweep 掉下去，本文沒有
-測**——需要一次冷讀行為驗證，不是 grep 能回答的。這是本文提出的唯一新開缺口。
+測**——需要一次冷讀行為驗證，不是 grep 能回答的。
+
+本文提出的新開缺口有兩個，這是第一個；第二個記在下方 §覆蓋範圍與限制：
+Check 8 由 reviewer subagent 讀散文執行，**弱 tier 會不會真的掃出那一句，本文
+同樣沒有測**。兩者都是執行面而非取材面的疑問。
 
 ## 排序建議
 

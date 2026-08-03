@@ -14,7 +14,7 @@ start: next time a planning-origin defect reaches close-out despite 0.39.0's con
   the orchestrator's carried close-out list.
 - What:
   1. **The preventive half of the citation rule is unenforced.**
-     `writing-plans/references/plan-format.md:149` ("Any verifiable technical assertion in a
+     `writing-plans/references/plan-format.md:169` ("Any verifiable technical assertion in a
      plan carries a `file:line` citation…") requires a citation on every verifiable
      assertion, but no plan-document-reviewer check verifies compliance. Reviewer item 7
      is by design a no-op when no citation is present.
@@ -30,8 +30,12 @@ start: next time a planning-origin defect reaches close-out despite 0.39.0's con
      Net effect: 0.39.0 catches a **cited** false fact (measured — see the dogfood note's
      §Re-run) and misses an **uncited** one, which is the cheaper authoring path and the
      shape of the audit's own §3.8 instance ("15 fields" asserted three times where
-     the code says 14). Fix is either Check 17 plus amending the pin, or an explicit decision
-     to accept the residual. Branch-local evidence that author-side discipline does not
+     the code says 14). Fix is either **a new check — the next free number is 18**, Check 17
+     having shipped as `Reuse-adequacy` (see the correction above) — plus amending the pin,
+     or an explicit decision to accept the residual. Do NOT reuse or renumber 17:
+     `docs/loom/memory/retire-numbered-checks-dont-renumber.md` forbids it, and this
+     prescription said "Check 17" until 2026-08-03, when the number it named was taken by
+     something else. Branch-local evidence that author-side discipline does not
      self-hold: five citation inaccuracies in this branch's own commits, the fifth inside the
      section documenting the citation fixes.
   2. **The acceptance-criteria family is untouched.** Candidate check, append-only numbering:

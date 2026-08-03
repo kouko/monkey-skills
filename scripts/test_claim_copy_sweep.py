@@ -23,6 +23,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPT = Path(__file__).resolve().parent / "claim_copy_sweep.py"
 
 CLAIM = "the resolver refuses when freshness cannot be established"
@@ -201,9 +203,126 @@ def test_leaks_are_printed_even_when_nothing_matched(tmp_path):
 
 
 def test_zero_hits_says_so_rather_than_printing_an_empty_list(tmp_path):
+    """`"0" in stdout` would pass unconditionally — every run prints
+    "alternate phrasings declared: 0". Pin the sentinel the name claims."""
     write(tmp_path, "docs/loom/specs/a.md", "unrelated prose\n")
     result = run(tmp_path, "--claim", CLAIM)
-    assert "0" in result.stdout, result.stdout
+    assert "(none)" in result.stdout, result.stdout
+    assert "operative locations (0)" in result.stdout, result.stdout
+
+
+# --- one normalization rule, one implementation -----------------------------
+
+
+def test_needle_and_haystack_normalize_identically_on_final_sigma(tmp_path):
+    """Whole-string `.lower()` applies Greek final-sigma; per-character
+    `.lower()` does not. Two implementations of one rule let a copy hide from
+    the sweep — the tool's own core failure mode."""
+    write(tmp_path, "docs/loom/specs/greek.md", "we say ΟΔΟΣ here\n")
+    result = run(tmp_path, "--claim", "we say ΟΔΟΣ here")
+    assert "docs/loom/specs/greek.md:1" in result.stdout, result.stdout
+
+
+def test_expanding_lowercase_does_not_crash_the_sweep(tmp_path):
+    """U+0130 lowercases to two characters. One map entry per SOURCE character
+    instead of per EMITTED character desynchronizes the index-to-line map, and
+    a long enough run indexes past its end — an uncaught IndexError that takes
+    down the whole sweep, not just one file."""
+    write(
+        tmp_path,
+        "docs/loom/specs/dotted.md",
+        "İ" * 40 + "\nfiller line\n" + CLAIM + "\n",
+    )
+    result = run(tmp_path, "--claim", CLAIM)
+    assert result.returncode == 0, result.stderr
+    assert "Traceback" not in result.stderr, result.stderr
+    assert "docs/loom/specs/dotted.md:3" in result.stdout, result.stdout
+
+
+# --- direct unit tests of the load-bearing helpers -------------------------
+#
+# Every test above drives the CLI through a subprocess, which is why the
+# defects these pin were all invisible to a green suite: nothing called the
+# tricky functions directly.
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claim_copy_sweep as sweep  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "we say ΟΔΟΣ here",
+        "İ" * 5 + "\nclaim\n",
+        "plain ascii text",
+        "  leading and trailing  ",
+        "hard\nwrapped\tprose",
+    ],
+)
+def test_normalize_agrees_with_normalize_with_lines(text):
+    """One rule, one implementation. The needle comes from `normalize` and the
+    haystack from `normalize_with_lines`; any divergence is a silent miss."""
+    assert sweep.normalize(text) == sweep.normalize_with_lines(text)[0]
+
+
+@pytest.mark.parametrize("text", ["İ" * 5 + "\nclaim\n", "ΟΔΟΣ\nclaim\n", "a\nb\n"])
+def test_line_map_has_one_entry_per_normalized_character(text):
+    normalized, line_of = sweep.normalize_with_lines(text)
+    assert len(normalized) == len(line_of), (len(normalized), len(line_of))
+
+
+def test_find_in_text_never_indexes_past_the_line_map():
+    """The desync surfaced as an uncaught IndexError, not a wrong line."""
+    assert sweep.find_in_text("claim", "İ" * 5 + "\nclaim\n") == [(2, False)]
+
+
+def test_fence_delimiter_lines_count_as_outside():
+    """Both delimiters, per the docstring — the opening one already did."""
+    states = sweep.fence_state_by_line("a\n```\nX\n```\nb\n")
+    assert states[2] is False, states  # opening ```
+    assert states[3] is True, states  # the fenced content
+    assert states[4] is False, states  # closing ``` — was True
+
+
+# --- history classification is by basename, not path suffix ----------------
+
+
+def test_a_file_merely_ending_in_changelog_md_is_not_frozen(tmp_path):
+    """`endswith("CHANGELOG.md")` also matches RELEASE-CHANGELOG.md. Misfiling
+    an operative file as history means the reader's edit misses that copy."""
+    write(tmp_path, "docs/RELEASE-CHANGELOG.md", f"{CLAIM}\n")
+    result = run(tmp_path, "--claim", CLAIM)
+    operative_section = result.stdout.split("frozen")[0]
+    assert "docs/RELEASE-CHANGELOG.md:1" in operative_section, result.stdout
+
+
+# --- an unreadable file is a named leak, never a silent skip ---------------
+
+
+def test_an_undecodable_file_is_reported_not_silently_skipped(tmp_path):
+    """The module's stated contract is that what it cannot see gets named. A
+    file it could not read is exactly that."""
+    write(tmp_path, "docs/loom/specs/ok.md", f"{CLAIM}\n")
+    bad = tmp_path / "docs" / "loom" / "specs" / "bad.md"
+    bad.write_bytes(b"\xff\xfe\x00broken\xff")
+    result = run(tmp_path, "--claim", CLAIM)
+    assert result.returncode == 0, result.stderr
+    assert "docs/loom/specs/bad.md" in result.stdout, result.stdout
+    assert "could not read" in result.stdout.lower(), result.stdout
+
+
+# --- fence delimiters are outside the fence, as the docstring says ---------
+
+
+def test_closing_fence_delimiter_is_not_marked_inside(tmp_path):
+    write(
+        tmp_path,
+        "docs/loom/specs/delim.md",
+        f"prose\n```\nfenced\n```\n{CLAIM}\n",
+    )
+    result = run(tmp_path, "--claim", CLAIM)
+    hit_line = [ln for ln in result.stdout.splitlines() if "delim.md:5" in ln][0]
+    assert "fence" not in hit_line.lower(), hit_line
 
 
 # --- scope and hygiene -----------------------------------------------------

@@ -3,14 +3,56 @@ name: 2026-07-27-phase-containment-effectiveness-success-measure-for-plan-stage-
 description: Phase Containment Effectiveness — success measure for plan-stage fact grounding
 status: OPEN
 origin: `docs/loom/specs/2026-07-27-plan-stage-fact-grounding.md` Open Question 1 — "How is success measured? … Without this the change ships unfalsifiable." Plan Task 9 (`docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md:452-455`) fixes the measure's cheapest viable form. Evidence: `docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md` §2 (root-cause taxonomy) and §3 (arc-by-arc dossier).
-start: evaluate at the close-out (whole-branch review and/or live dogfood) of each investing-toolkit arc that ships AFTER the plan-stage fact-grounding change (`docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md`) lands. The baseline cannot be computed yet — see the Baseline note below and the reconciliation entry that follows this one.
+start: FORWARD half only — evaluate at the close-out (whole-branch review and/or live dogfood) of each investing-toolkit arc that ships AFTER the plan-stage fact-grounding change (`docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md`) lands. The HISTORICAL BASELINE half is WONTDO as of 2026-08-03 — see the decision block at the top of the body; do not re-open it without new grounds.
 ---
 
-- Start: evaluate at the close-out (whole-branch review and/or live dogfood) of each
-  investing-toolkit arc that ships AFTER the plan-stage fact-grounding change
-  (`docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md`) lands. The baseline cannot be
-  computed yet — see the Baseline note below and the reconciliation entry that follows this
-  one.
+## WONTDO 2026-08-03 — the historical baseline, decided by the user
+
+**Only the historical-baseline half is closed. The forward-recording half above
+is untouched and still stands** — a per-arc "of this arc's planning-origin
+defects, how many were caught before close-out" is a standalone number and
+never needed a historical baseline to be meaningful.
+
+Three grounds, in order of weight:
+
+1. **The comparison's other side is empty and unscheduled.** This entry scopes
+   the evaluation population to *investing-toolkit* arcs. Every arc shipped
+   since the plan-stage fact-grounding change (loom-code 0.39.0, 2026-07-28)
+   has been a loom-code process arc, so the "after" side holds zero qualifying
+   arcs and will keep holding zero until the population is widened — itself an
+   unscheduled item. Computing the expensive "before" first, under a retention
+   deadline, to feed a comparison whose other side does not exist, inverts the
+   order.
+2. **The result would not be a rate.** The population is eight arcs, Category A
+   falls in three of them, and the Category-A count is itself contested in the
+   source audit (§1's scoreboard against §3.7's enumeration — see the
+   reconciliation entry). A percentage over that is an anecdote with decimal
+   places.
+3. **The useful half was answered more cheaply.** PCE existed to say whether
+   the plan-stage gates catch anything and which class they miss.
+   `docs/loom/audits/2026-08-03-remediation-candidate-status-and-live-population.md`
+   answered the "which class" half case by case, at zero dispatch cost and
+   without reading a single transcript. What PCE would add is the ratio, which
+   ground 2 disqualifies.
+
+**Also corrected here**: the cost figure this decision was nearly made on was
+wrong. The close-out entry recorded "~35 MB" of session transcripts; measured
+2026-08-03, the 2026-07-22→07-27 window holds 954 transcript files totalling
+303 MB across all project directories (731 of them in the three monkey-skills
+directories). Re-measure rather than citing either figure.
+
+**The input was NOT preserved.** Copying those transcripts out of
+`~/.claude/projects/` before they age out (roughly 2026-08-21, on a ~30-day
+retention inferred from the oldest surviving file in the main project
+directory) was offered and not taken up. If this entry is ever re-opened, the
+baseline is unreconstructible — that is a known, accepted consequence of this
+decision, not an oversight.
+
+- Start: FORWARD half only — evaluate at the close-out (whole-branch review and/or live
+  dogfood) of each investing-toolkit arc that ships AFTER the plan-stage fact-grounding
+  change (`docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md`) lands. The HISTORICAL
+  BASELINE half is WONTDO as of 2026-08-03 — see the decision block at the top of the body;
+  do not re-open it without new grounds.
 - Origin: `docs/loom/specs/2026-07-27-plan-stage-fact-grounding.md` Open Question 1 —
   "How is success measured? … Without this the change ships unfalsifiable." Plan Task 9
   (`docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md:452-455`) fixes the measure's

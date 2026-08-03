@@ -66,10 +66,17 @@ here fixes where it lives, not what it is.
 
 **The unwrapping half is now mechanised; the obligation half is not.**
 `scripts/claim_copy_sweep.py` (2026-08-03) closes the hard-wrap leak. Measured
-live on this corpus against a phrase used across the loom skills, the sweep
-returned every file a contiguous grep returned **plus** files grep reported as
-clean — and one of those was this store's own hard-wrap entry, whose copy of
-the phrase is split across a line break. No total is stated here on purpose:
+live on this corpus, re-runnable as printed:
+
+```
+grep -rln "architectural blast radius" --include='*.md' .   # contiguous
+python3 scripts/claim_copy_sweep.py --claim "architectural blast radius"
+```
+
+The sweep returned every file the grep returned **plus** files the grep
+reported as clean — one of those being this very entry's sibling
+[[verbatim-phrase-guards-break-on-hard-line-wrap]], whose copy of the phrase is
+split across a line break. No total is stated here on purpose:
 the first attempt at this passage quoted one, and the count moved between two
 runs minutes apart because writing the passage added the phrase to the corpus
 it was counting. That is leak three, live. Re-run the command rather than

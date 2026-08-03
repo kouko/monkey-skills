@@ -16,16 +16,29 @@ its verification grep confirm the false success. Both the haystack and the
 needle are collapsed to single spaces (and lowercased) before matching, so a
 wrap cannot hide a copy in either direction.
 
+WHY there is exactly ONE normalization implementation: there were two, and
+they disagreed. `normalize` used a whole-string `str.lower()` (which applies
+the Greek final-sigma rule: `ΟΔΟΣ` → `οδος`) while the haystack was built
+character by character (`Σ` → `σ`), so a document containing the claim
+verbatim returned NO hits — the tool's own core failure mode, in the tool.
+`normalize` now derives from `normalize_with_lines`, so the needle and the
+haystack cannot diverge. Consequence, stated rather than hidden: per-character
+lowering does not apply final-sigma, so matching is on the per-character
+folding. That is fine because both sides use it; it would NOT be fine to
+"improve" one side alone.
+
 WHY this reports and never edits: `docs/loom/memory/big-rename-operative-frozen-sweep.md`
 records an automated sweep rewriting prose ABOUT the sweep into
 self-contradiction — a CHANGELOG line stating the docs archive was NOT renamed
 got itself renamed. Enumeration is the job; the edit stays with a human or an
 agent that can read what each copy is for. Hits are partitioned into operative
-(an edit must cover these) and history (editing these falsifies the record),
+(an edit must cover these) and frozen (editing these falsifies the record),
 and the partition is printed rather than applied.
 
 WHY the leaks are always printed: the memory entry is named for them. A sweep
-that hides what it cannot see ships as reliable and misses silently.
+that hides what it cannot see ships as reliable and misses silently. That
+includes files this run could not read — they are listed, not skipped in
+silence.
 
 Read-only. Stdlib only (`os`, `pathlib`, `re`, `sys`).
 
@@ -39,30 +52,26 @@ import re
 import sys
 from pathlib import Path
 
-DEFAULT_HISTORY_PREFIXES = (
+DEFAULT_FROZEN_PREFIXES = (
     "docs/loom/archive/",
     "docs/loom/dogfood/",
 )
-DEFAULT_HISTORY_BASENAMES = ("CHANGELOG.md",)
+DEFAULT_FROZEN_BASENAMES = frozenset({"CHANGELOG.md"})
 
 _WHITESPACE_RUN = re.compile(r"\s+")
-
-
-def normalize(text: str) -> str:
-    """Collapse every whitespace run to one space and lowercase.
-
-    Applied to BOTH sides of every comparison — a needle written on one line
-    must match a haystack copy split across two.
-    """
-    return _WHITESPACE_RUN.sub(" ", text).strip().lower()
 
 
 def normalize_with_lines(text: str) -> tuple[str, list[int]]:
     """Normalize `text` and return the 1-based source line of each output char.
 
-    A whitespace run that contains a newline collapses to a single space
-    carrying the line the run STARTED on, so a match spanning a hard wrap
-    anchors to its first physical line — the place a reader should open.
+    Whitespace runs collapse to one space. A run containing a newline carries
+    the line the run STARTED on, so a match spanning a hard wrap anchors to its
+    first physical line — the place a reader should open.
+
+    The map gains one entry per EMITTED character, not per source character:
+    `"İ".lower()` is two characters, and one entry per source character
+    desynchronized the map for everything after it — surfacing as an uncaught
+    IndexError that took down the whole sweep, not as a merely wrong line.
     """
     out: list[str] = []
     lines: list[int] = []
@@ -77,10 +86,10 @@ def normalize_with_lines(text: str) -> tuple[str, list[int]]:
             if ch == "\n":
                 line += 1
         else:
-            out.append(ch.lower())
-            lines.append(line)
+            for lowered_ch in ch.lower():
+                out.append(lowered_ch)
+                lines.append(line)
             in_run = False
-    # Mirror `normalize`'s strip() so offsets stay aligned with it.
     start = 0
     end = len(out)
     while start < end and out[start] == " ":
@@ -90,21 +99,31 @@ def normalize_with_lines(text: str) -> tuple[str, list[int]]:
     return "".join(out[start:end]), lines[start:end]
 
 
+def normalize(text: str) -> str:
+    """The needle's normalization — derived from the haystack's, never parallel
+    to it. See the module docstring's ONE-implementation note."""
+    return normalize_with_lines(text)[0]
+
+
 def fence_state_by_line(text: str) -> list[bool]:
     """Return, per 1-based source line, whether that line sits inside a fence.
 
-    The delimiter lines themselves count as outside. Fences are tracked rather
-    than skipped: `check_doc_citations.py` cannot tell a fenced example from a
-    live one and ate false positives on its own dogfood note, while silently
+    Both delimiter lines count as outside. Fences are tracked rather than
+    skipped: `check_doc_citations.py` cannot tell a fenced example from a live
+    one and ate false positives on its own dogfood note, while silently
     skipping fences would hide copies that ARE the thing being edited (a rule
     quoted verbatim inside a fence is still a copy). Reporting both and marking
     which is which leaves the judgement with the reader.
+
+    Known limit, stated: only ``` fences are tracked, not `~~~`, and a ``` in
+    an indented block toggles the state.
     """
     states = [False]  # index 0 unused; lines are 1-based
     inside = False
     for raw in text.split("\n"):
-        states.append(inside)
-        if raw.strip().startswith("```"):
+        is_delimiter = raw.strip().startswith("```")
+        states.append(inside and not is_delimiter)
+        if is_delimiter:
             inside = not inside
     return states
 
@@ -117,10 +136,14 @@ def iter_markdown_files(repo_root: Path):
                 yield Path(dirpath) / name
 
 
-def is_history(rel_path: str, extra_prefixes: tuple[str, ...]) -> bool:
-    if rel_path.endswith(DEFAULT_HISTORY_BASENAMES):
+def is_frozen(rel_path: str, extra_prefixes: tuple[str, ...]) -> bool:
+    """Frozen = a record editing would falsify. Basename match, not a path
+    suffix — `endswith("CHANGELOG.md")` also swallowed RELEASE-CHANGELOG.md,
+    and misfiling an operative file as frozen hides a copy the reader's edit
+    must cover, which is this tool's own failure mode."""
+    if Path(rel_path).name in DEFAULT_FROZEN_BASENAMES:
         return True
-    prefixes = DEFAULT_HISTORY_PREFIXES + extra_prefixes
+    prefixes = DEFAULT_FROZEN_PREFIXES + extra_prefixes
     return any(rel_path.startswith(prefix) for prefix in prefixes)
 
 
@@ -142,26 +165,28 @@ def find_in_text(needle: str, text: str) -> list[tuple[int, bool]]:
 
 def sweep(repo_root: Path, needles: list[str], extra_prefixes: tuple[str, ...]):
     operative: list[tuple[str, int, bool]] = []
-    history: list[tuple[str, int, bool]] = []
+    frozen: list[tuple[str, int, bool]] = []
+    unreadable: list[str] = []
     swept = 0
     for path in iter_markdown_files(repo_root):
+        rel = path.relative_to(repo_root).as_posix()
         try:
             text = path.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError):
+        except (UnicodeDecodeError, OSError) as exc:
+            unreadable.append(f"{rel} ({type(exc).__name__})")
             continue
         swept += 1
-        rel = path.relative_to(repo_root).as_posix()
         seen: set[int] = set()
         for needle in needles:
             for line, inside in find_in_text(needle, text):
                 if line in seen:
                     continue
                 seen.add(line)
-                bucket = history if is_history(rel, extra_prefixes) else operative
+                bucket = frozen if is_frozen(rel, extra_prefixes) else operative
                 bucket.append((rel, line, inside))
     operative.sort()
-    history.sort()
-    return operative, history, swept
+    frozen.sort()
+    return operative, frozen, unreadable, swept
 
 
 LEAKS = """what this sweep CANNOT see (named here rather than hidden):
@@ -175,20 +200,28 @@ LEAKS = """what this sweep CANNOT see (named here rather than hidden):
     fixture, or a commit message is out of scope by construction."""
 
 
-def render(claim: str, alternates: list[str], operative, history, swept: int) -> str:
+def render(claim, alternates, operative, frozen, unreadable, swept) -> str:
     lines = [
         f'claim: "{claim}"',
         f"swept {swept} markdown files; alternate phrasings declared: {len(alternates)}",
         "",
-        f"operative copies ({len(operative)}) — an edit to this claim must cover these:",
+        f"operative locations ({len(operative)}) — an edit to this claim must "
+        "cover these (one entry per source line):",
     ]
     lines.extend(_render_hits(operative))
     lines.append("")
     lines.append(
-        f"frozen copies ({len(history)}) — history; editing these falsifies the record:"
+        f"frozen locations ({len(frozen)}) — history; editing these falsifies the record:"
     )
-    lines.extend(_render_hits(history))
+    lines.extend(_render_hits(frozen))
     lines.append("")
+    if unreadable:
+        lines.append(
+            f"files this run could not read ({len(unreadable)}) — NOT searched, "
+            "so any copy in them is unaccounted for:"
+        )
+        lines.extend(f"  {entry}" for entry in unreadable)
+        lines.append("")
     lines.append(LEAKS)
     return "\n".join(lines)
 
@@ -251,8 +284,10 @@ def main(argv: list[str] | None = None) -> int:
         if normalized and normalized not in needles:
             needles.append(normalized)
 
-    operative, history, swept = sweep(repo_root, needles, tuple(extra_prefixes))
-    print(render(claim, alternates, operative, history, swept))
+    operative, frozen, unreadable, swept = sweep(
+        repo_root, needles, tuple(extra_prefixes)
+    )
+    print(render(claim, alternates, operative, frozen, unreadable, swept))
     return 0
 
 

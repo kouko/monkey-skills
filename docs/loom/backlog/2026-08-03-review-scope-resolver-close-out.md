@@ -71,16 +71,22 @@ the same self-referential-count trap this arc hit four times before.)
    pre-action or an unwrapping scan script would close the hard-wrap leak
    mechanically; the synonym leak stays open by nature and must be named rather
    than papered over.
-4. **PCE's historical baseline — deferred, and it has a clock.** Reconstructing
-   it means re-reading the ~35 MB of session transcripts the provenance audit
-   was extracted from (2026-07-22 → 07-27, across three worktree project dirs).
-   Those transcripts still exist as of 2026-08-03; the oldest surviving file in
-   that directory is from 2026-07-04, so retention appears to be about thirty
-   days. **If the baseline is wanted, it must be reconstructed before roughly
-   2026-08-21.** The audit it depends on also has internal inconsistencies filed
-   separately — three live, a fourth filed and then withdrawn as not a
-   contradiction — and one of the live three is judgment-shaped rather than
-   arithmetic.
+4. ~~**PCE's historical baseline — deferred, and it has a clock.**~~
+   **WONTDO 2026-08-03, decided by the user.** Grounds and the accepted
+   consequence are recorded in the PCE entry's own decision block
+   (`docs/loom/backlog/2026-07-27-phase-containment-effectiveness-success-measure-for-plan-stage-fact-grou.md`);
+   in short, the comparison's "after" side is empty and unscheduled under the
+   filed population, the result would not be a rate at this n, and the useful
+   half was answered more cheaply by
+   `docs/loom/audits/2026-08-03-remediation-candidate-status-and-live-population.md`.
+   The transcripts were not preserved, so the baseline is unreconstructible
+   once they age out — accepted, not overlooked. **The forward-recording half
+   of PCE is NOT closed by this** and still stands under its own entry.
+   Two figures this item stated are also corrected there: the transcript volume
+   ("~35 MB" — measured 2026-08-03 as 954 files / 303 MB in that window) and
+   the retention basis. The provenance audit's internal inconsistencies remain
+   filed separately and remain live; their trigger changed from "before
+   computing the baseline" to "before anyone cites the audit for a count".
 
 ## Residual notes carried, not fixed
 
