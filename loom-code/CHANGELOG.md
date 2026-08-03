@@ -5,6 +5,35 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.46.0] — 2026-08-03 — one resolver owns review scope, and a stale base refuses
+
+### Added
+
+- **`loom-code/scripts/review_scope.py` computes review scope in one place.**
+  `requesting-code-review`'s direct-entry and routing steps, and
+  `requesting-docs-review`'s Step 1, each used to run their own branch diff
+  against the default branch; they now call one resolver for the
+  changed-file list instead. The marker-sweep step (Step 4) does not invoke
+  the resolver itself — each invocation performs a network fetch — so it
+  reuses the file list Step 1 already resolved. The delegating station hands
+  its already-resolved scope down to `requesting-docs-review`, which only
+  computes its own when none was supplied — so a review that touches both
+  code and docs derives its file list once, not once per station.
+- **A branch base the resolver cannot confirm fresh is refused, never used
+  anyway.** The resolver fetches the default branch and checks the branch's
+  base against it before handing back a file list; a failed fetch, an
+  unresolvable default branch, or a default-branch ref with no remote
+  component all refuse rather than return a list computed against a base that
+  might already be behind. This narrows review *scope*, not review
+  *judgment* — it stops a review from running against the wrong set of
+  changed files; it says nothing about whether the review of those files is
+  correct. A fourth refusal shape — a base that genuinely predates the
+  remote's current tip — is the only one where both shas resolve, and only
+  it prints a ready-to-run `git rebase --onto <remote_sha> <base_sha> HEAD`
+  remedy; every other refusal shape has no shas to fill in and prints
+  none.
+  Either way, the calling station stops before dispatching any review work.
+
 ## [0.45.0] — 2026-08-02 — a review finding names its origin, durably
 
 ### Added
