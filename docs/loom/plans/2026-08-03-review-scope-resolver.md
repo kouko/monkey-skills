@@ -47,6 +47,53 @@ Plan-document-reviewer verdict: PASS (2026-08-03, round 2; amendment re-review P
   one-clause trim directly rather than re-dispatching, since re-dispatching an
   implementer on a contradiction undoes correct work.
 
+- **Plan defect found during the Tasks 5-7 wave: `Files touched` under-declared
+  the tests that pin the strings each task deletes.** All THREE tasks in the
+  parallel wave had to edit a pre-existing test outside their declared list —
+  Task 5 `test_docs_review_mode.py`, Task 6
+  `test_requesting_docs_review_skill.py`, Task 7
+  `test_docs_review_blocking_class.py` — and each flagged it rather than
+  silently widening scope. In every case it was unavoidable by construction:
+  the old test asserted the presence of the exact string the task's GREEN
+  requires deleting, so "delete the line" and "keep the suite green" are jointly
+  satisfiable only by updating that pin. Two of the three were narrow assertion
+  swaps; Task 7's was the standing version pin that every bump rewrites.
+
+  This is the same class the plan-document-reviewer caught once already (Task 4's
+  GREEN required editing `AGENTS.md` while `Files touched` omitted it), and it
+  survived into a wave where it matters more: **`Files touched` is the
+  disjointness oracle for parallel dispatch**. Three undeclared files in one
+  concurrent wave meant the oracle was answering from an incomplete set — the
+  three happened not to collide, which is luck, not design. **Rule for future
+  plans: when a task deletes or rewrites a string, every existing test that pins
+  that string belongs in its `Files touched`.** Find them before dispatch with a
+  grep for the string being retired, not after.
+
+- **Second plan defect in the same wave: Task 5's Description narrowed a pin
+  that is general.** The Description said the delegation to carry the resolved
+  scope is "the docs-only delegation"; §Pinned pass-down contract, which the
+  same task must transcribe VERBATIM, is unqualified — it says *the* delegating
+  station hands *the* delegate the scope, with no path carve-out. The
+  implementer followed the Description, left the mixed-branch bullet alone, and
+  **said so in its report** — its reading was correct and the narrowing was
+  mine.
+
+  The cost was not cosmetic. Review traced it: a mixed branch dispatches its
+  docs arm with no `resolved-scope`; `requesting-docs-review`'s Step 1 therefore
+  takes its "resolve it yourself" branch; the resolver returns the FULL branch
+  list rather than the `.md` subset; that station's own "any non-`.md` means not
+  docs-only" check then fires — a mixed branch contains non-`.md` files by
+  definition — and routes the dispatch back to `requesting-code-review`, which
+  hands it back the same way. The mixed-branch split breaks outright.
+
+  **Amended**: Task 5 also hands `resolved-scope` on the mixed-branch path, and
+  the value there is the `.md` subset of the resolved list — that arm's actual
+  scope. **Rule for future plans: when a task must transcribe a pin VERBATIM,
+  the task Description may not describe a narrower obligation than the pin
+  states.** A Description that narrows a pin produces an artifact whose stated
+  contract contradicts its own behaviour, and nothing downstream is looking for
+  that contradiction — both of this task's grep-window tests passed.
+
 - **Kickoff sweep result: zero one-way-door decisions to brief.** The round's
   two genuinely irreversible choices — the resolver runs the fetch itself, and
   it refuses rather than warns — were both ratified by the user at brief stage

@@ -22,10 +22,14 @@ Exit codes:
   1 — refusal. No file list is printed. stderr carries the reason from
       `FreshnessResult.reason`, and — only for the stale-base shape,
       the one case where both shas resolved — the concrete
-      `git rebase --onto <remote_sha> <base_sha> HEAD` remedy. The
-      other refusal shapes (unresolvable default branch, a local-only
-      ref, a failed/expired fetch) have no shas to fill in, so no
-      rebase invocation is printed for them. A third exit-1 source
+      `git rebase --onto <remote_sha> <base_sha> HEAD` remedy. Every
+      other refusal shape has no shas to fill in, so no rebase
+      invocation is printed for it. There are five, and the list is
+      exhaustive against `check_freshness`'s early returns: an
+      unresolvable default branch, a local-only ref, a failed or
+      expired fetch, a ref that still will not resolve after a
+      successful fetch, and a failed merge-base computation. A third
+      exit-1 source
       exists past the freshness verdict: a fresh base whose
       `resolve_changed_files` diff still fails. That shape carries a
       hardcoded stderr message, not a `FreshnessResult.reason` (no
