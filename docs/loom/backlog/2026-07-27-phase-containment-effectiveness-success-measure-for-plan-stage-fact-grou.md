@@ -89,9 +89,14 @@ decision, not an oversight.
     `feat-sec-submissions-pagination`), whose audit coverage is explicitly incomplete
     (audit header §Scope, and §1's scoreboard — task-level PASS/PASS_WITH_NOTES counts are unfilled for
     this arc, only the NEEDS_REVISION count is known, because it hasn't shipped).
-  - **Baseline: cannot be computed from the current audit.** The source document
-    (`docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md`) contains four
-    internally inconsistent claims about the same Category-A instances, so any count or
-    close-out/pre-close-out split drawn from it right now would be unreliable — see the
-    reconciliation entry immediately below for the specific inconsistencies and their
-    citations. Do not compute or assert a PCE number until that entry is resolved.
+  - **Baseline: cannot be computed from the current audit — and, as of 2026-08-03, will not
+    be computed at all** (see the WONTDO block at the top of this file). The source document
+    (`docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md`) carries
+    internally inconsistent claims about the same Category-A instances — its own erratum says
+    三處 live, a fourth filed and struck WITHDRAWN — so any count or close-out/pre-close-out
+    split drawn from it would be unreliable. The specific inconsistencies and their citations
+    are in `docs/loom/backlog/2026-07-27-investing-toolkit-arc-defect-provenance-audit-internal-inconsistencies-n.md`
+    (named, not "the entry below" — one entry per file now, and the generated index orders it
+    ahead of this one). **Scope of the prohibition**: do not compute or assert a HISTORICAL
+    BASELINE from this audit. It does NOT block the forward-recording half, which measures a
+    single arc's own defects at that arc's close-out and never reads this audit.

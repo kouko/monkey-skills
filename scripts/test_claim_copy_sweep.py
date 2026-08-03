@@ -104,7 +104,7 @@ def test_changelog_copy_is_classified_frozen(tmp_path):
     records a live instance of a sweep doing exactly that."""
     write(tmp_path, "loom-code/CHANGELOG.md", f"- {CLAIM}\n")
     result = run(tmp_path, "--claim", CLAIM)
-    frozen_section = result.stdout.split("frozen")[-1]
+    frozen_section = result.stdout.split("frozen locations")[-1]
     assert "loom-code/CHANGELOG.md:1" in frozen_section, result.stdout
 
 
@@ -112,7 +112,7 @@ def test_archive_and_dogfood_copies_are_frozen(tmp_path):
     write(tmp_path, "docs/loom/archive/old.md", f"{CLAIM}\n")
     write(tmp_path, "docs/loom/dogfood/run.md", f"{CLAIM}\n")
     result = run(tmp_path, "--claim", CLAIM)
-    frozen_section = result.stdout.split("frozen")[-1]
+    frozen_section = result.stdout.split("frozen locations")[-1]
     assert "docs/loom/archive/old.md:1" in frozen_section, result.stdout
     assert "docs/loom/dogfood/run.md:1" in frozen_section, result.stdout
 
@@ -120,14 +120,14 @@ def test_archive_and_dogfood_copies_are_frozen(tmp_path):
 def test_spec_copy_is_classified_operative(tmp_path):
     write(tmp_path, "docs/loom/specs/live.md", f"{CLAIM}\n")
     result = run(tmp_path, "--claim", CLAIM)
-    operative_section = result.stdout.split("frozen")[0]
+    operative_section = result.stdout.split("frozen locations")[0]
     assert "docs/loom/specs/live.md:1" in operative_section, result.stdout
 
 
 def test_extra_frozen_prefix_can_be_declared(tmp_path):
     write(tmp_path, "vendor/notes.md", f"{CLAIM}\n")
     result = run(tmp_path, "--claim", CLAIM, "--frozen", "vendor/")
-    frozen_section = result.stdout.split("frozen")[-1]
+    frozen_section = result.stdout.split("frozen locations")[-1]
     assert "vendor/notes.md:1" in frozen_section, result.stdout
 
 
@@ -246,7 +246,7 @@ def test_expanding_lowercase_does_not_crash_the_sweep(tmp_path):
 # tricky functions directly.
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import claim_copy_sweep as sweep  # noqa: E402
+import claim_copy_sweep  # noqa: E402  (not `as sweep` — the module has a sweep())
 
 
 @pytest.mark.parametrize(
@@ -262,29 +262,94 @@ import claim_copy_sweep as sweep  # noqa: E402
 def test_normalize_agrees_with_normalize_with_lines(text):
     """One rule, one implementation. The needle comes from `normalize` and the
     haystack from `normalize_with_lines`; any divergence is a silent miss."""
-    assert sweep.normalize(text) == sweep.normalize_with_lines(text)[0]
+    assert claim_copy_sweep.normalize(text) == claim_copy_sweep.normalize_with_lines(text)[0]
 
 
 @pytest.mark.parametrize("text", ["İ" * 5 + "\nclaim\n", "ΟΔΟΣ\nclaim\n", "a\nb\n"])
 def test_line_map_has_one_entry_per_normalized_character(text):
-    normalized, line_of = sweep.normalize_with_lines(text)
+    normalized, line_of = claim_copy_sweep.normalize_with_lines(text)
     assert len(normalized) == len(line_of), (len(normalized), len(line_of))
 
 
 def test_find_in_text_never_indexes_past_the_line_map():
     """The desync surfaced as an uncaught IndexError, not a wrong line."""
-    assert sweep.find_in_text("claim", "İ" * 5 + "\nclaim\n") == [(2, False)]
+    assert claim_copy_sweep.find_in_text("claim", "İ" * 5 + "\nclaim\n") == [(2, False)]
 
 
 def test_fence_delimiter_lines_count_as_outside():
     """Both delimiters, per the docstring — the opening one already did."""
-    states = sweep.fence_state_by_line("a\n```\nX\n```\nb\n")
+    states = claim_copy_sweep.fence_state_by_line("a\n```\nX\n```\nb\n")
     assert states[2] is False, states  # opening ```
     assert states[3] is True, states  # the fenced content
     assert states[4] is False, states  # closing ``` — was True
 
 
-# --- history classification is by basename, not path suffix ----------------
+# --- case FOLDING, not case mapping ----------------------------------------
+
+
+def test_uppercase_claim_matches_naturally_lowercased_prose(tmp_path):
+    """`str.lower()` is a case MAPPING and leaves ς and σ distinct, so the
+    mirror of the sigma case still missed: a human types ΟΔΟΣ, the document on
+    disk carries the natural lowercase οδος. Symmetry of function is not
+    symmetry of input — only a case FOLDING closes it."""
+    write(tmp_path, "docs/loom/specs/sigma.md", "The street sign reads οδος here.\n")
+    result = run(tmp_path, "--claim", "The street sign reads ΟΔΟΣ here.")
+    assert "docs/loom/specs/sigma.md:1" in result.stdout, result.stdout
+
+
+@pytest.mark.parametrize(
+    "text", ["ΟΔΟΣ", "οδος", "ΣΣΣ", "Straße", "STRASSE", "İstanbul", "ﬁle", "ǅ", "ẞ"]
+)
+def test_normalization_equals_whole_string_casefold(text):
+    """The per-EMITTED-character loop is only valid if folding one character at
+    a time equals folding the whole string. Pinning `normalize == casefold`
+    fails immediately on a revert to `.lower()`: `"ΟΔΟΣ".lower()` is `οδος`
+    while `.casefold()` is `οδοσ`."""
+    assert claim_copy_sweep.normalize(text) == text.casefold()
+
+
+# --- --frozen is a declaration, and it is visible --------------------------
+
+
+def test_empty_frozen_prefix_is_refused(tmp_path):
+    """An empty prefix matches every path, so every hit lands in the frozen
+    bucket and the report prints `operative locations (0)` — this tool's own
+    worst output, a confident all-clear."""
+    write(tmp_path, "docs/loom/specs/live.md", f"{CLAIM}\n")
+    assert_usage_error(run(tmp_path, "--claim", CLAIM, "--frozen", ""))
+    assert_usage_error(run(tmp_path, "--claim", CLAIM, "--frozen", "   "))
+
+
+def test_report_echoes_the_frozen_rule_in_effect(tmp_path):
+    """The brief's words: the classification is written into the report so the
+    user can see what they are relying on."""
+    write(tmp_path, "docs/loom/specs/live.md", f"{CLAIM}\n")
+    result = run(tmp_path, "--claim", CLAIM, "--frozen", "vendorlib/")
+    assert "frozen rule in effect:" in result.stdout, result.stdout
+    assert "vendorlib/" in result.stdout, result.stdout
+    assert "CHANGELOG.md" in result.stdout, result.stdout
+
+
+@pytest.mark.parametrize(
+    "rel_path,extra,expected",
+    [
+        ("loom-code/CHANGELOG.md", (), True),
+        ("docs/RELEASE-CHANGELOG.md", (), False),
+        ("docs/loom/archive/old.md", (), True),
+        ("docs/loom/dogfood/run.md", (), True),
+        ("docs/loom/specs/live.md", (), False),
+        ("vendor/notes.md", ("vendor/",), True),
+        ("vendorlib/live.md", ("vendor",), True),  # raw prefix: documented, echoed
+        ("vendorlib/live.md", ("vendor/",), False),
+    ],
+)
+def test_is_frozen_classification(rel_path, extra, expected):
+    """`is_frozen` was the one load-bearing helper reachable only through a
+    subprocess, and it is the one that shipped a defect."""
+    assert claim_copy_sweep.is_frozen(rel_path, extra) is expected
+
+
+# --- frozen classification is by basename, not path suffix -----------------
 
 
 def test_a_file_merely_ending_in_changelog_md_is_not_frozen(tmp_path):
@@ -292,7 +357,7 @@ def test_a_file_merely_ending_in_changelog_md_is_not_frozen(tmp_path):
     an operative file as history means the reader's edit misses that copy."""
     write(tmp_path, "docs/RELEASE-CHANGELOG.md", f"{CLAIM}\n")
     result = run(tmp_path, "--claim", CLAIM)
-    operative_section = result.stdout.split("frozen")[0]
+    operative_section = result.stdout.split("frozen locations")[0]
     assert "docs/RELEASE-CHANGELOG.md:1" in operative_section, result.stdout
 
 

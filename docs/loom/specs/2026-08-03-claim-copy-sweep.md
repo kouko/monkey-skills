@@ -70,7 +70,7 @@ big-rename 那次災情正是自動改寫造成的。編輯留給人或 agent，
 - **Error（既有錯誤慣例）**: `scripts/check_loom_memory_integrity.py:179,184,188`
   — `main()` 回 `0` / `1`，`sys.exit(main())`。`loom-code/scripts/check_doc_citations.py:431`
   用手寫 arg 迴圈（無 argparse）＋ `--repo-root` 旗標。兩者皆 stdlib-only。
-- **Data（語料）**: 646 `docs/loom/**.md`；frozen 候選＝`docs/loom/archive/`（3 份）
+- **Data（語料）**: 全部 `docs/loom/**.md`（數量見上方 §Users，本文不寫死）；frozen 候選＝`docs/loom/archive/`（3 份）
   ＋ 20 份 `CHANGELOG.md` ＋ `docs/loom/dogfood/`。
 - **Boundary（邊界）**: `check_doc_citations.py` 對 fenced code block / blockquote /
   表格儲存格**完全沒有處理**（grep 該檔零命中，與其自述的 parser v1 限制一致），
@@ -106,7 +106,7 @@ EN 與 JA 生態給的是**不同的答案**，而這個分歧本身是發現。
 |---|---|---|---|
 | **textlint + textlint-rule-prh**（JA 主流） | Sansan、DevelopersIO 等日本工程團隊；YAML regex 字典、markdown 語法感知（自動跳過連結文字）、支援 `--fix` | 成熟、已出貨多年；**對同義詞的答案是宣告式字典**，正面處理了「表記ゆれ」 | Node 工具鏈（本 repo 是 Python stdlib-only）；為常駐 lint 設計，不是「編輯前一次性掃描」；沒有 operative/frozen 概念；要維護一份字典 |
 | **`rg -U` 多行 grep** | 通用 | 零建置、已安裝 | 使用者得**每次手寫**一個在每個字之間放 `\s+` 的正規表示式——而那正是最容易寫錯的一步；無分區報告、無 frozen 分類 |
-| **結構性單一來源**（EN 主流論述：DITA / content reuse — 根本不要重複） | 技術寫作業界 | 從根源消滅這個缺陷類 | 646 份文件的語料，其中 operative/frozen 的重複是**刻意的**（歷史紀錄必須與現行版本分歧）；改造成 transclusion 等於重寫整個語料 |
+| **結構性單一來源**（EN 主流論述：DITA / content reuse — 根本不要重複） | 技術寫作業界 | 從根源消滅這個缺陷類 | 數百份文件的語料，其中 operative/frozen 的重複是**刻意的**（歷史紀錄必須與現行版本分歧）；改造成 transclusion 等於重寫整個語料 |
 
 EN 側搜尋的結果本身也是資料：**沒有一個現成工具做這件事**，回答一律是
 「組合多個工具或自己實作」（eslint/markdown 只有 `no-duplicate-definitions`

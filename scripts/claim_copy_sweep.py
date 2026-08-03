@@ -16,16 +16,21 @@ its verification grep confirm the false success. Both the haystack and the
 needle are collapsed to single spaces (and lowercased) before matching, so a
 wrap cannot hide a copy in either direction.
 
-WHY there is exactly ONE normalization implementation: there were two, and
-they disagreed. `normalize` used a whole-string `str.lower()` (which applies
-the Greek final-sigma rule: `ΟΔΟΣ` → `οδος`) while the haystack was built
-character by character (`Σ` → `σ`), so a document containing the claim
-verbatim returned NO hits — the tool's own core failure mode, in the tool.
-`normalize` now derives from `normalize_with_lines`, so the needle and the
-haystack cannot diverge. Consequence, stated rather than hidden: per-character
-lowering does not apply final-sigma, so matching is on the per-character
-folding. That is fine because both sides use it; it would NOT be fine to
-"improve" one side alone.
+WHY there is exactly ONE normalization implementation, and why it folds rather
+than lowercases: there were two implementations and they disagreed. `normalize`
+used a whole-string `str.lower()` (which applies the Greek final-sigma rule:
+`ΟΔΟΣ` → `οδος`) while the haystack was built character by character
+(`Σ` → `σ`), so a document containing the claim verbatim returned NO hits —
+the tool's own core failure mode, in the tool. Deriving `normalize` from
+`normalize_with_lines` closed that, but **symmetry of function is not symmetry
+of input**: the needle is typed by a human and the haystack is on disk, so a
+non-folding rule still splits one word into two needles. `str.lower()` is a
+case MAPPING; the mirror case (`ΟΔΟΣ` typed against `οδος` on disk) still
+missed. The rule is now `str.casefold()`, a case FOLDING, which maps `ς` and
+`σ` to the same character. Verified context-free (per-character == whole-string
+across ΟΔΟΣ / οδος / Straße / STRASSE / İstanbul / ﬁle / ǅ / ẞ / Ὀδυσσεύς), so
+the per-emitted-character loop below stays valid — and it already absorbs the
+1→2 expansions casefold introduces (`ß` → `ss`).
 
 WHY this reports and never edits: `docs/loom/memory/big-rename-operative-frozen-sweep.md`
 records an automated sweep rewriting prose ABOUT the sweep into
@@ -69,9 +74,10 @@ def normalize_with_lines(text: str) -> tuple[str, list[int]]:
     first physical line — the place a reader should open.
 
     The map gains one entry per EMITTED character, not per source character:
-    `"İ".lower()` is two characters, and one entry per source character
-    desynchronized the map for everything after it — surfacing as an uncaught
-    IndexError that took down the whole sweep, not as a merely wrong line.
+    `"İ".casefold()` is two characters (as is `"ß".casefold()`), and one entry
+    per source character desynchronized the map for everything after it —
+    surfacing as an uncaught IndexError that took down the whole sweep, not as
+    a merely wrong line.
     """
     out: list[str] = []
     lines: list[int] = []
@@ -86,8 +92,8 @@ def normalize_with_lines(text: str) -> tuple[str, list[int]]:
             if ch == "\n":
                 line += 1
         else:
-            for lowered_ch in ch.lower():
-                out.append(lowered_ch)
+            for folded_ch in ch.casefold():
+                out.append(folded_ch)
                 lines.append(line)
             in_run = False
     start = 0
@@ -140,7 +146,13 @@ def is_frozen(rel_path: str, extra_prefixes: tuple[str, ...]) -> bool:
     """Frozen = a record editing would falsify. Basename match, not a path
     suffix — `endswith("CHANGELOG.md")` also swallowed RELEASE-CHANGELOG.md,
     and misfiling an operative file as frozen hides a copy the reader's edit
-    must cover, which is this tool's own failure mode."""
+    must cover, which is this tool's own failure mode.
+
+    `--frozen` prefixes are matched raw, so `--frozen vendor` also captures
+    `vendorlib/`. That is the caller's choice and the report echoes every
+    prefix in effect so it is visible; an EMPTY prefix is refused at intake
+    because it would match everything and print a confident `operative
+    locations (0)` all-clear."""
     if Path(rel_path).name in DEFAULT_FROZEN_BASENAMES:
         return True
     prefixes = DEFAULT_FROZEN_PREFIXES + extra_prefixes
@@ -186,6 +198,7 @@ def sweep(repo_root: Path, needles: list[str], extra_prefixes: tuple[str, ...]):
                 bucket.append((rel, line, inside))
     operative.sort()
     frozen.sort()
+    unreadable.sort()
     return operative, frozen, unreadable, swept
 
 
@@ -200,10 +213,14 @@ LEAKS = """what this sweep CANNOT see (named here rather than hidden):
     fixture, or a commit message is out of scope by construction."""
 
 
-def render(claim, alternates, operative, frozen, unreadable, swept) -> str:
+def render(claim, alternates, operative, frozen, unreadable, swept, extra_prefixes=()) -> str:
+    frozen_rule = ", ".join(
+        sorted(DEFAULT_FROZEN_BASENAMES) + list(DEFAULT_FROZEN_PREFIXES) + list(extra_prefixes)
+    )
     lines = [
         f'claim: "{claim}"',
         f"swept {swept} markdown files; alternate phrasings declared: {len(alternates)}",
+        f"frozen rule in effect: {frozen_rule}",
         "",
         f"operative locations ({len(operative)}) — an edit to this claim must "
         "cover these (one entry per source line):",
@@ -264,6 +281,12 @@ def main(argv: list[str] | None = None) -> int:
             elif arg == "--also":
                 alternates.append(value)
             elif arg == "--frozen":
+                if not value.strip():
+                    return usage(
+                        "--frozen requires a non-empty prefix; an empty one "
+                        "matches every path and would report a false "
+                        "'operative locations (0)' all-clear"
+                    )
                 extra_prefixes.append(value)
             else:
                 repo_root = Path(value).resolve()
@@ -287,7 +310,17 @@ def main(argv: list[str] | None = None) -> int:
     operative, frozen, unreadable, swept = sweep(
         repo_root, needles, tuple(extra_prefixes)
     )
-    print(render(claim, alternates, operative, frozen, unreadable, swept))
+    print(
+        render(
+            claim,
+            alternates,
+            operative,
+            frozen,
+            unreadable,
+            swept,
+            tuple(extra_prefixes),
+        )
+    )
     return 0
 
 

@@ -67,10 +67,14 @@ the same self-referential-count trap this arc hit four times before.)
    before editing any" now lives in
    `docs/loom/memory/enumerate-every-copy-before-editing-a-claim-and-name-the-leaks.md`,
    but nothing obliges a repairer to hit it — and this arc failed to follow it
-   twice, once by the author who had written it hours earlier. A repairer-side
-   pre-action or an unwrapping scan script would close the hard-wrap leak
-   mechanically; the synonym leak stays open by nature and must be named rather
-   than papered over.
+   twice, once by the author who had written it hours earlier.
+   **Half done 2026-08-03.** The unwrapping scan script shipped as
+   `scripts/claim_copy_sweep.py` — it normalizes whitespace on both sides so
+   hard-wrapped copies cannot hide, and it partitions operative from frozen.
+   What remains open is the OBLIGATION half: nothing requires a repairer to run
+   it, left that way deliberately rather than added as another gate. The synonym
+   leak stays open by nature (`--also` covers only phrasings you already know
+   about) and must be named rather than papered over.
 4. ~~**PCE's historical baseline — deferred, and it has a clock.**~~
    **WONTDO 2026-08-03, decided by the user.** Grounds and the accepted
    consequence are recorded in the PCE entry's own decision block

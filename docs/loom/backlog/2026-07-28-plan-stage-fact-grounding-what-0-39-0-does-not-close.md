@@ -67,7 +67,10 @@ start: next time a planning-origin defect reaches close-out despite 0.39.0's con
        tool output, deliberately-broken fixture examples — from a live citation; both are
        checked identically, producing false findings. 2/2 observed on this branch's own
        dogfood notes. Reviewers must treat pre-pass findings inside fenced code blocks, blockquotes, table cells, and inline examples as
-       advisory, not as defects (see `requesting-code-review/SKILL.md:97`).
+       advisory, not as defects (see `requesting-docs-review/SKILL.md:54` — this caveat lived
+       at `requesting-code-review/SKILL.md:97` until loom-code 0.46.0 moved it; that line is
+       now blank, and three further copies of the stale pointer survive outside this entry,
+       filed separately).
   4. ~~**`Reuse-adequacy` is declarative-only.** Nothing enforces that a task carrying a reuse
      instruction fills the field.~~ **CLOSED 2026-08-03** — Check 17 (v0.43.0+) grades the
      block in four parts, the first being **presence**: a task whose Description instructs
@@ -139,7 +142,8 @@ start: next time a planning-origin defect reaches close-out despite 0.39.0's con
   13. **A gating obligation stated in a task Description binds nothing.** T3's "stop before
       Task 4 ships the dependency" lived in prose; the Dependencies field did not encode it;
       parallel marking let T4 commit first. Second consequence: the pre-pass population
-      caveat later folded into `requesting-code-review/SKILL.md:97` (the 0% false-positive
+      caveat later folded into what was then `requesting-code-review/SKILL.md:97`, now
+      `requesting-docs-review/SKILL.md:54` (the 0% false-positive
       figure's scope) reached that file only at whole-branch review, not during the branch's
       own plan-driven tasks. Candidate: plan-format rule — a Description sentence that gates
       ANOTHER task must be encoded as a Dependencies edge or it does not exist.
