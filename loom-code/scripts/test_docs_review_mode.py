@@ -106,9 +106,11 @@ def test_step1_routes_three_ways():
     text = _text()
     low = _norm(_step1_section(text)).lower()
 
-    # routing input: the mechanical trigger command.
-    assert "git diff main...head --name-only" in low, (
-        "must name the exact file-list command -- an orchestrator at "
+    # routing input: the mechanical trigger command. Post-resolver
+    # (docs/loom/plans/2026-08-03-review-scope-resolver.md Task 5), the
+    # file-list command is `review_scope.py`, not a raw `git diff`.
+    assert "review_scope.py" in low, (
+        "must name the resolver script -- an orchestrator at "
         "any tier must be able to route mechanically"
     )
 
