@@ -21,13 +21,15 @@ Versioning: [Semantic Versioning](https://semver.org/).
   code and docs derives its file list once, not once per station.
 - **A branch base the resolver cannot confirm fresh is refused, never used
   anyway.** The resolver fetches the default branch and checks the branch's
-  base against it before handing back a file list; a failed fetch, an
-  unresolvable default branch, or a default-branch ref with no remote
-  component all refuse rather than return a list computed against a base that
-  might already be behind. This narrows review *scope*, not review
+  base against it before handing back a file list; every shape of
+  freshness failure refuses rather than return a list computed against a base
+  that might already be behind. (The shapes are enumerated in
+  `review_scope.py`'s module docstring and deliberately not re-listed here —
+  each restatement of that population on this branch drifted to a different
+  count.) This narrows review *scope*, not review
   *judgment* — it stops a review from running against the wrong set of
   changed files; it says nothing about whether the review of those files is
-  correct. A fourth refusal shape — a base that genuinely predates the
+  correct. Exactly one refusal shape — a base that genuinely predates the
   remote's current tip — is the only one where both shas resolve, and only
   it prints a ready-to-run `git rebase --onto <remote_sha> <base_sha> HEAD`
   remedy; every other refusal shape has no shas to fill in and prints

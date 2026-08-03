@@ -110,9 +110,11 @@ Role boundaries enforced by behavior, not reading restrictions:
   prints the changed-file list, one path per line, byte-identical to
   `git diff <default-branch>...HEAD --name-only` (three-dot, unchanged);
   rc=0 with the list on stdout. Any way freshness cannot be established
-  (stale base, unresolvable default branch, a local-only ref, or a
-  failed/expired fetch) REFUSES instead of printing a list it cannot
-  vouch for: rc=1, the reason on stderr, and — for the stale-base shape,
+  REFUSES instead of printing a list it cannot vouch for — the shapes are
+  enumerated once, in `review_scope.py`'s own module docstring, and are
+  deliberately not re-listed here: three separate restatements of that
+  population each drifted to a different count before this entry stopped
+  restating it. rc=1, the reason on stderr, and — for the stale-base shape,
   where both shas resolved — the concrete
   `git rebase --onto <remote_sha> <base_sha> HEAD` remedy also on stderr.
   A third rc=1 source exists past the freshness verdict: a fresh base

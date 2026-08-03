@@ -19,10 +19,12 @@ Plan-document-reviewer verdict: PASS (2026-08-03, round 2; amendment re-review P
   hidden: the reviewer that raised both notes already adjudicated their
   substance in the same verdict (it verified `AGENTS.md:32` is the right
   surface and that the rename partition is correct); both corrections are
-  mechanically verifiable and were verified — the grep returns 11 total, 3 of
-  them this plan's own, leaving 8; and the same reviewer explicitly flagged the
+  mechanically verifiable and were verified — the grep returns eight hits
+  outside this plan, which is the figure Task 1's GREEN acts on (no total
+  including this file's own mentions is stated, here or there: see that
+  section for why); and the same reviewer explicitly flagged the
   loop risk, which this arc has already paid for once (`docs/loom/backlog/2026-08-03-origin-arc-close-out-residue.md`
-  records six rounds where each fix pass authored the next round's finding).
+  records five rounds where each fix pass authored the next round's finding).
   The loop ends by declining the next edit, not by running one more round.
 
 - **Task 1 amendment (2026-08-03) — the plan, not the artifact, was the defect.**
@@ -248,8 +250,11 @@ user-vetoable late.
   - GREEN: that import resolves and the full `test_loom_gate_markers.py` suite
     stays green. The rename's population is **enumerated, not described** — a
     repo-wide grep for `_default_branch_ref` returns **eight hits outside this
-    plan** (eleven in total; the other three are this plan's own mentions of the
-    name, including this line) and only three of the eight are this symbol:
+    plan**, and only three of the eight are this symbol. (No total including
+    this plan's own mentions is stated here, deliberately: every edit to this
+    paragraph changes that total, and the two previous attempts to state it
+    were both wrong for exactly that reason. The eight-hit partition below is
+    the actionable claim and is stable.)
     - **Rename** — the definition (`read loom-code/scripts/loom_gate_markers.py:341`)
       and its one call site (`read loom-code/scripts/loom_gate_markers.py:368`).
     - **Update the citation only** — `read loom-code/hooks/git-guard.py:324`, a

@@ -23,7 +23,13 @@ Task 4 adds a fourth git invocation, `resolve_changed_files`'s
 `diff <ref>...HEAD --name-only` — live-verified by
 `test_cli_emits_file_list_matching_three_dot_diff`, which drives it
 through `main()` and cross-checks stdout against a raw `git diff`
-subprocess run directly against the same repo, byte-for-byte.
+subprocess run directly against the same repo, byte-for-byte. A fifth
+invocation, `_remote_live_default_branch`'s
+`ls-remote --symref <remote> HEAD`, is live-verified by
+`test_stale_origin_head_after_default_branch_rename_refuses` (a genuinely
+renamed upstream default branch, real symref mismatch, no mocking) and
+`test_current_origin_head_still_reports_fresh` (the matching case, so the
+guard is proven not to refuse everything).
 """
 from __future__ import annotations
 
@@ -242,6 +248,62 @@ def test_cli_emits_file_list_matching_three_dot_diff(tmp_path, capsys):
     assert exit_code == 0
     assert captured.out == raw.stdout
     assert captured.out == "new_file.txt\n"
+
+
+def test_stale_origin_head_after_default_branch_rename_refuses(tmp_path):
+    # Whole-branch-review finding: upstream's default branch was renamed
+    # old-main -> main and advanced two commits; old-main is NOT deleted
+    # (the ordinary post-rename state on a real host). The clone's
+    # `origin/HEAD` symref was captured at clone time and never
+    # auto-updates (`git remote set-head origin -a` is a manual step
+    # almost nobody runs), so `default_branch_ref` still resolves to
+    # `origin/old-main` -- a ref that is real, fetchable, and
+    # merge-base-comparable, just not the remote's CURRENT default.
+    # Before this guard, check_freshness fetched old-main (unchanged
+    # since the clone), found merge-base == old-main's tip, and reported
+    # fresh=True while the branch sat two commits behind main -- a false
+    # all-clear indistinguishable from a genuine pass.
+    upstream = tmp_path / "upstream"
+    upstream.mkdir()
+    _git(upstream, "init", "-q", "-b", "old-main")
+    _git(upstream, "config", "user.email", "test@example.com")
+    _git(upstream, "config", "user.name", "Test User")
+    _git(upstream, "commit", "--allow-empty", "-m", "init")
+
+    repo = _clone(tmp_path, upstream)
+    _git(repo, "checkout", "-q", "-b", "feature")
+
+    # Rename the remote's default branch to "main" and advance it two
+    # commits; old-main stays around, unchanged and still fetchable.
+    _git(upstream, "checkout", "-q", "-b", "main")
+    _git(upstream, "commit", "--allow-empty", "-m", "rename 1")
+    _git(upstream, "commit", "--allow-empty", "-m", "rename 2")
+
+    # Confirm the setup actually reproduces the stale-symref state before
+    # asserting on it.
+    assert review_scope.default_branch_ref(repo) == "origin/old-main"
+
+    result = review_scope.check_freshness(repo)
+
+    assert result.fresh is False
+
+
+def test_current_origin_head_still_reports_fresh(tmp_path):
+    # Regression guard for the symref-freshness check above: when
+    # `origin/HEAD` DOES match the remote's live default branch, the new
+    # guard must not refuse a genuinely fresh base — a naive "refuse
+    # when unsure" fix would pass the test above by refusing everything,
+    # including this case.
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+    base_sha = _head(repo)
+    _git(repo, "checkout", "-q", "-b", "feature")
+
+    result = review_scope.check_freshness(repo)
+
+    assert result.fresh is True
+    assert result.base_sha == base_sha
+    assert result.remote_sha == base_sha
 
 
 def _head(repo: Path) -> str:

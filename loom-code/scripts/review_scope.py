@@ -24,12 +24,14 @@ Exit codes:
       the one case where both shas resolved — the concrete
       `git rebase --onto <remote_sha> <base_sha> HEAD` remedy. Every
       other refusal shape has no shas to fill in, so no rebase
-      invocation is printed for it. There are five, and the list is
+      invocation is printed for it. There are seven, and the list is
       exhaustive against `check_freshness`'s early returns: an
       unresolvable default branch, a local-only ref, a failed or
-      expired fetch, a ref that still will not resolve after a
-      successful fetch, and a failed merge-base computation. A third
-      exit-1 source
+      expired fetch, a failed or expired lookup of the remote's live
+      default branch, a default-branch ref that no longer matches the
+      remote's live default branch, a ref that still will not resolve
+      after a successful fetch, and a failed merge-base computation. A
+      third exit-1 source
       exists past the freshness verdict: a fresh base whose
       `resolve_changed_files` diff still fails. That shape carries a
       hardcoded stderr message, not a `FreshnessResult.reason` (no
@@ -40,6 +42,19 @@ This module writes its own stdlib `subprocess` git helper rather than
 importing `loom_gate_markers._git` — that name is private, and reaching
 for a second private cross-module name would recommit the dependency the
 `default_branch_ref` promotion (this repo's Task 1) exists to remove.
+
+A successful fetch of `default_branch_ref`'s ref is not, by itself,
+proof that the ref is still the remote's *current* default branch: a
+clone's local `origin/HEAD` symref is captured once, at clone time, and
+never auto-updates (`git remote set-head origin -a` is a separate manual
+step almost nobody runs). If the remote later renames its default branch
+without deleting the old one — the ordinary post-rename state on a real
+host — the old ref stays real and fetchable, and a freshness check that
+stops at "did the fetch succeed" reports fresh against a branch nobody
+treats as default anymore. `check_freshness` therefore also queries the
+remote's LIVE default branch (`git ls-remote --symref <remote> HEAD`,
+bounded by the same fetch timeout) and refuses on any mismatch or failed
+lookup, rather than trusting the local symref.
 
 §Pinned refusal contract (transcribed verbatim):
 
@@ -121,6 +136,28 @@ def split_fetch_target(ref: str) -> tuple[str, str] | None:
     return remote, branch
 
 
+def _remote_live_default_branch(
+    repo: Path, remote: str, *, timeout: float
+) -> str | None:
+    """Query `remote`'s LIVE default branch via `git ls-remote --symref
+    <remote> HEAD` — the remote's own answer to "what is my default
+    branch right now", independent of anything cached locally. Returns
+    the branch name (no `refs/heads/` prefix), or None on any failure
+    (non-zero exit, timeout, or no `ref:` line in the output). A failed
+    or timed-out lookup is a freshness FAILURE for the caller — it must
+    never fall back to trusting the local `origin/HEAD` symref, which is
+    exactly the value this check exists to cross-verify."""
+    output = _git(repo, "ls-remote", "--symref", remote, "HEAD", timeout=timeout)
+    if not output:
+        return None
+    for line in output.splitlines():
+        if line.startswith("ref:"):
+            parts = line.split()
+            if len(parts) >= 2:
+                return parts[1].removeprefix("refs/heads/")
+    return None
+
+
 def check_freshness(
     repo: Path, *, fetch_timeout: float = _FETCH_TIMEOUT_SECONDS
 ) -> FreshnessResult:
@@ -143,6 +180,24 @@ def check_freshness(
     if not fetched:
         return FreshnessResult(
             fresh=False, reason=f"git fetch {remote} {branch} failed or timed out"
+        )
+
+    live_branch = _remote_live_default_branch(repo, remote, timeout=fetch_timeout)
+    if live_branch is None:
+        return FreshnessResult(
+            fresh=False,
+            reason=(
+                f"could not verify {remote}'s live default branch "
+                "(ls-remote --symref failed or timed out)"
+            ),
+        )
+    if live_branch != branch:
+        return FreshnessResult(
+            fresh=False,
+            reason=(
+                f"default-branch ref is stale: resolved to {branch!r} but "
+                f"{remote}'s current default branch is {live_branch!r}"
+            ),
         )
 
     remote_sha = _git(repo, "rev-parse", ref)
