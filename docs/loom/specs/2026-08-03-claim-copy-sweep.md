@@ -129,12 +129,15 @@ EN 側搜尋的結果本身也是資料：**沒有一個現成工具做這件事
 - 進 `loom-code` plugin 發佈（先在 repo 內證明價值）。
 - 非 `.md` 檔（程式碼註解裡的聲明副本）。
 
-## Open Questions
+## Open Questions — both resolved during implementation
 
-1. **fenced code block 要不要跳過？** `check_doc_citations.py` 不跳，並因此在自己
-   的 dogfood note 上吃了 2/2 誤報。但本工具的語料裡，被 fence 包住的聲明有時
-   **正是**要找的副本（例如引用一段規則原文）。傾向：**不跳過，但在報告裡標記
-   命中位於 fence 內**，把判斷留給人——這比兩種靜默行為都誠實。
-2. **frozen 預設清單是否涵蓋 `docs/loom/audits/`？** audits 是紀錄，但本 repo 的
-   慣例是對 audit **附加勘誤**而非改寫。傾向歸為 operative 並在報告裡註記，
-   因為附加勘誤本身就是一種編輯。
+1. ~~**fenced code block 要不要跳過？**~~ **決定：不跳過，但逐筆標記
+   `[inside fence]`。** `check_doc_citations.py` 不跳並因此在自己的 dogfood note
+   上吃了 2/2 誤報；但靜默跳過會漏掉「被 fence 包住的規則原文」——那正是要找的
+   副本。兩種靜默行為都不誠實，所以兩邊都報、標明是哪一種，判斷留給讀者。
+   理由寫在 `scripts/claim_copy_sweep.py` 的 `fence_state_by_line` docstring。
+2. ~~**frozen 預設清單是否涵蓋 `docs/loom/audits/`？**~~ **決定：不涵蓋，audits
+   算 operative。** 本 repo 對 audit 的慣例是**附加勘誤**，而附加勘誤本身就是
+   一種編輯——一份帶著過期聲明的 audit 仍然在誤導讀者。預設 frozen 只有
+   `docs/loom/archive/`、`docs/loom/dogfood/` 與任何 `CHANGELOG.md`；其餘用
+   `--frozen` 自行宣告。
