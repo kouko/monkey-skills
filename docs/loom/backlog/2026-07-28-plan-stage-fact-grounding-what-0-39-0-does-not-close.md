@@ -69,8 +69,10 @@ start: next time a planning-origin defect reaches close-out despite 0.39.0's con
        dogfood notes. Reviewers must treat pre-pass findings inside fenced code blocks, blockquotes, table cells, and inline examples as
        advisory, not as defects (see `requesting-docs-review/SKILL.md:54` — this caveat lived
        at `requesting-code-review/SKILL.md:97` until loom-code 0.46.0 moved it; that line is
-       now blank, and three further copies of the stale pointer survive outside this entry,
-       filed separately).
+       now blank; further copies of the stale pointer survive outside this entry and are
+       filed at `docs/loom/backlog/2026-08-03-stale-requesting-code-review-97-pointers-outside-this-branch.md`,
+       which lists them by path and deliberately states no total — it is itself inside the
+       corpus a sweep for that pointer walks).
   4. ~~**`Reuse-adequacy` is declarative-only.** Nothing enforces that a task carrying a reuse
      instruction fills the field.~~ **CLOSED 2026-08-03** — Check 17 (v0.43.0+) grades the
      block in four parts, the first being **presence**: a task whose Description instructs

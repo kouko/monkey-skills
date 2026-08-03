@@ -55,6 +55,7 @@ is a reporter, not a gate.
 import os
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 DEFAULT_FROZEN_PREFIXES = (
@@ -83,7 +84,11 @@ def normalize_with_lines(text: str) -> tuple[str, list[int]]:
     lines: list[int] = []
     line = 1
     in_run = False
-    for ch in text:
+    # NFC first: casefold is not a Unicode normalization, so an NFD copy on
+    # disk (macOS copy-paste produces NFD, and this corpus carries 中/日 prose)
+    # would miss an NFC needle. NFC preserves newlines, so line numbers are
+    # unaffected. Both sides run this same pipeline — see the module docstring.
+    for ch in unicodedata.normalize("NFC", text):
         if ch.isspace():
             if not in_run:
                 out.append(" ")
@@ -134,8 +139,20 @@ def fence_state_by_line(text: str) -> list[bool]:
     return states
 
 
-def iter_markdown_files(repo_root: Path):
-    for dirpath, dirnames, filenames in os.walk(repo_root):
+def iter_markdown_files(repo_root: Path, unreadable: list[str]):
+    """Walk for `.md` files, recording directories the walk could not enter.
+
+    `os.walk` defaults to `onerror=None`, which SWALLOWS a directory-level
+    error: every `.md` inside an unreadable directory vanishes with no trace,
+    no entry in the could-not-read list, and an exit 0. That is the same
+    silent-miss the file-level handler exists to prevent, one level up, and it
+    under-reports — the dangerous direction.
+    """
+
+    def on_error(exc: OSError) -> None:
+        unreadable.append(f"{exc.filename} ({type(exc).__name__}, directory)")
+
+    for dirpath, dirnames, filenames in os.walk(repo_root, onerror=on_error):
         dirnames[:] = [d for d in dirnames if d != ".git"]
         for name in sorted(filenames):
             if name.endswith(".md"):
@@ -159,12 +176,10 @@ def is_frozen(rel_path: str, extra_prefixes: tuple[str, ...]) -> bool:
     return any(rel_path.startswith(prefix) for prefix in prefixes)
 
 
-def find_in_text(needle: str, text: str) -> list[tuple[int, bool]]:
-    """Return (line, inside_fence) for every occurrence of `needle` in `text`."""
+def _find_prepared(needle, haystack, line_of, fences) -> list[tuple[int, bool]]:
+    """The matching core, over an already-prepared haystack."""
     if not needle:
         return []
-    haystack, line_of = normalize_with_lines(text)
-    fences = fence_state_by_line(text)
     hits: list[tuple[int, bool]] = []
     pos = haystack.find(needle)
     while pos != -1:
@@ -175,12 +190,22 @@ def find_in_text(needle: str, text: str) -> list[tuple[int, bool]]:
     return hits
 
 
+def find_in_text(needle: str, text: str) -> list[tuple[int, bool]]:
+    """Return (line, inside_fence) for every occurrence of `needle` in `text`.
+
+    Convenience wrapper for a single needle; `sweep` prepares the haystack once
+    per file and calls `_find_prepared` directly.
+    """
+    haystack, line_of = normalize_with_lines(text)
+    return _find_prepared(needle, haystack, line_of, fence_state_by_line(text))
+
+
 def sweep(repo_root: Path, needles: list[str], extra_prefixes: tuple[str, ...]):
     operative: list[tuple[str, int, bool]] = []
     frozen: list[tuple[str, int, bool]] = []
     unreadable: list[str] = []
     swept = 0
-    for path in iter_markdown_files(repo_root):
+    for path in iter_markdown_files(repo_root, unreadable):
         rel = path.relative_to(repo_root).as_posix()
         try:
             text = path.read_text(encoding="utf-8")
@@ -188,9 +213,14 @@ def sweep(repo_root: Path, needles: list[str], extra_prefixes: tuple[str, ...]):
             unreadable.append(f"{rel} ({type(exc).__name__})")
             continue
         swept += 1
+        # Hoisted out of the needle loop: both are needle-independent, and
+        # recomputing them per needle made cost linear in --also count on a
+        # flag that is the tool's own answer to its named synonym leak.
+        haystack, line_of = normalize_with_lines(text)
+        fences = fence_state_by_line(text)
         seen: set[int] = set()
         for needle in needles:
-            for line, inside in find_in_text(needle, text):
+            for line, inside in _find_prepared(needle, haystack, line_of, fences):
                 if line in seen:
                     continue
                 seen.add(line)
@@ -209,6 +239,10 @@ LEAKS = """what this sweep CANNOT see (named here rather than hidden):
   - a self-referential count: a number describing the document it sits in
     changes when the sentence stating it changes, so no fixed string can find
     its next value.
+  - markup INTERIOR to the claim: `the resolver **refuses** when …` is the same
+    words, not a synonym, and the emphasis markers sit inside the phrase, so
+    the match fails. Links, code spans and emphasis are ordinary in this prose.
+    Sweep a fragment that avoids the markup, or sweep both forms with --also.
   - anything outside `.md` files — a copy living in a code comment, a test
     fixture, or a commit message is out of scope by construction."""
 

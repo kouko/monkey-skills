@@ -21,6 +21,7 @@ classification and reporting are exercised, not a mock of them.
 
 import subprocess
 import sys
+import unicodedata
 from pathlib import Path
 
 import pytest
@@ -295,6 +296,41 @@ def test_uppercase_claim_matches_naturally_lowercased_prose(tmp_path):
     write(tmp_path, "docs/loom/specs/sigma.md", "The street sign reads οδος here.\n")
     result = run(tmp_path, "--claim", "The street sign reads ΟΔΟΣ here.")
     assert "docs/loom/specs/sigma.md:1" in result.stdout, result.stdout
+
+
+def test_nfd_copy_on_disk_matches_an_nfc_claim(tmp_path):
+    """casefold is not a Unicode normalization. macOS copy-paste yields NFD, and
+    this repo carries 中/日 prose, so an NFD copy against an NFC needle is an
+    ordinary way to get a confident `operative locations (0)`."""
+    nfd = unicodedata.normalize("NFD", "分支が古いと審査は résumé を拒否する")
+    nfc = unicodedata.normalize("NFC", "分支が古いと審査は résumé を拒否する")
+    assert nfd != nfc, "fixture must actually differ, or the test proves nothing"
+    write(tmp_path, "docs/loom/specs/nfd.md", nfd + "\n")
+    result = run(tmp_path, "--claim", nfc)
+    assert "docs/loom/specs/nfd.md:1" in result.stdout, result.stdout
+
+
+def test_a_directory_it_cannot_enter_is_named_not_skipped(tmp_path):
+    """File-level read errors are already named. A directory the walk cannot
+    enter takes its .md files with it and, before this, left no trace at all."""
+    write(tmp_path, "docs/loom/specs/ok.md", f"{CLAIM}\n")
+    locked = tmp_path / "docs" / "loom" / "locked"
+    locked.mkdir(parents=True)
+    (locked / "hidden.md").write_text(f"{CLAIM}\n", encoding="utf-8")
+    locked.chmod(0o000)
+    try:
+        result = run(tmp_path, "--claim", CLAIM)
+    finally:
+        locked.chmod(0o755)
+    assert result.returncode == 0, result.stderr
+    assert "could not read" in result.stdout.lower(), result.stdout
+    assert "locked" in result.stdout, result.stdout
+
+
+def test_markup_interior_to_the_claim_is_a_named_leak():
+    """`the resolver **refuses** when …` is the same words, so the synonym leak
+    does not cover it. Not fixed — named, per this module's own contract."""
+    assert "markup" in claim_copy_sweep.LEAKS.lower(), claim_copy_sweep.LEAKS
 
 
 @pytest.mark.parametrize(

@@ -50,12 +50,15 @@ that makes the next fix ship a fresh contradiction.
 whitespace on both sides, so hard-wrapped copies cannot hide, and it prints the
 operative / frozen partition plus its own named leaks. Add `--also "<other
 phrasing>"` for every restatement you already know about. **Sweep a phrase, not
-a token**: `--claim "646"` returned thirteen hits across unrelated documents
-where the digits meant something else entirely, while
-`--claim "requesting-code-review/SKILL.md:97"` returned nine real copies where a
-reviewer working from the branch diff had found two — **the review's scope is
-not the claim's population**, and that gap is the whole reason to run the tool
-rather than trust a reader. (2) write the resulting count into the artifact and
+a token**: a bare number as the claim returns hits from every document where
+those digits meant something else entirely, while a distinctive phrase returns
+copies that are actually copies. And **the review's scope is not the claim's
+population** — sweeping a stale `file:line` pointer returned copies in documents
+a reviewer working from the branch diff never saw, which is the whole reason to
+run the tool rather than trust a reader. Neither observation carries a count
+here on purpose: this entry is itself in the swept corpus, so any total written
+would count its own sentences — leak three, stated below and demonstrated twice
+on this arc. (2) write the resulting count into the artifact and
 partition it —
 which hits change, which must NOT (same-name-different-symbol is the trap), which
 are out of scope — rather than writing "every reference"; (3) never state a total that counts

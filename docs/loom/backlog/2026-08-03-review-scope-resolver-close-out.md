@@ -1,9 +1,9 @@
 ---
 name: 2026-08-03-review-scope-resolver-close-out
-description: what the review-scope-resolver arc shipped, the two decisions its branch is waiting on, and the four-item queue that came out of it — recorded here because the session's own diagnosis was that a queue living only in conversation evaporates
+description: what the review-scope-resolver arc shipped, and the queue that came out of it — recorded here because the session's own diagnosis was that a queue living only in conversation evaporates; the arc itself merged as PR #641, so only the queue is still live
 status: OPEN
-origin: the review-scope-resolver arc (loom-code 0.46.0, branch feat-review-scope-resolver, unpushed)
-start: before the branch is pushed, or before the next arc begins — whichever comes first
+origin: the review-scope-resolver arc (loom-code 0.46.0), merged as PR #641, squash 2b8785d3
+start: before the next arc begins — the queue below is what remains; the push gate this entry originally carried is spent
 ---
 
 ## What shipped
@@ -21,21 +21,24 @@ against the wrong set of files. It says nothing about whether the review of
 those files is correct. Those two were conflated repeatedly during the arc and
 the CHANGELOG now separates them explicitly.
 
-## The two decisions the branch is waiting on
+## The two decisions the branch was waiting on — both resolved
 
-The branch is complete and verified but **cannot honestly be pushed yet**:
+**Struck 2026-08-03.** This section described a live push gate on branch
+`feat-review-scope-resolver`. That branch shipped: PR #641, squash `2b8785d3`,
+now an ancestor of `origin/main`. Kept as a struck record rather than deleted
+because the queue below is still live and because the shape is worth seeing —
+the gate was real, it was resolved by an authorized third round plus the user's
+word, and the section outlived the event it described by long enough for two
+separate later edits to this file to pass over it untouched.
 
-1. **The docs arm's last verdict was NEEDS_REVISION.** Its three findings were
-   fixed and each fix was mechanically verified, but no reviewer has passed the
-   fixed version. `requesting-docs-review`'s convergence contract caps the loop
-   at two rounds and permits a third **only on explicit user authorization**, so
-   no third round was run. A review-pass gate marker cannot be minted from a
-   NEEDS_REVISION verdict, and minting one on the orchestrator's own
-   verification would be exactly the self-signed waiver the gate exists to
-   prevent. Push therefore needs either an authorized round 3 or a knowing,
-   recorded waiver.
-2. **Push and PR are outward-facing.** They need the user's word regardless of
-   the above.
+1. ~~**The docs arm's last verdict was NEEDS_REVISION.**~~ Resolved: an
+   authorized round ran and the branch merged. The contract it names is
+   unchanged and still governs — `requesting-docs-review` caps the loop at two
+   rounds and permits a third only on explicit user authorization, a review-pass
+   gate marker cannot be minted from a NEEDS_REVISION verdict, and minting one
+   on the orchestrator's own verification would be exactly the self-signed
+   waiver the gate exists to prevent.
+2. ~~**Push and PR are outward-facing.**~~ Resolved: the user gave the word.
 
 Close-out verification that IS complete: the suite this branch runs against —
 `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/` —
