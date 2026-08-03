@@ -2,7 +2,7 @@
 name: 2026-08-03-review-scope-resolver-close-out
 description: what the review-scope-resolver arc shipped, the two decisions its branch is waiting on, and the four-item queue that came out of it — recorded here because the session's own diagnosis was that a queue living only in conversation evaporates
 status: OPEN
-origin: the review-scope-resolver arc (loom-code 0.46.0, branch feat-review-scope-resolver, 9 commits, unpushed)
+origin: the review-scope-resolver arc (loom-code 0.46.0, branch feat-review-scope-resolver, unpushed)
 start: before the branch is pushed, or before the next arc begins — whichever comes first
 ---
 
@@ -39,8 +39,10 @@ The branch is complete and verified but **cannot honestly be pushed yet**:
 
 Close-out verification that IS complete: 806 tests pass; backlog index validate
 and check, loom-memory integrity, living-spec index, Codex manifest sync, and
-the skill-content version-bump gate all exit 0; all nine commits carry
-retrievable memory trailers.
+the skill-content version-bump gate all exit 0; every commit on the branch
+carries retrievable memory trailers. (No commit count is stated: this entry is
+itself committed, so any number written here is stale the moment it lands —
+the same self-referential-count trap this arc hit four times before.)
 
 ## The queue this arc produced, in priority order
 

@@ -22,8 +22,8 @@ were the brief's own prose, which implementation work does not refresh. The
 count is what converted a plausible instruction into a correct one.
 
 A third leak, learned the hard way in that same partition: **a count of a
-string inside the document stating the count is not stable.** Two successive
-attempts to state the grand total were both wrong, because each correction
+string inside the document stating the count is not stable.** Successive
+attempts to state the grand total were each wrong, because every correction
 added another occurrence of the string it was counting. State the partition
 that drives action; do not state a total that includes the sentence stating
 it.
@@ -41,7 +41,7 @@ it.
 
 **Why:** an edit to a claim is only as correct as the population it was measured
 against, and "I grepped it" reads identically whether the population was right
-or short. The two leaks matter more than the rule: a repairer who trusts a
+or short. The leaks matter more than the rule: a repairer who trusts a
 single-line sweep gets a confident count that is wrong in exactly the direction
 that makes the next fix ship a fresh contradiction.
 
@@ -51,8 +51,7 @@ spans them; (2) write the resulting count into the artifact and partition it —
 which hits change, which must NOT (same-name-different-symbol is the trap), which
 are out of scope — rather than writing "every reference"; (3) never state a total that counts
 occurrences inside the document making the claim — that number changes with the
-sentence stating it, and on this arc three successive attempts to state one were
-each wrong; and (4) state that the synonym leak stays open, because a rule that
+sentence stating it, and on this arc every attempt to state one was wrong; and (4) state that the synonym leak stays open, because a rule that
 presents itself as complete is worse than one that names its hole.
 
 **This entry is the persistence half only, and that is a deliberate, stated

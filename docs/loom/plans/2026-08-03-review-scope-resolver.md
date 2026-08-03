@@ -13,8 +13,9 @@ Plan-document-reviewer verdict: PASS (2026-08-03, round 2; amendment re-review P
   The plan reached PASS 15/15 at round 2, and an amendment re-review returned
   PASS 15/15 again with two notes — both mine, both non-gating: Task 4's
   `Files touched` omitted `AGENTS.md` while its GREEN required editing it, and
-  Task 1's GREEN said the repo-wide grep returns eight hits when it returns
-  eleven. Both are corrected above. A `Files touched` change normally
+  Task 1's GREEN stated a hit count that was short. Both are corrected above —
+  the count by deleting the total rather than restating it, for the reason
+  Task 1's GREEN now gives. A `Files touched` change normally
   re-reviews, and that round is **not** being run. Reasons, stated rather than
   hidden: the reviewer that raised both notes already adjudicated their
   substance in the same verdict (it verified `AGENTS.md:32` is the right
