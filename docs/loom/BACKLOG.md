@@ -69,6 +69,7 @@
 - [2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift](backlog/2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift.md) — loom_gate_markers' per-finding field scanner anchors on one column, so two shapes of benign indentation drift refuse a well-formed verdict and blame the wrong field
 - [2026-08-02-quote-informativeness-needs-corpus-selectivity-not-length](backlog/2026-08-02-quote-informativeness-needs-corpus-selectivity-not-length.md) — no length or width threshold can separate an informative origin quote from a corpus-universal fragment — the measured axis is document frequency, and a selectivity gate is the successor mechanism
 - [2026-08-03-origin-arc-close-out-residue](backlog/2026-08-03-origin-arc-close-out-residue.md) — four small claim-accuracy items left open when the finding-origin-attribution arc shipped, each a one-clause edit that a fifth review round would have cost more to catch than to fix later
+- [2026-08-03-review-scope-resolver-close-out](backlog/2026-08-03-review-scope-resolver-close-out.md) — what the review-scope-resolver arc shipped, the two decisions its branch is waiting on, and the four-item queue that came out of it — recorded here because the session's own diagnosis was that a queue living only in conversation evaporates
 
 ## PARKED
 - [2026-07-08-automate-research-toolkit-s-sync-primitives-sh](backlog/2026-07-08-automate-research-toolkit-s-sync-primitives-sh.md) — Automate research-toolkit's sync-primitives.sh
