@@ -25,6 +25,28 @@ Plan-document-reviewer verdict: PASS (2026-08-03, round 2; amendment re-review P
   records six rounds where each fix pass authored the next round's finding).
   The loop ends by declining the next edit, not by running one more round.
 
+- **Task 1 amendment (2026-08-03) — the plan, not the artifact, was the defect.**
+  Round 2 of Task 1's review produced contradicting arms on one artifact:
+  code-quality returned PASS 7/7 and had itself REQUESTED the docstring in
+  round 1; spec returned NEEDS_REVISION holding that the docstring is outside
+  Task 1's authorised population and duplicates §Pinned local-ref rule a task
+  early. Per
+  `docs/loom/memory/contradicting-reviewer-verdicts-localize-the-defect-to-the-spec.md`,
+  the blocking arm's spec sentence was read rather than the artifact re-judged.
+  That sentence is this plan's own, in Task 1's GREEN, quoted as it stood:
+  *"The rename's population is **enumerated, not described**"*. It enumerates
+  **which occurrences of the string `_default_branch_ref` change** — it was
+  never a list of every line Task 1 may touch, and it does not say so. Both
+  readings were available, so the ambiguity is the defect and it is mine.
+  **Amended authorisation**: Task 1 MAY document the contract of the symbol it
+  promotes, at the definition site, because that is what makes a newly public
+  surface honest. It may NOT state downstream policy: `default_branch_ref` has
+  no notion of freshness, so the pin's sentence *"Local-only is a freshness
+  FAILURE, never a fresh verdict"* does not belong in it — that sentence stays
+  with Tasks 2 and 3, its only transcribers. The orchestrator applied the
+  one-clause trim directly rather than re-dispatching, since re-dispatching an
+  implementer on a contradiction undoes correct work.
+
 - **Kickoff sweep result: zero one-way-door decisions to brief.** The round's
   two genuinely irreversible choices — the resolver runs the fetch itself, and
   it refuses rather than warns — were both ratified by the user at brief stage

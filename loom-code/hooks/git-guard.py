@@ -321,7 +321,7 @@ def _head(cwd, git_globals=()):
 
 def _default_branch_ref(cwd, git_globals=()):
     """Best-effort default-branch ref for merge-base computation, or
-    None when none resolve (mirrors loom_gate_markers._default_branch_ref;
+    None when none resolve (mirrors loom_gate_markers.default_branch_ref;
     duplicated here since this hook is stdlib-only/dependency-free)."""
     res = _git(["symbolic-ref", "-q", "refs/remotes/origin/HEAD"], cwd, git_globals)
     if res.returncode == 0:

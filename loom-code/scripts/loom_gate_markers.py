@@ -338,13 +338,22 @@ def _show_committed_file(
     return content, None
 
 
-def _default_branch_ref(repo: Path) -> str | None:
+def default_branch_ref(repo: Path) -> str | None:
     """Best-effort default-branch ref for merge-base computation.
 
     Tries origin/HEAD's symbolic ref, then local `main`, then local
     `master`. Returns None when none resolve — callers then omit the
     patch-id fields entirely (fail-closed: the fallback never activates
     for that marker; strict head_sha equality remains the only path).
+
+    Returns a revision NAME, not a fetch target — one of three shapes:
+    `origin/<branch>` (from origin/HEAD, `refs/remotes/` prefix
+    stripped), a bare local `main` / `master`, or None. A return with
+    no remote component (the bare-local shape) is a LOCAL-ONLY ref:
+    comparing against it answers "am I current with my own local
+    main", which is a false all-clear — callers must not treat it as
+    equivalent to the `origin/<branch>` shape. What a caller then DOES
+    about that is the caller's policy, not this function's.
     """
     origin_head = _git(repo, "symbolic-ref", "-q", "refs/remotes/origin/HEAD")
     if origin_head:
@@ -365,7 +374,7 @@ def compute_patch_id(repo: Path) -> tuple[str, str] | None:
     missing pair means the patch-id fallback never activates; strict
     head_sha equality is the only path `git-guard.py` can take).
     """
-    ref = _default_branch_ref(repo)
+    ref = default_branch_ref(repo)
     if ref is None:
         return None
     base_sha = _git(repo, "merge-base", ref, "HEAD")

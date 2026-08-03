@@ -2710,3 +2710,16 @@ def test_not_a_git_repo_exits_2_for_every_subcommand(tmp_path, capsys):
     for argv in argvs:
         assert main(argv) == 2, argv
     assert "git" in capsys.readouterr().err.lower()
+
+
+# ------------------------------------------------------------------ public surface
+
+
+def test_default_branch_ref_is_importable_as_a_public_name():
+    # review_scope.py (a sibling production module) needs to depend on
+    # this helper's return semantics without importing a private name —
+    # the existing cross-module precedent (check-living-spec-index.py)
+    # only imports public symbols.
+    from loom_gate_markers import default_branch_ref
+
+    assert callable(default_branch_ref)
