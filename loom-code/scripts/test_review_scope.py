@@ -19,6 +19,11 @@ repo with no default branch resolvable at all, and a repo with a
 LOCAL-ONLY default-branch ref — a real, fetchable `origin` remote IS
 configured, but `refs/remotes/origin/HEAD` is unset, so
 `default_branch_ref` falls through to the bare local `main` shape.
+Task 4 adds a fourth git invocation, `resolve_changed_files`'s
+`diff <ref>...HEAD --name-only` — live-verified by
+`test_cli_emits_file_list_matching_three_dot_diff`, which drives it
+through `main()` and cross-checks stdout against a raw `git diff`
+subprocess run directly against the same repo, byte-for-byte.
 """
 from __future__ import annotations
 
@@ -159,6 +164,84 @@ def test_local_only_ref_refuses(tmp_path):
     assert result.fresh is False
     assert result.base_sha is None
     assert result.remote_sha is None
+
+
+def test_cli_refuses_stale_base_with_rebase_remedy(tmp_path, capsys):
+    # Task 4 RED (a): the CLI on a stale-base repo must exit non-zero and
+    # print the CONCRETE `git rebase --onto <remote_sha> <base_sha> HEAD`
+    # remedy — both shas filled in, not a template. Fails today because
+    # review_scope.main does not exist yet.
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+    base_sha = _head(repo)
+
+    _git(repo, "checkout", "-q", "-b", "feature")
+    _git(upstream, "commit", "--allow-empty", "-m", "already on default branch")
+    remote_sha = _head(upstream)
+
+    exit_code = review_scope.main(["--repo", str(repo)])
+    captured = capsys.readouterr()
+
+    assert exit_code != 0
+    assert captured.out == ""
+    assert f"git rebase --onto {remote_sha} {base_sha} HEAD" in captured.err
+
+
+def test_cli_refuses_without_shas_prints_no_rebase_remedy(tmp_path, capsys):
+    # Finding 2 (round 2): a refusal shape whose shas never resolved
+    # (here, no default branch resolvable at all — same setup as
+    # test_no_resolvable_default_branch_refuses, driven through main()
+    # instead of check_freshness directly) must print the reason but
+    # NOT the rebase remedy line — there are no shas to fill it with.
+    # Guards the `result.base_sha is not None and result.remote_sha is
+    # not None` gate at review_scope.py: a regression that drops it
+    # (e.g. replacing the condition with `True`) would print
+    # "git rebase --onto None None HEAD", an instruction that cannot
+    # be run.
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q", "-b", "not-main-or-master")
+    _git(repo, "config", "user.email", "test@example.com")
+    _git(repo, "config", "user.name", "Test User")
+    _git(repo, "commit", "--allow-empty", "-m", "init")
+
+    exit_code = review_scope.main(["--repo", str(repo)])
+    captured = capsys.readouterr()
+
+    assert exit_code != 0
+    assert captured.out == ""
+    assert "review-scope: refused — no default branch resolved" in captured.err
+    assert "git rebase --onto" not in captured.err
+
+
+def test_cli_emits_file_list_matching_three_dot_diff(tmp_path, capsys):
+    # Task 4 RED (b): on a fresh base, the CLI's stdout must be
+    # byte-identical to `git diff <default-branch>...HEAD --name-only`
+    # run directly against the same repo — not merely the same set of
+    # names, the same bytes (ordering, trailing newline included). Fails
+    # today because review_scope.main does not exist yet.
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+
+    _git(repo, "checkout", "-q", "-b", "feature")
+    (repo / "new_file.txt").write_text("hello\n")
+    _git(repo, "add", "new_file.txt")
+    _git(repo, "commit", "-m", "add new_file")
+
+    exit_code = review_scope.main(["--repo", str(repo)])
+    captured = capsys.readouterr()
+
+    default_branch = review_scope.default_branch_ref(repo)
+    raw = subprocess.run(
+        ["git", "-C", str(repo), "diff", f"{default_branch}...HEAD", "--name-only"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert exit_code == 0
+    assert captured.out == raw.stdout
+    assert captured.out == "new_file.txt\n"
 
 
 def _head(repo: Path) -> str:

@@ -1,16 +1,36 @@
-"""Review-scope resolver: a freshness verdict on a branch's merge-base.
+"""Review-scope resolver: a freshness verdict on a branch's merge-base,
+and the changed-file list gated on it.
 
 `check_freshness` derives a fetch target from `default_branch_ref`'s
 revision name, fetches that ref narrowly, and reports whether the
 branch's merge-base with the default branch is the remote's current
-tip. It never exits and returns no file list — the CLI entry point and
-the changed-file-list resolution are later work on this module — but
-every way freshness can fail to be established now REFUSES rather than
+tip. Every way freshness can fail to be established REFUSES rather than
 falling back to a verdict computed from whatever is on disk: see
 §Pinned refusal contract below. `FreshnessResult.fresh is False` IS the
 refusal signal, for a genuinely stale base and for an unestablishable
 one alike; `base_sha`/`remote_sha` stay `None` on the latter, since no
 comparison ever ran.
+
+`main` is the CLI entry point: `python3 review_scope.py [--repo <path>]`.
+
+Exit codes:
+  0 — the base is fresh. The branch's changed-file list is printed to
+      stdout, one path per line, byte-identical to
+      `git diff <default-branch>...HEAD --name-only` (three-dot,
+      unchanged — the brief's §Decision is that the defect was the
+      base, never the dot count).
+  1 — refusal. No file list is printed. stderr carries the reason from
+      `FreshnessResult.reason`, and — only for the stale-base shape,
+      the one case where both shas resolved — the concrete
+      `git rebase --onto <remote_sha> <base_sha> HEAD` remedy. The
+      other refusal shapes (unresolvable default branch, a local-only
+      ref, a failed/expired fetch) have no shas to fill in, so no
+      rebase invocation is printed for them. A third exit-1 source
+      exists past the freshness verdict: a fresh base whose
+      `resolve_changed_files` diff still fails. That shape carries a
+      hardcoded stderr message, not a `FreshnessResult.reason` (no
+      `FreshnessResult` describes it — the verdict was already fresh),
+      and prints no rebase remedy either.
 
 This module writes its own stdlib `subprocess` git helper rather than
 importing `loom_gate_markers._git` — that name is private, and reaching
@@ -34,7 +54,9 @@ fresh verdict.
 """
 from __future__ import annotations
 
+import argparse
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -136,3 +158,56 @@ def check_freshness(
         base_sha=base_sha,
         remote_sha=remote_sha,
     )
+
+
+def resolve_changed_files(repo: Path, ref: str) -> list[str] | None:
+    """Return `repo`'s branch's changed-file list against `ref`, computed
+    the same way the review stations do today — `git diff <ref>...HEAD
+    --name-only`, three-dot — so the output is byte-identical to what
+    they already compute. Returns None on any git failure; an empty list
+    is a valid ("no changes") result, distinct from failure."""
+    output = _git(repo, "diff", f"{ref}...HEAD", "--name-only")
+    if output is None:
+        return None
+    if output == "":
+        return []
+    return output.splitlines()
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry: `python3 review_scope.py [--repo <path>]` (default cwd).
+    See the module docstring for the exit-code contract."""
+    parser = argparse.ArgumentParser(
+        description="Resolve review scope: a changed-file list gated on base freshness"
+    )
+    parser.add_argument("--repo", default=".", help="repo path (default: cwd)")
+    args = parser.parse_args(argv)
+    repo = Path(args.repo)
+
+    result = check_freshness(repo)
+    if not result.fresh:
+        print(f"review-scope: refused — {result.reason}", file=sys.stderr)
+        if result.base_sha is not None and result.remote_sha is not None:
+            print(
+                "review-scope: rebase onto the current base: "
+                f"git rebase --onto {result.remote_sha} {result.base_sha} HEAD",
+                file=sys.stderr,
+            )
+        return 1
+
+    ref = default_branch_ref(repo)
+    files = resolve_changed_files(repo, ref) if ref is not None else None
+    if files is None:
+        print(
+            "review-scope: refused — changed-file list could not be resolved",
+            file=sys.stderr,
+        )
+        return 1
+
+    for path in files:
+        print(path)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

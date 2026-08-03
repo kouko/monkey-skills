@@ -103,6 +103,21 @@ Role boundaries enforced by behavior, not reading restrictions:
   body file has no index line, an index line points to a missing file, a
   filename diverges from its frontmatter `name`, or an index description
   isn't byte-identical to its frontmatter `description`; rc=0 when clean.
+- **Resolve review scope** (the scope input a review station dispatches
+  from): `python3 loom-code/scripts/review_scope.py [--repo <path>]`
+  (default cwd) — fetches the default branch narrowly, verifies the
+  branch's merge-base is still the remote's current tip, and only then
+  prints the changed-file list, one path per line, byte-identical to
+  `git diff <default-branch>...HEAD --name-only` (three-dot, unchanged);
+  rc=0 with the list on stdout. Any way freshness cannot be established
+  (stale base, unresolvable default branch, a local-only ref, or a
+  failed/expired fetch) REFUSES instead of printing a list it cannot
+  vouch for: rc=1, the reason on stderr, and — for the stale-base shape,
+  where both shas resolved — the concrete
+  `git rebase --onto <remote_sha> <base_sha> HEAD` remedy also on stderr.
+  A third rc=1 source exists past the freshness verdict: a fresh base
+  whose changed-file diff itself fails — a hardcoded stderr message,
+  not a `FreshnessResult.reason`, and no rebase remedy either.
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams
