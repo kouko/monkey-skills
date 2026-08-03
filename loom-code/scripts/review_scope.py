@@ -1,16 +1,27 @@
 """Review-scope resolver: a freshness verdict on a branch's merge-base.
 
-Task 2 of this module's build: `check_freshness` derives a fetch target
-from `default_branch_ref`'s revision name, fetches that ref narrowly, and
-reports whether the branch's merge-base with the default branch is the
-remote's current tip. It REPORTS only — it never refuses and never exits;
-turning a non-fresh result into a refusal (and the file-list resolution +
-CLI entry point) is later work on this module.
+`check_freshness` derives a fetch target from `default_branch_ref`'s
+revision name, fetches that ref narrowly, and reports whether the
+branch's merge-base with the default branch is the remote's current
+tip. It never exits and returns no file list — the CLI entry point and
+the changed-file-list resolution are later work on this module — but
+every way freshness can fail to be established now REFUSES rather than
+falling back to a verdict computed from whatever is on disk: see
+§Pinned refusal contract below. `FreshnessResult.fresh is False` IS the
+refusal signal, for a genuinely stale base and for an unestablishable
+one alike; `base_sha`/`remote_sha` stay `None` on the latter, since no
+comparison ever ran.
 
 This module writes its own stdlib `subprocess` git helper rather than
 importing `loom_gate_markers._git` — that name is private, and reaching
 for a second private cross-module name would recommit the dependency the
 `default_branch_ref` promotion (this repo's Task 1) exists to remove.
+
+§Pinned refusal contract (transcribed verbatim):
+
+A stale base, or any failure to establish freshness, REFUSES.
+The resolver never returns a file list it cannot vouch for, and a
+station that receives a refusal STOPS before dispatching anything.
 
 §Pinned local-ref rule (transcribed verbatim):
 
@@ -88,7 +99,9 @@ def check_freshness(
     repo: Path, *, fetch_timeout: float = _FETCH_TIMEOUT_SECONDS
 ) -> FreshnessResult:
     """Report whether `repo`'s HEAD branch base is current with the
-    remote default branch. Reports only — see module docstring."""
+    remote default branch. Never exits — see module docstring; every
+    failure-to-establish-freshness shape refuses via `fresh=False` with
+    `base_sha`/`remote_sha` left `None`, per §Pinned refusal contract."""
     ref = default_branch_ref(repo)
     if ref is None:
         return FreshnessResult(fresh=False, reason="no default branch resolved")
