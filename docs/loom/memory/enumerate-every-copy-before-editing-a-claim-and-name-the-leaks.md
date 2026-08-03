@@ -45,9 +45,12 @@ or short. The leaks matter more than the rule: a repairer who trusts a
 single-line sweep gets a confident count that is wrong in exactly the direction
 that makes the next fix ship a fresh contradiction.
 
-**How to apply.** Before editing any claim that could have copies: (1) sweep with
-the line-wrap in mind — join hard-wrapped lines first, or use a matcher that
-spans them; (2) write the resulting count into the artifact and partition it —
+**How to apply.** Before editing any claim that could have copies: (1) run
+`python3 scripts/claim_copy_sweep.py --claim "<the sentence>"` — it normalizes
+whitespace on both sides, so hard-wrapped copies cannot hide, and it prints the
+operative / history partition plus its own named leaks. Add `--also "<other
+phrasing>"` for every restatement you already know about; (2) write the
+resulting count into the artifact and partition it —
 which hits change, which must NOT (same-name-different-symbol is the trap), which
 are out of scope — rather than writing "every reference"; (3) never state a total that counts
 occurrences inside the document making the claim — that number changes with the
@@ -59,9 +62,26 @@ limit.** The discipline lived until now in a `.claude/handoffs/` file, which
 `.gitignore` excludes, plus transcripts that age out — the same "nowhere" answer
 that [[an-instrument-can-be-correct-at-every-step-and-still-not-support-its-judgment]]
 identifies as the fatal property of a measurement that never persists. Moving it
-here fixes where it lives, not what it is: it is still narrative, and nothing
-mechanically obliges a repairer to hit it. The mechanism — a repairer-side
-pre-action or an unwrapping scan script — is the open half.
+here fixes where it lives, not what it is.
+
+**The unwrapping half is now mechanised; the obligation half is not.**
+`scripts/claim_copy_sweep.py` (2026-08-03) closes the hard-wrap leak. Measured
+live on this corpus against a phrase used across the loom skills, the sweep
+returned every file a contiguous grep returned **plus** files grep reported as
+clean — and one of those was this store's own hard-wrap entry, whose copy of
+the phrase is split across a line break. No total is stated here on purpose:
+the first attempt at this passage quoted one, and the count moved between two
+runs minutes apart because writing the passage added the phrase to the corpus
+it was counting. That is leak three, live. Re-run the command rather than
+citing a figure.
+The sweep additionally separates operative hits from history (plugin
+CHANGELOGs, in that run), because
+[[big-rename-operative-frozen-sweep]] records an automated sweep rewriting
+history into self-contradiction. It reports and never edits, for the same
+reason. **Nothing still obliges a repairer to run it** — that was left open
+deliberately rather than added as another gate; the synonym leak likewise
+stays open by nature, and `--also` only covers restatements you already know
+about.
 [[pin-shared-wording-in-plan-copies-transcribe-from-pin]] is the prevention-side
 sibling: it stops copies from diverging when you already know a wording will fan
 out; this entry is for the copies you did not know about.
