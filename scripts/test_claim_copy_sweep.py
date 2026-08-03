@@ -367,7 +367,26 @@ def test_normalization_is_idempotent():
 
 
 @pytest.mark.parametrize(
-    "text", ["ΟΔΟΣ", "οδος", "ΣΣΣ", "Straße", "STRASSE", "İstanbul", "ﬁle", "ǅ", "ẞ"]
+    "text",
+    [
+        "ΟΔΟΣ",
+        "οδος",
+        "ΣΣΣ",
+        "Straße",
+        "STRASSE",
+        "İstanbul",
+        "ﬁle",
+        "ǅ",
+        "ẞ",
+        # U+0345 iota subscript with a second combining mark: the classic
+        # casefold non-invariance trap, and the ONLY case that pins the FIRST
+        # NFC pass. Without it, deleting `normalize("NFC", text)` leaves the
+        # whole suite green — found by mutation, not by reading.
+        # Written as escapes deliberately: the two combining marks must stay
+        # in THIS order (U+0345 then U+0301); reversed, the mutant survives,
+        # and a literal here is one editor away from being silently reordered.
+        "\u0428\u0345\u0301",
+    ],
 )
 def test_normalization_is_canonical_caseless_match(text):
     """The pipeline is NFC → casefold → NFC, the canonical caseless match of

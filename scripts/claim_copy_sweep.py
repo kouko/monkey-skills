@@ -49,7 +49,7 @@ that hides what it cannot see ships as reliable and misses silently. That
 includes files this run could not read — they are listed, not skipped in
 silence.
 
-Read-only. Stdlib only (`os`, `pathlib`, `re`, `sys`).
+Read-only. Stdlib only (`os`, `pathlib`, `sys`, `unicodedata`).
 
 Exit codes: 0 = the sweep ran (any number of hits, including none);
 2 = usage error. There is deliberately no "found too many" failure code — this
@@ -57,7 +57,6 @@ is a reporter, not a gate.
 """
 
 import os
-import re
 import sys
 import unicodedata
 from pathlib import Path
@@ -67,8 +66,6 @@ DEFAULT_FROZEN_PREFIXES = (
     "docs/loom/dogfood/",
 )
 DEFAULT_FROZEN_BASENAMES = frozenset({"CHANGELOG.md"})
-
-_WHITESPACE_RUN = re.compile(r"\s+")
 
 
 def normalize_with_lines(text: str) -> tuple[str, list[int]]:
