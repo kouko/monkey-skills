@@ -201,11 +201,17 @@ def test_frontmatter_name_and_trigger_description():
 def test_docs_only_dispatch_trigger():
     """Step 1 states the mechanical trigger: diff non-empty AND every
     file ends in `.md`; any non-.md file routes back to
-    requesting-code-review."""
+    requesting-code-review.
+
+    The trigger's scope now comes from the review-scope resolver
+    (`review_scope.py`) rather than a raw `git diff` invocation --
+    `docs/loom/plans/2026-08-03-review-scope-resolver.md` Task 6 requires
+    deleting the unconditional branch-diff call, so this pin follows the
+    new mechanism instead of the retired one."""
     low = _norm(_steps_window(_text())).lower()
-    assert "git diff main...head --name-only" in low, (
-        "must name the exact trigger command -- an orchestrator at any "
-        "tier must be able to run this mechanically"
+    assert "review_scope.py" in low, (
+        "must name the resolver CLI that supplies the scope -- an "
+        "orchestrator at any tier must be able to run this mechanically"
     )
     assert "non-empty" in low, (
         "must state the diff must be non-empty (empty diff is vacuously "
