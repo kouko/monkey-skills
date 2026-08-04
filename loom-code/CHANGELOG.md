@@ -14,9 +14,9 @@ Versioning: [Semantic Versioning](https://semver.org/).
   and never said where the range came from — not the branch base, not the
   merge-base, and not recoverable from the diff. The rule was executable only
   by an orchestrator that happened to remember which commit the previous
-  round reviewed, which no passage asked it to record. Step 3 now records the
-  HEAD sha each dispatch reviews and repeats it in the surfaced result;
-  Directive 2 defines the range as `<previous round's sha>..HEAD` and
+  round reviewed, which no passage asked it to record. Step 3 now states the HEAD
+  sha each dispatch reviews and Step 5 surfaces it; Directive 2 defines the
+  range as `<previous round's sha>..HEAD` and
   **falls back to `unbounded` when no prior sha can be found**. The
   `docs-reviewer` contract carries the same fallback for a range it cannot
   resolve. The asymmetry justifying that direction is **visibility, not
@@ -24,11 +24,13 @@ Versioning: [Semantic Versioning](https://semver.org/).
   pre-existing pool and can consume a round under the cap — but every cost is
   visible and decidable, while a wrongly-guessed range suppresses findings
   nobody ever saw.
-- **The sha now has a carrier that outlives its session.** `reviewed_sha:` is
-  a REQUIRED field in the panel verdict and in the `docs-reviewer` output
-  contract, and Step 5 surfaces it. Before this, "record the sha" meant the
-  dispatching orchestrator remembering it, which is why the 0.48.0 rule was
-  executable in one session and not across a handoff.
+- **The sha now has a field, and the contract states where that stops.**
+  `reviewed_sha:` is REQUIRED in the panel verdict and in the `docs-reviewer`
+  output contract, and Step 5 surfaces it — enough for the next round in the
+  same session. Across a session boundary nothing persists the verdict, so a
+  resuming round takes the `unbounded` fallback; Directive 2 says so plainly
+  rather than implying continuity it cannot deliver
+  (`docs/loom/backlog/2026-08-04-a-delta-scoped-round-cannot-resume-across-a-session.md`).
 
 ## [0.48.0] — 2026-08-04 — the docs arm stops minting on a mixed branch, and later rounds scope to the delta
 
