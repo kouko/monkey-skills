@@ -5,6 +5,39 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.48.0] — 2026-08-04 — the docs arm stops minting on a mixed branch, and later rounds scope to the delta
+
+### Fixed
+
+- **The docs arm no longer mints the review-pass marker on a mixed branch.**
+  Step 4 instructed the mint unconditionally while `requesting-code-review`
+  asserted the opposite ("its own mint step does not fire here") — a carve-out
+  the delegate never carried. A docs arm following its own contract could
+  therefore satisfy `git-guard.py`'s push gate from a verdict that never saw
+  the code arm. Step 4 now keys the mint on `read-context`, which is supplied
+  on exactly the mixed path.
+
+### Changed
+
+- **From round 2 onward, what a reviewer may RAISE is scoped to the round's
+  delta; what it READS is not.** Findings must be about text the delta changed
+  or a contradiction between that delta and unchanged text; anything else is
+  listed out-of-scope. A review does two jobs and only one terminates —
+  sampling the artifact's pre-existing defect pool, and verifying this round's
+  edits. Round 1 does the first, later rounds the second. Measured: two
+  delta-scoped arms re-found both gating findings two unbounded arms found,
+  and suppressed 13 low-value observations. Round 1 stays unbounded
+  **provisionally** — only until a standing sweep of pre-existing defects
+  exists — and an authorized extra round declares its own scope rather than
+  inheriting one from its number.
+- **Three over-claims corrected in the 0.47.0 text and its source audit.**
+  "Two confirmed by running the cited command" — only one command decides its
+  finding. "A deterministic check outranks another round" — neither worked
+  example was answerable by a detector; the category is a standing mechanism
+  (checker, format rule, or a change to what the reviewer is handed). "An
+  empty round is not a reachable state" — true for an artifact carrying many
+  small real defects, which is the measured condition, not a universal.
+
 ## [0.47.0] — 2026-08-04 — the docs arm can open the code it is told to check
 
 ### Added

@@ -59,9 +59,12 @@ The result that was not predicted is the load-bearing one:
 All seven were checked, but not to the same depth, and the difference
 matters to what this audit may be cited for. Each of the seven was read
 against the text it cited and found to describe that text accurately —
-no finding pointed at a passage that did not say what it claimed. Two
-were additionally confirmed by running the command that decides them,
-both against artifacts that had passed round 4 that same day:
+no finding pointed at a passage that did not say what it claimed. **One**
+was additionally settled by running a command that decides it. The other
+was settled by reading the two passages against each other; the command
+run there answers a different question — whether the store's gate catches
+it — not whether the contradiction exists. Both artifacts had passed
+round 4 that same day:
 
 - `docs/loom/memory/enumerate-every-copy-before-editing-a-claim-and-name-the-leaks.md`
   — the frontmatter `description` presented the hard-wrap leak as open
@@ -97,9 +100,12 @@ invent findings. It is arithmetic:
 
 The hard 2-round cap is therefore correct — but not for the reason the
 skill stated. It is not that extra rounds manufacture defects; it is
-that no round count reaches an empty round. The cap exists because
-"reviewer found nothing" is not a reachable state, so it cannot be the
-termination condition.
+that, **for an artifact in the condition the blockquote names**, no round
+count reaches an empty round. The cap exists because "reviewer found
+nothing" is not a reachable state *there*, so it cannot be the
+termination condition. The conditional is load-bearing and travels with
+the claim: this was measured on one corpus (§Limits), and a genuinely
+thin artifact could well return an empty round.
 
 The two framings prescribe opposite reader behaviour, which is why the
 distinction is worth the edit:
@@ -109,16 +115,24 @@ distinction is worth the edit:
 | *extra rounds manufacture defects* | discount them — they are probably artifacts |
 | *the pool is large and sampled* | treat them as real; decide on severity, not on exhaustion |
 
-The second also yields the operative consequence: **a deterministic
-check outranks another review round.** A checker returns the same
-finding on every run; a reviewer returns a different subset each time.
-Both of the hand-verified findings above are of a kind a mechanism
-could have held, and each fed one follow-up: the description-vs-body
-contradiction produced the `description` rule now in
-`docs/loom/memory/README.md` §Format (a format contract, not a detector
-— `docs/loom/memory/measure-a-checks-fire-rate-before-building-it.md`
-records why), and the stdin claim produced the `read-context` field in
-`requesting-code-review` Step 1 / `requesting-docs-review` Step 3.
+The second also yields the operative consequence: **a standing mechanism
+outranks another review round.** A mechanism fires the same way every
+run; a reviewer returns a different subset each time.
+
+"Mechanism" here is deliberately wider than "detector", because **neither
+of the two hand-verified findings was answerable by a detector** — and
+saying otherwise would send a reader to build one. The description-vs-body
+contradiction produced a **format contract** that makes the claim
+unwritable (`docs/loom/memory/README.md` §Format); a detector for it was
+measured and killed
+(`docs/loom/memory/measure-a-checks-fire-rate-before-building-it.md`).
+The stdin claim produced a **change to what the reviewer is handed** —
+the `read-context` field in `requesting-code-review` Step 1 /
+`requesting-docs-review` Step 3. Three shapes, then: a checker, a format
+rule, a change of inputs. The evidence that checkers specifically pay off
+is separate and plentiful — `backlog_index --check`,
+`check_loom_memory_integrity`, and the codex-manifest hook each caught a
+mistake on this branch at the moment it was made.
 
 ## Limits — stated, not buried
 
@@ -140,7 +154,69 @@ records why), and the stdin claim produced the `read-context` field in
   branch's own findings, written into a file on that branch, changes
   every time the branch is reviewed again
   (`docs/loom/memory/a-passage-that-describes-itself-decays-on-every-edit.md`).
-  The reviews themselves are the record; read them in the PR.
+  The reviews themselves are the record; read them in PR #644.
+
+## Does delta-scoping converge faster?
+
+A second, separately pre-registered experiment on the branch that shipped
+this audit. **The rule under test**: from some round N onward a reviewer
+still reads every artifact whole, but may only raise a finding that is
+(a) about text the round's delta changed or (b) a contradiction between
+that delta and unchanged text. Everything else it notices is listed as
+out-of-scope rather than raised.
+
+**Design** — 2×2. Two cells were already filled by that branch's real
+review rounds; two were run fresh against worktrees pinned at the same
+commits, with prompts identical to the historical ones except for the
+scope clause. Two arms per cell; findings unioned per cell.
+
+| | Unbounded (control) | Delta-scoped (treatment) |
+|---|---|---|
+| **Round 2** (large delta — round 1's fixes) | 2 gating · NEEDS_REVISION | **3 gating** · NEEDS_REVISION |
+| **Round 3** (small delta — round 2's fixes) | **2 gating** · NEEDS_REVISION | 0 gating · PASS |
+
+**The registered falsifier held.** Delta-scoping must not hide a gating
+defect living inside the delta. Both round-2 treatment arms re-found both
+of the control's gating findings, and surfaced a third the control missed.
+Suppression was volunteered, not inferred: the round-2 treatment arms
+listed 13 out-of-scope observations between them, the round-3 treatment
+arms 3. None of the suppressed items later proved important.
+
+**The first reading of this table was wrong, and the correction is the
+finding.** The round-3 column looks like "scoping blinds a late round" —
+its unbounded control surfaced two real pre-existing defects the scoped
+arms never mentioned, including a gate hole in this very skill. That
+invites a rule keyed on round number, with round 3 exempted. It is an
+artifact. **Both of those defects were present and findable during rounds
+1 and 2, which were also unbounded, and both of those rounds missed
+them.** The mint-scope conflict survived two unbounded passes. So the
+round-3 control did not find them by being round 3; it found them the way
+the first experiment's arms found their seven — by sampling a pool that
+does not run out.
+
+Round number is therefore the wrong variable. The real trade is the same
+at every round: **keep sampling an inexhaustible pool and never
+terminate, or scope to the delta and converge.** Which is why the shipped
+rule is monotonic from round 2 (`requesting-docs-review` Directive 2) and
+why round 1 is kept unbounded only until something else sweeps that pool.
+
+**Limits — this experiment.**
+
+- One branch, two arms per cell. No rate generalises, and n=2 cannot
+  separate a one-finding difference from arm variance — the round-2
+  3-vs-2 result is suggestive at best.
+- **Named confound**: treatment arms were told to list what they
+  suppressed "because it is data". That instruction may itself have made
+  them more careful, so treatment's higher gating count is not cleanly
+  attributable to scoping. The falsifier result (treatment re-found both
+  control findings) does not depend on it.
+- Suppression counts rest on arms volunteering what they withheld. An arm
+  that drops something silently is invisible here, so those counts are a
+  floor.
+- Round 1 sampled the pre-existing pool weakly on this branch — 1 of its
+  14 findings was pre-existing-and-unrelated — because the branch was
+  mostly new text. A branch changing three lines in a large document
+  would test that differently, and was not tested.
 
 ## Corrections this arc's research pass produced
 

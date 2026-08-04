@@ -106,9 +106,14 @@ governs an entry when it is written and when its description is next
 edited; it does not oblige a retrofit sweep. Fix a non-conforming
 description on its next touch.
 
-**How the list below was built, and what it cannot see.** A keyword sweep
-of the index for phrases that name current tooling (`scans only`,
-`CI runs`, `CI-only`, `mechanized in`, `is github:`, `expose no`, …).
+**How the list below was built, and what it cannot see.** This exact
+command, re-runnable verbatim — no elided patterns:
+
+```
+grep -nE '^\[.*(scans only|CI runs|CI-only|mechanized in|is github:|expose no)' \
+  docs/loom/memory/README.md
+```
+
 **This is not the population** — the test is semantic, so a description
 that fails it in words the sweep does not carry is invisible here, exactly
 as `enumerate-every-copy-before-editing-a-claim-and-name-the-leaks`
