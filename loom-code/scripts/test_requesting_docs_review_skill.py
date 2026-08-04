@@ -579,6 +579,45 @@ def test_delta_scope_rationale_carries_no_unsourced_magnitudes():
     )
 
 
+def test_delta_scope_rationale_is_size_grounded_and_attribution_correct():
+    """Two follow-on defects from the same magnitude retraction (Task 8,
+    docs/loom/plans/2026-08-04-docs-review-0490-defect-fixes.md):
+
+    (1) the (b)/(c) risk sentence must not claim 'three gating defects'
+    caught by 'the next round' -- the audit's round-2 cell shows the
+    HISTORICAL unbounded control caught 2; the third came from a FRESH
+    retrospective delta-scoped treatment arm, not from 'the next round'
+    itself (docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md
+    Round 2 row). Direction without count or mis-attribution is what's
+    sourced.
+
+    (2) the 'A large rewrite -> (a)' conclusion needs a size
+    characterization to hang on now that the evidence clause measures
+    delta-vs-unbounded catch parity, not rewrite size. The audit's own
+    row labels -- 'large delta' (round 2 row) / 'small delta' (round 3
+    row) -- are audit-recorded direction words and may be used, without
+    reintroducing an edit count."""
+    low = _norm(_convergence_window(_text())).lower()
+
+    assert "three gating defects" not in low, (
+        "the (b)/(c) risk sentence must not carry the unsourced count "
+        "'three gating defects' -- the audit's HISTORICAL round-2 "
+        "unbounded control caught 2, and the third came from a FRESH "
+        "retrospective treatment arm, not 'the next round'"
+    )
+    assert "the next round caught" not in low, (
+        "the (b)/(c) risk sentence must not attribute the third gating "
+        "defect to 'the next round' -- it came from a fresh retrospective "
+        "delta-scoped arm, not the branch's real next round"
+    )
+    assert "larger delta" in low and "smaller delta" in low, (
+        "the criterion paragraph must reintroduce a size characterization "
+        "(round 1's fixes were the larger delta, round 2's the smaller) "
+        "using the audit's own round-label direction words, so the "
+        "'A large rewrite -> (a)' conclusion has something to hang on"
+    )
+
+
 def test_aggregation_instruction_class_only():
     """The aggregation rule applies to instruction-class findings ONLY;
     evidence-class findings are recorded observations that never gate;
