@@ -59,7 +59,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
   direction (delta-scoped arms re-found both control findings; the
   misread-sampling correction killed the per-round design), not the
   unsourced "broad rewrite" / "four one-to-two-sentence edits" figures the
-  audit never stated.
+  audit never stated
+  (`docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md`).
 - **The docs Aggregation rule states its threshold's provenance**: the
   thresholds are inherited unexamined from `requesting-code-review`, where
   they sit on top of a passing test suite, and no docs-specific evidence
