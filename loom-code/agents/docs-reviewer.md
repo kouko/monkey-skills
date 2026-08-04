@@ -343,8 +343,9 @@ against the artifact. Absent on a docs-only branch}
 {`unbounded` (round 1, and any later round the user authorized as a
 wider sweep) OR `delta-scoped: <commit range>`. Absent means unbounded,
 and so does a `delta-scoped` with no range or an unresolvable one — say
-so in your summary rather than guessing a range, because a wrong range
-suppresses findings silently while a wide one only costs reading.
+so in your summary rather than guessing a range. A wide round is
+expensive but its cost is visible; a wrong range suppresses findings you
+never saw, so nobody can weigh what was lost.
 
 Under `delta-scoped` your READING never narrows — you still read every
 artifact whole. What narrows is what you may put in `findings:`: only
@@ -371,6 +372,10 @@ text FIRST, per role-contract rule 6; absent on round 1}
 
 ```
 standards_version: "{X.Y.Z — value of `version` in loom-code/.claude-plugin/plugin.json}"
+
+reviewed_sha: {the HEAD sha you reviewed — REQUIRED. Take it from the
+              dispatch packet; if the packet did not state one, resolve it
+              yourself and say in your summary that you did}
 
 verdict: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 

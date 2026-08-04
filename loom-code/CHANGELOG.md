@@ -17,11 +17,18 @@ Versioning: [Semantic Versioning](https://semver.org/).
   round reviewed, which no passage asked it to record. Step 3 now records the
   HEAD sha each dispatch reviews and repeats it in the surfaced result;
   Directive 2 defines the range as `<previous round's sha>..HEAD` and
-  **falls back to `unbounded` when that sha is missing** — a handoff, a new
-  session, or a skipped record. The `docs-reviewer` contract carries the same
-  fallback for a range it cannot resolve. Fail-closed direction: an unbounded
-  round costs a wider read, while a wrongly-guessed range suppresses findings
-  inside the excluded span and leaves no trace.
+  **falls back to `unbounded` when no prior sha can be found**. The
+  `docs-reviewer` contract carries the same fallback for a range it cannot
+  resolve. The asymmetry justifying that direction is **visibility, not
+  cost**: an unbounded round is genuinely expensive — it re-opens the
+  pre-existing pool and can consume a round under the cap — but every cost is
+  visible and decidable, while a wrongly-guessed range suppresses findings
+  nobody ever saw.
+- **The sha now has a carrier that outlives its session.** `reviewed_sha:` is
+  a REQUIRED field in the panel verdict and in the `docs-reviewer` output
+  contract, and Step 5 surfaces it. Before this, "record the sha" meant the
+  dispatching orchestrator remembering it, which is why the 0.48.0 rule was
+  executable in one session and not across a handoff.
 
 ## [0.48.0] — 2026-08-04 — the docs arm stops minting on a mixed branch, and later rounds scope to the delta
 
