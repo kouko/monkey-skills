@@ -40,7 +40,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
   delta-scoped verification round (the default, and affordable only because
   scoping exists), fix and ship unverified, or ship with named residuals —
   states the risk of the second as a measured number rather than a caution
-  (round 1's fixes carried two gating defects), and names the criterion:
+  (round 1's fixes carried three gating defects), and names the criterion:
   how large the remaining fixes are, not how many rounds are left. Every
   round's fixes are verified by the next, so the last round's always ship
   unverified; a standing extra round moves that edge instead of closing it.

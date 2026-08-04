@@ -232,7 +232,13 @@ why round 1 is kept unbounded only until something else sweeps that pool.
 in place, because doing so destroys the record the correction exists to
 create. This document broke that rule against itself before this note
 existed. Recorded here rather than reverted, since the corrected text is
-the one downstream contracts now transcribe:
+the one downstream contracts now transcribe.
+
+**Scope of this section**: it records in-place rewrites of text that had
+already SHIPPED to `main` under an earlier release. Rewrites of prose the
+same unmerged branch authored are not listed — Directive 4 governs
+settled narrative, and unmerged text is not settled. Later rounds of the
+0.48.0 branch rewrote several of its own new sentences on that basis.
 
 - **loom-code 0.48.0** corrected three claims first published under
   0.47.0. §Were they real? said two findings were confirmed by running
@@ -283,11 +289,16 @@ citation that has been checked here:
 Every place that cites this audit, so an editor revising a claim above
 knows what depends on it:
 
-- `loom-code/skills/requesting-docs-review/SKILL.md` — five sites:
-  Directive 1's rationale and its fix-round risk figure, Directive 2's
-  §Why and its clause-(b) instances, Step 3's `read-context` rationale
-  (the stdin miss), and the red-flag row.
-- `loom-code/CHANGELOG.md` — the 0.47.0 and 0.48.0 entries.
+This list is what the sweep below returns — passages that **cite this
+path**. A passage that draws on this audit without citing it (Directive
+2's clause-(b) instances, the 0.48.0 CHANGELOG entry) is not a site here
+and will not appear when you re-run the command.
+
+- `loom-code/skills/requesting-docs-review/SKILL.md` — Directive 1's
+  fix-round risk figure, its "why a cap" rationale, Directive 2's §Why,
+  Step 3's `Round scope` field, and the red-flag row.
+- `loom-code/CHANGELOG.md` — the 0.47.0 entry.
+- `docs/loom/memory/README.md` — §Format's recorded instance.
 - `docs/loom/memory/README.md` §Format — the description-vs-body
   contradiction above is the recorded instance behind its rule.
 

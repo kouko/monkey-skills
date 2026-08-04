@@ -405,6 +405,9 @@ out_of_scope:                       # omit under `Round scope: unbounded`
     # pre-existing defect goes — recorded so it is not lost, kept out of
     # findings: so the round can converge. Be complete here: a silently
     # dropped observation is invisible to everyone downstream.
+    # These are NOT findings: the aggregation rule's fail-closed "missing
+    # class: counts as instruction" does not reach them, exactly as it does
+    # not reach read_context_findings.
 
 summary:
   - <≤5 bullet observations about the branch's artifacts as a whole>
