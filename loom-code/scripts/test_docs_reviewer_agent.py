@@ -306,23 +306,27 @@ def test_reviewed_sha_fail_closed_no_self_resolve():
 # ── role contract ──────────────────────────────────────────────────────
 
 
-def test_verdict_only_role_never_edits_never_runs_tests():
-    """Evaluator role: produces verdicts, does NOT modify reviewed files,
-    does NOT run tests (prose has no test suite to run — and running
-    code tests is verification-before-completion's job).
+def test_verdict_only_role_never_edits_narrow_test_permission():
+    """Evaluator role: produces verdicts, does NOT modify reviewed files.
+    Prose has no test suite to run by default; the narrow carve-out
+    (2026-08-05 evidence-grade contract, T2) permits a READ-ONLY test
+    run only when `### Read context` supplies code whose claims cite
+    tests — this is a narrow conditional permission, not the absolute
+    "may not run tests" prohibition this test pinned before T2.
 
     Windowed to `## Role contract` (not the whole file): the frontmatter
     description and the injected reviewer-discipline-v1 block both reuse
-    "verdict-only" / "may not" / "run tests" independently, so a
-    whole-file grep stays green even if the hand-authored role-contract
-    sentence stating this is deleted -- narrowing to the window closes
-    that false-green (T1 quality review, tests finding)."""
+    "verdict-only" / "may not" independently, so a whole-file grep stays
+    green even if the hand-authored role-contract sentence stating this
+    is deleted -- narrowing to the window closes that false-green (T1
+    quality review, tests finding)."""
     window = _role_contract_window()
     low = window.lower()
     assert "verdict-only" in low
     assert "may not" in low
     assert "edit" in low or "modify" in low
-    assert "run tests" in low
+    assert "no suite to run" in low
+    assert "read-only" in low
 
 
 def test_whole_artifact_scope_duty():
