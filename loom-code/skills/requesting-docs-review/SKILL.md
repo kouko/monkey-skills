@@ -88,7 +88,7 @@ Thresholds are `requesting-code-review` §Aggregation rule, unchanged: any 🔴 
 - The rule is computed over **instruction-class findings only**; evidence-class findings are carried into the verdict as recorded observations that **do not gate**.
 - A finding missing `class:` counts as instruction (fail closed), consistent with a finding missing `where:` flipping the whole verdict.
 - A defect noticed **inside** a `read-context` file (Step 3) is not a finding of this arm at all: it carries no severity, no dimension and no `class:`, rides in the separate `read_context_findings:` block, and never enters a dimension score. **It gates nothing, on either arm, and nobody assigns it a severity later** — the orchestrator surfaces it in the report and hands it to the code arm as context, and that arm reviews those files on this same branch under its own rubrics anyway. Deliberate: a defect the docs arm noticed incidentally, in a file it was not scoped to judge, must not decide a verdict. A defect in what a reviewed `.md` **claims about** such a file is an ordinary finding and gates normally — that is the primary case `read-context` exists to serve.
-- **The same exclusion covers `out_of_scope:`** (Directive 2's block for what a delta-scoped round declines to raise): those entries carry no severity, no dimension and no `class:`, never enter a dimension score, and the fail-closed `class:` bullet above does NOT reach them — they are not findings. Without this line that bullet would sweep every suppressed observation back into the gate and cancel the convergence Directive 2 exists to produce. Surface them to the user with the verdict so a deferred defect is deferred on the record.
+- **The same exclusion covers `out_of_scope:`** (Directive 2's block for what a delta-scoped round declines to raise): those entries carry no severity, no dimension and no `class:`, never enter a dimension score, and the fail-closed `class:` bullet above does NOT reach them — they are not findings. Without this line that bullet would sweep every suppressed observation back into the gate and cancel the convergence Directive 2 exists to produce. Surface them to the user with the verdict; persisted nowhere — deferral survives only if the user or orchestrator acts on it.
 - An evidence-class finding against narrative prose the branch left UNCHANGED (Step 3's whole-artifact question) must be superseded by an appended correction naming what it replaces, never edited in place (Directive 4).
 - **Panel union**: each arm's own `verdict:` is advisory; the gate verdict comes from applying this rule to the union of both arms' findings.
 
@@ -135,8 +135,9 @@ read_context_findings:              # omit when empty or when no read-context wa
 out_of_scope:                       # omit on an unbounded round
   - where: <file:line>
     note: <a defect noticed outside this round's raise scope (Directive 2)>
-    # Emitted, never scored. Surface these to the user with the verdict so a
-    # suppressed defect is deferred on the record, not lost.
+    # Emitted, never scored. Surfaced to the user with the verdict;
+    # persisted nowhere — deferral survives only if the user or
+    # orchestrator acts on it.
 
 summary:
   - <≤5 bullet observations about the branch's artifacts as a whole>

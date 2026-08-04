@@ -334,3 +334,52 @@ def test_convergence_duties_present():
         "discipline (docs/loom/memory/"
         "asserting-absence-needs-full-text-not-an-abstract.md)"
     )
+
+
+def _out_of_scope_fence_window() -> str:
+    """The `out_of_scope:` fence entry inside `## Output contract` --
+    from the `out_of_scope:` line to the next top-level key line, or to
+    the end of the output contract (it is the fence's last key, so
+    there normally is no next key)."""
+    window = _output_contract()
+    lines = window.splitlines(keepends=True)
+    start = None
+    for i, line in enumerate(lines):
+        if line.strip().startswith("out_of_scope:"):
+            start = i
+            break
+    assert start is not None, (
+        "## Output contract carries no `out_of_scope:` fence"
+    )
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        if re.match(r"^[a-z_]+:", lines[j]):
+            end = j
+            break
+    return "".join(lines[start:end])
+
+
+def test_out_of_scope_not_claimed_persisted():
+    """The out_of_scope fence comment must not claim a suppressed
+    defect is 'recorded so it is not lost' -- nothing persists it: the
+    panel verdict text goes to an unspecified temp file and nothing
+    re-injects the entry into a later round. State the honest fact
+    instead: surfaced to the user with the verdict, persisted nowhere;
+    deferral survives only if the user or orchestrator acts on it. The
+    completeness counter-instruction ('a silently dropped observation
+    is invisible to everyone downstream') must survive unchanged (D5)."""
+    fence = " ".join(
+        _out_of_scope_fence_window().replace("*", "").split()
+    ).lower()
+    assert "recorded so it is not lost" not in fence, (
+        "the out_of_scope fence comment must not claim a suppressed "
+        "defect is recorded so it is not lost"
+    )
+    assert "persisted nowhere" in fence, (
+        "the out_of_scope fence comment must state the honest fact: "
+        "persisted nowhere"
+    )
+    assert "silently" in fence and "dropped observation" in fence, (
+        "the completeness counter-instruction must survive: a silently "
+        "dropped observation is invisible to everyone downstream"
+    )

@@ -431,9 +431,11 @@ out_of_scope:                       # omit under `Round scope: unbounded`
   - where: <file:line>
     note: <a defect you noticed that falls outside this round's raise scope>
     # Emitted, never scored. Under a delta-scoped round this is where a
-    # pre-existing defect goes — recorded so it is not lost, kept out of
-    # findings: so the round can converge. Be complete here: a silently
-    # dropped observation is invisible to everyone downstream.
+    # pre-existing defect goes — surfaced to the user with the verdict;
+    # persisted nowhere. Deferral survives only if the user or orchestrator
+    # acts on it; kept out of findings: so the round can converge. Be
+    # complete here: a silently dropped observation is invisible to
+    # everyone downstream.
     # These are NOT findings: the aggregation rule's fail-closed "missing
     # class: counts as instruction" does not reach them, exactly as it does
     # not reach read_context_findings.

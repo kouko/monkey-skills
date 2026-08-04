@@ -717,6 +717,63 @@ def test_round_accounting_is_session_scoped():
     )
 
 
+def _out_of_scope_fence_window(text: str) -> str:
+    """The `out_of_scope:` fence entry inside `## Verdict structure` --
+    from the `out_of_scope:` line to the next top-level key line, or to
+    the end of the heading window (it is the fence's last key, so there
+    normally is no next key)."""
+    verdict = _heading_window(text, "Verdict structure")
+    lines = verdict.splitlines(keepends=True)
+    start = None
+    for i, line in enumerate(lines):
+        if line.strip().startswith("out_of_scope:"):
+            start = i
+            break
+    assert start is not None, (
+        "`## Verdict structure` carries no `out_of_scope:` fence"
+    )
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        if re.match(r"^[a-z_]+:", lines[j]):
+            end = j
+            break
+    return "".join(lines[start:end])
+
+
+def test_out_of_scope_not_claimed_persisted():
+    """`out_of_scope:` entries carry no `severity:`, never match the
+    ledger's finding regex (`_FINDING_RE`, loom_gate_markers.py), and
+    nothing re-injects them into round N+1 -- the panel verdict text
+    goes to an unspecified temp file. "Deferred on the record" overclaims
+    a persistence the mechanism does not provide. State the honest fact
+    instead: surfaced to the user with the verdict, persisted nowhere --
+    deferral survives only if the user or orchestrator acts on it (D5).
+    Both copies of the claim must retract: the Aggregation rule's
+    out_of_scope prose bullet, and the Verdict structure fence's own
+    comment."""
+    agg = _norm(_heading_window(_text(), "Aggregation rule")).lower()
+    assert "deferred on the record" not in agg, (
+        "the Aggregation rule's out_of_scope bullet must not claim a "
+        "deferred defect is 'deferred on the record' -- nothing "
+        "persists it"
+    )
+    assert "persisted nowhere" in agg, (
+        "the Aggregation rule's out_of_scope bullet must state the "
+        "honest fact: surfaced to the user with the verdict, persisted "
+        "nowhere"
+    )
+
+    fence = _norm(_out_of_scope_fence_window(_text())).lower()
+    assert "deferred on the record" not in fence, (
+        "the Verdict structure out_of_scope fence comment must not "
+        "claim a suppressed defect is 'deferred on the record'"
+    )
+    assert "persisted nowhere" in fence, (
+        "the Verdict structure out_of_scope fence comment must state "
+        "the honest fact: persisted nowhere"
+    )
+
+
 def test_window_precision():
     """Windows are narrow, not whole-file greps in disguise: each
     window's distinctive phrase exists in the file exactly where
