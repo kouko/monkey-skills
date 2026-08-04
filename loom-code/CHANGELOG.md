@@ -5,6 +5,25 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.52.0] — 2026-08-04 — the mechanical lane runs the suite, and worktree reviewers get told where they are
+
+### Added
+
+- **Mechanical self-check part 3: suite green.** `Review-weight:
+  mechanical` skipped both reviewers and checked only content + scope,
+  so nothing between a task's commit and the whole-branch review ran
+  the package suite — the 0.51.0 bump shipped a red tip that only the
+  panel caught (the shipping-version pin test lived in a file no task
+  touched). The self-check now also runs the resolved package test
+  command after the commit; any failure falls back to the full triad.
+- **`dispatch-hygiene-notes.md` §Worktree-isolated reviewer dispatch.**
+  A worktree dispatch can land detached at the default-branch tip when
+  the orchestrator's tree holds the branch; the new section tells
+  packet authors to route reviewers through `git show`, to name known
+  environmental test failures once instead of letting every arm
+  re-prove them, and to stamp `standards_version` from the reviewed
+  branch's manifest, not the worktree's.
+
 ## [0.51.0] — 2026-08-04 — the stale-base remedy stops prescribing a conflicting rebase
 
 ### Fixed
