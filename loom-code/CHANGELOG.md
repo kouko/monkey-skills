@@ -5,6 +5,75 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.50.0] — 2026-08-04 — adjudicated fixes for the ten defects the 0.49.0 review left open
+
+### Fixed
+
+- **The prior-findings carrier now runs every round after round 1**, not only
+  round 2. The round-2-only wording in both contract files made `resurfaced`
+  unreachable past round 2 and left Directive 3's oscillation stop
+  undischargeable; the authorized verification round now receives the
+  surviving findings it verifies, and a fix-verified finding is retained one
+  extra round so `resurfaced` has a chance to fire.
+- **A prior finding is restated as a one-line scalar**, not the original
+  `- severity:` block — the verbatim-block wording fed the ledger's own
+  finding regex, so a restated finding could land in the origin ledger a
+  second time as if it were new.
+- **The ledger-recording contract now states invocation semantics, not mint
+  semantics**, at all three copies (`requesting-docs-review/SKILL.md`
+  Directive 2, `loom_gate_markers.py`'s module docstring, and
+  `requesting-code-review/references/gate-markers-spec.md`) plus the backlog
+  entry that first named the gap: the ledger appends on every `review-pass`
+  invocation, including refuse paths, so it is unbiased only when every round
+  invokes it — rounds that never mint (mixed-branch docs rounds, failing
+  rounds nobody minted) append nothing and the sample skews.
+- **Round accounting is now stated as session-scoped, not continuous.** The
+  already-reviewed-branch bullet claimed "round accounting continues, it
+  does not reset"; nothing restores the count across a session boundary, so
+  the 2-round cap in fact guards each session independently — weaker than
+  the retracted claim
+  (`docs/loom/backlog/2026-08-04-a-delta-scoped-round-cannot-resume-across-a-session.md`,
+  now covering both the sha and the round-count carrier gap).
+- **`out_of_scope` is no longer claimed "deferred on the record."** Nothing
+  persists it; the honest contract is that it is surfaced to the user with
+  the verdict and lives nowhere durable unless the user or orchestrator acts
+  on it. A new backlog entry
+  (`docs/loom/backlog/2026-08-04-out-of-scope-deferrals-have-no-durable-record.md`)
+  proposes the persistence mechanism this retraction leaves open.
+- **`reviewed_sha` now fails closed instead of self-resolving.** The
+  `docs-reviewer` output contract no longer tells the reviewer to "resolve it
+  yourself" when the packet omits the sha; it reports `reviewed_sha:
+  unresolved` and states that the next round then runs unbounded per the
+  skill's range rule. The input-contract template gained the missing HEAD-sha
+  slot the skill's own Step 3 already required.
+
+### Changed
+
+- **Panel union recomputes `dimension_scores` from the union**, in both
+  `requesting-docs-review/SKILL.md` and `requesting-code-review/SKILL.md` —
+  the prior "worse of the two arms' scores" rule understated a dimension
+  when the two arms contributed different findings to it; the score is now
+  re-derived by re-running the aggregation rule on the union's findings per
+  dimension.
+- **The delta-scope rationale carries only what its cited audit records** —
+  direction (delta-scoped arms re-found both control findings; the
+  misread-sampling correction killed the per-round design), not the
+  unsourced "broad rewrite" / "four one-to-two-sentence edits" figures the
+  audit never stated.
+- **The docs Aggregation rule states its threshold's provenance**: the
+  thresholds are inherited unexamined from `requesting-code-review`, where
+  they sit on top of a passing test suite, and no docs-specific evidence
+  sets them.
+- **A `class:` tag may now carry a `(defaulted)` marker** —
+  `class: instruction (defaulted)` — when the reviewer could not tell and
+  fail-closed defaulted to `instruction`; a `(defaulted)` tag is treated
+  exactly as `instruction` by the aggregation rule, and Directive 1's option
+  (c) guidance points the user at defaulted-only findings as the ones to
+  scrutinize before choosing that option.
+
+Source: `docs/loom/specs/2026-08-04-docs-review-0490-defect-fixes.md` (the
+adjudicated brief this release closes).
+
 ## [0.49.0] — 2026-08-04 — the delta-scope rule says where its range comes from
 
 ### Fixed
