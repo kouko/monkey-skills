@@ -46,3 +46,13 @@ and ask whether the remainder still holds. This composes with
 that entry covers copies of the claim you are editing; this one covers
 neighbors that state something ELSE the edit falsified, which no string
 sweep can enumerate.
+
+**Fifth carrier, one arc later (0.53.0, 2026-08-05): a FROZEN PINNED
+BLOCK authored before a mid-arc supersession.** A plan's Task-3 verbatim
+CHANGELOG block described R3 with wording that a later round-2 review
+finding retired; the block was frozen, the implementer transcribed it
+faithfully, and the stale semantics shipped in the CHANGELOG — caught
+only by the whole-branch docs arms. When a reviewer finding supersedes
+pinned wording mid-arc, sweep every not-yet-executed pinned block that
+DESCRIBES the superseded text, not just the text itself: a frozen pin
+is a delayed-action neighbor.
