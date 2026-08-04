@@ -17,10 +17,11 @@ git rebase --onto 4c2937d5ed6e6b38e070cfc1efdefe4a1781f4e8 099af0c92fdf96b4c3e14
 `099af0c9` is a commit in main's own history (PR #645), NOT the branch's
 fork point. Running the command verbatim replayed main's own commits onto
 main's tip and hit conflicts ("Could not apply f422f494..."); recovery
-required `git rebase --abort`. The correct old-base was
-`git merge-base HEAD origin/main` = `f61837ed`; rebasing with that
-succeeded 18/18 cleanly. A weak-model orchestrator following the printed
-remedy verbatim wedges in conflicts it cannot diagnose.
+required `git rebase --abort`. The old-base that worked was `f61837ed` —
+the branch's creation point (the recording session mislabeled it as the
+merge-base; the verified root cause below corrects that): rebasing with
+it succeeded 18/18 cleanly. A weak-model orchestrator following the
+printed remedy verbatim wedges in conflicts it cannot diagnose.
 
 Root cause (verified 2026-08-04 by git-history reconstruction —
 OVERTURNS the original hypothesis, kept here honestly): the script
