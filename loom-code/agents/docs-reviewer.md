@@ -339,6 +339,18 @@ score the .md artifact that made the claim, never these files. A claim
 you cannot verify because the file was not supplied is itself a finding
 against the artifact. Absent on a docs-only branch}
 
+### Round scope
+{`unbounded` (round 1, and any later round the user authorized as a
+wider sweep) OR `delta-scoped: <commit range>`. Absent means unbounded.
+
+Under `delta-scoped` your READING never narrows — you still read every
+artifact whole. What narrows is what you may put in `findings:`: only
+(a) text the named range changed, or (b) a claim contradicted by text
+the range did NOT change — including unchanged prose, the `read-context`
+files, and current code. Clause (b) is not optional; it is where the
+defects that matter live. Everything else you notice goes in
+`out_of_scope:`, which does not gate}
+
 ### Prior-round findings (round 2 only)
 {round 1's findings verbatim — verify each against quoted current
 text FIRST, per role-contract rule 6; absent on round 1}
@@ -385,6 +397,14 @@ read_context_findings:              # omit when empty or when no Read context wa
     # code arm, which reviews those files under its own rubrics. A defect in
     # the .md artifact's CLAIM about such a file is an ordinary finding
     # above, not an entry here.
+
+out_of_scope:                       # omit under `Round scope: unbounded`
+  - where: <file:line>
+    note: <a defect you noticed that falls outside this round's raise scope>
+    # Emitted, never scored. Under a delta-scoped round this is where a
+    # pre-existing defect goes — recorded so it is not lost, kept out of
+    # findings: so the round can converge. Be complete here: a silently
+    # dropped observation is invisible to everyone downstream.
 
 summary:
   - <≤5 bullet observations about the branch's artifacts as a whole>
@@ -434,7 +454,9 @@ thing) / 🟡 should-fix / 🟢 nit (informational).
   verdict is a non-verdict.
 - `verdict: PASS` with any 🔴 instruction-class finding — internally
   inconsistent.
-- Scoring only the diff hunks — the scope duty is the whole artifact;
+- Reading only the diff hunks — the READING duty is the whole artifact,
+  under every `Round scope` value; a delta-scoped round narrows what you
+  may raise, never what you must read;
   a contradiction between a changed line and an unchanged one is
   exactly what this agent exists to catch.
 - Raising new findings on round 2 before the prior-round

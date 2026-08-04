@@ -120,8 +120,12 @@ outranks another review round.** A mechanism fires the same way every
 run; a reviewer returns a different subset each time.
 
 "Mechanism" here is deliberately wider than "detector", because **neither
-of the two hand-verified findings was answerable by a detector** — and
-saying otherwise would send a reader to build one. The description-vs-body
+of the two hand-verified findings was answerable by a standing detector**
+— and saying otherwise would send a reader to build one. The distinction
+that makes this compatible with §Were they real? above: a one-off command
+can settle a single instance (`grep -c stdin` settled the stdin claim)
+while no standing check finds the class (nothing greps every doc for
+every capability it claims). Instance and class are different questions. The description-vs-body
 contradiction produced a **format contract** that makes the claim
 unwritable (`docs/loom/memory/README.md` §Format); a detector for it was
 measured and killed
@@ -180,7 +184,11 @@ defect living inside the delta. Both round-2 treatment arms re-found both
 of the control's gating findings, and surfaced a third the control missed.
 Suppression was volunteered, not inferred: the round-2 treatment arms
 listed 13 out-of-scope observations between them, the round-3 treatment
-arms 3. None of the suppressed items later proved important.
+arms 3. Of those 16, none has since been raised as a gating finding by
+any later arm on this branch — which is the only check that was run, over
+the rounds this session held, adjudicated by the author. It is not a
+claim that they were unimportant, and the suppression counts are a floor
+(see Limits).
 
 **The first reading of this table was wrong, and the correction is the
 finding.** The round-3 column looks like "scoping blinds a late round" —
@@ -218,6 +226,28 @@ why round 1 is kept unbounded only until something else sweeps that pool.
   mostly new text. A branch changing three lines in a large document
   would test that differently, and was not tested.
 
+## Errata — what was rewritten in place, and when
+
+`requesting-docs-review` Directive 4 forbids rewriting settled narrative
+in place, because doing so destroys the record the correction exists to
+create. This document broke that rule against itself before this note
+existed. Recorded here rather than reverted, since the corrected text is
+the one downstream contracts now transcribe:
+
+- **loom-code 0.48.0** corrected three claims first published under
+  0.47.0. §Were they real? said two findings were confirmed by running
+  the command that decides them; only one was. §What this means said a
+  deterministic check outranks another round, on two worked examples
+  neither of which a detector answers; the category is now a standing
+  mechanism. The cap rationale asserted "an empty round is not a
+  reachable state" without the "artifact carrying many small real
+  defects" premise its own blockquote carries.
+- **loom-code 0.48.0** also added §Does delta-scoping converge faster and
+  withdrew the magnitude from the §Limits overlap bullet.
+
+A reader who cited the 0.47.0-era wording will find different text above.
+`loom-code/CHANGELOG.md` carries the same record release by release.
+
 ## Corrections this arc's research pass produced
 
 The session that led here ran a deep-research pass whose first-round
@@ -253,10 +283,11 @@ citation that has been checked here:
 Every place that cites this audit, so an editor revising a claim above
 knows what depends on it:
 
-- `loom-code/skills/requesting-docs-review/SKILL.md` — Directive 1's
-  rationale, the matching red-flag row, and Step 3's `read-context`
-  rationale (the stdin miss).
-- `loom-code/CHANGELOG.md` — the 0.47.0 entry.
+- `loom-code/skills/requesting-docs-review/SKILL.md` — five sites:
+  Directive 1's rationale and its fix-round risk figure, Directive 2's
+  §Why and its clause-(b) instances, Step 3's `read-context` rationale
+  (the stdin miss), and the red-flag row.
+- `loom-code/CHANGELOG.md` — the 0.47.0 and 0.48.0 entries.
 - `docs/loom/memory/README.md` §Format — the description-vs-body
   contradiction above is the recorded instance behind its rule.
 

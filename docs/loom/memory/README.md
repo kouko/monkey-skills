@@ -107,7 +107,8 @@ edited; it does not oblige a retrofit sweep. Fix a non-conforming
 description on its next touch.
 
 **How the list below was built, and what it cannot see.** This exact
-command, re-runnable verbatim — no elided patterns:
+command, re-runnable verbatim from the repo root — no elided patterns,
+and the path is root-relative, so `cd` there first:
 
 ```
 grep -nE '^\[.*(scans only|CI runs|CI-only|mechanized in|is github:|expose no)' \

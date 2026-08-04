@@ -26,10 +26,24 @@ Versioning: [Semantic Versioning](https://semver.org/).
   sampling the artifact's pre-existing defect pool, and verifying this round's
   edits. Round 1 does the first, later rounds the second. Measured: two
   delta-scoped arms re-found both gating findings two unbounded arms found,
-  and suppressed 13 low-value observations. Round 1 stays unbounded
+  and listed 13 further observations as out-of-scope. Round 1 stays unbounded
   **provisionally** — only until a standing sweep of pre-existing defects
   exists — and an authorized extra round declares its own scope rather than
-  inheriting one from its number.
+  inheriting one from its number (silent authorization defaults to scoped).
+  The rule is carried by the `docs-reviewer` agent contract, not only by the
+  skill: a `### Round scope` input section, an `out_of_scope:` output block
+  for what a scoped round declines to raise, and an anti-pattern reworded to
+  separate the reading duty (always whole-artifact) from the raise scope.
+- **Directive 1 now says what "hand them the decision" means.** The 2-round
+  cap's STOP surfaced findings without naming the choice, so each executor
+  invented one. It now presents three options in order — fix plus one
+  delta-scoped verification round (the default, and affordable only because
+  scoping exists), fix and ship unverified, or ship with named residuals —
+  states the risk of the second as a measured number rather than a caution
+  (round 1's fixes carried two gating defects), and names the criterion:
+  how large the remaining fixes are, not how many rounds are left. Every
+  round's fixes are verified by the next, so the last round's always ship
+  unverified; a standing extra round moves that edge instead of closing it.
 - **Three over-claims corrected in the 0.47.0 text and its source audit.**
   "Two confirmed by running the cited command" — only one command decides its
   finding. "A deterministic check outranks another round" — neither worked
