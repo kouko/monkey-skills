@@ -69,7 +69,11 @@ cannot vouch for") — and the sweep reported:
 - the `.md` copies (`requesting-code-review/SKILL.md:98`,
   `requesting-docs-review/SKILL.md:77`) in the same operative list;
 - summary line now reads "swept 2785 markdown files and 668 python
-  module docstrings", and the leak list names the narrowed blind spot
+  module docstrings" — counts are LIVE working-tree state (the tool
+  walks the filesystem, so untracked scratch files inflate them; a
+  clean checkout of this commit measures 2702/667 — the reviewer
+  reproduced the five operative hits exactly either way), and the leak
+  list names the narrowed blind spot
   (function/class docstrings, non-docstring literals, comments, commit
   messages).
 
@@ -87,4 +91,4 @@ docstring carrier.
 
 No probe blocks finishing. Next-touch candidates recorded above: remedy
 prints branch name instead of literal `HEAD`; plus the arc's reviewer
-debt (see final summary).
+debt (recorded in the shipping PR's body and the plan's Notes).
