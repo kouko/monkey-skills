@@ -660,6 +660,11 @@ def test_threshold_provenance_sentence():
     assert "instruction-class findings only" in low, (
         "the instruction-class-only needle must survive this edit"
     )
+    assert "grep-window" in low, (
+        "the contrast with a passing test suite must qualify itself: "
+        "the docs arm still has a grep-window test floor beneath it, "
+        "per the Cross-skill contract's sibling-gate row"
+    )
 
 
 def test_verdict_structure_prose_dimensions():
