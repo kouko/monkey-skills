@@ -647,6 +647,21 @@ def test_aggregation_instruction_class_only():
     )
 
 
+def test_threshold_provenance_sentence():
+    """The Aggregation rule states the inherited-threshold provenance
+    honestly: the 2-🟡 bar is inherited unexamined from
+    requesting-code-review, where it sits on top of a passing test
+    suite the docs arm has none of."""
+    low = _norm(_heading_window(_text(), "Aggregation rule")).lower()
+    assert "inherited unexamined" in low, (
+        "the Aggregation rule must state the thresholds are inherited "
+        "unexamined from requesting-code-review"
+    )
+    assert "instruction-class findings only" in low, (
+        "the instruction-class-only needle must survive this edit"
+    )
+
+
 def test_verdict_structure_prose_dimensions():
     """The verdict schema carries the five prose dimension_scores keys
     and the per-finding class key."""
