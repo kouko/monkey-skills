@@ -383,6 +383,49 @@ def test_cli_divergent_creation_sha_falls_back_with_caveat(tmp_path, capsys):
     assert "git reflog show arc" in captured.err
 
 
+def test_cli_creation_sha_predating_merge_base_falls_back_with_caveat(
+    tmp_path, capsys
+):
+    # Whole-branch review finding — mutation-killing coverage for the
+    # FIRST ancestry check (`base is ancestor-or-equal of creation`),
+    # the symmetric twin of the divergent-creation test above: a fixture
+    # where the recorded creation sha fails the FIRST check while
+    # passing the second. Layout: branch "arc" is cut at the clone
+    # point G (creation == G), upstream then advances to M1 and M1 is
+    # MERGED INTO arc — so merge-base(HEAD, ref) moves forward to M1,
+    # leaving the creation sha STRICTLY BEHIND the merge-base. Check 1
+    # (base(M1)-is-ancestor-of-creation(G)) genuinely fails; check 2
+    # (creation(G)-is-ancestor-of-HEAD) genuinely passes. A version of
+    # the code that only tested check 2 would wrongly select G as
+    # old-base — replaying M1's already-based history — so this proves
+    # check 1 is load-bearing on its own.
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+    g_sha = _head(repo)
+
+    _git(repo, "checkout", "-q", "-b", "arc", g_sha)
+    (repo / "o1.txt").write_text("o1\n")
+    _git(repo, "add", "o1.txt")
+    _git(repo, "commit", "-q", "-m", "O1")
+
+    _git(upstream, "commit", "--allow-empty", "-m", "M1")
+    m1_sha = _head(upstream)
+    _git(repo, "fetch", "-q", "origin")
+    _git(repo, "merge", "-q", "--no-edit", m1_sha)
+
+    _git(upstream, "commit", "--allow-empty", "-m", "M2")
+    remote_sha = _head(upstream)
+
+    exit_code = review_scope.main(["--repo", str(repo)])
+    captured = capsys.readouterr()
+
+    assert exit_code != 0
+    assert f"git rebase --onto {remote_sha} {m1_sha} HEAD" in captured.err
+    assert f"--onto {remote_sha} {g_sha} HEAD" not in captured.err
+    assert "git rebase --abort" in captured.err
+    assert "git reflog show arc" in captured.err
+
+
 def test_cli_refuses_without_shas_prints_no_rebase_remedy(tmp_path, capsys):
     # Finding 2 (round 2): a refusal shape whose shas never resolved
     # (here, no default branch resolvable at all — same setup as

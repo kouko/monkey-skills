@@ -26,7 +26,7 @@ loom-code/skills/writing-plans/references/plan-format.md
 
 You **must** load all three via the Read tool before producing a verdict.
 
-## Checks — apply in order; first failure determines verdict
+## Checks — apply in order; any failure ⇒ NEEDS_REVISION, and report ALL failures
 
 | # | Check | Failure → NEEDS_REVISION |
 |---|---|---|

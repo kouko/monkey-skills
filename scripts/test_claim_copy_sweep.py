@@ -579,6 +579,21 @@ def assert_usage_error(result):
     assert "usage" in result.stderr.lower(), result.stderr
 
 
+def test_unparseable_py_lands_on_unreadable_list(tmp_path):
+    """A `.py` the parser rejects must be LISTED, not skipped in silence —
+    the module contract's fail-loud promise, extended to the python scope
+    (whole-branch review finding: the SyntaxError→unreadable route shipped
+    untested). Paired positive: the `.md` copy still reports, proving the
+    sweep itself ran."""
+    write(tmp_path, "docs/loom/specs/md_copy.md", f"{CLAIM}\n")
+    write(tmp_path, "scripts/broken.py", "def broken(:\n")
+    result = run(tmp_path, "--claim", CLAIM)
+    assert result.returncode == 0, result.stderr
+    assert "docs/loom/specs/md_copy.md:1" in result.stdout, result.stdout
+    assert "files this run could not read" in result.stdout, result.stdout
+    assert "scripts/broken.py (SyntaxError)" in result.stdout, result.stdout
+
+
 def test_missing_claim_is_a_usage_error(tmp_path):
     assert_usage_error(run(tmp_path))
 

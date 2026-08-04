@@ -20,7 +20,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
   now prefers the branch's reflog creation sha when it is a
   descendant-or-equal of the merge-base and an ancestor of HEAD; otherwise
   it falls back to the merge-base and prints a verifiable-action caveat
-  line (abort + substitute the creation sha from `git reflog show
+  line (abort + substitute the last-line sha of `git reflog show
   <branch>`). The `AGENTS.md` mirror follows.
 
 ### Added

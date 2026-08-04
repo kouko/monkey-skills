@@ -40,6 +40,10 @@ the caveat's existing branch-name resolution.
 
 ## Probe (b) — D-C cold-reader, sonnet, verdict: CLEAN
 
+(The spec's Decision 5 promises cold-reader probes for BOTH D-C and E-3;
+E-3's ran separately as probe (d) below — recorded after the
+whole-branch docs arm caught the roll-up missing it.)
+
 A cold sonnet agent read ONLY §Verdict mapping (the edited lines) of
 `plan-document-reviewer-prompt.md`, plus a fabricated round-1 state: a
 4-task plan, Check 6 failing on Task 2 (noticed) and Task 4 ("already
@@ -81,6 +85,20 @@ The defect class that motivated D-D — a contract-prose mirror in a .py
 module docstring invisible to the sweep — is closed for the module-
 docstring carrier.
 
+## Probe (d) — E-3 cold-reader, sonnet, verdict: CLEAN
+
+A cold sonnet agent read ONLY the panel step's Step-3 paragraph
+(`requesting-code-review/SKILL.md:108`, the line carrying the new
+pointer) plus a fabricated state: both panel arms terminated on the API
+error "You've hit your session limit". It correctly distinguished the
+capacity-error case from the Dead-arm rule's single-arm death, named the
+pointer target (`dispatch-hygiene-notes.md` §Capacity-error recovery),
+resolved the relative path against the SKILL.md's own directory, and
+quoted the landing section's first sentence — the pointer both fires and
+resolves for a reader with no other context. (This session itself hit
+the exact scenario live during the whole-branch review: four arms died
+together on a session limit and were re-dispatched per that protocol.)
+
 ## Verdict roll-up
 
 | Probe | Target | Model | Verdict |
@@ -88,7 +106,12 @@ docstring carrier.
 | (a) live un-wedge | D-A remedy old-base | haiku | CLEAN |
 | (b) cold-reader | D-C sweep obligation | sonnet | CLEAN |
 | (c) mechanical sweep | D-D .py docstrings | — | CLEAN (exemplar substituted) |
+| (d) cold-reader | E-3 capacity pointer | sonnet | CLEAN |
 
-No probe blocks finishing. Next-touch candidates recorded above: remedy
-prints branch name instead of literal `HEAD`; plus the arc's reviewer
-debt (recorded in the shipping PR's body and the plan's Notes).
+No probe blocks finishing. Next-touch candidates recorded above and from
+the whole-branch review: remedy prints branch name instead of literal
+`HEAD`; the fallback caveat's "last-line sha" recovery is imperfect when
+the reflog itself was pruned or the creation sha diverged (two of the
+three fallback triggers — the caveat's conditional phrasing bounds the
+harm, but a follower can land back on the rejected sha); plus the arc's
+reviewer debt (recorded in the shipping PR's body and the plan's Notes).
