@@ -557,6 +557,40 @@ def test_cross_skill_contract_names_callers():
     )
 
 
+def test_prior_findings_carrier_every_later_round():
+    """The prior-findings carrier is not round-2-specific: every round
+    after round 1 receives the previous round's surviving findings.
+    `resurfaced` (Directive 3) was otherwise unreachable at round 2, the
+    only round the old wording let carry `prior_findings_check` (D1)."""
+    conv = _norm(_convergence_window(_text())).lower()
+    assert "round-n handoff" in conv, (
+        "Directive 2 must be generalized to a round-N handoff, not "
+        "round-2-specific"
+    )
+    assert "round n's" in conv and "round n-1" in conv, (
+        "Directive 2 must state round N's packet carries round N-1's "
+        "findings"
+    )
+    assert "receives the surviving findings it verifies" in conv, (
+        "Directive 1 option (a) must state the authorized verification "
+        "round receives the surviving findings it verifies"
+    )
+    assert "round 2 only" not in conv, (
+        "the convergence directives must not restrict the carrier to "
+        "round 2 only"
+    )
+
+    verdict = _norm(_heading_window(_text(), "Verdict structure")).lower()
+    assert "every round after round 1" in verdict, (
+        "the verdict-schema comment must generalize prior_findings_check "
+        "to every round after round 1"
+    )
+    assert "round 2 only" not in verdict, (
+        "the verdict-schema comment must not restrict prior_findings_check "
+        "to round 2 only"
+    )
+
+
 def test_window_precision():
     """Windows are narrow, not whole-file greps in disguise: each
     window's distinctive phrase exists in the file exactly where

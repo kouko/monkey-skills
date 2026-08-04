@@ -44,7 +44,7 @@ Owns the **docs arm** of whole-branch review. Dispatches **two `docs-reviewer` s
 
 **What to hand the user, and what to recommend.** "Hand them the decision" means presenting a choice, not a finding list. Present these three, in this order:
 
-- **(a) Fix, then run one delta-scoped verification round** — *the default recommendation*. It reads whole artifacts but raises only against the fixes (Directive 2), so it costs a fraction of a full round. That cost drop is what makes it the default; before scoping existed, a third round meant re-reviewing everything, and "don't authorize lightly" was the right posture.
+- **(a) Fix, then run one delta-scoped verification round** — *the default recommendation*. It reads whole artifacts but raises only against the fixes (Directive 2), so it costs a fraction of a full round. That cost drop is what makes it the default; before scoping existed, a third round meant re-reviewing everything, and "don't authorize lightly" was the right posture. The authorized verification round receives the surviving findings it verifies (Directive 2's round-N handoff).
 - **(b) Fix and ship without re-review.** State the risk concretely, never as a general caution: **a fix round is where defects get written.** On the measured branch, round 1's fixes contained three gating defects that only the next round caught (`docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md`).
 - **(c) Ship as-is, the findings recorded as named residuals.** Correct when the findings are real but change nothing an executor does.
 
@@ -52,7 +52,7 @@ Owns the **docs arm** of whole-branch review. Dispatches **two `docs-reviewer` s
 
 **Why a cap rather than "review until clean": for an artifact carrying many small real defects, a clean round is not a reachable state.** Each pass samples that pool, so "the reviewer found nothing" cannot serve as the termination condition — measured on one branch's twelve already-passed `.md` artifacts: four fresh arms, seven gating findings, zero overlap, each traced to its cited text and one settled by running the command that decides it; the audit's §Limits states it does not generalize a rate (`docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md`). The corollary is operative: when a finding names a class a standing mechanism could hold, **prefer adding that mechanism over authorizing another round** — a checker, a format rule that makes the defect unwritable, or a change to what the reviewer is handed. Each fires every time; a reviewer returns a different subset each time.
 
-**2. Round-2 handoff.** The round-2 dispatch packet carries round 1's findings verbatim. Reviewers verify each prior finding against the quoted current text of the artifact BEFORE raising anything new. Re-raising a closed finding in new words is forbidden — that is re-litigation, not review.
+**2. Round-N handoff.** Every round after round 1 carries the prior round's findings: round N's dispatch packet carries round N-1's surviving findings verbatim. Reviewers verify each prior finding against the quoted current text of the artifact BEFORE raising anything new. Re-raising a closed finding in new words is forbidden — that is re-litigation, not review.
 
 **From round 2 onward, what a reviewer may RAISE narrows; what it READS never does.** It still reads every artifact whole. It may raise a new finding only if that finding is (a) about text this round's delta changed, or (b) a contradiction **in either direction** between the delta and text it did NOT change — an unchanged claim the delta falsifies (Step 3's question), or a delta claim unchanged text falsifies. What is out of scope is a contradiction between two unchanged passages, neither touched by the delta. **"Did not change" spans unchanged prose, the `read-context` files, and current code**, which is what keeps Step 3's "does any UNCHANGED claim contradict the change, or the current code?" actionable under a scoped round. Clause (b) is not optional. Two instances, both named so the claim is checkable: a docs arm's `read-context` gap let a spec claiming stdin ship against a script with no stdin path, and this contract's own `read_context_findings` rule was contradicted by an unchanged §Aggregation rule that had no exclusion for it. Anything else the reviewer notices goes in its `out_of_scope:` block (agent contract), never in `findings:`.
 
@@ -111,7 +111,7 @@ dimension_scores:
   incorrect-fact: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   missing-population: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 
-prior_findings_check:               # round 2 only; omit on round 1
+prior_findings_check:               # every round after round 1; omit on round 1
   - finding: <round-1 finding, restated verbatim>
     status: fix-verified | not-fixed | resurfaced
     quote: <the exact current text that verifies (or fails) the fix>

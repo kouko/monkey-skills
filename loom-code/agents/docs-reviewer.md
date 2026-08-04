@@ -358,9 +358,9 @@ range, is OUT of scope. "Did not change" spans unchanged prose, the
 where the defects that matter live. Everything else you notice goes in
 `out_of_scope:`, which does not gate}
 
-### Prior-round findings (round 2 only)
-{round 1's findings verbatim — verify each against quoted current
-text FIRST, per role-contract rule 6; absent on round 1}
+### Prior-round findings (every round after round 1)
+{the prior round's surviving findings verbatim — verify each against
+quoted current text FIRST, per role-contract rule 6; absent on round 1}
 
 ### Context
 - Branch base: {main / explicit SHA}
@@ -386,7 +386,7 @@ dimension_scores:
   incorrect-fact: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   missing-population: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 
-prior_findings_check:               # round 2 only; omit on round 1
+prior_findings_check:               # every round after round 1; omit on round 1
   - finding: <round-1 finding, restated verbatim>
     status: fix-verified | not-fixed | resurfaced
     quote: <the exact current text that verifies (or fails) the fix>

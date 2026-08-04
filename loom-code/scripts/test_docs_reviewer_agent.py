@@ -50,6 +50,15 @@ def _output_contract() -> str:
     return text[start:end]
 
 
+def _input_contract() -> str:
+    """Isolate the Input contract section (dispatch packet shape) — from
+    its ## heading to the ## Output contract heading."""
+    text = _text()
+    start = text.index("## Input contract")
+    end = text.index("## Output contract", start)
+    return text[start:end]
+
+
 def _role_contract_window() -> str:
     """Isolate `## Role contract — behavioral rules` — from its heading
     to the injected reviewer-discipline-v1 marker. Bounding on the
@@ -149,6 +158,34 @@ def test_findings_carry_class_taxonomy():
     aggregation gates on instruction-class findings only."""
     window = _output_contract()
     assert "class: instruction | evidence" in window
+
+
+def test_prior_findings_carrier_every_later_round():
+    """The prior-findings carrier is not round-2-specific in either the
+    input or output contract: every round after round 1 receives (and
+    echoes back) the previous round's surviving findings (D1)."""
+    input_window = _input_contract()
+    assert (
+        "### Prior-round findings (every round after round 1)"
+        in input_window
+    ), (
+        "the input-contract heading must generalize to every round "
+        "after round 1"
+    )
+    assert "round 2 only" not in input_window, (
+        "the input-contract heading must not restrict the carrier to "
+        "round 2 only"
+    )
+
+    output_window = _output_contract()
+    assert "every round after round 1" in output_window, (
+        "the output-template comment must generalize prior_findings_check "
+        "to every round after round 1"
+    )
+    assert "round 2 only" not in output_window, (
+        "the output-template comment must not restrict prior_findings_check "
+        "to round 2 only"
+    )
 
 
 # ── role contract ──────────────────────────────────────────────────────
