@@ -4,7 +4,7 @@ Source brief: docs/loom/specs/2026-08-05-reviewer-evidence-grade-contract.md
 Total tasks: 4
 Critical-path depth: 4 (T1 → T2 → T3 → T4)
 Execution order: sequential
-Plan-document-reviewer verdict: PASS (2026-08-05, round 2, 15/15)
+Plan-document-reviewer verdict: PASS (2026-08-05, round 3, 15/15)
 
 ## Task 1 — R3 becomes a conditional fallback at the SSOT
 
@@ -14,13 +14,20 @@ Plan-document-reviewer verdict: PASS (2026-08-05, round 2, 15/15)
   which you did not produce. When a dimension's PASS rests on evidence
   you could not independently confirm, do not emit a clean PASS for it`)
   with this text verbatim:
-  `When you could not run the relevant check yourself — environment,
-  capacity, or no runnable check exists — a dimension's PASS resting on
-  the implementer's reported `test_results` or other evidence you could
-  not independently confirm must not ship clean; do not emit a clean
+  `When a dimension's PASS rests on the implementer's reported
+  `test_results` or other evidence you did not independently confirm —
+  whether the check could not run (environment, capacity, no runnable
+  check exists) or you simply did not run it — do not emit a clean
   PASS for it`
-  (the rest of R3 — the downgrade instruction, the spec-reviewer
-  binary-token clause, "Never false-pass" — stays byte-identical). Then
+  (round-2 wording: the duty attaches to UNCONFIRMED evidence
+  regardless of reason — T1's quality reviewer proved the earlier
+  could-not-run antecedent left the chose-not-to reviewer bound only by
+  the closing aphorism). In the retained tail, additionally replace the
+  phrase `naming exactly what you could not verify` with `naming
+  exactly what was not independently verified` (same falsified-neighbor
+  seam, one clause past the pinned span); the rest of R3 — the
+  downgrade instruction, the spec-reviewer binary-token clause, "Never
+  false-pass" — stays byte-identical. Then
   run `python3 loom-code/scripts/distribute.py` (SSOT:
   `loom-code/scripts/_reviewer-discipline.md`) so all four agents'
   `reviewer-discipline-v1` managed blocks regenerate, and verify
@@ -227,6 +234,16 @@ Plan-document-reviewer verdict: PASS (2026-08-05, round 2, 15/15)
 - Dependencies: Tasks 2, 3 complete first
 - Independent: false
 - Brief item covered: "merge-gating behavioral verification uses by-path probes" (Decision 6)
+
+## Decision Log
+
+- T1's R3 opening supersedes the brief's FROZEN Decision-2 illustrative
+  quote: the could-not-run antecedent left a chose-not-to reviewer bound
+  only by the closing aphorism (T1 quality reviewer's 🟡, execution
+  time); the duty now attaches to unconfirmed evidence regardless of
+  reason. Substance of Decision 2 (absolute premise → conditional
+  fallback) unchanged — plan-over-brief drift recorded here so close-out
+  reads it as adjudicated, not accidental. Two-way door — logged.
 
 ## Notes
 
