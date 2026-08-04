@@ -47,8 +47,13 @@ instead (`resolve_common_marker_dir`) — see its own entry for why.
   "origin_raw", "quote_status"}, ...]}, ...]}} — append-only, never
   reset, written on EVERY `review-pass` invocation (including
   NEEDS_REVISION and schema-failure paths, both of which mint no
-  `review-pass.json`) so the sample of recorded findings is never
-  biased by which rounds happened to pass (see `_append_origin_ledger`).
+  `review-pass.json`). This keeps the recorded sample unbiased by
+  which rounds happened to pass ONLY IF every round invokes this CLI;
+  shipped orchestration invokes it on mint attempts, so in practice
+  the recorded sample is invocation-skewed — a round nobody bothers to
+  invoke (e.g. one already known NEEDS_REVISION, or a mixed-branch
+  docs round that returns its verdict without ever calling this CLI)
+  leaves no row at all (see `_append_origin_ledger`).
   Its directory is resolved via `git rev-parse --git-common-dir`, NOT
   `--git-dir` like the three markers above (`resolve_common_marker_dir`)
   — every `git worktree` checkout of a repo shares one git-common-dir,

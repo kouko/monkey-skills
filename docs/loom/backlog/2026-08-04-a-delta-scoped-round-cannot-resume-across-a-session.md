@@ -34,20 +34,26 @@ and the wrong half is the load-bearing one:
   (`loom_gate_markers.py`, inside the `review-pass` command), and the write is
   ordered before the schema and verdict checks — so a `review-pass` invocation
   on a failing verdict *would* be recorded.
-- But nobody invokes `review-pass` on a `NEEDS_REVISION` verdict; there is no
-  reason to, and it refuses to mint anyway. Measured on this repo's own
-  ledger: branch `fix-docs-review-mechanisms` has **two** ledger rows against a
-  review history of more rounds than that (the exact count is not retrievable —
-  its audit defers the record to PR #644, which carries no review comments).
+- Nobody invokes `review-pass` on a round already known `NEEDS_REVISION`;
+  there is no reason to, and it refuses to mint anyway. Measured on this
+  repo's own ledger: branch `fix-docs-review-mechanisms` has **two** ledger
+  rows against a review history of more rounds than that (the exact count is
+  not retrievable — its audit defers the record to PR #644, which carries no
+  review comments).
 
-So the ledger records mint attempts, not review rounds. It therefore misses
-every `NEEDS_REVISION` round — but not every round a round 2 might follow:
-`PASS_WITH_NOTES` is a passing verdict that mints, and Step 6 keys round 2
-on "the user fixed and wants re-review", not on a failing verdict. This
-repo's own ledger shows both rows for `fix-docs-review-mechanisms` are
-`PASS_WITH_NOTES`. So the ledger is usable and merely stale, and a stale
-sha yields a WIDER range than the true one — the safe direction. The
-cheapest fix below is therefore live, not ruled out.
+So the ledger records `review-pass` INVOCATIONS, not review rounds — a
+narrower claim than "mint attempts": an exit-4 schema-failure fix-and-rerun
+still appends a row on each retry even though it never attempts a mint, and
+a mixed-branch docs round that returns its verdict to the orchestrator
+without ever calling this CLI (Step 4) never appears at all, whatever its
+verdict. It therefore misses every round that nobody invoked the CLI on —
+in practice mostly `NEEDS_REVISION` rounds, since `PASS_WITH_NOTES` is a
+passing verdict that mints and Step 6 keys round 2 on "the user fixed and
+wants re-review," not on a failing verdict. This repo's own ledger shows
+both rows for `fix-docs-review-mechanisms` are `PASS_WITH_NOTES`. So the
+ledger is usable and merely stale, and a stale sha yields a WIDER range
+than the true one — the safe direction. The cheapest fix below is
+therefore live, not ruled out.
 
 A second trap for whoever mines the ledger: `_append_origin_ledger` writes
 `"round": len(rounds) + 1`, so that field is a MINT index, not the review

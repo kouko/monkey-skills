@@ -2723,3 +2723,43 @@ def test_default_branch_ref_is_importable_as_a_public_name():
     from loom_gate_markers import default_branch_ref
 
     assert callable(default_branch_ref)
+
+
+# ------------------------------------------------------------------ docstring
+
+
+def _norm_doc(s: str) -> str:
+    """Collapse whitespace so a hard-wrapped docstring line still
+    matches a multi-word phrase check."""
+    return " ".join(s.split()).lower()
+
+
+def test_module_docstring_states_conditional_ledger_bias():
+    """The origin-ledger docstring entry must state that the recorded
+    sample is unbiased ONLY IF every round invokes `review-pass` --
+    shipped orchestration invokes it on mint attempts, so in practice
+    the recorded sample is invocation-skewed. The prior unconditional
+    "never biased by which rounds happened to pass" claim overstated
+    what the code guarantees (D2); this is a docstring-only fix, zero
+    behavior change."""
+    doc = loom_gate_markers.__doc__
+    assert doc is not None, "the module must carry a docstring"
+    norm = _norm_doc(doc)
+    assert "never biased by which rounds happened to pass" not in norm, (
+        "the docstring must not claim the recorded sample is "
+        "unconditionally never biased -- that only holds if every "
+        "round invokes review-pass, which shipped orchestration does "
+        "not guarantee"
+    )
+    assert "invocation" in norm, (
+        "the docstring must name invocation as the mechanism the bias "
+        "condition depends on"
+    )
+    assert "only if" in norm, (
+        "the docstring must state the unbiased claim is conditional "
+        "(only if every round invokes this CLI)"
+    )
+    assert "skewed" in norm, (
+        "the docstring must name the shipped reality: the recorded "
+        "sample is invocation-skewed in practice"
+    )

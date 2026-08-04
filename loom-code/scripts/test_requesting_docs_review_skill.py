@@ -645,6 +645,48 @@ def test_prior_findings_restated_as_scalar():
     )
 
 
+def test_directive2_states_invocation_semantics():
+    """Directive 2's session-boundary paragraph must state invocation
+    semantics: the ledger appends on every `review-pass` INVOCATION,
+    including the NEEDS_REVISION (exit 3) and schema-failure (exit 4)
+    paths that mint no marker -- not only on a "minted" round. An
+    entry can still be stale, but for the correct reason: a round
+    that never invokes the CLI (a mixed-branch docs round; a round
+    nobody bothered to invoke) appends nothing (D2). The paragraph
+    must also name the `unresolved` sentinel and treat it exactly as
+    "no prior reviewed_sha", never as a literal string to build a
+    range from (folded-in from Task 3's review)."""
+    conv = _norm(_convergence_window(_text())).lower()
+    assert "last minted round" not in conv, (
+        "Directive 2 must not claim the ledger holds only the last "
+        "minted round -- the ledger appends on every invocation, not "
+        "only on a mint"
+    )
+    assert "invocation" in conv, (
+        "Directive 2 must state the ledger appends on every "
+        "review-pass invocation"
+    )
+    assert "needs_revision" in conv and (
+        "exit 3" in conv or "exit-3" in conv
+    ), (
+        "Directive 2 must name the NEEDS_REVISION (exit 3) path as one "
+        "that still appends a ledger entry despite minting no marker"
+    )
+    assert "schema" in conv and ("exit 4" in conv or "exit-4" in conv), (
+        "Directive 2 must name the schema-failure (exit 4) path as one "
+        "that still appends a ledger entry despite minting no marker"
+    )
+    assert "unresolved" in conv and "not a sha" in conv, (
+        "Directive 2 must name the `unresolved` sentinel and state it "
+        "is not a sha"
+    )
+    assert "no prior `reviewed_sha`" in conv, (
+        "Directive 2 must state the `unresolved` sentinel is treated "
+        "exactly as no prior reviewed_sha found, so the next round "
+        "runs unbounded"
+    )
+
+
 def test_window_precision():
     """Windows are narrow, not whole-file greps in disguise: each
     window's distinctive phrase exists in the file exactly where

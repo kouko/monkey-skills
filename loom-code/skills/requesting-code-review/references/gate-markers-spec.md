@@ -90,8 +90,11 @@ silently.
 "quote_status"}, ...]}, ...]}}` — append-only, **never reset**, one
 entry appended per `review-pass` invocation whose verdict file is
 readable and whose branch resolves — including the `NEEDS_REVISION`
-and schema-failure paths that mint no `review-pass.json` at all, so the
-recorded sample is never biased by which rounds happened to pass.
+and schema-failure paths that mint no `review-pass.json` at all. This
+keeps the recorded sample unbiased by which rounds happened to pass
+ONLY IF every round invokes this CLI; shipped orchestration invokes it
+on mint attempts, so the recorded sample is invocation-skewed in
+practice — a round nobody bothers to invoke leaves no row at all.
 
 Its directory resolves via `--git-common-dir` (not `--git-dir` like the
 three markers above), so every `git worktree` checkout of a repo shares
