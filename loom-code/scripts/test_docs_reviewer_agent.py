@@ -252,18 +252,21 @@ def test_reviewed_sha_fail_closed_no_self_resolve():
     (D4). The input-contract template must also carry the HEAD-sha slot
     SKILL.md Step 3 requires the dispatch packet to state -- that
     omission is what makes the fallback reachable in the first place."""
-    output_window = _output_contract()
-    assert "unresolved" in output_window, (
+    output_norm = " ".join(_output_contract().split()).lower()
+    assert "unresolved" in output_norm, (
         "the output contract must document a fail-closed `unresolved` "
         "value for reviewed_sha when the packet did not state one"
     )
-    assert "resolve it yourself" not in output_window, (
+    assert "resolve it yourself" not in output_norm, (
         "the output contract must not instruct the reviewer to "
-        "self-resolve a missing HEAD sha"
+        "self-resolve a missing HEAD sha -- checked on whitespace-"
+        "normalized text because the historical defect wording "
+        "hard-wrapped this exact phrase across a line boundary, which "
+        "made a raw substring check vacuous"
     )
 
-    input_window = _input_contract()
-    assert "HEAD sha" in input_window, (
+    input_norm = " ".join(_input_contract().split()).lower()
+    assert "head sha" in input_norm, (
         "the input-contract template must carry the HEAD-sha slot the "
         "skill's Step 3 requires the dispatch packet to state, or the "
         "fail-closed fallback above stays reachable"
