@@ -5,6 +5,25 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.53.0] — 2026-08-05 — reviewers may verify what they judge
+
+### Changed
+
+- **The four reviewer contracts drop the test-running prohibition for
+  an evidence-grade permission.** Born as an economy default (v0.7.0)
+  and patched into honesty rather than re-examined (R3, PR #465), the
+  prohibition made verdict quality packet-dependent: reviewers who
+  obeyed dispatch packets caught a red tip and mutation-proved a
+  coverage gap; reviewers who obeyed the contract refused to run and
+  downgraded. Contracts now permit READ-ONLY test runs as verdict
+  evidence (mutation/RED probes on extracted copies or isolated
+  worktrees only, zero residual diff verified; docs-reviewer gets the
+  narrow read-context form), R3 becomes a conditional fallback for
+  when a check genuinely could not run, each contract gains a purpose
+  anchor (evidence-grade verdicts: reading first, tools corroborate),
+  and the input contracts codify the attention-list rule — a packet's
+  `Scrutinize:` list only adds focus, never narrows coverage.
+
 ## [0.52.0] — 2026-08-04 — the mechanical lane runs the suite, and worktree reviewers get told where they are
 
 ### Added
