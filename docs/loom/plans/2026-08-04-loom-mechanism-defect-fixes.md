@@ -389,6 +389,21 @@ Plan-document-reviewer verdict: PASS (2026-08-04, round 2, 15/15)
 - Independent: false
 - Brief item covered: "Weak-model dogfood before finishing (user directive)" (Decision 5)
 
+## Decision Log
+
+- T3 gained a third test (`test_cli_divergent_creation_sha_falls_back_with_caveat`)
+  beyond the plan's two: T2's quality reviewer proved by mutation that
+  neither ancestry check was test-necessary; the divergent-creation case
+  is a fallback case, so the mutation-killer landed in T3's scope.
+  Two-way door, no product consequence — logged, not asked.
+- T11 executed by the orchestrator, not an implementer: probe (a)
+  dispatches a weak-model agent, and subagents cannot dispatch agents
+  (recorded nesting gotcha). Reviewer verification unchanged.
+- T11 probe (c)'s pinned exemplar ("never biased" docstring copy) was
+  retired by the 0490 arc's own claim rewrite before the probe ran;
+  substituted a live md↔py mirror pair (§Pinned refusal contract), with
+  the substitution recorded in the dogfood record. Two-way door — logged.
+
 ## Notes
 
 - Verdict stamped PASS (round 2) — stamping the reviewer's returned
