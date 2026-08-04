@@ -79,7 +79,13 @@ def _step1_section(text: str) -> str:
 
 
 def _norm(s: str) -> str:
-    """Collapse whitespace so a re-wrapped line still matches."""
+    """Collapse whitespace so a re-wrapped line still matches, and strip
+    markdown emphasis markers so bold text is not falsely distinct from
+    the equivalent plain phrase when a test checks a phrase's presence
+    or absence -- mirrors test_requesting_docs_review_skill.py's _norm
+    (hard-wrap, whitespace, and inline-bold are the three vacuous-pin
+    variants seen in this arc)."""
+    s = s.replace("*", "")
     return re.sub(r"\s+", " ", s).strip()
 
 

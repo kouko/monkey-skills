@@ -37,6 +37,16 @@ _PROSE_DIMENSIONS = [
 ]
 
 
+def _norm(s: str) -> str:
+    """Collapse whitespace so a re-wrapped line still matches, and strip
+    markdown emphasis markers so bold text is not falsely distinct from
+    the equivalent plain phrase when a test checks a phrase's presence
+    or absence -- mirrors test_requesting_docs_review_skill.py's _norm
+    (hard-wrap, whitespace, and inline-bold are the three vacuous-pin
+    variants seen in this arc)."""
+    return re.sub(r"\s+", " ", s.replace("*", "")).strip()
+
+
 def _text() -> str:
     assert AGENT.is_file(), f"agent file is absent at {AGENT}"
     return AGENT.read_text(encoding="utf-8")
@@ -192,7 +202,7 @@ def test_class_default_provenance_marker():
     `instruction` instead of judging it, and the aggregation-equivalence
     sentence must say so verbatim (I5)."""
     window = _output_contract()
-    norm = " ".join(window.split()).lower()
+    norm = _norm(window).lower()
     assert "(defaulted)" in norm, (
         "Output contract must show the optional `(defaulted)` tag on "
         "the `class:` line"
@@ -210,7 +220,7 @@ def test_prior_findings_carrier_every_later_round():
     """The prior-findings carrier is not round-2-specific in either the
     input or output contract: every round after round 1 receives (and
     echoes back) the previous round's surviving findings (D1)."""
-    input_window = _input_contract()
+    input_window = _norm(_input_contract())
     assert (
         "### Prior-round findings (every round after round 1)"
         in input_window
@@ -229,7 +239,7 @@ def test_prior_findings_carrier_every_later_round():
         "once more and what to do with it"
     )
 
-    output_window = _output_contract()
+    output_window = _norm(_output_contract())
     assert "every round after round 1" in output_window, (
         "the output-template comment must generalize prior_findings_check "
         "to every round after round 1"
@@ -272,20 +282,20 @@ def test_reviewed_sha_fail_closed_no_self_resolve():
     (D4). The input-contract template must also carry the HEAD-sha slot
     SKILL.md Step 3 requires the dispatch packet to state -- that
     omission is what makes the fallback reachable in the first place."""
-    output_norm = " ".join(_output_contract().split()).lower()
+    output_norm = _norm(_output_contract()).lower()
     assert "unresolved" in output_norm, (
         "the output contract must document a fail-closed `unresolved` "
         "value for reviewed_sha when the packet did not state one"
     )
     assert "resolve it yourself" not in output_norm, (
         "the output contract must not instruct the reviewer to "
-        "self-resolve a missing HEAD sha -- checked on whitespace-"
-        "normalized text because the historical defect wording "
+        "self-resolve a missing HEAD sha -- checked on whitespace- and "
+        "markdown-normalized text because the historical defect wording "
         "hard-wrapped this exact phrase across a line boundary, which "
         "made a raw substring check vacuous"
     )
 
-    input_norm = " ".join(_input_contract().split()).lower()
+    input_norm = _norm(_input_contract()).lower()
     assert "head sha" in input_norm, (
         "the input-contract template must carry the HEAD-sha slot the "
         "skill's Step 3 requires the dispatch packet to state, or the "
