@@ -125,7 +125,7 @@ Plan-document-reviewer verdict: PASS (2026-08-05, round 3, 15/15)
   the attention-list sentence, and `may not** run tests` appears in
   NONE of the four (absence paired with the positives).
 - Module: loom-code/agents/
-- Files touched: loom-code/agents/code-quality-reviewer.md, loom-code/agents/code-reviewer.md, loom-code/agents/spec-reviewer.md, loom-code/agents/docs-reviewer.md, loom-code/scripts/test_reviewer_carve_out_wording.py
+- Files touched: loom-code/agents/code-quality-reviewer.md, loom-code/agents/code-reviewer.md, loom-code/agents/spec-reviewer.md, loom-code/agents/docs-reviewer.md, loom-code/scripts/test_reviewer_carve_out_wording.py, loom-code/scripts/test_docs_reviewer_agent.py
 - Context paths:
   - loom-code/agents/code-quality-reviewer.md (role rules ~15-25, Input contract section)
   - loom-code/agents/code-reviewer.md (role rules ~15-27)
@@ -237,6 +237,17 @@ Plan-document-reviewer verdict: PASS (2026-08-05, round 3, 15/15)
 
 ## Decision Log
 
+- The shipped CHANGELOG entry supersedes this plan's Task-3 verbatim
+  block in ONE clause: the block was pinned before T1's round-2 R3
+  rewording and still described R3 with the retired could-not-run-only
+  antecedent; the whole-branch docs arms caught the stale copy (the
+  falsified-neighbor class riding a frozen pin), and the CHANGELOG now
+  reads "attaches its honest-downgrade duty to any evidence not
+  independently confirmed — whether a check could not run or simply was
+  not run". The plan's pinned block stays as the historical record;
+  this entry adjudicates the divergence. Also: T2's Files-touched
+  gained `test_docs_reviewer_agent.py` retroactively (shipped in
+  89af7c77, disclosed in its report, under-declared here).
 - T4 executed by the orchestrator, not an implementer: probes dispatch
   agents, and subagents cannot dispatch agents (recorded nesting
   gotcha). Reviewer verification of the record runs as planned.
@@ -252,8 +263,8 @@ Plan-document-reviewer verdict: PASS (2026-08-05, round 3, 15/15)
 ## Notes
 
 - Copy-sweep partition for the prohibition (taken pre-plan, offline
-  sweep): 6 operative copies — 4 per-file rules (T2), 1 SSOT R3 (T1),
-  1 gitignored HANDOFF (history, untouched). Synonym leak stays open as
+  sweep): 6 copies, 5 operative — 4 per-file rules (T2), 1 SSOT R3 (T1),
+  plus 1 gitignored HANDOFF (history, untouched). Synonym leak stays open as
   always.
 - T1 and T2 both author a pytest — full triads; only T3 is mechanical
   (bounded literal substitution + quoted CHANGELOG + named sync

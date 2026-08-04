@@ -78,40 +78,40 @@ def _normalize(text):
 
 
 def test_code_quality_reviewer_carve_out_present():
-    text = _normalize(CODE_QUALITY_REVIEWER.read_text())
+    text = _normalize(CODE_QUALITY_REVIEWER.read_text(encoding="utf-8"))
     assert _normalize(CARVE_OUT_CODE_QUALITY_REVIEWER) in text
 
 
 def test_code_reviewer_carve_out_present():
-    text = _normalize(CODE_REVIEWER.read_text())
+    text = _normalize(CODE_REVIEWER.read_text(encoding="utf-8"))
     assert _normalize(CARVE_OUT_CODE_REVIEWER) in text
 
 
 def test_spec_reviewer_carve_out_present():
-    text = _normalize(SPEC_REVIEWER.read_text())
+    text = _normalize(SPEC_REVIEWER.read_text(encoding="utf-8"))
     assert _normalize(CARVE_OUT_SPEC_REVIEWER) in text
 
 
 def test_docs_reviewer_carve_out_present():
-    text = _normalize(DOCS_REVIEWER.read_text())
+    text = _normalize(DOCS_REVIEWER.read_text(encoding="utf-8"))
     assert _normalize(CARVE_OUT_DOCS_REVIEWER) in text
 
 
 def test_purpose_anchor_present_in_all_four():
     for path in ALL_FOUR:
-        text = _normalize(path.read_text())
+        text = _normalize(path.read_text(encoding="utf-8"))
         assert _normalize(PURPOSE_ANCHOR) in text, f"missing in {path}"
 
 
 def test_attention_list_sentence_present_in_all_four():
     for path in ALL_FOUR:
-        text = _normalize(path.read_text())
+        text = _normalize(path.read_text(encoding="utf-8"))
         assert _normalize(ATTENTION_LIST_SENTENCE) in text, f"missing in {path}"
 
 
 def test_absolute_prohibition_absent_from_all_four():
     for path in ALL_FOUR:
-        text = _normalize(path.read_text())
+        text = _normalize(path.read_text(encoding="utf-8"))
         assert _normalize(ABSENT_PROHIBITION) not in text, f"still present in {path}"
 
 
@@ -124,13 +124,13 @@ def test_anti_pattern_test_ban_bullets_gone_residue_bullet_exact_three():
     that had a test-ban anti-pattern bullet; docs-reviewer.md's
     anti-patterns section never had one and stays untouched."""
     for path in ALL_FOUR:
-        text = _normalize(path.read_text())
+        text = _normalize(path.read_text(encoding="utf-8"))
         assert _normalize(ANTI_PATTERN_OUT_OF_SCOPE) not in text, f"still present in {path}"
         assert _normalize(ANTI_PATTERN_VERIFICATION_JOB) not in text, f"still present in {path}"
 
     for path in FILES_WITH_RESIDUE_BULLET:
-        text = _normalize(path.read_text())
+        text = _normalize(path.read_text(encoding="utf-8"))
         assert _normalize(RESIDUE_BULLET) in text, f"missing in {path}"
 
-    docs_text = _normalize(DOCS_REVIEWER.read_text())
+    docs_text = _normalize(DOCS_REVIEWER.read_text(encoding="utf-8"))
     assert _normalize(RESIDUE_BULLET) not in docs_text

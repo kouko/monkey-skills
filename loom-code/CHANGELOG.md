@@ -18,8 +18,9 @@ Versioning: [Semantic Versioning](https://semver.org/).
   downgraded. Contracts now permit READ-ONLY test runs as verdict
   evidence (mutation/RED probes on extracted copies or isolated
   worktrees only, zero residual diff verified; docs-reviewer gets the
-  narrow read-context form), R3 becomes a conditional fallback for
-  when a check genuinely could not run, each contract gains a purpose
+  narrow read-context form), R3 now attaches its honest-downgrade duty
+  to any evidence not independently confirmed — whether a check could
+  not run or simply was not run, each contract gains a purpose
   anchor (evidence-grade verdicts: reading first, tools corroborate),
   and the input contracts codify the attention-list rule — a packet's
   `Scrutinize:` list only adds focus, never narrows coverage.

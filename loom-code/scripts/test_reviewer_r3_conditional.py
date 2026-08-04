@@ -40,29 +40,29 @@ def _normalize(text):
 
 
 def test_conditional_opening_present_in_ssot():
-    text = _normalize(SSOT_PATH.read_text())
+    text = _normalize(SSOT_PATH.read_text(encoding="utf-8"))
     assert _normalize(CONDITIONAL_OPENING) in text
 
 
 def test_conditional_opening_present_in_all_four_agents():
     for path in AGENT_PATHS:
-        text = _normalize(path.read_text())
+        text = _normalize(path.read_text(encoding="utf-8"))
         assert _normalize(CONDITIONAL_OPENING) in text, f"missing in {path}"
 
 
 def test_absolute_opening_absent_from_all_five():
     for path in ALL_PATHS:
-        text = _normalize(path.read_text())
+        text = _normalize(path.read_text(encoding="utf-8"))
         assert _normalize(ABSOLUTE_OPENING) not in text, f"still present in {path}"
 
 
 def test_round1_opening_absent_from_all_five():
     for path in ALL_PATHS:
-        text = _normalize(path.read_text())
+        text = _normalize(path.read_text(encoding="utf-8"))
         assert _normalize(ROUND1_OPENING) not in text, f"still present in {path}"
 
 
 def test_never_false_pass_still_present_in_all_five():
     for path in ALL_PATHS:
-        text = _normalize(path.read_text())
+        text = _normalize(path.read_text(encoding="utf-8"))
         assert _normalize("Never false-pass") in text, f"missing in {path}"
