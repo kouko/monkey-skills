@@ -9,8 +9,10 @@ contract change.
 ## Which contract actually ran
 
 The cold reviewer (sonnet, fresh context, no expectations leaked) was dispatched
-with the BRANCH's `loom-code/agents/docs-reviewer.md` at commit `19c73436`
-(0.50.0 working tree) passed as its role contract by path — NOT the installed
+with the BRANCH's `loom-code/agents/docs-reviewer.md` at the 0.50.0 bump
+commit — `6db54567` after the base-freshening rebase onto origin/main
+(`4c2937d5`); byte-identical content to the pre-rebase commit the probe ran
+against — passed as its role contract by path — NOT the installed
 plugin cache (which still serves 0.49.0 until publication). So this probe
 exercises the post-fix wording. The orchestrator layer (cap/STOP, round-N
 packet assembly, union recompute, mint-once) remains uncoverable by cold-read
