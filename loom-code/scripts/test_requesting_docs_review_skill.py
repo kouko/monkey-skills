@@ -419,9 +419,12 @@ def test_union_reaggregation_mutation_guard():
     _assert_reaggregate_never_adopt_one_arm(low)
 
     key_phrase = (
-        "re-run §aggregation rule on the union (per-dimension score = "
-        "the worse of the two arms' scores) — never adopt one arm's "
-        "own verdict"
+        "re-run §aggregation rule on the union — per-dimension score is "
+        "re-aggregated from that dimension's union findings, not either "
+        "arm's own: two arms contributing different findings to one "
+        "dimension can each score clean alone yet union to "
+        "needs_revision, which either arm's own score would miss — "
+        "never adopt one arm's own verdict"
     )
     assert key_phrase in low, (
         "test fixture assumption broken -- SKILL.md wording changed "
@@ -433,26 +436,63 @@ def test_union_reaggregation_mutation_guard():
         _assert_reaggregate_never_adopt_one_arm(mutated)
 
 
-def _assert_per_dimension_worse_score(low: str) -> None:
+def _assert_per_dimension_score_is_union_recomputed(low: str) -> None:
     """Raise AssertionError unless `low` states each minted dimension
-    score is the WORSE of the two arms' scores (mirrors
-    requesting-code-review's wording, T2 quality review correctness
-    finding)."""
+    score is RE-AGGREGATED from that dimension's union findings, not
+    copied from either arm's own score (I1 fix: worse-of-arms
+    understates when the two arms contribute DIFFERENT findings to one
+    dimension -- two arms that each score a dimension clean alone can
+    still union to NEEDS_REVISION there, which worse-of-arms would miss
+    since neither arm alone carried a 🟡/🔴 in it)."""
     assert "per-dimension score" in low, (
         "must state how the orchestrator computes per-dimension panel "
         "scores for the minted verdict"
     )
-    assert "worse of the two arms" in low, (
-        "per-dimension score must be the WORSE of the two arms' scores, "
-        "mirroring requesting-code-review's wording verbatim"
+    assert "re-aggregated from that dimension's union findings" in low, (
+        "per-dimension score must be RE-AGGREGATED from that "
+        "dimension's union findings, not copied from either arm"
+    )
+    assert "worse of the two arms' scores" not in low, (
+        "must retire worse-of-arms as the per-dimension score rule -- "
+        "it understates when the two arms contribute different "
+        "findings to the same dimension"
     )
 
 
-def test_per_dimension_score_is_worse_of_two_arms():
-    """The minted per-dimension score is the WORSE of the two arms'
-    scores -- same rule as requesting-code-review's panel aggregation."""
+def test_per_dimension_score_is_union_recomputed():
+    """The minted per-dimension score is RE-AGGREGATED from that
+    dimension's union findings, not the worse of the two arms' own
+    scores -- worse-of-arms silently understates a dimension where the
+    two arms found DIFFERENT defects (1 instruction-class 🟡 each ->
+    union has 2 -> NEEDS_REVISION at the verdict level, while
+    worse-of-arms still reads PASS_WITH_NOTES since neither arm alone
+    crossed the threshold)."""
     low = _norm(_steps_window(_text())).lower()
-    _assert_per_dimension_worse_score(low)
+    _assert_per_dimension_score_is_union_recomputed(low)
+
+
+def test_per_dimension_score_union_recompute_mutation_guard():
+    """Mutation probe: reverting the union-recompute wording back to
+    worse-of-arms must fail this pin -- proves the pin is sensitive to
+    the regression it exists to catch (the verdict/dimension_scores
+    contradiction I1 closes), not just to the section going absent."""
+    low = _norm(_steps_window(_text())).lower()
+    _assert_per_dimension_score_is_union_recomputed(low)
+
+    key_phrase = (
+        "per-dimension score is re-aggregated from that dimension's "
+        "union findings, not either arm's own"
+    )
+    assert key_phrase in low, (
+        "test fixture assumption broken -- SKILL.md wording changed "
+        "under this test; update key_phrase to match"
+    )
+    mutated = low.replace(
+        key_phrase, "per-dimension score is the worse of the two arms' scores"
+    )
+
+    with pytest.raises(AssertionError):
+        _assert_per_dimension_score_is_union_recomputed(mutated)
 
 
 def test_convergence_directives():

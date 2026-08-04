@@ -310,6 +310,67 @@ def test_step3_mint_scoped_away_from_mixed_branch():
     )
 
 
+def _assert_per_dimension_score_is_union_recomputed(low: str) -> None:
+    """Raise AssertionError unless `low` states each minted dimension
+    score is RE-AGGREGATED from that dimension's union findings, not
+    copied from either arm's own score (I1 fix: worse-of-arms
+    understates when the two arms contribute DIFFERENT findings to one
+    dimension -- two arms that each score a dimension clean alone can
+    still union to NEEDS_REVISION there, which worse-of-arms would
+    miss)."""
+    assert "per-dimension score" in low, (
+        "Step 3 must state how the panel computes per-dimension scores "
+        "for the minted verdict"
+    )
+    assert "re-aggregated from that dimension's union findings" in low, (
+        "per-dimension score must be RE-AGGREGATED from that "
+        "dimension's union findings, not copied from either arm"
+    )
+    assert "worse of the two arms' scores" not in low, (
+        "must retire worse-of-arms as the per-dimension score rule -- "
+        "it understates when the two arms contribute different "
+        "findings to the same dimension"
+    )
+
+
+def test_step3_per_dimension_score_is_union_recomputed():
+    """Step 3's minted per-dimension score is RE-AGGREGATED from that
+    dimension's union findings, not the worse of the two arms' own
+    scores -- worse-of-arms silently understates a dimension where the
+    two arms found DIFFERENT defects (1 yellow each -> union has 2 ->
+    NEEDS_REVISION at the verdict level, while worse-of-arms still
+    reads PASS_WITH_NOTES since neither arm alone crossed the
+    threshold). Mirrors requesting-docs-review's Step 4 wording."""
+    text = _text()
+    low = _norm(_step3_section(text)).lower()
+    _assert_per_dimension_score_is_union_recomputed(low)
+
+
+def test_step3_per_dimension_score_mutation_guard():
+    """Mutation probe: reverting the union-recompute wording back to
+    worse-of-arms must fail this pin -- proves it is sensitive to the
+    regression it exists to catch, not just to the section going
+    absent."""
+    text = _text()
+    low = _norm(_step3_section(text)).lower()
+    _assert_per_dimension_score_is_union_recomputed(low)
+
+    key_phrase = (
+        "per-dimension score is re-aggregated from that dimension's "
+        "union findings, not either arm's own"
+    )
+    assert key_phrase in low, (
+        "test fixture assumption broken -- SKILL.md wording changed "
+        "under this test; update key_phrase to match"
+    )
+    mutated = low.replace(
+        key_phrase, "per-dimension score is the worse of the two arms' scores"
+    )
+
+    with pytest.raises(AssertionError):
+        _assert_per_dimension_score_is_union_recomputed(mutated)
+
+
 def _when_to_use_trivial_row(text: str) -> str:
     """The §When to use table row for trivial diffs."""
     for line in text.splitlines():
