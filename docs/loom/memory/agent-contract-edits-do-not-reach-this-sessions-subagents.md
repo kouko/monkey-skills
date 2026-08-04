@@ -1,16 +1,25 @@
 ---
 name: agent-contract-edits-do-not-reach-this-sessions-subagents
-description: A dispatched subagent's role contract is loaded from the INSTALLED plugin cache, never from the repo working tree, so a branch that edits an agent contract cannot behaviourally test its own change — and the subagent's self-report about which version it loaded is worthless, because two arms in one round gave contradicting accounts while the cache said only one of them was right
+description: An ordinary subagent dispatch loads its role contract from the installed plugin, not from the repo working tree, so an agent-contract edit on a branch does not reach the reviewers that branch dispatches — and the subagent cannot report which version it loaded, because it may have read the repo copy as a review artifact and mistake that for its own system prompt
 type: gotcha
 origin: PR #645 (2026-08-04) — the delta-scope rule was edited into loom-code/agents/docs-reviewer.md and every reviewer dispatched that session still ran the cached 0.47.0 contract
 ---
 
 Editing `loom-code/agents/<role>.md` on a branch changes the file the
-orchestrator and reviewers *read as an artifact*. It does not change the
-system prompt of any subagent dispatched with that `subagent_type` — that
-comes from the installed plugin cache
+orchestrator and reviewers *read as an artifact*. On an **ordinary
+dispatch** it does not change the system prompt of any subagent dispatched
+with that `subagent_type` — that comes from the installed plugin cache
 (`~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/`), which only
 moves when the plugin is published and updated.
+
+**Scope, because a sibling entry covers the exception**:
+[[headless-branch-plugin-testing-recipe]] loads an unpushed branch's plugin
+with `claude … --plugin-dir <repo>/<plugin>`, which is a deliberate override
+of the path this entry describes. Whether that override reaches subagent
+role contracts specifically is untested — the point here is only that an
+ordinary in-session dispatch does not, so "I dispatched a reviewer and it
+behaved correctly" is not evidence about a contract edit that has not
+shipped.
 
 The gap is invisible unless you look at the cache. On PR #645 the working
 tree carried a new `### Round scope` input section and an `out_of_scope:`

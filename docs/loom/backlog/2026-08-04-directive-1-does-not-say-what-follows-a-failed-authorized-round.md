@@ -15,10 +15,16 @@ Directive 1 covers two states precisely:
   third round runs only on explicit user authorization.
 
 It does not say what happens when that authorized round **also** ends
-`NEEDS_REVISION`. PR #645 reached exactly there. The spirit is not in
-doubt — every round past the cap needs its own authorization, so a fourth
-would too — but the text does not say it, and an executor following the
-letter finds no rule at the moment it most needs one.
+`NEEDS_REVISION`. PR #645 reached exactly there.
+
+**Half of it is already written, and the gap is the other half.** The
+authorization rule generalizes on its own: `SKILL.md:63` states "A round
+past the cap needs explicit user authorization (Directive 1)", which covers
+a fourth round as much as a third. What no passage states is whether the
+**three-option STOP handoff** (Directive 1's fix-plus-verification / fix-and-
+ship / ship-with-residuals menu) recurs after a failed authorized round, or
+whether something else governs there. Do not add a clause about
+authorization; it exists.
 
 ## What the answer probably is, and why it is not written yet
 
