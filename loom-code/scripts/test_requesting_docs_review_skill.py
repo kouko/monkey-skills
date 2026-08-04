@@ -60,7 +60,14 @@ def _text() -> str:
 
 
 def _norm(s: str) -> str:
-    """Collapse whitespace so a re-wrapped line still matches."""
+    """Collapse whitespace so a re-wrapped line still matches, and strip
+    markdown emphasis markers so bold text (e.g. "last **minted**
+    round") is not falsely distinct from the equivalent plain phrase
+    ("last minted round") when a test checks a phrase's presence or
+    absence -- three prior vacuous-pin variants in this arc were hard
+    wrap, whitespace, and inline bold; this closes the inline-bold
+    gap."""
+    s = s.replace("*", "")
     return re.sub(r"\s+", " ", s).strip()
 
 
@@ -684,6 +691,29 @@ def test_directive2_states_invocation_semantics():
         "Directive 2 must state the `unresolved` sentinel is treated "
         "exactly as no prior reviewed_sha found, so the next round "
         "runs unbounded"
+    )
+
+
+def test_round_accounting_is_session_scoped():
+    """The already-reviewed-branch bullet in `## When NOT to use` must
+    retract the false claim that round accounting persists across a
+    session boundary. Nothing restores an orchestrator's round count
+    when a new session resumes review -- the count restarts, so the
+    2-round cap guards each session independently, weaker than
+    continuous accounting would be. Directive 2's surrounding prose
+    already covers the ledger/sha carrier gap (D2, Task 4); this bullet
+    stays scoped to the round-COUNT truth, not a restatement of that
+    (D3)."""
+    window = _norm(_heading_window(_text(), "When NOT to use")).lower()
+    assert "round accounting continues, it does not reset" not in window, (
+        "must retract the false cross-session round-accounting "
+        "continuity claim"
+    )
+    assert "session-scoped" in window, (
+        "must state round accounting is session-scoped"
+    )
+    assert "restarts" in window, (
+        "must state the round count restarts across a session boundary"
     )
 
 

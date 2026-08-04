@@ -60,6 +60,21 @@ A second trap for whoever mines the ledger: `_append_origin_ledger` writes
 round number. The two rows above read `round: 1` and `round: 2` while being
 that branch's third-and-later rounds. Nothing in the field name says so.
 
+## The round COUNT shares this gap
+
+Directive 1's 2-round cap is enforced by a round counter the orchestrator
+holds in its own context — the same carrier as `reviewed_sha:` above, and
+nothing durable backs it either. Across a session boundary nothing restores
+that counter: a resumed session starts counting from round 1 again, so a
+review already past its two authorized rounds gets two more before the cap
+re-engages. `requesting-docs-review/SKILL.md`'s already-reviewed-branch
+entry used to claim the count survives a session boundary ("round accounting
+continues, it does not reset"); that claim was false and has been retracted
+to state the truth plainly (D3, 0.50.0) — this is the recorded carrier gap
+the retraction points at. Whichever persistence mechanism gets picked for
+the sha above should carry the round number alongside it; a fix that
+persists one and not the other leaves this item half-closed.
+
 ## What a fix has to decide
 
 Not a sentence — a persistence decision, one of:

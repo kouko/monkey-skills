@@ -33,7 +33,7 @@ Owns the **docs arm** of whole-branch review. Dispatches **two `docs-reviewer` s
 | Exempt category | What qualifies | What does NOT qualify |
 |---|---|---|
 | **Mechanical doc edits** | Typo fix, version bump, generated/sync output regen | Authored prose of any length — a 3-line instruction edit can misdirect an executor; it routes here |
-| **Already-reviewed branch** | A prior invocation this session PASSed and nothing changed since | "I tweaked a paragraph after review" — re-review (round accounting continues, it does not reset) |
+| **Already-reviewed branch** | A prior invocation this session PASSed and nothing changed since | "I tweaked a paragraph after review" — re-review (round accounting is session-scoped: the count restarts at a session boundary, so the 2-round cap guards each session independently, weaker than continuous accounting) |
 | **Explicit user override** | User literally says "skip docs review" AND the diff matches the mechanical category | "It's just docs" — that framing is the reason this skill exists |
 
 ## Process
