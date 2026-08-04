@@ -31,7 +31,12 @@ Exit codes:
       already-squashed foreign commits whose replay conflicts (squashing
       changes patch-ids, so rebase's duplicate-skip cannot drop them) —
       the merge-base fallback is textbook-correct for merge/rebase
-      workflows but unsafe in exactly that state. Every other refusal
+      workflows but unsafe in exactly that state — when it happens, one
+      extra stderr line follows the rebase remedy: a caveat naming the
+      verifiable recovery action (`git rebase --abort`, then retry with
+      the reflog's own last-line sha) so the caller need not judge
+      whether the printed old-base was safe. No caveat is printed when
+      the creation sha was used. Every other refusal
       shape has no shas to fill in, so no rebase invocation is printed
       for it. There are seven, and the list is
       exhaustive against `check_freshness`'s early returns: an
@@ -289,19 +294,37 @@ def main(argv: list[str] | None = None) -> int:
             # exit. Test both ancestry conditions with `is not None`,
             # never truthiness, or a real usable creation sha reads as a
             # failed check here.
-            if (
+            creation_usable = (
                 creation is not None
                 and _git(repo, "merge-base", "--is-ancestor", result.base_sha, creation)
                 is not None
                 and _git(repo, "merge-base", "--is-ancestor", creation, "HEAD")
                 is not None
-            ):
+            )
+            if creation_usable:
                 old_base = creation
             print(
                 "review-scope: rebase onto the current base: "
                 f"git rebase --onto {result.remote_sha} {old_base} HEAD",
                 file=sys.stderr,
             )
+            if not creation_usable:
+                # The remedy fell back to the merge-base rather than the
+                # branch's own creation sha, so merge-base..HEAD may carry
+                # already-squashed foreign commits (see module docstring).
+                # Print a verifiable recovery action rather than leaving
+                # the caller to judge whether the printed old-base is
+                # safe: abort and retry with the reflog's own last-line
+                # sha, not a guess.
+                branch = _git(repo, "symbolic-ref", "--short", "-q", "HEAD")
+                branch_label = branch if branch is not None else "<branch>"
+                print(
+                    "review-scope: if the rebase stops on commits that are "
+                    "not this branch's own work, run git rebase --abort and "
+                    "retry with the second sha replaced by the last-line sha "
+                    f"of: git reflog show {branch_label}",
+                    file=sys.stderr,
+                )
         return 1
 
     ref = default_branch_ref(repo)

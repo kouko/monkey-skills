@@ -44,7 +44,20 @@ the creation sha or falls back to the merge-base — is live-verified by
 `test_cli_stale_cut_remedy_uses_creation_sha_not_merge_base` (a real
 stale-cut fixture where both ancestry checks genuinely hold) and
 `test_cli_refuses_stale_base_with_rebase_remedy` (the creation-equals-
-merge-base case, proving the guard is not vacuously true).
+merge-base case, proving the guard is not vacuously true). Task 3 adds
+no new invocation but exercises two further real states of the same
+ancestry checks: `test_cli_stale_base_without_reflog_prints_caveat`
+deletes the branch's real `.git/logs/refs/heads/<branch>` file so
+`branch_creation_sha` genuinely returns None (confirmed live at
+loom-code scratchpad probe: `git log -g` on a reflog-less ref exits 0
+with empty stdout, not an error, which is why `branch_creation_sha`
+must test `output` for emptiness rather than trust a non-None return);
+and `test_cli_divergent_creation_sha_falls_back_with_caveat` builds a
+real repo where the recorded creation sha passes the first ancestry
+check (base-is-ancestor-of-creation) but fails the second
+(creation-is-ancestor-of-HEAD) — a genuine reset-to-a-sibling-lineage
+state, not a mock — proving that second check is load-bearing on its
+own.
 """
 from __future__ import annotations
 
@@ -253,6 +266,121 @@ def test_cli_stale_cut_remedy_uses_creation_sha_not_merge_base(tmp_path, capsys)
     assert exit_code != 0
     assert f"git rebase --onto {s_sha} {p2_sha} HEAD" in captured.err
     assert m0_sha not in captured.err
+
+
+def test_cli_stale_base_without_reflog_prints_caveat(tmp_path, capsys):
+    # Task 3 RED (a): the plain stale-base fixture (same shape as
+    # test_cli_refuses_stale_base_with_rebase_remedy), but with the
+    # branch's real reflog FILE deleted before the CLI runs — a live,
+    # unmocked way to force branch_creation_sha to return None (confirmed
+    # separately: git log -g on a reflog-less ref exits 0 with empty
+    # stdout, not a git failure). The fallback old-base must still be the
+    # merge-base, and — new in Task 3 — a caveat line pointing at a
+    # verifiable recovery action must appear on stderr.
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+    base_sha = _head(repo)
+
+    _git(repo, "checkout", "-q", "-b", "feature")
+    _git(upstream, "commit", "--allow-empty", "-m", "already on default branch")
+    remote_sha = _head(upstream)
+
+    reflog_path = repo / ".git" / "logs" / "refs" / "heads" / "feature"
+    reflog_path.unlink()
+
+    exit_code = review_scope.main(["--repo", str(repo)])
+    captured = capsys.readouterr()
+
+    assert exit_code != 0
+    assert f"git rebase --onto {remote_sha} {base_sha} HEAD" in captured.err
+    assert "git rebase --abort" in captured.err
+    assert "git reflog show feature" in captured.err
+
+
+def test_cli_creation_sha_path_prints_no_caveat(tmp_path, capsys):
+    # Task 3 RED (paired negative): Task 2's stale-cut fixture, where the
+    # creation sha IS usable and becomes the printed old-base. No caveat
+    # line may appear here — the remedy is already correct. Absence is
+    # paired with the positive fact that the remedy line itself is
+    # present, so this cannot pass vacuously on a broken CLI path.
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+
+    _git(repo, "checkout", "-q", "-b", "prev")
+    (repo / "p1.txt").write_text("p1\n")
+    _git(repo, "add", "p1.txt")
+    _git(repo, "commit", "-q", "-m", "P1")
+    (repo / "p2.txt").write_text("p2\n")
+    _git(repo, "add", "p2.txt")
+    _git(repo, "commit", "-q", "-m", "P2")
+    p2_sha = _head(repo)
+
+    (upstream / "p1.txt").write_text("p1\n")
+    (upstream / "p2.txt").write_text("p2\n")
+    _git(upstream, "add", "p1.txt", "p2.txt")
+    _git(upstream, "commit", "-q", "-m", "S (squash of P1+P2)")
+    s_sha = _head(upstream)
+
+    _git(repo, "checkout", "-q", "-b", "arc")
+    (repo / "o1.txt").write_text("o1\n")
+    _git(repo, "add", "o1.txt")
+    _git(repo, "commit", "-q", "-m", "O1")
+
+    exit_code = review_scope.main(["--repo", str(repo)])
+    captured = capsys.readouterr()
+
+    assert exit_code != 0
+    assert f"git rebase --onto {s_sha} {p2_sha} HEAD" in captured.err
+    assert "git rebase --abort" not in captured.err
+
+
+def test_cli_divergent_creation_sha_falls_back_with_caveat(tmp_path, capsys):
+    # Task 3 RED (b) — mutation-killing coverage for the SECOND ancestry
+    # check (`creation is ancestor of HEAD`), found missing during
+    # review: a fixture where the recorded creation sha passes the FIRST
+    # check (base is ancestor of creation) but fails the second. Layout:
+    #   G (clone point) --- R (upstream advances; branch "arc" cut here,
+    #                          so branch_creation_sha == R)
+    #    \
+    #     S (a sibling line off G, NOT descending through R)
+    # arc's own commit O1 is then hard-reset onto S, so current HEAD's
+    # real ancestry no longer passes through R at all: merge-base(HEAD,
+    # ref) resolves to G (R is-ancestor-of G's descendant R holds, so
+    # check 1 — base(G)-is-ancestor-of-creation(R) — genuinely passes),
+    # but R is NOT an ancestor of HEAD=S (check 2 genuinely fails). A
+    # version of the code that only tested check 1 would wrongly select
+    # R as old-base here; this proves check 2 is load-bearing on its own.
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+    g_sha = _head(repo)
+
+    _git(upstream, "commit", "--allow-empty", "-m", "ROOT")
+    root_sha = _head(upstream)
+    default_branch = _git(upstream, "symbolic-ref", "--short", "HEAD")
+
+    _git(upstream, "checkout", "-q", "-b", "sideline", g_sha)
+    _git(upstream, "commit", "--allow-empty", "-m", "SIDE")
+    side_sha = _head(upstream)
+    _git(upstream, "checkout", "-q", default_branch)
+
+    _git(repo, "fetch", "-q", "origin")
+    _git(repo, "checkout", "-q", "-b", "arc", root_sha)
+    (repo / "o1.txt").write_text("o1\n")
+    _git(repo, "add", "o1.txt")
+    _git(repo, "commit", "-q", "-m", "O1")
+    _git(repo, "reset", "-q", "--hard", side_sha)
+
+    _git(upstream, "commit", "--allow-empty", "-m", "further")
+    remote_sha = _head(upstream)
+
+    exit_code = review_scope.main(["--repo", str(repo)])
+    captured = capsys.readouterr()
+
+    assert exit_code != 0
+    assert f"git rebase --onto {remote_sha} {g_sha} HEAD" in captured.err
+    assert root_sha not in captured.err
+    assert "git rebase --abort" in captured.err
+    assert "git reflog show arc" in captured.err
 
 
 def test_cli_refuses_without_shas_prints_no_rebase_remedy(tmp_path, capsys):
