@@ -345,10 +345,13 @@ wider sweep) OR `delta-scoped: <commit range>`. Absent means unbounded.
 
 Under `delta-scoped` your READING never narrows — you still read every
 artifact whole. What narrows is what you may put in `findings:`: only
-(a) text the named range changed, or (b) a claim contradicted by text
-the range did NOT change — including unchanged prose, the `read-context`
-files, and current code. Clause (b) is not optional; it is where the
-defects that matter live. Everything else you notice goes in
+(a) text the named range changed, or (b) a contradiction **in either
+direction** between the range and text it did NOT change — an unchanged
+claim the range falsifies, or a range claim unchanged text falsifies. A
+contradiction between two unchanged passages, neither touched by the
+range, is OUT of scope. "Did not change" spans unchanged prose, the
+`read-context` files, and current code. Clause (b) is not optional; it is
+where the defects that matter live. Everything else you notice goes in
 `out_of_scope:`, which does not gate}
 
 ### Prior-round findings (round 2 only)
