@@ -237,6 +237,10 @@ Plan-document-reviewer verdict: PASS (2026-08-05, round 3, 15/15)
 
 ## Decision Log
 
+- T4 executed by the orchestrator, not an implementer: probes dispatch
+  agents, and subagents cannot dispatch agents (recorded nesting
+  gotcha). Reviewer verification of the record runs as planned.
+  Two-way door — logged.
 - T1's R3 opening supersedes the brief's FROZEN Decision-2 illustrative
   quote: the could-not-run antecedent left a chose-not-to reviewer bound
   only by the closing aphorism (T1 quality reviewer's 🟡, execution
