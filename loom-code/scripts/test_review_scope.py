@@ -29,7 +29,15 @@ invocation, `_remote_live_default_branch`'s
 `test_stale_origin_head_after_default_branch_rename_refuses` (a genuinely
 renamed upstream default branch, real symref mismatch, no mocking) and
 `test_current_origin_head_still_reports_fresh` (the matching case, so the
-guard is proven not to refuse everything).
+guard is proven not to refuse everything). A sixth and seventh
+invocation, `branch_creation_sha`'s `symbolic-ref --short -q HEAD` and
+`log -g --format=%H%x1f%gs refs/heads/<branch>`, are live-verified by
+`test_branch_creation_sha_returns_fork_sha` (a real branch cut from a
+known commit, with real commits added on top, read back through a real
+reflog), `test_branch_creation_sha_none_on_detached_head` (a real
+detached HEAD, no mocking of the failed `symbolic-ref`), and
+`test_branch_creation_sha_none_when_oldest_entry_not_creation` (a real
+reflog file edited in place to simulate a pruned creation entry).
 """
 from __future__ import annotations
 
@@ -361,5 +369,35 @@ def test_branch_creation_sha_none_on_detached_head(tmp_path):
     upstream = _init_upstream(tmp_path)
     repo = _clone(tmp_path, upstream)
     _git(repo, "checkout", "-q", "--detach")
+
+    assert review_scope.branch_creation_sha(repo) is None
+
+
+def test_branch_creation_sha_none_when_oldest_entry_not_creation(tmp_path):
+    # Round-2 coverage fix: the detached-HEAD test above exits before the
+    # `subject.startswith("branch: Created from")` guard ever runs, so
+    # that guard had zero coverage. This test exercises it directly: cut
+    # a branch, add a commit (a real reflog with two entries), then edit
+    # the reflog file in place to replace the OLDEST entry's subject —
+    # simulating the state `git reflog expire` leaves when it prunes the
+    # creation entry but leaves later ones. The oldest surviving entry's
+    # sha here still equals the true cut sha (edited in place, not
+    # removed), so a version of branch_creation_sha that returned the
+    # oldest entry's sha UNCONDITIONALLY would coincidentally still
+    # return the right value — the guard is what makes an entry whose
+    # subject isn't a creation entry return None instead of that sha.
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+
+    _git(repo, "checkout", "-q", "-b", "feature")
+    (repo / "a.txt").write_text("a\n")
+    _git(repo, "add", "a.txt")
+    _git(repo, "commit", "-q", "-m", "commit1")
+
+    reflog_path = repo / ".git" / "logs" / "refs" / "heads" / "feature"
+    lines = reflog_path.read_text().splitlines(keepends=True)
+    assert "branch: Created from HEAD" in lines[0]
+    lines[0] = lines[0].replace("branch: Created from HEAD", "commit: pruned entry")
+    reflog_path.write_text("".join(lines))
 
     assert review_scope.branch_creation_sha(repo) is None
