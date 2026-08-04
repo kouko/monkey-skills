@@ -561,6 +561,24 @@ def test_convergence_directives():
     )
 
 
+def test_delta_scope_rationale_carries_no_unsourced_magnitudes():
+    """The delta-scope rationale sentence (Directive 1) may state only
+    what the cited audit records -- direction without magnitude. The
+    audit (docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md)
+    carries neither an edit count nor a size label for either round's
+    fixes; both phrases were unsourced (I3)."""
+    low = _norm(_convergence_window(_text())).lower()
+    assert "four one-to-two-sentence edits" not in low, (
+        "the delta-scope rationale must not carry the unsourced edit "
+        "count 'four one-to-two-sentence edits' -- the audit records no "
+        "such count"
+    )
+    assert "broad rewrite" not in low, (
+        "the delta-scope rationale must not carry the unsourced size "
+        "label 'broad rewrite' -- the audit records no such label"
+    )
+
+
 def test_aggregation_instruction_class_only():
     """The aggregation rule applies to instruction-class findings ONLY;
     evidence-class findings are recorded observations that never gate;
