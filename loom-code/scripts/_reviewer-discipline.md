@@ -34,12 +34,12 @@ orchestrator treats a verdict with any opaque element as malformed.
 
 ## Rule R3 — A verdict resting on unconfirmed evidence downgrades
 
-When you could not run the relevant check yourself — environment,
-capacity, or no runnable check exists — a dimension's PASS resting on
-the implementer's reported `test_results` or other evidence you could
-not independently confirm must not ship clean; do not emit a clean
+When a dimension's PASS rests on the implementer's reported
+`test_results` or other evidence you did not independently confirm —
+whether the check could not run (environment, capacity, no runnable
+check exists) or you simply did not run it — do not emit a clean
 PASS for it — downgrade to
-`PASS_WITH_NOTES` naming exactly what you could not verify (e.g.
+`PASS_WITH_NOTES` naming exactly what was not independently verified (e.g.
 "correctness rests on implementer `test_results`; not independently
 run"). For the binary spec-reviewer, which has no `PASS_WITH_NOTES`
 token, record the same caveat in `notes` rather than passing it

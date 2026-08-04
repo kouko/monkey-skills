@@ -17,6 +17,14 @@ AGENT_PATHS = [
 ALL_PATHS = [SSOT_PATH] + AGENT_PATHS
 
 CONDITIONAL_OPENING = (
+    "When a dimension's PASS rests on the implementer's reported "
+    "`test_results` or other evidence you did not independently confirm — "
+    "whether the check could not run (environment, capacity, no runnable "
+    "check exists) or you simply did not run it — do not emit a clean "
+    "PASS for it"
+)
+
+ROUND1_OPENING = (
     "When you could not run the relevant check yourself — environment, "
     "capacity, or no runnable check exists — a dimension's PASS resting on "
     "the implementer's reported `test_results` or other evidence you could "
@@ -46,6 +54,12 @@ def test_absolute_opening_absent_from_all_five():
     for path in ALL_PATHS:
         text = _normalize(path.read_text())
         assert _normalize(ABSOLUTE_OPENING) not in text, f"still present in {path}"
+
+
+def test_round1_opening_absent_from_all_five():
+    for path in ALL_PATHS:
+        text = _normalize(path.read_text())
+        assert _normalize(ROUND1_OPENING) not in text, f"still present in {path}"
 
 
 def test_never_false_pass_still_present_in_all_five():
