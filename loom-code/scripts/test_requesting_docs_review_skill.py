@@ -667,6 +667,25 @@ def test_threshold_provenance_sentence():
     )
 
 
+def test_class_default_provenance_marker():
+    """The finding schema's `class:` line may carry an optional
+    `(defaulted)` annotation when the reviewer fail-closed defaulted to
+    `instruction` instead of judging it -- and the aggregation-equivalence
+    sentence must say so verbatim, inside `## Verdict structure` (I5)."""
+    section = _norm(_heading_window(_text(), "Verdict structure")).lower()
+    assert "(defaulted)" in section, (
+        "§Verdict structure must show the optional `(defaulted)` tag on "
+        "the `class:` line"
+    )
+    assert "treated exactly as" in section, (
+        "§Verdict structure must state the `(defaulted)` tag is treated "
+        "exactly as `instruction` by the aggregation rule"
+    )
+    assert "class: instruction | evidence" in _heading_window(
+        _text(), "Verdict structure"
+    ), "the pinned `class: instruction | evidence` literal must survive"
+
+
 def test_verdict_structure_prose_dimensions():
     """The verdict schema carries the five prose dimension_scores keys
     and the per-finding class key."""

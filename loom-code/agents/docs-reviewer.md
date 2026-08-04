@@ -412,7 +412,7 @@ prior_findings_check:               # every round after round 1; omit on round 1
 findings:
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
     dimension: omission | ambiguity | inconsistency | incorrect-fact | missing-population
-    class: instruction | evidence   # unclear → instruction (fail closed)
+    class: instruction | evidence   # unclear → instruction (fail closed); may read `instruction (defaulted)` when you could not tell. A `(defaulted)` tag is treated exactly as `instruction` by the aggregation rule.
     where: <file:line>              # REQUIRED, path-like — empty/missing flips verdict to NEEDS_REVISION
     quote: <the exact current text the finding is about>
     note: <1-2 sentence finding>

@@ -46,7 +46,7 @@ Owns the **docs arm** of whole-branch review. Dispatches **two `docs-reviewer` s
 
 - **(a) Fix, then run one delta-scoped verification round** — *the default recommendation*. It reads whole artifacts but raises only against the fixes (Directive 2), so it costs a fraction of a full round. That cost drop is what makes it the default; before scoping existed, a third round meant re-reviewing everything, and "don't authorize lightly" was the right posture. The authorized verification round receives the surviving findings it verifies (Directive 2's round-N handoff).
 - **(b) Fix and ship without re-review.** State the risk concretely, never as a general caution: **a fix round is where defects get written.** On the measured branch, round 1's fixes contained gating defects that only later review caught (`docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md`).
-- **(c) Ship as-is, the findings recorded as named residuals.** Correct when the findings are real but change nothing an executor does.
+- **(c) Ship as-is, the findings recorded as named residuals.** Correct when the findings are real but change nothing an executor does. Scrutinize `(defaulted)`-only findings before choosing (c) — the reviewer could not confirm their class.
 
 **The criterion is how large the remaining fixes are, not how many rounds are left.** Every round's fixes are verified by the next round, so the LAST round's fixes always ship unverified — adding a round moves that edge, it never removes it. Do not propose a standing extra round to close it. What decides the risk is how much text the remaining fixes rewrite: on the measured branch, round 1's fixes were the larger delta and round 2's were the smaller delta (the audit's own round labels, `docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md` §Does delta-scoping converge faster) — a delta-scoped round verifying round 1's fixes re-found every gating defect an unbounded round also found, while a delta-scoped round verifying round 2's fixes found none. A large rewrite → (a). One-line corrections → (b) and (c) are both defensible.
 
@@ -121,7 +121,7 @@ prior_findings_check:               # every round after round 1; omit on round 1
 findings:
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
     dimension: omission | ambiguity | inconsistency | incorrect-fact | missing-population
-    class: instruction | evidence   # unclear → instruction (fail closed)
+    class: instruction | evidence   # unclear → instruction (fail closed); may read `instruction (defaulted)` when the reviewer could not tell. A `(defaulted)` tag is treated exactly as `instruction` by the aggregation rule.
     where: <file:line>              # REQUIRED, path-like — empty/missing flips verdict to NEEDS_REVISION
     quote: <the exact current text the finding is about>
     note: <1-2 sentence finding>

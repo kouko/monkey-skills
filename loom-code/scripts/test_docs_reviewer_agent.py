@@ -186,6 +186,26 @@ def test_findings_carry_class_taxonomy():
     assert "class: instruction | evidence" in window
 
 
+def test_class_default_provenance_marker():
+    """The `class:` line in the output contract may carry an optional
+    `(defaulted)` annotation when the reviewer fail-closed defaulted to
+    `instruction` instead of judging it, and the aggregation-equivalence
+    sentence must say so verbatim (I5)."""
+    window = _output_contract()
+    norm = " ".join(window.split()).lower()
+    assert "(defaulted)" in norm, (
+        "Output contract must show the optional `(defaulted)` tag on "
+        "the `class:` line"
+    )
+    assert "treated exactly as" in norm, (
+        "Output contract must state the `(defaulted)` tag is treated "
+        "exactly as `instruction` by the aggregation rule"
+    )
+    assert "class: instruction | evidence" in window, (
+        "the pinned `class: instruction | evidence` literal must survive"
+    )
+
+
 def test_prior_findings_carrier_every_later_round():
     """The prior-findings carrier is not round-2-specific in either the
     input or output contract: every round after round 1 receives (and
