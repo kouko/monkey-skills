@@ -24,3 +24,14 @@ next to the manifest bump — and a reviewer checking a version bump should
 `git log --follow <plugin>/CHANGELOG.md` for the convention before
 passing. Candidate mechanization if it recurs: a CI check that a
 plugin.json version appearing in a diff has a matching CHANGELOG heading.
+
+**Second variant, 2026-08-04 (loom-code 0.51.0 arc): the shipping-version
+PIN TEST is a fourth deliverable of the same class.**
+`loom-code/scripts/test_docs_review_blocking_class.py` pins the current
+shipping version by design ("each bump rewrites it"), so a bump packet
+that names only manifest + codex sync + CHANGELOG ships a red suite —
+exactly what happened: the per-task triad passed (the pin lives in a file
+no task touched) and only the whole-branch review caught the tip failing
+its own suite. A loom-code bump packet must name the pin test rewrite as
+a deliverable alongside the other three; the cheap self-check is running
+the full suite AFTER the bump commit, not before it.
