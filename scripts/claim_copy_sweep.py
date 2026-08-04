@@ -264,6 +264,7 @@ def sweep(repo_root: Path, needles: list[str], extra_prefixes: tuple[str, ...]):
     frozen: list[tuple[str, int, bool]] = []
     unreadable: list[str] = []
     swept = 0
+    swept_py = 0
     for path in iter_markdown_files(repo_root, unreadable):
         rel = path.relative_to(repo_root).as_posix()
         try:
@@ -300,6 +301,7 @@ def sweep(repo_root: Path, needles: list[str], extra_prefixes: tuple[str, ...]):
         if docstring_info is None:
             continue
         doc_text, doc_lineno = docstring_info
+        swept_py += 1
         # Sweep the docstring text only — module docstrings only, never the
         # whole file — so the fence/normalize machinery below runs over the
         # same haystack shape as a markdown file, offset from the literal's
@@ -321,7 +323,7 @@ def sweep(repo_root: Path, needles: list[str], extra_prefixes: tuple[str, ...]):
     # unreadable directory, so a plain sort would print it twice — dedupe
     # rather than let the same "could not read" line appear twice.
     unreadable = sorted(set(unreadable))
-    return operative, frozen, unreadable, swept
+    return operative, frozen, unreadable, swept, swept_py
 
 
 LEAKS = """what this sweep CANNOT see (named here rather than hidden):
@@ -335,17 +337,22 @@ LEAKS = """what this sweep CANNOT see (named here rather than hidden):
     words, not a synonym, and the emphasis markers sit inside the phrase, so
     the match fails. Links, code spans and emphasis are ordinary in this prose.
     Sweep a fragment that avoids the markup, or sweep both forms with --also.
-  - anything outside `.md` files — a copy living in a code comment, a test
-    fixture, or a commit message is out of scope by construction."""
+  - anything outside `.md` files and `.py` module docstrings — a copy living
+    in a code comment, a function or class docstring, a non-docstring string
+    literal, a test fixture, or a commit message is out of scope by
+    construction."""
 
 
-def render(claim, alternates, operative, frozen, unreadable, swept, extra_prefixes=()) -> str:
+def render(
+    claim, alternates, operative, frozen, unreadable, swept, swept_py, extra_prefixes=()
+) -> str:
     frozen_rule = ", ".join(
         sorted(DEFAULT_FROZEN_BASENAMES) + list(DEFAULT_FROZEN_PREFIXES) + list(extra_prefixes)
     )
     lines = [
         f'claim: "{claim}"',
-        f"swept {swept} markdown files; alternate phrasings declared: {len(alternates)}",
+        f"swept {swept} markdown files and {swept_py} python module docstrings; "
+        f"alternate phrasings declared: {len(alternates)}",
         f"frozen rule in effect: {frozen_rule}",
         "",
         f"operative locations ({len(operative)}) — an edit to this claim must "
@@ -433,7 +440,7 @@ def main(argv: list[str] | None = None) -> int:
         if normalized and normalized not in needles:
             needles.append(normalized)
 
-    operative, frozen, unreadable, swept = sweep(
+    operative, frozen, unreadable, swept, swept_py = sweep(
         repo_root, needles, tuple(extra_prefixes)
     )
     print(
@@ -444,6 +451,7 @@ def main(argv: list[str] | None = None) -> int:
             frozen,
             unreadable,
             swept,
+            swept_py,
             tuple(extra_prefixes),
         )
     )

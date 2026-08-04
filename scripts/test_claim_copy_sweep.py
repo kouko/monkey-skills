@@ -524,6 +524,36 @@ def test_py_module_docstring_copy_is_reported(tmp_path):
     assert "function_docstring_only.py" not in result.stdout, result.stdout
 
 
+def test_output_names_python_docstring_scope(tmp_path):
+    """The self-describing output must name the extended scope (Decision 2):
+    the summary line counts scanned `.py` module docstrings, and the LEAKS
+    block's absolute `.md`-only claim is replaced by one that also carves out
+    `.py` module docstrings and names the newly-adjacent non-leaks (function/
+    class docstrings, other string literals) that stay out of scope."""
+    write(tmp_path, "docs/loom/specs/sentinel.md", f"{CLAIM}\n")
+    write(
+        tmp_path,
+        "scripts/module_docstring.py",
+        '"""We decided that the resolver refuses when freshness\n'
+        'cannot be established, which is the whole point."""\n',
+    )
+    result = run(tmp_path, "--claim", CLAIM)
+    assert result.returncode == 0, result.stderr
+    assert "python module docstrings" in result.stdout, result.stdout
+
+    normalized = claim_copy_sweep.normalize(result.stdout)
+    new_leak = claim_copy_sweep.normalize(
+        "anything outside `.md` files and `.py` module docstrings — a copy "
+        "living in a code comment, a function or class docstring, a "
+        "non-docstring string literal, a test fixture, or a commit message "
+        "is out of scope by construction."
+    )
+    assert new_leak in normalized, result.stdout
+
+    old_leak = claim_copy_sweep.normalize("anything outside `.md` files —")
+    assert old_leak not in normalized, result.stdout
+
+
 def test_git_directory_is_skipped(tmp_path):
     write(tmp_path, ".git/notes.md", f"{CLAIM}\n")
     write(tmp_path, "docs/loom/specs/sentinel.md", f"{CLAIM}\n")
