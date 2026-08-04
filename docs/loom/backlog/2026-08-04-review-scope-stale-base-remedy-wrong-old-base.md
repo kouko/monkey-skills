@@ -22,17 +22,23 @@ required `git rebase --abort`. The correct old-base was
 succeeded 18/18 cleanly. A weak-model orchestrator following the printed
 remedy verbatim wedges in conflicts it cannot diagnose.
 
-Root-cause hypothesis (verify in the source before fixing): the remedy
-uses a recorded/stale base rather than computing `git merge-base HEAD
-<target>` at refusal time.
+Root cause (verified 2026-08-04 by git-history reconstruction —
+OVERTURNS the original hypothesis, kept here honestly): the script
+already computes `git merge-base HEAD <ref>` at refusal time and the
+printed `099af0c9` WAS the true merge-base. The branch had been cut
+from `f61837ed` — the tip of the previous arc's merged-but-squashed
+local branch `docs-loom-close-out-backlog-and-memory` — so
+merge-base..HEAD contained 7 foreign commits whose content was already
+squash-merged into main; squash changes patch-ids, so rebase cannot
+skip them and their replay is what conflicted. The remedy is unsafe
+precisely in the stale-cut state it exists to heal (second occurrence
+of that state; see
+`docs/loom/memory/new-arc-branch-bases-on-origin-main-not-merged-tip.md`).
 
-Next step: RED test first (fixture: branch whose fork point ≠ the remedy's
-chosen old-base; assert the printed remedy's old-base equals the
-merge-base). Fix in `review_scope.py`; tests live in
-`loom-code/scripts/test_review_scope*.py`. Before editing the remedy
-wording, sweep for copies of the remedy shape — the gate-markers/scope
-specs may quote it (`loom-code/skills/requesting-code-review/references/gate-markers-spec.md`,
-`loom-code/skills/requesting-docs-review/SKILL.md` Step 1 pass-down) —
-per `docs/loom/memory/enumerate-every-copy-before-editing-a-claim-and-name-the-leaks.md`.
-loom-code `scripts/` is plugin content: version bump + CHANGELOG entry are
-named deliverables of the fix.
+Fix shipped this arc (user-approved Option A): the remedy prefers the
+branch's reflog creation sha as the printed old-base when it is a
+descendant-or-equal of the merge-base and an ancestor of HEAD;
+otherwise it falls back to the merge-base and prints a
+verifiable-action caveat line. RED coverage:
+`loom-code/scripts/test_review_scope.py` (creation-sha selection,
+fallback caveat, detached-HEAD None).
