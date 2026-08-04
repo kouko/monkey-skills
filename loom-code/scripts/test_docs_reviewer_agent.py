@@ -20,6 +20,7 @@ Stdlib only.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import distribute
@@ -57,6 +58,31 @@ def _input_contract() -> str:
     start = text.index("## Input contract")
     end = text.index("## Output contract", start)
     return text[start:end]
+
+
+def _prior_findings_check_window() -> str:
+    """The `prior_findings_check:` fence entry inside `## Output
+    contract` -- from the `prior_findings_check:` line to the next
+    top-level key line (`findings:`). Narrower than `_output_contract`,
+    which also contains `findings:`'s own `- severity:` line and would
+    false-green an assertion that no `- severity:` line appears inside
+    the prior_findings_check fence."""
+    window = _output_contract()
+    lines = window.splitlines(keepends=True)
+    start = None
+    for i, line in enumerate(lines):
+        if line.strip().startswith("prior_findings_check:"):
+            start = i
+            break
+    assert start is not None, (
+        "## Output contract carries no `prior_findings_check:` fence"
+    )
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        if re.match(r"^[a-z_]+:", lines[j]):
+            end = j
+            break
+    return "".join(lines[start:end])
 
 
 def _role_contract_window() -> str:
@@ -191,6 +217,28 @@ def test_prior_findings_carrier_every_later_round():
     assert "round 2 only" not in output_window, (
         "the output-template comment must not restrict prior_findings_check "
         "to round 2 only"
+    )
+
+
+def test_prior_findings_restated_as_scalar():
+    """A prior finding is restated as a one-line scalar, never the
+    original `- severity:` block -- `_FINDING_RE`
+    (`loom_gate_markers.py`) matches `- severity:` at ANY indent, so a
+    verbatim block nested under `finding:` would land in the origin
+    ledger a second time as a later-round finding, contaminating the
+    population partition the ledger exists to keep clean (I2)."""
+    raw = _prior_findings_check_window()
+    norm = " ".join(raw.split()).lower()
+    assert "one-line" in norm and "scalar" in norm, (
+        "the restatement instruction must tell the reviewer to restate "
+        "the prior finding as a one-line scalar summary"
+    )
+    assert not re.search(r"(?m)^\s*-\s*severity\s*:", raw), (
+        "the prior_findings_check fence must not itself carry a "
+        "`- severity:` finding-block line (the exact pattern "
+        "loom_gate_markers.py's _FINDING_RE matches at any indent) -- "
+        "a nested one would double-count the finding in the origin "
+        "ledger as a new later-round finding"
     )
 
 

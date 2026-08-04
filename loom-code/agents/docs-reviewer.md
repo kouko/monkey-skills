@@ -390,7 +390,9 @@ dimension_scores:
   missing-population: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 
 prior_findings_check:               # every round after round 1; omit on round 1
-  - finding: <round-1 finding, restated verbatim>
+  - finding: <round-1 finding, restated as a one-line scalar summary --
+      never a verbatim `- severity:` block, which the ledger's finding
+      regex would re-match as a new later-round finding>
     status: fix-verified | not-fixed | resurfaced
     quote: <the exact current text that verifies (or fails) the fix>
 
