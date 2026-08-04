@@ -53,7 +53,9 @@ narrowing instruction was correctly overridden by the contract.
   `mini.py` source. Narrow permission exercised exactly as written.
 - **d2 (no read-context):** the probe explicitly reasoned "rule 2 only
   authorizes running tests when `### Read context` includes the cited
-  code, which it does not here", reported `test_run_attempted: no`, and
+  code, which it does not here", answered `test_run_attempted: no` (a
+  field this probe's DISPATCH PACKET requested for measurement — not
+  part of the docs-reviewer output schema), and
   applied the REWRITTEN R3 correctly — incorrect-fact downgraded to
   PASS_WITH_NOTES naming exactly what was not independently verified.
   The narrow gate denies precisely where it should, and the
