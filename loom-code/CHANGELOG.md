@@ -5,7 +5,7 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
-## [0.50.0] — 2026-08-04 — adjudicated fixes for the ten defects the 0.49.0 review left open
+## [0.50.0] — 2026-08-04 — adjudicated fixes for the ten findings the 0.49.0 review left open
 
 ### Fixed
 
@@ -25,7 +25,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
   `requesting-code-review/references/gate-markers-spec.md`) plus the backlog
   entry that first named the gap: the ledger appends on every `review-pass`
   invocation, including refuse paths, so it is unbiased only when every round
-  invokes it — rounds that never mint (mixed-branch docs rounds, failing
+  invokes it — rounds that never invoke (mixed-branch docs rounds, failing
   rounds nobody minted) append nothing and the sample skews.
 - **Round accounting is now stated as session-scoped, not continuous.** The
   already-reviewed-branch bullet claimed "round accounting continues, it

@@ -403,7 +403,7 @@ dimension_scores:
   missing-population: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 
 prior_findings_check:               # every round after round 1; omit on round 1
-  - finding: <round-1 finding, restated as a one-line scalar summary --
+  - finding: <prior-round finding, restated as a one-line scalar summary --
       never a verbatim `- severity:` block, which the ledger's finding
       regex would re-match as a new later-round finding>
     status: fix-verified | not-fixed | resurfaced
@@ -493,7 +493,7 @@ thing) / 🟡 should-fix / 🟢 nit (informational).
   may raise, never what you must read;
   a contradiction between a changed line and an unchanged one is
   exactly what this agent exists to catch.
-- Raising new findings on round 2 before the prior-round
+- Raising new findings on a later round before the prior-round
   fix-verification pass — convergence duty order is binding.
 - Re-raising a closed finding in new words — re-litigation, not
   review.

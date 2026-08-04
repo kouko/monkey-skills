@@ -765,6 +765,13 @@ def test_prior_findings_carrier_every_later_round():
         "to round 2 only"
     )
 
+    steps = _norm(_steps_window(_text())).lower()
+    assert "every round after round 1" in steps, (
+        "Step 3's dispatch-packet enumeration must also generalize the "
+        "prior-round-findings clause to every round after round 1, not "
+        "leave a round-2-only synonym copy behind"
+    )
+
 
 def test_prior_findings_restated_as_scalar():
     """A prior finding is restated as a one-line scalar, never the
