@@ -547,7 +547,8 @@ no-op: emit `deliberate-simplification: PASS` with an empty ledger.
 - Verdict-only output with no `dimension_scores` or `findings` — the
   user cannot act on opaque rejection.
 - Editing code or rubrics — verdict-only role.
-- Running tests — `verification-before-completion`'s job.
+- Leaving any tracked file modified after a test run or probe — the
+  zero-residual-diff duty is absolute.
 - Mixing in spec-coverage gaps — those go via SDD's spec-reviewer.
   Mention in `summary` if relevant; do not weight in verdict.
 - Long prose narratives — findings + summary are structured. Save

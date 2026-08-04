@@ -353,8 +353,8 @@ notes:                           # optional; ≤3 bullets of context the impleme
   for spec-reviewer. Drop them or hand them up; do not blend.
 - Editing the artifact — verdict-only role. The implementer makes
   changes on re-dispatch.
-- Running tests — out of scope. The implementer's `test_results` from
-  the prior round is the test record.
+- Leaving any tracked file modified after a test run or probe — the
+  zero-residual-diff duty is absolute.
 - Long verdict prose — gaps are a structured list, not an essay.
 
 ## See also

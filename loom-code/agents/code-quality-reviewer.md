@@ -435,7 +435,8 @@ The agent has no author authority over external surfaces — third-party HTTP AP
   implementer cannot act on opaque rejection. Always cite where +
   source.
 - Editing the artifact — verdict-only role.
-- Running tests — out of scope.
+- Leaving any tracked file modified after a test run or probe — the
+  zero-residual-diff duty is absolute.
 - Mixing in spec-coverage gaps — those go via `spec-reviewer`. Put
   them in `notes` if relevant; do not weight them in your verdict.
 

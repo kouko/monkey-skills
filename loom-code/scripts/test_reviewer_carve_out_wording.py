@@ -60,6 +60,18 @@ ATTENTION_LIST_SENTENCE = (
 
 ABSENT_PROHIBITION = "may not** run tests"
 
+ANTI_PATTERN_OUT_OF_SCOPE = "Running tests — out of scope"
+ANTI_PATTERN_VERIFICATION_JOB = (
+    "Running tests — `verification-before-completion`'s job"
+)
+
+RESIDUE_BULLET = (
+    "- Leaving any tracked file modified after a test run or probe — "
+    "the zero-residual-diff duty is absolute."
+)
+
+FILES_WITH_RESIDUE_BULLET = [CODE_QUALITY_REVIEWER, SPEC_REVIEWER, CODE_REVIEWER]
+
 
 def _normalize(text):
     return re.sub(r"\s+", " ", text).strip()
@@ -101,3 +113,24 @@ def test_absolute_prohibition_absent_from_all_four():
     for path in ALL_FOUR:
         text = _normalize(path.read_text())
         assert _normalize(ABSENT_PROHIBITION) not in text, f"still present in {path}"
+
+
+def test_anti_pattern_test_ban_bullets_gone_residue_bullet_exact_three():
+    """Falsified-neighbor sweep (round 2): rule 2 now permits READ-ONLY
+    test runs, so the anti-pattern bullets that still banned running
+    tests outright contradicted the new rule in the same file. They are
+    replaced with a residue-ban bullet (rule 2's absolute condition —
+    zero residual diff — not the run itself) in exactly the three files
+    that had a test-ban anti-pattern bullet; docs-reviewer.md's
+    anti-patterns section never had one and stays untouched."""
+    for path in ALL_FOUR:
+        text = _normalize(path.read_text())
+        assert _normalize(ANTI_PATTERN_OUT_OF_SCOPE) not in text, f"still present in {path}"
+        assert _normalize(ANTI_PATTERN_VERIFICATION_JOB) not in text, f"still present in {path}"
+
+    for path in FILES_WITH_RESIDUE_BULLET:
+        text = _normalize(path.read_text())
+        assert _normalize(RESIDUE_BULLET) in text, f"missing in {path}"
+
+    docs_text = _normalize(DOCS_REVIEWER.read_text())
+    assert _normalize(RESIDUE_BULLET) not in docs_text
