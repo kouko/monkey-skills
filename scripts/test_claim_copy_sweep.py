@@ -496,6 +496,34 @@ def test_non_markdown_files_are_not_swept(tmp_path):
     assert "thing.py" not in result.stdout, result.stdout
 
 
+def test_py_module_docstring_copy_is_reported(tmp_path):
+    """`.py` MODULE docstrings are in scope now (Decision 2); function/class
+    docstrings and other string literals stay out by construction. The
+    module-docstring claim is hard-wrapped across a line break to exercise
+    normalize, and its reported line must be the ACTUAL file line."""
+    write(tmp_path, "docs/loom/specs/md_copy.md", f"{CLAIM}\n")
+    write(
+        tmp_path,
+        "scripts/module_docstring.py",
+        '"""We decided that the resolver refuses when freshness\n'
+        'cannot be established, which is the whole point."""\n',
+    )
+    write(
+        tmp_path,
+        "scripts/function_docstring_only.py",
+        '"""Unrelated module docstring."""\n'
+        "\n\n"
+        "def foo():\n"
+        f'    """{CLAIM}"""\n'
+        "    pass\n",
+    )
+    result = run(tmp_path, "--claim", CLAIM)
+    assert result.returncode == 0, result.stderr
+    assert "docs/loom/specs/md_copy.md:1" in result.stdout, result.stdout
+    assert "scripts/module_docstring.py:1" in result.stdout, result.stdout
+    assert "function_docstring_only.py" not in result.stdout, result.stdout
+
+
 def test_git_directory_is_skipped(tmp_path):
     write(tmp_path, ".git/notes.md", f"{CLAIM}\n")
     write(tmp_path, "docs/loom/specs/sentinel.md", f"{CLAIM}\n")

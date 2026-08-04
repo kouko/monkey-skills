@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Enumerate every copy of a claim across the repo's Markdown prose.
+"""Enumerate every copy of a claim across the repo's Markdown prose and `.py`
+module docstrings.
 
 The rule this executes lives in
 `docs/loom/memory/enumerate-every-copy-before-editing-a-claim-and-name-the-leaks.md`:
@@ -49,13 +50,14 @@ that hides what it cannot see ships as reliable and misses silently. That
 includes files this run could not read — they are listed, not skipped in
 silence.
 
-Read-only. Stdlib only (`os`, `pathlib`, `sys`, `unicodedata`).
+Read-only. Stdlib only (`ast`, `os`, `pathlib`, `sys`, `unicodedata`).
 
 Exit codes: 0 = the sweep ran (any number of hits, including none);
 2 = usage error. There is deliberately no "found too many" failure code — this
 is a reporter, not a gate.
 """
 
+import ast
 import os
 import sys
 import unicodedata
@@ -169,6 +171,53 @@ def iter_markdown_files(repo_root: Path, unreadable: list[str]):
                 yield Path(dirpath) / name
 
 
+def iter_python_files(repo_root: Path, unreadable: list[str]):
+    """Walk for `.py` files, recording directories the walk could not enter.
+
+    Mirrors `iter_markdown_files`'s walk (same `onerror` behaviour, same
+    frozen-prefix rule applied later via `is_frozen`) but for the new
+    module-docstring scope (Decision 2).
+    """
+
+    def on_error(exc: OSError) -> None:
+        unreadable.append(f"{exc.filename} ({type(exc).__name__}, directory)")
+
+    for dirpath, dirnames, filenames in os.walk(repo_root, onerror=on_error):
+        dirnames[:] = [d for d in dirnames if d != ".git"]
+        for name in sorted(filenames):
+            if name.endswith(".py"):
+                yield Path(dirpath) / name
+
+
+def module_docstring_with_lineno(text: str) -> tuple[str, int] | None:
+    """Return (docstring text, source line of the literal's opening quote) for
+    `text`'s MODULE docstring only — the first statement, when it is a bare
+    string constant. None when there is no such statement.
+
+    Deliberately NOT `ast.get_docstring`: that helper runs `inspect.cleandoc`
+    (dedents and strips), which would shift every line offset away from the
+    raw source and break the actual-file-line mapping the caller depends on.
+    The raw literal value is used instead, and the caller offsets from
+    `lineno` — the line the opening `\"\"\"` sits on, whether or not the
+    docstring's first character shares that line.
+
+    Raises `SyntaxError` / `ValueError` on a file `ast.parse` cannot read —
+    the caller routes that to the unreadable list, same as an unreadable
+    markdown file.
+    """
+    tree = ast.parse(text)
+    if not tree.body:
+        return None
+    first = tree.body[0]
+    if (
+        isinstance(first, ast.Expr)
+        and isinstance(first.value, ast.Constant)
+        and isinstance(first.value.value, str)
+    ):
+        return first.value.value, first.value.lineno
+    return None
+
+
 def is_frozen(rel_path: str, extra_prefixes: tuple[str, ...]) -> bool:
     """Frozen = a record editing would falsify. Basename match, not a path
     suffix — `endswith("CHANGELOG.md")` also swallowed RELEASE-CHANGELOG.md,
@@ -236,9 +285,42 @@ def sweep(repo_root: Path, needles: list[str], extra_prefixes: tuple[str, ...]):
                 seen.add(line)
                 bucket = frozen if is_frozen(rel, extra_prefixes) else operative
                 bucket.append((rel, line, inside))
+    for path in iter_python_files(repo_root, unreadable):
+        rel = path.relative_to(repo_root).as_posix()
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError) as exc:
+            unreadable.append(f"{rel} ({type(exc).__name__})")
+            continue
+        try:
+            docstring_info = module_docstring_with_lineno(text)
+        except (SyntaxError, ValueError) as exc:
+            unreadable.append(f"{rel} ({type(exc).__name__})")
+            continue
+        if docstring_info is None:
+            continue
+        doc_text, doc_lineno = docstring_info
+        # Sweep the docstring text only — module docstrings only, never the
+        # whole file — so the fence/normalize machinery below runs over the
+        # same haystack shape as a markdown file, offset from the literal's
+        # own opening line back to the actual file line the caller reports.
+        haystack, line_of = normalize_with_lines(doc_text)
+        fences = fence_state_by_line(doc_text)
+        seen: set[int] = set()
+        for needle in needles:
+            for rel_line, inside in _find_prepared(needle, haystack, line_of, fences):
+                actual_line = doc_lineno + (rel_line - 1)
+                if actual_line in seen:
+                    continue
+                seen.add(actual_line)
+                bucket = frozen if is_frozen(rel, extra_prefixes) else operative
+                bucket.append((rel, actual_line, inside))
     operative.sort()
     frozen.sort()
-    unreadable.sort()
+    # Two separate walks (markdown, python) both invoke `onerror` on the same
+    # unreadable directory, so a plain sort would print it twice — dedupe
+    # rather than let the same "could not read" line appear twice.
+    unreadable = sorted(set(unreadable))
     return operative, frozen, unreadable, swept
 
 
