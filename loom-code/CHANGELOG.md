@@ -5,6 +5,24 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.49.0] — 2026-08-04 — the delta-scope rule says where its range comes from
+
+### Fixed
+
+- **A delta-scoped round could not compute its own scope.** 0.48.0 told the
+  orchestrator to put `delta-scoped: <commit range>` in the dispatch packet
+  and never said where the range came from — not the branch base, not the
+  merge-base, and not recoverable from the diff. The rule was executable only
+  by an orchestrator that happened to remember which commit the previous
+  round reviewed, which no passage asked it to record. Step 3 now records the
+  HEAD sha each dispatch reviews and repeats it in the surfaced result;
+  Directive 2 defines the range as `<previous round's sha>..HEAD` and
+  **falls back to `unbounded` when that sha is missing** — a handoff, a new
+  session, or a skipped record. The `docs-reviewer` contract carries the same
+  fallback for a range it cannot resolve. Fail-closed direction: an unbounded
+  round costs a wider read, while a wrongly-guessed range suppresses findings
+  inside the excluded span and leaves no trace.
+
 ## [0.48.0] — 2026-08-04 — the docs arm stops minting on a mixed branch, and later rounds scope to the delta
 
 ### Fixed

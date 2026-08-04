@@ -341,7 +341,10 @@ against the artifact. Absent on a docs-only branch}
 
 ### Round scope
 {`unbounded` (round 1, and any later round the user authorized as a
-wider sweep) OR `delta-scoped: <commit range>`. Absent means unbounded.
+wider sweep) OR `delta-scoped: <commit range>`. Absent means unbounded,
+and so does a `delta-scoped` with no range or an unresolvable one — say
+so in your summary rather than guessing a range, because a wrong range
+suppresses findings silently while a wide one only costs reading.
 
 Under `delta-scoped` your READING never narrows — you still read every
 artifact whole. What narrows is what you may put in `findings:`: only
