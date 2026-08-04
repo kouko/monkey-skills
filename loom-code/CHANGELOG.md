@@ -27,9 +27,11 @@ Versioning: [Semantic Versioning](https://semver.org/).
 - **The sha now has a field, and the contract states where that stops.**
   `reviewed_sha:` is REQUIRED in the panel verdict and in the `docs-reviewer`
   output contract, and Step 5 surfaces it — enough for the next round in the
-  same session. Across a session boundary nothing persists the verdict, so a
-  resuming round takes the `unbounded` fallback; Directive 2 says so plainly
-  rather than implying continuity it cannot deliver
+  same session. Across a session boundary the read side is not
+  wired: a durable record exists (marker minting appends `head_sha` to the
+  origin ledger) but no step consults it, and it holds only the last MINTED
+  round, so it can be several rounds stale. Directive 2 states that boundary
+  and notes a stale sha is safe to use — it widens the range, never narrows it
   (`docs/loom/backlog/2026-08-04-a-delta-scoped-round-cannot-resume-across-a-session.md`).
 
 ## [0.48.0] — 2026-08-04 — the docs arm stops minting on a mixed branch, and later rounds scope to the delta
