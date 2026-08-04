@@ -5,6 +5,35 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.51.0] — 2026-08-04 — the stale-base remedy stops prescribing a conflicting rebase
+
+### Fixed
+
+- **The stale-base refusal's rebase remedy now prints an old-base that is
+  safe to follow verbatim.** `review_scope.py` previously filled the
+  remedy's old-base with the merge-base — textbook-correct, but in this
+  squash-merge repo a branch cut from a previous arc's merged-but-squashed
+  local tip carries already-merged foreign commits between the merge-base
+  and its own work, and replaying them conflicts (observed live on the
+  0.50.0 fix arc; backlog entry
+  `2026-08-04-review-scope-stale-base-remedy-wrong-old-base`). The remedy
+  now prefers the branch's reflog creation sha when it is a
+  descendant-or-equal of the merge-base and an ancestor of HEAD; otherwise
+  it falls back to the merge-base and prints a verifiable-action caveat
+  line (abort + substitute the creation sha from `git reflog show
+  <branch>`). The `AGENTS.md` mirror follows.
+
+### Added
+
+- **The plan-document-reviewer's output contract now obliges a per-check
+  full-task sweep** — a check that failed anywhere must be re-scanned
+  against every task before the verdict returns (one sentence in §Verdict
+  mapping; closes the round-costing partial sweep observed on the 0.50.0
+  fix arc).
+- **`requesting-code-review`'s panel step points at SDD's capacity-error
+  recovery** (`dispatch-hygiene-notes.md` §Capacity-error recovery), paid
+  for inside the CHK-SKL-010 word cap by trimming an unpinned version tag.
+
 ## [0.50.0] — 2026-08-04 — adjudicated fixes for the ten findings the 0.49.0 review left open
 
 ### Fixed
