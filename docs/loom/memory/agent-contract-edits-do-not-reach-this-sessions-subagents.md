@@ -1,6 +1,6 @@
 ---
 name: agent-contract-edits-do-not-reach-this-sessions-subagents
-description: An ordinary subagent dispatch loads its role contract from the installed plugin, not from the repo working tree, so an agent-contract edit on a branch does not reach the reviewers that branch dispatches — and the subagent cannot report which version it loaded, because it may have read the repo copy as a review artifact and mistake that for its own system prompt
+description: An ordinary subagent dispatch loads its role contract from the installed plugin, not from the repo working tree, so an agent-contract edit on a branch does not reach the reviewers that branch dispatches — and the subagent cannot reliably report which version it loaded, because it may have read the repo copy as a review artifact and mistake that for its own system prompt
 type: gotcha
 origin: PR #645 (2026-08-04) — the delta-scope rule was edited into loom-code/agents/docs-reviewer.md and every reviewer dispatched that session still ran the cached 0.47.0 contract
 ---
@@ -50,8 +50,12 @@ generalised to every in-session dispatch.
 **How to apply:** when a branch edits an agent contract, state plainly that
 the change is unverified behaviourally and say why — do not cite a
 reviewer's self-description as evidence it landed. To check what is actually
-live, grep the installed cache path, not the repo. Behavioural verification
-of such a change is a post-publish step; before then, the available
-instruments are static — a diff read by a reviewer, or a check pairing the
-skill against the agent contract
+live, grep the installed cache path, not the repo. Ordinary review rounds
+cannot supply behavioural verification of such a change, so do not schedule
+it as one. Two instruments remain before publication: a deliberate
+`--plugin-dir` probe, whose reach into role contracts is untested and so
+worth establishing before relying on it
+([[headless-branch-plugin-testing-recipe]]), and static checks that need no
+probe at all — a diff read by a reviewer, or a check pairing the skill
+against the agent contract
 (`docs/loom/backlog/2026-08-04-a-rule-can-ship-into-a-skill-and-never-reach-its-agent-contract.md`).

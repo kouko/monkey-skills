@@ -49,8 +49,10 @@ tightly enough to evaluate:
   no such section.
 - the delta-scope raise rule — depends. The rule was Directive 2 prose, and
   the skill named no schema field for it until the fix added `Round scope`.
-  A field-name predicate fires only if prose that names an output list
-  ("goes in an explicit out-of-scope list") counts as naming a field.
+  A field-name predicate fires only if prose naming an output list counts as
+  naming a field. Whether the round-1 text was worded that way is no longer
+  checkable — #645 was squashed — so score this case from the predicate you
+  write, not from a reconstruction of that state.
 - `out_of_scope:` — does **not** fire. The field was present in both
   carriers; what was missing was its exclusion bullet in §Aggregation rule.
   A presence check cannot see a rule that fails to mention a field that
