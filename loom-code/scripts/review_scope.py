@@ -22,9 +22,18 @@ Exit codes:
   1 — refusal. No file list is printed. stderr carries the reason from
       `FreshnessResult.reason`, and — only for the stale-base shape,
       the one case where both shas resolved — the concrete
-      `git rebase --onto <remote_sha> <base_sha> HEAD` remedy. Every
-      other refusal shape has no shas to fill in, so no rebase
-      invocation is printed for it. There are seven, and the list is
+      `git rebase --onto <remote_sha> <old_base> HEAD` remedy, where
+      `<old_base>` is the branch's reflog creation sha
+      (`branch_creation_sha`) when it is a descendant-or-equal of the
+      merge-base AND an ancestor of HEAD, falling back to the merge-base
+      itself otherwise. The creation sha is preferred because a
+      squash-merge repo can leave merge-base..HEAD carrying
+      already-squashed foreign commits whose replay conflicts (squashing
+      changes patch-ids, so rebase's duplicate-skip cannot drop them) —
+      the merge-base fallback is textbook-correct for merge/rebase
+      workflows but unsafe in exactly that state. Every other refusal
+      shape has no shas to fill in, so no rebase invocation is printed
+      for it. There are seven, and the list is
       exhaustive against `check_freshness`'s early returns: an
       unresolvable default branch, a local-only ref, a failed or
       expired fetch, a failed or expired lookup of the remote's live
@@ -273,9 +282,24 @@ def main(argv: list[str] | None = None) -> int:
     if not result.fresh:
         print(f"review-scope: refused — {result.reason}", file=sys.stderr)
         if result.base_sha is not None and result.remote_sha is not None:
+            old_base = result.base_sha
+            creation = branch_creation_sha(repo)
+            # TRAP: _git returns "" (falsy, not None) on a SUCCESSFUL
+            # `merge-base --is-ancestor` — it emits no stdout on a zero
+            # exit. Test both ancestry conditions with `is not None`,
+            # never truthiness, or a real usable creation sha reads as a
+            # failed check here.
+            if (
+                creation is not None
+                and _git(repo, "merge-base", "--is-ancestor", result.base_sha, creation)
+                is not None
+                and _git(repo, "merge-base", "--is-ancestor", creation, "HEAD")
+                is not None
+            ):
+                old_base = creation
             print(
                 "review-scope: rebase onto the current base: "
-                f"git rebase --onto {result.remote_sha} {result.base_sha} HEAD",
+                f"git rebase --onto {result.remote_sha} {old_base} HEAD",
                 file=sys.stderr,
             )
         return 1

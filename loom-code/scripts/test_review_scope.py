@@ -37,7 +37,14 @@ known commit, with real commits added on top, read back through a real
 reflog), `test_branch_creation_sha_none_on_detached_head` (a real
 detached HEAD, no mocking of the failed `symbolic-ref`), and
 `test_branch_creation_sha_none_when_oldest_entry_not_creation` (a real
-reflog file edited in place to simulate a pruned creation entry).
+reflog file edited in place to simulate a pruned creation entry). An
+eighth invocation, `merge-base --is-ancestor <ancestor> <descendant>`
+— Task 2's old-base selection, gating whether the printed remedy uses
+the creation sha or falls back to the merge-base — is live-verified by
+`test_cli_stale_cut_remedy_uses_creation_sha_not_merge_base` (a real
+stale-cut fixture where both ancestry checks genuinely hold) and
+`test_cli_refuses_stale_base_with_rebase_remedy` (the creation-equals-
+merge-base case, proving the guard is not vacuously true).
 """
 from __future__ import annotations
 
@@ -199,6 +206,53 @@ def test_cli_refuses_stale_base_with_rebase_remedy(tmp_path, capsys):
     assert exit_code != 0
     assert captured.out == ""
     assert f"git rebase --onto {remote_sha} {base_sha} HEAD" in captured.err
+
+
+def test_cli_stale_cut_remedy_uses_creation_sha_not_merge_base(tmp_path, capsys):
+    # Task 2 RED: reproduce the stale-cut state from the 0.50.0 fix arc
+    # (docs/loom/specs/2026-08-04-loom-mechanism-defect-fixes.md §Verified
+    # root cause) — a branch cut from a local tip (`prev` at P2) whose
+    # content was later squash-merged into upstream's default branch as a
+    # single commit S. merge-base(arc, origin/main) is M0 (the clone
+    # point), but the branch's OWN work only starts at P2: rebasing onto
+    # M0 replays P1/P2, which upstream already carries (squashed, so
+    # rebase's duplicate-skip cannot recognize them) and conflicts. The
+    # printed remedy's old-base must be P2 (the reflog creation sha), not
+    # M0 (the merge-base) — today's code always prints the merge-base, so
+    # this fails before the fix.
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+    m0_sha = _head(repo)
+
+    _git(repo, "checkout", "-q", "-b", "prev")
+    (repo / "p1.txt").write_text("p1\n")
+    _git(repo, "add", "p1.txt")
+    _git(repo, "commit", "-q", "-m", "P1")
+    (repo / "p2.txt").write_text("p2\n")
+    _git(repo, "add", "p2.txt")
+    _git(repo, "commit", "-q", "-m", "P2")
+    p2_sha = _head(repo)
+
+    # Upstream gains a squash-style commit S carrying the same content as
+    # P1+P2 — the already-squashed foreign history the fix must avoid
+    # replaying.
+    (upstream / "p1.txt").write_text("p1\n")
+    (upstream / "p2.txt").write_text("p2\n")
+    _git(upstream, "add", "p1.txt", "p2.txt")
+    _git(upstream, "commit", "-q", "-m", "S (squash of P1+P2)")
+    s_sha = _head(upstream)
+
+    _git(repo, "checkout", "-q", "-b", "arc")
+    (repo / "o1.txt").write_text("o1\n")
+    _git(repo, "add", "o1.txt")
+    _git(repo, "commit", "-q", "-m", "O1")
+
+    exit_code = review_scope.main(["--repo", str(repo)])
+    captured = capsys.readouterr()
+
+    assert exit_code != 0
+    assert f"git rebase --onto {s_sha} {p2_sha} HEAD" in captured.err
+    assert m0_sha not in captured.err
 
 
 def test_cli_refuses_without_shas_prints_no_rebase_remedy(tmp_path, capsys):
