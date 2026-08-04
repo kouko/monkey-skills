@@ -176,6 +176,12 @@ def test_prior_findings_carrier_every_later_round():
         "the input-contract heading must not restrict the carrier to "
         "round 2 only"
     )
+    assert "one extra round" in input_window and "retained" in input_window, (
+        "the input-contract section must tell the reviewer that a "
+        "fix-verified finding is retained in the carrier for exactly "
+        "one extra round, so it knows a fix-verified item can appear "
+        "once more and what to do with it"
+    )
 
     output_window = _output_contract()
     assert "every round after round 1" in output_window, (

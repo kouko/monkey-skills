@@ -359,8 +359,11 @@ where the defects that matter live. Everything else you notice goes in
 `out_of_scope:`, which does not gate}
 
 ### Prior-round findings (every round after round 1)
-{the prior round's surviving findings verbatim — verify each against
-quoted current text FIRST, per role-contract rule 6; absent on round 1}
+{the prior round's surviving findings verbatim, PLUS any finding
+fix-verified last round — retained one extra round in the carrier so a
+regression can be tagged `resurfaced`, then dropped after one clean
+retained round — verify each against quoted current text FIRST, per
+role-contract rule 6; absent on round 1}
 
 ### Context
 - Branch base: {main / explicit SHA}

@@ -579,6 +579,13 @@ def test_prior_findings_carrier_every_later_round():
         "the convergence directives must not restrict the carrier to "
         "round 2 only"
     )
+    assert "one extra round" in conv and "retained" in conv, (
+        "Directive 2 must state that a finding fix-verified in round "
+        "N-1 is retained in round N's carrier for exactly one extra "
+        "round, so a regression can be tagged `resurfaced` — "
+        "otherwise a fix-verified finding drops out of every later "
+        "carrier and Directive 3's oscillation stop stays unreachable"
+    )
 
     verdict = _norm(_heading_window(_text(), "Verdict structure")).lower()
     assert "every round after round 1" in verdict, (
