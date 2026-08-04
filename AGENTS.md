@@ -116,7 +116,9 @@ Role boundaries enforced by behavior, not reading restrictions:
   population each drifted to a different count before this entry stopped
   restating it. rc=1, the reason on stderr, and — for the stale-base shape,
   where both shas resolved — the concrete
-  `git rebase --onto <remote_sha> <base_sha> HEAD` remedy also on stderr.
+  `git rebase --onto <remote_sha> <old_base> HEAD` remedy also on stderr
+  (`<old_base>` = the branch's reflog creation sha when usable, else the
+  merge-base plus a recovery caveat line).
   A third rc=1 source exists past the freshness verdict: a fresh base
   whose changed-file diff itself fails — a hardcoded stderr message,
   not a `FreshnessResult.reason`, and no rebase remedy either.
