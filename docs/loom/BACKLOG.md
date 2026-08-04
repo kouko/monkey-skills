@@ -4,6 +4,8 @@
 
 ## COMMITTED-NEXT
 - [2026-07-18-knowledge-triage-v2-1-mechanize-enforcement-semantics](backlog/2026-07-18-knowledge-triage-v2-1-mechanize-enforcement-semantics.md) — knowledge-triage v2.1 — mechanize enforcement semantics
+- [2026-08-04-claim-copy-sweep-blind-to-py-module-docstrings](backlog/2026-08-04-claim-copy-sweep-blind-to-py-module-docstrings.md) — claim_copy_sweep.py scans only .md files, so contract-prose mirrors living in .py module docstrings are invisible to the sweep, and its leak report does not name that blind spot
+- [2026-08-04-review-scope-stale-base-remedy-wrong-old-base](backlog/2026-08-04-review-scope-stale-base-remedy-wrong-old-base.md) — review_scope.py's stale-base refusal prints a rebase remedy whose old-base argument is not the branch's fork point, so following the printed command verbatim replays main's own commits and wedges in conflicts
 
 ## OPEN
 - [2026-07-02-468-reviewer-next-touch-nits-loom-code-tech-spec-ci](backlog/2026-07-02-468-reviewer-next-touch-nits-loom-code-tech-spec-ci.md) — #468 reviewer next-touch nits (loom-code TECH-SPEC + CI)
