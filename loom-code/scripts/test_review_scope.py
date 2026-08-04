@@ -329,3 +329,37 @@ def test_split_fetch_target_returns_none_for_bare_local_ref():
     # fetched, so split_fetch_target must signal that with None rather
     # than a fabricated split.
     assert review_scope.split_fetch_target("main") is None
+
+
+def test_branch_creation_sha_returns_fork_sha(tmp_path):
+    # Task 1 RED (positive): cut a branch from a known commit, add
+    # commits on top, and confirm branch_creation_sha returns the
+    # cut-point sha — the reflog's OLDEST entry for the branch ref
+    # (`git checkout -b` writes a single "branch: Created from HEAD"
+    # entry; later commits append newer entries, so the creation entry
+    # is the reflog's last output line, not its first).
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+    cut_sha = _head(repo)
+
+    _git(repo, "checkout", "-q", "-b", "feature")
+    (repo / "a.txt").write_text("a\n")
+    _git(repo, "add", "a.txt")
+    _git(repo, "commit", "-q", "-m", "commit1")
+    (repo / "b.txt").write_text("b\n")
+    _git(repo, "add", "b.txt")
+    _git(repo, "commit", "-q", "-m", "commit2")
+
+    assert review_scope.branch_creation_sha(repo) == cut_sha
+
+
+def test_branch_creation_sha_none_on_detached_head(tmp_path):
+    # Task 1 RED (paired negative): a detached HEAD has no branch name to
+    # resolve (`git symbolic-ref --short -q HEAD` fails), so
+    # branch_creation_sha must return an honest None rather than
+    # guessing at a ref.
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+    _git(repo, "checkout", "-q", "--detach")
+
+    assert review_scope.branch_creation_sha(repo) is None

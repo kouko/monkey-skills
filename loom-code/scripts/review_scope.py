@@ -219,6 +219,32 @@ def check_freshness(
     )
 
 
+def branch_creation_sha(repo: Path) -> str | None:
+    """Return the sha the current branch was cut from, or None when it
+    cannot be established. Resolves the current branch name via `git
+    symbolic-ref --short -q HEAD` (None on detached HEAD, where there is
+    no branch to look up); reads that branch's reflog OLDEST entry via
+    `git log -g --format=%H%x1f%gs refs/heads/<branch>` (the reflog is
+    printed newest-first, so the oldest entry is the last output line);
+    returns that entry's sha only when its subject starts with `branch:
+    Created from` — a pruned or rewritten reflog whose oldest surviving
+    entry is not the creation entry returns None rather than a wrong
+    sha. Any git failure (including no reflog at all) returns None."""
+    branch = _git(repo, "symbolic-ref", "--short", "-q", "HEAD")
+    if branch is None:
+        return None
+
+    output = _git(repo, "log", "-g", "--format=%H%x1f%gs", f"refs/heads/{branch}")
+    if not output:
+        return None
+
+    lines = output.splitlines()
+    sha, _, subject = lines[-1].partition("\x1f")
+    if not subject.startswith("branch: Created from"):
+        return None
+    return sha
+
+
 def resolve_changed_files(repo: Path, ref: str) -> list[str] | None:
     """Return `repo`'s branch's changed-file list against `ref`, computed
     the same way the review stations do today — `git diff <ref>...HEAD
