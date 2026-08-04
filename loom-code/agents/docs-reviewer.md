@@ -319,6 +319,12 @@ reply — do not dispatch anyone.
 ### Branch
 {branch name}
 
+### HEAD sha
+{the HEAD sha this dispatch reviews — REQUIRED (SKILL.md Step 3). Echo
+it back verbatim as `reviewed_sha:` in your verdict; it is what the
+NEXT round in this session reads to derive Directive 2's delta-scoped
+range}
+
 ### Diff scope
 {git diff main...HEAD OR explicit SHA range — context only; you read
 each changed .md artifact WHOLE}
@@ -376,9 +382,14 @@ role-contract rule 6; absent on round 1}
 ```
 standards_version: "{X.Y.Z — value of `version` in loom-code/.claude-plugin/plugin.json}"
 
-reviewed_sha: {the HEAD sha you reviewed — REQUIRED. Take it from the
-              dispatch packet; if the packet did not state one, resolve it
-              yourself and say in your summary that you did}
+reviewed_sha: {the HEAD sha you reviewed — REQUIRED. Take it verbatim from
+              the packet's `### HEAD sha`; if the packet did not state one,
+              report `unresolved` — never guess or derive one on your own.
+              A self-derived sha becomes the left endpoint of the next
+              round's delta-scoped range and can silently narrow it (the
+              fail-open direction SKILL.md's Directive 2 forbids);
+              `unresolved` instead trips Directive 2's existing "no prior
+              reviewed_sha -> unbounded" fallback, which is safe by design}
 
 verdict: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 
