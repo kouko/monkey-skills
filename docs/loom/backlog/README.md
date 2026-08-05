@@ -112,6 +112,21 @@ that have been closed and moved to `archive/` (see below) — a live
 entry must never carry `status: archived`, and an archived entry must
 never carry any other status.
 
+## Verbs
+
+Three flows read and close this store; everything else only writes it.
+
+- **Ready query** — `python3 scripts/backlog_index.py --ready` is the
+  store's read surface: it prints the `COMMITTED-NEXT` queue (the
+  "now" queue — soft cap ≤5 entries, file-date order) followed by
+  `OPEN` candidates with their `start:` conditions.
+- **Close duty** — `finishing-a-development-branch`'s Step 8
+  Backlog-close check flips a shipped or superseded entry's status at
+  branch close-out. The procedure lives in that skill, not here —
+  follow it there rather than reconstructing it from this charter.
+- **Kickoff read** — `brainstorming`'s Axis 0 Backlog ready check runs
+  the ready query at arc kickoff, so the queue informs new work.
+
 ## Filename rule
 
 Each entry's filename is `YYYY-MM-DD-<slug>.md`, where the date is the
