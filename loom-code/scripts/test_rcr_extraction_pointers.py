@@ -106,7 +106,7 @@ def test_g4_ab_evidence_absent_from_skill_present_in_design_evidence():
 def test_design_evidence_header_states_author_facing_no_runtime_load():
     dest_norm = _norm(_read(REFERENCES / "design-evidence.md"))
     assert "author-facing" in dest_norm
-    assert "do NOT load at runtime" in dest_norm
+    assert "do NOT load this file at runtime" in dest_norm
 
 
 # --- (d) pinned survivors still inline in SKILL.md --------------------------

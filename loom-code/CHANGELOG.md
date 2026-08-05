@@ -16,10 +16,13 @@ Versioning: [Semantic Versioning](https://semver.org/).
   push-trigger rationalization table, the red-flags table — the last
   keeping a one-line inline refusal distillation, probe-gated), and
   maintainer-facing evidence (the panel exit clause, G4 measurement
-  citations, a version-archaeology tag) moved to an author-facing
-  `references/design-evidence.md` that runtime agents are told not to
-  load. Every existing prose-pin test is untouched and green; a new
-  pointer-pin test guards the refactor's own surface.
+  citations) moved to an author-facing `references/design-evidence.md`
+  that runtime agents are told not to load, and a version-archaeology
+  tag was deleted outright. No prose pin was adapted: the eight
+  pre-existing pin-test files are untouched by the extraction (the
+  shipping-version pin file changed only its version strings for this
+  bump) and all green; a new pointer-pin test guards the refactor's own
+  surface.
 
 ## [0.53.0] — 2026-08-05 — reviewers may verify what they judge
 

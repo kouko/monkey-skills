@@ -139,6 +139,23 @@ Plan-document-reviewer verdict: PASS (2026-08-05, round 1, 15/15)
 
 ## Decision Log
 
+- Whole-branch round-1 errata (docs arms, adjudicated here because the
+  brief and this plan's Task-2 block are frozen): (1) the brief's
+  Smallest End State 2 "8 pin-test files UNTOUCHED" absolute is scoped
+  to the EXTRACTION (T1) — the T2 shipping-version pin rewrite
+  (version strings only, its own by-design contract) is excepted, as
+  End State 5 and Task 2(3) always required; an executor must not read
+  End State 2 as forbidding Task 2. (2) The Task-2 pinned CHANGELOG
+  block said the version-archaeology tag "moved" and "Every existing
+  prose-pin test is untouched" — the shipped CHANGELOG supersedes both
+  clauses (tag DELETED per the brief's partition #5; the pin-file
+  wording now names the version-strings exception). The pinned block
+  stays as historical record; this entry adjudicates the divergence
+  (frozen-pin delayed-action neighbor, third occurrence — see the
+  memory entry's fifth-carrier note). (3) The brief's line-26 citation
+  "repo memory feedback_extract_to_reference_load_bearing_rule" is a
+  MACHINE-LOCAL auto-memory entry, not a docs/loom/memory/ store file —
+  provenance mislabel recorded, not edited (frozen).
 - T3 probe (b) ran a second, exceeds-spec HAIKU leg alongside the
   planned sonnet leg (same three questions): the extraction's risk
   model is weak-reader degradation, so sonnet-only comprehension proves

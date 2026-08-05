@@ -2,7 +2,7 @@ Source: `requesting-code-review/SKILL.md` — maintainer-facing evidence extract
 
 # Design evidence — author-facing, do NOT load at runtime
 
-This file is author-facing: it exists for maintainers reviewing or redesigning this skill's panel-width and aggregation decisions. Runtime agents executing `requesting-code-review` do NOT load at runtime — the rules these fragments qualify already stay inline in SKILL.md; only the supporting citations and archaeology live here.
+This file is author-facing: it exists for maintainers reviewing or redesigning this skill's panel-width and aggregation decisions. Runtime agents executing `requesting-code-review` do NOT load this file at runtime — the rules these fragments qualify already stay inline in SKILL.md; only the supporting citations and archaeology live here.
 
 ## Exit clause (originally §Verdict structure)
 
