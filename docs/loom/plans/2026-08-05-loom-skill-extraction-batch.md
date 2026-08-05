@@ -209,6 +209,10 @@ Plan-document-reviewer verdict: PASS (2026-08-05, round 2, 15/15)
 
 ## Decision Log
 
+- T5 executed by the orchestrator, not an implementer: probes dispatch
+  agents, and subagents cannot dispatch agents (recorded nesting
+  gotcha). Reviewer verification of the record runs as planned.
+  Two-way door — logged.
 - T3 ceiling adjudicated (spec-reviewer round 1, quality 🟡 discharged
   here): achieved 4119 vs Task 3's literal "≤4100" — the safe tier's
   actual yield, ~25w of recon estimation slack; both routes to close
