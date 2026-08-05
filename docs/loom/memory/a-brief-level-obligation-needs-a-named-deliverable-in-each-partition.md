@@ -8,8 +8,8 @@ origin: 2026-08-05 extraction-batch arc (PR #652 round 1) via the orchestrator-t
 The 0.55.0 extraction batch's brief stated in its Smallest End State
 that extracted files get "residues + pointers". Partitions A and B
 itemized their pointer lines as explicit deliverables; Partition C
-(requesting-docs-review) did not — and shipped with no route to its own
-design-evidence.md. Three plan-review rounds and six per-task reviewers
+(requesting-docs-review) did not — and passed every per-task gate with
+no route to its own design-evidence.md. Three plan-review rounds and six per-task reviewers
 passed it, because each verified the itemized lists in front of them;
 only a whole-branch docs arm caught the missing pointer, one round
 before merge.

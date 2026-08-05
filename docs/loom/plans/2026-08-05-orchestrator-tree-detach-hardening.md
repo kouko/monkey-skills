@@ -183,3 +183,10 @@ N3 — CHANGELOG entry (prepend under the format header, above [0.55.0]):
 - 2026-08-05: T2 places the bullet before `git status --short` (brief
   Decisions); T4's CHANGELOG heading date uses today's date — both
   below-threshold, logged not asked.
+- 2026-08-05 erratum (whole-branch round 1, docs arm): T2's
+  parenthetical "strip markup, collapse whitespace, lowercase both
+  sides" over-describes the shipped normalization — the sibling test
+  files split on lowercasing, and the shipped
+  test_finishing_attached_head_check.py only collapses whitespace
+  (stricter than planned, RED-verified). The shipped test is the
+  convention of record.

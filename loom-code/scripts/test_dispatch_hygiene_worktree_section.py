@@ -2,7 +2,8 @@
 
 Pins the new `## Worktree-isolated reviewer dispatch` section inserted
 into dispatch-hygiene-notes.md, directly before `## Worked example`,
-with three guidance bullets each led by a pinned bolded key phrase.
+with guidance bullets each led by a pinned bolded key phrase (the
+BOLDED_PHRASES list below is the count of record).
 """
 
 from pathlib import Path
