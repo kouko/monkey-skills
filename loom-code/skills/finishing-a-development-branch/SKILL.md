@@ -70,7 +70,7 @@ Exempt: **mid-task work** (SDD plan not yet complete), **trivial direct-to-main 
 | *"finish this branch"* / *"wrap up the feature"* / *"ready to merge"* | ✅ Yes |
 | *"open a PR for this branch"* / *"ship it"* / *"close out this branch"* | ✅ Yes |
 | *"I'm done here, what's next?"* | ✅ Yes — the one endpoint-unnamed trigger: confirm the close-out intent at entry ("closing out = review → verify → commit → push → PR — proceeding?"), then never re-ask downstream. |
-| SDD's task plan just completed all tasks DONE | ✅ Yes (proactive — natural handoff point) |
+| SDD's task plan just completed all tasks DONE | ✅ Yes (proactive — SDD's hand-off recommendation names the close-out endpoint; accepting it carries the authorization) |
 | User wants per-task review during implementation | ❌ No — that's SDD's per-task triad |
 | User wants whole-branch review WITHOUT merging | ❌ Route directly to `requesting-code-review` (no close-out flow needed) |
 
@@ -338,7 +338,7 @@ Close-out shortcuts to refuse — *"skip review just push," "tests passed yester
 
 ## What this skill does NOT do
 
-Delegates rather than duplicates: review → `requesting-code-review`, tests → `verification-before-completion`, memory trailers → `dev-workflow:git-memory` (P3-D). Does **not** merge into main, force-push, amend commits (creates new per CLAUDE.md), or auto-remove worktrees — worktree removal still needs explicit user authorization, while PR-open does not re-ask: its authorization arrives with the close-out request (refusal rationale in [`references/red-flags.md`](references/red-flags.md)).
+Delegates rather than duplicates: review → `requesting-code-review`, tests → `verification-before-completion`, memory trailers → `dev-workflow:git-memory` (P3-D). Does **not** merge into main, force-push, amend commits (creates new per CLAUDE.md), or auto-remove worktrees — worktree removal still needs explicit user authorization, while PR-open does not re-ask: its authorization arrives with the close-out request. (Shortcut-refusal rationale for merge/force-push/amend lives in [`references/red-flags.md`](references/red-flags.md).)
 
 ## See also
 

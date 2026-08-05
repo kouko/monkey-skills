@@ -45,8 +45,9 @@ def test_relay_phrasing_gate_one_heading_present():
 def test_step4_push_was_the_request_lead_present():
     """After PASS the push executes — the request already authorized it."""
     assert (
-        "**After PASS**: the push WAS the request — execute it (branch- "
-        "qualified form) and report loudly what was pushed. Do not re-ask."
+        "**After PASS**: the push WAS the request — execute it "
+        "(branch-qualified form) and report loudly what was pushed. "
+        "Do not re-ask."
         in _normalized(SKILL_MD)
     )
 

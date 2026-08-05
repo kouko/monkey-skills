@@ -15,11 +15,11 @@ finishing-a-development-branch
   ├─→ Step 3: dev-workflow:git-memory       （commit メッセージ trailer、P3-D 必須）
   ├─→ Step 4: git commit                    （Step 3 のメッセージ使用）
   ├─→ Step 5: git push
-  ├─→ Step 6: gh pr create                  （任意、ユーザ opt-in）
+  ├─→ Step 6: gh pr create                  （request-derived——再確認なし、事前 opt-out 可）
   └─→ Step 7: git worktree remove           （任意、ユーザ確認）
 ```
 
-各 Step は次を gate する。🔴 fatal レビュー findings または test failure は進行を BLOCK。各 user-visible action（commit メッセージ承認、push、PR 作成、worktree 削除）前にユーザ確認必須。
+各 Step は次を gate する。🔴 fatal レビュー findings または test failure は進行を BLOCK。確認を求めるのは worktree 削除のみ；push と PR 作成の認可は close-out リクエストと共に届く（事前 opt-out 可）；merge は常にユーザに残る。
 
 ## 使う場面
 
@@ -47,7 +47,7 @@ finishing-a-development-branch
 | 3 | `dev-workflow:git-memory` | P3-D 必須 — git-memory が trailer 必要性を判断；オーケストレータは複製しない |
 | 4 | git CLI | 標準 git commit |
 | 5 | git CLI | git push（新規ブランチなら upstream 設定） |
-| 6 | gh CLI | gh pr create（opt-in） |
+| 6 | gh CLI | gh pr create（request-derived、再確認なし） |
 | 7 | `using-git-worktrees` | Worktree クリーンアップパターンは向こうに |
 
 ## このスキルがしないこと
@@ -58,7 +58,7 @@ finishing-a-development-branch
 - main にマージしない（ユーザ権限）
 - 認可なく force-push しない
 - Commit amend しない（CLAUDE.md ポリシー準拠 — 常に新 commit）
-- Opt-in なく PR を自動作成しない
+- Merge はしない——PR は loud report と共に開く（request-derived 認可、事前 opt-out 可）；merge は常にユーザに残る
 - 確認なく worktree を自動削除しない
 
 ## 関連

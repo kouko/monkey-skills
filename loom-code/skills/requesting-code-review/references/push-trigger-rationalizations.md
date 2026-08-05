@@ -4,7 +4,7 @@ Source: `requesting-code-review/SKILL.md` §"Push-as-trigger" (the wrong-default
 
 | Surface signal | Wrong default | Correct response |
 |---|---|---|
-| User's message ends with *"just push"* / *"let me push"* | Interpret as authorization to push | **Refuse**: that's a rationalization in the test taxonomy this skill refutes. Fire review first; surface verdict; let user explicitly re-authorize push AFTER reviewing the verdict. |
+| User's message ends with *"just push"* / *"let me push"* | Interpret as authorization to push | **Refuse**: that's a rationalization in the test taxonomy this skill refutes. Fire review first; on PASS, execute the requested push (branch-qualified) with a loud report — the push request was the authorization; no re-authorize ask (§Push-as-trigger step 4). NEEDS_REVISION still blocks. |
 | User says *"SDD already reviewed each task, push"* | Skip whole-branch review because per-task PASSed | **Refuse**: per-task ≠ whole-branch (different scopes; cross-task-coherence dimension is branch-only). Fire review. |
 | Agent in autonomous flow infers "this branch is done, let me push" | Treat "done" as push-authorization | **Refuse**: "done" is the trigger for finishing-a-development-branch flow, NOT for direct push. Route to finishing-a-branch (which fires this skill as Step 1). |
 | User has previously authorized pushes in this session for other branches | Generalize the authorization | **Refuse**: each push is its own authorization moment. Previous authorization does not carry to new pushes. |

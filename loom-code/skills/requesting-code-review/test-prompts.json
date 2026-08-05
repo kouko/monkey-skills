@@ -15,7 +15,7 @@
       "id": 2,
       "category": "edge-case",
       "prompt": "SDD already reviewed each task on this branch, so just push it for me.",
-      "expected_behavior": "Refuses the push (quotes the per-task≠whole-branch rationalization row), does NOT run git push, runs the two-reviewer panel on git diff main...HEAD first, and only after surfacing the verdict asks the user to explicitly re-authorize the push.",
+      "expected_behavior": "Refuses the immediate push (quotes the per-task≠whole-branch rationalization row), does NOT run git push before review, runs the two-reviewer panel on git diff main...HEAD first; on PASS executes the requested push (branch-qualified) with a loud report — the push request was the authorization, no re-authorize ask; on NEEDS_REVISION surfaces findings and does not push.",
       "edge_case_dimensions": ["skip-rationalization", "push-as-trigger"]
     },
     {

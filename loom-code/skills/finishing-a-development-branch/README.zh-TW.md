@@ -15,11 +15,11 @@ finishing-a-development-branch
   ├─→ Step 3: dev-workflow:git-memory       （commit message trailer，P3-D 強制）
   ├─→ Step 4: git commit                    （用 Step 3 的訊息）
   ├─→ Step 5: git push
-  ├─→ Step 6: gh pr create                  （可選、user opt-in）
+  ├─→ Step 6: gh pr create                  （request-derived——不再問、可事先 opt-out）
   └─→ Step 7: git worktree remove           （可選、user 確認）
 ```
 
-每個 Step gate 下一個。🔴 fatal review findings 或 test failure 會 BLOCK 進度。每個 user-visible action（commit message 確認、push、PR 建立、worktree 移除）之前都要 user 確認。
+每個 Step gate 下一個。🔴 fatal review findings 或 test failure 會 BLOCK 進度。只有 worktree 移除需要問；push 與 PR 建立的授權隨 close-out 請求而來（可事先 opt-out）；merge 永遠留給 user。
 
 ## 使用時機
 
@@ -47,7 +47,7 @@ finishing-a-development-branch
 | 3 | `dev-workflow:git-memory` | P3-D 強制 — git-memory 判斷 trailer 是否需要；orchestrator 不重複 |
 | 4 | git CLI | 標準 git commit |
 | 5 | git CLI | git push（新 branch 要設 upstream） |
-| 6 | gh CLI | gh pr create（opt-in） |
+| 6 | gh CLI | gh pr create（request-derived、不再問） |
 | 7 | `using-git-worktrees` | Worktree 清理 pattern 在那邊 |
 
 ## 這個 skill 不做的事
@@ -58,7 +58,7 @@ finishing-a-development-branch
 - 不 merge 到 main（使用者權限）
 - 沒授權不 force-push
 - 不 amend commit（按 CLAUDE.md 政策 — 永遠開新 commit）
-- 沒 opt-in 不自動建 PR
+- 不 merge——PR 以 loud report 開啟（request-derived 授權、可事先 opt-out），merge 永遠留給 user
 - 沒確認不自動移除 worktree
 
 ## 參考

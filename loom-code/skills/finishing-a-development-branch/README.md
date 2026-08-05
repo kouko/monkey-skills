@@ -15,11 +15,11 @@ finishing-a-development-branch
   ├─→ Step 3: dev-workflow:git-memory       (commit-message trailers, P3-D MANDATORY)
   ├─→ Step 4: git commit                    (using Step 3's message)
   ├─→ Step 5: git push
-  ├─→ Step 6: gh pr create                  (optional, user opt-in)
+  ├─→ Step 6: gh pr create                  (request-derived — no re-ask, opt-out honored)
   └─→ Step 7: git worktree remove           (optional, user confirmation)
 ```
 
-Each Step gates the next. 🔴 fatal review findings or test failures BLOCK progress. User confirmation is required before each user-visible action (commit message approval, push, PR creation, worktree removal).
+Each Step gates the next. 🔴 fatal review findings or test failures BLOCK progress. Only worktree removal asks; push and PR-open authorization arrives with the close-out request (up-front opt-out honored); the merge always stays with the user.
 
 ## When to use
 
@@ -47,7 +47,7 @@ This skill is intentionally light on novel logic. Every step delegates to a spec
 | 3 | `dev-workflow:git-memory` | P3-D MANDATORY — git-memory decides trailer warranted-ness; orchestrator doesn't duplicate |
 | 4 | git CLI | Standard git commit |
 | 5 | git CLI | git push (set upstream if new branch) |
-| 6 | gh CLI | gh pr create (opt-in) |
+| 6 | gh CLI | gh pr create (request-derived, no re-ask) |
 | 7 | `using-git-worktrees` | Worktree cleanup pattern lives there |
 
 ## What this skill does NOT do
@@ -58,7 +58,7 @@ This skill is intentionally light on novel logic. Every step delegates to a spec
 - Does **not** merge into main (user agency).
 - Does **not** force-push without authorization.
 - Does **not** amend commits (per CLAUDE.md policy — always create NEW commits).
-- Does **not** auto-create PRs without opt-in.
+- Does **not** merge — the PR opens with a loud report (request-derived authorization; up-front opt-out honored), and the merge always stays with the user.
 - Does **not** auto-remove worktrees without confirmation.
 
 ## See also

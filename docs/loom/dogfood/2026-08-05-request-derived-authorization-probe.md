@@ -70,4 +70,4 @@ The two failure directions the plan feared — an over-eager reader
 auto-pushing on an unnamed request, and an over-cautious reader
 re-asking after a named one — both came back correctly refused at the
 haiku tier, each answer anchored to a verbatim shipped sentence. The
-merge invariant held in every leg that touched it (a, c, d).
+merge invariant held in every leg that touched it (a, d).

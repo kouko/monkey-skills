@@ -125,9 +125,9 @@ finishing-a-development-branch
   ↓ Step 1: requesting-code-review (cross-task-coherence 維度；verdict 帶 standards_version)
   ↓ Step 2: verification-before-completion (npm test / pytest / 等)
   ↓ Step 3: dev-workflow:git-memory (Decision: / Learning: / Gotcha: trailers)
-  ↓ Step 4: git commit (使用者確認後)
-  ↓ Step 5: git push (使用者再次授權後)
-  ↓ Step 6: gh pr create (可選，opt-in)
+  ↓ Step 4: git commit (privacy gate 通過後)
+  ↓ Step 5: git push (review-gated——不再問)
+  ↓ Step 6: gh pr create (request-derived——不再問、可事先 opt-out)
   ↓ Step 7: git worktree remove (可選，確認)
 ```
 

@@ -65,8 +65,7 @@ Push-intent excuses and their refusals: see [`references/push-trigger-rationaliz
 1. **Do NOT execute the push.** Halt the planned action.
 2. **Surface the rationalization** to the user explicitly — quote which row of [`references/push-trigger-rationalizations.md`](references/push-trigger-rationalizations.md) their request matches.
 3. **Offer to run review now**: "Dispatching `requesting-code-review` — back in ~30s." Then resolve scope via the resolver — `review_scope.py`, the same call §Process Step 1 makes — or an explicit commit range if the user specified one, then run **§Process from Step 1**, not from Step 2 — the routing step is not optional here. A docs-only scope reached through this entry point must delegate exactly as Step 1 says; skipping to Steps 2-3 would dispatch the code-reviewer panel against pure prose. Once Step 1 has routed, the panel default applies as everywhere else — two reviewers, union, re-aggregate, never a single-reviewer dispatch. A refusal STOPS here, before any dispatch — see §Pinned refusal contract under §Process Step 1.
-4. **After PASS**: the push WAS the request — execute it (branch-
-   qualified form) and report loudly what was pushed. Do not re-ask.
+4. **After PASS**: the push WAS the request — execute it (branch-qualified form) and report loudly what was pushed. Do not re-ask. (Never a merge — step 0 routed merge-shaped triggers away.)
 5. **After NEEDS_REVISION**: surface findings; do NOT push; let user remediate.
 6. **After PASS_WITH_NOTES**: push, carrying every finding verbatim
    into the report (and the PR body if one follows) — consistent with

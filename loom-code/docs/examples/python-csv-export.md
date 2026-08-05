@@ -292,8 +292,8 @@ Orchestrator runs 7-step flow:
     Excel use case at lower complexity. Streaming deferred until
     reports grow beyond 1M rows (current largest is 50K).
    ```
-5. **git push** — only after user explicit re-authorize
-6. **gh pr create** — user opts in; PR body uses brief + plan + verdict as content
+5. **git push** — executes review-gated with a loud report; the kickoff request named the close-out endpoint, so no re-ask
+6. **gh pr create** — opens without re-asking (request-derived authorization); PR body uses brief + plan + verdict as content
 7. **git worktree cleanup** — N/A (branch not in a worktree)
 
 ---
@@ -309,14 +309,14 @@ Orchestrator runs 7-step flow:
 | `tdd-iron-law` | RED before GREEN every time; Beck 2002 Preface applied to the renderer |
 | `requesting-code-review` | Branch-scope review caught the wiki-deletion gap that per-task review couldn't see |
 | `verification-before-completion` | Forced `pytest` invocation; 47 tests pass evidence, not "tests pass" claim |
-| `finishing-a-development-branch` | Orchestrated all 7 close-out steps; user re-authorized push explicitly |
+| `finishing-a-development-branch` | Orchestrated all 7 close-out steps; push and PR-open ran on the request's authorization with loud reports |
 
 **What you did NOT see (but the toolkit prevented)**:
 - Random patching ("let me just try adding CSV and see") — brainstorming forced 5-axis first
 - Tests-after ("I'll write tests once it works") — tdd-iron-law forced RED first
 - Push without review — router rule #4 + requesting-code-review's Push-as-trigger
 - "Tests pass" without invocation — verification-before-completion forced the pytest output
-- Auto-merge — finishing-a-development-branch requires user re-authorize each visible action
+- Auto-merge — the merge itself always stays with the user; finishing-a-development-branch prepares the command, never runs it
 
 ## See also
 

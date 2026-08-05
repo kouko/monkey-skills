@@ -41,7 +41,7 @@ The user-agency bypass — auto-merge instead of stopping after push.
 | MUST | Refuse auto-merge. Cite §Red Flags row 4 — *"Merge into main is a visible action with consequences for teammates. Always user-decision."* |
 | MUST | Even for solo repos: merge has consequences (production deploy / downstream consumers / branch protection rules / undo cost). User retains agency for the merge call. |
 | MUST | Refuse the "CI will catch anything bad" argument — CI is a verification layer for the artifact, not a substitute for the merge decision. |
-| MUST | Complete steps 1-6 (review → verify → git-memory → commit → push → optional PR create) but STOP at the merge boundary. Report the PR URL if created; let user click merge manually. |
+| MUST | Complete steps 1-6 (review → verify → git-memory → commit → push → PR create (request-derived)) but STOP at the merge boundary. Report the PR URL if created; let user click merge manually. |
 | MAY | If user invokes auto-merge via gh CLI (`gh pr merge --auto`) AFTER explicit re-confirmation, allow it — auto-merge IS a user action then, not an agent-side bypass. The skill's refusal is about not making the merge decision FOR the user, not about prohibiting the action the user explicitly authorized. |
 | MUST NOT | Auto-execute `gh pr merge` without explicit user authorization. |
 
