@@ -207,6 +207,19 @@ Plan-document-reviewer verdict: PASS (2026-08-05, round 2, 15/15)
 - Independent: false
 - Brief item covered: "Cold-read probes CLEAN" (Smallest End State 3)
 
+## Decision Log
+
+- T3 ceiling adjudicated (spec-reviewer round 1, quality 🟡 discharged
+  here): achieved 4119 vs Task 3's literal "≤4100" — the safe tier's
+  actual yield, ~25w of recon estimation slack; both routes to close
+  the gap are foreclosed by the frozen brief itself (rule wording
+  out-of-scope; risky trim tier declined). The shipped pytest pins
+  ≤4130 and its docstring discloses why. This entry is the
+  plan-amendment channel the quality arm asked for: Task 3's
+  acceptance ceiling reads AS ADJUDICATED ≤4130, and the CHANGELOG's
+  pre-frozen "to about 4100" wording already anticipated the
+  approximation. Two-way door — logged.
+
 ## Notes
 
 - The brief's three Partitions are the extraction SSOT (point-don't-copy
