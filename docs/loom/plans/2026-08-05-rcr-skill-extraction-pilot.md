@@ -137,6 +137,17 @@ Plan-document-reviewer verdict: PASS (2026-08-05, round 1, 15/15)
 - Independent: false
 - Brief item covered: "Cold-read probes CLEAN ... probe (red-flags) FAIL → #4 reverts per the exit clause" (Smallest End State 4)
 
+## Decision Log
+
+- T3 probe (b) ran a second, exceeds-spec HAIKU leg alongside the
+  planned sonnet leg (same three questions): the extraction's risk
+  model is weak-reader degradation, so sonnet-only comprehension proves
+  too little — user-prompted mid-arc, two-way door, logged (precedent:
+  the 0.51.0 arc's T3 third test).
+- T3 executed by the orchestrator, not an implementer: probes dispatch
+  agents, and subagents cannot dispatch agents (recorded nesting
+  gotcha). Reviewer verification of the record runs as planned.
+
 ## Notes
 
 - Reviewer advisories (round 1): if T3's exit clause FIRES, the #4
