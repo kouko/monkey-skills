@@ -16,8 +16,12 @@ Neighborhood-scoped (mirrors test_finishing_merge_path_guidance.py and
 test_finishing_step3_autoproceed.py): Step 7, Step 9, and the
 ASK-rationale paragraph are sliced independently so a whole-file
 substring check can't false-green off text living elsewhere in the
-file. Guard slices for Step 11 / Step 12 confirm the two remaining
-outward-facing asks (PR-open, worktree-removal) survive untouched.
+file. Guard slices for Step 11 / Step 12: Step 11 now opens the PR
+with NO ask — the authorization arrived with the close-out request
+(request-derived; every §When to use trigger names the endpoint, the
+one ambiguous "done" row confirms at entry per its N4 note) — while
+keeping the PR-body privacy gate; Step 12's worktree-removal ask
+survives untouched.
 
 Stdlib only (pathlib). Resolve SKILL.md relative to this test file.
 """
@@ -29,6 +33,29 @@ SKILL = Path(__file__).parents[1] / "skills" / "finishing-a-development-branch" 
 OLD_STEP7_ASK = "ASK for approval"
 OLD_STEP9_DEP = "user approval at Step 7"
 OLD_RATIONALE_CLAIM = "Each user-visible action has a confirmation"
+OLD_STEP11_ASK = 'Open a PR? (y/N)'
+OLD_NOT_DO_ABSOLUTE = (
+    "auto-create PRs / auto-remove worktrees — each needs explicit "
+    "user authorization"
+)
+NEW_STEP11_LEAD = "Open the PR — no ask"
+# N4 — §When to use entry note (whitespace-normalized single line)
+N4_ENTRY_NOTE = (
+    "✅ Yes — the one endpoint-unnamed trigger: confirm the close-out "
+    'intent at entry ("closing out = review → verify → commit → push → '
+    'PR — proceeding?"), then never re-ask downstream.'
+)
+# N9a — SSOT pointer in the §ASK rationale paragraph (whitespace-normalized)
+N9A_POINTER = (
+    "For any remaining question, run the ask-vs-resolve triage at "
+    "`subagent-driven-development` §Asking the user, gate ① (the "
+    "cross-skill SSOT) before asking."
+)
+
+
+def _norm(s: str) -> str:
+    """Whitespace-normalize so pinned texts match regardless of wrapping."""
+    return " ".join(s.split())
 
 
 def _text() -> str:
@@ -76,7 +103,7 @@ def _rationale_slice(text: str) -> str:
 def _step11_slice(text: str) -> str:
     return _step_slice(
         text,
-        '11. ASK user: "Open a PR? (y/N)"',
+        "11. Open the PR — no ask",
         '12. ASK user: "Branch was in .worktrees/',
     )
 
@@ -167,12 +194,48 @@ def test_rationale_paragraph_reflects_exception_based_model():
         "Rationale must name the privacy-gate BLOCK as the remaining exception stop"
 
 
-def test_guard_step11_pr_open_ask_intact():
-    """Guard against over-deletion: Step 11's PR-open ask must survive
-    untouched — it is outward-facing and stays."""
+def test_step11_pr_open_ask_deleted():
+    """Step 11's y/N PR-open ask is DELETED — the authorization arrived
+    with the request (every §When to use trigger names the close-out
+    endpoint; the ambiguous "done" row confirms at entry). The lead
+    opens the PR with no ask and keeps the opt-out escape (unconfigured
+    gh CLI / up-front opt-out → stop after push and say so)."""
     step11 = _step11_slice(_text())
-    assert 'ASK user: "Open a PR? (y/N)"' in step11, \
-        "Step 11's PR-open ask must remain intact"
+    assert OLD_STEP11_ASK not in step11, \
+        f"Step 11 must no longer contain the y/N ask {OLD_STEP11_ASK!r}"
+    assert NEW_STEP11_LEAD in step11, \
+        "Step 11's lead must open the PR with no ask"
+    assert "the authorization arrived with the request" in step11, \
+        "Step 11's lead must ground the no-ask in request-derived authorization"
+    assert "- If no: stop after push" not in step11, \
+        "The trailing 'If no' line is absorbed by the lead's opt-out sentence"
+
+
+def test_when_to_use_done_row_confirms_at_entry():
+    """The one endpoint-unnamed trigger ("I'm done here, what's next?")
+    must carry the N4 entry-confirm note: confirm close-out intent at
+    entry, then never re-ask downstream."""
+    assert N4_ENTRY_NOTE in _norm(_text()), \
+        "§When to use 'I'm done here' row must carry the N4 entry-confirm note"
+
+
+def test_rationale_carries_ask_triage_ssot_pointer():
+    """The §ASK rationale paragraph must point remaining questions at
+    the cross-skill ask-vs-resolve triage SSOT (SDD §Asking the user,
+    gate ①) instead of growing its own triage."""
+    rationale = _rationale_slice(_text())
+    assert N9A_POINTER in _norm(rationale), \
+        "§ASK rationale must carry the N9a SSOT pointer"
+
+
+def test_not_do_section_drops_pr_open_absolute():
+    """§What this skill does NOT do must drop the old absolute that
+    lumped PR-open with worktree-removal ('each needs explicit user
+    authorization') — worktree removal keeps the ask; PR-open
+    authorization arrives with the request."""
+    text = _text()
+    assert OLD_NOT_DO_ABSOLUTE not in text, \
+        f"Old absolute must be gone: {OLD_NOT_DO_ABSOLUTE!r}"
 
 
 def test_step11_invokes_pr_body_privacy_gate():

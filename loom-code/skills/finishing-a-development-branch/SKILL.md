@@ -69,7 +69,7 @@ Exempt: **mid-task work** (SDD plan not yet complete), **trivial direct-to-main 
 |---|---|
 | *"finish this branch"* / *"wrap up the feature"* / *"ready to merge"* | ✅ Yes |
 | *"open a PR for this branch"* / *"ship it"* / *"close out this branch"* | ✅ Yes |
-| *"I'm done here, what's next?"* | ✅ Yes (the "done" framing — finish the branch before next task) |
+| *"I'm done here, what's next?"* | ✅ Yes — the one endpoint-unnamed trigger: confirm the close-out intent at entry ("closing out = review → verify → commit → push → PR — proceeding?"), then never re-ask downstream. |
 | SDD's task plan just completed all tasks DONE | ✅ Yes (proactive — natural handoff point) |
 | User wants per-task review during implementation | ❌ No — that's SDD's per-task triad |
 | User wants whole-branch review WITHOUT merging | ❌ Route directly to `requesting-code-review` (no close-out flow needed) |
@@ -86,13 +86,13 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 | 3 | `dev-workflow:git-memory` | P3-D MANDATORY — git-memory decides whether memory trailers are warranted on this commit. Orchestrator passes the diff + recent commits; git-memory returns the trailer set (or empty, if routine) |
 | 4 | git CLI | Standard `git commit -m "<msg>" -m "<body with trailers>"` |
 | 5 | git CLI | `git push -u origin <branch>` if new; `git push` if upstream set |
-| 6 | gh CLI | `gh pr create --title "<title>" --body "<body>"`; user must opt in |
+| 6 | gh CLI | `gh pr create --title "<title>" --body "<body>"`; authorization is request-derived — it arrived with the close-out request, so Step 11 opens the PR without a re-ask (up-front opt-out honored) |
 | 7 | `using-git-worktrees` | Worktree cleanup pattern lives in that skill; this orchestrator just offers to invoke its `git worktree remove` flow |
 
 **The orchestrator does NOT**:
 - Duplicate git-memory's trailer-decision logic (P3-D — would create drift)
 - Decide commit messages from scratch (delegates to git-memory output)
-- Force the merge or auto-create PRs without user opt-in (both visible to teammates → user agency; see §What this skill does NOT do)
+- Force the merge — merge stays with the user, never auto-run (PR-open is different: its authorization is request-derived, arriving with the close-out request, so Step 11 opens the PR and reports loudly rather than re-asking; see §What this skill does NOT do)
 
 ## Default flow — what happens if user just says "finish this branch"
 
@@ -283,8 +283,12 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
       `… loom_gate_markers.py waiver --reason "<user's words>"` — one-shot, consumed and
       logged by the gate on the next push. Never self-mint a waiver.
 10. git push (branch-qualified form per Step 8)
-11. ASK user: "Open a PR? (y/N)" — only if gh CLI configured
-    - If yes: compose the PR body per `dev-workflow/skills/git-memory/protocols/compose-pr.md`,
+11. Open the PR — no ask: the authorization arrived with the request
+    (every §When to use trigger names the close-out endpoint; the one
+    ambiguous row confirmed at entry). Skip only if gh CLI is
+    unconfigured or the user opted out up front — then stop after
+    push and say so.
+    - Compose the PR body per `dev-workflow/skills/git-memory/protocols/compose-pr.md`,
       then run its Step 6 privacy gate over that composed body BEFORE `gh pr create` — the
       same two-layer gate (privacy-scan.py + the privacy-judge-spec.md judge, full
       cross-plugin paths in Step 7, fail-closed)
@@ -312,7 +316,6 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
       prefix). Web-dialog prefill is unreliable; see
       `docs/loom/memory/squash-dialog-can-drop-entire-pr-body.md`. The
       orchestrator prepares the command, never runs it — no auto-merge.
-    - If no: stop after push
 12. ASK user: "Branch was in .worktrees/; remove the worktree? (y/N)"
     - If yes: cd to repo root; git worktree remove .worktrees/<slug>
     - If no: leave it
@@ -327,7 +330,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
     and worktree status.
 ```
 
-**ASK = stop and wait for user.** That guarantee is now exception-based, not blanket: close-out is autonomous on the happy path — Steps 1–10 proceed silently once each step's own gate PASSes, including Step 7's privacy gate. What remains are the two OUTWARD-FACING actions (Step 11 — open a PR; Step 12 — remove the worktree), which always ask because they are visible to teammates or touch shared state, plus a Step 7 privacy-gate BLOCK, where the human returns only because the gate failed.
+**ASK = stop and wait for user.** That guarantee is now exception-based, not blanket: close-out is autonomous on the happy path — Steps 1–10 proceed silently once each step's own gate PASSes, including Step 7's privacy gate. What remains is one OUTWARD-FACING action that always asks (Step 12 — remove the worktree, because it touches shared state), plus a Step 7 privacy-gate BLOCK, where the human returns only because the gate failed; Step 11 (open a PR) no longer asks — its authorization arrived with the request, so it reports loudly instead. For any remaining question, run the ask-vs-resolve triage at `subagent-driven-development` §Asking the user, gate ① (the cross-skill SSOT) before asking.
 
 ## Red Flags — refuse these rationalizations
 
@@ -335,7 +338,7 @@ Close-out shortcuts to refuse — *"skip review just push," "tests passed yester
 
 ## What this skill does NOT do
 
-Delegates rather than duplicates: review → `requesting-code-review`, tests → `verification-before-completion`, memory trailers → `dev-workflow:git-memory` (P3-D). Does **not** merge into main, force-push, amend commits (creates new per CLAUDE.md), or auto-create PRs / auto-remove worktrees — each needs explicit user authorization (refusal rationale in [`references/red-flags.md`](references/red-flags.md)).
+Delegates rather than duplicates: review → `requesting-code-review`, tests → `verification-before-completion`, memory trailers → `dev-workflow:git-memory` (P3-D). Does **not** merge into main, force-push, amend commits (creates new per CLAUDE.md), or auto-remove worktrees — worktree removal still needs explicit user authorization, while PR-open does not re-ask: its authorization arrives with the close-out request (refusal rationale in [`references/red-flags.md`](references/red-flags.md)).
 
 ## See also
 

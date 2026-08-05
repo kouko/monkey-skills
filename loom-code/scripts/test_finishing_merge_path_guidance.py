@@ -58,7 +58,7 @@ def _step_slice(text: str, start_marker: str, end_marker: str) -> str:
 def _step11_slice(text: str) -> str:
     return _step_slice(
         text,
-        '11. ASK user: "Open a PR? (y/N)"',
+        "11. Open the PR — no ask",
         '12. ASK user: "Branch was in .worktrees/',
     )
 
