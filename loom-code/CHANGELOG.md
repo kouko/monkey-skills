@@ -5,6 +5,22 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.54.0] — 2026-08-05 — the review contract sheds its commentary, not its rules
+
+### Changed
+
+- **`requesting-code-review/SKILL.md` drops from 4498 to under 3900
+  words with zero rule changes** — the extraction pilot for the three
+  ceiling-bound skill files. Four zero-pin sections moved whole behind
+  pointers (the SDD-scope comparison, the cross-skill map, the
+  push-trigger rationalization table, the red-flags table — the last
+  keeping a one-line inline refusal distillation, probe-gated), and
+  maintainer-facing evidence (the panel exit clause, G4 measurement
+  citations, a version-archaeology tag) moved to an author-facing
+  `references/design-evidence.md` that runtime agents are told not to
+  load. Every existing prose-pin test is untouched and green; a new
+  pointer-pin test guards the refactor's own surface.
+
 ## [0.53.0] — 2026-08-05 — reviewers may verify what they judge
 
 ### Changed
