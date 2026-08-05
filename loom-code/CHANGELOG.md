@@ -5,6 +5,30 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.58.0] — 2026-08-05 — authorization arrives with the request
+
+### Changed
+
+- **A request that names a publish endpoint is a continuous-mode
+  opt-in.** The router and doctrine recognize "finish this branch" /
+  "ship it" / "開 PR" as the explicit opt-in continuous mode always
+  required — judged once at kickoff, recorded in the plan header,
+  reversible mid-arc with 「一站一站來」. Measured basis: 6-project
+  pump-phrase mining, PR/review-context stops ≈10:1 over
+  limit-recovery stops.
+- **Stations stop re-asking for what the request already authorized.**
+  finishing Step 11's `Open a PR? (y/N)` is deleted (every trigger
+  names the endpoint; the ambiguous "done" row confirms at entry);
+  requesting-code-review's push-trigger PASS re-ask and
+  PASS_WITH_NOTES push-anyway ask are replaced by loud reports
+  carrying findings; SDD gate ① states the confirm is asked once.
+  Merge, deploy, delete, and paid runs still always confirm; hard
+  gates (NEEDS_REVISION, privacy BLOCK, one-way doors, UI acceptance)
+  unchanged.
+- **Gate ①'s three-way triage is marked the cross-skill SSOT** for
+  ask-vs-resolve decisions; sibling ask-moments point at it by stable
+  heading text instead of restating fragments.
+
 ## [0.57.0] — 2026-08-05 — the privacy gate's files get their full addresses
 
 ### Fixed
