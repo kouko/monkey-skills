@@ -62,7 +62,7 @@ outcome vs the pilot: the recipe held at 3-file scale, including on the
 pin-saturated file, whose target was the reduced ≤4100 from freeze
 (HONEST REDUCED SCOPE — never ≤3900) and landed at 4118, adjudicated
 ≤4130 in the plan's Decision Log. Family state after this arc: the four
-review/planning core skills sit at 3788-4118 words — 381-712 words
+review/planning core skills sit at 3788-4118 words — 382-712 words
 under the CHK-SKL-010 hard cap (4500), and 12-112 words under the
 per-file pin ceilings (this batch's 3900/3900/4130 plus the pilot's
 3900: headroom 26/76/12/112 respectively). The new pins deliberately bank the recovered room: future

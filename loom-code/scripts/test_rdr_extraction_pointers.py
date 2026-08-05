@@ -126,6 +126,17 @@ def test_moved_fragments_absent_from_skill_and_present_in_destination():
         )
 
 
+def test_design_evidence_pointer_present_in_skill():
+    """Whole-branch docs arms (round 1) found the extracted evidence
+    undiscoverable from the skill it serves — the body carried no route
+    to references/design-evidence.md. The pointer now rides Directive
+    1's measured-branch sentence, giving that referent its provenance
+    antecedent in the same stroke."""
+    text = _skill_text()
+    assert "references/design-evidence.md" in text
+    assert "measurement provenance" in text
+
+
 def test_word_ceiling():
     """The plan's target ceiling is <=4100 (Task 3 acceptance). Every
     fragment matching Partition C's three named classes (citation

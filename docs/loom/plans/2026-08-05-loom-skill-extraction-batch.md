@@ -214,7 +214,8 @@ Plan-document-reviewer verdict: PASS (2026-08-05, round 2, 15/15)
   gotcha). Reviewer verification of the record runs as planned.
   Two-way door — logged.
 - T3 ceiling adjudicated (spec-reviewer round 1, quality 🟡 discharged
-  here): achieved 4119 vs Task 3's literal "≤4100" — the safe tier's
+  here): achieved 4119 (wc -w; 4118 by the len(text.split()) convention
+  the pin test and dogfood record use) vs Task 3's literal "≤4100" — the safe tier's
   actual yield, ~25w of recon estimation slack; both routes to close
   the gap are foreclosed by the frozen brief itself (rule wording
   out-of-scope; risky trim tier declined). The shipped pytest pins

@@ -76,7 +76,7 @@ If the critical-path **depth** exceeds 5, the brief is too big. **Do not silentl
 
 A **deep chain** (critical-path depth >5) is almost always a discovery failure, not a planning failure; a **wide-but-shallow** plan (many independent leaves, shallow depth) parallelizes cleanly and is NOT a discovery failure.
 
-**Why depth `5` is a heuristic, not a law** — the compounding-error rationale and measured example: [`references/design-evidence.md`](references/design-evidence.md).
+**Why depth `5` is a heuristic, not a law** — the compounding-error rationale and worked example: [`references/design-evidence.md`](references/design-evidence.md).
 
 **Structural-split escape hatch (round-2 NEEDS_REVISION only):** If the plan-document-reviewer returns NEEDS_REVISION for a second round and the *sole* failure is a structural-size violation (a task structurally cannot resolve to one failing test within one module boundary — Check 6 keeps failing no matter how the description is reworded — and cannot be shrunk further without a brief change), split that oversized task into a fresh sibling part (a new `<topic>-part-N.md` brief → new plan) and treat it as a round-1 input to a fresh `writing-plans` run. The original plan's 2-round cap applies to the original tasks only; the new sibling part starts its own clean round count.
 
