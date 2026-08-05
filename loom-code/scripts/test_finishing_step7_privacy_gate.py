@@ -97,6 +97,19 @@ def test_step7_invokes_privacy_gate():
         "Step 7 must invoke the privacy gate"
 
 
+def test_step7_names_full_cross_plugin_paths():
+    """Step 7 must name BOTH gate components by their full cross-plugin
+    paths — the gate's files live in the dev-workflow plugin, so a bare
+    basename (`scripts/privacy-scan.py`, `privacy-judge-spec.md`) sends
+    the orchestrator hunting in the wrong plugin (live: a judge dispatch
+    guessed `references/` for a file that lives in `protocols/`)."""
+    step7 = _step7_slice(_text())
+    assert "dev-workflow/skills/git-memory/scripts/privacy-scan.py" in step7, \
+        "Step 7 must give privacy-scan.py's full cross-plugin path"
+    assert "dev-workflow/skills/git-memory/protocols/privacy-judge-spec.md" in step7, \
+        "Step 7 must give privacy-judge-spec.md's full cross-plugin path"
+
+
 def test_step7_pass_proceeds_silently():
     """Step 7's PASS branch must proceed silently — no user ask."""
     step7 = _step7_slice(_text())

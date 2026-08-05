@@ -5,6 +5,19 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.57.0] — 2026-08-05 — the privacy gate's files get their full addresses
+
+### Fixed
+
+- **Finishing Step 7 names the privacy gate's components by full
+  cross-plugin path** — `dev-workflow/skills/git-memory/scripts/privacy-scan.py`
+  (with its `--text-file` flag) and
+  `dev-workflow/skills/git-memory/protocols/privacy-judge-spec.md` —
+  instead of bare basenames. The gate's files live in the dev-workflow
+  plugin, so a pathless mention sent a judge dispatch hunting in the
+  wrong folder (live: `references/` guessed for a file in
+  `protocols/`). Pin test extended RED-first.
+
 ## [0.56.0] — 2026-08-05 — the orchestrator's tree is nobody else's checkout
 
 ### Added

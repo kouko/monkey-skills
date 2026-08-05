@@ -152,8 +152,12 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      the exact lapse this inline check exists to prevent (documented recurrence: PR #519, PR #520).
 7. Run the privacy gate on the composed commit message + trailers —
    git-memory's compose-commit protocol Step 3.5, the fail-closed
-   two-layer check: layer-1 deterministic `scripts/privacy-scan.py`
-   scan, then layer-2 fresh-context judge per `privacy-judge-spec.md`.
+   two-layer check: layer-1 deterministic scan via
+   `dev-workflow/skills/git-memory/scripts/privacy-scan.py`
+   (`--text-file <path>`), then layer-2 fresh-context judge per
+   `dev-workflow/skills/git-memory/protocols/privacy-judge-spec.md`
+   (both live in the dev-workflow plugin — pass the judge this full
+   path, not a bare filename).
    - PASS (layer-1 clean AND layer-2 PASS): proceed silently — no user ask.
    - BLOCK (any layer-1 finding, a layer-2 BLOCK, or a fail-closed
      condition — script error, judge dispatch failure, or
@@ -282,7 +286,8 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 11. ASK user: "Open a PR? (y/N)" — only if gh CLI configured
     - If yes: compose the PR body per `dev-workflow/skills/git-memory/protocols/compose-pr.md`,
       then run its Step 6 privacy gate over that composed body BEFORE `gh pr create` — the
-      same two-layer gate (privacy-scan.py + the privacy-judge-spec.md judge, fail-closed)
+      same two-layer gate (privacy-scan.py + the privacy-judge-spec.md judge, full
+      cross-plugin paths in Step 7, fail-closed)
       that Step 7 runs on the commit carrier. Gate PASS → proceed to create; gate BLOCK
       (any layer-1 finding, layer-2 BLOCK, or a fail-closed condition) → surface findings
       and do NOT create the PR until the user resolves it. This is explicit, not transitive:
