@@ -5,6 +5,22 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.59.0] — 2026-08-06 — the backlog grows verbs
+
+### Added
+
+- **The backlog becomes readable and closable, not just writable.**
+  Measured: 90 entries filed in five weeks, zero ever closed, no flow
+  ever read the store. Three verbs close the loop, following the
+  industry pattern (ready-query + close-in-the-work-loop):
+  `backlog_index.py --ready` prints the COMMITTED-NEXT queue + OPEN
+  candidates with their start conditions; brainstorming Axis 0 runs
+  the ready check at arc kickoff (N/A-silent without a store);
+  finishing Step 8 flips shipped/superseded entries in the close-out
+  commit and Step 13 ends its report naming the queue's top. The
+  inventory was swept once against the 0.49.0-0.58.0 shipped record —
+  conservative flips only, each carrying its evidence line.
+
 ## [0.58.0] — 2026-08-05 — authorization arrives with the request
 
 ### Changed
