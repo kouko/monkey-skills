@@ -49,6 +49,14 @@ committed work), then proceed as if the verdicts had arrived on time.
   (`git show <branch>:loom-code/.claude-plugin/plugin.json`), never
   the worktree's own checkout — a detached worktree otherwise stamps
   the wrong version (live: 0.50.0 stamped on a 0.51.0 branch).
+- **Never `git checkout` / `git switch` in the orchestrator's main
+  working tree** — the dispatch packet names absolute paths under the
+  main repo, so a worktree-isolated agent can still run git there and
+  detach the tree the orchestrator is about to commit on (live: a
+  close-out commit landed on a detached HEAD this way). Read other
+  revisions via `git show`; run anything that needs a different
+  checkout inside your OWN worktree. The main tree's checkout state
+  belongs to the orchestrator alone.
 
 ## Worked example — the built-in `/recap` style is the target
 

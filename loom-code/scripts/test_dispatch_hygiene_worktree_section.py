@@ -23,6 +23,7 @@ BOLDED_PHRASES = [
     "**The worktree may be detached at the default-branch tip**",
     "**Name known environmental test failures in the packet**",
     "**`standards_version` comes from the REVIEWED BRANCH's manifest**",
+    "**Never `git checkout` / `git switch` in the orchestrator's main working tree**",
 ]
 
 
@@ -58,8 +59,18 @@ def test_worktree_section_precedes_worked_example():
 
 
 def test_worktree_section_bolded_key_phrases_present():
-    """Task 2: all three pinned bolded key phrases appear in the file,
+    """All pinned bolded key phrases appear in the file,
     whitespace-normalized."""
     normalized = _normalized_text()
     for phrase in BOLDED_PHRASES:
         assert phrase in normalized, f"missing pinned phrase: {phrase!r}"
+
+
+def test_orchestrator_tree_bullet_names_both_remedies():
+    """The fourth bullet (never checkout in the orchestrator's tree)
+    names both permitted routes: `git show` for reading other revisions,
+    and the agent's OWN worktree for anything needing a different
+    checkout."""
+    normalized = _normalized_text()
+    assert "Read other revisions via `git show`" in normalized
+    assert "inside your OWN worktree" in normalized
