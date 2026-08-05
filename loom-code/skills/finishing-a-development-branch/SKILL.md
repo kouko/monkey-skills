@@ -229,6 +229,12 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      (`plugin version bump`), so a post-push failure does not point at the store and costs
      a diagnosis round. Recurrence is the reason this bullet exists — the same miss
      shipped twice.
+   - Attached-HEAD check: run `git symbolic-ref -q HEAD` in the main
+     working tree — it must print the branch being finished. Detached
+     HEAD or a different branch means something (typically a subagent)
+     moved this tree mid-flight; STOP, reattach (`git checkout <branch>`,
+     fast-forwarding any commits that already landed detached), and only
+     then commit — never commit the close-out on a detached HEAD.
    - Run `git status --short` to confirm exactly which files are staged and untracked.
    - Stage with an explicit file list (`git add <file1> <file2> …`) — avoid `git add -A <dir>`
      which sweeps unrelated untracked files into the commit.
