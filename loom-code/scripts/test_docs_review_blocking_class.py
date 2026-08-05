@@ -197,7 +197,7 @@ PLUGIN_JSON = Path(__file__).parents[1] / ".claude-plugin" / "plugin.json"
 CHANGELOG_MD = Path(__file__).parents[1] / "CHANGELOG.md"
 
 
-def test_plugin_version_and_changelog_at_0_54_0():
+def test_plugin_version_and_changelog_at_0_55_0():
     """Originally Task 6 of
     docs/loom/plans/2026-08-02-finding-origin-attribution.md, and rewritten
     by every subsequent bump -- loom-code/CHANGELOG.md is the release
@@ -205,8 +205,8 @@ def test_plugin_version_and_changelog_at_0_54_0():
     that used to live here grew one link per release and had drifted into
     listing its own originating plan as a later supersession).
 
-    plugin.json is bumped to 0.54.0 and CHANGELOG.md carries a matching
-    `## [0.54.0]` heading. Both read from the
+    plugin.json is bumped to 0.55.0 and CHANGELOG.md carries a matching
+    `## [0.55.0]` heading. Both read from the
     WORKING TREE, never a committed blob -- an implementer cannot commit, so a
     test that reads committed content can never go green in this workflow
     (docs/loom/backlog/2026-07-28-plan-stage-fact-grounding-what-0-39-0-does-not-close.md,
@@ -216,13 +216,13 @@ def test_plugin_version_and_changelog_at_0_54_0():
     rewrites it, which is what makes a missing bump fail CI rather than
     ship a silent marketplace no-op."""
     plugin_text = PLUGIN_JSON.read_text(encoding="utf-8")
-    assert '"version": "0.54.0"' in plugin_text, (
-        "loom-code/.claude-plugin/plugin.json must read version 0.54.0"
+    assert '"version": "0.55.0"' in plugin_text, (
+        "loom-code/.claude-plugin/plugin.json must read version 0.55.0"
     )
 
     changelog_text = CHANGELOG_MD.read_text(encoding="utf-8")
-    assert "## [0.54.0]" in changelog_text, (
-        "loom-code/CHANGELOG.md must carry a `## [0.54.0]` heading"
+    assert "## [0.55.0]" in changelog_text, (
+        "loom-code/CHANGELOG.md must carry a `## [0.55.0]` heading"
     )
 
 
