@@ -903,6 +903,138 @@ def test_agreement_check_is_a_noop_when_body_has_no_matching_bullet(tmp_path):
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# --ready — the store's single READ surface (plan
+# docs/loom/plans/2026-08-06-backlog-ready-verb-and-close-loop.md, Task 1).
+# COMMITTED-NEXT first (filename order), then OPEN; excluded statuses
+# (PARKED / UPSTREAM / SHIPPED / CLOSED — SUPERSEDED / archived) never
+# listed; closing `ready: N committed / M open / K excluded by status` line.
+# ---------------------------------------------------------------------------
+
+
+def _ready_store(tmp_path: Path) -> Path:
+    """One entry per status — two OPEN entries (with and without `start:`)
+    so assertion (c) can check both the rendered and the absent case —
+    plus one archive-tier entry. Shared by all five --ready assertions."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(
+        store,
+        "2026-08-01-committed.md",
+        _entry("2026-08-01-committed", "COMMITTED-NEXT", description="Committed marker."),
+    )
+    _write(
+        store,
+        "2026-08-02-open-with-start.md",
+        _entry(
+            "2026-08-02-open-with-start", "OPEN", description="Open-with-start marker."
+        ).replace("status: OPEN\n", "status: OPEN\nstart: a third real thing happens\n"),
+    )
+    _write(
+        store,
+        "2026-08-03-open-plain.md",
+        _entry("2026-08-03-open-plain", "OPEN", description="Open-plain marker."),
+    )
+    _write(store, "2026-08-04-parked.md", _entry("2026-08-04-parked", "PARKED"))
+    _write(store, "2026-08-05-upstream.md", _entry("2026-08-05-upstream", "UPSTREAM"))
+    _write(store, "2026-08-06-shipped.md", _entry("2026-08-06-shipped", "SHIPPED"))
+    _write(
+        store,
+        "2026-08-07-superseded.md",
+        _entry("2026-08-07-superseded", "CLOSED — SUPERSEDED"),
+    )
+    _write(
+        store,
+        "archive/2026-07-01-archived.md",
+        _archived_entry("2026-07-01-archived", "2026-07-15"),
+    )
+    return store
+
+
+def _run_ready(store: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(BACKLOG_SCRIPT), "--ready", "--store", str(store)],
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_ready_prints_committed_next_section_before_open(tmp_path):
+    """(a) COMMITTED-NEXT is the 'now' queue — it must render before OPEN,
+    and each section must actually contain its own entries (section-scoped,
+    not whole-output substring)."""
+    result = _run_ready(_ready_store(tmp_path))
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    out = result.stdout
+    assert "## COMMITTED-NEXT" in out and "## OPEN" in out, out
+    assert out.index("## COMMITTED-NEXT") < out.index("## OPEN")
+    committed_section = _section(out, "## COMMITTED-NEXT")
+    assert "- 2026-08-01-committed — Committed marker." in committed_section
+    open_section = _section(out, "## OPEN")
+    assert "- 2026-08-02-open-with-start — Open-with-start marker." in open_section
+    assert "- 2026-08-03-open-plain — Open-plain marker." in open_section
+
+
+def test_ready_excludes_non_actionable_statuses(tmp_path):
+    """(b) PARKED / UPSTREAM / SHIPPED / CLOSED — SUPERSEDED / archived are
+    not actionable — none of their entries may appear anywhere in the
+    output (they are only tallied in the count line)."""
+    result = _run_ready(_ready_store(tmp_path))
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    for excluded_name in (
+        "2026-08-04-parked",
+        "2026-08-05-upstream",
+        "2026-08-06-shipped",
+        "2026-08-07-superseded",
+        "2026-07-01-archived",
+    ):
+        assert excluded_name not in result.stdout, (
+            f"excluded-status entry {excluded_name} leaked into --ready output"
+        )
+
+
+def test_ready_start_line_rendered_only_for_entries_that_have_the_field(tmp_path):
+    """(c) an entry whose frontmatter carries `start:` gets a second
+    indented line directly under its own entry line; entries without the
+    field get none (exactly one start line in the whole fixture output)."""
+    result = _run_ready(_ready_store(tmp_path))
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    lines = result.stdout.splitlines()
+    idx = lines.index("- 2026-08-02-open-with-start — Open-with-start marker.")
+    assert lines[idx + 1] == "  start: a third real thing happens", lines[idx + 1]
+    assert result.stdout.count("  start:") == 1, result.stdout
+
+
+def test_ready_count_line_reports_exact_numbers(tmp_path):
+    """(d) the output ends with the exact tally: 1 committed, 2 open,
+    5 excluded (parked + upstream + shipped + superseded + archived)."""
+    result = _run_ready(_ready_store(tmp_path))
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    non_empty = [line for line in result.stdout.splitlines() if line.strip()]
+    assert non_empty[-1] == "ready: 1 committed / 2 open / 5 excluded by status"
+
+
+def test_ready_is_a_mode_on_its_own_and_joins_the_no_mode_error(tmp_path):
+    """(e) `--ready` is accepted with no other mode flag; and the no-mode
+    parser error now names it alongside --validate/--write/--check."""
+    store = _ready_store(tmp_path)
+
+    result = _run_ready(store)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+    no_mode = subprocess.run(
+        [sys.executable, str(BACKLOG_SCRIPT), "--store", str(store)],
+        capture_output=True,
+        text=True,
+    )
+    assert no_mode.returncode == 2, no_mode.stdout + no_mode.stderr
+    assert "--ready" in no_mode.stderr, no_mode.stderr
+
+
 def test_the_deferred_rules_follow_up_is_tracked_in_the_store():
     """A future agent must find and understand this follow-up by grepping
     the store alone -- no plan reference required. Discriminating: fails if

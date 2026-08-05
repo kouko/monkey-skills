@@ -84,14 +84,26 @@ the same build errors `--write` rejects. `--check` never calls
 index stays readable by agents, and a hand-edit is blocked rather than
 merely discouraged.
 
+`--ready` mode is the store's READ surface (plan
+docs/loom/plans/2026-08-06-backlog-ready-verb-and-close-loop.md, Task 1):
+it prints the actionable queue — `## COMMITTED-NEXT` entries first, then
+`## OPEN` entries, each section in filename order (filenames start
+YYYY-MM-DD, so filename order is file-date order) — one
+`- <name> — <description>` line per entry, plus an indented
+`  start: <value>` second line for an entry whose frontmatter carries
+`start:`. Statuses PARKED / UPSTREAM / SHIPPED / CLOSED — SUPERSEDED /
+archived are excluded from the listing and only tallied in the closing
+`ready: N committed / M open / K excluded by status` line.
+
 Usage:
     python3 scripts/backlog_index.py --validate [--store docs/loom/backlog]
     python3 scripts/backlog_index.py --write [--store docs/loom/backlog] [--output docs/loom/BACKLOG.md]
     python3 scripts/backlog_index.py --check [--store docs/loom/backlog] [--output docs/loom/BACKLOG.md]
+    python3 scripts/backlog_index.py --ready [--store docs/loom/backlog]
 
 Exit codes: 0 = clean/written/matches, 1 = at least one invariant violation
-(--validate), a build error (--write, --check), or drift / a missing
-committed file (--check).
+(--validate), a build error (--write, --check, --ready), or drift / a
+missing committed file (--check).
 """
 
 from __future__ import annotations
@@ -495,6 +507,63 @@ def build_index(store: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
+# The two statuses --ready treats as actionable, in render order.
+READY_STATUSES = ("COMMITTED-NEXT", "OPEN")
+
+
+def build_ready(store: Path) -> str:
+    """The store's READ surface: the actionable queue as prose (see the
+    module docstring's `--ready` paragraph for the pinned format).
+
+    Same purity contract as `build_index()`: a pure function of the entry
+    files' frontmatter text. Entries render in `_entry_files()` order,
+    which is sorted-by-filename per tier — i.e. file-date order.
+
+    Raises ValueError (caller decides exit codes) on a status outside the
+    closed vocabulary, mirroring `_bucket_entry()` — an unrecognized
+    status must not be silently laundered into the excluded tally.
+    """
+    entry_lines: dict[str, list[str]] = {status: [] for status in READY_STATUSES}
+    counts: dict[str, int] = {status: 0 for status in READY_STATUSES}
+    excluded = 0
+
+    for path, _is_archived in _entry_files(store):
+        frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
+        status = frontmatter.get("status")
+        if status not in CLOSED_STATUS_VOCABULARY:
+            raise ValueError(
+                f"{path.name}: entry has status {status!r}, outside the "
+                "closed status vocabulary"
+            )
+        if status not in READY_STATUSES:
+            excluded += 1
+            continue
+        counts[status] += 1
+        name = frontmatter.get("name", path.stem)
+        description = frontmatter.get("description", "")
+        entry_lines[status].append(f"- {name} — {description}")
+        start = frontmatter.get("start")
+        if start:
+            entry_lines[status].append(f"  start: {start}")
+
+    lines: list[str] = []
+    for status in READY_STATUSES:
+        if not entry_lines[status]:
+            continue
+        if lines:
+            lines.append("")
+        lines.append(f"## {status}")
+        lines.extend(entry_lines[status])
+
+    if lines:
+        lines.append("")
+    lines.append(
+        f"ready: {counts['COMMITTED-NEXT']} committed / {counts['OPEN']} open "
+        f"/ {excluded} excluded by status"
+    )
+    return "\n".join(lines) + "\n"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -518,14 +587,19 @@ def main() -> int:
         help="regenerate the index and compare it to --output without writing; exit 1 on drift",
     )
     parser.add_argument(
+        "--ready",
+        action="store_true",
+        help="print the actionable queue (COMMITTED-NEXT then OPEN) with a closing count line",
+    )
+    parser.add_argument(
         "--output",
         default="docs/loom/BACKLOG.md",
         help="path to write (--write) or compare against (--check) the generated index",
     )
     args = parser.parse_args()
 
-    if not args.validate and not args.write and not args.check:
-        parser.error("no mode specified; pass --validate, --write, or --check")
+    if not args.validate and not args.write and not args.check and not args.ready:
+        parser.error("no mode specified; pass --validate, --write, --check, or --ready")
 
     if args.validate:
         violations = find_violations(Path(args.store))
@@ -577,6 +651,14 @@ def main() -> int:
             return 1
 
         print(f"backlog_index --check: OK — {output_path} matches the entry files.")
+
+    if args.ready:
+        try:
+            ready_text = build_ready(Path(args.store))
+        except ValueError as exc:
+            print(f"backlog_index --ready: FAIL — {exc}")
+            return 1
+        sys.stdout.write(ready_text)
 
     return 0
 
