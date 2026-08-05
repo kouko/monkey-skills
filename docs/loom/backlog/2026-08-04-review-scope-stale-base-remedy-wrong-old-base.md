@@ -1,7 +1,7 @@
 ---
 name: 2026-08-04-review-scope-stale-base-remedy-wrong-old-base
 description: review_scope.py's stale-base refusal prints a rebase remedy whose old-base argument is not the branch's fork point, so following the printed command verbatim replays main's own commits and wedges in conflicts
-status: COMMITTED-NEXT
+status: SHIPPED
 origin: 0.50.0 fix arc close-out (2026-08-04) — defect observed live on branch fix-docs-review-0490-adjudicated-defects
 ---
 
@@ -43,3 +43,8 @@ otherwise it falls back to the merge-base and prints a
 verifiable-action caveat line. RED coverage:
 `loom-code/scripts/test_review_scope.py` (creation-sha selection,
 fallback caveat, detached-HEAD None).
+
+Swept 2026-08-06: shipped in loom-code 0.51.0 / PR #648 (squash 0366f993)
+— `loom-code/scripts/review_scope.py:236-259` reflog-based
+`branch_creation_sha` + `:288-325` dual-ancestry-gated remedy with
+merge-base fallback caveat.

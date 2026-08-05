@@ -1,7 +1,7 @@
 ---
 name: 2026-07-18-knowledge-triage-v2-1-mechanize-enforcement-semantics
 description: knowledge-triage v2.1 — mechanize enforcement semantics
-status: COMMITTED-NEXT
+status: OPEN
 origin: 2026-07-18 live dogfood, both weak-model legs (`docs/loom/dogfood/2026-07-18-knowledge-triage-live-spec-leg.md`); knowledge-triage arc PR #581/#582.
 ---
 
@@ -52,3 +52,13 @@ origin: 2026-07-18 live dogfood, both weak-model legs (`docs/loom/dogfood/2026-0
   sentence to product-principles SKILL.md Step 8. Also re-measure
   `_PROVENANCE_MIN_MATCH` (n=1, 3-char corridor) against the next real
   dogfood artifact.
+
+Swept 2026-08-06: de-committed COMMITTED-NEXT → OPEN. Shipped same-day
+(2026-07-18): cuts a+c in loom-spec 0.6.0 (`validate_spec_output.py`
+whitelist / SHAPING-tier checks + completeness-critic consistency-lens),
+cut b in loom-interface-design design-critic SKILL.md mechanical pre-check
+(~:86-106), cut d in loom-product-principles 0.11.0 (marker whitelist +
+Anchors provenance). Remaining work is only the trigger-gated Next-touch
+above (seed pass-through once a driver persists its run-input seed;
+`_PROVENANCE_MIN_MATCH` re-measure) — commitment tier was stale, entry
+stays open on its trigger.

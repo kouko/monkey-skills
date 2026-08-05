@@ -1,7 +1,7 @@
 ---
 name: 2026-08-04-claim-copy-sweep-blind-to-py-module-docstrings
 description: claim_copy_sweep.py scans only .md files, so contract-prose mirrors living in .py module docstrings are invisible to the sweep, and its leak report does not name that blind spot
-status: COMMITTED-NEXT
+status: SHIPPED
 origin: 0.50.0 fix arc close-out (2026-08-04) — third copy of the "never biased" ledger claim found only by manual grep
 ---
 
@@ -40,3 +40,8 @@ hits alongside the `.md` copies. Remaining blind spots (function/class
 docstrings, non-docstring string literals, comments, commit messages)
 stay out of scope by construction and are named in the tool's own leak
 report.
+
+Swept 2026-08-06: shipped in loom-code 0.51.0 / PR #648 (squash 0366f993,
+subject names the claim-sweep .py docstring scope) —
+`scripts/claim_copy_sweep.py:174-218` walks `.py` files and matches module
+docstrings via `ast.parse`.

@@ -1,7 +1,7 @@
 ---
 name: 2026-07-28-spec-reviewer-rule-r3-forbids-the-cross-read-item-7-now-requires
 description: spec-reviewer Rule R3 forbids the cross-read item 7 now requires
-status: OPEN
+status: SHIPPED
 origin: whole-branch review of `feat-plan-fact-grounding`, finding 3. The contradiction was latent before 0.39.0; item 7 makes it adjacent — the two rules now sit ~30 lines apart in the same document.
 start: next edit to either reviewer contract's discipline rules, or the next time a reviewer's R3 compliance lets a false reported figure through.
 ---
@@ -24,3 +24,8 @@ start: next edit to either reviewer contract's discipline rules, or the next tim
     reviewer that violated R3.
   - Not fixed here because R3 is outside this branch's diff — changing a discipline rule that
     governs every reviewer dispatch is its own change with its own review.
+
+Swept 2026-08-06: resolved in loom-code 0.53.0 / PR #650 (squash 0c98ab14)
+— `loom-code/agents/spec-reviewer.md:89` Rule R3 now reads "A verdict
+resting on unconfirmed evidence downgrades" (honest-downgrade duty replaces
+the confirmation ban; the forbids-vs-requires contradiction is gone).
