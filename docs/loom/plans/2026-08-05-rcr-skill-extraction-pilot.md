@@ -152,7 +152,8 @@ Plan-document-reviewer verdict: PASS (2026-08-05, round 1, 15/15)
   wording now names the version-strings exception). The pinned block
   stays as historical record; this entry adjudicates the divergence
   (frozen-pin delayed-action neighbor, third occurrence — see the
-  memory entry's fifth-carrier note). (3) The brief's line-26 citation
+  fifth-carrier note in
+  `docs/loom/memory/a-rule-edit-falsifies-the-unchanged-prose-composed-with-it.md`). (3) The brief's line-26 citation
   "repo memory feedback_extract_to_reference_load_bearing_rule" is a
   MACHINE-LOCAL auto-memory entry, not a docs/loom/memory/ store file —
   provenance mislabel recorded, not edited (frozen).
