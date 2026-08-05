@@ -96,26 +96,13 @@ This substitution is gated upstream by `plan-document-reviewer` Check 16 (see `w
 
 Unlike the mechanical exemption, this substitution does **not** bypass the §Verdict resolution table below — the table still applies on this path, with the docs-reviewer's verdict substituting into the table's `code-quality-reviewer` column (the `spec-reviewer` column is unchanged).
 
-**Progress ledger — maintain `Status` per task + resume from it (v0.10.0+, optional).** When the plan carries the optional per-task `Status` field (see `writing-plans/references/plan-format.md` §Progress ledger), the orchestrator **writes it back into the plan as it executes** so the plan becomes a durable, shared progress record:
+**Progress ledger.** SDD writes the plan's optional per-task `Status` field back as it executes and resumes from it after interruption: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Progress ledger.
 
-- On dispatch → set `Status: claimed(@<agent>)` (`<agent>` = the worktree branch name, unique per agent; for a single-orchestrator run use the current branch).
-- On resolved DONE (both reviewers PASS / PASS_WITH_NOTES **— or, on the `Review-weight: mechanical` path above, the self-check passing in place of reviewer verdicts**) **after committing** → set `Status: done(<sha>)` with that task's commit sha.
-- On `BLOCKED` / NEEDS_CONTEXT / the 3-round cap → set `Status: blocked`.
-
-Commit the ledger update **per task** (lean: keep it maximally current so a crash loses at most the one in-flight task). The plan file is the SSOT for progress; the per-task code commits are the durable artifacts the ledger points at.
-
-**Resume after interruption:** on re-entry, **read the plan ledger first** — skip every `done(<sha>)` task (its work is committed), redo only **your own** in-flight `claimed(@<this-agent>)` task, and continue. (In mode (b), leave a sibling agent's live `claimed(@other)` alone — it owns that slice; see `dispatching-parallel-agents` §Multiple concurrent sessions.) This is the continuous, finer-grained complement to `dev-workflow:handoff` (which stays for the cross-session narrative + verification commands). A plan with no `Status` fields → behaves exactly as before (the ledger is opt-in by presence).
-
-**Decision Log maintenance — append during execution.** When the orchestrator or an implementer report surfaces an agent-decided engineering choice that was classified by the §Asking the user two-axis test and did **not** escalate to a briefing (any non-briefed, classified decision — both two-way-door cells, per `kickoff-briefing.md` §a/§e), append one entry to the plan's `## Decision Log` per `writing-plans/references/plan-format.md`'s record spec (pointer — do not restate the format). Write it into the plan document itself, the same artifact the Progress ledger lives in. Commit the entry with that task's ledger update — same per-task cadence as `Status`, above. **Appetite read**: before applying the threshold, check the target repo's `docs/loom/PRINCIPLES.md` Engineering Principles section for an `escalation appetite` entry (landing shape: `loom-product-principles/skills/product-principles/references/principles-rules.md` §Escalation appetite — landing shape) and tune the bar accordingly, read once, never re-ask; absent → default to the threshold as written.
+**Decision Log maintenance.** SDD appends non-briefed, classified engineering decisions to the plan's `## Decision Log` during execution: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Decision Log maintenance.
 
 **Read-before-Edit is non-negotiable for the orchestrator.** When the orchestrator applies post-review fixes, renames files, or edits files located via **any Bash inspection** — `grep` / `jq` / `sed` / `cat` / `head` / etc.: call `Read` on each target file before `Edit`. The precondition is tool-level — only the `Read` tool satisfies it, never shell stdout. grep/jq/sed/cat output and subagent-created files do NOT satisfy the Edit read-precondition. Skipping this produces cascading "File has not been read yet" errors across every subsequent edit. For the full set of harness gotchas, see [environment-gotchas](../using-loom-code/references/environment-gotchas.md).
 
-**Environment hygiene.** Commands the orchestrator (or its subagents) run directly:
-
-- Prefix every `pytest` invocation with `PYTHONDONTWRITEBYTECODE=1` — without it, Python writes `__pycache__` directories that trip the skill-folder structure hook.
-- Resolve `git worktree add` paths from the **repo root**; a relative path issued from inside a subdirectory nests the worktree inside a skill folder, triggering the same hook.
-- Issue branch-push and `gh pr create` as **two separate Bash calls** — chaining them with `&&` triggers the dcg "push to main" guard pattern.
-- Before every per-task commit **in a parallel wave**, run `git status --short` and confirm **only that task's files are staged** — sibling implementers in the same wave may have staged their files into the shared index, and `git add <specific-file>` does not unstage them.
+**Environment hygiene.** Standing hygiene rules for commands the orchestrator (or its subagents) run directly: [`references/dispatch-hygiene-notes.md`](references/dispatch-hygiene-notes.md) §Environment hygiene.
 
 **Version / semver work in implementer tasks.** Before importing a package for version parsing or manifest handling, the implementer must confirm it is stdlib (e.g. `importlib.metadata`, plain `tuple(int(x) for x in v.split('.'))`) rather than third-party (e.g. `packaging`). Third-party imports in new code fail the code-quality-reviewer's external-surface-grounding check and return `NEEDS_REVISION`.
 
@@ -141,13 +128,7 @@ A 3-round cap prevents infinite loops on ambiguous specs. On the 4th retry, surf
 
 ## Definition of Done — command-surface accretion
 
-A task that introduces a **new runnable capability** (a new test suite, build step, lint target, e2e suite, `migrate` command, etc.) must have that verb **declared in the command surface** (the project's declared commands — `AGENTS.md` commands section, `make`/`just` recipes, `package.json` scripts) **AND verified to run** before the implementer reports `DONE`. This is **accretion**: it binds "add a capability" to "declare it in the surface" exactly as TDD binds "add behaviour" to "add a test". Enforcement lives in the **implementer's task-completion contract** (verify-before-declare + declare in the managed block, as specified in [`loom-code/agents/implementer.md`](../../agents/implementer.md)) — it is the implementer that self-enforces this obligation, not the orchestrator's verdict-resolution table.
-
-**Event-driven — not per-task polling.** A task that adds *no* new runnable capability triggers *no* surface change. The clause is a no-op for the common case. It is **not** a per-task audit of the whole surface, and it is **not** a build-once bootstrap. *Negative example:* a task that adds only a helper function, an internal class, or a private module — with no new top-level runnable verb — does NOT trigger this.
-
-**Moving target.** "Complete" is relative to the project's *current* capabilities. Never pre-declare a verb that does not yet exist (no `deploy` entry before deployment exists; no `migrate` entry before a migration runner exists).
-
-**Mechanics.** The implementer reuses the declared-first resolution from `verification-before-completion` to locate the surface. Full mechanics (managed block, shim pattern, verify-before-declare discipline) are in the implementer contract at [`loom-code/agents/implementer.md`](../../agents/implementer.md).
+A task that adds a **new runnable capability** must have that verb **declared in the command surface and verified to run** before `DONE` — accretion, binding capability-add to surface-declare exactly as TDD binds behaviour to test: [`references/command-surface-accretion.md`](references/command-surface-accretion.md).
 
 ## Model selection
 

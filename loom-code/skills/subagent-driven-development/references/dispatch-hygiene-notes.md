@@ -6,8 +6,9 @@ referenced from a skill body by a one-line pointer: worked-out
 illustrations of rules the body already states (§Worked example, §SDD
 flow diagram — the pointer's rule is authoritative, the section only
 illustrates it), and standing dispatch guidance stated in full here
-(§Capacity-error recovery, §Worktree-isolated reviewer dispatch — the
-section itself is the rule; the body pointer is the route to it).
+(§Capacity-error recovery, §Worktree-isolated reviewer dispatch,
+§Environment hygiene — the section itself is the rule; the body
+pointer is the route to it).
 
 ## Capacity-error recovery
 
@@ -86,3 +87,12 @@ flowchart TD
 This visualizes the same trigger + per-task loop described in
 `SKILL.md` §When to use and §Process — per-task triad; it adds no
 rule beyond what those sections already state in prose.
+
+## Environment hygiene
+
+Commands the orchestrator (or its subagents) run directly:
+
+- Prefix every `pytest` invocation with `PYTHONDONTWRITEBYTECODE=1` — without it, Python writes `__pycache__` directories that trip the skill-folder structure hook.
+- Resolve `git worktree add` paths from the **repo root**; a relative path issued from inside a subdirectory nests the worktree inside a skill folder, triggering the same hook.
+- Issue branch-push and `gh pr create` as two separate Bash calls — see [environment-gotchas](../../using-loom-code/references/environment-gotchas.md) §S2(a) for why (dcg "push to main" guard pattern), rather than restating it here.
+- Before every per-task commit **in a parallel wave**, run `git status --short` and confirm **only that task's files are staged** — sibling implementers in the same wave may have staged their files into the shared index, and `git add <specific-file>` does not unstage them.
