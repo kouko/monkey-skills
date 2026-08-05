@@ -5,6 +5,23 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.56.0] — 2026-08-05 — the orchestrator's tree is nobody else's checkout
+
+### Added
+
+- **Worktree dispatch guidance forbids touching the orchestrator's
+  checkout.** A fourth bullet in dispatch-hygiene's worktree section:
+  never `git checkout` / `git switch` in the orchestrator's main
+  working tree — the dispatch packet's absolute paths reach it, and a
+  reviewer arm detached it mid-arc (the 0.55.0 close-out commit landed
+  on a detached HEAD). Read via `git show`, execute in your own
+  worktree.
+- **Finishing gains a mechanical attached-HEAD gate.** Step 8 now
+  requires `git symbolic-ref -q HEAD` to resolve to the branch being
+  finished before the close-out commit — the backstop that turns the
+  prose rule's failure mode from a silent detached commit into a loud
+  STOP. Both surfaces pin-tested.
+
 ## [0.55.0] — 2026-08-05 — three more skill contracts shed their commentary
 
 ### Changed
