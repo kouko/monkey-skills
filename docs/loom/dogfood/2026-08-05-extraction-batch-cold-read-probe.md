@@ -3,7 +3,8 @@
 Date: 2026-08-05
 Branch: `refactor-loom-skill-extraction-batch` (probes run at the
 post-T4 tree, loom-code 0.55.0; writing-plans 3874w, SDD 3824w,
-requesting-docs-review 4119w)
+requesting-docs-review 4118w — all `len(text.split())`, the pin tests'
+own convention)
 Plan: `docs/loom/plans/2026-08-05-loom-skill-extraction-batch.md` Task 5
 Operator note: probes executed by the orchestrator, not an implementer
 (probes dispatch agents; subagents cannot) — Decision-Logged.
@@ -58,7 +59,12 @@ per-file output.
 
 No probe blocks finishing; the A3 exit clause is not exercised. Batch
 outcome vs the pilot: the recipe held at 3-file scale, including on the
-pin-saturated file where the honest safe tier (4119, adjudicated ≤4130)
-replaced the uniform ≤3900 target. Family state after this arc: all
-four review/planning core skills sit at 3788-4119 words with 381-712
-words of headroom each.
+pin-saturated file, whose target was the reduced ≤4100 from freeze
+(HONEST REDUCED SCOPE — never ≤3900) and landed at 4118, adjudicated
+≤4130 in the plan's Decision Log. Family state after this arc: the four
+review/planning core skills sit at 3788-4118 words — 381-712 words
+under the CHK-SKL-010 hard cap (4500), and 12-112 words under the
+per-file pin ceilings (this batch's 3900/3900/4130 plus the pilot's
+3900: headroom 26/76/12/112 respectively). The new pins deliberately bank the recovered room: future
+prose growth pays a deliberate pin-raise, not silent creep back to the
+wall.
