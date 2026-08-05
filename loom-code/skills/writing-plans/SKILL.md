@@ -76,7 +76,7 @@ If the critical-path **depth** exceeds 5, the brief is too big. **Do not silentl
 
 A **deep chain** (critical-path depth >5) is almost always a discovery failure, not a planning failure; a **wide-but-shallow** plan (many independent leaves, shallow depth) parallelizes cleanly and is NOT a discovery failure.
 
-**Why depth — and why `5` is a heuristic, not a law.** Errors **compound** across dependent steps — a depth-5 chain at ~95% per-step reliability succeeds only ~77% of the time — and no universal optimal step count exists. Treat **`5` as a deliberate default, not a measured value**; tune it if your steps are more or less reliable.
+**Why depth `5` is a heuristic, not a law** — the compounding-error rationale and measured example: [`references/design-evidence.md`](references/design-evidence.md).
 
 **Structural-split escape hatch (round-2 NEEDS_REVISION only):** If the plan-document-reviewer returns NEEDS_REVISION for a second round and the *sole* failure is a structural-size violation (a task structurally cannot resolve to one failing test within one module boundary — Check 6 keeps failing no matter how the description is reworded — and cannot be shrunk further without a brief change), split that oversized task into a fresh sibling part (a new `<topic>-part-N.md` brief → new plan) and treat it as a round-1 input to a fresh `writing-plans` run. The original plan's 2-round cap applies to the original tasks only; the new sibling part starts its own clean round count.
 
@@ -90,11 +90,7 @@ When SDD dispatches an implementer subagent and the implementer returns `BLOCKED
 4. Self-reviews the child decomposition via plan-document-reviewer.
 5. Returns the child plan to SDD.
 
-This is **Kent Beck's "Child Test" pattern (*Test-Driven Development: By Example*, 2002, Part III)** verbatim:
-
-> *"When you are working on a test and it gets too big, write a smaller test that represents the broken part of the bigger test. Get the smaller test working. Then go back to the bigger test."*
-
-The implementer's BLOCKED signal is "the test got too big to make pass in one step" — write smaller tests (= split into child tasks), get them green, then re-attempt the parent.
+This mirrors Kent Beck's "Child Test" pattern — citation + verbatim quote: [`references/design-evidence.md`](references/design-evidence.md) (author-facing; not loaded at runtime). The implementer's BLOCKED signal is "the test got too big to make pass in one step" — write smaller tests (= split into child tasks), get them green, then re-attempt the parent.
 
 **Anti-pattern**: silently ignoring BLOCKED and re-dispatching the same task hoping the implementer will figure it out. That violates SDD's 3-round retry cap and burns subagent budget. Always re-invoke writing-plans when BLOCKED carries a decomposition signal.
 
@@ -173,9 +169,9 @@ The markup is **opt-in**. A plan that omits it (or sets `Independent: false`) ro
 
 Alongside the brainstorming brief, writing-plans can consume a **validated loom-spec change-folder** — `docs/loom/<change-id>/` emitted by `loom-spec:spec-expansion`. "Validated" means the change-folder is **`validate_spec_output.py`-clean** (the validator ran and exited 0). The change-folder's `specs/<capability>/spec.md` delta is the structure `validate_spec_output.py` enforces: `### Requirement:` blocks each containing one or more `#### Scenario:` (GIVEN / WHEN / THEN) acceptance criteria.
 
-**Detecting which change-folder to consume.** A layered cascade, evaluated in order — stop at the first layer that resolves. Grounded in `docs/loom/research/2026-07-10-change-binding-and-lifecycle-research.md` §Resolved decisions (industry precedent: spec-kit, OpenSpec, Jira smart commits — every shipped answer shrinks the candidate pool structurally, none guesses from content).
+**Detecting which change-folder to consume.** A layered cascade, evaluated in order — stop at the first layer that resolves. Grounded in `docs/loom/research/2026-07-10-change-binding-and-lifecycle-research.md` §Resolved decisions (industry-precedent survey: [`references/design-evidence.md`](references/design-evidence.md)).
 
-**All detection layers anchor at the TARGET repo's root, not the ambient working directory.** Before evaluating layer (i) or layer (ii), resolve the target repo's root via `git rev-parse --show-toplevel` run **in the repo being planned for** — never in whatever directory the dispatch happened to start in. Branch name (layer i) and the `docs/loom/` folder count (layer ii) are both evaluated **against that resolved root**, not a relative guess from cwd. This mirrors `code-reviewer.md`'s D8 "Activation is self-derived" anchor pattern, which fixed the identical bug class (a relative check from cwd false-N/A's from a worktree or nested cwd — here it makes a weak operator run detection against the wrong repo entirely).
+**All detection layers anchor at the TARGET repo's root, not the ambient working directory.** Before evaluating layer (i) or layer (ii), resolve the target repo's root via `git rev-parse --show-toplevel` run **in the repo being planned for** — never in whatever directory the dispatch happened to start in. Branch name (layer i) and the `docs/loom/` folder count (layer ii) are both evaluated **against that resolved root**, not a relative guess from cwd (design precedent this mirrors: [`references/design-evidence.md`](references/design-evidence.md)).
 
 - **Layer 0 — explicit handoff wins.** If the caller (a conductor, an orchestrator, the user) hands writing-plans a change-folder path directly, bind to it immediately. Detection never runs — layers (i) and (ii) below exist only for when no path was named.
 - **Layer (i) — branch-slug match, opportunistic only.** Exact match between the current branch name and a `docs/loom/<change-id>` slug. This layer is **opportunistic**, not authoritative: a miss falls through **silently** to layer (ii) — no error, no note. When this layer DOES decide the binding, **surface it explicitly** ("bound to `<change-id>` via branch name") — never bind silently. Any **ambiguity** (the branch name could plausibly match more than one folder) skips straight to the ask sub-step of layer (ii) below — never guess.
@@ -219,39 +215,13 @@ Proceed only on **exit 0** (fresh `PASS_WITH_NOTES`). Route on the non-zero exit
 
 **Coverage self-check (change-folder input only).** After producing the plan, run `python3 loom-code/scripts/check_scenario_coverage.py <change-folder> <plan>`. It compares the change-folder's `#### Scenario:` set against the plan's `Brief item covered` join keys. Exit 0 means every scenario maps to a task. **Exit 1 blocks the plan from PASS** — self-review may not declare PASS until either every scenario maps to a task, or the drop is **explicitly user-approved** and recorded in the plan's `Notes` section (name the dropped join key + the approval). This check applies only to the change-folder input path; a brainstorming-brief-only plan has no change-folder to check coverage against. **Gate order**: run this coverage check BEFORE dispatching the plan-document-reviewer — a coverage failure blocks the dispatch (a cheap deterministic script runs before an evaluator subagent, same economics as §Self-review's pre-patch habit; the two gates check different things — the reviewer's Check 3 verifies field presence per task, this script verifies full scenario coverage — so neither subsumes the other).
 
-## Cross-skill contract
-
-| Direction | Skill | Contract |
-|---|---|---|
-| **Upstream** | `brainstorming` | Produces brief at `docs/loom/specs/<topic>.md`. writing-plans reads it via Read tool. |
-| **Upstream** | `loom-spec:spec-expansion` | Produces the validated change-folder consumed per §Consuming a loom-spec change-folder. |
-| **Downstream** | `subagent-driven-development` | Consumes plan at `docs/loom/plans/<topic>.md`. SDD reads plan + dispatches per-task triad. |
-| **Downstream (opt-in)** | `dispatching-parallel-agents` | Consumes tasks marked `Independent: true` with disjoint `Files touched`. Dispatches their implementers in one assistant message for concurrent execution. Fall back to SDD's sequential dispatch if either condition fails. |
-| **Self-review** | `plan-document-reviewer` (evaluator subagent) | writing-plans dispatches it after producing the plan. Returns PASS / NEEDS_REVISION. |
-| **Recursive (BLOCKED fallback)** | `writing-plans` (self) | When SDD's implementer returns BLOCKED with decomposition signal, orchestrator re-invokes this skill on the failing task. |
-| **Optional delegation** | `dev-workflow:complexity-critique` | If the plan produces >3 tasks and you suspect Axis 3 (smallest end state) was too generous, optionally invoke complexity-critique before falling back to brainstorming. |
-
-Delegation contract per CLAUDE.md: pass **paths + structured seed context**, not file content. The target skill loads its own resources via Read.
+Cross-skill delegation (upstream / downstream / self-review / recursive contracts) passes paths + structured seed context per CLAUDE.md, never file content — full table: [`references/cross-skill-map.md`](references/cross-skill-map.md).
 
 ## Red Flags — refuse these rationalizations
 
-| Agent / user says | Reality | Correct response |
-|---|---|---|
-| *"Just skip planning, the brief is enough."* | The brief is the *what*; the plan is the *how-cut-into-atomic-pieces*. SDD needs atomicity, not just scope. | Refuse. Produce the plan even if it's only 1-2 tasks. If 1 task, the brief was an exemption candidate (§When NOT to Use). |
-| *"This task is roughly an hour but I don't know how to split it."* | "I don't know how to split" is a discovery failure, not a planning failure. The brief did not articulate Axis 3 (smallest end state) tightly enough. | Surface back to brainstorming for Axis 3 re-cut, do not produce a 1-hour task that resolves to a single assertion and calls itself done — split by criterion 1 (one failing test), not by the clock. |
-| *"This chain is 8 tasks deep, that's fine."* | No — see §Plan size ceiling. Critical-path depth >5 = brief too big. (A wide-but-shallow 8-task plan is fine; a deep 8-link chain is not.) | Refuse the deep chain. Route back to brainstorming OR split into N briefs each with depth ≤5. |
-| *"Skip the plan-document-reviewer, it's overkill."* | The reviewer catches the failure modes the splitting framework misses (orphan tasks, cycle dependencies, brief-task coverage gaps). | Refuse. Self-review is non-negotiable. If you genuinely produced a perfect plan, the reviewer takes 30 seconds to confirm. |
-| *"Implementer returned BLOCKED, just retry."* | Beck Child Test pattern says split smaller, not retry. Silent retry burns SDD's 3-round cap. | Re-invoke writing-plans on the failing task per §BLOCKED fallback. |
-| *"This task depends on Task 1, Task 3, AND a thing not in the plan."* | The "thing not in the plan" is a missing task. Declare it. | Add the missing task to the plan. Re-run plan-document-reviewer. |
-| 「先跳過 plan 直接派 SDD 吧 / プランは飛ばして」 | Same rationalization, localized. | Same refusal — produce the plan. |
+Planning-skip shortcuts to refuse — *"just skip planning, the brief is enough," "this chain is 8 tasks deep, that's fine," "skip the plan-document-reviewer, it's overkill," "implementer returned BLOCKED, just retry"* (and localized 「先跳過 plan 直接派 SDD 吧 / プランは飛ばして」). Default posture: refuse the silent skip; produce the plan — even a 1-2 task plan beats no plan, and self-review costs 30 seconds against a discovery failure it would otherwise miss. Full table (rationalization → reality → correct response) in [`references/red-flags.md`](references/red-flags.md).
 
-## What this skill does NOT do
-
-- Does **not** write code. Atomic-task production is metadata about future work, not the work.
-- Does **not** dispatch SDD subagents. That's SDD's job. writing-plans hands off the plan; SDD picks it up.
-- Does **not** invoke the implementer / spec-reviewer / code-quality-reviewer prompts directly. Only plan-document-reviewer (a different evaluator scope).
-- Does **not** estimate dev-time at all — the split-trigger is criterion 1 (one failing test); see §No time-box criterion.
-- Does **not** decide priority or sequencing beyond what the dependency graph requires. The user (or SDD) decides which independent tasks run first.
+What this skill does NOT do (write code, dispatch SDD subagents, invoke implementer/reviewer prompts directly, estimate dev-time, or decide task priority) — full list: [`references/cross-skill-map.md`](references/cross-skill-map.md) §What this skill does NOT do.
 
 ## See also
 
