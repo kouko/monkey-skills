@@ -22,7 +22,7 @@ The rule stays inline ("a fix round is where defects get written"). Evidence: on
 
 ## Directive 1 — delta-size evidence (criterion paragraph)
 
-The rule stays inline ("on the measured branch, round 1's fixes were the larger delta and round 2's were the smaller delta"). Its sourcing and supporting evidence: the audit's own round labels (`docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md` §Does delta-scoping converge faster) — a delta-scoped round verifying round 1's fixes re-found every gating defect an unbounded round also found, while a delta-scoped round verifying round 2's fixes found none.
+The rule stays inline ("on the measured branch […] round 1's fixes were the larger delta and round 2's were the smaller delta" — the ellipsis marks the provenance parenthetical a later review fix inserted). Its sourcing and supporting evidence: the audit's own round labels (`docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md` §Does delta-scoping converge faster) — a delta-scoped round verifying round 1's fixes re-found every gating defect an unbounded round also found, while a delta-scoped round verifying round 2's fixes found none.
 
 ## Directive 1 — "why a cap" measurement
 

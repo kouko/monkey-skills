@@ -47,7 +47,18 @@ that entry covers copies of the claim you are editing; this one covers
 neighbors that state something ELSE the edit falsified, which no string
 sweep can enumerate.
 
-**Fifth carrier, one arc later (0.53.0, 2026-08-05): a FROZEN PINNED
+**Sixth carrier, same day (0.55.0 batch): a CHANGED MEASURED QUANTITY.**
+The falsified neighbor can be a NUMBER: a fix commit that corrects one
+derived figure (381→382) simultaneously moved the underlying count
+(4118→4122 via its own +4-word edit), restaling the family-state
+sentence in the same tree — and the arc hit the class twice (the first
+arithmetic correction itself left a stale derived value one clause
+over). When a fix changes a measured quantity, sweep the artifact for
+every sentence stating the OLD value or anything DERIVED from it,
+including sentences the same commit just touched; or anchor the
+sentence to a named revision basis so it stops racing the tree.
+
+**Fifth carrier, one arc earlier (0.53.0, 2026-08-05): a FROZEN PINNED
 BLOCK authored before a mid-arc supersession.** A plan's Task-3 verbatim
 CHANGELOG block described R3 with wording that a later round-2 review
 finding retired; the block was frozen, the implementer transcribed it

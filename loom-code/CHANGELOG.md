@@ -18,8 +18,10 @@ Versioning: [Semantic Versioning](https://semver.org/).
   honest safe tier only (to about 4100 from 4490): its pin saturation
   makes deeper extraction a wording-drift risk, so citation tails and
   measurement archaeology moved while every rule sentence stayed
-  byte-identical. Pre-existing pin tests untouched by the extraction
-  and green; three new pointer-pin tests guard the moved surfaces.
+  byte-identical through the extraction (a follow-up review fix later
+  added a provenance parenthetical to one sentence). Pre-existing pin
+  tests untouched by the extraction and green; three new pointer-pin
+  tests guard the moved surfaces.
 
 ## [0.54.0] — 2026-08-05 — the review contract sheds its commentary, not its rules
 
