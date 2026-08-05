@@ -233,6 +233,17 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      (`plugin version bump`), so a post-push failure does not point at the store and costs
      a diagnosis round. Recurrence is the reason this bullet exists — the same miss
      shipped twice.
+   - Backlog-close check (orchestrator-only, ONCE per branch, same
+     shape as its Step 8 siblings): when the repo has
+     `docs/loom/backlog/`, check whether THIS branch ships or
+     supersedes any backlog entry — grep the store for the branch's
+     topic terms and read the hits. On a hit: flip that entry's
+     `status:` to SHIPPED (or CLOSED — SUPERSEDED), append one body
+     line naming the evidence (this branch/PR), regenerate the index
+     with `python3 scripts/backlog_index.py --write`, and stage both
+     in the same close-out commit. No hit, or no store → skip
+     silently (auditable from the diff, like the memory-store
+     bullet).
    - Attached-HEAD check: run `git symbolic-ref -q HEAD` in the main
      working tree — it must print the branch being finished. Detached
      HEAD or a different branch means something (typically a subagent)
@@ -327,7 +338,11 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
     specialization). Include: PR URL if created — same both-paths merge
     guidance as Step 11 (glance the prefilled dialog before confirming,
     plus the ready-to-run `gh pr merge <N> --squash` CLI alternative) —
-    and worktree status.
+    and worktree status. End the report with one line naming the top
+    of the remaining COMMITTED-NEXT backlog queue ("backlog next:
+    <name>" — or "backlog queue empty"), from
+    `python3 scripts/backlog_index.py --ready`; skip the line when the
+    repo has no backlog store.
 ```
 
 **ASK = stop and wait for user.** That guarantee is now exception-based, not blanket: close-out is autonomous on the happy path — Steps 1–10 proceed silently once each step's own gate PASSes, including Step 7's privacy gate. What remains is one OUTWARD-FACING action that always asks (Step 12 — remove the worktree, because it touches shared state), plus a Step 7 privacy-gate BLOCK, where the human returns only because the gate failed; Step 11 (open a PR) no longer asks — its authorization arrived with the request, so it reports loudly instead. For any remaining question, run the ask-vs-resolve triage at `subagent-driven-development` §Asking the user, gate ① (the cross-skill SSOT) before asking.
