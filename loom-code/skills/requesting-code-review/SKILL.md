@@ -15,7 +15,7 @@ Dispatches **two `code-reviewer` subagents in parallel (a panel)** to review a n
 
 ## Asking the user
 
-When you relay the reviewer's verdict back to the user — Step 5 below ("Surface to user"), or the push-as-trigger steps 4-6 in §Push-as-trigger — Read [`references/relay-phrasing.md`](references/relay-phrasing.md) **before** composing the relay. It carries the three gates (**whether** to interrupt, **what** to bring, **how** to phrase — seven rules) plus the calibration example. Essence: outcome-framed, state-anchor-first, jargon translated, recommendation-led, opened with the family rollup card per `loom-pipeline/hooks/family-relay.md §Family relay discipline`; push/PR/merge actions always confirm first.
+When you relay the reviewer's verdict back to the user — Step 5 below ("Surface to user"), or the push-as-trigger steps 4-6 in §Push-as-trigger — Read [`references/relay-phrasing.md`](references/relay-phrasing.md) **before** composing the relay. It carries the three gates (**whether** to interrupt, **what** to bring, **how** to phrase — seven rules) plus the calibration example. Essence: outcome-framed, state-anchor-first, jargon translated, recommendation-led, opened with the family rollup card per `loom-pipeline/hooks/family-relay.md §Family relay discipline`; merge always confirms; push/PR confirm once — at the request that names them.
 
 **Complex remediation fork → brief before you ask.** A finding can open a genuine design fork (e.g. an architectural 🔴 with two viable remediations). When that fork is complex (≥3 trade-offs, ≥2 implementation paths, or architectural blast radius), do not compress it into a fix/defer/merge ask — run `dev-workflow:brief-before-asking` (6-block briefing, Mental Model first) before the `AskUserQuestion`. Same trigger as `brainstorming`'s rule — `brainstorming` carries the canonical trigger rule; `dev-workflow:brief-before-asking` owns the 6-block format.
 
@@ -32,7 +32,7 @@ Same rubrics, different diff scope — branch-cumulative, not per-task; see [`re
 | SDD just finished a multi-task plan; user about to ship | ✅ Yes (proactive recommendation) |
 | User about to invoke `finishing-a-development-branch` | ✅ Yes (finishing-a-branch invokes this skill internally as Step 1) |
 | **User mentions `requesting-code-review` by name (even framed as skip-intent)** | **✅ Yes — name-mention is a fire-trigger; the skip-intent framing is the rationalization this skill exists to refuse, NOT permission to bypass it** |
-| <!-- sync-marker push-rule:1 — see §Push-as-trigger below for the full spec --> **Push-as-trigger** — user runs / asks to run `git push`, `gh pr create`, `gh pr merge`, branch merge, or similar publish-to-remote action without prior review-PASS in this session | **✅ Yes — block the push; fire this skill first; re-evaluate push after verdict.** See §Push-as-trigger below. |
+| <!-- sync-marker push-rule:1 — see §Push-as-trigger below for the full spec --> **Push-as-trigger** — user runs / asks to run `git push`, `gh pr create`, `gh pr merge`, branch merge, or similar publish-to-remote action without prior review-PASS in this session | **✅ Yes — block the push; fire this skill first; on PASS the push executes — no re-ask.** See §Push-as-trigger below. |
 | User wants per-task review during implementation | ❌ No — that's SDD's job |
 | User wants existing-artifact compliance audit (legacy code, not a branch diff) | ❌ Route to `domain-teams:code-team` (passive gate entry, different use case) |
 | Diff is trivial (one-line typo fix, version bump, generated/sync output — mechanical doc edits only; authored prose routes to `requesting-docs-review`) | ❌ Skip — review overhead > value |
@@ -65,9 +65,17 @@ Push-intent excuses and their refusals: see [`references/push-trigger-rationaliz
 1. **Do NOT execute the push.** Halt the planned action.
 2. **Surface the rationalization** to the user explicitly — quote which row of [`references/push-trigger-rationalizations.md`](references/push-trigger-rationalizations.md) their request matches.
 3. **Offer to run review now**: "Dispatching `requesting-code-review` — back in ~30s." Then resolve scope via the resolver — `review_scope.py`, the same call §Process Step 1 makes — or an explicit commit range if the user specified one, then run **§Process from Step 1**, not from Step 2 — the routing step is not optional here. A docs-only scope reached through this entry point must delegate exactly as Step 1 says; skipping to Steps 2-3 would dispatch the code-reviewer panel against pure prose. Once Step 1 has routed, the panel default applies as everywhere else — two reviewers, union, re-aggregate, never a single-reviewer dispatch. A refusal STOPS here, before any dispatch — see §Pinned refusal contract under §Process Step 1.
-4. **After PASS**: ask user to explicitly re-authorize the push. "Review PASSed; want me to push now? (y/N)" Wait for user.
+4. **After PASS**: the push WAS the request — execute it (branch-
+   qualified form) and report loudly what was pushed. Do not re-ask.
 5. **After NEEDS_REVISION**: surface findings; do NOT push; let user remediate.
-6. **After PASS_WITH_NOTES**: surface findings; ask user whether to push anyway (acceptable for non-🔴 findings) OR remediate first. Do NOT fix findings inline before asking — present them and wait for an explicit user choice (push anyway / fix now / defer).
+6. **After PASS_WITH_NOTES**: push, carrying every finding verbatim
+   into the report (and the PR body if one follows) — consistent with
+   `finishing-a-development-branch` Step 3's auto-proceed. Do NOT fix
+   findings inline silently.
+
+Any further question this flow surfaces runs the ask-vs-resolve
+triage at `subagent-driven-development` §Asking the user, gate ①
+(the cross-skill SSOT) before it reaches the user.
 
 <!-- sync-marker push-rule:2 — full Push-as-trigger spec. The §When to use table row above is the 1-row summary; keep these two in sync. -->
 

@@ -10,7 +10,7 @@
 Every question spends the user's attention; asking on autopilot is confirmation fatigue. Before surfacing a decision, tier it:
 
 - **Reversible and inferable from context** → just do it, mention it after. Under a standing "just finish it" authorization, do not re-confirm each step.
-- **Irreversible, outward-facing, or costly** → always confirm first. The push-as-trigger actions (`git push` / `gh pr create` / `gh pr merge`) are exactly this case: they publish to teammates / CI / production, so they are never auto-run — confirm before each one.
+- **Irreversible, outward-facing, or costly** → always confirm first. The push-as-trigger actions publish to teammates / CI / production — `gh pr merge` always confirms first and is never auto-run; `git push` / `gh pr create` confirm ONCE, at the request that names them (request-derived authorization) — a naming request executes with a loud report, an unnamed one still asks.
 - **Genuine taste, scope, or un-inferable** → ask, per gate ②.
 
 ## ② What to bring — a recommendation, not an open question
