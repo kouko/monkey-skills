@@ -36,6 +36,16 @@ Continuous mode starts only when **both** hold:
    gate**, PASS / NEEDS_REVISION). The plan becomes one more
    auto-advance-with-gate stage.
 
+Entry opt-in is also satisfied by the request itself: a kickoff
+request naming a publish endpoint ("finish this branch", "ship it",
+"開 PR", "run to PR") is an explicit opt-in — judged once at kickoff
+against the operative test "does the request name a publish
+endpoint?", recorded in the plan header ("endpoint named: yes →
+continuous"), and flipped by a mid-arc 「一站一站來」. A request
+naming no endpoint keeps the human-pumped default. The STOP contract
+below is unchanged by this recognition, and the merge invariant is
+untouched: **never auto-merge**.
+
 ## Freeze discrimination — declared, NOT content-shape sniffed (R6)
 
 The freeze does **not** classify the entry artifact by sniffing its content

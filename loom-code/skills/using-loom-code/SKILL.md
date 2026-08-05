@@ -18,7 +18,7 @@ Five load-bearing rules:
 2. **TDD is the iron law.** No production code without a failing test first. Call `tdd-iron-law`. Beck (2002, ISBN 978-0321146533) Preface: *"Write the test you wish you had. Make it fail. Make it pass. Make it clean."* Floor, not aspiration.
 3. **Split + dispatch (SDD).** Task >1 hour or >1 module → `subagent-driven-development`; atomic one-failing-test units; three subagents per task (implementer / spec-reviewer / code-quality-reviewer).
 4. **Never push without review — and a real close-out means `finishing-a-development-branch`, not review alone.** `git push` / `gh pr create` / `gh pr merge` without prior review PASS = violation. A `requesting-code-review` PASS is the floor, not the whole close-out: if the push is meant to finish/merge the branch (not just fetch a mid-work review opinion), route the whole thing through `finishing-a-development-branch` — it delegates to `requesting-code-review` as its own Step 1, so nothing is lost, and it additionally bundles verification-before-completion + same-branch memory-timing + the git-memory trailer decision, none of which a standalone review-then-manual-push gets you. Calling `requesting-code-review` directly and pushing by hand is the narrow exception (`finishing-a-development-branch`'s own §When to use names it: "review WITHOUT merging") — not the default path for a real close-out.
-5. **Research before asking.** Non-trivial design / strategy / tech-stack question to user MUST cite WebSearch findings (2-4 industry approaches w/ sources). *"X or Y?"* without industry context = violation. Use `brainstorming` Axis 4 protocol for the research. This is gate ② of the full asking-the-user discipline — gate ① (whether to ask: do reversible/inferable steps without asking, always confirm outward/irreversible actions) and gate ③ (plain, jargon-free phrasing with a state anchor) are enforced in the downstream skills (`brainstorming` / `subagent-driven-development` / `requesting-code-review`).
+5. **Research before asking.** Non-trivial design / strategy / tech-stack question to user MUST cite WebSearch findings (2-4 industry approaches w/ sources). *"X or Y?"* without industry context = violation. Use `brainstorming` Axis 4 protocol for the research. This is gate ② of the full asking-the-user discipline — gate ① (whether to ask: do reversible/inferable steps without asking, always confirm outward/irreversible actions — asked once — see §Continuous mode's request-recognition block) and gate ③ (plain, jargon-free phrasing with a state anchor) are enforced in the downstream skills (`brainstorming` / `subagent-driven-development` / `requesting-code-review`).
 
 **Skipping any of these = violation.** "I'll just quickly…" / "just push" / "just ask" / 「ちょっと試すだけ」 / 「先 push 再說」 / 「先問再說」 are rationalizations — refuse them.
 </EXTREMELY-IMPORTANT>
@@ -65,7 +65,19 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 
 ## Continuous mode (opt-in): spec-frozen → PR auto-advance
 
-**Continuous mode** is an **opt-in** convention that lets the orchestrator auto-advance stage→stage from a frozen spec to a PR without a human "go" between stages (the default stays human-pumped). **Entry precondition:** the user opts in explicitly **and** a **human-approved** frozen entry artifact exists — either the `brainstorming` brief or a validated loom-spec change-folder. It adds a STOP rule, not a brain; the full doctrine lives in the reference.
+**Continuous mode** is an **opt-in** convention that lets the orchestrator auto-advance stage→stage from a frozen spec to a PR without a human "go" between stages (the default stays human-pumped). **Entry precondition:** the user opts in explicitly **and** a **human-approved** frozen entry artifact exists — either the `brainstorming` brief or a validated loom-spec change-folder.
+
+**Opt-in is also recognized from the request itself**: a kickoff
+request that names a publish endpoint — "finish this branch", "ship
+it", "開 PR", "run to PR" — is an explicit continuous opt-in (the
+anchor phrases are examples; the operative test is whether the request
+names a publish endpoint). Record the recognition in one line in the
+plan header ("endpoint named: yes → continuous"); downstream stations
+read the recording, never re-judge the request. A request naming no
+endpoint never triggers this; saying 「一站一站來」 (stage-by-stage)
+restores human-pumped mode from that point, and the recording flips.
+
+It adds a STOP rule, not a brain; the full doctrine lives in the reference.
 
 **MANDATORY:** when the user opts into continuous mode ("run continuous to PR" / "連續跑到 PR"), **READ `references/continuous-mode.md` IN FULL before auto-advancing.** The stub here is not enough to run safely.
 
