@@ -68,6 +68,13 @@ test-covered increment, Axis 0 is skipped silently — no noise on incremental
 work. Only proceed past this guard for product-shaped / user-facing /
 multi-state new work.
 
+**Backlog ready check** — when the target repo has
+`docs/loom/backlog/`, run `python3 scripts/backlog_index.py --ready`
+before settling the arc's scope, and surface to the user any
+COMMITTED-NEXT items plus OPEN items related to the seed idea (no
+store → skip silently, N/A). The queue informs the arc decision — it
+never hijacks it: the user's seed idea stays the default subject.
+
 If a criteria row triggers, surface the recommendation **ONCE** — name the
 concrete design-side sequence (e.g. `using-loom-product-principles` →
 `using-loom-interface-design` → `using-loom-spec`, whichever rows fired), then
