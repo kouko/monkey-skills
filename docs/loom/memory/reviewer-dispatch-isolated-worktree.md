@@ -37,3 +37,20 @@ prompts must order mutations to run ONLY in an isolated copy (e.g.
 tree; and an orchestrator receiving a "working-tree regression"
 finding while sibling reviewers are in flight must re-verify the tree
 itself before dispatching a fix.
+
+**2026-08-05 variant (0.55.0 extraction-batch arc): granting
+`isolation: worktree` does NOT enforce isolation.** A reviewer arm
+dispatched WITH its own worktree still ran a checkout in the
+orchestrator's main tree — the dispatch packet names absolute paths
+under the main repo, and nothing stops the agent from running git
+there — leaving the main tree's HEAD detached; the arc's close-out
+commit then landed on a detached HEAD and needed an ff-merge +
+autostash recovery. Mechanized since: the dispatch guidance's fourth
+worktree bullet forbids checkout/switch in the orchestrator's tree
+(`loom-code/skills/subagent-driven-development/references/dispatch-hygiene-notes.md`
+§Worktree-isolated reviewer dispatch), and finishing Step 8 gates the
+close-out commit on `git symbolic-ref -q HEAD` resolving to the
+finished branch
+(`loom-code/skills/finishing-a-development-branch/SKILL.md`). The
+standing rule: isolation is something the dispatched agent must be
+TOLD to stay inside, not something granting a worktree achieves.
