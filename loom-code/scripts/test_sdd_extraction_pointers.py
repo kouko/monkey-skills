@@ -78,7 +78,7 @@ ENVIRONMENT_GOTCHAS = (
     / "environment-gotchas.md"
 )
 
-WORD_CEILING = 3974
+WORD_CEILING = 4015
 
 # --- distinctive phrases, whitespace-normalized ---------------------------
 
@@ -269,6 +269,17 @@ def test_plan_ledger_notes_progress_ledger_precedes_decision_log():
     assert progress_idx < decision_idx
 
 
+def test_ledger_flip_names_the_writer():
+    """T3(a) of the 2026-08-06 ledger-writer-and-plan-tooling-hardening
+    arc: SKILL.md's Progress-ledger paragraph must name the deterministic
+    ledger writer (`plan_card.py --set-status`) as the flip path and keep
+    hand-editing as the script-absent fallback only — flip-by-hand caused
+    two incidents (the 0.62.0 duplicate-Status field among them)."""
+    text = _norm(SDD_SKILL)
+    assert '--set-status "T<N>=<status>"' in text
+    assert "hand-edit only when the script is absent" in text
+
+
 # --- B3: Definition of Done -- command-surface accretion --------------------
 
 
@@ -323,9 +334,9 @@ def test_skill_md_word_count_within_ceiling():
     word_count = len(_read(SDD_SKILL).split())
     assert word_count <= WORD_CEILING, (
         f"SKILL.md is {word_count} words, over the {WORD_CEILING} ceiling "
-        "(raised deliberately 3900 -> 3974 by the 2026-08-06 "
-        "progress-cards-and-plan-ledger arc to admit the N3 "
-        "progress-card Delivery-form paragraph)"
+        "(raised deliberately 3974 -> 4015 by the 2026-08-06 "
+        "ledger-writer-and-plan-tooling-hardening arc to admit the "
+        "Progress-ledger flip-via-plan_card.py duty sentence)"
     )
 
 

@@ -48,6 +48,8 @@ Steps: <OPTIONAL numbered block, one line per derived dependency
 
 If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-reviewed yet and SDD MUST NOT consume it.
 
+A `Steps:` line with content after the colon is rejected loudly by `plan_card.py` — the bare `Steps:` line followed by indented numbered titles is the only accepted form.
+
 **Critical-path depth** is the **longest chain of tasks linked by `Dependencies`** (the longest sequential path through the dependency DAG). N independent tasks at the **same dependency level** (disjoint `Files touched`, no semantic dependency) count as **one level**, not N. The ceiling is on this depth, NOT on `Total tasks` — `Total tasks` is uncapped.
 
 ### Per-task block (required, repeats N times)
@@ -92,6 +94,7 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
 
 - **`Files touched`** is the **disjointness oracle** for cross-task parallel dispatch. List every file the implementer will Write or Edit (not files it merely Reads — those go in `Context paths`).
 - **`Independent: true`** is the plan author's claim that this task has no shared symbol / no sequential data dependency with other `Independent: true` tasks. Default `false`.
+- **`Dependencies` is the ordering authority** — `Independent: true` governs concurrency only among tasks at the same dependency level, never against a declared dependency.
 - [`../../dispatching-parallel-agents/SKILL.md`](../../dispatching-parallel-agents/SKILL.md) MAY dispatch tasks concurrently only when **both** declare `Independent: true` AND their `Files touched` sets are disjoint. Otherwise SDD's sequential dispatch is the floor.
 - **Empty-recon sentinel.** When target-repo reconnaissance finds **no existing target** (greenfield target / wrong repo), the contract forbids fabricating an existing path — so `Files touched` / `Module` may be written as a **PROPOSED-new** form clearly marked NEW (`NEW: <proposed-path>`, or `greenfield — no existing target found`), **never a guessed existing path**. A task whose `Files touched` is a PROPOSED-new path defaults to **`Independent: false`**: the disjointness oracle cannot be trusted on a path that does not exist yet, so such tasks must not be marked parallel-eligible.
 

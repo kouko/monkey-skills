@@ -42,6 +42,20 @@ it.
   `git commit -F /tmp/commit-msg.md`. The inline heredoc form is
   scanned and blocked.
 
+## S3 — Starting a new arc branch (dcg "main" string match)
+
+**Why:** The dcg string-matches the literal "main" in Bash command
+strings, so branch-start commands that name `origin/main` trip the
+push-guard even though they never push.
+
+- Don't: `git merge --ff-only origin/main` or
+  `git checkout -b <name> origin/main` — both trip the push-guard's
+  string match on "main".
+- Do: start a new arc branch with `git checkout -b <name>
+  <main-tip-sha>`, resolving the sha from origin/main after a fetch
+  (`git fetch origin`, then `git rev-parse origin/main`) and passing
+  the printed sha.
+
 ## B3 — Bash cwd persistence across calls
 
 **Why:** A `cd <subdir>` inside one Bash call persists into the next

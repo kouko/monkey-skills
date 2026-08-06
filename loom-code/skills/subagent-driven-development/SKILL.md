@@ -107,7 +107,7 @@ This substitution is gated upstream by `plan-document-reviewer` Check 16 (see `w
 
 Unlike the mechanical exemption, this substitution does **not** bypass the §Verdict resolution table below — the table still applies on this path, with the docs-reviewer's verdict substituting into the table's `code-quality-reviewer` column (the `spec-reviewer` column is unchanged).
 
-**Progress ledger.** SDD writes the plan's per-task `Status` field back as it executes and resumes from it after interruption: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Progress ledger.
+**Progress ledger.** SDD writes the plan's per-task `Status` field back as it executes and resumes from it after interruption: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Progress ledger. Perform every ledger flip via `python3 scripts/plan_card.py <plan-path> --set-status "T<N>=<status>"` when `scripts/plan_card.py` exists at the repo root — it validates the task, the status grammar, and refuses duplicate or missing `Status` lines; hand-edit only when the script is absent.
 
 **Decision Log maintenance.** SDD appends non-briefed, classified engineering decisions to the plan's `## Decision Log` during execution: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Decision Log maintenance.
 
