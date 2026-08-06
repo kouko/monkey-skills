@@ -5,7 +5,7 @@ Goal: ledger flips become a validated one-line script edit instead of
     bare string surgery, malformed Steps declarations fail loudly, and
     the branch-start recipe plus the Dependencies-over-Independent rule
     are written where the next session will read them
-Stage: sdd:wave-1
+Stage: review:round-1
 Total tasks: 5
 Critical-path depth: 5 (≤5)
 Execution order: sequential (every level is a single task after the
@@ -143,7 +143,7 @@ Steps:
 - Brief item covered: "loom-code → 0.63.0"
 
 ## Task 5 — haiku probe + dogfood note
-- Status: pending
+- Status: done(552bdeaf)
 - Description: One fresh-context haiku probe: given SDD's new
   ledger-flip sentence (verbatim) + the scenario "T2's reviewers both
   passed, its commit is abc1234, update the plan ledger", does the
