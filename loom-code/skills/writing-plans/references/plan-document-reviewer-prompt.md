@@ -9,7 +9,7 @@
 3. You **may not** evaluate the *content quality* of the brief — only whether the plan covers it. If the brief is bad, that surfaces as gaps where tasks lack `Brief item covered` entries; the fix is to revisit brainstorming, not patch the plan.
 4. Verdict is **binary**: `PASS` or `NEEDS_REVISION`. No middle ground. Either every check passes or there are gaps to fix.
 5. Be specific about gaps. Quote the schema rule that's violated; point at the task / brief section that violates it.
-6. The per-task **`Status`** field (default-on for new plans, absent on old ones) (`pending` / `claimed(@…)` / `done(<sha>)` / `blocked` — see `plan-format.md` §Progress ledger) is **runtime ledger state, not plan-authoring content**. **Accept and ignore it**: never require it, never flag its presence or value, and never let it affect any check verdict. SDD writes it during execution; it is outside the plan↔brief↔schema triangle you evaluate.
+6. The per-task **`Status`** field (default-on for new plans, absent on old ones) (`pending` / `claimed(@…)` / `done(<sha>)` / `blocked` — see `plan-format.md` §Progress ledger) is **runtime ledger state, not plan-authoring content**. **Accept and ignore it**: never require it, never flag its presence or value, and never let it affect any check verdict. SDD writes it during execution; it is outside the plan↔brief↔schema triangle you evaluate. The same accept-and-ignore posture covers the optional per-task `Gloss:` field: Gloss lines, when present, state effect + goal relation in the user's conversation language — accept and read, never require.
 
 ## Input contract — what the writing-plans orchestrator hands you
 

@@ -6,6 +6,14 @@ default-on flip: writing-plans now emits `Status: pending` per task at
 plan time, while a plan without `Status` fields (written before the
 default) behaves exactly as before. Matching is whitespace-normalized
 contiguous (helper shape from test_dispatch_hygiene_worktree_section.py).
+
+Also pins the roadmap-view additions (plan 2026-08-06 Task 2): the
+optional `Steps:` header block (N3a), the per-task `Gloss:` schema line
+(N3b) with its never-a-name-restatement contract, the worked example
+carrying a `Steps:` block plus bold `- **Gloss**:` lines, and the
+plan-document-reviewer prompt's non-gating Gloss-contract sentence.
+Schema pins are whitespace-normalized sentence pins, NOT `- Gloss:`
+literal counts (the example uses the bold style `- **Gloss**:`).
 """
 
 from pathlib import Path
@@ -18,6 +26,14 @@ PLAN_FORMAT_MD = (
     / "writing-plans"
     / "references"
     / "plan-format.md"
+)
+REVIEWER_PROMPT_MD = (
+    REPO_ROOT
+    / "loom-code"
+    / "skills"
+    / "writing-plans"
+    / "references"
+    / "plan-document-reviewer-prompt.md"
 )
 
 GOAL_SCHEMA_LINE = (
@@ -40,6 +56,29 @@ OLD_PLAN_COMPAT_SENTENCE = (
     "A plan without `Status` fields (written "
     "before this default) behaves exactly as before — the ledger stays "
     "opt-in-by-presence for old plans."
+)
+
+STEPS_SCHEMA_BLOCK = (
+    "Steps: <OPTIONAL numbered block, one line per derived dependency "
+    "level, titles in the user's conversation language; when present "
+    "the count must equal the plan's dependency-level count — "
+    "plan_card.py exits 1 loud on mismatch>"
+)
+
+GLOSS_SCHEMA_LEAD = (
+    "- **Gloss**: <one line in the user's conversation language stating "
+    "the task's user-visible effect and why it matters to the goal"
+)
+
+GLOSS_NEVER_RESTATEMENT_SENTENCE = (
+    "NEVER a restatement of the task name; rendered under the task row "
+    "by plan_card.py; emitted by writing-plans for new plans, optional "
+    "on old ones>"
+)
+
+REVIEWER_GLOSS_CONTRACT_SENTENCE = (
+    "Gloss lines, when present, state effect + goal relation in the "
+    "user's conversation language — accept and read, never require"
 )
 
 
@@ -83,3 +122,57 @@ def test_old_plan_compatibility_sentence_present():
     """Task 1(b): §Progress ledger carries the old-plan compatibility
     sentence (N1b) — a plan without `Status` fields behaves as before."""
     assert _normalize(OLD_PLAN_COMPAT_SENTENCE) in _normalized_text()
+
+
+def _worked_example_text() -> str:
+    """The canonical CSV worked-example section of plan-format.md —
+    everything between the `## Worked example` heading and the next
+    `### ` heading (the wide-but-shallow example). Raw text, NOT
+    whitespace-normalized, so per-line bold-Gloss counting works."""
+    text = PLAN_FORMAT_MD.read_text(encoding="utf-8")
+    start = text.index("## Worked example")
+    end = text.index("### Wide-but-shallow example", start)
+    return text[start:end]
+
+
+def test_steps_header_schema_block_present():
+    """Task 2(a): the header schema carries the optional `Steps:` block
+    (N3a, verbatim) — one line per derived dependency level, count must
+    equal the plan's dependency-level count."""
+    assert _normalize(STEPS_SCHEMA_BLOCK) in _normalized_text()
+
+
+def test_gloss_per_task_schema_lead_present():
+    """Task 2(b): the per-task schema carries the `- **Gloss**:` line
+    (N3b lead) — one line in the user's conversation language stating
+    effect + goal relation."""
+    assert _normalize(GLOSS_SCHEMA_LEAD) in _normalized_text()
+
+
+def test_gloss_never_restatement_contract_present():
+    """Task 2(b): N3b's contract sentence — a Gloss is NEVER a
+    restatement of the task name; rendered by plan_card.py; emitted by
+    writing-plans for new plans, optional on old ones."""
+    assert _normalize(GLOSS_NEVER_RESTATEMENT_SENTENCE) in _normalized_text()
+
+
+def test_worked_example_carries_steps_block():
+    """Task 2(c): the canonical CSV worked example declares a `Steps:`
+    header block (English titles — the example's own language)."""
+    assert "\nSteps:\n" in _worked_example_text()
+
+
+def test_worked_example_carries_bold_gloss_lines():
+    """Task 2(c): the canonical CSV worked example carries ≥3 bold
+    `- **Gloss**:` lines — one per task, consistent with its siblings'
+    bold field style."""
+    count = _worked_example_text().count("- **Gloss**:")
+    assert count >= 3, f"expected >=3 bold Gloss lines in example, found {count}"
+
+
+def test_reviewer_prompt_gloss_contract_sentence_present():
+    """Task 2(d): plan-document-reviewer-prompt.md carries the
+    non-gating Gloss-contract sentence near its Status-field rule —
+    accept and read, never require."""
+    text = " ".join(REVIEWER_PROMPT_MD.read_text(encoding="utf-8").split())
+    assert _normalize(REVIEWER_GLOSS_CONTRACT_SENTENCE) in text
