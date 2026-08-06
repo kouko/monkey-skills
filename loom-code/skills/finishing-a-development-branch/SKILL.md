@@ -11,7 +11,7 @@ If you are a subagent dispatched with an explicit role prompt (code-reviewer / p
 
 ## What this skill does
 
-Orchestrates the close-branch sequence. The agent acts as conductor — invoking each step's specialist skill in order, gating progress on each step's verdict, and surfacing the final state to the user. **The user retains agency for the final merge decision** (push + PR is automated; actual merge into main is not).
+Orchestrates the close-branch sequence. The agent acts as conductor — invoking each step's specialist skill in order, gating progress on each step's verdict, and surfacing the final state to the user. Before executing, Read the CURRENT SKILL.md from the installed plugin — never run the flow from memory or a compacted summary. **The user retains agency for the final merge decision** (push + PR is automated; actual merge into main is not).
 
 ```
 finishing-a-development-branch (this skill)
@@ -114,10 +114,15 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
    - If PASS_WITH_NOTES (exactly 1 🟡, no 🔴): auto-proceed — carry the 🟡 finding forward
      into the PR body and the final close-out report as noted debt.
    - If PASS (all 🟢): proceed silently.
-   - If the docs arm (requesting-docs-review) returns its 2-round-cap STOP (round 2 ended
-     with NEEDS_REVISION — a round-2 PASS_WITH_NOTES auto-proceeds per the bullet above):
-     surface the surviving findings to the user now — do NOT fold this into
-     the fix→re-review loop below. A third review round runs only on explicit user
+   - If the docs arm (requesting-docs-review) returns its bounded-cap STOP: surface the
+     surviving findings to the user now — do NOT fold this into the fix→re-review loop
+     below. That skill's bounded convergence cap now runs one mechanically-conditioned
+     auto-delta round on its own authority and REPORTS it in its rollup — the conditions
+     live in its Directive 1 and are not restated here. A cap-STOP therefore reaches this
+     step only in the shapes requesting-docs-review still stops on: a round-2
+     NEEDS_REVISION shape failing the auto-round conditions (a round-2 PASS_WITH_NOTES
+     auto-proceeds per the bullet above), or a round-3 verdict other than PASS or
+     PASS_WITH_NOTES. Rounds beyond the bounded cap run only on explicit user
      authorization.
    - Budget/quota failure fallback: if the code-reviewer subagent fails to launch due to
      budget or quota exhaustion, perform an inline B2 self-review — Read the diff, surface
@@ -135,6 +140,10 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 4. Before applying any review findings from Step 3: Read each file you intend to Edit
    (Bash inspection does NOT satisfy the Edit/Write precondition) — details in
    [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S1.
+   When a finding's fix edits a prose contract, the new material goes in its OWN
+   sentence or inside the placeholder it governs — never spliced into an existing
+   sentence that pins or enumerations depend on (repo memory:
+   splicing-into-a-pinned-sentence-creates-false-readings).
 5. Dispatch verification-before-completion
    - MANDATORY even if tests were run immediately before invoking this skill. Step 3
      fix-ups may have modified files; a pre-invocation test run does NOT satisfy this gate.
