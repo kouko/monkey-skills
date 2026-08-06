@@ -5,7 +5,7 @@ Goal: dispatch packets carry verified maps with string anchors,
     implementers stop re-running the full suite inside the inner loop,
     and eligible plans declare their review lanes — three measured
     latency levers legislated, the unproven fourth parked with its data
-Stage: sdd:wave-1
+Stage: sdd:wave-2
 Total tasks: 5
 Critical-path depth: 2 (≤5)
 Execution order: parallel-where-possible
@@ -15,7 +15,7 @@ Steps:
   2. 收束與驗證
 
 ## Task 1 — packet-context discipline (dispatch-hygiene + SDD pointer)
-- Status: claimed(@feat-dispatch-efficiency-trio)
+- Status: done(73e9bd72)
 - Description: Add a new `## Dispatch-packet context` section to
   loom-code/skills/subagent-driven-development/references/dispatch-hygiene-notes.md
   carrying the brief's four rules, each its own sentence: (a) site
