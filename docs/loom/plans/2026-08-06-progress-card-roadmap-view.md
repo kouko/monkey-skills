@@ -4,7 +4,7 @@ Source brief: docs/loom/specs/2026-08-06-progress-card-roadmap-view.md
 Goal: the card shows execution order (topological steps), and every
 task carries an authored user-language gloss stating its effect and
 goal relation — done/remaining/order readable at a glance.
-Stage: sdd:wave-1
+Stage: review:round-1
 Critical-path depth: 3 (≤5)
 Total tasks: 6
 Execution order: parallel-where-possible (Wave 1 = T1+T2+T3+T4, disjoint files; T5 after; T6 after T5)
@@ -65,7 +65,7 @@ Endpoint named: yes → continuous (user 「go」; runs to PR-open; merge stays 
     renders its real dependency structure correctly.
 - Dependencies: none
 - Independent: true
-- Status: pending
+- Status: done(2508d37b)
 - Brief item covered: Smallest End State 1
 
 ## Task 2 — plan-format: Steps + Gloss schema + example
@@ -96,7 +96,7 @@ Endpoint named: yes → continuous (user 「go」; runs to PR-open; merge stays 
   - GREEN: pin file green.
 - Dependencies: none
 - Independent: true
-- Status: pending
+- Status: done(0bdd0b75)
 - Brief item covered: Smallest End State 2; brief Decisions bullet 2
   (reviewer-prompt Gloss sentence); Decision "language rule"
 
@@ -125,7 +125,7 @@ Endpoint named: yes → continuous (user 「go」; runs to PR-open; merge stays 
   - GREEN: wp pin file green; count reported; four-site raise named.
 - Dependencies: none
 - Independent: true
-- Status: pending
+- Status: done(043d7f58)
 - Brief item covered: Smallest End State 3; Decision "counting
   convention / ceilings"; Decision "language rule"
 
@@ -157,7 +157,7 @@ Endpoint named: yes → continuous (user 「go」; runs to PR-open; merge stays 
   - GREEN: `python3 -m pytest loom-pipeline/scripts/ -q` green.
 - Dependencies: none
 - Independent: true
-- Status: pending
+- Status: done(ff608959)
 - Brief item covered: Smallest End State 4; Decision "language rule"
 
 ## Task 5 — bump loom-code 0.61.0
@@ -174,7 +174,7 @@ Endpoint named: yes → continuous (user 「go」; runs to PR-open; merge stays 
   - GREEN: `python3 -m pytest loom-code/scripts/ scripts/ loom-pipeline/scripts/ -q` passes.
 - Dependencies: Tasks 1, 2, 3, 4 complete first
 - Independent: false
-- Status: pending
+- Status: done(16e7eb91)
 - Review-weight: mechanical
 - Brief item covered: Smallest End State 5
 
