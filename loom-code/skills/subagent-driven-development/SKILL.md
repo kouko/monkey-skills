@@ -56,7 +56,7 @@ checkpoint sign-off renders the progress card first: run
 `python3 scripts/plan_card.py <plan-path>` and relay its output in the
 live conversation language, framed per
 `loom-pipeline/hooks/family-relay.md §Family relay discipline` —
-progress-card variant `§(a2) Progress card` (file or script absent →
+progress-card variant `§(a2) Progress card` (family-relay or script absent →
 render the four fields inline: goal, task table, stage, next —
 nothing is dropped). Update the plan's `Stage:` header
 in the same commit as that wave's ledger writes. The card re-reads the
@@ -107,7 +107,7 @@ This substitution is gated upstream by `plan-document-reviewer` Check 16 (see `w
 
 Unlike the mechanical exemption, this substitution does **not** bypass the §Verdict resolution table below — the table still applies on this path, with the docs-reviewer's verdict substituting into the table's `code-quality-reviewer` column (the `spec-reviewer` column is unchanged).
 
-**Progress ledger.** SDD writes the plan's optional per-task `Status` field back as it executes and resumes from it after interruption: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Progress ledger.
+**Progress ledger.** SDD writes the plan's per-task `Status` field back as it executes and resumes from it after interruption: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Progress ledger.
 
 **Decision Log maintenance.** SDD appends non-briefed, classified engineering decisions to the plan's `## Decision Log` during execution: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Decision Log maintenance.
 
@@ -168,7 +168,7 @@ The orchestrator never silently dismisses a `BLOCKED` — even if the unblock st
 
 Before surfacing a `BLOCKED` that hinges on a semantics or convention dispute (not a missing dependency, not broken test infra) → read [`references/research-escalation.md`](references/research-escalation.md) and run its triage FIRST, same as the 2nd-round trigger above.
 
-Whatever the user sees at this seam — a wave sign-off, a `DONE_WITH_CONCERNS` summary — is the rollup card in the live conversation language, per `loom-pipeline/hooks/family-relay.md §Family relay discipline`; this table's states are internal routing, not user-facing copy.
+Whatever the user sees at this seam — a wave sign-off, a `DONE_WITH_CONCERNS` summary — is the progress card per §Delivery form above (family-relay `§(a2) Progress card`), in the live conversation language; this table's states are internal routing, not user-facing copy.
 
 ## Prompt templates
 

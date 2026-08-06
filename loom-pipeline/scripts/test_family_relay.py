@@ -107,18 +107,25 @@ def test_relay_section():
 
 def test_sdd_pointer():
     """
-    Task 5 adds the canonical pointer phrase to BOTH narration seams in
-    loom-code/skills/subagent-driven-development/SKILL.md:
-      - near '### ③ How to phrase' (Asking the user seam)
-      - near '## Status handling' (checkpoint sign-off seam)
-    Marker: POINTER_PHRASE ("family-relay.md §Family relay
-    discipline") must occur at least twice in the file — no template
-    body copied in either seam.
+    Task 5 originally added the canonical pointer phrase to BOTH
+    narration seams in
+    loom-code/skills/subagent-driven-development/SKILL.md. Fix round 1
+    (2026-08-06, progress-cards-and-plan-ledger arc) corrected the
+    Status handling seam's wording — it had wrongly called the
+    progress card a "rollup card" — and, instead of re-duplicating
+    POINTER_PHRASE there, made it cross-reference the '### ③ How to
+    phrase' seam's own Delivery form paragraph ("§Delivery form
+    above"), which already carries POINTER_PHRASE. No template body is
+    copied in either seam either way.
     """
     text = _read(SDD_SKILL)
-    assert text.count(POINTER_PHRASE) >= 2, (
-        "expected the pointer phrase in both the ③ seam and the "
-        "Status handling seam"
+    assert text.count(POINTER_PHRASE) >= 1, (
+        "expected the pointer phrase at least once, in the ③ seam's "
+        "Delivery form paragraph"
+    )
+    assert "§Delivery form above" in text, (
+        "expected the Status handling seam to cross-reference the "
+        "Delivery form paragraph instead of duplicating the pointer"
     )
 
 

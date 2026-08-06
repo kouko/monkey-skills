@@ -181,6 +181,40 @@ def test_plan_with_no_task_headings_exits_1_loudly(tmp_path):
     assert "🎯" not in result.stdout, "must never render a partial card"
 
 
+def test_bold_status_bullet_renders_same_card_as_plain_style(tmp_path):
+    """(7) plan-format.md's per-task schema writes the Status bullet bold
+    (`- **Status**: value`) — a schema-conformant plan must render the
+    identical card as the plain `- Status:` style. Before the fix,
+    _STATUS_BULLET only matched the plain spelling and a bold-style task
+    misdiagnosed as an old-format (statusless) plan."""
+    text = (
+        "# Plan: widget fixture\n\n"
+        "Source brief: docs/loom/specs/fixture.md\n"
+        "Goal: Ship the widget pipeline end-to-end.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — parser\n\n"
+        "- Description: fixture task body.\n"
+        "- **Status**: done(abc1234)\n\n"
+        "## Task 2 — renderer\n\n"
+        "- Description: fixture task body.\n"
+        "- **Status**: claimed(implementer)\n\n"
+        "## Notes\n\nFixture notes — never a task.\n"
+    )
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == (
+        "🎯 Ship the widget pipeline end-to-end.\n"
+        "tasks: ✅1 ⏳1 ⬜0 🚫0\n"
+        "✅ T1 parser\n"
+        "⏳ T2 renderer\n"
+        "stage: sdd:wave-1\n"
+        "next: T2 renderer\n"
+    )
+
+
 def test_status_value_outside_the_four_kinds_exits_1_naming_it(tmp_path):
     """Defensive edge beyond the five pinned cases: a status value that is
     none of done(/claimed(/pending/blocked must fail loud (naming the bogus

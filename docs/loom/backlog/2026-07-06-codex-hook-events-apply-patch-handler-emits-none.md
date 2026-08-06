@@ -3,13 +3,11 @@ name: 2026-07-06-codex-hook-events-apply-patch-handler-emits-none
 description: Codex hook events — apply_patch handler emits none
 status: UPSTREAM
 origin: 2026-07-06 live-fire test on Codex 0.139.0 — apply_patch wrote files but the rollout log carried zero hook events; official docs say apply_patch matches Edit/Write matchers, so wiring is dormant-correct
-start: next Codex CLI version bump in this environment — re-run the live-fire ritual in docs/loom/codex-verification.md §remind-memory-mirror (codex exec writes a type:project note to a memory-pattern path; grep the session rollout log for the reminder fingerprint)
+start: openai/codex#17532 closing, or the next Codex-side live re-probe in this environment, whichever first
 ---
 
-- Start: next Codex CLI version bump in this environment — re-run the
-  live-fire ritual in docs/loom/codex-verification.md §remind-memory-mirror
-  (codex exec writes a type:project note to a memory-pattern path; grep the
-  session rollout log for the reminder fingerprint)
+- Start: openai/codex#17532 closing, or the next Codex-side live
+  re-probe in this environment, whichever first
 - Origin: 2026-07-06 live-fire test on Codex 0.139.0 — apply_patch wrote
   files but the rollout log carried zero hook events; official docs say
   apply_patch matches Edit/Write matchers, so wiring is dormant-correct

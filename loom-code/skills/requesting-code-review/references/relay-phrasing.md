@@ -29,7 +29,7 @@ Seven rules:
 4. **Open with a one-line state anchor** (一句話現況): *I reviewed the whole branch; here's what I found.* Never lead with a bare verdict token (`NEEDS_REVISION` alone is the failure) — give the reader the situation before the symbol. When you follow up with an `AskUserQuestion`, put the anchor **inside its `question` field**, not only in chat prose above the call — the user reads the rendered question, not your preamble. Always populate the `questions` array with fully-drafted question text; an empty `{}` payload causes InputValidationError at dispatch time.
 5. **≤4 options** (AskUserQuestion hard cap). Never add an explicit "Other" — the tool auto-injects it. End **open** design questions with a free-form invite; for **closed** factual questions, don't.
 6. **Compound asks only when sub-questions share one topic** or are jointly judgeable. Split unrelated decisions into separate rounds.
-7. **Relay via the shared family card.** Open the relay with the family rollup card per `loom-pipeline/hooks/family-relay.md §Family relay discipline` — don't restate its rules here. Walk findings at the user's pace, not as a dump; ≥2 remediation options default to a markdown comparison table.
+7. **Relay via the shared family card.** Open the relay with the family rollup card per `loom-pipeline/hooks/family-relay.md §Family relay discipline` — don't restate its rules here. Walk findings at the user's pace, not as a dump; ≥2 remediation options default to a markdown comparison table; when a finishing gate-STOP already led with the progress card, the rollup opens after it — the two compose, never duplicate.
 
 ## Worked example — the built-in `/recap` style is the target
 

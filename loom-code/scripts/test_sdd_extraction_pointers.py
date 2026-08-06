@@ -95,7 +95,8 @@ ENV_HYGIENE_HEADING = "## Environment hygiene"
 # B2: distinctive tails only present in the FULL bold-lead sentences (the
 # residue pointers below are deliberately shorter and omit these tails).
 PROGRESS_LEDGER_FULL_LEAD = (
-    "maintain `Status` per task + resume from it (v0.10.0+, optional)"
+    "maintain `Status` per task + resume from it "
+    "(v0.10.0+; default-on since v0.60.0 — old plans opt-in by presence)"
 )
 DECISION_LOG_FULL_LEAD_TAIL = (
     "an agent-decided engineering choice that was classified by the "
@@ -103,7 +104,7 @@ DECISION_LOG_FULL_LEAD_TAIL = (
 )
 PROGRESS_LEDGER_HEADING = (
     "## Progress ledger — maintain `Status` per task + resume from it "
-    "(v0.10.0+, optional)"
+    "(v0.10.0+; default-on since v0.60.0 — old plans opt-in by presence)"
 )
 DECISION_LOG_HEADING = "## Decision Log maintenance — append during execution"
 RESUME_AFTER_INTERRUPTION_LEAD = "**Resume after interruption:**"

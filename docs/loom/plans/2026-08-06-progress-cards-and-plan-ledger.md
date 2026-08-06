@@ -474,3 +474,8 @@ closing, or our next Codex-side live re-probe, whichever first.
   sites incl. the function rename); T6 insertion anchored before
   `### (b) Visual defaults`; SES-9/Decision traceability spread onto
   T2/T3/T4/T6/T8.
+- 2026-08-06: commit 2c4c4793 (T9 ledger write-back) reuses 7cbd0a60's
+  probe-report message verbatim — an index.lock race split one chain
+  into two commits and the retry inherited the message; content
+  correct, messages collapse at squash-merge; recorded for the log's
+  honesty.

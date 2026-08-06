@@ -127,7 +127,7 @@ per-task `Status:` from birth (schema below). After the reviewer PASS
 is stamped, run `python3 scripts/plan_card.py <plan-path>` and relay
 its card in the conversation language — fire-and-continue, not a new
 pause, framed per `loom-pipeline/hooks/family-relay.md §(a2) Progress
-card` (file or script absent → render the four fields inline: goal,
+card` (family-relay or script absent → render the four fields inline: goal,
 task table, stage, next). The card re-reads the plan file by
 construction; never compose it from memory.
 

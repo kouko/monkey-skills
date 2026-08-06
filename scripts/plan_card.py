@@ -45,7 +45,7 @@ import sys
 from pathlib import Path
 
 _TASK_HEADING = re.compile(r"^## Task (\d+) — (.+?)\s*$", re.MULTILINE)
-_STATUS_BULLET = re.compile(r"^- Status:\s*(\S.*?)\s*$", re.MULTILINE)
+_STATUS_BULLET = re.compile(r"^- \*{0,2}Status\*{0,2}:\s*(\S.*?)\s*$", re.MULTILINE)
 
 # Kind -> mark, in the N5-pinned counts-line order.
 _MARKS = {"done": "✅", "claimed": "⏳", "pending": "⬜", "blocked": "🚫"}
@@ -102,7 +102,8 @@ def _parse_tasks(text: str) -> list[tuple[int, str, str]]:
         if status_match is None:
             raise ValueError(
                 f"task T{number} ({name}) has no '- Status:' line — "
-                "old-format plan predating the default-on Status ledger"
+                "either an old-format plan predating the default-on ledger, "
+                "or a Status line the parser does not recognize"
             )
         kind = _classify(status_match.group(1))
         if kind is None:

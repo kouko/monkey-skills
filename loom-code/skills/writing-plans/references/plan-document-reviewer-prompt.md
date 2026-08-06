@@ -9,7 +9,7 @@
 3. You **may not** evaluate the *content quality* of the brief — only whether the plan covers it. If the brief is bad, that surfaces as gaps where tasks lack `Brief item covered` entries; the fix is to revisit brainstorming, not patch the plan.
 4. Verdict is **binary**: `PASS` or `NEEDS_REVISION`. No middle ground. Either every check passes or there are gaps to fix.
 5. Be specific about gaps. Quote the schema rule that's violated; point at the task / brief section that violates it.
-6. The optional per-task **`Status`** field (`pending` / `claimed(@…)` / `done(<sha>)` / `blocked` — see `plan-format.md` §Progress ledger) is **runtime ledger state, not plan-authoring content**. **Accept and ignore it**: never require it, never flag its presence or value, and never let it affect any check verdict. SDD writes it during execution; it is outside the plan↔brief↔schema triangle you evaluate.
+6. The per-task **`Status`** field (default-on for new plans, absent on old ones) (`pending` / `claimed(@…)` / `done(<sha>)` / `blocked` — see `plan-format.md` §Progress ledger) is **runtime ledger state, not plan-authoring content**. **Accept and ignore it**: never require it, never flag its presence or value, and never let it affect any check verdict. SDD writes it during execution; it is outside the plan↔brief↔schema triangle you evaluate.
 
 ## Input contract — what the writing-plans orchestrator hands you
 
@@ -30,7 +30,7 @@ You **must** load all three via the Read tool before producing a verdict.
 
 | # | Check | Failure → NEEDS_REVISION |
 |---|---|---|
-| 1 | Plan has top-level header with `Source brief`, `Total tasks`, `Execution order`, `Plan-document-reviewer verdict` fields | Any field missing |
+| 1 | Plan has top-level header with `Source brief`, `Goal`, `Stage`, `Total tasks`, `Execution order`, `Plan-document-reviewer verdict` fields | Any field missing |
 | 2 | **Critical-path DEPTH ≤ 5** — the longest chain of tasks linked by `Dependencies` (N independent same-level tasks count as ONE level, not N). A wide-but-shallow plan with >5 total tasks but depth ≤5 PASSES. | Critical-path depth >5 (writing-plans should have split into sequential briefs / routed back to brainstorming) |
 | 3 | Each task has all required fields (Description, Module, Context paths, Acceptance.RED, Acceptance.GREEN, Dependencies, Brief item covered). The `Brief item covered` field is satisfied by EITHER referent kind: (a) a brief item, OR (b) when the plan consumes a loom-spec change-folder, a stable join key `<change-id> / Requirement: <name> / Scenario: <name>` (R5). Field-PRESENCE is the requirement — accept the spec join-key referent as valid provenance, do not require a brief item specifically. | Any required field missing or empty |
 | 4 | Each task's `Module` field names exactly ONE module / file path | Task lists 2+ modules |

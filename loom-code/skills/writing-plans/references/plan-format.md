@@ -96,9 +96,9 @@ One named category worth calling out explicitly (see the worked example below): 
 
 Eligibility is narrow — transcribed from that same SSOT wording: this may ONLY be set when **all files listed in the task's `Files touched` are `.md` authored prose — never code, never config, never a generated/sync artifact**. Fail-closed, mirroring the mechanical exemption above: if any touched or diffed file is not `.md` authored prose, the orchestrator falls back to the full triad rather than silently narrowing review. `plan-document-reviewer` Check 16 gates this marker at plan review — a plan setting it without satisfying Check 16's eligibility test never reaches SDD.
 
-#### Progress ledger — the `Status` field (v0.10.0+, optional)
+#### Progress ledger — the `Status` field (v0.10.0+; default-on v0.60.0+)
 
-The optional per-task `Status` field turns the plan into a **run-scoped, durable, shared progress
+The per-task `Status` field turns the plan into a **run-scoped, durable, shared progress
 ledger**. It is **runtime state**, not plan-authoring content: `writing-plans` emits its initial
 value (`Status: pending` on every task at plan time — see below), `subagent-driven-development`
 **maintains** it as it executes, and `plan-document-reviewer` **ignores** it.

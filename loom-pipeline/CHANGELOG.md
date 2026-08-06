@@ -12,7 +12,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 - family-relay.md gains §(a2) Progress card — the plan-progress
   variant of the user-rollup card (goal / task table / stage / next,
-  body rendered by loom-code's `scripts/plan_card.py`, relayer adds
+  body rendered by the repo-root `scripts/plan_card.py`, relayer adds
   only a localized one-line frame).
 
 ## [0.12.0] — 2026-08-02 — loom-memory routes backlog items to the entry-per-file store
