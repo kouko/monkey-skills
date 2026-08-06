@@ -118,7 +118,7 @@ Steps:
 - Brief item covered: "Duty + docs wiring (prose)"
 
 ## Task 4 — version 0.63.0
-- Status: pending
+- Status: done(7ebbb754)
 - Description: Bump loom-code to 0.63.0 in both manifests, add the
   CHANGELOG [0.63.0] entry (ledger writer + Steps guard + the three
   doc wirings + the deliberate SDD ceiling raise), rewrite the
