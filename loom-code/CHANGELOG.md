@@ -5,6 +5,48 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.64.0] — 2026-08-06 — dispatch packets cite their sources
+
+### Added
+
+- **SDD gains §Dispatch-packet context — four rules for what rides a
+  dispatch packet.** Site inventories and exact target strings are
+  anchored by verbatim string or stable heading, never by line number
+  alone — line numbers rot within a single branch. Every fact in a
+  packet names its source inline (the file read or the command run);
+  a statement without a named source is a guess and must be labeled
+  as one. The provenance marker is deliberately open-form — a file or
+  command named inline. It does not govern plan-format
+  §Reuse-adequacy blocks, whose closed three-marker vocabulary stays
+  authoritative there. When ≥3 downstream dispatches will consume the
+  same map, a locate arm is dispatched first and its cost amortized
+  across them; below that threshold, knowledge already in hand is
+  used. A map serving many workers or exceeding ~10 lines may live in
+  a file the locate arm writes, with packets carrying only the path.
+  Reviewer packets carry claims-to-verify, never
+  conclusions-to-adopt — worker packets optimize for trust, reviewer
+  packets for independence. The section lives in
+  `subagent-driven-development/references/dispatch-hygiene-notes.md`
+  with a body pointer routing to it.
+- **implementer role-contract rule 13 — scoped inner-loop test runs.**
+  During the RED→GREEN inner loop the implementer runs the touched
+  test file(s) only. The full resolved package suite runs exactly
+  once, after the last edit and before the commit. That final full
+  run IS the per-task package-level gate —
+  `verification-before-completion` is unchanged, and only redundant
+  intermediate full runs are eliminated.
+
+### Changed
+
+- **plan-format gains lane-usage authoring guidance for
+  `Review-weight`.** When a task's Description already names an
+  exact-spec target per Check 16's eligibility, the plan author
+  declares `Review-weight: mechanical`; when every file in `Files
+  touched` is `.md` authored prose, `Review-weight: prose` is
+  considered. The guidance is non-gating — Check 16 stays the gate.
+  An eligible task left undeclared costs a full reviewer triad for
+  zero marginal defect yield.
+
 ## [0.63.0] — 2026-08-06 — the ledger gets its own pen
 
 ### Added
