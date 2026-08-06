@@ -516,7 +516,8 @@ thing) / 🟡 should-fix / 🟢 nit (informational).
 ## See also
 
 - `loom-code/skills/requesting-docs-review/SKILL.md` — orchestration
-  spec (dispatch, rounds, 2-round cap, verdict minting).
+  spec (dispatch, rounds, bounded cap (2 rounds + one
+  conditional auto-delta round), verdict minting).
 - `loom-code/agents/code-reviewer.md` — the code-arm sibling (same
   verdict-only role, code dimensions, whole-branch scope).
 - `loom-code/scripts/check_doc_citations.py` — the citation pre-pass
