@@ -15,7 +15,7 @@ Steps:
   2. 收束與驗證
 
 ## Task 1 — packet-context discipline (dispatch-hygiene + SDD pointer)
-- Status: pending
+- Status: claimed(@feat-dispatch-efficiency-trio)
 - Description: Add a new `## Dispatch-packet context` section to
   loom-code/skills/subagent-driven-development/references/dispatch-hygiene-notes.md
   carrying the brief's four rules, each its own sentence: (a) site
@@ -69,7 +69,7 @@ Steps:
   §Dispatch-packet context … four rules … Plus ONE pointer sentence"
 
 ## Task 2 — scoped inner-loop tests (implementer rule)
-- Status: pending
+- Status: claimed(@feat-dispatch-efficiency-trio)
 - Description: Append one rule to loom-code/agents/implementer.md's
   role contract (own numbered item, matching rule 12's style): during
   the RED→GREEN inner loop, run the touched test file(s) only; run the
@@ -102,7 +102,7 @@ Steps:
   implementer.md's role contract"
 
 ## Task 3 — lane-usage guidance (plan-format)
-- Status: pending
+- Status: claimed(@feat-dispatch-efficiency-trio)
 - Description: Add one authoring-guidance sentence (own sentence, not
   spliced) in plan-format.md's Review-weight area: when a task's
   Description already names an exact-spec target per Check 16's
