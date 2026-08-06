@@ -29,6 +29,11 @@ Free-form plans force SDD to re-parse; this schema makes the parse trivial.
 # Plan: <topic>
 
 **Source brief**: <path to brief, e.g. docs/loom/specs/2026-05-16-csv-export.md>
+Goal: <one sentence transcribed from the brief's Smallest End State at
+    plan time — frozen with the plan; never edited afterward>
+Stage: <planning | sdd:wave-N | review:round-N | finishing — updated by
+    the orchestrator at each transition, committed with the nearest
+    ledger or close-out commit>
 **Total tasks**: <N>
 **Critical-path depth**: <D> (must be ≤5; if >5 route back to brainstorming)
 **Execution order**: sequential | parallel-where-possible
@@ -65,10 +70,11 @@ If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-rev
     à la Kiro `_Requirements:` / Spec-Kit `FR-###`). This is the SAME field with a broadened
     referent — do NOT add a second field; point at the source `### Requirement:` / `#### Scenario:`
     names rather than copying their prose.>
-- **Status**: <OPTIONAL runtime ledger field — see §Progress ledger. One of:
-    "pending" | "claimed(@<agent>)" | "done(<sha>)" | "blocked". Default OMITTED (a plan with no
-    Status fields behaves exactly as before — fully backward compatible). NOT authoring content;
-    SDD writes it, the plan-document-reviewer ignores it.>
+- **Status**: <runtime ledger field, DEFAULT-ON — see §Progress ledger. One of:
+    "pending" | "claimed(@<agent>)" | "done(<sha>)" | "blocked". writing-plans emits
+    "pending" at plan time; an old plan without Status fields behaves exactly as
+    before — fully backward compatible. NOT authoring content beyond the initial
+    "pending"; SDD writes the transitions, the plan-document-reviewer ignores it.>
 ```
 
 #### `Files touched` and `Independent` (v0.8.0+)
@@ -93,9 +99,9 @@ Eligibility is narrow — transcribed from that same SSOT wording: this may ONLY
 #### Progress ledger — the `Status` field (v0.10.0+, optional)
 
 The optional per-task `Status` field turns the plan into a **run-scoped, durable, shared progress
-ledger**. It is **runtime state**, not plan-authoring content: `writing-plans` never sets it (a fresh
-plan has no `Status` fields), `subagent-driven-development` **maintains** it as it executes, and
-`plan-document-reviewer` **ignores** it.
+ledger**. It is **runtime state**, not plan-authoring content: `writing-plans` emits its initial
+value (`Status: pending` on every task at plan time — see below), `subagent-driven-development`
+**maintains** it as it executes, and `plan-document-reviewer` **ignores** it.
 
 Vocabulary (exactly these four):
 
@@ -114,8 +120,10 @@ Why it earns its place:
   agents (see `dispatching-parallel-agents` §Multiple concurrent sessions) — worktrees isolate files,
   the ledger coordinates *who does what*.
 
-**Backward compatibility is total:** omit `Status` and nothing changes. The field is opt-in by presence,
-exactly like `External surfaces`.
+The ledger is DEFAULT-ON: writing-plans emits `Status: pending` on
+every task at plan time. A plan without `Status` fields (written
+before this default) behaves exactly as before — the ledger stays
+opt-in-by-presence for old plans.
 
 #### `External surfaces` (v0.9.0+)
 
