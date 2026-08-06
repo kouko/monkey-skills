@@ -45,6 +45,22 @@ six-space-indented line under its task row. `--detail T<N>` prints one
 task's description / why (brief item) / acceptance / gloss verbatim
 (wrapped lines folded), omitting absent fields.
 
+Ledger writer (Task 1 of
+docs/loom/plans/2026-08-06-ledger-writer-and-plan-tooling-hardening.md):
+`--set-status "T<N>=<status>"` rewrites the task block's existing
+`- Status:` line in place, wherever it sits in the block, and prints
+the old line then the new line. The writer's status grammar is exactly
+the schema's four kinds — `pending` | `claimed(@<agent>)` |
+`done(<sha>)` | `blocked` — parenthetical REQUIRED for claimed/done,
+FORBIDDEN for pending/blocked (stricter than the renderer's
+`blocked(<why>)` tolerance: the writer never authors the optional
+form). Loud exit 1, file untouched, on: task not found, malformed
+status, zero `- Status:` lines in the block, more than one `- Status:`
+line in the block (the 0.62.0 duplicate-field incident becomes
+detectable instead of survivable — the writer refuses, never repairs).
+The file is modified only on that one line. `--set-status` and
+`--detail` are mutually exclusive.
+
 A plan missing `Goal:` or `Stage:`, having zero task headings,
 carrying a statusless / unrecognized-status task, a dependency cycle
 or phantom-task reference, or a `Steps:` count that mismatches the
@@ -57,9 +73,10 @@ scripts/backlog_index.py's build/main convention.
 Usage:
     python3 scripts/plan_card.py <plan-path>
     python3 scripts/plan_card.py <plan-path> --detail T<N>
+    python3 scripts/plan_card.py <plan-path> --set-status "T<N>=<status>"
 
-Exit codes: 0 = card rendered, 1 = unreadable/unrenderable plan,
-2 = usage error.
+Exit codes: 0 = card rendered / status rewritten, 1 = unreadable/
+unrenderable plan or refused rewrite, 2 = usage error.
 """
 
 from __future__ import annotations
@@ -393,18 +410,84 @@ def build_detail(text: str, task_number: int) -> str:
     return "\n".join(lines) + "\n"
 
 
-_USAGE = "usage: python3 scripts/plan_card.py <plan-path> [--detail T<N>]"
+# The writer's status grammar (plan Task 1): exactly the schema's four
+# kinds — parenthetical REQUIRED for claimed/done (non-empty, no nested
+# parens; claimed's payload is `@<agent>`), FORBIDDEN for pending/blocked.
+# Stricter than _classify: the writer never authors `blocked(<why>)`.
+_SET_STATUS_GRAMMAR = re.compile(
+    r"pending|blocked|done\([^()\s]+\)|claimed\(@[^()\s]+\)"
+)
+
+
+def set_status(text: str, task_number: int, status: str) -> tuple[str, str, str]:
+    """The plan text with task T<task_number>'s single `- Status:` line
+    rewritten to `- Status: <status>`, plus the old and new line —
+    every other byte unchanged. Pure function (the caller writes the
+    file and decides exit codes); raises ValueError on a malformed
+    status, a missing task heading, and zero or duplicate `- Status:`
+    lines in the task block (refuse, never repair — plan Decisions)."""
+    if _SET_STATUS_GRAMMAR.fullmatch(status) is None:
+        raise ValueError(
+            f"--set-status: status '{status}' outside pending / "
+            "claimed(@<agent>) / done(<sha>) / blocked — parenthetical "
+            "REQUIRED for claimed/done, FORBIDDEN for pending/blocked"
+        )
+    for heading in _TASK_HEADING.finditer(text):
+        if int(heading.group(1)) == task_number:
+            break
+    else:
+        raise ValueError(
+            f"--set-status T{task_number}: no '## Task {task_number}' "
+            "heading in the plan"
+        )
+    next_heading = text.find("\n## ", heading.end())
+    block_end = next_heading if next_heading != -1 else len(text)
+    block = text[heading.end() : block_end]
+    status_lines = list(_STATUS_BULLET.finditer(block))
+    if not status_lines:
+        raise ValueError(
+            f"task T{task_number} ({heading.group(2)}) has no "
+            "'- Status:' line to rewrite — the writer never inserts one"
+        )
+    if len(status_lines) > 1:
+        raise ValueError(
+            f"task T{task_number} ({heading.group(2)}) has "
+            f"{len(status_lines)} '- Status:' lines — duplicate field; "
+            "fix the plan by hand, the writer refuses to pick one"
+        )
+    # Span the physical line, not the regex match: _STATUS_BULLET's
+    # trailing `\s*$` may extend across a following blank line in
+    # MULTILINE mode, and the rewrite must never touch that newline.
+    start = heading.end() + status_lines[0].start()
+    line_break = text.find("\n", start)
+    end = line_break if line_break != -1 else len(text)
+    old_line = text[start:end]
+    new_line = f"- Status: {status}"
+    return text[:start] + new_line + text[end:], old_line, new_line
+
+
+_USAGE = (
+    "usage: python3 scripts/plan_card.py <plan-path> "
+    '[--detail T<N> | --set-status "T<N>=<status>"]'
+)
 
 
 def main() -> int:
     args = sys.argv[1:]
     detail_number: int | None = None
+    set_status_ref: tuple[int, str] | None = None
     if len(args) == 3 and args[1] == "--detail":
         task_ref = re.fullmatch(r"T(\d+)", args[2])
         if task_ref is None:
             print(_USAGE, file=sys.stderr)
             return 2
         detail_number = int(task_ref.group(1))
+    elif len(args) == 3 and args[1] == "--set-status":
+        task_ref = re.fullmatch(r"T(\d+)=(.+)", args[2])
+        if task_ref is None:
+            print(_USAGE, file=sys.stderr)
+            return 2
+        set_status_ref = (int(task_ref.group(1)), task_ref.group(2))
     elif len(args) != 1:
         print(_USAGE, file=sys.stderr)
         return 2
@@ -416,6 +499,12 @@ def main() -> int:
 
     try:
         text = plan_path.read_text(encoding="utf-8")
+        if set_status_ref is not None:
+            new_text, old_line, new_line = set_status(text, *set_status_ref)
+            plan_path.write_text(new_text, encoding="utf-8")
+            print(f"old: {old_line}")
+            print(f"new: {new_line}")
+            return 0
         card = (
             build_card(text)
             if detail_number is None
