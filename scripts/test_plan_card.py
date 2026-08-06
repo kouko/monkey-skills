@@ -83,7 +83,7 @@ def test_happy_path_mixed_statuses_renders_the_exact_card(tmp_path):
     assert result.stdout == (
         "goal: Ship the widget pipeline end-to-end.\n"
         "tasks: 1 done / 1 claimed / 1 pending / 1 blocked\n"
-        "[x] T1 parser\n"
+        "[v] T1 parser\n"
         "[~] T2 renderer\n"
         "[ ] T3 cli wiring\n"
         "[!] T4 docs\n"
@@ -109,8 +109,8 @@ def test_all_done_plan_renders_next_close_out(tmp_path):
     assert result.stdout == (
         "goal: Ship the widget pipeline end-to-end.\n"
         "tasks: 2 done / 0 claimed / 0 pending / 0 blocked\n"
-        "[x] T1 parser\n"
-        "[x] T2 renderer\n"
+        "[v] T1 parser\n"
+        "[v] T2 renderer\n"
         "stage: finishing\n"
         "next: close-out\n"
     )
@@ -208,7 +208,7 @@ def test_bold_status_bullet_renders_same_card_as_plain_style(tmp_path):
     assert result.stdout == (
         "goal: Ship the widget pipeline end-to-end.\n"
         "tasks: 1 done / 1 claimed / 0 pending / 0 blocked\n"
-        "[x] T1 parser\n"
+        "[v] T1 parser\n"
         "[~] T2 renderer\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"

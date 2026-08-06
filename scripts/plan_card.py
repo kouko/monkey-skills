@@ -20,7 +20,7 @@ Output (stdout), field order fixed by N5:
 
     goal: <goal>
     tasks: D done / C claimed / P pending / B blocked
-    [x]|[~]|[ ]|[!] T<N> <name>    (ASCII marks: done/claimed/pending/blocked)
+    [v]|[~]|[ ]|[!] T<N> <name>    (ASCII marks: done/claimed/pending/blocked)
     <mark> T<N> <name>              (one row per task, file order)
     stage: <stage>
     next: T<N> <name>               (first not-done task; or `close-out`)
@@ -49,7 +49,7 @@ _TASK_HEADING = re.compile(r"^## Task (\d+) — (.+?)\s*$", re.MULTILINE)
 _STATUS_BULLET = re.compile(r"^- \*{0,2}Status\*{0,2}:\s*(\S.*?)\s*$", re.MULTILINE)
 
 # Kind -> mark, in the N5-pinned counts-line order.
-_MARKS = {"done": "[x]", "claimed": "[~]", "pending": "[ ]", "blocked": "[!]"}
+_MARKS = {"done": "[v]", "claimed": "[~]", "pending": "[ ]", "blocked": "[!]"}
 
 
 def _header_value(header: str, key: str) -> str | None:
