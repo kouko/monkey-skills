@@ -1,9 +1,12 @@
 # Dogfood: dispatch-packet context — five-leg adversarial haiku probe
 
 Date: 2026-08-06
-Branch: feat-dispatch-efficiency-trio (probes at the T4 commit
-c028d07e's shipped §Dispatch-packet context text, rules embedded
-verbatim per leg)
+Branch: feat-dispatch-efficiency-trio (legs A-D probed the T4
+commit c028d07e's shipped §Dispatch-packet context text, rules
+embedded verbatim per leg; leg E ran later the same session, before
+fix commit 5f0c7eda, and was handed c028d07e's rules (a)+(c) with
+rule (a)'s incident sentence abbreviated away — the below-threshold
+sentence 5f0c7eda later added to rule (c) was NOT in its input)
 Verdict: **5/5 CLEAN**
 
 Probe tier: haiku, one fresh context per leg, zero tools, each leg

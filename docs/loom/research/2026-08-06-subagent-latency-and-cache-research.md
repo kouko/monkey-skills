@@ -10,9 +10,10 @@ scanning script are committed as the appendix file
 
 ## 1. Cross-project latency scan (local measurement)
 
-Scanned 386 transcript files across 13 projects under
-~/.claude/projects/ — 10,054 subagent-completion records, 0 parse
-failures (script: scan_subagent_timing.py, session job tmp). The scan
+Scanned 386 transcript files under ~/.claude/projects/ (spanning 42
+project directories, 13 of which contained ≥1 completion record) —
+10,054 subagent-completion records, 0 parse failures (script: see
+`2026-08-06-subagent-timing-scan-raw.md` §Regeneration appendix). The scan
 globbed `~/.claude/projects/*/*.jsonl` — each project's top-level
 session transcripts (source: `scan_subagent_timing.py:27,38`, quoted
 in the appendix). 386 files matched the glob, 93 contained ≥1

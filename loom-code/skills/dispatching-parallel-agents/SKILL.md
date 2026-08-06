@@ -86,7 +86,7 @@ When all parallel agents return:
    - Any `NEEDS_REVISION` → re-dispatch **only that one branch** with the findings. Other branches keep their results.
    - Any `BLOCKED` → apply the unblock step or surface to user.
    - Any `NEEDS_CONTEXT` → surface to user; do not re-dispatch blind.
-4. Run the package-level test suite **once** at the integration point (per `verification-before-completion`) — not per branch. Per-branch suites pass in isolation; the combined diff can still fail. This is the integration-level run across the merged branches; each task's own pre-commit full run per implementer rule 13 is separate and unchanged.
+4. Run the package-level test suite **once** at the integration point (per `verification-before-completion`) — not per branch. Per-branch suites pass in isolation; the combined diff can still fail. This is the integration-level run across the merged branches; each task's own pre-commit full run per implementer role-contract rule 13 (`../../agents/implementer.md`) is separate and unchanged.
 
 ## TDD iron-law per branch
 
