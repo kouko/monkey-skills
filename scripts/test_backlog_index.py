@@ -1092,3 +1092,95 @@ def test_the_deferred_rules_follow_up_is_tracked_in_the_store():
         f"{name} does not appear under its '## {status}' section in the "
         "regenerated index -- present as a file but not surfaced"
     )
+
+
+# ---------------------------------------------------------------------------
+# Fix round 1 (whole-branch review) -- build_ready() must honor the
+# archive tier, not just the frontmatter status.
+# ---------------------------------------------------------------------------
+
+
+def test_ready_excludes_archive_tier_entry_regardless_of_status(tmp_path):
+    """A file physically under `archive/` that (incorrectly, or from a
+    stale migration) still carries an actionable status like OPEN must
+    NOT leak into the actionable output -- the archive tier overrides
+    the frontmatter status. It must instead be counted in the excluded
+    tally."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(
+        store,
+        "2026-08-01-open-plain.md",
+        _entry("2026-08-01-open-plain", "OPEN", description="Legit open marker."),
+    )
+    _write(
+        store,
+        "archive/2026-07-01-mis-tiered.md",
+        _entry(
+            "2026-07-01-mis-tiered",
+            "OPEN",
+            description="Should never render -- physically archived.",
+        ),
+    )
+
+    result = _run_ready(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    out = result.stdout
+    assert "2026-07-01-mis-tiered" not in out, (
+        "archive-tier entry leaked into --ready output despite a "
+        "non-archived status"
+    )
+    open_section = _section(out, "## OPEN")
+    assert "- 2026-08-01-open-plain — Legit open marker." in open_section
+    assert "2026-07-01-mis-tiered" not in open_section
+    non_empty = [line for line in out.splitlines() if line.strip()]
+    assert non_empty[-1] == "ready: 0 committed / 1 open / 1 excluded by status", non_empty[-1]
+
+
+def test_ready_fails_loudly_on_status_outside_closed_vocabulary(tmp_path):
+    """(a) An entry with a status outside the closed vocabulary must fail
+    --ready loudly (exit 1) with the FAIL message, mirroring --write /
+    --check's behavior for the same malformed input -- never silently
+    laundered into the excluded tally."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(
+        store,
+        "2026-08-01-bogus.md",
+        _entry("2026-08-01-bogus", "NOT-A-REAL-STATUS"),
+    )
+
+    result = subprocess.run(
+        [sys.executable, str(BACKLOG_SCRIPT), "--ready", "--store", str(store)],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "backlog_index --ready: FAIL —" in result.stdout, result.stdout
+    assert "NOT-A-REAL-STATUS" in result.stdout, result.stdout
+
+
+def test_ready_omits_committed_next_heading_when_empty(tmp_path):
+    """(b) A store with no COMMITTED-NEXT entries at all must omit the
+    '## COMMITTED-NEXT' heading entirely (not print an empty section),
+    while the count line still reports the correct numbers -- this is
+    the real store's current shape."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(
+        store,
+        "2026-08-01-open-plain.md",
+        _entry("2026-08-01-open-plain", "OPEN", description="Open-plain marker."),
+    )
+    _write(store, "2026-08-02-parked.md", _entry("2026-08-02-parked", "PARKED"))
+
+    result = _run_ready(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    out = result.stdout
+    assert "## COMMITTED-NEXT" not in out, out
+    assert "## OPEN" in out
+    non_empty = [line for line in out.splitlines() if line.strip()]
+    assert non_empty[-1] == "ready: 0 committed / 1 open / 1 excluded by status"

@@ -19,8 +19,9 @@ SKILL_MD = (
 
 LEAD_PHRASE = "**Backlog ready check**"
 READY_COMMAND = "python3 scripts/backlog_index.py --ready"
-NA_SILENT_CLAUSE = "no store → skip silently, N/A"
+NA_SILENT_CLAUSE = "no store or no `scripts/backlog_index.py` → skip silently, N/A"
 NEVER_HIJACKS = "it never hijacks it"
+INDEPENDENT_OF_NEGATIVE_GUARD = "independent of the Negative guard"
 
 NEGATIVE_GUARD_PHRASE = "**Negative guard (silent skip)**"
 
@@ -69,3 +70,10 @@ def test_never_hijacks_sentence_present():
     """The queue informs the arc decision but never hijacks it —
     the user's seed idea stays the default subject."""
     assert NEVER_HIJACKS in _normalized_text()
+
+
+def test_independent_of_negative_guard_sentence_present():
+    """Fix round 1: the ready check is independent of the Negative
+    guard above it — a bug-fix/refactor arc that skips the rest of
+    Axis 0 still runs the ready check."""
+    assert INDEPENDENT_OF_NEGATIVE_GUARD in _normalized_text()

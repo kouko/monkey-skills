@@ -527,7 +527,7 @@ def build_ready(store: Path) -> str:
     counts: dict[str, int] = {status: 0 for status in READY_STATUSES}
     excluded = 0
 
-    for path, _is_archived in _entry_files(store):
+    for path, is_archived in _entry_files(store):
         frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
         status = frontmatter.get("status")
         if status not in CLOSED_STATUS_VOCABULARY:
@@ -535,7 +535,7 @@ def build_ready(store: Path) -> str:
                 f"{path.name}: entry has status {status!r}, outside the "
                 "closed status vocabulary"
             )
-        if status not in READY_STATUSES:
+        if is_archived or status not in READY_STATUSES:
             excluded += 1
             continue
         counts[status] += 1

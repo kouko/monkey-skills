@@ -72,8 +72,12 @@ multi-state new work.
 `docs/loom/backlog/`, run `python3 scripts/backlog_index.py --ready`
 before settling the arc's scope, and surface to the user any
 COMMITTED-NEXT items plus OPEN items related to the seed idea (no
-store → skip silently, N/A). The queue informs the arc decision — it
-never hijacks it: the user's seed idea stays the default subject.
+store or no `scripts/backlog_index.py` → skip silently, N/A). The
+queue informs the arc decision — it never hijacks it: the user's seed
+idea stays the default subject. This check is independent of the
+Negative guard above — a bug-fix or refactor arc that skips the rest
+of Axis 0 still runs the ready check (backlog entries are often
+exactly bug-fix shaped).
 
 If a criteria row triggers, surface the recommendation **ONCE** — name the
 concrete design-side sequence (e.g. `using-loom-product-principles` →

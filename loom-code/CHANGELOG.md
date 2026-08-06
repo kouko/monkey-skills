@@ -10,8 +10,9 @@ Versioning: [Semantic Versioning](https://semver.org/).
 ### Added
 
 - **The backlog becomes readable and closable, not just writable.**
-  Measured: 90 entries filed in five weeks, zero ever closed, no flow
-  ever read the store. Three verbs close the loop, following the
+  Measured: 90 entries filed in five weeks, zero ever archived
+  (archive/ absent, git history has zero deletions), no flow ever read
+  the store. Three verbs close the loop, following the
   industry pattern (ready-query + close-in-the-work-loop):
   `backlog_index.py --ready` prints the COMMITTED-NEXT queue + OPEN
   candidates with their start conditions; brainstorming Axis 0 runs
