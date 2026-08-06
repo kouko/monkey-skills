@@ -5,7 +5,7 @@ Goal: the docs-review cap runs one mechanically-gated scoped third round
     on its own (reported, once per branch, hard-stop after), fix
     dispatches carry the placement guard, and finishing's conductor
     reads the current skill text before executing
-Stage: sdd:wave-4
+Stage: review:round-1
 Total tasks: 6
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
@@ -188,7 +188,7 @@ Steps:
   before Step 1 and why. Write the dogfood report to
   docs/loom/dogfood/2026-08-06-bounded-auto-round3-probe.md (Write
   under an alias then mv if the basename is refused).
-- Status: pending
+- Status: done(pending-sha)
 - Gloss: 用最弱的模型冷讀新條款做三個情境測驗——證明「機械可判」不是
   只有作者讀得懂，弱模型也判得對、不會自簽通過。
 - Module: docs/loom/dogfood
