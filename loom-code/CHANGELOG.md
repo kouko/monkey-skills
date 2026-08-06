@@ -5,6 +5,40 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.62.0] — 2026-08-06 — the cap runs its own last mile
+
+### Changed
+
+- **Docs review runs one bounded auto-third round on its own.**
+  requesting-docs-review's convergence cap becomes 2 rounds + one
+  mechanically-conditioned auto-delta round: a round-2 NEEDS_REVISION
+  whose verdict shows zero surviving prior findings, zero new 🔴, and
+  at most 2 new 🟡 auto-runs a single delta-scoped round 3, once per
+  branch, reported in the terminal rollup. The conditions are
+  count/verdict-shape only — no judgment prose a weak model could
+  self-certify past. Any other shape still STOPs and surfaces; a
+  round-3 verdict short of PASS/PASS_WITH_NOTES hard-stops, and round
+  4 never runs without explicit user authorization. The rdr word
+  ceiling rises 4130 → 4370 as a deliberate banked-headroom act to
+  admit the new directive text.
+- **Fix dispatches carry the placement guard.** agents/implementer.md
+  rule 12: when a fix task edits prose contracts, new material goes in
+  its own sentence or inside the placeholder it governs — never
+  spliced into an existing sentence that pins or enumerations depend
+  on (incident source: memory entry
+  splicing-into-a-pinned-sentence-creates-false-readings).
+- **Finishing follows the new cap and reads before it runs.** The
+  Step-3 docs-arm cap-STOP bullet routes on rdr's bounded contract by
+  pointer, surfacing only the shapes rdr still stops on; Step 4 states
+  the placement rule when applying review findings to prose contracts;
+  the conductor Reads the CURRENT SKILL.md from the installed plugin
+  before executing — never running the flow from memory or a compacted
+  summary.
+- **Neighbor cap mentions swept to the new semantics.**
+  requesting-code-review's SKILL.md and agents/docs-reviewer.md now
+  read "bounded cap (2 rounds + one conditional auto-delta round)" in
+  place of the old 2-round wording.
+
 ## [0.61.0] — 2026-08-06 — the card becomes a roadmap
 
 ### Added
