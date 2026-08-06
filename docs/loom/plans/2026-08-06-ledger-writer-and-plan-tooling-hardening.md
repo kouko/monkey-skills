@@ -52,7 +52,7 @@ Steps:
   deterministic ledger writer"
 
 ## Task 2 — loud Steps guard
-- Status: pending
+- Status: done(383c314d)
 - Description: A `Steps:` line with content after the colon exits 1
   with a message naming the correct format (bare `Steps:` line +
   indented numbered titles). Fixture: the inline form the 0.62.0 plan
