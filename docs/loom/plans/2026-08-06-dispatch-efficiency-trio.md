@@ -5,7 +5,7 @@ Goal: dispatch packets carry verified maps with string anchors,
     implementers stop re-running the full suite inside the inner loop,
     and eligible plans declare their review lanes — three measured
     latency levers legislated, the unproven fourth parked with its data
-Stage: review:round-1
+Stage: finishing
 Total tasks: 5
 Critical-path depth: 2 (≤5)
 Execution order: parallel-where-possible
