@@ -69,7 +69,10 @@ convention — same grounding logic as §(d)'s jargon-and-stakes gate.
 The plan-progress variant of the rollup card. Field order is fixed:
 **Goal** (one line, verbatim from the plan header), **task table**
 (`[v]` done / `[~]` claimed / `[ ]` pending / `[!]` blocked — plain-ASCII
-marks for cross-platform rendering; counts then rows),
+marks for cross-platform rendering; counts then rows), step separators
+with `(needs: T…)` lists when the plan declares Dependencies, and
+indented gloss lines when tasks carry `Gloss:`; `--detail T<N>` prints
+one task's curated fields on demand,
 **Stage**, **next** (first not-done task, or close-out).
 The body is rendered mechanically by `scripts/plan_card.py` — never
 compose it by hand when the script is available, never re-order or

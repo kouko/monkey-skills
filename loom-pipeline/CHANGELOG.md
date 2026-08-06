@@ -10,7 +10,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- §(a2) Progress card switches to plain-ASCII marks (`[x]`/`[~]`/`[ ]`/`[!]`,
+- §(a2) Progress card switches to plain-ASCII marks (`[v]`/`[~]`/`[ ]`/`[!]`,
   goal-line prefix `goal:`) — emoji rendered inconsistently across
   terminals and fonts; the body renderer `scripts/plan_card.py` changed
   in the same commit (the pinned same-commit duty for format changes).

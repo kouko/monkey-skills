@@ -30,7 +30,9 @@ Free-form plans force SDD to re-parse; this schema makes the parse trivial.
 
 **Source brief**: <path to brief, e.g. docs/loom/specs/2026-05-16-csv-export.md>
 Goal: <one sentence transcribed from the brief's Smallest End State at
-    plan time — frozen with the plan; never edited afterward>
+    plan time — frozen with the plan; never edited afterward>; continuation
+    lines MUST be indented (unindented wraps silently truncate the
+    rendered goal)
 Stage: <planning | sdd:wave-N | review:round-N | finishing — updated by
     the orchestrator at each transition, committed with the nearest
     ledger or close-out commit>
@@ -301,7 +303,7 @@ Steps:
 - **Acceptance**:
   - **RED**: `renderers/csv.test.ts > renderCSV produces RFC 4180-compliant output with quoted fields containing commas`
   - **GREEN**: CSV string matches RFC 4180 fixture; passes existing fuzz tests
-- **Dependencies**: none (parallel with Task 1)
+- **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: "minimum shippable change: CSV output that downstream pipeline can ingest"
 - **Status**: pending
@@ -349,7 +351,7 @@ Stage: planning
 ## Task 4 — Docstring for yaml renderer  (Independent: true, Dependencies: none)
 ## Task 5 — Docstring for toml renderer  (Independent: true, Dependencies: none)
 ## Task 6 — Docstring for html renderer  (Independent: true, Dependencies: none)
-## Task 7 — Run lint gate over all renderers (Dependencies: Tasks 1-6 complete first)
+## Task 7 — Run lint gate over all renderers (Dependencies: Tasks 1, 2, 3, 4, 5, 6 complete first)
 ## Task 8 — Regenerate renderer index doc   (Dependencies: Task 7 completes first)
 ```
 

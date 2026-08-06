@@ -128,6 +128,33 @@ def test_all_done_plan_renders_next_close_out(tmp_path):
     )
 
 
+def test_next_follows_roadmap_order_not_file_order(tmp_path):
+    """`next:` names the first not-done task in ROADMAP order (earliest
+    dependency level, then file order within that level) — not the
+    first not-done task in raw file order. Task 1 is written first in
+    the file but depends on Task 2 (so it sits at level 2); Task 2 has
+    no dependencies (level 1). The level-1 task is the true next step —
+    naming Task 1 would tell the user to start on blocked work."""
+    plan_path = _write_plan(
+        tmp_path,
+        _plan_text(
+            tasks=[
+                (
+                    "first-in-file",
+                    "pending",
+                    ["- Dependencies: Task 2 completes first"],
+                ),
+                ("second-in-file", "pending"),
+            ]
+        ),
+    )
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "next: T2 second-in-file\n" in result.stdout, result.stdout
+
+
 def test_plan_missing_goal_header_exits_1_naming_goal(tmp_path):
     """(3) No `Goal:` header → exit 1 with a one-line loud message naming
     the missing field; never a partial card."""
@@ -330,20 +357,38 @@ def test_deps_without_steps_render_untitled_separators(tmp_path):
 def test_needs_list_sorts_ascending_and_parallel_form_parses(tmp_path):
     """The `Tasks <n>, <n>... parallel` grammar form is a prerequisite
     list identical to `complete first`, and the needs-list renders
-    ascending by task number regardless of the order the plan wrote."""
+    ascending by task number regardless of the order the plan wrote.
+
+    Task numbers are 100/200/300 (not 1/2/3) deliberately: with small
+    consecutive ints, CPython's set-iteration bucket order (bucket =
+    hash(n) % table_size) happens to come out ascending even WITHOUT a
+    sorted() call, so a `sorted(...)` -> `set(...)` mutation would
+    still pass a 1/2/3 fixture — a false green. 100/200/300 collide in
+    the small hash table (100 % 8 == 300 % 8 == 4) and are inserted out
+    of order (300, 100, 200 per the Dependencies value below), so their
+    raw set-iteration order is NOT ascending — only an actual sort
+    produces "T100 T200 T300"."""
     plan_path = _write_plan(
         tmp_path,
-        _plan_text(
-            tasks=[
-                ("parser", "done(abc1234)"),
-                ("renderer", "done(def5678)"),
-                ("docs", "done(fed9876)"),
-                (
-                    "cli wiring",
-                    "pending",
-                    ["- Dependencies: Tasks 3, 1, 2 parallel"],
-                ),
-            ]
+        (
+            "# Plan: widget fixture\n\n"
+            "Source brief: docs/loom/specs/fixture.md\n"
+            "Goal: Ship the widget pipeline end-to-end.\n"
+            "Stage: sdd:wave-1\n\n"
+            "## Task 100 — parser\n\n"
+            "- Description: fixture task body.\n"
+            "- Status: done(abc1234)\n\n"
+            "## Task 200 — renderer\n\n"
+            "- Description: fixture task body.\n"
+            "- Status: done(def5678)\n\n"
+            "## Task 300 — docs\n\n"
+            "- Description: fixture task body.\n"
+            "- Status: done(fed9876)\n\n"
+            "## Task 400 — cli wiring\n\n"
+            "- Description: fixture task body.\n"
+            "- Status: pending\n"
+            "- Dependencies: Tasks 300, 100, 200 parallel\n\n"
+            "## Notes\n\nFixture notes — never a task.\n"
         ),
     )
 
@@ -354,13 +399,13 @@ def test_needs_list_sorts_ascending_and_parallel_form_parses(tmp_path):
         "goal: Ship the widget pipeline end-to-end.\n"
         "tasks: 3 done / 0 claimed / 1 pending / 0 blocked\n"
         "-- step 1 --\n"
-        "[v] T1 parser\n"
-        "[v] T2 renderer\n"
-        "[v] T3 docs\n"
-        "-- step 2 (needs: T1 T2 T3) --\n"
-        "[ ] T4 cli wiring\n"
+        "[v] T100 parser\n"
+        "[v] T200 renderer\n"
+        "[v] T300 docs\n"
+        "-- step 2 (needs: T100 T200 T300) --\n"
+        "[ ] T400 cli wiring\n"
         "stage: sdd:wave-1\n"
-        "next: T4 cli wiring\n"
+        "next: T400 cli wiring\n"
     )
 
 

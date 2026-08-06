@@ -4,6 +4,11 @@ Date: 2026-08-06
 Branch: fix-plan-card-ascii-marks (probes by-path at the T5 commit)
 Verdict: **3/3 CLEAN** (one honest scope note on leg a)
 
+Probe tier: haiku, one fresh context per leg, written exercises. Leg
+(a)'s input was a constructed sample card (CSV-export scenario,
+embedded verbatim in the probe prompt), not a repo plan — chosen so
+the leg tests card-reading with zero repo context.
+
 | Leg | Surface | Verdict |
 |---|---|---|
 | a | a titled+glossed rendered card alone | CLEAN (order/parallel/done/remaining) |

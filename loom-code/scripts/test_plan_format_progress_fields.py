@@ -16,6 +16,8 @@ Schema pins are whitespace-normalized sentence pins, NOT `- Gloss:`
 literal counts (the example uses the bold style `- **Gloss**:`).
 """
 
+import subprocess
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -35,6 +37,7 @@ REVIEWER_PROMPT_MD = (
     / "references"
     / "plan-document-reviewer-prompt.md"
 )
+PLAN_CARD_SCRIPT = REPO_ROOT / "scripts" / "plan_card.py"
 
 GOAL_SCHEMA_LINE = (
     "Goal: <one sentence transcribed from the brief's Smallest End State at "
@@ -176,3 +179,41 @@ def test_reviewer_prompt_gloss_contract_sentence_present():
     accept and read, never require."""
     text = " ".join(REVIEWER_PROMPT_MD.read_text(encoding="utf-8").split())
     assert _normalize(REVIEWER_GLOSS_CONTRACT_SENTENCE) in text
+
+
+def _canonical_worked_example_plan_text() -> str:
+    """The fenced ```markdown plan body inside the canonical CSV-export
+    worked example (NOT the wide-but-shallow example) — the literal
+    plan text a reader would copy and run plan_card.py against."""
+    section = _worked_example_text()
+    fence_start = section.index("```markdown") + len("```markdown")
+    fence_end = section.index("```", fence_start)
+    return section[fence_start:fence_end].strip("\n") + "\n"
+
+
+def test_canonical_worked_example_renders_with_plan_card(tmp_path):
+    """Integration guard (F1): the canonical worked example must be a
+    RUNNABLE plan, not just prose — extract its fenced plan body to a
+    tmp file and run the real plan_card.py on it. Before the fix, Task
+    2's `- **Dependencies**: none (parallel with Task 1)` value falls
+    outside plan_card.py's Dependencies grammar and plan_card.py exits
+    1; after the one-word fix it renders the two-step roadmap card."""
+    plan_text = _canonical_worked_example_plan_text()
+    plan_path = tmp_path / "worked-example-plan.md"
+    plan_path.write_text(plan_text, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(PLAN_CARD_SCRIPT), str(plan_path)],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert (
+        "-- step 1: Understand the CSV request and produce the file format --"
+        in result.stdout
+    ), result.stdout
+    assert (
+        "-- step 2: Connect them so the download actually happens "
+        "(needs: T1 T2) --" in result.stdout
+    ), result.stdout

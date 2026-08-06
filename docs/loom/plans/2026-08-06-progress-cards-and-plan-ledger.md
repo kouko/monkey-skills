@@ -2,8 +2,8 @@
 
 Source brief: docs/loom/specs/2026-08-06-progress-cards-and-plan-ledger.md
 Goal: the user sees the full plan + live progress at defined moments
-without asking, and the orchestrator re-anchors on the goal at every
-card render (fill-from-file via plan_card.py).
+    without asking, and the orchestrator re-anchors on the goal at every
+    card render (fill-from-file via plan_card.py).
 Stage: finishing
 Total tasks: 9
 Critical-path depth: 3 (≤5)

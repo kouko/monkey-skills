@@ -23,7 +23,10 @@ Output (stdout), field order fixed by N5:
     [v]|[~]|[ ]|[!] T<N> <name>    (ASCII marks: done/claimed/pending/blocked)
     <mark> T<N> <name>              (one row per task, file order)
     stage: <stage>
-    next: T<N> <name>               (first not-done task; or `close-out`)
+    next: T<N> <name>               (first not-done task in roadmap
+                                      order — earliest dependency level,
+                                      then file order within it; or
+                                      `close-out`)
 
 Roadmap view (Task 1 of
 docs/loom/plans/2026-08-06-progress-card-roadmap-view.md): per-task
@@ -335,10 +338,16 @@ def build_card(text: str) -> str:
 
     lines.append(f"stage: {stage}")
 
-    next_task = next(
-        (f"T{number} {name}" for number, name, kind, _, _ in tasks if kind != "done"),
-        "close-out",
-    )
+    not_done = [
+        (levels[number], index, number, name)
+        for index, (number, name, kind, _, _) in enumerate(tasks)
+        if kind != "done"
+    ]
+    if not_done:
+        _, _, number, name = min(not_done, key=lambda item: item[:2])
+        next_task = f"T{number} {name}"
+    else:
+        next_task = "close-out"
     lines.append(f"next: {next_task}")
 
     return "\n".join(lines) + "\n"

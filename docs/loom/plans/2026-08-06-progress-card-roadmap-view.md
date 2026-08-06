@@ -2,8 +2,8 @@
 
 Source brief: docs/loom/specs/2026-08-06-progress-card-roadmap-view.md
 Goal: the card shows execution order (topological steps), and every
-task carries an authored user-language gloss stating its effect and
-goal relation — done/remaining/order readable at a glance.
+    task carries an authored user-language gloss stating its effect and
+    goal relation — done/remaining/order readable at a glance.
 Stage: review:round-1
 Critical-path depth: 3 (≤5)
 Total tasks: 6

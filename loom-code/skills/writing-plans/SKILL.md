@@ -171,6 +171,7 @@ Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PA
     Decision section — required; plan-document-reviewer Check 3 blocks on this field>
 - Status: pending   ← default-on ledger field; SDD maintains it —
     semantics in `references/plan-format.md` §Progress ledger
+- Gloss: <one line, user's conversation language — effect + goal relation>
 
 ## Task 2 — ...
 ```
