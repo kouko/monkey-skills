@@ -5,6 +5,21 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.61.0] — 2026-08-06 — the card becomes a roadmap
+
+### Added
+
+- **Progress cards show execution order.** plan_card.py derives
+  topological steps from `Dependencies:` and renders A-layout
+  separators with needs-lists; opt-in `Steps:` titles and per-task
+  `Gloss:` lines (both authored at plan time in the user's
+  conversation language — the gloss states effect and goal relation,
+  never a name restatement); `--detail T<N>` prints one task's full
+  fields on demand. The frame contract (family-relay §(a2)) now
+  requires stop-reason openings on blocked rows and bans
+  pipeline-station narration. Designed interactively with the user;
+  markdown-table output rejected for cross-platform stability.
+
 ## [0.60.0] — 2026-08-06 — the plan becomes the progress surface
 
 ### Added
