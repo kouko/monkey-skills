@@ -110,7 +110,7 @@ One named category worth calling out explicitly (see the worked example below): 
 
 Eligibility is narrow — transcribed from that same SSOT wording: this may ONLY be set when **all files listed in the task's `Files touched` are `.md` authored prose — never code, never config, never a generated/sync artifact**. Fail-closed, mirroring the mechanical exemption above: if any touched or diffed file is not `.md` authored prose, the orchestrator falls back to the full triad rather than silently narrowing review. `plan-document-reviewer` Check 16 gates this marker at plan review — a plan setting it without satisfying Check 16's eligibility test never reaches SDD.
 
-Authoring guidance (non-gating — Check 16 stays the gate): when a task's Description already names an exact-spec target per Check 16's eligibility, declare `Review-weight: mechanical`, and when every file in the task's `Files touched` is `.md` authored prose, consider `Review-weight: prose` — an eligible task left undeclared costs a full reviewer triad for zero marginal defect yield.
+Authoring guidance (non-gating — Check 16 stays the gate): when a task's Description already names an exact-spec target per Check 16's eligibility, declare `Review-weight: mechanical`, and when every file in the task's `Files touched` is `.md` authored prose, consider `Review-weight: prose` — an eligible task left undeclared costs a full reviewer triad for zero marginal defect yield. Check 16's exclusions apply unchanged — never declare the mechanical lane for logic, heuristic, hook, or security-surface work.
 
 #### Progress ledger — the `Status` field (v0.10.0+; default-on v0.60.0+)
 
@@ -196,7 +196,7 @@ Before v0.43.0, this field was one free-prose line combining a behaviour-match c
 
 A plan is a technical SSOT that nothing validates: every downstream station judges the artifact **against the plan**, so a fact the plan states wrongly is implemented faithfully, reviewed as conformant, and typically surfaces only at close-out — the most expensive point to catch it. This rule makes the copy unnecessary — it is not extra ceremony on top of it.
 
-**Any verifiable technical assertion in a plan carries a `file:line` citation of the source it came from.** A *verifiable technical assertion* is a sentence whose truth some existing artifact already settles: a number, a formula, a field list, a count, or a claim about existing behaviour (*"the helper already normalizes the ticker"*). Design intent, a preference, or an instruction to the implementer is **not** one and needs no citation. Cite the narrowest form that resolves — `src/renderers/csv.ts:120` or `src/renderers/csv.ts:120-134`.
+**Any verifiable technical assertion in a plan carries a `file:line` citation of the source it came from.** A *verifiable technical assertion* is a sentence whose truth some existing artifact already settles: a number, a formula, a field list, a count, or a claim about existing behaviour (*"the helper already normalizes the ticker"*). Design intent, a preference, or an instruction to the implementer is **not** one and needs no citation. Cite the narrowest form that resolves — `src/renderers/csv.ts:120` or `src/renderers/csv.ts:120-134`. When the assertion will ride a dispatch packet, pair the line cite with the verbatim string or stable heading it locates — line numbers alone rot in flight (§Dispatch-packet context rule (a)).
 
 The citation **replaces** the copy: point at the formula, do not retype it. A retyped formula drifts from its source while every test stays green.
 

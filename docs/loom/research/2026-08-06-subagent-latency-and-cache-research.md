@@ -4,14 +4,20 @@ Date: 2026-08-06
 Arc: dispatch-efficiency trio (loom-code 0.64.0)
 Method: cross-project transcript mining + EN/JP industry survey + a
 hypothesis-verification round against official docs + one local
-experiment. Full source URLs inline; raw scan tables at the session
-job dir (regenerable via the script noted below).
+experiment. Full source URLs inline; the raw scan tables and the
+scanning script are committed as the appendix file
+`2026-08-06-subagent-timing-scan-raw.md` — the durable record.
 
 ## 1. Cross-project latency scan (local measurement)
 
 Scanned 386 transcript files across 13 projects under
 ~/.claude/projects/ — 10,054 subagent-completion records, 0 parse
-failures (script: scan_subagent_timing.py, session job tmp).
+failures (script: scan_subagent_timing.py, session job tmp). The scan
+globbed `~/.claude/projects/*/*.jsonl` — each project's top-level
+session transcripts (source: `scan_subagent_timing.py:27,38`, quoted
+in the appendix). 386 files matched the glob, 93 contained ≥1
+completion record; the tree holds ~6,403 `.jsonl` in total including
+nested per-task transcript files the glob deliberately excludes.
 
 Headline: duration scales near-linearly with tool_uses at a
 **~10-11s-per-tool-call floor** (buckets ≥6 calls; the 1-5 bucket
@@ -88,7 +94,7 @@ decision variable).
 | W1-W3 | warm, parallel | 8.2s / 11.0s / 9.3s |
 | W4 | warm, sequential | 10.9s |
 
-Warm mean 9.8s vs cold 10.6s — within intra-group spread. **No
+Warm mean 9.9s vs cold 10.6s — within intra-group spread. **No
 detectable effect at this scale.** Named confounds: (a) C1 was not
 globally cold — other agent types ran within TTL, so the shared base
 prefix was likely warm and only the implementer-definition segment

@@ -113,8 +113,10 @@ packet — worker or reviewer:
 - **Anchor by string, never by line number alone.** Site inventories
   and exact target strings ride the packet, anchored by verbatim
   string or stable heading — never by line number alone. Line numbers
-  rot within a single branch — two live incidents in one session,
-  where a pinned `:326-328` had become `:335-339` by dispatch time.
+  rot within a single branch — twice during the 2026-08-06
+  dispatch-efficiency arc a span pinned in a dispatch packet had shifted
+  by the time the packet was dispatched
+  (`docs/loom/specs/2026-08-06-dispatch-efficiency-trio.md` §Problem).
 - **Every fact names its source.** Every fact in a packet names its
   source inline — the file the orchestrator read or the command it
   ran. A statement without a named source is a guess and must be
@@ -127,9 +129,12 @@ packet — worker or reviewer:
   will consume the same map, dispatch a locate arm first and amortize
   its cost across them. Below that threshold, use knowledge already in
   hand — never Read files into the main conversation just to quote
-  them. A map serving many workers or exceeding ~10 lines may live in
-  a FILE the locate arm writes; packets then carry only the path, so
-  the map costs the main conversation nothing but that path.
+  them. With fewer than three consumers and no knowledge in hand, the
+  worker locates the target itself in its own context — the
+  orchestrator neither Reads nor guesses. A map serving many workers or
+  exceeding ~10 lines may live in a FILE the locate arm writes; packets
+  then carry only the path, so the map costs the main conversation
+  nothing but that path.
 - **Reviewer packets carry claims-to-verify, never
   conclusions-to-adopt.** Worker packets optimize for trust; reviewer
   packets optimize for independence — hand a reviewer the claims to

@@ -58,6 +58,8 @@ Each agent gets:
 - **Constraints** — what NOT to touch (the other domains' files, by path).
 - **Expected output** — the verdict / status shape (`status: DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED` for implementers; `PASS / PASS_WITH_NOTES / NEEDS_REVISION` for reviewers).
 
+Packet context — anchoring, provenance, locate arms, reviewer independence: [`../subagent-driven-development/references/dispatch-hygiene-notes.md`](../subagent-driven-development/references/dispatch-hygiene-notes.md) §Dispatch-packet context.
+
 ### 3. Dispatch all N subagents in one fan-out step
 
 Your host determines exactly what "one fan-out step" looks like as a tool call — see your host's tool-mapping reference under `using-loom-code/references/` (`claude-code-tools.md`'s "concurrent calls in one assistant message" shape, or `codex-tools.md`'s native multi-agent spawn-and-wait) for the concrete syntax, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid (Codex has no equivalent). The invariant that holds regardless of host:
@@ -84,7 +86,7 @@ When all parallel agents return:
    - Any `NEEDS_REVISION` → re-dispatch **only that one branch** with the findings. Other branches keep their results.
    - Any `BLOCKED` → apply the unblock step or surface to user.
    - Any `NEEDS_CONTEXT` → surface to user; do not re-dispatch blind.
-4. Run the package-level test suite **once** at the integration point (per `verification-before-completion`) — not per branch. Per-branch suites pass in isolation; the combined diff can still fail.
+4. Run the package-level test suite **once** at the integration point (per `verification-before-completion`) — not per branch. Per-branch suites pass in isolation; the combined diff can still fail. This is the integration-level run across the merged branches; each task's own pre-commit full run per implementer rule 13 is separate and unchanged.
 
 ## TDD iron-law per branch
 
