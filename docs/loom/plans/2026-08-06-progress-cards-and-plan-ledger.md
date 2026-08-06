@@ -246,7 +246,7 @@ design; the arc runs to PR-open; merge stays with the user)
   - GREEN: full `python3 -m pytest loom-code/scripts/ scripts/ loom-pipeline/scripts/ -q` passes.
 - Dependencies: Tasks 1, 2, 3, 4, 5, 6, 7 complete first
 - Independent: false
-- Status: pending
+- Status: done(81cf2aea)
 - Review-weight: mechanical
 - Brief item covered: Smallest End State 9 (loom-code half; the
   loom-pipeline half ships in Task 6)
