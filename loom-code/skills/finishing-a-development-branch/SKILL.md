@@ -101,11 +101,12 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
    When the branch has a plan carrying the progress headers, render the
    card once on entry (`python3 scripts/plan_card.py <plan-path>`, framed
    per `loom-pipeline/hooks/family-relay.md §(a2) Progress card`) so the
-   user sees the whole arc before the gates run. No plan or old-format
-   plan → skip silently; a plan whose Status lines the parser REJECTS
-   (plan_card exits 1 naming a task) → relay that error line loudly,
-   never skip; script or family-relay absent → render the four fields
-   inline: goal, task table, stage, next.
+   user sees the whole arc before the gates run. No plan, or a plan
+   with no Status lines at all (old-format) → skip silently; a plan
+   whose Status VALUES the parser rejects (plan_card's "has status
+   '…', outside" error) → relay that error line loudly, never skip;
+   script or family-relay absent → render the four fields inline:
+   goal, task table, stage, next.
 2. Verify branch has commits (else: "nothing to finish; branch matches main")
 3. Dispatch requesting-code-review — route on the returned verdict, not raw severity:
    - If NEEDS_REVISION (any 🔴 fatal, or 2+ 🟡 should-fix): surface findings; STOP. Wait

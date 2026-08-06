@@ -2,9 +2,11 @@
 
 Pins the N4a entry-card sentence appended to Default flow step 1 in
 finishing-a-development-branch/SKILL.md (render the card once on entry
-via plan_card.py, framed per family-relay §(a2); no plan or old-format
-plan → skip silently; script or family-relay absent → four fields
-inline) and the N4b gate-STOP clause appended to the §ASK rationale
+via plan_card.py, framed per family-relay §(a2); three-branch
+degradation — statusless old-format plan skips silently, rejected
+Status VALUES relay the parser's error line loudly, missing
+script/family-relay renders the four fields inline) and the N4b
+gate-STOP clause appended to the §ASK rationale
 paragraph (every gate STOP surfaced to the user leads with the card).
 Added by the progress-cards-and-plan-ledger arc.
 """
@@ -81,3 +83,11 @@ def test_gate_stop_clause_leads_with_card():
         "a privacy BLOCK, a probe FAIL) leads with the progress card"
         in _normalized_text()
     )
+def test_entry_card_rejected_status_branch_relays_loudly():
+    """The middle degradation branch: rejected Status VALUES (the
+    parser's "has status '…', outside" error shape) relay the error
+    line loudly — never a silent skip. Keyed on the second error
+    shape so it stays disjoint from the statusless old-format branch."""
+    normalized = _normalized_text()
+    assert "relay that error line loudly, never skip" in normalized
+    assert "Status VALUES the parser rejects" in normalized
