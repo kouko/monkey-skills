@@ -126,7 +126,7 @@ Steps:
   conditional auto-delta round)". No other file changes;
   design-evidence.md stays historical; SDD/writing-plans/
   continuous-mode caps are different loops and out of population.
-- Status: pending
+- Status: done(e4eeaa75)
 - Gloss: 把其他兩處還寫著「2 輪上限」的舊描述改成新語義，避免讀者在
   不同檔案讀到互相矛盾的規則——語義改動的全 plugin 矛盾掃描義務。
 - Module: loom-code (two files, one-line each)
