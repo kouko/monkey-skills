@@ -11,9 +11,10 @@ move; A4 (maintainer-facing fragments in §BLOCKED fallback, §Plan size
 ceiling, §Consuming) move to references/design-evidence.md (author-facing
 header) while the rules they qualify, and the 5-step process / anti-pattern
 paragraph / detection-cascade rule sentences, stay inline verbatim. Word
-ceiling <=4023 — raised deliberately from 3900 by the 2026-08-06
-progress-cards-and-plan-ledger arc to admit the Progress-surface duty
-paragraph + Goal/Stage/Status schema lines (new count 4003 + 20). §Amending a PASS plan (MUST NOT MOVE, including
+ceiling <=4047 — raised deliberately from 4023 by the 2026-08-06
+progress-card-roadmap-view arc to admit the N2 Steps/Gloss emit-duty
+sentence (new count 4027 + 20; prior raise 3900 → 4023 by the 2026-08-06
+progress-cards-and-plan-ledger arc). §Amending a PASS plan (MUST NOT MOVE, including
 its exactly-3-item closed list — pinned separately by
 test_post_pass_amendment_gate.py) and the splitting framework are
 untouched anti-vacuous survivors.
@@ -179,6 +180,20 @@ def test_inline_fallback_field_list_present():
     )
 
 
+def test_progress_surface_steps_and_gloss_emit_duty_present():
+    # N2 clause (2026-08-06 progress-card-roadmap-view arc): plan-time
+    # emission of Steps titles + Gloss lines, in the user's language.
+    norm = _norm(_skill_text())
+    assert (
+        "an optional `Steps:` title block, and per-task `Gloss:` lines"
+        in norm
+    )
+    assert (
+        "Steps titles and Gloss lines are written at plan time in the "
+        "user's conversation language" in norm
+    )
+
+
 def test_minimal_structure_block_carries_progress_schema_lines():
     text = _skill_text()
     assert "Goal: <one sentence transcribed from the brief" in _norm(text)
@@ -188,10 +203,10 @@ def test_minimal_structure_block_carries_progress_schema_lines():
 
 # --- (f) word cap ------------------------------------------------------------
 
-def test_word_count_at_most_4023():
+def test_word_count_at_most_4047():
     word_count = len(_skill_text().split())
-    assert word_count <= 4023, (
-        f"SKILL.md is {word_count} words, over the 4023 cap (raised "
-        "deliberately from 3900 by the 2026-08-06 "
-        "progress-cards-and-plan-ledger arc)"
+    assert word_count <= 4047, (
+        f"SKILL.md is {word_count} words, over the 4047 cap (raised "
+        "deliberately from 4023 by the 2026-08-06 "
+        "progress-card-roadmap-view arc)"
     )
