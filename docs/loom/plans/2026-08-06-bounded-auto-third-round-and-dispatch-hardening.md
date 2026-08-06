@@ -17,6 +17,7 @@ Steps:
   4. 行為探針
 
 ## Task 1 — rdr Directive 1: bounded auto-third-round
+- Status: claimed(@feat-auto-round3-and-dispatch-hardening)
 - Description: Amend requesting-docs-review's convergence contract so a
   round-2 NEEDS_REVISION whose structured verdict shows (a) zero
   surviving prior findings (all fix-verified), (b) NEW findings with
@@ -30,7 +31,6 @@ Steps:
   1's own cap sentence, :63, :69 — "A round past the cap needs explicit
   user authorization", which directly contradicts the auto-round if
   left, :82, :152, :164, :173). Raise the word ceiling deliberately.
-- Status: pending
 - Gloss: 讓 docs 審查在「前輪全修好、只剩 ≤2 個小新發現」時自動跑一輪
   限定範圍的第三輪並回報，不再停下來等你授權——連續三個 arc 的重複
   授權停頓從此消失，且發散時仍在第三輪硬停。
@@ -90,6 +90,7 @@ Steps:
   Step 4" + "Finishing entry duty"
 
 ## Task 3 — implementer agent: placement rule
+- Status: done(33ca2406)
 - Description: Add one rule to loom-code/agents/implementer.md's role
   contract: when a fix task edits prose contracts (skill text, agent
   contracts, schema references), new material goes in its OWN sentence
@@ -99,7 +100,6 @@ Steps:
   incident source. Pin the rule in
   test_implementer_req_tag_guard.py (same file that already pins
   implementer.md content).
-- Status: pending
 - Gloss: 讓每個被派去修東西的 implementer 都帶著「別把新句子插進既有
   pinned 句」的規則出發——presence-pin 看不見的那類缺陷，從派工契約
   層面預防。
