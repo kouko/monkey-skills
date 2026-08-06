@@ -4,7 +4,7 @@ Source brief: docs/loom/specs/2026-08-06-progress-card-roadmap-view.md
 Goal: the card shows execution order (topological steps), and every
     task carries an authored user-language gloss stating its effect and
     goal relation — done/remaining/order readable at a glance.
-Stage: review:round-1
+Stage: finishing
 Critical-path depth: 3 (≤5)
 Total tasks: 6
 Execution order: parallel-where-possible (Wave 1 = T1+T2+T3+T4, disjoint files; T5 after; T6 after T5)
