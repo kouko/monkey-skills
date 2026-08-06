@@ -13,7 +13,7 @@ header) while the rules they qualify, and the 5-step process / anti-pattern
 paragraph / detection-cascade rule sentences, stay inline verbatim. Word
 ceiling <=4047 — raised deliberately from 4023 by the 2026-08-06
 progress-card-roadmap-view arc to admit the N2 Steps/Gloss emit-duty
-sentence (new count 4027 + 20; prior raise 3900 → 4023 by the 2026-08-06
+sentence (new count 4039 + 8; prior raise 3900 → 4023 by the 2026-08-06
 progress-cards-and-plan-ledger arc). §Amending a PASS plan (MUST NOT MOVE, including
 its exactly-3-item closed list — pinned separately by
 test_post_pass_amendment_gate.py) and the splitting framework are

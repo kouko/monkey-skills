@@ -30,9 +30,9 @@ Free-form plans force SDD to re-parse; this schema makes the parse trivial.
 
 **Source brief**: <path to brief, e.g. docs/loom/specs/2026-05-16-csv-export.md>
 Goal: <one sentence transcribed from the brief's Smallest End State at
-    plan time — frozen with the plan; never edited afterward>; continuation
-    lines MUST be indented (unindented wraps silently truncate the
-    rendered goal)
+    plan time — frozen with the plan (wrap continuation lines WITH
+    indentation — unindented wraps silently truncate the rendered goal);
+    never edited afterward>
 Stage: <planning | sdd:wave-N | review:round-N | finishing — updated by
     the orchestrator at each transition, committed with the nearest
     ledger or close-out commit>

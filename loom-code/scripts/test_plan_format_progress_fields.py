@@ -41,7 +41,9 @@ PLAN_CARD_SCRIPT = REPO_ROOT / "scripts" / "plan_card.py"
 
 GOAL_SCHEMA_LINE = (
     "Goal: <one sentence transcribed from the brief's Smallest End State at "
-    "plan time — frozen with the plan; never edited afterward>"
+    "plan time — frozen with the plan (wrap continuation lines WITH "
+    "indentation — unindented wraps silently truncate the rendered goal); "
+    "never edited afterward>"
 )
 
 STAGE_ENUM_LINE = (
