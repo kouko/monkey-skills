@@ -266,6 +266,16 @@ N4 — CHANGELOG entry:
   listed entry carrying the field (field-presence rule), not OPEN-only
   — simpler, and COMMITTED-NEXT entries don't realistically carry
   `start:`; implementer-flagged, orchestrator-approved (two-way door).
+- 2026-08-06 (whole-branch rounds): round 1 = code NEEDS_REVISION
+  (archive-tier leak, coverage) + docs-A NEEDS_REVISION (5🟡) + docs-B
+  PASS; fix commit fc3a53dc. Round 2 = code PASS_WITH_NOTES + docs-A
+  NEEDS_REVISION (2 new 🟡, fix-round-writes-defects class) → docs
+  2-round cap fired, surfaced to user; user authorized round 3
+  (「修把」); fix commit fef95801. Round 3 delta = PASS (2🟢 nits
+  recorded). Backlog-close check first live run: grep hit 5
+  backlog-machinery entries, none shipped by this branch → silent
+  skip per the bullet (the duplicate-keys entry's start: condition
+  is FIRED by this branch — surfaces via --ready at the next arc).
 - 2026-08-06 (round-1 fixes): brief item 7 became Task 7 (the 0.58.0
   precedent the parenthetical cited actually made probes a task —
   corrected; depth 3 → 4); T5 Module reduced to one path, its
