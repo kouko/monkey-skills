@@ -67,7 +67,7 @@ Steps:
   Read the CURRENT SKILL.md from the installed plugin — never run the
   flow from memory or a compacted summary. Each new sentence is its
   own sentence (self-applying the placement rule).
-- Status: pending
+- Status: done(5acd237e)
 - Gloss: 讓收尾流程跟上新規則並堵住兩個洞：修 review 發現前帶著「新材
   料獨立成句」警告（上輪兩個 placement 缺陷的直接預防）；入口強制先讀
   現行 skill 檔，compaction 後照舊版文本漏跑職責的事故不再重演。
