@@ -5,7 +5,7 @@ Goal: the docs-review cap runs one mechanically-gated scoped third round
     on its own (reported, once per branch, hard-stop after), fix
     dispatches carry the placement guard, and finishing's conductor
     reads the current skill text before executing
-Stage: review:round-1
+Stage: finishing
 Total tasks: 6
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
