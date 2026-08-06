@@ -19,7 +19,7 @@ Steps:
   5. 行為探針
 
 ## Task 1 — plan_card --set-status ledger writer
-- Status: pending
+- Status: done(fb6f552d)
 - Description: Add `--set-status "T<N>=<status>"` to scripts/plan_card.py.
   Status grammar is exactly the schema's four kinds — `pending` |
   `claimed(@<agent>)` | `done(<sha>)` | `blocked` — parenthetical
