@@ -147,6 +147,46 @@ def test_review_weight_section_carries_prose_case():
     )
 
 
+def test_review_weight_section_carries_lane_usage_guidance():
+    """The §Review-weight section carries authoring guidance telling the plan
+    author WHEN to declare a lane (Task 3 of
+    docs/loom/plans/2026-08-06-dispatch-efficiency-trio.md): an exact-spec
+    target per Check 16 -> declare mechanical; all-`.md` authored prose ->
+    consider prose; an eligible task left undeclared costs a full reviewer
+    triad for zero marginal defect yield. Non-gating -- Check 16 stays the
+    gate."""
+    low = _norm(_review_weight_section(_text())).lower()
+
+    # mechanical trigger: Description names an exact-spec target
+    assert re.search(r"description.{0,80}exact-spec target", low), (
+        "must tie the mechanical lane to a Description that names an "
+        "exact-spec target"
+    )
+    assert "declare `review-weight: mechanical`" in low, (
+        "must instruct the author to declare `Review-weight: mechanical`"
+    )
+
+    # prose trigger: every touched file is .md authored prose
+    assert "consider `review-weight: prose`" in low, (
+        "must instruct the author to consider `Review-weight: prose`"
+    )
+
+    # cost of omission
+    assert "left undeclared" in low, (
+        "must name the omission case: an eligible task left undeclared"
+    )
+    assert "full reviewer triad" in low and "zero marginal defect yield" in low, (
+        "must state the cost: a full reviewer triad for zero marginal "
+        "defect yield"
+    )
+
+    # guidance is non-gating; Check 16 stays the gate
+    assert "non-gating" in low, "must mark the guidance as non-gating"
+    assert re.search(r"check 16 (remains|stays) the gate", low), (
+        "must state Check 16 remains the gate"
+    )
+
+
 def test_review_weight_section_polarity_guard():
     """Inverting the reviewer-swap text to claim spec-reviewer is ALSO
     replaced must fail the same check that passes on the real text --

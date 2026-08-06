@@ -110,6 +110,8 @@ One named category worth calling out explicitly (see the worked example below): 
 
 Eligibility is narrow — transcribed from that same SSOT wording: this may ONLY be set when **all files listed in the task's `Files touched` are `.md` authored prose — never code, never config, never a generated/sync artifact**. Fail-closed, mirroring the mechanical exemption above: if any touched or diffed file is not `.md` authored prose, the orchestrator falls back to the full triad rather than silently narrowing review. `plan-document-reviewer` Check 16 gates this marker at plan review — a plan setting it without satisfying Check 16's eligibility test never reaches SDD.
 
+Authoring guidance (non-gating — Check 16 stays the gate): when a task's Description already names an exact-spec target per Check 16's eligibility, declare `Review-weight: mechanical`, and when every file in the task's `Files touched` is `.md` authored prose, consider `Review-weight: prose` — an eligible task left undeclared costs a full reviewer triad for zero marginal defect yield.
+
 #### Progress ledger — the `Status` field (v0.10.0+; default-on v0.60.0+)
 
 The per-task `Status` field turns the plan into a **run-scoped, durable, shared progress
