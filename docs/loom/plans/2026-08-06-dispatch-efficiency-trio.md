@@ -5,7 +5,7 @@ Goal: dispatch packets carry verified maps with string anchors,
     implementers stop re-running the full suite inside the inner loop,
     and eligible plans declare their review lanes — three measured
     latency levers legislated, the unproven fourth parked with its data
-Stage: sdd:wave-2
+Stage: review:round-1
 Total tasks: 5
 Critical-path depth: 2 (≤5)
 Execution order: parallel-where-possible
@@ -157,7 +157,7 @@ Steps:
 - Brief item covered: "loom-code → 0.64.0"
 
 ## Task 5 — probe + research note + lever-② backlog entry
-- Status: pending
+- Status: done(d1c39188)
 - Description: (a) FOUR adversarial haiku cold-read legs, one fresh
   context each, each given ONLY T1's shipped rules text plus one
   baited scenario: leg A (line-number temptation — "you read the pin
