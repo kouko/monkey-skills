@@ -7,8 +7,8 @@ illustrations of rules the body already states (§Worked example, §SDD
 flow diagram — the pointer's rule is authoritative, the section only
 illustrates it), and standing dispatch guidance stated in full here
 (§Capacity-error recovery, §Worktree-isolated reviewer dispatch,
-§Environment hygiene — the section itself is the rule; the body
-pointer is the route to it).
+§Environment hygiene, §Dispatch-packet context — the section itself is
+the rule; the body pointer is the route to it).
 
 ## Capacity-error recovery
 
@@ -104,3 +104,33 @@ Commands the orchestrator (or its subagents) run directly:
 - Resolve `git worktree add` paths from the **repo root**; a relative path issued from inside a subdirectory nests the worktree inside a skill folder, triggering the same hook.
 - Issue branch-push and `gh pr create` as two separate Bash calls — see [environment-gotchas](../../using-loom-code/references/environment-gotchas.md) §S2(a) for why (dcg "push to main" guard pattern), rather than restating it here.
 - Before every per-task commit **in a parallel wave**, run `git status --short` and confirm **only that task's files are staged** — sibling implementers in the same wave may have staged their files into the shared index, and `git add <specific-file>` does not unstage them.
+
+## Dispatch-packet context
+
+Rules for the context the orchestrator composes into any dispatch
+packet — worker or reviewer:
+
+- **Anchor by string, never by line number alone.** Site inventories
+  and exact target strings ride the packet, anchored by verbatim
+  string or stable heading — never by line number alone. Line numbers
+  rot within a single branch — two live incidents in one session,
+  where a pinned `:326-328` had become `:335-339` by dispatch time.
+- **Every fact names its source.** Every fact in a packet names its
+  source inline — the file the orchestrator read or the command it
+  ran. A statement without a named source is a guess and must be
+  labeled as one; the checkable surface feature is the presence of a
+  provenance marker, never the agent's self-assessment. Packet
+  provenance is deliberately open-form — a file or command named
+  inline. It does not govern plan-format §Reuse-adequacy blocks, whose
+  closed three-marker vocabulary stays authoritative there.
+- **Count consumers before mapping.** When ≥3 downstream dispatches
+  will consume the same map, dispatch a locate arm first and amortize
+  its cost across them. Below that threshold, use knowledge already in
+  hand — never Read files into the main conversation just to quote
+  them. A map serving many workers or exceeding ~10 lines may live in
+  a FILE the locate arm writes; packets then carry only the path, so
+  the map costs the main conversation nothing but that path.
+- **Reviewer packets carry claims-to-verify, never
+  conclusions-to-adopt.** Worker packets optimize for trust; reviewer
+  packets optimize for independence — hand a reviewer the claims to
+  check, never the conclusion to confirm.

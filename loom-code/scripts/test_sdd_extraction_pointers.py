@@ -327,6 +327,66 @@ def test_command_surface_accretion_implementer_links_resolve_one_level_deeper():
     assert target.is_file()
 
 
+# --- Dispatch-packet context (2026-08-06 dispatch-efficiency trio, T1) ------
+
+DPC_HEADING = "## Dispatch-packet context"
+DPC_RULE_A = (
+    "anchored by verbatim string or stable heading — never by line number alone"
+)
+DPC_RULE_B_GUESS_LABEL = (
+    "A statement without a named source is a guess and must be labeled as one"
+)
+DPC_RULE_B_PROVENANCE_MARKER = (
+    "the checkable surface feature is the presence of a provenance marker, "
+    "never the agent's self-assessment"
+)
+DPC_RULE_B_NON_GOVERNANCE = (
+    "does not govern plan-format §Reuse-adequacy blocks, whose closed "
+    "three-marker vocabulary stays authoritative there"
+)
+DPC_RULE_C_LOCATE_ARM = "dispatch a locate arm first"
+DPC_RULE_C_STAY_HOME = (
+    "never Read files into the main conversation just to quote them"
+)
+DPC_RULE_C_FILE_MAP_VALVE = "packets then carry only the path"
+DPC_RULE_D = "claims-to-verify, never conclusions-to-adopt"
+DPC_SKILL_POINTER = (
+    "[`references/dispatch-hygiene-notes.md`](references/dispatch-hygiene-notes.md) "
+    "§Dispatch-packet context"
+)
+
+
+def test_dispatch_packet_context_section():
+    """T1 of docs/loom/plans/2026-08-06-dispatch-efficiency-trio.md: the
+    notes file carries §Dispatch-packet context with the four rules'
+    load-bearing phrases, the preamble enumeration names the new
+    standing-guidance section, and SKILL.md's dispatch area carries ONE
+    pointer sentence to it."""
+    notes = _norm(DISPATCH_HYGIENE_NOTES)
+    assert DPC_HEADING in notes
+    # (a) string/heading anchors, never line numbers alone
+    assert DPC_RULE_A in notes
+    # (b) inline source provenance; unsourced = labeled guess (action-type
+    # formulation), plus the §Reuse-adequacy non-governance sentence
+    assert DPC_RULE_B_GUESS_LABEL in notes
+    assert DPC_RULE_B_PROVENANCE_MARKER in notes
+    assert DPC_RULE_B_NON_GOVERNANCE in notes
+    # (c) consumer-count threshold + commander-stays-home + file-map valve
+    assert DPC_RULE_C_LOCATE_ARM in notes
+    assert DPC_RULE_C_STAY_HOME in notes
+    assert DPC_RULE_C_FILE_MAP_VALVE in notes
+    # (d) reviewer packets carry claims, never conclusions
+    assert DPC_RULE_D in notes
+    # preamble section-enumeration sentence must name the new section
+    # (stale enumeration = falsified neighbor)
+    assert "§Dispatch-packet context" in notes.split(DPC_HEADING)[0], (
+        "preamble (text before the new heading) must name "
+        "§Dispatch-packet context"
+    )
+    # SKILL.md pointer sentence in the dispatch area
+    assert DPC_SKILL_POINTER in _norm(SDD_SKILL)
+
+
 # --- word ceiling + destination-file existence ------------------------------
 
 

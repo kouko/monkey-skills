@@ -79,6 +79,8 @@ If neither trigger fires, the user goes straight to `tdd-iron-law` for implement
 
 Dispatch every subagent call below as a one-shot, blocking call that waits for and returns its result directly — see your host's tool-mapping reference under `using-loom-code/references/` (`claude-code-tools.md` / `codex-tools.md`) for the exact call shape, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid (Codex has no equivalent).
 
+Packet context — anchoring, provenance, locate arms, reviewer independence: [`references/dispatch-hygiene-notes.md`](references/dispatch-hygiene-notes.md) §Dispatch-packet context.
+
 For each atomic task in the plan:
 
 1. **Dispatch an `implementer` subagent** (role identifier `loom-code:implementer`; input contract defined in the plugin-level agent at [`loom-code/agents/implementer.md`](../../agents/implementer.md), which also carries the 12-rule engineering baseline from [`loom-code/scripts/_baseline.md`](../../scripts/_baseline.md)) with the task description + context paths + resource paths. Before dispatching, the orchestrator resolves the project's test command once via `verification-before-completion`'s declared-first rule (consult the declared surface; trust only if it runs and emits a test count; else fall back to detection), caches it **session-scoped** (re-resolve across sessions because declarations rot), and passes it into the implementer dispatch as a **`Resolved test command`** line so the implementer runs the project's real test command instead of re-detecting. Relevant `Kickoff decision:` lines from the plan's `## Notes` ride the implementer's task packet. Wait for return.
