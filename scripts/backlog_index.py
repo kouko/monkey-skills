@@ -522,6 +522,10 @@ def build_ready(store: Path) -> str:
     Raises ValueError (caller decides exit codes) on a status outside the
     closed vocabulary, mirroring `_bucket_entry()` — an unrecognized
     status must not be silently laundered into the excluded tally.
+
+    An entry physically under `archive/` is excluded regardless of its
+    frontmatter `status:` — the archive tier overrides the status field,
+    same as `_bucket_entry()`.
     """
     entry_lines: dict[str, list[str]] = {status: [] for status in READY_STATUSES}
     counts: dict[str, int] = {status: 0 for status in READY_STATUSES}

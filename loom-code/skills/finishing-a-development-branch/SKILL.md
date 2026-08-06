@@ -235,19 +235,20 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      shipped twice.
    - Backlog-close check (orchestrator-only, ONCE per branch, same
      shape as its Step 8 siblings): when the repo has
-     `docs/loom/backlog/` and `scripts/backlog_index.py` exists at the
-     repo root (it ships in no plugin — a consuming repo may have the
-     store without the script; absent → say `backlog-close: N/A —
-     backlog_index.py not present` and skip the regeneration, flipping
-     status by hand if a hit demands it), check whether THIS branch
-     ships or supersedes any backlog entry — grep the store for the
-     branch's topic terms and read the hits. On a hit: flip that
-     entry's `status:` to SHIPPED (or CLOSED — SUPERSEDED), append one
-     body line naming the evidence (this branch/PR), regenerate the
-     index with `python3 scripts/backlog_index.py --write`, and stage
-     both in the same close-out commit. No hit, or no store → skip
-     silently (auditable from the diff, like the memory-store
-     bullet).
+     `docs/loom/backlog/`, check whether THIS branch ships or
+     supersedes any backlog entry — grep the store for the branch's
+     topic terms and read the hits. On a hit: flip that entry's
+     `status:` to SHIPPED (or CLOSED — SUPERSEDED), append one body
+     line naming the evidence (this branch/PR); then, if
+     `scripts/backlog_index.py` exists at the repo root, regenerate
+     the index with `python3 scripts/backlog_index.py --write` and
+     stage both in the same close-out commit — the script ships in no
+     plugin, so a consuming repo may have the store without it:
+     absent → say `backlog-close: index not regenerated —
+     backlog_index.py not present`, stage the entry flip alone, and
+     note the index must be regenerated on a machine that has the
+     script. No hit, or no store → skip silently (auditable from the
+     diff, like the memory-store bullet).
    - Attached-HEAD check: run `git symbolic-ref -q HEAD` in the main
      working tree — it must print the branch being finished. Detached
      HEAD or a different branch means something (typically a subagent)
@@ -346,7 +347,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
     of the remaining COMMITTED-NEXT backlog queue ("backlog next:
     <name>" — or "COMMITTED-NEXT queue empty"), from
     `python3 scripts/backlog_index.py --ready`; skip the line when the
-    repo has no backlog store or no backlog_index.py.
+    repo has no backlog store or no `scripts/backlog_index.py`.
 ```
 
 **ASK = stop and wait for user.** That guarantee is now exception-based, not blanket: close-out is autonomous on the happy path — Steps 1–10 proceed silently once each step's own gate PASSes, including Step 7's privacy gate. What remains is one OUTWARD-FACING action that always asks (Step 12 — remove the worktree, because it touches shared state), plus a Step 7 privacy-gate BLOCK, where the human returns only because the gate failed; Step 11 (open a PR) no longer asks — its authorization arrived with the request, so it reports loudly instead. For any remaining question, run the ask-vs-resolve triage at `subagent-driven-development` §Asking the user, gate ① (the cross-skill SSOT) before asking.

@@ -1162,6 +1162,21 @@ def test_ready_fails_loudly_on_status_outside_closed_vocabulary(tmp_path):
     assert "NOT-A-REAL-STATUS" in result.stdout, result.stdout
 
 
+def test_ready_on_empty_store_prints_zero_count_line_only(tmp_path):
+    """(c) A store holding only README.md (no entry files at all) has
+    nothing actionable and nothing excluded -- `--ready` must exit 0
+    printing exactly the zero-tally count line, with no section
+    heading at all (not even an empty one)."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(store, "README.md", "# fixture store, no entries\n")
+
+    result = _run_ready(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == "ready: 0 committed / 0 open / 0 excluded by status\n"
+
+
 def test_ready_omits_committed_next_heading_when_empty(tmp_path):
     """(b) A store with no COMMITTED-NEXT entries at all must omit the
     '## COMMITTED-NEXT' heading entirely (not print an empty section),

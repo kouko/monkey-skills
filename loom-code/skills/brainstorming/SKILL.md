@@ -43,7 +43,7 @@ When uncertain, ask: *"Could a reasonable engineer pick the wrong solution from 
 
 ## The 5-axis exploration framework
 
-"5-axis" is the framework's historical name; the walk itself now starts one step earlier. Walk all axes below, starting at Axis 0 — a mandatory member of the walk (its own negative guard is the only sanctioned skip). Don't skip any. If an axis returns *"don't know"* or *"need more from user"* — that is itself a discovery output and goes into Open Questions in the brief.
+"5-axis" is the framework's historical name; the walk itself now starts one step earlier. Walk all axes below, starting at Axis 0 — a mandatory member of the walk (its own negative guard is the only sanctioned skip, and it skips only the upstream-artifact walk — the ready check inside Axis 0 always runs). Don't skip any. If an axis returns *"don't know"* or *"need more from user"* — that is itself a discovery output and goes into Open Questions in the brief.
 
 When axis uncertainty requires user input, ask **at most one axis per `AskUserQuestion` call** — the single highest-uncertainty one. Bundling multiple axes (e.g. Axis 1 + Axis 3 + Axis 4 with 3-4 options each) overloads the call and will be rejected by the harness as too many options.
 
@@ -64,8 +64,9 @@ on-ramp criteria table (`loom-pipeline/hooks/family-reception.md`) — point to
 it, never copy its rows here (SSOT: that file owns the table body).
 
 **Negative guard (silent skip)**: if the work is a bug fix, a refactor, or a
-test-covered increment, Axis 0 is skipped silently — no noise on incremental
-work. Only proceed past this guard for product-shaped / user-facing /
+test-covered increment, Axis 0's upstream-artifact walk is skipped silently —
+no noise on incremental work; the **Backlog ready check** below runs
+regardless. Only proceed past this guard for product-shaped / user-facing /
 multi-state new work.
 
 **Backlog ready check** — when the target repo has

@@ -83,3 +83,32 @@ def test_step13_queue_tail_phrase_present():
     """Step 13's report ends naming the top of the remaining
     COMMITTED-NEXT queue."""
     assert '"backlog next: <name>"' in _normalized_text()
+
+
+def test_backlog_close_script_absent_na_string_present():
+    """Fix round 2: the script-existence check now gates only the
+    index regeneration, not the whole close-out (fix 2's condition
+    split) — the N/A phrasing changed accordingly from a whole-bullet
+    N/A to a scoped 'index not regenerated' statement."""
+    assert (
+        "backlog-close: index not regenerated — "
+        "backlog_index.py not present" in _normalized_text()
+    )
+
+
+def test_step13_skip_clause_names_the_script_path():
+    """Fix round 2 (fix 5a, path-consistency ride-along): Step 13's
+    own skip clause names the script by its repo-root-relative path,
+    matching the Backlog-close bullet's own `scripts/backlog_index.py`
+    references rather than the bare module name."""
+    assert (
+        "no backlog store or no `scripts/backlog_index.py`"
+        in _normalized_text()
+    )
+
+
+def test_step13_queue_empty_alternative_phrase_present():
+    """Step 13's report line has two renderings depending on queue
+    state: 'backlog next: <name>' when non-empty, or this literal
+    string when the COMMITTED-NEXT queue has nothing in it."""
+    assert '"COMMITTED-NEXT queue empty"' in _normalized_text()

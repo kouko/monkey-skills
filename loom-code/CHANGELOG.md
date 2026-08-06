@@ -16,7 +16,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
   industry pattern (ready-query + close-in-the-work-loop):
   `backlog_index.py --ready` prints the COMMITTED-NEXT queue + OPEN
   candidates with their start conditions; brainstorming Axis 0 runs
-  the ready check at arc kickoff (N/A-silent without a store);
+  the ready check at arc kickoff (N/A-silent without a store or the
+  repo-root script);
   finishing Step 8 flips shipped/superseded entries in the close-out
   commit and Step 13 ends its report naming the queue's top. The
   inventory was swept once against the 0.49.0-0.58.0 shipped record —
