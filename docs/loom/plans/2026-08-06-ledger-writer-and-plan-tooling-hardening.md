@@ -73,7 +73,7 @@ Steps:
 - Brief item covered: "Loud Steps guard"
 
 ## Task 3 — duty + docs wiring (prose)
-- Status: pending
+- Status: done(a499cfce)
 - Description: Four one-sentence edits: (a) SDD SKILL.md Progress-ledger
   paragraph — perform ledger flips via `python3 scripts/plan_card.py
   --set-status "T<N>=<status>"` when the script exists at the repo
