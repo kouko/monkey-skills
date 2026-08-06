@@ -733,6 +733,37 @@ def test_set_status_rewrites_in_place(tmp_path):
     )
 
 
+def test_set_status_preserves_bold_field_markup(tmp_path):
+    """(F1, whole-branch review fix round) plan-format.md's per-task
+    schema writes the Status bullet bold (`- **Status**: value`) — the
+    writer must PRESERVE that markup on rewrite, not silently de-bold a
+    schema-conformant line. Before the fix, set_status always emitted
+    the plain `- Status:` prefix regardless of the matched line's own
+    markup; a bold-style plan lost its bold on the very first flip."""
+    text = (
+        "# Plan: widget fixture\n\n"
+        "Source brief: docs/loom/specs/fixture.md\n"
+        "Goal: Ship the widget pipeline end-to-end.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — parser\n"
+        "- **Status**: pending\n"
+        "- Description: fixture task body.\n\n"
+        "## Notes\n\nFixture notes — never a task.\n"
+    )
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path, "--set-status", "T1=done(abc1234)")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == (
+        "old: - **Status**: pending\n"
+        "new: - **Status**: done(abc1234)\n"
+    )
+    assert plan_path.read_text(encoding="utf-8") == text.replace(
+        "- **Status**: pending", "- **Status**: done(abc1234)"
+    )
+
+
 def test_set_status_pending_kind(tmp_path):
     """pending kind (bare word, no parenthetical) rewrites a done task
     back to pending."""
@@ -945,6 +976,44 @@ def test_set_status_file_byte_identical_outside_the_one_line(tmp_path):
     assert len(diffs) == 1, f"exactly one line may change, got {diffs}"
     assert before_lines[diffs[0]] == "- Status: pending\n"
     assert after_lines[diffs[0]] == "- Status: claimed(@implementer)\n"
+
+
+def test_set_status_claimed_without_at_sign_exits_1(tmp_path):
+    """(F2 axis 1, whole-branch review fix round) `claimed(implementer)`
+    — missing the REQUIRED `@` sigil — must be refused. This test's RED
+    is only against a WEAKENED grammar: the current
+    `_SET_STATUS_GRAMMAR` already requires `claimed(@<agent>)`, so this
+    assertion PASSES against current code unchanged; it pins that a
+    future loosened grammar (dropping the `@` requirement) cannot
+    silently regress this axis."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path, "--set-status", "T1=claimed(implementer)")
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert "'claimed(implementer)'" in result.stdout
+    assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
+
+
+def test_set_status_blocked_with_parenthetical_exits_1(tmp_path):
+    """(F2 axis 2, whole-branch review fix round) `blocked(why)` — the
+    writer's grammar FORBIDS a parenthetical on blocked, unlike the
+    renderer's `blocked(<why>)` tolerance. This test's RED is only
+    against a WEAKENED grammar: the current `_SET_STATUS_GRAMMAR`
+    already excludes it, so this assertion PASSES against current code
+    unchanged; it pins that a future loosened grammar cannot silently
+    accept the renderer's tolerant form on the writer side."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path, "--set-status", "T1=blocked(why)")
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert "'blocked(why)'" in result.stdout
+    assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
 
 
 def test_set_status_and_detail_are_mutually_exclusive(tmp_path):

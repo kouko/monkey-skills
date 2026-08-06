@@ -139,6 +139,12 @@ every task at plan time. A plan without `Status` fields (written
 before this default) behaves exactly as before — the ledger stays
 opt-in-by-presence for old plans.
 
+Every ledger flip routes through `python3 scripts/plan_card.py
+<plan-path> --set-status "T<N>=<status>"` when `scripts/plan_card.py`
+exists at the repo root — it rewrites only the task's `Status` line
+and performs no whole-plan validation; hand-edit only when the script
+is absent.
+
 #### `External surfaces` (v0.9.0+)
 
 When an atomic task touches a **non-stdlib external surface** the agent does not author, the plan MUST declare it. This is the plan-time half of the external-surface-grounding discipline (see `loom-code/skills/subagent-driven-development/standards/external-surface-grounding.md`); the review-time half is D7 in `code-quality-reviewer.md` + `code-reviewer.md`. The two halves form one defense-in-depth gate.

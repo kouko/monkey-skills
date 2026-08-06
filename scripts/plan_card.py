@@ -14,7 +14,7 @@ per N1's wrapped-schema shape); the body must carry at least one
 `## Task N — <name>` heading, and every task must carry a
 `- Status: <value>` bullet where <value> is one of:
 
-    done(<sha>) | claimed(<who>) | pending | blocked[(<why>)]
+    done(<sha>) | claimed(@<agent>) | pending | blocked[(<why>)]
 
 Output (stdout), field order fixed by N5:
 
@@ -49,7 +49,10 @@ Ledger writer (Task 1 of
 docs/loom/plans/2026-08-06-ledger-writer-and-plan-tooling-hardening.md):
 `--set-status "T<N>=<status>"` rewrites the task block's existing
 `- Status:` line in place, wherever it sits in the block, and prints
-the old line then the new line. The writer's status grammar is exactly
+the old line then the new line. The rewrite preserves the matched
+line's own markup — a bold `- **Status**:` line stays bold, a plain
+`- Status:` line stays plain; the writer never adds or strips bolding.
+The writer's status grammar is exactly
 the schema's four kinds — `pending` | `claimed(@<agent>)` |
 `done(<sha>)` | `blocked` — parenthetical REQUIRED for claimed/done,
 FORBIDDEN for pending/blocked (stricter than the renderer's
@@ -473,7 +476,8 @@ def set_status(text: str, task_number: int, status: str) -> tuple[str, str, str]
     line_break = text.find("\n", start)
     end = line_break if line_break != -1 else len(text)
     old_line = text[start:end]
-    new_line = f"- Status: {status}"
+    label = "- **Status**:" if old_line.startswith("- **Status**:") else "- Status:"
+    new_line = f"{label} {status}"
     return text[:start] + new_line + text[end:], old_line, new_line
 
 

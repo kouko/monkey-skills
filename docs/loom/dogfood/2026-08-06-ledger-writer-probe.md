@@ -33,5 +33,7 @@ does not mislead; the mechanical layer corrects.
 Every ledger flip after the writer's birth commit went through it:
 T1 done(fb6f552d) — the writer's own first flip — then T2
 done(383c314d), T3 done(a499cfce), T4 done(7ebbb754), and T5's own
-flip in the close-out. Each printed the old→new pair; zero hand
-edits, zero flip errata this arc (the previous arc had two).
+flip in the close-out. Each printed the old→new pair; zero
+hand-edited flips (the Stage line edits are hand edits by design —
+the writer only rewrites Status), zero flip errata through T5 (the
+previous arc had two).

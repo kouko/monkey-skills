@@ -42,15 +42,32 @@ it.
   `git commit -F /tmp/commit-msg.md`. The inline heredoc form is
   scanned and blocked.
 
-## S3 — Starting a new arc branch (dcg "main" string match)
+## S3 — Starting a new arc branch (dcg guard is operation-anchored, not phrase-anchored)
 
-**Why:** The dcg string-matches the literal "main" in Bash command
-strings, so branch-start commands that name `origin/main` trip the
-push-guard even though they never push.
+**Why:** The dcg's deny regexes are operation-anchored — `git push
+.*(main|master)` and `git merge .*(main|master)` — so only push/merge
+commands that name main/master are blocked; checkout/switch/pull to
+main are allowed by the guard's own comment. The natural
+"update main then branch" chain (`git checkout main && git merge
+--ff-only origin/main && git checkout -b <name>`) still dies
+mid-recipe, but on the **merge** step (observed: "Blocked: do not
+merge into/from main/master without PR"), not because "main" appears
+anywhere in the chain. A plain `git checkout -b <name> origin/main`
+is **NOT** blocked (probed 2026-08-06 — the branch was created and
+upstream was set to `origin/main`); it just sets upstream tracking to
+`origin/main`, which the sha recipe below avoids by pinning to an
+explicit, fetched sha instead.
 
-- Don't: `git merge --ff-only origin/main` or
-  `git checkout -b <name> origin/main` — both trip the push-guard's
-  string match on "main".
+- Don't: `git checkout main && git merge --ff-only origin/main &&
+  git checkout -b <name>`, or any standalone `git merge` naming
+  `main`/`master` — the merge step trips the guard (observed message
+  above).
+- Not blocked, but not the recommended form: `git checkout -b <name>
+  origin/main` succeeds and sets upstream tracking to `origin/main` —
+  an older belief that this trips the guard is a documented incident
+  in the memory store
+  (`docs/loom/memory/new-arc-branch-bases-on-origin-main-not-merged-tip.md`),
+  not the guard's current observed behavior.
 - Do: start a new arc branch with `git checkout -b <name>
   <main-tip-sha>`, resolving the sha from origin/main after a fetch
   (`git fetch origin`, then `git rev-parse origin/main`) and passing

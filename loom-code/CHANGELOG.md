@@ -38,10 +38,14 @@ Versioning: [Semantic Versioning](https://semver.org/).
   dependency level, never against a declared dependency. The
   inline-`Steps:` rejection is documented beside the field it guards.
 - **environment-gotchas gains §S3 — starting a new arc branch.** The
-  dcg string-matches the literal "main", so branch-start commands
-  naming `origin/main` trip the push-guard; the recipe is
-  `git checkout -b <name> <main-tip-sha>` with the sha resolved from
-  origin/main after a fetch.
+  dcg guard is operation-anchored, not phrase-anchored: only
+  `git push`/`git merge` commands naming main/master are blocked, so a
+  plain `git checkout -b <name> origin/main` is NOT blocked (probed
+  2026-08-06) — it just sets upstream tracking to `origin/main`. The
+  recipe is still `git checkout -b <name> <main-tip-sha>` with the sha
+  resolved from origin/main after a fetch, which avoids that tracking
+  and gives the freshness check an explicit, pinned sha to verify
+  against.
 
 ## [0.62.0] — 2026-08-06 — the cap runs its own last mile
 

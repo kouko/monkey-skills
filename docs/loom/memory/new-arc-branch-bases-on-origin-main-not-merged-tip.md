@@ -22,13 +22,18 @@ longer the arc, the later and more expensively it surfaces. The rebase is
 cheap when caught, but review verdicts minted before the rebase reviewed
 the wrong diff.
 
-**How to apply:** when opening a new arc branch, cut from origin/main
-after a fetch (`git fetch origin && git checkout -b <branch> origin/main`
-— note the repo guard blocks `checkout -b` FROM origin/main in one
-compound line with pushes; branch from a fetched, fast-forwarded local
-ref if the guard complains). If the worktree is parked on a merged
-branch, that convenience is the trap. At finishing, ALWAYS verify base
-freshness before dispatching the whole-branch reviewer:
+**How to apply:** when opening a new arc branch, cut from the fetched
+origin/main tip, not from a local possibly-squash-merged tip. The
+recommended form is `git fetch origin && git checkout -b <branch>
+<main-tip-sha>`, with `<main-tip-sha>` resolved via
+`git rev-parse origin/main` after the fetch — per
+`environment-gotchas.md` §S3, which records the guard's observed
+behavior: `git checkout -b <branch> origin/main` is not actually
+blocked, but the sha form still gives the freshness check below an
+explicit, pinned value to verify against instead of a moving ref. If
+the worktree is parked on a merged branch, that convenience is the
+trap. At finishing, ALWAYS verify base freshness before dispatching
+the whole-branch reviewer:
 `git log --oneline origin/main..HEAD | wc -l` must equal this arc's
 commit count, and `git diff origin/main HEAD --stat` must list only this
 arc's files; a mismatch → `git rebase --onto origin/main <old-base>`
