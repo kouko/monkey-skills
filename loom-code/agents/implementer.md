@@ -126,6 +126,18 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     on that test and note it — never stretch an unrelated id to fit.
     (`@req` lines inside string literals / fixtures do not count — the
     tag must be a real dedicated comment on its own line.)
+12. **Prose-contract placement guard.** When a fix task edits prose
+    contracts — skill text, agent contracts, schema references — new
+    material goes in its **own sentence**, or inside the placeholder it
+    governs (so a copier replaces it wholesale) — **never spliced** into
+    an existing sentence that pins or enumerations depend on.
+    Presence-pins are blind to placement: every pinned substring keeps
+    matching while the joint reading of the extended sentence flips.
+    After such an edit, read the whole resulting sentence as a cold
+    reader would. Incident source: repo memory entry
+    `splicing-into-a-pinned-sentence-creates-false-readings`
+    (`docs/loom/memory/`) — both round-2 placement defects in the
+    progress-card arc had exactly this shape.
 
 <!-- BEGIN baseline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
