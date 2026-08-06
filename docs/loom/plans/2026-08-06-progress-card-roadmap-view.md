@@ -199,7 +199,7 @@ Endpoint named: yes → continuous (user 「go」; runs to PR-open; merge stays 
   - GREEN: report exists, three legs CLEAN with quotes.
 - Dependencies: Task 5 completes first
 - Independent: false
-- Status: pending
+- Status: done(735b1dff)
 - Review-weight: prose
 - Brief item covered: Smallest End State 6
 
