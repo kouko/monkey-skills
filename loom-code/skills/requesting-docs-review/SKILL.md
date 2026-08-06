@@ -42,7 +42,7 @@ Owns the **docs arm** of whole-branch review. Dispatches **two `docs-reviewer` s
 
 **CONVERGENCE CONTRACT — four binding directives. Apply them at every dispatch and verdict moment; they override any impulse to run another round.**
 
-**1. Bounded cap: 2 review rounds, plus at most one automatic delta round.** PASS and PASS_WITH_NOTES are both passing verdicts and end the review. When round 2 ends with NEEDS_REVISION, read the auto-round conditions off round 2's structured verdict — they are counts and verdict shape only, never a judgment about what a finding means. All three must hold:
+**1. Bounded cap: 2 review rounds, plus at most one automatic delta round.** PASS and PASS_WITH_NOTES are both passing verdicts and end the review. When round 2 ends with NEEDS_REVISION, read conditions (a) and (b) off round 2's structured verdict — condition (c) is the orchestrator's own record of this branch — all three are counts and verdict shape only, never a judgment about what a finding means. All three must hold:
 
 - (a) every prior-round finding is fix-verified — zero surviving (`prior_findings_check` carries no `not-fixed` and no `resurfaced` status);
 - (b) the NEW findings carry zero 🔴 and at most 2 🟡;
