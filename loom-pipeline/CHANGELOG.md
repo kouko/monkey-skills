@@ -6,6 +6,15 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.14.0] — 2026-08-06
+
+### Changed
+
+- §(a2) Progress card switches to plain-ASCII marks (`[x]`/`[~]`/`[ ]`/`[!]`,
+  goal-line prefix `goal:`) — emoji rendered inconsistently across
+  terminals and fonts; the body renderer `scripts/plan_card.py` changed
+  in the same commit (the pinned same-commit duty for format changes).
+
 ## [0.13.0] — 2026-08-06
 
 ### Added

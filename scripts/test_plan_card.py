@@ -81,12 +81,12 @@ def test_happy_path_mixed_statuses_renders_the_exact_card(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == (
-        "🎯 Ship the widget pipeline end-to-end.\n"
-        "tasks: ✅1 ⏳1 ⬜1 🚫1\n"
-        "✅ T1 parser\n"
-        "⏳ T2 renderer\n"
-        "⬜ T3 cli wiring\n"
-        "🚫 T4 docs\n"
+        "goal: Ship the widget pipeline end-to-end.\n"
+        "tasks: 1 done / 1 claimed / 1 pending / 1 blocked\n"
+        "[x] T1 parser\n"
+        "[~] T2 renderer\n"
+        "[ ] T3 cli wiring\n"
+        "[!] T4 docs\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
     )
@@ -107,10 +107,10 @@ def test_all_done_plan_renders_next_close_out(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == (
-        "🎯 Ship the widget pipeline end-to-end.\n"
-        "tasks: ✅2 ⏳0 ⬜0 🚫0\n"
-        "✅ T1 parser\n"
-        "✅ T2 renderer\n"
+        "goal: Ship the widget pipeline end-to-end.\n"
+        "tasks: 2 done / 0 claimed / 0 pending / 0 blocked\n"
+        "[x] T1 parser\n"
+        "[x] T2 renderer\n"
         "stage: finishing\n"
         "next: close-out\n"
     )
@@ -129,7 +129,7 @@ def test_plan_missing_goal_header_exits_1_naming_goal(tmp_path):
     assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
     assert "Goal" in result.stdout
     assert result.stdout.count("\n") == 1, "message must be one line"
-    assert "🎯" not in result.stdout, "must never render a partial card"
+    assert "goal:" not in result.stdout, "must never render a partial card"
 
 
 def test_plan_missing_stage_header_exits_1_naming_stage(tmp_path):
@@ -145,7 +145,7 @@ def test_plan_missing_stage_header_exits_1_naming_stage(tmp_path):
     assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
     assert "Stage" in result.stdout
     assert result.stdout.count("\n") == 1, "message must be one line"
-    assert "🎯" not in result.stdout, "must never render a partial card"
+    assert "goal:" not in result.stdout, "must never render a partial card"
 
 
 def test_statusless_old_format_plan_exits_1_naming_status(tmp_path):
@@ -164,7 +164,7 @@ def test_statusless_old_format_plan_exits_1_naming_status(tmp_path):
     assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
     assert "Status" in result.stdout
     assert result.stdout.count("\n") == 1, "message must be one line"
-    assert "🎯" not in result.stdout, "must never render a partial card"
+    assert "goal:" not in result.stdout, "must never render a partial card"
 
 
 def test_plan_with_no_task_headings_exits_1_loudly(tmp_path):
@@ -178,7 +178,7 @@ def test_plan_with_no_task_headings_exits_1_loudly(tmp_path):
     assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
     assert "## Task" in result.stdout
     assert result.stdout.count("\n") == 1, "message must be one line"
-    assert "🎯" not in result.stdout, "must never render a partial card"
+    assert "goal:" not in result.stdout, "must never render a partial card"
 
 
 def test_bold_status_bullet_renders_same_card_as_plain_style(tmp_path):
@@ -206,10 +206,10 @@ def test_bold_status_bullet_renders_same_card_as_plain_style(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == (
-        "🎯 Ship the widget pipeline end-to-end.\n"
-        "tasks: ✅1 ⏳1 ⬜0 🚫0\n"
-        "✅ T1 parser\n"
-        "⏳ T2 renderer\n"
+        "goal: Ship the widget pipeline end-to-end.\n"
+        "tasks: 1 done / 1 claimed / 0 pending / 0 blocked\n"
+        "[x] T1 parser\n"
+        "[~] T2 renderer\n"
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
     )
@@ -228,4 +228,4 @@ def test_status_value_outside_the_four_kinds_exits_1_naming_it(tmp_path):
     assert result.returncode == 1, result.stdout + result.stderr
     assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
     assert "wip-maybe" in result.stdout
-    assert "🎯" not in result.stdout, "must never render a partial card"
+    assert "goal:" not in result.stdout, "must never render a partial card"

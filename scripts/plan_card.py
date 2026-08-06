@@ -18,8 +18,9 @@ per N1's wrapped-schema shape); the body must carry at least one
 
 Output (stdout), field order fixed by N5:
 
-    🎯 <goal>
-    tasks: ✅D ⏳C ⬜P 🚫B          (done/claimed/pending/blocked counts)
+    goal: <goal>
+    tasks: D done / C claimed / P pending / B blocked
+    [x]|[~]|[ ]|[!] T<N> <name>    (ASCII marks: done/claimed/pending/blocked)
     <mark> T<N> <name>              (one row per task, file order)
     stage: <stage>
     next: T<N> <name>               (first not-done task; or `close-out`)
@@ -48,7 +49,7 @@ _TASK_HEADING = re.compile(r"^## Task (\d+) — (.+?)\s*$", re.MULTILINE)
 _STATUS_BULLET = re.compile(r"^- \*{0,2}Status\*{0,2}:\s*(\S.*?)\s*$", re.MULTILINE)
 
 # Kind -> mark, in the N5-pinned counts-line order.
-_MARKS = {"done": "✅", "claimed": "⏳", "pending": "⬜", "blocked": "🚫"}
+_MARKS = {"done": "[x]", "claimed": "[~]", "pending": "[ ]", "blocked": "[!]"}
 
 
 def _header_value(header: str, key: str) -> str | None:
@@ -141,9 +142,9 @@ def build_card(text: str) -> str:
         counts[kind] += 1
 
     lines = [
-        f"🎯 {goal}",
+        f"goal: {goal}",
         "tasks: "
-        + " ".join(f"{mark}{counts[kind]}" for kind, mark in _MARKS.items()),
+        + " / ".join(f"{counts[kind]} {kind}" for kind in _MARKS),
     ]
     lines.extend(f"{_MARKS[kind]} T{number} {name}" for number, name, kind in tasks)
     lines.append(f"stage: {stage}")

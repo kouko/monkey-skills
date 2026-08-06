@@ -68,7 +68,8 @@ convention — same grounding logic as §(d)'s jargon-and-stakes gate.
 
 The plan-progress variant of the rollup card. Field order is fixed:
 **Goal** (one line, verbatim from the plan header), **task table**
-(✅ done / ⏳ claimed / ⬜ pending / 🚫 blocked, counts then rows),
+(`[x]` done / `[~]` claimed / `[ ]` pending / `[!]` blocked — plain-ASCII
+marks for cross-platform rendering; counts then rows),
 **Stage**, **next** (first not-done task, or close-out). The body is
 rendered mechanically by `scripts/plan_card.py` — the relayer adds
 only a one-line conversational frame in the live conversation
