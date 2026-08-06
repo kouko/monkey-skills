@@ -63,8 +63,10 @@ The file is modified only on that one line. `--set-status` and
 
 A plan missing `Goal:` or `Stage:`, having zero task headings,
 carrying a statusless / unrecognized-status task, a dependency cycle
-or phantom-task reference, or a `Steps:` count that mismatches the
-derived level count exits 1 with a one-line loud message naming the
+or phantom-task reference, an inline `Steps: ...` declaration (content
+after the colon instead of the bare-line-plus-numbered-titles block),
+or a `Steps:` count that mismatches the derived level count exits 1
+with a one-line loud message naming the
 offending field — a partial card is never rendered. Pure stdlib;
 `build_card()` / `build_detail()` are pure functions of the plan text
 (raise ValueError; the caller decides exit codes), mirroring
@@ -125,11 +127,20 @@ def _parse_steps(header: str) -> list[str] | None:
     """The header `Steps:` block's titles, in order — a bare `Steps:`
     line followed by indented numbered lines (`  1. <title>`). None when
     the block is absent; a declared-but-empty block comes back as []
-    (the level-count check then fails loud rather than guessing)."""
+    (the level-count check then fails loud rather than guessing). An
+    inline declaration (`Steps: a / b / c` — content after the colon)
+    raises ValueError naming the correct format, never a titleless card
+    (Task 2 of the 2026-08-06 ledger-writer-hardening plan)."""
     lines = header.splitlines()
     for i, line in enumerate(lines):
-        if line.rstrip() != "Steps:":
+        if not line.startswith("Steps:"):
             continue
+        if line[len("Steps:") :].strip():
+            raise ValueError(
+                f"inline 'Steps:' declaration ('{line.strip()}') — the "
+                "schema is a bare 'Steps:' line followed by indented "
+                "numbered titles ('  1. <title>')"
+            )
         titles = []
         for candidate in lines[i + 1 :]:
             match = _STEPS_TITLE_LINE.match(candidate)

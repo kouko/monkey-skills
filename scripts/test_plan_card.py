@@ -520,6 +520,67 @@ def test_steps_count_mismatch_exits_1_loudly(tmp_path):
     assert "goal:" not in result.stdout, "must never render a partial card"
 
 
+def test_inline_steps_declaration_fails_loud(tmp_path):
+    """Task 2 of
+    docs/loom/plans/2026-08-06-ledger-writer-and-plan-tooling-hardening.md:
+    a header `Steps:` line with content after the colon (the inline form
+    the 0.62.0 plan's author actually wrote) → exit 1 loud, with a
+    message naming the correct format — a bare `Steps:` line followed by
+    indented numbered titles. Before the fix, _parse_steps silently
+    ignored the line and rendered a titleless card at exit 0."""
+    text = (
+        "# Plan: widget fixture\n\n"
+        "Source brief: docs/loom/specs/fixture.md\n"
+        "Goal: Ship the widget pipeline end-to-end.\n"
+        "Stage: sdd:wave-1\n"
+        "Steps: 核心條款 / 鄰居同步 / 版本收束\n\n"
+        "## Task 1 — parser\n\n"
+        "- Description: fixture task body.\n"
+        "- Status: pending\n\n"
+        "## Notes\n\nFixture notes — never a task.\n"
+    )
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert "Steps" in result.stdout
+    assert "bare" in result.stdout, "message must name the bare-line form"
+    assert "numbered" in result.stdout, (
+        "message must name the indented numbered-titles form"
+    )
+    assert result.stdout.count("\n") == 1, "message must be one line"
+    assert "goal:" not in result.stdout, "must never render a partial card"
+
+
+def test_steps_mention_in_task_prose_does_not_trigger_inline_guard(tmp_path):
+    """Scope pin for the inline-Steps guard: a column-0 `Steps: ...` line
+    inside a section AFTER the first `## ` heading (task-block / prose
+    territory) is content, not a header declaration — the plan still
+    renders its flat card at exit 0. The guard is bounded to the
+    pre-first-`## ` header region, exactly like _parse_steps; a naive
+    whole-file scan would wrongly fail this plan."""
+    text = (
+        "# Plan: widget fixture\n\n"
+        "Source brief: docs/loom/specs/fixture.md\n"
+        "Goal: Ship the widget pipeline end-to-end.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — parser\n\n"
+        "- Description: fixture task body.\n"
+        "- Status: pending\n\n"
+        "## Notes\n\n"
+        "Steps: a / b / c — a prose mention, never a declaration.\n"
+    )
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "goal: Ship the widget pipeline end-to-end.\n" in result.stdout
+    assert "[ ] T1 parser\n" in result.stdout
+
+
 def test_dependency_cycle_exits_1_naming_the_cycle(tmp_path):
     """T1 needs T2 and T2 needs T1 → no topological order exists; exit 1
     loud naming the cycle's tasks, never a hang or a partial card."""
