@@ -4,7 +4,7 @@ Source brief: docs/loom/specs/2026-08-06-progress-cards-and-plan-ledger.md
 Goal: the user sees the full plan + live progress at defined moments
 without asking, and the orchestrator re-anchors on the goal at every
 card render (fill-from-file via plan_card.py).
-Stage: sdd:wave-2
+Stage: review:round-1
 Total tasks: 9
 Critical-path depth: 3 (≤5)
 Execution order: parallel-where-possible (Wave 1 = T1-T7, disjoint files; T8 after Wave 1; T9 after T8)
@@ -277,7 +277,7 @@ design; the arc runs to PR-open; merge stays with the user)
     verbatim supporting quotes.
 - Dependencies: Task 8 completes first
 - Independent: false
-- Status: pending
+- Status: done(7cbd0a60)
 - Review-weight: prose
 - Brief item covered: Smallest End State 10
 
