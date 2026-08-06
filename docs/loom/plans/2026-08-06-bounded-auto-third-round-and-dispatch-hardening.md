@@ -188,7 +188,7 @@ Steps:
   before Step 1 and why. Write the dogfood report to
   docs/loom/dogfood/2026-08-06-bounded-auto-round3-probe.md (Write
   under an alias then mv if the basename is refused).
-- Status: done(pending-sha)
+- Status: done(bb08a8f4)
 - Gloss: 用最弱的模型冷讀新條款做三個情境測驗——證明「機械可判」不是
   只有作者讀得懂，弱模型也判得對、不會自簽通過。
 - Module: docs/loom/dogfood
