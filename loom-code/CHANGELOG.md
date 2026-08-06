@@ -5,6 +5,44 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.63.0] — 2026-08-06 — the ledger gets its own pen
+
+### Added
+
+- **plan_card.py writes the ledger deterministically.**
+  `--set-status "T<N>=<status>"` rewrites a task's `- Status:` line in
+  place and prints the old line then the new line, leaving every other
+  byte of the plan untouched. The writer's status grammar is exactly
+  the schema's four kinds — `pending` | `claimed(@<agent>)` |
+  `done(<sha>)` | `blocked` — parenthetical REQUIRED for claimed/done,
+  FORBIDDEN for pending/blocked. It refuses loudly (exit 1, file
+  untouched) on an unknown task, a malformed status, a missing
+  `- Status:` line, or duplicate `- Status:` lines — the 0.62.0
+  duplicate-field incident class becomes a detected refusal instead of
+  a survivable ambiguity; the writer never repairs, never picks one.
+- **plan_card.py rejects inline `Steps:` declarations loudly.** A
+  `Steps:` line with content after the colon is an unrenderable plan
+  (exit 1 with a pointed message) — the bare `Steps:` line followed by
+  indented numbered titles is the only accepted form.
+
+### Changed
+
+- **SDD flips the ledger through the writer.**
+  subagent-driven-development's Progress-ledger sentence now directs
+  every ledger flip through `plan_card.py --set-status` when the
+  script exists at the repo root, hand-editing only when it is absent.
+  The SKILL.md word ceiling rises 3974 → 4015 as a deliberate
+  banked-headroom act for this duty sentence.
+- **plan-format names `Dependencies` the ordering authority.**
+  `Independent: true` governs concurrency only among tasks at the same
+  dependency level, never against a declared dependency. The
+  inline-`Steps:` rejection is documented beside the field it guards.
+- **environment-gotchas gains §S3 — starting a new arc branch.** The
+  dcg string-matches the literal "main", so branch-start commands
+  naming `origin/main` trip the push-guard; the recipe is
+  `git checkout -b <name> <main-tip-sha>` with the sha resolved from
+  origin/main after a fetch.
+
 ## [0.62.0] — 2026-08-06 — the cap runs its own last mile
 
 ### Changed
