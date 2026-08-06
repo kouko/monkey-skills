@@ -3,8 +3,9 @@
 `docs/loom/plans/2026-07-30-requesting-docs-review-standalone-skill.md`).
 
 SKILL.md is a prompt/contract artifact, not executable code: nothing
-importable observes whether the orchestrator actually caps the review
-loop at 2 rounds or hands round-1 findings to round 2 verbatim. This
+importable observes whether the orchestrator actually honors the
+bounded cap (2 rounds plus at most one mechanically-conditioned
+auto-delta round) or hands round-1 findings to round 2 verbatim. This
 file IS the instruction the orchestrator reads at dispatch, so its
 correctness condition is the PRESENCE of the load-bearing phrases that
 make the docs arm + convergence contract executable by that reader --
@@ -614,8 +615,10 @@ def test_auto_third_round_mechanical_conditions():
     assert "terminal rollup" in conv, (
         "the auto-round must be reported in the terminal rollup"
     )
-    assert "never silent" in conv, (
-        "the report duty must state the auto-round is never silent"
+    assert "rollup: visible, never silent" in conv, (
+        "the report duty must state the auto-round is visible in the"
+        " rollup and never silent -- the bare substring 'never silent'"
+        " false-greens on the fourth-round sentence's 'never silently'"
     )
     # non-qualifying round-2 shapes keep today's STOP-and-surface.
     assert "any other round-2 shape" in conv, (
