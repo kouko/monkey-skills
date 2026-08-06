@@ -7,10 +7,13 @@ freeze:
   1. the variant heading  — "### (a2) Progress card"
   2. the four field names in their fixed order:
      Goal / task table / Stage / next (bold anchors, within §(a2))
-  3. the localization rule sentence — the relayer adds only a one-line
-     conversational frame in the live conversation language, same
-     localized-content rule as the rollup card (whitespace-normalized;
-     the source wraps across lines)
+  3. the frame contract v2 clauses (N1, 2026-08-06 roadmap plan) —
+     the frame-language lead ("The relayer's frame, in the live
+     conversation language:"), the stop-reason opening for `[!]` rows,
+     the pipeline-station-narration ban, and the grounded-gloss clause
+     (whitespace-normalized; the source wraps across lines). N1
+     deleted the original one-line-frame localization sentence; its
+     pin was re-pointed, not dropped.
   4. positive-fact control — the "### (a) User-rollup card" heading
      must still be present (guards against a moved/emptied file
      passing the negative shape of these greps)
@@ -66,15 +69,51 @@ def test_progress_card_field_names_in_order():
 
 
 def test_progress_card_localization_rule():
-    """The relayer frames in the live conversation language — same
-    localized-content rule as the rollup card. Whitespace-normalized
-    because the sentence wraps across source lines."""
+    """The relayer's frame is written in the live conversation language.
+    N1 (2026-08-06 roadmap plan) deleted the sentence this pin froze
+    ("the relayer adds only a one-line conversational frame ... same
+    localized-content rule") — the pin is re-pointed at N1's
+    replacement clause. Whitespace-normalized because the sentence
+    wraps across source lines."""
     normalized = _normalized(_progress_section(_read(FAMILY_RELAY)))
     assert (
-        "the relayer adds only a one-line conversational frame in the "
-        "live conversation language, same localized-content rule as "
-        "the rollup card above" in normalized
-    ), "missing the §(a2) localization rule sentence"
+        "The relayer's frame, in the live conversation language:"
+        in normalized
+    ), "missing the §(a2) frame-language clause (frame contract v2, N1)"
+
+
+def test_progress_card_stop_reason_opening():
+    """Every `[!]` row's explanation OPENS with the stop reason —
+    needs your decision / waiting on an external condition (N1)."""
+    normalized = _normalized(_progress_section(_read(FAMILY_RELAY)))
+    assert "OPENS with the stop reason" in normalized, (
+        "missing the §(a2) stop-reason opening requirement for [!] rows"
+    )
+    assert '"needs your decision: …"' in normalized, (
+        "missing the needs-your-decision stop-reason form"
+    )
+    assert '"waiting on an external condition: …"' in normalized, (
+        "missing the external-condition stop-reason form"
+    )
+
+
+def test_progress_card_station_narration_ban():
+    """Pipeline-station narration (waves, reviewer arms, verdicts)
+    stays out of the frame unless a pending decision needs it (N1)."""
+    normalized = _normalized(_progress_section(_read(FAMILY_RELAY)))
+    assert (
+        "Pipeline-station narration (waves, reviewer arms, verdicts) "
+        "stays out of the frame" in normalized
+    ), "missing the §(a2) pipeline-station-narration ban"
+
+
+def test_progress_card_grounded_gloss():
+    """The `next:` gloss is derived from that task's own plan fields —
+    cite the source item, never invent (N1)."""
+    normalized = _normalized(_progress_section(_read(FAMILY_RELAY)))
+    assert "cite the source item, never invent" in normalized, (
+        "missing the §(a2) grounded-gloss clause for next:"
+    )
 
 
 def test_control_user_rollup_heading_still_present():

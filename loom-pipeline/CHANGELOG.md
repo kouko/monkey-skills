@@ -14,6 +14,12 @@ Versioning: [Semantic Versioning](https://semver.org/).
   goal-line prefix `goal:`) — emoji rendered inconsistently across
   terminals and fonts; the body renderer `scripts/plan_card.py` changed
   in the same commit (the pinned same-commit duty for format changes).
+- The card becomes a roadmap: `scripts/plan_card.py` derives topological
+  steps from `Dependencies:` and renders per-step separators, optional
+  `Steps:` titles and per-task `Gloss:` lines; §(a2)'s frame contract v2
+  replaces the one-line-frame rule — goal gloss, grounded `next:` gloss
+  (cite the source item, never invent), stop-reason opening on every
+  `[!]` row, pipeline-station narration banned from the frame.
 
 ## [0.13.0] — 2026-08-06
 
