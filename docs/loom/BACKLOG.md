@@ -72,6 +72,7 @@
 - [2026-08-04-a-rule-can-ship-into-a-skill-and-never-reach-its-agent-contract](backlog/2026-08-04-a-rule-can-ship-into-a-skill-and-never-reach-its-agent-contract.md) — a reviewer-behaviour rule written into a SKILL.md is not carried by the agent contract that executes it, and nothing mechanical pairs the two
 - [2026-08-04-directive-1-does-not-say-what-follows-a-failed-authorized-round](backlog/2026-08-04-directive-1-does-not-say-what-follows-a-failed-authorized-round.md) — the convergence contract defines the STOP after round 2 but not the state after a user-authorized round also ends NEEDS_REVISION
 - [2026-08-04-out-of-scope-deferrals-have-no-durable-record](backlog/2026-08-04-out-of-scope-deferrals-have-no-durable-record.md) — an out_of_scope finding is surfaced once in chat and persisted nowhere -- nothing re-injects it into a later round, so a deferred defect is silently dropped the moment nobody acts on the verdict in the same session
+- [2026-08-06-plan-card-cjk-aware-gloss-line-join](backlog/2026-08-06-plan-card-cjk-aware-gloss-line-join.md) — plan_card.py joins wrapped bullet lines with a space, which is correct for Latin text but inserts a stray mid-word space in CJK glosses (e.g. 大聲報錯教 你正確寫法) — the join should be width-aware (no space between CJK codepoints)
 
 ## PARKED
 - [2026-07-08-automate-research-toolkit-s-sync-primitives-sh](backlog/2026-07-08-automate-research-toolkit-s-sync-primitives-sh.md) — Automate research-toolkit's sync-primitives.sh

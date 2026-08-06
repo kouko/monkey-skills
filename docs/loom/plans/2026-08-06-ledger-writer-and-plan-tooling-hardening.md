@@ -5,7 +5,7 @@ Goal: ledger flips become a validated one-line script edit instead of
     bare string surgery, malformed Steps declarations fail loudly, and
     the branch-start recipe plus the Dependencies-over-Independent rule
     are written where the next session will read them
-Stage: review:round-1
+Stage: finishing
 Total tasks: 5
 Critical-path depth: 5 (≤5)
 Execution order: sequential (every level is a single task after the
