@@ -5,6 +5,25 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.60.0] — 2026-08-06 — the plan becomes the progress surface
+
+### Added
+
+- **Plans carry Goal/Stage headers and a default-on Status ledger.**
+  writing-plans emits `Status: pending` per task from birth; the
+  orchestrator updates `Stage:` at transitions. Old plans without the
+  fields behave as before.
+- **Progress cards at defined moments, rendered by script.**
+  `scripts/plan_card.py` projects the plan file into a fixed-field
+  card (goal / task table / stage / next; exit 1 on missing fields).
+  writing-plans relays it at plan PASS, SDD at every wave completion
+  and stage transition, finishing at entry and on every gate STOP —
+  fill-from-file by construction (the industry recitation pattern:
+  the card entering recent context re-anchors the orchestrator on the
+  goal), advisory-tier, no hook dependency, Codex-compatible. The SDD
+  and writing-plans pin ceilings rise deliberately to admit the duty
+  paragraphs (the banked-headroom contract honored, not bypassed).
+
 ## [0.59.0] — 2026-08-06 — the backlog grows verbs
 
 ### Added
