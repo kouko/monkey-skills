@@ -122,6 +122,15 @@ A qualifying amendment records a one-line skip note in the plan's `Notes` naming
 
 After PASS, before SDD handoff: run the kickoff briefing — read [`references/kickoff-briefing.md`](references/kickoff-briefing.md) and batch-brief the round's one-way-door decisions (expect 1-3) and foreseeable implementation forks; the rest route to the Decision Log.
 
+**Progress surface.** The plan carries `Goal:`, `Stage:`, and
+per-task `Status:` from birth (schema below). After the reviewer PASS
+is stamped, run `python3 scripts/plan_card.py <plan-path>` and relay
+its card in the conversation language — fire-and-continue, not a new
+pause, framed per `loom-pipeline/hooks/family-relay.md §(a2) Progress
+card` (file or script absent → render the four fields inline: goal,
+task table, stage, next). The card re-reads the plan file by
+construction; never compose it from memory.
+
 ## Output contract — the plan
 
 Schema in [`references/plan-format.md`](references/plan-format.md). Plan lives at `docs/loom/plans/<date>-<topic>.md` (sibling to the brief). Minimum structure:
@@ -130,6 +139,10 @@ Schema in [`references/plan-format.md`](references/plan-format.md). Plan lives a
 # Plan: <topic>
 
 Source brief: docs/loom/specs/<date>-<topic>.md
+Goal: <one sentence transcribed from the brief's Smallest End State at
+    plan time — frozen with the plan; never edited afterward>
+Stage: planning   ← at emit; enum planning | sdd:wave-N | review:round-N |
+    finishing — orchestrator updates it at each transition
 Total tasks: <N>   ← uncapped
 Critical-path depth: <D> (≤5)   ← longest Dependencies chain; this is the ceiling
 Execution order: sequential | parallel-where-possible
@@ -153,6 +166,8 @@ Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PA
 - Independent: <true | false>  # opt-in marker for dispatching-parallel-agents
 - Brief item covered: <quote or close paraphrase from brief's Smallest End State /
     Decision section — required; plan-document-reviewer Check 3 blocks on this field>
+- Status: pending   ← default-on ledger field; SDD maintains it —
+    semantics in `references/plan-format.md` §Progress ledger
 
 ## Task 2 — ...
 ```

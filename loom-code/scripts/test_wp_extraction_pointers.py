@@ -11,7 +11,9 @@ move; A4 (maintainer-facing fragments in §BLOCKED fallback, §Plan size
 ceiling, §Consuming) move to references/design-evidence.md (author-facing
 header) while the rules they qualify, and the 5-step process / anti-pattern
 paragraph / detection-cascade rule sentences, stay inline verbatim. Word
-ceiling drops to <=3900. §Amending a PASS plan (MUST NOT MOVE, including
+ceiling <=4023 — raised deliberately from 3900 by the 2026-08-06
+progress-cards-and-plan-ledger arc to admit the Progress-surface duty
+paragraph + Goal/Stage/Status schema lines (new count 4003 + 20). §Amending a PASS plan (MUST NOT MOVE, including
 its exactly-3-item closed list — pinned separately by
 test_post_pass_amendment_gate.py) and the splitting framework are
 untouched anti-vacuous survivors.
@@ -149,8 +151,47 @@ def test_plan_size_ceiling_core_rule_stays_inline():
     assert "Route back to brainstorming" in text
 
 
+# --- (g) progress surface — emit duty + plan-PASS card (2026-08-06 arc) -----
+
+def test_progress_surface_lead_phrase_present():
+    assert "**Progress surface.**" in _skill_text()
+
+
+def test_plan_card_command_string_present():
+    assert "python3 scripts/plan_card.py" in _skill_text()
+
+
+def test_fire_and_continue_clause_present():
+    assert "fire-and-continue, not a new pause" in _norm(_skill_text())
+
+
+def test_family_relay_progress_card_pointer_present():
+    assert (
+        "loom-pipeline/hooks/family-relay.md §(a2) Progress card"
+        in _norm(_skill_text())
+    )
+
+
+def test_inline_fallback_field_list_present():
+    assert (
+        "render the four fields inline: goal, task table, stage, next"
+        in _norm(_skill_text())
+    )
+
+
+def test_minimal_structure_block_carries_progress_schema_lines():
+    text = _skill_text()
+    assert "Goal: <one sentence transcribed from the brief" in _norm(text)
+    assert "Stage: planning" in text
+    assert "- Status: pending" in text
+
+
 # --- (f) word cap ------------------------------------------------------------
 
-def test_word_count_at_most_3900():
+def test_word_count_at_most_4023():
     word_count = len(_skill_text().split())
-    assert word_count <= 3900, f"SKILL.md is {word_count} words, over the 3900 cap"
+    assert word_count <= 4023, (
+        f"SKILL.md is {word_count} words, over the 4023 cap (raised "
+        "deliberately from 3900 by the 2026-08-06 "
+        "progress-cards-and-plan-ledger arc)"
+    )
