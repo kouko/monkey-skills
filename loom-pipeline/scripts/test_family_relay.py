@@ -114,18 +114,22 @@ def test_sdd_pointer():
     Status handling seam's wording — it had wrongly called the
     progress card a "rollup card" — and, instead of re-duplicating
     POINTER_PHRASE there, made it cross-reference the '### ③ How to
-    phrase' seam's own Delivery form paragraph ("§Delivery form
-    above"), which already carries POINTER_PHRASE. No template body is
-    copied in either seam either way.
+    phrase' seam's own Delivery form paragraph. Fix round 2 (same day)
+    reworded that cross-reference from the pseudo-heading "§Delivery
+    form above" to "the **Delivery form** paragraph above" (there is no
+    actual '§Delivery form' heading in the file), which still carries
+    POINTER_PHRASE. No template body is copied in either seam either
+    way.
     """
     text = _read(SDD_SKILL)
     assert text.count(POINTER_PHRASE) >= 1, (
         "expected the pointer phrase at least once, in the ③ seam's "
         "Delivery form paragraph"
     )
-    assert "§Delivery form above" in text, (
+    assert "the **Delivery form** paragraph above" in text, (
         "expected the Status handling seam to cross-reference the "
-        "Delivery form paragraph instead of duplicating the pointer"
+        "Delivery form paragraph (no pseudo-§ heading) instead of "
+        "duplicating the pointer"
     )
 
 

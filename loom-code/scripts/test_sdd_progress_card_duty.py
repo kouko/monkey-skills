@@ -7,10 +7,15 @@ the plan's pinned text N3: every per-wave status report, stage
 transition, and checkpoint sign-off renders the progress card first
 (`python3 scripts/plan_card.py <plan-path>`), the `Stage:` header is
 updated in the same commit as that wave's ledger writes, and the
-paragraph carries BOTH family-relay pointers — `§Family relay
-discipline` (so loom-pipeline/scripts/test_family_relay.py's
-POINTER_PHRASE count >= 2 survives) and the progress-card variant
-`§(a2) Progress card` — plus the inline-fallback field list.
+paragraph carries the family-relay pointer `§Family relay
+discipline` (present once, per loom-pipeline/scripts/test_family_relay.py's
+POINTER_PHRASE) and the progress-card variant `§(a2) Progress card`,
+plus the inline-fallback field list. Fix round 2 (same day) removed the
+second narration seam's duplicate of POINTER_PHRASE — the Status
+handling seam now cross-references this Delivery-form paragraph by the
+literal "the **Delivery form** paragraph above" instead, which is what
+test_family_relay.py::test_sdd_pointer pins (see that test's docstring
+for the rationale).
 
 Assertions are whitespace-normalized (encoding="utf-8"). The
 positive-fact control pins the adjacent Worked-example sentence that

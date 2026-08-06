@@ -168,7 +168,7 @@ The orchestrator never silently dismisses a `BLOCKED` — even if the unblock st
 
 Before surfacing a `BLOCKED` that hinges on a semantics or convention dispute (not a missing dependency, not broken test infra) → read [`references/research-escalation.md`](references/research-escalation.md) and run its triage FIRST, same as the 2nd-round trigger above.
 
-Whatever the user sees at this seam — a wave sign-off, a `DONE_WITH_CONCERNS` summary — is the progress card per §Delivery form above (family-relay `§(a2) Progress card`), in the live conversation language; this table's states are internal routing, not user-facing copy.
+Whatever the user sees at this seam — a wave sign-off, a `DONE_WITH_CONCERNS` summary — is the progress card per the **Delivery form** paragraph above (family-relay `§(a2) Progress card`), in the live conversation language; this table's states are internal routing, not user-facing copy.
 
 ## Prompt templates
 

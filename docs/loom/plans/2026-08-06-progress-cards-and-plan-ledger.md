@@ -479,3 +479,10 @@ closing, or our next Codex-side live re-probe, whichever first.
   into two commits and the retry inherited the message; content
   correct, messages collapse at squash-merge; recorded for the log's
   honesty.
+- 2026-08-06 (round-2 whole-branch): the round-2 plan-review entry
+  above ('N3 keeps BOTH pointers so the ≥2 invariant survives') was
+  superseded by the review fix commit — SDD:171 now routes via the
+  Delivery-form cross-reference, and test_family_relay.py's invariant
+  deliberately moved to ≥1 + the cross-reference literal (rationale in
+  that test's docstring); recorded so the dated entries read in
+  sequence.

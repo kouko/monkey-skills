@@ -107,7 +107,7 @@ Vocabulary (exactly these four):
 
 | Value | Meaning | Set by SDD when |
 |---|---|---|
-| `pending` | not started (or simply omitted) | — (default / omitted) |
+| `pending` | not started (omission = old-plan opt-in only; new plans write it) | — |
 | `claimed(@<agent>)` | an agent is working it; `<agent>` is the worktree branch name (unique per agent) | the implementer is dispatched |
 | `done(<sha>)` | resolved + committed; `<sha>` is the task's commit | reviewers PASS and the task is committed |
 | `blocked` | stuck (NEEDS_CONTEXT / BLOCKED / 3-round cap) | the task cannot proceed |
@@ -254,6 +254,8 @@ For a brief at `docs/loom/specs/2026-05-16-csv-export.md` whose Smallest End Sta
 # Plan: CSV export query param
 
 **Source brief**: docs/loom/specs/2026-05-16-csv-export.md
+Goal: users can export the orders list as CSV with the same filters the list view applies
+Stage: planning
 **Total tasks**: 3
 **Critical-path depth**: 2 (≤5 ✓)
 **Execution order**: sequential
@@ -273,6 +275,7 @@ For a brief at `docs/loom/specs/2026-05-16-csv-export.md` whose Smallest End Sta
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: "minimum shippable change: `?format=csv` query param to existing report URL (no UI work)"
+- **Status**: pending
 
 ## Task 2 — Implement CSV renderer for report payload
 
@@ -288,6 +291,7 @@ For a brief at `docs/loom/specs/2026-05-16-csv-export.md` whose Smallest End Sta
 - **Dependencies**: none (parallel with Task 1)
 - **Independent**: true
 - **Brief item covered**: "minimum shippable change: CSV output that downstream pipeline can ingest"
+- **Status**: pending
 
 ## Task 3 — Wire renderer into handler + set Content-Type
 
@@ -303,6 +307,7 @@ For a brief at `docs/loom/specs/2026-05-16-csv-export.md` whose Smallest End Sta
 - **Dependencies**: Tasks 1, 2 complete first
 - **Independent**: false  # touches files Task 1 also touches; must run after Task 1
 - **Brief item covered**: "minimum shippable change: end-to-end CSV download path"
+- **Status**: pending
 
 ## Notes
 
@@ -317,6 +322,8 @@ A high `Total tasks` count is **not** a discovery failure when the tasks fan out
 # Plan: backfill renderer module docstrings
 
 **Source brief**: docs/loom/specs/2026-05-20-renderer-docstrings.md
+Goal: every renderer file carries a one-line module docstring so the lint gate stops flagging them
+Stage: planning
 **Total tasks**: 8
 **Critical-path depth**: 2 (≤5 ✓)
 **Execution order**: parallel-where-possible

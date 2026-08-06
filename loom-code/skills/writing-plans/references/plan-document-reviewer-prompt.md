@@ -30,7 +30,7 @@ You **must** load all three via the Read tool before producing a verdict.
 
 | # | Check | Failure → NEEDS_REVISION |
 |---|---|---|
-| 1 | Plan has top-level header with `Source brief`, `Goal`, `Stage`, `Total tasks`, `Execution order`, `Plan-document-reviewer verdict` fields | Any field missing |
+| 1 | Plan has top-level header with `Source brief`, `Goal`, `Stage`, `Critical-path depth`, `Total tasks`, `Execution order`, `Plan-document-reviewer verdict` fields | Any field missing |
 | 2 | **Critical-path DEPTH ≤ 5** — the longest chain of tasks linked by `Dependencies` (N independent same-level tasks count as ONE level, not N). A wide-but-shallow plan with >5 total tasks but depth ≤5 PASSES. | Critical-path depth >5 (writing-plans should have split into sequential briefs / routed back to brainstorming) |
 | 3 | Each task has all required fields (Description, Module, Context paths, Acceptance.RED, Acceptance.GREEN, Dependencies, Brief item covered). The `Brief item covered` field is satisfied by EITHER referent kind: (a) a brief item, OR (b) when the plan consumes a loom-spec change-folder, a stable join key `<change-id> / Requirement: <name> / Scenario: <name>` (R5). Field-PRESENCE is the requirement — accept the spec join-key referent as valid provenance, do not require a brief item specifically. | Any required field missing or empty |
 | 4 | Each task's `Module` field names exactly ONE module / file path | Task lists 2+ modules |
