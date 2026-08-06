@@ -138,25 +138,27 @@ def test_design_evidence_pointer_present_in_skill():
 
 
 def test_word_ceiling():
-    """The plan's target ceiling is <=4100 (Task 3 acceptance). Every
-    fragment matching Partition C's three named classes (citation
-    tails, worked-example asides, measurement archaeology) in the
-    convergence contract, Step 3, the intro, Red Flags row 1, and the
-    Aggregation rule has been moved (see MOVED_FRAGMENTS above); no
-    further reduction is reachable without touching a rule sentence,
-    which the brief forbids ("Any wording change to rules that stay"
-    is out of scope). The achieved result (4490 -> ~4119) falls just
-    short of 4100 -- an honest gap, not a shortfall: the brief's own
-    Out of scope section already anticipated exactly this outcome
-    ("The higher-risk trim tier for requesting-docs-review (~+120w) --
-    deliberately declined; revisit only if a future arc actually needs
-    the room"). This ceiling is calibrated to the actually-achieved,
-    safe-tier-only result, with a small buffer."""
+    """Ceiling history — every raise is a deliberate, changelog-noted
+    act, never drift:
+
+    - The extraction batch (Partition C, 2026-08-05) moved every
+      safe-tier fragment out (see MOVED_FRAGMENTS above): 4490 ->
+      ~4119, ceiling calibrated to 4130 (the plan's <=4100 target was
+      honestly missed; the brief's Out-of-scope section anticipated
+      exactly that, declining the higher-risk trim tier).
+    - loom-code 0.62.0 (bounded auto-third-round, Task 1 of
+      docs/loom/plans/2026-08-06-bounded-auto-third-round-and-dispatch-hardening.md)
+      amended Directive 1 and every cap-stating site: measured 4353,
+      ceiling raised to 4370 (margin 17, <=20 per the banked-headroom
+      contract; CHANGELOG-noted in the 0.62.0 entry).
+
+    No further prose may ride in without either trimming elsewhere or
+    another deliberate, changelog-noted raise."""
     words = _skill_text().split()
-    assert len(words) <= 4130, (
-        f"SKILL.md is {len(words)} words -- exceeds even the "
-        "safe-tier-calibrated ceiling; a splice was reverted or "
-        "skipped without accounting for it"
+    assert len(words) <= 4370, (
+        f"SKILL.md is {len(words)} words -- exceeds the deliberately "
+        "raised 0.62.0 ceiling (4353 measured + 17 margin); trim, or "
+        "raise the ceiling as a deliberate changelog-noted act"
     )
 
 
