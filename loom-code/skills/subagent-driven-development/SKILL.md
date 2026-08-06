@@ -51,7 +51,18 @@ When you ask a technical decision (a bug-fix approach, a design choice, error ha
 
 **Worked example — the built-in `/recap` style is the target.** Full ✅/❌ pair (the calibration target for every question and hand-off the orchestrator surfaces below): [`references/dispatch-hygiene-notes.md`](references/dispatch-hygiene-notes.md) §Worked example.
 
-**Delivery form.** Every per-wave status report and checkpoint sign-off surfaced under this gate is delivered as the user-rollup card, filled in the live conversation language — see `loom-pipeline/hooks/family-relay.md §Family relay discipline`. Never copy the card template body here; point at it. Internal machine traffic (verdict tokens, wave labels) stays precise below the card.
+**Delivery form.** Every per-wave status report, stage transition, and
+checkpoint sign-off renders the progress card first: run
+`python3 scripts/plan_card.py <plan-path>` and relay its output in the
+live conversation language, framed per
+`loom-pipeline/hooks/family-relay.md §Family relay discipline` —
+progress-card variant `§(a2) Progress card` (file or script absent →
+render the four fields inline: goal, task table, stage, next —
+nothing is dropped). Update the plan's `Stage:` header
+in the same commit as that wave's ledger writes. The card re-reads the
+plan file by construction — never compose it from memory. **Never copy
+the card template body here; point at it.** Internal machine traffic
+(verdict tokens, wave labels) stays precise below the card.
 
 ## When to use
 

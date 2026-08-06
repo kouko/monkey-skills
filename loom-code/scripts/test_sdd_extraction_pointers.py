@@ -78,7 +78,7 @@ ENVIRONMENT_GOTCHAS = (
     / "environment-gotchas.md"
 )
 
-WORD_CEILING = 3900
+WORD_CEILING = 3974
 
 # --- distinctive phrases, whitespace-normalized ---------------------------
 
@@ -321,7 +321,10 @@ def test_command_surface_accretion_implementer_links_resolve_one_level_deeper():
 def test_skill_md_word_count_within_ceiling():
     word_count = len(_read(SDD_SKILL).split())
     assert word_count <= WORD_CEILING, (
-        f"SKILL.md is {word_count} words, over the {WORD_CEILING} ceiling"
+        f"SKILL.md is {word_count} words, over the {WORD_CEILING} ceiling "
+        "(raised deliberately 3900 -> 3974 by the 2026-08-06 "
+        "progress-cards-and-plan-ledger arc to admit the N3 "
+        "progress-card Delivery-form paragraph)"
     )
 
 
