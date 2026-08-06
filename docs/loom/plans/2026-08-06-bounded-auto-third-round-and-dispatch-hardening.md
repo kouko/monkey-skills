@@ -5,7 +5,7 @@ Goal: the docs-review cap runs one mechanically-gated scoped third round
     on its own (reported, once per branch, hard-stop after), fix
     dispatches carry the placement guard, and finishing's conductor
     reads the current skill text before executing
-Stage: sdd:wave-3
+Stage: sdd:wave-4
 Total tasks: 6
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
@@ -159,7 +159,7 @@ Steps:
   (:200), its docstring (:208-209), the plugin.json assert (:219-220),
   AND the CHANGELOG assert (:224-225); all four sites rewrite, so the
   GREEN "CHANGELOG entry present" has a real oracle.
-- Status: pending
+- Status: done(eecf5252)
 - Gloss: 版本升到 0.62.0 並讓版本 pin 同步——沒有 bump 的內容改動在
   裝置端 update 時會靜默拿不到。
 - Module: loom-code (manifests + CHANGELOG + pin)
