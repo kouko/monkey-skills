@@ -497,15 +497,18 @@ def test_per_dimension_score_union_recompute_mutation_guard():
 
 def test_convergence_directives():
     """The four convergence directives sit at the dispatch moment (the
-    window extraction pins placement): 2-round hard cap with
-    STOP-and-surface + user-authorized breach; round-1-findings-verbatim
-    handoff with fix-verification before anything new; re-litigation
-    ban; oscillation stop; appended-corrections rule."""
+    window extraction pins placement): bounded cap (2 rounds plus at
+    most one mechanically-conditioned auto-delta round) with
+    STOP-and-surface + user-authorized breach beyond it;
+    round-1-findings-verbatim handoff with fix-verification before
+    anything new; re-litigation ban; oscillation stop;
+    appended-corrections rule."""
     low = _norm(_convergence_window(_text())).lower()
 
-    # (a) hard cap 2 rounds -> STOP and surface; breach only by user.
+    # (a) bounded cap -> STOP and surface on non-qualifying shapes;
+    # breach beyond the auto-delta round only by user.
     assert "2 review rounds" in low, (
-        "directive (a) must state the hard cap: 2 review rounds"
+        "directive (a) must state the base cap: 2 review rounds"
     )
     assert "ends with needs_revision" in low, (
         "directive (a) must state the cap-STOP trigger explicitly: round 2 "
@@ -525,9 +528,11 @@ def test_convergence_directives():
         "ambiguous on whether PASS_WITH_NOTES counts; must name "
         "NEEDS_REVISION explicitly"
     )
-    assert "third round" in low and "explicit user authorization" in low, (
-        "a third round runs ONLY on explicit user authorization "
-        "(critics' user-authorized breach precedent)"
+    assert "fourth round" in low and "explicit user authorization" in low, (
+        "a fourth round runs ONLY on explicit user authorization -- the "
+        "0.62.0 bounded auto-third-round moved the authorization "
+        "boundary one notch past the auto-delta round; it did not "
+        "remove it"
     )
 
     # (b) round-2 handoff: round-1 findings verbatim, verify first.
@@ -558,6 +563,80 @@ def test_convergence_directives():
     )
     assert "never in-place rewrites" in low, (
         "directive (d) must forbid in-place rewrites"
+    )
+
+
+def test_auto_third_round_mechanical_conditions():
+    """Directive 1's bounded auto-third-round (0.62.0, brief
+    docs/loom/specs/2026-08-06-bounded-auto-third-round-and-dispatch-hardening.md
+    item 1): a round-2 NEEDS_REVISION whose STRUCTURED VERDICT shows
+    (a) zero surviving prior findings (all fix-verified), (b) NEW
+    findings with zero 🔴 and at most 2 🟡, and (c) no auto-third-round
+    yet on this branch, auto-runs ONE delta-scoped round 3 (scope = the
+    NEW findings' fixes only) and REPORTS the auto-round in the
+    terminal rollup — visible, never silent. Any other round-2 shape
+    STOPs and surfaces (test_convergence_directives pins that). A
+    round-3 verdict other than PASS / PASS_WITH_NOTES hard-stops; a
+    fourth round never runs without explicit user authorization.
+    Conditions are count/verdict-shape only — the brief's Decisions
+    section rejected any 'non-semantic finding' judgment wording."""
+    conv = _norm(_convergence_window(_text())).lower()
+
+    # conditions read mechanically off round 2's structured verdict.
+    assert "structured verdict" in conv, (
+        "directive 1 must source the auto-round conditions from round "
+        "2's structured verdict -- mechanical, not a judgment call"
+    )
+    # (a) zero surviving prior findings, all fix-verified.
+    assert "fix-verified" in conv and "zero surviving" in conv, (
+        "condition (a): every prior-round finding fix-verified -- zero "
+        "surviving"
+    )
+    # (b) NEW findings: zero 🔴 and at most 2 🟡.
+    assert "zero 🔴" in conv and "at most 2 🟡" in conv, (
+        "condition (b): NEW findings carry zero 🔴 and at most 2 🟡 -- "
+        "count/verdict-shape only, no 'minor'/'non-semantic' judgment "
+        "wording"
+    )
+    # (c) once per branch, ever.
+    assert "once per branch" in conv, (
+        "condition (c): the auto-round runs at most once per branch"
+    )
+    # shape: ONE delta-scoped auto round over the NEW findings' fixes.
+    assert "delta-scoped round 3 automatically" in conv, (
+        "when all three conditions hold the orchestrator runs ONE "
+        "delta-scoped round 3 automatically"
+    )
+    assert "new findings' fixes only" in conv, (
+        "the auto-round's scope is the NEW findings' fixes only"
+    )
+    # report duty: visible in the terminal rollup, never silent.
+    assert "terminal rollup" in conv, (
+        "the auto-round must be reported in the terminal rollup"
+    )
+    assert "never silent" in conv, (
+        "the report duty must state the auto-round is never silent"
+    )
+    # non-qualifying round-2 shapes keep today's STOP-and-surface.
+    assert "any other round-2 shape" in conv, (
+        "any other round-2 shape must STOP and surface, unchanged"
+    )
+    # round-3 non-passing verdict -> hard stop; round 4 is user-only.
+    assert (
+        "other than pass or pass_with_notes" in conv
+        and "hard stop" in conv
+    ), (
+        "a round-3 verdict other than PASS or PASS_WITH_NOTES must "
+        "hard STOP and surface"
+    )
+    assert "fourth round" in conv and "explicit user authorization" in conv, (
+        "a fourth round never runs without explicit user authorization"
+    )
+    # judgment wording stays out: the discriminator is count/shape only.
+    assert "non-semantic" not in conv, (
+        "the conditions must not introduce 'non-semantic' judgment "
+        "wording -- rejected at kickoff (weak models self-certify past "
+        "judgment prose)"
     )
 
 
@@ -842,7 +921,7 @@ def test_round_accounting_is_session_scoped():
     retract the false claim that round accounting persists across a
     session boundary. Nothing restores an orchestrator's round count
     when a new session resumes review -- the count restarts, so the
-    2-round cap guards each session independently, weaker than
+    bounded cap guards each session independently, weaker than
     continuous accounting would be. Directive 2's surrounding prose
     already covers the ledger/sha carrier gap (D2, Task 4); this bullet
     stays scoped to the round-COUNT truth, not a restatement of that
