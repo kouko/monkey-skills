@@ -19,13 +19,15 @@ Versioning: [Semantic Versioning](https://semver.org/).
   self-certify past. Any other shape still STOPs and surfaces; a
   round-3 verdict short of PASS/PASS_WITH_NOTES hard-stops, and round
   4 never runs without explicit user authorization. The rdr word
-  ceiling rises 4130 → 4370 as a deliberate banked-headroom act to
-  admit the new directive text.
+  ceiling rises 4130 → 4430 across two deliberate banked-headroom acts
+  in this line: 4370 for the new directive text, then 4430 for the
+  docs-review round-1 fix round's condition-(c) fail-closed default
+  and frontmatter anchor.
 - **Fix dispatches carry the placement guard.** agents/implementer.md
-  rule 12: when a fix task edits prose contracts, new material goes in
-  its own sentence or inside the placeholder it governs — never
-  spliced into an existing sentence that pins or enumerations depend
-  on (incident source: memory entry
+  role-contract rule 12: when a fix task edits prose contracts, new
+  material goes in its own sentence or inside the placeholder it
+  governs — never spliced into an existing sentence that pins or
+  enumerations depend on (incident source: memory entry
   splicing-into-a-pinned-sentence-creates-false-readings).
 - **Finishing follows the new cap and reads before it runs.** The
   Step-3 docs-arm cap-STOP bullet routes on rdr's bounded contract by

@@ -3,9 +3,9 @@ name: requesting-docs-review
 description: |
   Whole-artifact review of every changed `.md` file on a docs-heavy branch —
   five prose dimensions, instruction/evidence blocking class, bounded
-  convergence cap: 2 rounds plus at most one mechanically-conditioned
-  auto-delta round (any other round-2 NEEDS_REVISION shape → STOP and
-  surface to the user).
+  convergence cap: 2 rounds plus at most one qualifying-shape
+  mechanically-conditioned auto-delta round (any other round-2
+  NEEDS_REVISION shape → STOP and surface to the user).
   Fires BEFORE push/merge when every changed file is `.md`; also the docs
   arm of requesting-code-review's routing. Use for 'review my docs' / 'are
   these docs ready to merge?'.
@@ -35,7 +35,7 @@ Owns the **docs arm** of whole-branch review. Dispatches **two `docs-reviewer` s
 | Exempt category | What qualifies | What does NOT qualify |
 |---|---|---|
 | **Mechanical doc edits** | Typo fix, version bump, generated/sync output regen | Authored prose of any length — a 3-line instruction edit can misdirect an executor; it routes here |
-| **Already-reviewed branch** | A prior invocation this session PASSed and nothing changed since | "I tweaked a paragraph after review" — re-review (round accounting is session-scoped: the count restarts at a session boundary, so the bounded cap guards each session independently, weaker than continuous accounting) |
+| **Already-reviewed branch** | A prior invocation this session PASSed and nothing changed since | "I tweaked a paragraph after review" — re-review (round accounting is session-scoped: the count restarts at a session boundary, so the bounded cap guards each session independently, weaker than continuous accounting). Directive 1's condition (c) does not share that restart — it fails closed instead |
 | **Explicit user override** | User literally says "skip docs review" AND the diff matches the mechanical category | "It's just docs" — that framing is the reason this skill exists |
 
 ## Process
@@ -47,6 +47,8 @@ Owns the **docs arm** of whole-branch review. Dispatches **two `docs-reviewer` s
 - (a) every prior-round finding is fix-verified — zero surviving (`prior_findings_check` carries no `not-fixed` and no `resurfaced` status);
 - (b) the NEW findings carry zero 🔴 and at most 2 🟡;
 - (c) no auto-third-round has yet run on this branch — it runs once per branch.
+
+**Condition (c) fails closed when undeterminable.** When the session cannot tell whether an auto-third-round already ran on this branch — e.g. a resumed or fresh session with no record of the branch's review rounds — condition (c) counts as NOT met: STOP and surface, never guess.
 
 When all three hold, run ONE delta-scoped round 3 automatically — its scope is the NEW findings' fixes only — and REPORT the auto-round in the terminal rollup: visible, never silent. Any other round-2 shape → STOP and surface the surviving findings to the user. Hand them the decision. A round-3 verdict other than PASS or PASS_WITH_NOTES → hard STOP and surface. A fourth round runs ONLY on explicit user authorization — never silently.
 

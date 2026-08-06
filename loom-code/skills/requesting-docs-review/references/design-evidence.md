@@ -6,15 +6,15 @@ This file is author-facing: it exists for maintainers reviewing or redesigning t
 
 ## What this skill does — intro audit citation
 
-The rule stays inline in SKILL.md ("this skill therefore also carries what the code arm never needed: a convergence contract with a hard 2-round cap"). Its evidence tail: the recorded pathology this contract exists to end is a 9-round non-converging docs-review loop in which 6 of 9 rounds shipped a defect injected by the previous round's own remediation (`docs/loom/audits/2026-07-28-doc-branch-review-loop-audit.md`).
+The rule stays inline in SKILL.md ("this skill therefore also carries what the code arm never needed: a convergence contract with a bounded cap — 2 rounds plus at most one mechanically-conditioned auto-delta round"). Its evidence tail: the recorded pathology this contract exists to end is a 9-round non-converging docs-review loop in which 6 of 9 rounds shipped a defect injected by the previous round's own remediation (`docs/loom/audits/2026-07-28-doc-branch-review-loop-audit.md`).
 
 ## Directive 1 (a) — pre-scoping historical note
 
 The rule stays inline ("the default recommendation... That cost drop is what makes it the default."). Supporting narrative: before scoping existed, a third round meant re-reviewing everything, and "don't authorize lightly" was the right posture.
 
-## Directive 1 — third-round authorization precedent
+## Directive 1 — beyond-cap authorization precedent
 
-The rule stays inline ("A third round runs ONLY on explicit user authorization — never silently."). Precedent it draws on: the critics' user-authorized breach precedent.
+The rule stays inline ("A fourth round runs ONLY on explicit user authorization — never silently."). Precedent it draws on: the critics' user-authorized breach precedent.
 
 ## Directive 1 (b) — fix-round risk citation
 

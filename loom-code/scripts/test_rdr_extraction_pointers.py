@@ -151,13 +151,19 @@ def test_word_ceiling():
       amended Directive 1 and every cap-stating site: measured 4353,
       ceiling raised to 4370 (margin 17, <=20 per the banked-headroom
       contract; CHANGELOG-noted in the 0.62.0 entry).
+    - Docs-review round-1 fix round (same 0.62.0 line): condition (c)'s
+      fail-closed default (Directive 1 + the already-reviewed-branch
+      bullet) and the frontmatter description's anchored-"other" fix
+      added prose: measured 4414, ceiling raised to 4430 (margin 16,
+      <=20 per the banked-headroom contract; CHANGELOG-noted in the
+      0.62.0 entry).
 
     No further prose may ride in without either trimming elsewhere or
     another deliberate, changelog-noted raise."""
     words = _skill_text().split()
-    assert len(words) <= 4370, (
+    assert len(words) <= 4430, (
         f"SKILL.md is {len(words)} words -- exceeds the deliberately "
-        "raised 0.62.0 ceiling (4353 measured + 17 margin); trim, or "
+        "raised 0.62.0 ceiling (4414 measured + 16 margin); trim, or "
         "raise the ceiling as a deliberate changelog-noted act"
     )
 
