@@ -132,7 +132,7 @@ Steps:
   sentence in plan-format.md's Review-weight area"
 
 ## Task 4 — version 0.64.0
-- Status: pending
+- Status: done(c028d07e)
 - Description: Bump loom-code to 0.64.0 in both manifests, add the
   CHANGELOG [0.64.0] entry (packet discipline + scoped inner loop +
   lane guidance + any T1 ceiling raise), rewrite the shipping-version
