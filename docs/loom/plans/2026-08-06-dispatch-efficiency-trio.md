@@ -102,7 +102,7 @@ Steps:
   implementer.md's role contract"
 
 ## Task 3 — lane-usage guidance (plan-format)
-- Status: claimed(@feat-dispatch-efficiency-trio)
+- Status: done(f4a063e1)
 - Description: Add one authoring-guidance sentence (own sentence, not
   spliced) in plan-format.md's Review-weight area: when a task's
   Description already names an exact-spec target per Check 16's
