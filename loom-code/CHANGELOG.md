@@ -38,7 +38,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
   dependency level, never against a declared dependency. The
   inline-`Steps:` rejection is documented beside the field it guards.
 - **environment-gotchas gains §S3 — starting a new arc branch.** The
-  dcg guard is operation-anchored, not phrase-anchored: only
+  repo bash-guard (third hook in the dcg → safety-net → bash-guard
+  chain) is operation-anchored, not phrase-anchored: only
   `git push`/`git merge` commands naming main/master are blocked, so a
   plain `git checkout -b <name> origin/main` is NOT blocked (probed
   2026-08-06) — it just sets upstream tracking to `origin/main`. The
