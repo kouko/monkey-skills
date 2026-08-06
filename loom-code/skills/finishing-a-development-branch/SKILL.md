@@ -98,6 +98,12 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 
 ```
 1. Read branch state — git status + git log main..HEAD + git diff main...HEAD
+   When the branch has a plan carrying the progress headers, render the
+   card once on entry (`python3 scripts/plan_card.py <plan-path>`, framed
+   per `loom-pipeline/hooks/family-relay.md §(a2) Progress card`) so the
+   user sees the whole arc before the gates run. No plan or old-format
+   plan → skip silently; script or family-relay absent → render the four
+   fields inline: goal, task table, stage, next.
 2. Verify branch has commits (else: "nothing to finish; branch matches main")
 3. Dispatch requesting-code-review — route on the returned verdict, not raw severity:
    - If NEEDS_REVISION (any 🔴 fatal, or 2+ 🟡 should-fix): surface findings; STOP. Wait
@@ -351,6 +357,9 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 ```
 
 **ASK = stop and wait for user.** That guarantee is now exception-based, not blanket: close-out is autonomous on the happy path — Steps 1–10 proceed silently once each step's own gate PASSes, including Step 7's privacy gate. What remains is one OUTWARD-FACING action that always asks (Step 12 — remove the worktree, because it touches shared state), plus a Step 7 privacy-gate BLOCK, where the human returns only because the gate failed; Step 11 (open a PR) no longer asks — its authorization arrived with the request, so it reports loudly instead. For any remaining question, run the ask-vs-resolve triage at `subagent-driven-development` §Asking the user, gate ① (the cross-skill SSOT) before asking.
+Every gate STOP that surfaces to the user (a NEEDS_REVISION, a privacy
+BLOCK, a probe FAIL) leads with the progress card — the user sees
+where the arc stopped before deciding.
 
 ## Red Flags — refuse these rationalizations
 
