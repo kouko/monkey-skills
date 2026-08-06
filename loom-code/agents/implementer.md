@@ -138,6 +138,12 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     `splicing-into-a-pinned-sentence-creates-false-readings`
     (`docs/loom/memory/`) — both round-2 placement defects in the
     progress-card arc had exactly this shape.
+13. **Scoped inner-loop test runs.** During the RED→GREEN inner loop,
+    run the touched test file(s) only. Run the full resolved package
+    suite exactly once, after the last edit and before the commit.
+    That final full run IS the per-task package-level gate
+    (`verification-before-completion` unchanged) — only redundant
+    intermediate full runs are eliminated.
 
 <!-- BEGIN baseline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules

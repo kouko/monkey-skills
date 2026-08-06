@@ -2,7 +2,10 @@
 
 Guards Rule 11's @req namespace guard and the prose-contract placement
 guard (own-sentence rule; incident source: docs/loom/memory/
-splicing-into-a-pinned-sentence-creates-false-readings.md).
+splicing-into-a-pinned-sentence-creates-false-readings.md). Also guards
+rule 13's scoped inner-loop test-run discipline (touched test files only
+inside the RED→GREEN loop; the full resolved package suite exactly once,
+after the last edit and before the commit).
 
 The agent contract is a prompt artifact, not executable code. The contract
 under guard: the implementer's `@req` Definition-of-Done (role-contract
@@ -129,4 +132,55 @@ def test_placement_guard_rule_present():
     assert "splicing-into-a-pinned-sentence-creates-false-readings" in block, (
         "placement rule must name the memory-entry slug as the incident "
         "source so implementers can read the full record"
+    )
+
+
+def test_scoped_inner_loop_rule_present():
+    """The role contract must scope inner-loop runs to touched test files.
+
+    Measured 2-3 full ~52s suite runs per task where one suffices. The
+    rule must land BEFORE the baseline-v1 managed block (distribute.py
+    overwrites everything inside it), scope the RED→GREEN inner loop to
+    the touched test file(s) only, require the full resolved package
+    suite exactly once — after the last edit and before the commit — and
+    state that this final full run IS the per-task package-level gate
+    (verification-before-completion unchanged), so only redundant
+    intermediate full runs are eliminated.
+    """
+    text = _text(AGENT)
+    start = text.find("**Scoped inner-loop test runs")
+    assert start != -1, (
+        "role-contract scoped-inner-loop rule lead-in is absent from "
+        "implementer.md — implementers keep re-running the full suite on "
+        "every inner-loop iteration"
+    )
+    baseline = text.find("<!-- BEGIN baseline-v1")
+    assert baseline != -1 and start < baseline, (
+        "scoped-inner-loop rule must live BEFORE the baseline-v1 managed "
+        "block — distribute.py overwrites everything inside that block"
+    )
+    # Collapse hard line-wraps so phrase pins survive re-wrapping.
+    block = " ".join(text[start:baseline].split())
+    lowered = block.lower()
+    assert "touched test file(s) only" in lowered, (
+        "rule must scope the RED→GREEN inner loop to the touched test "
+        "file(s) only"
+    )
+    assert "exactly once" in lowered, (
+        "rule must require the full resolved package suite exactly once"
+    )
+    assert "after the last edit and before the commit" in lowered, (
+        "rule must place the single full run after the last edit and "
+        "before the commit"
+    )
+    assert "per-task package-level gate" in lowered, (
+        "rule must state the final full run IS the per-task package-level "
+        "gate — otherwise it reads as weakening the gate"
+    )
+    assert "verification-before-completion" in lowered, (
+        "rule must name verification-before-completion as unchanged"
+    )
+    assert "redundant intermediate full runs" in lowered, (
+        "rule must state that only redundant intermediate full runs are "
+        "eliminated"
     )
