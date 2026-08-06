@@ -64,6 +64,18 @@ Provenance: row set converges Google eng-practices CL-description
 conventions with the JA 影響範囲/動作確認/レビューポイント PR-template
 convention — same grounding logic as §(d)'s jargon-and-stakes gate.
 
+### (a2) Progress card
+
+The plan-progress variant of the rollup card. Field order is fixed:
+**Goal** (one line, verbatim from the plan header), **task table**
+(✅ done / ⏳ claimed / ⬜ pending / 🚫 blocked, counts then rows),
+**Stage**, **next** (first not-done task, or close-out). The body is
+rendered mechanically by `scripts/plan_card.py` — the relayer adds
+only a one-line conversational frame in the live conversation
+language, same localized-content rule as the rollup card above. Never
+re-order or drop fields; never compose the body by hand when the
+script is available.
+
 ### (b) Visual defaults
 
 - **≥2 options at a fork** → a markdown comparison table is the
