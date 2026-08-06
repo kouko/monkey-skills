@@ -69,7 +69,7 @@ Steps:
   §Dispatch-packet context … four rules … Plus ONE pointer sentence"
 
 ## Task 2 — scoped inner-loop tests (implementer rule)
-- Status: claimed(@feat-dispatch-efficiency-trio)
+- Status: done(fe0b29d5)
 - Description: Append one rule to loom-code/agents/implementer.md's
   role contract (own numbered item, matching rule 12's style): during
   the RED→GREEN inner loop, run the touched test file(s) only; run the
