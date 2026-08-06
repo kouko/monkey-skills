@@ -5,7 +5,7 @@ Goal: the docs-review cap runs one mechanically-gated scoped third round
     on its own (reported, once per branch, hard-stop after), fix
     dispatches carry the placement guard, and finishing's conductor
     reads the current skill text before executing
-Stage: sdd:wave-1
+Stage: sdd:wave-2
 Total tasks: 6
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
@@ -17,7 +17,7 @@ Steps:
   4. 行為探針
 
 ## Task 1 — rdr Directive 1: bounded auto-third-round
-- Status: claimed(@feat-auto-round3-and-dispatch-hardening)
+- Status: done(43e13664)
 - Description: Amend requesting-docs-review's convergence contract so a
   round-2 NEEDS_REVISION whose structured verdict shows (a) zero
   surviving prior findings (all fix-verified), (b) NEW findings with
