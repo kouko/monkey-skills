@@ -1,0 +1,83 @@
+"""T2 (C2) drift guard: the shared `brief-before-asking` anchor clause must
+stay byte-identical (after whitespace normalization) across the four
+design-side router SKILL.md files.
+
+WHY this test exists: the audit's C2 finding was that a semantic edit to
+the shared "≥3 trade-offs, ≥2 implementation paths, or architectural blast
+radius — run `dev-workflow:brief-before-asking`…" clause in any one router
+can silently drift from its three siblings — CI only pins the
+`dev-workflow:brief-before-asking` skill-id substring, not the wording
+(brief §Current State Evidence, Error). Per-router lead-in / fork-noun
+wording ("discovery fork" / "product/principle fork" / "design fork" /
+"spec fork") is a DELIBERATE localization and stays out of scope (brief
+§Out of Scope) — extraction anchors on the byte-stable fragment
+"≥3 trade-offs" (Kickoff decision) so only the shared clause is compared.
+
+`check(root)` takes an arbitrary root so RED verification can run against
+an extracted, perturbed temp copy without touching the real tree (house
+pattern; repo memory: mutation/RED limited to extracted copies).
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+# The four design-side routers that carry the shared brief-before-asking
+# clause (brief §Context paths / §Current State Evidence, Data).
+ROUTER_FILES = (
+    "loom-discovery/skills/using-loom-discovery/SKILL.md",
+    "loom-product-principles/skills/using-loom-product-principles/SKILL.md",
+    "loom-interface-design/skills/using-loom-interface-design/SKILL.md",
+    "loom-spec/skills/using-loom-spec/SKILL.md",
+)
+
+# Byte-stable fragment present verbatim in all 4 routers (Kickoff decision).
+ANCHOR = "≥3 trade-offs"  # "≥3 trade-offs"
+
+
+def extract_anchor_sentence(text: str, rel_path: str) -> str:
+    """Extract the shared clause starting at ANCHOR through the next period,
+    with whitespace runs collapsed to single spaces.
+
+    Starting AT the anchor (not at the enclosing sentence's start) is what
+    excludes the per-router fork-noun lead-in that precedes it — that
+    lead-in is deliberate localization, not drift (brief §Problem, C2).
+    """
+    idx = text.find(ANCHOR)
+    if idx == -1:
+        raise ValueError(f"anchor fragment {ANCHOR!r} not found in {rel_path}")
+    end = text.find(".", idx)
+    if end == -1:
+        raise ValueError(f"no sentence-ending period after anchor in {rel_path}")
+    fragment = text[idx : end + 1]
+    return re.sub(r"\s+", " ", fragment).strip()
+
+
+def check(root: Path) -> dict[str, str]:
+    """Return {rel_path: normalized_sentence} for every router under root.
+
+    Raises AssertionError naming the diverging file(s) when any router's
+    normalized clause differs from the first router's.
+    """
+    sentences: dict[str, str] = {}
+    for rel_path in ROUTER_FILES:
+        text = (root / rel_path).read_text(encoding="utf-8")
+        sentences[rel_path] = extract_anchor_sentence(text, rel_path)
+
+    baseline_path, baseline = next(iter(sentences.items()))
+    diverging = [
+        rel_path for rel_path, sentence in sentences.items() if sentence != baseline
+    ]
+    if diverging:
+        raise AssertionError(
+            "brief-before-asking anchor clause diverges from "
+            f"{baseline_path} in: {diverging}"
+        )
+    return sentences
+
+
+def test_anchor_sentence_lockstep_across_routers():
+    check(REPO_ROOT)
