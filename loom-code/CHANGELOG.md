@@ -5,6 +5,33 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.68.0] — 2026-08-07 — finishing's five ONCE-bullets collapse into one close-out table
+
+### Changed
+
+- **`finishing-a-development-branch`'s five ONCE-per-branch Step-8
+  bullets collapse into one close-out sub-checks table.** The five
+  bullets — Living-spec index regen / Archive-on-close / Memory-timing
+  check / Memory-store integrity / Backlog-close check — are replaced
+  in place (not extracted to a reference) by one lead-in sentence
+  carrying the shared "orchestrator-only, ONCE per branch" scope once,
+  plus one table (columns: Check / When it fires / Action / On failure
+  or N/A) with one row per check in the same order. Every command
+  invocation, every quoted N/A string, and every fallback wording
+  lands verbatim in a cell; the words deleted are only the per-bullet
+  scaffolding repetitions — the ×5 scope restatements, the
+  "same shape as its Step 8 siblings" tails, and the per-bullet
+  restatements of the shared concurrency rationale (−401 w,
+  SKILL.md 4,402 → 4,001). Pin tests
+  (`test_finishing_archive_step.py`, `test_finishing_backlog_close.py`,
+  `test_finishing_memory_store_integrity.py`) re-anchor their
+  window-extraction anchors from bullet windows to table rows —
+  pinned phrases untouched, each adjusted test run RED-first against a
+  probe copy missing its target phrase. This is the arc-4 deferral
+  LANDING: the A1 collapse that 0.67.0's Deferred entry recorded
+  (blocked then by PR #674's in-flight edits to the same file) now
+  ships.
+
 ## [0.67.0] — 2026-08-07 — prose slims: convergence contract extracted, wrong-bind downgraded
 
 ### Changed
