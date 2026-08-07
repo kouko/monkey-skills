@@ -77,7 +77,7 @@ claude plugin install loom-code@monkey-skills --scope local
 | 3 | [`subagent-driven-development`](skills/subagent-driven-development/) | Execution | Per-task triad dispatch (implementer + spec-reviewer + code-quality-reviewer) |
 | 4 | [`tdd-iron-law`](skills/tdd-iron-law/) | Discipline | "NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST" (Beck 2002 Preface, ISBN 978-0321146533); §Feathers (2004) legitimate legacy-code backfill distinction |
 | 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4-phase REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY; HARD-GATE "NO FIXING WITHOUT REPRODUCING" |
-| 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | Whole-branch review with 7-dimension scoring (cross-task-coherence as branch-only dimension); push-as-trigger |
+| 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | Whole-branch review with 11-dimension scoring (cross-task-coherence as branch-only dimension); push-as-trigger |
 | 7 | [`verification-before-completion`](skills/verification-before-completion/) | Verification | "NO DONE WITHOUT PACKAGE-LEVEL TEST INVOCATION"; 20+ stack canonical commands |
 | 7b | [`ui-verification`](skills/ui-verification/) | Verification (conditional) | Drives the rendered app through `ui-flows.md`'s enumerated states via host browser/device automation; N/A-loud when conditions/tooling absent; token conformance excluded (parked) |
 | 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | Branch close | 7-step orchestrator (review → verify → git-memory mandatory → commit → push → optional PR + worktree cleanup) |

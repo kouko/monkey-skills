@@ -36,7 +36,7 @@
 すべての verdict は以下を含む：
 
 - **`standards_version`** スタンプ（`plugin.json` の `version` から）— ダウンストリーム読者が「この review はどのバージョンの rubric で採点されたか」を判別できる（v0.7.0 reviewer-discipline R1）。
-- 7 次元スコア（security / architecture / correctness / naming / tests / refactoring / **cross-task-coherence** — ブランチ限定）。
+- 11 次元スコア（security / architecture / correctness / naming / tests / refactoring / **cross-task-coherence** — ブランチ限定 / external-surface-grounding / principles-conformance — 条件付き / **deliberate-simplification** — ブランチ限定 / deletion-first）。
 - 重大度タグ付き findings（🔴 fatal / 🟡 should-fix / 🟢 nit）— 各 finding は `where:`（file:line または commit SHA range）を必須記載。**`where` が欠落すると重大度に関わらず verdict は `NEEDS_REVISION` に反転**（v0.7.0 reviewer-discipline R2 — 不透明な finding は修正不能）。
 - ≤5 行 summary。
 

@@ -72,7 +72,7 @@ claude plugin install loom-code@monkey-skills --scope local
 | 3 | [`subagent-driven-development`](skills/subagent-driven-development/) | Execution | タスクごとに triad を派遣（implementer + spec-reviewer + code-quality-reviewer）；reviewer 三人組は `reviewer-discipline-v1` SSOT 注入ブロック（R1+R2）搭載 |
 | 4 | [`tdd-iron-law`](skills/tdd-iron-law/) | Discipline | "FAILING TEST なしに production code を書くな"（Beck 2002 Preface, ISBN 978-0321146533）；§Feathers (2004) 正当な legacy code backfill 区別 |
 | 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4 フェーズ REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY；HARD-GATE "再現せず fix するな" |
-| 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | 全ブランチレビュー 7 次元スコア（cross-task-coherence はブランチ限定次元）；v0.7.0+ verdict に `standards_version` スタンプ、findings は `where:` file:line 必須；push-as-trigger |
+| 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | 全ブランチレビュー 11 次元スコア（cross-task-coherence はブランチ限定次元）；v0.7.0+ verdict に `standards_version` スタンプ、findings は `where:` file:line 必須；push-as-trigger |
 | 7 | [`verification-before-completion`](skills/verification-before-completion/) | Verification | "PACKAGE-LEVEL TEST 実行なしに DONE するな"；20+ stack の canonical コマンドを網羅 |
 | 7b | [`ui-verification`](skills/ui-verification/) | Verification（条件付き） | `ui-flows.md` が列挙する状態をホストの browser/device 自動化で実機走査；条件・ツール不在時は N/A を明示；token 適合チェックは対象外（park 済み） |
 | 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | Branch close | 7 ステップ orchestrator（review → verify → git-memory 必須 → commit → push → 任意 PR + worktree cleanup） |

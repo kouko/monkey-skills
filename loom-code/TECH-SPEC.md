@@ -254,11 +254,11 @@ loom-code:spec-reviewer   (agents/spec-reviewer.md)
 loom-code:code-quality-reviewer   (agents/code-quality-reviewer.md)
   Input: artifact + rubrics/quality-gate.md + rubrics/arch-gate.md +
          checklists/security-checklist.md + all 9 standards/
-  Output: PASS / PASS_WITH_NOTES / NEEDS_REVISION + 7-dimension scores + findings
+  Output: PASS / PASS_WITH_NOTES / NEEDS_REVISION + 8-dimension scores + findings
 
 loom-code:code-reviewer   (agents/code-reviewer.md) — whole-branch scope
   Input: branch diff + same rubrics + checklists + standards as above
-  Output: PASS / PASS_WITH_NOTES / NEEDS_REVISION + 7-dimension scores
+  Output: PASS / PASS_WITH_NOTES / NEEDS_REVISION + 11-dimension scores
           (adds cross-task-coherence dimension unique to branch scope)
 ```
 

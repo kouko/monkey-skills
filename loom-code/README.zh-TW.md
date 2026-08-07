@@ -72,7 +72,7 @@ claude plugin install loom-code@monkey-skills --scope local
 | 3 | [`subagent-driven-development`](skills/subagent-driven-development/) | Execution | 每個 task 派 triad（implementer + spec-reviewer + code-quality-reviewer）；reviewer 三件套攜帶 `reviewer-discipline-v1` SSOT 注入區塊（R1+R2） |
 | 4 | [`tdd-iron-law`](skills/tdd-iron-law/) | Discipline | "沒先有 failing test 不准寫 production code"（Beck 2002 Preface, ISBN 978-0321146533）；§Feathers (2004) 對 legacy code backfill 的合法區別 |
 | 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4 階段 REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY；HARD-GATE "沒重現不准 fix" |
-| 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | 全 branch 審查、7 維度評分（cross-task-coherence 為 branch 限定維度）；v0.7.0+ verdict 帶 `standards_version` stamp、findings 必填 `where:` file:line；push-as-trigger |
+| 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | 全 branch 審查、11 維度評分（cross-task-coherence 為 branch 限定維度）；v0.7.0+ verdict 帶 `standards_version` stamp、findings 必填 `where:` file:line；push-as-trigger |
 | 7 | [`verification-before-completion`](skills/verification-before-completion/) | Verification | "沒跑 package-level test 不准 done"；涵蓋 20+ 種 stack 的 canonical command |
 | 7b | [`ui-verification`](skills/ui-verification/) | Verification（條件式） | 用 host 的 browser/device 自動化把 `ui-flows.md` 列舉的狀態實機走一遍；條件或工具不在時明講 N/A；token 合規檢查排除在外（已停車） |
 | 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | 分支收尾 | 7 步 orchestrator（review → verify → git-memory 強制 → commit → push → 可選 PR + worktree 清理） |
