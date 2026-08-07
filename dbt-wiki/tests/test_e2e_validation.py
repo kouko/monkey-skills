@@ -199,6 +199,11 @@ def _build_report(
         "accuracy_pct": round(report_grade.score * 100, 2),
         "passed_count": report_grade.passed_count,
         "total": report_grade.total,
+        # Advisory, never folded into `score` — a nonzero count is a prompt to
+        # read the traces below, not a failure. Without it the headline block
+        # is flag-blind: every answer could trip a prohibition invariant and
+        # this summary would still read accuracy_pct 100.0.
+        "invariant_flag_count": report_grade.invariant_flag_count,
         "is_real_model_output": is_real_output,
         "final_message_excerpt": final_message[:2000],
         "governance": {

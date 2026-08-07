@@ -161,6 +161,41 @@ def test_lookup_backlog_description_feeds_scope_guard_on_wrapped_signal(tmp_path
     ) is False
 
 
+# B9's signal sits in a continuation paragraph separated by a BLANK line —
+# still one list item under CommonMark, and one ordinary markdown edit away in
+# a hand-maintained doc. Round-2 review found the blank line ended the item,
+# dropping the paragraph and failing the guard OPEN.
+_CAMPAIGN_DOC_BLANK_LINE_CONTINUATION = """\
+# dbt-wiki Quality Campaign — work queue & state
+
+## Phase 2 — backlog burn-down
+
+- [ ] B9: redistill-vs-review stale-clearing convention mismatch
+
+  Confirming this needs a real e2e run against the headless harness before
+  the convention can be pinned.
+
+- [ ] B10: sync couples to sibling skills by step number
+
+## Phase 3 — generalization sweep
+"""
+
+
+def test_lookup_backlog_description_keeps_blank_line_separated_continuation(tmp_path):
+    campaign_path = _write(
+        tmp_path, "campaign.md", _CAMPAIGN_DOC_BLANK_LINE_CONTINUATION
+    )
+
+    description = lookup_backlog_description("B9", campaign_path)
+
+    assert "real e2e run" in description, (
+        "a blank line does not end a list item — dropping the continuation "
+        "hands the fail-closed guard a truncated description, which fails OPEN"
+    )
+    assert "sync couples" not in description, "next item must not bleed in"
+    assert requires_real_agent_surface(description) is True
+
+
 def test_lookup_backlog_description_fails_loud_for_unknown_item(tmp_path):
     campaign_path = _write(tmp_path, "campaign.md", _CAMPAIGN_DOC)
 

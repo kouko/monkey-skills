@@ -14,14 +14,15 @@ consistency, portability, and test-hygiene debts.
 
 - **`is_nightly_paused` keeps the retired "nightly" name.**
   `safety_gates.py:6,46`, its module docstring, and the
-  `NIGHTLY_PAUSED` fixture name in `test_safety_gates.py:3,21,27,33` all
+  `NIGHTLY_PAUSED` fixture name in `test_safety_gates.py:21,27,33` (plus
+  "nightly" in its module docstring, `:1`, and a comment at `:56`) all
   survived the 2026-07-29 rename of the directory and the sentinel
   (`docs/loom/PHASE2_LOOP_PAUSED`). The name is actively disinforming:
   the redesign deliberately registers no schedule, so "nightly" asserts a
   cadence that was decided against. Rename to `is_loop_paused` and update
   the three call sites plus `ROUTINE.md:30`.
 - **The freeze-gate regex is mirrored, not imported, with no drift guard.**
-  `queue_entry.py:25-28`'s `_PLAN_REVIEWER_PASS_PATTERN` is byte-identical
+  `queue_entry.py:36-39`'s `_PLAN_REVIEWER_PASS_PATTERN` is byte-identical
   to `batch_queue.py:46-49`'s. The docstring documents the mirroring, but
   nothing fails if the two diverge — and the integration test uses a plan
   both patterns accept, so a tightened upstream pattern would let
@@ -45,9 +46,12 @@ consistency, portability, and test-hygiene debts.
 
 ## L2 e2e harness (`dbt-wiki/tests/`)
 
-- **No text I/O in this directory declares `encoding=`.**
-  `build_sparse_variant.py:41`, `grader.py:110`,
-  `test_e2e_validation.py:240`, `test_gold_questions.py:33,95`. The
+- **The production text I/O in this directory does not declare `encoding=`.**
+  `build_sparse_variant.py:41`, `grader.py:135`,
+  `test_e2e_validation.py:292`, `test_e2e_sparse_comment_validation.py:226`,
+  `test_gold_questions.py:33,95`. (Two sites DO declare it —
+  `test_e2e_validation.py:89,102` — but those are inside the cleanup-guard
+  regression test added 2026-08-07, not the I/O paths at issue.) The
   load-bearing site is the report write, which passes
   `ensure_ascii=False` — on a non-UTF-8 default locale it raises
   `UnicodeEncodeError` and destroys the only artifact of a
@@ -70,7 +74,7 @@ consistency, portability, and test-hygiene debts.
   way, or state the single-quote-only scope in the docstring.
 - **`duckdb` and `PyYAML` are imported directly but declared only
   transitively** through `dbt-duckdb==1.10.1`
-  (`requirements.txt:8-9` vs `conftest.py:18`, `grader.py:41`,
+  (`requirements.txt:8-9` vs `conftest.py:18`, `grader.py:54`,
   `test_build_sparse_variant.py:17`). Add explicit direct pins.
 - **`conftest.py` imports `duckdb` at module scope**, so the pure-Python
   grader tests cannot run without the full dbt install. Deferring the

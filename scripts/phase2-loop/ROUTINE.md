@@ -83,14 +83,26 @@ no work. Read its exit code and stdout:
 document (Steps 2, 3, 6 and 8).** A nonzero exit from the CLI itself — as
 opposed to a failure of the dispatched item, which Step 8 covers — means this
 invocation STOPS where it stands. Do not retry the command, do not proceed to
-the next step, and do not invent a compensating transition. The one exception
-is Step 6/8's own recovery path, stated there.
+the next step, and do not invent a compensating transition.
+
+**What "STOP" leaves behind differs by step, and both shapes are correct.**
+Before Step 5 there is no run: a `RUNNING` entry left with no run evidence is
+a false anomaly, so any step that exits before dispatch must first release the
+entry (Step 4 states the two paths that do). At Steps 6 and 8 a run exists —
+in flight or finished — so exiting with the entry still `RUNNING` is the
+intended outcome, not a leak: `reconcile` judges it against the Workflow
+record on the next invocation and flags `SUSPECT` / `SUSPECT-COMPLETE` for a
+human. That is what `reconcile` is for. Never `force-fail` a live run to
+tidy the state; the evidence is what a human needs.
 
 ## Step 4 — Scope guard on the picked entry
 
 **Where the description comes from.** `next`'s dispatch payload carries no
-description, and neither does a `QUEUE.toml` entry (`load_queue` accepts only
-`id`, `plan`, `budgets`, and optionally `models`). The campaign doc's own
+description — `_dispatch_entry` builds exactly the eight keys listed in Step
+3. Adding a `description` key to `QUEUE.toml` does not help either: it would
+survive `load_queue` (which validates required fields and returns the raw
+TOML dicts rather than rejecting unknown ones) but never reach the executor,
+because the payload is built from a fixed key set. The campaign doc's own
 Phase 2 checklist line is the description of record, and
 `queue_entry.lookup_backlog_description` is the only supported way to read
 it — it returns the item's head line plus its wrapped continuation lines,
@@ -103,12 +115,18 @@ description = queue_entry.lookup_backlog_description(
 )
 ```
 
-It raises `ValueError` when the id is not a Phase 2 checklist item. That is
-a STOP, not a skip: treat it exactly as the tooling-failure rule in Step 3
-(exit, leave the entry `RUNNING` for `reconcile` to surface). Never
-substitute another string — passing `changeId` itself, or an empty string,
-makes the guard return `False` and dispatches the very item it exists to
-refuse.
+It raises `ValueError` when the id is not a Phase 2 checklist item. Release
+the entry the same way the guard-`True` path below does — `force-fail <id>`
+with the reason `"scope guard: no Phase 2 checklist entry for this id"` —
+then journal one line and exit. **Do not simply exit here.** Step 3's
+tooling-failure rule does not apply: its justification is "there is no
+dispatch payload, so there is nothing to guard, dispatch, or mark", and at
+this point the payload exists and the entry is already `RUNNING`. Leaving it
+would strand exactly the state the next section is about to argue against.
+
+Never substitute another string for the description — passing `changeId`
+itself, or an empty string, makes the guard return `False` and dispatches the
+very item it exists to refuse.
 
 (This calls `lookup_backlog_description`, NOT `propose_queue_entry` — the
 authoring helper in the same module remains a planning-stage tool this stage

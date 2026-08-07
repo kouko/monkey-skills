@@ -69,22 +69,39 @@ def _phase2_items(campaign_text: str) -> dict[str, str]:
 
     A checklist entry wraps across lines in the real campaign doc, and a
     signal the scope guard must catch can sit on a continuation line — so an
-    item's text is its head line PLUS every following indented line, stopping
-    at the next unindented line (the next item, a group label like ``High:``,
-    or a blank line). Truncating at the head line would hand the fail-closed
-    guard a partial description, which fails OPEN.
+    item's text is its head line PLUS every following indented line.
+    Truncating at the head line would hand the fail-closed guard a partial
+    description, which fails OPEN.
+
+    **A blank line does NOT end the item.** Under CommonMark an indented
+    paragraph after a blank line is still part of the list item, and this
+    document is hand-maintained — treating the blank as a boundary drops that
+    paragraph silently, which is the same fail-OPEN this function exists to
+    prevent. Only an unindented, non-blank line ends the item (the next item,
+    a group label like ``High:``, or trailing section prose).
     """
     section = _phase2_section_lines(campaign_text)
     items: dict[str, str] = {}
     current: str | None = None
+    pending_blanks: list[str] = []
     for line in section:
         if match := _ITEM.match(line):
             current = match.group("id")
             items[current] = line
-        elif current is not None and line[:1].isspace() and line.strip():
+            pending_blanks = []
+        elif current is None:
+            continue
+        elif not line.strip():
+            # Held, not dropped: an indented continuation may still follow.
+            pending_blanks.append(line)
+        elif line[:1].isspace():
+            for blank in pending_blanks:
+                items[current] += "\n" + blank
+            pending_blanks = []
             items[current] += "\n" + line
-        elif not line.strip() or not line[:1].isspace():
+        else:
             current = None
+            pending_blanks = []
     return items
 
 

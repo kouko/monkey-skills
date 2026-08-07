@@ -118,6 +118,8 @@ def _build_report(
         "accuracy_pct": g1_accuracy,
         "passed_count": report_grade.passed_count,
         "total": report_grade.total,
+        # Advisory, never folded into `score` — see the W1 report builder.
+        "invariant_flag_count": report_grade.invariant_flag_count,
         "is_real_model_output": is_real_output,
         "final_message_excerpt": final_message[:2000],
         "governance": {

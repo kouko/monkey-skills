@@ -10,11 +10,14 @@ The Phase 2 execution loop's brief chose to COMPOSE
 state machinery — the right call, and the code honors it. But the routine
 document written on top of it specified its scope guard as
 `requires_real_agent_surface(<picked entry's description>)`, and no
-`description` exists anywhere in the machine handoff: `_dispatch_entry`
-builds exactly eight keys (`segment`, `changeId`, `projectPath`,
-`planPath`, `budgets`, `models`, `skillsRoot`, `branch`), `load_queue`
-accepts only `id`/`plan`/`budgets`(+`models`), and the branch's own
-entry-authoring helper emitted only three fields. The description was real,
+`description` reaches the executor: `_dispatch_entry` builds exactly eight
+keys (`segment`, `changeId`, `projectPath`, `planPath`, `budgets`, `models`,
+`skillsRoot`, `branch`), and the branch's own entry-authoring helper emitted
+only three fields. Note the precise shape of the wall — `load_queue` does
+NOT reject an unknown key, so a `description` added to `QUEUE.toml` parses
+fine and then goes nowhere, because the payload is assembled from a fixed
+key set downstream. "It was accepted" and "it arrived" are different
+questions, and only the second one matters. The description was real,
 but it lived in the campaign doc's checklist line — the human-facing source
 of record — which the composed CLI has no reason to carry.
 
