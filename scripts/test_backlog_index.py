@@ -1486,3 +1486,67 @@ def test_real_direction_file_exists_and_real_store_validates_clean_with_it():
 
     result = _run_validate(REPO_ROOT / "docs" / "loom" / "backlog")
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_validate_exempts_backlog_entry_filename_reference_from_date_ban(tmp_path):
+    """The charter permits a `## Next`/`## Later` line pointing at a
+    backlog-entry FILENAME (e.g. '- theme X — see
+    `2026-08-07-execute-complexity-audit-keep-lanes.md`'). The date-ban
+    scanner must strip such filename references before token-matching so
+    this is not a [direction-date] violation — user-ratified exemption,
+    not a dropped feature."""
+    store, direction = _direction_store(tmp_path, [])
+    text = direction.read_text(encoding="utf-8")
+    direction.write_text(
+        text.replace(
+            "- a fixture next theme",
+            "- a fixture next theme — see "
+            "`2026-08-07-execute-complexity-audit-keep-lanes.md`",
+        ),
+        encoding="utf-8",
+    )
+
+    result = _run_validate(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "direction-date" not in result.stdout, result.stdout
+
+
+def test_validate_still_flags_bare_date_token_beside_filename_reference(tmp_path):
+    """Mutation pin: the filename exemption strips ONLY the filename
+    substring — a bare date token elsewhere on the same line must still
+    fail [direction-date]."""
+    store, direction = _direction_store(tmp_path, [])
+    text = direction.read_text(encoding="utf-8")
+    direction.write_text(
+        text.replace(
+            "- a fixture next theme",
+            "- 2026-09 target — see "
+            "2026-08-07-execute-complexity-audit-keep-lanes.md",
+        ),
+        encoding="utf-8",
+    )
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "direction-date" in result.stdout, result.stdout
+
+
+def test_direction_write_preserves_indented_next_heading(tmp_path):
+    """CommonMark permits 1-3 leading spaces before a heading marker. The
+    `## Now` section's end-of-section predicate must recognize an indented
+    '## Next' just like the start-of-section predicate does (whitespace-
+    tolerant `line.strip()`) — otherwise --direction-write's wholesale
+    splice swallows an indented '## Next' into the regenerated Now body
+    and silently deletes it."""
+    store, direction = _direction_store(tmp_path, [("2026-08-01-first-bet", "COMMITTED-NEXT")])
+    indented = direction.read_text(encoding="utf-8").replace("## Next", " ## Next")
+    direction.write_text(indented, encoding="utf-8")
+
+    result = _run_direction_write(direction, store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    after = direction.read_text(encoding="utf-8")
+    assert " ## Next" in after, after
+    assert "- a fixture next theme" in after, after

@@ -611,6 +611,13 @@ DIRECTION_NOW_HEADING = "## Now"
 # (Q1-Q4). Scanned over everything OUTSIDE the generated `## Now` body.
 DIRECTION_DATE_TOKEN_RE = re.compile(r"20\d\d[-/年.]|Q[1-4]")
 
+# User-ratified exemption: a `## Next`/`## Later` line may point at a
+# backlog-entry FILENAME (the charter permits this pointer pattern), which
+# necessarily carries a date-like token by store convention. Matched
+# substrings are stripped from the line before the date scan below runs,
+# so a bare date token elsewhere on the same line is still caught.
+DIRECTION_ENTRY_FILENAME_RE = re.compile(r"20\d\d-\d\d-\d\d-[A-Za-z0-9_-]+\.md")
+
 
 def _direction_path_for(store: Path) -> Path:
     """Where the validate mode looks for the direction file: the store's
@@ -654,7 +661,7 @@ def _direction_now_bounds(lines: list[str]) -> tuple[int, int] | None:
         if line.strip() == DIRECTION_NOW_HEADING:
             section_end = len(lines)
             for j in range(i + 1, len(lines)):
-                if lines[j].startswith("## "):
+                if lines[j].lstrip().startswith("## "):
                     section_end = j
                     break
             return i, section_end
@@ -721,7 +728,8 @@ def find_direction_violations(direction_path: Path, store: Path) -> list[Violati
     for lineno, line in enumerate(lines):
         if lineno in now_body:
             continue  # generated body: entry names are date-prefixed by convention
-        match = DIRECTION_DATE_TOKEN_RE.search(line)
+        scan_line = DIRECTION_ENTRY_FILENAME_RE.sub("", line)
+        match = DIRECTION_DATE_TOKEN_RE.search(scan_line)
         if match:
             violations.append(
                 Violation(
@@ -732,6 +740,67 @@ def find_direction_violations(direction_path: Path, store: Path) -> list[Violati
                 )
             )
     return violations
+
+
+def _run_direction_write(args: argparse.Namespace) -> int:
+    """--direction-write: regenerate the given DIRECTION.md's `## Now`
+    section from COMMITTED-NEXT entry files and write it back."""
+    direction_path = Path(args.direction_write)
+    if not direction_path.is_file():
+        print(
+            f"backlog_index --direction-write: FAIL — {direction_path} does "
+            "not exist; create it with its charter header and sections first"
+        )
+        return 1
+    try:
+        new_text = splice_direction_now(
+            direction_path.read_text(encoding="utf-8"),
+            build_direction_now(Path(args.store)),
+        )
+    except ValueError as exc:
+        print(f"backlog_index --direction-write: FAIL — {exc}")
+        return 1
+    direction_path.write_text(new_text, encoding="utf-8")
+    print(f"backlog_index --direction-write: wrote {direction_path}")
+    return 0
+
+
+def _run_direction_check(args: argparse.Namespace) -> int:
+    """--direction-check: re-run the `## Now` generator in memory and diff
+    it against the given DIRECTION.md without writing; exit 1 on drift."""
+    direction_path = Path(args.direction_check)
+    if not direction_path.is_file():
+        print(
+            f"backlog_index --direction-check: FAIL — {direction_path} does "
+            "not exist; run --direction-write first"
+        )
+        return 1
+    committed_direction = direction_path.read_text(encoding="utf-8")
+    try:
+        generated_direction = splice_direction_now(
+            committed_direction, build_direction_now(Path(args.store))
+        )
+    except ValueError as exc:
+        print(f"backlog_index --direction-check: FAIL — {exc}")
+        return 1
+    if committed_direction != generated_direction:
+        print(
+            "backlog_index --direction-check: FAIL — the committed '## Now' "
+            f"has drifted from the entry files (compare against {direction_path}).\n"
+        )
+        diff = difflib.unified_diff(
+            committed_direction.splitlines(keepends=True),
+            generated_direction.splitlines(keepends=True),
+            fromfile=f"{direction_path} (committed)",
+            tofile="<regenerated from entry files>",
+        )
+        sys.stdout.writelines(diff)
+        return 1
+    print(
+        f"backlog_index --direction-check: OK — {direction_path} matches "
+        "the entry files."
+    )
+    return 0
 
 
 def main() -> int:
@@ -859,57 +928,14 @@ def main() -> int:
         sys.stdout.write(ready_text)
 
     if args.direction_write:
-        direction_path = Path(args.direction_write)
-        if not direction_path.is_file():
-            print(
-                f"backlog_index --direction-write: FAIL — {direction_path} does "
-                "not exist; create it with its charter header and sections first"
-            )
-            return 1
-        try:
-            new_text = splice_direction_now(
-                direction_path.read_text(encoding="utf-8"),
-                build_direction_now(Path(args.store)),
-            )
-        except ValueError as exc:
-            print(f"backlog_index --direction-write: FAIL — {exc}")
-            return 1
-        direction_path.write_text(new_text, encoding="utf-8")
-        print(f"backlog_index --direction-write: wrote {direction_path}")
+        result = _run_direction_write(args)
+        if result != 0:
+            return result
 
     if args.direction_check:
-        direction_path = Path(args.direction_check)
-        if not direction_path.is_file():
-            print(
-                f"backlog_index --direction-check: FAIL — {direction_path} does "
-                "not exist; run --direction-write first"
-            )
-            return 1
-        committed_direction = direction_path.read_text(encoding="utf-8")
-        try:
-            generated_direction = splice_direction_now(
-                committed_direction, build_direction_now(Path(args.store))
-            )
-        except ValueError as exc:
-            print(f"backlog_index --direction-check: FAIL — {exc}")
-            return 1
-        if committed_direction != generated_direction:
-            print(
-                "backlog_index --direction-check: FAIL — the committed '## Now' "
-                f"has drifted from the entry files (compare against {direction_path}).\n"
-            )
-            diff = difflib.unified_diff(
-                committed_direction.splitlines(keepends=True),
-                generated_direction.splitlines(keepends=True),
-                fromfile=f"{direction_path} (committed)",
-                tofile="<regenerated from entry files>",
-            )
-            sys.stdout.writelines(diff)
-            return 1
-        print(
-            f"backlog_index --direction-check: OK — {direction_path} matches "
-            "the entry files."
-        )
+        result = _run_direction_check(args)
+        if result != 0:
+            return result
 
     return 0
 
