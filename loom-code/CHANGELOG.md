@@ -18,15 +18,15 @@ Versioning: [Semantic Versioning](https://semver.org/).
   — the four directives there are binding") plus a compact
   per-directive one-line summary inline. Every pin that guarded a
   phrase from the moved block was re-anchored to its new carrier
-  (the reference file, or the surviving inline summary) across
-  `test_requesting_docs_review_skill.py` and
-  `test_docs_reviewer_agent.py` — no rule semantics changed, only
-  location.
+  (the reference file, or the surviving inline summary) in
+  `test_requesting_docs_review_skill.py` — no rule semantics changed,
+  only location.
 - **`writing-plans`'s wrong-bind reversal paragraph downgrades to one
   line.** The unauthenticated-hypothesis protocol paragraph is
-  replaced by: "A confirmed wrong-bind incident downgrades layer (i)
-  to confirm-before-use — restore the full protocol from git
-  history." The surfacing duty ("is surfaced immediately and") is
+  replaced by: "A confirmed wrong-bind incident is surfaced
+  immediately and downgrades layer (i) to confirm-before-use —
+  restore the full protocol from git history." The surfacing duty
+  ("is surfaced immediately and") is
   kept — the plan's own quality review caught that dropping it would
   be a real semantic loss, not just a length cut. Pins in
   `test_writing_plans_change_binding.py` verified to survive

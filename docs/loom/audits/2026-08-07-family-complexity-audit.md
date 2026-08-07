@@ -62,7 +62,7 @@ KEEP-WITH-CAVEAT (5):
 
 | # | Item | Caveat |
 |---|---|---|
-| A1 | Collapse finishing Step 8's five "ONCE per branch" checklists (block measured 1,123 w) into one generic regen-artifacts table | Preserve each check's semantics and per-artifact fallback wording; merge structure only |
+| A1 | Collapse finishing Step 8's five "ONCE per branch" checklists (974 w of bullets at the arc-3 state (earlier 1,123 w measured at the pre-arc-3 base)) into one generic regen-artifacts table | Preserve each check's semantics and per-artifact fallback wording; merge structure only |
 | A3 | Downgrade writing-plans' wrong-bind reversal trigger (block measured 44 w, :206 — the earlier 315 w figure included neighboring cascade text; self-described hypothetical, no incident) to a one-line note | Re-add trigger: first real wrong-bind incident (full text recoverable from git history) |
 | C2 | SSOT the brief-before-asking clause (near-verbatim ×4 across the four design-side routers: the trigger tail is word-identical — loom-discovery's copy wraps differently — the fork-noun varies per router) | Not purely behavior-zero — needs a parameterized carrier or a one-time wording normalization; and choose the carrier carefully — placing it in family-reception makes it per-session preload |
 | D2 | Protect router-card.md's five hand-copied rules against drift | Shipped as a standalone token-presence test (scripts/test_router_card_rule_tokens.py) rather than verify-drift.py registration, to honor the deliberate-compression decision (session-start:6-11) — no new machinery |

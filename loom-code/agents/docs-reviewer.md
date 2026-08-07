@@ -397,7 +397,9 @@ reviewed_sha: {the HEAD sha you reviewed — REQUIRED. Take it verbatim from
               report `unresolved` — never guess or derive one on your own.
               A self-derived sha becomes the left endpoint of the next
               round's delta-scoped range and can silently narrow it (the
-              fail-open direction SKILL.md's Directive 2 forbids).
+              fail-open direction requesting-docs-review's convergence
+              contract (references/convergence-contract.md) Directive 2
+              forbids).
               `unresolved` is NOT a sha: the orchestrator must treat it
               exactly as "no prior reviewed_sha was found" and run the
               next round unbounded — never build a delta-scoped range

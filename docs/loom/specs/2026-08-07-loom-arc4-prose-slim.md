@@ -70,10 +70,12 @@ mandates a weak-model cold-read per extraction).
 ## Current State Evidence
 
 - A2: block :43-84 (1,446 w); references/design-evidence.md already exists
-  (1,447 w, author-facing); pin tests enumerated —
+  (894 w, author-facing); pin tests enumerated —
   test_requesting_docs_review_skill.py:534,551,571-576 (bounded cap /
   once-per-branch / auto-third-round), :607-609 + test_docs_reviewer_agent.py:279
-  (delta-scoped), :817-837 (round-N handoff / retained), :551-557 (oscillation).
+  (prose mention in a docstring, not a pin — corrected at review; no pin
+  migration occurred there) (delta-scoped), :817-837 (round-N handoff /
+  retained), :551-557 (oscillation).
 - A1 (at arc-3 branch state, becomes main on #674 merge): Step 8 :186-291;
   five bullets :187-273 = 78+208+155+383+150 w; pins in
   test_finishing_archive_step.py (:106-135 N/A wording + once-per-branch +

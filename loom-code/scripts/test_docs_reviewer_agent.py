@@ -277,7 +277,9 @@ def test_reviewed_sha_fail_closed_no_self_resolve():
     fail-closed reporting (`unresolved`), never self-resolution -- a
     self-resolved sha becomes the left endpoint of the NEXT round's
     delta-scoped range and can silently narrow it (the exact fail-open
-    direction SKILL.md's Directive 2 forbids), while `unresolved` trips
+    direction requesting-docs-review's convergence contract
+    (references/convergence-contract.md) Directive 2 forbids), while
+    `unresolved` trips
     the skill's existing "no prior reviewed_sha -> unbounded" fallback
     (D4). The input-contract template must also carry the HEAD-sha slot
     SKILL.md Step 3 requires the dispatch packet to state -- that

@@ -4,6 +4,8 @@ Source: `requesting-docs-review/SKILL.md` — maintainer-facing evidence extract
 
 This file is author-facing: it exists for maintainers reviewing or redesigning this skill's convergence-contract decisions. Runtime agents executing `requesting-docs-review` do NOT load this file at runtime — the rule sentences these fragments qualify already stay inline in SKILL.md, byte-preserved; only citation tails, worked-example asides, and measurement archaeology live here. SAFE-TIER extraction only (per `docs/loom/specs/2026-08-05-loom-skill-extraction-batch.md` §Partition C) — this file carries none of the operative rules themselves.
 
+**Correction (2026-08-07, arc 4a):** the rule sentences the 13 pointers below describe as "stays inline in SKILL.md" moved to `references/convergence-contract.md` on 2026-08-07 (arc 4a). The fragments and their qualifications below are unchanged — only the host file differs; read every "stays inline in SKILL.md" below as "stays inline in convergence-contract.md." Per Directive 4, this is an appended correction — the 13 pointers themselves are left as originally written.
+
 ## What this skill does — intro audit citation
 
 The rule stays inline in SKILL.md ("this skill therefore also carries what the code arm never needed: a convergence contract with a bounded cap — 2 rounds plus at most one mechanically-conditioned auto-delta round"). Its evidence tail: the recorded pathology this contract exists to end is a 9-round non-converging docs-review loop in which 6 of 9 rounds shipped a defect injected by the previous round's own remediation (`docs/loom/audits/2026-07-28-doc-branch-review-loop-audit.md`).
