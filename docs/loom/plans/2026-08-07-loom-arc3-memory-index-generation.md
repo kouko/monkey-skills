@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-loom-arc3-memory-index-generation.md
 Goal: The memory store's ## Index becomes generated — --write/--check join the existing validator, the six hand-append teaching surfaces flip to the regen procedure, and no new script, CI gate, or format change ships.
-Stage: review:round-1
+Stage: finishing
 Total tasks: 6
 Critical-path depth: 2 (≤5)
 Execution order: parallel-where-possible
