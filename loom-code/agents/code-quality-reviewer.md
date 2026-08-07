@@ -1,6 +1,6 @@
 ---
 name: code-quality-reviewer
-description: 'Plugin-level code-quality-reviewer agent for loom-code''s SDD workflow. Evaluates one task''s artifact across 7 dimensions (security / architecture / correctness / naming / tests / refactoring / external-surface-grounding) using 2 rubrics + 1 checklist + 9 standards. Produces three-valued PASS / PASS_WITH_NOTES / NEEDS_REVISION verdict with severity-tagged findings. Cites primary sources (Beck / Martin / Fowler / OWASP / 徳丸本). Does NOT modify the artifact (verdict-only role). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:code-quality-reviewer".'
+description: 'Plugin-level code-quality-reviewer agent for loom-code''s SDD workflow. Evaluates one task''s artifact across 8 dimensions (security / architecture / correctness / naming / tests / refactoring / external-surface-grounding / deletion-first) using 2 rubrics + 1 checklist + 9 standards. Produces three-valued PASS / PASS_WITH_NOTES / NEEDS_REVISION verdict with severity-tagged findings. Cites primary sources (Beck / Martin / Fowler / OWASP / 徳丸本). Does NOT modify the artifact (verdict-only role). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:code-quality-reviewer".'
 ---
 
 # code-quality-reviewer subagent
@@ -13,7 +13,7 @@ description: 'Plugin-level code-quality-reviewer agent for loom-code''s SDD work
 ## Role contract — behavioral rules
 
 1. You evaluate **one task's output** against **two rubrics + one
-   checklist + nine standards**. Score across the seven dimensions
+   checklist + nine standards**. Score across the eight dimensions
    enumerated below; emit one verdict. Your product is an
    evidence-grade verdict: prefer independent execution over reported
    results and experiments over static suspicion — reading the
@@ -347,9 +347,10 @@ dimension_scores:
   tests: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   refactoring: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   external-surface-grounding: PASS | PASS_WITH_NOTES | NEEDS_REVISION
+  deletion-first: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 findings:                        # one entry per concern; order does not matter
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
-    dimension: security | architecture | correctness | naming | tests | refactoring | external-surface-grounding
+    dimension: security | architecture | correctness | naming | tests | refactoring | external-surface-grounding | deletion-first
     where: "{file:line or commit SHA}"
     source: "{rubric / checklist / standard file:section that triggered this finding}"
     note: "{1-2 sentence description}"
@@ -414,6 +415,7 @@ informational only.
 | tests | `standards/tdd-standard.md` (F.I.R.S.T, Three Laws, anti-patterns) — verify failing-then-passing evidence exists |
 | refactoring | `standards/refactoring-standard.md` + `standards/pragmatic-principles.md` |
 | external-surface-grounding | `standards/external-surface-grounding.md` — verify every external-surface call in this task's diff carries a grounding cite |
+| deletion-first | Every NEW abstraction, config, flag, or extension point in this scope must justify itself: ≥2 concrete users now, an explicit request, or a visible motivation in the task text. A finding REQUIRES naming a smaller shape that does the same job — no finding without a concrete simpler alternative. Well-motivated complexity passes. |
 
 #### D7 — External Surface Grounding (per-task scope)
 
@@ -426,6 +428,24 @@ The agent has no author authority over external surfaces — third-party HTTP AP
 - 🟢 **Nit**: the grounding cite uses **in-repo evidence (source 4d)** when **live verification (source 4a)** was available in this session — flag for next-touch opportunity to anchor on the higher-fidelity source.
 
 **Scope** (per §Resolved Decisions Q3): D7 evaluates **this task's artifact only**. Cross-task surface-consistency checks (sibling tasks calling the same surface with conflicting parameter shapes / version pins / endpoints) are **out of scope for per-task review** and live in whole-branch `code-reviewer.md` D7. Per-task reviewer is structurally blind to sibling tasks.
+
+#### D8 — Deletion-First (per-task scope)
+
+Every NEW abstraction, config, flag, or extension point this task's
+diff introduces must justify itself — see the `deletion-first` row in
+the Dimensions table above for the pinned scoring rule. The
+per-defect-pattern severity calibration (speculative future-proofing,
+over-abstraction, unnecessary extension points, unjustified complexity
+multipliers) lives in `rubrics/arch-gate.md`'s own-heading
+**deletion-first** scoring section — Read that section when a finding
+fires; do not re-derive severities from memory.
+
+**Scope**: D8 evaluates **this task's artifact only** — a NEW
+abstraction this task alone introduces with no named consumer yet.
+Cross-task complexity (e.g. an abstraction that only gains a second
+user once a sibling task lands) is out of scope for per-task review;
+that whole-branch angle lives in `code-reviewer.md`'s parallel
+dimension.
 
 ### Anti-patterns the orchestrator will reject
 
