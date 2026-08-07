@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-08-progress-display-hardening.md
 Goal: 進度顯示雙通道修復——plan_card.py 的 ledger 動作（--set-status／新增 --set-stage）自動印出整張進度卡，SDD 契約把渲染義務改綁在這些機械動作上並新增 host 原生 todo-list 單向鏡射（Claude Code 有 task 工具就鏡射、Codex 靜默跳過），rcr 的 Stage 手改指令換成 --set-stage，loom-code 出 0.70.0。
-Stage: planning
+Stage: sdd:wave-1
 Total tasks: 4
 Critical-path depth: 3 (≤5)
 Execution order: parallel-where-possible
@@ -28,7 +28,7 @@ Steps:
 - Dependencies: none
 - Independent: true
 - Brief item covered: "`scripts/plan_card.py` — ledger actions print the card" + "New `--set-stage`" (§Smallest End State 1)
-- Status: pending
+- Status: done(e2c2d438)
 - Gloss: 翻狀態／翻階段的那一下，整張卡就印在眼前——顯示義務從「記得渲染」縮成「轉述眼前的卡」
 - Review-hint: mutation probes should cover the refusal paths' byte-untouched guarantee and that the card in stdout is build_card's output, not a drifted copy.
 
