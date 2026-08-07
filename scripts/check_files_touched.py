@@ -83,8 +83,15 @@ Exit contract:
 
 __doc__ += "\n" + EXIT_CONTRACT
 
-# `## Task <N>` opens a task block (plan-format.md:45).
-_TASK_HDR = re.compile(r"^##\s+Task\s+(\d+)\b.*$", re.MULTILINE)
+# `## Task <N>` opens a task block (plan-format.md:45). The id is captured
+# as a STRING (group 1), never cast to int: an optional single trailing
+# letter (`## Task 3a`, `## Task 3b`) is a real plan shape — a split of an
+# original numbered task — and must resolve to its own distinct id rather
+# than silently vanish (a letter-suffixed heading that doesn't match this
+# pattern still matches `_TASK_BOUNDARY` below and gets swallowed as a
+# boundary with zero parse_errors). Multi-letter suffixes (`3ab`) are not
+# supported — same fate as before, accepted limitation.
+_TASK_HDR = re.compile(r"^##\s+Task\s+(\d+[A-Za-z]?)\b.*$", re.MULTILINE)
 
 # A task block ends at the next level-2 heading (`## Task <M>` or a plan
 # section like `## Notes`). `###` is deliberately NOT a boundary — see the
@@ -105,7 +112,16 @@ _STATUS_LINE = re.compile(
 
 # Progress-ledger vocabulary (plan-format.md:106): only `done(<sha>)`
 # carries a join key; the other three are valid and sha-less.
-_STATUS_DONE = re.compile(r"^done\(([0-9a-fA-F]{7,40})\)$")
+#
+# The optional `(?:\s+.*)?` tail (Task 2, wiring gap 3b) admits a real
+# annotated ledger line — docs/loom/plans/2026-07-25-company-total-
+# revenue.md:254's `done(c301c7be)  # spec-reviewer PASS; ...` — without
+# over-broadening: a tail is only absorbed when it is separated from the
+# closing `)` by whitespace, so it stays general (not hard-required to
+# start with `#`) while a genuinely sha-less Status (`pending`, `blocked`)
+# or a foreign-vocabulary token still falls through to `_STATUS_SHALESS`
+# and its parse_error, unchanged.
+_STATUS_DONE = re.compile(r"^done\(([0-9a-fA-F]{7,40})\)(?:\s+.*)?$")
 _STATUS_SHALESS = re.compile(r"^(?:pending|claimed\(@[^)]+\)|blocked)$")
 
 _NEW_TOKEN_PREFIX = re.compile(r"^NEW\s*:\s*")
@@ -155,9 +171,10 @@ class TaskDeclaration:
 
 @dataclass
 class PlanParse:
-    """Parse result for one plan: task number -> declaration, plus every
+    """Parse result for one plan: task id (string — plain "3" or
+    letter-suffixed "3a"/"3b", see `_TASK_HDR`) -> declaration, plus every
     field line that matched a field name but could not be parsed."""
-    tasks: dict[int, TaskDeclaration] = field(default_factory=dict)
+    tasks: dict[str, TaskDeclaration] = field(default_factory=dict)
     parse_errors: list[str] = field(default_factory=list)
 
 
@@ -176,7 +193,7 @@ def _normalize_token(token: str) -> str:
     return token.strip()
 
 
-def _parse_files_touched(task_no: int, value: str,
+def _parse_files_touched(task_no: str, value: str,
                          errors: list[str]) -> frozenset[str]:
     if not value:
         errors.append(
@@ -205,7 +222,7 @@ def _parse_files_touched(task_no: int, value: str,
     return frozenset(paths)
 
 
-def _parse_status(task_no: int, value: str, errors: list[str]) -> str | None:
+def _parse_status(task_no: str, value: str, errors: list[str]) -> str | None:
     done = _STATUS_DONE.match(value)
     if done:
         return done.group(1)
@@ -220,16 +237,17 @@ def _parse_status(task_no: int, value: str, errors: list[str]) -> str | None:
 def parse_plan_text(text: str) -> PlanParse:
     """Parse plan markdown into per-task declarations.
 
-    Returns a `PlanParse` whose `tasks` maps task number ->
-    `TaskDeclaration(declared_paths, sha)`; `sha` is None for any task
-    without a `Status: done(<sha>)` line. Unreadable field lines land in
-    `parse_errors`. A task block with no `Files touched` line at all yields
-    an empty `declared_paths` without a parse error — whether that is
-    acceptable is the verdict layer's policy, not the parser's.
+    Returns a `PlanParse` whose `tasks` maps task id (string; plain "3" or
+    letter-suffixed "3a"/"3b") -> `TaskDeclaration(declared_paths, sha)`;
+    `sha` is None for any task without a `Status: done(<sha>)` line.
+    Unreadable field lines land in `parse_errors`. A task block with no
+    `Files touched` line at all yields an empty `declared_paths` without a
+    parse error — whether that is acceptable is the verdict layer's policy,
+    not the parser's.
     """
     result = PlanParse()
     for hdr in _TASK_HDR.finditer(text):
-        task_no = int(hdr.group(1))
+        task_no = hdr.group(1)
         boundary = _TASK_BOUNDARY.search(text, hdr.end())
         block = text[hdr.end():boundary.start() if boundary else len(text)]
 
@@ -411,6 +429,22 @@ def _repo_relative_plan_path(plan_arg: Path, repo: Path) -> str:
         return plan_arg.as_posix()
 
 
+def _task_sort_key(task_id: str) -> tuple[int, str]:
+    """Numeric-then-letter sort key for a task id (Task 1: ids became
+    strings so `## Task 3a`/`3b` can parse). Plain `sorted(parse.tasks)`
+    would sort lexicographically ("10" before "2"); this key keeps the
+    reported order matching plan order — numeric part first, then the
+    optional trailing letter ("3" < "3a" < "3b" < "4" < "10"). A task id
+    that doesn't match the plain/letter-suffixed shape (should not occur —
+    `_TASK_HDR` only ever captures that shape) sorts last, by string, rather
+    than raising.
+    """
+    m = re.match(r"^(\d+)([A-Za-z]?)$", task_id)
+    if not m:
+        return (10**9, task_id)
+    return (int(m.group(1)), m.group(2))
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=("Compare each plan task's declared `Files touched` "
@@ -446,7 +480,7 @@ def main(argv: list[str] | None = None) -> int:
 
     variants = VARIANTS if args.variant == "all" else (args.variant,)
     flagged = False
-    for task_no in sorted(parse.tasks):
+    for task_no in sorted(parse.tasks, key=_task_sort_key):
         decl = parse.tasks[task_no]
         actual: frozenset[str] | None = None
         if decl.sha is not None:

@@ -5,6 +5,28 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.67.0] — 2026-08-07 — files-touched declaration check wired into close-out
+
+### Added
+
+- **Step 8 files-touched check.** `finishing-a-development-branch` Step 8
+  gains an orchestrator-only, ONCE-per-branch sibling check that runs the
+  repo-root `scripts/check_files_touched.py <plan> --variant R3` against
+  the branch's own plan, catching a task that under-declares
+  `Files touched`. Silent skip when the branch has no plan; loud N/A when
+  the script is absent (it ships in no plugin). Gates on exit 1
+  (under/over-declaration, unresolved sha, or parse error); surfaces exit
+  2 (no ledger) loudly. The comparator itself stays at repo root — no
+  plugin content, no marketplace ship (user decision 2026-08-07).
+  Dogfood: the check caught two real under-declarations on this very
+  branch's plan at close-out.
+
+### Changed
+
+- Step 8 files-touched bullet trimmed to keep the SKILL.md body under the
+  CHK-SKL-010 4,500-word cap (4,493 words) — underscores audit item A1
+  (collapse Step 8's ONCE-per-branch checklists into one table).
+
 ## [0.66.0] — 2026-08-07 — a deletion-first dimension on both code reviewers
 
 ### Added

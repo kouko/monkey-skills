@@ -21,7 +21,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from check_files_touched import parse_plan, parse_plan_text  # noqa: E402
+from check_files_touched import (  # noqa: E402
+    parse_plan, parse_plan_text, _task_sort_key,
+)
 
 BOLD_AND_PLAIN = """\
 # Plan: fixture
@@ -49,11 +51,11 @@ def test_parse_declared_files_bold_and_plain_forms():
     same bare-path shape; each task joins to its done(<sha>) key."""
     result = parse_plan_text(BOLD_AND_PLAIN)
 
-    assert set(result.tasks) == {1, 2}
-    assert result.tasks[1].declared_paths == frozenset({"src/a.py", "src/b.py"})
-    assert result.tasks[1].sha == "abc1234"
-    assert result.tasks[2].declared_paths == frozenset({"src/c.py"})
-    assert result.tasks[2].sha == "def5678"
+    assert set(result.tasks) == {"1", "2"}
+    assert result.tasks["1"].declared_paths == frozenset({"src/a.py", "src/b.py"})
+    assert result.tasks["1"].sha == "abc1234"
+    assert result.tasks["2"].declared_paths == frozenset({"src/c.py"})
+    assert result.tasks["2"].sha == "def5678"
     assert result.parse_errors == []
 
 
@@ -73,7 +75,7 @@ def test_token_normalization_backticks_dotslash_whitespace():
     result = parse_plan_text(_single_task(
         "- **Files touched**: ./src/f.py, `src/g.py` , src/h.py "))
 
-    assert result.tasks[1].declared_paths == frozenset(
+    assert result.tasks["1"].declared_paths == frozenset(
         {"src/f.py", "src/g.py", "src/h.py"})
     assert result.parse_errors == []
 
@@ -84,7 +86,7 @@ def test_new_token_normalizes_to_proposed_path():
     result = parse_plan_text(_single_task(
         "- **Files touched**: NEW: `scripts/x.py`, NEW: scripts/y.py"))
 
-    assert result.tasks[1].declared_paths == frozenset(
+    assert result.tasks["1"].declared_paths == frozenset(
         {"scripts/x.py", "scripts/y.py"})
     assert result.parse_errors == []
 
@@ -97,8 +99,8 @@ def test_missing_status_field_yields_none_sha():
     result = parse_plan_text(_single_task(
         "- **Files touched**: src/a.py", status_line="- **Independent**: false"))
 
-    assert result.tasks[1].declared_paths == frozenset({"src/a.py"})
-    assert result.tasks[1].sha is None
+    assert result.tasks["1"].declared_paths == frozenset({"src/a.py"})
+    assert result.tasks["1"].sha is None
     assert result.parse_errors == []
 
 
@@ -108,7 +110,7 @@ def test_non_done_status_vocabulary_yields_none_sha_without_error():
     result = parse_plan_text(_single_task(
         "- **Files touched**: src/a.py", status_line="- **Status**: pending"))
 
-    assert result.tasks[1].sha is None
+    assert result.tasks["1"].sha is None
     assert result.parse_errors == []
 
 
@@ -118,10 +120,50 @@ def test_malformed_files_touched_line_lands_in_parse_errors():
     §Decision, the citation-checker empty-pass lesson)."""
     result = parse_plan_text(_single_task("- **Files touched**:"))
 
-    assert result.tasks[1].declared_paths == frozenset()
+    assert result.tasks["1"].declared_paths == frozenset()
     assert len(result.parse_errors) == 1
     assert "Task 1" in result.parse_errors[0]
     assert "Files touched" in result.parse_errors[0]
+
+
+def test_annotated_status_done_tail_yields_sha():
+    """Real ledger shape (docs/loom/plans/2026-07-25-company-total-revenue.md:254):
+    `done(<sha>)` followed by a whitespace + `#`-comment tail must still
+    yield the join key. The `$`-anchored regex previously fell through to
+    `_STATUS_SHALESS`, failed that too, and produced a parse_error — mis-
+    reporting the whole plan as exit 2 (loud-empty) on the repo's normal
+    annotated-ledger shape (gap 3b)."""
+    result = parse_plan_text(_single_task(
+        "- **Files touched**: src/a.py",
+        status_line=("- Status: done(c301c7be)  # spec-reviewer PASS; "
+                      "code-quality-reviewer PASS_WITH_NOTES")))
+
+    assert result.tasks["1"].sha == "c301c7be"
+    assert result.parse_errors == []
+
+
+def test_annotated_status_relaxation_preserves_boundary():
+    """No-over-broadening boundary, pinned alongside the relaxation above:
+    a bare `done(<sha>)` with no tail still yields its sha; a genuinely
+    sha-less `pending` Status still carries no sha and no parse error; and
+    a foreign-vocabulary token still produces a parse_error. The annotation
+    relaxation must not swallow arbitrary text as 'done'."""
+    bare = parse_plan_text(_single_task(
+        "- **Files touched**: src/a.py",
+        status_line="- **Status**: done(abc1234)"))
+    assert bare.tasks["1"].sha == "abc1234"
+    assert bare.parse_errors == []
+
+    pending = parse_plan_text(_single_task(
+        "- **Files touched**: src/a.py", status_line="- Status: pending"))
+    assert pending.tasks["1"].sha is None
+    assert pending.parse_errors == []
+
+    foreign = parse_plan_text(_single_task(
+        "- **Files touched**: src/a.py", status_line="- Status: shipped!"))
+    assert foreign.tasks["1"].sha is None
+    assert len(foreign.parse_errors) == 1
+    assert "Status" in foreign.parse_errors[0]
 
 
 def test_malformed_status_value_lands_in_parse_errors():
@@ -130,7 +172,7 @@ def test_malformed_status_value_lands_in_parse_errors():
     result = parse_plan_text(_single_task(
         "- **Files touched**: src/a.py", status_line="- **Status**: shipped!"))
 
-    assert result.tasks[1].sha is None
+    assert result.tasks["1"].sha is None
     assert len(result.parse_errors) == 1
     assert "Task 1" in result.parse_errors[0]
     assert "Status" in result.parse_errors[0]
@@ -156,10 +198,10 @@ def test_subheading_inside_task_block_does_not_split_the_task():
     )
     result = parse_plan_text(corpus)
 
-    assert set(result.tasks) == {1, 2}
-    assert result.tasks[1].declared_paths == frozenset({"src/a.py"})
-    assert result.tasks[1].sha == "abc1234"  # lost if `###` split the block
-    assert result.tasks[2].declared_paths == frozenset({"src/b.py"})
+    assert set(result.tasks) == {"1", "2"}
+    assert result.tasks["1"].declared_paths == frozenset({"src/a.py"})
+    assert result.tasks["1"].sha == "abc1234"  # lost if `###` split the block
+    assert result.tasks["2"].declared_paths == frozenset({"src/b.py"})
     assert result.parse_errors == []
 
 
@@ -177,8 +219,8 @@ def test_duplicate_task_number_keeps_first_and_reports_error():
     )
     result = parse_plan_text(corpus)
 
-    assert result.tasks[1].declared_paths == frozenset({"src/a.py"})
-    assert result.tasks[1].sha == "abc1234"
+    assert result.tasks["1"].declared_paths == frozenset({"src/a.py"})
+    assert result.tasks["1"].sha == "abc1234"
     assert len(result.parse_errors) == 1
     assert "Task 1" in result.parse_errors[0]
 
@@ -190,8 +232,57 @@ def test_parse_plan_reads_a_file(tmp_path):
 
     result = parse_plan(plan)
 
-    assert set(result.tasks) == {1, 2}
-    assert result.tasks[1].sha == "abc1234"
+    assert set(result.tasks) == {"1", "2"}
+    assert result.tasks["1"].sha == "abc1234"
+
+
+# --- Letter-suffixed task headings (`## Task 3a`) ---------------------------
+#
+# WHY this test exists: `_TASK_HDR` used to capture only `\d+` and cast it to
+# int. A `## Task 3a` heading didn't match it — but it STILL matched the
+# generic `## `-prefixed `_TASK_BOUNDARY`, so the whole block was silently
+# consumed as a section boundary and vanished with ZERO parse_errors (a
+# silent-drop bug: the comparator would under-report once wired into
+# close-out). Task ids are now strings so a letter-suffixed split of an
+# original numbered task resolves to its own stable, distinct id.
+
+
+def test_letter_suffixed_task_headings_parse():
+    """`## Task 3a` / `## Task 3b` parse to distinct entries alongside a
+    plain `## Task 4` — today only the `4` entry survives; the 3a/3b blocks
+    vanish silently (matched by `_TASK_BOUNDARY`, not `_TASK_HDR`)."""
+    corpus = (
+        "# Plan: fixture\n\n"
+        "## Task 3a — first split half\n\n"
+        "- **Files touched**: src/a.py\n"
+        "- **Status**: done(abc1234)\n\n"
+        "## Task 3b — second split half\n\n"
+        "- **Files touched**: src/b.py\n"
+        "- **Status**: done(def5678)\n\n"
+        "## Task 4 — plain integer heading\n\n"
+        "- **Files touched**: src/c.py\n"
+        "- **Status**: done(fed9876)\n"
+    )
+    result = parse_plan_text(corpus)
+
+    assert set(result.tasks) == {"3a", "3b", "4"}
+    assert result.tasks["3a"].declared_paths == frozenset({"src/a.py"})
+    assert result.tasks["3a"].sha == "abc1234"
+    assert result.tasks["3b"].declared_paths == frozenset({"src/b.py"})
+    assert result.tasks["3b"].sha == "def5678"
+    assert result.tasks["4"].declared_paths == frozenset({"src/c.py"})
+    assert result.tasks["4"].sha == "fed9876"
+    assert result.parse_errors == []
+
+
+def test_task_sort_key_orders_numeric_then_letter():
+    """Downstream `sorted(parse.tasks, key=_task_sort_key)` (main()'s CLI
+    report order) must stay numeric-then-letter now that task ids are
+    strings — plain lexicographic sort would put "10" before "3b" and
+    (worse) before "2", reordering the report relative to plan order."""
+    ids = ["10", "3b", "3a", "2", "4"]
+
+    assert sorted(ids, key=_task_sort_key) == ["2", "3a", "3b", "4", "10"]
 
 
 # --- Task 6: continuation-line (wrapped) `Files touched` values ------------
@@ -222,7 +313,7 @@ def test_wrapped_files_touched_value_spans_continuation_lines():
     )
     result = parse_plan_text(corpus)
 
-    assert result.tasks[1].declared_paths == frozenset({
+    assert result.tasks["1"].declared_paths == frozenset({
         "skills/data-markets/scripts/cache_util.py",
         "tests/data/test_cache_util.py",  # the continuation path
     })
@@ -247,7 +338,7 @@ def test_wrapped_files_touched_no_value_all_paths_on_continuation_lines():
     )
     result = parse_plan_text(corpus)
 
-    assert result.tasks[1].declared_paths == frozenset({
+    assert result.tasks["1"].declared_paths == frozenset({
         "tests/analysis/test_fidelity.py",
         "tests/data/fixtures/ko_fy2017.json",
     })
@@ -268,7 +359,7 @@ def test_trailing_comma_on_final_continuation_line_is_list_syntax():
     )
     result = parse_plan_text(corpus)
 
-    assert result.tasks[1].declared_paths == frozenset(
+    assert result.tasks["1"].declared_paths == frozenset(
         {"src/a.py", "src/b.py"})
     assert result.parse_errors == []
 
@@ -280,7 +371,7 @@ def test_trailing_comma_with_no_continuation_stays_a_parse_error():
     makes this red (the error vanishes)."""
     result = parse_plan_text(_single_task("- Files touched: src/a.py,"))
 
-    assert result.tasks[1].declared_paths == frozenset({"src/a.py"})
+    assert result.tasks["1"].declared_paths == frozenset({"src/a.py"})
     assert len(result.parse_errors) == 1
     assert "Task 1" in result.parse_errors[0]
     assert "Files touched" in result.parse_errors[0]
@@ -298,7 +389,7 @@ def test_real_wrapped_plan_task1_parses_full_declared_set():
 
     result = parse_plan(plan)
 
-    declared = result.tasks[1].declared_paths
+    declared = result.tasks["1"].declared_paths
     assert ("investing-toolkit/skills/data-markets/scripts/cache_util.py"
             in declared)
     assert "investing-toolkit/tests/data/test_cache_util.py" in declared
@@ -336,7 +427,7 @@ def test_trailing_parenthetical_annotation_not_a_token():
     result = parse_plan_text(_single_task(
         f"- **Files touched**: {files_value} {_LINE24_ANNOTATION}"))
 
-    assert result.tasks[1].declared_paths == _LINE24_PATHS
+    assert result.tasks["1"].declared_paths == _LINE24_PATHS
     assert result.parse_errors == []
 
 
@@ -347,7 +438,7 @@ def test_non_parenthetical_tail_after_backticked_token_is_parse_error():
     result = parse_plan_text(_single_task(
         "- **Files touched**: `src/a.py`, `src/b.py` stray trailing prose"))
 
-    assert result.tasks[1].declared_paths == frozenset({"src/a.py"})
+    assert result.tasks["1"].declared_paths == frozenset({"src/a.py"})
     assert len(result.parse_errors) == 1
     assert "Task 1" in result.parse_errors[0]
     assert "src/b.py" in result.parse_errors[0]
@@ -362,7 +453,7 @@ def test_comma_inside_annotation_does_not_fragment_the_value():
     result = parse_plan_text(_single_task(
         "- **Files touched**: `src/a.py`, `src/b.py` (amended, see note)"))
 
-    assert result.tasks[1].declared_paths == frozenset(
+    assert result.tasks["1"].declared_paths == frozenset(
         {"src/a.py", "src/b.py"})
     assert result.parse_errors == []
 
@@ -380,7 +471,7 @@ def test_annotation_on_final_continuation_line_of_wrapped_value_strips():
     )
     result = parse_plan_text(corpus)
 
-    assert result.tasks[1].declared_paths == frozenset(
+    assert result.tasks["1"].declared_paths == frozenset(
         {"src/a.py", "src/b.py"})
     assert result.parse_errors == []
 
@@ -398,7 +489,7 @@ def test_real_annotated_plan_task1_parses_exact_declared_set():
 
     result = parse_plan(plan)
 
-    assert result.tasks[1].declared_paths == _LINE24_PATHS
+    assert result.tasks["1"].declared_paths == _LINE24_PATHS
     assert not [e for e in result.parse_errors
                 if "Task 1" in e and "Files touched" in e]
 
@@ -555,7 +646,7 @@ def test_double_done_status_is_loud_and_keeps_last():
     )
     result = parse_plan_text(corpus)
 
-    assert result.tasks[1].sha == "def5678"
+    assert result.tasks["1"].sha == "def5678"
     assert len(result.parse_errors) == 1
     assert "Task 1" in result.parse_errors[0]
     assert "done(" in result.parse_errors[0]
@@ -655,13 +746,13 @@ def _build_cell(cell, tmp_path):
         _edit(repo, "src/a.py", "tests/test_a.py")
         sha = _commit(repo, ["src/a.py", "tests/test_a.py"])
         _write_plan(repo, "plan.md", [_bold("src/a.py, tests/test_a.py", sha)])
-        return repo, "plan.md", {1: _OK3}
+        return repo, "plan.md", {"1": _OK3}
     if cell == 2:  # under-declaration, guard-test shape
         repo = _repo(tmp_path, ["src/limits.py", "tests/test_limits_guard.py"])
         _edit(repo, "src/limits.py", "tests/test_limits_guard.py")
         sha = _commit(repo, ["src/limits.py", "tests/test_limits_guard.py"])
         _write_plan(repo, "plan.md", [_bold("src/limits.py", sha)])
-        return repo, "plan.md", {1: _UNDER3}
+        return repo, "plan.md", {"1": _UNDER3}
     if cell == 3:  # under-declaration, SSOT-functional-copy shape
         repo = _repo(tmp_path, ["canonical/checklists/spec.md",
                                 "mirror/checklists/spec.md"])
@@ -670,7 +761,7 @@ def _build_cell(cell, tmp_path):
                              "mirror/checklists/spec.md"])
         _write_plan(repo, "plan.md",
                     [_bold("canonical/checklists/spec.md", sha)])
-        return repo, "plan.md", {1: _UNDER3}
+        return repo, "plan.md", {"1": _UNDER3}
     if cell == 4:  # under-declaration, manifest-mirror shape
         repo = _repo(tmp_path, ["plugin/plugin.json",
                                 "plugin/.codex-plugin/plugin.json"])
@@ -678,33 +769,33 @@ def _build_cell(cell, tmp_path):
         sha = _commit(repo, ["plugin/plugin.json",
                              "plugin/.codex-plugin/plugin.json"])
         _write_plan(repo, "plan.md", [_bold("plugin/plugin.json", sha)])
-        return repo, "plan.md", {1: _UNDER3}
+        return repo, "plan.md", {"1": _UNDER3}
     if cell == 5:  # over-declaration — the R1 vs R2/R3 discriminator
         repo = _repo(tmp_path, ["src/b.py", "src/never_touched.py"])
         _edit(repo, "src/b.py")
         sha = _commit(repo, ["src/b.py"])
         _write_plan(repo, "plan.md",
                     [_bold("src/b.py, src/never_touched.py", sha)])
-        return repo, "plan.md", {1: {"R1": OVER, "R2": OK, "R3": OK}}
+        return repo, "plan.md", {"1": {"R1": OVER, "R2": OK, "R3": OK}}
     if cell == 6:  # NEW: <path> token — commit CREATES the file
         repo = _repo(tmp_path)
         _write(repo, "src/new_module.py")
         sha = _commit(repo, ["src/new_module.py"])
         _write_plan(repo, "plan.md", [_bold("NEW: src/new_module.py", sha)])
-        return repo, "plan.md", {1: _OK3}
+        return repo, "plan.md", {"1": _OK3}
     if cell == 7:  # missing done(<sha>) — a commit exists, nothing joins
         repo = _repo(tmp_path, ["src/c.py"])
         _edit(repo, "src/c.py")
         _commit(repo, ["src/c.py"])
         _write_plan(repo, "plan.md", [_bold("src/c.py", None)])
-        return repo, "plan.md", {1: _NOJOIN3}
+        return repo, "plan.md", {"1": _NOJOIN3}
     if cell == 8:  # rename — --no-renames yields BOTH paths
         repo = _repo(tmp_path, ["src/old_name.py"])
         _git(repo, "mv", "src/old_name.py", "src/new_name.py")
         _write(repo, "src/new_name.py", "edited after move\n")
         sha = _commit(repo, ["src/new_name.py"])
         _write_plan(repo, "plan.md", [_bold("src/new_name.py", sha)])
-        return repo, "plan.md", {1: _UNDER3}
+        return repo, "plan.md", {"1": _UNDER3}
     if cell == 9:  # field-form variance — one plan, two tasks, both clean
         repo = _repo(tmp_path, ["src/d.py", "src/e.py"])
         _edit(repo, "src/d.py")
@@ -717,7 +808,7 @@ def _build_cell(cell, tmp_path):
              "- Files touched: src/e.py",
              f"- Status: done({sha_b})"],
         ])
-        return repo, "plan.md", {1: _OK3, 2: _OK3}
+        return repo, "plan.md", {"1": _OK3, "2": _OK3}
     if cell == 10:  # path normalization + the two standing excludes
         repo = _repo(tmp_path, ["src/f.py", "src/g.py", "src/h.py"])
         plan_rel = "plans/cell10.md"
@@ -737,7 +828,7 @@ def _build_cell(cell, tmp_path):
         _git(repo, "add", "-f", "--", "src/__pycache__/f.cpython-312.pyc")
         sha = _commit(repo, ["src/f.py", "src/g.py", "src/h.py", plan_rel])
         _write_plan(repo, plan_rel, [_bold(declared, sha)])
-        return repo, plan_rel, {1: {"R1": UNDER, "R2": UNDER, "R3": OK}}
+        return repo, plan_rel, {"1": {"R1": UNDER, "R2": UNDER, "R3": OK}}
     raise AssertionError(f"unknown cell {cell}")
 
 
