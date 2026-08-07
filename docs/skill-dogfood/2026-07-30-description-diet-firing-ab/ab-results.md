@@ -114,8 +114,9 @@ intended once and could be read more narrowly later.
 **It binds `loom-discovery:user-insights`'s SKILL.md frontmatter
 description** — the string this run varied, per the `Repo state:` line above.
 It does NOT bind `loom-discovery`'s **plugin manifest** description (the
-string mirrored across `.claude-plugin/plugin.json`,
-`.codex-plugin/plugin.json`, and the repo-root `marketplace.json`). That is a
+string mirrored across `loom-discovery/.claude-plugin/plugin.json`,
+`loom-discovery/.codex-plugin/plugin.json`, and the repo-level
+`.claude-plugin/marketplace.json`). That is a
 browse blurb shown to a human choosing whether to install; no leg here varied
 it, and no probe in this repo has measured a manifest description on a firing
 surface. It was cut from 1005 characters to one sentence in #664 (2026-08-07)
