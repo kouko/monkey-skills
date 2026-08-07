@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Fail a loom-memory store that violates its own §Index invariants.
 
-`docs/loom/memory/README.md` documents (§Format, §Index) four invariants that
+`docs/loom/memory/README.md` documents (§Format, §Index) five invariants that
 keep the index the durable retrieval surface for the store's body files. They
 were prose-only and already drifted once: PR #592 landed 2 orphan body files
 with no index line, uncaught, because nothing mechanical checked it. This gate
-mechanizes the same four invariants — the "mechanize the prose invariant"
+mechanizes the same five invariants — the "mechanize the prose invariant"
 pattern already used by check_version_bump.py.
 
-The four invariants, all checked against `--store` (default
+The five invariants, all checked against `--store` (default
 `docs/loom/memory`):
 
   (a) every body file (`<store>/*.md` except README.md) has an index line in
