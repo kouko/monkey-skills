@@ -5,6 +5,60 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.66.0] — 2026-08-07 — a deletion-first dimension on both code reviewers
+
+### Added
+
+- **`deletion-first` dimension on both code reviewers.** Every NEW
+  abstraction, config, flag, or extension point in scope must justify
+  itself: ≥2 concrete users now, an explicit request, or a visible
+  motivation in the task text. A finding REQUIRES naming a smaller
+  shape that does the same job — no finding without a concrete
+  simpler alternative; well-motivated complexity passes.
+  `code-quality-reviewer.md` scores it per-task (8 dimensions, was 7)
+  as D8; `code-reviewer.md` scores it whole-branch (11 dimensions, was
+  10) as D10, with the operational branch-scope check that D8
+  structurally cannot run: enumerate each NEW abstraction the branch
+  diff introduces, count its consumers across the **whole** branch
+  diff (not per task), and flag an abstraction whose promised second
+  consumer never landed — the anti-over-correction guard that catches
+  speculative machinery which per-task review excused task-by-task
+  but is cumulative branch-wide. `code-reviewer.md:10`'s pre-existing
+  stale "7-dimension scores" phrase is fixed alongside its own
+  dimension-count bump.
+- **`rubrics/arch-gate.md` gains an own-heading Deletion-First Scoring
+  section**, both in the canonical copy
+  (`domain-teams/skills/code-team/rubrics/arch-gate.md`) and the
+  distribute-generated loom-code copy. The YAGNI/Speculative-Generality
+  severity rows (speculative-future-problem, 3x-more-complex,
+  over-abstraction, unnecessary-extension-points) moved out of the
+  architecture scoring section into this section, so the defect class
+  is scored exactly once instead of duplicated across two dimensions.
+- **`scripts/test_deletion_first_dimension_pin.py`** locks the two
+  hand-authored dimension copies in lockstep: the pinned anchor
+  tokens ("deletion-first", "smaller shape", "≥2 concrete users") and
+  the `deletion-first:` enum line must appear in both agent files, with
+  a mutation-catch test on the non-baseline copy.
+- **`requesting-code-review/SKILL.md`'s `dimension_scores:` example
+  block** completes its enum: adds both `deletion-first:` and the
+  already-missing `deliberate-simplification:` line.
+- **`docs/loom/references/complexity-prune-runbook.md`** (repo-level,
+  not a skill): the E3 complexity-prune runbook — when to run
+  (human-invoked, felt growth or ~quarterly), the four-arm read-only
+  audit recipe (core-chain / support-surface / siblings / glue),
+  load-bearing do-not-touch discipline, proposal-critique triage
+  (KEEP/DEFER/DROP), and outputs into `docs/loom/audits/` +
+  PARKED/OPEN backlog entries. Proposal-only, stated loudly.
+
+### Fixed
+
+- **`scripts/test_brief_clause_lockstep.py`'s
+  `test_check_catches_a_perturbed_router`** now perturbs
+  `ROUTER_FILES[1]` instead of `ROUTER_FILES[0]` (the baseline), so
+  the naming assertion can actually fail on misattribution — an
+  arc-1 round-3 reviewer finding, one-word fix, ride-along in this
+  release.
+
 ## [0.65.2] — 2026-08-07 — session-start header names its rule-sync guard
 
 ### Changed
