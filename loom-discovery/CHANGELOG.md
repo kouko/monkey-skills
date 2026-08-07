@@ -6,6 +6,16 @@ file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] — 2026-08-07 — one-sentence plugin description
+
+### Changed
+
+- **plugin.json / marketplace.json `description`**: cut from a 1005-char
+  mini-README to one sentence (user request: a plugin description should
+  be a single simple line). The detail it carried already lives in the
+  plugin README and the two skills' own descriptions; both manifests stay
+  verbatim-synced per the marketplace-description-sync gate.
+
 ## [0.4.0] — 2026-07-25 — bba imperative in entry router
 
 ### Added
