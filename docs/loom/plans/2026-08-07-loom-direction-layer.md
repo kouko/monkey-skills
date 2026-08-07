@@ -44,7 +44,7 @@ Steps:
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: "Charter sync: backlog README §Verbs gains the fourth flow (Bet/promote — user-only)" (item 5) + §Addendum 1 (roadmap-entry pattern) + §Addendum 3-4 (parallel set, same-lane ordering)
-- Status: claimed(@impl-t2)
+- Status: pending
 - Gloss: 章程補齊：第四動詞、roadmap 條目具名、Now＝並行集合入法
 - Review-hint: none.
 
@@ -61,7 +61,7 @@ Steps:
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: "Kickoff read: brainstorming Axis 0's ready check extends one line" (item 4) + "every station edit fires CONDITIONALLY … silent skip" (item 8)
-- Status: claimed(@impl-t3)
+- Status: pending
 - Gloss: 開工必經站順讀方向檔——讀取迴路接上
 - Review-hint: cold-reader must not misread the conditional as mandatory for repos without the file.
 
@@ -78,7 +78,7 @@ Steps:
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: "Betting moment (the missing write loop)" + Decision "betting = event-driven at close (queue EMPTY → prompt)" (item 3) + "conditional + fallback wording like the backlog-close row" (item 8) + §Addendum 4 (same-lane first)
-- Status: claimed(@impl-t4)
+- Status: pending
 - Gloss: 收線站得到下注時刻——寫入迴路接上、同線優先，機制閉環
 - Review-hint: the cell is already the table's longest neighbor class — reviewer checks the extended cell still reads unambiguously (arc-4b's known long-row debt is precedent, not a blocker).
 
@@ -224,6 +224,26 @@ Steps:
 - Kickoff briefing: zero one-way-door decisions (all edits reversible
   from git history; the convention is opt-in per repo). The seed-theme
   ask was the only user input — collected (see Kickoff decision above).
+- RESUME NOTE (2026-08-08, session handoff): wave 1 fully done and
+  reviewed (T1 spec PASS + quality PASS_WITH_NOTES; five tombstones
+  mechanical-self-check clean; suite 1185). Wave-2 claims were reset to
+  pending — their implementers were never spawned (session subagent
+  budget exhausted at 200/200; user chose pause-and-new-session).
+  Carried 🟡 debt for the PR body: build_direction_now is the third
+  near-copy of the entry-iteration loop in scripts/backlog_index.py
+  (prescribed fix: extract a shared _iter_entries_validated iterator —
+  reviewer finding, Rule of Three). Carried 🟢: charter/enforcement
+  wording gap on the Now-body date exemption (DIRECTION.md:12-13 vs
+  script docstring); date-regex boundary behavior is plan-pinned
+  (bare years pass, TW tickers like 2049.TW false-positive) — upstream
+  debt, not implementer error; Violation.kind vocabulary comment not
+  extended; main() length pre-existing. T1's three adjudicated
+  deviations (Now-body date exemption / flagless-defaults-to-validate /
+  <store>/../DIRECTION.md resolution) are all ACCEPTED and documented.
+  Next session: dispatch T2+T3+T4 (pairwise disjoint; T1 done so T2's
+  Independent:false constraint is satisfied), then T10, then
+  whole-branch review (code + docs + haiku cold-read on T3/T4's
+  conditional posture), then finishing to PR-open.
 - T2's RED grep caveat: anchor is the longer "Bet (promote)" token —
   the implementer re-anchors if the live grep collides (store lesson:
   docs/loom/memory/a-red-grep-pinned-to-prose-must-anchor-a-phrase-that-exists-on-one-line.md).
