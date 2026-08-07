@@ -88,7 +88,12 @@ others. Pick by what is *blocking the item*, not by how important it
 feels:
 
 - `COMMITTED-NEXT` — decided, scheduled, and next in line. Nothing is
-  blocking it but our own turn to start.
+  blocking it but our own turn to start. When `docs/loom/DIRECTION.md`
+  exists, this queue is mirrored into its generated `## Now` section by
+  `scripts/backlog_index.py --direction-write` (see §Verbs' Bet flow).
+  The queue is a PARALLEL ACTIVE SET, not a serial order: one entry
+  typically maps to one worktree/lane, and the ≤5 cap is
+  parallel-steering capacity, not a serial queue depth.
 - `OPEN` — agreed to be worth doing, not yet scheduled. Anyone may
   pick it up.
 - `PARKED` — deliberately not being done for now, with the reason
@@ -114,7 +119,8 @@ never carry any other status.
 
 ## Verbs
 
-Three flows read and close this store; everything else only writes it.
+Four flows read, close, or promote items in this store; everything
+else only writes it.
 
 - **Ready query** — `python3 scripts/backlog_index.py --ready` is the
   store's read surface: it prints the `COMMITTED-NEXT` queue (the
@@ -131,6 +137,29 @@ Three flows read and close this store; everything else only writes it.
   later.
 - **Kickoff read** — `brainstorming`'s Axis 0 Backlog ready check runs
   the ready query at arc kickoff, so the queue informs new work.
+- **Bet (promote)** — promoting a backlog entry into `COMMITTED-NEXT`
+  is **user-only**; agents never promote. Triggered by
+  `finishing-a-development-branch`'s close-out when the
+  `COMMITTED-NEXT` queue is empty and the repo has
+  `docs/loom/DIRECTION.md`, or manually at any time. Candidates: the
+  active roadmap entries' next arcs first (same-lane first — when an
+  arc of theme X just closed, theme X's next arc leads the list), then
+  the ready query's `OPEN` output. To promote, the user edits the
+  chosen entry's `status:` to `COMMITTED-NEXT`; `--write` and
+  `--direction-write` then regenerate `BACKLOG.md` and DIRECTION.md's
+  `## Now` from it.
+
+## Roadmap entries — a named pattern, not a new file type
+
+A **roadmap entry** is an ordinary backlog entry whose body is an
+ordered arc list with dependency notes, serving one DIRECTION theme —
+not a new file type, not a DIRECTION section. `docs/loom/DIRECTION.md`'s
+`## Next` lines may point at one by filename. As each arc ships, its
+evidence line accumulates in the entry's body rather than opening a new
+entry per arc. Precedent:
+`2026-08-07-execute-complexity-audit-keep-lanes.md` ran exactly this
+shape live across five PRs, its body's evidence lines accumulating arc
+by arc as each one shipped.
 
 ## Filename rule
 
