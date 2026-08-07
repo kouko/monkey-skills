@@ -5,6 +5,33 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.65.0] — 2026-08-07 — a plan can say it waits on the user
+
+### Added
+
+- **Stage enum gains `blocked:user-decision`.** The plan Stage grammar
+  in writing-plans SKILL.md and `references/plan-format.md` gains a
+  value for a plan halted on a decision only the user can make.
+  plan-format.md carries the when-to-set duty prose: set it when
+  execution stops pending a user decision, flip it back when the
+  decision lands. Pinned by
+  `scripts/test_plan_format_progress_fields.py`.
+- **requesting-code-review gains the review-round Stage-flip duty.**
+  A dedicated paragraph atop §Process: entering a review round flips
+  the plan's Stage to review, so the ledger reflects where the branch
+  actually is. Pinned by the new
+  `scripts/test_review_stage_flip_duty.py`.
+
+### Noted
+
+- **Docs-arm rider deliberately skipped.** The matching Stage-flip
+  duty sentence for requesting-docs-review was cap-blown:
+  its SKILL.md sits exactly at the 4430-word ceiling pinned by
+  `scripts/test_rdr_extraction_pointers.py::test_word_ceiling`, and
+  the brief's pre-recorded rule governs (cap blown → skip the rider).
+  Recorded here so a future ceiling raise is a deliberate act per
+  that test's own docstring, not a silent side effect.
+
 ## [0.64.0] — 2026-08-06 — dispatch packets cite their sources
 
 ### Added
