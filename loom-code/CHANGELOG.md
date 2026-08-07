@@ -5,6 +5,41 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.67.0] — 2026-08-07 — prose slims: convergence contract extracted, wrong-bind downgraded
+
+### Changed
+
+- **`requesting-docs-review`'s convergence contract moves to a
+  reference.** SKILL.md's four binding Directives block (the bounded
+  cap / once-per-branch / auto-third-round / delta-scoped / round-N
+  handoff / oscillation rules) moves verbatim to a new
+  `references/convergence-contract.md`, leaving an imperative pointer
+  ("Read references/convergence-contract.md before running any round
+  — the four directives there are binding") plus a compact
+  per-directive one-line summary inline. Every pin that guarded a
+  phrase from the moved block was re-anchored to its new carrier
+  (the reference file, or the surviving inline summary) across
+  `test_requesting_docs_review_skill.py` and
+  `test_docs_reviewer_agent.py` — no rule semantics changed, only
+  location.
+- **`writing-plans`'s wrong-bind reversal paragraph downgrades to one
+  line.** The unauthenticated-hypothesis protocol paragraph is
+  replaced by: "A confirmed wrong-bind incident downgrades layer (i)
+  to confirm-before-use — restore the full protocol from git
+  history." The surfacing duty ("is surfaced immediately and") is
+  kept — the plan's own quality review caught that dropping it would
+  be a real semantic loss, not just a length cut. Pins in
+  `test_writing_plans_change_binding.py` verified to survive
+  unchanged.
+
+### Deferred
+
+- **A1 (finishing's five ONCE-bullets collapse) is deferred to a
+  follow-up brief after PR #674 merges** — its target file is
+  arc-3-modified by that in-flight PR, so folding it into this arc
+  would race a live merge. Recorded here per the brief's
+  continuation-pressure split clause; not shipped in 0.67.0.
+
 ## [0.66.0] — 2026-08-07 — a deletion-first dimension on both code reviewers
 
 ### Added
