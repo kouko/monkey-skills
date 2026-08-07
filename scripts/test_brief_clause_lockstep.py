@@ -23,6 +23,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # The four design-side routers that carry the shared brief-before-asking
@@ -46,9 +48,13 @@ def extract_anchor_sentence(text: str, rel_path: str) -> str:
     excludes the per-router fork-noun lead-in that precedes it — that
     lead-in is deliberate localization, not drift (brief §Problem, C2).
     """
+    count = text.count(ANCHOR)
+    if count != 1:
+        raise ValueError(
+            f"anchor fragment {ANCHOR!r} must appear exactly once in "
+            f"{rel_path}, found {count}"
+        )
     idx = text.find(ANCHOR)
-    if idx == -1:
-        raise ValueError(f"anchor fragment {ANCHOR!r} not found in {rel_path}")
     end = text.find(".", idx)
     if end == -1:
         raise ValueError(f"no sentence-ending period after anchor in {rel_path}")
@@ -81,3 +87,12 @@ def check(root: Path) -> dict[str, str]:
 
 def test_anchor_sentence_lockstep_across_routers():
     check(REPO_ROOT)
+
+
+def test_extract_anchor_sentence_rejects_duplicate_anchor():
+    """A router file where ANCHOR appears more than once is ambiguous — which
+    occurrence is the shared clause? Must fail loud naming the file, not
+    silently extract from the first match."""
+    text = f"lead-in. {ANCHOR} first occurrence. more text. {ANCHOR} second occurrence."
+    with pytest.raises(ValueError, match="dummy.md"):
+        extract_anchor_sentence(text, "dummy.md")
