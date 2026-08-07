@@ -113,9 +113,10 @@ Role boundaries enforced by behavior, not reading restrictions:
   `python3 scripts/check_loom_memory_integrity.py [--store docs/loom/memory]`
   — validate-only (default), stdlib-only; fails rc=1 and names every offender
   when a body file has no index line, an index line points to a missing
-  file, a filename diverges from its frontmatter `name`, or an index
-  description isn't byte-identical to its frontmatter `description`; rc=0
-  when clean. `python3 scripts/check_loom_memory_integrity.py --write`
+  file, a filename diverges from its frontmatter `name`, an index
+  description isn't byte-identical to its frontmatter `description`, or
+  two index lines point at the same body file; rc=0 when clean.
+  `python3 scripts/check_loom_memory_integrity.py --write`
   regenerates the `## Index` section from every entry's frontmatter and
   writes it back in place. `--check` diffs the committed `## Index` against
   a freshly rebuilt one and fails rc=1 on any drift without writing —

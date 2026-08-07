@@ -121,6 +121,13 @@ Steps:
   no-new-CI call, and the sorted canonical order are all two-way doors
   recorded in the brief; no PRINCIPLES.md → nothing suppressed.
 - Amendment log: verdict stamped PASS round 2 — stamping only (closed-list kind 1).
+- Amendment log: Task 5's RED grep target
+  ("fix the store, re-run until exit 0") was unsatisfiable as a single
+  `grep -n` line — the phrase is hard-wrapped across lines in
+  loom-code/skills/finishing-a-development-branch/SKILL.md's source;
+  the implementer verified RED/GREEN with a multi-line probe instead.
+  Recorded here so no later reviewer enforces the unsatisfiable
+  single-line criterion.
 - Change-folder binding: input is this brief (Layer 0 explicit handoff);
   the two non-archived investing change-folders remain unrelated, NOT
   bound — stated loudly.

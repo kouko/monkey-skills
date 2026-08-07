@@ -74,7 +74,7 @@ correctness, so the validator stays).
   D1 deliberately matches that, adding no new CI wiring.
 - Data: store = 144 entries; README 9,244 w total, ## Index 8,340 w
   (L132-EOF), non-Index prose 904 w; validator already implements
-  parse_frontmatter (L69-82) + parse_index_lines (L47-99) + five
+  parse_frontmatter (L69-82) + parse_index_lines (L101-117) + five
   invariants (L102-164); CLI has only --store (L169-173).
 - Boundary: touches repo-root script + charter + hook (repo-level, no
   plugin) AND two plugins' skill text (loom-pipeline: loom-memory;

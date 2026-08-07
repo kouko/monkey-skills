@@ -56,8 +56,9 @@ Given a fact worth keeping:
    store — the index and the file bodies — for entries the new fact
    contradicts. On a hit, update or replace that entry (delete and
    rewrite it; git history is the archive) instead of adding a
-   contradicting sibling, and note the replacement in the index line.
-   This mirrors git-memory's backward-pointing `Supersedes:` doctrine
+   contradicting sibling, and note the replacement in the entry's
+   frontmatter `description` (the regenerated index line then carries
+   it). This mirrors git-memory's backward-pointing `Supersedes:` doctrine
    (`dev-workflow/skills/git-memory/standards/memory-conventions.md`)
    — point at it, don't copy its table (SSOT above).
 3. **Write `<slug>.md`** in `docs/loom/memory/` following the
@@ -70,9 +71,12 @@ Given a fact worth keeping:
    the reason (broken frontmatter, unexpected prose in the index
    region) — fix that named file first, then re-run.
 5. **Re-run the validator** before declaring done:
-   `python3 scripts/check_loom_memory_integrity.py --check` must
-   exit 0 — it diffs the full index block, covering all five
-   invariants the charter defines.
+   `python3 scripts/check_loom_memory_integrity.py` (default validate
+   mode) must exit 0 — it independently checks all five invariants
+   the validator's docstring defines. Also run `--check`, which
+   additionally catches hand-edits or drift in the committed index;
+   `--check` re-runs the generator, so it is not itself the
+   certification.
 
    A nonzero exit is a fail-loud fix-now, not a note.
 
