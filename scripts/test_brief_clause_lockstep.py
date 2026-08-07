@@ -123,7 +123,7 @@ def test_check_catches_a_perturbed_router(tmp_path):
 
     check(tmp_path)  # baseline: unmutated copy passes
 
-    mutated_rel = ROUTER_FILES[0]
+    mutated_rel = ROUTER_FILES[1]
     mutated_path = tmp_path / mutated_rel
     text = mutated_path.read_text(encoding="utf-8")
     assert "architectural blast radius" in text
