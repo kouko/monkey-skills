@@ -1018,21 +1018,23 @@ def test_ready_count_line_reports_exact_numbers(tmp_path):
     assert non_empty[-1] == "ready: 1 committed / 2 open / 5 excluded by status"
 
 
-def test_ready_is_a_mode_on_its_own_and_joins_the_no_mode_error(tmp_path):
-    """(e) `--ready` is accepted with no other mode flag; and the no-mode
-    parser error now names it alongside --validate/--write/--check."""
+def test_ready_is_a_mode_on_its_own_and_flagless_defaults_to_validate(tmp_path):
+    """(e) `--ready` is accepted with no other mode flag; and a flagless
+    invocation now runs the validate mode (mirroring
+    check_loom_memory_integrity.py's trio shape, direction-layer arc)
+    instead of the former "no mode specified" parser error."""
     store = _ready_store(tmp_path)
 
     result = _run_ready(store)
     assert result.returncode == 0, result.stdout + result.stderr
 
-    no_mode = subprocess.run(
+    flagless = subprocess.run(
         [sys.executable, str(BACKLOG_SCRIPT), "--store", str(store)],
         capture_output=True,
         text=True,
     )
-    assert no_mode.returncode == 2, no_mode.stdout + no_mode.stderr
-    assert "--ready" in no_mode.stderr, no_mode.stderr
+    assert flagless.returncode == 0, flagless.stdout + flagless.stderr
+    assert "backlog_index --validate: OK" in flagless.stdout, flagless.stdout
 
 
 def test_the_deferred_rules_follow_up_is_tracked_in_the_store():
@@ -1199,3 +1201,288 @@ def test_ready_omits_committed_next_heading_when_empty(tmp_path):
     assert "## OPEN" in out
     non_empty = [line for line in out.splitlines() if line.strip()]
     assert non_empty[-1] == "ready: 0 committed / 1 open / 1 excluded by status"
+
+
+# ---------------------------------------------------------------------------
+# Direction layer (plan docs/loom/plans/2026-08-07-loom-direction-layer.md,
+# Task 1): `--direction-write <path>` / `--direction-check <path>` regenerate
+# / self-confirm the generated `## Now` section of a DIRECTION.md from
+# COMMITTED-NEXT entry files; the flagless validate mode gains independent
+# DIRECTION.md checks ONLY when the file exists (absent file = silently
+# valid — the direction layer is opt-in per repo). Validate resolves the
+# direction file at `<store>/../DIRECTION.md` (the convention's fixed
+# location, docs/loom/DIRECTION.md beside docs/loom/backlog/).
+# ---------------------------------------------------------------------------
+
+
+EMPTY_QUEUE_LINE = "_(queue empty — bet at the next close-out)_"
+
+
+def _direction_text(now_body: str = EMPTY_QUEUE_LINE) -> str:
+    """A minimal DIRECTION.md fixture: charter-header stand-in + the three
+    required sections. `now_body` is the ## Now section body (default: the
+    exact empty-queue line the generator renders)."""
+    return (
+        "# Direction — fixture\n"
+        "\n"
+        "> Charter fixture header: Now is generated; no dates anywhere.\n"
+        "\n"
+        "## Now\n"
+        "\n"
+        f"{now_body}\n"
+        "\n"
+        "## Next\n"
+        "\n"
+        "- a fixture next theme\n"
+        "\n"
+        "## Later\n"
+        "\n"
+        "- a fixture later theme\n"
+    )
+
+
+def _direction_store(tmp_path: Path, statuses: list[tuple[str, str]]) -> tuple[Path, Path]:
+    """A fixture (store, direction-file) pair laid out per the convention:
+    DIRECTION.md sits at the store's parent (`tmp/DIRECTION.md` beside
+    `tmp/backlog/`), which is where the validate mode resolves it."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    for name, status in statuses:
+        _write(store, f"{name}.md", _entry(name, status, description=f"{name} marker."))
+    direction = tmp_path / "DIRECTION.md"
+    direction.write_text(_direction_text(), encoding="utf-8")
+    return store, direction
+
+
+def _run_direction_write(direction: Path, store: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(BACKLOG_SCRIPT),
+            "--direction-write",
+            str(direction),
+            "--store",
+            str(store),
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+
+def _run_direction_check(direction: Path, store: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(BACKLOG_SCRIPT),
+            "--direction-check",
+            str(direction),
+            "--store",
+            str(store),
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_direction_write_renders_committed_next_entries_in_file_date_order(tmp_path):
+    """Generation from a fixture store with COMMITTED-NEXT entries: one
+    `- <name> — <description>` line per entry, filename (= file-date) order,
+    other statuses excluded, human sections untouched, and a second run is
+    byte-identical (pure function of the entry files)."""
+    store, direction = _direction_store(
+        tmp_path,
+        [
+            ("2026-08-02-second-bet", "COMMITTED-NEXT"),
+            ("2026-08-01-first-bet", "COMMITTED-NEXT"),
+            ("2026-08-03-open-thing", "OPEN"),
+        ],
+    )
+
+    result = _run_direction_write(direction, store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    text = direction.read_text(encoding="utf-8")
+    now_section = _section(text, "## Now")
+    first = now_section.index("- 2026-08-01-first-bet — 2026-08-01-first-bet marker.")
+    second = now_section.index("- 2026-08-02-second-bet — 2026-08-02-second-bet marker.")
+    assert first < second, now_section
+    assert "2026-08-03-open-thing" not in now_section, now_section
+    assert EMPTY_QUEUE_LINE not in now_section, now_section
+    # Human sections untouched:
+    assert "- a fixture next theme" in _section(text, "## Next")
+    assert "- a fixture later theme" in _section(text, "## Later")
+    # Idempotent:
+    rerun = _run_direction_write(direction, store)
+    assert rerun.returncode == 0, rerun.stdout + rerun.stderr
+    assert direction.read_text(encoding="utf-8") == text
+
+
+def test_direction_write_renders_exact_empty_queue_line(tmp_path):
+    """An empty COMMITTED-NEXT queue renders exactly the pinned line —
+    nothing else in the ## Now body."""
+    store, direction = _direction_store(tmp_path, [("2026-08-03-open-thing", "OPEN")])
+    # Pre-seed a stale Now body so the run demonstrably regenerates it.
+    direction.write_text(
+        _direction_text(now_body="- stale-hand-edited-line — should vanish."),
+        encoding="utf-8",
+    )
+
+    result = _run_direction_write(direction, store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    now_section = _section(direction.read_text(encoding="utf-8"), "## Now")
+    assert now_section.strip() == EMPTY_QUEUE_LINE, now_section
+
+
+def test_direction_write_refuses_file_without_now_heading(tmp_path):
+    """Refusal on missing `## Now`: loud exit 1, file left byte-untouched."""
+    store, direction = _direction_store(tmp_path, [])
+    headless = "# Direction — fixture\n\n## Next\n\n- a theme\n\n## Later\n\n- b theme\n"
+    direction.write_text(headless, encoding="utf-8")
+
+    result = _run_direction_write(direction, store)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "backlog_index --direction-write: FAIL —" in result.stdout, result.stdout
+    assert "## Now" in result.stdout, result.stdout
+    assert direction.read_text(encoding="utf-8") == headless
+
+
+def test_direction_write_refuses_malformed_entry_frontmatter(tmp_path):
+    """An entry whose status falls outside the closed vocabulary (the
+    malformed-frontmatter case build_ready also refuses) fails loudly
+    rather than being silently skipped or laundered into the queue."""
+    store, direction = _direction_store(tmp_path, [])
+    _write(store, "2026-08-01-bogus.md", _entry("2026-08-01-bogus", "NOT-A-REAL-STATUS"))
+    before = direction.read_text(encoding="utf-8")
+
+    result = _run_direction_write(direction, store)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "NOT-A-REAL-STATUS" in result.stdout, result.stdout
+    assert direction.read_text(encoding="utf-8") == before
+
+
+def test_direction_check_is_self_confirmation_pass_and_drift(tmp_path):
+    """--direction-check re-runs the generator and diffs (self-confirmation):
+    exit 0 right after --direction-write; exit 1 with a diff after a
+    hand-edit to the generated ## Now body, without writing anything."""
+    store, direction = _direction_store(tmp_path, [("2026-08-01-first-bet", "COMMITTED-NEXT")])
+    assert _run_direction_write(direction, store).returncode == 0
+
+    clean = _run_direction_check(direction, store)
+    assert clean.returncode == 0, clean.stdout + clean.stderr
+
+    hand_edited = direction.read_text(encoding="utf-8").replace(
+        "- 2026-08-01-first-bet — 2026-08-01-first-bet marker.",
+        "- 2026-08-01-first-bet — a hand-tweaked description.",
+    )
+    direction.write_text(hand_edited, encoding="utf-8")
+
+    drifted = _run_direction_check(direction, store)
+    assert drifted.returncode == 1, drifted.stdout + drifted.stderr
+    assert "backlog_index --direction-check: FAIL —" in drifted.stdout, drifted.stdout
+    assert direction.read_text(encoding="utf-8") == hand_edited  # never writes
+
+
+def test_direction_check_fails_loudly_when_file_missing(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    missing = tmp_path / "DIRECTION.md"
+
+    result = _run_direction_check(missing, store)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "backlog_index --direction-check: FAIL —" in result.stdout, result.stdout
+
+
+def test_validate_flags_date_token_in_later_section(tmp_path):
+    """Mutation pin for the charter's no-dates rule as a checked invariant:
+    a `2026-09` token in ## Later must fail validate; a `Q3` token must
+    fail too (the plan's `20\\d\\d[-/年.]` + `Q[1-4]` regex)."""
+    store, direction = _direction_store(tmp_path, [])
+    text = direction.read_text(encoding="utf-8")
+    direction.write_text(
+        text.replace("- a fixture later theme", "- a fixture later theme (2026-09)"),
+        encoding="utf-8",
+    )
+    result = _run_validate(store)
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "direction-date" in result.stdout, result.stdout
+    assert "2026-" in result.stdout, result.stdout
+
+    direction.write_text(
+        text.replace("- a fixture later theme", "- a fixture later theme in Q3"),
+        encoding="utf-8",
+    )
+    result = _run_validate(store)
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "direction-date" in result.stdout, result.stdout
+
+
+def test_validate_exempts_generated_now_body_from_the_date_ban(tmp_path):
+    """Entry FILENAMES are date-prefixed by store convention, so a non-empty
+    generated ## Now necessarily carries `20\\d\\d-` tokens. The date ban
+    scopes to the human-owned text (header, ## Next, ## Later); the ## Now
+    body is exempt — it is safe to exempt precisely because the separate
+    now-matches-entries check pins that body to the generator's output."""
+    store, direction = _direction_store(tmp_path, [("2026-08-01-first-bet", "COMMITTED-NEXT")])
+    assert _run_direction_write(direction, store).returncode == 0
+
+    result = _run_validate(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_validate_flags_now_section_drifted_from_entries(tmp_path):
+    """The ## Now content must match the COMMITTED-NEXT entry files — a
+    hand-edit (here: a stale empty-queue line while the store has a
+    committed entry) is an independent validate violation."""
+    store, direction = _direction_store(tmp_path, [("2026-08-01-first-bet", "COMMITTED-NEXT")])
+    # direction still carries the default empty-queue Now — stale.
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "direction-now" in result.stdout, result.stdout
+
+
+def test_validate_flags_missing_next_and_later_headings(tmp_path):
+    store, direction = _direction_store(tmp_path, [])
+    direction.write_text(
+        f"# Direction — fixture\n\n## Now\n\n{EMPTY_QUEUE_LINE}\n", encoding="utf-8"
+    )
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "'## Next'" in result.stdout, result.stdout
+    assert "'## Later'" in result.stdout, result.stdout
+
+
+def test_validate_is_silently_valid_when_direction_file_absent(tmp_path):
+    """Absent DIRECTION.md = the repo has not opted into the direction
+    layer: validate passes with no direction-* mention at all."""
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(store, "2026-08-01-alpha.md", _entry("2026-08-01-alpha", "OPEN"))
+
+    result = _run_validate(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "direction" not in result.stdout.lower(), result.stdout
+
+
+def test_real_direction_file_exists_and_real_store_validates_clean_with_it():
+    """monkey-skills is the direction layer's first consumer: the real
+    docs/loom/DIRECTION.md exists with the three sections, and flagless
+    validate over the real store — which now includes the DIRECTION
+    checks — passes."""
+    real_direction = REPO_ROOT / "docs" / "loom" / "DIRECTION.md"
+    assert real_direction.is_file(), f"missing {real_direction}"
+    text = real_direction.read_text(encoding="utf-8")
+    for heading in ("## Now", "## Next", "## Later"):
+        assert f"\n{heading}\n" in text, f"real DIRECTION.md missing {heading}"
+
+    result = _run_validate(REPO_ROOT / "docs" / "loom" / "backlog")
+    assert result.returncode == 0, result.stdout + result.stderr
