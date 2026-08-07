@@ -5,9 +5,13 @@ design-side router SKILL.md files.
 WHY this test exists: the audit's C2 finding was that a semantic edit to
 the shared "≥3 trade-offs, ≥2 implementation paths, or architectural blast
 radius — run `dev-workflow:brief-before-asking`…" clause in any one router
-can silently drift from its three siblings — CI only pins the
-`dev-workflow:brief-before-asking` skill-id substring, not the wording
-(brief §Current State Evidence, Error). Per-router lead-in / fork-noun
+can silently drift from its three siblings. Each router's own test already
+pins its OWN copy of the trigger triple verbatim (e.g.
+loom-discovery/scripts/test_using_skill.py:146-149 and its three
+siblings) — but those four pins are independent single-file assertions;
+nothing asserted the four copies stay EQUAL to each other, or pinned the
+tail clause after the triple (brief §Current State Evidence, Error). This
+test adds that cross-file equality lockstep. Per-router lead-in / fork-noun
 wording ("discovery fork" / "product/principle fork" / "design fork" /
 "spec fork") is a DELIBERATE localization and stays out of scope (brief
 §Out of Scope) — extraction anchors on the byte-stable fragment

@@ -16,9 +16,11 @@ per-item caveats in the audit doc's Triage and Impact sections):
    none byte-identical, so relocation would rewrite rendered prose;
    pinned by scripts/test_state_anchor_carrier_inventory.py instead of
    consolidating); T2 brief-before-asking anchor-sentence lockstep test
-   (C2 — the shared trigger sentence is already byte-identical across
-   the 4 design-side router SKILL.md files; byte-pins it, no
-   normalization needed); T3 router-card rule-token presence test (D2
+   (C2 — the shared trigger sentence is already word-identical across
+   the 4 design-side router SKILL.md files, though loom-discovery's copy
+   wraps differently; the lockstep normalizes whitespace then requires
+   equality, deliberately tolerating a pure re-wrap); T3 router-card
+   rule-token presence test (D2
    — each of the 5 load-bearing rules' anchor TITLE token (rule 5 =
    "Research before asking") present in BOTH hooks/router-card.md and
    using-loom-code/SKILL.md's rules block; router-card additionally
@@ -46,7 +48,8 @@ per-item caveats in the audit doc's Triage and Impact sections):
    hypothetical wrong-bind reversal protocol (315 w) to one line.
    Weak-model cold-reads mandatory; 44 test files + 6 production
    scripts name these skills (grep of `*.py` under `loom-*/scripts`,
-   `loom-*/tests`, `scripts/`).
+   `loom-*/tests`, `scripts/`; measured at e610f7c4 — this branch's own
+   new test file makes it 45+6 at merge).
 
 Expected impact if all four land: ~-1,900 words across the three
 heaviest SKILL.md bodies, maintenance tax on the four cross-file rules

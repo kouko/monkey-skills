@@ -7,6 +7,10 @@ Endpoint named: no → human-pumped. Design-side on-ramp: N/A (refactor —
 Axis 0 negative guard; backlog ready check ran: COMMITTED-NEXT empty, seed
 entry itself is the related OPEN item).
 
+2026-08-07 post-review corrections: measured figures and the C2/CI-pin
+rationale updated to match the shipped artifacts; see the plan's Decision
+Log.
+
 ## Problem
 
 Four cross-file rule duplications in the loom family have no drift
@@ -16,22 +20,28 @@ maintenance tax. Deep recon (this brief's Evidence) falsified two of the
 audit's premises, so the arc is RESHAPED from "relocate into distribute.py
 SSOT" to "pin with drift-guard tests":
 
-- B1 state-anchor: NOT 7 hand-copies of one text — 11 locations in 10 files,
+- B1 state-anchor: NOT 7 hand-copies of one text — 12 grep hits across 9
+  files (recon's original "11 locations in 10 files" was itself a miscount
+  against the same base tree; the shipped pin,
+  scripts/test_state_anchor_carrier_inventory.py, is the source of truth),
   all deliberate paraphrases at different compression levels, none
-  byte-identical. Byte-SSOT would rewrite rendered prose in 10 files (not
-  behavior-neutral). Reshape: a carrier-inventory test that pins the known
-  location list + shared fragment, giving semantic changes a machine-readable
-  sweep list.
+  byte-identical. Byte-SSOT would rewrite rendered prose across those 9
+  files (not behavior-neutral). Reshape: a carrier-inventory test that pins
+  the known location list + shared fragment, giving semantic changes a
+  machine-readable sweep list.
 - B2 tdd-standard.md ×2: ALREADY managed — distribute.py ROUTE
   ("standards/tdd-standard.md" → both dests, distribute.py:59-62) and
   verify-drift.py:73-97 byte-check it. The audit's "not managed" claim is
   false. Reshape: no code change; correct the audit doc.
 - C2 brief-before-asking ×4 routers: the operative trigger sentence is
-  ALREADY byte-identical across all 4; only lead-in/fork-noun/one extra
-  loom-discovery sentence differ (deliberate per-router localization). CI
-  pins only the skill-id token, not the sentence. Reshape: lockstep byte-pin
-  test on the shared anchor sentence (mint_critic_verdict ast-lockstep
-  precedent) — no relocation, no per-session preload increase.
+  ALREADY word-identical across all 4 — loom-discovery's copy wraps
+  differently, so the lockstep compares after whitespace normalization;
+  only lead-in/fork-noun/one extra loom-discovery sentence differ
+  (deliberate per-router localization). Each router's own test pins its
+  copy of the sentence independently; nothing asserts the four copies
+  stay equal to each other. Reshape: lockstep byte-pin test on the shared anchor
+  sentence (mint_critic_verdict ast-lockstep precedent) — no relocation, no
+  per-session preload increase.
 - D2 router-card 5 rules: the divergence is a RECORDED deliberate decision —
   session-start:6-11 says "card wording is deliberately compressed, not
   byte-identical — kept out of verify-drift.py scope for now". Reshape:
@@ -59,10 +69,14 @@ existing precedents: prose-pin tests, mint_critic_verdict cross-plugin
 lockstep).
 
 1. T1 (B1): carrier-inventory test — greps `state anchor|state-anchor` over
-   `loom-*/`, asserts the live-carrier list matches the pinned 11-location
-   inventory (grep population stated in-test; CHANGELOG + test-prompts.json
-   excluded). Fails when a carrier appears/disappears → the failure message
-   IS the sweep list for semantic changes.
+   `loom-*/`, asserts the live-carrier list matches the pinned 12-hit,
+   9-file inventory (per scripts/test_state_anchor_carrier_inventory.py,
+   the source of truth; grep population stated in-test; excludes only
+   loom-code/CHANGELOG.md and loom-pipeline/hooks/test-prompts.json — a
+   nonexistent path kept for forward-compat;
+   loom-code/skills/requesting-code-review/test-prompts.json IS counted).
+   Fails when a carrier appears/disappears → the failure message IS the
+   sweep list for semantic changes.
 2. T2 (C2): lockstep test — byte-compares the shared anchor sentence
    ("≥3 trade-offs, ≥2 implementation paths, or architectural blast radius —
    run `dev-workflow:brief-before-asking`…") across the 4 design-side router
@@ -92,19 +106,27 @@ lockstep).
 - Error: drift surfaces only via verify-drift.py exit 1 in CI
   (loom-code-ci.yml); design-side routers under loom-siblings-ci.yml
   (loom-discovery/product-principles/interface-design) and loom-spec-ci.yml.
-  The four router tests pin only the substring
-  "dev-workflow:brief-before-asking" (e.g.
-  loom-discovery/scripts/test_using_skill.py:144-145) — wording drift is
-  currently invisible to CI.
-- Data: C2 anchor sentence byte-identical ×4
+  Each of the four router tests already pins its OWN copy of the trigger
+  triple verbatim (e.g. loom-discovery/scripts/test_using_skill.py:146-149
+  and its three siblings) — but the four pins are independent single-file
+  assertions; nothing asserts the four copies stay equal to each other, or
+  pins the tail clause after the triple. T2 adds that cross-file equality
+  lockstep.
+- Data: C2 anchor sentence word-identical ×4 (loom-discovery's copy wraps
+  differently, so the lockstep compares after whitespace normalization)
   (using-loom-discovery/SKILL.md:59-65 with one extra sentence,
   using-loom-product-principles/SKILL.md:43,
   using-loom-interface-design/SKILL.md:41, using-loom-spec/SKILL.md:19);
-  B1 = 11 paraphrased locations, 10 files (list in recon; grep
-  `state anchor|state-anchor` over `loom-*/`, excl. CHANGELOG + 
-  test-prompts.json); tdd-standard.md md5 8063cbb… identical ×2;
-  router-card.md:9-13 vs using-loom-code/SKILL.md:16-21 rules 4-5 diverge
-  substantially by design (session-start:6-11).
+  B1 = 12 hits, 9 files per
+  scripts/test_state_anchor_carrier_inventory.py (the shipped pin is the
+  source of truth, superseding recon's "11 locations in 10 files"; grep
+  `state anchor|state-anchor` over `loom-*/`, excluding only
+  loom-code/CHANGELOG.md and loom-pipeline/hooks/test-prompts.json — a
+  nonexistent path kept for forward-compat;
+  loom-code/skills/requesting-code-review/test-prompts.json IS counted);
+  tdd-standard.md md5 8063cbb… identical ×2; router-card.md:9-13 vs
+  using-loom-code/SKILL.md:16-21 rules 4-5 diverge substantially by design
+  (session-start:6-11).
 - Boundary: C2 spans 4 plugins → cross-plugin lockstep test follows the
   mint_critic_verdict precedent (a test in one plugin reads sibling plugin
   files); T1/T3 are loom-code-internal. Plugin versions at branch base:
@@ -138,8 +160,9 @@ Pre-triaged by the audit → proposal-critique → two docs-review rounds; the
 in-house SSOT+drift machinery is the industry-standard shape (config-as-code
 drift checks). Narrow space; recon replaced the one open fork (C2 carrier:
 family-reception relocation vs lockstep pin) with evidence — the sentence is
-already byte-identical, so the pin wins: zero preload cost, zero
-cross-plugin file dependency, precedent exists. No further research needed.
+already word-identical (loom-discovery's copy wraps differently), so the
+pin wins: zero preload cost, zero cross-plugin file dependency, precedent
+exists. No further research needed.
 
 ## What Becomes Obsolete (Axis 5)
 

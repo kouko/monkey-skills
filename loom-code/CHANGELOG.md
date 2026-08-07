@@ -10,9 +10,11 @@ Versioning: [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - **Session-start header comment now names
-  `scripts/test_router_card_rule_tokens.py`** as the rule-sync guard,
-  replacing the manual "edit BOTH" caveat that had no enforcement
-  behind it.
+  `scripts/test_router_card_rule_tokens.py`** as the rule-sync guard.
+  The manual "edit BOTH" duty itself is unchanged — what was replaced is
+  the "(kept out of verify-drift.py scope for now)" parenthetical; that
+  duty is now backed by the token-presence guard instead of standing
+  unenforced.
 
 ### Added (repo level)
 

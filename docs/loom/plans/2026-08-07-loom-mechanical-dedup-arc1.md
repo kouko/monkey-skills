@@ -15,7 +15,7 @@ Steps:
   4. CHANGELOG 條目
 
 ## Task 1 — T1 state-anchor carrier-inventory test
-- Description: Add a pytest that greps `state anchor|state-anchor` over `loom-*/` (excluding `loom-code/CHANGELOG.md` and `loom-pipeline/hooks/test-prompts.json`) and asserts the hit set equals the pinned 11-location inventory (10 files; list in brief Evidence/Data). Expose the check as a function taking a root path so RED can run against a mutated temp copy.
+- Description: Add a pytest that greps `state anchor|state-anchor` over `loom-*/` (excluding `loom-code/CHANGELOG.md` and `loom-pipeline/hooks/test-prompts.json`) and asserts the hit set equals the pinned 11-location inventory (10 files; list in brief Evidence/Data) (figure superseded — the shipped pin is 12 hits / 9 files; see Decision Log 2026-08-07). Expose the check as a function taking a root path so RED can run against a mutated temp copy.
 - Module: scripts/ (repo-root QA suite)
 - Files touched: scripts/test_state_anchor_carrier_inventory.py
 - Context paths:
@@ -176,10 +176,11 @@ Steps:
 - Endpoint named: no → human-pumped (recorded at router entry).
 - Test placement decision (brief Open Question, resolved with CI evidence):
   repo-root scripts/ — loom-code-ci already runs
-  `python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/`
-  (loom-code-ci.yml:98), so root tests execute today; Task 5 closes the
-  cross-plugin trigger gap. No design-side plugin files change → no
-  design-side bumps; loom-code bumps only for Task 4's hooks edit.
+  `python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/` (the
+  pytest step in loom-code-ci.yml — this branch moved its line number), so
+  root tests execute today; Task 5 closes the cross-plugin trigger gap. No
+  design-side plugin files change → no design-side bumps; loom-code bumps
+  only for Task 4's hooks edit.
 - RED discipline for guard tests (Tasks 1-3): mutation runs against an
   extracted temp copy only, zero residue in the real tree (house pattern;
   repo memory: mutation/RED limited to extracted copies).
@@ -217,3 +218,6 @@ Steps:
 - Kickoff briefing: zero one-way-door decisions found (all tasks additive
   tests/docs/comment — two-way doors); no PRINCIPLES.md in this repo →
   nothing suppressed by appetite read.
+- 2026-08-07 (close-out): T2's acceptance was completed by fix commit
+  f9d2f7c6 (anchor-uniqueness guard) — ledger's done(b9141492) records the
+  initial commit only.
