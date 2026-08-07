@@ -55,6 +55,16 @@ on:
       - 'loom-product-principles/skills/product-principles/references/knowledge-triage.md'
       - 'loom-interface-design/skills/interaction-flows/references/knowledge-triage.md'
       - 'loom-interface-design/skills/design-system/references/knowledge-triage.md'
+      # Repo-root drift-guard tests (test_brief_clause_lockstep.py,
+      # test_state_anchor_carrier_inventory.py) read these sibling-plugin
+      # entry files, but only loom-code/** is otherwise in this trigger —
+      # so an edit to just one of these foreign carrier files would merge
+      # ungated without these explicit lines (fail-open).
+      - 'loom-discovery/skills/using-loom-discovery/SKILL.md'
+      - 'loom-product-principles/skills/using-loom-product-principles/SKILL.md'
+      - 'loom-interface-design/skills/using-loom-interface-design/SKILL.md'
+      - 'loom-spec/skills/using-loom-spec/SKILL.md'
+      - 'loom-pipeline/hooks/family-relay.md'
       - '.github/workflows/loom-code-ci.yml'
   push:
     branches: [main]
@@ -71,6 +81,12 @@ on:
       - 'loom-product-principles/skills/product-principles/references/knowledge-triage.md'
       - 'loom-interface-design/skills/interaction-flows/references/knowledge-triage.md'
       - 'loom-interface-design/skills/design-system/references/knowledge-triage.md'
+      # Same repo-root drift-guard rationale as the pull_request trigger above.
+      - 'loom-discovery/skills/using-loom-discovery/SKILL.md'
+      - 'loom-product-principles/skills/using-loom-product-principles/SKILL.md'
+      - 'loom-interface-design/skills/using-loom-interface-design/SKILL.md'
+      - 'loom-spec/skills/using-loom-spec/SKILL.md'
+      - 'loom-pipeline/hooks/family-relay.md'
 
 permissions:
   contents: read
