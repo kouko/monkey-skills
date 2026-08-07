@@ -5,6 +5,24 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.66.1] — 2026-08-07 — memory-store remediation flips to the regen command
+
+### Changed
+
+- **`finishing-a-development-branch/SKILL.md`'s memory-store integrity
+  bullet (Step 8)**: the on-nonzero remediation now names
+  `python3 scripts/check_loom_memory_integrity.py --write` (regenerate
+  the `## Index` section) instead of the prior "fix the store"
+  prose, and the quoted `§Index` invariant sentence now states the
+  generated-index reality — the byte-identical invariant survives
+  unchanged, but the index line is generated from frontmatter rather
+  than hand-copied. Part of loom arc 3 (memory index generation, D1):
+  the store's own validator gained `--write`/`--check` in this arc,
+  and this bullet is one of the hand-append teaching surfaces that
+  flips alongside it.
+  `scripts/test_finishing_memory_store_integrity.py`'s
+  byte-identical-wording pin is rewritten to match.
+
 ## [0.66.0] — 2026-08-07 — a deletion-first dimension on both code reviewers
 
 ### Added
