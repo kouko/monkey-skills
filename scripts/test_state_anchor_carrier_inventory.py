@@ -15,9 +15,10 @@ loom-code/CHANGELOG.md (changelog prose, not a live carrier) and
 loom-pipeline/hooks/test-prompts.json (test fixture, not a live carrier;
 absent from the tree as of this pin — kept for forward compatibility).
 Re-derived directly against the working tree at pin time — NOT copied from
-the brief's recon list, which predates this branch's own edits and undercounts
-by one file (brief said 10 files / 11 hits; the live tree has 9 files / 12
-hits, one extra "state anchor" line in subagent-driven-development/SKILL.md).
+the brief's recon list. The brief's recon figure (10 files / 11 hits) was
+simply miscounted against main; verified against branch base d1e50685 the
+count was already 9 files / 12 hits — this branch edits no carrier files.
+The live measurement is 9 files / 12 hits, matching that base exactly.
 
 Granularity is file -> hit-count, not file:line — per the plan's Kickoff
 decision, line numbers churn on unrelated edits; a count change in any file

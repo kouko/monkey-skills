@@ -33,7 +33,10 @@ pattern; repo memory: mutation/RED limited to extracted copies).
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
+
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -98,3 +101,39 @@ def check(root: Path) -> None:
 
 def test_router_card_rule_tokens_present_in_both_files():
     check(REPO_ROOT)
+
+
+def test_check_catches_a_removed_rule_token(tmp_path):
+    """Proves check() is load-bearing, not vacuous.
+
+    The real tree currently satisfies check() exactly, so the test above
+    alone would stay green even if check() were broken (e.g. always a
+    no-op). This test extracts FILES' REAL content into an isolated
+    tmp_path copy (zero mutation residue in the real tree — house
+    RED-on-extracted-copy pattern, mirroring
+    test_state_anchor_carrier_inventory.py's non-vacuity test), removes
+    rule 2's anchor token from the copy's router-card.md, and shows
+    check() actually raises, naming that rule + file.
+    """
+    for rel_path in FILES:
+        src = REPO_ROOT / rel_path
+        dst = tmp_path / rel_path
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dst)
+
+    check(tmp_path)  # baseline: unmutated copy passes
+
+    mutated_rel = "loom-code/hooks/router-card.md"
+    mutated_path = tmp_path / mutated_rel
+    text = mutated_path.read_text(encoding="utf-8")
+    token = RULE_TOKENS[2]
+    assert token in text
+    mutated_path.write_text(text.replace(token, "REMOVED", 1), encoding="utf-8")
+
+    with pytest.raises(AssertionError) as exc_info:
+        check(tmp_path)
+
+    message = str(exc_info.value)
+    assert "rule 2" in message
+    assert token in message
+    assert mutated_rel in message
