@@ -48,7 +48,7 @@
 - ちょうど 1 個の 🟡、🔴 なし、全 finding が `where` 付き → `PASS_WITH_NOTES`
 - 🔴 なし、🟡 なし → `PASS`
 
-R1+R2 規律の canonical は `loom-code/scripts/_reviewer-discipline.md` にあり、`distribute.py` が 3 つの reviewer agent に自動注入する。
+R1+R2 規律の canonical は `loom-code/scripts/_reviewer-discipline.md` にあり、`distribute.py` が 4 つの reviewer agent に自動注入する。
 
 ## Cross-skill
 

@@ -21,10 +21,13 @@ look. The complexity audit legislated the fix (two in-repo occurrences +
 external research): a scored **deletion-first** dimension riding the two
 code reviewers — no new station, no new round. E3 companion: the audit's
 own recipe becomes a human-triggered, proposal-only runbook so the
-mechanism-prune loop outlives this session. Research caveat baked in: LLM
-reviewers over-correct when prompted hard (Springer 2026, cited in the
-audit), so the dimension must require a CONCRETE simpler alternative per
-finding — no vague "this feels heavy" flags.
+mechanism-prune loop outlives this session. Research caveat baked in: LLM reviewers systematically over-correct on
+requirement-conformance judgment ("Are LLMs reliable code reviewers? —
+systematic overcorrection in requirement conformance judgement",
+Automated Software Engineering (Springer), 2026,
+https://link.springer.com/article/10.1007/s10515-026-00638-5), so the
+dimension must require a CONCRETE simpler alternative per finding — no
+vague "this feels heavy" flags.
 
 Recon correction to the audit's E1 wording: dimension definitions are
 hand-authored per-agent delta sections, NOT distribute-managed

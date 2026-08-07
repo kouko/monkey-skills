@@ -69,7 +69,7 @@ claude plugin install loom-code@monkey-skills --scope local
 | Router | [`using-loom-code`](skills/using-loom-code/) | Always-on | SessionStart 注入 ~2 KB router card（coding mandate＋5 條 load-bearing rules）；完整 router（含 Skill Priority 表）於調用時載入（0.24.0） |
 | 1 | [`brainstorming`](skills/brainstorming/) | Discovery | HARD-GATE 5-axis 探索（Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete）；v0.7.0+ brief 帶 `Current State Evidence` 5 維 recon section；拒絕跳過 discovery 的合理化 |
 | 2 | [`writing-plans`](skills/writing-plans/) | Planning | ≤5-task plan + 每個 task RED-GREEN acceptance；BLOCKED → child-test fallback（Beck Part II §Child Test）；v0.8.0+ 加入 `Independent` + `Files touched` 欄位作為 parallel-dispatch 入場條件 |
-| 3 | [`subagent-driven-development`](skills/subagent-driven-development/) | Execution | 每個 task 派 triad（implementer + spec-reviewer + code-quality-reviewer）；reviewer 三件套攜帶 `reviewer-discipline-v1` SSOT 注入區塊（R1+R2） |
+| 3 | [`subagent-driven-development`](skills/subagent-driven-development/) | Execution | 每個 task 派 triad（implementer + spec-reviewer + code-quality-reviewer）；reviewer 四件套攜帶 `reviewer-discipline-v1` SSOT 注入區塊（R1+R2） |
 | 4 | [`tdd-iron-law`](skills/tdd-iron-law/) | Discipline | "沒先有 failing test 不准寫 production code"（Beck 2002 Preface, ISBN 978-0321146533）；§Feathers (2004) 對 legacy code backfill 的合法區別 |
 | 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4 階段 REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY；HARD-GATE "沒重現不准 fix" |
 | 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | 全 branch 審查、11 維度評分（cross-task-coherence 為 branch 限定維度）；v0.7.0+ verdict 帶 `standards_version` stamp、findings 必填 `where:` file:line；push-as-trigger |

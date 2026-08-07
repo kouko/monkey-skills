@@ -159,7 +159,7 @@ two arcs:
   KEEP-WITH-CAVEAT (5) / DEFER (5) / DROP (2) triage table this
   runbook's sections above are distilled from.
 - **Arc 1** (PR #670, merged) — the mechanical-dedup lane: executed
-  KEEP items B1/D2 and KEEP-WITH-CAVEAT item C2 as drift-guard tests
+  KEEP item B1 and KEEP-WITH-CAVEAT items C2/D2 as drift-guard tests
   pinning existing duplication rather than relocating it into an SSOT
   (recon found the copies were not byte-identical, so relocation would
   have rewritten rendered prose); found B2 already covered by existing

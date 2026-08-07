@@ -48,7 +48,7 @@
 - 恰好 1 個 🟡、無 🔴、全部帶 `where` → `PASS_WITH_NOTES`
 - 無 🔴、無 🟡 → `PASS`
 
-R1+R2 紀律的 canonical 在 `loom-code/scripts/_reviewer-discipline.md`，由 `distribute.py` 自動注入 3 個 reviewer agent。
+R1+R2 紀律的 canonical 在 `loom-code/scripts/_reviewer-discipline.md`，由 `distribute.py` 自動注入 4 個 reviewer agent。
 
 ## Cross-skill
 

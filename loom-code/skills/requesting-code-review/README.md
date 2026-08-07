@@ -48,7 +48,7 @@ Aggregation (aligned with `rubrics/quality-gate.md` SSOT):
 - Exactly 1 🟡, no 🔴, all with `where` → `PASS_WITH_NOTES`
 - No 🔴, no 🟡 → `PASS`
 
-R1+R2 discipline lives in `loom-code/scripts/_reviewer-discipline.md` (SSOT) and is auto-injected into the 3 reviewer agents by `distribute.py`.
+R1+R2 discipline lives in `loom-code/scripts/_reviewer-discipline.md` (SSOT) and is auto-injected into the 4 reviewer agents by `distribute.py`.
 
 ## Cross-skill
 

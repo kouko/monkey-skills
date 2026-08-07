@@ -162,7 +162,7 @@ loom-code/
 ├─────────────────────────────────────────────────────────┤
 │  Knowledge Layer (SSOT-and-functional-copy)             │
 │  ─────────────────────────────                          │
-│  standards/      (7 files, byte-identical to code-team) │
+│  standards/      (9 files, byte-identical to code-team) │
 │  rubrics/        (quality-gate, arch-gate)              │
 │  checklists/     (security, spec-consistency)           │
 │                                                         │
@@ -259,7 +259,10 @@ loom-code:code-quality-reviewer   (agents/code-quality-reviewer.md)
 loom-code:code-reviewer   (agents/code-reviewer.md) — whole-branch scope
   Input: branch diff + same rubrics + checklists + standards as above
   Output: PASS / PASS_WITH_NOTES / NEEDS_REVISION + 11-dimension scores
-          (adds cross-task-coherence dimension unique to branch scope)
+          (adds cross-task-coherence, principles-conformance, and
+          deliberate-simplification, unique to branch scope; deletion-first
+          also runs branch-wide to catch machinery scattered thinly across
+          tasks that per-task review structurally cannot see)
 ```
 
 Reviewer 角色封閉（CLAUDE.md 慣例）：**只產 verdict 不修 artifact**。修訂由 implementer 接力重跑。
@@ -417,7 +420,7 @@ gaps: [list of spec items not covered]
 
 ### Output Contract
 verdict: PASS / PASS_WITH_NOTES / NEEDS_REVISION
-dimension_scores: {security, architecture, correctness, naming, tests, refactoring}
+dimension_scores: {security, architecture, correctness, naming, tests, refactoring, external-surface-grounding, deletion-first}
 findings: [🔴 fatal / 🟡 should-fix / 🟢 nit]
 ```
 
