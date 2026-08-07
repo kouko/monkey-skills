@@ -12,12 +12,22 @@ naming the missing field) — never a bare "exit != 0", which a missing
 script file also satisfies (exit 2, empty stdout).
 """
 
+import importlib.util
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PLAN_CARD_SCRIPT = REPO_ROOT / "scripts" / "plan_card.py"
+
+# Direct import (not subprocess) so the fix-round ordering test below can
+# monkeypatch build_card — a subprocess call cannot be monkeypatched.
+_SPEC = importlib.util.spec_from_file_location("plan_card", PLAN_CARD_SCRIPT)
+plan_card = importlib.util.module_from_spec(_SPEC)
+sys.modules["plan_card"] = plan_card
+_SPEC.loader.exec_module(plan_card)
 
 
 def _plan_text(
@@ -1080,6 +1090,7 @@ def test_set_status_and_detail_are_mutually_exclusive(tmp_path):
     assert result.returncode == 2, result.stdout + result.stderr
     assert "--set-status" in result.stderr
     assert "--detail" in result.stderr
+    assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
 
 
 # --- ledger writer: --set-stage ----------------------------------------------
@@ -1110,6 +1121,61 @@ def test_set_stage_happy_path_rewrites_and_prints_card(tmp_path):
     assert plan_path.read_text(encoding="utf-8") == text.replace(
         "Stage: sdd:wave-1", "Stage: sdd:wave-2"
     )
+
+
+def test_set_stage_replaces_wrapped_continuation_lines(tmp_path):
+    """(Finding 2, fix round) A wrapped `Stage:` value — an indented
+    continuation line, N1's folded shape — must have its ENTIRE span
+    replaced: the `Stage:` line plus every continuation line. Replacing
+    only the `Stage:` line leaves a stale orphan continuation, which
+    `_header_value` would fold back into a stale-merged value on the
+    next render even though `new:` echoes the correct one."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    wrapped = text.replace(
+        "Stage: sdd:wave-1\n", "Stage: sdd:wave-1\n  continued detail\n"
+    )
+    plan_path = _write_plan(tmp_path, wrapped)
+
+    result = _run_card(plan_path, "--set-stage", "sdd:wave-2")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    after = plan_path.read_text(encoding="utf-8")
+    stage_lines = [line for line in after.splitlines() if line.startswith("Stage:")]
+    assert stage_lines == ["Stage: sdd:wave-2"], stage_lines
+    assert "continued detail" not in after
+    assert "stage: sdd:wave-2\n" in result.stdout, result.stdout
+
+
+def test_set_stage_and_detail_are_mutually_exclusive(tmp_path):
+    """(Finding 3 reviewer note, fix round) Passing both --set-stage and
+    --detail → usage error (exit 2) whose message names both flags; the
+    file is not modified."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path, "--set-stage", "sdd:wave-2", "--detail", "T1")
+
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "--set-stage" in result.stderr
+    assert "--detail" in result.stderr
+    assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
+
+
+def test_set_stage_and_set_status_are_mutually_exclusive(tmp_path):
+    """(Finding 3 reviewer note, fix round) Passing both --set-stage and
+    --set-status → usage error (exit 2) whose message names both flags;
+    the file is not modified."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(
+        plan_path, "--set-stage", "sdd:wave-2", "--set-status", "T1=blocked"
+    )
+
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "--set-stage" in result.stderr
+    assert "--set-status" in result.stderr
+    assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
 
 
 def test_set_stage_missing_header_exits_1(tmp_path):
@@ -1154,6 +1220,37 @@ def test_set_status_degrades_to_card_unavailable_when_goal_missing(tmp_path):
     assert "old: - Status: pending\n" in result.stdout
     assert "new: - Status: done(abc1234)\n" in result.stdout
     assert "plan_card: card unavailable —" in result.stdout
+    assert "- Status: done(abc1234)" in plan_path.read_text(encoding="utf-8")
+
+
+def test_set_status_write_lands_before_render_on_non_valueerror(tmp_path, monkeypatch):
+    """(Finding 3, fix round) The "render runs AFTER the write" claim
+    above is unfalsifiable on the ValueError-only path (a write-after-
+    render implementation is indistinguishable there — both orders
+    degrade to the same one-line message). This test distinguishes the
+    two orderings directly: monkeypatch build_card to raise a
+    NON-ValueError, call main() in-process (subprocess can't be
+    monkeypatched), and require BOTH that the flip already landed on
+    disk AND that the exception propagates uncaught (only ValueError is
+    a controlled degrade — _print_card_or_degrade doesn't catch this).
+    A write-after-render implementation would fail the file assertion:
+    build_card raises before the write ever runs."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    def _boom(_text):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(plan_card, "build_card", _boom)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["plan_card.py", str(plan_path), "--set-status", "T1=done(abc1234)"],
+    )
+
+    with pytest.raises(RuntimeError, match="boom"):
+        plan_card.main()
+
     assert "- Status: done(abc1234)" in plan_path.read_text(encoding="utf-8")
 
 

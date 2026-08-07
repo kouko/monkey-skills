@@ -487,9 +487,15 @@ def set_stage(text: str, new_value: str) -> tuple[str, str, str]:
     Pure function (the caller writes the file and decides exit codes);
     raises ValueError when the plan has no `Stage:` header line, or
     `new_value` is empty/whitespace-only. Free-text value — stage
-    vocabulary evolves, no enum validation (plan Task 1 Decisions)."""
+    vocabulary evolves, no enum validation (plan Task 1 Decisions).
+
+    A wrapped value (indented continuation lines, `_header_value`'s
+    folded shape) has its ENTIRE span replaced — the `Stage:` line plus
+    every continuation line — never just the first line, which would
+    leave a stale orphan continuation that `_header_value` folds back in
+    on the next read (Finding 2, fix round)."""
     header, sep, rest = text.partition("\n## ")
-    match = re.search(r"^Stage:.*$", header, re.MULTILINE)
+    match = re.search(r"^Stage:.*$(?:\n[ \t]+\S.*$)*", header, re.MULTILINE)
     if match is None:
         raise ValueError("plan has no 'Stage:' header line")
     if not new_value.strip():
