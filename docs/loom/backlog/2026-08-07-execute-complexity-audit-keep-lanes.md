@@ -40,19 +40,26 @@ per-item caveats in the audit doc's Triage and Impact sections):
    hand-mirror today) the way backlog_index.py already generates
    BACKLOG.md. Separate PR: touches the store charter's stated
    maintenance procedure, needs a plugin-wide contradiction sweep.
-4. Prose slim arc — A2 extract requesting-docs-review's convergence
-   block (1,424 w; cap headroom 72 w today, so any net-adding edit
-   over 72 words must slim first — the tightest cap pressure in the
-   family); A1 collapse finishing Step 8's five ONCE-checklists
-   (1,123 w, semantics preserved); A3 downgrade writing-plans'
-   hypothetical wrong-bind reversal protocol (315 w) to one line.
-   Weak-model cold-reads mandatory; 44 test files + 6 production
-   scripts name these skills (grep of `*.py` under `loom-*/scripts`,
-   `loom-*/tests`, `scripts/`; measured at e610f7c4 — this branch's own
-   new test file makes it 45+6 at merge).
+4. Prose slim arc — split into 4a (shipping now) and a deferred A1.
+   4a: A2 extract requesting-docs-review's convergence block
+   (1,446 w; cap headroom 72 w today, so any net-adding edit over
+   72 words must slim first — the tightest cap pressure in the
+   family); A3 downgrade writing-plans' hypothetical wrong-bind
+   reversal protocol (44 w — the earlier 315 w figure included
+   neighboring text) to one line. Deferred: A1 collapse finishing
+   Step 8's five ONCE-checklists (974 w of bullets at the arc-3 state;
+   collapse saves ~400-600 w, semantics preserved), held behind
+   PR #674's merge. Weak-model cold-reads mandatory;
+   44 test files + 6 production scripts name these skills (grep of
+   `*.py` under `loom-*/scripts`, `loom-*/tests`, `scripts/`; measured
+   at e610f7c4 — this branch's own new test file makes it 45+6 at
+   merge).
 
-Expected impact if all four land: ~-1,900 words across the three
-heaviest SKILL.md bodies, maintenance tax on the four cross-file rules
+Expected impact of arcs 1-3 plus arc 4a (arc 4's A1 remains deferred
+behind PR #674): ~-1,150 w from arc 4a (A2+A3, shipping now); A1's
+deferred ~400-600 w follows post-#674 — the old aggregate ~-1,900 w
+figure conflated both waves. Maintenance tax on the four cross-file
+rules
 gains machine-readable drift guards (arc 1 pins carriers/tokens rather
 than consolidating to one source — see item 1 above), and the family
 gains its first standing
