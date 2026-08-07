@@ -20,7 +20,7 @@ why the same miss recurred.
 
 These checks assert on load-bearing PHRASES. They tolerate rewording
 *around* those phrases, but not changes to the phrases themselves or to
-the bullet's anchor — a one-character anchor edit turns every test in
+the row's anchor — a one-character anchor edit turns every test in
 this file red. That is deliberate for a prompt artifact whose exact
 wording is the contract; it is not the same as being wording-agnostic.
 
@@ -37,51 +37,41 @@ def _text() -> str:
     return SKILL.read_text(encoding="utf-8")
 
 
-def _integrity_bullet(text: str) -> str:
-    """The Memory-store integrity bullet's OWN text, delimited by bullet
-    boundaries rather than a character radius.
+def _integrity_row(text: str) -> str:
+    """The Memory-store integrity table ROW plus the table's lead-in
+    sentence — the text under guard since Step 8's five ONCE-per-branch
+    checks collapsed into one close-out sub-checks table (loom arc 4b).
 
-    `test_finishing_archive_step.py` scopes with a ±600-char window; that
-    technique is NOT safe here and a first draft of this file was
-    false-green because of it. The bullet immediately above
-    (Memory-timing) contains both `docs/loom/memory/README.md` and "lands
-    in THIS close-out commit" within ~4 lines of its end — so a radius
-    window centered on this bullet
-    satisfies the store-path, README and commit assertions below even
-    when this bullet is deleted outright. Delimiting on the bullet
-    markers keeps every assertion inside the text under guard.
+    The row is one physical line, so extraction is line-scoped: no radius
+    window (an earlier bullet-era draft of this file was false-green from a
+    ±600-char window — the neighbor above satisfied the store-path, README
+    and commit assertions with the guarded text deleted outright) and no
+    structural terminators to recalibrate. The lead-in line above the table
+    carries the shared "orchestrator-only, ONCE per branch" scope exactly
+    once for every row, so it is part of the guarded text: delete the
+    lead-in and the concurrency-tag test goes red.
     """
-    start = text.find("   - Memory-store integrity")
-    assert start != -1, (
-        'no line matching the literal anchor "   - Memory-store integrity" '
-        "(three leading spaces) — the bullet is either absent, renamed, or "
-        "Step 8's indentation changed; check which before editing the tests"
+    row_start = text.find("| Memory-store integrity |")
+    assert row_start != -1, (
+        'no line matching the literal anchor "| Memory-store integrity |" '
+        "— the table row is either absent, renamed, or the Check-cell "
+        "label changed; check which before editing the tests"
     )
+    row = text[row_start:].splitlines()[0]
 
-    collected: list[str] = []
-    for i, line in enumerate(text[start:].splitlines()):
-        if i and _ends_the_bullet(line):
-            break
-        collected.append(line)
-    return "\n".join(collected)
-
-
-def _ends_the_bullet(line: str) -> bool:
-    """True when `line` is outside the Memory-store integrity bullet.
-
-    Two structural terminators, no character budget: a sibling Step 8 bullet
-    (`   - `), or any non-blank line dedented out of the bullet list (Step 9
-    onward). An earlier draft used a `_MAX_BULLET_CHARS` cap as a second
-    delimiter; whole-branch review measured it at 6 characters of headroom
-    rather than the ~570 its comment claimed, so a 7-character prose edit
-    turned every test in this file red under a message blaming the anchor —
-    and, worse, it masked the sibling path assertion below, which never got
-    to evaluate. Structural terminators need no recalibration when the
-    bullet's prose grows, and cannot silently widen.
-    """
-    if line.startswith("   - "):
-        return True
-    return bool(line.strip()) and (len(line) - len(line.lstrip())) < 5
+    lead_start = text.find("Close-out sub-checks")
+    assert lead_start != -1, (
+        'no "Close-out sub-checks" lead-in above the table — the sentence '
+        "carrying the shared orchestrator-only / ONCE-per-branch scope is "
+        "absent or renamed"
+    )
+    header_start = text.find("| Check |", lead_start)
+    assert header_start != -1 and header_start < row_start, (
+        "table header not found between the lead-in and the Memory-store "
+        "integrity row — the lead-in no longer governs this table"
+    )
+    lead = text[lead_start:header_start]
+    return lead + "\n" + row
 
 
 def test_memory_integrity_step_names_the_script_with_its_path():
@@ -94,7 +84,7 @@ def test_memory_integrity_step_names_the_script_with_its_path():
     `loom-code/scripts/`, this checker lives at the repo root's `scripts/`,
     and a reviewer probe confirmed that swapping one for the other kept every
     assertion green."""
-    bullet = _integrity_bullet(_text())
+    row = _integrity_row(_text())
 
     # The full invocation, not `…/scripts/…` plus a blacklist. Whole-branch
     # review probed the loose form: `scripts/check_loom_memory_integrity.py`
@@ -102,14 +92,14 @@ def test_memory_integrity_step_names_the_script_with_its_path():
     # `loom-pipeline/scripts/`, `tools/scripts/` and `../scripts/` all
     # false-green. Asserting the literal command creates a token boundary
     # that admits no prefix at all.
-    assert "python3 scripts/check_loom_memory_integrity.py" in bullet, \
+    assert "python3 scripts/check_loom_memory_integrity.py" in row, \
         "must name the full repo-root invocation, admitting no path prefix"
     # "from the repo root", not "repo root": the bullet also says the script
     # "lives at the monkey-skills repo root", so the bare token was satisfied
     # by that sentence and deleting the cwd qualifier left every test green.
     # Fourth instance of this class in one branch — pin the phrase the failure
     # message names, never a token that merely occurs in the bullet.
-    assert "from the repo root" in bullet, \
+    assert "from the repo root" in row, \
         "a relative script path is only correct with its cwd qualifier stated"
 
 
@@ -117,14 +107,14 @@ def test_memory_integrity_step_handles_the_script_being_absent():
     """This skill ships as a distributed plugin, but the checker exists only
     in this repo. `loom-pipeline:loom-memory` fires in ANY repo carrying
     `docs/loom/memory/README.md`, so a consuming repo can satisfy this
-    bullet's trigger with no such script present — where the command exits
-    nonzero for "No such file" and the bullet's own "exit 0 is the gate"
+    row's trigger with no such script present — where the command exits
+    nonzero for "No such file" and the row's own "exit 0 is the gate"
     rule would convert that into a phantom store violation.
 
-    Both sibling Step 8 bullets name their not-applicable case; this one
+    Both sibling Step 8 rows name their not-applicable case; this one
     must too."""
-    bullet = _integrity_bullet(_text())
-    low = bullet.lower()
+    row = _integrity_row(_text())
+    low = row.lower()
 
     # The exact line, not `"n/a" or "absent" or "not present"`. That OR was
     # this test's first form and it survived deleting the whole N/A sentence,
@@ -138,13 +128,13 @@ def test_memory_integrity_step_handles_the_script_being_absent():
 
 
 def test_memory_integrity_step_carries_the_concurrency_tag():
-    """The bullet's failure action edits `docs/loom/memory/README.md`, so it
+    """The row's failure action edits `docs/loom/memory/README.md`, so it
     must not run in a parallel wave. The sibling this file mirrors pins the
     same clause (`test_finishing_archive_step.py` asserts `orchestrator-only`
     in its own window); whole-branch review caught that the docs arm restored
     this clause while the test arm did not follow it."""
-    bullet = _integrity_bullet(_text())
-    low = bullet.lower()
+    row = _integrity_row(_text())
+    low = row.lower()
 
     assert "orchestrator-only" in low, \
         "must carry the orchestrator-only tag its siblings carry"
@@ -156,9 +146,9 @@ def test_memory_integrity_step_states_the_failure_action():
     """Stating the pass condition is not enough. Step 9b, the nearest
     can-fail gate, spells out its failure action ("STOP … Do NOT push"); a
     weak orchestrator that sees exit 1, notes it, and commits anyway is not
-    contradicted by a bullet that only says what passing looks like."""
-    bullet = _integrity_bullet(_text())
-    low = bullet.lower()
+    contradicted by a row that only says what passing looks like."""
+    row = _integrity_row(_text())
+    low = row.lower()
 
     assert "nonzero" in low or "non-zero" in low, \
         "must name the failure condition explicitly"
@@ -166,7 +156,7 @@ def test_memory_integrity_step_states_the_failure_action():
         "must say what NOT to do on a violation, not only what passing means"
     # The checker validates the WORKING TREE, so exit 0 alone does not mean the
     # commit is clean: fixing the index line and forgetting to stage it ships
-    # the very defect this bullet guards, while passing its own gate.
+    # the very defect this row guards, while passing its own gate.
     assert "git add" in low, \
         "must tell the reader to stage the corrected file, not just fix it"
 
@@ -175,14 +165,14 @@ def test_memory_integrity_step_gated_on_touching_the_store():
     """The checkpoint fires when the branch touched docs/loom/memory/ —
     not unconditionally, and not only on brand-new files (an edited
     description must stay byte-identical to its index line too)."""
-    bullet = _integrity_bullet(_text())
-    low = bullet.lower()
+    row = _integrity_row(_text())
+    low = row.lower()
 
     # The trigger CLAUSE, not the bare store path — that substring occurs three
     # times in the bullet (the parallel-wave clause and the §Index sentence both
     # satisfy it), so pinning it left the trigger condition of a *conditional*
     # checkpoint unguarded.
-    assert "added or edited a file under `docs/loom/memory/`" in bullet, \
+    assert "added or edited a file under `docs/loom/memory/`" in row, \
         "must name the trigger clause, not merely mention the store path"
     assert "index" in low, \
         "must reference the §Index invariant the check enforces"
@@ -192,9 +182,9 @@ def test_memory_integrity_step_gated_on_touching_the_store():
 
 def test_memory_integrity_step_states_when_it_does_not_fire():
     """A conditional step that never says when it is N/A gets run as a
-    ritual or skipped silently. The bullet must name the skip case."""
-    bullet = _integrity_bullet(_text())
-    low = bullet.lower()
+    ritual or skipped silently. The row must name the skip case."""
+    row = _integrity_row(_text())
+    low = row.lower()
 
     assert "skip" in low, \
         "must state the skip case explicitly"
@@ -206,8 +196,8 @@ def test_memory_integrity_step_states_the_index_line_duty():
     """Naming the script is not enough — the reader must know the fix is a
     README §Index line whose description matches the frontmatter, which is
     the specific invariant that was violated twice."""
-    bullet = _integrity_bullet(_text())
-    low = bullet.lower()
+    row = _integrity_row(_text())
+    low = row.lower()
 
     assert "readme" in low, \
         "must point at README.md as where the index line goes"
@@ -219,7 +209,7 @@ def test_memory_integrity_step_states_the_index_line_duty():
     # test green. Updated for the generated-index reality (loom arc 3, D1): the
     # index line is no longer hand-copied, it is generated from frontmatter, but
     # the byte-identical invariant itself is unchanged.
-    assert "frontmatter `description`, byte-identical" in bullet, \
+    assert "frontmatter `description`, byte-identical" in row, \
         "must state the description is byte-identical to the file's frontmatter, not paraphrased"
 
 
@@ -230,8 +220,8 @@ def test_memory_integrity_step_runs_before_the_commit():
     Asserts the full phrase, not `"before" in text or "commit" in text`:
     that OR was the first draft's wording and both words are common
     enough in Step 8 that it could not fail."""
-    bullet = _integrity_bullet(_text())
-    low = bullet.lower()
+    row = _integrity_row(_text())
+    low = row.lower()
 
     assert "before" in low and "close-out commit" in low, \
         "must place the check before the close-out commit"

@@ -1,12 +1,14 @@
 """Prose-pin test for the finishing Step 8 backlog-close check.
 
-Pins the backlog-close bullet in
-finishing-a-development-branch/SKILL.md Step 8 (flip a shipped or
+Pins the Backlog-close check row in finishing-a-development-branch/
+SKILL.md Step 8's close-out sub-checks table (flip a shipped or
 superseded backlog entry's status in the same close-out commit,
 regenerate the index, silent skip without a hit or a store) and the
 Step 13 queue-tail report line ("backlog next: <name>"). Added by the
 backlog ready-verb-and-close-loop arc: 90 entries filed, zero ever
-closed, because no flow ever read or closed the store.
+closed, because no flow ever read or closed the store. The five Step 8
+ONCE-per-branch bullets collapsed into one table in loom arc 4b; these
+pins now land in that table's cells.
 """
 
 from pathlib import Path
@@ -65,10 +67,11 @@ def test_backlog_close_silent_skip_clause_present():
     assert "No hit, or no store → skip silently" in _normalized_text()
 
 
-def test_backlog_close_follows_memory_store_integrity_bullet():
-    """The bullet sits in Step 8's hygiene list directly after the
-    Memory-store integrity bullet (which ends on 'the same miss
-    shipped twice') and before the Attached-HEAD check."""
+def test_backlog_close_follows_memory_store_integrity_row():
+    """The row sits in Step 8's close-out sub-checks table directly
+    after the Memory-store integrity row (whose Action cell ends on
+    'the same miss shipped twice') and before the Attached-HEAD
+    check."""
     normalized = _normalized_text()
     memory_end_idx = normalized.find("the same miss shipped twice")
     close_idx = normalized.find("Backlog-close check")

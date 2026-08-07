@@ -13,10 +13,12 @@ When no change-folder was bound, the step must say so loudly — never a
 silent skip — using the exact phrase
 "archive-on-close: N/A — no change-folder bound".
 
-The step lives in the git-hygiene area (Step 8), alongside the
-living-spec index regen bullet: same shape (orchestrator-only, once per
-branch, not per-implementer/per-wave — a per-implementer archive under
-parallel SDD would race the same folder).
+The step lives in Step 8's close-out sub-checks table (the five
+ONCE-per-branch bullets collapsed into one table in loom arc 4b),
+directly after the Living-spec index regen row; the table's lead-in
+sentence carries the shared scope (orchestrator-only, once per branch —
+a parallel wave would race each check's target file) exactly once for
+every row.
 
 These checks assert on load-bearing PHRASES (intent), tolerant of
 wording variation, so the test guards meaning without being brittle.
@@ -29,33 +31,36 @@ from pathlib import Path
 SKILL = Path(__file__).parents[1] / "skills" / "finishing-a-development-branch" / "SKILL.md"
 AGENTS_MD = Path(__file__).parents[2] / "AGENTS.md"
 
-# How far (in characters) around the archive_change_folder.py mention to look
-# for words that also occur, verbatim, in neighboring Step 8 bullets (the
-# living-spec index bullet above, the Memory-timing bullet below). A window
-# this size covers the archive bullet's own text without spilling into either
-# neighbor — see test_archive_step_placed_near_living_spec_index_bullet for
-# the sibling technique this mirrors.
-_NEIGHBORHOOD_RADIUS = 600
-
 
 def _text() -> str:
     assert SKILL.is_file(), f"SKILL.md is absent at {SKILL}"
     return SKILL.read_text(encoding="utf-8")
 
 
-def _archive_neighborhood(text: str, radius: int = _NEIGHBORHOOD_RADIUS) -> str:
-    """Window of text centered on the archive_change_folder.py mention.
+def _archive_neighborhood(text: str) -> str:
+    """The Archive-on-close table ROW plus the table's lead-in sentence.
 
-    Scopes assertions to the archive-on-close bullet itself. Without this,
-    generic words like "stage" / "orchestrator-only" / "once per branch"
-    also appear in the living-spec-index and memory-timing bullets, so a
-    whole-file substring check passes even with the archive bullet's own
-    wording missing (false-green)."""
+    Scopes assertions to the archive-on-close row itself. Without this,
+    generic words like "stage" / "close-out commit" also appear in the
+    sibling rows, so a whole-file substring check passes even with the
+    archive row's own wording missing (false-green). The bullet-era
+    version of this helper was a ±600-char radius window; the row is one
+    physical line, so extraction is now line-scoped. The lead-in line
+    above the table carries "orchestrator-only" / "ONCE per branch" for
+    every row exactly once, so it is part of the guarded text: delete the
+    lead-in and the orchestrator-only test goes red."""
     idx = text.find("archive_change_folder.py")
     assert idx != -1, "archive_change_folder.py must be present"
-    start = max(0, idx - radius)
-    end = min(len(text), idx + radius)
-    return text[start:end]
+    row_start = text.rfind("\n", 0, idx) + 1
+    row = text[row_start:].splitlines()[0]
+
+    lead_start = text.find("Close-out sub-checks")
+    assert lead_start != -1, \
+        'the "Close-out sub-checks" lead-in above the table must be present'
+    header_start = text.find("| Check |", lead_start)
+    assert header_start != -1 and header_start < idx, \
+        "table header must sit between the lead-in and the archive row"
+    return text[lead_start:header_start] + "\n" + row
 
 
 def test_archive_step_names_the_script():
@@ -110,12 +115,12 @@ def test_archive_step_na_loud_when_unbound():
 def test_archive_step_stages_the_move_in_close_out_commit():
     """The resulting move (docs/loom/<change-id>/ -> docs/loom/archive/...)
     must be staged so it lands in the close-out commit, mirroring the
-    living-spec index regen bullet's stage-it-here instruction.
+    Living-spec index regen row's stage-it-here instruction.
 
-    Scoped to the archive bullet's own neighborhood: "stage" and
-    "close-out commit" both also appear in the living-spec-index and
-    memory-timing bullets, so an unscoped whole-file check would pass
-    even with the archive bullet's own staging instruction absent."""
+    Scoped to the archive row itself: "stage" and "close-out commit"
+    both also appear in the sibling rows, so an unscoped whole-file
+    check would pass even with the archive row's own staging
+    instruction absent."""
     text = _text()
     window = _archive_neighborhood(text).lower()
 
@@ -126,15 +131,11 @@ def test_archive_step_stages_the_move_in_close_out_commit():
 
 
 def test_archive_step_is_orchestrator_only_once_per_branch():
-    """Same shape as the living-spec index regen bullet immediately above
-    it: orchestrator-only, run once per branch — never per-implementer or
-    per-wave (would race the same folder under parallel SDD).
-
-    Scoped to the archive bullet's own neighborhood: "orchestrator-only"
-    and "once per branch" both also appear in the living-spec-index and
-    memory-timing bullets, so an unscoped whole-file check would pass
-    even with the archive bullet's own orchestrator-only/once-per-branch
-    marking absent."""
+    """Orchestrator-only, run once per branch — never per-implementer or
+    per-wave (would race the same folder under parallel SDD). Since the
+    arc-4b collapse the table's lead-in sentence carries this scope once
+    for every row, so the guarded text is the lead-in plus the archive
+    row: delete the lead-in and this test goes red."""
     text = _text()
     window = _archive_neighborhood(text).lower()
 
@@ -144,18 +145,19 @@ def test_archive_step_is_orchestrator_only_once_per_branch():
         "must mark the step as running once per branch (near the archive_change_folder.py mention)"
 
 
-def test_archive_step_placed_near_living_spec_index_bullet():
-    """The step belongs in the Step 8 git-hygiene area, near the
-    living-spec index regen bullet — not scattered elsewhere in the file."""
+def test_archive_step_placed_near_living_spec_index_row():
+    """The step belongs in the Step 8 close-out sub-checks table, near
+    the Living-spec index regen row — not scattered elsewhere in the
+    file. Row adjacency in the table satisfies the proximity pin."""
     text = _text()
     living_spec_idx = text.find("Living-spec index regen")
     archive_idx = text.find("archive_change_folder.py")
 
-    assert living_spec_idx != -1, "living-spec index regen bullet must still be present"
+    assert living_spec_idx != -1, "Living-spec index regen row must still be present"
     assert archive_idx != -1, "archive_change_folder.py must be present"
-    # Both bullets should live within the same ~2000-char Step 8 neighborhood.
+    # Both rows should live within the same ~2000-char Step 8 table.
     assert abs(archive_idx - living_spec_idx) < 2000, \
-        "archive-on-close step must sit near the living-spec index regen bullet (Step 8 git-hygiene area)"
+        "archive-on-close row must sit near the Living-spec index regen row (Step 8 close-out sub-checks table)"
 
 
 def test_agents_md_declares_archive_script():

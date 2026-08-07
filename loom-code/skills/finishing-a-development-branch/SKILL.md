@@ -162,7 +162,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
    - Pass: diff, recent commits, branch name
    - Receive: trailer set (Decision: / Learning: / Gotcha: lines) + commit body suggestion
    - **The moment this trailer set comes back non-empty, run the Memory-timing check NOW** (see
-     Step 8's Memory-timing bullet for the exact rule) — using the returned Decision/Learning/Gotcha
+     Step 8's Memory-timing row for the exact rule) — using the returned Decision/Learning/Gotcha
      content itself as the input: does any of it also belong in `docs/loom/memory/` as a durable,
      cross-branch-reusable practice/gotcha/process, not just this commit's local trailer? Do NOT
      defer this question to Step 8's later checklist pass — a non-empty trailer set writing rich
@@ -184,93 +184,16 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      7 has, and it fires only on failure — the user may still edit the
      message to clear the finding.
 8. git hygiene before the close-out commit:
-   - Living-spec index regen (orchestrator-only, ONCE per branch): if the repo has a
-     `docs/loom/` tree, run
-     `python3 loom-code/scripts/check-living-spec-index.py --write-index docs/loom/INDEX.md <repo-root>`
-     once, then stage the regenerated `docs/loom/INDEX.md` (`git add docs/loom/INDEX.md`)
-     so it lands in THIS close-out commit. This is EXPLICITLY orchestrator-only, NOT
-     per-implementer / per-wave: the index is a repo-wide generated file, so a per-implementer
-     regen under parallel SDD would merge-conflict the file and reflect only a partial tree.
-     This mirrors loom's existing "orchestrator commits, implementers don't" rule.
-   - Archive-on-close (orchestrator-only, ONCE per branch — same shape as the living-spec
-     index bullet immediately above, NOT per-implementer / per-wave, since a per-implementer
-     archive under parallel SDD would race the same folder): if this branch consumed a
-     loom-spec change-folder (bound per writing-plans' detection cascade — see
-     `../writing-plans/SKILL.md` §Consuming a loom-spec change-folder) AND that change-folder's
-     scenarios shipped in this branch, run
-     `python3 loom-code/scripts/archive_change_folder.py <change-id> <repo-root>` (Read the
-     script's docstring/CLI first for the exact argv shape — change-id first, root second —
-     do NOT guess) to move `docs/loom/<change-id>/` to `docs/loom/archive/<date>-<change-id>/`,
-     then stage the resulting move (`git add docs/loom/archive/<date>-<change-id>/` and the
-     now-removed `docs/loom/<change-id>/` path) so it lands in THIS close-out commit. **Recovering
-     bound-ness at finishing time**: the binding happened in an earlier dispatch, possibly another
-     session, so derive it from the plan document itself — grep the branch's plan
-     (`docs/loom/plans/<date>-<topic>.md`) for change-folder join keys (the
-     `<change-id> / Requirement: <name> / Scenario: <name>` pattern per
-     `../writing-plans/references/plan-format.md`); a plan carrying join keys names the bound
-     change-id. No plan, or a plan with no join keys, means unbound — never guess a change-id
-     from content similarity (mirroring the detection cascade's own no-guessing discipline). If no
-     change-folder was bound for this branch, state so loudly instead of silently skipping:
-     "archive-on-close: N/A — no change-folder bound".
-   - Memory-timing check (orchestrator-only, ONCE per branch) — **the question itself should
-     already have been asked and answered at Step 6**, the moment git-memory's trailer set came
-     back; this bullet's remaining job at Step 8 is only to STAGE whatever `docs/loom/memory/`
-     file that Step-6 check produced (same role as the Living-spec index bullet immediately
-     above), not to be the first time the question is asked. The rule, unchanged: if this branch
-     surfaced a durable, already-known fact (practice / gotcha / process per the jurisdiction
-     table), record it into `docs/loom/memory/` NOW so it lands in THIS close-out commit — see
-     `docs/loom/memory/README.md` §"When to record" for the exact rule and its one exception. If
-     you reach this bullet at Step 8 and the question was NOT already asked at Step 6, ask it now
-     — late is still better than never — but treat that as a process miss to avoid next time, not
-     the intended flow.
-   - Memory-store integrity (orchestrator-only, ONCE per branch, same as its Step 8
-     siblings — the check only reads, but its failure action edits
-     `docs/loom/memory/README.md`, which a parallel wave would race). Fires ONLY when
-     this branch added or edited a file under `docs/loom/memory/`; otherwise skip
-     silently — unlike `ui-verification` and archive-on-close, which state their N/A
-     loudly, this trigger is auditable straight from the diff, so a loud N/A on every
-     branch that never touched the store would be pure noise.
-     **First, does the checker exist here?** `scripts/check_loom_memory_integrity.py`
-     lives at the monkey-skills repo root and ships inside no plugin, so a consuming repo
-     that adopted the portable store may not have it. If that path is absent, say
-     `memory-store integrity: N/A — checker not present in this repo` loudly and move on
-     — never read a "No such file" nonzero as a store violation.
-     Otherwise run `python3 scripts/check_loom_memory_integrity.py` from the repo root
-     **before** the close-out commit. The store's §Index invariant survives unchanged — one
-     index line per memory file in `docs/loom/memory/README.md`, whose description is that
-     file's frontmatter `description`, byte-identical — but the index is now generated from
-     frontmatter rather than hand-copied, so writing the memory file alone still leaves the
-     store invalid until the index is regenerated. Exit 0 is the gate; a nonzero exit names
-     the offending file and which invariant broke (missing index line, description not
-     byte-identical, dangling line, filename ≠ frontmatter `name`, duplicate lines). **On
-     nonzero: run `python3 scripts/check_loom_memory_integrity.py --write` to regenerate
-     the index, re-run until exit 0, then `git add` the corrected
-     `docs/loom/memory/README.md` — do not commit on a violation.** If `--write` itself
-     exits nonzero, naming a file and a reason (broken frontmatter, unexpected prose in
-     the index region), fix that named file first, then repeat `--write`. The checker validates
-     the WORKING TREE, so exit 0 is not on its own evidence the commit is clean: fixing the
-     index line and forgetting to stage it ships exactly the defect this bullet exists to
-     prevent, while passing its own gate. Run it yourself rather
-     than letting CI find it: the CI job that catches this is named for a different check
-     (`plugin version bump`), so a post-push failure does not point at the store and costs
-     a diagnosis round. Recurrence is the reason this bullet exists — the same miss
-     shipped twice.
-   - Backlog-close check (orchestrator-only, ONCE per branch, same
-     shape as its Step 8 siblings): when the repo has
-     `docs/loom/backlog/`, check whether THIS branch ships or
-     supersedes any backlog entry — grep the store for the branch's
-     topic terms and read the hits. On a hit: flip that entry's
-     `status:` to SHIPPED (or CLOSED — SUPERSEDED), append one body
-     line naming the evidence (this branch/PR); then, if
-     `scripts/backlog_index.py` exists at the repo root, regenerate
-     the index with `python3 scripts/backlog_index.py --write` and
-     stage both in the same close-out commit — the script ships in no
-     plugin, so a consuming repo may have the store without it:
-     absent → say `backlog-close: index not regenerated —
-     backlog_index.py not present`, stage the entry flip alone, and
-     note the index must be regenerated on a machine that has the
-     script. No hit, or no store → skip silently (auditable from the
-     diff, like the memory-store bullet).
+   - Close-out sub-checks — all orchestrator-only, ONCE per branch; a parallel wave
+     would race each check's target file:
+
+     | Check | When it fires | Action | On failure or N/A |
+     |---|---|---|---|
+     | Living-spec index regen | The repo has a `docs/loom/` tree. | Run `python3 loom-code/scripts/check-living-spec-index.py --write-index docs/loom/INDEX.md <repo-root>` once, then stage the regenerated `docs/loom/INDEX.md` (`git add docs/loom/INDEX.md`) into THIS close-out commit. | — |
+     | Archive-on-close | This branch consumed a loom-spec change-folder (bound per writing-plans' detection cascade — see `../writing-plans/SKILL.md` §Consuming a loom-spec change-folder) AND its scenarios shipped. Recover bound-ness by grepping the branch's plan (`docs/loom/plans/<date>-<topic>.md`) for change-folder join keys (the `<change-id> / Requirement: <name> / Scenario: <name>` pattern per `../writing-plans/references/plan-format.md`) — they name the bound change-id; none (or no plan) = unbound — never guess a change-id from content similarity. | Run `python3 loom-code/scripts/archive_change_folder.py <change-id> <repo-root>` (argv per the script's docstring: change-id first, root second — do NOT guess), then stage the move (`git add docs/loom/archive/<date>-<change-id>/` and the now-removed `docs/loom/<change-id>/` path) into THIS close-out commit. | No change-folder bound → say loudly, never silently skip: "archive-on-close: N/A — no change-folder bound". |
+     | Memory-timing check | Asked and answered at Step 6, the moment git-memory's trailer set came back — this row only STAGEs whatever `docs/loom/memory/` file that check produced. | A durable, already-known fact (practice / gotcha / process per the jurisdiction table) goes into `docs/loom/memory/` NOW, staged into THIS close-out commit — exact rule and its one exception: `docs/loom/memory/README.md` §"When to record". | Question NOT asked at Step 6 → ask it now — late beats never — treat it as a process miss. |
+     | Memory-store integrity | Fires ONLY when this branch added or edited a file under `docs/loom/memory/`; otherwise skip silently (auditable from the diff). | Run `python3 scripts/check_loom_memory_integrity.py` from the repo root before the close-out commit; exit 0 is the gate. §Index invariant (`docs/loom/memory/README.md`): one index line per memory file, description = the file's frontmatter `description`, byte-identical — index generated from frontmatter, so the memory file alone leaves the store invalid until regen. CI's catching job is named `plugin version bump`, so run it locally. Recurrence is why this check exists — the same miss shipped twice. | Checker absent (it ships in no plugin) → say `memory-store integrity: N/A — checker not present in this repo` loudly and move on — never read a "No such file" nonzero as a store violation. On nonzero: run `python3 scripts/check_loom_memory_integrity.py --write`, re-run until exit 0, then `git add` the corrected `docs/loom/memory/README.md` — do not commit on a violation; `--write` itself nonzero → fix the file it names, repeat. It validates the WORKING TREE — an unstaged index fix ships the exact defect this check prevents. |
+     | Backlog-close check | The repo has `docs/loom/backlog/` AND this branch ships or supersedes a backlog entry — grep the store for the branch's topic terms and read the hits. | Flip the entry's `status:` to SHIPPED (or CLOSED — SUPERSEDED), append one body line naming the evidence (this branch/PR); if `scripts/backlog_index.py` exists at the repo root, regenerate with `python3 scripts/backlog_index.py --write` and stage both in the same close-out commit. | No hit, or no store → skip silently (auditable from the diff, like the memory-store row). `backlog_index.py` absent (ships in no plugin) → say `backlog-close: index not regenerated — backlog_index.py not present`, stage the entry flip alone, noting the regen needs a machine with the script. |
    - Attached-HEAD check: run `git symbolic-ref -q HEAD` in the main
      working tree — it must print the branch being finished. Detached
      HEAD or a different branch means something (typically a subagent)
