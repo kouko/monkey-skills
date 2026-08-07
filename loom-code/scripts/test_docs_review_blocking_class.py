@@ -216,8 +216,8 @@ def test_plugin_version_and_changelog_at_0_65_1():
     rewrites it, which is what makes a missing bump fail CI rather than
     ship a silent marketplace no-op."""
     plugin_text = PLUGIN_JSON.read_text(encoding="utf-8")
-    assert '"version": "0.65.1"' in plugin_text, (
-        "loom-code/.claude-plugin/plugin.json must read version 0.65.1"
+    assert '"version": "0.65.2"' in plugin_text, (
+        "loom-code/.claude-plugin/plugin.json must read version 0.65.2"
     )
 
     changelog_text = CHANGELOG_MD.read_text(encoding="utf-8")
