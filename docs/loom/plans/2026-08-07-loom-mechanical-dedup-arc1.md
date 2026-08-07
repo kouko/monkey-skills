@@ -28,7 +28,7 @@ Steps:
 - Dependencies: none
 - Independent: true
 - Brief item covered: "T1 (B1): carrier-inventory test — greps `state anchor|state-anchor` over `loom-*/`, asserts the live-carrier list matches the pinned 11-location inventory"
-- Status: claimed(@wave-1)
+- Status: done(fb9ccfd1)
 - Gloss: 把 state-anchor 的 11 個載體位置釘進測試——語義要改時，測試失敗訊息就是完整掃描清單
 
 ## Task 2 — T2 brief-before-asking anchor-sentence lockstep test
@@ -47,7 +47,7 @@ Steps:
 - Dependencies: none
 - Independent: true
 - Brief item covered: "T2 (C2): lockstep test — byte-compares the shared anchor sentence … across the 4 design-side router SKILL.md files"
-- Status: claimed(@wave-1)
+- Status: done(b9141492)
 - Gloss: 四個 router 共享的觸發句上鎖——改一份沒同步另外三份時 CI 直接點名
 
 ## Task 3 — T3 router-card rule-token presence test
@@ -65,7 +65,7 @@ Steps:
 - Dependencies: none
 - Independent: true
 - Brief item covered: "T3 (D2): token-presence lockstep — for each of the 5 load-bearing rules, asserts its distinctive anchor tokens appear in BOTH"
-- Status: claimed(@wave-1)
+- Status: done(e86c0bf4)
 - Gloss: 五條家規在卡片與 router 兩邊都要在場——「改了一邊忘另一邊」從此被 CI 抓
 
 ## Task 4 — session-start comment points at the new guard
@@ -82,7 +82,7 @@ Steps:
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: "update session-start:6-11 comment to name the guard"
-- Status: pending
+- Status: done(0270c160)
 - Gloss: 把「edit BOTH 靠人記」的註解改成指向新防護
 
 ## Task 5 — CI trigger wiring for cross-plugin drift tests
@@ -98,7 +98,7 @@ Steps:
 - Dependencies: none
 - Independent: true
 - Brief item covered: Decision — "Where the new tests land decides version bumps … a repo-root location avoids bumps but needs CI wiring"
-- Status: claimed(@wave-1)
+- Status: done(0d92c47e)
 - Gloss: 補 CI 觸發路徑——sibling plugin 改到被鎖檔案時，跑得到根目錄的防漂移測試
 
 ## Task 6 — ride-along corrections: audit doc
@@ -114,7 +114,7 @@ Steps:
 - Dependencies: none
 - Independent: true
 - Brief item covered: "Doc corrections (audit doc + execute-keep-lanes entry) per Ride-along"
-- Status: claimed(@wave-1)
+- Status: done(bd395391)
 - Gloss: 審計文件止血——修 PR #669 殘留與被偵察推翻的兩個前提，並全文清掃舊數值
 
 ## Task 7 — ride-along corrections: backlog entry + index
@@ -130,7 +130,7 @@ Steps:
 - Dependencies: none
 - Independent: true
 - Brief item covered: "update the execute-keep-lanes backlog entry to the reshaped arc-1 scope"
-- Status: claimed(@wave-1)
+- Status: done(0a9fecf8)
 - Gloss: backlog 執行計畫同步改形後的 arc 1 範圍，索引重生成
 
 ## Task 8 — loom-code manifest version bump
@@ -146,7 +146,7 @@ Steps:
 - Dependencies: Task 4 completes first
 - Independent: false
 - Brief item covered: Decision — "tests inside a plugin's scripts/ imply that plugin's patch bump" (the session-start edit is the bump trigger here)
-- Status: pending
+- Status: done(86890509)
 - Gloss: 版本 bump——讓裝置端 plugin update 拿得到這次的 hooks 註解變更
 
 ## Task 9 — loom-code CHANGELOG entry
@@ -162,7 +162,7 @@ Steps:
 - Dependencies: Task 8 completes first
 - Independent: false
 - Brief item covered: Decision — "tests inside a plugin's scripts/ imply that plugin's patch bump" (release notes for that bump)
-- Status: pending
+- Status: done(56854bbc)
 - Gloss: CHANGELOG 記錄 0.65.2 的內容
 
 ## Notes
