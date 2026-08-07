@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-loom-direction-layer-and-commit-loop.md
 Goal: loom gains a portable direction layer — a per-repo DIRECTION.md (generated Now / human-only Next+Later, no dates) with its write loop (betting at close when the queue is empty) and read loop (Axis 0) wired conditionally into the stations, five frozen ROADMAPs tombstoned, loom-code shipping 0.69.0 — monkey-skills seeded as first consumer.
-Stage: review:round-1
+Stage: review:round-2
 Total tasks: 10
 Critical-path depth: 3 (≤5)
 Execution order: parallel-where-possible
@@ -213,6 +213,19 @@ Steps:
   drift generator in the mechanism this arc ships; one-clause fix +
   two pins, cheap-hardening rule applied; re-verified by the
   whole-branch review arms.
+
+- 2026-08-08 (review round 1, USER-RATIFIED): 🔴 filename-pointer vs
+  date-ban self-contradiction — user chose validator exemption: date
+  tokens inside a backlog-entry filename reference
+  (`YYYY-MM-DD-slug.md`) are exempt from the DIRECTION.md no-dates
+  scan (identifiers, not schedule promises); wording aligned across
+  DIRECTION.md charter / backlog README / CHANGELOG. Alternatives
+  (dateless-slug pointers; dropping the permission) declined.
+- 2026-08-08 (review round 1, USER-RATIFIED): remediation scope — all
+  four findings fixed (validator exemption, heading-predicate
+  alignment in _direction_now_bounds, main() extraction below the
+  100-line ceiling, Bet-trigger entry-flip precondition), then one
+  delta-scoped round-2 re-review before PR-open.
 
 ## Notes
 
