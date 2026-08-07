@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-stage-owner-and-blocked-enum.md
 Goal: The Stage header gains an owner for review-round transitions (a duty sentence in requesting-code-review, plus the docs-arm rider) and a blocked:user-decision enum value across both prose copies and the pin test, shipped with the loom-code version bump and CHANGELOG entry.
-Stage: planning
+Stage: sdd:wave-1
 Endpoint named: yes → continuous (user: 「先做 PR A 吧」)
 Total tasks: 5
 Critical-path depth: 3 (≤5)
@@ -27,7 +27,7 @@ Plan-document-reviewer verdict: PASS (2026-08-07, round 1, 15/15)
 - Dependencies: none
 - Independent: false
 - Brief item covered: "writing-plans/references/plan-format.md:36 enum copy gains the same value PLUS the when-to-set duty text" + "Pin test …test_plan_format_progress_fields.py:49-53 (STAGE_ENUM_LINE, verbatim) updated RED-first"
-- Status: pending
+- Status: claimed(@implementer-1)
 - Gloss: 給 Stage 加上「等使用者裁決」狀態值——schema 檔與它的 pin 測試同步改，先紅後綠
 
 ## Task 2 — writing-plans SKILL.md: enum line + new pin assertion
