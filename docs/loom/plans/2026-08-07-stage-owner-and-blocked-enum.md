@@ -27,7 +27,7 @@ Plan-document-reviewer verdict: PASS (2026-08-07, round 1, 15/15)
 - Dependencies: none
 - Independent: false
 - Brief item covered: "writing-plans/references/plan-format.md:36 enum copy gains the same value PLUS the when-to-set duty text" + "Pin test …test_plan_format_progress_fields.py:49-53 (STAGE_ENUM_LINE, verbatim) updated RED-first"
-- Status: claimed(@implementer-1)
+- Status: done(672f5d3a)
 - Gloss: 給 Stage 加上「等使用者裁決」狀態值——schema 檔與它的 pin 測試同步改，先紅後綠
 
 ## Task 2 — writing-plans SKILL.md: enum line + new pin assertion
@@ -63,7 +63,7 @@ Plan-document-reviewer verdict: PASS (2026-08-07, round 1, 15/15)
 - Dependencies: none
 - Independent: false
 - Brief item covered: "requesting-code-review/SKILL.md gains ONE self-contained duty sentence: at the start of each whole-branch review round, the orchestrator flips the plan's Stage: to review:round-N (hand-edit…)"
-- Status: pending
+- Status: claimed(@implementer-2)
 - Gloss: review 每一輪開始就把 plan 的 Stage 翻到 round-N——把無主轉換補上 owner，配新 pin 測試
 
 ## Task 4 — requesting-docs-review rider: same duty, docs-arm variant
