@@ -6,6 +6,16 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.15.0] — 2026-08-07
+
+### Changed
+
+- `skills/loom-memory/SKILL.md` — record steps 4-5 and prune's index
+  duties flip from hand-append/hand-update to the generated-index
+  regen procedure (`python3 scripts/check_loom_memory_integrity.py
+  --write`, followed by `--check`); the SSOT pointer-discipline
+  section is untouched. Skill frontmatter version 0.2.0 → 0.2.1.
+
 ## [0.14.0] — 2026-08-06
 
 ### Changed

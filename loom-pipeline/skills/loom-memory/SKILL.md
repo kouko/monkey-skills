@@ -10,7 +10,7 @@ description: >-
   reason, loudly. NOT for git commit trailers (dev-workflow:git-memory)
   nor Claude auto-memory. Triggers: "有沒有相關經驗", "記住這個做法",
   "記憶整理", "この教訓を残して", "過去の知見はある？".
-version: 0.2.0
+version: 0.2.1
 ---
 
 # loom-memory — record / recall / prune for the practice-memory store
@@ -62,15 +62,19 @@ Given a fact worth keeping:
    — point at it, don't copy its table (SSOT above).
 3. **Write `<slug>.md`** in `docs/loom/memory/` following the
    charter's format block exactly (frontmatter fields, body sections).
-4. **Append the index line** in the charter's index format, with the
-   description copied **byte-identical** from the file's frontmatter
-   `description`.
-5. **Re-verify the two invariants** before declaring done:
-   - filename (minus `.md`) equals the frontmatter `name` slug;
-   - the index line's description equals the frontmatter
-     `description`, byte for byte.
+4. **Regenerate the index** — run
+   `python3 scripts/check_loom_memory_integrity.py --write`. The
+   validator rebuilds the charter's `## Index` section from every
+   entry's frontmatter; do not hand-append an index line. If
+   `--write` refuses, its FAIL output names the offending file and
+   the reason (broken frontmatter, unexpected prose in the index
+   region) — fix that named file first, then re-run.
+5. **Re-run the validator** before declaring done:
+   `python3 scripts/check_loom_memory_integrity.py --check` must
+   exit 0 — it diffs the full index block, covering all five
+   invariants the charter defines.
 
-   A mismatch is a fail-loud fix-now, not a note.
+   A nonzero exit is a fail-loud fix-now, not a note.
 
 ## recall
 
@@ -119,9 +123,10 @@ a one-line reason (keep-rows included; silence is not a verdict):
   charter — no archive folder).
 
 **NEVER delete without explicit user approval.** Merge and retire are
-proposals; execute them only after the user approves, then update the
-index in the same pass and re-verify the record invariants for any
-merged file.
+proposals; execute them only after the user approves, then regenerate
+the index in the same pass — run
+`python3 scripts/check_loom_memory_integrity.py --write` — and re-run
+the validator (`--check`) for any merged file.
 
 ## Red flags — refuse these
 
