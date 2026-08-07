@@ -1,4 +1,9 @@
-"""Planning-stage helper: draft a batch-mode `[[change]]` queue entry.
+"""Campaign-doc queue helpers: entry authoring (planning) + description
+lookup (execution).
+
+Both stages read the same source of truth — the campaign doc's ``## Phase 2``
+checklist — so its scanning lives here once rather than being mirrored per
+stage.
 
 `propose_queue_entry` is the PLANNING-stage tool (the execution routine in
 ROUTINE.md never calls it). It validates that a Phase 2 backlog item's plan
@@ -8,6 +13,12 @@ exists as an unfinished checklist line under the campaign doc's
 ``## Phase 2`` section, then emits the TOML block a human pastes into
 ``docs/loom/QUEUE.toml`` for ``loom-pipeline/scripts/batch_queue.py`` to
 consume.
+
+`lookup_backlog_description` is the EXECUTION-stage tool (ROUTINE.md Step 4).
+It returns an item's checklist text so the scope guard has a real input:
+``batch_queue.py``'s dispatch payload carries no description field, and
+neither does ``load_queue``'s accepted entry shape, so the campaign doc's own
+checklist line is the description of record.
 
 Fail-loud, no improvised defaults — mirrors ``batch_queue.py``'s
 ``load_queue`` stance: a missing verdict or a bogus item id RAISES rather
@@ -36,25 +47,75 @@ _SECTION_HEADING = re.compile(r"^##\s+")
 _ITEM = re.compile(r"^- \[[ xX]\] (?P<id>B\d+):")
 
 
-def _phase2_item_ids(campaign_text: str) -> set[str]:
-    """Return every ``B<n>`` id that appears as a checklist line under
-    ``## Phase 2`` (checked or unchecked), scoped to that section only."""
+def _phase2_section_lines(campaign_text: str) -> list[str]:
+    """Return the lines between the ``## Phase 2`` heading and the next
+    ``## `` heading — empty when the section is absent."""
     lines = campaign_text.splitlines()
     start = next(
         (i + 1 for i, line in enumerate(lines) if _PHASE2_HEADING.match(line)),
         None,
     )
     if start is None:
-        return set()
+        return []
     end = next(
         (j for j in range(start, len(lines)) if _SECTION_HEADING.match(lines[j])),
         len(lines),
     )
-    return {
-        m.group("id")
-        for line in lines[start:end]
-        if (m := _ITEM.match(line))
-    }
+    return lines[start:end]
+
+
+def _phase2_items(campaign_text: str) -> dict[str, str]:
+    """Map each Phase 2 ``B<n>`` id to its full checklist text.
+
+    A checklist entry wraps across lines in the real campaign doc, and a
+    signal the scope guard must catch can sit on a continuation line — so an
+    item's text is its head line PLUS every following indented line, stopping
+    at the next unindented line (the next item, a group label like ``High:``,
+    or a blank line). Truncating at the head line would hand the fail-closed
+    guard a partial description, which fails OPEN.
+    """
+    section = _phase2_section_lines(campaign_text)
+    items: dict[str, str] = {}
+    current: str | None = None
+    for line in section:
+        if match := _ITEM.match(line):
+            current = match.group("id")
+            items[current] = line
+        elif current is not None and line[:1].isspace() and line.strip():
+            items[current] += "\n" + line
+        elif not line.strip() or not line[:1].isspace():
+            current = None
+    return items
+
+
+def _phase2_item_ids(campaign_text: str) -> set[str]:
+    """Return every ``B<n>`` id that appears as a checklist line under
+    ``## Phase 2`` (checked or unchecked), scoped to that section only."""
+    return set(_phase2_items(campaign_text))
+
+
+def lookup_backlog_description(item_id: str, campaign_doc_path: Path) -> str:
+    """Return ``item_id``'s full Phase 2 checklist text (head + wrapped lines).
+
+    This is the scope guard's input in ROUTINE.md Step 4 —
+    ``safety_gates.requires_real_agent_surface`` is called on what this
+    returns. Scoped to the ``## Phase 2`` section specifically, so a
+    similarly-named item in another phase is never substituted.
+
+    Raises ``ValueError`` naming the missing id when the item is not a Phase 2
+    checklist item — fail-loud, mirroring ``propose_queue_entry``. An
+    unattended run must never scope-guard against a guessed description.
+    """
+    campaign_text = Path(campaign_doc_path).read_text(encoding="utf-8")
+    items = _phase2_items(campaign_text)
+    if item_id not in items:
+        raise ValueError(
+            f'lookup_backlog_description: item "{item_id}" is not a Phase 2 '
+            f'checklist item in "{campaign_doc_path}" — refusing to return a '
+            "description for an id that does not exist under ## Phase 2 "
+            "(fail-loud: the scope guard must never receive a guess)."
+        )
+    return items[item_id]
 
 
 def _toml_escape(value: str) -> str:

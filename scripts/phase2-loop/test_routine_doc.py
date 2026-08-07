@@ -65,3 +65,31 @@ def test_routine_doc_covers_required_steps():
     # invokes itself.
     assert "brainstorming" not in content
     assert "subagent-driven-development" not in content
+
+
+def test_routine_doc_scope_guard_step_is_executable():
+    """Step 4's guard must name a real input source and a real state exit.
+
+    Whole-branch review found Step 4 unexecutable: it called the guard on
+    "<picked entry's description>", a field that exists in no dispatch
+    payload, no accepted queue-entry shape, and no emitter — so an unattended
+    executor had to improvise the one input a fail-closed guard must never
+    receive by guess. Its skip path also prescribed no state transition,
+    stranding the entry RUNNING with a live worktree.
+    """
+    content = _routine_text()
+
+    # The guard's input comes from a named callable, not a hand-waved field.
+    assert "lookup_backlog_description" in content
+    # ...and the phantom field is gone.
+    assert "picked entry's description" not in content
+
+    # The skip path transitions queue state instead of stranding it RUNNING.
+    assert "force-fail" in content
+
+    # Every helper the routine calls is module-qualified, journal writer
+    # included (it was the only unqualified one).
+    assert "journal_writer" in content
+
+    # Tooling failure — not just dispatched-item failure — has a defined rule.
+    assert "nonzero" in content.lower()

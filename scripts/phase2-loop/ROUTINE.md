@@ -67,25 +67,82 @@ no work. Read its exit code and stdout:
   Do NOT override. This unattended routine MUST NOT pass `--override-halt` —
   a systemic-failure signal is exactly the case a human must see.
 - **stdout `{"done": true}`** (or `{"done": false, "non_terminal": [...]}`
-  listing only in-flight / non-eligible entries, i.e. nothing this scan could
+  listing the entries still in flight, i.e. nothing this scan could
   dispatch) — **exit as a no-op.** There is no frozen, queued work to run.
 - **stdout a dispatch payload** (a JSON object with `segment`, `changeId`,
   `projectPath`, `planPath`, `budgets`, `models`, `skillsRoot`, `branch`) —
   this is the entry to execute. `next` has already recorded it `RUNNING` and
   readied its isolated worktree + `loom/<changeId>` branch. Continue.
+- **Any other nonzero exit** (`1` — a `QueueError`, a malformed
+  `QUEUE.toml`, an unreadable state file) — **STOP and exit.** There is no
+  dispatch payload, so there is nothing to guard, dispatch, or mark; falling
+  through to Step 4 would scope-guard a payload that does not exist. Leave
+  stderr for the human.
+
+**Tooling-failure rule, applying to every `batch_queue.py` call in this
+document (Steps 2, 3, 6 and 8).** A nonzero exit from the CLI itself — as
+opposed to a failure of the dispatched item, which Step 8 covers — means this
+invocation STOPS where it stands. Do not retry the command, do not proceed to
+the next step, and do not invent a compensating transition. The one exception
+is Step 6/8's own recovery path, stated there.
 
 ## Step 4 — Scope guard on the picked entry
 
-Call
-`safety_gates.requires_real_agent_surface(<picked entry's description>)`.
+**Where the description comes from.** `next`'s dispatch payload carries no
+description, and neither does a `QUEUE.toml` entry (`load_queue` accepts only
+`id`, `plan`, `budgets`, and optionally `models`). The campaign doc's own
+Phase 2 checklist line is the description of record, and
+`queue_entry.lookup_backlog_description` is the only supported way to read
+it — it returns the item's head line plus its wrapped continuation lines,
+because a signal the guard must catch can sit on a continuation line.
+
+```
+description = queue_entry.lookup_backlog_description(
+    <changeId from the Step 3 payload>,
+    Path("<root>/docs/dbt-wiki-quality-campaign.md"),
+)
+```
+
+It raises `ValueError` when the id is not a Phase 2 checklist item. That is
+a STOP, not a skip: treat it exactly as the tooling-failure rule in Step 3
+(exit, leave the entry `RUNNING` for `reconcile` to surface). Never
+substitute another string — passing `changeId` itself, or an empty string,
+makes the guard return `False` and dispatches the very item it exists to
+refuse.
+
+(This calls `lookup_backlog_description`, NOT `propose_queue_entry` — the
+authoring helper in the same module remains a planning-stage tool this stage
+never runs.)
+
+Then call `safety_gates.requires_real_agent_surface(description)`.
 
 - If it returns `True`, this loop MUST NOT drive the item unattended (it
   gestures at the metered real-headless-agent eval surface — W1/G1/G2/G3).
-  Do the following and then **exit**:
-  1. `append_journal_line(Path("<root>/docs/dbt-wiki-quality-campaign.md"),
-     "<id>: skipped, needs human scoping (real-agent surface)")`
-  2. Do not dispatch. Leave the entry for a human to scope. (The guard fails
-     **closed** — an ambiguous description is refused, never guessed.)
+  Do the following, in this order, and then **exit**:
+  1. Release the queue entry — Step 3's `next` already recorded it `RUNNING`,
+     so simply exiting would strand a `RUNNING` entry with no run evidence
+     and make Step 2's `reconcile` report a false `SUSPECT` on the next
+     invocation:
+     ```
+     python3 loom-pipeline/scripts/batch_queue.py force-fail <id> \
+       --project <root> --reason "scope guard: real-agent surface, needs human scoping"
+     ```
+     `force-fail` is the only valid transition out of `RUNNING` here (`reset`
+     would requeue the item, and the next scheduled run would pick it up and
+     refuse it again — a loop). The resulting `FAILED` counts toward the Step
+     3 circuit breaker like any other, which is intended: two consecutive
+     items needing human scoping SHOULD stop the loop and fetch a human.
+  2. `journal_writer.append_journal_line(...)` — one line, per Step 9's
+     single-line rule and its exact format.
+  3. Do not dispatch. (The guard fails **closed** — an ambiguous description
+     is refused, never guessed.)
+
+  **Known residue, stated rather than hidden**: `force-fail` transitions
+  queue state but does not tear down the `loom/<changeId>` worktree and
+  branch `next` created (`batch_queue.py`'s `_teardown_worktree` is internal
+  to its own skip path and exposed by no CLI verb). This routine does NOT
+  remove them itself — that would violate its never-manage-branches boundary
+  below. The worktree is left for the human the `FAILED` entry summons.
 
 ## Step 5 — Dispatch segment 3 (execution only)
 
@@ -121,8 +178,18 @@ existing halt discipline documented at
 `loom-code/skills/using-loom-code/references/continuous-mode.md` — its
 "no human pumping → hand back slack one round earlier" precedent (the STOP
 contract there). Do not invent a new threshold and do not restate its
-mechanics here; that file is the single source of truth for when an
-unattended run stops and escalates.
+mechanics here; that file is the single source of truth for **when** an
+unattended run stops and escalates. It is not the source of truth for what
+happens next: its stop contract ends at a PR-open this routine forbids
+outright (see Hard boundaries), so the terminal bookkeeping below applies
+instead.
+
+**An escalation halt is a terminal outcome, not a third state.** Its
+"stop-and-wait and emit why I stopped" ending presumes a reader who is by
+definition absent here, so record it the same way any other failure is
+recorded — Step 8's `mark <id> failed` with the halt reason, then Step 9's
+one journal line. An unattended halt must never leave the entry `RUNNING`
+with no journal line: that is indistinguishable from a crash.
 
 ## Step 8 — Mark the terminal outcome
 
@@ -146,15 +213,27 @@ human; two consecutive failures trip the Step 3 circuit breaker by design.
 
 ## Step 9 — Narrate one campaign-journal line
 
-Regardless of pass / fail / skip, append exactly one human-readable summary
-line:
+Exactly **one** journal line is appended per invocation, whatever the outcome
+— done, failed, escalation-halt, or scope-guard skip. Step 4's skip path is
+that invocation's one line, not an extra one: it calls this step's helper
+with this step's format and then exits, so control never reaches here twice.
 
 ```
-append_journal_line(Path("<root>/docs/dbt-wiki-quality-campaign.md"), line)
+journal_writer.append_journal_line(
+    Path("<root>/docs/dbt-wiki-quality-campaign.md"), line
+)
 ```
 
-where `line` is a single line such as `<id>: done` / `<id>: failed —
-<reason>` / `<id>: skipped, needs human scoping`.
+`line` MUST begin with `- ` — every entry in the target `## Journal` section
+is a markdown list item, and `append_journal_line` inserts after the last
+content line, so an unprefixed line is absorbed into the preceding bullet as
+a lazy continuation instead of rendering as its own entry. Use one of:
+
+```
+- <id>: done
+- <id>: failed — <reason>
+- <id>: skipped, needs human scoping (real-agent surface)
+```
 
 ---
 

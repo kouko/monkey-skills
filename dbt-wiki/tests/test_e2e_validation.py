@@ -71,6 +71,39 @@ def _bundles_in(base: Path) -> list[Path]:
     return sorted(p for p in base.glob("*-analytics") if p.is_dir())
 
 
+def test_cleanup_preserves_preexisting_repo_root_byproducts(tmp_path):
+    """Teardown must not delete a repo-root `.dbt-wiki/` it did not create.
+
+    Whole-branch review: the repo-root sweep was unconditional while the
+    fixture-side sweep carefully guarded `.git`/`CLAUDE.md`. Since this repo
+    develops the dbt-wiki plugin, a maintainer's real `.dbt-wiki/` (from a
+    genuine `dbt-wiki:init`) sat one `-m e2e` invocation away from silent,
+    irreversible deletion.
+    """
+    repo_root = tmp_path / "repo"
+    fixture_dir = tmp_path / "fixture"
+    fixture_dir.mkdir()
+
+    mine = repo_root / ".dbt-wiki"
+    mine.mkdir(parents=True)
+    (mine / "index.md").write_text("real knowledge base", encoding="utf-8")
+    my_bundle = repo_root / "mine-analytics"
+    my_bundle.mkdir()
+
+    preserved = snapshot_repo_root_byproducts(repo_root)
+
+    # ...the run then drops its own bundle at the root.
+    run_bundle = repo_root / "fixture-analytics"
+    run_bundle.mkdir()
+
+    _cleanup_run_byproducts(fixture_dir, repo_root, False, False, preserved)
+
+    assert mine.is_dir(), "pre-existing .dbt-wiki/ must survive teardown"
+    assert (mine / "index.md").read_text(encoding="utf-8") == "real knowledge base"
+    assert my_bundle.is_dir(), "pre-existing bundle must survive teardown"
+    assert not run_bundle.exists(), "the run's own byproduct must still be removed"
+
+
 def _parse_run_output(raw_stdout: str) -> tuple[dict, str | None, str, bool]:
     """Extract `(raw_answers, parse_error, final_message, is_real_output)` from
     a real `claude -p --output-format json` run's stdout."""
@@ -92,17 +125,32 @@ def _parse_run_output(raw_stdout: str) -> tuple[dict, str | None, str, bool]:
     return raw_answers, parse_error, final_message, is_real_output
 
 
+def snapshot_repo_root_byproducts(repo_root: Path) -> set[Path]:
+    """Paths at the repo root that a cleanup must NEVER delete.
+
+    Call this BEFORE the run. This repo develops the `dbt-wiki` plugin, so a
+    maintainer plausibly has a real `.dbt-wiki/` at the root from a genuine
+    `dbt-wiki:init` — deleting it is irreversible and unrelated to the run.
+    The fixture side already guards its own `.git`/`CLAUDE.md` this way; this
+    extends the same discipline to the repo root.
+    """
+    return {p for p in [repo_root / ".dbt-wiki", *_bundles_in(repo_root)] if p.exists()}
+
+
 def _cleanup_run_byproducts(
     fixture_dir: Path,
     repo_root: Path,
     preexisting_git: bool,
     preexisting_claude_md: bool,
+    preexisting_repo_byproducts: set[Path] | None = None,
 ) -> None:
     """Remove every byproduct the run may have written into the fixture, then
     drop the temporary git root. Belt-and-suspenders: also clean any that
-    escaped to the repo root."""
+    escaped to the repo root — except anything `preexisting_repo_byproducts`
+    recorded as already present before the run started."""
     fixture_git = fixture_dir / ".git"
     fixture_claude_md = fixture_dir / "CLAUDE.md"
+    preserved = preexisting_repo_byproducts or set()
     for junk in [fixture_dir / ".dbt-wiki", *_bundles_in(fixture_dir)]:
         shutil.rmtree(junk, ignore_errors=True)
     if not preexisting_claude_md:
@@ -110,6 +158,8 @@ def _cleanup_run_byproducts(
     if not preexisting_git and fixture_git.exists():
         shutil.rmtree(fixture_git, ignore_errors=True)
     for junk in [repo_root / ".dbt-wiki", *_bundles_in(repo_root)]:
+        if junk in preserved:
+            continue
         shutil.rmtree(junk, ignore_errors=True)
 
 
@@ -186,6 +236,8 @@ def test_real_end_to_end_run_scores_the_blind_agent():
     # already had one so teardown only removes the one this run created.
     fixture_claude_md = FIXTURE_DIR / "CLAUDE.md"
     preexisting_claude_md = fixture_claude_md.exists()
+    # Anything already at the repo root is the maintainer's, not this run's.
+    preexisting_repo_byproducts = snapshot_repo_root_byproducts(repo_root)
 
     landing = {"fixture_bundles": [], "repo_root_bundles": [], "repo_root_dbt_wiki": False}
     run_meta: dict = {}
@@ -241,7 +293,11 @@ def test_real_end_to_end_run_scores_the_blind_agent():
 
     finally:
         _cleanup_run_byproducts(
-            FIXTURE_DIR, repo_root, preexisting_git, preexisting_claude_md
+            FIXTURE_DIR,
+            repo_root,
+            preexisting_git,
+            preexisting_claude_md,
+            preexisting_repo_byproducts,
         )
 
     # --- GREEN assertions: report exists, produced by a real (non-canned) run,

@@ -74,6 +74,7 @@
 - [2026-08-04-out-of-scope-deferrals-have-no-durable-record](backlog/2026-08-04-out-of-scope-deferrals-have-no-durable-record.md) — an out_of_scope finding is surfaced once in chat and persisted nowhere -- nothing re-injects it into a later round, so a deferred defect is silently dropped the moment nobody acts on the verdict in the same session
 - [2026-08-06-plan-card-cjk-aware-gloss-line-join](backlog/2026-08-06-plan-card-cjk-aware-gloss-line-join.md) — plan_card.py joins wrapped bullet lines with a space, which is correct for Latin text but inserts a stray mid-word space in CJK glosses (e.g. 大聲報錯教 你正確寫法) — the join should be width-aware (no space between CJK codepoints)
 - [2026-08-06-same-type-dispatch-batching-cache-experiment](backlog/2026-08-06-same-type-dispatch-batching-cache-experiment.md) — Same-type subagent batching within the cache TTL is theory-supported (identical definition prefixes share API-level cache) but locally unproven — a haiku zero-tool experiment showed no detectable duration effect (warm mean 9.9s vs cold 10.6s, within spread); the JP-measured 2x win used ~119k-token real workloads, so the re-test needs realistic mass
+- [2026-08-07-phase2-loop-and-l2-harness-review-residue](backlog/2026-08-07-phase2-loop-and-l2-harness-review-residue.md) — deferred whole-branch review findings from the Phase 2 loop + L2 e2e harness branch
 
 ## PARKED
 - [2026-07-08-automate-research-toolkit-s-sync-primitives-sh](backlog/2026-07-08-automate-research-toolkit-s-sync-primitives-sh.md) — Automate research-toolkit's sync-primitives.sh

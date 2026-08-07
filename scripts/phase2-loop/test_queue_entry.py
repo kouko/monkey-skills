@@ -1,10 +1,12 @@
-"""Tests for the planning-stage `propose_queue_entry` helper."""
+"""Tests for the queue-entry helpers (planning-stage authoring + the
+execution stage's campaign-doc description lookup)."""
 
 import tomllib
 
 import pytest
 
-from queue_entry import propose_queue_entry
+from queue_entry import lookup_backlog_description, propose_queue_entry
+from safety_gates import requires_real_agent_surface
 
 # A realistic slice of docs/dbt-wiki-quality-campaign.md's ## Phase 2 section —
 # High/Medium sub-groups, multi-line item bodies, and a neighbouring section
@@ -106,5 +108,74 @@ def test_propose_queue_entry_ignores_items_outside_phase2_section(tmp_path):
 
     with pytest.raises(ValueError) as excinfo:
         propose_queue_entry("G1", plan_path, campaign_path, 5)
+
+    assert "G1" in str(excinfo.value)
+
+
+# --- lookup_backlog_description (execution-stage scope-guard input) ---------
+#
+# ROUTINE.md Step 4 calls `requires_real_agent_surface` on the picked entry's
+# description. No description exists in batch_queue.py's dispatch payload, in
+# `load_queue`'s accepted fields, or in `propose_queue_entry`'s emitted block —
+# the campaign doc's own Phase 2 checklist line IS the description of record,
+# and this is the only supported way to obtain it.
+
+# B7's real-agent signal ("e2e run") sits on the WRAPPED continuation line, not
+# the head line — the case a head-line-only lookup would silently pass through.
+_CAMPAIGN_DOC_WRAPPED_SIGNAL = """\
+# dbt-wiki Quality Campaign — work queue & state
+
+## Phase 2 — backlog burn-down
+
+- [ ] B6: init SKILL.md pseudocode duplicating build_evidence_pages.py
+- [ ] B7: log.md template dual-spec — needs a real e2e run against the
+  headless harness to confirm the dialect line
+- [ ] B8: stale in-file version headers
+
+## Phase 3 — generalization sweep
+"""
+
+
+def test_lookup_backlog_description_includes_wrapped_continuation_lines(tmp_path):
+    campaign_path = _write(tmp_path, "campaign.md", _CAMPAIGN_DOC)
+
+    description = lookup_backlog_description("B1", campaign_path)
+
+    assert "rescan ~450 lines inline pseudocode" in description
+    # The wrapped second line belongs to B1 and must be part of its description.
+    assert "TypeError" in description
+    # ...and the NEXT item's text must not bleed in.
+    assert "materiality map" not in description
+
+
+def test_lookup_backlog_description_feeds_scope_guard_on_wrapped_signal(tmp_path):
+    # The safety-critical composition: a signal on the continuation line must
+    # still trip the fail-closed guard.
+    campaign_path = _write(tmp_path, "campaign.md", _CAMPAIGN_DOC_WRAPPED_SIGNAL)
+
+    assert requires_real_agent_surface(
+        lookup_backlog_description("B7", campaign_path)
+    ) is True
+    assert requires_real_agent_surface(
+        lookup_backlog_description("B8", campaign_path)
+    ) is False
+
+
+def test_lookup_backlog_description_fails_loud_for_unknown_item(tmp_path):
+    campaign_path = _write(tmp_path, "campaign.md", _CAMPAIGN_DOC)
+
+    with pytest.raises(ValueError) as excinfo:
+        lookup_backlog_description("B99", campaign_path)
+
+    assert "B99" in str(excinfo.value)
+
+
+def test_lookup_backlog_description_scoped_to_phase2_section(tmp_path):
+    # G1 lives under ## Phase 3 — the execution stage must not scope-guard
+    # against a description from another section.
+    campaign_path = _write(tmp_path, "campaign.md", _CAMPAIGN_DOC)
+
+    with pytest.raises(ValueError) as excinfo:
+        lookup_backlog_description("G1", campaign_path)
 
     assert "G1" in str(excinfo.value)

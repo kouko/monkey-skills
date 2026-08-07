@@ -116,3 +116,39 @@ Low (next-touch, from PR reviews): flatten_links anchored-link backstop;
   the full matrix) are exactly where a real degradation might still turn
   up. G1 checklist item stays unchecked — only the sparse-comment slice
   is done; dialect + scale remain.
+- 2026-08-07: U1's execution-stage slice shipped — a 4-task SDD plan
+  (`docs/loom/plans/2026-07-28-phase2-loop-execution-only.md`) that
+  **replaced** U1's original "build our own nightly loop" framing. The
+  redesign composes `loom-pipeline/scripts/batch_queue.py` (queue, state,
+  circuit breaker, worktree isolation — all already built and hardened
+  twice since) instead of duplicating it, and splits the work by review
+  status rather than by clock time: a **planning stage** (interactive,
+  unchanged — brainstorm → plan → `Plan-document-reviewer verdict: PASS`)
+  and an **execution stage** (`scripts/phase2-loop/ROUTINE.md`) that only
+  ever dispatches segment 3 against an already-frozen plan. Delivered: the
+  kill switch + scope guard (`safety_gates.py`), the campaign-journal
+  writer, `queue_entry.py` (entry authoring + the backlog-description
+  lookup the scope guard reads), and an integration proof that the drafted
+  TOML round-trips through `batch_queue.py`'s `load_queue` + `check_frozen`.
+  Deliberately NOT done: no real `docs/loom/QUEUE.toml` is created and no
+  schedule is registered — both wait for the first Phase 2 item to actually
+  be planned, and the schedule needs a separate explicit go-ahead. U1's
+  checklist box stays unchecked for that reason (same precedent as G1
+  above): the machinery exists, the loop has never run. No Phase 2 backlog
+  item (B1-B14) has been burned down yet.
+- 2026-08-07: **Correction to the 2026-07-10 W1 entry's invariant caveat
+  above.** That entry called the grader's invariant check "advisory-only"
+  for the real runs, but the code hard-gated on it: `QuestionResult.passed`
+  required an empty `invariant_failures`, so the documented posture and the
+  implemented one disagreed. Whole-branch review found the consequence — a
+  *correct* as-of answer expressed as `WHERE as_of_date = (SELECT
+  MAX(as_of_date) … WHERE as_of_date <= '<date>')` was mechanically failed
+  by the `MAX(`-ban, and the fixture's own reference model
+  `fct_amortization_trap.sql` would have been graded as violating its own
+  invariant. The check is now advisory in code as well: `passed` is decided
+  by value correctness, flags are recorded and counted
+  (`GradeReport.invariant_flag_count`) for a human to read. **The reported
+  W1 5/5 and G1 5/5 / 0.0pp figures are unaffected** — both runs had zero
+  invariant failures, so no result changes under either rule. The
+  stream-json-based semantic check named in the W1 entry remains the real
+  fix and remains deferred.

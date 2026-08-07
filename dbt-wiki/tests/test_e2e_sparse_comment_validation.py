@@ -41,6 +41,7 @@ from test_e2e_validation import (
     _cleanup_run_byproducts,
     _parse_run_output,
     _repo_root,
+    snapshot_repo_root_byproducts,
 )
 
 TESTS_DIR = Path(__file__).parent
@@ -171,6 +172,9 @@ def test_sparse_comment_variant_scores_the_blind_agent(tmp_path):
     # init/pack byproduct is unambiguously ours to remove.
     preexisting_git = False
     preexisting_claude_md = False
+    # The repo root, however, is the maintainer's — snapshot what was already
+    # there so teardown never removes a real `.dbt-wiki/` or bundle.
+    preexisting_repo_byproducts = snapshot_repo_root_byproducts(repo_root)
 
     landing = {"fixture_bundles": [], "repo_root_bundles": [], "repo_root_dbt_wiki": False}
     run_meta: dict = {}
@@ -223,7 +227,11 @@ def test_sparse_comment_variant_scores_the_blind_agent(tmp_path):
 
     finally:
         _cleanup_run_byproducts(
-            sparse_dir, repo_root, preexisting_git, preexisting_claude_md
+            sparse_dir,
+            repo_root,
+            preexisting_git,
+            preexisting_claude_md,
+            preexisting_repo_byproducts,
         )
 
     # --- GREEN assertions: report exists, produced by a real (non-canned) run,

@@ -118,6 +118,64 @@ def test_grader_detects_naive_max_date_violation():
     assert not amortization.passed
 
 
+def test_grader_passes_a_correct_scoped_max_answer():
+    """A CORRECT scoped `MAX(` answer must score as passed.
+
+    Whole-branch review: `_invariant_violated` banned the aggregate named in
+    a "must not" invariant wherever it appeared in the trace, so the
+    idiomatic correct form — `MAX(as_of_date)` inside an as-of filter, which
+    is exactly what the fixture's own reference model
+    `fct_amortization_trap.sql` does — was mechanically failed. The existing
+    all-correct set sidesteps this by writing `ORDER BY … LIMIT 1` instead.
+    The prohibition check is advisory (the harness's own journal says so, and
+    `--output-format json` exposes no SQL transcript to check against); it
+    records a flag, it does not decide `passed`.
+    """
+    scoped_max = {
+        "avg_ratio": {
+            "value": 0.0875,
+            "trace": "SELECT SUM(numerator) / SUM(denominator) FROM seed_avg_ratio",
+        },
+        "fanout": {
+            "value": 82.50,
+            "trace": (
+                "WITH li AS (SELECT order_id, SUM(quantity * unit_price) v "
+                "FROM seed_fanout_line_items GROUP BY order_id) "
+                "SELECT SUM(li.v + o.shipping_fee) FROM seed_fanout_orders o "
+                "JOIN li USING (order_id)"
+            ),
+        },
+        "categorical": {
+            "value": 3,
+            "trace": "SELECT COUNT(*) FROM seed_categorical WHERE status = 'active'",
+        },
+        "amortization": {
+            # Correct value, correct as-of scoping — expressed with MAX().
+            "value": 800.00,
+            "trace": (
+                "SELECT book_value FROM seed_amortization WHERE as_of_date = ("
+                "SELECT MAX(as_of_date) FROM seed_amortization "
+                "WHERE as_of_date <= '2026-07-01')"
+            ),
+        },
+        "regional_twins": {
+            "value": 160.00,
+            "trace": "SELECT SUM(amount) FROM seed_regional_twins WHERE entity_id = 'widget'",
+        },
+    }
+
+    report = grade(scoped_max, GOLD_YAML)
+
+    amortization = next(r for r in report.results if r.trap == "amortization")
+    assert amortization.value_correct
+    assert amortization.passed, "a correct scoped MAX() answer must not be failed"
+    assert report.score == 1.0
+
+    # The advisory flag is still RECORDED — it is surfaced, just not gating.
+    assert amortization.invariant_failures
+    assert report.invariant_flag_count == 1
+
+
 def test_grader_does_not_falsely_flag_aggregate_free_prohibitions():
     """Traps whose prohibitions name no uppercase aggregate (fanout, categorical,
     regional_twins) must still pass on a correct trace — the empty-banned-set

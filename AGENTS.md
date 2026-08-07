@@ -101,10 +101,14 @@ Role boundaries enforced by behavior, not reading restrictions:
   `python3 -m pip install -r dbt-wiki/tests/requirements.txt && python3 -m pytest dbt-wiki/tests/ -v -m "not e2e"`
   — covers the L2 end-to-end harness (`dbt-wiki/tests/fixtures/l2-harness/`,
   a synthetic dbt-duckdb project) and its shared `dbt_build` pytest fixture
-  (`dbt-wiki/tests/conftest.py`). `-m "not e2e"` excludes the real headless
-  `claude -p` validation run (Task 11 of the W1 L2-harness plan). Run
-  manually; no CI workflow wires this in yet — automated CI/nightly wiring
-  is Phase 4 (U1/U2) of the dbt-wiki quality campaign, not yet built.
+  (`dbt-wiki/tests/conftest.py`). `-m "not e2e"` excludes BOTH real headless
+  `claude -p` validation runs — `test_e2e_validation.py` (W1 L2-harness plan
+  Task 11) and `test_e2e_sparse_comment_validation.py` (G1 sparse-comment
+  plan Task 3); each spends real quota. The suite shells out to `dbt`, so the
+  venv's `bin` must be on `PATH`, not just its interpreter. Run manually; the
+  `test-dbt-wiki.yml` workflow does NOT cover this directory (it globs
+  `dbt-wiki/skills/*/assets/*_test.py` only) — wiring it in is Phase 4
+  (U1/U2) of the dbt-wiki quality campaign, not yet built.
 - **Check the loom-memory store's §Index invariants**:
   `python3 scripts/check_loom_memory_integrity.py [--store docs/loom/memory]`
   — validate-only, stdlib-only; fails rc=1 and names every offender when a
@@ -130,15 +134,17 @@ Role boundaries enforced by behavior, not reading restrictions:
   A third rc=1 source exists past the freshness verdict: a fresh base
   whose changed-file diff itself fails — a hardcoded stderr message,
   not a `FreshnessResult.reason`, and no rebase remedy either.
-- **Run the nightly Phase 2 loop test suite**:
-  `source scripts/phase2-loop/.venv/bin/activate && PYTHONDONTWRITEBYTECODE=1 python -m pytest scripts/phase2-loop/ -v`
-  — covers the U1 nightly-loop skeleton's pure-logic modules (safety gates,
-  journal writer) plus the structural-completeness tests for the routine/
-  schedule docs. Pure stdlib; the local venv (gitignored via `**/.venv/`)
-  needs only pytest: `uv venv scripts/phase2-loop/.venv --python 3.11 &&
-  VIRTUAL_ENV=scripts/phase2-loop/.venv uv pip install pytest`.
-  Run manually; same Phase 4 (U1/U2) status as the dbt-wiki suite — no CI
-  wiring yet.
+- **Run the Phase 2 loop test suite**:
+  `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest scripts/phase2-loop/ -v`
+  — covers the execution-stage loop's three pure-logic modules
+  (`safety_gates.py` kill switch + scope guard, `journal_writer.py`,
+  `queue_entry.py` entry authoring + backlog-description lookup), the
+  cross-plugin integration proof against
+  `loom-pipeline/scripts/batch_queue.py`, and the structural-completeness
+  test for `ROUTINE.md` (the only doc in the directory — there is no
+  schedule doc). Pure stdlib plus pytest, so no dedicated venv is required;
+  this directory IS already covered by CI, since `loom-code-ci.yml` runs
+  `pytest … scripts/ …` over the whole tree.
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams
