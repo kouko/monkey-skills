@@ -8,14 +8,28 @@ origin: 2026-08-07 family complexity audit + proposal-critique triage (docs/loom
 Ten triaged items, recommended as four arcs in this order (rationale and
 per-item caveats in the audit doc's Triage and Impact sections):
 
-1. Mechanical dedup arc — B1 state-anchor wording into distribute.py
-   SSOT (7 hand-copied files today); B2 tdd-standard.md byte-identical
-   fork into distribute.py; C2 brief-before-asking clause (near-verbatim
-   ×4 in design-side routers — the trigger tail is byte-identical, the
-   fork-noun varies, so C2 needs a parameterized carrier or a one-time
-   wording normalization) to one source; D2 router-card five rules into
-   verify-drift.py coverage. Behavior-neutral except C2's wording
-   normalization; existing machinery throughout.
+1. Mechanical dedup arc — RESHAPED by 2026-08-07 recon (arc-1 brief:
+   docs/loom/specs/2026-08-07-loom-mechanical-dedup-arc1.md) from
+   "relocate into distribute.py SSOT" to "pin with drift-guard tests".
+   This arc ships: T1 state-anchor carrier-inventory test (B1 was NOT 7
+   byte-identical hand-copies — recon found 12 grep hits across 9 files,
+   none byte-identical, so relocation would rewrite rendered prose;
+   pinned by scripts/test_state_anchor_carrier_inventory.py instead of
+   consolidating); T2 brief-before-asking anchor-sentence lockstep test
+   (C2 — the shared trigger sentence is already byte-identical across
+   the 4 design-side router SKILL.md files; byte-pins it, no
+   normalization needed); T3 router-card rule-token presence test (D2
+   — each of the 5 load-bearing rules' anchor TITLE token (rule 5 =
+   "Research before asking") present in BOTH hooks/router-card.md and
+   using-loom-code/SKILL.md's rules block; router-card additionally
+   names `dev-workflow:brief-before-asking` inline in rule 5 — a
+   deliberate divergence the test tolerates, not part of the pinned
+   token set), plus CI trigger wiring for the cross-plugin paths the
+   tests read and a session-start comment update naming the T3 guard.
+   B2 tdd-standard.md dropped from this arc — recon found it already
+   distribute.py-managed (ROUTE copy + verify-drift.py byte-check); the
+   audit's "not managed" premise was false. No relocation, no
+   rendered-text changes; behavior-neutral.
 2. Legislation arc — E1 deletion-first review dimension via the
    _reviewer-discipline SSOT; E3 record this audit's recipe as a
    human-triggered, proposal-only prune runbook. Runs before the prose
@@ -30,11 +44,14 @@ per-item caveats in the audit doc's Triage and Impact sections):
    family); A1 collapse finishing Step 8's five ONCE-checklists
    (1,123 w, semantics preserved); A3 downgrade writing-plans'
    hypothetical wrong-bind reversal protocol (315 w) to one line.
-   Weak-model cold-reads mandatory; 50 test files name these skills
-   (grep of `*.py` under `loom-*/scripts`, `loom-*/tests`, `scripts/`).
+   Weak-model cold-reads mandatory; 44 test files + 6 production
+   scripts name these skills (grep of `*.py` under `loom-*/scripts`,
+   `loom-*/tests`, `scripts/`).
 
 Expected impact if all four land: ~-1,900 words across the three
-heaviest SKILL.md bodies, maintenance tax on four cross-file rules drops
-to single-source, and the family gains its first standing
+heaviest SKILL.md bodies, maintenance tax on the four cross-file rules
+gains machine-readable drift guards (arc 1 pins carriers/tokens rather
+than consolidating to one source — see item 1 above), and the family
+gains its first standing
 anti-complexity loop (E1 + E3). Does not shorten the mandatory happy
 path — those gates were judged load-bearing.
