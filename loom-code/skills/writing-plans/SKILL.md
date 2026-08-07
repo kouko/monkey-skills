@@ -203,7 +203,7 @@ Alongside the brainstorming brief, writing-plans can consume a **validated loom-
 
 **Mandatory once bound.** Once a change-folder is bound by any layer (including Layer 0), consuming it is **not optional** — writing-plans MUST derive the plan from it (scenario → task mapping below), not treat it as an FYI alongside a separately-authored brief.
 
-**Wrong-bind reversal trigger.** If a real wrong-bind incident occurs (writing-plans bound to the wrong change-folder and produced a plan against it), layer (i) downgrades from opportunistic-auto to **confirm-before-use** — surface this to the user/orchestrator immediately rather than silently continuing to trust layer (i) unconfirmed.
+**Wrong-bind reversal trigger.** A confirmed wrong-bind incident is surfaced immediately and downgrades layer (i) to confirm-before-use — restore the full protocol from git history.
 
 **Who runs the validator.** In Continuous mode the FREEZE step already gated this change-folder — it ran `validate_spec_output.py` and got exit 0 — so writing-plans **trusts that exit-0** and does not re-run it. For a direct, non-freeze invocation (consuming a change-folder outside Continuous mode), run `validate_spec_output.py` once on the change-folder before consuming it, and proceed only on exit 0.
 
