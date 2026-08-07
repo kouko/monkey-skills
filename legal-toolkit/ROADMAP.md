@@ -1,4 +1,5 @@
 # legal-toolkit Roadmap (v0.1.0 → v1.0.0)
+> **Historical design record — superseded.** Forward direction lives in `docs/loom/DIRECTION.md` (see its charter header); this file is kept as a design-era artifact and is no longer maintained.
 
 > **Status**: Phase 3 fully closed (v0.5.2, 2026-05-15) — 7 skills active (router + playbook-author + contract-review + document-draft + incident-response + issue-spot + research). IRAC cluster complete. Phase 4 Tracker cluster (v0.6.0) is next.
 > **Source of design**: `<obsidian-vault>/research/2026-05-09 法務 Agent Skill (legal-toolkit) 整體架構與執行流程設計.md`（1344 行；38+ 鎖定決定見 §11 ledger）
