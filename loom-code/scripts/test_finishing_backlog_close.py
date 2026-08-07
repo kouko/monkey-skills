@@ -140,3 +140,24 @@ def test_backlog_close_betting_prompt_fires_on_empty_committed_next():
     """The betting duty is event-driven: it fires when COMMITTED-NEXT
     is EMPTY after the flip + regen, not on every close-out."""
     assert "COMMITTED-NEXT is EMPTY" in _backlog_close_row_text()
+
+
+def test_backlog_close_direction_write_command_spelling_pinned():
+    """Task 4 review probe: deleting the whole `--direction-write
+    docs/loom/DIRECTION.md` command sentence left all 13 prior tests
+    green. Pins the exact command spelling."""
+    assert (
+        "--direction-write docs/loom/DIRECTION.md"
+        in _backlog_close_row_text()
+    )
+
+
+def test_backlog_close_no_direction_md_silent_skip_pinned():
+    """Task 4 review probe: deleting the no-DIRECTION.md silent-skip
+    fallback left all 13 prior tests green. Pins the fallback
+    wording."""
+    assert (
+        "No `docs/loom/DIRECTION.md` in this repo → skip the betting "
+        "duty silently"
+        in _backlog_close_row_text()
+    )
