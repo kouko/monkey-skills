@@ -21,7 +21,7 @@
 |---|---|---|---|---|
 | `implementer` | worker | (status: DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED) | task / spec / standards | コード・テスト・commit |
 | `spec-reviewer` | evaluator | PASS / NEEDS_REVISION + gap 一覧 | artifact / spec / `checklists/spec-consistency.md` | 判定のみ |
-| `code-quality-reviewer` | evaluator | PASS / PASS_WITH_NOTES / NEEDS_REVISION + 7 次元スコア + findings (🔴 / 🟡 / 🟢) | artifact / rubrics / checklist / 9 standards | 判定のみ |
+| `code-quality-reviewer` | evaluator | PASS / PASS_WITH_NOTES / NEEDS_REVISION + 8 次元スコア + findings (🔴 / 🟡 / 🟢) | artifact / rubrics / checklist / 9 standards | 判定のみ |
 
 各タスクは implementer 1 ラウンド + reviewer 並列 1 ラウンドで進む。レビュアの守備範囲は故意に非重複：spec-reviewer は品質を採点しない、code-quality-reviewer は spec 網羅性を採点しない。混ぜるとオーケストレータの解決アルゴリズムが壊れる。
 

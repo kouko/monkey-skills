@@ -161,15 +161,16 @@ _DIMENSION_RE = re.compile(r"^\s*dimension\s*:[^\S\n]*(.*)$")
 _ORIGIN_RE = re.compile(r"^\s*origin\s*:[^\S\n]*(.*)$")
 _INDENT_RE = re.compile(r"^[ \t]*")
 
-# §Pinned dimension partition (verified disjoint 2026-08-02). A finding
-# whose `dimension:` both parses and falls in the docs-arm set is
+# §Pinned dimension partition (verified disjoint 2026-08-02; "deletion-first"
+# added 2026-08-07, disjointness re-verified — docs-arm set unchanged). A
+# finding whose `dimension:` both parses and falls in the docs-arm set is
 # exempt from `origin:`; everything else — code-arm, unrecognized, or
 # unparseable (absent/empty) — requires it (fail closed, see
 # `_origin_required`).
 _CODE_ARM_DIMENSIONS = {
     "security", "architecture", "correctness", "naming", "tests",
     "refactoring", "cross-task-coherence", "external-surface-grounding",
-    "principles-conformance", "deliberate-simplification",
+    "principles-conformance", "deliberate-simplification", "deletion-first",
 }
 _DOCS_ARM_DIMENSIONS = {
     "omission", "ambiguity", "inconsistency", "incorrect-fact",

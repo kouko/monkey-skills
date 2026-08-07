@@ -178,7 +178,7 @@ Three role-defined plugin-level subagents (v0.6.0 / P15-12 complete); all carry 
 
 - **implementer** — worker; produces code + tests + status. [`loom-code/agents/implementer.md`](../../agents/implementer.md). Role identifier `loom-code:implementer`. Shipped v0.5.2 / P15-12 Phase 1.
 - **spec-reviewer** — evaluator; produces `PASS` / `NEEDS_REVISION` + gap list. [`loom-code/agents/spec-reviewer.md`](../../agents/spec-reviewer.md). Role identifier `loom-code:spec-reviewer`. Promoted v0.6.0 / P15-12 Phase 2.
-- **code-quality-reviewer** — evaluator; produces three-valued verdict + seven-dimension scores + findings. [`loom-code/agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md). Role identifier `loom-code:code-quality-reviewer`. Promoted v0.6.0 / P15-12 Phase 2.
+- **code-quality-reviewer** — evaluator; produces three-valued verdict + eight-dimension scores + findings. [`loom-code/agents/code-quality-reviewer.md`](../../agents/code-quality-reviewer.md). Role identifier `loom-code:code-quality-reviewer`. Promoted v0.6.0 / P15-12 Phase 2.
 
 Reviewer prompts intentionally constrain scope: spec-reviewer **cannot** evaluate code quality; code-quality-reviewer **cannot** evaluate spec coverage. Mixing the two collapses the signal at the orchestrator level.
 
