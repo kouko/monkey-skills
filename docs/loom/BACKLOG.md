@@ -79,6 +79,7 @@
 - [2026-08-07-52-53-week-calendar-boundary-never-verified-against-a-real-filer](backlog/2026-08-07-52-53-week-calendar-boundary-never-verified-against-a-real-filer.md) — The quarterly series' day-span classifier was never verified against a 52/53-week filer — Task G planned it, the branch shipped without it
 - [2026-08-07-execute-complexity-audit-keep-lanes](backlog/2026-08-07-execute-complexity-audit-keep-lanes.md) — Execute the ten KEEP / KEEP-WITH-CAVEAT items from the 2026-08-07 family complexity audit, in four arcs
 - [2026-08-07-phase2-loop-and-l2-harness-review-residue](backlog/2026-08-07-phase2-loop-and-l2-harness-review-residue.md) — deferred whole-branch review findings from the Phase 2 loop + L2 e2e harness branch
+- [2026-08-07-readme-mirror-value-lockstep-check](backlog/2026-08-07-readme-mirror-value-lockstep-check.md) — Tri-language README mirrors keep shipping stale counts/versions after English-only sweeps; a lockstep check on shared factual values (version, skill count, agent counts) would make the class unwritable
 
 ## PARKED
 - [2026-07-08-automate-research-toolkit-s-sync-primitives-sh](backlog/2026-07-08-automate-research-toolkit-s-sync-primitives-sh.md) — Automate research-toolkit's sync-primitives.sh
