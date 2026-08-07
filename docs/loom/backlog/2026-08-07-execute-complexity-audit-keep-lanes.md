@@ -1,7 +1,7 @@
 ---
 name: 2026-08-07-execute-complexity-audit-keep-lanes
 description: Execute the ten KEEP / KEEP-WITH-CAVEAT items from the 2026-08-07 family complexity audit, in four arcs
-status: OPEN
+status: SHIPPED
 origin: 2026-08-07 family complexity audit + proposal-critique triage (docs/loom/audits/2026-08-07-family-complexity-audit.md)
 ---
 
@@ -65,3 +65,11 @@ than consolidating to one source — see item 1 above), and the family
 gains its first standing
 anti-complexity loop (E1 + E3). Does not shorten the mandatory happy
 path — those gates were judged load-bearing.
+
+SHIPPED evidence: arc 1 = PR #670 (drift-guard tests); arc 2 = PR #672
+(loom-code 0.66.0, deletion-first + runbook); arc 3 = PR #674
+(index generation, loom-code 0.66.1 / loom-pipeline 0.15.0); arc 4a =
+PR #675 (loom-code 0.67.0, A2+A3); A1 = branch
+refactor/loom-arc4b-finishing-collapse (loom-code 0.68.0, the five
+ONCE-bullets → one close-out table, −401 w) — the deferred tail lands,
+all ten triaged items closed.

@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-loom-arc4-prose-slim.md
 Goal: finishing-a-development-branch's five ONCE-per-branch Step-8 bullets (974 w) collapse into one table — per-check fallback wording preserved verbatim in cells, every pin keeping a carrier — saving 400-600 w, and loom-code ships 0.68.0.
-Stage: review:round-1
+Stage: finishing
 Total tasks: 2
 Critical-path depth: 2 (≤5)
 Execution order: sequential
