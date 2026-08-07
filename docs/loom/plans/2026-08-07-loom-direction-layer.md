@@ -27,7 +27,7 @@ Steps:
 - Dependencies: none
 - Independent: true
 - Brief item covered: "`docs/loom/DIRECTION.md` — one file, three sections + charter header" (item 1) + "Generation + validation: backlog_index.py grows a --direction write/check pair" (item 2) + "Portability requirements … absent file = opt-in" (item 8) + "Initial content ride-along (first-consumer dogfood): seed monkey-skills' DIRECTION.md" (item 9, themes per §Addendum 7)
-- Status: pending
+- Status: claimed(@impl-t1)
 - Gloss: 生成器＋驗證器＋第一份 DIRECTION.md——Now 段機器寫、日期禁令變成可檢查的不變式、種子主題實內容出貨
 - Review-hint: mutation probes must cover the date-ban regex and the empty-queue rendering.
 
@@ -96,7 +96,7 @@ Steps:
 - Independent: true
 - Review-weight: mechanical
 - Brief item covered: "Five ROADMAP.md tombstones: one header line each" (item 6)
-- Status: pending
+- Status: claimed(@impl-t5)
 - Gloss: 墓碑一：loom-code 的設計期 roadmap 蓋章
 - Review-hint: none (mechanical self-check path).
 
@@ -114,7 +114,7 @@ Steps:
 - Independent: true
 - Review-weight: mechanical
 - Brief item covered: "Five ROADMAP.md tombstones: one header line each" (item 6)
-- Status: pending
+- Status: claimed(@impl-t6)
 - Gloss: 墓碑二：investing-toolkit
 - Review-hint: none (mechanical self-check path).
 
@@ -132,7 +132,7 @@ Steps:
 - Independent: true
 - Review-weight: mechanical
 - Brief item covered: "Five ROADMAP.md tombstones: one header line each" (item 6)
-- Status: pending
+- Status: claimed(@impl-t7)
 - Gloss: 墓碑三：legal-toolkit
 - Review-hint: none (mechanical self-check path).
 
@@ -150,7 +150,7 @@ Steps:
 - Independent: true
 - Review-weight: mechanical
 - Brief item covered: "Five ROADMAP.md tombstones: one header line each" (item 6)
-- Status: pending
+- Status: claimed(@impl-t8)
 - Gloss: 墓碑四：philosophers-toolkit
 - Review-hint: none (mechanical self-check path).
 
@@ -168,7 +168,7 @@ Steps:
 - Independent: true
 - Review-weight: mechanical
 - Brief item covered: "Five ROADMAP.md tombstones: one header line each" (item 6)
-- Status: pending
+- Status: claimed(@impl-t9)
 - Gloss: 墓碑五：systems-thinking-toolkit
 - Review-hint: none (mechanical self-check path).
 
