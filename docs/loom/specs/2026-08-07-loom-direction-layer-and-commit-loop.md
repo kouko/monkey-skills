@@ -212,3 +212,38 @@ integration.
 - None blocking. Betting-prompt floor chosen as EMPTY (not <5) — the
   least-nag option, reversible by one word later. Seed content for
   Next/Later comes from the user at kickoff briefing.
+
+## Addendum — same-day design discussion (user-拍板, 2026-08-07)
+
+1. **Roadmap entries (the middle layer).** Between DIRECTION themes and
+   single arcs sits the user's requested "ordered sub-goal set with
+   dependencies". Shape chosen: **(a) a NAMED PATTERN of ordinary
+   backlog entries** — an entry whose body is an ordered arc list with
+   dependency notes, serving one DIRECTION theme; DIRECTION `## Next`
+   lines may point at such an entry by filename. NOT a new file type,
+   NOT a DIRECTION section. Precedent: the complexity-audit's
+   execute-keep-lanes entry ran exactly this shape live across five
+   PRs. Machine-readable fields deferred (YAGNI) — prose pointers v1.
+2. **Backlog = the pool.** Ordinary OPEN/PARKED entries are the
+   someday/trigger-gated/debt pool and need no relation to any current
+   theme — that is a feature (Shape Up's lost-ideas critique, solved).
+   One physical store; the distinction is semantic (entries migrate by
+   one status edit, both directions — de-commit precedent exists).
+3. **`## Now` = PARALLEL ACTIVE SET, not a serial queue.** The user
+   works multiple worktrees with different goals; one Now entry ↔ one
+   worktree/lane typically; the ≤5 cap reads as parallel-steering
+   capacity. Charter + DIRECTION header must state this definition.
+4. **Betting candidate ordering: same-lane first.** When an arc of
+   theme X closes, the prompt lists theme X's roadmap-entry next arc
+   first (keep the lane hot), then other lanes / ready pool.
+5. **Worktree/merge doctrine rides along**: DIRECTION header carries
+   one line — on `## Now` merge conflict, take either side wholesale
+   and regenerate (`--direction-write`), never hand-merge (store
+   entry precedent, twice-proven).
+6. **Section name stays `Now`** (Now/Next/Later triad recognizability;
+   "Task" rejected for hard term-collision with plan/SDD tasks —
+   portability term-collision doctrine).
+7. **Seed themes confirmed** (first-consumer content): Next — ①
+   investing-toolkit 三大表＋管理層 KPI 完整歷史入 kpi_store ②
+   loom-code replay matrix 客觀迴歸量測; Later — ① 投資線營運指標
+   敘事層 ② loom 機制 Codex 移植線 ③ obsidian wiki 知識線深化.
