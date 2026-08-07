@@ -481,9 +481,39 @@ def set_status(text: str, task_number: int, status: str) -> tuple[str, str, str]
     return text[:start] + new_line + text[end:], old_line, new_line
 
 
+def set_stage(text: str, new_value: str) -> tuple[str, str, str]:
+    """The plan text with the header `Stage:` line's value replaced by
+    `new_value`, plus the old and new line — every other byte unchanged.
+    Pure function (the caller writes the file and decides exit codes);
+    raises ValueError when the plan has no `Stage:` header line, or
+    `new_value` is empty/whitespace-only. Free-text value — stage
+    vocabulary evolves, no enum validation (plan Task 1 Decisions)."""
+    header, sep, rest = text.partition("\n## ")
+    match = re.search(r"^Stage:.*$", header, re.MULTILINE)
+    if match is None:
+        raise ValueError("plan has no 'Stage:' header line")
+    if not new_value.strip():
+        raise ValueError("--set-stage: value is empty or whitespace-only")
+    old_line = match.group(0)
+    new_line = f"Stage: {new_value}"
+    new_header = header[: match.start()] + new_line + header[match.end() :]
+    return new_header + sep + rest, old_line, new_line
+
+
+def _print_card_or_degrade(text: str) -> None:
+    """Print a blank line then the full rendered card; when `build_card`
+    raises on the (already successfully written) plan, degrade to one
+    line instead — a valid flip is never reported as a failure."""
+    print()
+    try:
+        sys.stdout.write(build_card(text))
+    except ValueError as exc:
+        print(f"plan_card: card unavailable — {exc}")
+
+
 _USAGE = (
     "usage: python3 scripts/plan_card.py <plan-path> "
-    '[--detail T<N> | --set-status "T<N>=<status>"]'
+    '[--detail T<N> | --set-status "T<N>=<status>" | --set-stage "<text>"]'
 )
 
 
@@ -491,6 +521,7 @@ def main() -> int:
     args = sys.argv[1:]
     detail_number: int | None = None
     set_status_ref: tuple[int, str] | None = None
+    set_stage_ref: str | None = None
     if len(args) == 3 and args[1] == "--detail":
         task_ref = re.fullmatch(r"T(\d+)", args[2])
         if task_ref is None:
@@ -503,6 +534,8 @@ def main() -> int:
             print(_USAGE, file=sys.stderr)
             return 2
         set_status_ref = (int(task_ref.group(1)), task_ref.group(2))
+    elif len(args) == 3 and args[1] == "--set-stage":
+        set_stage_ref = args[2]
     elif len(args) != 1:
         print(_USAGE, file=sys.stderr)
         return 2
@@ -519,6 +552,14 @@ def main() -> int:
             plan_path.write_text(new_text, encoding="utf-8")
             print(f"old: {old_line}")
             print(f"new: {new_line}")
+            _print_card_or_degrade(new_text)
+            return 0
+        if set_stage_ref is not None:
+            new_text, old_line, new_line = set_stage(text, set_stage_ref)
+            plan_path.write_text(new_text, encoding="utf-8")
+            print(f"old: {old_line}")
+            print(f"new: {new_line}")
+            _print_card_or_degrade(new_text)
             return 0
         card = (
             build_card(text)

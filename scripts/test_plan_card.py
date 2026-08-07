@@ -727,6 +727,12 @@ def test_set_status_rewrites_in_place(tmp_path):
     assert result.stdout == (
         "old: - Status: pending\n"
         "new: - Status: done(abc1234)\n"
+        "\n"
+        "goal: Ship the widget pipeline end-to-end.\n"
+        "tasks: 1 done / 0 claimed / 0 pending / 0 blocked\n"
+        "[v] T1 parser\n"
+        "stage: sdd:wave-1\n"
+        "next: close-out\n"
     )
     assert plan_path.read_text(encoding="utf-8") == text.replace(
         "- Status: pending", "- Status: done(abc1234)"
@@ -758,6 +764,12 @@ def test_set_status_preserves_bold_field_markup(tmp_path):
     assert result.stdout == (
         "old: - **Status**: pending\n"
         "new: - **Status**: done(abc1234)\n"
+        "\n"
+        "goal: Ship the widget pipeline end-to-end.\n"
+        "tasks: 1 done / 0 claimed / 0 pending / 0 blocked\n"
+        "[v] T1 parser\n"
+        "stage: sdd:wave-1\n"
+        "next: close-out\n"
     )
     assert plan_path.read_text(encoding="utf-8") == text.replace(
         "- **Status**: pending", "- **Status**: done(abc1234)"
@@ -777,6 +789,12 @@ def test_set_status_pending_kind(tmp_path):
     assert result.stdout == (
         "old: - Status: done(abc1234)\n"
         "new: - Status: pending\n"
+        "\n"
+        "goal: Ship the widget pipeline end-to-end.\n"
+        "tasks: 0 done / 0 claimed / 1 pending / 0 blocked\n"
+        "[ ] T1 parser\n"
+        "stage: sdd:wave-1\n"
+        "next: T1 parser\n"
     )
     assert "- Status: pending" in plan_path.read_text(encoding="utf-8")
 
@@ -793,6 +811,12 @@ def test_set_status_claimed_kind(tmp_path):
     assert result.stdout == (
         "old: - Status: pending\n"
         "new: - Status: claimed(@implementer)\n"
+        "\n"
+        "goal: Ship the widget pipeline end-to-end.\n"
+        "tasks: 0 done / 1 claimed / 0 pending / 0 blocked\n"
+        "[~] T1 parser\n"
+        "stage: sdd:wave-1\n"
+        "next: T1 parser\n"
     )
     assert "- Status: claimed(@implementer)" in plan_path.read_text(
         encoding="utf-8"
@@ -812,8 +836,35 @@ def test_set_status_blocked_kind(tmp_path):
     assert result.stdout == (
         "old: - Status: claimed(@implementer)\n"
         "new: - Status: blocked\n"
+        "\n"
+        "goal: Ship the widget pipeline end-to-end.\n"
+        "tasks: 0 done / 0 claimed / 0 pending / 1 blocked\n"
+        "[!] T1 parser\n"
+        "stage: sdd:wave-1\n"
+        "next: T1 parser\n"
     )
     assert "- Status: blocked" in plan_path.read_text(encoding="utf-8")
+
+
+def test_set_status_stdout_includes_card_body_after_new_line(tmp_path):
+    """The rendered card follows old:/new: and a blank line — goal line,
+    a task row, and stage line must all be present, proving build_card's
+    own output (not a drifted second renderer) rides the flip."""
+    plan_path = _write_plan(
+        tmp_path, _plan_text(tasks=[("parser", "pending")])
+    )
+
+    result = _run_card(plan_path, "--set-status", "T1=done(abc1234)")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    stdout = result.stdout
+    marker = "new: - Status: done(abc1234)\n"
+    assert marker in stdout
+    after_new = stdout.split(marker, 1)[1]
+    assert after_new.startswith("\n"), "blank line must separate new: from the card"
+    assert "goal: Ship the widget pipeline end-to-end." in after_new
+    assert "[v] T1 parser" in after_new
+    assert "stage: sdd:wave-1" in after_new
 
 
 def test_set_status_task_not_found_exits_1_naming_it(tmp_path):
@@ -1029,4 +1080,94 @@ def test_set_status_and_detail_are_mutually_exclusive(tmp_path):
     assert result.returncode == 2, result.stdout + result.stderr
     assert "--set-status" in result.stderr
     assert "--detail" in result.stderr
+
+
+# --- ledger writer: --set-stage ----------------------------------------------
+# Task 1 of docs/loom/plans/2026-08-08-progress-display-hardening.md.
+# Free-text value (stage vocabulary evolves) — no enum validation.
+
+
+def test_set_stage_happy_path_rewrites_and_prints_card(tmp_path):
+    """`--set-stage "<text>"` replaces the Stage: header's value, prints
+    old:/new: (the Stage header line before/after), then a blank line and
+    the full card."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path, "--set-stage", "sdd:wave-2")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == (
+        "old: Stage: sdd:wave-1\n"
+        "new: Stage: sdd:wave-2\n"
+        "\n"
+        "goal: Ship the widget pipeline end-to-end.\n"
+        "tasks: 0 done / 0 claimed / 1 pending / 0 blocked\n"
+        "[ ] T1 parser\n"
+        "stage: sdd:wave-2\n"
+        "next: T1 parser\n"
+    )
+    assert plan_path.read_text(encoding="utf-8") == text.replace(
+        "Stage: sdd:wave-1", "Stage: sdd:wave-2"
+    )
+
+
+def test_set_stage_missing_header_exits_1(tmp_path):
+    """A plan with no `Stage:` header line → exit 1 loud naming the
+    missing field; the file is not modified."""
+    text = _plan_text(stage=None, tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path, "--set-stage", "sdd:wave-2")
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert "Stage" in result.stdout
+    assert result.stdout.count("\n") == 1, "message must be one line"
     assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
+
+
+def test_set_stage_empty_value_exits_1(tmp_path):
+    """A whitespace-only value → exit 1 loud; the file is not modified."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path, "--set-stage", "   ")
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert result.stdout.count("\n") == 1, "message must be one line"
+    assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
+
+
+def test_set_status_degrades_to_card_unavailable_when_goal_missing(tmp_path):
+    """The flip runs and succeeds even when the resulting plan cannot
+    render a card (no Goal: header) — the render runs AFTER the write,
+    and a raise there degrades to one line rather than reporting the
+    successful flip as a failure."""
+    text = _plan_text(goal=None, tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path, "--set-status", "T1=done(abc1234)")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "old: - Status: pending\n" in result.stdout
+    assert "new: - Status: done(abc1234)\n" in result.stdout
+    assert "plan_card: card unavailable —" in result.stdout
+    assert "- Status: done(abc1234)" in plan_path.read_text(encoding="utf-8")
+
+
+def test_set_stage_degrades_to_card_unavailable_when_goal_missing(tmp_path):
+    """Same degradation guarantee on the --set-stage path: a valid flip
+    is never reported as a failure just because the resulting plan can't
+    render."""
+    text = _plan_text(goal=None, tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path, "--set-stage", "sdd:wave-2")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "old: Stage: sdd:wave-1\n" in result.stdout
+    assert "new: Stage: sdd:wave-2\n" in result.stdout
+    assert "plan_card: card unavailable —" in result.stdout
+    assert "Stage: sdd:wave-2" in plan_path.read_text(encoding="utf-8")
