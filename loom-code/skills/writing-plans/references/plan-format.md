@@ -33,9 +33,9 @@ Goal: <one sentence transcribed from the brief's Smallest End State at
     plan time — frozen with the plan (wrap continuation lines WITH
     indentation — unindented wraps silently truncate the rendered goal);
     never edited afterward>
-Stage: <planning | sdd:wave-N | review:round-N | finishing — updated by
-    the orchestrator at each transition, committed with the nearest
-    ledger or close-out commit>
+Stage: <planning | sdd:wave-N | review:round-N | blocked:user-decision |
+    finishing — updated by the orchestrator at each transition,
+    committed with the nearest ledger or close-out commit>
 Steps: <OPTIONAL numbered block, one line per derived dependency
     level, titles in the user's conversation language; when present
     the count must equal the plan's dependency-level count —
@@ -47,6 +47,8 @@ Steps: <OPTIONAL numbered block, one line per derived dependency
 ```
 
 If `Plan-document-reviewer verdict` is `PENDING`, the plan has not been self-reviewed yet and SDD MUST NOT consume it.
+
+blocked:user-decision marks an arc halted awaiting a user ruling: set it when the orchestrator stops mid-arc to wait for a user decision (an open finding, a deferred choice), and on resume flip Stage to the stage the ruling re-enters.
 
 A `Steps:` line with content after the colon is rejected loudly by `plan_card.py` — the bare `Steps:` line followed by indented numbered titles is the only accepted form.
 

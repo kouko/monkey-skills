@@ -47,9 +47,16 @@ GOAL_SCHEMA_LINE = (
 )
 
 STAGE_ENUM_LINE = (
-    "Stage: <planning | sdd:wave-N | review:round-N | finishing — updated by "
-    "the orchestrator at each transition, committed with the nearest "
-    "ledger or close-out commit>"
+    "Stage: <planning | sdd:wave-N | review:round-N | blocked:user-decision "
+    "| finishing — updated by the orchestrator at each transition, "
+    "committed with the nearest ledger or close-out commit>"
+)
+
+BLOCKED_DUTY_SENTENCE = (
+    "blocked:user-decision marks an arc halted awaiting a user ruling: set "
+    "it when the orchestrator stops mid-arc to wait for a user decision "
+    "(an open finding, a deferred choice), and on resume flip Stage to "
+    "the stage the ruling re-enters."
 )
 
 DEFAULT_ON_SENTENCE = (
@@ -112,9 +119,17 @@ def test_goal_schema_line_present():
 
 def test_stage_enum_line_present():
     """Task 1(a): the `Stage:` enum header schema line (N1, verbatim)
-    exists, carrying the four-value enum
-    planning / sdd:wave-N / review:round-N / finishing."""
+    exists, carrying the five-value enum
+    planning / sdd:wave-N / review:round-N / blocked:user-decision /
+    finishing."""
     assert _normalize(STAGE_ENUM_LINE) in _normalized_text()
+
+
+def test_blocked_duty_sentence_present():
+    """Plan 2026-08-07 Task 1: the blocked:user-decision when-to-set duty
+    sentence exists as its own sentence (sibling prose OUTSIDE the header
+    template block, so a plan copier never inherits rule text)."""
+    assert _normalize(BLOCKED_DUTY_SENTENCE) in _normalized_text()
 
 
 def test_status_ledger_default_on_sentence_present():
