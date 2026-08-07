@@ -51,8 +51,6 @@ quality-gate and the security checklist.
 ## Flag Definitions
 
 ### Approach Fitness
-- 🔴 **Fatal**: Chosen approach is 3x+ more complex than an obviously simpler alternative that meets the same requirements (house heuristic; see "Note on numeric thresholds" above). Underlying principle: Fowler 2018 **"Speculative Generality"** smell + Fowler bliki "Yagni" (*"capability we presume our software needs in the future should not be built now"*).
-- 🔴 **Fatal**: Solution solves a hypothetical future problem, not the actual current requirement. **Grounded in**: Fowler bliki "Yagni" (https://martinfowler.com/bliki/Yagni.html); see `standards/pragmatic-principles.md` §YAGNI.
 - 🟡 **Warning**: Complexity is borderline justified — could go either way
 - 🟢 **Clear**: Approach matches problem complexity; boring solution preferred (ETC-consistent per Pragmatic Programmer Ch.2 "The Essence of Good Design")
 
@@ -60,13 +58,11 @@ quality-gate and the security checklist.
 - 🔴 **Fatal**: Circular dependency between modules/services (DIP violation at system level; *Clean Architecture* 2017 "dependency rule")
 - 🔴 **Fatal**: **God object / module** that absorbs responsibilities from 3+ distinct concerns (house count). **Grounded in**: Martin 2000 **SRP** — *"A class should have only one reason to change"* — and Fowler 2018 **"Large Class"** smell. See `standards/solid-principles.md` §SRP and `standards/refactoring-standard.md` §"Large Class".
 - 🟡 **Warning**: Dependencies point in the wrong direction (high-level policy depending on low-level detail). **Grounded in**: Martin 2000 **DIP** — *"High-level modules should not depend on low-level modules. Both should depend on abstractions."* See `standards/solid-principles.md` §DIP.
-- 🟡 **Warning**: **Over-abstraction** — abstraction layer exists but has only one implementation with no foreseeable second. **Grounded in**: Fowler bliki "Yagni" (XP discipline) and Fowler 2018 **"Speculative Generality"** smell. See `standards/pragmatic-principles.md` §YAGNI.
 - 🟢 **Clear**: Boundaries are in the right places; coupling is appropriate (Pragmatic Programmer Ch.2 "Orthogonality" respected)
 
 ### Change Tolerance
 - 🔴 **Fatal**: The most likely future change exhibits Fowler 2018 **"Shotgun Surgery"** — *"Every time you make a kind of change, you have to make a lot of little changes to a lot of different classes."* The code-team house shorthand for this is "5+ files across 3+ modules for one feature", but the primary-source signal is the smell itself: responsibility for a single concept is spread across too many modules. See `standards/refactoring-standard.md` §"Shotgun Surgery".
 - 🟡 **Warning**: Module exhibits Fowler 2018 **"Divergent Change"** — *"one module is often changed in different ways for different reasons"* — indicating multiple actors pulling the module in different directions (SRP violation at the symptom level). See `standards/refactoring-standard.md` §"Divergent Change".
-- 🟡 **Warning**: Extension points exist where the domain is stable (unnecessary flexibility — Speculative Generality smell + YAGNI)
 - 🟢 **Clear**: Rigid where stable, flexible where it will evolve — ETC principle (Pragmatic Programmer Ch.2 "The Essence of Good Design")
 
 ### Ecosystem Fit
@@ -79,6 +75,19 @@ predictor of whether a design is reviewable by teammates.*
 - 🟡 **Warning**: Deviates from project conventions without documented rationale
 - 🟡 **Warning**: Other developers would need explanation to understand the design intent
 - 🟢 **Clear**: Fits existing architecture; conventions followed
+
+### Deletion-First Scoring
+
+These four rows feed the `deletion-first` dimension scored on
+code-quality-reviewer and code-reviewer — moved out of the
+architecture dimensions above so this defect class (YAGNI /
+Speculative Generality) is scored exactly once, not duplicated
+across gates.
+
+- 🔴 **Fatal**: Chosen approach is 3x+ more complex than an obviously simpler alternative that meets the same requirements (house heuristic; see "Note on numeric thresholds" above). Underlying principle: Fowler 2018 **"Speculative Generality"** smell + Fowler bliki "Yagni" (*"capability we presume our software needs in the future should not be built now"*).
+- 🔴 **Fatal**: Solution solves a hypothetical future problem, not the actual current requirement. **Grounded in**: Fowler bliki "Yagni" (https://martinfowler.com/bliki/Yagni.html); see `standards/pragmatic-principles.md` §YAGNI.
+- 🟡 **Warning**: **Over-abstraction** — abstraction layer exists but has only one implementation with no foreseeable second. **Grounded in**: Fowler bliki "Yagni" (XP discipline) and Fowler 2018 **"Speculative Generality"** smell. See `standards/pragmatic-principles.md` §YAGNI.
+- 🟡 **Warning**: Extension points exist where the domain is stable (unnecessary flexibility — Speculative Generality smell + YAGNI)
 
 ## Verdict Rules
 
