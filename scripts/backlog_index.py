@@ -803,6 +803,83 @@ def _run_direction_check(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_validate(args: argparse.Namespace) -> int:
+    """--validate (also the flagless default): check every entry's
+    frontmatter against the store's invariants, plus the direction file's
+    independent checks when one exists at the store's fixed location."""
+    store = Path(args.store)
+    violations = find_violations(store)
+    violations.extend(find_direction_violations(_direction_path_for(store), store))
+    if not violations:
+        print("backlog_index --validate: OK — every invariant holds.")
+        return 0
+    print("backlog_index --validate: FAIL — the store's invariants are violated.\n")
+    for violation in sorted(violations, key=lambda v: (v.file, v.kind)):
+        print(f"  [{violation.kind}] {violation.file}: {violation.detail}")
+    return 1
+
+
+def _run_write(args: argparse.Namespace) -> int:
+    """--write: regenerate the index from the entry files and write it to
+    --output."""
+    try:
+        text = build_index(Path(args.store))
+    except ValueError as exc:
+        print(f"backlog_index --write: FAIL — {exc}")
+        return 1
+    Path(args.output).write_text(text, encoding="utf-8")
+    print(f"backlog_index --write: wrote {args.output}")
+    return 0
+
+
+def _run_check(args: argparse.Namespace) -> int:
+    """--check: regenerate the index in memory and diff it against
+    --output without writing; exit 1 on drift or a missing --output file."""
+    try:
+        generated = build_index(Path(args.store))
+    except ValueError as exc:
+        print(f"backlog_index --check: FAIL — {exc}")
+        return 1
+
+    output_path = Path(args.output)
+    if not output_path.is_file():
+        print(
+            f"backlog_index --check: FAIL — {output_path} does not exist; "
+            "run --write first"
+        )
+        return 1
+
+    committed = output_path.read_text(encoding="utf-8")
+    if committed != generated:
+        print(
+            "backlog_index --check: FAIL — the committed index has "
+            f"drifted from the entry files (compare against {output_path}).\n"
+        )
+        diff = difflib.unified_diff(
+            committed.splitlines(keepends=True),
+            generated.splitlines(keepends=True),
+            fromfile=f"{output_path} (committed)",
+            tofile="<regenerated from entry files>",
+        )
+        sys.stdout.writelines(diff)
+        return 1
+
+    print(f"backlog_index --check: OK — {output_path} matches the entry files.")
+    return 0
+
+
+def _run_ready(args: argparse.Namespace) -> int:
+    """--ready: print the actionable queue (COMMITTED-NEXT then OPEN) with
+    a closing count line."""
+    try:
+        ready_text = build_ready(Path(args.store))
+    except ValueError as exc:
+        print(f"backlog_index --ready: FAIL — {exc}")
+        return 1
+    sys.stdout.write(ready_text)
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -867,65 +944,24 @@ def main() -> int:
         args.validate = True
 
     if args.validate:
-        store = Path(args.store)
-        violations = find_violations(store)
-        violations.extend(find_direction_violations(_direction_path_for(store), store))
-        if not violations:
-            print("backlog_index --validate: OK — every invariant holds.")
-        else:
-            print("backlog_index --validate: FAIL — the store's invariants are violated.\n")
-            for violation in sorted(violations, key=lambda v: (v.file, v.kind)):
-                print(f"  [{violation.kind}] {violation.file}: {violation.detail}")
-            return 1
+        result = _run_validate(args)
+        if result != 0:
+            return result
 
     if args.write:
-        try:
-            text = build_index(Path(args.store))
-        except ValueError as exc:
-            print(f"backlog_index --write: FAIL — {exc}")
-            return 1
-        Path(args.output).write_text(text, encoding="utf-8")
-        print(f"backlog_index --write: wrote {args.output}")
+        result = _run_write(args)
+        if result != 0:
+            return result
 
     if args.check:
-        try:
-            generated = build_index(Path(args.store))
-        except ValueError as exc:
-            print(f"backlog_index --check: FAIL — {exc}")
-            return 1
-
-        output_path = Path(args.output)
-        if not output_path.is_file():
-            print(
-                f"backlog_index --check: FAIL — {output_path} does not exist; "
-                "run --write first"
-            )
-            return 1
-
-        committed = output_path.read_text(encoding="utf-8")
-        if committed != generated:
-            print(
-                "backlog_index --check: FAIL — the committed index has "
-                f"drifted from the entry files (compare against {output_path}).\n"
-            )
-            diff = difflib.unified_diff(
-                committed.splitlines(keepends=True),
-                generated.splitlines(keepends=True),
-                fromfile=f"{output_path} (committed)",
-                tofile="<regenerated from entry files>",
-            )
-            sys.stdout.writelines(diff)
-            return 1
-
-        print(f"backlog_index --check: OK — {output_path} matches the entry files.")
+        result = _run_check(args)
+        if result != 0:
+            return result
 
     if args.ready:
-        try:
-            ready_text = build_ready(Path(args.store))
-        except ValueError as exc:
-            print(f"backlog_index --ready: FAIL — {exc}")
-            return 1
-        sys.stdout.write(ready_text)
+        result = _run_ready(args)
+        if result != 0:
+            return result
 
     if args.direction_write:
         result = _run_direction_write(args)
