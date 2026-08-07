@@ -21,7 +21,7 @@ grounding × necessity matrix.
 | Mandatory happy path, simple bug fix | 6 loom-code SKILL.md (using-loom-code, brainstorming, tdd-iron-law, verification-before-completion, requesting-code-review, finishing-a-development-branch) + 1 external plugin skill (dev-workflow:git-memory) + ≥6 auxiliary scripts/protocol docs |
 | Per-session fixed overhead | ~2,400 words (two SessionStart cards + 27 skill-list descriptions) — modest, mostly justified |
 | Largest single duplication | docs/loom/memory/README.md `## Index`: 7,761 w, 89% of the file, hand-maintained byte-mirror of 136 entry descriptions |
-| Duplication governance | 12-rule baseline + reviewer discipline: real SSOT (scripts/_baseline.md → distribute.py → verify-drift.py, CI-gated); this SSOT already covers tdd-standard.md (ROUTE-managed, distribute.py:59-62, byte-checked by verify-drift.py:73-97). NOT covered: state-anchor wording (11 paraphrased locations in 10 files, none byte-identical), router-card 5 rules (manual "edit BOTH" sync) |
+| Duplication governance | 12-rule baseline + reviewer discipline: real SSOT (scripts/_baseline.md → distribute.py → verify-drift.py, CI-gated); this SSOT already covers tdd-standard.md (ROUTE-managed, distribute.py:59-62, byte-checked by verify-drift.py:73-97). NOT covered: state-anchor wording (12 grep hits across 9 files, pinned by scripts/test_state_anchor_carrier_inventory.py; pattern + exclusions stated in-test; none byte-identical), router-card 5 rules (manual "edit BOTH" sync) |
 
 ## Headline finding
 
@@ -53,7 +53,7 @@ KEEP (5):
 | # | Item | Reason |
 |---|---|---|
 | A2 | Extract requesting-docs-review Directive 1–2 convergence math to references/ (block measured 1,424 w; leave ~300 w decision table inline) | Pure move; densest block in the family; restores cap headroom 72 w → ~1,200 w. Execution requires weak-model cold-read (extraction-severing precedent in docs/loom/memory/) |
-| B1 | Bring the "one-line state anchor" ask-UX wording under distribute.py SSOT | Measured 11 paraphrased locations in 10 files (none byte-identical), zero drift protection — worst maintenance tax found |
+| B1 | Bring the "one-line state anchor" ask-UX wording under distribute.py SSOT | Measured 12 grep hits across 9 files (pinned by scripts/test_state_anchor_carrier_inventory.py; pattern + exclusions stated in-test; none byte-identical), zero drift protection — worst maintenance tax found |
 | B2 | tdd-standard.md (1,019 w) is already ROUTE-managed by distribute.py (:59-62) and byte-checked by verify-drift.py (:73-97) | Audit's original "not covered" premise was false — no code change needed; doc correction only |
 | D1 | Generate docs/loom/memory/README.md `## Index` by script instead of hand-mirroring | Largest single dedup win (7,761 w); backlog_index.py proves the pattern; requires charter revision + plugin-wide contradiction sweep for "hand-edit the index" restatements |
 | E1 | Add a deletion-first (YAGNI) review dimension to code-quality-reviewer + code-reviewer via the _reviewer-discipline SSOT | Minimal built-in complexity check: rides existing review rounds, adds no new station. Grounded by external research (LLM over-engineering documented; over-correction risk says keep it lean) + two in-repo occurrences (E-1 slim arc, this audit) |
@@ -94,7 +94,9 @@ DROP (2):
   headroom (72 w → ~1,200 w) — today any net-adding edit over 72 words
   there must slim first.
 - Maintenance tax: state-anchor gets a carrier-inventory sweep list
-  (11 paraphrased locations, 10 files) instead of consolidation;
+  (12 grep hits across 9 files, pinned by
+  scripts/test_state_anchor_carrier_inventory.py; pattern + exclusions
+  stated in-test) instead of consolidation;
   tdd-standard already ROUTE-managed (no change); memory-index 2
   hand-edits → 1 + regen; router-card drift CI-caught via a
   token-presence lockstep test.
