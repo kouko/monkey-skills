@@ -19,7 +19,7 @@ Steps:
 - Module: scripts/ (repo-root QA suite)
 - Files touched: scripts/test_state_anchor_carrier_inventory.py
 - Context paths:
-  - docs/loom/specs/2026-08-07-loom-mechanical-dedup-arc1.md (Evidence §Data — the 11-location list)
+  - docs/loom/specs/2026-08-07-loom-mechanical-dedup-arc1.md (Evidence §Data — carrier list; figures since corrected to 12 hits / 9 files)
   - scripts/backlog_index.py (house style for repo-root scripts)
 - Acceptance:
   - RED: run the check function against a temp copy of the tree with one carrier line removed (extracted-copy mutation, zero residue in the real tree) → check reports the missing carrier and pytest assertion fails on that copy.
@@ -27,9 +27,9 @@ Steps:
 - External surfaces: none — stdlib + pytest only, no new deps.
 - Dependencies: none
 - Independent: true
-- Brief item covered: "T1 (B1): carrier-inventory test — greps `state anchor|state-anchor` over `loom-*/`, asserts the live-carrier list matches the pinned 11-location inventory"
+- Brief item covered: "T1 (B1): carrier-inventory test — greps `state anchor|state-anchor` over `loom-*/`, asserts the live-carrier list matches the pinned 11-location inventory" (brief figure since corrected — see Decision Log 2026-08-07)
 - Status: done(fb9ccfd1)
-- Gloss: 把 state-anchor 的 11 個載體位置釘進測試——語義要改時，測試失敗訊息就是完整掃描清單
+- Gloss: 把 state-anchor 的 11 個載體位置釘進測試（數字後經修正為 12 hits / 9 files，見 Decision Log 2026-08-07）——語義要改時，測試失敗訊息就是完整掃描清單
 
 ## Task 2 — T2 brief-before-asking anchor-sentence lockstep test
 - Description: Add a pytest that byte-compares the shared anchor sentence ("≥3 trade-offs, ≥2 implementation paths, or architectural blast radius" + the `dev-workflow:brief-before-asking` directive) across the four design-side router SKILL.md files, tolerating line-wrap differences (compare after whitespace normalization; loom-discovery's copy is word-identical but wrapped differently — brief Evidence §Data). Expose check(root) for RED-on-copy.
@@ -102,7 +102,7 @@ Steps:
 - Gloss: 補 CI 觸發路徑——sibling plugin 改到被鎖檔案時，跑得到根目錄的防漂移測試
 
 ## Task 6 — ride-along corrections: audit doc
-- Description: In docs/loom/audits/2026-08-07-family-complexity-audit.md, apply the recorded corrections: (a) PR #669 noted debt — :109 drop "behavior-zero" for arc 1, :116 42→50, label the 50-file grep as "44 test files + 6 production scripts", hook count "13 hook files"→"12 tracked hook files (a 13th is a gitignored __pycache__ artifact)"; (b) recon-falsified premises — B1 "7 hand-copied files"→"11 paraphrased locations in 10 files (none byte-identical)", B2 "NOT covered: … tdd-standard.md"→already ROUTE-managed (distribute.py:59-62, verify-drift.py:73-97); (c) Expected-impact table "state-anchor 7→1 files; tdd-standard 2→1"→reshaped drift-guard outcomes.
+- Description: In docs/loom/audits/2026-08-07-family-complexity-audit.md, apply the recorded corrections: (a) PR #669 noted debt — :109 drop "behavior-zero" for arc 1, :116 42→50, label the 50-file grep as "44 test files + 6 production scripts", hook count "13 hook files"→"12 tracked hook files (a 13th is a gitignored __pycache__ artifact)"; (b) recon-falsified premises — B1 "7 hand-copied files"→"11 paraphrased locations in 10 files (none byte-identical)" (both figures since superseded by the shipped pin: 12 hits / 9 files), B2 "NOT covered: … tdd-standard.md"→already ROUTE-managed (distribute.py:59-62, verify-drift.py:73-97); (c) Expected-impact table "state-anchor 7→1 files; tdd-standard 2→1"→reshaped drift-guard outcomes.
 - Module: docs/loom/audits
 - Files touched: docs/loom/audits/2026-08-07-family-complexity-audit.md
 - Context paths:
@@ -187,8 +187,9 @@ Steps:
 - Amendment log: header verdict stamped PASS (2026-08-07, round 3) —
   stamping the verdict, no re-review (closed-list kind 1).
 - Kickoff decision: T1 inventory pin granularity → pin a file→hit-count
-  map (10 files, 11 hits total), NOT file:line pairs — line numbers churn
-  on unrelated edits; a count change in any file is the drift signal.
+  map (10 files, 11 hits total) (measured at ship: 9 files, 12 hits — see
+  Decision Log), NOT file:line pairs — line numbers churn on unrelated
+  edits; a count change in any file is the drift signal.
 - Kickoff decision: T2 comparison normalization → extract the sentence by
   anchoring on the byte-stable fragment "≥3 trade-offs", collapse all
   whitespace runs to single spaces, then require the 4 normalized

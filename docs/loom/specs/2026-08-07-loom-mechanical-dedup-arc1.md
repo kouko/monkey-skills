@@ -39,9 +39,9 @@ SSOT" to "pin with drift-guard tests":
   only lead-in/fork-noun/one extra loom-discovery sentence differ
   (deliberate per-router localization). Each router's own test pins its
   copy of the sentence independently; nothing asserts the four copies
-  stay equal to each other. Reshape: lockstep byte-pin test on the shared anchor
-  sentence (mint_critic_verdict ast-lockstep precedent) — no relocation, no
-  per-session preload increase.
+  stay equal to each other. Reshape: lockstep equality test on the shared
+  anchor sentence (whitespace-normalized) (mint_critic_verdict ast-lockstep
+  precedent) — no relocation, no per-session preload increase.
 - D2 router-card 5 rules: the divergence is a RECORDED deliberate decision —
   session-start:6-11 says "card wording is deliberately compressed, not
   byte-identical — kept out of verify-drift.py scope for now". Reshape:
@@ -77,7 +77,8 @@ lockstep).
    loom-code/skills/requesting-code-review/test-prompts.json IS counted).
    Fails when a carrier appears/disappears → the failure message IS the
    sweep list for semantic changes.
-2. T2 (C2): lockstep test — byte-compares the shared anchor sentence
+2. T2 (C2): lockstep test — compares the shared anchor sentence (after
+   whitespace normalization)
    ("≥3 trade-offs, ≥2 implementation paths, or architectural blast radius —
    run `dev-workflow:brief-before-asking`…") across the 4 design-side router
    SKILL.md files.

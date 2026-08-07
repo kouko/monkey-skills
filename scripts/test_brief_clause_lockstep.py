@@ -25,6 +25,7 @@ pattern; repo memory: mutation/RED limited to extracted copies).
 from __future__ import annotations
 
 import re
+import shutil
 from pathlib import Path
 
 import pytest
@@ -100,3 +101,39 @@ def test_extract_anchor_sentence_rejects_duplicate_anchor():
     text = f"lead-in. {ANCHOR} first occurrence. more text. {ANCHOR} second occurrence."
     with pytest.raises(ValueError, match="dummy.md"):
         extract_anchor_sentence(text, "dummy.md")
+
+
+def test_check_catches_a_perturbed_router(tmp_path):
+    """Proves check() is load-bearing, not vacuous.
+
+    The real tree currently satisfies check() exactly, so
+    test_anchor_sentence_lockstep_across_routers alone would stay green even
+    if check() were broken (e.g. always a no-op). This test extracts
+    ROUTER_FILES' REAL content into an isolated tmp_path copy (zero mutation
+    residue in the real tree — house RED-on-extracted-copy pattern,
+    mirroring test_router_card_rule_tokens.py's non-vacuity test), perturbs
+    one word AFTER the anchor in one router's copy, and shows check()
+    actually raises, naming that router.
+    """
+    for rel_path in ROUTER_FILES:
+        src = REPO_ROOT / rel_path
+        dst = tmp_path / rel_path
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dst)
+
+    check(tmp_path)  # baseline: unmutated copy passes
+
+    mutated_rel = ROUTER_FILES[0]
+    mutated_path = tmp_path / mutated_rel
+    text = mutated_path.read_text(encoding="utf-8")
+    assert "architectural blast radius" in text
+    mutated_path.write_text(
+        text.replace("architectural blast radius", "PERTURBED blast radius", 1),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AssertionError) as exc_info:
+        check(tmp_path)
+
+    message = str(exc_info.value)
+    assert mutated_rel in message
