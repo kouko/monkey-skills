@@ -44,7 +44,7 @@ Plan-document-reviewer verdict: PASS (2026-08-07, round 1, 15/15)
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: "writing-plans/SKILL.md:147 enum line gains `| blocked:user-decision` (+2 words against an 8-word margin: cap 4047, current 4039)"
-- Status: claimed(@implementer-3)
+- Status: done(0853a917)
 - Gloss: SKILL.md 裡的 enum 副本跟上同一個新值，並補上它一直缺的 pin；字數天花板 4047 不破
 
 ## Task 3 — requesting-code-review: round-flip duty sentence + new pin test
@@ -80,7 +80,7 @@ Plan-document-reviewer verdict: PASS (2026-08-07, round 1, 15/15)
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: "Rider (mechanical criterion…): the same one-sentence round-flip duty in requesting-docs-review/SKILL.md IF its word cap allows" — cap check at plan time found no rdr word-cap test; rider included with an in-task tripwire.
-- Status: pending
+- Status: claimed(@implementer-4)
 - Gloss: docs 審查臂同樣輪次也要翻 Stage——同一義務的 docs 版，搭車一起修
 
 ## Task 5 — version bump + CHANGELOG
