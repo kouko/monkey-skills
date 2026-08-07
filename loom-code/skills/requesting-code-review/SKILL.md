@@ -128,6 +128,8 @@ dimension_scores:
   cross-task-coherence: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # NEW at branch scope
   external-surface-grounding: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # mirrors per-task D7 + cross-task surface-consistency
   principles-conformance: PASS | PASS_WITH_NOTES | NEEDS_REVISION | N/A  # vs consumer PRINCIPLES.md; N/A when absent
+  deliberate-simplification: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # LOOM-SIMPLIFY marker harvest + completeness check; PASS with empty ledger when no markers
+  deletion-first: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 
 findings:
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
