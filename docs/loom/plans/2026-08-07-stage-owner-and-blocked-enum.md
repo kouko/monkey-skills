@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-stage-owner-and-blocked-enum.md
 Goal: The Stage header gains an owner for review-round transitions (a duty sentence in requesting-code-review, plus the docs-arm rider) and a blocked:user-decision enum value across both prose copies and the pin test, shipped with the loom-code version bump and CHANGELOG entry.
-Stage: sdd:wave-2
+Stage: sdd:wave-3
 Endpoint named: yes → continuous (user: 「先做 PR A 吧」)
 Total tasks: 5
 Critical-path depth: 3 (≤5)
@@ -97,7 +97,7 @@ Plan-document-reviewer verdict: PASS (2026-08-07, round 1, 15/15)
 - Dependencies: Tasks 1, 2, 3, 4 complete first
 - Independent: false
 - Brief item covered: "loom-code version bump + CHANGELOG entry (skill-content PR ⇒ bump is mandatory; marketplace sync per repo convention)"
-- Status: pending
+- Status: claimed(@implementer-5)
 - Gloss: 版本 0.65.0 與 CHANGELOG——skill 內容改動不 bump 就不會發佈，這是出貨的門票
 
 ## Notes
