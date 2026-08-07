@@ -15,18 +15,19 @@ grounding × necessity matrix.
 
 | Facet | Measured |
 |---|---|
-| Family size | 33 skills, 5 agents, 13 hooks, ~111 support md files, ~161 scripts |
-| SKILL.md body total | ~57,000 words; loom-code alone 35,252 (~62%) |
+| Family size | 27 skills, 5 agents, 13 hook files (every file type under `loom-*/hooks/`), 111 support md files (md under `*/skills/*/` excl. SKILL.md), 191 scripts (py+sh under `loom-*/`, excl. `__pycache__`) — populations as parenthesized; all six plugins unless stated |
+| SKILL.md total | 60,651 words across the six plugins (57,197 excl. loom-pipeline); loom-code alone 35,252 — 58% of the six-plugin total |
 | Heaviest SKILL.md bodies | requesting-docs-review 4,428 w (72 w under the 4,500 cap); finishing-a-development-branch 4,351 w; writing-plans 4,041 w; subagent-driven-development 4,013 w |
-| Mandatory happy path, simple bug fix | 6 loom-code SKILL.md + 1 external plugin skill (dev-workflow:git-memory) + ≥6 auxiliary scripts/protocol docs |
+| Mandatory happy path, simple bug fix | 6 loom-code SKILL.md (using-loom-code, brainstorming, tdd-iron-law, verification-before-completion, requesting-code-review, finishing-a-development-branch) + 1 external plugin skill (dev-workflow:git-memory) + ≥6 auxiliary scripts/protocol docs |
 | Per-session fixed overhead | ~2,400 words (two SessionStart cards + 27 skill-list descriptions) — modest, mostly justified |
 | Largest single duplication | docs/loom/memory/README.md `## Index`: 7,761 w, 89% of the file, hand-maintained byte-mirror of 136 entry descriptions |
 | Duplication governance | 12-rule baseline + reviewer discipline: real SSOT (scripts/_baseline.md → distribute.py → verify-drift.py, CI-gated). NOT covered: state-anchor wording (7 hand-copied files), tdd-standard.md (byte-identical full-file fork ×2), router-card 5 rules (manual "edit BOTH" sync) |
 
 ## Headline finding
 
-The complexity is real, measured, and unevenly distributed: ~80% of the
-weight sits in loom-code, and the heaviest parts are mostly load-bearing
+The complexity is real, measured, and unevenly distributed: loom-code
+alone carries 58% of the family's SKILL.md words (and the largest
+support/script surface), and the heaviest parts are mostly load-bearing
 (backed by documented incidents). The actual pathology is not "too big"
 but "patches accumulate and are never pruned back into the base flow" —
 one-off incident guards stack into per-skill rules engines
@@ -63,7 +64,7 @@ KEEP-WITH-CAVEAT (5):
 |---|---|---|
 | A1 | Collapse finishing Step 8's five "ONCE per branch" checklists (block measured 1,123 w) into one generic regen-artifacts table | Preserve each check's semantics and per-artifact fallback wording; merge structure only |
 | A3 | Downgrade writing-plans' wrong-bind reversal trigger (block measured 315 w, self-described hypothetical, no incident) to a one-line note | Re-add trigger: first real wrong-bind incident (full text recoverable from git history) |
-| C2 | SSOT the brief-before-asking clause (verbatim ×4 across the four design-side routers) | Choose carrier carefully — placing it in family-reception makes it per-session preload |
+| C2 | SSOT the brief-before-asking clause (near-verbatim ×4 across the four design-side routers: the trigger tail is byte-identical, the fork-noun varies per router) | Not purely behavior-zero — needs a parameterized carrier or a one-time wording normalization; and choose the carrier carefully — placing it in family-reception makes it per-session preload |
 | D2 | Protect router-card.md's five hand-copied rules against drift | Prefer adding the pair to verify-drift.py coverage over a build-step generation — no new machinery |
 | E3 | Periodic mechanism-prune pass | Minimal form only: record this audit's recipe as a runbook, human-triggered, proposal-only output. Do NOT build a new skill for it |
 
@@ -90,15 +91,18 @@ DROP (2):
 
 - Reader burden: ~-1,900 w across the three heaviest core skills
   (rdr → ~3,300; finishing → ~3,800; wp → ~3,750). Key win is rdr's cap
-  headroom (72 w → ~1,200 w) — currently any future edit there is blocked.
+  headroom (72 w → ~1,200 w) — today any net-adding edit over 72 words
+  there must slim first.
 - Maintenance tax: state-anchor 7→1 files; tdd-standard 2→1;
   memory-index 2 hand-edits → 1 + regen; router-card drift CI-caught.
 - Behavior: only E1 (review dimension) and E3 (prune loop) change what
   the family does; everything else is behavior-neutral dedup.
 - Does NOT change: the 6-skill mandatory happy path, the ~2,400 w
-  session overhead, loom-code's ~80% share.
-- Execution cost: 42 test files reference the three slimmed skills —
-  prose-pin updates dominate; comparable to the E-1 slim arc (#652).
+  session overhead, loom-code's ~58% share of SKILL.md words.
+- Execution cost: 50 test files name the three slimmed skills (grep of
+  `*.py` under `loom-*/scripts`, `loom-*/tests`, `scripts/` for the three
+  skill names) — prose-pin updates dominate; comparable to the E-1 slim
+  arc (#652).
 
 ## Recommended execution order
 
