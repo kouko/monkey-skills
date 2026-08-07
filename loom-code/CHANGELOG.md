@@ -18,18 +18,22 @@ Versioning: [Semantic Versioning](https://semver.org/).
   capacity, mirroring the backlog store's own `COMMITTED-NEXT` cap).
   `## Next` and `## Later` stay human-written themes. No dates
   anywhere in the file — the generated `## Now` body's entry-name
-  identifiers are the one explicit exemption — enforced as a checked
-  invariant, not just a convention: `--direction-check` scans
-  everything outside the generated body for a date-like token
-  (`20\d\d[-/年.]` or `Q[1-4]`) and fails loud on a hit.
+  identifiers are the one explicit exemption — enforced as three
+  independent checks in `backlog_index.py`'s flagless validate mode
+  (mirroring `check_loom_memory_integrity.py`'s trio shape): `## Now`
+  content matches the `COMMITTED-NEXT` entry files; `## Next`/`## Later`
+  headings present; and no date-like token (`20\d\d[-/年.]` or
+  `Q[1-4]`) anywhere outside the generated `## Now` body.
 - **`--direction-write <path>` / `--direction-check <path>`** land in
   `scripts/backlog_index.py` as the DIRECTION.md counterparts of
   `--write`/`--check`: `--direction-write` regenerates `## Now` from
   the store's `COMMITTED-NEXT` entries (empty queue → the file's own
   "queue empty — bet at the next close-out" line, never a blank
-  section); `--direction-check` re-runs the generator in memory and
-  diffs it against the committed file, plus the two independent
-  checks above (headings present; no stray dates).
+  section); `--direction-check` is self-confirmation only — it
+  re-runs the generator in memory and diffs it against the committed
+  file, exit 1 on drift or a missing file. It does NOT run the three
+  validate-mode checks above; CI needs the flagless validate mode, not
+  `--direction-check`, to catch a stray date or a missing heading.
 - **The backlog charter's fourth verb, Bet (promote).** Promoting a
   backlog entry into `COMMITTED-NEXT` is **user-only** — agents never
   promote. Triggered by `finishing-a-development-branch`'s close-out
@@ -38,6 +42,12 @@ Versioning: [Semantic Versioning](https://semver.org/).
   **same-lane first** (when the just-closed arc belongs to a theme,
   that theme's next `## Next`/`## Later` roadmap entry leads), then
   the ready query's `OPEN` output.
+- **Roadmap entries — a named pattern, not a new file type.** A
+  roadmap entry is an ordinary backlog entry whose body is an ordered
+  arc list with dependency notes, serving one DIRECTION theme;
+  `docs/loom/DIRECTION.md`'s `## Next` lines may point at one by
+  filename. As each arc ships, its evidence line accumulates in the
+  entry's body rather than opening a new entry per arc.
 
 ### Changed
 
@@ -64,16 +74,15 @@ Versioning: [Semantic Versioning](https://semver.org/).
   the store-absent case.
 - **Five `ROADMAP.md` tombstones** (loom-code, philosophers-toolkit,
   systems-thinking-toolkit, investing-toolkit, legal-toolkit): each
-  file's content is replaced by a one-line pointer to
-  `docs/loom/DIRECTION.md` as its supersession, following the
-  roadmap-entry charter pattern — no new file type, the convention
-  reuses the existing named-backlog-entry shape.
-
-The whole convention is conditional and portable by design: every new
-read or write is gated on the target file's presence, defaults to a
-silent skip when absent, and is opt-in per repo — a repo can adopt
-`DIRECTION.md` without a backlog store, or run the backlog store
-without ever creating `DIRECTION.md`.
+  file gets a one-line "superseded" banner PREPENDED at line 2,
+  pointing to `docs/loom/DIRECTION.md`; the rest of the file is kept
+  in full, unchanged, as a design-era artifact — no content is
+  deleted or replaced.
+- **The whole convention is conditional and portable by design.**
+  Every new read or write is gated on the target file's presence,
+  defaults to a silent skip when absent, and is opt-in per repo — a
+  repo can adopt `DIRECTION.md` without a backlog store, or run the
+  backlog store without ever creating `DIRECTION.md`.
 
 ## [0.68.0] — 2026-08-07 — finishing's five ONCE-bullets collapse into one close-out table
 
