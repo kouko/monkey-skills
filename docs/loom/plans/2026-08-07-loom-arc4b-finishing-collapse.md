@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-loom-arc4-prose-slim.md
 Goal: finishing-a-development-branch's five ONCE-per-branch Step-8 bullets (974 w) collapse into one table — per-check fallback wording preserved verbatim in cells, every pin keeping a carrier — saving 400-600 w, and loom-code ships 0.68.0.
-Stage: sdd:wave-2
+Stage: review:round-1
 Total tasks: 2
 Critical-path depth: 2 (≤5)
 Execution order: sequential
@@ -42,7 +42,7 @@ Steps:
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: "loom-code minor bump (three core SKILL.md bodies change — the third lands in this split) + CHANGELOG + version-pin rewrite"
-- Status: pending
+- Status: done(9fd7e448)
 - Gloss: 0.68.0——瘦身弧後半場出貨，arc-4 全弧完結
 - Review-hint: none.
 
