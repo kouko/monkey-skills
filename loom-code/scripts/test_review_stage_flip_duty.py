@@ -11,8 +11,9 @@ drop or splice it.
 Covered here:
 - test_rcr_carries_stage_flip_duty — requesting-code-review/SKILL.md.
   (The planned requesting-docs-review sibling was descoped: its SKILL.md
-  sits at the 4430-word ceiling pinned by test_rdr_extraction_pointers.py,
-  and the brief rules cap-blown → skip the rider.)
+  sits at 4427 words against the 4430-word ceiling pinned by
+  test_rdr_extraction_pointers.py — the 31-word duty sentence would land
+  it at 4458 — and the brief rules cap-blown → skip the rider.)
 """
 import re
 from pathlib import Path

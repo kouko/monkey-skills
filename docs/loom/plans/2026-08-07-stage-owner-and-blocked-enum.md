@@ -97,11 +97,11 @@ Plan-document-reviewer verdict: PASS (2026-08-07, round 1, 15/15)
 - Dependencies: Tasks 1, 2, 3, 4 complete first
 - Independent: false
 - Brief item covered: "loom-code version bump + CHANGELOG entry (skill-content PR ⇒ bump is mandatory; marketplace sync per repo convention)"
-- Status: claimed(@implementer-5)
+- Status: done(910d32af)
 - Gloss: 版本 0.65.0 與 CHANGELOG——skill 內容改動不 bump 就不會發佈，這是出貨的門票
 
 ## Notes
-- T4 DESCOPED (2026-08-07, during execution): the plan-time claim "no rdr word-cap test" was WRONG — `loom-code/scripts/test_rdr_extraction_pointers.py::test_word_ceiling` pins requesting-docs-review/SKILL.md at 4430 words and the file sits exactly at 4430; the rider's 28-word sentence trips it (4458 > 4430). The brief's pre-recorded rule governs: "Cap blown → skip the rider, note it in the PR body" (brief §Smallest End State item 5). Task-4 working-tree edits reverted (diff archived in session scratchpad t4-descoped-edits.diff); T3's test docstring corrected in the same commit so it no longer prescribes the descoped sibling. Status ledger uses `blocked` (closest grammar value; semantics here = descoped-by-brief-rule, not awaiting unblock). PR body must carry the skip note.
+- T4 DESCOPED (2026-08-07, during execution): the plan-time claim "no rdr word-cap test" was WRONG — `loom-code/scripts/test_rdr_extraction_pointers.py::test_word_ceiling` pins requesting-docs-review/SKILL.md at 4430 words and the file sits at 4427 (the pin's own tokenizer); the rider sentence — 31 words by that tokenizer — trips it (4427 + 31 = 4458 > 4430). [Numbers corrected post-T5-review: an earlier version of this note said "exactly at 4430" / "28-word", derived from a different tokenizer.] The brief's pre-recorded rule governs: "Cap blown → skip the rider, note it in the PR body" (brief §Smallest End State item 5). Task-4 working-tree edits reverted (diff archived in session scratchpad t4-descoped-edits.diff); T3's test docstring corrected in the same commit so it no longer prescribes the descoped sibling. Status ledger uses `blocked` (closest grammar value; semantics here = descoped-by-brief-rule, not awaiting unblock). PR body must carry the skip note.
 - Amend skip note: T2/T4 Dependencies parenthetical annotations removed post-PASS to satisfy plan_card's dependency grammar — fixing a typo/formatting, assertion unchanged ("shared test file" rationale already lives in Decision Log entry 2), no re-review.
 - Change-folder binding: N/A — the caller handed this run the brainstorming brief explicitly (Layer-0 input); the two non-archived docs/loom/ change-folders (2026-07-12-us-sec…, 2026-07-19-8k…) belong to prior investing arcs and are not bound.
 - plan_card.py needs NO change: Stage is free text to it (scripts/plan_card.py:318-320).

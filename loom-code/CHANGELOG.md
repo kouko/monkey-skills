@@ -26,8 +26,9 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 - **Docs-arm rider deliberately skipped.** The matching Stage-flip
   duty sentence for requesting-docs-review was cap-blown:
-  its SKILL.md sits exactly at the 4430-word ceiling pinned by
-  `scripts/test_rdr_extraction_pointers.py::test_word_ceiling`, and
+  its SKILL.md sits at 4427 words against the 4430-word ceiling pinned by
+  `scripts/test_rdr_extraction_pointers.py::test_word_ceiling` (the
+  31-word duty sentence would land it at 4458), and
   the brief's pre-recorded rule governs (cap blown → skip the rider).
   Recorded here so a future ceiling raise is a deliberate act per
   that test's own docstring, not a silent side effect.
