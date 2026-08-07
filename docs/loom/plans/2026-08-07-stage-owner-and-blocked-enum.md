@@ -80,7 +80,7 @@ Plan-document-reviewer verdict: PASS (2026-08-07, round 1, 15/15)
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: "Rider (mechanical criterion…): the same one-sentence round-flip duty in requesting-docs-review/SKILL.md IF its word cap allows" — cap check at plan time found no rdr word-cap test; rider included with an in-task tripwire.
-- Status: claimed(@implementer-4)
+- Status: blocked
 - Gloss: docs 審查臂同樣輪次也要翻 Stage——同一義務的 docs 版，搭車一起修
 
 ## Task 5 — version bump + CHANGELOG
@@ -101,6 +101,7 @@ Plan-document-reviewer verdict: PASS (2026-08-07, round 1, 15/15)
 - Gloss: 版本 0.65.0 與 CHANGELOG——skill 內容改動不 bump 就不會發佈，這是出貨的門票
 
 ## Notes
+- T4 DESCOPED (2026-08-07, during execution): the plan-time claim "no rdr word-cap test" was WRONG — `loom-code/scripts/test_rdr_extraction_pointers.py::test_word_ceiling` pins requesting-docs-review/SKILL.md at 4430 words and the file sits exactly at 4430; the rider's 28-word sentence trips it (4458 > 4430). The brief's pre-recorded rule governs: "Cap blown → skip the rider, note it in the PR body" (brief §Smallest End State item 5). Task-4 working-tree edits reverted (diff archived in session scratchpad t4-descoped-edits.diff); T3's test docstring corrected in the same commit so it no longer prescribes the descoped sibling. Status ledger uses `blocked` (closest grammar value; semantics here = descoped-by-brief-rule, not awaiting unblock). PR body must carry the skip note.
 - Amend skip note: T2/T4 Dependencies parenthetical annotations removed post-PASS to satisfy plan_card's dependency grammar — fixing a typo/formatting, assertion unchanged ("shared test file" rationale already lives in Decision Log entry 2), no re-review.
 - Change-folder binding: N/A — the caller handed this run the brainstorming brief explicitly (Layer-0 input); the two non-archived docs/loom/ change-folders (2026-07-12-us-sec…, 2026-07-19-8k…) belong to prior investing arcs and are not bound.
 - plan_card.py needs NO change: Stage is free text to it (scripts/plan_card.py:318-320).
@@ -109,5 +110,6 @@ Plan-document-reviewer verdict: PASS (2026-08-07, round 1, 15/15)
 - Implementer commit discipline: pathspec-scoped commits only (staged obsidian/ WIP exists in the tree; never `git add -A`), conventional-commits type+scope per repo CI, re-check staged set immediately before each commit.
 
 ## Decision Log
+- (exec) T4 rider dropped per the brief's cap-blown rule instead of raising the 4430 ceiling — raising is a deliberate scope act the brief did not authorize; continuous mode may not re-scope (crutch-vs-verification line). Revisit only if the user asks for the docs-arm duty later (then: raise ceiling + CHANGELOG note per that test's own docstring).
 - (plan) Duty prose lives in plan-format.md, not wp SKILL.md — wp cap margin is 8 words; references are uncapped by design (extraction-pointer architecture).
 - (plan) T1→T2 and T3→T4 sequenced only by shared test files; no parallel dispatch — tasks are minutes-scale, parallel implementers on one tree would need index-race guards for no wall-clock gain.

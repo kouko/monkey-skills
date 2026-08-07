@@ -2,16 +2,17 @@
 
 Arc 2026-08-07 (stage-owner-and-blocked-enum): whole-branch review rounds
 previously had no owner for flipping the plan's `Stage:` header to
-`review:round-N`, so plans went stale during review. Each review-arm
+`review:round-N`, so plans went stale during review. requesting-code-review/
 SKILL.md now carries ONE self-contained duty sentence making the
 orchestrator flip the Stage at each round start. These tests pin that
 sentence (whitespace-normalized substring) so refactors cannot silently
 drop or splice it.
 
 Covered here:
-- test_rcr_carries_stage_flip_duty — requesting-code-review/SKILL.md
-  (a sibling test_rdr_carries_stage_flip_duty for requesting-docs-review
-  is added by plan Task 4).
+- test_rcr_carries_stage_flip_duty — requesting-code-review/SKILL.md.
+  (The planned requesting-docs-review sibling was descoped: its SKILL.md
+  sits at the 4430-word ceiling pinned by test_rdr_extraction_pointers.py,
+  and the brief rules cap-blown → skip the rider.)
 """
 import re
 from pathlib import Path
