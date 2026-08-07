@@ -10,12 +10,14 @@ Versioning: [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - **`.codex-plugin/plugin.json` `interface.longDescription`**: cut from
-  990 chars to 489 — the family's storefront norm is ~300-500. Dropped
-  the full skill enumeration (which had drifted: it said "12 skills
-  total" while `skills/` holds 13), the eight-entry citation list
-  (kept the anchor authors), and the version-history line; kept the
-  stage flow, primary-source grounding, coexistence notes, and the
-  `LOOM_CODE_MODE=off` escape hatch.
+  990 chars to 547 (family storefront band across the 27 codex
+  manifests: 317-683). Dropped the full skill enumeration (which had
+  drifted: it said "12 skills total" while `skills/` holds 13), the
+  eight-entry citation list (kept the anchor authors), and the
+  version-history line; kept the stage flow, primary-source grounding,
+  coexistence notes, and the `LOOM_CODE_MODE=off` escape hatch — now
+  stated at its true width (review round-2 fix: the flag disables the
+  git guard too, `hooks/git-guard.py`, not only the router card).
 
 ## [0.65.0] — 2026-08-07 — a plan can say it waits on the user
 
