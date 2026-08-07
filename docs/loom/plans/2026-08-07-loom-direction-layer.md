@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-loom-direction-layer-and-commit-loop.md
 Goal: loom gains a portable direction layer — a per-repo DIRECTION.md (generated Now / human-only Next+Later, no dates) with its write loop (betting at close when the queue is empty) and read loop (Axis 0) wired conditionally into the stations, five frozen ROADMAPs tombstoned, loom-code shipping 0.69.0 — monkey-skills seeded as first consumer.
-Stage: sdd:wave-1
+Stage: sdd:wave-2
 Total tasks: 10
 Critical-path depth: 3 (≤5)
 Execution order: parallel-where-possible
@@ -27,7 +27,7 @@ Steps:
 - Dependencies: none
 - Independent: true
 - Brief item covered: "`docs/loom/DIRECTION.md` — one file, three sections + charter header" (item 1) + "Generation + validation: backlog_index.py grows a --direction write/check pair" (item 2) + "Portability requirements … absent file = opt-in" (item 8) + "Initial content ride-along (first-consumer dogfood): seed monkey-skills' DIRECTION.md" (item 9, themes per §Addendum 7)
-- Status: claimed(@impl-t1)
+- Status: done(e1dfbd3b)
 - Gloss: 生成器＋驗證器＋第一份 DIRECTION.md——Now 段機器寫、日期禁令變成可檢查的不變式、種子主題實內容出貨
 - Review-hint: mutation probes must cover the date-ban regex and the empty-queue rendering.
 
@@ -44,7 +44,7 @@ Steps:
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: "Charter sync: backlog README §Verbs gains the fourth flow (Bet/promote — user-only)" (item 5) + §Addendum 1 (roadmap-entry pattern) + §Addendum 3-4 (parallel set, same-lane ordering)
-- Status: pending
+- Status: claimed(@impl-t2)
 - Gloss: 章程補齊：第四動詞、roadmap 條目具名、Now＝並行集合入法
 - Review-hint: none.
 
@@ -61,7 +61,7 @@ Steps:
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: "Kickoff read: brainstorming Axis 0's ready check extends one line" (item 4) + "every station edit fires CONDITIONALLY … silent skip" (item 8)
-- Status: pending
+- Status: claimed(@impl-t3)
 - Gloss: 開工必經站順讀方向檔——讀取迴路接上
 - Review-hint: cold-reader must not misread the conditional as mandatory for repos without the file.
 
@@ -78,7 +78,7 @@ Steps:
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: "Betting moment (the missing write loop)" + Decision "betting = event-driven at close (queue EMPTY → prompt)" (item 3) + "conditional + fallback wording like the backlog-close row" (item 8) + §Addendum 4 (same-lane first)
-- Status: pending
+- Status: claimed(@impl-t4)
 - Gloss: 收線站得到下注時刻——寫入迴路接上、同線優先，機制閉環
 - Review-hint: the cell is already the table's longest neighbor class — reviewer checks the extended cell still reads unambiguously (arc-4b's known long-row debt is precedent, not a blocker).
 
@@ -96,7 +96,7 @@ Steps:
 - Independent: true
 - Review-weight: mechanical
 - Brief item covered: "Five ROADMAP.md tombstones: one header line each" (item 6)
-- Status: claimed(@impl-t5)
+- Status: done(7d01fd23)
 - Gloss: 墓碑一：loom-code 的設計期 roadmap 蓋章
 - Review-hint: none (mechanical self-check path).
 
@@ -114,7 +114,7 @@ Steps:
 - Independent: true
 - Review-weight: mechanical
 - Brief item covered: "Five ROADMAP.md tombstones: one header line each" (item 6)
-- Status: claimed(@impl-t6)
+- Status: done(917c11e4)
 - Gloss: 墓碑二：investing-toolkit
 - Review-hint: none (mechanical self-check path).
 
@@ -132,7 +132,7 @@ Steps:
 - Independent: true
 - Review-weight: mechanical
 - Brief item covered: "Five ROADMAP.md tombstones: one header line each" (item 6)
-- Status: claimed(@impl-t7)
+- Status: done(6be322cf)
 - Gloss: 墓碑三：legal-toolkit
 - Review-hint: none (mechanical self-check path).
 
@@ -150,7 +150,7 @@ Steps:
 - Independent: true
 - Review-weight: mechanical
 - Brief item covered: "Five ROADMAP.md tombstones: one header line each" (item 6)
-- Status: claimed(@impl-t8)
+- Status: done(53fec8d3)
 - Gloss: 墓碑四：philosophers-toolkit
 - Review-hint: none (mechanical self-check path).
 
@@ -168,7 +168,7 @@ Steps:
 - Independent: true
 - Review-weight: mechanical
 - Brief item covered: "Five ROADMAP.md tombstones: one header line each" (item 6)
-- Status: claimed(@impl-t9)
+- Status: done(ee6a676f)
 - Gloss: 墓碑五：systems-thinking-toolkit
 - Review-hint: none (mechanical self-check path).
 
