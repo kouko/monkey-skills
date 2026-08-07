@@ -78,7 +78,7 @@ Steps:
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: "Betting moment (the missing write loop)" + Decision "betting = event-driven at close (queue EMPTY → prompt)" (item 3) + "conditional + fallback wording like the backlog-close row" (item 8) + §Addendum 4 (same-lane first)
-- Status: pending
+- Status: done(f9079211)
 - Gloss: 收線站得到下注時刻——寫入迴路接上、同線優先，機制閉環
 - Review-hint: the cell is already the table's longest neighbor class — reviewer checks the extended cell still reads unambiguously (arc-4b's known long-row debt is precedent, not a blocker).
 
@@ -188,6 +188,31 @@ Steps:
 - Status: pending
 - Gloss: 0.69.0——方向層機制隨 minor 版出貨
 - Review-hint: none.
+
+## Decision Log
+
+- 2026-08-08 (wave 2, T3 fix round 1): spec-over-plan wording — plan
+  Task 3's verbatim phrase "when the target repo also has
+  docs/loom/DIRECTION.md" reads conjunctive with the block's
+  backlog-store condition; spec §Smallest End State 8 deliberately
+  contrasts Axis 0 (DIRECTION.md-present ONLY, single condition)
+  against finishing (both artifacts). Artifact reworded to make the
+  read independent of the store; quality-reviewer finding, spec is the
+  portability SSOT. Below briefing threshold (reversible, spec-backed).
+- 2026-08-08 (wave 2, T2 fix round 1): precedent-claim correction —
+  charter's "evidence lines accumulating arc by arc across five PRs"
+  was contradicted by the cited entry's own git history (single
+  final-commit write; arcs 2-3 never touched the file). Claim shrunk
+  to what the source supports; the accumulation practice stays as
+  prescription, not as precedent. Plan/spec-inherited wording, fixed
+  at artifact level. Tier sentences kept (plan requires both facts)
+  but aligned verbatim to DIRECTION.md phrasing + SSOT pointer added.
+- 2026-08-08 (wave 2, T4): PASS_WITH_NOTES 🟡 fixed immediately
+  instead of carried as PR debt — promote-then-stale-Now gap (row
+  never re-runs --direction-write after a user promote) is a real
+  drift generator in the mechanism this arc ships; one-clause fix +
+  two pins, cheap-hardening rule applied; re-verified by the
+  whole-branch review arms.
 
 ## Notes
 
