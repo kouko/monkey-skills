@@ -73,8 +73,11 @@ multi-state new work.
 `docs/loom/backlog/`, run `python3 scripts/backlog_index.py --ready`
 before settling the arc's scope, and surface to the user any
 COMMITTED-NEXT items plus OPEN items related to the seed idea (no
-store or no `scripts/backlog_index.py` → skip silently, N/A). The
-queue informs the arc decision — it never hijacks it: the user's seed
+store or no `scripts/backlog_index.py` → skip silently, N/A). When
+the target repo also has `docs/loom/DIRECTION.md`, read it and
+surface its `## Now` and `## Next` sections alongside the ready queue
+(no file → skip silently, same posture as the no-store case above).
+The queue informs the arc decision — it never hijacks it: the user's seed
 idea stays the default subject. This check is independent of the
 Negative guard above — a bug-fix or refactor arc that skips the rest
 of Axis 0 still runs the ready check (backlog entries are often

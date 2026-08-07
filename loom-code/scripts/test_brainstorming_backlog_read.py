@@ -97,3 +97,44 @@ def test_negative_guard_paragraph_announces_ready_check_runs_regardless():
     assert guard_end_idx != -1
     guard_paragraph = normalized[guard_idx : guard_end_idx + len(guard_end_marker)]
     assert "runs regardless" in guard_paragraph, guard_paragraph
+
+
+# --- Task 3: DIRECTION.md read, conditional on the file's presence ---
+
+DIRECTION_CONDITIONAL_LEAD = "When the target repo also has `docs/loom/DIRECTION.md`"
+DIRECTION_NOW_NEXT_SECTIONS = "`## Now` and `## Next`"
+DIRECTION_NO_FILE_SKIP = "no file → skip silently, same posture as the no-store case"
+BLOCK_END_MARKER = "exactly bug-fix shaped)."
+
+
+def test_direction_md_conditional_lead_present():
+    """The new sentence's conditional opener is pinned verbatim — this
+    is the phrase a cold reader must see to know the DIRECTION.md read
+    is gated on the file's presence, not mandatory."""
+    assert DIRECTION_CONDITIONAL_LEAD in _normalized_text()
+
+
+def test_direction_md_now_next_sections_present():
+    """Both sections the ready check must surface when DIRECTION.md
+    exists are named."""
+    assert DIRECTION_NOW_NEXT_SECTIONS in _normalized_text()
+
+
+def test_direction_md_no_file_skip_clause_present():
+    """Absent-file posture matches the no-store case already pinned
+    above (NA_SILENT_CLAUSE) — this is the DIRECTION.md-specific
+    restatement of that same silent-skip rule."""
+    assert DIRECTION_NO_FILE_SKIP in _normalized_text()
+
+
+def test_direction_md_sentence_inside_backlog_ready_check_block():
+    """The new sentence must land inside the Backlog ready check block
+    (between its lead phrase and the block's closing sentence), not
+    elsewhere in the file — the plan's placement requirement."""
+    normalized = _normalized_text()
+    lead_idx = normalized.find(LEAD_PHRASE)
+    block_end_idx = normalized.find(BLOCK_END_MARKER, lead_idx)
+    assert lead_idx != -1
+    assert block_end_idx != -1
+    block = normalized[lead_idx : block_end_idx + len(BLOCK_END_MARKER)]
+    assert DIRECTION_CONDITIONAL_LEAD in block, block
