@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-loom-arc4-prose-slim.md
 Goal: finishing-a-development-branch's five ONCE-per-branch Step-8 bullets (974 w) collapse into one table — per-check fallback wording preserved verbatim in cells, every pin keeping a carrier — saving 400-600 w, and loom-code ships 0.68.0.
-Stage: planning
+Stage: sdd:wave-2
 Total tasks: 2
 Critical-path depth: 2 (≤5)
 Execution order: sequential
@@ -25,7 +25,7 @@ Steps:
 - Dependencies: none
 - Independent: false
 - Brief item covered: "A1: finishing's five ONCE-bullets (974 w at arc-3-merged state) collapse into one … table — one row per check … per-check fallback wording preserved verbatim in the cells; target saving 400-600 w" + §Decision "do NOT extract A1's content to a reference (collapse in place)"
-- Status: pending
+- Status: done(d26fdc33)
 - Gloss: 五條收尾檢查摺成一張表——省的是重複鷹架，規則字句一字不動進格子
 - Review-hint: the whole-branch review runs a HAIKU COLD-READ probe on the collapsed Step 8 (brief item 4's conditional fires: cells cite outside rules — charter §refs — so the extraction-severing duty applies; misread = wording fix, never reader-blame).
 
