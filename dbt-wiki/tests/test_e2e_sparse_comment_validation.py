@@ -39,6 +39,7 @@ from test_e2e_validation import (
     _CANNED_MARKER,  # noqa: F401 — re-exported so this run's authenticity check shares W1's marker
     _bundles_in,
     _cleanup_run_byproducts,
+    _flag_bearing_grade,
     _parse_run_output,
     _repo_root,
     snapshot_repo_root_byproducts,
@@ -150,6 +151,24 @@ def _build_report(
             ),
         },
     }
+
+
+def test_sparse_report_carries_the_advisory_flag_count():
+    """Same pin as W1's — the G1 builder is equally e2e-gated (round 3)."""
+    report = _build_report(
+        cmd=["claude", "-p"],
+        sparse_dir=Path("/nonexistent-sparse-dir"),
+        run_meta={},
+        parse_error=None,
+        raw_answers={},
+        report_grade=_flag_bearing_grade(),
+        is_real_output=True,
+        final_message="",
+        landing={"fixture_bundles": [], "repo_root_bundles": [], "repo_root_dbt_wiki": False},
+    )
+
+    assert report["accuracy_pct"] == 100.0, "precondition: the flag-blind shape"
+    assert report["invariant_flag_count"] == 2
 
 
 @pytest.mark.e2e

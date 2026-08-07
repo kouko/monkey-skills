@@ -80,20 +80,35 @@ no work. Read its exit code and stdout:
   stderr for the human.
 
 **Tooling-failure rule, applying to every `batch_queue.py` call in this
-document (Steps 2, 3, 6 and 8).** A nonzero exit from the CLI itself — as
+document (Steps 2, 3, 4, 6 and 8 — Step 4 calls `force-fail` on both of its
+exit paths).** A nonzero exit from the CLI itself — as
 opposed to a failure of the dispatched item, which Step 8 covers — means this
 invocation STOPS where it stands. Do not retry the command, do not proceed to
 the next step, and do not invent a compensating transition.
 
 **What "STOP" leaves behind differs by step, and both shapes are correct.**
-Before Step 5 there is no run: a `RUNNING` entry left with no run evidence is
-a false anomaly, so any step that exits before dispatch must first release the
-entry (Step 4 states the two paths that do). At Steps 6 and 8 a run exists —
-in flight or finished — so exiting with the entry still `RUNNING` is the
-intended outcome, not a leak: `reconcile` judges it against the Workflow
-record on the next invocation and flags `SUSPECT` / `SUSPECT-COMPLETE` for a
-human. That is what `reconcile` is for. Never `force-fail` a live run to
-tidy the state; the evidence is what a human needs.
+The dividing line is whether `next` already claimed an entry. Steps 2 and 3
+exit owning nothing — `next` writes `RUNNING` only when it dispatches, so a
+nonzero exit there leaves no entry to release, which is what Step 3's own
+bullet means by "there is nothing to guard, dispatch, or mark". Step 4 is the
+first step that exits holding a claimed entry, and both of its exits must
+release it: a `RUNNING` entry with no run evidence is a false anomaly that
+`reconcile` will report as `SUSPECT` for a human who has nothing to look at.
+
+At Steps 6 and 8 a run exists — in flight or finished — so exiting with the
+entry still `RUNNING` is the intended outcome, not a leak: it gets surfaced to
+a human either way, and the evidence is what makes that surfacing useful.
+(Mechanism, for the reader who wants it: after Step 6 succeeded there is a
+`runId`, so `reconcile` reads the Workflow record and flags
+`SUSPECT-COMPLETE` on a completed run; if Step 6 itself failed there is no
+`runId`, so the entry is instead surfaced as stale after a grace window.
+Either way a human sees it.) Never `force-fail` a live run to tidy the state;
+the evidence is what a human needs.
+
+If a `force-fail` release at Step 4 is itself what exits nonzero, stop there
+too. The entry stays `RUNNING` with no `runId` and `reconcile` surfaces it as
+stale — worse than a clean release, but safe, and not something this routine
+may paper over with a second attempt.
 
 ## Step 4 — Scope guard on the picked entry
 
@@ -118,7 +133,9 @@ description = queue_entry.lookup_backlog_description(
 It raises `ValueError` when the id is not a Phase 2 checklist item. Release
 the entry the same way the guard-`True` path below does — `force-fail <id>`
 with the reason `"scope guard: no Phase 2 checklist entry for this id"` —
-then journal one line and exit. **Do not simply exit here.** Step 3's
+then journal one line per Step 9's single-line rule, using its
+`- <id>: failed — <reason>` shape, and exit. **Do not simply exit here.**
+Step 3's
 tooling-failure rule does not apply: its justification is "there is no
 dispatch payload, so there is nothing to guard, dispatch, or mark", and at
 this point the payload exists and the entry is already `RUNNING`. Leaving it
@@ -232,9 +249,11 @@ human; two consecutive failures trip the Step 3 circuit breaker by design.
 ## Step 9 — Narrate one campaign-journal line
 
 Exactly **one** journal line is appended per invocation, whatever the outcome
-— done, failed, escalation-halt, or scope-guard skip. Step 4's skip path is
-that invocation's one line, not an extra one: it calls this step's helper
-with this step's format and then exits, so control never reaches here twice.
+— done, failed, escalation-halt, or either of Step 4's two early exits (the
+scope-guard skip and the unknown-id `ValueError` release). Each of those exits
+writes that invocation's one line, not an extra one: it calls this step's
+helper with a shape from this step's list and then exits, so control never
+reaches here twice.
 
 ```
 journal_writer.append_journal_line(
@@ -252,6 +271,12 @@ a lazy continuation instead of rendering as its own entry. Use one of:
 - <id>: failed — <reason>
 - <id>: skipped, needs human scoping (real-agent surface)
 ```
+
+This list is closed. The `failed` shape carries every non-`done`, non-skip
+outcome, its `<reason>` being the same string passed to `mark … --reason` or
+`force-fail … --reason` — an escalation halt and Step 4's unknown-id release
+both land here. If an outcome ever arises that none of the three fit, that is
+a gap in this document to report, not a line to invent.
 
 ---
 

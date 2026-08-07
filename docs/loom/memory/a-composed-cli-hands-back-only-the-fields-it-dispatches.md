@@ -24,7 +24,7 @@ of record — which the composed CLI has no reason to carry.
 Two things make this worse than an ordinary omission:
 
 - **It reads correctly.** Every other claim in that document verified
-  clean against `batch_queue.py`: four subcommand shapes, the exit-3 HALT
+  clean against `batch_queue.py`: every subcommand shape it drives, the exit-3 HALT
   semantics, the `loom/<changeId>` branch model, the payload key list. The
   defect is in what the prose assumed was available, not in what it said.
 - **The guard fails OPEN under improvisation.** An unattended executor

@@ -137,6 +137,52 @@ def snapshot_repo_root_byproducts(repo_root: Path) -> set[Path]:
     return {p for p in [repo_root / ".dbt-wiki", *_bundles_in(repo_root)] if p.exists()}
 
 
+def _flag_bearing_grade() -> grader.GradeReport:
+    """Two value-correct answers that BOTH trip a prohibition invariant.
+
+    The exact shape the advisory rule makes reachable: `passed` ignores flags,
+    so `accuracy_pct` reads 100.0 while every answer tripped one.
+    """
+    return grader.GradeReport(
+        results=[
+            grader.QuestionResult(
+                trap=name,
+                value_correct=True,
+                expected=1,
+                actual=1,
+                invariant_failures=["must not take MAX(as_of_date) over all rows"],
+            )
+            for name in ("amortization", "avg_ratio")
+        ]
+    )
+
+
+def test_report_carries_the_advisory_flag_count():
+    """The headline report block must not be flag-blind.
+
+    Round-2 review found `invariant_flag_count` defined and documented as the
+    human-facing rollup yet emitted by neither builder; round 3 found nothing
+    would fail if it were deleted, because both builders are reached only from
+    `e2e`-marked tests. This pins it in the default lane instead — the class of
+    blindness, not just the instance.
+    """
+    grade = _flag_bearing_grade()
+    report = _build_report(
+        cmd=["claude", "-p"],
+        fixture_dir=FIXTURE_DIR,
+        run_meta={},
+        parse_error=None,
+        raw_answers={},
+        report_grade=grade,
+        is_real_output=True,
+        final_message="",
+        landing={"fixture_bundles": [], "repo_root_bundles": [], "repo_root_dbt_wiki": False},
+    )
+
+    assert report["accuracy_pct"] == 100.0, "precondition: the flag-blind shape"
+    assert report["invariant_flag_count"] == 2
+
+
 def _cleanup_run_byproducts(
     fixture_dir: Path,
     repo_root: Path,

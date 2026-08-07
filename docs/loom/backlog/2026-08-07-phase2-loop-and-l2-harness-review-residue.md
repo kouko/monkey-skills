@@ -48,7 +48,7 @@ consistency, portability, and test-hygiene debts.
 
 - **The production text I/O in this directory does not declare `encoding=`.**
   `build_sparse_variant.py:41`, `grader.py:135`,
-  `test_e2e_validation.py:292`, `test_e2e_sparse_comment_validation.py:226`,
+  `test_e2e_validation.py:343`, `test_e2e_sparse_comment_validation.py:247`,
   `test_gold_questions.py:33,95`. (Two sites DO declare it —
   `test_e2e_validation.py:89,102` — but those are inside the cleanup-guard
   regression test added 2026-08-07, not the I/O paths at issue.) The
@@ -61,10 +61,12 @@ consistency, portability, and test-hygiene debts.
 - **Four in-code statements still describe the Task-1 "0 models" fixture.**
   `conftest.py:58-60` justifies the writable `connect()` with reasoning
   that stopped being true once models landed (the code is still correct;
-  its stated reason is not); `dbt_project.yml:5-6` and
+  its stated reason is not); `fixtures/l2-harness/dbt_project.yml:5-6`
+  (deeper than this section's other cites, which are relative to
+  `dbt-wiki/tests/`) and
   `test_fixture_project.py:14-15` say "0 custom models";
   `test_filler_models.py:87` asserts `>= 6` because "sibling trap tasks
-  may still be landing concurrently" — a window that closed, and which
+  may still be landing" — a window that closed, and which
   now contradicts `test_build_sparse_variant.py:109` asserting exactly 10
   on the same fixture.
 - **`strip_sql_comments.py` is literal-aware for single quotes only.**
