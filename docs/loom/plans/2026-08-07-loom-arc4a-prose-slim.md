@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-loom-arc4-prose-slim.md
 Goal: requesting-docs-review's convergence contract moves to a reference (4,428 → ~3,330 w) with every pin keeping a carrier, writing-plans' wrong-bind paragraph becomes one line, the audit's A-lane figures get corrected, and loom-code ships 0.67.0 — semantics everywhere byte-preserved.
-Stage: review:round-1
+Stage: finishing
 Total tasks: 4
 Critical-path depth: 2 (≤5)
 Execution order: parallel-where-possible
