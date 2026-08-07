@@ -74,6 +74,7 @@
 - [2026-08-04-out-of-scope-deferrals-have-no-durable-record](backlog/2026-08-04-out-of-scope-deferrals-have-no-durable-record.md) — an out_of_scope finding is surfaced once in chat and persisted nowhere -- nothing re-injects it into a later round, so a deferred defect is silently dropped the moment nobody acts on the verdict in the same session
 - [2026-08-06-plan-card-cjk-aware-gloss-line-join](backlog/2026-08-06-plan-card-cjk-aware-gloss-line-join.md) — plan_card.py joins wrapped bullet lines with a space, which is correct for Latin text but inserts a stray mid-word space in CJK glosses (e.g. 大聲報錯教 你正確寫法) — the join should be width-aware (no space between CJK codepoints)
 - [2026-08-06-same-type-dispatch-batching-cache-experiment](backlog/2026-08-06-same-type-dispatch-batching-cache-experiment.md) — Same-type subagent batching within the cache TTL is theory-supported (identical definition prefixes share API-level cache) but locally unproven — a haiku zero-tool experiment showed no detectable duration effect (warm mean 9.9s vs cold 10.6s, within spread); the JP-measured 2x win used ~119k-token real workloads, so the re-test needs realistic mass
+- [2026-08-07-execute-complexity-audit-keep-lanes](backlog/2026-08-07-execute-complexity-audit-keep-lanes.md) — Execute the ten KEEP / KEEP-WITH-CAVEAT items from the 2026-08-07 family complexity audit, in four arcs
 - [2026-08-07-phase2-loop-and-l2-harness-review-residue](backlog/2026-08-07-phase2-loop-and-l2-harness-review-residue.md) — deferred whole-branch review findings from the Phase 2 loop + L2 e2e harness branch
 
 ## PARKED
@@ -84,6 +85,11 @@
 - [2026-07-25-bba-trigger-calibration-loop-needs-a-two-sided-metric](backlog/2026-07-25-bba-trigger-calibration-loop-needs-a-two-sided-metric.md) — bba trigger calibration loop — needs a two-sided metric
 - [2026-07-25-dev-workflow-loom-workflow-rename-evaluated-not-recommended](backlog/2026-07-25-dev-workflow-loom-workflow-rename-evaluated-not-recommended.md) — dev-workflow → loom-workflow rename — evaluated, NOT recommended
 - [2026-07-28-whole-branch-review-round-ledger-bad-fix-re-check-planned-parked-before](backlog/2026-07-28-whole-branch-review-round-ledger-bad-fix-re-check-planned-parked-before.md) — Whole-branch review round ledger + bad-fix re-check — planned but not yet implemented
+- [2026-08-07-extract-completeness-critic-lens-block-to-reference](backlog/2026-08-07-extract-completeness-critic-lens-block-to-reference.md) — completeness-critic keeps its ~600-word 6-lens block inline; design-critic already extracted its equivalent
+- [2026-08-07-mechanize-loom-memory-prune-pretriage](backlog/2026-08-07-mechanize-loom-memory-prune-pretriage.md) — loom-memory prune is fully manual over the whole store; a pre-triage script could rank candidates by origin age
+- [2026-08-07-merge-sdd-review-weight-exemption-protocols](backlog/2026-08-07-merge-sdd-review-weight-exemption-protocols.md) — SDD carries two parallel review-weight exemption protocols that could be one table
+- [2026-08-07-plan-time-complexity-budget-fields](backlog/2026-08-07-plan-time-complexity-budget-fields.md) — writing-plans could record a per-task complexity budget (new abstractions / new files) for reviewers to check overshoot
+- [2026-08-07-reconcile-shared-critic-pattern-prose](backlog/2026-08-07-reconcile-shared-critic-pattern-prose.md) — The two sanctioned co-writer critics restate the writer-vs-judge pattern in ~500 words of parallel but diverging prose
 
 ## UPSTREAM
 - [2026-07-06-codex-hook-events-apply-patch-handler-emits-none](backlog/2026-07-06-codex-hook-events-apply-patch-handler-emits-none.md) — Codex hook events — apply_patch handler emits none
