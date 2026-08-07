@@ -115,3 +115,28 @@ def test_step13_queue_empty_alternative_phrase_present():
     state: 'backlog next: <name>' when non-empty, or this literal
     string when the COMMITTED-NEXT queue has nothing in it."""
     assert '"COMMITTED-NEXT queue empty"' in _normalized_text()
+
+
+def _backlog_close_row_text() -> str:
+    """The Backlog-close row's own window (this row's cells only) — so
+    the betting-duty pins below can't accidentally match wording that
+    lives in a neighboring row."""
+    normalized = _normalized_text()
+    close_idx = normalized.find("Backlog-close check")
+    head_idx = normalized.find("Attached-HEAD check:")
+    assert close_idx != -1
+    assert head_idx != -1
+    return normalized[close_idx:head_idx]
+
+
+def test_backlog_close_betting_prompt_never_auto_promotes():
+    """Direction-layer arc (task 4): the betting duty surfaces a prompt
+    but only the USER promotes a candidate to COMMITTED-NEXT — agents
+    must never auto-promote. Promotion is never a silent default."""
+    assert "agents never auto-promote" in _backlog_close_row_text()
+
+
+def test_backlog_close_betting_prompt_fires_on_empty_committed_next():
+    """The betting duty is event-driven: it fires when COMMITTED-NEXT
+    is EMPTY after the flip + regen, not on every close-out."""
+    assert "COMMITTED-NEXT is EMPTY" in _backlog_close_row_text()
