@@ -48,6 +48,22 @@ the foreign paths, and recommit scoped.
   should be kept small or downgraded to orchestrator-serial commits
   when many agents share one index.
 
+**2026-08-07 addition (arc-1 mechanical-dedup, three index.lock
+collisions in one wave — two new facts):**
+
+- **Read-only agents hold the lock too.** Verdict-only reviewers running
+  `git status`/`git diff` refresh the index and briefly create
+  `.git/index.lock`, so orchestrator commits can fail on the lock even
+  when NO sibling ever commits. The lock error is loud, but—
+- **A compound multi-commit Bash block half-executes on the lock, and a
+  later `$(git rev-parse HEAD)` then captures the WRONG commit's sha.**
+  One collision stamped a bogus `done(<sha>)` into the plan ledger
+  (sha of the previous task's commit) before being caught. While any
+  subagent is live: one commit per Bash block, verify with
+  `git log --oneline -1` BEFORE capturing a sha for the ledger, re-run
+  the single failed commit after the wave quiets, and never delete the
+  lock file while agents run.
+
 **2026-07-24 addition (kpi-tearsheet T3/T4 interleave):** commit a
 finished task BEFORE dispatching its same-file successor. The
 orchestrator dispatched T4 (same files as T3) while T3's verdict-
