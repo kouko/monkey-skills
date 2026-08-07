@@ -145,7 +145,8 @@ Source brief: docs/loom/specs/<date>-<topic>.md
 Goal: <one sentence transcribed from the brief's Smallest End State at
     plan time — frozen with the plan; never edited afterward>
 Stage: planning   ← at emit; enum planning | sdd:wave-N | review:round-N |
-    finishing — orchestrator updates it at each transition
+    blocked:user-decision | finishing — orchestrator updates it at each
+    transition
 Total tasks: <N>   ← uncapped
 Critical-path depth: <D> (≤5)   ← longest Dependencies chain; this is the ceiling
 Execution order: sequential | parallel-where-possible
