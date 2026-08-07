@@ -422,6 +422,43 @@ def test_write_aborts_on_broken_frontmatter_without_touching_file(tmp_path):
     assert (store / "README.md").read_text(encoding="utf-8") == original
 
 
+def test_write_aborts_on_name_stem_mismatch_without_touching_file(tmp_path):
+    """build_entries() must not silently accept a frontmatter `name` that
+    disagrees with its own filename stem — --write must refuse (nonzero
+    exit), name the violating file, and leave README.md untouched."""
+    store = tmp_path / "memory"
+    store.mkdir()
+    original = README_HEADER + "[mismatched-fact](mismatched-fact.md) — A description that predates the corruption.\n"
+    _write(store, "README.md", original)
+    # frontmatter 'name' disagrees with the filename stem 'mismatched-fact'.
+    _write(store, "mismatched-fact.md", _body("wrong-slug", "A description that predates the corruption."))
+
+    result = _run_flag(store, "--write")
+
+    assert result.returncode != 0
+    assert "mismatched-fact.md" in result.stdout
+    assert (store / "README.md").read_text(encoding="utf-8") == original
+
+
+def test_write_aborts_on_missing_description_without_touching_file(tmp_path):
+    """build_entries() must not silently render a blank description when a
+    body file's frontmatter is missing 'description' — --write must refuse
+    (nonzero exit), name the violating file, and leave README.md untouched."""
+    store = tmp_path / "memory"
+    store.mkdir()
+    original = README_HEADER + "[bare-desc-fact](bare-desc-fact.md) — A description that predates the corruption.\n"
+    _write(store, "README.md", original)
+    # frontmatter is missing the 'description' key entirely.
+    body = "---\nname: bare-desc-fact\ntype: practice\n---\n\nThe fact.\n"
+    _write(store, "bare-desc-fact.md", body)
+
+    result = _run_flag(store, "--write")
+
+    assert result.returncode != 0
+    assert "bare-desc-fact.md" in result.stdout
+    assert (store / "README.md").read_text(encoding="utf-8") == original
+
+
 def test_multiple_clean_facts_all_pass(tmp_path):
     store = tmp_path / "memory"
     store.mkdir()
