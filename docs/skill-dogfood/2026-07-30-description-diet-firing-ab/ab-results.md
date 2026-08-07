@@ -104,3 +104,28 @@ attempt to diet this one description needs this same same-day two-leg
 A/B against the loom-memory guard pair, not static judgment about
 wording — three independent bands have now falsified the "shorter is
 safe if worded carefully" assumption.
+
+## Scope clarification — appended 2026-08-07
+
+The Conclusion above is unchanged and stands. This note only states which
+artifact it binds, because "this one description" was read more broadly than
+intended once and could be read more narrowly later.
+
+**It binds `loom-discovery:user-insights`'s SKILL.md frontmatter
+description** — the string this run varied, per the `Repo state:` line above.
+It does NOT bind `loom-discovery`'s **plugin manifest** description (the
+string mirrored across `.claude-plugin/plugin.json`,
+`.codex-plugin/plugin.json`, and the repo-root `marketplace.json`). That is a
+browse blurb shown to a human choosing whether to install; no leg here varied
+it, and no probe in this repo has measured a manifest description on a firing
+surface. It was cut from 1005 characters to one sentence in #664 (2026-08-07)
+without an A/B, consistent with #437 and #494 having dieted plugin manifests
+wholesale on the same basis.
+
+Neither direction of that distinction weakens the finding above: the
+frontmatter pin remains at 899 characters and still requires a same-day
+two-leg A/B against the `loom-pipeline:loom-memory` guard pair before any
+future diet attempt.
+
+Trap recorded at
+`docs/loom/memory/an-ab-verdict-scopes-to-the-string-it-varied-not-its-namesake.md`.

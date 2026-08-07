@@ -7,54 +7,81 @@ origin: 2026-08-07 loom-discovery plugin-manifest diet (PR #664 shipped it; PR #
 
 `loom-discovery` owns at least four description strings: three SKILL
 frontmatter descriptions (`user-insights`, `using-loom-discovery`,
-`business-value`) and the plugin manifest description, mirrored across
-`marketplace.json`, `.claude-plugin/`, and `.codex-plugin/`. They live one or
-two directories apart and are all called "the description".
+`business-value`) and the plugin manifest description, mirrored byte-identical
+across `marketplace.json`, `.claude-plugin/`, and `.codex-plugin/`. They live
+one or two directories apart and are all called "the description".
 
 The 2026-07-30 firing A/B
 (`docs/skill-dogfood/2026-07-30-description-diet-firing-ab/ab-results.md`)
-varied exactly one of them. Its own header names the variable — "frontmatter
-description at 493 rendered chars" — and its remedy enumerates the revert
-scope as "frontmatter byte-identical" plus plugin.json's version and
-CHANGELOG, a list that mentions plugin.json and conspicuously omits its
-DESCRIPTION. Its conclusion, though, reads as a general
-prohibition: "Any future attempt to diet this one description needs this same
-same-day two-leg A/B against the loom-memory guard pair."
+varied exactly one of them. Its `Repo state:` metadata line names the variable
+— "frontmatter description at 493 rendered chars" — its cache-experiment
+disclosure overlays only that string onto the deployed copy, and its remedy
+enumerates the revert scope as "frontmatter byte-identical" plus plugin.json's
+version and CHANGELOG, a list that names plugin.json while omitting its
+description.
 
-"This one description" is unambiguous to the author, standing in front of the
-experiment. It is ambiguous to everyone downstream, because the surrounding
-prose talks about `loom-discovery` and `loom-discovery` has several.
+Its conclusion, though, generalizes: any future attempt to diet "this one
+description" needs the same same-day two-leg A/B against the loom-memory guard
+pair. Unambiguous to the author standing in front of the experiment.
 
-**Both misreadings are live, and the second is the dangerous one.**
+**The source is not maximally ambiguous, and the misreading happened anyway.**
+Two disambiguators sit within four lines of that sentence: the same section
+opens by naming the skill — "The 899-char `user-insights` description" — and
+that 899-character size marker cannot denote a 1005-character manifest
+string. A careful reader has what they need. The trap is that the operative
+sentence — the one a reader greps to, quotes, and acts on — says only "this
+one description", and the surrounding prose says `loom-discovery`, which owns
+four of them. Sufficient context elsewhere does not rescue an imperative that
+is ambiguous where it is read.
 
-- *Too broad*: the ban is read as covering the plugin manifest, so a
-  1005-character browse blurb — 4.65x the next-longest plugin in a listing
-  whose median is 97 — gets frozen by an experiment that never tested it. The
-  repo had already dieted plugin manifests wholesale twice with no A/B at all
+**Both misreadings are live; only the first is recorded.**
+
+- *Too broad* (observed, this entry's origin): the ban is read as covering the
+  plugin manifest, freezing a browse blurb the experiment never tested. At the
+  time, `loom-discovery`'s manifest description was 1005 characters — 4.65x
+  the next-longest of the 27 entries in `.claude-plugin/marketplace.json`
+  (`loom-pipeline`, 216), against a median of 97. (Figures as of `fd2c1a4f^`,
+  before #664 cut it; re-measuring today returns different numbers.) The repo
+  had already dieted plugin manifests wholesale twice with no A/B at all
   (#437, #494); `loom-discovery` escaped both only by landing later (#523).
-- *Too narrow, later*: once someone ships the manifest diet and nothing
+- *Too narrow, predicted*: once someone ships the manifest diet and nothing
   breaks, the A/B's authority looks falsified. The next person shortens the
   `user-insights` frontmatter on that precedent — and that string has failed
-  at three separate bands (170 / 217 / 493) against
-  `loom-pipeline:loom-memory`'s standing "before loom work" attractor. The
-  regression is a silent routing miss, not an error.
+  at three separate bands (170 / 217 / 493) against `loom-pipeline:loom-memory`'s
+  standing "before loom work" attractor, per
+  [[sibling-attractor-makes-lexical-tuning-unstable]]. No instance recorded
+  yet; the asymmetry is what makes it worth pre-empting — a routing miss is
+  silent, not an error.
 
-**What distinguishes them is job, not name.** A SKILL frontmatter description
-is a routing surface: the harness matches queries against it, so its wording
-changes which skill fires. A plugin manifest description is a browse blurb
-shown to a human choosing whether to install. No agent-runtime path reads it.
-An experiment measuring firing rates cannot say anything about the second, and
-did not try to.
+**What distinguishes the two strings is job, not name.** A SKILL frontmatter
+description is a routing surface: the harness matches queries against it, so
+its wording changes which skill fires. A plugin manifest description is a
+browse blurb shown to a human choosing whether to install. Stated at the
+strength the evidence supports: no probe in this repo has ever measured a
+manifest description on a firing surface —
+[[deploy-surface-ab-legs-run-post-merge]] enumerates the deployed probe
+surfaces as "skill frontmatter descriptions, hooks, preload cards", and
+manifest descriptions are absent. That is an absence of measurement, not a
+proven absence of effect; it is enough to say the 2026-07-30 experiment
+cannot speak to the manifest, which is the claim this entry needs.
 
-**When recording an A/B verdict, name the artifact, not the owner.** "Do not
-diet `loom-discovery:user-insights`'s SKILL.md frontmatter description without
-a same-day two-leg A/B" costs six words more than "this one description" and
-cannot be misread in either direction. **When reading one, find the leg
-definition before accepting the conclusion** — the header that says what was
-varied is load-bearing, and a conclusion written in prose will almost always
-be broader than the experiment that produced it.
+**Why:** the store is consulted precisely when nobody wants to re-read the
+experiment, so a verdict's wording is the whole interface. A ban whose scope
+every later reader has to reconstruct will be reconstructed differently each
+time, and one of those readings edits a string that regresses silently.
 
-Anchor by quote, not line number: this file's citations are verbatim strings
-so they survive edits to the A/B document, per
-[[a-passage-that-describes-itself-decays-on-every-edit]] and
-[[a-line-cite-fixed-before-its-file-is-edited-goes-stale-again]].
+**How to apply:** when recording an A/B verdict, name the artifact, not the
+component that owns it — "do not diet `loom-discovery:user-insights`'s SKILL.md
+frontmatter description without a same-day two-leg A/B" costs six words more
+than "this one description" and cannot be misread in either direction. When
+reading one, find the leg definition (the metadata block stating what was
+varied) before accepting the conclusion; a conclusion written in prose is
+almost always broader than the experiment that produced it.
+
+Citations here are anchored by short verbatim fragments rather than line
+numbers, per [[a-passage-that-describes-itself-decays-on-every-edit]] and
+[[a-line-cite-fixed-before-its-file-is-edited-goes-stale-again]] — **short**
+being load-bearing: the A/B's conclusion sentence spans a hard line wrap, so
+no grep for it as one continuous string matches, which is why it is
+paraphrased above with only "this one description" quoted. See
+[[verbatim-phrase-guards-break-on-hard-line-wrap]].
