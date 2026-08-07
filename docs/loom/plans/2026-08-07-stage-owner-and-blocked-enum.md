@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-stage-owner-and-blocked-enum.md
 Goal: The Stage header gains an owner for review-round transitions (a duty sentence in requesting-code-review, plus the docs-arm rider) and a blocked:user-decision enum value across both prose copies and the pin test, shipped with the loom-code version bump and CHANGELOG entry.
-Stage: review:round-1
+Stage: finishing
 Endpoint named: yes → continuous (user: 「先做 PR A 吧」)
 Total tasks: 5
 Critical-path depth: 3 (≤5)

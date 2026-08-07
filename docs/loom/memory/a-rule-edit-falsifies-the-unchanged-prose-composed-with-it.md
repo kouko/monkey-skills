@@ -56,7 +56,12 @@ arithmetic correction itself left a stale derived value one clause
 over). When a fix changes a measured quantity, sweep the artifact for
 every sentence stating the OLD value or anything DERIVED from it,
 including sentences the same commit just touched; or anchor the
-sentence to a named revision basis so it stops racing the tree.
+sentence to a named revision basis so it stops racing the tree. Name
+the measuring instrument with the number, too: the same file measured
+4427 words by a pin's `split()` tokenizer and 4428 by `wc -w`, and one
+report's "28-word sentence" was 31 by the pin's tokenizer (2026-08-07
+arc) — a count whose instrument is unnamed can be "corrected" back and
+forth forever between two tools that are both right.
 
 **Fifth carrier, one arc earlier (0.53.0, 2026-08-05): a FROZEN PINNED
 BLOCK authored before a mid-arc supersession.** A plan's Task-3 verbatim
