@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-loom-direction-layer-and-commit-loop.md
 Goal: loom gains a portable direction layer — a per-repo DIRECTION.md (generated Now / human-only Next+Later, no dates) with its write loop (betting at close when the queue is empty) and read loop (Axis 0) wired conditionally into the stations, five frozen ROADMAPs tombstoned, loom-code shipping 0.69.0 — monkey-skills seeded as first consumer.
-Stage: sdd:wave-3
+Stage: whole-branch-review
 Total tasks: 10
 Critical-path depth: 3 (≤5)
 Execution order: parallel-where-possible
@@ -185,7 +185,7 @@ Steps:
 - Dependencies: Tasks 3, 4 complete first
 - Independent: false
 - Brief item covered: "Pin-test migration + loom-code minor bump (brainstorming + finishing SKILL.md change) + CHANGELOG" (item 7)
-- Status: pending
+- Status: done(e77ca3c6)
 - Gloss: 0.69.0——方向層機制隨 minor 版出貨
 - Review-hint: none.
 
