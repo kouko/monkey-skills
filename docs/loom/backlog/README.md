@@ -140,9 +140,10 @@ else only writes it.
   the ready query at arc kickoff, so the queue informs new work.
 - **Bet (promote)** — promoting a backlog entry into `COMMITTED-NEXT`
   is **user-only**; agents never promote. Triggered by
-  `finishing-a-development-branch`'s close-out when the
-  `COMMITTED-NEXT` queue is empty and the repo has
-  `docs/loom/DIRECTION.md`, or manually at any time. Candidates: the
+  `finishing-a-development-branch`'s close-out when that close-out
+  flips a backlog entry (the duty lives in its Backlog-close row), the
+  `COMMITTED-NEXT` queue is empty after the flip, and the repo has
+  `docs/loom/DIRECTION.md` — or manually at any time. Candidates: the
   active roadmap entries' next arcs first (same-lane first — when an
   arc of theme X just closed, theme X's next arc leads the list), then
   the ready query's `OPEN` output. To promote, the user edits the
@@ -155,9 +156,11 @@ else only writes it.
 A **roadmap entry** is an ordinary backlog entry whose body is an
 ordered arc list with dependency notes, serving one DIRECTION theme —
 not a new file type, not a DIRECTION section. `docs/loom/DIRECTION.md`'s
-`## Next` lines may point at one by filename. As each arc ships, its
-evidence line accumulates in the entry's body rather than opening a new
-entry per arc. Precedent for the shape (not the cadence — per-arc
+`## Next` lines may point at one by filename (the filename's date
+prefix is a file identifier, exempt from DIRECTION.md's no-dates
+rule). As each arc ships, its evidence line accumulates in the entry's
+body rather than opening a new entry per arc. Precedent for the shape
+(not the cadence — per-arc
 evidence accumulation is the prescription going forward):
 `2026-08-07-execute-complexity-audit-keep-lanes.md` held one theme's
 ordered arc list with dependency notes across five PRs, its body

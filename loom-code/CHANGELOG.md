@@ -23,7 +23,9 @@ Versioning: [Semantic Versioning](https://semver.org/).
   (mirroring `check_loom_memory_integrity.py`'s trio shape): `## Now`
   content matches the `COMMITTED-NEXT` entry files; `## Now`/`## Next`/
   `## Later` headings present; and no date-like token (`20\d\d[-/年.]` or
-  `Q[1-4]`) anywhere outside the generated `## Now` body.
+  `Q[1-4]`) anywhere outside the generated `## Now` body — date tokens
+  inside a backlog-entry filename reference (`YYYY-MM-DD-slug.md`) are
+  exempt: identifiers, not schedule promises.
 - **`--direction-write <path>` / `--direction-check <path>`** land in
   `scripts/backlog_index.py` as the DIRECTION.md counterparts of
   `--write`/`--check`: `--direction-write` regenerates `## Now` from
@@ -37,8 +39,9 @@ Versioning: [Semantic Versioning](https://semver.org/).
 - **The backlog charter's fourth verb, Bet (promote).** Promoting a
   backlog entry into `COMMITTED-NEXT` is **user-only** — agents never
   promote. Triggered by `finishing-a-development-branch`'s close-out
-  when `COMMITTED-NEXT` is empty and the repo has
-  `docs/loom/DIRECTION.md`, or manually at any time. Candidates list
+  when that close-out flips a backlog entry, `COMMITTED-NEXT` is empty
+  after the flip, and the repo has `docs/loom/DIRECTION.md`, or
+  manually at any time. Candidates list
   **same-lane first** (when the just-closed arc belongs to a theme,
   that theme's next arc leads the list), then the ready query's
   `OPEN` output.
@@ -46,7 +49,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
   roadmap entry is an ordinary backlog entry whose body is an ordered
   arc list with dependency notes, serving one DIRECTION theme;
   `docs/loom/DIRECTION.md`'s `## Next` lines may point at one by
-  filename. As each arc ships, its evidence line accumulates in the
+  filename (its date prefix is a file identifier, exempt from the
+  no-dates rule). As each arc ships, its evidence line accumulates in the
   entry's body rather than opening a new entry per arc.
 
 ### Changed

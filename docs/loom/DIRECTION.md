@@ -8,7 +8,9 @@
 >   typically maps to one worktree/lane; the ≤5 cap is parallel-steering
 >   capacity.
 > - `## Next` / `## Later` are human-written themes only; a `## Next`
->   line MAY point at a roadmap entry in `docs/loom/backlog/` by filename.
+>   line MAY point at a roadmap entry in `docs/loom/backlog/` by
+>   filename (the filename's date prefix — YYYY-MM-DD — is a file
+>   identifier, exempt from the no-dates rule below).
 > - No dates anywhere in this file (entry names inside the generated
 >   `## Now` are exempt — file identifiers, not schedule promises).
 > - Betting promotes backlog entries to COMMITTED-NEXT — user-only;
