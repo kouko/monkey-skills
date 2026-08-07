@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-loom-direction-layer-and-commit-loop.md
 Goal: loom gains a portable direction layer — a per-repo DIRECTION.md (generated Now / human-only Next+Later, no dates) with its write loop (betting at close when the queue is empty) and read loop (Axis 0) wired conditionally into the stations, five frozen ROADMAPs tombstoned, loom-code shipping 0.69.0 — monkey-skills seeded as first consumer.
-Stage: sdd:wave-2
+Stage: sdd:wave-3
 Total tasks: 10
 Critical-path depth: 3 (≤5)
 Execution order: parallel-where-possible
@@ -44,7 +44,7 @@ Steps:
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: "Charter sync: backlog README §Verbs gains the fourth flow (Bet/promote — user-only)" (item 5) + §Addendum 1 (roadmap-entry pattern) + §Addendum 3-4 (parallel set, same-lane ordering)
-- Status: pending
+- Status: done(987039b8)
 - Gloss: 章程補齊：第四動詞、roadmap 條目具名、Now＝並行集合入法
 - Review-hint: none.
 
@@ -61,7 +61,7 @@ Steps:
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: "Kickoff read: brainstorming Axis 0's ready check extends one line" (item 4) + "every station edit fires CONDITIONALLY … silent skip" (item 8)
-- Status: pending
+- Status: done(fc27fad8)
 - Gloss: 開工必經站順讀方向檔——讀取迴路接上
 - Review-hint: cold-reader must not misread the conditional as mandatory for repos without the file.
 
