@@ -87,13 +87,14 @@ The `status` field is a closed enum — exactly these seven values, no
 others. Pick by what is *blocking the item*, not by how important it
 feels:
 
-- `COMMITTED-NEXT` — decided, scheduled, and next in line. Nothing is
-  blocking it but our own turn to start. When `docs/loom/DIRECTION.md`
-  exists, this queue is mirrored into its generated `## Now` section by
-  `scripts/backlog_index.py --direction-write` (see §Verbs' Bet flow).
-  The queue is a PARALLEL ACTIVE SET, not a serial order: one entry
-  typically maps to one worktree/lane, and the ≤5 cap is
-  parallel-steering capacity, not a serial queue depth.
+- `COMMITTED-NEXT` — decided, scheduled, and active/claimed for the
+  parallel set. Nothing is blocking it but our own turn to start. When
+  `docs/loom/DIRECTION.md` exists, this queue is mirrored into its
+  generated `## Now` section by `scripts/backlog_index.py
+  --direction-write` (see §Verbs' Bet flow). This is a PARALLEL ACTIVE
+  SET, not a serial queue: one entry typically maps to one
+  worktree/lane, and the ≤5 cap is parallel-steering capacity. See
+  `docs/loom/DIRECTION.md`'s charter header — the convention's SSOT.
 - `OPEN` — agreed to be worth doing, not yet scheduled. Anyone may
   pick it up.
 - `PARKED` — deliberately not being done for now, with the reason
@@ -124,10 +125,10 @@ else only writes it.
 
 - **Ready query** — `python3 scripts/backlog_index.py --ready` is the
   store's read surface: it prints the `COMMITTED-NEXT` queue (the
-  "now" queue, file-date order; store policy — not enforced by the
-  tool — keep it to ≤5 entries: a sixth commitment means re-judging
-  the queue) followed by `OPEN` candidates with their `start:`
-  conditions.
+  "now" queue, file-date order — a listing order, not an execution
+  order; store policy — not enforced by the tool — keep it to ≤5
+  entries: a sixth commitment means re-judging the queue) followed by
+  `OPEN` candidates with their `start:` conditions.
 - **Close duty** — `finishing-a-development-branch`'s Step 8
   Backlog-close check flips a shipped or superseded entry's status at
   branch close-out. The procedure lives in that skill, not here —
@@ -157,9 +158,10 @@ not a new file type, not a DIRECTION section. `docs/loom/DIRECTION.md`'s
 `## Next` lines may point at one by filename. As each arc ships, its
 evidence line accumulates in the entry's body rather than opening a new
 entry per arc. Precedent:
-`2026-08-07-execute-complexity-audit-keep-lanes.md` ran exactly this
-shape live across five PRs, its body's evidence lines accumulating arc
-by arc as each one shipped.
+`2026-08-07-execute-complexity-audit-keep-lanes.md` held one theme's
+ordered arc list with dependency notes across five PRs, its body
+revised arc by arc as the plan reshaped, with the SHIPPED evidence for
+all five arcs recorded together at close.
 
 ## Filename rule
 
