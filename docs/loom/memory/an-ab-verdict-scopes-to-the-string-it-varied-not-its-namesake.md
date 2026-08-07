@@ -10,9 +10,10 @@ frontmatter descriptions (`user-insights`, `using-loom-discovery`,
 `business-value`) and the plugin manifest description, mirrored byte-identical
 across `.claude-plugin/marketplace.json`, `loom-discovery/.claude-plugin/`,
 and `loom-discovery/.codex-plugin/`. They live one or two directories apart
-and are all called *the description*. (Double quotes in this entry mark
-verbatim text — either cited from a source or proposed as replacement
-wording; mentions are italicized.)
+and are all called *the description*. (Double quotes in this entry's **body**
+mark verbatim text — either cited from a source or proposed as replacement
+wording; mentions are italicized. The frontmatter `description` above is a
+compressed summary and quotes paraphrase there.)
 
 The 2026-07-30 firing A/B
 (`docs/skill-dogfood/2026-07-30-description-diet-firing-ab/ab-results.md`)
@@ -27,21 +28,17 @@ Its conclusion, though, generalizes: any future attempt to diet "this one
 description" needs the same same-day two-leg A/B against the loom-memory guard
 pair. Unambiguous to the author standing in front of the experiment.
 
-**The source is not maximally ambiguous, and the misreading happened anyway —
-but the disambiguators are further off than they feel.** The section opens by
-naming the skill ("The 899-char `user-insights` description"), fifteen lines
-above the operative sentence; the next mention of the skill is nine lines
-above it. Within four lines there is only a size marker — the remedy's "the
-full 899-char" — and the entity that sentence goes on to name is
-`loom-discovery`, the plugin. So the nearest cue disambiguates by arithmetic
-(899 cannot denote a 1005-character manifest string) while naming the wrong
-granularity, and the cues that name the skill outright are far enough up that
-a reader who greps to the ban never sees them.
+**The source is not maximally ambiguous, and the misreading happened anyway.**
+Its neighbouring lines do carry scope cues: the remedy names "frontmatter
+byte-identical", and it cites "the full 899-char" description — a size no
+1005-character manifest string can match. A reader who works upward from the
+ban can reconstruct the scope.
 
-That is the trap: the operative sentence — the one a reader greps to, quotes,
-and acts on — says only "this one description", and its own paragraph says
-`loom-discovery`, which owns four of them. Sufficient context elsewhere in the
-document does not rescue an imperative that is ambiguous where it is read.
+The trap is that none of those cues is *in* the operative sentence, and none
+of them names the skill. The sentence a reader greps to, quotes, and acts on
+says only "this one description", while its own paragraph says
+`loom-discovery`, which owns four of them. Sufficient context nearby does not
+rescue an imperative that is ambiguous where it is read.
 
 **Both misreadings are live; only the first is recorded.**
 
