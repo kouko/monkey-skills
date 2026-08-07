@@ -157,7 +157,8 @@ ordered arc list with dependency notes, serving one DIRECTION theme —
 not a new file type, not a DIRECTION section. `docs/loom/DIRECTION.md`'s
 `## Next` lines may point at one by filename. As each arc ships, its
 evidence line accumulates in the entry's body rather than opening a new
-entry per arc. Precedent:
+entry per arc. Precedent for the shape (not the cadence — per-arc
+evidence accumulation is the prescription going forward):
 `2026-08-07-execute-complexity-audit-keep-lanes.md` held one theme's
 ordered arc list with dependency notes across five PRs, its body
 revised arc by arc as the plan reshaped, with the SHIPPED evidence for
