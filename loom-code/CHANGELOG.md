@@ -17,11 +17,17 @@ Versioning: [Semantic Versioning](https://semver.org/).
   carrying the shared "orchestrator-only, ONCE per branch" scope once,
   plus one table (columns: Check / When it fires / Action / On failure
   or N/A) with one row per check in the same order. Every command
-  invocation, every quoted N/A string, and every fallback wording
-  lands verbatim in a cell; the words deleted are only the per-bullet
+  invocation, every quoted N/A string, and every pin-guarded fallback
+  phrase lands verbatim in a cell; a few non-pinned fallback sentences
+  are condensed with meaning intact ("late is still better than never"
+  → "late beats never"), and the deletions cover the per-bullet
   scaffolding repetitions — the ×5 scope restatements, the
-  "same shape as its Step 8 siblings" tails, and the per-bullet
-  restatements of the shared concurrency rationale (−401 w,
+  "same shape as its Step 8 siblings" tails, the per-bullet
+  restatements of the shared concurrency rationale — plus some
+  explanatory rationale prose (the memory-store checker's
+  invariant-break enumeration, which the checker itself prints at
+  failure time; the "costs a diagnosis round" CI consequence) whose
+  operative rules stay in the cells (−401 w,
   SKILL.md 4,402 → 4,001). Pin tests
   (`test_finishing_archive_step.py`, `test_finishing_backlog_close.py`,
   `test_finishing_memory_store_integrity.py`) re-anchor their
