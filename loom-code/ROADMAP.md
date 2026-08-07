@@ -1,4 +1,5 @@
 # loom-code Roadmap (v0.1.0 → v1.0.0)
+> **Historical design record — superseded.** Forward direction lives in `docs/loom/DIRECTION.md` (see its charter header); this file is kept as a design-era artifact and is no longer maintained.
 
 > **Status**: Design-only (no skill shipped yet)
 > **Source of design**: `<obsidian-vault>/research/2026-05-15 Superpowers vs code-team 架構比較研究.md` + Q1-Q4 lock
