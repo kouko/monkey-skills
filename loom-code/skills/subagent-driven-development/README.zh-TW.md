@@ -39,7 +39,7 @@
 
 ## Reviewer 輸出紀律（v0.7.0+）
 
-3 個 reviewer agent（`spec-reviewer`、`code-quality-reviewer`、`code-reviewer`）各自 **額外** 攜帶一個檔內 SSOT 注入區塊 — **reviewer-discipline-v1** — 用 BEGIN/END 標記包覆。Canonical 文字在 `loom-code/scripts/_reviewer-discipline.md`：
+4 個 reviewer agent（`spec-reviewer`、`code-quality-reviewer`、`code-reviewer`、`docs-reviewer`）各自 **額外** 攜帶一個檔內 SSOT 注入區塊 — **reviewer-discipline-v1** — 用 BEGIN/END 標記包覆。Canonical 文字在 `loom-code/scripts/_reviewer-discipline.md`：
 
 - **R1** — 每個 verdict 帶 `standards_version` 欄位（從 `plugin.json` 的 `version` 讀），讓未來讀者知道這次 review 是哪一版 rubric 跑的。
 - **R2** — 每個 finding / gap 都必須帶證據引用欄位（`where:` / `artifact:` / `spec_ref:`）。缺證據 → 整個 verdict 翻成 `NEEDS_REVISION`（opaque 輸出無法修）。

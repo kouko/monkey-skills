@@ -39,7 +39,7 @@ All `standards/`, `rubrics/`, `checklists/` files under this skill are byte-iden
 
 ## Reviewer-output discipline (v0.7.0+)
 
-The 3 reviewer agents (`spec-reviewer`, `code-quality-reviewer`, `code-reviewer`) each embed an **additional** in-file SSOT injection block — **reviewer-discipline-v1** — between BEGIN/END markers. Canonical text lives in `loom-code/scripts/_reviewer-discipline.md`:
+The 4 reviewer agents (`spec-reviewer`, `code-quality-reviewer`, `code-reviewer`, `docs-reviewer`) each embed an **additional** in-file SSOT injection block — **reviewer-discipline-v1** — between BEGIN/END markers. Canonical text lives in `loom-code/scripts/_reviewer-discipline.md`:
 
 - **R1** — every verdict carries a `standards_version` field (read from `plugin.json` `version`), so future readers can date the review against a specific rubric revision.
 - **R2** — every finding / gap must include an evidence-citation field (`where:` / `artifact:` / `spec_ref:`). Missing evidence flips the whole verdict to `NEEDS_REVISION` (opaque outputs are unfixable).
