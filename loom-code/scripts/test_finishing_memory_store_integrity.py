@@ -216,9 +216,11 @@ def test_memory_integrity_step_states_the_index_line_duty():
     # The run-instruction phrasing, not the bare token: adding invariant (d) to
     # the failure enumeration put a second "byte-identical" in the bullet, which
     # disarmed this assertion — deleting the load-bearing sentence left every
-    # test green.
-    assert "copied **byte-identical**" in bullet, \
-        "must state the description is copied byte-identical, not paraphrased"
+    # test green. Updated for the generated-index reality (loom arc 3, D1): the
+    # index line is no longer hand-copied, it is generated from frontmatter, but
+    # the byte-identical invariant itself is unchanged.
+    assert "frontmatter `description`, byte-identical" in bullet, \
+        "must state the description is byte-identical to the file's frontmatter, not paraphrased"
 
 
 def test_memory_integrity_step_runs_before_the_commit():

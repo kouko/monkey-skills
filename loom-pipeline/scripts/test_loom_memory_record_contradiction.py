@@ -71,11 +71,12 @@ def test_contradiction_check_points_at_git_memory_doctrine_not_copy():
     assert "memory-conventions.md" in record
 
 
-def test_skill_version_bumped_to_0_2_0():
+def test_skill_version_bumped_to_0_2_1():
     """
-    Frontmatter version must bump 0.1.0 -> 0.2.0 (skill content
-    changed).
+    Frontmatter version must bump 0.2.0 -> 0.2.1 (skill content
+    changed again — record steps 4-5 and prune's index duties flipped
+    to the generated-index regen command).
     """
     text = _read(SKILL_MD)
     frontmatter = text[: text.index("---", 3)]
-    assert "version: 0.2.0" in frontmatter
+    assert "version: 0.2.1" in frontmatter

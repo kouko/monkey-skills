@@ -236,14 +236,18 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      `memory-store integrity: N/A — checker not present in this repo` loudly and move on
      — never read a "No such file" nonzero as a store violation.
      Otherwise run `python3 scripts/check_loom_memory_integrity.py` from the repo root
-     **before** the close-out commit. The store's §Index invariant requires one index line
-     per memory file in `docs/loom/memory/README.md`, whose description is that file's
-     frontmatter `description` copied **byte-identical** — writing the memory file alone
-     leaves the store invalid. Exit 0 is the gate; a nonzero exit names the offending file
-     and which invariant broke (missing index line, description not byte-identical,
-     dangling line, filename ≠ frontmatter `name`, duplicate lines). **On nonzero: fix the
-     store, re-run until exit 0, then `git add` the corrected
-     `docs/loom/memory/README.md` — do not commit on a violation.** The checker validates
+     **before** the close-out commit. The store's §Index invariant survives unchanged — one
+     index line per memory file in `docs/loom/memory/README.md`, whose description is that
+     file's frontmatter `description`, byte-identical — but the index is now generated from
+     frontmatter rather than hand-copied, so writing the memory file alone still leaves the
+     store invalid until the index is regenerated. Exit 0 is the gate; a nonzero exit names
+     the offending file and which invariant broke (missing index line, description not
+     byte-identical, dangling line, filename ≠ frontmatter `name`, duplicate lines). **On
+     nonzero: run `python3 scripts/check_loom_memory_integrity.py --write` to regenerate
+     the index, re-run until exit 0, then `git add` the corrected
+     `docs/loom/memory/README.md` — do not commit on a violation.** If `--write` itself
+     exits nonzero, naming a file and a reason (broken frontmatter, unexpected prose in
+     the index region), fix that named file first, then repeat `--write`. The checker validates
      the WORKING TREE, so exit 0 is not on its own evidence the commit is clean: fixing the
      index line and forgetting to stage it ships exactly the defect this bullet exists to
      prevent, while passing its own gate. Run it yourself rather

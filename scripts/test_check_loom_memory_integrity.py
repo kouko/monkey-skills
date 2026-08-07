@@ -284,6 +284,181 @@ def test_duplicate_index_entries_for_same_file_is_a_violation(tmp_path):
     assert "2" in result.stdout
 
 
+def _run_flag(store: Path, flag: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), "--store", str(store), flag],
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_check_detects_drift_against_a_tmp_store_copy(tmp_path):
+    """--check rebuilds the ## Index section from body-file frontmatter and
+    exits nonzero when the committed README.md has drifted from it."""
+    store = tmp_path / "memory"
+    store.mkdir()
+    real_desc = "The real description living in the body file's frontmatter."
+    _write(
+        store,
+        "README.md",
+        README_HEADER + "[drift-fact](drift-fact.md) — a stale description nobody regenerated.\n",
+    )
+    _write(store, "drift-fact.md", _body("drift-fact", real_desc))
+
+    result = _run_flag(store, "--check")
+
+    assert result.returncode != 0
+    assert "drift" in result.stdout.lower()
+
+
+def test_write_then_check_is_idempotent(tmp_path):
+    """--write regenerates the index; running --check right after must exit 0
+    — the second rebuild matches the first, unchanged, write."""
+    store = tmp_path / "memory"
+    store.mkdir()
+    desc_a = "First clean fact for the idempotence check."
+    desc_b = "Second clean fact for the idempotence check."
+    _write(
+        store,
+        "README.md",
+        README_HEADER + "[fact-a](fact-a.md) — WRONG stale description text.\n",
+    )
+    _write(store, "fact-a.md", _body("fact-a", desc_a))
+    _write(store, "fact-b.md", _body("fact-b", desc_b))
+
+    write_result = _run_flag(store, "--write")
+    assert write_result.returncode == 0, write_result.stdout + write_result.stderr
+
+    check_result = _run_flag(store, "--check")
+    assert check_result.returncode == 0, check_result.stdout + check_result.stderr
+
+
+def test_write_generates_sorted_index_for_a_crafted_two_entry_store(tmp_path):
+    """--write output for a crafted 2-entry tmp store matches the expected
+    lines exactly — entries sorted by name, not by file-creation order."""
+    store = tmp_path / "memory"
+    store.mkdir()
+    _write(store, "README.md", README_HEADER)
+    _write(store, "zebra-fact.md", _body("zebra-fact", "Second fact, sorts last."))
+    _write(store, "alpha-fact.md", _body("alpha-fact", "First fact, sorts first."))
+
+    result = _run_flag(store, "--write")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    expected = (
+        README_HEADER
+        + "[alpha-fact](alpha-fact.md) — First fact, sorts first.\n"
+        + "[zebra-fact](zebra-fact.md) — Second fact, sorts last.\n"
+    )
+    assert (store / "README.md").read_text(encoding="utf-8") == expected
+
+
+def test_trailing_prose_in_index_region_fails_loudly_on_write(tmp_path):
+    """FIX F1: prose sitting between the last entry line and EOF/next heading
+    inside the §Index entry region must not be silently dropped by --write —
+    it must fail loud, naming the offending line, and leave README.md
+    untouched (never silently delete)."""
+    store = tmp_path / "memory"
+    store.mkdir()
+    desc = "A clean fact whose index section also carries trailing prose."
+    original = (
+        README_HEADER
+        + f"[clean-fact](clean-fact.md) — {desc}\n"
+        + "This trailing note was never a valid index entry line.\n"
+    )
+    _write(store, "README.md", original)
+    _write(store, "clean-fact.md", _body("clean-fact", desc))
+
+    result = _run_flag(store, "--write")
+
+    assert result.returncode != 0
+    assert "trailing note" in result.stdout
+    assert (store / "README.md").read_text(encoding="utf-8") == original
+
+
+def test_preamble_prose_before_first_entry_is_preserved_byte_identical(tmp_path):
+    """The legitimate preamble between the '## Index' heading and the first
+    entry line (as documented in the real README.md §Index) must survive
+    --write byte-identical — only the entry-line block is regenerated."""
+    store = tmp_path / "memory"
+    store.mkdir()
+    preamble = (
+        "One line per memory: `[<name>](<file>.md) — <description>`.\n"
+        "This preamble explains the format before any entries follow.\n"
+    )
+    desc = "A clean fact used to prove the preamble survives regeneration."
+    _write(
+        store,
+        "README.md",
+        "# fixture store\n\n## Index\n\n" + preamble + f"[clean-fact](clean-fact.md) — {desc}\n",
+    )
+    _write(store, "clean-fact.md", _body("clean-fact", desc))
+
+    result = _run_flag(store, "--write")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    written = (store / "README.md").read_text(encoding="utf-8")
+    assert written.startswith("# fixture store\n\n## Index\n\n" + preamble)
+
+
+def test_write_aborts_on_broken_frontmatter_without_touching_file(tmp_path):
+    """FIX F2: build_entries() must not silently fall back to the filename
+    stem when a body file's frontmatter is missing 'name' — --write must
+    refuse (nonzero exit), name the violation, and leave README.md
+    untouched, rather than laundering it into a clean-looking index."""
+    store = tmp_path / "memory"
+    store.mkdir()
+    original = README_HEADER + "[broken-fact](broken-fact.md) — A description that predates the corruption.\n"
+    _write(store, "README.md", original)
+    # frontmatter is missing the 'name' key entirely.
+    body = "---\ndescription: This fact's frontmatter never declares a name.\ntype: practice\n---\n\nThe fact.\n"
+    _write(store, "broken-fact.md", body)
+
+    result = _run_flag(store, "--write")
+
+    assert result.returncode != 0
+    assert "broken-fact.md" in result.stdout
+    assert "name" in result.stdout.lower()
+    assert (store / "README.md").read_text(encoding="utf-8") == original
+
+
+def test_write_aborts_on_name_stem_mismatch_without_touching_file(tmp_path):
+    """build_entries() must not silently accept a frontmatter `name` that
+    disagrees with its own filename stem — --write must refuse (nonzero
+    exit), name the violating file, and leave README.md untouched."""
+    store = tmp_path / "memory"
+    store.mkdir()
+    original = README_HEADER + "[mismatched-fact](mismatched-fact.md) — A description that predates the corruption.\n"
+    _write(store, "README.md", original)
+    # frontmatter 'name' disagrees with the filename stem 'mismatched-fact'.
+    _write(store, "mismatched-fact.md", _body("wrong-slug", "A description that predates the corruption."))
+
+    result = _run_flag(store, "--write")
+
+    assert result.returncode != 0
+    assert "mismatched-fact.md" in result.stdout
+    assert (store / "README.md").read_text(encoding="utf-8") == original
+
+
+def test_write_aborts_on_missing_description_without_touching_file(tmp_path):
+    """build_entries() must not silently render a blank description when a
+    body file's frontmatter is missing 'description' — --write must refuse
+    (nonzero exit), name the violating file, and leave README.md untouched."""
+    store = tmp_path / "memory"
+    store.mkdir()
+    original = README_HEADER + "[bare-desc-fact](bare-desc-fact.md) — A description that predates the corruption.\n"
+    _write(store, "README.md", original)
+    # frontmatter is missing the 'description' key entirely.
+    body = "---\nname: bare-desc-fact\ntype: practice\n---\n\nThe fact.\n"
+    _write(store, "bare-desc-fact.md", body)
+
+    result = _run_flag(store, "--write")
+
+    assert result.returncode != 0
+    assert "bare-desc-fact.md" in result.stdout
+    assert (store / "README.md").read_text(encoding="utf-8") == original
+
+
 def test_multiple_clean_facts_all_pass(tmp_path):
     store = tmp_path / "memory"
     store.mkdir()

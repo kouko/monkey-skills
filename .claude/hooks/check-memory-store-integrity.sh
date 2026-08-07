@@ -95,16 +95,15 @@ if ! REPORT=$(cd "$REPO_ROOT" && PYTHONDONTWRITEBYTECODE=1 python3 "$CHECKER" 2>
 
 $REPORT
 
-Fix: give every entry one line in docs/loom/memory/README.md §Index, in the
-form
+Fix: regenerate the §Index from entry frontmatter:
 
-    [<name>](<name>.md) — <description>
+    python3 scripts/check_loom_memory_integrity.py --write
 
-where <description> is that entry's frontmatter \`description\` copied
-byte-identical, and <name> matches both the filename and the frontmatter
-\`name\`. Then re-run:
+then re-run the check:
 
     python3 scripts/check_loom_memory_integrity.py
+
+If --write refuses instead of regenerating, its output names the file and the problem; fix that file, then repeat both steps.
 EOF
   exit 2
 fi
