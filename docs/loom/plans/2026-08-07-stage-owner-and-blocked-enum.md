@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-stage-owner-and-blocked-enum.md
 Goal: The Stage header gains an owner for review-round transitions (a duty sentence in requesting-code-review, plus the docs-arm rider) and a blocked:user-decision enum value across both prose copies and the pin test, shipped with the loom-code version bump and CHANGELOG entry.
-Stage: sdd:wave-1
+Stage: sdd:wave-2
 Endpoint named: yes → continuous (user: 「先做 PR A 吧」)
 Total tasks: 5
 Critical-path depth: 3 (≤5)
@@ -44,7 +44,7 @@ Plan-document-reviewer verdict: PASS (2026-08-07, round 1, 15/15)
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: "writing-plans/SKILL.md:147 enum line gains `| blocked:user-decision` (+2 words against an 8-word margin: cap 4047, current 4039)"
-- Status: pending
+- Status: claimed(@implementer-3)
 - Gloss: SKILL.md 裡的 enum 副本跟上同一個新值，並補上它一直缺的 pin；字數天花板 4047 不破
 
 ## Task 3 — requesting-code-review: round-flip duty sentence + new pin test
@@ -63,7 +63,7 @@ Plan-document-reviewer verdict: PASS (2026-08-07, round 1, 15/15)
 - Dependencies: none
 - Independent: false
 - Brief item covered: "requesting-code-review/SKILL.md gains ONE self-contained duty sentence: at the start of each whole-branch review round, the orchestrator flips the plan's Stage: to review:round-N (hand-edit…)"
-- Status: claimed(@implementer-2)
+- Status: done(f57d0e63)
 - Gloss: review 每一輪開始就把 plan 的 Stage 翻到 round-N——把無主轉換補上 owner，配新 pin 測試
 
 ## Task 4 — requesting-docs-review rider: same duty, docs-arm variant
