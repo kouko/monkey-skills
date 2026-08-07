@@ -52,7 +52,7 @@ KEEP (5):
 
 | # | Item | Reason |
 |---|---|---|
-| A2 | Extract requesting-docs-review Directive 1–2 convergence math to references/ (block measured 1,424 w; leave ~300 w decision table inline) | Pure move; densest block in the family; restores cap headroom 72 w → ~1,200 w. Execution requires weak-model cold-read (extraction-severing precedent in docs/loom/memory/) |
+| A2 | Extract requesting-docs-review Directive 1–2 convergence math to references/ (block measured 1,446 w, :43-84; leave ~300 w decision table inline) | Pure move; densest block in the family; restores cap headroom 72 w → ~1,200 w. Execution requires weak-model cold-read (extraction-severing precedent in docs/loom/memory/) |
 | B1 | State-anchor carrier inventory: pinned by a drift-guard test, not brought under distribute.py SSOT | Measured 12 grep hits across 9 files (scripts/test_state_anchor_carrier_inventory.py; pattern + exclusions stated in-test); the SSOT relocation was rejected — the paraphrases are deliberate, none byte-identical — so the sweep is now machine-listed (drift-guarded) rather than eliminated; maintenance tax reduced, not removed |
 | B2 | tdd-standard.md (1,019 w) is already ROUTE-managed by distribute.py (:59-62) and byte-checked by verify-drift.py (:73-97) | Audit's original "not covered" premise was false — no code change needed; doc correction only |
 | D1 | Generate docs/loom/memory/README.md `## Index` by script instead of hand-mirroring | Largest single dedup win (7,761 w); backlog_index.py proves the pattern; requires charter revision + plugin-wide contradiction sweep for "hand-edit the index" restatements |
@@ -63,7 +63,7 @@ KEEP-WITH-CAVEAT (5):
 | # | Item | Caveat |
 |---|---|---|
 | A1 | Collapse finishing Step 8's five "ONCE per branch" checklists (block measured 1,123 w) into one generic regen-artifacts table | Preserve each check's semantics and per-artifact fallback wording; merge structure only |
-| A3 | Downgrade writing-plans' wrong-bind reversal trigger (block measured 315 w, self-described hypothetical, no incident) to a one-line note | Re-add trigger: first real wrong-bind incident (full text recoverable from git history) |
+| A3 | Downgrade writing-plans' wrong-bind reversal trigger (block measured 44 w, :206 — the earlier 315 w figure included neighboring cascade text; self-described hypothetical, no incident) to a one-line note | Re-add trigger: first real wrong-bind incident (full text recoverable from git history) |
 | C2 | SSOT the brief-before-asking clause (near-verbatim ×4 across the four design-side routers: the trigger tail is word-identical — loom-discovery's copy wraps differently — the fork-noun varies per router) | Not purely behavior-zero — needs a parameterized carrier or a one-time wording normalization; and choose the carrier carefully — placing it in family-reception makes it per-session preload |
 | D2 | Protect router-card.md's five hand-copied rules against drift | Shipped as a standalone token-presence test (scripts/test_router_card_rule_tokens.py) rather than verify-drift.py registration, to honor the deliberate-compression decision (session-start:6-11) — no new machinery |
 | E3 | Periodic mechanism-prune pass | Minimal form only: record this audit's recipe as a runbook, human-triggered, proposal-only output. Do NOT build a new skill for it |
@@ -89,10 +89,14 @@ DROP (2):
 
 ## Expected impact of executing KEEP + KEEP-WITH-CAVEAT
 
-- Reader burden: ~-1,900 w across the three heaviest core skills
-  (rdr → ~3,300; finishing → ~3,800; wp → ~3,750). Key win is rdr's cap
-  headroom (72 w → ~1,200 w) — today any net-adding edit over 72 words
-  there must slim first.
+- Reader burden: recomputed post-recon, split by what actually ships in
+  the 4a prose-slim arc vs. what's deferred. A2+A3 land ~-1,150 w now
+  (rdr 4,428 → ~3,300, the dominant share; wp's 44 w wrong-bind block
+  trims to one line). A1 (finishing's five ONCE-bullets, ~400-600 w)
+  is NOT in this split — it follows post-#674, so finishing stays at
+  4,351 w for now; the old aggregate ~-1,900 w figure conflated both
+  waves. Key win is rdr's cap headroom (72 w → ~1,200 w) — today any
+  net-adding edit over 72 words there must slim first.
 - Maintenance tax: state-anchor gets a carrier-inventory sweep list
   (12 grep hits across 9 files, pinned by
   scripts/test_state_anchor_carrier_inventory.py; pattern + exclusions
