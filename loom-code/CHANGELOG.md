@@ -21,8 +21,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
   identifiers are the one explicit exemption — enforced as three
   independent checks in `backlog_index.py`'s flagless validate mode
   (mirroring `check_loom_memory_integrity.py`'s trio shape): `## Now`
-  content matches the `COMMITTED-NEXT` entry files; `## Next`/`## Later`
-  headings present; and no date-like token (`20\d\d[-/年.]` or
+  content matches the `COMMITTED-NEXT` entry files; `## Now`/`## Next`/
+  `## Later` headings present; and no date-like token (`20\d\d[-/年.]` or
   `Q[1-4]`) anywhere outside the generated `## Now` body.
 - **`--direction-write <path>` / `--direction-check <path>`** land in
   `scripts/backlog_index.py` as the DIRECTION.md counterparts of
@@ -40,8 +40,8 @@ Versioning: [Semantic Versioning](https://semver.org/).
   when `COMMITTED-NEXT` is empty and the repo has
   `docs/loom/DIRECTION.md`, or manually at any time. Candidates list
   **same-lane first** (when the just-closed arc belongs to a theme,
-  that theme's next `## Next`/`## Later` roadmap entry leads), then
-  the ready query's `OPEN` output.
+  that theme's next arc leads the list), then the ready query's
+  `OPEN` output.
 - **Roadmap entries — a named pattern, not a new file type.** A
   roadmap entry is an ordinary backlog entry whose body is an ordered
   arc list with dependency notes, serving one DIRECTION theme;
