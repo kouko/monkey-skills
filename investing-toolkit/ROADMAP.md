@@ -1,4 +1,5 @@
 # investing-toolkit Roadmap
+> **Historical design record — superseded.** Forward direction lives in `docs/loom/DIRECTION.md` (see its charter header); this file is kept as a design-era artifact and is no longer maintained.
 
 ---
 
