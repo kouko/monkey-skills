@@ -65,6 +65,20 @@ FALLBACK_FIELD_LIST = (
     "render the four fields inline: goal, task table, stage, next"
 )
 
+# The two-limb fallback trigger — family-relay absence is a live
+# conditional-plugin host state distinct from script absence; round-1
+# narrowed this to one limb, dropping the family-relay-absent case.
+TWO_LIMB_TRIGGER = "(family-relay or script absent → render the four fields inline"
+
+# The script-absent duty clause — anchors the MUST-relay duty to the
+# moments on the no-script path (per-wave/stage/checkpoint), so the
+# duty does not evaporate when no ledger-action script runs.
+SCRIPT_ABSENT_DUTY = (
+    "when the script is absent, the same relay duty binds directly at "
+    "per-wave status reports, stage transitions, and checkpoint "
+    "sign-offs, with the inline four fields"
+)
+
 # The never-compose-from-memory rule.
 NEVER_COMPOSE_RULE = (
     "The card re-reads the plan file by construction — never compose "
@@ -136,6 +150,14 @@ def test_both_family_relay_pointers_present():
 
 def test_inline_fallback_field_list_present():
     assert FALLBACK_FIELD_LIST in _norm(SDD_SKILL)
+
+
+def test_fallback_trigger_is_two_limbed():
+    assert TWO_LIMB_TRIGGER in _norm(SDD_SKILL)
+
+
+def test_script_absent_duty_present():
+    assert SCRIPT_ABSENT_DUTY in _norm(SDD_SKILL)
 
 
 def test_never_compose_rule_present():
