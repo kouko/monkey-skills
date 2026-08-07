@@ -93,17 +93,35 @@ def test_blocks_when_index_line_is_missing(tmp_path: Path) -> None:
     )
     assert _ENTRY_NAME in result.stderr, \
         "the checker's own report must reach the reader, naming the file"
-    # The hook's OWN contribution, not the checker's: the index-line FORMAT and
-    # the re-run command, neither of which a reader can get from `$REPORT`.
-    # The mutation that isolates them keeps `$REPORT` on stderr and deletes only
-    # the Fix body — that turns THIS assertion red, which is what makes the two
-    # load-bearing. (Deleting the whole heredoc instead proves nothing about
-    # them: it empties stderr, so the assertion above fails first and these two
-    # never run. An earlier draft of this comment cited exactly that mutation.)
-    assert "](<name>.md) — <description>" in result.stderr, \
-        "the fix-hint must show the index-line format the reader has to write"
-    assert "python3 scripts/check_loom_memory_integrity.py" in result.stderr, \
-        "the fix-hint must give the re-run command"
+    # The hook's OWN contribution, not the checker's: the --write regen
+    # command and the re-run command, neither of which a reader can get from
+    # `$REPORT`. The mutation that isolates them keeps `$REPORT` on stderr and
+    # deletes only the Fix body — that turns THIS assertion red, which is what
+    # makes the two load-bearing. (Deleting the whole heredoc instead proves
+    # nothing about them: it empties stderr, so the assertion above fails
+    # first and these two never run. An earlier draft of this comment cited
+    # exactly that mutation.)
+    #
+    # The re-run assertion below pins "then re-run the check:" together with
+    # its command line, NOT the bare command string — the bare command
+    # ("python3 scripts/check_loom_memory_integrity.py") is a substring of
+    # the regen line above ("...check_loom_memory_integrity.py --write"), so
+    # deleting only the re-run line could not turn a bare-command assertion
+    # red independently. The "then re-run the check:" phrase appears nowhere
+    # else in the Fix block, so this pin is unique to the re-run line and the
+    # two assertions are independently falsifiable, as the module docstring
+    # (and CI) require.
+    assert "python3 scripts/check_loom_memory_integrity.py --write" in result.stderr, \
+        "the fix-hint must give the regen command"
+    assert (
+        "then re-run the check:\n\n    python3 scripts/check_loom_memory_integrity.py\n"
+        in result.stderr
+    ), "the fix-hint must give the re-run command, distinct from the --write regen line"
+    # --write itself can refuse (bad frontmatter, stray prose) instead of
+    # regenerating — the Fix block must tell the reader what to do THEN, not
+    # just what to do when --write succeeds.
+    assert "If --write refuses" in result.stderr, \
+        "the fix-hint must cover --write's own refusal, not just the happy path"
 
 
 def test_passes_when_the_store_is_valid(tmp_path: Path) -> None:
