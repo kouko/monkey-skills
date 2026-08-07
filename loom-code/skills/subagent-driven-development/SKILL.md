@@ -51,18 +51,29 @@ When you ask a technical decision (a bug-fix approach, a design choice, error ha
 
 **Worked example — the built-in `/recap` style is the target.** Full ✅/❌ pair (the calibration target for every question and hand-off the orchestrator surfaces below): [`references/dispatch-hygiene-notes.md`](references/dispatch-hygiene-notes.md) §Worked example.
 
-**Delivery form.** Every per-wave status report, stage transition, and
-checkpoint sign-off renders the progress card first: run
-`python3 scripts/plan_card.py <plan-path>` and relay its output in the
-live conversation language, framed per
+**Delivery form.** The ledger actions —
+`python3 scripts/plan_card.py <plan-path> --set-status "T<N>=<status>"`
+and `--set-stage "<text>"` — print the full progress card themselves
+after the flip. ANY turn that runs one of these actions MUST relay
+that printed card in the live conversation language, framed per
 `loom-pipeline/hooks/family-relay.md §Family relay discipline` —
-progress-card variant `§(a2) Progress card` (family-relay or script absent →
-render the four fields inline: goal, task table, stage, next —
-nothing is dropped). Update the plan's `Stage:` header
-in the same commit as that wave's ledger writes. The card re-reads the
-plan file by construction — never compose it from memory. **Never copy
-the card template body here; point at it.** Internal machine traffic
-(verdict tokens, wave labels) stays precise below the card.
+progress-card variant `§(a2) Progress card` (script absent → render
+the four fields inline: goal, task table, stage, next — nothing is
+dropped). Per-wave status reports, stage transitions, and checkpoint
+sign-offs flip the ledger via the script, so the card rides them by
+construction — the duty is bound to the mechanical act, not to
+remembering a render step. The card re-reads the plan file by
+construction — never compose it from memory. **Never copy the card
+template body here; point at it.** Internal machine traffic (verdict
+tokens, wave labels) stays precise below the card.
+
+**Host todo mirror.** When the host provides built-in task tools
+(TaskCreate/TaskUpdate), mirror the plan's tasks into the todo list
+when SDD starts consuming the plan, and update each mirrored task's
+status in the same turn as its ledger flip. This is a one-way display
+projection — the plan file's Status ledger stays the SSOT; the todo
+list is never read back. Hosts without task tools → skip silently
+(same conditional posture as the DIRECTION.md reads).
 
 ## When to use
 

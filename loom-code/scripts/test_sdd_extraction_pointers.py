@@ -78,7 +78,7 @@ ENVIRONMENT_GOTCHAS = (
     / "environment-gotchas.md"
 )
 
-WORD_CEILING = 4015
+WORD_CEILING = 4130
 
 # --- distinctive phrases, whitespace-normalized ---------------------------
 
@@ -396,7 +396,10 @@ def test_skill_md_word_count_within_ceiling():
         f"SKILL.md is {word_count} words, over the {WORD_CEILING} ceiling "
         "(raised deliberately 3974 -> 4015 by the 2026-08-06 "
         "ledger-writer-and-plan-tooling-hardening arc to admit the "
-        "Progress-ledger flip-via-plan_card.py duty sentence)"
+        "Progress-ledger flip-via-plan_card.py duty sentence; raised "
+        "again 4015 -> 4130 by the 2026-08-08 progress-display-hardening "
+        "arc to admit the Delivery-form ledger-action reword + Host "
+        "todo mirror paragraph)"
     )
 
 

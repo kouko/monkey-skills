@@ -1,21 +1,15 @@
 """Pin tests for the SDD progress-card Delivery-form duty (Task 4 of
-docs/loom/plans/2026-08-06-progress-cards-and-plan-ledger.md).
+docs/loom/plans/2026-08-06-progress-cards-and-plan-ledger.md, reworded
+by Task 2 of docs/loom/plans/2026-08-08-progress-display-hardening.md).
 
 The "**Delivery form.**" paragraph in
-subagent-driven-development/SKILL.md §Asking the user is replaced with
-the plan's pinned text N3: every per-wave status report, stage
-transition, and checkpoint sign-off renders the progress card first
-(`python3 scripts/plan_card.py <plan-path>`), the `Stage:` header is
-updated in the same commit as that wave's ledger writes, and the
-paragraph carries the family-relay pointer `§Family relay
-discipline` (present once, per loom-pipeline/scripts/test_family_relay.py's
-POINTER_PHRASE) and the progress-card variant `§(a2) Progress card`,
-plus the inline-fallback field list. Fix round 2 (same day) removed the
-second narration seam's duplicate of POINTER_PHRASE — the Status
-handling seam now cross-references this Delivery-form paragraph by the
-literal "the **Delivery form** paragraph above" instead, which is what
-test_family_relay.py::test_sdd_pointer pins (see that test's docstring
-for the rationale).
+subagent-driven-development/SKILL.md rebinds the render duty to the
+mechanical ledger actions: `--set-status`/`--set-stage` print the card
+themselves after the flip, and ANY turn that runs one of them must
+relay the printed card. A new "**Host todo mirror.**" paragraph adds a
+conditional, display-only projection onto the host's built-in task
+tools (Claude Code) — the plan file's Status ledger stays the SSOT;
+hosts without task tools skip silently.
 
 Assertions are whitespace-normalized (encoding="utf-8"). The
 positive-fact control pins the adjacent Worked-example sentence that
@@ -37,31 +31,56 @@ SDD_SKILL = (
     / "SKILL.md"
 )
 
-# N3's lead sentence (whitespace-normalized).
+# The Delivery-form lead sentence (whitespace-normalized).
 N3_LEAD = (
-    "**Delivery form.** Every per-wave status report, stage transition, "
-    "and checkpoint sign-off renders the progress card first"
+    "**Delivery form.** The ledger actions — "
+    '`python3 scripts/plan_card.py <plan-path> --set-status "T<N>=<status>"`'
 )
 
-# The fill-from-file command string.
-COMMAND_STRING = "python3 scripts/plan_card.py <plan-path>"
+# The two ledger-action command strings that print the card.
+COMMAND_STRING_STATUS = (
+    'python3 scripts/plan_card.py <plan-path> --set-status "T<N>=<status>"'
+)
+COMMAND_STRING_STAGE = '--set-stage "<text>"'
 
-# The Stage-update duty sentence.
-STAGE_UPDATE_DUTY = (
-    "Update the plan's `Stage:` header in the same commit as that "
-    "wave's ledger writes."
+# The MUST-relay duty bound to running either ledger action.
+RELAY_DUTY = "ANY turn that runs one of these actions MUST relay that printed card"
+
+# The mechanical-act binding sentence (per-wave/stage/checkpoint moments
+# flip the ledger via the script, so the card rides them by construction).
+STAGE_DUTY = (
+    "Per-wave status reports, stage transitions, and checkpoint "
+    "sign-offs flip the ledger via the script, so the card rides them "
+    "by construction"
 )
 
 # BOTH pointers (Gap-A invariant locally visible: the family-relay
-# pointer phrase must survive the N3 replacement alongside the new
-# progress-card variant pointer).
+# pointer phrase must survive the reword alongside the progress-card
+# variant pointer).
 FAMILY_RELAY_POINTER = "family-relay.md §Family relay discipline"
 PROGRESS_CARD_VARIANT_POINTER = "§(a2) Progress card"
 
-# The inline-fallback field list (script or family-relay absent).
+# The inline-fallback field list (script absent).
 FALLBACK_FIELD_LIST = (
     "render the four fields inline: goal, task table, stage, next"
 )
+
+# The never-compose-from-memory rule.
+NEVER_COMPOSE_RULE = (
+    "The card re-reads the plan file by construction — never compose "
+    "it from memory."
+)
+
+# --- Host todo mirror pins ---------------------------------------------
+
+TODO_MIRROR_LEAD = "**Host todo mirror.**"
+
+# The SSOT sentence — the mirror must not read as a second source of truth.
+SSOT_SENTENCE = "the plan file's Status ledger stays the SSOT"
+
+# The conditional posture — must not read as mandatory on hosts without
+# task tools.
+CONDITIONAL_POSTURE = "Hosts without task tools → skip silently"
 
 # Positive-fact control — adjacent, pre-existing, untouched by this arc.
 CONTROL_WORKED_EXAMPLE = (
@@ -88,19 +107,25 @@ def test_control_worked_example_sentence_present():
     assert CONTROL_WORKED_EXAMPLE in _norm(SDD_SKILL)
 
 
-# --- N3 pins ----------------------------------------------------------------
+# --- Delivery-form pins ------------------------------------------------------
 
 
 def test_n3_lead_present():
     assert N3_LEAD in _norm(SDD_SKILL)
 
 
-def test_plan_card_command_string_present():
-    assert COMMAND_STRING in _norm(SDD_SKILL)
+def test_plan_card_command_strings_present():
+    text = _norm(SDD_SKILL)
+    assert COMMAND_STRING_STATUS in text
+    assert COMMAND_STRING_STAGE in text
 
 
-def test_stage_update_duty_present():
-    assert STAGE_UPDATE_DUTY in _norm(SDD_SKILL)
+def test_relay_duty_present():
+    assert RELAY_DUTY in _norm(SDD_SKILL)
+
+
+def test_stage_duty_present():
+    assert STAGE_DUTY in _norm(SDD_SKILL)
 
 
 def test_both_family_relay_pointers_present():
@@ -111,3 +136,22 @@ def test_both_family_relay_pointers_present():
 
 def test_inline_fallback_field_list_present():
     assert FALLBACK_FIELD_LIST in _norm(SDD_SKILL)
+
+
+def test_never_compose_rule_present():
+    assert NEVER_COMPOSE_RULE in _norm(SDD_SKILL)
+
+
+# --- Host todo mirror pins ---------------------------------------------------
+
+
+def test_todo_mirror_lead_present():
+    assert TODO_MIRROR_LEAD in _norm(SDD_SKILL)
+
+
+def test_todo_mirror_ssot_sentence_present():
+    assert SSOT_SENTENCE in _norm(SDD_SKILL)
+
+
+def test_todo_mirror_conditional_posture_present():
+    assert CONDITIONAL_POSTURE in _norm(SDD_SKILL)
