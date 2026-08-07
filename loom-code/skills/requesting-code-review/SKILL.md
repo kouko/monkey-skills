@@ -82,7 +82,7 @@ This rule applies **even when this skill was not explicitly invoked** — the de
 
 ## Process
 
-At the start of each review round (round 1 included), run `python3 scripts/plan_card.py <plan-path> --set-stage "review:round-N"` — the script prints the refreshed card; relay it — commit the flip with that round's verdict or fixes; hand-edit only when the script is absent.
+At the start of each review round (round 1 included), run `python3 scripts/plan_card.py <plan-path> --set-stage "review:round-N"` — the script prints the refreshed card; relay it — and commit the flip with that round's verdict or fixes; hand-edit only when the script is absent.
 
 1. **Determine diff scope, then route by file type**. Resolve scope by running the resolver — `python3 loom-code/scripts/review_scope.py [--repo <path>]` — or, if the user specifies one, an explicit commit range (`git diff <SHA1>..<SHA2>`). Exit 0 prints the changed-file list, one path per line; a non-zero exit is a refusal, with the reason (and, on a stale base, a ready-to-run `git rebase --onto` remedy) on stderr.
 

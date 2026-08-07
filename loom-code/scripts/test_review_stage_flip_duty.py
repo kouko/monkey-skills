@@ -25,10 +25,11 @@ Covered here:
 - test_duty_sentence_pin_rejects_old_sentence_probe — RED-first control:
   a probe copy carrying only the OLD sentence must NOT satisfy the new
   pin's substring check.
-  (The planned requesting-docs-review sibling was descoped: its SKILL.md
-  sits at 4427 words against the 4430-word ceiling pinned by
-  test_rdr_extraction_pointers.py — the 31-word duty sentence would land
-  it at 4458 — and the brief rules cap-blown → skip the rider.)
+
+(The planned requesting-docs-review sibling was descoped: its SKILL.md
+sits at 4427 words against the 4430-word ceiling pinned by
+test_rdr_extraction_pointers.py — the 31-word duty sentence would land
+it at 4458 — and the brief rules cap-blown → skip the rider.)
 """
 import re
 from pathlib import Path
@@ -40,7 +41,7 @@ RCR_DUTY_SENTENCE = (
     "At the start of each review round (round 1 included), run "
     "`python3 scripts/plan_card.py <plan-path> --set-stage "
     '"review:round-N"` — the script prints the refreshed card; relay '
-    "it — commit the flip with that round's verdict or fixes; "
+    "it — and commit the flip with that round's verdict or fixes; "
     "hand-edit only when the script is absent."
 )
 
@@ -76,3 +77,8 @@ def test_duty_sentence_pin_rejects_old_sentence_probe():
     # on the presence of *a* duty sentence at that location.
     probe = _norm(f"## Process\n\n{OLD_DUTY_SENTENCE}\n\n1. more text")
     assert _norm(RCR_DUTY_SENTENCE) not in probe
+    # And the live artifact itself must not still carry the OLD sentence —
+    # a probe-only check can pass while the SKILL.md silently regressed to
+    # the old wording; this closes that gap.
+    skill = RCR_SKILL_MD.read_text(encoding="utf-8")
+    assert OLD_DUTY_SENTENCE not in skill
