@@ -5,6 +5,23 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.65.2] — 2026-08-07 — session-start header names its rule-sync guard
+
+### Changed
+
+- **Session-start header comment now names
+  `scripts/test_router_card_rule_tokens.py`** as the rule-sync guard,
+  replacing the manual "edit BOTH" caveat that had no enforcement
+  behind it.
+
+### Added (repo level)
+
+- Three repo-root drift guards ride this release: a state-anchor
+  carrier inventory, a brief-before-asking clause lockstep check, and
+  a rule-token presence check.
+- `loom-code-ci` trigger wiring extended to sibling-plugin files, so
+  these guards actually run on the PRs that touch them.
+
 ## [0.65.1] — 2026-08-07 — codex storefront description trimmed
 
 ### Changed
