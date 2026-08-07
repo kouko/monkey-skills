@@ -82,6 +82,8 @@ This rule applies **even when this skill was not explicitly invoked** — the de
 
 ## Process
 
+At the start of each review round (round 1 included), update the plan's Stage: header to review:round-N by hand-edit — plan_card.py has no stage setter — and commit it with that round's verdict or fixes.
+
 1. **Determine diff scope, then route by file type**. Resolve scope by running the resolver — `python3 loom-code/scripts/review_scope.py [--repo <path>]` — or, if the user specifies one, an explicit commit range (`git diff <SHA1>..<SHA2>`). Exit 0 prints the changed-file list, one path per line; a non-zero exit is a refusal, with the reason (and, on a stale base, a ready-to-run `git rebase --onto` remedy) on stderr.
 
    **§Pinned refusal contract** (transcribed verbatim): A stale base, or any failure to establish freshness, REFUSES. The resolver never returns a file list it cannot vouch for, and a station that receives a refusal STOPS before dispatching anything.
