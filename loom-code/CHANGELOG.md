@@ -55,10 +55,10 @@ Versioning: [Semantic Versioning](https://semver.org/).
   fixes; hand-edit is the fallback only when the script is absent.
   (Dropped alongside the Delivery-form rebind: SDD's separate "update
   the `Stage:` header in the same commit as that wave's ledger
-  writes" sentence — the Stage header's commit duty now lives only at
-  the station that flips it, as this bullet's rcr rule does for
-  review rounds; plan-ledger-notes.md's per-task cadence governs the
-  Status ledger, not the Stage header.)
+  writes" sentence — SDD no longer restates it; the Stage header's
+  commit duty lives in plan-format.md's schema line ("committed with
+  the nearest ledger or close-out commit"), with this bullet's rcr
+  rule specifying it for review rounds.)
 
 ## [0.69.0] — 2026-08-08 — the direction layer: DIRECTION.md, Bet, and two conditional station reads
 
