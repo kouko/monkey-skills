@@ -2,7 +2,7 @@
 name: parallel-implementers-shared-tree-need-index-race-guard
 description: Parallel implementer waves sharing ONE working tree race on the git index — `git add` + `git commit` interleave across agents, sweeping sibling files into the wrong commit; every dispatch packet needs the three-line guard (re-check staged set immediately before commit / unstage strays / pathspec-scoped commit), and the stash ban needs "including for isolation testing" spelled out
 type: practice
-origin: feat-copywriting-convergence-modernization (2026-07-30) — wave 2 race swallowed a sibling's staged files (soft-reset recovery); wave 3 with the guard: 4+ races all caught pre-commit; separately a subagent used `git stash` for "isolation testing" despite a plain stash ban and popped a foreign stash into a UU conflict (3rd occurrence of the stash-pop trap in this repo)
+origin: feat-copywriting-convergence-modernization (2026-07-30) — wave 2 race swallowed a sibling's staged files (soft-reset recovery); wave 3 with the guard: 4+ races all caught pre-commit; separately a subagent used `git stash` for "isolation testing" despite a plain stash ban and popped a foreign stash into a UU conflict (3rd occurrence of the stash-pop trap in this repo). RECURRENCE feat/progress-display-hardening (2026-08-08) — the orchestrator's fix-wave packets said only "stage by explicit path", omitting the three-line guard verbatim; the race fired again (pathless `git commit` swept the sibling's staged files; both agents self-repaired via soft-reset). The failure mode is RECALL, not knowledge: the entry existed and was not pulled into the packet — parallel-wave dispatch packets must paste the guard, not paraphrase it
 ---
 
 When several implementer subagents work the same checkout concurrently (no
