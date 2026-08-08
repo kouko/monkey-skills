@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-08-progress-display-hardening.md
 Goal: 進度顯示雙通道修復——plan_card.py 的 ledger 動作（--set-status／新增 --set-stage）自動印出整張進度卡，SDD 契約把渲染義務改綁在這些機械動作上並新增 host 原生 todo-list 單向鏡射（Claude Code 有 task 工具就鏡射、Codex 靜默跳過），rcr 的 Stage 手改指令換成 --set-stage，loom-code 出 0.70.0。
-Stage: sdd:wave-3
+Stage: review:round-1
 Total tasks: 4
 Critical-path depth: 3 (≤5)
 Execution order: parallel-where-possible
@@ -83,9 +83,26 @@ Steps:
 - Dependencies: Tasks 2, 3 complete first
 - Independent: false
 - Brief item covered: "loom-code 0.70.0 + CHANGELOG + version-pin migration" (§Smallest End State 6)
-- Status: pending
+- Status: done(7ddb027a)
 - Gloss: 0.70.0——顯示層修復隨 minor 版出貨
 - Review-hint: CHANGELOG factual accuracy vs shipped artifacts (the 0.69.0 arc's --direction-check misattribution is the fresh precedent — cross-read every claim).
+
+## Decision Log
+
+- 2026-08-08 (T4 close): the CHANGELOG disclosure sentence about SDD's
+  dropped Stage-commit coupling converged over three prescribed
+  corrections (reviewer-actor misattribution → false relocation claim
+  → overbroad "only at the station" absolute); final wording quotes
+  plan-format.md's schema line verbatim per the round-3 reviewer's
+  prescription. A 4th micro-round was not dispatched (per-task 3-round
+  cap); the whole-branch docs arm — which reads the CHANGELOG whole —
+  is the named verifying round for this sentence.
+- 2026-08-08 (wave 2 incident): parallel implementers sharing the
+  checkout hit a staging race — one agent's pathless `git commit`
+  swept the sibling's staged files; both self-repaired and both final
+  commits verified isolated. Store-lesson candidate at close-out:
+  shared-tree parallel dispatch packets must mandate pathspec'd
+  commits (`git commit -- <files>`) or serialize commits.
 
 ## Notes
 
