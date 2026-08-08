@@ -37,6 +37,7 @@ Steps:
 - Module: loom-code/skills/subagent-driven-development
 - Files touched: loom-code/skills/subagent-driven-development/SKILL.md, loom-code/scripts/test_sdd_progress_card_duty.py, loom-code/scripts/test_sdd_extraction_pointers.py (WORD_CEILING only — see Deviation note)
 - Deviation (adjudicated, spec-review round 1): the specced content (+108 words into a file with 6 words of headroom) made the WORD_CEILING bump 4015→4130 unavoidable — the task as planned was internally impossible (add content + file untouched + suite green). Reviewer measured the growth as near-minimal and the bump form sanctioned (dated rationale in the assertion message, per the prior arc's precedent). This note records the authorization the plan failed to grant; second consecutive bump (3974→4015→4130) — regrowth watch flagged for the PR body.
+- Deviation 2 (adjudicated, quality+spec review rounds): the specced parenthetical "(same conditional posture as the DIRECTION.md reads)" was CUT in the fix round on the quality reviewer's finding (decorative — no in-file referent; grep "DIRECTION" in SDD SKILL.md is empty); the behavioral duty (skip silently) survives in full. Recorded so plan/spec text describing the parenthetical is a documented delta, not silent drift.
 - Context paths:
   - docs/loom/specs/2026-08-08-progress-display-hardening.md (§Smallest End State 2-3)
   - loom-pipeline/hooks/family-relay.md:67-87 (§(a2) — read-only; no edit)
