@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-08-progress-display-hardening.md
 Goal: 進度顯示雙通道修復——plan_card.py 的 ledger 動作（--set-status／新增 --set-stage）自動印出整張進度卡，SDD 契約把渲染義務改綁在這些機械動作上並新增 host 原生 todo-list 單向鏡射（Claude Code 有 task 工具就鏡射、Codex 靜默跳過），rcr 的 Stage 手改指令換成 --set-stage，loom-code 出 0.70.0。
-Stage: sdd:wave-2
+Stage: sdd:wave-3
 Total tasks: 4
 Critical-path depth: 3 (≤5)
 Execution order: parallel-where-possible
@@ -48,7 +48,7 @@ Steps:
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: "SDD SKILL.md §Delivery form — duty rebound to the mechanical act" (§Smallest End State 2) + "host todo mirror (conditional, display-only)" (§Smallest End State 3)
-- Status: pending
+- Status: done(710fc353)
 - Gloss: SDD 契約改綁機械動作＋接回 host 原生 todo 顯示——Claude Code 上重獲即時清單，Codex 靜默照舊
 - Review-hint: cold-read hazard — the todo mirror must not be readable as a second source of truth, nor as mandatory on hosts without task tools.
 
@@ -66,7 +66,7 @@ Steps:
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: "rcr SKILL.md — stage flips go through the script" (§Smallest End State 4) + "Pins updated in lockstep" (§Smallest End State 5)
-- Status: pending
+- Status: done(5b0a3a4f)
 - Gloss: 審查輪的階段翻轉走腳本、卡片跟著出——手改路徑只剩腳本缺席時的後備
 - Review-hint: the falsified-neighbor sweep is the point here — zero stale "no stage setter" claims may survive anywhere in the branch.
 
