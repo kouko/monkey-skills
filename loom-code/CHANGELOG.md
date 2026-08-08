@@ -5,6 +5,55 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.70.0] — 2026-08-08 — progress-display hardening: ledger actions print the card, --set-stage, host todo mirror
+
+### Added
+
+- **`scripts/plan_card.py --set-stage "<text>"`.** A new ledger action
+  alongside `--set-status`: replaces the `Stage:` header's value,
+  refuses (nonzero exit, file byte-untouched) when the plan has no
+  `Stage:` header or the new value is empty/whitespace-only, and
+  otherwise accepts free-text (stage vocabulary evolves — no enum
+  validation). `plan_card.py` is a repo-root script that ships in no
+  plugin; the skills below TEACH callers to invoke it.
+
+### Changed
+
+- **`plan_card.py`'s ledger actions print the card themselves.** After
+  a successful `--set-status` or `--set-stage` flip, the script prints
+  `old:`/`new:` followed by a blank line and the full rendered card —
+  the same `build_card` output the plain-render path produces, not a
+  second renderer. This runs AFTER the file write; if `build_card`
+  raises on the (already-flipped) plan — e.g. no `Goal:` header — the
+  action still exits 0, printing `plan_card: card unavailable —
+  <reason>` in place of the card, so a valid flip is never reported as
+  a failure.
+- **`subagent-driven-development`'s Delivery form rebinds the
+  card-relay duty to the mechanical ledger act.** Any turn that runs
+  `--set-status`/`--set-stage` MUST relay the card the script just
+  printed, in the live conversation language, per family-relay's
+  §(a2) frame; the script-absent inline fallback (four fields:
+  goal, task table, stage, next) and the "never compose from memory"
+  rule are unchanged. This kills the measured under-fire class the
+  arc set out to close: a prose-render duty invoked on judgment
+  ("remember to show the card") drifted or was skipped under load;
+  the duty is now bound to a mechanical act that already produced the
+  card, not to a recollection.
+- **`subagent-driven-development` grows a host todo mirror.** When the
+  host provides built-in task tools (TaskCreate/TaskUpdate), SDD
+  mirrors the plan's tasks into the todo list on plan intake and
+  updates each mirrored task's status in the same turn as its ledger
+  flip. The mirror is a one-way display projection — the plan file's
+  Status ledger stays the sole source of truth, the todo list is
+  never read back — and hosts without task tools skip the mirror
+  silently (Codex-safe).
+- **`requesting-code-review`'s per-round stage flip goes through
+  `--set-stage`.** At the start of each review round (round 1
+  included), the reviewer runs `python3 scripts/plan_card.py
+  <plan-path> --set-stage "review:round-N"`, relays the card the
+  script prints, and commits the flip with that round's verdict or
+  fixes; hand-edit is the fallback only when the script is absent.
+
 ## [0.69.0] — 2026-08-08 — the direction layer: DIRECTION.md, Bet, and two conditional station reads
 
 ### Added
