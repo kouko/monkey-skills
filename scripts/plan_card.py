@@ -500,6 +500,8 @@ def set_stage(text: str, new_value: str) -> tuple[str, str, str]:
         raise ValueError("plan has no 'Stage:' header line")
     if not new_value.strip():
         raise ValueError("--set-stage: value is empty or whitespace-only")
+    if "\n" in new_value:
+        raise ValueError("--set-stage: value must be a single line")
     old_line = match.group(0)
     new_line = f"Stage: {new_value}"
     new_header = header[: match.start()] + new_line + header[match.end() :]

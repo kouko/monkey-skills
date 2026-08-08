@@ -1206,6 +1206,21 @@ def test_set_stage_empty_value_exits_1(tmp_path):
     assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
 
 
+def test_set_stage_newline_value_exits_1(tmp_path):
+    """A value containing a newline must not be accepted — it would
+    inject a second physical line into the header block, silently
+    corrupting the plan's structure. Exit 1 loud; file untouched."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path, "--set-stage", "review:round-1\nGoal: hacked")
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert result.stdout.count("\n") == 1, "message must be one line"
+    assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
+
+
 def test_set_status_degrades_to_card_unavailable_when_goal_missing(tmp_path):
     """The flip runs and succeeds even when the resulting plan cannot
     render a card (no Goal: header) — the render runs AFTER the write,
