@@ -1221,6 +1221,23 @@ def test_set_stage_newline_value_exits_1(tmp_path):
     assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
 
 
+def test_set_stage_carriage_return_value_exits_1(tmp_path):
+    """A value containing a bare `\\r` must not be accepted either — the
+    `"\\n" in new_value` guard misses it, but plan_card's own readers
+    fold text via splitlines(), which treats `\\r` as a line boundary
+    too — so the injected text would re-materialize as a second header
+    line on the next read. Exit 1 loud; file untouched."""
+    text = _plan_text(tasks=[("parser", "pending")])
+    plan_path = _write_plan(tmp_path, text)
+
+    result = _run_card(plan_path, "--set-stage", "review:round-1\rGoal: hacked")
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert result.stdout.count("\n") == 1, "message must be one line"
+    assert plan_path.read_text(encoding="utf-8") == text, "file must be untouched"
+
+
 def test_set_status_degrades_to_card_unavailable_when_goal_missing(tmp_path):
     """The flip runs and succeeds even when the resulting plan cannot
     render a card (no Goal: header) — the render runs AFTER the write,
