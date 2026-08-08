@@ -49,10 +49,14 @@ Versioning: [Semantic Versioning](https://semver.org/).
   silently (Codex-safe).
 - **`requesting-code-review`'s per-round stage flip goes through
   `--set-stage`.** At the start of each review round (round 1
-  included), the reviewer runs `python3 scripts/plan_card.py
+  included), the orchestrator runs `python3 scripts/plan_card.py
   <plan-path> --set-stage "review:round-N"`, relays the card the
   script prints, and commits the flip with that round's verdict or
   fixes; hand-edit is the fallback only when the script is absent.
+  (Dropped alongside the Delivery-form rebind: SDD's separate "update
+  the `Stage:` header in the same commit as that wave's ledger
+  writes" sentence — the per-task commit cadence in
+  plan-ledger-notes.md carries that coupling now.)
 
 ## [0.69.0] — 2026-08-08 — the direction layer: DIRECTION.md, Bet, and two conditional station reads
 
