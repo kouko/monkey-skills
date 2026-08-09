@@ -101,3 +101,30 @@ about.
 [[pin-shared-wording-in-plan-copies-transcribe-from-pin]] is the prevention-side
 sibling: it stops copies from diverging when you already know a wording will fan
 out; this entry is for the copies you did not know about.
+
+**Recurrence (2026-08-10, branch `fix/design-md-spec-conformance`) — the tool
+existed and the orchestrator hand-rolled greps instead.** One false claim ("every
+`##` section carries a YAML token block") had **seven** copies across two files.
+Each review round fixed the copy the previous finding pointed at, and the next
+round found one more. After the fourth, the orchestrator ran a "exhaustive" sweep
+and declared the list complete at two entries — three greps, keyed to
+`surface|shadow|elevation|depth`, to the literal `token block`, and to backticked
+non-member keys. The very next review found an eighth-shaped instance
+(`the depth/shape tokens hang off`) that contained **none of those three
+patterns**: not the words the sweep looked for, not the literal, not a backtick.
+Two more surfaced later in a sibling file for the same reason.
+
+The failure is precisely leak two, which this entry already names: searching for
+the **shapes of known instances** does not enumerate a **claim**. What makes it a
+recurrence worth recording rather than a re-derivation is that
+`scripts/claim_copy_sweep.py` was sitting in the repo, this entry pointed at it,
+and it was never run — the orchestrator improvised greps from the instances it
+had already seen. The entry's own closing line said nothing obliges a repairer to
+run the tool. Nothing did, and a five-round arc paid for it.
+
+**How to apply, sharpened:** when a claim is found in two places, treat the
+population as unknown and run the sweep before editing either — and phrase the
+sweep from the **proposition** ("this section carries tokens"), then `--also`
+each synonym you can generate, rather than from the strings you happen to have
+in front of you. If the arc is fixing a claim at all, the enumeration is not
+optional overhead; it is the cheapest step in the arc.
