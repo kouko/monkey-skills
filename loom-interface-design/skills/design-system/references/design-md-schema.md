@@ -44,7 +44,7 @@ The artifact MUST contain these eight `##` sections, **in this order**. Five
 of the eight carry a YAML token block, one per spec token group — `colors`
 (Colors), `typography` (Typography), `rounded` (Shapes), `spacing` (Layout),
 `components` (Components). The remaining three (Overview / Brand, Elevation
-& Depth, Do's & Don'ts) are prose, including any documented loom extensions.
+& Depth, Do's & Don'ts) are prose.
 
 ## Overview / Brand
 
@@ -83,7 +83,7 @@ Carry, in the **prose body** of this section (the YAML keys below stay thin):
   palette).
 
 **Derivation contract:** every token in Colors / Typography / Layout /
-Elevation / Shapes / Components MUST be derivable from, and defensible against,
+Shapes / Components MUST be derivable from, and defensible against,
 this concept + its principles (and the governing `PRINCIPLES.md`). A token you
 cannot trace back to the concept is an arbitrary default — the exact failure the
 Anti-patterns section bans. A committed concept makes most of those bans
@@ -177,12 +177,13 @@ Expected keys (confirm against the spec):
 
 The elevation system — shadows and layering used to express depth and
 stacking order. `elevation` is not one of the spec's five token groups; both
-keys below are documented loom extensions.
-
-Expected token keys (confirm against the spec):
+keys below are documented loom extensions — plain prose, not YAML tokens
+confirmed against the spec:
 
 - `shadows` — the shadow ramp (e.g. sm / md / lg / xl) — **loom extension: `export` does not carry this token.**
 - `z_index` — named stacking layers (e.g. base / overlay / modal / toast) — **loom extension: `export` does not carry this token.**
+
+This section carries no fenced YAML block.
 
 ## Shapes
 
@@ -283,7 +284,7 @@ When emitting `DESIGN.md`, the `design-system` skill MUST:
    emit all 8 `##` sections in the order above.
 3. Populate the YAML token block for the five token-group sections —
    `colors`, `typography`, `rounded`, `spacing`, `components` — and write
-   prose (including any documented loom extensions) for the rest.
+   prose for the rest.
 4. Verify every color pairing meets WCAG-AA contrast.
 5. Run `npx @google/design.md` lint and resolve violations before declaring done.
 6. Keep flows / screens / navigation **out** — those go in `ui-flows.md`.

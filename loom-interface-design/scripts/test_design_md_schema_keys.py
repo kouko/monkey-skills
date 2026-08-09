@@ -372,3 +372,65 @@ def test_component_completeness_scoping_catches_deleted_bullet(token):
     )
     with pytest.raises(AssertionError):
         _bullet_line(mutated_section, token)
+
+
+# --- Correctness fixes (reviewer 🔴 findings C, D, E) ---
+
+
+def test_elevation_section_disambiguates_non_spec_keys():
+    """Task C: '## Elevation & Depth' stated (two lines up) that elevation is
+    not one of the spec's five token groups and both keys below are loom
+    extensions, then immediately headed the bullet list 'Expected token keys
+    (confirm against the spec):' — inviting confirmation against a spec that
+    has no such keys. Give it the same disambiguating treatment
+    '## Do's & Don'ts' already carries.
+    """
+    text = _schema_text()
+    section = _section(text, "## Elevation & Depth", "## Shapes")
+    assert "Expected token keys (confirm against the spec):" not in section, (
+        "the 'confirm against the spec' framing contradicts this section's "
+        "own prior sentence that elevation is not one of the spec's five "
+        "token groups"
+    )
+    lowered = section.lower()
+    assert "plain prose, not yaml tokens" in lowered, (
+        "must carry the same disambiguating language as ## Do's & Don'ts"
+    )
+    assert "this section carries no fenced yaml block" in lowered, (
+        "must state this explicitly, matching ## Do's & Don'ts's closing line"
+    )
+
+
+def test_prose_scope_clause_removed_at_both_loci():
+    """Task D: 'are prose, including any documented loom extensions' (:47,
+    restated :286) contradicts the six labelled extension bullets, which are
+    documented as YAML keys — some inside prose sections (Overview / Brand,
+    Elevation & Depth) but `border_width`/`border_style` inside `## Shapes`,
+    a TOKEN_GROUPS section (`rounded`). The extensions stay as documented
+    YAML keys carrying the export-does-not-carry label; this clause goes.
+    """
+    text = _schema_text()
+    normalized = re.sub(r"\s+", " ", text)
+    assert "including any documented loom extensions" not in normalized, (
+        "the clause implies loom extensions are confined to the three "
+        "prose sections, but border_width/border_style live in ## Shapes "
+        "(a token-group section) — remove the clause, keep the extensions "
+        "as documented YAML keys"
+    )
+
+
+def test_derivation_contract_excludes_elevation():
+    """Task E: the Derivation contract roster still named Elevation as
+    token-bearing ('every token in Colors / Typography / Layout / Elevation
+    / Shapes / Components') — same claim class as C. TOKEN_GROUPS has no
+    elevation member; fix the roster to the five-group reality.
+    """
+    text = _schema_text()
+    section = _section(text, "**Derivation contract:**", "Expected YAML frontmatter")
+    normalized = re.sub(r"\s+", " ", section)
+    assert "Elevation" not in normalized, (
+        "the Derivation contract roster still names Elevation as "
+        "token-bearing; TOKEN_GROUPS has no elevation member"
+    )
+    for name in ("Colors", "Typography", "Layout", "Shapes", "Components"):
+        assert name in normalized, f"Derivation contract roster must still name `{name}`"
