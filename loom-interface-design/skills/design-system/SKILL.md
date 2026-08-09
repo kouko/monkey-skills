@@ -157,10 +157,12 @@ that choice; it is never an unnamed default.
   `Surface treatment: X — because <the tone & manner adjectives> +
   <constraint>`. It rides inside that existing section — **do not add a 9th
   `##` section**; the 8-section contract is frozen.
-- **The pick then constrains the `## Elevation & Depth` and `## Shapes` token
-  blocks** — `surface`, `shadows`, `radius` and border tokens are **derived
-  from the chosen treatment**, never an arbitrary default. A flat pick with a
-  deep shadow ramp is a defect.
+- **The pick then constrains the `## Elevation & Depth` prose and the
+  `## Shapes` token block** — Elevation & Depth stays prose-only, describing
+  how the chosen treatment conveys depth (shadow spread/blur/colour, or the
+  flat-design alternative); Shapes' `rounded` and border tokens are
+  **derived from the chosen treatment**, never an arbitrary default. A flat
+  pick with a deep shadow ramp is a defect.
 - **Anti-costume law.** A treatment may enrich candidates but **never
   overrides a PRINCIPLES value**. Its vocabulary is inspiration; the values are
   non-negotiable — when the two collide, the treatment loses.

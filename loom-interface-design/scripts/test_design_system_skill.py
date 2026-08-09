@@ -261,6 +261,19 @@ def test_surface_treatment_candidate_pick_protocol():
     assert "`## shapes`" in block[constrains_at:], \
         "the pick must constrain BOTH the Elevation & Depth and Shapes tokens"
 
+    # (f2) but Elevation & Depth carries NO token group at all (spec reality
+    # per design_md_spec_keys.TOKEN_GROUPS — only `rounded` under Shapes) —
+    # the block must not claim both sections share a "token blocks" plural,
+    # and must use the spec's real key `rounded`, never `radius`
+    assert "elevation & depth` and `## shapes` token blocks" not in block, \
+        "must not claim Elevation & Depth carries a YAML token block " \
+        "(it is prose-only per Step 4 / TOKEN_GROUPS)"
+    assert "`radius`" not in block, \
+        "the corner-radius token key is `rounded`, not `radius` " \
+        "(see references/design-md-schema.md's explicit note)"
+    assert "`rounded`" in block, \
+        "the Shapes token block must be named with its real spec key `rounded`"
+
     # (g) the anti-costume law carries over
     assert "anti-costume law" in block, \
         "the anti-costume law must carry over to the surface axis"
