@@ -14,6 +14,8 @@ the sets in-repo is that CI needs neither.
 import pathlib
 import re
 
+import pytest
+
 import design_md_spec_keys
 
 SCHEMA_PATH = (
@@ -52,11 +54,17 @@ def _nested_mapping(yaml_block: str, top_key: str) -> dict:
     this plugin's scripts/). Handles exactly the two-level shape this
     reference emits (`top_key:` -> name -> `key: value`); a third nesting
     level, YAML lists, or multiline scalars under `top_key:` are unsupported.
+    A property line indented off the level's established property indent
+    (deeper OR shallower) raises `AssertionError` instead of being
+    silently dropped — closed 2026-08-10 after T2's code-quality review
+    found the drop.
     | ceiling: the fenced yaml block under `typography:` or `components:`
-    grows a list, anchor, or multiline scalar | upgrade: add
+    grows a list, anchor, multiline scalar, or a third nesting level
+    (indentation drift within the two supported levels is no longer a
+    ceiling — it now raises) | upgrade: add
     `python3 -m pip install pyyaml` to loom-siblings-ci.yml's install step
     and replace this walker with `yaml.safe_load(block)[top_key]`
-    | ref: docs/loom/plans/2026-08-10-design-md-spec-conformance.md Task 2
+    | ref: docs/loom/plans/2026-08-10-design-md-spec-conformance.md Task 3
     """
     lines = [line for line in yaml_block.splitlines() if line.strip()]
     top_idx = next(
@@ -84,9 +92,12 @@ def _nested_mapping(yaml_block: str, top_key: str) -> dict:
         elif indent > level_indent and current_name is not None and ":" in stripped:
             if prop_indent is None:
                 prop_indent = indent
-            if indent == prop_indent:
-                prop_key, _, prop_value = stripped.partition(":")
-                result[current_name][prop_key.strip()] = prop_value.strip()
+            assert indent == prop_indent, (
+                f"inconsistent property indentation under '{current_name}': "
+                f"expected indent {prop_indent}, got {indent} for line {stripped!r}"
+            )
+            prop_key, _, prop_value = stripped.partition(":")
+            result[current_name][prop_key.strip()] = prop_value.strip()
     return result
 
 
@@ -121,6 +132,27 @@ def test_frozen_sets_carry_provenance():
     assert "npx @google/design.md@0.4.0 spec" in design_md_spec_keys.PROVENANCE
 
 
+def test_nested_mapping_raises_on_indentation_drift():
+    """A property indented deeper than its siblings must not vanish silently.
+
+    Task-2 code-quality review found `_nested_mapping` captured property
+    lines only at a level's first-observed indent, so a key indented
+    deeper than its siblings was silently dropped from the extracted set
+    — a hole that would let T3's exclusivity assertion pass without ever
+    grading the dropped key. This pins the fix: a deeper-indented sibling
+    must surface as a loud failure, not vanish quietly.
+    """
+    yaml_block = (
+        "components:\n"
+        "  button:\n"
+        "    backgroundColor: \"{colors.primary}\"\n"
+        "      textColor: \"{colors.background}\"\n"  # deeper than sibling
+        "    rounded: \"{rounded.md}\"\n"
+    )
+    with pytest.raises(AssertionError):
+        _nested_mapping(yaml_block, "components")
+
+
 def test_typography_properties_are_all_spec_recognised():
     text = _schema_text()
     section = _section(text, "## Typography", "## Layout")
@@ -141,4 +173,41 @@ def test_typography_properties_are_all_spec_recognised():
     unrecognised = extracted_properties - design_md_spec_keys.TYPOGRAPHY_PROPERTIES
     assert not unrecognised, (
         f"typography properties not in the spec whitelist: {unrecognised}"
+    )
+
+
+def test_component_sub_tokens_are_complete_and_exclusive():
+    text = _schema_text()
+    section = _section(text, "## Components", "## Do's & Don'ts")
+
+    # (a) completeness: every member of COMPONENT_SUB_TOKENS is named
+    # somewhere in the ## Components section.
+    missing = {
+        token
+        for token in design_md_spec_keys.COMPONENT_SUB_TOKENS
+        if token not in section
+    }
+    assert not missing, (
+        f"component sub-tokens not documented in ## Components: {missing}"
+    )
+
+    yaml_block = _fenced_yaml_block(section)
+    components = _nested_mapping(yaml_block, "components")
+
+    # (b) extraction non-empty: the `components:` mapping yields at least
+    # one component with nested keys. This guards against (c) passing
+    # vacuously on an empty extraction.
+    assert any(props for props in components.values()), (
+        "no component carries nested property keys"
+    )
+
+    # (c) exclusivity: every key at the nested-under-a-component depth is
+    # a member of COMPONENT_SUB_TOKENS. Component/variant NAMES
+    # themselves (`button`, `button-primary`, `button-primary-hover`, …)
+    # and `{...}` brace-reference VALUES are outside the extracted set by
+    # construction.
+    extracted_keys = {key for props in components.values() for key in props}
+    unrecognised = extracted_keys - design_md_spec_keys.COMPONENT_SUB_TOKENS
+    assert not unrecognised, (
+        f"component keys not in the spec whitelist: {unrecognised}"
     )

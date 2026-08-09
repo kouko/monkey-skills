@@ -191,16 +191,64 @@ inherit from the system (buttons, inputs, cards, etc.). This section maps
 the global tokens above onto named component slots; it does **not** describe
 component *behavior* or *flows* (those are out of scope — see the scope note).
 
-Expected token keys (confirm against the spec):
+Component names (`button`, `input`, `card`, …) are open, matching
+Typography's open level-name position. Each component's properties are
+drawn only from this closed set (confirm against the spec):
 
-- `button` — variants (primary / secondary / destructive) and their token bindings
-- `input` — field styling tokens
-- `card` — surface / rounded / elevation bindings
-- `states` — visual states (hover / focus / active / disabled) as token deltas
+- `backgroundColor` — fill color, typically a `{colors.*}` reference
+- `textColor` — foreground/text color, typically a `{colors.*}` reference
+- `typography` — which typography level the component's text uses,
+  typically a `{typography.*}` reference
+- `rounded` — corner-radius token, typically a `{rounded.*}` reference
+- `padding` — internal spacing (CSS shorthand or per-side)
+- `size` — named size variant (e.g. `sm` / `md` / `lg`), where the
+  component has one
+- `height` — fixed height, where applicable
+- `width` — fixed width, where applicable
 
-> Note: `states` here is **presentational** (hover/focus/disabled styling).
-> The behavioral lifecycle (empty / loading / error / success domain states)
-> belongs to `ui-flows.md` + `spec-expansion`, not to `DESIGN.md`.
+**`{token.reference}` syntax** — a component property can point at another
+token group's value instead of repeating a literal, e.g.
+`backgroundColor: "{colors.primary}"` means "resolve to whatever
+`colors.primary` currently is," not the literal string. Prefer references
+over duplicated literals so a palette or type-scale change propagates.
+
+**Variants live under related keys, not a nested map.** A component's
+stylistic variants (primary / secondary / destructive) and its visual
+states (hover / focus / active / disabled) are each their own top-level
+entry named `<component>-<variant>` (and `<component>-<variant>-<state>`
+for a variant's state) — e.g. `button-primary` and `button-primary-hover`
+are separate entries, each carrying only the properties that differ from
+the base component, **not** a `states` sub-key nested under `button`. This
+is **presentational** styling (hover/focus/disabled token deltas); the
+behavioral lifecycle (empty / loading / error / success domain states)
+still belongs to `ui-flows.md` + `spec-expansion`, not to `DESIGN.md`.
+
+```yaml
+components:
+  button:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.background}"
+    typography: "{typography.label-lg}"
+    rounded: "{rounded.md}"
+    padding: "12px 20px"
+    height: "40px"
+  button-primary:
+    backgroundColor: "{colors.primary}"
+  button-primary-hover:
+    backgroundColor: "{colors.primaryHover}"
+  input:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.foreground}"
+    typography: "{typography.body-md}"
+    rounded: "{rounded.sm}"
+    padding: "8px 12px"
+    size: "md"
+  card:
+    backgroundColor: "{colors.background}"
+    rounded: "{rounded.lg}"
+    padding: "24px"
+    width: "100%"
+```
 
 ## Do's & Don'ts
 
