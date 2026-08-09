@@ -1,9 +1,16 @@
-"""Frozen copy of `@google/design.md`'s closed key sets.
+"""Frozen copy of `@google/design.md`'s key sets.
 
 The spec format is `alpha` with no compatibility promise, so this module
 freezes the values in-repo rather than querying the spec live at check
 time — CI must not depend on the network. Frozen-copy pattern per
 `loom-code/scripts/canonical/README.md`.
+
+`TOKEN_GROUPS` and `TYPOGRAPHY_PROPERTIES` are closed sets — the spec
+defines no fallback for an unrecognized member of either. `COMPONENT_SUB_TOKENS`
+is the spec's RECOGNISED set, not closed: the spec's Consumer Behavior for
+Unknown Content table has a row for it — "Unknown component property |
+Accept with warning | borderColor" — so an unrecognized component property
+is accepted with a warning, not rejected.
 
 Update procedure: re-run the derivation command below against a newer
 spec version, diff the three sets, and bump `PROVENANCE` in the same

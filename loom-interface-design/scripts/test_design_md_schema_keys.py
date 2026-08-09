@@ -419,6 +419,27 @@ def test_prose_scope_clause_removed_at_both_loci():
     )
 
 
+def test_component_sub_tokens_docstring_not_claimed_closed():
+    """Task F: a reviewer re-ran `npx @google/design.md@0.4.0 spec` live —
+    its Consumer Behavior for Unknown Content table has a row 'Unknown
+    component property | Accept with warning | borderColor', so
+    COMPONENT_SUB_TOKENS is the spec's RECOGNISED set, not closed.
+    TOKEN_GROUPS/TYPOGRAPHY_PROPERTIES have no such row; 'closed' still
+    holds for those two. Pins the corrected docstring wording only — no
+    frozen value changes (see test_frozen_sets_carry_provenance).
+    """
+    doc = design_md_spec_keys.__doc__
+    assert "closed key sets" not in doc, (
+        "module docstring must not blanket-claim all three sets are "
+        "closed — COMPONENT_SUB_TOKENS is the spec's recognised set, not "
+        "closed"
+    )
+    assert "COMPONENT_SUB_TOKENS" in doc, (
+        "docstring must name COMPONENT_SUB_TOKENS when distinguishing its "
+        "recognised/closed status from the other two sets"
+    )
+
+
 def test_derivation_contract_excludes_elevation():
     """Task E: the Derivation contract roster still named Elevation as
     token-bearing ('every token in Colors / Typography / Layout / Elevation
