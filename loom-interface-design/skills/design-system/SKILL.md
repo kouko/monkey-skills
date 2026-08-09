@@ -118,11 +118,14 @@ Emit a **`DESIGN.md`** following the schema contract from Step 1:
    named in its prose. This is the conceptual ground for
    everything below; a generic identity here is what makes output look
    "AI-generated."
-4. Emit **all 8 `##` sections in order**, each with a short prose rationale
-   plus its YAML token block (Overview / Brand → Colors → Typography → Layout →
-   Elevation & Depth → Shapes → Components → Do's & Don'ts), then **derive every
-   token from that committed concept + the `PRINCIPLES.md` constraints** — each
-   token defensible against the concept, never an arbitrary default.
+4. Emit **all 8 `##` sections in order** (Overview / Brand → Colors →
+   Typography → Layout → Elevation & Depth → Shapes → Components → Do's &
+   Don'ts), each with a short prose rationale. Only five of the eight carry a
+   YAML token block — **colors**, **typography**, **spacing** (Layout),
+   **rounded** (Shapes), **components**; Overview / Brand, Elevation & Depth
+   and Do's & Don'ts stay prose-only. Then **derive every token from that
+   committed concept + the `PRINCIPLES.md` constraints** — each token
+   defensible against the concept, never an arbitrary default.
 5. **Verify WCAG-AA contrast** for every foreground/background pairing (body
    text ≥ 4.5:1, large text ≥ 3:1). Treat an AA failure as a **blocker**.
 6. Run the spec lint `npx @google/design.md` where available and resolve

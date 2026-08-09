@@ -27,6 +27,8 @@ Stdlib only (pathlib + re). Resolve SKILL.md relative to this test file.
 import re
 from pathlib import Path
 
+from design_md_spec_keys import TOKEN_GROUPS as SPEC_TOKEN_GROUPS
+
 SKILL = (
     Path(__file__).parents[1]
     / "skills"
@@ -282,6 +284,43 @@ def test_surface_treatment_candidate_pick_protocol():
         "the anchor constraint must be stated BEFORE the proposal instruction "
         "— it governs which treatments are proposable at all"
     )
+
+
+def _step4_block() -> str:
+    """Step 4's emit instruction — lowercased, whitespace-flattened.
+
+    Scoped to Step 4's own numbered item (not the whole Step 4a list), so a
+    whole-file pin would not false-green on the phrase appearing anywhere in
+    the skill (see docs/loom/memory/
+    grep-tests-scope-to-measured-neighborhood.md). Whitespace-flattened
+    because the source phrase this test targets is itself split across a
+    hard line break at SKILL.md:121-122 — a raw-file substring check would
+    never match it and the test would false-RED (pass before any edit).
+    """
+    text = _text()
+    start = text.index("4. Emit **all 8")
+    end = text.index("5. **Verify WCAG-AA", start)
+    return re.sub(r"\s+", " ", text[start:end]).lower()
+
+
+def test_step4_names_the_five_token_groups():
+    """Step 4 must stop implying all 8 `##` sections carry a YAML token
+    block (Overview / Brand, Elevation & Depth and Do's & Don'ts do not) and
+    instead name the five sections that actually do — the spec's frozen
+    `TOKEN_GROUPS` set (`design_md_spec_keys.py`, Task 1's frozen copy).
+    """
+    block = _step4_block()
+
+    # the old blanket claim — every one of the 8 sections gets a rationale
+    # PLUS a token block — must be gone
+    assert "each with a short prose rationale plus its yaml token block" \
+        not in block, \
+        "Step 4 must no longer claim every section carries a token block"
+
+    # every TOKEN_GROUPS member must be named (spec reality, not re-typed)
+    for group in SPEC_TOKEN_GROUPS:
+        assert group.lower() in block, \
+            f"Step 4 must name the token group '{group}' from TOKEN_GROUPS"
 
 
 def _schema_overview_block() -> str:
