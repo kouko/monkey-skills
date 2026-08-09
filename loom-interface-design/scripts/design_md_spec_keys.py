@@ -13,8 +13,10 @@ Accept with warning | borderColor" — so an unrecognized component property
 is accepted with a warning, not rejected.
 
 Update procedure: re-run the derivation command below against a newer
-spec version, diff the three sets, and bump `PROVENANCE` in the same
-commit as any value change.
+spec version, diff the three sets AND re-check the Consumer Behavior for
+Unknown Content row for `COMPONENT_SUB_TOKENS` (the "accept with warning"
+behaviour this docstring and `design-md-schema.md` cite), and bump
+`PROVENANCE` in the same commit as any value or behaviour change.
 
 Stdlib only.
 """

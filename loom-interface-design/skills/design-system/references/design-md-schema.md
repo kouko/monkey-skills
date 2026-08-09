@@ -9,7 +9,10 @@ Apache-2.0-licensed `DESIGN.md` format — the **visual system** for a product.
 > secondary sources, not a frozen in-repo copy of the spec. **Verify the format's current
 > shape, exact license, and the exact lint package/command against the authoritative Google
 > `DESIGN.md` spec at generation time** before relying on any of them. The frozen key sets
-> this reference checks against (`design_md_spec_keys.py`) were verified against
+> this reference checks against (`design_md_spec_keys.py`), and the
+> unrecognized-component-property-gets-a-warning behaviour this reference cites
+> under Components below (the spec's Consumer Behavior for Unknown Content),
+> were both verified against
 > `@google/design.md` version `0.4.0` on 2026-08-10.
 
 > **Scope — visual system only.** `DESIGN.md` documents the product's
@@ -292,7 +295,13 @@ When emitting `DESIGN.md`, the `design-system` skill MUST:
    `colors`, `typography`, `rounded`, `spacing`, `components` — and write
    prose for the rest.
 4. Verify every color pairing meets WCAG-AA contrast.
-5. Run `npx @google/design.md` lint and resolve violations before declaring done.
+5. Run `npx @google/design.md` lint. A **failure** (e.g. a WCAG-AA contrast
+   violation) is a blocker — resolve it before declaring done. A **warning**
+   on a component property outside `## Components`'s recognised list is
+   expected, and legitimate, when that property is a deliberately-chosen
+   extension: the spec accepts an unrecognized component property with a
+   warning rather than rejecting it (see `## Components`), so this step
+   does not require resolving that warning away.
 6. Keep flows / screens / navigation **out** — those go in `ui-flows.md`.
 
 ## Anti-patterns — NEVER ship these (the "AI-generated" tells)

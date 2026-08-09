@@ -440,6 +440,11 @@ assert set(TOKEN_GROUP_DISPLAY_NAMES) == design_md_spec_keys.TOKEN_GROUPS, (
 )
 
 
+_TOTALIZING_SET_SCOPE_RE = re.compile(
+    r"\b(?:all|every|each|both)\b[^.!?]{0,30}?\bsets?\b", re.IGNORECASE
+)
+
+
 def _assert_no_blanket_closed_claim_for_component_sub_tokens(doc: str, *, source: str) -> None:
     """`doc` must not claim, however phrased, that COMPONENT_SUB_TOKENS (or
     all three frozen sets taken together) form a closed set — the spec's
@@ -448,20 +453,26 @@ def _assert_no_blanket_closed_claim_for_component_sub_tokens(doc: str, *, source
     TOKEN_GROUPS/TYPOGRAPHY_PROPERTIES may be described as closed.
 
     Property check, not a literal-string ban: split into sentences and flag
-    any sentence that (a) talks about COMPONENT_SUB_TOKENS specifically, or
-    a blanket "all three sets"/"closed key sets" claim covering it, AND
-    (b) calls it "closed" without also saying "not closed" — this survives
-    a full sentence rewrite (only the exact substring "closed key sets"
-    used to be banned; a rewritten sentence carrying neither that phrase
-    nor "component_sub_tokens" verbatim evaded it).
+    any sentence that scopes closedness over MORE than TOKEN_GROUPS +
+    TYPOGRAPHY_PROPERTIES — either (a) it names COMPONENT_SUB_TOKENS
+    specifically, or (b) it uses a totalizing quantifier over "sets"
+    ("all"/"every"/"each"/"both" within a short span of "set(s)") — AND
+    (c) calls the result "closed" without also saying "not closed". This
+    survives a full sentence rewrite: neither the exact substring "closed
+    key sets" nor the name "component_sub_tokens" need appear — "Every set
+    enumerated above is closed" and "All of the sets here are closed" both
+    still trip (b), which the old literal ban ("all three sets" / "closed
+    key sets" verbatim) did not catch.
     """
     offending = None
     for sentence in re.split(r"(?<=[.!?])\s+", doc):
         lowered = sentence.lower()
-        blanket_all_three = "all three" in lowered or "closed key sets" in lowered
+        blanket_scope = bool(_TOTALIZING_SET_SCOPE_RE.search(sentence)) or (
+            "closed key sets" in lowered
+        )
         names_component_tokens = "component_sub_tokens" in lowered
         if (
-            (blanket_all_three or names_component_tokens)
+            (blanket_scope or names_component_tokens)
             and "closed" in lowered
             and "not closed" not in lowered
         ):
@@ -550,14 +561,53 @@ def test_elevation_disambiguation_tolerates_meaning_preserving_reword(monkeypatc
             "prose only, carrying no YAML token block",
             header_region,
         )
-        assert mutated_header != header_region, (
-            "sanity check: the reword regex must actually match the "
-            f"current header text: {header_region!r}"
-        )
+        if mutated_header == header_region:
+            # The OLD wording is no longer present verbatim in the live
+            # doc (e.g. this exact reword has already been adopted) —
+            # the regex has nothing left to rewrite. Fall back to an
+            # unconditional insertion of the reworded text instead of
+            # asserting the current wording, so this probe keeps
+            # exercising "does the production check tolerate this
+            # phrasing" regardless of what the doc currently says,
+            # rather than false-REDing on its own sanity step.
+            mutated_header = header_region + "prose only, carrying no YAML token block\n"
         return t.replace(header_region, mutated_header)
 
     _monkeypatch_schema_text(monkeypatch, mutator)
     test_elevation_section_disambiguates_non_spec_keys()  # must NOT raise
+
+
+def test_elevation_mirror_probe_survives_document_already_using_new_wording(monkeypatch):
+    """Regression (🟡 whole-branch review finding 1): the mirror probe
+    above (`test_elevation_disambiguation_tolerates_meaning_preserving_reword`)
+    carries its OWN sanity assert requiring the OLD wording ('plain
+    prose, not yaml tokens') to still be present, verbatim, in the live
+    document for its regex to have something to rewrite. If a maintainer
+    actually adopts the exact reword the probe's own docstring names as
+    the must-not-false-RED case ('prose only, carrying no YAML token
+    block') into the real document, the probe's sanity assert now fails
+    — the old wording is gone — so the probe false-REDs the very reword
+    it promises to tolerate. Simulate that adopted document (header
+    already carrying the new wording) and confirm the mirror probe no
+    longer raises.
+    """
+    text = _schema_text()
+    section = _section(text, "## Elevation & Depth", "## Shapes")
+    header_region = _header_before_first_bullet(section)
+    already_adopted_header = re.sub(
+        r"(?i)plain prose,? not yaml tokens[^\n:]*",
+        "prose only, carrying no YAML token block",
+        header_region,
+    )
+    assert already_adopted_header != header_region, (
+        "sanity check: the reword must actually apply once to set up this scenario"
+    )
+
+    def mutator(t: str) -> str:
+        return t.replace(header_region, already_adopted_header)
+
+    _monkeypatch_schema_text(monkeypatch, mutator)
+    test_elevation_disambiguation_tolerates_meaning_preserving_reword(monkeypatch)  # must NOT raise
 
 
 def test_prose_scope_clause_removed_at_both_loci():
@@ -650,6 +700,30 @@ def test_component_sub_tokens_docstring_catches_reworded_closed_claim(monkeypatc
     monkeypatch.setattr(design_md_spec_keys, "__doc__", mutated_doc)
     with pytest.raises(AssertionError):
         test_component_sub_tokens_docstring_not_claimed_closed()
+
+
+def test_component_sub_tokens_docstring_catches_closed_claim_sharing_no_pinned_wording(monkeypatch):
+    """Probe (🟡 whole-branch review finding 2): the check was still a
+    phrase ban keyed on "all three" / "closed key sets" /
+    "component_sub_tokens" — two restatements of the identical false
+    claim, sharing NONE of those three substrings, evaded it:
+    'Every set enumerated above is closed: an unrecognized member is
+    rejected by the spec.' and 'All of the sets here are closed: an
+    unrecognized member of any is rejected.' Both must go RED under the
+    semantic check (closedness scoped wider than TOKEN_GROUPS +
+    TYPOGRAPHY_PROPERTIES), invoked here via the production test
+    function itself, not the helper in isolation.
+    """
+    for false_claim in (
+        "Every set enumerated above is closed: an unrecognized member "
+        "is rejected by the spec.",
+        "All of the sets here are closed: an unrecognized member of "
+        "any is rejected.",
+    ):
+        mutated_doc = design_md_spec_keys.__doc__ + "\n\n" + false_claim
+        monkeypatch.setattr(design_md_spec_keys, "__doc__", mutated_doc)
+        with pytest.raises(AssertionError):
+            test_component_sub_tokens_docstring_not_claimed_closed()
 
 
 def test_module_docstring_not_claimed_closed():
@@ -820,3 +894,159 @@ def test_overview_brand_header_distinguishes_extension_bullets_from_spec_keys():
         "the header above the frontmatter bullet list must name the loom "
         f"extensions below it as extensions: {header!r}"
     )
+
+
+# --- Correctness fixes (whole-branch review findings 3, 4) ---
+
+
+def _generation_checklist_step(text: str, n: int) -> str:
+    section = _section(text, "## Generation checklist", "## Anti-patterns")
+    match = re.search(rf"\n{n}\.\s.*?(?=\n\d\.|\Z)", section, re.DOTALL)
+    assert match, f"Generation checklist has no step {n}"
+    return re.sub(r"\s+", " ", match.group(0)).strip()
+
+
+def test_generation_checklist_lint_step_does_not_require_stripping_warned_extension_properties():
+    """🟡 3: step 5 said "resolve violations before declaring done" —
+    unconditional. `## Components` (:211-213) newly establishes that the
+    spec ACCEPTS an unrecognized component property with a warning
+    rather than rejecting it, so a deliberately-chosen extension
+    property that lints with a warning now has two live readings (strip
+    it, or keep it) and the checklist said which nowhere.
+
+    Property, not the literal sentence: step 5 must (a) still require
+    resolving a genuine lint failure (contrast etc. stay blockers,
+    matching '## Lint + accessibility''s own framing at :36-39, untouched
+    here), while (b) explicitly carving out a warning on such a
+    documented extension property as expected — not something this step
+    requires resolving away. Tolerant of how (a)/(b) are worded, as long
+    as both concepts are present.
+    """
+    step5 = _generation_checklist_step(_schema_text(), 5).lower()
+    assert "warning" in step5, f"step 5 must mention the warning case: {step5!r}"
+    assert "expected" in step5 or "legitimate" in step5, (
+        f"step 5 must say the warning is expected/legitimate, not a "
+        f"violation to resolve: {step5!r}"
+    )
+    assert "fail" in step5 or "blocker" in step5, (
+        f"step 5 must keep requiring a genuine failure to be resolved: {step5!r}"
+    )
+
+
+def test_generation_checklist_lint_step_catches_reverted_unconditional_resolve(monkeypatch):
+    """Probe (🟡 3): reverting step 5 to its OLD unconditional wording —
+    'Run `npx @google/design.md` lint and resolve violations before
+    declaring done.' — must go RED under the new property check.
+    """
+    text = _schema_text()
+    section = _section(text, "## Generation checklist", "## Anti-patterns")
+    match = re.search(r"\n5\.\s.*?(?=\n\d\.|\Z)", section, re.DOTALL)
+    assert match
+    old_step5 = (
+        "\n5. Run `npx @google/design.md` lint and resolve violations "
+        "before declaring done."
+    )
+
+    def mutator(t: str) -> str:
+        mutated_section = section.replace(match.group(0), old_step5)
+        return t.replace(section, mutated_section)
+
+    _monkeypatch_schema_text(monkeypatch, mutator)
+    with pytest.raises(AssertionError):
+        test_generation_checklist_lint_step_does_not_require_stripping_warned_extension_properties()
+
+
+def test_grounding_note_covers_the_consumer_behavior_claim():
+    """🟡 4: the grounding note (:7-13) dates its verification of the
+    frozen KEY SETS against `@google/design.md` `0.4.0` on 2026-08-10,
+    but the branch also asserts a spec BEHAVIOUR at `## Components`
+    (:211-213 — unknown component property -> accept with warning) that
+    this citation does not cover, in a document that hedges every other
+    spec fact (:15-26). Property, not the literal sentence: the SAME
+    dated verified-against-the-spec clause must also cover the
+    unrecognized-component-property/warning behaviour — tolerant of how
+    the clause is worded, as long as the behaviour is named alongside
+    the dated citation.
+    """
+    text = _schema_text()
+    match = re.search(r"> \*\*Grounding\.\*\*.*?(?=\n\n)", text, re.DOTALL)
+    assert match, "Grounding note not found"
+    note = re.sub(r"\s+", " ", match.group(0)).lower()
+    assert "verified against" in note and "0.4.0" in note, (
+        f"grounding note must date its verification against the spec version: {note!r}"
+    )
+    assert "warning" in note and (
+        "component property" in note or "consumer behavior" in note
+    ), (
+        "the same dated verification must also cover the "
+        f"unrecognized-component-property/warning behaviour claim: {note!r}"
+    )
+
+
+def test_grounding_note_catches_reverted_key_sets_only_scope(monkeypatch):
+    """Probe (🟡 4): reverting the grounding note's last sentence to its
+    OLD scope — covering only the three frozen key sets, silent on the
+    Consumer-Behavior warning claim — must go RED.
+    """
+    text = _schema_text()
+    match = re.search(r"> \*\*Grounding\.\*\*.*?(?=\n\n)", text, re.DOTALL)
+    assert match, "Grounding note not found"
+    note = match.group(0)
+    old_last_sentence_re = re.compile(
+        r"The frozen key sets\n> this reference checks against.*?on 2026-08-10\.",
+        re.DOTALL,
+    )
+    old_last_sentence = (
+        "The frozen key sets\n> this reference checks against "
+        "(`design_md_spec_keys.py`) were verified against\n> "
+        "`@google/design.md` version `0.4.0` on 2026-08-10."
+    )
+
+    def mutator(t: str) -> str:
+        mutated_note = old_last_sentence_re.sub(old_last_sentence, note)
+        assert mutated_note != note, "sanity: the OLD-scope sentence must replace the current one"
+        return t.replace(note, mutated_note)
+
+    _monkeypatch_schema_text(monkeypatch, mutator)
+    with pytest.raises(AssertionError):
+        test_grounding_note_covers_the_consumer_behavior_claim()
+
+
+def test_update_procedure_covers_consumer_behavior_row():
+    """🟡 4 (second locus): `design_md_spec_keys.py`'s module docstring
+    (:15-17) instructs re-checking the three frozen key sets on a spec
+    bump, but says nothing about re-checking the Consumer Behavior for
+    Unknown Content row that its own docstring (:8-13) and `PROVENANCE`
+    assert a BEHAVIOUR from (COMPONENT_SUB_TOKENS -> accept with
+    warning) — a spec bump could silently invalidate that behaviour claim
+    with no check in the loop. Property: the Update-procedure paragraph
+    must also instruct re-checking that row.
+    """
+    doc = design_md_spec_keys.__doc__
+    match = re.search(r"Update procedure:.*?(?=\n\n|\Z)", doc, re.DOTALL)
+    assert match, "Update procedure paragraph not found"
+    procedure = re.sub(r"\s+", " ", match.group(0)).lower()
+    assert "consumer behavior" in procedure, (
+        "Update procedure must also instruct re-checking the Consumer "
+        f"Behavior for Unknown Content row: {procedure!r}"
+    )
+
+
+def test_update_procedure_catches_reverted_three_sets_only_scope(monkeypatch):
+    """Probe (🟡 4): reverting the Update-procedure paragraph to its OLD
+    scope — diff the three sets only, no Consumer-Behavior recheck —
+    must go RED.
+    """
+    doc = design_md_spec_keys.__doc__
+    match = re.search(r"Update procedure:.*?(?=\n\n|\Z)", doc, re.DOTALL)
+    assert match, "Update procedure paragraph not found"
+    old_procedure = (
+        "Update procedure: re-run the derivation command below against a newer\n"
+        "spec version, diff the three sets, and bump `PROVENANCE` in the same\n"
+        "commit as any value change."
+    )
+    mutated_doc = doc.replace(match.group(0), old_procedure)
+    assert mutated_doc != doc, "sanity: the OLD-scope paragraph must replace the current one"
+    monkeypatch.setattr(design_md_spec_keys, "__doc__", mutated_doc)
+    with pytest.raises(AssertionError):
+        test_update_procedure_covers_consumer_behavior_row()
