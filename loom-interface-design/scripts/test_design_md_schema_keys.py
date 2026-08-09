@@ -1,7 +1,7 @@
 """Guards the frozen spec key sets in `design_md_spec_keys.py`.
 
 `design_md_spec_keys` is the in-repo frozen copy of `@google/design.md`'s
-closed key sets (frozen-copy pattern per `loom-code/scripts/canonical/README.md`,
+key sets (frozen-copy pattern per `loom-code/scripts/canonical/README.md`,
 chosen because the spec format is `alpha` with no compatibility promise and CI
 must not depend on the network). This test pins the three frozen sets and the
 module's provenance record so any accidental edit to either is caught here
@@ -13,6 +13,7 @@ the sets in-repo is that CI needs neither.
 
 import pathlib
 import re
+import sys
 
 import pytest
 
@@ -25,6 +26,8 @@ SCHEMA_PATH = (
     / "references"
     / "design-md-schema.md"
 )
+
+_THIS_MODULE = sys.modules[__name__]
 
 
 def _schema_text() -> str:
@@ -99,6 +102,40 @@ def _nested_mapping(yaml_block: str, top_key: str) -> dict:
             prop_key, _, prop_value = stripped.partition(":")
             result[current_name][prop_key.strip()] = prop_value.strip()
     return result
+
+
+def _bullet_line(text: str, key: str) -> str:
+    """Return the top-level `- \\`key\\` — ...` bullet line documenting `key`.
+
+    Restricted to bullets that open a line (optionally indented) with the
+    backticked key immediately after the dash, so it locates the single
+    canonical documentation bullet for that key rather than any incidental
+    mention of the same word in prose or a `{key.*}` reference elsewhere.
+    """
+    match = re.search(rf"^\s*- `{re.escape(key)}`.*$", text, re.MULTILINE)
+    assert match, f"no top-level bullet documents `{key}`"
+    return match.group(0)
+
+
+def _header_before_first_bullet(section: str) -> str:
+    """The lead-in prose of `section`, from its start up to (not including)
+    its first top-level `- \\`key\\`` bullet — i.e. whatever framing text
+    introduces the bullet list. Used to check what the header claims about
+    the list below it without depending on the bullets' own wording.
+    """
+    first_bullet = re.search(r"\n- `", section)
+    assert first_bullet, "section has no top-level bullets"
+    return section[: first_bullet.start()]
+
+
+def _monkeypatch_schema_text(monkeypatch: pytest.MonkeyPatch, mutator) -> None:
+    """Patch `_schema_text()` to return the pristine document run through
+    `mutator`, so any caller of `_schema_text()` — including a production
+    test function invoked directly below, one level lower in the stack
+    than calling a helper in isolation — observes the mutated text.
+    """
+    mutated = mutator(_schema_text())
+    monkeypatch.setattr(_THIS_MODULE, "_schema_text", lambda: mutated)
 
 
 def test_frozen_sets_carry_provenance():
@@ -176,10 +213,12 @@ def test_typography_properties_are_all_spec_recognised():
     )
 
 
-def _five_group_paragraph(text: str) -> str:
-    """The intro paragraph naming the five token-group sections, whitespace-
-    normalized. Scoped via `_section` to just this paragraph (ends at the
-    next `##` heading) so the group-name check below can't be satisfied by
+def _five_group_section(text: str) -> str:
+    """The intro section naming the five token-group sections, whitespace-
+    normalized. Named `_..._section` (not `_..._paragraph` — it returns
+    the WHOLE section including its `##` heading, not one paragraph).
+    Scoped via `_section` to just this section (ends at the next `##`
+    heading) so the group-name check below can't be satisfied by
     unrelated headings/prose that happen to repeat the same five words
     elsewhere in the document (all five occur as section headings too).
     """
@@ -189,12 +228,11 @@ def _five_group_paragraph(text: str) -> str:
     return re.sub(r"\s+", " ", section)
 
 
-def _assert_all_token_groups_named(paragraph: str) -> None:
-    """Every TOKEN_GROUPS member must be named in `paragraph`."""
+def _assert_all_token_groups_named(text_blob: str) -> None:
+    """Every TOKEN_GROUPS member must be named in `text_blob`."""
     for group in design_md_spec_keys.TOKEN_GROUPS:
-        assert group in paragraph, (
-            f"TOKEN_GROUPS member `{group}` not named in the five-group "
-            "paragraph under '## The 8 canonical sections (in order)'"
+        assert group in text_blob, (
+            f"TOKEN_GROUPS member `{group}` not named in: {text_blob!r}"
         )
 
 
@@ -206,35 +244,6 @@ def _assert_component_tokens_documented(section: str) -> None:
     """
     for token in design_md_spec_keys.COMPONENT_SUB_TOKENS:
         _bullet_line(section, token)
-
-
-def _bullet_line(text: str, key: str) -> str:
-    """Return the top-level `- \\`key\\` — ...` bullet line documenting `key`.
-
-    Restricted to bullets that open a line (optionally indented) with the
-    backticked key immediately after the dash, so it locates the single
-    canonical documentation bullet for that key rather than any incidental
-    mention of the same word in prose or a `{key.*}` reference elsewhere.
-    """
-    match = re.search(rf"^\s*- `{re.escape(key)}`.*$", text, re.MULTILINE)
-    assert match, f"no top-level bullet documents `{key}`"
-    return match.group(0)
-
-
-# The six loom extensions named in the brief's closed list — deliberately
-# NOT the set-complement of TOKEN_GROUPS, which would also sweep in the
-# spec's own meta keys (name/description/version/omitted).
-LOOM_EXTENSIONS = (
-    "brand_voice",
-    "theme",
-    "shadows",
-    "z_index",
-    "border_width",
-    "border_style",
-)
-
-# Spec meta keys that must be documented WITHOUT the extension label.
-SPEC_META_KEYS = ("name", "description", "version", "omitted")
 
 
 def test_non_spec_keys_are_labelled_and_token_groups_named():
@@ -271,11 +280,11 @@ def test_non_spec_keys_are_labelled_and_token_groups_named():
     assert (
         "Populate each section's YAML token block" not in normalized
     ), "blanket per-section token-block claim still present at :194"
-    # scoped to the five-group intro paragraph, NOT the whole file — a
+    # scoped to the five-group intro section, NOT the whole file — a
     # whole-file grep is satisfied by the group names' own `##` headings
-    # and ordinary prose regardless of what this paragraph actually says
-    # (see the mutation-proof tests below).
-    _assert_all_token_groups_named(_five_group_paragraph(text))
+    # and ordinary prose regardless of what this section actually says
+    # (see the mutation tests below).
+    _assert_all_token_groups_named(_five_group_section(text))
 
 
 def test_component_sub_tokens_are_complete_and_exclusive():
@@ -285,8 +294,8 @@ def test_component_sub_tokens_are_complete_and_exclusive():
     # (a) completeness: every member of COMPONENT_SUB_TOKENS has its own
     # documentation bullet in ## Components — NOT a bare substring check
     # over the whole section, which the fenced yaml example below would
-    # satisfy even after the doc bullet is deleted (see the mutation-proof
-    # tests below).
+    # satisfy even after the doc bullet is deleted (see the mutation tests
+    # below).
     _assert_component_tokens_documented(section)
 
     yaml_block = _fenced_yaml_block(section)
@@ -311,55 +320,76 @@ def test_component_sub_tokens_are_complete_and_exclusive():
     )
 
 
-# --- Mutation-proof tests: the rescoped assertions above must actually bite ---
+# --- Mutation tests: the rescoped assertions above must actually bite ---
 #
 # The whole-branch reviewer proved by mutation that the OLD whole-file/
 # whole-section checks these two tests replaced did NOT catch: (1) blanket
-# replacement of the five-group paragraph, (2) rewriting it to claim "all
+# replacement of the five-group section, (2) rewriting it to claim "all
 # eight" sections carry tokens, (3) renaming a group inside that sentence,
 # and (4) deleting a component token's documentation bullet. Each test below
-# reproduces one such mutation against the REAL file text and asserts the
-# rescoped helper now raises.
+# reproduces one such mutation via `_monkeypatch_schema_text` and asserts
+# that CALLING THE PRODUCTION TEST FUNCTION ITSELF (not a bypassed helper)
+# now raises — one level lower in the stack than calling the helper
+# directly, so a production test body reverted to its old, unscoped check
+# is caught here rather than leaving the suite green (proven: reverting
+# both `test_non_spec_keys_are_labelled_and_token_groups_named`'s and
+# `test_component_sub_tokens_are_complete_and_exclusive`'s helper calls to
+# their pre-fix whole-file/whole-section checks, with the document
+# pristine, used to leave 16/16 passed).
 
 
-def test_five_group_scoping_catches_blanket_paragraph_replacement():
+def test_five_group_scoping_catches_blanket_paragraph_replacement(monkeypatch):
     text = _schema_text()
     section = _section(
         text, "## The 8 canonical sections (in order)", "## Overview / Brand"
     )
     _heading, _, paragraph = section.partition("\n\n")
-    mutated_text = text.replace(paragraph.strip(), "Each section carries stuff.")
+    target = paragraph.strip()
+
+    def mutator(t: str) -> str:
+        return t.replace(target, "Each section carries stuff.")
+
+    _monkeypatch_schema_text(monkeypatch, mutator)
     with pytest.raises(AssertionError):
-        _assert_all_token_groups_named(_five_group_paragraph(mutated_text))
+        test_non_spec_keys_are_labelled_and_token_groups_named()
 
 
-def test_five_group_scoping_catches_all_eight_rewrite():
+def test_five_group_scoping_catches_all_eight_rewrite(monkeypatch):
     text = _schema_text()
     section = _section(
         text, "## The 8 canonical sections (in order)", "## Overview / Brand"
     )
     _heading, _, paragraph = section.partition("\n\n")
-    mutated_text = text.replace(
-        paragraph.strip(),
-        "**All** eight sections carry a YAML token block, in this order.",
-    )
+    target = paragraph.strip()
+
+    def mutator(t: str) -> str:
+        return t.replace(
+            target,
+            "**All** eight sections carry a YAML token block, in this order.",
+        )
+
+    _monkeypatch_schema_text(monkeypatch, mutator)
     with pytest.raises(AssertionError):
-        _assert_all_token_groups_named(_five_group_paragraph(mutated_text))
+        test_non_spec_keys_are_labelled_and_token_groups_named()
 
 
-def test_five_group_scoping_catches_group_rename():
+def test_five_group_scoping_catches_group_rename(monkeypatch):
     text = _schema_text()
     assert text.count("`spacing` (Layout)") == 1, (
         "sanity check: this mutation targets the one occurrence of this "
         "exact phrase — if this fails, the source text moved"
     )
-    mutated_text = text.replace("`spacing` (Layout)", "`gaps` (Layout)", 1)
+
+    def mutator(t: str) -> str:
+        return t.replace("`spacing` (Layout)", "`gaps` (Layout)", 1)
+
+    _monkeypatch_schema_text(monkeypatch, mutator)
     with pytest.raises(AssertionError):
-        _assert_all_token_groups_named(_five_group_paragraph(mutated_text))
+        test_non_spec_keys_are_labelled_and_token_groups_named()
 
 
 @pytest.mark.parametrize("token", ["size", "height", "padding", "width"])
-def test_component_completeness_scoping_catches_deleted_bullet(token):
+def test_component_completeness_scoping_catches_deleted_bullet(token, monkeypatch):
     text = _schema_text()
     section = _section(text, "## Components", "## Do's & Don'ts")
     mutated_section = re.sub(
@@ -370,53 +400,215 @@ def test_component_completeness_scoping_catches_deleted_bullet(token):
         "after its doc bullet is deleted — that survival is exactly what "
         "let the old bare `in` check pass"
     )
+
+    def mutator(t: str) -> str:
+        return t.replace(section, mutated_section)
+
+    _monkeypatch_schema_text(monkeypatch, mutator)
     with pytest.raises(AssertionError):
-        _bullet_line(mutated_section, token)
+        test_component_sub_tokens_are_complete_and_exclusive()
 
 
-# --- Correctness fixes (reviewer 🔴 findings C, D, E) ---
+# The six loom extensions named in the brief's closed list — deliberately
+# NOT the set-complement of TOKEN_GROUPS, which would also sweep in the
+# spec's own meta keys (name/description/version/omitted).
+LOOM_EXTENSIONS = (
+    "brand_voice",
+    "theme",
+    "shadows",
+    "z_index",
+    "border_width",
+    "border_style",
+)
+
+# Spec meta keys that must be documented WITHOUT the extension label.
+SPEC_META_KEYS = ("name", "description", "version", "omitted")
+
+# Display names for TOKEN_GROUPS as they appear in the reference's own
+# prose rosters (e.g. the Derivation contract). Source of truth for
+# MEMBERSHIP is design_md_spec_keys.TOKEN_GROUPS; this only maps each
+# member to how the prose spells it out.
+TOKEN_GROUP_DISPLAY_NAMES = {
+    "colors": "Colors",
+    "typography": "Typography",
+    "spacing": "Layout",
+    "rounded": "Shapes",
+    "components": "Components",
+}
+assert set(TOKEN_GROUP_DISPLAY_NAMES) == design_md_spec_keys.TOKEN_GROUPS, (
+    "TOKEN_GROUP_DISPLAY_NAMES must mirror design_md_spec_keys.TOKEN_GROUPS"
+)
+
+
+def _assert_no_blanket_closed_claim_for_component_sub_tokens(doc: str, *, source: str) -> None:
+    """`doc` must not claim, however phrased, that COMPONENT_SUB_TOKENS (or
+    all three frozen sets taken together) form a closed set — the spec's
+    Consumer Behavior for Unknown Content table accepts an unrecognized
+    component property with a warning (PROVENANCE-cited), so only
+    TOKEN_GROUPS/TYPOGRAPHY_PROPERTIES may be described as closed.
+
+    Property check, not a literal-string ban: split into sentences and flag
+    any sentence that (a) talks about COMPONENT_SUB_TOKENS specifically, or
+    a blanket "all three sets"/"closed key sets" claim covering it, AND
+    (b) calls it "closed" without also saying "not closed" — this survives
+    a full sentence rewrite (only the exact substring "closed key sets"
+    used to be banned; a rewritten sentence carrying neither that phrase
+    nor "component_sub_tokens" verbatim evaded it).
+    """
+    offending = None
+    for sentence in re.split(r"(?<=[.!?])\s+", doc):
+        lowered = sentence.lower()
+        blanket_all_three = "all three" in lowered or "closed key sets" in lowered
+        names_component_tokens = "component_sub_tokens" in lowered
+        if (
+            (blanket_all_three or names_component_tokens)
+            and "closed" in lowered
+            and "not closed" not in lowered
+        ):
+            offending = sentence
+            break
+    assert offending is None, (
+        f"{source} docstring sentence claims a closed set covering "
+        f"COMPONENT_SUB_TOKENS, however phrased: {offending!r}"
+    )
+
+
+# --- Correctness fixes (reviewer findings C, D, E, F) ---
 
 
 def test_elevation_section_disambiguates_non_spec_keys():
-    """Task C: '## Elevation & Depth' stated (two lines up) that elevation is
-    not one of the spec's five token groups and both keys below are loom
-    extensions, then immediately headed the bullet list 'Expected token keys
-    (confirm against the spec):' — inviting confirmation against a spec that
-    has no such keys. Give it the same disambiguating treatment
-    '## Do's & Don'ts' already carries.
+    """Task C: '## Elevation & Depth' states (two lines up) that elevation
+    is not one of the spec's five token groups and both keys below are
+    loom extensions, so a bullet-list header inviting spec-confirmation
+    would contradict its own prior sentence. Property, not two verbatim
+    English sentences: (1) the section carries no fenced yaml block —
+    `_fenced_yaml_block` raising IS the structural cash-out of "not YAML
+    tokens", robust to any wording of that idea (a meaning-preserving
+    reword like "prose only, carrying no YAML token block" must not
+    false-RED — see the mutation test below); (2) the header text framing
+    the bullet list — everything before the first bullet — carries no
+    "confirm ... against the spec" invitation, checked as a collocation
+    of both words rather than one exact phrase, so a determiner-reworded
+    re-add of the old header ("confirm THESE against the spec") is still
+    caught — see the mutation test below.
     """
     text = _schema_text()
     section = _section(text, "## Elevation & Depth", "## Shapes")
-    assert "Expected token keys (confirm against the spec):" not in section, (
-        "the 'confirm against the spec' framing contradicts this section's "
-        "own prior sentence that elevation is not one of the spec's five "
-        "token groups"
+
+    with pytest.raises(AssertionError):
+        _fenced_yaml_block(section)
+
+    header = _header_before_first_bullet(section).lower()
+    assert not ("confirm" in header and "spec" in header), (
+        "the bullet-list header still invites spec-confirmation, which "
+        f"contradicts this section's own prior sentence that elevation "
+        f"is not one of the spec's five token groups: {header!r}"
     )
-    lowered = section.lower()
-    assert "plain prose, not yaml tokens" in lowered, (
-        "must carry the same disambiguating language as ## Do's & Don'ts"
-    )
-    assert "this section carries no fenced yaml block" in lowered, (
-        "must state this explicitly, matching ## Do's & Don'ts's closing line"
-    )
+
+
+def test_elevation_disambiguation_catches_reintroduced_spec_confirmation_header(monkeypatch):
+    """Probe (item 4/5, Task C): the OLD pin banned only the literal string
+    'Expected token keys (confirm against the spec):'. Re-adding a
+    spec-confirmation header with a different determiner —
+    'Expected token keys (confirm THESE against the spec):' — evaded that
+    literal ban. Proves the NEW property-based check in
+    `test_elevation_section_disambiguates_non_spec_keys` catches it.
+    """
+    text = _schema_text()
+    section = _section(text, "## Elevation & Depth", "## Shapes")
+    insertion_point = re.search(r"\n- `", section).start()
+
+    def mutator(t: str) -> str:
+        mutated_section = (
+            section[:insertion_point]
+            + "\nExpected token keys (confirm THESE against the spec):"
+            + section[insertion_point:]
+        )
+        return t.replace(section, mutated_section)
+
+    _monkeypatch_schema_text(monkeypatch, mutator)
+    with pytest.raises(AssertionError):
+        test_elevation_section_disambiguates_non_spec_keys()
+
+
+def test_elevation_disambiguation_tolerates_meaning_preserving_reword(monkeypatch):
+    """Mirror probe (item 4, Task C): the OLD pin required the exact phrase
+    'plain prose, not yaml tokens' (lowercased) to survive verbatim.
+    Rewording it to an equivalent phrase — 'prose only, carrying no YAML
+    token block' — false-REDded that old pin. The NEW property-based
+    check must NOT false-RED on this reword: it depends only on the
+    structural absence of a fenced yaml block and the absence of a
+    spec-confirmation header, neither of which this reword touches.
+    """
+    text = _schema_text()
+    section = _section(text, "## Elevation & Depth", "## Shapes")
+    header_region = _header_before_first_bullet(section)
+
+    def mutator(t: str) -> str:
+        mutated_header = re.sub(
+            r"(?i)plain prose,? not yaml tokens[^\n:]*",
+            "prose only, carrying no YAML token block",
+            header_region,
+        )
+        assert mutated_header != header_region, (
+            "sanity check: the reword regex must actually match the "
+            f"current header text: {header_region!r}"
+        )
+        return t.replace(header_region, mutated_header)
+
+    _monkeypatch_schema_text(monkeypatch, mutator)
+    test_elevation_section_disambiguates_non_spec_keys()  # must NOT raise
 
 
 def test_prose_scope_clause_removed_at_both_loci():
-    """Task D: 'are prose, including any documented loom extensions' (:47,
-    restated :286) contradicts the six labelled extension bullets, which are
-    documented as YAML keys — some inside prose sections (Overview / Brand,
-    Elevation & Depth) but `border_width`/`border_style` inside `## Shapes`,
-    a TOKEN_GROUPS section (`rounded`). The extensions stay as documented
-    YAML keys carrying the export-does-not-carry label; this clause goes.
+    """Task D: 'are prose, including <determiner> documented loom
+    extensions' contradicts the six labelled extension bullets — some of
+    which (`border_width` / `border_style`) live inside `## Shapes`, a
+    TOKEN_GROUPS section (`rounded`), not one of the three prose sections.
+    Property, not one exact string: (1) no sentence assigns documented
+    loom extensions wholesale to prose, tolerant of the determiner word
+    between "including" and "documented" — the OLD pin banned only the
+    literal "including any documented loom extensions", which a
+    determiner swap to "including ALL documented loom extensions" evaded
+    (see the mutation test below); (2) the structural fact that makes the
+    wholesale claim false still holds — border_width / border_style are
+    documented inside ## Shapes, not a prose section.
     """
     text = _schema_text()
     normalized = re.sub(r"\s+", " ", text)
-    assert "including any documented loom extensions" not in normalized, (
-        "the clause implies loom extensions are confined to the three "
-        "prose sections, but border_width/border_style live in ## Shapes "
-        "(a token-group section) — remove the clause, keep the extensions "
-        "as documented YAML keys"
+    assert not re.search(
+        r"including\s+\S+\s+documented loom extensions", normalized, re.IGNORECASE
+    ), (
+        "a sentence still assigns documented loom extensions wholesale to "
+        "prose (any determiner) — border_width/border_style live in "
+        "## Shapes, a token-group section, not a prose section"
     )
+
+    shapes_section = _section(text, "## Shapes", "## Components")
+    for key in ("border_width", "border_style"):
+        _bullet_line(shapes_section, key)
+
+
+def test_prose_scope_clause_catches_determiner_reword(monkeypatch):
+    """Probe (item 4/5, Task D): restoring the false wholesale claim with a
+    different determiner — 'including ALL documented loom extensions' —
+    evaded the OLD literal-string pin ("including any documented loom
+    extensions"). Proves the NEW determiner-tolerant regex catches it.
+    """
+    text = _schema_text()
+    section = _section(
+        text, "## The 8 canonical sections (in order)", "## Overview / Brand"
+    )
+    _heading, _, paragraph = section.partition("\n\n")
+    target = paragraph.strip()
+
+    def mutator(t: str) -> str:
+        mutated = target + " Both are prose, including ALL documented loom extensions."
+        return t.replace(target, mutated)
+
+    _monkeypatch_schema_text(monkeypatch, mutator)
+    with pytest.raises(AssertionError):
+        test_prose_scope_clause_removed_at_both_loci()
 
 
 def test_component_sub_tokens_docstring_not_claimed_closed():
@@ -425,33 +617,206 @@ def test_component_sub_tokens_docstring_not_claimed_closed():
     component property | Accept with warning | borderColor', so
     COMPONENT_SUB_TOKENS is the spec's RECOGNISED set, not closed.
     TOKEN_GROUPS/TYPOGRAPHY_PROPERTIES have no such row; 'closed' still
-    holds for those two. Pins the corrected docstring wording only — no
-    frozen value changes (see test_frozen_sets_carry_provenance).
+    holds for those two. Property check (see
+    `_assert_no_blanket_closed_claim_for_component_sub_tokens`), not the
+    literal string "closed key sets" — a full-sentence rewrite ("All
+    three sets … are closed: an unrecognized member of any of them is
+    rejected by the spec") evaded that literal ban (see the mutation test
+    below). Pins the corrected docstring property only — no frozen value
+    changes (see test_frozen_sets_carry_provenance).
     """
     doc = design_md_spec_keys.__doc__
-    assert "closed key sets" not in doc, (
-        "module docstring must not blanket-claim all three sets are "
-        "closed — COMPONENT_SUB_TOKENS is the spec's recognised set, not "
-        "closed"
-    )
+    _assert_no_blanket_closed_claim_for_component_sub_tokens(doc, source="design_md_spec_keys")
     assert "COMPONENT_SUB_TOKENS" in doc, (
         "docstring must name COMPONENT_SUB_TOKENS when distinguishing its "
         "recognised/closed status from the other two sets"
     )
 
 
+def test_component_sub_tokens_docstring_catches_reworded_closed_claim(monkeypatch):
+    """Probe (item 4/5, Task F): restoring the false closed-set claim fully
+    reworded — 'All three sets … are closed: an unrecognized member of
+    any of them is rejected by the spec' — carries neither the literal
+    substring "closed key sets" nor the name "COMPONENT_SUB_TOKENS", so
+    it evaded the OLD literal-string pin. Proves the NEW property check
+    catches it via the "all three" + "closed" (without "not closed")
+    collocation.
+    """
+    mutated_doc = (
+        design_md_spec_keys.__doc__
+        + "\n\nAll three sets are closed: an unrecognized member of any "
+        "of them is rejected by the spec."
+    )
+    monkeypatch.setattr(design_md_spec_keys, "__doc__", mutated_doc)
+    with pytest.raises(AssertionError):
+        test_component_sub_tokens_docstring_not_claimed_closed()
+
+
+def test_module_docstring_not_claimed_closed():
+    """Item 3: this test module's OWN docstring (module-level, describing
+    `design_md_spec_keys`'s three sets as "closed key sets") is a SECOND,
+    previously-unguarded copy of the same blanket-closed claim Task F
+    fixed in `design_md_spec_keys.__doc__` — Task F's original pin only
+    scoped to that one module's docstring. Extends the same property
+    check to this module's docstring too.
+    """
+    doc = __doc__
+    _assert_no_blanket_closed_claim_for_component_sub_tokens(
+        doc, source="test_design_md_schema_keys"
+    )
+
+
 def test_derivation_contract_excludes_elevation():
-    """Task E: the Derivation contract roster still named Elevation as
-    token-bearing ('every token in Colors / Typography / Layout / Elevation
-    / Shapes / Components') — same claim class as C. TOKEN_GROUPS has no
-    elevation member; fix the roster to the five-group reality.
+    """Task E: the Derivation contract's roster clause ('every token in
+    <roster> MUST be derivable...') must name exactly the five
+    TOKEN_GROUPS sections (by their prose display names) — no more, no
+    less. Scoped to the roster clause itself, not the whole section — the
+    OLD pin banned the substring "Elevation" anywhere in the section, so
+    a clarifying parenthetical added elsewhere in the section
+    ("Elevation is excluded — it is not a spec token group") would have
+    false-REDded it (see the mutation test below proving the new scoping
+    tolerates exactly that addition).
     """
     text = _schema_text()
-    section = _section(text, "**Derivation contract:**", "Expected YAML frontmatter")
-    normalized = re.sub(r"\s+", " ", section)
-    assert "Elevation" not in normalized, (
-        "the Derivation contract roster still names Elevation as "
-        "token-bearing; TOKEN_GROUPS has no elevation member"
+    section = _section(text, "**Derivation contract:**", "## Colors")
+    match = re.search(r"every token in (.+?) MUST be derivable", section, re.DOTALL)
+    assert match, "Derivation contract roster clause not found"
+    roster = re.sub(r"\s+", " ", match.group(1))
+    names = {name.strip() for name in re.split(r"/|,|\band\b", roster) if name.strip()}
+    assert names == set(TOKEN_GROUP_DISPLAY_NAMES.values()), (
+        "Derivation contract roster must name exactly the five TOKEN_GROUPS "
+        f"sections {sorted(TOKEN_GROUP_DISPLAY_NAMES.values())}, got {sorted(names)}"
     )
-    for name in ("Colors", "Typography", "Layout", "Shapes", "Components"):
-        assert name in normalized, f"Derivation contract roster must still name `{name}`"
+
+
+def test_derivation_contract_roster_catches_elevation_readded(monkeypatch):
+    """Probe (item 4/5, Task E): re-adding Elevation to the roster clause
+    itself must still go RED under the new scoped check.
+    """
+    text = _schema_text()
+    section = _section(text, "**Derivation contract:**", "## Colors")
+    match = re.search(r"every token in (.+?) MUST be derivable", section, re.DOTALL)
+    assert match
+    roster = match.group(1)
+    mutated_roster = roster.rstrip() + " / Elevation"
+
+    def mutator(t: str) -> str:
+        mutated_section = section.replace(roster, mutated_roster, 1)
+        return t.replace(section, mutated_section)
+
+    _monkeypatch_schema_text(monkeypatch, mutator)
+    with pytest.raises(AssertionError):
+        test_derivation_contract_excludes_elevation()
+
+
+def test_derivation_contract_tolerates_clarifying_elevation_note_outside_roster(monkeypatch):
+    """Mirror probe (item 4, Task E): a clarifying parenthetical about
+    Elevation added OUTSIDE the roster clause (elsewhere in the same
+    section) must NOT false-RED — this is exactly what the OLD
+    whole-section substring ban on "Elevation" would have done.
+    """
+    text = _schema_text()
+    section = _section(text, "**Derivation contract:**", "## Colors")
+
+    def mutator(t: str) -> str:
+        mutated_section = (
+            section.rstrip()
+            + "\n(Elevation is excluded — it is not a spec token group.)\n\n"
+        )
+        return t.replace(section, mutated_section)
+
+    _monkeypatch_schema_text(monkeypatch, mutator)
+    test_derivation_contract_excludes_elevation()  # must NOT raise
+
+
+# --- Additional loci (items 1, 6, 7) ---
+
+
+def test_component_properties_header_not_claimed_closed():
+    """Item 1: '## Components' headed its property list "drawn only from
+    this closed set (confirm against the spec)" — but a live
+    `npx @google/design.md@0.4.0 spec` run (commit 546e9f3a,
+    design_md_spec_keys.py:8-13) showed an unrecognized component
+    property is accepted with a warning, not rejected: COMPONENT_SUB_TOKENS
+    is the spec's RECOGNISED set, not closed. The header must stop
+    claiming closedness and stop inviting spec-confirmation of a
+    closedness that doesn't exist. `## Typography`'s closed-set claim
+    (`:131`) is untouched and must stay — TYPOGRAPHY_PROPERTIES genuinely
+    is closed, unlike COMPONENT_SUB_TOKENS.
+    """
+    text = _schema_text()
+
+    components_section = _section(text, "## Components", "## Do's & Don'ts")
+    components_header = _header_before_first_bullet(components_section).lower()
+    assert "closed" not in components_header, (
+        f"the Components property-list header still claims closedness: {components_header!r}"
+    )
+    assert not ("confirm" in components_header and "spec" in components_header), (
+        "the Components property-list header still invites spec-confirmation "
+        f"of a closed set that doesn't exist: {components_header!r}"
+    )
+
+    typography_section = _section(text, "## Typography", "## Layout")
+    typography_header = _header_before_first_bullet(typography_section).lower()
+    assert "closed" in typography_header, (
+        "## Typography's closed-set claim must stay — TYPOGRAPHY_PROPERTIES "
+        "genuinely is closed, unlike COMPONENT_SUB_TOKENS"
+    )
+
+
+def test_generation_checklist_step3_names_all_token_groups():
+    """Item 6: the Generation-checklist step-3 five-group roster is
+    deletable today with a fully green suite. Pin it structurally.
+    """
+    text = _schema_text()
+    section = _section(text, "## Generation checklist", "## Anti-patterns")
+    step3_match = re.search(r"\n3\.\s.*?(?=\n\d\.|\Z)", section, re.DOTALL)
+    assert step3_match, "Generation checklist has no step 3"
+    _assert_all_token_groups_named(re.sub(r"\s+", " ", step3_match.group(0)))
+
+
+def test_shapes_rounded_bullet_states_not_radius():
+    """Item 6: the '## Shapes' `rounded` bullet is the sole locus of the
+    load-bearing "Token key is `rounded` per the Google DESIGN.md spec
+    (not `radius`)" correction. Pin it.
+    """
+    text = _schema_text()
+    section = _section(text, "## Shapes", "## Components")
+    line = _bullet_line(section, "rounded").lower()
+    assert "radius" in line and "not" in line, (
+        f"the `rounded` bullet must keep the not-`radius` correction: {line!r}"
+    )
+
+
+def test_shapes_header_distinguishes_extension_bullets_from_spec_keys():
+    """Item 7: '## Shapes' used to head its whole bullet list — including
+    the two loom-extension bullets `border_width`/`border_style` — with
+    one unscoped "confirm against the spec" hedge, which does not apply
+    to keys that aren't spec keys at all. The header must name the
+    extensions as extensions rather than fold them under the spec-key
+    hedge (Shapes stays a token-group section — this only rescopes the
+    hedge, it does not reclassify Shapes as prose).
+    """
+    text = _schema_text()
+    section = _section(text, "## Shapes", "## Components")
+    header = _header_before_first_bullet(section).lower()
+    assert "extension" in header, (
+        "the header above the bullet list must name the loom extensions "
+        f"below it as extensions, not fold them under a spec-confirmation "
+        f"hedge that doesn't apply to them: {header!r}"
+    )
+
+
+def test_overview_brand_header_distinguishes_extension_bullets_from_spec_keys():
+    """Item 7: same fix as Shapes, applied to Overview / Brand's mixed
+    frontmatter list (`name`/`description`/`version`/`omitted` spec keys
+    plus `brand_voice`/`theme` loom extensions, all previously under one
+    unscoped "confirm against the spec" hedge).
+    """
+    text = _schema_text()
+    section = _section(text, "## Overview / Brand", "## Colors")
+    header = _header_before_first_bullet(section).lower()
+    assert "extension" in header, (
+        "the header above the frontmatter bullet list must name the loom "
+        f"extensions below it as extensions: {header!r}"
+    )

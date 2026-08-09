@@ -90,7 +90,9 @@ Anti-patterns section bans. A committed concept makes most of those bans
 redundant: a design that commits to "restrained editorial" does not reach for a
 purple gradient on its own.
 
-Expected YAML frontmatter / token keys (confirm against the spec):
+`name` / `description` / `version` / `omitted` are spec frontmatter keys
+below (confirm against the spec at generation time); `brand_voice` /
+`theme` are documented loom extensions, not spec keys:
 
 - `name` — product / system name
 - `description` — one-line design-system intent
@@ -177,8 +179,8 @@ Expected keys (confirm against the spec):
 
 The elevation system — shadows and layering used to express depth and
 stacking order. `elevation` is not one of the spec's five token groups; both
-keys below are documented loom extensions — plain prose, not YAML tokens
-confirmed against the spec:
+keys below are documented loom extensions — plain prose, not YAML tokens,
+listed here for reference:
 
 - `shadows` — the shadow ramp (e.g. sm / md / lg / xl) — **loom extension: `export` does not carry this token.**
 - `z_index` — named stacking layers (e.g. base / overlay / modal / toast) — **loom extension: `export` does not carry this token.**
@@ -189,7 +191,9 @@ This section carries no fenced YAML block.
 
 Corner radii and border treatment — the shape language of components.
 
-Expected token keys (confirm against the spec):
+`rounded` is the spec key below (confirm against the spec at generation
+time); `border_width` / `border_style` are documented loom extensions, not
+spec keys:
 
 - `rounded` — the corner-radius scale (e.g. none / sm / md / lg / full). Token key is `rounded` per the Google DESIGN.md spec (not `radius`).
 - `border_width` — border weight tokens — **loom extension: `export` does not carry this token.**
@@ -204,7 +208,9 @@ component *behavior* or *flows* (those are out of scope — see the scope note).
 
 Component names (`button`, `input`, `card`, …) are open, matching
 Typography's open level-name position. Each component's properties are
-drawn only from this closed set (confirm against the spec):
+drawn from this recognised set — the spec accepts an unrecognized
+component property with a warning rather than rejecting it, so this list
+guides, but does not gate, what a property key may be:
 
 - `backgroundColor` — fill color, typically a `{colors.*}` reference
 - `textColor` — foreground/text color, typically a `{colors.*}` reference
