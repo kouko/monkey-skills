@@ -111,15 +111,46 @@ foreground/background pairing MUST satisfy WCAG-AA contrast (see above).
 
 ## Typography
 
-The type system — font families, the modular scale, and the weight ramp.
+The type system — a set of **named typography levels**, each a nested
+mapping of properties (not a flat list of scale/weight/family keys). A real
+product's `DESIGN.md` typically names **9-15 levels** spanning display,
+headline, title, body, and label roles at multiple sizes (e.g.
+`display-lg`, `headline-lg`/`md`/`sm`, `title-lg`/`md`/`sm`,
+`body-lg`/`md`/`sm`, `label-lg`/`md`/`sm`) — this reference shows 3
+representative levels; extend the pattern to the full ramp when emitting.
 
-Expected token keys (confirm against the spec):
+Level names are open — pick names that fit the product's voice. Each
+level's properties are drawn only from this closed set (confirm against
+the spec):
 
-- `font_family` — base / heading / mono font stacks
-- `scale` — the type scale (e.g. ratio or explicit step sizes)
-- `weights` — the weight ramp (e.g. regular / medium / bold)
-- `line_height` — base leading
-- `letter_spacing` — tracking, where it deviates from default
+- `fontFamily` — base / heading / mono font stack for this level
+- `fontSize`
+- `fontWeight`
+- `lineHeight`
+- `letterSpacing` — tracking, where it deviates from default
+- `fontFeature` — OpenType feature settings, where used
+- `fontVariation` — variable-font axis settings, where used
+
+```yaml
+typography:
+  headline-lg:
+    fontFamily: "Fraktion Mono, monospace"
+    fontSize: "32px"
+    fontWeight: 600
+    lineHeight: 1.2
+  body-md:
+    fontFamily: "Fraktion Sans, sans-serif"
+    fontSize: "16px"
+    fontWeight: 400
+    lineHeight: 1.5
+    letterSpacing: "0.01em"
+  label-sm:
+    fontFamily: "Fraktion Sans, sans-serif"
+    fontSize: "12px"
+    fontWeight: 500
+    lineHeight: 1.4
+    letterSpacing: "0.02em"
+```
 
 ## Layout
 
