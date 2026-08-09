@@ -176,6 +176,73 @@ def test_typography_properties_are_all_spec_recognised():
     )
 
 
+def _bullet_line(text: str, key: str) -> str:
+    """Return the top-level `- \\`key\\` — ...` bullet line documenting `key`.
+
+    Restricted to bullets that open a line (optionally indented) with the
+    backticked key immediately after the dash, so it locates the single
+    canonical documentation bullet for that key rather than any incidental
+    mention of the same word in prose or a `{key.*}` reference elsewhere.
+    """
+    match = re.search(rf"^\s*- `{re.escape(key)}`.*$", text, re.MULTILINE)
+    assert match, f"no top-level bullet documents `{key}`"
+    return match.group(0)
+
+
+# The six loom extensions named in the brief's closed list — deliberately
+# NOT the set-complement of TOKEN_GROUPS, which would also sweep in the
+# spec's own meta keys (name/description/version/omitted).
+LOOM_EXTENSIONS = (
+    "brand_voice",
+    "theme",
+    "shadows",
+    "z_index",
+    "border_width",
+    "border_style",
+)
+
+# Spec meta keys that must be documented WITHOUT the extension label.
+SPEC_META_KEYS = ("name", "description", "version", "omitted")
+
+
+def test_non_spec_keys_are_labelled_and_token_groups_named():
+    text = _schema_text()
+
+    # (a) extensions labelled: each of the six enumerated loom extensions
+    # appears under its own bullet, and that bullet's line states plainly
+    # that `export` does not carry it (both words present, case-insensitive).
+    for key in LOOM_EXTENSIONS:
+        line = _bullet_line(text, key).lower()
+        assert "extension" in line, f"`{key}` bullet has no extension label: {line!r}"
+        assert "export" in line, f"`{key}` bullet doesn't say export omits it: {line!r}"
+
+    # (b) spec meta keys unlabelled: name/description/version/omitted are
+    # documented but their bullets must NOT carry the extension label.
+    for key in SPEC_META_KEYS:
+        line = _bullet_line(text, key).lower()
+        assert "extension" not in line, (
+            f"spec meta key `{key}` incorrectly carries the extension label: {line!r}"
+        )
+
+    # (c) grounding stamped: the grounding note names the verified spec
+    # version.
+    grounding = _section(text, "> **Grounding.**", "> **Scope")
+    assert "0.4.0" in grounding, "grounding note doesn't name the verified spec version"
+
+    # (d) blanket claim gone at BOTH loci, replaced by the five-group
+    # reality (whitespace-normalized so a line-wrapped phrase still matches).
+    normalized = re.sub(r"\s+", " ", text)
+    assert (
+        "Each section carries a short prose rationale plus a YAML token block"
+        not in normalized
+    ), "blanket per-section token-block claim still present at :41-42"
+    assert (
+        "Populate each section's YAML token block" not in normalized
+    ), "blanket per-section token-block claim still present at :194"
+    for group in design_md_spec_keys.TOKEN_GROUPS:
+        assert group in normalized, f"TOKEN_GROUPS member `{group}` not named in reference"
+
+
 def test_component_sub_tokens_are_complete_and_exclusive():
     text = _schema_text()
     section = _section(text, "## Components", "## Do's & Don'ts")

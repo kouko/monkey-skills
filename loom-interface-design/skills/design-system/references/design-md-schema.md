@@ -8,7 +8,9 @@ Apache-2.0-licensed `DESIGN.md` format — the **visual system** for a product.
 > Apache-2.0) and its lint CLI (reported as `npx @google/design.md`) are documented from
 > secondary sources, not a frozen in-repo copy of the spec. **Verify the format's current
 > shape, exact license, and the exact lint package/command against the authoritative Google
-> `DESIGN.md` spec at generation time** before relying on any of them.
+> `DESIGN.md` spec at generation time** before relying on any of them. The frozen key sets
+> this reference checks against (`design_md_spec_keys.py`) were verified against
+> `@google/design.md` version `0.4.0` on 2026-08-10.
 
 > **Scope — visual system only.** `DESIGN.md` documents the product's
 > *visual* design system: brand, color, type, spacing, elevation, shape,
@@ -38,8 +40,11 @@ Apache-2.0-licensed `DESIGN.md` format — the **visual system** for a product.
 
 ## The 8 canonical sections (in order)
 
-The artifact MUST contain these eight `##` sections, **in this order**. Each
-section carries a short prose rationale plus a YAML token block.
+The artifact MUST contain these eight `##` sections, **in this order**. Five
+of the eight carry a YAML token block, one per spec token group — `colors`
+(Colors), `typography` (Typography), `rounded` (Shapes), `spacing` (Layout),
+`components` (Components). The remaining three (Overview / Brand, Elevation
+& Depth, Do's & Don'ts) are prose, including any documented loom extensions.
 
 ## Overview / Brand
 
@@ -89,8 +94,10 @@ Expected YAML frontmatter / token keys (confirm against the spec):
 
 - `name` — product / system name
 - `description` — one-line design-system intent
-- `brand_voice` — adjectives describing personality / mood (e.g. calm, precise)
-- `theme` — `light` / `dark` / `system`
+- `version` — the `DESIGN.md` spec version this document targets (e.g. `0.4.0`; confirm exact semantics against the spec)
+- `omitted` — token groups intentionally left out of this document (spec meta key; confirm exact semantics against the spec)
+- `brand_voice` — adjectives describing personality / mood (e.g. calm, precise) — **loom extension: `export` does not carry this token.**
+- `theme` — `light` / `dark` / `system` — **loom extension: `export` does not carry this token.**
 
 ## Colors
 
@@ -105,6 +112,7 @@ Expected token keys (confirm against the spec):
 - `foreground`
 - `destructive`
 - `muted`
+- `surface` — surface tint per elevation level (relocated from Elevation & Depth; `surface` is a spec-recommended color token name, not an extension)
 
 Each token is a color value (hex / oklch / CSS variable). Every
 foreground/background pairing MUST satisfy WCAG-AA contrast (see above).
@@ -154,25 +162,27 @@ typography:
 
 ## Layout
 
-Spacing, container width, and grid — the spatial skeleton.
+The `spacing` token group — the spatial skeleton. Container width, grid, and
+breakpoints are entries nested under `spacing`, not separate token groups of
+their own.
 
-Expected token keys (confirm against the spec):
+Expected keys (confirm against the spec):
 
-- `spacing` — the spacing scale (e.g. base unit + steps)
-- `max_width` — content container max width
-- `grid` — column count / gutter
-- `breakpoints` — responsive breakpoints
+- `spacing` — the spacing scale (e.g. base unit + steps), nesting:
+  - `max_width` — content container max width
+  - `grid` — column count / gutter
+  - `breakpoints` — responsive breakpoints
 
 ## Elevation & Depth
 
 The elevation system — shadows and layering used to express depth and
-stacking order.
+stacking order. `elevation` is not one of the spec's five token groups; both
+keys below are documented loom extensions.
 
 Expected token keys (confirm against the spec):
 
-- `shadows` — the shadow ramp (e.g. sm / md / lg / xl)
-- `z_index` — named stacking layers (e.g. base / overlay / modal / toast)
-- `surface` — surface tints per elevation level
+- `shadows` — the shadow ramp (e.g. sm / md / lg / xl) — **loom extension: `export` does not carry this token.**
+- `z_index` — named stacking layers (e.g. base / overlay / modal / toast) — **loom extension: `export` does not carry this token.**
 
 ## Shapes
 
@@ -181,8 +191,8 @@ Corner radii and border treatment — the shape language of components.
 Expected token keys (confirm against the spec):
 
 - `rounded` — the corner-radius scale (e.g. none / sm / md / lg / full). Token key is `rounded` per the Google DESIGN.md spec (not `radius`).
-- `border_width` — border weight tokens
-- `border_style` — default border style where it matters
+- `border_width` — border weight tokens — **loom extension: `export` does not carry this token.**
+- `border_style` — default border style where it matters — **loom extension: `export` does not carry this token.**
 
 ## Components
 
@@ -252,14 +262,15 @@ components:
 
 ## Do's & Don'ts
 
-Usage guardrails — the prose rules that keep the system coherent when applied.
-Pairs of recommended / discouraged usage (e.g. "DO use `accent` sparingly for
-single primary actions; DON'T tint large surfaces with `accent`").
+Usage guardrails — plain prose, not YAML tokens, matching the spec's own
+Do's-and-Don'ts example (a bullet list). Pairs of recommended / discouraged
+usage (e.g. "DO use `accent` sparingly for single primary actions; DON'T
+tint large surfaces with `accent`") under two prose lists:
 
-Expected token keys (confirm against the spec):
+- `dos` — recommended-usage rules, as prose bullets
+- `donts` — discouraged-usage rules, as prose bullets
 
-- `dos` — list of recommended-usage rules
-- `donts` — list of discouraged-usage rules
+This section carries no fenced YAML block.
 
 ## Generation checklist
 
@@ -270,7 +281,9 @@ When emitting `DESIGN.md`, the `design-system` skill MUST:
 2. **Commit the visual concept first** (Overview / Brand: an art-direction idea
    + the 3-5 generative visual principles, per the *Derivation contract*), then
    emit all 8 `##` sections in the order above.
-3. Populate each section's YAML token block.
+3. Populate the YAML token block for the five token-group sections —
+   `colors`, `typography`, `rounded`, `spacing`, `components` — and write
+   prose (including any documented loom extensions) for the rest.
 4. Verify every color pairing meets WCAG-AA contrast.
 5. Run `npx @google/design.md` lint and resolve violations before declaring done.
 6. Keep flows / screens / navigation **out** — those go in `ui-flows.md`.
