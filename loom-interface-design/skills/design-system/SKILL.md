@@ -35,10 +35,11 @@ spec's lint (`npx @google/design.md`) where available.
 ## Scope — visual system only, NOT flows
 
 `DESIGN.md` documents the product's **visual system** only — brand, color,
-type, spacing, elevation, shape, and component tokens. It does **NOT** address
-user **flows**, screen/command inventory, navigation, or interaction — those
-live in **`ui-flows.md`**, produced by the **`interaction-flows`** skill. Do
-not put flows, screen inventories, or render-variant tables in `DESIGN.md`.
+type, spacing, elevation, shape, and component-token defaults. It does
+**NOT** address user **flows**, screen/command inventory, navigation, or
+interaction — those live in **`ui-flows.md`**, produced by the
+**`interaction-flows`** skill. Do not put flows, screen inventories, or
+render-variant tables in `DESIGN.md`.
 
 The emitted **`DESIGN.md` tokens are a side-channel** straight to
 loom-code's frontend implementation (styling / lint) — the design system
@@ -133,9 +134,10 @@ Emit a **`DESIGN.md`** following the schema contract from Step 1:
 
 **Surface treatment — the candidate round (step 2 above, in full).** The
 surface-treatment axis (skeuomorphic / flat / material-elevation / neumorphic /
-glassmorphic / neubrutalist …) is a **choice over the very tokens the schema
-already ships** — `surface`, `shadows`, radii and borders. This station owns
-that choice; it is never an unnamed default.
+glassmorphic / neubrutalist …) is a **choice over how depth is conveyed and
+how corners/borders are shaped** — the `rounded` and border tokens in Shapes,
+plus Elevation & Depth's prose description. This station owns that choice; it
+is never an unnamed default.
 
 - **This round is downstream of the tone & manner anchor** (Step 2): the
   inherited **3-5 tone & manner adjectives** are the governing mood and they

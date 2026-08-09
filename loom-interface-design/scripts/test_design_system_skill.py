@@ -299,6 +299,62 @@ def test_surface_treatment_candidate_pick_protocol():
     )
 
 
+def test_surface_treatment_paragraph_does_not_name_surface_shadows_as_schema_tokens():
+    """The surface-treatment axis paragraph must not claim `surface` and
+    `shadows` are schema-shipped tokens — `TOKEN_GROUPS`
+    (`design_md_spec_keys.py`, Task 1's frozen copy) has no
+    elevation/shadow/surface token group. The paragraph's real subject — this
+    station owns the depth/shape choice — survives via the real `rounded` +
+    border tokens in Shapes and Elevation & Depth's prose description.
+    """
+    block = _surface_block()
+
+    assert (
+        "the very tokens the schema already ships` — `surface`, `shadows`, "
+        "radii and borders"
+    ) not in block, (
+        "must not claim `surface`/`shadows` are schema-shipped tokens — "
+        "TOKEN_GROUPS has no elevation/shadow/surface group"
+    )
+    assert "`surface`" not in block, \
+        "`surface` is not a TOKEN_GROUPS member; do not name it as a " \
+        "schema-shipped token"
+    assert "`shadows`" not in block, \
+        "`shadows` is not a TOKEN_GROUPS member; do not name it as a " \
+        "schema-shipped token"
+    assert "choice over how depth is conveyed" in block, \
+        "the paragraph must still frame the surface-treatment axis as this " \
+        "station's choice, now grounded in depth + shape rather than a " \
+        "fictitious shipped-token claim"
+    assert "`rounded`" in block, \
+        "the reworded claim must point at the real Shapes token key `rounded`"
+
+
+def _scope_block() -> str:
+    """The `## Scope` section — lowercased, whitespace-flattened."""
+    text = _text()
+    start = text.index("## Scope — visual system only")
+    end = text.index("## Procedure", start)
+    return re.sub(r"\s+", " ", text[start:end]).lower()
+
+
+def test_scope_section_lists_component_token_defaults_not_bare_tokens():
+    """The Scope section's list ('brand, color, type, spacing, elevation,
+    shape, and component ... tokens') must not let a trailing bare 'tokens'
+    distribute across the whole list — that reading asserts an 'elevation
+    tokens' group, and `TOKEN_GROUPS` has none. Hyphenate so 'tokens' binds
+    only to 'component', matching the file's own already-correct phrasing at
+    `SKILL.md:11` ('component-token defaults').
+    """
+    block = _scope_block()
+    assert "and component tokens" not in block, \
+        "trailing bare 'tokens' distributes across the whole list, " \
+        "implying an 'elevation tokens' group that TOKEN_GROUPS does not have"
+    assert "and component-token defaults" in block, \
+        "must hyphenate so 'tokens' binds only to 'component', matching " \
+        "the file's own correct phrasing elsewhere"
+
+
 def _step4_block() -> str:
     """Step 4's emit instruction — lowercased, whitespace-flattened.
 
