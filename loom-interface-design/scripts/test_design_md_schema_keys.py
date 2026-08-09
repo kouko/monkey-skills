@@ -176,6 +176,38 @@ def test_typography_properties_are_all_spec_recognised():
     )
 
 
+def _five_group_paragraph(text: str) -> str:
+    """The intro paragraph naming the five token-group sections, whitespace-
+    normalized. Scoped via `_section` to just this paragraph (ends at the
+    next `##` heading) so the group-name check below can't be satisfied by
+    unrelated headings/prose that happen to repeat the same five words
+    elsewhere in the document (all five occur as section headings too).
+    """
+    section = _section(
+        text, "## The 8 canonical sections (in order)", "## Overview / Brand"
+    )
+    return re.sub(r"\s+", " ", section)
+
+
+def _assert_all_token_groups_named(paragraph: str) -> None:
+    """Every TOKEN_GROUPS member must be named in `paragraph`."""
+    for group in design_md_spec_keys.TOKEN_GROUPS:
+        assert group in paragraph, (
+            f"TOKEN_GROUPS member `{group}` not named in the five-group "
+            "paragraph under '## The 8 canonical sections (in order)'"
+        )
+
+
+def _assert_component_tokens_documented(section: str) -> None:
+    """Every COMPONENT_SUB_TOKENS member must have its own documentation
+    bullet in `section` — scoped via `_bullet_line`, not a bare substring
+    check (the fenced yaml example later in the section repeats the same
+    words as literal keys/values, so a bare `in` survives a deleted bullet).
+    """
+    for token in design_md_spec_keys.COMPONENT_SUB_TOKENS:
+        _bullet_line(section, token)
+
+
 def _bullet_line(text: str, key: str) -> str:
     """Return the top-level `- \\`key\\` — ...` bullet line documenting `key`.
 
@@ -239,24 +271,23 @@ def test_non_spec_keys_are_labelled_and_token_groups_named():
     assert (
         "Populate each section's YAML token block" not in normalized
     ), "blanket per-section token-block claim still present at :194"
-    for group in design_md_spec_keys.TOKEN_GROUPS:
-        assert group in normalized, f"TOKEN_GROUPS member `{group}` not named in reference"
+    # scoped to the five-group intro paragraph, NOT the whole file — a
+    # whole-file grep is satisfied by the group names' own `##` headings
+    # and ordinary prose regardless of what this paragraph actually says
+    # (see the mutation-proof tests below).
+    _assert_all_token_groups_named(_five_group_paragraph(text))
 
 
 def test_component_sub_tokens_are_complete_and_exclusive():
     text = _schema_text()
     section = _section(text, "## Components", "## Do's & Don'ts")
 
-    # (a) completeness: every member of COMPONENT_SUB_TOKENS is named
-    # somewhere in the ## Components section.
-    missing = {
-        token
-        for token in design_md_spec_keys.COMPONENT_SUB_TOKENS
-        if token not in section
-    }
-    assert not missing, (
-        f"component sub-tokens not documented in ## Components: {missing}"
-    )
+    # (a) completeness: every member of COMPONENT_SUB_TOKENS has its own
+    # documentation bullet in ## Components — NOT a bare substring check
+    # over the whole section, which the fenced yaml example below would
+    # satisfy even after the doc bullet is deleted (see the mutation-proof
+    # tests below).
+    _assert_component_tokens_documented(section)
 
     yaml_block = _fenced_yaml_block(section)
     components = _nested_mapping(yaml_block, "components")
@@ -278,3 +309,66 @@ def test_component_sub_tokens_are_complete_and_exclusive():
     assert not unrecognised, (
         f"component keys not in the spec whitelist: {unrecognised}"
     )
+
+
+# --- Mutation-proof tests: the rescoped assertions above must actually bite ---
+#
+# The whole-branch reviewer proved by mutation that the OLD whole-file/
+# whole-section checks these two tests replaced did NOT catch: (1) blanket
+# replacement of the five-group paragraph, (2) rewriting it to claim "all
+# eight" sections carry tokens, (3) renaming a group inside that sentence,
+# and (4) deleting a component token's documentation bullet. Each test below
+# reproduces one such mutation against the REAL file text and asserts the
+# rescoped helper now raises.
+
+
+def test_five_group_scoping_catches_blanket_paragraph_replacement():
+    text = _schema_text()
+    section = _section(
+        text, "## The 8 canonical sections (in order)", "## Overview / Brand"
+    )
+    _heading, _, paragraph = section.partition("\n\n")
+    mutated_text = text.replace(paragraph.strip(), "Each section carries stuff.")
+    with pytest.raises(AssertionError):
+        _assert_all_token_groups_named(_five_group_paragraph(mutated_text))
+
+
+def test_five_group_scoping_catches_all_eight_rewrite():
+    text = _schema_text()
+    section = _section(
+        text, "## The 8 canonical sections (in order)", "## Overview / Brand"
+    )
+    _heading, _, paragraph = section.partition("\n\n")
+    mutated_text = text.replace(
+        paragraph.strip(),
+        "**All** eight sections carry a YAML token block, in this order.",
+    )
+    with pytest.raises(AssertionError):
+        _assert_all_token_groups_named(_five_group_paragraph(mutated_text))
+
+
+def test_five_group_scoping_catches_group_rename():
+    text = _schema_text()
+    assert text.count("`spacing` (Layout)") == 1, (
+        "sanity check: this mutation targets the one occurrence of this "
+        "exact phrase — if this fails, the source text moved"
+    )
+    mutated_text = text.replace("`spacing` (Layout)", "`gaps` (Layout)", 1)
+    with pytest.raises(AssertionError):
+        _assert_all_token_groups_named(_five_group_paragraph(mutated_text))
+
+
+@pytest.mark.parametrize("token", ["size", "height", "padding", "width"])
+def test_component_completeness_scoping_catches_deleted_bullet(token):
+    text = _schema_text()
+    section = _section(text, "## Components", "## Do's & Don'ts")
+    mutated_section = re.sub(
+        rf"^\s*- `{re.escape(token)}`.*$\n?", "", section, count=1, flags=re.MULTILINE
+    )
+    assert token in mutated_section, (
+        f"sanity check: `{token}` must still appear in the yaml example "
+        "after its doc bullet is deleted — that survival is exactly what "
+        "let the old bare `in` check pass"
+    )
+    with pytest.raises(AssertionError):
+        _bullet_line(mutated_section, token)
