@@ -392,6 +392,42 @@ def test_step4_names_the_five_token_groups():
             f"Step 4 must name the token group '{group}' from TOKEN_GROUPS"
 
 
+def _step4a_item2_block() -> str:
+    """Step 4a's item 2 — the surface-treatment round pointer — lowercased,
+    whitespace-flattened.
+
+    Scoped to just this numbered item (not the whole Step 4a list), so a
+    whole-file pin would not false-green on the phrase appearing elsewhere
+    (see docs/loom/memory/grep-tests-scope-to-measured-neighborhood.md).
+    Whitespace-flattened because the source sentence is split across a hard
+    line break at SKILL.md:114-115.
+    """
+    text = _text()
+    start = text.index("2. **Run the surface-treatment candidate round**")
+    end = text.index("3. **Commit the visual concept**", start)
+    return re.sub(r"\s+", " ", text[start:end]).lower()
+
+
+def test_step4a_item2_does_not_pair_depth_with_tokens():
+    """Item 2 must not claim 'depth/shape tokens' — shape tokens are real
+    (`rounded` + border keys in Shapes), but depth tokens do not exist:
+    `TOKEN_GROUPS` has no elevation/depth member, and this same file
+    correctly states Elevation & Depth is prose-only at `:126` and
+    `:162-167`. The slash-compound asserts two parallel token categories
+    where only one exists — self-contradicting the file's own later prose.
+    """
+    block = _step4a_item2_block()
+    assert "depth/shape tokens" not in block, \
+        "must not pair 'depth' with 'tokens' in a slash-compound — " \
+        "TOKEN_GROUPS has no depth/elevation member; Elevation & Depth " \
+        "is prose-only"
+    assert "depth tokens" not in block, \
+        "must not claim depth tokens exist in any phrasing"
+    assert "shape tokens" in block, \
+        "the sentence must still credit the real shape tokens (`rounded` " \
+        "+ border keys) hanging off this pick"
+
+
 def _schema_overview_block() -> str:
     """The `## Overview / Brand` section of the schema — lowercased,
     whitespace-flattened.

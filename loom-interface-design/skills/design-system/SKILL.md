@@ -112,7 +112,8 @@ Emit a **`DESIGN.md`** following the schema contract from Step 1:
 1. Confirm the exact YAML token keys against the authoritative Google
    `DESIGN.md` spec at generation time.
 2. **Run the surface-treatment candidate round** (below) — the pick is the
-   generative choice the concept and the depth/shape tokens hang off.
+   generative choice the concept, the shape tokens, and Elevation & Depth's
+   prose hang off.
 3. **Commit the visual concept** in **Overview / Brand** — one specific
    art-direction idea plus the **3-5 generative visual principles** it leans on
    (per the schema's *Derivation contract*), with the chosen surface treatment
