@@ -35,10 +35,11 @@ def test_reception_content_contract():
     text = RECEPTION_MD.read_text()
     lower = text.lower()
 
-    # Line budget (brief §Open Q1): ≤60 non-empty lines.
+    # Line budget (brief §Open Q1): ≤60 non-empty lines, +1 for the
+    # sanctioned row-5 loom-init addition (plan 2026-08-10-loom-init-scaffold §Task 3).
     non_empty = _non_empty_lines(text)
-    assert len(non_empty) <= 60, (
-        f"family-reception.md has {len(non_empty)} non-empty lines, budget is 60"
+    assert len(non_empty) <= 61, (
+        f"family-reception.md has {len(non_empty)} non-empty lines, budget is 61"
     )
 
     # Family map: all five using-loom-* entries present.
@@ -86,6 +87,28 @@ def test_reception_content_contract():
     )
     assert "never blocking prerequisites" in lower, (
         "missing the recommendations-are-not-prerequisites reconciliation"
+    )
+
+
+def test_reception_onramp_row_suggests_loom_init_once():
+    text = RECEPTION_MD.read_text()
+
+    # Row 5: repo lacks the queue layer -> suggest running loom-init once.
+    rows = [line for line in text.splitlines() if "loom-init" in line]
+    assert rows, "missing the loom-init on-ramp row"
+    row = rows[0]
+    assert row.lstrip().startswith("|"), "loom-init must appear as a table row"
+    assert "docs/loom/backlog/" in row, (
+        "loom-init row must condition on the missing queue layer (docs/loom/backlog/)"
+    )
+    assert "once" in row.lower(), "loom-init row must carry the once wording"
+    assert "loom-code" in row, (
+        "loom-init row must name loom-code as where the scaffold verb ships"
+    )
+
+    # Negative pin: this hook file is read raw — no placeholder literal.
+    assert "${CLAUDE_PLUGIN_ROOT}" not in text, (
+        "family-reception.md is read raw; ${CLAUDE_PLUGIN_ROOT} must not appear"
     )
 
 
