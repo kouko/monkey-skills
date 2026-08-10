@@ -6,6 +6,16 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.17.0] — 2026-08-10
+
+### Changed
+
+- `hooks/family-reception.md` on-ramp criteria table gains a row: when
+  the target repo has no `docs/loom/backlog/` (queue layer not
+  adopted) and the work is loom-family-scoped, suggest running
+  **loom-init** once — the scaffold verb shipped in loom-code. The
+  table's existing "Recommend ONCE, never nag" rule covers it.
+
 ## [0.16.0] — 2026-08-10
 
 ### Changed

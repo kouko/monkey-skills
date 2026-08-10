@@ -5,6 +5,45 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.73.0] — 2026-08-10 — loom-init: one verb scaffolds the queue layer into any repo
+
+### Added
+
+- **`scripts/loom_init.py` — the queue-layer scaffold verb.** One
+  command (`python3 loom_init.py [repo-root]`, default cwd) mints
+  `docs/loom/backlog/README.md` (charter instance),
+  `docs/loom/DIRECTION.md` (skeleton whose `## Now` body is the
+  generator's empty-queue placeholder line verbatim, so
+  `--direction-check`'s whole-section diff passes from birth), and
+  `docs/loom/plans/`/`docs/loom/specs/` (`.gitkeep` each — git cannot
+  track an empty directory), all from templates shipped in
+  `scripts/templates/`. After writing, it self-verifies against the
+  live validators: the sibling `backlog_index.py` runs `--validate`
+  and `--direction-check` with cwd at the target repo, both exit codes
+  relayed, any nonzero → exit 1. Two refusals, each one explanatory
+  line + exit 1 writing nothing: an existing `docs/loom/backlog/` (an
+  adopted store) and an existing `docs/loom/DIRECTION.md` (human-owned
+  themes).
+- **Vintage stamps make the scaffold a repo-owned starting point.**
+  Each minted file opens with
+  `<!-- scaffolded by loom-init (loom-code <version>) -->` (version
+  read at runtime from plugin.json; `unknown` on read failure) — a
+  point-in-time copy that thereafter belongs to the target repo; no
+  drift checking, ever.
+
+### Changed
+
+- **`brainstorming`'s Axis 0 ready check grows a one-time loom-init
+  offer.** When the ready check skips because the target repo has no
+  `docs/loom/backlog/` store, offer scaffolding one ONCE via the
+  plugin-shipped verb, record the user's choice in the brief's
+  Design-side on-ramp line, and never re-raise it (the same
+  recommend-once rule as the on-ramp recommendation). The offer is a
+  single plugin-shipped command — a bootstrap verb has no repo-root
+  resolution tier, since its precondition is precisely the repo
+  lacking the layer. When neither copy of `backlog_index.py`
+  resolves, the check stays N/A as before — no offer.
+
 ## [0.72.0] — 2026-08-10 — terminal-state gates: --stale-scan verb + finishing's stage-flip duty and stale-scan relay
 
 ### Added
