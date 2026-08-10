@@ -55,11 +55,26 @@ def test_verify_step_still_invokes_verify_merged_head():
     ), "the --verify-merged HEAD invocation was removed or reworded"
 
 
+def _verify_step_script(raw: str) -> str:
+    """The verify step's `run: |` script body only — sliced from the step's
+    `- name: Verify` line to the end of file (it is the last step). Scoping
+    the exit-4 pins here means a YAML comment elsewhere mentioning
+    `gh pr comment` can never satisfy them (T3 review 🟡, 2026-08-10:
+    the whole-file pin stayed green with the comment line deleted)."""
+    lines = raw.splitlines()
+    start = next(
+        i for i, ln in enumerate(lines) if ln.strip().startswith("- name: Verify")
+    )
+    return "\n".join(
+        ln for ln in lines[start:] if not ln.lstrip().startswith("#")
+    )
+
+
 def test_exit_4_branch_comments_on_pr_and_keeps_the_red():
-    text = _normalized(WORKFLOW.read_text(encoding="utf-8"))
-    assert 'if [ "$rc" -eq 4 ]; then' in text, "exit-4 conditional missing"
-    assert "gh pr comment" in text, "PR-comment notification missing from exit-4 branch"
-    assert "exit 1" in text, "exit-4 branch no longer fails the workflow (red light lost)"
+    script = _normalized(_verify_step_script(WORKFLOW.read_text(encoding="utf-8")))
+    assert 'if [ "$rc" -eq 4 ]; then' in script, "exit-4 conditional missing"
+    assert "gh pr comment" in script, "PR-comment notification missing from exit-4 branch"
+    assert "exit 1" in script, "exit-4 branch no longer fails the workflow (red light lost)"
 
 
 def test_permissions_block_grants_pr_write_and_keeps_contents_read():
@@ -74,4 +89,4 @@ def test_trigger_is_push_to_main():
     block = _normalized(_top_level_block(raw, "on:", ("permissions:", "jobs:")))
     assert "push:" in block, "trigger lost push:"
     assert "branches:" in block, "trigger lost branches: filter"
-    assert "main" in block, "trigger no longer scoped to main"
+    assert "[main]" in block, "trigger no longer scoped to main"
