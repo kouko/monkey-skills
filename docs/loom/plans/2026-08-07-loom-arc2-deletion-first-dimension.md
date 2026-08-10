@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-loom-arc2-deletion-first-dimension.md
 Goal: A scored deletion-first dimension on the two code reviewers (rubric rows moved, not copied), a pin test guarding the two hand-authored copies, the E3 prune runbook, and the T2 ride-along fix — no new stations, blocks, or skills.
-Stage: review:round-1
+Stage: finishing
 Total tasks: 9
 Critical-path depth: 3 (≤5)
 Execution order: parallel-where-possible

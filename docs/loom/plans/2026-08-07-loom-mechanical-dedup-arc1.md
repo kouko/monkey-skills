@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-07-loom-mechanical-dedup-arc1.md
 Goal: Three drift-guard tests + doc corrections + one comment update — zero rendered-prose changes, zero relocations, zero new mechanism types.
-Stage: sdd:wave-1
+Stage: finishing
 Total tasks: 9
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
