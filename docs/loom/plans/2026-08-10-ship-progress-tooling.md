@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-10-ship-progress-tooling.md
 Goal: plan_card.py 與 backlog_index.py 隨 loom-code plugin 出貨，skill 呼叫點取得雙層解析（repo-root 優先、plugin 後備），外部 repo 不再永久靜默降級
-Stage: review:round-1
+Stage: finishing
 Total tasks: 5
 Critical-path depth: 4 (T1 → T2 → {T3 ∥ T4} → T5)
 Execution order: parallel-where-possible
