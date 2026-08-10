@@ -19,8 +19,10 @@ from pathlib import Path
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-PLAN_CARD_SCRIPT = REPO_ROOT / "scripts" / "plan_card.py"
+# The script under test ships beside this file in loom-code/scripts/
+# (inside the plugin — Task 1 of
+# docs/loom/plans/2026-08-10-ship-progress-tooling.md).
+PLAN_CARD_SCRIPT = Path(__file__).resolve().parent / "plan_card.py"
 
 # Direct import (not subprocess) so the fix-round ordering test below can
 # monkeypatch build_card — a subprocess call cannot be monkeypatched.

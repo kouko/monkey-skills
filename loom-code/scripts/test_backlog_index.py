@@ -10,9 +10,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+# This file lives at loom-code/scripts/ (inside the plugin — Task 1 of
+# docs/loom/plans/2026-08-10-ship-progress-tooling.md), so the repo
+# root is three levels up; the script under test ships beside it.
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 CHARTER_PATH = REPO_ROOT / "docs" / "loom" / "backlog" / "README.md"
-BACKLOG_SCRIPT = REPO_ROOT / "scripts" / "backlog_index.py"
+BACKLOG_SCRIPT = Path(__file__).resolve().parent / "backlog_index.py"
 
 # Direct import (not subprocess) so the revision-round-1 tests below can reuse
 # the production parse/extract helpers instead of duplicating their regex —
