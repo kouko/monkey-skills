@@ -596,11 +596,18 @@ def _run_stale_scan(plans_dir: Path) -> int:
     if not plans_dir.is_dir():
         print(f"plan_card: FAIL — no plans directory at {plans_dir}")
         return 1
-    plans = [
-        (path.name, path.read_text(encoding="utf-8"))
-        for path in sorted(plans_dir.glob("*.md"))
-    ]
+    plans: list[tuple[str, str]] = []
+    read_degrades: list[str] = []
+    for path in sorted(plans_dir.glob("*.md")):
+        try:
+            plans.append((path.name, path.read_text(encoding="utf-8")))
+        except (UnicodeDecodeError, OSError) as exc:
+            # Whole-branch review 🟡 (2026-08-10): one unreadable file
+            # crashed the entire sweep, hiding every other candidate —
+            # the exact outcome the per-file degrade posture forbids.
+            read_degrades.append(f"stale-scan: skipping {path.name} — {exc}")
     out_lines, degrades = build_stale_scan(plans)
+    degrades = read_degrades + degrades
     for line in degrades:
         print(line, file=sys.stderr)
     for line in out_lines:

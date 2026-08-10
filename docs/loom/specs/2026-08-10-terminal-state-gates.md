@@ -19,9 +19,11 @@ Two mechanism gaps keep regenerating drift the repo then has to sweep by hand:
    because it already owns the close-out choke point.
 2. **The squash-body wipe defense is prose, n=4.** The web merge dialog
    cleared the PR body four times (#566, #641, #642, #681) past four CLI
-   reminders. `memory-grep.sh --verify HEAD` already DETECTS the loss
-   (exit 4, "squash-shaped commit (#N) with title-only body") but only when
-   a session happens to run it. Industry counterpart: the JP hash-gate CI
+   reminders. `memory-grep.sh --verify-merged HEAD` already DETECTS the
+   loss (exit 4, "squash-shaped commit (#N) with title-only body") but
+   only when a session happens to run it. (This paragraph originally
+   named `--verify` — corrected after the T3 adjudication; End State #3
+   records the full story.) Industry counterpart: the JP hash-gate CI
    pattern — make the divergence machine-observable and red, because
    "human attention (prose rules) gets broken".
 

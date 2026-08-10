@@ -13,8 +13,9 @@ Versioning: [Semantic Versioning](https://semver.org/).
   verb: walks every `*.md` in the directory and lists each plan whose
   tasks are ALL `done(...)` while its `Stage:` header is anything other
   than `finishing` — one `<file>: stage=<value> (all N tasks done)` line
-  per candidate, or the single line `stale-scan: clean` when none. It
-  always exits 0 by design: all-done at `review:round-N` is a legitimate
+  per candidate, or the single line `stale-scan: clean` when none. Once
+  the plans directory exists it always exits 0 by design (a missing
+  directory is the caller's error — exit 1): all-done at `review:round-N` is a legitimate
   transient state of a live parallel arc, and a red light here would
   teach callers to ignore the gate. Old-format plans (no `- Status:`
   lines) and pre-Stage-era plans (a Status ledger but no `Stage:`

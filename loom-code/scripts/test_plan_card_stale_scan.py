@@ -247,3 +247,24 @@ def test_stale_scan_skips_pre_stage_era_plans_silently(tmp_path):
     assert result.stderr == "", result.stderr  # zero degrade noise
     assert VICTIM_SDD_LINE in result.stdout, result.stdout
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_stale_scan_survives_an_unreadable_file(tmp_path):
+    """(8) Whole-branch review 🟡: a single non-UTF-8 `.md` must not
+    crash the sweep — it degrades to one stderr line and every other
+    candidate still lists, exit stays 0. Pre-fix behavior was a
+    UnicodeDecodeError traceback, empty stdout, exit 1: the exact
+    'one corrupt plan hides the rest' outcome the posture forbids."""
+    assert PLAN_CARD_SCRIPT.is_file(), f"missing script at {PLAN_CARD_SCRIPT}"
+    plans_dir = tmp_path / "plans"
+    _write_victim_fixtures(plans_dir)
+    (plans_dir / "2026-08-01-binary-garbage.md").write_bytes(
+        b"\xff\xfe\x00garbage not utf-8\x9c"
+    )
+
+    result = _run_scan(plans_dir)
+
+    assert "2026-08-01-binary-garbage.md" in result.stderr, result.stderr
+    assert VICTIM_SDD_LINE in result.stdout, result.stdout + result.stderr
+    assert VICTIM_REVIEW_LINE in result.stdout, result.stdout + result.stderr
+    assert result.returncode == 0, result.stdout + result.stderr

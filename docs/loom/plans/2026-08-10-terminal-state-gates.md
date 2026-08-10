@@ -14,7 +14,8 @@ Endpoint recording: endpoint named: yes → continuous（/goal「把 A 跟 B 都
 - 業界研究引註（本 session 雙語調查）：終態不變式業界零家有（EN 臂：spec-kit/task-master/Kiro/OpenHands 皆無）；「散文必被破」兩語圈明文（Cline memory bank 官方自認無驗證；JP hash-gate CI 一文動機句）。細節在 brief。
 - stale-scan 判準以今天兩個真實受害者為 fixture 形：all tasks done + Stage ∈ {sdd:wave-N, review:round-N}（一個各佔一種）。
 - Action 消費 memory-grep.sh 既有契約（exit 4 + stderr 訊息），不改該腳本。
-- Decision Log（T3 NEEDS_CONTEXT，spec 兩處被推翻）: implementer 實測發現 (1) 原 spec 旗標 `--verify` 為二值 trailer 語意、對合法無-trailer 合併（#667）誤紅，正確為 `--verify-merged`；(2) 紅燈 workflow `memory-verify-merged.yml` 已存在且今日 #681 實紅（run `11390166 failure`）無人看見。裁決＝選項 (b) 擴充既有檔（deletion-first、單一閘門），T3 真正交付物收窄為「通知半邊」（PR 留言＋permissions）。工程決策兩軸皆低，記錄不上問。
+- Decision Log（T1 偏差補記）: 出貨行為除「無 Status 行」外亦靜默跳過「有 Status 帳、無 Stage 表頭」形（T1 spec-review 🟡 修正 3b2f233f，6 份真實 plan）——task Description 未回寫，以本行為準。
+- Decision Log（T3 NEEDS_CONTEXT，spec 兩處被推翻）: implementer 實測發現 (1) 原 spec 旗標 `--verify` 為二值 trailer 語意、對合法無-trailer 合併（#667）誤紅，正確為 `--verify-merged`；(2) 紅燈 workflow `memory-verify-merged.yml` 已存在且今日 #681 實紅（squash `11390166` 上的 run `31353877679` failure）無人看見。裁決＝選項 (b) 擴充既有檔（deletion-first、單一閘門），T3 真正交付物收窄為「通知半邊」（PR 留言＋permissions）。工程決策兩軸皆低，記錄不上問。
 
 ## Task 1 — plan_card.py 增 --stale-scan 動詞
 
@@ -26,7 +27,7 @@ Endpoint recording: endpoint named: yes → continuous（/goal「把 A 跟 B 都
   - loom-code/scripts/test_plan_card.py
   - docs/loom/memory/a-mutation-test-must-run-the-production-assertion.md
 - Acceptance:
-  - RED: `test_plan_card_stale_scan.py` 的 sdd:wave-1 fixture 斷言在動詞實作前失敗（argparse 未知旗標）
+  - RED: `test_plan_card_stale_scan.py` 的 sdd:wave-1 fixture 斷言在動詞實作前失敗（未知旗標 usage error——手刻解析器，非 argparse）
   - GREEN: 該檔全過；`python3 -m pytest loom-code/scripts/ scripts/ -q` 全綠；對本 repo 實跑 `--stale-scan docs/loom/plans` 輸出 `stale-scan: clean`（今日已修完兩案）
 - External surfaces: 無（純 stdlib 延伸既有解析器）
 - Dependencies: none
@@ -64,7 +65,7 @@ Endpoint recording: endpoint named: yes → continuous（/goal「把 A 跟 B 都
 - Acceptance:
   - RED: 釘測試於 comment 步驟／permissions 擴充存在前失敗（既有檔無 `gh pr comment` 字串，grep=0）
   - GREEN: 釘測試過；`python3 -m pytest loom-code/scripts/ scripts/ -q` 全綠；YAML 語法驗證留待 CI 首跑（pin 測試只驗文字性質）
-- External surfaces: GitHub Actions on-push 觸發與 GH_TOKEN 的 `gh pr comment` 權限（`permissions: pull-requests: write` 需明寫）；`--verify-merged` exit 4 契約（memory-grep.sh:274-303；實證 #681=4、#667 健康合併=0——`--verify` 二值語意誤紅已由 NEEDS_CONTEXT 排除）；今日 run 紀錄 `11390166 failure` 證紅燈已在但不可見
+- External surfaces: GitHub Actions on-push 觸發與 GH_TOKEN 的 `gh pr comment` 權限（`permissions: pull-requests: write` 需明寫）；`--verify-merged` exit 4 契約（memory-grep.sh:274-303；實證 #681=4、#667 健康合併=0——`--verify` 二值語意誤紅已由 NEEDS_CONTEXT 排除）；今日 squash `11390166` 的 run `31353877679` failure 證紅燈已在但不可見
 - Dependencies: none
 - Independent: true
 - Brief item covered: Smallest End State #3「post-merge GitHub Action … converting the n=4 prose reminder into a red light」

@@ -79,7 +79,7 @@ def test_exit_4_branch_comments_on_pr_and_keeps_the_red():
 
 def test_permissions_block_grants_pr_write_and_keeps_contents_read():
     raw = WORKFLOW.read_text(encoding="utf-8")
-    block = _normalized(_top_level_block(raw, "permissions:", ("jobs",) + ("jobs:",)))
+    block = _normalized(_top_level_block(raw, "permissions:", ("jobs:",)))
     assert "pull-requests: write" in block, "permissions: lacks pull-requests: write"
     assert "contents: read" in block, "permissions: lost contents: read"
 
