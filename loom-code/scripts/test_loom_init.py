@@ -21,6 +21,14 @@ through the PRODUCTION path — the real loom_init.py run, and for the
 charter probe the production test function itself (`ACTIVE_SCRIPTS` is
 monkeypatched so the green test re-executes against the mutated
 scaffold) — never a re-implemented predicate beside the production one.
+
+External-surface grounding (source a — live verification): the one git
+flag the script depends on (`git -C <target> rev-parse --show-toplevel`,
+the nested-cwd advisory) is exercised LIVE by
+`test_nested_cwd_run_warns_but_proceeds` against a throwaway `git init`
+repo — the asserted stderr line must carry the real toplevel path the
+installed git printed, so a flag regression surfaces here, not via
+belief.
 """
 
 import json
