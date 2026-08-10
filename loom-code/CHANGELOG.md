@@ -5,6 +5,29 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.74.0] — 2026-08-10 — cheap hardening batch: plan-revision self-screen + loom-init polish
+
+### Changed
+
+- **`writing-plans`' NEEDS_REVISION loop self-screens the revision
+  delta before reviewer re-dispatch.** After applying a revision, the
+  orchestrator re-checks its own delta against the mechanical checks
+  before spending a reviewer round — catching self-introduced defects
+  at the cheapest point (word ratchet raised 4047 → 4099 to carry the
+  duty).
+- **`AGENTS.md`'s managed command-surface block declares `loom_init`**
+  (+ a pin test keeping the declaration from silently vanishing) — the
+  scaffold verb shipped in 0.73.0 is now discoverable from the
+  declared surface, not just the CHANGELOG.
+- **`loom_init` warns advisory-only when the target is not the git
+  repo root.** Monorepo-subdir adoption is legitimate, so a non-root
+  target gets a one-line advisory instead of a refusal (the same
+  advisory-vs-red split as `--stale-scan`).
+- **`loom_init`'s existence test probes a tmp fixture instead of the
+  live repo** — the test no longer depends on this repo's own
+  `docs/loom/` state, so it cannot false-flip when the dev repo
+  evolves.
+
 ## [0.73.0] — 2026-08-10 — loom-init: one verb scaffolds the queue layer into any repo
 
 ### Added
