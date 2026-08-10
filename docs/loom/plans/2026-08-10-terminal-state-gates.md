@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-10-terminal-state-gates.md
 Goal: 終態翻轉成為 finishing 的義務、全清單 stale 掃描在每次收官時出聲、squash-body 流失從散文提醒升級為 post-merge 紅燈
-Stage: review:round-1
+Stage: finishing
 Total tasks: 4
 Critical-path depth: 3 (T1 → T2 → T4；T3 ∥ T1)
 Execution order: parallel-where-possible
