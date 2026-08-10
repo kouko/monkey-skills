@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-10-loom-init-scaffold.md
 Goal: 任何 repo 一個指令長出佇列層骨架（憲章實例＋DIRECTION 骨架＋目錄），自驗於真實 validator，兩個既有觸點各提供一次性 offer——零新 skill
-Stage: sdd:wave-1
+Stage: blocked:user-decision
 Total tasks: 4
 Critical-path depth: 2 (T1 → T4；T2 ∥ T3 ∥ T1)
 Execution order: parallel-where-possible
@@ -36,7 +36,7 @@ Endpoint recording: endpoint named: yes → continuous（/goal「把 A 跟 B 都
 - Dependencies: none
 - Independent: true
 - Brief item covered: Smallest End State #1 + #2
-- Status: claimed(@implementer-t1)
+- Status: done(d49208e4)
 - Gloss: 一個指令把佇列層骨架鑄進任何 repo，鑄完立刻用真 validator 自證合格
 
 ## Task 2 — brainstorming Axis 0 offer 分支
@@ -54,7 +54,7 @@ Endpoint recording: endpoint named: yes → continuous（/goal「把 A 跟 B 都
 - Dependencies: none
 - Independent: true
 - Brief item covered: Smallest End State #3 前半（brainstorming offer once）
-- Status: claimed(@implementer-t2)
+- Status: done(d4bed08f)
 - Gloss: 沒有佇列層的 repo 在動工前會被問一次要不要長出來，問過就不再煩
 
 ## Task 3 — family-reception 推薦列（loom-pipeline）
