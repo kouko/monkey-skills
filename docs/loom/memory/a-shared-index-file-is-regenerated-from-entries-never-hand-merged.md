@@ -20,7 +20,8 @@ nobody should be editing by hand at all.
 **How to apply:** on any conflict in a generated index file, take either
 side wholesale (or delete the section), finish the rebase/merge of the
 ENTRY files, then run the store's generator and stage the result —
-`python3 scripts/backlog_index.py --write` for docs/loom/BACKLOG.md,
+`backlog_index.py --write` (resolution per the backlog charter,
+`docs/loom/backlog/README.md`) for docs/loom/BACKLOG.md,
 `python3 scripts/check_loom_memory_integrity.py --write` for
 docs/loom/memory/README.md's §Index — and re-run the matching validator
 before committing.

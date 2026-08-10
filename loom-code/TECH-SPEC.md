@@ -3,7 +3,7 @@
 > **Owner**: code-team (technical contract — module / data-flow / interface / SSOT)
 > **Companion**: [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — business + design direction (planning-team owned)
 > **Source of design**: `<obsidian-vault>/research/2026-05-15 Superpowers vs code-team 架構比較研究.md`
-> **Roadmap**: [ROADMAP.md](ROADMAP.md)
+> **Roadmap**: forward direction lives in [`docs/loom/DIRECTION.md`](../docs/loom/DIRECTION.md); [ROADMAP.md](ROADMAP.md) is a historical design record
 
 ## Revision History
 
@@ -81,11 +81,12 @@ loom-code/
 │   ├── hooks.json                     # SessionStart registration
 │   └── session-start                  # bash: inject hooks/router-card.md (slim)
 ├── scripts/
+│   ├── backlog_index.py               # backlog-store generator/validator — plugin-shipped copy; a repo-root scripts/ copy resolves first when present
 │   ├── canonical/                     # pointers, NOT byte copies
 │   │   └── README.md                  # explains SSOT-and-functional-copy
 │   ├── distribute.py                  # pull from domain-teams:code-team/standards/ → skills/*/standards/
-│   ├── verify-drift.py                # CI gate: byte-identical check
-│   └── README.md
+│   ├── plan_card.py                   # plan-ledger progress card — plugin-shipped copy; a repo-root scripts/ copy resolves first when present
+│   └── verify-drift.py                # CI gate: byte-identical check
 ├── docs/
 │   └── loom-code/                  # plugin-namespaced artifact dir
 │       ├── plans/                     # implementation plans (writing-plans output)

@@ -128,7 +128,9 @@ else only writes it.
   "now" queue, file-date order — a listing order, not an execution
   order; store policy — not enforced by the tool — keep it to ≤5
   entries: a sixth commitment means re-judging the queue) followed by
-  `OPEN` candidates with their `start:` conditions.
+  `OPEN` candidates with their `start:` conditions. The script path
+  resolves per the generated-index section below (repo-root first,
+  else the loom-code plugin copy).
 - **Close duty** — `finishing-a-development-branch`'s Step 8
   Backlog-close check flips a shipped or superseded entry's status at
   branch close-out. The procedure lives in that skill, not here —
@@ -149,7 +151,9 @@ else only writes it.
   the ready query's `OPEN` output. To promote, the user edits the
   chosen entry's `status:` to `COMMITTED-NEXT`; `--write` and
   `--direction-write` then regenerate `BACKLOG.md` and DIRECTION.md's
-  `## Now` from it.
+  `## Now` from it. Those flags belong to the same script, resolved per
+  the generated-index section below (repo-root first, else the
+  loom-code plugin copy).
 
 ## Roadmap entries — a named pattern, not a new file type
 
@@ -194,7 +198,10 @@ every entry file in this store and grouping them by status. It must
 never be hand-edited: any change belongs in the entry file it was
 generated from, followed by regenerating the index with
 `scripts/backlog_index.py`, the store's generator/validator script
-(run from the repo root):
+(run from the repo root). The script resolves two-tier: use the
+repo-root `scripts/backlog_index.py` when it exists; otherwise run the
+copy shipped inside the loom-code plugin
+(`loom-code/scripts/backlog_index.py` in this repo). The commands:
 
 ```
 python3 scripts/backlog_index.py --validate   # check every entry's frontmatter invariants

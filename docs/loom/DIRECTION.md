@@ -3,7 +3,8 @@
 > Charter (this header is the convention's SSOT — stations point here,
 > never copy):
 > - `## Now` is GENERATED from COMMITTED-NEXT entry files by
->   `scripts/backlog_index.py --direction-write` — never hand-edit it.
+>   `scripts/backlog_index.py --direction-write` (repo-root first, else
+>   the loom-code plugin copy) — never hand-edit it.
 > - `## Now` is a PARALLEL ACTIVE SET, not a serial queue: one entry
 >   typically maps to one worktree/lane; the ≤5 cap is parallel-steering
 >   capacity.
