@@ -64,6 +64,21 @@ detectable instead of survivable — the writer refuses, never repairs).
 The file is modified only on that one line. `--set-status` and
 `--detail` are mutually exclusive.
 
+Stale scan (Task 1 of docs/loom/plans/2026-08-10-terminal-state-gates.md):
+`--stale-scan <plans-dir>` walks every `*.md` in the directory
+(filename order) and lists each plan whose tasks are ALL `done(...)`
+while its header `Stage:` is not `finishing` — the stranded-arc
+signature. One line per candidate,
+`<filename>: stage=<current> (all N tasks done)`; no candidates prints
+the single line `stale-scan: clean`. Files with zero `- Status:` lines
+(old-format plans, non-ledger docs) are skipped SILENTLY; a file with
+Status lines that still fails to parse degrades LOUDLY per-file on
+stderr and the scan continues. The scan ALWAYS exits 0 — advisory by
+design: all-done + review:round-N is a legitimate transient state of a
+live parallel arc, and a red exit would teach people to ignore the
+gate (plan-gate advisory N1). `build_stale_scan()` is a pure function
+of (filename, text) pairs, same convention as `build_card()`.
+
 A plan missing `Goal:` or `Stage:`, having zero task headings,
 carrying a statusless / unrecognized-status task, a dependency cycle
 or phantom-task reference, an inline `Steps: ...` declaration (content
@@ -79,9 +94,11 @@ Usage:
     python3 scripts/plan_card.py <plan-path>
     python3 scripts/plan_card.py <plan-path> --detail T<N>
     python3 scripts/plan_card.py <plan-path> --set-status "T<N>=<status>"
+    python3 scripts/plan_card.py --stale-scan <plans-dir>
 
-Exit codes: 0 = card rendered / status rewritten, 1 = unreadable/
-unrenderable plan or refused rewrite, 2 = usage error.
+Exit codes: 0 = card rendered / status rewritten / stale scan completed
+(with or without candidates), 1 = unreadable/unrenderable plan, refused
+rewrite, or missing plans directory, 2 = usage error.
 """
 
 from __future__ import annotations
@@ -508,6 +525,46 @@ def set_stage(text: str, new_value: str) -> tuple[str, str, str]:
     return new_header + sep + rest, old_line, new_line
 
 
+def build_stale_scan(
+    plans: list[tuple[str, str]],
+) -> tuple[list[str], list[str]]:
+    """(stdout lines, stderr degrade lines) for `--stale-scan` over
+    (filename, text) pairs, in input order.
+
+    A file with zero `- Status:` lines is skipped SILENTLY (old-format
+    plan or non-ledger doc — never part of the ledger contract). A file
+    WITH Status lines that still fails to parse (missing `Stage:`, no
+    task headings, a status outside the vocabulary) contributes one loud
+    stderr line and the scan continues — a single corrupt plan must
+    never hide the rest of the sweep. Candidates are plans whose tasks
+    are ALL done while `Stage:` is not `finishing`; none found yields
+    the single `stale-scan: clean` line. Pure function — the caller
+    reads the directory, prints, and always exits 0 (advisory)."""
+    candidates: list[str] = []
+    degrades: list[str] = []
+    for filename, text in plans:
+        if _STATUS_BULLET.search(text) is None:
+            continue
+        try:
+            header, _, _ = text.partition("\n## ")
+            stage = _header_value(header, "Stage")
+            if not stage:
+                raise ValueError("plan has no 'Stage:' header line")
+            tasks = _parse_tasks(text)
+            if not tasks:
+                raise ValueError("plan has no '## Task N — <name>' headings")
+        except ValueError as exc:
+            degrades.append(f"stale-scan: skipping {filename} — {exc}")
+            continue
+        if stage != "finishing" and all(
+            kind == "done" for _, _, kind, _, _ in tasks
+        ):
+            candidates.append(
+                f"{filename}: stage={stage} (all {len(tasks)} tasks done)"
+            )
+    return candidates or ["stale-scan: clean"], degrades
+
+
 def _print_card_or_degrade(text: str) -> None:
     """Print a blank line then the full rendered card; when `build_card`
     raises on the (already successfully written) plan, degrade to one
@@ -522,11 +579,34 @@ def _print_card_or_degrade(text: str) -> None:
 _USAGE = (
     "usage: python3 scripts/plan_card.py <plan-path> "
     '[--detail T<N> | --set-status "T<N>=<status>" | --set-stage "<text>"]'
+    "\n       python3 scripts/plan_card.py --stale-scan <plans-dir>"
 )
+
+
+def _run_stale_scan(plans_dir: Path) -> int:
+    """Read every `*.md` under `plans_dir` (filename order), print
+    `build_stale_scan`'s degrade lines to stderr and its result lines
+    to stdout. Always 0 once the directory exists — advisory by
+    design, module docstring."""
+    if not plans_dir.is_dir():
+        print(f"plan_card: FAIL — no plans directory at {plans_dir}")
+        return 1
+    plans = [
+        (path.name, path.read_text(encoding="utf-8"))
+        for path in sorted(plans_dir.glob("*.md"))
+    ]
+    out_lines, degrades = build_stale_scan(plans)
+    for line in degrades:
+        print(line, file=sys.stderr)
+    for line in out_lines:
+        print(line)
+    return 0
 
 
 def main() -> int:
     args = sys.argv[1:]
+    if len(args) == 2 and args[0] == "--stale-scan":
+        return _run_stale_scan(Path(args[1]))
     detail_number: int | None = None
     set_status_ref: tuple[int, str] | None = None
     set_stage_ref: str | None = None
