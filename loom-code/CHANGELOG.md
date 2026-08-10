@@ -14,9 +14,10 @@ Versioning: [Semantic Versioning](https://semver.org/).
   host repo's root `scripts/` into the plugin, so any repo with loom-code
   installed gets them via `plugin update` — previously they existed only
   in the monkey-skills repo and every external repo silently degraded to
-  the inline fallback forever. The old repo-root paths remain as exec
-  shims (argv and exit code passed through), so existing repo-root
-  invocations keep working unchanged.
+  the inline fallback forever. The two SCRIPTS' old repo-root paths
+  remain as exec shims (argv and exit code passed through), so existing
+  repo-root invocations keep working unchanged; the test files moved
+  without shims.
 
 ### Changed
 

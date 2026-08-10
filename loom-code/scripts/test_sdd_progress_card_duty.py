@@ -70,13 +70,20 @@ FALLBACK_FIELD_LIST = (
 # The two-limb fallback trigger — family-relay absence is a live
 # conditional-plugin host state distinct from script absence; round-1
 # narrowed this to one limb, dropping the family-relay-absent case.
-TWO_LIMB_TRIGGER = "(family-relay or script absent → render the four fields inline"
+# 2026-08-10 ship-progress-tooling whole-branch 🟡: "script absent"
+# re-qualified as BOTH copies absent (repo-root shim + plugin-shipped),
+# so the inline fallback can no longer be read as licensed while the
+# plugin copy exists — property (two limbs) unchanged.
+TWO_LIMB_TRIGGER = (
+    "(family-relay absent, or both script copies absent → render the "
+    "four fields inline"
+)
 
 # The script-absent duty clause — anchors the MUST-relay duty to the
 # moments on the no-script path (per-wave/stage/checkpoint), so the
 # duty does not evaporate when no ledger-action script runs.
 SCRIPT_ABSENT_DUTY = (
-    "when the script is absent, the same relay duty binds directly at "
+    "when both copies are absent, the same relay duty binds directly at "
     "per-wave status reports, stage transitions, and checkpoint "
     "sign-offs, with the inline four fields"
 )

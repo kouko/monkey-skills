@@ -61,9 +61,10 @@ substitution, not a run-time shell variable).
 ANY turn that runs one of these actions MUST relay
 that printed card in the live conversation language, framed per
 `loom-pipeline/hooks/family-relay.md §Family relay discipline` —
-progress-card variant `§(a2) Progress card` (family-relay or script
-absent → render the four fields inline: goal, task table, stage,
-next — nothing is dropped); when the script is absent, the same
+progress-card variant `§(a2) Progress card` (family-relay absent, or
+both script copies absent → render the four fields inline: goal, task
+table, stage,
+next — nothing is dropped); when both copies are absent, the same
 relay duty binds directly at per-wave status reports, stage
 transitions, and checkpoint sign-offs, with the inline four fields.
 Per-wave status reports, stage transitions, and checkpoint sign-offs

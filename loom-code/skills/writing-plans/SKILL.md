@@ -130,7 +130,8 @@ reviewer PASS
 is stamped, run `python3 scripts/plan_card.py <plan-path>` and relay
 its card in the conversation language — fire-and-continue, not a new
 pause, framed per `loom-pipeline/hooks/family-relay.md §(a2) Progress
-card` (family-relay or script absent → render the four fields inline: goal,
+card` (family-relay absent, or both script copies absent → render the
+four fields inline: goal,
 task table, stage, next). Repo-root `scripts/plan_card.py` when it
 exists; otherwise run the plugin-shipped copy:
 `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path>` (a

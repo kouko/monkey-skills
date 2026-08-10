@@ -15,10 +15,11 @@ Endpoint recording: endpoint named: yes → continuous（/goal「修復當前發
 - Kickoff decision: reference files（plan-format.md / family-relay.md）只用散文描述 cascade，不放 `${CLAUDE_PLUGIN_ROOT}` 字面量——替換只發生在渲染的 SKILL.md body 與 hooks.json，Read 工具讀原文不展開。
 - 歷史文件（已出貨 plans、memory 條目）中的 `scripts/plan_card.py` 引用一律不改——shim 讓它們照舊可執行。
 - Decision Log: brainstorming→writing-plans 的可見 checkpoint 於 goal-hook 連續授權下以本 plan 記錄代替使用者逐項簽核（前弧同型先例，記錄供審計）。
+- Decision Log（post-execution 記錄更正，whole-branch docs-B 🟡）: Task 2 的 Files touched 依實際出貨 commit 78efe262 更正——移除三個實際未動的檔（test_finishing_progress_card / test_review_stage_flip_duty / test_wp_extraction_pointers，其釘全數原樣存活），補上兩個實際動到的字數上限檔（test_sdd_extraction_pointers / test_rcr_extraction_pointers，T2 report 已揭露、spec 臂已裁決接受）。純記錄面更正，非規格變更；「3 行 exec shim」同步更正為「小型」（實物 9 行）。
 
 ## Task 1 — 腳本搬進 plugin + repo-root shims
 
-- Description: `git mv` `scripts/plan_card.py`、`scripts/backlog_index.py`、`scripts/test_plan_card.py`、`scripts/test_backlog_index.py` 至 `loom-code/scripts/`；修正測試檔內以 `__file__`/相對路徑定位腳本的常數；於 `scripts/plan_card.py`、`scripts/backlog_index.py` 原位新增 3 行 exec shim（argv 與 exit code 透傳）；新增 `loom-code/scripts/test_progress_tooling_shipped.py` 斷言兩腳本存在於 plugin 目錄且 `--help`/無參數呼叫回傳已知輸出。
+- Description: `git mv` `scripts/plan_card.py`、`scripts/backlog_index.py`、`scripts/test_plan_card.py`、`scripts/test_backlog_index.py` 至 `loom-code/scripts/`；修正測試檔內以 `__file__`/相對路徑定位腳本的常數；於 `scripts/plan_card.py`、`scripts/backlog_index.py` 原位新增小型 exec shim（argv 與 exit code 透傳）；新增 `loom-code/scripts/test_progress_tooling_shipped.py` 斷言兩腳本存在於 plugin 目錄且 `--help`/無參數呼叫回傳已知輸出。
 - Module: loom-code/scripts（含 repo-root scripts/ 的 shim 對）
 - Files touched: loom-code/scripts/plan_card.py, loom-code/scripts/backlog_index.py, loom-code/scripts/test_plan_card.py, loom-code/scripts/test_backlog_index.py, loom-code/scripts/test_progress_tooling_shipped.py, scripts/plan_card.py, scripts/backlog_index.py
 - Context paths:
@@ -41,7 +42,7 @@ Endpoint recording: endpoint named: yes → continuous（/goal「修復當前發
 
 - Description: 於 5 個 SKILL.md 的 10 個呼叫點（subagent-driven-development:55,124；writing-plans:130；requesting-code-review:85；brainstorming:73,76；finishing-a-development-branch:102,196,294-295）把 `python3 scripts/<name>.py` 改為雙層解析：repo-root `scripts/<name>.py` 存在則用之，否則 `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/<name>.py"`；同步改寫 finishing:196 被 T1 falsify 的宣稱「`backlog_index.py` absent (ships in no plugin)」為新語義（絕跡情形=plugin 未裝或 cache 缺檔，N/A 訊息保留但理由改寫）；finishing:195 的 `check_loom_memory_integrity.py` 宣稱仍為真，不動。更新釘住舊指令字面的 duty 測試（test_sdd_progress_card_duty.py、test_finishing_progress_card.py、test_finishing_backlog_close.py、test_brainstorming_backlog_read.py、test_review_stage_flip_duty.py、test_wp_extraction_pointers.py 中實際釘到的斷言）至 cascade 措辭。
 - Module: loom-code/skills（單一 plugin 內 5 檔）+ 其釘測試
-- Files touched: loom-code/skills/subagent-driven-development/SKILL.md, loom-code/skills/writing-plans/SKILL.md, loom-code/skills/requesting-code-review/SKILL.md, loom-code/skills/brainstorming/SKILL.md, loom-code/skills/finishing-a-development-branch/SKILL.md, loom-code/scripts/test_sdd_progress_card_duty.py, loom-code/scripts/test_finishing_progress_card.py, loom-code/scripts/test_finishing_backlog_close.py, loom-code/scripts/test_brainstorming_backlog_read.py, loom-code/scripts/test_review_stage_flip_duty.py, loom-code/scripts/test_wp_extraction_pointers.py
+- Files touched: loom-code/skills/subagent-driven-development/SKILL.md, loom-code/skills/writing-plans/SKILL.md, loom-code/skills/requesting-code-review/SKILL.md, loom-code/skills/brainstorming/SKILL.md, loom-code/skills/finishing-a-development-branch/SKILL.md, loom-code/scripts/test_sdd_progress_card_duty.py, loom-code/scripts/test_finishing_backlog_close.py, loom-code/scripts/test_brainstorming_backlog_read.py, loom-code/scripts/test_sdd_extraction_pointers.py, loom-code/scripts/test_rcr_extraction_pointers.py
 - Context paths:
   - loom-code/skills/finishing-a-development-branch/SKILL.md
   - docs/loom/memory/enumerate-every-copy-before-editing-a-claim-and-name-the-leaks.md

@@ -37,7 +37,7 @@ scripts are present here.)
    `loom-code/scripts/` — inside the plugin, so every `plugin update`
    delivers them. Single copy; no sync duty.
 2. Repo-root `scripts/plan_card.py` / `scripts/backlog_index.py` become
-   3-line exec shims, so every documented invocation in this repo's
+   small exec shims, so every documented invocation in this repo's
    plans, memory entries, and muscle memory keeps working unchanged.
 3. The skill-body call sites gain a two-step resolution cascade:
    repo-root `scripts/<name>.py` when present, else
