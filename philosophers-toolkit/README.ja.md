@@ -226,6 +226,7 @@ doubt する、問題を分解する、開かれた問いを対話する — そ
 検討中のフレームワークは [ROADMAP.md](ROADMAP.md) を参照
 — Occam's Razor、pragmatism、功利主義・義務論、三現主義、
 道家・無為など。
+（過去の設計記録 — 今後の方向は `docs/loom/DIRECTION.md`）
 
 ## Contributing
 

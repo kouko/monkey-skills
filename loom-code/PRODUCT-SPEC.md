@@ -3,7 +3,7 @@
 > **Owner**: planning (cross-domain — process methodology + knowledge integration)
 > **Companion**: [TECH-SPEC.md](TECH-SPEC.md) — plugin layout / hooks / SSOT mechanics (code-team owned)
 > **Source of design**: `<obsidian-vault>/research/2026-05-15 Superpowers vs code-team 架構比較研究.md`（two-axis comparison: 流程紀律 vs 知識權威）
-> **Roadmap**: [ROADMAP.md](ROADMAP.md) — v0.1.0 → v1.0.0 phase plan
+> **Roadmap**: forward direction lives in `docs/loom/DIRECTION.md`; [ROADMAP.md](ROADMAP.md) — v0.1.0 → v1.0.0 phase plan (historical design record)
 
 ## Revision History
 

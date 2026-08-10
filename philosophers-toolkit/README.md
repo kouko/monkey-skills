@@ -228,6 +228,7 @@ has its own skill.
 See [ROADMAP.md](ROADMAP.md) for frameworks under consideration —
 including Occam's Razor, pragmatism, utilitarian and deontological
 ethics, 三現主義, and 道家 / 無為.
+(historical design record — forward direction: `docs/loom/DIRECTION.md`)
 
 ## Contributing
 
