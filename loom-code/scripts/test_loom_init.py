@@ -105,6 +105,21 @@ def test_loom_init_ships_with_its_templates_and_runs():
     assert result.returncode == 1, result.stdout + result.stderr
 
 
+def test_agents_md_declares_loom_init():
+    """Command-surface accretion obligation: AGENTS.md's managed
+    command-surface block must declare loom_init.py so the bootstrap
+    verb shipped in #683 has a declared entry point (pin convention:
+    test_writing_plans_change_binding.py::test_agents_md_declares_coverage_script)."""
+    agents_md = REPO_ROOT / "AGENTS.md"
+    assert agents_md.is_file(), f"AGENTS.md is absent at {agents_md}"
+    text = agents_md.read_text(encoding="utf-8")
+    start = text.index("BEGIN command-surface (managed)")
+    end = text.index("END command-surface (managed)")
+    managed_block = text[start:end]
+    assert "loom_init.py" in managed_block, \
+        "AGENTS.md managed command-surface block must declare loom_init.py"
+
+
 def test_direction_template_carries_the_placeholder_line_verbatim():
     text = TEMPLATE_DIRECTION.read_text(encoding="utf-8")
     assert f"\n{DIRECTION_PLACEHOLDER}\n" in text, (

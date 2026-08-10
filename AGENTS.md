@@ -167,6 +167,14 @@ Role boundaries enforced by behavior, not reading restrictions:
   `scripts/backlog_index.py` first, else the loom-code plugin-shipped
   copy via `"${CLAUDE_PLUGIN_ROOT}/scripts/backlog_index.py"`
   (load-time substitution, as above).
+- **Scaffold the queue layer into a repo (one-time)**:
+  `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/loom_init.py" [repo-root]`
+  — creates the backlog charter + DIRECTION.md skeleton + plans/ +
+  specs/, self-verifies the fresh store via `backlog_index.py`, and
+  refuses when either artifact already exists. Plugin-shipped ONLY —
+  a bootstrap verb has no repo-root tier (its precondition is the
+  repo lacking the layer). `${CLAUDE_PLUGIN_ROOT}` is a load-time
+  substitution, as above.
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams
