@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-10-loom-init-scaffold.md
 Goal: 任何 repo 一個指令長出佇列層骨架（憲章實例＋DIRECTION 骨架＋目錄），自驗於真實 validator，兩個既有觸點各提供一次性 offer——零新 skill
-Stage: review:round-1
+Stage: finishing
 Total tasks: 4
 Critical-path depth: 2 (T1 → T4；T2 ∥ T3 ∥ T1)
 Execution order: parallel-where-possible
