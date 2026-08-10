@@ -89,11 +89,12 @@ of Axis 0 still runs the ready check (backlog entries are often
 exactly bug-fix shaped).
 
 **No queue layer yet** — when the ready check skips because the target
-repo has no `docs/loom/backlog/` store, offer scaffolding one **ONCE**:
-`python3 scripts/loom_init.py`. Repo-root `scripts/loom_init.py` when
-it exists; otherwise run the plugin-shipped copy:
+repo has no `docs/loom/backlog/` store, offer scaffolding one **ONCE**
+via the plugin-shipped verb:
 `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/loom_init.py"`
-(a load-time substitution, not a run-time shell variable). If the user
+(a load-time substitution, not a run-time shell variable; a bootstrap
+verb has no repo-root tier — its precondition is the repo lacking the
+layer). If the user
 declines or does not engage, proceed silently exactly as today, record
 the choice in the brief's `## Design-side on-ramp` line ("offered
 loom-init — user chose <scaffold/decline>"), and never re-raise it —

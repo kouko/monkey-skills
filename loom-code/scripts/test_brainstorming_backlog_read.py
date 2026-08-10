@@ -150,8 +150,12 @@ def test_direction_md_no_file_skip_clause_present():
 # pinned sentences above (NA_SILENT_CLAUSE et al.) survive byte-intact.
 
 LOOM_INIT_OFFER_LEAD = "**No queue layer yet**"
-LOOM_INIT_OFFER_COMMAND = "python3 scripts/loom_init.py"
-LOOM_INIT_PLUGIN_FALLBACK = 'python3 "${CLAUDE_PLUGIN_ROOT}/scripts/loom_init.py"'
+# T2 review 🟡 (2026-08-10): the repo-root first tier was dead in ALL
+# repos — a bootstrap verb's precondition is the repo lacking the layer,
+# so no repo-root copy can exist. Single plugin-shipped command only;
+# the pin below asserts the dead tier's ABSENCE so it cannot creep back.
+LOOM_INIT_PLUGIN_COMMAND = 'python3 "${CLAUDE_PLUGIN_ROOT}/scripts/loom_init.py"'
+LOOM_INIT_DEAD_TIER = "Repo-root `scripts/loom_init.py` when"
 LOOM_INIT_LOAD_TIME_NOTE = "load-time substitution"
 LOOM_INIT_PARA_END = "no offer to make."
 ON_RAMP_PARA_LEAD = "If a criteria row triggers"
@@ -177,14 +181,16 @@ def test_loom_init_offer_paragraph_present():
 
 
 def test_loom_init_offer_command_with_plugin_fallback_same_paragraph():
-    """The offer names the repo-root command AND the plugin-shipped
-    fallback in the SAME paragraph-unit, with the load-time-substitution
-    note — the two-tier cascade wording mirroring the ready-command
-    cascade already pinned above."""
+    """The offer names the SINGLE plugin-shipped command in the
+    paragraph-unit with the load-time-substitution note; the dead
+    repo-root tier (T2 review 🟡 — structurally unreachable for a
+    bootstrap verb) must stay absent."""
     para = _loom_init_paragraph()
-    assert LOOM_INIT_OFFER_COMMAND in para, para
-    assert LOOM_INIT_PLUGIN_FALLBACK in para, para
+    assert LOOM_INIT_PLUGIN_COMMAND in para, para
     assert LOOM_INIT_LOAD_TIME_NOTE in para, para
+    assert LOOM_INIT_DEAD_TIER not in para, (
+        "the dead repo-root tier crept back into the offer:\n" + para
+    )
 
 
 def test_loom_init_offer_recommend_once_and_records_choice():
