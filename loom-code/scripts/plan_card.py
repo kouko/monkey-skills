@@ -531,12 +531,17 @@ def build_stale_scan(
     """(stdout lines, stderr degrade lines) for `--stale-scan` over
     (filename, text) pairs, in input order.
 
-    A file with zero `- Status:` lines is skipped SILENTLY (old-format
-    plan or non-ledger doc — never part of the ledger contract). A file
-    WITH Status lines that still fails to parse (missing `Stage:`, no
-    task headings, a status outside the vocabulary) contributes one loud
-    stderr line and the scan continues — a single corrupt plan must
-    never hide the rest of the sweep. Candidates are plans whose tasks
+    A file with zero `- Status:` lines OR without a `Stage:` header is
+    skipped SILENTLY — both are pre-ledger-era shapes this repo really
+    ships (six Status-ledger/no-Stage plans predate the Stage field),
+    and a plan without a Stage header cannot be stage-stale by
+    definition; emitting stderr for them on every sweep is the
+    dismissed-gate noise the advisory design exists to avoid (T1 spec
+    review 🟡, 2026-08-10). A file WITH Status lines AND a Stage header
+    that still fails to parse (no task headings, a status outside the
+    vocabulary) contributes one loud stderr line and the scan
+    continues — a single corrupt plan must never hide the rest of the
+    sweep. Candidates are plans whose tasks
     are ALL done while `Stage:` is not `finishing`; none found yields
     the single `stale-scan: clean` line. Pure function — the caller
     reads the directory, prints, and always exits 0 (advisory)."""
@@ -545,11 +550,11 @@ def build_stale_scan(
     for filename, text in plans:
         if _STATUS_BULLET.search(text) is None:
             continue
+        header, _, _ = text.partition("\n## ")
+        stage = _header_value(header, "Stage")
+        if not stage:
+            continue  # pre-Stage-era plan — cannot be stage-stale
         try:
-            header, _, _ = text.partition("\n## ")
-            stage = _header_value(header, "Stage")
-            if not stage:
-                raise ValueError("plan has no 'Stage:' header line")
             tasks = _parse_tasks(text)
             if not tasks:
                 raise ValueError("plan has no '## Task N — <name>' headings")

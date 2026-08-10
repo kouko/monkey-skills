@@ -219,3 +219,31 @@ def test_mutation_one_task_flipped_to_pending_drops_the_line(tmp_path):
     assert VICTIM_REVIEW_LINE not in after.stdout, after.stdout + after.stderr
     assert VICTIM_SDD_LINE in after.stdout, after.stdout + after.stderr
     assert after.returncode == 0, after.stdout + after.stderr
+
+
+def test_stale_scan_skips_pre_stage_era_plans_silently(tmp_path):
+    """(7) T1 spec-review 🟡: a plan WITH a Status ledger but WITHOUT a
+    `Stage:` header — this repo ships six such pre-Stage-era plans —
+    is skipped SILENTLY: not listed, and NO stderr line. A plan without
+    a Stage header cannot be stage-stale by definition; per-sweep noise
+    for known-benign files is the dismissed-gate spiral the advisory
+    design forbids."""
+    assert PLAN_CARD_SCRIPT.is_file(), f"missing script at {PLAN_CARD_SCRIPT}"
+    plans_dir = tmp_path / "plans"
+    _write_victim_fixtures(plans_dir)
+    pre_stage = _plan_text(stage="sdd:wave-1", statuses=["done(abc1234)"])
+    pre_stage = "\n".join(
+        line for line in pre_stage.splitlines() if not line.startswith("Stage:")
+    ) + "\n"
+    assert "- Status:" in pre_stage and "Stage:" not in pre_stage
+    (plans_dir / "2026-07-01-pre-stage-era.md").write_text(
+        pre_stage, encoding="utf-8"
+    )
+
+    result = _run_scan(plans_dir)
+
+    assert "2026-07-01-pre-stage-era.md" not in result.stdout, result.stdout
+    assert "2026-07-01-pre-stage-era.md" not in result.stderr, result.stderr
+    assert result.stderr == "", result.stderr  # zero degrade noise
+    assert VICTIM_SDD_LINE in result.stdout, result.stdout
+    assert result.returncode == 0, result.stdout + result.stderr
