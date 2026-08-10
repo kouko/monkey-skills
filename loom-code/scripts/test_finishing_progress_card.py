@@ -91,3 +91,78 @@ def test_entry_card_rejected_status_branch_relays_loudly():
     normalized = _normalized_text()
     assert "relay that error line loudly, never skip" in normalized
     assert "Status VALUES the parser rejects" in normalized
+
+
+# --- Terminal-state gates arc: Step 8 Stage-flip duty + Stale-scan relay ---
+# Two rows added to the close-out sub-checks table: the terminal flip
+# (every intermediate stage had a flip duty; the terminal one was
+# un-mandated — two merged arcs stranded mid-flight) and the loud
+# stale-scan relay surfacing legacy strays at the next close-out.
+
+
+def _single_row_line(marker: str) -> str:
+    """The one physical table-row line containing `marker` — markdown
+    table rows are single source lines, so a same-line match proves two
+    phrases share a row-unit, not merely a file."""
+    lines = [
+        line
+        for line in SKILL_MD.read_text(encoding="utf-8").splitlines()
+        if marker in line
+    ]
+    assert len(lines) == 1, (
+        f"expected exactly one table-row line containing {marker!r}, "
+        f"got {len(lines)}"
+    )
+    return lines[0]
+
+
+def test_stage_flip_row_binds_set_stage_finishing_with_plugin_fallback():
+    """The Stage-flip duty row names the exact terminal-flip command AND
+    the plugin-shipped fallback in the SAME row-unit — the two-tier
+    resolution idiom the table's other rows use."""
+    row = _single_row_line("Stage-flip duty")
+    assert '--set-stage "finishing"' in row
+    assert '"${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py"' in row
+    assert "a load-time substitution, not a run-time shell variable" in row
+
+
+def test_stage_flip_row_runs_before_commit_and_stages_the_flip():
+    """The flip runs BEFORE the close-out commit and the flipped plan
+    file is staged into THAT commit — never a follow-up chore."""
+    row = _single_row_line("Stage-flip duty")
+    assert "BEFORE the close-out commit" in row
+    assert "THIS close-out commit" in row
+
+
+def test_stage_flip_row_na_defers_to_entry_card_skip_rules():
+    """No plan, or a statusless old-format plan → silent skip, per the
+    Step 1 entry-card rules — the N/A column states it."""
+    row = _single_row_line("Stage-flip duty")
+    assert "skip silently" in row
+
+
+def test_stale_scan_row_binds_verb_with_plugin_fallback():
+    """The Stale-scan relay row names the scan verb over the plans dir
+    AND the plugin-shipped fallback in the SAME row-unit."""
+    row = _single_row_line("Stale-scan relay")
+    assert "--stale-scan docs/loom/plans" in row
+    assert '"${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py"' in row
+
+
+def test_stale_scan_row_relays_stdout_verbatim_and_loudly():
+    """The scan's stdout is relayed VERBATIM and loudly — never
+    summarized away, never silently swallowed."""
+    row = _single_row_line("Stale-scan relay")
+    assert "VERBATIM" in row
+    assert "loudly" in row
+
+
+def test_stale_scan_row_advisory_pass_through_wording():
+    """The advisory rationale is written into the row itself so a cold
+    reader doesn't harden the scan into a block: all-done at
+    review:round-N is a legitimate transient state of a live parallel
+    arc — merged-arc candidates get fixed on the spot, live-arc
+    candidates are named and passed through."""
+    row = _single_row_line("Stale-scan relay")
+    assert "legitimate transient state" in row
+    assert "never harden" in row
