@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-10-task-mgmt-doc-currency.md
 Goal: 任務管理相關活文件全部反映 0.71.0 機制實況——兩份 plan ledger 收官、工具路徑教雙層解析、ROADMAP 指標改標歷史、backlog 條目對齊已出貨事實
-Stage: review:round-1
+Stage: finishing
 Total tasks: 4
 Critical-path depth: 2 (T1 ∥ T2 ∥ T3 → T4)
 Execution order: parallel-where-possible
