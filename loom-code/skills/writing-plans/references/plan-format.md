@@ -146,8 +146,11 @@ opt-in-by-presence for old plans.
 Every ledger flip routes through `python3 scripts/plan_card.py
 <plan-path> --set-status "T<N>=<status>"` when `scripts/plan_card.py`
 exists at the repo root — it rewrites only the task's `Status` line
-and performs no whole-plan validation; hand-edit only when the script
-is absent.
+and performs no whole-plan validation. When no repo-root copy exists,
+run the same plan_card.py that ships in the loom-code plugin (under
+the plugin installation's `scripts/` directory — the executing
+SKILL.md carries the resolved invocation). Hand-edit only when both
+copies are absent.
 
 #### `External surfaces` (v0.9.0+)
 

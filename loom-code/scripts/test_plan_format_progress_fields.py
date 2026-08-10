@@ -211,6 +211,23 @@ def test_worked_example_carries_bold_gloss_lines():
     assert count >= 3, f"expected >=3 bold Gloss lines in example, found {count}"
 
 
+LEDGER_PLUGIN_FALLBACK_PHRASE = (
+    "the same plan_card.py that ships in the loom-code plugin"
+)
+
+
+def test_ledger_prose_describes_plugin_shipped_fallback():
+    """Plan 2026-08-10 Task 3: the §Progress ledger paragraph describes
+    the resolution cascade in PROSE — repo-root copy first, else the
+    plan_card.py that ships in the loom-code plugin — and the file must
+    NOT contain the literal `${CLAUDE_PLUGIN_ROOT}` anywhere: this
+    reference file is read RAW via the Read tool, where the placeholder
+    never expands (kickoff decision, plan §Notes)."""
+    assert _normalize(LEDGER_PLUGIN_FALLBACK_PHRASE) in _normalized_text()
+    raw = PLAN_FORMAT_MD.read_text(encoding="utf-8")
+    assert "${CLAUDE_PLUGIN_ROOT}" not in raw
+
+
 def test_reviewer_prompt_gloss_contract_sentence_present():
     """Task 2(d): plan-document-reviewer-prompt.md carries the
     non-gating Gloss-contract sentence near its Status-field rule —
