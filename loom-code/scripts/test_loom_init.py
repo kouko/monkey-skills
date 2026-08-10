@@ -303,6 +303,43 @@ def test_refuses_before_any_write_when_a_file_blocks_a_scaffold_path(tmp_path):
     )
 
 
+def test_nested_cwd_run_warns_but_proceeds(tmp_path):
+    """Task 3 (plan 2026-08-10-cheap-hardening-batch.md): a target nested
+    inside a git repo gets ONE advisory line on stderr naming the repo
+    root — and the scaffold still proceeds with exit 0, because monorepo
+    subdirs adopting their own queue layer are legitimate (advisory,
+    never refusal; PR #683 debt)."""
+    init = subprocess.run(
+        ["git", "init", str(tmp_path)], capture_output=True, text=True
+    )
+    assert init.returncode == 0, init.stdout + init.stderr
+    sub = tmp_path / "sub"
+    sub.mkdir()
+
+    result = _run_init(sub)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "loom-init: OK" in result.stdout, result.stdout + result.stderr
+    assert (sub / "docs" / "loom" / "backlog" / "README.md").is_file(), (
+        "advisory must never block the scaffold"
+    )
+    assert (sub / "docs" / "loom" / "DIRECTION.md").is_file(), (
+        "advisory must never block the scaffold"
+    )
+    assert "not the git repo root" in result.stderr, result.stderr
+    assert str(tmp_path.resolve()) in result.stderr, (
+        "the advisory must name the repo root, got: " + result.stderr
+    )
+
+
+def test_non_git_target_stays_silent_on_stderr(tmp_path):
+    """Companion pin: the plain success run (target not inside any git
+    repo) emits NOTHING on stderr — the nested-cwd advisory is the only
+    stderr speaker and it stays quiet outside a repo."""
+    result = _scaffold_ok(tmp_path / "repo")
+    assert result.stderr == "", result.stderr
+
+
 def test_stray_file_at_store_path_is_not_called_adoption(tmp_path):
     """(11) Companion 🟢: a stray FILE at docs/loom/backlog gets the
     inspect-and-remove message, never the 'has adopted the queue

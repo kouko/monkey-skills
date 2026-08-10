@@ -98,6 +98,29 @@ def main(argv: list[str]) -> int:
         print(f"loom-init: FAIL — target {target} is not a directory")
         return 1
 
+    # Advisory only (plan 2026-08-10-cheap-hardening-batch.md, Task 3): a
+    # nested-cwd run silently scaffolds at the wrong depth, but monorepo
+    # subdirs adopting their own queue layer are legitimate — warn on
+    # stderr, never refuse, never touch the exit code. Any git failure
+    # (git absent, not a repo) → silent skip.
+    try:
+        toplevel = subprocess.run(
+            ["git", "-C", str(target), "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+        )
+        if toplevel.returncode == 0:
+            repo_root = Path(toplevel.stdout.strip()).resolve()
+            if repo_root != target:
+                print(
+                    f"loom-init: note — {target} is not the git repo root "
+                    f"({repo_root}); scaffolding here anyway (monorepo "
+                    "subdirs are legitimate)",
+                    file=sys.stderr,
+                )
+    except OSError:
+        pass
+
     store = target / "docs" / "loom" / "backlog"
     direction = target / "docs" / "loom" / "DIRECTION.md"
     if store.is_dir():
