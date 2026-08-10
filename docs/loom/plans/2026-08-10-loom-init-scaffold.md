@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-10-loom-init-scaffold.md
 Goal: 任何 repo 一個指令長出佇列層骨架（憲章實例＋DIRECTION 骨架＋目錄），自驗於真實 validator，兩個既有觸點各提供一次性 offer——零新 skill
-Stage: blocked:user-decision
+Stage: review:round-1
 Total tasks: 4
 Critical-path depth: 2 (T1 → T4；T2 ∥ T3 ∥ T1)
 Execution order: parallel-where-possible
@@ -90,7 +90,7 @@ Endpoint recording: endpoint named: yes → continuous（/goal「把 A 跟 B 都
 - Dependencies: Tasks 1, 2, 3 complete first
 - Independent: false
 - Brief item covered: Smallest End State #4
-- Status: pending
+- Status: done(d5c984c5)
 - Gloss: 讓 init 動詞與 offer 真的隨 plugin update 到達使用者機器
 
 ## Steps
