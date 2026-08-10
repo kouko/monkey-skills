@@ -222,9 +222,19 @@ def test_ledger_prose_describes_plugin_shipped_fallback():
     plan_card.py that ships in the loom-code plugin — and the file must
     NOT contain the literal `${CLAUDE_PLUGIN_ROOT}` anywhere: this
     reference file is read RAW via the Read tool, where the placeholder
-    never expands (kickoff decision, plan §Notes)."""
-    assert _normalize(LEDGER_PLUGIN_FALLBACK_PHRASE) in _normalized_text()
+    never expands (kickoff decision, plan §Notes).
+
+    T3 review 🟡: the pin is SECTION-SCOPED — sliced between the
+    `#### Progress ledger` heading and the next `####` — so relocating
+    the sentence out of the ledger section reds; a file-wide pin stayed
+    green under that mutation (probed 2026-08-10)."""
     raw = PLAN_FORMAT_MD.read_text(encoding="utf-8")
+    start = raw.index("#### Progress ledger")
+    end = raw.index("\n#### ", start + 1)
+    ledger_section = raw[start:end]
+    assert _normalize(LEDGER_PLUGIN_FALLBACK_PHRASE) in _normalize(
+        ledger_section
+    ), "the plugin-shipped fallback sentence left the §Progress ledger section"
     assert "${CLAUDE_PLUGIN_ROOT}" not in raw
 
 
