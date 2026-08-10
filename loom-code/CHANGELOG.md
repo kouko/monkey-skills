@@ -5,6 +5,41 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.71.0] — 2026-08-10 — progress tooling ships in the plugin: plan_card.py + backlog_index.py with repo-root-first resolution
+
+### Added
+
+- **`plan_card.py` and `backlog_index.py` ship in `loom-code/scripts/`.**
+  The two progress-tooling scripts (and their test files) moved from the
+  host repo's root `scripts/` into the plugin, so any repo with loom-code
+  installed gets them via `plugin update` — previously they existed only
+  in the monkey-skills repo and every external repo silently degraded to
+  the inline fallback forever. The old repo-root paths remain as exec
+  shims (argv and exit code passed through), so existing repo-root
+  invocations keep working unchanged.
+
+### Changed
+
+- **10 skill call sites resolve the scripts repo-root-first, plugin
+  second.** `subagent-driven-development`, `writing-plans`,
+  `requesting-code-review`, `brainstorming`, and
+  `finishing-a-development-branch` now teach a two-step resolution
+  cascade at each `plan_card.py`/`backlog_index.py` call site: use
+  `scripts/<name>.py` when it exists at the repo root, otherwise fall
+  back to `"${CLAUDE_PLUGIN_ROOT}/scripts/<name>.py"` (the
+  plugin-shipped copy; the placeholder is substituted at load time in
+  rendered skill bodies).
+- **`finishing-a-development-branch`'s "ships in no plugin" reason is
+  rewritten.** The backlog-close N/A message survives, but its reason no
+  longer claims `backlog_index.py` ships in no plugin (falsified by this
+  release) — the absent-script case now means the plugin is not
+  installed or the cache copy is missing.
+- **`writing-plans/references/plan-format.md` describes the cascade in
+  prose.** The ledger section's "when `scripts/plan_card.py` exists at
+  the repo root" wording now states the repo-root-first,
+  plugin-copy-second resolution — in prose only, since `Read` does not
+  expand `${CLAUDE_PLUGIN_ROOT}` literals in reference files.
+
 ## [0.70.0] — 2026-08-08 — progress-display hardening: ledger actions print the card, --set-stage, host todo mirror
 
 ### Added

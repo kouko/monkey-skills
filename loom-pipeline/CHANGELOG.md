@@ -6,6 +6,17 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.16.0] — 2026-08-10
+
+### Changed
+
+- `hooks/family-relay.md` §(a2) — the progress-card body renderer is
+  now named as the `plan_card.py` that ships in the loom-code plugin,
+  with a repo-root `scripts/` copy taking precedence when present
+  (stated in prose only; reference files carry no
+  placeholder literals) — the previous wording pointed only at the
+  repo-root script, a path that does not exist in external repos.
+
 ## [0.15.0] — 2026-08-07
 
 ### Changed
