@@ -5,6 +5,50 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.72.0] — 2026-08-10 — terminal-state gates: --stale-scan verb + finishing's stage-flip duty and stale-scan relay
+
+### Added
+
+- **`scripts/plan_card.py --stale-scan <plans-dir>`.** A new advisory
+  verb: walks every `*.md` in the directory and lists each plan whose
+  tasks are ALL `done(...)` while its `Stage:` header is anything other
+  than `finishing` — one `<file>: stage=<value> (all N tasks done)` line
+  per candidate, or the single line `stale-scan: clean` when none. It
+  always exits 0 by design: all-done at `review:round-N` is a legitimate
+  transient state of a live parallel arc, and a red light here would
+  teach callers to ignore the gate. Old-format plans (no `- Status:`
+  lines) and pre-Stage-era plans (a Status ledger but no `Stage:`
+  header) are skipped silently — the latter shape surfaced in spec
+  review, where six real pre-Stage plans in the host repo would
+  otherwise have degraded loudly on every scan; a plan without a stage
+  cannot be stage-stale.
+
+### Changed
+
+- **`finishing-a-development-branch`'s close-out sub-checks table gains
+  two rows.** (1) *Stage-flip duty*: when the branch carries a plan with
+  progress headers, run `plan_card.py <plan> --set-stage "finishing"`
+  BEFORE the close-out commit and stage the flipped plan into that same
+  commit — the terminal state ships with the close-out, never as a
+  follow-up chore. (2) *Stale-scan relay*: every close-out where the
+  repo has `docs/loom/plans/` also runs `--stale-scan docs/loom/plans`
+  and relays its stdout verbatim and loudly — a candidate from an
+  already-merged arc gets the same flip on the spot; a candidate from a
+  live parallel arc is named and passed through. Both rows resolve the
+  script repo-root-first with the plugin-shipped copy as fallback, in
+  the same wording as the existing 0.71.0 rows.
+
+### Added (repo level)
+
+- **The post-merge squash-body workflow now comments on the PR when the
+  squash wipes the memory trailers.** `.github/workflows/
+  memory-verify-merged.yml` catches `--verify-merged HEAD` exit 4, posts
+  the loss + the `gh pr merge --squash --body-file` prescription as a PR
+  comment (via the squash title's `(#N)`), then still fails red. This is
+  a monkey-skills repo artifact, not plugin content — recorded with this
+  version because its pin test (`scripts/test_postmerge_workflow_pin.py`)
+  rides the same CI lane as this release's other pins.
+
 ## [0.71.0] — 2026-08-10 — progress tooling ships in the plugin: plan_card.py + backlog_index.py with repo-root-first resolution
 
 ### Added
