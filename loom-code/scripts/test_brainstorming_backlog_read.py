@@ -142,6 +142,83 @@ def test_direction_md_no_file_skip_clause_present():
     assert DIRECTION_NO_FILE_SKIP in _normalized_text()
 
 
+# --- loom-init offer branch (loom-init scaffold, Task 2) ---
+#
+# Third state of the ready check: no docs/loom/backlog/ store → offer
+# scaffolding it via loom_init.py ONCE, then proceed either way. Lives
+# in its OWN paragraph directly after the ready-check paragraph — the
+# pinned sentences above (NA_SILENT_CLAUSE et al.) survive byte-intact.
+
+LOOM_INIT_OFFER_LEAD = "**No queue layer yet**"
+LOOM_INIT_OFFER_COMMAND = "python3 scripts/loom_init.py"
+LOOM_INIT_PLUGIN_FALLBACK = 'python3 "${CLAUDE_PLUGIN_ROOT}/scripts/loom_init.py"'
+LOOM_INIT_LOAD_TIME_NOTE = "load-time substitution"
+LOOM_INIT_PARA_END = "no offer to make."
+ON_RAMP_PARA_LEAD = "If a criteria row triggers"
+
+
+def _loom_init_paragraph() -> str:
+    """The offer paragraph, bounded by its own lead phrase and closing
+    sentence, so presence assertions below cannot pass vacuously off
+    phrases living elsewhere in the file (e.g. the on-ramp paragraph
+    also says "Design-side on-ramp")."""
+    normalized = _normalized_text()
+    lead_idx = normalized.find(LOOM_INIT_OFFER_LEAD)
+    assert lead_idx != -1, "loom-init offer paragraph lead missing"
+    end_idx = normalized.find(LOOM_INIT_PARA_END, lead_idx)
+    assert end_idx != -1, "loom-init offer paragraph closing sentence missing"
+    return normalized[lead_idx : end_idx + len(LOOM_INIT_PARA_END)]
+
+
+def test_loom_init_offer_paragraph_present():
+    """The ready-check section gains the third state: an offer paragraph
+    with its own lead phrase."""
+    assert LOOM_INIT_OFFER_LEAD in _normalized_text()
+
+
+def test_loom_init_offer_command_with_plugin_fallback_same_paragraph():
+    """The offer names the repo-root command AND the plugin-shipped
+    fallback in the SAME paragraph-unit, with the load-time-substitution
+    note — the two-tier cascade wording mirroring the ready-command
+    cascade already pinned above."""
+    para = _loom_init_paragraph()
+    assert LOOM_INIT_OFFER_COMMAND in para, para
+    assert LOOM_INIT_PLUGIN_FALLBACK in para, para
+    assert LOOM_INIT_LOAD_TIME_NOTE in para, para
+
+
+def test_loom_init_offer_recommend_once_and_records_choice():
+    """Decline / no engagement → proceed silently, choice recorded in
+    the brief's Design-side on-ramp line, never re-raised — the same
+    recommend-once rule as the Axis 0 on-ramp recommendation."""
+    para = _loom_init_paragraph()
+    assert "ONCE" in para, para
+    assert "Design-side on-ramp" in para, para
+    assert "never re-raise" in para, para
+
+
+def test_loom_init_offer_sits_between_ready_check_block_and_on_ramp():
+    """Placement: the offer paragraph follows the ready-check paragraph
+    (after its closing sentence) and precedes the on-ramp criteria
+    paragraph — inside the ready-check section, not elsewhere."""
+    normalized = _normalized_text()
+    block_end_idx = normalized.find(BLOCK_END_MARKER)
+    lead_idx = normalized.find(LOOM_INIT_OFFER_LEAD)
+    on_ramp_idx = normalized.find(ON_RAMP_PARA_LEAD)
+    assert block_end_idx != -1
+    assert lead_idx != -1
+    assert on_ramp_idx != -1
+    assert block_end_idx < lead_idx < on_ramp_idx
+
+
+def test_loom_init_offer_keeps_na_state_for_missing_script_copies():
+    """Third state ≠ second state: when neither copy of
+    `backlog_index.py` resolves, the ready check stays N/A as today —
+    the offer paragraph itself must carve that out."""
+    para = _loom_init_paragraph()
+    assert "neither copy" in para, para
+
+
 def test_direction_md_sentence_inside_backlog_ready_check_block():
     """The new sentence must land inside the Backlog ready check block
     (between its lead phrase and the block's closing sentence), not

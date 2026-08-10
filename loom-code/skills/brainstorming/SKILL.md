@@ -88,6 +88,19 @@ Negative guard above — a bug-fix or refactor arc that skips the rest
 of Axis 0 still runs the ready check (backlog entries are often
 exactly bug-fix shaped).
 
+**No queue layer yet** — when the ready check skips because the target
+repo has no `docs/loom/backlog/` store, offer scaffolding one **ONCE**:
+`python3 scripts/loom_init.py`. Repo-root `scripts/loom_init.py` when
+it exists; otherwise run the plugin-shipped copy:
+`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/loom_init.py"`
+(a load-time substitution, not a run-time shell variable). If the user
+declines or does not engage, proceed silently exactly as today, record
+the choice in the brief's `## Design-side on-ramp` line ("offered
+loom-init — user chose <scaffold/decline>"), and never re-raise it —
+the same recommend-once rule as the on-ramp recommendation below. When
+neither copy of `backlog_index.py` resolves, stay N/A as today — the
+scaffold verb ships alongside it, so there is no offer to make.
+
 If a criteria row triggers, surface the recommendation **ONCE** — name the
 concrete design-side sequence (e.g. `using-loom-product-principles` →
 `using-loom-interface-design` → `using-loom-spec`, whichever rows fired), then
