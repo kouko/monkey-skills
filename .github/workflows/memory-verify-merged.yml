@@ -30,6 +30,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   verify-merged:
@@ -42,5 +43,24 @@ jobs:
           fetch-depth: 1
 
       - name: Verify HEAD's memory carrier survived the squash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          set +e
           bash dev-workflow/skills/git-memory/scripts/memory-grep.sh --verify-merged HEAD
+          rc=$?
+          set -e
+          if [ "$rc" -eq 4 ]; then
+            # Wipe shape: the squash message lost its memory carrier. A red
+            # workflow on main is not a notification (it fired unseen on #681)
+            # — comment on the merged PR, then keep the red.
+            title="$(git log -1 --format=%s HEAD)"
+            if [[ "$title" =~ \(#([0-9]+)\)$ ]]; then
+              pr="${BASH_REMATCH[1]}"
+              gh pr comment "$pr" --body "**memory verify-merged: carrier loss detected.** The squash commit message for this PR lost its \`## Memory\` carrier (Decision:/Learning:/Gotcha: keys) — the web merge dialog likely cleared the message body. The PR body remains the surviving memory carrier; nothing is lost yet, but the git-side trailers did not land on \`main\`. Prescription for future merges: \`gh pr merge $pr --squash --body-file <file>\` from the CLI, which bypasses the dialog that wipes the body."
+            else
+              echo "verify-merged: exit 4, but HEAD's title has no trailing (#N) — skipping the PR comment." >&2
+            fi
+            exit 1
+          fi
+          exit "$rc"
