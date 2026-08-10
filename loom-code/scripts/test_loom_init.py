@@ -97,17 +97,18 @@ def _scratch_scripts(tmp_path: Path) -> Path:
     return scratch
 
 
-def test_loom_init_ships_with_its_templates_and_runs():
+def test_loom_init_ships_with_its_templates_and_runs(tmp_path):
     assert LOOM_INIT.is_file(), f"loom_init.py does not exist at {LOOM_INIT}"
     assert TEMPLATE_README.is_file(), f"missing template {TEMPLATE_README}"
     assert TEMPLATE_DIRECTION.is_file(), f"missing template {TEMPLATE_DIRECTION}"
-    # Run probe against THIS repo (an adopted store): the refusal branch is
-    # a positive fact only a real run produces.
+    # Run probe against a tmp fixture with a pre-made store: the refusal
+    # branch is a positive fact only a real run produces — and probing a
+    # fixture keeps the suite decoupled from the live repo's adoption state.
+    (tmp_path / "docs" / "loom" / "backlog").mkdir(parents=True)
     result = subprocess.run(
-        [sys.executable, str(LOOM_INIT)],
+        [sys.executable, str(LOOM_INIT), str(tmp_path)],
         capture_output=True,
         text=True,
-        cwd=REPO_ROOT,
     )
     assert "already exists" in result.stdout, result.stdout + result.stderr
     assert result.returncode == 1, result.stdout + result.stderr
