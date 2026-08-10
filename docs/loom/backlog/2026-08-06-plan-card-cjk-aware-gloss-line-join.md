@@ -17,3 +17,7 @@ Fix shape: join adjacent lines without a space when the boundary
 codepoints are both CJK (East Asian Width W/F), keep the space
 otherwise. Pin with a wrapped-CJK fixture asserting the exact joined
 output.
+
+2026-08-10 note: since PR #680 the canonical code lives at
+`loom-code/scripts/plan_card.py` (the repo-root `scripts/plan_card.py` is an
+exec shim); the code references in this entry refer to the canonical file.

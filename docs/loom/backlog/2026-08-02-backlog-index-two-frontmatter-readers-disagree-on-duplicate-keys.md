@@ -59,3 +59,7 @@ above it that fixes the order as COMMITTED-NEXT first and calls it a
 hard contract. The generator resolved it correctly and `--check` would
 fail loudly on the wrong order, so the only risk is to someone
 re-deriving the shape from the plan later.
+
+2026-08-10 note: since PR #680 the canonical code lives at
+`loom-code/scripts/backlog_index.py` (the repo-root `scripts/backlog_index.py`
+is an exec shim); the code references in this entry refer to the canonical file.

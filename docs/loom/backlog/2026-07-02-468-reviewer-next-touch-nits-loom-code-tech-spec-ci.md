@@ -20,3 +20,7 @@ start: next loom-code/TECH-SPEC.md touch
   in TECH-SPEC.md; (c) loom CI steps sharing one `run:` block appears
   ALREADY FIXED — all four loom-*-ci.yml workflows now run one command
   per step; confirm and drop sub-item (c) at next touch.
+- 2026-08-10 audit: sub-item (a) delivered by PR #672 — dimension counts
+  now read 8-/11- consistently across TECH-SPEC.md:257,260 and the
+  code-reviewer agent; (c) was already marked fixed above; only (b)
+  mixed backtick/plain paths remains live.

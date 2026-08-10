@@ -86,3 +86,10 @@ start: READY. The `kpi_id` identity arc it depended on shipped as 2.37.0 (branch
 3. Sub-arc (c) — becomes user-visible pressure only after (a) fills the store.
 4. Sub-arc (b) — independent of (a) and (c); ordering against them is a priority
    call, not a dependency. Blocked only on its own Part 3.
+
+### Evidence log
+
+- 2026-08-10 audit: sub-arc (a) delivered by PR #619 (2.38.0) —
+  `kpi_us_statements_ingest.py` is the US envelope→points→`kpi_store.append`
+  analog of the TW lane, and `kpi_spine_view.py`'s `SPINE_FIELD_CHAINS` defines
+  the 14-field US spine. Remaining scope narrows to (b)+(c); status stays OPEN.
