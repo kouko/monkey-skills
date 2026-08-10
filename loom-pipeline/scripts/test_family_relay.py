@@ -105,6 +105,36 @@ def test_relay_section():
     )
 
 
+def test_relay_progress_card_renderer_ships_in_plugin():
+    """
+    Task 4 (2026-08-10 ship-progress-tooling plan): §(a2)'s sentence
+    describing the mechanical renderer must state that plan_card.py
+    ships in the loom-code plugin (repo-root scripts/ copy wins when
+    present) — post-T1 the script is no longer repo-root-only, and an
+    external repo has no repo-root copy at all.
+
+    Raw-read constraint (plan §Notes kickoff decision): this file is a
+    hook reference read RAW — load-time substitutions never expand
+    here — so the "${CLAUDE_PLUGIN_ROOT}" literal must NOT appear
+    anywhere in family-relay.md; the cascade is prose only.
+    """
+    text = _read(FAMILY_RELAY)
+    a2_idx = text.find("### (a2) Progress card")
+    b_idx = text.find("### (b) Visual defaults")
+    assert a2_idx != -1 and b_idx != -1
+    # whitespace-normalized: the source wraps sentences across lines
+    section = " ".join(text[a2_idx:b_idx].split())
+    assert "plan_card.py" in section, "missing the mechanical-renderer sentence"
+    assert "ships in the loom-code plugin" in section, (
+        "the renderer sentence must state plan_card.py ships in the "
+        "loom-code plugin (repo-root copy wins when present)"
+    )
+    assert "${CLAUDE_PLUGIN_ROOT}" not in text, (
+        "family-relay.md is read RAW — never write the substitution "
+        "literal into it; prose only"
+    )
+
+
 def test_sdd_pointer():
     """
     Task 5 originally added the canonical pointer phrase to BOTH

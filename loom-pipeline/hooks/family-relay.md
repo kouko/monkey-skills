@@ -75,9 +75,10 @@ the task table, step separators with `(needs: T…)` lists appear when
 the plan declares Dependencies, and indented gloss lines when tasks
 carry `Gloss:`; `--detail T<N>` is a separate on-demand view printing
 one task's curated fields — not part of the card.
-The body is rendered mechanically by `scripts/plan_card.py` — never
-compose it by hand when the script is available, never re-order or
-drop fields. The relayer's frame, in the live conversation language:
+The body is rendered mechanically by `plan_card.py` (ships in the
+loom-code plugin; a repo-root `scripts/` copy wins when present) —
+never compose it by hand when the script is available, never re-order
+or drop fields. The relayer's frame, in the live conversation language:
 a plain-translation gloss under the goal line; a grounded explanatory
 gloss for `next:` (derived from that task's own plan fields — cite
 the source item, never invent); and for every `[!]` row an
