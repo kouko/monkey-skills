@@ -78,7 +78,11 @@ ENVIRONMENT_GOTCHAS = (
     / "environment-gotchas.md"
 )
 
-WORD_CEILING = 4130
+# Raised deliberately 4130 -> 4175 by the 2026-08-10 ship-progress-tooling
+# arc, Task 2: two plugin-fallback cascade sentences (Delivery form +
+# Progress ledger) so external repos resolve the plugin-shipped
+# plan_card.py instead of degrading to hand-edits.
+WORD_CEILING = 4175
 
 # --- distinctive phrases, whitespace-normalized ---------------------------
 

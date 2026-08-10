@@ -19,7 +19,10 @@ SKILL_MD = (
 
 LEAD_PHRASE = "**Backlog ready check**"
 READY_COMMAND = "python3 scripts/backlog_index.py --ready"
-NA_SILENT_CLAUSE = "no store or no `scripts/backlog_index.py` → skip silently, N/A"
+# Cascade wording (ship-progress-tooling Task 2): the script now also
+# ships in the loom-code plugin, so the silent skip fires only when
+# NEITHER the repo-root copy nor the plugin-shipped copy resolves.
+NA_SILENT_CLAUSE = "no store, or neither copy of `backlog_index.py` → skip silently, N/A"
 NEVER_HIJACKS = "it never hijacks it"
 INDEPENDENT_OF_NEGATIVE_GUARD = "independent of the Negative guard"
 

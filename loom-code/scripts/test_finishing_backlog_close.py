@@ -100,12 +100,12 @@ def test_backlog_close_script_absent_na_string_present():
 
 
 def test_step13_skip_clause_names_the_script_path():
-    """Fix round 2 (fix 5a, path-consistency ride-along): Step 13's
-    own skip clause names the script by its repo-root-relative path,
-    matching the Backlog-close bullet's own `scripts/backlog_index.py`
-    references rather than the bare module name."""
+    """Fix round 2 (fix 5a) pinned the repo-root-relative path; the
+    ship-progress-tooling arc (Task 2) rewrote the clause to cascade
+    wording — the script also ships in the loom-code plugin, so the
+    skip fires only when neither copy resolves."""
     assert (
-        "no backlog store or no `scripts/backlog_index.py`"
+        "no backlog store or neither copy of `backlog_index.py`"
         in _normalized_text()
     )
 

@@ -54,7 +54,11 @@ When you ask a technical decision (a bug-fix approach, a design choice, error ha
 **Delivery form.** The ledger actions —
 `python3 scripts/plan_card.py <plan-path> --set-status "T<N>=<status>"`
 and `--set-stage "<text>"` — print the full progress card themselves
-after the flip. ANY turn that runs one of these actions MUST relay
+after the flip. Repo-root `scripts/plan_card.py` when it exists;
+otherwise run the plugin-shipped copy:
+`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" …` (a load-time
+substitution, not a run-time shell variable).
+ANY turn that runs one of these actions MUST relay
 that printed card in the live conversation language, framed per
 `loom-pipeline/hooks/family-relay.md §Family relay discipline` —
 progress-card variant `§(a2) Progress card` (family-relay or script
@@ -121,7 +125,7 @@ This substitution is gated upstream by `plan-document-reviewer` Check 16 (see `w
 
 Unlike the mechanical exemption, this substitution does **not** bypass the §Verdict resolution table below — the table still applies on this path, with the docs-reviewer's verdict substituting into the table's `code-quality-reviewer` column (the `spec-reviewer` column is unchanged).
 
-**Progress ledger.** SDD writes the plan's per-task `Status` field back as it executes and resumes from it after interruption: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Progress ledger. Perform every ledger flip via `python3 scripts/plan_card.py <plan-path> --set-status "T<N>=<status>"` when `scripts/plan_card.py` exists at the repo root — it validates the task, the status grammar, and refuses duplicate or missing `Status` lines; hand-edit only when the script is absent.
+**Progress ledger.** SDD writes the plan's per-task `Status` field back as it executes and resumes from it after interruption: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Progress ledger. Perform every ledger flip via `python3 scripts/plan_card.py <plan-path> --set-status "T<N>=<status>"` when `scripts/plan_card.py` exists at the repo root — it validates the task, the status grammar, and refuses duplicate or missing `Status` lines; hand-edit only when the script is absent. When only the repo-root copy is missing, run the plugin-shipped copy instead — `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path> --set-status "T<N>=<status>"` — "absent" means neither copy is present.
 
 **Decision Log maintenance.** SDD appends non-briefed, classified engineering decisions to the plan's `## Decision Log` during execution: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Decision Log maintenance.
 

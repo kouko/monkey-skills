@@ -21,6 +21,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 SDD_SKILL = (
@@ -177,3 +179,59 @@ def test_todo_mirror_ssot_sentence_present():
 
 def test_todo_mirror_conditional_posture_present():
     assert CONDITIONAL_POSTURE in _norm(SDD_SKILL)
+
+
+# --- Plugin-fallback cascade duty (ship-progress-tooling arc, Task 2) --------
+#
+# T1 moved plan_card.py / backlog_index.py into loom-code/scripts/ (plugin-
+# shipped) with exec shims at the repo root. Every skill-body invocation must
+# therefore carry the two-step resolution cascade: repo-root copy first, then
+# the plugin-shipped copy via the `${CLAUDE_PLUGIN_ROOT}` load-time
+# substitution. A paragraph (or table row) that invokes the script without
+# naming the fallback silently degrades external repos to hand-editing.
+
+CASCADE_SKILLS = [
+    "subagent-driven-development",
+    "writing-plans",
+    "requesting-code-review",
+    "brainstorming",
+    "finishing-a-development-branch",
+]
+
+_TOOLING_INVOCATION_RE = re.compile(
+    r"python3 scripts/(?:plan_card|backlog_index)\.py"
+)
+PLUGIN_FALLBACK = "${CLAUDE_PLUGIN_ROOT}/scripts/"
+
+
+def _units(text: str) -> list[str]:
+    """Paragraph-or-table-row units: blank-line-separated blocks, with
+    table rows (lines starting with `|`) split out as individual units
+    so one row's fallback cannot satisfy a neighboring row."""
+    units: list[str] = []
+    for block in re.split(r"\n\s*\n", text):
+        lines = block.splitlines()
+        table_rows = [ln for ln in lines if ln.lstrip().startswith("|")]
+        prose = "\n".join(
+            ln for ln in lines if not ln.lstrip().startswith("|")
+        )
+        units.extend(table_rows)
+        if prose.strip():
+            units.append(prose)
+    return units
+
+
+@pytest.mark.parametrize("skill", CASCADE_SKILLS)
+def test_every_tooling_invocation_unit_carries_plugin_fallback(skill):
+    path = REPO_ROOT / "loom-code" / "skills" / skill / "SKILL.md"
+    offenders = [
+        unit
+        for unit in _units(_read(path))
+        if _TOOLING_INVOCATION_RE.search(unit)
+        and PLUGIN_FALLBACK not in unit
+    ]
+    assert not offenders, (
+        f"{skill}/SKILL.md: {len(offenders)} invocation unit(s) lack the "
+        f"plugin fallback {PLUGIN_FALLBACK!r}:\n"
+        + "\n---\n".join(u[:200] for u in offenders)
+    )

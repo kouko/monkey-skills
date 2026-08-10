@@ -73,7 +73,11 @@ multi-state new work.
 `docs/loom/backlog/`, run `python3 scripts/backlog_index.py --ready`
 before settling the arc's scope, and surface to the user any
 COMMITTED-NEXT items plus OPEN items related to the seed idea (no
-store or no `scripts/backlog_index.py` → skip silently, N/A). When
+store, or neither copy of `backlog_index.py` → skip silently, N/A).
+Repo-root `scripts/backlog_index.py` when it exists; otherwise run
+the plugin-shipped copy:
+`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backlog_index.py" --ready`
+(a load-time substitution, not a run-time shell variable). When
 the target repo has `docs/loom/DIRECTION.md` — with or without a
 backlog store — read it and surface its `## Now` and `## Next`
 sections alongside the ready queue (no file → skip silently, same
