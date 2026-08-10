@@ -62,23 +62,38 @@ def test_backlog_index_ships_in_the_plugin_and_runs():
 
 
 def test_repo_root_shims_exist_and_match_the_plugin_copies():
+    """Argv-binding discipline: every shim invocation below passes an
+    argument that CHANGES the script's output, so a shim that drops
+    `sys.argv[1:]` cannot stay output-identical. (A flagless
+    `backlog_index.py` run defaults to the same output as `--validate`,
+    so `--validate` alone cannot discriminate — probed 2026-08-10.)"""
     assert SHIM_PLAN_CARD.is_file(), f"missing shim at {SHIM_PLAN_CARD}"
     assert SHIM_BACKLOG_INDEX.is_file(), f"missing shim at {SHIM_BACKLOG_INDEX}"
 
-    shim = _run(SHIM_PLAN_CARD)
-    plugin = _run(PLUGIN_PLAN_CARD)
-    assert "usage" in shim.stderr.lower(), shim.stderr  # a real run, not exec noise
+    # plan_card WITH a real plan path renders the card (exit 0, "goal:"
+    # line); an argv-dropping shim falls to the flagless usage error
+    # (exit 2) and both asserts below fail.
+    plan_path = "docs/loom/plans/2026-08-10-ship-progress-tooling.md"
+    shim = _run(SHIM_PLAN_CARD, plan_path)
+    plugin = _run(PLUGIN_PLAN_CARD, plan_path)
+    assert shim.returncode == 0 and "goal:" in shim.stdout, (
+        shim.stdout + shim.stderr
+    )
     assert (shim.returncode, shim.stdout, shim.stderr) == (
         plugin.returncode,
         plugin.stdout,
         plugin.stderr,
     ), "shim scripts/plan_card.py must be output-identical to the plugin copy"
 
-    shim_b = _run(SHIM_BACKLOG_INDEX, "--validate")
-    plugin_b = _run(PLUGIN_BACKLOG_INDEX, "--validate")
-    assert "backlog_index --validate: OK" in shim_b.stdout, (
-        shim_b.stdout + shim_b.stderr
+    # --ready prints the ready queue, NOT the validate line — an
+    # argv-dropping shim runs flagless (= validate output) and the
+    # marker asserts below fail before the equality check can lie.
+    shim_b = _run(SHIM_BACKLOG_INDEX, "--ready")
+    plugin_b = _run(PLUGIN_BACKLOG_INDEX, "--ready")
+    assert "backlog_index --validate: OK" not in shim_b.stdout, (
+        "shim ignored --ready and ran the flagless default:\n" + shim_b.stdout
     )
+    assert "## OPEN" in shim_b.stdout, shim_b.stdout + shim_b.stderr
     assert (shim_b.returncode, shim_b.stdout) == (
         plugin_b.returncode,
         plugin_b.stdout,
