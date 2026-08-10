@@ -11,9 +11,10 @@ move; A4 (maintainer-facing fragments in §BLOCKED fallback, §Plan size
 ceiling, §Consuming) move to references/design-evidence.md (author-facing
 header) while the rules they qualify, and the 5-step process / anti-pattern
 paragraph / detection-cascade rule sentences, stay inline verbatim. Word
-ceiling <=4047 — raised deliberately from 4023 by the 2026-08-06
-progress-card-roadmap-view arc to admit the N2 Steps/Gloss emit-duty
-sentence (new count 4039 + 8; prior raise 3900 → 4023 by the 2026-08-06
+ceiling <=4099 — raised deliberately from 4047 by the 2026-08-10
+cheap-hardening-batch arc for the revision-delta self-check sentence
+(new count 4079 + 20; prior raises 4023 → 4047 by the 2026-08-06
+progress-card-roadmap-view arc, 3900 → 4023 by the 2026-08-06
 progress-cards-and-plan-ledger arc). §Amending a PASS plan (MUST NOT MOVE, including
 its exactly-3-item closed list — pinned separately by
 test_post_pass_amendment_gate.py) and the splitting framework are
@@ -201,12 +202,34 @@ def test_minimal_structure_block_carries_progress_schema_lines():
     assert "- Status: pending" in text
 
 
+# --- (h) NEEDS_REVISION loop self-screens the revision delta (2026-08-10) ----
+
+def test_needs_revision_loop_self_screens_the_revision_delta():
+    # 2026-08-10 cheap-hardening-batch arc: three consecutive arcs'
+    # round-2 findings were defects the round-2 revision itself
+    # introduced (n>=8) — the loop must self-screen the revision delta
+    # before re-dispatching the reviewer.
+    norm = _norm(_skill_text())
+    # the pinned loop sentence stays intact (anti-splice guard)
+    assert (
+        "If reviewer returns `NEEDS_REVISION`, writing-plans "
+        "**fixes the plan** and re-runs the reviewer." in norm
+    )
+    # the new duty is its own sentence in the same loop context
+    assert (
+        "re-run the §Pre-patch self-screen on the revision delta itself"
+        in norm
+    )
+    assert "every line the fix added or changed" in norm
+
+
 # --- (f) word cap ------------------------------------------------------------
 
-def test_word_count_at_most_4047():
+def test_word_count_at_most_4099():
     word_count = len(_skill_text().split())
-    assert word_count <= 4047, (
-        f"SKILL.md is {word_count} words, over the 4047 cap (raised "
-        "deliberately from 4023 by the 2026-08-06 "
-        "progress-card-roadmap-view arc)"
+    assert word_count <= 4099, (
+        f"SKILL.md is {word_count} words, over the 4099 cap (raised "
+        "deliberately from 4047 by the 2026-08-10 cheap-hardening-batch "
+        "arc for the revision-delta self-check sentence; prior raise "
+        "4023 -> 4047 by the 2026-08-06 progress-card-roadmap-view arc)"
     )
