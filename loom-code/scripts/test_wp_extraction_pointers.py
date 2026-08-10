@@ -215,10 +215,12 @@ def test_needs_revision_loop_self_screens_the_revision_delta():
         "If reviewer returns `NEEDS_REVISION`, writing-plans "
         "**fixes the plan** and re-runs the reviewer." in norm
     )
-    # the new duty is its own sentence in the same loop context
+    # the new duty is its own sentence in the same loop context; the
+    # reference matches the actual label at the Pre-patch paragraph
+    # (quality-review 🟡 2026-08-10: a §-ref to a nonexistent label)
     assert (
-        "re-run the §Pre-patch self-screen on the revision delta itself"
-        in norm
+        "re-run the **Pre-patch before dispatch** self-screen on the "
+        "revision delta itself" in norm
     )
     assert "every line the fix added or changed" in norm
 
