@@ -6,12 +6,8 @@ origin: 2026-08-08..10 DESIGN.md spec-conformance research — reading google-la
 start: next substantive edit to design-system's Overview / Brand section or its Anti-patterns list, or the first real run of design-system that produces a DESIGN.md worth judging
 ---
 
-- Start: next substantive edit to `design-system`'s Overview / Brand
-  section or its Anti-patterns list, or the first real run of
-  `design-system` that produces a `DESIGN.md` worth judging.
-- Origin: DESIGN.md spec-conformance research (2026-08-08..10). The
-  token-shape half shipped separately; this is the half that is a
-  judgement call, not a mechanical correction.
+- Start: next substantive edit to design-system's Overview / Brand section or its Anti-patterns list, or the first real run of design-system that produces a DESIGN.md worth judging
+- Origin: 2026-08-08..10 DESIGN.md spec-conformance research — reading google-labs-code/design.md PHILOSOPHY.md (repo root, 110 lines; missed on the first pass because only docs/spec.md was read). Split out of docs/loom/specs/2026-08-08-design-md-spec-conformance.md so a mechanical token-shape fix would not be bundled with a taste decision about the station's generative layer.
 
 - What: `design-system` currently makes **inherited adjectives the
   governing layer**. `references/design-md-schema.md` (Overview / Brand)
