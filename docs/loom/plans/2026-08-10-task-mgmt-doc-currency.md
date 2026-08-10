@@ -16,10 +16,11 @@ Endpoint recording: endpoint named: no → human-pumped（push/PR 前向 user �
 - README 三語組（loom-code、philosophers-toolkit）三語同刀（repo memory: skill READMEs require tri-language）。
 - T4 依賴 T1-T3 全完（regen 需在所有條目編輯落定後跑一次）。
 - Decision Log（plan-gate 2 輪上限越權，round 3）: round 2 唯一 finding 是 round-2 修訂自身引入的一個欄位（T2 `Review-weight: prose` 對生成器目標檔 DIRECTION.md 不合 Check 16），修法為 reviewer 自開處方「拔掉該欄」——brief 無恙、非結構問題，故套用單欄修正後跑 round 3 而非中斷向 user 升級；本行即審計記錄。
+- Decision Log（commit 對照，whole-branch 🟡 補記）: 各任務的交付 commit 與其審查修正 commit——T1=7a9cb468（無修正）；T2=43f7533e（無修正）；T3=交付 c8a41a42、審查 🟡 修正 9e85e34c（repo-root 限定+zh-TW 措辭）；T4=交付 f46864bd、審查 🟡 修正 e2f15f19（行號引用更正）。ledger done() 欄記的是各任務終態 commit，本行補齊交付 commit 供追溯。
 
 ## Task 1 — 兩份 plan ledger 收官
 
-- Description: 以 `python3 scripts/plan_card.py <plan> --set-stage "finishing"` 分別翻 `docs/loom/plans/2026-08-07-loom-mechanical-dedup-arc1.md`（現 `Stage: sdd:wave-1`）與 `docs/loom/plans/2026-08-07-loom-arc2-deletion-first-dimension.md`（現 `Stage: review:round-1`）——兩弧 9/9 任務 done、PR 已 merge（loom-code 0.68.0）、分支已刪。用機制自己的寫入器，不手改。
+- Description: 以 `python3 scripts/plan_card.py <plan> --set-stage "finishing"` 分別翻 `docs/loom/plans/2026-08-07-loom-mechanical-dedup-arc1.md`（現 `Stage: sdd:wave-1`）與 `docs/loom/plans/2026-08-07-loom-arc2-deletion-first-dimension.md`（現 `Stage: review:round-1`）——兩弧 9/9 任務 done、PR 已 merge（各自出貨於 loom-code 0.65.2 / 0.66.0，屬收於 0.68.0 的複雜度體檢五弧系列）、分支已刪。用機制自己的寫入器，不手改。
 - Module: docs/loom/plans（ledger 欄位，機制活面）
 - Files touched: docs/loom/plans/2026-08-07-loom-mechanical-dedup-arc1.md, docs/loom/plans/2026-08-07-loom-arc2-deletion-first-dimension.md
 - Context paths:

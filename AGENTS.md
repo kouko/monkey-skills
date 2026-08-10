@@ -1,6 +1,6 @@
 # Monkey Skills
 
-Personal agent skills organized into two plugins: domain teams and Obsidian workflows.
+Personal agent skills organized into multiple plugins — domain teams, Obsidian workflows, the loom family, investing/research toolkits, and more.
 
 ## Architecture: Checkpoint-Based Quality Gates + Open Domain Knowledge
 
@@ -209,12 +209,14 @@ Role boundaries enforced by behavior, not reading restrictions:
 |-------|------|-------|
 | `obsidian-vault-organizer` | Vault maintenance (standalone) | haiku |
 
-## Plugin: philosophers-toolkit (v0.1.0 — roadmap only)
+## Plugin: philosophers-toolkit (v1.0.4 — 12 skills)
 
-Philosophical thinking frameworks for problem clarification and deeper reasoning.
-Planned work now lives in `docs/loom/DIRECTION.md` and
-`docs/loom/backlog/` entries; `philosophers-toolkit/ROADMAP.md` is a
-historical design record.
+Philosophical thinking frameworks for problem clarification and deeper
+reasoning — 12 shipped skills (11 frameworks + 1 router).
+`philosophers-toolkit/ROADMAP.md` is a historical design record that
+holds the original planned-frameworks list; future planned work, when
+it exists, lives in repo-root `docs/loom/DIRECTION.md` and
+`docs/loom/backlog/` entries.
 
 ## Installation
 

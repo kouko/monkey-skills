@@ -2,7 +2,7 @@
 
 > **Process-discipline + canon-grounded 程式開發工作流 for Claude Code (+ Codex CLI)。** 13-skill plugin，SessionStart 自動注入 router charter，讓 agent 停止合理化、開始 deferring — 每條規則皆 grounded 於一級書目（Beck on TDD / Martin on naming / Fowler on refactoring / Feathers on legacy code / OWASP ASVS on security / 徳丸本 on encoding security）。
 
-**狀態**：v0.66.0 — 13 skills；v0.3.0 起達成完整 Superpowers parity。各版本細節（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate 等）見 [CHANGELOG.md](CHANGELOG.md)。
+**狀態**：v0.71.0 — 13 skills；v0.3.0 起達成完整 Superpowers parity。各版本細節（rule-sheet 注入、reviewer-discipline、parallel dispatch、spec→code seam、memory verify gate 等）見 [CHANGELOG.md](CHANGELOG.md)。
 **語言**：[English](README.md) | [日本語](README.ja.md) | **繁體中文**
 **Repository**：[`monkey-skills`](https://github.com/kouko/monkey-skills) 的一部分
 
@@ -73,6 +73,7 @@ claude plugin install loom-code@monkey-skills --scope local
 | 4 | [`tdd-iron-law`](skills/tdd-iron-law/) | Discipline | "沒先有 failing test 不准寫 production code"（Beck 2002 Preface, ISBN 978-0321146533）；§Feathers (2004) 對 legacy code backfill 的合法區別 |
 | 5 | [`systematic-debugging`](skills/systematic-debugging/) | Repair | 4 階段 REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY；HARD-GATE "沒重現不准 fix" |
 | 6 | [`requesting-code-review`](skills/requesting-code-review/) | Review | 全 branch 審查、11 維度評分（cross-task-coherence 為 branch 限定維度）；v0.7.0+ verdict 帶 `standards_version` stamp、findings 必填 `where:` file:line；push-as-trigger |
+| 6b | [`requesting-docs-review`](skills/requesting-docs-review/) | Review（docs 臂） | 逐檔整篇審查所有變更的 `.md` — 散文五維度、instruction/evidence 阻擋分級、收斂上限（0.42.0+） |
 | 7 | [`verification-before-completion`](skills/verification-before-completion/) | Verification | "沒跑 package-level test 不准 done"；涵蓋 20+ 種 stack 的 canonical command |
 | 7b | [`ui-verification`](skills/ui-verification/) | Verification（條件式） | 用 host 的 browser/device 自動化把 `ui-flows.md` 列舉的狀態實機走一遍；條件或工具不在時明講 N/A；token 合規檢查排除在外（已停車） |
 | 8 | [`finishing-a-development-branch`](skills/finishing-a-development-branch/) | 分支收尾 | 7 步 orchestrator（review → verify → git-memory 強制 → commit → push → 可選 PR + worktree 清理） |

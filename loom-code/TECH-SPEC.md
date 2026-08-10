@@ -80,7 +80,7 @@ loom-code/
 ├── hooks/
 │   ├── hooks.json                     # SessionStart registration
 │   └── session-start                  # bash: inject hooks/router-card.md (slim)
-├── scripts/
+├── scripts/                           # (abridged — the shipped dir holds ~20 production scripts + tests)
 │   ├── backlog_index.py               # backlog-store generator/validator — plugin-shipped copy; a repo-root scripts/ copy resolves first when present
 │   ├── canonical/                     # pointers, NOT byte copies
 │   │   └── README.md                  # explains SSOT-and-functional-copy

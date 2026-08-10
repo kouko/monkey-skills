@@ -1,11 +1,11 @@
 # Brief: bring the repo's task-management documents current with the shipped loom mechanism
 
 Date: 2026-08-10
-Origin: user ask「整理一下這個 repo 的任務管理相關文件 確認都有用到最新版本 loom 機制」immediately after PR #680 (loom-code 0.71.0 / loom-pipeline 0.16.0) merged. Two read-only audits (backlog truthfulness over all 91 live entries; stale-mechanism references over every living doc surface) produced the exact finding tables this brief consumes.
+Origin: user ask「整理一下這個 repo 的任務管理相關文件 確認都有用到最新版本 loom 機制」immediately after PR #680 (loom-code 0.71.0 / loom-pipeline 0.16.0) merged. Two read-only audits (backlog truthfulness over all 91 OPEN+PARKED entries — the actionable subset; SHIPPED/CLOSED/UPSTREAM were spot-checked separately; stale-mechanism references over every living doc surface) produced the exact finding tables this brief consumes.
 
 ## Problem
 
-The mechanism moved twice recently — #677 tombstoned ROADMAP.md in favor of DIRECTION.md, #680 shipped plan_card.py/backlog_index.py inside the loom-code plugin — and the skill bodies were updated both times, but the surrounding LIVING documents were not swept. Result: 2 plan ledgers claim in-flight for merged arcs; 6 living surfaces teach a repo-root-only tooling path; 6 surfaces point readers at a tombstoned ROADMAP as the forward plan; docs/loom/README's directory map omits DIRECTION.md entirely; 3 backlog entries carry sub-asks that already shipped (PR #619/#672/#573) and 2 point at shim paths instead of the canonical scripts. This is the exact class the store entry `a-documented-fallback-can-legitimize-a-delivery-gap` and today's stale-reference incident describe: docs drifting from mechanism, each drift surviving because nothing sweeps the periphery when the center moves.
+The mechanism moved twice recently — #677 tombstoned ROADMAP.md in favor of DIRECTION.md, #680 shipped plan_card.py/backlog_index.py inside the loom-code plugin — and the skill bodies were updated both times, but the surrounding LIVING documents were not swept. Result: 2 plan ledgers claim in-flight for merged arcs; 6 living surfaces teach a repo-root-only tooling path; five surfaces (nine files — two tri-language README trios, two spec headers, one AGENTS section) point readers at a tombstoned ROADMAP as the forward plan; docs/loom/README's directory map omits DIRECTION.md entirely; 3 backlog entries carry sub-asks that already shipped (PR #619/#672/#573) and 2 point at shim paths instead of the canonical scripts. This is the exact class the store entry `a-documented-fallback-can-legitimize-a-delivery-gap` and today's stale-reference incident describe: docs drifting from mechanism, each drift surviving because nothing sweeps the periphery when the center moves.
 
 ## Users
 
@@ -13,7 +13,7 @@ kouko + any agent (this repo's sessions, Codex mirror readers of AGENTS.md) taki
 
 ## Smallest End State
 
-1. Both stale plans read `Stage: finishing` (their 9/9 tasks are done; arcs merged in loom-code 0.68.0).
+1. Both stale plans read `Stage: finishing` (their 9/9 tasks are done; the arcs shipped as loom-code 0.65.2 and 0.66.0, within the five-arc complexity-audit series that closed at 0.68.0).
 2. Every living-doc invocation of the two progress scripts states the two-tier resolution (repo-root first, else the loom-code plugin copy) or points at the charter section that does; AGENTS.md's script inventory gains one bullet each for plan_card.py and backlog_index.py; TECH-SPEC §2.1's scripts/ block lists both and drops the nonexistent scripts/README.md.
 3. Every living pointer to a ROADMAP.md is relabeled historical with forward direction at docs/loom/DIRECTION.md (loom-code README ×3 languages, PRODUCT-SPEC + TECH-SPEC headers, AGENTS.md philosophers section, philosophers-toolkit README ×3 languages).
 4. docs/loom/README's directory map gains a DIRECTION.md row (human Next/Later; generated Now — never hand-edit).
