@@ -1,5 +1,9 @@
 # loom family backlog store
 
+> The scaffold stamp above records which loom-code version minted
+> this document. From that moment it is THIS repo's own file —
+> it never syncs back to the plugin; edit it freely.
+
 > Repo-native home for open items, debts, and re-trigger conditions
 > that span the loom-* plugins — one entry per file. This is the
 > format SSOT: derive the entry format from this file alone, without
@@ -90,7 +94,7 @@ feels:
   parallel set. Nothing is blocking it but our own turn to start. When
   `docs/loom/DIRECTION.md` exists, this queue is mirrored into its
   generated `## Now` section by `scripts/backlog_index.py
-  --direction-write` (see §Verbs' Bet flow). This is a PARALLEL ACTIVE
+  --direction-write docs/loom/DIRECTION.md` (see §Verbs' Bet flow). This is a PARALLEL ACTIVE
   SET, not a serial queue: one entry typically maps to one
   worktree/lane, and the ≤5 cap is parallel-steering capacity. See
   `docs/loom/DIRECTION.md`'s charter header — the convention's SSOT.

@@ -89,7 +89,9 @@ of Axis 0 still runs the ready check (backlog entries are often
 exactly bug-fix shaped).
 
 **No queue layer yet** — when the ready check skips because the target
-repo has no `docs/loom/backlog/` store, offer scaffolding one **ONCE**
+repo has no `docs/loom/backlog/` store **and no `docs/loom/DIRECTION.md`**
+(the verb refuses on either existing — never offer a guaranteed
+refusal), offer scaffolding one **ONCE**
 via the plugin-shipped verb:
 `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/loom_init.py"`
 (a load-time substitution, not a run-time shell variable; a bootstrap

@@ -15,6 +15,8 @@ Endpoint recording: endpoint named: yes → continuous（/goal「把 A 跟 B 都
 - 落點裁決（本 session 記錄）：動詞＋模板 loom-code（與 backlog_index/plan_card 版本連動）；loom-pipeline 只加推薦列。
 - **硬依賴：T4 的 loom-code bump 0.72.0→0.73.0 假設 PR #682（弧 A）已 merge**。#682 未落地前 T4 不派工；T1-T3 檔案集與弧 A 零重疊（unverified assumption——rebase 時以 #682 檔案清單 diff 定案），可先行。
 - brainstorming SKILL.md 若有字數上限釘，T2 需預算（實作時先 grep ceiling 測試；有則量餘裕、必要時依棘輪慣例帶理由調升）。
+- Decision Log（rebase 改寫 SHA，ledger 刷新）: #682 merge 後本分支 rebase，T1-T3 的交付 commit 被改寫（d49208e4→d5a3d508、d85893e7+d4bed08f→30eb007b+a4f2326a、fb9a4b3c→22b8be67）；whole-branch docs 臂抓到 ledger 仍記 pre-rebase 孤兒 SHA（fresh clone 不可解析），已刷新為可達 SHA。教訓：rebase 後 ledger done() 需同步刷新。
+- Decision Log（T1 第二拒絕補記）: 出貨的 loom_init 除店存在外亦拒絕「DIRECTION.md 存在而店缺」（半採納形，防覆寫人寫主題）——T1 implementer 主動加入、spec 臂裁定 in-scope 硬化，brief/plan 原文未載，以本行入記錄；whole-branch 後又補強為全碰撞點先檢後寫（見補救 commit）。
 - Decision Log（T2 措辭指令被審查推翻）: T2 原令 offer 用「雙層解析措辭同段既有形」；品質臂證明第一層對 loom_init 在**所有** repo 皆為死路（bootstrap 動詞的前提=repo 尚無此層，repo-root 副本結構上不存在；T1 亦不出 shim）——裁決改為**單層 plugin 指令**（`${CLAUDE_PLUGIN_ROOT}` + load-time 註記保留），釘同步改綁單層形。雙層 cascade 保留給 repo-root 副本可能存在的工具（backlog_index/plan_card）。
 - Decision Log（plan-gate 2 輪上限越權，round 3）: round 2 唯一 finding 是 round-2 新增 Reuse-adequacy 塊的 source-marker 格式（封閉詞彙 `read <path>:<line>` 結尾缺失）＋兩處引用勘誤——reviewer 自開一行處方、brief 無恙非結構問題，套用後跑 round 3；本行即審計記錄（同型先例：task-mgmt-doc-currency plan round 3）。
 
@@ -36,7 +38,7 @@ Endpoint recording: endpoint named: yes → continuous（/goal「把 A 跟 B 都
 - Dependencies: none
 - Independent: true
 - Brief item covered: Smallest End State #1 + #2
-- Status: done(d49208e4)
+- Status: done(d5a3d508)
 - Gloss: 一個指令把佇列層骨架鑄進任何 repo，鑄完立刻用真 validator 自證合格
 
 ## Task 2 — brainstorming Axis 0 offer 分支
@@ -54,7 +56,7 @@ Endpoint recording: endpoint named: yes → continuous（/goal「把 A 跟 B 都
 - Dependencies: none
 - Independent: true
 - Brief item covered: Smallest End State #3 前半（brainstorming offer once）
-- Status: done(d4bed08f)
+- Status: done(a4f2326a)
 - Gloss: 沒有佇列層的 repo 在動工前會被問一次要不要長出來，問過就不再煩
 
 ## Task 3 — family-reception 推薦列（loom-pipeline）
@@ -72,7 +74,7 @@ Endpoint recording: endpoint named: yes → continuous（/goal「把 A 跟 B 都
 - Dependencies: none
 - Independent: true
 - Brief item covered: Smallest End State #3 後半（reception row）
-- Status: done(fb9a4b3c)
+- Status: done(22b8be67)
 - Gloss: 家族接待知道向沒有佇列層的 repo 指一次路
 
 ## Task 4 — 雙 plugin 版本鏈（依賴 #682 merge）

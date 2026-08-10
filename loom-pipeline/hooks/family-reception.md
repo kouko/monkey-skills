@@ -46,7 +46,7 @@ This table is the single source of truth — every family entry's §Intake refer
 | 3 | The work is multi-state/multi-object behavior AND no spec or change-folder exists for it | Suggest **using-loom-spec first** |
 | Negative guard | The work is a bug fix, a refactor, or a test-covered increment | **Do not interrupt** — proceed directly, skip the recommendation silently |
 | 4 | The work is product-shaped AND no `docs/loom/discovery/*/user-insights.md` already covers it AND the problem/users cannot yet be articulated with evidence (the user would be guessing at who-needs-what) | Suggest **using-loom-discovery first** |
-| 5 | No `docs/loom/backlog/` in the target repo (the queue layer is not adopted) AND the work is loom-family-scoped | Suggest running **loom-init** once — the scaffold verb shipped in loom-code |
+| 5 | Neither `docs/loom/backlog/` nor `docs/loom/DIRECTION.md` in the target repo (the queue layer is not adopted; the verb refuses on either existing) AND the work is loom-family-scoped | Suggest running **loom-init** once — the scaffold verb shipped in loom-code |
 
 When both row 4 and row 1 fire, recommend discovery first — the principles station consumes discovery's value-commitment output.
 

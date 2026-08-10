@@ -100,10 +100,17 @@ def main(argv: list[str]) -> int:
 
     store = target / "docs" / "loom" / "backlog"
     direction = target / "docs" / "loom" / "DIRECTION.md"
-    if store.exists():
+    if store.is_dir():
         print(
             f"loom-init: refusing — {store} already exists; this repo has "
             "adopted the queue layer and loom-init never overwrites it"
+        )
+        return 1
+    if store.exists():  # a stray FILE at the store path, not adoption
+        print(
+            f"loom-init: refusing — {store} exists but is not a directory; "
+            "inspect and remove it (possibly a crashed scaffold) before "
+            "re-running"
         )
         return 1
     if direction.exists():
@@ -112,6 +119,18 @@ def main(argv: list[str]) -> int:
             "are human-owned and loom-init never overwrites them"
         )
         return 1
+    # Whole-branch review 🟡 (2026-08-10): precheck EVERY path the
+    # scaffold will touch BEFORE the first write — a stray file at any
+    # of them used to crash mid-scaffold, leaving residue that later
+    # runs misdescribed as adoption.
+    for dirname in ("plans", "specs"):
+        clash = target / "docs" / "loom" / dirname
+        if clash.exists() and not clash.is_dir():
+            print(
+                f"loom-init: refusing — {clash} exists but is not a "
+                "directory; inspect and remove it before re-running"
+            )
+            return 1
 
     stamp = f"<!-- scaffolded by loom-init (loom-code {_plugin_version()}) -->"
     store.mkdir(parents=True)

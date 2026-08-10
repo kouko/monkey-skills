@@ -1,9 +1,13 @@
 # Direction
 
+> The scaffold stamp above records which loom-code version minted
+> this document. From that moment it is THIS repo's own file —
+> it never syncs back to the plugin; edit it freely.
+
 > Charter (this header is the convention's SSOT — stations point here,
 > never copy):
 > - `## Now` is GENERATED from COMMITTED-NEXT entry files by
->   `scripts/backlog_index.py --direction-write` (repo-root first, else
+>   `scripts/backlog_index.py --direction-write docs/loom/DIRECTION.md` (repo-root first, else
 >   the loom-code plugin copy) — never hand-edit it.
 > - `## Now` is a PARALLEL ACTIVE SET, not a serial queue: one entry
 >   typically maps to one worktree/lane; the ≤5 cap is parallel-steering

@@ -262,3 +262,43 @@ def test_mutation_stripped_charter_section_fails_the_production_assertion(
     monkeypatch.setattr(sys.modules[__name__], "ACTIVE_SCRIPTS", scratch)
     with pytest.raises(AssertionError):
         test_scaffolded_readme_carries_the_charter_sections(tmp_path / "mut")
+
+
+def test_refuses_before_any_write_when_a_file_blocks_a_scaffold_path(tmp_path):
+    """(10) Whole-branch review 🟡: a stray FILE at any scaffold path
+    (probed: docs/loom/plans) used to crash MID-scaffold with residue
+    left behind — later runs then misdescribed the crash husk as
+    adoption. All collision points now precheck BEFORE the first
+    write: loud refusal naming the path, exit 1, ZERO residue."""
+    assert LOOM_INIT.is_file(), f"missing script at {LOOM_INIT}"
+    target = tmp_path / "repo"
+    (target / "docs" / "loom").mkdir(parents=True)
+    (target / "docs" / "loom" / "plans").write_text("stray file")
+
+    result = _run_init(target)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "plans" in result.stdout, result.stdout
+    assert "not a directory" in result.stdout, result.stdout
+    assert not (target / "docs" / "loom" / "backlog").exists(), (
+        "residue: backlog/ was created before the refusal"
+    )
+    assert not (target / "docs" / "loom" / "DIRECTION.md").exists(), (
+        "residue: DIRECTION.md was created before the refusal"
+    )
+
+
+def test_stray_file_at_store_path_is_not_called_adoption(tmp_path):
+    """(11) Companion 🟢: a stray FILE at docs/loom/backlog gets the
+    inspect-and-remove message, never the 'has adopted the queue
+    layer' claim (which is reserved for a real store directory)."""
+    assert LOOM_INIT.is_file(), f"missing script at {LOOM_INIT}"
+    target = tmp_path / "repo"
+    (target / "docs" / "loom").mkdir(parents=True)
+    (target / "docs" / "loom" / "backlog").write_text("stray file")
+
+    result = _run_init(target)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "not a directory" in result.stdout, result.stdout
+    assert "adopted the queue layer" not in result.stdout, result.stdout
