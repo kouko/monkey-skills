@@ -157,31 +157,6 @@ def _convergence_window(text: str) -> str:
     return "".join(lines[start:end])
 
 
-def _prior_findings_check_window(text: str) -> str:
-    """The `prior_findings_check:` fence entry inside `## Verdict
-    structure` -- from the `prior_findings_check:` line to the next
-    top-level key line (`findings:`). Narrower than the whole heading
-    window, which also contains `findings:`'s own `- severity:` line
-    and would false-green an assertion that no `- severity:` line
-    appears inside the prior_findings_check fence."""
-    verdict = _heading_window(text, "Verdict structure")
-    lines = verdict.splitlines(keepends=True)
-    start = None
-    for i, line in enumerate(lines):
-        if line.strip().startswith("prior_findings_check:"):
-            start = i
-            break
-    assert start is not None, (
-        "`## Verdict structure` carries no `prior_findings_check:` fence"
-    )
-    end = len(lines)
-    for j in range(start + 1, len(lines)):
-        if re.match(r"^[a-z_]+:", lines[j]):
-            end = j
-            break
-    return "".join(lines[start:end])
-
-
 def _steps_window(text: str) -> str:
     """The numbered orchestration steps of `## Process` (after the
     convergence directives)."""
@@ -281,6 +256,38 @@ def test_docs_only_dispatch_trigger():
     )
     assert "requesting-code-review" in low, (
         "the non-.md fallback must route through requesting-code-review"
+    )
+
+
+def test_classification_scope_citation():
+    """T9 review-round-1 fix (spec gap 1): the plan's item (a) --
+    'scope -- cite Task 8's SSOT (point, don't copy)' -- was entirely
+    absent from the shipped SKILL.md. A cold reader resolving scope
+    before dispatching (Step 1) must be told this station reviews
+    contract-class `.md` only, pointing at requesting-code-review's
+    classification SSOT heading rather than re-deriving or copying the
+    glob rule."""
+    raw_steps = _steps_window(_text())
+    low = _norm(raw_steps).lower()
+    assert "contract-class" in low, (
+        "Step 1 must state this station reviews contract-class `.md` "
+        "only"
+    )
+    assert (
+        "requesting-code-review" in low
+        and "classification: contract-class vs record-class" in low
+    ), (
+        "must point at requesting-code-review's classification SSOT "
+        "heading by name, not copy the glob rule inline"
+    )
+    # point, don't copy: the glob literals themselves must NOT be
+    # duplicated here -- that would be a copy, not a citation, and would
+    # drift out of lockstep with the SSOT the moment either side edits.
+    # Checked against the RAW (un-normalized) window: _norm strips `*`,
+    # which would silently eat the glob wildcards and vacuously pass.
+    assert "<plugin>/skills/**/*.md" not in raw_steps, (
+        "must cite the SSOT heading, not copy its glob literals inline "
+        "-- a copy drifts; a citation cannot"
     )
 
 
@@ -753,6 +760,60 @@ def test_class_default_provenance_marker():
     ), "the pinned `class: instruction | evidence` literal must survive"
 
 
+def test_verdict_structure_retires_prior_findings_check():
+    """T9 review-round-1 fix (cq 1 fatal + 1 should-fix, spec gap 2):
+    §Verdict structure still carried the round-N `prior_findings_check`
+    machinery, contradicting the single-round-plus-confirmation contract
+    shipped in the same commit AND convergence-contract.md's own "no
+    `prior_findings_check`" retirement line. Formally retire the field
+    (reviewers' option (a)): the fence, its round-after-round-1 comment,
+    and the resurfaced-status sentence that referenced it are gone;
+    `reviewed_sha` and `out_of_scope` keep their fields but lose their
+    round-N-vocabulary comments."""
+    text = _text()
+    section = _heading_window(text, "Verdict structure")
+
+    # the field itself is gone -- whole file, not just the window,
+    # matching the acceptance grep.
+    assert "prior_findings_check" not in text, (
+        "the retired prior_findings_check field must not survive "
+        "anywhere in SKILL.md"
+    )
+    assert "resurfaced" not in text, (
+        "the `resurfaced` status literal belonged to the retired field "
+        "-- it must not survive either"
+    )
+
+    # reviewed_sha: field stays (still useful for provenance / the
+    # delta-confirmation anchor), but the stale round-range comment
+    # is gone.
+    assert "reviewed_sha:" in section, (
+        "reviewed_sha must survive -- it anchors the delta confirmation"
+    )
+    assert "next-round range" not in section, (
+        "the stale 'Directive 2's next-round range starts here' comment "
+        "must not survive -- there is no next round"
+    )
+    assert "delta" in section.lower() and (
+        "provenance" in section.lower() or "anchor" in section.lower()
+    ), (
+        "reviewed_sha's comment must be rewritten to describe its role "
+        "as delta-confirmation provenance/anchor, not a dropped comment"
+    )
+
+    # out_of_scope: field stays, but its comments no longer speak of "an
+    # unbounded round" or "this round's raise scope (Directive 2)" --
+    # Directive 2 is delta confirmation now, not a raise-scope rule.
+    assert "out_of_scope:" in section, "out_of_scope must survive"
+    assert "unbounded round" not in section, (
+        "the stale 'omit on an unbounded round' comment must not survive"
+    )
+    assert "raise scope (directive 2)" not in section.lower(), (
+        "the stale 'this round's raise scope (Directive 2)' comment "
+        "must not survive -- Directive 2 no longer defines a raise scope"
+    )
+
+
 def test_verdict_structure_prose_dimensions():
     """The verdict schema carries the five prose dimension_scores keys
     and the per-finding class key."""
@@ -842,28 +903,6 @@ def test_prior_findings_carrier_every_later_round():
     assert "round 2 only" not in steps and "round-n handoff" not in steps, (
         "Step 3's dispatch-packet enumeration must not carry a "
         "round-2-only or round-N-handoff synonym copy"
-    )
-
-
-def test_prior_findings_restated_as_scalar():
-    """A prior finding is restated as a one-line scalar, never the
-    original `- severity:` block -- `_FINDING_RE`
-    (`loom_gate_markers.py`) matches `- severity:` at ANY indent, so a
-    verbatim block nested under `finding:` would land in the origin
-    ledger a second time as a later-round finding, contaminating the
-    population partition the ledger exists to keep clean (I2)."""
-    raw = _prior_findings_check_window(_text())
-    norm = _norm(raw).lower()
-    assert "one-line" in norm and "scalar" in norm, (
-        "the restatement instruction must tell the reviewer to restate "
-        "the prior finding as a one-line scalar summary"
-    )
-    assert not re.search(r"(?m)^\s*-\s*severity\s*:", raw), (
-        "the prior_findings_check fence must not itself carry a "
-        "`- severity:` finding-block line (the exact pattern "
-        "loom_gate_markers.py's _FINDING_RE matches at any indent) -- "
-        "a nested one would double-count the finding in the origin "
-        "ledger as a new later-round finding"
     )
 
 

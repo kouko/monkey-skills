@@ -52,7 +52,7 @@ Owns the **docs arm** of whole-branch review. Dispatches **two `docs-reviewer` s
 
 Steps:
 
-1. **Resolve scope — only when none was handed down.** §Pinned pass-down contract, transcribed verbatim: "The delegating station hands the delegate the resolved scope as `resolved-scope` in the dispatch packet. The delegate resolves scope itself ONLY when no `resolved-scope` was supplied." When this dispatch's packet carries `resolved-scope` — the delegated-dispatch shape, `requesting-code-review`'s Step 1 routing already resolved it — consume that file list directly; do not call the resolver again. Otherwise (direct invocation), resolve it yourself: run `python3 <plugin-root>/scripts/review_scope.py` (resolve `<plugin-root>` as `../..` from this skill's base dir). Exit 0 prints the changed-file list to stdout, one path per line; a non-zero exit is a refusal. §Pinned refusal contract, transcribed verbatim: "A stale base, or any failure to establish freshness, REFUSES. The resolver never returns a file list it cannot vouch for, and a station that receives a refusal STOPS before dispatching anything." A refusal — the resolver's own non-zero exit here, or an upstream refusal already surfaced before scope was ever handed down — STOPS this station before any dispatch: do not dispatch the docs-reviewer panel; surface the refusal reason to the user instead. On a resolved (non-refused) scope, the docs-only dispatch fires when the list is non-empty AND every file in it ends in `.md`. Any non-`.md` file in the list means this is not a docs-only branch — route through `requesting-code-review`'s three-way dispatch instead (its mixed-branch per-file split still sends the `.md` files back to this skill's contract).
+1. **Resolve scope — only when none was handed down.** This station reviews contract-class `.md` only — scope per `requesting-code-review` §Classification: contract-class vs record-class (cite that heading; do not re-derive or copy the glob rule here). §Pinned pass-down contract, transcribed verbatim: "The delegating station hands the delegate the resolved scope as `resolved-scope` in the dispatch packet. The delegate resolves scope itself ONLY when no `resolved-scope` was supplied." When this dispatch's packet carries `resolved-scope` — the delegated-dispatch shape, `requesting-code-review`'s Step 1 routing already resolved it — consume that file list directly; do not call the resolver again. Otherwise (direct invocation), resolve it yourself: run `python3 <plugin-root>/scripts/review_scope.py` (resolve `<plugin-root>` as `../..` from this skill's base dir). Exit 0 prints the changed-file list to stdout, one path per line; a non-zero exit is a refusal. §Pinned refusal contract, transcribed verbatim: "A stale base, or any failure to establish freshness, REFUSES. The resolver never returns a file list it cannot vouch for, and a station that receives a refusal STOPS before dispatching anything." A refusal — the resolver's own non-zero exit here, or an upstream refusal already surfaced before scope was ever handed down — STOPS this station before any dispatch: do not dispatch the docs-reviewer panel; surface the refusal reason to the user instead. On a resolved (non-refused) scope, the docs-only dispatch fires when the list is non-empty AND every file in it ends in `.md`. Any non-`.md` file in the list means this is not a docs-only branch — route through `requesting-code-review`'s three-way dispatch instead (its mixed-branch per-file split still sends the `.md` files back to this skill's contract).
 2. **Citation pre-pass.** Run `python3 <plugin-root>/scripts/check_doc_citations.py <changed .md files>` (resolve `<plugin-root>` as `../..` from this skill's base dir) and fold its output into the dispatch packet. Pre-pass findings inside fenced code blocks, blockquotes, table cells, and inline examples are advisory, not defects — documents quoting tool output or deliberately-broken examples trigger false findings.
 3. **Dispatch TWO `docs-reviewer` subagents in parallel, with byte-identical prompts** (a panel, mirroring `requesting-code-review`'s two-arm convention; agent contract at [`loom-code/agents/docs-reviewer.md`](../../agents/docs-reviewer.md); "byte-identical" means identical to each other). Open each prompt with the agent's role anchor — "You ARE the reviewer" — verbatim. **State the HEAD sha this dispatch reviews** in the packet; each arm returns it as `reviewed_sha:` and the panel verdict carries it (§Verdict structure) — provenance for the delta confirmation that follows a gating verdict (Step 6). The dispatch packet carries: branch name, diff scope, the changed-artifact list, the citation pre-pass output, and any `read-context` file list handed down (see below). Round 1 is always whole-artifact — there is no round-scope variable to set and no prior-round findings to carry (Directive 1: round 1 is the only full review). **`read-context`** — supplied by `requesting-code-review`'s mixed-branch split, absent on a docs-only branch — is the branch's non-`.md` files: material each reviewer OPENS to check the artifacts' claims against, never scope it reviews. A claim a changed `.md` makes about a shipped interface (a flag, an accepted input, a path) is verified by reading the named file, not by trusting the prose; unverifiable because the file was not supplied is itself reportable. Findings against a `read-context` file are reported for the orchestrator to pass to the code arm — they do not enter this arm's dimension scores. **Whole-artifact scope**: each reviewer reads every changed artifact whole, the diff only as context, and asks explicitly: does any UNCHANGED claim in this file contradict the change, or the current code? (an unchanged line in a document is an untouched line, not a correct one — documents have no tests). Reviewers score the five prose dimensions — **omission** (an obligation or referent the text needs and lacks), **ambiguity** (an absolute — "only", "never", "zero" — without support, or a sentence with two live readings), **inconsistency** (two passages contradicting, including changed-vs-unchanged), **incorrect-fact** (a citation that does not support its claim — open the source), **missing-population** (a measured number without its denominator or scope) — and every finding carries `class: instruction | evidence`: instruction is text a reader or executor will act on (a rule, a step, a prescribed command or path); evidence is a narrative claim about what happened or is true (a measurement, an attribution). A finding whose class is unclear is tagged `instruction` (fail closed).
 4. **Wait for BOTH verdicts, union the findings, re-aggregate — then mint the gate marker ONLY if this skill owns the whole review.** Union rule as in `requesting-code-review` Step 3: same `file:line` AND same dimension → one finding, keeping the more detailed wording and the severer severity; same location under different dimensions stays distinct. Re-run §Aggregation rule on the union — per-dimension score is re-aggregated from that dimension's union findings, not either arm's own: two arms contributing DIFFERENT findings to one dimension can each score clean alone yet union to NEEDS_REVISION, which either arm's own score would miss — never adopt one arm's own verdict. **Mint ONLY when this skill owns the whole review.** If the dispatch packet carried a non-empty `read-context` (Step 3), this invocation is the `.md` half of `requesting-code-review`'s mixed-branch split: **return the verdict to that orchestrator and do NOT mint** — it mints once from the joined verdict after both arms return, and a marker minted here would satisfy `git-guard.py`'s push gate before the code arm has said anything. `read-context` is the signal because it is supplied on exactly the mixed path and is non-empty there by construction. Otherwise (docs-only branch, whether invoked directly or delegated whole) mint here: save the panel verdict text to a temp file and run `python3 <plugin-root>/scripts/loom_gate_markers.py review-pass --verdict-file <file>` — the docs arm mints the SAME review-pass marker as the code arm (a separate docs marker would break the `git-guard.py` push gate); the prose dimension names are schema-valid to the marker script, and `NEEDS_REVISION` or a malformed verdict refuses to mint (exit 3/4). Dead-arm rule: an arm that errors out with no verdict is re-dispatched once; if it dies again, proceed single-arm and say so in the verdict summary and the user relay.
@@ -77,8 +77,9 @@ The panel verdict text (computed over the union) mirrors the `docs-reviewer` out
 ```
 standards_version: "{X.Y.Z — value of `version` in loom-code/.claude-plugin/plugin.json}"
 
-reviewed_sha: {the HEAD sha this round reviewed — REQUIRED; Directive 2's
-              next-round range starts here}
+reviewed_sha: {the HEAD sha this round reviewed — REQUIRED; records the
+              reviewed commit for provenance and as the delta-confirmation
+              anchor (Directive 2) — there is no round-N handoff to track}
 
 verdict: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 
@@ -88,13 +89,6 @@ dimension_scores:
   inconsistency: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   incorrect-fact: PASS | PASS_WITH_NOTES | NEEDS_REVISION
   missing-population: PASS | PASS_WITH_NOTES | NEEDS_REVISION
-
-prior_findings_check:               # every round after round 1; omit on round 1
-  - finding: <prior-round finding, restated as a one-line scalar summary --
-      never a verbatim `- severity:` block, which the ledger's finding
-      regex would re-match as a new later-round finding>
-    status: fix-verified | not-fixed | resurfaced
-    quote: <the exact current text that verifies (or fails) the fix>
 
 findings:
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
@@ -110,9 +104,12 @@ read_context_findings:              # omit when empty or when no read-context wa
     # No severity, no dimension, no class — never enters a dimension score.
     # The orchestrator forwards these to the code arm (§Aggregation rule).
 
-out_of_scope:                       # omit on an unbounded round
+out_of_scope:                       # omit on round 1 (unbounded -- nothing
+                                     # is out of scope there); populated by
+                                     # a delta confirmation (Directive 2),
+                                     # which is scoped to the delta only
   - where: <file:line>
-    note: <a defect noticed outside this round's raise scope (Directive 2)>
+    note: <a defect noticed outside the delta while confirming a fix>
     # Emitted, never scored. Surfaced to the user with the verdict;
     # persisted nowhere — deferral survives only if the user or
     # orchestrator acts on it.
@@ -120,8 +117,6 @@ out_of_scope:                       # omit on an unbounded round
 summary:
   - <≤5 bullet observations about the branch's artifacts as a whole>
 ```
-
-Any `resurfaced` status in `prior_findings_check` triggers Directive 3 — the loop ends and the oscillation goes to the user.
 
 ## Red Flags — refuse these rationalizations
 
