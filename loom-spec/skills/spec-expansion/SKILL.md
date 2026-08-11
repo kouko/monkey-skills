@@ -409,7 +409,8 @@ blind spots:
 
 - `## USM backbone` — Phase ① artifact: the ordered journey-step spine.
 - `## OOUX object model` — Phase ② artifact: the object inventory + each
-  object's state machine.
+  object's state machine and relations, rendered as Mermaid diagram
+  blocks (fill-or-declare, pinned N/A line — see Phase ②).
 - `## Path × edge matrix` — Phase ③ artifact: the grid plus which
   `backbone × object × CTA × state` paths and edges survive post-prune.
 - `## Cross-object combinations` — Phase ③b artifact: per interaction-dense
