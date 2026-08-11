@@ -72,6 +72,19 @@ RESIDUE_BULLET = (
 
 FILES_WITH_RESIDUE_BULLET = [CODE_QUALITY_REVIEWER, SPEC_REVIEWER, CODE_REVIEWER]
 
+SSOT_REVIEWER_DISCIPLINE = REPO_ROOT / "loom-code/scripts/_reviewer-discipline.md"
+REQUESTING_CODE_REVIEW_SKILL = (
+    REPO_ROOT / "loom-code/skills/requesting-code-review/SKILL.md"
+)
+
+CONTRACT_CLASS_QUALIFIER = (
+    "Where docs-reviewer is the routing target for authored prose, that "
+    "routing is scoped to contract-class `.md` only — see "
+    "`requesting-code-review/SKILL.md` §\"Classification: contract-class "
+    "vs record-class\"; record-class prose is review-exempt from this "
+    "routing."
+)
+
 
 def _normalize(text):
     return re.sub(r"\s+", " ", text).strip()
@@ -134,3 +147,46 @@ def test_anti_pattern_test_ban_bullets_gone_residue_bullet_exact_three():
 
     docs_text = _normalize(DOCS_REVIEWER.read_text(encoding="utf-8"))
     assert _normalize(RESIDUE_BULLET) not in docs_text
+
+
+def _extract_glob_literal(text):
+    """Pull the contract-class glob-pattern sentence out of a section — the
+    literal path patterns, not the surrounding bold label (which is
+    legitimately cased differently at sentence-start vs mid-sentence)."""
+    match = re.search(r"paths matching.*?\(incl\. `docs/\*\*`\)\.", text, re.DOTALL)
+    assert match, "contract-class glob literal not found"
+    return _normalize(match.group(0))
+
+
+def test_contract_class_qualifier_and_lockstep():
+    """@req: none (dispatch carries no registered REQ-ids for this plan)
+
+    Task 13: the shared carve-out sentence naming docs-reviewer
+    (`_reviewer-discipline.md:8`) gains a contract-class qualifier —
+    authored-prose routing to docs-review applies to contract-class `.md`
+    only, citing Task 8's SSOT heading. Pins: (1) the qualifier ships in
+    the SSOT and every synced agent copy; (2) the contract-class glob
+    literal in `requesting-code-review/SKILL.md` §Classification and its
+    copy in `agents/docs-reviewer.md` §Scope contract stay byte-equal
+    (after whitespace normalization) — the cross-file lockstep that makes
+    Tasks 7/8's authoring order irrelevant.
+    """
+    ssot_text = _normalize(SSOT_REVIEWER_DISCIPLINE.read_text(encoding="utf-8"))
+    assert _normalize(CONTRACT_CLASS_QUALIFIER) in ssot_text
+
+    for path in ALL_FOUR:
+        text = _normalize(path.read_text(encoding="utf-8"))
+        assert _normalize(CONTRACT_CLASS_QUALIFIER) in text, f"missing in {path}"
+
+    skill_glob = _extract_glob_literal(
+        REQUESTING_CODE_REVIEW_SKILL.read_text(encoding="utf-8")
+    )
+    docs_reviewer_glob = _extract_glob_literal(
+        DOCS_REVIEWER.read_text(encoding="utf-8")
+    )
+    assert skill_glob == docs_reviewer_glob, (
+        "contract-class glob literal drifted between "
+        f"requesting-code-review/SKILL.md and docs-reviewer.md:\n"
+        f"  SKILL.md:       {skill_glob}\n"
+        f"  docs-reviewer:  {docs_reviewer_glob}"
+    )

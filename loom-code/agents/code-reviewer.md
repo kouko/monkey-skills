@@ -54,6 +54,11 @@ every plugin-level agent), this block ships ONLY in reviewer agents
 docs-reviewer) — the implementer does not produce verdicts and does
 not carry it.
 
+Where docs-reviewer is the routing target for authored prose, that
+routing is scoped to contract-class `.md` only — see
+`requesting-code-review/SKILL.md` §"Classification: contract-class vs
+record-class"; record-class prose is review-exempt from this routing.
+
 ## Rule R1 — Stamp every verdict with `standards_version`
 
 At dispatch start, anchor at the repository root via
