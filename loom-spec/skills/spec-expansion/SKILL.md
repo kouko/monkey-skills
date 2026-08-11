@@ -218,8 +218,19 @@ independent (disjoint objects, no shared state), which is exactly the case
 the fan-out convention is for.
 
 **Visible artifact:** emit a `## OOUX object model` section in `proposal.md` —
-the object inventory plus, for each object, its state machine (states +
-legal transitions).
+the object inventory, plus, for each object, its state machine (states +
+legal transitions) rendered as a fenced ```mermaid `stateDiagram-v2` block,
+plus one fenced ```mermaid `erDiagram` block for the object-to-object
+relations. Both diagram slots are governed by the fill-or-declare contract:
+
+This section is fill-or-declare: either embed the diagram(s) this section
+names, or replace the body with the single line
+`N/A — no flow/state/architecture-shaped content: <one-line reason>`.
+Do not delete the section heading — an absent heading or a bare section is
+a reviewable omission, and an N/A whose reason does not hold against the
+artifact's own content is a reviewable claim. A paragraph that suffices
+needs no diagram — the slot forces the declaration, not the drawing.
+Channel rule SSOT: `loom-pipeline/hooks/family-relay.md §(b) Visual defaults`.
 
 ### Phase ③ 自動拓展矩陣 (auto-expansion matrix) — grid, prune, emit
 
