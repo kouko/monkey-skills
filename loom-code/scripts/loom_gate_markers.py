@@ -467,7 +467,16 @@ def _record_only_changed_files(repo: Path) -> list[str] | None:
     merge_base = _git(repo, "merge-base", ref, "HEAD")
     if merge_base is None:
         return None
-    diff_output = _git(repo, "diff", "--name-only", merge_base, "HEAD")
+    # --no-renames: WITHOUT it, git's default rename detection collapses
+    # a contract->record rename (e.g. `git mv agents/foo.md
+    # docs/foo-notes.md` plus a small edit) into ONLY the new path — the
+    # contract-class OLD path would never reach
+    # `_record_only_offending_files`, letting a branch that moved a
+    # contract file mint the exemption. Forcing add/delete pairs keeps
+    # BOTH sides of any rename visible to the classifier.
+    diff_output = _git(
+        repo, "diff", "--no-renames", "--name-only", merge_base, "HEAD"
+    )
     if diff_output is None:
         return None
     if diff_output == "":

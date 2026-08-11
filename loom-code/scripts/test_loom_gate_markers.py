@@ -2918,6 +2918,45 @@ def test_record_only_exemption_excludes_readme_and_changelog_basenames(tmp_path)
     assert (_marker_dir(repo) / "review-pass.json").is_file()
 
 
+def test_record_only_exemption_refuses_contract_to_record_rename(tmp_path):
+    """A contract-class file `git mv`d to a record-class path (with a
+    small content edit, kept above git's default rename-similarity
+    threshold) must still refuse — git's default rename detection on a
+    bare `git diff --name-only` collapses an R-pair down to only the
+    NEW path, which would hide the contract-class OLD path from
+    `_record_only_offending_files` entirely. `--no-renames` (or
+    equivalent) must keep both sides visible."""
+    repo = _init_repo_with_main(tmp_path)
+    body = "\n".join(f"line {i} of the original contract file" for i in range(30))
+    _commit_new_files(
+        repo, {"loom-code/agents/foo.md": body + "\n"}, "add contract-class file"
+    )
+    _git(repo, "checkout", "-b", "feat/contract-to-record-rename")
+    (repo / "docs").mkdir(parents=True, exist_ok=True)
+    _git(repo, "mv", "loom-code/agents/foo.md", "docs/foo-notes.md")
+    (repo / "docs" / "foo-notes.md").write_text(
+        body + "\none small added line\n", encoding="utf-8"
+    )
+    _git(repo, "add", "docs/foo-notes.md")
+    _git(repo, "commit", "-m", "rename contract file into docs/")
+
+    # Prove the fixture is real: git's default rename detection sees
+    # this as an R-pair (similarity above its threshold), not a plain
+    # add — otherwise this test would pass for the wrong reason.
+    merge_base = _git(repo, "merge-base", "main", "HEAD")
+    name_status = _git(repo, "diff", "--name-status", merge_base, "HEAD")
+    assert name_status.startswith("R"), (
+        f"fixture is not exercising rename detection: {name_status!r}"
+    )
+
+    rc = main(
+        ["mint", "--review-na-record-only", "--repo", str(repo)]
+    )
+
+    assert rc != 0
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+
+
 def test_mint_verb_and_flag_appear_in_help_text():
     script = str(Path(__file__).resolve().parent / "loom_gate_markers.py")
     top = subprocess.run(
