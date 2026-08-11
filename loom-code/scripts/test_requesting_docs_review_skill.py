@@ -519,16 +519,15 @@ def test_per_dimension_score_union_recompute_mutation_guard():
 
 def test_convergence_directives():
     """The convergence contract sits at the dispatch moment (the window
-    extraction pins placement): SKILL.md now carries an imperative
-    pointer to the extracted reference plus a compact per-directive
-    summary (A2, docs/loom/plans/2026-08-07-loom-arc4a-prose-slim.md
-    Task 1); the four directives' full text -- bounded cap (2 rounds
-    plus at most one mechanically-conditioned auto-delta round) with
-    STOP-and-surface + user-authorized breach beyond it;
-    round-1-findings-verbatim handoff with fix-verification before
-    anything new; re-litigation ban; oscillation stop;
-    appended-corrections rule -- now lives verbatim in
-    references/convergence-contract.md."""
+    extraction pins placement): SKILL.md carries an imperative pointer to
+    the extracted reference plus a compact per-directive summary; the
+    single-round-with-confirmation contract's full text -- round 1 as the
+    only full review, delta confirmation by the SAME reviewer via
+    SendMessage, the "no gating findings" terminal state, and the
+    session-death fallback -- lives verbatim in
+    references/convergence-contract.md (Task 9 + absorbed Task 19,
+    docs/loom/plans/2026-08-11-review-cost-reduction.md). This REPLACES
+    the former bounded 2-round-cap-plus-auto-delta-round design in full."""
     low = _norm(_convergence_window(_text())).lower()
     ref = _norm(_reference_text()).lower()
 
@@ -542,167 +541,89 @@ def test_convergence_directives():
         "the pointer must state the reference's directives are binding"
     )
 
-    # (a) bounded cap -> STOP and surface on non-qualifying shapes;
-    # breach beyond the auto-delta round only by user. The inline
-    # summary keeps the cap count and the fourth-round-authorization
-    # guard visible without opening the reference; the rest of the
-    # mechanical detail lives in the reference only.
-    assert "2 review rounds" in low, (
-        "the inline summary must still state the base cap: 2 review rounds"
+    # Directive 1 -- round 1 is the only full review; no gating findings
+    # -> done; gating verdict -> fix, then delta confirmation.
+    assert "round 1" in low and "only full review" in low, (
+        "the inline summary must state round 1 is the only full review"
     )
-    assert "fourth round" in low and "explicit user authorization" in low, (
-        "the inline summary must still state a fourth round runs ONLY on "
-        "explicit user authorization"
+    assert "round 1 is the only full review" in ref, (
+        "the reference must state round 1 is the only full review, "
+        "verbatim"
     )
-    assert "ends with needs_revision" in ref, (
-        "the reference must state the cap-STOP trigger explicitly: round 2 "
-        "ending with NEEDS_REVISION -- not a bare 'without PASS' that leaves "
-        "PASS_WITH_NOTES ambiguous (T4 code-quality review finding)"
+    assert "no round 2, no round cap" in ref, (
+        "the reference must retire the round cap explicitly"
     )
-    assert "pass_with_notes" in ref and "passing verdict" in ref, (
-        "the reference must state PASS and PASS_WITH_NOTES are both "
-        "passing verdicts that end the review"
+    assert "no gating findings" in low and "no gating findings" in ref, (
+        "both the inline summary and the reference must state the "
+        "no-gating-findings terminal outcome"
     )
-    assert "stop" in ref and "surviving findings" in ref, (
-        "the reference must state that after round 2 ends with "
-        "NEEDS_REVISION the orchestrator STOPs and surfaces the "
-        "surviving findings to the user"
-    )
-    assert "without pass" not in ref, (
-        "polarity guard: the reference must not read bare 'without PASS' -- "
-        "ambiguous on whether PASS_WITH_NOTES counts; must name "
-        "NEEDS_REVISION explicitly"
-    )
-    assert "fourth round" in ref and "explicit user authorization" in ref, (
-        "the reference must also carry the fourth-round-authorization "
-        "guard verbatim -- the 0.62.0 bounded auto-third-round moved the "
-        "authorization boundary one notch past the auto-delta round; it "
-        "did not remove it"
+    assert "delta confirmation" in low and "delta confirmation" in ref, (
+        "both the inline summary and the reference must name delta "
+        "confirmation as what follows a gating verdict"
     )
 
-    # (b) round-2 handoff: round-1 findings verbatim, verify first --
-    # detail lives in the reference only.
-    assert "findings verbatim" in ref, (
-        "the reference must state the round-N dispatch carries the prior "
-        "round's findings verbatim"
+    # Directive 2 -- delta confirmation: SAME reviewer, via SendMessage,
+    # delta-scoped, never a fresh whole-corpus re-sample; two verdicts;
+    # STILL_BLOCKING after one cycle STOPs.
+    assert "same reviewer" in ref, (
+        "the reference must state the SAME reviewer confirms the fix"
     )
-    assert "before raising anything new" in ref, (
-        "the reference must state reviewers verify each prior finding "
-        "against quoted current text BEFORE raising anything new"
+    assert "sendmessage" in ref, (
+        "the reference must state confirmation is dispatched via "
+        "SendMessage, never a fresh Agent dispatch"
     )
-    assert "re-raising a closed finding in new words is forbidden" in ref, (
-        "the re-litigation ban must be stated verbatim in the reference"
+    assert "whole-corpus re-sample" in low and "whole-corpus re-sample" in ref, (
+        "both the inline summary and the reference must forbid a fresh "
+        "whole-corpus re-sample"
     )
-
-    # (c) oscillation stop -- kept in both the inline summary and the
-    # reference (the inline one-liner reuses the exact phrasing).
-    assert (
-        "resurfaces after being fix-verified" in low
-        and "resurfaces after being fix-verified" in ref
-    ), (
-        "oscillation must be defined -- a finding resurfacing after "
-        "being fix-verified -- inline and in the reference"
+    assert "confirmed_resolved" in ref and "still_blocking" in ref, (
+        "the reference must name both confirmation verdicts"
     )
-    assert (
-        "ends the loop immediately" in low
-        and "ends the loop immediately" in ref
-    ), (
-        "an oscillation ends the loop immediately -> user, inline and in "
-        "the reference"
+    assert "still_blocking" in low, (
+        "the inline summary must also name the STILL_BLOCKING verdict"
+    )
+    assert "after this one fix cycle" in ref and "stop" in ref, (
+        "the reference must state STILL_BLOCKING after this one fix "
+        "cycle STOPs"
+    )
+    assert "explicit user authorization" in ref, (
+        "the reference must forbid a second cycle or a fallback round "
+        "without explicit user authorization"
     )
 
-    # (d) appended corrections -- kept in both.
-    assert (
-        "appended corrections" in low and "appended corrections" in ref
-    ), (
-        "evidence-class fixes for unchanged prose are appended "
-        "corrections, inline and in the reference"
+    # Directive 3 -- terminal state is "no gating findings", never
+    # "clean".
+    assert "clean round is not a reachable state" in ref, (
+        "the reference must state a clean round is not a reachable "
+        "state (pool-arithmetic rationale)"
     )
-    assert (
-        "never in-place rewrites" in low
-        and "never in-place rewrites" in ref
-    ), (
-        "in-place rewrites must be forbidden, inline and in the reference"
+    assert 'never as "the doc is clean."' in ref or "never \"clean\"" in ref, (
+        "the reference must forbid reporting the terminal state as "
+        "'clean'"
     )
 
+    # Directive 4 -- session death before confirmation -> one fresh
+    # single round.
+    assert "session death" in ref or "session dies" in ref, (
+        "the reference must state the session-death fallback"
+    )
+    assert "one fresh single round" in ref, (
+        "the reference must state the fallback is one fresh single "
+        "round"
+    )
 
-def test_auto_third_round_mechanical_conditions():
-    """Directive 1's bounded auto-third-round (0.62.0, brief
-    docs/loom/specs/2026-08-06-bounded-auto-third-round-and-dispatch-hardening.md
-    item 1): a round-2 NEEDS_REVISION whose STRUCTURED VERDICT shows
-    (a) zero surviving prior findings (all fix-verified), (b) NEW
-    findings with zero 🔴 and at most 2 🟡, and (c) no auto-third-round
-    yet on this branch, auto-runs ONE delta-scoped round 3 (scope = the
-    NEW findings' fixes only) and REPORTS the auto-round in the
-    terminal rollup — visible, never silent. Any other round-2 shape
-    STOPs and surfaces (test_convergence_directives pins that). A
-    round-3 verdict other than PASS / PASS_WITH_NOTES hard-stops; a
-    fourth round never runs without explicit user authorization.
-    Conditions are count/verdict-shape only — the brief's Decisions
-    section rejected any 'non-semantic finding' judgment wording. This
-    mechanical detail moved verbatim to references/convergence-contract.md
-    (A2, docs/loom/plans/2026-08-07-loom-arc4a-prose-slim.md Task 1);
-    SKILL.md's inline summary keeps only the cap count and the
-    fourth-round-authorization guard (test_convergence_directives)."""
-    conv = _norm(_reference_text()).lower()
-
-    # conditions read mechanically off round 2's structured verdict.
-    assert "structured verdict" in conv, (
-        "directive 1 must source the auto-round conditions from round "
-        "2's structured verdict -- mechanical, not a judgment call"
+    # old bounded-cap machinery is gone -- both inline and reference.
+    assert "2 review rounds" not in low and "2 review rounds" not in ref, (
+        "the old bounded-cap phrase '2 review rounds' must not survive"
     )
-    # (a) zero surviving prior findings, all fix-verified.
-    assert "fix-verified" in conv and "zero surviving" in conv, (
-        "condition (a): every prior-round finding fix-verified -- zero "
-        "surviving"
+    assert "auto-delta" not in low and "auto-delta" not in ref, (
+        "the old auto-delta-round machinery must not survive"
     )
-    # (b) NEW findings: zero 🔴 and at most 2 🟡.
-    assert "zero 🔴" in conv and "at most 2 🟡" in conv, (
-        "condition (b): NEW findings carry zero 🔴 and at most 2 🟡 -- "
-        "count/verdict-shape only, no 'minor'/'non-semantic' judgment "
-        "wording"
+    assert "fourth round" not in low and "fourth round" not in ref, (
+        "the old fourth-round-authorization ladder must not survive"
     )
-    # (c) once per branch, ever.
-    assert "once per branch" in conv, (
-        "condition (c): the auto-round runs at most once per branch"
-    )
-    # shape: ONE delta-scoped auto round over the NEW findings' fixes.
-    assert "delta-scoped round 3 automatically" in conv, (
-        "when all three conditions hold the orchestrator runs ONE "
-        "delta-scoped round 3 automatically"
-    )
-    assert "new findings' fixes only" in conv, (
-        "the auto-round's scope is the NEW findings' fixes only"
-    )
-    # report duty: visible in the terminal rollup, never silent.
-    assert "terminal rollup" in conv, (
-        "the auto-round must be reported in the terminal rollup"
-    )
-    assert "rollup: visible, never silent" in conv, (
-        "the report duty must state the auto-round is visible in the"
-        " rollup and never silent -- the bare substring 'never silent'"
-        " false-greens on the fourth-round sentence's 'never silently'"
-    )
-    # non-qualifying round-2 shapes keep today's STOP-and-surface.
-    assert "any other round-2 shape" in conv, (
-        "any other round-2 shape must STOP and surface, unchanged"
-    )
-    # round-3 non-passing verdict -> hard stop; round 4 is user-only.
-    assert (
-        "other than pass or pass_with_notes" in conv
-        and "hard stop" in conv
-    ), (
-        "a round-3 verdict other than PASS or PASS_WITH_NOTES must "
-        "hard STOP and surface"
-    )
-    assert "fourth round" in conv and "explicit user authorization" in conv, (
-        "a fourth round never runs without explicit user authorization"
-    )
-    # judgment wording stays out: the discriminator is count/shape only.
-    assert "non-semantic" not in conv, (
-        "the conditions must not introduce 'non-semantic' judgment "
-        "wording -- rejected at kickoff (weak models self-certify past "
-        "judgment prose)"
+    assert "no prior_findings_check" in ref or "prior_findings_check`" in ref, (
+        "the reference must explicitly retire prior_findings_check"
     )
 
 
@@ -727,43 +648,40 @@ def test_delta_scope_rationale_carries_no_unsourced_magnitudes():
 
 
 def test_delta_scope_rationale_is_size_grounded_and_attribution_correct():
-    """Two follow-on defects from the same magnitude retraction (Task 8,
-    docs/loom/plans/2026-08-04-docs-review-0490-defect-fixes.md):
-
-    (1) the (b)/(c) risk sentence must not claim 'three gating defects'
-    caught by 'the next round' -- the audit's round-2 cell shows the
-    HISTORICAL unbounded control caught 2; the third came from a FRESH
-    retrospective delta-scoped treatment arm, not from 'the next round'
-    itself (docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md
-    Round 2 row). Direction without count or mis-attribution is what's
-    sourced.
-
-    (2) the 'A large rewrite -> (a)' conclusion needs a size
-    characterization to hang on now that the evidence clause measures
-    delta-vs-unbounded catch parity, not rewrite size. The audit's own
-    row labels -- 'large delta' (round 2 row) / 'small delta' (round 3
-    row) -- are audit-recorded direction words and may be used, without
-    reintroducing an edit count. Both sentences moved verbatim to
-    references/convergence-contract.md (A2, docs/loom/plans/
-    2026-08-07-loom-arc4a-prose-slim.md Task 1)."""
+    """Task 9's single-round-plus-confirmation rewrite retires the
+    round-1-vs-round-2 magnitude comparison this test used to pin
+    (docs/loom/plans/2026-08-11-review-cost-reduction.md Task 9, absorbing
+    Task 19's convergence-contract.md rewrite): there is no round 2 to
+    compare a delta size against any more, so 'larger delta' / 'smaller
+    delta' no longer has anything to hang on and must NOT reappear as an
+    unsourced magnitude claim. What survives from the original defect
+    (Task 8, docs/loom/plans/2026-08-04-docs-review-0490-defect-fixes.md):
+    the same audit citation now backs Directive 3's pool-arithmetic
+    rationale honestly -- direction ('a clean round is not a reachable
+    state') without a fabricated count or a mis-attributed 'next round'
+    catch."""
     low = _norm(_reference_text()).lower()
 
     assert "three gating defects" not in low, (
-        "the (b)/(c) risk sentence must not carry the unsourced count "
-        "'three gating defects' -- the audit's HISTORICAL round-2 "
-        "unbounded control caught 2, and the third came from a FRESH "
-        "retrospective treatment arm, not 'the next round'"
+        "the terminal-state rationale must not carry the unsourced count "
+        "'three gating defects' from the old (b)/(c) risk sentence"
     )
     assert "the next round caught" not in low, (
-        "the (b)/(c) risk sentence must not attribute the third gating "
-        "defect to 'the next round' -- it came from a fresh retrospective "
-        "delta-scoped arm, not the branch's real next round"
+        "the terminal-state rationale must not attribute a defect catch "
+        "to 'the next round' -- there is no round 2 any more"
     )
-    assert "larger delta" in low and "smaller delta" in low, (
-        "the criterion paragraph must reintroduce a size characterization "
-        "(round 1's fixes were the larger delta, round 2's the smaller) "
-        "using the audit's own round-label direction words, so the "
-        "'A large rewrite -> (a)' conclusion has something to hang on"
+    assert "larger delta" not in low and "smaller delta" not in low, (
+        "the round-1-vs-round-2 delta-size comparison must not survive "
+        "-- there is no round 2 to compare against under the "
+        "single-round-plus-confirmation contract"
+    )
+    assert "2026-08-04-docs-review-convergence-experiment.md" in low, (
+        "the pool-arithmetic rationale (Directive 3) must still cite the "
+        "measured audit"
+    )
+    assert "pool-arithmetic rationale" in low, (
+        "the audit citation must be attached to the pool-arithmetic "
+        "rationale, not a magnitude claim"
     )
 
 
@@ -875,61 +793,55 @@ def test_cross_skill_contract_names_callers():
 
 
 def test_prior_findings_carrier_every_later_round():
-    """The prior-findings carrier is not round-2-specific: every round
-    after round 1 receives the previous round's surviving findings.
-    `resurfaced` (Directive 3) was otherwise unreachable at round 2, the
-    only round the old wording let carry `prior_findings_check` (D1).
-    Directive 2's body moved verbatim to references/convergence-contract.md
-    (A2, docs/loom/plans/2026-08-07-loom-arc4a-prose-slim.md Task 1);
-    Directive 1 option (a) -- the hand-the-user decision surface -- stays
-    inline in SKILL.md unmodified."""
+    """The old round-N-handoff carrier (Directive 2's multi-round
+    `prior_findings_check` propagation) is RETIRED, not generalized: Task
+    9's single-round-plus-confirmation contract replaces it with a single
+    delta-confirmation cycle -- the SAME reviewer, dispatched via
+    SendMessage, scoped to the delta only, returning CONFIRMED_RESOLVED
+    or STILL_BLOCKING (docs/loom/plans/2026-08-11-review-cost-reduction.md
+    Task 9, absorbing Task 19's convergence-contract.md rewrite). No
+    round-2-specific OR round-N-generalized carrier language may survive
+    anywhere in the shipped text."""
     ref = _norm(_reference_text()).lower()
-    assert "round-n handoff" in ref, (
-        "Directive 2 must be generalized to a round-N handoff, not "
-        "round-2-specific"
+    assert "delta confirmation — same reviewer, delta-scoped, one cycle" in ref, (
+        "Directive 2 must be the delta-confirmation contract: same "
+        "reviewer, delta-scoped, one cycle"
     )
-    assert "round n's" in ref and "round n-1" in ref, (
-        "Directive 2 must state round N's packet carries round N-1's "
-        "findings"
+    assert "sendmessage" in ref and "never a fresh agent dispatch" in ref, (
+        "Directive 2 must state confirmation is dispatched via "
+        "SendMessage, never a fresh Agent dispatch"
+    )
+    assert "round-n handoff" not in ref, (
+        "the retired round-N-handoff carrier must not survive in the "
+        "reference"
     )
     assert "round 2 only" not in ref, (
-        "the convergence directives must not restrict the carrier to "
-        "round 2 only"
+        "no round-2-only restriction may survive in the reference -- "
+        "Task 9 retires the mechanism entirely, not generalizes it"
     )
-    assert "one extra round" in ref and "retained" in ref, (
-        "Directive 2 must state that a finding fix-verified in round "
-        "N-1 is retained in round N's carrier for exactly one extra "
-        "round, so a regression can be tagged `resurfaced` — "
-        "otherwise a fix-verified finding drops out of every later "
-        "carrier and Directive 3's oscillation stop stays unreachable"
+    assert "no `prior_findings_check`" in ref, (
+        "the reference must explicitly retire prior_findings_check as a "
+        "carrier, not silently drop the phrase"
     )
 
     low = _norm(_convergence_window(_text())).lower()
-    assert "receives the surviving findings it verifies" in low, (
-        "Directive 1 option (a) -- retained inline as the hand-the-user "
-        "decision surface -- must state the authorized verification "
-        "round receives the surviving findings it verifies"
+    assert "confirmed_resolved" in low and "closes the review" in low, (
+        "the inline hand-the-user summary must state CONFIRMED_RESOLVED "
+        "closes the review"
     )
-    assert "round 2 only" not in low, (
-        "the SKILL.md inline summary must not restrict the carrier to "
-        "round 2 only either"
+    assert "still_blocking" in low and "hands the finding" in low, (
+        "the inline hand-the-user summary must state STILL_BLOCKING "
+        "hands the finding back to the user"
     )
-
-    verdict = _norm(_heading_window(_text(), "Verdict structure")).lower()
-    assert "every round after round 1" in verdict, (
-        "the verdict-schema comment must generalize prior_findings_check "
-        "to every round after round 1"
-    )
-    assert "round 2 only" not in verdict, (
-        "the verdict-schema comment must not restrict prior_findings_check "
-        "to round 2 only"
+    assert "round 2 only" not in low and "round-n handoff" not in low, (
+        "the SKILL.md inline summary must not carry round-2-only or "
+        "round-N-handoff language either"
     )
 
     steps = _norm(_steps_window(_text())).lower()
-    assert "every round after round 1" in steps, (
-        "Step 3's dispatch-packet enumeration must also generalize the "
-        "prior-round-findings clause to every round after round 1, not "
-        "leave a round-2-only synonym copy behind"
+    assert "round 2 only" not in steps and "round-n handoff" not in steps, (
+        "Step 3's dispatch-packet enumeration must not carry a "
+        "round-2-only or round-N-handoff synonym copy"
     )
 
 
@@ -952,50 +864,6 @@ def test_prior_findings_restated_as_scalar():
         "loom_gate_markers.py's _FINDING_RE matches at any indent) -- "
         "a nested one would double-count the finding in the origin "
         "ledger as a new later-round finding"
-    )
-
-
-def test_directive2_states_invocation_semantics():
-    """Directive 2's session-boundary paragraph must state invocation
-    semantics: the ledger appends on every `review-pass` INVOCATION,
-    including the NEEDS_REVISION (exit 3) and schema-failure (exit 4)
-    paths that mint no marker -- not only on a "minted" round. An
-    entry can still be stale, but for the correct reason: a round
-    that never invokes the CLI (a mixed-branch docs round; a round
-    nobody bothered to invoke) appends nothing (D2). The paragraph
-    must also name the `unresolved` sentinel and treat it exactly as
-    "no prior reviewed_sha", never as a literal string to build a
-    range from (folded-in from Task 3's review). This paragraph moved
-    verbatim to references/convergence-contract.md (A2, docs/loom/plans/
-    2026-08-07-loom-arc4a-prose-slim.md Task 1)."""
-    conv = _norm(_reference_text()).lower()
-    assert "last minted round" not in conv, (
-        "Directive 2 must not claim the ledger holds only the last "
-        "minted round -- the ledger appends on every invocation, not "
-        "only on a mint"
-    )
-    assert "invocation" in conv, (
-        "Directive 2 must state the ledger appends on every "
-        "review-pass invocation"
-    )
-    assert "needs_revision" in conv and (
-        "exit 3" in conv or "exit-3" in conv
-    ), (
-        "Directive 2 must name the NEEDS_REVISION (exit 3) path as one "
-        "that still appends a ledger entry despite minting no marker"
-    )
-    assert "schema" in conv and ("exit 4" in conv or "exit-4" in conv), (
-        "Directive 2 must name the schema-failure (exit 4) path as one "
-        "that still appends a ledger entry despite minting no marker"
-    )
-    assert "unresolved" in conv and "not a sha" in conv, (
-        "Directive 2 must name the `unresolved` sentinel and state it "
-        "is not a sha"
-    )
-    assert "no prior `reviewed_sha`" in conv, (
-        "Directive 2 must state the `unresolved` sentinel is treated "
-        "exactly as no prior reviewed_sha found, so the next round "
-        "runs unbounded"
     )
 
 
@@ -1082,11 +950,12 @@ def test_out_of_scope_not_claimed_persisted():
 def test_window_precision():
     """Windows are narrow, not whole-file greps in disguise: each
     window's distinctive phrase exists in the file exactly where
-    asserted and NOT in the sibling windows. Since A2 (docs/loom/plans/
-    2026-08-07-loom-arc4a-prose-slim.md Task 1) the convergence
-    directives' detailed text lives in references/convergence-contract.md,
-    not in SKILL.md's convergence window -- the boundary check moves
-    with it."""
+    asserted and NOT in the sibling windows. Since Task 9
+    (docs/loom/plans/2026-08-11-review-cost-reduction.md, absorbing Task
+    19's convergence-contract.md rewrite) the single-round-plus-
+    confirmation contract's mechanical detail lives in
+    references/convergence-contract.md, not in SKILL.md's convergence
+    window -- the boundary check moves with it."""
     text = _text()
     conv = _norm(_convergence_window(text)).lower()
     steps = _norm(_steps_window(text)).lower()
@@ -1098,19 +967,16 @@ def test_window_precision():
     assert "instruction-class findings only" not in conv, (
         "the convergence window must not swallow the aggregation rule"
     )
-    # re-litigation ban lives in the extracted reference now, not inline
-    # in SKILL.md's convergence window or its steps.
-    assert "re-raising a closed finding in new words is forbidden" in ref
-    assert (
-        "re-raising a closed finding in new words is forbidden" not in conv
-    ), (
-        "the re-litigation ban's full text must not have leaked back "
+    # a distinctive Directive-2 sentence lives in the extracted reference
+    # only, not inline in SKILL.md's convergence window or its steps.
+    distinctive = "the reviewer does not re-read the whole artifact from scratch"
+    assert distinctive in ref
+    assert distinctive not in conv, (
+        "Directive 2's full mechanical detail must not have leaked back "
         "into SKILL.md's convergence window -- it belongs in the "
         "extracted reference only"
     )
-    assert (
-        "re-raising a closed finding in new words is forbidden" not in steps
-    ), (
+    assert distinctive not in steps, (
         "the steps window must not swallow the convergence directives"
     )
     # pre-pass script name stays out of the aggregation window.
