@@ -8,6 +8,14 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first three versions without a CHANGELOG.
 
+## [0.11.0] — 2026-08-11 — toolkit-guarded ascii-ui-patterns skeletons
+
+### Changed
+
+- loom-interface-design 0.11.0: ascii-ui-patterns — skeletons are generated
+  via ascii-graph-toolkit when available (availability-guarded degrade path,
+  CJK labels never hand-drawn); example skeletons re-aligned.
+
 ## [0.9.0] — 2026-07-25 — bba imperative in entry router
 
 ### Added
