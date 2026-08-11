@@ -21,8 +21,10 @@ Versioning: [Semantic Versioning](https://semver.org/).
   loudly (naming the offending paths) if any contract-class or
   non-`.md` file is present in the branch diff vs. `main`. The same
   contract-class qualifier lands in the shared reviewer-discipline
-  carve-out (`scripts/_reviewer-discipline.md`, resynced to its three
-  functional copies in `agents/*.md`) and in `requesting-docs-review`'s
+  carve-out (`scripts/_reviewer-discipline.md`, resynced to its four
+  functional copies in `agents/*.md` — `spec-reviewer.md`,
+  `code-quality-reviewer.md`, `docs-reviewer.md`, `code-reviewer.md`)
+  and in `requesting-docs-review`'s
   scope statement, which now points at the Task 8 SSOT instead of
   restating it. **Aggregation thresholds are UNCHANGED everywhere**
   (`requesting-code-review` §Aggregation, `requesting-docs-review`'s
@@ -32,6 +34,13 @@ Versioning: [Semantic Versioning](https://semver.org/).
   (14/14 sampled 🟡 findings load-bearing); see
   `docs/loom/audits/2026-08-11-yellow-finding-load-bearing-sample.md`
   for the evidence.
+- **`subagent-driven-development`'s per-task prose substitution narrows
+  the same way.** A `Review-weight: prose` task whose Files touched are
+  ALL record-class `.md` now dispatches spec-reviewer only — the
+  docs-reviewer substitution is N/A, recorded in the task summary as
+  "code-quality slot: N/A — record-class prose"; a mixed-class prose
+  task still substitutes docs-reviewer, scoped to the contract-class
+  subset only.
 - **`requesting-docs-review`'s convergence loop replaces the 2-round +
   qualifying-auto-delta-round cap with a single-round +
   same-reviewer delta-confirmation contract.** Round 1 is the only
