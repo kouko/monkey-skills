@@ -101,6 +101,17 @@ If Open Questions is non-empty, `writing-plans` is **blocked** until they are an
 
 Mermaid blocks per [`visual-companion.md`](visual-companion.md). Embed inline (not as separate files). Each diagram preceded by a 1-sentence caption explaining what to look at. These Mermaid blocks are for rendered venues (GitHub / Obsidian / VS Code); when relaying the brief in a terminal chat, apply visual-companion's channel-aware degradation instead.
 
+This section is fill-or-declare: either embed the diagram(s) this section
+names, or replace the body with the single line
+`N/A — no flow/state/architecture-shaped content: <one-line reason>`.
+Do not delete the section heading — an absent heading or a bare section is
+a reviewable omission, and an N/A whose reason does not hold against the
+artifact's own content is a reviewable claim. A paragraph that suffices
+needs no diagram — the slot forces the declaration, not the drawing.
+Channel rule SSOT: `loom-pipeline/hooks/family-relay.md §(b) Visual defaults`.
+
+When-to-draw judgment: see [visual-companion.md](visual-companion.md).
+
 ## Template
 
 Copy-paste this skeleton:
@@ -161,7 +172,7 @@ Copy-paste this skeleton:
 
 ## Diagrams
 
-(embed Mermaid blocks; preceded by 1-sentence captions; remove this section if no diagrams)
+(embed Mermaid blocks with 1-sentence captions, or write the pinned N/A line — do not delete this section)
 ```
 
 ## Anti-patterns
