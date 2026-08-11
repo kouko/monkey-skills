@@ -382,6 +382,10 @@ Stage: planning
 **Critical-path depth**: 2 (≤5 ✓)
 **Execution order**: parallel-where-possible
 
+## Task-flow diagram
+
+<!-- mermaid flowchart LR of the Task 1-6 → Task 7 → Task 8 dependency DAG -->
+
 ## Task 1 — Docstring for csv renderer   (Independent: true, Dependencies: none)
 ## Task 2 — Docstring for json renderer  (Independent: true, Dependencies: none)
 ## Task 3 — Docstring for xml renderer   (Independent: true, Dependencies: none)

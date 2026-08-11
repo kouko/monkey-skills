@@ -7,10 +7,12 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ## [0.76.0] — 2026-08-11 — Visualization trigger layer
 
-loom-code 0.76.0: Visualization trigger layer — the brief's `## Diagrams`
-section and the new plan-level `## Task-flow diagram` slot become
-fill-or-declare (pinned N/A line); docs-reviewer's omission dimension now
-covers a missing diagram slot and an unjustified N/A.
+### Changed
+
+- loom-code 0.76.0: Visualization trigger layer — the brief's `## Diagrams`
+  section and the new plan-level `## Task-flow diagram` slot become
+  fill-or-declare (pinned N/A line); docs-reviewer's omission dimension now
+  covers a missing diagram slot and an unjustified N/A.
 
 ## [0.75.0] — 2026-08-11 — review cost reduction: contract/record scope narrowing, single-round + confirmation loop, reviewer model defaults
 
