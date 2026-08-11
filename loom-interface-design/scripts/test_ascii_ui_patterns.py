@@ -131,3 +131,18 @@ def test_skeleton_border_lines_equal_width_per_block():
             f"block {i} has misaligned border lines (lengths {sorted(lengths)}): "
             f"{border_lines}"
         )
+
+
+def test_skeleton_blocks_have_no_trailing_whitespace():
+    """Guards against the invisible-padding class of bug directly: a line
+    that ends in whitespace inside a fenced skeleton re-breaks silently on
+    the next trim-on-save (docs/loom/plans/2026-08-11-visualization-trigger-
+    layer.md wave-1 fixup, Fix 4)."""
+    text = _text()
+    blocks = _fenced_blocks(text)
+    assert len(blocks) >= 4
+    for i, block in enumerate(blocks):
+        for line in block.split("\n"):
+            assert line == line.rstrip(), (
+                f"block {i} has a line with trailing whitespace: {line!r}"
+            )
