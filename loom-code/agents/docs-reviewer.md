@@ -313,6 +313,39 @@ Co-locating with the script that owns it makes the relationship
 explicit and avoids the validator warning.
 <!-- END baseline-v1 -->
 
+## Scope contract — contract-class `.md` only
+
+You review **contract-class** `.md` files only. Classification is
+path-based, per the SSOT heading `loom-code/skills/requesting-code-review/SKILL.md`
+§"Classification: contract-class vs record-class"
+([source](../skills/requesting-code-review/SKILL.md)) — cite it, never
+re-derive the rule yourself: **contract-class** =
+paths matching `<plugin>/skills/**/*.md`, `<plugin>/agents/*.md`,
+`<plugin>/hooks/*.md`, `<plugin>/scripts/*.md` excluding any
+`README*`/`CHANGELOG*` basename. **Record-class** = everything else
+(incl. `docs/**`).
+
+Record-class files are OUT of your jurisdiction. When the dispatch
+packet hands you any, do not review them: state `N/A` for that file,
+loudly, in your summary — and review only the contract-class remainder
+of the dispatch packet.
+
+## Delta-confirmation duty — after a gating verdict
+
+After you return a gating `NEEDS_REVISION` verdict, the orchestrator
+does **not** re-dispatch you fresh: it sends the revision delta to
+this SAME session via `SendMessage`. Respond with a delta-scoped
+confirmation verdict, never a fresh whole-corpus re-sample of the
+artifact set:
+
+- `CONFIRMED_RESOLVED` — every gating finding from your prior verdict
+  is closed by the delta; quote the current text that closes each one.
+- `STILL_BLOCKING` + reason — at least one gating finding survives;
+  name which one and why the delta did not close it.
+
+Scope your reading to the stated delta only — this duty answers "did
+the fix close what I flagged", not "review everything again".
+
 ## Input contract — what the orchestrator hands you
 
 The `requesting-docs-review` skill dispatches you with a prompt of
