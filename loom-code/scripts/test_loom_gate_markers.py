@@ -2763,3 +2763,170 @@ def test_module_docstring_states_conditional_ledger_bias():
         "the docstring must name the shipped reality: the recorded "
         "sample is invocation-skewed in practice"
     )
+
+
+# ------------------------------------------------------ mint (record-only)
+
+_GIT_GUARD_HOOK = Path(__file__).resolve().parent.parent / "hooks" / "git-guard.py"
+
+
+def _init_repo_with_main(tmp_path: Path) -> Path:
+    """Like `_init_repo`, but guarantees a local branch literally named
+    `main` regardless of the environment's `init.defaultBranch` —
+    `default_branch_ref` (which the record-only mint's merge-base
+    resolution reuses) falls back to a local `main`/`master` branch
+    when no `origin/HEAD` exists, which throwaway test repos never
+    have."""
+    repo = _init_repo(tmp_path)
+    current = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    if current != "main":
+        _git(repo, "branch", "-m", "main")
+    return repo
+
+
+def _commit_new_files(repo: Path, files: dict[str, str], message: str) -> None:
+    for rel_path, content in files.items():
+        target = repo / rel_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+        _git(repo, "add", rel_path)
+    _git(repo, "commit", "-m", message)
+
+
+def _run_git_guard_push(repo: Path) -> subprocess.CompletedProcess:
+    env = os.environ.copy()
+    env.pop("LOOM_CODE_MODE", None)
+    env.pop("GIT_DIR", None)
+    env.pop("GIT_WORK_TREE", None)
+    env["GIT_CONFIG_GLOBAL"] = ""
+    env["GIT_CONFIG_SYSTEM"] = ""
+    return subprocess.run(
+        [sys.executable, str(_GIT_GUARD_HOOK)],
+        input=json.dumps(
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "git push"},
+                "cwd": str(repo),
+            }
+        ),
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+
+
+def test_record_only_exemption_mints_and_validates(tmp_path):
+    """mint --review-na-record-only on an all-record-class branch (a
+    bare `docs/**.md` file, per rcr SKILL.md's own "incl. docs/**"
+    example) mints a review-pass marker git-guard.py's arm-agnostic
+    push gate then accepts (`validate` = the push gate this exemption
+    exists to satisfy, per the plan's Task 14 spec)."""
+    repo = _init_repo_with_main(tmp_path)
+    _git(repo, "checkout", "-b", "feat/docs-only")
+    _commit_new_files(
+        repo, {"docs/notes.md": "hello\n"}, "docs: add notes"
+    )
+
+    rc = main(["mint", "--review-na-record-only", "--repo", str(repo)])
+
+    assert rc == 0
+    marker = _marker_dir(repo) / "review-pass.json"
+    assert marker.is_file()
+    data = json.loads(marker.read_text(encoding="utf-8"))
+    assert data["schema"] == 1
+    assert data["branch"] == "feat/docs-only"
+    assert data["head_sha"] == _head(repo)
+    assert len(data["head_sha"]) == 40
+    assert data["verdict"] in {"PASS", "PASS_WITH_NOTES"}
+    datetime.fromisoformat(data["written_at"])
+
+    # Task 14's own scope is the review-pass half of the push gate —
+    # mint the verified.json half separately (unchanged `verified`
+    # command) to prove the FULL arm-agnostic gate now accepts a
+    # record-only branch end-to-end, not merely that this marker's
+    # fields look right in isolation.
+    rc_verified = main(["verified", "--repo", str(repo), "--run", "true"])
+    assert rc_verified == 0
+
+    result = _run_git_guard_push(repo)
+    assert result.returncode == 0, result.stderr
+
+
+def test_record_only_exemption_refuses_contract_class_file_naming_offender(
+    tmp_path, capsys
+):
+    repo = _init_repo_with_main(tmp_path)
+    _git(repo, "checkout", "-b", "feat/mixed-contract")
+    _commit_new_files(
+        repo,
+        {
+            "loom-code/skills/foo/SKILL.md": "x\n",
+            "docs/notes.md": "hello\n",
+        },
+        "mixed change",
+    )
+
+    rc = main(["mint", "--review-na-record-only", "--repo", str(repo)])
+
+    assert rc != 0
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    err = capsys.readouterr().err
+    assert "loom-code/skills/foo/SKILL.md" in err
+    assert "docs/notes.md" not in err  # only the offender is named
+
+
+def test_record_only_exemption_refuses_non_md_file_naming_offender(
+    tmp_path, capsys
+):
+    repo = _init_repo_with_main(tmp_path)
+    _git(repo, "checkout", "-b", "feat/mixed-nonmd")
+    _commit_new_files(
+        repo,
+        {
+            "docs/notes.md": "hello\n",
+            "docs/script.py": "pass\n",
+        },
+        "mixed nonmd change",
+    )
+
+    rc = main(["mint", "--review-na-record-only", "--repo", str(repo)])
+
+    assert rc != 0
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    err = capsys.readouterr().err
+    assert "docs/script.py" in err
+
+
+def test_record_only_exemption_excludes_readme_and_changelog_basenames(tmp_path):
+    """README*/CHANGELOG* basenames are excluded from contract-class
+    even under a skills/agents/hooks/scripts dir — same carve-out as
+    the rcr SSOT's classification heading."""
+    repo = _init_repo_with_main(tmp_path)
+    _git(repo, "checkout", "-b", "feat/readme-only")
+    _commit_new_files(
+        repo,
+        {
+            "loom-code/skills/foo/README.md": "readme\n",
+            "loom-code/scripts/CHANGELOG.md": "changelog\n",
+        },
+        "readme/changelog only",
+    )
+
+    rc = main(["mint", "--review-na-record-only", "--repo", str(repo)])
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+def test_mint_verb_and_flag_appear_in_help_text():
+    script = str(Path(__file__).resolve().parent / "loom_gate_markers.py")
+    top = subprocess.run(
+        [sys.executable, script, "--help"], capture_output=True, text=True
+    )
+    assert "mint" in top.stdout
+    sub = subprocess.run(
+        [sys.executable, script, "mint", "--help"],
+        capture_output=True,
+        text=True,
+    )
+    assert "--review-na-record-only" in sub.stdout

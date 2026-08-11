@@ -11,9 +11,10 @@ Dir: `<git-dir>/loom/` resolved via `git rev-parse --git-dir` from
 instead (`resolve_common_marker_dir`) — see its own entry for why.
 
 - `review-pass.json`  {"schema": 1, "branch", "head_sha", "verdict",
-  "written_at", optional "base_sha"/"patch_id"} — written ONLY after the
-  reviewer's verdict text passes schema validation (the audit's schema
-  gate: a marker can only exist if a schema-valid verdict text exists).
+  "written_at", optional "base_sha"/"patch_id"} — written via one of TWO
+  paths. `review-pass --verdict-file <file>`: ONLY after the reviewer's
+  verdict text passes schema validation (the audit's schema gate: a
+  marker can only exist if a schema-valid verdict text exists).
   NEEDS_REVISION never mints a marker (exit 3); a malformed verdict
   never mints one either (exit 4, missing keys listed). Quote
   verification (below) does NOT gate this marker (Task 8) — the
@@ -21,6 +22,13 @@ instead (`resolve_common_marker_dir`) — see its own entry for why.
   origin ledger below supersedes it (a per-run snapshot restated the
   same population-mismatch defect the ledger exists to fix — see
   `docs/loom/backlog/2026-08-02-origin-quote-tier-counts-have-no-durable-ledger.md`).
+  `mint --review-na-record-only`: ONLY after re-verifying every file
+  changed vs the default branch's merge-base is record-class per the
+  `requesting-code-review/SKILL.md` §Classification: contract-class vs
+  record-class SSOT (see `_is_contract_class_md` /
+  `_record_only_offending_files`) — no verdict text, no docs/code-review
+  arm dispatch; this path never touches the origin ledger below (there
+  are no findings to record).
 - `verified.json`     {"schema": 1, "head_sha", "run_cmd", "exit_code",
   "output_tail", "written_at", optional "base_sha"/"patch_id"} — minted
   ONLY after `--run "<cmd>"` actually executes in `--repo` and exits 0;
@@ -405,6 +413,66 @@ def compute_patch_id(repo: Path) -> tuple[str, str] | None:
     if patch_id_result.returncode != 0 or not patch_id_result.stdout.strip():
         return None
     return base_sha, patch_id_result.stdout.split()[0]
+
+
+# §Classification: contract-class vs record-class (Task 14) — the SAME
+# path rule as `requesting-code-review/SKILL.md`'s own heading of that
+# name (Task 8's SSOT): "Contract-class = paths matching
+# `<plugin>/skills/**/*.md`, `<plugin>/agents/*.md`, `<plugin>/hooks/*.md`,
+# `<plugin>/scripts/*.md` excluding any `README*`/`CHANGELOG*` basename.
+# Record-class = everything else (incl. `docs/**`)." That SKILL.md
+# heading is the ONE place the rule TEXT lives; this regex is the ONE
+# place it is ENCODED in Python (doc-mirrors-code lockstep) — never
+# re-derive it independently elsewhere in this file.
+_CONTRACT_CLASS_RE = re.compile(
+    r"^[^/]+/(?:skills/.+|agents/[^/]+|hooks/[^/]+|scripts/[^/]+)\.md$"
+)
+_EXEMPT_BASENAME_PREFIXES = ("README", "CHANGELOG")
+
+
+def _is_contract_class_md(path: str) -> bool:
+    """True iff `path` (repo-relative, forward-slash separated) is a
+    contract-class `.md` file per the rcr SSOT above. Only meaningful
+    for `.md` paths — the SSOT's classification is scoped to `.md`
+    routing decisions only; callers must reject non-`.md` paths
+    themselves (see `_record_only_offending_files`)."""
+    if not _CONTRACT_CLASS_RE.match(path):
+        return False
+    basename = path.rsplit("/", 1)[-1]
+    return not basename.startswith(_EXEMPT_BASENAME_PREFIXES)
+
+
+def _record_only_offending_files(changed_files: list[str]) -> list[str]:
+    """Files in `changed_files` that disqualify a record-only branch:
+    any non-`.md` file, or any `.md` file that is contract-class per
+    `_is_contract_class_md`. Order-preserving; an empty return means
+    the whole set is record-class and the exemption may mint."""
+    return [
+        f for f in changed_files if not f.endswith(".md") or _is_contract_class_md(f)
+    ]
+
+
+def _record_only_changed_files(repo: Path) -> list[str] | None:
+    """Files changed on the current branch vs the merge-base with the
+    default branch — mirrors `git diff --name-only $(git merge-base
+    HEAD main)` from the plan's Task 14 spec, but resolves the default
+    branch via `default_branch_ref` (origin/HEAD, else local `main`/
+    `master`) rather than hardcoding `main`, so throwaway repos with no
+    `origin` remote still resolve. Returns None when the default
+    branch or the merge-base cannot be resolved (fail-closed: the
+    caller refuses to mint rather than guessing an empty diff)."""
+    ref = default_branch_ref(repo)
+    if ref is None:
+        return None
+    merge_base = _git(repo, "merge-base", ref, "HEAD")
+    if merge_base is None:
+        return None
+    diff_output = _git(repo, "diff", "--name-only", merge_base, "HEAD")
+    if diff_output is None:
+        return None
+    if diff_output == "":
+        return []
+    return diff_output.splitlines()
 
 
 def resolve_marker_dir(repo: Path) -> Path | None:
@@ -1417,6 +1485,73 @@ def _cmd_verified(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int
     return 0
 
 
+def _cmd_mint(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int:
+    """`mint --review-na-record-only` — the record-only continuity
+    exemption (Task 14). Mints `review-pass.json` WITHOUT any verdict
+    text and WITHOUT dispatching either review arm, IFF every file
+    changed vs the default branch's merge-base is record-class per the
+    rcr SSOT (`_record_only_offending_files`). Any offending file (a
+    contract-class `.md`, or any non-`.md` file at all) refuses to
+    mint, loudly, naming every offender — never a partial mint."""
+    if not args.review_na_record_only:
+        print(
+            "loom-gate-markers: mint requires --review-na-record-only "
+            "(the only mint mode currently defined).",
+            file=sys.stderr,
+        )
+        return 2
+
+    changed_files = _record_only_changed_files(repo)
+    if changed_files is None:
+        print(
+            "loom-gate-markers: cannot resolve the default branch or its "
+            "merge-base with HEAD — refusing to mint.",
+            file=sys.stderr,
+        )
+        return 2
+    if not changed_files:
+        print(
+            "loom-gate-markers: no files changed vs the merge-base — the "
+            "record-only exemption requires a non-empty, all-record-class "
+            "file list (rcr SKILL.md §Process Step 1's Record-only branch "
+            "bullet); refusing to mint.",
+            file=sys.stderr,
+        )
+        return 3
+
+    offenders = _record_only_offending_files(changed_files)
+    if offenders:
+        print(
+            "loom-gate-markers: record-only exemption refused — the "
+            "following changed file(s) are not record-class per rcr "
+            "SKILL.md §Classification: contract-class vs record-class:",
+            file=sys.stderr,
+        )
+        for path in offenders:
+            print(f"  - {path}", file=sys.stderr)
+        return 3
+
+    branch = _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    head_sha = _git(repo, "rev-parse", "HEAD")
+    if branch is None or head_sha is None:
+        print("loom-gate-markers: cannot resolve HEAD.", file=sys.stderr)
+        return 2
+
+    payload = {
+        "schema": 1,
+        "branch": branch,
+        "head_sha": head_sha,
+        "verdict": "PASS",
+        "written_at": _now_iso(),
+    }
+    patch_id_fields = compute_patch_id(repo)
+    if patch_id_fields is not None:
+        payload["base_sha"], payload["patch_id"] = patch_id_fields
+    path = _write_marker(marker_dir, "review-pass.json", payload)
+    print(path)
+    return 0
+
+
 def _cmd_waiver(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int:
     reason = args.reason.strip()
     if len(reason) < MIN_WAIVER_REASON_CHARS:
@@ -1490,8 +1625,9 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     """CLI entry: `review-pass --verdict-file <path>` /
     `verified --run "<cmd>"` / `waiver --reason "<text>"` /
+    `mint --review-na-record-only` /
     `validate --verdict-file <path> [--suite-line "<text>"]`,
-    each of the first three with optional `--repo <path>` (default
+    each of the first four with optional `--repo <path>` (default
     cwd). `validate` is a dry-run text check — no repo, no marker
     write — so it takes no `--repo`."""
     parser = argparse.ArgumentParser(
@@ -1523,6 +1659,17 @@ def main(argv: list[str] | None = None) -> int:
     wv.add_argument("--repo", default=".", help="repo path (default: cwd)")
     wv.add_argument("--reason", required=True)
     wv.set_defaults(func=_cmd_waiver)
+
+    mt = subparsers.add_parser("mint")
+    mt.add_argument("--repo", default=".", help="repo path (default: cwd)")
+    mt.add_argument(
+        "--review-na-record-only",
+        action="store_true",
+        help="mint review-pass.json without a review, IFF every file "
+        "changed vs the default branch's merge-base is record-class "
+        "(rcr SKILL.md §Classification: contract-class vs record-class)",
+    )
+    mt.set_defaults(func=_cmd_mint)
 
     vd = subparsers.add_parser("validate")
     vd.add_argument("--verdict-file", required=True)
