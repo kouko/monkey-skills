@@ -119,16 +119,14 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
    - If PASS_WITH_NOTES (exactly 1 🟡, no 🔴): auto-proceed — carry the 🟡 finding forward
      into the PR body and the final close-out report as noted debt.
    - If PASS (all 🟢): proceed silently.
-   - If the docs arm (requesting-docs-review) returns its bounded-cap STOP: surface the
-     surviving findings to the user now — do NOT fold this into the fix→re-review loop
-     below. That skill's bounded convergence cap now runs one mechanically-conditioned
-     auto-delta round on its own authority and REPORTS it in its rollup — the conditions
-     live in its Directive 1 and are not restated here. A cap-STOP therefore reaches this
-     step only in the shapes requesting-docs-review still stops on: a round-2
-     NEEDS_REVISION shape failing the auto-round conditions (a round-2 PASS_WITH_NOTES
-     auto-proceeds per the bullet above), or a round-3 verdict other than PASS or
-     PASS_WITH_NOTES. Rounds beyond the bounded cap run only on explicit user
-     authorization.
+   - If the docs arm (requesting-docs-review) returns a STILL_BLOCKING confirmation:
+     surface the finding and the reviewer's reason to the user now — do NOT fold this
+     into the fix→re-review loop below. That skill runs a single-round-with-confirmation
+     contract: round 1 is whole-artifact and the only full review; a gating verdict is
+     fixed once, then confirmed by the SAME reviewer via SendMessage, delta-scoped, never
+     a fresh whole-corpus re-sample (mechanics live in its Directive 2, not restated
+     here). STILL_BLOCKING after that one fix cycle STOPs here — no second confirmation
+     cycle and no fresh round 1 run without explicit user authorization.
    - Budget/quota failure fallback: if the code-reviewer subagent fails to launch due to
      budget or quota exhaustion, perform an inline B2 self-review — Read the diff, surface
      🔴 / 🟡 / 🟢 findings with an explicit "(self-review — code-reviewer unavailable)" caveat,
@@ -140,8 +138,9 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      SDD's per-task triad during development or this step's own fix-up cycle — digest
      silently; the user sees only the terminal verdict, never each iteration.
      PASS_WITH_NOTES above auto-proceeds without asking — consistent with this
-     digest-silently posture, not an exception to it. The docs-arm cap-STOP above IS
-     the one exception: it surfaces to the user immediately rather than looping silently.
+     digest-silently posture, not an exception to it. The docs-arm STILL_BLOCKING
+     confirmation above IS the one exception: it surfaces to the user immediately
+     rather than looping silently.
 4. Before applying any review findings from Step 3: Read each file you intend to Edit
    (Bash inspection does NOT satisfy the Edit/Write precondition) — details in
    [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S1.

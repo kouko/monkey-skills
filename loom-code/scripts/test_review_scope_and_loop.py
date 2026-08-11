@@ -26,6 +26,13 @@ RDR_SKILL_MD = (
     / "SKILL.md"
 )
 
+FINISHING_SKILL_MD = (
+    Path(__file__).resolve().parent.parent
+    / "skills"
+    / "finishing-a-development-branch"
+    / "SKILL.md"
+)
+
 
 def _rcr_text() -> str:
     return RCR_SKILL_MD.read_text(encoding="utf-8")
@@ -69,6 +76,10 @@ def _section(text: str, heading_prefix: str) -> str:
 
 def _rdr_text() -> str:
     return RDR_SKILL_MD.read_text(encoding="utf-8")
+
+
+def _finishing_text() -> str:
+    return FINISHING_SKILL_MD.read_text(encoding="utf-8")
 
 
 def test_rcr_scope_classification():
@@ -226,4 +237,47 @@ def test_rdr_single_round_confirmation():
     assert "qualifying-shape" not in low, (
         "the old qualifying-shape auto-delta-round machinery must not "
         "survive"
+    )
+
+
+def test_finishing_confirmation_stop():
+    """finishing-a-development-branch/SKILL.md Step 3's docs-arm routing
+    (Task 10) must re-point to requesting-docs-review's single-round +
+    same-reviewer delta-confirmation contract: a STILL_BLOCKING
+    confirmation, dispatched via SendMessage, surfaces to the user --
+    replacing the old 2-round-plus-auto-delta cap language. Verdict
+    THRESHOLDS at :117/:119/:135-136 (any 🔴 fatal, or 2+ 🟡 should-fix)
+    are UNTOUCHED by this task (2026-08-11 user decision) -- this test
+    only checks the docs-arm loop-mechanism wording, scoped to the
+    '## Default flow' section via `_section()` so a mutation elsewhere
+    in the file can't false-green it."""
+    section = _section(_finishing_text(), "## Default flow")
+    low = section.lower()
+
+    assert "STILL_BLOCKING" in section, (
+        "Step 3 must name the STILL_BLOCKING confirmation verdict"
+    )
+    assert "surface" in low and "user" in low, (
+        "Step 3 must surface a STILL_BLOCKING confirmation to the user"
+    )
+    assert "sendmessage" in low, (
+        "Step 3 must name that delta confirmation is dispatched via "
+        "SendMessage, matching requesting-docs-review's Directive 2"
+    )
+
+    # old 2-round-plus-auto-delta cap machinery must be gone from this section.
+    assert "2 rounds" not in low, (
+        "the old '2 rounds' bounded-cap phrase must not survive"
+    )
+    assert "auto-delta" not in low, (
+        "the old auto-delta-round machinery must not survive"
+    )
+    assert "round-2" not in low, (
+        "the old round-2 shape language must not survive"
+    )
+    assert "round-3" not in low, (
+        "the old round-3 shape language must not survive"
+    )
+    assert "bounded-cap" not in low and "bounded cap" not in low, (
+        "the old bounded-cap naming must not survive"
     )

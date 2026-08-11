@@ -18,6 +18,15 @@ conductor paragraph carries the entry read duty (Read the CURRENT
 SKILL.md before executing — never run the flow from a compacted
 summary).
 
+Task 10 of the review-cost-reduction plan
+(`docs/loom/plans/2026-08-11-review-cost-reduction.md`) supersedes the
+bounded-cap contract above: the cap-STOP bullet now names a
+STILL_BLOCKING confirmation (single-round-with-confirmation contract,
+`requesting-docs-review` Directive 2) instead of the 2-round-plus-
+auto-delta cap; the affected tests below are updated to match. Verdict
+THRESHOLDS elsewhere in Step 3 (any 🔴 fatal, or 2+ 🟡 should-fix) are
+UNTOUCHED by Task 10.
+
 SKILL.md is a prompt/contract artifact, not executable code: nothing
 importable observes whether the orchestrator actually treats a cap-STOP
 differently from an ordinary NEEDS_REVISION loop. This file IS the
@@ -164,9 +173,10 @@ class TestVerdictRoutingSurfacesCapStop:
     def test_cap_stop_bullet_present(self):
         bullet = _norm(_cap_stop_bullet(_step3_window(_text())))
         assert "requesting-docs-review" in bullet
-        assert re.search(r"bounded[- ]cap", bullet, re.IGNORECASE), (
-            "cap-STOP bullet must name the bounded cap (2 rounds + one "
-            "conditional auto-delta round), not the old 2-round cap"
+        assert "STILL_BLOCKING" in bullet, (
+            "cap-STOP bullet must name the STILL_BLOCKING confirmation "
+            "verdict (Task 10), not the old bounded 2-round-plus-auto-delta "
+            "cap"
         )
         assert "stop" in bullet.lower()
 
@@ -183,28 +193,18 @@ class TestVerdictRoutingSurfacesCapStop:
         )
 
     def test_cap_stop_bullet_states_needs_revision_trigger(self):
-        """T4 code-quality review finding, re-pinned to the bounded
-        contract: the cap-STOP bullet must state its round-2 trigger
-        explicitly (a NEEDS_REVISION shape failing the auto-round
-        conditions), and name that a round-2 PASS_WITH_NOTES
-        auto-proceeds per the bullet above -- so no precedence question
-        survives between the two bullets."""
+        """Re-pinned to the single-round-with-confirmation contract
+        (Task 10): the cap-STOP bullet must state the STILL_BLOCKING
+        trigger explicitly (after ONE fix cycle), and that no second
+        confirmation cycle runs without explicit user authorization --
+        so no ambiguity survives about how many cycles are allowed."""
         bullet = _norm(_cap_stop_bullet(_step3_window(_text()))).lower()
-        assert (
-            "round-2 needs_revision shape failing the auto-round conditions"
-            in bullet
-        ), (
-            "cap-STOP bullet must state the round-2 trigger explicitly: a "
-            "NEEDS_REVISION shape failing the auto-round conditions"
+        assert "still_blocking" in bullet and "one fix cycle" in bullet, (
+            "cap-STOP bullet must state STILL_BLOCKING fires after ONE "
+            "fix cycle"
         )
-        assert "pass_with_notes" in bullet and "auto-proceeds" in bullet, (
-            "cap-STOP bullet must state that a round-2 PASS_WITH_NOTES "
-            "auto-proceeds per the bullet above, resolving the precedence "
-            "question against the PASS_WITH_NOTES bullet"
-        )
-        assert "ended without pass" not in bullet, (
-            "polarity guard: bullet must not read bare 'ended without "
-            "PASS' -- ambiguous about whether PASS_WITH_NOTES counts"
+        assert "no second confirmation cycle" in bullet, (
+            "cap-STOP bullet must state no second confirmation cycle runs"
         )
 
     def test_cap_stop_not_folded_into_digest_silently_loop(self):
@@ -235,53 +235,49 @@ class TestVerdictRoutingSurfacesCapStop:
         step3 = _step3_window(_text())
         digest_bullet = _norm(_digest_silently_bullet(step3))
         mutated = re.sub(
-            r"the docs-arm cap-stop.*$",
+            r"the docs-arm still_blocking.*$",
             "",
             digest_bullet,
             flags=re.IGNORECASE,
         )
         with pytest.raises(AssertionError):
-            assert "exception" in mutated and "cap-stop" in mutated.lower()
+            assert "exception" in mutated and "still_blocking" in mutated.lower()
 
 
 # --- T2: bounded-cap pointer + placement guard + entry read duty ---------
 
 
-def test_cap_stop_routes_on_bounded_contract():
-    """The cap-STOP bullet routes on requesting-docs-review's bounded
-    contract by POINTER: it names the auto-delta round existing and
-    REPORTED, names the two shapes rdr still stops on, keeps beyond-cap
-    rounds behind explicit user authorization — and does NOT restate the
-    three mechanical conditions (anti-copy convention: Directive 1 owns
-    them; a copy here would drift)."""
+def test_cap_stop_routes_on_confirmation_contract():
+    """Task 10: the cap-STOP bullet routes on requesting-docs-review's
+    single-round-with-confirmation contract by POINTER: it names round 1
+    as the only full review, names delta confirmation dispatched via
+    SendMessage, points at Directive 2 for the confirmation mechanics
+    rather than restating them (anti-copy convention), and keeps a
+    second confirmation cycle behind explicit user authorization."""
     bullet = _norm(_cap_stop_bullet(_step3_window(_text())))
     low = bullet.lower()
-    assert "mechanically-conditioned" in low and "auto-delta round" in low, (
-        "bullet must name rdr's mechanically-conditioned auto-delta round"
+    assert "single-round-with-confirmation" in low, (
+        "bullet must name rdr's single-round-with-confirmation contract"
     )
-    assert "report" in low, (
-        "bullet must state the auto-round is REPORTED by rdr, never silent"
+    assert "round 1" in low and "only full review" in low, (
+        "bullet must name round 1 as the only full review"
     )
-    assert "directive 1" in low, (
-        "bullet must point at requesting-docs-review's Directive 1 for the "
-        "auto-round conditions"
+    assert "sendmessage" in low, (
+        "bullet must state delta confirmation is dispatched via "
+        "SendMessage"
     )
-    assert "failing the auto-round conditions" in low, (
-        "bullet must name the first surfaced shape: a round-2 "
-        "NEEDS_REVISION shape failing the auto-round conditions"
+    assert "directive 2" in low, (
+        "bullet must point at requesting-docs-review's Directive 2 for "
+        "the confirmation mechanics"
     )
-    assert "round-3 verdict other than pass or pass_with_notes" in low, (
-        "bullet must name the second surfaced shape: a round-3 verdict "
-        "other than PASS or PASS_WITH_NOTES"
-    )
-    assert "beyond the bounded cap" in low, (
-        "bullet must keep rounds beyond the bounded cap behind explicit "
+    assert "explicit user authorization" in low, (
+        "bullet must keep a second confirmation cycle behind explicit "
         "user authorization"
     )
     for copied in ("fix-verified", "at most 2", "once per branch"):
         assert copied not in low, (
             f"anti-copy violation: condition wording {copied!r} restated "
-            "here — the conditions live in rdr's Directive 1 only"
+            "here — the mechanics live in rdr's Directive 2 only"
         )
 
 
