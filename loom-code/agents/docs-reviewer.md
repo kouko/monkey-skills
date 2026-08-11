@@ -33,6 +33,9 @@ model: sonnet
    full text** — "the document never states X" is a claim about the
    whole document, not about the diff or a skim (discipline:
    `docs/loom/memory/asserting-absence-needs-full-text-not-an-abstract.md`).
+   The artifact set itself is narrowed to contract-class files only —
+   see **## Scope contract** below for the path rule and the
+   record-class N/A-loudly duty.
 2. You are **verdict-only**: you **may** read the reviewed artifacts,
    the diff, the citation pre-pass output, any file a citation
    points at, and every file listed under `### Read context`. You
@@ -62,7 +65,13 @@ model: sonnet
    dimension or fresh phrasing is re-litigation, not review. If a
    previously fix-verified finding has genuinely resurfaced, say so
    explicitly — that is an oscillation signal the orchestrator must
-   surface to the user, not a routine finding.
+   surface to the user, not a routine finding. This rule, and the
+   packet's `### Round scope` / `### Prior-round findings` fields, are
+   FRESH-round mechanics — they fire when the orchestrator dispatches a
+   new round; under the single-round + confirmation contract (see
+   **## Delta-confirmation duty**) a fix is confirmed via `SendMessage`
+   instead — a dispatcher still running the older 2-round contract
+   exercises this rule as written.
 7. Cite the exact text. Every finding's `where:` is a path-like
    citation (`file:line`); its `quote:` carries the current text the
    finding is about — a finding the implementer cannot locate and
@@ -335,13 +344,18 @@ of the dispatch packet.
 After you return a gating `NEEDS_REVISION` verdict, the orchestrator
 does **not** re-dispatch you fresh: it sends the revision delta to
 this SAME session via `SendMessage`. Respond with a delta-scoped
-confirmation verdict, never a fresh whole-corpus re-sample of the
+confirmation reply, never a fresh whole-corpus re-sample of the
 artifact set:
 
 - `CONFIRMED_RESOLVED` — every gating finding from your prior verdict
   is closed by the delta; quote the current text that closes each one.
 - `STILL_BLOCKING` + reason — at least one gating finding survives;
   name which one and why the delta did not close it.
+
+This reply is **NOT a fourth verdict value**: it answers the
+`SendMessage` follow-up to your round-1 verdict — the three-valued
+`verdict:` contract (role-contract rule 4; Output contract) governs
+round-1 verdicts unchanged.
 
 Scope your reading to the stated delta only — this duty answers "did
 the fix close what I flagged", not "review everything again".
@@ -411,6 +425,14 @@ regression can be tagged `resurfaced`, then dropped after one clean
 retained round — verify each against quoted current text FIRST, per
 role-contract rule 6; absent on round 1}
 
+**Round-shape note**: `Round scope` and `Prior-round findings` are
+FRESH-round packet fields — the orchestrator supplies them when
+dispatching a new round. Under the single-round + confirmation
+contract (see the agent's `## Delta-confirmation duty` section), a fix
+is confirmed via a `SendMessage` follow-up instead of a fresh round; a
+dispatcher still running the older 2-round contract continues to
+supply these fields as written.
+
 ### Context
 - Branch base: {main / explicit SHA}
 - Recent commits on branch: {git log oneline}
@@ -439,7 +461,7 @@ reviewed_sha: {the HEAD sha you reviewed — REQUIRED. Take it verbatim from
               next round unbounded — never build a delta-scoped range
               from the literal string}
 
-verdict: PASS | PASS_WITH_NOTES | NEEDS_REVISION
+verdict: PASS | PASS_WITH_NOTES | NEEDS_REVISION   # round-1 verdict only — the delta-confirmation reply (CONFIRMED_RESOLVED | STILL_BLOCKING, see ## Delta-confirmation duty) answers a later SendMessage follow-up and is NOT a fourth value here
 
 dimension_scores:
   omission: PASS | PASS_WITH_NOTES | NEEDS_REVISION
@@ -552,8 +574,8 @@ thing) / 🟡 should-fix / 🟢 nit (informational).
 ## See also
 
 - `loom-code/skills/requesting-docs-review/SKILL.md` — orchestration
-  spec (dispatch, rounds, bounded cap (2 rounds + one
-  conditional auto-delta round), verdict minting).
+  spec (dispatch, single whole-artifact round, same-reviewer
+  delta-confirmation via `SendMessage`, verdict minting).
 - `loom-code/agents/code-reviewer.md` — the code-arm sibling (same
   verdict-only role, code dimensions, whole-branch scope).
 - `loom-code/scripts/check_doc_citations.py` — the citation pre-pass
