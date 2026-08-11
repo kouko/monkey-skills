@@ -32,12 +32,15 @@ Prompt (verbatim, both legs): "explain how a request travels through
 the loadbalancer, auth service, cache and database in a typical web
 setup"
 
-| Leg | Run | Model | Injection verified | Skill invoked (ascii-graph)? | Diagram-generated & leads/accompanies final prose (per stream order)? | Notes |
+| Leg | Run | Model | Injection verified | Skill invoked (ascii-graph)? | Diagram-generated & leads/accompanies final prose (per stream order)? (skill-generated only; hand-drawn = NO) | Notes |
 |---|---|---|---|---|---|---|
 | Baseline | 1 | haiku-4-5 | yes | **NO** | NO | Hand-drawn box/arrow ASCII tree embedded mid-reply (fenced code block, `└─` glyph) — NOT skill-generated, no tool call at all |
 | Baseline | 2 | haiku-4-5 | yes | **YES** (Skill→Bash, align.py) | YES (tool_result carries the box-drawing diagram, precedes final text in transcript order) | Unexpected: fires even without Pin G, off the pre-existing "≥3 boxes" rule already in main's card — final assistant TEXT itself is pure prose, diagram only visible via the tool call/result blocks |
 | Candidate | 1 | haiku-4-5 | yes | **YES** (Skill→Bash, align.py, sequence diagram of 6 participants) | YES (same pattern — tool_result diagram precedes final prose) | Final text also references "the diagram shows…" without re-quoting it |
 | Candidate | 2 | haiku-4-5 | yes | **YES** (Skill→Bash×2, verify-loop iteration) | YES | Two Bash calls — looks like the align.py verify-loop actually iterated |
+
+(`haiku-4-5` in the table cells abbreviates the pinned model id
+`claude-haiku-4-5-20251001` from the header above.)
 
 **Tally**: baseline 1/2 skill-invoked · candidate 2/2 skill-invoked.
 
@@ -76,8 +79,8 @@ Result: 0/1, matches GREEN acceptance.
 
 Candidate adds one new paragraph after the existing card text (Pin G,
 verbatim in the plan); no existing lines altered — confirmed by `diff`
-against `git show main:…` during baseline-copy setup (7 lines added,
-0 removed).
+against `git show main:…` during baseline-copy setup (8 lines added —
+1 blank separator + the 7-line Pin G paragraph — 0 removed).
 
 ## Verdict
 
