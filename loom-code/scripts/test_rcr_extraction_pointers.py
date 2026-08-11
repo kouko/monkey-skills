@@ -149,8 +149,14 @@ def test_pinned_refusal_and_pass_down_contracts_untouched():
 # Raised deliberately 3920 -> 3935 by the 2026-08-10 ship-progress-tooling
 # arc, Task 2: one plugin-fallback cascade sentence on the review-round
 # stage-flip duty so external repos resolve the plugin-shipped
-# plan_card.py instead of degrading to hand-edits.
-WORD_CEILING = 3935
+# plan_card.py instead of degrading to hand-edits. Raised again
+# 3935 -> 4150 by the 2026-08-11 review-cost-reduction arc, Task 8: the
+# contract/record classification SSOT section plus the record-only,
+# docs-only, and mixed-branch routing-bullet rewrites (record-class `.md`
+# exemption + the record-only continuity marker verb) net-added ~215
+# words that could not be trimmed further without losing pinned
+# hand-off-pattern substrings other tests in this repo assert on.
+WORD_CEILING = 4150
 
 def test_word_count_within_ceiling():
     word_count = len(_skill_text().split())
@@ -160,7 +166,9 @@ def test_word_count_within_ceiling():
         "progress-display-hardening arc, Task 3 fix round, to restore "
         "the plan's 'and commit the flip' wording that round-1 had "
         "trimmed to fit under the old cap, then 3920 -> 3935 by the "
-        "2026-08-10 ship-progress-tooling arc's cascade sentence; the "
-        "extraction-pilot brief reserves ~600 words of true headroom "
+        "2026-08-10 ship-progress-tooling arc's cascade sentence, then "
+        "3935 -> 4150 by the 2026-08-11 review-cost-reduction arc's Task "
+        "8 contract/record classification SSOT + record-only routing; "
+        "the extraction-pilot brief reserves ~600 words of true headroom "
         "to CHK-SKL-010)"
     )
