@@ -54,6 +54,23 @@ A `Steps:` line with content after the colon is rejected loudly by `plan_card.py
 
 **Critical-path depth** is the **longest chain of tasks linked by `Dependencies`** (the longest sequential path through the dependency DAG). N independent tasks at the **same dependency level** (disjoint `Files touched`, no semantic dependency) count as **one level**, not N. The ceiling is on this depth, NOT on `Total tasks` — `Total tasks` is uncapped.
 
+### Plan-level diagram slot
+
+Every plan carries one required top-level section, `## Task-flow diagram`, placed between the header and Task 1: a Mermaid `flowchart` of the task dependency DAG (the same graph `Dependencies` fields encode, drawn once so a reader sees the shape before reading tasks in order).
+
+This section is fill-or-declare: either embed the diagram(s) this section
+names, or replace the body with the single line
+`N/A — no flow/state/architecture-shaped content: <one-line reason>`.
+Do not delete the section heading — an absent heading or a bare section is
+a reviewable omission, and an N/A whose reason does not hold against the
+artifact's own content is a reviewable claim. A paragraph that suffices
+needs no diagram — the slot forces the declaration, not the drawing.
+Channel rule SSOT: `loom-pipeline/hooks/family-relay.md §(b) Visual defaults`.
+
+When-to-draw judgment: see [`../../brainstorming/references/visual-companion.md`](../../brainstorming/references/visual-companion.md).
+
+Per-task diagrams are explicitly NOT required — this slot is plan-level only, one diagram per plan, never one per task.
+
 ### Per-task block (required, repeats N times)
 
 ```markdown
@@ -290,6 +307,10 @@ Steps:
 **Critical-path depth**: 2 (≤5 ✓)
 **Execution order**: sequential
 **Plan-document-reviewer verdict**: PASS (2026-05-16 10:42)
+
+## Task-flow diagram
+
+<!-- mermaid flowchart LR of the Task 1 → Task 2 → Task 3 dependency DAG -->
 
 ## Task 1 — Add format query param parsing to /reports handler
 
