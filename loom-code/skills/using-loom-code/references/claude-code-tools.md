@@ -23,7 +23,7 @@ Agent(
 
 This is the concrete call shape every loom-code skill's host-neutral "dispatch a subagent" prose resolves to on Claude Code. **Do not add `name:`** to a loom-code dispatch — see [environment-gotchas](environment-gotchas.md) §A1: naming turns this one-shot blocking call into a persistent mailbox-semantics teammate whose output is never delivered (only `SendMessage` retrieves it). `description:` is unrelated and always required regardless.
 
-Available `subagent_type` values vary by host configuration; common ones surface in the system prompt at startup. loom-code ships 5 plugin-level agents (v0.6.0+) — dispatch via `subagent_type: "loom-code:<role>"`:
+Available `subagent_type` values vary by host configuration; common ones surface in the system prompt at startup. loom-code ships 5 plugin-level agents (four since v0.6.0; docs-reviewer since v0.42.0) — dispatch via `subagent_type: "loom-code:<role>"`:
 
 - `loom-code:implementer` — SDD worker
 - `loom-code:spec-reviewer` — SDD per-task spec evaluator
@@ -31,7 +31,7 @@ Available `subagent_type` values vary by host configuration; common ones surface
 - `loom-code:code-reviewer` — whole-branch evaluator (requesting-code-review)
 - `loom-code:docs-reviewer` — whole-artifact prose evaluator (requesting-docs-review)
 
-Role contracts live at `loom-code/agents/<role>.md`. Each agent carries the 12-rule engineering baseline ([`loom-code/scripts/_baseline.md`](../../../scripts/_baseline.md)) baked into its system prompt. Reviewer agents may also carry a `model:` frontmatter key that sets their host-native default; a dispatch-time `model` param on the `Agent` call overrides it upward.
+Role contracts live at `loom-code/agents/<role>.md`. Each agent carries the 12-rule engineering baseline ([`loom-code/scripts/_baseline.md`](../../../scripts/_baseline.md)) baked into its system prompt. Reviewer agents may also carry a `model:` frontmatter key that sets their host-native default; a dispatch-time `model` param on the `Agent` call takes precedence over the frontmatter default — by loom convention, used only to upgrade the tier.
 
 ### Parallel fan-out (`dispatching-parallel-agents`)
 
