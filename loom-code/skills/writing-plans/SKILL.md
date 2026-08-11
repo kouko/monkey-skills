@@ -6,7 +6,7 @@ version: 0.12.1
 ---
 
 <SUBAGENT-STOP>
-If you are a subagent dispatched with an explicit role prompt (implementer / spec-reviewer / code-quality-reviewer / code-reviewer / plan-document-reviewer), the parent orchestrator already finished planning. **Do not** re-route through this skill. Follow your dispatched prompt directly.
+If you are a subagent dispatched with an explicit role prompt (implementer / spec-reviewer / code-quality-reviewer / code-reviewer / plan-document-reviewer — the last is a prompt-file role, not a registered agent type; see §Self-review), the parent orchestrator already finished planning. **Do not** re-route through this skill. Follow your dispatched prompt directly.
 </SUBAGENT-STOP>
 
 ## What this skill does
@@ -95,6 +95,8 @@ This mirrors Kent Beck's "Child Test" pattern — citation + verbatim quote: [`r
 **Anti-pattern**: silently ignoring BLOCKED and re-dispatching the same task hoping the implementer will figure it out. That violates SDD's 3-round retry cap and burns subagent budget. Always re-invoke writing-plans when BLOCKED carries a decomposition signal.
 
 ## Self-review — plan-document-reviewer
+
+`plan-document-reviewer` is a **PROMPT FILE** ([`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md)) dispatched via a generic subagent — NEVER an agent-registry lookup, and no other reviewer agent (docs-reviewer included) may substitute for it. Dispatch defaults to `model: sonnet`, with dispatch-time upward override for high-stakes plans.
 
 After producing the plan, writing-plans **must** dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent — a one-shot blocking call that waits for and returns its verdict directly (see your host's tool-mapping reference for the exact shape, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid — Codex has no equivalent). That prompt holds the **authoritative, full check list** — do not maintain a duplicate copy here (it drifts). The highest-value checks, so you can self-pre-screen before dispatch:
 

@@ -11,10 +11,12 @@ move; A4 (maintainer-facing fragments in §BLOCKED fallback, §Plan size
 ceiling, §Consuming) move to references/design-evidence.md (author-facing
 header) while the rules they qualify, and the 5-step process / anti-pattern
 paragraph / detection-cascade rule sentences, stay inline verbatim. Word
-ceiling <=4099 — raised deliberately from 4047 by the 2026-08-10
-cheap-hardening-batch arc for the revision-delta self-check sentence
-(new count 4079 + 20; prior raises 4023 → 4047 by the 2026-08-06
-progress-card-roadmap-view arc, 3900 → 4023 by the 2026-08-06
+ceiling <=4200 — raised deliberately from 4099 by the 2026-08-11
+review-cost-reduction arc's misroute fix (plan-document-reviewer routing
+substitution-proofing: §Self-review prompt-file/no-substitution/model-default
+sentences + SUBAGENT-STOP disambiguation; new count 4134; prior raises
+4047 → 4099 by the 2026-08-10 cheap-hardening-batch arc, 4023 → 4047 by the
+2026-08-06 progress-card-roadmap-view arc, 3900 → 4023 by the 2026-08-06
 progress-cards-and-plan-ledger arc). §Amending a PASS plan (MUST NOT MOVE, including
 its exactly-3-item closed list — pinned separately by
 test_post_pass_amendment_gate.py) and the splitting framework are
@@ -227,11 +229,13 @@ def test_needs_revision_loop_self_screens_the_revision_delta():
 
 # --- (f) word cap ------------------------------------------------------------
 
-def test_word_count_at_most_4099():
+def test_word_count_at_most_4200():
     word_count = len(_skill_text().split())
-    assert word_count <= 4099, (
-        f"SKILL.md is {word_count} words, over the 4099 cap (raised "
-        "deliberately from 4047 by the 2026-08-10 cheap-hardening-batch "
-        "arc for the revision-delta self-check sentence; prior raise "
+    assert word_count <= 4200, (
+        f"SKILL.md is {word_count} words, over the 4200 cap (raised "
+        "deliberately from 4099 by the 2026-08-11 review-cost-reduction "
+        "arc's misroute fix — §Self-review prompt-file/no-substitution/"
+        "model-default sentences + SUBAGENT-STOP disambiguation; prior "
+        "raises 4047 -> 4099 by the 2026-08-10 cheap-hardening-batch arc, "
         "4023 -> 4047 by the 2026-08-06 progress-card-roadmap-view arc)"
     )
