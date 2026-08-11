@@ -33,6 +33,13 @@ FINISHING_SKILL_MD = (
     / "SKILL.md"
 )
 
+SDD_SKILL_MD = (
+    Path(__file__).resolve().parent.parent
+    / "skills"
+    / "subagent-driven-development"
+    / "SKILL.md"
+)
+
 
 def _rcr_text() -> str:
     return RCR_SKILL_MD.read_text(encoding="utf-8")
@@ -80,6 +87,35 @@ def _rdr_text() -> str:
 
 def _finishing_text() -> str:
     return FINISHING_SKILL_MD.read_text(encoding="utf-8")
+
+
+def _sdd_text() -> str:
+    return SDD_SKILL_MD.read_text(encoding="utf-8")
+
+
+def _bold_lead_section(text: str, lead: str) -> str:
+    """Slice from the line containing `lead` to the next bold-paragraph
+    lead (a line starting with `**` followed by a capital letter -- the
+    house bold-lead-in style subagent-driven-development/SKILL.md uses
+    for this part of the file, which does NOT sit under its own `## `
+    heading) or EOF. `_section()` above scopes to `## `-headings; this
+    is the same clause-scoping idea applied to SKILL.md's bold-lead
+    paragraphs -- mirrors test_review_weight_prose.py's `_prose_section`
+    convention so a mutation inside the new paragraph is guaranteed to
+    redden the test that names it, not a whole-file substring search."""
+    lines = text.splitlines(keepends=True)
+    start = None
+    for i, line in enumerate(lines):
+        if lead in line:
+            start = i
+            break
+    assert start is not None, f"lead {lead!r} not found in text"
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        if re.match(r"^\*\*[A-Z]", lines[j]):
+            end = j
+            break
+    return "".join(lines[start:end])
 
 
 def test_rcr_scope_classification():
@@ -281,3 +317,62 @@ def test_finishing_confirmation_stop():
     assert "bounded-cap" not in low and "bounded cap" not in low, (
         "the old bounded-cap naming must not survive"
     )
+
+
+def test_sdd_prose_weight_record_class_scope():
+    """Task 11: subagent-driven-development/SKILL.md's "Prose
+    review-weight substitution" paragraphs must add the record-class
+    scope rule -- when a `Review-weight: prose` task's `Files touched`
+    are ALL record-class per `requesting-code-review`'s §Classification
+    SSOT (cited, not copied -- the glob literals stay in ONE place),
+    the docs-reviewer substitution is N/A: dispatch spec-reviewer only
+    and record "code-quality slot: N/A -- record-class prose" in the
+    task summary; contract-class prose keeps the substitution
+    unchanged; a mixed contract+record prose task routes docs-reviewer
+    to the contract-class subset only, consistent with rcr's own
+    mixed-branch routing. §Verdict resolution (:139-144) is a SEPARATE
+    2026-08-11 user decision left untouched by this task -- not
+    asserted here, verified instead via `git diff` in the report."""
+    text = _sdd_text()
+    section = _bold_lead_section(text, "**Record-class scope narrowing.**")
+    norm = _norm(section)
+
+    # cites the rcr SSOT heading by name; does not copy its glob
+    # literals into this file (point, don't copy)
+    assert "requesting-code-review" in section
+    assert "Classification: contract-class vs record-class" in section
+    assert "<plugin>/skills/**/*.md" not in section, (
+        "must cite the rcr SSOT heading, not copy its glob literals "
+        "into SKILL.md"
+    )
+
+    # record-class-only N/A rule, as one contiguous polarity-bearing
+    # sentence -- flipping "is N/A" to "still applies", or dropping
+    # "only" from "dispatch spec-reviewer only", must redden this
+    assert (
+        "the docs-reviewer substitution is N/A: dispatch spec-reviewer "
+        "only, and record"
+    ) in norm, (
+        "the record-class N/A rule must survive as one contiguous "
+        "sentence, not scattered independently-flippable clauses"
+    )
+    assert '"code-quality slot: N/A — record-class prose"' in section, (
+        "must name the exact task-summary marker string verbatim"
+    )
+
+    # contract-class prose: substitution stays unchanged
+    assert "Contract-class prose keeps the substitution unchanged." in section
+
+    # mixed contract+record prose: docs-reviewer scoped to the
+    # contract-class subset only, consistent with rcr's own routing
+    assert (
+        "routes the docs-reviewer to the contract-class subset only"
+    ) in section
+    assert "mixed-branch routing" in norm
+
+    # §Verdict resolution table (:139-144) is untouched by this task --
+    # verified via git diff in the report, not asserted here (the table
+    # sits well past this bold-lead slice's end boundary by
+    # construction, so this assertion is a belt-and-braces check that
+    # the new paragraph did not accidentally swallow it).
+    assert "Verdict resolution" not in section
