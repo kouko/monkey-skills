@@ -5,6 +5,12 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] — 2026-08-11 — OOUX Mermaid diagram forms
+
+loom-spec 0.9.0: OOUX visible artifact renders each object's state machine
+as Mermaid `stateDiagram-v2` and object relations as `erDiagram`,
+fill-or-declare with the pinned N/A line.
+
 ## [0.8.1] — 2026-08-02 — citation repoint after the backlog store split
 
 ### Changed
