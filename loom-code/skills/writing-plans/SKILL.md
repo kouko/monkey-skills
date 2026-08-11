@@ -159,6 +159,10 @@ Critical-path depth: <D> (≤5)   ← longest Dependencies chain; this is the ce
 Execution order: sequential | parallel-where-possible
 Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PASS (timestamp)
 
+## Task-flow diagram
+
+<!-- mermaid flowchart LR of the task dependency DAG (or the pinned N/A line) -->
+
 ## Task 1 — <short name>
 - Description: <one-assertion unit of work, imperative voice>
 - Module: <path or module name; one only>

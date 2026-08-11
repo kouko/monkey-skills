@@ -79,7 +79,7 @@ Bulleted list of adjacent things explicitly NOT in this change. Each bullet shou
 
 ## Optional sections
 
-Strongly recommended for non-trivial work; can be omitted for genuinely small changes.
+Strongly recommended for non-trivial work; can be omitted for genuinely small changes — except `## Diagrams`, which is fill-or-declare (see its entry): write the diagram or the pinned N/A line, never omit the heading.
 
 ### `## Alternatives Considered`
 

@@ -43,15 +43,14 @@ def _text() -> str:
 def test_diagrams_section_fill_or_declare_full_phrases() -> None:
     text = _text()
 
-    # Pin A's line-prefix is load-bearing in the spec entry AND legitimately
-    # may recur in the template copy (the template shows the same pinned N/A
-    # line an author would paste in) -- so this test asserts PRESENCE
-    # (>= 1 occurrence), not a single-count uniqueness, per the plan's
-    # grep-pin-discipline note that scopes uniqueness assertions to where
-    # they are actually load-bearing.
-    assert PIN_A_PREFIX in text, (
-        f"Pin A's full line-prefix {PIN_A_PREFIX!r} must appear in "
-        "handoff-brief-format.md's `## Diagrams` fill-or-declare wording"
+    # Pin A's line-prefix occurs exactly once: embedded in the spec entry's
+    # transcribed Pin B block. The template copy only prose-references the
+    # pinned N/A line ("write the pinned N/A line") rather than repeating
+    # the literal, so this is a uniqueness assertion, not a bare-presence
+    # one, per the plan's grep-pin-discipline note.
+    assert text.count(PIN_A_PREFIX) == 1, (
+        f"Pin A's full line-prefix {PIN_A_PREFIX!r} must appear exactly once "
+        "in handoff-brief-format.md's `## Diagrams` fill-or-declare wording"
     )
 
     # Pin B's sentence is the shared fill-or-declare contract core; it
