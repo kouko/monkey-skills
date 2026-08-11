@@ -35,3 +35,17 @@ no task touched) and only the whole-branch review caught the tip failing
 its own suite. A loom-code bump packet must name the pin test rewrite as
 a deliverable alongside the other three; the cheap self-check is running
 the full suite AFTER the bump commit, not before it.
+
+**Third instance, 2026-08-11 (visualization-trigger-layer, loom-code
+0.76.0): the pin-test deliverable was omitted from the plan AGAIN —
+and the arc-start recall missed this entry** because the recall query
+named the arc's topics (templates/reviewers/pointers), not "version
+bump". Two lessons layered on: (1) recall before a plan should also
+grep the store for each task KIND the plan contains (a bump task →
+grep "bump"), not only the arc's subject; (2) the failure was caught
+this time by the mechanical-lane self-check's scope rule (diff ⊄
+declared Files touched → exemption voided → full triad fallback), which
+is the intended safety net — but it costs a triad; naming the pin test
+in the packet up front remains the cheap path. Occurrence count is now
+three: the CI-check mechanization named above graduates from candidate
+to warranted next time anyone touches the bump tooling.
