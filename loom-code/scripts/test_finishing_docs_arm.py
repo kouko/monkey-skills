@@ -131,10 +131,12 @@ def _conductor_paragraph(text: str) -> str:
 
 
 class TestFlowDiagramNamesDocsArm:
-    def test_phase1_names_three_way_dispatch(self):
+    def test_phase1_names_four_way_dispatch(self):
         window = _norm(_flow_diagram_window(_text()))
-        assert "three-way" in window, (
-            "Phase 1 flow diagram must name the three-way review dispatch"
+        assert "four-way" in window, (
+            "Phase 1 flow diagram must name the four-way review dispatch "
+            "(record-only / docs-only / mixed / code-only, per Task 8's "
+            "record-only branch)"
         )
 
     def test_phase1_names_docs_only_delegate(self):
@@ -152,10 +154,10 @@ class TestFlowDiagramNamesDocsArm:
 
 
 class TestDelegationTableNamesDocsArm:
-    def test_row_names_three_way(self):
+    def test_row_names_four_way(self):
         row = _norm(_delegation_row(_text()))
-        assert "three-way" in row.lower(), (
-            "Delegation table row 1 must name the three-way dispatch"
+        assert "four-way" in row.lower(), (
+            "Delegation table row 1 must name the four-way dispatch"
         )
         assert "requesting-docs-review" in row, (
             "Delegation table row 1 must name requesting-docs-review"

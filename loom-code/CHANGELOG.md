@@ -11,8 +11,10 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 - **Review scope narrows from "all changed `.md`" to contract-class
   `.md` only.** `requesting-code-review` installs the classification
-  SSOT (contract-class = everything except `README*`/`CHANGELOG*`;
-  record-class = the rest) at its routing sites, and its docs arm now
+  SSOT (contract-class = plugin-shipped `skills/**`, `agents/*`,
+  `hooks/*`, `scripts/*` `.md` files, excluding `README*`/`CHANGELOG*`
+  basenames; record-class = everything else, incl. `docs/**`) at its
+  routing sites, and its docs arm now
   receives contract-class files ONLY — record-class files are exempt
   from review at any mix. A branch whose changed `.md` files are ALL
   record-class runs NO docs arm; it satisfies the push gate through a

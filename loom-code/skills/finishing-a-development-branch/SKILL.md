@@ -17,7 +17,8 @@ Orchestrates the close-branch sequence. The agent acts as conductor — invoking
 finishing-a-development-branch (this skill)
   │
   ├─→ Phase 1: requesting-code-review
-  │     three-way dispatch by file type (docs-only → whole review delegates to
+  │     four-way dispatch by file type (record-only → no review arm, mints the
+  │     record-only continuity marker; docs-only → whole review delegates to
   │     requesting-docs-review; mixed → per-file split, code panel + docs-reviewer;
   │     code-only → code-reviewer panel, unchanged) → verdict: PASS / PASS_WITH_NOTES / NEEDS_REVISION
   │     blocks on NEEDS_REVISION (any 🔴, or 2+ 🟡); PASS_WITH_NOTES (1 🟡) auto-proceeds,
@@ -80,7 +81,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 
 | Step | Delegate | Why this skill doesn't do it directly |
 |---|---|---|
-| 1 | `requesting-code-review` (three-way dispatch: docs-only delegates whole to `requesting-docs-review`; mixed splits per-file; code-only unchanged) | Human-judgment quality review is its own skill with its own subagent; this orchestrator just dispatches |
+| 1 | `requesting-code-review` (four-way dispatch: record-only mints a continuity marker with no review arm; docs-only delegates whole to `requesting-docs-review`; mixed splits per-file; code-only unchanged) | Human-judgment quality review is its own skill with its own subagent; this orchestrator just dispatches |
 | 2 | `verification-before-completion` | Package-level test invocation has its own per-stack command table; this orchestrator just invokes the gate |
 | 2b | `ui-verification` (conditional) | The user's main acceptance stage for a UI-bearing branch — what "done" means to them — has its own tooling/degradation contract (browser/device automation, N/A-loud); fires only when the branch touched UI and a `ui-flows.md` exists |
 | 3 | `dev-workflow:git-memory` | P3-D MANDATORY — git-memory decides whether memory trailers are warranted on this commit. Orchestrator passes the diff + recent commits; git-memory returns the trailer set (or empty, if routine) |

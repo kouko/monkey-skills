@@ -23,6 +23,8 @@ Agent(
 
 This is the concrete call shape every loom-code skill's host-neutral "dispatch a subagent" prose resolves to on Claude Code. **Do not add `name:`** to a loom-code dispatch — see [environment-gotchas](environment-gotchas.md) §A1: naming turns this one-shot blocking call into a persistent mailbox-semantics teammate whose output is never delivered (only `SendMessage` retrieves it). `description:` is unrelated and always required regardless.
 
+**An UNNAMED dispatch is still addressable after it returns.** The `Agent` spawn result carries a handle/agent-id for the dispatched agent even when no `name:` was passed; `SendMessage` to that handle resumes the SAME agent from its own transcript — no `name:` needed. This is the mechanism `requesting-docs-review`'s delta-confirmation duty relies on: the orchestrator addresses the round-1 reviewer by the handle its dispatch returned, not by a teammate name. The no-`name:` rule and §A1's undelivered-reply caveat are scoped to NAMED teammate dispatches; they do not apply to `SendMessage`-driven resumption of an unnamed agent's handle.
+
 Available `subagent_type` values vary by host configuration; common ones surface in the system prompt at startup. loom-code ships 5 plugin-level agents (four since v0.6.0; docs-reviewer since v0.42.0) — dispatch via `subagent_type: "loom-code:<role>"`:
 
 - `loom-code:implementer` — SDD worker
