@@ -67,3 +67,5 @@ D5 (0.50.0) deliberately retracted the overclaim rather than build the
 mechanism in the same branch -- the branch's stated direction was
 retract-not-add. This entry is the durable trace that the retraction was not
 the end of the story.
+
+- Narrowed (2026-08-11, loom-code 0.75.0): the confirmation reply now has an explicit out_of_scope emission channel (docs-reviewer.md §Delta-confirmation duty) and record-class prose left review scope entirely; the remaining gap is only DURABLE persistence of contract-class out_of_scope observations across sessions.

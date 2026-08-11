@@ -1,7 +1,7 @@
 ---
 name: 2026-08-04-directive-1-does-not-say-what-follows-a-failed-authorized-round
 description: the convergence contract defines the STOP after round 2 but not the state after a user-authorized round also ends NEEDS_REVISION
-status: OPEN
+status: SHIPPED
 origin: PR #645 — its own verification round (an authorized round 3) ended NEEDS_REVISION, landing in a state the contract does not describe
 start: next edit to `requesting-docs-review` Directive 1, or the next time an authorized round fails
 ---
@@ -51,3 +51,5 @@ the branch left unchanged" versus "settled narrative" — and neither defines
 "settled". Raised as an out-of-scope observation by a #645 verification arm,
 carried as a 🟢 residual there. Same file, different defect; fix them in one
 pass if convenient, but they are not the same item.
+
+- Shipped: loom-code 0.75.0 — the bounded-round convergence contract was replaced by single-round + same-reviewer delta confirmation; the failed-authorized-round state this entry named no longer exists (STILL_BLOCKING after one fix cycle → STOP, surface to user; requesting-docs-review Directives 2/3).

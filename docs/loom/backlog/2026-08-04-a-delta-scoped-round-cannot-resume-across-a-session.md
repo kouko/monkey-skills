@@ -1,7 +1,7 @@
 ---
 name: 2026-08-04-a-delta-scoped-round-cannot-resume-across-a-session
 description: the sha a delta-scoped review round needs is carried only by the dispatching orchestrator's context, so a round resuming in a new session falls back to unbounded
-status: OPEN
+status: CLOSED — SUPERSEDED
 origin: loom-code 0.49.0 — shipped with the in-session half working and the boundary stated in Directive 2 rather than papered over
 start: when a docs-review round 2 actually resumes in a fresh session, or when the next branch touches `requesting-docs-review` Directive 2
 ---
@@ -96,3 +96,5 @@ costs are visible; a wrong range suppresses findings nobody ever saw.
 is fail-closed, and at the time of shipping none of this machinery had reached
 a live reviewer anyway — the installed plugin was two versions behind, so the
 whole delta-scope mechanism was still inert in practice.
+
+- Superseded: loom-code 0.75.0 — no round-2 dispatch exists; session death before the delta confirmation falls back to one fresh single round by contract, so the cross-session sha handoff this entry proposed has no consumer.

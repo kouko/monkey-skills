@@ -1,7 +1,7 @@
 ---
 name: 2026-08-10-plan-document-reviewer-misrouted-as-agent-type
 description: writing-plans' self-review wording led a cold operator to look up plan-document-reviewer in the agent registry, find nothing, and substitute docs-reviewer with the wrong checklist for 3 rounds — field incident in an external consumer repo
-status: OPEN
+status: SHIPPED
 origin: 2026-08-10 review-cost discussion — diagnosed from the consumer repo's session transcripts (kumiko, private; disclosed per committed-docs precedent)
 start: next touch of loom-code/skills/writing-plans/SKILL.md §Self-review, or the next reported plan-gate misroute — whichever comes first
 ---
@@ -34,3 +34,5 @@ start: next touch of loom-code/skills/writing-plans/SKILL.md §Self-review, or t
 - Evidence pointers (private repo, session-level): the consumer repo's
   Part-4 plan records the 3 proxy rounds and the fiat close in its plan
   header notes.
+
+- Shipped: loom-code 0.75.0 (branch feat/review-cost-reduction, commit d270b2f5) — prompt-file routing made explicit, SUBAGENT-STOP disambiguated, model: sonnet default; haiku cold-reader probe PASS (docs/loom/dogfood/2026-08-11-review-cost-probes.md).

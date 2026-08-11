@@ -1,7 +1,7 @@
 ---
 name: 2026-08-10-yellow-findings-should-default-to-debt-not-revision-loops
 description: relax the 2+🟡→NEEDS_REVISION aggregation so 🟡 findings ship as documented debt at any count and only 🔴/instruction-class findings open a revision loop — mechanical count rule, weak-model-safe
-status: OPEN
+status: CLOSED — SUPERSEDED
 origin: 2026-08-10 review-cost discussion — review→fix loops in both the dev repo and the external consumer repo were dominated by 🟡-class conventional findings, each forcing a fix + re-verdict round
 start: user authorizes the review-cost-reduction arc, or the next arc where a 🟡-driven revision loop demonstrably burns a round — whichever comes first
 ---
@@ -39,3 +39,5 @@ start: user authorizes the review-cost-reduction arc, or the next arc where a �
 - Blast radius when the arc opens: requesting-code-review verdict rules,
   SDD §Verdict resolution, finishing Step 3, docs-review aggregation —
   four wording sites plus their pin tests; one plugin version bump.
+
+- Close-out (2026-08-11): REFUTED by the arc's own mandated history check — 14/14 sampled gated 🟡s were load-bearing (docs/loom/audits/2026-08-11-yellow-finding-load-bearing-sample.md); the user kept aggregation thresholds unchanged. The arc shipped the alternative cost cuts instead (contract-class scope narrowing, single-round + delta-confirmation loop, model tiering M3) — loom-code 0.75.0, branch feat/review-cost-reduction.
