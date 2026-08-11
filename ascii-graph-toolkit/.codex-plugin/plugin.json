@@ -1,6 +1,6 @@
 {
   "name": "ascii-graph-toolkit",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "CJK-width-aware ASCII/Unicode diagram & table toolkit — invoke BEFORE hand-drawing any CJK or ≥3-box ASCII diagram.",
   "author": {
     "name": "kouko",
