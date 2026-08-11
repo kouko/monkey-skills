@@ -155,8 +155,16 @@ def test_pinned_refusal_and_pass_down_contracts_untouched():
 # docs-only, and mixed-branch routing-bullet rewrites (record-class `.md`
 # exemption + the record-only continuity marker verb) net-added ~215
 # words that could not be trimmed further without losing pinned
-# hand-off-pattern substrings other tests in this repo assert on.
-WORD_CEILING = 4150
+# hand-off-pattern substrings other tests in this repo assert on. Raised
+# again 4150 -> 4300 by the same arc's Task 12: the M3 mechanical
+# upgrade rule paragraph (three path-based triggers + the honesty note,
+# ~70 words) plus the docs-only bullet's stale-cross-ref rewrite (the
+# old "bounded convergence cap (2 rounds + one conditional auto-delta
+# round)" replaced with a pointer to requesting-docs-review's own
+# Directives, net near-zero) landed at 4220 words -- under the 4300
+# fallback the task brief authorizes, so no further trim was needed;
+# the chain is cumulative: 3920 -> 3935 -> 4150 -> 4300.
+WORD_CEILING = 4300
 
 def test_word_count_within_ceiling():
     word_count = len(_skill_text().split())
@@ -168,7 +176,9 @@ def test_word_count_within_ceiling():
         "trimmed to fit under the old cap, then 3920 -> 3935 by the "
         "2026-08-10 ship-progress-tooling arc's cascade sentence, then "
         "3935 -> 4150 by the 2026-08-11 review-cost-reduction arc's Task "
-        "8 contract/record classification SSOT + record-only routing; "
+        "8 contract/record classification SSOT + record-only routing, "
+        "then 4150 -> 4300 by the same arc's Task 12 M3 upgrade-rule "
+        "paragraph + stale-cross-ref rewrite; "
         "the extraction-pilot brief reserves ~600 words of true headroom "
         "to CHK-SKL-010)"
     )

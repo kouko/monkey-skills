@@ -143,6 +143,69 @@ def test_rcr_scope_classification():
     # record-only continuity mechanism, named (Task 14's marker verb)
     assert "mint --review-na-record-only" in text
 
+    # Debt (T8 review, ride-along on Task 12): the docs-only and
+    # mixed-branch Step-1 bullets' hand-off text must CLAUSE-SCOPE the
+    # contract-class-only restriction, not just an unscoped whole-file
+    # substring hit -- a mutation that reverts the docs-only bullet to
+    # "handing it the WHOLE .md list" must redden this test. Scope
+    # first via _section() to the enclosing "## Process" section
+    # (excludes §Classification and §Verdict structure, which also say
+    # "contract-class subset"), then slice bullet-to-bullet by the
+    # literal bold-lead markers the routing prose already pins --
+    # _bold_lead_section() can't isolate these because the bullets are
+    # indented list items, not its line-start "**" convention.
+    process = _section(text, "## Process")
+    docs_only_start = process.index("**Docs-only branch**")
+    mixed_start = process.index("**Mixed branch**")
+    code_only_start = process.index("**Code-only branch**")
+    docs_only_bullet = process[docs_only_start:mixed_start]
+    mixed_bullet = process[mixed_start:code_only_start]
+
+    assert "ONLY the contract-class subset" in docs_only_bullet, (
+        "docs-only hand-off must restrict to the contract-class subset, "
+        "not the whole .md list"
+    )
+    assert "restricted to the contract-class subset" in mixed_bullet, (
+        "mixed-branch hand-off must restrict to the contract-class "
+        "subset, not the whole .md list"
+    )
+
+
+def test_rcr_m3_upgrade_rule():
+    """Task 12: requesting-code-review/SKILL.md must install the M3
+    mechanical upgrade rule directly after Step 1's routing bullets --
+    three path-based triggers that force the docs arm to `model: opus`
+    (or a second opinion), plus the honesty note that catch-quality-by-
+    tier is unmeasured. Clause-scoped to the M3 paragraph itself (first
+    _section()-bounded to "## Process", then sliced from the "**M3"
+    lead to Step 2's numbered marker) so a mutation inside this one
+    paragraph is guaranteed to redden this test, not a whole-file
+    substring search."""
+    text = _rcr_text()
+    process = _section(text, "## Process")
+    m3_start = process.index("**M3")
+    step2_start = process.index("2. **Dispatch TWO")
+    m3 = process[m3_start:step2_start]
+
+    # trigger 1: any agents/*.md among changed contract-class files ->
+    # docs arm dispatched at model: opus (dispatch-time override)
+    assert "agents/*.md" in m3
+    assert "model: opus" in m3
+
+    # trigger 2: literal threshold 10 (plan kickoff decision, Task 12)
+    assert "10 or more contract-class" in m3
+
+    # trigger 3: a contested 🔴 (writer disputes the finding) -> second
+    # opinion one tier up
+    assert "🔴" in m3
+    assert "second opinion one tier up" in m3
+
+    # honesty note, verbatim per the brief
+    assert (
+        "catch-quality-by-tier is UNMEASURED — the upgrade rule is the "
+        "hedge"
+    ) in m3
+
 
 def test_docs_reviewer_scope_and_confirmation():
     """docs-reviewer.md (Task 7) must carry: (a) the scope contract --
@@ -330,7 +393,11 @@ def test_sdd_prose_weight_record_class_scope():
     task summary; contract-class prose keeps the substitution
     unchanged; a mixed contract+record prose task routes docs-reviewer
     to the contract-class subset only, consistent with rcr's own
-    mixed-branch routing. §Verdict resolution (:139-144) is a SEPARATE
+    mixed-branch routing. The paragraph must also state HOW this path
+    resolves through the §Verdict resolution table (round-1
+    code-quality-reviewer 🔴: N/A had no defined row) -- spec-reviewer's
+    verdict alone decides, code-quality-reviewer column N/A by
+    construction. The §Verdict resolution table itself is a SEPARATE
     2026-08-11 user decision left untouched by this task -- not
     asserted here, verified instead via `git diff` in the report."""
     text = _sdd_text()
@@ -360,6 +427,19 @@ def test_sdd_prose_weight_record_class_scope():
         "must name the exact task-summary marker string verbatim"
     )
 
+    # round-1 code-quality-reviewer 🔴 fix: verdict-table composition on
+    # the record-class N/A path must be spelled out -- contiguous
+    # polarity-bearing phrases so a flip (e.g. "both verdicts" instead
+    # of "alone", or dropping "by construction") reddens this test
+    assert "spec-reviewer's verdict alone" in section, (
+        "must state the record-class N/A path resolves on "
+        "spec-reviewer's verdict alone, not the two-reviewer table row"
+    )
+    assert "N/A by construction" in section, (
+        "must state the code-quality-reviewer column is N/A by "
+        "construction on this path"
+    )
+
     # contract-class prose: substitution stays unchanged
     assert "Contract-class prose keeps the substitution unchanged." in section
 
@@ -370,9 +450,11 @@ def test_sdd_prose_weight_record_class_scope():
     ) in section
     assert "mixed-branch routing" in norm
 
-    # §Verdict resolution table (:139-144) is untouched by this task --
-    # verified via git diff in the report, not asserted here (the table
-    # sits well past this bold-lead slice's end boundary by
-    # construction, so this assertion is a belt-and-braces check that
-    # the new paragraph did not accidentally swallow it).
+    # The §Verdict resolution table (heading + rows) is untouched by
+    # this task -- verified via git diff in the report, not asserted
+    # here by line number (line numbers drift; content-anchor instead).
+    # This bold-lead slice must describe the record-class path's
+    # resolution WITHOUT repeating the table's own heading text --
+    # a belt-and-braces check that the new paragraph did not
+    # accidentally swallow the neighboring ### heading.
     assert "Verdict resolution" not in section
