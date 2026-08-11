@@ -5,6 +5,76 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.75.0] — 2026-08-11 — review cost reduction: contract/record scope narrowing, single-round + confirmation loop, reviewer model defaults
+
+### Changed
+
+- **Review scope narrows from "all changed `.md`" to contract-class
+  `.md` only.** `requesting-code-review` installs the classification
+  SSOT (contract-class = everything except `README*`/`CHANGELOG*`;
+  record-class = the rest) at its routing sites, and its docs arm now
+  receives contract-class files ONLY — record-class files are exempt
+  from review at any mix. A branch whose changed `.md` files are ALL
+  record-class runs NO docs arm; it satisfies the push gate through a
+  new mechanically-validated exemption verb,
+  `loom_gate_markers.py mint --review-na-record-only`, which refuses
+  loudly (naming the offending paths) if any contract-class or
+  non-`.md` file is present in the branch diff vs. `main`. The same
+  contract-class qualifier lands in the shared reviewer-discipline
+  carve-out (`scripts/_reviewer-discipline.md`, resynced to its three
+  functional copies in `agents/*.md`) and in `requesting-docs-review`'s
+  scope statement, which now points at the Task 8 SSOT instead of
+  restating it. **Aggregation thresholds are UNCHANGED everywhere**
+  (`requesting-code-review` §Aggregation, `requesting-docs-review`'s
+  cascade, `finishing-a-development-branch`'s verdict thresholds) — the
+  🟡-as-debt-at-any-count relaxation considered at plan-kickoff was
+  DROPPED after a history check tripped the plan's own STOP condition
+  (14/14 sampled 🟡 findings load-bearing); see
+  `docs/loom/audits/2026-08-11-yellow-finding-load-bearing-sample.md`
+  for the evidence.
+- **`requesting-docs-review`'s convergence loop replaces the 2-round +
+  qualifying-auto-delta-round cap with a single-round +
+  same-reviewer delta-confirmation contract.** Round 1 is the only
+  full whole-artifact review; no gating findings → done (non-gating
+  findings still recorded as debt, thresholds unchanged); a gating
+  verdict → fix → the SAME reviewer re-checks only the delta
+  (`CONFIRMED_RESOLVED` / `STILL_BLOCKING`); `STILL_BLOCKING` after one
+  fix cycle → STOP, surface to the user (never a silent third round).
+  `references/convergence-contract.md` is rewritten to this contract
+  end to end, and `finishing-a-development-branch`'s Step 3
+  loop-mechanism language re-points to the same shape.
+- **Reviewer model defaults land as `model: sonnet` frontmatter** on
+  the three checklist-arm agents — `spec-reviewer.md`,
+  `code-quality-reviewer.md`, `docs-reviewer.md` — while the two
+  whole-branch judgment arms (`implementer.md`, `code-reviewer.md`)
+  stay unset and inherit the session model; a pin test locks the
+  three-have/two-don't split. `requesting-code-review` gains the M3
+  mechanical upgrade rule alongside it: a branch touching any
+  `agents/*.md`, or ≥10 changed contract-class `.md` files, or a
+  contested 🔴 → dispatch the docs arm at `model: opus` (dispatch-time
+  override); the "catch-quality-by-tier is unmeasured" honesty note
+  ships verbatim. `writing-plans`' plan-document-reviewer dispatch
+  gains the same `model: sonnet` default with upward override.
+- **`writing-plans` misroute fix: plan-document-reviewer is a PROMPT
+  FILE, never an agent-registry lookup.** §Self-review now states
+  explicitly that `plan-document-reviewer-prompt.md` is dispatched via
+  a generic subagent, is never looked up in an agent registry, and
+  that no other reviewer agent (docs-reviewer included) may substitute
+  for it; the `SUBAGENT-STOP` block's role listing is disambiguated to
+  the same effect. Two fresh-context haiku cold-reader probes (one on
+  this wording, one on the Task 8 classification rule) both PASS
+  blind, recorded in `docs/loom/dogfood/2026-08-11-review-cost-probes.md`.
+- **Codex per-subagent model mapping is documented, including the
+  silent-fallback gotcha.** `codex-tools.md` names the mandatory
+  gotcha: when `[features.multi_agent_v2]`'s
+  `hide_spawn_agent_metadata = true` is active, Codex strips the
+  model/reasoning-effort fields from the `spawn_agent` tool
+  definition, so a subagent's `.codex/agents/<name>.toml` `model =`
+  value is silently ignored and the subagent runs on the parent
+  session's model instead — no error, no warning, toml still present
+  and apparently correct. Workaround: set `hide_spawn_agent_metadata
+  = false`.
+
 ## [0.74.0] — 2026-08-10 — cheap hardening batch: plan-revision self-screen + loom-init polish
 
 ### Changed
