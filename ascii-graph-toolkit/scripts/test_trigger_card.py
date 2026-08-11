@@ -77,6 +77,50 @@ def test_session_start_emits_trigger_card():
     assert any("hooks/session-start" in cmd for cmd in commands)
 
 
+def test_card_carries_generative_trigger():
+    """
+    Pin G (docs/loom/plans/2026-08-12-ascii-graph-generative-trigger.md
+    §Pinned wording): the card must carry the GENERATIVE trigger
+    paragraph appended after the existing text. Pins the two
+    load-bearing phrases from Pin G, each required to appear exactly
+    once (count() == 1) in the card FILE text, and also verified to
+    survive the hook's JSON round-trip into additionalContext (the
+    hook script backslash-escapes newlines in the card into JSON,
+    and json.loads restores them — see hooks/session-start's
+    escape_for_json).
+    """
+    assert TRIGGER_CARD.exists(), f"missing trigger card: {TRIGGER_CARD}"
+    card_text = TRIGGER_CARD.read_text(encoding="utf-8")
+
+    explain_phrase = (
+        "about to EXPLAIN in chat any flow / state machine / architecture"
+    )
+    guard_phrase = "never draw for decoration"
+
+    assert card_text.count(explain_phrase) == 1, (
+        f"expected exactly one occurrence of {explain_phrase!r} in "
+        f"{TRIGGER_CARD}, found {card_text.count(explain_phrase)}"
+    )
+    assert card_text.count(guard_phrase) == 1, (
+        f"expected exactly one occurrence of {guard_phrase!r} in "
+        f"{TRIGGER_CARD}, found {card_text.count(guard_phrase)}"
+    )
+
+    result = subprocess.run(
+        [str(SESSION_START)],
+        cwd=str(PLUGIN_ROOT),
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode == 0, f"session-start exited non-zero: {result.stderr}"
+
+    payload = json.loads(result.stdout)
+    context = payload["hookSpecificOutput"]["additionalContext"]
+    assert explain_phrase in context
+    assert guard_phrase in context
+
+
 def test_description_is_action_moment():
     """
     skills/ascii-graph/SKILL.md frontmatter `description:` must:
