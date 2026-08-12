@@ -41,10 +41,13 @@ never flip the exit code.
 """
 
 import argparse
+import functools
 import json
 import re
 import sys
 from pathlib import Path
+
+from adjudication_profiles import get_profile
 
 
 def check_nonempty_rendition(unit):
@@ -85,8 +88,8 @@ def check_anchor_echo(unit):
 _NEGATION_PATTERN = re.compile(
     r"\b(?:not|no|never|cannot|must not|without)\b", re.IGNORECASE
 )
-_ZH_NEGATION_MARKERS = "不未無非沒勿"
 _BACKTICK_SPAN_PATTERN = re.compile(r"`[^`]*`")
+_DEFAULT_PROFILE = get_profile("zh-Hant")
 
 
 def _count_en_negations(source_text):
@@ -104,28 +107,35 @@ def _count_en_negations(source_text):
     return count
 
 
-def _count_zh_negation_markers(rendition):
-    """Count ZH negation marker occurrences (single-char markers only
-    — `不得` contains `不` and is counted via that marker, per the
-    protocol note that marker-occurrence counting suffices)."""
-    return sum(1 for ch in rendition if ch in _ZH_NEGATION_MARKERS)
+def _count_negation_markers(rendition, profile):
+    """Count negation marker occurrences from `profile.negation_markers`
+    (single-char markers only — `不得` contains `不` and is counted via
+    that marker, per the protocol note that marker-occurrence counting
+    suffices)."""
+    return sum(1 for ch in rendition if ch in profile.negation_markers)
 
 
-def check_negation_preserved(unit):
+def check_negation_preserved(unit, profile=None):
     """Two-tier count design (round-1 finding 1): N = EN negation
     token count in `source_text` (after `_count_en_negations`'
-    exclusions), M = ZH negation marker count in `rendition`.
-      - N >= 1 and M == 0 -> HARD violation (existing exit-affecting
-        behavior, unchanged): total negation absence.
-      - N >= 2 and 1 <= M < N -> WARNING (does not affect exit code):
-        a multi-negation unit dropped some but not all negations —
-        the whole-unit `any()` check alone cannot see this."""
+    exclusions), M = negation marker count in `rendition` per
+    `profile.negation_markers`.
+      - N >= 1 and M == 0 -> violation at `profile.negation_tier`
+        ("hard" fails the lint, unchanged for zh-Hant; a "warning"
+        tier reports without affecting the exit code): total
+        negation absence.
+      - N >= 2 and 1 <= M < N -> WARNING (does not affect exit code)
+        regardless of tier: a multi-negation unit dropped some but
+        not all negations — the whole-unit `any()` check alone
+        cannot see this."""
+    profile = profile or _DEFAULT_PROFILE
     n = _count_en_negations(unit["source_text"])
     if n == 0:
         return []
-    m = _count_zh_negation_markers(unit["rendition"])
+    m = _count_negation_markers(unit["rendition"], profile)
     if m == 0:
-        return [f"{unit['id']}: negation dropped in rendition"]
+        line = f"{unit['id']}: negation dropped in rendition"
+        return [line if profile.negation_tier == "hard" else f"WARNING {line}"]
     if n >= 2 and m < n:
         return [
             f"WARNING {unit['id']}: negation count shortfall (source {n}, rendition {m})"
@@ -133,30 +143,25 @@ def check_negation_preserved(unit):
     return []
 
 
-# Fixed modality mapping (protocol "Fixed modality mapping" table).
-# "must not" / "should not" listed before their single-word prefixes
-# so alternation prefers the two-word phrase at a matching position —
-# a "must not" occurrence is consumed whole and never also counted as
-# a bare "must".
-_MODALITY_MAP = [
-    ("must not", "不得"),
-    ("should not", "不應"),
-    ("must", "必須"),
-    ("should", "應"),
-    ("may", "可"),
-]
-_MODALITY_PATTERN = re.compile(
-    r"\b(?:" + "|".join(re.escape(term) for term, _ in _MODALITY_MAP) + r")\b",
-    re.IGNORECASE,
-)
-_MODALITY_EXPECTED = {term: zh for term, zh in _MODALITY_MAP}
-_ZH_NEGATION_PREFIX = "不未非"
+@functools.lru_cache(maxsize=None)
+def _modality_pattern(modality_map):
+    """Build the modality-scan regex from a profile's `modality_map`
+    (a hashable tuple of `(term, forms)` pairs — see
+    adjudication_profiles.LanguageProfile). Term order matters: a
+    profile lists two-word phrases ("must not" / "should not") before
+    their single-word prefixes so alternation consumes the phrase
+    whole and never also counts it as the bare "must" / "should"."""
+    terms = [term for term, _forms in modality_map]
+    return re.compile(
+        r"\b(?:" + "|".join(re.escape(term) for term in terms) + r")\b",
+        re.IGNORECASE,
+    )
 
 
-def _all_occurrences_negated(expected, rendition):
+def _all_occurrences_negated(expected, rendition, negation_prefix):
     """True if `expected` occurs in `rendition` at least once, and
-    EVERY occurrence is immediately preceded by a ZH negation marker
-    (不/未/非) — the polarity-inversion signal (round-1 finding u3(b)):
+    EVERY occurrence is immediately preceded by a `negation_prefix`
+    character — the polarity-inversion signal (round-1 finding u3(b)):
     source says e.g. "should" (affirmative), but the rendition only
     ever has the negated form (不應), never a standalone 應. A
     rendition with both a negated and a standalone occurrence is fine
@@ -165,15 +170,16 @@ def _all_occurrences_negated(expected, rendition):
     if not positions:
         return False
     return all(
-        pos > 0 and rendition[pos - 1] in _ZH_NEGATION_PREFIX for pos in positions
+        pos > 0 and rendition[pos - 1] in negation_prefix for pos in positions
     )
 
 
-def check_modality_mapping(unit):
+def check_modality_mapping(unit, profile=None):
     """WARNING-only: for each distinct modal verb in `source_text`,
-    flag (does not fail lint) when its fixed ZH mapping is absent from
-    `rendition`, or present ONLY in negated form (polarity inversion —
-    see `_all_occurrences_negated`). Returned lines are prefixed
+    flag (does not fail lint) when NONE of its `profile.modality_map`
+    accepted forms are present in `rendition`, or when every present
+    form appears ONLY in negated form (polarity inversion — see
+    `_all_occurrences_negated`). Returned lines are prefixed
     `WARNING ` — see `main()`'s exit-code filter.
 
     Two scan exclusions (round-1 finding u3, live dogfood finding):
@@ -181,11 +187,13 @@ def check_modality_mapping(unit):
     (parity with `_count_en_negations`), and a modal token immediately
     followed by `-` (a hyphen-compound like "should-fix" — a severity
     label, not a modality claim) is skipped."""
+    profile = profile or _DEFAULT_PROFILE
+    expected_by_term = dict(profile.modality_map)
     source_text = _BACKTICK_SPAN_PATTERN.sub("", unit["source_text"])
     rendition = unit["rendition"]
     warnings = []
     seen = set()
-    for match in _MODALITY_PATTERN.finditer(source_text):
+    for match in _modality_pattern(profile.modality_map).finditer(source_text):
         end = match.end()
         if end < len(source_text) and source_text[end] == "-":
             continue
@@ -193,14 +201,19 @@ def check_modality_mapping(unit):
         if token in seen:
             continue
         seen.add(token)
-        expected = _MODALITY_EXPECTED[token]
-        if expected not in rendition:
+        forms = expected_by_term[token]
+        present = [form for form in forms if form in rendition]
+        label = "／".join(forms)
+        if not present:
             warnings.append(
-                f"WARNING {unit['id']}: expected 「{expected}」 for '{token}'"
+                f"WARNING {unit['id']}: expected 「{label}」 for '{token}'"
             )
-        elif _all_occurrences_negated(expected, rendition):
+        elif all(
+            _all_occurrences_negated(form, rendition, profile.negation_prefix)
+            for form in present
+        ):
             warnings.append(
-                f"WARNING {unit['id']}: expected 「{expected}」 for '{token}' appears only negated"
+                f"WARNING {unit['id']}: expected 「{label}」 for '{token}' appears only negated"
             )
     return warnings
 
@@ -233,10 +246,23 @@ def exit_code_for(lines):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("path", help="path to a units-JSON file")
+    parser.add_argument(
+        "--lang",
+        default="zh-Hant",
+        help="language profile tag for negation/modality checks (default: zh-Hant)",
+    )
     args = parser.parse_args(argv)
 
+    profile = get_profile(args.lang)
+    checks = [
+        check_nonempty_rendition,
+        check_anchor_echo,
+        functools.partial(check_negation_preserved, profile=profile),
+        functools.partial(check_modality_mapping, profile=profile),
+    ]
+
     units = json.loads(Path(args.path).read_text(encoding="utf-8"))
-    violations = run_checks(units)
+    violations = run_checks(units, checks=checks)
     for line in violations:
         print(line)
     return exit_code_for(violations)
