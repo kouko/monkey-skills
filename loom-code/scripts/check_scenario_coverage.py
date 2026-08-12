@@ -30,7 +30,7 @@ values are prose referents, or the field is absent, or the plan file itself
 is missing) is treated as zero coverage: every change-folder scenario is
 reported dropped. Every `Brief item covered` value that does not parse as a
 join key is additionally named on stderr with its task, so a mistyped key is
-distinguishable from a genuinely uncited scenario; it is a note, not an
+distinguishable from a genuinely uncited scenario; it is a warning, not an
 error, because a prose referent is legal on this path.
 
 Stdlib only.
@@ -77,7 +77,14 @@ _JOIN_KEY = re.compile(
     r"Scenario:\s*(?P<scen>.+?)\s*[\"'`]?$")
 
 # Any markdown heading — used only to name which task an unparsed
-# `Brief item covered` value sits under.
+# `Brief item covered` value sits under. Same known limitation as
+# `_SECTION_BOUNDARY` above, and wider: a `#`-prefixed line inside a fenced
+# code block (e.g. a `# comment` in a python example, or a markdown example's
+# `## heading`) is still mistaken for a real heading — and unlike that regex,
+# single-# is INCLUDED here, so a plan's code fences can mis-name the task.
+# Tolerable at this call site: the value is only a label in a diagnostic
+# message, never a key, so a wrong label misdirects a reader but changes no
+# coverage result and no exit code.
 _HEADING = re.compile(r"^#{1,6}\s+(.+)$", re.MULTILINE)
 
 
@@ -169,7 +176,7 @@ def collect_plan_join_keys(plan_text: str) -> set[str]:
                   f"Scenario: {m.group('scen')}")
     for heading, value in unparsed:
         where = heading or "(no enclosing heading)"
-        print(f"Note: 'Brief item covered' value under '{where}' is not the "
+        print(f"Warning: 'Brief item covered' value under '{where}' is not the "
               f"join-key grammar, so it contributes no coverage — a prose "
               f"referent is legal here, a mistyped key is not. Value: {value}",
               file=sys.stderr)

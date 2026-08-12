@@ -260,6 +260,53 @@ def test_unparsed_change_folder_referent_is_named_not_dropped(tmp_path):
     assert "Task 2 — typo'd join key" in result.stderr
 
 
+def test_unparsed_value_is_attributed_to_the_nearest_preceding_heading(tmp_path):
+    """The task named for an unparsed value must be the NEAREST PRECEDING
+    heading, not merely *some* heading in the document.
+
+    A two-heading fixture cannot pin this: with the unparsed value under the
+    last heading, an implementation that ignores position and returns the
+    last (or the first, or any fixed) heading still satisfies it. Here the
+    plan has five headings and the typo sits under the SECOND task, so
+    returning the document's last heading ('Task 4'), its first ('Plan:
+    nearest-heading fixture'), or any other names the wrong task and fails.
+
+    Coverage is complete (Task 1 and Task 3 between them cite both
+    scenarios), so exit stays 0: the unparsed-value report is a diagnostic,
+    never an error. It rides the per-item stderr channel word 'Warning: ',
+    the same word the duplicate-key per-item report uses, so grepping
+    stderr for 'Warning: ' enumerates every per-item diagnostic.
+    """
+    change_folder = tmp_path / "2026-07-10-my-change"
+    _write_spec(change_folder, _TWO_SCENARIO_SPEC)
+    typo_value = ("2026-07-10-my-change / Requirment: Users can filter by date "
+                  "/ Scenario: Single match")
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: nearest-heading fixture\n\n"
+        "## Task 1 — the first task\n"
+        "- Brief item covered: 2026-07-10-my-change / Requirement: Users can filter by date / Scenario: Empty result set\n\n"
+        "## Task 2 — the typo'd task\n"
+        f"- Brief item covered: {typo_value}\n\n"
+        "## Task 3 — a later task\n"
+        "- Brief item covered: 2026-07-10-my-change / Requirement: Users can filter by date / Scenario: Single match\n\n"
+        "## Task 4 — the last task\n"
+        "- Description: no brief item field at all\n",
+        encoding="utf-8",
+    )
+    result = _run(change_folder, plan)
+    assert result.returncode == 0, result.stderr
+    assert "Warning: " in result.stderr, \
+        "per-item stderr diagnostics use the 'Warning: ' channel word"
+    assert typo_value in result.stderr
+    # the nearest preceding heading, and ONLY it
+    assert "Task 2 — the typo'd task" in result.stderr
+    assert "Task 1 — the first task" not in result.stderr
+    assert "Task 3 — a later task" not in result.stderr
+    assert "Task 4 — the last task" not in result.stderr
+    assert "Plan: nearest-heading fixture" not in result.stderr
+
+
 def test_multiple_requirements_and_scenarios_all_paired_correctly(tmp_path):
     change_folder = tmp_path / "2026-07-10-my-change"
     spec = """\
