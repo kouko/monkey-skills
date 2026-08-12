@@ -28,7 +28,10 @@ covered-key set from the plan's join keys, and reports the difference:
 A malformed plan (no join keys found at all — e.g. all `Brief item covered`
 values are prose referents, or the field is absent, or the plan file itself
 is missing) is treated as zero coverage: every change-folder scenario is
-reported dropped.
+reported dropped. Every `Brief item covered` value that does not parse as a
+join key is additionally named on stderr with its task, so a mistyped key is
+distinguishable from a genuinely uncited scenario; it is a note, not an
+error, because a prose referent is legal on this path.
 
 Stdlib only.
 """
@@ -72,6 +75,10 @@ _BRIEF_ITEM_LINE = re.compile(
 _JOIN_KEY = re.compile(
     r"^[\"'`]?\s*(?P<change_id>.+?)\s*/\s*Requirement:\s*(?P<req>.+?)\s*/\s*"
     r"Scenario:\s*(?P<scen>.+?)\s*[\"'`]?$")
+
+# Any markdown heading — used only to name which task an unparsed
+# `Brief item covered` value sits under.
+_HEADING = re.compile(r"^#{1,6}\s+(.+)$", re.MULTILINE)
 
 
 def _requirement_scenario_pairs(text: str) -> list[tuple[str, str]]:
@@ -122,19 +129,50 @@ def collect_folder_scenario_keys(change_folder: Path, change_id: str) -> set[str
     return keys
 
 
+def _enclosing_heading(plan_text: str, pos: int) -> str:
+    """The nearest markdown heading above `pos` — i.e. the task a
+    `Brief item covered` field belongs to. Empty string when the field
+    sits above every heading."""
+    nearest = ""
+    for hdr in _HEADING.finditer(plan_text):
+        if hdr.start() >= pos:
+            break
+        nearest = hdr.group(1).strip()
+    return nearest
+
+
 def collect_plan_join_keys(plan_text: str) -> set[str]:
     """Every join key referenced by a `Brief item covered` field in the
     plan. A `Brief item covered` line whose value is prose (referent kind
     (a), not the join-key grammar) contributes nothing — that is the
-    malformed-plan / zero-coverage case."""
+    malformed-plan / zero-coverage case.
+
+    Every such non-contributing value is named on stderr with its task and
+    its verbatim text. It is reported, never an error: on this path a
+    prose quote IS a legal referent kind, so an unparsed value cannot be
+    told apart from a typo, and erroring would punish the legal form. What
+    is being fixed is the silence — dropping the value outright made a
+    mistyped citation read as 'this scenario has no task', which is a
+    different repair from 'this citation did not parse'. Exit-code
+    semantics are unchanged: coverage alone decides them.
+    """
     keys: set[str] = set()
+    unparsed: list[tuple[str, str]] = []
     for line_match in _BRIEF_ITEM_LINE.finditer(plan_text):
         value = line_match.group(1).strip()
         m = _JOIN_KEY.match(value)
         if m is None:
+            unparsed.append(
+                (_enclosing_heading(plan_text, line_match.start()), value))
             continue
         keys.add(f"{m.group('change_id')} / Requirement: {m.group('req')} / "
                   f"Scenario: {m.group('scen')}")
+    for heading, value in unparsed:
+        where = heading or "(no enclosing heading)"
+        print(f"Note: 'Brief item covered' value under '{where}' is not the "
+              f"join-key grammar, so it contributes no coverage — a prose "
+              f"referent is legal here, a mistyped key is not. Value: {value}",
+              file=sys.stderr)
     return keys
 
 

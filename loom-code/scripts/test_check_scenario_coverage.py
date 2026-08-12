@@ -227,6 +227,39 @@ def test_duplicate_scenario_key_warns_on_stderr(tmp_path):
     assert "Empty result set" in result.stderr
 
 
+def test_unparsed_change_folder_referent_is_named_not_dropped(tmp_path):
+    """A `Brief item covered` value that does not match the join-key
+    grammar must be reported with its task and its verbatim text, not
+    silently skipped. Otherwise a typo among otherwise-valid keys reads as
+    'this scenario has no task' — a different repair from 'this citation
+    did not parse', reported today with the same message.
+
+    It stays a report, never an error: on this path a prose quote is a
+    legal referent kind (`plan-format.md` referent kind (a)), so an
+    unparsed value is genuinely ambiguous between a legitimate quote and a
+    typo. Exit code therefore still reflects coverage alone — here exit 1,
+    because the typo'd task covers nothing.
+    """
+    change_folder = tmp_path / "2026-07-10-my-change"
+    _write_spec(change_folder, _TWO_SCENARIO_SPEC)
+    typo_value = ("2026-07-10-my-change / Requirment: Users can filter by date "
+                  "/ Scenario: Single match")
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — foo\n"
+        "- Brief item covered: 2026-07-10-my-change / Requirement: Users can filter by date / Scenario: Empty result set\n\n"
+        "## Task 2 — typo'd join key\n"
+        f"- Brief item covered: {typo_value}\n",
+        encoding="utf-8",
+    )
+    result = _run(change_folder, plan)
+    assert result.returncode == 1
+    # the unparsed value, verbatim, and the task it sits under
+    assert typo_value in result.stderr
+    assert "Task 2 — typo'd join key" in result.stderr
+
+
 def test_multiple_requirements_and_scenarios_all_paired_correctly(tmp_path):
     change_folder = tmp_path / "2026-07-10-my-change"
     spec = """\
