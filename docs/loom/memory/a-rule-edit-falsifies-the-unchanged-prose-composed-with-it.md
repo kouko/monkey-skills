@@ -63,6 +63,25 @@ report's "28-word sentence" was 31 by the pin's tokenizer (2026-08-07
 arc) — a count whose instrument is unnamed can be "corrected" back and
 forth forever between two tools that are both right.
 
+**Seventh carrier (0.78.0, 2026-08-12): the FEATURE'S OWN PURPOSE
+SENTENCE, and a debt paragraph the fix retired.** An arc that added
+Japanese support left the protocol's §Why this exists saying the
+adjudicator reads "natively in Traditional Chinese" — the one sentence
+stating what the whole document is FOR, falsified by the branch's entire
+point, untouched through nine tasks and two whole-branch docs arms. The
+same arc's CHANGELOG carried a paragraph recording a substring gap as
+"carried-not-fixed" that a later fix in the same branch retired, so the
+release notes described a defect that no longer shipped. One docs
+reviewer named the miss on itself in delta confirmation: this is exactly
+the unchanged-claim-vs-change class its round-1 whole-artifact read
+should have caught and didn't. Adds two carriers to the list: (5) the
+artifact's own purpose/scope sentence — the more foundational the claim,
+the less likely anyone re-reads it, because it reads as background
+rather than as an assertion under test; and (6) any paragraph recording
+something as UNFIXED, which a later commit on the same branch may have
+fixed. Both are cheap to sweep and neither is reachable by a string
+sweep for the changed claim.
+
 **Fifth carrier, one arc earlier (0.53.0, 2026-08-05): a FROZEN PINNED
 BLOCK authored before a mid-arc supersession.** A plan's Task-3 verbatim
 CHANGELOG block described R3 with wording that a later round-2 review
