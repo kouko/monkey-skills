@@ -36,3 +36,32 @@ def test_rcr_pointers_present_and_fence_intact():
     assert FENCE_PHRASE in skill_text, (
         "machine-precise fence wording changed or removed in SKILL.md"
     )
+
+
+DEFERRAL_MARKER = "§Firing conditions"
+
+
+def test_rcr_pointers_defer_to_protocol_firing_conditions():
+    skill_text = SKILL_PATH.read_text(encoding="utf-8")
+    relay_text = RELAY_PATH.read_text(encoding="utf-8")
+
+    assert "protocols/adjudication-view.md" in skill_text, (
+        "SKILL.md missing pointer to adjudication-view.md"
+    )
+    assert "protocols/adjudication-view.md" in relay_text, (
+        "relay-phrasing.md missing pointer to adjudication-view.md"
+    )
+    assert "not English" not in skill_text, (
+        "SKILL.md still restates the firing condition instead of deferring to the protocol"
+    )
+    assert "not English" not in relay_text, (
+        "relay-phrasing.md still restates the firing condition instead of deferring to the protocol"
+    )
+    assert DEFERRAL_MARKER in skill_text, (
+        "SKILL.md deferral clause missing — must cite the protocol's own "
+        f"{DEFERRAL_MARKER}, not just point at the file"
+    )
+    assert DEFERRAL_MARKER in relay_text, (
+        "relay-phrasing.md deferral clause missing — must cite the protocol's own "
+        f"{DEFERRAL_MARKER}, not just point at the file"
+    )
