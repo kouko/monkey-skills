@@ -5,22 +5,32 @@
 handoff-brief-format.md is a prompt/contract artifact, not executable code:
 nothing importable observes whether a brief author learns how to name an
 item. This file IS the schema the author reads, so its correctness
-condition is that the four declared identifier properties (form,
-authored-not-derived, monotonic-never-reused, any-outcome-section scope),
-their two rationales, and the declaration shape are all stated INSIDE the
-`## Brief item identifiers` section.
+condition is that the declared identifier properties (form,
+authored-not-derived, monotonic-never-reused, the named in-scope sections,
+the prose-form declaration site, split/merge), their rationales, and the
+declaration shape are all stated INSIDE the `## Brief item identifiers`
+section — and that the rest of the document composes with them rather than
+contradicting them: the `## Template` skeleton demonstrates the convention,
+the per-section format entries point at it, and `## Anti-patterns` names its
+failure modes.
 
-Every assertion runs against a SLICE of that section, never the whole file:
+Every assertion runs against a SLICE of one section, never the whole file:
 a whole-file substring search would pass on a stray mention elsewhere in the
 document (a recorded defect class in this repo), which would make the pin
-report a convention the author never actually reads in context.
+report a convention the author never actually reads in context. Slicing
+reuses `adjudication_split.split_document` rather than re-deriving a second
+H2 scanner — this document nests `## `-prefixed lines inside fenced blocks,
+which a fence-blind scan truncates silently (see
+`test_section_slicer_is_fence_aware`).
 
-Stdlib + pytest only (pathlib, re).
+Stdlib + pytest only (pathlib, re) plus the sibling `adjudication_split`.
 """
 from __future__ import annotations
 
 import re
 from pathlib import Path
+
+from adjudication_split import split_document
 
 HANDOFF_BRIEF_FORMAT_MD = (
     Path(__file__).parents[1]
@@ -30,33 +40,78 @@ HANDOFF_BRIEF_FORMAT_MD = (
     / "handoff-brief-format.md"
 )
 
-SECTION_HEADING = "## Brief item identifiers"
+SECTION_HEADING_TEXT = "Brief item identifiers"
+SECTION_HEADING = f"## {SECTION_HEADING_TEXT}"
 
 
-def _identifier_section() -> str:
-    """Return the body of `## Brief item identifiers`, heading excluded.
+def _section_body(text: str, heading_text: str) -> str:
+    """Return the body of the `## <heading_text>` section, heading excluded.
 
     The slice ends at the next level-2 heading (or EOF), so nothing outside
-    the section can satisfy the assertions below.
+    the section can satisfy the assertions below. Boundary detection is
+    delegated to `adjudication_split.split_document`, whose H2 scan is
+    fence-aware per CommonMark close rules — this document nests `## `-
+    prefixed lines inside fenced blocks (`## Template` holds a whole brief
+    skeleton), and a fence-blind scan truncates those slices silently.
     """
+    units = [u for u in split_document(text) if u["heading"] == heading_text]
+    assert len(units) == 1, (
+        f"the document must carry exactly one '## {heading_text}' section; "
+        f"found {len(units)}"
+    )
+    return units[0]["source_text"]
+
+
+def _brief_format_section(heading_text: str) -> str:
+    """Return one section body of the real handoff-brief-format.md."""
     assert HANDOFF_BRIEF_FORMAT_MD.is_file(), (
         f"handoff-brief-format.md is absent at {HANDOFF_BRIEF_FORMAT_MD}"
     )
-    lines = HANDOFF_BRIEF_FORMAT_MD.read_text(encoding="utf-8").splitlines()
-
-    starts = [i for i, line in enumerate(lines) if line.strip() == SECTION_HEADING]
-    assert len(starts) == 1, (
-        f"handoff-brief-format.md must carry exactly one {SECTION_HEADING!r} "
-        f"section; found {len(starts)}"
+    return _section_body(
+        HANDOFF_BRIEF_FORMAT_MD.read_text(encoding="utf-8"), heading_text
     )
-    start = starts[0] + 1
 
-    end = len(lines)
-    for i in range(start, len(lines)):
-        if lines[i].startswith("## "):
-            end = i
-            break
-    return "\n".join(lines[start:end])
+
+def _identifier_section() -> str:
+    return _brief_format_section(SECTION_HEADING_TEXT)
+
+
+# A fenced block whose body carries `## `-prefixed lines is this file's own
+# convention (`## Template` nests a whole brief skeleton in a fence), so a
+# fence-blind boundary scan truncates a slice silently and the pins below
+# would then run against a fragment while still reporting green.
+FENCED_H2_FIXTURE = """\
+## Target
+
+before the fence
+
+```markdown
+## Problem
+
+## Users
+```
+
+after the fence
+
+## Next section
+
+body of the next section
+"""
+
+
+def test_section_slicer_is_fence_aware() -> None:
+    body = _section_body(FENCED_H2_FIXTURE, "Target")
+
+    # The `## Problem` line inside the fence is content, not a boundary:
+    # everything up to the REAL next H2 stays in the slice.
+    assert "after the fence" in body, (
+        "the slicer truncated the section at a `## ` line nested inside a "
+        "fenced code block"
+    )
+    # The real boundary still holds — the slice is not the whole document.
+    assert "body of the next section" not in body, (
+        "the slicer must still stop at the next unfenced level-2 heading"
+    )
 
 
 def test_schema_declares_the_identifier_convention() -> None:
@@ -116,3 +171,165 @@ def test_schema_declares_the_identifier_convention() -> None:
         "the identifier section must show a declaration whose id is followed "
         "by the human-readable item text on the same line"
     )
+
+
+def test_scope_names_the_known_in_scope_sections() -> None:
+    """Scope is satisfiable by matching a section name, not by judgment."""
+    section = _identifier_section()
+
+    # The measured in-scope set is named, so an author matches rather than
+    # adjudicates. Dropping any one of the three fails here.
+    for heading in (
+        "`## Smallest End State`",
+        "`## What Becomes Obsolete`",
+        "`## Decision`",
+    ):
+        assert heading in section, (
+            f"the identifier section must name {heading} as a known "
+            "in-scope section"
+        )
+
+    # The satisfaction rule itself. Negating it ("by adjudicating whether the
+    # section declares an outcome") removes this phrase.
+    assert "by matching a section name" in section, (
+        "the identifier section must say the scope rule is satisfied by "
+        "matching a section name"
+    )
+
+    # The general rule survives as an EXTENSION clause, not as a replacement:
+    # a section outside the list is added to it, never treated as exempt.
+    assert "extend the list" in section, (
+        "the identifier section must keep the general rule as an extension "
+        "clause for sections not on the known list"
+    )
+
+
+def test_prose_form_sections_state_how_they_carry_an_identifier() -> None:
+    """A section whose declared format is prose has a stated declaration site."""
+    section = _identifier_section()
+
+    assert "directly beneath the prose" in section, (
+        "the identifier section must state where a prose-form section's "
+        "identifiers are declared"
+    )
+    # Negating the property ("a prose-form section is exempt") removes this.
+    assert "is not exempt" in section, (
+        "the identifier section must state that a prose-form section is not "
+        "exempt from carrying identifiers"
+    )
+    # Negating the property ("its prose is restructured into bullets")
+    # removes this.
+    assert "is not restructured" in section, (
+        "the identifier section must state that a prose-form section's prose "
+        "is not restructured"
+    )
+    assert "a single umbrella outcome gets a single line" in section, (
+        "the identifier section must state the single-outcome case for a "
+        "prose-form section"
+    )
+
+
+def test_split_and_merge_are_specified() -> None:
+    """`never renumbered, never reused` is disambiguated for both cases."""
+    section = _identifier_section()
+
+    # Split. Negating the property ("one half keeps the original number")
+    # removes both phrases.
+    assert "split into two" in section, (
+        "the identifier section must state what happens when one item is "
+        "split into two"
+    )
+    assert "both halves take new numbers" in section, (
+        "the identifier section must state that both halves of a split take "
+        "new numbers"
+    )
+    assert "neither half inherits it" in section, (
+        "the identifier section must state that neither half of a split "
+        "inherits the original number"
+    )
+
+    # Merge. Negating the property ("the merged item keeps the lower number")
+    # removes both phrases.
+    assert "merged into one" in section, (
+        "the identifier section must state what happens when two items are "
+        "merged into one"
+    )
+    assert "both numbers are retired" in section, (
+        "the identifier section must state that a merge retires both numbers"
+    )
+    assert "the merged item takes a new number" in section, (
+        "the identifier section must state that the merged item takes a new "
+        "number"
+    )
+
+
+def _template_skeleton() -> str:
+    """Return the copy-paste brief skeleton inside `## Template`'s fence."""
+    template = _brief_format_section("Template")
+    fenced = re.search(r"^```markdown\n(.*?)^```", template, flags=re.S | re.M)
+    assert fenced, "`## Template` must hold the skeleton in a ```markdown fence"
+    return fenced.group(1)
+
+
+def test_template_demonstrates_the_identifier_convention() -> None:
+    """The skeleton an author copies obeys the convention it is governed by."""
+    skeleton = _template_skeleton()
+
+    # Placement: each outcome-declaring section of the skeleton carries at
+    # least one declaration, in the declaration shape.
+    for heading in ("Smallest End State", "Decision", "What Becomes Obsolete"):
+        body = _section_body(skeleton, heading)
+        assert re.search(r"^- BI-\d+ — ", body, flags=re.MULTILINE), (
+            f"the Template's `## {heading}` placeholder must carry a "
+            "`- BI-<n> — …` declaration"
+        )
+
+    ids = [
+        int(n) for n in re.findall(r"^- BI-(\d+) — ", skeleton, flags=re.MULTILINE)
+    ]
+    assert len(ids) >= 4, (
+        "the Template must demonstrate at least four declarations (one per "
+        "outcome placeholder)"
+    )
+    # Monotonic across the whole brief, never restarted per section, never
+    # duplicated. Negating the property (numbering restarting at BI-1 in the
+    # second outcome section) breaks the strictly-increasing check.
+    assert ids == sorted(set(ids)) and len(ids) == len(set(ids)), (
+        f"the Template's identifiers must ascend monotonically across the "
+        f"whole skeleton and never repeat; found {ids}"
+    )
+
+
+def test_section_entries_point_at_the_identifier_convention() -> None:
+    """The per-section format entries do not contradict the new convention."""
+    pointer = "Each outcome declared here takes a brief item identifier"
+
+    # `## Smallest End State` and `## Decision` live under Required sections.
+    required = _brief_format_section("Required sections")
+    assert required.count(pointer) == 2, (
+        "both outcome-declaring entries under `## Required sections` "
+        "(`## Smallest End State`, `## Decision`) must point at the "
+        f"identifier convention; found {required.count(pointer)}"
+    )
+
+    # `## What Becomes Obsolete` lives under Optional sections.
+    optional = _brief_format_section("Optional sections")
+    assert optional.count(pointer) == 1, (
+        "the `## What Becomes Obsolete` entry under `## Optional sections` "
+        f"must point at the identifier convention; found {optional.count(pointer)}"
+    )
+
+
+def test_anti_patterns_cover_the_identifier_failure_modes() -> None:
+    """Every convention in this file carries ❌ entries; so does this one."""
+    anti_patterns = _brief_format_section("Anti-patterns")
+
+    for entry in (
+        "Skipping the identifier on an in-scope item",
+        "Renumbering on insert",
+        "Reusing a retired number",
+        "Deriving the identifier from the heading",
+    ):
+        assert f"❌ **{entry}" in anti_patterns, (
+            f"the anti-pattern list must carry an ❌ entry for {entry!r}"
+        )
