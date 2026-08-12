@@ -9,13 +9,21 @@ Exercised as a CLI subprocess (the actual interface: two positional args,
 exit 0 / exit 1) rather than importing internals, since the contract this
 script must honor is the process boundary.
 
-Stdlib only (subprocess + pathlib).
+The brief-item collector is the one exception, tested by direct import.
+It has no process boundary yet — nothing on the CLI path calls it until
+the brief-mode check is wired to the gate — so a subprocess test could
+only assert the collector's absence from output it does not yet reach.
+
+Stdlib only (subprocess + pathlib), plus a direct import of the module
+under test for the collector tests.
 """
 
 import os
 import subprocess
 import sys
 from pathlib import Path
+
+from check_scenario_coverage import collect_brief_item_ids
 
 SCRIPT = Path(__file__).parent / "check_scenario_coverage.py"
 
@@ -305,6 +313,128 @@ def test_unparsed_value_is_attributed_to_the_nearest_preceding_heading(tmp_path)
     assert "Task 3 — a later task" not in result.stderr
     assert "Task 4 — the last task" not in result.stderr
     assert "Plan: nearest-heading fixture" not in result.stderr
+
+
+# A realistic brief: three declared identifiers across TWO sections, plus
+# every near-miss the shipped convention rules out —
+# `handoff-brief-format.md` §Brief item identifiers names `BI1`, `bi-1` and
+# `B-1` as explicitly not the form, and demonstrates the form itself inside
+# a ```markdown fence, which makes a fence the documented carrier for
+# illustrative (non-declaring) identifiers. Without these near-misses the
+# collector's precision is untested: a bare `BI-\\d+` substring scan passes
+# a fixture that only holds well-formed declarations.
+_BRIEF_WITH_THREE_IDS = """\
+# widget rework — brief
+
+## Problem
+
+When a plan cites a brief item, I want the citation to survive a reword.
+
+## Smallest End State
+
+The brief carries stable identifiers. Note that BI-42 is discussed in this
+sentence but never declared, so a scan that reads prose as declarations
+would invent it.
+
+- BI-1 — Brief items carry an identifier that survives rewording.
+- BI-2 — The coverage checker resolves a cited identifier to a declared item.
+
+## Out of Scope
+
+- Renumbering existing items. See BI-2 above for what we do instead.
+- BI1 — the prefix without its hyphen is not the form.
+- bi-1 — lowercase is not the form.
+- B-1 — a single-letter prefix is not the form.
+
+## Decision
+
+We ship the identifier convention and the checker's brief mode together.
+
+- BI-3 — The umbrella outcome this decision commits to.
+
+## Template
+
+```markdown
+- BI-9 — (example identifier inside a fenced skeleton, never a declaration)
+```
+"""
+
+
+def _lineno_of(text: str, line: str) -> int:
+    """1-based line number of the one line equal to `line`."""
+    hits = [i for i, candidate in enumerate(text.splitlines(), start=1)
+            if candidate == line]
+    assert len(hits) == 1, f"fixture must hold exactly one {line!r}: {hits}"
+    return hits[0]
+
+
+def test_collects_declared_brief_item_ids():
+    """The collector returns every declared `BI-<n>` with its 1-based line
+    number, and nothing else.
+
+    Three properties are pinned together because each one alone is passed
+    by a wrong collector that the others catch:
+
+    - **Form.** `handoff-brief-format.md` §Brief item identifiers rules out
+      `BI1`, `bi-1` and `B-1` by name. A regex loosened to accept `BI<n>`
+      would collect the `BI1` bullet.
+    - **Position.** A declaration is the identifier FIRST on its line, then
+      the item text. `BI-42` and `BI-2` also appear mid-sentence in prose
+      here; a scan that matches anywhere on the line invents `BI-42` and
+      mis-locates `BI-2` to the prose line.
+    - **Line number.** Pinned to the exact declaring line, so an off-by-one
+      (0-based, or the line after) fails. The numbers are looked up from
+      the fixture by exact line text rather than hardcoded, so editing the
+      fixture cannot silently desync the expectation from the pin.
+
+    Sections are not enumerated: `BI-3` sits in `## Decision` and `BI-1` /
+    `BI-2` in `## Smallest End State`, and the convention's extension clause
+    lets a fourth section declare outcomes too — so the collector must scan
+    the whole file, and a three-section allowlist is not a legal shortcut.
+    """
+    text = _BRIEF_WITH_THREE_IDS
+    assert collect_brief_item_ids(text) == {
+        "BI-1": _lineno_of(
+            text,
+            "- BI-1 — Brief items carry an identifier that survives rewording."),
+        "BI-2": _lineno_of(
+            text,
+            "- BI-2 — The coverage checker resolves a cited identifier to a "
+            "declared item."),
+        "BI-3": _lineno_of(
+            text, "- BI-3 — The umbrella outcome this decision commits to."),
+    }
+
+
+def test_fenced_example_identifier_is_not_a_declaration():
+    """`BI-9` sits inside the fixture's ```markdown fence and must not be
+    collected.
+
+    The shipped convention demonstrates the form inside a fence
+    (`handoff-brief-format.md` §Brief item identifiers), and its
+    `## Template` nests a whole brief skeleton carrying `BI-1` / `BI-2` /
+    `BI-3` example lines. A brief that pastes such a skeleton would
+    otherwise gain phantom identifiers that no task can ever deliver — and,
+    worse, would resolve a downstream citation against an example instead
+    of failing it.
+    """
+    assert "BI-9" not in collect_brief_item_ids(_BRIEF_WITH_THREE_IDS)
+
+
+def test_legacy_brief_declaring_no_ids_returns_empty_without_raising():
+    """A brief predating the convention declares zero identifiers. That is
+    a legal legacy brief, not an error: the collector returns an empty
+    mapping rather than raising, which is what lets the caller enter legacy
+    mode instead of failing every brief written before the convention
+    landed."""
+    legacy = (
+        "# older brief\n\n"
+        "## Smallest End State\n\n"
+        "The thing works end to end.\n\n"
+        "## Decision\n\n"
+        "We build the thing.\n"
+    )
+    assert collect_brief_item_ids(legacy) == {}
 
 
 def test_multiple_requirements_and_scenarios_all_paired_correctly(tmp_path):

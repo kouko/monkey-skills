@@ -87,6 +87,24 @@ _JOIN_KEY = re.compile(
 # coverage result and no exit code.
 _HEADING = re.compile(r"^#{1,6}\s+(.+)$", re.MULTILINE)
 
+# A brief item declaration, per `loom-code/skills/brainstorming/references/
+# handoff-brief-format.md` §Brief item identifiers: the identifier FIRST on
+# its line (an optional list marker aside), then the item's human-readable
+# text on the same line. The form is the literal `BI`, a hyphen, a decimal
+# number — that section names `BI1`, `bi-1` and `B-1` as explicitly not the
+# form, hence the mandatory hyphen, the case-sensitive prefix and the `\b`
+# that stops `BI-1x` matching. Identifier-first is what keeps a prose
+# mention ("see BI-2 above") from reading as a second declaration.
+_BRIEF_ITEM_DECL = re.compile(r"^\s*(?:[-*+]\s+)?(BI-\d+)\b(?P<text>.*)$")
+
+# CommonMark fence grammar: a ``` or ~~~ line indented up to 3 spaces.
+# Same state machine as `adjudication_split._iter_h2_matches` (a fence
+# closes only on the same character at >= the opening length). Not reused
+# directly: that helper is private and yields H2 matches rather than fence
+# state, and extracting a shared line scanner would touch a second module,
+# outside this change's boundary.
+_FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
+
 
 def _requirement_scenario_pairs(text: str) -> list[tuple[str, str]]:
     """(requirement name, scenario name) pairs found in one delta file's
@@ -181,6 +199,57 @@ def collect_plan_join_keys(plan_text: str) -> set[str]:
               f"referent is legal here, a mistyped key is not. Value: {value}",
               file=sys.stderr)
     return keys
+
+
+def collect_brief_item_ids(brief_text: str) -> dict[str, int]:
+    """Every `BI-<n>` identifier the brief declares, mapped to the 1-based
+    line number of the line declaring it.
+
+    Nothing on the CLI path calls this yet — the brief-mode check that
+    consumes it is wired at the gate in a later step of this change.
+
+    Declarations are collected wherever they appear, not from a list of
+    section names. `handoff-brief-format.md` §Brief item identifiers names
+    `## Smallest End State`, `## What Becomes Obsolete` and `## Decision` as
+    the known in-scope set, and in the same breath tells an author to extend
+    that list when a brief carries another outcome-declaring section. A
+    three-section allowlist would silently drop exactly the items that
+    extension clause exists to admit.
+
+    Identifiers inside a fenced code block are illustration, never
+    declaration. The convention section demonstrates the form inside a
+    ```markdown fence and its `## Template` nests a whole brief skeleton
+    carrying example identifiers, so a brief that pastes that skeleton would
+    otherwise gain items no task can deliver — and a downstream citation
+    would resolve against the example instead of failing loudly.
+
+    A brief declaring zero identifiers returns an empty mapping rather than
+    raising: that is a legal legacy brief written before the convention, and
+    the empty result is what puts the caller into legacy mode.
+
+    When one identifier is declared twice (an authoring error the
+    never-reused rule forbids), the first declaring line wins.
+    """
+    declared: dict[str, int] = {}
+    fence_char: str | None = None
+    fence_min_len = 0
+    for lineno, line in enumerate(brief_text.splitlines(), start=1):
+        fence = _FENCE.match(line)
+        if fence:
+            marker = fence.group(1)
+            char, length = marker[0], len(marker)
+            if fence_char is None:
+                fence_char, fence_min_len = char, length
+            elif char == fence_char and length >= fence_min_len:
+                fence_char, fence_min_len = None, 0
+            continue
+        if fence_char is not None:
+            continue
+        decl = _BRIEF_ITEM_DECL.match(line)
+        if decl is None or not decl.group("text").strip():
+            continue
+        declared.setdefault(decl.group(1), lineno)
+    return declared
 
 
 def check_coverage(
