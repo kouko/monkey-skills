@@ -9,7 +9,9 @@ convention; the check-list wiring mirrors adjudication_lint.main()'s
 functools.partial(profile=...) pattern.
 """
 
+import dataclasses
 import functools
+import unicodedata
 import unittest
 
 from adjudication_lint import (
@@ -249,6 +251,49 @@ class TestJapaneseNegationCollisionWords(unittest.TestCase):
             rendition="verdict ブロックは必ず書き換えない。",
         )
         self.assertEqual(check_negation_preserved(unit, profile=get_profile("ja")), [])
+
+
+class TestRenditionIsUnicodeNormalizedBeforeMatching(unittest.TestCase):
+    """Whole-branch review finding F2 (CHK-SEC-005, canonicalize before
+    you compare): the checks match untrusted rendition text by exact
+    codepoint against NFC-composed literals, so the SAME Japanese
+    sentence submitted in NFD (dakuten as a combining mark) silently
+    stopped matching every form containing 「ば」/「が」/「ざ」 -- turning a
+    faithful rendition into a WARNING, and, on the negation side, hiding
+    a preserved negation."""
+
+    def test_nfd_rendition_still_matches_the_must_form(self):
+        # 「なければならない」 carries ば -> U+306F + U+3099 under NFD.
+        unit = _unit(
+            source_text="you must do this",
+            rendition=unicodedata.normalize("NFD", "実行しなければならない"),
+        )
+        self.assertEqual(check_modality_mapping(unit, profile=get_profile("ja")), [])
+
+    def test_nfd_rendition_still_matches_the_should_form(self):
+        # 「ことが望ましい」 carries が -> U+304B + U+3099 under NFD.
+        unit = _unit(
+            source_text="you should do this",
+            rendition=unicodedata.normalize("NFD", "実行することが望ましい"),
+        )
+        self.assertEqual(check_modality_mapping(unit, profile=get_profile("ja")), [])
+
+    def test_nfd_rendition_still_counts_a_negation_marker(self):
+        # Today's ja negation_pattern (ない/ません) happens to carry no
+        # dakuten, so it cannot exhibit the bug itself. The negation scan
+        # must normalize regardless -- pinned here with a profile whose
+        # pattern carries a real dakuten negation form (godan ぶ-verbs:
+        # 選ぶ -> 選ばない), which is exactly what a widened pattern would
+        # add. Without normalization this rendition counts zero markers
+        # and the unit warns.
+        profile = dataclasses.replace(
+            get_profile("ja"), negation_pattern=r"ばない|ません"
+        )
+        unit = _unit(
+            source_text="do not choose it",
+            rendition=unicodedata.normalize("NFD", "選ばない"),
+        )
+        self.assertEqual(check_negation_preserved(unit, profile=profile), [])
 
 
 if __name__ == "__main__":

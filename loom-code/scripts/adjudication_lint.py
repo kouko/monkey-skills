@@ -45,6 +45,7 @@ import functools
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 from adjudication_profiles import get_profile
@@ -107,6 +108,20 @@ def _count_en_negations(source_text):
     return count
 
 
+def _normalized(rendition):
+    """NFC-normalize a rendition before any codepoint-exact match.
+
+    Both language checks compare untrusted rendition text against
+    NFC-composed literals (the profile's negation pattern and modality
+    forms), so a canonically-equivalent NFD rendition — dakuten carried
+    as a combining mark, which macOS filesystems and some IMEs emit —
+    silently stopped matching every form containing ば/が/ざ. Measured:
+    「実行しなければならない」 and 「実行することが望ましい」 both flipped
+    from quiet to WARNING purely by re-encoding. Canonicalize once,
+    then compare (CHK-SEC-005)."""
+    return unicodedata.normalize("NFC", rendition)
+
+
 @functools.lru_cache(maxsize=None)
 def _negation_pattern_regex(pattern):
     """Compile+cache a profile's `negation_pattern` regex string (Task
@@ -144,7 +159,7 @@ def check_negation_preserved(unit, profile=None):
     n = _count_en_negations(unit["source_text"])
     if n == 0:
         return []
-    m = _count_negation_markers(unit["rendition"], profile)
+    m = _count_negation_markers(_normalized(unit["rendition"]), profile)
     if m == 0:
         line = f"{unit['id']}: negation dropped in rendition"
         return [line if profile.negation_tier == "hard" else f"WARNING {line}"]
@@ -202,7 +217,7 @@ def check_modality_mapping(unit, profile=None):
     profile = profile or _DEFAULT_PROFILE
     expected_by_term = dict(profile.modality_map)
     source_text = _BACKTICK_SPAN_PATTERN.sub("", unit["source_text"])
-    rendition = unit["rendition"]
+    rendition = _normalized(unit["rendition"])
     warnings = []
     seen = set()
     for match in _modality_pattern(profile.modality_map).finditer(source_text):
