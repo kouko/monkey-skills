@@ -209,7 +209,9 @@ authoring language).
 ## Decision
 
 Give brief items hybrid identity (immutable short ID + human-readable text) in
-`## Smallest End State` and `## Decision`; widen `Brief item covered` to accept
+**every section that declares an outcome a task could deliver** — the scope
+corrected by the experiment, which found 5 of 9 real tasks citing outcomes
+declared outside `## Smallest End State`; widen `Brief item covered` to accept
 that ID as a third referent form inside the existing field; extend the coverage
 checker with a brief mode; and make an unresolvable referent an error rather
 than a silent zero-coverage contribution.

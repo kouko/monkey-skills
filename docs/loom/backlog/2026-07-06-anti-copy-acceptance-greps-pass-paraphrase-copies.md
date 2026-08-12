@@ -20,3 +20,13 @@ start: next touch of loom-code writing-plans SKILL.md or the plan-document-revie
   protected content"); candidate: one line in writing-plans'
   acceptance-criteria guidance + one check hint in the
   plan-document-reviewer prompt.
+
+- **2026-08-13: start condition FIRED and was consciously not taken.** The
+  brief-item addressability arc's Task 8 edits
+  `loom-code/skills/writing-plans/SKILL.md`, which is this entry's named
+  trigger. It was not folded in: the subject here is acceptance-criteria
+  authoring guidance (an anti-copy criterion needs a mechanical leg AND a
+  reviewer-judgment leg), a different deliverable with its own RED test, and
+  taking it would have pushed that plan past its critical-path depth ceiling.
+  Recorded rather than skipped silently — the condition stays fired, so the
+  next `writing-plans/SKILL.md` touch has no excuse.
