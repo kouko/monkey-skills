@@ -5,6 +5,45 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.77.0] — 2026-08-12 — Adjudication view: conversation-language views of artifacts under adjudication
+
+### Changed
+
+- **New protocol SSOT**: `using-loom-code/protocols/adjudication-view.md`
+  defines the shared rules for translated views of plans/briefs (document
+  mode) and verdict digests — unit-1:1 with source structure, a fixed
+  modality mapping table (must→必須 / should→應 / may→可 / must not→不得 /
+  should not→不應), verbatim carry-through for technical nouns and enum
+  tokens, provenance-tagged translator additions (`譯注`), and firing
+  conditions (conversation language ≠ English; verdict mode only when
+  findings ≥ 1).
+- **`adjudication_split.py`** (new): splits a markdown artifact into units
+  JSON — doc mode (brief H2 sections / plan `## Task N` blocks) and verdict
+  mode (structured findings blocks, fence-aware, docs-variant `quote:`
+  column parsing), each unit carrying extracted anchors.
+- **`adjudication_lint.py`** (new): zero-token lint over units JSON with
+  renditions — verbatim anchor echo (numbers, enum tokens, backticked
+  terms) with digit-boundary matching, two-tier EN negation-marker check
+  (hard fail on dropped negation), and modality-mapping check in warning
+  mode.
+- **`adjudication_render.py`** (new): renders units JSON to self-contained
+  HTML — document mode produces EN/ZH side-by-side HTML (ZH rendition with
+  collapsible EN original per unit); verdict mode produces a findings
+  table in both markdown (for inline chat) and HTML.
+- **Wiring pointers** (duty + protocol path, no copied rules) added at the
+  presentation moments of `requesting-code-review` (Step 5 +
+  `relay-phrasing.md`), `requesting-docs-review` (hand-to-user +
+  STILL_BLOCKING stop), `brainstorming` (sign-off checkpoint), and
+  `writing-plans` (kickoff briefing + post-PASS card).
+- Each new script and wiring point ships a pin test
+  (`test_adjudication_protocol_pins.py`, `test_adjudication_split.py`,
+  `test_adjudication_split_verdict.py`, `test_adjudication_lint.py`,
+  `test_adjudication_lint_language.py`, `test_adjudication_render.py`,
+  `test_adjudication_render_verdict.py`,
+  `test_adjudication_wiring_rcr.py`, `test_adjudication_wiring_rdr.py`,
+  `test_adjudication_wiring_brainstorming.py`,
+  `test_adjudication_wiring_writing_plans.py`).
+
 ## [0.76.0] — 2026-08-11 — Visualization trigger layer
 
 ### Changed
