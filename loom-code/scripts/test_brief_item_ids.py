@@ -197,10 +197,83 @@ def test_scope_names_the_known_in_scope_sections() -> None:
     )
 
     # The general rule survives as an EXTENSION clause, not as a replacement:
-    # a section outside the list is added to it, never treated as exempt.
-    assert "extend the list" in section, (
+    # a section outside the list is added to it, never treated as exempt. Who
+    # extends it, and what the author does meanwhile, is pinned by
+    # `test_unlisted_in_scope_section_states_an_actionable_mechanism`.
+    assert "Extending the list above" in section, (
         "the identifier section must keep the general rule as an extension "
         "clause for sections not on the known list"
+    )
+
+
+def _scope_bullet() -> str:
+    """Return the single `- **Scope: …**` bullet line of the identifier section.
+
+    The mechanism below is asserted against ONE bullet, not the whole
+    section: `## Open Questions` and the word "maintainer" could each appear
+    somewhere else in the section while the scope rule itself still leaves an
+    author with nothing to do, which is the defect this slice exists to
+    prevent. Each bullet of this section is a single (long) source line, so
+    the bullet's own first line IS its full body.
+    """
+    section = _identifier_section()
+    bullets = [
+        line for line in section.splitlines() if line.startswith("- **Scope:")
+    ]
+    assert len(bullets) == 1, (
+        f"the identifier section must carry exactly one `- **Scope:` bullet; "
+        f"found {len(bullets)}"
+    )
+    return bullets[0]
+
+
+def test_unlisted_in_scope_section_states_an_actionable_mechanism() -> None:
+    """An author meeting an unlisted outcome section can act without deciding.
+
+    Three parts must be stated in the scope bullet itself. Each assertion
+    below is worded so that NEGATING its part — not merely deleting it —
+    removes the pinned text: "the author extends the list themselves"
+    displaces the maintainer clause, an exemption displaces "never an
+    exemption", and deferring the identifiers displaces "assign that
+    section's identifiers now".
+    """
+    bullet = _scope_bullet()
+
+    # Anti-exemption force, retained from the clause this supersedes.
+    assert "never an exemption" in bullet, (
+        "the scope bullet must state that a section's absence from the list "
+        "is never an exemption from carrying identifiers"
+    )
+
+    # Part 1 — assign now, in this brief. Nothing about the unlisted section
+    # defers the identifiers or blocks the brief.
+    assert "assign that section's identifiers now" in bullet, (
+        "the scope bullet must tell the author to assign the unlisted "
+        "section's identifiers immediately, in their own brief"
+    )
+
+    # Part 2 — extending the canonical list is a maintainer action against
+    # this shared file, NOT an author's mid-session edit. Negating this
+    # ("the author extends the list themselves") removes both phrases.
+    assert "a maintainer's edit to this file" in bullet, (
+        "the scope bullet must say that extending the list is a maintainer's "
+        "edit to this shared file"
+    )
+    assert "not something a brief's author makes mid-session" in bullet, (
+        "the scope bullet must say the author does not make that edit "
+        "mid-session"
+    )
+
+    # Part 3 — the unlisted section is recorded in the author's OWN brief, so
+    # the pending extension is visible instead of silently absent. It is
+    # recorded AS A QUESTION, which is what `## Open Questions` accepts (its
+    # entry: "specific enough to answer in one round").
+    assert (
+        "record the unlisted section as an open question in this brief's own "
+        "`## Open Questions`"
+    ) in bullet, (
+        "the scope bullet must tell the author where to record the unlisted "
+        "section: this brief's own `## Open Questions`"
     )
 
 
