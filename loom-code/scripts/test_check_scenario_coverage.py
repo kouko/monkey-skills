@@ -437,6 +437,64 @@ def test_legacy_brief_declaring_no_ids_returns_empty_without_raising():
     assert collect_brief_item_ids(legacy) == {}
 
 
+# A brief that declares `BI-2` twice — the authoring error the never-reused
+# rule forbids. The two declarations carry different item text so each line
+# can be located by its exact text rather than a hardcoded number.
+_BRIEF_WITH_DUPLICATE_ID = """\
+# duplicated-identifier brief
+
+## Smallest End State
+
+- BI-1 — An outcome declared exactly once.
+- BI-2 — The second outcome, declared here first.
+
+## Decision
+
+- BI-2 — The same identifier reused by mistake, further down the file.
+"""
+
+
+def test_duplicate_brief_item_declaration_warns_and_first_line_wins(capsys):
+    """A `BI-<n>` declared twice is an authoring error the never-reused rule
+    forbids, so the collector must not resolve it in silence.
+
+    Two properties are pinned together, because the silence had two halves
+    and closing either one alone leaves the other open:
+
+    - **The warning.** It rides the `Warning: ` per-item stderr channel word
+      the sibling collector already uses (`collect_folder_scenario_keys`,
+      pinned by `test_duplicate_scenario_key_warns_on_stderr`), and names the
+      identifier plus BOTH declaring lines — one line number alone tells an
+      author a duplicate exists without telling them where the other half is.
+    - **The resolution.** First-declaration-wins was previously an untested
+      choice of `setdefault`. Pinned here so flipping it to last-wins fails,
+      rather than being caught only by whichever downstream caller happened
+      to depend on the line number.
+    """
+    text = _BRIEF_WITH_DUPLICATE_ID
+    first = _lineno_of(text, "- BI-2 — The second outcome, declared here first.")
+    later = _lineno_of(
+        text,
+        "- BI-2 — The same identifier reused by mistake, further down the file.")
+    assert first < later, "fixture must declare the duplicate after the original"
+
+    declared = collect_brief_item_ids(text)
+
+    # the resolution: first declaration wins, unchanged by the warning
+    assert declared["BI-2"] == first
+    assert declared == {
+        "BI-1": _lineno_of(text, "- BI-1 — An outcome declared exactly once."),
+        "BI-2": first,
+    }
+
+    err = capsys.readouterr().err
+    assert "Warning: " in err, \
+        "per-item stderr diagnostics use the 'Warning: ' channel word"
+    assert "BI-2" in err
+    assert f"line {first}" in err, "the warning must name the first declaration"
+    assert f"line {later}" in err, "the warning must name the later declaration"
+
+
 def test_multiple_requirements_and_scenarios_all_paired_correctly(tmp_path):
     change_folder = tmp_path / "2026-07-10-my-change"
     spec = """\

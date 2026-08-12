@@ -228,9 +228,14 @@ def collect_brief_item_ids(brief_text: str) -> dict[str, int]:
     the empty result is what puts the caller into legacy mode.
 
     When one identifier is declared twice (an authoring error the
-    never-reused rule forbids), the first declaring line wins.
+    never-reused rule forbids), the first declaring line wins. The reuse is
+    reported on stderr naming the identifier and both declaring lines, so
+    the author can find the pair — resolving an authoring error the
+    docstring calls an error, in silence, left the second declaration
+    indistinguishable from a line the collector never saw.
     """
     declared: dict[str, int] = {}
+    duplicates: list[tuple[str, int, int]] = []
     fence_char: str | None = None
     fence_min_len = 0
     for lineno, line in enumerate(brief_text.splitlines(), start=1):
@@ -248,7 +253,15 @@ def collect_brief_item_ids(brief_text: str) -> dict[str, int]:
         decl = _BRIEF_ITEM_DECL.match(line)
         if decl is None or not decl.group("text").strip():
             continue
-        declared.setdefault(decl.group(1), lineno)
+        item_id = decl.group(1)
+        if item_id in declared:
+            duplicates.append((item_id, declared[item_id], lineno))
+            continue
+        declared[item_id] = lineno
+    for item_id, first, repeat in duplicates:
+        print(f"Warning: brief item {item_id} is declared twice — line {first} "
+              f"and line {repeat}; the never-reused rule forbids reuse, so the "
+              f"line {first} declaration wins.", file=sys.stderr)
     return declared
 
 
