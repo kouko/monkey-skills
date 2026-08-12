@@ -34,7 +34,12 @@ the process of legalising, and nobody asked why the check rejected it. Fixing
 the symptom removed the signal, and the root defect survived to be found three
 tasks later by an implementer who happened to read the prompt file.
 
-**How to apply.** When a task widens what a value may legally be — a new
+**How to apply.** The rule is named for widening because that is where it
+was found, but the mechanism is symmetric: NARROWING a grammar fails the same
+way, with a downstream gate still accepting what the SSOT just made illegal.
+The census is identical in both directions.
+
+When a task changes what a value may legally be — a new
 referent kind, a new enum member, a new accepted format, a relaxed
 constraint — enumerate every consumer of that grammar at plan time and give
 each one either a task or a recorded reason it needs none. The recorded

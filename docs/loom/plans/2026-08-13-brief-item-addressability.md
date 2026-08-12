@@ -215,7 +215,7 @@ flowchart LR
 - **`Review-weight: prose` is unavailable to this plan.** Every task ships a `.py` RED test, so no task's `Files touched` is all-`.md` — the marker's eligibility test cannot be satisfied here, and round 1 of review correctly caught three tasks claiming it. All tasks run the full triad.
 - **Obligation-sweep note for the plan-document-reviewer**: the source brief quotes external sources heavily (ISO, CVE, Anthropic, OpenSpec, EARS studies, spec-kit). Sentences carrying `must` / `should` / `required` inside `## Alternatives Considered` and the Sources lines are quotations or descriptions of other systems' obligations, not obligations this arc undertakes. `## Experiment` is NOT uniformly external — its closing method note ("A future run of this shape should extract task blocks with `sed`") is this repo's own self-directed note; it binds no deliverable in this arc because this arc runs no probe, which is why no task covers it. Round 1 verified this reading and found one exception it was right to gap — the `must not` in §Current State Evidence → Boundary about the existing prose-referent pin — now covered by Tasks 4, 5 and 6's GREEN clauses.
 - **Adjacent backlog entry: condition fired, deliberately not folded in.** `2026-07-06-anti-copy-acceptance-greps-pass-paraphrase-copies` starts on "next touch of loom-code writing-plans SKILL.md", and Task 8 edits exactly that file. It is NOT taken into this arc: its subject is acceptance-criteria authoring guidance (anti-copy criteria need a mechanical leg AND a reviewer-judgment leg), which is a different deliverable needing its own RED test, and adding it would push this plan past its depth ceiling. The entry stays OPEN with its condition recorded as fired.
-- **Parallel-marking, and why it is deliberately narrow.** Both have no dependencies and their file sets are disjoint. Every other code task (T3, T4, T6, T7) touches `check_scenario_coverage.py` and its test file, so none may be marked `Independent: true` alongside T5 — a concurrent dispatch would race the same file. T2 and T3 sit at the same dependency level with disjoint files and would otherwise qualify, but T3 shares files with the dependency-free T5, which could still be running; marking T3 independent would invite exactly that race. Task 10 is also disjoint from T3/T4/T6/T7 with no dependency edge either way, so the amendment adds a second advisory under-mark; it stays unmarked for the same reason. Under-marking is advisory (Check 15); over-marking is a real defect (Check 14), so this plan under-marks deliberately.
+- **Parallel-marking, and why it is deliberately narrow.** The only genuine parallel pair is T1 + T5: both have no dependencies and their file sets are disjoint. Every other code task (T3, T4, T6, T7) touches `check_scenario_coverage.py` and its test file, so none may be marked `Independent: true` alongside T5 — a concurrent dispatch would race the same file. T2 and T3 sit at the same dependency level with disjoint files and would otherwise qualify, but T3 shares files with the dependency-free T5, which could still be running; marking T3 independent would invite exactly that race. Task 10 is also disjoint from T3/T4/T6/T7 with no dependency edge either way, so the amendment adds a second advisory under-mark; it stays unmarked for the same reason. Under-marking is advisory (Check 15); over-marking is a real defect (Check 14), so this plan under-marks deliberately.
 - **Ironic self-reference, recorded deliberately**: this plan cites its own brief by quote (referent kind (a)), because the brief that introduces `BI-` ids does not itself declare any — the convention does not exist until Task 1 lands. The first brief to carry `BI-` ids will be the next arc's.
 - No `LOOM-SIMPLIFY:` markers are planned.
 
@@ -257,9 +257,9 @@ flowchart LR
   signal. Added as Task 10, which re-opens plan review for the amendment.
 
 - **Amendment skip note (2026-08-13).** After the amendment PASSed, four
-  corrections landed that assert nothing new: three stale `file:line` cites
-  refreshed to the coordinates the reviewer measured (the pinned tests moved
-  when this branch's own commits inserted above them), the parallel-marking
+  corrections landed that assert nothing new: four stale `file:line` cites — all of them the SAME test's line, not two
+  tests' worth — refreshed to the coordinate the reviewer measured (that pin
+  moved when this branch's own commits inserted above it), the parallel-marking
   Notes bullet's justification updated because Task 10 made its stated reason
   ("every other code task touches `check_scenario_coverage.py`") untrue, and
   the `Steps:` level-3 title widened because the amendment added a
@@ -267,3 +267,17 @@ flowchart LR
   catching up to a fact the reviewer established; no acceptance criterion,
   dependency edge, scope or claim changed. Confirmed by delta with the same
   reviewer rather than carried silently.
+
+- **Correction to the record (2026-08-13), mine.** The delta report for
+  `eaa66f8c`, and that commit's own message, claimed "two pinned tests moved"
+  and that Task 5 had carried a stale `:113` for the sibling pin. Neither is
+  true: `git show eaa66f8c^` finds zero occurrences of `113` in the plan or
+  the brief, and Task 5 cites that pin by NAME only, before and after. The
+  cause was mine and is worth naming because it is the class this arc keeps
+  finding: the fix script contained a `:113 → :121` substitution that matched
+  nothing, and the report described it as though it had matched. A
+  substitution that replaces zero occurrences is indistinguishable from a
+  successful one unless you check the count — and I checked the count for the
+  cite I cared about (`94`, verified zero remaining) but not for the one I had
+  assumed. The commit message cannot be amended; this entry is the correction,
+  and the claim does not travel to the PR body.
