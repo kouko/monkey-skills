@@ -126,6 +126,44 @@ def _sentence_with(block: str, needle: str) -> str:
 
 # --- addition 1: the BI-<n> referent kind ----------------------------------
 
+# Vocabulary the id convention (handoff-brief-format.md §Brief item
+# identifiers) owns. Pointing at that section is required; restating what it
+# says is the regression — so these phrases must NOT appear in the definition.
+# Negative assertions misfire when a banned phrase has a legitimate second
+# sense, so each is chosen for a sense only a rules-copy carries, and the
+# two-word forms are deliberate:
+#   "monotonic"          — names the numbering invariant; the word has no other
+#                          use in a plan schema.
+#   "next unused"        — how a new item's number is picked; only a copy of
+#                          the assignment rule needs to say it.
+#   "never reused" /     — the two immutability clauses. Banned as phrases, not
+#   "never renumbered"     as bare `reused` / `renumber`, because a plan's own
+#                          TASKS are legitimately renumbered and one referent is
+#                          legitimately reused by two tasks (both probed by
+#                          test_a_non_copying_neighbour_sentence_still_passes).
+#   "slugified" /        — the mechanism words of the authored-not-derived
+#   "never derived" /      clause; nothing else here derives anything.
+#   "authored-not-derived"
+#   "number is retired" /— the retirement clause, anchored on `number` because
+#   "numbers are retired"  the shipped POINTER legitimately says the rules for
+#                          ids "formed, assigned, retired" live elsewhere, and
+#                          a bare `retired` would flag that pointer itself.
+# Residual gap, stated rather than hidden: a restatement that paraphrases every
+# one of these away would still pass. The pin raises the cost of copying and
+# catches the realistic copy-paste, it does not decide prose intent.
+_ID_RULE_VOCABULARY = (
+    "monotonic",
+    "next unused",
+    "never reused",
+    "never renumbered",
+    "slugified",
+    "never derived",
+    "authored-not-derived",
+    "number is retired",
+    "numbers are retired",
+)
+
+
 def _assert_bi_referent_kind(definition: str) -> None:
     low = definition.lower()
     assert "bi-" in low, (
@@ -144,6 +182,15 @@ def _assert_bi_referent_kind(definition: str) -> None:
     assert "brief item identifiers" in low, (
         "the pointer must name the owning section, `§Brief item identifiers`"
     )
+    normalized = _norm(definition).lower()
+    for phrase in _ID_RULE_VOCABULARY:
+        assert phrase not in normalized, (
+            f"SSOT discipline: found {phrase!r} — vocabulary the id convention "
+            "owns — inside the `Brief item covered` definition. The pointer at "
+            "handoff-brief-format.md §Brief item identifiers must REPLACE the "
+            "rules, not sit next to a copy of them; a copy drifts from the "
+            "schema that owns it while this pin stays green"
+        )
     bi_sentence = _sentence_with(definition, "BI-")
     for negation in ("is not an accepted", "is never an accepted",
                      "is not a valid referent", "is not accepted"):
@@ -227,6 +274,63 @@ def test_bi_referent_none_value_and_tiebreak_are_declared():
     _assert_bi_referent_kind(definition)
     _assert_none_value(definition)
     _assert_tiebreak(definition)
+
+
+def _mutated(definition: str, paragraph: str) -> str:
+    """The shipped definition with `paragraph` added next to it — the shape of
+    the regression this pin exists to catch: the pointer sentence kept verbatim
+    AND the pointed-at rules copied in beside it."""
+    return definition + "\n\n" + paragraph
+
+
+# The reviewer's mutation, verbatim in shape: the id-formation rules restated
+# in `plan-format.md` while the pointer sentence stays untouched.
+_ID_RULES_COPIED_IN = (
+    "**How a `BI-<n>` id is formed, assigned and retired.** The brief's author "
+    "types the identifier; it is never derived by slugifying the item's "
+    "heading. A new item takes the next unused number, monotonic across the "
+    "brief. Items already present are never renumbered, and when an item is "
+    "deleted its number is retired and never reused."
+)
+
+
+def test_copying_the_id_rules_beside_the_pointer_is_rejected():
+    """A future author who keeps the pointer AND restates the id rules must
+    trip the pin. Runs the PRODUCTION assertion (`_assert_bi_referent_kind`)
+    against the mutant, not a stand-in, so the pin's real wording is what is
+    being measured."""
+    mutant = _mutated(_definition(_text()), _ID_RULES_COPIED_IN)
+    try:
+        _assert_bi_referent_kind(mutant)
+    except AssertionError:
+        return
+    raise AssertionError(
+        "the definition may point at handoff-brief-format.md §Brief item "
+        "identifiers but must not restate its rules; a full copy of the "
+        "formation/assignment/retirement rules pasted beside the pointer was "
+        "accepted"
+    )
+
+
+# A sentence that legitimately uses the *subjects* of the banned phrases
+# without restating any rule — the false-positive probe for the negative
+# assertion above. Each clause is one a future author could reasonably write
+# in this file: plan tasks (not brief items) do get renumbered, one referent
+# can be reused across tasks, and a retired id is a thing this file's
+# tie-break prose may legitimately mention.
+_LEGITIMATE_NEIGHBOUR = (
+    "Renumbering a plan's tasks never changes a cited `BI-<n>` referent. Two "
+    "tasks may reuse the same referent only when neither is the primary. A "
+    "citation naming an id the brief has retired must fail loudly rather than "
+    "resolve to the nearest surviving item."
+)
+
+
+def test_a_non_copying_neighbour_sentence_still_passes():
+    """The negative assertion must not fire on prose that merely talks about
+    renumbering, reuse or retirement without restating the convention — a
+    banned-phrase pin whose phrases are too broad blocks correct edits."""
+    _assert_bi_referent_kind(_mutated(_definition(_text()), _LEGITIMATE_NEIGHBOUR))
 
 
 def test_still_one_traceability_field():
