@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-12-adjudication-view-japanese.md
 Goal: A language-profile layer over the adjudication view's single-language machinery — `--lang` on both scripts defaulting to zh-Hant, a Japanese profile with JIS-derived modality and warning-tier negation, per-profile render attributes, and a firing condition that names its supported languages instead of claiming "not English".
-Stage: sdd:wave-5
+Stage: review:round-1
 Endpoint named: yes → continuous (user signed off the brief with "Go"; recorded per continuous-mode entry rule)
 Total tasks: 9
 Critical-path depth: 5 (≤5)

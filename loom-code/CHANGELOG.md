@@ -28,11 +28,41 @@ Versioning: [Semantic Versioning](https://semver.org/).
   were dropped: `ず` collides with `必ず`, one of the commonest words in
   Japanese technical prose, which caused a silent false-negative on
   fully inverted text; `ぬ`/`まい` are archaic in technical prose and
-  did not pay for their collision risk). A known, carried-not-fixed gap:
-  `しない`(must not) is a literal substring of `しない方がよい`(should
-  not), so a should-not rendition can silently satisfy a must-not
-  source — recorded for close-out, not fixed here (both forms are
-  brief-mandated JIS entries).
+  did not pay for their collision risk).
+- **Japanese modality forms are verb-independent suffixes**, not the
+  サ変-stem forms JIS spells out. Japanese modality attaches to whatever
+  verb precedes it, so a table listing 「してはならない」 rejects the
+  correct rendition 「書き換えてはならない」 — a *grammatical* rendition
+  warned. Each entry now stores the suffix alone (`てはならない`,
+  `なければならない`, `ことが望ましい`, …); forms carrying no サ変 stem
+  (`望ましくない`, `差し支えない`) are unchanged. Side effect: bare
+  `しない` leaves the must-not set, which retires the substring gap
+  where a should-not rendition (`しない方がよい`) could silently satisfy
+  a must-not source.
+- **Renditions are NFC-normalized before matching.** Matching was exact
+  codepoint against NFC-composed literals, so an NFD input silently
+  stopped matching every form containing a dakuten (「なければならない」,
+  「ことが望ましい」) while dakuten-free forms kept working — the
+  signature that makes this class invisible to fixtures
+  (CHK-SEC-005 / 徳丸 2018 Ch.6).
+- **Verdict mode joins the profile layer.** Its column labels were
+  hardcoded Traditional Chinese, so `--lang ja --html` emitted a
+  Japanese-tagged page with Chinese headers; the markdown path
+  validated `--lang` and then dropped it, accepting a flag that did
+  nothing. Labels now come from the profile (ja: 要約 / アンカー) and
+  `lang` is threaded through both paths.
+- **The protocol states how to invoke the pipeline.** It described the
+  stages but named no script and no flag, so an executor at a live
+  Japanese gate would invent `adjudication_lint.py units.json` — which
+  defaults to `zh-Hant` and checks Japanese text against `不未無非沒勿`
+  at hard-fail tier, reproducing the exact stuck gate this release
+  exists to fix. A new §Invocation contract names the scripts, makes
+  `--lang` mandatory for lint and render, and states the consequence of
+  omitting it. §Lint-failure rule now also defines what to do with
+  WARNING lines (not a failure: do not regenerate, do not hand-edit, do
+  not block) and names their only channel to the reader — the executor
+  relaying the lint's stdout, since no schema field or template carries
+  them.
 - **Firing conditions now name the supported set** (`zh-Hant`, `ja`)
   instead of claiming "not English"; any other non-English conversation
   language is N/A-loud. The four wiring pointers
