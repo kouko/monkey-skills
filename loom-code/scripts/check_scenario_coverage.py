@@ -33,6 +33,21 @@ join key is additionally named on stderr with its task, so a mistyped key is
 distinguishable from a genuinely uncited scenario; it is a warning, not an
 error, because a prose referent is legal on this path.
 
+Brief mode is the second input path, selected by `--brief`:
+
+    check_scenario_coverage.py --brief <brief-path> <plan-path>
+
+It takes no change-folder — a brief-only plan has none — and answers a
+different question: does every task's `Brief item covered` value resolve
+against a `BI-<n>` identifier the brief declares? An unresolvable value is
+an ERROR (exit 1) naming the task and quoting the value, because there the
+grammar is unambiguous: the brief HAS identifiers, so a value naming none of
+them is a defect rather than a legal prose referent. The legal
+no-requirement value `none — <reason>` passes through. A brief declaring no
+identifiers at all is a legacy brief: the quote referent stays legal, no
+resolution is attempted, and the run says so on stdout rather than exiting 0
+in silence. The two modes are selected, never combined.
+
 Stdlib only.
 """
 
@@ -96,6 +111,21 @@ _HEADING = re.compile(r"^#{1,6}\s+(.+)$", re.MULTILINE)
 # that stops `BI-1x` matching. Identifier-first is what keeps a prose
 # mention ("see BI-2 above") from reading as a second declaration.
 _BRIEF_ITEM_DECL = re.compile(r"^\s*(?:[-*+]\s+)?(BI-\d+)\b(?P<text>.*)$")
+
+# A `BI-<n>` citation inside a `Brief item covered` value. Same form as
+# `_BRIEF_ITEM_DECL`'s identifier, but matched ANYWHERE in the value rather
+# than identifier-first: a value legally carries the id plus the item's text
+# (`BI-1 — items carry an identifier`), backticks (`` `BI-2` ``), or two ids
+# for a task delivering two items. Position-anchoring is a declaration-side
+# rule — it keeps a prose mention from reading as a second declaration —
+# and has no counterpart here, where a mention IS the citation.
+_BI_CITATION = re.compile(r"\bBI-\d+\b")
+
+# The no-requirement value `none — <reason>` (plan-format.md). Recognised
+# here only well enough to keep it OUT of the unresolvable bucket; whether
+# the reason is present and non-empty is validated separately, and that
+# validation tightens this seam rather than replacing it.
+_NONE_VALUE = re.compile(r"^[\"'`]?\s*none\b", re.IGNORECASE)
 
 # CommonMark fence grammar: a ``` or ~~~ line indented up to 3 spaces.
 # Same state machine as `adjudication_split._iter_h2_matches` (a fence
@@ -265,6 +295,89 @@ def collect_brief_item_ids(brief_text: str) -> dict[str, int]:
     return declared
 
 
+def resolve_plan_brief_citations(
+    plan_text: str, declared: dict[str, int]
+) -> list[str]:
+    """One error message per `Brief item covered` value that resolves
+    against none of the brief's `declared` identifiers.
+
+    Called only when the brief declares at least one identifier. There the
+    grammar is unambiguous — the brief HAS ids, so a value that names none
+    of them is a defect, not a legal prose referent — which is why this
+    path errors while `collect_plan_join_keys` only reports. That asymmetry
+    is deliberate: on the change-folder path a prose quote is a legal
+    referent kind and cannot be told apart from a typo, so erroring there
+    would punish the legal form.
+
+    Two shapes are not errors. A value citing only declared ids resolves,
+    obviously; and `none — <reason>`, the legal no-requirement value, is
+    passed through untouched — a task delivering no brief outcome must not
+    be forced into a false citation. This function decides only that the
+    no-requirement shape is not *unresolvable*; the reason's mandatoriness
+    is checked elsewhere, so that check tightens this seam rather than
+    rewriting the resolution.
+    """
+    errors: list[str] = []
+    for line_match in _BRIEF_ITEM_LINE.finditer(plan_text):
+        value = line_match.group(1).strip()
+        if _NONE_VALUE.match(value):
+            continue
+        where = (_enclosing_heading(plan_text, line_match.start())
+                 or "(no enclosing heading)")
+        cited = _BI_CITATION.findall(value)
+        unknown = [item_id for item_id in cited if item_id not in declared]
+        if cited and not unknown:
+            continue
+        if not cited:
+            errors.append(
+                f"Error: 'Brief item covered' under '{where}' cites no BI-<n> "
+                f"identifier, but the brief declares them — so this value "
+                f"resolves to nothing. Value: {value}")
+        else:
+            errors.append(
+                f"Error: 'Brief item covered' under '{where}' cites "
+                f"{', '.join(unknown)}, which the brief does not declare. "
+                f"Value: {value}")
+    return errors
+
+
+def check_brief_coverage(brief_path: Path, plan_path: Path) -> int:
+    """Brief mode: resolve every task's `Brief item covered` value against
+    the identifiers the brief declares. Returns the process exit code.
+
+    A brief declaring zero identifiers is a legal legacy brief, written
+    before the convention existed: the quote referent stays legal and no
+    resolution is attempted. That outcome is ANNOUNCED rather than passed
+    silently, because a silent exit 0 is indistinguishable from a checked
+    one — a brief that merely forgot to declare identifiers would otherwise
+    read as fully resolved.
+    """
+    if not brief_path.is_file():
+        print(f"Error: brief file not found at {brief_path}.", file=sys.stderr)
+        return 1
+    brief_text = brief_path.read_text(encoding="utf-8")
+    declared = collect_brief_item_ids(brief_text)
+    if not declared:
+        print(f"Legacy mode: {brief_path} declares no BI-<n> identifiers, so no "
+              f"citation in {plan_path} was resolved — this run checked nothing. "
+              f"Declare identifiers in the brief to enable the check.")
+        return 0
+
+    if not plan_path.is_file():
+        print(f"Error: plan file not found at {plan_path}.", file=sys.stderr)
+        return 1
+    plan_text = plan_path.read_text(encoding="utf-8")
+
+    errors = resolve_plan_brief_citations(plan_text, declared)
+    for message in errors:
+        print(message, file=sys.stderr)
+    if errors:
+        return 1
+    print(f"Every 'Brief item covered' value in {plan_path} resolves against the "
+          f"{len(declared)} identifier(s) declared in {brief_path}.")
+    return 0
+
+
 def check_coverage(
     change_folder: Path, plan_path: Path
 ) -> tuple[bool, list[str], str]:
@@ -299,12 +412,32 @@ def main(argv: list[str] | None = None) -> int:
                     "set against a writing-plans plan's join keys; exit 1 "
                     "naming every dropped scenario."
     )
-    parser.add_argument("change_folder", help="path to the loom-spec change-folder")
+    parser.add_argument("change_folder", nargs="?",
+                        help="path to the loom-spec change-folder "
+                             "(omit in brief mode)")
     parser.add_argument("plan_path", help="path to the writing-plans plan file")
+    parser.add_argument("--brief", help="path to the source brainstorming brief; "
+                                        "selects brief mode, where each task's "
+                                        "'Brief item covered' value is resolved "
+                                        "against the brief's declared BI-<n> ids")
     args = parser.parse_args(argv)
 
-    change_folder = Path(args.change_folder)
     plan_path = Path(args.plan_path)
+
+    # The two modes read different inputs and answer different questions, so
+    # they are selected, never combined: passing both would silently run one
+    # of the two checks the caller asked for.
+    if args.brief is not None:
+        if args.change_folder is not None:
+            parser.error("--brief selects brief mode, which takes no "
+                         "<change-folder>; run the two checks as two "
+                         "invocations")
+        return check_brief_coverage(Path(args.brief), plan_path)
+    if args.change_folder is None:
+        parser.error("a <change-folder> is required unless --brief selects "
+                     "brief mode")
+
+    change_folder = Path(args.change_folder)
 
     ok, dropped, note = check_coverage(change_folder, plan_path)
     if note:

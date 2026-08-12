@@ -9,10 +9,13 @@ Exercised as a CLI subprocess (the actual interface: two positional args,
 exit 0 / exit 1) rather than importing internals, since the contract this
 script must honor is the process boundary.
 
-The brief-item collector is the one exception, tested by direct import.
-It has no process boundary yet — nothing on the CLI path calls it until
-the brief-mode check is wired to the gate — so a subprocess test could
-only assert the collector's absence from output it does not yet reach.
+Brief mode (`--brief <brief> <plan>`, no change-folder) is exercised the
+same way, as a subprocess.
+
+The brief-item collector is the one exception, tested by direct import:
+its per-identifier results (which ids, at which line numbers) are not
+visible at the process boundary, which reports only the resolution
+outcome.
 
 Stdlib only (subprocess + pathlib), plus a direct import of the module
 under test for the collector tests.
