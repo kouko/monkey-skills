@@ -101,19 +101,31 @@ The structured intermediate between split and render. Fields:
 
 ## Lint-failure rule
 
-The zero-token lint (unit count parity, anchor echo, negation
-presence, modality-mapping warning) runs after translation. On
-failure: **regenerate once, no revision loop.** If the regenerated
-rendition fails lint a second time, surface the failure to the user
-rather than looping — do not keep retrying silently.
+Unit count parity holds by construction at split time — the mechanical
+split emits exactly one unit per source unit, including the preamble
+unit when non-blank content precedes the first H2 (see the unit-1:1
+rule above). The zero-token lint then checks each unit's rendition
+(anchor echo, negation presence, modality-mapping warning) after
+translation. On failure: **regenerate once, no revision loop.** If the
+regenerated rendition fails lint a second time, surface the failure to
+the user rather than looping — do not keep retrying silently.
 
 ## Delivery adapters
 
-- **Claude Code**: side-panel render of the scratchpad HTML view.
-- **Codex**: no side-panel surface exists — print the rendered path
-  and an `open <path>` hint instead. This is an **environmental-absence
-  fallback**, not a delivery gap: the view is still produced and still
-  reachable, only the presentation channel differs by host.
+Delivery differs by object, not just by host:
+
+- **Document view** (plan / brief full text): rendered to scratchpad
+  HTML.
+  - **Claude Code**: side-panel render of that HTML.
+  - **Codex**: no side-panel surface exists — print the rendered path
+    and an `open <path>` hint instead. This is an
+    **environmental-absence fallback**, not a delivery gap: the view
+    is still produced and still reachable, only the presentation
+    channel differs by host.
+- **Verdict digest** (review findings): an inline markdown table in
+  chat by DEFAULT. The HTML rendition (same scratchpad/side-panel path
+  as the document view) is used only via `--html`, when findings are
+  numerous or on request — not the default for this object.
 
 ## Machine-precise boundary
 

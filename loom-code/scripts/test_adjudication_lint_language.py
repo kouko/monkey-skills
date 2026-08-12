@@ -155,6 +155,42 @@ class TestModalityMapping(unittest.TestCase):
         unit = _unit(source_text="ship this feature", rendition="出貨這個功能")
         self.assertEqual(check_modality_mapping(unit), [])
 
+    def test_modal_token_inside_backtick_span_excluded_from_scan(self):
+        # Fix 3(a) — parity with _count_en_negations: a modal token
+        # inside a backticked span (code/flag reference) is not a
+        # modality claim.
+        unit = _unit(source_text="run `you must confirm` first", rendition="先執行")
+        self.assertEqual(check_modality_mapping(unit), [])
+
+    def test_modality_polarity_inversion_only_negated_form_warns_distinctly(self):
+        # Fix 3(b): source says "should" (affirmative obligation) but
+        # the rendition only ever has 不應 (negated) -- never a
+        # standalone 應. This is a distinct warning from "missing".
+        unit = _unit(source_text="you should complete this task", rendition="你不應完成這個任務")
+        warnings = check_modality_mapping(unit)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("應", warnings[0])
+        self.assertIn("appears only negated", warnings[0])
+
+    def test_modality_polarity_standalone_and_negated_form_is_quiet(self):
+        # Fix 3(b): a rendition containing BOTH 應 standalone and 不應
+        # is fine -- the standalone occurrence proves the polarity is
+        # not universally inverted.
+        unit = _unit(
+            source_text="you should complete this task",
+            rendition="你不應該偷懶但應完成這個任務",
+        )
+        self.assertEqual(check_modality_mapping(unit), [])
+
+    def test_modality_hyphen_compound_excluded_from_scan(self):
+        # Fix 3(c), live dogfood finding: "should-fix" (a severity
+        # label carried verbatim, no separate 應 elsewhere in the
+        # rendition) is not a modality claim -- must not fire a
+        # warning. Real repro: this exact label fired 5 spurious
+        # warnings on first real use.
+        unit = _unit(source_text="severity: should-fix", rendition="嚴重度：should-fix")
+        self.assertEqual(check_modality_mapping(unit), [])
+
 
 class TestCleanBilingualFixtureFullyQuiet(unittest.TestCase):
     def test_clean_fixture_has_no_violations_and_no_warnings(self):

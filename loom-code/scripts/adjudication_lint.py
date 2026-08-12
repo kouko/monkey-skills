@@ -15,7 +15,11 @@ Hard checks:
 Warning-only check (does not affect exit code):
     - modality mapping per the protocol's fixed table (must→必須 /
       should→應 / may→可 / must not→不得 / should not→不應) — a
-      missing expected ZH form emits a `WARNING ...` line on stdout.
+      missing expected ZH form, or one present only in negated form
+      (polarity inversion), emits a `WARNING ...` line on stdout. A
+      modal token inside a backticked span, or immediately followed by
+      `-` (a hyphen-compound like "should-fix"), is not a modality
+      claim and is excluded from the scan.
     - negation count shortfall: a unit with ≥2 EN negation tokens
       whose rendition preserves some but not all of them (whole-unit
       `any()` presence alone cannot see a partial drop) emits a
@@ -146,17 +150,45 @@ _MODALITY_PATTERN = re.compile(
     re.IGNORECASE,
 )
 _MODALITY_EXPECTED = {term: zh for term, zh in _MODALITY_MAP}
+_ZH_NEGATION_PREFIX = "不未非"
+
+
+def _all_occurrences_negated(expected, rendition):
+    """True if `expected` occurs in `rendition` at least once, and
+    EVERY occurrence is immediately preceded by a ZH negation marker
+    (不/未/非) — the polarity-inversion signal (round-1 finding u3(b)):
+    source says e.g. "should" (affirmative), but the rendition only
+    ever has the negated form (不應), never a standalone 應. A
+    rendition with both a negated and a standalone occurrence is fine
+    (some occurrence is not preceded by a negation marker)."""
+    positions = [m.start() for m in re.finditer(re.escape(expected), rendition)]
+    if not positions:
+        return False
+    return all(
+        pos > 0 and rendition[pos - 1] in _ZH_NEGATION_PREFIX for pos in positions
+    )
 
 
 def check_modality_mapping(unit):
     """WARNING-only: for each distinct modal verb in `source_text`,
     flag (does not fail lint) when its fixed ZH mapping is absent from
-    `rendition`. Returned lines are prefixed `WARNING ` — see
-    `main()`'s exit-code filter."""
+    `rendition`, or present ONLY in negated form (polarity inversion —
+    see `_all_occurrences_negated`). Returned lines are prefixed
+    `WARNING ` — see `main()`'s exit-code filter.
+
+    Two scan exclusions (round-1 finding u3, live dogfood finding):
+    a modal token inside a backticked span is stripped before the scan
+    (parity with `_count_en_negations`), and a modal token immediately
+    followed by `-` (a hyphen-compound like "should-fix" — a severity
+    label, not a modality claim) is skipped."""
+    source_text = _BACKTICK_SPAN_PATTERN.sub("", unit["source_text"])
     rendition = unit["rendition"]
     warnings = []
     seen = set()
-    for match in _MODALITY_PATTERN.finditer(unit["source_text"]):
+    for match in _MODALITY_PATTERN.finditer(source_text):
+        end = match.end()
+        if end < len(source_text) and source_text[end] == "-":
+            continue
         token = match.group(0).lower()
         if token in seen:
             continue
@@ -165,6 +197,10 @@ def check_modality_mapping(unit):
         if expected not in rendition:
             warnings.append(
                 f"WARNING {unit['id']}: expected 「{expected}」 for '{token}'"
+            )
+        elif _all_occurrences_negated(expected, rendition):
+            warnings.append(
+                f"WARNING {unit['id']}: expected 「{expected}」 for '{token}' appears only negated"
             )
     return warnings
 
