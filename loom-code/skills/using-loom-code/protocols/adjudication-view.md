@@ -71,30 +71,36 @@ caveats below before treating this table as a standard.
 
 | our source modal | accepted Japanese forms |
 |---|---|
-| must | しなければならない |
-| must not | してはならない / しない |
-| should | することが望ましい / するのがよい / することを推奨する |
-| should not | 望ましくない / しない方がよい |
-| may | してもよい / してよい / 差し支えない |
+| must | なければならない |
+| must not | てはならない |
+| should | ことが望ましい / のがよい / ことを推奨する |
+| should not | 望ましくない / ない方がよい |
+| may | てもよい / てよい / 差し支えない |
 
-`must` deliberately carries only 「しなければならない」, narrower than
+Every entry above is a **verb-independent suffix**, not a whole
+predicate. Japanese modality attaches to whichever verb precedes it, so
+`must`'s entry 「なければならない」 matches 「書き換えなければならない」 and
+「実行しなければならない」 alike. Reading an entry as a standalone phrase,
+or re-adding the サ変 stem 「し」/「する」 in front of it, narrows the
+check back to サ変 renditions only.
+
+`must` deliberately carries only 「なければならない」, narrower than
 JIS Table 3, which also lists bare 「する」 and 「とする」. Those two were
 dropped: a bare verb ending cannot distinguish obligation from
 prohibition — measured, a rendition of "you must execute this" as
 「実行しないこととする」 (a PROHIBITION, meaning fully inverted) matched,
 because 「とする」 is a substring of that prohibitive construction.
-Only 「しなければならない」 lexically encodes obligation on its own, so it
+Only 「なければならない」 lexically encodes obligation on its own, so it
 is the sole form kept for `must`.
 
-A related collision is recorded but **not** narrowed the same way:
-「しない」 (`must not`) is a literal substring of 「しない方がよい」
-(`should not`), so a should-not rendition can silently satisfy a
-must-not source. This is carried as a known debt, not fixed — both
-forms are brief-mandated JIS entries, so removing one lacks the
-"adds no obligation signal" justification that licensed the `must`
-narrowing above, and the failure is an obligation-*strength* blur
-between two negative-polarity forms, not a direction flip (see the
-plan's Decision Log, "T2 debt, both arms agree — carried NOT fixed").
+Bare 「しない」 was **dropped** from `must not` rather than shortened —
+its verb-independent form would be 「ない」, which collides with every
+い-adjective and with 「ならない」 itself. Dropping it retired a debt this
+protocol used to record: 「しない」 was a literal substring of should-not's
+「しない方がよい」, so a should-not rendition could silently satisfy a
+must-not source. `must not` now matches only 「てはならない」. A narrower
+residual collision is recorded but not fixed — see the inline comment at
+the `ja` profile's `modality_map` in `adjudication_profiles.py`.
 
 **Two JIS caveats — read before treating this table as a standard:**
 

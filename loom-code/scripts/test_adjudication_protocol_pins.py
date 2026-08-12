@@ -11,6 +11,8 @@ depend on.
 import re
 from pathlib import Path
 
+from adjudication_profiles import get_profile
+
 PROTOCOL_PATH = (
     Path(__file__).resolve().parent.parent
     / "skills"
@@ -32,6 +34,20 @@ def _section(text: str, heading: str) -> str:
     row left both document-wide assertions green.)"""
     assert f"## {heading}" in text, f"section missing: ## {heading}"
     return text.split(f"## {heading}", 1)[1].split("\n## ", 1)[0]
+
+
+def _table_forms(table: str) -> dict:
+    """Parse a two-column markdown modality table into
+    `{source modal: [accepted form, ...]}`, splitting a cell's
+    alternatives on ` / `. Header and separator rows are dropped by
+    requiring the left cell to be a modal we ship."""
+    modals = {"must", "must not", "should", "should not", "may"}
+    parsed = {}
+    for line in table.splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) == 2 and cells[0] in modals:
+            parsed[cells[0]] = [f.strip() for f in cells[1].split(" / ")]
+    return parsed
 
 
 def _firing_conditions_section(text: str) -> str:
@@ -246,3 +262,46 @@ def test_schema_and_purpose_are_not_chinese_only():
     assert (
         "Chinese or Japanese" in why
     ), "the purpose section still claims a Chinese-only adjudicator"
+
+
+def test_ja_modality_table_transcribes_the_shipped_profile():
+    """The protocol states its modality forms are transcribed from
+    `adjudication_profiles.py`'s `modality_map` -- so the tables must
+    not drift from what actually ships. Without this pin the drift is
+    invisible: the whole-branch fix that made the ja forms
+    verb-independent suffixes (「してはならない」 -> 「てはならない」) and
+    dropped bare 「しない」 from must-not left the protocol table still
+    listing the retired サ変 forms, and every existing pin stayed
+    green. Assert every shipped form of every profile appears in the
+    mapping section, and that the retired 「しない」 debt is no longer
+    described as carried."""
+    text = PROTOCOL_PATH.read_text(encoding="utf-8")
+    mapping = _section(text, "Fixed modality mapping")
+
+    for tag, subheading in (("zh-Hant", "### zh-Hant"), ("ja", "### ja")):
+        table = mapping.split(subheading, 1)[1].split("\n### ", 1)[0]
+        # Exact row equality, not `form in table`: every shipped ja form
+        # is a proper SUFFIX of the サ変 form it replaced, so a
+        # substring check passes against the stale table it is meant
+        # to catch.
+        rows = _table_forms(table)
+        for term, forms in get_profile(tag).modality_map:
+            assert term in rows, f"{tag}: no table row for '{term}'"
+            assert rows[term] == list(forms), (
+                f"{tag} '{term}': table lists {rows[term]} but "
+                f"adjudication_profiles.py ships {list(forms)} -- the "
+                "protocol's transcription has drifted from the shipped profile"
+            )
+
+    # The forms are suffixes, not whole predicates -- a reader who
+    # copies them as-is must know they attach to a preceding verb.
+    assert (
+        "verb-independent suffix" in mapping
+    ), "the protocol does not say the ja forms are verb-independent suffixes"
+
+    # The T2 debt was retired by dropping bare 「しない」; the protocol
+    # must not still describe it as a carried debt.
+    assert (
+        "carried as a known debt" not in mapping
+    ), "the protocol still carries the 「しない」 debt that dropping the form retired"
+    assert "retire" in mapping, "the protocol does not record the debt's retirement"
