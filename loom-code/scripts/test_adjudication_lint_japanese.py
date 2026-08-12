@@ -203,6 +203,67 @@ class TestJapaneseModalityFormsAreVerbIndependent(unittest.TestCase):
         )
 
 
+class TestJapaneseModalityPolarityInversion(unittest.TestCase):
+    """Whole-branch review finding F5: making the ja forms
+    verb-independent (F1) dropped the leading 「し」 that had been
+    INCIDENTALLY guarding against an intervening negation morpheme.
+    「なくてはならない」 ends in 「てはならない」 and 「ないことが望ましい」
+    ends in 「ことが望ましい」, so both fully-inverted renditions became
+    silent. ja's `negation_prefix` (now a tuple of kana strings, not a
+    character set) is the guard that makes them WARN again."""
+
+    def test_must_not_source_rendered_as_an_obligation_warns(self):
+        # 「書き換えなくてはならない」 = "must rewrite" -- the exact
+        # opposite of the must-not source.
+        unit = _unit(
+            source_text="The verdict block must not be rewritten.",
+            rendition="verdict ブロックを書き換えなくてはならない。",
+        )
+        warnings = check_modality_mapping(unit, profile=get_profile("ja"))
+        self.assertTrue(
+            any("u1" in w and "appears only negated" in w for w in warnings),
+            f"expected a polarity-inversion WARNING, got: {warnings}",
+        )
+
+    def test_should_source_rendered_as_a_negative_recommendation_warns(self):
+        # 「書き換えないことが望ましい」 = "it is desirable NOT to
+        # rewrite" -- the opposite of the affirmative should source.
+        unit = _unit(
+            source_text="you should rewrite it",
+            rendition="verdict ブロックを書き換えないことが望ましい。",
+        )
+        warnings = check_modality_mapping(unit, profile=get_profile("ja"))
+        self.assertTrue(
+            any("u1" in w and "appears only negated" in w for w in warnings),
+            f"expected a polarity-inversion WARNING, got: {warnings}",
+        )
+
+    def test_zh_hant_polarity_inversion_still_flags(self):
+        # Regression pin, negative direction: zh-Hant's prefix chars
+        # became one-character strings, so its polarity semantics must
+        # be byte-for-byte unchanged.
+        unit = _unit(source_text="you should skip this", rendition="不應跳過")
+        warnings = check_modality_mapping(unit, profile=get_profile("zh-Hant"))
+        self.assertTrue(
+            any("appears only negated" in w for w in warnings),
+            f"expected a polarity-inversion WARNING, got: {warnings}",
+        )
+
+    def test_zh_hant_affirmative_rendition_stays_quiet(self):
+        unit = _unit(source_text="you should execute this", rendition="應執行")
+        self.assertEqual(
+            check_modality_mapping(unit, profile=get_profile("zh-Hant")), []
+        )
+
+    def test_zh_hant_must_not_rendition_stays_quiet(self):
+        # 不得 IS the sanctioned must-not form; the 不 that opens it is
+        # part of the form, not an intervening negation.
+        unit = _unit(source_text="you must not skip this", rendition="不得跳過")
+        self.assertEqual(
+            check_modality_mapping(unit, profile=get_profile("zh-Hant")), []
+        )
+
+
 class TestJapaneseNegationCollisionWords(unittest.TestCase):
     def test_negation_dropped_but_masked_by_narazu_now_warns(self):
         # RED-B (Finding B, quality arm): source is a prohibition
