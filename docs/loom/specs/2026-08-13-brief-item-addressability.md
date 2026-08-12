@@ -76,10 +76,18 @@ rather than in review.*
 
 ## Smallest End State
 
+Items 1, 5 and 6 below were rewritten after the pre-ship experiment recorded
+in §Experiment; each names the finding that forced it.
+
 1. **Brief items carry hybrid identity** — an immutable short ID plus the
-   human-readable text, in the sections tasks actually cite (`## Smallest End
-   State`, `## Decision`). The ID is what resolves; the text is what a reader
-   reads. Form and prefix are an Open Question; the *hybrid* is the decision.
+   human-readable text. The ID is what resolves; the text is what a reader
+   reads. **Scope: every brief section that declares an outcome a task could
+   deliver** — not only `## Smallest End State`. The experiment measured 5 of
+   9 real tasks citing outcomes declared OUTSIDE that section (four in
+   `## What Becomes Obsolete`, one against `## Decision` as an umbrella), so
+   an ID scheme confined to Smallest End State would leave the majority of
+   tasks with nothing honest to cite. Form and prefix stay an Open Question;
+   the *hybrid* and the *scope* are decided.
 2. **`Brief item covered` accepts the ID as a third referent form.** It must
    ride INSIDE the existing field — `test_traceability_generalization.py:62-70`
    asserts `plan-format.md` contains no second traceability field name, by
@@ -87,12 +95,30 @@ rather than in review.*
    change have no IDs).
 3. **The coverage checker gains a brief mode** — every task cites a referent
    that resolves against the brief's declared IDs, and every declared ID is
-   covered by at least one task. This mirrors what the change-folder path
-   already gets, on the path every arc actually uses.
+   covered. This mirrors what the change-folder path already gets, on the path
+   every arc actually uses.
 4. **The fail-open closes.** A `Brief item covered` value matching no known
    referent grammar is an ERROR naming the malformed value, never a silent
    zero-coverage contribution. This fix applies to the existing change-folder
    path too — the defect is in shared code.
+5. **A legal no-requirement value: `none — <reason>`, reason mandatory.**
+   Some tasks deliver no brief outcome at all: the experiment's T9 was version
+   bump + CHANGELOG + mirror sync, and all three independent probes called it
+   unmappable without being offered that option. Without a legal escape the
+   checker forces a false citation, which is worse than no citation because it
+   looks satisfied. The mandatory reason is what stops it becoming a silent
+   opt-out — an empty or generic reason is a checker error like any other.
+6. **Coverage is directional both ways.** A task may cover several items and
+   an item may need several tasks: the experiment found SES-1 ("`--lang` on
+   **both** scripts") delivered half by one task and half by another, with
+   neither alone satisfying it. The checker must therefore treat an item as
+   covered by the UNION of citing tasks, and must not assume one citation
+   discharges an item.
+7. **A written tie-break rule for the primary referent.** All three probes
+   independently flagged the same task as tied between two items, for the same
+   reason (its description centres one item, its RED test the other) — a
+   convergent, rule-able seam rather than noise. The rule is stated in
+   `plan-format.md` so authors do not re-litigate it per plan.
 
 ## Current State Evidence
 
@@ -218,11 +244,57 @@ defects in. The mitigation is that both forms live in one field with one
 grammar list and one error path; the risk is that the quote form becomes a
 silent downgrade an author can always fall back to.
 
+## Experiment — run before planning, results binding
+
+Two pre-registered probes ran against a real shipped brief/plan pair
+(`docs/loom/specs/2026-08-12-adjudication-view-japanese.md` and its 9-task
+plan), chosen because ground truth exists: that plan's `Brief item covered`
+values were authored by a human at the time, so accuracy is checkable and not
+only self-consistency.
+
+**Probe 1 — can independent readers derive the same partition?** Criterion
+registered in advance: differing item COUNTS = hard fail. Result: three
+independent agents produced **6, 6, 7** — a hard fail as registered, and all
+three located the SAME seam (whether tuple-valued modality is its own
+deliverable), with two cutting it one way and one the other. Two also found
+further defensible cuts yielding 8 or 9.
+
+**The criterion was then judged mis-specified, and this is recorded rather
+than quietly repaired.** The workflow never asks two authors to derive the
+same partition: the brief author partitions ONCE, and downstream agents cite
+existing IDs. Probe 1 measured partition-derivation; the design requires
+partition-matching. Changing a criterion after seeing a failure is exactly
+what invalidates pre-registration, so probe 1's failure stands on the record
+and probe 2 was registered afresh before running.
+
+**Probe 2 — given a FIXED partition, is task→ID assignment determinate?**
+Criteria registered in advance: 9/9 unanimous PRIMARY = pass; 7-8/9 = marginal,
+proceed ONLY if disagreements are convergent and rule-able; ≤6/9 = fail.
+Result: **8/9 unanimous**, with the single disagreement flagged as TIED by all
+three probes for an identical reason — convergent and rule-able, so the
+marginal-pass condition held as written.
+
+Findings that changed the design (each confirmed by ≥2 independent sources):
+scope (5 of 9 tasks cite outcomes outside `## Smallest End State`);
+unmappable-by-design tasks (all three probes independently called the release
+task unmappable); bidirectional coverage (one item split across two tasks).
+These became Smallest End State items 1, 5, 6 and 7.
+
+**Method limitation, disclosed by the probes themselves:** all three read the
+plan whole-file, so its existing `Brief item covered` values entered their
+context. Each said so unprompted. The contamination is bounded by their
+outputs diverging from those values on exactly the tasks where ground truth
+differs (they called the release task unmappable and forced the four pointer
+tasks onto an item the author had not used), which is evidence the leaked
+field did not drive the answers. A future run of this shape should extract
+task blocks with `sed` rather than reading the file whole.
+
 ## Open Questions
 
-1. **The ID scheme itself** — prefix, whether it is hierarchical (the measured
-   study used `REQ-XXX.Y.Z`), and whether `## Decision` items get IDs or only
-   `## Smallest End State`. Resolve at plan time.
+1. **The ID scheme's form** — prefix, and whether it is hierarchical (the
+   measured citation study used `REQ-XXX.Y.Z`). Resolve at plan time. The
+   scope question that sat here is RESOLVED by the experiment (Smallest End
+   State item 1).
 2. **How the checker distinguishes a legacy brief from an ID-bearing one.**
    A brief with zero declared IDs must not fail every task's citation; a brief
    WITH IDs should probably require them. The transition rule is a plan-time
@@ -230,7 +302,11 @@ silent downgrade an author can always fall back to.
 3. **Whether the ID is authored or derived.** A derived ID (slugified heading)
    desyncs on rename — the documented hybrid hole. An authored ID is one more
    thing to get right. Resolve at plan time.
-4. The adjacent OPEN backlog entry
+4. **What the tie-break rule actually says.** The experiment proves the seam
+   is convergent; it does not say which side wins. Two candidates: the item
+   the RED test asserts, or the item the bulk of `Files touched` serves.
+   Resolve at plan time and write it into `plan-format.md`.
+5. The adjacent OPEN backlog entry
    `2026-07-06-anti-copy-acceptance-greps-pass-paraphrase-copies` names
    `writing-plans/SKILL.md` in its start condition; this arc edits
    `plan-format.md` and `check_scenario_coverage.py`. If plan work requires a
