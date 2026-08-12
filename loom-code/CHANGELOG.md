@@ -5,6 +5,53 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.78.0] — 2026-08-12 — Adjudication view: language-profile layer + Japanese support
+
+### Changed
+
+- **Language-profile layer replaces the three hardcoded zh-Hant
+  constants.** `adjudication_profiles.py` (new) holds one
+  `LanguageProfile` per language tag (negation markers/pattern, negation
+  tier, modality map, page `lang` + font stack), resolved via
+  `get_profile(lang)`. `adjudication_lint.py` and
+  `adjudication_render.py` both gain `--lang`, defaulting to `zh-Hant`;
+  the default path stays byte-identical to 0.77.0's shipped behavior.
+- **New `ja` profile**, modality forms `derived from JIS Z 8301:2019
+  Clause 7` — never conformance, since JIS itself marks the English
+  correspondence 参考 not 規定. `must` is narrowed to
+  「しなければならない」 alone (NOT JIS's broader
+  する/とする list — those forms carry no lexical obligation signal and
+  a measured case showed `とする` matching inside a prohibitive
+  construction, inverting the meaning silently). Japanese negation runs
+  at WARNING tier, never hard-fail, and its kana pattern is
+  `ない|ません` (narrowed from the plan's original wider set — `ぬ`/`ず`/`まい`
+  were dropped: `ず` collides with `必ず`, one of the commonest words in
+  Japanese technical prose, which caused a silent false-negative on
+  fully inverted text; `ぬ`/`まい` are archaic in technical prose and
+  did not pay for their collision risk). A known, carried-not-fixed gap:
+  `しない`(must not) is a literal substring of `しない方がよい`(should
+  not), so a should-not rendition can silently satisfy a must-not
+  source — recorded for close-out, not fixed here (both forms are
+  brief-mandated JIS entries).
+- **Firing conditions now name the supported set** (`zh-Hant`, `ja`)
+  instead of claiming "not English"; any other non-English conversation
+  language is N/A-loud. The four wiring pointers
+  (`requesting-code-review`, `requesting-docs-review`, `brainstorming`,
+  `writing-plans`) now DEFER to the protocol's own §Firing conditions
+  instead of restating the condition, so a future third language needs
+  no wiring edit.
+- **Correction to the 0.77.0 entry below**: it describes the document
+  view as "EN/ZH side-by-side" HTML. The renderer has never produced a
+  side-by-side layout — it emits a single-column document with the
+  original text in a collapsible block per unit. The 0.77.0 entry is
+  left as-is (historical record); this line is the correction.
+- **Close-out caveat**: the Japanese profile ships tested but
+  **un-exercised on real Japanese prose** — its tests are authored
+  fixtures, and no Japanese-language session has yet driven a real gate
+  through it. The green suite below is not field validation; the first
+  Japanese session that hits a gate is the dogfood target for the next
+  arc.
+
 ## [0.77.0] — 2026-08-12 — Adjudication view: conversation-language views of artifacts under adjudication
 
 ### Changed
