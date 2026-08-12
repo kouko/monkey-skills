@@ -112,6 +112,22 @@ Channel rule SSOT: `loom-pipeline/hooks/family-relay.md §(b) Visual defaults`.
 
 When-to-draw judgment: see [visual-companion.md](visual-companion.md).
 
+## Brief item identifiers
+
+Every outcome-declaring item in a brief carries an identifier, so that a downstream plan can cite that exact item instead of re-quoting its wording. The identifier and the item's human-readable text travel together: the identifier is the half that stays stable, the text is the half that stays readable.
+
+- **Form.** An identifier is written `BI-<n>` — the literal prefix `BI`, a hyphen, then a decimal number. `BI-1`, `BI-2`, `BI-17` are identifiers; `BI1`, `bi-1` and `B-1` are not.
+- **Authored, never derived.** The brief's author types the identifier. It is never slugified, hashed, or otherwise generated from the item's heading or from the item's text. Authored-not-derived is what stops the identifier desyncing from its item when the item's text is later reworded.
+- **Monotonic, never renumbered, never reused.** A new item takes the next unused number — the highest number this brief has ever used, plus one — regardless of where in the document the new item sits. Items already present keep the numbers they already have; an item inserted above `BI-3` does not become `BI-3`. When an item is deleted, its number is retired: no later item may carry it. Monotonic-never-reused is what keeps the id immutable when an item is inserted, since no insertion can shift a number that was never position-derived in the first place.
+- **Scope: any outcome-declaring section.** Identifiers go on the items of every section that declares an outcome a task could deliver — not only `## Smallest End State`. If a reader could point at a line and say *"a task could ship that"*, that line takes an identifier.
+
+Write each declaration as the identifier first, then the human-readable item text, on the same line:
+
+```markdown
+- BI-1 — Brief items carry an identifier that survives rewording.
+- BI-2 — The coverage checker resolves a cited identifier to a declared item.
+```
+
 ## Template
 
 Copy-paste this skeleton:
