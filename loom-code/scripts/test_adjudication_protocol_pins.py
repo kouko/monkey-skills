@@ -8,6 +8,7 @@ future edit cannot silently drop a contract clause the other tasks
 depend on.
 """
 
+import re
 from pathlib import Path
 
 PROTOCOL_PATH = (
@@ -19,16 +20,23 @@ PROTOCOL_PATH = (
 )
 
 
+def _section(text: str, heading: str) -> str:
+    """Slice out one `## <heading>` section body. Every assertion that
+    pins a claim belonging to a specific section MUST run against its
+    slice, not the whole document -- tokens like "supported",
+    "zh-Hant", "`ja`", "hard-fail" and "warning" each occur in several
+    sections, so a document-wide `in text` check keeps passing even
+    after the section that owns the claim has been gutted. (Revision
+    round 1 found this on the firing condition; revision round 2 found
+    the same class on the negation-tier rows -- deleting either tier
+    row left both document-wide assertions green.)"""
+    assert f"## {heading}" in text, f"section missing: ## {heading}"
+    return text.split(f"## {heading}", 1)[1].split("\n## ", 1)[0]
+
+
 def _firing_conditions_section(text: str) -> str:
-    """Slice out just the ## Firing conditions section body. Assertions
-    that pin the firing-condition promise MUST run against this slice,
-    not the whole document -- tokens like "supported", "zh-Hant", and
-    "`ja`" also occur in other sections (the modality tables, the
-    negation-tier table), so a document-wide `in text` check keeps
-    passing even when the Firing-conditions section itself is reverted
-    to the old, retired "not English" wording. (Revision round 1: both
-    reviewers found exactly this via mutation probe.)"""
-    return text.split("## Firing conditions", 1)[1].split("\n## ", 1)[0]
+    """Slice out just the ## Firing conditions section body."""
+    return _section(text, "Firing conditions")
 
 
 def test_protocol_carries_modality_table_and_unit_rule():
@@ -87,9 +95,20 @@ def test_protocol_names_supported_languages_and_tiers():
     # and produces nothing, rather than silently dropping the bullet.
     assert "N/A-loud" in firing, "N/A-loud promise missing"
 
-    # Per-language negation tier, both directions.
-    assert "hard-fail" in text, "zh-Hant negation tier missing"
-    assert "warning" in text, "ja negation tier missing"
+    # Per-language negation tier, both directions -- asserted as TABLE
+    # ROWS inside the section that owns them. A document-wide
+    # `"hard-fail" in text` / `"warning" in text` check cannot fail:
+    # "hard-fail" also occurs in the Lint-failure discussion and
+    # "warning" occurs in the Lint-failure rule, so deleting either
+    # tier row (or both) left the old assertions green. Pin the row
+    # shape instead, sliced -- see _section.
+    tier = _section(text, "Negation tier by language")
+    assert re.search(
+        r"\|\s*zh-Hant\s*\|\s*hard-fail\s*\|", tier
+    ), "zh-Hant hard-fail tier row missing from the negation-tier table"
+    assert re.search(
+        r"\|\s*ja\s*\|\s*warning\s*\|", tier
+    ), "ja warning tier row missing from the negation-tier table"
 
     # A ja modality table -- at least one JIS-derived form present.
     assert "しなければならない" in text, "ja modality table missing"
@@ -102,3 +121,128 @@ def test_protocol_names_supported_languages_and_tiers():
     assert (
         "この規格で規定する事項ではない" in text
     ), "JIS verbatim 参考 quote missing"
+
+
+def test_protocol_states_the_invocation_contract():
+    """The protocol must tell an executor HOW to invoke the pipeline,
+    not just describe it abstractly. Round-2 finding: `--lang` appeared
+    nowhere under `loom-code/skills/`, and the protocol never named the
+    three scripts -- so an executor at a live Japanese gate invents the
+    invocation, omits `--lang`, and both lint and render silently fall
+    back to the `zh-Hant` profile, checking Japanese text against the
+    Chinese closed negation set at hard-fail tier. That is verbatim the
+    stuck-gate bug this arc exists to remove, reintroduced at the only
+    site that executes. Pin the contract: the three script names, the
+    split step's language-neutrality, the MUST on `--lang` for lint and
+    render, and the consequence of omitting it."""
+    text = PROTOCOL_PATH.read_text(encoding="utf-8")
+    inv = _section(text, "Invocation contract")
+
+    for script in (
+        "adjudication_split.py",
+        "adjudication_lint.py",
+        "adjudication_render.py",
+    ):
+        assert script in inv, f"invocation contract does not name {script}"
+
+    # Split is language-neutral -- it takes no --lang.
+    assert "takes no `--lang`" in inv, "split's language-neutrality not stated"
+
+    # Lint and render MUST be passed --lang, with the two profile tags.
+    assert "MUST" in inv, "the --lang duty is not stated as a MUST"
+    assert "zh-Hant" in inv and "`ja`" in inv, "profile tags missing from --lang duty"
+
+    # The consequence of omitting it, stated plainly.
+    assert "Omitting `--lang`" in inv, "omission consequence not stated"
+    assert (
+        "default `--lang` to `zh-Hant`" in inv
+    ), "the zh-Hant default of the flag is not stated"
+    assert (
+        "hard-fail" in inv
+    ), "omission consequence does not name the hard-fail tier it trips"
+
+
+def test_warning_lines_have_an_executor_action_and_a_named_channel():
+    """WARNING-tier lint output is the ja negation tier's designed
+    steady state (plus the modality check on every profile), so the
+    protocol must define what the executor DOES with it -- round 2
+    found three live readings (regenerate / hand-edit / pass through)
+    and the document picked none. It must also name the real channel:
+    the checks only `print()` to the orchestrator's stdout, the
+    units-JSON schema has no field for a warning, and neither render
+    template emits one -- so 'informs the adjudicator' is true only
+    because the executor relays it."""
+    text = PROTOCOL_PATH.read_text(encoding="utf-8")
+    rule = _section(text, "Lint-failure rule")
+
+    # Not a failure: no regeneration, no hand-edit, no gate block.
+    assert "WARNING lines are not a failure" in rule, "WARNING action not stated"
+    assert "do not regenerate" in rule, "the no-regenerate action is missing"
+    assert "do not hand-edit" in rule, "the no-hand-edit action is missing"
+    assert "do not block the gate" in rule, "the no-block action is missing"
+
+    # The relay channel, and that it is a duty rather than automatic.
+    assert "stdout" in rule, "the stdout channel is not named"
+    assert (
+        "the executor's duty" in rule
+    ), "relaying is not stated as the executor's duty"
+    assert (
+        "the rendered page does not carry them" in rule
+    ), "the renderer's non-carriage of warnings is not stated"
+
+    # And the negation-tier table's 'informs the adjudicator' claim must
+    # point at that same relay rather than assert it happens by itself.
+    tier = _section(text, "Negation tier by language")
+    assert (
+        "the executor relays" in tier
+    ), "ja tier row still claims the warning reaches the adjudicator by itself"
+
+
+def test_modality_rule_reads_as_a_set_of_accepted_forms():
+    """Round-2 finding: the rule said modals map to a fixed target-
+    language *term* while the ja table gives each modal a SET of 2-3
+    accepted forms (matching the shipped `modality_map` tuples). Both
+    readings were live and only the set reading is true for ja. Pin the
+    single rule that covers both profiles -- zh-Hant's one-form entries
+    and ja's multi-form entries as instances of it -- while keeping the
+    'never a paraphrase / never a synonym swap' force and the pointer
+    to adjudication_profiles.py as the transcription source."""
+    text = PROTOCOL_PATH.read_text(encoding="utf-8")
+    rule = _section(text, "Fixed modality mapping")
+
+    assert (
+        "set of accepted target-language forms" in rule
+    ), "the modality rule does not read as a set of accepted forms"
+    assert (
+        "one form per modal" in rule and "two or three" in rule
+    ), "the rule does not reconcile zh-Hant's single forms with ja's multiple"
+    assert "never a paraphrase" in rule, "the 'never a paraphrase' force was lost"
+    assert "never a synonym swap" in rule, "the 'never a synonym swap' force was lost"
+    assert (
+        "adjudication_profiles.py" in rule
+    ), "the transcription-source pointer was lost"
+
+
+def test_schema_and_purpose_are_not_chinese_only():
+    """The view now serves two profiles, so no field description may
+    describe the target language as Chinese. `rendition` said "the
+    Chinese rendering of the unit"; the field is the rendering in
+    whichever profile fired. Pinned as an absence over the whole
+    section so any of the five field descriptions re-acquiring a
+    zh-only claim fails this test, plus a positive pin on the
+    replacement wording."""
+    text = PROTOCOL_PATH.read_text(encoding="utf-8")
+    schema = _section(text, "Units-JSON schema")
+
+    assert (
+        "target-language rendering" in schema
+    ), "`rendition` does not describe itself as the target-language rendering"
+    assert (
+        "Chinese" not in schema
+    ), "a units-JSON field description still names Chinese as the target language"
+
+    # Same class, in the section that states who the view is for.
+    why = _section(text, "Why this exists")
+    assert (
+        "Chinese or Japanese" in why
+    ), "the purpose section still claims a Chinese-only adjudicator"
