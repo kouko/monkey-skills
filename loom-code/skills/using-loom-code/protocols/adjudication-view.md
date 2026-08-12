@@ -39,9 +39,13 @@ count by construction — this holds for both objects.
 
 ## Fixed modality mapping
 
-Modal verbs map to a single fixed Chinese term — never a paraphrase,
-never a synonym swap, so the adjudicator can recognize the strength of
-an obligation on sight:
+Modal verbs map to a fixed target-language term per language profile —
+never a paraphrase, never a synonym swap, so the adjudicator can
+recognize the strength of an obligation on sight. One table per
+supported language; forms are transcribed from the shipped profile in
+`adjudication_profiles.py` (its `modality_map`), not re-derived here.
+
+### zh-Hant
 
 | English | Chinese |
 |---|---|
@@ -53,6 +57,73 @@ an obligation on sight:
 
 Verbatim pairs: must→必須 / should→應 / may→可 / must not→不得 /
 should not→不應.
+
+### ja
+
+Derived from JIS Z 8301:2019 Clause 7 (Tables 3-5) — read the two
+caveats below before treating this table as a standard.
+
+| our source modal | accepted Japanese forms |
+|---|---|
+| must | しなければならない |
+| must not | してはならない / しない |
+| should | することが望ましい / するのがよい / することを推奨する |
+| should not | 望ましくない / しない方がよい |
+| may | してもよい / してよい / 差し支えない |
+
+`must` deliberately carries only 「しなければならない」, narrower than
+JIS Table 3, which also lists bare 「する」 and 「とする」. Those two were
+dropped: a bare verb ending cannot distinguish obligation from
+prohibition — measured, a rendition of "you must execute this" as
+「実行しないこととする」 (a PROHIBITION, meaning fully inverted) matched,
+because 「とする」 is a substring of that prohibitive construction.
+Only 「しなければならない」 lexically encodes obligation on its own, so it
+is the sole form kept for `must`.
+
+A related collision is recorded but **not** narrowed the same way:
+「しない」 (`must not`) is a literal substring of 「しない方がよい」
+(`should not`), so a should-not rendition can silently satisfy a
+must-not source. This is carried as a known debt, not fixed — both
+forms are brief-mandated JIS entries, so removing one lacks the
+"adds no obligation signal" justification that licensed the `must`
+narrowing above, and the failure is an obligation-*strength* blur
+between two negative-polarity forms, not a direction flip (see the
+plan's Decision Log, "T2 debt, both arms agree — carried NOT fixed").
+
+**Two JIS caveats — read before treating this table as a standard:**
+
+1. **参考, not 規定.** JIS Z 8301:2019 labels the English↔Japanese
+   correspondence in Clause 7 as 参考 (reference material), stating
+   verbatim: 「この規格で規定する事項ではない」 ("not a matter this
+   standard prescribes"). The Japanese forms are normative for JIS
+   drafting; their pairing to shall/should/may is reference material
+   aligned to ISO/IEC Directives Part 2, not itself JIS-normative. So
+   this protocol says the table is **derived from** JIS Z 8301:2019 —
+   never **per** or **conformant to** it.
+2. **Mapped by force, not by spelling.** Our source "must" is used
+   colloquially for obligation — semantically ISO's `shall`. JIS's own
+   `must` row (Table 7) means an EXTERNAL constraint (statute,
+   physical law), not internal obligation — not what our artifacts
+   mean. Mapping our "must" onto JIS's literal `must` row would be a
+   register error; instead our modals map by FORCE (meaning) onto
+   JIS's 要求事項/推奨/許容 tables.
+
+## Negation tier by language
+
+The negation-preservation check runs at a **per-language tier**, not
+one tier for every language:
+
+| Language | Tier | Why |
+|---|---|---|
+| zh-Hant | hard-fail | Chinese negation is a closed character set (`不未無非沒勿`) with no homograph collision — a missing marker reliably means a dropped negation. |
+| ja | warning | Japanese negation is inflectional (a kana suffix), not a closed character set, and collides with ordinary vocabulary: 少ない / 危ない / つまらない all end in ない without negating anything. (An earlier pattern also matched 「ず」, which collided with common words like 必ず ("without fail") — that form was already narrowed away for this reason; see the inline comment at the `ja` profile's `negation_pattern` assignment in `adjudication_profiles.py`.) A missing-marker signal is real but unreliable, so it informs the adjudicator — it never blocks. |
+
+The tier is **evidence-derived**, not a placeholder — do not raise `ja`
+to hard-fail without new measured evidence (see the inline comment at
+the `ja` profile's `negation_tier` assignment in
+`adjudication_profiles.py`, and the plan's `## Notes` section
+"Japanese negation stays WARNING-tier by design", for the measurements
+that set it).
 
 ## Verbatim carry-through
 
@@ -92,9 +163,13 @@ The structured intermediate between split and render. Fields:
 
 ## Firing conditions
 
-- The view **fires only when live conversation language is not English**
-  — an English-speaking session gets no view; the artifact itself
-  already serves that reader.
+- The view fires when the live conversation language is a **supported
+  profile**: `zh-Hant` or `ja` (the two entries in
+  `adjudication_profiles.py`). An English-speaking session gets no
+  view — the artifact itself already serves that reader.
+- A non-English language with **no profile** — anything other than
+  the two above — is **N/A-loud**: say so, and produce nothing,
+  rather than firing the view into machinery that cannot serve it.
 - Likewise, verdict mode fires only when findings ≥ 1 — a clean PASS
   with zero findings is already localized by the family rollup card,
   so no verdict digest is produced for it.
