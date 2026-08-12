@@ -3,8 +3,9 @@
 HTML view per the adjudication-view protocol
 (loom-code/skills/using-loom-code/protocols/adjudication-view.md).
 
-Doc mode (this task): one section per unit — the ZH `rendition` is the
-primary text; the EN `source_text` is collapsible beside it in a
+Doc mode: one section per unit — the target-language `rendition` (the
+language `--lang` selects, default zh-Hant) is the primary text; the EN
+`source_text` is collapsible beside it in a
 `<details><summary>原文</summary>...</details>` block. All content
 interpolations (heading / source_text / rendition) are html.escape'd —
 source and rendition are untrusted text, never raw-HTML-injected.
@@ -14,12 +15,14 @@ no external URLs of any kind) and restrained: one CSS accent-color
 variable (`--accent`), no gradients, no card borders/shadows, no emoji
 in chrome, print-safe (A4 @page rule).
 
-Verdict mode (Task 6) will add a table-mode renderer — `MODES` below
-is the extension point: add a `"verdict": render_verdict` entry, no
-change to `main()`.
+Verdict mode: one 4-column table row per finding, as inline markdown by
+default or as an HTML page under `--html`.
 
 CLI:
     python3 adjudication_render.py doc <units-json-file> [-o out.html]
+                                      [--lang <tag>]
+    python3 adjudication_render.py verdict <units-json-file> [--html]
+                                      [-o out.html] [--lang <tag>]
 
 Emits HTML to stdout by default, or to the path given by `-o`.
 """
@@ -254,7 +257,10 @@ def render_verdict_html(units, title="Adjudication Verdict", lang="zh-Hant"):
     return _render_page(title, table_html, lang)
 
 
-MODES = {"doc": render_doc, "verdict": render_verdict}
+# The accepted `mode` values, nothing more: `main()` branches on the
+# mode explicitly (verdict has two renditions, doc has one), so this
+# stopped being a dispatch table and only its keys were ever live.
+MODES = ("doc", "verdict")
 
 
 def main(argv=None):

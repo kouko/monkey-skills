@@ -9,14 +9,21 @@ Hard checks:
     - every anchor in a unit's `anchors` list appears verbatim in
       that unit's `rendition`
     - every EN negation token in `source_text` (not / no / never /
-      cannot / must not / without) requires ≥1 ZH negation marker
-      (不 / 未 / 無 / 非 / 沒 / 勿 / 不得) in `rendition`
+      cannot / must not / without) requires ≥1 negation marker in
+      `rendition`, per the resolved profile's negation model — a
+      character set for zh-Hant (不 / 未 / 無 / 非 / 沒 / 勿), a regex
+      for a suffix-negating language like ja. Whether a shortfall is
+      hard or warning-only is the profile's `negation_tier`, so this
+      check is a HARD one only for profiles that say so (zh-Hant does;
+      ja does not)
 
 Warning-only check (does not affect exit code):
-    - modality mapping per the protocol's fixed table (must→必須 /
-      should→應 / may→可 / must not→不得 / should not→不應) — a
-      missing expected ZH form, or one present only in negated form
-      (polarity inversion), emits a `WARNING ...` line on stdout. A
+    - modality mapping per the resolved profile's `modality_map` (the
+      protocol carries one fixed table per supported language; zh-Hant
+      is must→必須 / should→應 / may→可 / must not→不得 / should not→不應)
+      — none of a modal's accepted target-language forms present, or one
+      present only in negated form (polarity inversion), emits a
+      `WARNING ...` line on stdout. A
       modal token inside a backticked span, or immediately followed by
       `-` (a hyphen-compound like "should-fix"), is not a modality
       claim and is excluded from the scan.
@@ -33,7 +40,7 @@ how `main()` excludes them from the exit-code decision without
 `run_checks()` needing to know which checks are hard vs. advisory.
 
 CLI:
-    python3 adjudication_lint.py <units-json-file>
+    python3 adjudication_lint.py <units-json-file> [--lang <tag>]
 
 Exit 0 and no output on a clean run; exit 1 with one violation line
 per finding (stdout) otherwise. WARNING-prefixed lines print but

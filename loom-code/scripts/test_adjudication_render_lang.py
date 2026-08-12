@@ -117,3 +117,17 @@ def test_cli_verdict_markdown_threads_lang(tmp_path, capsys):
     units_path.write_text(json.dumps(VERDICT_UNITS, ensure_ascii=False), encoding="utf-8")
     assert main(["verdict", str(units_path), "--lang", "ja"]) == 0
     assert "| # | severity | 要約 | アンカー |" in capsys.readouterr().out
+
+
+def test_both_mode_names_stay_accepted(tmp_path, capsys):
+    """Characterization guard for collapsing `MODES` from a dead dispatch
+    dict to a tuple of names (F4): both mode words must still be accepted
+    by the parser and reach their renderer. Green before and after the
+    collapse by design — it guards the refactor, it does not drive it."""
+    units_path = tmp_path / "units.json"
+    units_path.write_text(json.dumps(DOC_UNITS, ensure_ascii=False), encoding="utf-8")
+    assert main(["doc", str(units_path)]) == 0
+    assert "<html lang=" in capsys.readouterr().out
+    units_path.write_text(json.dumps(VERDICT_UNITS, ensure_ascii=False), encoding="utf-8")
+    assert main(["verdict", str(units_path)]) == 0
+    assert capsys.readouterr().out.startswith("| # | severity |")

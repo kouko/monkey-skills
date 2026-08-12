@@ -189,6 +189,14 @@ _PROFILES = {
         # adding an exception lexicon (out of scope per the brief).
         # Same い-adjective false-positive caveat as the tier comment
         # above still applies to the remaining ない/ません forms.
+        # Construction-internal collision (whole-branch review F4,
+        # reviewer-probed and re-verified here): 「ない」 also matches
+        # INSIDE 「ならない」 — i.e. inside ja's own `must` form
+        # 「〜なければならない」 — so an inverted rendition
+        # 「ブロックを書き換えなければならない。」 for a must-not source
+        # counts one marker and this check stays silent. The modality
+        # check is the second line of defence there and does fire
+        # (measured: `WARNING u1: expected 「てはならない」 for 'must not'`).
         negation_pattern=r"ません|ない",
         # Task 3: same shape as zh-Hant's stack, JP face swapped in as
         # the CJK-specific member of the list.
