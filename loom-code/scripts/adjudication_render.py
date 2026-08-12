@@ -81,6 +81,20 @@ details pre {
   @page { size: A4; margin: 2cm; }
   details { break-inside: avoid; }
 }
+table.verdict {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+table.verdict th, table.verdict td {
+  border: 1px solid var(--muted);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+table.verdict th {
+  color: var(--accent);
+}
 """.strip()
 
 DOC_PAGE_TEMPLATE = """<!doctype html>
@@ -126,8 +140,79 @@ def render_doc(units, title="Adjudication View"):
     )
 
 
-# Mode dispatch — Task 6 adds "verdict": render_verdict here.
-MODES = {"doc": render_doc}
+VERDICT_TABLE_HEADER = "| # | severity | 摘述 | 錨點 |\n|---|---|---|---|"
+
+VERDICT_HTML_TABLE_TEMPLATE = """<table class="verdict">
+<thead><tr><th>#</th><th>severity</th><th>摘述</th><th>錨點</th></tr></thead>
+<tbody>
+{rows}
+</tbody>
+</table>"""
+
+VERDICT_ROW_TEMPLATE = "<tr><td>{id}</td><td>{severity}</td><td>{rendition}</td><td>{where}</td></tr>"
+
+
+def _field_value(source_text, field_name):
+    """Extract a field's value verbatim from a unit's source_text field
+    block (one `key: value` line per field, as produced by
+    adjudication_split.py's split_verdict()). Returns "" if the field
+    is absent. This is the ONLY way severity/where reach the table —
+    they are copied from the parsed field, never recomputed from the
+    unit's other data (heading, anchors)."""
+    prefix = f"{field_name}:"
+    for line in source_text.splitlines():
+        if line.startswith(prefix):
+            return line[len(prefix) :].strip()
+    return ""
+
+
+def _md_cell(text):
+    """Collapse a rendition to one markdown-table line: newlines become
+    spaces (a table row is one line), and a literal `|` is escaped so
+    it can't be misread as an extra column boundary."""
+    return text.replace("\r\n", " ").replace("\n", " ").replace("\r", " ").replace(
+        "|", "\\|"
+    )
+
+
+def render_verdict(units):
+    """Render `units` (verdict-mode units-JSON, see adjudication_split.py
+    split_verdict()) into an inline markdown table: one row per finding,
+    in source order (never re-sorted by severity or anything else).
+    severity and 錨點 (where) are extracted verbatim from each unit's
+    source_text field block — copied, never recomputed — per the
+    adjudication-view protocol's severity carry-through rule."""
+    lines = [VERDICT_TABLE_HEADER]
+    for unit in units:
+        severity = _field_value(unit["source_text"], "severity")
+        where = _field_value(unit["source_text"], "where")
+        rendition = _md_cell(unit["rendition"])
+        lines.append(f"| {unit['id']} | {severity} | {rendition} | {where} |")
+    return "\n".join(lines) + "\n"
+
+
+def render_verdict_html(units, title="Adjudication Verdict"):
+    """Render `units` into a self-contained HTML page holding the same
+    4-column table as `render_verdict`, reusing the doc template's
+    styling (STYLE, DOC_PAGE_TEMPLATE). All cell content is
+    html.escape'd — rendition/severity/where may carry attacker-
+    reachable text from a translated finding."""
+    rows = "\n".join(
+        VERDICT_ROW_TEMPLATE.format(
+            id=html.escape(unit["id"]),
+            severity=html.escape(_field_value(unit["source_text"], "severity")),
+            rendition=html.escape(unit["rendition"]),
+            where=html.escape(_field_value(unit["source_text"], "where")),
+        )
+        for unit in units
+    )
+    table_html = VERDICT_HTML_TABLE_TEMPLATE.format(rows=rows)
+    return DOC_PAGE_TEMPLATE.format(
+        title=html.escape(title), style=STYLE, units_html=table_html
+    )
+
+
+MODES = {"doc": render_doc, "verdict": render_verdict}
 
 
 def main(argv=None):
@@ -137,10 +222,18 @@ def main(argv=None):
     parser.add_argument(
         "-o", "--output", help="output HTML path (default: stdout)", default=None
     )
+    parser.add_argument(
+        "--html",
+        action="store_true",
+        help="verdict mode only: emit the HTML table rendition instead of markdown",
+    )
     args = parser.parse_args(argv)
 
     units = json.loads(Path(args.path).read_text(encoding="utf-8"))
-    rendered = MODES[args.mode](units)
+    if args.mode == "verdict" and args.html:
+        rendered = render_verdict_html(units)
+    else:
+        rendered = MODES[args.mode](units)
 
     if args.output:
         Path(args.output).write_text(rendered, encoding="utf-8")
