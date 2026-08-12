@@ -11,7 +11,6 @@ SKILL_PATH = pathlib.Path(__file__).parent.parent / "skills" / "writing-plans" /
 
 
 def test_writing_plans_pointers_present():
-    # @req: none (task-scoped wiring pin, not bound to a registered REQ-id)
     skill_text = SKILL_PATH.read_text(encoding="utf-8")
 
     assert skill_text.count("protocols/adjudication-view.md") >= 2, (

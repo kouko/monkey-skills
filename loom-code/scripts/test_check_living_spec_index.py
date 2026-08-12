@@ -699,3 +699,25 @@ def test_main_passes_on_valid_status_suffix(tmp_path, capsys):
         f"a valid status suffix must not fail the structural lane, got "
         f"rc={rc!r}"
     )
+
+
+def test_committed_tree_has_no_structural_violations():
+    # WHY: CI's bare structural step (`check-living-spec-index.py .`,
+    # loom-code-ci.yml) is the only gate over the REAL tree that fails on a
+    # dangling @req or a malformed tag, and no pytest test covered it —
+    # every other test here runs on tmp_path fixtures.
+    # test_committed_index_is_current cannot stand in for it: build_index
+    # RENDERS dangling entries into the index, so both sides of its
+    # byte-identity assertion derive from the same tree and it stays green
+    # however many violations exist. Measured: four `@req: none` tags
+    # shipped in PR #689 turned CI red while that test was green on main.
+    # This calls main() — the exact entry point CI invokes — rather than
+    # reassembling its internals, so a future change to the FAIL lane's
+    # composition (it also folds in find_malformed_status) stays covered.
+    checker = _load_checker()
+
+    assert checker.main([str(_REPO_ROOT)]) == 0, (
+        "living-spec structural check failed over the real repo tree; run "
+        "`python3 loom-code/scripts/check-living-spec-index.py .` to see "
+        "each dangling @req / malformed tag"
+    )

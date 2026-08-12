@@ -24,7 +24,6 @@ FENCE_PHRASE = (
 
 
 def test_rcr_pointers_present_and_fence_intact():
-    # @req: none (task-scoped wiring pin, not bound to a registered REQ-id)
     skill_text = SKILL_PATH.read_text(encoding="utf-8")
     relay_text = RELAY_PATH.read_text(encoding="utf-8")
 

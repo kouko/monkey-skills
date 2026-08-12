@@ -11,7 +11,6 @@ SKILL_PATH = pathlib.Path(__file__).parent.parent / "skills" / "brainstorming" /
 
 
 def test_brainstorming_pointer_present():
-    # @req: none (task-scoped wiring pin, not bound to a registered REQ-id)
     skill_text = SKILL_PATH.read_text(encoding="utf-8")
 
     assert "protocols/adjudication-view.md" in skill_text, (
