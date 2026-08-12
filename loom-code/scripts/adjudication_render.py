@@ -30,6 +30,14 @@ import json
 import sys
 from pathlib import Path
 
+from adjudication_profiles import get_profile
+
+# Sentinel replaced (via str.replace, not str.format -- CSS is full of
+# braces that str.format would otherwise try to parse) with the
+# resolved profile's `font_stack` at render time. Kept as a plain
+# marker rather than a `{font_stack}` format field for that reason.
+_FONT_STACK_PLACEHOLDER = "__FONT_STACK__"
+
 STYLE = """
 :root {
   --accent: #2b5797;
@@ -39,7 +47,7 @@ STYLE = """
 }
 * { box-sizing: border-box; }
 body {
-  font-family: -apple-system, "Segoe UI", "Noto Sans TC", sans-serif;
+  font-family: __FONT_STACK__;
   color: var(--fg);
   background: var(--bg);
   max-width: 52rem;
@@ -98,7 +106,7 @@ table.verdict th {
 """.strip()
 
 DOC_PAGE_TEMPLATE = """<!doctype html>
-<html lang="zh-Hant">
+<html lang="{lang}">
 <head>
 <meta charset="utf-8">
 <title>{title}</title>
@@ -123,9 +131,31 @@ UNIT_TEMPLATE = """<section class="unit" id="{unit_id}">
 </section>"""
 
 
-def render_doc(units, title="Adjudication View"):
+def _render_page(title, units_html, lang):
+    """Resolve `lang` to its profile ONCE and fill the shared
+    DOC_PAGE_TEMPLATE -- the single template both doc and verdict-HTML
+    modes reuse, parameterized by the page attributes (`<html lang>`,
+    font stack) instead of forking a per-language template. `page_lang`
+    / `font_stack` come from a frozen, developer-authored profile (not
+    attacker-reachable request/unit data), so they are interpolated
+    as-is -- html.escape is reserved for the untrusted `title` and
+    per-unit content, kept uniform with the rest of this module."""
+    profile = get_profile(lang)
+    style_rendered = STYLE.replace(_FONT_STACK_PLACEHOLDER, profile.font_stack)
+    return DOC_PAGE_TEMPLATE.format(
+        lang=profile.page_lang,
+        title=html.escape(title),
+        style=style_rendered,
+        units_html=units_html,
+    )
+
+
+def render_doc(units, title="Adjudication View", lang="zh-Hant"):
     """Render `units` (a list of unit dicts per the units-JSON schema)
-    into a single self-contained HTML document string."""
+    into a single self-contained HTML document string. `lang` selects
+    the language profile (Task 3) that supplies the page's `<html
+    lang>` attribute and font stack; default "zh-Hant" matches the
+    pre-Task-3 hardcoded behavior byte-for-byte."""
     units_html = "\n".join(
         UNIT_TEMPLATE.format(
             unit_id=html.escape(unit["id"]),
@@ -135,9 +165,7 @@ def render_doc(units, title="Adjudication View"):
         )
         for unit in units
     )
-    return DOC_PAGE_TEMPLATE.format(
-        title=html.escape(title), style=STYLE, units_html=units_html
-    )
+    return _render_page(title, units_html, lang)
 
 
 VERDICT_TABLE_HEADER = "| # | severity | 摘述 | 錨點 |\n|---|---|---|---|"
@@ -191,12 +219,14 @@ def render_verdict(units):
     return "\n".join(lines) + "\n"
 
 
-def render_verdict_html(units, title="Adjudication Verdict"):
+def render_verdict_html(units, title="Adjudication Verdict", lang="zh-Hant"):
     """Render `units` into a self-contained HTML page holding the same
     4-column table as `render_verdict`, reusing the doc template's
     styling (STYLE, DOC_PAGE_TEMPLATE). All cell content is
     html.escape'd — rendition/severity/where may carry attacker-
-    reachable text from a translated finding."""
+    reachable text from a translated finding. `lang` selects the
+    language profile the same way `render_doc` does (Task 3); default
+    "zh-Hant" matches the pre-Task-3 hardcoded behavior byte-for-byte."""
     rows = "\n".join(
         VERDICT_ROW_TEMPLATE.format(
             id=html.escape(unit["id"]),
@@ -207,9 +237,7 @@ def render_verdict_html(units, title="Adjudication Verdict"):
         for unit in units
     )
     table_html = VERDICT_HTML_TABLE_TEMPLATE.format(rows=rows)
-    return DOC_PAGE_TEMPLATE.format(
-        title=html.escape(title), style=STYLE, units_html=table_html
-    )
+    return _render_page(title, table_html, lang)
 
 
 MODES = {"doc": render_doc, "verdict": render_verdict}
@@ -227,13 +255,22 @@ def main(argv=None):
         action="store_true",
         help="verdict mode only: emit the HTML table rendition instead of markdown",
     )
+    parser.add_argument(
+        "--lang",
+        default="zh-Hant",
+        help="language profile tag for page attributes (default: zh-Hant)",
+    )
     args = parser.parse_args(argv)
+    get_profile(args.lang)  # resolve once up front -- fail loud on an
+    # unknown tag before doing any rendering work, for both modes.
 
     units = json.loads(Path(args.path).read_text(encoding="utf-8"))
     if args.mode == "verdict" and args.html:
-        rendered = render_verdict_html(units)
+        rendered = render_verdict_html(units, lang=args.lang)
+    elif args.mode == "verdict":
+        rendered = render_verdict(units)
     else:
-        rendered = MODES[args.mode](units)
+        rendered = render_doc(units, lang=args.lang)
 
     if args.output:
         Path(args.output).write_text(rendered, encoding="utf-8")

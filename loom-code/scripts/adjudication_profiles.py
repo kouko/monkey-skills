@@ -45,6 +45,14 @@ class LanguageProfile:
     # matches instead of scanning `negation_markers` char-by-char.
     # None for zh-Hant (its character-set model is unchanged).
     negation_pattern: Optional[str] = None
+    # Task 3: the renderer's per-profile page attributes. `page_lang`
+    # is the exact value that belongs in `<html lang="...">`.
+    # `font_stack` is the exact CSS `font-family` value (the whole
+    # comma-separated list, not just the CJK face) -- zh-Hant's is the
+    # literal string that used to be hardcoded in adjudication_render.py,
+    # copied verbatim so its output cannot shift.
+    page_lang: str = "zh-Hant"
+    font_stack: str = '-apple-system, "Segoe UI", "Noto Sans TC", sans-serif'
 
 
 _PROFILES = {
@@ -67,6 +75,8 @@ _PROFILES = {
             ("may", ("可",)),
         ),
         negation_tier="hard",
+        page_lang="zh-Hant",
+        font_stack='-apple-system, "Segoe UI", "Noto Sans TC", sans-serif',
     ),
     "ja": LanguageProfile(
         lang="ja",
@@ -142,6 +152,10 @@ _PROFILES = {
         # Same い-adjective false-positive caveat as the tier comment
         # above still applies to the remaining ない/ません forms.
         negation_pattern=r"ません|ない",
+        # Task 3: same shape as zh-Hant's stack, JP face swapped in as
+        # the CJK-specific member of the list.
+        page_lang="ja",
+        font_stack='-apple-system, "Segoe UI", "Noto Sans JP", sans-serif',
     ),
 }
 
