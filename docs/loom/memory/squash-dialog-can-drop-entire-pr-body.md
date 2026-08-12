@@ -43,6 +43,25 @@ direct commit (not a squash-of-PR shape at all) and stays exit `0`.
 Generalize this pattern to any other heading/marker-based detector
 gating on PR-sourced squash bodies.
 
+**Prevention, and how the prevention itself fails (2026-08-12, PR #689
+— sixth occurrence):** the detection above is sound and fired again as
+designed, but detection is not prevention. The prevention is to merge
+from the CLI — `gh pr merge <n> --squash --body-file <path>` passes the
+body as an argument, so no editable dialog exists to clear. On #689
+that command was *composed and handed to the human in the close-out
+report*, and the merge still went through the web dialog; the body
+vanished exactly as before. The lesson is about who executes a
+prevention, not whether one exists: **a prevention whose executor is
+the human, offered as one option beside the web link, competes with the
+link and usually loses.** Either present the CLI command as the only
+merge path in the close-out report, or ask for authorization to run
+`gh pr merge` directly — merging is outward-facing so it always needs
+the ask, but asking moves execution back to the side that will actually
+do it. Note this does not weaken the durable-carrier hierarchy: on
+#689, as on every prior occurrence, the committed store and the PR page
+both survived; what was lost each time is only `git log --grep`
+retrieval on `main`.
+
 **Contradiction check:** this is a DIFFERENT mechanism from both
 [github-squash-merge-single-commit-drops-body](github-squash-merge-single-commit-drops-body.md)
 (GitHub's *default* squash-message template drops the body for a
