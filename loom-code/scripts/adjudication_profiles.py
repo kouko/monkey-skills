@@ -38,7 +38,10 @@ from typing import Optional, Tuple
 class LanguageProfile:
     lang: str
     negation_markers: str
-    negation_prefix: str
+    # Tuple of negation-morpheme STRINGS that invert a modality form
+    # when they immediately precede it. Not a character set: Japanese
+    # needs multi-character kana prefixes (whole-branch review F5).
+    negation_prefix: Tuple[str, ...]
     modality_map: Tuple[Tuple[str, Tuple[str, ...]], ...]
     negation_tier: str  # "hard" | "warning"
     # Optional regex string; when set, the checker counts pattern
@@ -68,8 +71,10 @@ _PROFILES = {
         lang="zh-Hant",
         # Moved verbatim from adjudication_lint._ZH_NEGATION_MARKERS.
         negation_markers="不未無非沒勿",
-        # Moved verbatim from adjudication_lint._ZH_NEGATION_PREFIX.
-        negation_prefix="不未非",
+        # Moved verbatim from adjudication_lint._ZH_NEGATION_PREFIX,
+        # each character now its own single-character string (the field
+        # became a tuple for ja's sake) -- semantics unchanged.
+        negation_prefix=("不", "未", "非"),
         # Moved verbatim from adjudication_lint._MODALITY_MAP, with each
         # ZH form wrapped in a single-element tuple. Order matters:
         # two-word phrases ("must not" / "should not") precede their
@@ -95,14 +100,22 @@ _PROFILES = {
         # `negation_pattern` (below), not a character set. Kept empty
         # rather than omitted so every profile has the same shape.
         negation_markers="",
-        # Unused for the same reason: the modality polarity-inversion
-        # check (`_all_occurrences_negated`) looks for a PREFIX
-        # character immediately before a modality form, which is a
-        # zh-Hant-specific (prefix-negation) grammatical fact that
-        # does not hold for Japanese (suffix/inflectional negation).
-        # An empty set makes that check a no-op for ja rather than
-        # silently reusing zh-Hant's prefix chars.
-        negation_prefix="",
+        # The modality polarity-inversion check
+        # (`_all_occurrences_negated`) tests whether a modality form is
+        # immediately preceded by a negation morpheme. This WAS empty
+        # (a deliberate no-op) while every ja form carried a leading
+        # 「し」 that incidentally excluded an intervening negation.
+        # Making the forms verb-independent (F1) removed that guard and
+        # opened a silent polarity inversion (whole-branch review F5):
+        # 「書き換えなくてはならない」 (= must rewrite) ends in
+        # 「てはならない」, and 「書き換えないことが望ましい」 (= desirable
+        # NOT to rewrite) ends in 「ことが望ましい」, so both fully
+        # inverted renditions matched their source modal and warned
+        # nothing. 「なく」 (the 〜なくてはならない / 〜なくてもよい stem)
+        # and 「ない」 (the plain negative before a nominalizer) are the
+        # two morphemes that can sit in that slot; listing them makes
+        # this check load-bearing for ja rather than a no-op.
+        negation_prefix=("なく", "ない"),
         # JIS Z 8301:2019 Clause 7 (Tables 3-5), derived-from per the
         # brief's two caveats: the English column is 参考 not 規定, and
         # our "must"/"should" map by force (semantic obligation) to
@@ -150,11 +163,22 @@ _PROFILES = {
         # 「しない方がよい」, so a should-not rendition silently satisfied
         # a must-not source); must-not now matches only 「てはならない」.
         #
+        # The class of collision that MATTERS here is an intervening
+        # negation morpheme: because these forms are bare suffixes, an
+        # inverted rendition can end in the very form its source modal
+        # expects (「なくてはならない」 ⊃ 「てはならない」,
+        # 「ないことが望ましい」 ⊃ 「ことが望ましい」). That is a full
+        # direction flip, not a near-miss, and it is caught -- by
+        # `negation_prefix` below, which `_all_occurrences_negated`
+        # reads; see its comment for the two morphemes covered.
+        #
         # Residual collision, recorded not fixed: 「のがよい」 (should)
         # matches inside 「ものがよい」, and 「ない方がよい」 (should not)
-        # inside any 〜ない方がよい clause -- both are false-QUIET risks
-        # on a warning-tier check, one tier below the false-warning this
-        # replaces.
+        # inside any 〜ない方がよい clause. Unlike the inversion class
+        # above these do not flip direction -- they accept a rendition
+        # whose modality is merely unproven -- so they stay false-QUIET
+        # risks on a warning-tier check, one tier below the
+        # false-warning F1 replaced.
         modality_map=(
             ("must not", ("てはならない",)),
             ("should not", ("望ましくない", "ない方がよい")),

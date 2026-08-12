@@ -194,18 +194,24 @@ def _modality_pattern(modality_map):
 
 def _all_occurrences_negated(expected, rendition, negation_prefix):
     """True if `expected` occurs in `rendition` at least once, and
-    EVERY occurrence is immediately preceded by a `negation_prefix`
-    character — the polarity-inversion signal (round-1 finding u3(b)):
-    source says e.g. "should" (affirmative), but the rendition only
-    ever has the negated form (不應), never a standalone 應. A
-    rendition with both a negated and a standalone occurrence is fine
-    (some occurrence is not preceded by a negation marker)."""
+    EVERY occurrence is immediately preceded by one of the
+    `negation_prefix` STRINGS — the polarity-inversion signal (round-1
+    finding u3(b)): source says e.g. "should" (affirmative), but the
+    rendition only ever has the negated form (不應), never a standalone
+    應. A rendition with both a negated and a standalone occurrence is
+    fine (some occurrence is not preceded by a negation marker).
+
+    `negation_prefix` is a tuple of strings, not a character set
+    (whole-branch review F5): zh-Hant's prefixes are single characters,
+    but Japanese negation morphemes that can sit between the verb and a
+    modality suffix are multi-character (「なく」/「ない」), so a
+    per-character test could not express them. `str.endswith` takes the
+    tuple directly and also handles an empty tuple (never negated) and
+    a match at position 0 (empty prefix slice)."""
     positions = [m.start() for m in re.finditer(re.escape(expected), rendition)]
     if not positions:
         return False
-    return all(
-        pos > 0 and rendition[pos - 1] in negation_prefix for pos in positions
-    )
+    return all(rendition[:pos].endswith(negation_prefix) for pos in positions)
 
 
 def check_modality_mapping(unit, profile=None):
