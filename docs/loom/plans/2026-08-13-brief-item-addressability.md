@@ -10,11 +10,11 @@ Execution order: parallel-where-possible
 Plan-document-reviewer verdict: PASS (2026-08-13, round 2 + delta confirmation)
 
 Steps:
-1. 宣告識別碼慣例、同時修掉舊路徑的沉默
-2. 引用端與解析端開工
-3. 檢查器三項行為
-4. 接上閘門
-5. 出貨行政
+  1. 宣告識別碼慣例、同時修掉舊路徑的沉默
+  2. 引用端與解析端開工
+  3. 檢查器三項行為
+  4. 接上閘門
+  5. 出貨行政
 
 ## Task-flow diagram
 
