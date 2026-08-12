@@ -117,12 +117,39 @@ _PROFILES = {
         # lexically unambiguous (the construction itself encodes
         # obligation, not just a bare verb ending), so it is the only
         # form kept.
+        #
+        # VERB-INDEPENDENT SUFFIXES (whole-branch review, Finding F1):
+        # Japanese modality is a suffix on whatever verb precedes it, so
+        # every form below is stored WITHOUT the サ変 verb that used to
+        # lead it (「してはならない」 -> 「てはならない」,
+        # 「することが望ましい」 -> 「ことが望ましい」). The old forms only
+        # matched サ変 renditions (実行する): the correct rendition of
+        # "you must rewrite it" is 「書き換えなければならない」 -- never
+        # 「書き換えしなければならない」 -- and it warned. Each stored form
+        # is a proper suffix of the form it replaces, so every rendition
+        # that used to match still matches; only the added non-サ変
+        # renditions are new. Forms carrying no サ変 verb at all
+        # (「望ましくない」, 「差し支えない」) are unchanged.
+        #
+        # Bare 「しない」 (must not) is DROPPED rather than shortened:
+        # its verb-independent form is 「ない」, which collides with every
+        # い-adjective and with 「ならない」 itself -- far too coarse to
+        # list. Dropping it retires the recorded T2 debt in passing
+        # (「しない」 was a literal substring of should-not's
+        # 「しない方がよい」, so a should-not rendition silently satisfied
+        # a must-not source); must-not now matches only 「てはならない」.
+        #
+        # Residual collision, recorded not fixed: 「のがよい」 (should)
+        # matches inside 「ものがよい」, and 「ない方がよい」 (should not)
+        # inside any 〜ない方がよい clause -- both are false-QUIET risks
+        # on a warning-tier check, one tier below the false-warning this
+        # replaces.
         modality_map=(
-            ("must not", ("してはならない", "しない")),
-            ("should not", ("望ましくない", "しない方がよい")),
-            ("must", ("しなければならない",)),
-            ("should", ("することが望ましい", "するのがよい", "することを推奨する")),
-            ("may", ("してもよい", "してよい", "差し支えない")),
+            ("must not", ("てはならない",)),
+            ("should not", ("望ましくない", "ない方がよい")),
+            ("must", ("なければならない",)),
+            ("should", ("ことが望ましい", "のがよい", "ことを推奨する")),
+            ("may", ("てもよい", "てよい", "差し支えない")),
         ),
         # Warning tier by design, not omission (brief Alternatives):
         # a naive kana negation regex is a homograph of the い-adjective

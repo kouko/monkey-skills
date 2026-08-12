@@ -143,6 +143,64 @@ class TestJapaneseModalitySetMembership(unittest.TestCase):
         )
 
 
+class TestJapaneseModalityFormsAreVerbIndependent(unittest.TestCase):
+    """Whole-branch review finding F1: Japanese modality is a SUFFIX on
+    whatever verb precedes it, so a form list that bakes in the サ変 stem
+    「し」 only matches サ変 verbs (実行する). For a non-サ変 verb the
+    sanctioned rendition is 「書き換えてはならない」 -- never
+    「書き換えしてはならない」 -- so a grammatically CORRECT rendition
+    warned. Every fixture below uses 書き換える (godan, not サ変)."""
+
+    def test_must_accepts_non_sahen_verb(self):
+        unit = _unit(
+            source_text="you must rewrite it",
+            rendition="verdict ブロックを書き換えなければならない。",
+        )
+        self.assertEqual(check_modality_mapping(unit, profile=get_profile("ja")), [])
+
+    def test_must_not_accepts_non_sahen_verb(self):
+        unit = _unit(
+            source_text="The verdict block must not be rewritten.",
+            rendition="verdict ブロックを書き換えてはならない。",
+        )
+        self.assertEqual(check_modality_mapping(unit, profile=get_profile("ja")), [])
+
+    def test_should_accepts_non_sahen_verb(self):
+        unit = _unit(
+            source_text="you should rewrite it",
+            rendition="verdict ブロックを書き換えることが望ましい。",
+        )
+        self.assertEqual(check_modality_mapping(unit, profile=get_profile("ja")), [])
+
+    def test_should_not_accepts_non_sahen_verb(self):
+        unit = _unit(
+            source_text="you should not rewrite it",
+            rendition="verdict ブロックを書き換えない方がよい。",
+        )
+        self.assertEqual(check_modality_mapping(unit, profile=get_profile("ja")), [])
+
+    def test_may_accepts_non_sahen_verb(self):
+        unit = _unit(
+            source_text="you may rewrite it",
+            rendition="verdict ブロックを書き換えてもよい。",
+        )
+        self.assertEqual(check_modality_mapping(unit, profile=get_profile("ja")), [])
+
+    def test_should_not_rendition_no_longer_satisfies_a_must_not_source(self):
+        # The T2 Decision-Log debt (「しない」 ⊂ 「しない方がよい」) is
+        # retired as a side effect of dropping bare 「しない」 from the
+        # must-not set: a should-not rendition for a must-not source used
+        # to pass silently, and must now WARN.
+        unit = _unit(
+            source_text="you must not skip this", rendition="スキップしない方がよい"
+        )
+        warnings = check_modality_mapping(unit, profile=get_profile("ja"))
+        self.assertTrue(
+            any("u1" in w for w in warnings),
+            f"expected a 'must not' mapping WARNING, got: {warnings}",
+        )
+
+
 class TestJapaneseNegationCollisionWords(unittest.TestCase):
     def test_negation_dropped_but_masked_by_narazu_now_warns(self):
         # RED-B (Finding B, quality arm): source is a prohibition
