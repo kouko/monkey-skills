@@ -495,6 +495,149 @@ def test_duplicate_brief_item_declaration_warns_and_first_line_wins(capsys):
     assert f"line {later}" in err, "the warning must name the later declaration"
 
 
+# --- brief mode: resolving citations against the brief's declared ids ---
+
+
+def _run_brief(brief_path: Path, plan_path: Path) -> subprocess.CompletedProcess:
+    """Brief mode's process boundary: `--brief <brief> <plan>`, no
+    change-folder positional — a brief-only plan has none to pass."""
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), "--brief", str(brief_path), str(plan_path)],
+        capture_output=True,
+        text=True,
+        env=_ENV,
+    )
+
+
+_BRIEF_TWO_IDS = """\
+# widget rework — brief
+
+## Smallest End State
+
+- BI-1 — Brief items carry an identifier that survives rewording.
+- BI-2 — The coverage checker resolves a cited identifier to a declared item.
+"""
+
+
+def test_unresolvable_citation_errors_when_brief_declares_ids(tmp_path):
+    """A citation naming an id the brief never declared is an ERROR that
+    names the task and quotes the value verbatim.
+
+    Three properties are pinned together, each one alone passed by a wrong
+    implementation the others catch:
+
+    - **It is an error, not a warning.** Before this check existed, an
+      unknown `BI-99` contributed nothing and the run exited 0 — the
+      fail-open this arc closes. A version that prints the same sentence
+      on stderr and still exits 0 leaves the plan shippable, so the exit
+      code is asserted, not the message alone.
+    - **The offending value is quoted.** A message reading only "a citation
+      did not resolve" sends the author to read all ten tasks. `BI-99` must
+      appear so the value is findable by search.
+    - **The task is named.** Same reason, other axis: the value alone does
+      not say where it sits.
+
+    The grammar is unambiguous here — the brief declares ids, so the quote
+    referent is no longer legal — which is why this path errors while the
+    change-folder path only reports (see
+    `test_unparsed_change_folder_referent_is_named_not_dropped`).
+    """
+    brief = tmp_path / "brief.md"
+    brief.write_text(_BRIEF_TWO_IDS, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — foo\n"
+        "- Brief item covered: BI-1\n\n"
+        "## Task 2 — bar\n"
+        "- Brief item covered: BI-99 — an item no brief ever declared\n",
+        encoding="utf-8",
+    )
+    result = _run_brief(brief, plan)
+    assert result.returncode != 0, \
+        f"an unresolvable citation must fail the run, got 0\n{result.stdout}"
+    assert "BI-99" in result.stderr, \
+        "the unresolvable value must be quoted so the author can find it"
+    assert "Task 2 — bar" in result.stderr, \
+        "the offending task must be named"
+    # the resolvable citation is not collateral damage
+    assert "Task 1 — foo" not in result.stderr
+
+
+def test_legacy_brief_declaring_no_ids_announces_legacy_mode(tmp_path):
+    """A brief predating the convention puts the run in legacy mode: the
+    quote referent stays legal, no resolution is attempted — and the run
+    SAYS so.
+
+    The announcement is the point. A silent exit 0 here is indistinguishable
+    from a checked exit 0, so a brief that simply forgot to declare ids
+    would read as fully covered. Legacy must never be mistakable for
+    checked.
+    """
+    brief = tmp_path / "brief.md"
+    brief.write_text(
+        "# older brief\n\n## Smallest End State\n\nThe thing works.\n",
+        encoding="utf-8",
+    )
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — foo\n"
+        "- Brief item covered: \"the thing works end to end\"\n",
+        encoding="utf-8",
+    )
+    result = _run_brief(brief, plan)
+    assert result.returncode == 0, result.stderr
+    combined = result.stdout + result.stderr
+    assert "legacy" in combined.lower(), \
+        "legacy mode must be announced, never passed silently"
+    assert str(brief) in combined, \
+        "the announcement must name the brief that declared no ids"
+
+
+def test_resolvable_citations_exit_zero(tmp_path):
+    """The positive control for the error above: an implementation that
+    errors on every value would pass the unresolvable pin. Two tasks citing
+    two declared ids must exit 0."""
+    brief = tmp_path / "brief.md"
+    brief.write_text(_BRIEF_TWO_IDS, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — foo\n"
+        "- Brief item covered: BI-1 — Brief items carry an identifier\n\n"
+        "## Task 2 — bar\n"
+        "- Brief item covered: `BI-2`\n",
+        encoding="utf-8",
+    )
+    result = _run_brief(brief, plan)
+    assert result.returncode == 0, result.stderr
+
+
+def test_none_with_reason_is_not_treated_as_unresolvable(tmp_path):
+    """`none — <reason>` is the legal no-requirement value, so brief-mode
+    resolution passes it through rather than calling it unresolvable.
+
+    This pins only the direction the two tasks agree on: the form with a
+    reason is never an error. Whether a BARE `none` (or an empty reason) is
+    rejected is the next task's subject; that check lands on top of this
+    pass-through without changing it.
+    """
+    brief = tmp_path / "brief.md"
+    brief.write_text(_BRIEF_TWO_IDS, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — foo\n"
+        "- Brief item covered: BI-1\n\n"
+        "## Task 9 — ship\n"
+        "- Brief item covered: none — release administration only\n",
+        encoding="utf-8",
+    )
+    result = _run_brief(brief, plan)
+    assert result.returncode == 0, result.stderr
+
+
 def test_multiple_requirements_and_scenarios_all_paired_correctly(tmp_path):
     change_folder = tmp_path / "2026-07-10-my-change"
     spec = """\
