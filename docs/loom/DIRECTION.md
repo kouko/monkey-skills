@@ -21,7 +21,7 @@
 
 ## Now
 
-_(queue empty — bet at the next close-out)_
+- 2026-08-13-requirement-identity-splits-between-birthplace-and-living-spec — a requirement is born in a change-folder as a prose NAME and lives forever in the living spec as REQ-N, with nothing joining the two — one concept, two vocabularies, across the longest-lived identifier in the repo
 
 ## Next
 
