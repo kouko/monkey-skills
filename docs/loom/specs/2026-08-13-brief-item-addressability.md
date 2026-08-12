@@ -145,7 +145,7 @@ in §Experiment; each names the finding that forced it.
   change script behavior. `plan_card.py` needs no change (opaque read).
 - **Boundary**: `test_traceability_generalization.py:62-70` forbids a sibling
   traceability field — the constraint that keeps this change small.
-  `test_check_scenario_coverage.py:104` pins the prose-referent case as
+  `test_check_scenario_coverage.py:102` pins the prose-referent case as
   contributing zero keys; an identifier-shaped brief referent must not collide
   with that expectation. `check-living-spec-index.py` and
   `check_doc_citations.py` are untouched (neither reads briefs).

@@ -4,7 +4,7 @@ Source brief: docs/loom/specs/2026-08-13-brief-item-addressability.md
 Goal: Give brief items hybrid identity (an immutable `BI-<n>` plus the human-readable text) in every outcome-declaring section, let `Brief item covered` cite that id inside the existing field, extend the coverage checker with a brief mode that treats an item as covered by the union of citing tasks, and make an unresolvable citation an error instead of a silent zero.
 Stage: sdd:wave-1
 Endpoint named: no — the request named implementation ("開始依照 loom 的標準流程實作吧"), not a publish endpoint; PR and merge stay human-pumped.
-Total tasks: 9
+Total tasks: 10
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
 Plan-document-reviewer verdict: PASS (2026-08-13, round 2 + delta confirmation)
@@ -12,7 +12,7 @@ Plan-document-reviewer verdict: PASS (2026-08-13, round 2 + delta confirmation)
 Steps:
   1. 宣告識別碼慣例、同時修掉舊路徑的沉默
   2. 引用端與解析端開工
-  3. 檢查器三項行為
+  3. 檢查器行為與下游消費者
   4. 接上閘門
   5. 出貨行政
 
@@ -31,6 +31,8 @@ flowchart LR
   T6 --> T8
   T7 --> T8
   T8 --> T9[T9 ship]
+  T2 --> T10[T10 reviewer prompt learns kind c]
+  T10 --> T9
 ```
 
 ## Task 1 — declare the `BI-<n>` convention in the brief schema
@@ -81,7 +83,7 @@ flowchart LR
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: "The coverage checker gains a brief mode"
-- Status: pending
+- Status: done(ac15c95e)
 - Gloss: 檢查器學會從 brief 讀出宣告過的識別碼，舊格式 brief 不會因此報錯
 
 ## Task 4 — brief mode: resolve citations and fail closed on an unresolvable one
@@ -94,7 +96,7 @@ flowchart LR
   - loom-code/scripts/test_check_scenario_coverage.py
 - Acceptance:
   - RED: `loom-code/scripts/test_check_scenario_coverage.py::test_unresolvable_citation_errors_when_brief_declares_ids` fails — an unknown `BI-99` citation currently contributes zero keys silently and the run exits 0.
-  - GREEN: the unknown citation exits non-zero with a message naming the task and quoting `BI-99`; a legacy brief with zero declared ids still exits 0 while printing an explicit legacy-mode line; and the existing prose-referent pin `test_malformed_plan_prose_only_zero_coverage_exit_1` (`loom-code/scripts/test_check_scenario_coverage.py:94`) passes **unchanged** (same exit code, same `Empty result set` and `Single match` stderr assertions) — brief mode must not reach the change-folder path it guards.
+  - GREEN: the unknown citation exits non-zero with a message naming the task and quoting `BI-99`; a legacy brief with zero declared ids still exits 0 while printing an explicit legacy-mode line; and the existing prose-referent pin `test_malformed_plan_prose_only_zero_coverage_exit_1` (`loom-code/scripts/test_check_scenario_coverage.py:102`) passes **unchanged** (same exit code, same `Empty result set` and `Single match` stderr assertions) — brief mode must not reach the change-folder path it guards.
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: "The fail-open closes. A `Brief item covered` value matching no known referent grammar is an ERROR"
@@ -111,7 +113,7 @@ flowchart LR
   - loom-code/scripts/test_check_scenario_coverage.py
 - Acceptance:
   - RED: `loom-code/scripts/test_check_scenario_coverage.py::test_unparsed_change_folder_referent_is_named_not_dropped` fails — a plan mixing one valid join key with one malformed referent currently reports only the resulting coverage gap, never the malformed value.
-  - GREEN: the malformed value and its task appear in the output verbatim; and BOTH existing pins pass **unchanged** — `test_malformed_plan_prose_only_zero_coverage_exit_1` (`loom-code/scripts/test_check_scenario_coverage.py:94` — exit 1, `Empty result set`, `Single match`) and `test_malformed_plan_no_brief_item_field_at_all_zero_coverage_exit_1` (exit 1).
+  - GREEN: the malformed value and its task appear in the output verbatim; and BOTH existing pins pass **unchanged** — `test_malformed_plan_prose_only_zero_coverage_exit_1` (`loom-code/scripts/test_check_scenario_coverage.py:102` — exit 1, `Empty result set`, `Single match`) and `test_malformed_plan_no_brief_item_field_at_all_zero_coverage_exit_1` (exit 1).
 - Dependencies: none
 - Independent: true
 - Brief item covered: "This fix applies to the existing change-folder path too — the defect is in shared code"
@@ -128,7 +130,7 @@ flowchart LR
   - docs/loom/specs/2026-08-13-brief-item-addressability.md
 - Acceptance:
   - RED: `loom-code/scripts/test_check_scenario_coverage.py::test_item_cited_by_two_tasks_is_covered_once` fails — no per-id union coverage exists.
-  - GREEN: a fixture where two tasks each cite `BI-2` reports `BI-2` covered exactly once (not double-counted); a declared id cited by no task is reported as uncovered with its line number; and the existing prose-referent pin `test_malformed_plan_prose_only_zero_coverage_exit_1` (`loom-code/scripts/test_check_scenario_coverage.py:94`) passes unchanged.
+  - GREEN: a fixture where two tasks each cite `BI-2` reports `BI-2` covered exactly once (not double-counted); a declared id cited by no task is reported as uncovered with its line number; and the existing prose-referent pin `test_malformed_plan_prose_only_zero_coverage_exit_1` (`loom-code/scripts/test_check_scenario_coverage.py:102`) passes unchanged.
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: "Coverage is directional both ways… the checker must therefore treat an item as covered by the UNION of citing tasks"
@@ -180,11 +182,28 @@ flowchart LR
 - Acceptance:
   - RED: `scripts/test_check_version_bump.py::test_skill_content_without_version_bump_is_a_violation` fails while this branch's skill-content edits sit unbumped; and `.claude/hooks/check-codex-manifest-drift.sh` exits non-zero while `.codex-plugin/plugin.json` still carries the old version.
   - GREEN: both pass, the CHANGELOG entry exists with the honest-limit sentence, and the full suite is green.
-- Dependencies: Task 8 completes first
+- Dependencies: Tasks 8, 10 complete first
 - Independent: false
 - Brief item covered: none — release administration; this task delivers no brief outcome. Escape authorised by brief §Smallest End State item 5 ("A legal no-requirement value: `none — <reason>`, reason mandatory") and by §Experiment's unmappable-by-design finding, where all three probes independently called the equivalent release task unmappable. This task is also the plan's own worked instance of the value Task 7 makes legal.
 - Status: pending
 - Gloss: 出貨行政：版本號、變更記錄、Codex 鏡射三者對齊
+
+## Task 10 — teach the plan-document-reviewer prompt the new referent kind and the none-value
+
+- Description: Update `plan-document-reviewer-prompt.md` so its own checks accept what `plan-format.md` now declares. Check 3 enumerates "EITHER referent kind: (a)… OR (b)…" and must gain kind (c), the `BI-<n>` identifier. Check 9 says every task's `Brief item covered` "quotes / references the brief" and must state that `none — <reason>` satisfies it, with the reason mandatory — a task delivering no brief outcome is not an orphan. Point at `plan-format.md`'s definition rather than restating the rules; that file is the SSOT for referent kinds.
+- Module: loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md
+- Files touched: loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md, loom-code/scripts/test_plan_reviewer_referent_kinds.py
+- Context paths:
+  - loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md
+  - loom-code/skills/writing-plans/references/plan-format.md
+- Acceptance:
+  - RED: `loom-code/scripts/test_plan_reviewer_referent_kinds.py::test_checks_accept_the_bi_referent_and_the_none_value` fails — Check 3 names only kinds (a) and (b), and Check 9 admits no no-requirement value.
+  - GREEN: both checks name the new referent kind and the `none — <reason>` value, asserted by slicing each check's own table row rather than searching the file; and the nine other test modules pinning this prompt still pass unchanged.
+- Dependencies: Task 2 completes first
+- Independent: false
+- Brief item covered: "`Brief item covered` accepts the ID as a third referent form" + "A legal no-requirement value: `none — <reason>`, reason mandatory"
+- Status: pending
+- Gloss: 計畫審查者的檢查表學會新的引用形式，否則作者用了新值反而會被自家閘門判缺口
 
 ## Notes
 
@@ -196,7 +215,7 @@ flowchart LR
 - **`Review-weight: prose` is unavailable to this plan.** Every task ships a `.py` RED test, so no task's `Files touched` is all-`.md` — the marker's eligibility test cannot be satisfied here, and round 1 of review correctly caught three tasks claiming it. All tasks run the full triad.
 - **Obligation-sweep note for the plan-document-reviewer**: the source brief quotes external sources heavily (ISO, CVE, Anthropic, OpenSpec, EARS studies, spec-kit). Sentences carrying `must` / `should` / `required` inside `## Alternatives Considered` and the Sources lines are quotations or descriptions of other systems' obligations, not obligations this arc undertakes. `## Experiment` is NOT uniformly external — its closing method note ("A future run of this shape should extract task blocks with `sed`") is this repo's own self-directed note; it binds no deliverable in this arc because this arc runs no probe, which is why no task covers it. Round 1 verified this reading and found one exception it was right to gap — the `must not` in §Current State Evidence → Boundary about the existing prose-referent pin — now covered by Tasks 4, 5 and 6's GREEN clauses.
 - **Adjacent backlog entry: condition fired, deliberately not folded in.** `2026-07-06-anti-copy-acceptance-greps-pass-paraphrase-copies` starts on "next touch of loom-code writing-plans SKILL.md", and Task 8 edits exactly that file. It is NOT taken into this arc: its subject is acceptance-criteria authoring guidance (anti-copy criteria need a mechanical leg AND a reviewer-judgment leg), which is a different deliverable needing its own RED test, and adding it would push this plan past its depth ceiling. The entry stays OPEN with its condition recorded as fired.
-- **Only one genuine parallel pair exists, and it is T1 + T5.** Both have no dependencies and their file sets are disjoint. Every other code task (T3, T4, T6, T7) touches `check_scenario_coverage.py` and its test file, so none may be marked `Independent: true` alongside T5 — a concurrent dispatch would race the same file. T2 and T3 sit at the same dependency level with disjoint files and would otherwise qualify, but T3 shares files with the dependency-free T5, which could still be running; marking T3 independent would invite exactly that race. Under-marking is advisory (Check 15); over-marking is a real defect (Check 14), so this plan under-marks deliberately.
+- **Parallel-marking, and why it is deliberately narrow.** Both have no dependencies and their file sets are disjoint. Every other code task (T3, T4, T6, T7) touches `check_scenario_coverage.py` and its test file, so none may be marked `Independent: true` alongside T5 — a concurrent dispatch would race the same file. T2 and T3 sit at the same dependency level with disjoint files and would otherwise qualify, but T3 shares files with the dependency-free T5, which could still be running; marking T3 independent would invite exactly that race. Task 10 is also disjoint from T3/T4/T6/T7 with no dependency edge either way, so the amendment adds a second advisory under-mark; it stays unmarked for the same reason. Under-marking is advisory (Check 15); over-marking is a real defect (Check 14), so this plan under-marks deliberately.
 - **Ironic self-reference, recorded deliberately**: this plan cites its own brief by quote (referent kind (a)), because the brief that introduces `BI-` ids does not itself declare any — the convention does not exist until Task 1 lands. The first brief to carry `BI-` ids will be the next arc's.
 - No `LOOM-SIMPLIFY:` markers are planned.
 
@@ -221,3 +240,30 @@ flowchart LR
   question resolves) — recorded so the next toucher sees the mismatch rather
   than rediscovering it. Cost-of-change if it ever bites: one clause, in the
   same bullet.
+
+- **A fourth surface nobody named at plan time: the reviewer's own prompt.**
+  Task 2's implementer flagged, and correctly declined to fix outside its
+  `Files touched`, that `plan-document-reviewer-prompt.md`'s Check 3
+  enumerates only referent kinds (a) and (b), and its Check 9 requires every
+  `Brief item covered` to quote or reference the brief. So a task using the
+  newly-legal `none — <reason>` conforms to `plan-format.md` and is gapped by
+  the project's own plan reviewer. Without closing it the value is inert in
+  practice — authors would meet a gap every time they used it and stop using
+  it. This is the same shape as round 1's fatal finding (real in the
+  library, inert at the site that executes), and it is worse for having been
+  visible earlier: round 1's reviewer DID gap Task 9's `none —` value under
+  Check 9, and that was resolved by strengthening the field's own text rather
+  than by asking why the check rejected it. Fixing the symptom removed the
+  signal. Added as Task 10, which re-opens plan review for the amendment.
+
+- **Amendment skip note (2026-08-13).** After the amendment PASSed, four
+  corrections landed that assert nothing new: three stale `file:line` cites
+  refreshed to the coordinates the reviewer measured (the pinned tests moved
+  when this branch's own commits inserted above them), the parallel-marking
+  Notes bullet's justification updated because Task 10 made its stated reason
+  ("every other code task touches `check_scenario_coverage.py`") untrue, and
+  the `Steps:` level-3 title widened because the amendment added a
+  non-checker task to that level. Each is a coordinate or a justification
+  catching up to a fact the reviewer established; no acceptance criterion,
+  dependency edge, scope or claim changed. Confirmed by delta with the same
+  reviewer rather than carried silently.
