@@ -66,7 +66,7 @@ flowchart LR
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: "`Brief item covered` accepts the ID as a third referent form" + "A written tie-break rule for the primary referent"
-- Status: pending
+- Status: done(66b2fe1d)
 - Gloss: 計畫端學會引用新的識別碼，有了合法的「無需求對應」寫法，平手規則也寫死
 
 ## Task 3 — collect declared `BI-<n>` ids from a brief
