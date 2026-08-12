@@ -163,8 +163,12 @@ def test_pinned_refusal_and_pass_down_contracts_untouched():
 # round)" replaced with a pointer to requesting-docs-review's own
 # Directives, net near-zero) landed at 4220 words -- under the 4300
 # fallback the task brief authorizes, so no further trim was needed;
-# the chain is cumulative: 3920 -> 3935 -> 4150 -> 4300.
-WORD_CEILING = 4300
+# the chain is cumulative: 3920 -> 3935 -> 4150 -> 4300 -> 4315 (the
+# last raise by the 2026-08-12 adjudication-view arc's T7 pointer
+# sentence at Step 5 — the conversation-language findings-rendition
+# duty, ~15 words, pointer-not-copy so untrimmable without losing the
+# duty).
+WORD_CEILING = 4315
 
 def test_word_count_within_ceiling():
     word_count = len(_skill_text().split())
@@ -178,7 +182,8 @@ def test_word_count_within_ceiling():
         "3935 -> 4150 by the 2026-08-11 review-cost-reduction arc's Task "
         "8 contract/record classification SSOT + record-only routing, "
         "then 4150 -> 4300 by the same arc's Task 12 M3 upgrade-rule "
-        "paragraph + stale-cross-ref rewrite; "
+        "paragraph + stale-cross-ref rewrite, then 4300 -> 4315 by the "
+        "2026-08-12 adjudication-view arc's T7 Step-5 pointer sentence; "
         "the extraction-pilot brief reserves ~600 words of true headroom "
         "to CHK-SKL-010)"
     )

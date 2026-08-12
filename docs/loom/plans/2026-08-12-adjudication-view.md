@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-12-adjudication-digest.md
 Goal: Document-view (plan + brief) as core plus verdict digest: a protocol file, split/translate/reassemble renderer with EN/ZH side-by-side HTML for documents and a findings-table rendition for verdicts, a zero-token lint (modality warning-mode), and wiring at four skills' presentation moments.
-Stage: planning
+Stage: review:whole-branch
 Endpoint named: yes → continuous (goal "把這個功能實作完" names completion; recorded per continuous-mode entry rule)
 Total tasks: 12
 Critical-path depth: 5 (≤5)
@@ -49,7 +49,7 @@ flowchart LR
 - Dependencies: none
 - Independent: false
 - Brief item covered: "Protocol file (SSOT): `adjudication-digest` protocol under `using-loom-code` — shared rules for both objects"; also brief Smallest End State item 4 ("Conditions: fires only when live conversation language is not English; verdict digest fires only when findings ≥ 1") — pinned by GREEN's firing-conditions check
-- Status: pending
+- Status: done(45008d07)
 - Gloss: 立規則的那份總綱：翻譯視圖怎麼切、怎麼譯、什麼時候觸發，全寫死在這一份
 
 ## Task 1 — splitter: document mode
@@ -68,7 +68,7 @@ flowchart LR
 - Dependencies: Task 0 completes first
 - Independent: false
 - Brief item covered: "script splits the English artifact by section/task"
-- Status: pending
+- Status: done(586df8e8)
 - Gloss: 把英文文件機械切成一節一節，1:1 由切分保證
 
 ## Task 2 — splitter: verdict mode
@@ -87,7 +87,7 @@ flowchart LR
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: "Verdict digest: markdown table inline in chat (編號 assigned | severity verbatim emoji | 中文摘述 | `where` anchor verbatim)"
-- Status: pending
+- Status: done(c902e63f)
 - Gloss: 同一把刀補 verdict 模式：findings 逐條拆單元、emoji 與錨點原樣帶走
 
 ## Task 3 — lint: hard checks
@@ -105,7 +105,7 @@ flowchart LR
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: "Zero-token lint on the structured intermediate: unit count == source unit count; every number / enum / English term from each unit appears verbatim in its rendition"
-- Status: pending
+- Status: done(a322ce26)
 - Gloss: 零 token 的照合檢查：數字、專名、token 逐字對回原文，漏了就擋
 
 ## Task 4 — lint: language checks (negation hard, modality warning)
@@ -122,7 +122,7 @@ flowchart LR
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: "negation-marker presence check; modality mapping check in warning mode"
-- Status: pending
+- Status: done(68ad5d8d)
 - Gloss: 抓最危險的錯：否定詞被譯丟直接擋下，modality 對照先觀測不硬擋
 
 ## Task 5 — renderer: document view (EN/ZH side-by-side HTML)
@@ -140,7 +140,7 @@ flowchart LR
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: "Document view: EN/ZH side-by-side HTML (original collapsible beside each translated unit)"
-- Status: pending
+- Status: done(1bffe3e7)
 - Gloss: 中英對照的 HTML 視圖：譯文為主、原文折疊在旁，抽查零成本
 
 ## Task 6 — renderer: verdict table (markdown + HTML)
@@ -157,7 +157,7 @@ flowchart LR
 - Dependencies: Tasks 2, 5 complete first
 - Independent: false
 - Brief item covered: "findings-table rendition for verdicts … HTML rendition of the same structured rows via the same template"
-- Status: pending
+- Status: done(1ec04411)
 - Gloss: verdict 表格兩種皮同一來源：severity 只搬運不重判
 
 ## Task 7 — wiring: requesting-code-review
@@ -175,7 +175,7 @@ flowchart LR
 - Dependencies: Task 0 completes first
 - Independent: true
 - Brief item covered: "requesting-code-review/SKILL.md Step 5 (:118) + references/relay-phrasing.md"
-- Status: pending
+- Status: done(58cfe2de)
 - Gloss: whole-branch review 呈報時刻接上 verdict 表格義務
 
 ## Task 8 — wiring: requesting-docs-review
@@ -193,7 +193,7 @@ flowchart LR
 - Dependencies: Task 0 completes first
 - Independent: true
 - Brief item covered: "requesting-docs-review/SKILL.md (:52, :125)"
-- Status: pending
+- Status: done(65bed934)
 - Gloss: docs review 的 verdict 與卡關呈報接上同一義務
 
 ## Task 9 — wiring: brainstorming
@@ -211,7 +211,7 @@ flowchart LR
 - Dependencies: Task 0 completes first
 - Independent: true
 - Brief item covered: "brainstorming/SKILL.md sign-off checkpoint (:219)"
-- Status: pending
+- Status: done(7ecc7d49)
 - Gloss: brief sign-off 時刻接上中英對照視圖
 
 ## Task 10 — wiring: writing-plans
@@ -229,7 +229,7 @@ flowchart LR
 - Dependencies: Task 0 completes first
 - Independent: true
 - Brief item covered: "writing-plans/SKILL.md plan-presentation moments"
-- Status: pending
+- Status: done(230bd860)
 - Gloss: plan review gate 時刻接上中英對照視圖
 
 ## Task 11 — version bump + codex mirror sync
@@ -248,7 +248,7 @@ flowchart LR
 - Dependencies: Tasks 2, 4, 6, 7, 8, 9, 10 complete first
 - Independent: false
 - Brief item covered: "One loom-code version bump + `.codex-plugin` mirror sync"; also brief Open Question 3 ("DIRECTION bet … at close-out") — disposition recorded in ## Notes "DIRECTION bet" entry with its file:line citation (existing mechanism at finishing-a-development-branch/SKILL.md:201; no new task work)
-- Status: pending
+- Status: done(0dfcfe97)
 - Gloss: 出貨行政：版本、變更記錄、Codex 鏡射一次到位（皆在 loom-code 模組內）
 
 ## Notes
@@ -261,3 +261,11 @@ flowchart LR
 - Rider backlog items (brief Open Question 2): `2026-07-06-anti-copy-acceptance-greps-pass-paraphrase-copies` (start condition now fires — this plan touches writing-plans SKILL.md) and `2026-07-10-change-binding-chain-integration-test` (fires on any loom-code touch) — both surfaced, neither bundled: deferred to the close-out betting step for the user's call. Queue informs, never hijacks.
 - Test fixtures are inline in each test file (repo convention per existing `test_backlog_index.py` / `test_plan_card.py`); the real brief `docs/loom/specs/2026-08-12-adjudication-digest.md` serves as a manual smoke target, not a committed fixture.
 - The LLM translate-per-unit step is orchestrator-side (fills `rendition` in units JSON) — deliberately not in any script; scripts stay deterministic stdlib-only.
+
+## Decision Log
+
+- 2026-08-12 (SDD wave 2, T7-T10 parallel dispatch): wave implementers run under a no-git rule (edit + own pin test only); the orchestrator commits each task path-scoped after its verdicts. Reason: four concurrent implementers share one checkout — concurrent `git add/commit` races the index, and `isolation: worktree` would detach at the default-branch tip which lacks T0's protocol file (dispatch-hygiene-notes §Worktree-isolated reviewer dispatch documents the detach behavior). Full package suite runs once at wave end by the orchestrator instead of 4×.
+- 2026-08-12 (T6 verdict resolution): quality 🟡 carried as debt — render_verdict interpolates severity/where raw (only rendition goes through _md_cell), so a `where` containing a literal `|` fragments the markdown row (probe-verified); one-line fix (route both through _md_cell) queued for the debt list. Two 🟢: _field_value trusts the splitter's one-line-per-field guarantee without a defensive assert; doc-mode sanity test only asserts callability.
+- 2026-08-12 (T4 verdict resolution): negation check upgraded to two-tier (zero-marker = hard, partial shortfall = WARNING) + flag/backtick exclusion per quality findings; full per-clause negation correspondence needs sentence alignment the stdlib lint deliberately doesn't have — recorded as a protocol-level clarification queued for the whole-branch round (same batch as the unit-id wording tension).
+- 2026-08-12 (T2 verdict resolution): quality 🟡 residue carried as debt — (a) a flush-left `- severity:` line inside a block-scalar note is indistinguishable from a real finding without full YAML semantics (phantom-unit risk on a plausible authoring mistake; the sibling-column fix handles deeper-indented continuations but not flush-left ones) — documented limitation, stdlib parser stays; (b) protocol wording tension: protocol says unit id = where+dimension for findings, implementation keeps ordinal id + puts the semantic key in `heading` (spec-reviewer ruled ordinal OK via plan precedent; three reviewers tripped on the same text) — protocol one-line clarification queued for whole-branch review round.
+- 2026-08-12 (T0 verdict resolution): code-quality 🟡 (pin test's `"1" in text` half is vacuous — a "findings ≥ 2" drift would stay green; test_adjudication_protocol_pins.py:44-50) carried as debt per the PASS_WITH_NOTES auto-proceed rule; scheduled for the close-out debt list, not fixed in-flight.

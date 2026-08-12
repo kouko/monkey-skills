@@ -229,11 +229,15 @@ def test_needs_revision_loop_self_screens_the_revision_delta():
 
 # --- (f) word cap ------------------------------------------------------------
 
-def test_word_count_at_most_4200():
+def test_word_count_at_most_4210():
     word_count = len(_skill_text().split())
-    assert word_count <= 4200, (
-        f"SKILL.md is {word_count} words, over the 4200 cap (raised "
-        "deliberately from 4099 by the 2026-08-11 review-cost-reduction "
+    assert word_count <= 4210, (
+        f"SKILL.md is {word_count} words, over the 4210 cap (raised "
+        "deliberately from 4200 by the 2026-08-12 adjudication-view "
+        "arc's T10 document-view pointer sentences at the kickoff "
+        "briefing and post-PASS card relay — pointer-not-copy, "
+        "untrimmable without losing the duty; prior raise from 4099 "
+        "by the 2026-08-11 review-cost-reduction "
         "arc's misroute fix — §Self-review prompt-file/no-substitution/"
         "model-default sentences + SUBAGENT-STOP disambiguation; prior "
         "raises 4047 -> 4099 by the 2026-08-10 cheap-hardening-batch arc, "
