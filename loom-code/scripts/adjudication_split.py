@@ -11,21 +11,33 @@ already `## Task N — …` blocks, so the same H2 split handles both
 briefs and plans without special-casing. Content before the first H2
 (title, intro) is not a unit.
 
-Verdict mode (Task 2) will add a second unit source (structured
-findings, not H2 sections) — `MODES` below is the extension point:
-add a `"verdict": split_verdict` entry, no change to `main()`.
+Verdict mode splits a reviewer's structured verdict block instead: one
+unit per `- severity: ...` finding item (code-arm and docs-arm finding
+shapes both tolerated — see `_iter_finding_blocks`), heading = that
+finding's `where` + `dimension`, source_text = the finding's field
+block reassembled verbatim from its parsed key/value lines.
 
 CLI:
     python3 adjudication_split.py doc <markdown-file>
+    python3 adjudication_split.py verdict <verdict-text-file>
 
 Emits units-JSON (a JSON array) to stdout. Each unit:
     id           ordinal identifier ("u1", "u2", ...)
-    heading      the H2 heading text
-    source_text  the section body, verbatim
+    heading      doc mode: the H2 heading text.
+                 verdict mode: "<where> <dimension>" (the semantic
+                 unit key — same finding, same heading, across a
+                 regenerated rendition).
+    source_text  doc mode: the section body, verbatim.
+                 verdict mode: the finding's field block, verbatim
+                 (each `key: value` line as parsed, in source order).
     anchors      verbatim tokens extracted from source_text (numbers,
                  ALL-CAPS enum tokens, backticked terms, CamelCase /
                  snake_case identifiers) — order = first-occurrence
-                 position in source_text, deduplicated
+                 position in source_text, deduplicated.
+                 verdict mode additionally appends the finding's
+                 severity emoji and its `where` value verbatim (both
+                 must survive translation even when neither matches
+                 an anchor pattern above).
     rendition    empty string; filled later by the orchestrator-side
                  LLM translate step (this script never fills it)
 """
@@ -43,6 +55,18 @@ NUMBER_RE = re.compile(r"\b\d[\d.]*\b")
 ALLCAPS_RE = re.compile(r"\b[A-Z]{2,}(?:_[A-Z0-9]+)*\b")
 SNAKE_CASE_RE = re.compile(r"\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b")
 CAMEL_CASE_RE = re.compile(r"\b[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+\b")
+
+# Verdict mode: a finding item starts with `- severity: ...` at some
+# indent; its subsequent field lines (`dimension:`, `where:`, `note:`,
+# `class:`, code-arm's `source:`/`origin:`, docs-arm's `quote:`, ...)
+# are indented deeper than the item's own `-`. Matching on
+# `- severity:` specifically (not a bare `- `) means unrelated `-`
+# list items elsewhere in a verdict block (simplification_ledger,
+# summary, read_context_findings) are never mistaken for findings —
+# no separate "findings:" section boundary tracking is needed.
+FINDING_ITEM_RE = re.compile(r"^([ \t]*)-\s*severity:\s*(.+)$")
+FIELD_LINE_RE = re.compile(r"^([ \t]*)([A-Za-z][A-Za-z_-]*):\s*(.*)$")
+SEVERITY_EMOJI_RE = re.compile(r"[🔴🟡🟢]")
 
 # Anchor kinds in extraction-priority order. Backticked terms are
 # captured whole (group 1 — the content, without the backtick
@@ -126,8 +150,87 @@ def split_document(text):
     return units
 
 
-# Mode dispatch — Task 2 adds "verdict": split_verdict here.
-MODES = {"doc": split_document}
+def _iter_finding_blocks(text):
+    """Yield an ordered field dict (severity first, then each field in
+    source order) per `- severity: ...` finding item found in `text`,
+    tolerating both the code-arm and docs-arm finding shapes (the
+    field set differs — code-arm has `source:`/`origin:`, docs-arm has
+    `quote:` instead — this only requires `severity:` to start an
+    item and reads whatever fields follow it).
+
+    A sibling field must sit at the SAME COLUMN as the item's first
+    non-blank line — never at any deeper indent. A line nested deeper
+    (e.g. inside a `note: |` block-literal that quotes `dimension:`/
+    `where:` from a pasted verdict-schema example, which reviewers
+    really do write) is that field's value content, not a sibling
+    field, and must not be read as one. Mirrors the column rule in
+    loom-code/scripts/loom_gate_markers.py's `_iter_findings`."""
+    lines = text.splitlines()
+    i, n = 0, len(lines)
+    while i < n:
+        start_match = FINDING_ITEM_RE.match(lines[i])
+        if start_match is None:
+            i += 1
+            continue
+        item_indent = len(start_match.group(1))
+        fields = {"severity": start_match.group(2).strip()}
+        block_start = i + 1
+        j = block_start
+        while j < n:
+            line = lines[j]
+            if line.strip():
+                line_indent = len(line) - len(line.lstrip(" \t"))
+                if line_indent <= item_indent:
+                    break  # dedent to the item's own level: block ends
+            j += 1
+        block_end = j
+        column = None
+        for line in lines[block_start:block_end]:
+            if line.strip():
+                column = len(line) - len(line.lstrip(" \t"))
+                break
+        if column is not None:
+            for line in lines[block_start:block_end]:
+                if not line.strip():
+                    continue
+                field_match = FIELD_LINE_RE.match(line)
+                if field_match and len(field_match.group(1)) == column:
+                    fields[field_match.group(2)] = field_match.group(3).strip()
+        yield fields
+        i = block_end
+
+
+def split_verdict(text):
+    """Split `text` (a reviewer's structured verdict block) into
+    units-JSON, one unit per finding. Unit count == finding count (the
+    unit-1:1 rule — see `_iter_finding_blocks`)."""
+    units = []
+    for i, fields in enumerate(_iter_finding_blocks(text)):
+        severity = fields.get("severity", "")
+        dimension = fields.get("dimension", "")
+        where = fields.get("where", "")
+        source_text = "\n".join(f"{key}: {value}" for key, value in fields.items())
+        anchors = extract_anchors(source_text)
+        emoji_match = SEVERITY_EMOJI_RE.search(severity)
+        if emoji_match and emoji_match.group(0) not in anchors:
+            anchors.append(emoji_match.group(0))
+        if where and where not in anchors:
+            anchors.append(where)
+        units.append(
+            {
+                "id": f"u{i + 1}",
+                "heading": f"{where} {dimension}".strip(),
+                "source_text": source_text,
+                "anchors": anchors,
+                "rendition": "",
+            }
+        )
+    return units
+
+
+# Mode dispatch — "doc" is document mode (Task 1), "verdict" is
+# findings mode (Task 2).
+MODES = {"doc": split_document, "verdict": split_verdict}
 
 
 def main(argv=None):
