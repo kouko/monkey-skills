@@ -47,7 +47,7 @@ flowchart LR
 - Dependencies: none
 - Independent: true
 - Brief item covered: "Brief items carry hybrid identity — an immutable short ID plus the human-readable text"
-- Status: pending
+- Status: done(bd357f60)
 - Gloss: brief 格式第一次有了「項目怎麼命名」的規則，而且規定編號只增不改
 
 ## Task 2 — teach `plan-format.md` the new referent kind, the none-value, and the tie-break
@@ -115,7 +115,7 @@ flowchart LR
 - Dependencies: none
 - Independent: true
 - Brief item covered: "This fix applies to the existing change-folder path too — the defect is in shared code"
-- Status: pending
+- Status: done(7aa98bd4)
 - Gloss: 舊路徑上解析不出來的引用會被列名，不再無聲消失；但不改判成錯誤，因為那條路上引述本來就合法
 
 ## Task 6 — treat an item as covered by the union of citing tasks
@@ -199,3 +199,25 @@ flowchart LR
 - **Only one genuine parallel pair exists, and it is T1 + T5.** Both have no dependencies and their file sets are disjoint. Every other code task (T3, T4, T6, T7) touches `check_scenario_coverage.py` and its test file, so none may be marked `Independent: true` alongside T5 — a concurrent dispatch would race the same file. T2 and T3 sit at the same dependency level with disjoint files and would otherwise qualify, but T3 shares files with the dependency-free T5, which could still be running; marking T3 independent would invite exactly that race. Under-marking is advisory (Check 15); over-marking is a real defect (Check 14), so this plan under-marks deliberately.
 - **Ironic self-reference, recorded deliberately**: this plan cites its own brief by quote (referent kind (a)), because the brief that introduces `BI-` ids does not itself declare any — the convention does not exist until Task 1 lands. The first brief to carry `BI-` ids will be the next arc's.
 - No `LOOM-SIMPLIFY:` markers are planned.
+
+## Decision Log
+
+- **The unlisted-section gate borrows a vocabulary sized for a lighter cost.**
+  Task 1's scope clause routes an unlisted outcome-declaring section into the
+  brief's `## Open Questions`, which this repo documents as blocking
+  `writing-plans`. The gate itself was ruled correct — an unlisted section
+  means the canonical list is measurably incomplete, and surfacing that once
+  beats every future brief rediscovering it; the identifiers are assigned
+  before the gate fires, so what is delayed is the plan, not the work. But the
+  docs reviewer noted a real mismatch the ruling did not account for:
+  `## Open Questions` offers two resolutions — answer in-session, or hand back
+  to the user — and the first is explicitly foreclosed by the same clause
+  ("not something a brief's author makes mid-session"). What actually
+  discharges the question is a maintainer editing a shared plugin skill file,
+  with its own review/test/version-bump cycle. So "specific enough to answer
+  in one round" and "requires a maintainer PR to a shared file" now ride the
+  same mechanism at quietly different cost classes. Not reopened (the
+  reviewer did not propose it, and the identifiers stand whichever way the
+  question resolves) — recorded so the next toucher sees the mismatch rather
+  than rediscovering it. Cost-of-change if it ever bites: one clause, in the
+  same bullet.
