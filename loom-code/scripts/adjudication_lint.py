@@ -107,11 +107,23 @@ def _count_en_negations(source_text):
     return count
 
 
+@functools.lru_cache(maxsize=None)
+def _negation_pattern_regex(pattern):
+    """Compile+cache a profile's `negation_pattern` regex string (Task
+    2) — mirrors `_modality_pattern`'s cache-by-hashable-input shape."""
+    return re.compile(pattern)
+
+
 def _count_negation_markers(rendition, profile):
-    """Count negation marker occurrences from `profile.negation_markers`
-    (single-char markers only — `不得` contains `不` and is counted via
-    that marker, per the protocol note that marker-occurrence counting
-    suffices)."""
+    """Count negation marker occurrences. Prefers `profile.negation_
+    pattern` (a regex, non-overlapping match count) when the profile
+    carries one — Japanese negation is an inflectional kana suffix, not
+    a standalone character, so a char-set scan cannot express it (Task
+    2). Falls back to `profile.negation_markers` (single-char markers
+    only — `不得` contains `不` and is counted via that marker, per the
+    protocol note that marker-occurrence counting suffices) otherwise."""
+    if profile.negation_pattern:
+        return len(_negation_pattern_regex(profile.negation_pattern).findall(rendition))
     return sum(1 for ch in rendition if ch in profile.negation_markers)
 
 
