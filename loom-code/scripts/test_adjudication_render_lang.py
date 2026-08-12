@@ -11,7 +11,9 @@ renderer, so the first run is RED (the ja assertions fail against the
 hardcoded zh-Hant literals).
 """
 
-from adjudication_render import render_doc, render_verdict_html
+import json
+
+from adjudication_render import main, render_doc, render_verdict, render_verdict_html
 
 DOC_UNITS = [
     {
@@ -69,3 +71,49 @@ def test_default_lang_is_zh_hant_for_both_modes():
     verdict_out = render_verdict_html(VERDICT_UNITS)
     assert '<html lang="zh-Hant">' in doc_out
     assert '<html lang="zh-Hant">' in verdict_out
+
+
+# --- Whole-branch review F3: verdict mode never joined the profile layer.
+# The verdict table's column labels were hardcoded Traditional Chinese, so
+# `--lang ja --html` emitted a Japanese page with Chinese headers; and the
+# markdown verdict path validated `--lang` via get_profile() then never
+# threaded it, so the flag was accepted and did nothing at all.
+
+
+def test_verdict_markdown_honors_lang():
+    """A non-default --lang must CHANGE the markdown verdict output --
+    the label pair comes from the profile, not from a module constant."""
+    table = render_verdict(VERDICT_UNITS, lang="ja")
+    header = table.splitlines()[0]
+    assert header == "| # | severity | 要約 | アンカー |"
+
+
+def test_verdict_markdown_default_header_byte_identical():
+    """zh-Hant (explicit and flagless) keeps today's header byte-for-byte."""
+    expected = "| # | severity | 摘述 | 錨點 |"
+    assert render_verdict(VERDICT_UNITS).splitlines()[0] == expected
+    assert render_verdict(VERDICT_UNITS, lang="zh-Hant").splitlines()[0] == expected
+
+
+def test_verdict_html_uses_japanese_column_labels():
+    """The HTML verdict page already carried lang="ja" + Noto Sans JP while
+    its column headers stayed Chinese -- chrome and page attributes must
+    come from the same profile."""
+    html_out = render_verdict_html(VERDICT_UNITS, lang="ja")
+    assert "<th>要約</th>" in html_out and "<th>アンカー</th>" in html_out
+    assert "摘述" not in html_out and "錨點" not in html_out
+
+
+def test_verdict_html_zh_hant_headers_unchanged():
+    html_out = render_verdict_html(VERDICT_UNITS)
+    assert "<th>摘述</th>" in html_out and "<th>錨點</th>" in html_out
+
+
+def test_cli_verdict_markdown_threads_lang(tmp_path, capsys):
+    """The defect at its own layer: `verdict u.json --lang ja` (no --html)
+    resolved the profile and then discarded it. Driving main() pins that
+    the flag reaches the markdown renderer."""
+    units_path = tmp_path / "units.json"
+    units_path.write_text(json.dumps(VERDICT_UNITS, ensure_ascii=False), encoding="utf-8")
+    assert main(["verdict", str(units_path), "--lang", "ja"]) == 0
+    assert "| # | severity | 要約 | アンカー |" in capsys.readouterr().out

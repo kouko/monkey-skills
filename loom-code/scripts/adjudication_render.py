@@ -168,10 +168,14 @@ def render_doc(units, title="Adjudication View", lang="zh-Hant"):
     return _render_page(title, units_html, lang)
 
 
-VERDICT_TABLE_HEADER = "| # | severity | 摘述 | 錨點 |\n|---|---|---|---|"
+# The two content column labels come from the resolved profile
+# (`verdict_labels`); `#` and `severity` are protocol field names and
+# are not translated. Before Task 3's profile layer reached verdict mode
+# these were Traditional-Chinese literals baked into both templates.
+VERDICT_TABLE_HEADER_TEMPLATE = "| # | severity | {summary} | {anchor} |\n|---|---|---|---|"
 
 VERDICT_HTML_TABLE_TEMPLATE = """<table class="verdict">
-<thead><tr><th>#</th><th>severity</th><th>摘述</th><th>錨點</th></tr></thead>
+<thead><tr><th>#</th><th>severity</th><th>{summary}</th><th>{anchor}</th></tr></thead>
 <tbody>
 {rows}
 </tbody>
@@ -203,14 +207,21 @@ def _md_cell(text):
     )
 
 
-def render_verdict(units):
+def render_verdict(units, lang="zh-Hant"):
     """Render `units` (verdict-mode units-JSON, see adjudication_split.py
     split_verdict()) into an inline markdown table: one row per finding,
     in source order (never re-sorted by severity or anything else).
-    severity and 錨點 (where) are extracted verbatim from each unit's
-    source_text field block — copied, never recomputed — per the
-    adjudication-view protocol's severity carry-through rule."""
-    lines = [VERDICT_TABLE_HEADER]
+    severity and the anchor (where) are extracted verbatim from each
+    unit's source_text field block — copied, never recomputed — per the
+    adjudication-view protocol's severity carry-through rule. `lang`
+    selects the profile supplying the two content column labels; default
+    "zh-Hant" matches the pre-profile-layer header byte-for-byte."""
+    summary_label, anchor_label = get_profile(lang).verdict_labels
+    lines = [
+        VERDICT_TABLE_HEADER_TEMPLATE.format(
+            summary=summary_label, anchor=anchor_label
+        )
+    ]
     for unit in units:
         severity = _field_value(unit["source_text"], "severity")
         where = _field_value(unit["source_text"], "where")
@@ -236,7 +247,10 @@ def render_verdict_html(units, title="Adjudication Verdict", lang="zh-Hant"):
         )
         for unit in units
     )
-    table_html = VERDICT_HTML_TABLE_TEMPLATE.format(rows=rows)
+    summary_label, anchor_label = get_profile(lang).verdict_labels
+    table_html = VERDICT_HTML_TABLE_TEMPLATE.format(
+        rows=rows, summary=summary_label, anchor=anchor_label
+    )
     return _render_page(title, table_html, lang)
 
 
@@ -268,7 +282,7 @@ def main(argv=None):
     if args.mode == "verdict" and args.html:
         rendered = render_verdict_html(units, lang=args.lang)
     elif args.mode == "verdict":
-        rendered = render_verdict(units)
+        rendered = render_verdict(units, lang=args.lang)
     else:
         rendered = render_doc(units, lang=args.lang)
 

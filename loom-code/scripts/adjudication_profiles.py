@@ -53,6 +53,14 @@ class LanguageProfile:
     # copied verbatim so its output cannot shift.
     page_lang: str = "zh-Hant"
     font_stack: str = '-apple-system, "Segoe UI", "Noto Sans TC", sans-serif'
+    # The verdict table's two content column labels, in table order
+    # (summary, anchor). `#` and `severity` are not translated -- they
+    # are the protocol's own field names. This lives here, beside
+    # `page_lang` / `font_stack`, because it is the same kind of fact:
+    # per-language presentation the renderer reads rather than hardcodes
+    # (whole-branch review F3 -- verdict mode had never joined the
+    # profile layer, so a `--lang ja` page carried Chinese headers).
+    verdict_labels: Tuple[str, str] = ("摘述", "錨點")
 
 
 _PROFILES = {
@@ -77,6 +85,9 @@ _PROFILES = {
         negation_tier="hard",
         page_lang="zh-Hant",
         font_stack='-apple-system, "Segoe UI", "Noto Sans TC", sans-serif',
+        # Byte-identical to the labels the verdict renderer used to
+        # hardcode -- zh-Hant output cannot shift.
+        verdict_labels=("摘述", "錨點"),
     ),
     "ja": LanguageProfile(
         lang="ja",
@@ -183,6 +194,9 @@ _PROFILES = {
         # the CJK-specific member of the list.
         page_lang="ja",
         font_stack='-apple-system, "Segoe UI", "Noto Sans JP", sans-serif',
+        # Natural Japanese, not the Chinese labels transliterated:
+        # 摘述 -> 要約, 錨點 -> アンカー.
+        verdict_labels=("要約", "アンカー"),
     ),
 }
 

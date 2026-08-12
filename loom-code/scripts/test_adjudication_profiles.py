@@ -31,6 +31,14 @@ class TestZhHantProfile(unittest.TestCase):
         for _term, forms in profile.modality_map:
             self.assertIsInstance(forms, tuple)
 
+    def test_verdict_labels_are_per_profile(self):
+        # Whole-branch review F3: the verdict table's two content column
+        # labels are per-language presentation facts and belong beside
+        # page_lang / font_stack. zh-Hant's pair is pinned byte-identical
+        # to the shipped header; ja's is natural Japanese, not Chinese.
+        self.assertEqual(get_profile("zh-Hant").verdict_labels, ("摘述", "錨點"))
+        self.assertEqual(get_profile("ja").verdict_labels, ("要約", "アンカー"))
+
     def test_unknown_lang_raises_clear_error(self):
         with self.assertRaises(ValueError) as ctx:
             get_profile("fr")
