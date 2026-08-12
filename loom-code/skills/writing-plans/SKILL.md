@@ -122,7 +122,7 @@ A qualifying amendment records a one-line skip note in the plan's `Notes` naming
 
 ## Kickoff briefing
 
-After PASS, before SDD handoff: run the kickoff briefing — read [`references/kickoff-briefing.md`](references/kickoff-briefing.md) and batch-brief the round's one-way-door decisions (expect 1-3) and foreseeable implementation forks; the rest route to the Decision Log. When the live conversation language is not English, produce the plan's document view per the adjudication-view protocol (doc mode) for the user's plan reading — see [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md).
+After PASS, before SDD handoff: run the kickoff briefing — read [`references/kickoff-briefing.md`](references/kickoff-briefing.md) and batch-brief the round's one-way-door decisions (expect 1-3) and foreseeable implementation forks; the rest route to the Decision Log. For this kickoff-briefing moment, produce the plan's document view per the adjudication-view protocol's own firing conditions (doc mode) for the user's plan reading — see [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md).
 
 **Progress surface.** The plan carries `Goal:`, `Stage:`, per-task
 `Status:`, an optional `Steps:` title block, and per-task `Gloss:`
@@ -139,9 +139,10 @@ exists; otherwise run the plugin-shipped copy:
 `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path>` (a
 load-time substitution, not a run-time shell variable). The card
 re-reads the plan file by
-construction; never compose it from memory. When the live conversation
-language is not English, also produce the plan's document view per the
-adjudication-view protocol (doc mode) for the user's plan reading —
+construction; never compose it from memory. For this post-PASS
+progress-card relay moment, also produce the plan's document view per
+the adjudication-view protocol's own firing conditions (doc mode) for
+the user's plan reading —
 see [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md).
 
 ## Output contract — the plan
