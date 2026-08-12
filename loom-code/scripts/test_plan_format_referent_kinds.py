@@ -99,9 +99,19 @@ def _section(text: str, heading_prefix: str) -> str:
     return "\n".join(lines[start:])
 
 
+def _per_task_region(text: str) -> str:
+    """The `### Per-task block` region — the schema section a plan author reads
+    to learn the per-task fields, ending at the next `###`/`##` heading. The
+    field's prose subsection is sliced from HERE, not from the whole file, so
+    the same prose relocated to another part of plan-format.md (out of the
+    schema a field-reader consults) does not keep this pin green."""
+    return _section(text, "### Per-task block")
+
+
 def _definition(text: str) -> str:
     """Everything that defines the field: the schema entry + its prose section."""
-    return _field_block(text) + "\n" + _section(text, "#### `Brief item covered`")
+    region = _per_task_region(text)
+    return _field_block(region) + "\n" + _section(region, "#### `Brief item covered`")
 
 
 def _sentences(block: str) -> list[str]:
