@@ -1,10 +1,21 @@
-"""Structural grep-test guarding Task 6 of
-docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md: the three
-shipped writing-plans READMEs (README.md / README.ja.md /
-README.zh-TW.md) enumerate the per-task field list from
-`references/plan-format.md`. Task 2 added a `Reuse-adequacy` field to
-that schema; this test guards that all three READMEs' per-task field
-lists were updated to mention it.
+"""Structural grep-tests keeping the three shipped writing-plans READMEs
+(README.md / README.ja.md / README.zh-TW.md) in step with the per-task
+field list in `references/plan-format.md`. Two schema changes are pinned
+here, and the file grows one group per change that reaches the READMEs:
+
+1. `Reuse-adequacy` -- Task 6 of
+   docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md, later
+   reshaped into the two-slot `Observed` / `Intended` form by
+   docs/loom/plans/2026-07-31-reuse-adequacy-declaration-hardening.md.
+2. `Brief item covered` -- the widening from one referent kind to three
+   plus a legal no-requirement value. See the comment above
+   `REFERENT_KIND_TOKENS` for what these READMEs owe that field and,
+   deliberately, what they do not.
+
+A README is an orientation document, so these pins assert that it does
+not MISINFORM and that it routes to the owning schema -- never that it
+reproduces the grammar. A pin demanding the full grammar would turn each
+README into a second drift surface.
 
 Section scoping (not whole-file grep): each README's field list sits
 between its `- **Description**:` bullet (present verbatim, in English,
@@ -45,6 +56,9 @@ READMES = {
 START_ANCHOR = "- **Description**:"
 END_ANCHOR = "\n## "
 
+BRIEF_ITEM_ANCHOR = "- **Brief item covered**:"
+BULLET_BOUNDARY = "\n- **"
+
 
 def _field_list_section(path: Path) -> str:
     assert path.is_file(), f"README is absent at {path}"
@@ -52,6 +66,33 @@ def _field_list_section(path: Path) -> str:
     start = text.index(START_ANCHOR)
     end = text.index(END_ANCHOR, start)
     return text[start:end]
+
+
+def _brief_item_bullet(path: Path) -> str:
+    """Return just the `Brief item covered` bullet of the field list.
+
+    Scoped tighter than `_field_list_section` on purpose: the tokens the
+    assertions below look for (`BI-`, `change-folder`) are ordinary words
+    elsewhere in this skill's prose, so a section-wide grep would let a
+    neighbouring bullet satisfy a claim about THIS field. The bullet runs
+    to whichever comes first: the next `- **`-opened bullet, or the blank
+    line that closes the list. The blank-line boundary matters because this
+    bullet is currently the LAST in the list -- without it the slice would
+    swallow the trailing paragraph and let prose outside the field list
+    satisfy the assertions.
+    """
+    section = _field_list_section(path)
+    start = section.index(BRIEF_ITEM_ANCHOR)
+    body_start = start + len(BRIEF_ITEM_ANCHOR)
+    boundaries = [
+        idx
+        for idx in (
+            section.find(BULLET_BOUNDARY, body_start),
+            section.find("\n\n", body_start),
+        )
+        if idx != -1
+    ]
+    return section[start:] if not boundaries else section[start : min(boundaries)]
 
 
 def test_readmes_list_reuse_adequacy_field():
@@ -153,3 +194,61 @@ def test_readmes_mirror_the_two_slot_shape():
                 "`Observed` report clause) -- found outside that span, "
                 "suggesting a slot swap"
             )
+
+
+# `Brief item covered` was widened from a single referent kind (a quote from
+# the brief) to three, plus a legal no-requirement value -- see
+# plan-format.md's field block and its §`Brief item covered`. The two tests
+# below are the consumer-census pin for that widening: the READMEs are
+# orientation documents, so they are NOT required to restate the grammar,
+# only to stop describing the field as quote-only and to route the reader to
+# the schema that owns it. Anything stricter would make the README a second
+# drift surface -- the failure mode
+# docs/loom/memory/widening-a-value-grammar-needs-a-consumer-census-at-plan-time.md
+# and this file's own `Reuse-adequacy` docstring both warn about.
+#
+# Tokens are asserted verbatim and untranslated in all three locales, on the
+# same rule the MARKER_TOKENS above follow: these are literal strings a plan
+# author types into a plan file, not prose to localize.
+REFERENT_KIND_TOKENS = {
+    "change-folder join key (kind b)": "change-folder",
+    "brief-item identifier (kind c)": "BI-",
+}
+NO_REQUIREMENT_VALUE = "none — <reason>"
+SCHEMA_AUTHORITY = "references/plan-format.md"
+
+
+def test_readmes_state_all_three_brief_item_referent_kinds():
+    """The `Brief item covered` bullet must not describe the field as
+    accepting only a quote/reference from the brief. All three referent
+    kinds are legal, and a reader told otherwise writes a plan that the
+    plan-document-reviewer accepts but that silently drops the join-key and
+    identifier forms from the author's option set."""
+    for name, path in READMES.items():
+        bullet = _brief_item_bullet(path)
+        for kind, token in REFERENT_KIND_TOKENS.items():
+            assert token in bullet, (
+                f"{name}: the `Brief item covered` bullet does not mention "
+                f"the {kind} referent kind (expected the verbatim token "
+                f"{token!r}); the field reads as quote-only"
+            )
+
+
+def test_readmes_state_the_no_requirement_value_and_its_authority():
+    """Two further things the bullet must carry: the legal `none — <reason>`
+    value (without it, a task delivering no brief outcome gets forced into a
+    false citation, which reads as satisfied to every downstream reader), and
+    a pointer to plan-format.md as the authority -- the README summarizes the
+    grammar, it does not own it."""
+    for name, path in READMES.items():
+        bullet = _brief_item_bullet(path)
+        assert NO_REQUIREMENT_VALUE in bullet, (
+            f"{name}: the `Brief item covered` bullet does not carry the "
+            f"legal no-requirement value {NO_REQUIREMENT_VALUE!r} verbatim "
+            "(em-dash, mandatory reason placeholder)"
+        )
+        assert SCHEMA_AUTHORITY in bullet, (
+            f"{name}: the `Brief item covered` bullet does not point at "
+            f"{SCHEMA_AUTHORITY} as the owning schema, so a reader cannot "
+            "tell the README is a summary rather than the grammar itself"
+        )

@@ -37,7 +37,7 @@ brainstorming → brief                             (Discovery 階段)
 - **Acceptance**: RED 測試名 + GREEN 可觀察條件
 - **Dependencies**: `none` | `Task N completes first` | `Tasks N, M parallel`
 - **Reuse-adequacy**: 當任務的 Description 指示重用既有 helper 到新 lane 時，兩個作者填寫的 slot — `Observed`（報告 helper 現在做什麼，結尾要接一個來自封閉詞彙 `read <repo-relative-path>:<line>` / `inferred from docstring` / `unverified assumption — <what would settle it>` 的 source marker）與 `Intended`（規格：新呼叫路徑會做什麼）。沒有作者端的 adequacy 判定欄位 — 那是 reviewer 的判斷（見 `references/plan-format.md` §`Reuse-adequacy`）
-- **Brief item covered**: 引 brief 的 Smallest End State / Decision 對應段落
+- **Brief item covered**: 一個 traceability referent，三種形式擇一 — 引 brief 的 Smallest End State / Decision 對應段落、loom-spec change-folder 的 join key、或 brief 宣告的 `BI-<n>` 識別碼。不交付任何 brief 成果的任務（release 行政作業、版本 bump）寫 `none — <reason>`，理由是必填。完整文法、一個任務同時對到兩個 item 時的 tie-break、以及識別碼規則見 [`references/plan-format.md`](references/plan-format.md) §`Brief item covered`
 
 這個 shape 就是 `subagent-driven-development` 派 3 個 subagent 時消費的形狀。
 
