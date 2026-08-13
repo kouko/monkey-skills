@@ -291,6 +291,64 @@ def test_brief_mode_coverage_gate_is_named():
     )
 
 
+# --- (i2) the brief-mode duty is reachable from the brief-only path ---------
+
+_SELF_REVIEW_HEADING = "\n## Self-review"
+
+
+def _section(heading: str) -> str:
+    """The slice from `heading` to the next top-level `## ` heading.
+
+    Slicing is the point: this pin asserts REACHABILITY, i.e. that the
+    pointer sits in the section the acting author is actually reading at
+    the moment of the reviewer dispatch. A pointer parked anywhere else in
+    the file leaves this slice and fails.
+    """
+    text = _skill_text()
+    start = text.index(heading)
+    nxt = text.find("\n## ", start + len(heading))
+    return text[start:len(text) if nxt == -1 else nxt]
+
+
+def test_coverage_gate_reachable_from_self_review():
+    """A brief-only author never opens §Consuming a loom-spec change-folder,
+    so the brief-mode coverage duty must be reachable from §Self-review —
+    where the plan-document-reviewer dispatch it gates is described.
+
+    The pointer's TARGET is resolved from the pointer's own text, not
+    hardcoded here: a pointer aimed at the wrong section fails because the
+    gate is not found there.
+    """
+    self_review = _norm(_section(_SELF_REVIEW_HEADING))
+
+    pointers = [s for s in _sentences(self_review) if _GATE_LEAD[2:] in s]
+    assert len(pointers) == 1, (
+        "§Self-review must carry exactly one pointer to the Coverage "
+        f"self-check; found {len(pointers)}"
+    )
+    pointer = pointers[0]
+
+    # the duty it makes reachable is the BRIEF-mode one, with the shipped
+    # invocation form and the gate ordering that binds it to this dispatch.
+    assert "--brief" in pointer
+    assert "brief mode" in pointer.lower()
+    assert "before dispatching the reviewer" in pointer.lower()
+
+    # follow the pointer: the section it names must exist and must be where
+    # the gate paragraph actually lives.
+    target = re.search(r"§([^—]+?)\s+—", pointer)
+    assert target, f"the pointer names no resolvable §section: {pointer}"
+    heading = "\n## " + target.group(1).strip()
+    assert heading in _skill_text(), (
+        f"the pointer aims at {heading.strip()!r}, which is not a section "
+        "of this SKILL.md"
+    )
+    assert _GATE_LEAD in _section(heading), (
+        f"the pointer aims at {heading.strip()!r}, but the coverage-gate "
+        "paragraph does not live there"
+    )
+
+
 # --- (f) word cap ------------------------------------------------------------
 
 def test_word_count_at_most_4220():
