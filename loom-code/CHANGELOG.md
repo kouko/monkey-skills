@@ -111,15 +111,18 @@ Versioning: [Semantic Versioning](https://semver.org/).
   red at every intermediate run. If this is revisited, the question is
   not "should uncovered ids fail" but "at what moment", and the answer
   must survive the mid-authoring case.
-- **A known unresolved case: a well-formed change-folder join key
-  (referent kind (b)) errors in brief mode**, because it contains no
-  `BI-<n>`. Today the CLI makes the two modes mutually exclusive, which
-  hides the question rather than resolving it — a plan mixing kind-(b)
-  and kind-(c) tasks, checked by two separate invocations, would have
-  its legitimate kind-(b) citations flagged. Recorded, with the cheap
-  candidate fix named (brief mode tolerates a well-formed join key as
-  "not my business", the same tolerance the change-folder path already
-  extends to prose).
+- **A change-folder join key (referent kind (b)) is tolerated in brief
+  mode but INERT there** — legal, warned about, and contributing no
+  coverage, because it resolves against no brief item. A plan whose
+  tasks all cite join keys therefore passes brief mode while reporting
+  every declared id uncovered: measured, a 3-id brief against such a
+  plan exits 0 with `Brief item coverage: 0 of 3`. Read the two outputs
+  together or not at all — the same run also prints that every value
+  "resolves against the 3 identifier(s) declared", which is true (none
+  was unresolvable) and reads as reassurance that nothing was checked.
+  Brief mode answers one of the two questions such a plan raises; the
+  change-folder invocation answers the other, and neither knows the
+  other ran.
 - **A fullwidth or minus-sign dash in `none — <reason>` gets an
   unhelpful message.** Unicode look-alike dashes (U+2212, U+FF0D) are
   ruled OUT of the separator set, fail-closed and pinned; the
