@@ -158,7 +158,7 @@ flowchart LR
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: "A legal no-requirement value: `none — <reason>`, reason mandatory"
-- Status: pending
+- Status: done(9a54a1d7)
 - Gloss: 「這個任務沒有需求對應」是合法的，但必須寫理由，不能空著混過去
 
 ## Task 8 — wire brief mode into the writing-plans gate paragraph
@@ -175,7 +175,7 @@ flowchart LR
 - Dependencies: Tasks 2, 4, 5, 6, 7 complete first
 - Independent: true
 - Brief item covered: "The coverage checker gains a brief mode… This mirrors what the change-folder path already gets, on the path every arc actually uses"
-- Status: pending
+- Status: done(e4943660)
 - Gloss: 閘門那段學會 brief 模式，並且把「只適用 change-folder」這個說法從標題與本文一起拿掉
 
 ## Task 11 — declare the `--brief` invocation form in the command surface
@@ -534,3 +534,23 @@ flowchart LR
   task's completion, not an extension of it. The criterion is offered, not
   asserted: if whole-branch review thinks it draws the line in the wrong place,
   the line is what should move, not this instance.
+
+- **T7 and T8 shipped without same-reviewer delta confirmation, and this is a
+  disclosure rather than a repair.** Both tasks were implemented, reviewed
+  (T8: spec PASS, code-quality PASS_WITH_NOTES), and fixed. Their fix rounds
+  were then supposed to close via the repo's standard resolution — the SAME
+  reviewer confirming the delta by `SendMessage`. That path was gone: a context
+  compaction dropped every completed reviewer's handle, and `ListAgents`
+  enumerates only live subagents and peer sessions, so no completed reviewer
+  could be readdressed. The loss produced no error of any kind; it presented as
+  simply not knowing whom to ask.
+  Two repairs suggested themselves and both were rejected. Dispatching a FRESH
+  reviewer is exactly the whole-artifact re-round the delta contract exists to
+  prevent, and would re-sample the whole corpus for new unrelated findings.
+  Flipping the ledger as if confirmed would launder an unconfirmed fix into the
+  record — worst precisely for judgment-bearing findings, which is what these
+  were. So the fixes ride into whole-branch review (which reads the entire diff
+  regardless) and are named here as unconfirmed. Recorded as a durable lesson
+  in `docs/loom/memory/same-reviewer-delta-confirmation-dies-at-a-context-compaction.md`:
+  reviewer handles are perishable state, and the fix is to write the handle
+  into the artifact when the gating verdict arrives — not to remember it.
