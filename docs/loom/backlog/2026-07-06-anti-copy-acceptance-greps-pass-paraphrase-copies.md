@@ -3,11 +3,15 @@ name: 2026-07-06-anti-copy-acceptance-greps-pass-paraphrase-copies
 description: Anti-copy acceptance greps pass paraphrase copies
 status: OPEN
 origin: 2026-07-06 loom-memory-skill task 1 quality review — the plan's anti-copy GREEN criterion grepped for verbatim charter-row text; the implementer shipped a complete five-row PARAPHRASE of the charter's jurisdiction table that passed the mechanical grep while violating its intent; only the quality reviewer's judgment leg caught it
-start: next touch of loom-code writing-plans SKILL.md or the plan-document-reviewer prompt
+start: plan-document-reviewer-prompt.md's next touch, expected to be Task 7 of docs/loom/plans/2026-08-13-open-question-dispatch-gate.md landing (confirms the committed leg shipped); or writing-plans/SKILL.md's next touch, expected to be the slimming arc's slim round 2 pass over that file (2026-07-14-pocock-loom-roadmap-arcs-c-d-e-remainder.md leg D — the deferred leg)
 ---
 
-- Start: next touch of loom-code writing-plans SKILL.md or the
-  plan-document-reviewer prompt
+- Start: plan-document-reviewer-prompt.md's next touch, expected to be
+  Task 7 of docs/loom/plans/2026-08-13-open-question-dispatch-gate.md
+  landing (confirms the committed leg shipped); or writing-plans/SKILL.md's
+  next touch, expected to be the slimming arc's slim round 2 pass over
+  that file (2026-07-14-pocock-loom-roadmap-arcs-c-d-e-remainder.md leg D
+  — the deferred leg)
 - Origin: 2026-07-06 loom-memory-skill task 1 quality review — the
   plan's anti-copy GREEN criterion grepped for verbatim charter-row
   text; the implementer shipped a complete five-row PARAPHRASE of the
@@ -30,3 +34,24 @@ start: next touch of loom-code writing-plans SKILL.md or the plan-document-revie
   taking it would have pushed that plan past its critical-path depth ceiling.
   Recorded rather than skipped silently — the condition stays fired, so the
   next `writing-plans/SKILL.md` touch has no excuse.
+
+- **Split decided 2026-08-13** (open-question-dispatch-gate arc), superseding
+  the flat FIRED-but-not-taken note above. The reviewer-prompt leg is
+  committed to this arc as Task 7 of
+  `docs/loom/plans/2026-08-13-open-question-dispatch-gate.md`: it will add a
+  check hint to `plan-document-reviewer-prompt.md` stating that a plan whose
+  acceptance criterion protects content from copying must carry BOTH the
+  mechanical verbatim grep AND an explicit reviewer-judgment check ("no
+  paraphrase reproduction of the protected content"), and that a
+  mechanical-only criterion is a gap. As of this writing Task 7 has not yet
+  executed — `plan-document-reviewer-prompt.md` carries no such hint and no
+  occurrence of "paraphrase" / "anti-copy" / "reviewer-judgment". The
+  `writing-plans/SKILL.md` leg is deferred to the slimming arc
+  (`2026-07-14-pocock-loom-roadmap-arcs-c-d-e-remainder.md` leg D):
+  `SKILL.md` sits at 4249 words against the hard ≤4250-word ceiling pinned
+  by `test_word_count_at_most_4250`, and a third ceiling raise is not the
+  plan of record. This entry stays `OPEN` until the committed leg (Task 7)
+  actually lands; the `start:` condition above tracks both remaining
+  triggers — Task 7's landing (to confirm the committed leg shipped) and
+  the `writing-plans/SKILL.md` leg's deferred touch — and will narrow to
+  just the latter once Task 7 lands.
