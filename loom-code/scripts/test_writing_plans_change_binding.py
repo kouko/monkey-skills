@@ -30,6 +30,7 @@ wording variation, so the test guards meaning without being brittle.
 Stdlib only (pathlib). Resolve SKILL.md relative to this test file.
 """
 
+import re
 from pathlib import Path
 
 SKILL = Path(__file__).parents[1] / "skills" / "writing-plans" / "SKILL.md"
@@ -39,6 +40,20 @@ AGENTS_MD = Path(__file__).parents[2] / "AGENTS.md"
 def _text() -> str:
     assert SKILL.is_file(), f"SKILL.md is absent at {SKILL}"
     return SKILL.read_text(encoding="utf-8")
+
+
+def _coverage_entry(managed_block: str) -> str:
+    """The ONE command-surface bullet that declares the coverage script.
+
+    Sliced rather than searched so that text satisfying the pins has to
+    live inside this entry: the same words parked in a neighbouring
+    bullet declare nothing about this command.
+    """
+    start = managed_block.index("- **Check writing-plans scenario coverage**")
+    tail = managed_block[start + 1:]
+    next_bullet = tail.find("\n- **")
+    stop = len(managed_block) if next_bullet == -1 else start + 1 + next_bullet
+    return managed_block[start:stop]
 
 
 def test_layer_0_explicit_handoff_wins():
@@ -148,7 +163,17 @@ def test_coverage_script_wired_after_scenario_mapping():
 def test_agents_md_declares_coverage_script():
     """Command-surface accretion obligation (Task 12): AGENTS.md's managed
     command-surface block must declare check_scenario_coverage.py so the
-    new runnable verb has a declared entry point."""
+    new runnable verb has a declared entry point.
+
+    Task 11 extends this to the SECOND invocation form the script grew
+    (`--brief`), and to the exclusivity claims that form falsifies. A
+    declaration that names one of two forms sends a reader to the wrong
+    invocation, so both the form and the ABSENCE of any surviving
+    change-folder-only claim are asserted over the entry's own slice —
+    an absence, because the falsehood was stated in two places at once
+    (a parenthetical label AND a body that described the change-folder
+    comparison as the whole check), and pinning either one by name
+    leaves the other free to keep asserting it."""
     assert AGENTS_MD.is_file(), f"AGENTS.md is absent at {AGENTS_MD}"
     text = AGENTS_MD.read_text(encoding="utf-8")
     start = text.index("BEGIN command-surface (managed)")
@@ -156,6 +181,24 @@ def test_agents_md_declares_coverage_script():
     managed_block = text[start:end]
     assert "check_scenario_coverage.py" in managed_block, \
         "AGENTS.md managed command-surface block must declare check_scenario_coverage.py"
+
+    entry = _coverage_entry(managed_block)
+    low = entry.lower()
+
+    assert "check_scenario_coverage.py --brief" in entry, \
+        ("the coverage entry must declare the --brief invocation form, "
+         "not the two-positional form alone")
+
+    for hit in re.finditer("only", low):
+        window = low[max(0, hit.start() - 90):hit.end() + 90]
+        assert "change-folder" not in window and "change folder" not in window, \
+            ("the coverage entry still claims the check is change-folder-"
+             f"only, which --brief falsifies: ...{window}...")
+
+    assert "BI-<n>" in entry, \
+        ("the coverage entry describes the change-folder comparison alone; "
+         "it must also say what brief mode resolves (the brief's declared "
+         "BI-<n> identifiers)")
 
 
 def test_detection_cascade_anchors_at_target_repo_root():
