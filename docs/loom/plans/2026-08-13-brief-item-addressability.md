@@ -25,15 +25,15 @@ flowchart LR
   T3 --> T4[T4 brief mode: resolve + fail closed]
   T3 --> T6[T6 union coverage]
   T3 --> T7[T7 none-with-reason]
-  T2 --> T8a[T8a gate paragraph]
-  T2 --> T8b[T8b command surface]
-  T4 --> T8a
-  T4 --> T8b
+  T2 --> T8[T8 gate paragraph]
+  T2 --> T11[T11 command surface]
+  T4 --> T8
+  T4 --> T11
   T5[T5 change-folder: report unparsed] --> T8
-  T6 --> T8a
-  T6 --> T8b
-  T7 --> T8a
-  T7 --> T8b
+  T6 --> T8
+  T6 --> T11
+  T7 --> T8
+  T7 --> T11
   T8a --> T9[T9 ship]
   T8b --> T9
   T2 --> T10[T10 reviewer prompt learns kind c]
@@ -159,7 +159,7 @@ flowchart LR
 - Status: pending
 - Gloss: 「這個任務沒有需求對應」是合法的，但必須寫理由，不能空著混過去
 
-## Task 8a — wire brief mode into the writing-plans gate paragraph
+## Task 8 — wire brief mode into the writing-plans gate paragraph
 
 - Description: In `writing-plans/SKILL.md`'s coverage-gate paragraph (`:251`), add one sentence stating that when the source brief declares `BI-` ids, the same `check_scenario_coverage.py` invocation runs in brief mode before the plan-document-reviewer dispatch, with the same block-on-nonzero rule. Then remove EVERY claim in that paragraph that the check is change-folder-only — there are at least two: the heading "Coverage self-check (change-folder input only)" and the body sentence "This check applies only to the change-folder input path; a brainstorming-brief-only plan has no change-folder to check coverage against". Pointer, not copy — the mechanics stay in the script and in `plan-format.md`.
 - Module: loom-code/skills/writing-plans/SKILL.md
@@ -176,7 +176,7 @@ flowchart LR
 - Status: pending
 - Gloss: 閘門那段學會 brief 模式，並且把「只適用 change-folder」這個說法從標題與本文一起拿掉
 
-## Task 8b — declare the `--brief` invocation form in the command surface
+## Task 11 — declare the `--brief` invocation form in the command surface
 
 - Description: `AGENTS.md`'s command-surface entry declares this script as `python3 loom-code/scripts/check_scenario_coverage.py <change-folder> <plan-path>` only, and its parenthetical label reads "(writing-plans self-check, change-folder input only)". Add the `--brief` invocation form and remove the change-folder-only claim from that label — per `writing-plans`' runnable-capability rule that a new verb is declared in the command surface AND verified to run.
 - Module: AGENTS.md
@@ -204,7 +204,7 @@ flowchart LR
 - Acceptance:
   - RED: `scripts/test_check_version_bump.py::test_skill_content_without_version_bump_is_a_violation` fails while this branch's skill-content edits sit unbumped; and `.claude/hooks/check-codex-manifest-drift.sh` exits non-zero while `.codex-plugin/plugin.json` still carries the old version.
   - GREEN: both pass, the CHANGELOG entry exists with the honest-limit sentence, and the full suite is green.
-- Dependencies: Tasks 8a, 8b, 10 complete first
+- Dependencies: Tasks 8, 10, 11 complete first
 - Independent: false
 - Brief item covered: none — release administration; this task delivers no brief outcome. Escape authorised by brief §Smallest End State item 5 ("A legal no-requirement value: `none — <reason>`, reason mandatory") and by §Experiment's unmappable-by-design finding, where all three probes independently called the equivalent release task unmappable. This task is also the plan's own worked instance of the value Task 7 makes legal.
 - Status: pending
@@ -309,7 +309,9 @@ flowchart LR
   the AGENTS.md duty had no failing test at all — the existing managed-block
   pin asserts only that the block names the script, which was already true,
   so it stayed green with or without `--brief`. Split by consumer at the same
-  dependency level, so depth is unchanged at 5. **And a second, worse finding:
+  dependency level (numbered 8 and 11 — the `Dependencies` grammar accepts
+  only numeric task ids, so the reviewer's suggested `8a`/`8b` labels were
+  rejected by `plan_card.py` and renumbered), so depth is unchanged at 5. **And a second, worse finding:
   the amendment fixed the falsified HEADING and left two sibling sentences
   asserting the same falsehood** — `writing-plans/SKILL.md:251`'s body ("This
   check applies only to the change-folder input path") and `AGENTS.md`'s own
@@ -346,3 +348,23 @@ flowchart LR
   one task that is this arc's worked instance of the value. Every remaining
   dispatch in this arc, and the whole-branch review at close-out, must pass
   REPO paths for any contract this branch edits.
+
+- **Open design question, two reviewers disagree — routed to whole-branch
+  review, deliberately not resolved inside a task.** In brief mode, a value
+  that is a well-formed change-folder join key (referent kind (b)) errors,
+  because it contains no `BI-<n>`. Task 4's code-quality reviewer judged the
+  question moot: the CLI makes the two modes mutually exclusive. Task 4's spec
+  reviewer disagreed after reading Task 8's Description, which implies both
+  checks run as SEPARATE invocations against the same plan when a brief with
+  ids and a change-folder both exist — under which a plan mixing kind-(b) and
+  kind-(c) tasks would have its legitimate kind-(b) citations wrongly flagged.
+  Its words: mode-exclusivity "merely hides the question rather than resolving
+  it". Both reviewers agree this is NOT a Task 4 defect — the artifact executes
+  its own Description exactly. It is a plan-level gap, arguably Task 2's (which
+  framed the three kinds as coexisting "alongside" one another) or Task 8's.
+  Not folded into Task 4's fix round: that round already carries three findings
+  and this would widen it past its Description, which is the boundary discipline
+  this arc has enforced on every implementer. The cheap candidate fix, recorded
+  so it need not be re-derived: brief mode tolerates a well-formed join key as
+  "not my business" rather than treating it as unresolvable — the same tolerance
+  the change-folder path already extends to prose.
