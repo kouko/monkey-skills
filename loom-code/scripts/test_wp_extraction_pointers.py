@@ -28,7 +28,10 @@ test_post_pass_amendment_gate.py) and the splitting framework are
 untouched anti-vacuous survivors.
 """
 import re
+import sys
 from pathlib import Path
+
+import pytest
 
 SKILL_DIR = Path(__file__).resolve().parents[1] / "skills" / "writing-plans"
 SKILL_MD = SKILL_DIR / "SKILL.md"
@@ -246,17 +249,39 @@ _GATE_LEAD = "**Coverage self-check"
 _SCOPE_RESTRICTIONS = ("only", "not apply", "no change-folder")
 
 
+_GATE_SECTION_HEADING = "\n## Consuming a loom-spec change-folder"
+
+
 def _coverage_gate_paragraph() -> str:
     """The coverage-self-check paragraph, sliced from its bold lead-in to the
-    next blank line.
+    next blank line, ANCHORED INSIDE the section that owns it.
 
     Slicing binds PLACEMENT, not vocabulary: a duty relocated intact into a
     neighbouring paragraph leaves this slice and fails the pin.
+
+    The anchor is the owning section's heading, not the file-wide first
+    occurrence of the lead-in: §Self-review sits ABOVE this section and
+    legitimately mentions the gate, so a file-wide `index` re-anchors onto
+    any bolded mention above and validates text the shipped paragraph never
+    earned. Last-occurrence would also dodge that decoy, but it is rejected
+    because it fails SILENTLY — it would follow a second gate paragraph
+    added below, exactly the class of bug this fix removes. The heading
+    anchor fails LOUDLY when the document is restructured.
     """
-    text = _skill_text()
-    start = text.index(_GATE_LEAD)
-    end = text.index("\n\n", start)
-    return _norm(text[start:end])
+    assert _GATE_SECTION_HEADING in _skill_text(), (
+        f"cannot locate the section {_GATE_SECTION_HEADING.strip()!r} that "
+        "owns the coverage-gate paragraph — if it was renamed or moved, "
+        "re-point _GATE_SECTION_HEADING at its new heading text"
+    )
+    section = _section(_GATE_SECTION_HEADING)
+    assert _GATE_LEAD in section, (
+        f"the section {_GATE_SECTION_HEADING.strip()!r} carries no "
+        f"{_GATE_LEAD!r} lead-in — the coverage-gate paragraph has left the "
+        "section that owns it"
+    )
+    start = section.index(_GATE_LEAD)
+    end = section.index("\n\n", start)
+    return _norm(section[start:end])
 
 
 def _sentences(paragraph: str) -> list[str]:
@@ -291,6 +316,91 @@ def test_brief_mode_coverage_gate_is_named():
         "the coverage-gate paragraph still restricts the check to the "
         f"change-folder input path: {offenders}"
     )
+
+
+# --- (i1) the slice cannot be captured by a decoy above it -----------------
+
+# A synthetic SKILL.md in which §Self-review carries a paragraph satisfying
+# every substring `test_brief_mode_coverage_gate_is_named` checks for, while
+# the REAL gate paragraph — in the section that owns it — violates the pin.
+# A file-wide first-occurrence anchor validates the decoy and reports a pass
+# the shipped text has not earned. Reproduced live on this branch: T8's own
+# fix round bolded a §Self-review mention and the pin followed it.
+_DECOY_DOC = """# writing-plans
+
+## Self-review — plan-document-reviewer
+
+**Coverage self-check.** When the brief declares `BI-` ids, run the script \
+in brief mode — `python3 check_scenario_coverage.py --brief <brief> <plan>` \
+— before the plan-document-reviewer dispatch, blocking on a non-zero exit.
+
+Other self-review prose.
+
+## Consuming a loom-spec change-folder
+
+**Coverage self-check.** After producing the plan, run the script. It applies \
+only to a change-folder input.
+
+Trailing section prose.
+"""
+
+
+def _patched_skill_text(monkeypatch, doc: str) -> None:
+    monkeypatch.setattr(sys.modules[__name__], "_skill_text", lambda: doc)
+
+
+def test_decoy_paragraph_above_the_gate_cannot_capture_the_pin(monkeypatch):
+    """The production pin — not a helper stand-in — must reject the decoy.
+
+    `test_brief_mode_coverage_gate_is_named` is invoked directly so the
+    assertion under test is the shipped one.
+    """
+    _patched_skill_text(monkeypatch, _DECOY_DOC)
+
+    # sanity: the decoy really does carry everything the pin checks for, so a
+    # pass here would come from the decoy and not from the real paragraph.
+    decoy = _norm(_DECOY_DOC[_DECOY_DOC.index(_GATE_LEAD):])
+    for token in ("--brief", "BI-", "brief mode", "plan-document-reviewer",
+                  "non-zero"):
+        assert token in decoy
+
+    with pytest.raises(AssertionError):
+        test_brief_mode_coverage_gate_is_named()
+
+
+def test_renamed_owning_section_fails_loudly_not_silently(monkeypatch):
+    """Restructure probe: the anchor's whole point is WHICH failure it picks.
+
+    Renaming the owning section must name the heading it could not find,
+    not silently re-slice whatever `**Coverage self-check` appears first.
+    """
+    _patched_skill_text(
+        monkeypatch,
+        _DECOY_DOC.replace(
+            "## Consuming a loom-spec change-folder",
+            "## Consuming a loom-spec spec-folder",
+        ),
+    )
+
+    with pytest.raises(AssertionError) as excinfo:
+        _coverage_gate_paragraph()
+    assert "Consuming a loom-spec change-folder" in str(excinfo.value)
+
+
+def test_gate_paragraph_missing_from_its_section_fails_loudly(monkeypatch):
+    """The complementary restructure: heading intact, paragraph moved away."""
+    _patched_skill_text(
+        monkeypatch,
+        _DECOY_DOC.replace(
+            "**Coverage self-check.** After producing the plan, run the "
+            "script. It applies only to a change-folder input.",
+            "Only unrelated prose lives here now.",
+        ),
+    )
+
+    with pytest.raises(AssertionError) as excinfo:
+        _coverage_gate_paragraph()
+    assert _GATE_LEAD in str(excinfo.value)
 
 
 # --- (i2) the brief-mode duty is reachable from the brief-only path ---------
