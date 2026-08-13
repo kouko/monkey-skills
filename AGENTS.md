@@ -49,13 +49,20 @@ Role boundaries enforced by behavior, not reading restrictions:
   (named on stderr); a `[deferred]` req with 0 tests is surfaced on
   stdout (informational, rc=0). Sound because CI runs it after the green
   pytest gate, so a linked test ≡ a passing test.
-- **Check writing-plans scenario coverage** (writing-plans self-check,
-  change-folder input only):
+- **Check writing-plans scenario coverage** (writing-plans self-check;
+  two modes, selected by the input you pass — passing both is refused):
   `python3 loom-code/scripts/check_scenario_coverage.py <change-folder> <plan-path>`
   — compares the change-folder's `#### Scenario:` set against the
   plan's `Brief item covered` join keys; rc=1 names every dropped
   scenario on stderr, rc=0 on full coverage (or a vacuous zero-scenario
   folder).
+  `python3 loom-code/scripts/check_scenario_coverage.py --brief <brief-path> <plan-path>`
+  — brief mode: resolves every task's `Brief item covered` value against
+  the `BI-<n>` identifiers the brief declares; rc=1 names each
+  unresolvable citation on stderr, rc=0 otherwise, with every declared
+  identifier no task cites warned and a coverage count printed. A brief
+  declaring no identifiers is announced as legacy mode — that run
+  resolved nothing, and says so rather than exiting 0 silently.
 - **Archive a shipped change-folder, or a single backlog entry file**
   (finishing-a-development-branch archive-on-close step, orchestrator-only,
   once per branch; the file unit is also used to close a
