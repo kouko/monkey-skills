@@ -22,6 +22,7 @@ under test for the collector tests.
 """
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -698,6 +699,128 @@ def test_none_with_reason_is_not_treated_as_unresolvable(tmp_path):
     )
     result = _run_brief(brief, plan)
     assert result.returncode == 0, result.stderr
+
+
+# --- per-item coverage: the union of every task citing an identifier ---
+
+
+# Two tasks, one shared identifier: the shape the experiment found in the
+# wild (`--lang` on **both** scripts, delivered half by one task and half by
+# another). BI-1 and BI-3 are declared by the same brief and cited by
+# nobody, which is the other direction of the same question.
+_PLAN_TWO_TASKS_BOTH_CITING_BI2 = """\
+# Plan: x
+
+## Task 1 — first half
+- Brief item covered: BI-2 — the checker resolves a cited identifier
+
+## Task 2 — second half
+- Brief item covered: `BI-2`
+"""
+
+# The per-item tally, machine-readable so a test can assert the NUMBER of
+# covered items rather than a phrase that happens to appear when it is right.
+_TALLY = re.compile(r"^Brief item coverage: (\d+) of (\d+)\b")
+
+# One uncovered-item report line: which identifier, and the brief line that
+# declared it.
+_UNCOVERED = re.compile(
+    r"^Warning: uncovered brief item (BI-\d+) — declared at line (\d+)\b")
+
+
+def _coverage_tally(output: str) -> tuple[int, int]:
+    """(covered, declared) read off the run's tally line."""
+    hits = [match for match in (_TALLY.match(line)
+                                for line in output.splitlines()) if match]
+    assert len(hits) == 1, (
+        "the run must print exactly one 'Brief item coverage: <n> of <n>' "
+        f"tally line — got {len(hits)} in:\n{output}"
+    )
+    return int(hits[0].group(1)), int(hits[0].group(2))
+
+
+def _uncovered_reports(stderr: str) -> set[tuple[str, int]]:
+    """Every (identifier, declaring line number) pair the run reports as
+    covered by no task."""
+    return {(match.group(1), int(match.group(2)))
+            for match in (_UNCOVERED.match(line)
+                          for line in stderr.splitlines()) if match}
+
+
+def test_item_cited_by_two_tasks_is_covered_once(tmp_path):
+    """An identifier cited by two tasks is ONE covered item, not two.
+
+    Coverage is per declared identifier, computed as the union of the tasks
+    citing it — so the tally counts items, never citations. The distinction
+    is invisible until an item is shared: the experiment found `--lang on
+    both scripts` delivered half by one task and half by another, and a
+    checker that counts citations reports 2-of-3 covered for a brief where
+    only 1 of 3 items is cited at all. That inflated number is worse than no
+    number, because it reads as progress against items nobody touched.
+
+    The tally is parsed and compared as a pair of integers rather than
+    matched as a phrase: the test's own name says "covered once", so a
+    substring assertion that merely finds the word `covered` would be
+    satisfied by the double-counting implementation this pin exists to
+    reject — and by the `tmp_path` directory name, which pytest builds from
+    this function's own name.
+    """
+    brief = tmp_path / "brief.md"
+    brief.write_text(_BRIEF_WITH_THREE_IDS, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(_PLAN_TWO_TASKS_BOTH_CITING_BI2, encoding="utf-8")
+
+    result = _run_brief(brief, plan)
+
+    assert result.returncode == 0, (
+        "both citations resolve, so the run must not fail\n"
+        f"{result.stdout}\n{result.stderr}"
+    )
+    assert _coverage_tally(result.stdout + result.stderr) == (1, 3), (
+        "the brief declares 3 identifiers and exactly 1 of them is cited; "
+        "counting citations instead of items would report 2 covered"
+    )
+
+
+def test_declared_id_cited_by_no_task_is_reported_with_its_declaring_line(
+    tmp_path,
+):
+    """Every declared identifier no task cites is named, each with the brief
+    line that declared it.
+
+    This is the reverse direction of the citation check: that one asks
+    whether each task's value resolves, this one asks whether each item
+    found a task. Both are needed — a plan citing one item three times
+    resolves perfectly and still leaves two items unbuilt.
+
+    The reported pairs are compared as a SET, not searched for: a report
+    narrowed to the first uncovered item still contains `BI-1`, so a
+    containment assertion cannot see the narrowing. The declaring line
+    number is half of each pair because that is the coordinate the collector
+    exists to supply — without it the author is told an id is missing and
+    left to find where it was declared. The identifiers and line numbers are
+    read out of the fixture, so a fixture edit cannot silently desync them
+    from the expectation.
+    """
+    brief = tmp_path / "brief.md"
+    brief.write_text(_BRIEF_WITH_THREE_IDS, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(_PLAN_TWO_TASKS_BOTH_CITING_BI2, encoding="utf-8")
+
+    result = _run_brief(brief, plan)
+
+    expected = {
+        ("BI-1", _lineno_of(
+            _BRIEF_WITH_THREE_IDS,
+            "- BI-1 — Brief items carry an identifier that survives rewording.")),
+        ("BI-3", _lineno_of(
+            _BRIEF_WITH_THREE_IDS,
+            "- BI-3 — The umbrella outcome this decision commits to.")),
+    }
+    assert _uncovered_reports(result.stderr) == expected, (
+        "every uncovered identifier must be reported with its declaring "
+        f"line, and the cited BI-2 must not be — got:\n{result.stderr}"
+    )
 
 
 def test_multiple_requirements_and_scenarios_all_paired_correctly(tmp_path):
