@@ -209,7 +209,7 @@ flowchart LR
 - Dependencies: Tasks 8, 10, 11 complete first
 - Independent: false
 - Brief item covered: none — release administration; this task delivers no brief outcome. Escape authorised by brief §Smallest End State item 5 ("A legal no-requirement value: `none — <reason>`, reason mandatory") and by §Experiment's unmappable-by-design finding, where all three probes independently called the equivalent release task unmappable. This task is also the plan's own worked instance of the value Task 7 makes legal.
-- Status: pending
+- Status: done(004c0799)
 - Gloss: 出貨行政：版本號、變更記錄、Codex 鏡射三者對齊
 
 ## Task 10 — teach the plan-document-reviewer prompt the new referent kind and the none-value

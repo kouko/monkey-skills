@@ -293,7 +293,17 @@ def test_brief_mode_coverage_gate_is_named():
 
     # (1) brief mode is named in this paragraph, in its own sentence, with
     # the shipped `--brief` invocation form, the reviewer-dispatch ordering,
-    # and the same block-on-nonzero rule the change-folder mode carries.
+    # and the blocking condition brief mode ACTUALLY carries.
+    #
+    # This assertion previously required the word "non-zero" and its comment
+    # claimed brief mode blocks by "the same rule the change-folder mode
+    # carries". Whole-branch review falsified that against the code: brief
+    # mode's exit 1 fires for an unresolvable citation only, while an id no
+    # task cites is warned and the run still exits 0. The pin was therefore
+    # holding a false statement in place — a passing test guaranteeing the
+    # prose stayed wrong. Strengthened rather than dropped: it now pins the
+    # distinction itself, so prose that re-flattens the two gates into one
+    # rule fails here.
     brief_sentences = [s for s in _sentences(para) if "--brief" in s]
     assert len(brief_sentences) == 1, (
         "the coverage-gate paragraph must name brief mode in exactly one "
@@ -303,7 +313,15 @@ def test_brief_mode_coverage_gate_is_named():
     assert "BI-" in sentence
     assert "brief mode" in sentence.lower()
     assert "plan-document-reviewer" in sentence
-    assert "non-zero" in sentence.lower()
+    assert "unresolvable" in sentence.lower(), (
+        "the brief-mode sentence must name the condition that actually "
+        "blocks (an unresolvable citation), not a generic non-zero exit"
+    )
+    assert "uncovered" in sentence.lower(), (
+        "the brief-mode sentence must also say what does NOT block — an "
+        "uncovered id only warns — or a reader infers the change-folder "
+        "path's stronger rule applies here too"
+    )
 
     # (2) and no sentence in the same paragraph still restricts the check to
     # the change-folder input path.

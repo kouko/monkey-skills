@@ -97,6 +97,15 @@ in §Experiment; each names the finding that forced it.
    that resolves against the brief's declared IDs, and every declared ID is
    covered. This mirrors what the change-folder path already gets, on the path
    every arc actually uses.
+   > **Shipped narrower than this sentence reads — annotation added at
+   > close-out, original wording left intact.** The two halves ship with
+   > different force. An unresolvable citation is an ERROR (exit 1). An id that
+   > no task cites is **reported, not gated** — it is named in a warning and the
+   > run still exits 0. So "every declared ID is covered" is an outcome this
+   > mode makes *visible*, not one it *enforces*. The ruling and its reasoning
+   > are in the plan's Decision Log under Task 6 (report-vs-gate); this note
+   > exists because a later arc will read this item as the convention's origin
+   > and would otherwise inherit the stronger reading.
 4. **The fail-open closes.** A `Brief item covered` value matching no known
    referent grammar is an ERROR naming the malformed value, never a silent
    zero-coverage contribution. This fix applies to the existing change-folder
