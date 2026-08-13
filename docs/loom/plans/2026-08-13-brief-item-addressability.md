@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-13-brief-item-addressability.md
 Goal: Give brief items hybrid identity (an immutable `BI-<n>` plus the human-readable text) in every outcome-declaring section, let `Brief item covered` cite that id inside the existing field, extend the coverage checker with a brief mode that treats an item as covered by the union of citing tasks, and make an unresolvable citation an error instead of a silent zero.
-Stage: sdd:wave-1
+Stage: finishing
 Endpoint named: no — the request named implementation ("開始依照 loom 的標準流程實作吧"), not a publish endpoint; PR and merge stay human-pumped.
 Total tasks: 11
 Critical-path depth: 5 (≤5)
