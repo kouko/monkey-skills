@@ -107,7 +107,7 @@ flowchart LR
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: "The fail-open closes. A `Brief item covered` value matching no known referent grammar is an ERROR"
-- Status: pending
+- Status: done(bad3a07a)
 - Gloss: 引用寫錯會當場報錯並指名，不再安靜地變成「這條沒人做」
 
 ## Task 5 — change-folder mode: name the referents that did not parse instead of dropping them
@@ -399,5 +399,25 @@ flowchart LR
   run number leaks by a route the sweep never modelled; and it tests whole-literal
   containment, not fragment containment against a differently-segmented path. The
   reviewer grepped and confirmed none of those shapes exists live in this file
-  today. Treat the 21/21 result as a first-pass filter for one shape, never as
-  proof that no other shape exists in the wider suite.
+  today, and extended the sweep with a second AST pass over the three unmodelled
+  shapes, finding two benign non-literal needles and nothing at risk. Treat the
+  sweep as a first-pass filter for ONE shape, never as proof that no other shape
+  exists in the wider suite.
+- **The sweep's tally was measured three times and came back three different
+  ways, and none of the three was wrong.** The implementer reported 21 tests /
+  17 taking `tmp_path` / 4 not; the reviewer's own AST parse gave 21 / 16 / 5;
+  an orchestrator parse at a later tree state gives 23 / 18 / 5. The file was
+  moving under all three — concurrent arms were landing commits throughout. The
+  lesson is not that someone miscounted: it is that **a count over a file under
+  concurrent edit is valid only until the next commit**, so a tally quoted in a
+  durable artefact needs the tree state it was taken at, or it will read as a
+  contradiction later. The 5-not-taking-`tmp_path` figure was stable across all
+  three, which is the part the sweep's conclusion actually rested on.
+- **A reviewer's own blind spot, named by itself and worth keeping.** The Task 4
+  code-quality arm wrote: "I ran mutations on the *implementation* but never
+  checked whether the *test itself* could fail — didn't occur to me to ask a
+  passing test 'why does it pass'." That is the distinction the legacy-pin
+  defect turned on. Mutating the implementation proves the test is sensitive to
+  the implementation; it does not prove the test passes for the reason its name
+  claims. Those are different questions and only the second finds a
+  self-satisfying assertion.
