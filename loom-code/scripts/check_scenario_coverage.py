@@ -341,6 +341,44 @@ def resolve_plan_brief_citations(
     return errors
 
 
+def brief_item_coverage(
+    plan_text: str, declared: dict[str, int]
+) -> dict[str, set[str]]:
+    """Every declared identifier mapped to the SET of tasks citing it.
+
+    Coverage is per item and is the UNION of its citing tasks: an item may
+    need several tasks, so no single citation discharges one. The
+    experiment behind this change found `--lang` on both scripts delivered
+    half by one task and half by another, with neither alone satisfying it.
+    Counting citations instead would report that brief as further along
+    than it was, because the same item cited twice would read as two.
+
+    Tasks are keyed by their enclosing heading, so two citations from the
+    same task collapse to one member — the value counts distinct citing
+    tasks, never occurrences. An identifier no task cites maps to an empty
+    set rather than being absent: the caller reports uncovered items, and a
+    missing key is indistinguishable from an identifier the collector never
+    saw.
+
+    Only declared identifiers are credited. A value citing an id the brief
+    does not declare resolves to nothing and is `resolve_plan_brief_
+    citations`' error to raise; crediting it here would let a typo cover an
+    item that has no coverage at all.
+    """
+    coverage: dict[str, set[str]] = {item_id: set() for item_id in declared}
+    for line_match in _BRIEF_ITEM_LINE.finditer(plan_text):
+        value = line_match.group(1).strip()
+        cited = [item_id for item_id in _BI_CITATION.findall(value)
+                 if item_id in coverage]
+        if not cited:
+            continue
+        where = (_enclosing_heading(plan_text, line_match.start())
+                 or "(no enclosing heading)")
+        for item_id in cited:
+            coverage[item_id].add(where)
+    return coverage
+
+
 def check_brief_coverage(brief_path: Path, plan_path: Path) -> int:
     """Brief mode: resolve every task's `Brief item covered` value against
     the identifiers the brief declares. Returns the process exit code.
@@ -371,6 +409,24 @@ def check_brief_coverage(brief_path: Path, plan_path: Path) -> int:
     errors = resolve_plan_brief_citations(plan_text, declared)
     for message in errors:
         print(message, file=sys.stderr)
+
+    # The reverse direction, reported on both exit paths: a plan whose one
+    # bad citation fails the run still owes its author the whole picture,
+    # and computing it only on the way to exit 0 would hide it exactly when
+    # the plan is being edited. Declaration order, so the report reads in
+    # the order the brief does.
+    coverage = brief_item_coverage(plan_text, declared)
+    uncovered = [item_id for item_id in
+                 sorted(declared, key=lambda item: declared[item])
+                 if not coverage[item_id]]
+    for item_id in uncovered:
+        print(f"Warning: uncovered brief item {item_id} — declared at line "
+              f"{declared[item_id]} of {brief_path}, cited by no task's "
+              f"'Brief item covered' value in {plan_path}.", file=sys.stderr)
+    print(f"Brief item coverage: {len(declared) - len(uncovered)} of "
+          f"{len(declared)} declared identifier(s) cited by at least one task "
+          f"in {plan_path}.")
+
     if errors:
         return 1
     print(f"Every 'Brief item covered' value in {plan_path} resolves against the "
