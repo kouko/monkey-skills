@@ -72,6 +72,17 @@ Versioning: [Semantic Versioning](https://semver.org/).
   invocation form — executed once against a real brief/plan pair, not
   merely written. Both had carried a now-false "change-folder input
   only" claim.
+- **The `writing-plans` READMEs ship with the widened field, not behind
+  it.** All three (`README.md`, `.ja`, `.zh-TW`) still described `Brief
+  item covered` as taking only a quote from the brief, so a reader who
+  believed them would author plans using one of four legal forms; each
+  now names the accepted kinds and the no-requirement value and routes
+  to `references/plan-format.md` for the grammar, with a pin in
+  `test_writing_plans_readme_sync.py` failing if any one regresses.
+  Counted as part of this feature rather than a follow-up fix: a widened
+  value grammar whose consumers still teach the old one is an incomplete
+  ship, which is the class this arc filed as
+  `widening-a-value-grammar-needs-a-consumer-census-at-plan-time`.
 
 ### Honest limits — read these before adopting
 
