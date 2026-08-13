@@ -63,6 +63,24 @@ Role boundaries enforced by behavior, not reading restrictions:
   identifier no task cites warned and a coverage count printed. A brief
   declaring no identifiers is announced as legacy mode — that run
   resolved nothing, and says so rather than exiting 0 silently.
+- **Check a plan's Open Questions gate** (writing-plans self-check):
+  `python3 loom-code/scripts/check_open_questions.py <plan-path>` —
+  scopes the scan to the plan's `## Open Questions` section only
+  (a token outside that section, e.g. in prose, a Decision Log entry,
+  or a fenced code-block example, is never inspected — heading
+  detection and the entry scan are both fence-aware); rc=1 on any
+  `[OPEN]` entry (its `OQ-<n>` named on stderr), on an absent
+  `## Open Questions` heading, on more than one such heading (a
+  malformed plan — exactly one is required), on a present-but-bare
+  section (heading present, body empty), on a section whose body is
+  prose only (no recognizable entry and no N/A line), on a line
+  starting with the `- OQ-<n>` entry marker that fails the entry
+  grammar (a malformed entry, e.g. wrong/lowercase token, named on
+  stderr), or on the pinned `N/A — no unresolved question: <reason>`
+  line missing its reason; rc=0 when every entry is `[RESOLVED]` or the
+  N/A line is well-formed. A reused `OQ-<n>` identifier (the
+  never-renumbered/never-reused rule) is warned on stderr, first-wins —
+  a warning only, it never changes rc.
 - **Archive a shipped change-folder, or a single backlog entry file**
   (finishing-a-development-branch archive-on-close step, orchestrator-only,
   once per branch; the file unit is also used to close a
