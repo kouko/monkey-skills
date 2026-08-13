@@ -4,7 +4,7 @@ Source brief: docs/loom/specs/2026-08-13-brief-item-addressability.md
 Goal: Give brief items hybrid identity (an immutable `BI-<n>` plus the human-readable text) in every outcome-declaring section, let `Brief item covered` cite that id inside the existing field, extend the coverage checker with a brief mode that treats an item as covered by the union of citing tasks, and make an unresolvable citation an error instead of a silent zero.
 Stage: sdd:wave-1
 Endpoint named: no — the request named implementation ("開始依照 loom 的標準流程實作吧"), not a publish endpoint; PR and merge stay human-pumped.
-Total tasks: 10
+Total tasks: 11
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
 Plan-document-reviewer verdict: PASS (2026-08-13, round 2 + delta confirmation)
@@ -25,12 +25,17 @@ flowchart LR
   T3 --> T4[T4 brief mode: resolve + fail closed]
   T3 --> T6[T6 union coverage]
   T3 --> T7[T7 none-with-reason]
-  T2 --> T8[T8 wire the gate]
-  T4 --> T8
+  T2 --> T8a[T8a gate paragraph]
+  T2 --> T8b[T8b command surface]
+  T4 --> T8a
+  T4 --> T8b
   T5[T5 change-folder: report unparsed] --> T8
-  T6 --> T8
-  T7 --> T8
-  T8 --> T9[T9 ship]
+  T6 --> T8a
+  T6 --> T8b
+  T7 --> T8a
+  T7 --> T8b
+  T8a --> T9[T9 ship]
+  T8b --> T9
   T2 --> T10[T10 reviewer prompt learns kind c]
   T10 --> T9
 ```
@@ -154,22 +159,39 @@ flowchart LR
 - Status: pending
 - Gloss: 「這個任務沒有需求對應」是合法的，但必須寫理由，不能空著混過去
 
-## Task 8 — run the brief-mode check at the same gate the change-folder check already uses
+## Task 8a — wire brief mode into the writing-plans gate paragraph
 
-- Description: Add one sentence to `writing-plans/SKILL.md`'s existing coverage-gate paragraph stating that when the source brief declares `BI-` ids, the same `check_scenario_coverage.py` invocation runs in brief mode before the plan-document-reviewer dispatch, with the same block-on-nonzero rule. Pointer, not copy — the mechanics stay in the script and in `plan-format.md`.
+- Description: In `writing-plans/SKILL.md`'s coverage-gate paragraph (`:251`), add one sentence stating that when the source brief declares `BI-` ids, the same `check_scenario_coverage.py` invocation runs in brief mode before the plan-document-reviewer dispatch, with the same block-on-nonzero rule. Then remove EVERY claim in that paragraph that the check is change-folder-only — there are at least two: the heading "Coverage self-check (change-folder input only)" and the body sentence "This check applies only to the change-folder input path; a brainstorming-brief-only plan has no change-folder to check coverage against". Pointer, not copy — the mechanics stay in the script and in `plan-format.md`.
 - Module: loom-code/skills/writing-plans/SKILL.md
 - Files touched: loom-code/skills/writing-plans/SKILL.md, loom-code/scripts/test_wp_extraction_pointers.py
 - Context paths:
   - loom-code/skills/writing-plans/SKILL.md
   - loom-code/scripts/test_wp_extraction_pointers.py
 - Acceptance:
-  - RED: `loom-code/scripts/test_wp_extraction_pointers.py::test_brief_mode_coverage_gate_is_named` fails — the SKILL.md coverage-gate paragraph mentions only the change-folder input.
-  - GREEN: the sentence is present inside that paragraph (asserted by slicing the paragraph, not the whole file), and the file's existing word ceiling still passes — if the addition breaches it, raise the ceiling deliberately with the reason recorded inline per house convention rather than trimming the new duty.
+  - RED: `loom-code/scripts/test_wp_extraction_pointers.py::test_brief_mode_coverage_gate_is_named` fails — the paragraph mentions only the change-folder input.
+  - GREEN: the new sentence is present AND the sliced paragraph contains no sentence restricting the check to the change-folder input path (one assertion covering heading and body, since both are single lines); the file's existing word ceiling still passes — if the addition breaches it, raise it deliberately with the reason recorded inline rather than trimming the new duty.
 - Dependencies: Tasks 2, 4, 5, 6, 7 complete first
-- Independent: false
+- Independent: true
 - Brief item covered: "The coverage checker gains a brief mode… This mirrors what the change-folder path already gets, on the path every arc actually uses"
 - Status: pending
-- Gloss: 新檢查接上既有的閘門，跟 change-folder 那條走同一個位置與同一條擋人規則
+- Gloss: 閘門那段學會 brief 模式，並且把「只適用 change-folder」這個說法從標題與本文一起拿掉
+
+## Task 8b — declare the `--brief` invocation form in the command surface
+
+- Description: `AGENTS.md`'s command-surface entry declares this script as `python3 loom-code/scripts/check_scenario_coverage.py <change-folder> <plan-path>` only, and its parenthetical label reads "(writing-plans self-check, change-folder input only)". Add the `--brief` invocation form and remove the change-folder-only claim from that label — per `writing-plans`' runnable-capability rule that a new verb is declared in the command surface AND verified to run.
+- Module: AGENTS.md
+- Files touched: AGENTS.md, loom-code/scripts/test_writing_plans_change_binding.py
+- Context paths:
+  - AGENTS.md
+  - loom-code/scripts/test_writing_plans_change_binding.py
+- Acceptance:
+  - RED: extend `loom-code/scripts/test_writing_plans_change_binding.py`'s existing managed-block pin (around `:150-158`) to assert the entry declares the `--brief` form; it fails today because `AGENTS.md:54` declares the two-positional form only. The existing pin asserts only that the block names the script, which is already true — that is why a new assertion is required rather than reuse.
+  - GREEN: the entry carries the `--brief` form, its parenthetical no longer says change-folder-only, and that form was EXECUTED once against a real brief/plan pair to confirm it runs.
+- Dependencies: Tasks 2, 4, 5, 6, 7 complete first
+- Independent: true
+- Brief item covered: "The coverage checker gains a brief mode" + none — the command-surface declaration duty comes from `writing-plans`' splitting framework, not from a brief item
+- Status: pending
+- Gloss: 命令表面補上 `--brief` 這個呼叫形式，並且實跑一次確認它真的能動
 
 ## Task 9 — version bump, CHANGELOG, and Codex mirror sync
 
@@ -182,7 +204,7 @@ flowchart LR
 - Acceptance:
   - RED: `scripts/test_check_version_bump.py::test_skill_content_without_version_bump_is_a_violation` fails while this branch's skill-content edits sit unbumped; and `.claude/hooks/check-codex-manifest-drift.sh` exits non-zero while `.codex-plugin/plugin.json` still carries the old version.
   - GREEN: both pass, the CHANGELOG entry exists with the honest-limit sentence, and the full suite is green.
-- Dependencies: Tasks 8, 10 complete first
+- Dependencies: Tasks 8a, 8b, 10 complete first
 - Independent: false
 - Brief item covered: none — release administration; this task delivers no brief outcome. Escape authorised by brief §Smallest End State item 5 ("A legal no-requirement value: `none — <reason>`, reason mandatory") and by §Experiment's unmappable-by-design finding, where all three probes independently called the equivalent release task unmappable. This task is also the plan's own worked instance of the value Task 7 makes legal.
 - Status: pending
@@ -281,3 +303,46 @@ flowchart LR
   cite I cared about (`94`, verified zero remaining) but not for the one I had
   assumed. The commit message cannot be amended; this entry is the correction,
   and the claim does not travel to the PR body.
+
+- **Third amendment (2026-08-13): Task 8 splits into 8a/8b.** The second
+  amendment (below) put three separately-checkable duties behind one RED, and
+  the AGENTS.md duty had no failing test at all — the existing managed-block
+  pin asserts only that the block names the script, which was already true,
+  so it stayed green with or without `--brief`. Split by consumer at the same
+  dependency level, so depth is unchanged at 5. **And a second, worse finding:
+  the amendment fixed the falsified HEADING and left two sibling sentences
+  asserting the same falsehood** — `writing-plans/SKILL.md:251`'s body ("This
+  check applies only to the change-folder input path") and `AGENTS.md`'s own
+  parenthetical ("change-folder input only"). An amendment written to repair a
+  falsified neighbour reproduced the defect twice inside itself. Both GREENs
+  now assert the ABSENCE of any change-folder-only claim in the sliced region,
+  rather than naming one sentence to fix.
+
+- **Second amendment (2026-08-13): Task 8 gains `AGENTS.md` and a
+  command-surface duty.** Task 4 introduced a new invocation form (`--brief`).
+  `writing-plans`' splitting framework requires a task introducing a runnable
+  capability to carry an acceptance line stating the new verb is declared in
+  the command surface and verified to run — the plan gave Task 4 no such line,
+  and `AGENTS.md:54` still declares this script as change-folder-only. A
+  consumer census over the invocation grammar found exactly two live consumers
+  (`AGENTS.md:54` and `writing-plans/SKILL.md:251`); CHANGELOG and historical
+  plans are records, not contracts. Task 8 already owned the second, but
+  under-scoped: its paragraph's own heading says "change-folder input only",
+  which this change falsifies. Both are now Task 8's, with the command-surface
+  form required to be executed rather than merely written. This is the third
+  amendment and the second instance in one arc of the census lesson recorded at
+  `docs/loom/memory/widening-a-value-grammar-needs-a-consumer-census-at-plan-time.md`
+  — the entry was written between the first instance and this one, which is
+  evidence the lesson is real and that recording it did not by itself prevent
+  the recurrence.
+
+- **Dispatch hazard found by the amendment review, binding for the rest of this
+  arc.** Reviewers dispatched against `~/.claude/plugins/cache/.../0.76.0/...`
+  paths judge by PRE-BRANCH rules: this branch has moved `plan-format.md` to
+  v0.79.0 and rewritten two rows of the reviewer prompt, while the cache still
+  carries 0.76.0. The review confirmed the consequence is verdict-changing, not
+  cosmetic — Task 9's `none — <reason>` is legal under the repo copy and FAILS
+  Check 9 under the cached one, which would have produced a spurious gap on the
+  one task that is this arc's worked instance of the value. Every remaining
+  dispatch in this arc, and the whole-branch review at close-out, must pass
+  REPO paths for any contract this branch edits.
