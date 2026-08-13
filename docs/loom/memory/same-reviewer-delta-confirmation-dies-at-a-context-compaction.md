@@ -33,10 +33,20 @@ themselves at that moment are wrong:
 **How to apply.** Treat reviewer handles as *perishable state*, not as
 recall:
 
-1. When a reviewer returns a gating verdict that will need a fix round,
-   **write its handle into the durable artifact immediately** — the plan's
-   Decision Log or the task block — not just into the conversation. A handle
-   costs one line and is worthless the moment it is only remembered.
+1. **Dispatch any reviewer whose verdict may need a fix round with a stable
+   `name:`, and record THAT name in the plan** — never the `agentId`. An
+   agentId is session-scoped and the harness forbids surfacing it, so writing
+   one into a committed artifact is both prohibited and useless: it resolves
+   nowhere in a later session. A `name:` is a plain string the dispatcher
+   chooses, it survives the agent's completion (a `SendMessage` to the name
+   resumes it from its transcript), and it can be written down anywhere.
+   This composes with the standing rule "do not add `name:` unless you will
+   drive that agent via `SendMessage`" rather than breaking it — delta
+   confirmation IS driving via `SendMessage`, so a reviewer that may need
+   confirming is exactly the sanctioned case for naming. (Corollary of that
+   same rule: a named agent's plain-text reply is not delivered on its own,
+   so name reviewers you intend to confirm — not one-shot arms whose verdict
+   you simply receive.)
 2. Prefer closing the fix→confirm cycle **before** starting unrelated work,
    while the handle is certainly live. A confirmation deferred across other
    tasks is a confirmation gambling on context length.
