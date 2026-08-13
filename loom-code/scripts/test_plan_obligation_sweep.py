@@ -38,8 +38,10 @@ PLAN_DOCUMENT_REVIEWER_PROMPT = (
 # Current legitimate maximum check number in the table. Check 8's own
 # amendment must not raise this further — it amends Check 8's row in place.
 # Bumped 16 -> 17 when Check 17 (Reuse-adequacy) shipped, an authorized
-# append, not a renumbering.
-PRE_EXISTING_MAX_CHECK_NUMBER = 17
+# append, not a renumbering. Bumped 17 -> 18 when Check 18 (Open Questions
+# gate) shipped (docs/loom/plans/2026-08-13-open-question-dispatch-gate.md
+# Task 6), likewise an authorized append.
+PRE_EXISTING_MAX_CHECK_NUMBER = 18
 
 
 def _read(path: Path) -> str:
@@ -57,7 +59,7 @@ def test_check8_sweeps_brief_obligations():
         (e.g. modal-obligation words and deferred-verification phrases),
         so the reviewer can classify a sentence without judgment.
     And the checks table as a whole must show no renumbering: no row number
-    exceeds the table's current legitimate maximum (17, since Check 17 shipped).
+    exceeds the table's current legitimate maximum (18, since Check 18 shipped).
     """
     text = _read(PLAN_DOCUMENT_REVIEWER_PROMPT)
 

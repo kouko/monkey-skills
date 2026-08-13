@@ -255,10 +255,64 @@ def test_sdd_skill_points_at_check17_without_restating_the_floor():
     )
 
 
+_RANGE_TOKEN_RE = re.compile(r"(\d+)\s*[-–—]\s*(\d+)|(\d+)")
+
+
+def _range_list_covers(range_list_text: str, n: int) -> bool:
+    """True if the comma-separated list of check-id ranges/singles in
+    `range_list_text` (e.g. "1-4, 6-14, 16-18") covers `n` -- either as a
+    standalone id or inside a `lo-hi` span. Stays true regardless of how
+    high the upper bound grows (Check 19, 20, ...); goes false the moment
+    the span stops reaching `n`, e.g. a contraction to `16-16`."""
+    for m in _RANGE_TOKEN_RE.finditer(range_list_text):
+        if m.group(1) and m.group(2):
+            if int(m.group(1)) <= n <= int(m.group(2)):
+                return True
+        elif m.group(3) and int(m.group(3)) == n:
+            return True
+    return False
+
+
+def _check_id_range_text(check_id_line: str) -> str:
+    """Isolate the `<...>` range list in the gaps.check_id line -- avoids
+    scanning the trailing `#` comment, which names Checks 5 and 15
+    individually and could otherwise feed unrelated digits into the
+    range scan."""
+    m = re.search(r"<([^>]+)>", check_id_line)
+    assert m, f"no <...> range list found in check_id line: {check_id_line!r}"
+    return m.group(1)
+
+
+def _needs_revision_range_text(needs_revision_line: str) -> str:
+    """Isolate the `**...**` range list right after 'applicable check' --
+    same isolation reasoning as `_check_id_range_text`: the rest of the
+    sentence names Checks 5 and 15 individually and must not leak into
+    the range scan."""
+    m = re.search(r"applicable check\s+\*\*([^*]+)\*\*", needs_revision_line)
+    assert m, (
+        "no **...** range list found after 'applicable check' in "
+        f"NEEDS_REVISION line: {needs_revision_line!r}"
+    )
+    return m.group(1)
+
+
 def test_output_contract_names_check_17():
     """checks_passed denominator, the check_id range in the gaps block, and
-    the verdict mapping's NEEDS_REVISION range must all account for the new
-    Check 17 (it is a normal gating check, not retired/advisory)."""
+    the verdict mapping's NEEDS_REVISION range must all account for Check
+    17.
+
+    Check 17's own applicable total keeps moving as later checks are added
+    (Check 18 already followed it) -- ownership of the exact denominator
+    and range upper-bound VALUE now belongs to
+    `test_plan_reviewer_output_contract_count.py`, which derives them
+    fresh from the checks table rather than hardcoding a second copy of
+    the same number here (the thing that broke this test the last three
+    times a check was added/retired). This test keeps only the claim that
+    is actually about Check 17: the checks_passed line must exist and be
+    well-formed, and the two range lines must still cover check id 17 --
+    an inclusion check that stays true as the upper bound grows further,
+    and goes false the moment either range stops reaching 17 (e.g. a
+    contraction to `16-16`) or the line disappears."""
     text = _text()
 
     denominator_line = next(
@@ -266,9 +320,8 @@ def test_output_contract_names_check_17():
         None,
     )
     assert denominator_line is not None, "checks_passed line not found"
-    assert "/<15>" in denominator_line, (
-        "checks_passed denominator must be 15 (14 prior + Check 17; "
-        "Checks 5 and 15 still never count)"
+    assert re.search(r"/<\d+>", denominator_line), (
+        "checks_passed denominator must be a bracketed integer, e.g. /<16>"
     )
 
     check_id_line = next(
@@ -276,8 +329,8 @@ def test_output_contract_names_check_17():
         None,
     )
     assert check_id_line is not None, "gaps.check_id line not found"
-    assert "16-17" in check_id_line or "16–17" in check_id_line, (
-        "gaps.check_id range must extend to 17"
+    assert _range_list_covers(_check_id_range_text(check_id_line), 17), (
+        "gaps.check_id range must still cover check 17"
     )
 
     needs_revision_line = next(
@@ -285,6 +338,6 @@ def test_output_contract_names_check_17():
         None,
     )
     assert needs_revision_line is not None, "verdict mapping's NEEDS_REVISION sentence not found"
-    assert "16–17" in needs_revision_line or "16-17" in needs_revision_line, (
-        "verdict mapping's NEEDS_REVISION range must extend to 17"
+    assert _range_list_covers(_needs_revision_range_text(needs_revision_line), 17), (
+        "verdict mapping's NEEDS_REVISION range must still cover check 17"
     )
