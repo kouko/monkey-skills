@@ -141,7 +141,7 @@ flowchart LR
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: "Coverage is directional both ways… the checker must therefore treat an item as covered by the UNION of citing tasks"
-- Status: pending
+- Status: done(c1163888)
 - Gloss: 一個項目由兩個任務各做一半也算被覆蓋，沒人做的項目會被指名
 
 ## Task 7 — make `none` legal only with a reason
