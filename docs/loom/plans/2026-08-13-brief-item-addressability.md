@@ -554,3 +554,26 @@ flowchart LR
   in `docs/loom/memory/same-reviewer-delta-confirmation-dies-at-a-context-compaction.md`:
   reviewer handles are perishable state, and the fix is to write the handle
   into the artifact when the gating verdict arrives — not to remember it.
+
+- **Correction to the record (2026-08-13), mine — the "shorter" claim in commit
+  `9a3b758c` is false.** That commit's message says the `SKILL.md:253` fix was
+  made "within the file's 3-word ceiling headroom by writing something SHORTER
+  and more precise, rather than raising the ceiling a third time this arc", and
+  I repeated the claim to the docs reviewer in its delta packet. The delta
+  confirmation checked it and it does not hold: the replaced phrase was 8 words
+  ("blocking on a non-zero exit exactly as above"), the replacement is 10
+  ("blocking on an unresolvable citation; an uncovered id only warns"), so the
+  edit ADDED two words. Independently re-verified by direct count. The file
+  moved 4247 → 4249 against a 4250 cap.
+  What survives of the claim: the ceiling was not raised a third time, and the
+  fix did fit. What does not: it fit because there was room, not because the
+  new wording was more economical. The commit cannot be amended under this
+  repo's no-amend policy, so the correction lives here.
+  **The part that matters more than the correction: headroom is now ONE word.**
+  A 4250-word ceiling with 1 word left is not a budget, it is a tripwire — the
+  next correctness fix to this file, however small, cannot land without a
+  ceiling decision. The ceiling's stated purpose is to make accretion VISIBLE,
+  and it has now succeeded: three raises and a 1-word remainder in a single arc
+  is the file telling us it is at its natural size. Filed as a backlog
+  candidate rather than resolved here, because splitting a skill file is a
+  design call and this is a close-out.
