@@ -447,3 +447,30 @@ flowchart LR
   string in place of a coordinate, so the line numbers are removed rather than
   refreshed a third time. Maintaining a coordinate nobody can keep current
   manufactures the drift it is meant to prevent.
+
+- **Rule of Three crossed in `check_scenario_coverage.py`, routed to
+  whole-branch review — and routed differently from the duplicate-pin fix, on
+  purpose.** Task 6's reviewer found this file now has THREE functions running
+  the same skeleton (`_BRIEF_ITEM_LINE.finditer` → strip → `_enclosing_heading`),
+  with one line copy-pasted verbatim between `resolve_plan_brief_citations` and
+  the new `brief_item_coverage`; and `check_brief_coverage` now makes two
+  near-identical passes over the same `plan_text` in one call. It also found the
+  simplification that would close it: `brief_item_coverage` returns
+  `dict[str, set[str]]` keyed by enclosing heading, but the only consumer tests
+  `if not coverage[item_id]` — the heading set is computed, stored, and never
+  read. A plain `set[str]` of ids-with-≥1-citation gives byte-identical CLI
+  output AND removes the third scan. **Deletion-first and the duplication fix
+  are the same change here.**
+  Why this one goes to review rather than a scheduled trigger: unlike the
+  duplicate-pin hardening — which had zero judgment left and therefore only lost
+  by waiting — this carries a real design call. Dropping heading identity
+  forecloses a future consumer asking "delivered by ≥2 DISTINCT tasks", and the
+  reviewer noted that if such a consumer ever appears, heading-as-key would need
+  replacing with something stabler anyway (task ordinal, or the RED test's own
+  numbering), since two identically-titled headings are a real authoring case
+  this scheme cannot distinguish. A judgment with a foreclosure in it is exactly
+  what whole-branch review is for.
+  Also inert-today, verified by the reviewer with a live probe: two tasks sharing
+  a heading collapse into one citer, but coverage is consumed as a boolean, so a
+  collision can never flip covered↔uncovered — it only affects a cardinality
+  nothing reads.
