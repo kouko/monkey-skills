@@ -474,3 +474,41 @@ flowchart LR
   a heading collapse into one citer, but coverage is consumed as a boolean, so a
   collision can never flip covered↔uncovered — it only affects a cardinality
   nothing reads.
+
+- **Latent defect recorded, not fixed: T8's slice anchor is
+  first-occurrence-fragile.** `test_wp_extraction_pointers.py`'s coverage-gate
+  slicer locates its paragraph with `text.index("**Coverage self-check")`,
+  which takes the FIRST occurrence in the file. §Self-review precedes
+  §Consuming a loom-spec change-folder, so any future BOLDED mention of that
+  phrase above the gate paragraph silently re-points the pin at the wrong
+  region — the pin would still pass, against the wrong text. The T8 fix round
+  hit this live: its first draft bolded the pointer's mention and turned T8
+  red; it un-bolded rather than touching T8, because acceptance required T8
+  unchanged. **The fragility is unfixed by design of that acceptance, and is
+  carried here rather than in a reviewer's head.** Cheapest fix when someone
+  next touches that file: anchor on the section heading rather than the bolded
+  lead-in, or take the LAST occurrence.
+- **Second word-ceiling raise in one arc, ruled acceptable.** `writing-plans/SKILL.md`
+  went 4210 → 4220 (brief-mode sentence) → 4250 (the §Self-review pointer),
+  each recorded inline with its reason. Two raises in one arc looks like drift
+  and the implementer flagged it rather than absorbing it — which is the
+  ceiling mechanism working as designed. The ceiling exists to make accretion
+  VISIBLE, not to make it impossible; both additions are duties that cannot be
+  trimmed without dropping either the invocation form or the gate ordering, and
+  the alternative — shrinking a contract to fit a number — is the failure the
+  house convention explicitly forbids.
+- **A better fix than the one I specified, recorded because the reasoning
+  generalises.** For T7's separator gap I proposed `\s+-\s+`. The implementer
+  shipped `\s*[–—]|\s+-(?=\s|$)` instead and gave the reason: both reject
+  `none -r`, but the lookahead keeps a reason-less `none -` INSIDE `_NONE_VALUE`,
+  so it still receives the "no-requirement value with no reason" diagnostic
+  rather than being misrouted to "cites no BI-<n>". My version would have made
+  the hyphen form behave differently from the em-dash form for the SAME
+  authoring mistake. The generalisable point: when tightening a matcher to
+  close a hole, check what the newly-excluded inputs fall through TO — an input
+  that lands in the wrong error is a second defect wearing the first one's fix.
+- **Carried cost, out of scope, worth an eye at review**: unicode look-alike
+  dashes (U+2212, U+FF0D) are ruled OUT of the separator set, fail-closed and
+  pinned. The cost the implementer named: the fallthrough message says "cites no
+  BI-<n> identifier", which gives a CJK author who typed a fullwidth dash no hint
+  that the GLYPH was the problem.
