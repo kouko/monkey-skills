@@ -14,7 +14,11 @@ protocol names (numbers / enum tokens / backticked terms / CamelCase
 or snake_case identifiers).
 """
 
-from adjudication_split import split_document, split_verdict
+from adjudication_split import (
+    iter_lines_outside_fences,
+    split_document,
+    split_verdict,
+)
 
 FIXTURE = """# Brief: sample feature
 
@@ -237,3 +241,112 @@ def test_verdict_mode_note_block_literal_body_preserved_in_source_text():
     # Nested note content must still not override the real sibling
     # fields (regression guard shared with test_adjudication_split_verdict.py).
     assert units[0]["heading"] == "adjudication_split.py:194 correctness"
+
+
+# --- the shared fence scan, and the two consumers it replaced ---
+
+# Six CommonMark fence cases, each a shape the two former copies of this
+# state machine had to agree on, held as (name, text, expected-prose-lines).
+# Six separate fixtures rather than one blob: a single document exercising
+# all six would let one misclassified case hide inside the others' output.
+#
+# The expected list is written out in full per case rather than derived from
+# a marker token. The 4-space case is why: there the ```` ``` ```` line is
+# itself ordinary content, so no rule of the form "lines tagged KEEP" can
+# state the expectation without the fixture and the rule disagreeing about
+# which lines those are.
+_FENCE_CASES = (
+    (
+        "a nested SHORTER fence does not close a longer outer one",
+        "a\n"
+        "````\n"
+        "inside\n"
+        "```\n"
+        "still inside — a shorter marker cannot close a longer fence\n"
+        "````\n"
+        "b\n",
+        ["a", "b"],
+    ),
+    (
+        "a ``` line does not close a ~~~ fence",
+        "a\n"
+        "~~~\n"
+        "inside\n"
+        "```\n"
+        "still inside — wrong fence character\n"
+        "~~~\n"
+        "b\n",
+        ["a", "b"],
+    ),
+    (
+        "a fence indented up to 3 spaces is still a fence",
+        "a\n"
+        "   ```\n"
+        "inside\n"
+        "   ```\n"
+        "b\n",
+        ["a", "b"],
+    ),
+    (
+        "4 spaces of indent is an indented code block, never a fence — so "
+        "the marker line is content and nothing after it is hidden",
+        "a\n"
+        "    ```\n"
+        "b\n",
+        ["a", "    ```", "b"],
+    ),
+    (
+        "an unterminated fence swallows the rest of the document",
+        "a\n"
+        "```\n"
+        "inside\n"
+        "to the end of the file\n",
+        ["a"],
+    ),
+    (
+        "a closing fence longer than its opener still closes",
+        "a\n"
+        "```\n"
+        "inside\n"
+        "`````\n"
+        "b\n",
+        ["a", "b"],
+    ),
+)
+
+
+def test_fence_scan_across_commonmark_edge_cases():
+    """`iter_lines_outside_fences` classifies every CommonMark fence edge
+    case the two former copies of this scan had to agree on.
+
+    This scan lived twice — here and verbatim in `check_scenario_
+    coverage.py`, which also carried its own copy of `FENCE_RE`. The two
+    were differential-tested across these six cases and found identical on
+    all six, which is what made the duplication indefensible: there was no
+    divergent tolerance to preserve, only two state machines to keep in
+    step. The copies are now one import, and these cases are its test.
+
+    Each case asserts the WHOLE prose-line set in order, not merely that a
+    fenced line is absent: a scan that hid everything after the first fence
+    would satisfy every absence assertion while destroying the document.
+    """
+    for name, text, expected in _FENCE_CASES:
+        prose = [content for _offset, content in iter_lines_outside_fences(text)]
+        assert prose == expected, (
+            f"{name}: fence scan misclassified\n"
+            f"expected: {expected}\ngot:      {prose}"
+        )
+
+
+def test_fence_scan_offsets_index_into_the_source():
+    """The yielded offset is the line's start index into the source text —
+    the coordinate `_iter_h2_matches` slices section bodies with, and the
+    one `collect_brief_item_ids` counts newlines against for a line number.
+    A generator yielding an ordinal of surviving lines instead would pass
+    every classification assertion above and silently corrupt both.
+    """
+    text = _FENCE_CASES[0][1]
+    for offset, content in iter_lines_outside_fences(text):
+        assert text[offset:offset + len(content)] == content, (
+            f"offset {offset} does not index to {content!r}"
+        )

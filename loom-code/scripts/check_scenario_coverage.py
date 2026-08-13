@@ -42,7 +42,11 @@ different question: does every task's `Brief item covered` value resolve
 against a `BI-<n>` identifier the brief declares? An unresolvable value is
 an ERROR (exit 1) naming the task and quoting the value, because there the
 grammar is unambiguous: the brief HAS identifiers, so a value naming none of
-them is a defect rather than a legal prose referent. The legal
+them is a defect rather than a legal prose referent. The one exception is a
+well-formed change-folder join key (referent kind (b)): `plan-format.md`
+declares it legal for this same field, so it is warned about — legal here,
+contributes no coverage in this mode — rather than failing a gate a
+correctly authored plan must pass. The legal
 no-requirement value `none — <reason>` passes through; its reason is
 mandatory, so a bare `none`, an empty reason or a whitespace-only one is
 itself an error naming the task. A brief declaring no
@@ -50,7 +54,9 @@ identifiers at all is a legacy brief: the quote referent stays legal, no
 resolution is attempted, and the run says so on stdout rather than exiting 0
 in silence. The two modes are selected, never combined.
 
-Stdlib only.
+Stdlib only, plus the sibling `adjudication_split` for its CommonMark fence
+scan (`iter_lines_outside_fences`) — this file runs as a script, so the
+sibling resolves off `sys.path[0]`, its own directory.
 """
 
 from __future__ import annotations
@@ -59,6 +65,8 @@ import argparse
 import re
 import sys
 from pathlib import Path
+
+from adjudication_split import iter_lines_outside_fences
 
 # Same underlying heading grammar as validate_spec_output.py's
 # `_REQUIREMENT_HDR` (`^###\s+Requirement:`) and the pattern
@@ -152,13 +160,16 @@ _NONE_VALUE = re.compile(
     r"[\"'`]?\s*$",
     re.IGNORECASE)
 
-# CommonMark fence grammar: a ``` or ~~~ line indented up to 3 spaces.
-# Same state machine as `adjudication_split._iter_h2_matches` (a fence
-# closes only on the same character at >= the opening length). Not reused
-# directly: that helper is private and yields H2 matches rather than fence
-# state, and extracting a shared line scanner would touch a second module,
-# outside this change's boundary.
-_FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
+# The CommonMark fence scan itself is imported, not re-derived: this module
+# and `adjudication_split` ask the same question of the same grammar — which
+# lines are ordinary prose rather than fenced illustration — and each used to
+# carry its own copy of the state machine AND of `FENCE_RE`. A differential
+# test across the CommonMark edge cases (nested longer fence, `~~~` against
+# backticks, a 3-space-indented fence, a 4-space-indented non-fence, an
+# unterminated fence, a closing fence longer than its opener) found the two
+# identical on every one, so there was no divergent-tolerance case to
+# protect — only two copies to keep in step. The seam is
+# `adjudication_split.iter_lines_outside_fences`, tested there.
 
 
 def _requirement_scenario_pairs(text: str) -> list[tuple[str, str]]:
@@ -291,23 +302,16 @@ def collect_brief_item_ids(brief_text: str) -> dict[str, int]:
     """
     declared: dict[str, int] = {}
     duplicates: list[tuple[str, int, int]] = []
-    fence_char: str | None = None
-    fence_min_len = 0
-    for lineno, line in enumerate(brief_text.splitlines(), start=1):
-        fence = _FENCE.match(line)
-        if fence:
-            marker = fence.group(1)
-            char, length = marker[0], len(marker)
-            if fence_char is None:
-                fence_char, fence_min_len = char, length
-            elif char == fence_char and length >= fence_min_len:
-                fence_char, fence_min_len = None, 0
-            continue
-        if fence_char is not None:
-            continue
+    for offset, line in iter_lines_outside_fences(brief_text):
         decl = _BRIEF_ITEM_DECL.match(line)
         if decl is None or not decl.group("text").strip():
             continue
+        # The generator reports a byte offset, but the diagnostic below is
+        # read against a text editor, so the line NUMBER is what an author
+        # needs. Counted here rather than tracked in the generator because
+        # a declaration is rare — a handful per brief — while the scan
+        # visits every line.
+        lineno = brief_text.count("\n", 0, offset) + 1
         item_id = decl.group(1)
         if item_id in declared:
             duplicates.append((item_id, declared[item_id], lineno))
@@ -334,10 +338,33 @@ def resolve_plan_brief_citations(
     referent kind and cannot be told apart from a typo, so erroring there
     would punish the legal form.
 
-    Two shapes are not errors. A value citing only declared ids resolves,
-    obviously; and `none — <reason>`, the legal no-requirement value, is
+    Three shapes are not errors. A value citing only declared ids resolves,
+    obviously; `none — <reason>`, the legal no-requirement value, is
     passed through untouched — a task delivering no brief outcome must not
-    be forced into a false citation.
+    be forced into a false citation; and a well-formed change-folder join
+    key (referent kind (b)) is warned about on stderr rather than erroring,
+    because it is a legal value for this same field that simply answers a
+    different question.
+
+    That third tolerance is what keeps a legal plan shippable. `plan-format.
+    md` declares kinds (a), (b) and (c) all legal for `Brief item covered`,
+    and `writing-plans/SKILL.md` fires brief mode on any brief declaring
+    `BI-` ids — change-folder or not — so a change carrying both a brief and
+    a change-folder reaches this check with both kinds in one plan. Erroring
+    there blocked a mandatory gate on a correctly authored plan, with no
+    bypass: the `Notes`-approval escape covers coverage drops, not citation
+    errors. Fail-closed is the right instinct against AMBIGUITY, and a value
+    matching the join-key grammar is not ambiguous — it is the mirror of the
+    tolerance `collect_plan_join_keys` already extends to prose referents on
+    the other path, warned for the same reason: a value contributing nothing
+    must say so, or a mistyped key reads as an item no task delivers.
+
+    The tolerance is deliberately reachable only when the value cites NO
+    identifier at all. A value carrying an undeclared id AND the join-key
+    grammar (`BI-99 / Requirement: … / Scenario: …`) keeps erroring on the
+    undeclared id, so the typo path stays fully closed — the shape this
+    tolerates is the one the reviewer reproduced, not every string the
+    grammar happens to accept.
 
     The reason is what makes that value legal, so a reason-less one is an
     error here rather than a pass-through: a bare `none`, an empty reason
@@ -371,6 +398,14 @@ def resolve_plan_brief_citations(
         if cited and not unknown:
             continue
         if not cited:
+            if _JOIN_KEY.match(value):
+                print(f"Warning: 'Brief item covered' under '{where}' is a "
+                      f"change-folder join key, which is a legal referent kind "
+                      f"here but resolves against no brief item, so it "
+                      f"contributes no coverage in brief mode — run the "
+                      f"change-folder check for it. Value: {value}",
+                      file=sys.stderr)
+                continue
             errors.append(
                 f"Error: 'Brief item covered' under '{where}' cites no BI-<n> "
                 f"identifier, but the brief declares them — so this value "
@@ -383,42 +418,44 @@ def resolve_plan_brief_citations(
     return errors
 
 
-def brief_item_coverage(
-    plan_text: str, declared: dict[str, int]
-) -> dict[str, set[str]]:
-    """Every declared identifier mapped to the SET of tasks citing it.
+def brief_item_coverage(plan_text: str, declared: dict[str, int]) -> set[str]:
+    """The declared identifiers cited by at least one task's `Brief item
+    covered` value.
 
-    Coverage is per item and is the UNION of its citing tasks: an item may
-    need several tasks, so no single citation discharges one. The
-    experiment behind this change found `--lang` on both scripts delivered
-    half by one task and half by another, with neither alone satisfying it.
-    Counting citations instead would report that brief as further along
-    than it was, because the same item cited twice would read as two.
+    Coverage is per item and BOOLEAN: one citation discharges an item, and
+    the result says which items got one — never how many tasks cited them,
+    nor which. The tally is therefore of items, never of citations: an item
+    cited by two tasks is one covered item, which is what keeps a brief
+    delivered half by one task and half by another (the shape the experiment
+    behind this change found) from reading as two items' worth of progress.
 
-    Tasks are keyed by their enclosing heading, so two citations from the
-    same task collapse to one member — the value counts distinct citing
-    tasks, never occurrences. An identifier no task cites maps to an empty
-    set rather than being absent: the caller reports uncovered items, and a
-    missing key is indistinguishable from an identifier the collector never
-    saw.
+    This returned a `dict[str, set[str]]` of citing task headings until a
+    mutation test found the union unobservable — replacing it with
+    last-write-wins left every test green, because the sole consumer asks
+    only whether an item's set is empty. The heading set was computed,
+    stored and never read; deleting it removes a third `_enclosing_heading`
+    scan of the plan and leaves CLI output byte-identical (verified across
+    the shared-item, repeated-heading, none-value, join-key and
+    no-heading-at-all shapes).
+
+    What that forecloses, recorded because it was a judgment and not an
+    oversight: a future consumer asking "delivered by >= 2 DISTINCT tasks"
+    would need the citing tasks back. It would need a stabler key than the
+    heading anyway — two identically-titled headings are a real authoring
+    case this scheme could not tell apart — so the discarded shape was not
+    the one such a consumer would have reused.
 
     Only declared identifiers are credited. A value citing an id the brief
     does not declare resolves to nothing and is `resolve_plan_brief_
     citations`' error to raise; crediting it here would let a typo cover an
     item that has no coverage at all.
     """
-    coverage: dict[str, set[str]] = {item_id: set() for item_id in declared}
+    covered: set[str] = set()
     for line_match in _BRIEF_ITEM_LINE.finditer(plan_text):
         value = line_match.group(1).strip()
-        cited = [item_id for item_id in _BI_CITATION.findall(value)
-                 if item_id in coverage]
-        if not cited:
-            continue
-        where = (_enclosing_heading(plan_text, line_match.start())
-                 or "(no enclosing heading)")
-        for item_id in cited:
-            coverage[item_id].add(where)
-    return coverage
+        covered.update(item_id for item_id in _BI_CITATION.findall(value)
+                       if item_id in declared)
+    return covered
 
 
 def check_brief_coverage(brief_path: Path, plan_path: Path) -> int:
@@ -457,10 +494,10 @@ def check_brief_coverage(brief_path: Path, plan_path: Path) -> int:
     # and computing it only on the way to exit 0 would hide it exactly when
     # the plan is being edited. Declaration order, so the report reads in
     # the order the brief does.
-    coverage = brief_item_coverage(plan_text, declared)
+    covered = brief_item_coverage(plan_text, declared)
     uncovered = [item_id for item_id in
                  sorted(declared, key=lambda item: declared[item])
-                 if not coverage[item_id]]
+                 if item_id not in covered]
     for item_id in uncovered:
         print(f"Warning: uncovered brief item {item_id} — declared at line "
               f"{declared[item_id]} of {brief_path}, cited by no task's "

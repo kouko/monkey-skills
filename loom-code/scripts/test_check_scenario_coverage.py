@@ -631,6 +631,150 @@ def test_value_with_no_identifier_at_all_errors_when_brief_declares_ids(tmp_path
     assert "Task 1 — foo" not in result.stderr
 
 
+# A plan carrying BOTH referent kinds at once: two tasks citing `BI-<n>`
+# identifiers (kind (c)) and one citing the change-folder join key
+# `<change-id> / Requirement: … / Scenario: …` (kind (b)). `plan-format.md`
+# declares both legal for the same field, and `writing-plans/SKILL.md` fires
+# brief mode on any brief declaring `BI-` ids — change-folder or not — so
+# this plan is what a change with both a brief and a change-folder actually
+# looks like when brief mode runs over it.
+_PLAN_MIXING_JOIN_KEY_AND_IDS = (
+    "# Plan: x\n\n"
+    "## Task 1 — identifier referent\n"
+    "- Brief item covered: BI-1\n\n"
+    "## Task 2 — join-key referent\n"
+    "- Brief item covered: widget-rework / Requirement: Users can filter by "
+    "date / Scenario: Empty result set\n\n"
+    "## Task 3 — the other identifier\n"
+    "- Brief item covered: BI-2\n"
+)
+
+
+def _stderr_lines_naming(task: str, stderr: str) -> list[str]:
+    """Every stderr line that names `task` — the register (`Error:` /
+    `Warning:`) is the line's own prefix, so a caller can assert which one
+    a task was reported under rather than merely that it appeared."""
+    return [line for line in stderr.splitlines() if task in line]
+
+
+def test_wellformed_join_key_is_a_warning_not_an_error_in_brief_mode(tmp_path):
+    """A task citing a well-formed change-folder join key does not fail
+    brief mode; it is reported as contributing no coverage HERE.
+
+    Both referent kinds are legal for `Brief item covered` per
+    `plan-format.md`, and brief mode fires on any brief declaring `BI-` ids,
+    so a plan mixing the two reaches this check as a matter of course. Before
+    this tolerance existed it exited 1 at a gate with no bypass — the
+    `Notes`-approval escape covers coverage drops, not citation errors — which
+    made a legal plan unshippable.
+
+    The fail-closed instinct does not apply: fail-closed protects against
+    AMBIGUITY, and a value matching the join-key grammar is not ambiguous.
+    It is the mirror of the tolerance the change-folder path already extends
+    to prose referents, and it is a warning rather than silence for the same
+    reason that one is — a value that contributes nothing must say so, or a
+    mistyped key reads as an item no task delivers.
+
+    Two properties are pinned, and the register is the load-bearing one: an
+    implementation that keeps the sentence but leaves the exit code at 1
+    still blocks the gate, and one that drops the line entirely restores the
+    silence.
+    """
+    brief = tmp_path / "brief.md"
+    brief.write_text(_BRIEF_TWO_IDS, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(_PLAN_MIXING_JOIN_KEY_AND_IDS, encoding="utf-8")
+
+    result = _run_brief(brief, plan)
+    assert result.returncode == 0, (
+        "a well-formed join key is a legal referent kind, so brief mode must "
+        f"not fail on it\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    )
+    reported = _stderr_lines_naming("Task 2 — join-key referent", result.stderr)
+    assert reported, (
+        "the join-key task must still be named — silence is what makes a "
+        "mistyped key read as an uncovered item"
+    )
+    assert all(line.lstrip().startswith("Warning:") for line in reported), (
+        "the join-key task must be reported in the warning register, not the "
+        f"error one; got:\n" + "\n".join(reported)
+    )
+
+
+def test_near_miss_identifiers_still_error_in_brief_mode(tmp_path):
+    """The join-key tolerance is not a hole: every value that is neither a
+    resolvable identifier nor a well-formed join key still fails the run.
+
+    Four shapes, each a different way of missing. `BI-2x` and `BI2` are the
+    typos `handoff-brief-format.md` §Brief item identifiers rules out by the
+    trailing `\\b` and the mandatory hyphen; `bi-1` is the case error the
+    same section names; the bare prose quote is the pre-convention form. None
+    contains the `/ Requirement: … / Scenario: …` grammar, so none may reach
+    the tolerance — and each is asserted by task, not by a single exit code,
+    because one surviving shape among four would otherwise hide behind the
+    other three.
+    """
+    brief = tmp_path / "brief.md"
+    brief.write_text(_BRIEF_TWO_IDS, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — trailing character\n"
+        "- Brief item covered: BI-2x\n\n"
+        "## Task 2 — missing hyphen\n"
+        "- Brief item covered: BI2\n\n"
+        "## Task 3 — wrong case\n"
+        "- Brief item covered: bi-1\n\n"
+        "## Task 4 — bare prose\n"
+        "- Brief item covered: the widget rework ships end to end\n",
+        encoding="utf-8",
+    )
+
+    result = _run_brief(brief, plan)
+    assert result.returncode != 0, (
+        "a mistyped identifier must still fail loudly\n" + result.stdout
+    )
+    for task in (
+        "Task 1 — trailing character",
+        "Task 2 — missing hyphen",
+        "Task 3 — wrong case",
+        "Task 4 — bare prose",
+    ):
+        reported = _stderr_lines_naming(task, result.stderr)
+        assert reported, f"{task} must be reported"
+        assert all(line.lstrip().startswith("Error:") for line in reported), (
+            f"{task} must stay in the error register; got:\n"
+            + "\n".join(reported)
+        )
+
+
+def test_join_key_still_counts_as_coverage_in_change_folder_mode(tmp_path):
+    """The tolerance is scoped to brief mode: on the change-folder path the
+    same join key still CONTRIBUTES coverage rather than being warned away.
+
+    The two modes read the same field and now treat the same value
+    differently, which is exactly the shape a fix leaks across. Running the
+    identical plan through the change-folder path is what proves it did not:
+    the key covers its scenario, and only the genuinely uncovered sibling is
+    reported dropped.
+    """
+    change_folder = tmp_path / "widget-rework"
+    _write_spec(change_folder, _TWO_SCENARIO_SPEC)
+    plan = tmp_path / "plan.md"
+    plan.write_text(_PLAN_MIXING_JOIN_KEY_AND_IDS, encoding="utf-8")
+
+    result = _run(change_folder, plan)
+    assert result.returncode != 0, (
+        "the second scenario is covered by nobody, so the run must fail"
+    )
+    assert "Scenario: Single match" in result.stderr, \
+        "the genuinely uncovered scenario must be named"
+    assert "Scenario: Empty result set" not in result.stderr, (
+        "the join key must still count as coverage on the change-folder "
+        "path — a tolerance scoped to brief mode must not reach here"
+    )
+
+
 def test_legacy_brief_declaring_no_ids_announces_legacy_mode(tmp_path):
     """A brief predating the convention puts the run in legacy mode: the
     quote referent stays legal, no resolution is attempted — and the run
@@ -975,6 +1119,64 @@ def test_item_cited_by_two_tasks_is_covered_once(tmp_path):
     assert _coverage_tally(result.stdout + result.stderr) == (1, 3), (
         "the brief declares 3 identifiers and exactly 1 of them is cited; "
         "counting citations instead of items would report 2 covered"
+    )
+
+
+# Two tasks citing two DIFFERENT identifiers, with a third declared and
+# cited by neither. The complement of the shared-item fixture above: that
+# one proves two citations of one id count once, this one proves one
+# citation each of two ids both count.
+_PLAN_TWO_TASKS_CITING_DIFFERENT_IDS = """\
+# Plan: x
+
+## Task 1 — first item
+- Brief item covered: BI-1 — Brief items carry an identifier
+
+## Task 2 — second item
+- Brief item covered: BI-2 — the checker resolves a cited identifier
+"""
+
+
+def test_coverage_accumulates_across_tasks(tmp_path):
+    """An identifier stays covered once some task cites it, even when later
+    tasks cite other identifiers.
+
+    This is the property a mutation test found unpinned. Coverage is built
+    by scanning every `Brief item covered` value in document order and
+    accumulating; an implementation that ASSIGNS per value instead of
+    accumulating — last citation wins — passes every other pin in this file,
+    including the shared-item one above, because those fixtures happen to
+    cite the same id in their final value. It reports the last task's items
+    as the whole plan's coverage, so a 10-task plan reads as covering one
+    or two items no matter how complete it is.
+
+    The tally is asserted as a pair AND the uncovered set as a set: under
+    last-write-wins the tally alone drops to 1-of-3, but a plan whose final
+    task cited every id would keep the tally right while the uncovered
+    report went wrong, and only the set sees that.
+    """
+    brief = tmp_path / "brief.md"
+    brief.write_text(_BRIEF_WITH_THREE_IDS, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(_PLAN_TWO_TASKS_CITING_DIFFERENT_IDS, encoding="utf-8")
+
+    result = _run_brief(brief, plan)
+
+    assert result.returncode == 0, (
+        "both citations resolve, so the run must not fail\n"
+        f"{result.stdout}\n{result.stderr}"
+    )
+    assert _coverage_tally(result.stdout + result.stderr) == (2, 3), (
+        "two tasks citing two distinct identifiers cover two items; an "
+        "implementation that keeps only the last value's citations reports 1"
+    )
+    assert _uncovered_reports(result.stderr) == {
+        ("BI-3", _lineno_of(
+            _BRIEF_WITH_THREE_IDS,
+            "- BI-3 — The umbrella outcome this decision commits to.")),
+    }, (
+        "only the genuinely uncited identifier may be reported uncovered\n"
+        f"{result.stderr}"
     )
 
 

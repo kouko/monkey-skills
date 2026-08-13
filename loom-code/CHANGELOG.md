@@ -36,20 +36,28 @@ Versioning: [Semantic Versioning](https://semver.org/).
   `Files touched` serves) tracks effort rather than outcome.
 - **`check_scenario_coverage.py` gains a brief mode (`--brief`).** It
   resolves each task's citation against the brief's declared ids and
-  **errors on an unresolvable one**; it **announces legacy mode** when a
-  brief declares no ids (so "legacy" can never be misread as "checked");
-  coverage of an item is the **union of its citing tasks**, so an item
-  split across two tasks is covered; and uncovered ids are reported **by
-  id with the line that declares them**.
+  **errors on an unresolvable one** — except a well-formed change-folder
+  join key, which `plan-format.md` declares legal for this same field, so
+  it **warns** (legal here, contributes no coverage in this mode) rather
+  than failing a mandatory gate on a correctly authored plan that carries
+  both referent kinds. It **announces legacy mode** when a brief declares
+  no ids (so "legacy" can never be misread as "checked"); coverage of an
+  item is **boolean** — one citation discharges it, and the tally counts
+  items rather than citations, so an item cited by two tasks is one
+  covered item, never two; and uncovered ids are reported **by id with
+  the line that declares them**.
 - **The change-folder path's silent skip is replaced by a named
   report.** It previously parsed the field, tried the join-key grammar,
   and dropped any value that did not match — counting it as zero
   coverage, so a broken citation read as "this requirement has no task".
   Unparsed referents are now named. Note the two paths close the same
-  silence with **deliberately different verbs**: brief mode *errors*
-  because its grammar is unambiguous; the change-folder path *reports*
-  because a prose quote is a legal referent kind there, so an unparsed
-  value cannot be distinguished from a typo.
+  silence with **deliberately different verbs**, and the dividing line is
+  ambiguity rather than the mode: brief mode *errors* on a value whose
+  grammar is unambiguously wrong, and *reports* — like the change-folder
+  path — on the one value that is unambiguously right for the other mode.
+  The change-folder path always reports, because a prose quote is a legal
+  referent kind there, so an unparsed value cannot be distinguished from
+  a typo.
 - **The plan-document-reviewer learns what the format now allows.**
   Check 3 enumerated only referent kinds (a) and (b), and Check 9
   required every `Brief item covered` to quote or reference the brief —

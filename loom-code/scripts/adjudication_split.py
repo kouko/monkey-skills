@@ -97,19 +97,26 @@ def extract_anchors(text):
     return anchors
 
 
-def _iter_h2_matches(text):
-    """Yield (start, end, heading) for H2 lines that are NOT inside a
-    fenced code block. `start`/`end` mirror `re.Match.start()`/`.end()`
-    for a `^## (.+)$` match: `end` is right after the heading text,
-    before the line's newline.
+def iter_lines_outside_fences(text):
+    """Yield (offset, content) for every line of `text` that is ordinary
+    prose — neither inside a fenced code block nor a fence marker line
+    itself. `offset` is the line's start index into `text`; `content` is
+    the line without its trailing newline.
 
     Fence tracking is a line-scanner state machine (stdlib only, no
     markdown library): a ``` or ~~~ line (indented up to 3 spaces per
     CommonMark) toggles fence state; a fence only closes on the same
     character with length >= the opening length (also per CommonMark —
     a longer nested fence of the other character does not close it).
-    While inside a fence, `## `-prefixed lines are ordinary content,
-    never section boundaries.
+
+    Public because a second module needs exactly this scan: `check_
+    scenario_coverage.collect_brief_item_ids` must not read a `BI-<n>`
+    identifier out of an illustrative code fence, which is the same
+    question `_iter_h2_matches` asks about `## ` lines. That module
+    carried a verbatim copy of this state machine plus its own copy of
+    `FENCE_RE`; the two were differential-tested across the CommonMark
+    edge cases and found identical, so there was no divergent-tolerance
+    reason for two of them — only the cost of keeping them in step.
     """
     fence_char = None
     fence_min_len = 0
@@ -125,10 +132,23 @@ def _iter_h2_matches(text):
             elif char == fence_char and length >= fence_min_len:
                 fence_char, fence_min_len = None, 0
         elif fence_char is None:
-            h2_match = H2_LINE_RE.match(content)
-            if h2_match:
-                yield pos, pos + len(content), h2_match.group(1).strip()
+            yield pos, content
         pos += len(line)
+
+
+def _iter_h2_matches(text):
+    """Yield (start, end, heading) for H2 lines that are NOT inside a
+    fenced code block. `start`/`end` mirror `re.Match.start()`/`.end()`
+    for a `^## (.+)$` match: `end` is right after the heading text,
+    before the line's newline.
+
+    Fence state comes from `iter_lines_outside_fences`, so a `## `
+    line inside a fence is ordinary content, never a section boundary.
+    """
+    for pos, content in iter_lines_outside_fences(text):
+        h2_match = H2_LINE_RE.match(content)
+        if h2_match:
+            yield pos, pos + len(content), h2_match.group(1).strip()
 
 
 def split_document(text):
