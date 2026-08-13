@@ -127,20 +127,29 @@ _BI_CITATION = re.compile(r"\bBI-\d+\b")
 # covered`). The whole value is matched, not just its opening word, because
 # the reason is what makes the value legal: `reason` is None for a bare
 # `none` and blank for an empty or whitespace-only one, and the caller
-# rejects both. Capturing the reason RAW (the trailing `\s*` sits outside
-# the group) leaves the blank test to the caller, so an empty reason and a
-# whitespace-only one are distinguishable inputs rather than the same one.
+# rejects all three the same way, with one message. Capturing the reason RAW
+# (the trailing `\s*` sits outside the group) is what leaves that blank test
+# to the caller instead of deciding it here.
 #
 # The separator is a separator, not a glyph: an em-dash, an en-dash, or a
-# plain hyphen all introduce the reason. The hyphen must be spaced, though —
-# unspaced it is English's word-joiner, so `none-of-a-kind` is one word and
-# not this value at all; the dashes are never word-joiners and need no
-# space. A value that matches nothing here (prose like `none of the brief
-# items apply`) is not this value either and falls through to ordinary
-# resolution, where it fails as the unresolvable citation it is. Reading
-# either look-alike as the escape would opt a task out by accident.
+# plain hyphen all introduce the reason. The hyphen needs whitespace on BOTH
+# sides, though (or nothing at all after it, which is the reason-less form
+# the caller rejects by name). Spaced only in front, it is still English's
+# word-joiner: `none -of-a-kind` reads as the same prose as `none-of-a-kind`,
+# one stray keystroke apart, so accepting it would hand out the escape for a
+# typo — the accidental opt-out the mandatory reason exists to prevent. The
+# dashes are never word-joiners and need no space.
+#
+# The three glyphs above are the whole separator set. A dash-alike the
+# format does not name — U+2212 MINUS SIGN, U+FF0D FULLWIDTH HYPHEN-MINUS
+# (what a CJK IME emits for `-`) — is deliberately NOT one, so its author is
+# told to retype rather than granted an opt-out on a glyph nobody ruled on.
+# Fail-closed: a value that matches nothing here (that, or prose like `none
+# of the brief items apply`) falls through to ordinary resolution, where it
+# fails loudly as the unresolvable citation it is, with the value quoted.
 _NONE_VALUE = re.compile(
-    r"^[\"'`]?\s*none(?:(?P<sep>\s*[–—]|\s+-)(?P<reason>.*?))?[\"'`]?\s*$",
+    r"^[\"'`]?\s*none(?:(?P<sep>\s*[–—]|\s+-(?=\s|$))(?P<reason>.*?))?"
+    r"[\"'`]?\s*$",
     re.IGNORECASE)
 
 # CommonMark fence grammar: a ``` or ~~~ line indented up to 3 spaces.
