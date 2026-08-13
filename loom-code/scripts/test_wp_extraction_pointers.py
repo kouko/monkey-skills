@@ -227,6 +227,67 @@ def test_needs_revision_loop_self_screens_the_revision_delta():
     assert "every line the fix added or changed" in norm
 
 
+# --- (i) the coverage gate names brief mode (2026-08-13) --------------------
+
+_GATE_LEAD = "**Coverage self-check"
+
+# A scope-restricting token. A sentence carrying one of these AND naming the
+# change-folder is asserting this gate is change-folder-only, which brief
+# mode falsifies. The pin is an ABSENCE over the WHOLE sliced paragraph
+# rather than a named sentence to fix, because the claim sat on TWO
+# sentences — the bold lead-in and the body — and an earlier revision of
+# this change fixed the lead-in and left the body asserting the same
+# falsehood.
+_SCOPE_RESTRICTIONS = ("only", "not apply", "no change-folder")
+
+
+def _coverage_gate_paragraph() -> str:
+    """The coverage-self-check paragraph, sliced from its bold lead-in to the
+    next blank line.
+
+    Slicing binds PLACEMENT, not vocabulary: a duty relocated intact into a
+    neighbouring paragraph leaves this slice and fails the pin.
+    """
+    text = _skill_text()
+    start = text.index(_GATE_LEAD)
+    end = text.index("\n\n", start)
+    return _norm(text[start:end])
+
+
+def _sentences(paragraph: str) -> list[str]:
+    return [s for s in re.split(r"(?<=\.)\s+", paragraph) if s]
+
+
+def test_brief_mode_coverage_gate_is_named():
+    para = _coverage_gate_paragraph()
+
+    # (1) brief mode is named in this paragraph, in its own sentence, with
+    # the shipped `--brief` invocation form, the reviewer-dispatch ordering,
+    # and the same block-on-nonzero rule the change-folder mode carries.
+    brief_sentences = [s for s in _sentences(para) if "--brief" in s]
+    assert len(brief_sentences) == 1, (
+        "the coverage-gate paragraph must name brief mode in exactly one "
+        f"sentence of its own; found {len(brief_sentences)}"
+    )
+    sentence = brief_sentences[0]
+    assert "BI-" in sentence
+    assert "brief mode" in sentence.lower()
+    assert "plan-document-reviewer" in sentence
+    assert "non-zero" in sentence.lower()
+
+    # (2) and no sentence in the same paragraph still restricts the check to
+    # the change-folder input path.
+    offenders = [
+        s for s in _sentences(para)
+        if "change-folder" in s.lower()
+        and any(token in s.lower() for token in _SCOPE_RESTRICTIONS)
+    ]
+    assert not offenders, (
+        "the coverage-gate paragraph still restricts the check to the "
+        f"change-folder input path: {offenders}"
+    )
+
+
 # --- (f) word cap ------------------------------------------------------------
 
 def test_word_count_at_most_4210():
