@@ -718,6 +718,154 @@ def test_none_with_reason_is_not_treated_as_unresolvable(tmp_path):
     assert result.returncode == 0, result.stderr
 
 
+# The reason-less rejection, machine-readable so the pin can compare the SET
+# of offending tasks rather than hunt for a phrase that happens to co-occur.
+# Line-initial and literal-prefixed by construction, so no fixture path can
+# reach it: `tmp_path` names its directory after the test function, and this
+# test's name carries the words `none` and `rejected`.
+_NO_REASON_ERROR = re.compile(
+    r"^Error: 'Brief item covered' under '(?P<task>.+?)' is the "
+    r"no-requirement value with no reason\b")
+
+# The pre-existing "this value resolves to nothing" error, parsed the same
+# way — a value that only LOOKS like the no-requirement value lands here.
+_CITES_NOTHING_ERROR = re.compile(
+    r"^Error: 'Brief item covered' under '(?P<task>.+?)' cites no BI-")
+
+
+def _tasks_reported_by(pattern: "re.Pattern[str]", stderr: str) -> set[str]:
+    """The set of task headings `pattern` names, one per stderr line."""
+    return {match.group("task")
+            for match in (pattern.match(line) for line in stderr.splitlines())
+            if match}
+
+
+# Every shape of the no-requirement value in one plan, so one run decides the
+# whole boundary. Task 5's reason is absent rather than a trailing space: the
+# reader strips the field value, so `none — ` and `none —` are the same input.
+# Task 6 is quoted for exactly that reason — the quotes are what keep a
+# whitespace-only reason reachable at all past the strip.
+_PLAN_EVERY_NONE_SHAPE = """\
+# Plan: x
+
+## Task 1 — cites a real item
+- Brief item covered: BI-1
+
+## Task 2 — release administration
+- Brief item covered: none — release administration only
+
+## Task 3 — spaced hyphen separator
+- Brief item covered: none - a plain hyphen still separates a reason
+
+## Task 4 — bare escape
+- Brief item covered: none
+
+## Task 5 — separator but nothing after it
+- Brief item covered: none —
+
+## Task 6 — separator and only spaces after it
+- Brief item covered: "none —   "
+"""
+
+
+def test_bare_none_is_rejected_and_none_with_reason_is_accepted(tmp_path):
+    """`none — <reason>` is legal; the reason is what makes it legal.
+
+    A task delivering no brief outcome must not be forced into a false
+    citation, so the value exists — but a bare `none` is that escape with
+    the justification deleted, which is a silent opt-out wearing the legal
+    value's clothes (`plan-format.md`: "a bare `none`, an empty reason, or a
+    whitespace-only reason is invalid"). The reason is the whole mechanism.
+
+    Three shapes of the boundary are settled here, each pinned in the run
+    where it is decidable:
+
+    - **The reason-less shapes fail, and the offending task is named.** The
+      exit code is asserted, not the message alone: a version that prints
+      the same sentence and still exits 0 leaves the plan shippable. Task
+      names are compared as a parsed SET, so an implementation that rejects
+      only the bare form (and lets `none —` through) fails on the narrowing,
+      and one that rejects the legal Tasks 2 and 3 fails on the widening —
+      containment could see neither.
+    - **The separator is a separator, not a glyph.** An em-dash, an en-dash,
+      and a SPACED plain hyphen all separate a reason; the reason carries
+      the safety and the glyph carries none of it, so rejecting a value
+      whose intent is unmistakable would punish typography.
+    - **A word-initial `none` is not the escape value.** `none of the brief
+      items apply` is prose and `none-of-a-kind` is a hyphen joining a word,
+      not introducing a reason. Reading either as the escape would let an
+      author opt a task out by accident, which is the failure this value's
+      mandatory reason exists to prevent. Both stay ordinary unresolvable
+      citations — they fail, by the pre-existing route, naming the task.
+
+    Assertions are parsed from line-initial `Error:` prefixes, never sought
+    in the output blob: this test's own name contains `none` and `rejected`,
+    and `tmp_path` puts the truncated name into every path the run prints.
+    """
+    brief = tmp_path / "brief.md"
+    brief.write_text(_BRIEF_TWO_IDS, encoding="utf-8")
+
+    plan = tmp_path / "plan.md"
+    plan.write_text(_PLAN_EVERY_NONE_SHAPE, encoding="utf-8")
+    result = _run_brief(brief, plan)
+    assert result.returncode != 0, (
+        "a no-requirement value with no reason must fail the run, got 0\n"
+        f"{result.stdout}"
+    )
+    assert _tasks_reported_by(_NO_REASON_ERROR, result.stderr) == {
+        "Task 4 — bare escape",
+        "Task 5 — separator but nothing after it",
+        "Task 6 — separator and only spaces after it",
+    }, (
+        "exactly the three reason-less tasks must be reported as such — the "
+        "two carrying a reason are legal and must not appear\n"
+        f"{result.stderr}"
+    )
+
+    # The positive control: an implementation rejecting every `none` passes
+    # the run above. Both separator glyphs must survive to exit 0.
+    legal = tmp_path / "legal.md"
+    legal.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — cites a real item\n"
+        "- Brief item covered: BI-1\n\n"
+        "## Task 2 — release administration\n"
+        "- Brief item covered: none — release administration only\n\n"
+        "## Task 3 — spaced hyphen separator\n"
+        "- Brief item covered: none - a plain hyphen still separates a reason\n",
+        encoding="utf-8",
+    )
+    accepted = _run_brief(brief, legal)
+    assert accepted.returncode == 0, accepted.stderr
+
+    # The look-alikes: `none` opening a word or a sentence is not the value.
+    lookalike = tmp_path / "lookalike.md"
+    lookalike.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — prose opening with the word\n"
+        "- Brief item covered: none of the brief items apply to this task\n\n"
+        "## Task 2 — hyphen joining a word\n"
+        "- Brief item covered: none-of-a-kind rendering work\n",
+        encoding="utf-8",
+    )
+    looks = _run_brief(brief, lookalike)
+    assert looks.returncode != 0, (
+        "a value that is not the no-requirement value and cites nothing must "
+        f"fail the run, got 0\n{looks.stdout}"
+    )
+    assert _tasks_reported_by(_NO_REASON_ERROR, looks.stderr) == set(), (
+        "neither look-alike is the no-requirement value, so neither may be "
+        f"reported as one whose reason is missing\n{looks.stderr}"
+    )
+    assert _tasks_reported_by(_CITES_NOTHING_ERROR, looks.stderr) == {
+        "Task 1 — prose opening with the word",
+        "Task 2 — hyphen joining a word",
+    }, (
+        "both look-alikes must fail as ordinary unresolvable citations, "
+        f"each naming its own task\n{looks.stderr}"
+    )
+
+
 # --- per-item coverage: the union of every task citing an identifier ---
 
 
