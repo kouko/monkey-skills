@@ -43,7 +43,9 @@ against a `BI-<n>` identifier the brief declares? An unresolvable value is
 an ERROR (exit 1) naming the task and quoting the value, because there the
 grammar is unambiguous: the brief HAS identifiers, so a value naming none of
 them is a defect rather than a legal prose referent. The legal
-no-requirement value `none — <reason>` passes through. A brief declaring no
+no-requirement value `none — <reason>` passes through; its reason is
+mandatory, so a bare `none`, an empty reason or a whitespace-only one is
+itself an error naming the task. A brief declaring no
 identifiers at all is a legacy brief: the quote referent stays legal, no
 resolution is attempted, and the run says so on stdout rather than exiting 0
 in silence. The two modes are selected, never combined.
@@ -121,11 +123,25 @@ _BRIEF_ITEM_DECL = re.compile(r"^\s*(?:[-*+]\s+)?(BI-\d+)\b(?P<text>.*)$")
 # and has no counterpart here, where a mention IS the citation.
 _BI_CITATION = re.compile(r"\bBI-\d+\b")
 
-# The no-requirement value `none — <reason>` (plan-format.md). Recognised
-# here only well enough to keep it OUT of the unresolvable bucket; whether
-# the reason is present and non-empty is validated separately, and that
-# validation tightens this seam rather than replacing it.
-_NONE_VALUE = re.compile(r"^[\"'`]?\s*none\b", re.IGNORECASE)
+# The no-requirement value `none — <reason>` (plan-format.md §`Brief item
+# covered`). The whole value is matched, not just its opening word, because
+# the reason is what makes the value legal: `reason` is None for a bare
+# `none` and blank for an empty or whitespace-only one, and the caller
+# rejects both. Capturing the reason RAW (the trailing `\s*` sits outside
+# the group) leaves the blank test to the caller, so an empty reason and a
+# whitespace-only one are distinguishable inputs rather than the same one.
+#
+# The separator is a separator, not a glyph: an em-dash, an en-dash, or a
+# plain hyphen all introduce the reason. The hyphen must be spaced, though —
+# unspaced it is English's word-joiner, so `none-of-a-kind` is one word and
+# not this value at all; the dashes are never word-joiners and need no
+# space. A value that matches nothing here (prose like `none of the brief
+# items apply`) is not this value either and falls through to ordinary
+# resolution, where it fails as the unresolvable citation it is. Reading
+# either look-alike as the escape would opt a task out by accident.
+_NONE_VALUE = re.compile(
+    r"^[\"'`]?\s*none(?:(?P<sep>\s*[–—]|\s+-)(?P<reason>.*?))?[\"'`]?\s*$",
+    re.IGNORECASE)
 
 # CommonMark fence grammar: a ``` or ~~~ line indented up to 3 spaces.
 # Same state machine as `adjudication_split._iter_h2_matches` (a fence
@@ -312,18 +328,35 @@ def resolve_plan_brief_citations(
     Two shapes are not errors. A value citing only declared ids resolves,
     obviously; and `none — <reason>`, the legal no-requirement value, is
     passed through untouched — a task delivering no brief outcome must not
-    be forced into a false citation. This function decides only that the
-    no-requirement shape is not *unresolvable*; the reason's mandatoriness
-    is checked elsewhere, so that check tightens this seam rather than
-    rewriting the resolution.
+    be forced into a false citation.
+
+    The reason is what makes that value legal, so a reason-less one is an
+    error here rather than a pass-through: a bare `none`, an empty reason
+    and a whitespace-only reason are the escape with its justification
+    deleted, which reads as authorised to every downstream reader while
+    saying nothing. That is the silent opt-out the mandatory reason exists
+    to prevent, and it gets its own diagnostic — routing it through the
+    cites-nothing message below would tell an author who wrote the value
+    deliberately to go add an identifier they correctly decided not to
+    cite.
     """
     errors: list[str] = []
     for line_match in _BRIEF_ITEM_LINE.finditer(plan_text):
         value = line_match.group(1).strip()
-        if _NONE_VALUE.match(value):
-            continue
         where = (_enclosing_heading(plan_text, line_match.start())
                  or "(no enclosing heading)")
+        none_match = _NONE_VALUE.match(value)
+        if none_match is not None:
+            reason = none_match.group("reason")
+            if reason is not None and reason.strip():
+                continue
+            errors.append(
+                f"Error: 'Brief item covered' under '{where}' is the "
+                f"no-requirement value with no reason — the reason is what "
+                f"keeps `none` from being a silent opt-out, so write "
+                f"`none — <why this task delivers no brief item>`. "
+                f"Value: {value}")
+            continue
         cited = _BI_CITATION.findall(value)
         unknown = [item_id for item_id in cited if item_id not in declared]
         if cited and not unknown:
