@@ -705,14 +705,22 @@ def test_near_miss_identifiers_still_error_in_brief_mode(tmp_path):
     """The join-key tolerance is not a hole: every value that is neither a
     resolvable identifier nor a well-formed join key still fails the run.
 
-    Four shapes, each a different way of missing. `BI-2x` and `BI2` are the
+    Five shapes, each a different way of missing. `BI-2x` and `BI2` are the
     typos `handoff-brief-format.md` §Brief item identifiers rules out by the
     trailing `\\b` and the mandatory hyphen; `bi-1` is the case error the
     same section names; the bare prose quote is the pre-convention form. None
-    contains the `/ Requirement: … / Scenario: …` grammar, so none may reach
-    the tolerance — and each is asserted by task, not by a single exit code,
-    because one surviving shape among four would otherwise hide behind the
-    other three.
+    of those four contains the `/ Requirement: … / Scenario: …` grammar, so
+    none may reach the tolerance — and each is asserted by task, not by a
+    single exit code, because one surviving shape among five would otherwise
+    hide behind the others.
+
+    The fifth is the one that pins WHERE the tolerance sits. `_JOIN_KEY`
+    reads its change-id slot as `.+?`, so an undeclared `BI-99` wearing the
+    join-key shape matches the grammar perfectly — testing it ahead of the
+    cites-nothing branch would route that typo into the warning register and
+    silence it. The shipped order tests it inside `if not cited:`, which
+    confines the tolerance to values citing no `BI-` at all; this row is what
+    fails if that order is ever inverted.
     """
     brief = tmp_path / "brief.md"
     brief.write_text(_BRIEF_TWO_IDS, encoding="utf-8")
@@ -726,7 +734,10 @@ def test_near_miss_identifiers_still_error_in_brief_mode(tmp_path):
         "## Task 3 — wrong case\n"
         "- Brief item covered: bi-1\n\n"
         "## Task 4 — bare prose\n"
-        "- Brief item covered: the widget rework ships end to end\n",
+        "- Brief item covered: the widget rework ships end to end\n\n"
+        "## Task 5 — undeclared id wearing the join-key shape\n"
+        "- Brief item covered: BI-99 / Requirement: Users can filter by date "
+        "/ Scenario: Empty result set\n",
         encoding="utf-8",
     )
 
@@ -739,6 +750,7 @@ def test_near_miss_identifiers_still_error_in_brief_mode(tmp_path):
         "Task 2 — missing hyphen",
         "Task 3 — wrong case",
         "Task 4 — bare prose",
+        "Task 5 — undeclared id wearing the join-key shape",
     ):
         reported = _stderr_lines_naming(task, result.stderr)
         assert reported, f"{task} must be reported"
