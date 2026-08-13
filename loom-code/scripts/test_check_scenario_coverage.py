@@ -797,6 +797,20 @@ def test_bare_none_is_rejected_and_none_with_reason_is_accepted(tmp_path):
       author opt a task out by accident, which is the failure this value's
       mandatory reason exists to prevent. Both stay ordinary unresolvable
       citations — they fail, by the pre-existing route, naming the task.
+      The joined word stays joined when a stray space lands in FRONT of the
+      hyphen (`none -of-a-kind`): one accidental keystroke away from the
+      glued form, materially the same prose, so it cannot be a different
+      answer — which is why a plain hyphen is a separator only with
+      whitespace on BOTH sides.
+    - **Only the three named glyphs separate a reason.** Em-dash, en-dash
+      and a spaced plain hyphen are the separator set; a dash-alike the
+      format does not name (U+2212 MINUS SIGN, U+FF0D FULLWIDTH HYPHEN-MINUS
+      — the one a CJK IME emits) is NOT the escape. That is fail-closed by
+      choice: an unrecognised glyph fails loudly as an unresolvable citation
+      with the value quoted, so the author retypes it, whereas widening the
+      set to every dash-alike widens the surface on which an opt-out can be
+      granted by accident. Rejecting typography a reader would forgive is
+      the cost, and it is paid in a visible error, never in silence.
 
     Assertions are parsed from line-initial `Error:` prefixes, never sought
     in the output blob: this test's own name contains `none` and `rejected`,
@@ -832,20 +846,33 @@ def test_bare_none_is_rejected_and_none_with_reason_is_accepted(tmp_path):
         "## Task 2 — release administration\n"
         "- Brief item covered: none — release administration only\n\n"
         "## Task 3 — spaced hyphen separator\n"
-        "- Brief item covered: none - a plain hyphen still separates a reason\n",
+        "- Brief item covered: none - a plain hyphen still separates a reason\n\n"
+        "## Task 4 — en-dash, tight\n"
+        "- Brief item covered: none–an en-dash is never a word-joiner\n\n"
+        "## Task 5 — en-dash, spaced\n"
+        "- Brief item covered: none – release administration only\n",
         encoding="utf-8",
     )
     accepted = _run_brief(brief, legal)
     assert accepted.returncode == 0, accepted.stderr
 
-    # The look-alikes: `none` opening a word or a sentence is not the value.
+    # The look-alikes: `none` opening a word or a sentence is not the value,
+    # and neither is a dash-alike glyph the format does not name.
     lookalike = tmp_path / "lookalike.md"
     lookalike.write_text(
         "# Plan: x\n\n"
         "## Task 1 — prose opening with the word\n"
         "- Brief item covered: none of the brief items apply to this task\n\n"
         "## Task 2 — hyphen joining a word\n"
-        "- Brief item covered: none-of-a-kind rendering work\n",
+        "- Brief item covered: none-of-a-kind rendering work\n\n"
+        "## Task 3 — a stray space in front of the joining hyphen\n"
+        "- Brief item covered: none -of-a-kind rendering work\n\n"
+        "## Task 4 — the same stray space, value ending at the joined word\n"
+        "- Brief item covered: none -of-a-kind\n\n"
+        "## Task 5 — U+2212 minus sign, a glyph the format does not name\n"
+        "- Brief item covered: none − release administration only\n\n"
+        "## Task 6 — U+FF0D fullwidth hyphen-minus, as a CJK IME emits it\n"
+        "- Brief item covered: none － release administration only\n",
         encoding="utf-8",
     )
     looks = _run_brief(brief, lookalike)
@@ -854,14 +881,18 @@ def test_bare_none_is_rejected_and_none_with_reason_is_accepted(tmp_path):
         f"fail the run, got 0\n{looks.stdout}"
     )
     assert _tasks_reported_by(_NO_REASON_ERROR, looks.stderr) == set(), (
-        "neither look-alike is the no-requirement value, so neither may be "
+        "no look-alike is the no-requirement value, so none may be "
         f"reported as one whose reason is missing\n{looks.stderr}"
     )
     assert _tasks_reported_by(_CITES_NOTHING_ERROR, looks.stderr) == {
         "Task 1 — prose opening with the word",
         "Task 2 — hyphen joining a word",
+        "Task 3 — a stray space in front of the joining hyphen",
+        "Task 4 — the same stray space, value ending at the joined word",
+        "Task 5 — U+2212 minus sign, a glyph the format does not name",
+        "Task 6 — U+FF0D fullwidth hyphen-minus, as a CJK IME emits it",
     }, (
-        "both look-alikes must fail as ordinary unresolvable citations, "
+        "every look-alike must fail as an ordinary unresolvable citation, "
         f"each naming its own task\n{looks.stderr}"
     )
 
