@@ -87,9 +87,18 @@ def test_open_questions_row_runs_before_the_close_out_commit():
 def test_open_questions_row_reuses_step_1s_plan_not_a_new_discovery_rule():
     """Judgment call: the row must name WHICH plan to check by pointing at
     the plan Step 1 already read/rendered (`plan_card.py <plan-path>`,
-    SKILL.md Step 1), not invent a second plan-discovery mechanism."""
+    SKILL.md Step 1), not invent a second plan-discovery mechanism.
+
+    Cell-sliced to the plan-identification cell (`row.split("|")[2]`), not
+    the whole row: the row also carries a trailing "per Step 1's
+    entry-card rules" phrase in the skip-case cell, so an unscoped
+    `"Step 1" in row` check stays green even if THIS cell's own reuse
+    clause were replaced with an invented discovery rule (e.g. "find it
+    by globbing docs/loom/plans/ and taking the newest file") -- the
+    exact defect this test exists to catch."""
     row = _open_questions_row(_text())
-    assert "Step 1" in row, \
+    plan_identification_cell = row.split("|")[2]
+    assert plan_identification_cell.count("Step 1") == 1, \
         "must point at the plan Step 1 already identified, not a fresh discovery rule"
 
 

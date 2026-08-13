@@ -343,6 +343,10 @@ Steps:
 
 <!-- mermaid flowchart LR of the Task 1 → Task 2 → Task 3 dependency DAG -->
 
+## Open Questions
+
+N/A — no unresolved question: brief left nothing undecided at plan time.
+
 ## Task 1 — Add format query param parsing to /reports handler
 
 - **Description**: Accept `format=csv` query param in `GET /reports/:id`; default to `format=json` if absent or unrecognized.
@@ -416,6 +420,10 @@ Stage: planning
 ## Task-flow diagram
 
 <!-- mermaid flowchart LR of the Task 1-6 → Task 7 → Task 8 dependency DAG -->
+
+## Open Questions
+
+N/A — no unresolved question: brief left nothing undecided at plan time.
 
 ## Task 1 — Docstring for csv renderer   (Independent: true, Dependencies: none)
 ## Task 2 — Docstring for json renderer  (Independent: true, Dependencies: none)

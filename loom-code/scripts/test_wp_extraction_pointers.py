@@ -510,8 +510,12 @@ def _open_questions_gate_paragraph() -> str:
 def test_skill_wires_open_questions_gate_unconditionally():
     para = _open_questions_gate_paragraph()
 
-    # (1) names the checker
-    assert "check_open_questions.py" in para
+    # (1) names the checker's full repo-root-relative invocation, not a
+    # bare basename — same reasoning as the finishing-a-development-branch
+    # sibling row's own test (`test_finishing_open_questions_gate.py`):
+    # a bare basename is satisfiable by any path prefix
+    # (loom-pipeline/scripts/, tools/scripts/, ../scripts/).
+    assert "python3 loom-code/scripts/check_open_questions.py" in para
 
     # (2) states the gate runs on every plan — UNCONDITIONAL, unlike the two
     # existing check_scenario_coverage.py invocations (SKILL.md:253), both

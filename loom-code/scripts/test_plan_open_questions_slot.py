@@ -21,8 +21,13 @@ Pins all six acceptance criteria (a)-(f) from the plan's Task 1:
 """
 from __future__ import annotations
 
+import os
 import re
+import subprocess
+import sys
 from pathlib import Path
+
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PLAN_FORMAT_MD = (
@@ -33,6 +38,10 @@ PLAN_FORMAT_MD = (
     / "references"
     / "plan-format.md"
 )
+WRITING_PLANS_SKILL_MD = (
+    REPO_ROOT / "loom-code" / "skills" / "writing-plans" / "SKILL.md"
+)
+CHECK_OPEN_QUESTIONS = Path(__file__).parent / "check_open_questions.py"
 
 SECTION_HEADING = "## Open Questions"
 
@@ -168,15 +177,27 @@ def test_plan_format_declares_open_questions_fill_or_declare_slot():
     assert NO_LINKAGE in text, f"missing {NO_LINKAGE!r}"
 
     # (f) pointer, not restatement — judgment-rubrics.md §3's own boolean
-    # grouping / thresholds must NOT be copied into plan-format.md
+    # grouping / thresholds must NOT be copied into the Open-Questions
+    # slot. The two RESTATEMENT negatives below are claims about what
+    # THIS slot says, not about the whole file, so — same convention as
+    # pin (a) above, which scopes to oq_section for the identical reason
+    # — both are scoped to oq_section rather than the whole document. An
+    # unscoped whole-file check would false-accuse an unrelated part of
+    # plan-format.md that happens to use either word for a different
+    # purpose (e.g. an anti-pattern row about marking an irreversible
+    # task, which restates nothing) of restating §3's content. The
+    # POINTER presence check stays whole-file: it is a positive claim
+    # ("the pointer exists somewhere relevant"), not a negative one, so
+    # it carries no false-accusation risk from unrelated content
+    # elsewhere in the document.
     assert JUDGMENT_RUBRICS_POINTER in text, "missing pointer to judgment-rubrics.md"
-    assert "irreversible" not in text.lower(), (
-        "plan-format.md restates judgment-rubrics.md §3's content instead "
-        "of pointing at it"
+    assert "irreversible" not in oq_section.lower(), (
+        "the Open-Questions slot restates judgment-rubrics.md §3's content "
+        "instead of pointing at it"
     )
-    assert "30 min" not in text, (
-        "plan-format.md restates judgment-rubrics.md §3's content instead "
-        "of pointing at it"
+    assert "30 min" not in oq_section, (
+        "the Open-Questions slot restates judgment-rubrics.md §3's content "
+        "instead of pointing at it"
     )
 
 
@@ -233,4 +254,99 @@ def test_decision_log_disclaims_unresolved_questions():
         "Decision Log section does not state that an unresolved question "
         "belongs in `## Open Questions` instead, scoped to its own "
         "descriptive block"
+    )
+
+
+# Review-fix — every template a plan author copies must actually SHOW the
+# slot: the two tests above only pin plan-format.md's own schema PROSE
+# (the rule text), never whether a template built from that schema
+# conforms to its own rule. That gap is exactly how both worked examples
+# below, and writing-plans/SKILL.md's own "Minimum structure" schema
+# template, shipped with zero '## Open Questions' section: an author
+# following the schema-prose-conformant instructions would still produce
+# a plan the schema's own gate rejects.
+#
+# These tests extract each template's fenced plan body and run it through
+# the REAL check_open_questions.py grammar (subprocess, same convention
+# as test_check_open_questions.py — not a re-implementation of the
+# grammar) rather than re-checking for a bare substring, so a future edit
+# that adds the heading back with a malformed or absent body still fails
+# here, closing exactly the gap this task's dispatch named.
+
+_ENV = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+
+
+def _extract_fenced_markdown_block(text: str, anchor: str) -> str:
+    """Body of the fenced ```markdown code block that contains `anchor` —
+    the nearest ```markdown fence opening before `anchor`, up to its
+    matching closing fence. `anchor` must be a substring unique to one
+    fenced block in `text` (callers verify this via `text.count`)."""
+    anchor_idx = text.index(anchor)
+    fence_marker = "```markdown\n"
+    fence_start = text.rindex(fence_marker, 0, anchor_idx) + len(fence_marker)
+    fence_end = text.index("\n```", fence_start)
+    return text[fence_start:fence_end]
+
+
+def _run_open_questions_checker(
+    plan_text: str, tmp_path: Path
+) -> subprocess.CompletedProcess:
+    plan_path = tmp_path / "extracted-plan.md"
+    plan_path.write_text(plan_text, encoding="utf-8")
+    return subprocess.run(
+        [sys.executable, str(CHECK_OPEN_QUESTIONS), str(plan_path)],
+        capture_output=True,
+        text=True,
+        env=_ENV,
+    )
+
+
+CSV_EXPORT_EXAMPLE_ANCHOR = "# Plan: CSV export query param"
+DOCSTRING_BACKFILL_EXAMPLE_ANCHOR = "# Plan: backfill renderer module docstrings"
+
+
+@pytest.mark.parametrize(
+    "anchor",
+    [CSV_EXPORT_EXAMPLE_ANCHOR, DOCSTRING_BACKFILL_EXAMPLE_ANCHOR],
+)
+def test_plan_format_worked_example_passes_real_open_questions_checker(
+    anchor, tmp_path
+):
+    """Extract each of plan-format.md's two worked examples and run the
+    REAL check_open_questions.py against the extracted body — must exit
+    0. This is the check the orchestrator ran by hand to find the
+    original defect (both examples exited 1: no section found)."""
+    text = PLAN_FORMAT_MD.read_text(encoding="utf-8")
+    assert text.count(anchor) == 1, f"expected exactly one {anchor!r} anchor"
+    plan_body = _extract_fenced_markdown_block(text, anchor)
+    result = _run_open_questions_checker(plan_body, tmp_path)
+    assert result.returncode == 0, (
+        f"worked example at {anchor!r} fails check_open_questions.py "
+        f"(exit {result.returncode}): {result.stderr}"
+    )
+
+
+WRITING_PLANS_MINIMUM_STRUCTURE_ANCHOR = "# Plan: <topic>"
+
+
+def test_writing_plans_minimum_structure_template_passes_real_checker(tmp_path):
+    """writing-plans/SKILL.md's own 'Output contract — the plan ...
+    Minimum structure' template is the block writing-plans follows when
+    emitting a plan — it must also carry a checker-valid '## Open
+    Questions' slot, not just plan-format.md's worked examples. The
+    checker only scans the '## Open Questions' section itself (see
+    check_open_questions.py's own docstring), so it does not matter that
+    every other field in this block is a `<placeholder>` token rather
+    than concrete content."""
+    text = WRITING_PLANS_SKILL_MD.read_text(encoding="utf-8")
+    assert text.count(WRITING_PLANS_MINIMUM_STRUCTURE_ANCHOR) == 1, (
+        f"expected exactly one {WRITING_PLANS_MINIMUM_STRUCTURE_ANCHOR!r} anchor"
+    )
+    plan_body = _extract_fenced_markdown_block(
+        text, WRITING_PLANS_MINIMUM_STRUCTURE_ANCHOR
+    )
+    result = _run_open_questions_checker(plan_body, tmp_path)
+    assert result.returncode == 0, (
+        "writing-plans/SKILL.md's Minimum structure template fails "
+        f"check_open_questions.py (exit {result.returncode}): {result.stderr}"
     )

@@ -73,14 +73,17 @@ Role boundaries enforced by behavior, not reading restrictions:
   `## Open Questions` heading, on more than one such heading (a
   malformed plan — exactly one is required), on a present-but-bare
   section (heading present, body empty), on a section whose body is
-  prose only (no recognizable entry and no N/A line), on a line
-  starting with the `- OQ-<n>` entry marker that fails the entry
-  grammar (a malformed entry, e.g. wrong/lowercase token, named on
-  stderr), or on the pinned `N/A — no unresolved question: <reason>`
-  line missing its reason; rc=0 when every entry is `[RESOLVED]` or the
-  N/A line is well-formed. A reused `OQ-<n>` identifier (the
-  never-renumbered/never-reused rule) is warned on stderr, first-wins —
-  a warning only, it never changes rc.
+  prose only (no recognizable entry and no N/A line), on a line that
+  ATTEMPTS an entry — an `OQ-<n>` id followed by an opening `[`, under
+  any bullet (`-`, `*`, `+`, `>`, blockquoted, or none at all) — that
+  fails the strict entry grammar (a malformed entry, e.g. wrong/
+  lowercase token or a non-`-` bullet, named on stderr), or on the
+  pinned `N/A — no unresolved question: <reason>` line missing its
+  reason; rc=0 when every well-formed entry is `[RESOLVED]` or the N/A
+  line is well-formed (a bare `OQ-<n>` id mentioned in prose, with no
+  bracketed-token attempt following it, is not scanned as an entry). A
+  reused `OQ-<n>` identifier (the never-renumbered/never-reused rule) is
+  warned on stderr, first-wins — a warning only, it never changes rc.
 - **Archive a shipped change-folder, or a single backlog entry file**
   (finishing-a-development-branch archive-on-close step, orchestrator-only,
   once per branch; the file unit is also used to close a

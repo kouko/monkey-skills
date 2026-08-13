@@ -16,23 +16,26 @@ Grammar (SSOT: `loom-code/skills/writing-plans/references/plan-format.md`
 Exit codes:
 
     0 — exactly one `## Open Questions` section exists, and either every
-        entry is `[RESOLVED]`, or the body is the well-formed N/A line
-        (a non-blank reason). A line is an "entry" only when it begins
-        with the marker `- OQ-<n>` at its own start (after stripping
-        leading whitespace); every other line in the section — a
-        soft-wrapped entry's continuation lines, blank lines,
-        explanatory prose — is ignored, not scanned for the entry
-        grammar. This mirrors plan-format.md's own scope: the `##
-        Open Questions` grammar never forbids soft-wrap or prose,
-        unlike `## Decision Log`, which pins entries to a single physical
-        line explicitly.
+        well-formed entry is `[RESOLVED]`, or the body is the well-formed
+        N/A line (a non-blank reason). Only `- OQ-<n> [TOKEN] — text`
+        (a literal `-` bullet, at the line's own start after stripping
+        leading whitespace) is a well-formed entry; every other line in
+        the section — a soft-wrapped entry's continuation lines, blank
+        lines, explanatory prose, or an `OQ-<n>` id merely mentioned in
+        prose with no bracketed token attempt following it — is ignored,
+        not scanned for the entry grammar. This mirrors plan-format.md's
+        own scope: the `## Open Questions` grammar never forbids
+        soft-wrap or prose, unlike `## Decision Log`, which pins entries
+        to a single physical line explicitly.
     1 — any of: the `## Open Questions` heading is absent; more than one
         such heading is present (a malformed plan — plan-format.md
-        requires exactly one); any entry is `[OPEN]` (its `OQ-<n>` named
-        on stderr); the N/A line is present but its reason is
-        missing/blank; a line beginning with the entry marker does not
-        otherwise match the entry grammar (malformed, named on stderr);
-        the section body is present but contains neither a recognizable
+        requires exactly one); any well-formed entry is `[OPEN]` (its
+        `OQ-<n>` named on stderr); the N/A line is present but its reason
+        is missing/blank; a line that ATTEMPTS an entry — an `OQ-<n>` id
+        followed by an opening `[`, under any bullet (`-`, `*`, `+`, `>`,
+        blockquoted, or none at all) — but does not match the strict
+        well-formed grammar in full (malformed, named on stderr); the
+        section body is present but contains neither a recognizable
         entry nor the N/A line (e.g. prose only).
 
 The scan is scoped to the section BODY — text between the `## Open
@@ -42,8 +45,10 @@ A `[OPEN]` / `[RESOLVED]` token appearing anywhere else in the document
 code block) is out of scope and never inspected. Heading detection and
 the entry scan are both fence-aware — a `## Open Questions` heading or
 an `- OQ-<n>` entry quoted inside a fenced code block (a worked example
-of the grammar, which plan-format.md and this arc's own plan both do)
-is never mistaken for a real declaration — via
+of the grammar, which plan-format.md's own `## Worked example` and
+`### Wide-but-shallow example` sections do, each fencing a `## Open
+Questions` heading inside a ```markdown block) is never mistaken for a
+real declaration — via
 `adjudication_split.iter_lines_outside_fences`, the same primitive
 `check_scenario_coverage.collect_brief_item_ids` already adopted for
 the identical problem. Fence-blindness is tolerable in some heading
@@ -95,11 +100,25 @@ _ENTRY_LINE = re.compile(
     r"^-\s*OQ-(?P<n>\d+)\s*\[(?P<token>OPEN|RESOLVED)\]\s*—\s*(?P<text>.+)$"
 )
 
-# A line that starts to look like an entry (an `OQ-<n>` list item) but
-# does not match `_ENTRY_LINE` in full — wrong/missing token, missing
-# em-dash, etc. Used only to phrase the diagnostic as "malformed entry"
-# rather than the more generic "unrecognized line".
-_LOOKS_LIKE_ENTRY = re.compile(r"^-\s*OQ-\d+\b")
+# A line that starts to look like an ENTRY ATTEMPT — some combination of
+# bullet-ish characters (`-`, `*`, `+`, `>`, blockquoted dash, or no
+# bullet at all), an `OQ-<n>` id, and an opening `[` immediately after it
+# (the start of a bracketed-token attempt) — but does not match
+# `_ENTRY_LINE` in full. The net is deliberately wider than the
+# well-formed grammar (`- OQ-<n> [TOKEN] — text`, still the ONLY shape
+# `_ENTRY_LINE` accepts): a `*`/`+`/`>` bullet, or no bullet, must still
+# fail loudly as malformed rather than silently fall through to the
+# ignored-prose branch below — that silent fallthrough was the fatal
+# false-negative whole-branch review found (three `[OPEN]` entries with
+# non-`-` bullets exited 0 as "clean").
+#
+# The trailing `\s*\[` is the boundary against the opposite defect: a
+# line that merely MENTIONS an `OQ-<n>` id in prose (no bracketed token
+# immediately following, e.g. "OQ-1 was settled last week") must stay
+# ignored as prose, not become a new false positive. Requiring an
+# attempted `[` right after the id is what tells "trying to declare an
+# entry" apart from "referencing an id in a sentence".
+_LOOKS_LIKE_ENTRY = re.compile(r"^[-*+>\s]*OQ-\d+\s*\[")
 
 
 def _find_open_questions_sections(
@@ -138,9 +157,12 @@ def check_open_questions(plan_text: str) -> tuple[bool, list[str]]:
     `problems` is non-empty.
 
     A reused `OQ-<n>` identifier is warned about directly to stderr as
-    it is found (mirroring `collect_brief_item_ids`'s own print-as-you-
-    collect convention, `check_scenario_coverage.py:270`) rather than
-    folded into `problems` — the warning must never flip `ok`."""
+    it is found, inline in the same scan that builds `problems` — unlike
+    the sibling collectors in `check_scenario_coverage.py`
+    (`collect_brief_item_ids`, `collect_folder_scenario_keys`), which
+    each finish their own full scan first and print duplicate warnings
+    in a separate pass afterward. The warning is not folded into
+    `problems` either way — it must never flip `ok`."""
     sections = _find_open_questions_sections(plan_text)
     if not sections:
         return False, [
@@ -200,9 +222,13 @@ def check_open_questions(plan_text: str) -> tuple[bool, list[str]]:
                     f"Warning: OQ-{oq_id} is declared twice — line "
                     f"{seen_ids[oq_id]} and line {lineno}; OQ-<n> "
                     "identifiers are monotonic and never reused "
-                    "(plan-format.md §Plan-level open-questions slot), so "
-                    f"the line {seen_ids[oq_id]} entry is treated as "
-                    "canonical.",
+                    "(plan-format.md §Plan-level open-questions slot). "
+                    f"Line {seen_ids[oq_id]} is recorded as the "
+                    "first-seen declaration for bookkeeping only — this "
+                    "does not suppress evaluation of the other entry; "
+                    "every entry sharing this id, including this one, is "
+                    "still checked for its own [OPEN]/[RESOLVED] status "
+                    "and can still fail the check on its own.",
                     file=sys.stderr,
                 )
             else:
@@ -222,15 +248,20 @@ def check_open_questions(plan_text: str) -> tuple[bool, list[str]]:
             )
             continue
         # Any other line — a soft-wrapped entry's continuation line, a
-        # blank separator, or explanatory prose — is ignored. Only a line
-        # that begins with the entry marker (`- OQ-<n>`) is required to
-        # parse; nothing else in the grammar (plan-format.md §Plan-level
-        # open-questions slot) forbids soft-wrap or prose in this section
-        # (contrast '## Decision Log', which pins its entries to a single
-        # physical line explicitly). This is why a bare `- OQ-` prefix
-        # still routes to the malformed-entry branch above instead of
-        # falling through here — a typo'd token must not go silently
-        # invisible as "unrecognized prose".
+        # blank separator, explanatory prose, or an `OQ-<n>` id merely
+        # mentioned in a sentence — is ignored. Only a line that ATTEMPTS
+        # an entry (an `OQ-<n>` id immediately followed by an opening `[`,
+        # under any bullet or none — see `_LOOKS_LIKE_ENTRY`) is required
+        # to parse; nothing else in the grammar (plan-format.md
+        # §Plan-level open-questions slot) forbids soft-wrap or prose in
+        # this section (contrast '## Decision Log', which pins its
+        # entries to a single physical line explicitly). This is why a
+        # `*`/`+`/`>`/no-bullet `OQ-<n> [` prefix still routes to the
+        # malformed-entry branch above instead of falling through here —
+        # a typo'd token, or a non-`-` bullet, must not go silently
+        # invisible as "unrecognized prose". Requiring the trailing `[`
+        # is what keeps a bare prose mention (e.g. "OQ-1 was settled last
+        # week", no bracket) OUT of that branch — the opposite defect.
 
     if not found_entry and not problems:
         problems.append(

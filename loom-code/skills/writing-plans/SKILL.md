@@ -110,7 +110,7 @@ The prompt also enforces parallel-dispatch checks — see it for the complete li
 
 **Coverage gate:** before dispatching the reviewer, run the Coverage self-check in §Consuming a loom-spec change-folder — brief mode (`--brief`) fires on any brief declaring `BI-` ids, change-folder or not.
 
-**Open-questions gate (unconditional):** before dispatching the reviewer, also run `python3 loom-code/scripts/check_open_questions.py <plan-path>` — on every plan, never conditional the way the coverage gate above is. Non-zero exit names the unresolved `OQ-<n>` and blocks the plan from PASS.
+**Open-questions gate (unconditional):** before dispatching the reviewer, also run `python3 loom-code/scripts/check_open_questions.py <plan-path>` — on every plan, never conditional the way the coverage gate above is. Non-zero exit blocks the plan from PASS (multiple causes — an absent/malformed section, or an unresolved `OQ-<n>`) — STOP, fix it, and re-run before dispatching.
 
 If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-runs the reviewer. Before that re-dispatch, re-run the **Pre-patch before dispatch** self-screen on the revision delta itself — every line the fix added or changed — because three consecutive arcs' round-2 findings were defects the round-2 revision itself introduced. Up to 2 rounds; if still NEEDS_REVISION after round 2, escalate to user (likely the brief itself needs revisiting).
 
@@ -171,6 +171,10 @@ Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PA
 
 <!-- mermaid flowchart LR of the task dependency DAG (or the pinned N/A line) -->
 
+## Open Questions
+
+N/A — no unresolved question: <one-line reason>
+
 ## Task 1 — <short name>
 - Description: <one-assertion unit of work, imperative voice>
 - Module: <path or module name; one only>
@@ -200,7 +204,7 @@ Worked examples — including an `Independent: true` pair (disjoint files, no se
 
 ### Parallel-dispatch markup (v0.8.0+)
 
-Two per-task fields — `Independent` and `Files touched` — signal parallel-dispatch eligibility for [`../dispatching-parallel-agents/SKILL.md`](../dispatching-parallel-agents/SKILL.md); full field semantics, the gating rule, and the overlapping-`Files touched` plan error live in [`references/plan-format.md`](references/plan-format.md) §`Files touched` and `Independent`.
+Two per-task fields — `Independent` and `Files touched` — signal parallel-dispatch eligibility for [`../dispatching-parallel-agents/SKILL.md`](../dispatching-parallel-agents/SKILL.md); full field semantics and the gating rule live in [`references/plan-format.md`](references/plan-format.md) §`Files touched` and `Independent`; the overlapping-`Files touched` plan error lives in that file's §Anti-patterns.
 
 ## Consuming a loom-spec change-folder
 
