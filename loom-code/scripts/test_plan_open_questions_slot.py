@@ -189,3 +189,48 @@ def test_plan_open_questions_slot_placed_before_per_task_block():
     per_task_idx = text.index("### Per-task block (required, repeats N times)")
 
     assert diagram_idx < section_idx < per_task_idx
+
+
+# Task 2 — Decision Log narrows its jurisdiction to decisions and points an
+# unresolved question at ## Open Questions instead.
+#
+# `## Decision Log` (as a bare string) appears 5 times in plan-format.md:
+# a backticked mention in the Open-Questions slot's own prose (line 76), two
+# more backticked mentions in the schema-description paragraph, and two
+# literal `## Decision Log` headings inside markdown code fences (the schema
+# stub and its worked example) — none of which is the section's own
+# descriptive prose. An unscoped whole-file `in` check can't tell which of
+# these it matched (docs/loom/memory/assertion-must-encode-the-property-it-claims.md),
+# so this test scopes to the section's own descriptive block, the same way
+# the Open-Questions pin above scopes to its block.
+DECISION_LOG_SECTION_START = "#### `Decision Log` plan section (v0.29.0+, optional)"
+DECISION_LOG_SECTION_END = "## Worked example"
+DECISION_LOG_DISCLAIMER = (
+    "This section's jurisdiction is decisions, not open forks: an "
+    "unresolved question does not belong here — it belongs in "
+    "`## Open Questions` instead."
+)
+
+
+def test_decision_log_disclaims_unresolved_questions():
+    """Task 2: the Decision Log section states its own jurisdiction is
+    decisions only, and that an unresolved question belongs in
+    `## Open Questions` instead — closing the second-home gap Task 1's
+    §Plan-level open-questions slot already names from the other side."""
+    text = _text()
+
+    assert text.count(DECISION_LOG_SECTION_START) == 1, (
+        f"expected exactly one {DECISION_LOG_SECTION_START!r} heading"
+    )
+    assert text.count(DECISION_LOG_SECTION_END) == 1, (
+        f"expected exactly one {DECISION_LOG_SECTION_END!r} heading"
+    )
+    start = text.index(DECISION_LOG_SECTION_START)
+    end = text.index(DECISION_LOG_SECTION_END)
+    decision_log_section = _normalize(text[start:end])
+
+    assert _normalize(DECISION_LOG_DISCLAIMER) in decision_log_section, (
+        "Decision Log section does not state that an unresolved question "
+        "belongs in `## Open Questions` instead, scoped to its own "
+        "descriptive block"
+    )

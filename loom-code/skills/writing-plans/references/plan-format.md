@@ -281,7 +281,9 @@ mirroring the per-task `Status` field's reviewer-ignores contract (see
 §Progress ledger above). The precise when-to-append trigger — the
 two-axis test that adjudicates "product stakes" — is owned by
 `subagent-driven-development`'s Decision Log maintenance clause; this
-section only defines the record shape, not the trigger.
+section only defines the record shape, not the trigger. This section's
+jurisdiction is decisions, not open forks: an unresolved question does
+not belong here — it belongs in `## Open Questions` instead.
 
 One entry per agent-decided choice: one conceptual record format
 (single-line, reason-bearing, cost-aware) shared with `product-principles`'
