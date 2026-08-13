@@ -11,7 +11,10 @@ move; A4 (maintainer-facing fragments in §BLOCKED fallback, §Plan size
 ceiling, §Consuming) move to references/design-evidence.md (author-facing
 header) while the rules they qualify, and the 5-step process / anti-pattern
 paragraph / detection-cascade rule sentences, stay inline verbatim. Word
-ceiling <=4200 — raised deliberately from 4099 by the 2026-08-11
+ceiling <=4220 — raised deliberately from 4210 by the 2026-08-13
+brief-item-addressability arc (coverage gate learns brief mode; the
+docstring had also drifted, still saying 4200 after the 08-12 raise to
+4210), and before that from 4099 by the 2026-08-11
 review-cost-reduction arc's misroute fix (plan-document-reviewer routing
 substitution-proofing: §Self-review prompt-file/no-substitution/model-default
 sentences + SUBAGENT-STOP disambiguation; new count 4134; prior raises
@@ -290,11 +293,16 @@ def test_brief_mode_coverage_gate_is_named():
 
 # --- (f) word cap ------------------------------------------------------------
 
-def test_word_count_at_most_4210():
+def test_word_count_at_most_4220():
     word_count = len(_skill_text().split())
-    assert word_count <= 4210, (
-        f"SKILL.md is {word_count} words, over the 4210 cap (raised "
-        "deliberately from 4200 by the 2026-08-12 adjudication-view "
+    assert word_count <= 4220, (
+        f"SKILL.md is {word_count} words, over the 4220 cap (raised "
+        "deliberately from 4210 by the 2026-08-13 brief-item-addressability "
+        "arc's T8: the coverage gate's brief-mode sentence, net +11 after "
+        "deleting the two change-folder-only claims it falsifies — the "
+        "duty is untrimmable without dropping either the `--brief` form "
+        "or the gate order; prior raise from 4200 by the 2026-08-12 "
+        "adjudication-view "
         "arc's T10 document-view pointer sentences at the kickoff "
         "briefing and post-PASS card relay — pointer-not-copy, "
         "untrimmable without losing the duty; prior raise from 4099 "
