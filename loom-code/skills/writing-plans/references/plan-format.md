@@ -71,6 +71,25 @@ When-to-draw judgment: see [`../../brainstorming/references/visual-companion.md`
 
 Per-task diagrams are explicitly NOT required — this slot is plan-level only, one diagram per plan, never one per task.
 
+### Plan-level open-questions slot
+
+Every plan carries one required top-level section, `## Open Questions`, placed after the plan-level diagram slot and before Task 1: the plan's home for a question nobody has resolved yet. When a fork surfaces during planning or execution and nobody resolves it, it goes here instead of into `## Decision Log` — silently absorbing an unresolved question into a section meant for decisions is what let a known-undecided design question reach the user as a whole-branch review finding instead of a planning decision.
+
+This section is fill-or-declare: either record every question — settled or not — as an entry, or replace the body with the single line
+`N/A — no unresolved question: <one-line reason>`.
+Do not delete the section heading — an absent heading or a bare section is
+a reviewable omission, and an N/A whose reason does not hold against the
+artifact's own content is a reviewable claim.
+
+Entry form: `- OQ-<n> [<TOKEN>] — <question text>`.
+
+- **`OQ-<n>` is authored, never derived.** The plan's author types the number. It is never slugified, hashed, or otherwise generated from the question's text — mirroring the `BI-<n>` rule in [`../../brainstorming/references/handoff-brief-format.md`](../../brainstorming/references/handoff-brief-format.md) §Brief item identifiers.
+- **Monotonic, never renumbered, never reused.** A new entry takes the next unused number — the highest `OQ-<n>` this plan has ever used, plus one — regardless of where it sits in the list. An entry already present keeps the number it already has. A deleted entry's number is retired: no later entry may carry it. This mirrors the same `BI-<n>` rule in [`../../brainstorming/references/handoff-brief-format.md`](../../brainstorming/references/handoff-brief-format.md) §Brief item identifiers.
+- **`<TOKEN>` is exactly one of two values: `[OPEN]` or `[RESOLVED]`.** No third status exists.
+- **A `[RESOLVED]` entry carries how it was resolved, on the same entry.** The resolution is not a separate field or a separate line — it is written into the entry's own question text (for example: "...→ resolved: <how>").
+
+This section deliberately carries no owner field, no deadline field, no routing field, and no per-task linkage field — each is a decided omission, not an oversight. An owner or deadline exists in mature closure-tracking practice to let a question stay open *through* a phase; a gate that blocks on any `[OPEN]` entry removes that permission, so the fields that governed it are removed too. A routing field distinguishing "the agent may settle this" from "the user must" is not carried either — that classification is already written down: see `~/.claude/rules/judgment-rubrics.md` §3 for when an agent must stop and ask the user rather than settle a question itself. A per-task `Blocked by: OQ-n` linkage field is likewise not carried — the section-level gate, not the task, is this schema's unit of blocking.
+
 ### Per-task block (required, repeats N times)
 
 ```markdown
