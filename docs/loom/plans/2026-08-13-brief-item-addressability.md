@@ -379,8 +379,17 @@ flowchart LR
   path assertion scoped to that same line). Nothing records that the duplicate
   pin's safety depends on a fact no test enforces. Fix is one line: scope its
   assertion to the warning line preemptively, as the legacy pin now does. NOT
-  done here because Task 6 is mid-flight in that same file; carried to
-  whole-branch review.
+  done at the time of writing because Task 6 was mid-flight in that same file.
+  **QUEUED FOR DISPATCH THE MOMENT TASK 6 LANDS** — not routed to whole-branch
+  review. The reviewer argued the distinction and was right: whole-branch review
+  is where JUDGMENT calls get synthesized, and this fix has no judgment left in
+  it (direct reuse of a pattern already proven on the legacy pin, one line).
+  Parking a judgment-free mechanical fix there adds an attention dependency —
+  someone must notice the line-item among everything else review surfaces — and
+  buys nothing back. Two of the same reviewer's other observations WERE correctly
+  routed to review in this arc (the join-key design tension, the AGENTS.md task
+  placement) precisely because those need a plan-owner's call. This one does not,
+  so it gets a trigger instead of a hope.
 - **The leak sweep's blind spots, named by the same reviewer so a later round
   does not over-trust it.** The `ast`-literal method reaches only literal
   constants sitting directly in the assert expression — not assertions built
