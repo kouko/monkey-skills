@@ -21,24 +21,26 @@ Steps:
 ```mermaid
 flowchart LR
   T1[T1 BI- convention] --> T2[T2 plan-format referents]
-  T1 --> T3[T3 collector]
-  T3 --> T4[T4 brief mode: resolve + fail closed]
-  T3 --> T6[T6 union coverage]
-  T3 --> T7[T7 none-with-reason]
-  T2 --> T8[T8 gate paragraph]
-  T2 --> T11[T11 command surface]
-  T4 --> T8
-  T4 --> T11
-  T5[T5 change-folder: report unparsed] --> T8
-  T6 --> T8
-  T6 --> T11
-  T7 --> T8
-  T7 --> T11
-  T8a --> T9[T9 ship]
-  T8b --> T9
-  T2 --> T10[T10 reviewer prompt learns kind c]
-  T10 --> T9
+  T1[T1 BI- convention] --> T3[T3 collector]
+  T2[T2 plan-format referents] --> T8[T8 gate paragraph]
+  T2[T2 plan-format referents] --> T10[T10 reviewer prompt]
+  T2[T2 plan-format referents] --> T11[T11 command surface]
+  T3[T3 collector] --> T4[T4 brief mode fail-closed]
+  T3[T3 collector] --> T6[T6 union coverage]
+  T3[T3 collector] --> T7[T7 none-with-reason]
+  T4[T4 brief mode fail-closed] --> T8[T8 gate paragraph]
+  T4[T4 brief mode fail-closed] --> T11[T11 command surface]
+  T5[T5 change-folder report] --> T8[T8 gate paragraph]
+  T5[T5 change-folder report] --> T11[T11 command surface]
+  T6[T6 union coverage] --> T8[T8 gate paragraph]
+  T6[T6 union coverage] --> T11[T11 command surface]
+  T7[T7 none-with-reason] --> T8[T8 gate paragraph]
+  T7[T7 none-with-reason] --> T11[T11 command surface]
+  T8[T8 gate paragraph] --> T9[T9 ship]
+  T10[T10 reviewer prompt] --> T9[T9 ship]
+  T11[T11 command surface] --> T9[T9 ship]
 ```
+
 
 ## Task 1 — declare the `BI-<n>` convention in the brief schema
 
@@ -185,8 +187,8 @@ flowchart LR
   - AGENTS.md
   - loom-code/scripts/test_writing_plans_change_binding.py
 - Acceptance:
-  - RED: extend `loom-code/scripts/test_writing_plans_change_binding.py`'s existing managed-block pin (around `:150-158`) to assert the entry declares the `--brief` form; it fails today because `AGENTS.md:54` declares the two-positional form only. The existing pin asserts only that the block names the script, which is already true — that is why a new assertion is required rather than reuse.
-  - GREEN: the entry carries the `--brief` form, its parenthetical no longer says change-folder-only, and that form was EXECUTED once against a real brief/plan pair to confirm it runs.
+  - RED: extend `loom-code/scripts/test_writing_plans_change_binding.py::test_agents_md_declares_coverage_script` (def at `:148`, asserts through `:158`) to assert the entry declares the `--brief` form; it fails today because `AGENTS.md:54` declares the two-positional form only. The existing pin asserts only that the block names the script, which is already true — that is why a new assertion is required rather than reuse.
+  - GREEN: the entry carries the `--brief` form, the sliced entry carries no remaining claim that the check is change-folder-only — the parenthetical at `:53` is one such claim and the body at `:55-58` describes only the change-folder mode, so an ABSENCE assertion over the entry is required rather than naming one line — and that form was EXECUTED once against a real brief/plan pair to confirm it runs.
 - Dependencies: Tasks 2, 4, 5, 6, 7 complete first
 - Independent: true
 - Brief item covered: "The coverage checker gains a brief mode" + none — the command-surface declaration duty comes from `writing-plans`' splitting framework, not from a brief item
@@ -224,7 +226,7 @@ flowchart LR
 - Dependencies: Task 2 completes first
 - Independent: false
 - Brief item covered: "`Brief item covered` accepts the ID as a third referent form" + "A legal no-requirement value: `none — <reason>`, reason mandatory"
-- Status: pending
+- Status: done(43133773)
 - Gloss: 計畫審查者的檢查表學會新的引用形式，否則作者用了新值反而會被自家閘門判缺口
 
 ## Notes
@@ -368,3 +370,25 @@ flowchart LR
   so it need not be re-derived: brief mode tolerates a well-formed join key as
   "not my business" rather than treating it as unresolvable — the same tolerance
   the change-folder path already extends to prose.
+
+- **Carried, cheap, deliberately deferred to avoid a concurrent-edit race.** The
+  Task 4 spec reviewer noted that `test_duplicate_scenario_key_warns_on_stderr`
+  is safe from the `tmp_path` self-satisfaction class only *by accident of the
+  current message shape* — its warning happens not to embed a path — whereas the
+  repaired legacy pin is now immune *by construction* (line-initial prefix match,
+  path assertion scoped to that same line). Nothing records that the duplicate
+  pin's safety depends on a fact no test enforces. Fix is one line: scope its
+  assertion to the warning line preemptively, as the legacy pin now does. NOT
+  done here because Task 6 is mid-flight in that same file; carried to
+  whole-branch review.
+- **The leak sweep's blind spots, named by the same reviewer so a later round
+  does not over-trust it.** The `ast`-literal method reaches only literal
+  constants sitting directly in the assert expression — not assertions built
+  from a variable, a module constant, or a helper-composed prefix; it compares
+  only against the test's OWN truncated name, not the other `tmp_path` segments
+  (`pytest-of-<user>/pytest-<run-N>/`), so a literal matching the username or a
+  run number leaks by a route the sweep never modelled; and it tests whole-literal
+  containment, not fragment containment against a differently-segmented path. The
+  reviewer grepped and confirmed none of those shapes exists live in this file
+  today. Treat the 21/21 result as a first-pass filter for one shape, never as
+  proof that no other shape exists in the wider suite.
