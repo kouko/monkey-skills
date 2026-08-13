@@ -103,7 +103,7 @@ flowchart LR
   - loom-code/scripts/test_check_scenario_coverage.py
 - Acceptance:
   - RED: `loom-code/scripts/test_check_scenario_coverage.py::test_unresolvable_citation_errors_when_brief_declares_ids` fails — an unknown `BI-99` citation currently contributes zero keys silently and the run exits 0.
-  - GREEN: the unknown citation exits non-zero with a message naming the task and quoting `BI-99`; a legacy brief with zero declared ids still exits 0 while printing an explicit legacy-mode line; and the existing prose-referent pin `test_malformed_plan_prose_only_zero_coverage_exit_1` (`loom-code/scripts/test_check_scenario_coverage.py:102`) passes **unchanged** (same exit code, same `Empty result set` and `Single match` stderr assertions) — brief mode must not reach the change-folder path it guards.
+  - GREEN: the unknown citation exits non-zero with a message naming the task and quoting `BI-99`; a legacy brief with zero declared ids still exits 0 while printing an explicit legacy-mode line; and the existing prose-referent pin `test_malformed_plan_prose_only_zero_coverage_exit_1` passes **unchanged** (same exit code, same `Empty result set` and `Single match` stderr assertions) — brief mode must not reach the change-folder path it guards.
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: "The fail-open closes. A `Brief item covered` value matching no known referent grammar is an ERROR"
@@ -120,7 +120,7 @@ flowchart LR
   - loom-code/scripts/test_check_scenario_coverage.py
 - Acceptance:
   - RED: `loom-code/scripts/test_check_scenario_coverage.py::test_unparsed_change_folder_referent_is_named_not_dropped` fails — a plan mixing one valid join key with one malformed referent currently reports only the resulting coverage gap, never the malformed value.
-  - GREEN: the malformed value and its task appear in the output verbatim; and BOTH existing pins pass **unchanged** — `test_malformed_plan_prose_only_zero_coverage_exit_1` (`loom-code/scripts/test_check_scenario_coverage.py:102` — exit 1, `Empty result set`, `Single match`) and `test_malformed_plan_no_brief_item_field_at_all_zero_coverage_exit_1` (exit 1).
+  - GREEN: the malformed value and its task appear in the output verbatim; and BOTH existing pins pass **unchanged** — `test_malformed_plan_prose_only_zero_coverage_exit_1` (exit 1, `Empty result set`, `Single match`) and `test_malformed_plan_no_brief_item_field_at_all_zero_coverage_exit_1` (exit 1).
 - Dependencies: none
 - Independent: true
 - Brief item covered: "This fix applies to the existing change-folder path too — the defect is in shared code"
@@ -137,7 +137,7 @@ flowchart LR
   - docs/loom/specs/2026-08-13-brief-item-addressability.md
 - Acceptance:
   - RED: `loom-code/scripts/test_check_scenario_coverage.py::test_item_cited_by_two_tasks_is_covered_once` fails — no per-id union coverage exists.
-  - GREEN: a fixture where two tasks each cite `BI-2` reports `BI-2` covered exactly once (not double-counted); a declared id cited by no task is reported as uncovered with its line number; and the existing prose-referent pin `test_malformed_plan_prose_only_zero_coverage_exit_1` (`loom-code/scripts/test_check_scenario_coverage.py:102`) passes unchanged.
+  - GREEN: a fixture where two tasks each cite `BI-2` reports `BI-2` covered exactly once (not double-counted); a declared id cited by no task is reported as uncovered with its line number; and the existing prose-referent pin `test_malformed_plan_prose_only_zero_coverage_exit_1` passes unchanged.
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: "Coverage is directional both ways… the checker must therefore treat an item as covered by the UNION of citing tasks"
@@ -421,3 +421,29 @@ flowchart LR
   the implementation; it does not prove the test passes for the reason its name
   claims. Those are different questions and only the second finds a
   self-satisfying assertion.
+
+- **Task 6's report-vs-gate tension, recorded at its reviewer's request.** The
+  brief's Smallest End State item 3 says "every declared ID is covered", which
+  reads as a gate. Task 6 ships a REPORT: uncovered ids are named with their
+  declaring line, and the run does not fail on them. Two independent reasons
+  this is right, not a quiet decline. (a) Task 6's `Brief item covered` cites
+  SES item 6 (union / directional-both-ways), never item 3 — it was not
+  textually committed to enforcing that clause. (b) A gate would falsify a
+  shipped sibling pin that encodes a REAL case:
+  `test_none_with_reason_is_not_treated_as_unresolvable` leaves `BI-2` cited by
+  nobody because its second task legitimately opts out via `none — <reason>`,
+  which is SES item 5's escape working as designed. The reviewer generalised
+  further: a plan authored progressively — tasks still `pending` when brief mode
+  runs — would produce spurious failures at every intermediate run if gated.
+  **So the gate is not merely deferred; it is probably not wanted
+  unconditionally.** If whole-branch review revisits it, the question is not
+  "should uncovered ids fail" but "at what moment", and the answer must survive
+  the mid-authoring case.
+- **Stopped maintaining a coordinate that has rotted three times.** The plan
+  cited `test_malformed_plan_prose_only_zero_coverage_exit_1` by name AND line.
+  That line has been 94, then 102, then 106 — moved each time by this branch's
+  own commits inserting above it, and corrected twice by reviewers. The test
+  NAME is a stable anchor and `plan-format.md` §Stated facts accepts a verbatim
+  string in place of a coordinate, so the line numbers are removed rather than
+  refreshed a third time. Maintaining a coordinate nobody can keep current
+  manufactures the drift it is meant to prevent.
