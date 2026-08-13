@@ -479,6 +479,120 @@ def test_coverage_gate_reachable_from_self_review():
     )
 
 
+# --- (j) open-questions gate wired unconditionally (Task 4, 2026-08-13) -----
+
+_OPEN_Q_GATE_LEAD = "**Open-questions gate"
+
+
+def _open_questions_gate_paragraph() -> str:
+    """The open-questions-gate paragraph, sliced from its bold lead-in to the
+    next blank line, ANCHORED INSIDE §Self-review — the section that owns
+    it. Same anchoring discipline as `_coverage_gate_paragraph`: a duty
+    relocated intact into another section leaves this slice and fails the
+    pin, rather than being silently re-found by a file-wide index."""
+    text = _skill_text()
+    assert _SELF_REVIEW_HEADING in text, (
+        f"cannot locate the section {_SELF_REVIEW_HEADING.strip()!r} that "
+        "owns the open-questions-gate paragraph — if it was renamed or "
+        "moved, re-point _SELF_REVIEW_HEADING at its new heading text"
+    )
+    section = _section(_SELF_REVIEW_HEADING)
+    assert _OPEN_Q_GATE_LEAD in section, (
+        f"section {_SELF_REVIEW_HEADING.strip()!r} carries no "
+        f"{_OPEN_Q_GATE_LEAD!r} lead-in — the open-questions-gate paragraph "
+        "has left the section that owns it"
+    )
+    start = section.index(_OPEN_Q_GATE_LEAD)
+    end = section.index("\n\n", start)
+    return _norm(section[start:end])
+
+
+def test_skill_wires_open_questions_gate_unconditionally():
+    para = _open_questions_gate_paragraph()
+
+    # (1) names the checker
+    assert "check_open_questions.py" in para
+
+    # (2) states the gate runs on every plan — UNCONDITIONAL, unlike the two
+    # existing check_scenario_coverage.py invocations (SKILL.md:253), both
+    # of which fire only under a condition (a bound change-folder / a brief
+    # declaring `BI-` ids). A gate paragraph that reintroduces either
+    # condition is the exact regression this pin exists to catch.
+    assert "every plan" in para.lower(), (
+        "the open-questions gate must state it runs on every plan"
+    )
+    assert "change-folder" not in para.lower(), (
+        "the open-questions gate paragraph must not gate on a change-folder "
+        "condition — that would make it conditional, like the coverage gate"
+    )
+    assert "bi-" not in para.lower(), (
+        "the open-questions gate paragraph must not gate on the brief "
+        "declaring BI- ids — that would make it conditional, like the "
+        "coverage gate's brief mode"
+    )
+
+    # (3) a non-zero exit blocks the plan from PASS
+    assert "non-zero" in para.lower()
+    assert "blocks the plan from pass" in para.lower()
+
+    # (4) exactly one such paragraph — not duplicated across sections, and
+    # not satisfiable by a decoy mention elsewhere in the file.
+    assert _skill_text().count(_OPEN_Q_GATE_LEAD) == 1
+
+
+def test_open_questions_gate_relocated_out_of_self_review_fails_loudly(monkeypatch):
+    """Reachability, not just wording: the paragraph pinned above must live
+    in §Self-review — where the plan-document-reviewer dispatch it gates is
+    described — not merely somewhere, anywhere, in the file.
+
+    Reproduces the reviewer's exact mutation: relocate the whole gate
+    paragraph out of §Self-review into §Consuming a loom-spec change-folder,
+    leaving its wording, and file-wide uniqueness, untouched. A file-wide
+    `index` on `_OPEN_Q_GATE_LEAD` would still find it and pass; anchoring
+    the slice to §Self-review must not.
+    """
+    original = _skill_text()
+    start = original.index(_OPEN_Q_GATE_LEAD)
+    end = original.index("\n\n", start) + 2
+    paragraph = original[start:end]
+    relocated = original[:start] + original[end:]
+
+    anchor = "\n## Consuming a loom-spec change-folder\n"
+    assert relocated.count(anchor) == 1
+    insert_at = relocated.index(anchor) + len(anchor)
+    relocated = relocated[:insert_at] + paragraph + relocated[insert_at:]
+
+    # sanity: wording and file-wide uniqueness both survive the mutation —
+    # this must be a placement failure, not a wording one.
+    assert relocated.count(_OPEN_Q_GATE_LEAD) == 1
+
+    _patched_skill_text(monkeypatch, relocated)
+
+    assert _OPEN_Q_GATE_LEAD not in _section(_SELF_REVIEW_HEADING)
+
+    with pytest.raises(AssertionError) as excinfo:
+        _open_questions_gate_paragraph()
+    assert "left the section that owns it" in str(excinfo.value)
+
+
+def test_open_questions_gate_owning_heading_missing_fails_loudly(monkeypatch):
+    """Complementary restructure: the paragraph stays put, but §Self-review's
+    heading itself is renamed/removed. The anchor must fail LOUDLY, naming
+    the missing section — not silently fall back to a file-wide slice."""
+    original = _skill_text()
+    mutated = original.replace(
+        "## Self-review — plan-document-reviewer",
+        "## Wrapping up before dispatch",
+    )
+    assert mutated != original
+
+    _patched_skill_text(monkeypatch, mutated)
+
+    with pytest.raises(AssertionError) as excinfo:
+        _open_questions_gate_paragraph()
+    assert _SELF_REVIEW_HEADING.strip() in str(excinfo.value)
+
+
 # --- (f) word cap ------------------------------------------------------------
 
 def test_word_count_at_most_4250():

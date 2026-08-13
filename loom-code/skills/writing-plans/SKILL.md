@@ -110,6 +110,8 @@ The prompt also enforces parallel-dispatch checks — see it for the complete li
 
 **Coverage gate:** before dispatching the reviewer, run the Coverage self-check in §Consuming a loom-spec change-folder — brief mode (`--brief`) fires on any brief declaring `BI-` ids, change-folder or not.
 
+**Open-questions gate (unconditional):** before dispatching the reviewer, also run `python3 loom-code/scripts/check_open_questions.py <plan-path>` — on every plan, never conditional the way the coverage gate above is. Non-zero exit names the unresolved `OQ-<n>` and blocks the plan from PASS.
+
 If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-runs the reviewer. Before that re-dispatch, re-run the **Pre-patch before dispatch** self-screen on the revision delta itself — every line the fix added or changed — because three consecutive arcs' round-2 findings were defects the round-2 revision itself introduced. Up to 2 rounds; if still NEEDS_REVISION after round 2, escalate to user (likely the brief itself needs revisiting).
 
 **Amending a PASS plan:** After PASS, any change re-reviews unless it is one of these three kinds — a **closed list**; an amendment that does not clearly match one of the three is outside the list:
@@ -198,9 +200,7 @@ Worked examples — including an `Independent: true` pair (disjoint files, no se
 
 ### Parallel-dispatch markup (v0.8.0+)
 
-Two per-task fields signal eligibility for [`../dispatching-parallel-agents/SKILL.md`](../dispatching-parallel-agents/SKILL.md): **`Independent: true`** — the plan author's claim that this task has no shared symbol / no sequential data dependency with other `Independent: true` tasks (default `false`) — and **`Files touched`**, the disjointness oracle. Dispatch may go parallel **only when** both declare `Independent: true` AND their `Files touched` sets are disjoint; if either condition fails, SDD's sequential dispatch is the floor. Full field semantics: [`references/plan-format.md`](references/plan-format.md) §`Files touched` and `Independent`.
-
-The markup is **opt-in**. A plan that omits it (or sets `Independent: false`) routes through SDD's standard sequential per-task triad. Claiming `Independent: true` with overlapping `Files touched` is a plan error — `plan-document-reviewer` should catch it; if not, `dispatching-parallel-agents` will refuse to dispatch.
+Two per-task fields — `Independent` and `Files touched` — signal parallel-dispatch eligibility for [`../dispatching-parallel-agents/SKILL.md`](../dispatching-parallel-agents/SKILL.md); full field semantics, the gating rule, and the overlapping-`Files touched` plan error live in [`references/plan-format.md`](references/plan-format.md) §`Files touched` and `Independent`.
 
 ## Consuming a loom-spec change-folder
 
