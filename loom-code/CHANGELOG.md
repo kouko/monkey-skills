@@ -5,6 +5,141 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.79.0] — 2026-08-13 — Brief items become addressable, and the coverage checker stops failing open
+
+### Changed
+
+- **Brief items carry `BI-<n>` identifiers.**
+  `brainstorming/references/handoff-brief-format.md` declares the
+  convention: **authored** (written by the brief author, never slugified
+  from a heading — a derived id desyncs the moment the text is
+  reworded), assigned **monotonically**, and **never renumbered, never
+  reused** (ADR's published convention; ordinals are not immutable under
+  insertion, which is what defeats every ordinal scheme). Scope is
+  **every brief section that declares an outcome a task could
+  deliver** — not only `## Smallest End State`. That scope came from
+  measurement, not taste: the pre-ship experiment found 5 of 9 real
+  tasks citing outcomes declared outside that section. A brief section
+  that declares outcomes but is not on the canonical list routes to the
+  brief's `## Open Questions`.
+- **`Brief item covered` accepts the identifier as a third referent
+  kind, and a legal no-requirement value.** `plan-format.md` now
+  enumerates kind (c) — a `BI-<n>` identifier — alongside the prose
+  quote (a) and the change-folder join key (b), and makes
+  `none — <reason>` legal with the **reason mandatory**; a bare `none`
+  is a defect. All three ride INSIDE the existing field: this repo pins
+  that `plan-format.md` declares no second traceability field name.
+  A **tie-break is written down** rather than left to the author: when a
+  task could honestly cite two items, the primary referent is **the item
+  the task's RED test asserts** — chosen because the RED test is this
+  repo's definition of done, where the alternative (the item most of
+  `Files touched` serves) tracks effort rather than outcome.
+- **`check_scenario_coverage.py` gains a brief mode (`--brief`).** It
+  resolves each task's citation against the brief's declared ids and
+  **errors on an unresolvable one**; it **announces legacy mode** when a
+  brief declares no ids (so "legacy" can never be misread as "checked");
+  coverage of an item is the **union of its citing tasks**, so an item
+  split across two tasks is covered; and uncovered ids are reported **by
+  id with the line that declares them**.
+- **The change-folder path's silent skip is replaced by a named
+  report.** It previously parsed the field, tried the join-key grammar,
+  and dropped any value that did not match — counting it as zero
+  coverage, so a broken citation read as "this requirement has no task".
+  Unparsed referents are now named. Note the two paths close the same
+  silence with **deliberately different verbs**: brief mode *errors*
+  because its grammar is unambiguous; the change-folder path *reports*
+  because a prose quote is a legal referent kind there, so an unparsed
+  value cannot be distinguished from a typo.
+- **The plan-document-reviewer learns what the format now allows.**
+  Check 3 enumerated only referent kinds (a) and (b), and Check 9
+  required every `Brief item covered` to quote or reference the brief —
+  so a task using the newly-legal `none — <reason>` would conform to
+  `plan-format.md` and be gapped by this repo's own plan reviewer. Both
+  checks now name kind (c) and the none-value, pointing at
+  `plan-format.md` as the SSOT rather than restating it.
+- **The gate is wired where authors are.** `writing-plans/SKILL.md`'s
+  coverage self-check names brief mode and is reachable from
+  §Self-review (previously it was reachable only from the change-folder
+  path), and `AGENTS.md`'s command surface declares the `--brief`
+  invocation form — executed once against a real brief/plan pair, not
+  merely written. Both had carried a now-false "change-folder input
+  only" claim.
+
+### Honest limits — read these before adopting
+
+- **The evidence is ONE study, and it measured a cost as well as a
+  win.** *Citation Discipline in Spec-Driven Development* (arXiv
+  2606.30689 — pre-registered, 840 implementations, two frontier models)
+  found addressable citations enabled **86–88% automated detection** of
+  implementations claiming a requirement they did not satisfy at **0%
+  false-positive rate**, where artifact-level traceability and post-hoc
+  trace maps both scored **0%**. The same study measured a
+  **determinism cost, d≈−0.7**. This release buys the detection
+  affordance at that cost: **a trade, not a free win**, and it rests on
+  a single study, not a literature.
+- **Adoption is all-or-nothing per plan.** Brief mode is regime-switched
+  on the *brief*, not per task. The moment a brief declares its FIRST
+  `BI-` id, every task in its plan must cite a resolvable id or
+  `none — <reason>` — every remaining quote referent becomes an error,
+  all at once, with no incremental path. Measured, not predicted:
+  injecting one id into this arc's own brief produced ten unresolvable
+  citation errors, one per task. This is designed behaviour; what is
+  missing is any warning before an author steps off the cliff. Filed as
+  `docs/loom/backlog/2026-08-13-adopting-bi-ids-forces-a-whole-plan-migration-in-one-pass.md`
+  (OPEN), whose start condition is the first brief that declares an id.
+- **The prose-quote referent can never be retired**, so the field
+  permanently carries two forms. Every brief authored before this change
+  lacks ids, so the checker must keep accepting quotes indefinitely —
+  which leaves exactly the "one concept, two vocabularies" shape this
+  repo keeps finding defects in. Mitigated by both forms living in one
+  field with one grammar list and one error path; the standing risk is
+  that the quote form becomes a silent downgrade an author can always
+  fall back to.
+- **Uncovered ids are REPORTED, not gated — the run does not fail on
+  them**, and this is deliberate rather than deferred. A gate would
+  falsify a real shipped case (an id legitimately cited by nobody
+  because its task opted out via `none — <reason>`), and a plan authored
+  progressively — tasks still `pending` when brief mode runs — would go
+  red at every intermediate run. If this is revisited, the question is
+  not "should uncovered ids fail" but "at what moment", and the answer
+  must survive the mid-authoring case.
+- **A known unresolved case: a well-formed change-folder join key
+  (referent kind (b)) errors in brief mode**, because it contains no
+  `BI-<n>`. Today the CLI makes the two modes mutually exclusive, which
+  hides the question rather than resolving it — a plan mixing kind-(b)
+  and kind-(c) tasks, checked by two separate invocations, would have
+  its legitimate kind-(b) citations flagged. Recorded, with the cheap
+  candidate fix named (brief mode tolerates a well-formed join key as
+  "not my business", the same tolerance the change-folder path already
+  extends to prose).
+- **A fullwidth or minus-sign dash in `none — <reason>` gets an
+  unhelpful message.** Unicode look-alike dashes (U+2212, U+FF0D) are
+  ruled OUT of the separator set, fail-closed and pinned; the
+  fallthrough message says "cites no `BI-<n>` identifier", which gives a
+  CJK author who typed a fullwidth dash no hint that the GLYPH was the
+  problem.
+- **What the experiment did and did not establish.** Probe 1 asked
+  whether independent readers derive the same item partition and
+  **hard-failed as pre-registered** (three agents produced 6, 6 and 7
+  items). That failure stands on the record; the criterion was judged
+  mis-specified afterwards (the workflow never asks two authors to
+  partition — the author partitions once and others cite existing ids),
+  and probe 2 was registered afresh. Probe 2 measured task→id assignment
+  against a FIXED partition and returned **8/9 unanimous**, a marginal
+  pass under its pre-registered criteria. Both probes ran against ONE
+  real brief/plan pair, and all three readers disclosed that they read
+  the plan whole-file, so its existing `Brief item covered` values
+  entered their context. **The scheme ships tested, not field-validated
+  across arcs.**
+- **One authoring cost with a mismatched discharge path.** An
+  outcome-declaring brief section that is not on the canonical list
+  routes to `## Open Questions`, which blocks `writing-plans`. But that
+  section's two resolutions are "answer in-session" or "hand back to the
+  user", and the first is explicitly foreclosed — what actually
+  discharges the question is a maintainer editing a shared plugin skill
+  file, with its own review/test/version-bump cycle. Questions of two
+  quite different cost classes therefore ride the same mechanism.
+
 ## [0.78.0] — 2026-08-12 — Adjudication view: language-profile layer + Japanese support
 
 ### Changed
