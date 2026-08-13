@@ -11,8 +11,10 @@ move; A4 (maintainer-facing fragments in §BLOCKED fallback, §Plan size
 ceiling, §Consuming) move to references/design-evidence.md (author-facing
 header) while the rules they qualify, and the 5-step process / anti-pattern
 paragraph / detection-cascade rule sentences, stay inline verbatim. Word
-ceiling <=4220 — raised deliberately from 4210 by the 2026-08-13
-brief-item-addressability arc (coverage gate learns brief mode; the
+ceiling <=4250 — raised deliberately TWICE by the 2026-08-13
+brief-item-addressability arc: 4220 -> 4250 for T8's fix round (the gate's
+reachability pointer in §Self-review, where a brief-only author acts), and
+before that 4210 -> 4220 by the same arc (coverage gate learns brief mode; the
 docstring had also drifted, still saying 4200 after the 08-12 raise to
 4210), and before that from 4099 by the 2026-08-11
 review-cost-reduction arc's misroute fix (plan-document-reviewer routing
@@ -351,12 +353,19 @@ def test_coverage_gate_reachable_from_self_review():
 
 # --- (f) word cap ------------------------------------------------------------
 
-def test_word_count_at_most_4220():
+def test_word_count_at_most_4250():
     word_count = len(_skill_text().split())
-    assert word_count <= 4220, (
-        f"SKILL.md is {word_count} words, over the 4220 cap (raised "
-        "deliberately from 4210 by the 2026-08-13 brief-item-addressability "
-        "arc's T8: the coverage gate's brief-mode sentence, net +11 after "
+    assert word_count <= 4250, (
+        f"SKILL.md is {word_count} words, over the 4250 cap (raised "
+        "deliberately from 4220 by the 2026-08-13 brief-item-addressability "
+        "arc's T8 fix round: the gate's reachability pointer in §Self-review "
+        "— a duty stated only under §Consuming a loom-spec change-folder is "
+        "unreachable from the brief-only path, and relocating the gate "
+        "paragraph instead would drag the change-folder mechanics with it; "
+        "SECOND raise in one arc, deliberate — flagged for the reviewer "
+        "rather than resolved by shrinking the contract; prior raise from "
+        "4210 by the same arc's T8: the coverage gate's brief-mode "
+        "sentence, net +11 after "
         "deleting the two change-folder-only claims it falsifies — the "
         "duty is untrimmable without dropping either the `--brief` form "
         "or the gate order; prior raise from 4200 by the 2026-08-12 "
