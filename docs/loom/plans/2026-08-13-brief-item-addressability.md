@@ -192,7 +192,7 @@ flowchart LR
 - Dependencies: Tasks 2, 4, 5, 6, 7 complete first
 - Independent: true
 - Brief item covered: "The coverage checker gains a brief mode" + none — the command-surface declaration duty comes from `writing-plans`' splitting framework, not from a brief item
-- Status: pending
+- Status: done(983ac653)
 - Gloss: 命令表面補上 `--brief` 這個呼叫形式，並且實跑一次確認它真的能動
 
 ## Task 9 — version bump, CHANGELOG, and Codex mirror sync
@@ -512,3 +512,25 @@ flowchart LR
   pinned. The cost the implementer named: the fallthrough message says "cites no
   BI-<n> identifier", which gives a CJK author who typed a fullwidth dash no hint
   that the GLYPH was the problem.
+
+- **Why Task 8's placement fix was folded in rather than routed — recorded
+  late, at its reviewer's fair insistence.** Every other mid-task finding with
+  judgment in it was either split into a new task (Task 2's reviewer-prompt
+  finding → Task 10) or routed to whole-branch review (the join-key ambiguity,
+  the Rule-of-Three dedup), with same-round folding reserved for the
+  judgment-free case (the duplicate-pin hardening). The placement fix carried
+  judgment by the implementer's own account ("a strict swap, not a fix") and was
+  folded anyway, and no entry said why. The reviewer was right that the omission
+  is itself the defect — this plan's stated practice is to record such calls so
+  the next toucher does not rediscover them.
+  **The criterion I actually applied, stated so it can be reused or refuted:
+  does resolving the finding require going OUTSIDE the task's declared
+  `Files touched`, or does it change what ANOTHER task means?** Task 10's
+  finding needed a different file; the join-key and Rule-of-Three questions
+  change what sibling tasks mean. The placement fix needed neither — same file,
+  same paragraph, same task's own subject — and the question it answered ("is a
+  wire the audience cannot see actually wired?") is about whether Task 8's OWN
+  acceptance was met, not about a new obligation. On that criterion it is the
+  task's completion, not an extension of it. The criterion is offered, not
+  asserted: if whole-branch review thinks it draws the line in the wrong place,
+  the line is what should move, not this instance.
