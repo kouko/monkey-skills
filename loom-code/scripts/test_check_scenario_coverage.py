@@ -567,6 +567,52 @@ def test_unresolvable_citation_errors_when_brief_declares_ids(tmp_path):
     assert "Task 1 — foo" not in result.stderr
 
 
+def test_value_with_no_identifier_at_all_errors_when_brief_declares_ids(tmp_path):
+    """A value that is plain prose — carrying no `BI-` substring anywhere —
+    is an ERROR once the brief declares identifiers.
+
+    This is the sibling of the typo'd-id pin above, and the likelier of the
+    two in practice: an author reaching this state has simply written the
+    old quote form (or a bare description) and never added an identifier,
+    which is what every plan written before this convention looks like. The
+    typo pin exercises the `unknown` branch; only this one exercises the
+    empty-`cited` branch, and the two fail for different reasons — an
+    implementation that errors only on ids it does not recognise passes the
+    typo pin while letting every un-identified value through, which is the
+    fail-open this arc exists to close.
+
+    The distinct diagnostic is asserted, not just the exit code: "cites
+    BI-99, which the brief does not declare" would misdescribe a value that
+    cites nothing, and sends the author looking for an id that was never
+    written.
+    """
+    brief = tmp_path / "brief.md"
+    brief.write_text(_BRIEF_TWO_IDS, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — foo\n"
+        "- Brief item covered: BI-1\n\n"
+        "## Task 2 — ship\n"
+        "- Brief item covered: the widget rework ships end to end\n",
+        encoding="utf-8",
+    )
+    result = _run_brief(brief, plan)
+    assert result.returncode != 0, (
+        "a value naming no identifier under a brief that declares them must "
+        f"fail the run, got 0\n{result.stdout}"
+    )
+    assert "Task 2 — ship" in result.stderr, "the offending task must be named"
+    assert "the widget rework ships end to end" in result.stderr, \
+        "the un-identified value must be quoted so the author can find it"
+    assert "cites no BI-" in result.stderr, (
+        "the diagnostic must say the value cites NOTHING — reusing the "
+        "unknown-id wording sends the author hunting for an absent id"
+    )
+    # the resolvable citation is not collateral damage
+    assert "Task 1 — foo" not in result.stderr
+
+
 def test_legacy_brief_declaring_no_ids_announces_legacy_mode(tmp_path):
     """A brief predating the convention puts the run in legacy mode: the
     quote referent stays legal, no resolution is attempted — and the run
@@ -576,6 +622,15 @@ def test_legacy_brief_declaring_no_ids_announces_legacy_mode(tmp_path):
     from a checked exit 0, so a brief that simply forgot to declare ids
     would read as fully covered. Legacy must never be mistakable for
     checked.
+
+    The announcement is located by its line-initial `Legacy mode:` prefix,
+    and the brief is then sought in THAT LINE — not in the whole output.
+    Searching the concatenated output for the bare word made the assertion
+    self-satisfying: `tmp_path` names its directory after this function, so
+    the substring `legacy` arrived through the brief's own path, and the
+    check still passed with the implementation's word deleted. An assertion
+    over output that embeds a fixture path can only be trusted against
+    words the test's own name does not contain.
     """
     brief = tmp_path / "brief.md"
     brief.write_text(
@@ -592,9 +647,13 @@ def test_legacy_brief_declaring_no_ids_announces_legacy_mode(tmp_path):
     result = _run_brief(brief, plan)
     assert result.returncode == 0, result.stderr
     combined = result.stdout + result.stderr
-    assert "legacy" in combined.lower(), \
-        "legacy mode must be announced, never passed silently"
-    assert str(brief) in combined, \
+    announcements = [line for line in combined.splitlines()
+                     if line.startswith("Legacy mode:")]
+    assert announcements, (
+        "legacy mode must be announced by a line opening 'Legacy mode:', "
+        f"never passed silently — got:\n{combined}"
+    )
+    assert str(brief) in announcements[0], \
         "the announcement must name the brief that declared no ids"
 
 
@@ -674,3 +733,74 @@ The system MUST do B.
     )
     result = _run(change_folder, plan)
     assert result.returncode == 0, result.stderr
+
+
+# --- argv binding at the CLI boundary ---
+
+
+def _run_argv(*argv: str) -> subprocess.CompletedProcess:
+    """The script under an arbitrary argv. These shapes never reach a file:
+    argparse rejects them while binding, so the arguments are deliberately
+    literal strings — no `tmp_path` reaches the output, and no assertion
+    below can be satisfied by a fixture directory's name."""
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), *argv],
+        capture_output=True,
+        text=True,
+        env=_ENV,
+    )
+
+
+def test_positional_binding_at_the_four_argv_boundaries():
+    """Which slot absorbs which positional, pinned at all four boundary
+    shapes — every one of them a refusal, none of them silent.
+
+    Brief mode made `change_folder` optional, and an optional positional
+    ahead of a required one moves the binding: a lone positional now fills
+    `plan_path`, where it previously filled `change_folder`. Nothing pinned
+    that, so the move was invisible. What the four shapes are worth
+    asserting is not the binding as an end in itself but that each one
+    exits 2 with a diagnostic naming the argument the caller actually
+    still owes:
+
+    - **No arguments.** Only `plan_path` is unconditionally required, so
+      argparse names it alone and leaves `[change_folder]` bracketed in the
+      usage line. That reading is correct for a two-mode CLI and is pinned
+      as-is rather than reworded: an error naming both would be wrong in
+      brief mode, where the change-folder is forbidden.
+    - **One bare positional.** The value binds to `plan_path`, and the
+      diagnostic therefore asks for the change-folder. This is the shape
+      that changed, and the assertion below is what would have caught the
+      move. Also pinned as-is: the message is accurate either way the value
+      was meant, and both documented invocation forms pass two arguments.
+    - **`--brief` with a change-folder.** The two modes read different
+      inputs, so combining them is refused explicitly instead of one check
+      silently winning.
+    - **`--brief` with no plan.** The plan is required in both modes;
+      brief mode drops the change-folder, not the plan.
+    """
+    bare = _run_argv()
+    assert bare.returncode == 2, f"no arguments must be refused: {bare!r}"
+    assert "plan_path" in bare.stderr, \
+        "the refusal must name the argument that is always required"
+
+    lone = _run_argv("only_one_arg")
+    assert lone.returncode == 2, f"one positional must be refused: {lone!r}"
+    assert "<change-folder> is required" in lone.stderr, (
+        "a lone positional binds to plan_path, so the diagnostic must ask "
+        "for the change-folder — if it asks for plan_path instead, the "
+        "optional-positional binding has moved back"
+    )
+
+    both_positionals = _run_argv(
+        "--brief", "brief.md", "change-folder", "plan.md")
+    assert both_positionals.returncode == 2, \
+        f"--brief plus a change-folder must be refused: {both_positionals!r}"
+    assert "takes no <change-folder>" in both_positionals.stderr, \
+        "the refusal must say which of the two modes was contradicted"
+
+    no_plan = _run_argv("--brief", "brief.md")
+    assert no_plan.returncode == 2, \
+        f"--brief with no plan must be refused: {no_plan!r}"
+    assert "plan_path" in no_plan.stderr, \
+        "brief mode drops the change-folder, not the plan"
