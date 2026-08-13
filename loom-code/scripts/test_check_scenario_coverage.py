@@ -223,7 +223,18 @@ def test_duplicate_scenario_key_warns_on_stderr(tmp_path):
     """Duplicate (requirement, scenario) name pairs collapse into one set
     entry — an uncovered duplicate instance would otherwise be
     undetectable. The script must warn on stderr naming the duplicated
-    key (without changing the join-key format) and still proceed."""
+    key (without changing the join-key format) and still proceed.
+
+    The warning is located by its line-initial `Warning: duplicate scenario
+    key` prefix, and the duplicated key is then sought in THAT LINE — not in
+    the whole stderr blob. Searching the blob for the bare word would make
+    the assertion self-satisfying the day the message grows a path for
+    context: `tmp_path` names its directory after this function, so
+    `duplicate` would arrive through the fixture path and the check would
+    still pass with the implementation's word deleted. Today's message
+    interpolates only `change_folder.name`, but nothing enforces that, so
+    the pin does not rely on it.
+    """
     change_folder = tmp_path / "2026-07-10-my-change"
     _write_spec(change_folder, _DUPLICATE_SCENARIO_SPEC)
     plan = tmp_path / "plan.md"
@@ -235,8 +246,14 @@ def test_duplicate_scenario_key_warns_on_stderr(tmp_path):
     )
     result = _run(change_folder, plan)
     assert result.returncode == 0, result.stderr
-    assert "duplicate" in result.stderr.lower()
-    assert "Empty result set" in result.stderr
+    warnings = [line for line in result.stderr.splitlines()
+                if line.startswith("Warning: duplicate scenario key")]
+    assert warnings, (
+        "a duplicate key must be announced by a line opening "
+        f"'Warning: duplicate scenario key' — got:\n{result.stderr}"
+    )
+    assert "Empty result set" in warnings[0], \
+        "the announcement must name the duplicated key"
 
 
 def test_unparsed_change_folder_referent_is_named_not_dropped(tmp_path):
