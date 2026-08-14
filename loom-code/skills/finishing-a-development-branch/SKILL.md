@@ -25,44 +25,36 @@ finishing-a-development-branch (this skill)
   │     carrying the 🟡 forward into the PR body + close-out report
   │
   ├─→ Phase 2: verification-before-completion
-  │     runs package-level test command → exit 0 + N>0 tests → PASS
-  │     blocks on test failure
-  │     + ui-verification (CONDITIONAL): branch touched UI AND a
-  │       ui-flows.md exists → this is the user's main acceptance stage
-  │       (design SSOT: docs/loom/design/2026-07-10-designer-pm-loop-architecture.md §1 #4)
-  │       (what "done" means for a UI-bearing branch) — drives the
-  │       rendered app through its enumerated states; otherwise N/A
-  │       (honest skip, stated)
+  │     runs package-level test command → exit 0 + N>0 tests → PASS; blocks on failure
+  │     + ui-verification (CONDITIONAL): branch touched UI AND a ui-flows.md exists
+  │       → main acceptance stage for a UI-bearing branch; otherwise N/A (honest skip, stated)
   │
   ├─→ Phase 3: dev-workflow:git-memory (P3-D MANDATORY)
-  │     decides on Decision: / Learning: / Gotcha: trailers for the close-out commit
-  │     orchestrator hands the diff + recent commits; git-memory returns trailer set
+  │     decides Decision: / Learning: / Gotcha: trailers for the close-out commit;
+  │     orchestrator hands the diff + recent commits, git-memory returns the trailer set
   │
   ├─→ Phase 4: git commit (orchestrator runs this)
-  │     uses the message + trailers from Phase 3
-  │     does NOT bypass hooks; does NOT amend
+  │     uses the message + trailers from Phase 3; does NOT bypass hooks; does NOT amend
   │     then verifies the carrier landed: memory-grep.sh --verify HEAD
   │     (memory-worthy + exit 4 → STOP before push; both-carrier policy)
   │
   ├─→ Phase 5: git push (orchestrator runs this)
-  │     pushes the branch; if branch is local-only, sets upstream first
+  │     pushes the branch; if local-only, sets upstream first
   │
   ├─→ Phase 6 (optional): gh pr create
-  │     only if user has gh CLI configured AND has not opted out
-  │     PR body uses git-memory's PR-body convention
+  │     only if user has gh CLI configured AND not opted out; PR body per git-memory convention
   │
   └─→ Phase 7 (optional): git worktree cleanup
         if branch was in .worktrees/, offer (do NOT auto-execute) the worktree remove
         per using-git-worktrees §Removing a worktree
 
-(The diagram above is the **phase overview** — which sub-skill fires in what order.
-The numbered **Step** list in §Default flow below is the granular procedure; "Phase N"
-and "Step N" are distinct numbering schemes.)
+(Diagram = phase overview; §Default flow's numbered **Step** list is the granular
+procedure — "Phase N" and "Step N" are distinct numbering schemes.)
 ```
 
 ## When NOT to use
 
-Exempt: **mid-task work** (SDD plan not yet complete), **trivial direct-to-main commits** (solo, no review, tiny doc fix), a **branch you're abandoning** (not merging — just delete, but close out first if the work was real), and **explicit user override** with a real reason (cherry-pick / known-trivial). Each has a near-miss rationalization that does NOT qualify ("I'm tired of this branch," "I trust myself"). These exemptions waive the close-out orchestration (review / verification / PR) but **NEVER waive `dev-workflow:git-memory`** — it gates every commit, even a trivial direct-to-main one. Full table in [`references/when-not-to-use.md`](references/when-not-to-use.md).
+Exempt: **mid-task work** (SDD plan incomplete), **trivial direct-to-main commits** (solo, tiny doc fix), a **branch you're abandoning** (close out first if real), and **explicit user override** with a real reason. Near-miss rationalizations ("I'm tired of this branch") do NOT qualify. These waive the close-out orchestration (review / verification / PR) but **NEVER waive `dev-workflow:git-memory`** — it gates every commit. Full table in [`references/when-not-to-use.md`](references/when-not-to-use.md).
 
 ## When to use
 
@@ -77,13 +69,13 @@ Exempt: **mid-task work** (SDD plan not yet complete), **trivial direct-to-main 
 
 ## Cross-skill contract — heavy delegation
 
-This skill is intentionally light on novel logic. Its value is orchestration; the work happens in delegated specialists:
+This skill is light on novel logic — its value is orchestration; the work happens in delegated specialists:
 
 | Step | Delegate | Why this skill doesn't do it directly |
 |---|---|---|
-| 1 | `requesting-code-review` (four-way dispatch: record-only mints a continuity marker with no review arm; docs-only delegates whole to `requesting-docs-review`; mixed splits per-file; code-only unchanged) | Human-judgment quality review is its own skill with its own subagent; this orchestrator just dispatches |
+| 1 | `requesting-code-review` (four-way dispatch; docs-only → `requesting-docs-review`) | Human-judgment quality review is its own skill with its own subagent; this orchestrator just dispatches |
 | 2 | `verification-before-completion` | Package-level test invocation has its own per-stack command table; this orchestrator just invokes the gate |
-| 2b | `ui-verification` (conditional) | The user's main acceptance stage for a UI-bearing branch — what "done" means to them — has its own tooling/degradation contract (browser/device automation, N/A-loud); fires only when the branch touched UI and a `ui-flows.md` exists |
+| 2b | `ui-verification` (conditional) | Main acceptance stage for a UI-bearing branch; has its own tooling/degradation contract (browser/device automation, N/A-loud); fires only when the branch touched UI and a `ui-flows.md` exists |
 | 3 | `dev-workflow:git-memory` | P3-D MANDATORY — git-memory decides whether memory trailers are warranted on this commit. Orchestrator passes the diff + recent commits; git-memory returns the trailer set (or empty, if routine) |
 | 4 | git CLI | Standard `git commit -m "<msg>" -m "<body with trailers>"` |
 | 5 | git CLI | `git push -u origin <branch>` if new; `git push` if upstream set |
@@ -93,7 +85,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
 **The orchestrator does NOT**:
 - Duplicate git-memory's trailer-decision logic (P3-D — would create drift)
 - Decide commit messages from scratch (delegates to git-memory output)
-- Force the merge — merge stays with the user, never auto-run (PR-open is different: its authorization is request-derived, arriving with the close-out request, so Step 11 opens the PR and reports loudly rather than re-asking; see §What this skill does NOT do)
+- Force the merge — merge stays with the user, never auto-run (PR-open is different: request-derived authorization, see §What this skill does NOT do)
 
 ## Default flow — what happens if user just says "finish this branch"
 
@@ -199,7 +191,7 @@ This skill is intentionally light on novel logic. Its value is orchestration; th
      | Memory-timing check | Asked and answered at Step 6, the moment git-memory's trailer set came back — this row only STAGEs whatever `docs/loom/memory/` file that check produced. | A durable, already-known fact (practice / gotcha / process per the jurisdiction table) goes into `docs/loom/memory/` NOW, staged into THIS close-out commit — exact rule and its one exception: `docs/loom/memory/README.md` §"When to record". | Question NOT asked at Step 6 → ask it now — late beats never — treat it as a process miss. |
      | Memory-store integrity | Fires ONLY when this branch added or edited a file under `docs/loom/memory/`; otherwise skip silently (auditable from the diff). | Run `python3 scripts/check_loom_memory_integrity.py` from the repo root before the close-out commit; exit 0 is the gate. §Index invariant (`docs/loom/memory/README.md`): one index line per memory file, description = the file's frontmatter `description`, byte-identical — index generated from frontmatter, so the memory file alone leaves the store invalid until regen. CI's catching job is named `plugin version bump`, so run it locally. Recurrence is why this check exists — the same miss shipped twice. | Checker absent (it ships in no plugin) → say `memory-store integrity: N/A — checker not present in this repo` loudly and move on — never read a "No such file" nonzero as a store violation. On nonzero: run `python3 scripts/check_loom_memory_integrity.py --write`, re-run until exit 0, then `git add` the corrected `docs/loom/memory/README.md` — do not commit on a violation; `--write` itself nonzero → fix the file it names, repeat. It validates the WORKING TREE — an unstaged index fix ships the exact defect this check prevents. |
      | Backlog-close check | The repo has `docs/loom/backlog/` AND this branch ships or supersedes a backlog entry — grep the store for the branch's topic terms and read the hits. | Flip the entry's `status:` to SHIPPED (or CLOSED — SUPERSEDED), append one body line naming the evidence (this branch/PR); if `scripts/backlog_index.py` exists at the repo root, regenerate with `python3 scripts/backlog_index.py --write` and stage both in the same close-out commit. When the repo-root copy is absent, run the plugin-shipped copy instead — `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backlog_index.py"` with the same arguments (a load-time substitution, not a run-time shell variable) — for this and every `backlog_index.py` invocation in this row. Then, when the repo also has `docs/loom/DIRECTION.md`: run `python3 scripts/backlog_index.py --direction-write docs/loom/DIRECTION.md` and stage the refreshed file into the same close-out commit; if COMMITTED-NEXT is EMPTY, surface a betting prompt to the user — list candidates same-lane first (when the just-closed arc belongs to a theme, that theme's next arc leads the list, if one exists), then `--ready`'s output — the USER promotes (edits status to COMMITTED-NEXT) or declines; agents never auto-promote — promotion is never a silent default. If the user promotes, re-run `python3 scripts/backlog_index.py --write` and `python3 scripts/backlog_index.py --direction-write docs/loom/DIRECTION.md`, then re-stage the refreshed `BACKLOG.md` and `DIRECTION.md` before this close-out commit lands. | No hit, or no store → skip silently (auditable from the diff, like the memory-store row). `backlog_index.py` absent from both the repo root and the plugin (the loom-code plugin not installed, or its cache copy missing) → say `backlog-close: index not regenerated — backlog_index.py not present`, stage the entry flip alone, noting the regen needs a machine with the script — this N/A now also covers the direction refresh. No `docs/loom/DIRECTION.md` in this repo → skip the betting duty silently (opt-in mechanism, same posture as the store-absent case). |
-     | Open-questions check | The branch has a plan (`docs/loom/plans/<date>-<topic>.md` — the same plan Step 1 already read to render the progress card; reuse that path rather than a fresh discovery rule). | Run `python3 loom-code/scripts/check_open_questions.py <plan-path>` before the close-out commit; exit 0 is the gate — every `## Open Questions` entry is `[RESOLVED]`, or the section carries the well-formed N/A line, per `loom-code/skills/writing-plans/references/plan-format.md` §Plan-level open-questions slot. This is a prose orchestrator check, not a hook-level guard — `hooks/git-guard.py` (Step 9c) is blind to plan content and only checks marker freshness. | Nonzero (an `[OPEN]` entry, or the section absent/malformed) → **STOP** before committing; surface the checker's stderr verbatim — it names the unresolved `OQ-<n>` when that is the cause, or describes the absent/malformed section otherwise — and route it back to the user or the plan author — do not commit past it. No plan → skip silently, per Step 1's entry-card rules. |
+     | Open-questions check | The branch has a plan — reuse the path Step 1 already read to render the progress card, not a fresh discovery rule. | Run `python3 loom-code/scripts/check_open_questions.py <plan-path>` before the close-out commit; exit 0 is the gate — every `## Open Questions` entry is `[RESOLVED]`, or the section carries the well-formed N/A line. Prose orchestrator check, not hook-level — `git-guard.py` (Step 9c) is blind to plan content. | Nonzero (an `[OPEN]` entry, or section absent/malformed) → **STOP**; surface stderr verbatim (it names the unresolved `OQ-<n>`, or describes the absent/malformed section) and route back to the user or plan author — do not commit past it. No plan → skip silently, per Step 1. |
      | Stage-flip duty | The branch has a plan carrying the progress headers (the same plan Step 1 rendered). | BEFORE the close-out commit, flip the plan's terminal state: run `python3 scripts/plan_card.py <plan-path> --set-stage "finishing"` — repo-root `scripts/plan_card.py` when it exists; otherwise the plugin-shipped copy: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path> --set-stage "finishing"` (a load-time substitution, not a run-time shell variable). Then stage the flipped plan file (`git add docs/loom/plans/<plan>.md`) into THIS close-out commit. | No plan, a plan with no Status lines at all (old-format), or a plan whose ledger predates the `Stage:` header (Status lines but no `Stage:` — `--set-stage` refuses nonzero on that shape) → skip silently, per Step 1's entry-card rules. |
      | Stale-scan relay | Every close-out where the repo has a `docs/loom/plans/` directory. | Run `python3 scripts/plan_card.py --stale-scan docs/loom/plans` — repo-root `scripts/plan_card.py` when it exists; otherwise the plugin-shipped copy: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" --stale-scan docs/loom/plans` (a load-time substitution, not a run-time shell variable). Relay its stdout VERBATIM and loudly to the user — including the single `stale-scan: clean` line. A candidate plan belonging to an already-merged arc gets fixed on the spot: the same `--set-stage "finishing"` flip, staged into THIS close-out commit. A candidate belonging to a live parallel arc is named and passed through untouched. The scan is advisory by design — it always exits 0, because all-done at `review:round-N` is a legitimate transient state of a live arc; never harden a candidate line into a block or a STOP. | No `docs/loom/plans/` directory → skip silently (nothing to scan, auditable from the tree). |
    - Attached-HEAD check: run `git symbolic-ref -q HEAD` in the main

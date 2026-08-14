@@ -5,6 +5,46 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.80.0] — 2026-08-14 — A plan must resolve its open questions before it ships
+
+### Changed
+
+- **`## Open Questions` is now fill-or-declare and gate-blocking, with
+  authored `OQ-<n>` identifiers.** A plan's open-questions section must
+  resolve every entry (`[RESOLVED]`) or carry a well-formed N/A line; an
+  `[OPEN]` entry, or a section absent/malformed, blocks. The slot
+  carries an authored `OQ-<n>` identifier and a two-valued status token,
+  and **deliberately carries no** owner / deadline / routing /
+  per-task-linkage field — each named as absent so a later reader sees
+  they were decided against, not forgotten; each extra field would raise
+  the cost of recording a question and feed the one failure mode already
+  named (authors writing nothing down).
+- **The gate fires at two points, not one.** Plan-write
+  (`writing-plans`) runs it on every plan, and branch close-out
+  (`finishing-a-development-branch` Step 8) runs it before the close-out
+  commit — the disputed fork that started this arc was born
+  mid-execution, after the plan-write gate had already passed, so a
+  plan-write-only gate would never have seen it. Close-out enforcement
+  ships as a **Step 8 prose row** an orchestrator follows, not folded
+  into `loom_gate_markers.py`'s mint path — the push guard reads only
+  marker files and is blind to plan content, and the marker contract is
+  frozen with every field test-asserted. A backlog tripwire records
+  revisiting the weaker form rather than forgetting it.
+- **`check_open_questions.py` is the scanner.** Its first production
+  run was this arc's own plan (never only authored fixtures), which
+  surfaced both the over-strict first draft and the section-scoping
+  defects. Whole-branch review then caught a false-green: the gate
+  reported "clean" on the arc's own plan because its questions used
+  `*`/`1.` bullets the entry matcher silently treated as prose — the
+  malformed-entry net was widened and a durable gotcha filed
+  (`section-gate-must-flag-entry-lookalikes-not-just-matches`).
+- **plan-document-reviewer gains Check 18** (section-existence +
+  false-N/A) and an **anti-copy judgment rider on Check 7** (a plan whose
+  acceptance criterion protects content from copying must carry BOTH
+  the mechanical verbatim grep AND an explicit reviewer-judgment check —
+  a mechanical-only criterion is a gap, grounded in the five-row
+  paraphrase incident).
+
 ## [0.79.0] — 2026-08-13 — Brief items become addressable, and the coverage checker stops failing open
 
 ### Changed
