@@ -131,7 +131,8 @@ After PASS, before SDD handoff: run the kickoff briefing — read [`references/k
 **Progress surface.** The plan carries `Goal:`, `Stage:`, per-task
 `Status:`, an optional `Steps:` title block, and per-task `Gloss:`
 lines from birth (schema below) — Steps titles and Gloss lines are
-written at plan time in the user's conversation language. After the
+written at plan time in the user's conversation language per §Language
+policy. After the
 reviewer PASS
 is stamped, run `python3 scripts/plan_card.py <plan-path>` and relay
 its card in the conversation language — fire-and-continue, not a new
@@ -148,6 +149,19 @@ progress-card relay moment, also produce the plan's document view per
 the adjudication-view protocol's own firing conditions (doc mode) for
 the user's plan reading —
 see [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md).
+
+## Language policy
+
+The plan document is written in two layers, split by field. Task
+**Description** bodies and **Acceptance** (RED/GREEN) are written in
+English — the machine-checkable contract implementers and reviewers
+read. **Steps** titles, **Gloss**, **Goal**, task titles, and
+**Notes** stay in the session's conversation language — the
+human-facing surface the user reads. For careful reading of the
+English precision content in zh-Hant/ja, produce the plan's document
+view per the adjudication-view protocol's own firing conditions (doc
+mode) — see
+[`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md).
 
 ## Output contract — the plan
 
