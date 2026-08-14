@@ -49,3 +49,19 @@ is the intended safety net — but it costs a triad; naming the pin test
 in the packet up front remains the cheap path. Occurrence count is now
 three: the CI-check mechanization named above graduates from candidate
 to warranted next time anyone touches the bump tooling.
+
+**Fourth instance, 2026-08-14 (loom-doc-language-layering, loom-code
+0.81.0): the bump commit itself omitted the pin test + CHANGELOG — the
+packet named them, the commit didn't.** The bump commit (f931c683)
+changed the four plugin.json manifests and nothing else; the pin test
+kept asserting 0.80.0 and the CHANGELOG had no 0.81.0 entry. The
+per-task triad and whole-branch review both passed (the pin lives in a
+file no task touched and the review reads the diff, not the suite), and
+only verification-before-completion caught the red suite. The fix was
+mechanical (rewrite the pin + add the release-record entries) but the
+occurrence pattern is now four-for-four: the bump packet naming the pin
+test is necessary but not sufficient — the bump COMMIT must land the
+pin rewrite + CHANGELOG entry in the same commit, and the cheap
+self-check is running the full suite AFTER the bump commit, not before
+it. The CI-check mechanization is now warranted on the next bump-tooling
+touch.

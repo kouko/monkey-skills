@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-14-loom-doc-language-layering.md
 Goal: A layered language policy is stated in the two artifact-producing skills (writing-plans, loom-spec) plus a pointer in brainstorming's brief-format, so plan/spec content is deliberately split: machine-executed precision content in English, human sense-making content in the session's conversation language, and the existing adjudication-view named as the display layer for reading the English precision content in zh-Hant/ja.
-Stage: planning
+Stage: finishing
 Steps:
   1. 政策落地（T1／T2／T3／T4 平行）
   2. 鏡像與驗證（T5／T6）
