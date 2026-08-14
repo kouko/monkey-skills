@@ -448,7 +448,8 @@ translated. The machine-precision layers are **written in English**:
 the spec-delta requirement lines (RFC-2119 keywords MUST / SHALL /
 SHOULD / MAY on the body line) and every `#### Scenario:` GIVEN /
 WHEN / THEN criterion. The human-narrative layer — `proposal.md`'s
-Problem / Users / Smallest End State / Decision reasoning — stays in
+narrative content (the USM backbone, object model, path/edge matrix,
+journey navigation, provenance, and blind-spots sections) — stays in
 the session's **conversation language**.
 
 For a zh-Hant / ja session, read the English precision layers through
