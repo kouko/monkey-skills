@@ -441,6 +441,22 @@ Validate the emitted directory with
 `../../scripts/validate_spec_output.py <output-dir>` (relative to this skill's
 directory) before handoff.
 
+### Language policy — layered by artifact role
+
+The hybrid output is **layered by language role**, not uniformly
+translated. The machine-precision layers are **written in English**:
+the spec-delta requirement lines (RFC-2119 keywords MUST / SHALL /
+SHOULD / MAY on the body line) and every `#### Scenario:` GIVEN /
+WHEN / THEN criterion. The human-narrative layer — `proposal.md`'s
+Problem / Users / Smallest End State / Decision reasoning — stays in
+the session's **conversation language**.
+
+For a zh-Hant / ja session, read the English precision layers through
+the [`adjudication-view`](../../../loom-code/skills/using-loom-code/protocols/adjudication-view.md)
+display layer (BI-4): it renders the English artifact for careful
+reading in the profile language without touching the machine-precise
+artifact underneath.
+
 ## Authoring the persistent intent layer
 
 The hybrid output above is the **per-change** artifact (a `docs/loom/<change-id>/`
