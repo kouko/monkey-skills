@@ -42,7 +42,7 @@ N/A — no unresolved question: the brief's Decision settled the layered policy,
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1 — writing-plans declares the layered policy（主，RED 斷言政策陳述落地）＋ BI-4 — the policy cites adjudication-view as the display layer＋ BI-6 — The umbrella outcome: both skills (plus the brief pointer) carry a consistent, inline layered language policy＋ BI-7 — §Progress surface statements consolidated into the umbrella policy
-- **Status**: pending
+- **Status**: done(f2f78791)
 - **Gloss**: 讓 writing-plans 的 SKILL.md 明載分層語言政策——機器執行的欄位（Description／Acceptance）用英文，人讀的欄位（Steps／Gloss／Goal／Notes）用會話語言，adjudication-view 當顯示層。
 
 ## Task 2 — plan-format.md 的 Description／Acceptance 欄位加英文規則
@@ -60,7 +60,7 @@ N/A — no unresolved question: the brief's Decision settled the layered policy,
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1 — writing-plans declares the layered policy（欄位層落地；brief 的 Current State Evidence 明載 plan-format.md 的 Description/Acceptance「carry no language annotation」）
-- **Status**: pending
+- **Status**: done(5d46b74a)
 - **Gloss**: 讓 plan-format.md（schema 的 SSOT）的 Description／Acceptance 欄位明載「用英文寫」——政策在欄位定義層落地，Steps／Gloss 的會話語言註記不變。
 
 ## Task 3 — spec-expansion SKILL.md 加分層語言政策
@@ -78,7 +78,7 @@ N/A — no unresolved question: the brief's Decision settled the layered policy,
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-2 — loom-spec declares the layered policy（主，RED 斷言政策陳述落地）＋ BI-4 — the policy cites adjudication-view as the display layer
-- **Status**: pending
+- **Status**: done(28d048ff)
 - **Gloss**: 讓 spec-expansion 的 SKILL.md 明載分層語言政策——spec 的 requirement 行與 Scenario 判準用英文，proposal.md 的敘事用會話語言，adjudication-view 當顯示層。
 
 ## Task 4 — handoff-brief-format.md 加 BI 語言指標
@@ -94,7 +94,7 @@ N/A — no unresolved question: the brief's Decision settled the layered policy,
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-3 — brainstorming's brief-format carries a pointer: BI statements are machine-executed precision content → English
-- **Status**: pending
+- **Status**: done(d72d71ac)
 - **Gloss**: 讓 brainstorming 的 brief-format 明載「BI 陳述用英文寫」——BI 是機器執行的精確內容，種子進 spec 的 requirement 行。
 
 ## Task 5 — writing-plans README 三語加語言註記
@@ -111,7 +111,7 @@ N/A — no unresolved question: the brief's Decision settled the layered policy,
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
 - **Brief item covered**: BI-1 — writing-plans declares the layered policy（README 是 writing-plans 的人讀 orientation mirror）
-- **Status**: pending
+- **Status**: done(a85ba721)
 - **Gloss**: 讓三語 README 的欄位清單也帶語言註記——人讀 orientation 不漂移，與 plan-format.md 的 schema 註記一致。
 
 ## Task 6 — cold-reader dogfood 驗證
@@ -128,7 +128,7 @@ N/A — no unresolved question: the brief's Decision settled the layered policy,
 - **Dependencies**: Tasks 1, 2, 3, 4 complete first
 - **Independent**: false
 - **Brief item covered**: BI-5 — verification: a fresh-context cold-reader dogfood writes a sample plan following the policy and the language layering lands correctly
-- **Status**: pending
+- **Status**: done(d364acf9)
 - **Gloss**: 用一個沒有本會話上下文的冷讀 agent 照政策寫一份樣本 plan，驗證語言分層真的落地——這是政策的品質地板。
 
 ## Notes
