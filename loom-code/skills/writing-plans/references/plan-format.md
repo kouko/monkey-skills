@@ -95,15 +95,15 @@ This section deliberately carries no owner field, no deadline field, no routing 
 ```markdown
 ## Task <N> — <short imperative name>
 
-- **Description**: <one-assertion unit of work, imperative voice>
+- **Description**: <one-assertion unit of work, written in English, imperative voice>
 - **Module**: <path or module name; ONE only>
 - **Files touched**: <comma-separated paths the implementer will Write / Edit>
 - **Context paths**:
   - <absolute path to existing code the implementer reads>
   - <... additional context paths>
 - **Acceptance**:
-  - **RED**: <failing test name OR diagnostic the implementer writes first>
-  - **GREEN**: <observable condition when the task is done>
+  - **RED**: <failing test name OR diagnostic the implementer writes first, written in English>
+  - **GREEN**: <observable condition when the task is done, written in English>
 - **External surfaces**: <v0.9.0+ — required when task touches non-stdlib external surface. See §External surfaces below. Omit field entirely if task is pure internal logic.>
 - **Reuse-adequacy**: <v0.43.0+ — required when the task's Description instructs the implementer to reuse an existing helper in a new lane. Two author-written slots, `Observed` (ends in a source marker) and `Intended`; no author-side adequacy verdict — that judgement is the reviewer's, not the plan's. See §`Reuse-adequacy` below. Omit field entirely if the task authors new logic instead of reusing an existing helper across lanes.>
 - **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M complete first" (multi-prerequisite — N and M must both finish before this task starts) | "Tasks N, M parallel" (both are prerequisites, may run in parallel). Cross-part ordering: use "none" at task level + a plan-level `Notes` entry; the field is within-plan only and cannot reference a sibling part's tasks.>
