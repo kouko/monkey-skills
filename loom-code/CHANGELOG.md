@@ -5,6 +5,26 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.81.0] — 2026-08-14 — layered language policy for plan/spec artifacts
+
+### Changed
+
+- **A layered language policy is now stated in the artifact-producing
+  skills.** writing-plans SKILL.md declares the split inline: machine-executed
+  precision content (task **Description** bodies, **Acceptance** RED/GREEN) is
+  written in English; human sense-making content (**Steps** titles, **Gloss**,
+  **Goal**, task titles, **Notes**) stays in the session's conversation
+  language. `adjudication-view` is cited as the display layer for careful
+  reading of the English precision content in zh-Hant/ja. The §Progress
+  surface's per-field statement is consolidated into the umbrella policy.
+- **plan-format.md's Description/Acceptance schema lines carry the English
+  annotation** — the schema SSOT now states the rule the policy declares; the
+  existing Steps/Gloss conversation-language annotations stay unchanged.
+- **The three writing-plans READMEs mirror the annotation** (EN/JA/zh-TW
+  field lists carry the language note), and handoff-brief-format.md's
+  §Brief item identifiers carries a one-line pointer: BI statements are
+  machine-executed precision content, so they are written in English.
+
 ## [0.80.0] — 2026-08-14 — A plan must resolve its open questions before it ships
 
 ### Changed

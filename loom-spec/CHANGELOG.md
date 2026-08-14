@@ -5,6 +5,17 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.10.0] — 2026-08-14 — layered language policy for spec artifacts
+
+### Changed
+
+- **spec-expansion SKILL.md declares the layered language policy.** Spec-delta
+  **requirement lines** (RFC-2119) and **Scenario** GIVEN/WHEN/THEN criteria
+  are written in English; proposal.md narrative (Problem / Users / Smallest
+  End State / Decision reasoning) stays in the session's conversation
+  language. `adjudication-view` is cited as the display layer for careful
+  reading of the English precision content in zh-Hant/ja.
+
 ## [0.9.0] — 2026-08-11 — OOUX Mermaid diagram forms
 
 ### Changed
