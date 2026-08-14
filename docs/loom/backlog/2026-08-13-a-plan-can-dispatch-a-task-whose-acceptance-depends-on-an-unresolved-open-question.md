@@ -1,7 +1,7 @@
 ---
 name: 2026-08-13-a-plan-can-dispatch-a-task-whose-acceptance-depends-on-an-unresolved-open-question
 description: nothing stops a plan from dispatching a task whose acceptance criteria depend on a question the plan itself records as unresolved, so a known-undecided fork ships as implemented behaviour and surfaces as a whole-branch finding instead of a planning decision
-status: COMMITTED-NEXT
+status: SHIPPED
 origin: brief-item-addressability arc (2026-08-13) — the arc's only 🔴 was a fork the plan had written down as an open question and deferred to review
 start: next touch of writing-plans' plan-document-reviewer prompt, or the next arc whose plan carries a non-empty Open Questions section
 ---
@@ -48,3 +48,11 @@ cost. Recorded so the option does not need re-deriving next time it is raised.
 
 The narrower rule reaches the same defect at a fraction of the cost, and does
 it at plan time rather than at review time.
+
+**Shipped.** The open-question dispatch gate arc
+(`feat/open-question-dispatch-gate`) landed the plan schema's fill-or-declare
+`## Open Questions` slot, the `check_open_questions.py` scanner, and the
+plan-document-reviewer's Check 18 — the section-existence + false-N/A gate
+that catches a plan claiming "no unresolved question" while its own body shows
+one. A load-bearing-for-acceptance open question is now blocked at plan-write
+and at branch close-out, not deferred to whole-branch review.

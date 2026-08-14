@@ -21,7 +21,6 @@
 
 ## Now
 
-- 2026-08-13-a-plan-can-dispatch-a-task-whose-acceptance-depends-on-an-unresolved-open-question — nothing stops a plan from dispatching a task whose acceptance criteria depend on a question the plan itself records as unresolved, so a known-undecided fork ships as implemented behaviour and surfaces as a whole-branch finding instead of a planning decision
 - 2026-08-13-requirement-identity-splits-between-birthplace-and-living-spec — a requirement is born in a change-folder as a prose NAME and lives forever in the living spec as REQ-N, with nothing joining the two — one concept, two vocabularies, across the longest-lived identifier in the repo
 
 ## Next

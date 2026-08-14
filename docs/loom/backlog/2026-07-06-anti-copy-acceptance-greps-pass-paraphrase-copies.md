@@ -3,15 +3,13 @@ name: 2026-07-06-anti-copy-acceptance-greps-pass-paraphrase-copies
 description: Anti-copy acceptance greps pass paraphrase copies
 status: OPEN
 origin: 2026-07-06 loom-memory-skill task 1 quality review — the plan's anti-copy GREEN criterion grepped for verbatim charter-row text; the implementer shipped a complete five-row PARAPHRASE of the charter's jurisdiction table that passed the mechanical grep while violating its intent; only the quality reviewer's judgment leg caught it
-start: plan-document-reviewer-prompt.md's next touch, expected to be Task 7 of docs/loom/plans/2026-08-13-open-question-dispatch-gate.md landing (confirms the committed leg shipped); or writing-plans/SKILL.md's next touch, expected to be the slimming arc's slim round 2 pass over that file (2026-07-14-pocock-loom-roadmap-arcs-c-d-e-remainder.md leg D — the deferred leg)
+start: writing-plans/SKILL.md's next touch, expected to be the slimming arc's slim round 2 pass over that file (2026-07-14-pocock-loom-roadmap-arcs-c-d-e-remainder.md leg D — the deferred leg)
 ---
 
-- Start: plan-document-reviewer-prompt.md's next touch, expected to be
-  Task 7 of docs/loom/plans/2026-08-13-open-question-dispatch-gate.md
-  landing (confirms the committed leg shipped); or writing-plans/SKILL.md's
-  next touch, expected to be the slimming arc's slim round 2 pass over
-  that file (2026-07-14-pocock-loom-roadmap-arcs-c-d-e-remainder.md leg D
-  — the deferred leg)
+- Start: writing-plans/SKILL.md's next touch, expected to be the slimming
+  arc's slim round 2 pass over that file
+  (2026-07-14-pocock-loom-roadmap-arcs-c-d-e-remainder.md leg D — the
+  deferred leg)
 - Origin: 2026-07-06 loom-memory-skill task 1 quality review — the
   plan's anti-copy GREEN criterion grepped for verbatim charter-row
   text; the implementer shipped a complete five-row PARAPHRASE of the
@@ -55,3 +53,12 @@ start: plan-document-reviewer-prompt.md's next touch, expected to be Task 7 of d
   triggers — Task 7's landing (to confirm the committed leg shipped) and
   the `writing-plans/SKILL.md` leg's deferred touch — and will narrow to
   just the latter once Task 7 lands.
+
+- **2026-08-14: Task 7 landed — the reviewer-prompt leg shipped.**
+  `plan-document-reviewer-prompt.md`'s Check 7 row now carries the
+  anti-copy / SSOT-protection rider requiring BOTH the mechanical verbatim
+  grep AND an explicit reviewer-judgment check ("no paraphrase
+  reproduction of the protected content"), grounded in the five-row
+  paraphrase incident. The `start:` above narrowed to track only the
+  deferred `writing-plans/SKILL.md` acceptance-criteria guidance leg
+  (slimming arc leg D). Entry stays `OPEN` for that leg.

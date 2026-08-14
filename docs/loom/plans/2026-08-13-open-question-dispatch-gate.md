@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-13-open-question-dispatch-gate.md
 Goal: A plan document holds unresolved questions in a gated, identifier-bearing section, and an unresolved entry blocks both the plan-write gate and branch close-out.
-Stage: review:round-2
+Stage: finishing
 Steps:
     1. 語法與紀錄
     2. 檢查器與審查檢查
