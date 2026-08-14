@@ -31,6 +31,8 @@ This pushes back on briefs that try to do too much and on plans that hide comple
 
 Per [`references/plan-format.md`](references/plan-format.md), every task ships with:
 
+*Language note: Description/Acceptance are written in English; Steps/Gloss in the session's conversation language.*
+
 - **Description**: one-assertion imperative-voice action
 - **Module**: one path / module name (not two)
 - **Context paths**: existing code the implementer reads (paths-not-content)

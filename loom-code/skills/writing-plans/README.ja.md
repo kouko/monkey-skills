@@ -31,6 +31,8 @@ brainstorming → brief                            (Discovery 段階)
 
 [`references/plan-format.md`](references/plan-format.md) に従い、各タスクは：
 
+*言語注記：Description／Acceptance は英語で書く；Steps／Gloss はセッションの会話言語で書く。*
+
 - **Description**: assertion 1 つ分の命令形アクション
 - **Module**: 1 つのパス / モジュール名（2 つではない）
 - **Context paths**: implementer が読む既存コードのパス（paths-not-content）

@@ -31,6 +31,8 @@ brainstorming → brief                             (Discovery 階段)
 
 依 [`references/plan-format.md`](references/plan-format.md)，每個任務都帶：
 
+*語言註記：Description／Acceptance 用英文寫；Steps／Gloss 用會話語言寫。*
+
 - **Description**: 一個 assertion 份量的命令式動作
 - **Module**: 1 個路徑 / module 名（不是 2 個）
 - **Context paths**: implementer 讀的既有 code 路徑（paths-not-content）
