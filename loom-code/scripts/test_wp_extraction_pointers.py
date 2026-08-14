@@ -194,6 +194,9 @@ def test_inline_fallback_field_list_present():
 def test_progress_surface_steps_and_gloss_emit_duty_present():
     # N2 clause (2026-08-06 progress-card-roadmap-view arc): plan-time
     # emission of Steps titles + Gloss lines, in the user's language.
+    # 2026-08-14 language-layering arc: the per-field statement now
+    # references the umbrella §Language policy (BI-7 consolidation,
+    # reworded not deleted).
     norm = _norm(_skill_text())
     assert (
         "an optional `Steps:` title block, and per-task `Gloss:` lines"
@@ -201,8 +204,30 @@ def test_progress_surface_steps_and_gloss_emit_duty_present():
     )
     assert (
         "Steps titles and Gloss lines are written at plan time in the "
-        "user's conversation language" in norm
+        "user's conversation language per §Language policy" in norm
     )
+
+
+# --- (g1) layered language policy (2026-08-14 language-layering arc) --------
+
+def test_layered_language_policy_declared():
+    # BI-1 + BI-4 (2026-08-14 language-layering arc): the plan document
+    # is written in two layers — Description/Acceptance in English, the
+    # human-facing fields in the conversation language — and
+    # adjudication-view is cited as the display layer for careful
+    # reading of the English precision content in zh-Hant/ja.
+    norm = _norm(_skill_text())
+    assert "## Language policy" in _skill_text()
+    assert (
+        "**Description** bodies and **Acceptance** (RED/GREEN) are "
+        "written in English" in norm
+    )
+    assert (
+        "**Steps** titles, **Gloss**, **Goal**, task titles, and "
+        "**Notes** stay in the session's conversation language" in norm
+    )
+    assert "adjudication-view" in norm
+    assert "zh-Hant/ja" in norm
 
 
 def test_minimal_structure_block_carries_progress_schema_lines():
