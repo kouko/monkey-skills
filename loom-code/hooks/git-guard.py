@@ -114,7 +114,7 @@ REVIEW_VERDICTS = {"PASS", "PASS_WITH_NOTES"}
 MSG_NO_VERIFY = (
     "What happened: the commit tried to skip the pre-commit hooks. "
     "Your two options: drop --no-verify and let the hooks run, or ask "
-    "the user to waive this push. "
+    "the user how to proceed. "
     "loom gate: `git commit --no-verify` / `-n` is blocked — pre-commit "
     "hooks are load-bearing in this repo. Drop the flag and let the hooks "
     "run (loom-code gate)."

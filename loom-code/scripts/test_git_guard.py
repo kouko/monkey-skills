@@ -460,6 +460,19 @@ def test_msg_constants_carry_plain_line(repo):
     assert "requesting-code-review" not in res_ver.stderr  # discriminator preserved
 
 
+def test_no_verify_msg_does_not_promise_push_waiver(repo):
+    # MSG_NO_VERIFY is the COMMIT path (prints + returns 2; never calls
+    # _gate_push, so the waiver.json mechanism never applies to it). The
+    # plain summary must not promise a "waive this push" option that the
+    # underlying mechanism does not provide. MSG_REVIEW / MSG_VERIFIED
+    # legitimately reference waiver (they ARE push gates that query
+    # waiver.json) — those are asserted elsewhere and must stay untouched.
+    res = run_hook(bash_event("git commit --no-verify -m x", cwd=repo))
+    assert res.returncode == 2
+    assert "What happened:" in res.stderr  # plain opener preserved
+    assert "waive this push" not in res.stderr  # the inaccurate promise
+
+
 # --- schema field is validated on every marker -------------------------------
 
 
