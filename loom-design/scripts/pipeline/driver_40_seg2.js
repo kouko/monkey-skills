@@ -79,7 +79,7 @@ function seg2SpecPreamble(changeDir, seg1Paths, round, critique) {
         ? ` — revision round ${round}. Address the critic findings below; augment the draft, do not rewrite it.`
         : '.'
     }`,
-    'Load the loom-spec:spec-expansion skill via the Skill tool and execute it faithfully.',
+    'Load the loom-design:spec-expansion skill via the Skill tool and execute it faithfully.',
     'Seed inputs are given as PATHS ONLY (delegation contract) — read each file yourself; do NOT expect their content inlined in this prompt:',
     `- principles: ${seg1Paths.principles}`,
     `- design: ${seg1Paths.design}`,
@@ -96,7 +96,7 @@ function seg2SpecPreamble(changeDir, seg1Paths, round, critique) {
 function seg2CriticPreamble(lens, changeDir, round) {
   return [
     `STATION: completeness-critic — lens "${lens.name}" (writer≠judge, fresh context), round ${round}.`,
-    `Read loom-spec:completeness-critic SKILL.md for the full panel contract, then apply ONLY this lens: ${lens.focus}`,
+    `Read loom-design:completeness-critic SKILL.md for the full panel contract, then apply ONLY this lens: ${lens.focus}`,
     `Persona: ${lens.persona}.`,
     `Draft under critique: ${changeDir} (proposal.md + specs/).`,
     "Write back any critic-found gaps per the skill (provenance-tagged, never overwrite the writer's content), then emit the skill's two-valued §Verdict (PASS_WITH_NOTES | NEEDS_REVISION) as `verdict`.",
@@ -124,7 +124,7 @@ async function runSegment2(args) {
       'runSegment2: segment 2 requires args.skillsRoot to locate the loom-spec validator — refusing to guess.'
     )
   }
-  const validatorScript = args.skillsRoot + '/loom-spec/scripts/validate_spec_output.py'
+  const validatorScript = args.skillsRoot + '/loom-design/scripts/spec/validate_spec_output.py'
 
   const results = []
   const changeDir = `${projectPath}/docs/loom/${changeId}`

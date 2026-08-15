@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Build the loom-pipeline Workflow driver asset.
+"""Build the loom-design Workflow driver asset.
 
-Concatenates every ``loom-pipeline/scripts/driver_NN_*.js`` module, in
+Concatenates every ``loom-design/scripts/pipeline/driver_NN_*.js`` module, in
 filename order (NN ascending), into ONE self-contained script:
 
-    loom-pipeline/skills/using-loom-pipeline/assets/loom-pipeline.js
+    loom-design/skills/using-loom-pipeline/assets/loom-pipeline.js
 
 That assembled asset is the only thing the Workflow tool ever runs (see
 driver_00_header.js's CONCAT CONTRACT). This script prepends a
 generated-file banner so nobody hand-edits the assembled output.
 
 Usage:
-    python3 loom-pipeline/scripts/build_driver.py
-    python3 loom-pipeline/scripts/build_driver.py --out /tmp/loom-pipeline.js
+    python3 loom-design/scripts/pipeline/build_driver.py
+    python3 loom-design/scripts/pipeline/build_driver.py --out /tmp/loom-pipeline.js
 
 Pure stdlib. Paths resolve relative to this script's own location so it
 runs correctly regardless of the caller's cwd.
@@ -24,15 +24,15 @@ import sys
 from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
-PIPELINE_ROOT = SCRIPTS_DIR.parent
+PIPELINE_ROOT = SCRIPTS_DIR.parent.parent
 DEFAULT_OUT = (
     PIPELINE_ROOT / "skills" / "using-loom-pipeline" / "assets" / "loom-pipeline.js"
 )
 
 BANNER = (
     "// GENERATED FILE — do not edit; built by "
-    "loom-pipeline/scripts/build_driver.py from driver_NN_*.js sources.\n"
-    "// Rebuild: python3 loom-pipeline/scripts/build_driver.py\n\n"
+    "loom-design/scripts/pipeline/build_driver.py from driver_NN_*.js sources.\n"
+    "// Rebuild: python3 loom-design/scripts/pipeline/build_driver.py\n\n"
 )
 
 

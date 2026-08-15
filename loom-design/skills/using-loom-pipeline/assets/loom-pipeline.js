@@ -1,14 +1,14 @@
-// GENERATED FILE — do not edit; built by loom-pipeline/scripts/build_driver.py from driver_NN_*.js sources.
-// Rebuild: python3 loom-pipeline/scripts/build_driver.py
+// GENERATED FILE — do not edit; built by loom-design/scripts/pipeline/build_driver.py from driver_NN_*.js sources.
+// Rebuild: python3 loom-design/scripts/pipeline/build_driver.py
 
 // loom-pipeline driver — HEAD module (concat order: driver_00_*).
 //
 // CONCAT CONTRACT:
 // This file is the head of the assembled Workflow driver asset. The build
-// script (loom-pipeline/scripts/build_driver.py, a later task) concatenates
-// every `loom-pipeline/scripts/driver_NN_<concern>.js` module IN FILENAME
+// script (loom-design/scripts/pipeline/build_driver.py, a later task) concatenates
+// every `loom-design/scripts/pipeline/driver_NN_<concern>.js` module IN FILENAME
 // ORDER (NN ascending) into ONE self-contained script:
-//   loom-pipeline/skills/using-loom-pipeline/assets/loom-pipeline.js
+//   loom-design/skills/using-loom-pipeline/assets/loom-pipeline.js
 // That assembled asset is the only thing the Workflow tool ever runs.
 //
 // Rules every module in this concat chain must honor (this file included):
@@ -26,7 +26,7 @@
 //   (a separate task) owns the fail-loud input-contract guard.
 
 export const meta = {
-  name: 'loom-pipeline',
+  name: 'loom-design',
   description: 'Deterministic conductor for the loom principles→design→spec→code pipeline',
   phases: [
     { title: 'Principles + Design', detail: 'product-principles (idempotent adopt-if-valid) → design-system + interaction-flows → design-critic panel gate' },
@@ -527,7 +527,7 @@ const PRINCIPLES_STABLE_PREAMBLE = [
   '  the first ~80 lines of the file, verbatim, so the driver can re-verify',
   '  the adopt decision against the real file content rather than trusting',
   '  your self-report alone.',
-  '- Otherwise: load the `loom-product-principles:product-principles` skill',
+  '- Otherwise: load the `loom-design:product-principles` skill',
   '  via the Skill tool and follow it faithfully to generate PRINCIPLES.md.',
   '  Do NOT improvise principles outside the skill — fail-loud per the guard',
   '  doctrine; no ad hoc constitution invented on the station\'s own judgment.',
@@ -574,8 +574,8 @@ function reconcilePrinciplesAdoption(principlesResult) {
 
 const DESIGN_STABLE_PREAMBLE = [
   'STATION: design generators.',
-  'Load `loom-interface-design:design-system` and',
-  '`loom-interface-design:interaction-flows` via the Skill tool and follow',
+  'Load `loom-design:design-system` and',
+  '`loom-design:interaction-flows` via the Skill tool and follow',
   'both faithfully to produce <projectPath>/docs/loom/DESIGN.md and the',
   'per-change <projectPath>/docs/loom/<changeId>/ui-flows.md. Every emitted',
   'artifact MUST carry a Decisions section (what / why / rejected',
@@ -622,8 +622,8 @@ const DESIGN_CRITIC_LENSES = [
 
 function buildCriticLensPrompt(projectPath, changeId, lens) {
   return [
-    "You are a fresh-context lens-critic on the loom-interface-design:design-critic panel.",
-    'Load the `loom-interface-design:design-critic` skill via the Skill tool',
+    "You are a fresh-context lens-critic on the loom-design:design-critic panel.",
+    'Load the `loom-design:design-critic` skill via the Skill tool',
     '(and its references/design-heuristics.md) and follow it faithfully.',
     `Lens: ${lens.name}. Persona: ${lens.persona}.`,
     `Artifacts under critique: ${projectPath}/docs/loom/DESIGN.md and ${projectPath}/docs/loom/${changeId}/ui-flows.md.`,
@@ -879,7 +879,7 @@ function seg2SpecPreamble(changeDir, seg1Paths, round, critique) {
         ? ` — revision round ${round}. Address the critic findings below; augment the draft, do not rewrite it.`
         : '.'
     }`,
-    'Load the loom-spec:spec-expansion skill via the Skill tool and execute it faithfully.',
+    'Load the loom-design:spec-expansion skill via the Skill tool and execute it faithfully.',
     'Seed inputs are given as PATHS ONLY (delegation contract) — read each file yourself; do NOT expect their content inlined in this prompt:',
     `- principles: ${seg1Paths.principles}`,
     `- design: ${seg1Paths.design}`,
@@ -896,7 +896,7 @@ function seg2SpecPreamble(changeDir, seg1Paths, round, critique) {
 function seg2CriticPreamble(lens, changeDir, round) {
   return [
     `STATION: completeness-critic — lens "${lens.name}" (writer≠judge, fresh context), round ${round}.`,
-    `Read loom-spec:completeness-critic SKILL.md for the full panel contract, then apply ONLY this lens: ${lens.focus}`,
+    `Read loom-design:completeness-critic SKILL.md for the full panel contract, then apply ONLY this lens: ${lens.focus}`,
     `Persona: ${lens.persona}.`,
     `Draft under critique: ${changeDir} (proposal.md + specs/).`,
     "Write back any critic-found gaps per the skill (provenance-tagged, never overwrite the writer's content), then emit the skill's two-valued §Verdict (PASS_WITH_NOTES | NEEDS_REVISION) as `verdict`.",
@@ -924,7 +924,7 @@ async function runSegment2(args) {
       'runSegment2: segment 2 requires args.skillsRoot to locate the loom-spec validator — refusing to guess.'
     )
   }
-  const validatorScript = args.skillsRoot + '/loom-spec/scripts/validate_spec_output.py'
+  const validatorScript = args.skillsRoot + '/loom-design/scripts/spec/validate_spec_output.py'
 
   const results = []
   const changeDir = `${projectPath}/docs/loom/${changeId}`

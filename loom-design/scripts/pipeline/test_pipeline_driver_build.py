@@ -1,4 +1,4 @@
-"""Tests for loom-pipeline/scripts/build_driver.py."""
+"""Tests for loom-design/scripts/pipeline/build_driver.py."""
 from __future__ import annotations
 
 import subprocess
@@ -7,7 +7,8 @@ from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
 BUILD_DRIVER = SCRIPTS_DIR / "build_driver.py"
-REPO_ROOT = SCRIPTS_DIR.parent.parent
+# SCRIPTS_DIR = loom-design/scripts/pipeline/ -> parent.parent.parent = repo root
+REPO_ROOT = SCRIPTS_DIR.parent.parent.parent
 AGENTS_MD = REPO_ROOT / "AGENTS.md"
 
 

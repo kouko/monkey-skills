@@ -104,7 +104,7 @@ const PRINCIPLES_STABLE_PREAMBLE = [
   '  the first ~80 lines of the file, verbatim, so the driver can re-verify',
   '  the adopt decision against the real file content rather than trusting',
   '  your self-report alone.',
-  '- Otherwise: load the `loom-product-principles:product-principles` skill',
+  '- Otherwise: load the `loom-design:product-principles` skill',
   '  via the Skill tool and follow it faithfully to generate PRINCIPLES.md.',
   '  Do NOT improvise principles outside the skill — fail-loud per the guard',
   '  doctrine; no ad hoc constitution invented on the station\'s own judgment.',
@@ -151,8 +151,8 @@ function reconcilePrinciplesAdoption(principlesResult) {
 
 const DESIGN_STABLE_PREAMBLE = [
   'STATION: design generators.',
-  'Load `loom-interface-design:design-system` and',
-  '`loom-interface-design:interaction-flows` via the Skill tool and follow',
+  'Load `loom-design:design-system` and',
+  '`loom-design:interaction-flows` via the Skill tool and follow',
   'both faithfully to produce <projectPath>/docs/loom/DESIGN.md and the',
   'per-change <projectPath>/docs/loom/<changeId>/ui-flows.md. Every emitted',
   'artifact MUST carry a Decisions section (what / why / rejected',
@@ -199,8 +199,8 @@ const DESIGN_CRITIC_LENSES = [
 
 function buildCriticLensPrompt(projectPath, changeId, lens) {
   return [
-    "You are a fresh-context lens-critic on the loom-interface-design:design-critic panel.",
-    'Load the `loom-interface-design:design-critic` skill via the Skill tool',
+    "You are a fresh-context lens-critic on the loom-design:design-critic panel.",
+    'Load the `loom-design:design-critic` skill via the Skill tool',
     '(and its references/design-heuristics.md) and follow it faithfully.',
     `Lens: ${lens.name}. Persona: ${lens.persona}.`,
     `Artifacts under critique: ${projectPath}/docs/loom/DESIGN.md and ${projectPath}/docs/loom/${changeId}/ui-flows.md.`,

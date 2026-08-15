@@ -16,7 +16,7 @@ from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
 BUILD_DRIVER = SCRIPTS_DIR / "build_driver.py"
-PIPELINE_ROOT = SCRIPTS_DIR.parent
+PIPELINE_ROOT = SCRIPTS_DIR.parent.parent
 ASSET_PATH = (
     PIPELINE_ROOT / "skills" / "using-loom-pipeline" / "assets" / "loom-pipeline.js"
 )

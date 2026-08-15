@@ -2,10 +2,10 @@
 //
 // CONCAT CONTRACT:
 // This file is the head of the assembled Workflow driver asset. The build
-// script (loom-pipeline/scripts/build_driver.py, a later task) concatenates
-// every `loom-pipeline/scripts/driver_NN_<concern>.js` module IN FILENAME
+// script (loom-design/scripts/pipeline/build_driver.py, a later task) concatenates
+// every `loom-design/scripts/pipeline/driver_NN_<concern>.js` module IN FILENAME
 // ORDER (NN ascending) into ONE self-contained script:
-//   loom-pipeline/skills/using-loom-pipeline/assets/loom-pipeline.js
+//   loom-design/skills/using-loom-pipeline/assets/loom-pipeline.js
 // That assembled asset is the only thing the Workflow tool ever runs.
 //
 // Rules every module in this concat chain must honor (this file included):
@@ -23,7 +23,7 @@
 //   (a separate task) owns the fail-loud input-contract guard.
 
 export const meta = {
-  name: 'loom-pipeline',
+  name: 'loom-design',
   description: 'Deterministic conductor for the loom principles→design→spec→code pipeline',
   phases: [
     { title: 'Principles + Design', detail: 'product-principles (idempotent adopt-if-valid) → design-system + interaction-flows → design-critic panel gate' },
