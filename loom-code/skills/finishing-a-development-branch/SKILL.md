@@ -11,41 +11,36 @@ If you are a subagent dispatched with an explicit role prompt (code-reviewer / p
 
 ## What this skill does
 
-Orchestrates the close-branch sequence. The agent acts as conductor — invoking each step's specialist skill in order, gating progress on each step's verdict, and surfacing the final state to the user. Before executing, Read the CURRENT SKILL.md from the installed plugin — never run the flow from memory or a compacted summary. **The user retains agency for the final merge decision** (push + PR is automated; actual merge into main is not).
+Orchestrates the close-branch sequence: invoke each step's specialist skill in order, gate progress on each step's verdict, surface the final state to the user. Before executing, Read the CURRENT SKILL.md from the installed plugin — never run the flow from memory or a compacted summary. **The user retains agency for the final merge decision** (push + PR is automated; actual merge into main is not).
 
 ```
 finishing-a-development-branch (this skill)
   │
   ├─→ Phase 1: requesting-code-review
-  │     four-way dispatch by file type (record-only → no review arm, mints the
-  │     record-only continuity marker; docs-only → whole review delegates to
-  │     requesting-docs-review; mixed → per-file split, code panel + docs-reviewer;
-  │     code-only → code-reviewer panel, unchanged) → verdict: PASS / PASS_WITH_NOTES / NEEDS_REVISION
-  │     blocks on NEEDS_REVISION (any 🔴, or 2+ 🟡); PASS_WITH_NOTES (1 🟡) auto-proceeds,
-  │     carrying the 🟡 forward into the PR body + close-out report
+  │     four-way dispatch by file type (record-only / docs-only / mixed / code-only;
+  │     docs-only delegates to requesting-docs-review)
+  │     → verdict: PASS / PASS_WITH_NOTES / NEEDS_REVISION
+  │     blocks on NEEDS_REVISION (any 🔴, or 2+ 🟡); PASS_WITH_NOTES (1 🟡) auto-proceeds
   │
   ├─→ Phase 2: verification-before-completion
-  │     runs package-level test command → exit 0 + N>0 tests → PASS; blocks on failure
-  │     + ui-verification (CONDITIONAL): branch touched UI AND a ui-flows.md exists
-  │       → main acceptance stage for a UI-bearing branch; otherwise N/A (honest skip, stated)
+  │     package-level tests → exit 0 + N>0 → PASS; blocks on failure
+  │     + ui-verification (CONDITIONAL): UI-bearing branch with a ui-flows.md
   │
   ├─→ Phase 3: dev-workflow:git-memory (P3-D MANDATORY)
-  │     decides Decision: / Learning: / Gotcha: trailers for the close-out commit;
-  │     orchestrator hands the diff + recent commits, git-memory returns the trailer set
+  │     decides Decision: / Learning: / Gotcha: trailers for the close-out commit
   │
   ├─→ Phase 4: git commit (orchestrator runs this)
-  │     uses the message + trailers from Phase 3; does NOT bypass hooks; does NOT amend
-  │     then verifies the carrier landed: memory-grep.sh --verify HEAD
-  │     (memory-worthy + exit 4 → STOP before push; both-carrier policy)
+  │     message + trailers from Phase 3; no hook bypass, no amend
+  │     then memory-grep.sh --verify HEAD (memory-worthy + exit 4 → STOP pre-push)
   │
   ├─→ Phase 5: git push (orchestrator runs this)
-  │     pushes the branch; if local-only, sets upstream first
+  │     pushes the branch; sets upstream first if local-only
   │
   ├─→ Phase 6 (optional): gh pr create
-  │     only if user has gh CLI configured AND not opted out; PR body per git-memory convention
+  │     only if gh CLI configured AND not opted out; PR body per git-memory convention
   │
   └─→ Phase 7 (optional): git worktree cleanup
-        if branch was in .worktrees/, offer (do NOT auto-execute) the worktree remove
+        if branch was in .worktrees/, offer (do NOT auto-execute) the remove
         per using-git-worktrees §Removing a worktree
 
 (Diagram = phase overview; §Default flow's numbered **Step** list is the granular
@@ -196,14 +191,12 @@ This skill is light on novel logic — its value is orchestration; the work happ
      | Stale-scan relay | Every close-out where the repo has a `docs/loom/plans/` directory. | Run `python3 scripts/plan_card.py --stale-scan docs/loom/plans` — repo-root `scripts/plan_card.py` when it exists; otherwise the plugin-shipped copy: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" --stale-scan docs/loom/plans` (a load-time substitution, not a run-time shell variable). Relay its stdout VERBATIM and loudly to the user — including the single `stale-scan: clean` line. A candidate plan belonging to an already-merged arc gets fixed on the spot: the same `--set-stage "finishing"` flip, staged into THIS close-out commit. A candidate belonging to a live parallel arc is named and passed through untouched. The scan is advisory by design — it always exits 0, because all-done at `review:round-N` is a legitimate transient state of a live arc; never harden a candidate line into a block or a STOP. | No `docs/loom/plans/` directory → skip silently (nothing to scan, auditable from the tree). |
    - **N/A consolidation (close-out report)**: when two or more close-out
      sub-checks above are N/A, do NOT stack ~4-5 separate "N/A — checker not
-     present" lines before the conclusion. Each N/A must still be STATEABLE
-     (the per-check "say loudly" semantics above are preserved — the check
-     still runs and still names its reason), but in the Step 13 close-out
-     report they consolidate inapplicable checks into ONE summary line
-     after the plain conclusion: "N inapplicable checks skipped: <list>;
-     details on request." Conclusion-first ordering is the point — the user
-     sees the outcome before the skipped-checks noise. A single N/A still
-     emits its own one-line note; only the multi-N/A case collapses.
+     present" lines before the conclusion. Each N/A stays STATEABLE (the
+     per-check "say loudly" semantics are preserved — the check still runs
+     and names its reason), but in the Step 13 report they consolidate inapplicable checks into
+     ONE summary line after the plain conclusion: "N inapplicable checks skipped: <list>; details on request."
+     Conclusion-first — the user sees the outcome before skipped-checks noise. A single N/A still emits its
+     own one-line note; only the multi-N/A case collapses.
    - Attached-HEAD check: run `git symbolic-ref -q HEAD` in the main
      working tree — it must print the branch being finished. Detached
      HEAD or a different branch means something (typically a subagent)
@@ -309,18 +302,16 @@ This skill is light on novel logic — its value is orchestration; the work happ
     of `backlog_index.py`.
 ```
 
-**ASK = stop and wait for user.** That guarantee is now exception-based, not blanket: close-out is autonomous on the happy path — Steps 1–10 proceed silently once each step's own gate PASSes, including Step 7's privacy gate. What remains is one OUTWARD-FACING action that always asks (Step 12 — remove the worktree, because it touches shared state), plus a Step 7 privacy-gate BLOCK, where the human returns only because the gate failed; Step 11 (open a PR) no longer asks — its authorization arrived with the request, so it reports loudly instead. For any remaining question, run the ask-vs-resolve triage at `subagent-driven-development` §Asking the user, gate ① (the cross-skill SSOT) before asking.
-Every gate STOP that surfaces to the user (a NEEDS_REVISION, a privacy
-BLOCK, a probe FAIL) leads with the progress card — the user sees
-where the arc stopped before deciding.
+**ASK = stop and wait for user.** Exception-based, not blanket: close-out is autonomous on the happy path — Steps 1–10 proceed silently once each step's gate PASSes. What asks: one outward-facing action — Step 12 (worktree removal — touches shared state) — and a Step 7 privacy-gate BLOCK (human returns only because the gate failed). Step 11 (open a PR) reports loudly instead of asking — authorization arrived with the request. For any remaining question, run the ask-vs-resolve triage at `subagent-driven-development` §Asking the user, gate ① (the cross-skill SSOT) before asking.
+Every gate STOP that surfaces to the user (a NEEDS_REVISION, a privacy BLOCK, a probe FAIL) leads with the progress card — the user sees where the arc stopped before deciding.
 
 ## Red Flags — refuse these rationalizations
 
-Close-out shortcuts to refuse — *"skip review just push," "tests passed yesterday skip verification," "message is obvious skip git-memory," "auto-merge after push," "force-push to clean up history," "just amend the last commit," "I already have an SDD commit message"* (and localized 「review skip / 跳過審查」). Default posture: refuse the shortcut, dispatch the gate it bypasses. Full table (rationalization → why it is one → correct response) in [`references/red-flags.md`](references/red-flags.md).
+Close-out shortcuts to refuse — *"skip review just push," "tests passed yesterday skip verification," "message is obvious skip git-memory," "auto-merge after push," "force-push to clean up history," "just amend the last commit," "I already have an SDD commit message"* (and 「review skip / 跳過審查」). Default: refuse the shortcut, dispatch the gate it bypasses. Full table in [`references/red-flags.md`](references/red-flags.md).
 
 ## What this skill does NOT do
 
-Delegates rather than duplicates: review → `requesting-code-review`, tests → `verification-before-completion`, memory trailers → `dev-workflow:git-memory` (P3-D). Does **not** merge into main, force-push, amend commits (creates new per CLAUDE.md), or auto-remove worktrees — worktree removal still needs explicit user authorization, while PR-open does not re-ask: its authorization arrives with the close-out request. (Shortcut-refusal rationale for merge/force-push/amend lives in [`references/red-flags.md`](references/red-flags.md).)
+Does **not** merge into main, force-push, amend commits (creates new per CLAUDE.md), or auto-remove worktrees — worktree removal needs explicit user authorization, while PR-open does not re-ask (authorization arrived with the close-out request). Delegation is by the table above; shortcut-refusal rationale for merge/force-push/amend lives in [`references/red-flags.md`](references/red-flags.md).
 
 ## See also
 
