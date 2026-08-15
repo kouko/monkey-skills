@@ -1,5 +1,5 @@
 """T10: brainstorming's brief-before-fork copy is replaced by a one-line
-pointer to the family SSOT (`loom-pipeline/hooks/family-reception.md`
+pointer to the family SSOT (`loom-code/hooks/family-reception.md`
 §Brief before a complex fork). The duplicated threshold text is removed;
 the pointer + brainstorming-specific anchor remain.
 
@@ -7,7 +7,7 @@ WHY this test exists: `loom-code/skills/brainstorming/SKILL.md` line 58
 previously carried a full copy of the brief-before-fork rule — including
 the trigger threshold ("≥3 trade-offs, ≥2 implementation paths, or
 architectural blast radius") and the stakes-first framing — which now
-lives canonically in `loom-pipeline/hooks/family-reception.md`
+lives canonically in `loom-code/hooks/family-reception.md`
 §Brief before a complex fork (Task 5). Six router/skill copies of this
 rule drift when edited in one place and not the others; this test pins
 the brainstorming copy as a pointer, not a duplicate.
@@ -37,7 +37,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 SKILL_REL = "loom-code/skills/brainstorming/SKILL.md"
-SSOT_REL = "loom-pipeline/hooks/family-reception.md"
+SSOT_REL = "loom-code/hooks/family-reception.md"
 
 # Region anchors — the brief-before-fork paragraph lives between these
 # two lines (confirmed verbatim substrings in the file). Scoping the
@@ -48,7 +48,7 @@ REGION_END = "### Axis 0 — Upstream artifacts"
 
 # Pointer tokens that MUST appear in the region after the edit.
 POINTER_TOKENS = (
-    "loom-pipeline/hooks/family-reception.md",
+    "loom-code/hooks/family-reception.md",
     "Brief before a complex fork",
     "§",
 )

@@ -1,8 +1,8 @@
 """T8 drift guard: the brief-before-fork template copy in
-loom-product-principles/skills/using-loom-product-principles/SKILL.md
+loom-design/skills/using-loom-design/SKILL.md
 must be replaced by a one-line pointer to the SSOT section
 `## Brief before a complex fork` in
-loom-pipeline/hooks/family-reception.md.
+loom-code/hooks/family-reception.md.
 
 WHY this test exists: the full template copy (≥3 trade-offs / ≥2
 implementation paths / architectural blast radius) drifted from the
@@ -31,9 +31,9 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-TARGET = "loom-product-principles/skills/using-loom-product-principles/SKILL.md"
+TARGET = "loom-design/skills/using-loom-design/SKILL.md"
 
-POINTER = "loom-pipeline/hooks/family-reception.md §Brief before a complex fork"
+POINTER = "loom-code/hooks/family-reception.md §Brief before a complex fork"
 THRESHOLD = "≥3 trade-offs"
 
 

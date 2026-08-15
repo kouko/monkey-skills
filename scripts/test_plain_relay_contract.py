@@ -1,7 +1,7 @@
 """T1 drift guard: the plain-relay contract file must carry all 7 rule
 lead-ins, the shared glossary header, and both calibration markers (✅/❌).
 
-WHY this test exists: `loom-pipeline/hooks/plain-relay.md` is the family-wide
+WHY this test exists: `loom-code/hooks/plain-relay.md` is the family-wide
 single source every relay pointer and the SessionStart trigger card reference.
 A silent removal of one rule (or of the glossary / calibration pair) from this
 file breaks every downstream pointer without any signal. This test asserts the
@@ -26,7 +26,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-CONTRACT_REL = "loom-pipeline/hooks/plain-relay.md"
+CONTRACT_REL = "loom-code/hooks/plain-relay.md"
 
 # Each rule's distinctive lead-in (the verbatim opening clause a reader/hooks
 # keys off). Losing one from the contract silently breaks the pointers.

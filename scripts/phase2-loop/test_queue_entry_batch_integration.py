@@ -1,7 +1,7 @@
 """Integration proof: propose_queue_entry output round-trips through batch_queue.
 
 Proves the planning-stage helper's TOML is genuinely consumable by
-loom-pipeline's batch_queue.py: load_queue parses the drafted entry and
+loom-design's batch_queue.py: load_queue parses the drafted entry and
 check_frozen returns eligible via the Form B (brief+plan) path — no
 docs/loom/<id>/ change folder exists for the synthetic fixture, so the
 plan's own ``Plan-document-reviewer verdict: PASS`` line is the freeze gate.
@@ -13,11 +13,11 @@ from pathlib import Path
 from queue_entry import propose_queue_entry
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_BATCH_QUEUE_PATH = _REPO_ROOT / "loom-pipeline" / "scripts" / "batch_queue.py"
+_BATCH_QUEUE_PATH = _REPO_ROOT / "loom-design" / "scripts" / "pipeline" / "batch_queue.py"
 
 
 def _load_batch_queue():
-    """Import loom-pipeline's batch_queue.py by file path — a cross-plugin
+    """Import loom-design's batch_queue.py by file path — a cross-plugin
     sibling module in the same repo — without touching sys.path or any
     shared conftest (scoped to this test module only)."""
     spec = importlib.util.spec_from_file_location(

@@ -1,5 +1,5 @@
 """Task 2 drift guard: the <PLAIN-RELAY> trigger card must be present verbatim
-in loom-pipeline/hooks/family-reception.md so the SessionStart bash script
+in loom-code/hooks/family-reception.md so the SessionStart bash script
 (hooks/session-start cats the whole file at line 37) preloads it every session.
 
 WHY this test exists: a local A/B proved an imperative short card preloaded
@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-RECEPTION_REL = "loom-pipeline/hooks/family-reception.md"
+RECEPTION_REL = "loom-code/hooks/family-reception.md"
 
 CARD_OPEN = "<PLAIN-RELAY>"
 CARD_CLOSE = "</PLAIN-RELAY>"

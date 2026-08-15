@@ -5,7 +5,7 @@ Plan: docs/loom/plans/2026-08-15-plain-relay-contract.md Task 11.
 RED: fails on the unedited repo (the full copy still carries the threshold
 phrase, and no pointer to the family-reception SSOT exists).
 GREEN: the copy is replaced by a one-line pointer to
-`loom-pipeline/hooks/family-reception.md §Brief before a complex fork`.
+`loom-code/hooks/family-reception.md §Brief before a complex fork`.
 """
 from pathlib import Path
 import shutil

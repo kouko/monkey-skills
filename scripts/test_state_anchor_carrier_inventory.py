@@ -12,7 +12,7 @@ a silent, ungrepped drift.
 
 Population: `grep -rnE 'state anchor|state-anchor' loom-*/`, excluding
 loom-code/CHANGELOG.md (changelog prose, not a live carrier) and
-loom-pipeline/hooks/test-prompts.json (test fixture, not a live carrier;
+loom-code/hooks/test-prompts.json (test fixture, not a live carrier;
 absent from the tree as of this pin — kept for forward compatibility).
 Re-derived directly against the working tree at pin time — NOT copied from
 the brief's recon list. The brief's recon figure (10 files / 11 hits) was
@@ -38,7 +38,7 @@ PATTERN = re.compile(r"state anchor|state-anchor")
 EXCLUDED_RELATIVE_PATHS = frozenset(
     {
         "loom-code/CHANGELOG.md",
-        "loom-pipeline/hooks/test-prompts.json",
+        "loom-code/hooks/test-prompts.json",
     }
 )
 
@@ -54,7 +54,7 @@ EXPECTED_INVENTORY = {
     "loom-code/skills/requesting-code-review/test-prompts.json": 1,
     "loom-code/skills/subagent-driven-development/SKILL.md": 3,
     "loom-code/skills/using-loom-code/SKILL.md": 1,
-    "loom-pipeline/hooks/family-relay.md": 1,
+    "loom-code/hooks/family-relay.md": 1,
 }
 
 

@@ -30,7 +30,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-RECEPTION = "loom-pipeline/hooks/family-reception.md"
+RECEPTION = "loom-code/hooks/family-reception.md"
 
 SECTION_HEADING = "## Brief before a complex fork"
 

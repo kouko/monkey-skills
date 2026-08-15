@@ -3,7 +3,7 @@
 The exact, ordered checklist a **scheduled / unattended** invocation follows
 to execute **one** already-frozen Phase 2 backlog item. This document is the
 whole contract for the execution stage: it dispatches loom-code SDD
-execution (loom-pipeline batch mode's **segment 3**) against a plan a human
+execution (loom-design batch mode's **segment 3**) against a plan a human
 has already written and a reviewer has already PASSed — nothing more.
 
 > **Scope, stated once and enforced throughout.** This stage NEVER explores
@@ -40,7 +40,7 @@ Call `safety_gates.is_nightly_paused(Path("<root>/docs/loom/PHASE2_LOOP_PAUSED")
 Before selecting or dispatching anything, run:
 
 ```
-python3 loom-pipeline/scripts/batch_queue.py reconcile --project <root>
+python3 loom-design/scripts/pipeline/batch_queue.py reconcile --project <root>
 ```
 
 This scans every `RUNNING` entry left over from a prior invocation against
@@ -55,7 +55,7 @@ breaker or the done-check below.
 ## Step 3 — Pick the next frozen entry
 
 ```
-python3 loom-pipeline/scripts/batch_queue.py next --project <root> --skills-root <root>
+python3 loom-design/scripts/pipeline/batch_queue.py next --project <root> --skills-root <root>
 ```
 
 `next` re-runs reconcile internally, enforces the freeze predicate
@@ -159,7 +159,7 @@ Then call `safety_gates.requires_real_agent_surface(description)`.
      and make Step 2's `reconcile` report a false `SUSPECT` on the next
      invocation:
      ```
-     python3 loom-pipeline/scripts/batch_queue.py force-fail <id> \
+     python3 loom-design/scripts/pipeline/batch_queue.py force-fail <id> \
        --project <root> --reason "scope guard: real-agent surface, needs human scoping"
      ```
      `force-fail` is the only valid transition out of `RUNNING` here (`reset`
@@ -196,7 +196,7 @@ should be.
 The moment `Workflow()` returns its run id and session directory, run:
 
 ```
-python3 loom-pipeline/scripts/batch_queue.py mark-running <id> \
+python3 loom-design/scripts/pipeline/batch_queue.py mark-running <id> \
   --project <root> --run-id <runId> --session-dir <dir>
 ```
 
@@ -231,13 +231,13 @@ with no journal line: that is indistinguishable from a crash.
 When execution finishes, record the outcome:
 
 ```
-python3 loom-pipeline/scripts/batch_queue.py mark <id> done --project <root>
+python3 loom-design/scripts/pipeline/batch_queue.py mark <id> done --project <root>
 ```
 
 or, on failure:
 
 ```
-python3 loom-pipeline/scripts/batch_queue.py mark <id> failed \
+python3 loom-design/scripts/pipeline/batch_queue.py mark <id> failed \
   --project <root> --reason "<one-line reason>"
 ```
 

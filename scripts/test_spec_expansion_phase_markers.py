@@ -44,7 +44,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SKILL_REL = "loom-spec/skills/spec-expansion/SKILL.md"
+SKILL_REL = "loom-design/skills/spec-expansion/SKILL.md"
 
 # The verbatim-to-chat phase marker: backtick + em-dash + space + Phase.
 # This shape appears ONLY in the 5 print-to-chat instructions; the
@@ -81,7 +81,7 @@ def check(root: Path) -> None:
             f"internal phase marker to chat (found {VERBATIM_CHAT_MARKER!r} "
             f"…). Chat must announce the step in the conversation language, "
             f"not print the internal English phase marker. See plain-relay "
-            f"rule 6 (loom-pipeline/hooks/plain-relay.md)."
+            f"rule 6 (loom-code/hooks/plain-relay.md)."
         )
 
     missing = [pid for pid in INTERNAL_PHASE_IDS if pid not in text]

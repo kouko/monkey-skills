@@ -1,9 +1,9 @@
-"""T6: dedup brief-before-fork — using-loom-discovery points at the SSOT.
+"""T6: dedup brief-before-fork — the design router points at the SSOT.
 
 The 6 router/skill copies of the brief-before-fork trigger template are
-collapsed to one source (`loom-pipeline/hooks/family-reception.md
+collapsed to one source (`loom-code/hooks/family-reception.md
 §Brief before a complex fork`, established by T5) + 6 pointers. This
-test covers the using-loom-discovery copy.
+test covers the consolidated using-loom-design router copy.
 
 WHY this test exists: a dedup that only *adds* a pointer while leaving
 the verbatim threshold copy in place is not a dedup — it doubles the
@@ -24,7 +24,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-SKILL_REL = "loom-discovery/skills/using-loom-discovery/SKILL.md"
+SKILL_REL = "loom-design/skills/using-loom-design/SKILL.md"
 
 # The pointer must name the SSOT file + section.
 POINTER_NEEDLE = "family-reception.md"
