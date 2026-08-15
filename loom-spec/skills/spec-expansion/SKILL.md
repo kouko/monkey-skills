@@ -137,9 +137,10 @@ persisted, skip this intake and treat the input as a generic seed.
 
 ## The three phases
 
-Run **three explicit phases in order**. Each phase (a) **announces itself**
-as it runs — print the exact marker line so the execution trace is visible —
-and (b) **emits a visible intermediate artifact** (a named `##` section in
+Run **three explicit phases in order**. Each phase (a) **announces itself
+in the conversation language** as it runs — say in plain words what the
+step does, never print an internal phase marker to chat — and (b)
+**emits a visible intermediate artifact** (a named `##` section in
 `proposal.md`) before the next phase starts. Provenance is tagged at every
 step. Do not collapse the phases into one silent pass: the visibility *is*
 the contract — a reader watching the run sees backbone → object model →
@@ -147,7 +148,7 @@ matrix appear in order, and can audit each before the spec is emitted.
 
 ### Phase ① USM — lay the user-journey backbone
 
-**Announce:** print `— Phase ① USM backbone —` before you start.
+**Announce:** before you start, say in the conversation language what this step does — e.g. "next I'll lay the user-journey backbone". The internal phase identifier (Phase ① USM backbone) stays in the artifact only; never print it to chat as a marker.
 
 **Seed-adequacy pre-flight (gate) — run this BEFORE you fan out.** A sparse
 seed sets the ceiling (honesty rail #1); fanning out a too-sparse seed
@@ -198,7 +199,7 @@ ordered list (or table) of the journey steps that form the spine.
 
 ### Phase ② OOUX — fan out the object model
 
-**Announce:** print `— Phase ② OOUX object model —` before you start.
+**Announce:** before you start, say in the conversation language what this step does — e.g. "next I'll fan out the object model". The internal phase identifier (Phase ② OOUX object model) stays in the artifact only; never print it to chat as a marker.
 
 For **each object** the journey touches, fan out **ORCA** — its:
 - **Objects** — confirm the object as a first-class noun,
@@ -234,7 +235,7 @@ Channel rule SSOT: `loom-pipeline/hooks/family-relay.md §(b) Visual defaults`.
 
 ### Phase ③ 自動拓展矩陣 (auto-expansion matrix) — grid, prune, emit
 
-**Announce:** print `— Phase ③ auto-expansion matrix —` before you start.
+**Announce:** before you start, say in the conversation language what this step does — e.g. "next I'll build and prune the auto-expansion matrix". The internal phase identifier (Phase ③ auto-expansion matrix) stays in the artifact only; never print it to chat as a marker.
 
 **Build the grid (cartesian, mechanical).** Take the cartesian product
 `backbone × object × CTA × state`. Each cell is a candidate path/edge. This
@@ -293,7 +294,7 @@ padding (Rule 12, fail loud).
 — the grid plus the surviving paths/edges that remain post-prune.
 
 **Phase ③b — cross-object combinations.**
-Announce `— Phase ③b cross-object combinations —`.
+**Announce:** say in the conversation language what this step does — e.g. "next I'll enumerate cross-object combinations for interaction-dense stages". The internal phase identifier (Phase ③b cross-object combinations) stays in the artifact only; never print it to chat as a marker.
 For each flow-stage, identify the **co-active objects** on that stage (the
 objects simultaneously live), enumerate their **joint state combinations**,
 and specify the **reaction each combination requires** (what the system must
@@ -327,7 +328,7 @@ honesty rail: an honest "pairwise-covered + listed residue" beats a fabricated
 full grid.
 
 **Phase ③c — journey-navigation coverage.**
-Announce `— Phase ③c journey navigation —`.
+**Announce:** say in the conversation language what this step does — e.g. "next I'll walk every navigation edge for journey coverage". The internal phase identifier (Phase ③c journey navigation) stays in the artifact only; never print it to chat as a marker.
 Apply **0-switch state-transition coverage** to the navigation
 graph from Phase ①: **walk every navigation edge exactly once** and, for each
 legal transition, specify the **reaction it requires** (what the system must do
