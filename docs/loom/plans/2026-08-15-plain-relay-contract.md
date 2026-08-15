@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-15-plain-relay-contract.md
 Goal: 新增一份白話轉譯契約 + 一張每次回覆注入的觸發卡 + 修五個外洩點 + 去重重複的 brief-before-fork 樣板,讓 loom skill 回覆不再把內部詞彙外洩給使用者
-Stage: planning
+Stage: finishing
 Steps:
   1. 建立白話契約檔與各自獨立的外洩點修補(無相依)
   2. 注入觸發卡並在三處加上指向契約的指標(需契約存在)
@@ -54,7 +54,7 @@ flowchart LR
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: "One plain-relay contract (loom-pipeline/hooks/plain-relay.md): 7 rules … + a token→meaning glossary + one ✅/❌ calibration pair"
-- **Status**: pending
+- **Status**: done(4ff504ef)
 - **Gloss**: 一份全家共用的白話轉譯契約誕生——後續所有指向與觸發卡都 reference 它,這是整個白話化的單一來源。
 
 ## Task 2 — Inject PLAIN-RELAY trigger card into the SessionStart reception
@@ -84,7 +84,7 @@ flowchart LR
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: "One injected trigger card (≤6 lines, appended to the SessionStart hook that already injects the Loom Family Reception) — the imperative short card the local A/B proved"
-- **Status**: pending
+- **Status**: done(6857e92c)
 - **Gloss**: 一張每次 session 開始就預載的短命令卡,把「白話回覆」從「需要記得」變成「每輪自動綁定」——A/B 證明注入短卡有效、供查閱長文無效。
 
 ## Task 3 — Point family-relay.md at the plain-relay contract
@@ -101,7 +101,7 @@ flowchart LR
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: "family-relay.md + relay-phrasing.md gain a one-line pointer to plain-relay" (family-relay half)
-- **Status**: pending
+- **Status**: done(b4f5ba55)
 - **Gloss**: 讓 relay 機制的 SSOT 檔也指向白話契約,讀到 relay 規則的人不會漏掉白話要求。
 
 ## Task 4 — Point relay-phrasing.md at the plain-relay contract
@@ -118,7 +118,7 @@ flowchart LR
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: "family-relay.md + relay-phrasing.md gain a one-line pointer to plain-relay" (relay-phrasing half)
-- **Status**: pending
+- **Status**: done(16a1c52c)
 - **Gloss**: 原本只在一個 skill 用的轉述規則,現在掛鉤到家族級白話契約,避免讀者以為它只是局部規則。
 
 ## Task 5 — Establish brief-before-fork SSOT in the reception
@@ -136,7 +136,7 @@ flowchart LR
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
 - **Brief item covered**: "dedup brief-before-fork: 6 full copies + 2 partial → one source, rest point" (the one-source half)
-- **Status**: pending
+- **Status**: done(a46e4b5e)
 - **Gloss**: 把散在六處的「複雜分岔前先簡報」規則收成一個權威來源,讓後續六處只需指向它,不再各自複製。
 
 ## Task 6 — Replace brief-before-fork copy in using-loom-discovery with a pointer
@@ -153,7 +153,7 @@ flowchart LR
 - **Dependencies**: Task 5 completes first
 - **Independent**: true
 - **Brief item covered**: "dedup brief-before-fork: 6 full copies + 2 partial → one source, rest point" (discovery copy)
-- **Status**: pending
+- **Status**: done(90b890b3)
 - **Gloss**: discovery 路由器不再自己背一份簡報規則,改成指向家族單一來源——少一份就少一處將來會飄的複本。
 
 ## Task 7 — Replace brief-before-fork copy in using-loom-interface-design with a pointer
@@ -170,7 +170,7 @@ flowchart LR
 - **Dependencies**: Task 5 completes first
 - **Independent**: true
 - **Brief item covered**: "dedup brief-before-fork: 6 full copies + 2 partial → one source, rest point" (interface copy)
-- **Status**: pending
+- **Status**: done(7e8ce46a)
 - **Gloss**: interface-design 路由器改指向單一來源,簡報規則只在 reception 維護一份。
 
 ## Task 8 — Replace brief-before-fork copy in using-loom-product-principles with a pointer
@@ -187,7 +187,7 @@ flowchart LR
 - **Dependencies**: Task 5 completes first
 - **Independent**: true
 - **Brief item covered**: "dedup brief-before-fork: 6 full copies + 2 partial → one source, rest point" (principles copy)
-- **Status**: pending
+- **Status**: done(9f190e07)
 - **Gloss**: product-principles 路由器改指向單一來源。
 
 ## Task 9 — Replace brief-before-fork copy in using-loom-spec with a pointer
@@ -204,7 +204,7 @@ flowchart LR
 - **Dependencies**: Task 5 completes first
 - **Independent**: true
 - **Brief item covered**: "dedup brief-before-fork: 6 full copies + 2 partial → one source, rest point" (spec copy)
-- **Status**: pending
+- **Status**: done(24ab1675)
 - **Gloss**: spec 路由器改指向單一來源。
 
 ## Task 10 — Replace brief-before-fork copy in brainstorming with a pointer
@@ -221,7 +221,7 @@ flowchart LR
 - **Dependencies**: Task 5 completes first
 - **Independent**: true
 - **Brief item covered**: "dedup brief-before-fork: 6 full copies + 2 partial → one source, rest point" (brainstorming copy)
-- **Status**: pending
+- **Status**: done(8bc0f516)
 - **Gloss**: brainstorming skill 改指向單一來源(此檔的 axis4 模板重排由 Task 14 另行處理,不同檔不衝突)。
 
 ## Task 11 — Replace brief-before-fork copy in subagent-driven-development with a pointer
@@ -238,7 +238,7 @@ flowchart LR
 - **Dependencies**: Task 5 completes first
 - **Independent**: true
 - **Brief item covered**: "dedup brief-before-fork: 6 full copies + 2 partial → one source, rest point" (SDD copy)
-- **Status**: pending
+- **Status**: done(f1a76066)
 - **Gloss**: SDD skill 改指向單一來源,六處簡報規則從此只維護一份。
 
 ## Task 12 — Announce spec-expansion phases in conversation language, not internal markers
@@ -255,7 +255,7 @@ flowchart LR
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: "spec-expansion → announce step in conversation language, internal marker only in artifact" (SE3 leak-point)
-- **Status**: pending
+- **Status**: done(e2cb158b)
 - **Gloss**: spec 展開過程不再把「Phase ① USM backbone」這類內部標記印給使用者,改成白話說「下一步在做什麼」。
 
 ## Task 13 — Prepend a user-facing plain line to each git-guard MSG_* block message
@@ -275,7 +275,7 @@ flowchart LR
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: "git-guard MSG_* → prepend a user-facing plain line" (SE3 leak-point, corrected framing: messages already have action directives but are model-facing stderr)
-- **Status**: pending
+- **Status**: done(84a7e539)
 - **Gloss: 推送被擋下時,使用者先看到一句白話「發生什麼+兩個出路」,不用先解碼「review-PASS marker」才能知道怎麼辦。
 
 ## Task 14 — Reorder brainstorming research-results template: recommendation first
@@ -293,7 +293,7 @@ flowchart LR
 - **Dependencies**: Task 10 completes first
 - **Independent**: false
 - **Brief item covered**: "brainstorming axis4 → recommendation first" (SE3 leak-point)
-- **Status**: pending
+- **Status**: done(f3bbbff5)
 - **Gloss: 研究結果一開頭就講「所以選哪個」,使用者不用讀完三個方案的優缺點才看到建議。
 
 ## Task 15 — Collapse finishing close-out N/A noise into one summary line
@@ -310,7 +310,7 @@ flowchart LR
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: "finishing → collapse N/A noise into one summary line after the conclusion" (SE3 leak-point)
-- **Status**: pending
+- **Status**: done(08f1c7bf)
 - **Gloss: 收尾報告不再先印四五行「N/A — 檢查不存在」雜訊,改成結論之後一行帶過。
 
 ## Task 16 — Add plain-relay pointer to verification-before-completion
@@ -327,7 +327,7 @@ flowchart LR
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: "verification-before-completion → one-line pointer to plain-relay" (SE3 leak-point — the coverage hole)
-- **Status**: pending
+- **Status**: done(959d12f8)
 - **Gloss: 「做完了」這個最需要一句白話的時刻,從此也被白話契約接管,不再是 relay 規則的覆蓋洞。
 
 ## Notes
