@@ -109,12 +109,12 @@ Role boundaries enforced by behavior, not reading restrictions:
   read; rc=0 when the Codex manifest's shared fields match the Claude
   SSOT, rc=1 on divergence.
 - **Rebuild the loom-pipeline driver asset**:
-  `python3 loom-pipeline/scripts/build_driver.py` — concatenates
-  `loom-pipeline/scripts/driver_NN_*.js` sources in filename order into
-  `loom-pipeline/skills/using-loom-pipeline/assets/loom-pipeline.js`;
+  `python3 loom-design/scripts/pipeline/build_driver.py` — concatenates
+  `loom-design/scripts/pipeline/driver_NN_*.js` sources in filename order into
+  `loom-design/skills/using-loom-pipeline/assets/loom-pipeline.js`;
   `--out <path>` builds to an alternate path instead.
 - **Drive loom-pipeline batch mode's queue bookkeeping**:
-  `python3 loom-pipeline/scripts/batch_queue.py {next|mark|mark-running|reconcile|reset|force-fail|status}` —
+  `python3 loom-design/scripts/pipeline/batch_queue.py {next|mark|mark-running|reconcile|reset|force-fail|status}` —
   deterministic dispatcher-loop CLI over `docs/loom/QUEUE.toml` (human
   intent) and `docs/loom/queue-state.json` (machine state); `next` emits
   ready-to-use `Workflow` args, `mark` records done/failed, `status`
@@ -174,7 +174,7 @@ Role boundaries enforced by behavior, not reading restrictions:
   (`safety_gates.py` kill switch + scope guard, `journal_writer.py`,
   `queue_entry.py` entry authoring + backlog-description lookup), the
   cross-plugin integration proof against
-  `loom-pipeline/scripts/batch_queue.py`, and the structural-completeness
+  `loom-design/scripts/pipeline/batch_queue.py`, and the structural-completeness
   test for `ROUTINE.md` (the only doc in the directory — there is no
   schedule doc). Pure stdlib plus pytest, so no dedicated venv is required;
   this directory IS already covered by CI, since `loom-code-ci.yml` runs
