@@ -20,19 +20,19 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'loom-spec/**'
+      - 'loom-design/**'
       - '.github/workflows/loom-spec-ci.yml'
   push:
     branches: [main]
     paths:
-      - 'loom-spec/**'
+      - 'loom-design/**'
 
 permissions:
   contents: read
 
 jobs:
   test:
-    name: loom-spec pytest
+    name: loom-design spec pytest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -47,7 +47,7 @@ jobs:
         # pytest = test runner. The validators are pure stdlib.
         run: python3 -m pip install --quiet pytest
 
-      - name: Run loom-spec scripts/ pytest suite
+      - name: Run loom-design scripts/spec pytest suite
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m pytest loom-spec/scripts/ -v
+        run: python3 -m pytest loom-design/scripts/spec/ -v

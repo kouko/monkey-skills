@@ -1,6 +1,6 @@
-name: loom-pipeline CI
+name: loom-design CI
 
-# Runs the loom-pipeline plugin's pytest suite (loom-pipeline/scripts/),
+# Runs the loom-design plugin's pytest suite (loom-design/scripts/pipeline/),
 # including the driver-build tests and the build-drift regression test
 # that checks the generated driver stays in sync with its js segment
 # sources. This plugin previously had NO CI coverage.
@@ -26,7 +26,11 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'loom-pipeline/**'
+      - 'loom-design/**'
+      # The pipeline plugin's hooks and loom-memory skill now live under
+      # loom-code/, so edits there must fire this gate too.
+      - 'loom-code/hooks/**'
+      - 'loom-code/skills/loom-memory/**'
       # test_pipeline_marketplace_entry.py reads the repo-root
       # marketplace.json, so an edit there must fire this gate too —
       # else a removed/renamed entry merges ungated (fail-open).
@@ -35,7 +39,9 @@ on:
   push:
     branches: [main]
     paths:
-      - 'loom-pipeline/**'
+      - 'loom-design/**'
+      - 'loom-code/hooks/**'
+      - 'loom-code/skills/loom-memory/**'
       - '.claude-plugin/marketplace.json'
       - '.github/workflows/loom-pipeline-ci.yml'
 
@@ -44,7 +50,7 @@ permissions:
 
 jobs:
   pipeline:
-    name: loom-pipeline pytest
+    name: loom-design pytest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -60,7 +66,7 @@ jobs:
         # self-test parses YAML.
         run: python3 -m pip install --quiet pytest pyyaml
 
-      - name: Run loom-pipeline scripts/ pytest suite
+      - name: Run loom-design scripts/pipeline pytest suite
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m pytest loom-pipeline/scripts/ -q
+        run: python3 -m pytest loom-design/scripts/pipeline/ -q

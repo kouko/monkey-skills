@@ -46,17 +46,9 @@ jobs:
         if: ${{ !cancelled() }}
         run: python3 scripts/check-skill-structure.py loom-code
 
-      - name: Run check-skill-structure.py against loom-spec
+      - name: Run check-skill-structure.py against loom-design
         if: ${{ !cancelled() }}
-        run: python3 scripts/check-skill-structure.py loom-spec
-
-      - name: Run check-skill-structure.py against loom-interface-design
-        if: ${{ !cancelled() }}
-        run: python3 scripts/check-skill-structure.py loom-interface-design
-
-      - name: Run check-skill-structure.py against loom-product-principles
-        if: ${{ !cancelled() }}
-        run: python3 scripts/check-skill-structure.py loom-product-principles
+        run: python3 scripts/check-skill-structure.py loom-design
 
       - name: Run check-skill-structure.py against copywriting-toolkit
         if: ${{ !cancelled() }}

@@ -22,9 +22,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'loom-interface-design/**'
-      - 'loom-product-principles/**'
-      - 'loom-discovery/**'
+      - 'loom-design/**'
       # Both plugins' test_marketplace_entry.py read the repo-root
       # marketplace.json, so an edit there must fire this gate too —
       # else a removed/renamed entry merges ungated (fail-open).
@@ -33,9 +31,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'loom-interface-design/**'
-      - 'loom-product-principles/**'
-      - 'loom-discovery/**'
+      - 'loom-design/**'
       - '.claude-plugin/marketplace.json'
 
 permissions:
@@ -43,7 +39,7 @@ permissions:
 
 jobs:
   interface-design:
-    name: loom-interface-design pytest
+    name: loom-design interface pytest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -58,13 +54,13 @@ jobs:
         # pytest = test runner. The validators are pure stdlib.
         run: python3 -m pip install --quiet pytest
 
-      - name: Run loom-interface-design scripts/ pytest suite
+      - name: Run loom-design scripts/interface pytest suite
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m pytest loom-interface-design/scripts/ -v
+        run: python3 -m pytest loom-design/scripts/interface/ -v
 
   product-principles:
-    name: loom-product-principles pytest
+    name: loom-design principles pytest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -78,13 +74,13 @@ jobs:
       - name: Install test deps
         run: python3 -m pip install --quiet pytest
 
-      - name: Run loom-product-principles scripts/ pytest suite
+      - name: Run loom-design scripts/principles pytest suite
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m pytest loom-product-principles/scripts/ -v
+        run: python3 -m pytest loom-design/scripts/principles/ -v
 
   discovery:
-    name: loom-discovery pytest
+    name: loom-design discovery pytest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -98,7 +94,7 @@ jobs:
       - name: Install test deps
         run: python3 -m pip install --quiet pytest
 
-      - name: Run loom-discovery scripts/ pytest suite
+      - name: Run loom-design scripts/discovery pytest suite
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m pytest loom-discovery/scripts/ -v
+        run: python3 -m pytest loom-design/scripts/discovery/ -v
