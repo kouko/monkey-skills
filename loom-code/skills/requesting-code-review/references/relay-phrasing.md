@@ -21,6 +21,10 @@ This skill mostly relays a verdict and asks the user to choose: fix the findings
 
 ## ③ How to phrase
 
+> These seven rules are one instance of the family-wide plain-language
+> contract — see [`loom-pipeline/hooks/plain-relay.md`](../../../../loom-pipeline/hooks/plain-relay.md)
+> for the shared glossary, hard caps, and conclusion-first discipline.
+
 Seven rules:
 
 1. **Outcome, not mechanism.** Each finding says what it *means for the user* and what they should do ("this branch ships a circular dependency — fix before merge"), not just the rule name it tripped ("violates arch-gate D3").
