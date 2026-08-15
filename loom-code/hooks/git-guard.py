@@ -112,17 +112,26 @@ ENV_ASSIGN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 REVIEW_VERDICTS = {"PASS", "PASS_WITH_NOTES"}
 
 MSG_NO_VERIFY = (
+    "What happened: the commit tried to skip the pre-commit hooks. "
+    "Your two options: drop --no-verify and let the hooks run, or ask "
+    "the user to waive this push. "
     "loom gate: `git commit --no-verify` / `-n` is blocked — pre-commit "
     "hooks are load-bearing in this repo. Drop the flag and let the hooks "
     "run (loom-code gate)."
 )
 MSG_REVIEW = (
+    "What happened: this push needs a passing code review that is not on "
+    "record yet. Your two options: run loom-code:requesting-code-review to "
+    "a PASS / PASS_WITH_NOTES verdict, or ask the user to waive this push. "
     "loom gate: no fresh review-PASS marker for the current HEAD. Run "
     "loom-code:requesting-code-review to a PASS / PASS_WITH_NOTES verdict "
     "first, or ask the user to waive this push (the orchestrator then "
     "writes the waiver via loom-code/scripts/loom_gate_markers.py)."
 )
 MSG_VERIFIED = (
+    "What happened: this push needs a verified green test run that is not "
+    "on record yet. Your two options: run the package-level test suite "
+    "green and write the marker, or ask the user to waive this push. "
     "loom gate: no fresh verification marker for the current HEAD. Run the "
     "package-level test suite green, then write the marker via "
     "loom-code/scripts/loom_gate_markers.py verified."

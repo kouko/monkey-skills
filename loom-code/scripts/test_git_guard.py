@@ -428,6 +428,38 @@ def test_push_blocked_stale_verified_sha(repo):
     assert res.returncode == 2
 
 
+# --- plain summary line prepended to MSG_* block messages -------------------
+
+
+def test_msg_constants_carry_plain_line(repo):
+    # The blocked-push stderr is model-facing jargon; a one-line plain
+    # summary ("What happened" + the two options) is PREPENDED to each
+    # MSG_* so the agent can relay it instead of pasting raw jargon. The
+    # existing model-facing directives and discriminator substrings must
+    # remain present (the plain line is additive, not a replacement).
+    PLAIN_MARKER = "What happened:"
+
+    # Case 1: --no-verify block → MSG_NO_VERIFY.
+    res_nv = run_hook(bash_event("git commit --no-verify -m x", cwd=repo))
+    assert res_nv.returncode == 2
+    assert PLAIN_MARKER in res_nv.stderr
+    assert "load-bearing" in res_nv.stderr  # existing discriminator preserved
+
+    # Case 2: push with no review marker → MSG_REVIEW.
+    res_rev = run_hook(bash_event("git push", cwd=repo))
+    assert res_rev.returncode == 2
+    assert PLAIN_MARKER in res_rev.stderr
+    assert "requesting-code-review" in res_rev.stderr  # existing discriminator
+
+    # Case 3: push with fresh review but no verified marker → MSG_VERIFIED.
+    write_review_pass(repo)
+    res_ver = run_hook(bash_event("git push", cwd=repo))
+    assert res_ver.returncode == 2
+    assert PLAIN_MARKER in res_ver.stderr
+    assert "verification marker" in res_ver.stderr  # existing discriminator
+    assert "requesting-code-review" not in res_ver.stderr  # discriminator preserved
+
+
 # --- schema field is validated on every marker -------------------------------
 
 
