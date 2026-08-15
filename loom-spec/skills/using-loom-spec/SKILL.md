@@ -16,7 +16,7 @@ If you are a subagent already dispatched with an explicit role prompt, **do not*
 it is the thin entry that decides which of loom-spec's two member skills the
 work needs, after checking whether spec work is even the right station yet.
 
-**Brief before you ask a complex spec fork.** Before you ask the user a spec fork this complex — **≥3 trade-offs, ≥2 implementation paths, or architectural blast radius** — run `dev-workflow:brief-before-asking` first instead of improvising the question.
+**Brief before you ask a complex spec fork.** When the spec fork is complex enough to warrant a brief, run `dev-workflow:brief-before-asking` first instead of improvising the question — the trigger threshold and stakes-first framing live in `loom-pipeline/hooks/family-reception.md §Brief before a complex fork` (the single source; reference it, don't copy it).
 </EXTREMELY-IMPORTANT>
 
 ## §Intake
