@@ -55,7 +55,7 @@ When that axis question fires, phrase it for the warm-but-interrupted user who r
 
 These three join the two gates already woven into the axes: gate ① (ask only when genuinely uncertain) lives in **Axis 1** as the confident-JTBD-read rule — state a confident reading as a committed interpretation rather than re-asking — and gate ② (bring a recommendation, not an open question) lives in **Axis 4** as the research-then-"My take: Recommend / Why / Conditional reversal" protocol; together the three read as one coherent set.
 
-**Above all — brief first when the fork is complex.** The trigger threshold and stakes-first framing live in `loom-pipeline/hooks/family-reception.md §Brief before a complex fork` — run `dev-workflow:brief-before-asking` before firing the `AskUserQuestion` for an axis fork.
+**Above all — brief first when the fork is complex.** The trigger threshold and stakes-first framing live in `loom-pipeline/hooks/family-reception.md §Brief before a complex fork` — run `dev-workflow:brief-before-asking` before firing the `AskUserQuestion` for an axis fork. When the brief presents ≥2 options, render them as a markdown comparison table by default (a trivial binary ask may stay prose) — per `loom-pipeline/hooks/family-relay.md §Family relay discipline`.
 
 ### Axis 0 — Upstream artifacts (family §Intake)
 
