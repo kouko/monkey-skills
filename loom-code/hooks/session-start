@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # SessionStart hook for loom-code.
 # Reads hooks/router-card.md (slim pre-invocation card: coding mandate +
-# five load-bearing rules + SUBAGENT-STOP) and injects it as
-# additionalContext. The full using-loom-code SKILL.md body is NOT
-# injected — the Skill tool loads it on invocation (pull, not push).
+# five load-bearing rules + SUBAGENT-STOP) AND hooks/family-reception.md
+# (loom family front door: family map + three doors + on-ramp criteria) and
+# injects both as additionalContext. The full using-loom-code SKILL.md body
+# is NOT injected — the Skill tool loads it on invocation (pull, not push).
 # Rationale + firing gate: docs/loom/plans/2026-07-06-loom-code-router-card-slim.md.
 # DRIFT NOTE: router-card.md's five rules are a hand-maintained tightened
 # copy of skills/using-loom-code/SKILL.md's — edit BOTH on any rule change
@@ -67,6 +68,38 @@ escaped="$(escape_for_json "${content}")"
 banner_open='<EXTREMELY_IMPORTANT>\nYou have loom-code. Routing through this skill is mandatory when applicable.\n\n'
 banner_close='\n</EXTREMELY_IMPORTANT>'
 context="${banner_open}${escaped}${banner_close}"
+
+# Family reception (front door) — merged from loom-pipeline/hooks/session-start.
+# Reference: docs/loom/specs/2026-07-04-loom-family-connective-tissue.md
+RECEPTION_PATH="${SCRIPT_DIR}/family-reception.md"
+FAMILY_RELAY_PATH="${SCRIPT_DIR}/family-relay.md"
+
+# Reception file missing → skip silently (router still injects; fail open).
+if [ -f "${RECEPTION_PATH}" ]; then
+  reception="$(cat "${RECEPTION_PATH}")"
+
+  # Extract "### (b) Visual defaults" from family-relay.md AT RUNTIME
+  # (heading-boundary awk range) and append it to the injected reception.
+  # family-relay.md stays the SSOT — this script must never carry a copy of
+  # the rule text. Fail open: missing file or missing section → skip
+  # silently, reception still injects without it.
+  if [ -f "${FAMILY_RELAY_PATH}" ]; then
+    visual_defaults="$(awk '/^### \(b\) Visual defaults/{flag=1} /^### \(c\)/{flag=0} flag' "${FAMILY_RELAY_PATH}")"
+    if [ -n "${visual_defaults}" ]; then
+      reception="${reception}
+${visual_defaults}"
+    fi
+  fi
+
+  escaped_reception="$(escape_for_json "${reception}")"
+
+  # Wrap in EXTREMELY-IMPORTANT block so the agent treats the reception as
+  # load-bearing awareness (not a mandate — the reception recommends, it does
+  # not gate).
+  reception_banner_open='<EXTREMELY_IMPORTANT>\nYou have the loom family of plugins available. Read this reception before deciding where to route work.\n\n'
+  reception_banner_close='\n</EXTREMELY_IMPORTANT>'
+  context="${context}\n\n${reception_banner_open}${escaped_reception}${reception_banner_close}"
+fi
 
 # Emit canonical nested key + both defensive top-level keys (same content).
 printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s"},"additional_context":"%s","additionalContext":"%s"}\n' \
