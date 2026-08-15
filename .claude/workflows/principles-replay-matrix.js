@@ -1,6 +1,6 @@
 export const meta = {
   name: 'principles-replay-matrix',
-  description: 'L1 regression matrix for loom-product-principles: fans out one haiku headless replay per seed to a sandbox, then grades each artifact mechanically (validator + seed-traceability checker; no LLM self-report anywhere in the verdict path) and returns a per-seed pass table + overall pass-rate. Eval semantics over non-deterministic replays — never wired into CI.',
+  description: 'L1 regression matrix for loom-design: fans out one haiku headless replay per seed to a sandbox, then grades each artifact mechanically (validator + seed-traceability checker; no LLM self-report anywhere in the verdict path) and returns a per-seed pass table + overall pass-rate. Eval semantics over non-deterministic replays — never wired into CI.',
   phases: [
     { title: 'Replay' },
     { title: 'Grade' },
@@ -8,7 +8,7 @@ export const meta = {
 }
 
 // Workflow runtime contract (grounded in .claude/workflows/code-toolkit-sweep.js
-// + loom-pipeline/scripts/driver_00_header.js + driver_10_guard.js — the only
+// + loom-design/scripts/pipeline/driver_00_header.js + driver_10_guard.js — the only
 // in-repo Workflow scripts): no non-deterministic timestamp/random calls
 // anywhere — a Workflow run can be paused and RESUMED from a journal, and
 // any of those would produce a different value on resume than on the
@@ -19,7 +19,7 @@ export const meta = {
 const ROOT = '/Users/kouko/GitHub/monkey-skills'
 const SEED_CORPUS_DIR = `${ROOT}/docs/loom/dogfood/2026-07-10-principles-flow-seed-corpus`
 const COLD_OPERATOR_SEED = `${ROOT}/docs/loom/dogfood/2026-07-10-principles-flow-cold-operator/seed.md`
-const SKILL_MD = `${ROOT}/loom-product-principles/skills/product-principles/SKILL.md`
+const SKILL_MD = `${ROOT}/loom-design/skills/product-principles/SKILL.md`
 
 const DEFAULT_SEEDS = [
   { id: 'seed1', input: `${SEED_CORPUS_DIR}/seed1-input.md`, oracle: `${SEED_CORPUS_DIR}/seed1-oracle.md` },
@@ -62,7 +62,7 @@ if (typeof runArgs.runLabel !== 'string' || runArgs.runLabel === '' || runArgs.r
 }
 // runLabel becomes a path segment (sandboxDir/runLabel/seed.id/...) AND is
 // interpolated into the grading courier's Bash instructions below — allow-list
-// rather than deny-list, mirroring loom-pipeline/scripts/driver_10_guard.js's
+// rather than deny-list, mirroring loom-design/scripts/pipeline/driver_10_guard.js's
 // changeId guard: only [A-Za-z0-9._-] is safe in both positions. A deny-list
 // (reject "/" and "..") lets shell-metacharacter labels like "foo$(x)" through;
 // an allow-list closes that hole by construction.
@@ -298,7 +298,7 @@ async function runSelfCheckCourier(seed, artifactPath, inventoryPath) {
     return await agent(
       `You are a SELF-CHECK COURIER. Run EXACTLY this command via Bash from the repo root ${ROOT}, and nothing else — do not open or read either file yourself, do not form an opinion about correctness, do not run any script other than this one:
 
-python3 loom-product-principles/scripts/check_seed_traceability.py ${artifactPath} ${inventoryPath}
+python3 loom-design/scripts/principles/check_seed_traceability.py ${artifactPath} ${inventoryPath}
 
 Return: exitCode (this command's exit code, a number), missLines (every stderr line the command printed, each already in \`<class>: <token>\` form — empty array when exitCode is 0).`,
       { phase: 'Replay', label: `selfcheck:${seed.id}`, schema: SELF_CHECK_SCHEMA }
@@ -331,7 +331,7 @@ const results = await pipeline(
     try {
       log(`replay:${seed.id}: dispatching headless replay (haiku) -> ${artifactPath}`)
       const replayResult = await agent(
-        `You are replaying the loom-product-principles \`product-principles\` skill in its "Headless / seeded mode" — no user is available; this is an on-demand regression replay, not a live authoring session.
+        `You are replaying the loom-design \`product-principles\` skill in its "Headless / seeded mode" — no user is available; this is an on-demand regression replay, not a live authoring session.
 
 STEPS:
 1. Read ${SKILL_MD} in full (the whole file — its "## Headless / seeded mode" section is the exact procedure to follow; earlier sections define the artifact contract it references, incl. references/principles-rules.md's — check: marker rule).
@@ -472,8 +472,8 @@ Return the artifact path you wrote.`,
       const g = await agent(
         `You are a GRADING COURIER. Run EXACTLY these two commands via Bash from the repo root ${ROOT}, and nothing else — do not open or read the artifact yourself, do not form an opinion about correctness, do not run any script other than these two:
 
-1. python3 loom-product-principles/scripts/validate_principles_output.py ${artifactPath}
-2. python3 loom-product-principles/scripts/check_seed_traceability.py ${artifactPath} ${seed.oracle}
+1. python3 loom-design/scripts/principles/validate_principles_output.py ${artifactPath}
+2. python3 loom-design/scripts/principles/check_seed_traceability.py ${artifactPath} ${seed.oracle}
 
 Save the raw stdout+stderr and exit code of BOTH commands, clearly labeled per command, to this exact path via the Write tool: ${gradeTxtPath}
 

@@ -1,6 +1,6 @@
 export const meta = {
   name: 'principles-improve-loop',
-  description: 'L3 autonomous improvement loop for loom-product-principles: nests the L1 replay matrix (principles-replay-matrix) on visible seeds, proposes ONE mechanical fixer edit per round, verifies it two-stage (win + confirmation re-run) plus a held-out smoke before accepting, and stops itself on a word-cap or plateau brake. Never merges or pushes — output is a human-reviewable proposal branch + round ledger + report.',
+  description: 'L3 autonomous improvement loop for loom-design: nests the L1 replay matrix (principles-replay-matrix) on visible seeds, proposes ONE mechanical fixer edit per round, verifies it two-stage (win + confirmation re-run) plus a held-out smoke before accepting, and stops itself on a word-cap or plateau brake. Never merges or pushes — output is a human-reviewable proposal branch + round ledger + report.',
   phases: [
     { title: 'Baseline' },
     { title: 'Fix' },
@@ -9,7 +9,7 @@ export const meta = {
 }
 
 // Workflow runtime contract (grounded in .claude/workflows/principles-replay-matrix.js
-// + code-toolkit-sweep.js + loom-pipeline/scripts/driver_*.js — the only in-repo
+// + code-toolkit-sweep.js + loom-design/scripts/pipeline/driver_*.js — the only in-repo
 // Workflow scripts): no non-deterministic timestamp/random calls anywhere — a
 // Workflow run can be paused and RESUMED from a journal, and any of those would
 // produce a different value on resume than on the original pass, silently
@@ -189,7 +189,7 @@ log(
 
 phase('Fix')
 
-const STATION_DIR = 'loom-product-principles/skills/product-principles'
+const STATION_DIR = 'loom-design/skills/product-principles'
 const STATION_SKILL_MD = `${STATION_DIR}/SKILL.md`
 
 // Fixer edit paths are restricted to STATION_DIR by an allow-list (per path
@@ -278,7 +278,7 @@ async function runFixer(round, failingRows) {
     .join('\n')
   try {
     return await agent(
-      `You are the FIXER stage, round ${round}, of an autonomous improvement loop over the loom-product-principles \`product-principles\` skill.
+      `You are the FIXER stage, round ${round}, of an autonomous improvement loop over the loom-design \`product-principles\` skill.
 
 STATION FILE you may propose edits to — the ONLY file you may target:
 ${STATION_SKILL_MD}
@@ -429,7 +429,7 @@ const ROUND_CAP = 3
 const roundsToRun = Math.min(maxRounds, ROUND_CAP)
 log(`Verify phase: running up to ${roundsToRun} round(s) (maxRounds=${maxRounds}, hard cap ${ROUND_CAP}).`)
 
-const VERDICT_CLI = 'loom-product-principles/scripts/improve_loop_verdict.py'
+const VERDICT_CLI = 'loom-design/scripts/principles/improve_loop_verdict.py'
 const VERDICT_SCHEMA = {
   type: 'object',
   required: ['exitCode', 'stderrTail'],
@@ -626,7 +626,7 @@ const COMMIT_SCHEMA = {
 }
 
 async function commitAcceptedRound(round, proposal) {
-  const subject = `fix(loom-product-principles): improve-loop round ${round} accepted edit`
+  const subject = `fix(loom-design): improve-loop round ${round} accepted edit`
   const body = `chose ${proposal.invariant} because ${proposal.rationale} — cost-of-change: revertible skill-text edit; validated by ${runArgs.runLabel} rounds`
   const messagePath = `${runArgs.sandboxDir}/${runArgs.runLabel}/commit-msg-round${round}.txt`
   try {
