@@ -26,6 +26,10 @@ Internal traffic (verdict tokens, wave labels, findings IDs) stays
 machine-precise **below** the card — the card is the user-facing
 headline, not a replacement for the record.
 
+> Plain-language contract: every user-visible chat line follows the
+> 7 rules + glossary in [`plain-relay.md`](plain-relay.md) — point
+> there, do not restate the rules here.
+
 #### Close-out card
 
 A close-out report (finishing Step 13, and any loom seam reporting a
