@@ -33,7 +33,7 @@ N/A — no unresolved question: 三個設計決定（D1 hooks→loom-code、D2 l
 - Dependencies: none
 - Independent: false
 - Brief item covered: 藍圖 §1.1 loom-design 目標結構（member skills + scripts + examples）
-- Status: pending
+- Status: done(f0aabc40)
 - Gloss: 建立 loom-design 骨架，git mv 保留歷史；scripts 用 per-plugin subdirs 規避碰撞
 
 ## Task 2 — 併 router：4 個 using-loom-* → using-loom-design
@@ -48,7 +48,7 @@ N/A — no unresolved question: 三個設計決定（D1 hooks→loom-code、D2 l
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: 藍圖 §2 改名對照（4 routers → using-loom-design）
-- Status: pending
+- Status: done(8aecf21d)
 - Gloss: 4 個設計 router 併成 1 個入口，骨架去重
 
 ## Task 3 — 搬 hooks：family hooks + hooks.json + session-start → loom-code
@@ -64,7 +64,7 @@ N/A — no unresolved question: 三個設計決定（D1 hooks→loom-code、D2 l
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: 藍圖 §1.2 loom-code 新增（家族 hooks）
-- Status: pending
+- Status: done(4874b93a)
 - Gloss: 家族連接組織搬進永遠開著的 loom-code，hooks.json 與 session-start 合併
 
 ## Task 4 — 搬 loom-memory → loom-code
@@ -79,7 +79,7 @@ N/A — no unresolved question: 三個設計決定（D1 hooks→loom-code、D2 l
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: 藍圖 §3 D2（loom-memory → loom-code，已定）
-- Status: pending
+- Status: done(2c1693d4)
 - Gloss: 家族實務記憶搬進 loom-code
 
 ## Notes
