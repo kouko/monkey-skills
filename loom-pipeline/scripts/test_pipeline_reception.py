@@ -35,11 +35,15 @@ def test_reception_content_contract():
     text = RECEPTION_MD.read_text()
     lower = text.lower()
 
-    # Line budget (brief §Open Q1): ≤60 non-empty lines, +1 for the
-    # sanctioned row-5 loom-init addition (plan 2026-08-10-loom-init-scaffold §Task 3).
+    # Line budget (brief §Open Q1): base ≤60 non-empty lines, +1 for the
+    # sanctioned row-5 loom-init addition (plan 2026-08-10-loom-init-scaffold §Task 3),
+    # + sanctioned plain-relay additions (plan 2026-08-15-plain-relay-contract):
+    #   the imperative <PLAIN-RELAY> trigger card (Task 2) and the
+    #   §Brief before a complex fork SSOT section (Task 5) — both load-bearing
+    #   per the frozen brief, so the reception budget grows to accommodate them.
     non_empty = _non_empty_lines(text)
-    assert len(non_empty) <= 61, (
-        f"family-reception.md has {len(non_empty)} non-empty lines, budget is 61"
+    assert len(non_empty) <= 85, (
+        f"family-reception.md has {len(non_empty)} non-empty lines, budget is 85"
     )
 
     # Family map: all five using-loom-* entries present.
