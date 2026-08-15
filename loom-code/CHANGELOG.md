@@ -5,7 +5,7 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
-## [0.82.0] — 2026-08-15 — plain-relay contract adoption + brief-before-fork dedup
+## [0.83.0] — 2026-08-15 — plain-relay contract adoption + brief-before-fork dedup
 
 ### Changed
 
@@ -36,6 +36,16 @@ Versioning: [Semantic Versioning](https://semver.org/).
   The "My take / Recommend / Why / Conditional reversal" block now precedes
   the enumerated alternatives, so the user sees the recommendation before
   the three options' pros/cons — conclusion-first per plain-relay rule 1.
+
+## [0.82.0] — 2026-08-15 — bundle mermaid.js + full markdown conversion
+
+### Added
+
+- Bundled mermaid.min.js (v11) as base64 data URL for fully self-contained HTML output.
+- markdown-it integration for full markdown-to-HTML conversion in rendition field.
+- Table support via markdown_it.rules_block.table.
+- Mermaid fences now render as <div class="mermaid"> for browser-side rendering.
+- Achromatic color system and proportional header sizing.
 
 ## [0.81.0] — 2026-08-14 — layered language policy for plan/spec artifacts
 
