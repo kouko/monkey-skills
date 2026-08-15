@@ -166,12 +166,13 @@ def test_entry_router_names_bba():
     applies, an on-ramp choice) must remind the agent to brief before
     asking (repo pattern: loom-pipeline/skills/using-loom-pipeline/
     SKILL.md gate (b); mirrored in loom-discovery/scripts/
-    test_using_skill.py::test_using_router_names_bba) — the router must
-    name the skill id and carry the trigger triple verbatim."""
+    test_using_skill.py::test_using_router_names_bba) — the router names
+    the skill id and points at the family SSOT for the trigger threshold
+    (the triple lives in family-reception.md §Brief before a complex fork,
+    not duplicated here post-dedup)."""
     text = _text()
     assert "dev-workflow:brief-before-asking" in text, \
         "router must name the dev-workflow:brief-before-asking skill id"
-    assert (
-        "≥3 trade-offs, ≥2 implementation paths, or architectural blast radius"
-        in text
-    ), "router must carry the trigger triple verbatim"
+    assert "family-reception.md" in text and "Brief before a complex fork" in text, \
+        "router must point at family-reception.md §Brief before a complex " \
+        "fork for the trigger threshold (dedup'd SSOT), not carry the triple"

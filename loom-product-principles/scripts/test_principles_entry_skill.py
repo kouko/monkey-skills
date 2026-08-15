@@ -131,16 +131,19 @@ def test_using_entry_intake_contract():
 
 
 def test_entry_router_names_bba():
-    """#475 complex-fork escalation: the router body must remind the
-    orchestrator to run dev-workflow:brief-before-asking before asking the
-    user a non-trivial trade-off fork — mirrors
-    loom-pipeline/skills/using-loom-pipeline/SKILL.md:158. Must name the
-    skill ID and carry the trigger triple verbatim."""
+    """#475 complex-fork escalation: the router body must point the
+    orchestrator at the family SSOT for the brief-before-fork trigger —
+    mirrors loom-pipeline/skills/using-loom-pipeline/SKILL.md:158. T8
+    (commit 9f190e07) replaced the WHOLE in-place brief-before-fork
+    template (skill id + trigger triple) with a one-line pointer to
+    family-reception.md §Brief before a complex fork, so the router no
+    longer names dev-workflow:brief-before-asking inline (the SSOT
+    carries it); this test asserts the pointer invariant T8 established."""
     text = _text()
-    assert "dev-workflow:brief-before-asking" in text, \
-        "router body must name dev-workflow:brief-before-asking"
-    assert "≥3 trade-offs, ≥2 implementation paths, or architectural blast radius" in text, \
-        "router body must carry the trigger triple verbatim"
+    assert "family-reception.md" in text and "Brief before a complex fork" in text, \
+        "router body must point at family-reception.md §Brief before a " \
+        "complex fork for the trigger threshold + brief-first rule " \
+        "(dedup'd SSOT; T8 removed the in-place skill-id + triple copy)"
 
 
 def test_skill_folder_is_flat():

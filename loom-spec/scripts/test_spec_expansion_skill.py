@@ -85,16 +85,33 @@ def test_three_explicit_phases_present():
 
 
 def test_phases_announced_during_execution():
-    """Each phase MUST be announced as it runs (visible execution trace)."""
+    """Each phase MUST be announced as it runs — in the CONVERSATION
+    language, not by printing the internal English phase marker to chat
+    (plain-relay rule 6 / T12). The chat announce instruction names a
+    conversation-language example ("next I'll ...") per phase; the
+    internal phase identifier stays referenced for the artifact only,
+    never printed to chat as a marker. Pre-T12 the skill instructed
+    printing `— Phase ① USM backbone —` verbatim to chat — a jargon
+    leak this test now guards against by asserting the new positive
+    invariant (the conversation-language announce instruction) instead
+    of the old verbatim marker."""
     text = _text()
-    # the literal announce markers the skill instructs the agent to emit
-    assert "— Phase ① USM backbone —" in text, \
-        "must instruct announcing Phase ① USM backbone"
-    assert "— Phase ② OOUX object model —" in text, \
-        "must instruct announcing Phase ② OOUX object model"
-    assert "— Phase ③ auto-expansion matrix —" in text, \
-        "must instruct announcing Phase ③ auto-expansion matrix"
     low = text.lower()
+    # the conversation-language announce instruction per phase — T12 replaced
+    # the verbatim chat-marker print with a "say in the conversation language
+    # what this step does" instruction carrying a per-phase "next I'll ..." example.
+    assert "conversation language" in low, \
+        "must instruct announcing each phase in the conversation language"
+    assert "next I'll lay the user-journey backbone" in text, \
+        "Phase ① must carry a conversation-language announce example " \
+        "('next I'll lay the user-journey backbone'), not the verbatim marker"
+    assert "next I'll fan out the object model" in text, \
+        "Phase ② must carry a conversation-language announce example " \
+        "('next I'll fan out the object model'), not the verbatim marker"
+    assert "next I'll build and prune the auto-expansion matrix" in text, \
+        "Phase ③ must carry a conversation-language announce example " \
+        "('next I'll build and prune the auto-expansion matrix'), not the " \
+        "verbatim marker"
     assert "announce" in low, "must instruct the agent to ANNOUNCE each phase"
 
 
@@ -210,12 +227,20 @@ def test_l3_journey_navigation_present():
     """The L3 journey-navigation layer: Phase ① ALSO builds the backbone as a
     navigation graph; a Phase ③c sub-step applies 0-switch state-transition
     coverage to it (broadly, any flow with ≥2 stages); proposal.md carries a
-    `## Journey navigation` section as the Phase ③c artifact."""
+    `## Journey navigation` section as the Phase ③c artifact. T12 replaced
+    the verbatim chat-marker print ('— Phase ③c journey navigation —') with
+    a conversation-language announce instruction; the internal phase
+    identifier stays in the artifact only."""
     text = _text()
     low = text.lower()
-    # the Phase ③c announce marker (exact bytes — validator hard-codes same)
-    assert "— Phase ③c journey navigation —" in text, \
-        "must announce '— Phase ③c journey navigation —'"
+    # the Phase ③c conversation-language announce example (T12 invariant) —
+    # pre-T12 this was a verbatim chat-marker print instruction, which would
+    # NOT contain the "next I'll ..." example phrase; so this assertion is
+    # RED-genuine (fails on pre-T12 SKILL.md).
+    assert "next I'll walk every navigation edge for journey coverage" in text, \
+        "Phase ③c must announce in the conversation language " \
+        "('next I'll walk every navigation edge for journey coverage'), " \
+        "not print the verbatim internal marker to chat"
     # the visible proposal.md artifact section (exact bytes)
     assert "## Journey navigation" in text, \
         "Phase ③c must emit a visible '## Journey navigation' section"
@@ -258,12 +283,20 @@ def test_l2_cross_object_combinations_present():
     per-stage joint state combinations of co-active objects, GATED on
     interaction-density; wide stages (≥4 co-active objects) call
     scripts/pairwise.py; proposal.md carries a `## Cross-object combinations`
-    section as the Phase ③b artifact."""
+    section as the Phase ③b artifact. T12 replaced the verbatim chat-marker
+    print ('— Phase ③b cross-object combinations —') with a conversation-
+    language announce instruction; the internal phase identifier stays in
+    the artifact only."""
     text = _text()
     low = text.lower()
-    # the Phase ③b announce marker (exact bytes — validator hard-codes same)
-    assert "— Phase ③b cross-object combinations —" in text, \
-        "must announce '— Phase ③b cross-object combinations —'"
+    # the Phase ③b conversation-language announce example (T12 invariant) —
+    # pre-T12 this was a verbatim chat-marker print instruction, which would
+    # NOT contain the "next I'll ..." example phrase; so this assertion is
+    # RED-genuine (fails on pre-T12 SKILL.md).
+    assert "next I'll enumerate cross-object combinations for interaction-dense stages" in text, \
+        "Phase ③b must announce in the conversation language ('next I'll " \
+        "enumerate cross-object combinations for interaction-dense stages'), " \
+        "not print the verbatim internal marker to chat"
     # the visible proposal.md artifact section (exact bytes)
     assert "## Cross-object combinations" in text, \
         "Phase ③b must emit a visible '## Cross-object combinations' section"

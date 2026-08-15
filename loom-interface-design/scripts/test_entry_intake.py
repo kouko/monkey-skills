@@ -147,13 +147,17 @@ def test_using_router_names_bba():
     Mirrors using-loom-pipeline's #475 complex-fork escalation
     (loom-pipeline/skills/using-loom-pipeline/SKILL.md:158): before the
     router lets a non-trivial design fork reach the user as a raw
-    question, it must name `dev-workflow:brief-before-asking` and carry
-    the canonical trigger triple verbatim, so the reminder fires at the
-    actual pre-ask moment (not just cited in the abstract).
+    question, it must name `dev-workflow:brief-before-asking` and point
+    at the family SSOT for the trigger threshold (the triple lives in
+    family-reception.md §Brief before a complex fork, not duplicated
+    here post-dedup), so the reminder fires at the actual pre-ask
+    moment (not just cited in the abstract).
     """
     body = _body()
 
     assert "dev-workflow:brief-before-asking" in body, \
         "router body must name dev-workflow:brief-before-asking"
-    assert "≥3 trade-offs, ≥2 implementation paths, or architectural blast radius" in body, \
-        "router body must carry the canonical trigger triple verbatim"
+    assert "family-reception.md" in body and "Brief before a complex fork" in body, \
+        "router body must point at family-reception.md §Brief before a " \
+        "complex fork for the trigger threshold (dedup'd SSOT), not " \
+        "carry the triple verbatim"
