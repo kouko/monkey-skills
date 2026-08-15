@@ -87,8 +87,16 @@ pad with bad alternatives to hit 3.
 
 ## Output format — surfacing alternatives to the user
 
+Lead with the recommendation (conclusion-first — plain-relay rule 1):
+the user learns "which one" before reading the alternatives' evidence.
+
 ```
 Industry approaches found (3, via WebSearch):
+
+My take (given your context):
+  Recommend: <approach #N>
+  Why: <1-2 sentences tying recommendation to user's brief + constraints>
+  Conditional reversal: <if X changes, prefer approach #M instead>
 
 1. <Approach name> — <source citation, e.g. RFC 6585, Cloudflare blog, Stripe API docs>
    • Pros: <2-3 bullets>
@@ -100,9 +108,4 @@ Industry approaches found (3, via WebSearch):
 
 3. <Approach name> — <source>
    ...
-
-My take (given your context):
-  Recommend: <approach #N>
-  Why: <1-2 sentences tying recommendation to user's brief + constraints>
-  Conditional reversal: <if X changes, prefer approach #M instead>
 ```
