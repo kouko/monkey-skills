@@ -5,6 +5,16 @@ You have the loom family of plugins available. One rule covers all of it:
 > **要用 loom-X, 就從 using-loom-X 開始.** Every plugin's entry point is its
 > `using-loom-*` skill — start there, it routes you the rest of the way.
 
+## Plain-relay trigger card
+
+<PLAIN-RELAY>
+Before EVERY user-visible reply while a loom skill is active:
+- 1st line = plain-language conclusion, in the conversation language.
+- Translate every internal token (PASS_WITH_NOTES, Axis, Wave, 🔴🟡🟢) — glossary: loom-pipeline/hooks/plain-relay.md.
+- Default reply ≤10 lines; ONE decision per ask (≤3 options + a recommended default).
+- Never lead with a raw gate/error string — plain words first.
+</PLAIN-RELAY>
+
 ## Family map
 
 - `using-loom-discovery` — jurisdiction: problem space (user-insights: needs
