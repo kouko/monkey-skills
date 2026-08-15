@@ -40,7 +40,7 @@ instead of proceeding here:
 - The problem/users are unarticulated (no evidence for who needs what) →
   `using-loom-discovery` first; resume here with its output as seed
 
-**Brief before you ask a complex product/principle fork.** Before you ask the user a product/principle fork this complex — **≥3 trade-offs, ≥2 implementation paths, or architectural blast radius** — run `dev-workflow:brief-before-asking` first instead of improvising the question.
+**Brief before you ask a complex product/principle fork.** See `loom-pipeline/hooks/family-reception.md §Brief before a complex fork` for the trigger threshold and the brief-first rule — do not duplicate it here.
 
 ### Step 3 — Hand off
 
