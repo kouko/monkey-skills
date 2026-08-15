@@ -59,10 +59,11 @@ member.
 
 **Step 4 — brief before a complex fork.** A discovery fork this router
 surfaces (a value commitment, an on-ramp choice) can itself be
-non-trivial. Before you ask the user a discovery fork this complex —
-**≥3 trade-offs, ≥2 implementation paths, or architectural blast radius**
-— run `dev-workflow:brief-before-asking` first instead of improvising
-the question.
+non-trivial. When the fork is complex enough to warrant a brief, run
+`dev-workflow:brief-before-asking` first instead of improvising the
+question — the trigger threshold and stakes-first framing live in
+`loom-pipeline/hooks/family-reception.md §Brief before a complex fork`
+(the single source; reference it, don't copy it).
 
 ## Family
 
