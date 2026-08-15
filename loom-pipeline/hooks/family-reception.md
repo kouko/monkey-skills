@@ -15,6 +15,22 @@ Before EVERY user-visible reply while a loom skill is active:
 - Never lead with a raw gate/error string — plain words first.
 </PLAIN-RELAY>
 
+## Brief before a complex fork
+
+When a fork this router surfaces is genuinely complex — **≥3 trade-offs,
+≥2 implementation paths, or architectural blast radius** — brief before
+you ask: run `dev-workflow:brief-before-asking` first, then fire the
+ask. The brief's first line states, in plain words, *what this choice
+changes for the user and why it matters* — the stakes come before the
+options, because a user can read three well-framed options and still
+not see the point. `dev-workflow:brief-before-asking` owns the 6-block
+briefing format (Mental Model first); the trigger threshold above is
+the canonical gate for when a fork is complex enough to warrant it.
+This is a floor, not politeness: an unbriefed complex fork hands the
+user a choice they cannot evaluate. The 6 router/skill copies of this
+rule point here — edit the threshold or framing in this section, not
+in the copies.
+
 ## Family map
 
 - `using-loom-discovery` — jurisdiction: problem space (user-insights: needs
