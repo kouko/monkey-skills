@@ -8,6 +8,15 @@ Versioning: [Semantic Versioning](https://semver.org/).
 > This file was reconstructed on 2026-07-02 from the git history — the plugin
 > shipped its first two versions without a CHANGELOG.
 
+## [0.13.0] — 2026-08-15 — brief-before-fork dedup pointer
+
+### Changed
+
+- **`using-loom-product-principles` points at the family SSOT for the
+  brief-before-fork trigger** instead of carrying an in-place copy of the
+  threshold triple — the triple now lives once in
+  `loom-pipeline/hooks/family-reception.md §Brief before a complex fork`.
+
 ## [0.12.1] — 2026-08-02 — citation repoint after the backlog store split
 
 ### Changed

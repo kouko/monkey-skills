@@ -6,6 +6,15 @@ file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] — 2026-08-15 — brief-before-fork dedup pointer
+
+### Changed
+
+- **`using-loom-discovery` points at the family SSOT for the brief-before-fork
+  trigger** instead of carrying an in-place copy of the threshold triple — the
+  triple now lives once in `loom-pipeline/hooks/family-reception.md §Brief
+  before a complex fork`.
+
 ## [0.4.1] — 2026-08-07 — one-sentence plugin description
 
 ### Changed

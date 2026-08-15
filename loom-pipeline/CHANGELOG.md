@@ -6,6 +6,27 @@ this file.
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.18.0] — 2026-08-15 — plain-relay contract + brief-before-fork SSOT
+
+### Changed
+
+- **A plain-relay contract is the family SSOT for the relay/machine-artifact
+  split.** `hooks/plain-relay.md` (7 rules + a token→meaning glossary + one
+  ✅/❌ calibration pair) governs: user-facing chat messages strip internal
+  jargon (stage names, verdict tokens, raw gate strings); machine artifacts
+  (briefs/verdicts/commits/plan docs) stay machine-precise. `family-relay.md`
+  and `relay-phrasing.md` gain one-line pointers to it.
+- **A `<PLAIN-RELAY>` trigger card is injected at SessionStart.** The
+  reception prepends a short imperative card so "reply in plain language" is
+  auto-bound every turn, not a remembered rule (A/B-verified: injecting the
+  short card works; supplying the long doc for reference does not).
+- **The brief-before-fork trigger collapses to one SSOT.**
+  `hooks/family-reception.md §Brief before a complex fork` is now the single
+  home of the threshold triple (≥3 trade-offs / ≥2 implementation paths /
+  architectural blast radius); the six routers/skills that carried in-place
+  copies now point here. The reception line-budget grows to accommodate the
+  trigger card + the SSOT section (both load-bearing).
+
 ## [0.17.0] — 2026-08-10
 
 ### Changed

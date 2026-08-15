@@ -5,6 +5,38 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.82.0] — 2026-08-15 — plain-relay contract adoption + brief-before-fork dedup
+
+### Changed
+
+- **The relay layer speaks plain language; machine artifacts stay
+  machine-precise.** `loom-pipeline/hooks/plain-relay.md` is the family
+  SSOT for the split (7 rules + glossary + calibration pair). loom-code
+  adopts it: `verification-before-completion` gains a one-line pointer to
+  the contract, and `finishing-a-development-branch`'s close-out report
+  collapses its run of per-check "N/A — check does not exist" lines into
+  one summary line after the conclusion (conclusion-first, not noise-first).
+- **`git-guard.py` MSG_* blocks prepend a user-facing plain line.** When a
+  push is blocked, the user now sees a one-line "what happened + your two
+  options" plain sentence before the raw `loom gate:` string (which is
+  preserved verbatim below for machine parsing). Includes a self-caught
+  correctness fix: the `MSG_NO_VERIFY` plain line originally promised
+  "ask the user to waive this push," but the no-verify path returns before
+  the push gate so `waiver.json` never applies — reworded to "ask the user
+  how to proceed."
+- **The brief-before-fork trigger is dedup'd to a family SSOT.**
+  `brainstorming` and `subagent-driven-development` replaced their in-place
+  copy of the "brief before a complex fork" rule with a one-line pointer to
+  `loom-pipeline/hooks/family-reception.md §Brief before a complex fork`;
+  the threshold triple now lives in one place, not six. brainstorming's
+  fork-guidance region keeps the distinct "render ≥2 options as a markdown
+  comparison table by default" rule (governed by family-relay.md §Family
+  relay discipline), guarded by an F1 dogfood test.
+- **brainstorming's Axis-4 research-results template is recommendation-first.**
+  The "My take / Recommend / Why / Conditional reversal" block now precedes
+  the enumerated alternatives, so the user sees the recommendation before
+  the three options' pros/cons — conclusion-first per plain-relay rule 1.
+
 ## [0.81.0] — 2026-08-14 — layered language policy for plan/spec artifacts
 
 ### Changed

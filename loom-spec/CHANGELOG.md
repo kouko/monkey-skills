@@ -5,6 +5,19 @@ All notable changes to the `loom-spec` plugin (formerly `spec-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.11.0] — 2026-08-15 — brief-before-fork dedup + conversation-language phase announcements
+
+### Changed
+
+- **`using-loom-spec` points at the family SSOT for the brief-before-fork
+  trigger** instead of carrying an in-place copy of the threshold triple — the
+  triple now lives once in `loom-pipeline/hooks/family-reception.md §Brief
+  before a complex fork`.
+- **`spec-expansion` announces its phases in the conversation language, not
+  internal markers.** Phase narration changed from verbatim "— Phase ① USM
+  backbone —" chat markers to "next I'll lay the user-journey backbone" plain
+  language; internal phase IDs stay in the artifact only.
+
 ## [0.10.0] — 2026-08-14 — layered language policy for spec artifacts
 
 ### Changed
