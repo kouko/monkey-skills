@@ -1,6 +1,6 @@
-"""Structural grep-test guarding the using-loom-discovery entry SKILL.md.
+"""Structural grep-test guarding the using-loom-design entry SKILL.md.
 
-using-loom-discovery is the loom-discovery FAMILY ENTRY (thin router): it
+using-loom-design is the loom-discovery FAMILY ENTRY (thin router): it
 routes "worth doing?" asks to business-value and "what do users need?"
 asks to user-insights, but never maps needs or renders a verdict itself.
 Mirrors the sibling entry-test shape (test_spec_entry_skill.py,
@@ -11,7 +11,7 @@ Task 3 acceptance (docs/loom/plans/2026-07-10-loom-discovery-station.md):
   - SKILL.md exists with valid YAML frontmatter (name + description)
   - description renders to <=1536 chars (router listing-eviction budget,
     repo memory: skill-triggering-diagnose-listing-before-text)
-  - both references/claude-code-tools.md and references/codex-tools.md exist
+  - both references/discovery-claude-code-tools.md and references/discovery-codex-tools.md exist
   - skill dir is flat (no nested subfolders — repo hook enforces)
 
 Stdlib only (pathlib + re). Resolve paths relative to this test file.
@@ -20,10 +20,10 @@ Stdlib only (pathlib + re). Resolve paths relative to this test file.
 import re
 from pathlib import Path
 
-SKILL_DIR = Path(__file__).parents[1] / "skills" / "using-loom-discovery"
+SKILL_DIR = Path(__file__).parents[2] / "skills" / "using-loom-design"
 SKILL = SKILL_DIR / "SKILL.md"
-CC_TOOLS = SKILL_DIR / "references" / "claude-code-tools.md"
-CODEX_TOOLS = SKILL_DIR / "references" / "codex-tools.md"
+CC_TOOLS = SKILL_DIR / "references" / "discovery-claude-code-tools.md"
+CODEX_TOOLS = SKILL_DIR / "references" / "discovery-codex-tools.md"
 
 _DESC_CAP = 1536
 
@@ -53,13 +53,13 @@ def _description() -> str:
 # --- existence + frontmatter -------------------------------------------------
 
 def test_skill_file_exists():
-    assert SKILL.is_file(), f"using-loom-discovery/SKILL.md must exist at {SKILL}"
+    assert SKILL.is_file(), f"using-loom-design/SKILL.md must exist at {SKILL}"
 
 
 def test_yaml_frontmatter_name_and_description():
     front = _frontmatter(_text())
-    assert re.search(r"^name:\s*using-loom-discovery\s*$", front, re.MULTILINE), \
-        "frontmatter must declare 'name: using-loom-discovery'"
+    assert re.search(r"^name:\s*using-loom-design\s*$", front, re.MULTILINE), \
+        "frontmatter must declare 'name: using-loom-design'"
     desc = re.search(r"^description:\s*(\S.*)$", front, re.MULTILINE | re.DOTALL)
     assert desc and desc.group(1).strip(), \
         "frontmatter must carry a non-empty 'description:'"
@@ -107,7 +107,7 @@ def test_intake_section_present():
 def test_intake_references_family_reception_ssot_without_copying_rows():
     text = _text()
     assert "family-reception.md" in text, \
-        "§Intake must reference loom-pipeline/hooks/family-reception.md (SSOT)"
+        "§Intake must reference loom-code/hooks/family-reception.md (SSOT)"
     # never-copy discipline: the on-ramp table's own column header must not
     # be reproduced verbatim in this router
     assert "| Condition | Recommendation |" not in text, \
@@ -138,7 +138,7 @@ def test_typical_sequence_and_reentrance_documented():
 def test_using_router_names_bba():
     """Non-trivial discovery forks (value commitment, on-ramp choice) must
     remind the agent to brief before asking (repo pattern:
-    loom-pipeline/skills/using-loom-pipeline/SKILL.md gate (b)) — the
+    loom-design/skills/using-loom-pipeline/SKILL.md gate (b)) — the
     router names the skill id and points at the family SSOT for the trigger
     threshold (the triple lives in family-reception.md §Brief before a
     complex fork, not duplicated here post-dedup)."""
@@ -162,8 +162,8 @@ def test_professional_isolation_line_present():
 # --- references ---------------------------------------------------------------
 
 def test_references_files_exist():
-    assert CC_TOOLS.is_file(), f"references/claude-code-tools.md missing at {CC_TOOLS}"
-    assert CODEX_TOOLS.is_file(), f"references/codex-tools.md missing at {CODEX_TOOLS}"
+    assert CC_TOOLS.is_file(), f"references/discovery-claude-code-tools.md missing at {CC_TOOLS}"
+    assert CODEX_TOOLS.is_file(), f"references/discovery-codex-tools.md missing at {CODEX_TOOLS}"
 
 
 def test_skill_folder_is_flat():

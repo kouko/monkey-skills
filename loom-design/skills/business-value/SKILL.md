@@ -140,7 +140,7 @@ NEEDS-MORE-RESEARCH, not a hopeful GO.
 4. **Delegate** any market/GTM/revenue sub-question to `domain-teams:planning-team`
    (pass paths + seed context); fold only its returned verdict back in. Host
    invocation shapes for delegation/handoff live in
-   `../using-loom-discovery/references/claude-code-tools.md` (Codex:
+   `../using-loom-design/references/claude-code-tools.md` (Codex:
    `codex-tools.md` beside it).
 5. **Emit `business-value.md`** into the change's discovery folder at
    `docs/loom/discovery/<date>-<slug>/business-value.md` (`<date>` = today,
@@ -154,7 +154,7 @@ NEEDS-MORE-RESEARCH, not a hopeful GO.
 
    ```
    cd <consumer-project-root>
-   python3 <resolved-absolute-path-to>/loom-discovery/scripts/validate_discovery_artifacts.py docs/loom/discovery/<date>-<slug>/
+   python3 <resolved-absolute-path-to>/loom-design/scripts/discovery/validate_discovery_artifacts.py docs/loom/discovery/<date>-<slug>/
    ```
 
    Fix any flagged issue and re-run, **bounded at 2 attempts**; on the 2nd

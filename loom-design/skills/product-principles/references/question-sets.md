@@ -72,7 +72,7 @@ station carries.
 
 The **surface-treatment axis** (flat / skeuomorphic / neumorphic /
 glassmorphic eras) is **not decided here**: it is decided
-**downstream at the DESIGN station** (`loom-interface-design`), which
+**downstream at the DESIGN station** (`loom-design`), which
 owns that canon list and names its pick in prose there. The old
 cross-axis contamination guard is therefore
 **structural, not instructional** — the two axes live in different

@@ -26,7 +26,7 @@ The validator checks a single PRINCIPLES.md file against the pinned contract in
      on the same line; present-but-empty invalid.
 
 Each check = a function (text/path) -> list[str] of problems (empty == ok),
-mirroring loom-spec/scripts/validate_spec_output.py. CLI:
+mirroring loom-design/scripts/spec/validate_spec_output.py. CLI:
 `python validate_principles_output.py <PRINCIPLES.md>` -> exit 0 valid / 1
 invalid.
 

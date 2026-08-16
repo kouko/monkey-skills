@@ -21,9 +21,9 @@ freeze:
 
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
-FAMILY_RELAY = REPO_ROOT / "loom-pipeline/hooks/family-relay.md"
+FAMILY_RELAY = REPO_ROOT / "loom-code/hooks/family-relay.md"
 
 PROGRESS_HEADING = "### (a2) Progress card"
 

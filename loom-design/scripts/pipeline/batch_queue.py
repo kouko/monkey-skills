@@ -242,7 +242,7 @@ def check_frozen(entry: dict, project_path: Path, skills_root: Path) -> tuple[bo
     """Freeze predicate — two accepted forms, both requiring the plan file.
 
     Form A (change-folder): ``docs/loom/<id>/`` exists → it must pass the
-    loom-spec validator (``python3 <skills_root>/loom-spec/scripts/
+    loom-spec validator (``python3 <skills_root>/loom-design/scripts/spec/
     validate_spec_output.py <project_path>/docs/loom/<id>``, invocation
     convention driver_40_seg2.js:106-127). This is the original v1.1
     Decision §"Freeze predicate = loom-spec validator exit-0 + plan
@@ -308,7 +308,7 @@ def check_frozen(entry: dict, project_path: Path, skills_root: Path) -> tuple[bo
             "line — not frozen under either form.",
         )
 
-    validator_script = Path(skills_root) / "loom-spec" / "scripts" / "validate_spec_output.py"
+    validator_script = Path(skills_root) / "loom-design" / "scripts" / "spec" / "validate_spec_output.py"
     result = subprocess.run(
         ["python3", str(validator_script), str(change_dir)],
         capture_output=True,

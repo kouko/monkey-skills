@@ -70,14 +70,14 @@ losing recall.
 - **domain-convention, SHAPING-class** → do **NOT** invent a token value.
   Resolution is **routed research BEFORE `design-critic`'s verdict** — the
   orchestrator or the user routes the tagged question to research (a
-  `loom-discovery` delegation, or the code-station's Axis-4-style research
+  `loom-design` delegation, or the code-station's Axis-4-style research
   protocol). **`design-system` itself never runs WebSearch** — it is a
   closed-world drafting skill (per its Executor model) and this reference
   does not change that; its only job here is to classify and tag.
 - **domain-convention, DEFERRABLE-class** → write the item into `DESIGN.md`
   as a **tagged open question** instead of a resolved token, carrying
   `evidence_needed: domain-convention` in the pin's tag format. This flows
-  downstream: `loom-spec`'s spec-expansion Phase ③ intake inherits tagged
+  downstream: `loom-design`'s spec-expansion Phase ③ intake inherits tagged
   open questions from the design seed, so a deferred item is never dropped —
   only handed to the next station.
 

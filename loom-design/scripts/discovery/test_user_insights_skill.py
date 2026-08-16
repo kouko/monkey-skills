@@ -22,7 +22,7 @@ Load-bearing invariants encoded here (why each matters):
 import re
 from pathlib import Path
 
-SKILL_DIR = Path(__file__).parent.parent / "skills" / "user-insights"
+SKILL_DIR = Path(__file__).parents[2] / "skills" / "user-insights"
 SKILL = SKILL_DIR / "SKILL.md"
 INSIGHTS_TEMPLATE = SKILL_DIR / "assets" / "user-insights-template.md"
 EVIDENCE_TEMPLATE = SKILL_DIR / "assets" / "evidence-template.md"

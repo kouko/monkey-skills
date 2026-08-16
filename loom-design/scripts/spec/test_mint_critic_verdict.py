@@ -1,5 +1,5 @@
 """Tests for mint_critic_verdict.py — the critic-verdict CLI that binds a
-loom-spec/loom-interface-design critic's PASS_WITH_NOTES/NEEDS_REVISION
+loom-design critic's PASS_WITH_NOTES/NEEDS_REVISION
 verdict to the exact bytes of the artifact files it reviewed (§4c Fix-4
 of docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md).
 

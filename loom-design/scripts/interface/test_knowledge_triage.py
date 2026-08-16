@@ -35,8 +35,8 @@ import re
 import subprocess
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[3]
+PLUGIN_ROOT = Path(__file__).resolve().parents[2]
 
 PLAN_PATH = (
     REPO_ROOT / "docs/loom/plans/2026-07-18-knowledge-triage-three-buckets.md"
@@ -164,22 +164,22 @@ def test_never_websearch_restated_in_both_files():
         )
 
 
-# --- 4. DEFERRABLE route: tagged open question, loom-spec named, no path ---
+# --- 4. DEFERRABLE route: tagged open question, loom-design named, no path ---
 
 
-def test_deferrable_route_names_loom_spec_without_cross_plugin_path():
+def test_deferrable_route_names_loom_design_without_cross_plugin_path():
     for label, path in TRIAGE_FILES.items():
         text = _text(path)
         low = text.lower()
         assert "evidence_needed: domain-convention" in text, (
             f"{label} must give the tagged-open-question format"
         )
-        assert "loom-spec" in low and "spec-expansion" in low, (
-            f"{label} must name loom-spec's spec-expansion by name (prose mention)"
+        assert "loom-design" in low and "spec-expansion" in low, (
+            f"{label} must name loom-design's spec-expansion by name (prose mention)"
         )
         # no cross-plugin filesystem path (the plan forbids this)
-        assert "loom-spec/skills" not in text, (
-            f"{label} must NOT embed a cross-plugin file path to loom-spec"
+        assert "loom-design/skills" not in text, (
+            f"{label} must NOT embed a cross-plugin file path to loom-design"
         )
 
 
@@ -440,7 +440,7 @@ def test_pin_blocks_byte_untouched_vs_head():
 # Code-quality-reviewer finding (round 1): condition 2's grep target
 # ("SHAPING") had no artifact obligation requiring it to literally exist.
 # This supplement makes the tier label a literal artifact obligation,
-# mirroring loom-spec's domain-tag-triage.md two-tier doctrine.
+# mirroring loom-design's domain-tag-triage.md two-tier doctrine.
 
 TIER_LABEL_SUPPLEMENT = (
     "Every tagged open question written into ui-flows.md / DESIGN.md must "

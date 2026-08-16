@@ -13,7 +13,7 @@ card's line, not the whole file.
 """
 from pathlib import Path
 
-_ROOT = Path(__file__).resolve().parents[1] / "skills"
+_ROOT = Path(__file__).resolve().parents[2] / "skills"
 _FLOWS = _ROOT / "interaction-flows" / "SKILL.md"
 _DESIGN = _ROOT / "design-system" / "SKILL.md"
 

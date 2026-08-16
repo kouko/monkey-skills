@@ -52,7 +52,7 @@ reference is self-contained:
 These lenses hunt **surface/usability omissions** on `DESIGN.md` / `ui-flows.md`
 — *is the state/exit/screen designed?* They do **NOT** hunt the **behavioral**
 omissions of the spec (state-machine transitions, edge-case fan-out, acceptance
-scenarios) — that is `loom-spec:completeness-critic`'s job, one stage later.
+scenarios) — that is `loom-design:completeness-critic`'s job, one stage later.
 **Flag the surface gap here; fan out the behavior there.**
 
 **Worked surface-vs-behavior pairs** (the lenses — especially error-prevention and

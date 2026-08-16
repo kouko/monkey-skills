@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 
 REFERENCES_DIR = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[2]
     / "skills"
     / "product-principles"
     / "references"
@@ -145,7 +145,6 @@ def test_visual_canon_is_axis_a_only():
     )
     referent = (
         Path(__file__).parents[2]
-        / "loom-interface-design"
         / "skills"
         / "design-system"
         / "references"

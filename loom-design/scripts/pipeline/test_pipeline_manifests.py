@@ -4,7 +4,7 @@
 import json
 from pathlib import Path
 
-PLUGIN_ROOT = Path(__file__).parents[1]
+PLUGIN_ROOT = Path(__file__).parents[2]
 CLAUDE_MANIFEST = PLUGIN_ROOT / ".claude-plugin" / "plugin.json"
 CODEX_MANIFEST = PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
 
@@ -16,10 +16,10 @@ def test_manifests_exist_and_sync():
     claude_data = json.loads(CLAUDE_MANIFEST.read_text())
     codex_data = json.loads(CODEX_MANIFEST.read_text())
 
-    assert claude_data["name"] == "loom-pipeline"
-    assert codex_data["name"] == "loom-pipeline"
+    assert claude_data["name"] == "loom-design"
+    assert codex_data["name"] == "loom-design"
 
     assert claude_data["version"] == codex_data["version"]
 
-    assert "loom-pipeline" in claude_data["keywords"]
-    assert "loom-pipeline" in codex_data["keywords"]
+    assert "loom-design" in claude_data["keywords"]
+    assert "loom-design" in codex_data["keywords"]

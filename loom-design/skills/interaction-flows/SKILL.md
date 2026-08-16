@@ -14,7 +14,7 @@ points, and information density — **modality-aware** across GUI, TUI, and CLI.
 
 This is a **GENERATE** skill in the DESIGN → spec → code pipeline. It produces a
 seed; it does **not** fan out the behavioral depth (state machines, edge cases,
-acceptance scenarios) — that is `loom-spec:spec-expansion`'s job (see Seam
+acceptance scenarios) — that is `loom-design:spec-expansion`'s job (see Seam
 below). Design stops at the surface; spec owns the behavior.
 
 **Ending gate — before you end ANY run of this skill → confirm `ui-flows.md` exists on disk and §7's validator ran, FIRST. A narrated analysis with no file written is a FAILED run, never a partial success.**
@@ -29,7 +29,7 @@ to install — the method rides on the host agent you are already in.
 ## Governing constraint — PRINCIPLES.md first
 
 Before generating anything, **read the product's `PRINCIPLES.md`** (from
-`loom-product-principles`, at
+`loom-design`, at
 `docs/loom/PRINCIPLES.md` in the consumer project). It is
 the **product constitution** and **governs every design decision** here —
 inventory choices, transition character, density posture, and exit-design must
@@ -37,7 +37,7 @@ stay consistent with it instead of drifting.
 
 **If `PRINCIPLES.md` is absent, surface that loudly** — do not silently invent a
 product constitution. Tell the user the design is **ungoverned** and either ask
-them to run `loom-product-principles:product-principles` first or proceed only
+them to run `loom-design:product-principles` first or proceed only
 with an explicit, flagged "no PRINCIPLES — design is unconstrained" caveat
 recorded in the output. (Baseline Rule 12 — fail loud.)
 
@@ -113,16 +113,16 @@ present (`empty / loading / error / success`). This is **flag-only**: name the
 variants that exist — do **not** author the transition logic, guards, or the full
 state machine that moves between them. Enumerating *when* and *why* a surface
 moves empty → loading → error is the **domain lifecycle**, which is
-`loom-spec:spec-expansion`'s job. **Design stops at "these variants exist";
+`loom-design:spec-expansion`'s job. **Design stops at "these variants exist";
 spec owns "here is how they transition."** Doing the state-machine / edge fan-out
-here would duplicate loom-spec — do not.
+here would duplicate loom-design — do not.
 
 ### 6. Emit `ui-flows.md` into the consumer project
 
 Write the artifact to `docs/loom/<change-id>/ui-flows.md` in the consumer
 project — **per feature / change, one folder per change**. `<change-id>` is
 the kebab-case name of this feature/change, the **same id**
-`loom-spec:spec-expansion` uses for its change folder, so the design seed sits
+`loom-design:spec-expansion` uses for its change folder, so the design seed sits
 beside the spec delta it will feed (ask the user for the change name if the
 feature description does not yield an obvious one). Do **not** write to a
 fixed product-level `docs/loom/ui-flows.md` — a per-feature artifact at a
@@ -132,7 +132,7 @@ Structure it as one `##` section per dimension,
 provenance-honest about which surfaces / flows are derived from the feature
 description vs inferred from domain priors.
 
-**`ui-flows.md` is the rich seed to `loom-spec:spec-expansion`.** Name this
+**`ui-flows.md` is the rich seed to `loom-design:spec-expansion`.** Name this
 seam in the artifact: the inventory + render-variant flags feed
 spec-expansion's object model and state-machine fan-out; the user-flows +
 navigation feed its journey-navigation (③c) coverage; the transitions character
@@ -144,13 +144,13 @@ fan-out there.
 this surface into its proposal; it **links back** to these sections and fans out only
 net-new behavior. So give each `##` dimension a **stable, addressable heading** the
 downstream can cite. The canonical section→phase mapping lives in
-`loom-spec:spec-expansion` (§"Consuming a `ui-flows.md` seed") — do not duplicate it
+`loom-design:spec-expansion` (§"Consuming a `ui-flows.md` seed") — do not duplicate it
 here; a copied table would drift.
 
 ### 7. Validate and fix
 
 Run the change-folder validator (repo-root-relative path
-`loom-interface-design/scripts/validate_design_output.py <design-output-dir>`;
+`loom-design/scripts/interface/validate_design_output.py <design-output-dir>`;
 the skill-relative form is `../../scripts/validate_design_output.py`) on the
 emitted **change folder** (`docs/loom/<change-id>/`) and **fix every flagged
 issue** before handing off. Do not declare the artifact done with validator
@@ -161,7 +161,7 @@ failures outstanding (Rule 12).
 (from the `design-system` skill) most-specific-first — the change folder
 itself, then its parent (the product level, `DESIGN.md`'s canonical home).
 Run the full validation once the change-folder is assembled — i.e. after
-`design-system` has also emitted (the `using-loom-interface-design` router
+`design-system` has also emitted (the `using-loom-design` router
 coordinates this). A `ui-flows.md`-only run with no `DESIGN.md` at either
 level will correctly report the missing `DESIGN.md`.
 
@@ -171,11 +171,11 @@ This skill **stops at the interface surface**: inventory, flows, layout,
 transitions character, entry/exit, density, and the render-variant **flags**. It
 does **not** author the behavioral depth — object state machines, transition
 rules, edge-case fan-out, or `#### Scenario:` acceptance blocks. That belongs to
-`loom-spec:spec-expansion`, which consumes `ui-flows.md` as its rich seed.
+`loom-design:spec-expansion`, which consumes `ui-flows.md` as its rich seed.
 **Flag here, fan-out there** — doing the fan-out in this skill would duplicate
-loom-spec and blur the DESIGN → spec boundary.
+loom-design and blur the DESIGN → spec boundary.
 
-**Next station.** Once `ui-flows.md` is done, hand off to `using-loom-spec` to
+**Next station.** Once `ui-flows.md` is done, hand off to `using-loom-design` to
 expand the feature into a spec.
 
 ## See also
@@ -187,7 +187,7 @@ expand the feature into a spec.
   question (craft / domain-convention / project-local) before drafting.
 - `obsidian:obsidian-mermaid-visualizer` — canonical Mermaid syntax for the flow
   diagrams.
-- `loom-spec:spec-expansion` — the downstream consumer of `ui-flows.md`; owns
+- `loom-design:spec-expansion` — the downstream consumer of `ui-flows.md`; owns
   the behavioral fan-out (state machines, edge cases, scenarios).
-- `loom-product-principles:product-principles` — produces the governing
+- `loom-design:product-principles` — produces the governing
   `PRINCIPLES.md`.

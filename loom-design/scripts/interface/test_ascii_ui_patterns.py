@@ -22,7 +22,7 @@ import re
 from pathlib import Path
 
 DOC = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[2]
     / "skills"
     / "interaction-flows"
     / "references"
@@ -32,7 +32,7 @@ DOC = (
 BORDER_STARTS = ("┌", "├", "└", "│")
 
 CHANNEL_SSOT_SENTENCE = (
-    "Channel rule SSOT: `loom-pipeline/hooks/family-relay.md §(b) Visual defaults`."
+    "Channel rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual defaults`."
 )
 
 OLD_HAND_DRAW_BULLET = (

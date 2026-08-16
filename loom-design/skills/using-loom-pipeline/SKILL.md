@@ -6,7 +6,7 @@ description: >-
   deterministic Claude Code Workflow segments. Use when asked to run the
   whole pipeline or to auto-implement a change from principles through
   code. CONDITIONAL: fires only when the Workflow tool is available AND
-  the four station plugins are installed — otherwise `loom-pipeline: N/A`
+  the four station plugins are installed — otherwise `loom-design: N/A`
   with the reason, loudly (Codex hosts are N/A). Triggers: "run the loom
   pipeline", "全管線", "全流程跑一遍", 自動實作, "run the conductor".
 version: 0.1.0
@@ -35,12 +35,12 @@ below gates on this skill's own two orchestration conditions.
 
 1. **前站檢查 (upstream check)** — check the target repo against the loom
    family reception's on-ramp criteria table
-   (`loom-pipeline/hooks/family-reception.md`, "On-ramp criteria table
+   (`loom-code/hooks/family-reception.md`, "On-ramp criteria table
    (SSOT)") — reference it by name/path, never copy its rows here.
 2. **對站檢查 (station check)** — if the ask is interactive design/spec/code
    work rather than a full pipeline run, hand off to that family's own
-   entry point instead of driving it from here: `using-loom-product-principles`,
-   `using-loom-interface-design`, `using-loom-spec`, or `using-loom-code`.
+   entry point instead of driving it from here: `using-loom-design`,
+   `using-loom-design`, `using-loom-design`, or `using-loom-code`.
 3. **本站再確認 (this station's fire condition, unchanged)** — this skill
    still only fires under `§When it fires`'s BOTH-conditions gate below;
    its N/A-loud wording governs unchanged — nothing in this §Intake grants
@@ -56,7 +56,7 @@ below gates on this skill's own two orchestration conditions.
    the fifth loom station, is v0.1 interactive-only and not required here
    — the conductor never drives it as a Workflow segment.)
 
-Either condition false → emit **`loom-pipeline: N/A`** with the specific
+Either condition false → emit **`loom-design: N/A`** with the specific
 reason (which condition failed) and stop. N/A is a first-class honest
 outcome — **never silently skip, and never fake the orchestration inline**
 (e.g. by hand-driving the four Workflow-driven stations one Task/Skill call at a time and
@@ -65,7 +65,7 @@ the babysitting problem this plugin exists to remove.
 
 **Codex hosts: N/A by definition.** Codex has no Workflow primitive (verified
 against the plugin-components reference); this skill has no fallback path
-for it. Report `loom-pipeline: N/A (no Workflow primitive on this host)` and
+for it. Report `loom-design: N/A (no Workflow primitive on this host)` and
 stop — do not attempt a shell-script substitute here (that is a parked,
 separate re-trigger, not this skill's job).
 
@@ -124,11 +124,11 @@ maps back to a station-plugin phase.
 1. **Segment 1 — Principles + Design.** `loom-product-principles` drafts
    PRINCIPLES.md, then `loom-interface-design` drafts DESIGN.md +
    ui-flows.md, then the **design-critic panel**
-   (`loom-interface-design:design-critic`) adversarially reviews the draft
+   (`loom-design:design-critic`) adversarially reviews the draft
    for surface omissions before the segment closes.
-2. **Segment 2 — Spec.** `loom-spec:spec-expansion` fans the seed out into
+2. **Segment 2 — Spec.** `loom-design:spec-expansion` fans the seed out into
    an OpenSpec-shape draft, the **completeness-critic** panel
-   (`loom-spec:completeness-critic`) hunts omissions, then the **validator
+   (`loom-design:completeness-critic`) hunts omissions, then the **validator
    gate** (loom-spec's exit-0 binary validator) must pass before the
    segment closes.
 3. **Segment 3 — Code.** `loom-code:subagent-driven-development` implements
@@ -188,7 +188,7 @@ prepending would invalidate the cache on every dispatch.
 Batch mode moves every per-change human decision (gates (a) and (c)) to
 **freeze time**, so a whole queue of changes runs Segment 3 unattended —
 walk away, come back to N reviewable PR branches. Sequential only; a
-parallel variant is parked (`loom-pipeline/README.md` §Parked items).
+parallel variant is parked (`loom-design/README.md` §Parked items).
 
 ### Queue file — `docs/loom/QUEUE.toml`
 
@@ -237,7 +237,7 @@ happens interactively before queueing, never inside the unattended run.
 
 A fresh session **taking over an in-progress batch** (resuming after a
 restart, a new session picking up someone else's queue) MUST run
-`python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py reconcile --project <projectPath>`
+`python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py reconcile --project <projectPath>`
 once, BEFORE its first `next` call — this reconciles any entry left RUNNING
 by the prior session against wf-record evidence (see below) before the loop
 resumes. A session that starts a batch from empty state has nothing to
@@ -250,12 +250,12 @@ non-terminal entries (QUEUED/RUNNING) remain, `next` instead prints
 `id`/`status`/`reason` — `done` never goes silent on a stuck batch (see the
 exit-code table below):
 
-1. `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py next --project <projectPath> --skills-root <skillsRoot>`
+1. `python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py next --project <projectPath> --skills-root <skillsRoot>`
    — this also runs `reconcile` internally at its top, so per-iteration
    staleness is caught even without a takeover.
 2. `Workflow({scriptPath: "<resolved assets/loom-pipeline.js>", args: <the JSON stdout from step 1, verbatim>})`
 3. Immediately after `Workflow()` returns, the dispatcher MUST call
-   `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py mark-running <id> --run-id <the Workflow run id, wf_...> --session-dir <this session's directory — the one whose workflows/ subfolder holds wf_<runId>.json, NOT the workflows/ subfolder itself> --project <projectPath>`
+   `python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py mark-running <id> --run-id <the Workflow run id, wf_...> --session-dir <this session's directory — the one whose workflows/ subfolder holds wf_<runId>.json, NOT the workflows/ subfolder itself> --project <projectPath>`
    — without this the runId is never recorded and `reconcile`'s
    definitive-evidence path has nothing to check against.
 
@@ -274,7 +274,7 @@ exit-code table below):
    the entry then has no `sessionDir` recorded, so `reconcile` can only
    ever resolve it via the staleness path (`SUSPECT`, human decides),
    never via definitive wf-record evidence.
-4. `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py mark <id> done|failed --project <projectPath> --run-id <the Workflow run id>`
+4. `python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py mark <id> done|failed --project <projectPath> --run-id <the Workflow run id>`
 
 The main agent is **dispatcher-only**: it never parses the queue file, it
 never composes git commands, and it never diagnoses failures mid-batch —
@@ -286,11 +286,11 @@ end-of-batch human report below.
 Two subcommands exist for a human operator to correct a stuck entry; the
 dispatcher loop above never calls either on its own:
 
-- `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py reset <id> --project <projectPath> [--reason <text>]`
+- `python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py reset <id> --project <projectPath> [--reason <text>]`
   — requeues a RUNNING or FAILED entry back to QUEUED (`attempts += 1`,
   audit line appended). Use when a stuck or wrongly-failed entry should
   simply run again.
-- `python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py force-fail <id> --reason <text> --project <projectPath>`
+- `python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py force-fail <id> --reason <text> --project <projectPath>`
   — transitions a RUNNING entry straight to FAILED (audit line appended;
   counts toward the circuit breaker). Use when an entry is confirmed dead
   and should not be retried automatically.
@@ -322,7 +322,7 @@ can trip HALT, with no human-confirmation step.
 
 ### End of batch
 
-`python3 <skillsRoot>/loom-pipeline/scripts/batch_queue.py status --project <projectPath>`
+`python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py status --project <projectPath>`
 prints the one-screen report a fresh session reads first. A finished batch
 of N changes leaves N ledgers at
 `<projectPath>/docs/loom/<changeId>/pipeline-ledger.md` and N PR-ready

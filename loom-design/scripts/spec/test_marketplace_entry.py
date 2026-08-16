@@ -1,13 +1,13 @@
-"""Regression guard: loom-spec is registered in the root marketplace.json.
+"""Regression guard: loom-design is registered in the root marketplace.json.
 
 Pure-config test (tdd-iron-law exemption) — asserts the plugins[] entry
-exists, points at ./loom-spec/, and carries a non-empty description.
+exists, points at ./loom-design/, and carries a non-empty description.
 """
 
 import json
 from pathlib import Path
 
-MARKETPLACE = Path(__file__).parents[2] / ".claude-plugin" / "marketplace.json"
+MARKETPLACE = Path(__file__).parents[3] / ".claude-plugin" / "marketplace.json"
 
 
 def _load_plugins():
@@ -21,15 +21,15 @@ def test_marketplace_is_valid_json():
 
 
 def test_exactly_one_spec_toolkit_entry():
-    entries = [p for p in _load_plugins() if p.get("name") == "loom-spec"]
-    assert len(entries) == 1, f"expected exactly one loom-spec entry, got {len(entries)}"
+    entries = [p for p in _load_plugins() if p.get("name") == "loom-design"]
+    assert len(entries) == 1, f"expected exactly one loom-design entry, got {len(entries)}"
 
 
 def test_spec_toolkit_source():
-    entry = next(p for p in _load_plugins() if p.get("name") == "loom-spec")
-    assert entry["source"] == "./loom-spec/", f"unexpected source: {entry.get('source')!r}"
+    entry = next(p for p in _load_plugins() if p.get("name") == "loom-design")
+    assert entry["source"] == "./loom-design/", f"unexpected source: {entry.get('source')!r}"
 
 
 def test_spec_toolkit_description_non_empty():
-    entry = next(p for p in _load_plugins() if p.get("name") == "loom-spec")
-    assert entry.get("description", "").strip(), "loom-spec description must be non-empty"
+    entry = next(p for p in _load_plugins() if p.get("name") == "loom-design")
+    assert entry.get("description", "").strip(), "loom-design description must be non-empty"

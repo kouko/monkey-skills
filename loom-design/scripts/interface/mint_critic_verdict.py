@@ -1,5 +1,5 @@
 # FUNCTIONAL COPY — DO NOT EDIT LOGIC OUT OF LOCKSTEP
-# SSOT: loom-spec/scripts/mint_critic_verdict.py
+# SSOT: loom-design/scripts/spec/mint_critic_verdict.py
 # Rule: logic must stay byte-identical to the SSOT; only docstrings
 # may differ. Enforced mechanically by test_lockstep_code_matches_ssot
 # in test_mint_critic_verdict.py (ast.dump comparison, docstrings

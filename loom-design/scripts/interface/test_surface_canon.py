@@ -17,14 +17,14 @@ No REQ-ids are registered for this dispatch; @req tags are intentionally
 omitted per the implementer contract.
 
 Stdlib + pytest only, path-based. The canon resolves inside this plugin;
-the research doc resolves at the repo root (loom-interface-design/scripts/
+the research doc resolves at the repo root (loom-design/scripts/interface/
 -> repo root -> docs/loom/research/).
 """
 
 import re
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).parents[2]
+REPO_ROOT = Path(__file__).parents[3]
 RESEARCH_DOC = (
     REPO_ROOT / "docs" / "loom" / "research"
     / "2026-07-12-ui-surface-treatments-canon.md"
@@ -45,7 +45,7 @@ SEED_TREATMENT_NAMES = [
 ]
 
 SURFACE_CANON = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[2]
     / "skills"
     / "design-system"
     / "references"

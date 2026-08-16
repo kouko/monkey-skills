@@ -1,4 +1,4 @@
-"""Tests for loom-pipeline/hooks/lang_detect.py.
+"""Tests for loom-code/hooks/lang_detect.py.
 
 Pure-stdlib language-detection helper: ``detect_script()`` is a
 char-heuristic on raw text; ``conversation_language()`` majority-votes
@@ -17,15 +17,15 @@ import importlib.util
 import json
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
-MODULE_PATH = REPO / "loom-pipeline" / "hooks" / "lang_detect.py"
+REPO = Path(__file__).resolve().parents[3]
+MODULE_PATH = REPO / "loom-code" / "hooks" / "lang_detect.py"
 # Frozen copy of a real session tail (user main-chain turns extracted
 # verbatim from a live Traditional-Chinese session's transcript;
 # machine-payload turns >2000 chars truncated to their head — the
 # injection filters only read the head). Never test against the live,
 # still-growing transcript file.
 FIXTURE_SESSION_TAIL = (
-    REPO / "loom-pipeline" / "scripts" / "fixtures" / "fixture_session_tail.jsonl"
+    REPO / "loom-design" / "scripts" / "pipeline" / "fixtures" / "fixture_session_tail.jsonl"
 )
 
 

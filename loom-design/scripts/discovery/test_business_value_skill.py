@@ -15,7 +15,7 @@ Stdlib only (pathlib + re). Resolve paths relative to this test file.
 import re
 from pathlib import Path
 
-SKILL_DIR = Path(__file__).parents[1] / "skills" / "business-value"
+SKILL_DIR = Path(__file__).parents[2] / "skills" / "business-value"
 SKILL = SKILL_DIR / "SKILL.md"
 TEMPLATE = SKILL_DIR / "assets" / "business-value-template.md"
 
@@ -257,7 +257,7 @@ def test_skipped_means_implicit_go_no_empty_file():
 # --- validate step: wired to the discovery validator, bounded retry ---------
 
 def test_validate_step_wires_discovery_validator():
-    # Why: mirrors loom-product-principles/skills/product-principles/SKILL.md
+    # Why: mirrors loom-design/skills/product-principles/SKILL.md
     # Step 8 — before declaring done, the artifact must be mechanically
     # validated, not just eyeballed by the agent.
     text = _skill()

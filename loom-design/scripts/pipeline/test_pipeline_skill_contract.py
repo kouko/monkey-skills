@@ -6,7 +6,7 @@ Workflow({scriptPath...}) invocation resolved from the skill's base path.
 import re
 from pathlib import Path
 
-PLUGIN_ROOT = Path(__file__).parents[1]
+PLUGIN_ROOT = Path(__file__).parents[2]
 SKILL_MD = PLUGIN_ROOT / "skills" / "using-loom-pipeline" / "SKILL.md"
 
 
@@ -42,7 +42,7 @@ def test_fire_inputs_and_invocation():
     ), "missing the four station-plugin names in the body"
 
     # N/A-loud clause (body-scoped).
-    assert "loom-pipeline: n/a" in body_lower, \
+    assert "loom-design: n/a" in body_lower, \
         "missing the N/A-loud emission clause in the body"
 
     # 5 run-input fields.
@@ -133,9 +133,9 @@ def test_skill_intake_section_contract():
     # that family's own using-loom-* entry.
     assert "對站檢查" in intake_section, "missing step 2 對站檢查 label"
     for entry in (
-        "using-loom-product-principles",
-        "using-loom-interface-design",
-        "using-loom-spec",
+        "using-loom-design",
+        "using-loom-design",
+        "using-loom-design",
         "using-loom-code",
     ):
         assert entry in intake_section, f"step 2 missing hand-off to {entry}"

@@ -26,9 +26,9 @@ suite runs from any cwd.
 
 from pathlib import Path
 
-SKILL = Path(__file__).parent.parent / "skills" / "product-principles" / "SKILL.md"
+SKILL = Path(__file__).parents[2] / "skills" / "product-principles" / "SKILL.md"
 REF = (
-    Path(__file__).parent.parent
+    Path(__file__).parents[2]
     / "skills"
     / "product-principles"
     / "references"

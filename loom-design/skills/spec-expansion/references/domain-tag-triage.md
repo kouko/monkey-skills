@@ -74,7 +74,7 @@ that: **spec-expansion itself never runs WebSearch.** Resolving a
 SHAPING-class domain-convention tag is explicitly **not** this skill's job —
 it happens **between this draft and its gate**, driven by the orchestrator or
 the user, who routes the tagged question to research (a
-`loom-discovery` delegation, or the code-station's Axis-4-style research
+`loom-design` delegation, or the code-station's Axis-4-style research
 protocol). This skill's only job is to classify, tag, and — for SHAPING
 tags — refuse to let the draft pass ungated; it never fetches the answer
 itself.

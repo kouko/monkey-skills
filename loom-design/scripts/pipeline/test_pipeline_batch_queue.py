@@ -1,4 +1,4 @@
-"""Tests for loom-pipeline/scripts/batch_queue.py."""
+"""Tests for loom-design/scripts/pipeline/batch_queue.py."""
 from __future__ import annotations
 
 import json
@@ -305,11 +305,11 @@ def test_load_state_fails_loud_on_non_dict_json(tmp_path):
 def _write_stub_validator(skills_root: Path, exit_code: int) -> None:
     """Write a stub loom-spec validator under skills_root that exits exit_code.
 
-    Stands in for the real ``loom-spec/scripts/validate_spec_output.py`` so
+    Stands in for the real ``loom-design/scripts/spec/validate_spec_output.py`` so
     tests never invoke the real validator (host convention: stub, don't
     shell out to sibling-team scripts from unit tests).
     """
-    validator_path = skills_root / "loom-spec" / "scripts" / "validate_spec_output.py"
+    validator_path = skills_root / "loom-design" / "scripts" / "spec" / "validate_spec_output.py"
     validator_path.parent.mkdir(parents=True, exist_ok=True)
     validator_path.write_text(f"import sys\nsys.exit({exit_code})\n", encoding="utf-8")
 

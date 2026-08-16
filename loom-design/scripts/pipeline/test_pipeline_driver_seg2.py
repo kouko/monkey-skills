@@ -16,7 +16,7 @@ from pathlib import Path
 
 MODULE_PATH = Path(__file__).parent / "driver_40_seg2.js"
 HEADER_PATH = Path(__file__).parent / "driver_00_header.js"
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def _seg2_phase_title() -> str:
@@ -50,7 +50,7 @@ def test_seg2_validator_gate():
 
     # spec-expansion writer station, seeded with PATHS to segment-1 artifacts
     # (never inlined content — delegation contract)
-    assert "loom-spec:spec-expansion" in source
+    assert "loom-design:spec-expansion" in source
     assert "docs/loom/PRINCIPLES.md" in source
     assert "docs/loom/DESIGN.md" in source
     assert "ui-flows.md" in source
@@ -68,10 +68,10 @@ def test_seg2_validator_gate():
     )
 
     # hard validator gate: the REAL validator filename (checked against the
-    # actual loom-spec/scripts/ dir, never guessed)
-    validator_dir = REPO_ROOT / "loom-spec" / "scripts"
+    # actual loom-design/scripts/spec/ dir, never guessed)
+    validator_dir = REPO_ROOT / "loom-design" / "scripts" / "spec"
     assert (validator_dir / "validate_spec_output.py").exists(), (
-        "expected validate_spec_output.py under loom-spec/scripts/ — "
+        "expected validate_spec_output.py under loom-design/scripts/spec/ — "
         "re-check the real filename before asserting on it"
     )
     assert "validate_spec_output.py" in source

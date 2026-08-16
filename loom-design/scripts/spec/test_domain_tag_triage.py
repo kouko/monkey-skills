@@ -26,8 +26,8 @@ suite runs from any cwd.
 
 from pathlib import Path
 
-SKILL = Path(__file__).parent.parent / "skills" / "spec-expansion" / "SKILL.md"
-REF = Path(__file__).parent.parent / "skills" / "spec-expansion" / "references" / "domain-tag-triage.md"
+SKILL = Path(__file__).parents[2] / "skills" / "spec-expansion" / "SKILL.md"
+REF = Path(__file__).parents[2] / "skills" / "spec-expansion" / "references" / "domain-tag-triage.md"
 
 
 def _skill_text() -> str:

@@ -1,11 +1,11 @@
-"""Tests for loom-pipeline/hooks/language-stop-check.py — Stop-event
+"""Tests for loom-code/hooks/language-stop-check.py — Stop-event
 language-consistency validator.
 
 Subprocess-runs the hook exactly as Claude Code would invoke it: Stop
 event JSON (transcript_path, stop_hook_active) on stdin, a
 ``{"decision": "block", "reason": "..."}`` top-level object (or
 nothing) as the effect, exit code 0 always (fail-open). Mirrors
-loom-pipeline/scripts/test_language_anchor.py's subprocess-driven
+loom-design/scripts/pipeline/test_language_anchor.py's subprocess-driven
 pattern.
 
 The zh/ja block reasons are DIRECTIVE TEXT emitted for a DETECTED
@@ -19,8 +19,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-HOOK = Path(__file__).resolve().parent.parent / "hooks" / "language-stop-check.py"
-HOOKS_JSON = Path(__file__).resolve().parent.parent / "hooks" / "hooks.json"
+HOOK = Path(__file__).resolve().parents[3] / "loom-code" / "hooks" / "language-stop-check.py"
+HOOKS_JSON = Path(__file__).resolve().parents[3] / "loom-code" / "hooks" / "hooks.json"
 
 ZH_USER_TEXT = (
     "請幫我看看今天的天氣預報，我想知道明天是不是還會下雨，"

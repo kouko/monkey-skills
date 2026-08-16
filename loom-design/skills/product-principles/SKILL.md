@@ -47,7 +47,7 @@ that *read* this file.
 **Tripwire — unanswerable grilling.** If the user cannot answer the
 problem/users probing with evidence (they would be guessing at who
 needs what), do not dead-end into a fabricated North Star: route to
-`using-loom-discovery` (user-insights) for evidence-backed needs mapping
+`using-loom-design` (user-insights) for evidence-backed needs mapping
 first, then resume this skill using its value-commitment output as the
 seed for the North Star and Product Principles.
 
@@ -144,7 +144,7 @@ the audit is sanctioned.
   only visual canon list this station carries. The **surface-treatment axis**
   (flat / skeuomorphic / neumorphic / glassmorphic eras) is **not decided
   here**: it is decided **downstream at the DESIGN station**
-  (`loom-interface-design`), which owns that canon list and pins its own
+  (`loom-design`), which owns that canon list and pins its own
   anchor row there. The old cross-axis contamination guard is therefore
   **structural, not instructional** — the two axes live in different plugins,
   so a round at this station cannot read the surface list even by accident;
@@ -260,7 +260,7 @@ consumer project root:
 
 ```
 cd <consumer-project-root>
-python <resolved-absolute-path-to>/loom-product-principles/scripts/validate_principles_output.py docs/loom/PRINCIPLES.md
+python <resolved-absolute-path-to>/loom-design/scripts/principles/validate_principles_output.py docs/loom/PRINCIPLES.md
 ```
 
 It mechanically enforces the contract summary in
@@ -286,7 +286,7 @@ the same format as §Headless / seeded mode's inventory-authoring step.
 
 ## Headless / seeded mode
 
-When this skill is driven with **no user available** (a loom-pipeline
+When this skill is driven with **no user available** (a loom-design
 Segment 1 Workflow agent, a batch context), every decision point degrades
 to its **"delegate to agent"** answer:
 
@@ -297,7 +297,7 @@ to its **"delegate to agent"** answer:
   here too: if the seed is too thin to ground a North Star (you would be
   guessing at who needs what), return a **BLOCKED**-style structured
   refusal to the conductor — state what the seed lacks and name
-  `using-loom-discovery` (user-insights) as the human-side remedy. Never
+  `using-loom-design` (user-insights) as the human-side remedy. Never
   fabricate a North Star to keep the run going.
 - **Inventory authoring — BEFORE drafting.** Before writing any
   `PRINCIPLES.md` section, extract every seed-named entity (canon,
@@ -360,8 +360,8 @@ downstream station — **interface-design, spec-expansion, and code** (incl.
 **headless / CLI** products with no UI). It is **key-free** and **git-diffable**,
 so it lives in the repo and reviews like code. Downstream stations *read* it as
 a governing constraint, each via its own intake section:
-`loom-interface-design:design-system` / `interaction-flows` (generators),
-`loom-spec:spec-expansion` (§Governing constraint), and the critics'
+`loom-design:design-system` / `interaction-flows` (generators),
+`loom-design:spec-expansion` (§Governing constraint), and the critics'
 principles lenses (`design-critic`'s conditional PRINCIPLES lens,
 `completeness-critic` lens 6).
 At the code station the conformance gate is **live**: loom-code's
@@ -371,5 +371,5 @@ This skill *writes* the constitution; enforcement lives in those
 downstream gates.
 
 **Next station.** Once `PRINCIPLES.md` is shipped, hand off to
-`using-loom-interface-design` for UI-bearing products, or to `using-loom-spec`
+`using-loom-design` for UI-bearing products, or to `using-loom-design`
 to expand a feature directly when the product is headless / CLI-only.

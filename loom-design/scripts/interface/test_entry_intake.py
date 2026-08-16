@@ -1,6 +1,6 @@
-"""Structural grep-test guarding using-loom-interface-design's §Intake section.
+"""Structural grep-test guarding using-loom-design's §Intake section.
 
-using-loom-interface-design/SKILL.md is a prompt artifact, not executable
+using-loom-design/SKILL.md is a prompt artifact, not executable
 code. This test asserts the PRESENCE of the load-bearing §Intake contract
 (loom family connective-tissue plan, Task D1):
 
@@ -9,9 +9,9 @@ code. This test asserts the PRESENCE of the load-bearing §Intake contract
     <EXTREMELY-IMPORTANT> modality block).
   - step 1 (前站檢查): references the loom family reception's on-ramp
     criteria (does NOT copy the table body — SSOT rule) and recommends
-    `using-loom-product-principles` when the target repo lacks
+    `using-loom-design` when the target repo lacks
     `docs/loom/PRINCIPLES.md`.
-  - step 2 (對站檢查): redirects spec-shaped fan-out asks to `using-loom-spec`
+  - step 2 (對站檢查): redirects spec-shaped fan-out asks to `using-loom-design`
     and coding asks to `using-loom-code`.
   - step 3: the EXISTING design-system / interaction-flows routing is kept,
     not duplicated — §Intake step 3 just hands off to the router's own
@@ -26,9 +26,9 @@ import re
 from pathlib import Path
 
 SKILL = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[2]
     / "skills"
-    / "using-loom-interface-design"
+    / "using-loom-design"
     / "SKILL.md"
 )
 
@@ -102,8 +102,8 @@ def test_intake_step1_references_reception_and_principles_gap():
         "step 1 must reference the loom family reception's on-ramp criteria"
     assert "principles.md" in section_lower, \
         "step 1 must check for docs/loom/PRINCIPLES.md"
-    assert "using-loom-product-principles" in section, \
-        "step 1 must recommend using-loom-product-principles when PRINCIPLES.md is absent"
+    assert "using-loom-design" in section, \
+        "step 1 must recommend using-loom-design when PRINCIPLES.md is absent"
 
     # SSOT rule: reference, don't copy the criteria table rows.
     assert "| # | condition | recommendation |" not in section_lower, \
@@ -113,8 +113,8 @@ def test_intake_step1_references_reception_and_principles_gap():
 def test_intake_step2_redirects_spec_and_code_asks():
     section = _intake_section()
 
-    assert "using-loom-spec" in section, \
-        "step 2 must redirect spec fan-out asks to using-loom-spec"
+    assert "using-loom-design" in section, \
+        "step 2 must redirect spec fan-out asks to using-loom-design"
     assert "using-loom-code" in section, \
         "step 2 must redirect coding asks to using-loom-code"
 
@@ -145,7 +145,7 @@ def test_using_router_names_bba():
     """Router body must carry a brief-before-asking imperative.
 
     Mirrors using-loom-pipeline's #475 complex-fork escalation
-    (loom-pipeline/skills/using-loom-pipeline/SKILL.md:158): before the
+    (loom-design/skills/using-loom-pipeline/SKILL.md:158): before the
     router lets a non-trivial design fork reach the user as a raw
     question, it must name `dev-workflow:brief-before-asking` and point
     at the family SSOT for the trigger threshold (the triple lives in

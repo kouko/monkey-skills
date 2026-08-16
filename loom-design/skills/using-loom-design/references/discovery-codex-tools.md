@@ -1,11 +1,11 @@
-# Codex CLI — host tool reference for loom-discovery
+# Codex CLI — host tool reference for loom-design
 
 This plugin's skills phrase host interaction in host-neutral prose. This
 file is the concrete Codex re-binding for both member skills reached
 through this router.
 
 **Verified 2026-07-05, mixed evidence grain** (same grain as the sibling
-`using-loom-spec`/`using-loom-interface-design` references files): Codex
+`using-loom-design`/`using-loom-design` references files): Codex
 `skill` tool and `web_search` tool are doc-confirmed (OpenAI's official
 Codex CLI manual) — not exercised in a live Codex session against this
 specific plugin's skills.

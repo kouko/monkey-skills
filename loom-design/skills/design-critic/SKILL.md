@@ -30,7 +30,7 @@ per-change `docs/loom/<change-id>/ui-flows.md` (legacy runs may have both
 side-by-side; one or both may be present — critique whatever exists, note the
 missing one). **Wrong-artifact guard:** if you are handed a
 **spec** (behavioral requirements / `#### Scenario:` blocks) or **code**, STOP — that
-is the wrong skill (`loom-spec:completeness-critic` for a spec; code review for
+is the wrong skill (`loom-design:completeness-critic` for a spec; code review for
 code). Do not run the panel over a non-design artifact and dutifully drop every
 finding; decline and name the right skill.
 
@@ -52,7 +52,7 @@ reachable?* It does **NOT**:
 
 - hunt **behavioral** omissions of the spec (object state machines, edge-case
   fan-out, `#### Scenario:` acceptance blocks) — that is
-  **`loom-spec:completeness-critic`**'s job, one stage later;
+  **`loom-design:completeness-critic`**'s job, one stage later;
 - review code, run TDD, or judge implementation.
 
 **Flag the surface gap here; fan-out the behavior there.** Doing the behavioral
@@ -110,8 +110,8 @@ unchanged (`PASS_WITH_NOTES` / `NEEDS_REVISION`).
 The lenses run as a **dispatched panel**, not one agent doing sequential passes.
 **Dispatch one subagent per lens, each with fresh context** — phrase the fan-out
 portably, not bound to any one harness (see
-[`../using-loom-interface-design/references/claude-code-tools.md`](../using-loom-interface-design/references/claude-code-tools.md)
-/ [`codex-tools.md`](../using-loom-interface-design/references/codex-tools.md)
+[`../using-loom-design/references/claude-code-tools.md`](../using-loom-design/references/claude-code-tools.md)
+/ [`codex-tools.md`](../using-loom-design/references/codex-tools.md)
 for the concrete per-host call shape). **Pin each lens-critic to a general
 reasoning agent — never a read-only / search / explore-restricted type**, or a lens
 silently refuses the reasoning role and the panel loses it (a false negative).
@@ -127,7 +127,7 @@ a search/explore/read-only type.
 
 **MANDATORY — each lens-critic reads `references/design-heuristics.md` in full** before
 hunting, so its findings cite the Nielsen heuristic + the 7-dim mapping (the anti-
-reinvent grounding). **Do NOT load** `loom-spec:completeness-critic`'s machinery or
+reinvent grounding). **Do NOT load** `loom-design:completeness-critic`'s machinery or
 any spec/behavioral reference — this panel is surface-only; pulling in the spec layer
 is the boundary violation the §boundary forbids.
 
@@ -260,7 +260,7 @@ loom-code's reviewer vocabulary):
   findings — never silently proceed.
 - **`PASS_WITH_NOTES`** — dry, findings re-seeded (`critic-found`), Blind
   spots non-empty. Resolution: the change-folder proceeds — `ui-flows.md`
-  hands to `loom-spec:spec-expansion`.
+  hands to `loom-design:spec-expansion`.
 
 There is **deliberately no unqualified `PASS`** in this enum: a bare PASS
 would claim no omissions remain — the banned "complete" reflex — and Blind
@@ -284,7 +284,7 @@ any lens the current model has subsumed.
 - [`references/design-heuristics.md`](references/design-heuristics.md) — the Nielsen
   × 7-dim lens grounding (cite the heuristic per finding).
 - `interaction-flows` — produces the `ui-flows.md` this skill critiques.
-- `loom-spec:completeness-critic` — the **behavioral** completeness critic, one
+- `loom-design:completeness-critic` — the **behavioral** completeness critic, one
   stage later; same panel pattern, different (deeper) artifact.
-- `loom-product-principles:product-principles` — produces the governing
+- `loom-design:product-principles` — produces the governing
   `PRINCIPLES.md` the conditional lens reads.

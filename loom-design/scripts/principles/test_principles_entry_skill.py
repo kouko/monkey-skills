@@ -1,9 +1,9 @@
-"""Structural grep-test guarding the using-loom-product-principles entry skill.
+"""Structural grep-test guarding the using-loom-design entry skill.
 
 This is the loom-product-principles FAMILY ENTRY (thin router), not the
 member skill that authors PRINCIPLES.md. Its correctness is the PRESENCE of:
 
-  - the SKILL.md file itself, with `name: using-loom-product-principles`
+  - the SKILL.md file itself, with `name: using-loom-design`
   - a `## §Intake` section carrying the three load-bearing steps: step 1
     (前站檢查 — reference the loom family reception's on-ramp criteria table,
     never copy it), step 2 (對站檢查 — redirect design/spec/code asks to
@@ -24,9 +24,9 @@ import re
 from pathlib import Path
 
 SKILL = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[2]
     / "skills"
-    / "using-loom-product-principles"
+    / "using-loom-design"
     / "SKILL.md"
 )
 
@@ -80,8 +80,8 @@ def test_using_entry_intake_contract():
 
     # frontmatter name
     assert re.search(
-        r"^name:\s*using-loom-product-principles\s*$", front, re.MULTILINE
-    ), "frontmatter must declare 'name: using-loom-product-principles'"
+        r"^name:\s*using-loom-design\s*$", front, re.MULTILINE
+    ), "frontmatter must declare 'name: using-loom-design'"
 
     # description present
     m = re.search(r"description:\s*\|?\s*\n?(.*?)(?:\nversion:|\Z)", front, re.DOTALL)
@@ -122,10 +122,10 @@ def test_using_entry_intake_contract():
         "step 1 must reference the loom family reception's on-ramp criteria (SSOT)"
 
     # step 2 redirects the three sibling concerns
-    assert "using-loom-interface-design" in text, \
-        "step 2 must redirect design-surface asks to using-loom-interface-design"
-    assert "using-loom-spec" in text, \
-        "step 2 must redirect spec fan-out asks to using-loom-spec"
+    assert "using-loom-design" in text, \
+        "step 2 must redirect design-surface asks to using-loom-design"
+    assert "using-loom-design" in text, \
+        "step 2 must redirect spec fan-out asks to using-loom-design"
     assert "using-loom-code" in text, \
         "step 2 must redirect coding asks to using-loom-code"
 
@@ -133,7 +133,7 @@ def test_using_entry_intake_contract():
 def test_entry_router_names_bba():
     """#475 complex-fork escalation: the router body must point the
     orchestrator at the family SSOT for the brief-before-fork trigger —
-    mirrors loom-pipeline/skills/using-loom-pipeline/SKILL.md:158. T8
+    mirrors loom-design/skills/using-loom-pipeline/SKILL.md:158. T8
     (commit 9f190e07) replaced the WHOLE in-place brief-before-fork
     template (skill id + trigger triple) with a one-line pointer to
     family-reception.md §Brief before a complex fork, so the router no

@@ -46,7 +46,7 @@ writing the check clause.
 - **domain-convention** → do **NOT** guess the fact to keep the check
   falsifiable. Route the question through this skill's **existing punt
   channel** — the Tripwire in the Procedure section ("route to
-  `using-loom-discovery` (user-insights) for evidence-backed needs mapping
+  `using-loom-design` (user-insights) for evidence-backed needs mapping
   first") — attaching the tag `evidence_needed: domain-convention` in the
   pin's tag format. The principle stays **DRAFT**: it does **not** ship
   into `PRINCIPLES.md` as a resolved entry. Record it instead as a
@@ -78,4 +78,4 @@ lexeme, entry-count, and section rules it enforces are untouched. It also
 does not add an external runtime: per the Executor model, this skill has
 **no** API key and **no** live research capability of its own — research
 (WebSearch, domain-source lookups) happens **only** downstream, inside
-`using-loom-discovery`, never inside this drafting station.
+`using-loom-design`, never inside this drafting station.

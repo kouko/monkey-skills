@@ -5,7 +5,7 @@ feature/change, actively *produce* the artifact each dimension asks for — do
 not merely record what already exists. The output is the **interface surface**
 (inventory, navigation, layout, arrival/exit). The **behavioral depth**
 (domain state machines, edge cases, acceptance scenarios) belongs to
-`loom-spec:spec-expansion`, which consumes this file as a rich seed — do not
+`loom-design:spec-expansion`, which consumes this file as a rich seed — do not
 do its fan-out here.
 
 ## Render-variant flag rule (applies to dimension 1)
@@ -16,9 +16,9 @@ variant genuinely differs). This is **flag-only**: list the variant names that
 exist for that surface; do **not** author the transition logic, guards, or the
 full state machine that moves between them. Enumerating *when* and *why* a
 surface moves empty → loading → error is the **domain lifecycle**, which is
-`loom-spec:spec-expansion`'s job. Design stops at "these variants exist";
+`loom-design:spec-expansion`'s job. Design stops at "these variants exist";
 spec owns "here is how they transition." Doing the fan-out here would duplicate
-loom-spec.
+loom-design.
 
 Per-modality reading of the flag:
 - **GUI** — render states of a screen/component (empty list, spinner, error
@@ -130,7 +130,7 @@ has a small/constrained form factor.
 
 This checklist produces the **surface**: inventory, flows, layout, transitions
 character, entry/exit, density. The render-variant **flags** name which states
-exist. `loom-spec:spec-expansion` then does the **behavioral fan-out** —
+exist. `loom-design:spec-expansion` then does the **behavioral fan-out** —
 object state machines, transition rules, edge cases, `#### Scenario:` blocks —
 seeded by this file. Keep the boundary: flag here, fan-out there.
 

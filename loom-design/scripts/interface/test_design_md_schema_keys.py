@@ -20,7 +20,7 @@ import pytest
 import design_md_spec_keys
 
 SCHEMA_PATH = (
-    pathlib.Path(__file__).resolve().parent.parent
+    pathlib.Path(__file__).resolve().parents[2]
     / "skills"
     / "design-system"
     / "references"

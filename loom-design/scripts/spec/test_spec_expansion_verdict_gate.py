@@ -9,7 +9,7 @@ per-exit-code routing (2 = never ran → design-critic; 3 = blocked →
 design writer; 4 = stale → re-run design-critic). It must also follow the
 existing Step-8-style path-resolution convention (script lives in the
 PLUGIN repo, artifact in the CONSUMER project — absolute script path, cd
-to consumer root), mirrored from loom-discovery/skills/user-insights/
+to consumer root), mirrored from loom-design/skills/user-insights/
 SKILL.md Step 6 (shipped this branch, Task 3).
 
 These checks assert on load-bearing PHRASES (intent), tolerant of wording
@@ -21,7 +21,7 @@ Stdlib only (pathlib + re). Resolve SKILL.md relative to this test file.
 import re
 from pathlib import Path
 
-SKILL = Path(__file__).parents[1] / "skills" / "spec-expansion" / "SKILL.md"
+SKILL = Path(__file__).parents[2] / "skills" / "spec-expansion" / "SKILL.md"
 
 
 def _text() -> str:

@@ -18,9 +18,9 @@ store file bodies", so a whole-file substring check would false-green.
 
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
-SKILL_MD = REPO_ROOT / "loom-pipeline/skills/loom-memory/SKILL.md"
+SKILL_MD = REPO_ROOT / "loom-code/skills/loom-memory/SKILL.md"
 
 
 def _read(path: Path) -> str:

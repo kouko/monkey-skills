@@ -87,7 +87,7 @@ Requirements, checked before the entry skill fires:
   conductor and never driven as a Workflow segment.)
 - A Claude Code host that exposes the **Workflow** primitive (a tool
   accepting an arbitrary `scriptPath`). No Workflow tool → the skill
-  reports `loom-pipeline: N/A` with the reason and stops; it never
+  reports `loom-design: N/A` with the reason and stops; it never
   fakes the orchestration by hand-driving the stations one call at a
   time.
 
@@ -124,7 +124,7 @@ before the next `Workflow` call:
 
 The driver requires the Workflow primitive, which Codex does not
 expose. On Codex this plugin is **N/A by definition** — report
-`loom-pipeline: N/A (no Workflow primitive on this host)` and stop; do
+`loom-design: N/A (no Workflow primitive on this host)` and stop; do
 not attempt an inline substitute. All five loom station plugins
 (including `loom-discovery`) remain usable on Codex — run them
 interactively, one station at a time, instead of through this
@@ -137,7 +137,7 @@ conductor.
 
 | Name pattern | Role | Examples |
 |---|---|---|
-| `using-loom-*` | **Entry** — the family-routing skill for one plugin. Fires on vague/goal-shaped asks, checks the on-ramp criteria, hands off to the right station. | `using-loom-discovery`, `using-loom-product-principles`, `using-loom-interface-design`, `using-loom-spec`, `using-loom-code`, `using-loom-pipeline` |
+| `using-loom-*` | **Entry** — the family-routing skill for one plugin. Fires on vague/goal-shaped asks, checks the on-ramp criteria, hands off to the right station. | `using-loom-design`, `using-loom-design`, `using-loom-design`, `using-loom-design`, `using-loom-code`, `using-loom-pipeline` |
 | plain artifact names | **Stations** — tuned to fire on direct, specific asks for their own artifact, without needing the entry skill first. | `product-principles`, `design-system`, `interaction-flows`, `spec-expansion`, `completeness-critic` |
 
 `brainstorming` is loom-code's **discovery** skill, not an artifact
@@ -151,7 +151,7 @@ other entries carry `§Intake` and `using-loom-code` instead points into
 brainstorming's Axis 0.
 
 **Reception**: a `SessionStart` hook
-(`loom-pipeline/hooks/family-reception.md`) injects the family map and
+(`loom-code/hooks/family-reception.md`) injects the family map and
 the on-ramp criteria table (the SSOT every `§Intake`/Axis 0 references)
 at the start of every session. The **Workflow door remains
 explicit-invocation only** — reception only describes it for awareness,
@@ -198,7 +198,7 @@ tooling. Machine-owned state (`docs/loom/queue-state.json`) records
 each entry's status (`QUEUED` / `RUNNING` / `DONE` / `FAILED` /
 `SKIPPED`) and is written only by `batch_queue.py`.
 
-**The loop** — `loom-pipeline/scripts/batch_queue.py`, pure stdlib,
+**The loop** — `loom-design/scripts/pipeline/batch_queue.py`, pure stdlib,
 sequential-only:
 
 1. `batch_queue.py next --project <path> --skills-root <path>` picks

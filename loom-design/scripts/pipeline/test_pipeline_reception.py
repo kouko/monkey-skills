@@ -11,16 +11,18 @@ import subprocess
 import sys
 from pathlib import Path
 
-PLUGIN_ROOT = Path(__file__).parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[3]
+# The family reception hooks ship from the loom-code plugin.
+PLUGIN_ROOT = REPO_ROOT / "loom-code"
 HOOKS_DIR = PLUGIN_ROOT / "hooks"
 RECEPTION_MD = HOOKS_DIR / "family-reception.md"
 HOOKS_JSON = HOOKS_DIR / "hooks.json"
 SESSION_START = HOOKS_DIR / "session-start"
 
+# Part-1 merged the four design-side routers (product-principles /
+# interface-design / spec / discovery) into one `using-loom-design` entry.
 FAMILY_ENTRIES = [
-    "using-loom-product-principles",
-    "using-loom-interface-design",
-    "using-loom-spec",
+    "using-loom-design",
     "using-loom-code",
     "using-loom-pipeline",
 ]
@@ -63,16 +65,19 @@ def test_reception_content_contract():
     assert "explicit" in lower, "missing explicit-invocation framing for the Workflow door"
 
     # On-ramp criteria table (SSOT) — three rows + negative guard.
-    assert "principles.md" in lower and "using-loom-product-principles first" in lower, (
-        "missing row 1 (no PRINCIPLES.md + product-shaped -> product-principles first)"
+    # Post-merge every row suggests `using-loom-design first`; the station
+    # parenthetical is what keeps the three rows distinguishable.
+    assert "using-loom-design first" in lower, "missing the design-side on-ramp suggestion"
+    assert "principles.md" in lower and "routes to the product-principles station" in lower, (
+        "missing row 1 (no PRINCIPLES.md + product-shaped -> product-principles station)"
     )
     assert (
         "design.md" in lower or "ui-flows" in lower
-    ) and "using-loom-interface-design first" in lower, (
-        "missing row 2 (user-facing surface + no DESIGN.md/ui-flows -> interface-design first)"
+    ) and "routes to the interface-design station" in lower, (
+        "missing row 2 (user-facing surface + no DESIGN.md/ui-flows -> interface-design station)"
     )
-    assert "using-loom-spec first" in lower, (
-        "missing row 3 (multi-state/multi-object + no spec/change-folder -> spec first)"
+    assert "routes to the spec station" in lower, (
+        "missing row 3 (multi-state/multi-object + no spec/change-folder -> spec station)"
     )
     assert "do not interrupt" in lower, "missing the negative-guard phrase"
     assert (

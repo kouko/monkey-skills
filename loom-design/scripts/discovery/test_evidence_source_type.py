@@ -20,7 +20,7 @@ silently breaks that routing.
 from pathlib import Path
 
 TEMPLATE = (
-    Path(__file__).parent.parent
+    Path(__file__).parents[2]
     / "skills"
     / "user-insights"
     / "assets"

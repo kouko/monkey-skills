@@ -1,7 +1,7 @@
 ---
 name: user-insights
 description: |
-  The problem-space research verb of loom-discovery — map, with recorded
+  The problem-space research verb of loom-design — map, with recorded
   evidence, WHAT users need and which needs are worth serving, before any
   design or spec work. Two modes: opportunity-space mapping (knowledge work —
   research the world, never interrogate the user for researchable facts) and
@@ -13,20 +13,20 @@ description: |
   research-toolkit:deep-deep-research. Use for: user needs / what do users need
   / needs research / 使用者需求 / 使用者洞察 / ユーザーインサイト. Not for
   business worth-it verdicts (that is business-value) nor for designing the
-  solution (that is loom-interface-design / loom-spec).
+  solution (that is loom-design / loom-design).
 version: 0.1.0
 ---
 
 # user-insights
 
-The core research verb of the loom-discovery station. The job: **when I bring a
+The core research verb of the loom-design station. The job: **when I bring a
 product-shaped idea to loom, establish — with recorded evidence — what problem
 exists, for whom, and which needs are worth serving**, so downstream stations
 consume verified needs instead of whatever was in my head.
 
 This skill is **problem-space-pure**. It states WHAT users need and the outcomes
 they want; it never states HOW to solve them (Intercom rule — no solution
-content). Solutions are the job of loom-interface-design, loom-spec, loom-code.
+content). Solutions are the job of loom-design, loom-design, loom-code.
 
 ## Two modes — assigned per work nature
 
@@ -128,9 +128,9 @@ What this artifact feeds (state it in problem-space terms, let each consumer
 translate):
 
 - **Value-commitment outcomes** → `PRINCIPLES.md` `— check:` material for
-  loom-product-principles (falsifiable checks derive from committed outcomes).
-- **Needs + journey stage** → loom-interface-design flow seeds.
-- **Job stories** → loom-spec acceptance-criteria seeds.
+  loom-design (falsifiable checks derive from committed outcomes).
+- **Needs + journey stage** → loom-design flow seeds.
+- **Job stories** → loom-design acceptance-criteria seeds.
 
 ## Agent behavioral contract
 
@@ -162,7 +162,7 @@ translate):
 
    ```
    cd <consumer-project-root>
-   python3 <resolved-absolute-path-to>/loom-discovery/scripts/validate_discovery_artifacts.py docs/loom/discovery/<date>-<slug>/
+   python3 <resolved-absolute-path-to>/loom-design/scripts/discovery/validate_discovery_artifacts.py docs/loom/discovery/<date>-<slug>/
    ```
 
    Non-zero exit → fix the reported problems and re-run, **bounded at 2 attempts**;
@@ -181,6 +181,6 @@ translate):
 - loom-code brainstorming `references/axis4-research-protocol.md` — the
   research-then-"my take" protocol Mode 2 reuses (EN+JA queries, recommendation
   shape).
-- `../using-loom-discovery/references/claude-code-tools.md` (Codex:
+- `../using-loom-design/references/claude-code-tools.md` (Codex:
   `codex-tools.md` beside it) — host invocation shapes for the delegation
   targets named above.

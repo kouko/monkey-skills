@@ -3,15 +3,15 @@
 Validates a `docs/loom/discovery/<slug>/` folder produced by the
 loom-discovery station:
   - user-insights.md REQUIRED: must carry the template's required section
-    headings (SSOT: loom-discovery/skills/user-insights/assets/
+    headings (SSOT: loom-design/skills/user-insights/assets/
     user-insights-template.md — hardcoded below, see _REQUIRED_SECTIONS
     in validate_discovery_artifacts.py).
   - evidence.md REQUIRED: presence + a markdown table header row (SSOT:
-    loom-discovery/skills/user-insights/assets/evidence-template.md).
+    loom-design/skills/user-insights/assets/evidence-template.md).
   - research/ OPTIONAL directory (no check needed either way).
   - business-value.md OPTIONAL; when present, its verdict line must
     contain exactly one of GO / NO-GO / NEEDS-MORE-RESEARCH (SSOT:
-    loom-discovery/skills/business-value/assets/business-value-template.md).
+    loom-design/skills/business-value/assets/business-value-template.md).
 
 Fixtures built INLINE via tmp_path (flat-folder rule: no fixtures/ subdir).
 """

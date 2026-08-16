@@ -10,7 +10,7 @@ verbatim, to flip that test green.
 Canonical pointer phrase (reused by tests 2-5): every seam that relays
 to the family relay SSOT must contain this exact substring somewhere in
 its file — never a copy of the section body. The SSOT body lives in its
-own sibling file (loom-pipeline/hooks/family-relay.md) because
+own sibling file (loom-code/hooks/family-relay.md) because
 family-reception.md is injected verbatim every SessionStart and is
 test-pinned to ≤60 non-empty lines; reception carries only a pointer.
 
@@ -30,13 +30,13 @@ import tempfile
 import pytest
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 POINTER_PHRASE = "family-relay.md §Family relay discipline"
 
-FAMILY_RECEPTION = REPO_ROOT / "loom-pipeline/hooks/family-reception.md"
-FAMILY_RELAY = REPO_ROOT / "loom-pipeline/hooks/family-relay.md"
-HOOKS_DIR = REPO_ROOT / "loom-pipeline/hooks"
+FAMILY_RECEPTION = REPO_ROOT / "loom-code/hooks/family-reception.md"
+FAMILY_RELAY = REPO_ROOT / "loom-code/hooks/family-relay.md"
+HOOKS_DIR = REPO_ROOT / "loom-code/hooks"
 SESSION_START = HOOKS_DIR / "session-start"
 SDD_SKILL = REPO_ROOT / "loom-code/skills/subagent-driven-development/SKILL.md"
 REVIEW_SKILL = REPO_ROOT / "loom-code/skills/requesting-code-review/SKILL.md"
@@ -46,9 +46,9 @@ BRAINSTORM_SKILL = REPO_ROOT / "loom-code/skills/brainstorming/SKILL.md"
 BRIEF_BEFORE_ASKING_SKILL = REPO_ROOT / "dev-workflow/skills/brief-before-asking/SKILL.md"
 
 DESIGN_SIDE_FILES = {
-    "spec": REPO_ROOT / "loom-spec/skills/using-loom-spec/SKILL.md",
-    "interface-design": REPO_ROOT / "loom-interface-design/skills/using-loom-interface-design/SKILL.md",
-    "product-principles": REPO_ROOT / "loom-product-principles/skills/using-loom-product-principles/SKILL.md",
+    "spec": REPO_ROOT / "loom-design/skills/using-loom-design/SKILL.md",
+    "interface-design": REPO_ROOT / "loom-design/skills/using-loom-design/SKILL.md",
+    "product-principles": REPO_ROOT / "loom-design/skills/using-loom-design/SKILL.md",
 }
 
 
@@ -58,7 +58,7 @@ def _read(path: Path) -> str:
 
 def test_relay_section():
     """
-    Markers required in loom-pipeline/hooks/family-relay.md
+    Markers required in loom-code/hooks/family-relay.md
     (this task writes them):
       1. "## Family relay discipline"        — section heading
       2. rollup-card slot names, all five, verbatim:
@@ -214,9 +214,9 @@ def test_design_side_pointers(skill_id):
     """
     Tasks 8/9/10 each add ONE line containing POINTER_PHRASE to the
     named using-loom-* SKILL.md's §Intake section:
-      spec             -> loom-spec/skills/using-loom-spec/SKILL.md
-      interface-design -> loom-interface-design/skills/using-loom-interface-design/SKILL.md
-      product-principles -> loom-product-principles/skills/using-loom-product-principles/SKILL.md
+      spec             -> loom-design/skills/using-loom-design/SKILL.md
+      interface-design -> loom-design/skills/using-loom-design/SKILL.md
+      product-principles -> loom-design/skills/using-loom-design/SKILL.md
     """
     text = _read(DESIGN_SIDE_FILES[skill_id])
     assert POINTER_PHRASE in text

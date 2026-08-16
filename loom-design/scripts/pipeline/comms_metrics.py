@@ -19,7 +19,7 @@ Computes, per transcript and aggregated across transcripts:
       matching multiple patterns still counts once (turn-level).
 
 Pure stdlib; no hardcoded conversation/target language anywhere — script
-detection is delegated to loom-pipeline/hooks/lang_detect.py (loaded by
+detection is delegated to loom-code/hooks/lang_detect.py (loaded by
 path, same convention as test_lang_detect.py, since hooks/ is not an
 installed package).
 
@@ -35,7 +35,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-_HOOKS_DIR = Path(__file__).resolve().parent.parent / "hooks"
+_HOOKS_DIR = Path(__file__).resolve().parents[3] / "loom-code" / "hooks"
 _LANG_DETECT_PATH = _HOOKS_DIR / "lang_detect.py"
 
 

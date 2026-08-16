@@ -60,7 +60,7 @@ generation time**.
 
 ### Step 2 — Read the governing PRINCIPLES.md
 
-Read the product's **`PRINCIPLES.md`** (from `loom-product-principles`, at
+Read the product's **`PRINCIPLES.md`** (from `loom-design`, at
 **`docs/loom/PRINCIPLES.md`** in the consumer project) as
 the **governing constraint** on the visual system. The constitution's North
 Star and principles **constrain** the design — e.g. a "minimal interface"
@@ -88,7 +88,7 @@ inherited.
 
 **If `PRINCIPLES.md` is absent, surface it** — do not invent a constitution.
 Tell the user the design system will be ungoverned and recommend running
-`loom-product-principles:product-principles` first; proceed only on their
+`loom-design:product-principles` first; proceed only on their
 say-so, noting the design is principle-ungoverned.
 
 ### Step 3 — Detect / ask the modality
@@ -196,7 +196,7 @@ Run the validator against the emitted design output directory and **fix any
 flagged issue before declaring done**:
 
 ```
-python loom-interface-design/scripts/validate_design_output.py <design-output-dir>
+python loom-design/scripts/interface/validate_design_output.py <design-output-dir>
 ```
 
 The path relative to this skill dir is `../../scripts/validate_design_output.py`
@@ -213,7 +213,7 @@ principles) is your responsibility.
 most-specific-first — change folder, then its parent: this skill's canonical
 home is the product level, `docs/loom/DESIGN.md`, one per product. Run the
 full validation once the change-folder is assembled — after
-`interaction-flows` has emitted (the `using-loom-interface-design` router
+`interaction-flows` has emitted (the `using-loom-design` router
 coordinates this). A `DESIGN.md`-only run will correctly report the missing
 `ui-flows.md`.
 
@@ -226,11 +226,11 @@ coordinates this). A `DESIGN.md`-only run will correctly report the missing
   That is a **deliberate park, not a gap** (audit 2026-07-02, reaffirming
   #456): consumer-side machinery is undecidable until a real frontend
   consumer exists. Re-trigger conditions live in the plugin README §Scope.
-- **Spec (loom-spec):** the design system is the *visual* surface; the
+- **Spec (loom-design):** the design system is the *visual* surface; the
   *behavioral* fan-out (object state machines, edges, acceptance scenarios) is
   `spec-expansion`'s turf, seeded by `ui-flows.md` — not duplicated here.
 
-**Next station.** Once `DESIGN.md` is done, hand off to `using-loom-spec` to
+**Next station.** Once `DESIGN.md` is done, hand off to `using-loom-design` to
 expand the feature into a spec — or to `interaction-flows` first if the
 product's flows haven't been mapped yet.
 

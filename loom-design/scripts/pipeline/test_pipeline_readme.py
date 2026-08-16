@@ -1,11 +1,11 @@
-"""Structural test: loom-pipeline/README.md and CHANGELOG.md exist and carry
+"""Structural test: loom-design/README.md and CHANGELOG.md exist and carry
 the required sections — Codex N/A note, G4 comparison-protocol section, the
 v1.1 batch-mode note, and all 5 parked items each with a re-trigger.
 
 """
 from pathlib import Path
 
-PLUGIN_ROOT = Path(__file__).parents[1]
+PLUGIN_ROOT = Path(__file__).parents[2]
 README = PLUGIN_ROOT / "README.md"
 CHANGELOG = PLUGIN_ROOT / "CHANGELOG.md"
 

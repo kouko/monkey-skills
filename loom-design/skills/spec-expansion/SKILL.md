@@ -53,7 +53,7 @@ false completeness claim.
 ## Governing constraint — PRINCIPLES.md first (constitution→spec seam)
 
 Before expanding anything, **read the product's `PRINCIPLES.md`** (from
-`loom-product-principles`, at `docs/loom/PRINCIPLES.md` in the consumer
+`loom-design`, at `docs/loom/PRINCIPLES.md` in the consumer
 project) **when present**. It is the **product constitution** and it
 **governs the fan-out**: the scope boundary (what the grid may enumerate at
 all), pruning priorities in Phase ③ (a principle like "primary task in ≤3
@@ -64,14 +64,14 @@ governed at GENERATE time — the `completeness-critic`'s principles lens
 
 **If `PRINCIPLES.md` is absent, surface that loudly** — do not silently
 expand an unconstrained spec. Tell the user the expansion is **ungoverned**
-and either ask them to run `loom-product-principles:product-principles`
+and either ask them to run `loom-design:product-principles`
 first or proceed only with an explicit, flagged "no PRINCIPLES — spec is
 unconstrained" caveat recorded in the proposal (baseline Rule 12 — fail
 loud). This intake is **read-only**: never edit the constitution from here.
 
 ## Consuming a `ui-flows.md` seed (DESIGN→spec seam)
 
-When the seed is a `ui-flows.md` produced by `loom-interface-design:interaction-flows`
+When the seed is a `ui-flows.md` produced by `loom-design:interaction-flows`
 (by convention it sits in **this change's own folder** —
 `docs/loom/<change-id>/ui-flows.md`, the same `<change-id>` this skill emits
 into — rather than a few raw lines of intent), the interface **surface** is already specified —
@@ -99,14 +99,14 @@ but if it leaves a core object's lifecycle unstated, surface that gap rather tha
 it. If no `ui-flows.md` exists, ignore this section and treat the input as a generic seed.
 
 **Validate before fan-out.** Before consuming a `ui-flows.md` seed from a change-folder,
-run loom-spec's own `mint_critic_verdict.py` to confirm `design-critic` actually reviewed
+run loom-design's own `mint_critic_verdict.py` to confirm `design-critic` actually reviewed
 this exact content — the script lives in the **PLUGIN repo**, the artifact lives in the
 **CONSUMER project**: resolve the script to an absolute path and run from the consumer
-project root (mirrors loom-discovery's user-insights SKILL.md Step 6):
+project root (mirrors loom-design's user-insights SKILL.md Step 6):
 
 ```
 cd <consumer-project-root>
-python3 <resolved-absolute-path-to>/loom-spec/scripts/mint_critic_verdict.py validate \
+python3 <resolved-absolute-path-to>/loom-design/scripts/spec/mint_critic_verdict.py validate \
   --change-folder docs/loom/<change-id>/ --critic design-critic --files DESIGN.md,ui-flows.md
 ```
 
@@ -114,9 +114,9 @@ Proceed only on exit 0. On any non-zero exit, **STOP** and report which conditio
 routing accordingly — the three exit codes are distinct failures, never interchangeable:
 
 - **exit 2** — no verdict file: `design-critic` never ran on this change-folder. Route to
-  `loom-interface-design:design-critic` before fanning out.
+  `loom-design:design-critic` before fanning out.
 - **exit 3** — fresh verdict is `NEEDS_REVISION`: the critic blocked this draft. Route back
-  to the design writer (`loom-interface-design:interaction-flows`) to address the findings.
+  to the design writer (`loom-design:interaction-flows`) to address the findings.
 - **exit 4** — three distinct causes, same remediation: a `--files` list diverging from what
   was recorded at mint, `DESIGN.md`/`ui-flows.md` edited since mint (stale hash), or a covered
   file unreadable since mint. Re-run design-critic on the current content before proceeding.
@@ -231,7 +231,7 @@ Do not delete the section heading — an absent heading or a bare section is
 a reviewable omission, and an N/A whose reason does not hold against the
 artifact's own content is a reviewable claim. A paragraph that suffices
 needs no diagram — the slot forces the declaration, not the drawing.
-Channel rule SSOT: `loom-pipeline/hooks/family-relay.md §(b) Visual defaults`.
+Channel rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual defaults`.
 
 ### Phase ③ 自動拓展矩陣 (auto-expansion matrix) — grid, prune, emit
 
@@ -369,7 +369,7 @@ the consumer project (the loom suite's shared artifact home, alongside
 another location. **When the seed is a `docs/loom/<X>/ui-flows.md`, emit into
 that same folder** — `<X>` IS this change's `<change-id>`; do not mint a
 second, differently-cased id (the sit-beside contract with
-`loom-interface-design` depends on the ids matching):
+`loom-design` depends on the ids matching):
 
 ```
 <output-dir>/                      # default: docs/loom/<change-id>/
@@ -398,11 +398,11 @@ The system MUST <normative obligation>.   <!-- RFC-2119 keyword on the body line
 Each `#### Scenario:` is one testable acceptance criterion → one RED test /
 GREEN condition for `loom-code:writing-plans`. Keep RFC-2119 keywords
 (MUST / SHALL / SHOULD / MAY) on the requirement body line, and keep the
-delta free of loom-spec-specific sections.
+delta free of loom-design-specific sections.
 
 ### proposal.md — additive richness
 
-loom-spec's differentiating richness goes in `proposal.md` additive
+loom-design's differentiating richness goes in `proposal.md` additive
 sections (OpenSpec's structure-only validate tolerates extra sections, so the
 delta stays pure while the richness lives here). `proposal.md` carries
 **seven visible sections** — the five per-phase artifacts plus provenance and
@@ -504,7 +504,7 @@ status.
 
 This skill **stops at GENERATE**. It does **not** run TDD, write production
 code, or review code — that is `loom-code`'s VERIFY layer. The output
-(the OpenSpec change-folder) is the one-directional handoff: loom-spec
+(the OpenSpec change-folder) is the one-directional handoff: loom-design
 *writes* it, `loom-code:writing-plans` *reads* the `#### Scenario:`
 criteria and turns them into RED/GREEN tasks, and loom-code's execution
 gate is the final truth. The completeness-critic (a sibling skill) critiques

@@ -10,7 +10,7 @@ Later tasks append further checks to the same registry:
   - Task 10: ui-flows.md carries its required sections.
 
 Each check = a function (root: Path) -> list[str] of problems (empty == ok),
-mirroring loom-spec/scripts/validate_spec_output.py. CLI:
+mirroring loom-design/scripts/spec/validate_spec_output.py. CLI:
 `python validate_design_output.py <dir>` -> exit 0 valid / 1 invalid.
 
 Synthetic content only; no real brand / company / customer / product names.

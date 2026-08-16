@@ -9,7 +9,7 @@ import json
 import re
 from pathlib import Path
 
-MANIFEST = Path(__file__).parent.parent / ".claude-plugin" / "plugin.json"
+MANIFEST = Path(__file__).parents[2] / ".claude-plugin" / "plugin.json"
 SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
 
 
@@ -25,7 +25,7 @@ def test_manifest_is_valid_json():
 
 def test_name_is_loom_discovery():
     # Why: name must match the plugin dir + marketplace source for resolution.
-    assert _load()["name"] == "loom-discovery"
+    assert _load()["name"] == "loom-design"
 
 
 def test_version_is_semver():

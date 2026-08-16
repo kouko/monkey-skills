@@ -8,7 +8,7 @@
 
 When the capability you are spec-ing already has a persisted intent layer,
 read it as prior-state so this cycle extends the last one rather than
-re-deriving it from scratch. This closes the spec→spec loop: loom-spec reads
+re-deriving it from scratch. This closes the spec→spec loop: loom-design reads
 its own persisted output as the seed-context for the next change.
 
 **Point-don't-copy.** REFERENCE the persisted files by path and link back to

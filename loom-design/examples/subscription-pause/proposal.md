@@ -2,8 +2,8 @@
 
 > **Seed:** "Let a customer pause their paid subscription for up to 3 months."
 >
-> GENERATE-layer spec draft produced by `loom-spec:spec-expansion` (3 phases)
-> then extended by `loom-spec:completeness-critic` (loop-until-dry, 7 lenses).
+> GENERATE-layer spec draft produced by `loom-design:spec-expansion` (3 phases)
+> then extended by `loom-design:completeness-critic` (loop-until-dry, 7 lenses).
 > This is **coverage relative to seed + lenses**, never a completeness claim.
 
 ---

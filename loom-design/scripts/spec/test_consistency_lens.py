@@ -30,8 +30,8 @@ Stdlib only (pathlib). Resolve paths relative to this test file.
 
 from pathlib import Path
 
-SKILL = Path(__file__).parent.parent / "skills" / "completeness-critic" / "SKILL.md"
-REF = (Path(__file__).parent.parent / "skills" / "completeness-critic"
+SKILL = Path(__file__).parents[2] / "skills" / "completeness-critic" / "SKILL.md"
+REF = (Path(__file__).parents[2] / "skills" / "completeness-critic"
        / "references" / "consistency-lens.md")
 
 

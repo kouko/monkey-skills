@@ -13,7 +13,7 @@ requirements, actors, states, failures, and constraints the writer of the
 draft did not think of. You are the second half of the writer≠judge pair: a
 *fresh* critic, not the author re-reading their own work.
 
-Your value is the **defensible differentiator** of loom-spec: CoDD
+Your value is the **defensible differentiator** of loom-design: CoDD
 expands-only, Spec Kit clarifies-but-not-adversarial. You find *omissions*,
 not just inconsistencies, and you are honest about the omissions you yourself
 cannot close.
@@ -36,7 +36,7 @@ not a code-level one:
 - You do **NOT** run TDD, write tests, or check test coverage.
 - Code review and TDD are **loom-code's** (and **VSDD's**) job — a different
   target, a different layer. The semantic joint is one-directional:
-  `loom-spec` writes the spec → `loom-code` reads + verifies by
+  `loom-design` writes the spec → `loom-code` reads + verifies by
   execution. You stop at the spec. "Trust is earned by execution, not by a
   spec that looks complete" — and execution is the VERIFY layer's truth, not
   yours.
@@ -109,8 +109,8 @@ The five fixed lenses run as a **dispatched panel**, not one agent doing five
 sequential passes. **Dispatch one subagent per lens, each with fresh context** —
 phrase this fan-out portably (like `research-toolkit:deep-research`'s fan-out),
 **not** bound to any one harness/tool, because this skill is agent-portable (see
-[`../using-loom-spec/references/claude-code-tools.md`](../using-loom-spec/references/claude-code-tools.md)
-/ [`codex-tools.md`](../using-loom-spec/references/codex-tools.md) for the
+[`../using-loom-design/references/claude-code-tools.md`](../using-loom-design/references/claude-code-tools.md)
+/ [`codex-tools.md`](../using-loom-design/references/codex-tools.md) for the
 concrete per-host call shape).
 **Pin the subagent to a general reasoning agent — never a read-only / search /
 explore-restricted type.** Lens-critique is pure design reasoning (it reads the

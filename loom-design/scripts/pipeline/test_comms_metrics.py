@@ -1,4 +1,4 @@
-"""Tests for loom-pipeline/scripts/comms_metrics.py.
+"""Tests for loom-design/scripts/pipeline/comms_metrics.py.
 
 Pure-stdlib recipe that computes three comms metrics over a Claude Code
 transcript JSONL (per file + aggregate):
@@ -29,10 +29,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
-MODULE_PATH = REPO / "loom-pipeline" / "scripts" / "comms_metrics.py"
-FIXTURE_A = REPO / "loom-pipeline" / "scripts" / "fixtures" / "fixture_a.jsonl"
-FIXTURE_B = REPO / "loom-pipeline" / "scripts" / "fixtures" / "fixture_b.jsonl"
+REPO = Path(__file__).resolve().parents[3]
+MODULE_PATH = REPO / "loom-design" / "scripts" / "pipeline" / "comms_metrics.py"
+FIXTURE_A = REPO / "loom-design" / "scripts" / "pipeline" / "fixtures" / "fixture_a.jsonl"
+FIXTURE_B = REPO / "loom-design" / "scripts" / "pipeline" / "fixtures" / "fixture_b.jsonl"
 
 
 def _load():

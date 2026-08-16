@@ -1,7 +1,7 @@
 # A/B dogfood — cross-seed summary (7 seeds)
 
 > **Date**: 2026-06-11
-> **Design**: per seed, two mutually-blind subagents — Arm A (loom-spec: spec-expansion 3-phase + completeness-critic) vs Arm B (a capable model's unaided one-shot brainstorm). Orchestrator diffs. Goal: test whether the scaffold's omission-recall beats a strong baseline, and where.
+> **Design**: per seed, two mutually-blind subagents — Arm A (loom-design: spec-expansion 3-phase + completeness-critic) vs Arm B (a capable model's unaided one-shot brainstorm). Orchestrator diffs. Goal: test whether the scaffold's omission-recall beats a strong baseline, and where.
 > All 7 Arm-A outputs pass `validate_spec_output.py` (exit 0): 5 visible sections, non-empty blind spots, OpenSpec-pure delta with GIVEN/WHEN/THEN scenarios.
 
 ## Per-seed recall verdict (7 seeds)

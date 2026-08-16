@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 WORKFLOW = REPO_ROOT / ".claude" / "workflows" / "principles-improve-loop.js"
 
 
@@ -140,7 +140,7 @@ def test_fixer_prompt_excludes_oracle_paths():
     # --- apply courier: clean-status precondition + station path allow-list ---
     assert "git status --porcelain" in text, "apply courier needs a clean-status precondition"
     assert "STATION_DIR" in text
-    assert "loom-product-principles/skills/product-principles" in text
+    assert "loom-design/skills/product-principles" in text
 
     # --- revert courier: stash, not checkout (EXT-1 fix — dcg blocks
     # `git checkout --`, environment-gotchas.md:36-38, "Undo with stash,
@@ -282,7 +282,7 @@ def test_two_stage_accept_and_brakes_wired():
     )
 
     # --- per-round ledger: validated entries (imitate, don't import,
-    # loom-pipeline/scripts/driver_60_ledger.js:33-55) ---
+    # loom-design/scripts/pipeline/driver_60_ledger.js:33-55) ---
     assert "ROUND_LEDGER" in text
     assert "recordRoundLedgerEntry" in text
     for key in [

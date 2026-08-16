@@ -17,7 +17,7 @@ the hard constraints the task and the host enforce:
     (`scripts/validate_design_output.py`) by relative path.
   - PRINCIPLES.md framed as the GOVERNING constraint (surface if absent).
   - the render-variant FLAG-only rule, with the full state machine deferred to
-    `loom-spec:spec-expansion` (the seam is named).
+    `loom-design:spec-expansion` (the seam is named).
   - flat-skill: every subfolder under the skill dir is single-level.
 
 Checks assert on load-bearing PHRASES (intent), tolerant of wording variation.
@@ -28,7 +28,7 @@ import re
 from pathlib import Path
 
 SKILL = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[2]
     / "skills"
     / "interaction-flows"
     / "SKILL.md"
@@ -126,9 +126,9 @@ def test_body_emits_ui_flows_to_consumer_project():
 
 
 def test_body_names_spec_expansion_seam():
-    """ui-flows.md is the rich seed to loom-spec:spec-expansion."""
+    """ui-flows.md is the rich seed to loom-design:spec-expansion."""
     text = _text()
-    assert "spec-expansion" in text or "loom-spec:spec-expansion" in text, \
+    assert "spec-expansion" in text or "loom-design:spec-expansion" in text, \
         "body must name the spec-expansion seam (ui-flows.md seeds it)"
 
 

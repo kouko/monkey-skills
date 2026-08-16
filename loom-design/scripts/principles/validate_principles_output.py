@@ -52,7 +52,7 @@ Valid iff:
       No `--seed` -> this check is skipped entirely.
 
 Design: each check is a function (text: str) -> list[str] of problem messages
-(empty == ok), mirroring `loom-spec/scripts/validate_spec_output.py`.
+(empty == ok), mirroring `loom-design/scripts/spec/validate_spec_output.py`.
 `_CHECKS` is the registry; `validate()` runs them all, plus the optional
 seed-provenance check when `seed_path` is given.
 

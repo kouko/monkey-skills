@@ -1,4 +1,4 @@
-"""Tests for loom-pipeline/hooks/language-anchor.py — PostToolUse tail
+"""Tests for loom-code/hooks/language-anchor.py — PostToolUse tail
 language anchor for tool_name "Skill".
 
 Each test subprocess-runs the hook exactly as Claude Code would invoke
@@ -18,8 +18,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-HOOK = Path(__file__).resolve().parent.parent / "hooks" / "language-anchor.py"
-HOOKS_JSON = Path(__file__).resolve().parent.parent / "hooks" / "hooks.json"
+HOOK = Path(__file__).resolve().parents[3] / "loom-code" / "hooks" / "language-anchor.py"
+HOOKS_JSON = Path(__file__).resolve().parents[3] / "loom-code" / "hooks" / "hooks.json"
 
 ZH_TEXT = (
     "請幫我看看今天的天氣預報，我想知道明天是不是還會下雨，"

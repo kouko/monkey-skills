@@ -7,7 +7,7 @@ Including but not limited to the entries below; doctrine content stays in
 the model (this list carries name + fits-when hint + stability note +
 currency note + source only). It stays SEPARATE from the Axis-A canon of
 cultural/graphic-design movements (`canon-design-visual.md`, owned by
-`loom-product-principles`) — the two axes answer different questions
+`loom-design`) — the two axes answer different questions
 ("which design tradition" vs "which screen-surface treatment era"), and
 they now live in different stations, so an Axis-A round cannot be
 context-polluted by these Axis-B entries by construction.
@@ -19,8 +19,8 @@ surface/depth treatment at **stage 4, the visual design-language step** (the
 concrete look components inherit) — a design-language sub-decision, not a
 PRINCIPLES one. Surface treatments are typically *derived* from platform /
 era / tech constraints rather than user-anchored, which is why this axis is
-owned by `loom-interface-design` (the DESIGN station) rather than by
-`loom-product-principles`. It is **downstream of the tone & manner anchor**:
+owned by `loom-design` (the DESIGN station) rather than by
+`loom-design`. It is **downstream of the tone & manner anchor**:
 the stage-3 adjectives carried in the PRINCIPLES.md `## Anchors` section are
 the governing mood, and they constrain which treatments below are even
 proposable — a treatment may enrich the mood, never override it.

@@ -1,9 +1,9 @@
 """Tests for mint_critic_verdict.py — the critic-verdict CLI that binds a
-loom-spec/loom-interface-design critic's PASS_WITH_NOTES/NEEDS_REVISION
+loom-design critic's PASS_WITH_NOTES/NEEDS_REVISION
 verdict to the exact bytes of the artifact files it reviewed (§4c Fix-4
 of docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md).
 
-Ported from loom-spec/scripts/test_mint_critic_verdict.py (Task 14's
+Ported from loom-design/scripts/spec/test_mint_critic_verdict.py (Task 14's
 proven test matrix) — test matrix is byte-identical to the SSOT's;
 fixture filenames (DESIGN.md throughout, matching the SSOT) are
 arbitrary sample content and irrelevant to plugin identity — no
@@ -28,7 +28,7 @@ from mint_critic_verdict import verdict_filename, main
 # the test works regardless of checkout location.
 _THIS_MODULE = Path(__file__).resolve().parent / "mint_critic_verdict.py"
 _SSOT_MODULE = (
-    Path(__file__).resolve().parents[2] / "loom-spec" / "scripts" / "mint_critic_verdict.py"
+    Path(__file__).resolve().parents[1] / "spec" / "mint_critic_verdict.py"
 )
 
 

@@ -18,7 +18,7 @@ Stdlib only (pathlib + re). Resolve SKILL.md relative to this test file.
 import re
 from pathlib import Path
 
-SKILL = Path(__file__).parents[1] / "skills" / "spec-expansion" / "SKILL.md"
+SKILL = Path(__file__).parents[2] / "skills" / "spec-expansion" / "SKILL.md"
 
 
 def _text() -> str:

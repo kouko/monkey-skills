@@ -5,7 +5,7 @@ docs/loom/specs/2026-07-10-principles-replay-loop.md).
 Workflow scripts run inside Claude Code's Workflow-tool sandbox (ambient
 runtime globals `agent`/`phase`/`pipeline`/`log`/`args` injected at run
 time — see `.claude/workflows/code-toolkit-sweep.js` and
-`loom-pipeline/scripts/driver_10_guard.js` for the only other in-repo
+`loom-design/scripts/pipeline/driver_10_guard.js` for the only other in-repo
 evidence of this contract, plus the in-context Workflow tool schema
 captured 2026-07-10). They are not Python-importable and this suite
 never executes the file — every assertion here is a STATIC check on the
@@ -24,7 +24,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 WORKFLOW = REPO_ROOT / ".claude" / "workflows" / "principles-replay-matrix.js"
 
 SEED_CORPUS_DIR = "docs/loom/dogfood/2026-07-10-principles-flow-seed-corpus"

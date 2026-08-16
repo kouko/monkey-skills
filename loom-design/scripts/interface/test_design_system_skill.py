@@ -30,14 +30,14 @@ from pathlib import Path
 from design_md_spec_keys import TOKEN_GROUPS as SPEC_TOKEN_GROUPS
 
 SKILL = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[2]
     / "skills"
     / "design-system"
     / "SKILL.md"
 )
 
 SCHEMA = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[2]
     / "skills"
     / "design-system"
     / "references"

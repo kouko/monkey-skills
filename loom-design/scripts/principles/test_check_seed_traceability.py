@@ -291,7 +291,7 @@ def test_negative_token_fires_on_its_own_rejection_sentence_characterization():
 
 # --- Task 3: committed oracles conform to the parser contract ---------------
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 _SEED_CORPUS = _REPO_ROOT / "docs/loom/dogfood/2026-07-10-principles-flow-seed-corpus"
 _COLD_OPERATOR_SEED = (
     _REPO_ROOT

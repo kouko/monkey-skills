@@ -8,7 +8,7 @@ Plan: docs/loom/plans/2026-07-18-loop-convergence-fixes.md Task 21.
 """
 from pathlib import Path
 
-PLUGIN_ROOT = Path(__file__).parents[1]
+PLUGIN_ROOT = Path(__file__).resolve().parents[2]
 SKILL_MD = PLUGIN_ROOT / "skills" / "using-loom-pipeline" / "SKILL.md"
 
 

@@ -19,7 +19,7 @@ import re
 from pathlib import Path
 
 RULES = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[2]
     / "skills"
     / "product-principles"
     / "references"

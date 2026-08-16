@@ -5,7 +5,7 @@ prohibitions (verbatim) + stable-prefix dispatch convention note.
 """
 from pathlib import Path
 
-PLUGIN_ROOT = Path(__file__).parents[1]
+PLUGIN_ROOT = Path(__file__).resolve().parents[2]
 SKILL_MD = PLUGIN_ROOT / "skills" / "using-loom-pipeline" / "SKILL.md"
 
 

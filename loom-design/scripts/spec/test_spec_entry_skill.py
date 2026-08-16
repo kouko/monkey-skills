@@ -1,6 +1,6 @@
-"""Structural grep-test guarding the using-loom-spec entry SKILL.md.
+"""Structural grep-test guarding the using-loom-design entry SKILL.md.
 
-using-loom-spec is the thin loom-family entry point for loom-spec: it does
+using-loom-design is the thin loom-family entry point for loom-design: it does
 not generate or critique anything itself, it routes. This test asserts the
 load-bearing structural contract (mirrors test_completeness_critic_skill.py's
 style — grep on PHRASES/intent, tolerant of wording, stdlib only):
@@ -21,7 +21,7 @@ Stdlib only (pathlib + re). Resolve SKILL.md relative to this test file.
 import re
 from pathlib import Path
 
-SKILL = Path(__file__).parents[1] / "skills" / "using-loom-spec" / "SKILL.md"
+SKILL = Path(__file__).parents[2] / "skills" / "using-loom-design" / "SKILL.md"
 
 
 def _text() -> str:
@@ -55,13 +55,13 @@ def _description() -> str:
 # --- existence + frontmatter -------------------------------------------------
 
 def test_skill_file_exists():
-    assert SKILL.is_file(), f"using-loom-spec/SKILL.md must exist at {SKILL}"
+    assert SKILL.is_file(), f"using-loom-design/SKILL.md must exist at {SKILL}"
 
 
 def test_yaml_frontmatter_name_and_description():
     front = _frontmatter(_text())
-    assert re.search(r"^name:\s*using-loom-spec\s*$", front, re.MULTILINE), \
-        "frontmatter must declare 'name: using-loom-spec'"
+    assert re.search(r"^name:\s*using-loom-design\s*$", front, re.MULTILINE), \
+        "frontmatter must declare 'name: using-loom-design'"
     desc = re.search(r"^description:\s*(\S.*)$", front, re.MULTILINE | re.DOTALL)
     assert desc and desc.group(1).strip(), \
         "frontmatter must carry a non-empty 'description:'"
@@ -118,7 +118,7 @@ def test_intake_step2_peer_check_present():
     """Step-2-scoped: slice to Step 2's OWN paragraph (between the '**Step 2'
     marker and the '**Step 3' marker) before asserting the three redirect-
     target names. A whole-§Intake slice is too coarse — Step 1 independently
-    names using-loom-interface-design and using-loom-product-principles, so
+    names using-loom-design and using-loom-design, so
     only a slice ending before Step 3 makes all three assertions genuinely
     load-bearing (found during C2's quality review; mirrors the section-
     scoping idea from loom-interface-design's test_entry_intake.py, one
@@ -132,10 +132,10 @@ def test_intake_step2_peer_check_present():
 
     assert "對站檢查" in step2, \
         "§Intake step 2 (對站檢查) must be present"
-    assert "using-loom-interface-design" in step2, \
-        "step 2 must redirect UI/UX design asks to using-loom-interface-design"
-    assert "using-loom-product-principles" in step2, \
-        "step 2 must redirect product-constitution asks to using-loom-product-principles"
+    assert "using-loom-design" in step2, \
+        "step 2 must redirect UI/UX design asks to using-loom-design"
+    assert "using-loom-design" in step2, \
+        "step 2 must redirect product-constitution asks to using-loom-design"
     assert "using-loom-code" in step2, \
         "step 2 must redirect implementation/code asks to using-loom-code"
 
@@ -164,8 +164,8 @@ def test_intake_step3_names_the_456_mis_route():
 def test_entry_router_names_bba():
     """Non-trivial spec forks this router surfaces (which member skill
     applies, an on-ramp choice) must remind the agent to brief before
-    asking (repo pattern: loom-pipeline/skills/using-loom-pipeline/
-    SKILL.md gate (b); mirrored in loom-discovery/scripts/
+    asking (repo pattern: loom-design/skills/using-loom-pipeline/
+    SKILL.md gate (b); mirrored in loom-design/scripts/discovery/
     test_using_skill.py::test_using_router_names_bba) — the router names
     the skill id and points at the family SSOT for the trigger threshold
     (the triple lives in family-reception.md §Brief before a complex fork,

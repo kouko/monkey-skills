@@ -17,7 +17,7 @@ product-level ui-flows.md is NOT a layout: per-feature flows at a fixed path
 would overwrite each other, which is why the change-id folder exists.
 
 This module checks the change-folder STRUCTURE (presence + well-formedness),
-mirroring `loom-spec/scripts/validate_spec_output.py`'s structure-only
+mirroring `loom-design/scripts/spec/validate_spec_output.py`'s structure-only
 posture: extra/unknown files are tolerated, never rejected.
 
 Task 8 implements the first check — both required files present. Later tasks

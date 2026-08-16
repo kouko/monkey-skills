@@ -16,17 +16,17 @@ required set applies again.
 Checks:
   - user-insights.md: present, and carries every required section heading.
     SSOT for the heading list is the shipped template —
-    loom-discovery/skills/user-insights/assets/user-insights-template.md —
+    loom-design/skills/user-insights/assets/user-insights-template.md —
     hardcoded in _REQUIRED_USER_INSIGHTS_SECTIONS below (read the template
     at authoring time; do not re-derive at runtime).
   - evidence.md: present, and contains a markdown table header row (SSOT:
-    loom-discovery/skills/user-insights/assets/evidence-template.md).
+    loom-design/skills/user-insights/assets/evidence-template.md).
   - business-value.md: optional; when present, its verdict line must
     contain exactly one of GO / NO-GO / NEEDS-MORE-RESEARCH (SSOT:
-    loom-discovery/skills/business-value/assets/business-value-template.md).
+    loom-design/skills/business-value/assets/business-value-template.md).
   - research/: optional directory; no structural check either way.
 
-Design mirrors loom-spec/scripts/validate_spec_output.py: each check is a
+Design mirrors loom-design/scripts/spec/validate_spec_output.py: each check is a
 function (root: Path) -> list[str] of problem messages (empty == ok).
 
 CLI: `python validate_discovery_artifacts.py <folder>` -> exit 0 if valid,
@@ -42,7 +42,7 @@ import re
 import sys
 from pathlib import Path
 
-# SSOT: loom-discovery/skills/user-insights/assets/user-insights-template.md
+# SSOT: loom-design/skills/user-insights/assets/user-insights-template.md
 # — the four required "## " headings, hardcoded here (whole-line match only;
 # a prose mention must never satisfy a check).
 _REQUIRED_USER_INSIGHTS_SECTIONS = [
@@ -52,7 +52,7 @@ _REQUIRED_USER_INSIGHTS_SECTIONS = [
     "## Risks & open questions",
 ]
 
-# SSOT: loom-discovery/skills/business-value/assets/business-value-template.md
+# SSOT: loom-design/skills/business-value/assets/business-value-template.md
 _VALID_VERDICTS = ("GO", "NO-GO", "NEEDS-MORE-RESEARCH")
 
 # Longest-first alternation so "NO-GO" / "NEEDS-MORE-RESEARCH" match whole,
