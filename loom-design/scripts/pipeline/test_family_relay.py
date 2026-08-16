@@ -46,9 +46,7 @@ BRAINSTORM_SKILL = REPO_ROOT / "loom-code/skills/brainstorming/SKILL.md"
 BRIEF_BEFORE_ASKING_SKILL = REPO_ROOT / "dev-workflow/skills/brief-before-asking/SKILL.md"
 
 DESIGN_SIDE_FILES = {
-    "spec": REPO_ROOT / "loom-design/skills/using-loom-design/SKILL.md",
-    "interface-design": REPO_ROOT / "loom-design/skills/using-loom-design/SKILL.md",
-    "product-principles": REPO_ROOT / "loom-design/skills/using-loom-design/SKILL.md",
+    "using-loom-design": REPO_ROOT / "loom-design/skills/using-loom-design/SKILL.md",
 }
 
 
@@ -209,17 +207,25 @@ def test_brainstorming_fork_table_default():
     assert "markdown comparison table" in skill
 
 
-@pytest.mark.parametrize("skill_id", ["spec", "interface-design", "product-principles"])
+@pytest.mark.parametrize("skill_id", ["using-loom-design"])
 def test_design_side_pointers(skill_id):
     """
-    Tasks 8/9/10 each add ONE line containing POINTER_PHRASE to the
-    named using-loom-* SKILL.md's §Intake section:
-      spec             -> loom-design/skills/using-loom-design/SKILL.md
-      interface-design -> loom-design/skills/using-loom-design/SKILL.md
-      product-principles -> loom-design/skills/using-loom-design/SKILL.md
+    Post-merge (6->2 plugin merge, loom-design-merge branch): the four
+    former per-station design-side routers (spec, interface-design,
+    product-principles, discovery) collapsed into ONE merged router,
+    loom-design/skills/using-loom-design/SKILL.md. Its §Intake section
+    carries the single line containing POINTER_PHRASE that all four used
+    to carry separately.
+
+    Whitespace-normalized match: the source wraps the pointer phrase
+    across a line break inside its backtick span (`...family-relay.md\n
+    §Family relay discipline`), so this collapses runs of whitespace
+    before checking — it must still fail if the pointer phrase is
+    removed or the rule text is inlined instead of referenced.
     """
     text = _read(DESIGN_SIDE_FILES[skill_id])
-    assert POINTER_PHRASE in text
+    normalized = " ".join(text.split())
+    assert POINTER_PHRASE in normalized
 
 
 def test_brief_before_asking_ordering():

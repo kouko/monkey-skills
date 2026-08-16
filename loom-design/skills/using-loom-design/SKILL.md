@@ -2,7 +2,9 @@
 name: using-loom-design
 # firing-evidence: merged from using-loom-discovery (2026-07-14 baseline 3/3 EXACT) + the other three design-side routers
 description: |
-  Family entry router for loom-design — the design-side umbrella covering discovery / product-principles / interface-design / spec; does intake + routing, then hands off. Use when unsure which design-side skill applies or where a product idea starts (不確定從哪開始 / 'where do I start'). Routes discovery asks (值不值得做 / worth my time / 需求研究 / ユーザーインサイト) to business-value or user-insights; product-constitution asks to product-principles; UI/UX design asks (design the UI/UX, screen flow, TUI/CLI layout) to design-system / interaction-flows; spec asks (draft/expand a spec from a seed, critique an existing draft) to spec-expansion or completeness-critic. Non-design asks redirect to their family entries.
+  The loom-design family entry router — intake + routing when unsure which
+  design skill applies, or 不確定從哪開始 ('where do I start'): 值不值得做,
+  需求研究, UI/UX design, spec asks all route here first.
 version: 0.1.0
 ---
 
@@ -11,15 +13,6 @@ version: 0.1.0
 <SUBAGENT-STOP>
 If you are a subagent already dispatched with an explicit role prompt, **do not** re-route through this skill. Follow the prompt you were dispatched with directly. This router is for the parent orchestrator only.
 </SUBAGENT-STOP>
-
-<EXTREMELY-IMPORTANT>
-**You have loom-design.** This router does not map needs, assess worth, draft
-constitutions, design interfaces, or write specs itself — it is the thin entry
-that decides which of the four design-side stations the work needs — discovery /
-product-principles / interface-design / spec — after checking whether the
-design side is even the right station yet, then routes to that station's member
-skill(s).
-</EXTREMELY-IMPORTANT>
 
 ## §Intake
 
@@ -35,12 +28,14 @@ and proceeds straight to whichever downstream station applies
 (`loom-code:using-loom-code`). The design side is also internally ordered —
 discovery normally comes FIRST (unarticulated problem/users →
 `§Discovery station`), then product-principles (no `docs/loom/PRINCIPLES.md` +
-product-shaped work → `§Product-principles station`), then interface-design (no
-`DESIGN.md` / `ui-flows.md` exists yet → `§Interface-design station`), then
-spec. When an upstream recommendation fires, recommend **once**, record the
-user's choice, then proceed either way. When both a discovery row and another
-row fire on the same ask, the precedence note recorded in `family-reception.md`
-governs — don't re-derive it here.
+product-shaped work → recommend `using-loom-design`'s own intake — this
+section — as the starting point, then proceed to `§Product-principles
+station`), then interface-design (no `DESIGN.md` / `ui-flows.md` exists yet →
+`§Interface-design station`), then spec. When an upstream recommendation
+fires, recommend **once**, record the user's choice, then proceed either way.
+When both a discovery row and another row fire on the same ask, the
+precedence note recorded in `family-reception.md` governs — don't re-derive
+it here.
 
 **Step 2 — 對站檢查 (station check).** Route by what the ask actually is —
 redirect to the matching station rather than forcing the ask through the wrong
@@ -54,6 +49,11 @@ one:
 | spec fan-out / draft-or-critique a spec | spec | `§Spec station` |
 | write / change / review / ship code | code | `loom-code:using-loom-code` |
 
+The UI/UX-surface and spec rows both redirect within this same router —
+`using-loom-design` — via `§Interface-design station` (see its own
+`Skill priority` table below) and `§Spec station`; only the code row
+leaves for `using-loom-code`.
+
 **Step 3 — brief before a complex fork.** A fork this router surfaces (a station
 choice, a value commitment, an on-ramp choice) can itself be non-trivial. When
 the fork is complex enough to warrant a brief, run
@@ -61,6 +61,15 @@ the fork is complex enough to warrant a brief, run
 the trigger threshold and stakes-first framing live in
 `loom-code/hooks/family-reception.md §Brief before a complex fork` (the
 single source; reference it, don't copy it).
+
+<EXTREMELY-IMPORTANT>
+**You have loom-design.** This router does not map needs, assess worth, draft
+constitutions, design interfaces, or write specs itself — it is the thin entry
+that decides which of the four design-side stations the work needs — discovery /
+product-principles / interface-design / spec — after checking whether the
+design side is even the right station yet, then routes to that station's member
+skill(s).
+</EXTREMELY-IMPORTANT>
 
 ## Discovery station
 
