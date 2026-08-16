@@ -114,7 +114,7 @@ Do not delete the section heading — an absent heading or a bare section is
 a reviewable omission, and an N/A whose reason does not hold against the
 artifact's own content is a reviewable claim. A paragraph that suffices
 needs no diagram — the slot forces the declaration, not the drawing.
-Channel rule SSOT: `loom-pipeline/hooks/family-relay.md §(b) Visual defaults`.
+Channel rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual defaults`.
 
 When-to-draw judgment: see [visual-companion.md](visual-companion.md).
 

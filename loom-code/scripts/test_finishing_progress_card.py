@@ -60,7 +60,7 @@ def test_entry_card_names_family_relay_a2_pointer():
     """N4a frames the card per the family-relay progress-card variant —
     the §(a2) pointer, not a copied template body."""
     assert (
-        "`loom-pipeline/hooks/family-relay.md §(a2) Progress card`"
+        "`loom-code/hooks/family-relay.md §(a2) Progress card`"
         in _normalized_text()
     )
 

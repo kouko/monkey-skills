@@ -88,7 +88,7 @@ This skill is light on novel logic — its value is orchestration; the work happ
 1. Read branch state — git status + git log main..HEAD + git diff main...HEAD
    When the branch has a plan carrying the progress headers, render the
    card once on entry (`python3 scripts/plan_card.py <plan-path>`, framed
-   per `loom-pipeline/hooks/family-relay.md §(a2) Progress card`) so the
+   per `loom-code/hooks/family-relay.md §(a2) Progress card`) so the
    user sees the whole arc before the gates run. Repo-root
    `scripts/plan_card.py` when it exists; otherwise the plugin-shipped
    copy: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py"
@@ -287,7 +287,7 @@ This skill is light on novel logic — its value is orchestration; the work happ
 13. Report final state as a product-language completion report — lead with what
     the product now does, in user terms (not with mechanism); commit SHA, push
     status, test counts, and review verdicts sink to sub-lines below that
-    headline. Format authority: `loom-pipeline/hooks/family-relay.md` §(a)'s
+    headline. Format authority: `loom-code/hooks/family-relay.md` §(a)'s
     Close-out card (not the generic User-rollup card — the close-out
     specialization). Include: PR URL if created — same both-paths merge
     guidance as Step 11 (glance the prefilled dialog before confirming,

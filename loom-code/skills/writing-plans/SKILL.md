@@ -11,7 +11,7 @@ If you are a subagent dispatched with an explicit role prompt (implementer / spe
 
 ## What this skill does
 
-Takes a `brainstorming` output brief and produces a **plan**: an ordered list of atomic tasks that `subagent-driven-development` (SDD) can dispatch one at a time. It can also consume a validated `loom-spec` change-folder as an alternate input — see §Consuming a loom-spec change-folder. Each task must be:
+Takes a `brainstorming` output brief and produces a **plan**: an ordered list of atomic tasks that `subagent-driven-development` (SDD) can dispatch one at a time. It can also consume a validated `loom-design` change-folder as an alternate input — see §Consuming a loom-design change-folder. Each task must be:
 
 - **Independently verifiable** — has a RED test (or RED diagnostic) that goes GREEN when the task is done. This is the primary sizing constraint — see §The splitting framework.
 - **One module** of touch surface (consistent with SDD's per-task scope).
@@ -108,7 +108,7 @@ The prompt also enforces parallel-dispatch checks — see it for the complete li
 
 **Pre-patch before dispatch (saves a NEEDS_REVISION round):** Before dispatching the reviewer, Read [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) and scan Check 1 and Check 3. If the plan is missing `Plan-document-reviewer verdict: PENDING` in the top-level header, or if any task is missing a `Brief item covered:` line, patch those fields now. They are the most common Check-1 / Check-3 failures; one Read saves a full round-trip.
 
-**Coverage gate:** before dispatching the reviewer, run the Coverage self-check in §Consuming a loom-spec change-folder — brief mode (`--brief`) fires on any brief declaring `BI-` ids, change-folder or not.
+**Coverage gate:** before dispatching the reviewer, run the Coverage self-check in §Consuming a loom-design change-folder — brief mode (`--brief`) fires on any brief declaring `BI-` ids, change-folder or not.
 
 **Open-questions gate (unconditional):** before dispatching the reviewer, also run `python3 loom-code/scripts/check_open_questions.py <plan-path>` — on every plan, never conditional the way the coverage gate above is. Non-zero exit blocks the plan from PASS (multiple causes — an absent/malformed section, or an unresolved `OQ-<n>`) — STOP, fix it, and re-run before dispatching.
 
@@ -118,7 +118,7 @@ If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-ru
 
 1. **Stamping the verdict** — writing the reviewer's already-returned verdict, round, or timestamp into the header (`PENDING` → `PASS (2026-07-27, round 3)`). No technical content changes.
 2. **Fixing a typo** — spelling, punctuation, or formatting (a mis-rendered heading, a stray character), with no change to what any field asserts.
-3. **Filling a schema field** — writing a required-but-blank field (an empty `Brief item covered:`) with text **byte-identical** to wording already in the brief, the loom-spec change-folder, or the plan — a verbatim copy of a quote, citation, or join key, never a paraphrase or any wording the author composed.
+3. **Filling a schema field** — writing a required-but-blank field (an empty `Brief item covered:`) with text **byte-identical** to wording already in the brief, the loom-design change-folder, or the plan — a verbatim copy of a quote, citation, or join key, never a paraphrase or any wording the author composed.
 
 Anything else re-reviews — in particular a change to a task's Acceptance RED or GREEN, to a cited fact (a `file:line`, a number, a claim about existing behaviour), to a Dependencies edge, or to a task's scope (Description, Module, Files touched).
 
@@ -136,7 +136,7 @@ policy. After the
 reviewer PASS
 is stamped, run `python3 scripts/plan_card.py <plan-path>` and relay
 its card in the conversation language — fire-and-continue, not a new
-pause, framed per `loom-pipeline/hooks/family-relay.md §(a2) Progress
+pause, framed per `loom-code/hooks/family-relay.md §(a2) Progress
 card` (family-relay absent, or both script copies absent → render the
 four fields inline: goal,
 task table, stage, next). Repo-root `scripts/plan_card.py` when it
@@ -220,9 +220,9 @@ Worked examples — including an `Independent: true` pair (disjoint files, no se
 
 Two per-task fields — `Independent` and `Files touched` — signal parallel-dispatch eligibility for [`../dispatching-parallel-agents/SKILL.md`](../dispatching-parallel-agents/SKILL.md); full field semantics and the gating rule live in [`references/plan-format.md`](references/plan-format.md) §`Files touched` and `Independent`; the overlapping-`Files touched` plan error lives in that file's §Anti-patterns.
 
-## Consuming a loom-spec change-folder
+## Consuming a loom-design change-folder
 
-Alongside the brainstorming brief, writing-plans can consume a **validated loom-spec change-folder** — `docs/loom/<change-id>/` emitted by `loom-spec:spec-expansion`. "Validated" means the change-folder is **`validate_spec_output.py`-clean** (the validator ran and exited 0). The change-folder's `specs/<capability>/spec.md` delta is the structure `validate_spec_output.py` enforces: `### Requirement:` blocks each containing one or more `#### Scenario:` (GIVEN / WHEN / THEN) acceptance criteria.
+Alongside the brainstorming brief, writing-plans can consume a **validated loom-design change-folder** — `docs/loom/<change-id>/` emitted by `loom-design:spec-expansion`. "Validated" means the change-folder is **`validate_spec_output.py`-clean** (the validator ran and exited 0). The change-folder's `specs/<capability>/spec.md` delta is the structure `validate_spec_output.py` enforces: `### Requirement:` blocks each containing one or more `#### Scenario:` (GIVEN / WHEN / THEN) acceptance criteria.
 
 **Detecting which change-folder to consume.** A layered cascade, evaluated in order — stop at the first layer that resolves. Grounded in `docs/loom/research/2026-07-10-change-binding-and-lifecycle-research.md` §Resolved decisions (industry-precedent survey: [`references/design-evidence.md`](references/design-evidence.md)).
 
@@ -242,10 +242,10 @@ Alongside the brainstorming brief, writing-plans can consume a **validated loom-
 
 **Who runs the validator.** In Continuous mode the FREEZE step already gated this change-folder — it ran `validate_spec_output.py` and got exit 0 — so writing-plans **trusts that exit-0** and does not re-run it. For a direct, non-freeze invocation (consuming a change-folder outside Continuous mode), run `validate_spec_output.py` once on the change-folder before consuming it, and proceed only on exit 0.
 
-**Structural-clean is not enough — the critic verdict gate.** `validate_spec_output.py` exit 0 only proves the change-folder is **structurally clean** (schema-valid `### Requirement:` / `#### Scenario:` shape). It says nothing about whether `loom-spec:completeness-critic` actually reviewed and approved this content — **structural-clean ≠ critic-fresh-and-passed**, two different gates, neither subsumes the other. So consuming a change-folder additionally requires (same cross-plugin invocation pattern as `validate_spec_output.py` above, now against loom-spec's `mint_critic_verdict.py`):
+**Structural-clean is not enough — the critic verdict gate.** `validate_spec_output.py` exit 0 only proves the change-folder is **structurally clean** (schema-valid `### Requirement:` / `#### Scenario:` shape). It says nothing about whether `loom-design:completeness-critic` actually reviewed and approved this content — **structural-clean ≠ critic-fresh-and-passed**, two different gates, neither subsumes the other. So consuming a change-folder additionally requires (same cross-plugin invocation pattern as `validate_spec_output.py` above, now against loom-design's `mint_critic_verdict.py`):
 
 ```
-python3 loom-spec/scripts/mint_critic_verdict.py validate --change-folder <path> --critic completeness-critic --files proposal.md,specs/<capability>/spec.md
+python3 loom-design/scripts/spec/mint_critic_verdict.py validate --change-folder <path> --critic completeness-critic --files proposal.md,specs/<capability>/spec.md
 ```
 
 The `--files` list must be **concrete file paths**, not a directory or a placeholder — `mint_critic_verdict.py` resolves each entry with `Path.read_bytes()` (files only; a directory or a literal `...` raises `OSError`, which surfaces as an unreadable-file exit 4, easily misread as staleness). Point-don't-copy applies here too: don't copy the example verbatim — enumerate the change-folder's **actual** covered spec files (e.g. `proposal.md,specs/<capability>/spec.md`), and this list must **match** the list `completeness-critic` minted — `mint_critic_verdict.py` records that list at mint time and compares it at validate time.
@@ -258,7 +258,7 @@ Proceed only on **exit 0** (fresh `PASS_WITH_NOTES`). Route on the non-zero exit
 
 **Scenario → task mapping.** Map each `#### Scenario:` (its GIVEN / WHEN / THEN) → **one task's `Acceptance: RED/GREEN`**. The THEN is the GREEN observable; the GIVEN/WHEN set up the RED. One `### Requirement:` may **fan to N tasks** — split per §The splitting framework (a multi-Scenario Requirement is N candidate tasks, grouped by assertion boundary).
 
-**Point-don't-copy / link back.** **NEVER** copy the spec body into the plan — loom-spec is SSOT, and a copied delta silently goes stale the moment loom-spec re-edits the change-folder, so the plan then drives implementers off a spec that no longer exists. Reference the source `### Requirement:` / `#### Scenario:` names via the stable join key `<change-id> / Requirement: <name> / Scenario: <name>` (the `Brief item covered:` field accepts this referent — see [`references/plan-format.md`](references/plan-format.md)). The plan **links back** to the spec; it does not duplicate it.
+**Point-don't-copy / link back.** **NEVER** copy the spec body into the plan — loom-design is SSOT, and a copied delta silently goes stale the moment loom-design re-edits the change-folder, so the plan then drives implementers off a spec that no longer exists. Reference the source `### Requirement:` / `#### Scenario:` names via the stable join key `<change-id> / Requirement: <name> / Scenario: <name>` (the `Brief item covered:` field accepts this referent — see [`references/plan-format.md`](references/plan-format.md)). The plan **links back** to the spec; it does not duplicate it.
 
 **Verbatim-copy carve-out (fact vs interpretation).** One exception to point-don't-copy: the THEN **observable**, **magic values**, and **signatures** are *facts* — copy them **verbatim** into the RED/GREEN assertion (a paraphrased magic value or signature is a defect). The surrounding **narrative** and **design rationale** are *interpretation* — link to them, do not copy. Facts in, prose linked.
 
@@ -266,7 +266,7 @@ Proceed only on **exit 0** (fresh `PASS_WITH_NOTES`). Route on the non-zero exit
 
 - **MODIFIED / REMOVED deltas.** When the spec carries a `## MODIFIED Requirements` or `## REMOVED Requirements` block (not just `## ADDED Requirements`), map them to change / removal tasks **plus the corresponding test update** — same `#### Scenario:` → RED/GREEN discipline (the RED is the failing test that encodes the changed / removed behavior; the GREEN is the updated test passing).
 
-**Consumer read-only.** **NEVER edit the producer's change-folder** — loom-spec is SSOT, so a consumer edit makes sibling consumers read a different spec than the one the freeze validated, and races the freeze's `validate_spec_output.py` re-run. writing-plans reads `docs/loom/<change-id>/` and writes only its own plan at `docs/loom/plans/<date>-<topic>.md` (the canonical plan path from the §Output contract; for a change-folder input the `<change-id>` fills the `<topic>` slot).
+**Consumer read-only.** **NEVER edit the producer's change-folder** — loom-design is SSOT, so a consumer edit makes sibling consumers read a different spec than the one the freeze validated, and races the freeze's `validate_spec_output.py` re-run. writing-plans reads `docs/loom/<change-id>/` and writes only its own plan at `docs/loom/plans/<date>-<topic>.md` (the canonical plan path from the §Output contract; for a change-folder input the `<change-id>` fills the `<topic>` slot).
 
 **Coverage self-check.** After producing the plan, run `python3 loom-code/scripts/check_scenario_coverage.py <change-folder> <plan>`. It compares the change-folder's `#### Scenario:` set against the plan's `Brief item covered` join keys. Exit 0 means every scenario maps to a task. **Exit 1 blocks the plan from PASS** — self-review may not declare PASS until either every scenario maps to a task, or the drop is **explicitly user-approved** and recorded in the plan's `Notes` section (name the dropped join key + the approval). When the source brief declares `BI-` ids, the same script runs in **brief mode** — `python3 loom-code/scripts/check_scenario_coverage.py --brief <brief> <plan>` — before the plan-document-reviewer dispatch, blocking on an unresolvable citation; an uncovered id only warns. **Gate order**: run this coverage check BEFORE dispatching the plan-document-reviewer — a coverage failure blocks the dispatch (a cheap deterministic script runs before an evaluator subagent, same economics as §Self-review's pre-patch habit; the two gates check different things — the reviewer's Check 3 verifies field presence per task, this script verifies full scenario coverage — so neither subsumes the other).
 

@@ -1,6 +1,6 @@
 """Tests for check_scenario_coverage.py — the coverage script that compares
-a loom-spec change-folder's `#### Scenario:` set (per
-`loom-spec/scripts/validate_spec_output.py`'s heading grammar: `### Requirement:`
+a loom-design change-folder's `#### Scenario:` set (per
+`loom-design/scripts/spec/validate_spec_output.py`'s heading grammar: `### Requirement:`
 / `#### Scenario:`) against a writing-plans plan's join keys (`<change-id> /
 Requirement: <name> / Scenario: <name>`, from each task's `Brief item covered`
 field — see `loom-code/skills/writing-plans/references/plan-format.md`).

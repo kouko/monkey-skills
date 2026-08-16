@@ -10,7 +10,7 @@ You have the loom family of plugins available. One rule covers all of it:
 <PLAIN-RELAY>
 Before EVERY user-visible reply while a loom skill is active:
 - 1st line = plain-language conclusion, in the conversation language.
-- Translate every internal token (PASS_WITH_NOTES, Axis, Wave, 🔴🟡🟢) — glossary: loom-pipeline/hooks/plain-relay.md.
+- Translate every internal token (PASS_WITH_NOTES, Axis, Wave, 🔴🟡🟢) — glossary: loom-code/hooks/plain-relay.md.
 - Default reply ≤10 lines; ONE decision per ask (≤3 options + a recommended default).
 - Never lead with a raw gate/error string — plain words first.
 </PLAIN-RELAY>
@@ -33,14 +33,12 @@ in the copies.
 
 ## Family map
 
-- `using-loom-discovery` — jurisdiction: problem space (user-insights: needs
-  research; business-value: worth-it check). Start here when the problem or users aren't yet evidence-backed.
-- `using-loom-product-principles` — jurisdiction: product constitution
-  (north star + falsifiable principles). Start here for a new product idea.
-- `using-loom-interface-design` — jurisdiction: UI/UX surface (DESIGN.md +
-  ui-flows.md). Start here to design how a feature looks and behaves.
-- `using-loom-spec` — jurisdiction: requirement fan-out (spec draft, edge
-  cases, acceptance criteria). Start here to expand a feature into a spec.
+- `using-loom-design` — jurisdiction: the design side — discovery (problem
+  space: user-insights / business-value), product constitution
+  (product-principles), UI/UX surface (design-system / interaction-flows /
+  design-critic), requirement fan-out (spec-expansion / completeness-critic).
+  Start here for product-shaped work or when unsure which design-side skill
+  applies.
 - `using-loom-code` — jurisdiction: implementation (brainstorm, plan, build,
   review, ship). Start here to write or change code.
 - `using-loom-pipeline` — jurisdiction: orchestration (drives the four
@@ -49,10 +47,9 @@ in the copies.
 
 ## Three doors
 
-1. **Interactive design-side** — `using-loom-discovery`,
-   `using-loom-product-principles`, `using-loom-interface-design`,
-   `using-loom-spec` answer direct asks and also recommend the next
-   station in the journey.
+1. **Interactive design-side** — `using-loom-design` answers direct asks
+   across discovery / product-principles / interface-design / spec and also
+   recommends the next station in the journey.
 2. **Interactive loom-code** — `using-loom-code` answers direct asks to
    write/change/review code, and is the unskippable gate before any brief.
 3. **Explicit Workflow (pipeline + batch)** — `using-loom-pipeline` drives
@@ -67,11 +64,11 @@ This table is the single source of truth — every family entry's §Intake refer
 
 | # | Condition | Recommendation |
 |---|-----------|-----------------|
-| 1 | No `docs/loom/PRINCIPLES.md` in the target repo AND the work is product-shaped (new product/feature idea, not an increment) | Suggest **using-loom-product-principles first** |
-| 2 | The work touches a user-facing surface AND no `DESIGN.md`/`ui-flows.md` already covers it | Suggest **using-loom-interface-design first** |
-| 3 | The work is multi-state/multi-object behavior AND no spec or change-folder exists for it | Suggest **using-loom-spec first** |
+| 1 | No `docs/loom/PRINCIPLES.md` in the target repo AND the work is product-shaped (new product/feature idea, not an increment) | Suggest **using-loom-design first** (routes to the product-principles station) |
+| 2 | The work touches a user-facing surface AND no `DESIGN.md`/`ui-flows.md` already covers it | Suggest **using-loom-design first** (routes to the interface-design station) |
+| 3 | The work is multi-state/multi-object behavior AND no spec or change-folder exists for it | Suggest **using-loom-design first** (routes to the spec station) |
 | Negative guard | The work is a bug fix, a refactor, or a test-covered increment | **Do not interrupt** — proceed directly, skip the recommendation silently |
-| 4 | The work is product-shaped AND no `docs/loom/discovery/*/user-insights.md` already covers it AND the problem/users cannot yet be articulated with evidence (the user would be guessing at who-needs-what) | Suggest **using-loom-discovery first** |
+| 4 | The work is product-shaped AND no `docs/loom/discovery/*/user-insights.md` already covers it AND the problem/users cannot yet be articulated with evidence (the user would be guessing at who-needs-what) | Suggest **using-loom-design first** (routes to the discovery station) |
 | 5 | Neither `docs/loom/backlog/` nor `docs/loom/DIRECTION.md` in the target repo (the queue layer is not adopted; the verb refuses on either existing) AND the work is loom-family-scoped | Suggest running **loom-init** once — the scaffold verb shipped in loom-code |
 
 When both row 4 and row 1 fire, recommend discovery first — the principles station consumes discovery's value-commitment output.
@@ -101,4 +98,4 @@ gotchas surface before you re-commit them.
 > on demand (pull-not-push stays intact).
 
 User-facing narration follows the family relay discipline — read
-`loom-pipeline/hooks/family-relay.md` on demand (pull, not preload).
+`loom-code/hooks/family-relay.md` on demand (pull, not preload).

@@ -37,8 +37,8 @@ There is deliberately no bare `PASS`: coverage is relative to `ui-flows.md`'s en
 ## What this skill does NOT do
 
 - **Not the package-test gate** — complements, never replaces, `verification-before-completion`.
-- **Not DESIGN.md token conformance** — colors/spacing/typography checking is explicitly parked (loom-interface-design README §Scope, PR #473); this skill verifies behavioral states, not visual token values.
-- **Not a design critic** — never adds states to `ui-flows.md` or judges the enumeration; omission-hunting is `loom-interface-design:design-critic`'s job, upstream.
+- **Not DESIGN.md token conformance** — colors/spacing/typography checking is explicitly parked (loom-design README §Scope, PR #473); this skill verifies behavioral states, not visual token values.
+- **Not a design critic** — never adds states to `ui-flows.md` or judges the enumeration; omission-hunting is `loom-design:design-critic`'s job, upstream.
 - **Not a code editor** — verdict-only role; fixes route back through the implementer.
 
 ## See also
@@ -46,4 +46,4 @@ There is deliberately no bare `PASS`: coverage is relative to `ui-flows.md`'s en
 - [`SKILL.md`](SKILL.md) — operational spec (conditional gate + tooling resolution + 5-step process + verdict rules).
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — the package-test sibling gate.
 - [`../finishing-a-development-branch/SKILL.md`](../finishing-a-development-branch/SKILL.md) — the orchestrator that invokes both gates.
-- `loom-interface-design:interaction-flows` — produces the `ui-flows.md` this skill drives; `loom-interface-design:design-critic` — enriches it with `critic-found` rows.
+- `loom-design:interaction-flows` — produces the `ui-flows.md` this skill drives; `loom-design:design-critic` — enriches it with `critic-found` rows.

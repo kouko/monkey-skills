@@ -37,8 +37,8 @@
 ## 這個 skill 不做的事
 
 - **不是 package 測試 gate** — 它補足、絕不取代 `verification-before-completion`。
-- **不是 DESIGN.md token 一致性檢查** — 比對顏色 / 間距 / 字體是否符合 token 明確處於擱置狀態（loom-interface-design README §Scope，PR #473）；這個 skill 驗證的是行為狀態，不是視覺 token 值。
-- **不是 design critic** — 從不往 `ui-flows.md` 加狀態，也不評判列舉好不好；獵捕遺漏是上游 `loom-interface-design:design-critic` 的工作。
+- **不是 DESIGN.md token 一致性檢查** — 比對顏色 / 間距 / 字體是否符合 token 明確處於擱置狀態（loom-design README §Scope，PR #473）；這個 skill 驗證的是行為狀態，不是視覺 token 值。
+- **不是 design critic** — 從不往 `ui-flows.md` 加狀態，也不評判列舉好不好；獵捕遺漏是上游 `loom-design:design-critic` 的工作。
 - **不是 code editor** — verdict-only 角色：只觀察與回報，修正一律經 implementer 回路。
 
 ## 參考
@@ -46,4 +46,4 @@
 - [`SKILL.md`](SKILL.md) — Agent 載入的運作規格（條件式 gate + 工具解析 + 5 步流程 + verdict 規則）。
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — package 測試側的姊妹 gate。
 - [`../finishing-a-development-branch/SKILL.md`](../finishing-a-development-branch/SKILL.md) — 同時呼叫兩個 gate 的 orchestrator。
-- `loom-interface-design:interaction-flows` — 產出這個 skill 要開的 `ui-flows.md`；`loom-interface-design:design-critic` — 用 `critic-found` 列增補它。
+- `loom-design:interaction-flows` — 產出這個 skill 要開的 `ui-flows.md`；`loom-design:design-critic` — 用 `critic-found` 列增補它。

@@ -7,7 +7,7 @@ PRESENCE + POSITION of a compact new subsection: "Axis 0 — Upstream artifacts
 (family §Intake)" placed immediately BEFORE "Axis 1 — Problem". Axis 0 must:
 
 1. Point at the loom family reception's on-ramp criteria table
-   (`loom-pipeline/hooks/family-reception.md`) rather than copy it — SSOT
+   (`loom-code/hooks/family-reception.md`) rather than copy it — SSOT
    drift prevention (plan-level note "Reception SSOT rule").
 2. On a triggered row, surface the recommendation ONCE (naming the concrete
    design-side sequence), then record the user's choice in the brief under a
@@ -56,7 +56,7 @@ def test_axis0_references_reception_criteria():
     """Axis 0 must name the loom family reception file / label as the
     criteria SSOT — never copy the on-ramp table body into this SKILL.md."""
     text = _text()
-    assert "loom-pipeline/hooks/family-reception.md" in text or \
+    assert "loom-code/hooks/family-reception.md" in text or \
         "family-reception.md" in text, \
         "Axis 0 must name the reception file (point, don't copy)"
     low = text.lower()
@@ -83,7 +83,7 @@ def test_axis0_recommend_once_and_record_choice():
         or "do not re-raise" in low or "never re-ask" in low, \
         "Axis 0 must forbid re-raising the recommendation after a decline"
     # the concrete sequence must be named, not left abstract
-    assert "using-loom-product-principles" in text, \
+    assert "using-loom-design" in text, \
         "Axis 0 must name a concrete station in the design-side sequence"
 
 

@@ -13,7 +13,7 @@ approved, and the covered files haven't drifted since) are two
 DIFFERENT gates — passing one says nothing about the other, so both
 must run.
 
-Per-exit-code routing (mirrors loom-spec/scripts/mint_critic_verdict.py's
+Per-exit-code routing (mirrors loom-design/scripts/spec/mint_critic_verdict.py's
 documented exit codes 0/2/3/4):
   - 2 = no verdict file, completeness-critic never ran -> route TO
     completeness-critic.
@@ -80,7 +80,7 @@ def test_structural_clean_vs_critic_fresh_distinction_stated():
 
 def test_completeness_critic_named_in_validate_invocation():
     """The --critic value must be completeness-critic -- writing-plans
-    consumes loom-spec's spec-expansion output, gated by
+    consumes loom-design's spec-expansion output, gated by
     completeness-critic's verdict, not design-critic's."""
     section = _who_runs_the_validator_section(_text())
 
@@ -153,7 +153,7 @@ def test_exit_4_reruns_completeness_critic():
 
 def test_exit_4_names_three_distinct_causes():
     """Exit 4 folds THREE real causes from mint_critic_verdict.py's
-    validate path (loom-spec/scripts/mint_critic_verdict.py:237-265):
+    validate path (loom-design/scripts/spec/mint_critic_verdict.py:237-265):
     a --files divergence from what was recorded at mint (:239-247), a
     covered file edited since mint / stale sha256 (:258-265), and a
     covered file that is unreadable since mint (:249-256, _covered_bytes
@@ -193,7 +193,7 @@ def test_three_exit_codes_have_distinct_routings():
 def test_files_example_is_concrete_not_ellipsis():
     """The --files example must be a concrete, readable file path, not a
     directory or a literal ellipsis. Grounding:
-    loom-spec/scripts/mint_critic_verdict.py:114-128 (_covered_bytes)
+    loom-design/scripts/spec/mint_critic_verdict.py:114-128 (_covered_bytes)
     resolves each --files entry with Path.read_bytes() -- files only.
     A directory, or a placeholder like 'specs/...', raises OSError at
     that call and mint_critic_verdict.py's own exit-4 branches (:189-194
@@ -216,21 +216,21 @@ def test_files_example_is_concrete_not_ellipsis():
 def test_command_example_names_explicit_owning_plugin_path():
     """Round-4 haiku cold-reader dogfood: a cold reader reproduced the
     mint_critic_verdict.py command with the wrong plugin path
-    (loom-code/scripts/ instead of loom-spec/scripts/) because the
+    (loom-code/scripts/ instead of loom-design/scripts/spec/) because the
     copyable command block itself only named the bare script filename --
     the owning plugin was only in surrounding prose. The command example
-    must carry the explicit `loom-spec/scripts/mint_critic_verdict.py`
+    must carry the explicit `loom-design/scripts/spec/mint_critic_verdict.py`
     path, mirroring how this same section's structural-validator
     precedent (`check_scenario_coverage.py`, line ~212) is invoked with
     its explicit `loom-code/scripts/` path so the owning plugin is
     unambiguous in the copyable command itself, not only in prose."""
     section = _who_runs_the_validator_section(_text())
 
-    assert "loom-spec/scripts/mint_critic_verdict.py" in section, \
-        "the command example must carry the explicit loom-spec/scripts/ " \
+    assert "loom-design/scripts/spec/mint_critic_verdict.py" in section, \
+        "the command example must carry the explicit loom-design/scripts/spec/ " \
         "path -- a bare 'mint_critic_verdict.py' filename let a cold " \
         "reader guess the wrong owning plugin (loom-code instead of " \
-        "loom-spec)"
+        "loom-design)"
 
 
 def test_files_list_must_match_what_critic_minted():

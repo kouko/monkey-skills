@@ -39,7 +39,7 @@ brainstorming → brief                            (Discovery 段階)
 - **Acceptance**: RED テスト名 + GREEN 観察可能条件
 - **Dependencies**: `none` | `Task N completes first` | `Tasks N, M parallel`
 - **Reuse-adequacy**: タスクの Description が既存 helper を別レーンで再利用するよう指示する場合、著者が書く 2 つのスロット — `Observed`（helper が今日何をするかの報告。閉じた語彙 `read <repo-relative-path>:<line>` / `inferred from docstring` / `unverified assumption — <what would settle it>` のいずれかの source marker で終える）と `Intended`（新しい呼び出し経路が何をするかの仕様）。著者側の adequacy 判定は書かない — それは reviewer の判断（`references/plan-format.md` §`Reuse-adequacy` 参照）
-- **Brief item covered**: traceability referent を 1 つ、次の 3 形式のいずれかで — ブリーフの Smallest End State / Decision からの引用 / 参照、loom-spec change-folder の join key、またはブリーフが宣言した `BI-<n>` 識別子。ブリーフの成果を何も届けないタスク（リリース事務、バージョン bump）は `none — <reason>` と書く（理由は必須）。厳密な文法、1 タスクが 2 つの item に対応しうる時の tie-break、識別子ルールは [`references/plan-format.md`](references/plan-format.md) §`Brief item covered` 参照
+- **Brief item covered**: traceability referent を 1 つ、次の 3 形式のいずれかで — ブリーフの Smallest End State / Decision からの引用 / 参照、loom-design change-folder の join key、またはブリーフが宣言した `BI-<n>` 識別子。ブリーフの成果を何も届けないタスク（リリース事務、バージョン bump）は `none — <reason>` と書く（理由は必須）。厳密な文法、1 タスクが 2 つの item に対応しうる時の tie-break、識別子ルールは [`references/plan-format.md`](references/plan-format.md) §`Brief item covered` 参照
 
 この形式が `subagent-driven-development` がタスクごとに 3 サブエージェントを派遣する時に消費する shape。
 

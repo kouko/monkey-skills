@@ -668,7 +668,7 @@ def test_real_store_has_every_migrated_entry_and_validates_clean():
 
     Deliberately a floor (`>=`), not `== 74`: this same branch ships two
     workflows that legitimately change the count going forward --
-    loom-memory (loom-pipeline/skills/loom-memory/SKILL.md) routes a new
+    loom-memory (loom-code/skills/loom-memory/SKILL.md) routes a new
     backlog-shaped fact to a new entry file, and
     archive_change_folder.py's file unit MOVES a live entry into
     backlog/archive/. An exact-equality assertion would turn either
@@ -814,7 +814,7 @@ def test_start_field_disagreeing_with_its_body_bullet_is_rejected(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Task 8 -- loom-pipeline's loom-memory skill must route a backlog-shaped item
+# Task 8 -- loom-code's loom-memory skill must route a backlog-shaped item
 # to the store (docs/loom/backlog/), not to the now-generated
 # docs/loom/BACKLOG.md. Scoped to the "## record" section's classification
 # step, not a whole-file substring search, so a stray historical mention
@@ -825,7 +825,7 @@ def test_start_field_disagreeing_with_its_body_bullet_is_rejected(tmp_path):
 
 
 LOOM_MEMORY_SKILL_PATH = (
-    REPO_ROOT / "loom-pipeline" / "skills" / "loom-memory" / "SKILL.md"
+    REPO_ROOT / "loom-code" / "skills" / "loom-memory" / "SKILL.md"
 )
 
 

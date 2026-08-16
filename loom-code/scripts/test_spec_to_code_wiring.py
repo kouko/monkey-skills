@@ -1,7 +1,7 @@
 """Structural grep-test guarding the spec→code seam wiring in writing-plans.
 
 writing-plans/SKILL.md is a prompt artifact, not executable code. Its
-correctness is the PRESENCE of a SECOND input contract: a validated loom-spec
+correctness is the PRESENCE of a SECOND input contract: a validated loom-design
 change-folder (`docs/loom/<change-id>/`, `validate_spec_output.py`-clean) may be
 consumed instead of a brainstorming brief. The section must state how a
 `#### Scenario:` (GIVEN/WHEN/THEN) maps to one task's `Acceptance: RED/GREEN`,
@@ -9,7 +9,7 @@ must POINT (not copy) the source `### Requirement:` / `#### Scenario:` names via
 the stable join key, must carve out the fact-vs-interpretation verbatim-copy
 rule (THEN observable / magic values / signatures are facts → copied verbatim;
 narrative + rationale are interpretation → linked), and must declare the
-consumer read-only on the producer's change-folder (loom-spec stays SSOT).
+consumer read-only on the producer's change-folder (loom-design stays SSOT).
 
 These checks assert on the load-bearing PHRASES (intent), tolerant of wording
 variation, so the test guards meaning without being brittle.
@@ -36,8 +36,8 @@ def test_writing_plans_documents_changefolder_input():
     low = text.lower()
 
     # 1. the section exists.
-    assert "Consuming a loom-spec change-folder" in text, \
-        "missing the 'Consuming a loom-spec change-folder' section heading"
+    assert "Consuming a loom-design change-folder" in text, \
+        "missing the 'Consuming a loom-design change-folder' section heading"
 
     # 2. it is a SECOND input contract alongside the brief, taking a validated
     #    change-folder as the alternative input.
@@ -65,7 +65,7 @@ def test_writing_plans_documents_changefolder_input():
         "must state the verbatim-copy carve-out for facts"
     assert "then" in low, "carve-out must name the THEN observable as a fact"
 
-    # 6. consumer read-only on the change-folder (loom-spec stays SSOT).
+    # 6. consumer read-only on the change-folder (loom-design stays SSOT).
     assert "read-only" in low or "read only" in low \
         or "must not modify" in low or "must not edit" in low, \
         "must declare the consumer read-only on the change-folder"

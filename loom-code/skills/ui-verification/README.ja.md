@@ -37,8 +37,8 @@ bare `PASS` は意図的に存在しない：カバレッジは `ui-flows.md` �
 ## このスキルがしないこと
 
 - **パッケージテストのゲートではない** — `verification-before-completion` を補完するのであって、代替しない。
-- **DESIGN.md トークン準拠チェックではない** — 色 / 余白 / タイポグラフィの照合は明示的に保留中（loom-interface-design README §Scope、PR #473）。このスキルが検証するのは挙動としての状態であり、視覚トークン値ではない。
-- **design critic ではない** — `ui-flows.md` に状態を追加せず、列挙の良し悪しも判定しない。見落とし狩りは上流の `loom-interface-design:design-critic` の仕事。
+- **DESIGN.md トークン準拠チェックではない** — 色 / 余白 / タイポグラフィの照合は明示的に保留中（loom-design README §Scope、PR #473）。このスキルが検証するのは挙動としての状態であり、視覚トークン値ではない。
+- **design critic ではない** — `ui-flows.md` に状態を追加せず、列挙の良し悪しも判定しない。見落とし狩りは上流の `loom-design:design-critic` の仕事。
 - **コードエディタではない** — verdict のみの役割。修正は implementer 経由で戻す。
 
 ## 関連
@@ -46,4 +46,4 @@ bare `PASS` は意図的に存在しない：カバレッジは `ui-flows.md` �
 - [`SKILL.md`](SKILL.md) — エージェント向け運用仕様（条件付きゲート + ツーリング解決 + 5 ステッププロセス + verdict ルール）。
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — パッケージテスト側の兄弟ゲート。
 - [`../finishing-a-development-branch/SKILL.md`](../finishing-a-development-branch/SKILL.md) — 両ゲートを呼び出すオーケストレータ。
-- `loom-interface-design:interaction-flows` — このスキルが走らせる `ui-flows.md` の生産者；`loom-interface-design:design-critic` — `critic-found` 行で同ファイルを増補。
+- `loom-design:interaction-flows` — このスキルが走らせる `ui-flows.md` の生産者；`loom-design:design-critic` — `critic-found` 行で同ファイルを増補。

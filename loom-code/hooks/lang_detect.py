@@ -248,7 +248,7 @@ def _majority_language(texts, n_turns: int = 3) -> Optional[str]:
 
     Shared building block for both a whole-file vote
     (``conversation_language``) and a rolling, point-in-time vote
-    (loom-pipeline/scripts/comms_metrics.py): turns whose script can't
+    (loom-design/scripts/pipeline/comms_metrics.py): turns whose script can't
     be determined (too short, or no script majority) are dropped
     BEFORE sampling rather than counted as a diluting non-vote — a run
     of short confirmations ("好" / "修", <20 visible chars) must not

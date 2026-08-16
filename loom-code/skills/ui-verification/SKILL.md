@@ -122,7 +122,7 @@ untestable: …" — never "the UI is verified".
   front-run the park. Verify *behavioral states*, not visual token values.
 - **Not a design critic.** It never adds states to `ui-flows.md` or judges
   whether the enumeration is good design — omission-hunting is
-  `loom-interface-design:design-critic`'s job, upstream.
+  `loom-design:design-critic`'s job, upstream.
 - **Not a code editor.** Verdict-only role: it observes and reports; fixes
   route back through the implementer.
 
@@ -139,4 +139,4 @@ re-derived UI claims — take it when you control the timing.
 
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — the package-test sibling gate.
 - [`../finishing-a-development-branch/SKILL.md`](../finishing-a-development-branch/SKILL.md) — the orchestrator that invokes both gates.
-- `loom-interface-design:interaction-flows` — produces the `ui-flows.md` this skill drives; `loom-interface-design:design-critic` — enriches it with `critic-found` rows.
+- `loom-design:interaction-flows` — produces the `ui-flows.md` this skill drives; `loom-design:design-critic` — enriches it with `critic-found` rows.

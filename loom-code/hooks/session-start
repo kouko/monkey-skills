@@ -69,7 +69,7 @@ banner_open='<EXTREMELY_IMPORTANT>\nYou have loom-code. Routing through this ski
 banner_close='\n</EXTREMELY_IMPORTANT>'
 context="${banner_open}${escaped}${banner_close}"
 
-# Family reception (front door) — merged from loom-pipeline/hooks/session-start.
+# Family reception (front door) — merged from loom-code/hooks/session-start.
 # Reference: docs/loom/specs/2026-07-04-loom-family-connective-tissue.md
 RECEPTION_PATH="${SCRIPT_DIR}/family-reception.md"
 FAMILY_RELAY_PATH="${SCRIPT_DIR}/family-relay.md"

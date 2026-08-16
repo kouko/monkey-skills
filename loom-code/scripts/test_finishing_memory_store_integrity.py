@@ -89,7 +89,7 @@ def test_memory_integrity_step_names_the_script_with_its_path():
     # The full invocation, not `…/scripts/…` plus a blacklist. Whole-branch
     # review probed the loose form: `scripts/check_loom_memory_integrity.py`
     # is satisfied by ANY prefix, and barring only `loom-code/` left
-    # `loom-pipeline/scripts/`, `tools/scripts/` and `../scripts/` all
+    # `loom-design/scripts/`, `tools/scripts/` and `../scripts/` all
     # false-green. Asserting the literal command creates a token boundary
     # that admits no prefix at all.
     assert "python3 scripts/check_loom_memory_integrity.py" in row, \
@@ -105,7 +105,7 @@ def test_memory_integrity_step_names_the_script_with_its_path():
 
 def test_memory_integrity_step_handles_the_script_being_absent():
     """This skill ships as a distributed plugin, but the checker exists only
-    in this repo. `loom-pipeline:loom-memory` fires in ANY repo carrying
+    in this repo. `loom-code:loom-memory` fires in ANY repo carrying
     `docs/loom/memory/README.md`, so a consuming repo can satisfy this
     row's trigger with no such script present — where the command exits
     nonzero for "No such file" and the row's own "exit 0 is the gate"

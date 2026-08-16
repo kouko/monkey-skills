@@ -10,7 +10,7 @@ instead of dumping options on a user who cannot evaluate them (the observed
 pain: "technical choices I can't really evaluate").
 
 Dedup (plain-relay PR): the threshold triple + brief-first rule now live in a
-single family SSOT — `loom-pipeline/hooks/family-reception.md §Brief before a
+single family SSOT — `loom-code/hooks/family-reception.md §Brief before a
 complex fork`. The six routers/skills that previously carried in-place copies
 of the trigger (using-loom-discovery, using-loom-interface-design,
 using-loom-product-principles, using-loom-spec, brainstorming,
@@ -33,14 +33,12 @@ from pathlib import Path
 
 _SKILLS = Path(__file__).parents[1] / "skills"
 _HOOKS = Path(__file__).parents[1] / "hooks"
-# loom-pipeline/hooks sits at the repo root, two parents above loom-code/scripts.
-_PIPELINE_HOOKS = Path(__file__).resolve().parents[2] / "loom-pipeline" / "hooks"
 
 BRAINSTORMING = _SKILLS / "brainstorming" / "SKILL.md"
 SDD = _SKILLS / "subagent-driven-development" / "SKILL.md"
 RCR = _SKILLS / "requesting-code-review" / "SKILL.md"
 ROUTER_CARD = _HOOKS / "router-card.md"
-SSOT = _PIPELINE_HOOKS / "family-reception.md"
+SSOT = _HOOKS / "family-reception.md"
 
 # The shared trigger contract — carried verbatim by the SSOT + the two
 # remaining in-place carriers (RCR, router-card).

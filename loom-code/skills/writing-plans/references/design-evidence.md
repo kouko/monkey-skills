@@ -1,4 +1,4 @@
-Source: `writing-plans/SKILL.md` §"BLOCKED fallback", §"Plan size ceiling", and §"Consuming a loom-spec change-folder" — serves `writing-plans`.
+Source: `writing-plans/SKILL.md` §"BLOCKED fallback", §"Plan size ceiling", and §"Consuming a loom-design change-folder" — serves `writing-plans`.
 
 # Design evidence — author-facing, do NOT load at runtime
 

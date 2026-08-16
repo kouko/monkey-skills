@@ -65,7 +65,7 @@ Do not delete the section heading — an absent heading or a bare section is
 a reviewable omission, and an N/A whose reason does not hold against the
 artifact's own content is a reviewable claim. A paragraph that suffices
 needs no diagram — the slot forces the declaration, not the drawing.
-Channel rule SSOT: `loom-pipeline/hooks/family-relay.md §(b) Visual defaults`.
+Channel rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual defaults`.
 
 When-to-draw judgment: see [`../../brainstorming/references/visual-companion.md`](../../brainstorming/references/visual-companion.md).
 
@@ -111,7 +111,7 @@ This section deliberately carries no owner field, no deadline field, no routing 
 - **Review-weight**: <mechanical | prose | OMIT>  # v0.11.0+ — opt-in, default absent = full triad (implementer + spec-reviewer + code-quality-reviewer). `mechanical` may ONLY be set when this task is an identical or near-identical edit reproducible from an exact spec — never for logic, heuristic, hook, or security-surface changes. `prose` (v0.42.0+) may ONLY be set when every file in `Files touched` is `.md` authored prose. See §`Review-weight` below.
 - **Brief item covered**: <traceability referent — ONE field, three accepted referent kinds:
     (a) a quote or reference from the brief's Smallest End State / Decision section, OR
-    (b) when the plan consumes a loom-spec change-folder, a **stable join key** of the form
+    (b) when the plan consumes a loom-design change-folder, a **stable join key** of the form
     `<change-id> / Requirement: <name> / Scenario: <name>` (R5 — a checkable provenance referent,
     à la Kiro `_Requirements:` / Spec-Kit `FR-###`), OR
     (c) a `BI-<n>` identifier declared by the source brief. This is the SAME field with a broadened

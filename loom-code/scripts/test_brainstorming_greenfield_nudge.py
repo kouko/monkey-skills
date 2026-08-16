@@ -8,9 +8,9 @@ Evidence AND for a UI / interaction / stateful surface, the agent must
 enumerate UI states across the six categories (empty / error / loading /
 state-transition / permission / boundary) BEFORE finalizing the brief — with
 an explicit gate (only greenfield + UI; NOT brownfield, NOT pure-logic), a DRY
-guardrail (category reminder only; full method lives in loom-spec:
+guardrail (category reminder only; full method lives in loom-design:
 spec-expansion; do not reproduce it here), and a forward-pointer to
-loom-spec:spec-expansion marked Tier 2 / deferred.
+loom-design:spec-expansion marked Tier 2 / deferred.
 
 These checks assert on the load-bearing PHRASES (intent), tolerant of wording
 variation, so the test guards meaning without being brittle.
@@ -133,11 +133,11 @@ def test_nudge_fires_before_finalizing_brief():
 
 def test_dry_guardrail_reminder_only():
     """A one-line DRY guardrail: this is a category reminder only; the full
-    method lives in loom-spec:spec-expansion; do NOT reproduce it here."""
+    method lives in loom-design:spec-expansion; do NOT reproduce it here."""
     text = _text()
     low = text.lower()
-    assert "loom-spec:spec-expansion" in text, \
-        "DRY guardrail must name the SSOT: loom-spec:spec-expansion"
+    assert "loom-design:spec-expansion" in text, \
+        "DRY guardrail must name the SSOT: loom-design:spec-expansion"
     assert "reminder" in low, \
         "guardrail must frame the nudge as a category reminder (not the method)"
     assert ("do not reproduce" in low or "don't reproduce" in low
@@ -154,14 +154,14 @@ def test_dry_guardrail_reminder_only():
 # --- the forward-pointer ----------------------------------------------------
 
 def test_forward_pointer_active_wired():
-    """A forward-pointer to loom-spec:spec-expansion for high-coverage /
+    """A forward-pointer to loom-design:spec-expansion for high-coverage /
     high-risk greenfield, now marked ACTIVE / wired: writing-plans reads
-    loom-spec change-folders, so the spec→code delegation is live (no longer
+    loom-design change-folders, so the spec→code delegation is live (no longer
     Tier-2-deferred)."""
     text = _text()
     low = text.lower()
-    assert "loom-spec:spec-expansion" in text, \
-        "forward-pointer must name loom-spec:spec-expansion"
+    assert "loom-design:spec-expansion" in text, \
+        "forward-pointer must name loom-design:spec-expansion"
     assert "active" in low or "wired" in low, \
         "forward-pointer must be marked active / wired (no longer deferred)"
     # the wiring is now live: this exact pointer must NOT still say it is deferred

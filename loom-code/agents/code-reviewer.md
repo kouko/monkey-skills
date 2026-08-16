@@ -462,7 +462,7 @@ that turns this dimension on. The agent has no authority to invent principles â€
 it judges the branch diff **against
 the falsifiable `â€” check:` clauses already written in that file** (industry analogue: Spec
 Kit's `/speckit.review` constitution gate). It is a **conformance** check (does the diff
-violate a stated principle?), distinct from the omission-hunting that `loom-spec:completeness-critic`'s
+violate a stated principle?), distinct from the omission-hunting that `loom-design:completeness-critic`'s
 principles lens performs on the spec.
 
 **Severity calibration:**

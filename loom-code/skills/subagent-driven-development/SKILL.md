@@ -37,7 +37,7 @@ Asking has a cost. Every low-stakes confirmation teaches the user that confirmat
 
 When you ask a technical decision (a bug-fix approach, a design choice, error handling), bring your judgment, not the raw problem. An open-ended "how should I fix this?" with no options makes the user think *for* you — that is forbidden. Research industry practice first (`using-loom-code` router rule #5 / `brainstorming`'s Axis-4 — point to them, do not re-implement the protocol here), then lead with a scoped `(Recommended)` option plus one line of why. The less familiar the domain, the **more** research you owe; unfamiliarity must not collapse into an open question.
 
-**Complex fork → brief before you ask.** The trigger threshold and stakes-first framing live in the family SSOT: [`loom-pipeline/hooks/family-reception.md`](../../../loom-pipeline/hooks/family-reception.md) §Brief before a complex fork — applies verbatim when the orchestrator surfaces a technical decision in gate ②.
+**Complex fork → brief before you ask.** The trigger threshold and stakes-first framing live in the family SSOT: [`loom-code/hooks/family-reception.md`](../../hooks/family-reception.md) §Brief before a complex fork — applies verbatim when the orchestrator surfaces a technical decision in gate ②.
 
 ### ③ How to phrase
 
@@ -60,7 +60,7 @@ otherwise run the plugin-shipped copy:
 substitution, not a run-time shell variable).
 ANY turn that runs one of these actions MUST relay
 that printed card in the live conversation language, framed per
-`loom-pipeline/hooks/family-relay.md §Family relay discipline` —
+`loom-code/hooks/family-relay.md §Family relay discipline` —
 progress-card variant `§(a2) Progress card` (family-relay absent, or
 both script copies absent → render the four fields inline: goal, task
 table, stage,

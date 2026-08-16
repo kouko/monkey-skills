@@ -55,12 +55,12 @@ When that axis question fires, phrase it for the warm-but-interrupted user who r
 
 These three join the two gates already woven into the axes: gate ① (ask only when genuinely uncertain) lives in **Axis 1** as the confident-JTBD-read rule — state a confident reading as a committed interpretation rather than re-asking — and gate ② (bring a recommendation, not an open question) lives in **Axis 4** as the research-then-"My take: Recommend / Why / Conditional reversal" protocol; together the three read as one coherent set.
 
-**Above all — brief first when the fork is complex.** The trigger threshold and stakes-first framing live in `loom-pipeline/hooks/family-reception.md §Brief before a complex fork` — run `dev-workflow:brief-before-asking` before firing the `AskUserQuestion` for an axis fork. When the brief presents ≥2 options, render them as a markdown comparison table by default (a trivial binary ask may stay prose) — per `loom-pipeline/hooks/family-relay.md §Family relay discipline`.
+**Above all — brief first when the fork is complex.** The trigger threshold and stakes-first framing live in `loom-code/hooks/family-reception.md §Brief before a complex fork` — run `dev-workflow:brief-before-asking` before firing the `AskUserQuestion` for an axis fork. When the brief presents ≥2 options, render them as a markdown comparison table by default (a trivial binary ask may stay prose) — per `loom-code/hooks/family-relay.md §Family relay discipline`.
 
 ### Axis 0 — Upstream artifacts (family §Intake)
 
 Before Axis 1, check the target repo against **the loom family reception's**
-on-ramp criteria table (`loom-pipeline/hooks/family-reception.md`) — point to
+on-ramp criteria table (`loom-code/hooks/family-reception.md`) — point to
 it, never copy its rows here (SSOT: that file owns the table body).
 
 **Negative guard (silent skip)**: if the work is a bug fix, a refactor, or a
@@ -105,8 +105,7 @@ neither copy of `backlog_index.py` resolves, stay N/A as today — the
 scaffold verb ships alongside it, so there is no offer to make.
 
 If a criteria row triggers, surface the recommendation **ONCE** — name the
-concrete design-side sequence (e.g. `using-loom-product-principles` →
-`using-loom-interface-design` → `using-loom-spec`, whichever rows fired), then
+concrete design-side sequence (e.g. `using-loom-design`, whichever rows fired), then
 record the user's choice in the brief under a `## Design-side on-ramp` line
 ("offered — user chose <direct/detour>") and proceed either way.
 Never re-raise it after a decline — the recommend-once rule holds for the
@@ -194,7 +193,7 @@ Optional but recommended sections: Alternatives Considered (Axis 4), What Become
 
 The brief lands in the user's repo at `docs/loom/specs/<date>-<topic>.md`.
 
-**Plain language in the summary message**: the chat message you send the user after brainstorming must use plain descriptions ("the distribution script now owns SSOT for module X"), not internal identifiers (`Option B`, `Finding #2`, `Q-v0.3-1`, cluster names). Those identifiers are shorthand for *you*; the user needs the human-readable meaning. The brief *file* may keep precise identifiers for `writing-plans` consumption. Relaying this summary and any diagrams: see `loom-pipeline/hooks/family-relay.md §Family relay discipline`.
+**Plain language in the summary message**: the chat message you send the user after brainstorming must use plain descriptions ("the distribution script now owns SSOT for module X"), not internal identifiers (`Option B`, `Finding #2`, `Q-v0.3-1`, cluster names). Those identifiers are shorthand for *you*; the user needs the human-readable meaning. The brief *file* may keep precise identifiers for `writing-plans` consumption. Relaying this summary and any diagrams: see `loom-code/hooks/family-relay.md §Family relay discipline`.
 
 **Reverse sub-bullet (SSOT ownership)**: before writing the Reverse sub-bullet, `Read` the distribution/sync script (e.g. `distribute.py`, `sync.sh`) to confirm which module owns canonical SSOT and which direction data flows. Never infer the direction from folder hierarchy alone — the file structure is often misleading.
 
@@ -204,7 +203,7 @@ This nudge fires **only** when **both** hold: (a) Current State Evidence is `N/A
 
 It does **not** fire in brownfield (the Current-State-Evidence recon — Forward / Reverse / Error / Data / Boundary — already walks these touch points) and **not** for pure-logic / data-only features with no interactive surface.
 
-**DRY guardrail** — this is a category *reminder only*: enumerate which of the six states the feature has, don't model them. The full method (BVA / state-machine modeling / permission matrix, with keep-flag-drop discrimination per lens) lives in `loom-spec:spec-expansion`; **do not reproduce it here**.
+**DRY guardrail** — this is a category *reminder only*: enumerate which of the six states the feature has, don't model them. The full method (BVA / state-machine modeling / permission matrix, with keep-flag-drop discrimination per lens) lives in `loom-design:spec-expansion`; **do not reproduce it here**.
 
 ## Red Flags — refuse these rationalizations
 
@@ -218,7 +217,7 @@ Rationalizations that push to skip discovery — *"this is simple," "I know what
 | Axis 4 produces 3+ real options that need triage | `dev-workflow:proposal-critique` | Evidence-grounded KEEP / DEFER / DROP triage. Optional. |
 | Brainstorming output indicates work >1 hour OR >1 module | `writing-plans` (next stage) | Brief becomes the input to plan-splitting. Before delegating, surface Axis 1 + Axis 3 (smallest end state) + Out-of-Scope as a visible checkpoint and require explicit user sign-off — do not proceed on an implicit "ok continue." Per the firing conditions in [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md), produce the brief's document view before requesting sign-off. |
 | Brainstorming output indicates a simple one-line known-pattern fix | Skip writing-plans; route straight to `tdd-iron-law` | The brief documented the smallness; trust it. |
-| Greenfield UI feature needs **high-coverage / high-risk** state fan-out (beyond the inline six-category reminder) | `loom-spec:spec-expansion` | Runs the full lens (USM / OOUX / auto-expansion matrix) on a sparse seed. **Active / wired**: `writing-plans` now reads loom-spec change-folders (see its **§Consuming a loom-spec change-folder**), so the full spec can flow spec→plan→code. Use the inline §Greenfield UI-state nudge for lightweight cases; escalate to `loom-spec:spec-expansion` (→ a validated change-folder) for the high-coverage path. |
+| Greenfield UI feature needs **high-coverage / high-risk** state fan-out (beyond the inline six-category reminder) | `loom-design:spec-expansion` | Runs the full lens (USM / OOUX / auto-expansion matrix) on a sparse seed. **Active / wired**: `writing-plans` now reads loom-spec change-folders (see its **§Consuming a loom-spec change-folder**), so the full spec can flow spec→plan→code. Use the inline §Greenfield UI-state nudge for lightweight cases; escalate to `loom-design:spec-expansion` (→ a validated change-folder) for the high-coverage path. |
 
 Delegation contract (see CLAUDE.md cross-plugin section): pass **paths + structured seed context**, not full file content. The target skill loads its own resources.
 
@@ -226,7 +225,7 @@ Delegation contract (see CLAUDE.md cross-plugin section): pass **paths + structu
 
 For non-trivial system design — especially when axes 1+2 (problem + users) need a flow / interaction diagram, or axis 5 (what becomes obsolete) needs an architecture-before-and-after — see [`references/visual-companion.md`](references/visual-companion.md). The companion documents when a Mermaid sequence / C4 / ER diagram pays for itself vs when prose is enough.
 
-Flow / state diagrams in briefs and user-facing summaries are GENERATED via `ascii-graph-toolkit` (or Mermaid where the channel renders it) — never hand-drawn box art. SSOT for the channel rule: `loom-pipeline/hooks/family-relay.md §(b) Visual defaults`.
+Flow / state diagrams in briefs and user-facing summaries are GENERATED via `ascii-graph-toolkit` (or Mermaid where the channel renders it) — never hand-drawn box art. SSOT for the channel rule: `loom-code/hooks/family-relay.md §(b) Visual defaults`.
 
 ## What this skill does NOT do
 

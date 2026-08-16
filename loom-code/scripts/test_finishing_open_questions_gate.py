@@ -60,7 +60,7 @@ def test_step8_table_names_open_questions_check():
 def test_open_questions_row_names_full_invocation_path():
     """Full invocation, not a bare basename — same reasoning as the
     memory-store integrity row's own test: a bare basename is satisfiable
-    by any path prefix (loom-pipeline/scripts/, tools/scripts/, ../scripts/),
+    by any path prefix (loom-design/scripts/, tools/scripts/, ../scripts/),
     so the assertion must pin the full repo-root-relative path."""
     row = _open_questions_row(_text())
     assert "python3 loom-code/scripts/check_open_questions.py" in row, \

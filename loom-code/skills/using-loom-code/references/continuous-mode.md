@@ -22,9 +22,9 @@ Continuous mode starts only when **both** hold:
    (the user picks one — see freeze discrimination below):
    - **(a) the `brainstorming` hand-off brief** (`docs/loom/specs/<topic>.md`),
      the per-feature artifact that locks the *approach*; or
-   - **(b) a human-approved loom-spec change-folder** (`docs/loom/<change-id>/`)
+   - **(b) a human-approved loom-design change-folder** (`docs/loom/<change-id>/`)
      as an **alternative** entry artifact alongside the brief — the upstream
-     loom-spec output the user has signed off on.
+     loom-design output the user has signed off on.
 
    Either way this is **not** the repo-level PRODUCT-SPEC / TECH-SPEC.
    **Design + spec stay human-gated** (sign-off locks the *approach* via
@@ -56,10 +56,10 @@ checkable signals — never a fuzzy content-shape classifier:
 
 - **(a) named-artifact presence** — `specs/<capability>/spec.md` exists at the
   declared change-folder path; and
-- **(b) validator exit 0** — loom-spec's `scripts/validate_spec_output.py
-  <change-folder>` (resolve under the loom-spec plugin root; in a
-  monkey-skills checkout: `loom-spec/scripts/validate_spec_output.py`)
-  returns **exit 0** (the cross-plugin gate; loom-spec owns
+- **(b) validator exit 0** — loom-design's `scripts/spec/validate_spec_output.py
+  <change-folder>` (resolve under the loom-design plugin root; in a
+  monkey-skills checkout: `loom-design/scripts/spec/validate_spec_output.py`)
+  returns **exit 0** (the cross-plugin gate; loom-design owns
   the format, loom-code reuses it — no new validator). A non-zero exit HALTS
   the freeze and escalates (the artifact is not validate-clean).
 

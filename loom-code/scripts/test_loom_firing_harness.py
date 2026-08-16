@@ -41,7 +41,7 @@ def test_corpus_parse_and_contamination_discard():
     # --- corpus parsing: one JSON record per line ---
     raw = (
         '{"query": "幫我做一個記帳 app，從零開始規劃功能與畫面", '
-        '"expected": "loom-product-principles:product-principles", '
+        '"expected": "loom-design:product-principles", '
         '"notes": "goal-oriented, product-shaped"}\n'
         '{"query": "make an app", '
         '"expected": "NONE", "notes": "control, too short to be self-contained"}\n'
@@ -49,7 +49,7 @@ def test_corpus_parse_and_contamination_discard():
     records = parse_corpus(raw)
     assert len(records) == 2
     assert records[0]["query"].startswith("幫我做一個記帳")
-    assert records[0]["expected"] == "loom-product-principles:product-principles"
+    assert records[0]["expected"] == "loom-design:product-principles"
     assert records[1]["expected"] == "NONE"
 
     # --- self-containedness validator: warns, never fails, on short queries ---
@@ -70,7 +70,7 @@ def test_corpus_parse_and_contamination_discard():
         {"result_subtype": "success", "text": "Skill tool_use: brainstorming"},
         {"result_subtype": "error_max_turns", "text": "hit max turns"},
         {"result_subtype": "success", "text": "Session limit reached, try later"},
-        {"result_subtype": "success", "text": "Skill tool_use: using-loom-spec"},
+        {"result_subtype": "success", "text": "Skill tool_use: using-loom-design"},
     ]
     kept, discarded_count = filter_contaminated(run_results)
     assert discarded_count == 1
@@ -165,17 +165,17 @@ def test_grade_exact_family_miss_over():
 
     # --- sibling-family hit: same plugin prefix, different skill ---
     family = {
-        "expected": "loom-spec:completeness-critic",
-        "fired": "loom-spec:spec-expansion",
+        "expected": "loom-design:completeness-critic",
+        "fired": "loom-design:spec-expansion",
     }
     assert grade_record(family) == "FAMILY"
 
     # --- miss: expected a skill, nothing fired ---
-    miss_nothing = {"expected": "loom-product-principles:product-principles", "fired": None}
+    miss_nothing = {"expected": "loom-design:product-principles", "fired": None}
     assert grade_record(miss_nothing) == "MISS"
 
     # --- miss: expected a skill, a non-loom skill fired instead ---
-    miss_non_loom = {"expected": "loom-interface-design:design-system", "fired": "dataviz"}
+    miss_non_loom = {"expected": "loom-design:design-system", "fired": "dataviz"}
     assert grade_record(miss_non_loom) == "MISS"
 
     # --- over-trigger: expected NONE, a loom-family skill fired anyway ---

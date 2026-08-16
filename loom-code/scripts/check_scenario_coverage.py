@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare a loom-spec change-folder's `#### Scenario:` set against a
+"""Compare a loom-design change-folder's `#### Scenario:` set against a
 writing-plans plan's join keys, and name every dropped scenario.
 
 Inputs (positional CLI args):
@@ -7,7 +7,7 @@ Inputs (positional CLI args):
     check_scenario_coverage.py <change-folder> <plan-path>
 
 - `<change-folder>` is a `docs/loom/<change-id>/` directory in the shape
-  `loom-spec/scripts/validate_spec_output.py` validates: `specs/<capability>/
+  `loom-design/scripts/spec/validate_spec_output.py` validates: `specs/<capability>/
   spec.md` delta files, each containing `### Requirement:` blocks that each
   contain one or more `#### Scenario:` headers. The heading regexes here
   reuse that exact grammar (`^###\\s+Requirement:` / `^####\\s+Scenario:`),
@@ -543,12 +543,12 @@ def check_coverage(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Compare a loom-spec change-folder's '#### Scenario:' "
+        description="Compare a loom-design change-folder's '#### Scenario:' "
                     "set against a writing-plans plan's join keys; exit 1 "
                     "naming every dropped scenario."
     )
     parser.add_argument("change_folder", nargs="?",
-                        help="path to the loom-spec change-folder "
+                        help="path to the loom-design change-folder "
                              "(omit in brief mode)")
     parser.add_argument("plan_path", help="path to the writing-plans plan file")
     parser.add_argument("--brief", help="path to the source brainstorming brief; "

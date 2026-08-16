@@ -154,7 +154,7 @@ def test_blocked_fallback_five_step_process_and_anti_pattern_stay_inline():
 
 def test_consuming_section_and_detection_rule_sentences_stay_inline():
     text = _skill_text()
-    assert "## Consuming a loom-spec change-folder" in text
+    assert "## Consuming a loom-design change-folder" in text
     assert "git rev-parse --show-toplevel" in text
     assert "resolve the target repo's root" in text
 
@@ -181,7 +181,7 @@ def test_fire_and_continue_clause_present():
 
 def test_family_relay_progress_card_pointer_present():
     assert (
-        "loom-pipeline/hooks/family-relay.md §(a2) Progress card"
+        "loom-code/hooks/family-relay.md §(a2) Progress card"
         in _norm(_skill_text())
     )
 
@@ -276,7 +276,7 @@ _GATE_LEAD = "**Coverage self-check"
 _SCOPE_RESTRICTIONS = ("only", "not apply", "no change-folder")
 
 
-_GATE_SECTION_HEADING = "\n## Consuming a loom-spec change-folder"
+_GATE_SECTION_HEADING = "\n## Consuming a loom-design change-folder"
 
 
 def _coverage_gate_paragraph() -> str:
@@ -381,7 +381,7 @@ in brief mode — `python3 check_scenario_coverage.py --brief <brief> <plan>` \
 
 Other self-review prose.
 
-## Consuming a loom-spec change-folder
+## Consuming a loom-design change-folder
 
 **Coverage self-check.** After producing the plan, run the script. It applies \
 only to a change-folder input.
@@ -422,14 +422,14 @@ def test_renamed_owning_section_fails_loudly_not_silently(monkeypatch):
     _patched_skill_text(
         monkeypatch,
         _DECOY_DOC.replace(
-            "## Consuming a loom-spec change-folder",
-            "## Consuming a loom-spec spec-folder",
+            "## Consuming a loom-design change-folder",
+            "## Consuming a loom-design spec-folder",
         ),
     )
 
     with pytest.raises(AssertionError) as excinfo:
         _coverage_gate_paragraph()
-    assert "Consuming a loom-spec change-folder" in str(excinfo.value)
+    assert "Consuming a loom-design change-folder" in str(excinfo.value)
 
 
 def test_gate_paragraph_missing_from_its_section_fails_loudly(monkeypatch):
@@ -468,7 +468,7 @@ def _section(heading: str) -> str:
 
 
 def test_coverage_gate_reachable_from_self_review():
-    """A brief-only author never opens §Consuming a loom-spec change-folder,
+    """A brief-only author never opens §Consuming a loom-design change-folder,
     so the brief-mode coverage duty must be reachable from §Self-review —
     where the plan-document-reviewer dispatch it gates is described.
 
@@ -541,7 +541,7 @@ def test_skill_wires_open_questions_gate_unconditionally():
     # bare basename — same reasoning as the finishing-a-development-branch
     # sibling row's own test (`test_finishing_open_questions_gate.py`):
     # a bare basename is satisfiable by any path prefix
-    # (loom-pipeline/scripts/, tools/scripts/, ../scripts/).
+    # (loom-design/scripts/, tools/scripts/, ../scripts/).
     assert "python3 loom-code/scripts/check_open_questions.py" in para
 
     # (2) states the gate runs on every plan — UNCONDITIONAL, unlike the two
@@ -577,7 +577,7 @@ def test_open_questions_gate_relocated_out_of_self_review_fails_loudly(monkeypat
     described — not merely somewhere, anywhere, in the file.
 
     Reproduces the reviewer's exact mutation: relocate the whole gate
-    paragraph out of §Self-review into §Consuming a loom-spec change-folder,
+    paragraph out of §Self-review into §Consuming a loom-design change-folder,
     leaving its wording, and file-wide uniqueness, untouched. A file-wide
     `index` on `_OPEN_Q_GATE_LEAD` would still find it and pass; anchoring
     the slice to §Self-review must not.
@@ -588,7 +588,7 @@ def test_open_questions_gate_relocated_out_of_self_review_fails_loudly(monkeypat
     paragraph = original[start:end]
     relocated = original[:start] + original[end:]
 
-    anchor = "\n## Consuming a loom-spec change-folder\n"
+    anchor = "\n## Consuming a loom-design change-folder\n"
     assert relocated.count(anchor) == 1
     insert_at = relocated.index(anchor) + len(anchor)
     relocated = relocated[:insert_at] + paragraph + relocated[insert_at:]
@@ -636,7 +636,7 @@ def test_word_count_at_most_4350():
         "the layered statement or the adjudication-view citation; prior "
         "raise from 4220 by the 2026-08-13 brief-item-addressability "
         "arc's T8 fix round: the gate's reachability pointer in §Self-review "
-        "— a duty stated only under §Consuming a loom-spec change-folder is "
+        "— a duty stated only under §Consuming a loom-design change-folder is "
         "unreachable from the brief-only path, and relocating the gate "
         "paragraph instead would drag the change-folder mechanics with it; "
         "SECOND raise in one arc, deliberate — flagged for the reviewer "
