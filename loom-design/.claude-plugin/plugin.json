@@ -1,0 +1,28 @@
+{
+  "name": "loom-design",
+  "version": "0.1.0",
+  "description": "The loom family's design side: discovery (what users need, is it worth building) → product principles → interface design → spec, plus the deterministic pipeline conductor.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/loom-design",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "loom-design",
+    "discovery",
+    "user-insights",
+    "business-value",
+    "product-principles",
+    "interface-design",
+    "design-system",
+    "interaction-flows",
+    "spec-expansion",
+    "completeness-critic",
+    "conductor",
+    "pipeline-driver",
+    "portable"
+  ],
+  "skills": "./skills/"
+}

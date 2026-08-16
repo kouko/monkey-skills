@@ -1,0 +1,48 @@
+{
+  "name": "loom-design",
+  "version": "0.1.0",
+  "description": "The loom family's design side: discovery (what users need, is it worth building) → product principles → interface design → spec, plus the deterministic pipeline conductor.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/loom-design",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "loom-design",
+    "discovery",
+    "user-insights",
+    "business-value",
+    "product-principles",
+    "interface-design",
+    "design-system",
+    "interaction-flows",
+    "spec-expansion",
+    "completeness-critic",
+    "conductor",
+    "pipeline-driver",
+    "portable"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "loom-design",
+    "shortDescription": "Discovery → principles → interface design → spec, the loom family's design side",
+    "longDescription": "loom-design is the design-side plugin of the loom suite. One entry router (using-loom-design) routes to four stations: discovery (user-insights maps evidence-linked needs; business-value renders an adversarial worth-it verdict), product-principles (a PRINCIPLES.md constitution — north star + falsifiable principles), interface-design (design-system emits DESIGN.md tokens, interaction-flows emits ui-flows.md, design-critic hunts surface omissions), and spec (spec-expansion fans a seed into a high-recall spec draft, completeness-critic adversarially hunts omissions). It also ships using-loom-pipeline, the deterministic conductor that drives the four Workflow-driven stations end-to-end — NOTE: the conductor requires the Claude Code Workflow primitive and is N/A on Codex hosts, where the stations run interactively instead.",
+    "developerName": "kouko",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "What do users actually need here?",
+      "Draft the product principles for this idea.",
+      "Design the UI/UX for this feature.",
+      "Expand this seed into a spec."
+    ],
+    "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/loom-design",
+    "brandColor": "#0E7490"
+  }
+}
