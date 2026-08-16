@@ -6,7 +6,7 @@ Guards three things:
 1. `references/knowledge-triage.md` exists and carries: the pin's three
    bucket names verbatim, the `evidence_needed:` tag format, the
    domain-convention route (existing Tripwire punt channel to
-   `using-loom-discovery`, DRAFT status, the `— assumption:` escape
+   `using-loom-design`, DRAFT status, the `— assumption:` escape
    hatch), the craft pointer (no restatement of the canon audit), the
    standing (not stall-triggered) posture, and the cross-severing guard
    (validator + no-external-runtime posture untouched).
@@ -97,7 +97,7 @@ def test_reference_craft_route_points_to_canon_audit_not_restated():
 
 def test_reference_domain_convention_routes_to_existing_tripwire_punt():
     text = REF.read_text(encoding="utf-8")
-    assert "using-loom-discovery" in text, (
+    assert "using-loom-design" in text, (
         "domain-convention route must name the existing punt channel target"
     )
     assert "Tripwire" in text, (
@@ -145,7 +145,7 @@ def test_reference_states_cross_severing_guard():
         "cross-severing guard must restate the skill's no-external-runtime"
         " posture"
     )
-    assert "using-loom-discovery" in text, (
+    assert "using-loom-design" in text, (
         "cross-severing guard must state research happens only in discovery,"
         " never in this drafting station"
     )

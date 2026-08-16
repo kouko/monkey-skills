@@ -1,7 +1,7 @@
 # Plan: loom-design merge (6 plugins → 2)
 
 **Source brief**: `docs/loom/research/2026-08-15-loom-plugin-consolidation.md`（vault 研究筆記，Option B 收斂 2 個）
-**Goal**: 把 4 個設計側 plugin（discovery / product-principles / interface-design / spec）＋ loom-pipeline 併成單一 `loom-design`；loom-code 原封不動並承接家族基礎設施。依賴方向收斂為單向：`loom-design → loom-code`。
+**Goal**: 把 4 個設計側 plugin（discovery / product-principles / interface-design / spec）＋ loom-pipeline 併成單一 `loom-design`；loom-code 原封不動並承接家族基礎設施。plugin 間耦合收斂為：僅兩個 plugin、無退役名殘留、loom-design 不依賴 loom-code 內部實作（見 §6／§9 修訂記錄）。
 **Stage**: planning（本文件是遷移藍圖，非可執行 SDD plan；執行時再拆成 writing-plans 格式）
 **Status**: 定案（D1/D2/D3 全數拍板）— 執行時每步拆成 writing-plans 格式走正常 git flow
 
@@ -12,7 +12,7 @@
 | Plugin 數 | 6 | **2**（loom-code、loom-design） |
 | Skill 數 | 27 | **24**（4 個設計 router 併 1） |
 | loom-design skill 數 | — | **10**（1 router + 9 member） |
-| 依賴方向 | 6 個 plugin 互相引用 | **單向**：loom-design → loom-code |
+| 依賴方向 | 6 個 plugin 互相引用 | **2 個 plugin**，無退役名殘留；loom-design 不依賴 loom-code 內部實作（詳見 §6／§9） |
 | 家族 hooks | loom-pipeline/hooks/ | **loom-code/hooks/**（loom-code 依賴它們） |
 | loom-memory | loom-pipeline | **loom-code**（已定，§3 D2） |
 | Marketplace entries | 6 | **2** |
@@ -149,7 +149,7 @@ flowchart LR
 | 全 pytest | — | 綠（含更新後的 ~60 個斷言） |
 | loom skill 清單 | 27 | **24**（router 4→1） |
 | 每 session 注入 bytes | ~9.5K | 下降（reception 卡合併、router 卡併 1） |
-| 依賴方向 | 6 向互指 | 單向 loom-design → loom-code（grep 驗證無反向） |
+| 依賴方向 | 6 向互指 | 恰兩個 loom plugin（loom-code、loom-design）；任何地方皆無 5 個已退役 plugin 名稱的殘留引用；loom-design 不依賴 loom-code 內部實作（`skills/`、`scripts/`），僅共享 family hooks（`loom-code/hooks/`）與已記錄的跨 plugin contract test（驗證路徑存在／家族中繼文字一致，見 §9 修訂記錄） |
 
 ## 7. 風險與反轉條件
 
@@ -172,3 +172,13 @@ flowchart LR
 - 引用掃描（blast radius）：~380 檔 / ~160 斷，§4 分類
 - 基礎設施（Agent 3）：4 router ~70% 重疊可併；family hooks 必須進 loom-code；driver 嵌 11 名；PR #696 已去重家族規則（「4+4+5 重複」已過時）
 - 用量（本機掃描，`loom-usage-scan.py`）：loom-code 352 skill / 66 session / 3124 agent；設計側有真實使用（discovery 8/5、spec 12/4、pipeline 58/56）——**與筆記「0 呼叫」不同**（筆記數據來自另一台機器）
+
+## 9. 修訂記錄
+
+- **2026-08-17 同一錯誤的另外兩處**：該反向說法在本文件出現三次——§6 表格列（下條）、§0 目標形表格列（L15）、以及開頭 **Goal** 行（L4）。三處已一併改為同一組不變量；只修 §6 會留下兩處互相矛盾的敘述。
+- **2026-08-17 修正 §6「依賴方向」列**：原文聲稱依賴只朝設計站到程式碼站單一方向、且 grep 驗證無反向引用，此說法與實測結果相反，已改寫為上表現況。實測 `grep -rlE 'loom-design(:|/)' loom-code/ --include='*.md' --include='*.py'`（排除 CHANGELOG、`/research/`）命中 **20 個檔案**，逐一檢視後全部是合理的下游消費，例如：
+  - `loom-code/scripts/check_scenario_coverage.py` 呼叫 spec 站驗證器 `loom-design/scripts/spec/validate_spec_output.py`
+  - `loom-code/skills/brainstorming/SKILL.md` 把設計形問題轉介到 `loom-design:spec-expansion`
+  - `loom-code/skills/ui-verification/SKILL.md` 透過 `loom-design:design-critic` / `loom-design:interaction-flows` 消費設計產物
+
+  真實資料流是 design → code，因此「code 側引用 design 產物」方向本身就是對的；會構成缺陷的是反向——loom-design 依賴 loom-code 內部實作。反向掃描（`loom-design/` 下引用 `loom-code(:|/)(skills|scripts)`）找到 8 個檔案，但均為已記錄的跨 plugin contract test／家族中繼一致性檢查（例：`test_family_relay.py` 驗證 loom-code 三個 skill 檔的家族中繼文字、`test_pipeline_ci_workflow.py` 驗證 CI 路徑涵蓋 `loom-code/skills/loom-memory/**`、`design_md_spec_keys.py` 引用 `loom-code/scripts/canonical/README.md` 的 frozen-copy key 定義），屬於刻意維護的雙向契約測試，非功能性耦合，與 family hooks 共享案例同屬允許範圍。

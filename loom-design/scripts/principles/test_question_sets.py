@@ -82,7 +82,7 @@ def test_design_section_is_expert_lane_no_fixed_question_set():
 def test_design_lane_single_axis_a_round():
     """Task 7 (supersedes the old two-round pin): Axis B left this plugin.
 
-    canon-design-surface.md now lives in loom-interface-design's design-system
+    canon-design-surface.md now lives in loom-design's design-system
     skill, so at THIS station the visual lens runs ONE Axis-A candidate round
     (cultural/graphic-design movements, canon-design-visual.md); the
     surface-treatment axis is decided downstream at the DESIGN station. The old

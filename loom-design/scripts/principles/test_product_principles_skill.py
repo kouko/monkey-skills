@@ -396,13 +396,13 @@ def test_flow_headless_seeded_mode():
 
 def test_tripwire_routes_unanswerable_probing_to_discovery():
     """R2 finding 4a pin: when the problem/users probing is unanswerable,
-    the Tripwire routes to using-loom-discovery instead of dead-ending into
+    the Tripwire routes to using-loom-design instead of dead-ending into
     a fabricated North Star."""
     low = _text().lower()
     assert "tripwire" in low, \
         "body must carry the unanswerable-grilling tripwire"
-    assert "using-loom-discovery" in low, \
-        "the tripwire must route to using-loom-discovery"
+    assert "using-loom-design" in low, \
+        "the tripwire must route to using-loom-design"
     assert "fabricat" in low, \
         "the tripwire must name the fabricated-North-Star failure it prevents"
 
@@ -420,7 +420,7 @@ def test_test_rigor_clause_is_ceiling_above_iron_law_floor():
 def test_headless_thin_seed_refuses_loudly_never_fabricates():
     """R2 finding 1: a headless run whose seed is too thin to ground a North
     Star REFUSES loudly — a BLOCKED-style structured refusal to the conductor
-    stating what the seed lacks and naming using-loom-discovery as the
+    stating what the seed lacks and naming using-loom-design as the
     human-side remedy — and NEVER fabricates."""
     low = _section(_text(), "## Headless / seeded mode").lower()
     assert "refus" in low, \
@@ -429,8 +429,8 @@ def test_headless_thin_seed_refuses_loudly_never_fabricates():
         "§Headless must shape the refusal as a BLOCKED-style structured return"
     assert "lack" in low, \
         "the refusal must state what the seed lacks"
-    assert "using-loom-discovery" in low, \
-        "§Headless must name using-loom-discovery as the human-side remedy"
+    assert "using-loom-design" in low, \
+        "§Headless must name using-loom-design as the human-side remedy"
     assert re.search(r"never\s+fabricate", low), \
         "the no-fabrication rule must stay unconditional in headless mode"
 
@@ -764,7 +764,7 @@ def test_headless_open_question_points_at_rules_file_format():
 def test_visual_lens_is_single_axis_a_round():
     """Task 6 (supersedes the old two-round pin): Axis B left this plugin.
 
-    Task 3 `git mv`'d canon-design-surface.md into loom-interface-design's
+    Task 3 `git mv`'d canon-design-surface.md into loom-design's
     design-system skill, so at THIS station the visual lens runs ONE Axis-A
     candidate round (cultural/graphic-design movements, canon-design-visual.md)
     and the surface-treatment axis is decided downstream at the DESIGN station.
@@ -782,7 +782,7 @@ def test_visual_lens_is_single_axis_a_round():
     flat = _skill_flat()
     assert "canon-design-surface.md" not in text, (
         "SKILL.md must not reference canon-design-surface.md — the file no "
-        "longer lives in this plugin (Task 3 moved it to loom-interface-design)"
+        "longer lives in this plugin (Task 3 moved it to loom-design)"
     )
     assert "axis b" not in flat and "axis-b" not in flat, (
         "SKILL.md must not instruct an Axis-B round — the surface-treatment "
@@ -797,11 +797,11 @@ def test_visual_lens_is_single_axis_a_round():
     handoff = [b for b in flat.split("\n- ") if "surface-treatment axis" in b]
     assert handoff, "Step 3 must carry a bullet naming the surface-treatment axis"
     assert any(
-        "downstream at the design station" in b and "loom-interface-design" in b
+        "downstream at the design station" in b and "loom-design" in b
         for b in handoff
     ), (
         "the surface-treatment axis must be handed off in that same bullet — "
-        "decided downstream at the DESIGN station (loom-interface-design)"
+        "decided downstream at the DESIGN station (loom-design)"
     )
 
 
@@ -966,7 +966,7 @@ def test_question_sets_carries_tone_and_manner_anchor():
 def test_question_sets_visual_lens_is_single_axis_a_round():
     """Task 7 (supersedes the old two-round wording): Axis B left this plugin.
 
-    Task 3 `git mv`'d canon-design-surface.md into loom-interface-design's
+    Task 3 `git mv`'d canon-design-surface.md into loom-design's
     design-system skill, so question-sets.md's Design lane must AGREE with
     SKILL.md (Task 6): the visual lens runs ONE Axis-A candidate round
     (cultural/graphic-design movements, canon-design-visual.md) and the
@@ -986,7 +986,7 @@ def test_question_sets_visual_lens_is_single_axis_a_round():
     assert "canon-design-surface.md" not in text, (
         "question-sets.md must not reference canon-design-surface.md — the "
         "file no longer lives in this plugin (Task 3 moved it to "
-        "loom-interface-design)"
+        "loom-design)"
     )
     assert "axis b" not in flat and "axis-b" not in flat, (
         "question-sets.md must not instruct an Axis-B round — the "
@@ -1002,11 +1002,11 @@ def test_question_sets_visual_lens_is_single_axis_a_round():
     handoff = [p for p in flat.split("\n\n") if "surface-treatment axis" in p]
     assert handoff, "the Design lane must carry a paragraph naming the surface-treatment axis"
     assert any(
-        "downstream at the design station" in p and "loom-interface-design" in p
+        "downstream at the design station" in p and "loom-design" in p
         for p in handoff
     ), (
         "the surface-treatment axis must be handed off in that same paragraph "
-        "— decided downstream at the DESIGN station (loom-interface-design)"
+        "— decided downstream at the DESIGN station (loom-design)"
     )
     assert any("structural, not instructional" in p for p in handoff), (
         "the old contamination guard must be restated as STRUCTURAL, not "

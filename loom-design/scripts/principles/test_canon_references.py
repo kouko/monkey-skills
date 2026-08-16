@@ -118,7 +118,7 @@ def test_visual_canon_is_axis_a_only():
     point agents at the surface-treatment axis's real home. That home is no
     longer a sibling in this plugin: Task 3 of
     docs/loom/plans/2026-07-13-axis-b-relocation-and-tone-manner-seam.md
-    moved canon-design-surface.md into loom-interface-design's design-system
+    moved canon-design-surface.md into loom-design's design-system
     skill, so the pointer must name the DESIGN station.
 
     Guard precision (assertion-must-encode-the-property-it-claims): the old
@@ -134,9 +134,9 @@ def test_visual_canon_is_axis_a_only():
         "canon-design-visual.md must not contain the collapsed "
         "surface-treatment row; its home is the DESIGN station's canon list"
     )
-    assert "loom-interface-design" in low, (
+    assert "loom-design" in low, (
         "canon-design-visual.md must point at the DESIGN station plugin "
-        "(loom-interface-design) for UI surface treatments — the "
+        "(loom-design) for UI surface treatments — the "
         "surface-treatment canon no longer lives in this plugin"
     )
     assert "design station" in low, (
