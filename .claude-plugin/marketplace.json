@@ -105,24 +105,9 @@
       "source": "./research-toolkit/"
     },
     {
-      "name": "loom-spec",
-      "description": "Key-free GENERATE-layer spec skills — expand a seed into a high-recall spec + critique omissions.",
-      "source": "./loom-spec/"
-    },
-    {
-      "name": "loom-product-principles",
-      "description": "Key-free generator for a PRINCIPLES.md project constitution — north star + falsifiable Product Principles, plus optional Design/Engineering Principles.",
-      "source": "./loom-product-principles/"
-    },
-    {
-      "name": "loom-interface-design",
-      "description": "Key-free cross-modal (GUI/TUI/CLI) UX design generator — emits portable DESIGN.md + ui-flows.md.",
-      "source": "./loom-interface-design/"
-    },
-    {
-      "name": "loom-pipeline",
-      "description": "Deterministic workflow driver conducting the loom principles→design→spec→code pipeline across station plugins; loom-discovery (problem-space, upstream of principles) is v0.1 interactive-only and not conductor-driven.",
-      "source": "./loom-pipeline/"
+      "name": "loom-design",
+      "description": "The loom family's design side: discovery (what users need, is it worth building) → product principles → interface design → spec, plus the deterministic pipeline conductor.",
+      "source": "./loom-design/"
     },
     {
       "name": "ascii-graph-toolkit",
@@ -133,11 +118,6 @@
       "name": "skill-dev-toolkit",
       "description": "Self-contained toolkit to author Claude Agent Skills — create, score, refactor, tune, dogfood.",
       "source": "./skill-dev-toolkit/"
-    },
-    {
-      "name": "loom-discovery",
-      "description": "The loom family's problem-space station: research what users need and whether an idea is worth building — before principles/design/spec/code start.",
-      "source": "./loom-discovery/"
     }
   ]
 }
