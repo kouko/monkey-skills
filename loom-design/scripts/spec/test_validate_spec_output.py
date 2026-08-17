@@ -71,7 +71,9 @@ def _well_formed_additive() -> str:
         "| login | wrong password |\n"
         "\n"
         "## Cross-object combinations\n"
-        "- User × Session: one user holds many sessions\n"
+        "| Stage | Co-active objects |\n"
+        "| --- | --- |\n"
+        "| Use feature | User × Session |\n"
         "\n"
         "## Journey navigation\n"
         "- From login screen → dashboard → feature\n"
@@ -238,7 +240,8 @@ def _proposal_with(*, usm=True, ooux=True, provenance=True, blind_spots=True,
                      "| login | wrong password |\n")
     if cross_object:
         parts.append("## Cross-object combinations\n"
-                     "- User × Session: one user holds many sessions\n")
+                     "| Stage | Co-active objects |\n| --- | --- |\n"
+                     "| Use feature | User × Session |\n")
     if journey:
         parts.append("## Journey navigation\n"
                      "- From login screen → dashboard → feature\n")
@@ -296,6 +299,51 @@ def test_additive_rejects_missing_path_edge_matrix(tmp_path):
     ok, problems = validate(root)
     assert not ok
     assert any("Path × edge matrix" in p for p in problems), problems
+
+
+def test_path_edge_matrix_prose_body_rejected(tmp_path):
+    body = _proposal_with()
+    body = body.replace(
+        "## Path × edge matrix\n| path | edge |\n| --- | --- |\n"
+        "| login | wrong password |\n",
+        "## Path × edge matrix\n- login fails on wrong password\n")
+    root = _write_skeleton(tmp_path, proposal_body=body)
+    ok, problems = validate(root)
+    assert not ok
+    assert any(
+        "'## Path × edge matrix' section" in p
+        and "neither a markdown table nor its pinned 'N/A — …' line" in p
+        for p in problems), problems
+
+
+def test_cross_object_prose_body_rejected(tmp_path):
+    body = _proposal_with()
+    body = body.replace(
+        "## Cross-object combinations\n"
+        "| Stage | Co-active objects |\n| --- | --- |\n"
+        "| Use feature | User × Session |\n",
+        "## Cross-object combinations\n- User × Session: one user holds many sessions\n")
+    root = _write_skeleton(tmp_path, proposal_body=body)
+    ok, problems = validate(root)
+    assert not ok
+    assert any(
+        "'## Cross-object combinations' section" in p
+        and "neither a markdown table nor its pinned 'N/A — …' line" in p
+        for p in problems), problems
+
+
+def test_cross_object_na_line_accepted(tmp_path):
+    body = _proposal_with()
+    body = body.replace(
+        "## Cross-object combinations\n"
+        "| Stage | Co-active objects |\n| --- | --- |\n"
+        "| Use feature | User × Session |\n",
+        "## Cross-object combinations\n"
+        "N/A — no interaction-dense stage: single-stage flow\n")
+    root = _write_skeleton(tmp_path, proposal_body=body)
+    ok, problems = validate(root)
+    assert ok, f"N/A line should satisfy the table-or-N/A check, got: {problems}"
+    assert problems == []
 
 
 def _proposal_five_original_only() -> str:

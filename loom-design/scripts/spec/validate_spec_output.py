@@ -281,6 +281,18 @@ _SEC_JOURNEY_NAVIGATION = "## Journey navigation"
 
 _H2 = re.compile(r"^##\s", re.MULTILINE)
 
+# Table-or-N/A body check for the two matrix sections (Pin C-1 / Pin C-2):
+# a section body must contain a markdown table (>=1 separator row) or its
+# pinned "N/A — " line — prose alone does not satisfy a table-routed section.
+_TABLE_SEP_ROW = re.compile(r"^\s*\|(?:\s*:?-+:?\s*\|)+\s*$", re.MULTILINE)
+_NA_LINE = re.compile(r"^\s*N/A — ", re.MULTILINE)
+
+# Table-or-N/A body check for the two matrix sections (Pin C-1 / Pin C-2):
+# a section body must contain a markdown table (>=1 separator row) or its
+# pinned "N/A — " line — prose alone does not satisfy a table-routed section.
+_TABLE_SEP_ROW = re.compile(r"^\s*\|(?:\s*:?-+:?\s*\|)+\s*$", re.MULTILINE)
+_NA_LINE = re.compile(r"^\s*N/A — ", re.MULTILINE)
+
 
 def _section_body(text: str, header: str) -> str | None:
     """Body of the `## <header>` section (lines after the header line up to the
@@ -346,10 +358,15 @@ def _check_path_edge_matrix_section(root: Path) -> list[str]:
     proposal = root / "proposal.md"
     if not proposal.is_file():
         return []  # already reported by _check_proposal
-    if _section_body(proposal.read_text(encoding="utf-8"),
-                     _SEC_PATH_EDGE_MATRIX) is None:
+    body = _section_body(proposal.read_text(encoding="utf-8"),
+                         _SEC_PATH_EDGE_MATRIX)
+    if body is None:
         return [f"missing '{_SEC_PATH_EDGE_MATRIX}' section in {proposal} "
                 f"(the path/edge coverage appendix)"]
+    if not (_TABLE_SEP_ROW.search(body) or _NA_LINE.search(body)):
+        return [f"'{_SEC_PATH_EDGE_MATRIX}' section in {proposal} carries "
+                f"neither a markdown table nor its pinned 'N/A — …' line "
+                f"(the section is table-routed; prose does not satisfy it)"]
     return []
 
 
@@ -357,10 +374,15 @@ def _check_cross_object_combinations_section(root: Path) -> list[str]:
     proposal = root / "proposal.md"
     if not proposal.is_file():
         return []  # already reported by _check_proposal
-    if _section_body(proposal.read_text(encoding="utf-8"),
-                     _SEC_CROSS_OBJECT_COMBINATIONS) is None:
+    body = _section_body(proposal.read_text(encoding="utf-8"),
+                         _SEC_CROSS_OBJECT_COMBINATIONS)
+    if body is None:
         return [f"missing '{_SEC_CROSS_OBJECT_COMBINATIONS}' section in {proposal} "
                 f"(L2 artifact — make cross-object combinations visible)"]
+    if not (_TABLE_SEP_ROW.search(body) or _NA_LINE.search(body)):
+        return [f"'{_SEC_CROSS_OBJECT_COMBINATIONS}' section in {proposal} carries "
+                f"neither a markdown table nor its pinned 'N/A — …' line "
+                f"(the section is table-routed; prose does not satisfy it)"]
     return []
 
 
