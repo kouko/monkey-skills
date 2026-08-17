@@ -144,7 +144,7 @@ def test_router_axis0_red_flag():
     """using-loom-code/SKILL.md must:
     (a) carry a red-flag row naming skipping brainstorming's Axis 0 upstream
         check before writing a brief as a violation;
-    (b) point to the loom family reception (loom-pipeline's SessionStart
+    (b) point to the loom family reception (loom-code's SessionStart
         hook) as the family map + on-ramp criteria SSOT;
     (c) update rule #1's '5-axis framework' mention with one clause noting
         the walk now starts at Axis 0, without rewriting the rule;

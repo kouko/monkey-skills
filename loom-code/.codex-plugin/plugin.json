@@ -1,6 +1,6 @@
 {
   "name": "loom-code",
-  "version": "0.83.0",
+  "version": "0.84.0",
   "description": "Canon-grounded coding-discipline workflow (TDD/brainstorm/SDD/review) for Claude Code + Codex.",
   "author": {
     "name": "kouko",
@@ -22,7 +22,7 @@
     "owasp-asvs",
     "session-start-hook",
     "superpowers-parity",
-    "loom-pipeline"
+    "loom-design"
   ],
   "skills": "./skills/",
   "interface": {

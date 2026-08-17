@@ -5,6 +5,39 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.84.0] — 2026-08-17 — absorbs the loom family infrastructure (6→2 plugin merge)
+
+### Added
+
+- **The family hooks now live here.** `hooks/family-reception.md`,
+  `family-relay.md`, `plain-relay.md`, `lang_detect.py`,
+  `language-anchor.py`, and `language-stop-check.py` moved in from the
+  retired `loom-pipeline` plugin, and `hooks.json` gained its PostToolUse
+  and Stop registrations. Rationale: loom-code is the always-installed
+  plugin, so the family's connective tissue belongs where it is always
+  present. `session-start` now injects both the router card and the
+  family reception.
+- **The `loom-memory` skill moved in** from `loom-pipeline` for the same
+  reason — repo-native practice memory is family infrastructure, not
+  pipeline-specific.
+
+### Changed
+
+- **References re-pointed for the 6→2 consolidation.** The four design
+  plugins and the pipeline conductor merged into one `loom-design`
+  plugin, so every `loom-{discovery,product-principles,interface-design,
+  spec,pipeline}:*` reference here now reads `loom-design:*`, and the
+  four `using-loom-*` design routers resolve to one `using-loom-design`.
+  The 4 `loom-code:*` agentTypes and `loom-code:ui-verification` are
+  unchanged — the hot dispatch path took zero impact.
+
+### Note for installed hosts
+
+This release is the other half of a marketplace change that removes
+`loom-pipeline`. Run `plugin update` to receive the family hooks and
+`loom-memory` at their new home; without it the hooks disappear when the
+retired plugin does.
+
 ## [0.83.0] — 2026-08-15 — plain-relay contract adoption + brief-before-fork dedup
 
 ### Changed

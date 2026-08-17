@@ -3,7 +3,7 @@
 docs/loom/plans/2026-07-23-wiki-update-loop.md, brief Decision 3,
 docs/loom/specs/2026-07-23-wiki-update-maintenance-loop.md).
 
-Mirrors loom-product-principles/scripts/test_improve_loop_workflow.py:
+Mirrors loom-design/scripts/principles/test_improve_loop_workflow.py:
 this suite never EXECUTES the Workflow script (ambient runtime globals
 ``agent``/``phase``/``workflow``/``log``/``args`` only exist inside
 Claude Code's Workflow sandbox) — assertions are regex/marker checks on

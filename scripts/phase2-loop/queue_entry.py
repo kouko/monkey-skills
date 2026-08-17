@@ -11,7 +11,7 @@ is actually frozen — the plan file carries a
 ``Plan-document-reviewer verdict: PASS`` line — and that the item id really
 exists as an unfinished checklist line under the campaign doc's
 ``## Phase 2`` section, then emits the TOML block a human pastes into
-``docs/loom/QUEUE.toml`` for ``loom-pipeline/scripts/batch_queue.py`` to
+``docs/loom/QUEUE.toml`` for ``loom-design/scripts/pipeline/batch_queue.py`` to
 consume.
 
 `lookup_backlog_description` is the EXECUTION-stage tool (ROUTINE.md Step 4).

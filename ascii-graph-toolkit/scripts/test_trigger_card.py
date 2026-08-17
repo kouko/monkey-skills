@@ -1,7 +1,7 @@
 """Tests for the ascii-graph-toolkit SessionStart trigger-card hook.
 
 Task 1 (this file, first test only): pins the hook's emitted JSON shape
-and content. Mirrors loom-pipeline/scripts/test_family_relay.py's style
+and content. Mirrors loom-design/scripts/pipeline/test_family_relay.py's style
 (mechanical marker-grep + subprocess execution over the real hook
 script, not a mock).
 

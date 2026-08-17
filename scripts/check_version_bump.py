@@ -76,8 +76,8 @@ def plugins_with_skill_content(paths: list[str]) -> set[str]:
         if plugin not in CODEX_ELIGIBLE or subdir not in SKILL_CONTENT_DIRS:
             continue
         # scripts/ colocates gate code with its own test_*.py files (loom
-        # convention: loom-pipeline 25, loom-spec 12, loom-discovery 7,
-        # loom-interface-design 11 inline test files). Tests are not skill
+        # convention: loom-design ~60 inline test files across its five
+        # station subdirs, loom-code ~90). Tests are not skill
         # content (see module docstring) — only a non-test file under
         # scripts/ demands a bump.
         basename = parts[-1]

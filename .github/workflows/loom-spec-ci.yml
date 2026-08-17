@@ -1,15 +1,15 @@
-name: loom-spec CI
+name: loom-design spec-station CI
 
-# Runs loom-spec's scripts/ pytest suite on every PR that touches the plugin
-# (or this workflow), and on every push to main that changes the plugin.
+# Runs the loom-design spec station's scripts/ pytest suite on every PR that
+# touches it (or this workflow), and on every push to main that changes it.
 #
-# loom-spec's scripts/ suite (validate_spec_output / validate_intent_layer /
+# The spec station's suite (validate_spec_output / validate_intent_layer /
 # pairwise / the skill + manifest behavioral tests) previously had NO CI
 # coverage — only loom-code/** was gated (loom-code-ci.yml). This workflow
 # closes that gap so the GENERATE-station validators + skill conventions are
 # guarded the same way the VERIFY station is.
 #
-# loom-spec carries no synced-knowledge SSOT, no .codex-plugin manifest, and no
+# The spec station carries no synced-knowledge SSOT and no
 # skill-crossref script (those are loom-code's), so this is pytest-only —
 # mirroring legal-toolkit-ci.yml's pytest-only shape rather than loom-code-ci's
 # four-gate shape.

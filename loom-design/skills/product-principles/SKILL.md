@@ -268,14 +268,14 @@ It mechanically enforces the contract summary in
 entry counts, the literal `— check:` marker on **every** entry, the
 `## Anchors` / `## Deviation Ledger` / `## Open Questions` rules, and the legacy-heading
 migration check (the path relative to this skill dir is
-`../../scripts/validate_principles_output.py`). The validator checks
+`../../scripts/principles/validate_principles_output.py`). The validator checks
 *structure*; the *quality* of each check (truly falsifiable vs disguised
 platitude) is your responsibility.
 
 **Interactive sessions ALSO run the seed-coverage checker.** After the
 structural validator passes, also run
 `check_seed_traceability.py <artifact> <inventory>` (path relative to this
-skill dir: `../../scripts/check_seed_traceability.py`) against the
+skill dir: `../../scripts/principles/check_seed_traceability.py`) against the
 `docs/loom/PRINCIPLES.md` artifact and the seed-inventory document, fix
 any miss line it reports, and **proceed only on exit 0** — mirroring the
 same gate-then-proceed shape as `writing-plans/SKILL.md`'s validator
@@ -304,7 +304,7 @@ to its **"delegate to agent"** answer:
   guideline, model, framework, language, library, format, technology,
   or deferred/undecidable stance) into a `seed-inventory.md` file, one
   token per named entity, using the checker's oracle key format (the
-  format contract in `../../scripts/check_seed_traceability.py`): a
+  format contract in `../../scripts/principles/check_seed_traceability.py`): a
   `named_anchors:` line for canons/traditions/tech-stack choices, a
   `deferred_items:` line for undecidable/deferred stances, each a
   `;`-separated token list, empty sentinel `none in this seed` when a

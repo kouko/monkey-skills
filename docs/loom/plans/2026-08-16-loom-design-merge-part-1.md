@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/plans/2026-08-16-loom-design-merge-plan.md（遷移藍圖，§5 S1-S4）
 Goal: 建立 loom-design 骨架（9 member skills + scripts + examples），4 個設計 router 併成 using-loom-design，家族 hooks 與 loom-memory 搬進 loom-code。此 part 完成後 repo 處於 WIP 斷裂狀態（引用仍指舊名），由 part 2 修復。
-Stage: planning
+Stage: finishing
 Total tasks: 4
 Critical-path depth: 2 (≤5)
 Execution order: parallel-where-possible

@@ -149,7 +149,7 @@ flowchart LR
 | 全 pytest | — | 綠（含更新後的 ~60 個斷言） |
 | loom skill 清單 | 27 | **24**（router 4→1） |
 | 每 session 注入 bytes | ~9.5K | 下降（reception 卡合併、router 卡併 1） |
-| 依賴方向 | 6 向互指 | 恰兩個 loom plugin（loom-code、loom-design）；任何地方皆無 5 個已退役 plugin 名稱的殘留引用；loom-design 不依賴 loom-code 內部實作（`skills/`、`scripts/`），僅共享 family hooks（`loom-code/hooks/`）與已記錄的跨 plugin contract test（驗證路徑存在／家族中繼文字一致，見 §9 修訂記錄） |
+| 依賴方向 | 6 向互指 | 恰兩個 loom plugin（loom-code、loom-design）；可執行面無 5 個已退役 plugin 名稱的殘留引用；`loom-design/` 引用 `loom-code/{skills,scripts}/` 的檔案**不得超出下列白名單 9 檔**（逐檔列舉，非類別標籤——新增任何一檔都要在此表補行並說明理由，否則視為違反）：`scripts/interface/{design_md_spec_keys,test_design_md_schema_keys}.py`、`scripts/pipeline/{test_family_relay,test_language_anchor,test_loom_memory_record_contradiction,test_pipeline_ci_workflow,test_pipeline_skill_contract}.py`、`scripts/pipeline/fixtures/fixture_session_tail.jsonl`（歷史 session 錄製資料，內容欄位含當時的路徑字串——測試素材的保真度，非程式依賴）、`skills/spec-expansion/SKILL.md`。共享 `loom-code/hooks/` 不計入（family hooks 是雙方共用的基礎設施，非單向依賴）。驗證指令：`grep -rlE 'loom-code/(skills|scripts)' loom-design/ | grep -v 'CHANGELOG-\|README-'` 應恰好回傳這 9 檔 |
 
 ## 7. 風險與反轉條件
 
@@ -175,6 +175,7 @@ flowchart LR
 
 ## 9. 修訂記錄
 
+- **2026-08-17 §6 依賴列二次修正（whole-branch review 🟡 F4）**：第一版改寫（下兩條）雖然把方向改對了，但把豁免寫成「已記錄的跨 plugin contract test」這個**類別標籤**——任何未來耦合只要被稱作 contract test 就能通過，該條因此不可證偽。已改為**逐檔白名單 8 檔**：新增任何一檔都必須在 §6 表補行說明理由，否則即為違反。證據數字經第二輪審查再次修正為 **9 個檔／9 處引用**：前兩版都漏了 `scripts/pipeline/fixtures/fixture_session_tail.jsonl`（掃描時被誤當成非程式碼而略過），且「`spec-expansion/SKILL.md` 有絕對與相對兩種形式」的說法有誤——該檔符合本條款 pattern 的只有 `:457` 一處（`:234` 指向 `loom-code/hooks/`，條款本身已排除）。白名單首次執行即違反的原因就是漏列 fixture；已補行並附驗證指令，使此條款可被單一指令證偽。**遺留待辦**：`loom-design/skills/spec-expansion/SKILL.md:457` 用 `../../../loom-code/skills/...` 相對路徑跨 plugin 逃逸，違反本 repo CLAUDE.md「委派時使用 plugin name，不使用檔案系統絕對／相對路徑」的跨 plugin 契約；此引用早於本次遷移且深度仍正確，不在本分支範圍內修，已立為 backlog。
 - **2026-08-17 同一錯誤的另外兩處**：該反向說法在本文件出現三次——§6 表格列（下條）、§0 目標形表格列（L15）、以及開頭 **Goal** 行（L4）。三處已一併改為同一組不變量；只修 §6 會留下兩處互相矛盾的敘述。
 - **2026-08-17 修正 §6「依賴方向」列**：原文聲稱依賴只朝設計站到程式碼站單一方向、且 grep 驗證無反向引用，此說法與實測結果相反，已改寫為上表現況。實測 `grep -rlE 'loom-design(:|/)' loom-code/ --include='*.md' --include='*.py'`（排除 CHANGELOG、`/research/`）命中 **20 個檔案**，逐一檢視後全部是合理的下游消費，例如：
   - `loom-code/scripts/check_scenario_coverage.py` 呼叫 spec 站驗證器 `loom-design/scripts/spec/validate_spec_output.py`

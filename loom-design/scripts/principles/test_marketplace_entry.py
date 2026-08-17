@@ -26,12 +26,12 @@ def test_marketplace_is_valid_json():
     json.loads(MARKETPLACE.read_text(encoding="utf-8"))
 
 
-def test_exactly_one_product_principles_toolkit_entry():
+def test_exactly_one_loom_design_entry():
     entries = [p for p in _load_plugins() if p.get("name") == "loom-design"]
     assert len(entries) == 1, f"expected exactly one loom-design entry, got {len(entries)}"
 
 
-def test_product_principles_toolkit_source():
+def test_loom_design_source():
     entry = next(p for p in _load_plugins() if p.get("name") == "loom-design")
     assert entry["source"] == "./loom-design/", f"unexpected source: {entry.get('source')!r}"
 

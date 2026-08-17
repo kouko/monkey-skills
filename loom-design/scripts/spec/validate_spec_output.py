@@ -266,7 +266,7 @@ def _check_scenario_given_when_then(root: Path) -> list[str]:
             f"(each requirement needs >=1 scenario with GIVEN/WHEN/THEN)"]
 
 
-# --- additive checks: loom-spec's differentiating richness ---------------
+# --- additive checks: the spec station's differentiating richness ---------------
 # Per the brief, the OpenSpec delta under specs/ stays pure (openspec-validate
 # clean); the additive sections live in proposal.md. These checks therefore
 # read proposal.md. Tolerant of extra content, like the skeleton checks.
@@ -490,7 +490,7 @@ _SKELETON_CHECKS = [
     _check_scenario_given_when_then,
 ]
 
-# loom-spec's additive richness, beyond the openspec-clean skeleton.
+# The spec station's additive richness, beyond the openspec-clean skeleton.
 # The three-flow artifacts (USM backbone / OOUX object model / Path × edge
 # matrix) make each expansion phase visible; Provenance + Blind spots carry
 # the critic's load-bearing output.

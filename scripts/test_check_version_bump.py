@@ -226,14 +226,29 @@ def test_scripts_dir_counts_as_skill_content():
 def test_scripts_dir_test_file_is_not_skill_content():
     """test_*.py files colocated in scripts/ are tests, not skill content.
 
-    Most loom plugins keep tests inline in scripts/ (loom-pipeline 25 test
-    files, loom-spec 12, loom-discovery 7, loom-interface-design 11). Per the
-    module docstring, tests require no bump — a test-only edit under
-    scripts/ must not demand one, even though scripts/ is a skill-content dir.
+    The loom plugins keep tests inline in scripts/ (loom-design ~60 test
+    files across its five station subdirs, loom-code ~90). Per the module
+    docstring, tests require no bump — a test-only edit under scripts/ must
+    not demand one, even though scripts/ is a skill-content dir.
+
+    The plugin named here MUST be one that is currently in CODEX_ELIGIBLE.
+    `plugins_with_skill_content` early-continues on any path whose plugin is
+    not eligible, so naming a retired plugin makes this test vacuous — it
+    would pass even with the test-file-skip logic deleted. That is exactly
+    what happened when the 6->2 merge removed loom-pipeline/ and this
+    fixture still named it; the non-test control assertion below is the
+    tripwire that keeps the vacuous form from coming back.
     """
     assert plugins_with_skill_content(
-        ["loom-pipeline/scripts/test_pipeline_batch_queue.py"]
+        ["loom-design/scripts/pipeline/test_pipeline_batch_queue.py"]
     ) == set()
+
+    # Control: the SAME plugin, a non-test file — must be detected as skill
+    # content. Without this, the assertion above cannot distinguish "skipped
+    # because it is a test" from "skipped because the plugin is unreachable".
+    assert plugins_with_skill_content(
+        ["loom-design/scripts/pipeline/batch_queue.py"]
+    ) == {"loom-design"}
 
 
 def test_changes_outside_any_plugin_are_a_no_op(tmp_path):

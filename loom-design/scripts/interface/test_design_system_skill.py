@@ -13,7 +13,7 @@ the hard constraints the task and the host enforce:
     8-section DESIGN.md / TUI-CLI emits a lightweight stub + phase-2 note →
     emit into the consumer project → validate.
   - references to BOTH the schema contract (`references/design-md-schema.md`)
-    and the validator (`scripts/validate_design_output.py`) by relative path.
+    and the validator (`scripts/interface/validate_design_output.py`) by relative path.
   - PRINCIPLES.md framed as the GOVERNING constraint (surface if absent).
   - DESIGN.md = visual system only (NOT flows) + tokens side-channel to
     frontend.
@@ -113,7 +113,7 @@ def test_body_references_schema_by_relative_path():
 
 def test_body_references_validator_by_relative_path():
     text = _text()
-    assert "scripts/validate_design_output.py" in text, \
+    assert "scripts/interface/validate_design_output.py" in text, \
         "body must reference the validator by relative path"
 
 

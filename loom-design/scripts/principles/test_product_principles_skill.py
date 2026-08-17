@@ -11,7 +11,7 @@ constraints the task and the host enforce:
     North Star → 3-7 falsifiable principles each carrying the literal `— check:`
     marker → emit PRINCIPLES.md → validate).
   - references to BOTH the authoring contract (`references/principles-rules.md`)
-    and the validator (`scripts/validate_principles_output.py`) by relative path.
+    and the validator (`scripts/principles/validate_principles_output.py`) by relative path.
   - the cross-cutting-constitution framing (governs interface-design / spec /
     code, incl headless), key-free + git-diffable.
   - flat-skill: the only subfolder under the skill dir is `references/` and it is
@@ -148,7 +148,7 @@ def test_body_references_rules_contract_by_relative_path():
 
 def test_body_references_validator_by_relative_path():
     text = _text()
-    assert "scripts/validate_principles_output.py" in text, \
+    assert "scripts/principles/validate_principles_output.py" in text, \
         "body must reference the validator by relative path"
 
 

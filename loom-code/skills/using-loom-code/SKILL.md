@@ -93,7 +93,7 @@ It adds a STOP rule, not a brain; the full doctrine lives in the reference.
 | "Subagents add overhead." | Context-window logic, not quality logic. | If task >1 hour or >1 module, SDD is mandatory. |
 | "User said skip TDD." | Valid only if user is explicit *and* the work matches `tdd-iron-law/SKILL.md` §When NOT to Use (throwaway / generated / pure config). | Quote §When NOT to Use back; ask for explicit confirmation. |
 | 「我先快速試一下 / ちょっと試すだけ」 | Same rationalization, localized. | Same refusal — load `tdd-iron-law`. |
-| "I'll skip straight to the brief." | Skipping `brainstorming`'s Axis 0 upstream check before writing a brief = violation — new product-shaped work may need `using-loom-product-principles` / `using-loom-interface-design` / `using-loom-spec` first. | Load `brainstorming`; Axis 0 checks the reception criteria before Axis 1. |
+| "I'll skip straight to the brief." | Skipping `brainstorming`'s Axis 0 upstream check before writing a brief = violation — new product-shaped work may need `using-loom-design` (the design side's entry — it routes on to the principles / interface / spec station) first. | Load `brainstorming`; Axis 0 checks the reception criteria before Axis 1. |
 
 ## Skill types
 

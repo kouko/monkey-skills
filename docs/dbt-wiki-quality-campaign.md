@@ -119,7 +119,7 @@ Low (next-touch, from PR reviews): flatten_links anchored-link backstop;
 - 2026-08-07: U1's execution-stage slice shipped — a 4-task SDD plan
   (`docs/loom/plans/2026-07-28-phase2-loop-execution-only.md`) that
   **replaced** U1's original "build our own nightly loop" framing. The
-  redesign composes `loom-pipeline/scripts/batch_queue.py` (queue, state,
+  redesign composes `loom-design/scripts/pipeline/batch_queue.py` (queue, state,
   circuit breaker, worktree isolation — all already built and hardened
   twice since) instead of duplicating it, and splits the work by review
   status rather than by clock time: a **planning stage** (interactive,

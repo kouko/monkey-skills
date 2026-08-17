@@ -6,7 +6,7 @@ description: >-
   deterministic Claude Code Workflow segments. Use when asked to run the
   whole pipeline or to auto-implement a change from principles through
   code. CONDITIONAL: fires only when the Workflow tool is available AND
-  the four station plugins are installed — otherwise `loom-design: N/A`
+  the two station plugins are installed — otherwise `loom-design: N/A`
   with the reason, loudly (Codex hosts are N/A). Triggers: "run the loom
   pipeline", "全管線", "全流程跑一遍", 自動實作, "run the conductor".
 version: 0.1.0
@@ -19,7 +19,7 @@ prompt directly — do not re-derive fire conditions or re-invoke Workflow
 yourself.
 </SUBAGENT-STOP>
 
-# using-loom-pipeline — the thin conductor over 4 of the 5 loom station plugins
+# using-loom-pipeline — the thin conductor over 4 of the 5 loom stations
 
 This skill is orchestration only. It never authors PRINCIPLES.md, DESIGN.md,
 ui-flows.md, a spec draft, or code, and it never produces a verdict — those
@@ -38,8 +38,8 @@ below gates on this skill's own two orchestration conditions.
    (SSOT)") — reference it by name/path, never copy its rows here.
 2. **對站檢查 (station check)** — if the ask is interactive design/spec/code
    work rather than a full pipeline run, hand off to that family's own
-   entry point instead of driving it from here: `using-loom-design`,
-   `using-loom-design`, `using-loom-design`, or `using-loom-code`.
+   entry point instead of driving it from here: `using-loom-design` for
+   design or spec work, `using-loom-code` for code work.
 3. **本站再確認 (this station's fire condition, unchanged)** — this skill
    still only fires under `§When it fires`'s BOTH-conditions gate below;
    its N/A-loud wording governs unchanged — nothing in this §Intake grants
@@ -51,9 +51,8 @@ below gates on this skill's own two orchestration conditions.
 1. **The Workflow tool is available** in this host (Claude Code exposes a
    `Workflow` primitive that accepts an arbitrary `scriptPath`).
 2. **The two station plugins are installed**: `loom-design`, `loom-code`.
-   (loom-design's discovery station, the fifth loom station, is v0.1
-   interactive-only and not required here — the conductor never drives it
-   as a Workflow segment.)
+   (loom-design's discovery station is v0.1 interactive-only and not
+   required here — the conductor never drives it as a Workflow segment.)
 
 Either condition false → emit **`loom-design: N/A`** with the specific
 reason (which condition failed) and stop. N/A is a first-class honest
@@ -129,7 +128,7 @@ maps back to a station-plugin phase.
 2. **Segment 2 — Spec.** `loom-design:spec-expansion` fans the seed out into
    an OpenSpec-shape draft, the **completeness-critic** panel
    (`loom-design:completeness-critic`) hunts omissions, then the **validator
-   gate** (loom-spec's exit-0 binary validator) must pass before the
+   gate** (the spec station's exit-0 binary validator) must pass before the
    segment closes.
 3. **Segment 3 — Code.** `loom-code:subagent-driven-development` implements
    the spec task-by-task under the TDD iron law, then a **whole-branch

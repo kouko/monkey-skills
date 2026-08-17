@@ -3,7 +3,7 @@
 docs/loom/specs/2026-07-23-wiki-update-maintenance-loop.md Decision 2).
 
 ORIGIN NOTE (bounded duplication, disclosed): adapted from
-``loom-product-principles/scripts/improve_loop_verdict.py`` — same
+``loom-design/scripts/principles/improve_loop_verdict.py`` — same
 exit-code-verdict skeleton (MalformedInputError, pure verdict
 functions, ``_cmd_*`` wrappers, silent accept path) — but the input
 surface is fully swapped: this CLI consumes ``wiki_lint_check.py``

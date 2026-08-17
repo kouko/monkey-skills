@@ -1,5 +1,5 @@
 """T4 drift guard: relay-phrasing.md must point at the family-wide
-plain-relay contract (loom-pipeline/hooks/plain-relay.md).
+plain-relay contract (loom-code/hooks/plain-relay.md).
 
 WHY this test exists: the review-report phrasing rules in
 relay-phrasing.md (rules 2/4 + the ✅/❌ pair) are ONE instance of the

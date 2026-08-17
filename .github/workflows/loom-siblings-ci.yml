@@ -1,20 +1,22 @@
 name: loom-siblings CI
 
-# Runs the pytest suites of the loom sibling plugins that previously had
-# NO CI coverage: loom-interface-design (validators + skill/manifest
-# behavioral tests), loom-product-principles (validator + skill/manifest
-# behavioral tests), and loom-discovery (plugin manifest + marketplace
-# entry + skill/manifest behavioral tests). loom-code and loom-spec
-# already have their own workflows (loom-code-ci.yml / loom-spec-ci.yml);
-# this closes the remaining gap — loom-product-principles' suite sat
-# silently RED from #456 (2026-06-26) until #468's audit precisely
-# because nothing ran it.
+# Runs the pytest suites of the loom-design stations that previously had
+# NO CI coverage: the interface station (validators + skill/manifest
+# behavioral tests), the principles station (validator + skill/manifest
+# behavioral tests), and the discovery station (plugin manifest +
+# marketplace entry + skill/manifest behavioral tests). loom-code and the
+# spec station already have their own workflows (loom-code-ci.yml /
+# loom-spec-ci.yml); this closes the remaining gap — the principles
+# station's suite sat silently RED from #456 (2026-06-26) until #468's
+# audit precisely because nothing ran it.
 #
-# The suites MUST run as separate pytest invocations: these plugins (and
-# loom-spec) ship same-basename test files (test_marketplace_entry.py /
-# test_plugin_manifest.py) with no __init__.py, so a single combined
-# invocation dies with "import file mismatch" at collection. Separate jobs
-# also give per-plugin CI visibility.
+# The suites MUST run as separate pytest invocations: these station dirs
+# ship same-basename test files (test_marketplace_entry.py /
+# test_plugin_manifest.py, and since the 6->2 merge also
+# test_knowledge_triage.py and test_mint_critic_verdict.py) with no
+# __init__.py, so a single combined invocation dies with "import file
+# mismatch" at collection. Separate jobs also give per-station CI
+# visibility.
 #
 # Status: intended for `main` branch protection.
 

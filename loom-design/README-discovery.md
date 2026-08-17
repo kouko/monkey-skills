@@ -1,5 +1,10 @@
 # loom-discovery
 
+> **Archived.** This plugin was merged into `loom-design` on 2026-08-17
+> (6→2 consolidation). Its station(s) live on inside `loom-design`; this file
+> is kept as the historical record of the standalone plugin, not as current
+> documentation. See `README.md` for the live plugin.
+
 The **problem-space** station of the loom pipeline: establish, with recorded
 evidence, what problem exists, for whom, and whether it's worth your time —
 *before* `loom-product-principles` / `loom-interface-design` / `loom-spec` /

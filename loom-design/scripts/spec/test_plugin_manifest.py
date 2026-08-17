@@ -23,7 +23,7 @@ def test_manifest_is_valid_json():
     _load()
 
 
-def test_name_is_spec_toolkit():
+def test_name_is_loom_design():
     # Why: name must match the plugin dir + marketplace source for resolution.
     assert _load()["name"] == "loom-design"
 

@@ -1,6 +1,11 @@
 # loom-interface-design
 
-The **active-GENERATE interface/UX design station** that sits between the product constitution and the spec: turn a product idea into a **design change-folder** — a design-system doc plus interaction flows — that **seeds `loom-spec:spec-expansion`** so UX/UI gaps surface *before* spec/code, not after.
+> **Archived.** This plugin was merged into `loom-design` on 2026-08-17
+> (6→2 consolidation). Its station(s) live on inside `loom-design`; this file
+> is kept as the historical record of the standalone plugin, not as current
+> documentation. See `README.md` for the live plugin.
+
+The **active-GENERATE interface/UX design station** that sits between the product constitution and the spec: turn a product idea into a **design change-folder** — a design-system doc plus interaction flows — that **seeds `loom-design:spec-expansion`** so UX/UI gaps surface *before* spec/code, not after.
 
 ```
   PRINCIPLES.md  (loom-product-principles — the constitution)
@@ -24,7 +29,7 @@ Two generate skills, a critic, and a router:
   - **TUI / CLI** → a lightweight conventions doc (terminal palette/layout for TUI; output-format + command/flag naming + help/error style for CLI). *Phase-2 — the GUI path ships first.*
 - **`interaction-flows`** (modality-aware) → **`ui-flows.md`** (per-feature/change): screen/panel/command inventory (with a *flag* of which render variants exist — empty/loading/error/success), **user flows** as mermaid, **UI structure** as ascii layout blocks, plus transitions, entry/exit points, information density, and mobile flow — a 7-dimension UX-flow checklist. For CLI/TUI the same dimensions render as command/output or panel/keybinding flows.
 - **`design-critic`** → adversarial critique of the emitted change-folder (`DESIGN.md` + `ui-flows.md`) via a writer≠judge panel hunting **surface omissions** — undrawn states, dead-end flows, a11y gaps — plus principle-conformance against `PRINCIPLES.md` when present. Surface only, never code.
-- **`using-loom-interface-design`** (entry/router) — runs the family **§Intake** reception check (upstream `PRINCIPLES.md` on-ramp per `loom-pipeline/hooks/family-reception.md`, adjacent-station redirects to `using-loom-spec` / `using-loom-code`), then records the modality and routes to the three skills.
+- **`using-loom-interface-design`** (entry/router) — runs the family **§Intake** reception check (upstream `PRINCIPLES.md` on-ramp per `loom-code/hooks/family-reception.md`, adjacent-station redirects to `using-loom-spec` / `using-loom-code`), then records the modality and routes to the three skills.
 
 ## Execution flow
 
@@ -36,7 +41,7 @@ flowchart TD
     dmd["DESIGN.md"]
     ufl["ui-flows.md"]
     critic["design-critic<br/>writer-vs-judge critique"]
-    spec["loom-spec:spec-expansion"]
+    spec["loom-design:spec-expansion"]
 
     entry --> ds
     entry --> flows
@@ -53,7 +58,7 @@ flowchart TD
 
 The output is the **design change-folder** — the surface of the interface — that downstream stations consume:
 
-- **Seam-1 (the seed):** `ui-flows.md` is the **rich seed** to `loom-spec:spec-expansion`. It names the objects / starting states / journey; `spec-expansion` does the **behavioral fan-out** (state machines, edge cases, `#### Scenario:` acceptance). That depth is **not** duplicated here — interface-design owns the **surface**, spec-expansion owns the **behavioral depth**.
+- **Seam-1 (the seed):** `ui-flows.md` is the **rich seed** to `loom-design:spec-expansion`. It names the objects / starting states / journey; `spec-expansion` does the **behavioral fan-out** (state machines, edge cases, `#### Scenario:` acceptance). That depth is **not** duplicated here — interface-design owns the **surface**, spec-expansion owns the **behavioral depth**.
 - **Side-channel:** `DESIGN.md` tokens feed the frontend build itself — colors, spacing, and component defaults the UI code reads. This seam is human/code level, **not** a loom-code skill: no loom-code skill machine-reads `DESIGN.md`.
 
 "States" split by axis: the design lists **render variants per screen** as a presentational *flag*; the spec owns the **domain lifecycle + transition rules**. Design stops at the surface — doing the fan-out would duplicate loom-spec.
@@ -73,13 +78,13 @@ docs/loom/
     ui-flows.md           # interaction flows, per-feature/change
 ```
 
-The design-system doc lives at the toolkit root (product-level); `ui-flows.md` is per-feature/change and lives in a **per-change folder** — the same `<change-id>` that `loom-spec:spec-expansion` uses, so the design seed sits beside the spec delta it feeds (a fixed product-level `ui-flows.md` would be overwritten by the next feature). All artifacts are **key-free, in-repo, git-diffable**. A `validate_*` script (mirroring `loom-spec/scripts/validate_spec_output.py`) is the executable format contract: it checks the change-folder's documents are present and well-formed (exit 0 = conformant).
+The design-system doc lives at the toolkit root (product-level); `ui-flows.md` is per-feature/change and lives in a **per-change folder** — the same `<change-id>` that `loom-design:spec-expansion` uses, so the design seed sits beside the spec delta it feeds (a fixed product-level `ui-flows.md` would be overwritten by the next feature). All artifacts are **key-free, in-repo, git-diffable**. A `validate_*` script (mirroring `loom-design/scripts/spec/validate_spec_output.py`) is the executable format contract: it checks the change-folder's documents are present and well-formed (exit 0 = conformant).
 
 The OpenSpec change-folder that `loom-spec` later produces lives under `docs/loom/` — consistent with the in-use `docs/<toolkit>/` convention, not a root `openspec/`.
 
 ## Scope (v0.4.x)
 
-In: the `design-system` and `interaction-flows` generate skills, the `design-critic` writer≠judge gate (shipped v0.2.0, mirroring `loom-spec:completeness-critic`), the router, and the change-folder validator. GUI ships fully (DESIGN.md + ui-flows + validator). The skills are written modality-aware so the architecture is cross-modal from day one.
+In: the `design-system` and `interaction-flows` generate skills, the `design-critic` writer≠judge gate (shipped v0.2.0, mirroring `loom-design:completeness-critic`), the router, and the change-folder validator. GUI ships fully (DESIGN.md + ui-flows + validator). The skills are written modality-aware so the architecture is cross-modal from day one.
 
 Out (still deferred):
 

@@ -1,4 +1,4 @@
-"""Language-detection helper for loom-pipeline hooks.
+"""Language-detection helper for the loom family hooks.
 
 Pure-stdlib heuristic script/majority-language detector. No target
 language is ever hardcoded here — callers get back whatever code was

@@ -14,7 +14,7 @@ the hard constraints the task and the host enforce:
     consumer project → validate.
   - references to BOTH reference docs (`references/ux-flow-checklist.md`,
     `references/ascii-ui-patterns.md`) AND the validator
-    (`scripts/validate_design_output.py`) by relative path.
+    (`scripts/interface/validate_design_output.py`) by relative path.
   - PRINCIPLES.md framed as the GOVERNING constraint (surface if absent).
   - the render-variant FLAG-only rule, with the full state machine deferred to
     `loom-design:spec-expansion` (the seam is named).
@@ -95,7 +95,7 @@ def test_body_references_both_reference_docs_by_relative_path():
 
 def test_body_references_validator_by_relative_path():
     text = _text()
-    assert "scripts/validate_design_output.py" in text, \
+    assert "scripts/interface/validate_design_output.py" in text, \
         "body must reference the validator by relative path"
 
 

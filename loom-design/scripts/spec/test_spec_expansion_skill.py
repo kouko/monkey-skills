@@ -282,7 +282,7 @@ def test_l2_cross_object_combinations_present():
     """The L2 cross-object-combination layer: a Phase ③b sub-step enumerates
     per-stage joint state combinations of co-active objects, GATED on
     interaction-density; wide stages (≥4 co-active objects) call
-    scripts/pairwise.py; proposal.md carries a `## Cross-object combinations`
+    scripts/spec/pairwise.py; proposal.md carries a `## Cross-object combinations`
     section as the Phase ③b artifact. T12 replaced the verbatim chat-marker
     print ('— Phase ③b cross-object combinations —') with a conversation-
     language announce instruction; the internal phase identifier stays in
@@ -304,13 +304,13 @@ def test_l2_cross_object_combinations_present():
     assert "interaction-density" in low, \
         "Phase ③b must be gated on interaction-density"
     # the wide-stage pairwise generator path
-    assert "scripts/pairwise.py" in text, \
-        "wide stages (≥4 objects) must call scripts/pairwise.py"
+    assert "scripts/spec/pairwise.py" in text, \
+        "wide stages (≥4 objects) must call scripts/spec/pairwise.py"
 
 
 def test_l2_wide_stage_mandates_pairwise_tool():
     """Wide stages (≥4 co-active objects) must be IMPERATIVE about tool use:
-    the executor MUST run scripts/pairwise.py (a real-seed dogfood found the
+    the executor MUST run scripts/spec/pairwise.py (a real-seed dogfood found the
     LLM bypasses it and reasons combinations inline, which the shipped A/B
     proved LEAKS). Two cues must co-occur on the wide-stage instruction:
     (1) an imperative MUST-run/MUST-invoke directive near pairwise.py, and
@@ -329,7 +329,7 @@ def test_l2_wide_stage_mandates_pairwise_tool():
             break
     assert imperative_near_tool, \
         "wide-stage instruction must IMPERATIVELY mandate running " \
-        "scripts/pairwise.py (MUST run/invoke/call), not softly suggest it"
+        "scripts/spec/pairwise.py (MUST run/invoke/call), not softly suggest it"
 
     # (2) ban on inline enumeration of wide-stage combinations by reasoning.
     ban_inline = (

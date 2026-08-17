@@ -1,13 +1,19 @@
-# loom-pipeline
+# loom-design
 
-The **conductor** plugin for the loom suite. It never authors an
-artifact and never produces a verdict — it only sequences four of the
-five loom station plugins (`loom-product-principles`,
-`loom-interface-design`, `loom-spec`, `loom-code`) through the
-principles→design→spec→code pipeline, one deterministic `Workflow`
-invocation per segment, and stops for the human at 4 fixed gates in
-between. The fifth station, `loom-discovery` (the problem-space entry,
-upstream of principles), is v0.1 **interactive-only** — the conductor
+The **design-side** plugin of the loom suite: discovery → product
+principles → interface design → spec, plus the pipeline conductor that
+sequences them.
+
+Its stations (`business-value`, `user-insights`, `product-principles`,
+`design-system`, `interaction-flows`, `design-critic`, `spec-expansion`,
+`completeness-critic`) author the artifacts; `using-loom-design` is the
+one entry router over all four stations. The conductor half —
+`using-loom-pipeline` — never authors an artifact and never produces a
+verdict; it only sequences the design stations and `loom-code` through
+the principles→design→spec→code pipeline, one deterministic `Workflow`
+invocation per segment, stopping for the human at 4 fixed gates in
+between. The discovery station (the problem-space entry, upstream of
+principles) is v0.1 **interactive-only** — the conductor
 does not drive it as a Workflow segment; pipeline runs still start at
 principles.
 
@@ -34,33 +40,32 @@ principles.
 +------------------------------------------------------------+
 ```
 
-Judgment stays in the four Workflow-driven station plugins and in
-`loom-discovery`, the fifth, interactive-only station (cross-plugin
-delegation contract, repo `CLAUDE.md`); this plugin only orchestrates
-and records.
+Judgment stays in the four Workflow-driven stations and in the
+discovery station, the fifth, interactive-only one; the conductor half
+only orchestrates and records.
 
 ## Execution flow
 
 Three `Workflow` invocations — one per segment, never one call for the
-whole run — carry four of the five station plugins in order (principles →
-interface-design → spec → code); `loom-discovery`, the fifth station,
+whole run — carry four of the five stations in order (principles →
+interface-design → spec → code); the discovery station
 sits upstream of principles and is v0.1 interactive-only, not a Workflow
 segment. The human gates (a)–(d) sit around the three Workflow-driven
 segments:
 
 ```mermaid
 flowchart TD
-    RH["SessionStart reception hook<br/>hooks/family-reception.md"] -.->|awareness only, never auto-opens| CON
+    RH["SessionStart reception hook<br/>loom-code/hooks/family-reception.md"] -.->|awareness only, never auto-opens| CON
     INV["Explicit invocation<br/>'run the loom pipeline'"] --> CON
     CON["using-loom-pipeline conductor<br/>collects the 6-field run-input contract"]
     CON --> GAC["Gate (a) change-id minting<br/>Gate (c) cost policy"]
     GAC --> SEG1
     subgraph SEG1["Workflow segment 1 - Principles + Design"]
-        PP["loom-product-principles<br/>PRINCIPLES.md"] --> IXD["loom-interface-design<br/>DESIGN.md + ui-flows.md + design-critic"]
+        PP["product-principles<br/>PRINCIPLES.md"] --> IXD["design-system + interaction-flows<br/>DESIGN.md + ui-flows.md + design-critic"]
     end
     SEG1 --> GC2["Gate (c) cost policy"] --> SEG2
     subgraph SEG2["Workflow segment 2 - Spec"]
-        SPC["loom-spec<br/>spec-expansion + completeness-critic + validator gate"]
+        SPC["spec station<br/>spec-expansion + completeness-critic + validator gate"]
     end
     SEG2 --> GC3["Gate (c) cost policy"] --> SEG3
     subgraph SEG3["Workflow segment 3 - Code"]
@@ -71,20 +76,40 @@ flowchart TD
 ```
 
 Each segment delegates all judgment (drafts, critic panels, verdicts,
-validator/review gates) to its station plugin; the on-ramp criteria the
-reception hook injects live in `hooks/family-reception.md` (the SSOT),
+validator/review gates) to its station; the on-ramp criteria the
+reception hook injects live in `loom-code/hooks/family-reception.md`
+(the SSOT — the family hooks moved to loom-code in the 6→2 merge),
 not here.
+
+## Running the tests
+
+Run each station's suite as its OWN pytest invocation:
+
+```
+python3 -m pytest loom-design/scripts/pipeline/
+python3 -m pytest loom-design/scripts/interface/
+python3 -m pytest loom-design/scripts/discovery/
+python3 -m pytest loom-design/scripts/spec/
+python3 -m pytest loom-design/scripts/principles/
+```
+
+`python3 -m pytest loom-design/scripts/` — the obvious whole-plugin form —
+fails at collection with "import file mismatch". The station dirs ship
+same-named test files (`test_marketplace_entry.py`, `test_plugin_manifest.py`,
+`test_knowledge_triage.py`, `test_mint_critic_verdict.py`) and carry no
+`__init__.py`, so pytest cannot tell the modules apart. `.github/workflows/
+loom-siblings-ci.yml` runs them as separate jobs for the same reason.
 
 ## Install + requirements
 
 Install from the monkey-skills marketplace like any other plugin.
 Requirements, checked before the entry skill fires:
 
-- The four station plugins the conductor drives, installed:
-  `loom-product-principles`, `loom-interface-design`, `loom-spec`,
-  `loom-code`. (`loom-discovery`, the fifth loom station, sits upstream
-  of principles and is v0.1 interactive-only — not required by the
-  conductor and never driven as a Workflow segment.)
+- The two station plugins the conductor drives, installed: `loom-design`
+  (this plugin — it carries the principles, design, and spec stations)
+  and `loom-code`. (The discovery station, inside `loom-design`, sits
+  upstream of principles and is v0.1 interactive-only — not required by
+  the conductor and never driven as a Workflow segment.)
 - A Claude Code host that exposes the **Workflow** primitive (a tool
   accepting an arbitrary `scriptPath`). No Workflow tool → the skill
   reports `loom-design: N/A` with the reason and stops; it never
@@ -125,20 +150,21 @@ before the next `Workflow` call:
 The driver requires the Workflow primitive, which Codex does not
 expose. On Codex this plugin is **N/A by definition** — report
 `loom-design: N/A (no Workflow primitive on this host)` and stop; do
-not attempt an inline substitute. All five loom station plugins
-(including `loom-discovery`) remain usable on Codex — run them
-interactively, one station at a time, instead of through this
-conductor.
+not attempt an inline substitute. Every loom station (including
+discovery) remains usable on Codex — run them interactively, one
+station at a time, instead of through this conductor.
 
 ## Family entries & naming convention
 
-> **要用 loom-X, 就從 using-loom-X 開始.** Every plugin's entry point is its
+> **要用 loom-X, 就從 using-loom-X 開始.** Each family entry point is a
 > `using-loom-*` skill — start there, it routes you the rest of the way.
+> (`loom-design` carries two: `using-loom-design` for the design stations,
+> `using-loom-pipeline` for the conductor.)
 
 | Name pattern | Role | Examples |
 |---|---|---|
-| `using-loom-*` | **Entry** — the family-routing skill for one plugin. Fires on vague/goal-shaped asks, checks the on-ramp criteria, hands off to the right station. | `using-loom-design`, `using-loom-design`, `using-loom-design`, `using-loom-design`, `using-loom-code`, `using-loom-pipeline` |
-| plain artifact names | **Stations** — tuned to fire on direct, specific asks for their own artifact, without needing the entry skill first. | `product-principles`, `design-system`, `interaction-flows`, `spec-expansion`, `completeness-critic` |
+| `using-loom-*` | **Entry** — a family-routing skill. Fires on vague/goal-shaped asks, checks the on-ramp criteria, hands off to the right station. | `using-loom-design`, `using-loom-code`, `using-loom-pipeline` |
+| plain artifact names | **Stations** — tuned to fire on direct, specific asks for their own artifact, without needing the entry skill first. | `business-value`, `user-insights`, `product-principles`, `design-system`, `interaction-flows`, `design-critic`, `spec-expansion`, `completeness-critic` |
 
 `brainstorming` is loom-code's **discovery** skill, not an artifact
 station — it explores intent before a brief exists, which is why
@@ -180,7 +206,7 @@ to a cheaper tier; a single anecdotal run is not sufficient evidence.
 
 ## Batch mode (v1.1)
 
-A queue of **FROZEN** changes (change-folder form: loom-spec validator
+A queue of **FROZEN** changes (change-folder form: spec-station validator
 exit-0; or brief+plan form: reviewer-PASSed plan — plan committed
 either way) feeds an unattended segment-3 loop, one queued item at a
 time, each in its own worktree/branch with its own pre-authorized

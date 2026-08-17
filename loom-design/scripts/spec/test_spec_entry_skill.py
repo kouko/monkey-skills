@@ -116,13 +116,15 @@ def test_intake_step1_upstream_check_references_reception_ssot():
 
 def test_intake_step2_peer_check_present():
     """Step-2-scoped: slice to Step 2's OWN paragraph (between the '**Step 2'
-    marker and the '**Step 3' marker) before asserting the three redirect-
-    target names. A whole-§Intake slice is too coarse — Step 1 independently
-    names using-loom-design and using-loom-design, so
-    only a slice ending before Step 3 makes all three assertions genuinely
-    load-bearing (found during C2's quality review; mirrors the section-
-    scoping idea from loom-interface-design's test_entry_intake.py, one
-    level narrower)."""
+    marker and the '**Step 3' marker) before asserting the redirect-target
+    names. A whole-§Intake slice is too coarse — Step 1 independently names
+    using-loom-design, so only a slice ending before Step 3 makes these
+    assertions genuinely load-bearing (found during C2's quality review;
+    mirrors the section-scoping idea from the interface station's
+    test_entry_intake.py, one level narrower).
+
+    Since the 4->1 router merge there are two assertions here, not three:
+    design and spec asks now share one redirect target."""
     text = _text()
     step2_idx = text.find("**Step 2")
     assert step2_idx != -1, "§Intake step 2 (對站檢查) marker must be present"
@@ -132,10 +134,11 @@ def test_intake_step2_peer_check_present():
 
     assert "對站檢查" in step2, \
         "§Intake step 2 (對站檢查) must be present"
+    # Both UI/UX-design asks and product-constitution asks redirect to the
+    # same merged router now (the 4->1 collapse), so this is one assertion,
+    # not two identical ones with differing messages.
     assert "using-loom-design" in step2, \
-        "step 2 must redirect UI/UX design asks to using-loom-design"
-    assert "using-loom-design" in step2, \
-        "step 2 must redirect product-constitution asks to using-loom-design"
+        "step 2 must redirect UI/UX design AND product-constitution asks to using-loom-design"
     assert "using-loom-code" in step2, \
         "step 2 must redirect implementation/code asks to using-loom-code"
 

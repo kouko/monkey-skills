@@ -122,7 +122,7 @@ _RE_TRIGGER_MARKER = "— re-trigger:"
 # references/knowledge-triage.md). Entry:
 # docs/loom/backlog/2026-07-18-knowledge-triage-v2-1-mechanize-enforcement-semantics.md
 # Mirrors
-# loom-spec's sibling cut (a) check (`validate_spec_output.py`
+# The spec station's sibling cut (a) check (`validate_spec_output.py`
 # `_EVIDENCE_NEEDED`/`_EVIDENCE_WHITELIST`) — same pinned three-bucket enum,
 # same real leg-1 failure mode (a weak executor inventing an out-of-enum
 # value such as `technical-constraint`). `evidence_needed:` may appear

@@ -210,7 +210,7 @@ augment it (mirroring `completeness-critic`'s write-back contract):
 2. **`## Blind spots — needs human/field input`** is appended/extended per the
    rule below.
 3. After write-back, run the change-folder validator
-   (`../../scripts/validate_design_output.py`) — a failure feeds the §Verdict.
+   (`../../scripts/interface/validate_design_output.py`) — a failure feeds the §Verdict.
 
 This write-back is the **sanctioned GENERATE-station exception** to the repo's
 evaluator-does-not-modify rule (repo CLAUDE.md §Agent Behavioral Rules):
@@ -251,7 +251,7 @@ loom-code's reviewer vocabulary):
 
 - **`NEEDS_REVISION`** — a **severity-3** gap (blocks the user's core job)
   could not be concretely re-seeded and needs the writer to redo a surface,
-  **or** `../../scripts/validate_design_output.py` fails after write-back.
+  **or** `../../scripts/interface/validate_design_output.py` fails after write-back.
   Resolution: route back to `design-system` / `interaction-flows` for the
   flagged surfaces, then re-run this critic. This outer writer↔critic
   revision cycle is capped at 2: on the 2nd consecutive `NEEDS_REVISION`
@@ -266,7 +266,7 @@ There is **deliberately no unqualified `PASS`** in this enum: a bare PASS
 would claim no omissions remain — the banned "complete" reflex — and Blind
 spots is non-empty by construction, so every clean outcome carries notes.
 
-Then mint it — both values mint: `../../scripts/mint_critic_verdict.py mint
+Then mint it — both values mint: `../../scripts/interface/mint_critic_verdict.py mint
 --change-folder <path> --critic design-critic --verdict-file <path>
 --files DESIGN.md,ui-flows.md`.
 

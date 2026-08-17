@@ -12,7 +12,7 @@
 #
 # DEFENSIVE keys (belt-and-suspenders, emitted for cross-version/host
 # portability): additional_context (top-level snake_case), additionalContext
-# (bare top-level camelCase). Mirrors loom-pipeline/hooks/session-start's
+# (bare top-level camelCase). Mirrors loom-code/hooks/session-start's
 # 3-key shape.
 set -euo pipefail
 

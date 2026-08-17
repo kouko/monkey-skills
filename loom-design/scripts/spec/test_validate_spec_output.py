@@ -213,7 +213,7 @@ def test_skeleton_tolerates_extra_content(tmp_path):
 
 
 # --- additive-section tests (Task 3) ---------------------------------------
-# loom-spec's differentiating richness lives in proposal.md's additive
+# The spec station's differentiating richness lives in proposal.md's additive
 # sections; the OpenSpec delta under specs/ stays pure. So additive checks
 # operate on proposal.md.
 

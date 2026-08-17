@@ -1,5 +1,10 @@
 # loom-spec
 
+> **Archived.** This plugin was merged into `loom-design` on 2026-08-17
+> (6→2 consolidation). Its station(s) live on inside `loom-design`; this file
+> is kept as the historical record of the standalone plugin, not as current
+> documentation. See `README.md` for the live plugin.
+
 The **GENERATE** layer of a three-layer spec→code pipeline: turn a sparse seed (a few lines of feature intent) into a **structured, verification-ready spec draft** that `loom-code`'s VERIFY layer consumes.
 
 ```

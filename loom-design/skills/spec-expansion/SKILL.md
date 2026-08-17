@@ -311,7 +311,7 @@ stages and prunes its junk, so do not enumerate combinations where the
 reaction is just the union of individual reactions.
 
 **Wide stages (≥4 co-active objects).** On a ≥4-object stage you
-**MUST run `../../scripts/pairwise.py`** (path relative to this skill's directory — the script ships at the plugin root's `scripts/`) — and **MUST NOT enumerate** a wide
+**MUST run `../../scripts/spec/pairwise.py`** (path relative to this skill's directory — the script ships under the plugin's `scripts/spec/`) — and **MUST NOT enumerate** a wide
 stage's combinations **inline** by reasoning. Inline reasoning-based
 enumeration on wide stages is the A/B-validated **leak** (the exhaustive grid
 catches gold that pure-prompt enumeration misses, `missed_by_both` up to 11);
@@ -416,7 +416,7 @@ blind spots:
   `backbone × object × CTA × state` paths and edges survive post-prune.
 - `## Cross-object combinations` — Phase ③b artifact: per interaction-dense
   stage, the joint state combinations of its co-active objects and the
-  reaction each requires (wide stages reduced via `../../scripts/pairwise.py`).
+  reaction each requires (wide stages reduced via `../../scripts/spec/pairwise.py`).
   **Structurally required — always emitted**; when no stage is
   interaction-dense, its body states that honestly (e.g. "no
   interaction-dense stage — combinations N/A") and does **not** pad.
@@ -439,7 +439,7 @@ such tag blocks VERIFY unless it carries an explicit `deferred: <reason>`
 note.
 
 Validate the emitted directory with
-`../../scripts/validate_spec_output.py <output-dir>` (relative to this skill's
+`../../scripts/spec/validate_spec_output.py <output-dir>` (relative to this skill's
 directory) before handoff.
 
 ### Language policy — layered by artifact role

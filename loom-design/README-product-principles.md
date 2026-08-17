@@ -1,5 +1,10 @@
 # loom-product-principles
 
+> **Archived.** This plugin was merged into `loom-design` on 2026-08-17
+> (6→2 consolidation). Its station(s) live on inside `loom-design`; this file
+> is kept as the historical record of the standalone plugin, not as current
+> documentation. See `README.md` for the live plugin.
+
 The **cross-cutting constitution** layer that sits *above* the whole spec→code pipeline: turn a sparse product idea into a `PRINCIPLES.md` — a project constitution whose North Star and non-negotiable principles, organized by **jurisdiction** (Product / Design / Engineering), **govern every downstream station** (interface-design, spec, code).
 
 ```
@@ -17,7 +22,7 @@ Agent-portable and key-free: the skill drives the host agent's own LLM — no ex
 
 Two skills:
 
-- **`using-loom-product-principles`** — the family entry: intake + routing. It runs the §Intake checks (upstream check against loom-pipeline's family-reception on-ramp criteria, plus a peer-station redirect when the ask belongs to another loom family), then hands off to `product-principles`. It does not author the constitution itself.
+- **`using-loom-product-principles`** — the family entry: intake + routing. It runs the §Intake checks (upstream check against the family-reception hook (now loom-code's) on-ramp criteria, plus a peer-station redirect when the ask belongs to another loom family), then hands off to `product-principles`. It does not author the constitution itself.
 - **`product-principles`** — takes a sparse product idea and emits a single **`PRINCIPLES.md`** organized by jurisdiction:
   - **`## North Star`** — the product's original goal plus a concrete definition of "success".
   - **`## Product Principles`** (required) — **3–7 non-negotiable principles, each carrying a falsifiable check.** Platitudes are rejected at generation: ❌ "be delightful" → ✅ "primary task completes in ≤3 steps", "never block the primary flow with a modal", "offline-readable". The falsifiable check is what makes a principle usable as a downstream gate.
@@ -55,7 +60,7 @@ docs/loom/PRINCIPLES.md
   ## Engineering Principles    # optional — 1–7, never empty if present
 ```
 
-`PRINCIPLES.md` is **key-free, in-repo, git-diffable**, and **project-level** (one per project, not per-feature). A `validate_*` script (mirroring `loom-spec/scripts/validate_spec_output.py`) is the executable format contract: it checks the required section exists, every present optional section is non-empty, and every principle carries a check (exit 0 = conformant).
+`PRINCIPLES.md` is **key-free, in-repo, git-diffable**, and **project-level** (one per project, not per-feature). A `validate_*` script (mirroring `loom-design/scripts/spec/validate_spec_output.py`) is the executable format contract: it checks the required section exists, every present optional section is non-empty, and every principle carries a check (exit 0 = conformant).
 
 ## Honesty rails
 
@@ -65,7 +70,7 @@ A principle is only useful if it is **falsifiable / checkable** — otherwise it
 
 In: the `using-loom-product-principles` family entry + the `product-principles` skill + the format validator. The constitution MAY ride the downstream seam as always-on steering context (it is just one more file path).
 
-The writer≠judge **conformance gate** ("does this artifact violate a principle?") is now **live downstream** as a **lens** on the existing critics — `loom-interface-design:design-critic` (conditional PRINCIPLES lens), `loom-spec:completeness-critic` (lens 6), and loom-code's whole-branch `code-reviewer` (`principles-conformance` dimension D8) — not a new gate engine.
+The writer≠judge **conformance gate** ("does this artifact violate a principle?") is now **live downstream** as a **lens** on the existing critics — `loom-design:design-critic` (conditional PRINCIPLES lens), `loom-design:completeness-critic` (lens 6), and loom-code's whole-branch `code-reviewer` (`principles-conformance` dimension D8) — not a new gate engine.
 
 Out (deferred): a second `principles-conformance` skill; business/market/strategy framing (that stays `planning-team`'s `PRODUCT-SPEC.md` turf); user/problem research (that is now `loom-discovery` turf) (supersedes-in-part the 2026-06-14 MVP brief's Out list, 2026-07-10). See `docs/loom/specs/2026-06-14-product-principles-toolkit-mvp.md` (brief).
 

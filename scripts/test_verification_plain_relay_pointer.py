@@ -5,7 +5,7 @@ the "done" announcement.
 WHY this test exists: "Done" is the moment the user most needs one plain line.
 Before this task, verification-before-completion had NO relay/phrasing rule at
 all — a confirmed coverage hole. This test pins the one-line pointer to
-loom-pipeline/hooks/plain-relay.md plus the conclusion-first /
+loom-code/hooks/plain-relay.md plus the conclusion-first /
 one-sentence-test-result instruction so the hole does not silently reopen.
 
 Block scoping: whole-file grep is false-green-prone (plain-relay.md could be

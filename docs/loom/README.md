@@ -12,7 +12,7 @@ truth.
 | [`BACKLOG.md`](BACKLOG.md) | **Generated** index over `backlog/` — never hand-edit it; run `python3 scripts/backlog_index.py --write` (repo-root first, else the loom-code plugin copy) |
 | [`DIRECTION.md`](DIRECTION.md) | Direction layer — human `## Next`/`## Later`; `## Now` generated — never hand-edit; regen via `python3 scripts/backlog_index.py --direction-write docs/loom/DIRECTION.md` (same two-tier resolution) |
 | [`memory/`](memory/) | Practice-memory store — repo-native home for distilled loom-* practices, habits, processes, and recurring gotchas (one fact per file) |
-| [`discovery/`](discovery/) | Problem-space artifacts per run: `user-insights.md` + evidence + research reports; `business-value.md` when the worth-it check fires — see loom-discovery plugin |
+| [`discovery/`](discovery/) | Problem-space artifacts per run: `user-insights.md` + evidence + research reports; `business-value.md` when the worth-it check fires — see the loom-design discovery station |
 | [`specs/`](specs/) | Brainstorming briefs (5-axis output) |
 | [`plans/`](plans/) | Writing-plans output (atomic task lists) |
 | [`audits/`](audits/) | Audit reports and changesets |
