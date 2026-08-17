@@ -87,7 +87,11 @@ jobs:
 
       - name: Install test deps
         # pytest = test runner. The drift + sync scripts are pure stdlib (P1-E).
-        run: python3 -m pip install --quiet pytest
+        # markdown-it-py = adjudication_render's markdown→HTML converter; it is
+        # the one non-stdlib runtime import under loom-code/scripts/, and three
+        # test modules fail at COLLECTION without it (not at assert time), which
+        # takes the whole suite down rather than one test.
+        run: python3 -m pip install --quiet pytest markdown-it-py
 
       - name: Run pytest suites (loom-code + codex-compat engine + hook)
         env:
