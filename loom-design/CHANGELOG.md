@@ -11,6 +11,16 @@ The five plugins this one absorbed keep their own histories alongside:
 `CHANGELOG-interface-design.md`, `CHANGELOG-product-principles.md`. Their
 version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
 
+## [0.2.0] — 2026-08-17 — artifact-layer table routing (spec side)
+
+### Changed
+
+- **`spec-expansion`'s `## Path × edge matrix` and `## Cross-object
+  combinations` sections now specify a markdown-table body** with pinned
+  `N/A` lines for the genuinely-empty case, instead of free-form prose.
+- **`validate_spec_output.py` rejects a body that carries neither a
+  table nor its `N/A` line** for those two sections.
+
 ## [0.1.0] — 2026-08-17 — the design side becomes one plugin (6→2)
 
 ### Added
