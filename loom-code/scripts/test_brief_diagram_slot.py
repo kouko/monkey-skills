@@ -13,6 +13,7 @@ Stdlib + pytest only (pathlib).
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 HANDOFF_BRIEF_FORMAT_MD = (
@@ -26,8 +27,18 @@ HANDOFF_BRIEF_FORMAT_MD = (
 # Pin A's full line-prefix (transcribe VERBATIM from the plan's §Pinned wording).
 PIN_A_PREFIX = "N/A — no flow/state/architecture-shaped content:"
 
-# Pin B's load-bearing sentence (transcribed VERBATIM from the plan).
-PIN_B_HEADING_SENTENCE = "Do not delete the section heading"
+# Pin B's load-bearing sentence (transcribed VERBATIM from the plan), narrowed
+# to the full `## Diagrams`-specific clause: `## Alternatives Considered`
+# (added in a later task, docs/loom/plans/2026-08-17-artifact-table-routing.md
+# Task 2) legitimately shares the bare prefix "Do not delete the section
+# heading — an absent heading or a bare section is a reviewable omission."
+# via its own transcribed Pin B, so the short prefix is no longer unique in
+# this file; the continuation below IS unique to `## Diagrams`.
+PIN_B_HEADING_SENTENCE = (
+    "Do not delete the section heading — an absent heading or a bare "
+    "section is a reviewable omission, and an N/A whose reason does not "
+    "hold against the artifact's own content is a reviewable claim."
+)
 
 # The old escape hatch this task must remove.
 OLD_ESCAPE_PHRASE = "remove this section if no diagrams"
@@ -38,6 +49,13 @@ def _text() -> str:
         f"handoff-brief-format.md is absent at {HANDOFF_BRIEF_FORMAT_MD}"
     )
     return HANDOFF_BRIEF_FORMAT_MD.read_text(encoding="utf-8")
+
+
+def _normalized_text() -> str:
+    # handoff-brief-format.md hard-wraps prose at ~80 columns, so a
+    # multi-clause pinned sentence can span source lines; collapse runs of
+    # whitespace (including newlines) to a single space before matching.
+    return re.sub(r"\s+", " ", _text())
 
 
 def test_diagrams_section_fill_or_declare_full_phrases() -> None:
@@ -55,10 +73,13 @@ def test_diagrams_section_fill_or_declare_full_phrases() -> None:
 
     # Pin B's sentence is the shared fill-or-declare contract core; it
     # belongs in the spec entry exactly once (the template copy carries the
-    # short form per the task, not the full Pin B block).
-    assert text.count(PIN_B_HEADING_SENTENCE) == 1, (
+    # short form per the task, not the full Pin B block). Matched against
+    # whitespace-normalized text since the source hard-wraps this sentence
+    # across lines.
+    normalized = _normalized_text()
+    assert normalized.count(PIN_B_HEADING_SENTENCE) == 1, (
         f"Pin B's sentence {PIN_B_HEADING_SENTENCE!r} must appear exactly once "
-        "(in the spec entry's transcribed Pin B block)"
+        "(in the `## Diagrams` entry, whitespace-normalized)"
     )
 
     # The old "just delete it" escape hatch must be fully gone.

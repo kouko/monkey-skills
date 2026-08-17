@@ -189,7 +189,7 @@ Brainstorming's deliverable is a **structured brief** that `writing-plans` consu
 (Bulleted list of adjacent things explicitly NOT in this change)
 ```
 
-Optional but recommended sections: Alternatives Considered (Axis 4), What Becomes Obsolete (Axis 5), Open Questions.
+Optional but recommended sections: What Becomes Obsolete (Axis 5), Open Questions. `## Alternatives Considered` (Axis 4) and `## Diagrams` are fill-or-declare — see `references/handoff-brief-format.md`.
 
 The brief lands in the user's repo at `docs/loom/specs/<date>-<topic>.md`.
 
