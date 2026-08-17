@@ -43,7 +43,19 @@ start: the next edit to any loom-design/CHANGELOG-*.md, OR a reader/agent misrea
   went to loom-code — and a header naming only one destination sends
   readers to the wrong plugin).
 
-- Open sub-question: whether the meta-commentary belongs inline in the
-  opening paragraph (what CHANGELOG-pipeline.md does) or in a `>`
-  blockquote after the Format/Versioning lines (what the two
-  reconstruction-noted siblings do). Pick one and make all five match.
+- Already done, do not redo: the INBOUND half of the pointer exists.
+  `loom-design/CHANGELOG.md:9-12` already names all five archives ("The
+  five plugins this one absorbed keep their own histories alongside") and
+  states that their version numbers do not continue. Only the outbound
+  half — each archive saying what it is — is missing.
+
+- Open sub-question: where the archival meta-commentary belongs. Three
+  live candidates, pick one and make all five match:
+  (a) inline in the opening paragraph — what `CHANGELOG-pipeline.md` does
+      today;
+  (b) a `>` blockquote after the Format/Versioning lines — what the two
+      reconstruction-noted siblings do;
+  (c) state the convention ONCE at the hub (`CHANGELOG.md:9-12`, which
+      already lists all five) and keep the five headers short — avoids
+      repeating the same sentence five times, at the cost of a reader who
+      opens an archive directly not seeing it.
