@@ -38,6 +38,7 @@ import sys
 from pathlib import Path
 
 from markdown_it import MarkdownIt
+from markdown_it.rules_block import table
 
 from adjudication_profiles import get_profile
 
@@ -54,12 +55,19 @@ _FONT_STACK_PLACEHOLDER = "__FONT_STACK__"
 # `html: False` — commonmark's default passes raw HTML straight through,
 # and a `rendition` is agent-written, not developer-authored. Every feature
 # used here is markdown syntax, so escaping raw HTML costs nothing.
-# `.enable("table")` rather than re-registering the rule: commonmark's
-# ruler already carries `table` ahead of `fence`, so a manual
-# `.before('fence', 'table', …)` only added a SECOND rule of the same name
-# (verified byte-identical output, and a duplicate name would make any
-# later enable/disable("table") ambiguous).
-_MD = MarkdownIt("commonmark", {"html": False}).enable("table")
+# The table rule is re-registered rather than merely `.enable("table")`d,
+# for its `alt` list. commonmark ships `table` disabled with
+# alt=['paragraph', 'reference']; this registration widens it to include
+# 'blockquote' and 'list', which is what lets a table interrupt a
+# blockquote's lazy continuation. Without the widening, a table written
+# directly under a `>` line stays literal pipe text inside the quote —
+# and renditions do carry blockquotes. Pinned by
+# test_table_interrupts_blockquote_lazy_continuation; the two forms are
+# NOT interchangeable.
+_MD = MarkdownIt("commonmark", {"html": False})
+_MD.block.ruler.before("fence", "table", table, {
+    "alt": ["paragraph", "reference", "blockquote", "list"],
+})
 
 # Matches ONE mermaid fence's open tag, body, and close tag together, so the
 # close tag of a non-mermaid fence is never rewritten. DOTALL because a
@@ -86,9 +94,10 @@ def _render_markdown(md_text: str) -> str:
     can locate and render them — the browser scans the DOM for elements
     with class="mermaid" and transforms them in place.
 
-    Tables are converted to `<table><thead><tbody>` — commonmark ships the
-    table rule ahead of `fence`, so pipes inside a table are never mistaken
-    for a fence delimiter; it only needs enabling.
+    Tables are converted to `<table><thead><tbody>`, including a table
+    written directly under a blockquote line — see the parser setup above
+    for why that case needs a widened `alt` list rather than a plain
+    `.enable("table")`.
 
     Other markdown syntax (bold, italic, lists, blockquotes, etc.)
     is also converted.
@@ -352,8 +361,12 @@ def _render_page(title, units_html, lang, mermaid_script=""):
     and is interpolated unescaped on purpose, guarded by the parser's
     `html: False` instead (see `_render_markdown`).
 
-    `mermaid_script` is the embedded mermaid JS as a <script> tag
-    (empty string = no script, CDN URL, or base64 data URL).
+    `mermaid_script` is BOTH the embedded mermaid library and its
+    `initialize` call, as one string — they travel together so a page can
+    never carry the call without the library (that pairing is the fix for
+    verdict mode, which passes "" and gets neither). Never a CDN URL: the
+    module's no-external-URLs constraint is what makes the output readable
+    offline and leak-free.
     """
     profile = get_profile(lang)
     style_rendered = STYLE.replace(_FONT_STACK_PLACEHOLDER, profile.font_stack)
@@ -367,10 +380,17 @@ def _render_page(title, units_html, lang, mermaid_script=""):
 
 
 def _load_bundled_mermaid() -> str:
-    """Load the bundled mermaid.min.js and return it as a base64 data URL.
+    """Return the bundled mermaid library AND its initialize call, as one
+    string: a `<script>` whose src is a base64 data URL, followed by a
+    `<script>` calling `mermaid.initialize`.
 
-    The script is read from the same directory as this module.
-    If the file is not found, returns an empty string (no script).
+    The two are emitted together deliberately — a page carrying the call
+    without the library throws ReferenceError on load, which is what
+    happened while the initialize call lived in the page template instead.
+
+    The library is read from this module's own directory. Unreadable for
+    any reason (absent, permissions, a directory) → returns "", so the page
+    ships neither tag and a diagram degrades to visible fence text.
     """
     script_path = Path(__file__).parent / "mermaid.min.js"
     try:

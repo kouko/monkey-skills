@@ -11,7 +11,7 @@ future template change fails exactly the test that names the broken
 behavior, not one monolithic assertion block.
 """
 
-from adjudication_render import render_doc
+from adjudication_render import render_doc, render_verdict_html
 
 FIXTURE_UNITS = [
     {
@@ -139,6 +139,7 @@ def test_rendition_raw_html_is_escaped_not_passed_through():
     assert "<script>alert(1)</script>" not in html_out
 
     html_out = render_doc([_unit('<img src=x onerror="alert(2)">')])
+    assert "&lt;img src=x onerror=" in html_out
     assert "<img src=x onerror=" not in html_out
 
 
@@ -171,4 +172,62 @@ def test_consecutive_mermaid_fences_do_not_merge():
     md = "```mermaid\nflowchart LR\n  A-->B\n```\n\ntext\n\n```mermaid\ngraph TD\n  C-->D\n```\n"
     html_out = render_doc([_unit(md)])
     assert html_out.count('<div class="mermaid">') == 2
-    assert "text" in html_out
+    # the paragraph between them must stay OUTSIDE both divs — a greedy
+    # match keeps the text present but swallows it into one merged div,
+    # so `"text" in html_out` alone would not catch the regression
+    assert "<p>text</p>" in html_out
+
+
+def test_mermaid_fence_match_is_case_insensitive():
+    """PIN: ```Mermaid / ```MERMAID must still become a diagram. The
+    rendition is agent-written, so case variance is realistic input, and
+    without re.IGNORECASE such a fence renders as a code block — silently,
+    no error."""
+    for fence in ("Mermaid", "MERMAID"):
+        html_out = render_doc([_unit(f"```{fence}\nflowchart LR\n  A-->B\n```")])
+        assert '<div class="mermaid">' in html_out, fence
+        assert f'class="language-{fence}"' not in html_out
+
+
+def test_table_interrupts_blockquote_lazy_continuation():
+    """PIN: the table rule is registered with a WIDENED `alt` list
+    (blockquote, list) rather than plain `.enable("table")`. commonmark's
+    built-in registration has alt=['paragraph','reference'], under which a
+    table written directly beneath a `>` line stays literal pipe text
+    inside the quote. Renditions do carry blockquotes, so the two forms
+    are not interchangeable."""
+    html_out = render_doc([_unit("> quote text\n| a | b |\n|---|---|\n| 1 | 2 |")])
+    assert "<table>" in html_out
+    assert "<td>1</td>" in html_out
+    assert "| a | b |" not in html_out
+
+
+def test_doc_page_ships_library_and_initialize_together():
+    """PIN: the library and its initialize call are ONE string, so a page
+    can never carry the call without the library. The call previously sat
+    in the page template unconditionally, which made every verdict-HTML
+    page throw ReferenceError on load."""
+    html_out = render_doc([_unit("plain text")])
+    assert html_out.count("mermaid.initialize") == 1
+    assert html_out.count("data:application/javascript;base64,") == 1
+    # the library tag must precede the call
+    assert html_out.index("base64,") < html_out.index("mermaid.initialize")
+
+
+def test_verdict_page_emits_neither_library_nor_initialize():
+    """PIN: verdict mode passes no mermaid script; it must therefore emit
+    no initialize call either. Pairs with the doc-mode test above — the
+    two together pin the invariant 'both or neither'."""
+    html_out = render_verdict_html([_unit("finding text", uid="f1")])
+    assert "mermaid.initialize" not in html_out
+    assert "data:application/javascript;base64," not in html_out
+
+
+def test_mermaid_initialize_pins_strict_security_level():
+    """PIN: the mermaid div is a second sink that the parser's html:False
+    does not reach — markdown-it escapes the fence body, the browser
+    decodes it back to text, and mermaid builds DOM from that text. The
+    bundle happens to default to strict, but this asserts it rather than
+    depending on a library default."""
+    html_out = render_doc([_unit("```mermaid\nA-->B\n```")])
+    assert 'securityLevel: "strict"' in html_out
