@@ -1,7 +1,14 @@
 # Changelog
 
-All notable changes to the `loom-pipeline` plugin will be documented in
-this file.
+All notable changes to the `loom-pipeline` plugin are documented in this
+file. **Archived** — loom-pipeline was retired on 2026-08-17 in the 6→2
+consolidation, and its two skills went to different plugins: the conductor
+lives on here as `loom-design`'s `using-loom-pipeline`, while `loom-memory`
+moved to **`loom-code`** (0.84.0). Entries below about loom-memory —
+including the 0.12.0 and 0.11.0 releases — describe a skill that now ships
+in loom-code, not in this plugin. This file is the historical record of the
+standalone plugin, not the merged plugin's changelog — see `CHANGELOG.md`
+for that.
 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
