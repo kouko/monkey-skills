@@ -6,9 +6,10 @@ HTML view per the adjudication-view protocol
 Doc mode: one section per unit — the target-language `rendition` (the
 language `--lang` selects, default zh-Hant) is the primary text; the EN
 `source_text` is collapsible beside it in a
-`<details><summary>原文</summary>...</details>` block. All content
-interpolations (heading / source_text / rendition) are html.escape'd —
-source and rendition are untrusted text, never raw-HTML-injected.
+`<details><summary>原文</summary>...</details>` block. `heading` and
+`source_text` are html.escape'd; `rendition` is parsed as markdown and
+injected as raw HTML (bold, italic, lists, blockquotes, and Mermaid
+fences are all converted).
 
 Styling is embedded (single `<style>` block, no external stylesheet,
 no external URLs of any kind) and restrained: one CSS accent-color
@@ -28,10 +29,14 @@ Emits HTML to stdout by default, or to the path given by `-o`.
 """
 
 import argparse
+import base64
 import html
 import json
 import sys
 from pathlib import Path
+
+from markdown_it import MarkdownIt
+from markdown_it.rules_block import table
 
 from adjudication_profiles import get_profile
 
@@ -41,12 +46,57 @@ from adjudication_profiles import get_profile
 # marker rather than a `{font_stack}` format field for that reason.
 _FONT_STACK_PLACEHOLDER = "__FONT_STACK__"
 
+# Cached markdown-it parser — constructed once, reused across all renders.
+# The default config handles headings, lists, blockquotes, bold/italic,
+# tables, and fenced code blocks (including ` ```mermaid ` → <pre><code
+# class="language-mermaid">).
+# The table rule is registered before 'fence' so table pipes don't
+# interfere with fenced code block detection.
+_MD = MarkdownIt()
+_MD.block.ruler.before('fence', 'table', table, {
+    'alt': ['paragraph', 'reference', 'blockquote', 'list'],
+})
+
+
+def _render_markdown(md_text: str) -> str:
+    """Convert markdown text to HTML via markdown-it.
+
+    Fenced code blocks (including ` ```mermaid `) are converted to HTML.
+    Mermaid fences specifically become `<div class="mermaid">` (not
+    `<pre><code class="language-mermaid">`) so browser-side Mermaid JS
+    can locate and render them — the browser scans the DOM for elements
+    with class="mermaid" and transforms them in place.
+
+    Tables are converted to `<table><thead><tbody>` (the table rule is
+    registered before the fence rule so pipe characters inside tables
+    are not confused with fenced code block delimiters).
+
+    Other markdown syntax (bold, italic, lists, blockquotes, etc.)
+    is also converted.
+
+    The output is safe for direct HTML interpolation (no raw user data —
+    markdown-it generates the HTML structure from trusted source text).
+    """
+    if not md_text:
+        return ""
+    result = _MD.render(md_text)
+    # Convert mermaid fences from <pre><code class="language-mermaid">
+    # to <div class="mermaid"> for browser-side Mermaid JS compatibility.
+    result = result.replace(
+        '<pre><code class="language-mermaid">',
+        '<div class="mermaid">',
+    )
+    result = result.replace('</code></pre>', '</div>')
+    return result
+
 STYLE = """
 :root {
-  --accent: #2b5797;
+  --accent: #1a1a1a;
+  --accent-light: #e0e0e0;
   --fg: #1a1a1a;
   --bg: #ffffff;
-  --muted: #555555;
+  --muted: #666666;
+  --muted-light: #f0f0f0;
 }
 * { box-sizing: border-box; }
 body {
@@ -59,38 +109,147 @@ body {
   line-height: 1.6;
 }
 h1 {
-  font-size: 1.4rem;
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 0.4rem;
+  font-size: 2.5rem;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
 }
 section.unit {
-  margin: 1.75rem 0;
+  margin: 2.5rem 0;
 }
 section.unit h2 {
-  font-size: 1.05rem;
+  font-size: 1.8rem;
   color: var(--accent);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.7rem;
+  font-weight: 600;
 }
-p.rendition {
-  white-space: pre-wrap;
+div.rendition h3 {
+  font-size: 1.7rem;
+  margin-top: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+div.rendition h4 {
+  font-size: 1.6rem;
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
+  color: var(--fg);
+  font-weight: 600;
+}
+div.rendition h5 {
+  font-size: 1.5rem;
+  margin-top: 0.9rem;
+  margin-bottom: 0.35rem;
+  color: var(--fg);
+  font-weight: 500;
+}
+div.rendition h6 {
+  font-size: 1.4rem;
+  margin-top: 0.8rem;
+  margin-bottom: 0.3rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+div.rendition {
   margin: 0 0 0.5rem 0;
+  font-size: 0.95em;
+  line-height: 1.7;
+}
+div.rendition p {
+  margin: 0.5rem 0;
+}
+div.rendition p:first-child {
+  margin-top: 0;
+}
+div.rendition p:last-child {
+  margin-bottom: 0;
+}
+div.rendition table {
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.9em;
+  width: 100%;
+}
+div.rendition th, div.rendition td {
+  border: 1px solid var(--muted-light);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+div.rendition th {
+  color: var(--accent);
+  background: var(--accent-light);
+  font-weight: 600;
+}
+div.rendition tr:hover td {
+  background: var(--muted-light);
+}
+div.rendition code {
+  background: var(--muted-light);
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+}
+div.rendition a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+div.rendition a:hover {
+  border-bottom-color: var(--accent);
+}
+div.rendition blockquote {
+  border-left: 3px solid var(--accent);
+  margin: 0.75rem 0;
+  padding: 0.4rem 0 0.4rem 1rem;
+  color: var(--muted);
+  background: var(--accent-light);
+}
+div.rendition blockquote p {
+  margin: 0.3rem 0;
+}
+div.rendition ul, div.rendition ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+div.rendition li {
+  margin: 0.25rem 0;
+}
+div.rendition .mermaid {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow-x: auto;
+}
+div.rendition pre {
+  margin: 0.75rem 0;
 }
 details {
   color: var(--muted);
-  margin-top: 0.4rem;
+  margin-top: 0.6rem;
+  border-top: 1px solid var(--muted-light);
+  padding-top: 0.5rem;
 }
 details summary {
   cursor: pointer;
   color: var(--accent);
+  font-size: 0.9em;
 }
 details pre {
   white-space: pre-wrap;
   font-family: inherit;
   margin: 0.4rem 0 0 0;
+  padding: 0.5rem;
+  background: var(--muted-light);
+  border-radius: 4px;
 }
 @media print {
   @page { size: A4; margin: 2cm; }
   details { break-inside: avoid; }
+  div.rendition th { background: var(--bg) !important; }
 }
 table.verdict {
   width: 100%;
@@ -120,6 +279,8 @@ DOC_PAGE_TEMPLATE = """<!doctype html>
 <body>
 <h1>{title}</h1>
 {units_html}
+{mermaid_script}
+<script>mermaid.initialize({{startOnLoad: true}});</script>
 </body>
 </html>
 """
@@ -133,8 +294,20 @@ UNIT_TEMPLATE = """<section class="unit" id="{unit_id}">
 </details>
 </section>"""
 
+# Template for raw-HTML rendition (markdown-it output).
+# Uses <div> instead of <p> because the rendition now contains
+# block-level elements (<p>, <ul>, <pre>, <blockquote>, etc.).
+UNIT_TEMPLATE_RAW = """<section class="unit" id="{unit_id}">
+<h2>{heading}</h2>
+<div class="rendition">{rendition}</div>
+<details>
+<summary>原文</summary>
+<pre>{source_text}</pre>
+</details>
+</section>"""
 
-def _render_page(title, units_html, lang):
+
+def _render_page(title, units_html, lang, mermaid_script=""):
     """Resolve `lang` to its profile ONCE and fill the shared
     DOC_PAGE_TEMPLATE -- the single template both doc and verdict-HTML
     modes reuse, parameterized by the page attributes (`<html lang>`,
@@ -142,7 +315,11 @@ def _render_page(title, units_html, lang):
     / `font_stack` come from a frozen, developer-authored profile (not
     attacker-reachable request/unit data), so they are interpolated
     as-is -- html.escape is reserved for the untrusted `title` and
-    per-unit content, kept uniform with the rest of this module."""
+    per-unit content, kept uniform with the rest of this module.
+
+    `mermaid_script` is the embedded mermaid JS as a <script> tag
+    (empty string = no script, CDN URL, or base64 data URL).
+    """
     profile = get_profile(lang)
     style_rendered = STYLE.replace(_FONT_STACK_PLACEHOLDER, profile.font_stack)
     return DOC_PAGE_TEMPLATE.format(
@@ -150,7 +327,25 @@ def _render_page(title, units_html, lang):
         title=html.escape(title),
         style=style_rendered,
         units_html=units_html,
+        mermaid_script=mermaid_script,
     )
+
+
+def _load_bundled_mermaid() -> str:
+    """Load the bundled mermaid.min.js and return it as a base64 data URL.
+
+    The script is read from the same directory as this module.
+    If the file is not found, returns an empty string (no script).
+    """
+    script_path = Path(__file__).parent / "mermaid.min.js"
+    try:
+        js_content = script_path.read_bytes()
+        base64_str = base64.b64encode(js_content).decode("ascii")
+        return (
+            f'<script src="data:application/javascript;base64,{base64_str}"></script>'
+        )
+    except FileNotFoundError:
+        return ""
 
 
 def render_doc(units, title="Adjudication View", lang="zh-Hant"):
@@ -158,17 +353,40 @@ def render_doc(units, title="Adjudication View", lang="zh-Hant"):
     into a single self-contained HTML document string. `lang` selects
     the language profile (Task 3) that supplies the page's `<html
     lang>` attribute and font stack; default "zh-Hant" matches the
-    pre-Task-3 hardcoded behavior byte-for-byte."""
+    pre-Task-3 hardcoded behavior byte-for-byte.
+
+    The `rendition` field is parsed as markdown (via markdown-it) and
+    injected as raw HTML — so `**bold**` becomes `<strong>bold</strong>`,
+    `- list` becomes `<li>list</li>`, and ` ```mermaid ` fences become
+    `<pre><code class="language-mermaid">` that browser-side Mermaid JS
+    can locate and render.
+
+    The bundled mermaid.min.js is embedded as a base64 data URL, so the
+    output is fully self-contained (no external URLs).
+    """
     units_html = "\n".join(
-        UNIT_TEMPLATE.format(
-            unit_id=html.escape(unit["id"]),
-            heading=html.escape(unit["heading"]),
-            rendition=html.escape(unit["rendition"]),
-            source_text=html.escape(unit["source_text"]),
-        )
+        _build_unit_html(unit)
         for unit in units
     )
-    return _render_page(title, units_html, lang)
+    mermaid_script = _load_bundled_mermaid()
+    return _render_page(title, units_html, lang, mermaid_script)
+
+
+def _build_unit_html(unit: dict) -> str:
+    """Build one unit's HTML with markdown-rendered rendition."""
+    unit_id = html.escape(unit["id"])
+    heading = html.escape(unit["heading"])
+    source_text = html.escape(unit["source_text"])
+    rendition_html = _render_markdown(unit["rendition"])
+    # UNIT_TEMPLATE_RAW uses <div> (not <p>) because the rendition now
+    # contains block-level HTML from markdown-it.  Direct interpolation is
+    # safe — markdown-it generates the HTML structure from trusted source.
+    return UNIT_TEMPLATE_RAW.format(
+        unit_id=unit_id,
+        heading=heading,
+        rendition=rendition_html,  # raw HTML, not escaped
+        source_text=source_text,
+    )
 
 
 # The two content column labels come from the resolved profile
