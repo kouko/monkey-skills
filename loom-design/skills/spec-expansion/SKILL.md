@@ -292,6 +292,14 @@ padding (Rule 12, fail loud).
 
 **Visible artifact:** emit a `## Path × edge matrix` section in `proposal.md`
 — the grid plus the surviving paths/edges that remain post-prune.
+Render it as a markdown table — one row per surviving path/edge, columns
+`Backbone step | Object | CTA | State | Lens verdict | Expected reaction`
+(`Lens verdict` is keep / flag; add a column rather than prose when a
+lens needs more). The table is fill-or-declare: when the pruned grid is
+genuinely empty, the body is the single line
+`N/A — no surviving path/edge: <one-line reason>` — never a padded
+table. Routing rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual
+defaults`.
 
 **Phase ③b — cross-object combinations.**
 **Announce:** say in the conversation language what this step does — e.g. "next I'll enumerate cross-object combinations for interaction-dense stages". The internal phase identifier (Phase ③b cross-object combinations) stays in the artifact only; never print it to chat as a marker.
@@ -414,12 +422,17 @@ blind spots:
   blocks (fill-or-declare, pinned N/A line — see Phase ②).
 - `## Path × edge matrix` — Phase ③ artifact: the grid plus which
   `backbone × object × CTA × state` paths and edges survive post-prune.
+  Rendered as the markdown table Phase ③ specifies, or its pinned N/A line.
 - `## Cross-object combinations` — Phase ③b artifact: per interaction-dense
   stage, the joint state combinations of its co-active objects and the
   reaction each requires (wide stages reduced via `../../scripts/spec/pairwise.py`).
-  **Structurally required — always emitted**; when no stage is
-  interaction-dense, its body states that honestly (e.g. "no
-  interaction-dense stage — combinations N/A") and does **not** pad.
+  **Structurally required — always emitted**. Rendered as a markdown
+  table — one row per joint state combination, columns
+  `Stage | Co-active objects | Joint state | Required reaction`.
+  When no stage is interaction-dense, the body is the single line
+  `N/A — no interaction-dense stage: <one-line reason>` and does **not**
+  pad. Routing rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual
+  defaults`.
 - `## Journey navigation` — Phase ③c artifact: the 0-switch walk of the
   navigation graph — every legal typed transition (`forward / back / skip /
   abandon / resume_reenter / error_escape / retry_self`) and the reaction it
