@@ -287,12 +287,6 @@ _H2 = re.compile(r"^##\s", re.MULTILINE)
 _TABLE_SEP_ROW = re.compile(r"^\s*\|(?:\s*:?-+:?\s*\|)+\s*$", re.MULTILINE)
 _NA_LINE = re.compile(r"^\s*N/A — ", re.MULTILINE)
 
-# Table-or-N/A body check for the two matrix sections (Pin C-1 / Pin C-2):
-# a section body must contain a markdown table (>=1 separator row) or its
-# pinned "N/A — " line — prose alone does not satisfy a table-routed section.
-_TABLE_SEP_ROW = re.compile(r"^\s*\|(?:\s*:?-+:?\s*\|)+\s*$", re.MULTILINE)
-_NA_LINE = re.compile(r"^\s*N/A — ", re.MULTILINE)
-
 
 def _section_body(text: str, header: str) -> str | None:
     """Body of the `## <header>` section (lines after the header line up to the
