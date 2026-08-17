@@ -5,6 +5,29 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.85.0] — 2026-08-17 — artifact-layer table routing
+
+### Added
+
+- **`family-relay.md` §(b) gains the artifact-scope routing bullet.** Any
+  brief, plan, or spec that weighs ≥2 options on shared axes now routes
+  that content to a markdown comparison table (one row per option, shared
+  axes as columns, a load-bearing chosen/rejected-because column) — the
+  same fork rule that already applied in chat now binds written artifacts
+  too.
+
+### Changed
+
+- **Brief's `## Alternatives Considered` becomes a fill-or-declare
+  comparison table** (pinned `N/A — no alternatives found: <reason>`
+  line) instead of a numbered list.
+- **`docs-reviewer`'s omission dimension now covers comparison-shaped
+  prose in a table-routed section** — flags a section that should be a
+  table but was left as narrative.
+- **`visual-companion.md` gains the diagram-semantics rule** (edges say
+  why, nodes carry title + reason) and its flowchart example was
+  rewritten to follow it.
+
 ## [0.84.0] — 2026-08-17 — absorbs the loom family infrastructure (6→2 plugin merge)
 
 ### Added
