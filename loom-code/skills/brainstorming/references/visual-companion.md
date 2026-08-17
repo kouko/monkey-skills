@@ -123,8 +123,12 @@ Default form for every Mermaid block a loom slot forces:
   gets the claim and its ground in one glance. Bare one-word nodes are
   a sketch, not a decision aid.
 
-The examples in §Mermaid quick reference follow this form. Routing rule
-SSOT: `loom-code/hooks/family-relay.md §(b) Visual defaults`.
+Of the §Mermaid quick reference examples, the Axis-4 flowchart is the
+one written to this form — copy its edge and node shape; the sequence,
+before/after, and ER blocks there are syntax references only (they
+predate this rule and keep bare nodes / mechanism labels), not models
+of it. Routing rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual
+defaults`.
 
 ## Anti-patterns
 

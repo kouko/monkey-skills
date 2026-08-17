@@ -431,8 +431,10 @@ blind spots:
   `Stage | Co-active objects | Joint state | Required reaction`.
   When no stage is interaction-dense, the body is the single line
   `N/A — no interaction-dense stage: <one-line reason>` and does **not**
-  pad. Routing rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual
-  defaults`.
+  pad. The table form here is this section's own contract (an
+  enumeration of joint states, not an options comparison — so it is not
+  what `family-relay.md §(b)` routes; the validator enforces the
+  table-or-N/A shape directly).
 - `## Journey navigation` — Phase ③c artifact: the 0-switch walk of the
   navigation graph — every legal typed transition (`forward / back / skip /
   abandon / resume_reenter / error_escape / retry_self`) and the reaction it
