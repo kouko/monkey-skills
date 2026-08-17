@@ -557,7 +557,7 @@ closed).
 
 | Dimension | What fires it |
 |---|---|
-| **omission** | An obligation or referent the text needs and lacks — a step the reader cannot execute, a term used but never defined, a promised section absent. A diagram slot required by the artifact's own template contract (fill-or-declare) that is absent, and an `N/A — no flow/state/architecture-shaped content:` declaration whose reason does not hold against the artifact's own content, are both omissions. Assert only after the full-text read (rule 1). |
+| **omission** | An obligation or referent the text needs and lacks — a step the reader cannot execute, a term used but never defined, a promised section absent. A diagram slot required by the artifact's own template contract (fill-or-declare) that is absent, and an `N/A — no flow/state/architecture-shaped content:` declaration whose reason does not hold against the artifact's own content, are both omissions. Comparison-shaped content — ≥2 options weighed on shared axes — left as prose in a section the artifact's own template routes to a markdown table (fill-or-declare), and an `N/A — no alternatives found:` declaration whose reason does not hold against the artifact's own content, are likewise omissions. Assert only after the full-text read (rule 1). |
 | **ambiguity** | An absolute — "only", "never", "zero" — without support; a sentence with two live readings that fork what the executor does. |
 | **inconsistency** | Two passages contradicting, including changed-vs-unchanged: the diff says X, an untouched paragraph still says not-X. |
 | **incorrect-fact** | A citation that does not support its claim — open the source and read the cited span before scoring; a stated number or path that is wrong against the artifact it describes. |
