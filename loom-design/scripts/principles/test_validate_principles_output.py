@@ -722,7 +722,7 @@ def test_evidence_needed_whitelisted_value_passes(tmp_path):
 
 
 def test_evidence_needed_invented_value_flagged(tmp_path):
-    # Real leg-1 failure mode (loom-spec sibling cut (a)): a weak executor
+    # Real leg-1 failure mode (loom-design's spec sibling cut (a)): a weak executor
     # invents an out-of-enum bucket instead of using the pinned three.
     doc = (
         _valid_doc(3) + "\n## Open Questions\n\n"

@@ -23,8 +23,7 @@ yourself.
 
 This skill is orchestration only. It never authors PRINCIPLES.md, DESIGN.md,
 ui-flows.md, a spec draft, or code, and it never produces a verdict — those
-stay with `loom-product-principles`, `loom-interface-design`, `loom-spec`,
-and `loom-code`. Its entire job is: collect the run-input contract, resolve
+stay with `loom-design` and `loom-code`. Its entire job is: collect the run-input contract, resolve
 the driver asset's absolute path, and invoke `Workflow({scriptPath})` once
 per pipeline segment.
 
@@ -51,10 +50,10 @@ below gates on this skill's own two orchestration conditions.
 
 1. **The Workflow tool is available** in this host (Claude Code exposes a
    `Workflow` primitive that accepts an arbitrary `scriptPath`).
-2. **The four station plugins are installed**: `loom-product-principles`,
-   `loom-interface-design`, `loom-spec`, `loom-code`. (`loom-discovery`,
-   the fifth loom station, is v0.1 interactive-only and not required here
-   — the conductor never drives it as a Workflow segment.)
+2. **The two station plugins are installed**: `loom-design`, `loom-code`.
+   (loom-design's discovery station, the fifth loom station, is v0.1
+   interactive-only and not required here — the conductor never drives it
+   as a Workflow segment.)
 
 Either condition false → emit **`loom-design: N/A`** with the specific
 reason (which condition failed) and stop. N/A is a first-class honest
@@ -77,12 +76,12 @@ default is explicitly stated below):
 
 | Field | Required | Default | Notes |
 |---|---|---|---|
-| **change-id** | yes | none | Identifies the per-change folder (`docs/loom/<change-id>/`); loom-spec owns that layout — this skill only threads the id through. |
+| **change-id** | yes | none | Identifies the per-change folder (`docs/loom/<change-id>/`); loom-design owns that layout — this skill only threads the id through. |
 | **target project path** | yes | none | Absolute path to the consumer project the pipeline runs against. |
 | **token budgets** | yes | run-level: host default budget cap; per-station: the driver's documented per-station defaults (`STATION_TOKEN_BUDGETS` in `driver_20_runstation.js`) | Canonical shape: `{ run: <number>, perStation: { <stationName>: <number>, ... } }`. `perStation` keys are station names (`principles`, `design`, `design-critic`, `spec`, `critic`, `validator`, `code`, `review`, `probe`) — omit a station's key to fall back to the driver's documented default for that station. Over-budget at either level is fail-loud inside the driver, never a silent continue. |
 | **model policy** | yes | Claude default model tier for all stations | Which model tier each station runs on (Workflow's `model` param is Claude-family only — no cross-vendor judging in v1). |
 | **resumeRunId** | no | none (fresh run) | Optional. Maps directly to Workflow's native `resumeFromRunId` — passing it resumes a previously checkpointed run instead of starting over. (Grounding: `scriptPath`/`resumeFromRunId` parameter names verified live — 2026-07-03 F5 dispatch spike run `wf_667ec006-ec2` and the same-day pipeline dogfood both exercised them against the real Workflow tool.) |
-| **skillsRoot** | yes for runs that include segment 2 | none | Absolute path to the monkey-skills checkout / plugin source root — the orchestrator resolves it (e.g. the repo root of the loom plugins install/checkout). Segment 2 uses it to locate the loom-spec validator script; missing it is a fail-loud stop inside the driver, never a guessed path. |
+| **skillsRoot** | yes for runs that include segment 2 | none | Absolute path to the monkey-skills checkout / plugin source root — the orchestrator resolves it (e.g. the repo root of the loom plugins install/checkout). Segment 2 uses it to locate the loom-design validator script; missing it is a fail-loud stop inside the driver, never a guessed path. |
 
 ## §Invocation — resolve the driver asset, one call per segment
 
@@ -121,9 +120,10 @@ Segment names match the driver meta's phases (Principles + Design / Spec /
 Code) — same vocabulary end to end so a paused run's segment number always
 maps back to a station-plugin phase.
 
-1. **Segment 1 — Principles + Design.** `loom-product-principles` drafts
-   PRINCIPLES.md, then `loom-interface-design` drafts DESIGN.md +
-   ui-flows.md, then the **design-critic panel**
+1. **Segment 1 — Principles + Design.** `loom-design:product-principles`
+   drafts PRINCIPLES.md, then `loom-design:design-system` and
+   `loom-design:interaction-flows` draft DESIGN.md + ui-flows.md, then the
+   **design-critic panel**
    (`loom-design:design-critic`) adversarially reviews the draft
    for surface omissions before the segment closes.
 2. **Segment 2 — Spec.** `loom-design:spec-expansion` fans the seed out into
@@ -137,7 +137,7 @@ maps back to a station-plugin phase.
    diff, then **ui-verify** (`loom-code:ui-verification`) exercises the
    running surface before the segment closes.
 
-`loom-discovery` is v0.1 **interactive-only** — the conductor does not
+loom-design's discovery station is v0.1 **interactive-only** — the conductor does not
 drive it as a Workflow segment; pipeline runs start at Segment 1
 (Principles + Design), and the discovery on-ramp (family reception's
 on-ramp row 4) is surfaced to the human before minting a change-id, not
@@ -176,7 +176,7 @@ for the human's answer before the next Workflow call.
 - The driver never merges.
 
 Judgment stays in the four Workflow-driven station plugins (cross-plugin delegation contract)
-— and in `loom-discovery`, the fifth loom station, which the conductor
+— and in loom-design's discovery station, the fifth loom station, which the conductor
 never drives at all — the conductor only orchestrates and records.
 
 **Stable-prefix dispatch convention**: station preambles are
@@ -221,7 +221,7 @@ An entry is eligible for `next` under either of two forms, both requiring
 the plan file to be committed:
 
 - **Change-folder form** — `docs/loom/<id>/` exists: it must pass the
-  loom-spec validator (exit 0). A folder that exists but fails is a hard
+  loom-design validator (exit 0). A folder that exists but fails is a hard
   reject, never a fallback.
 - **Brief+plan form** — no `docs/loom/<id>/` folder: the plan itself must
   carry a `Plan-document-reviewer verdict: PASS` line (the

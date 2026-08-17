@@ -1,5 +1,5 @@
 """Validate a `docs/loom/discovery/<date>-<slug>/` folder produced by the
-loom-discovery station.
+loom-design discovery station.
 
     <folder>/
       user-insights.md   # REQUIRED — except in the assess-first state below
@@ -179,7 +179,7 @@ def validate(root: Path) -> tuple[bool, list[str]]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Validate a docs/loom/discovery/<slug>/ folder produced "
-                    "by the loom-discovery station.")
+                    "by the loom-design discovery station.")
     parser.add_argument("folder", help="path to the discovery folder")
     args = parser.parse_args(argv)
 

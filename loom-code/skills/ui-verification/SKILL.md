@@ -118,7 +118,7 @@ untestable: …" — never "the UI is verified".
 - **Not DESIGN.md token conformance.** Checking whether the UI's colors /
   spacing / typography match `DESIGN.md`'s tokens is **explicitly out of
   scope** — that machine consumer is deliberately parked with re-triggers
-  (loom-interface-design README §Scope, PR #473); this skill must not
+  (`loom-design/README-interface-design.md` §Scope, PR #473); this skill must not
   front-run the park. Verify *behavioral states*, not visual token values.
 - **Not a design critic.** It never adds states to `ui-flows.md` or judges
   whether the enumeration is good design — omission-hunting is

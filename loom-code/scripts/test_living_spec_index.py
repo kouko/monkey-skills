@@ -25,7 +25,7 @@ def _make_spec(specs_dir, capability, body):
 
 
 def test_load_namespace(tmp_path):
-    # WHY: capability is DERIVED from the loom-spec dir name, not declared
+    # WHY: capability is DERIVED from the loom-design dir name, not declared
     # per-req. A single `### Requirement: REQ-1` under `specs/order/`
     # must resolve to capability "order" so downstream index links a
     # test's @req to the right capability.

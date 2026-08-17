@@ -1,7 +1,7 @@
 """Tests for validate_design_output.py — design change-folder structure (Task 8).
 
 The validator checks a design CHANGE-FOLDER (a directory) against the
-loom-interface-design output contract. Task 8 covers the first check only:
+loom-design output contract. Task 8 covers the first check only:
 the change-folder contains the design-system doc (`DESIGN.md` for the GUI
 modality) AND `ui-flows.md`.
 

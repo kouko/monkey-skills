@@ -1,5 +1,5 @@
 """Structural grep-test guarding the layered change-folder DETECTION cascade
-in writing-plans/SKILL.md's §Consuming a loom-spec change-folder.
+in writing-plans/SKILL.md's §Consuming a loom-design change-folder.
 
 writing-plans/SKILL.md is a prompt artifact, not executable code. Its
 correctness is the PRESENCE of the detection cascade (per

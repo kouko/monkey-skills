@@ -168,7 +168,7 @@ def test_skill_folder_is_flat():
 def test_ui_flows_emitted_per_change_folder():
     """ui-flows.md is declared per-feature/change, so it must be emitted into
     a per-change folder (docs/loom/<change-id>/ui-flows.md, sharing the
-    change-id loom-spec uses) — a fixed product-level docs/loom/ui-flows.md
+    change-id loom-design uses) — a fixed product-level docs/loom/ui-flows.md
     means the second feature overwrites the first."""
     text = _text()
     assert "<change-id>" in text, \

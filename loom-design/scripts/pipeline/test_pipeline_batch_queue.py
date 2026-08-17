@@ -303,7 +303,7 @@ def test_load_state_fails_loud_on_non_dict_json(tmp_path):
 
 
 def _write_stub_validator(skills_root: Path, exit_code: int) -> None:
-    """Write a stub loom-spec validator under skills_root that exits exit_code.
+    """Write a stub loom-design validator under skills_root that exits exit_code.
 
     Stands in for the real ``loom-design/scripts/spec/validate_spec_output.py`` so
     tests never invoke the real validator (host convention: stub, don't

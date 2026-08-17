@@ -1,4 +1,4 @@
-"""Validate an loom-interface-design DESIGN CHANGE-FOLDER.
+"""Validate a loom-design DESIGN CHANGE-FOLDER.
 
 The `design-system` + `interaction-flows` skills emit a change-folder (a
 directory) holding the interaction-flows doc, governed by the product-level
@@ -196,7 +196,7 @@ def validate(root: Path) -> tuple[bool, list[str]]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Validate an loom-interface-design design change-folder "
+        description="Validate a loom-design design change-folder "
                     "(design-system doc + ui-flows.md present and well-formed).")
     parser.add_argument("change_folder",
                         help="path to the design change-folder directory")

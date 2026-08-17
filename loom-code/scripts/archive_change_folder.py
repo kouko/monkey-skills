@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic archive step for a loom-spec change-folder OR a single
+"""Deterministic archive step for a loom-design change-folder OR a single
 loom-family store entry file — two units, selected via the ``unit``
 parameter (Python API) or the CLI's ``--unit`` flag (see below; defaults to
 ``folder``).

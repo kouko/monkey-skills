@@ -164,10 +164,10 @@ def test_router_axis0_red_flag():
     assert any("violation" in line.lower() for line in axis0_red_flag_lines), \
         "the Axis 0 red-flag row must call the skip a violation"
 
-    # (b) family pointer — loom-pipeline reception as the family map SSOT,
+    # (b) family pointer — loom-code reception as the family map SSOT,
     # attributed to the SessionStart hook mechanism.
-    assert "loom-pipeline" in text, \
-        "router must point to loom-pipeline (the reception's home plugin)"
+    assert "loom-code" in text, \
+        "router must point to loom-code (the reception's home plugin)"
     assert "family reception" in low or "family-reception.md" in text, \
         "router must name the loom family reception by name/path"
     assert "sessionstart" in low or "session-start" in low, \

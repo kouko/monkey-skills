@@ -3,9 +3,9 @@ finishing-a-development-branch/SKILL.md (plan Task 11).
 
 finishing-a-development-branch/SKILL.md is a prompt artifact, not
 executable code. Its correctness is the PRESENCE of the archive-on-close
-step: when the branch consumed a loom-spec change-folder (bound per
+step: when the branch consumed a loom-design change-folder (bound per
 writing-plans' detection cascade — see
-loom-code/skills/writing-plans/SKILL.md §Consuming a loom-spec
+loom-code/skills/writing-plans/SKILL.md §Consuming a loom-design
 change-folder) and its scenarios shipped, the orchestrator runs
 `archive_change_folder.py` to move `docs/loom/<change-id>/` into
 `docs/loom/archive/`, then stages that move in the close-out commit.

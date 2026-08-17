@@ -1,6 +1,6 @@
 """Tests for validate_spec_output.py — OpenSpec skeleton checks (Task 2).
 
-The validator checks a loom-spec OUTPUT DIRECTORY against the OpenSpec
+The validator checks a loom-design OUTPUT DIRECTORY against the OpenSpec
 change-folder SKELETON. Skeleton-valid iff:
   1. proposal.md present.
   2. specs/ subdir with >=1 *.md delta file.
@@ -47,7 +47,7 @@ def _well_formed_delta() -> str:
 
 
 def _well_formed_additive() -> str:
-    """The additive sections loom-spec requires in proposal.md (the
+    """The additive sections loom-design requires in proposal.md (the
     three-flow artifacts USM backbone / OOUX object model / Path × edge matrix
     plus Provenance and a non-empty Blind-spots body, plus the L2/L3
     Cross-object combinations / Journey navigation sections)."""

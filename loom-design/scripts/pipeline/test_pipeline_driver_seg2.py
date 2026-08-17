@@ -6,7 +6,7 @@ the concat-build lands in Task 14, so this checks the module in isolation via
 spec-expansion writer station seeded by PATHS (not inlined content),
 completeness-critic script-layer panel (>=2 fresh-context lens dispatches,
 RALLY_CAP loop-back, G5 per-judge ledger recording), a hard validator gate on
-the REAL loom-spec validator filename (no adopt-anyway on non-zero exit), and
+the REAL loom-design validator filename (no adopt-anyway on non-zero exit), and
 the G3 Decisions-section presence check. Mirrors
 test_pipeline_driver_runstation.py's structural-test pattern.
 """

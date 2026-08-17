@@ -1,7 +1,7 @@
 """Structural grep-test guarding the business-value SKILL.md + template.
 
 SKILL.md is a prompt artifact, not executable code (tdd-iron-law exemption,
-same class as the sibling loom-spec / loom-product-principles skill tests).
+same class as the sibling loom-design skill tests).
 Its correctness is the PRESENCE of the load-bearing, easily-lost rules the
 brief pins: the Shape-Up betting register (NOT Cagan viability), the decidable
 trigger AND skip enumerations, the planning-team delegation boundary, the

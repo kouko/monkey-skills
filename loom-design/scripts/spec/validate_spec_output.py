@@ -1,4 +1,4 @@
-"""Validate a loom-spec OUTPUT DIRECTORY against the OpenSpec change-folder
+"""Validate a loom-design OUTPUT DIRECTORY against the OpenSpec change-folder
 skeleton.
 
 Spec-toolkit emits a directory in OpenSpec change-folder *shape* (plain
@@ -528,9 +528,9 @@ def validate(root: Path) -> tuple[bool, list[str]]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Validate a loom-spec output directory against the "
+        description="Validate a loom-design output directory against the "
                     "OpenSpec change-folder skeleton.")
-    parser.add_argument("output_dir", help="path to the loom-spec output directory")
+    parser.add_argument("output_dir", help="path to the loom-design output directory")
     args = parser.parse_args(argv)
 
     ok, problems = validate(Path(args.output_dir))

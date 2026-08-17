@@ -35,11 +35,9 @@ def test_fire_inputs_and_invocation():
     assert "workflow" in body_lower and "available" in body_lower, \
         "missing Workflow-tool-availability fire condition in the body"
     assert (
-        "loom-product-principles" in body
-        and "loom-interface-design" in body
-        and "loom-spec" in body
+        "loom-design" in body
         and "loom-code" in body
-    ), "missing the four station-plugin names in the body"
+    ), "missing the two station-plugin names in the body"
 
     # N/A-loud clause (body-scoped).
     assert "loom-design: n/a" in body_lower, \

@@ -3,7 +3,7 @@
 These two reference files are prompt artifacts, not executable code. Their
 correctness is the PRESENCE of the load-bearing rule: the existing
 `Brief item covered:` field accepts, in addition to a brainstorming brief item,
-a STABLE JOIN-KEY referent for loom-spec change-folder provenance —
+a STABLE JOIN-KEY referent for loom-design change-folder provenance —
 `<change-id> / Requirement: <name> / Scenario: <name>` (R5; checkable, à la Kiro
 `_Requirements:` / Spec-Kit `FR-###`). It stays ONE field; only the accepted
 referent is broadened. plan-document-reviewer Check 3's field-PRESENCE

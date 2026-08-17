@@ -1,4 +1,4 @@
-"""Validate a loom-spec INTENT LAYER root's TOP-altitude MODEL.md.
+"""Validate a loom-design INTENT LAYER root's TOP-altitude MODEL.md.
 
 The intent layer is the persistent spec root (e.g. `docs/loom/spec/`). Its
 TOP-altitude `MODEL.md` carries the cross-cutting model — the invariants,
@@ -153,9 +153,9 @@ def validate(spec_dir: Path) -> tuple[bool, list[str]]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Validate a loom-spec intent-layer root (TOP MODEL.md + "
+        description="Validate a loom-design intent-layer root (TOP MODEL.md + "
                     "MID capability READMEs).")
-    parser.add_argument("spec_dir", help="path to the loom-spec intent-layer root")
+    parser.add_argument("spec_dir", help="path to the loom-design intent-layer root")
     args = parser.parse_args(argv)
 
     ok, problems = validate(Path(args.spec_dir))

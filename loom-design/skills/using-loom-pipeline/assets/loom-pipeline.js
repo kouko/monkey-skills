@@ -921,7 +921,7 @@ async function runSegment2(args) {
 
   if (typeof args.skillsRoot !== 'string' || args.skillsRoot === '') {
     throw new Error(
-      'runSegment2: segment 2 requires args.skillsRoot to locate the loom-spec validator — refusing to guess.'
+      'runSegment2: segment 2 requires args.skillsRoot to locate the loom-design validator — refusing to guess.'
     )
   }
   const validatorScript = args.skillsRoot + '/loom-design/scripts/spec/validate_spec_output.py'

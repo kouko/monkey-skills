@@ -1,7 +1,7 @@
 """Tests for validate_discovery_artifacts.py — Task 6.
 
 Validates a `docs/loom/discovery/<slug>/` folder produced by the
-loom-discovery station:
+loom-design discovery station:
   - user-insights.md REQUIRED: must carry the template's required section
     headings (SSOT: loom-design/skills/user-insights/assets/
     user-insights-template.md — hardcoded below, see _REQUIRED_SECTIONS

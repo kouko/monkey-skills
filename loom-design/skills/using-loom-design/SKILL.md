@@ -4,7 +4,7 @@ name: using-loom-design
 description: |
   The loom-design family entry router — intake + routing when unsure which
   design skill applies, or 不確定從哪開始 ('where do I start'): 值不值得做,
-  需求研究, UI/UX design, spec asks all route here first.
+  需求研究, ユーザーインサイト, UI/UX design, spec asks all route here first.
 version: 0.1.0
 ---
 

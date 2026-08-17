@@ -1,5 +1,5 @@
 """Structural grep-test guarding the Continuous-mode FREEZE (entry) extension
-that accepts a human-approved loom-spec change-folder as an alternative entry
+that accepts a human-approved loom-design change-folder as an alternative entry
 artifact alongside the brainstorming brief (Task 3 of the spec→code wiring).
 
 After the router structural refactor the Continuous-mode doctrine — including
@@ -11,7 +11,7 @@ Correctness is the PRESENCE of the load-bearing convention described in
 `docs/loom/specs/2026-06-21-spec-to-code-wiring.md` Decision §2 (R6):
 
   Continuous-mode freeze accepts EITHER the brainstorming brief OR a
-  human-approved loom-spec change-folder. Discrimination is NOT content-shape
+  human-approved loom-design change-folder. Discrimination is NOT content-shape
   sniffing — the USER DECLARES which artifact, and the freeze CONFIRMS by
   (a) named-artifact presence (`specs/<capability>/spec.md` at the declared
   path) AND (b) `validate_spec_output.py` exit 0. Upstream stays human-gated;
@@ -58,11 +58,11 @@ def test_reference_exists():
 # --- 1. the freeze names the change-folder as an alternative entry artifact --
 
 def test_freeze_names_changefolder_alternative():
-    """The freeze/entry block must name a loom-spec change-folder as an
+    """The freeze/entry block must name a loom-design change-folder as an
     alternative entry artifact ALONGSIDE the brainstorming brief."""
     window = _freeze_window()
     assert "change-folder" in window or "change folder" in window, \
-        "freeze entry must name a loom-spec change-folder as an alternative artifact"
+        "freeze entry must name a loom-design change-folder as an alternative artifact"
     assert "brief" in window, \
         "the brainstorming brief must remain a valid entry artifact alongside the change-folder"
 
@@ -94,10 +94,10 @@ def test_confirmation_by_named_artifact_presence():
 
 def test_confirmation_by_validator_exit_zero():
     """The freeze confirms by `validate_spec_output.py` exit 0 (reuses the
-    loom-spec validator — no new validator)."""
+    loom-design validator — no new validator)."""
     window = _freeze_window()
     assert "validate_spec_output" in window, \
-        "freeze must reuse loom-spec's validate_spec_output.py as the gate"
+        "freeze must reuse loom-design's validate_spec_output.py as the gate"
     assert ("exit 0" in window or "exit-0" in window or "exit code 0" in window), \
         "the validator gate must require exit 0"
 

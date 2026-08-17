@@ -1,4 +1,4 @@
-"""Regression guard for the loom-discovery plugin manifest.
+"""Regression guard for the loom-design plugin manifest.
 
 plugin.json is pure config (a tdd-iron-law exemption), so these are
 cheap presence/validity assertions, not iron-law-mandated logic tests.

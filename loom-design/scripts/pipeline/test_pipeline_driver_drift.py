@@ -1,7 +1,7 @@
 """Drift check for the COMMITTED Workflow driver asset (Task 14 of
 docs/loom/plans/2026-07-03-loom-pipeline-conductor.md).
 
-The asset at loom-pipeline/skills/using-loom-pipeline/assets/loom-pipeline.js
+The asset at loom-design/skills/using-loom-pipeline/assets/loom-pipeline.js
 is a GENERATED file (see build_driver.py's banner). It must never be
 hand-edited — any edit that isn't also applied to the driver_NN_*.js
 sources would silently drift from what `python3 build_driver.py` produces.

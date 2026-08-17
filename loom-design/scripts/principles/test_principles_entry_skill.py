@@ -1,6 +1,6 @@
 """Structural grep-test guarding the using-loom-design entry skill.
 
-This is the loom-product-principles FAMILY ENTRY (thin router), not the
+This is loom-design's product-principles FAMILY ENTRY (thin router), not the
 member skill that authors PRINCIPLES.md. Its correctness is the PRESENCE of:
 
   - the SKILL.md file itself, with `name: using-loom-design`

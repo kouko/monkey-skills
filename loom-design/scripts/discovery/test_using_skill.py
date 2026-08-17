@@ -1,6 +1,6 @@
 """Structural grep-test guarding the using-loom-design entry SKILL.md.
 
-using-loom-design is the loom-discovery FAMILY ENTRY (thin router): it
+using-loom-design is loom-design's discovery FAMILY ENTRY (thin router): it
 routes "worth doing?" asks to business-value and "what do users need?"
 asks to user-insights, but never maps needs or renders a verdict itself.
 Mirrors the sibling entry-test shape (test_spec_entry_skill.py,

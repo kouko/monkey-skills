@@ -1,7 +1,7 @@
 """Living-spec index generator.
 
 `load_namespace(specs_dir)` builds the req-to-capability namespace from a
-loom-spec tree: each `<specs_dir>/<capability>/spec.md` declares its
+loom-design tree: each `<specs_dir>/<capability>/spec.md` declares its
 requirements via `### Requirement: <id>` headings, and the capability is
 the immediate subdirectory name. Returns `{req_id: capability}`.
 
