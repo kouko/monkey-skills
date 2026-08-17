@@ -115,3 +115,60 @@ def test_doc_mode_id_interpolation_is_escaped():
     html_out = render_doc([evil_unit])
     assert "&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;" in html_out
     assert '"><script>alert(1)</script>' not in html_out
+
+
+def _unit(rendition, uid="u1"):
+    return {
+        "id": uid,
+        "heading": "n/a",
+        "source_text": "n/a",
+        "anchors": [],
+        "rendition": rendition,
+    }
+
+
+def test_rendition_raw_html_is_escaped_not_passed_through():
+    """PIN: `rendition` is the ONE field interpolated unescaped -- that is
+    what makes its markdown render. What keeps that safe is the parser's
+    `html: False`, and a rendition is agent-written model output, not
+    developer text. Deleting that setting reverts silently: before this
+    test, `MarkdownIt("commonmark", {"html": False})` -> `MarkdownIt()`
+    left all 126 adjudication tests green."""
+    html_out = render_doc([_unit("<script>alert(1)</script>")])
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html_out
+    assert "<script>alert(1)</script>" not in html_out
+
+    html_out = render_doc([_unit('<img src=x onerror="alert(2)">')])
+    assert "<img src=x onerror=" not in html_out
+
+
+def test_rendition_markdown_still_renders():
+    """PIN: the escaping above must not be bought by disabling markdown --
+    bold, lists, and tables are the point of parsing the rendition at all."""
+    html_out = render_doc([_unit("**粗體**\n\n- 一\n- 二")])
+    assert "<strong>粗體</strong>" in html_out
+    assert "<li>一</li>" in html_out
+    html_out = render_doc([_unit("| a | b |\n|---|---|\n| 1 | 2 |")])
+    assert "<table>" in html_out and "<td>1</td>" in html_out
+
+
+def test_mermaid_fence_rewrite_leaves_other_fences_intact():
+    """PIN: the mermaid rewrite once ran `.replace('</code></pre>',
+    '</div>')` unconditionally, so EVERY other fenced block's close tag
+    became `</div>` -- a python fence rendered as
+    `<pre><code class="language-python">x = 1</div>`. Only visible when one
+    unit carries both a diagram and an ordinary code block."""
+    md = "```python\nx = 1\n```\n\n```mermaid\nflowchart LR\n  A-->B\n```\n"
+    html_out = render_doc([_unit(md)])
+    assert html_out.count("<pre><code") == html_out.count("</code></pre>")
+    assert '<div class="mermaid">' in html_out
+    assert '<pre><code class="language-python">x = 1\n</code></pre>' in html_out
+
+
+def test_consecutive_mermaid_fences_do_not_merge():
+    """PIN: the rewrite regex is non-greedy so two diagrams stay two
+    diagrams; a greedy match would swallow the text between them."""
+    md = "```mermaid\nflowchart LR\n  A-->B\n```\n\ntext\n\n```mermaid\ngraph TD\n  C-->D\n```\n"
+    html_out = render_doc([_unit(md)])
+    assert html_out.count('<div class="mermaid">') == 2
+    assert "text" in html_out

@@ -38,7 +38,6 @@ import sys
 from pathlib import Path
 
 from markdown_it import MarkdownIt
-from markdown_it.rules_block import table
 
 from adjudication_profiles import get_profile
 
@@ -52,22 +51,29 @@ _FONT_STACK_PLACEHOLDER = "__FONT_STACK__"
 # Handles headings, lists, blockquotes, bold/italic, tables, and fenced
 # code blocks (including ` ```mermaid ` → <pre><code
 # class="language-mermaid">).
-# The table rule is registered before 'fence' so table pipes don't
-# interfere with fenced code block detection.
 # `html: False` — commonmark's default passes raw HTML straight through,
 # and a `rendition` is agent-written, not developer-authored. Every feature
 # used here is markdown syntax, so escaping raw HTML costs nothing.
-_MD = MarkdownIt("commonmark", {"html": False})
-_MD.block.ruler.before('fence', 'table', table, {
-    'alt': ['paragraph', 'reference', 'blockquote', 'list'],
-})
+# `.enable("table")` rather than re-registering the rule: commonmark's
+# ruler already carries `table` ahead of `fence`, so a manual
+# `.before('fence', 'table', …)` only added a SECOND rule of the same name
+# (verified byte-identical output, and a duplicate name would make any
+# later enable/disable("table") ambiguous).
+_MD = MarkdownIt("commonmark", {"html": False}).enable("table")
 
 # Matches ONE mermaid fence's open tag, body, and close tag together, so the
 # close tag of a non-mermaid fence is never rewritten. DOTALL because a
-# diagram spans lines; non-greedy so consecutive fences do not merge.
+# diagram spans lines. Non-greedy is safe here specifically because the
+# parser escapes fence bodies first: a diagram containing the literal text
+# `</code></pre>` arrives as `&lt;/code&gt;&lt;/pre&gt;` and cannot
+# terminate the match early. IGNORECASE because ` ```Mermaid ` is a
+# realistic input — the rendition is agent-written — and without it such a
+# fence silently renders as a code block instead of a diagram. Widening the
+# match adds no injection surface: the class attribute is parser-generated,
+# and with `html: False` no attacker-controlled text can reach it.
 _MERMAID_FENCE_RE = re.compile(
     r'<pre><code class="language-mermaid">(.*?)</code></pre>',
-    re.DOTALL,
+    re.DOTALL | re.IGNORECASE,
 )
 
 
@@ -80,9 +86,9 @@ def _render_markdown(md_text: str) -> str:
     can locate and render them — the browser scans the DOM for elements
     with class="mermaid" and transforms them in place.
 
-    Tables are converted to `<table><thead><tbody>` (the table rule is
-    registered before the fence rule so pipe characters inside tables
-    are not confused with fenced code block delimiters).
+    Tables are converted to `<table><thead><tbody>` — commonmark ships the
+    table rule ahead of `fence`, so pipes inside a table are never mistaken
+    for a fence delimiter; it only needs enabling.
 
     Other markdown syntax (bold, italic, lists, blockquotes, etc.)
     is also converted.
@@ -307,7 +313,6 @@ DOC_PAGE_TEMPLATE = """<!doctype html>
 <h1>{title}</h1>
 {units_html}
 {mermaid_script}
-<script>mermaid.initialize({{startOnLoad: true}});</script>
 </body>
 </html>
 """
@@ -341,8 +346,11 @@ def _render_page(title, units_html, lang, mermaid_script=""):
     font stack) instead of forking a per-language template. `page_lang`
     / `font_stack` come from a frozen, developer-authored profile (not
     attacker-reachable request/unit data), so they are interpolated
-    as-is -- html.escape is reserved for the untrusted `title` and
-    per-unit content, kept uniform with the rest of this module.
+    as-is -- html.escape guards the untrusted `title`, and each unit's
+    `id` / `heading` / `source_text` at their own call site. A unit's
+    `rendition` is the one exception: it arrives already rendered to HTML
+    and is interpolated unescaped on purpose, guarded by the parser's
+    `html: False` instead (see `_render_markdown`).
 
     `mermaid_script` is the embedded mermaid JS as a <script> tag
     (empty string = no script, CDN URL, or base64 data URL).
@@ -367,12 +375,25 @@ def _load_bundled_mermaid() -> str:
     script_path = Path(__file__).parent / "mermaid.min.js"
     try:
         js_content = script_path.read_bytes()
-        base64_str = base64.b64encode(js_content).decode("ascii")
-        return (
-            f'<script src="data:application/javascript;base64,{base64_str}"></script>'
-        )
-    except FileNotFoundError:
+    except OSError:
+        # Missing, unreadable, or a directory — the page simply ships no
+        # diagram support. Returning "" also suppresses the initialize
+        # call below, so a reader gets un-rendered fence text rather than
+        # a ReferenceError.
         return ""
+    base64_str = base64.b64encode(js_content).decode("ascii")
+    return (
+        f'<script src="data:application/javascript;base64,{base64_str}"></script>\n'
+        # securityLevel is set EXPLICITLY, not left to the bundle's default.
+        # The mermaid div is a second sink that the parser's `html: False`
+        # does not reach: markdown-it escapes the fence body, the browser
+        # decodes those entities back to text, and mermaid builds DOM from
+        # that text. Bundled mermaid 11.16.1 happens to default to "strict",
+        # but that is a library default this file would otherwise be
+        # silently depending on.
+        '<script>mermaid.initialize({startOnLoad: true, '
+        'securityLevel: "strict"});</script>'
+    )
 
 
 def render_doc(units, title="Adjudication View", lang="zh-Hant"):
