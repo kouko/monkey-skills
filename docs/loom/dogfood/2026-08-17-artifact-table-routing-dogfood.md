@@ -59,3 +59,16 @@ Result: edge labelling is not the delta (sonnet labels edges either way); **two-
 - Evidence anchors the commits it ran against (`ce31e0eb`); per `docs/loom/memory/dogfood-evidence-anchors-shipped-commit.md`, any later wording change re-runs the touched probe.
 
 Artifacts: scratchpad `dogfood/{base,cand,seeds,out,score.py}` (session-local, not committed).
+
+## Addendum — reader-comprehension A/B (table vs prose, same facts)
+
+Question the seed note left open: does the *form* change what a model reader understands? Controlled probe: one brief, two variants differing ONLY in `## Alternatives Considered` (rest byte-identical, program-checked) — 5 alternatives × 5 axes as a markdown table vs as a numbered list carrying the same facts. Fresh readers got one variant + a 10-question set (3 single-fact lookups, 5 cross-row comparisons incl. a 5-way ordering, 1 absent-fact trap, 1 two-reason "why"), document-only, and were scored against a pre-written gold key by a rule-based checker.
+
+| Form | Reader | n | Score |
+|---|---|---|---|
+| table | haiku-4-5 | 4 | 10/10 × 4 |
+| prose | haiku-4-5 | 4 | 10/10 × 4 |
+| table | sonnet | 2 | 10/10 × 2 |
+| prose | sonnet | 2 | 10/10 × 2 |
+
+Result: **ceiling on both forms, both tiers — no measurable comprehension difference at this scale** (≈4.6 KB document, 5-row comparison, 10 questions). Consistent with the seed note's literature read (frontier readers are format-indifferent; harm shows up in small models *writing* structured output, not reading it) and with the arc's premise: the table rule buys human readability, and the model reader is neither helped nor hurt. A discriminating test would need larger comparisons (≳12 rows × 6 axes with near-duplicate values), distractor length, and aggregation questions (counts / sums across rows) — the regime where the table-multi-step-reasoning weakness is documented; not run here.
