@@ -8,8 +8,9 @@ language `--lang` selects, default zh-Hant) is the primary text; the EN
 `source_text` is collapsible beside it in a
 `<details><summary>原文</summary>...</details>` block. `heading` and
 `source_text` are html.escape'd; `rendition` is parsed as markdown and
-injected as raw HTML (bold, italic, lists, blockquotes, and Mermaid
-fences are all converted).
+injected as raw HTML (bold, italic, lists, tables, blockquotes, and
+Mermaid fences are all converted); raw HTML inside a rendition is escaped
+by the parser, not passed through — see `_render_markdown`.
 
 Styling is embedded (single `<style>` block, no external stylesheet,
 no external URLs of any kind) and restrained: one CSS accent-color
@@ -32,6 +33,7 @@ import argparse
 import base64
 import html
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -47,15 +49,26 @@ from adjudication_profiles import get_profile
 _FONT_STACK_PLACEHOLDER = "__FONT_STACK__"
 
 # Cached markdown-it parser — constructed once, reused across all renders.
-# The default config handles headings, lists, blockquotes, bold/italic,
-# tables, and fenced code blocks (including ` ```mermaid ` → <pre><code
+# Handles headings, lists, blockquotes, bold/italic, tables, and fenced
+# code blocks (including ` ```mermaid ` → <pre><code
 # class="language-mermaid">).
 # The table rule is registered before 'fence' so table pipes don't
 # interfere with fenced code block detection.
-_MD = MarkdownIt()
+# `html: False` — commonmark's default passes raw HTML straight through,
+# and a `rendition` is agent-written, not developer-authored. Every feature
+# used here is markdown syntax, so escaping raw HTML costs nothing.
+_MD = MarkdownIt("commonmark", {"html": False})
 _MD.block.ruler.before('fence', 'table', table, {
     'alt': ['paragraph', 'reference', 'blockquote', 'list'],
 })
+
+# Matches ONE mermaid fence's open tag, body, and close tag together, so the
+# close tag of a non-mermaid fence is never rewritten. DOTALL because a
+# diagram spans lines; non-greedy so consecutive fences do not merge.
+_MERMAID_FENCE_RE = re.compile(
+    r'<pre><code class="language-mermaid">(.*?)</code></pre>',
+    re.DOTALL,
+)
 
 
 def _render_markdown(md_text: str) -> str:
@@ -74,19 +87,33 @@ def _render_markdown(md_text: str) -> str:
     Other markdown syntax (bold, italic, lists, blockquotes, etc.)
     is also converted.
 
-    The output is safe for direct HTML interpolation (no raw user data —
-    markdown-it generates the HTML structure from trusted source text).
+    Raw HTML in the input is ESCAPED, not passed through (`html: False` on
+    the shared parser). commonmark's default is the opposite, and that
+    default is wrong here: a `rendition` is written by an orchestrator-side
+    agent, so it is model output rather than developer-authored text — if
+    the artifact being rendered carries `<script>`, the agent can carry it
+    through, and the output lands in a page the author opens locally.
+    Everything this function advertises is markdown syntax, so escaping raw
+    HTML removes no capability.
+
+    The output is still interpolated into the page unescaped — that is what
+    makes the markdown render — so this parser setting is the only thing
+    standing between a rendition and the DOM. Keep it.
     """
     if not md_text:
         return ""
     result = _MD.render(md_text)
     # Convert mermaid fences from <pre><code class="language-mermaid">
     # to <div class="mermaid"> for browser-side Mermaid JS compatibility.
-    result = result.replace(
-        '<pre><code class="language-mermaid">',
-        '<div class="mermaid">',
+    # Rewrite the OPEN and CLOSE tags as one match: a blanket
+    # `.replace('</code></pre>', '</div>')` also rewrites the close tag of
+    # every OTHER fenced block, leaving `<pre><code class="language-python">
+    # …</div>` — malformed, and only visible when a unit carries both a
+    # mermaid diagram and an ordinary code block.
+    result = _MERMAID_FENCE_RE.sub(
+        lambda m: '<div class="mermaid">' + m.group(1) + "</div>",
+        result,
     )
-    result = result.replace('</code></pre>', '</div>')
     return result
 
 STYLE = """
@@ -358,8 +385,8 @@ def render_doc(units, title="Adjudication View", lang="zh-Hant"):
     The `rendition` field is parsed as markdown (via markdown-it) and
     injected as raw HTML — so `**bold**` becomes `<strong>bold</strong>`,
     `- list` becomes `<li>list</li>`, and ` ```mermaid ` fences become
-    `<pre><code class="language-mermaid">` that browser-side Mermaid JS
-    can locate and render.
+    `<div class="mermaid">`, which is what browser-side Mermaid JS scans
+    the DOM for.
 
     The bundled mermaid.min.js is embedded as a base64 data URL, so the
     output is fully self-contained (no external URLs).
@@ -379,8 +406,10 @@ def _build_unit_html(unit: dict) -> str:
     source_text = html.escape(unit["source_text"])
     rendition_html = _render_markdown(unit["rendition"])
     # UNIT_TEMPLATE_RAW uses <div> (not <p>) because the rendition now
-    # contains block-level HTML from markdown-it.  Direct interpolation is
-    # safe — markdown-it generates the HTML structure from trusted source.
+    # contains block-level HTML from markdown-it. `rendition` is
+    # deliberately NOT escaped here — that is what makes the markdown
+    # render. What keeps that safe is the parser's `html: False`, not
+    # anything at this call site; see _render_markdown's docstring.
     return UNIT_TEMPLATE_RAW.format(
         unit_id=unit_id,
         heading=heading,
