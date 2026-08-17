@@ -117,7 +117,7 @@ N/A — no unresolved question: part-2 執行期已把三類缺口定性完畢�
 - Dependencies: Tasks 1, 2, 3, 4, 5 complete first
 - Independent: false
 - Brief item covered: 藍圖 §5 S9 驗收、§6 驗收清單全表
-- Status: done(pending-commit)
+- Status: done(d4753776)
 - Gloss: 六條驗收逐條實測記錄，不到標的照實寫數字與原因
 
 ## §6 驗收記錄（Task 6，2026-08-17 實測）
