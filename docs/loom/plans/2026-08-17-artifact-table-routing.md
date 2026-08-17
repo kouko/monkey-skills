@@ -9,7 +9,7 @@ Goal: `family-relay.md` §(b) carries one added routing bullet that states
     prose in a table-routed section; `visual-companion.md` gains the
     diagram-semantics rule (edges say why, nodes carry title + reason);
     loom-code and loom-design each ship it as one version bump.
-Stage: review:round-1
+Stage: finishing
 Steps:
   1. 內容改動五路並行：規則一句、brief 表格化、spec 兩矩陣表格化、審查提示補缺、圖語意規則
   2. validator 接上表格檢查＋loom-code 0.85.0 出貨（codex 鏡射＋changelog）
