@@ -48,7 +48,7 @@ const SEG2_STATION_SCHEMA = {
   },
 }
 
-// Two lenses from loom-spec/skills/completeness-critic/SKILL.md's fixed
+// Two lenses from loom-design/skills/completeness-critic/SKILL.md's fixed
 // panel (load-bearing order #1 and #3), dispatched as SEPARATE fresh-context
 // agent() calls at the SCRIPT layer — not delegated to the skill's own
 // internal fan-out. Fresh context per lens is the mechanism that

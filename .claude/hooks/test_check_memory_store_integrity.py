@@ -13,7 +13,7 @@ CI step that runs ``scripts/check_loom_memory_integrity.py``. It must:
   instead of after push,
 - no-op (exit 0) for any path outside the store,
 - no-op (exit 0) when the checker is ABSENT — the store is portable
-  (``loom-pipeline:loom-memory`` fires in any repo carrying
+  (``loom-code:loom-memory`` fires in any repo carrying
   ``docs/loom/memory/README.md``) while the checker ships inside no plugin,
   so a consuming repo must not be blocked by a missing-file error.
 

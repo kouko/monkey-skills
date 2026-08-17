@@ -21,7 +21,7 @@
 # triggers a check that cannot see that file — the store's charter is one flat
 # file per fact, so a nested entry is itself the thing to fix.
 #
-# Portability: the store is portable (`loom-pipeline:loom-memory` fires in any
+# Portability: the store is portable (`loom-code:loom-memory` fires in any
 # repo carrying `docs/loom/memory/README.md`) but this checker ships inside no
 # plugin. When it is absent, no-op — never let a "No such file" become a
 # phantom store violation.
