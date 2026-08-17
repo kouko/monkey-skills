@@ -9,7 +9,7 @@ Goal: `family-relay.md` §(b) carries one added routing bullet that states
     prose in a table-routed section; `visual-companion.md` gains the
     diagram-semantics rule (edges say why, nodes carry title + reason);
     loom-code and loom-design each ship it as one version bump.
-Stage: sdd:wave-1
+Stage: finishing
 Steps:
   1. 內容改動五路並行：規則一句、brief 表格化、spec 兩矩陣表格化、審查提示補缺、圖語意規則
   2. validator 接上表格檢查＋loom-code 0.85.0 出貨（codex 鏡射＋changelog）
@@ -53,7 +53,7 @@ N/A — no unresolved question: the brief's one fork (loom-design leg in or out)
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1; also BI-6 (the umbrella outcome — SSOT sentence here, template binding in Tasks 2/3/6, reviewer dimension in Task 5, validator check in Task 4, text pins in every task).
-- **Status**: claimed(@wave-1)
+- **Status**: done(3f43c6a6)
 - **Gloss**: 家族唯一的分流規則本體多一條：比較型內容在落盤文件裡也進表格——所有指向 §(b) 的模板一次讀到，session 預載也自動帶上。
 
 ## Task 2 — brief 模板的「替代方案」區段改為 fill-or-declare 比較表
@@ -73,7 +73,7 @@ N/A — no unresolved question: the brief's one fork (loom-design leg in or out)
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-2; also BI-7 (the numbered-list format sentence and skeleton are deleted in this task).
-- **Status**: claimed(@wave-1)
+- **Status**: done(05fa6c01)
 - **Gloss**: brief 寫手在「替代方案」這一格只能填表或明寫「無替代方案＋理由」——把分流規則綁在寫作當下的欄位上，而不是只當一句可引用的教條。
 
 ## Task 3 — spec-expansion 兩個矩陣區段明定表格形式＋釘住的 N/A 行
@@ -92,7 +92,7 @@ N/A — no unresolved question: the brief's one fork (loom-design leg in or out)
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-3 (the doctrine half — table form + pinned N/A lines); also BI-8 (the unspecified "grid" body wording is replaced here).
-- **Status**: claimed(@wave-1)
+- **Status**: done(b71426bf)
 - **Gloss**: spec 裡最天生就是表格的兩個「矩陣」區段，從此不能再用散文寫——寫手照欄位填表，空的就寫釘住的 N/A 行，不准湊格子。
 
 ## Task 4 — validate_spec_output 對兩矩陣區段檢查「有表格或有 N/A 行」
@@ -111,7 +111,7 @@ N/A — no unresolved question: the brief's one fork (loom-design leg in or out)
 - **Dependencies**: Task 3 completes first
 - **Independent**: false
 - **Brief item covered**: BI-3 (the mechanical half — validator fails on neither-table-nor-N/A; loom-design test covers both branches).
-- **Status**: pending
+- **Status**: done(ec70b30b)
 - **Gloss**: 表格規則在 spec 這一段是唯一能機械執行的地方——validator 在凍結時就擋下「該是表格卻寫成散文」，不靠人眼。
 
 ## Task 5 — docs-reviewer 的 omission 列涵蓋「該進表格卻是散文」
@@ -131,7 +131,7 @@ N/A — no unresolved question: the brief's one fork (loom-design leg in or out)
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: claimed(@wave-1)
+- **Status**: done(097cb713)
 - **Gloss**: 審查迴圈接上——模板與 reference 檔裡「該分流到表格的比較內容還是散文」從此算缺漏；對 docs/ 下的產出實例它管不到，這點在 brief 與 Notes 都寫明。
 
 ## Task 6 — visual-companion 加圖語意規則並重寫自己的裸箭頭範例
@@ -150,7 +150,7 @@ N/A — no unresolved question: the brief's one fork (loom-design leg in or out)
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-9; also BI-10 (the bare-edge example is rewritten in this task).
-- **Status**: claimed(@wave-1)
+- **Status**: done(5135f7e5)
 - **Gloss**: 每個圖表欄位都指向的那份「怎麼畫」參考檔，從此要求箭頭寫「為什麼」、節點寫「標題＋理由」——圖才能取代旁邊那段散文，而不是多一張裝飾。
 
 ## Task 7 — loom-code 版本 0.84.0 → 0.85.0＋codex 鏡射＋changelog
@@ -171,7 +171,7 @@ N/A — no unresolved question: the brief's one fork (loom-design leg in or out)
 - **Independent**: true
 - **Review-weight**: mechanical
 - **Brief item covered**: BI-5 (loom-code half; marketplace.json carries no version fields — verified 2026-08-11 recon, still true — so no marketplace edit)
-- **Status**: pending
+- **Status**: done(705dd7c9)
 - **Gloss**: loom-code 的四處內容改動要隨 0.85.0 出貨——不 bump 的話 marketplace 更新是靜默 no-op。
 
 ## Task 8 — loom-design 版本 0.1.0 → 0.2.0＋codex 鏡射＋changelog
@@ -192,7 +192,7 @@ N/A — no unresolved question: the brief's one fork (loom-design leg in or out)
 - **Independent**: true
 - **Review-weight**: mechanical
 - **Brief item covered**: BI-5 (loom-design half; marketplace N/A rationale recorded in Task 7's field)
-- **Status**: pending
+- **Status**: done(0e9a4557)
 - **Gloss**: spec 兩矩陣的表格化與 validator 檢查隨 loom-design 0.2.0 出貨。
 
 ## Notes
@@ -328,3 +328,9 @@ loom-design 0.2.0: spec-expansion's `## Path × edge matrix` and
 with pinned N/A lines; `validate_spec_output.py` rejects a body that
 carries neither a table nor its N/A line.
 ```
+
+## Decision Log
+
+1. chose to let Task 2 also edit `loom-code/scripts/test_brief_diagram_slot.py` (narrowing its `PIN_B_HEADING_SENTENCE` pin from the bare prefix "Do not delete the section heading" to the full Diagrams-specific sentence) because Pin B VERBATIM legitimately introduces a second "Do not delete the section heading" clause and the pre-existing test pinned a prefix rather than the full phrase (a Grep-pin-discipline shortfall) — Pin B wording stays untouched, the pin becomes more specific not weaker, and the fourth touched file rides through the full triad (precedent: 2026-08-11 arc Decision Log 2) — cost-of-change: none going forward; plan-time recon for any future fill-or-declare slot must grep sibling slot pins for shared clause prefixes so Files touched declares them up front
+2. chose to record, not re-plan, a corrected fact from Task 4's GREEN run: `docs/loom/2026-07-12-us-sec-primary-source-layer` already carries markdown tables in both matrix sections and passes the stricter validator (exit 0) — the plan's Notes §Shipped change-folders and Task 4's GREEN line over-generalized from that folder's opening prose lines (2026-07-19-8k-prose-kpi-intake is the one that fails, exit non-zero) — cost-of-change: none; the recorded debt shrinks to one shipped folder, and plan-time recon must run the validator instead of reading a section's first lines
+3. chose to route Task 7 through the full triad instead of the mechanical self-check because its Content match is ambiguous by construction: the CHANGELOG target is Pin F reshaped into the file's `### Added` / `### Changed` convention (the dispatch packet instructed mirroring the top entry's shape, so the pin's sentences are present but not as one verbatim paragraph), and the test-pin file carries a per-bump rewrite rather than a single literal — fail-closed toward review per SDD's exemption rule — cost-of-change: none; a future bump-task pin should be written already in the CHANGELOG's Added/Changed shape so the mechanical path stays literal
