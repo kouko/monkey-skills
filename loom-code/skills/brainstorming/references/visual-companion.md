@@ -48,10 +48,10 @@ sequenceDiagram
 ```mermaid
 flowchart TD
     Start[User asks "export to CSV"] --> Q1{Does report URL exist?}
-    Q1 -- Yes --> A1[Add ?format=csv query param<br/>~20 LOC; no UI work]
-    Q1 -- No --> Q2{Is this 1-time export?}
-    Q2 -- Yes --> A2[Run ad-hoc SQL + paste to CSV<br/>0 LOC]
-    Q2 -- No --> A3[Build /reports endpoint + ?format param<br/>~150 LOC]
+    Q1 -->|"Yes — reuse the URL, no new surface"| A1[Add ?format=csv query param<br/>~20 LOC; no UI work]
+    Q1 -->|"No — need to scope the export"| Q2{Is this 1-time export?}
+    Q2 -->|"Yes — cheapest path, no code to maintain"| A2[Run ad-hoc SQL + paste to CSV<br/>0 LOC]
+    Q2 -->|"No — recurring need justifies the endpoint"| A3[Build /reports endpoint + ?format param<br/>~150 LOC]
 
     style A1 fill:#9f9
     style A2 fill:#9f9
@@ -106,12 +106,33 @@ Mermaid/Excalidraw/PlantUML above assume a rendering host. Apply channel-aware d
 
 Diagram labels always match the live conversation language.
 
+## Diagram semantics — edges say why, nodes carry their reason
+
+A diagram earns its slot only when it can replace the paragraph beside
+it, so it must carry the paragraph's *reasons*, not just its nouns.
+Default form for every Mermaid block a loom slot forces:
+
+- **Edge labels state the relation's why** — the causal, enabling, or
+  blocking reason one node has for pointing at the next
+  (`A -->|"drops the parser's only anchor"| B`), never a bare arrow or a
+  "connects to". An edge whose relation genuinely has no why — a pure
+  dependency DAG such as a plan's Task-flow diagram — may stay bare;
+  say so in the diagram's caption.
+- **Node text is two-layer** — `title<br/>supporting fact or reason`
+  (`["brief template<br/>Alternatives Considered → table"]`), so a reader
+  gets the claim and its ground in one glance. Bare one-word nodes are
+  a sketch, not a decision aid.
+
+The examples in §Mermaid quick reference follow this form. Routing rule
+SSOT: `loom-code/hooks/family-relay.md §(b) Visual defaults`.
+
 ## Anti-patterns
 
 - ❌ **Diagram for its own sake.** If prose covers the axis in 2 sentences, draw nothing. A diagram is a tool for catching errors prose hides; if there's nothing to catch, the diagram is decoration.
 - ❌ **Three diagrams for one axis.** Pick one venue per axis. If you find yourself needing multiple, the axis isn't sufficiently scoped — return to Axis 1 and split the problem.
 - ❌ **Diagrams without legend / color discipline.** A flowchart with 10 boxes and no rejected-vs-preferred signal is just a sketch, not a decision aid.
 - ❌ **Committing fuzzy whiteboard sketches as artifacts.** Excalidraw scratch is for thinking; once a decision is made, redraw as clean Mermaid in the brief. The brief survives 6 months; the whiteboard does not.
+- ❌ **Bare-arrow flowchart.** Edges with no why and one-word nodes tell the reader that things connect, not why — see §Diagram semantics.
 
 ## How this fits with `dev-workflow`
 
