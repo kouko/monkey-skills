@@ -95,6 +95,14 @@ unless a pending decision cannot be understood without it.
 
 - **≥2 options at a fork** → a markdown comparison table is the
   default form. Don't make the user hold options in their head.
+- **The same fork rule binds written artifacts** — a brief, plan, or spec
+  that weighs ≥2 options on shared axes routes that content to a markdown
+  comparison table: one row per option, the shared axes as columns, and
+  one load-bearing column stating chosen / rejected-because. The narrative
+  *why* stays as prose beside the table, never inside a cell. Shape-based,
+  never count-based: content that is not a comparison is not routed here,
+  and a template that owns a comparison-shaped section binds this rule at
+  its own slot (it points here; it does not restate this bullet).
 - **Flow / state shape** → `ascii-graph-toolkit` (CJK display-width
   aware) — not hand-drawn ASCII, not Mermaid, unless the channel is
   known to render Mermaid.
