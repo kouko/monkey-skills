@@ -231,3 +231,23 @@ def test_mermaid_initialize_pins_strict_security_level():
     depending on a library default."""
     html_out = render_doc([_unit("```mermaid\nA-->B\n```")])
     assert 'securityLevel: "strict"' in html_out
+
+
+def test_missing_mermaid_library_emits_neither_tag(tmp_path, monkeypatch):
+    """PIN: when the bundled library cannot be read, the fallback must
+    return "" — NOT an initialize call on its own. Emitting the call
+    without the library is precisely the ReferenceError this branch's
+    headline fix removed, and it can be reintroduced in the fallback
+    branch alone. Also pins the widened `except OSError`: a directory at
+    that path raises IsADirectoryError, which FileNotFoundError misses."""
+    import adjudication_render as mod
+
+    fake_dir = tmp_path / "mermaid.min.js"
+    fake_dir.mkdir()  # a directory, not a file → IsADirectoryError
+    monkeypatch.setattr(mod, "__file__", str(tmp_path / "adjudication_render.py"))
+    assert mod._load_bundled_mermaid() == ""
+
+    # and the page built with that empty script carries neither tag
+    html_out = mod._render_page("t", "<section></section>", "zh-Hant", "")
+    assert "mermaid.initialize" not in html_out
+    assert "data:application/javascript;base64," not in html_out

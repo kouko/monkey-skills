@@ -57,16 +57,17 @@ _FONT_STACK_PLACEHOLDER = "__FONT_STACK__"
 # used here is markdown syntax, so escaping raw HTML costs nothing.
 # The table rule is re-registered rather than merely `.enable("table")`d,
 # for its `alt` list. commonmark ships `table` disabled with
-# alt=['paragraph', 'reference']; this registration widens it to include
-# 'blockquote' and 'list', which is what lets a table interrupt a
-# blockquote's lazy continuation. Without the widening, a table written
-# directly under a `>` line stays literal pipe text inside the quote —
-# and renditions do carry blockquotes. Pinned by
-# test_table_interrupts_blockquote_lazy_continuation; the two forms are
-# NOT interchangeable.
+# alt=['paragraph', 'reference']; this registration adds 'blockquote',
+# which is what lets a table interrupt a blockquote's lazy continuation.
+# Without it, a table written directly under a `>` line stays literal pipe
+# text inside the quote — and renditions do carry blockquotes. Measured:
+# adding 'list' as well changes nothing (13 list-shaped probes render
+# identically), so it is not carried. Pinned by
+# test_table_interrupts_blockquote_lazy_continuation; a plain
+# `.enable("table")` is NOT equivalent.
 _MD = MarkdownIt("commonmark", {"html": False})
 _MD.block.ruler.before("fence", "table", table, {
-    "alt": ["paragraph", "reference", "blockquote", "list"],
+    "alt": ["paragraph", "reference", "blockquote"],
 })
 
 # Matches ONE mermaid fence's open tag, body, and close tag together, so the
@@ -325,15 +326,6 @@ DOC_PAGE_TEMPLATE = """<!doctype html>
 </body>
 </html>
 """
-
-UNIT_TEMPLATE = """<section class="unit" id="{unit_id}">
-<h2>{heading}</h2>
-<p class="rendition">{rendition}</p>
-<details>
-<summary>原文</summary>
-<pre>{source_text}</pre>
-</details>
-</section>"""
 
 # Template for raw-HTML rendition (markdown-it output).
 # Uses <div> instead of <p> because the rendition now contains
