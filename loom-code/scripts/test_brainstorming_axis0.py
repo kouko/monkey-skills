@@ -9,10 +9,11 @@ PRESENCE + POSITION of a compact new subsection: "Axis 0 — Upstream artifacts
 1. Point at the loom family reception's on-ramp criteria table
    (`loom-code/hooks/family-reception.md`) rather than copy it — SSOT
    drift prevention (plan-level note "Reception SSOT rule").
-2. On a triggered row, surface the recommendation ONCE (naming the concrete
-   design-side sequence), then record the user's choice in the brief under a
-   `## Design-side on-ramp` line, and proceed either way — never re-raise
-   after a decline.
+2. On a triggered row, first honor a DIRECTION.md standing choice; otherwise
+   write `pending` in the brief's `## Design-side on-ramp` line and surface
+   the recommendation ONCE as a standalone ask (naming the concrete
+   design-side sequence); only the user's answer is recorded — never an
+   agent default, never re-raised after the answer.
 3. Carry a negative-guard verbatim-equivalent: bug fix / refactor /
    test-covered increment → Axis 0 is skipped silently (no noise on
    incremental work).
