@@ -121,7 +121,7 @@
     },
     {
       "name": "think-orbit",
-      "description": "Single-user decision-reasoning assistant — turns a discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view.",
+      "description": "Single-user thinking-and-planning partner — turns a discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view; decisions are one kind of ending, not the only one.",
       "source": "./think-orbit/"
     }
   ]

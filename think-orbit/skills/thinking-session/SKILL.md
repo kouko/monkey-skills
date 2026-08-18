@@ -1,12 +1,12 @@
 ---
-name: decision-session
+name: thinking-session
 description: |
-  Core sitting protocol of think-orbit — run a decision discussion so every reasoning step lands as a node file, branches carry named assumptions, and the DAG view is regenerated at each milestone. Normally reached via using-think-orbit; fires on 我要決定 / 決策推演 / 繼續上次的決策 / "help me decide" / "continue the decision".
+  Core sitting protocol of think-orbit — run a thinking, planning, or decision discussion so every reasoning step lands as a node file, branches carry named assumptions, and the DAG view is regenerated at each milestone; a sitting may end in an open question or a plan outline, not only a DECISION. Normally reached via using-think-orbit; fires on 幫我想 / 想一下 X / 想清楚 / 整理思路 / 規劃 X / 思考 / 我要決定 / 決策推演 / "help me think" / "think through X" / "plan X" / "figure out" / "help me decide".
 source_language: en
 tags: [decision-making, chain-of-thought, dag, reasoning, assumptions, part-1-draft]
 ---
 
-# Decision session — the core sitting protocol
+# Thinking session — the core sitting protocol
 
 This is the sitting protocol of think-orbit: the user talks, and the
 discussion lands as files. You normally arrive here from
@@ -15,24 +15,30 @@ and delivered the resume opening. If you somehow got here without a
 `<root>`, ask for it once and continue — do not create one deep inside
 the plugin.
 
-The value of this plugin only appears **across sittings**. A decision
-finished in one conversation needs no graph; three weeks later, the
-user cannot remember which premise the conclusion stands on. Everything
-below exists to make that premise findable.
+The value of this plugin only appears **across sittings**. A line of
+thinking finished in one conversation needs no graph; three weeks later,
+the user cannot remember which premise the conclusion stands on.
+Everything below exists to make that premise findable.
+
+A sitting need not end in a DECISION. A chain of CLAIM and FACT nodes
+ending in an open question, or in a plan outline, is a complete and
+valid record of the sitting. DECISION is one kind of ending, not the
+only one — it is written only when the user actually rules.
 
 ## The family contract — three interrupt points
 
 There are exactly three **kinds** of interrupt, and each one is a single
 short exchange, never a form. The count is not three: you confirm the
-GOAL once, but you ask for assumptions **each** time a branch opens and
-confirm **each** DECISION — a two-fork sitting therefore interrupts more
-than three times, by design.
+GOAL once, you ask for assumptions **each** time a branch opens, and you
+confirm a DECISION **whenever** one is reached — a two-fork sitting
+therefore interrupts more than three times, by design, while a sitting
+that never reaches a ruling interrupts on (a) and (b) only.
 
 | # | Interrupt | Why it earns the interruption |
 |---|---|---|
-| a | Confirm the GOAL — ask 「你要決定的是什麼」 and confirm the GOAL node you wrote | Wrong goal, wrong graph |
+| a | Confirm the GOAL — ask 「你想弄清楚／規劃的是什麼？」 and confirm the GOAL node you wrote | Wrong goal, wrong graph |
 | b | When a branch opens, ask 「這條路踩在什麼上面？」 and have the user confirm the assumptions | Only moment the user knows why this path |
-| c | Confirm the DECISION — you ask, the owner rules | This is the thing they take away |
+| c | When a DECISION is reached, confirm it — you ask, the owner rules | This is the thing they take away |
 
 Everything else is **silent file writing**. No forms, no per-node
 confirmation, no progress narration. When the mechanical gate passes
@@ -45,8 +51,9 @@ follows the same rule.
 ## First sitting
 
 The user pastes or points at sources — meeting notes, competitor pages,
-a data export. Read them, then ask 「你要決定的是什麼」 and write the
-answer to `<root>/nodes/<id>.md` as `type: GOAL` with an author-named
+a data export. Read them, then ask 「你想弄清楚／規劃的是什麼？」 and
+write the answer — the question to answer, or the plan to shape — to
+`<root>/nodes/<id>.md` as `type: GOAL` with an author-named
 `id`, `seq: 1`, a one-line `summary`, and `inputs: []`. Ask the user to
 confirm that GOAL node — this is interrupt (a).
 
@@ -94,13 +101,18 @@ the assumption goes back for rewrite before it is written to disk. A
 wish is not an assumption. `breaks_if` must name an observable event
 (「主管在 10 月前通知預算下修」), not a mood.
 
-### Reaching a DECISION
+### Endings — a DECISION is one of them
 
 A `DECISION` node is written only when the user rules — interrupt (c).
 You may say the paths are now comparable and ask which one they take;
 you may never infer the ruling from the discussion's momentum.
 Authorship is the whole point: `DECISION` is written by the owner's
 ruling, and nothing else creates one.
+
+When no ruling comes, the sitting still ends whole. Leave the chain
+standing on its last CLAIM — an open question the user is still turning
+over, or a plan outline they will act on — and say so plainly instead of
+manufacturing a DECISION to round the graph off.
 
 ## Minimal examples
 

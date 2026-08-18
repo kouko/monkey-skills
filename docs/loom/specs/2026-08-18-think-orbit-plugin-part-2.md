@@ -7,6 +7,9 @@
 > **Sibling / precondition**: `docs/loom/specs/2026-08-18-think-orbit-plugin-part-1.md` — Part 2 **只在**
 > Part 1 的真實素材檢查點檔（`docs/loom/dogfood/2026-08-<dd>-think-orbit-real-material.md`）存在後
 > 開工；檢查點若推翻 schema，先修訂本 brief 再進 writing-plans。
+> **0.1.1 追記（user ruling 2026-08-18）**: plugin 的目的是**思考與規劃**，決策只是其中一種結尾；
+> `decision-session` 已更名為 `thinking-session`，入口語彙擴大到「幫我想／想清楚／規劃／整理思路」，
+> 且一次坐下不必以 DECISION 收尾。Part 2 的 BI 依此框架複核。
 > **STATUS**: DRAFT — 內容於 Part 1 檢查點後複核；BI 編號自本 part 起算。
 
 ## Problem

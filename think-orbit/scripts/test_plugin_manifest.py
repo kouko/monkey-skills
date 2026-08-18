@@ -19,7 +19,7 @@ def test_manifest_marketplace_and_codex_mirror_are_consistent():
     assert plugin_json_path.exists(), f"missing {plugin_json_path}"
     plugin_json = json.loads(plugin_json_path.read_text(encoding="utf-8"))
     assert plugin_json["name"] == "think-orbit"
-    assert plugin_json["version"] == "0.1.0"
+    assert plugin_json["version"] == "0.1.1"
 
     marketplace_path = REPO_ROOT / ".claude-plugin" / "marketplace.json"
     marketplace = json.loads(marketplace_path.read_text(encoding="utf-8"))
@@ -42,7 +42,7 @@ def test_manifest_marketplace_and_codex_mirror_are_consistent():
         "README.ja.md",
         "README.zh-TW.md",
         "CHANGELOG.md",
-        "skills/decision-session/SKILL.md",
+        "skills/thinking-session/SKILL.md",
     ):
         assert (PLUGIN_ROOT / rel).exists(), f"missing {PLUGIN_ROOT / rel}"
 
@@ -53,7 +53,7 @@ def test_layout_is_router_plus_verb_skills():
 
     expected_names = {
         "using-think-orbit": "using-think-orbit",
-        "decision-session": "decision-session",
+        "thinking-session": "thinking-session",
         "break-assumption": "break-assumption",
     }
     for skill_dir, expected_name in expected_names.items():
@@ -68,5 +68,27 @@ def test_layout_is_router_plus_verb_skills():
         "skills/think-orbit/ should no longer exist after the router split"
     )
 
-    schema_path = PLUGIN_ROOT / "skills" / "decision-session" / "references" / "node-schema.md"
+    assert not (PLUGIN_ROOT / "skills" / "decision-session").exists(), (
+        "skills/decision-session/ should no longer exist after the 0.1.1 rename"
+    )
+
+    schema_path = PLUGIN_ROOT / "skills" / "thinking-session" / "references" / "node-schema.md"
     assert schema_path.exists(), f"missing {schema_path}"
+
+
+def test_plugin_description_frames_thinking_planning_and_deciding():
+    """0.1.1 — the plugin's purpose is thinking and planning; deciding is one ending."""
+    plugin_json = json.loads(
+        (PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
+    )
+    description = plugin_json["description"]
+
+    for token in ("thinking", "planning", "decision"):
+        assert token in description.lower(), (
+            f"plugin description must frame {token!r}"
+        )
+
+    codex = json.loads(
+        (PLUGIN_ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
+    )
+    assert codex["version"] == plugin_json["version"]

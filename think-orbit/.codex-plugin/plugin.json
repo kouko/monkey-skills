@@ -1,8 +1,8 @@
 {
   "interface": {
     "displayName": "think-orbit",
-    "shortDescription": "Decision-reasoning assistant — chain of thought as a file-per-node DAG",
-    "longDescription": "Turns a discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view. Part 1 — pre-release.",
+    "shortDescription": "Thinking-and-planning partner — chain of thought as a file-per-node DAG",
+    "longDescription": "Turns a thinking, planning, or decision discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view. Part 1 — pre-release.",
     "developerName": "kouko",
     "category": "Productivity",
     "capabilities": [
@@ -11,16 +11,18 @@
       "Write"
     ],
     "defaultPrompt": [
+      "Help me think through X.",
+      "Help me plan X.",
       "Help me decide X.",
-      "Resume the decision.",
+      "Resume where we left off.",
       "An assumption broke."
     ],
     "websiteURL": "https://github.com/kouko/monkey-skills/tree/main/think-orbit",
     "brandColor": "#4B5563"
   },
   "name": "think-orbit",
-  "version": "0.1.0",
-  "description": "Single-user decision-reasoning assistant — turns a discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view.",
+  "version": "0.1.1",
+  "description": "Single-user thinking-and-planning partner — turns a discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view; decisions are one kind of ending, not the only one.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"

@@ -1,4 +1,4 @@
-"""RED test for Task 11 — decision-session SKILL.md core sitting protocol.
+"""RED test for Task 11 — thinking-session SKILL.md core sitting protocol.
 
 brief-item: BI-6
 brief-item: BI-7
@@ -16,7 +16,7 @@ import dag
 SKILL_MD = (
     Path(__file__).resolve().parent.parent
     / "skills"
-    / "decision-session"
+    / "thinking-session"
     / "SKILL.md"
 )
 
@@ -65,7 +65,7 @@ def _asserts_views_prohibition(body: str) -> None:
     ), "SKILL.md body must state the views/ read prohibition"
 
 
-def test_decision_session_skill_names_cli_verbs_interrupts_view_prohibition_and_word_cap():
+def test_thinking_session_skill_names_cli_verbs_interrupts_view_prohibition_and_word_cap():
     # brief-item: BI-6
     text = SKILL_MD.read_text(encoding="utf-8")
     body = _body(text)
@@ -87,7 +87,7 @@ def test_decision_session_skill_names_cli_verbs_interrupts_view_prohibition_and_
         ), f"no confirm/ask sentence names the interrupt point {token!r}"
 
 
-def test_decision_session_minimal_examples_pass_check(tmp_path):
+def test_thinking_session_minimal_examples_pass_check(tmp_path):
     # brief-item: BI-6
     body = _body(SKILL_MD.read_text(encoding="utf-8"))
     examples = EXAMPLE_BLOCK.findall(body)
@@ -126,7 +126,7 @@ BREAK_SKILL_MD = (
 ROUTER_WORD_CAP = 2500
 
 ROUTER_REQUIRED_LITERALS = (
-    "decision-session",
+    "thinking-session",
     "break-assumption",
     "dag.py check <root>",
     "dag.py claims <root>",
@@ -214,3 +214,76 @@ def test_break_assumption_skill_names_break_verb_and_two_followups():
 
     _asserts_views_prohibition(body)
 
+
+
+# --- 0.1.1: the plugin is a thinking-and-planning partner, not only a decider ---
+
+def _description(skill_md: Path) -> str:
+    """Return the frontmatter `description:` block of a SKILL.md."""
+    fm, _ = dag.split_frontmatter(skill_md.read_text(encoding="utf-8"))
+    assert fm, f"{skill_md} must open with YAML frontmatter"
+    lines = fm.splitlines()
+    start = next(i for i, line in enumerate(lines) if line.startswith("description:"))
+    out = [lines[start].split(":", 1)[1].strip().lstrip("|").strip()]
+    for line in lines[start + 1 :]:
+        if re.match(r"^[a-z_]+:", line):
+            break
+        out.append(line.strip())
+    return " ".join(part for part in out if part)
+
+
+# Entry vocabulary the user must be able to say. Thinking and planning are
+# first-class entries; deciding is one of them, not the only one.
+ENTRY_VOCABULARY = (
+    "幫我想",
+    "想清楚",
+    "規劃",
+    "整理思路",
+    "我要決定",
+    "think through",
+    "plan",
+    "help me think",
+    "help me decide",
+)
+
+ENTRY_SKILLS = (ROUTER_SKILL_MD, SKILL_MD)
+
+
+@pytest.mark.parametrize("skill_md", ENTRY_SKILLS, ids=lambda p: p.parent.name)
+def test_entry_description_covers_thinking_planning_and_deciding(skill_md):
+    description = _description(skill_md)
+
+    for token in ENTRY_VOCABULARY:
+        assert token in description, (
+            f"{skill_md.parent.name} description must fire on {token!r}"
+        )
+
+    sentences = [s for s in re.split(r"(?<=[.。])\s+", description.strip()) if s]
+    assert len(sentences) <= 2, (
+        f"{skill_md.parent.name} description is {len(sentences)} sentences, cap is 2"
+    )
+
+
+def test_thinking_session_states_a_sitting_need_not_end_in_a_decision():
+    body = _body(SKILL_MD.read_text(encoding="utf-8"))
+
+    # The framing the user ruled on: a chain that ends in an open question or a
+    # plan outline is a complete record; DECISION is one ending among several.
+    assert re.search(
+        r"(need not|does not have to|no.{0,20}DECISION).{0,120}DECISION|DECISION.{0,160}(one kind of ending|not the only)",
+        body,
+        re.IGNORECASE | re.DOTALL,
+    ), "SKILL.md must state that a sitting need not end in a DECISION"
+
+    for token in ("open question", "plan"):
+        assert token in body, (
+            f"SKILL.md must name {token!r} as a valid ending of a sitting"
+        )
+
+
+@pytest.mark.parametrize("skill_md", ALL_SKILL_MDS, ids=lambda p: p.parent.name)
+def test_no_skill_still_names_the_old_decision_session_slug(skill_md):
+    text = skill_md.read_text(encoding="utf-8")
+    assert "decision-session" not in text, (
+        f"{skill_md} still names the renamed skill `decision-session`"
+    )

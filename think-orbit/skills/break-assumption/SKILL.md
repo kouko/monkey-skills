@@ -35,7 +35,7 @@ what is open; a broken or confirmed assumption is not a candidate.
 
 If nothing on that list matches what happened, say so plainly: an
 unnamed premise cannot be "broken", because it was never tracked.
-Offer to write it as a new assumption in `decision-session` instead, so
+Offer to write it as a new assumption in `thinking-session` instead, so
 the next time it moves the graph can see it.
 
 ## Run the break
@@ -82,9 +82,9 @@ One short exchange, not a menu. Ask which of these two the user wants:
   which prints the same `impact view:` line.
 
 Then stop. What to re-examine is the user's call, not yours. Stale nodes
-stay stale until the user rewrites them in `decision-session` or rules
+stay stale until the user rewrites them in `thinking-session` or rules
 that they still hold — in which case set `status: current` on those node
-files, by hand or through `decision-session`.
+files, by hand or through `thinking-session`.
 
 ## Close the exchange
 
@@ -96,7 +96,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py check <root>
 ```
 
 `check` is silent on pass — say nothing. On failure, relay each line in
-plain words and fix the file. Then hand back to `decision-session` if
+plain words and fix the file. Then hand back to `thinking-session` if
 the user wants to keep going, or end the sitting there.
 
 ## The reverse moves
@@ -116,13 +116,13 @@ un-break verb, so say so rather than implying the tool will undo it.
 The assumption graph only protects premises that were **named**. An
 unnamed one fails silently: nothing marks it, nothing goes stale, and
 the conclusion keeps standing on air. That is exactly why
-`decision-session` asks 「這條路踩在什麼上面？」 every time a branch
+`thinking-session` asks 「這條路踩在什麼上面？」 every time a branch
 opens — this skill can only work with what that moment captured.
 
 ## Pointers
 
-- `${CLAUDE_PLUGIN_ROOT}/skills/decision-session/references/node-schema.md`
+- `${CLAUDE_PLUGIN_ROOT}/skills/thinking-session/references/node-schema.md`
   §assumptions — the field SSOT: `id`, `status` (`open` / `broken` /
   `confirmed`), `statement`, `breaks_if`, `branch`.
-- `decision-session` — writing and rewriting nodes and assumptions.
+- `thinking-session` — writing and rewriting nodes and assumptions.
 - `using-think-orbit` — root resolution, state detection, routing.
