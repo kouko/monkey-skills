@@ -90,6 +90,51 @@ def test_rule_11_names_the_no_namespace_escape():
     )
 
 
+def test_rule_11_names_change_folder_headers_as_namespace_source():
+    """Rule 11 must point at the CONCRETE namespace the checker reads.
+
+    The old wording ("resolves in the `loom-design` namespace") named a
+    namespace that does not exist as a lookup target. After T7,
+    check-living-spec-index.py reads ids declared by an id-form
+    `### Requirement: REQ-<n> — <name>` header in a live change-folder,
+    the archive, or docs/loom/spec/ — that is what an implementer must
+    actually check against. The rule must also say `--next-req-id` is
+    for spec AUTHORS, not implementers, and point at the SSOT reference
+    file. The never-mint sentence (test_rule_11_forbids_minting_ids)
+    must survive verbatim.
+    """
+    block = _rule_11_block(_text(AGENT))
+    lowered = block.lower()
+    assert "resolves in the `loom-design` namespace" not in lowered, (
+        "rule 11 must no longer point at the nonexistent `loom-design` "
+        "namespace lookup"
+    )
+    assert "### requirement: req-<n>" in lowered, (
+        "rule 11 must name the id-form header as the source of "
+        "resolvable ids"
+    )
+    assert "change-folder" in lowered, (
+        "rule 11 must name a live change-folder as a namespace root"
+    )
+    assert "archive" in lowered, (
+        "rule 11 must name the archive as a namespace root"
+    )
+    assert "docs/loom/spec/" in block, (
+        "rule 11 must name docs/loom/spec/ as a namespace root"
+    )
+    assert "--next-req-id" in block and "author" in lowered, (
+        "rule 11 must say --next-req-id exists for spec AUTHORS, not "
+        "implementers"
+    )
+    assert (
+        "loom-design/skills/spec-expansion/references/requirement-identifiers.md"
+        in block
+    ), "rule 11 must point at the SSOT requirement-identifiers reference"
+    assert "never mint" in lowered, (
+        "rule 11 must keep the never-mint sentence"
+    )
+
+
 def _placement_guard_block(text: str) -> str:
     """Slice the placement-guard rule (up to the managed baseline)."""
     # Anchor on the rule's bold lead-in, same technique as _rule_11_block.
