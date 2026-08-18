@@ -150,6 +150,21 @@ Write each declaration as the identifier first, then the human-readable item tex
 - BI-2 — The coverage checker resolves a cited identifier to a declared item.
 ```
 
+## Paragraph length
+
+A paragraph over 600 characters in a prose section is fill-or-declare, in the same shape `## Diagrams` and `## Alternatives Considered` already use: either split it into bullets or a table, or carry a declaration line on its own line directly beneath the paragraph, in exactly this form:
+
+`<!-- narrative: <one-line reason the sentences depend on each other> -->`
+
+An empty or whitespace-only reason counts as absent — the comment must state why the sentences depend on each other, not just exist.
+
+No checker classifies a paragraph as narrative; the author declares, the reviewer checks the declaration. A classifier would reintroduce the judgment this rule exists to remove.
+
+Two sections are exempt from this rule, each for its own reason:
+
+- `## Current State Evidence` — a citation appendix, not narrative prose.
+- `## Alternatives Considered` — already table-routed by `loom-code/hooks/family-relay.md §(b) Visual defaults`.
+
 ## Template
 
 Copy-paste this skeleton:
