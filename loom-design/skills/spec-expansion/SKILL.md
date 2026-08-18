@@ -2,7 +2,7 @@
 name: spec-expansion
 description: |
   Turn a sparse seed (a few lines of feature intent) into a high-recall spec draft — fan out objects, states, paths, edge cases → acceptance criteria in OpenSpec shape. Use for requirement fan-out / edge-case coverage before implementation.
-version: 0.2.1
+version: 0.3.0
 ---
 
 # spec-expansion
