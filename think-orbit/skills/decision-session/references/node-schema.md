@@ -24,7 +24,7 @@ defaults decided at kickoff.
 | `id` | string | Author-named identifier. Not derived from title or filename. |
 | `type` | string | `GOAL` / `FACT` / `CLAIM` / ... A research note always loads as `type: FACT`. |
 | `seq` | int | Ordering hint; nodes sort by `seq` then `id`. |
-| `inputs` | list | Upstream references. Each entry is `{ref, load_bearing}` or a bare string (then `load_bearing` is `None`, flagged by `check` later). |
+| `inputs` | list | Upstream references. Each entry is `{ref, load_bearing}` or a bare string (then `load_bearing` is `None`, flagged by `check` later). A mapping entry with `load_bearing` set but no (or an empty) `ref` is flagged by `check`'s `ref` rule as `inputs[<i>] has no ref`. |
 | `summary` | string | One-line summary. For a research note this is the `claim` field's text. |
 | `status` | string | e.g. `active`, `broken`. |
 | `branch` | string | Branch id the node belongs to, if any. |
@@ -50,9 +50,12 @@ recorded as a `"<relpath>: frontmatter: ..."` entry in `Project.problems`.
 file (`nodes/*.md`, excluding research notes) to contain 2–4 sentences,
 matching the vault's own writing convention; the sentence-boundary heuristic
 ignores inline code spans and URLs, collapses runs like `...`, and does not
-split on common abbreviations (`e.g.`, `i.e.`, `vs.`), while a lead-in line
-followed by a list (no blank line between them) is counted from its own
-sentences only.
+split on common abbreviations (`e.g.`, `i.e.`, `vs.`) or on a small set of
+title abbreviations (`Dr.`, `Mr.`, `Mrs.`, `Ms.`, `Prof.`, `St.`, `Jr.`, `Sr.`,
+`No.`, `Fig.`, `vs.`, `etc.`) even when the next word is capitalized (`Dr.
+Chen`) — except at end-of-text, where the end-of-text rule still ends the
+sentence — while a lead-in line followed by a list (no blank line between
+them) is counted from its own sentences only.
 
 ## Assumption fields (`assumptions/*.md`)
 
@@ -65,6 +68,14 @@ sentences only.
 | `source` | string | Citation source, if any. |
 | `branch` | string | Branch id the assumption belongs to, if any. |
 | `path` | Path | Resolved filesystem path of the file. |
+
+`check`'s `assumption-field` rule requires every assumption file to have a
+non-empty `id`, `status` (one of `open`, `broken`, `confirmed`), `statement`,
+`breaks_if`, and `branch`; a missing field or an out-of-set `status` is
+flagged per file. Its `assumption-max` rule caps assumptions per branch at 3
+— more than three assumption files sharing one `branch` prints a single
+summary line `assumptions: branch <b> has <n> assumptions (max 3)` (not a
+per-file relpath, since the violation belongs to the whole branch).
 
 ## `render` and `views/dag.md`
 

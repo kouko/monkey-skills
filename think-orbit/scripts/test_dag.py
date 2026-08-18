@@ -304,6 +304,83 @@ def test_check_prints_one_line_per_structural_violation_and_is_silent_when_clean
     assert clean_mtimes_before == clean_mtimes_after
 
 
+def test_check_flags_assumption_missing_breaks_if_and_more_than_three_per_branch(tmp_path, capsys):
+    # @req: BI-2
+    root = tmp_path
+    _write(
+        root / "assumptions" / "a1.md",
+        "id: a1\n"
+        "status: open\n"
+        "statement: First assumption\n"
+        "branch: b1\n",  # missing breaks_if -> violation 1
+    )
+    _write(
+        root / "assumptions" / "a2.md",
+        "id: a2\n"
+        "status: open\n"
+        "statement: Second assumption\n"
+        "breaks_if: x\n"
+        "branch: b1\n",
+    )
+    _write(
+        root / "assumptions" / "a3.md",
+        "id: a3\n"
+        "status: open\n"
+        "statement: Third assumption\n"
+        "breaks_if: x\n"
+        "branch: b1\n",
+    )
+    _write(
+        root / "assumptions" / "a4.md",
+        "id: a4\n"
+        "status: open\n"
+        "statement: Fourth assumption\n"
+        "breaks_if: x\n"
+        "branch: b1\n",  # 4 assumptions on b1 -> violation 2 (max 3)
+    )
+
+    rc = dag.main(["check", str(root)])
+    out = capsys.readouterr().out
+    lines = [ln for ln in out.splitlines() if ln]
+
+    assert rc == 1
+    assert len(lines) == 2
+    assert any("a1.md" in ln and "breaks_if" in ln for ln in lines)
+    assert any("branch b1 has 4 assumptions (max 3)" in ln for ln in lines)
+
+
+def test_check_flags_inputs_entry_without_ref(tmp_path, capsys):
+    # @req: BI-4
+    root = tmp_path
+    _write(
+        root / "nodes" / "goal.md",
+        "id: goal\n"
+        "type: GOAL\n"
+        "seq: 1\n"
+        "summary: Ship v0\n"
+        "status: active\n",
+    )
+    _write(
+        root / "nodes" / "claim1.md",
+        "id: claim1\n"
+        "type: CLAIM\n"
+        "seq: 2\n"
+        "summary: Pricing change reduces churn\n"
+        "status: active\n"
+        "inputs:\n"
+        "  - load_bearing: true\n",  # no ref -> violation
+    )
+
+    rc = dag.main(["check", str(root)])
+    out = capsys.readouterr().out
+    lines = [ln for ln in out.splitlines() if ln]
+
+    assert rc == 1
+    assert len(lines) == 1
+    assert "claim1.md" in lines[0]
+    assert "inputs[0] has no ref" in lines[0]
+
+
 def test_check_flags_paragraphs_outside_two_to_four_sentences(tmp_path, capsys):
     # @req: BI-4
     dirty_root = tmp_path / "dirty"
@@ -367,6 +444,19 @@ def test_count_sentences_ignores_abbreviations_urls_ellipses_and_inline_code():
     assert dag._count_sentences("Visit https://example.com/a.b.c for info. It works.") == 2
     assert dag._count_sentences("This trailed off... and continued.") == 1
     assert dag._count_sentences("Run `foo!` now. Then stop.") == 2
+
+
+def test_count_sentences_ignores_title_abbreviations():
+    # @req: BI-4
+    text = (
+        "We talked to Dr. Chen about the migration plan. "
+        "She recommended waiting until Q3. "
+        "This gives the team more runway. "
+        "We agreed to revisit in September."
+    )
+    assert dag._count_sentences(text) == 4
+    assert dag._count_sentences("Bring pens, paper, etc. to the meeting.") == 1
+    assert dag._count_sentences("We packed pens, paper, etc.") == 1
 
 
 def test_strip_fenced_blocks_handles_tilde_and_unclosed_fences():

@@ -237,8 +237,12 @@ def _rule_ref(project: Project) -> list[str]:
     violations = []
     for node in project.nodes:
         relpath = _relpath(node.path, project.root)
-        for entry in node.inputs:
-            if entry.ref is not None and entry.ref not in known_ids:
+        for i, entry in enumerate(node.inputs):
+            if not entry.ref:
+                if entry.load_bearing is not None:
+                    violations.append(f"{relpath}: ref: inputs[{i}] has no ref")
+                continue
+            if entry.ref not in known_ids:
                 violations.append(f"{relpath}: ref: input ref={entry.ref!r} resolves to no node/assumption/research id")
     return violations
 
@@ -266,6 +270,41 @@ def _rule_required_field(project: Project) -> list[str]:
         for name in ("type", "id", "seq", "summary"):
             if not getattr(node, name):
                 violations.append(f"{relpath}: required-field: missing {name}")
+    return violations
+
+
+_VALID_ASSUMPTION_STATUSES = {"open", "broken", "confirmed"}
+_ASSUMPTION_MAX_PER_BRANCH = 3
+
+
+def _rule_assumption_field(project: Project) -> list[str]:
+    violations = []
+    for assumption in project.assumptions:
+        relpath = _relpath(assumption.path, project.root)
+        for name in ("id", "status", "statement", "breaks_if", "branch"):
+            if not getattr(assumption, name):
+                violations.append(f"{relpath}: assumption-field: missing {name}")
+        if assumption.status and assumption.status not in _VALID_ASSUMPTION_STATUSES:
+            violations.append(
+                f"{relpath}: assumption-field: status {assumption.status!r} not in "
+                f"{sorted(_VALID_ASSUMPTION_STATUSES)}"
+            )
+    return violations
+
+
+def _rule_assumption_max(project: Project) -> list[str]:
+    by_branch: dict[str, int] = {}
+    for assumption in project.assumptions:
+        if not assumption.branch:
+            continue
+        by_branch[assumption.branch] = by_branch.get(assumption.branch, 0) + 1
+
+    violations = []
+    for branch, count in sorted(by_branch.items()):
+        if count > _ASSUMPTION_MAX_PER_BRANCH:
+            violations.append(
+                f"assumptions: branch {branch} has {count} assumptions (max {_ASSUMPTION_MAX_PER_BRANCH})"
+            )
     return violations
 
 
@@ -306,6 +345,10 @@ _URL_RE = re.compile(r"https?://\S+")
 # whitespace or a closing quote/bracket -- what a terminator may be followed by
 _CLOSING_RE = re.compile(r"[\s\"'’”)\]」』]")
 _FENCE_START_RE = re.compile(r"^(`{3,}|~{3,})")
+_ABBREV_WORD_RE = re.compile(r"([A-Za-z]+)$")
+_TITLE_ABBREVIATIONS = {
+    "Dr.", "Mr.", "Mrs.", "Ms.", "Prof.", "St.", "Jr.", "Sr.", "No.", "Fig.", "vs.", "etc.",
+}
 
 
 def _strip_fenced_blocks(text: str) -> str:
@@ -375,8 +418,11 @@ def _count_sentences(paragraph: str) -> int:
     end-of-text, or when followed by whitespace/closing-quote/bracket AND
     the next non-space character is not a lowercase ASCII letter (so
     `e.g. the`, `i.e. this`, `vs. that` don't split) -- otherwise it's
-    treated as an abbreviation or mid-word punctuation. A CJK terminator
-    (`。！？`) always ends a sentence once its run is collapsed.
+    treated as an abbreviation or mid-word punctuation. A title abbreviation
+    (`Dr.`, `Mr.`, `Mrs.`, `Ms.`, `Prof.`, `St.`, `Jr.`, `Sr.`, `No.`, `Fig.`,
+    `vs.`, `etc.`) never ends a sentence -- even when followed by a capital
+    letter -- except at end-of-text, where the end-of-text rule wins. A CJK
+    terminator (`。！？`) always ends a sentence once its run is collapsed.
     """
     text = _INLINE_CODE_RE.sub(" ", paragraph)
     text = _URL_RE.sub(" ", text)
@@ -393,6 +439,10 @@ def _count_sentences(paragraph: str) -> int:
         if end >= len(text):
             count += 1
             continue
+        if run == ".":
+            word_match = _ABBREV_WORD_RE.search(text[:match.start()])
+            if word_match and (word_match.group(1) + ".") in _TITLE_ABBREVIATIONS:
+                continue
         if not _CLOSING_RE.match(text[end]):
             continue
         pos = end
@@ -441,6 +491,8 @@ _CHECK_RULES = (
     _rule_ref,
     _rule_fact_source,
     _rule_required_field,
+    _rule_assumption_field,
+    _rule_assumption_max,
     _rule_problems,
     _rule_mermaid_id_collision,
     _rule_paragraph_form,
