@@ -696,6 +696,38 @@ def test_detail_omits_absent_fields(tmp_path):
     )
 
 
+def test_detail_preserves_nested_description_bullets(tmp_path):
+    """--detail on a task whose Description is one sentence plus two
+    nested bullets emits three lines, not one space-joined line —
+    `_bullet_value`'s ``" ".join(...)`` fold is bypassed for
+    Description inside build_detail only."""
+    plan_path = _write_plan(
+        tmp_path,
+        (
+            "# Plan: widget fixture\n\n"
+            "Source brief: docs/loom/specs/fixture.md\n"
+            "Goal: Ship the widget pipeline end-to-end.\n"
+            "Stage: sdd:wave-1\n\n"
+            "## Task 1 — parser\n\n"
+            "- Description: Extend the parser.\n"
+            "  - Nested bullet one.\n"
+            "  - Nested bullet two.\n"
+            "- Status: pending\n\n"
+            "## Notes\n\nFixture notes — never a task.\n"
+        ),
+    )
+
+    result = _run_card(plan_path, "--detail", "T1")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == (
+        "T1 parser\n"
+        "description: Extend the parser.\n"
+        "  Nested bullet one.\n"
+        "  Nested bullet two.\n"
+    )
+
+
 def test_detail_unknown_task_number_exits_1_naming_it(tmp_path):
     """--detail with a task number the plan has no heading for → exit 1
     loud naming the requested task."""

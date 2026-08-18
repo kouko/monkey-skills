@@ -417,9 +417,22 @@ def build_detail(text: str, task_number: int) -> str:
         )
 
     lines = [f"T{number} {name}"]
-    description = _bullet_value(block, "Description")
-    if description:
-        lines.append(f"description: {description}")
+    description_lines = _bullet_lines(block, "Description")
+    if description_lines is not None:
+        sentence_parts = [description_lines[0]]
+        bullets: list[list[str]] = []
+        for raw in description_lines[1:]:
+            sub_bullet = re.match(r"^\s*-\s+(.*?)\s*$", raw)
+            if sub_bullet is not None:
+                bullets.append([sub_bullet.group(1)])
+            elif bullets:
+                bullets[-1].append(raw.strip())
+            else:
+                sentence_parts.append(raw.strip())
+        description = " ".join(part.strip() for part in sentence_parts if part.strip())
+        if description:
+            lines.append(f"description: {description}")
+            lines.extend("  " + " ".join(parts) for parts in bullets)
     why = _bullet_value(block, "Brief item covered")
     if why:
         lines.append(f"why (brief item): {why}")
