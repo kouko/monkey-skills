@@ -82,8 +82,8 @@ right here. If the user waves it off, move on — never re-offer it at
 the next node.
 
 Draft **at most 3** assumption files per branch as
-`<root>/assumptions/<id>.md` with `status: open`, `statement`,
-`breaks_if`, and `branch` — the four the gate requires — plus `source`
+`<root>/assumptions/<id>.md` with `id`, `status: open`, `statement`,
+`breaks_if`, and `branch` — the five the gate requires — plus `source`
 where one exists (recommended, not gated). You draft, the user confirms —
 one exchange, not a questionnaire. The cap of three is deliberate: it
 forces ranking, and needing seven means the branch is not thought
@@ -104,7 +104,7 @@ ruling, and nothing else creates one.
 
 ## Minimal examples
 
-Write these three shapes from memory; `references/node-schema.md` is
+Write these four shapes from memory; `references/node-schema.md` is
 the field SSOT and the place to check anything not shown here. Do not
 restate the schema in conversation.
 

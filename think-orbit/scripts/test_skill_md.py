@@ -85,7 +85,7 @@ def test_decision_session_minimal_examples_pass_check(tmp_path):
     body = _body(SKILL_MD.read_text(encoding="utf-8"))
     examples = EXAMPLE_BLOCK.findall(body)
 
-    assert len(examples) >= 3, (
+    assert len(examples) == 4, (
         "expected the minimal GOAL / CLAIM / assumption examples to carry "
         f"`<!-- example: ... -->` markers, found {len(examples)}"
     )
