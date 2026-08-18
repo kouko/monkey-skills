@@ -7,6 +7,8 @@ skeleton so `main()` has a stable place to grow into.
 from __future__ import annotations
 
 import argparse
+import re
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -297,12 +299,75 @@ def check(project: Project) -> list[str]:
     return sorted(violations, key=sort_key)
 
 
+def propagate(project: Project, assumption_id: str) -> tuple[list[str], list[str]]:
+    """Walk `inputs` edges outward from `assumption_id`, without writing anything.
+
+    Returns (stale_ids, weakened_ids), each sorted. A node is stale when every
+    hop of at least one chain from `assumption_id` to it is `load_bearing:
+    True`; a node reachable only through chains containing a non-load-bearing
+    (False or None/bare-string) hop is weakened instead.
+    """
+    dependents: dict[str, list[tuple[str, bool]]] = {}
+    for node in project.nodes:
+        if node.id is None:
+            continue
+        for entry in node.inputs:
+            if entry.ref is None:
+                continue
+            dependents.setdefault(entry.ref, []).append((node.id, bool(entry.load_bearing)))
+
+    stale: set[str] = set()
+    weakened: set[str] = set()
+
+    frontier = [(assumption_id, True)]
+    while frontier:
+        current_id, chain_load_bearing = frontier.pop()
+        for dependent_id, hop_load_bearing in dependents.get(current_id, []):
+            hop_ok = chain_load_bearing and hop_load_bearing
+            if hop_ok:
+                if dependent_id not in stale:
+                    stale.add(dependent_id)
+                    frontier.append((dependent_id, True))
+            else:
+                if dependent_id not in stale and dependent_id not in weakened:
+                    weakened.add(dependent_id)
+                frontier.append((dependent_id, False))
+
+    weakened -= stale
+    return sorted(stale), sorted(weakened)
+
+
+def _set_frontmatter_field(path: Path, key: str, value: str) -> None:
+    """Rewrite a single top-level frontmatter field in place, byte-preserving.
+
+    Replaces the first `^<key>:\\s*.*$` line if present, else appends
+    `<key>: <value>` as the last frontmatter line. Body and every other
+    frontmatter line are left untouched.
+    """
+    text = path.read_text(encoding="utf-8")
+    fm_text, body = split_frontmatter(text)
+
+    pattern = re.compile(rf"^{re.escape(key)}:\s*.*$", flags=re.MULTILINE)
+    new_line = f"{key}: {value}"
+    if pattern.search(fm_text):
+        new_fm_text = pattern.sub(new_line, fm_text, count=1)
+    else:
+        if fm_text and not fm_text.endswith("\n"):
+            fm_text += "\n"
+        new_fm_text = fm_text + new_line + "\n"
+
+    path.write_text(f"---\n{new_fm_text}---\n{body}", encoding="utf-8")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="dag", description="strategy-dag project loader/CLI")
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("load", help="load and validate the project graph (diagnostics only)")
     check_parser = subparsers.add_parser("check", help="run the structural gate and report violations")
     check_parser.add_argument("root", help="project root directory")
+    break_parser = subparsers.add_parser("break", help="mark an assumption broken and propagate stale/weakened status")
+    break_parser.add_argument("root", help="project root directory")
+    break_parser.add_argument("assumption_id", help="id of the assumption to break")
     args = parser.parse_args(argv)
 
     if args.command == "load":
@@ -316,6 +381,24 @@ def main(argv: list[str] | None = None) -> int:
         for line in violations:
             print(line)
         return 1 if violations else 0
+
+    if args.command == "break":
+        project = load_project(Path(args.root))
+        assumption = next((a for a in project.assumptions if a.id == args.assumption_id), None)
+        if assumption is None:
+            print(f"assumption {args.assumption_id} not found", file=sys.stderr)
+            return 1
+
+        stale_ids, weakened_ids = propagate(project, args.assumption_id)
+
+        _set_frontmatter_field(assumption.path, "status", "broken")
+        by_id = {n.id: n for n in project.nodes}
+        for node_id in stale_ids:
+            _set_frontmatter_field(by_id[node_id].path, "status", "stale")
+
+        print(f"stale: {','.join(stale_ids)}")
+        print(f"weakened: {','.join(weakened_ids)}")
+        return 0
 
     parser.print_help()
     return 0

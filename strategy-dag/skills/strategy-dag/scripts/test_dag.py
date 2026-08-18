@@ -297,3 +297,104 @@ def test_check_prints_one_line_per_structural_violation_and_is_silent_when_clean
         p: p.stat().st_mtime_ns for p in sorted((clean_root / "nodes").glob("*.md"))
     }
     assert clean_mtimes_before == clean_mtimes_after
+
+
+def test_break_marks_load_bearing_chain_stale_and_reports_weakened(tmp_path, capsys):
+    # @req: BI-5
+    root = tmp_path
+    a1_fm = (
+        "id: a1\n"
+        "status: open\n"
+        "statement: Q4 budget will not be cut\n"
+        "breaks_if: Budget cut announced\n"
+        "source: finance team\n"
+    )
+    n1_fm = (
+        "id: n1\n"
+        "type: CLAIM\n"
+        "seq: 1\n"
+        "summary: n1\n"
+        "status: current\n"
+        "inputs:\n"
+        "  - ref: a1\n"
+        "    load_bearing: true\n"
+    )
+    n2_fm = (
+        "id: n2\n"
+        "type: CLAIM\n"
+        "seq: 2\n"
+        "summary: n2\n"
+        "status: current\n"
+        "inputs:\n"
+        "  - ref: a1\n"
+        "    load_bearing: false\n"
+    )
+    n3_fm = (
+        "id: n3\n"
+        "type: CLAIM\n"
+        "seq: 3\n"
+        "summary: n3\n"
+        "status: current\n"
+        "inputs:\n"
+        "  - ref: n1\n"
+        "    load_bearing: true\n"
+    )
+    n4_fm = (
+        "id: n4\n"
+        "type: CLAIM\n"
+        "seq: 4\n"
+        "summary: n4\n"
+        "status: current\n"
+        "inputs:\n"
+        "  - ref: n2\n"
+        "    load_bearing: true\n"
+    )
+
+    a1_path = root / "assumptions" / "a1.md"
+    n1_path = root / "nodes" / "n1.md"
+    n2_path = root / "nodes" / "n2.md"
+    n3_path = root / "nodes" / "n3.md"
+    n4_path = root / "nodes" / "n4.md"
+
+    _write(a1_path, a1_fm)
+    _write(n1_path, n1_fm)
+    _write(n2_path, n2_fm)
+    _write(n3_path, n3_fm)
+    _write(n4_path, n4_fm)
+
+    files_before = {
+        path: path.read_text(encoding="utf-8")
+        for path in (a1_path, n1_path, n2_path, n3_path, n4_path)
+    }
+
+    rc = dag.main(["break", str(root), "a1"])
+    out = capsys.readouterr().out
+    lines = [ln for ln in out.splitlines() if ln]
+
+    assert rc == 0
+    assert "stale: n1,n3" in lines
+    assert "weakened: n2,n4" in lines
+
+    project_after = dag.load_project(root)
+    by_id = {n.id: n for n in project_after.nodes}
+    assumptions_by_id = {a.id: a for a in project_after.assumptions}
+
+    assert assumptions_by_id["a1"].status == "broken"
+    assert by_id["n1"].status == "stale"
+    assert by_id["n3"].status == "stale"
+    assert by_id["n2"].status == "current"
+    assert by_id["n4"].status == "current"
+
+    for path, before_text in files_before.items():
+        after_text = path.read_text(encoding="utf-8")
+        fm_before, body_before = dag.split_frontmatter(before_text)
+        fm_after, body_after = dag.split_frontmatter(after_text)
+        assert body_after == body_before
+
+        fm_before_no_status = "\n".join(
+            ln for ln in fm_before.splitlines() if not ln.startswith("status:")
+        )
+        fm_after_no_status = "\n".join(
+            ln for ln in fm_after.splitlines() if not ln.startswith("status:")
+        )
+        assert fm_after_no_status == fm_before_no_status
