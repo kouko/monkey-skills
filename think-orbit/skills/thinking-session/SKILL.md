@@ -211,10 +211,10 @@ After writing or editing **any** node or assumption file, run:
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py check <root>
 ```
 
-Run one `check` per written or edited file (or at least per
-user-visible turn) — never one check for a batch of files. A batch check
-tells you the batch is dirty, not which file is, and the boundary this
-gate protects is the file you just wrote.
+Run one `check` per written or edited file —
+never one check for a batch of files. A batch check tells you the batch
+is dirty, not which file is, and the boundary this gate protects is the
+file you just wrote.
 
 On pass it prints nothing and you say nothing. On failure it prints one
 line per violation: relay each line to the user in plain words, fix the

@@ -291,6 +291,14 @@ def test_no_skill_still_names_the_old_decision_session_slug(skill_md):
 
 # --- 0.1.2: dogfood fixes (FINDING-001…012) ---
 
+# How far after a term's first appearance its explanation may sit — roughly
+# one paragraph, so a reader meets the definition without scrolling back.
+_FIRST_USE_WINDOW = 400
+
+# Prose pins are bounded so deleting the clause they pin fails the test: an
+# unbounded `.*` under DOTALL matches across the whole file and pins nothing.
+_NEARBY = r".{0,200}"
+
 NODE_SCHEMA_MD = (
     Path(__file__).resolve().parent.parent
     / "skills"
@@ -320,7 +328,7 @@ def test_router_description_owns_intake_and_carries_the_missed_trigger_shapes():
     assert re.search(r"not for .*(casual|one-off)", description), (
         "router description must carry a negative cue against casual one-off choices"
     )
-    assert "tagline" in description, (
+    assert re.search(r"\btaglines?\b", description), (
         "router description must exclude generating names/taglines"
     )
 
@@ -341,7 +349,7 @@ def test_router_verb_table_break_row_names_stale_and_weakened():
     break_row = next(
         line for line in body.splitlines() if line.startswith("| `break <root>")
     )
-    assert "stale" in break_row and "weakened" in break_row, (
+    assert re.search(r"\bstale\b", break_row) and re.search(r"\bweakened\b", break_row), (
         f"router break row must distinguish stale from weakened: {break_row!r}"
     )
     assert "load-bearing" in break_row, (
@@ -394,6 +402,9 @@ def test_thinking_session_gate_is_per_file_not_per_batch():
     assert re.search(r"never one check for a batch of files", body), (
         "the gate section must forbid one check for a batch of files"
     )
+    assert "user-visible turn" not in body, (
+        "the per-file rule takes no per-turn hedge — a turn may write many files"
+    )
 
 
 def test_thinking_session_lists_an_open_question_ending_as_a_render_milestone():
@@ -439,7 +450,7 @@ def test_thinking_session_inlines_the_status_enum_and_defines_load_bearing_at_fi
 
     first_use = body.index("load_bearing")
     definition = body.index("collapses if")
-    assert definition < first_use + 400, (
+    assert definition < first_use + _FIRST_USE_WINDOW, (
         "`load_bearing` must be defined where a reader first meets it"
     )
 
@@ -448,10 +459,10 @@ def test_thinking_session_files_a_cross_branch_assumption_project_wide():
     """FINDING-005 — a pivotal premise was forced into one branch by the ≤3 cap."""
     body = _body(SKILL_MD.read_text(encoding="utf-8"))
 
-    assert re.search(r"governs several branches.*project-wide", body, re.DOTALL), (
+    assert re.search(r"governs several branches" + _NEARBY + r"project-wide", body, re.DOTALL), (
         "the assumptions section must file a cross-branch premise project-wide"
     )
-    assert re.search(r"project-wide.*`inputs`", body, re.DOTALL), (
+    assert re.search(r"project-wide" + _NEARBY + r"`inputs`", body, re.DOTALL), (
         "each dependent node must cite the project-wide assumption via `inputs`"
     )
 
@@ -464,6 +475,6 @@ def test_node_schema_documents_optional_branch_and_project_wide_assumptions():
         "node-schema.md must say an assumption's `branch` is optional"
     )
     assert "project-wide" in schema
-    assert re.search(r"project-wide.*(max 3|cap)", schema, re.DOTALL), (
+    assert re.search(r"project-wide" + _NEARBY + r"(max 3|\bcap\b)", schema, re.DOTALL), (
         "node-schema.md must say the ≤3 cap counts branch-bound assumptions only"
     )

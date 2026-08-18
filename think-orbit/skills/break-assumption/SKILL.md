@@ -98,8 +98,9 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py render <root>
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py check <root>
 ```
 
-`check` is silent on pass — say nothing. On failure, relay each line in
-plain words and fix the file. Then hand back to `thinking-session` if
+`render` prints one line, `dag view: <relative path>` — relay that path
+to the user. `check` is silent on pass — say nothing. On failure, relay
+each line in plain words and fix the file. Then hand back to `thinking-session` if
 the user wants to keep going, or end the sitting there.
 
 ## The reverse moves

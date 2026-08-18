@@ -31,7 +31,9 @@ already stated in the opening message is confirmed in one line, not
 asked again (FINDING-004); a FACT body restates its quote while any
 "this means…" inference moves to a CLAIM (FINDING-006); and the `status`
 enum plus `load_bearing` are explained where a first-time reader meets
-them (FINDING-008, FINDING-009).
+them (FINDING-008). The `break` row of `using-think-orbit`'s verb table
+now distinguishes `stale` (down a fully load-bearing chain) from
+`weakened` (FINDING-009).
 
 ## [0.1.1] — 2026-08-18
 
