@@ -604,6 +604,21 @@ def _gate_commit_plans(cwd, git_globals=()):
     other than ``unresolved``). Fails open — loudly, one ``_inactive``
     note — whenever the verdict cannot be computed."""
     notes = []
+    # Repo probe first, because `git diff --cached` OUTSIDE a repo does
+    # not say so — it falls back to --no-index mode and reports
+    # "unknown option `cached'" (live-verified, git 2.x), which would be
+    # indistinguishable from a real failure. `rev-parse --git-dir` names
+    # the condition instead.
+    if _git(["rev-parse", "--git-dir"], cwd, git_globals).returncode != 0:
+        if git_globals:
+            # The segment pointed the gate at a repo that is not there —
+            # the gate did not run, so say so (loud fail-open).
+            return 0, [_inactive(
+                "no git repository at " + " ".join(git_globals)
+            )]
+        # An ambient non-repo cwd is not this gate's business: git itself
+        # refuses such a commit, and a note on every one of them is noise.
+        return 0, notes
     # grounding: `git diff --help` §--diff-filter — `A` selects Added
     # paths only (the gate's added-only scope), `--cached` reads the
     # index the commit is about to record.
@@ -611,7 +626,10 @@ def _gate_commit_plans(cwd, git_globals=()):
         ["diff", "--cached", "--name-only", "--diff-filter=A"], cwd, git_globals
     )
     if staged.returncode != 0:
-        return 0, notes  # not a repo / no index — nothing to gate
+        first_line = next(
+            (ln for ln in staged.stderr.splitlines() if ln.strip()), ""
+        )
+        return 0, [_inactive(f"git diff --cached failed: {first_line}")]
     plans = [
         line.strip()
         for line in staged.stdout.splitlines()
