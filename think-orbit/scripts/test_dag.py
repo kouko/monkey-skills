@@ -3,9 +3,9 @@
 Covers load_project(), the `check` rules, assumption breaking with stale
 propagation, the `claims` git diff, and the mermaid render/impact views.
 
-@req: BI-1
-@req: BI-2
-@req: BI-3
+brief-item: BI-1
+brief-item: BI-2
+brief-item: BI-3
 """
 from __future__ import annotations
 
@@ -145,7 +145,7 @@ def test_node_schema_doc_names_every_field():
 
 
 def test_load_project_records_non_dict_or_invalid_frontmatter_as_problems_instead_of_crashing(tmp_path):
-    # @req: BI-1
+    # brief-item: BI-1
     root = tmp_path
 
     _write(
@@ -228,7 +228,7 @@ def _build_clean_project(root: Path) -> None:
 
 
 def test_check_prints_one_line_per_structural_violation_and_is_silent_when_clean(tmp_path, capsys):
-    # @req: BI-4
+    # brief-item: BI-4
     dirty_root = tmp_path / "dirty"
     _write(
         dirty_root / "nodes" / "goal.md",
@@ -310,7 +310,7 @@ def test_check_prints_one_line_per_structural_violation_and_is_silent_when_clean
 
 
 def test_check_flags_assumption_missing_breaks_if_and_more_than_three_per_branch(tmp_path, capsys):
-    # @req: BI-2
+    # brief-item: BI-2
     root = tmp_path
     _write(
         root / "assumptions" / "a1.md",
@@ -355,7 +355,7 @@ def test_check_flags_assumption_missing_breaks_if_and_more_than_three_per_branch
 
 
 def test_check_flags_inputs_entry_without_ref(tmp_path, capsys):
-    # @req: BI-4
+    # brief-item: BI-4
     root = tmp_path
     _write(
         root / "nodes" / "goal.md",
@@ -387,7 +387,7 @@ def test_check_flags_inputs_entry_without_ref(tmp_path, capsys):
 
 
 def test_check_flags_paragraphs_outside_two_to_four_sentences(tmp_path, capsys):
-    # @req: BI-4
+    # brief-item: BI-4
     dirty_root = tmp_path / "dirty"
     _write(
         dirty_root / "nodes" / "goal.md",
@@ -444,7 +444,7 @@ def test_check_flags_paragraphs_outside_two_to_four_sentences(tmp_path, capsys):
 
 
 def test_count_sentences_ignores_abbreviations_urls_ellipses_and_inline_code():
-    # @req: BI-4
+    # brief-item: BI-4
     assert dag._count_sentences("See docs, e.g. the README. It has details.") == 2
     assert dag._count_sentences("Visit https://example.com/a.b.c for info. It works.") == 2
     assert dag._count_sentences("This trailed off... and continued.") == 1
@@ -452,7 +452,7 @@ def test_count_sentences_ignores_abbreviations_urls_ellipses_and_inline_code():
 
 
 def test_count_sentences_ignores_title_abbreviations():
-    # @req: BI-4
+    # brief-item: BI-4
     text = (
         "We talked to Dr. Chen about the migration plan. "
         "She recommended waiting until Q3. "
@@ -465,13 +465,13 @@ def test_count_sentences_ignores_title_abbreviations():
 
 
 def test_strip_fenced_blocks_handles_tilde_and_unclosed_fences():
-    # @req: BI-4
+    # brief-item: BI-4
     assert dag._strip_fenced_blocks("before\n~~~\ncode 1\ncode 2\n~~~\nafter\n") == "before\nafter\n"
     assert dag._strip_fenced_blocks("before\n```\ncode\nno close\n") == "before"
 
 
 def test_check_lead_in_sentence_followed_by_list_is_not_a_paragraph_violation(tmp_path, capsys):
-    # @req: BI-4
+    # brief-item: BI-4
     root = tmp_path
     _write(
         root / "nodes" / "goal.md",
@@ -498,7 +498,7 @@ def test_check_lead_in_sentence_followed_by_list_is_not_a_paragraph_violation(tm
     assert not any("paragraph-form" in ln for ln in lines)
 
 def test_break_marks_load_bearing_chain_stale_and_reports_weakened(tmp_path, capsys):
-    # @req: BI-5
+    # brief-item: BI-5
     root = tmp_path
     a1_fm = (
         "id: a1\n"
@@ -599,7 +599,7 @@ def test_break_marks_load_bearing_chain_stale_and_reports_weakened(tmp_path, cap
 
 
 def test_propagate_terminates_on_cycles_and_upgrades_weakened_to_stale():
-    # @req: BI-5
+    # brief-item: BI-5
     project = dag.Project(
         root=Path("/unused"),
         nodes=[
@@ -629,7 +629,7 @@ def test_propagate_terminates_on_cycles_and_upgrades_weakened_to_stale():
 
 
 def test_break_preserves_crlf_line_endings_and_body_bytes(tmp_path):
-    # @req: BI-5
+    # brief-item: BI-5
     root = tmp_path
     a1_path = root / "assumptions" / "a1.md"
     n1_path = root / "nodes" / "n1.md"
@@ -681,7 +681,7 @@ def _git_commit_all(root: Path) -> None:
 
 
 def test_claims_lists_dependents_only_for_research_claims_changed_since_rev(tmp_path, capsys):
-    # @req: BI-3
+    # brief-item: BI-3
     root = tmp_path
     _write(
         root / "research" / "r1.md",
@@ -741,7 +741,7 @@ def test_claims_lists_dependents_only_for_research_claims_changed_since_rev(tmp_
 
 
 def test_claims_works_when_root_is_a_symlink_to_the_real_git_worktree(tmp_path, capsys):
-    # @req: BI-3
+    # brief-item: BI-3
     real_root = tmp_path / "real"
     _write(
         real_root / "research" / "r1.md",
@@ -779,7 +779,7 @@ def test_claims_works_when_root_is_a_symlink_to_the_real_git_worktree(tmp_path, 
 
 
 def test_claims_tolerates_invalid_utf8_bytes_in_historic_git_show_output(tmp_path, capsys):
-    # @req: BI-3
+    # brief-item: BI-3
     root = tmp_path
     root_dir = root / "research"
     root_dir.mkdir(parents=True, exist_ok=True)
@@ -806,7 +806,7 @@ def test_claims_tolerates_invalid_utf8_bytes_in_historic_git_show_output(tmp_pat
 
 
 def test_claims_rejects_invalid_since_revision(tmp_path, capsys):
-    # @req: BI-3
+    # brief-item: BI-3
     root = tmp_path
     _write(root / "research" / "r1.md", "id: r1\nclaim: A claim\n")
     _git_commit_all(root)
@@ -819,7 +819,7 @@ def test_claims_rejects_invalid_since_revision(tmp_path, capsys):
 
 
 def test_claims_treats_note_added_after_valid_rev_as_unchanged_new(tmp_path, capsys):
-    # @req: BI-3
+    # brief-item: BI-3
     root = tmp_path
     _write(root / "nodes" / "goal.md", "id: goal\ntype: GOAL\nseq: 1\nsummary: Ship v0\nstatus: current\n")
     _git_commit_all(root)
@@ -834,7 +834,7 @@ def test_claims_treats_note_added_after_valid_rev_as_unchanged_new(tmp_path, cap
 
 
 def test_render_writes_full_dag_mermaid_with_branches_assumptions_and_stale_class(tmp_path):
-    # @req: BI-12
+    # brief-item: BI-12
     root = tmp_path
     _build_clean_project(root)
     _write(
@@ -877,7 +877,7 @@ def test_render_writes_full_dag_mermaid_with_branches_assumptions_and_stale_clas
 
 
 def test_render_disambiguates_colliding_mermaid_ids_and_check_flags_them(tmp_path):
-    # @req: BI-12
+    # brief-item: BI-12
     root = tmp_path
     _write(
         root / "nodes" / "a1.md",
@@ -911,7 +911,7 @@ def test_render_disambiguates_colliding_mermaid_ids_and_check_flags_them(tmp_pat
 
 
 def test_render_empty_project_emits_placeholder(tmp_path):
-    # @req: BI-12
+    # brief-item: BI-12
     root = tmp_path
     (root / "nodes").mkdir(parents=True)
 
@@ -925,7 +925,7 @@ def test_render_empty_project_emits_placeholder(tmp_path):
 
 
 def test_render_branch_with_assumptions_but_no_member_nodes_uses_unknown_branch_type(tmp_path):
-    # @req: BI-12
+    # brief-item: BI-12
     root = tmp_path
     _write(
         root / "nodes" / "goal.md",
@@ -951,7 +951,7 @@ def test_render_branch_with_assumptions_but_no_member_nodes_uses_unknown_branch_
 
 
 def test_render_truncates_long_labels_including_cjk(tmp_path):
-    # @req: BI-12
+    # brief-item: BI-12
     root = tmp_path
     english_summary = "This English summary is deliberately written to exceed sixty characters total."
     cjk_summary = "這是一段刻意寫得很長的中文摘要文字用來測試截斷功能是否能正確處理多位元組字元不會爛掉喔這是重複的部分再加長一點確保超過六十個字元"
@@ -977,7 +977,7 @@ def test_render_truncates_long_labels_including_cjk(tmp_path):
 
 
 def test_render_escapes_angle_brackets_in_labels(tmp_path):
-    # @req: BI-12
+    # brief-item: BI-12
     root = tmp_path
     _write(
         root / "nodes" / "goal.md",
@@ -997,7 +997,7 @@ def test_render_escapes_angle_brackets_in_labels(tmp_path):
 
 
 def test_render_escapes_special_characters_in_ids(tmp_path):
-    # @req: BI-12
+    # brief-item: BI-12
     root = tmp_path
     _write(
         root / "nodes" / "goal.md",
@@ -1022,7 +1022,7 @@ def test_render_escapes_special_characters_in_ids(tmp_path):
 
 
 def test_break_writes_impact_view_with_stale_dependents(tmp_path, capsys):
-    # @req: BI-5
+    # brief-item: BI-5
     root = tmp_path
     a1_fm = (
         "id: a1\n"
@@ -1109,7 +1109,7 @@ def test_break_writes_impact_view_with_stale_dependents(tmp_path, capsys):
 
 
 def test_impact_unknown_assumption_errors_without_writing(tmp_path, capsys):
-    # @req: BI-5
+    # brief-item: BI-5
     root = tmp_path
     _write(
         root / "assumptions" / "a1.md",
@@ -1129,7 +1129,7 @@ def test_impact_unknown_assumption_errors_without_writing(tmp_path, capsys):
 
 
 def test_check_flags_unknown_node_status(tmp_path, capsys):
-    # @req: BI-1
+    # brief-item: BI-1
     root = tmp_path
     _write(
         root / "nodes" / "ok.md",
@@ -1169,7 +1169,7 @@ def _impact_fixture(root: Path) -> None:
 
 
 def test_break_and_impact_print_the_written_view_path(tmp_path, capsys):
-    # @req: BI-5
+    # brief-item: BI-5
     root = tmp_path
     _impact_fixture(root)
 
@@ -1183,7 +1183,7 @@ def test_break_and_impact_print_the_written_view_path(tmp_path, capsys):
 
 
 def test_break_prints_the_sanitized_view_path_for_an_awkward_id(tmp_path, capsys):
-    # @req: BI-5
+    # brief-item: BI-5
     root = tmp_path
     _write(
         root / "assumptions" / "a.md",
@@ -1199,7 +1199,7 @@ def test_break_prints_the_sanitized_view_path_for_an_awkward_id(tmp_path, capsys
 
 
 def test_break_rewrites_files_whose_delimiter_line_has_trailing_whitespace(tmp_path):
-    # @req: BI-5
+    # brief-item: BI-5
     root = tmp_path
     a1_path = root / "assumptions" / "a1.md"
     n1_path = root / "nodes" / "n1.md"
@@ -1240,7 +1240,7 @@ def test_break_rewrites_files_whose_delimiter_line_has_trailing_whitespace(tmp_p
 
 
 def test_break_fails_loud_when_a_target_file_has_no_frontmatter(tmp_path, capsys, monkeypatch):
-    # @req: BI-5
+    # brief-item: BI-5
     root = tmp_path
     a1_path = root / "assumptions" / "a1.md"
     n1_path = root / "nodes" / "n1.md"
@@ -1282,7 +1282,7 @@ def test_break_fails_loud_when_a_target_file_has_no_frontmatter(tmp_path, capsys
 
 
 def test_render_skips_idless_nodes_instead_of_crashing(tmp_path):
-    # @req: BI-12
+    # brief-item: BI-12
     root = tmp_path
     _write(
         root / "nodes" / "goal.md",
@@ -1315,7 +1315,7 @@ def test_dag_module_reports_missing_pyyaml_plainly(capsys):
 
 
 def test_check_flags_duplicate_id_without_an_id_collision_line(tmp_path, capsys):
-    # @req: BI-4
+    # brief-item: BI-4
     root = tmp_path
     _write(
         root / "nodes" / "first.md",
@@ -1343,7 +1343,7 @@ def test_cli_no_longer_offers_a_load_subcommand():
 
 
 def test_frontmatter_span_ignores_indented_dashes_inside_block_scalars(tmp_path, capsys):
-    # @req: BI-1
+    # brief-item: BI-1
     root = tmp_path
     _write(
         root / "nodes" / "goal.md",
@@ -1375,7 +1375,7 @@ def test_frontmatter_span_ignores_indented_dashes_inside_block_scalars(tmp_path,
 
 
 def test_render_subgraph_ids_never_collide_with_node_ids_and_titles_are_escaped(tmp_path):
-    # @req: BI-12
+    # brief-item: BI-12
     root = tmp_path
     _write(
         root / "nodes" / "collides.md",
@@ -1395,7 +1395,7 @@ def test_render_subgraph_ids_never_collide_with_node_ids_and_titles_are_escaped(
 
 
 def test_load_project_records_non_utf8_file_as_problem(tmp_path):
-    # @req: BI-1
+    # brief-item: BI-1
     root = tmp_path
     bad_path = root / "nodes" / "bad.md"
     bad_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1408,7 +1408,7 @@ def test_load_project_records_non_utf8_file_as_problem(tmp_path):
 
 
 def test_render_impact_rejects_an_unknown_assumption_id():
-    # @req: BI-5
+    # brief-item: BI-5
     project = dag.Project(root=Path("/unused"), assumptions=[dag.Assumption(id="a1")])
 
     with pytest.raises(KeyError):

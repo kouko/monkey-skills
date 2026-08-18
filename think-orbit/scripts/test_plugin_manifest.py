@@ -1,6 +1,6 @@
 """RED test for Task 1 — think-orbit plugin skeleton + marketplace + Codex mirror.
 
-@req: BI-8
+brief-item: BI-8
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ PLUGIN_ROOT = REPO_ROOT / "think-orbit"
 
 
 def test_manifest_marketplace_and_codex_mirror_are_consistent():
-    # @req: BI-8
+    # brief-item: BI-8
     plugin_json_path = PLUGIN_ROOT / ".claude-plugin" / "plugin.json"
     assert plugin_json_path.exists(), f"missing {plugin_json_path}"
     plugin_json = json.loads(plugin_json_path.read_text(encoding="utf-8"))
@@ -48,7 +48,7 @@ def test_manifest_marketplace_and_codex_mirror_are_consistent():
 
 
 def test_layout_is_router_plus_verb_skills():
-    # @req: BI-8
+    # brief-item: BI-8
     assert (PLUGIN_ROOT / "scripts" / "dag.py").exists()
 
     expected_names = {

@@ -1,6 +1,6 @@
 """RED test for Task 7 — think-orbit CI workflow.
 
-@req: BI-8
+brief-item: BI-8
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def _all_run_lines(workflow: dict) -> str:
 
 
 def test_workflow_runs_pytest_structure_hook_and_codex_check():
-    # @req: BI-8
+    # brief-item: BI-8
     assert WORKFLOW_PATH.exists(), f"missing {WORKFLOW_PATH}"
     workflow = yaml.safe_load(WORKFLOW_PATH.read_text(encoding="utf-8"))
 

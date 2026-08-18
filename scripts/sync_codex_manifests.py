@@ -79,6 +79,7 @@ CODEX_ELIGIBLE = (
     "dev-workflow",
     "collab-toolkit",
     "salesforce-toolkit",
+    "think-orbit",
 )
 
 

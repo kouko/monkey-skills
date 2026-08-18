@@ -1,8 +1,8 @@
 """RED test for Task 11 — decision-session SKILL.md core sitting protocol.
 
-@req: BI-6
-@req: BI-7
-@req: BI-12
+brief-item: BI-6
+brief-item: BI-7
+brief-item: BI-12
 """
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ def _asserts_views_prohibition(body: str) -> None:
 
 
 def test_decision_session_skill_names_cli_verbs_interrupts_view_prohibition_and_word_cap():
-    # @req: BI-6
+    # brief-item: BI-6
     text = SKILL_MD.read_text(encoding="utf-8")
     body = _body(text)
 
@@ -88,7 +88,7 @@ def test_decision_session_skill_names_cli_verbs_interrupts_view_prohibition_and_
 
 
 def test_decision_session_minimal_examples_pass_check(tmp_path):
-    # @req: BI-6
+    # brief-item: BI-6
     body = _body(SKILL_MD.read_text(encoding="utf-8"))
     examples = EXAMPLE_BLOCK.findall(body)
 
@@ -134,7 +134,7 @@ ROUTER_REQUIRED_LITERALS = (
 
 
 def test_router_skill_routes_to_verbs_and_forbids_views():
-    # @req: BI-6
+    # brief-item: BI-6
     body = _body(ROUTER_SKILL_MD.read_text(encoding="utf-8"))
 
     assert len(body.split()) <= ROUTER_WORD_CAP, (
@@ -158,7 +158,7 @@ FULL_PREFIX = "${CLAUDE_PLUGIN_ROOT}/scripts/"
 
 @pytest.mark.parametrize("skill_md", ALL_SKILL_MDS, ids=lambda p: p.parent.name)
 def test_every_skill_always_uses_full_invocation_prefix(skill_md):
-    # @req: BI-6
+    # brief-item: BI-6
     body = _body(skill_md.read_text(encoding="utf-8"))
 
     bare = [
@@ -173,7 +173,7 @@ def test_every_skill_always_uses_full_invocation_prefix(skill_md):
 
 
 def test_router_skill_states_root_resolution_ladder():
-    # @req: BI-6
+    # brief-item: BI-6
     body = _body(ROUTER_SKILL_MD.read_text(encoding="utf-8"))
 
     for marker in ("current working directory", "ask", "session"):
@@ -192,7 +192,7 @@ BREAK_REQUIRED_LITERALS = (
 
 
 def test_break_assumption_skill_names_break_verb_and_two_followups():
-    # @req: BI-6
+    # brief-item: BI-6
     body = _body(BREAK_SKILL_MD.read_text(encoding="utf-8"))
 
     assert len(body.split()) <= BREAK_WORD_CAP, (
