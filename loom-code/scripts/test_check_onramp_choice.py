@@ -17,6 +17,8 @@ from pathlib import Path
 
 import pytest
 
+from check_onramp_choice import build_question, resolve
+
 SCRIPT = Path(__file__).parent / "check_onramp_choice.py"
 
 _ENV = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
@@ -196,6 +198,40 @@ def test_standing_choice_in_direction_resolves_listed_rows(tmp_path):
         capture_output=True, text=True, env=_ENV,
     )
     assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+
+def test_resolve_sets_missing_rows_for_standing_form():
+    """`resolve()` itself knows which cited rows lack a standing entry —
+    `main()` must not re-derive this by regex-matching the message."""
+    brief_text = (
+        "# Brief: x\n\n"
+        "Design-side on-ramp: fired: rows 1,3 — standing direct "
+        "(DIRECTION.md)\n\n"
+        "## Problem\n\nsome job.\n"
+    )
+    result = resolve(brief_text, {1: "direct"})
+    assert result.status == "unresolved"
+    assert result.missing_rows == [3]
+
+
+def test_resolve_missing_rows_empty_for_non_standing_forms():
+    result = resolve(
+        "# Brief: x\n\nDesign-side on-ramp: pending\n\n## Problem\n\nx.\n",
+        {},
+    )
+    assert result.missing_rows == []
+
+
+def test_build_question_names_missing_standing_row():
+    brief_text = (
+        "# Brief: x\n\n"
+        "Design-side on-ramp: fired: rows 1,3 — standing direct "
+        "(DIRECTION.md)\n\n"
+        "## Problem\n\nsome job.\n"
+    )
+    result = resolve(brief_text, {1: "direct"})
+    question = build_question(result)
+    assert "row 3" in question
 
 
 def test_real_spec_document_exits_0():

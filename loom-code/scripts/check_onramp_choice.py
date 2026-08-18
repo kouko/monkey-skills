@@ -17,9 +17,9 @@ repo precedent` or a missing line entirely — is *unresolved*: lookalike
 wording never resolves the gate (see
 `docs/loom/memory/section-gate-must-flag-entry-lookalikes-not-just-
 matches.md`). The `standing` form additionally requires every cited row
-to be named in the caller's `standing` mapping (DIRECTION.md wiring
-lands in a later task; this script's CLI always passes an empty
-mapping today).
+to be named in the caller's `standing` mapping — the CLI loads this
+mapping from `<repo-root>/docs/loom/DIRECTION.md`'s `## On-ramp
+standing choices` section via `load_standing()`.
 
 The on-ramp line may appear either as a `## Design-side on-ramp`
 heading followed by its value on the next non-blank line, or inline —
@@ -176,15 +176,19 @@ class Result:
     status: str  # "resolved" | "unresolved" | "not_fired"
     rows: list[int] = field(default_factory=list)
     message: str = ""
+    missing_rows: list[int] = field(default_factory=list)
 
 
 def resolve(brief_text: str, standing: dict[int, str]) -> Result:
     """Resolve a brief's on-ramp line against the canonical grammar.
 
     `standing` maps row number -> chosen value, per DIRECTION.md's
-    `## On-ramp standing choices` section (wired by a later task); the
-    `fired: rows <n> — standing <detour|direct> (DIRECTION.md)` form is
-    resolved only when every cited row is present in this mapping."""
+    `## On-ramp standing choices` section — the CLI loads this via
+    `load_standing()`; the `fired: rows <n> — standing <detour|direct>
+    (DIRECTION.md)` form is resolved only when every cited row is
+    present in this mapping. For an unresolved `standing` form,
+    `missing_rows` names exactly the cited rows absent from `standing`
+    (empty for every other form)."""
     value = _find_onramp_value_line(brief_text)
     if value is None:
         return Result(
@@ -202,9 +206,10 @@ def resolve(brief_text: str, standing: dict[int, str]) -> Result:
     standing_match = _FIRED_STANDING.match(value)
     if standing_match is not None:
         rows = _parse_rows(standing_match.group("rows"))
-        if all(row in standing for row in rows):
+        missing = [row for row in rows if row not in standing]
+        if not missing:
             return Result("resolved", rows, value)
-        return Result("unresolved", rows, value)
+        return Result("unresolved", rows, value, missing_rows=missing)
 
     # `pending`, a malformed `fired:` line, or any other wording — all
     # unresolved. If it at least names rows (a `fired: rows <n> ...`
@@ -213,6 +218,35 @@ def resolve(brief_text: str, standing: dict[int, str]) -> Result:
     rows_prefix = _FIRED_ROWS_PREFIX.match(value)
     rows = _parse_rows(rows_prefix.group("rows")) if rows_prefix else []
     return Result("unresolved", rows, value)
+
+
+def build_question(result: Result) -> str:
+    """The exact user-facing question for an `unresolved` `Result` —
+    shared by `main()`'s stderr message so the missing-standing-row
+    wording lives in one importable place (Task 8's git-guard reuses
+    it)."""
+    if result.missing_rows:
+        rows_str = ",".join(str(row) for row in result.rows)
+        missing_str = ",".join(str(row) for row in result.missing_rows)
+        return (
+            f"Design-side on-ramp: rows {missing_str} cite a standing "
+            f"choice, but DIRECTION.md's '{DIRECTION_STANDING_HEADING}' "
+            f"has no entry for row {missing_str}. Add one there, or "
+            "record the answer as `fired: rows "
+            f"{rows_str} — user chose <detour|direct>`"
+        )
+    if result.rows:
+        rows_str = ",".join(str(row) for row in result.rows)
+        return (
+            f"Design-side on-ramp: rows {rows_str} fired — detour into "
+            "loom-design first, or go direct? Record the answer as "
+            f"`fired: rows {rows_str} — user chose <detour|direct>`"
+        )
+    return (
+        "Design-side on-ramp fired — detour into loom-design first, "
+        "or go direct? Record the answer as `fired: rows <n> — user "
+        "chose <detour|direct>`"
+    )
 
 
 # --- CLI -------------------------------------------------------------
@@ -247,9 +281,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--repo-root",
         default=None,
-        help="repo root for future DIRECTION.md resolution (default: "
-             "`git rev-parse --show-toplevel` of the brief's directory, "
-             "falling back to cwd)",
+        help="repo root used to locate docs/loom/DIRECTION.md for "
+             "standing-choice resolution (default: `git rev-parse "
+             "--show-toplevel` of the brief's directory, falling back "
+             "to cwd)",
     )
     args = parser.parse_args(argv)
 
@@ -271,31 +306,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0
 
-    standing_match = _FIRED_STANDING.match(result.message)
-    if result.rows and standing_match is not None:
-        rows_str = ",".join(str(row) for row in result.rows)
-        missing = [row for row in result.rows if row not in standing]
-        missing_str = ",".join(str(row) for row in missing)
-        question = (
-            f"Design-side on-ramp: rows {missing_str} cite a standing "
-            f"choice, but DIRECTION.md's '{DIRECTION_STANDING_HEADING}' "
-            f"has no entry for row {missing_str}. Add one there, or "
-            "record the answer as `fired: rows "
-            f"{rows_str} — user chose <detour|direct>`"
-        )
-    elif result.rows:
-        rows_str = ",".join(str(row) for row in result.rows)
-        question = (
-            f"Design-side on-ramp: rows {rows_str} fired — detour into "
-            "loom-design first, or go direct? Record the answer as "
-            f"`fired: rows {rows_str} — user chose <detour|direct>`"
-        )
-    else:
-        question = (
-            "Design-side on-ramp fired — detour into loom-design first, "
-            "or go direct? Record the answer as `fired: rows <n> — user "
-            "chose <detour|direct>`"
-        )
+    question = build_question(result)
     print(f"Error: {brief_path}: {question}", file=sys.stderr)
     return 2
 
