@@ -93,10 +93,15 @@ def load_req_paths(specs_dir: Path) -> dict[str, list[Path]]:
     """
     paths: dict[str, list[Path]] = {}
     for spec_path in sorted(Path(specs_dir).glob("*/spec.md")):
+        seen_ids_in_file: set[str] = set()
         for line in spec_path.read_text(encoding="utf-8").splitlines():
             match = _REQUIREMENT_STATUS_RE.match(line)
             if match:
-                paths.setdefault(match.group("id"), []).append(spec_path)
+                req_id = match.group("id")
+                if req_id in seen_ids_in_file:
+                    continue
+                seen_ids_in_file.add(req_id)
+                paths.setdefault(req_id, []).append(spec_path)
     for req_id in paths:
         paths[req_id].sort()
     return paths
