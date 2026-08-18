@@ -3,7 +3,7 @@
 
 Claude Code pipes the hook-event JSON (`tool_name`, `tool_input`,
 `cwd`) to stdin before every tool call. For Bash commands this guard
-blocks two families of gate bypass:
+blocks these families of gate bypass:
 
 1. ``git commit --no-verify`` (or the ``-n`` short form, incl. inside
    bundled short-option clusters like ``-anm``; commit subcommand
@@ -48,6 +48,20 @@ blocks two families of gate bypass:
    undeletable waiver (e.g. read-only dir) is treated as absent,
    loudly, and the marker gates still apply (fail-closed against both
    the permanent-bypass and the TOCTOU double-spend).
+
+3. ``git commit`` staging a NEWLY ADDED ``docs/loom/plans/*.md``
+   (``--diff-filter=A``; a modified plan is never gated) whose source
+   brief — the path on the plan's ``**Source brief**:`` header line —
+   has not recorded the user's Design-side on-ramp choice. The brief's
+   ``## Design-side on-ramp`` line is evaluated by
+   ``loom-code/scripts/check_onramp_choice.py`` (imported from the
+   sibling ``scripts/`` directory); ``unresolved`` blocks with the
+   checker's own question plus ``MSG_ONRAMP``. This gate fails OPEN and
+   LOUDLY — a failed checker import, an unreadable brief, or a plan
+   with no ``**Source brief**:`` line prints exactly one
+   ``loom git-guard: on-ramp choice gate inactive (<reason>)`` line and
+   allows, mirroring ``.codex/hooks/git-guard-shim.sh``'s posture; a
+   silent allow would recreate the invisible default this gate closes.
 
 Escape hatches / fail-open behavior: ``LOOM_CODE_MODE=off`` disables
 the guard; non-Bash tools, non-git/gh segments, ``git push
@@ -104,6 +118,7 @@ import re
 import shlex
 import subprocess
 import sys
+from pathlib import Path
 
 # Segment separators: ||, &&, ;, |, single & (background — a safe
 # superset of &&), and newlines (multiline Bash commands are routine).
@@ -127,6 +142,17 @@ MSG_REVIEW = (
     "loom-code:requesting-code-review to a PASS / PASS_WITH_NOTES verdict "
     "first, or ask the user to waive this push (the orchestrator then "
     "writes the waiver via loom-code/scripts/loom_gate_markers.py)."
+)
+MSG_ONRAMP = (
+    "What happened: this commit ADDS a new plan, and its source brief "
+    "({brief}, named by {plan}'s `**Source brief**:` header) does not "
+    "record the user's Design-side on-ramp choice. Your two options: put "
+    "the question above to the user and write their answer into {brief}'s "
+    "`## Design-side on-ramp` line, or — when a standing choice covers it "
+    "— cite it there in the `standing <detour|direct> (DIRECTION.md)` "
+    "form. Do not answer on the user's behalf. "
+    "loom gate: a newly added plan's source brief must record the "
+    "on-ramp answer before the plan enters git (loom-code gate)."
 )
 MSG_VERIFIED = (
     "What happened: this push needs a verified green test run that is not "
@@ -482,6 +508,97 @@ def _gate_push(cwd, git_globals=()):
     return 0, notes
 
 
+PLAN_DIR = "docs/loom/plans/"
+SOURCE_BRIEF_PREFIX = "**Source brief**:"
+
+
+def _inactive(reason):
+    """The one loud fail-open line — the gate did not run, and says so."""
+    return f"loom git-guard: on-ramp choice gate inactive ({reason})"
+
+
+def _import_onramp_checker():
+    """The check_onramp_choice module from this hook's sibling
+    ``scripts/`` directory (the single implementation — the gate never
+    reimplements the grammar)."""
+    scripts_dir = str(Path(__file__).resolve().parent.parent / "scripts")
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    # A hook must not leave __pycache__/ behind in the plugin tree — this
+    # repo's skill-folder validator refuses nested subfolders there.
+    sys.dont_write_bytecode = True
+    import check_onramp_choice
+
+    return check_onramp_choice
+
+
+def _source_brief_path(plan_text):
+    """The path on the plan's ``**Source brief**:`` header line (plan-format
+    SSOT: writing-plans/references/plan-format.md), or None when the plan
+    carries no such line. Surrounding backticks are stripped — some plans
+    code-span the path."""
+    for line in plan_text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith(SOURCE_BRIEF_PREFIX):
+            value = stripped[len(SOURCE_BRIEF_PREFIX):].strip().strip("`").strip()
+            return value or None
+    return None
+
+
+def _gate_commit_plans(cwd, git_globals=()):
+    """On-ramp choice gate for one ``git commit`` → (exit_code, stderr notes).
+
+    Gates only NEWLY ADDED ``docs/loom/plans/*.md`` files: each one's
+    source brief must record the user's on-ramp answer (checker verdict
+    other than ``unresolved``). Fails open — loudly, one ``_inactive``
+    note — whenever the verdict cannot be computed."""
+    notes = []
+    staged = _git(
+        ["diff", "--cached", "--name-only", "--diff-filter=A"], cwd, git_globals
+    )
+    if staged.returncode != 0:
+        return 0, notes  # not a repo / no index — nothing to gate
+    plans = [
+        line.strip()
+        for line in staged.stdout.splitlines()
+        if line.strip().startswith(PLAN_DIR) and line.strip().endswith(".md")
+    ]
+    if not plans:
+        return 0, notes
+    try:
+        checker = _import_onramp_checker()
+    except Exception as exc:  # ImportError, or anything the module raises
+        return 0, [_inactive(f"checker unavailable: {exc}")]
+    top = _git(["rev-parse", "--show-toplevel"], cwd, git_globals)
+    if top.returncode != 0:
+        return 0, [_inactive("repo toplevel could not be resolved")]
+    root = Path(top.stdout.strip())
+    standing = checker.load_standing(root)
+    for plan in plans:
+        try:
+            plan_text = (root / plan).read_text(encoding="utf-8")
+        except OSError as exc:
+            notes.append(_inactive(f"{plan} could not be read: {exc}"))
+            continue
+        brief_rel = _source_brief_path(plan_text)
+        if brief_rel is None:
+            notes.append(_inactive(f"{plan} has no '{SOURCE_BRIEF_PREFIX}' line"))
+            continue
+        try:
+            brief_text = (root / brief_rel).read_text(encoding="utf-8")
+        except OSError as exc:
+            notes.append(
+                _inactive(f"source brief {brief_rel} could not be read: {exc}")
+            )
+            continue
+        result = checker.resolve(brief_text, standing)
+        if result.status == "unresolved":
+            notes.append(checker.build_question(result))
+            notes.append(MSG_ONRAMP.format(brief=brief_rel, plan=plan))
+            return 2, notes
+    return 0, notes
+
+
 def main():
     try:
         payload = json.loads(sys.stdin.read())
@@ -526,6 +643,19 @@ def main():
                 if sub == "commit" and _has_no_verify(args):
                     print(MSG_NO_VERIFY, file=sys.stderr)
                     return 2
+                if sub == "commit":
+                    commit_cwd = effective_cwd
+                    if c_path:
+                        commit_cwd = (
+                            c_path
+                            if os.path.isabs(c_path)
+                            else os.path.join(effective_cwd, c_path)
+                        )
+                    code, notes = _gate_commit_plans(commit_cwd)
+                    for note in notes:
+                        print(note, file=sys.stderr)
+                    if code != 0:
+                        return code
                 # push's -n means --dry-run (unlike commit's -n = --no-verify)
                 if sub == "push" and "--dry-run" not in args and "-n" not in args:
                     gate_cwd = effective_cwd
