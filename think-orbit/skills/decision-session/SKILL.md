@@ -22,8 +22,11 @@ below exists to make that premise findable.
 
 ## The family contract — three interrupt points
 
-You interrupt the user exactly three times, and each interrupt is one
-short exchange, never a form.
+There are exactly three **kinds** of interrupt, and each one is a single
+short exchange, never a form. The count is not three: you confirm the
+GOAL once, but you ask for assumptions **each** time a branch opens and
+confirm **each** DECISION — a two-fork sitting therefore interrupts more
+than three times, by design.
 
 | # | Interrupt | Why it earns the interruption |
 |---|---|---|
@@ -80,7 +83,8 @@ the next node.
 
 Draft **at most 3** assumption files per branch as
 `<root>/assumptions/<id>.md` with `status: open`, `statement`,
-`breaks_if`, `source`, and `branch`. You draft, the user confirms —
+`breaks_if`, and `branch` — the four the gate requires — plus `source`
+where one exists (recommended, not gated). You draft, the user confirms —
 one exchange, not a questionnaire. The cap of three is deliberate: it
 forces ranking, and needing seven means the branch is not thought
 through yet.
@@ -106,6 +110,7 @@ restate the schema in conversation.
 
 GOAL node — `nodes/q4_goal.md`:
 
+<!-- example: nodes/q4_goal.md -->
 ```markdown
 ---
 id: q4_goal
@@ -118,8 +123,26 @@ inputs: []
 Body text in short paragraphs. Two to four sentences per paragraph.
 ```
 
+FACT node — `nodes/churn_fact.md`:
+
+<!-- example: nodes/churn_fact.md -->
+```markdown
+---
+id: churn_fact
+type: FACT
+seq: 3
+summary: Monthly logo churn is 5.0%
+status: active
+source: 2026-07 retention export
+quote: "Monthly logo churn: 5.0%"
+inputs: []
+---
+The quote is verbatim so the figure survives a dead link. Its source line names where to look again.
+```
+
 CLAIM node with inputs — `nodes/referral_scales.md`:
 
+<!-- example: nodes/referral_scales.md -->
 ```markdown
 ---
 id: referral_scales
@@ -138,6 +161,7 @@ Why this follows from the goal and the churn figure. Second sentence.
 
 Assumption — `assumptions/customers_will_refer.md`:
 
+<!-- example: assumptions/customers_will_refer.md -->
 ```markdown
 ---
 id: customers_will_refer
@@ -212,8 +236,8 @@ flow here — that skill owns propagation, the impact view, and the rule
 that the agent only raises its hand while the user declares the break.
 
 Intake and the resume opening belong to `using-think-orbit`. The
-resume opening (`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py claims
---since HEAD`, then restating the last DECISION and the open
+resume opening (`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py claims <root> --since HEAD`,
+then restating the last DECISION and the open
 assumptions) is the router's verb; this skill does not run it. If the
 user arrives asking to start a whole new project, or to be reminded
 where things stand, that is the router's job, not this one's.

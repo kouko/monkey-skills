@@ -9,6 +9,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import dag
+
 SKILL_MD = (
     Path(__file__).resolve().parent.parent
     / "skills"
@@ -19,9 +21,9 @@ SKILL_MD = (
 WORD_CAP = 4500
 
 REQUIRED_LITERALS = (
-    "dag.py check",
-    "dag.py claims",
-    "dag.py render",
+    "dag.py check <root>",
+    "dag.py claims <root>",
+    "dag.py render <root>",
     "break-assumption",
     "references/node-schema.md",
     "references/research-rules.md",
@@ -34,10 +36,20 @@ REQUIRED_LITERALS = (
 INTERRUPT_TOKENS = ("GOAL", "assumption", "DECISION")
 
 
+# Machine-readable example convention: each fenced example block in SKILL.md is
+# preceded by a marker line `<!-- example: <relpath> -->` naming where the block
+# belongs inside a project root.
+EXAMPLE_BLOCK = re.compile(
+    r"<!-- example: (?P<relpath>[^\s>]+) -->\n```[a-z]*\n(?P<content>.*?)```",
+    re.DOTALL,
+)
+
+
 def _body(text: str) -> str:
     """Return the SKILL.md body — everything after the YAML frontmatter."""
-    assert text.startswith("---\n"), "SKILL.md must open with YAML frontmatter"
-    return text.split("---\n", 2)[2]
+    _, body = dag.split_frontmatter(text)
+    assert body != text, "SKILL.md must open with YAML frontmatter"
+    return body
 
 
 def _sentences(body: str) -> list[str]:
@@ -66,3 +78,25 @@ def test_decision_session_skill_names_cli_verbs_interrupts_view_prohibition_and_
             token in s and re.search(r"confirm|ask", s, re.IGNORECASE)
             for s in sentences
         ), f"no confirm/ask sentence names the interrupt point {token!r}"
+
+
+def test_decision_session_minimal_examples_pass_check(tmp_path):
+    # @req: BI-6
+    body = _body(SKILL_MD.read_text(encoding="utf-8"))
+    examples = EXAMPLE_BLOCK.findall(body)
+
+    assert len(examples) >= 3, (
+        "expected the minimal GOAL / CLAIM / assumption examples to carry "
+        f"`<!-- example: ... -->` markers, found {len(examples)}"
+    )
+
+    for relpath, content in examples:
+        target = tmp_path / relpath
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+
+    violations = dag.check(dag.load_project(tmp_path))
+    assert violations == [], (
+        "SKILL.md examples must be gate-clean when written verbatim:\n"
+        + "\n".join(violations)
+    )
