@@ -213,9 +213,7 @@ def _build_clean_project(root: Path) -> None:
         root / "research" / "r1.md",
         "id: r1\n"
         "claim: Competitor X raised prices last quarter\n"
-        "seq: 4\n"
-        "source: analyst note\n"
-        "quote: \"prices rose 3% in Q2\"\n",
+        "seq: 4\n",
     )
 
 

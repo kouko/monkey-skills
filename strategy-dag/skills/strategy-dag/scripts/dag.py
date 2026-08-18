@@ -35,6 +35,7 @@ class Node:
     quote: str | None = None
     path: Path | None = None
     body: str = ""
+    origin: str | None = None
 
 
 @dataclass
@@ -162,6 +163,7 @@ def _load_research_note_as_node(path: Path, root: Path) -> tuple[Node | None, st
         quote=fm.get("quote"),
         path=path,
         body=body,
+        origin="research",
     ), None
 
 
@@ -242,6 +244,10 @@ def _rule_fact_source(project: Project) -> list[str]:
     violations = []
     for node in project.nodes:
         if node.type != "FACT":
+            continue
+        if node.origin == "research":
+            # research-note FACT nodes are exempt: the note file itself is
+            # the source and its `claim` line is the citable content (BI-3).
             continue
         relpath = _relpath(node.path, project.root)
         missing = [name for name, value in (("source", node.source), ("quote", node.quote)) if not value]

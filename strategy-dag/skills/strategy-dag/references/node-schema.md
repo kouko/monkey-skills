@@ -37,6 +37,11 @@ A research note (`research/*.md`) has its own minimal frontmatter (`id`,
 `claim`, optionally `source`/`quote`) and loads as a `Node` with
 `type == "FACT"` and `summary` set to the `claim` text.
 
+`check`'s `fact-source` rule (missing `source`/`quote`) does not apply to a
+research-note FACT node — the note file itself is the source and its `claim`
+line is the citable content; the loader marks these nodes with `origin: "research"`
+so `check` (and later renderers) can recognize the exemption.
+
 A file whose frontmatter parses to a non-mapping (e.g. a YAML list) or fails
 to parse at all (invalid YAML) is not loaded as a node/assumption — it is
 recorded as a `"<relpath>: frontmatter: ..."` entry in `Project.problems`.
