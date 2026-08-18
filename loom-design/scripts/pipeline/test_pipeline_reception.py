@@ -45,7 +45,8 @@ def test_reception_content_contract():
     #   per the frozen brief, so the reception budget grows to accommodate them;
     # + the on-ramp explicit-choice gate (plan 2026-08-18-onramp-explicit-choice-gate,
     #   PR #704: the detour choice is the user's, recorded mechanically) — sanctioned
-    #   addition of ~13 lines; budget raised 85 → 100 to cover it with small headroom.
+    #   addition of ~18 lines (80 → 98 non-empty); budget raised 85 → 100 — 2 lines
+    #   of headroom on purpose: further accretion must be sanctioned in the same PR.
     non_empty = _non_empty_lines(text)
     assert len(non_empty) <= 100, (
         f"family-reception.md has {len(non_empty)} non-empty lines, budget is 100"
