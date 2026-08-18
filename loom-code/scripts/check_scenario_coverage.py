@@ -18,7 +18,7 @@ Inputs (positional CLI args):
   `Brief item covered` field MAY be the stable join key: for a legacy
   (name-keyed) requirement, `<change-id> / Requirement: <name> / Scenario:
   <name>`; for an id-mode requirement, `<change-id> / REQ-<n> / Scenario:
-  <name>` — bare id, no `Requirement:` prefix (referent kind (b)).
+  <name>` — bare id, no `Requirement:` prefix (referent kind (d)).
 
 The script builds the full scenario-key set from the change-folder, the
 covered-key set from the plan's join keys, and reports the difference:
@@ -82,8 +82,9 @@ from adjudication_split import iter_lines_outside_fences
 # (T2 validates that invariant; this script assumes it holds).
 _REQUIREMENT_HDR = re.compile(
     r"^###\s+Requirement:\s*"
-    r"(?:(?P<id>REQ-\d+)(?:\s+—\s+(?P<name>.+?))?|(?P<name_legacy>.+?))"
-    r"\s*(?:\[(?P<status>[^\]]*)\])?\s*$",
+    r"(?:(?P<id>REQ-\d+)(?:\s+—\s+(?P<name>.+?))?\s*(?:\[(?P<status>[^\]]*)\])?"
+    r"|(?P<name_legacy>.+?))"
+    r"\s*$",
     re.MULTILINE,
 )
 _SCENARIO_HDR = re.compile(r"^####\s+Scenario:\s*(.*)$", re.MULTILINE)

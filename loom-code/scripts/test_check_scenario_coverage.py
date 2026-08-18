@@ -103,6 +103,40 @@ def test_dropped_scenario_named_on_stderr_exit_1(tmp_path):
     assert "Empty result set" not in result.stderr
 
 
+_LEGACY_BRACKET_SPEC = """\
+## ADDED Requirements
+
+### Requirement: Legacy thing [deferred]
+The system MUST allow something legacy.
+
+#### Scenario: S1
+- GIVEN a precondition
+- WHEN an action
+- THEN an outcome
+"""
+
+
+def test_legacy_header_with_bracket_suffix_keys_by_full_header_text(tmp_path):
+    """A legacy (non-id-form) `### Requirement:` header keeps its trailing
+    `[status]` bracket suffix AS PART OF the key's requirement segment —
+    the legacy path must stay byte-identical to the pre-id-aware grammar
+    (`^###\\s+Requirement:\\s*(.*)$`), which captured the whole header text
+    including any bracket. A plan citing the key with the bracket included
+    must resolve (exit 0)."""
+    change_folder = tmp_path / "2026-07-10-my-change"
+    _write_spec(change_folder, _LEGACY_BRACKET_SPEC)
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — foo\n"
+        "- Brief item covered: 2026-07-10-my-change / Requirement: Legacy thing [deferred] / Scenario: S1\n",
+        encoding="utf-8",
+    )
+    result = _run(change_folder, plan)
+    assert result.returncode == 0, result.stderr
+    assert result.stderr == ""
+
+
 def test_malformed_plan_prose_only_zero_coverage_exit_1(tmp_path):
     """A plan whose 'Brief item covered' fields are all prose referents
     (kind (a) — no join-key grammar) has zero join keys — treat as zero
