@@ -804,3 +804,71 @@ def test_malformed_stdin_fail_open():
     res = run_hook("this is not json {")
     assert res.returncode == 0
     assert res.stderr.strip()  # fail-open must still leave a note
+
+
+# --- on-ramp choice gate: git commit adding a new plan --------------------
+
+
+def _write(path, text):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def _git_add(repo_path, *paths):
+    subprocess.run(["git", "add", *paths], cwd=repo_path, check=True,
+                   env=_iso_env())
+
+
+def test_commit_adding_plan_with_unresolved_onramp_blocked(repo):
+    # WHY: a plan may only enter git once its source brief records the
+    # user's own on-ramp answer — an unanswered (`pending`) line is
+    # exactly the invisible default this gate exists to close.
+    _write(repo / "docs" / "loom" / "specs" / "b.md",
+           "# Brief\n\n## Design-side on-ramp\n\npending\n")
+    _write(repo / "docs" / "loom" / "plans" / "p.md",
+           "# Plan: p\n\n**Source brief**: docs/loom/specs/b.md\n")
+    _git_add(repo, "docs/loom/specs/b.md", "docs/loom/plans/p.md")
+
+    res = run_hook(bash_event("git commit -m x", cwd=repo))
+    assert res.returncode == 2
+    assert "user chose <detour|direct>" in res.stderr
+
+    # The user answers in the brief → the same commit is allowed.
+    _write(repo / "docs" / "loom" / "specs" / "b.md",
+           "# Brief\n\n## Design-side on-ramp\n\n"
+           "fired: rows 1 — user chose direct\n")
+    _git_add(repo, "docs/loom/specs/b.md")
+    res = run_hook(bash_event("git commit -m x", cwd=repo))
+    assert res.returncode == 0
+
+
+def test_commit_modifying_committed_plan_not_gated(repo):
+    # WHY: gate scope is added-only — historical briefs are not migrated,
+    # so editing an already-committed plan must never be blocked.
+    _write(repo / "docs" / "loom" / "specs" / "b.md",
+           "# Brief\n\n## Design-side on-ramp\n\npending\n")
+    _write(repo / "docs" / "loom" / "plans" / "p.md",
+           "# Plan: p\n\n**Source brief**: docs/loom/specs/b.md\n")
+    _git_add(repo, "docs/loom/specs/b.md", "docs/loom/plans/p.md")
+    subprocess.run(
+        ["git", "-c", "user.email=t@t", "-c", "user.name=t",
+         "commit", "-m", "plan", "-q"],
+        cwd=repo, check=True, env=_iso_env(),
+    )
+    _write(repo / "docs" / "loom" / "plans" / "p.md",
+           "# Plan: p\n\n**Source brief**: docs/loom/specs/b.md\n\nedited\n")
+    _git_add(repo, "docs/loom/plans/p.md")
+
+    res = run_hook(bash_event("git commit -m x", cwd=repo))
+    assert res.returncode == 0
+
+
+def test_commit_adding_plan_without_source_brief_fails_open_loudly(repo):
+    # WHY: fail-open is the chosen posture, but never silent — an
+    # un-evaluable plan still tells the model the gate did not run.
+    _write(repo / "docs" / "loom" / "plans" / "p.md", "# Plan: p\n\nno header\n")
+    _git_add(repo, "docs/loom/plans/p.md")
+
+    res = run_hook(bash_event("git commit -m x", cwd=repo))
+    assert res.returncode == 0
+    assert "on-ramp choice gate inactive" in res.stderr
