@@ -1,5 +1,5 @@
 ---
-name: strategy-dag
+name: think-orbit
 description: |
   Single-user decision-reasoning assistant — turns a discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view. Use for 'help me decide X' or 'decision reasoning'. Part 1 draft — core protocol not yet wired.
 source_language: en

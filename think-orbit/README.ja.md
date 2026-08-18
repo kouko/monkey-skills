@@ -1,4 +1,4 @@
-# strategy-dag
+# think-orbit
 
 > シングルユーザー向け意思決定支援エージェント——議論を透明な思考の連鎖に変換する：ノードごとに1つの Markdown ファイル、陳腐化伝播を伴う仮定ファイル、静かな機械的ゲート、再生成される DAG ビュー。
 
@@ -17,5 +17,5 @@
 
 ```bash
 /plugin marketplace add kouko/monkey-skills
-/plugin install strategy-dag@monkey-skills
+/plugin install think-orbit@monkey-skills
 ```

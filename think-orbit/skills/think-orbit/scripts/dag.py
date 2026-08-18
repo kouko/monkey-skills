@@ -1,4 +1,4 @@
-"""strategy-dag core loader — parses the project's frontmatter files into a Project graph.
+"""think-orbit core loader — parses the project's frontmatter files into a Project graph.
 
 Subcommands (check / break / claims / render / impact) land in later tasks;
 this module currently implements only `load_project` plus an argparse
@@ -378,8 +378,7 @@ def _set_frontmatter_field(path: Path, key: str, value: str) -> None:
 
 
 # CLI surfaces: git rev-parse --show-toplevel / git show <rev>:<path> —
-# grounding: git show --help, git rev-parse --help (captured 2026-08-18);
-# in-repo evidence dev-workflow/skills/git-memory scripts use git show.
+# grounding: git show --help, git rev-parse --help (captured 2026-08-18).
 def claims(project: Project, root: Path, since: str) -> list[str] | None:
     """Report research-note `claim` changes since `since`, with their dependents.
 
@@ -453,7 +452,7 @@ def claims(project: Project, root: Path, since: str) -> list[str] | None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="dag", description="strategy-dag project loader/CLI")
+    parser = argparse.ArgumentParser(prog="dag", description="think-orbit project loader/CLI")
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("load", help="load and validate the project graph (diagnostics only)")
     check_parser = subparsers.add_parser("check", help="run the structural gate and report violations")

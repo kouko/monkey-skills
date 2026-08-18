@@ -1,4 +1,4 @@
-# strategy-dag
+# think-orbit
 
 > Single-user decision-reasoning assistant — turns a discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view.
 
@@ -17,5 +17,5 @@ Say "help me decide X" (or 「我要決定」/「決策推演」) to open a deci
 
 ```bash
 /plugin marketplace add kouko/monkey-skills
-/plugin install strategy-dag@monkey-skills
+/plugin install think-orbit@monkey-skills
 ```
