@@ -82,14 +82,17 @@ def _frontmatter_span(text: str) -> tuple[int, int, int] | None:
     Returns `(fm_start, fm_end, body_start)` — `text[fm_start:fm_end]` is the
     raw frontmatter lines with the delimiters excluded, and `text[body_start:]`
     is the body — or None when the text opens no frontmatter block. A delimiter
-    is any line that strips to `---`, LF or CRLF, so the reader and the rewriter
-    accept exactly the same files.
+    is a line that *rstrips* to `---`, LF or CRLF, so the reader and the rewriter
+    accept exactly the same files. Only trailing whitespace is tolerated: an
+    indented `  ---` is content — typically a markdown rule inside a YAML block
+    scalar — and must not be allowed to close the block early, which would push
+    every key below it into the body unnoticed.
     """
     lines = list(_LINE_RE.finditer(text))
-    if not lines or lines[0].group().strip() != FRONTMATTER_DELIM:
+    if not lines or lines[0].group().rstrip() != FRONTMATTER_DELIM:
         return None
     for match in lines[1:]:
-        if match.group().strip() == FRONTMATTER_DELIM:
+        if match.group().rstrip() == FRONTMATTER_DELIM:
             return lines[0].end(), match.start(), match.end()
     return None
 
@@ -127,8 +130,12 @@ def _parse_frontmatter_mapping(path: Path, root: Path) -> tuple[dict | None, str
     single-line "<relpath>: frontmatter: ..." message for Project.problems,
     and the caller must skip the file rather than fabricate a Node/Assumption.
     """
-    fm_text, body = split_frontmatter(path.read_text(encoding="utf-8"))
     relpath = path.relative_to(root).as_posix()
+    try:
+        raw_text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return None, "", f"{relpath}: frontmatter: not utf-8"
+    fm_text, body = split_frontmatter(raw_text)
     try:
         fm = yaml.safe_load(fm_text)
     except yaml.YAMLError as exc:
@@ -852,8 +859,10 @@ def render_dag(project: Project) -> str:
     for branch in branches:
         members = nodes_by_branch.get(branch, [])
         branch_type = next((n.branch_type for n in members if n.branch_type), "?")
-        branch_id = _sanitize_mermaid_id(branch)
-        lines.append(f'    subgraph {branch_id} ["{branch} ({branch_type})"]')
+        # `br_` prefix keeps a branch id from colliding with a node's mermaid id
+        branch_id = f"br_{_sanitize_mermaid_id(branch)}"
+        title = f"{_mermaid_label_text(branch)} ({_mermaid_label_text(branch_type)})"
+        lines.append(f'    subgraph {branch_id} ["{title}"]')
         for node in members:
             lines.append(f"    {_node_mermaid_line(node, mermaid_ids[node.id]).strip()}")
         for assumption in assumptions_by_branch.get(branch, []):
@@ -893,7 +902,7 @@ def render_impact(project: Project, assumption_id: str) -> str:
     `flowchart LR` mermaid block (pure, no I/O, no mutation of `project`).
 
     Caller must ensure `assumption_id` names an assumption in `project` —
-    this raises `StopIteration` otherwise. Computes reachability via
+    this raises `KeyError` otherwise. Computes reachability via
     `propagate()`: every stale (fully load-bearing chain) and weakened
     (chain contains a non-load-bearing hop) dependent is drawn as a box;
     edges among the shown nodes follow the actual `inputs` edges (solid
@@ -902,7 +911,9 @@ def render_impact(project: Project, assumption_id: str) -> str:
     Deterministic: same `project` + `assumption_id` always yields the same
     string.
     """
-    assumption = next(a for a in project.assumptions if a.id == assumption_id)
+    assumption = _find_assumption(project, assumption_id)
+    if assumption is None:
+        raise KeyError(f"no assumption with id {assumption_id!r}")
     stale_ids, weakened_ids = propagate(project, assumption_id)
     shown_ids = set(stale_ids) | set(weakened_ids)
 

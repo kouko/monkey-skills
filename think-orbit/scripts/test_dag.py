@@ -865,7 +865,7 @@ def test_render_writes_full_dag_mermaid_with_branches_assumptions_and_stale_clas
         assert node_id in text
     assert "q4_budget_holds" in text
 
-    assert "subgraph b1" in text
+    assert "subgraph br_b1" in text
     assert text.count("-.->") == 1
     assert "classDef stale" in text
     assert "class" in text and "decision1" in text.split("classDef stale", 1)[1]
@@ -947,7 +947,7 @@ def test_render_branch_with_assumptions_but_no_member_nodes_uses_unknown_branch_
     project = dag.load_project(root)
     text = dag.render_dag(project)
 
-    assert 'subgraph b9 ["b9 (?)"]' in text
+    assert 'subgraph br_b9 ["b9 (?)"]' in text
 
 
 def test_render_truncates_long_labels_including_cjk(tmp_path):
@@ -1340,3 +1340,76 @@ def test_cli_no_longer_offers_a_load_subcommand():
         dag.main(["load"])
 
     assert excinfo.value.code != 0
+
+
+def test_frontmatter_span_ignores_indented_dashes_inside_block_scalars(tmp_path, capsys):
+    # @req: BI-1
+    root = tmp_path
+    _write(
+        root / "nodes" / "goal.md",
+        "id: g\ntype: GOAL\nseq: 1\nsummary: Ship v0\nstatus: current\n",
+    )
+    _write(
+        root / "nodes" / "claim1.md",
+        "id: c1\n"
+        "type: CLAIM\n"
+        "seq: 2\n"
+        "summary: Depends on g\n"
+        "status: current\n"
+        "statement: |\n"
+        "  ---\n"
+        "  more text under the rule\n"
+        "inputs:\n"
+        "  - ref: g\n"
+        "    load_bearing: true\n",
+    )
+
+    project = dag.load_project(root)
+    claim = {n.id: n for n in project.nodes}["c1"]
+
+    assert [(i.ref, i.load_bearing) for i in claim.inputs] == [("g", True)]
+
+    rc = dag.main(["check", str(root)])
+    assert rc == 0
+    assert capsys.readouterr().out == ""
+
+
+def test_render_subgraph_ids_never_collide_with_node_ids_and_titles_are_escaped(tmp_path):
+    # @req: BI-12
+    root = tmp_path
+    _write(
+        root / "nodes" / "collides.md",
+        "id: b1\ntype: GOAL\nseq: 1\nsummary: A node whose id equals a branch id\nstatus: current\n",
+    )
+    _write(
+        root / "nodes" / "member.md",
+        "id: m1\ntype: CLAIM\nseq: 2\nsummary: Member of the branch\nstatus: current\n"
+        "branch: b1\nbranch_type: 'ex\"clusive'\n",
+    )
+
+    text = dag.render_dag(dag.load_project(root))
+
+    assert '    subgraph br_b1 ["b1 (ex#quot;clusive)"]' in text
+    assert 'b1{{"b1<br/>A node whose id equals a branch id"}}' in text
+    assert 'ex"clusive' not in text
+
+
+def test_load_project_records_non_utf8_file_as_problem(tmp_path):
+    # @req: BI-1
+    root = tmp_path
+    bad_path = root / "nodes" / "bad.md"
+    bad_path.parent.mkdir(parents=True, exist_ok=True)
+    bad_path.write_bytes(b"---\nid: x\nsummary: \xff\xfe not utf-8\n---\nbody\n")
+
+    project = dag.load_project(root)
+
+    assert project.nodes == []
+    assert project.problems == ["nodes/bad.md: frontmatter: not utf-8"]
+
+
+def test_render_impact_rejects_an_unknown_assumption_id():
+    # @req: BI-5
+    project = dag.Project(root=Path("/unused"), assumptions=[dag.Assumption(id="a1")])
+
+    with pytest.raises(KeyError):
+        dag.render_impact(project, "nope")
