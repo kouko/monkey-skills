@@ -1,6 +1,6 @@
 ---
 name: 2026-08-13-a-widened-field-grammar-has-no-mechanical-consumer-enumeration
-description: the consumer census a plan owes when it widens a field's grammar is performed from memory, so it misses consumers nobody thought of — the same arc missed one consumer its own brief named first, then missed three more of the same class in a second file set
+description: the consumer census a plan owes when it widens a field's grammar is performed from memory, so it misses consumers nobody thought of — the same arc missed one consumer its own brief named first, then missed three more of the same class in a second file set; the field-value-microstructure arc (2026-08-19) is a worked instance of the census done in the "Reverse" line of a brief's Current State Evidence
 status: OPEN
 origin: brief-item-addressability arc (2026-08-13) — two independent misses of one class; the practice exists as prose in docs/loom/memory but has no enumeration step
 start: next arc that widens or narrows a value grammar in a loom contract file, or the next touch of writing-plans' plan-document-reviewer prompt
@@ -51,3 +51,22 @@ mechanically verifiable and therefore preferred, but it needs a definition of
 
 Related: [[2026-08-13-a-plan-can-dispatch-a-task-whose-acceptance-depends-on-an-unresolved-open-question]]
 (the sibling plan-time gate proposed from the same arc's evidence).
+
+## Worked instance (2026-08-19, field-value-microstructure arc)
+
+This entry's start condition — "next arc that widens or narrows a value
+grammar in a loom contract file" — fired: the arc at
+`docs/loom/plans/2026-08-19-field-value-microstructure.md` widens the
+`Description`/`Goal`/`Acceptance.RED`/`Acceptance.GREEN` field grammar
+(BI-1, BI-2, BI-6). Its brief's Current State Evidence section derived,
+rather than recalled, the hit list this backlog entry's "Candidate
+mechanism" proposed: a `Reverse` line naming `plan-format.md` as the
+grammar's SSOT, restated by `writing-plans/README.md` and its `.ja` /
+`.zh-TW` mirrors, and graded by `plan-document-reviewer-prompt.md`
+Checks 3, 7, 16, 17, 18 — each hit then got its own plan task (Task 7 =
+`plan-format.md`, Task 9 = the three README mirrors, Task 10 = the
+reviewer-prompt check). No consumer in that list was found late or
+missed; the census ran at brief-authoring time, not per-task. The open
+sub-question this entry left unresolved (reviewer-check vs authoring
+instruction) is still unresolved — this instance used a brief-time
+prose enumeration, not a mechanical grep gate.

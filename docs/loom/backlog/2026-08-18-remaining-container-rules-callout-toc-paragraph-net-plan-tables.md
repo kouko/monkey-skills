@@ -1,6 +1,6 @@
 ---
 name: 2026-08-18-remaining-container-rules-callout-toc-paragraph-net-plan-tables
-description: the four container rules the artifact-layer table-routing arc (PR #699) deliberately left out — callout roles, TOC, a 2–4-sentence paragraph net, plan-level tables — each with the cost/risk that parked it and the evidence that would unpark it
+description: the four container rules the artifact-layer table-routing arc (PR #699) deliberately left out — callout roles, TOC, a 2–4-sentence paragraph net, plan-level tables — each with the cost/risk that parked it and the evidence that would unpark it; the field-value-microstructure arc (2026-08-19) took the field-value and (S)-slice half of the readability problem, leaving these four still parked
 status: OPEN
 origin: PR #699 close-out (2026-08-17) — brief `docs/loom/specs/2026-08-17-artifact-table-routing.md` §Out of Scope; user-ratified evaluation in the same session that only comparison→table was worth doing without further evidence
 start: docs-reviewer's table-routed-prose omission dimension yields its first real findings, or ≥30 post-#699 briefs/specs exist so the seed audit's corpus measurement can be re-run — whichever comes first
@@ -50,3 +50,26 @@ reader-comprehension table vs prose 120/120 both forms — the rules buy
 human readability, not model comprehension);
 `docs/loom/memory/model-readers-are-form-agnostic-at-loom-doc-scale.md`;
 `docs/loom/memory/a-cold-template-probe-proves-slot-binding-not-pipeline-drift.md`.
+
+## What the field-value-microstructure arc (2026-08-19) took, and what stays parked
+
+`docs/loom/plans/2026-08-19-field-value-microstructure.md` classified the
+same 57-paragraph population this entry's table cites into (T)
+comparison-shaped / (S) sequential-field-list / (N) reasoning-chain
+slices (8 / 26 / 23) and shipped a rule for the field-value grammar plus
+the (S) slice: BI-1/BI-3's fill-or-declare rule routes (S)-shaped
+overflow into bullets or a table, mechanically checked. It did not touch
+(T) — that stays a `family-relay.md §(b)` compliance gap, not a missing
+rule — and it did not touch (N); (N) still routes to the per-unit CoT
+diagram in
+`docs/loom/backlog/2026-08-18-per-unit-cot-diagram-in-the-adjudication-view.md`.
+
+This changes the **paragraph net** row's "no loom-internal evidence yet"
+ground above: loom-internal evidence now exists (the 57-paragraph S/N/T
+classification and OQ-1's 600-char threshold measurement over 281
+paragraphs in 17 specs). That evidence grounds BI-1/BI-3's fill-or-declare
+rule, not a general 2–4-sentence paragraph net — the shipped rule routes
+(S) overflow structurally and lets the author declare (N) inline rather
+than capping every paragraph's length. The paragraph-net row, callout
+roles, TOC, and plan-level tables are all still parked; none of their
+unpark conditions fired.

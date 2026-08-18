@@ -1,6 +1,6 @@
 ---
 name: 2026-08-18-per-unit-cot-diagram-in-the-adjudication-view
-description: the adjudication view's translate step should emit one 譯注-tagged mermaid CoT diagram per unit, rendered directly beneath that unit's target-language rendition — no renderer change (measured), no new skill, three guardrails; the diagram never enters the agent-consumed artifact
+description: the adjudication view's translate step should emit one 譯注-tagged mermaid CoT diagram per unit, rendered directly beneath that unit's target-language rendition — no renderer change (measured), no new skill, three guardrails; the diagram never enters the agent-consumed artifact; its start condition (the staleness arc merging) is now met, and the field-value-microstructure arc (2026-08-19) measured the (N)-slice this diagram targets, narrowing this entry's scope
 status: OPEN
 origin: kouko, 2026-08-18 — raised during the adjudication_render staleness arc after asking whether per-paragraph CoT diagrams (as used in the Obsidian vault's references/ notes) belong in the source markdown or the view
 start: after the adjudication_render staleness arc (docs/loom/specs/2026-08-18-adjudication-render-staleness-visible.md) merges
@@ -104,3 +104,24 @@ N/A.
 - `adjudication_lint.py`: guardrail 3 + its no-skip probe.
 - No renderer change (measured above). No new skill. No change to any
   agent-consumed artifact template.
+
+## Start condition met; a narrowing candidate from 2026-08-19
+
+The staleness arc this entry's `start` names
+(`docs/loom/specs/2026-08-18-adjudication-render-staleness-visible.md`)
+merged as PR #706 (loom-code 0.88.0). This entry's start condition is
+now met and the arc can open.
+
+Separately, `docs/loom/plans/2026-08-19-field-value-microstructure.md`
+classified the loom corpus's long-paragraph population into (T)
+comparison-shaped / (S) sequential-field-list / (N) reasoning-chain
+(8 / 26 / 23 of 57 measured) and left (N) — the class this diagram is
+for — entirely to this entry (see Out of Scope in
+`docs/loom/specs/2026-08-19-field-value-microstructure.md`). That
+measurement is a **narrowing candidate** for this entry's scope when it
+opens: the diagram duty need only fire on units whose prose is (N)-shaped
+(a reasoning chain), not on every unit — (T)/(S)-shaped units already get
+a structural rule (table or bullet) that the diagram would duplicate.
+Not decided here; the arc that opens this entry should re-derive the
+(N) test from `plan-format.md`'s narrative-declaration grammar rather
+than re-classifying paragraphs by hand.
