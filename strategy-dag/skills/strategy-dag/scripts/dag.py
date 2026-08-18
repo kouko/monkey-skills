@@ -377,6 +377,9 @@ def _set_frontmatter_field(path: Path, key: str, value: str) -> None:
     path.write_bytes(new_text.encode("utf-8"))
 
 
+# CLI surfaces: git rev-parse --show-toplevel / git show <rev>:<path> —
+# grounding: git show --help, git rev-parse --help (captured 2026-08-18);
+# in-repo evidence dev-workflow/skills/git-memory scripts use git show.
 def claims(project: Project, root: Path, since: str) -> list[str] | None:
     """Report research-note `claim` changes since `since`, with their dependents.
 
@@ -385,7 +388,8 @@ def claims(project: Project, root: Path, since: str) -> list[str] | None:
     shell=True, no interpolated shell string) and compares `claim` values
     after `.strip()`. A file absent at that rev counts as unchanged-new.
     Returns sorted `"<id>: claim changed → dependents: <ids>"` lines, or None
-    (having already printed the error) when `root` is not inside a git repo.
+    (having already printed the error) when `root` is not inside a git repo
+    or `since` does not resolve to a valid commit.
     """
     repo_root = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"],
@@ -395,7 +399,15 @@ def claims(project: Project, root: Path, since: str) -> list[str] | None:
         print(f"not a git repository: {root}", file=sys.stderr)
         return None
 
-    repo_root_path = Path(repo_root.stdout.strip())
+    verify = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", f"{since}^{{commit}}"],
+        cwd=root, capture_output=True, text=True,
+    )
+    if verify.returncode != 0:
+        print(f"invalid revision: {since}", file=sys.stderr)
+        return None
+
+    repo_root_path = Path(repo_root.stdout.strip()).resolve()
 
     dependents_by_ref: dict[str, list[str]] = {}
     for node in project.nodes:
@@ -409,15 +421,16 @@ def claims(project: Project, root: Path, since: str) -> list[str] | None:
     for node in project.nodes:
         if node.origin != "research" or node.id is None:
             continue
-        relpath = node.path.relative_to(repo_root_path).as_posix()
+        relpath = _relpath(node.path.resolve(), repo_root_path)
         result = subprocess.run(
             ["git", "show", f"{since}:{relpath}"],
-            cwd=root, capture_output=True, text=True,
+            cwd=root, capture_output=True,
         )
         if result.returncode != 0:
             continue  # absent at that rev -- unchanged-new
 
-        fm_text, _ = split_frontmatter(result.stdout)
+        stdout_text = result.stdout.decode("utf-8", errors="replace")
+        fm_text, _ = split_frontmatter(stdout_text)
         try:
             old_fm = yaml.safe_load(fm_text)
         except yaml.YAMLError:

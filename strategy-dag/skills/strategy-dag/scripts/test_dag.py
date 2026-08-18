@@ -6,6 +6,7 @@
 """
 from __future__ import annotations
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -533,3 +534,112 @@ def test_claims_lists_dependents_only_for_research_claims_changed_since_rev(tmp_
     assert lines[0] == "r1: claim changed → dependents: n1"
     assert "r2" not in lines[0]
     assert "n2" not in lines[0]
+
+
+def test_claims_works_when_root_is_a_symlink_to_the_real_git_worktree(tmp_path, capsys):
+    # @req: BI-3
+    real_root = tmp_path / "real"
+    _write(
+        real_root / "research" / "r1.md",
+        "id: r1\n"
+        "claim: Original claim via symlinked root\n",
+    )
+    _write(
+        real_root / "nodes" / "n1.md",
+        "id: n1\n"
+        "type: CLAIM\n"
+        "seq: 1\n"
+        "summary: Depends on r1\n"
+        "status: active\n"
+        "inputs:\n"
+        "  - ref: r1\n"
+        "    load_bearing: true\n",
+    )
+    _git(real_root, "init", "-q")
+    _git(real_root, "config", "user.email", "test@example.com")
+    _git(real_root, "config", "user.name", "Test")
+    _git(real_root, "add", ".")
+    _git(real_root, "commit", "-q", "-m", "initial")
+
+    link_root = tmp_path / "link"
+    os.symlink(real_root, link_root)
+
+    _write(
+        link_root / "research" / "r1.md",
+        "id: r1\n"
+        "claim: Updated claim via symlinked root\n",
+    )
+
+    rc = dag.main(["claims", str(link_root), "--since", "HEAD"])
+    out = capsys.readouterr().out
+    lines = [ln for ln in out.splitlines() if ln]
+
+    assert rc == 0
+    assert lines == ["r1: claim changed → dependents: n1"]
+
+
+def test_claims_tolerates_invalid_utf8_bytes_in_historic_git_show_output(tmp_path, capsys):
+    # @req: BI-3
+    root = tmp_path
+    root_dir = root / "research"
+    root_dir.mkdir(parents=True, exist_ok=True)
+    r1_path = root_dir / "r1.md"
+    r1_path.write_bytes(
+        b"---\nid: r1\nclaim: Old claim with invalid bytes\n---\n"
+        b"body with an invalid byte: \xff\xfe\n"
+    )
+
+    _git(root, "init", "-q")
+    _git(root, "config", "user.email", "test@example.com")
+    _git(root, "config", "user.name", "Test")
+    _git(root, "add", ".")
+    _git(root, "commit", "-q", "-m", "initial")
+
+    _write(
+        root / "research" / "r1.md",
+        "id: r1\n"
+        "claim: New claim, valid utf-8 only\n",
+    )
+
+    rc = dag.main(["claims", str(root), "--since", "HEAD"])
+    out = capsys.readouterr().out
+    lines = [ln for ln in out.splitlines() if ln]
+
+    assert rc == 0
+    assert lines == ["r1: claim changed → dependents: (none)"]
+
+
+def test_claims_rejects_invalid_since_revision(tmp_path, capsys):
+    # @req: BI-3
+    root = tmp_path
+    _write(root / "research" / "r1.md", "id: r1\nclaim: A claim\n")
+    _git(root, "init", "-q")
+    _git(root, "config", "user.email", "test@example.com")
+    _git(root, "config", "user.name", "Test")
+    _git(root, "add", ".")
+    _git(root, "commit", "-q", "-m", "initial")
+
+    rc = dag.main(["claims", str(root), "--since", "not-a-real-rev"])
+    err = capsys.readouterr().err
+
+    assert rc == 1
+    assert "invalid revision: not-a-real-rev" in err
+
+
+def test_claims_treats_note_added_after_valid_rev_as_unchanged_new(tmp_path, capsys):
+    # @req: BI-3
+    root = tmp_path
+    _write(root / "nodes" / "goal.md", "id: goal\ntype: GOAL\nseq: 1\nsummary: Ship v0\nstatus: active\n")
+    _git(root, "init", "-q")
+    _git(root, "config", "user.email", "test@example.com")
+    _git(root, "config", "user.name", "Test")
+    _git(root, "add", ".")
+    _git(root, "commit", "-q", "-m", "initial")
+
+    _write(root / "research" / "r_new.md", "id: r_new\nclaim: Added after the rev\n")
+
+    rc = dag.main(["claims", str(root), "--since", "HEAD"])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert out == ""
