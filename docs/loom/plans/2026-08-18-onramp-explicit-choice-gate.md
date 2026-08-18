@@ -7,7 +7,7 @@ Goal: brief 的 `## Design-side on-ramp` 行若記的是 agent 預設而非使�
     `docs/loom/plans/*.md` 時順 `**Source brief**:` 跑 checker、未解決就擋（Codex 走既有 shim）；
     `writing-plans` 入口跑同一支腳本先給早期回饋；brainstorming Axis 0 與 reception 改成
     「獨立一問、使用者答前寫 `pending`、agent 可建議不可代記」；上線前先量既有 brief 的觸發率。
-Stage: planning
+Stage: finishing
 Steps:
     1. 文法定案（brief 格式規格加三態文法）
     2. 散文層與 checker 骨幹（reception 改寫；checker 解析 brief 行＋CLI）
@@ -60,7 +60,7 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(87746ad7)
 - **Gloss**: 先把「那一行只能長四種樣子」寫進 brief 格式的 SSOT，後面的腳本和散文才有東西可指。
 
 ## Task 2 — reception：推薦改為獨立一問、`pending`、常設選擇條目文法、改寫「never blocking」
@@ -78,7 +78,7 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(eda97504)
 - **Gloss**: 家族入口規則本身改口：這一問要單獨問、答之前寫 pending、agent 不能代答；並開一個 repo 級「常設選擇」的家。
 
 ## Task 3 — checker 腳本：解析 brief 的 on-ramp 行＋CLI 退出碼
@@ -97,7 +97,7 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: BI-2
-- **Status**: pending
+- **Status**: done(b0d1cc6d)
 - **Gloss**: 真正判「這行算不算使用者答過」的機器；之後 git-guard 與 writing-plans 都只是叫它。
 
 ## Task 4 — brainstorming Axis 0 改寫：獨立一問、`pending`、不代記
@@ -116,7 +116,7 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 - **Dependencies**: Task 2 completes first
 - **Independent**: true
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(065396cb)
 - **Gloss**: 讓寫 brief 的那一站照新規矩做：先查常設選擇，沒有就單獨問、先寫 pending。
 
 ## Task 5 — DIRECTION.md 加 `## On-ramp standing choices` 並記下本 repo 第 1 列的常設決定
@@ -134,7 +134,7 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 - **Dependencies**: Task 7 completes first
 - **Independent**: true
 - **Brief item covered**: BI-6
-- **Status**: pending
+- **Status**: done(89a5aafb)
 - **Gloss**: 把「本 repo 沒有 PRINCIPLES.md 是刻意的」正式記下來，之後第 1 列不會再每弧重問。
 
 ## Task 6 — loom_init 的 DIRECTION 模板加空的 `## On-ramp standing choices`
@@ -152,7 +152,7 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 - **Dependencies**: Task 2 completes first
 - **Independent**: true
 - **Brief item covered**: BI-6
-- **Status**: pending
+- **Status**: done(2b68d1c4)
 - **Gloss**: 新 repo 一 scaffold 就有這個段，不用第一次觸發時才手動補。
 
 ## Task 7 — checker 讀 DIRECTION.md 常設選擇並解析 `standing` 形
@@ -170,7 +170,7 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 - **Dependencies**: Tasks 2, 3 complete first
 - **Independent**: false
 - **Brief item covered**: BI-2
-- **Status**: pending
+- **Status**: done(4260a489)
 - **Gloss**: 常設選擇要真的被機器讀到，閘門才會因為它而放行。
 
 ## Task 8 — git-guard：`git commit` 新增 plan 檔時跑 checker，未解決就擋
@@ -189,7 +189,7 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 - **Dependencies**: Task 7 completes first
 - **Independent**: true
 - **Brief item covered**: BI-3, BI-8, BI-9
-- **Status**: pending
+- **Status**: done(32535afd)
 - **Gloss**: 這就是門：新 plan 想進 git，它的 brief 那一行必須是你答的，兩個 host 都一樣。
 
 ## Task 9 — writing-plans 入口閘：跑 checker、未解決就拒絕規劃
@@ -207,7 +207,7 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 - **Dependencies**: Task 7 completes first
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: done(84e3b944)
 - **Gloss**: 在還沒花時間寫 plan 之前就先撞到同一道檢查，省一整輪。
 
 ## Task 10 — 觸發率量測：checker 掃既有 brief 與 plan→brief 對，寫成審計文件
@@ -225,7 +225,7 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 - **Dependencies**: Task 7 completes first
 - **Independent**: true
 - **Brief item covered**: BI-7
-- **Status**: pending
+- **Status**: done(09d88f08)
 - **Gloss**: 上線前先知道這道門在歷史語料上會擋多少，避免做出一個天天叫的閘。
 
 ## Task 11 — 發版：loom-code 0.87.0、CHANGELOG、codex manifest 同步
@@ -243,7 +243,7 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 - **Dependencies**: Tasks 4, 5, 6, 8, 9, 10 complete first
 - **Independent**: false
 - **Brief item covered**: none — release administration (version bump + changelog + deterministic manifest mirror), delivers no brief outcome
-- **Status**: pending
+- **Status**: done(f401615b)
 - **Gloss**: 沒 bump 版本 marketplace 就不會發佈，Codex 鏡射也要跟上。
 
 ## Notes
@@ -259,3 +259,7 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 - Kickoff decision: gate scope for plan files (added-only vs added+modified) → added-only (`--diff-filter=A`); two-way door (one flag), recorded here per kickoff-briefing §b arm-1
 - Kickoff decision: checker import / brief-read failure inside git-guard (fail-closed vs loud fail-open) → loud fail-open (one stderr line, allow), matching the Codex shim posture; two-way door, late-vetoable
 - Kickoff decision: unresolved exit code → 2 (same code git-guard already uses to deny), 1 = file missing, 0 = resolved/not-fired; two-way door
+
+## Decision Log
+
+1. chose to exempt well-formed `## On-ramp standing choices` entries from DIRECTION.md's no-dates invariant (backlog_index.py) rather than drop the `(YYYY-MM-DD)` from the entry grammar because a standing choice is a dated decision and the grammar is already pinned by four shipped tasks — cost-of-change: the day you want DIRECTION.md fully date-free again, this choice costs re-cutting the entry grammar across reception, brief format, Axis 0 and the checker
