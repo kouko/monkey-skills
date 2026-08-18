@@ -15,9 +15,10 @@ the life of the requirement.
 ## Form
 
 A requirement header carries its id, if any, first: `### Requirement:
-REQ-<n> — <name>` — id-first, the id shape itself being `REQ-<n> — <name>`
-(the literal prefix `REQ`, a hyphen, a decimal number, one space, an em dash
-U+2014, one space, then the human-readable name). The optional
+REQ-<n> — <name>` — id-first. The header shape is `REQ-<n> — <name>`;
+the id itself is `REQ-<n>` (the literal prefix `REQ`, a hyphen, a
+decimal number). The header carries the id followed by one space, an
+em dash U+2014, one space, then the human-readable name. The optional
 status suffix (`[active]` / `[deferred]`) stays after the name, unchanged by
 this convention: `### Requirement: REQ-<n> — <name> [deferred]`.
 
@@ -42,12 +43,13 @@ inserting a requirement above `REQ-3` does not renumber `REQ-3`. When a
 requirement is deleted, its number is retired and never reused: no later
 requirement may carry it.
 
-**Minting**: run `--next-req-id` (the flag a repo script exposes for this),
-or grep the three namespace roots yourself (see [Scope](#scope) below) for
-the highest `REQ-<n>` in use and take the next number. Never guess a number
-that looks free without checking all three roots — a collision across
-parallel change-folders is exactly what the merge-boundary checker exists
-to reject.
+**Minting**: run `--next-req-id`, the flag `loom-code/scripts/check-living-spec-index.py`
+exposes for this, or grep the three namespace roots yourself — live
+change-folders, the archive, and the living-spec root (see §Monotonic
+above) — for the highest `REQ-<n>` in use and take the next number. Never
+guess a number that looks free without checking all three roots — a
+collision across parallel change-folders is exactly what the
+merge-boundary checker exists to reject.
 
 `--next-req-id` computes "highest number among headers PRESENT, plus one",
 not "highest number ever minted, plus one" — it has no memory of a
@@ -67,7 +69,7 @@ stale citation fails loudly against a retired number instead.
 ## Scope
 
 Change-folder `specs/*/spec.md` and living-spec `spec.md` share the grammar
-— one regex, not two. The only difference: a living-spec
+— one grammar, implemented by each parser. The only difference: a living-spec
 header may omit the ` — <name>` half and carry the bare `### Requirement:
 REQ-<n>` form, since a living-spec requirement's name lives in its own
 prose body rather than the header line. A change-folder header may not omit
