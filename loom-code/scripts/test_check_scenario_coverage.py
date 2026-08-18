@@ -439,6 +439,45 @@ def test_bare_req_id_citation_covers_all_scenarios_of_that_requirement(tmp_path)
         "the offending task must be named"
 
 
+def test_citation_error_alone_exits_1_without_dropped_header(tmp_path):
+    """Pins main()'s two exit-1 guards: a run with full scenario coverage
+    (no dropped keys) but ONE citation error must still exit 1 — the
+    citation error alone is enough (`if ok and not citation_errors:` must
+    not short-circuit to a success message) — and must NOT print the
+    "Dropped scenario(s)" header (the `if dropped:` guard must stay gated
+    on an actually non-empty `dropped` list, not fire just because the run
+    is non-zero).
+
+    Folder REQ-3 (id-mode) has S1+S2. Task 1 cites the bare `REQ-3` id,
+    fully covering both scenarios (`dropped` ends up empty). Task 2 cites
+    the undeclared `REQ-9`, which is a citation error. The run must fail
+    on the citation error alone, with no dropped-scenario header at all.
+    """
+    change_folder = tmp_path / "2026-07-10-my-change"
+    _write_spec(change_folder, _ID_MODE_TWO_SCENARIO_SPEC)
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — foo\n"
+        "- Brief item covered: REQ-3\n\n"
+        "## Task 2 — bogus\n"
+        "- Brief item covered: REQ-9\n",
+        encoding="utf-8",
+    )
+    result = _run(change_folder, plan)
+    assert result.returncode == 1, (
+        f"a citation error alone (no dropped scenarios) must still fail "
+        f"the run\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    )
+    assert "Task 2 — bogus" in result.stderr
+    assert "REQ-9" in result.stderr
+    assert "Dropped scenario(s)" not in result.stderr, (
+        "no scenario was actually dropped — the citation error is the "
+        "only failure — so the dropped-scenario header must not print\n"
+        f"stderr:\n{result.stderr}"
+    )
+
+
 def test_unparsed_change_folder_referent_is_named_not_dropped(tmp_path):
     """A `Brief item covered` value that does not match the join-key
     grammar must be reported with its task and its verbatim text, not
