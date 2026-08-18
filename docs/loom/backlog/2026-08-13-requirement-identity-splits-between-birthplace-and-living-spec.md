@@ -1,7 +1,7 @@
 ---
 name: 2026-08-13-requirement-identity-splits-between-birthplace-and-living-spec
 description: a requirement is born in a change-folder as a prose NAME and lives forever in the living spec as REQ-N, with nothing joining the two — one concept, two vocabularies, across the longest-lived identifier in the repo
-status: COMMITTED-NEXT
+status: SHIPPED
 origin: 2026-08-13 identifier-design recon for the brief-addressability arc — the inventory of every identifier in the loom pipeline surfaced this split as an existing defect rather than as a design choice anyone made
 start: user bet it at the 2026-08-13 close-out — run immediately after the brief-item addressability arc ships
 ---
@@ -68,3 +68,11 @@ start: user bet it at the 2026-08-13 close-out — run immediately after the bri
 - **Related**: `docs/loom/specs/2026-08-13-brief-item-addressability.md`
   (the arc that ships first and establishes the hybrid convention in the
   brief→plan crossing).
+
+- **Shipped**: branch `feat/requirement-identity-hybrid` (2026-08-18) —
+  loom-code 0.86.0 + loom-design 0.3.0; brief
+  `docs/loom/specs/2026-08-18-requirement-identity-hybrid.md`, plan
+  `docs/loom/plans/2026-08-18-requirement-identity-hybrid.md`. Kept live
+  (not archived) because two follow-ups hang off it:
+  `2026-08-18-bare-req-id-coverage-semantics-dogfood` and
+  `2026-08-18-archive-on-close-recovers-bound-folder-by-name-form-key-only`.

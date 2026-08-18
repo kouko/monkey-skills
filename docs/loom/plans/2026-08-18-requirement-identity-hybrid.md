@@ -8,7 +8,7 @@ Goal: a change-folder requirement header may carry an authored id ahead of
     gate's namespace is widened to live change-folders + archive + living
     root so an id typed once resolves end to end, with dangling or
     duplicate ids rejected and legacy prose-only files unchanged.
-Stage: review:round-1
+Stage: finishing
 Steps:
   1. 四路平行起跑：validator 學會 id 標頭、coverage 用 id 當 key、living-spec 解析器學會 id+名字、慣例文件成為 SSOT
   2. 各路加深：全有或全無、requirement 層引用、CI namespace 看見 change-folder、spec-expansion 語法收斂、implementer 守衛更新
@@ -346,4 +346,6 @@ Kickoff decision: bare `REQ-<n>` in `Brief item covered` → requirement-level c
 
 1. chose to leave the backlog status flip and BACKLOG.md/DIRECTION.md regeneration out of Task 14 and let finishing-a-development-branch's Step 8 do them at close-out because docs/loom/backlog/README.md §Verbs assigns the close duty there (a SHIPPED flip before merge would lie) — cost-of-change: the day you want the release task to own backlog closure, this choice costs one Step-8 pointer edit
 2. chose to fold two reviewer should-fixes into small follow-up commits (T8's private-import refactor → public `load_req_paths`; T3's dead `d` parameter) rather than log them as debt because each was named concretely by the reviewer and cost minutes — cost-of-change: none; the only surviving debt is T5's untested `if dropped:` guard (a citation-error-only run with full coverage), left for the whole-branch review or a follow-up test
+3. chose to keep Task 12's Description text as written (it says "when the bound folder is in id mode") and correct the shipped docs to the SSOT's per-FILE rule instead of rewriting the plan record — whole-branch docs review found the folder-vs-file drift in three files that faithfully copied the plan's wording; the plan is a record, the docs are the contract — cost-of-change: none beyond this line
+4. chose to keep the legacy coverage key byte-identical (a `[status]`-suffixed prose name keeps its suffix in the key) rather than migrate the one shipped July plan citation — the plan's canonical-grammar note promised "legacy: unchanged behaviour everywhere" and whole-branch review caught the regression — cost-of-change: the day legacy keys should also drop the status suffix, this choice costs one regex-group tweak plus that plan line
 
