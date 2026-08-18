@@ -10,10 +10,11 @@ Versioning: [Semantic Versioning](https://semver.org/).
 ### Added
 
 - **`check_onramp_choice.py`** — a standalone checker enforcing the
-  Design-side on-ramp three-state grammar (`chose <option>` /
-  `deferred — <reason>` / standing choice) in a brief's on-ramp
-  section, and reading `## On-ramp standing choices` entries from
-  DIRECTION.md via `build_question`.
+  Design-side on-ramp grammar (`not fired — <reason>` / `pending` /
+  `fired: rows <n> — user chose <detour|direct>` / `fired: rows <n>
+  — standing <detour|direct> (DIRECTION.md)`) in a brief's on-ramp
+  line, with `load_standing` reading `## On-ramp standing choices`
+  entries from DIRECTION.md.
 - **A git-guard commit-time gate** blocks a newly added
   `docs/loom/plans/*.md` whose bound brief has no on-ramp answer
   (`--diff-filter=A`, historical plans untouched); the checker path
