@@ -33,3 +33,10 @@ _(queue empty — bet at the next close-out)_
 - 投資線營運指標敘事層（非金錢 KPI）
 - loom 機制 Codex 移植線
 - obsidian wiki 知識線深化
+
+## On-ramp standing choices
+
+<!-- Repo-level on-ramp decisions read by check_onramp_choice.py; grammar
+owned by loom-code/hooks/family-reception.md §On-ramp standing choices. -->
+
+- row 1 (product-principles): standing direct — monkey-skills deliberately keeps no docs/loom/PRINCIPLES.md; loom-family arcs go direct to a brief (2026-08-18)
