@@ -99,7 +99,10 @@ def test_reception_content_contract():
     )
     # PR #704 reworded the reconciliation: the docs are never a prerequisite to
     # RUN loom-design, but the on-ramp CHOICE itself is gated (explicit user choice).
-    assert "never a prerequisite" in lower and "choice" in lower and "gated" in lower, (
+    assert (
+        "never a prerequisite to *run* loom-design" in lower
+        and "*choice* is gated" in lower
+    ), (
         "missing the recommendations-are-not-prerequisites / choice-is-gated reconciliation"
     )
 
