@@ -9,6 +9,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 import dag
 
 SKILL_MD = (
@@ -109,6 +111,13 @@ ROUTER_SKILL_MD = (
     / "SKILL.md"
 )
 
+BREAK_SKILL_MD = (
+    Path(__file__).resolve().parent.parent
+    / "skills"
+    / "break-assumption"
+    / "SKILL.md"
+)
+
 ROUTER_WORD_CAP = 2500
 
 ROUTER_REQUIRED_LITERALS = (
@@ -135,15 +144,19 @@ def test_router_skill_routes_to_verbs_and_forbids_views():
     ), "router SKILL.md body must state the views/ read prohibition"
 
 
+ALL_SKILL_MDS = (SKILL_MD, ROUTER_SKILL_MD, BREAK_SKILL_MD)
+
 # Every CLI mention must be copy-pasteable: a bare `dag.py <verb>` sends the
 # reader to a script that is not on their PATH.
+
 DAG_INVOCATION = re.compile(r"dag\.py (?:check|break|claims|render|impact)")
 FULL_PREFIX = "${CLAUDE_PLUGIN_ROOT}/scripts/"
 
 
-def test_router_skill_always_uses_full_invocation_prefix():
+@pytest.mark.parametrize("skill_md", ALL_SKILL_MDS, ids=lambda p: p.parent.name)
+def test_every_skill_always_uses_full_invocation_prefix(skill_md):
     # @req: BI-6
-    body = _body(ROUTER_SKILL_MD.read_text(encoding="utf-8"))
+    body = _body(skill_md.read_text(encoding="utf-8"))
 
     bare = [
         body[max(0, m.start() - 60) : m.end()]
@@ -162,3 +175,41 @@ def test_router_skill_states_root_resolution_ladder():
 
     for marker in ("current working directory", "ask", "session"):
         assert marker in body, f"root-resolution ladder must mention {marker!r}"
+
+
+BREAK_WORD_CAP = 2000
+
+BREAK_REQUIRED_LITERALS = (
+    "dag.py break <root> <assumption-id>",
+    "impact-",
+    "direct dependents",
+    "full impact",
+    "references/node-schema.md",
+)
+
+
+def test_break_assumption_skill_names_break_verb_and_two_followups():
+    # @req: BI-6
+    body = _body(BREAK_SKILL_MD.read_text(encoding="utf-8"))
+
+    assert len(body.split()) <= BREAK_WORD_CAP, (
+        f"SKILL.md body is {len(body.split())} words, cap is {BREAK_WORD_CAP}"
+    )
+
+    for literal in BREAK_REQUIRED_LITERALS:
+        assert literal in body, f"break-assumption SKILL.md must name {literal!r}"
+
+    # The whole point of the skill: the user declares, the agent only asks.
+    assert re.search(r"declare", body, re.IGNORECASE), (
+        "SKILL.md must state that the user declares the break, not the agent"
+    )
+
+    # Nothing downstream is recomputed — the user decides what to re-examine.
+    assert re.search(r"recomput", body, re.IGNORECASE), (
+        "SKILL.md must state that nothing is recomputed"
+    )
+
+    assert re.search(r"never read.*views/", body, re.IGNORECASE) or re.search(
+        r"views/.*never", body, re.IGNORECASE
+    ), "SKILL.md body must state the views/ read prohibition"
+
