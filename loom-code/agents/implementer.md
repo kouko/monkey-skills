@@ -105,7 +105,7 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     `# @req: <REQ-id>` tag — a single-line comment as the first
     line(s) *inside* the test body, directly *below* the `def test_...`
     line — binding that test to the requirement it verifies. The
-    `<REQ-id>` (e.g. `# @req: REQ-ORDER-3`) is the linkage the living-spec
+    `<REQ-id>` (e.g. `# @req: REQ-3`) is the linkage the living-spec
     structural lane and the repo-wide index read to prove every
     requirement is exercised. In that case a test with no `@req` tag
     is **INCOMPLETE** per this contract — the same way a skipped test
@@ -114,9 +114,9 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     an id that **already exists in the living-spec namespace** (your
     dispatch's plan/spec names them; the repo index is the registry).
     Concretely, the namespace is every id declared by an id-form
-    `### Requirement: REQ-<n> — <name>` header — in a live change-folder's
-    `specs/<capability>/spec.md`, in the archive, or in
-    `docs/loom/spec/` — which is what
+    `### Requirement: REQ-<n>` header (with or without ` — <name>`) — in
+    a live change-folder's `specs/<capability>/spec.md`, in the archive,
+    or in `docs/loom/spec/` — which is what
     `loom-code/scripts/check-living-spec-index.py` actually reads; see
     `loom-design/skills/spec-expansion/references/requirement-identifiers.md`
     for the full grammar. `--next-req-id` mints the next number, but that

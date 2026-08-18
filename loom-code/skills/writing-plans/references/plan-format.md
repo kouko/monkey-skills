@@ -109,13 +109,13 @@ This section deliberately carries no owner field, no deadline field, no routing 
 - **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M complete first" (multi-prerequisite — N and M must both finish before this task starts) | "Tasks N, M parallel" (both are prerequisites, may run in parallel). Cross-part ordering: use "none" at task level + a plan-level `Notes` entry; the field is within-plan only and cannot reference a sibling part's tasks.>
 - **Independent**: <true | false>  # v0.8.0+ — opt-in marker for `dispatching-parallel-agents`. Default false.
 - **Review-weight**: <mechanical | prose | OMIT>  # v0.11.0+ — opt-in, default absent = full triad (implementer + spec-reviewer + code-quality-reviewer). `mechanical` may ONLY be set when this task is an identical or near-identical edit reproducible from an exact spec — never for logic, heuristic, hook, or security-surface changes. `prose` (v0.42.0+) may ONLY be set when every file in `Files touched` is `.md` authored prose. See §`Review-weight` below.
-- **Brief item covered**: <traceability referent — ONE field, three accepted referent kinds:
+- **Brief item covered**: <traceability referent — ONE field, four accepted referent kinds:
     (a) a quote or reference from the brief's Smallest End State / Decision section, OR
     (b) when the plan consumes a loom-design change-folder, a **stable join key** of the form
     `<change-id> / Requirement: <name> / Scenario: <name>` (R5 — a checkable provenance referent,
     à la Kiro `_Requirements:` / Spec-Kit `FR-###`), OR
     (c) a `BI-<n>` identifier declared by the source brief, OR
-    (d) a `REQ-<n>` id declared by an id-mode change-folder header, or the id-form join key
+    (d) a `REQ-<n>` id declared by an id-mode spec file's header, or the id-form join key
     `<change-id> / REQ-<n> / Scenario: <name>`. A bare `REQ-<n>` (no `/ Scenario:` suffix) is
     requirement-level coverage of every scenario under it (OQ-3, option A) — see
     `loom-design/skills/spec-expansion/references/requirement-identifiers.md` for the id rules
@@ -240,9 +240,11 @@ Before v0.43.0, this field was one free-prose line combining a behaviour-match c
 
 **Omit the field entirely** when the task authors new logic rather than reusing an existing helper across lanes. The field is opt-in by reuse presence, not by every task.
 
-#### `Brief item covered` — kind (c), the none-value, and the tie-break (v0.79.0+)
+#### `Brief item covered` — kinds (c) and (d), the none-value, and the tie-break (v0.79.0+)
 
 **Referent kind (c): a `BI-<n>` identifier declared by the source brief.** It joins the quote kind (a) and the change-folder join-key kind (b) as an accepted referent of this same field — cite the id, not a re-quote of the item's wording, when the brief declares one. How identifiers are formed, assigned, retired, and which brief sections carry them is owned by [`../../brainstorming/references/handoff-brief-format.md`](../../brainstorming/references/handoff-brief-format.md) §Brief item identifiers; read the rules there. This file settles only that the id is a legal referent here — a second copy of the id rules would drift from the schema that owns them.
+
+**Referent kind (d): a `REQ-<n>` id declared by an id-mode spec file's header, or the id-form join key `<change-id> / REQ-<n> / Scenario: <name>`.** A bare `REQ-<n>` (no `/ Scenario:` suffix) covers every scenario under that requirement (OQ-3, option A). `loom-design/skills/spec-expansion/references/requirement-identifiers.md` owns the id grammar; this file settles only that the id is a legal referent here.
 
 **The no-requirement value.** `none — <reason>` is legal because a task that delivers no brief outcome — release administration, a version bump, a manifest mirror — must not be forced into a false citation: a citation naming an item the task does not deliver reads as satisfied to every downstream reader and to the coverage checker, which makes it worse than no citation at all. The reason is mandatory, and that is what keeps the value from becoming a silent opt-out — a bare `none`, an empty reason, or a whitespace-only reason is invalid. Task 9 of `docs/loom/plans/2026-08-13-brief-item-addressability.md` is this rule's own worked instance: the release-administration task that introduced the value uses it.
 
@@ -521,7 +523,7 @@ Both tasks' entire output is computed by a deterministic script from a named SSO
 - ❌ **Multi-module task.** If `Module:` lists 2+ files, split. The implementer subagent's per-task scope is one module.
 - ❌ **Missing acceptance.** A task with no RED test name has no done-condition. tdd-iron-law cannot fire on it. Always name the failing test.
 - ❌ **Implicit dependencies.** If a task says *"also remember to update the OpenAPI spec,"* that update is a missing task. Declare it.
-- ❌ **Tasks not traceable to brief.** Every task must cite a brief item — a quote, a change-folder join key, or a `BI-<n>` id. Orphan tasks are scope creep. The one exception is the declared `none — <reason>` value (see §`Brief item covered`); a bare `none` is an orphan task with a hat on.
+- ❌ **Tasks not traceable to brief.** Every task must cite a brief item — a quote, a change-folder join key, a `BI-<n>` id, or a `REQ-<n>` id. Orphan tasks are scope creep. The one exception is the declared `none — <reason>` value (see §`Brief item covered`); a bare `none` is an orphan task with a hat on.
 - ❌ **Critical-path depth >5 with no fallback decision.** If the longest chain of tasks linked by `Dependencies` exceeds depth 5, route back to brainstorming OR split into multiple briefs. A deep chain is a discovery failure. Do not silently produce a deep sequential chain. (A wide-but-shallow plan — many `Independent: true` leaves, shallow depth — is fine; the ceiling counts depth, NOT total task count.)
 - ❌ **Skipping plan-document-reviewer self-review.** `Plan-document-reviewer verdict: PENDING` means SDD blocks. Do not pass an unreviewed plan to SDD.
 - ❌ **Claiming `Independent: true` with overlapping `Files touched`.** Independence requires disjoint write sets. If two tasks both declare `Independent: true` AND share any file in `Files touched`, the claim is wrong — fix the plan, not the dispatch. `dispatching-parallel-agents` will refuse to dispatch overlapping tasks regardless of the marker.
