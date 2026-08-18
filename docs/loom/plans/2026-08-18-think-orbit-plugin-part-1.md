@@ -7,7 +7,7 @@ Goal: Part 1 交付後：plugin 骨架在 repo 內、有自己的 CI lane；使�
     標 `stale`、輸出影響範圍視圖、不重算；研究筆記以其 `claim` 一行被引用、`claim` 變了才通知下游；
     整張 DAG 由腳本畫成一張基本 Mermaid 全圖給人看；最後使用者用自己的真實素材跑完一輪、
     對著 DAG 全圖與節點檔寫下檢查點結論。
-Stage: sdd:wave-4
+Stage: review:round-1
 Steps:
     1. 骨架與地基（plugin 骨架／載入器＋格式文件／研究規則與盲區清單）
     2. 四個腳本動詞與 CI lane（check／break／claims／render 基本 DAG 全圖／CI workflow）
@@ -255,7 +255,7 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Dependencies**: Tasks 3, 6, 8, 9, 10, 13, 14 complete first
 - **Independent**: false
 - **Brief item covered**: BI-6 — Core conversation protocol (SKILL.md)（主）＋ BI-7 — Research rules（SKILL 指向 T3 的 reference）＋ BI-12 — Basic DAG view（SKILL 教何時看 `views/dag.md`）＋ BI-10 — Umbrella (Part 1)（骨架＋腳本＋核心 SKILL 落地）
-- **Status**: claimed(@strage-dag-skill)
+- **Status**: done(0e081d1d)
 - **Gloss**: 使用者「只是講話」就能讓討論落成節點與假設檔的那份劇本——三處打斷、其餘靜默寫檔、閘門失敗才出聲（B 拆法下的核心動詞 skill）。
 
 ## Task 12 — 真實素材檢查點（使用者親跑）
@@ -327,7 +327,7 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Dependencies**: Tasks 6, 14 complete first
 - **Independent**: false
 - **Brief item covered**: BI-6 — Core conversation protocol（intake／續談開場／路由半邊）
-- **Status**: pending
+- **Status**: done(bfeb9382)
 - **Gloss**: 使用者的單一入口——說「我要決定 X」或「繼續」就進來，由它判斷現況、開場，再把你交給正確的動詞 skill。
 
 ## Task 16 — break-assumption SKILL.md：假設破裂流程
@@ -344,7 +344,7 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Dependencies**: Tasks 10, 14 complete first
 - **Independent**: false
 - **Brief item covered**: BI-6 — Core conversation protocol（break-assumption 流程半邊）＋ BI-5（impact 視圖的人工使用）
-- **Status**: pending
+- **Status**: done(a44dab08)
 - **Gloss**: 「前提破了」那一刻的劇本——agent 只能舉手，你宣告，系統只標記受影響節點並給你一張影響範圍圖，重看哪裡由你決定。
 
 ## Notes
@@ -364,6 +364,8 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Rename（2026-08-18, after T6）**：使用者定案 plugin 名稱 `think-orbit`（原工作名 `strategy-dag` 來自分支名筆誤；候選 decision-cot／deliberate／think-trail 討論後選定）。skill 拆法：使用者於 T7 後選 **B（路由＋動詞拆分）**——`using-think-orbit`／`decision-session`／`break-assumption`（Part 2 再加 `render-views`／`compile-proposal`）；見下方 Amendment。本計畫與三份 brief 內的 `strategy-dag` 路徑／識別字全數機械替換為 `think-orbit`——純識別字替換，任務範圍／驗收不變，屬 stamping 類，no re-review；程式側改名以獨立 commit 完成（見 T6 之後的 rename commit）。分支名 `strage-dag-skill` 不改。
 - **T13 PASS_WITH_NOTES 債（2026-08-18）**：label 中的 `node.id`／`assumption.id` 仍未 escape（`"`／`<`／`>`），只有 summary／statement 走 `_mermaid_label_text` → 併入 T10（同模組、共用 label 組合），加 RED 測試。
 - **T8 PASS_WITH_NOTES 債（2026-08-18）**：`_count_sentences` 對稱謂縮寫（Dr./Mr./Mrs./Ms./Prof./St./Jr./Sr./No.）後接大寫專名仍切句 → 併入 T9（同模組），加小型縮寫表＋測試。
+- **CI gotcha（2026-08-18, T16 收尾發現）**：`.claude/hooks/validate-skill-folder-structure.sh` 只讀 stdin 的 PostToolUse JSON、忽略 argv——`bash hook <path>` 永遠 exit 0；think-orbit CI 已改用 `scripts/check-skill-structure.py think-orbit`（eece4620）。`tsundoku-ci.yml` 有同型死步驟，列為收尾 backlog／memory 項。
+- **T12 執行方式**：實作全部完成後（T1–T11、T13–T16 done）分支先走 finishing（整支審查→驗證→PR-open 停），T12 由使用者在 PR 開啟後以 headless recipe 或安裝後親跑；檢查點檔落成一個後續 commit（可進同一 PR）。Stage 到 T12 時為 `blocked:user-decision`。
 - **Kickoff sweep（2026-08-18）**：一路門（one-way door）僅一條——節點／假設檔的 frontmatter 欄位集（使用者資料會累積在上面）；已由 brief 簽核＋T12 檢查點在 Part 2 前留改口，於 kickoff 簡報向使用者揭示，不另開分岔。其餘皆兩路門，記入 Decision Log。
 - Kickoff decision: frontmatter 解析 → PyYAML `yaml.safe_load`（repo 先例＋Obsidian YAML 硬需求；自寫解析器是 YAGNI），CI 安裝 pyyaml
 - Kickoff decision: `break` 是否直接改檔 → 直接改 assumption `status` 與依賴節點 `status`（使用者已宣告破裂；「只輸出建議再由 agent 改檔」多一輪且易漏），其餘欄位與本文 byte-identical
@@ -380,3 +382,5 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 6. chose to exempt research-note FACT nodes from the fact-source rule (the note file is the source, its `claim` the citable line; only `nodes/` FACTs need `source`+`quote`) — cost-of-change: the day you want research notes to carry an external `source` too, this choice costs one rule tweak plus a schema line, no data migration
 7. chose the name `think-orbit` (user's call: 'think' carries the thinking-partner action, 'orbit' the coming-back-across-sessions feel) over decision-cot / think-trail — cost-of-change: the day you want the name to say 'decision' or 'trail', this choice costs a mechanical rename plus a marketplace re-publish
 8. chose the router + verb-skill layout (`using-think-orbit` / `decision-session` / `break-assumption`) with plugin-level shared `scripts/` (user's call, option B) — cost-of-change: the day you want a single entry file, this choice costs folding three SKILL.md bodies into one under the 4,500-word cap
+9. chose a per-session `<root>` resolution ladder (path in the message → cwd containing nodes/ → ask once per session; no state file in Part 1) because a fresh session has no memory and must never guess a project path — cost-of-change: the day you want the plugin to remember projects, this choice costs adding a small pointer file (e.g. `~/.think-orbit/last-root`) and a consent line
+10. chose `current | stale` as the only node status vocabulary and added a `node-status` gate rule (found `active` drift between decision-session and node-schema at T16 review) — cost-of-change: the day you want more states (e.g. `superseded`), this choice costs one enum edit plus a schema line
