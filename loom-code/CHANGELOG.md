@@ -5,6 +5,41 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.87.0] — 2026-08-18 — on-ramp explicit-choice gate
+
+### Added
+
+- **`check_onramp_choice.py`** — a standalone checker enforcing the
+  Design-side on-ramp three-state grammar (`chose <option>` /
+  `deferred — <reason>` / standing choice) in a brief's on-ramp
+  section, and reading `## On-ramp standing choices` entries from
+  DIRECTION.md via `build_question`.
+- **A git-guard commit-time gate** blocks a newly added
+  `docs/loom/plans/*.md` whose bound brief has no on-ramp answer
+  (`--diff-filter=A`, historical plans untouched); the checker path
+  is contained to the repo and forwards `--git-dir`/`--work-tree`;
+  an import failure or unreadable brief fails open with one loud
+  stderr line, never silently.
+- **A writing-plans intake gate** consumes the same checker before a
+  plan is drafted, so the on-ramp question surfaces before Task 1
+  rather than only at commit time.
+- **`## On-ramp standing choices`** section in DIRECTION.md (template
+  scaffold + this repo's row-1 entry) for repos that record a
+  standing answer instead of re-asking every brief; `backlog_index.py`
+  carries a narrow date exemption for well-formed standing-choice
+  entries against DIRECTION.md's no-dates invariant.
+- **`docs/loom/audits/2026-08-18-onramp-choice-gate-fire-rate.md`** —
+  a fire-rate audit of the gate over historical specs and plans.
+
+### Changed
+
+- **Brainstorming Axis 0 and the family-reception wording** now ask
+  the on-ramp question as a standalone item, default to `pending`
+  rather than any agent-chosen default, and check DIRECTION.md's
+  standing choices before asking.
+- **`handoff-brief-format.md`** documents the `## Design-side
+  on-ramp` three-state grammar the checker enforces.
+
 ## [0.86.0] — 2026-08-18 — requirement identity (REQ-<n> + name)
 
 ### Added
