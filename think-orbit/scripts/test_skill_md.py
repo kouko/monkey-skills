@@ -20,6 +20,7 @@ WORD_CAP = 4500
 
 REQUIRED_LITERALS = (
     "dag.py check",
+    "dag.py claims",
     "dag.py render",
     "break-assumption",
     "references/node-schema.md",

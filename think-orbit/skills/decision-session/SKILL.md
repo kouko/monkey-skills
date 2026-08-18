@@ -211,7 +211,10 @@ hand off to the `break-assumption` skill. Do not re-implement the break
 flow here — that skill owns propagation, the impact view, and the rule
 that the agent only raises its hand while the user declares the break.
 
-Intake and the resume opening belong to `using-think-orbit`. If the
+Intake and the resume opening belong to `using-think-orbit`. The
+resume opening (`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py claims
+--since HEAD`, then restating the last DECISION and the open
+assumptions) is the router's verb; this skill does not run it. If the
 user arrives asking to start a whole new project, or to be reminded
 where things stand, that is the router's job, not this one's.
 
