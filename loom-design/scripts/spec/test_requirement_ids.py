@@ -40,8 +40,10 @@ def _split_h2_sections(text: str) -> list[tuple[str, str]]:
 
     Fence-aware: a `## `-prefixed line inside a fenced code block is
     content, not a section boundary — a fence-blind scan would truncate a
-    section that embeds an example header (this doc embeds
-    `### Requirement: REQ-<n> — <name>` examples in fences).
+    section that ever fences an example header. The doc today uses inline
+    backtick spans, not fences — the guard is defensive, so a future fenced
+    `### Requirement: REQ-<n> — <name>` example cannot silently truncate a
+    section.
     """
     sections: list[tuple[str, list[str]]] = []
     in_fence = False

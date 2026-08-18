@@ -2,7 +2,7 @@
 
 > Companion to [`../SKILL.md`](../SKILL.md). This is the single-source-of-truth
 > convention for a requirement's identifier — the `REQ-<n>` twin of
-> [`handoff-brief-format.md §Brief item identifiers`](../../brainstorming/references/handoff-brief-format.md)
+> [`handoff-brief-format.md §Brief item identifiers`](../../../../loom-code/skills/brainstorming/references/handoff-brief-format.md)
 > in `brainstorming`. Every parser and every skill passage that talks about a
 > requirement id points here rather than restating the rule.
 
@@ -120,7 +120,7 @@ real one):
 
 ## See also
 
-- [`handoff-brief-format.md §Brief item identifiers`](../../brainstorming/references/handoff-brief-format.md#brief-item-identifiers)
+- [`handoff-brief-format.md §Brief item identifiers`](../../../../loom-code/skills/brainstorming/references/handoff-brief-format.md#brief-item-identifiers)
   — the `BI-<n>` convention this document mirrors.
 - [`../SKILL.md`](../SKILL.md) — the requirement header skeleton this
   convention governs.
