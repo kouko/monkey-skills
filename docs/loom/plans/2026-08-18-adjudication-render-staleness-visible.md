@@ -12,11 +12,11 @@ Steps:
   1. 蓋章：頁面帶上產生它的版本（含讀不到版本時的 unknown 退路）
   2. 大聲失敗：譯文區殘留未轉換的 markdown 就非零退出、不寫檔
   3. 釘死路徑：協定規定執行哪一份 copy，並在交付前檢查印記
-  4. 收尾：出貨 0.87.0（版本 bump ＋ Codex manifest 同步 ＋ CHANGELOG），並把 Codex 實測立案
+  4. 收尾：出貨 0.88.0（版本 bump ＋ Codex manifest 同步 ＋ CHANGELOG），並把 Codex 實測立案
 **Total tasks**: 6
 **Critical-path depth**: 4 (≤5 ✓)
 **Execution order**: parallel-where-possible
-**Plan-document-reviewer verdict**: PASS (2026-08-18, round 2, 16/16)
+**Plan-document-reviewer verdict**: PASS (2026-08-18, round 2, 16/16) + post-PASS amendment re-review (Task 5 version number, see Notes)
 
 ## Task-flow diagram
 
@@ -27,7 +27,7 @@ flowchart LR
     T1["T1 版本印記<br/>meta + 頁尾"] --> T2["T2 讀不到版本<br/>→ unknown"]
     T1 --> T4["T4 協定：釘死路徑<br/>+ 交付前檢查印記"]
     T2 --> T3["T3 譯文區殘留 markdown<br/>→ 非零退出、不寫檔"]
-    T3 --> T5["T5 loom-code 0.87.0<br/>+ CHANGELOG"]
+    T3 --> T5["T5 loom-code 0.88.0<br/>+ CHANGELOG"]
     T4 --> T5
     T3 --> T6["T6 Codex 實測<br/>立案 backlog"]
     T4 --> T6
@@ -55,7 +55,7 @@ flowchart LR
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: "`adjudication_render.py` stamps every HTML page it emits with the version of the plugin copy that ran — machine-readable (`<meta name="generator">`) and visible to the reader (a small page footer)."
-- **Status**: claimed(@implementer-T1)
+- **Status**: done(ef28ffde)
 - **Gloss**: 每份產出的頁面都帶上「是哪個版本產的」，機器讀得到、你也看得見
 
 ## Task 2 — a copy that cannot name itself stamps `unknown`, never crashes
@@ -72,7 +72,7 @@ flowchart LR
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: "falling back to a literal `unknown` when that file is unreadable (a copy that cannot name itself is as suspect as an old one, and must still be visibly marked)"
-- **Status**: pending
+- **Status**: done(ed66822d)
 - **Gloss**: 連版本檔都讀不到的 copy 會蓋上 unknown，不會當掉，也不會偷偷不蓋
 
 ## Task 3 — unconverted markdown in the rendition region fails the render loudly
@@ -91,7 +91,7 @@ flowchart LR
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
 - **Brief item covered**: "`adjudication_render.py` fails loud (non-zero exit, no output file written) when a rendered `rendition` still contains unconverted markdown markers."
-- **Status**: pending
+- **Status**: done(2e72357e)
 - **Gloss**: 譯文區還留著沒轉換的 markdown 就直接報錯不寫檔；程式碼片段裡的 `**` 與英文原文區不算數
 
 ## Task 4 — the invocation contract pins which copy runs, and gates delivery on the stamp
@@ -108,12 +108,12 @@ flowchart LR
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: "The same invocation contract pins WHICH copy runs, as a self-locating rule… before delivering the page, confirm it carries the stamp and the stamp's version matches the pipeline being run."
-- **Status**: pending
+- **Status**: done(4754e06b)
 - **Gloss**: 協定明文規定「跑跟這份協定一起出貨的那支腳本」，並要求交付前先確認頁面有印記
 
-## Task 5 — ship as loom-code 0.87.0
+## Task 5 — ship as loom-code 0.88.0
 
-- **Description**: Bump `loom-code/.claude-plugin/plugin.json` to `0.87.0`, run `python3 scripts/sync_codex_manifests.py loom-code` so `.codex-plugin/plugin.json` follows in lock-step, and add the `0.87.0` entry to `loom-code/CHANGELOG.md` describing the three shipped behaviors (path pin, version stamp, fail-loud postcondition) and naming the five incidents as the motivation. A version bump is mandatory here rather than optional: T4 changes skill-loaded content, and the marketplace publishes by version, so an unbumped PR is a silent no-op on every installed copy.
+- **Description**: Bump `loom-code/.claude-plugin/plugin.json` to `0.88.0` — NOT the `0.87.0` this task originally named: PR #704 on branch `onramp-explicit-choice-gate` claimed `0.87.0` and merged to main at 2026-08-18T08:41:58Z (verified at implementation time via `gh pr view 704` and `git show origin/main:loom-code/.claude-plugin/plugin.json`), so `0.87.0` was already taken and the marketplace publishes by version — run `python3 scripts/sync_codex_manifests.py loom-code` so `.codex-plugin/plugin.json` follows in lock-step, and add the `0.88.0` entry to `loom-code/CHANGELOG.md` describing the three shipped behaviors (path pin, version stamp, fail-loud postcondition) and naming the five incidents as the motivation. A version bump is mandatory here rather than optional: T4 changes skill-loaded content, and the marketplace publishes by version, so an unbumped PR is a silent no-op on every installed copy.
 - **Module**: loom-code
 - **Files touched**: loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/CHANGELOG.md
 - **Context paths**:
@@ -122,12 +122,12 @@ flowchart LR
   - /Users/kouko/.supacode/repos/monkey-skills/Html-viewer-fix/scripts/sync_codex_manifests.py
 - **Acceptance**:
   - **RED**: `python3 scripts/sync_codex_manifests.py --check loom-code` exits non-zero immediately after the `.claude-plugin` bump and before the sync — the two manifests diverge on `version`.
-  - **GREEN**: `python3 scripts/sync_codex_manifests.py --check loom-code` exits 0; both manifests read `0.87.0`; `loom-code/CHANGELOG.md` carries a `0.87.0` section naming all three behaviors; the full `python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/` suite is green.
+  - **GREEN**: `python3 scripts/sync_codex_manifests.py --check loom-code` exits 0; both manifests read `0.88.0`; `loom-code/CHANGELOG.md` carries a `0.88.0` section naming all three behaviors; the full `python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/` suite is green.
 - **Dependencies**: Tasks 3, 4 complete first
 - **Independent**: true
 - **Brief item covered**: release of the brief's Smallest End State items 1-4 — no new behavior; the version + changelog that make the shipped legs reach an installed copy at all
 - **Status**: pending
-- **Gloss**: 出貨 0.87.0，Codex manifest 跟著同步，CHANGELOG 記上三項行為
+- **Gloss**: 出貨 0.88.0，Codex manifest 跟著同步，CHANGELOG 記上三項行為
 
 ## Task 6 — record the un-probed Codex claim in the backlog
 
@@ -152,6 +152,7 @@ flowchart LR
 - **Same-file chain is deliberate, and the parallel pairs are marked accordingly.** T1 → T2 → T3 all edit `adjudication_render.py`, so they stay sequential regardless of how independent the behaviors read; T1 is the sole task at its level and is therefore `Independent: false` (there is nothing for it to run beside). The genuine parallel pairs are **T2 ‖ T4** (render script + its stamp test vs. the protocol + its pin test — disjoint) and **T5 ‖ T6** (`loom-code/` manifests + changelog vs. `docs/loom/backlog/` — disjoint). T4 depends on T1 only because it documents T1's stamp (doc-mirrors-code).
 - **Protocol size ceiling not triggered.** `adjudication-view.md` is 2069 words; T4 adds roughly 150. The unpark condition in `docs/loom/backlog/2026-08-12-protocol-files-carry-no-size-ceiling.md` is "crosses ~3000 words OR a second protocol file lands" — neither fires here, so that entry stays OPEN untouched.
 - **Two memory entries bind T3 specifically.** `a-mutation-test-must-run-the-production-assertion.md` is why every T3 test drives `main()` rather than the helper; `a-mechanical-check-can-go-green-by-skipping.md` is why T3 carries the no-skip probe (c). A T3 that skips either is not done.
-- **What this plan does NOT fix.** A session whose installed plugin is itself older than 0.87.0 still renders with that old copy and gets no stamp — by design, that absence is the signal. Nothing here prunes the plugin cache, rebases a stale worktree, or retro-flags the five pages already delivered.
+- **What this plan does NOT fix.** A session whose installed plugin is itself older than 0.88.0 still renders with that old copy and gets no stamp — by design, that absence is the signal. Nothing here prunes the plugin cache, rebases a stale worktree, or retro-flags the five pages already delivered.
 - **Verdict stamped, no re-review** — writing the returned verdict + flipping `Stage` to `sdd:wave-1` is the stamping-the-verdict amendment kind.
 - **Three citation drifts left in place deliberately.** Round 2 flagged, non-gating: `_render_page` `:343-372` (body ends 371), `DOC_PAGE_TEMPLATE` `:313-330` (template ends 328), and T3's "the `-o` write at `:578`" — which is wrong on both line and branch (the `-o` write is `:576`; `:578` is the no-`-o` stdout branch). Correcting a cited fact is NOT in the closed post-PASS amendment list, and the plan is at its 2-round cap, so the corrections travel in the implementers' dispatch packets instead of a third review round. T1 shifts every one of these line numbers anyway.
+- **Post-PASS amendment (re-reviewed, not a skip-note kind).** Task 5's version was changed `0.87.0` → `0.88.0` after the plan's PASS. This is a change to a cited fact, so it is outside the closed skip-list (stamping the verdict / fixing a typo / filling a schema field) and was sent back for a scoped re-review rather than amended silently. Cause: PR #704 claimed `0.87.0` and merged to main mid-arc; the marketplace publishes by version, so shipping a duplicate number would have made the update a silent no-op on every installed copy — the same "looks shipped, is not" failure class this arc exists to fix.

@@ -5,6 +5,43 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.88.0] — 2026-08-18 — adjudication render staleness made visible
+
+### Added
+
+- **The invocation-contract protocol pins the exact script path** the
+  reader must run to render an adjudication view, closing the gap
+  where a stale copy of the instructions could be followed literally
+  and still produce unconverted output.
+- **`adjudication_render.py` stamps every rendered page with the
+  running script's version**, falling back to `unknown` when the
+  version cannot be determined, so a rendered page now carries visible
+  evidence of which copy of the renderer produced it.
+- **`adjudication_render.py` fails loud on a broken rendition
+  postcondition** instead of silently emitting a page that looks
+  converted but isn't. This guard is scoped to a current-format page:
+  it catches a future regression in the conversion step, and is
+  structurally silent on a genuinely stale copy, which wrapped
+  renditions in a different element entirely.
+
+### Motivation
+
+Five adjudication views delivered 2026-08-14 through 2026-08-18
+carried unconverted markdown, because the copy of the renderer that
+ran on each of those five occasions predated the markdown-it
+conversion — and every one of those runs exited 0, so nothing in the
+run itself signaled the staleness.
+
+What surfaces that class of failure is the **stamp and the
+pre-delivery check**, not the fail-loud exit code: a stale copy stamps
+its own older version, a pre-stamp copy stamps nothing, and the
+invocation contract now refuses to hand over an unstamped or
+version-mismatched page. The path pin prevents four of those five
+incidents outright, since each ran a copy the executor chose over the
+one shipped beside the protocol. The postcondition guards a different
+failure — a future conversion regression — and would not have caught
+these five.
+
 ## [0.87.0] — 2026-08-18 — on-ramp explicit-choice gate
 
 ### Added
