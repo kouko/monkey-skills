@@ -8,13 +8,20 @@ Task 1 of docs/loom/plans/2026-08-19-field-value-microstructure.md.
 Grammar:
 
 - A `Description` first line (the text after the colon on the bullet's
-  own line) violates when it carries more than one sentence-terminal
-  mark from the closed set `.` `?` `!`, ignoring marks inside backtick
-  spans and inside a trailing parenthetical — i.e. `Description` allows
-  exactly one sentence.
+  own line) violates when it carries more than one sentence *boundary*
+  — not every occurrence of a mark from the closed set `.` `?` `!`.
+  A mark is a boundary only when it is followed by whitespace-then-
+  capital-letter, or by end-of-line; a mark mid-token (a version
+  number's `0.89.0`, `e.g.`, `i.e.`, an ellipsis not followed by a
+  capital) is not a boundary. Counting occurrences instead of
+  boundaries produces false positives on correctly-written prose —
+  reproduced live against this plan's own Task 12. Backtick-span
+  content is still stripped before counting, so a mark inside a
+  filename like `test.py` never counts. `Description` allows exactly
+  one sentence boundary.
 - A `RED` or `GREEN` first line is allowed one assertion sentence plus
   one optional grounding clause, so it violates only at the third
-  sentence-terminal mark — the `Fails today because ...` clause
+  sentence boundary — the `Fails today because ...` clause
   `plan-format.md` itself teaches is that grounding sentence.
 - A field's continuation lines (everything after the first line, up to
   the next blank or column-0 line) violate when any indented non-blank
@@ -50,14 +57,12 @@ from plan_card import _bullet_lines, _task_blocks  # noqa: E402
 # mark.
 _BACKTICK_SPAN = re.compile(r"`[^`]*`")
 
-# A parenthetical `(...)` ending the line, optionally itself followed
-# by one sentence-terminal mark — the "trailing parenthetical" the
-# grammar exempts. Only the parenthetical's own content is discounted;
-# a terminal mark immediately after it (e.g. "...(default json).")
-# still counts.
-_TRAILING_PARENTHETICAL = re.compile(r"\([^()]*\)([.?!])?\s*$")
-
-_SENTENCE_TERMINAL = re.compile(r"[.?!]")
+# A sentence *boundary*: a mark from `.` `?` `!` followed by
+# whitespace-then-capital-letter, or by end-of-line. This is what
+# distinguishes a real sentence end from a mark mid-token — a version
+# number (`0.89.0`), an abbreviation (`e.g.`, `i.e.`), or an ellipsis
+# not followed by a new (capitalized) sentence never matches.
+_SENTENCE_TERMINAL = re.compile(r"[.?!](?=\s+[A-Z]|$)")
 
 _NESTED_BULLET_LINE = re.compile(r"^\s+[-*+]\s")
 _TABLE_LINE = re.compile(r"^\s*\|")
@@ -70,20 +75,14 @@ _RED_GREEN_MAX_TERMINALS = 2
 
 
 def _strip_ignored_marks(line: str) -> str:
-    """`line` with backtick-span content removed and a trailing
-    parenthetical's content removed (its own closing terminal mark, if
-    any, is kept) — what remains is what `_sentence_count` counts."""
-    stripped = _BACKTICK_SPAN.sub("", line).rstrip()
-    match = _TRAILING_PARENTHETICAL.search(stripped)
-    if match is not None:
-        end_mark = match.group(1) or ""
-        stripped = stripped[: match.start()] + end_mark
-    return stripped
+    """`line` with backtick-span content removed — what remains is what
+    `_sentence_count` scans for sentence boundaries."""
+    return _BACKTICK_SPAN.sub("", line).rstrip()
 
 
 def _sentence_count(line: str) -> int:
-    """Number of sentence-terminal marks in `line`, after discounting
-    backtick-span and trailing-parenthetical content."""
+    """Number of sentence *boundaries* in `line` (see `_SENTENCE_TERMINAL`),
+    after discounting backtick-span content."""
     return len(_SENTENCE_TERMINAL.findall(_strip_ignored_marks(line)))
 
 

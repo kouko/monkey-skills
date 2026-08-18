@@ -101,6 +101,79 @@ def test_red_allows_one_grounding_clause():
     assert any("1" in p and "RED" in p for p in problems)
 
 
+def _plan_with_description(description_value: str) -> str:
+    return (
+        "## Task 1 — foo\n\n"
+        f"- **Description**: {description_value}\n"
+        "- **Acceptance**:\n"
+        "  - **RED**: `test.py::test_foo` — asserts something.\n"
+        "  - **GREEN**: it passes.\n"
+        "- **Dependencies**: none\n"
+        "- **Independent**: true\n"
+        "- **Status**: pending\n"
+    )
+
+
+def test_accepts_unbackticked_version_number():
+    text = _plan_with_description("Bump the version to 0.89.0.")
+    assert check_plan_fields(text) == []
+
+
+def test_rejects_unbackticked_version_number_plus_second_sentence():
+    text = _plan_with_description("Bump the version to 0.89.0. Then ship it.")
+    problems = check_plan_fields(text)
+    assert problems, "expected a non-empty problem list"
+    assert any("1" in p and "Description" in p for p in problems)
+
+
+def test_accepts_eg_abbreviation():
+    text = _plan_with_description(
+        "Fetch data from the API, e.g. the users endpoint, and cache it."
+    )
+    assert check_plan_fields(text) == []
+
+
+def test_rejects_eg_abbreviation_plus_second_sentence():
+    text = _plan_with_description(
+        "Fetch data from the API, e.g. the users endpoint. Then cache it."
+    )
+    problems = check_plan_fields(text)
+    assert problems, "expected a non-empty problem list"
+    assert any("1" in p and "Description" in p for p in problems)
+
+
+def test_accepts_ie_abbreviation():
+    text = _plan_with_description(
+        "Use the flag, i.e. pass --json, to enable it."
+    )
+    assert check_plan_fields(text) == []
+
+
+def test_rejects_ie_abbreviation_plus_second_sentence():
+    text = _plan_with_description(
+        "Use the flag, i.e. pass --json. Then run it."
+    )
+    problems = check_plan_fields(text)
+    assert problems, "expected a non-empty problem list"
+    assert any("1" in p and "Description" in p for p in problems)
+
+
+def test_accepts_ellipsis_not_starting_new_sentence():
+    text = _plan_with_description(
+        "The scan runs long... eventually finishing."
+    )
+    assert check_plan_fields(text) == []
+
+
+def test_rejects_ellipsis_starting_new_sentence():
+    text = _plan_with_description(
+        "The scan runs long... Eventually it finishes."
+    )
+    problems = check_plan_fields(text)
+    assert problems, "expected a non-empty problem list"
+    assert any("1" in p and "Description" in p for p in problems)
+
+
 def test_help_exits_zero():
     result = subprocess.run(
         [sys.executable, str(_SCRIPT), "--help"],
