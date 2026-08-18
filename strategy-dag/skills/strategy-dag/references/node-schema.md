@@ -37,6 +37,10 @@ A research note (`research/*.md`) has its own minimal frontmatter (`id`,
 `claim`, optionally `source`/`quote`) and loads as a `Node` with
 `type == "FACT"` and `summary` set to the `claim` text.
 
+A file whose frontmatter parses to a non-mapping (e.g. a YAML list) or fails
+to parse at all (invalid YAML) is not loaded as a node/assumption — it is
+recorded as a `"<relpath>: frontmatter: ..."` entry in `Project.problems`.
+
 ## Assumption fields (`assumptions/*.md`)
 
 | Field | Type | Meaning |

@@ -54,6 +54,7 @@ class Project:
     root: Path
     nodes: list[Node] = field(default_factory=list)
     assumptions: list[Assumption] = field(default_factory=list)
+    problems: list[str] = field(default_factory=list)
 
 
 def split_frontmatter(text: str) -> tuple[str, str]:
@@ -87,9 +88,31 @@ def _parse_inputs(raw_inputs) -> list[Input]:
     return inputs
 
 
-def _load_node(path: Path) -> Node:
+def _parse_frontmatter_mapping(path: Path, root: Path) -> tuple[dict | None, str, str | None]:
+    """Parse a file's frontmatter into a mapping.
+
+    Returns (fm, body, problem). `fm` is None when the frontmatter fails to
+    parse to a mapping (non-dict YAML, or invalid YAML); `problem` is then a
+    single-line "<relpath>: frontmatter: ..." message for Project.problems,
+    and the caller must skip the file rather than fabricate a Node/Assumption.
+    """
     fm_text, body = split_frontmatter(path.read_text(encoding="utf-8"))
-    fm = yaml.safe_load(fm_text) or {}
+    relpath = path.relative_to(root).as_posix()
+    try:
+        fm = yaml.safe_load(fm_text)
+    except yaml.YAMLError as exc:
+        reason = str(exc).splitlines()[0]
+        return None, body, f"{relpath}: frontmatter: invalid YAML ({reason})"
+    fm = fm or {}
+    if not isinstance(fm, dict):
+        return None, body, f"{relpath}: frontmatter: not a mapping"
+    return fm, body, None
+
+
+def _load_node(path: Path, root: Path) -> tuple[Node | None, str | None]:
+    fm, body, problem = _parse_frontmatter_mapping(path, root)
+    if fm is None:
+        return None, problem
     return Node(
         id=fm.get("id"),
         type=fm.get("type"),
@@ -103,12 +126,13 @@ def _load_node(path: Path) -> Node:
         quote=fm.get("quote"),
         path=path,
         body=body,
-    )
+    ), None
 
 
-def _load_assumption(path: Path) -> Assumption:
-    fm_text, body = split_frontmatter(path.read_text(encoding="utf-8"))
-    fm = yaml.safe_load(fm_text) or {}
+def _load_assumption(path: Path, root: Path) -> tuple[Assumption | None, str | None]:
+    fm, body, problem = _parse_frontmatter_mapping(path, root)
+    if fm is None:
+        return None, problem
     return Assumption(
         id=fm.get("id"),
         status=fm.get("status"),
@@ -118,12 +142,13 @@ def _load_assumption(path: Path) -> Assumption:
         branch=fm.get("branch"),
         path=path,
         body=body,
-    )
+    ), None
 
 
-def _load_research_note_as_node(path: Path) -> Node:
-    fm_text, body = split_frontmatter(path.read_text(encoding="utf-8"))
-    fm = yaml.safe_load(fm_text) or {}
+def _load_research_note_as_node(path: Path, root: Path) -> tuple[Node | None, str | None]:
+    fm, body, problem = _parse_frontmatter_mapping(path, root)
+    if fm is None:
+        return None, problem
     return Node(
         id=fm.get("id"),
         type="FACT",
@@ -137,7 +162,7 @@ def _load_research_note_as_node(path: Path) -> Node:
         quote=fm.get("quote"),
         path=path,
         body=body,
-    )
+    ), None
 
 
 def load_project(root: Path) -> Project:
@@ -145,25 +170,38 @@ def load_project(root: Path) -> Project:
     root = Path(root)
     nodes: list[Node] = []
     assumptions: list[Assumption] = []
+    problems: list[str] = []
 
     nodes_dir = root / "nodes"
     if nodes_dir.is_dir():
         for path in sorted(nodes_dir.glob("*.md")):
-            nodes.append(_load_node(path))
+            node, problem = _load_node(path, root)
+            if problem:
+                problems.append(problem)
+            else:
+                nodes.append(node)
 
     assumptions_dir = root / "assumptions"
     if assumptions_dir.is_dir():
         for path in sorted(assumptions_dir.glob("*.md")):
-            assumptions.append(_load_assumption(path))
+            assumption, problem = _load_assumption(path, root)
+            if problem:
+                problems.append(problem)
+            else:
+                assumptions.append(assumption)
 
     research_dir = root / "research"
     if research_dir.is_dir():
         for path in sorted(research_dir.glob("*.md")):
-            nodes.append(_load_research_note_as_node(path))
+            node, problem = _load_research_note_as_node(path, root)
+            if problem:
+                problems.append(problem)
+            else:
+                nodes.append(node)
 
     nodes.sort(key=lambda n: (n.seq is None, n.seq, n.id or ""))
 
-    return Project(root=root, nodes=nodes, assumptions=assumptions)
+    return Project(root=root, nodes=nodes, assumptions=assumptions, problems=problems)
 
 
 def main(argv: list[str] | None = None) -> int:

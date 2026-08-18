@@ -132,3 +132,36 @@ def test_node_schema_doc_names_every_field():
     text = schema_path.read_text(encoding="utf-8")
     for field in NODE_FIELDS + ASSUMPTION_FIELDS:
         assert field in text, f"node-schema.md missing field mention: {field}"
+
+
+def test_load_project_records_non_dict_or_invalid_frontmatter_as_problems_instead_of_crashing(tmp_path):
+    # @req: BI-1
+    root = tmp_path
+
+    _write(
+        root / "nodes" / "goal.md",
+        "id: goal\n"
+        "type: GOAL\n"
+        "seq: 1\n"
+        "summary: Ship v0\n"
+        "status: active\n",
+    )
+    _write(
+        root / "nodes" / "list_frontmatter.md",
+        "- a\n- b\n",
+    )
+    _write(
+        root / "nodes" / "bad_yaml.md",
+        "key: [unclosed\n",
+    )
+
+    project = dag.load_project(root)
+
+    assert len(project.nodes) == 1
+    assert project.nodes[0].id == "goal"
+    assert len(project.problems) == 2
+
+    problems_text = "\n".join(project.problems)
+    assert "list_frontmatter.md" in problems_text
+    assert "bad_yaml.md" in problems_text
+    assert all("frontmatter:" in p for p in project.problems)
