@@ -114,7 +114,12 @@ This section deliberately carries no owner field, no deadline field, no routing 
     (b) when the plan consumes a loom-design change-folder, a **stable join key** of the form
     `<change-id> / Requirement: <name> / Scenario: <name>` (R5 — a checkable provenance referent,
     à la Kiro `_Requirements:` / Spec-Kit `FR-###`), OR
-    (c) a `BI-<n>` identifier declared by the source brief. This is the SAME field with a broadened
+    (c) a `BI-<n>` identifier declared by the source brief, OR
+    (d) a `REQ-<n>` id declared by an id-mode change-folder header, or the id-form join key
+    `<change-id> / REQ-<n> / Scenario: <name>`. A bare `REQ-<n>` (no `/ Scenario:` suffix) is
+    requirement-level coverage of every scenario under it (OQ-3, option A) — see
+    `loom-design/skills/spec-expansion/references/requirement-identifiers.md` for the id rules
+    (SSOT; do not restate here). This is the SAME field with a broadened
     referent — do NOT add a second field; point at the source `### Requirement:` / `#### Scenario:`
     names rather than copying their prose. One no-requirement value is legal: `none — <reason>`.
     See §`Brief item covered` below for kind (c), that value, and the tie-break rule.>
