@@ -10,7 +10,7 @@ Steps:
 **Total tasks**: 8
 **Critical-path depth**: 3 (≤5)
 **Execution order**: parallel-where-possible
-**Plan-document-reviewer verdict**: PENDING (round-3 gap fixed — Task 7 flipped to `Independent: false`; plus the plan's own `## Open Questions` slot added and Task 6 given its blast-radius repair)
+**Plan-document-reviewer verdict**: NOT RE-RUN after the round-3 fixes (Task 7 flipped to `Independent: false`; the plan's own `## Open Questions` slot added; Task 6 given its blast-radius repair). The branch shipped in PR #693 on its whole-branch review, not on a fresh plan-document round, so no round-4 verdict exists. Corrected 2026-08-18 from the stale `PENDING`: recorded as fact rather than back-filled to `PASS`, because no PASS was ever issued — and the non-PASS value is load-bearing, since `loom-design/scripts/pipeline/batch_queue.py`'s `check_frozen()` Form B returns not-frozen for a plan that carries no `Plan-document-reviewer verdict: PASS` line (an eligibility result, not a raised refusal). Do not "fix" this to PASS without a verdict to cite.
 
 ## Task-flow diagram
 
