@@ -94,6 +94,23 @@ node/subgraph ids; when two different ids sanitize to the same token (e.g.
 reports the clash as an `id-collision` violation so it gets fixed at the
 source instead of silently living only in the rendered view.
 
+## `impact` and `views/impact-<id>.md`
+
+`dag.py impact <root> <assumption-id>` writes
+`<root>/views/impact-<assumption-id>.md` (the assumption id sanitized to
+`[A-Za-z0-9_-]` for the filename): a single `flowchart LR` mermaid block
+showing that one assumption's blast radius — the assumption as a stadium
+node, every dependent reachable via a fully load-bearing chain (`propagate()`)
+as a box with the `stale` class when its *current* `status == "stale"`, and
+every dependent reachable only through a non-load-bearing hop drawn with a
+dashed edge and no `stale` class. Same generated-marker-comment convention
+as `render` — human-only, regenerated on every run, never hand-edited or
+read back by an agent. `dag.py break <root> <assumption-id>` calls this
+renderer itself after propagating stale/weakened status, so breaking an
+assumption always refreshes its impact view; an unknown assumption id
+prints `assumption <id> not found` to stderr and exits 1 without writing
+any file (both `break` and `impact`).
+
 ## Minimal examples
 
 ### Node — `nodes/goal.md`
