@@ -294,17 +294,18 @@ def _is_gh_api_merge(tokens):
 
 def _parse_git(tokens):
     """Split a ``git ...`` argv into (subcommand, sub_args, -C path,
-    --git-dir path).
+    --git-dir path, --work-tree path).
 
     Value-taking global flags (-C / -c / --git-dir / --work-tree /
     --namespace / --config-env / --attr-source, in both
     ``--flag value`` and ``--flag=value`` forms) are skipped so their
     VALUES are never mistaken for the subcommand. The ``=`` forms are
-    single tokens, so all but ``--git-dir=`` (whose value we capture)
-    fall through to the generic ``-``-prefix skip.
+    single tokens, so all but ``--git-dir=`` / ``--work-tree=`` (whose
+    values we capture) fall through to the generic ``-``-prefix skip.
     """
     c_path = None
     git_dir = None
+    work_tree = None
     i = 1
     while i < len(tokens):
         tok = tokens[i]
@@ -317,17 +318,22 @@ def _parse_git(tokens):
         elif tok.startswith("--git-dir="):
             git_dir = tok.split("=", 1)[1]
             i += 1
+        elif tok == "--work-tree" and i + 1 < len(tokens):
+            work_tree = tokens[i + 1]
+            i += 2
+        elif tok.startswith("--work-tree="):
+            work_tree = tok.split("=", 1)[1]
+            i += 1
         elif (
-            tok in ("-c", "--work-tree", "--namespace",
-                    "--config-env", "--attr-source")
+            tok in ("-c", "--namespace", "--config-env", "--attr-source")
             and i + 1 < len(tokens)
         ):
             i += 2
         elif tok.startswith("-"):
             i += 1
         else:
-            return tok, tokens[i + 1:], c_path, git_dir
-    return None, [], c_path, git_dir
+            return tok, tokens[i + 1:], c_path, git_dir, work_tree
+    return None, [], c_path, git_dir, work_tree
 
 
 def _git(args, cwd, git_globals=()):
@@ -458,6 +464,32 @@ def _has_no_verify(args):
     return False
 
 
+def _cwd_for(effective_cwd, c_path):
+    """The cwd a git segment's gate must run in: the segment's own ``-C``
+    path (relative forms resolved against the effective cwd), or the
+    effective cwd when it carries none."""
+    if not c_path:
+        return effective_cwd
+    return c_path if os.path.isabs(c_path) else os.path.join(effective_cwd, c_path)
+
+
+def _repo_globals(git_dir, work_tree, gate_cwd):
+    """Global flags forwarding a segment's ``--git-dir`` / ``--work-tree``
+    to the gate, so it resolves the same repo the command itself would
+    hit (relative paths resolve against the gate cwd, like git's own
+    -C-then---git-dir ordering). Empty when the segment names neither."""
+    globals_ = ()
+    if git_dir:
+        if not os.path.isabs(git_dir):
+            git_dir = os.path.join(gate_cwd, git_dir)
+        globals_ += ("--git-dir", git_dir)
+    if work_tree:
+        if not os.path.isabs(work_tree):
+            work_tree = os.path.join(gate_cwd, work_tree)
+        globals_ += ("--work-tree", work_tree)
+    return globals_
+
+
 def _gate_push(cwd, git_globals=()):
     """Marker gate for one push-family segment → (exit_code, stderr_notes)."""
     notes = []
@@ -545,6 +577,25 @@ def _source_brief_path(plan_text):
     return None
 
 
+def _brief_path_inside_repo(root, brief_rel):
+    """The absolute path of `brief_rel` when it names a file INSIDE
+    `root`, else None — the containment check that keeps a plan's
+    `**Source brief**:` value from steering the gate at an arbitrary
+    file (OWASP ASVS V5 path traversal / CHK-SEC-004). An absolute
+    value is refused outright (``root / "/etc/hosts"`` is
+    ``/etc/hosts`` under Path.__truediv__), and the relative case is
+    resolved — symlinks included — before being compared against the
+    resolved root, so ``../`` cannot climb out."""
+    if os.path.isabs(brief_rel):
+        return None
+    try:
+        candidate = (root / brief_rel).resolve()
+        candidate.relative_to(root.resolve())
+    except (OSError, ValueError):
+        return None
+    return candidate
+
+
 def _gate_commit_plans(cwd, git_globals=()):
     """On-ramp choice gate for one ``git commit`` → (exit_code, stderr notes).
 
@@ -553,6 +604,9 @@ def _gate_commit_plans(cwd, git_globals=()):
     other than ``unresolved``). Fails open — loudly, one ``_inactive``
     note — whenever the verdict cannot be computed."""
     notes = []
+    # grounding: `git diff --help` §--diff-filter — `A` selects Added
+    # paths only (the gate's added-only scope), `--cached` reads the
+    # index the commit is about to record.
     staged = _git(
         ["diff", "--cached", "--name-only", "--diff-filter=A"], cwd, git_globals
     )
@@ -584,8 +638,14 @@ def _gate_commit_plans(cwd, git_globals=()):
         if brief_rel is None:
             notes.append(_inactive(f"{plan} has no '{SOURCE_BRIEF_PREFIX}' line"))
             continue
+        brief_path = _brief_path_inside_repo(root, brief_rel)
+        if brief_path is None:
+            notes.append(
+                _inactive(f"source brief path escapes the repo: {brief_rel}")
+            )
+            continue
         try:
-            brief_text = (root / brief_rel).read_text(encoding="utf-8")
+            brief_text = brief_path.read_text(encoding="utf-8")
         except OSError as exc:
             notes.append(
                 _inactive(f"source brief {brief_rel} could not be read: {exc}")
@@ -639,40 +699,26 @@ def main():
             gate_cwd = None
             gate_globals = ()
             if _is_git_token(gtoks[0]):
-                sub, args, c_path, git_dir = _parse_git(gtoks)
+                sub, args, c_path, git_dir, work_tree = _parse_git(gtoks)
                 if sub == "commit" and _has_no_verify(args):
                     print(MSG_NO_VERIFY, file=sys.stderr)
                     return 2
                 if sub == "commit":
-                    commit_cwd = effective_cwd
-                    if c_path:
-                        commit_cwd = (
-                            c_path
-                            if os.path.isabs(c_path)
-                            else os.path.join(effective_cwd, c_path)
-                        )
-                    code, notes = _gate_commit_plans(commit_cwd)
+                    commit_cwd = _cwd_for(effective_cwd, c_path)
+                    code, notes = _gate_commit_plans(
+                        commit_cwd,
+                        _repo_globals(git_dir, work_tree, commit_cwd),
+                    )
                     for note in notes:
                         print(note, file=sys.stderr)
                     if code != 0:
                         return code
                 # push's -n means --dry-run (unlike commit's -n = --no-verify)
                 if sub == "push" and "--dry-run" not in args and "-n" not in args:
-                    gate_cwd = effective_cwd
-                    if c_path:
-                        gate_cwd = (
-                            c_path
-                            if os.path.isabs(c_path)
-                            else os.path.join(effective_cwd, c_path)
-                        )
-                    if git_dir:
-                        # Forward --git-dir so the gate resolves the same
-                        # repo the push itself would hit (relative paths
-                        # resolve against the effective cwd, like git's own
-                        # -C-then---git-dir ordering).
-                        if not os.path.isabs(git_dir):
-                            git_dir = os.path.join(gate_cwd, git_dir)
-                        gate_globals = ("--git-dir", git_dir)
+                    gate_cwd = _cwd_for(effective_cwd, c_path)
+                    # push's marker gate only resolves <git-dir>/loom —
+                    # no work tree involved, so --work-tree is not forwarded.
+                    gate_globals = _repo_globals(git_dir, None, gate_cwd)
             elif (
                 gtoks[0] == "gh"
                 and len(gtoks) >= 3
