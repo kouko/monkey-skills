@@ -89,9 +89,7 @@ A repo may pre-answer a row for every future arc instead of asking
 each time. Record that in `docs/loom/DIRECTION.md` under
 `## On-ramp standing choices`, one entry per row:
 
-```
-- row <n> (<station>): standing <direct|detour> — <reason> (<YYYY-MM-DD>)
-```
+`- row <n> (<station>): standing <direct|detour> — <reason> (<YYYY-MM-DD>)`
 
 A standing entry lets Axis 0 write the `standing` form on the brief
 line without asking. It is a decision, revisited only by editing
@@ -101,14 +99,16 @@ DIRECTION.md.
 
 **Batch the intake.** When an entry skill needs input it cannot proceed
 without (the seed idea, target directory, git state), collect everything
-missing in ONE ask — never serially across turns — and fold the on-ramp
-recommendation (if one fired) into that same single ask. PRINCIPLES.md
-and design docs stay governed by the on-ramp table above: never a
-prerequisite to *run* loom-design — but the *choice* is gated,
-because writing-plans intake and the plan-commit guard refuse an
-unresolved on-ramp line. See `handoff-brief-format.md` for the brief
-line's grammar. (Evidence + contamination caveats: monkey-skills
-`docs/harness-audit/2026-07-06-iteration-roadmap.md` item 7.)
+missing in ONE ask — never serially across turns. The on-ramp choice is
+NOT part of that batch — it is asked on its own (§On-ramp above) once
+the seed is known, since the rows cannot be evaluated before the seed
+exists. PRINCIPLES.md and design docs stay governed by the on-ramp
+table above: never a prerequisite to *run* loom-design — but the
+*choice* is gated, because writing-plans intake and the plan-commit
+guard refuse an unresolved on-ramp line. See `handoff-brief-format.md`
+for the brief line's grammar. (Evidence + contamination caveats:
+monkey-skills `docs/harness-audit/2026-07-06-iteration-roadmap.md`
+item 7.)
 
 ## Recall before you start
 

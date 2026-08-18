@@ -31,6 +31,7 @@ def test_reception_requires_standalone_ask_pending_and_standing_choices():
     for must_not_contain in (
         "proceed either way",
         "never blocking prerequisites",
+        "fold the on-ramp recommendation",
     ):
         assert must_not_contain not in text, (
             f"stale substring still present: {must_not_contain!r}"
