@@ -7,7 +7,7 @@ Goal: Part 1 交付後：plugin 骨架在 repo 內、有自己的 CI lane；使�
     標 `stale`、輸出影響範圍視圖、不重算；研究筆記以其 `claim` 一行被引用、`claim` 變了才通知下游；
     整張 DAG 由腳本畫成一張基本 Mermaid 全圖給人看；最後使用者用自己的真實素材跑完一輪、
     對著 DAG 全圖與節點檔寫下檢查點結論。
-Stage: sdd:wave-3
+Stage: sdd:wave-4
 Steps:
     1. 骨架與地基（plugin 骨架／載入器＋格式文件／研究規則與盲區清單）
     2. 四個腳本動詞與 CI lane（check／break／claims／render 基本 DAG 全圖／CI workflow）
@@ -201,7 +201,7 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Dependencies**: Task 4 completes first
 - **Independent**: false
 - **Brief item covered**: BI-4 — Mechanical gate script (`check`)（段落形式規則半邊）
-- **Status**: pending
+- **Status**: done(a5c77ac2)
 - **Gloss**: 擋住 LLM 寫出使用者讀不下去的長段落——每段 2–4 句是 vault 寫作規則，這裡機械化。
 
 ## Task 9 — `check` 加假設檔規則
@@ -217,7 +217,7 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Dependencies**: Task 4 completes first
 - **Independent**: false
 - **Brief item covered**: BI-2 — Assumption files（主：≤3／分支＋可證偽欄位 `breaks_if` 必填的機械檢查）
-- **Status**: pending
+- **Status**: done(11ef2664)
 - **Gloss**: 「一條分支最多三個假設、每個假設要能說出什麼事發生代表它破了」——從對話規則變成閘門會擋的東西。
 
 ## Task 10 — `dag.py impact` 與 `break` 產出影響範圍視圖
@@ -234,7 +234,7 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Dependencies**: Task 5 completes first
 - **Independent**: false
 - **Brief item covered**: BI-5 — Assumption-broken propagation（影響範圍視圖半邊）
-- **Status**: pending
+- **Status**: done(bfc98c83)
 - **Gloss**: 前提破了之後使用者看的那張圖——只給人看、由腳本重生成、agent 不讀。
 
 ## Task 11 — decision-session SKILL.md：核心對話協定
@@ -255,7 +255,7 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Dependencies**: Tasks 3, 6, 8, 9, 10, 13, 14 complete first
 - **Independent**: false
 - **Brief item covered**: BI-6 — Core conversation protocol (SKILL.md)（主）＋ BI-7 — Research rules（SKILL 指向 T3 的 reference）＋ BI-12 — Basic DAG view（SKILL 教何時看 `views/dag.md`）＋ BI-10 — Umbrella (Part 1)（骨架＋腳本＋核心 SKILL 落地）
-- **Status**: pending
+- **Status**: claimed(@strage-dag-skill)
 - **Gloss**: 使用者「只是講話」就能讓討論落成節點與假設檔的那份劇本——三處打斷、其餘靜默寫檔、閘門失敗才出聲（B 拆法下的核心動詞 skill）。
 
 ## Task 12 — 真實素材檢查點（使用者親跑）
@@ -309,7 +309,7 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Dependencies**: Task 13 completes first
 - **Independent**: false
 - **Brief item covered**: BI-8 — Plugin scaffold（B 拆法下的骨架重整；CI lane 路徑更新）
-- **Status**: claimed(@strage-dag-skill)
+- **Status**: done(7c0ccc79)
 - **Gloss**: 把單一 skill 骨架改成「入口路由＋動詞 skill」的形狀，腳本升到 plugin 層讓三個 skill 共用——之後每個動詞各自有清楚的觸發描述。
 
 ## Task 15 — using-think-orbit SKILL.md：入口路由＋intake＋續談開場
@@ -363,6 +363,7 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **T4 PASS_WITH_NOTES 債（2026-08-18）**：mapping 形式的 `inputs` 條目若有 `load_bearing` 但缺 `ref`，`check` 看不到（code-quality-reviewer 🟡）→ 併入 T9 實作（新增 `ref` 缺失規則＋測試），不另開回合。
 - **Rename（2026-08-18, after T6）**：使用者定案 plugin 名稱 `think-orbit`（原工作名 `strategy-dag` 來自分支名筆誤；候選 decision-cot／deliberate／think-trail 討論後選定）。skill 拆法：使用者於 T7 後選 **B（路由＋動詞拆分）**——`using-think-orbit`／`decision-session`／`break-assumption`（Part 2 再加 `render-views`／`compile-proposal`）；見下方 Amendment。本計畫與三份 brief 內的 `strategy-dag` 路徑／識別字全數機械替換為 `think-orbit`——純識別字替換，任務範圍／驗收不變，屬 stamping 類，no re-review；程式側改名以獨立 commit 完成（見 T6 之後的 rename commit）。分支名 `strage-dag-skill` 不改。
 - **T13 PASS_WITH_NOTES 債（2026-08-18）**：label 中的 `node.id`／`assumption.id` 仍未 escape（`"`／`<`／`>`），只有 summary／statement 走 `_mermaid_label_text` → 併入 T10（同模組、共用 label 組合），加 RED 測試。
+- **T8 PASS_WITH_NOTES 債（2026-08-18）**：`_count_sentences` 對稱謂縮寫（Dr./Mr./Mrs./Ms./Prof./St./Jr./Sr./No.）後接大寫專名仍切句 → 併入 T9（同模組），加小型縮寫表＋測試。
 - **Kickoff sweep（2026-08-18）**：一路門（one-way door）僅一條——節點／假設檔的 frontmatter 欄位集（使用者資料會累積在上面）；已由 brief 簽核＋T12 檢查點在 Part 2 前留改口，於 kickoff 簡報向使用者揭示，不另開分岔。其餘皆兩路門，記入 Decision Log。
 - Kickoff decision: frontmatter 解析 → PyYAML `yaml.safe_load`（repo 先例＋Obsidian YAML 硬需求；自寫解析器是 YAGNI），CI 安裝 pyyaml
 - Kickoff decision: `break` 是否直接改檔 → 直接改 assumption `status` 與依賴節點 `status`（使用者已宣告破裂；「只輸出建議再由 agent 改檔」多一輪且易漏），其餘欄位與本文 byte-identical
