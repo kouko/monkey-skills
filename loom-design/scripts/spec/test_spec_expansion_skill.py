@@ -379,6 +379,17 @@ def test_hybrid_format_markers():
     low = text.lower()
     assert "given" in low and "when" in low and "then" in low, \
         "scenario skeleton must name GIVEN/WHEN/THEN"
+    # single canonical header grammar: the skeleton FENCE (not just anywhere
+    # in the file) teaches the id-first shape, not the bare-name-only shape
+    skeleton_fence = re.search(
+        r"## ADDED Requirements\n(.*?)```", text, re.DOTALL
+    )
+    assert skeleton_fence, "skeleton fence ('## ADDED Requirements' block) not found"
+    assert "### Requirement: REQ-<n> — <name>" in skeleton_fence.group(1), \
+        "skeleton fence must teach the single id-first header shape"
+    assert "### Requirement: REQ-X [" not in text, \
+        "no fenced example may still show the old dual grammar " \
+        "('### Requirement: REQ-X [...]')"
 
 
 def test_specs_delta_stays_openspec_pure():

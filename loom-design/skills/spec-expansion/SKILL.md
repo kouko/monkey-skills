@@ -394,7 +394,7 @@ when the OpenSpec CLI wires in). Use the skeleton exactly:
 ```
 ## ADDED Requirements
 
-### Requirement: <name>
+### Requirement: REQ-<n> — <name>
 The system MUST <normative obligation>.   <!-- RFC-2119 keyword on the body line -->
 
 #### Scenario: <name>
@@ -402,6 +402,12 @@ The system MUST <normative obligation>.   <!-- RFC-2119 keyword on the body line
 - WHEN <action>
 - THEN <expected outcome>
 ```
+
+The `REQ-<n> — ` id half is optional per file — an existing legacy file with
+zero ids stays valid prose-only headers (`### Requirement: <name>`); adding
+even one id switches that file into id-mode for the id shape, minting, and
+adoption rules, see
+[`references/requirement-identifiers.md`](references/requirement-identifiers.md).
 
 Each `#### Scenario:` is one testable acceptance criterion → one RED test /
 GREEN condition for `loom-code:writing-plans`. Keep RFC-2119 keywords
@@ -496,17 +502,22 @@ requirement is meant to be verified now or is aspirational. Declare it as a
 suffix on the heading:
 
 ```
-### Requirement: REQ-X [deferred]
-### Requirement: REQ-X [active]
-### Requirement: REQ-X            ← no suffix ≡ active (the default)
+### Requirement: REQ-<n> — <name> [deferred]
+### Requirement: REQ-<n> — <name> [active]
+### Requirement: REQ-<n> — <name>            ← no suffix ≡ active (the default)
 ```
 
-- **`active`** is the **DEFAULT** and may be omitted — `### Requirement: REQ-X`
-  is exactly equivalent to `### Requirement: REQ-X [active]`.
+- **`active`** is the **DEFAULT** and may be omitted — `### Requirement: REQ-<n> — <name>`
+  is exactly equivalent to the same header with `[active]` appended.
 - Only `active` and `deferred` are valid. Any other suffix (e.g. `[activ]`,
   `[future]`) is a **malformed declaration** that **FAILs the every-push
   structural lane** of the drift gate — it needs no index and is RED-phase-safe,
   so it is enforced on every push, PR and main alike.
+- The `REQ-<n> — ` id half follows the same optional-per-file rule as the
+  skeleton above — see
+  [`references/requirement-identifiers.md`](references/requirement-identifiers.md)
+  for the id shape and adoption rules; this section only adds the status
+  suffix.
 
 Status maps onto spec **authority** — a verified `active` requirement is
 *canonical* (test-bound), a `deferred`/unverified one is *inspirational* —
