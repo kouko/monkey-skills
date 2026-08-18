@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -376,6 +377,68 @@ def _set_frontmatter_field(path: Path, key: str, value: str) -> None:
     path.write_bytes(new_text.encode("utf-8"))
 
 
+def claims(project: Project, root: Path, since: str) -> list[str] | None:
+    """Report research-note `claim` changes since `since`, with their dependents.
+
+    For every research-note FACT node (origin == "research"), reads the file's
+    frontmatter as it stood at `since` via `git show <since>:<relpath>` (never
+    shell=True, no interpolated shell string) and compares `claim` values
+    after `.strip()`. A file absent at that rev counts as unchanged-new.
+    Returns sorted `"<id>: claim changed → dependents: <ids>"` lines, or None
+    (having already printed the error) when `root` is not inside a git repo.
+    """
+    repo_root = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        cwd=root, capture_output=True, text=True,
+    )
+    if repo_root.returncode != 0:
+        print(f"not a git repository: {root}", file=sys.stderr)
+        return None
+
+    repo_root_path = Path(repo_root.stdout.strip())
+
+    dependents_by_ref: dict[str, list[str]] = {}
+    for node in project.nodes:
+        if node.id is None:
+            continue
+        for entry in node.inputs:
+            if entry.ref is not None:
+                dependents_by_ref.setdefault(entry.ref, []).append(node.id)
+
+    changed: list[str] = []
+    for node in project.nodes:
+        if node.origin != "research" or node.id is None:
+            continue
+        relpath = node.path.relative_to(repo_root_path).as_posix()
+        result = subprocess.run(
+            ["git", "show", f"{since}:{relpath}"],
+            cwd=root, capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            continue  # absent at that rev -- unchanged-new
+
+        fm_text, _ = split_frontmatter(result.stdout)
+        try:
+            old_fm = yaml.safe_load(fm_text)
+        except yaml.YAMLError:
+            continue
+        if not isinstance(old_fm, dict):
+            continue
+
+        old_claim = old_fm.get("claim")
+        new_claim = node.summary
+        old_claim_norm = old_claim.strip() if isinstance(old_claim, str) else old_claim
+        new_claim_norm = new_claim.strip() if isinstance(new_claim, str) else new_claim
+        if old_claim_norm == new_claim_norm:
+            continue
+
+        ids = sorted(dependents_by_ref.get(node.id, []))
+        ids_text = ",".join(ids) if ids else "(none)"
+        changed.append(f"{node.id}: claim changed → dependents: {ids_text}")
+
+    return sorted(changed)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="dag", description="strategy-dag project loader/CLI")
     subparsers = parser.add_subparsers(dest="command")
@@ -385,6 +448,9 @@ def main(argv: list[str] | None = None) -> int:
     break_parser = subparsers.add_parser("break", help="mark an assumption broken and propagate stale/weakened status")
     break_parser.add_argument("root", help="project root directory")
     break_parser.add_argument("assumption_id", help="id of the assumption to break")
+    claims_parser = subparsers.add_parser("claims", help="report research claims changed since a git revision, with dependents")
+    claims_parser.add_argument("root", help="project root directory")
+    claims_parser.add_argument("--since", default="HEAD", help="git revision to diff against (default: HEAD)")
     args = parser.parse_args(argv)
 
     if args.command == "load":
@@ -415,6 +481,16 @@ def main(argv: list[str] | None = None) -> int:
 
         print(f"stale: {','.join(stale_ids)}")
         print(f"weakened: {','.join(weakened_ids)}")
+        return 0
+
+    if args.command == "claims":
+        root = Path(args.root)
+        project = load_project(root)
+        lines = claims(project, root, args.since)
+        if lines is None:
+            return 1
+        for line in lines:
+            print(line)
         return 0
 
     parser.print_help()

@@ -6,6 +6,7 @@
 """
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 import dag
@@ -464,3 +465,71 @@ def test_break_preserves_crlf_line_endings_and_body_bytes(tmp_path):
     # every line ending is CRLF -- no bare \n introduced anywhere
     assert a1_after.replace(b"\r\n", b"").find(b"\n") == -1
     assert n1_after.replace(b"\r\n", b"").find(b"\n") == -1
+
+
+def _git(root: Path, *args: str) -> None:
+    subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True)
+
+
+def test_claims_lists_dependents_only_for_research_claims_changed_since_rev(tmp_path, capsys):
+    # @req: BI-3
+    root = tmp_path
+    _write(
+        root / "research" / "r1.md",
+        "id: r1\n"
+        "claim: Original claim about competitor pricing\n",
+    )
+    _write(
+        root / "research" / "r2.md",
+        "id: r2\n"
+        "claim: Unrelated claim that never changes\n",
+    )
+    _write(
+        root / "nodes" / "n1.md",
+        "id: n1\n"
+        "type: CLAIM\n"
+        "seq: 1\n"
+        "summary: Depends on r1\n"
+        "status: active\n"
+        "inputs:\n"
+        "  - ref: r1\n"
+        "    load_bearing: true\n",
+    )
+    _write(
+        root / "nodes" / "n2.md",
+        "id: n2\n"
+        "type: CLAIM\n"
+        "seq: 2\n"
+        "summary: Depends on r2\n"
+        "status: active\n"
+        "inputs:\n"
+        "  - ref: r2\n"
+        "    load_bearing: true\n",
+    )
+
+    _git(root, "init", "-q")
+    _git(root, "config", "user.email", "test@example.com")
+    _git(root, "config", "user.name", "Test")
+    _git(root, "add", ".")
+    _git(root, "commit", "-q", "-m", "initial")
+
+    rc_clean = dag.main(["claims", str(root), "--since", "HEAD"])
+    out_clean = capsys.readouterr().out
+    assert rc_clean == 0
+    assert out_clean == ""
+
+    _write(
+        root / "research" / "r1.md",
+        "id: r1\n"
+        "claim: Updated claim about competitor pricing\n",
+    )
+
+    rc = dag.main(["claims", str(root), "--since", "HEAD"])
+    out = capsys.readouterr().out
+    lines = [ln for ln in out.splitlines() if ln]
+
+    assert rc == 0
+    assert len(lines) == 1
+    assert lines[0] == "r1: claim changed → dependents: n1"
+    assert "r2" not in lines[0]
+    assert "n2" not in lines[0]
