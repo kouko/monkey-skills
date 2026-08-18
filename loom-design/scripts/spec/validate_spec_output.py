@@ -263,6 +263,24 @@ def _check_requirement_with_rfc2119(root: Path) -> list[str]:
             f"(state the normative obligation, e.g. 'The system MUST ...')"]
 
 
+def _iter_requirement_id_headers(d: Path, text: str):
+    """Yield one record per '### Requirement:' header match in `text`
+    (from delta file `d`), shared by the three requirement-id checks below
+    (Rule of Three: T1/T2/T3 each walked this same match loop).
+
+    Record fields: `match` (the raw re.Match, for id/name/name_legacy/status
+    group access), `line_no` (1-based), and `header_text` (the header's own
+    source line, stripped — used in violation messages)."""
+    for m in _REQUIREMENT_ID_HDR.finditer(text):
+        line_no = text.count("\n", 0, m.start()) + 1
+        line_start = text.rfind("\n", 0, m.start()) + 1
+        line_end = text.find("\n", m.start())
+        header_text = text[line_start:
+                            (line_end if line_end != -1 else len(text))
+                            ].strip()
+        yield m, line_no, header_text
+
+
 def _check_requirement_id_form(root: Path) -> list[str]:
     # Classifies each '### Requirement:' header as id-form, near-miss, or
     # legacy prose. Only near-miss is a violation (T2's all-or-nothing
@@ -271,11 +289,10 @@ def _check_requirement_id_form(root: Path) -> list[str]:
     problems = []
     for d in deltas:
         text = d.read_text(encoding="utf-8")
-        for m in _REQUIREMENT_ID_HDR.finditer(text):
+        for m, line_no, _header_text in _iter_requirement_id_headers(d, text):
             if m.group("id"):
                 if m.group("name"):
                     continue  # id-form, name present
-                line_no = text.count("\n", 0, m.start()) + 1
                 problems.append(
                     f"{d}:{line_no}: requirement id '{m.group('id')}' "
                     f"under '### Requirement:' has no name (name may be "
@@ -285,7 +302,6 @@ def _check_requirement_id_form(root: Path) -> list[str]:
             candidate = (m.group("name_legacy") or "").strip()
             token = candidate.split()[0] if candidate.split() else ""
             if token and _NEAR_MISS_ID.match(token):
-                line_no = text.count("\n", 0, m.start()) + 1
                 problems.append(
                     f"{d}:{line_no}: near-miss requirement id '{token}' "
                     f"under '### Requirement:' (expected exact form "
@@ -304,14 +320,8 @@ def _check_requirement_id_all_or_nothing(root: Path) -> list[str]:
     for d in deltas:
         text = d.read_text(encoding="utf-8")
         headers = []  # (line_no, is_id_form, header_text)
-        for m in _REQUIREMENT_ID_HDR.finditer(text):
+        for m, line_no, header_text in _iter_requirement_id_headers(d, text):
             is_id_form = bool(m.group("id")) and bool(m.group("name"))
-            line_no = text.count("\n", 0, m.start()) + 1
-            line_start = text.rfind("\n", 0, m.start()) + 1
-            line_end = text.find("\n", m.start())
-            header_text = text[line_start:
-                                (line_end if line_end != -1 else len(text))
-                                ].strip()
             headers.append((line_no, is_id_form, header_text))
         if not any(is_id_form for _, is_id_form, _ in headers):
             continue  # legacy mode: no id-form header in this file at all
@@ -323,6 +333,29 @@ def _check_requirement_id_all_or_nothing(root: Path) -> list[str]:
                 f"in one file (this file has >=1 id-form header, so every "
                 f"header in it must be id-form; '{header_text}' is not — "
                 f"all-or-nothing is per file, not per folder)")
+    return problems
+
+
+def _check_requirement_id_unique(root: Path) -> list[str]:
+    # Folder scope only: collect every id-form header's REQ-<n> id across
+    # ALL delta files of this change-folder; any id seen more than once is
+    # one violation naming the id and every file:line that declares it.
+    # Cross-folder collisions are the living-spec checker's job (T8).
+    deltas = _delta_files(root)
+    occurrences: dict[str, list[str]] = {}
+    for d in deltas:
+        text = d.read_text(encoding="utf-8")
+        for m, line_no, _header_text in _iter_requirement_id_headers(d, text):
+            if m.group("id") and m.group("name"):
+                occurrences.setdefault(m.group("id"), []).append(
+                    f"{d}:{line_no}")
+    problems = []
+    for req_id, locations in occurrences.items():
+        if len(locations) > 1:
+            problems.append(
+                f"duplicate requirement id '{req_id}' declared at "
+                f"{', '.join(locations)} (each REQ-<n> must be unique "
+                f"within a change-folder)")
     return problems
 
 
@@ -583,6 +616,7 @@ _SKELETON_CHECKS = [
     _check_requirement_with_rfc2119,
     _check_requirement_id_form,
     _check_requirement_id_all_or_nothing,
+    _check_requirement_id_unique,
     _check_scenario_given_when_then,
 ]
 

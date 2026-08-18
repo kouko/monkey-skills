@@ -346,6 +346,46 @@ def test_mixed_headers_split_across_two_files_is_valid(tmp_path):
     assert ok, problems
 
 
+def test_duplicate_requirement_id_across_files_is_invalid(tmp_path):
+    # No living-spec REQ-id: T3 (this task) predates the living-spec
+    # namespace registry (T1 is the validator itself); untagged per
+    # implementer contract rule 11.
+    body_a = (
+        "## ADDED Requirements\n"
+        "\n"
+        "### Requirement: REQ-1 — Foo\n"
+        "The system MUST do the thing.\n"
+        "\n"
+        "#### Scenario: Valid\n"
+        "- GIVEN a user\n- WHEN login\n- THEN session\n"
+    )
+    body_b = (
+        "## ADDED Requirements\n"
+        "\n"
+        "### Requirement: REQ-1 — Bar\n"
+        "The system MUST do another thing.\n"
+        "\n"
+        "#### Scenario: Valid\n"
+        "- GIVEN a user\n- WHEN login\n- THEN session\n"
+    )
+    proposal = "# Proposal\n\nWhy this change.\n\n" + _well_formed_additive()
+    (tmp_path / "proposal.md").write_text(proposal, encoding="utf-8")
+    specs_a = tmp_path / "specs" / "a"
+    specs_a.mkdir(parents=True)
+    path_a = specs_a / "spec.md"
+    path_a.write_text(body_a, encoding="utf-8")
+    specs_b = tmp_path / "specs" / "b"
+    specs_b.mkdir(parents=True)
+    path_b = specs_b / "spec.md"
+    path_b.write_text(body_b, encoding="utf-8")
+    ok, problems = validate(tmp_path)
+    assert not ok
+    dup_problems = [p for p in problems if "REQ-1" in p]
+    assert dup_problems, problems
+    assert any(str(path_a) in p and str(path_b) in p for p in dup_problems), \
+        problems
+
+
 # --- additive-section tests (Task 3) ---------------------------------------
 # The spec station's differentiating richness lives in proposal.md's additive
 # sections; the OpenSpec delta under specs/ stays pure. So additive checks
