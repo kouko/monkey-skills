@@ -160,6 +160,8 @@ An empty or whitespace-only reason counts as absent — the comment must state w
 
 No checker classifies a paragraph as narrative; the author declares, the reviewer checks the declaration. A classifier would reintroduce the judgment this rule exists to remove.
 
+This declaration uses an HTML comment instead of the `N/A — <reason>` form the other fill-or-declare slots use, because a visible `N/A —` line would break the narrative paragraph's own reading flow — staying readable prose is the whole point of the paragraph the declaration sits beneath.
+
 Two sections are exempt from this rule, each for its own reason:
 
 - `## Current State Evidence` — a citation appendix, not narrative prose.
