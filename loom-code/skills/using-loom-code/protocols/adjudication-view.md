@@ -229,15 +229,40 @@ brief's own scope names a file under `loom-code/scripts/adjudication_*.py`
 as a file the current task edits — that session runs its own working
 tree's copy, not the installed plugin's.
 
-**Before delivering.** Confirm the produced page carries the
-generator stamp and that its version matches the plugin whose
-protocol you are reading. A page with no stamp came from a pre-stamp
-copy of `adjudication_render.py` and must not be handed to the user.
-A stamp that IS present but whose version does NOT match is the same
-outcome as no stamp: do not deliver it. Re-run the pipeline with the
-correct copy per the "Which copy runs" rule above; if it still
-mismatches, surface the mismatch to the user rather than delivering
-the page.
+**Before delivering an HTML view.** This check applies to the two
+HTML outputs — doc mode, and verdict mode under `--html`. It does NOT
+apply to verdict mode's default markdown table, which carries no
+stamp by construction; that path has no staleness signal at all, so
+the "Which copy runs" rule above is the only protection it gets.
+
+Confirm the produced page carries the generator stamp and that its
+version matches the running copy's own manifest — read `"version"`
+from `../../../.claude-plugin/plugin.json`, resolved from this
+protocol file's own absolute path exactly as the script path is
+resolved above. Compare that string to the one in the page's
+`<meta name="generator" content="loom-code-adjudication-render/…">`.
+Do not compare against the session's plugin version or against
+whatever repo the working directory happens to sit in — that is the
+wrong-copy error this whole contract exists to close.
+
+A page with no stamp came from a pre-stamp copy of
+`adjudication_render.py` and must not be handed to the user. A stamp
+that IS present but whose version does NOT match — including the
+literal `unknown`, which never matches — is the same outcome as no
+stamp: do not deliver it. Re-run the pipeline with the correct copy
+per the "Which copy runs" rule above; if it still mismatches, surface
+the mismatch to the user rather than delivering the page.
+
+The one carve-out above carries here too: when the working-tree
+exception applies, the two manifests are different files by
+construction — the script ran from the working tree, the protocol was
+read from the installed plugin — so their versions differ whenever the
+branch has bumped, and no re-run can reconcile them. In that case the
+mismatch is the expected state, not a staleness signal: deliver the
+page and say which working-tree version produced it. The exception is
+the same checkable one, not a second judgment call — it applies only
+when the active plan or brief's own scope names a file under
+`loom-code/scripts/adjudication_*.py` as a file the current task edits.
 
 ## Lint-failure rule
 

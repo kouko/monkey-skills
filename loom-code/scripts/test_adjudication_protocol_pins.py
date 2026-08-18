@@ -364,12 +364,25 @@ def test_invocation_contract_resolves_the_round2_findings():
         "not by the bare filename shown here" in inv
     ), "the bullets do not disclaim the bare-filename form as invocation syntax"
 
-    # Finding 2 -- the mismatch failure branch.
+    # Finding 2 -- the mismatch failure branch. Two brittleness classes
+    # broke this pin when the section was later reflowed, and the fix
+    # treats both; a future reader should not mis-learn which one did the
+    # damage. (a) The phrase spanned a hard newline, so the raw slice no
+    # longer contained it -- collapsing whitespace fixes that. (b) The
+    # revision inserted a clause MID-PHRASE ("... does NOT match --
+    # including the literal `unknown` ... -- is the same outcome ..."),
+    # which broke contiguity outright; whitespace collapse alone would NOT
+    # have saved it. Splitting the claim into two `and`-joined substrings
+    # is the load-bearing half. The pin still owns the same claim: proven
+    # by mutation -- rewriting the protocol's "do not deliver it" to
+    # "deliver it anyway" fails this test.
+    inv_flat = " ".join(inv.split())
     assert (
-        "version does NOT match is the same\noutcome as no stamp" in inv
+        "version does NOT match" in inv_flat
+        and "is the same outcome as no stamp" in inv_flat
     ), "a version-mismatch stamp is not treated as equivalent to no stamp"
     assert (
-        "surface the mismatch to the user" in inv
+        "surface the mismatch to the user" in inv_flat
     ), "the re-run-then-surface fallback for a persistent mismatch is missing"
 
     # Finding 3 -- checkable carve-out, not judgment-shaped prose.

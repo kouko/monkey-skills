@@ -18,11 +18,15 @@ Versioning: [Semantic Versioning](https://semver.org/).
   version cannot be determined, so a rendered page now carries visible
   evidence of which copy of the renderer produced it.
 - **`adjudication_render.py` fails loud on a broken rendition
-  postcondition** instead of silently emitting a page that looks
-  converted but isn't. This guard is scoped to a current-format page:
-  it catches a future regression in the conversion step, and is
-  structurally silent on a genuinely stale copy, which wrapped
-  renditions in a different element entirely.
+  postcondition in the document view** instead of silently emitting a
+  page that looks converted but isn't. Two scoping limits, both
+  deliberate: it reaches only the document view's rendition regions —
+  verdict mode emits no such region at all — `--html` escapes each
+  rendition into a table cell, and the default markdown output is a
+  plain table — so the scan is inert on both verdict paths — and it is structurally silent on a
+  genuinely stale copy, which wrapped renditions in a different
+  element entirely. What surfaces a stale copy is the stamp; what
+  prevents one is the path pin.
 
 ### Motivation
 
