@@ -137,6 +137,41 @@ def test_legacy_header_with_bracket_suffix_keys_by_full_header_text(tmp_path):
     assert result.stderr == ""
 
 
+_ID_ONLY_NO_NAME_SPEC = """\
+## ADDED Requirements
+
+### Requirement: REQ-3
+The system MUST allow something with an id but no display name.
+
+#### Scenario: S1
+- GIVEN a precondition
+- WHEN an action
+- THEN an outcome
+"""
+
+
+def test_id_only_header_without_name_does_not_flip_file_to_id_mode(tmp_path):
+    """A header whose `id` group matched but whose `name` group did NOT
+    (`### Requirement: REQ-3`, no `— <name>` suffix) must not flip the
+    whole file into id-mode — aligned with validate_spec_output.py's own
+    `is_id_form = bool(m.group("id")) and bool(m.group("name"))`
+    predicate. The file stays legacy-keyed: the key's requirement segment
+    is `Requirement: REQ-3` (legacy form), not the bare `REQ-3` id-mode
+    form."""
+    change_folder = tmp_path / "2026-07-10-my-change"
+    _write_spec(change_folder, _ID_ONLY_NO_NAME_SPEC)
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — foo\n"
+        "- Brief item covered: 2026-07-10-my-change / Requirement: REQ-3 / Scenario: S1\n",
+        encoding="utf-8",
+    )
+    result = _run(change_folder, plan)
+    assert result.returncode == 0, result.stderr
+    assert result.stderr == ""
+
+
 def test_malformed_plan_prose_only_zero_coverage_exit_1(tmp_path):
     """A plan whose 'Brief item covered' fields are all prose referents
     (kind (a) — no join-key grammar) has zero join keys — treat as zero

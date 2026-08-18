@@ -208,13 +208,15 @@ def _requirement_scenario_pairs(text: str) -> list[tuple[bool, str, str]]:
     one delta file's text, per the canonical grammar.
 
     Mode is decided once per FILE — ≥1 id-form header (a header whose `id`
-    group matched) makes every requirement in this file id-mode, per the
-    plan's per-file invariant (validated elsewhere, by T2; assumed here).
+    AND `name` groups both matched, same predicate as
+    validate_spec_output.py's `is_id_form`) makes every requirement in
+    this file id-mode, per the plan's per-file invariant (validated
+    elsewhere, by T2; assumed here).
     In id-mode, `requirement identifier` is the bare `REQ-<n>`; in legacy
     mode it is the prose name, exactly as before this change.
     """
     matches = list(_REQUIREMENT_HDR.finditer(text))
-    is_id_mode = any(m.group("id") for m in matches)
+    is_id_mode = any(m.group("id") and m.group("name") for m in matches)
     pairs: list[tuple[bool, str, str]] = []
     for req_match in matches:
         if req_match.group("id"):
