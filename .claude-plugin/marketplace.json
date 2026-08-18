@@ -118,6 +118,11 @@
       "name": "skill-dev-toolkit",
       "description": "Self-contained toolkit to author Claude Agent Skills — create, score, refactor, tune, dogfood.",
       "source": "./skill-dev-toolkit/"
+    },
+    {
+      "name": "strategy-dag",
+      "description": "Single-user decision-reasoning assistant — turns a discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view.",
+      "source": "./strategy-dag/"
     }
   ]
 }

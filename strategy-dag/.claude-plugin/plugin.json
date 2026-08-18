@@ -1,0 +1,22 @@
+{
+  "name": "strategy-dag",
+  "version": "0.1.0",
+  "description": "Single-user decision-reasoning assistant — turns a discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/strategy-dag",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "decision-making",
+    "chain-of-thought",
+    "dag",
+    "reasoning",
+    "assumptions",
+    "mermaid",
+    "part-1",
+    "pre-release"
+  ]
+}
