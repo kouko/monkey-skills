@@ -23,7 +23,7 @@ When in doubt, write it to a file. The cost of the file is one `git add`; the co
 
 ## Required sections
 
-These five must appear in every brief, plus a sixth (`Current State Evidence`) when the change touches existing code or process. Order matters — `writing-plans` parses top-down.
+These five must appear in every brief, plus a sixth (`Current State Evidence`) when the change touches existing code or process, and a seventh (`## Design-side on-ramp`) whenever the reception's on-ramp criteria fire — or, if they don't, the `not fired` line still records that. Order matters — `writing-plans` parses top-down.
 
 ### `## Problem`
 
@@ -80,6 +80,17 @@ Each outcome declared here takes a brief item identifier — see [§Brief item i
 ### `## Out of Scope`
 
 Bulleted list of adjacent things explicitly NOT in this change. Each bullet should be a thing someone might reasonably ask *"why didn't you also do…"* — the bullet preempts that question.
+
+### `## Design-side on-ramp`
+
+**Required when the loom family reception's on-ramp criteria (`loom-code/hooks/family-reception.md` — point, don't copy) fire for this brief; otherwise still write the `not fired` line.** One line, exactly one of these four canonical forms:
+
+- `not fired — <reason>`
+- `fired: rows <comma-separated row numbers> — user chose <detour|direct>`
+- `fired: rows <comma-separated row numbers> — standing <detour|direct> (DIRECTION.md)`
+- `pending`
+
+Any other wording is *unresolved* — never treated as a pass (lookalike wording does not resolve the gate). `pending` is what the agent writes until the user has answered; it is never the agent's own default. The `standing` form is legal only when `docs/loom/DIRECTION.md`'s `## On-ramp standing choices` section names every row cited on that line — that section's own grammar is owned by `loom-code/hooks/family-reception.md`, not repeated here.
 
 ## Optional sections
 
@@ -149,6 +160,10 @@ Copy-paste this skeleton:
 > **Phase**: brainstorming output (`brainstorming` → `writing-plans` handoff)
 > **Date**: YYYY-MM-DD
 > **Author**: <human / agent>
+
+## Design-side on-ramp
+
+(one of: `not fired — <reason>` / `fired: rows <list> — user chose <detour|direct>` / `fired: rows <list> — standing <detour|direct> (DIRECTION.md)` / `pending`; any other wording is unresolved)
 
 ## Problem
 
