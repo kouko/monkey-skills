@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+"""Check a writing-plans plan's `Description` / `RED` / `GREEN` field
+values against the plan-field microstructure grammar (SSOT:
+`loom-code/skills/writing-plans/references/plan-format.md`).
+
+Task 1 of docs/loom/plans/2026-08-19-field-value-microstructure.md.
+
+Grammar:
+
+- A `Description` first line (the text after the colon on the bullet's
+  own line) violates when it carries more than one sentence-terminal
+  mark from the closed set `.` `?` `!`, ignoring marks inside backtick
+  spans and inside a trailing parenthetical — i.e. `Description` allows
+  exactly one sentence.
+- A `RED` or `GREEN` first line is allowed one assertion sentence plus
+  one optional grounding clause, so it violates only at the third
+  sentence-terminal mark — the `Fails today because ...` clause
+  `plan-format.md` itself teaches is that grounding sentence.
+- A field's continuation lines (everything after the first line, up to
+  the next blank or column-0 line) violate when any indented non-blank
+  line is neither a nested bullet (`^\\s+[-*+]\\s`) nor a markdown table
+  line (`^\\s*\\|`).
+
+Block extraction and bullet-value extraction are NOT reimplemented here
+— both are imported from `plan_card.py` (`_task_blocks`, `_bullet_lines`)
+so the two scripts never drift on what counts as a task block or a
+bullet's raw lines.
+
+This file does not implement the `Goal:` rule (a separate task) or the
+brief-paragraph rule (a separate task, `--brief` mode) — plan-only, for
+now.
+
+Stdlib only (`re`, `sys`, `pathlib`, `argparse`) plus the intra-repo
+import of `plan_card` (resolved off this file's own directory, same
+convention as `check_open_questions.py` importing `adjudication_split`).
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from plan_card import _bullet_lines, _task_blocks  # noqa: E402
+
+# A backtick-quoted span — its content (including any `.`/`?`/`!`
+# inside, e.g. a filename like `test.py`) is never a sentence-terminal
+# mark.
+_BACKTICK_SPAN = re.compile(r"`[^`]*`")
+
+# A parenthetical `(...)` ending the line, optionally itself followed
+# by one sentence-terminal mark — the "trailing parenthetical" the
+# grammar exempts. Only the parenthetical's own content is discounted;
+# a terminal mark immediately after it (e.g. "...(default json).")
+# still counts.
+_TRAILING_PARENTHETICAL = re.compile(r"\([^()]*\)([.?!])?\s*$")
+
+_SENTENCE_TERMINAL = re.compile(r"[.?!]")
+
+_NESTED_BULLET_LINE = re.compile(r"^\s+[-*+]\s")
+_TABLE_LINE = re.compile(r"^\s*\|")
+
+# Description: exactly one sentence (>1 terminal mark violates).
+_DESCRIPTION_MAX_TERMINALS = 1
+# RED / GREEN: one assertion + one optional grounding clause (>2 marks
+# violates — the third sentence).
+_RED_GREEN_MAX_TERMINALS = 2
+
+
+def _strip_ignored_marks(line: str) -> str:
+    """`line` with backtick-span content removed and a trailing
+    parenthetical's content removed (its own closing terminal mark, if
+    any, is kept) — what remains is what `_sentence_count` counts."""
+    stripped = _BACKTICK_SPAN.sub("", line).rstrip()
+    match = _TRAILING_PARENTHETICAL.search(stripped)
+    if match is not None:
+        end_mark = match.group(1) or ""
+        stripped = stripped[: match.start()] + end_mark
+    return stripped
+
+
+def _sentence_count(line: str) -> int:
+    """Number of sentence-terminal marks in `line`, after discounting
+    backtick-span and trailing-parenthetical content."""
+    return len(_SENTENCE_TERMINAL.findall(_strip_ignored_marks(line)))
+
+
+def _check_continuations(
+    lines: list[str], number: int, name: str, field: str
+) -> list[str]:
+    """Every indented non-blank line in `lines[1:]` (a field's
+    continuation lines) that is neither a nested bullet nor a table row
+    is a violation."""
+    problems = []
+    for raw in lines[1:]:
+        if not raw.strip():
+            continue
+        if _NESTED_BULLET_LINE.match(raw) or _TABLE_LINE.match(raw):
+            continue
+        problems.append(
+            f"Task {number} ({name}): '{field}' continuation line is "
+            f"neither a nested bullet nor a table row: {raw.strip()!r}"
+        )
+    return problems
+
+
+def _check_first_line(
+    lines: list[str], number: int, name: str, field: str, max_terminals: int
+) -> list[str]:
+    first = lines[0]
+    count = _sentence_count(first)
+    if count <= max_terminals:
+        return []
+    return [
+        f"Task {number} ({name}): '{field}' first line carries {count} "
+        f"sentence-terminal marks (max {max_terminals}): {first!r}"
+    ]
+
+
+def _dedent_lines(lines: list[str]) -> list[str]:
+    """`lines` with the smallest common leading-space run stripped, so a
+    sub-block's bullets (e.g. `Acceptance`'s `RED`/`GREEN` sub-bullets,
+    indented under it) can be re-scanned with `_bullet_lines`, which
+    only matches a bullet anchored at column 0."""
+    indents = [len(line) - len(line.lstrip(" ")) for line in lines if line.strip()]
+    if not indents:
+        return lines
+    n = min(indents)
+    return [line[n:] if len(line) >= n else line for line in lines]
+
+
+def _check_acceptance(block: str, number: int, name: str) -> list[str]:
+    acceptance_lines = _bullet_lines(block, "Acceptance")
+    if acceptance_lines is None:
+        return []
+    sub_text = "\n".join(_dedent_lines(acceptance_lines[1:]))
+
+    problems: list[str] = []
+    for field in ("RED", "GREEN"):
+        sub_lines = _bullet_lines(sub_text, field)
+        if sub_lines is None:
+            continue
+        problems.extend(
+            _check_first_line(
+                sub_lines, number, name, field, _RED_GREEN_MAX_TERMINALS
+            )
+        )
+        problems.extend(_check_continuations(sub_lines, number, name, field))
+    return problems
+
+
+def check_plan_fields(text: str) -> list[str]:
+    """Every `Description` / `RED` / `GREEN` field-microstructure
+    violation across all `## Task <N> —` blocks in `text`, in file
+    order. Empty when the plan is clean."""
+    problems: list[str] = []
+    for number, name, block in _task_blocks(text):
+        description_lines = _bullet_lines(block, "Description")
+        if description_lines is not None:
+            problems.extend(
+                _check_first_line(
+                    description_lines,
+                    number,
+                    name,
+                    "Description",
+                    _DESCRIPTION_MAX_TERMINALS,
+                )
+            )
+            problems.extend(
+                _check_continuations(description_lines, number, name, "Description")
+            )
+        problems.extend(_check_acceptance(block, number, name))
+    return problems
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Check a writing-plans plan's Description/RED/GREEN "
+                    "field values against the plan-field microstructure "
+                    "grammar; exit 1 on any violation."
+    )
+    parser.add_argument("plan_path", help="path to the writing-plans plan file")
+    args = parser.parse_args(argv)
+
+    plan_path = Path(args.plan_path)
+    if not plan_path.is_file():
+        print(f"Error: plan file not found at {plan_path}.", file=sys.stderr)
+        return 1
+    text = plan_path.read_text(encoding="utf-8")
+
+    problems = check_plan_fields(text)
+    for problem in problems:
+        print(problem, file=sys.stderr)
+    if problems:
+        return 1
+    print(f"Field microstructure in {plan_path} is clean — no violations.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
