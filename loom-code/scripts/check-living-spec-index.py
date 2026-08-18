@@ -373,6 +373,58 @@ def run_drift_lane(root: Path) -> list[str]:
 _DEFAULT_INDEX = Path("docs") / "loom" / "INDEX.md"
 
 
+def _run_check_coverage(root: Path) -> int:
+    """Run the ``--check-coverage`` merge-boundary coverage gate.
+
+    Composes the real-repo inputs and runs the hermetic ``active_coverage``.
+    SOUND because CI runs this AFTER the green pytest gate, so a linked
+    test == a passing test (0 linked == 0 passing). Deferred reqs with 0
+    tests are informational (stdout, never fail); uncovered active reqs
+    are violations (stderr, rc=1).
+    """
+    tag_records = collect_structural_records(root)
+    namespace = _load_namespace_all(root)
+    statuses = _load_req_status_all(root)
+    violations, surfaced = active_coverage(tag_records, namespace, statuses)
+    for line in surfaced:
+        print(line)
+    if violations:
+        for entry in violations:
+            print(entry, file=sys.stderr)
+        print(
+            f"\nFAIL: {len(violations)} living-spec coverage "
+            f"violation(s).",
+            file=sys.stderr,
+        )
+        return 1
+    print("OK: every active living-spec req is covered.")
+    return 0
+
+
+def _run_next_req_id(root: Path) -> int:
+    """Run the ``--next-req-id`` mode: print next free ``REQ-<n>``, exit 0.
+
+    Ignores the capability values, parses the trailing ``\\d+`` of every
+    id-form key in the T7 folded namespace, and prints the next free
+    ``REQ-<n>`` (``REQ-1`` on an empty namespace). Opens no new roots and
+    reads no header the structural lane does not already read.
+
+    LIMIT: it scans headers PRESENT, not every id ever minted. A retired
+    req id (declaration deleted) is NOT excluded from being re-minted once
+    nothing references it any more — the doc's minting rule ("next unused
+    = highest ever seen + 1") coincides with this tool's "highest present
+    + 1" only while no declaration is ever deleted.
+    """
+    namespace = _load_namespace_all(root)
+    highest = 0
+    for req_id in namespace:
+        match = re.search(r"\d+", req_id)
+        if match:
+            highest = max(highest, int(match.group()))
+    print(f"REQ-{highest + 1}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     # argv shapes:
     #   []                              -> default lanes over cwd
@@ -387,14 +439,6 @@ def main(argv: list[str] | None = None) -> int:
     # still selects the source tree (the WARN-lane tests pass
     # `[str(repo)]` with no flag, so the default path must preserve that
     # behavior).
-    #
-    # --next-req-id LIMIT: it scans headers PRESENT (via the same T7
-    # folded loader every other mode uses), not every id ever minted. A
-    # retired req id (declaration deleted) is NOT excluded from being
-    # re-minted once nothing references it any more — the doc's minting
-    # rule ("next unused = highest ever seen + 1") coincides with this
-    # tool's "highest present + 1" only while no declaration is ever
-    # deleted.
     args = sys.argv[1:] if argv is None else argv
 
     mode = None
@@ -425,41 +469,9 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
     if mode == "--check-coverage":
-        # Merge-boundary coverage gate: compose the real-repo inputs and run
-        # the hermetic active_coverage. SOUND because CI runs this AFTER the
-        # green pytest gate, so a linked test ≡ a passing test (0 linked ≡
-        # 0 passing). Deferred reqs with 0 tests are informational (stdout,
-        # never fail); uncovered active reqs are violations (stderr, rc=1).
-        tag_records = collect_structural_records(root)
-        namespace = _load_namespace_all(root)
-        statuses = _load_req_status_all(root)
-        violations, surfaced = active_coverage(tag_records, namespace, statuses)
-        for line in surfaced:
-            print(line)
-        if violations:
-            for entry in violations:
-                print(entry, file=sys.stderr)
-            print(
-                f"\nFAIL: {len(violations)} living-spec coverage "
-                f"violation(s).",
-                file=sys.stderr,
-            )
-            return 1
-        print("OK: every active living-spec req is covered.")
-        return 0
+        return _run_check_coverage(root)
     if mode == "--next-req-id":
-        # Ignores the capability values, parses the trailing \d+ of every
-        # id-form key in the T7 folded namespace, and prints the next free
-        # REQ-<n> — REQ-1 on an empty namespace. Opens no new roots and
-        # reads no header the structural lane does not already read.
-        namespace = _load_namespace_all(root)
-        highest = 0
-        for req_id in namespace:
-            match = re.search(r"\d+", req_id)
-            if match:
-                highest = max(highest, int(match.group()))
-        print(f"REQ-{highest + 1}")
-        return 0
+        return _run_next_req_id(root)
 
     # WARN lane: advisory only. Print each drift WARN to stderr but NEVER
     # let it fail the build or touch the structural FAIL list below.

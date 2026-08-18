@@ -80,6 +80,13 @@ from adjudication_split import iter_lines_outside_fences
 # Mode is decided per FILE, not per header, by `_requirement_scenario_pairs`
 # below: ≥1 id-form header in the file ⇒ id-mode for every header in it
 # (T2 validates that invariant; this script assumes it holds).
+#
+# Deliberate deviation from `_REQUIREMENT_HDR`'s canonical-grammar note: the
+# trailing `\[(?P<status>[^\]]*)\]` group is nested inside the id-form
+# branch only, so a legacy prose header keeps any `[status]` suffix INSIDE
+# `name_legacy` rather than stripping it — the coverage key for a legacy
+# heading must stay byte-identical to before this grammar change (plan
+# Decision Log #4).
 _REQUIREMENT_HDR = re.compile(
     r"^###\s+Requirement:\s*"
     r"(?:(?P<id>REQ-\d+)(?:\s+—\s+(?P<name>.+?))?\s*(?:\[(?P<status>[^\]]*)\])?"
