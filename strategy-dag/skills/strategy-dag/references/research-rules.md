@@ -9,9 +9,19 @@ to a source.
 | Situation ／情況 | Action ／動作 | Where it lands ／落點 |
 |---|---|---|
 | Project docs already answer it ／專案內文件能回答 | Infer directly ／直接推論 | No extra record ／不需額外記錄 |
-| One missing external fact needed to continue ／需要一個外部事實才能繼續 | Verify, at most ONE agent arm ／查證，最多一個臂 | **Must** write into the current note: one-line conclusion + source ／**必須**寫進當前筆記：一行結論＋出處 |
+| One missing external fact needed to continue ／需要一個外部事實才能繼續 | Verify, at most ONE agent arm ／查證，最多一個臂 | Write a `FACT` node under `nodes/` (`type: FACT`, one-line `summary`, `source`, verbatim `quote` — see node-schema.md §Node fields) and add it to the current node's `inputs` with `load_bearing` set ／落成一個 `FACT` 節點檔（見 node-schema.md §Node fields），並加進當前節點的 `inputs`（標 `load_bearing`）——不可只寫成正文一句 |
 | Need to survey a topic ／需要盤點一個主題 | Standalone research note ／獨立研究筆記 | New file (e.g. via research-toolkit) ／新檔案 |
 | User explicitly asks for research ／使用者明說要研究 | Standalone research note ／獨立研究筆記 | New file ／新檔案 |
+
+### Terms ／名詞
+
+**One arm** = one bounded verification dispatch: a single subagent
+dispatch (Agent tool) or, when the host has no subagent tooling, a
+single WebSearch/WebFetch call — never a loop of retries. If one arm
+cannot settle the fact, escalate to the "survey a topic" row above.
+／**一個臂**＝一次有邊界的查證派工：一次 subagent 派工，或無派工工具時
+一次網頁搜尋／抓取；不重試迴圈。一次查不到，就升級為上面「盤點主題」
+那一列（獨立研究筆記）。
 
 ## Hard rule ／硬規則
 
