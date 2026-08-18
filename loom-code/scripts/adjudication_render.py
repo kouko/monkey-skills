@@ -586,6 +586,92 @@ def render_verdict_html(units, title="Adjudication Verdict", lang="zh-Hant"):
 MODES = ("doc", "verdict")
 
 
+# The literal marker the scan anchors on. `_iter_rendition_regions`
+# depends on this exact string; renaming it in `UNIT_TEMPLATE_RAW`
+# without updating this constant turns the postcondition into a no-op
+# that matches nothing and silently passes every page -- see
+# docs/loom/memory/a-mechanical-check-can-go-green-by-skipping.md.
+_RENDITION_START = '<div class="rendition">'
+_DIV_TAG_RE = re.compile(r"<div\b[^>]*>|</div>")
+_UNIT_ID_RE = re.compile(r'<section class="unit" id="([^"]*)">')
+# Stripped BEFORE the marker scan so a rendition legitimately quoting
+# `` `**bold**` `` or a fenced example of this very bug is not itself
+# flagged -- observed twice on this arc's own brief view.
+_CODE_PRE_RE = re.compile(r"<pre\b.*?</pre>|<code\b.*?</code>", re.DOTALL)
+_BOLD_RE = re.compile(r"\*\*[^*]+\*\*")
+
+
+def _iter_rendition_regions(page_html):
+    """Yield `(start_index, inner_html)` for every `<div class="rendition">`
+    region in `page_html`, tracking nested `<div>` depth rather than a
+    non-greedy `.*?</div>` regex -- a rendition can legitimately contain
+    its own nested `<div class="mermaid">` from a fence, and a naive
+    non-greedy match would truncate at THAT inner `</div>` and miss
+    content past it."""
+    start = 0
+    while True:
+        idx = page_html.find(_RENDITION_START, start)
+        if idx == -1:
+            return
+        inner_start = idx + len(_RENDITION_START)
+        depth = 1
+        end = len(page_html)
+        for m in _DIV_TAG_RE.finditer(page_html, inner_start):
+            if m.group().startswith("</div"):
+                depth -= 1
+            else:
+                depth += 1
+            if depth == 0:
+                end = m.start()
+                break
+        yield idx, page_html[inner_start:end]
+        start = end if end > idx else idx + len(_RENDITION_START)
+
+
+def _unit_id_before(page_html, idx):
+    """The nearest `<section class="unit" id="...">` opening before
+    `idx`, for the offending-unit id in the postcondition's error
+    message. Falls back to "unknown" if none is found."""
+    unit_id = None
+    for m in _UNIT_ID_RE.finditer(page_html, 0, idx):
+        unit_id = m.group(1)
+    return unit_id or "unknown"
+
+
+def _assert_rendition_converted(page_html: str):
+    """Scan every `<div class="rendition">...</div>` region in
+    `page_html` for a markdown marker that survived conversion.
+
+    Never scans the `原文` `<details><pre>` block -- that block is
+    structurally outside every rendition region (see
+    `UNIT_TEMPLATE_RAW`), so it is never visited; it carries
+    `html.escape`'d English source markdown BY DESIGN, and a check that
+    scanned the whole page would condemn every correct page.
+
+    Within each region, `<code>...</code>` and `<pre>...</pre>` spans
+    are stripped first, then a surviving `**...**` pair or a literal
+    ``` fence is a violation. Returns the first `(unit_id, marker)`
+    found, or `None` when every region is clean -- mirrors
+    `adjudication_lint.py`'s violations-as-data convention rather than
+    a control-flow exception, matching the module's existing shape
+    (this file had no exception type before this check and none of
+    its siblings raise for a detected violation).
+    """
+    for idx, region in _iter_rendition_regions(page_html):
+        stripped = _CODE_PRE_RE.sub("", region)
+        marker = None
+        if "```" in stripped:
+            marker = "```"
+        else:
+            bold_match = _BOLD_RE.search(stripped)
+            if bold_match:
+                marker = bold_match.group()
+        if marker is not None:
+            unit_id = _unit_id_before(page_html, idx)
+            return unit_id, marker
+    return None
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=sorted(MODES), help="render mode")
@@ -614,6 +700,16 @@ def main(argv=None):
         rendered = render_verdict(units, lang=args.lang)
     else:
         rendered = render_doc(units, lang=args.lang)
+
+    violation = _assert_rendition_converted(rendered)
+    if violation is not None:
+        unit_id, marker = violation
+        print(
+            f"error: unit {unit_id!r} rendition still contains an "
+            f"unconverted markdown marker: {marker!r}",
+            file=sys.stderr,
+        )
+        return 1
 
     if args.output:
         Path(args.output).write_text(rendered, encoding="utf-8")
