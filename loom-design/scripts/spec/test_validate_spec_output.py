@@ -292,6 +292,60 @@ def test_rejects_id_and_status_requirement_missing_name(tmp_path):
     assert any("REQ-1" in p for p in problems), problems
 
 
+def test_mixed_id_and_prose_headers_in_one_file_is_invalid(tmp_path):
+    # No living-spec REQ-id: T2 (this task) predates the living-spec
+    # namespace registry (T1 is the validator itself); untagged per
+    # implementer contract rule 11.
+    mixed_body = (
+        "## ADDED Requirements\n"
+        "\n"
+        "### Requirement: REQ-1 — Foo\n"
+        "The system MUST do the thing.\n"
+        "\n"
+        "#### Scenario: Valid\n"
+        "- GIVEN a user\n- WHEN login\n- THEN session\n"
+        "\n"
+        "### Requirement: Bar\n"
+        "The system MUST do another thing.\n"
+    )
+    root = _write_skeleton(tmp_path, delta_body=mixed_body)
+    ok, problems = validate(root)
+    assert not ok
+    assert any("Bar" in p for p in problems), problems
+
+
+def test_mixed_headers_split_across_two_files_is_valid(tmp_path):
+    # No living-spec REQ-id: same as above.
+    id_body = (
+        "## ADDED Requirements\n"
+        "\n"
+        "### Requirement: REQ-1 — Foo\n"
+        "The system MUST do the thing.\n"
+        "\n"
+        "#### Scenario: Valid\n"
+        "- GIVEN a user\n- WHEN login\n- THEN session\n"
+    )
+    prose_body = (
+        "## ADDED Requirements\n"
+        "\n"
+        "### Requirement: Bar\n"
+        "The system MUST do another thing.\n"
+        "\n"
+        "#### Scenario: Valid\n"
+        "- GIVEN a user\n- WHEN login\n- THEN session\n"
+    )
+    proposal = "# Proposal\n\nWhy this change.\n\n" + _well_formed_additive()
+    (tmp_path / "proposal.md").write_text(proposal, encoding="utf-8")
+    specs_a = tmp_path / "specs" / "a"
+    specs_a.mkdir(parents=True)
+    (specs_a / "spec.md").write_text(id_body, encoding="utf-8")
+    specs_b = tmp_path / "specs" / "b"
+    specs_b.mkdir(parents=True)
+    (specs_b / "spec.md").write_text(prose_body, encoding="utf-8")
+    ok, problems = validate(tmp_path)
+    assert ok, problems
+
+
 # --- additive-section tests (Task 3) ---------------------------------------
 # The spec station's differentiating richness lives in proposal.md's additive
 # sections; the OpenSpec delta under specs/ stays pure. So additive checks

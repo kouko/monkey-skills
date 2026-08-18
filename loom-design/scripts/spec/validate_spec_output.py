@@ -293,6 +293,39 @@ def _check_requirement_id_form(root: Path) -> list[str]:
     return problems
 
 
+def _check_requirement_id_all_or_nothing(root: Path) -> list[str]:
+    # Mode is per FILE, not per folder: within one delta file, if >=1
+    # '### Requirement:' header is id-form (id AND name both present),
+    # every header in that SAME file must be id-form. A file with zero
+    # id-form headers stays legacy mode (no violation). Two files in the
+    # same specs/<capability>/ folder — or different folders — may differ.
+    deltas = _delta_files(root)
+    problems = []
+    for d in deltas:
+        text = d.read_text(encoding="utf-8")
+        headers = []  # (line_no, is_id_form, header_text)
+        for m in _REQUIREMENT_ID_HDR.finditer(text):
+            is_id_form = bool(m.group("id")) and bool(m.group("name"))
+            line_no = text.count("\n", 0, m.start()) + 1
+            line_start = text.rfind("\n", 0, m.start()) + 1
+            line_end = text.find("\n", m.start())
+            header_text = text[line_start:
+                                (line_end if line_end != -1 else len(text))
+                                ].strip()
+            headers.append((line_no, is_id_form, header_text))
+        if not any(is_id_form for _, is_id_form, _ in headers):
+            continue  # legacy mode: no id-form header in this file at all
+        for line_no, is_id_form, header_text in headers:
+            if is_id_form:
+                continue
+            problems.append(
+                f"{d}:{line_no}: mixed id/prose '### Requirement:' headers "
+                f"in one file (this file has >=1 id-form header, so every "
+                f"header in it must be id-form; '{header_text}' is not — "
+                f"all-or-nothing is per file, not per folder)")
+    return problems
+
+
 def _check_scenario_given_when_then(root: Path) -> list[str]:
     deltas = _delta_files(root)
     if not deltas:
@@ -549,6 +582,7 @@ _SKELETON_CHECKS = [
     _check_requirements_block,
     _check_requirement_with_rfc2119,
     _check_requirement_id_form,
+    _check_requirement_id_all_or_nothing,
     _check_scenario_given_when_then,
 ]
 
