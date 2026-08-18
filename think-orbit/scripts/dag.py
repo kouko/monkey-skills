@@ -298,12 +298,41 @@ def _rule_mermaid_id_collision(project: Project) -> list[str]:
     return violations
 
 
-_SENTENCE_TERMINATORS = ".!?。！？"
+_TERMINATOR_CHARS = ".!?。！？"
+_CJK_TERMINATORS = "。！？"
+_TERMINATOR_RUN_RE = re.compile(r"[.!?。！？]+")
+_INLINE_CODE_RE = re.compile(r"`[^`]*`")
+_URL_RE = re.compile(r"https?://\S+")
+# whitespace or a closing quote/bracket -- what a terminator may be followed by
+_CLOSING_RE = re.compile(r"[\s\"'’”)\]」』]")
+_FENCE_START_RE = re.compile(r"^(`{3,}|~{3,})")
 
 
 def _strip_fenced_blocks(text: str) -> str:
-    """Remove fenced code/Mermaid blocks (``` ... ```) entirely before paragraph splitting."""
-    return re.sub(r"```.*?```", "", text, flags=re.DOTALL)
+    """Remove fenced code/Mermaid blocks entirely before paragraph splitting.
+
+    Supports both ``` and ~~~ fences (a fence closes only with the same
+    marker character); an unclosed fence strips from its opening line to
+    the end of the text.
+    """
+    lines = text.split("\n")
+    out: list[str] = []
+    i = 0
+    while i < len(lines):
+        match = _FENCE_START_RE.match(lines[i].strip())
+        if match is None:
+            out.append(lines[i])
+            i += 1
+            continue
+        marker_char = match.group(1)[0]
+        i += 1
+        while i < len(lines):
+            closing = lines[i].strip()
+            if closing and set(closing) == {marker_char}:
+                i += 1
+                break
+            i += 1
+    return "\n".join(out)
 
 
 def _strip_html_comments(text: str) -> str:
@@ -314,6 +343,16 @@ def _is_list_item(line: str) -> bool:
     if line.startswith("- ") or line.startswith("* "):
         return True
     return bool(re.match(r"^\d+\.\s", line))
+
+
+def _is_secondary_list_line(line: str) -> bool:
+    """True for a list/blockquote/table line appearing below a lead-in line
+    in the same block (no blank line separating them) -- excluded from the
+    lead-in's sentence count."""
+    stripped = line.lstrip()
+    if stripped.startswith(("- ", "* ", "> ", "| ")):
+        return True
+    return bool(re.match(r"^\d+\.\s", stripped))
 
 
 def _skip_paragraph(block: str) -> bool:
@@ -327,19 +366,52 @@ def _skip_paragraph(block: str) -> bool:
 
 
 def _count_sentences(paragraph: str) -> int:
-    """Count sentence terminators; a `.` immediately followed by a digit (e.g. `3.5`) doesn't count."""
+    """Count sentence-ending terminators.
+
+    Before counting: strip inline code spans and URLs (their punctuation
+    never ends a sentence). Runs of terminators (`...`, `??`, `。。`)
+    collapse into one. A `.` immediately followed by a digit (`3.5`) never
+    ends a sentence. An ASCII terminator (`.!?`) ends a sentence only at
+    end-of-text, or when followed by whitespace/closing-quote/bracket AND
+    the next non-space character is not a lowercase ASCII letter (so
+    `e.g. the`, `i.e. this`, `vs. that` don't split) -- otherwise it's
+    treated as an abbreviation or mid-word punctuation. A CJK terminator
+    (`。！？`) always ends a sentence once its run is collapsed.
+    """
+    text = _INLINE_CODE_RE.sub(" ", paragraph)
+    text = _URL_RE.sub(" ", text)
+
     count = 0
-    for idx, ch in enumerate(paragraph):
-        if ch not in _SENTENCE_TERMINATORS:
+    for match in _TERMINATOR_RUN_RE.finditer(text):
+        run = match.group()
+        end = match.end()
+        if any(ch in _CJK_TERMINATORS for ch in run):
+            count += 1
             continue
-        if ch == "." and idx + 1 < len(paragraph) and paragraph[idx + 1].isdigit():
+        if run[-1] == "." and end < len(text) and text[end].isdigit():
+            continue
+        if end >= len(text):
+            count += 1
+            continue
+        if not _CLOSING_RE.match(text[end]):
+            continue
+        pos = end
+        while pos < len(text) and _CLOSING_RE.match(text[pos]):
+            pos += 1
+        if pos < len(text) and text[pos].isascii() and text[pos].isalpha() and text[pos].islower():
             continue
         count += 1
+
     return count if count > 0 else 1
 
 
 def _rule_paragraph_form(project: Project) -> list[str]:
-    """Every prose body paragraph of a node (not a research note) must have 2-4 sentences."""
+    """Every prose body paragraph of a node (not a research note) must have 2-4 sentences.
+
+    A block whose first line is prose but whose later lines are list/
+    blockquote/table lines (a lead-in with no blank line before a list) is
+    counted only from its non-list lines.
+    """
     violations = []
     for node in project.nodes:
         if node.origin == "research":
@@ -351,14 +423,18 @@ def _rule_paragraph_form(project: Project) -> list[str]:
             block = block.strip("\n")
             if not block.strip() or _skip_paragraph(block):
                 continue
+            prose_text = "\n".join(
+                line for line in block.splitlines() if not _is_secondary_list_line(line)
+            )
+            if not prose_text.strip():
+                continue
             paragraph_index += 1
-            sentence_count = _count_sentences(block)
+            sentence_count = _count_sentences(prose_text)
             if not (2 <= sentence_count <= 4):
                 violations.append(
                     f"{relpath}: paragraph-form: paragraph {paragraph_index} has {sentence_count} sentences"
                 )
     return violations
-
 
 _CHECK_RULES = (
     _rule_load_bearing,

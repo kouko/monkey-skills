@@ -48,7 +48,11 @@ recorded as a `"<relpath>: frontmatter: ..."` entry in `Project.problems`.
 
 `check`'s `paragraph-form` rule requires every prose body paragraph of a node
 file (`nodes/*.md`, excluding research notes) to contain 2–4 sentences,
-matching the vault's own writing convention.
+matching the vault's own writing convention; the sentence-boundary heuristic
+ignores inline code spans and URLs, collapses runs like `...`, and does not
+split on common abbreviations (`e.g.`, `i.e.`, `vs.`), while a lead-in line
+followed by a list (no blank line between them) is counted from its own
+sentences only.
 
 ## Assumption fields (`assumptions/*.md`)
 

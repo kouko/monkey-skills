@@ -361,6 +361,47 @@ def test_check_flags_paragraphs_outside_two_to_four_sentences(tmp_path, capsys):
     assert out2 == ""
 
 
+def test_count_sentences_ignores_abbreviations_urls_ellipses_and_inline_code():
+    # @req: BI-4
+    assert dag._count_sentences("See docs, e.g. the README. It has details.") == 2
+    assert dag._count_sentences("Visit https://example.com/a.b.c for info. It works.") == 2
+    assert dag._count_sentences("This trailed off... and continued.") == 1
+    assert dag._count_sentences("Run `foo!` now. Then stop.") == 2
+
+
+def test_strip_fenced_blocks_handles_tilde_and_unclosed_fences():
+    # @req: BI-4
+    assert dag._strip_fenced_blocks("before\n~~~\ncode 1\ncode 2\n~~~\nafter\n") == "before\nafter\n"
+    assert dag._strip_fenced_blocks("before\n```\ncode\nno close\n") == "before"
+
+
+def test_check_lead_in_sentence_followed_by_list_is_not_a_paragraph_violation(tmp_path, capsys):
+    # @req: BI-4
+    root = tmp_path
+    _write(
+        root / "nodes" / "goal.md",
+        "id: goal\n"
+        "type: GOAL\n"
+        "seq: 1\n"
+        "summary: Ship v0\n"
+        "status: active\n",
+        body=(
+            "Lead sentence one. Lead sentence two.\n"
+            "- item 1\n"
+            "- item 2\n"
+            "- item 3\n"
+            "- item 4\n"
+            "- item 5\n"
+        ),
+    )
+
+    rc = dag.main(["check", str(root)])
+    out = capsys.readouterr().out
+    lines = [ln for ln in out.splitlines() if ln]
+
+    assert rc == 0
+    assert not any("paragraph-form" in ln for ln in lines)
+
 def test_break_marks_load_bearing_chain_stale_and_reports_weakened(tmp_path, capsys):
     # @req: BI-5
     root = tmp_path
