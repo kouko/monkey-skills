@@ -126,7 +126,7 @@ flowchart LR
 - **Dependencies**: Tasks 3, 4 complete first
 - **Independent**: true
 - **Brief item covered**: release of the brief's Smallest End State items 1-4 — no new behavior; the version + changelog that make the shipped legs reach an installed copy at all
-- **Status**: pending
+- **Status**: done(3d29d646)
 - **Gloss**: 出貨 0.88.0，Codex manifest 跟著同步，CHANGELOG 記上三項行為
 
 ## Task 6 — record the un-probed Codex claim in the backlog
@@ -144,7 +144,7 @@ flowchart LR
 - **Dependencies**: Tasks 3, 4 complete first
 - **Independent**: true
 - **Brief item covered**: brief `## Open Questions` item 0 — "the probe is worth a backlog entry rather than a blocking task… recorded because 'portable by construction' is an argument, not a measurement"
-- **Status**: pending
+- **Status**: done(8e4fcf81)
 - **Gloss**: 把「Codex 沒實測過」這件事立案，不讓它變成沒人記得的口頭承諾
 
 ## Notes

@@ -205,10 +205,22 @@ opened with the Read tool is neither, and the on-disk file keeps the literal
 token (verified: `brainstorming/SKILL.md:79` carries `${CLAUDE_PLUGIN_ROOT}`
 on disk while this session's loaded body carried the resolved absolute path).
 A literal token reaching Bash expands to empty — a new trap. The self-locating
-rule also carries to Codex, which has no such placeholder at all and installs
-by git clone (no per-version cache tier, so only the stale-clone class of this
-bug exists there); NOT live-probed on Codex — recorded as a backlog item, not
-claimed here.
+rule also carries to Codex, which has no such placeholder at all.
+
+**Correction, 2026-08-18, after this brief's first draft**: an earlier version
+of this paragraph claimed Codex "installs by git clone (no per-version cache
+tier, so only the stale-clone class of this bug exists there)". That is false,
+and the repo's own `docs/loom/codex-verification.md:50` already said so — the
+`codex plugin add` marketplace path installs into
+`~/.codex/plugins/cache/<marketplace>/<plugin>/<version>/`, a per-version tree
+structurally identical to staleness source #1 above. The manual `git clone`
+shape in `.codex/INSTALL.md:9-29` is a *second*, different install path, and
+the two were conflated. Confirmed live on this machine: the Codex cache holds
+`monkey-skills/loom-code/0.83.0` — a pre-markdown-it copy — so a Codex-rendered
+adjudication view today reproduces the original bug. At least two of the three
+staleness classes therefore exist under Codex. What remains un-probed is
+whether an executor under Codex resolves the self-locating rule correctly, NOT
+whether Codex can go stale; the backlog entry carries that scope.
 
 We will NOT touch the plugin cache and will NOT add a second script: both trade
 the problem for device hygiene the repo cannot enforce. We will NOT move these
