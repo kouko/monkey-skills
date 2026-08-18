@@ -7,7 +7,7 @@ Goal: the invocation contract pins WHICH copy of `adjudication_render.py`
     and visible to the reader, `unknown` when the copy cannot name itself —
     and a render whose rendition still holds unconverted markdown exits
     non-zero without writing a file.
-Stage: sdd:wave-1
+Stage: finishing
 Steps:
   1. 蓋章：頁面帶上產生它的版本（含讀不到版本時的 unknown 退路）
   2. 大聲失敗：譯文區殘留未轉換的 markdown 就非零退出、不寫檔
