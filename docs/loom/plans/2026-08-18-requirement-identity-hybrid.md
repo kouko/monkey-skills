@@ -8,7 +8,7 @@ Goal: a change-folder requirement header may carry an authored id ahead of
     gate's namespace is widened to live change-folders + archive + living
     root so an id typed once resolves end to end, with dangling or
     duplicate ids rejected and legacy prose-only files unchanged.
-Stage: planning
+Stage: review:round-1
 Steps:
   1. 四路平行起跑：validator 學會 id 標頭、coverage 用 id 當 key、living-spec 解析器學會 id+名字、慣例文件成為 SSOT
   2. 各路加深：全有或全無、requirement 層引用、CI namespace 看見 change-folder、spec-expansion 語法收斂、implementer 守衛更新
@@ -55,7 +55,7 @@ flowchart LR
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(9315b3f0)
 - **Gloss**: validator 認得「REQ-7 — 名字」這種標頭，並抓出寫壞的 id（REQ1／req-1），舊的純散文標頭完全不受影響
 
 ## Task 2 — validator enforces all-or-nothing per spec file
@@ -72,7 +72,7 @@ flowchart LR
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-2
-- **Status**: pending
+- **Status**: done(2eb12223)
 - **Gloss**: 一個 spec 檔要嘛全部有 id、要嘛全部沒有——混著寫會被擋，避免半套採用
 
 ## Task 3 — validator rejects a duplicate `REQ-<n>` within the change-folder
@@ -89,7 +89,7 @@ flowchart LR
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(de627f97)
 - **Gloss**: 同一個 change-folder 裡不能有兩個 REQ-1；撞號在出生地就被擋下
 
 ## Task 4 — coverage checker keys id-mode folders by `REQ-<n>` and drops the duplicate-name warning for them
@@ -106,7 +106,7 @@ flowchart LR
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: done(80007bb7)
 - **Gloss**: coverage 檢查改用 REQ id 當鑰匙，兩個同名 requirement 再也不會被誤認為同一個
 
 ## Task 5 — coverage checker accepts a bare `REQ-<n>` citation as requirement-level coverage
@@ -123,7 +123,7 @@ flowchart LR
 - **Dependencies**: Task 4 completes first
 - **Independent**: false
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(6d58206b)
 - **Gloss**: plan 只寫「REQ-3」也算數（視為整條 requirement 都交付）；寫了一個不存在的 REQ 會直接報錯
 
 ## Task 6 — living_spec_index parses `REQ-<n> — <name> [status]`, ignores prose headers, and builds both status regexes from one vocabulary
@@ -141,7 +141,7 @@ flowchart LR
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-8
-- **Status**: pending
+- **Status**: done(a62857e8)
 - **Gloss**: living-spec 解析器學會「REQ-7 — 名字 [狀態]」，純散文標頭不再被誤當成 id；兩個狀態 regex 共用一份詞彙，改一處不會漏另一處
 
 ## Task 7 — living-spec checker namespace = live change-folders + archive + living root
@@ -162,7 +162,7 @@ flowchart LR
 - **Dependencies**: Task 6 completes first
 - **Independent**: false
 - **Brief item covered**: BI-6
-- **Status**: pending
+- **Status**: done(ae011342)
 - **Gloss**: CI 的 living-spec 閘門終於看得見 change-folder（現役＋封存）——今天寫的 `@req: REQ-3` 今天就能解析，指向不存在目錄的 bug 順帶修掉
 
 ## Task 8 — living-spec checker fails on the same `REQ-<n>` declared in two namespace files
@@ -179,7 +179,7 @@ flowchart LR
 - **Dependencies**: Task 7 completes first
 - **Independent**: false
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: done(add094ea)
 - **Gloss**: 兩個資料夾撞號（都發了 REQ-5）會在 CI 被擋下，而不是靜靜地讓兩個 requirement 共用一個身分
 
 ## Task 9 — `--next-req-id` mode reports the next free number, declared in the command surface
@@ -200,7 +200,7 @@ flowchart LR
 - **Dependencies**: Task 8 completes first
 - **Independent**: false
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: done(a83a0872)
 - **Gloss**: 一條指令告訴你下一個空號是幾號，不用自己 grep 三個目錄
 
 ## Task 10 — the requirement-identifier convention doc, pinned by doc-schema tests
@@ -218,7 +218,7 @@ flowchart LR
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-9
-- **Status**: pending
+- **Status**: done(0da57a32)
 - **Gloss**: REQ id 的規則只寫在一個地方（形式／誰發號／永不重編／全有或全無），三個 parser 和所有 skill 文字都指向它
 
 ## Task 11 — spec-expansion teaches one header grammar and its pin asserts the single shape
@@ -237,7 +237,7 @@ flowchart LR
 - **Dependencies**: Task 10 completes first
 - **Independent**: false
 - **Brief item covered**: BI-11
-- **Status**: pending
+- **Status**: done(5ec4ac0f)
 - **Gloss**: spec-expansion 不再一個檔案裡教兩種標頭；釘測改成釘「單一形狀」，回退舊寫法會被抓到
 
 ## Task 12 — writing-plans accepts the `REQ-<n>` referent and mandates the id key for id-mode folders
@@ -257,7 +257,7 @@ flowchart LR
 - **Dependencies**: Tasks 5, 10 complete first
 - **Independent**: false
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(8b7e9e9f)
 - **Gloss**: plan 的 traceability 欄位正式接受 REQ id；審查提示與 writing-plans 的 join key 規定同步改，三個消費者一次到位
 
 ## Task 13 — implementer Rule 11 names id-mode change-folder headers as the namespace
@@ -274,7 +274,7 @@ flowchart LR
 - **Dependencies**: Task 10 completes first
 - **Independent**: false
 - **Brief item covered**: BI-7
-- **Status**: pending
+- **Status**: done(8474cbed)
 - **Gloss**: implementer 的 `@req` 規則從「查一個從不存在的 namespace」變成「查 change-folder 裡真的有的 id」，永不自己發號的規定不變
 
 ## Task 14 — loom-code 0.85.0 → 0.86.0, CHANGELOG, Codex manifest, backlog hygiene
@@ -292,7 +292,7 @@ flowchart LR
 - **Dependencies**: Tasks 5, 9, 12, 13 complete first
 - **Independent**: false
 - **Brief item covered**: none — release administration and backlog hygiene; delivers no brief outcome
-- **Status**: pending
+- **Status**: done(14e801b7)
 - **Gloss**: loom-code 出貨 0.86.0，Codex 鏡射同步，backlog 兩條記帳（本弧收掉、遞延項 (a) 銷掉）
 
 ## Task 15 — loom-design 0.2.0 → 0.3.0 + CHANGELOG
@@ -309,7 +309,7 @@ flowchart LR
 - **Dependencies**: Tasks 3, 11 complete first
 - **Independent**: false
 - **Brief item covered**: none — release administration; delivers no brief outcome
-- **Status**: pending
+- **Status**: done(ddf469eb)
 - **Gloss**: loom-design 出貨 0.3.0（validator 三項＋慣例文件＋skill 語法收斂）
 
 ## Notes
@@ -341,3 +341,9 @@ flowchart LR
 **Review trail**: round 1 NEEDS_REVISION (Checks 14/16/17) → fixed; round 2 NEEDS_REVISION (Check 17 on T9 only) → Reuse-adequacy block added and CONFIRMED_RESOLVED by the same reviewer via delta check; verdict stamped — stamping the verdict, no re-review.
 
 Kickoff decision: bare `REQ-<n>` in `Brief item covered` → requirement-level coverage of every scenario under it (OQ-3, option A; user-ratified 2026-08-18 at kickoff). Post-arc follow-up (user decision, same kickoff): a blind dogfood AFTER this arc ships — cold plan-writers on an id-mode fixture folder, measuring bare-id over-claim rate and reviewer catch rate; results binding on whether OQ-3 flips to scenario-only (cost: one resolver branch in T5). Not a task of this plan; file it as a backlog entry at close-out.
+
+## Decision Log
+
+1. chose to leave the backlog status flip and BACKLOG.md/DIRECTION.md regeneration out of Task 14 and let finishing-a-development-branch's Step 8 do them at close-out because docs/loom/backlog/README.md §Verbs assigns the close duty there (a SHIPPED flip before merge would lie) — cost-of-change: the day you want the release task to own backlog closure, this choice costs one Step-8 pointer edit
+2. chose to fold two reviewer should-fixes into small follow-up commits (T8's private-import refactor → public `load_req_paths`; T3's dead `d` parameter) rather than log them as debt because each was named concretely by the reviewer and cost minutes — cost-of-change: none; the only surviving debt is T5's untested `if dropped:` guard (a citation-error-only run with full coverage), left for the whole-branch review or a follow-up test
+

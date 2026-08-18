@@ -2,7 +2,7 @@
 name: writing-plans
 description: |
   Use AFTER brainstorming produces a brief, BEFORE subagent-driven-development dispatches implementers. Splits it into atomic tasks — each with one RED/GREEN test and a single module boundary — into a dependency graph.
-version: 0.12.1
+version: 0.12.2
 ---
 
 <SUBAGENT-STOP>
