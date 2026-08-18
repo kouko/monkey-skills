@@ -2,8 +2,11 @@
 
 `load_namespace(specs_dir)` builds the req-to-capability namespace from a
 loom-design tree: each `<specs_dir>/<capability>/spec.md` declares its
-requirements via `### Requirement: <id>` headings, and the capability is
-the immediate subdirectory name. Returns `{req_id: capability}`.
+requirements via `### Requirement: REQ-<n> — <name> [status]` headings
+(name and status both optional), and the capability is the immediate
+subdirectory name. Returns `{req_id: capability}`. A heading whose text
+is not id-form (legacy prose, no `REQ-<n>`) is skipped — it is not a
+namespace entry.
 
 Stdlib only (pathlib + re).
 """
@@ -11,35 +14,42 @@ Stdlib only (pathlib + re).
 import re
 from pathlib import Path
 
-# A requirement heading: `### Requirement: <id>` with an optional trailing
-# `[active|deferred]` status suffix. The id group is non-greedy and the
-# suffix is captured separately, so `### Requirement: REQ-1 [deferred]`
-# yields id "REQ-1" (NOT "REQ-1 [deferred]") — both `load_namespace` and
-# `load_req_status` key on this same id. Only `active`/`deferred` are
-# recognized; any other trailing bracket stays part of the id group and
-# `load_req_status` defaults it to active.
+# The status vocabulary, declared ONCE — both regexes below are built
+# from this single constant (f-string), so a vocabulary change can't
+# miss a copy (closes the paired-regex lockstep debt item).
+_STATUS_VOCAB = "active|deferred"
+
+# An id-form requirement heading: `### Requirement: REQ-<n>` with an
+# optional ` — <name>` and an optional trailing `[<status>]` suffix
+# (status vocabulary: `_STATUS_VOCAB`). Named groups: id, name, status. A heading whose text
+# is NOT id-form (legacy prose, e.g. `### Requirement: Some prose`)
+# does not match this regex at all and is skipped by `load_namespace`
+# and `load_req_status`.
 _REQUIREMENT_STATUS_RE = re.compile(
-    r"^###\s+Requirement:\s*(.+?)\s*(?:\[(active|deferred)\])?\s*$"
+    r"^###\s+Requirement:\s*(?P<id>REQ-\d+)(?:\s+—\s+(?P<name>.+?))?"
+    rf"\s*(?:\[(?P<status>{_STATUS_VOCAB})\])?\s*$"
 )
 
-# A requirement heading that DOES carry a trailing `[...]` bracket,
-# capturing the id-portion (group 1) and the raw bracket content
-# (group 2) regardless of whether it is a valid status. This is the
-# fail-loud counterpart to `_REQUIREMENT_STATUS_RE`: that regex only
-# matches valid/absent suffixes (an unrecognized suffix falls through
-# into the id group and defaults active), so it cannot SEE a typo'd
-# status. This one always matches a bracket, letting the caller flag
-# any content that is not `active`/`deferred`.
+# A requirement heading (id-form OR legacy prose) that DOES carry a
+# trailing `[...]` bracket, capturing the text before the bracket
+# (group "id") and the raw bracket content (group "status") regardless
+# of whether it is a valid status. This is the fail-loud counterpart to
+# `_REQUIREMENT_STATUS_RE`: that regex only matches a valid/absent
+# suffix on an id-form heading, so it cannot SEE a typo'd status, nor a
+# bracket on a prose heading. This one always matches any heading with
+# a bracket — id-form or prose alike — letting the caller flag any
+# content that is not in `_STATUS_VOCAB`.
 _REQUIREMENT_BRACKET_RE = re.compile(
-    r"^###\s+Requirement:\s*(.+?)\s*\[([^\]]*)\]\s*$"
+    r"^###\s+Requirement:\s*(?P<id>.+?)\s*\[(?P<status>[^\]]*)\]\s*$"
 )
 
 
 def load_namespace(specs_dir: Path) -> dict[str, str]:
-    """Map each `### Requirement: <id>` to its capability (the dir name).
+    """Map each id-form `### Requirement: REQ-<n>` to its capability.
 
     Walks `<specs_dir>/<capability>/spec.md` files only. A capability dir
-    may declare multiple requirements; all map to that capability.
+    may declare multiple requirements; all map to that capability. A
+    prose heading (no `REQ-<n>` id) is legacy and skipped.
     """
     namespace: dict[str, str] = {}
     for spec_path in sorted(Path(specs_dir).glob("*/spec.md")):
@@ -47,17 +57,19 @@ def load_namespace(specs_dir: Path) -> dict[str, str]:
         for line in spec_path.read_text(encoding="utf-8").splitlines():
             match = _REQUIREMENT_STATUS_RE.match(line)
             if match:
-                namespace[match.group(1)] = capability
+                namespace[match.group("id")] = capability
     return namespace
 
 
 def load_req_status(specs_dir: Path) -> dict[str, str]:
-    """Map each `### Requirement: <id>` to its status: "active"|"deferred".
+    """Map each id-form `### Requirement: REQ-<n>` to its status.
 
     Walks the SAME `<specs_dir>/<capability>/spec.md` files as
     `load_namespace`. A heading may carry an optional trailing
-    `[active|deferred]` suffix; a bare heading defaults to "active".
-    The status suffix is split off so the req id stays identical to
+    `[<status>]` suffix (see `_STATUS_VOCAB`); a bare heading defaults
+    to "active". A
+    prose heading (no `REQ-<n>` id) is legacy and skipped. The status
+    suffix is split off so the req id stays identical to
     `load_namespace`'s capture (e.g. "REQ-1", not "REQ-1 [deferred]").
     """
     status: dict[str, str] = {}
@@ -65,7 +77,7 @@ def load_req_status(specs_dir: Path) -> dict[str, str]:
         for line in spec_path.read_text(encoding="utf-8").splitlines():
             match = _REQUIREMENT_STATUS_RE.match(line)
             if match:
-                status[match.group(1)] = match.group(2) or "active"
+                status[match.group("id")] = match.group("status") or "active"
     return status
 
 
@@ -76,19 +88,23 @@ def find_malformed_status(specs_dir: Path) -> list[str]:
     `load_namespace`/`load_req_status`. A heading whose trailing bracket
     content is neither "active" nor "deferred" (e.g. `[activ]`,
     `[todo]`, `[ ]`) is a MALFORMED declaration that `load_req_status`
-    would silently default to "active"; this surfaces it instead.
-    Returns one descriptive string per offender naming the bracket
-    content and the id-portion. A heading with no bracket, or a valid
-    `[active]`/`[deferred]`, yields nothing. Source order, deterministic.
+    would silently default to "active"; this surfaces it instead. The
+    suffix grammar applies to BOTH id-form and legacy-prose headings —
+    a prose heading with an invalid bracket is flagged too, even though
+    it is otherwise skipped (it is not a namespace entry). Returns one
+    descriptive string per offender naming the bracket content and the
+    id-portion. A heading with no bracket, or a valid `[active]`/
+    `[deferred]`, yields nothing. Source order, deterministic.
     """
+    valid_statuses = _STATUS_VOCAB.split("|")
     offenders: list[str] = []
     for spec_path in sorted(Path(specs_dir).glob("*/spec.md")):
         for line in spec_path.read_text(encoding="utf-8").splitlines():
             match = _REQUIREMENT_BRACKET_RE.match(line)
-            if match and match.group(2) not in ("active", "deferred"):
+            if match and match.group("status") not in valid_statuses:
                 offenders.append(
-                    f"MALFORMED status '[{match.group(2)}]' on "
-                    f"requirement {match.group(1)}"
+                    f"MALFORMED status '[{match.group('status')}]' on "
+                    f"requirement {match.group('id')}"
                 )
     return offenders
 
