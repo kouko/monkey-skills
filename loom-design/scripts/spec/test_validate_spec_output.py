@@ -214,6 +214,47 @@ def test_skeleton_tolerates_extra_content(tmp_path):
     assert ok, f"extra content must be tolerated, got: {problems}"
 
 
+def test_rejects_near_miss_requirement_id(tmp_path):
+    # No living-spec REQ-id: this task predates the living-spec namespace
+    # registry (T1 is the validator itself); untagged per implementer
+    # contract rule 11.
+    body = (
+        "## ADDED Requirements\n"
+        "\n"
+        "### Requirement: req-1 — Foo\n"
+        "The system MUST do the thing.\n"
+        "\n"
+        "#### Scenario: Valid\n"
+        "- GIVEN a user\n- WHEN login\n- THEN session\n"
+    )
+    root = _write_skeleton(tmp_path, delta_body=body)
+    ok, problems = validate(root)
+    assert not ok
+    assert any("req-1" in p for p in problems), problems
+
+
+def test_accepts_id_form_requirement(tmp_path):
+    body = (
+        "## ADDED Requirements\n"
+        "\n"
+        "### Requirement: REQ-1 — Foo\n"
+        "The system MUST do the thing.\n"
+        "\n"
+        "#### Scenario: Valid\n"
+        "- GIVEN a user\n- WHEN login\n- THEN session\n"
+    )
+    root = _write_skeleton(tmp_path, delta_body=body)
+    ok, problems = validate(root)
+    assert ok, problems
+
+
+def test_accepts_legacy_prose_requirement(tmp_path):
+    body = _well_formed_delta()  # "### Requirement: User login", no id
+    root = _write_skeleton(tmp_path, delta_body=body)
+    ok, problems = validate(root)
+    assert ok, problems
+
+
 # --- additive-section tests (Task 3) ---------------------------------------
 # The spec station's differentiating richness lives in proposal.md's additive
 # sections; the OpenSpec delta under specs/ stays pure. So additive checks

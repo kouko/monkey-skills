@@ -46,6 +46,21 @@ _REQ_BLOCK_HDR = re.compile(
     r"^##\s+(?:ADDED|MODIFIED|REMOVED)\s+Requirements\s*$", re.MULTILINE)
 _REQUIREMENT_HDR = re.compile(r"^###\s+Requirement:", re.MULTILINE)
 
+# id-aware header grammar (canonical, frozen in the plan's Notes §Canonical
+# grammar so T1/T4/T6/T10 can start in parallel): id-form ("REQ-<n> — name"),
+# or legacy prose (anything else, incl. an optional trailing "[status]").
+_REQUIREMENT_ID_HDR = re.compile(
+    r"^###\s+Requirement:\s*"
+    r"(?:(?P<id>REQ-\d+)(?:\s+—\s+(?P<name>.+?))?|(?P<name_legacy>.+?))"
+    r"\s*(?:\[(?P<status>[^\]]*)\])?\s*$",
+    re.MULTILINE,
+)
+
+# Near-miss: the first token after "Requirement:" looks like an attempted id
+# (r/req/REQ optionally hyphenated + digits) but is not exactly "REQ-<n>"
+# (e.g. REQ1, req-1, R-1 — the brief's own examples).
+_NEAR_MISS_ID = re.compile(r"(?i)^r(?:eq)?-?\d+$")
+
 # Knowledge-triage `evidence_needed:` tag (cut (a); doctrine in
 # spec-expansion/references/domain-tag-triage.md). Entry:
 # docs/loom/backlog/2026-07-18-knowledge-triage-v2-1-mechanize-enforcement-semantics.md
@@ -246,6 +261,28 @@ def _check_requirement_with_rfc2119(root: Path) -> list[str]:
     return [f"no '### Requirement:' under {root / 'specs'} carries an "
             f"RFC-2119 keyword (MUST / SHALL / SHOULD / MAY) on its body line "
             f"(state the normative obligation, e.g. 'The system MUST ...')"]
+
+
+def _check_requirement_id_form(root: Path) -> list[str]:
+    # Classifies each '### Requirement:' header as id-form, near-miss, or
+    # legacy prose. Only near-miss is a violation (T2's all-or-nothing
+    # id-mode gate and T3's duplicate-id check live elsewhere, not here).
+    deltas = _delta_files(root)
+    problems = []
+    for d in deltas:
+        text = d.read_text(encoding="utf-8")
+        for m in _REQUIREMENT_ID_HDR.finditer(text):
+            if m.group("id"):
+                continue  # id-form
+            candidate = (m.group("name_legacy") or "").strip()
+            token = candidate.split()[0] if candidate.split() else ""
+            if token and _NEAR_MISS_ID.match(token):
+                line_no = text.count("\n", 0, m.start()) + 1
+                problems.append(
+                    f"{d}:{line_no}: near-miss requirement id '{token}' "
+                    f"under '### Requirement:' (expected exact form "
+                    f"'REQ-<n> — <name>', e.g. 'REQ-1 — Foo')")
+    return problems
 
 
 def _check_scenario_given_when_then(root: Path) -> list[str]:
@@ -503,6 +540,7 @@ _SKELETON_CHECKS = [
     _check_specs_dir,
     _check_requirements_block,
     _check_requirement_with_rfc2119,
+    _check_requirement_id_form,
     _check_scenario_given_when_then,
 ]
 
