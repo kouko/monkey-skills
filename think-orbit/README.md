@@ -11,7 +11,7 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 
 ## Usage
 
-Say "help me decide X" (or 「我要決定」/「決策推演」) to open a decision; the agent asks a few questions and writes the reasoning to markdown files as you talk, regenerating a DAG view you can read at any time.
+Say "help me decide X" (or 「我要決定」/「決策推演」) to open a decision — the `using-think-orbit` entry skill routes you in; the agent asks a few questions and writes the reasoning to markdown files as you talk, regenerating a DAG view you can read at any time.
 
 ## Install
 

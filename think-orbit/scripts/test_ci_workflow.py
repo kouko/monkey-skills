@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW_PATH = REPO_ROOT / ".github" / "workflows" / "think-orbit-ci.yml"
 
 
@@ -41,9 +41,11 @@ def test_workflow_runs_pytest_structure_hook_and_codex_check():
     assert "think-orbit/**" in paths_filters
 
     run_lines = _all_run_lines(workflow)
-    assert "python3 -m pytest think-orbit/skills/think-orbit/scripts/" in run_lines
+    assert "python3 -m pytest think-orbit/scripts/" in run_lines
     assert (
-        "bash .claude/hooks/validate-skill-folder-structure.sh "
-        "think-orbit/skills/think-orbit/SKILL.md"
+        "for skill in using-think-orbit decision-session break-assumption"
+    ) in run_lines
+    assert (
+        'bash .claude/hooks/validate-skill-folder-structure.sh "think-orbit/skills/$skill/SKILL.md"'
     ) in run_lines
     assert "python3 scripts/sync_codex_manifests.py --check think-orbit" in run_lines

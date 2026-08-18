@@ -15,3 +15,6 @@ Initial plugin skeleton: `.claude-plugin/plugin.json`, Codex manifest
 mirror (`.codex-plugin/plugin.json`), tri-language READMEs, and a stub
 `skills/think-orbit/SKILL.md`. The core conversation protocol is not
 yet implemented — Part 1, pre-release.
+
+layout: using-think-orbit router + decision-session + break-assumption;
+scripts at plugin level

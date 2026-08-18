@@ -129,7 +129,10 @@ def test_load_project_parses_nodes_assumptions_and_research_claims(tmp_path):
 
 
 def test_node_schema_doc_names_every_field():
-    schema_path = Path(__file__).resolve().parents[1] / "references" / "node-schema.md"
+    schema_path = (
+        Path(__file__).resolve().parents[1]
+        / "skills" / "decision-session" / "references" / "node-schema.md"
+    )
     assert schema_path.exists(), f"missing {schema_path}"
     text = schema_path.read_text(encoding="utf-8")
     for field in NODE_FIELDS + ASSUMPTION_FIELDS:

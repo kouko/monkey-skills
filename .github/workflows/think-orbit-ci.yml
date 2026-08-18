@@ -36,10 +36,14 @@ jobs:
       - name: Run think-orbit pytest suite
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: python3 -m pytest think-orbit/skills/think-orbit/scripts/ -q
+        run: python3 -m pytest think-orbit/scripts/ -q
 
       - name: Validate skill folder structure
-        run: bash .claude/hooks/validate-skill-folder-structure.sh think-orbit/skills/think-orbit/SKILL.md
+        # Anthropic skill convention: SKILL.md + flat single-level subfolders.
+        run: |
+          for skill in using-think-orbit decision-session break-assumption; do
+            bash .claude/hooks/validate-skill-folder-structure.sh "think-orbit/skills/$skill/SKILL.md"
+          done
 
       - name: Check Codex manifest mirror is in sync
         run: python3 scripts/sync_codex_manifests.py --check think-orbit

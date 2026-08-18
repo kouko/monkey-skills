@@ -11,7 +11,7 @@
 
 ## 使用方式
 
-說「我要決定 X」（或 "help me decide X"），agent 會問幾個問題，邊聊邊把推理寫進 markdown 檔案，並重新產生你隨時可讀的 DAG 視圖。
+說「我要決定 X」（或 "help me decide X"），入口 skill `using-think-orbit` 會接手引路，agent 會問幾個問題，邊聊邊把推理寫進 markdown 檔案，並重新產生你隨時可讀的 DAG 視圖。
 
 ## 安裝
 
