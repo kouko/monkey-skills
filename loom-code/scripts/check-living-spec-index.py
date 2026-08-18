@@ -43,8 +43,12 @@ omitted; ``--check-coverage`` takes only an optional trailing ``[root]``.
 
 ``build_index(root)`` is the single regeneration path the CLI, the
 finishing step, and the CI verify lane all call — composing
-``collect_structural_records`` -> ``load_namespace`` -> ``generate_index``
-across the source tree into the index markdown string.
+``collect_structural_records`` -> ``_load_namespace_all`` ->
+``generate_index`` across the source tree into the index markdown
+string. The namespace is folded, via ``_namespace_roots(root)``, over
+every LIVE change-folder ``docs/loom/<change-id>/specs``, every
+ARCHIVED ``docs/loom/archive/<x>/specs``, and the living-spec root
+``docs/loom/spec`` (tolerated absent) — not a single hardcoded root.
 
 Alongside the structural FAIL lane, the runner drives an advisory WARN
 lane via ``run_drift_lane(root)`` — composing collect -> resolve ->
@@ -72,6 +76,65 @@ from living_spec_index import (
     load_namespace,
     load_req_status,
 )
+
+
+def _namespace_roots(root: Path) -> list[Path]:
+    """Return every ``specs`` dir that contributes to the req namespace.
+
+    In order: every LIVE change-folder ``docs/loom/<change-id>/specs``
+    (glob ``docs/loom/*/specs``, existing dirs only), every ARCHIVED
+    change-folder ``docs/loom/archive/<x>/specs``, then the living-spec
+    root ``docs/loom/spec`` (tolerated absent — the folded loaders below
+    already handle a missing dir by globbing nothing). Fixes BI-12: a
+    single hardcoded ``docs/loom/spec`` root that usually does not exist
+    once requirements live in change-folders instead.
+    """
+    root = Path(root)
+    loom_dir = root / "docs" / "loom"
+    roots = [
+        p / "specs"
+        for p in sorted(loom_dir.glob("*"))
+        if p.name != "archive" and (p / "specs").is_dir()
+    ]
+    archive_dir = loom_dir / "archive"
+    if archive_dir.is_dir():
+        roots += [
+            p / "specs"
+            for p in sorted(archive_dir.glob("*"))
+            if (p / "specs").is_dir()
+        ]
+    roots.append(loom_dir / "spec")
+    return roots
+
+
+def _load_namespace_all(root: Path) -> dict[str, str]:
+    """Fold ``load_namespace`` over every ``_namespace_roots(root)``.
+
+    Dict merge, later roots overwrite earlier ones on the same key. A
+    duplicate id declared under two roots is NOT resolved here — that
+    is a namespace-collision violation surfaced elsewhere (T8), not
+    silently picked here.
+    """
+    namespace: dict[str, str] = {}
+    for specs_dir in _namespace_roots(root):
+        namespace.update(load_namespace(specs_dir))
+    return namespace
+
+
+def _load_req_status_all(root: Path) -> dict[str, str]:
+    """Fold ``load_req_status`` over every ``_namespace_roots(root)``."""
+    statuses: dict[str, str] = {}
+    for specs_dir in _namespace_roots(root):
+        statuses.update(load_req_status(specs_dir))
+    return statuses
+
+
+def _find_malformed_status_all(root: Path) -> list[str]:
+    """Fold ``find_malformed_status`` over every ``_namespace_roots(root)``."""
+    offenders: list[str] = []
+    for specs_dir in _namespace_roots(root):
+        offenders += find_malformed_status(specs_dir)
+    return offenders
 
 
 def find_structural_violations(
@@ -181,18 +244,19 @@ def build_index(root: Path) -> str:
     - ``collect_structural_records(root)`` parses every ANCHORED ``@req``
       binding under ``root`` into ``{test, reqs, invariant_refs}``
       records;
-    - ``load_namespace(root / "docs/loom/spec")`` maps each
-      ``### Requirement: <id>`` to its capability (the subdir name);
+    - ``_load_namespace_all(root)`` maps each ``### Requirement: <id>``
+      across every namespace root (live change-folders, archive, and
+      the living-spec root) to its capability (the subdir name);
     - ``generate_index(records, namespace)`` renders the
       capability > requirement > test markdown tree.
 
-    Over a repo with no ``docs/loom/spec`` tree yet, ``load_namespace``
+    Over a repo with no namespace roots yet, ``_load_namespace_all``
     returns ``{}`` and the index is near-empty — the valid base case,
     not an error.
     """
     root = Path(root)
     tag_records = collect_structural_records(root)
-    namespace = load_namespace(root / "docs" / "loom" / "spec")
+    namespace = _load_namespace_all(root)
     return generate_index(tag_records, namespace)
 
 
@@ -289,8 +353,8 @@ def main(argv: list[str] | None = None) -> int:
         # 0 passing). Deferred reqs with 0 tests are informational (stdout,
         # never fail); uncovered active reqs are violations (stderr, rc=1).
         tag_records = collect_structural_records(root)
-        namespace = load_namespace(root / "docs" / "loom" / "spec")
-        statuses = load_req_status(root / "docs" / "loom" / "spec")
+        namespace = _load_namespace_all(root)
+        statuses = _load_req_status_all(root)
         violations, surfaced = active_coverage(tag_records, namespace, statuses)
         for line in surfaced:
             print(line)
@@ -316,12 +380,12 @@ def main(argv: list[str] | None = None) -> int:
     # malformed tag. This is the gate that fails the build (rc=1).
     tag_records = collect_structural_records(root)
     malformed = collect_malformed(root)
-    namespace = load_namespace(root / "docs" / "loom" / "spec")
+    namespace = _load_namespace_all(root)
     violations = find_structural_violations(tag_records, malformed, namespace)
     # Fold the malformed-status check into the SAME FAIL list: a bad status
     # token (`[activ]`) is a syntax defect, RED-safe to gate on every push
     # (not a coverage check) — surface it on stderr and count it toward rc=1.
-    violations += find_malformed_status(root / "docs" / "loom" / "spec")
+    violations += _find_malformed_status_all(root)
     if violations:
         for entry in violations:
             print(entry, file=sys.stderr)

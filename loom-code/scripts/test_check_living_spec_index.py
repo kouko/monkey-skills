@@ -380,6 +380,62 @@ def test_main_structural_lane_passes_on_resolvable_req(tmp_path, capsys):
     )
 
 
+def test_namespace_includes_live_change_folder_and_archive_specs(tmp_path, capsys):
+    # WHY: the namespace must be read from EVERY change-folder + archive
+    # `specs/` dir plus the living `docs/loom/spec`, not just the
+    # singular (often nonexistent) `docs/loom/spec` root (BI-12). A test
+    # tagged `@req: REQ-3` (declared under a LIVE change-folder) and
+    # another tagged `@req: REQ-4` (declared under an ARCHIVE
+    # change-folder) must both resolve even with no `docs/loom/spec` dir
+    # at all; a third tag `@req: REQ-9` (declared nowhere) must still be
+    # reported DANGLING.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    (repo / "test_foo.py").write_text(
+        "def test_a():\n"
+        "    # @req: REQ-3\n"
+        "    assert True\n"
+        "\n"
+        "def test_b():\n"
+        "    # @req: REQ-4\n"
+        "    assert True\n"
+        "\n"
+        "def test_c():\n"
+        "    # @req: REQ-9\n"
+        "    assert True\n",
+        encoding="utf-8",
+    )
+    live_dir = repo / "docs" / "loom" / "2026-01-01-x" / "specs" / "cap"
+    live_dir.mkdir(parents=True)
+    (live_dir / "spec.md").write_text(
+        "### Requirement: REQ-3 — Foo\n", encoding="utf-8"
+    )
+    archive_dir = repo / "docs" / "loom" / "archive" / "2026-01-02-y" / "specs" / "cap2"
+    archive_dir.mkdir(parents=True)
+    (archive_dir / "spec.md").write_text(
+        "### Requirement: REQ-4 — Bar\n", encoding="utf-8"
+    )
+    _commit(repo, "live + archive specs, no docs/loom/spec", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main([str(repo)])
+    assert rc == 1, (
+        f"the dangling REQ-9 must still fail the structural lane, got rc={rc!r}"
+    )
+    captured = capsys.readouterr()
+    assert "REQ-9" in captured.err, (
+        f"REQ-9 must be named as dangling, got: {captured.err!r}"
+    )
+    assert "REQ-3" not in captured.err, (
+        f"REQ-3 (declared in a live change-folder) must resolve, "
+        f"got: {captured.err!r}"
+    )
+    assert "REQ-4" not in captured.err, (
+        f"REQ-4 (declared in an archive change-folder) must resolve, "
+        f"got: {captured.err!r}"
+    )
+
+
 def test_verify_index_mode_fails_on_stale(tmp_path):
     # WHY: the merge-boundary stale-index gate. `--verify-index <path>`
     # regenerates the index from the source tree and asserts byte-identity
