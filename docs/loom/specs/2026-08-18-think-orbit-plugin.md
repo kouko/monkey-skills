@@ -1,4 +1,4 @@
-# strategy-dag plugin（決策推演 CoT 文件群）— brief
+# think-orbit plugin（決策推演 CoT 文件群）— brief
 
 > **Phase**: brainstorming output (`brainstorming` → `writing-plans` handoff)
 > **Date**: 2026-08-18
@@ -7,16 +7,16 @@
 > `/Users/kouko/kouko-obsidian-vault/research/2026-08-18 決策推演 plugin v0 設計定案.md`（要做什麼）、
 > `…/2026-08-18 決策節點分類法的雙盲一致率實驗.md`（實證）、
 > `…/2026-08-17 不可變 DAG 與六類推理節點架構可行性研究.md`（哪些設計站不住）。
-> Session handoff: `.claude/handoffs/HANDOFF-2026-08-18-strategy-dag-plugin-design.md`.
+> Session handoff: `.claude/handoffs/HANDOFF-2026-08-18-think-orbit-plugin-design.md`.
 > **Scope lock**: user chose the FULL v0 scope（「第一個版本就可以完整運作」）over a
 > vertical slice; mitigation is task ORDERING (schema + gate + assumption
 > propagation first, real-material checkpoint, then views/compile).
-> **Working name**: `strategy-dag`（branch `strage-dag-skill` 為筆誤；名稱可改，非承重）。
+> **Working name**: `think-orbit`（branch `strage-dag-skill` 為筆誤；名稱可改，非承重）。
 > **Continuous mode**: not named — human-pumped.
 > **SPLIT (2026-08-18, user chose A)**: this file is now the UMBRELLA (overview + Alternatives +
 > Diagrams SSOT). Plans consume the parts, not this file: Part 1 =
-> `2026-08-18-strategy-dag-plugin-part-1.md` (schema / gate / propagation / core SKILL / scaffold →
-> real-material checkpoint), Part 2 = `2026-08-18-strategy-dag-plugin-part-2.md` (views / proposal /
+> `2026-08-18-think-orbit-plugin-part-1.md` (schema / gate / propagation / core SKILL / scaffold →
+> real-material checkpoint), Part 2 = `2026-08-18-think-orbit-plugin-part-2.md` (views / proposal /
 > milestones / release). Reason: full-v0 critical-path depth 6–7 > writing-plans ceiling 5. Each part
 > declares its own BI ids and maps back to this file's ids as `[U BI-n]`.
 > **Design-side on-ramp**: rows 1（無 PRINCIPLES.md＋產品形態）與 3（多狀態行為＋無 spec）
@@ -57,7 +57,7 @@ Job story：**當**我和 agent 一起就一個商業決策做狀況分析、形
 
 （Axis 3 — 使用者選 **完整 v0**，非最小切片；此節記的是「完整 v0」的邊界。）
 
-一個獨立 plugin `strategy-dag` 上架 marketplace 後，使用者在任一資料夾對 agent 說「我要決定
+一個獨立 plugin `think-orbit` 上架 marketplace 後，使用者在任一資料夾對 agent 說「我要決定
 X」，接下來的每次坐下（第一次 ~40 分鐘、續談 ~15 分鐘、編提案 ~10 分鐘）都只是講話：agent
 把討論中的每一個推理步驟寫成型別化節點檔（`GOAL / FACT / CLAIM / DECISION`；程序性／社交
 內容不落盤），開分支時起草最多三個可證偽假設檔並請使用者確認，每個節點邊界靜默跑機械閘
@@ -80,7 +80,7 @@ CoT 可讀版。非判準：不量分類「正確率」（只承諾一致，不�
 - BI-9 — Research rules: project docs answer → infer directly; one missing external fact → verify with at most one agent arm and write result + source into the current note; topic survey or explicit request → standalone research note. Hard rule: any external fact entering the reasoning must be findable in the docs.
 - BI-10 — Git milestones: the SKILL commits at 4–6 milestones per sitting (GOAL confirmed, each branch opened, assumption confirmed/broken, DECISION written), message carries the node/assumption ids; no hash chain, no `graph_state.json`.
 - BI-11 — Compile proposal: on request, the winning mainline is compiled into a proposal body and rejected branches + reasons into an appendix (a rendering over BI-6's mainline + branches data, not a new node type).
-- BI-12 — Repo integration: `strategy-dag/` plugin folder with `.claude-plugin/plugin.json` + Codex mirror, tri-language READMEs, marketplace entry, its own CI workflow (pytest over `strategy-dag/**` + skill-folder-structure validation), SKILL.md bodies ≤4,500 words self-enforced.
+- BI-12 — Repo integration: `think-orbit/` plugin folder with `.claude-plugin/plugin.json` + Codex mirror, tri-language READMEs, marketplace entry, its own CI workflow (pytest over `think-orbit/**` + skill-folder-structure validation), SKILL.md bodies ≤4,500 words self-enforced.
 - BI-13 — Real-material checkpoint: after BI-1/2/4/5 land and before BI-6/10/11, the user runs one real decision through the flow; schema changes found there are applied before views/compile are built.
 
 ## Current State Evidence
@@ -96,7 +96,7 @@ CoT 可讀版。非判準：不量分類「正確率」（只承諾一致，不�
 
 ## Decision
 
-我們要蓋一個獨立、單人使用、不併入 loom 家族的 plugin `strategy-dag`：把使用者與 agent 的
+我們要蓋一個獨立、單人使用、不併入 loom 家族的 plugin `think-orbit`：把使用者與 agent 的
 決策討論即時落成型別化節點檔＋假設檔（frontmatter 就是圖），腳本層負責機械閘、假設破裂的
 stale 傳播、三種 Mermaid 衍生視圖與提案編譯，SKILL 層負責只打斷三次的對話協定、靜默寫檔、
 研究規則與里程碑 commit。**不做**：雜湊鏈／`graph_state.json`／確定性快取（LLM 非確定、git
@@ -107,7 +107,7 @@ ATMS 自動剪枝與 Dung 外延。範圍取「完整 v0」而非垂直切片是
 文件節點粒度＝需求驅動抽取（整份先當一個 FACT，用進推理的句子才抽節點）；切分粒度＝允許
 一段多重角色、不做句內切分；存放位置＝使用者指定資料夾、plugin 不預設路徑。
 
-- BI-14 — Umbrella: `strategy-dag` ships as a standalone marketplace plugin delivering BI-1..BI-13, with the three defaults above (extraction-driven node granularity / multi-role paragraphs / user-chosen project dir) recorded as decisions in the plan header.
+- BI-14 — Umbrella: `think-orbit` ships as a standalone marketplace plugin delivering BI-1..BI-13, with the three defaults above (extraction-driven node granularity / multi-role paragraphs / user-chosen project dir) recorded as decisions in the plan header.
 
 ## Out of Scope
 

@@ -1,11 +1,11 @@
-# strategy-dag plugin — Part 2（三視圖・編提案・里程碑 commit・SKILL 補完・發佈）— brief
+# think-orbit plugin — Part 2（三視圖・編提案・里程碑 commit・SKILL 補完・發佈）— brief
 
 > **Phase**: brainstorming output (`brainstorming` → `writing-plans` handoff) — **Part 2 of 2**
 > **Date**: 2026-08-18
 > **Author**: agent (Fable 5) + kouko
-> **Umbrella brief**: `docs/loom/specs/2026-08-18-strategy-dag-plugin.md`。
-> **Sibling / precondition**: `docs/loom/specs/2026-08-18-strategy-dag-plugin-part-1.md` — Part 2 **只在**
-> Part 1 的真實素材檢查點檔（`docs/loom/dogfood/2026-08-<dd>-strategy-dag-real-material.md`）存在後
+> **Umbrella brief**: `docs/loom/specs/2026-08-18-think-orbit-plugin.md`。
+> **Sibling / precondition**: `docs/loom/specs/2026-08-18-think-orbit-plugin-part-1.md` — Part 2 **只在**
+> Part 1 的真實素材檢查點檔（`docs/loom/dogfood/2026-08-<dd>-think-orbit-real-material.md`）存在後
 > 開工；檢查點若推翻 schema，先修訂本 brief 再進 writing-plans。
 > **STATUS**: DRAFT — 內容於 Part 1 檢查點後複核；BI 編號自本 part 起算。
 
@@ -32,7 +32,7 @@
 
 同總覽；Part 2 另加 Part 1 產出的實際路徑（於檢查點後填入 `file:line`）。
 
-- **Forward / Reverse / Error / Data / Boundary**: 見總覽；Part 1 交付後補 `strategy-dag/skills/strategy-dag/scripts/*.py:line` 的實際接點。
+- **Forward / Reverse / Error / Data / Boundary**: 見總覽；Part 1 交付後補 `think-orbit/skills/think-orbit/scripts/*.py:line` 的實際接點。
 - **Evidence paths**: 總覽 §Evidence paths ＋ Part 1 檢查點檔。
 
 ## Decision

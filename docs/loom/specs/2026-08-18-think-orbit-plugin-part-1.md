@@ -1,17 +1,17 @@
-# strategy-dag plugin — Part 1（格式・機械閘・假設傳播・核心對話協定・骨架 → 真實素材檢查點）— brief
+# think-orbit plugin — Part 1（格式・機械閘・假設傳播・核心對話協定・骨架 → 真實素材檢查點）— brief
 
 > **Phase**: brainstorming output (`brainstorming` → `writing-plans` handoff) — **Part 1 of 2**
 > **Date**: 2026-08-18
 > **Author**: agent (Fable 5) + kouko
-> **Umbrella brief**: `docs/loom/specs/2026-08-18-strategy-dag-plugin.md`（總覽：Problem／Users／
+> **Umbrella brief**: `docs/loom/specs/2026-08-18-think-orbit-plugin.md`（總覽：Problem／Users／
 > Alternatives／Diagrams 的完整版在那裡；本 part 只重述計畫所需的最小內容，並用自己的 BI 編號。
 > 括號內 `[U BI-n]` 指回總覽的條目。）
-> **Sibling**: `docs/loom/specs/2026-08-18-strategy-dag-plugin-part-2.md`（視圖／編提案／里程碑／發佈）。
+> **Sibling**: `docs/loom/specs/2026-08-18-think-orbit-plugin-part-2.md`（視圖／編提案／里程碑／發佈）。
 > **Why split**: 完整 v0 一份計畫的關鍵路徑深度 6–7 > 5（writing-plans 硬上限）；使用者 2026-08-18
 > 選 A＝拆兩份 brief／兩份計畫，範圍不變。Part 1 的最後一項是真實素材檢查點；Part 2 在檢查點
 > 回饋後開工。
 > **Design-side on-ramp**: direct（見總覽）。**Continuous mode**: not named — human-pumped.
-> **Working name**: `strategy-dag`。**Skill shape**: 單一 skill `strategy-dag/skills/strategy-dag/`
+> **Working name**: `think-orbit`。**Skill shape**: 單一 skill `think-orbit/skills/think-orbit/`
 > （SKILL.md ≤4,500 words，references/ + scripts/ 各一層）。
 
 ## Problem
@@ -48,8 +48,8 @@ agent 依對話協定寫 `GOAL/FACT/CLAIM/DECISION` 節點檔與假設檔（≤3
 - BI-5 — Assumption-broken propagation (`break`): on `status: broken`, transitive dependents reached through a load-bearing chain get `status: stale`; dependents reached only through non-load-bearing edges are reported as weakened, not marked; nothing is recomputed; the impact view (assumption-focused Mermaid) is rendered. [U BI-5, and the impact-view half of BI-6]
 - BI-6 — Core conversation protocol (SKILL.md): intake (project dir + sources) → agent asks the goal → GOAL confirmed → branches (`exclusive|complementary`) → assumptions drafted/confirmed → silent node writes for every reasoning step (procedural/social content produces no node) → gate at every node boundary; resume opening restates last decision + open assumptions; break-assumption flow (agent raises hand, user declares, "direct dependents only" vs "full impact"); three interrupt points only; user may hand-edit files between turns; agent must not read rendered `views/` files; blind-spot checklist offered when a branch opens. [U BI-8, BI-7 semantics]
 - BI-7 — Research rules in SKILL.md: project docs answer → infer; one missing external fact → verify with ≤1 arm and write result + source into the current note; topic survey or explicit request → standalone research note; any external fact entering the reasoning must be findable in the docs. [U BI-9]
-- BI-8 — Plugin scaffold: `strategy-dag/` with `.claude-plugin/plugin.json` (version 0.1.0) + `.codex-plugin/plugin.json` mirror, tri-language READMEs (may be short), `CHANGELOG.md`, marketplace entry, and a repo-root CI workflow `strategy-dag-ci.yml` running pytest over the skill's `scripts/` and the skill-folder-structure hook; SKILL.md ≤4,500 words self-enforced. [U BI-12 scaffold half]
-- BI-9 — Real-material checkpoint: after BI-1..BI-8 land, the user runs one real decision through the protocol; findings + any schema deltas are recorded in `docs/loom/dogfood/2026-08-<dd>-strategy-dag-real-material.md`; Part 2 starts only after this file exists. [U BI-13]
+- BI-8 — Plugin scaffold: `think-orbit/` with `.claude-plugin/plugin.json` (version 0.1.0) + `.codex-plugin/plugin.json` mirror, tri-language READMEs (may be short), `CHANGELOG.md`, marketplace entry, and a repo-root CI workflow `think-orbit-ci.yml` running pytest over the skill's `scripts/` and the skill-folder-structure hook; SKILL.md ≤4,500 words self-enforced. [U BI-12 scaffold half]
+- BI-9 — Real-material checkpoint: after BI-1..BI-8 land, the user runs one real decision through the protocol; findings + any schema deltas are recorded in `docs/loom/dogfood/2026-08-<dd>-think-orbit-real-material.md`; Part 2 starts only after this file exists. [U BI-13]
 
 ## Current State Evidence
 
@@ -63,7 +63,7 @@ agent 依對話協定寫 `GOAL/FACT/CLAIM/DECISION` 節點檔與假設檔（≤3
 - **Error**: 總覽 §Error（CI 掃描缺口 → BI-8 自帶 lane）。
 - **Data**: 專案資料夾在 repo 外；plugin 內只有 SKILL 文字、腳本、schema 參考、pytest。
 - **Boundary**: 總覽 §Boundary（`[FRAGILE]` 衍生視圖只重生成；閘為腳本非散文；fail-closed 顯式；id 由作者命名）。
-- **Evidence paths**: 見 `docs/loom/specs/2026-08-18-strategy-dag-plugin.md` §Evidence paths。
+- **Evidence paths**: 見 `docs/loom/specs/2026-08-18-think-orbit-plugin.md` §Evidence paths。
 
 ## Decision
 
@@ -75,7 +75,7 @@ commit、SKILL 的視圖／編提案段落、正式版本發佈。三個預設�
 角色、存放在使用者指定資料夾。腳本以 Python stdlib 為主（frontmatter 用簡單 YAML 子集解析或
 `yaml` 若 repo 既有慣例允許——由計畫決定並註明外部表面）。
 
-- BI-10 — Umbrella (Part 1): the scaffold + scripts (`check`, `break`, claim-diff, loader, basic DAG render) + core SKILL land in `strategy-dag/`, and the real-material checkpoint file exists before Part 2 begins.
+- BI-10 — Umbrella (Part 1): the scaffold + scripts (`check`, `break`, claim-diff, loader, basic DAG render) + core SKILL land in `think-orbit/`, and the real-material checkpoint file exists before Part 2 begins.
 - BI-12 — Basic DAG view (`render`): one Mermaid flowchart of the whole graph written to `<root>/views/dag.md` — every node in `seq` order (shape by `type`, `stale` nodes greyed), assumptions as stadium nodes attached to their branch, edges from `inputs` (dashed when `load_bearing: false`), branch members grouped by `branch`; regenerated from frontmatter, generated-marker comment first line, human-only; no collapsing / partial rendering (Part 2). [U BI-6 basic half — the CoT made visible]
 
 ## Out of Scope
