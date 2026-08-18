@@ -620,14 +620,19 @@ DIRECTION_ENTRY_FILENAME_RE = re.compile(r"20\d\d-\d\d-\d\d-[A-Za-z0-9_-]+\.md")
 
 # Second user-ratified exemption: a well-formed `## On-ramp standing
 # choices` entry carries a trailing `(YYYY-MM-DD)` by design — grammar
-# SSOT is check_onramp_choice.py's load_standing() / family-reception.md
-# §On-ramp standing choices; duplicated here (not imported) to keep this
-# module's date scan free of a dependency on the checker CLI. Only the
-# trailing date group is stripped before the date scan, so a malformed
-# line, or a date anywhere else on a well-formed line, is still caught.
+# SSOT is check_onramp_choice.py's `_STANDING_ENTRY` / family-reception.md
+# §On-ramp standing choices. Kept semantically IDENTICAL to
+# `_STANDING_ENTRY` (same quantifiers/character classes; the only
+# difference is the added `date` capture group, needed here to strip
+# just that span before the date scan) — deliberately not imported
+# (this module must not depend on the checker CLI), so
+# test_standing_entry_regex_matches_check_onramp_choice pins the two
+# against drift. Only the trailing date group is stripped before the
+# date scan, so a malformed line, or a date anywhere else on a
+# well-formed line, is still caught.
 DIRECTION_STANDING_ENTRY_RE = re.compile(
-    r"^-\s*row\s+\d+\s*\([^)]*\):\s*standing\s+(?:direct|detour)\s+—\s+.*"
-    r"(?P<date>\(20\d\d-\d\d-\d\d\))\s*$"
+    r"^-\s*row\s+(?P<row>\d+)\s*\([^)]*\):\s*standing\s+"
+    r"(?P<choice>direct|detour)\s*—\s*.+(?P<date>\(\d{4}-\d{2}-\d{2}\))\s*$"
 )
 DIRECTION_STANDING_HEADING = "## On-ramp standing choices"
 

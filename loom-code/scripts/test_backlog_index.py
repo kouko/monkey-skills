@@ -25,6 +25,18 @@ backlog_index = importlib.util.module_from_spec(_SPEC)
 sys.modules["backlog_index"] = backlog_index  # dataclass() needs this pre-registered
 _SPEC.loader.exec_module(backlog_index)
 
+# Sibling import for the drift-pin test below (round-3 code-quality-review
+# fix): check_onramp_choice.py is this module's grammar-regex SSOT for
+# `## On-ramp standing choices` entries; importing it here (not duplicating
+# its pattern in a test literal) lets the pin catch future drift directly.
+CHECK_ONRAMP_SCRIPT = Path(__file__).resolve().parent / "check_onramp_choice.py"
+_ONRAMP_SPEC = importlib.util.spec_from_file_location(
+    "check_onramp_choice", CHECK_ONRAMP_SCRIPT
+)
+check_onramp_choice = importlib.util.module_from_spec(_ONRAMP_SPEC)
+sys.modules["check_onramp_choice"] = check_onramp_choice
+_ONRAMP_SPEC.loader.exec_module(check_onramp_choice)
+
 # Transcribed VERBATIM from the plan's §Pinned frontmatter contract
 # (docs/loom/plans/2026-08-01-backlog-one-entry-per-file.md, ## Notes).
 CLOSED_STATUS_VOCABULARY = [
@@ -1599,6 +1611,37 @@ def test_validate_still_flags_wellformed_looking_entry_outside_standing_section(
 
     assert result.returncode == 1, result.stdout + result.stderr
     assert "direction-date" in result.stdout, result.stdout
+
+
+def test_standing_entry_regex_matches_check_onramp_choice():
+    """Drift pin (round-3 code-quality-review fix): DIRECTION_STANDING_ENTRY_RE
+    in backlog_index.py and _STANDING_ENTRY in check_onramp_choice.py are two
+    independent copies of the same grammar (SSOT: family-reception.md `###
+    On-ramp standing choices`) -- deliberately not import-shared (backlog_index
+    must not import check_onramp_choice), so nothing else stops them silently
+    drifting apart. If they disagree, an entry the checker accepts as a valid
+    standing choice could still be flagged [direction-date] by backlog_index's
+    validate (or vice versa) -- a real inconsistency a plain diff of the two
+    files would not surface as a test failure. This corpus is the mutation
+    pin: every string's match-truthiness must agree between the two regexes.
+    """
+    corpus = [
+        "- row 1 (product-principles): standing direct — a fixture reason (2026-08-18)",
+        "- row 1 (product-principles): standing direct —a fixture reason (2026-08-18)",  # no-space em-dash
+        "- row 1 (product-principles): standing direct — (2026-08-18)",  # empty reason
+        "- row 1 (product-principles): standing direct — a fixture reason (1999-08-18)",  # non-20xx year
+        "- row 1 product-principles: standing direct — a fixture reason (2026-08-18)",  # malformed station (no parens)
+        "- row 1 (product-principles): standing direct — a fixture reason with no date",  # missing date
+        "- row 12 (interface-design): standing detour — a fixture reason (2026-08-18)",  # row 12, detour
+        "- row 1 (product-principles): standing direct — a fixture reason (2026-08-18)   ",  # trailing spaces
+    ]
+    for s in corpus:
+        backlog_result = bool(backlog_index.DIRECTION_STANDING_ENTRY_RE.match(s))
+        checker_result = bool(check_onramp_choice._STANDING_ENTRY.match(s.strip()))
+        assert backlog_result == checker_result, (
+            f"regex drift on {s!r}: backlog_index={backlog_result} "
+            f"check_onramp_choice={checker_result}"
+        )
 
 
 def test_direction_write_preserves_indented_next_heading(tmp_path):
