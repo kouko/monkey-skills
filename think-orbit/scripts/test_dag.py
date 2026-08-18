@@ -22,7 +22,7 @@ ASSUMPTION_FIELDS = (
 )
 
 
-def _write(path: Path, frontmatter: str, body: str = "body text\n") -> None:
+def _write(path: Path, frontmatter: str, body: str = "Body sentence one. Body sentence two.\n") -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(f"---\n{frontmatter}---\n{body}", encoding="utf-8")
 
@@ -302,6 +302,63 @@ def test_check_prints_one_line_per_structural_violation_and_is_silent_when_clean
         p: p.stat().st_mtime_ns for p in sorted((clean_root / "nodes").glob("*.md"))
     }
     assert clean_mtimes_before == clean_mtimes_after
+
+
+def test_check_flags_paragraphs_outside_two_to_four_sentences(tmp_path, capsys):
+    # @req: BI-4
+    dirty_root = tmp_path / "dirty"
+    _write(
+        dirty_root / "nodes" / "goal.md",
+        "id: goal\n"
+        "type: GOAL\n"
+        "seq: 1\n"
+        "summary: Ship v0\n"
+        "status: active\n",
+        body=(
+            "第一句。第二句。第三句。第四句。第五句。第六句。\n"
+            "\n"
+            "This is one sentence.\n"
+        ),
+    )
+
+    rc = dag.main(["check", str(dirty_root)])
+    out = capsys.readouterr().out
+    lines = [ln for ln in out.splitlines() if ln]
+
+    assert rc == 1
+    assert len(lines) == 2
+    assert any("goal.md" in ln and "paragraph 1 has 6 sentences" in ln for ln in lines)
+    assert any("goal.md" in ln and "paragraph 2 has 1 sentences" in ln for ln in lines)
+
+    clean_root = tmp_path / "clean"
+    _write(
+        clean_root / "nodes" / "goal.md",
+        "id: goal\n"
+        "type: GOAL\n"
+        "seq: 1\n"
+        "summary: Ship v0\n"
+        "status: active\n",
+        body=(
+            "# Heading\n"
+            "\n"
+            "One sentence here. Two sentence here. Three sentence here.\n"
+            "\n"
+            "- item one\n"
+            "- item two\n"
+            "\n"
+            "Another para. Second sentence. Third sentence.\n"
+            "\n"
+            "```mermaid\n"
+            "flowchart TD\n"
+            "  A --> B\n"
+            "```\n"
+        ),
+    )
+
+    rc2 = dag.main(["check", str(clean_root)])
+    out2 = capsys.readouterr().out
+    assert rc2 == 0
+    assert out2 == ""
 
 
 def test_break_marks_load_bearing_chain_stale_and_reports_weakened(tmp_path, capsys):

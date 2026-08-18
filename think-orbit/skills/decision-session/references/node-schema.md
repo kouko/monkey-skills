@@ -46,6 +46,10 @@ A file whose frontmatter parses to a non-mapping (e.g. a YAML list) or fails
 to parse at all (invalid YAML) is not loaded as a node/assumption — it is
 recorded as a `"<relpath>: frontmatter: ..."` entry in `Project.problems`.
 
+`check`'s `paragraph-form` rule requires every prose body paragraph of a node
+file (`nodes/*.md`, excluding research notes) to contain 2–4 sentences,
+matching the vault's own writing convention.
+
 ## Assumption fields (`assumptions/*.md`)
 
 | Field | Type | Meaning |

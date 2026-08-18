@@ -298,6 +298,68 @@ def _rule_mermaid_id_collision(project: Project) -> list[str]:
     return violations
 
 
+_SENTENCE_TERMINATORS = ".!?。！？"
+
+
+def _strip_fenced_blocks(text: str) -> str:
+    """Remove fenced code/Mermaid blocks (``` ... ```) entirely before paragraph splitting."""
+    return re.sub(r"```.*?```", "", text, flags=re.DOTALL)
+
+
+def _strip_html_comments(text: str) -> str:
+    return re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+
+
+def _is_list_item(line: str) -> bool:
+    if line.startswith("- ") or line.startswith("* "):
+        return True
+    return bool(re.match(r"^\d+\.\s", line))
+
+
+def _skip_paragraph(block: str) -> bool:
+    """True when `block` is a heading, list, blockquote, or table -- not counted prose."""
+    first_line = block.splitlines()[0].strip()
+    if not first_line:
+        return True
+    if first_line.startswith(("#", ">", "|")):
+        return True
+    return _is_list_item(first_line)
+
+
+def _count_sentences(paragraph: str) -> int:
+    """Count sentence terminators; a `.` immediately followed by a digit (e.g. `3.5`) doesn't count."""
+    count = 0
+    for idx, ch in enumerate(paragraph):
+        if ch not in _SENTENCE_TERMINATORS:
+            continue
+        if ch == "." and idx + 1 < len(paragraph) and paragraph[idx + 1].isdigit():
+            continue
+        count += 1
+    return count if count > 0 else 1
+
+
+def _rule_paragraph_form(project: Project) -> list[str]:
+    """Every prose body paragraph of a node (not a research note) must have 2-4 sentences."""
+    violations = []
+    for node in project.nodes:
+        if node.origin == "research":
+            continue
+        relpath = _relpath(node.path, project.root)
+        body = _strip_html_comments(_strip_fenced_blocks(node.body))
+        paragraph_index = 0
+        for block in re.split(r"\n\s*\n", body):
+            block = block.strip("\n")
+            if not block.strip() or _skip_paragraph(block):
+                continue
+            paragraph_index += 1
+            sentence_count = _count_sentences(block)
+            if not (2 <= sentence_count <= 4):
+                violations.append(
+                    f"{relpath}: paragraph-form: paragraph {paragraph_index} has {sentence_count} sentences"
+                )
+    return violations
+
+
 _CHECK_RULES = (
     _rule_load_bearing,
     _rule_ref,
@@ -305,6 +367,7 @@ _CHECK_RULES = (
     _rule_required_field,
     _rule_problems,
     _rule_mermaid_id_collision,
+    _rule_paragraph_form,
 )
 
 
