@@ -242,9 +242,17 @@ def test_missing_mermaid_library_emits_neither_tag(tmp_path, monkeypatch):
     that path raises IsADirectoryError, which FileNotFoundError misses."""
     import adjudication_render as mod
 
-    fake_dir = tmp_path / "mermaid.min.js"
+    scripts_dir = tmp_path / "scripts"
+    scripts_dir.mkdir()
+    fake_dir = scripts_dir / "mermaid.min.js"
     fake_dir.mkdir()  # a directory, not a file → IsADirectoryError
-    monkeypatch.setattr(mod, "__file__", str(tmp_path / "adjudication_render.py"))
+    # _render_page below also reads the version stamp from
+    # <repo>/.claude-plugin/plugin.json (Task 1) -- fake that manifest
+    # too so this test's fake __file__ tree stays self-contained.
+    plugin_dir = tmp_path / ".claude-plugin"
+    plugin_dir.mkdir()
+    (plugin_dir / "plugin.json").write_text('{"version": "0.0.0-test"}')
+    monkeypatch.setattr(mod, "__file__", str(scripts_dir / "adjudication_render.py"))
     assert mod._load_bundled_mermaid() == ""
 
     # and the page built with that empty script carries neither tag

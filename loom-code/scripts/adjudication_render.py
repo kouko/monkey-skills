@@ -308,12 +308,20 @@ table.verdict th, table.verdict td {
 table.verdict th {
   color: var(--accent);
 }
+footer.stamp {
+  margin-top: 2rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--muted-light);
+  color: var(--muted);
+  font-size: 0.75em;
+}
 """.strip()
 
 DOC_PAGE_TEMPLATE = """<!doctype html>
 <html lang="{lang}">
 <head>
 <meta charset="utf-8">
+<meta name="generator" content="loom-code-adjudication-render/{version}">
 <title>{title}</title>
 <style>
 {style}
@@ -323,6 +331,7 @@ DOC_PAGE_TEMPLATE = """<!doctype html>
 <h1>{title}</h1>
 {units_html}
 {mermaid_script}
+<footer class="stamp">loom-code-adjudication-render/{version}</footer>
 </body>
 </html>
 """
@@ -338,6 +347,20 @@ UNIT_TEMPLATE_RAW = """<section class="unit" id="{unit_id}">
 <pre>{source_text}</pre>
 </details>
 </section>"""
+
+
+def _deployment_version() -> str:
+    """Return the version of the copy of this script that is actually
+    running, read from the `.claude-plugin/plugin.json` shipped beside
+    it -- never a hardcoded constant, never the invocation. A stale copy
+    of this file carries a stale copy of the manifest next to it, so it
+    stamps its own (older) version; that mismatch is the whole point of
+    the stamp (Task 1 of the staleness-visible arc)."""
+    plugin_json = (
+        Path(__file__).resolve().parent.parent / ".claude-plugin" / "plugin.json"
+    )
+    manifest = json.loads(plugin_json.read_text())
+    return manifest["version"]
 
 
 def _render_page(title, units_html, lang, mermaid_script=""):
@@ -368,6 +391,7 @@ def _render_page(title, units_html, lang, mermaid_script=""):
         style=style_rendered,
         units_html=units_html,
         mermaid_script=mermaid_script,
+        version=_deployment_version(),
     )
 
 
