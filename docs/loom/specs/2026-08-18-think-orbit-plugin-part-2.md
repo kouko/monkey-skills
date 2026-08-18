@@ -26,6 +26,7 @@
 - BI-4 — Proposal outline (`render proposal`): winning mainline node summaries in `seq` order as body skeleton; rejected exclusive branches + the broken assumption / reason as appendix skeleton; SKILL turns the skeleton into prose on request. [U BI-11]
 - BI-5 — Git milestones in SKILL.md: commit at GOAL confirmed / each branch opened / assumption confirmed or broken / DECISION written (4–6 per sitting), message carries node/assumption ids; no hash chain. [U BI-10]
 - BI-6 — SKILL.md completion: sections for the three views (when to show which, partial rendering, human-only, agent must not read `views/`), compile-proposal flow, milestone flow; body stays ≤4,500 words. [U BI-8 remainder, BI-6]
+- BI-10 — Carried debt from Part 1 whole-branch review (first touch of Part 2): frontmatter scalar typing — coerce/validate `id`/`branch`/`branch_type` to str and `seq` to int in the loader, emitting a `problems` line instead of a traceback; plus the 🟢s (three-way mermaid id collision, `seq: 0` truthiness, `claims`/`render_dag` length).
 - BI-7 — Release: version bump to 0.2.0 with CHANGELOG entry, tri-language READMEs filled, marketplace description synced, CI green. [U BI-12 release half]
 
 ## Current State Evidence
