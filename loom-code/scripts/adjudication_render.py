@@ -349,18 +349,34 @@ UNIT_TEMPLATE_RAW = """<section class="unit" id="{unit_id}">
 </section>"""
 
 
+_PLUGIN_MANIFEST_PATH = (
+    Path(__file__).resolve().parent.parent / ".claude-plugin" / "plugin.json"
+)
+
+
 def _deployment_version() -> str:
     """Return the version of the copy of this script that is actually
     running, read from the `.claude-plugin/plugin.json` shipped beside
     it -- never a hardcoded constant, never the invocation. A stale copy
     of this file carries a stale copy of the manifest next to it, so it
     stamps its own (older) version; that mismatch is the whole point of
-    the stamp (Task 1 of the staleness-visible arc)."""
-    plugin_json = (
-        Path(__file__).resolve().parent.parent / ".claude-plugin" / "plugin.json"
-    )
-    manifest = json.loads(plugin_json.read_text())
-    return manifest["version"]
+    the stamp (Task 1 of the staleness-visible arc).
+
+    An absent, unreadable, malformed-JSON, non-dict-shaped (e.g. a JSON
+    list), version-less, or version-null manifest returns the literal
+    string 'unknown' instead of raising: a copy that cannot even name
+    itself is exactly as suspect as an old one, so it must still be
+    visibly marked rather than silently unmarked."""
+    try:
+        manifest = json.loads(_PLUGIN_MANIFEST_PATH.read_text())
+    except (OSError, ValueError):
+        return "unknown"
+    if not isinstance(manifest, dict):
+        return "unknown"
+    version = manifest.get("version")
+    if not isinstance(version, str) or not version:
+        return "unknown"
+    return version
 
 
 def _render_page(title, units_html, lang, mermaid_script=""):
@@ -374,7 +390,10 @@ def _render_page(title, units_html, lang, mermaid_script=""):
     `id` / `heading` / `source_text` at their own call site. A unit's
     `rendition` is the one exception: it arrives already rendered to HTML
     and is interpolated unescaped on purpose, guarded by the parser's
-    `html: False` instead (see `_render_markdown`).
+    `html: False` instead (see `_render_markdown`). `version` comes from
+    `_deployment_version()`, sourced from the repo-tracked
+    `.claude-plugin/plugin.json` -- the same trust tier as `lang` /
+    `font_stack` -- and is likewise interpolated unescaped.
 
     `mermaid_script` is BOTH the embedded mermaid library and its
     `initialize` call, as one string — they travel together so a page can

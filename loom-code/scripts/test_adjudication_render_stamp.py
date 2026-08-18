@@ -13,6 +13,7 @@ stamp behavior, so the first run is RED.
 import json
 from pathlib import Path
 
+import adjudication_render
 from adjudication_render import render_doc, render_verdict_html
 
 FIXTURE_UNITS = [
@@ -65,3 +66,46 @@ def test_verdict_html_carries_generator_meta_and_visible_footer():
         "</footer>", 1
     )[0]
     assert version in footer_body
+
+
+def test_unreadable_manifest_stamps_unknown(tmp_path, monkeypatch):
+    """An absent, unreadable, malformed-JSON, non-dict-shaped, or
+    version-less/version-null manifest must not crash the render -- it
+    stamps the literal 'unknown' so a copy that cannot even name itself
+    is still visibly marked, never silently unmarked. Driven through
+    render_doc (the production path) rather than _deployment_version
+    alone -- the non-dict-shape crash only surfaces through that path."""
+    missing_path = tmp_path / "does-not-exist.json"
+
+    bad_json_path = tmp_path / "not-json.json"
+    bad_json_path.write_text("not json")
+
+    versionless_path = tmp_path / "versionless.json"
+    versionless_path.write_text("{}")
+
+    non_dict_path = tmp_path / "non-dict.json"
+    non_dict_path.write_text("[1, 2, 3]")
+
+    null_version_path = tmp_path / "null-version.json"
+    null_version_path.write_text('{"version": null}')
+
+    for manifest_path in (
+        missing_path,
+        bad_json_path,
+        versionless_path,
+        non_dict_path,
+        null_version_path,
+    ):
+        monkeypatch.setattr(
+            adjudication_render, "_PLUGIN_MANIFEST_PATH", manifest_path
+        )
+        html_out = render_doc(FIXTURE_UNITS)
+
+        assert (
+            '<meta name="generator" content="loom-code-adjudication-render/unknown">'
+            in html_out
+        )
+        footer_body = html_out.split('<footer class="stamp">', 1)[1].split(
+            "</footer>", 1
+        )[0]
+        assert "loom-code-adjudication-render/unknown" in footer_body
