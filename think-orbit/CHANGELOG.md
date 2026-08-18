@@ -5,6 +5,34 @@ All notable changes to the `think-orbit` plugin are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] — 2026-08-18
+
+### Fixed
+
+Behavioral dogfood of 0.1.1 found the plugin unreachable in the two
+shapes users actually arrive in. `using-think-orbit` now says in its
+description that it **owns intake** — invoke it before inspecting any
+folder the user names (FINDING-001) — and carries assumption-broke
+(FINDING-002), structured-thinking (FINDING-012) and negative
+(FINDING-010) cues. `break-assumption` applies whenever a premise
+changed, even mid-conversation, resolving `<root>` by the router's own
+ladder (FINDING-002), and `thinking-session` sends a direct entry
+through that same ladder (FINDING-011).
+
+An assumption's `branch` is now optional: a premise that governs several
+branches is filed project-wide, outside every branch's cap of three, and
+`render` draws it at the top level (FINDING-005). `dag.py render` prints
+`dag view: <relpath>` instead of succeeding silently (FINDING-007).
+
+The sitting protocol gained the rules the dogfood run showed missing:
+one `check` per written or edited file rather than per batch, and an
+open-question ending among the render milestones (FINDING-003); a GOAL
+already stated in the opening message is confirmed in one line, not
+asked again (FINDING-004); a FACT body restates its quote while any
+"this means…" inference moves to a CLAIM (FINDING-006); and the `status`
+enum plus `load_bearing` are explained where a first-time reader meets
+them (FINDING-008, FINDING-009).
+
 ## [0.1.1] — 2026-08-18
 
 ### Changed

@@ -335,7 +335,8 @@ def _rule_assumption_field(project: Project) -> list[str]:
     violations = []
     for assumption in project.assumptions:
         relpath = _relpath(assumption.path, project.root)
-        for name in ("id", "status", "statement", "breaks_if", "branch"):
+        # `branch` is optional: an assumption with no branch is project-wide
+        for name in ("id", "status", "statement", "breaks_if"):
             if not getattr(assumption, name):
                 violations.append(f"{relpath}: assumption-field: missing {name}")
         if assumption.status and assumption.status not in _VALID_ASSUMPTION_STATUSES:
@@ -347,6 +348,7 @@ def _rule_assumption_field(project: Project) -> list[str]:
 
 
 def _rule_assumption_max(project: Project) -> list[str]:
+    # project-wide assumptions (no `branch`) are not counted against any branch
     by_branch: dict[str, int] = {}
     for assumption in project.assumptions:
         if not assumption.branch:
@@ -1054,7 +1056,8 @@ def _cmd_claims(args) -> int:
 
 def _cmd_render(args) -> int:
     root = Path(args.root)
-    _write_view(root, "dag.md", render_dag(load_project(root)))
+    view_path = _write_view(root, "dag.md", render_dag(load_project(root)))
+    print(f"dag view: {_relpath(view_path, root)}")
     return 0
 
 

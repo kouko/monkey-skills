@@ -1,7 +1,7 @@
 ---
 name: break-assumption
 description: |
-  When a premise breaks or the situation changes — mark the assumption broken, let the load-bearing chain go stale, and hand the user the impact view. The agent only raises its hand; the user declares. Normally reached via using-think-orbit; fires on 假設破了 / 情況變了 / 前提不成立了 / "assumption broke" / "situation changed".
+  When a premise breaks or the situation changes — mark the assumption broken, let the load-bearing chain go stale, and hand the user the impact view; this applies whenever the user reports a premise changed, even mid-conversation with no project in sight, and when no `<root>` is known it is resolved by the same ladder using-think-orbit runs (the message names a directory → the working directory holding nodes/ → ask once) before `break` runs. The agent only raises its hand; the user declares — normally reached via using-think-orbit, and fires on 假設破了 / 情況變了 / 前提不成立了 / "assumption broke" / "situation changed".
 source_language: en
 tags: [decision-making, chain-of-thought, dag, assumptions, part-1-draft]
 ---
@@ -10,7 +10,10 @@ tags: [decision-making, chain-of-thought, dag, assumptions, part-1-draft]
 
 This is the script for one moment: a premise the graph stands on no
 longer holds. You normally arrive here from `using-think-orbit`, which
-already resolved `<root>`. If you got here without one, ask for it once.
+already resolved `<root>`. If you got here without one — the user simply
+said a premise changed mid-conversation — run the router's own ladder
+first: the message names a directory, else the working directory holding
+`nodes/` or `assumptions/`, else ask once.
 
 **You may only raise your hand. The user declares.** When something in
 the conversation matches an assumption's `breaks_if`, say so and ask:
@@ -123,6 +126,7 @@ opens — this skill can only work with what that moment captured.
 
 - `${CLAUDE_PLUGIN_ROOT}/skills/thinking-session/references/node-schema.md`
   §assumptions — the field SSOT: `id`, `status` (`open` / `broken` /
-  `confirmed`), `statement`, `breaks_if`, `branch`.
+  `confirmed`), `statement`, `breaks_if`, and an optional `branch`
+  (omitted on a project-wide assumption).
 - `thinking-session` — writing and rewriting nodes and assumptions.
 - `using-think-orbit` — root resolution, state detection, routing.

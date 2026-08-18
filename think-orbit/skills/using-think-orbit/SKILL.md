@@ -1,7 +1,7 @@
 ---
 name: using-think-orbit
 description: |
-  Entry point for think-orbit — turn a thinking, planning, or decision discussion into a transparent chain of thought (one file per reasoning node, a regenerated DAG view), detect where the project stands, and route to thinking-session or break-assumption. Fires on 幫我想 / 想一下 X / 想清楚 / 整理思路 / 規劃 X / 思考 / 我要決定 / 決策推演 / 用 think-orbit / "help me think" / "think through X" / "plan X" / "figure out" / "help me decide".
+  Entry point for think-orbit — turn a thinking, planning, or decision discussion into a transparent chain of thought (one file per reasoning node, a regenerated DAG view), detect where the project stands, and route to thinking-session or break-assumption; invoke this first — before inspecting any folder the user names — because it owns intake (the project directory and the sources), and it is not for one-off casual choices or for generating names/taglines. Fires on 幫我想 / 想一下 X / 想清楚 / 整理思路 / 規劃 X / 思考 / 有結構的思考 / 回頭看當初的前提 / 我要決定 / 決策推演 / 用 think-orbit / 假設破了 / 情況變了 / 前提不成立 / "help me think" / "think through X" / "plan X" / "figure out" / "help me decide" / "structured thinking" / "trace what it rested on" / "an assumption broke" / "the situation changed".
 source_language: en
 tags: [decision-making, chain-of-thought, dag, router, part-1-draft]
 ---
@@ -43,6 +43,12 @@ Run this ladder, in order, at every session entry:
 2. Otherwise the current working directory contains `nodes/` or
    `assumptions/` → propose it and confirm in one line.
 3. Otherwise ask for the project directory, once for this session.
+
+When the user names a folder, the router does not explore it first —
+intake resolves that folder as `<root>` and the routing below takes over.
+Reading the sources inside it belongs to `thinking-session`, after the
+GOAL is confirmed. Listing a directory before the skill owns intake is
+how a request ends up answered without a graph.
 
 Sources are **local paths**. If the material lives in Notion, Google
 Drive, or another external service, the user reaches it through their
@@ -121,7 +127,7 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py <verb> <root> [args]
 | Verb | Meaning |
 |---|---|
 | `check <root>` | structural gate; silent on pass, one line per violation on failure |
-| `break <root> <assumption-id>` | mark an assumption broken, propagate status downstream, write `views/impact-<id>.md`, and print `stale:` / `weakened:` id lists |
+| `break <root> <assumption-id>` | mark an assumption broken, mark every node down a fully load-bearing chain `stale` (a node reached only through a non-load-bearing hop is `weakened` — still standing, file untouched), write `views/impact-<id>.md`, and print both id lists |
 | `claims <root> --since HEAD` | research claims that changed since a git revision, with their dependents |
 | `render <root>` | write `views/dag.md`, the full DAG view |
 | `impact <root> <assumption-id>` | re-render `views/impact-<id>.md` without breaking anything — `break` already wrote it once |

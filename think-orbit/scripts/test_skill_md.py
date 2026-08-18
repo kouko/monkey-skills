@@ -287,3 +287,183 @@ def test_no_skill_still_names_the_old_decision_session_slug(skill_md):
     assert "decision-session" not in text, (
         f"{skill_md} still names the renamed skill `decision-session`"
     )
+
+
+# --- 0.1.2: dogfood fixes (FINDING-001…012) ---
+
+NODE_SCHEMA_MD = (
+    Path(__file__).resolve().parent.parent
+    / "skills"
+    / "thinking-session"
+    / "references"
+    / "node-schema.md"
+)
+
+
+def test_router_description_owns_intake_and_carries_the_missed_trigger_shapes():
+    """FINDING-001/002/010/012 — the router lost every folder-mentioning and
+    assumption-broke query because its description described what the plugin is
+    rather than that it owns intake and fires on a broken premise."""
+    description = _description(ROUTER_SKILL_MD)
+
+    for cue in ("before inspecting", "owns intake"):
+        assert cue in description, f"router description must carry the ownership cue {cue!r}"
+
+    for cue in ("假設破了", "情況變了", "前提不成立",
+                "an assumption broke", "the situation changed"):
+        assert cue in description, f"router description must fire on {cue!r}"
+
+    for cue in ("有結構的思考", "回頭看當初的前提",
+                "structured thinking", "trace what it rested on"):
+        assert cue in description, f"router description must fire on {cue!r}"
+
+    assert re.search(r"not for .*(casual|one-off)", description), (
+        "router description must carry a negative cue against casual one-off choices"
+    )
+    assert "tagline" in description, (
+        "router description must exclude generating names/taglines"
+    )
+
+
+def test_router_body_does_not_explore_a_named_folder_before_intake():
+    """FINDING-001 — the observed first move was `ls` on the named folder."""
+    body = _body(ROUTER_SKILL_MD.read_text(encoding="utf-8"))
+
+    assert re.search(r"names a folder.*not explore it first", body, re.DOTALL), (
+        "router body must say that a named folder is resolved as <root>, not explored first"
+    )
+
+
+def test_router_verb_table_break_row_names_stale_and_weakened():
+    """FINDING-009 — `stale` / `weakened` were defined only in break-assumption."""
+    body = _body(ROUTER_SKILL_MD.read_text(encoding="utf-8"))
+
+    break_row = next(
+        line for line in body.splitlines() if line.startswith("| `break <root>")
+    )
+    assert "stale" in break_row and "weakened" in break_row, (
+        f"router break row must distinguish stale from weakened: {break_row!r}"
+    )
+    assert "load-bearing" in break_row, (
+        f"router break row must say stale follows the load-bearing chain: {break_row!r}"
+    )
+
+
+def test_break_assumption_description_applies_mid_conversation_and_states_the_root_ladder():
+    """FINDING-002 — standalone `break-assumption` never fired because its
+    description promised a flow over an already-visible project."""
+    description = _description(BREAK_SKILL_MD)
+
+    assert re.search(r"mid-conversation", description), (
+        "break-assumption description must apply whenever a premise changed, "
+        "even mid-conversation"
+    )
+    assert "<root>" in description and "ladder" in description, (
+        "break-assumption description must state it resolves <root> via the "
+        "router's own ladder when none is known"
+    )
+
+
+def test_thinking_session_description_points_back_at_the_router():
+    """FINDING-011 — 3/40 runs entered thinking-session directly, skipping intake."""
+    description = _description(SKILL_MD)
+
+    assert "using-think-orbit" in description
+    assert re.search(r"entered directly.*ladder", description), (
+        "thinking-session description must send a direct entry through the "
+        "router's <root> ladder first"
+    )
+
+
+def test_thinking_session_body_states_the_direct_entry_ladder():
+    """FINDING-011 — the body's intake note carries the same rule."""
+    body = _body(SKILL_MD.read_text(encoding="utf-8"))
+
+    assert re.search(r"entered directly.*ladder", body, re.DOTALL), (
+        "thinking-session body must run the router's <root> ladder on direct entry"
+    )
+
+
+def test_thinking_session_gate_is_per_file_not_per_batch():
+    """FINDING-003 — the executor wrote 6 FACT nodes then ran `check` once."""
+    body = _body(SKILL_MD.read_text(encoding="utf-8"))
+
+    assert re.search(r"one `check` per written or edited file", body), (
+        "the gate section must require one check per file"
+    )
+    assert re.search(r"never one check for a batch of files", body), (
+        "the gate section must forbid one check for a batch of files"
+    )
+
+
+def test_thinking_session_lists_an_open_question_ending_as_a_render_milestone():
+    """FINDING-003 — the executor found no milestone covering an open ending."""
+    body = _body(SKILL_MD.read_text(encoding="utf-8"))
+
+    milestone_sentence = next(
+        s for s in _sentences(body) if "milestone" in s and "GOAL confirmed" in s
+    )
+    assert "sitting ends on an open question" in milestone_sentence, (
+        f"render milestones must include an open-question ending: {milestone_sentence!r}"
+    )
+
+
+def test_thinking_session_confirms_a_goal_already_stated_instead_of_re_asking():
+    """FINDING-004 — the GOAL interrupt fired although the opening stated the goal."""
+    body = _body(SKILL_MD.read_text(encoding="utf-8"))
+
+    assert re.search(
+        r"opening message already states the goal.*one-line confirmation",
+        body,
+        re.DOTALL,
+    ), "the first-sitting section must skip re-asking a goal the opening already states"
+
+
+def test_thinking_session_keeps_inference_out_of_a_fact_body():
+    """FINDING-006 — FACT bodies carried 'this means…' tails."""
+    body = _body(SKILL_MD.read_text(encoding="utf-8"))
+
+    assert "restates and contextualizes the quote" in body
+    assert re.search(r"this means.{0,80}CLAIM", body, re.DOTALL | re.IGNORECASE), (
+        "the node-types section must send a 'this means…' inference to a CLAIM"
+    )
+
+
+def test_thinking_session_inlines_the_status_enum_and_defines_load_bearing_at_first_use():
+    """FINDING-008 — a cold reader stalled on `status` and met `load_bearing` unexplained."""
+    body = _body(SKILL_MD.read_text(encoding="utf-8"))
+
+    assert "status: current | stale" in body and "only break writes stale" in body, (
+        "the body must inline the status enum a first-time reader needs"
+    )
+
+    first_use = body.index("load_bearing")
+    definition = body.index("collapses if")
+    assert definition < first_use + 400, (
+        "`load_bearing` must be defined where a reader first meets it"
+    )
+
+
+def test_thinking_session_files_a_cross_branch_assumption_project_wide():
+    """FINDING-005 — a pivotal premise was forced into one branch by the ≤3 cap."""
+    body = _body(SKILL_MD.read_text(encoding="utf-8"))
+
+    assert re.search(r"governs several branches.*project-wide", body, re.DOTALL), (
+        "the assumptions section must file a cross-branch premise project-wide"
+    )
+    assert re.search(r"project-wide.*`inputs`", body, re.DOTALL), (
+        "each dependent node must cite the project-wide assumption via `inputs`"
+    )
+
+
+def test_node_schema_documents_optional_branch_and_project_wide_assumptions():
+    """FINDING-005 — the schema is the SSOT a writer checks for the field."""
+    schema = NODE_SCHEMA_MD.read_text(encoding="utf-8")
+
+    assert re.search(r"`branch`.*optional", schema), (
+        "node-schema.md must say an assumption's `branch` is optional"
+    )
+    assert "project-wide" in schema
+    assert re.search(r"project-wide.*(max 3|cap)", schema, re.DOTALL), (
+        "node-schema.md must say the ≤3 cap counts branch-bound assumptions only"
+    )

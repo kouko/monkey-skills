@@ -1413,3 +1413,82 @@ def test_render_impact_rejects_an_unknown_assumption_id():
 
     with pytest.raises(KeyError):
         dag.render_impact(project, "nope")
+
+
+# --- 0.1.2 dogfood fixes ---
+
+
+def test_render_prints_the_view_path(tmp_path, capsys):
+    """FINDING-007 — a silent `render` leaves the agent unable to tell the view
+    was written without listing the folder; it prints one line like `impact`."""
+    root = tmp_path
+    _write(
+        root / "nodes" / "goal.md",
+        "id: goal\ntype: GOAL\nseq: 1\nsummary: Ship v0\nstatus: current\n",
+    )
+
+    rc = dag.main(["render", str(root)])
+
+    assert rc == 0
+    assert capsys.readouterr().out == "dag view: views/dag.md\n"
+
+
+def test_project_wide_assumption_is_gate_clean_and_outside_the_per_branch_cap(tmp_path):
+    """FINDING-005 — a pivotal premise governing several branches is filed
+    project-wide (no `branch`), so the ≤3 cap of one branch cannot force it in."""
+    root = tmp_path
+    _write(
+        root / "assumptions" / "checkpoint_go.md",
+        "id: checkpoint_go\n"
+        "status: open\n"
+        "statement: The mid-quarter checkpoint still happens\n"
+        "breaks_if: The checkpoint is cancelled\n",
+        body="",
+    )
+    for i in range(3):
+        _write(
+            root / "assumptions" / f"a{i}.md",
+            f"id: a{i}\n"
+            "status: open\n"
+            f"statement: Branch premise {i}\n"
+            "breaks_if: It is contradicted in writing\n"
+            "branch: b1\n",
+            body="",
+        )
+
+    assert dag.check(dag.load_project(root)) == []
+
+
+def test_render_places_a_project_wide_assumption_outside_every_subgraph(tmp_path):
+    """FINDING-005 — the project-wide premise is drawn at top level, not inside
+    the subgraph of whichever branch happened to cite it first."""
+    root = tmp_path
+    _write(
+        root / "assumptions" / "checkpoint_go.md",
+        "id: checkpoint_go\n"
+        "status: open\n"
+        "statement: The mid-quarter checkpoint still happens\n"
+        "breaks_if: The checkpoint is cancelled\n",
+        body="",
+    )
+    _write(
+        root / "nodes" / "claim.md",
+        "id: claim1\n"
+        "type: CLAIM\n"
+        "seq: 2\n"
+        "summary: Branch A is viable\n"
+        "status: current\n"
+        "branch: b1\n"
+        "branch_type: exclusive\n"
+        "inputs:\n"
+        "  - {ref: checkpoint_go, load_bearing: true}\n",
+    )
+
+    dag.main(["render", str(root)])
+    lines = (root / "views" / "dag.md").read_text(encoding="utf-8").splitlines()
+
+    assumption_line = next(i for i, l in enumerate(lines) if "checkpoint_go(" in l)
+    subgraph_line = next(i for i, l in enumerate(lines) if l.strip().startswith("subgraph "))
+    assert assumption_line < subgraph_line, (
+        "a branch-less assumption must be drawn before (outside) every subgraph"
+    )

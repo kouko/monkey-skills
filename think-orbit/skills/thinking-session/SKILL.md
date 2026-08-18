@@ -1,7 +1,7 @@
 ---
 name: thinking-session
 description: |
-  Core sitting protocol of think-orbit — run a thinking, planning, or decision discussion so every reasoning step lands as a node file, branches carry named assumptions, and the DAG view is regenerated at each milestone; a sitting may end in an open question or a plan outline, not only a DECISION. Normally reached via using-think-orbit; fires on 幫我想 / 想一下 X / 想清楚 / 整理思路 / 規劃 X / 思考 / 我要決定 / 決策推演 / "help me think" / "think through X" / "plan X" / "figure out" / "help me decide".
+  Core sitting protocol of think-orbit — a thinking, planning, or decision discussion where every reasoning step lands as a node file, branches carry named assumptions, and the DAG view is regenerated at each milestone; a sitting may end in an open question or a plan outline, not only a DECISION. Enter via using-think-orbit, which owns intake — if entered directly, run the router's `<root>` ladder before anything else; fires on 幫我想 / 想一下 X / 想清楚 / 整理思路 / 規劃 X / 思考 / 我要決定 / 決策推演 / "help me think" / "think through X" / "plan X" / "figure out" / "help me decide".
 source_language: en
 tags: [decision-making, chain-of-thought, dag, reasoning, assumptions, part-1-draft]
 ---
@@ -11,9 +11,10 @@ tags: [decision-making, chain-of-thought, dag, reasoning, assumptions, part-1-dr
 This is the sitting protocol of think-orbit: the user talks, and the
 discussion lands as files. You normally arrive here from
 `using-think-orbit`, which already resolved the project root `<root>`
-and delivered the resume opening. If you somehow got here without a
-`<root>`, ask for it once and continue — do not create one deep inside
-the plugin.
+and delivered the resume opening. If you were entered directly, without a
+`<root>`, run the router's own ladder first: the message names a
+directory, else the working directory holding `nodes/` or `assumptions/`,
+else ask once. Never create a root deep inside the plugin.
 
 The value of this plugin only appears **across sittings**. A line of
 thinking finished in one conversation needs no graph; three weeks later,
@@ -57,20 +58,27 @@ write the answer — the question to answer, or the plan to shape — to
 `id`, `seq: 1`, a one-line `summary`, and `inputs: []`. Ask the user to
 confirm that GOAL node — this is interrupt (a).
 
+When the opening message already states the goal, do not ask the
+question again. Write the GOAL node from what the user said and ask a
+one-line confirmation of the wording instead. Interrupt (a) is a
+confirmation of the goal, not a ritual question.
+
 From there the discussion runs normally and you write silently. Every
 distinct reasoning step becomes one node file with a monotonic `seq`
 and `inputs: [{ref, load_bearing}]` pointing at the nodes it stands on.
+`load_bearing: true` means this node collapses if that input falls,
+`false` that it merely weakens; tag every input, because the gate
+rejects an untagged one.
+
 Use `CLAIM` for your own inference and `FACT` for a sourced statement
-(which also carries `source` and a verbatim `quote`).
+(which also carries `source` and a verbatim `quote`). A FACT body
+restates and contextualizes the quote; any "this means…" inference
+belongs in a CLAIM node that inputs the FACT.
 
 Procedural and social content produces **no node** — scheduling, "thanks",
 "let me check", "shall we continue" are not propositions. Granularity is
 judgment, not a rule: extract a node per distinct claim or fact you
 actually use, not per paragraph of input.
-
-`load_bearing: true` means this node collapses if that input falls;
-`false` means it merely weakens. Tag every input — the gate rejects an
-untagged one.
 
 ### When the discussion forks
 
@@ -90,11 +98,17 @@ the next node.
 
 Draft **at most 3** assumption files per branch as
 `<root>/assumptions/<id>.md` with `id`, `status: open`, `statement`,
-`breaks_if`, and `branch` — the five the gate requires — plus `source`
-where one exists (recommended, not gated). You draft, the user confirms —
-one exchange, not a questionnaire. The cap of three is deliberate: it
-forces ranking, and needing seven means the branch is not thought
-through yet.
+and `breaks_if` — the four the gate requires — plus the `branch` id and
+`source` where one exists (recommended, not gated). You draft, the user
+confirms — one exchange, not a questionnaire. The cap of three is
+deliberate: it forces ranking, and needing seven means the branch is not
+thought through yet.
+
+A pivotal assumption that governs several branches is not filed under
+one of them. Leave `branch` out and it is project-wide, outside every
+branch's cap of three, and each node that depends on it cites it in that
+node's own `inputs`. A later `break` then reaches every branch the
+premise actually carries, instead of only the one it was filed under.
 
 **Falsifiability check**: if you cannot answer "what event breaks this",
 the assumption goes back for rewrite before it is written to disk. A
@@ -115,6 +129,10 @@ over, or a plan outline they will act on — and say so plainly instead of
 manufacturing a DECISION to round the graph off.
 
 ## Minimal examples
+
+Node files carry `status: current | stale (only break writes stale)`, so
+everything you write by hand is `current` and the `stale` value only ever
+arrives through the break flow.
 
 Write these four shapes from memory; `references/node-schema.md` is
 the field SSOT and the place to check anything not shown here. Do not
@@ -193,6 +211,11 @@ After writing or editing **any** node or assumption file, run:
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py check <root>
 ```
 
+Run one `check` per written or edited file (or at least per
+user-visible turn) — never one check for a batch of files. A batch check
+tells you the batch is dirty, not which file is, and the boundary this
+gate protects is the file you just wrote.
+
 On pass it prints nothing and you say nothing. On failure it prints one
 line per violation: relay each line to the user in plain words, fix the
 file, and run it again. Never suppress a violation, never hand-wave one
@@ -203,16 +226,15 @@ every node boundary gets switched off within a day.
 
 ## The view — regenerate, never read
 
-After each milestone — GOAL confirmed, branch opened, DECISION written,
-assumption broken — run:
+After each milestone — GOAL confirmed, branch opened, DECISION written, assumption broken, sitting ends on an open question — run:
 
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py render <root>
 ```
 
-Then tell the user where it is: `<root>/views/dag.md`. That file is the
-chain of thought made visible, and it is the artifact that makes a
-three-week-old decision readable again.
+It prints one line, `dag view: views/dag.md`; relay that path to the
+user. That file is the chain of thought made visible, and it is the
+artifact that makes a three-week-old decision readable again.
 
 The view is a derived read model for the human.
 **You never read any file under `views/`** — it is lossy and it goes

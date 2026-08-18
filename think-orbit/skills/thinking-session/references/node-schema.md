@@ -66,22 +66,30 @@ them) is counted from its own sentences only.
 | `statement` | string | The assumption's statement. |
 | `breaks_if` | string | Condition under which the assumption breaks. |
 | `source` | string | Citation source, if any. |
-| `branch` | string | Branch id the assumption belongs to, if any. |
+| `branch` | string | Branch id the assumption belongs to. It is optional: an assumption with no `branch` is **project-wide** — a premise several branches stand on. |
 | `path` | Path | Resolved filesystem path of the file. |
 
 `check`'s `assumption-field` rule requires every assumption file to have a
 non-empty `id`, `status` (one of `open`, `broken`, `confirmed`), `statement`,
-`breaks_if`, and `branch`; a missing field or an out-of-set `status` is
-flagged per file. Its `assumption-max` rule caps assumptions per branch at 3
+and `breaks_if`; a missing field or an out-of-set `status` is
+flagged per file. `branch` is not required — a project-wide assumption
+simply omits it. Its `assumption-max` rule caps assumptions per branch at 3
 — more than three assumption files sharing one `branch` prints a single
 summary line `assumptions: branch <b> has <n> assumptions (max 3)` (not a
 per-file relpath, since the violation belongs to the whole branch).
+
+The cap counts branch-bound assumptions only: a project-wide assumption is
+outside every branch's max 3, so a pivotal premise never has to be squeezed
+into one branch to fit. `render` draws it at the top level of the graph,
+outside every subgraph, and dependents in any branch cite it through their
+own `inputs`.
 
 ## `render` and `views/dag.md`
 
 `dag.py render <root>` writes `<root>/views/dag.md`: one Mermaid
 `flowchart TD` showing every node (shaped by `type`), every assumption as a
-stadium node grouped into its branch's subgraph, one edge per `inputs` entry
+stadium node grouped into its branch's subgraph (a project-wide assumption,
+having no `branch`, is drawn at the top level instead), one edge per `inputs` entry
 (dashed when `load_bearing` is false), and a grey `stale` style on nodes
 whose `status` is `stale`. The file opens with a generated-marker comment —
 it is regenerated from `nodes/`/`assumptions/`/`research/` on every run,
