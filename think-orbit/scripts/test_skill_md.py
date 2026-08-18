@@ -100,3 +100,36 @@ def test_decision_session_minimal_examples_pass_check(tmp_path):
         "SKILL.md examples must be gate-clean when written verbatim:\n"
         + "\n".join(violations)
     )
+
+
+ROUTER_SKILL_MD = (
+    Path(__file__).resolve().parent.parent
+    / "skills"
+    / "using-think-orbit"
+    / "SKILL.md"
+)
+
+ROUTER_WORD_CAP = 2500
+
+ROUTER_REQUIRED_LITERALS = (
+    "decision-session",
+    "break-assumption",
+    "dag.py check <root>",
+    "dag.py claims <root>",
+)
+
+
+def test_router_skill_routes_to_verbs_and_forbids_views():
+    # @req: BI-6
+    body = _body(ROUTER_SKILL_MD.read_text(encoding="utf-8"))
+
+    assert len(body.split()) <= ROUTER_WORD_CAP, (
+        f"SKILL.md body is {len(body.split())} words, cap is {ROUTER_WORD_CAP}"
+    )
+
+    for literal in ROUTER_REQUIRED_LITERALS:
+        assert literal in body, f"router SKILL.md body must name {literal!r}"
+
+    assert re.search(r"never read.*views/", body, re.IGNORECASE) or re.search(
+        r"views/.*never", body, re.IGNORECASE
+    ), "router SKILL.md body must state the views/ read prohibition"
