@@ -58,6 +58,16 @@ recorded as a `"<relpath>: frontmatter: ..."` entry in `Project.problems`.
 | `branch` | string | Branch id the assumption belongs to, if any. |
 | `path` | Path | Resolved filesystem path of the file. |
 
+## `render` and `views/dag.md`
+
+`dag.py render <root>` writes `<root>/views/dag.md`: one Mermaid
+`flowchart TD` showing every node (shaped by `type`), every assumption as a
+stadium node grouped into its branch's subgraph, one edge per `inputs` entry
+(dashed when `load_bearing` is false), and a grey `stale` style on nodes
+whose `status` is `stale`. The file opens with a generated-marker comment —
+it is regenerated from `nodes/`/`assumptions/`/`research/` on every run,
+human-only, and must never be hand-edited or read back by an agent.
+
 ## Minimal examples
 
 ### Node — `nodes/goal.md`
