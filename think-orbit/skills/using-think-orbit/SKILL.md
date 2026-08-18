@@ -31,11 +31,10 @@ do not re-explain it in conversation.
 
 ## Intake — resolve `<root>` at every session entry
 
-`<root>` is the project directory: a folder the user owns, typically
-inside their Obsidian vault. It lives for this session only — Part 1
-keeps no state file, so you re-resolve it next session. Never invent a
-path, never create one inside the plugin, and never carry over a path
-you remember from another project.
+`<root>` is the project directory: a folder the user owns. It lives for
+this session only — Part 1 keeps no state file, so you re-resolve it
+next session. Never invent a path, never create one inside the plugin,
+and never carry over a path you remember from another project.
 
 Run this ladder, in order, at every session entry:
 

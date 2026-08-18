@@ -5,6 +5,17 @@ All notable changes to the `think-orbit` plugin are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] — 2026-08-19
+
+### Fixed
+
+The skill text no longer presumes an Obsidian vault. `<root>` intake
+described the project directory as one "typically inside their Obsidian
+vault", and `node-schema.md` justified the `paragraph-form` rule as
+"matching the vault's own writing convention" — a rationale that has no
+referent in a project without a vault. The intake ladder and the rule
+itself are unchanged; only the borrowed premise is gone.
+
 ## [0.1.2] — 2026-08-18
 
 ### Fixed

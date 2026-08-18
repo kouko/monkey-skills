@@ -21,7 +21,7 @@
     "brandColor": "#4B5563"
   },
   "name": "think-orbit",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Single-user thinking-and-planning partner — turns a discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view; decisions are one kind of ending, not the only one.",
   "author": {
     "name": "kouko",
