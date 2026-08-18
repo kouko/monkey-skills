@@ -68,6 +68,49 @@ def test_fired_without_user_choice_exits_2(tmp_path, onramp_line, expected_exit)
         assert "user chose <detour|direct>" in result.stderr
 
 
+@pytest.mark.parametrize(
+    "onramp_body,expected_exit",
+    [
+        ("## Design-side on-ramp\n\npending\n", 2),
+        (
+            "## Design-side on-ramp\n\nfired: rows 1 — user chose direct\n",
+            0,
+        ),
+    ],
+    ids=["heading-pending", "heading-user-chose"],
+)
+def test_heading_form_locates_value_line(tmp_path, onramp_body, expected_exit):
+    brief = tmp_path / "brief.md"
+    brief.write_text(f"# Brief: x\n\n{onramp_body}\n## Problem\n\nsome job.\n",
+                      encoding="utf-8")
+    result = _run(brief)
+    assert result.returncode == expected_exit, (
+        f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    )
+
+
+def test_wrapped_blockquote_continuation_line_joined_before_grammar(tmp_path):
+    """A soft-wrapped blockquote value — the value's own text continues
+    onto a second `>` line, as CommonMark blockquote paragraphs do and
+    as the real corpus (docs/loom/specs/2026-08-18-onramp-explicit-
+    choice-gate.md) does for its `not fired` reason — must be joined
+    into one value before the strict grammar is applied. Without the
+    join, `user chose\\n> direct` truncates to `user chose`, which
+    fails the grammar and wrongly reports unresolved."""
+    brief = tmp_path / "brief.md"
+    brief.write_text(
+        "# Brief: x\n\n"
+        "> Design-side on-ramp: fired: rows 1,3 — user chose\n"
+        "> direct\n\n"
+        "## Problem\n\nsome job.\n",
+        encoding="utf-8",
+    )
+    result = _run(brief)
+    assert result.returncode == 0, (
+        f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    )
+
+
 def test_missing_brief_file_exits_1(tmp_path):
     result = _run(tmp_path / "does-not-exist.md")
     assert result.returncode == 1

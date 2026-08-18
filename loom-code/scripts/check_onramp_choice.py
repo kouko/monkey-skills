@@ -61,16 +61,46 @@ _INLINE_LINE = re.compile(
     r"^(?:>\s*)?(?:-\s*)?\*{0,2}Design-side on-ramp\*{0,2}\s*:\s*(?P<value>.*)$"
 )
 
+# A blockquote continuation line that starts a NEW labelled field (a
+# bolded `**Label**:` field, or a heading) rather than continuing the
+# on-ramp value's own soft-wrap — joining must stop there.
+_BLOCKQUOTE_FIELD_START = re.compile(r"^(?:#{1,6}\s|\*\*[^*\n]+\*\*\s*:)")
+
+
+def _join_blockquote_continuation(lines: list[str], start_idx: int, value: str) -> str:
+    """Join subsequent `>`-prefixed lines onto `value` while they are
+    plain continuation text — CommonMark lets a blockquote's own
+    paragraph soft-wrap across physical lines, and the corpus does
+    this for on-ramp values (see docs/loom/specs/2026-08-18-onramp-
+    explicit-choice-gate.md's own `not fired — ...` line). Stops at the
+    first line that is not a `>` line, is blank, or starts a new
+    labelled field."""
+    parts = [value]
+    for nxt in lines[start_idx + 1:]:
+        stripped = nxt.lstrip()
+        if not stripped.startswith(">"):
+            break
+        content = stripped[1:].strip()
+        if not content or _BLOCKQUOTE_FIELD_START.match(content):
+            break
+        parts.append(content)
+    return " ".join(parts)
+
 
 def _find_onramp_value_line(brief_text: str) -> str | None:
     """The on-ramp line's value (stripped), from whichever corpus form
     is found first in document order, or None if neither form is
-    present."""
+    present. A blockquote-form value's soft-wrapped continuation lines
+    (subsequent `>` lines) are joined in before the grammar is applied
+    — see `_join_blockquote_continuation`."""
     lines = brief_text.splitlines()
     for i, raw in enumerate(lines):
         inline = _INLINE_LINE.match(raw)
         if inline is not None:
-            return inline.group("value").strip()
+            value = inline.group("value").strip()
+            if raw.lstrip().startswith(">"):
+                value = _join_blockquote_continuation(lines, i, value)
+            return value.strip()
         if _HEADING_LINE.match(raw):
             for nxt in lines[i + 1:]:
                 if nxt.strip():
@@ -145,9 +175,14 @@ def resolve(brief_text: str, standing: dict[int, str]) -> Result:
 
 
 def _resolve_repo_root(explicit: str | None, brief_dir: Path) -> Path:
+    # Not yet called by main() — Task 7 (DIRECTION.md standing-choices
+    # wiring) is the first caller; kept here now so the CLI flag shape
+    # is stable across that task's landing.
     if explicit is not None:
         return Path(explicit)
     try:
+        # grounding: in-repo precedent loom_init.py:108 (same flag) +
+        # `git rev-parse --help`
         out = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"],
             cwd=brief_dir,
@@ -182,10 +217,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     brief_text = brief_path.read_text(encoding="utf-8")
 
-    # Resolved but unused beyond this point in this task — DIRECTION.md
-    # standing-choices wiring (which consumes it) lands in a later task
-    # of this same plan; computing it here keeps the CLI shape stable.
-    _resolve_repo_root(args.repo_root, brief_path.resolve().parent)
+    # `--repo-root` / `_resolve_repo_root` are not called from here yet
+    # — Task 7 (DIRECTION.md standing-choices wiring) is the first
+    # caller; the flag is accepted now so the CLI shape is stable.
 
     result = resolve(brief_text, {})
 
