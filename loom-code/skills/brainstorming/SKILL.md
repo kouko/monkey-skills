@@ -104,12 +104,17 @@ the same recommend-once rule as the on-ramp recommendation below. When
 neither copy of `backlog_index.py` resolves, stay N/A as today — the
 scaffold verb ships alongside it, so there is no offer to make.
 
-If a criteria row triggers, surface the recommendation **ONCE** — name the
-concrete design-side sequence (e.g. `using-loom-design`, whichever rows fired), then
-record the user's choice in the brief under a `## Design-side on-ramp` line
-("offered — user chose <direct/detour>") and proceed either way.
-Never re-raise it after a decline — the recommend-once rule holds for the
-rest of this task.
+If a criteria row triggers, first check `docs/loom/DIRECTION.md`'s
+`## On-ramp standing choices` — a standing entry for every fired row means
+write `fired: rows <n> — standing <direct|detour> (DIRECTION.md)` in the
+`## Design-side on-ramp` line and continue without asking. Otherwise write
+`pending` and surface the recommendation **ONCE** as a standalone ask (per
+`loom-code/hooks/family-reception.md` §On-ramp — point, don't copy),
+naming the concrete design-side sequence (e.g. `using-loom-design`,
+whichever rows fired) and stating the recommendation inside the ask. Only
+after the user answers, write `fired: rows <n> — user chose <detour|direct>`
+(grammar SSOT: `references/handoff-brief-format.md`) — never record an
+agent default, and never re-raise it after the user answers.
 
 ### Axis 1 — Problem
 

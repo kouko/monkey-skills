@@ -87,6 +87,26 @@ def test_axis0_recommend_once_and_record_choice():
         "Axis 0 must name a concrete station in the design-side sequence"
 
 
+def test_axis0_standalone_ask_pending_no_agent_default():
+    """A fired row must first check DIRECTION.md's standing choices; absent
+    a standing entry, the brief line starts `pending` and the recommendation
+    fires as a standalone ask — never an agent-recorded default. The old
+    'proceed either way' phrasing (which let an unanswered ask sit
+    unresolved) must be gone."""
+    text = _text()
+    low = text.lower()
+    assert "standalone ask" in low, \
+        "Axis 0 must fire the recommendation as a standalone ask"
+    assert "pending" in low, \
+        "Axis 0 must name the 'pending' brief-line state before the user answers"
+    assert "standing" in low, \
+        "Axis 0 must check DIRECTION.md's standing choices before asking"
+    assert "direction.md" in low, \
+        "Axis 0 must name DIRECTION.md as the standing-choice source"
+    assert "proceed either way" not in low, \
+        "Axis 0 must drop the old 'proceed either way' phrasing"
+
+
 # --- inclusive mandate ----------------------------------------------------
 
 
