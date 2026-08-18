@@ -23,7 +23,7 @@ When in doubt, write it to a file. The cost of the file is one `git add`; the co
 
 ## Required sections
 
-These five must appear in every brief, plus a sixth (`Current State Evidence`) when the change touches existing code or process, and a seventh (`## Design-side on-ramp`) whenever the reception's on-ramp criteria fire — or, if they don't, the `not fired` line still records that. Order matters — `writing-plans` parses top-down.
+These five must appear in every brief, plus a sixth (`Current State Evidence`) when the change touches existing code or process, and `## Design-side on-ramp` — always present, whether the reception's on-ramp criteria fired or not (when they don't, the `not fired` line records that). `## Design-side on-ramp` sits at the TOP of the brief: immediately after the title / author metadata, before `## Problem` — see §Template for the exact skeleton. Order matters — `writing-plans` parses top-down.
 
 ### `## Problem`
 

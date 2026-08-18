@@ -97,10 +97,15 @@ via the plugin-shipped verb:
 (a load-time substitution, not a run-time shell variable; a bootstrap
 verb has no repo-root tier — its precondition is the repo lacking the
 layer). If the user
-declines or does not engage, proceed silently exactly as today, record
-the choice in the brief's `## Design-side on-ramp` line ("offered
-loom-init — user chose <scaffold/decline>"), and never re-raise it —
-the same recommend-once rule as the on-ramp recommendation below. When
+declines or does not engage, proceed silently exactly as today, and
+never re-raise it — the same recommend-once rule as the on-ramp
+recommendation below. Record the answer inside the brief's
+`## Design-side on-ramp` section, on its OWN line BELOW that section's
+on-ramp value line, as
+`Loom-init offer: offered — user chose <scaffold/decline>`. Never write
+it as the on-ramp value itself: that value line takes one of the four
+canonical forms only, and any other wording there reads as unresolved
+and blocks the plan. When
 neither copy of `backlog_index.py` resolves, stay N/A as today — the
 scaffold verb ships alongside it, so there is no offer to make.
 
@@ -175,6 +180,9 @@ If nothing becomes obsolete, that is a flag: either the change is purely additiv
 Brainstorming's deliverable is a **structured brief** that `writing-plans` consumes. Schema in [`references/handoff-brief-format.md`](references/handoff-brief-format.md); minimum required sections:
 
 ```markdown
+## Design-side on-ramp
+(Axis 0 — one line in the canonical grammar; SSOT `references/handoff-brief-format.md`)
+
 ## Problem
 (Axis 1 — the JTBD-style job behind the user's request)
 
