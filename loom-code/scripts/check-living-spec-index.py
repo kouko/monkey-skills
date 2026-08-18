@@ -71,6 +71,7 @@ from living_spec_collect import (
 from living_spec_drift import find_gitref_drift
 from living_spec_gitref import resolve_binding_refs
 from living_spec_index import (
+    _REQUIREMENT_STATUS_RE,
     find_malformed_status,
     generate_index,
     load_namespace,
@@ -135,6 +136,49 @@ def _find_malformed_status_all(root: Path) -> list[str]:
     for specs_dir in _namespace_roots(root):
         offenders += find_malformed_status(specs_dir)
     return offenders
+
+
+def _collect_req_declarations_all(root: Path) -> dict[str, list[Path]]:
+    """Map each id-form req id to EVERY spec.md path that declares it.
+
+    Folds over ``_namespace_roots(root)``, walking the same
+    ``<specs_dir>/<capability>/spec.md`` files as ``_load_namespace_all``.
+    Unlike ``_load_namespace_all`` (a dict merge where the last root wins),
+    this collects every declaring path per id, so a duplicate declaration
+    across namespace files stays visible instead of being silently
+    overwritten.
+    """
+    declarations: dict[str, list[Path]] = {}
+    for specs_dir in _namespace_roots(root):
+        for spec_path in sorted(Path(specs_dir).glob("*/spec.md")):
+            for line in spec_path.read_text(encoding="utf-8").splitlines():
+                match = _REQUIREMENT_STATUS_RE.match(line)
+                if match:
+                    declarations.setdefault(match.group("id"), []).append(
+                        spec_path
+                    )
+    return declarations
+
+
+def find_duplicate_req_declarations(root: Path) -> list[str]:
+    """Return one violation per req id declared in more than one file.
+
+    The merge-boundary collision guard (BI-3): two branches each minting
+    the same ``REQ-<n>`` in different namespace files collide on the
+    first CI run after both merge (or earlier, on rebase). Names the id
+    and every declaring path, sorted by id for deterministic output.
+    """
+    declarations = _collect_req_declarations_all(root)
+    violations: list[str] = []
+    for req_id in sorted(declarations):
+        paths = declarations[req_id]
+        if len(paths) > 1:
+            joined = ", ".join(str(p) for p in paths)
+            violations.append(
+                f"DUPLICATE requirement id {req_id} declared in "
+                f"multiple files: {joined}"
+            )
+    return violations
 
 
 def find_structural_violations(
@@ -386,6 +430,10 @@ def main(argv: list[str] | None = None) -> int:
     # token (`[activ]`) is a syntax defect, RED-safe to gate on every push
     # (not a coverage check) — surface it on stderr and count it toward rc=1.
     violations += _find_malformed_status_all(root)
+    # Merge-boundary collision guard (BI-3): the same req id declared in
+    # more than one namespace file must fail loud rather than let one
+    # declaration silently overwrite the other.
+    violations += find_duplicate_req_declarations(root)
     if violations:
         for entry in violations:
             print(entry, file=sys.stderr)

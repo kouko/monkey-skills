@@ -436,6 +436,63 @@ def test_namespace_includes_live_change_folder_and_archive_specs(tmp_path, capsy
     )
 
 
+def test_duplicate_req_id_across_namespace_files_fails_structural_lane(tmp_path, capsys):
+    # WHY: BI-3's merge-boundary collision guard. Two change-folders each
+    # declaring `REQ-5` (e.g. two branches independently minting the same
+    # id) must not silently share one identity — the structural lane must
+    # FAIL LOUD, naming the id and BOTH declaring spec.md paths. The same
+    # id declared exactly once must still pass (no false-positive).
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    dup_a = repo / "docs" / "loom" / "2026-01-01-a" / "specs" / "cap-a"
+    dup_a.mkdir(parents=True)
+    (dup_a / "spec.md").write_text(
+        "### Requirement: REQ-5 — First\n", encoding="utf-8"
+    )
+    dup_b = repo / "docs" / "loom" / "2026-01-02-b" / "specs" / "cap-b"
+    dup_b.mkdir(parents=True)
+    (dup_b / "spec.md").write_text(
+        "### Requirement: REQ-5 — Second\n", encoding="utf-8"
+    )
+    _commit(repo, "REQ-5 declared twice", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main([str(repo)])
+    assert rc == 1, (
+        f"REQ-5 declared in two namespace files must fail the structural "
+        f"lane, got rc={rc!r}"
+    )
+    captured = capsys.readouterr()
+    assert "REQ-5" in captured.err, (
+        f"the duplicated id must be named on stderr, got: {captured.err!r}"
+    )
+    assert str(dup_a / "spec.md") in captured.err, (
+        f"the first declaring path must be named, got: {captured.err!r}"
+    )
+    assert str(dup_b / "spec.md") in captured.err, (
+        f"the second declaring path must be named, got: {captured.err!r}"
+    )
+
+
+def test_duplicate_req_id_declared_once_passes(tmp_path, capsys):
+    # WHY: no false-positive — a req id declared in exactly ONE namespace
+    # file must not trip the duplicate-declaration guard.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    spec_dir = repo / "docs" / "loom" / "spec" / "cap"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-5 — Only\n", encoding="utf-8"
+    )
+    _commit(repo, "REQ-5 declared once", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main([str(repo)])
+    assert rc == 0, (
+        f"a req id declared exactly once must not fail, got rc={rc!r}"
+    )
+
+
 def test_verify_index_mode_fails_on_stale(tmp_path):
     # WHY: the merge-boundary stale-index gate. `--verify-index <path>`
     # regenerates the index from the source tree and asserts byte-identity
