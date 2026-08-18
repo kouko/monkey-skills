@@ -122,6 +122,50 @@ _FIRED_STANDING = re.compile(
 )
 _FIRED_ROWS_PREFIX = re.compile(rf"^fired:\s*rows\s*{_ROWS}\b")
 
+# --- DIRECTION.md standing-choices section ------------------------------
+
+# Exact-line heading match — same posture as backlog_index.py's
+# `DIRECTION_NOW_HEADING` scan (backlog_index.py:607,657-672): the
+# section is machine-parsed, so its heading is a fixed string, not a
+# pattern.
+DIRECTION_STANDING_HEADING = "## On-ramp standing choices"
+
+# Entry grammar SSOT: loom-code/hooks/family-reception.md
+# `### On-ramp standing choices`.
+_STANDING_ENTRY = re.compile(
+    r"^-\s*row\s+(?P<row>\d+)\s*\([^)]*\):\s*standing\s+"
+    r"(?P<choice>direct|detour)\s*—\s*.+\(\d{4}-\d{2}-\d{2}\)\s*$"
+)
+
+
+def load_standing(repo_root: Path) -> dict[int, str]:
+    """Parse `<repo_root>/docs/loom/DIRECTION.md`'s `## On-ramp standing
+    choices` section into `{row: "direct"|"detour"}`. A missing file or
+    a missing section is not an error — it just means no row has a
+    standing choice recorded yet, which the `standing` form's row check
+    already treats as unresolved."""
+    direction_path = repo_root / "docs" / "loom" / "DIRECTION.md"
+    if not direction_path.is_file():
+        return {}
+    lines = direction_path.read_text(encoding="utf-8").splitlines()
+
+    heading_idx = None
+    for i, line in enumerate(lines):
+        if line.strip() == DIRECTION_STANDING_HEADING:
+            heading_idx = i
+            break
+    if heading_idx is None:
+        return {}
+
+    standing: dict[int, str] = {}
+    for line in lines[heading_idx + 1:]:
+        if line.lstrip().startswith("## "):
+            break
+        match = _STANDING_ENTRY.match(line.strip())
+        if match is not None:
+            standing[int(match.group("row"))] = match.group("choice")
+    return standing
+
 
 def _parse_rows(rows_text: str) -> list[int]:
     return [int(part.strip()) for part in rows_text.split(",")]
@@ -175,9 +219,7 @@ def resolve(brief_text: str, standing: dict[int, str]) -> Result:
 
 
 def _resolve_repo_root(explicit: str | None, brief_dir: Path) -> Path:
-    # Not yet called by main() — Task 7 (DIRECTION.md standing-choices
-    # wiring) is the first caller; kept here now so the CLI flag shape
-    # is stable across that task's landing.
+    # Called by main() to locate DIRECTION.md for `load_standing()`.
     if explicit is not None:
         return Path(explicit)
     try:
@@ -217,11 +259,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     brief_text = brief_path.read_text(encoding="utf-8")
 
-    # `--repo-root` / `_resolve_repo_root` are not called from here yet
-    # — Task 7 (DIRECTION.md standing-choices wiring) is the first
-    # caller; the flag is accepted now so the CLI shape is stable.
+    repo_root = _resolve_repo_root(args.repo_root, brief_path.parent)
+    standing = load_standing(repo_root)
 
-    result = resolve(brief_text, {})
+    result = resolve(brief_text, standing)
 
     if result.status in ("resolved", "not_fired"):
         print(
@@ -230,7 +271,19 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0
 
-    if result.rows:
+    standing_match = _FIRED_STANDING.match(result.message)
+    if result.rows and standing_match is not None:
+        rows_str = ",".join(str(row) for row in result.rows)
+        missing = [row for row in result.rows if row not in standing]
+        missing_str = ",".join(str(row) for row in missing)
+        question = (
+            f"Design-side on-ramp: rows {missing_str} cite a standing "
+            f"choice, but DIRECTION.md's '{DIRECTION_STANDING_HEADING}' "
+            f"has no entry for row {missing_str}. Add one there, or "
+            "record the answer as `fired: rows "
+            f"{rows_str} — user chose <detour|direct>`"
+        )
+    elif result.rows:
         rows_str = ",".join(str(row) for row in result.rows)
         question = (
             f"Design-side on-ramp: rows {rows_str} fired — detour into "

@@ -124,6 +124,80 @@ def test_stderr_names_brief_path_on_unresolved(tmp_path):
     assert str(brief) in result.stderr
 
 
+def test_standing_choice_in_direction_resolves_listed_rows(tmp_path):
+    """`load_standing` wiring: a `standing` on-ramp line resolves only
+    when every cited row has a matching entry under DIRECTION.md's
+    `## On-ramp standing choices` heading. Also covers the
+    default-resolution path (`--repo-root` omitted, resolved via `git
+    rev-parse --show-toplevel` from the brief's directory)."""
+    direction_dir = tmp_path / "docs" / "loom"
+    direction_dir.mkdir(parents=True)
+    (direction_dir / "DIRECTION.md").write_text(
+        "## On-ramp standing choices\n\n"
+        "- row 1 (product-principles): standing direct — x (2026-08-18)\n",
+        encoding="utf-8",
+    )
+
+    brief_ok = _write_brief(
+        tmp_path,
+        "Design-side on-ramp: fired: rows 1 — standing direct (DIRECTION.md)",
+    )
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(brief_ok), "--repo-root", str(tmp_path)],
+        capture_output=True, text=True, env=_ENV,
+    )
+    assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+    brief_extra_row = _write_brief(
+        tmp_path,
+        "Design-side on-ramp: fired: rows 1,3 — standing direct (DIRECTION.md)",
+    )
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(brief_extra_row), "--repo-root", str(tmp_path)],
+        capture_output=True, text=True, env=_ENV,
+    )
+    assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "row 3" in result.stderr
+
+    no_direction_root = tmp_path / "no-direction"
+    no_direction_root.mkdir()
+    brief_no_direction = _write_brief(
+        no_direction_root,
+        "Design-side on-ramp: fired: rows 1 — standing direct (DIRECTION.md)",
+    )
+    result = subprocess.run(
+        [
+            sys.executable, str(SCRIPT), str(brief_no_direction),
+            "--repo-root", str(no_direction_root),
+        ],
+        capture_output=True, text=True, env=_ENV,
+    )
+    assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+    # Default-resolution path: no `--repo-root`, resolved via `git
+    # rev-parse --show-toplevel` of a real git-inited tmp repo.
+    git_repo = tmp_path / "git-repo"
+    git_repo.mkdir()
+    subprocess.run(["git", "init"], cwd=git_repo, capture_output=True,
+                    text=True, check=True)
+    git_direction_dir = git_repo / "docs" / "loom"
+    git_direction_dir.mkdir(parents=True)
+    (git_direction_dir / "DIRECTION.md").write_text(
+        "## On-ramp standing choices\n\n"
+        "- row 1 (product-principles): standing direct — x (2026-08-18)\n",
+        encoding="utf-8",
+    )
+    brief_git = _write_brief(
+        git_repo,
+        "Design-side on-ramp: fired: rows 1 — standing direct (DIRECTION.md)",
+    )
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(brief_git)],
+        capture_output=True, text=True, env=_ENV,
+    )
+    assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+
 def test_real_spec_document_exits_0():
     repo_root = Path(__file__).resolve().parents[2]
     spec_path = (
