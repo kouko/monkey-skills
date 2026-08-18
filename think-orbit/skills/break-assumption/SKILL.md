@@ -15,14 +15,16 @@ already resolved `<root>`. If you got here without one, ask for it once.
 **You may only raise your hand. The user declares.** When something in
 the conversation matches an assumption's `breaks_if`, say so and ask:
 "this sounds like `<assumption-id>` may have broken — do you declare it
-broken?" You never declare a break on your own, however obvious it
-looks. Marking a premise dead rewrites the user's own reasoning, and
-that authorship is theirs.
+broken?"
 
-Raise your hand on the explicit cues — 「假設破了」「情況變了」
-「前提不成立了」 / "assumption broke" / "situation changed" — and also
-on the silent one: a fact stated in passing that matches a `breaks_if`
-line you have on disk.
+You never declare a break on your own, however obvious it looks.
+Marking a premise dead rewrites the user's own reasoning, and that
+authorship is theirs.
+
+Raise your hand on the explicit cues: 「假設破了」「情況變了」
+「前提不成立了」 / "assumption broke" / "situation changed". Raise it
+also on the silent cue — a fact stated in passing that matches a
+`breaks_if` line you have on disk.
 
 ## Identify which assumption
 
@@ -46,8 +48,14 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py break <root> <assumption-id>
 
 What it does: rewrites the assumption's `status` to `broken`; rewrites
 `status: stale` on every node reached through a chain whose every hop is
-`load_bearing: true`; writes `<root>/views/impact-<assumption-id>.md`;
-and prints two lines, `stale: <ids>` and `weakened: <ids>`.
+`load_bearing: true`; writes an impact view under `<root>/views/`; and
+prints three lines — `stale: <ids>`, `weakened: <ids>`, and
+`impact view: <relative path>`.
+
+Take the view's filename from that third line, never by computing it.
+The name is `views/impact-<id>.md` with every character of the id
+outside `[A-Za-z0-9_-]` replaced by `_`, so an id with a slash, a space,
+or CJK does not spell its own filename.
 
 What it does **not** do: a node reached only through a non-load-bearing
 hop is reported on the `weakened:` line and its file is left untouched.
@@ -65,11 +73,13 @@ One short exchange, not a menu. Ask which of these two the user wants:
   plain words ("these now rest on a broken premise"), and the
   `weakened:` ids as "weakened, not stale — still standing, just less
   supported".
-- **full impact** — tell them to open
-  `<root>/views/impact-<assumption-id>.md`. **You never read any file
-  under `views/`**; it is a lossy, human-only rendering. If they want it
-  regenerated, run
-  `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py impact <root> <assumption-id>`.
+- **full impact** — tell them to open the path `break` printed on its
+  `impact view:` line (`views/impact-<sanitized-id>.md`, the id's
+  non-`[A-Za-z0-9_-]` characters replaced by `_`).
+  **You never read a file under `views/`** — it is a lossy, human-only
+  rendering. If they want it regenerated, run
+  `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py impact <root> <assumption-id>`,
+  which prints the same `impact view:` line.
 
 Then stop. What to re-examine is the user's call, not yours. Stale nodes
 stay stale until the user rewrites them in `decision-session` or rules

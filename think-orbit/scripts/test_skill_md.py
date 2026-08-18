@@ -58,6 +58,13 @@ def _sentences(body: str) -> list[str]:
     return [s for s in re.split(r"(?<=[.!?])\s+|\n", body) if s.strip()]
 
 
+def _asserts_views_prohibition(body: str) -> None:
+    """The `views/` read prohibition must be stated, in either word order."""
+    assert re.search(r"never read.*views/", body, re.IGNORECASE) or re.search(
+        r"views/.*never", body, re.IGNORECASE
+    ), "SKILL.md body must state the views/ read prohibition"
+
+
 def test_decision_session_skill_names_cli_verbs_interrupts_view_prohibition_and_word_cap():
     # @req: BI-6
     text = SKILL_MD.read_text(encoding="utf-8")
@@ -70,9 +77,7 @@ def test_decision_session_skill_names_cli_verbs_interrupts_view_prohibition_and_
     for literal in REQUIRED_LITERALS:
         assert literal in body, f"SKILL.md body must name {literal!r}"
 
-    assert re.search(r"never read.*views/", body, re.IGNORECASE) or re.search(
-        r"views/.*never", body, re.IGNORECASE
-    ), "SKILL.md body must state the views/ read prohibition"
+    _asserts_views_prohibition(body)
 
     sentences = _sentences(body)
     for token in INTERRUPT_TOKENS:
@@ -139,9 +144,7 @@ def test_router_skill_routes_to_verbs_and_forbids_views():
     for literal in ROUTER_REQUIRED_LITERALS:
         assert literal in body, f"router SKILL.md body must name {literal!r}"
 
-    assert re.search(r"never read.*views/", body, re.IGNORECASE) or re.search(
-        r"views/.*never", body, re.IGNORECASE
-    ), "router SKILL.md body must state the views/ read prohibition"
+    _asserts_views_prohibition(body)
 
 
 ALL_SKILL_MDS = (SKILL_MD, ROUTER_SKILL_MD, BREAK_SKILL_MD)
@@ -149,7 +152,7 @@ ALL_SKILL_MDS = (SKILL_MD, ROUTER_SKILL_MD, BREAK_SKILL_MD)
 # Every CLI mention must be copy-pasteable: a bare `dag.py <verb>` sends the
 # reader to a script that is not on their PATH.
 
-DAG_INVOCATION = re.compile(r"dag\.py (?:check|break|claims|render|impact)")
+DAG_INVOCATION = re.compile(r"dag\.py (?:check|break|claims|render|impact)\b")
 FULL_PREFIX = "${CLAUDE_PLUGIN_ROOT}/scripts/"
 
 
@@ -209,7 +212,5 @@ def test_break_assumption_skill_names_break_verb_and_two_followups():
         "SKILL.md must state that nothing is recomputed"
     )
 
-    assert re.search(r"never read.*views/", body, re.IGNORECASE) or re.search(
-        r"views/.*never", body, re.IGNORECASE
-    ), "SKILL.md body must state the views/ read prohibition"
+    _asserts_views_prohibition(body)
 

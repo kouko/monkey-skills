@@ -117,7 +117,7 @@ id: q4_goal
 type: GOAL
 seq: 1
 summary: Pick the Q4 growth motion
-status: active
+status: current
 inputs: []
 ---
 Body text in short paragraphs. Two to four sentences per paragraph.
@@ -132,7 +132,7 @@ id: churn_fact
 type: FACT
 seq: 3
 summary: Monthly logo churn is 5.0%
-status: active
+status: current
 source: 2026-07 retention export
 quote: "Monthly logo churn: 5.0%"
 inputs: []
@@ -149,7 +149,7 @@ id: referral_scales
 type: CLAIM
 seq: 4
 summary: Referral motion scales faster than outbound here
-status: active
+status: current
 branch: b_referral
 branch_type: exclusive
 inputs:

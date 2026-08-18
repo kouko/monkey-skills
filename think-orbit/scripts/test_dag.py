@@ -36,7 +36,7 @@ def test_load_project_parses_nodes_assumptions_and_research_claims(tmp_path):
         "type: GOAL\n"
         "seq: 1\n"
         "summary: Ship v0\n"
-        "status: active\n",
+        "status: current\n",
     )
     _write(
         root / "nodes" / "fact.md",
@@ -44,7 +44,7 @@ def test_load_project_parses_nodes_assumptions_and_research_claims(tmp_path):
         "type: FACT\n"
         "seq: 2\n"
         "summary: Users churn at 5%\n"
-        "status: active\n"
+        "status: current\n"
         "source: internal survey\n"
         "quote: \"5% monthly churn\"\n",
     )
@@ -54,7 +54,7 @@ def test_load_project_parses_nodes_assumptions_and_research_claims(tmp_path):
         "type: CLAIM\n"
         "seq: 3\n"
         "summary: Pricing change reduces churn\n"
-        "status: active\n"
+        "status: current\n"
         "branch: b1\n"
         "branch_type: exclusive\n"
         "inputs:\n"
@@ -91,7 +91,7 @@ def test_load_project_parses_nodes_assumptions_and_research_claims(tmp_path):
     assert goal.type == "GOAL"
     assert goal.seq == 1
     assert goal.summary == "Ship v0"
-    assert goal.status == "active"
+    assert goal.status == "current"
     assert goal.path == root / "nodes" / "goal.md"
 
     fact = node_map["fact1"]
@@ -149,7 +149,7 @@ def test_load_project_records_non_dict_or_invalid_frontmatter_as_problems_instea
         "type: GOAL\n"
         "seq: 1\n"
         "summary: Ship v0\n"
-        "status: active\n",
+        "status: current\n",
     )
     _write(
         root / "nodes" / "list_frontmatter.md",
@@ -180,7 +180,7 @@ def _build_clean_project(root: Path) -> None:
         "type: GOAL\n"
         "seq: 1\n"
         "summary: Ship v0\n"
-        "status: active\n",
+        "status: current\n",
     )
     _write(
         root / "nodes" / "fact1.md",
@@ -188,7 +188,7 @@ def _build_clean_project(root: Path) -> None:
         "type: FACT\n"
         "seq: 2\n"
         "summary: Users churn at 5%\n"
-        "status: active\n"
+        "status: current\n"
         "source: internal survey\n"
         "quote: \"5% monthly churn\"\n",
     )
@@ -198,7 +198,7 @@ def _build_clean_project(root: Path) -> None:
         "type: CLAIM\n"
         "seq: 3\n"
         "summary: Pricing change reduces churn\n"
-        "status: active\n"
+        "status: current\n"
         "branch: b1\n"
         "branch_type: exclusive\n"
         "inputs:\n"
@@ -231,7 +231,7 @@ def test_check_prints_one_line_per_structural_violation_and_is_silent_when_clean
         "type: GOAL\n"
         "seq: 1\n"
         "summary: Ship v0\n"
-        "status: active\n",
+        "status: current\n",
     )
     _write(
         dirty_root / "nodes" / "claim1.md",
@@ -239,7 +239,7 @@ def test_check_prints_one_line_per_structural_violation_and_is_silent_when_clean
         "type: CLAIM\n"
         "seq: 2\n"
         "summary: Pricing change reduces churn\n"
-        "status: active\n"
+        "status: current\n"
         "inputs:\n"
         "  - ref: goal\n",  # missing load_bearing -> violation 1
     )
@@ -249,7 +249,7 @@ def test_check_prints_one_line_per_structural_violation_and_is_silent_when_clean
         "type: CLAIM\n"
         "seq: 3\n"
         "summary: Second claim\n"
-        "status: active\n"
+        "status: current\n"
         "inputs:\n"
         "  - ref: missing_id\n"  # dangling ref -> violation 2
         "    load_bearing: true\n",
@@ -260,7 +260,7 @@ def test_check_prints_one_line_per_structural_violation_and_is_silent_when_clean
         "type: FACT\n"
         "seq: 4\n"
         "summary: Users churn at 5%\n"
-        "status: active\n"
+        "status: current\n"
         "source: internal survey\n",  # missing quote -> violation 3
     )
 
@@ -358,7 +358,7 @@ def test_check_flags_inputs_entry_without_ref(tmp_path, capsys):
         "type: GOAL\n"
         "seq: 1\n"
         "summary: Ship v0\n"
-        "status: active\n",
+        "status: current\n",
     )
     _write(
         root / "nodes" / "claim1.md",
@@ -366,7 +366,7 @@ def test_check_flags_inputs_entry_without_ref(tmp_path, capsys):
         "type: CLAIM\n"
         "seq: 2\n"
         "summary: Pricing change reduces churn\n"
-        "status: active\n"
+        "status: current\n"
         "inputs:\n"
         "  - load_bearing: true\n",  # no ref -> violation
     )
@@ -390,7 +390,7 @@ def test_check_flags_paragraphs_outside_two_to_four_sentences(tmp_path, capsys):
         "type: GOAL\n"
         "seq: 1\n"
         "summary: Ship v0\n"
-        "status: active\n",
+        "status: current\n",
         body=(
             "第一句。第二句。第三句。第四句。第五句。第六句。\n"
             "\n"
@@ -414,7 +414,7 @@ def test_check_flags_paragraphs_outside_two_to_four_sentences(tmp_path, capsys):
         "type: GOAL\n"
         "seq: 1\n"
         "summary: Ship v0\n"
-        "status: active\n",
+        "status: current\n",
         body=(
             "# Heading\n"
             "\n"
@@ -474,7 +474,7 @@ def test_check_lead_in_sentence_followed_by_list_is_not_a_paragraph_violation(tm
         "type: GOAL\n"
         "seq: 1\n"
         "summary: Ship v0\n"
-        "status: active\n",
+        "status: current\n",
         body=(
             "Lead sentence one. Lead sentence two.\n"
             "- item 1\n"
@@ -682,7 +682,7 @@ def test_claims_lists_dependents_only_for_research_claims_changed_since_rev(tmp_
         "type: CLAIM\n"
         "seq: 1\n"
         "summary: Depends on r1\n"
-        "status: active\n"
+        "status: current\n"
         "inputs:\n"
         "  - ref: r1\n"
         "    load_bearing: true\n",
@@ -693,7 +693,7 @@ def test_claims_lists_dependents_only_for_research_claims_changed_since_rev(tmp_
         "type: CLAIM\n"
         "seq: 2\n"
         "summary: Depends on r2\n"
-        "status: active\n"
+        "status: current\n"
         "inputs:\n"
         "  - ref: r2\n"
         "    load_bearing: true\n",
@@ -741,7 +741,7 @@ def test_claims_works_when_root_is_a_symlink_to_the_real_git_worktree(tmp_path, 
         "type: CLAIM\n"
         "seq: 1\n"
         "summary: Depends on r1\n"
-        "status: active\n"
+        "status: current\n"
         "inputs:\n"
         "  - ref: r1\n"
         "    load_bearing: true\n",
@@ -820,7 +820,7 @@ def test_claims_rejects_invalid_since_revision(tmp_path, capsys):
 def test_claims_treats_note_added_after_valid_rev_as_unchanged_new(tmp_path, capsys):
     # @req: BI-3
     root = tmp_path
-    _write(root / "nodes" / "goal.md", "id: goal\ntype: GOAL\nseq: 1\nsummary: Ship v0\nstatus: active\n")
+    _write(root / "nodes" / "goal.md", "id: goal\ntype: GOAL\nseq: 1\nsummary: Ship v0\nstatus: current\n")
     _git(root, "init", "-q")
     _git(root, "config", "user.email", "test@example.com")
     _git(root, "config", "user.name", "Test")
@@ -888,7 +888,7 @@ def test_render_disambiguates_colliding_mermaid_ids_and_check_flags_them(tmp_pat
         "type: GOAL\n"
         "seq: 1\n"
         "summary: First\n"
-        "status: active\n",
+        "status: current\n",
     )
     _write(
         root / "nodes" / "a2.md",
@@ -896,7 +896,7 @@ def test_render_disambiguates_colliding_mermaid_ids_and_check_flags_them(tmp_pat
         "type: GOAL\n"
         "seq: 2\n"
         "summary: Second\n"
-        "status: active\n",
+        "status: current\n",
     )
 
     project = dag.load_project(root)
@@ -936,7 +936,7 @@ def test_render_branch_with_assumptions_but_no_member_nodes_uses_unknown_branch_
         "type: GOAL\n"
         "seq: 1\n"
         "summary: Ship v0\n"
-        "status: active\n",
+        "status: current\n",
     )
     _write(
         root / "assumptions" / "lonely.md",
@@ -963,11 +963,11 @@ def test_render_truncates_long_labels_including_cjk(tmp_path):
 
     _write(
         root / "nodes" / "goal.md",
-        f"id: goal\ntype: GOAL\nseq: 1\nsummary: {english_summary}\nstatus: active\n",
+        f"id: goal\ntype: GOAL\nseq: 1\nsummary: {english_summary}\nstatus: current\n",
     )
     _write(
         root / "nodes" / "fact1.md",
-        f"id: fact1\ntype: FACT\nseq: 2\nsummary: {cjk_summary}\nstatus: active\n",
+        f"id: fact1\ntype: FACT\nseq: 2\nsummary: {cjk_summary}\nstatus: current\n",
     )
 
     project = dag.load_project(root)
@@ -988,7 +988,7 @@ def test_render_escapes_angle_brackets_in_labels(tmp_path):
         "type: GOAL\n"
         "seq: 1\n"
         "summary: \"Ship <v0> now\"\n"
-        "status: active\n",
+        "status: current\n",
     )
 
     project = dag.load_project(root)
@@ -1008,7 +1008,7 @@ def test_render_escapes_special_characters_in_ids(tmp_path):
         "type: GOAL\n"
         "seq: 1\n"
         "summary: Ship it\n"
-        "status: active\n",
+        "status: current\n",
     )
 
     project = dag.load_project(root)
@@ -1129,3 +1129,73 @@ def test_impact_unknown_assumption_errors_without_writing(tmp_path, capsys):
     assert rc == 1
     assert "assumption nope not found" in err
     assert not (root / "views" / "impact-nope.md").exists()
+
+
+def test_check_flags_unknown_node_status(tmp_path, capsys):
+    # @req: BI-1
+    root = tmp_path
+    _write(
+        root / "nodes" / "ok.md",
+        "id: ok\ntype: GOAL\nseq: 1\nsummary: Ship v0\nstatus: current\n",
+    )
+    _write(
+        root / "nodes" / "implicit.md",
+        "id: implicit\ntype: CLAIM\nseq: 2\nsummary: No status field\n",
+    )
+    _write(
+        root / "nodes" / "bad.md",
+        "id: bad\ntype: CLAIM\nseq: 3\nsummary: Wrong status\nstatus: active\n",
+    )
+
+    rc = dag.main(["check", str(root)])
+    out = capsys.readouterr().out
+    lines = [ln for ln in out.splitlines() if ln]
+
+    assert rc == 1
+    assert "nodes/bad.md: node-status: 'active' not in ['current', 'stale']" in lines
+    # A missing status is allowed — it means `current`.
+    assert not any(ln.startswith("nodes/implicit.md: node-status") for ln in lines)
+    assert not any(ln.startswith("nodes/ok.md: node-status") for ln in lines)
+
+
+def _impact_fixture(root: Path) -> None:
+    _write(
+        root / "assumptions" / "a1.md",
+        "id: a1\nstatus: open\nstatement: Customers refer\n"
+        "breaks_if: Two asks declined\nbranch: b1\n",
+    )
+    _write(
+        root / "nodes" / "n1.md",
+        "id: n1\ntype: CLAIM\nseq: 1\nsummary: Referral scales\n"
+        "status: current\ninputs:\n  - {ref: a1, load_bearing: true}\n",
+    )
+
+
+def test_break_and_impact_print_the_written_view_path(tmp_path, capsys):
+    # @req: BI-5
+    root = tmp_path
+    _impact_fixture(root)
+
+    assert dag.main(["break", str(root), "a1"]) == 0
+    break_lines = [ln for ln in capsys.readouterr().out.splitlines() if ln]
+    assert "impact view: views/impact-a1.md" in break_lines
+
+    assert dag.main(["impact", str(root), "a1"]) == 0
+    impact_lines = [ln for ln in capsys.readouterr().out.splitlines() if ln]
+    assert "impact view: views/impact-a1.md" in impact_lines
+
+
+def test_break_prints_the_sanitized_view_path_for_an_awkward_id(tmp_path, capsys):
+    # @req: BI-5
+    root = tmp_path
+    _write(
+        root / "assumptions" / "a.md",
+        "id: a/b c\nstatus: open\nstatement: Awkward id\n"
+        "breaks_if: Something observable\nbranch: b1\n",
+    )
+
+    assert dag.main(["break", str(root), "a/b c"]) == 0
+    lines = [ln for ln in capsys.readouterr().out.splitlines() if ln]
+
+    assert "impact view: views/impact-a_b_c.md" in lines
+    assert (root / "views" / "impact-a_b_c.md").exists()

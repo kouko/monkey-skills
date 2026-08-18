@@ -271,6 +271,27 @@ def _rule_required_field(project: Project) -> list[str]:
     return violations
 
 
+_VALID_NODE_STATUSES = {"current", "stale"}
+
+
+def _rule_node_status(project: Project) -> list[str]:
+    """A node's `status` is `current` or `stale`; absent means `current`.
+
+    The field is optional precisely so a hand-written node need not carry it —
+    only a *set* value out of the vocabulary is a violation, because that is
+    the case where `break` propagation and the renderer would disagree with
+    the author about what the node's state is.
+    """
+    violations = []
+    for node in project.nodes:
+        if node.status and node.status not in _VALID_NODE_STATUSES:
+            violations.append(
+                f"{_relpath(node.path, project.root)}: node-status: "
+                f"{node.status!r} not in {sorted(_VALID_NODE_STATUSES)}"
+            )
+    return violations
+
+
 _VALID_ASSUMPTION_STATUSES = {"open", "broken", "confirmed"}
 _ASSUMPTION_MAX_PER_BRANCH = 3
 
@@ -489,6 +510,7 @@ _CHECK_RULES = (
     _rule_ref,
     _rule_fact_source,
     _rule_required_field,
+    _rule_node_status,
     _rule_assumption_field,
     _rule_assumption_max,
     _rule_problems,
@@ -915,12 +937,14 @@ def main(argv: list[str] | None = None) -> int:
         views_dir = root / "views"
         views_dir.mkdir(parents=True, exist_ok=True)
         filename = f"impact-{_sanitize_filename_component(args.assumption_id)}.md"
-        (views_dir / filename).write_text(
+        view_path = views_dir / filename
+        view_path.write_text(
             render_impact(project, args.assumption_id), encoding="utf-8"
         )
 
         print(f"stale: {','.join(stale_ids)}")
         print(f"weakened: {','.join(weakened_ids)}")
+        print(f"impact view: {_relpath(view_path, root)}")
         return 0
 
     if args.command == "impact":
@@ -934,9 +958,11 @@ def main(argv: list[str] | None = None) -> int:
         views_dir = root / "views"
         views_dir.mkdir(parents=True, exist_ok=True)
         filename = f"impact-{_sanitize_filename_component(args.assumption_id)}.md"
-        (views_dir / filename).write_text(
+        view_path = views_dir / filename
+        view_path.write_text(
             render_impact(project, args.assumption_id), encoding="utf-8"
         )
+        print(f"impact view: {_relpath(view_path, root)}")
         return 0
 
     if args.command == "claims":

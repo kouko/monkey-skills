@@ -26,7 +26,7 @@ defaults decided at kickoff.
 | `seq` | int | Ordering hint; nodes sort by `seq` then `id`. |
 | `inputs` | list | Upstream references. Each entry is `{ref, load_bearing}` or a bare string (then `load_bearing` is `None`, flagged by `check` later). A mapping entry with `load_bearing` set but no (or an empty) `ref` is flagged by `check`'s `ref` rule as `inputs[<i>] has no ref`. |
 | `summary` | string | One-line summary. For a research note this is the `claim` field's text. |
-| `status` | string | e.g. `active`, `broken`. |
+| `status` | string | `current` or `stale`. Absent means `current`; a set value outside that pair is flagged by `check`'s `node-status` rule. `break` is what writes `stale`. |
 | `branch` | string | Branch id the node belongs to, if any. |
 | `branch_type` | string | e.g. `exclusive`. |
 | `source` | string | Citation source (mainly on FACT nodes). |
@@ -121,7 +121,7 @@ id: goal
 type: GOAL
 seq: 1
 summary: Ship v0
-status: active
+status: current
 ---
 Longer body text explaining the goal.
 ```
