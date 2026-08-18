@@ -60,8 +60,7 @@ On pass it prints nothing and you say nothing. On failure it prints one
 line per violation — relay only the failures, in plain words, and fix
 the files before continuing.
 
-3. When `<root>/research/` exists **and** `<root>` is inside a git repo,
-   also run:
+3. When `<root>/research/` exists, also run:
 
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py claims <root> --since HEAD

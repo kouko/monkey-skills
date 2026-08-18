@@ -1,4 +1,7 @@
-"""RED test for Task 2 — dag.py load_project() + node-schema.md.
+"""Tests for dag.py — the think-orbit project loader, gate, break/claims and views.
+
+Covers load_project(), the `check` rules, assumption breaking with stale
+propagation, the `claims` git diff, and the mermaid render/impact views.
 
 @req: BI-1
 @req: BI-2
@@ -9,6 +12,8 @@ from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
+
+import pytest
 
 import dag
 
@@ -663,6 +668,18 @@ def _git(root: Path, *args: str) -> None:
     subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True)
 
 
+def _git_commit_all(root: Path) -> None:
+    """Init a git repo at `root` and commit everything written there so far."""
+    for args in (
+        ("init", "-q"),
+        ("config", "user.email", "test@example.com"),
+        ("config", "user.name", "Test"),
+        ("add", "."),
+        ("commit", "-q", "-m", "initial"),
+    ):
+        _git(root, *args)
+
+
 def test_claims_lists_dependents_only_for_research_claims_changed_since_rev(tmp_path, capsys):
     # @req: BI-3
     root = tmp_path
@@ -699,11 +716,7 @@ def test_claims_lists_dependents_only_for_research_claims_changed_since_rev(tmp_
         "    load_bearing: true\n",
     )
 
-    _git(root, "init", "-q")
-    _git(root, "config", "user.email", "test@example.com")
-    _git(root, "config", "user.name", "Test")
-    _git(root, "add", ".")
-    _git(root, "commit", "-q", "-m", "initial")
+    _git_commit_all(root)
 
     rc_clean = dag.main(["claims", str(root), "--since", "HEAD"])
     out_clean = capsys.readouterr().out
@@ -746,11 +759,7 @@ def test_claims_works_when_root_is_a_symlink_to_the_real_git_worktree(tmp_path, 
         "  - ref: r1\n"
         "    load_bearing: true\n",
     )
-    _git(real_root, "init", "-q")
-    _git(real_root, "config", "user.email", "test@example.com")
-    _git(real_root, "config", "user.name", "Test")
-    _git(real_root, "add", ".")
-    _git(real_root, "commit", "-q", "-m", "initial")
+    _git_commit_all(real_root)
 
     link_root = tmp_path / "link"
     os.symlink(real_root, link_root)
@@ -780,11 +789,7 @@ def test_claims_tolerates_invalid_utf8_bytes_in_historic_git_show_output(tmp_pat
         b"body with an invalid byte: \xff\xfe\n"
     )
 
-    _git(root, "init", "-q")
-    _git(root, "config", "user.email", "test@example.com")
-    _git(root, "config", "user.name", "Test")
-    _git(root, "add", ".")
-    _git(root, "commit", "-q", "-m", "initial")
+    _git_commit_all(root)
 
     _write(
         root / "research" / "r1.md",
@@ -804,11 +809,7 @@ def test_claims_rejects_invalid_since_revision(tmp_path, capsys):
     # @req: BI-3
     root = tmp_path
     _write(root / "research" / "r1.md", "id: r1\nclaim: A claim\n")
-    _git(root, "init", "-q")
-    _git(root, "config", "user.email", "test@example.com")
-    _git(root, "config", "user.name", "Test")
-    _git(root, "add", ".")
-    _git(root, "commit", "-q", "-m", "initial")
+    _git_commit_all(root)
 
     rc = dag.main(["claims", str(root), "--since", "not-a-real-rev"])
     err = capsys.readouterr().err
@@ -821,11 +822,7 @@ def test_claims_treats_note_added_after_valid_rev_as_unchanged_new(tmp_path, cap
     # @req: BI-3
     root = tmp_path
     _write(root / "nodes" / "goal.md", "id: goal\ntype: GOAL\nseq: 1\nsummary: Ship v0\nstatus: current\n")
-    _git(root, "init", "-q")
-    _git(root, "config", "user.email", "test@example.com")
-    _git(root, "config", "user.name", "Test")
-    _git(root, "add", ".")
-    _git(root, "commit", "-q", "-m", "initial")
+    _git_commit_all(root)
 
     _write(root / "research" / "r_new.md", "id: r_new\nclaim: Added after the rev\n")
 
@@ -1199,3 +1196,147 @@ def test_break_prints_the_sanitized_view_path_for_an_awkward_id(tmp_path, capsys
 
     assert "impact view: views/impact-a_b_c.md" in lines
     assert (root / "views" / "impact-a_b_c.md").exists()
+
+
+def test_break_rewrites_files_whose_delimiter_line_has_trailing_whitespace(tmp_path):
+    # @req: BI-5
+    root = tmp_path
+    a1_path = root / "assumptions" / "a1.md"
+    n1_path = root / "nodes" / "n1.md"
+    a1_path.parent.mkdir(parents=True, exist_ok=True)
+    n1_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # the loader accepts any line that strips to `---`; so must the writer
+    a1_path.write_text(
+        "--- \n"
+        "id: a1\n"
+        "status: open\n"
+        "statement: Q4 budget holds\n"
+        "breaks_if: Budget cut announced\n"
+        "--- \n"
+        "Body one. Body two.\n",
+        encoding="utf-8",
+    )
+    n1_path.write_text(
+        "---\t\n"
+        "id: n1\n"
+        "type: CLAIM\n"
+        "seq: 1\n"
+        "summary: n1\n"
+        "status: current\n"
+        "inputs:\n"
+        "  - ref: a1\n"
+        "    load_bearing: true\n"
+        "---\t\n"
+        "Body one. Body two.\n",
+        encoding="utf-8",
+    )
+
+    rc = dag.main(["break", str(root), "a1"])
+
+    assert rc == 0
+    assert "status: broken" in a1_path.read_text(encoding="utf-8")
+    assert "status: stale" in n1_path.read_text(encoding="utf-8")
+
+
+def test_break_fails_loud_when_a_target_file_has_no_frontmatter(tmp_path, capsys, monkeypatch):
+    # @req: BI-5
+    root = tmp_path
+    a1_path = root / "assumptions" / "a1.md"
+    n1_path = root / "nodes" / "n1.md"
+    _write(
+        a1_path,
+        "id: a1\nstatus: open\nstatement: S\nbreaks_if: B\n",
+    )
+    n1_path.parent.mkdir(parents=True, exist_ok=True)
+    n1_path.write_text("no frontmatter at all\n", encoding="utf-8")
+
+    a1_before = a1_path.read_text(encoding="utf-8")
+
+    def _fake_load_project(_root):
+        return dag.Project(
+            root=root,
+            nodes=[
+                dag.Node(
+                    id="n1",
+                    type="CLAIM",
+                    seq=1,
+                    summary="n1",
+                    inputs=[dag.Input(ref="a1", load_bearing=True)],
+                    path=n1_path,
+                )
+            ],
+            assumptions=[dag.Assumption(id="a1", status="open", path=a1_path)],
+        )
+
+    monkeypatch.setattr(dag, "load_project", _fake_load_project)
+
+    rc = dag.main(["break", str(root), "a1"])
+    err = capsys.readouterr().err
+
+    assert rc == 1
+    assert "cannot rewrite frontmatter: nodes/n1.md" in err
+    # no partial writes: the healthy target and the impact view are untouched
+    assert a1_path.read_text(encoding="utf-8") == a1_before
+    assert not (root / "views").exists()
+
+
+def test_render_skips_idless_nodes_instead_of_crashing(tmp_path):
+    # @req: BI-12
+    root = tmp_path
+    _write(
+        root / "nodes" / "goal.md",
+        "id: goal\ntype: GOAL\nseq: 1\nsummary: Ship v0\nstatus: current\n",
+    )
+    _write(
+        root / "nodes" / "nameless.md",
+        "type: CLAIM\nseq: 2\nsummary: No id at all\nstatus: current\n",
+    )
+
+    rc = dag.main(["render", str(root)])
+
+    assert rc == 0
+    text = (root / "views" / "dag.md").read_text(encoding="utf-8")
+    assert "goal" in text
+    assert "No id at all" not in text
+
+
+def test_dag_module_reports_missing_pyyaml_plainly(capsys):
+    def _failing_importer(name):
+        raise ImportError(f"No module named {name!r}")
+
+    with pytest.raises(SystemExit) as excinfo:
+        dag._require_yaml(_failing_importer)
+
+    assert excinfo.value.code == 2
+    assert capsys.readouterr().err.strip() == (
+        "think-orbit: PyYAML is required — pip install pyyaml"
+    )
+
+
+def test_check_flags_duplicate_id_without_an_id_collision_line(tmp_path, capsys):
+    # @req: BI-4
+    root = tmp_path
+    _write(
+        root / "nodes" / "first.md",
+        "id: dup\ntype: GOAL\nseq: 1\nsummary: First\nstatus: current\n",
+    )
+    _write(
+        root / "nodes" / "second.md",
+        "id: dup\ntype: CLAIM\nseq: 2\nsummary: Second\nstatus: current\n",
+    )
+
+    rc = dag.main(["check", str(root)])
+    lines = [ln for ln in capsys.readouterr().out.splitlines() if ln]
+
+    assert rc == 1
+    assert lines == [
+        "nodes/second.md: duplicate-id: dup also declared in nodes/first.md"
+    ]
+
+
+def test_cli_no_longer_offers_a_load_subcommand():
+    with pytest.raises(SystemExit) as excinfo:
+        dag.main(["load"])
+
+    assert excinfo.value.code != 0

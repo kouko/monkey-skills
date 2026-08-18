@@ -19,3 +19,5 @@ Say "help me decide X" (or 「我要決定」/「決策推演」) to open a deci
 /plugin marketplace add kouko/monkey-skills
 /plugin install think-orbit@monkey-skills
 ```
+
+**Requires**: Python 3 with PyYAML (`pip install pyyaml`) — the gate and DAG scripts run on it.

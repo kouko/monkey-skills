@@ -19,3 +19,5 @@
 /plugin marketplace add kouko/monkey-skills
 /plugin install think-orbit@monkey-skills
 ```
+
+**必要環境**: PyYAML 入りの Python 3（`pip install pyyaml`）— ゲートと DAG のスクリプトがこれで動きます。

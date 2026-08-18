@@ -19,3 +19,5 @@
 /plugin marketplace add kouko/monkey-skills
 /plugin install think-orbit@monkey-skills
 ```
+
+**執行需求**：安裝了 PyYAML 的 Python 3（`pip install pyyaml`）— 閘門與 DAG 腳本靠它執行。

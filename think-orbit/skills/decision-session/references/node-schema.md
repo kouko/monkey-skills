@@ -28,7 +28,7 @@ defaults decided at kickoff.
 | `summary` | string | One-line summary. For a research note this is the `claim` field's text. |
 | `status` | string | `current` or `stale`. Absent means `current`; a set value outside that pair is flagged by `check`'s `node-status` rule. `break` is what writes `stale`. |
 | `branch` | string | Branch id the node belongs to, if any. |
-| `branch_type` | string | e.g. `exclusive`. |
+| `branch_type` | string | `exclusive` (the paths compete, one gets chosen) or `complementary` (they coexist and all get weighed). |
 | `source` | string | Citation source (mainly on FACT nodes). |
 | `quote` | string | Supporting quote (mainly on FACT nodes). |
 | `path` | Path | Resolved filesystem path of the file. |

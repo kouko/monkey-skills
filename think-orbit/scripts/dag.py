@@ -1,19 +1,36 @@
 """think-orbit core loader — parses the project's frontmatter files into a Project graph.
 
-Subcommands: load / check / break / claims / render / impact.
+Subcommands: check / break / claims / render / impact.
 """
 from __future__ import annotations
 
 import argparse
+import importlib
 import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import yaml
+
+def _require_yaml(importer=importlib.import_module):
+    """Return the PyYAML module, or say so plainly and exit 2.
+
+    PyYAML is this script's only third-party dependency; without it every
+    subcommand fails at import time with a traceback that says nothing about
+    what to install.
+    """
+    try:
+        return importer("yaml")
+    except ImportError:
+        print("think-orbit: PyYAML is required — pip install pyyaml", file=sys.stderr)
+        raise SystemExit(2)
+
+
+yaml = _require_yaml()
 
 FRONTMATTER_DELIM = "---"
+_LINE_RE = re.compile(r"[^\n]*\n|[^\n]+")
 
 
 @dataclass
@@ -59,24 +76,36 @@ class Project:
     problems: list[str] = field(default_factory=list)
 
 
+def _frontmatter_span(text: str) -> tuple[int, int, int] | None:
+    """Locate the frontmatter block as character offsets into `text`.
+
+    Returns `(fm_start, fm_end, body_start)` — `text[fm_start:fm_end]` is the
+    raw frontmatter lines with the delimiters excluded, and `text[body_start:]`
+    is the body — or None when the text opens no frontmatter block. A delimiter
+    is any line that strips to `---`, LF or CRLF, so the reader and the rewriter
+    accept exactly the same files.
+    """
+    lines = list(_LINE_RE.finditer(text))
+    if not lines or lines[0].group().strip() != FRONTMATTER_DELIM:
+        return None
+    for match in lines[1:]:
+        if match.group().strip() == FRONTMATTER_DELIM:
+            return lines[0].end(), match.start(), match.end()
+    return None
+
+
 def split_frontmatter(text: str) -> tuple[str, str]:
     """Split raw file text into (frontmatter_text, body_text).
 
     Returns the frontmatter block's raw text (without the `---` delimiters)
-    and the body separately, so a later rewrite (Task 5) can preserve key
+    and the body separately, so `_frontmatter_field_rewrite` can preserve key
     order and body bytes exactly.
     """
-    lines = text.split("\n")
-    if not lines or lines[0].strip() != FRONTMATTER_DELIM:
+    span = _frontmatter_span(text)
+    if span is None:
         return "", text
-    for idx in range(1, len(lines)):
-        if lines[idx].strip() == FRONTMATTER_DELIM:
-            fm_text = "\n".join(lines[1:idx]) + "\n"
-            body = "\n".join(lines[idx + 1:])
-            if body.startswith("\n"):
-                body = body[1:]
-            return fm_text, body
-    return "", text
+    fm_start, fm_end, body_start = span
+    return text[fm_start:fm_end], text[body_start:]
 
 
 def _parse_inputs(raw_inputs) -> list[Input]:
@@ -168,39 +197,38 @@ def _load_research_note_as_node(path: Path, root: Path) -> tuple[Node | None, st
     ), None
 
 
+def _load_dir(directory: Path, root: Path, loader) -> tuple[list, list[str]]:
+    """Load every `*.md` in `directory` through `loader`, in filename order.
+
+    Returns (items, problems): a file whose frontmatter does not parse
+    contributes a problem line instead of an item, so a malformed file is
+    reported rather than silently fabricated into a Node/Assumption.
+    """
+    items: list = []
+    problems: list[str] = []
+    if not directory.is_dir():
+        return items, problems
+    for path in sorted(directory.glob("*.md")):
+        item, problem = loader(path, root)
+        if problem:
+            problems.append(problem)
+        else:
+            items.append(item)
+    return items, problems
+
+
 def load_project(root: Path) -> Project:
     """Load every node/assumption/research-note *.md under root into a Project."""
     root = Path(root)
-    nodes: list[Node] = []
-    assumptions: list[Assumption] = []
-    problems: list[str] = []
-
-    nodes_dir = root / "nodes"
-    if nodes_dir.is_dir():
-        for path in sorted(nodes_dir.glob("*.md")):
-            node, problem = _load_node(path, root)
-            if problem:
-                problems.append(problem)
-            else:
-                nodes.append(node)
-
-    assumptions_dir = root / "assumptions"
-    if assumptions_dir.is_dir():
-        for path in sorted(assumptions_dir.glob("*.md")):
-            assumption, problem = _load_assumption(path, root)
-            if problem:
-                problems.append(problem)
-            else:
-                assumptions.append(assumption)
-
-    research_dir = root / "research"
-    if research_dir.is_dir():
-        for path in sorted(research_dir.glob("*.md")):
-            node, problem = _load_research_note_as_node(path, root)
-            if problem:
-                problems.append(problem)
-            else:
-                nodes.append(node)
+    nodes, problems = _load_dir(root / "nodes", root, _load_node)
+    assumptions, assumption_problems = _load_dir(
+        root / "assumptions", root, _load_assumption
+    )
+    research_nodes, research_problems = _load_dir(
+        root / "research", root, _load_research_note_as_node
+    )
+    nodes += research_nodes
+    problems += assumption_problems + research_problems
 
     nodes.sort(key=lambda n: (n.seq is None, n.seq, n.id or ""))
 
@@ -331,22 +359,46 @@ def _rule_problems(project: Project) -> list[str]:
     return list(project.problems)
 
 
-def _rule_mermaid_id_collision(project: Project) -> list[str]:
-    """Flag raw ids that sanitize to the same mermaid id (render disambiguates
-    them, but the gate should still surface the underlying naming clash)."""
-    entries: list[tuple[str, Path | None]] = [
-        (n.id, n.path) for n in project.nodes if n.id
-    ] + [(a.id, a.path) for a in project.assumptions if a.id]
+def _id_entries(project: Project) -> list[tuple[str, Path | None]]:
+    """Every declared (id, path) pair — nodes first, then assumptions."""
+    return [(n.id, n.path) for n in project.nodes if n.id] + [
+        (a.id, a.path) for a in project.assumptions if a.id
+    ]
 
-    by_base: dict[str, list[tuple[str, Path | None]]] = {}
-    for raw_id, path in entries:
-        by_base.setdefault(_sanitize_mermaid_id(raw_id), []).append((raw_id, path))
+
+def _rule_duplicate_id(project: Project) -> list[str]:
+    """Flag an id declared by more than one file — the later file (by path)
+    is reported and points back at the first one."""
+    first_seen: dict[str, str] = {}
+    violations = []
+    entries = sorted(
+        ((raw_id, _relpath(path, project.root)) for raw_id, path in _id_entries(project)),
+        key=lambda entry: entry[1],
+    )
+    for raw_id, relpath in entries:
+        if raw_id in first_seen:
+            violations.append(
+                f"{relpath}: duplicate-id: {raw_id} also declared in {first_seen[raw_id]}"
+            )
+        else:
+            first_seen[raw_id] = relpath
+    return violations
+
+
+def _rule_mermaid_id_collision(project: Project) -> list[str]:
+    """Flag *distinct* raw ids that sanitize to the same mermaid id (render
+    disambiguates them, but the gate should still surface the underlying
+    naming clash). Identical raw ids are `duplicate-id`'s business, not this
+    rule's."""
+    by_base: dict[str, dict[str, Path | None]] = {}
+    for raw_id, path in _id_entries(project):
+        by_base.setdefault(_sanitize_mermaid_id(raw_id), {}).setdefault(raw_id, path)
 
     violations = []
     for base, group in by_base.items():
         if len(group) < 2:
             continue
-        group_sorted = sorted(group, key=lambda e: e[0])
+        group_sorted = sorted(group.items(), key=lambda e: e[0])
         first_id, _ = group_sorted[0]
         for other_id, other_path in group_sorted[1:]:
             relpath = _relpath(other_path, project.root)
@@ -514,6 +566,7 @@ _CHECK_RULES = (
     _rule_assumption_field,
     _rule_assumption_max,
     _rule_problems,
+    _rule_duplicate_id,
     _rule_mermaid_id_collision,
     _rule_paragraph_form,
 )
@@ -581,25 +634,25 @@ def propagate(project: Project, assumption_id: str) -> tuple[list[str], list[str
     return stale, weakened
 
 
-def _set_frontmatter_field(path: Path, key: str, value: str) -> None:
-    """Rewrite a single top-level frontmatter field in place, byte-preserving.
+def _frontmatter_field_rewrite(path: Path, key: str, value: str) -> bytes | None:
+    """Compute `path`'s new bytes with one top-level frontmatter field set.
 
-    Replaces the first `^<key>:\\s*.*$` line if present, else appends
-    `<key>: <value>` as the last frontmatter line. Body and every other
-    frontmatter line are left untouched -- including the file's original
-    line-ending convention (CRLF vs LF), which is detected from the raw
-    bytes rather than assumed, since text-mode reads silently translate
-    CRLF to LF (universal newlines) before we ever see the content.
+    Replaces the first `^<key>:...` line if present, else appends
+    `<key>: <value>` as the last frontmatter line. Delimiters, body and every
+    other frontmatter line are copied verbatim -- including the file's original
+    line-ending convention (CRLF vs LF), which is detected from the raw bytes
+    rather than assumed, since text-mode reads silently translate CRLF to LF
+    (universal newlines) before we ever see the content. Returns None when the
+    file carries no frontmatter block to rewrite, so the caller can fail loud
+    instead of reporting a write that never happened.
     """
-    raw = path.read_bytes()
-    text = raw.decode("utf-8")
+    text = path.read_bytes().decode("utf-8")
+    span = _frontmatter_span(text)
+    if span is None:
+        return None
+    fm_start, fm_end, _ = span
+    fm_text = text[fm_start:fm_end]
     eol = "\r\n" if "\r\n" in text else "\n"
-
-    match = re.match(r"^---\r?\n(.*?\r?\n)---\r?\n", text, flags=re.DOTALL)
-    if match is None:
-        return
-    fm_text = match.group(1)
-    body = text[match.end():]
 
     pattern = re.compile(rf"^{re.escape(key)}:[^\r\n]*", flags=re.MULTILINE)
     new_line = f"{key}: {value}"
@@ -610,8 +663,7 @@ def _set_frontmatter_field(path: Path, key: str, value: str) -> None:
             fm_text += eol
         new_fm_text = fm_text + new_line + eol
 
-    new_text = f"---{eol}{new_fm_text}---{eol}{body}"
-    path.write_bytes(new_text.encode("utf-8"))
+    return (text[:fm_start] + new_fm_text + text[fm_end:]).encode("utf-8")
 
 
 # CLI surfaces: git rev-parse --show-toplevel / git show <rev>:<path> —
@@ -752,10 +804,12 @@ def _assumption_mermaid_line(assumption: Assumption, mermaid_id: str) -> str:
 def render_dag(project: Project) -> str:
     """Render `project` as a single `flowchart TD` mermaid block (pure, no I/O).
 
-    Every node is drawn (shape by `type`), every assumption as a stadium node
-    grouped into its branch's subgraph, one edge per `inputs` entry, and a
-    `stale` classDef applied to nodes whose `status == "stale"`. Deterministic:
-    same `project` always yields the same string.
+    Every node with an `id` is drawn (shape by `type`), every assumption as a
+    stadium node grouped into its branch's subgraph, one edge per `inputs`
+    entry, and a `stale` classDef applied to nodes whose `status == "stale"`.
+    A node without an `id` has no drawable identity and is skipped -- `check`
+    already reports it as a missing required field. Deterministic: same
+    `project` always yields the same string.
     """
     lines = [
         "<!-- generated by dag.py render — regenerate, never hand-edit; agent must not read -->",
@@ -764,7 +818,9 @@ def render_dag(project: Project) -> str:
         "flowchart TD",
     ]
 
-    if not project.nodes:
+    nodes = [node for node in project.nodes if node.id]
+
+    if not nodes:
         lines.append("    %% no nodes yet")
         lines.append("```")
         return "\n".join(lines) + "\n"
@@ -773,7 +829,7 @@ def render_dag(project: Project) -> str:
 
     nodes_by_branch: dict[str, list[Node]] = {}
     top_level_nodes: list[Node] = []
-    for node in project.nodes:
+    for node in nodes:
         if node.branch:
             nodes_by_branch.setdefault(node.branch, []).append(node)
         else:
@@ -804,7 +860,7 @@ def render_dag(project: Project) -> str:
             lines.append(f"    {_assumption_mermaid_line(assumption, mermaid_ids[assumption.id]).strip()}")
         lines.append("    end")
 
-    for node in project.nodes:
+    for node in nodes:
         node_id = mermaid_ids[node.id]
         for entry in node.inputs:
             if entry.ref is None:
@@ -814,7 +870,7 @@ def render_dag(project: Project) -> str:
             lines.append(f"    {ref_id} {arrow} {node_id}")
 
     stale_ids = sorted(
-        mermaid_ids[n.id] for n in project.nodes if n.status == "stale" and n.id
+        mermaid_ids[n.id] for n in nodes if n.status == "stale"
     )
     if stale_ids:
         lines.append("    classDef stale fill:#f1f3f5,stroke:#adb5bd,color:#868e96")
@@ -886,10 +942,114 @@ def render_impact(project: Project, assumption_id: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def main(argv: list[str] | None = None) -> int:
+def _write_view(root: Path, filename: str, content: str) -> Path:
+    """Write `content` to `<root>/views/<filename>`, creating the dir. Returns the path."""
+    views_dir = root / "views"
+    views_dir.mkdir(parents=True, exist_ok=True)
+    view_path = views_dir / filename
+    view_path.write_text(content, encoding="utf-8")
+    return view_path
+
+
+def _find_assumption(project: Project, assumption_id: str) -> Assumption | None:
+    return next((a for a in project.assumptions if a.id == assumption_id), None)
+
+
+def _impact_view_filename(assumption_id: str) -> str:
+    return f"impact-{_sanitize_filename_component(assumption_id)}.md"
+
+
+def _cmd_check(args) -> int:
+    violations = check(load_project(Path(args.root)))
+    for line in violations:
+        print(line)
+    return 1 if violations else 0
+
+
+def _cmd_break(args) -> int:
+    root = Path(args.root)
+    project = load_project(root)
+    assumption = _find_assumption(project, args.assumption_id)
+    if assumption is None:
+        print(f"assumption {args.assumption_id} not found", file=sys.stderr)
+        return 1
+
+    stale_ids, weakened_ids = propagate(project, args.assumption_id)
+    by_id = {n.id: n for n in project.nodes if n.id}
+    targets = [(assumption, "broken")] + [(by_id[node_id], "stale") for node_id in stale_ids]
+
+    # compute every rewrite before writing any of it, so an unrewritable file
+    # stops the whole command instead of leaving the project half-marked
+    rewrites: list[tuple[Path, bytes]] = []
+    failed = False
+    for entity, status in targets:
+        new_bytes = (
+            None if entity.path is None
+            else _frontmatter_field_rewrite(entity.path, "status", status)
+        )
+        if new_bytes is None:
+            print(
+                f"cannot rewrite frontmatter: {_relpath(entity.path, root)}",
+                file=sys.stderr,
+            )
+            failed = True
+        else:
+            rewrites.append((entity.path, new_bytes))
+    if failed:
+        return 1
+
+    for path, new_bytes in rewrites:
+        path.write_bytes(new_bytes)
+    for entity, status in targets:
+        entity.status = status
+
+    view_path = _write_view(
+        root,
+        _impact_view_filename(args.assumption_id),
+        render_impact(project, args.assumption_id),
+    )
+
+    print(f"stale: {','.join(stale_ids)}")
+    print(f"weakened: {','.join(weakened_ids)}")
+    print(f"impact view: {_relpath(view_path, root)}")
+    return 0
+
+
+def _cmd_impact(args) -> int:
+    root = Path(args.root)
+    project = load_project(root)
+    if _find_assumption(project, args.assumption_id) is None:
+        print(f"assumption {args.assumption_id} not found", file=sys.stderr)
+        return 1
+
+    view_path = _write_view(
+        root,
+        _impact_view_filename(args.assumption_id),
+        render_impact(project, args.assumption_id),
+    )
+    print(f"impact view: {_relpath(view_path, root)}")
+    return 0
+
+
+def _cmd_claims(args) -> int:
+    root = Path(args.root)
+    lines = claims(load_project(root), root, args.since)
+    if lines is None:
+        return 1
+    for line in lines:
+        print(line)
+    return 0
+
+
+def _cmd_render(args) -> int:
+    root = Path(args.root)
+    _write_view(root, "dag.md", render_dag(load_project(root)))
+    return 0
+
+
+def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="dag", description="think-orbit project loader/CLI")
     subparsers = parser.add_subparsers(dest="command")
-    subparsers.add_parser("load", help="load and validate the project graph (diagnostics only)")
     check_parser = subparsers.add_parser("check", help="run the structural gate and report violations")
     check_parser.add_argument("root", help="project root directory")
     break_parser = subparsers.add_parser("break", help="mark an assumption broken and propagate stale/weakened status")
@@ -903,88 +1063,26 @@ def main(argv: list[str] | None = None) -> int:
     impact_parser = subparsers.add_parser("impact", help="write views/impact-<id>.md — one assumption's impact view")
     impact_parser.add_argument("root", help="project root directory")
     impact_parser.add_argument("assumption_id", help="id of the assumption to render impact for")
+    return parser
+
+
+_COMMANDS = {
+    "check": _cmd_check,
+    "break": _cmd_break,
+    "impact": _cmd_impact,
+    "claims": _cmd_claims,
+    "render": _cmd_render,
+}
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = _build_parser()
     args = parser.parse_args(argv)
-
-    if args.command == "load":
-        project = load_project(Path.cwd())
-        print(f"loaded {len(project.nodes)} node(s), {len(project.assumptions)} assumption(s)")
+    handler = _COMMANDS.get(args.command)
+    if handler is None:
+        parser.print_help()
         return 0
-
-    if args.command == "check":
-        project = load_project(Path(args.root))
-        violations = check(project)
-        for line in violations:
-            print(line)
-        return 1 if violations else 0
-
-    if args.command == "break":
-        root = Path(args.root)
-        project = load_project(root)
-        assumption = next((a for a in project.assumptions if a.id == args.assumption_id), None)
-        if assumption is None:
-            print(f"assumption {args.assumption_id} not found", file=sys.stderr)
-            return 1
-
-        stale_ids, weakened_ids = propagate(project, args.assumption_id)
-
-        _set_frontmatter_field(assumption.path, "status", "broken")
-        assumption.status = "broken"
-        by_id = {n.id: n for n in project.nodes}
-        for node_id in stale_ids:
-            _set_frontmatter_field(by_id[node_id].path, "status", "stale")
-            by_id[node_id].status = "stale"
-
-        views_dir = root / "views"
-        views_dir.mkdir(parents=True, exist_ok=True)
-        filename = f"impact-{_sanitize_filename_component(args.assumption_id)}.md"
-        view_path = views_dir / filename
-        view_path.write_text(
-            render_impact(project, args.assumption_id), encoding="utf-8"
-        )
-
-        print(f"stale: {','.join(stale_ids)}")
-        print(f"weakened: {','.join(weakened_ids)}")
-        print(f"impact view: {_relpath(view_path, root)}")
-        return 0
-
-    if args.command == "impact":
-        root = Path(args.root)
-        project = load_project(root)
-        assumption = next((a for a in project.assumptions if a.id == args.assumption_id), None)
-        if assumption is None:
-            print(f"assumption {args.assumption_id} not found", file=sys.stderr)
-            return 1
-
-        views_dir = root / "views"
-        views_dir.mkdir(parents=True, exist_ok=True)
-        filename = f"impact-{_sanitize_filename_component(args.assumption_id)}.md"
-        view_path = views_dir / filename
-        view_path.write_text(
-            render_impact(project, args.assumption_id), encoding="utf-8"
-        )
-        print(f"impact view: {_relpath(view_path, root)}")
-        return 0
-
-    if args.command == "claims":
-        root = Path(args.root)
-        project = load_project(root)
-        lines = claims(project, root, args.since)
-        if lines is None:
-            return 1
-        for line in lines:
-            print(line)
-        return 0
-
-    if args.command == "render":
-        root = Path(args.root)
-        project = load_project(root)
-        views_dir = root / "views"
-        views_dir.mkdir(parents=True, exist_ok=True)
-        (views_dir / "dag.md").write_text(render_dag(project), encoding="utf-8")
-        return 0
-
-    parser.print_help()
-    return 0
+    return handler(args)
 
 
 if __name__ == "__main__":
