@@ -671,12 +671,16 @@ def build_direction_now(store: Path) -> list[str]:
     return lines or [DIRECTION_EMPTY_QUEUE_LINE]
 
 
-def _direction_now_bounds(lines: list[str]) -> tuple[int, int] | None:
-    """(heading index, section end) of the `## Now` section in `lines`,
+def _direction_section_bounds(
+    lines: list[str], heading: str
+) -> tuple[int, int] | None:
+    """(heading index, section end) of the `heading` section in `lines`,
     or None when the heading is absent. The section body runs from the
-    line after the heading to the next `## ` heading or EOF."""
+    line after the heading to the next `## ` heading or EOF. Shared by
+    every direction-file section scan so the two readers of DIRECTION.md
+    cannot disagree on where a section starts and ends."""
     for i, line in enumerate(lines):
-        if line.strip() == DIRECTION_NOW_HEADING:
+        if line.strip() == heading:
             section_end = len(lines)
             for j in range(i + 1, len(lines)):
                 if lines[j].lstrip().startswith("## "):
@@ -697,7 +701,7 @@ def splice_direction_now(direction_text: str, now_lines: list[str]) -> str:
     file structure the human owns.
     """
     lines = direction_text.splitlines()
-    bounds = _direction_now_bounds(lines)
+    bounds = _direction_section_bounds(lines, DIRECTION_NOW_HEADING)
     if bounds is None:
         raise ValueError(
             f"the direction file has no {DIRECTION_NOW_HEADING!r} heading "
@@ -725,7 +729,7 @@ def find_direction_violations(direction_path: Path, store: Path) -> list[Violati
                 Violation("direction-heading", display, f"missing required '{heading}' heading")
             )
 
-    bounds = _direction_now_bounds(lines)
+    bounds = _direction_section_bounds(lines, DIRECTION_NOW_HEADING)
     if bounds is not None:
         try:
             regenerated = splice_direction_now(text, build_direction_now(store))
@@ -743,29 +747,30 @@ def find_direction_violations(direction_path: Path, store: Path) -> list[Violati
                 )
 
     now_body = range(bounds[0] + 1, bounds[1]) if bounds is not None else range(0)
-    standing_body: range = range(0)
-    for i, line in enumerate(lines):
-        if line.strip() == DIRECTION_STANDING_HEADING:
-            section_end = len(lines)
-            for j in range(i + 1, len(lines)):
-                if lines[j].lstrip().startswith("## "):
-                    section_end = j
-                    break
-            standing_body = range(i + 1, section_end)
-            break
+    standing_bounds = _direction_section_bounds(lines, DIRECTION_STANDING_HEADING)
+    standing_body = (
+        range(standing_bounds[0] + 1, standing_bounds[1])
+        if standing_bounds is not None
+        else range(0)
+    )
 
     for lineno, line in enumerate(lines):
         if lineno in now_body:
             continue  # generated body: entry names are date-prefixed by convention
-        stripped_line = line
+        scan_source = line
         if lineno in standing_body:
-            standing_match = DIRECTION_STANDING_ENTRY_RE.match(line)
+            # Match the STRIPPED line, as check_onramp_choice.load_standing
+            # does — otherwise a CommonMark-legal indented entry the checker
+            # honours as a standing choice would be flagged here.
+            entry = line.strip()
+            standing_match = DIRECTION_STANDING_ENTRY_RE.match(entry)
             if standing_match is not None:
                 # Strip only the trailing (YYYY-MM-DD) group — a date
-                # elsewhere on a well-formed line is still caught.
+                # elsewhere on a well-formed line is still caught. Offsets
+                # are into `entry`, so the surviving text comes from it too.
                 start, end = standing_match.span("date")
-                stripped_line = line[:start] + line[end:]
-        scan_line = DIRECTION_ENTRY_FILENAME_RE.sub("", stripped_line)
+                scan_source = entry[:start] + entry[end:]
+        scan_line = DIRECTION_ENTRY_FILENAME_RE.sub("", scan_source)
         match = DIRECTION_DATE_TOKEN_RE.search(scan_line)
         if match:
             violations.append(

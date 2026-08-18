@@ -1613,6 +1613,28 @@ def test_validate_still_flags_wellformed_looking_entry_outside_standing_section(
     assert "direction-date" in result.stdout, result.stdout
 
 
+def test_validate_exempts_indented_standing_choice_entry(tmp_path):
+    """The checker (`load_standing`) matches on `line.strip()`, so it
+    ACCEPTS a CommonMark-legal indented entry as a real standing choice.
+    validate must agree: matching on the raw line would flag the very
+    entry the checker is honouring as [direction-date] — an inconsistency
+    between the two readers of the same section, not a charter breach."""
+    store, direction = _direction_store(tmp_path, [])
+    text = direction.read_text(encoding="utf-8")
+    direction.write_text(
+        text
+        + "\n## On-ramp standing choices\n\n"
+        "  - row 1 (product-principles): standing direct — a fixture reason "
+        "(2026-08-18)\n",
+        encoding="utf-8",
+    )
+
+    result = _run_validate(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "direction-date" not in result.stdout, result.stdout
+
+
 def test_standing_entry_regex_matches_check_onramp_choice():
     """Drift pin (round-3 code-quality-review fix): DIRECTION_STANDING_ENTRY_RE
     in backlog_index.py and _STANDING_ENTRY in check_onramp_choice.py are two
@@ -1634,14 +1656,24 @@ def test_standing_entry_regex_matches_check_onramp_choice():
         "- row 1 (product-principles): standing direct — a fixture reason with no date",  # missing date
         "- row 12 (interface-design): standing detour — a fixture reason (2026-08-18)",  # row 12, detour
         "- row 1 (product-principles): standing direct — a fixture reason (2026-08-18)   ",  # trailing spaces
+        "  - row 1 (product-principles): standing direct — a fixture reason (2026-08-18)",  # indented (CommonMark-legal list indent)
     ]
     for s in corpus:
-        backlog_result = bool(backlog_index.DIRECTION_STANDING_ENTRY_RE.match(s))
+        backlog_result = bool(
+            backlog_index.DIRECTION_STANDING_ENTRY_RE.match(s.strip())
+        )
         checker_result = bool(check_onramp_choice._STANDING_ENTRY.match(s.strip()))
         assert backlog_result == checker_result, (
             f"regex drift on {s!r}: backlog_index={backlog_result} "
             f"check_onramp_choice={checker_result}"
         )
+    # The two modules also parse the same SECTION. A heading that drifted
+    # would send each side scanning a different span of DIRECTION.md,
+    # which no regex-level pin above would notice.
+    assert (
+        backlog_index.DIRECTION_STANDING_HEADING
+        == check_onramp_choice.DIRECTION_STANDING_HEADING
+    )
 
 
 def test_direction_write_preserves_indented_next_heading(tmp_path):

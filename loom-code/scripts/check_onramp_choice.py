@@ -223,8 +223,8 @@ def resolve(brief_text: str, standing: dict[int, str]) -> Result:
 def build_question(result: Result) -> str:
     """The exact user-facing question for an `unresolved` `Result` —
     shared by `main()`'s stderr message so the missing-standing-row
-    wording lives in one importable place (Task 8's git-guard reuses
-    it)."""
+    wording lives in one importable place (git-guard.py's
+    `_gate_commit_plans` reuses it)."""
     if result.missing_rows:
         rows_str = ",".join(str(row) for row in result.rows)
         missing_str = ",".join(str(row) for row in result.missing_rows)

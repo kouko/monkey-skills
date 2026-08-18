@@ -621,9 +621,15 @@ def _gate_commit_plans(cwd, git_globals=()):
         return 0, notes
     # grounding: `git diff --help` §--diff-filter — `A` selects Added
     # paths only (the gate's added-only scope), `--cached` reads the
-    # index the commit is about to record.
+    # index the commit is about to record. §-z makes the output
+    # NUL-terminated AND turns OFF the default `core.quotepath` C-quoting,
+    # which would otherwise render a non-ASCII plan name as
+    # `"docs/loom/plans/\350\250\210\347\224\273.md"` — a leading `"` that
+    # defeats the PLAN_DIR filter below and silently un-gates the commit.
     staged = _git(
-        ["diff", "--cached", "--name-only", "--diff-filter=A"], cwd, git_globals
+        ["diff", "--cached", "--name-only", "-z", "--diff-filter=A"],
+        cwd,
+        git_globals,
     )
     if staged.returncode != 0:
         first_line = next(
@@ -631,9 +637,9 @@ def _gate_commit_plans(cwd, git_globals=()):
         )
         return 0, [_inactive(f"git diff --cached failed: {first_line}")]
     plans = [
-        line.strip()
-        for line in staged.stdout.splitlines()
-        if line.strip().startswith(PLAN_DIR) and line.strip().endswith(".md")
+        path
+        for path in staged.stdout.split("\0")
+        if path.startswith(PLAN_DIR) and path.endswith(".md")
     ]
     if not plans:
         return 0, notes
@@ -645,7 +651,15 @@ def _gate_commit_plans(cwd, git_globals=()):
     if top.returncode != 0:
         return 0, [_inactive("repo toplevel could not be resolved")]
     root = Path(top.stdout.strip())
-    standing = checker.load_standing(root)
+    try:
+        standing = checker.load_standing(root)
+    except Exception as exc:  # OSError, UnicodeDecodeError, anything else
+        # Name the gate: an unreadable DIRECTION.md here would otherwise
+        # escape to __main__'s anonymous "internal error" line, hiding
+        # WHICH gate stopped working.
+        return 0, [_inactive(
+            f"cannot read DIRECTION.md standing choices: {exc}"
+        )]
     for plan in plans:
         try:
             plan_text = (root / plan).read_text(encoding="utf-8")

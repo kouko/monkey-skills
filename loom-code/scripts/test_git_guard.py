@@ -1005,3 +1005,41 @@ def test_commit_plan_with_backticked_source_brief_is_evaluated(repo):
     res = run_hook(bash_event("git commit -m x", cwd=repo))
     assert res.returncode == 2
     assert "user chose <detour|direct>" in res.stderr
+
+
+def test_commit_adding_non_ascii_named_plan_is_gated(repo):
+    # WHY: under git's default `core.quotepath=true`, `git diff --cached
+    # --name-only` renders a non-ASCII path as a C-quoted string
+    # (`"docs/loom/plans/\350\250\210\347\224\273.md"`), whose leading `"`
+    # defeats the startswith(PLAN_DIR)/endswith(".md") filter — a CJK-named
+    # plan would then be SILENTLY allowed, the exact invisible default the
+    # gate exists to close. `-z` (git diff --help §-z) disables the quoting.
+    _write(repo / "docs" / "loom" / "specs" / "b.md",
+           "# Brief\n\n## Design-side on-ramp\n\npending\n")
+    _write(repo / "docs" / "loom" / "plans" / "計画.md",
+           "# Plan: 計画\n\n**Source brief**: docs/loom/specs/b.md\n")
+    _git_add(repo, "docs/loom/specs/b.md", "docs/loom/plans/計画.md")
+
+    res = run_hook(bash_event("git commit -m x", cwd=repo))
+    assert res.returncode == 2
+    assert "user chose <detour|direct>" in res.stderr
+
+
+def test_commit_with_unreadable_direction_file_fails_open_loudly(repo):
+    # WHY: load_standing() reads DIRECTION.md once, before the per-plan
+    # loop. An undecodable file there must surface as THIS gate's named
+    # fail-open note, not as __main__'s anonymous internal-error line —
+    # otherwise the operator cannot tell which gate stopped working.
+    direction = repo / "docs" / "loom" / "DIRECTION.md"
+    direction.parent.mkdir(parents=True, exist_ok=True)
+    direction.write_bytes(b"# Direction\n\xff\xfe not utf-8\n")
+    _write(repo / "docs" / "loom" / "specs" / "b.md",
+           "# Brief\n\n## Design-side on-ramp\n\npending\n")
+    _write(repo / "docs" / "loom" / "plans" / "p.md",
+           "# Plan: p\n\n**Source brief**: docs/loom/specs/b.md\n")
+    _git_add(repo, "docs/loom/specs/b.md", "docs/loom/plans/p.md")
+
+    res = run_hook(bash_event("git commit -m x", cwd=repo))
+    assert res.returncode == 0
+    assert "on-ramp choice gate inactive" in res.stderr
+    assert "DIRECTION.md" in res.stderr
