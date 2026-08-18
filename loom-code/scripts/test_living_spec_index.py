@@ -157,13 +157,14 @@ def test_load_req_paths_maps_id_to_every_declaring_path(tmp_path):
     }
 
 
-def test_load_req_paths_dedupes_same_path_when_req_declared_twice_in_one_file(tmp_path):
-    # WHY: find_duplicate_req_declarations (check-living-spec-index.py)
-    # reports "declared in multiple files" using this map's per-id path
-    # LIST — a genuine duplicate is >1 DISTINCT file. A req id repeated
-    # twice inside the SAME spec.md must not inflate that list with the
-    # same path twice, or a single-file authoring slip (e.g. a copy-paste
-    # heading duplicate) misreports as a cross-file duplicate.
+def test_load_req_paths_preserves_repeats_when_req_declared_twice_in_one_file(tmp_path):
+    # WHY: find_duplicate_req_declarations (check-living-spec-index.py) must
+    # be able to tell a SAME-FILE duplicate REQ-<n> (a same-file authoring
+    # slip, e.g. a copy-paste heading duplicate) apart from a cross-file
+    # collision — the two need distinct violation wording. That requires
+    # the per-id path LIST to keep one entry per declaring line (repeats
+    # included), not dedupe within a file — deduping here made a same-file
+    # duplicate invisible to the CI structural lane entirely.
     specs = tmp_path / "specs"
     _make_spec(
         specs, "order",
@@ -172,7 +173,9 @@ def test_load_req_paths_dedupes_same_path_when_req_declared_twice_in_one_file(tm
 
     result = load_req_paths(specs)
 
-    assert result == {"REQ-5": [specs / "order" / "spec.md"]}
+    assert result == {
+        "REQ-5": [specs / "order" / "spec.md", specs / "order" / "spec.md"]
+    }
 
 
 def test_generate_index_tree():

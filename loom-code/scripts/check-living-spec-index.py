@@ -166,22 +166,41 @@ def _collect_req_declarations_all(root: Path) -> dict[str, list[Path]]:
 
 
 def find_duplicate_req_declarations(root: Path) -> list[str]:
-    """Return one violation per req id declared in more than one file.
+    """Return one violation per req id declared more than once.
 
-    The merge-boundary collision guard (BI-3): two branches each minting
-    the same ``REQ-<n>`` in different namespace files collide on the
-    first CI run after both merge (or earlier, on rebase). Names the id
-    and every declaring path, sorted by id for deterministic output.
+    Two distinct collision shapes, both BI-3 (a merge-boundary collision
+    on a change-folder spec.md), reported with distinct wording:
+
+    - CROSS-FILE: two branches each minting the same ``REQ-<n>`` in
+      different namespace files collide on the first CI run after both
+      merge (or earlier, on rebase). Names the id and every declaring
+      path.
+    - SAME-FILE: the same ``REQ-<n>`` heading appears twice in ONE
+      spec.md (a same-file authoring slip, or two branches appending to
+      the same capability spec.md that git merges cleanly line-by-line —
+      only this checker catches it post-merge). Names the id, the
+      occurrence count, and the single declaring path.
+
+    ``declarations`` (via ``load_req_paths``) carries one path entry per
+    DECLARING LINE, repeats included — the distinct-vs-repeated path set
+    is what tells the two shapes apart; deduping it would make the
+    same-file shape invisible.
     """
     declarations = _collect_req_declarations_all(root)
     violations: list[str] = []
     for req_id in sorted(declarations):
         paths = declarations[req_id]
-        if len(paths) > 1:
+        distinct_paths = sorted(set(paths))
+        if len(distinct_paths) > 1:
             joined = ", ".join(str(p) for p in paths)
             violations.append(
                 f"DUPLICATE requirement id {req_id} declared in "
                 f"multiple files: {joined}"
+            )
+        elif len(paths) > 1:
+            violations.append(
+                f"DUPLICATE requirement id {req_id} declared "
+                f"{len(paths)} times in {distinct_paths[0]}"
             )
     return violations
 

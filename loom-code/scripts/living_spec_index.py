@@ -87,20 +87,20 @@ def load_req_paths(specs_dir: Path) -> dict[str, list[Path]]:
     Walks the SAME `<specs_dir>/<capability>/spec.md` files as
     `load_namespace`. Unlike `load_namespace` (a dict merge where the
     last declaration wins), this collects every declaring `spec.md`
-    path per id, sorted, so a duplicate declaration across files stays
-    visible instead of being silently overwritten. A
-    prose heading (no `REQ-<n>` id) is legacy and skipped.
+    path per id — ONE ENTRY PER DECLARING LINE, repeats included — so a
+    duplicate declaration stays visible instead of being silently
+    overwritten OR silently deduped within a file. The caller
+    (`find_duplicate_req_declarations`) is what turns a repeated same
+    path into a same-file-duplicate violation; deduping here would hide
+    that case entirely. A prose heading (no `REQ-<n>` id) is legacy and
+    skipped.
     """
     paths: dict[str, list[Path]] = {}
     for spec_path in sorted(Path(specs_dir).glob("*/spec.md")):
-        seen_ids_in_file: set[str] = set()
         for line in spec_path.read_text(encoding="utf-8").splitlines():
             match = _REQUIREMENT_STATUS_RE.match(line)
             if match:
                 req_id = match.group("id")
-                if req_id in seen_ids_in_file:
-                    continue
-                seen_ids_in_file.add(req_id)
                 paths.setdefault(req_id, []).append(spec_path)
     for req_id in paths:
         paths[req_id].sort()

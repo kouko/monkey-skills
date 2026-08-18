@@ -493,6 +493,42 @@ def test_duplicate_req_id_declared_once_passes(tmp_path, capsys):
     )
 
 
+def test_same_file_duplicate_req_id_fails_structural_lane(tmp_path, capsys):
+    # WHY: BI-3's collision shape can also happen WITHOUT a merge — two
+    # `### Requirement: REQ-<n>` headings inside the SAME spec.md (e.g. a
+    # copy-paste slip, or two branches appending to the same capability
+    # spec.md that git merges cleanly line-by-line). Deduping per-file in
+    # `load_req_paths` (commit 1c27c39f) made this invisible: the
+    # structural lane must FAIL LOUD here too, naming the id, the "declared
+    # N times" count, and the single declaring path.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    spec_dir = repo / "docs" / "loom" / "spec" / "cap"
+    spec_dir.mkdir(parents=True)
+    (spec_dir / "spec.md").write_text(
+        "### Requirement: REQ-5 — First\n\n### Requirement: REQ-5 — Second\n",
+        encoding="utf-8",
+    )
+    _commit(repo, "REQ-5 declared twice in one file", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main([str(repo)])
+    assert rc == 1, (
+        f"REQ-5 declared twice in the same spec.md must fail the "
+        f"structural lane, got rc={rc!r}"
+    )
+    captured = capsys.readouterr()
+    assert "REQ-5" in captured.err, (
+        f"the duplicated id must be named on stderr, got: {captured.err!r}"
+    )
+    assert "2 times" in captured.err, (
+        f"the same-file occurrence count must be named, got: {captured.err!r}"
+    )
+    assert str(spec_dir / "spec.md") in captured.err, (
+        f"the declaring path must be named, got: {captured.err!r}"
+    )
+
+
 def test_verify_index_mode_fails_on_stale(tmp_path):
     # WHY: the merge-boundary stale-index gate. `--verify-index <path>`
     # regenerates the index from the source tree and asserts byte-identity
