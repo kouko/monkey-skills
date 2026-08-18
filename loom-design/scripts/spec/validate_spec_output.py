@@ -263,9 +263,9 @@ def _check_requirement_with_rfc2119(root: Path) -> list[str]:
             f"(state the normative obligation, e.g. 'The system MUST ...')"]
 
 
-def _iter_requirement_id_headers(d: Path, text: str):
-    """Yield one record per '### Requirement:' header match in `text`
-    (from delta file `d`), shared by the three requirement-id checks below
+def _iter_requirement_id_headers(text: str):
+    """Yield one record per '### Requirement:' header match in `text`,
+    shared by the three requirement-id checks below
     (Rule of Three: T1/T2/T3 each walked this same match loop).
 
     Record fields: `match` (the raw re.Match, for id/name/name_legacy/status
@@ -289,7 +289,7 @@ def _check_requirement_id_form(root: Path) -> list[str]:
     problems = []
     for d in deltas:
         text = d.read_text(encoding="utf-8")
-        for m, line_no, _header_text in _iter_requirement_id_headers(d, text):
+        for m, line_no, _header_text in _iter_requirement_id_headers(text):
             if m.group("id"):
                 if m.group("name"):
                     continue  # id-form, name present
@@ -320,7 +320,7 @@ def _check_requirement_id_all_or_nothing(root: Path) -> list[str]:
     for d in deltas:
         text = d.read_text(encoding="utf-8")
         headers = []  # (line_no, is_id_form, header_text)
-        for m, line_no, header_text in _iter_requirement_id_headers(d, text):
+        for m, line_no, header_text in _iter_requirement_id_headers(text):
             is_id_form = bool(m.group("id")) and bool(m.group("name"))
             headers.append((line_no, is_id_form, header_text))
         if not any(is_id_form for _, is_id_form, _ in headers):
@@ -345,7 +345,7 @@ def _check_requirement_id_unique(root: Path) -> list[str]:
     occurrences: dict[str, list[str]] = {}
     for d in deltas:
         text = d.read_text(encoding="utf-8")
-        for m, line_no, _header_text in _iter_requirement_id_headers(d, text):
+        for m, line_no, _header_text in _iter_requirement_id_headers(text):
             if m.group("id") and m.group("name"):
                 occurrences.setdefault(m.group("id"), []).append(
                     f"{d}:{line_no}")
