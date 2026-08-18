@@ -1,0 +1,94 @@
+"""Tests for check_onramp_choice.py — parses a handoff brief's
+`## Design-side on-ramp` line (grammar SSOT:
+`loom-code/skills/brainstorming/references/handoff-brief-format.md`
+`### `## Design-side on-ramp``) and exits non-zero while the on-ramp
+fired but was resolved by anything other than an explicit user choice.
+
+Exercised as a CLI subprocess (the actual interface) — same convention
+as `test_check_open_questions.py`.
+
+Stdlib only (subprocess + pathlib).
+"""
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+SCRIPT = Path(__file__).parent / "check_onramp_choice.py"
+
+_ENV = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+
+
+def _run(brief_path: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), str(brief_path)],
+        capture_output=True,
+        text=True,
+        env=_ENV,
+    )
+
+
+def _write_brief(tmp_path: Path, onramp_line: str | None) -> Path:
+    brief = tmp_path / "brief.md"
+    body = "# Brief: x\n\n"
+    if onramp_line is not None:
+        body += f"{onramp_line}\n\n"
+    body += "## Problem\n\nsome job.\n"
+    brief.write_text(body, encoding="utf-8")
+    return brief
+
+
+@pytest.mark.parametrize(
+    "onramp_line,expected_exit",
+    [
+        ("Design-side on-ramp: pending", 2),
+        (
+            "Design-side on-ramp: offered — direct per repo precedent",
+            2,
+        ),
+        (None, 2),
+        (
+            "Design-side on-ramp: fired: rows 1,3 — user chose direct",
+            0,
+        ),
+        ("Design-side on-ramp: not fired — increment", 0),
+    ],
+    ids=["pending", "agent-default", "missing", "user-chose", "not-fired"],
+)
+def test_fired_without_user_choice_exits_2(tmp_path, onramp_line, expected_exit):
+    brief = _write_brief(tmp_path, onramp_line)
+    result = _run(brief)
+    assert result.returncode == expected_exit, (
+        f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    )
+    if expected_exit == 2:
+        assert "user chose <detour|direct>" in result.stderr
+
+
+def test_missing_brief_file_exits_1(tmp_path):
+    result = _run(tmp_path / "does-not-exist.md")
+    assert result.returncode == 1
+    assert "not found" in result.stderr.lower()
+
+
+def test_stderr_names_brief_path_on_unresolved(tmp_path):
+    brief = _write_brief(tmp_path, "Design-side on-ramp: pending")
+    result = _run(brief)
+    assert result.returncode == 2
+    assert str(brief) in result.stderr
+
+
+def test_real_spec_document_exits_0():
+    repo_root = Path(__file__).resolve().parents[2]
+    spec_path = (
+        repo_root / "docs" / "loom" / "specs"
+        / "2026-08-18-onramp-explicit-choice-gate.md"
+    )
+    assert spec_path.is_file(), f"fixture spec missing at {spec_path}"
+    result = _run(spec_path)
+    assert result.returncode == 0, (
+        f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    )
