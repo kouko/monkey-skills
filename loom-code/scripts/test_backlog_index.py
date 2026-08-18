@@ -1536,6 +1536,71 @@ def test_validate_still_flags_bare_date_token_beside_filename_reference(tmp_path
     assert "direction-date" in result.stdout, result.stdout
 
 
+def test_validate_exempts_wellformed_standing_choice_entry_from_date_ban(tmp_path):
+    """Second user-ratified exemption: a well-formed `## On-ramp standing
+    choices` entry (grammar SSOT: check_onramp_choice.py /
+    family-reception.md) carries a trailing `(YYYY-MM-DD)` by design — the
+    date-ban scanner must strip only that trailing date before matching,
+    the same technique as the entry-filename exemption."""
+    store, direction = _direction_store(tmp_path, [])
+    text = direction.read_text(encoding="utf-8")
+    direction.write_text(
+        text
+        + "\n## On-ramp standing choices\n\n"
+        "- row 1 (product-principles): standing direct — a fixture reason "
+        "(2026-08-18)\n",
+        encoding="utf-8",
+    )
+
+    result = _run_validate(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "direction-date" not in result.stdout, result.stdout
+
+
+def test_validate_still_flags_malformed_standing_choice_line_with_date(tmp_path):
+    """Mutation pin: the standing-choice exemption matches the FULL entry
+    grammar — a malformed line inside the section (missing the `row <n>
+    (<station>): standing <direct|detour>` prefix) still fails
+    [direction-date] on its embedded token."""
+    store, direction = _direction_store(tmp_path, [])
+    text = direction.read_text(encoding="utf-8")
+    direction.write_text(
+        text
+        + "\n## On-ramp standing choices\n\n"
+        "- some hand-written note about 2026-08-18 that isn't the grammar\n",
+        encoding="utf-8",
+    )
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "direction-date" in result.stdout, result.stdout
+
+
+def test_validate_still_flags_wellformed_looking_entry_outside_standing_section(tmp_path):
+    """Mutation pin: the exemption is scoped to lines INSIDE the
+    `## On-ramp standing choices` section — an identically-formatted line
+    placed in `## Later` (outside that section) still fails
+    [direction-date]."""
+    store, direction = _direction_store(tmp_path, [])
+    text = direction.read_text(encoding="utf-8")
+    direction.write_text(
+        text.replace(
+            "- a fixture later theme",
+            "- a fixture later theme\n"
+            "- row 1 (product-principles): standing direct — a fixture "
+            "reason (2026-08-18)",
+        ),
+        encoding="utf-8",
+    )
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "direction-date" in result.stdout, result.stdout
+
+
 def test_direction_write_preserves_indented_next_heading(tmp_path):
     """CommonMark permits 1-3 leading spaces before a heading marker. The
     `## Now` section's end-of-section predicate must recognize an indented

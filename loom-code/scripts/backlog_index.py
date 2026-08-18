@@ -618,6 +618,19 @@ DIRECTION_DATE_TOKEN_RE = re.compile(r"20\d\d[-/年.]|Q[1-4]")
 # so a bare date token elsewhere on the same line is still caught.
 DIRECTION_ENTRY_FILENAME_RE = re.compile(r"20\d\d-\d\d-\d\d-[A-Za-z0-9_-]+\.md")
 
+# Second user-ratified exemption: a well-formed `## On-ramp standing
+# choices` entry carries a trailing `(YYYY-MM-DD)` by design — grammar
+# SSOT is check_onramp_choice.py's load_standing() / family-reception.md
+# §On-ramp standing choices; duplicated here (not imported) to keep this
+# module's date scan free of a dependency on the checker CLI. Only the
+# trailing date group is stripped before the date scan, so a malformed
+# line, or a date anywhere else on a well-formed line, is still caught.
+DIRECTION_STANDING_ENTRY_RE = re.compile(
+    r"^-\s*row\s+\d+\s*\([^)]*\):\s*standing\s+(?:direct|detour)\s+—\s+.*"
+    r"(?P<date>\(20\d\d-\d\d-\d\d\))\s*$"
+)
+DIRECTION_STANDING_HEADING = "## On-ramp standing choices"
+
 
 def _direction_path_for(store: Path) -> Path:
     """Where the validate mode looks for the direction file: the store's
@@ -725,10 +738,29 @@ def find_direction_violations(direction_path: Path, store: Path) -> list[Violati
                 )
 
     now_body = range(bounds[0] + 1, bounds[1]) if bounds is not None else range(0)
+    standing_body: range = range(0)
+    for i, line in enumerate(lines):
+        if line.strip() == DIRECTION_STANDING_HEADING:
+            section_end = len(lines)
+            for j in range(i + 1, len(lines)):
+                if lines[j].lstrip().startswith("## "):
+                    section_end = j
+                    break
+            standing_body = range(i + 1, section_end)
+            break
+
     for lineno, line in enumerate(lines):
         if lineno in now_body:
             continue  # generated body: entry names are date-prefixed by convention
-        scan_line = DIRECTION_ENTRY_FILENAME_RE.sub("", line)
+        stripped_line = line
+        if lineno in standing_body:
+            standing_match = DIRECTION_STANDING_ENTRY_RE.match(line)
+            if standing_match is not None:
+                # Strip only the trailing (YYYY-MM-DD) group — a date
+                # elsewhere on a well-formed line is still caught.
+                start, end = standing_match.span("date")
+                stripped_line = line[:start] + line[end:]
+        scan_line = DIRECTION_ENTRY_FILENAME_RE.sub("", stripped_line)
         match = DIRECTION_DATE_TOKEN_RE.search(scan_line)
         if match:
             violations.append(
