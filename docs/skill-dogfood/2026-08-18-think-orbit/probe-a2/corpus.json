@@ -1,0 +1,77 @@
+[
+ {
+  "query": "幫我想一下下半年要不要把團隊從 Redshift 搬到 BigQuery，資料夾在 ./decision",
+  "should_trigger": true,
+  "expect": "using-think-orbit"
+ },
+ {
+  "query": "規劃明年上半年的產品路線圖，我手上有三份會議記錄",
+  "should_trigger": true,
+  "expect": "using-think-orbit"
+ },
+ {
+  "query": "help me think through whether to open a Tokyo office; sources are in ./tokyo",
+  "should_trigger": true,
+  "expect": "using-think-orbit"
+ },
+ {
+  "query": "plan the migration to the new billing vendor with me — I have notes in a folder",
+  "should_trigger": true,
+  "expect": "using-think-orbit"
+ },
+ {
+  "query": "help me decide whether to sunset the legacy dashboard, keep a record of the reasoning",
+  "should_trigger": true,
+  "expect": "using-think-orbit"
+ },
+ {
+  "query": "繼續上次的決策，資料夾 ./decisions/pricing",
+  "should_trigger": true,
+  "expect": "using-think-orbit"
+ },
+ {
+  "query": "continue the decision we started last week in ./decisions/pricing",
+  "should_trigger": true,
+  "expect": "using-think-orbit"
+ },
+ {
+  "query": "来週の採用計画をじっくり考えたい。資料は ./hiring にある",
+  "should_trigger": true,
+  "expect": "using-think-orbit"
+ },
+ {
+  "query": "剛才主管說預算砍到 100 萬，我覺得我們的假設破了",
+  "should_trigger": true,
+  "expect": "break-assumption"
+ },
+ {
+  "query": "情況變了：對手上週降價 20%，之前那條假設不成立了",
+  "should_trigger": true,
+  "expect": "break-assumption"
+ },
+ {
+  "query": "one of my assumptions just broke — the vendor won't renew; what does that hit?",
+  "should_trigger": true,
+  "expect": "break-assumption"
+ },
+ {
+  "query": "前提不成立了，那個「Q4 預算不縮」的假設要標掉",
+  "should_trigger": true,
+  "expect": "break-assumption"
+ },
+ {
+  "query": "我想針對這個問題做一次有結構的思考，之後可以回頭看當初踩在什麼前提上",
+  "should_trigger": true,
+  "expect": "using-think-orbit"
+ },
+ {
+  "query": "想一下晚餐吃什麼",
+  "should_trigger": false,
+  "expect": "NONE"
+ },
+ {
+  "query": "幫我想個新產品的標語",
+  "should_trigger": false,
+  "expect": "NONE"
+ }
+]

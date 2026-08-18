@@ -1,0 +1,147 @@
+{
+ "rows": [
+  {
+   "idx": 0,
+   "query": "幫我想一下下半年要不要把團隊從 Redshift 搬到 BigQuery，資料夾在 ./decision",
+   "expect": "using-think-orbit",
+   "run1_fired": "think-orbit:using-think-orbit",
+   "run1_verdict": "TP-exact",
+   "run2_fired": "think-orbit:using-think-orbit",
+   "run2_verdict": "TP-exact"
+  },
+  {
+   "idx": 1,
+   "query": "規劃明年上半年的產品路線圖，我手上有三份會議記錄",
+   "expect": "using-think-orbit",
+   "run1_fired": "NONE",
+   "run1_verdict": "FN",
+   "run2_fired": "NONE",
+   "run2_verdict": "FN"
+  },
+  {
+   "idx": 2,
+   "query": "help me think through whether to open a Tokyo office; sources are in ./tokyo",
+   "expect": "using-think-orbit",
+   "run1_fired": "think-orbit:using-think-orbit",
+   "run1_verdict": "TP-exact",
+   "run2_fired": "think-orbit:using-think-orbit",
+   "run2_verdict": "TP-exact"
+  },
+  {
+   "idx": 3,
+   "query": "plan the migration to the new billing vendor with me — I have notes in a folder",
+   "expect": "using-think-orbit",
+   "run1_fired": "think-orbit:using-think-orbit",
+   "run1_verdict": "TP-exact",
+   "run2_fired": "think-orbit:using-think-orbit",
+   "run2_verdict": "TP-exact"
+  },
+  {
+   "idx": 4,
+   "query": "help me decide whether to sunset the legacy dashboard, keep a record of the reasoning",
+   "expect": "using-think-orbit",
+   "run1_fired": "think-orbit:using-think-orbit",
+   "run1_verdict": "TP-exact",
+   "run2_fired": "think-orbit:using-think-orbit",
+   "run2_verdict": "TP-exact"
+  },
+  {
+   "idx": 5,
+   "query": "繼續上次的決策，資料夾 ./decisions/pricing",
+   "expect": "using-think-orbit",
+   "run1_fired": "think-orbit:using-think-orbit",
+   "run1_verdict": "TP-exact",
+   "run2_fired": "think-orbit:using-think-orbit",
+   "run2_verdict": "TP-exact"
+  },
+  {
+   "idx": 6,
+   "query": "continue the decision we started last week in ./decisions/pricing",
+   "expect": "using-think-orbit",
+   "run1_fired": "NONE",
+   "run1_verdict": "FN",
+   "run2_fired": "NONE",
+   "run2_verdict": "FN"
+  },
+  {
+   "idx": 7,
+   "query": "来週の採用計画をじっくり考えたい。資料は ./hiring にある",
+   "expect": "using-think-orbit",
+   "run1_fired": "think-orbit:using-think-orbit",
+   "run1_verdict": "TP-exact",
+   "run2_fired": "think-orbit:using-think-orbit",
+   "run2_verdict": "TP-exact"
+  },
+  {
+   "idx": 8,
+   "query": "剛才主管說預算砍到 100 萬，我覺得我們的假設破了",
+   "expect": "break-assumption",
+   "run1_fired": "think-orbit:using-think-orbit",
+   "run1_verdict": "TP-other",
+   "run2_fired": "think-orbit:using-think-orbit",
+   "run2_verdict": "TP-other"
+  },
+  {
+   "idx": 9,
+   "query": "情況變了：對手上週降價 20%，之前那條假設不成立了",
+   "expect": "break-assumption",
+   "run1_fired": "think-orbit:using-think-orbit",
+   "run1_verdict": "TP-other",
+   "run2_fired": "think-orbit:using-think-orbit",
+   "run2_verdict": "TP-other"
+  },
+  {
+   "idx": 10,
+   "query": "one of my assumptions just broke — the vendor won't renew; what does that hit?",
+   "expect": "break-assumption",
+   "run1_fired": "think-orbit:using-think-orbit",
+   "run1_verdict": "TP-other",
+   "run2_fired": "think-orbit:using-think-orbit",
+   "run2_verdict": "TP-other"
+  },
+  {
+   "idx": 11,
+   "query": "前提不成立了，那個「Q4 預算不縮」的假設要標掉",
+   "expect": "break-assumption",
+   "run1_fired": "think-orbit:using-think-orbit",
+   "run1_verdict": "TP-other",
+   "run2_fired": "think-orbit:using-think-orbit",
+   "run2_verdict": "TP-other"
+  },
+  {
+   "idx": 12,
+   "query": "我想針對這個問題做一次有結構的思考，之後可以回頭看當初踩在什麼前提上",
+   "expect": "using-think-orbit",
+   "run1_fired": "think-orbit:using-think-orbit",
+   "run1_verdict": "TP-exact",
+   "run2_fired": "think-orbit:using-think-orbit",
+   "run2_verdict": "TP-exact"
+  },
+  {
+   "idx": 13,
+   "query": "想一下晚餐吃什麼",
+   "expect": "NONE",
+   "run1_fired": "NONE",
+   "run1_verdict": "TN",
+   "run2_fired": "NONE",
+   "run2_verdict": "TN"
+  },
+  {
+   "idx": 14,
+   "query": "幫我想個新產品的標語",
+   "expect": "NONE",
+   "run1_fired": "NONE",
+   "run1_verdict": "TN",
+   "run2_fired": "NONE",
+   "run2_verdict": "TN"
+  }
+ ],
+ "totals": {
+  "TP-exact": 14,
+  "TP-other": 8,
+  "FN": 4,
+  "TN": 4,
+  "OVER-TRIGGER": 0,
+  "TIMEOUT": 0
+ }
+}

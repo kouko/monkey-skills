@@ -1,0 +1,543 @@
+{
+  "summary": {
+    "total_queries": 27,
+    "should_trigger_queries": 20,
+    "should_not_trigger_queries": 7,
+    "total_runs_should": 40,
+    "total_runs_should_not": 14,
+    "true_positive_exact_skill": "12/40",
+    "true_positive_wrong_think_orbit_skill": "3/40",
+    "fired_other_plugin_when_should_trigger": "0/40",
+    "false_negative_no_fire": "25/40",
+    "true_negative_rate": "14/14",
+    "over_trigger_rate": "0/14"
+  },
+  "per_query": [
+    {
+      "idx": 0,
+      "query": "幫我想一下下半年要不要把團隊從 Redshift 搬到 BigQuery，資料夾在 ./decision",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "`./decision` 這個資料夾不存在——`/private/tmp/to-probe-nvgw-a` 底下是空的，所以我沒有任何你們的實際資料可以看。在拿到那些東西之前，我給不出「該不該搬」的答案，只能給你一個空殼框架。\n\n**先確認一件事**：資料夾路徑是不是打錯了？還是那些材料其實在別的地方（另一個 repo、Google Drive、Notion）？告訴我正確位置我就直接讀。\n\n同時，"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "`./decision` 不存在 —— 目前工作目錄 `/private/tmp/to-probe-nvgw-a` 是空的（`ls -la` 只有 `.` 和 `..`）。所以我還沒有任何你們團隊的實際資料可以看，下面只能給框架，不能給結論。\n\n**先確認路徑**：那份資料是在別的目錄嗎？給我絕對路徑（或告訴我要不要我在這裡幫你建 `./decision` 開始寫）。\n\n**同時，這個決策真正該由"
+      }
+    },
+    {
+      "idx": 1,
+      "query": "我要決定 Q4 行銷預算怎麼分配，先幫我把思路整理起來",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:thinking-session"
+        ],
+        "verdict": "WRONG_SKILL_FIRE:thinking-session",
+        "final_text": ""
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:using-think-orbit"
+        ],
+        "verdict": "EXPECTED_FIRE",
+        "final_text": ""
+      }
+    },
+    {
+      "idx": 2,
+      "query": "規劃明年上半年的產品路線圖，我手上有三份會議記錄",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "三份會議記錄我還拿不到 —— 工作目錄 `/private/tmp/to-probe-nvgw-a` 是空的。給我來源後就能開工。\n\n**可用的取檔管道**\n- 本機路徑（直接貼路徑即可）\n- Google Drive（已連線，可搜尋／讀取）\n- Slack（已連線，可讀頻道／討論串）\n- ⚠️ Notion、Asana、Gmail、Google Calendar 目前**未授權**，本 sess"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "工作目錄 `/private/tmp/to-probe-nvgw-a` 是空的 — 三份會議記錄我這邊看不到，請先給我。\n\n**給檔案的方式（擇一）**\n- 直接貼進對話\n- 給我本機路徑（我用 Bash 讀）\n- 說在 Google Drive / Slack，我用連接器去抓（Notion、Asana、Gmail、Calendar 目前未授權，需要你在 claude.ai 連接器設定開通）\n\n*"
+      }
+    },
+    {
+      "idx": 3,
+      "query": "想清楚要不要接這個顧問案，來回想幾週了",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:using-think-orbit"
+        ],
+        "verdict": "EXPECTED_FIRE",
+        "final_text": ""
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:using-think-orbit"
+        ],
+        "verdict": "EXPECTED_FIRE",
+        "final_text": ""
+      }
+    },
+    {
+      "idx": 4,
+      "query": "整理一下我對「要不要換供應商」這件事的思路，之後幾週會陸續補資料",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:using-think-orbit"
+        ],
+        "verdict": "EXPECTED_FIRE",
+        "final_text": ""
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:using-think-orbit"
+        ],
+        "verdict": "EXPECTED_FIRE",
+        "final_text": ""
+      }
+    },
+    {
+      "idx": 5,
+      "query": "help me think through whether to open a Tokyo office; sources are in ./tokyo",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "I'll start by looking at what's in ./tokyo."
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": ""
+      }
+    },
+    {
+      "idx": 6,
+      "query": "plan the migration to the new billing vendor with me — I have notes in a folder",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "The working directory `/private/tmp/to-probe-nvgw-a` is empty — no notes there. I need the path before I can plan anything grounded.\n\nWhere are the notes?\n\n- A local folder path (`~/...`), or\n- Google"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "The working directory `/private/tmp/to-probe-nvgw-a` is empty — no notes here, so I need the path before I can plan anything real.\n\nWhere are they?\n- Full path works best (e.g. `~/Documents/billing-mi"
+      }
+    },
+    {
+      "idx": 7,
+      "query": "figure out with me which of two hiring plans to pursue over the next month",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:using-think-orbit"
+        ],
+        "verdict": "EXPECTED_FIRE",
+        "final_text": "Two things before we start, then we're off.\n\n**1. Where should the record live?** think-orbit writes each reasoning step as a small markdown file so you can re-open the chain in three weeks and see wh"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:using-think-orbit"
+        ],
+        "verdict": "EXPECTED_FIRE",
+        "final_text": ""
+      }
+    },
+    {
+      "idx": 8,
+      "query": "help me decide whether to sunset the legacy dashboard, keep a record of the reasoning",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "I can't ground this yet — the working directory `/private/tmp/to-probe-nvgw-a` is empty, and nothing in this session tells me which dashboard you mean. Rather than invent a rationale, here's the frame"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:using-think-orbit"
+        ],
+        "verdict": "EXPECTED_FIRE",
+        "final_text": ""
+      }
+    },
+    {
+      "idx": 9,
+      "query": "用 think-orbit 開一個新的思考：要不要把週會改成雙週",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:thinking-session"
+        ],
+        "verdict": "WRONG_SKILL_FIRE:thinking-session",
+        "final_text": ""
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:using-think-orbit"
+        ],
+        "verdict": "EXPECTED_FIRE",
+        "final_text": "I'll start a think-orbit sitting on this."
+      }
+    },
+    {
+      "idx": 10,
+      "query": "繼續上次的決策，資料夾 ./decisions/pricing",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": ""
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": ""
+      }
+    },
+    {
+      "idx": 11,
+      "query": "continue the decision we started last week in ./decisions/pricing",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "**這裡沒有 `./decisions/pricing` — 工作目錄 `/private/tmp/to-probe-nvgw-b/` 是空的**（沒有任何檔案，也不是 git repo）。\n\n所以我沒有上週那份決策的任何內容可以接續，也沒有前次對話紀錄（這是全新 session）。\n\n可能的情況：\n- 路徑不同 — 那份決策可能在別的專案目錄底下\n- 這個 tmp 目錄被清掉了（`/privat"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "找不到那份決策——`./decisions/pricing` 不存在，工作目錄 `/private/tmp/to-probe-nvgw-b/` 是空的（連 `decisions/` 都沒有），而且不是 git repo，所以也沒有歷史可以翻。\n\n這個 session 也沒有上週的對話紀錄可繼承。\n\n要接下去，我需要你給其中一個：\n- **正確路徑**（可能在別的專案目錄底下？）\n- 或直接貼上／告"
+      }
+    },
+    {
+      "idx": 12,
+      "query": "決策推演：新產品定價的三個方案，幫我建立推理鏈",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:using-think-orbit"
+        ],
+        "verdict": "EXPECTED_FIRE",
+        "final_text": ""
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:using-think-orbit"
+        ],
+        "verdict": "EXPECTED_FIRE",
+        "final_text": ""
+      }
+    },
+    {
+      "idx": 13,
+      "query": "来週の採用計画をじっくり考えたい。資料は ./hiring にある",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": ""
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "I'll start by looking at what's actually in `./hiring`."
+      }
+    },
+    {
+      "idx": 14,
+      "query": "剛才主管說預算砍到 100 萬，我覺得我們的假設破了",
+      "should_trigger": true,
+      "expect": "break-assumption",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "預算腰斬確實會讓原本的假設失效，但我這邊沒有你們原本的假設是什麼——這個 session 沒有前文，工作目錄 `/private/tmp/to-probe-nvgw-b` 也是空的。\n\n先確認三件事，我就能直接幫你重推：\n\n- **原本假設是什麼？** 原預算多少、砍到 100 萬是砍了幾成？關鍵假設寫在哪（文件／筆記／只在你腦中）？\n- **哪一類假設破了？** 人力規模、時程、範圍、還是外購/"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "我這邊沒有任何前文脈絡——這個 session 是空的（工作目錄 `/private/tmp/to-probe-nvgw-b` 沒有檔案），所以我不知道「我們的假設」指的是哪一份計畫。\n\n要接下去，給我三件事就夠：\n\n- **原本的假設是什麼**：預算多少、據此推導出什麼（人力／時程／範圍）\n- **100 萬是哪種**：總額還是年度？含不含人事？是硬上限還是「先報這個數」\n- **你想要的產出*"
+      }
+    },
+    {
+      "idx": 15,
+      "query": "情況變了：對手上週降價 20%，之前那條假設不成立了",
+      "should_trigger": true,
+      "expect": "break-assumption",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "**這是本 session 第一則訊息，我沒有「之前那條假設」的上下文** — 工作目錄 `/private/tmp/to-probe-nvgw-b` 是空的，沒有任何檔案或 git 記錄可查。\n\n我不猜，直接問三件事（一句話就夠）：\n\n1. **哪條假設**？（例如「對手不會跟進降價」／「我們的價格帶有溢價空間」／某個財務模型的輸入值）\n2. **它撐著什麼決策**？定價、營收預測、投資 mem"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "這是本 session 的第一則訊息，我這邊沒有「那條假設」的上下文——工作目錄是空的，也沒有相關 memory。\n\n要接手的話，請補：\n\n- **哪條假設**（原本假設什麼？例如「我們維持 X 價位仍有 Y% 轉換率」）\n- **它撐著什麼產出**（定價模型／財務預測／某份提案／某段程式的參數？）\n- **對手是誰、降的是哪條線**（全線 20% 還是特定方案）\n\n補完我就從假設失效的下游影響開"
+      }
+    },
+    {
+      "idx": 16,
+      "query": "one of my assumptions just broke — the vendor won't renew; what does that hit?",
+      "should_trigger": true,
+      "expect": "break-assumption",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": ""
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "I can't answer that yet — there's no record here to trace. This directory (`/private/tmp/to-probe-nvgw-b`) is empty: no think-orbit node store, no repo, no prior session state. So \"what does it hit\" h"
+      }
+    },
+    {
+      "idx": 17,
+      "query": "前提不成立了，那個「Q4 預算不縮」的假設要標掉",
+      "should_trigger": true,
+      "expect": "break-assumption",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "這個 session 沒有任何前文，工作目錄 `/private/tmp/to-probe-nvgw-b` 也是空的 — 我找不到那個「Q4 預算不縮」假設寫在哪裡，所以還沒動任何東西。\n\n需要你補一項資訊：\n\n- 那個假設記錄在哪？think-orbit 的 sitting（`.think-orbit/` 之類的節點檔）、Obsidian vault 筆記、還是某個 repo 的 doc / p"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "我這邊找不到那個假設的出處 —— 工作目錄 `/private/tmp/to-probe-nvgw-b` 是空的，本 session 也沒有先前對話紀錄。\n\n要標掉它，我需要知道它記在哪：\n\n- **think-orbit 的思考節點**（某個 vault／repo 裡的 node 檔）→ 給我路徑，我用 `break-assumption` 把它標成失效並往下推連帶影響的分支\n- **Obsid"
+      }
+    },
+    {
+      "idx": 18,
+      "query": "幫我把「要不要收掉東京辦公室」這件事想透，並把過程留成可回溯的文件",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:thinking-session"
+        ],
+        "verdict": "WRONG_SKILL_FIRE:thinking-session",
+        "final_text": ""
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [
+          "think-orbit:using-think-orbit"
+        ],
+        "verdict": "EXPECTED_FIRE",
+        "final_text": ""
+      }
+    },
+    {
+      "idx": 19,
+      "query": "我想針對這個問題做一次有結構的思考，之後可以回頭看當初踩在什麼前提上",
+      "should_trigger": true,
+      "expect": "using-think-orbit",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "你要想的「這個問題」還沒說是什麼 — 給我題目我就開工。\n\n我打算用 **think-orbit** 的 thinking-session 來做：它會把每一步推理寫成一個節點檔、把每條分支踩的前提明確命名，最後產生一張 DAG 圖 —— 正好對應你說的「之後回頭看當初踩在什麼前提上」。\n\n告訴我兩件事就好：\n- 要想的問題是什麼（一句話即可）\n- 期待的收尾形式：一個決策 / 一份計畫大綱 / 或"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "你要想的「這個問題」是什麼？這是本次對話的第一則訊息，我沒有前文可接。\n\n告訴我題目後，我會用 think-orbit 跑：每個推理步驟存成一個節點檔、分支標上它依賴的前提、里程碑時重繪 DAG——這樣之後回頭看，能直接指出當初踩在哪些前提上、哪些後來被推翻。\n\n順帶一提，如果你要想的東西已經有筆記或草稿，一併給我路徑，我從既有材料起步而不是從零問你。"
+      }
+    },
+    {
+      "idx": 20,
+      "query": "幫我加一個 CSV 匯出功能到 reports 頁面",
+      "should_trigger": false,
+      "expect": "NONE",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "目錄是空的，沒有專案可以動手。\n\n`/private/tmp/to-probe-nvgw-c` 完全沒有檔案（連 .git 都沒有），所以沒有「reports 頁面」可以加匯出功能。\n\n需要你提供其中一項：\n\n- **正確的專案路徑** — 我 cd 過去看 reports 頁面的實作再動手\n- **或確認要從零開一個新專案** — 那我們得先談清楚 stack（TS/React？後端？資料來源）"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "目錄是空的，沒有 reports 頁面可以改 —— 我需要你指路才能動手。\n\n`/private/tmp/to-probe-nvgw-c` 完全沒有檔案（連 git repo 都不是），所以我無從得知你的 reports 頁面長什麼樣：\n\n- 專案實際路徑在哪？（cd 過去我就能開始）\n- 或者你想在這個空目錄從零建一個新專案？那我需要知道技術棧（前端框架、有沒有後端 API、資料從哪來）\n\n給我"
+      }
+    },
+    {
+      "idx": 21,
+      "query": "review my branch before I open the PR",
+      "should_trigger": false,
+      "expect": "NONE",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "沒東西可以 review — 這裡不是 git repo，而且資料夾是空的。\n\n- `/private/tmp/to-probe-nvgw-c`：空目錄（只有 `.` 和 `..`）\n- `git rev-parse` → `fatal: not a git repository`\n\n所以沒有 branch、沒有 diff、也沒有 PR 可開。你大概是在別的目錄工作？告訴我實際的 repo 路徑（"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "沒東西可以 review — 這裡不是 git repo，目錄也是空的。\n\n- 位置：`/private/tmp/to-probe-nvgw-c`（空目錄，只有 `.` 和 `..`）\n- `git rev-parse` → `fatal: not a git repository`\n\n所以沒有 branch、沒有 diff、沒有 commit 可看。\n\n要我繼續的話，給我其中一個：\n- 你的 r"
+      }
+    },
+    {
+      "idx": 22,
+      "query": "critique this proposal list — which items are over-engineered?",
+      "should_trigger": false,
+      "expect": "NONE",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "I don't have the list — the working directory is empty and nothing was attached to your message.\n\nPaste the proposal list (or give me a file path / PR link) and I'll run it through `proposal-critique`"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "I don't have the list — the working directory is empty and nothing was pasted in.\n\nPaste the proposal list (or give me a file path / PR / issue URL), and I'll triage it KEEP / DEFER / DROP via `propos"
+      }
+    },
+    {
+      "idx": 23,
+      "query": "幫我把這段對話存成 Obsidian 筆記",
+      "should_trigger": false,
+      "expect": "NONE",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "這段對話目前沒有內容可存 — 你的「幫我把這段對話存成 Obsidian 筆記」是本 session 的第一則訊息，前面沒有任何討論、決策或結論。現在存下去只會得到一則空筆記。\n\n可能的情況與對應做法：\n\n- **你以為接續的是先前的 session** → 那段對話在另一個 session 裡，我這邊讀不到。可以告訴我大概主題，或直接在原本那個視窗裡叫我存。\n- **你想先建一則筆記、待會邊聊邊"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [
+          "obsidian:obsidian-tldr"
+        ],
+        "verdict": "OTHER_PLUGIN_FIRE:obsidian:obsidian-tldr",
+        "final_text": ""
+      }
+    },
+    {
+      "idx": 24,
+      "query": "畫一張心智圖整理這篇文章",
+      "should_trigger": false,
+      "expect": "NONE",
+      "run1": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "沒看到「這篇文章」——工作目錄 `/private/tmp/to-probe-nvgw-c` 是空的，對話裡也沒有貼上內文或連結。\n\n請給我其中一種，我就直接畫：\n\n- **網址** — 我用 defuddle 抓乾淨正文再整理\n- **檔案路徑**（.md / .pdf / .docx 都行）\n- **直接貼全文**\n\n順帶先確認輸出形式，避免做完才發現不對：\n\n| 形式 | 適合 | 產出 |"
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [],
+        "verdict": "NO_FIRE",
+        "final_text": "「這篇文章」我看不到 — 你的訊息裡沒有附上文章內容、檔案路徑或網址。\n\n請提供其中一種，我就畫：\n- **網址** → 我用 defuddle 抓乾淨正文再整理\n- **檔案路徑**（md / pdf / docx…）→ 直接讀\n- **直接貼文字** → 最快\n\n另外想先確認輸出形式（不回答的話我用預設）：\n- **預設**：聊天裡的 Mermaid mindmap（VS Code / Obs"
+      }
+    },
+    {
+      "idx": 25,
+      "query": "這個說法對嗎：Redshift 的 SORTKEY 會影響壓縮率？",
+      "should_trigger": false,
+      "expect": "NONE",
+      "run1": {
+        "status": "OK",
+        "routed": [
+          "research-toolkit:fact-check"
+        ],
+        "verdict": "OTHER_PLUGIN_FIRE:research-toolkit:fact-check",
+        "final_text": "I'll run the fact-check pipeline. Stage A first — gather evidence."
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [
+          "research-toolkit:fact-check"
+        ],
+        "verdict": "OTHER_PLUGIN_FIRE:research-toolkit:fact-check",
+        "final_text": ""
+      }
+    },
+    {
+      "idx": 26,
+      "query": "brainstorm the design for a new retry-policy feature in our API client",
+      "should_trigger": false,
+      "expect": "NONE",
+      "run1": {
+        "status": "OK",
+        "routed": [
+          "loom-code:brainstorming"
+        ],
+        "verdict": "OTHER_PLUGIN_FIRE:loom-code:brainstorming",
+        "final_text": ""
+      },
+      "run2": {
+        "status": "OK",
+        "routed": [
+          "loom-code:brainstorming"
+        ],
+        "verdict": "OTHER_PLUGIN_FIRE:loom-code:brainstorming",
+        "final_text": ""
+      }
+    }
+  ]
+}
