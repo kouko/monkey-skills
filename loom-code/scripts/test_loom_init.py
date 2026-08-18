@@ -137,6 +137,22 @@ def test_direction_template_carries_the_placeholder_line_verbatim():
     )
 
 
+def test_direction_scaffold_has_onramp_standing_choices_section(tmp_path):
+    """Task 6: the scaffolded DIRECTION.md carries an empty
+    `## On-ramp standing choices` section so a fresh repo does not need
+    a manual first-touch addition before check_onramp_choice.py can
+    read it."""
+    target = tmp_path / "repo"
+    result = _scaffold_ok(target)
+
+    direction = target / "docs" / "loom" / "DIRECTION.md"
+    text = direction.read_text(encoding="utf-8")
+    assert "## On-ramp standing choices" in text, (
+        f"scaffolded DIRECTION.md missing the section, got:\n{text}\n"
+        f"{result.stdout}{result.stderr}"
+    )
+
+
 def test_refuses_when_the_store_already_exists(tmp_path):
     target = tmp_path / "repo"
     store = target / "docs" / "loom" / "backlog"

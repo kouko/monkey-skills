@@ -30,3 +30,10 @@ _(queue empty — bet at the next close-out)_
 ## Next
 
 ## Later
+
+## On-ramp standing choices
+
+<!-- Repo-level on-ramp decisions read by check_onramp_choice.py; grammar
+owned by loom-code/hooks/family-reception.md §On-ramp standing choices. -->
+
+_(none — every fired row is asked)_
