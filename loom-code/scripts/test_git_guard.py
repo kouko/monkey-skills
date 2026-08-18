@@ -872,3 +872,86 @@ def test_commit_adding_plan_without_source_brief_fails_open_loudly(repo):
     res = run_hook(bash_event("git commit -m x", cwd=repo))
     assert res.returncode == 0
     assert "on-ramp choice gate inactive" in res.stderr
+
+
+def test_commit_plan_with_absolute_source_brief_never_read(repo):
+    # WHY: an absolute path discards `root` under Path.__truediv__ — the
+    # gate would read (and quote back) a file outside the repo. It must
+    # refuse the path, not evaluate it.
+    _write(repo / "docs" / "loom" / "plans" / "p.md",
+           "# Plan: p\n\n**Source brief**: /etc/hosts\n")
+    _git_add(repo, "docs/loom/plans/p.md")
+
+    res = run_hook(bash_event("git commit -m x", cwd=repo))
+    assert res.returncode == 0
+    assert "on-ramp choice gate inactive" in res.stderr
+    assert "user chose" not in res.stderr  # target was never evaluated
+
+
+def test_commit_plan_with_traversing_source_brief_never_read(
+    repo, tmp_path_factory
+):
+    # WHY: same escape via `../` at a REAL file outside the repo —
+    # containment is checked after resolve(), so an existing outside
+    # brief is refused, not evaluated.
+    outside = tmp_path_factory.mktemp("outside")
+    _write(outside / "b.md", "# Brief\n\n## Design-side on-ramp\n\npending\n")
+    rel = os.path.relpath(outside / "b.md", repo)
+    _write(repo / "docs" / "loom" / "plans" / "p.md",
+           f"# Plan: p\n\n**Source brief**: {rel}\n")
+    _git_add(repo, "docs/loom/plans/p.md")
+
+    res = run_hook(bash_event("git commit -m x", cwd=repo))
+    assert res.returncode == 0
+    assert "on-ramp choice gate inactive" in res.stderr
+    assert "user chose" not in res.stderr  # target was never evaluated
+
+
+def test_commit_plan_with_standing_choice_allowed(repo):
+    # WHY: the `standing` form resolves only when DIRECTION.md names the
+    # cited row — this drives load_standing() through the hook.
+    _write(repo / "docs" / "loom" / "DIRECTION.md",
+           "# Direction\n\n## On-ramp standing choices\n\n"
+           "- row 1 (product-principles): standing direct — no PRINCIPLES.md "
+           "in this repo (2026-08-18)\n")
+    _write(repo / "docs" / "loom" / "specs" / "b.md",
+           "# Brief\n\n## Design-side on-ramp\n\n"
+           "fired: rows 1 — standing direct (DIRECTION.md)\n")
+    _write(repo / "docs" / "loom" / "plans" / "p.md",
+           "# Plan: p\n\n**Source brief**: docs/loom/specs/b.md\n")
+    _git_add(repo, "docs/loom/plans/p.md", "docs/loom/specs/b.md",
+             "docs/loom/DIRECTION.md")
+
+    res = run_hook(bash_event("git commit -m x", cwd=repo))
+    assert res.returncode == 0
+
+
+def test_commit_plan_with_missing_source_brief_file_fails_open_loudly(repo):
+    # WHY: a brief path that points nowhere is un-evaluable — allow, but
+    # say so (the fail-open posture is never silent).
+    _write(repo / "docs" / "loom" / "plans" / "p.md",
+           "# Plan: p\n\n**Source brief**: docs/loom/specs/gone.md\n")
+    _git_add(repo, "docs/loom/plans/p.md")
+
+    res = run_hook(bash_event("git commit -m x", cwd=repo))
+    assert res.returncode == 0
+    assert "on-ramp choice gate inactive" in res.stderr
+
+
+def test_commit_with_git_dir_global_gates_that_repo(repo, tmp_path_factory):
+    # WHY: --git-dir must point the gate at the repo the commit will hit,
+    # not the ambient cwd — otherwise the gate reads the wrong index
+    # (false block / false allow).
+    _write(repo / "docs" / "loom" / "specs" / "b.md",
+           "# Brief\n\n## Design-side on-ramp\n\npending\n")
+    _write(repo / "docs" / "loom" / "plans" / "p.md",
+           "# Plan: p\n\n**Source brief**: docs/loom/specs/b.md\n")
+    _git_add(repo, "docs/loom/specs/b.md", "docs/loom/plans/p.md")
+    outside = tmp_path_factory.mktemp("elsewhere")
+
+    res = run_hook(bash_event(
+        f"git --git-dir={repo / '.git'} --work-tree={repo} commit -m x",
+        cwd=outside,
+    ))
+    assert res.returncode == 2
+    assert "user chose <detour|direct>" in res.stderr
