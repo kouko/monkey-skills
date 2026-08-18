@@ -316,25 +316,31 @@ def propagate(project: Project, assumption_id: str) -> tuple[list[str], list[str
                 continue
             dependents.setdefault(entry.ref, []).append((node.id, bool(entry.load_bearing)))
 
-    stale: set[str] = set()
-    weakened: set[str] = set()
+    # state[node_id] is True once a fully-load-bearing chain reached it
+    # (stale), False while only a weak chain has (weakened). A node is
+    # enqueued again only when its state changes (None->False, None->True,
+    # or False->True) so a cycle re-visits each node at most twice and
+    # always terminates.
+    state: dict[str, bool] = {}
 
     frontier = [(assumption_id, True)]
     while frontier:
         current_id, chain_load_bearing = frontier.pop()
         for dependent_id, hop_load_bearing in dependents.get(current_id, []):
-            hop_ok = chain_load_bearing and hop_load_bearing
-            if hop_ok:
-                if dependent_id not in stale:
-                    stale.add(dependent_id)
-                    frontier.append((dependent_id, True))
-            else:
-                if dependent_id not in stale and dependent_id not in weakened:
-                    weakened.add(dependent_id)
+            new_ok = chain_load_bearing and hop_load_bearing
+            prev = state.get(dependent_id)
+            if prev is True:
+                continue
+            if new_ok:
+                state[dependent_id] = True
+                frontier.append((dependent_id, True))
+            elif prev is None:
+                state[dependent_id] = False
                 frontier.append((dependent_id, False))
 
-    weakened -= stale
-    return sorted(stale), sorted(weakened)
+    stale = sorted(node_id for node_id, is_stale in state.items() if is_stale)
+    weakened = sorted(node_id for node_id, is_stale in state.items() if not is_stale)
+    return stale, weakened
 
 
 def _set_frontmatter_field(path: Path, key: str, value: str) -> None:
@@ -342,21 +348,32 @@ def _set_frontmatter_field(path: Path, key: str, value: str) -> None:
 
     Replaces the first `^<key>:\\s*.*$` line if present, else appends
     `<key>: <value>` as the last frontmatter line. Body and every other
-    frontmatter line are left untouched.
+    frontmatter line are left untouched -- including the file's original
+    line-ending convention (CRLF vs LF), which is detected from the raw
+    bytes rather than assumed, since text-mode reads silently translate
+    CRLF to LF (universal newlines) before we ever see the content.
     """
-    text = path.read_text(encoding="utf-8")
-    fm_text, body = split_frontmatter(text)
+    raw = path.read_bytes()
+    text = raw.decode("utf-8")
+    eol = "\r\n" if "\r\n" in text else "\n"
 
-    pattern = re.compile(rf"^{re.escape(key)}:\s*.*$", flags=re.MULTILINE)
+    match = re.match(r"^---\r?\n(.*?\r?\n)---\r?\n", text, flags=re.DOTALL)
+    if match is None:
+        return
+    fm_text = match.group(1)
+    body = text[match.end():]
+
+    pattern = re.compile(rf"^{re.escape(key)}:[^\r\n]*", flags=re.MULTILINE)
     new_line = f"{key}: {value}"
     if pattern.search(fm_text):
         new_fm_text = pattern.sub(new_line, fm_text, count=1)
     else:
-        if fm_text and not fm_text.endswith("\n"):
-            fm_text += "\n"
-        new_fm_text = fm_text + new_line + "\n"
+        if fm_text and not fm_text.endswith(eol):
+            fm_text += eol
+        new_fm_text = fm_text + new_line + eol
 
-    path.write_text(f"---\n{new_fm_text}---\n{body}", encoding="utf-8")
+    new_text = f"---{eol}{new_fm_text}---{eol}{body}"
+    path.write_bytes(new_text.encode("utf-8"))
 
 
 def main(argv: list[str] | None = None) -> int:

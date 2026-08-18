@@ -398,3 +398,69 @@ def test_break_marks_load_bearing_chain_stale_and_reports_weakened(tmp_path, cap
             ln for ln in fm_after.splitlines() if not ln.startswith("status:")
         )
         assert fm_after_no_status == fm_before_no_status
+
+
+def test_propagate_terminates_on_cycles_and_upgrades_weakened_to_stale():
+    # @req: BI-5
+    project = dag.Project(
+        root=Path("/unused"),
+        nodes=[
+            dag.Node(
+                id="n1",
+                inputs=[
+                    dag.Input(ref="a1", load_bearing=False),
+                    dag.Input(ref="n2", load_bearing=False),
+                ],
+            ),
+            dag.Node(id="n2", inputs=[dag.Input(ref="n1", load_bearing=False)]),
+            dag.Node(
+                id="n3",
+                inputs=[
+                    dag.Input(ref="a1", load_bearing=True),
+                    dag.Input(ref="n1", load_bearing=False),
+                ],
+            ),
+        ],
+        assumptions=[dag.Assumption(id="a1")],
+    )
+
+    stale, weakened = dag.propagate(project, "a1")
+
+    assert stale == ["n3"]
+    assert weakened == ["n1", "n2"]
+
+
+def test_break_preserves_crlf_line_endings_and_body_bytes(tmp_path):
+    # @req: BI-5
+    root = tmp_path
+    a1_path = root / "assumptions" / "a1.md"
+    n1_path = root / "nodes" / "n1.md"
+    a1_path.parent.mkdir(parents=True, exist_ok=True)
+    n1_path.parent.mkdir(parents=True, exist_ok=True)
+
+    a1_bytes = b"---\r\nid: a1\r\nstatus: open\r\n---\r\nbody line 1\r\nbody line 2\r\n"
+    n1_bytes = (
+        b"---\r\nid: n1\r\ntype: CLAIM\r\nseq: 1\r\nsummary: n1\r\nstatus: current\r\n"
+        b"inputs:\r\n  - ref: a1\r\n    load_bearing: true\r\n---\r\nnode body\r\n"
+    )
+    a1_path.write_bytes(a1_bytes)
+    n1_path.write_bytes(n1_bytes)
+
+    a1_body_before = a1_bytes.split(b"---\r\n", 2)[2]
+    n1_body_before = n1_bytes.split(b"---\r\n", 2)[2]
+
+    rc = dag.main(["break", str(root), "a1"])
+    assert rc == 0
+
+    a1_after = a1_path.read_bytes()
+    n1_after = n1_path.read_bytes()
+
+    assert b"status: broken\r\n" in a1_after
+    assert a1_after.endswith(a1_body_before)
+
+    assert b"status: stale\r\n" in n1_after
+    assert n1_after.endswith(n1_body_before)
+
+    # every line ending is CRLF -- no bare \n introduced anywhere
+    assert a1_after.replace(b"\r\n", b"").find(b"\n") == -1
+    assert n1_after.replace(b"\r\n", b"").find(b"\n") == -1
