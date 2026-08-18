@@ -81,6 +81,27 @@ def load_req_status(specs_dir: Path) -> dict[str, str]:
     return status
 
 
+def load_req_paths(specs_dir: Path) -> dict[str, list[Path]]:
+    """Map each id-form `### Requirement: REQ-<n>` to EVERY declaring path.
+
+    Walks the SAME `<specs_dir>/<capability>/spec.md` files as
+    `load_namespace`. Unlike `load_namespace` (a dict merge where the
+    last declaration wins), this collects every declaring `spec.md`
+    path per id, sorted, so a duplicate declaration across files stays
+    visible instead of being silently overwritten. A
+    prose heading (no `REQ-<n>` id) is legacy and skipped.
+    """
+    paths: dict[str, list[Path]] = {}
+    for spec_path in sorted(Path(specs_dir).glob("*/spec.md")):
+        for line in spec_path.read_text(encoding="utf-8").splitlines():
+            match = _REQUIREMENT_STATUS_RE.match(line)
+            if match:
+                paths.setdefault(match.group("id"), []).append(spec_path)
+    for req_id in paths:
+        paths[req_id].sort()
+    return paths
+
+
 def find_malformed_status(specs_dir: Path) -> list[str]:
     """Flag `### Requirement:` headings with an invalid `[...]` status.
 

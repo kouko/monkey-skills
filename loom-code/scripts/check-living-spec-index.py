@@ -71,10 +71,10 @@ from living_spec_collect import (
 from living_spec_drift import find_gitref_drift
 from living_spec_gitref import resolve_binding_refs
 from living_spec_index import (
-    _REQUIREMENT_STATUS_RE,
     find_malformed_status,
     generate_index,
     load_namespace,
+    load_req_paths,
     load_req_status,
 )
 
@@ -150,13 +150,8 @@ def _collect_req_declarations_all(root: Path) -> dict[str, list[Path]]:
     """
     declarations: dict[str, list[Path]] = {}
     for specs_dir in _namespace_roots(root):
-        for spec_path in sorted(Path(specs_dir).glob("*/spec.md")):
-            for line in spec_path.read_text(encoding="utf-8").splitlines():
-                match = _REQUIREMENT_STATUS_RE.match(line)
-                if match:
-                    declarations.setdefault(match.group("id"), []).append(
-                        spec_path
-                    )
+        for req_id, paths in load_req_paths(specs_dir).items():
+            declarations.setdefault(req_id, []).extend(paths)
     return declarations
 
 

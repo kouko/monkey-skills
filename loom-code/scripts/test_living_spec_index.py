@@ -16,6 +16,7 @@ from living_spec_index import (
     find_malformed_status,
     generate_index,
     load_namespace,
+    load_req_paths,
     load_req_status,
 )
 
@@ -136,6 +137,24 @@ def test_find_malformed_status(tmp_path):
     # the valid [deferred] and the bare heading are NOT flagged
     assert "REQ-2" not in joined
     assert "REQ-3" not in joined
+
+
+def test_load_req_paths_maps_id_to_every_declaring_path(tmp_path):
+    # WHY: the CI duplicate-declaration guard (BI-3) needs EVERY path that
+    # declares a given req id, not just the last one (load_namespace's dict
+    # merge silently drops earlier declarations). Two spec.md files each
+    # declaring REQ-5 must both surface under the same key, sorted, so a
+    # duplicate id across namespace files stays visible instead of being
+    # overwritten.
+    specs = tmp_path / "specs"
+    _make_spec(specs, "order", "### Requirement: REQ-5\n")
+    _make_spec(specs, "payment", "### Requirement: REQ-5\n")
+
+    result = load_req_paths(specs)
+
+    assert result == {
+        "REQ-5": sorted([specs / "order" / "spec.md", specs / "payment" / "spec.md"])
+    }
 
 
 def test_generate_index_tree():
