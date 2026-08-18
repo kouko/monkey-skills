@@ -305,3 +305,78 @@ def test_ja_modality_table_transcribes_the_shipped_profile():
         "carried as a known debt" not in mapping
     ), "the protocol still carries the 「しない」 debt that dropping the form retired"
     assert "retire" in mapping, "the protocol does not record the debt's retirement"
+
+
+def test_invocation_contract_pins_the_shipped_copy():
+    """The invocation contract must pin WHICH copy of the pipeline
+    scripts an executor runs, and gate delivery on the render stamp.
+    Every past silent failure (2026-08-14..18) was a copy the executor
+    chose over the one shipped beside this protocol file -- a bare
+    filename, a hardcoded plugin-cache version directory, or a
+    repo-relative path from the session's cwd. Pin the self-locating
+    relative-resolution rule (../../../scripts/ from this file's own
+    absolute path), its one exception (a session developing these
+    scripts runs its own working tree's copy), and the pre-delivery
+    stamp/version check -- all inside the section, and confirm
+    CLAUDE_PLUGIN_ROOT is absent (substitution never reaches a
+    protocol file opened via Read; the token would survive literally
+    and expand to empty in a shell)."""
+    text = PROTOCOL_PATH.read_text(encoding="utf-8")
+    inv = _section(text, "Invocation contract")
+
+    assert "../../../scripts/" in inv, "self-locating relative script path missing"
+    assert "generator" in inv, "pre-delivery generator-stamp check missing"
+    assert "CLAUDE_PLUGIN_ROOT" not in inv, (
+        "CLAUDE_PLUGIN_ROOT would survive literally in a protocol file "
+        "opened via Read and expand to empty in a shell"
+    )
+
+
+def test_invocation_contract_resolves_the_round2_findings():
+    """Round 2 docs-review findings on the invocation contract, all
+    pinned inside the §Invocation contract slice:
+
+    Finding 1 (inconsistency): the three pipeline bullets show bare
+    filenames (`python3 <script>.py`), which the "Which copy runs"
+    rule forbids as the actual invocation form. The contradiction is
+    resolved by explicitly marking the bullets as order/flag
+    documentation, not invocation syntax -- pin that the marker text
+    is present.
+
+    Finding 2 (omission): "Before delivering" originally gave a
+    failure branch only for "no stamp"; a present-but-mismatched
+    stamp had no instruction. Pin that the mismatch branch now says
+    do-not-deliver and names the re-run-then-surface fallback.
+
+    Finding 3 (ambiguity): the working-tree-copy exception was
+    judgment-shaped ("a session developing these scripts themselves").
+    Pin that it is now a checkable test -- the active plan/brief scope
+    naming a `loom-code/scripts/adjudication_*.py` file as edited by
+    the current task."""
+    text = PROTOCOL_PATH.read_text(encoding="utf-8")
+    inv = _section(text, "Invocation contract")
+
+    # Finding 1 -- bullets marked as order/flags only, not invocation syntax.
+    assert (
+        "document invocation ORDER and FLAGS only" in inv
+    ), "the pipeline bullets are not marked as order/flag documentation"
+    assert (
+        "not by the bare filename shown here" in inv
+    ), "the bullets do not disclaim the bare-filename form as invocation syntax"
+
+    # Finding 2 -- the mismatch failure branch.
+    assert (
+        "version does NOT match is the same\noutcome as no stamp" in inv
+    ), "a version-mismatch stamp is not treated as equivalent to no stamp"
+    assert (
+        "surface the mismatch to the user" in inv
+    ), "the re-run-then-surface fallback for a persistent mismatch is missing"
+
+    # Finding 3 -- checkable carve-out, not judgment-shaped prose.
+    assert (
+        "checkable, not a judgment call" in inv
+    ), "the working-tree-copy exception is not marked checkable"
+    assert (
+        "loom-code/scripts/adjudication_*.py" in inv
+        and "current task edits" in inv
+    ), "the working-tree-copy exception does not give an operational test"

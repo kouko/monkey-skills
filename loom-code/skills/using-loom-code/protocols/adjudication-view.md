@@ -190,7 +190,11 @@ The structured intermediate between split and render. Fields:
 
 The pipeline is three scripts in `loom-code/scripts/`, run in this
 order, with an orchestrator-side LLM translate step (which fills each
-unit's `rendition`) between the first and the second:
+unit's `rendition`) between the first and the second. The three
+bullets below document invocation ORDER and FLAGS only — `python3
+<script>.py` is a stand-in for the resolved path form; the actual
+script path an executor runs is governed by the "Which copy runs"
+rule further down, not by the bare filename shown here:
 
 - `python3 adjudication_split.py {doc|verdict} <artifact.md>` — writes
   units-JSON to stdout. Split is language-neutral: it **takes no `--lang`**
@@ -212,6 +216,28 @@ faithful, gets checked against the Chinese closed negation set
 (`不未無非沒勿`) at the zh-Hant **hard-fail** tier, and correct output
 blocks the gate. That is the stuck-gate failure this language layer
 exists to remove; passing the flag is the only thing that prevents it.
+
+**Which copy runs.** Resolve all three scripts from THIS protocol
+file's own absolute path, as `../../../scripts/<script>.py` — never a
+bare filename (as shown in the three bullets above, which document
+order and flags only), never a hardcoded plugin-cache version
+directory, and never a repo-relative path from the session's working
+directory: every past silent failure was a copy the executor chose
+over the one shipped beside this file. The one exception is
+checkable, not a judgment call: it applies when the active plan or
+brief's own scope names a file under `loom-code/scripts/adjudication_*.py`
+as a file the current task edits — that session runs its own working
+tree's copy, not the installed plugin's.
+
+**Before delivering.** Confirm the produced page carries the
+generator stamp and that its version matches the plugin whose
+protocol you are reading. A page with no stamp came from a pre-stamp
+copy of `adjudication_render.py` and must not be handed to the user.
+A stamp that IS present but whose version does NOT match is the same
+outcome as no stamp: do not deliver it. Re-run the pipeline with the
+correct copy per the "Which copy runs" rule above; if it still
+mismatches, surface the mismatch to the user rather than delivering
+the page.
 
 ## Lint-failure rule
 
