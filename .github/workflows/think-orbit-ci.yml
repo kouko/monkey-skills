@@ -1,0 +1,45 @@
+name: think-orbit CI
+
+# Runs the think-orbit pytest suite, the per-skill folder-structure
+# validator, and the Codex-manifest mirror check on every push and PR
+# that touches the plugin (or the workflow itself).
+
+on:
+  push:
+    paths:
+      - 'think-orbit/**'
+      - '.github/workflows/think-orbit-ci.yml'
+  pull_request:
+    paths:
+      - 'think-orbit/**'
+      - '.github/workflows/think-orbit-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest + skill-structure + codex-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pytest and pyyaml
+        run: python3 -m pip install --quiet pytest pyyaml
+
+      - name: Run think-orbit pytest suite
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python3 -m pytest think-orbit/skills/think-orbit/scripts/ -q
+
+      - name: Validate skill folder structure
+        run: bash .claude/hooks/validate-skill-folder-structure.sh think-orbit/skills/think-orbit/SKILL.md
+
+      - name: Check Codex manifest mirror is in sync
+        run: python3 scripts/sync_codex_manifests.py --check think-orbit
