@@ -273,7 +273,15 @@ def _check_requirement_id_form(root: Path) -> list[str]:
         text = d.read_text(encoding="utf-8")
         for m in _REQUIREMENT_ID_HDR.finditer(text):
             if m.group("id"):
-                continue  # id-form
+                if m.group("name"):
+                    continue  # id-form, name present
+                line_no = text.count("\n", 0, m.start()) + 1
+                problems.append(
+                    f"{d}:{line_no}: requirement id '{m.group('id')}' "
+                    f"under '### Requirement:' has no name (name may be "
+                    f"absent only in living-spec files, not change-folder "
+                    f"deltas; expected 'REQ-<n> — <name>')")
+                continue
             candidate = (m.group("name_legacy") or "").strip()
             token = candidate.split()[0] if candidate.split() else ""
             if token and _NEAR_MISS_ID.match(token):

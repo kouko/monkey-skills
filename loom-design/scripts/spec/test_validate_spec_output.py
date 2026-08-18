@@ -255,6 +255,43 @@ def test_accepts_legacy_prose_requirement(tmp_path):
     assert ok, problems
 
 
+def test_rejects_id_only_requirement_missing_name(tmp_path):
+    # spec-reviewer round-2 gap: docs/loom/plans/2026-08-18-requirement-
+    # identity-hybrid.md Notes §Canonical grammar — name may be absent
+    # only in living-spec files, not change-folder deltas; an id with no
+    # name is a near-miss there. No living-spec REQ-id: untagged per
+    # implementer contract rule 11 (same as test_rejects_near_miss_requirement_id).
+    body = (
+        "## ADDED Requirements\n"
+        "\n"
+        "### Requirement: REQ-1\n"
+        "The system MUST do the thing.\n"
+        "\n"
+        "#### Scenario: Valid\n"
+        "- GIVEN a user\n- WHEN login\n- THEN session\n"
+    )
+    root = _write_skeleton(tmp_path, delta_body=body)
+    ok, problems = validate(root)
+    assert not ok
+    assert any("REQ-1" in p for p in problems), problems
+
+
+def test_rejects_id_and_status_requirement_missing_name(tmp_path):
+    body = (
+        "## ADDED Requirements\n"
+        "\n"
+        "### Requirement: REQ-1 [active]\n"
+        "The system MUST do the thing.\n"
+        "\n"
+        "#### Scenario: Valid\n"
+        "- GIVEN a user\n- WHEN login\n- THEN session\n"
+    )
+    root = _write_skeleton(tmp_path, delta_body=body)
+    ok, problems = validate(root)
+    assert not ok
+    assert any("REQ-1" in p for p in problems), problems
+
+
 # --- additive-section tests (Task 3) ---------------------------------------
 # The spec station's differentiating richness lives in proposal.md's additive
 # sections; the OpenSpec delta under specs/ stays pure. So additive checks
