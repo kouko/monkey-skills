@@ -307,6 +307,69 @@ def test_id_mode_folder_keys_use_req_id_and_plan_key_resolves(tmp_path):
     assert "duplicate scenario key" not in result.stderr
 
 
+_ID_MODE_TWO_SCENARIO_SPEC = """\
+## ADDED Requirements
+
+### Requirement: REQ-3 — Foo
+The system MUST allow filtering.
+
+#### Scenario: S1
+- GIVEN one record matches
+- WHEN filter applied
+- THEN one item returned
+
+#### Scenario: S2
+- GIVEN a second record matches
+- WHEN filter applied
+- THEN a second item returned
+"""
+
+
+def test_bare_req_id_citation_covers_all_scenarios_of_that_requirement(tmp_path):
+    """A `Brief item covered` value that is exactly a bare `REQ-<n>` token
+    (referent kind (d), OQ-3 option A) covers EVERY scenario under that
+    requirement in the bound change-folder — one task citing `REQ-3` is
+    enough to discharge both `S1` and `S2`.
+
+    A bare id naming a requirement the folder never declares (`REQ-9`) is
+    unambiguous, unlike prose: it is an ERROR (exit 1) naming the task and
+    quoting the value, mirroring the brief-mode unresolvable-citation
+    diagnostic shape.
+    """
+    change_folder = tmp_path / "2026-07-10-my-change"
+    _write_spec(change_folder, _ID_MODE_TWO_SCENARIO_SPEC)
+
+    covered_plan = tmp_path / "plan.md"
+    covered_plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — foo\n"
+        "- Brief item covered: REQ-3\n",
+        encoding="utf-8",
+    )
+    result = _run(change_folder, covered_plan)
+    assert result.returncode == 0, (
+        f"a bare REQ-3 citation must cover both of REQ-3's scenarios\n"
+        f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    )
+
+    undeclared_plan = tmp_path / "plan_bad.md"
+    undeclared_plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — bogus\n"
+        "- Brief item covered: REQ-9\n",
+        encoding="utf-8",
+    )
+    bad_result = _run(change_folder, undeclared_plan)
+    assert bad_result.returncode == 1, (
+        "a bare REQ-<n> matching no id-form header in the folder must fail "
+        f"the run\nstdout:\n{bad_result.stdout}\nstderr:\n{bad_result.stderr}"
+    )
+    assert "REQ-9" in bad_result.stderr, \
+        "the undeclared value must be quoted so the author can find it"
+    assert "Task 1 — bogus" in bad_result.stderr, \
+        "the offending task must be named"
+
+
 def test_unparsed_change_folder_referent_is_named_not_dropped(tmp_path):
     """A `Brief item covered` value that does not match the join-key
     grammar must be reported with its task and its verbatim text, not
@@ -749,6 +812,37 @@ def test_wellformed_join_key_is_a_warning_not_an_error_in_brief_mode(tmp_path):
     assert all(line.lstrip().startswith("Warning:") for line in reported), (
         "the join-key task must be reported in the warning register, not the "
         f"error one; got:\n" + "\n".join(reported)
+    )
+
+
+def test_bare_req_id_is_a_warning_not_an_error_in_brief_mode(tmp_path):
+    """A task citing a bare `REQ-<n>` token does not fail brief mode — same
+    treatment as a well-formed change-folder join key
+    (`test_wellformed_join_key_is_a_warning_not_an_error_in_brief_mode`):
+    it is a legal `Brief item covered` value that simply answers a
+    different question here, so it is warned about, not errored."""
+    brief = tmp_path / "brief.md"
+    brief.write_text(_BRIEF_TWO_IDS, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — identifier referent\n"
+        "- Brief item covered: BI-1\n\n"
+        "## Task 2 — bare req-id referent\n"
+        "- Brief item covered: REQ-3\n",
+        encoding="utf-8",
+    )
+
+    result = _run_brief(brief, plan)
+    assert result.returncode == 0, (
+        "a bare REQ-<n> is a legal referent kind, so brief mode must not "
+        f"fail on it\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    )
+    reported = _stderr_lines_naming("Task 2 — bare req-id referent", result.stderr)
+    assert reported, "the bare-REQ-id task must still be named"
+    assert all(line.lstrip().startswith("Warning:") for line in reported), (
+        "the bare-REQ-id task must be reported in the warning register, not "
+        f"the error one; got:\n" + "\n".join(reported)
     )
 
 
