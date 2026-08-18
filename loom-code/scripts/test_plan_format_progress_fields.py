@@ -44,9 +44,10 @@ WP_SKILL_MD = (
 
 GOAL_SCHEMA_LINE = (
     "Goal: <one sentence transcribed from the brief's Smallest End State at "
-    "plan time — frozen with the plan (wrap continuation lines WITH "
-    "indentation — unindented wraps silently truncate the rendered goal); "
-    "never edited afterward>"
+    "plan time, within a 300-character ceiling and no nested body — see "
+    "§Field-value grammar; frozen with the plan (wrap continuation lines "
+    "WITH indentation — unindented wraps silently truncate the rendered "
+    "goal); never edited afterward>"
 )
 
 STAGE_ENUM_LINE = (
