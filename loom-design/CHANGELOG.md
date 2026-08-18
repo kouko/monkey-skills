@@ -11,6 +11,30 @@ The five plugins this one absorbed keep their own histories alongside:
 `CHANGELOG-interface-design.md`, `CHANGELOG-product-principles.md`. Their
 version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
 
+## [0.3.0] — 2026-08-18 — requirement identifiers
+
+### Added
+
+- **`REQ-<n> — <name>` requirement-identifier header grammar** (T1–T3).
+  `validate_spec_output.py` now parses id-form `### Requirement:` headers,
+  rejects a near-miss token (`REQ1`, `req-1`, `R-1`), enforces all-or-nothing
+  adoption per spec file (a file with one id-form header must use id-form
+  for every header in it; legacy prose-only files are unaffected), and
+  rejects a duplicate `REQ-<n>` declared more than once within a
+  change-folder.
+- **`references/requirement-identifiers.md`**, the SSOT for the `REQ-<n>`
+  convention — form, authored-never-derived, monotonic-never-reused
+  minting rule, change-folder/living-spec scope, and an anti-patterns list
+  — pinned by `scripts/spec/test_requirement_ids.py` (T10).
+
+### Changed
+
+- **`spec-expansion`'s `SKILL.md` teaches one requirement-header grammar**
+  instead of two: the skeleton and the status-suffix passage both now show
+  `### Requirement: REQ-<n> — <name>` (with `[deferred]` etc. as a
+  trailing suffix), pointing at `references/requirement-identifiers.md`
+  for the id rules instead of restating them (T11).
+
 ## [0.2.0] — 2026-08-17 — artifact-layer table routing (spec side)
 
 ### Changed
