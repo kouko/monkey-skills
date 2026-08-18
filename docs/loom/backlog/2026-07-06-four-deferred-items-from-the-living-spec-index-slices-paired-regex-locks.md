@@ -15,3 +15,6 @@ start: next living-spec script touch (loom-code/scripts/living_spec_*.py or chec
   tokenize-ization; (c) Rule-of-Three `_matched_files` extraction;
   (d) Open-Q6 ready-signal binding for BOTH merge-boundary gates
   (verify-index + active-coverage).
+- Item (a) closed by the requirement-identity-hybrid arc's Task 6
+  (`_STATUS_VOCAB`, commit a62857e8) — both status regexes now derive
+  from one module constant. (b)–(d) remain open.

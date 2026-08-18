@@ -16,7 +16,7 @@ start: user bet it at the 2026-08-13 close-out — run immediately after the bri
 
 - **The defect**: `loom-spec`'s change-folder names a requirement in prose
   (`### Requirement: <name>`, enforced at
-  `loom-spec/scripts/validate_spec_output.py:46-47`). The living spec
+  `loom-design/scripts/spec/validate_spec_output.py:47`). The living spec
   gives the same concept a numeric identity
   (`### Requirement: REQ-N [active|deferred]`,
   `loom-code/scripts/living_spec_index.py:14-20`), and code tags join

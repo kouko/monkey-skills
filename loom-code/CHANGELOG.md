@@ -5,6 +5,43 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.86.0] — 2026-08-18 — requirement identity (REQ-<n> + name)
+
+### Added
+
+- **`check_scenario_coverage.py` keys id-mode folders by `REQ-<n>`**
+  instead of the requirement name, so two id-mode requirements that
+  happen to share a name no longer collide as the same coverage key;
+  legacy name-keyed folders are unaffected.
+- **A plan may cite a bare `REQ-<n>`** in `Brief item covered` for
+  requirement-level coverage — it resolves to every scenario key of
+  that requirement in the bound folder; an undeclared id is a
+  change-folder-mode error and a brief-mode warning.
+- **`living_spec_index.py` parses `REQ-<n> — <name> [status]`** and
+  skips prose-only headers instead of misreading them as ids; both
+  status regexes now derive from one `_STATUS_VOCAB` constant, closing
+  deferred item (a) of the 2026-07-06 living-spec backlog entry.
+- **`check-living-spec-index.py`'s namespace now folds every live
+  change-folder's `specs/`, the archive, and `docs/loom/spec/`**
+  instead of reading only the single (often nonexistent)
+  `docs/loom/spec/` root — an `@req` tag minted today in a live
+  change-folder resolves today.
+- **The living-spec structural lane fails on a `REQ-<n>` declared in
+  two namespace files** — the merge-boundary collision guard for two
+  branches that each mint the same id.
+- **`check-living-spec-index.py --next-req-id [root]`** prints the
+  next free `REQ-<n>` across all namespace roots, declared in
+  `AGENTS.md`'s managed command-surface block.
+- **`writing-plans` accepts the `REQ-<n>` referent** (plan-format.md,
+  the reviewer prompt, and the SKILL.md join-key mandate all name the
+  bare id and the id-form join key `<change-id> / REQ-<n> / Scenario:
+  <name>` for id-mode folders).
+- **Implementer Rule 11's `@req` namespace description now names the
+  concrete source** — an id-form `### Requirement: REQ-<n> — <name>`
+  header in a live change-folder, the archive, or `docs/loom/spec/` —
+  replacing the vague "resolves in the `loom-design` namespace"
+  wording; the never-mint rule is unchanged.
+
 ## [0.85.0] — 2026-08-17 — artifact-layer table routing
 
 ### Added
