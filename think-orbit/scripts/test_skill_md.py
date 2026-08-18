@@ -133,3 +133,32 @@ def test_router_skill_routes_to_verbs_and_forbids_views():
     assert re.search(r"never read.*views/", body, re.IGNORECASE) or re.search(
         r"views/.*never", body, re.IGNORECASE
     ), "router SKILL.md body must state the views/ read prohibition"
+
+
+# Every CLI mention must be copy-pasteable: a bare `dag.py <verb>` sends the
+# reader to a script that is not on their PATH.
+DAG_INVOCATION = re.compile(r"dag\.py (?:check|break|claims|render|impact)")
+FULL_PREFIX = "${CLAUDE_PLUGIN_ROOT}/scripts/"
+
+
+def test_router_skill_always_uses_full_invocation_prefix():
+    # @req: BI-6
+    body = _body(ROUTER_SKILL_MD.read_text(encoding="utf-8"))
+
+    bare = [
+        body[max(0, m.start() - 60) : m.end()]
+        for m in DAG_INVOCATION.finditer(body)
+        if not body[: m.start()].endswith(FULL_PREFIX)
+    ]
+    assert bare == [], (
+        "every dag.py invocation must be written "
+        f"`{FULL_PREFIX}dag.py <verb> <root>`; bare mentions: {bare}"
+    )
+
+
+def test_router_skill_states_root_resolution_ladder():
+    # @req: BI-6
+    body = _body(ROUTER_SKILL_MD.read_text(encoding="utf-8"))
+
+    for marker in ("current working directory", "ask", "session"):
+        assert marker in body, f"root-resolution ladder must mention {marker!r}"

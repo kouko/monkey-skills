@@ -24,12 +24,20 @@ writing: no forms, no per-node confirmation, no progress narration. The
 `decision-session` skill enforces this contract; state it here once and
 do not re-explain it in conversation.
 
-## Intake — once per project
+## Intake — resolve `<root>` at every session entry
 
-Ask for the project directory `<root>` the first time, and only the
-first time. It is a folder the user owns, typically inside their
-Obsidian vault. Never invent a path, never create one inside the plugin,
-and never guess from a previous project.
+`<root>` is the project directory: a folder the user owns, typically
+inside their Obsidian vault. It lives for this session only — Part 1
+keeps no state file, so you re-resolve it next session. Never invent a
+path, never create one inside the plugin, and never carry over a path
+you remember from another project.
+
+Run this ladder, in order, at every session entry:
+
+1. The user's message names a directory → use it.
+2. Otherwise the current working directory contains `nodes/` or
+   `assumptions/` → propose it and confirm in one line.
+3. Otherwise ask for the project directory, once for this session.
 
 Sources are **local paths**. If the material lives in Notion, Google
 Drive, or another external service, the user reaches it through their
@@ -75,6 +83,9 @@ narrate the whole graph, do not re-list every node, and do not ask a
 question in this paragraph — the next thing the user says decides the
 route.
 
+Name the `<root>` you resolved in that same paragraph. A wrong folder is
+then caught in the first line rather than after five nodes.
+
 ## Routing
 
 | The user … | Route to |
@@ -82,7 +93,7 @@ route.
 | starts a new decision, or wants to keep analysing an existing one | `decision-session` |
 | says an assumption broke, the situation changed, 「假設破了」/「情況變了」 | `break-assumption` |
 | asks for the mainline or per-branch view, a compiled proposal, or milestone git commits | Say plainly: "Part 2 — not yet." Do not improvise a substitute. |
-| asks to see the graph | Tell them to open `<root>/views/dag.md`; regenerate it first with `dag.py render <root>` if nodes changed since the last render |
+| asks to see the graph | Regenerate first with `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py render <root>` — it is cheap and deterministic — then tell them to open `<root>/views/dag.md` |
 
 **You never read any file under `views/`.** It is a derived, lossy view
 for the human. When you need graph structure, recompute it from the
@@ -97,7 +108,7 @@ frontmatter of `nodes/`, `assumptions/`, and `research/`.
 | `<root>/research/` | standalone research notes; dependents reference the `claim` line |
 | `<root>/views/` | rendered views — **human-only**, never read by you |
 
-Every verb has the same shape:
+The five project verbs share one shape:
 
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py <verb> <root> [args]
@@ -106,10 +117,10 @@ python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py <verb> <root> [args]
 | Verb | Meaning |
 |---|---|
 | `check <root>` | structural gate; silent on pass, one line per violation on failure |
-| `break <root> <assumption-id>` | mark an assumption broken and propagate stale/weakened status downstream |
+| `break <root> <assumption-id>` | mark an assumption broken, propagate status downstream, write `views/impact-<id>.md`, and print `stale:` / `weakened:` id lists |
 | `claims <root> --since HEAD` | research claims that changed since a git revision, with their dependents |
 | `render <root>` | write `views/dag.md`, the full DAG view |
-| `impact <root> <assumption-id>` | write `views/impact-<id>.md` for one assumption |
+| `impact <root> <assumption-id>` | re-render `views/impact-<id>.md` without breaking anything — `break` already wrote it once |
 
 ## Pointers
 
