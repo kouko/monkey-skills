@@ -49,6 +49,15 @@ Role boundaries enforced by behavior, not reading restrictions:
   (named on stderr); a `[deferred]` req with 0 tests is surfaced on
   stdout (informational, rc=0). Sound because CI runs it after the green
   pytest gate, so a linked test ≡ a passing test.
+- **Look up the next free requirement id**:
+  `python3 loom-code/scripts/check-living-spec-index.py --next-req-id [<repo-root>]`
+  — prints `REQ-<max+1>` where max is the highest `\d+` among ALL
+  id-form `### Requirement:` headers found across live change-folders +
+  archive + the living-spec root (`REQ-1` when none exist), exit 0
+  always. LIMIT: scans headers PRESENT, not every id ever minted — a
+  retired number is free to be re-minted; this matches the "next
+  unused = highest ever seen + 1" minting convention only while no
+  declaration is ever deleted.
 - **Check writing-plans scenario coverage** (writing-plans self-check;
   two modes, selected by the input you pass — passing both is refused):
   `python3 loom-code/scripts/check_scenario_coverage.py <change-folder> <plan-path>`

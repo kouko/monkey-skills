@@ -37,9 +37,18 @@ modes selected from argv:
   (stderr), a deferred req with 0 tests is surfaced informationally
   (stdout). The merge-boundary coverage gate (sound because CI runs it
   after the green pytest gate, so a linked test == a passing test).
+- ``--next-req-id [root]`` prints ``REQ-<max+1>`` where max is the
+  highest ``\\d+`` among ALL id-form ``### Requirement:`` headers found
+  by the T7 folded loader across live change-folders + archive + the
+  living-spec root (``REQ-1`` when none exist), exit 0 always. LIMIT:
+  it scans headers PRESENT, not every id ever minted — a retired
+  number (its declaration deleted) is free to be re-minted; this only
+  matches the "next unused = highest ever seen + 1" convention while
+  no declaration is ever deleted.
 
 The index modes default ``<path>`` to ``docs/loom/INDEX.md`` when
-omitted; ``--check-coverage`` takes only an optional trailing ``[root]``.
+omitted; ``--check-coverage`` and ``--next-req-id`` each take only an
+optional trailing ``[root]``.
 
 ``build_index(root)`` is the single regeneration path the CLI, the
 finishing step, and the CI verify lane all call — composing
@@ -60,6 +69,7 @@ Stdlib only, plus the sibling living-spec modules it composes.
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -351,11 +361,21 @@ def main(argv: list[str] | None = None) -> int:
     #   [--write-index, [path,] [root]] -> regenerate + WRITE path
     #   [--verify-index, [path,] [root]]-> regenerate + byte-identity gate
     #   [--check-coverage, [root]]      -> active-coverage merge gate
+    #   [--next-req-id, [root]]         -> print next free REQ-<n>, exit 0
     # A leading --write-index/--verify-index flag consumes an optional
-    # <path> arg (defaulting to docs/loom/INDEX.md); --check-coverage takes
-    # no <path>. The trailing positional, if present, still selects the
-    # source tree (the WARN-lane tests pass `[str(repo)]` with no flag, so
-    # the default path must preserve that behavior).
+    # <path> arg (defaulting to docs/loom/INDEX.md); --check-coverage and
+    # --next-req-id take no <path>. The trailing positional, if present,
+    # still selects the source tree (the WARN-lane tests pass
+    # `[str(repo)]` with no flag, so the default path must preserve that
+    # behavior).
+    #
+    # --next-req-id LIMIT: it scans headers PRESENT (via the same T7
+    # folded loader every other mode uses), not every id ever minted. A
+    # retired req id (declaration deleted) is NOT excluded from being
+    # re-minted once nothing references it any more — the doc's minting
+    # rule ("next unused = highest ever seen + 1") coincides with this
+    # tool's "highest present + 1" only while no declaration is ever
+    # deleted.
     args = sys.argv[1:] if argv is None else argv
 
     mode = None
@@ -365,7 +385,7 @@ def main(argv: list[str] | None = None) -> int:
         index_path = Path(args[0]) if args else _DEFAULT_INDEX
         if args:
             args = args[1:]
-    elif args and args[0] == "--check-coverage":
+    elif args and args[0] in ("--check-coverage", "--next-req-id"):
         mode = args[0]
         args = args[1:]
 
@@ -407,6 +427,19 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 1
         print("OK: every active living-spec req is covered.")
+        return 0
+    if mode == "--next-req-id":
+        # Ignores the capability values, parses the trailing \d+ of every
+        # id-form key in the T7 folded namespace, and prints the next free
+        # REQ-<n> — REQ-1 on an empty namespace. Opens no new roots and
+        # reads no header the structural lane does not already read.
+        namespace = _load_namespace_all(root)
+        highest = 0
+        for req_id in namespace:
+            match = re.search(r"\d+", req_id)
+            if match:
+                highest = max(highest, int(match.group()))
+        print(f"REQ-{highest + 1}")
         return 0
 
     # WARN lane: advisory only. Print each drift WARN to stderr but NEVER

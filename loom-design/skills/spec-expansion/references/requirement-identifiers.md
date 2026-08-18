@@ -49,6 +49,13 @@ that looks free without checking all three roots — a collision across
 parallel change-folders is exactly what the merge-boundary checker exists
 to reject.
 
+`--next-req-id` computes "highest number among headers PRESENT, plus one",
+not "highest number ever minted, plus one" — it has no memory of a
+declaration once it is deleted, so the two coincide only for as long as no
+requirement is ever deleted; if one is, its retired number stops being
+excluded from re-minting and the author must keep tracking retirement by
+hand.
+
 **Split and merge retires both sides.** When one requirement is split into
 two, the original number is retired and both halves take new numbers —
 neither half inherits it. When two requirements are merged into one, both

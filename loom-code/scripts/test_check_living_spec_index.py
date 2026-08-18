@@ -834,3 +834,51 @@ def test_committed_tree_has_no_structural_violations():
         "`python3 loom-code/scripts/check-living-spec-index.py .` to see "
         "each dangling @req / malformed tag"
     )
+
+
+def test_next_req_id_prints_highest_plus_one_across_roots(tmp_path, capsys):
+    # No living-spec REQ-id: this test covers T9's own new CLI mode, a
+    # capability with no ### Requirement namespace entry of its own yet.
+    # WHY: `--next-req-id` must scan ALL namespace roots the T7 folded
+    # loader covers (live change-folders + archive + living root), not
+    # just one — REQ-3 lives in a live folder, REQ-11 in archive; the
+    # printed next-free id must be highest-present + 1 across BOTH.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+
+    live_dir = repo / "docs" / "loom" / "2026-01-01-x" / "specs" / "cap"
+    live_dir.mkdir(parents=True)
+    (live_dir / "spec.md").write_text(
+        "### Requirement: REQ-3 — Foo\n", encoding="utf-8"
+    )
+    archive_dir = (
+        repo / "docs" / "loom" / "archive" / "2026-01-02-y" / "specs" / "cap2"
+    )
+    archive_dir.mkdir(parents=True)
+    (archive_dir / "spec.md").write_text(
+        "### Requirement: REQ-11 — Bar\n", encoding="utf-8"
+    )
+    _commit(repo, "REQ-3 live, REQ-11 archive", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main(["--next-req-id", str(repo)])
+    captured = capsys.readouterr()
+    assert rc == 0, f"--next-req-id must exit 0, got rc={rc!r}"
+    assert captured.out.strip() == "REQ-12", (
+        f"expected 'REQ-12' (highest present REQ-11 + 1), "
+        f"got: {captured.out!r}"
+    )
+
+
+def test_next_req_id_prints_req_1_on_empty_namespace(tmp_path, capsys):
+    # No living-spec REQ-id: empty-namespace base case of the same mode.
+    checker = _load_checker()
+    repo = _init_repo(tmp_path)
+    (repo / "README.md").write_text("empty fixture\n", encoding="utf-8")
+    _commit(repo, "no specs at all", date="2026-01-01T00:00:00 +0000")
+
+    rc = checker.main(["--next-req-id", str(repo)])
+    captured = capsys.readouterr()
+    assert rc == 0, f"--next-req-id must exit 0 on empty namespace, got rc={rc!r}"
+    assert captured.out.strip() == "REQ-1", (
+        f"expected 'REQ-1' on an empty namespace, got: {captured.out!r}"
+    )
