@@ -165,3 +165,137 @@ def test_load_project_records_non_dict_or_invalid_frontmatter_as_problems_instea
     assert "list_frontmatter.md" in problems_text
     assert "bad_yaml.md" in problems_text
     assert all("frontmatter:" in p for p in project.problems)
+
+
+def _build_clean_project(root: Path) -> None:
+    """A structurally-clean fixture: 4 nodes, no check violations."""
+    _write(
+        root / "nodes" / "goal.md",
+        "id: goal\n"
+        "type: GOAL\n"
+        "seq: 1\n"
+        "summary: Ship v0\n"
+        "status: active\n",
+    )
+    _write(
+        root / "nodes" / "fact1.md",
+        "id: fact1\n"
+        "type: FACT\n"
+        "seq: 2\n"
+        "summary: Users churn at 5%\n"
+        "status: active\n"
+        "source: internal survey\n"
+        "quote: \"5% monthly churn\"\n",
+    )
+    _write(
+        root / "nodes" / "claim1.md",
+        "id: claim1\n"
+        "type: CLAIM\n"
+        "seq: 3\n"
+        "summary: Pricing change reduces churn\n"
+        "status: active\n"
+        "branch: b1\n"
+        "branch_type: exclusive\n"
+        "inputs:\n"
+        "  - ref: goal\n"
+        "    load_bearing: true\n",
+    )
+    _write(
+        root / "assumptions" / "q4_budget_holds.md",
+        "id: q4_budget_holds\n"
+        "status: open\n"
+        "statement: Q4 budget will not be cut\n"
+        "breaks_if: Budget cut announced\n"
+        "source: finance team\n"
+        "branch: b1\n",
+    )
+    _write(
+        root / "research" / "r1.md",
+        "id: r1\n"
+        "claim: Competitor X raised prices last quarter\n"
+        "seq: 4\n"
+        "source: analyst note\n"
+        "quote: \"prices rose 3% in Q2\"\n",
+    )
+
+
+def test_check_prints_one_line_per_structural_violation_and_is_silent_when_clean(tmp_path, capsys):
+    # @req: BI-4
+    dirty_root = tmp_path / "dirty"
+    _write(
+        dirty_root / "nodes" / "goal.md",
+        "id: goal\n"
+        "type: GOAL\n"
+        "seq: 1\n"
+        "summary: Ship v0\n"
+        "status: active\n",
+    )
+    _write(
+        dirty_root / "nodes" / "claim1.md",
+        "id: claim1\n"
+        "type: CLAIM\n"
+        "seq: 2\n"
+        "summary: Pricing change reduces churn\n"
+        "status: active\n"
+        "inputs:\n"
+        "  - ref: goal\n",  # missing load_bearing -> violation 1
+    )
+    _write(
+        dirty_root / "nodes" / "claim2.md",
+        "id: claim2\n"
+        "type: CLAIM\n"
+        "seq: 3\n"
+        "summary: Second claim\n"
+        "status: active\n"
+        "inputs:\n"
+        "  - ref: missing_id\n"  # dangling ref -> violation 2
+        "    load_bearing: true\n",
+    )
+    _write(
+        dirty_root / "nodes" / "fact1.md",
+        "id: fact1\n"
+        "type: FACT\n"
+        "seq: 4\n"
+        "summary: Users churn at 5%\n"
+        "status: active\n"
+        "source: internal survey\n",  # missing quote -> violation 3
+    )
+
+    dirty_mtimes_before = {
+        p: p.stat().st_mtime_ns for p in sorted((dirty_root / "nodes").glob("*.md"))
+    }
+
+    rc = dag.main(["check", str(dirty_root)])
+    out = capsys.readouterr().out
+    lines = [ln for ln in out.splitlines() if ln]
+
+    assert rc == 1
+    assert len(lines) == 3
+    assert any("claim1.md" in ln and "load_bearing" in ln for ln in lines)
+    assert any("claim2.md" in ln and "ref" in ln for ln in lines)
+    assert any("fact1.md" in ln and "fact-source" in ln for ln in lines)
+
+    dirty_mtimes_after = {
+        p: p.stat().st_mtime_ns for p in sorted((dirty_root / "nodes").glob("*.md"))
+    }
+    assert dirty_mtimes_before == dirty_mtimes_after
+
+    clean_root = tmp_path / "clean"
+    _build_clean_project(clean_root)
+    clean_mtimes_before = {
+        p: p.stat().st_mtime_ns for p in sorted((clean_root / "nodes").glob("*.md"))
+    }
+
+    project = dag.load_project(clean_root)
+    assert len(project.nodes) >= 4
+
+    rc_clean = dag.main(["check", str(clean_root)])
+    out_clean = capsys.readouterr().out
+
+    assert rc_clean == 0
+    assert out_clean == ""
+
+    clean_mtimes_after = {
+        p: p.stat().st_mtime_ns for p in sorted((clean_root / "nodes").glob("*.md"))
+    }
+    assert clean_mtimes_before == clean_mtimes_after

@@ -204,16 +204,112 @@ def load_project(root: Path) -> Project:
     return Project(root=root, nodes=nodes, assumptions=assumptions, problems=problems)
 
 
+def _relpath(path: Path | None, root: Path) -> str:
+    if path is None:
+        return "<unknown>"
+    try:
+        return path.relative_to(root).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def _rule_load_bearing(project: Project) -> list[str]:
+    violations = []
+    for node in project.nodes:
+        relpath = _relpath(node.path, project.root)
+        for entry in node.inputs:
+            if entry.load_bearing is None:
+                violations.append(
+                    f"{relpath}: load_bearing: input ref={entry.ref!r} missing load_bearing"
+                )
+    return violations
+
+
+def _rule_ref(project: Project) -> list[str]:
+    known_ids = {n.id for n in project.nodes if n.id} | {
+        a.id for a in project.assumptions if a.id
+    }
+    violations = []
+    for node in project.nodes:
+        relpath = _relpath(node.path, project.root)
+        for entry in node.inputs:
+            if entry.ref is not None and entry.ref not in known_ids:
+                violations.append(f"{relpath}: ref: input ref={entry.ref!r} resolves to no node/assumption/research id")
+    return violations
+
+
+def _rule_fact_source(project: Project) -> list[str]:
+    violations = []
+    for node in project.nodes:
+        if node.type != "FACT":
+            continue
+        relpath = _relpath(node.path, project.root)
+        missing = [name for name, value in (("source", node.source), ("quote", node.quote)) if not value]
+        for name in missing:
+            violations.append(f"{relpath}: fact-source: missing {name}")
+    return violations
+
+
+def _rule_required_field(project: Project) -> list[str]:
+    violations = []
+    for node in project.nodes:
+        relpath = _relpath(node.path, project.root)
+        for name in ("type", "id", "seq", "summary"):
+            if not getattr(node, name):
+                violations.append(f"{relpath}: required-field: missing {name}")
+    return violations
+
+
+def _rule_problems(project: Project) -> list[str]:
+    return list(project.problems)
+
+
+_CHECK_RULES = (
+    _rule_load_bearing,
+    _rule_ref,
+    _rule_fact_source,
+    _rule_required_field,
+    _rule_problems,
+)
+
+
+def check(project: Project) -> list[str]:
+    """Run every structural rule against `project`, returning sorted violation lines.
+
+    Never writes to any file — purely a read/report pass over an already-loaded
+    Project. Sort by (relpath, rule) for deterministic output.
+    """
+    violations: list[str] = []
+    for rule in _CHECK_RULES:
+        violations.extend(rule(project))
+
+    def sort_key(line: str) -> tuple[str, str]:
+        relpath, _, rest = line.partition(": ")
+        rule_token, _, _ = rest.partition(": ")
+        return (relpath, rule_token)
+
+    return sorted(violations, key=sort_key)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="dag", description="strategy-dag project loader/CLI")
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("load", help="load and validate the project graph (diagnostics only)")
+    check_parser = subparsers.add_parser("check", help="run the structural gate and report violations")
+    check_parser.add_argument("root", help="project root directory")
     args = parser.parse_args(argv)
 
     if args.command == "load":
         project = load_project(Path.cwd())
         print(f"loaded {len(project.nodes)} node(s), {len(project.assumptions)} assumption(s)")
         return 0
+
+    if args.command == "check":
+        project = load_project(Path(args.root))
+        violations = check(project)
+        for line in violations:
+            print(line)
+        return 1 if violations else 0
 
     parser.print_help()
     return 0
