@@ -11,8 +11,10 @@
 > 選 A＝拆兩份 brief／兩份計畫，範圍不變。Part 1 的最後一項是真實素材檢查點；Part 2 在檢查點
 > 回饋後開工。
 > **Design-side on-ramp**: direct（見總覽）。**Continuous mode**: not named — human-pumped.
-> **Working name**: `think-orbit`。**Skill shape**: 單一 skill `think-orbit/skills/think-orbit/`
-> （SKILL.md ≤4,500 words，references/ + scripts/ 各一層）。
+> **Name**: `think-orbit`（使用者 2026-08-18 定案）。**Skill shape**（使用者 2026-08-18 選 B）：入口路由 `using-think-orbit`
+> ＋動詞 skill `decision-session`／`break-assumption`（Part 2 再加 `render-views`／`compile-proposal`）；腳本在 plugin 層
+> `think-orbit/scripts/`（三 skill 共用）；每個 SKILL.md ≤4,500 words，references 在 decision-session 下、其他 skill 以
+> `${CLAUDE_PLUGIN_ROOT}` 路徑指過去。
 
 ## Problem
 

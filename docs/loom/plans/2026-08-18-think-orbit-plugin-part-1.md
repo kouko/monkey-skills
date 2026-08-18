@@ -7,17 +7,17 @@ Goal: Part 1 交付後：plugin 骨架在 repo 內、有自己的 CI lane；使�
     標 `stale`、輸出影響範圍視圖、不重算；研究筆記以其 `claim` 一行被引用、`claim` 變了才通知下游；
     整張 DAG 由腳本畫成一張基本 Mermaid 全圖給人看；最後使用者用自己的真實素材跑完一輪、
     對著 DAG 全圖與節點檔寫下檢查點結論。
-Stage: sdd:wave-2
+Stage: sdd:wave-3
 Steps:
     1. 骨架與地基（plugin 骨架／載入器＋格式文件／研究規則與盲區清單）
     2. 四個腳本動詞與 CI lane（check／break／claims／render 基本 DAG 全圖／CI workflow）
     3. 補齊規則與影響範圍視圖（段落形式／假設檔規則／impact 視圖）
-    4. 核心對話協定（SKILL.md）
+    4. 搬家＋三個 skill（腳本移到 plugin 層／路由／decision-session／break-assumption）
     5. 真實素材檢查點（使用者親跑）
-**Total tasks**: 13
+**Total tasks**: 16
 **Critical-path depth**: 5 (≤5)
 **Execution order**: sequential（所有 `Files touched` 皆為 PROPOSED-new 路徑 → `Independent: false`；SDD 逐一派發，同層任務無先後之分）
-**Plan-document-reviewer verdict**: PASS (2026-08-18, round 2, 16/16)
+**Plan-document-reviewer verdict**: PASS (2026-08-18, round 3, 16/16)
 **Continuous mode**: endpoint named: yes（2026-08-18 `/goal 開始實作到完成吧`）→ continuous to PR-open; never auto-merge; T12 是使用者親跑的計畫內停點
 **Umbrella brief**: docs/loom/specs/2026-08-18-think-orbit-plugin.md（總覽；Part 2 = `…-part-2.md`，只在 T12 檢查點檔存在後開工）
 
@@ -36,13 +36,20 @@ flowchart LR
     T4 --> T8["T8 段落形式規則"]
     T4 --> T9["T9 假設檔規則"]
     T5 --> T10["T10 impact 視圖"]
-    T1 --> T11["T11 SKILL 核心協定"]
+    T14 --> T11["T11 decision-session SKILL"]
     T6 --> T11
     T8 --> T11
     T9 --> T11
     T10 --> T11
+    T13 --> T14["T14 搬家：腳本至 plugin 層＋三 skill 骨架"]
+    T14 --> T15["T15 using-think-orbit 路由"]
+    T6 --> T15
+    T14 --> T16["T16 break-assumption"]
+    T10 --> T16
     T7 --> T12["T12 真實素材檢查點"]
     T11 --> T12
+    T15 --> T12
+    T16 --> T12
 ```
 
 ## Open Questions
@@ -177,7 +184,7 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Dependencies**: Tasks 1, 2 complete first
 - **Independent**: false
 - **Brief item covered**: BI-8 — Plugin scaffold（CI lane 半邊：repo 既有 skill-structure 掃描不含新 plugin，見 brief §Error）
-- **Status**: pending
+- **Status**: done(7877db56)
 - **Gloss**: 讓這個 plugin 的測試真的會在 PR 上跑——repo 既有掃描不涵蓋新 plugin，沒有這條 lane 就是暗測試。
 
 ## Task 8 — `check` 加段落形式規則
@@ -230,26 +237,26 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Status**: pending
 - **Gloss**: 前提破了之後使用者看的那張圖——只給人看、由腳本重生成、agent 不讀。
 
-## Task 11 — SKILL.md 核心對話協定
+## Task 11 — decision-session SKILL.md：核心對話協定
 
-- **Description**: Replace the Task 1 stub body of `think-orbit/skills/think-orbit/SKILL.md` with the core protocol (body ≤4,500 words; conversation-language examples allowed): intake (ask for the project dir once; sources are local paths — external services via MCP, not this skill); the three interrupt points (confirm GOAL / ask assumptions when a branch opens / confirm DECISION) and the rule that everything else is silent file writing; the first-sitting flow (GOAL → branches with `branch_type` → ≤3 assumptions drafted by agent, confirmed by user, falsifiability check → CLAIM/FACT nodes with monotonic `seq` and `inputs` tagged `load_bearing`); procedural/social content produces no node; run `python3 <skill>/scripts/dag.py check <root>` at every node boundary and relay only failures; resume opening (`claims --since HEAD` first, then restate last DECISION + open assumptions); run `python3 <skill>/scripts/dag.py render <root>` after every milestone (GOAL confirmed / branch opened / DECISION written / assumption broken) and tell the user where `views/dag.md` is — the DAG is the CoT made visible, the user reads it, the agent never does; break-assumption flow (agent raises hand, user declares, run `break`, offer "direct dependents only" vs "full impact" using the impact view); user may hand-edit any file between turns; the agent must not read `views/` files; point at `references/node-schema.md`, `references/research-rules.md`, `references/blind-spot-checklist.md`; a short "not yet in Part 1" line naming mainline/branches views, proposal compile, and milestone commits. Update the frontmatter `description` to trigger on 「我要決定」/「決策推演」/ "help me decide" / "resume the decision" / 「假設破了」. Write the test first.
-- **Module**: think-orbit/skills/think-orbit/SKILL.md
-- **Files touched**: think-orbit/skills/think-orbit/SKILL.md, NEW: think-orbit/skills/think-orbit/scripts/test_skill_md.py
+- **Description**: Write `think-orbit/skills/decision-session/SKILL.md` (created as a stub by Task 14) — the core sitting protocol (body ≤4,500 words; conversation-language examples allowed). Intake and the resume opening live in the router (Task 15) and the break flow in Task 16; this skill assumes the router has already resolved the project dir and hands over. Content: the three interrupt points (confirm GOAL / ask assumptions when a branch opens / confirm DECISION) and the rule that everything else is silent file writing; the first-sitting flow (GOAL → branches with `branch_type` → ≤3 assumptions drafted by agent, confirmed by user, falsifiability check → CLAIM/FACT nodes with monotonic `seq` and `inputs` tagged `load_bearing`); procedural/social content produces no node; run `python3 <skill>/scripts/dag.py check <root>` at every node boundary and relay only failures; run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py render <root>` after every milestone (GOAL confirmed / branch opened / DECISION written / assumption broken) and tell the user where `views/dag.md` is — the DAG is the CoT made visible, the user reads it, the agent never does; when the user says an assumption broke, hand off to the `break-assumption` skill (do not re-implement it); user may hand-edit any file between turns; the agent must not read `views/` files; point at its own `references/node-schema.md`, `references/research-rules.md`, `references/blind-spot-checklist.md` (moved here by Task 14); a short "not yet in Part 1" line naming mainline/branches views, proposal compile, and milestone commits. Frontmatter `description` triggers on 「我要決定」/「決策推演」/「繼續上次的決策」/ "help me decide" / "continue the decision" — but the router (Task 15) is the primary entry; this skill's description must say it is normally reached via `using-think-orbit`. All `dag.py` invocations use `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py <verb> <root>` (plugin-level scripts, Task 14). Write the test first.
+- **Module**: think-orbit/skills/decision-session/SKILL.md
+- **Files touched**: think-orbit/skills/decision-session/SKILL.md, NEW: think-orbit/scripts/test_skill_md.py
 - **Context paths**:
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/specs/2026-08-18-think-orbit-plugin-part-1.md
   - /Users/kouko/kouko-obsidian-vault/research/2026-08-18 決策推演 plugin v0 設計定案.md
-  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/think-orbit/skills/think-orbit/references/node-schema.md
-  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/think-orbit/skills/think-orbit/references/research-rules.md
-  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/tsundoku/skills/book-extract/SKILL.md
+  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/think-orbit/skills/decision-session/references/node-schema.md
+  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/think-orbit/skills/decision-session/references/research-rules.md
+  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/loom-code/skills/using-loom-code/SKILL.md (router shape precedent)
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/CLAUDE.md
 - **Acceptance**:
-  - **RED**: `think-orbit/skills/think-orbit/scripts/test_skill_md.py::test_skill_md_names_cli_verbs_interrupts_view_prohibition_and_word_cap` — asserts SKILL.md body word count ≤4,500, contains the literal strings `dag.py check`, `dag.py break`, `dag.py claims`, `dag.py render`, references all three `references/*.md` files by relative path, contains a "views/" prohibition sentence, and names the three interrupt points — fails on the stub (verbs absent).
-  - **GREEN**: the test passes; `bash .claude/hooks/validate-skill-folder-structure.sh think-orbit/skills/think-orbit/SKILL.md` exits 0; `python3 scripts/check-plugin-description-skill-coherence.py` exits 0.
-- **Dependencies**: Tasks 1, 3, 6, 8, 9, 10, 13 complete first
+  - **RED**: `think-orbit/scripts/test_skill_md.py::test_decision_session_skill_names_cli_verbs_interrupts_view_prohibition_and_word_cap` — asserts decision-session SKILL.md body word count ≤4,500, contains the literal strings `dag.py check`, `dag.py claims`, `dag.py render`, `break-assumption` (hand-off), references all three `references/*.md` files by relative path, contains a "views/" prohibition sentence, and names the three interrupt points — fails on the stub (verbs absent).
+  - **GREEN**: the test passes; `bash .claude/hooks/validate-skill-folder-structure.sh think-orbit/skills/decision-session/SKILL.md` exits 0; `python3 scripts/check-plugin-description-skill-coherence.py` exits 0.
+- **Dependencies**: Tasks 3, 6, 8, 9, 10, 13, 14 complete first
 - **Independent**: false
 - **Brief item covered**: BI-6 — Core conversation protocol (SKILL.md)（主）＋ BI-7 — Research rules（SKILL 指向 T3 的 reference）＋ BI-12 — Basic DAG view（SKILL 教何時看 `views/dag.md`）＋ BI-10 — Umbrella (Part 1)（骨架＋腳本＋核心 SKILL 落地）
 - **Status**: pending
-- **Gloss**: 使用者「只是講話」就能讓討論落成節點與假設檔的那份劇本——三處打斷、其餘靜默寫檔、閘門失敗才出聲。
+- **Gloss**: 使用者「只是講話」就能讓討論落成節點與假設檔的那份劇本——三處打斷、其餘靜默寫檔、閘門失敗才出聲（B 拆法下的核心動詞 skill）。
 
 ## Task 12 — 真實素材檢查點（使用者親跑）
 
@@ -258,11 +265,11 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Files touched**: NEW: docs/loom/dogfood/2026-08-<dd>-think-orbit-real-material.md
 - **Context paths**:
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/memory/headless-branch-plugin-testing-recipe.md
-  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/think-orbit/skills/think-orbit/SKILL.md
+  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/think-orbit/skills/using-think-orbit/SKILL.md
 - **Acceptance**:
   - **RED**: diagnostic `ls docs/loom/dogfood/2026-08-*-think-orbit-real-material.md` returns nothing.
   - **GREEN**: the file exists with the four sections; `## Part 2 go / no-go` states go or no-go; if `## schema 變更` is non-empty, the Part 2 brief's OQ-1 is resolved by citing this file.
-- **Dependencies**: Tasks 7, 11 complete first
+- **Dependencies**: Tasks 7, 11, 15, 16 complete first
 - **Independent**: false
 - **Brief item covered**: BI-9 — Real-material checkpoint（主）＋ BI-10 — Umbrella (Part 1)（檢查點檔存在＝Part 1 收尾）
 - **Status**: pending
@@ -283,12 +290,68 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
 - **Brief item covered**: BI-12 — Basic DAG view (`render`)（主：整張 CoT DAG 給人看，不折疊）
-- **Status**: pending
+- **Status**: done(534578ab)
 - **Gloss**: 核心概念「CoT 透明化」的觀看面——整條推理鏈、分支與假設一張圖看完；只給人看、由腳本重生成、agent 不讀。
+
+## Task 14 — 搬家：腳本移到 plugin 層＋三個 skill 骨架（B 拆法）
+
+- **Description**: Restructure the plugin for the router + verb-skill layout (user decision 2026-08-18, option B). (1) `git mv think-orbit/skills/think-orbit/scripts/*.py think-orbit/scripts/` (dag.py, test_dag.py, test_plugin_manifest.py, test_ci_workflow.py) — plugin-level scripts shared by all skills; fix `REPO_ROOT`/path constants in the tests (depth changes) and any path in test_ci_workflow.py; (2) `git mv think-orbit/skills/think-orbit/references think-orbit/skills/decision-session/references` and `git mv think-orbit/skills/think-orbit/SKILL.md think-orbit/skills/decision-session/SKILL.md` (stub stays a stub: frontmatter `name: decision-session` + one-paragraph body "Part 1 draft — protocol lands in T11"); remove the now-empty `skills/think-orbit/`; (3) create stub `think-orbit/skills/using-think-orbit/SKILL.md` (frontmatter `name: using-think-orbit`, description = plugin entry/router; body "stub — Task 15") and stub `think-orbit/skills/break-assumption/SKILL.md` (frontmatter `name: break-assumption`; body "stub — Task 16"); (4) update `.github/workflows/think-orbit-ci.yml`: pytest over `think-orbit/scripts/`, structure hook run for each of the three skills; update `test_ci_workflow.py` assertions accordingly; (5) update `plugin.json` description if it names a single skill, keep marketplace byte-identical (re-run description sync), re-sync the Codex mirror; README one-line usage now names `using-think-orbit`. Write the test first (adjust `test_plugin_manifest.py` to assert the three SKILL.md files exist and `think-orbit/scripts/dag.py` exists — RED before the move).
+- **Module**: think-orbit (plugin root)
+- **Files touched**: think-orbit/scripts/dag.py, think-orbit/scripts/test_dag.py, think-orbit/scripts/test_plugin_manifest.py, think-orbit/scripts/test_ci_workflow.py, think-orbit/skills/decision-session/SKILL.md, think-orbit/skills/decision-session/references/node-schema.md, think-orbit/skills/decision-session/references/research-rules.md, think-orbit/skills/decision-session/references/blind-spot-checklist.md, NEW: think-orbit/skills/using-think-orbit/SKILL.md, NEW: think-orbit/skills/break-assumption/SKILL.md, .github/workflows/think-orbit-ci.yml, think-orbit/.claude-plugin/plugin.json, think-orbit/.codex-plugin/plugin.json, .claude-plugin/marketplace.json, think-orbit/README.md, think-orbit/README.ja.md, think-orbit/README.zh-TW.md, think-orbit/CHANGELOG.md
+- **Context paths**:
+  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/loom-code/scripts/ (plugin-level scripts precedent)
+  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/loom-code/skills/using-loom-code/SKILL.md (router precedent)
+  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/CLAUDE.md (skill folder rules)
+  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/scripts/check-plugin-description-skill-coherence.py
+- **Acceptance**:
+  - **RED**: `think-orbit/scripts/test_plugin_manifest.py::test_layout_is_router_plus_verb_skills` — asserts `think-orbit/scripts/dag.py` exists, the three `skills/{using-think-orbit,decision-session,break-assumption}/SKILL.md` exist with matching frontmatter `name`, `skills/think-orbit/` does not exist, and `decision-session/references/node-schema.md` exists — fails before the move.
+  - **GREEN**: the test passes; `python3 -m pytest think-orbit/scripts/ -q` passes; the structure hook exits 0 for all three SKILL.md; `python3 scripts/check-marketplace-description-sync.py`, `python3 scripts/sync_codex_manifests.py --check think-orbit`, `python3 scripts/check-plugin-description-skill-coherence.py` all exit 0.
+- **Dependencies**: Task 13 completes first
+- **Independent**: false
+- **Brief item covered**: BI-8 — Plugin scaffold（B 拆法下的骨架重整；CI lane 路徑更新）
+- **Status**: claimed(@strage-dag-skill)
+- **Gloss**: 把單一 skill 骨架改成「入口路由＋動詞 skill」的形狀，腳本升到 plugin 層讓三個 skill 共用——之後每個動詞各自有清楚的觸發描述。
+
+## Task 15 — using-think-orbit SKILL.md：入口路由＋intake＋續談開場
+
+- **Description**: Write `think-orbit/skills/using-think-orbit/SKILL.md` (stub from Task 14): the plugin's entry/router (body ≤2,500 words). Content: what think-orbit is (one paragraph, plain language: your discussion becomes a transparent chain of thought — one file per node, a regenerated DAG view); intake once per project (ask for the project dir; sources are local paths — external services via MCP, not this plugin); state detection (`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py check <root>` and, when `research/` exists, `claims --since HEAD`); resume opening line (restate the last DECISION + open assumptions, list changed claims); routing table: new/continue a decision → `decision-session`; user says an assumption broke / situation changed → `break-assumption`; views/compile → "Part 2, not yet"; the agent must not read `views/` files; the "three interrupt points" rule stated once here as the family contract. Frontmatter description triggers on 「我要決定」/「決策推演」/「用 think-orbit」/ "help me decide" / "think-orbit". Write the test first.
+- **Module**: think-orbit/skills/using-think-orbit/SKILL.md
+- **Files touched**: think-orbit/skills/using-think-orbit/SKILL.md, think-orbit/scripts/test_skill_md.py
+- **Context paths**:
+  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/loom-code/skills/using-loom-code/SKILL.md (router shape)
+  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/specs/2026-08-18-think-orbit-plugin-part-1.md (BI-6)
+  - /Users/kouko/kouko-obsidian-vault/research/2026-08-18 決策推演 plugin v0 設計定案.md §使用者互動
+- **Acceptance**:
+  - **RED**: `think-orbit/scripts/test_skill_md.py::test_router_skill_routes_to_verbs_and_forbids_views` — asserts using-think-orbit SKILL.md names `decision-session` and `break-assumption`, contains `dag.py check` and `dag.py claims`, a "views/" prohibition sentence, and body ≤2,500 words — fails on the stub.
+  - **GREEN**: the test passes; structure hook exits 0; `python3 scripts/check-plugin-description-skill-coherence.py` exits 0.
+- **Dependencies**: Tasks 6, 14 complete first
+- **Independent**: false
+- **Brief item covered**: BI-6 — Core conversation protocol（intake／續談開場／路由半邊）
+- **Status**: pending
+- **Gloss**: 使用者的單一入口——說「我要決定 X」或「繼續」就進來，由它判斷現況、開場，再把你交給正確的動詞 skill。
+
+## Task 16 — break-assumption SKILL.md：假設破裂流程
+
+- **Description**: Write `think-orbit/skills/break-assumption/SKILL.md` (stub from Task 14; body ≤2,000 words): the agent may only raise its hand ("this sounds like `<assumption-id>` may have broken — do you declare it broken?"); the user declares; then run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py break <root> <assumption-id>` (rewrites `status`, marks the load-bearing chain stale, prints `stale:`/`weakened:`, writes `views/impact-<id>.md`); offer exactly two follow-ups: "direct dependents only" (list from stdout) vs "full impact" (tell the user to open the impact view — the agent does not read it); nothing is recomputed — the user decides what to re-examine; then hand back to `decision-session` if they want to continue. Point at `${CLAUDE_PLUGIN_ROOT}/skills/decision-session/references/node-schema.md` §assumptions. Frontmatter description triggers on 「假設破了」/「情況變了」/「前提不成立了」/ "assumption broke" / "situation changed". Write the test first.
+- **Module**: think-orbit/skills/break-assumption/SKILL.md
+- **Files touched**: think-orbit/skills/break-assumption/SKILL.md, think-orbit/scripts/test_skill_md.py
+- **Context paths**:
+  - /Users/kouko/kouko-obsidian-vault/research/2026-08-18 決策推演 plugin v0 設計定案.md §假設機制 (六條規則)
+  - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/specs/2026-08-18-think-orbit-plugin-part-1.md (BI-5, BI-6)
+- **Acceptance**:
+  - **RED**: `think-orbit/scripts/test_skill_md.py::test_break_assumption_skill_names_break_verb_and_two_followups` — asserts the SKILL.md contains `dag.py break`, `impact-`, both follow-up phrases ("direct dependents" and "full impact"), a "does not recompute" sentence, and body ≤2,000 words — fails on the stub.
+  - **GREEN**: the test passes; structure hook exits 0; `python3 scripts/check-plugin-description-skill-coherence.py` exits 0.
+- **Dependencies**: Tasks 10, 14 complete first
+- **Independent**: false
+- **Brief item covered**: BI-6 — Core conversation protocol（break-assumption 流程半邊）＋ BI-5（impact 視圖的人工使用）
+- **Status**: pending
+- **Gloss**: 「前提破了」那一刻的劇本——agent 只能舉手，你宣告，系統只標記受影響節點並給你一張影響範圍圖，重看哪裡由你決定。
 
 ## Notes
 
-- **BI 覆蓋對照**：BI-1→T2；BI-2→T9（主）／T2；BI-3→T6（主）／T2；BI-4→T4／T8；BI-5→T5／T10；BI-6→T11；BI-7→T3／T11；BI-8→T1／T7；BI-9→T12；BI-10→T11／T12；BI-11（What Becomes Obsolete，nothing）不需任務；BI-12→T13（主）／T11。
+- **BI 覆蓋對照**：BI-1→T2；BI-2→T9（主）／T2；BI-3→T6（主）／T2；BI-4→T4／T8；BI-5→T5／T10／T16；BI-6→T11／T15／T16；BI-7→T3／T11；BI-8→T1／T7／T14；BI-9→T12；BI-10→T11／T12；BI-11（What Becomes Obsolete，nothing）不需任務；BI-12→T13（主）／T11。
+- **Amendment skip note（2026-08-18, round 3 PASS 後）**：header 蓋章＋相依圖兩條邊對齊 `Dependencies` 欄位（移除 T1→T11、補 T6→T15、T14→T11 標籤）——stamping／formatting 類，欄位不變，no re-review。
+- **Amendment（2026-08-18, after T7）**：使用者選 skill 拆法 **B（路由＋動詞）** → 新增 T14（搬家＋三 skill 骨架）、T15（using-think-orbit 路由）、T16（break-assumption）；T11 改為 decision-session；T12 依賴補 T15／T16；T8／T9／T10 的 `Files touched` 路徑在 T14 之後為 `think-orbit/scripts/`（派工時以當下實際路徑為準——T14 前後皆可，因 SDD 逐一派發不併行）；scope 變更 → verdict 回 PENDING、重審（round 3）。
 - **Amendment（2026-08-18, round 1 PASS 後）**：使用者再對齊核心概念（CoT 透明化＝DAG 圖＋每節點一檔）→ 新增 T13 基本 DAG 全圖並接進 T11／T12；屬 scope 變更 → verdict 回 PENDING、重審（round 2）→ round 2 PASS 16/16；header 蓋章屬 stamping 類，no re-review。
 - **平行派發**：所有 `Files touched` 皆為 PROPOSED-new 路徑（plan-format §Empty-recon sentinel）→ 一律 `Independent: false`，SDD 逐一派發；同層（T1/T2/T3；T4/T5/T6/T7/T13；T8/T9/T10）之間無先後之分，可由 orchestrator 任選順序。T4/T5/T6/T8/T9/T10/T13 共用 `dag.py`＋`test_dag.py`，天然序列。
 - **PyYAML**：repo 有 `import yaml` 先例（`dev-workflow/skills/handoff/scripts/test_handoff_readmes.py`）；CI（T7）安裝 `pyyaml`。使用者的專案資料夾是 Obsidian vault，YAML frontmatter 是硬需求，不自寫解析器。
@@ -298,7 +361,8 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **版本**：T1 定 0.1.0；Part 1 內之後的 skill 內容變更（T3、T11）不再 bump（同一未發佈版本內，`check_version_bump.py` 以 PR 為單位比對 base→head，T1 已含 bump）。CHANGELOG 0.1.0 條目由 T1 建立、T11 補一行（`version-bump-packets-must-name-changelog-entry`）。
 - **Amendment skip note（2026-08-18, round 1 PASS 後）**：header 蓋章 PENDING→PASS；本段 Kickoff 決策行為記錄流程狀態——stamping 類，no re-review。
 - **T4 PASS_WITH_NOTES 債（2026-08-18）**：mapping 形式的 `inputs` 條目若有 `load_bearing` 但缺 `ref`，`check` 看不到（code-quality-reviewer 🟡）→ 併入 T9 實作（新增 `ref` 缺失規則＋測試），不另開回合。
-- **Rename（2026-08-18, after T6）**：使用者定案 plugin／skill 名稱 `think-orbit`（原工作名 `strategy-dag` 來自分支名筆誤；候選 decision-cot／deliberate／think-trail 討論後選定）。skill 拆法：使用者未反對建議 A → 單一 skill `think-orbit`；Part 2 若 SKILL.md 逼近 4,500 字上限再拆視圖／編提案為第二個 skill（預備方案 C）。本計畫與三份 brief 內的 `strategy-dag` 路徑／識別字全數機械替換為 `think-orbit`——純識別字替換，任務範圍／驗收不變，屬 stamping 類，no re-review；程式側改名以獨立 commit 完成（見 T6 之後的 rename commit）。分支名 `strage-dag-skill` 不改。
+- **Rename（2026-08-18, after T6）**：使用者定案 plugin 名稱 `think-orbit`（原工作名 `strategy-dag` 來自分支名筆誤；候選 decision-cot／deliberate／think-trail 討論後選定）。skill 拆法：使用者於 T7 後選 **B（路由＋動詞拆分）**——`using-think-orbit`／`decision-session`／`break-assumption`（Part 2 再加 `render-views`／`compile-proposal`）；見下方 Amendment。本計畫與三份 brief 內的 `strategy-dag` 路徑／識別字全數機械替換為 `think-orbit`——純識別字替換，任務範圍／驗收不變，屬 stamping 類，no re-review；程式側改名以獨立 commit 完成（見 T6 之後的 rename commit）。分支名 `strage-dag-skill` 不改。
+- **T13 PASS_WITH_NOTES 債（2026-08-18）**：label 中的 `node.id`／`assumption.id` 仍未 escape（`"`／`<`／`>`），只有 summary／statement 走 `_mermaid_label_text` → 併入 T10（同模組、共用 label 組合），加 RED 測試。
 - **Kickoff sweep（2026-08-18）**：一路門（one-way door）僅一條——節點／假設檔的 frontmatter 欄位集（使用者資料會累積在上面）；已由 brief 簽核＋T12 檢查點在 Part 2 前留改口，於 kickoff 簡報向使用者揭示，不另開分岔。其餘皆兩路門，記入 Decision Log。
 - Kickoff decision: frontmatter 解析 → PyYAML `yaml.safe_load`（repo 先例＋Obsidian YAML 硬需求；自寫解析器是 YAGNI），CI 安裝 pyyaml
 - Kickoff decision: `break` 是否直接改檔 → 直接改 assumption `status` 與依賴節點 `status`（使用者已宣告破裂；「只輸出建議再由 agent 改檔」多一輪且易漏），其餘欄位與本文 byte-identical
@@ -314,3 +378,4 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 5. chose to define "one arm" as a single subagent dispatch (or one WebSearch/WebFetch call without subagent tooling), never a retry loop — cost-of-change: the day you want deeper verification, this choice costs promoting the case to a standalone research note rather than widening the arm
 6. chose to exempt research-note FACT nodes from the fact-source rule (the note file is the source, its `claim` the citable line; only `nodes/` FACTs need `source`+`quote`) — cost-of-change: the day you want research notes to carry an external `source` too, this choice costs one rule tweak plus a schema line, no data migration
 7. chose the name `think-orbit` (user's call: 'think' carries the thinking-partner action, 'orbit' the coming-back-across-sessions feel) over decision-cot / think-trail — cost-of-change: the day you want the name to say 'decision' or 'trail', this choice costs a mechanical rename plus a marketplace re-publish
+8. chose the router + verb-skill layout (`using-think-orbit` / `decision-session` / `break-assumption`) with plugin-level shared `scripts/` (user's call, option B) — cost-of-change: the day you want a single entry file, this choice costs folding three SKILL.md bodies into one under the 4,500-word cap
