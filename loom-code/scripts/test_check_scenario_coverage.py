@@ -256,6 +256,57 @@ def test_duplicate_scenario_key_warns_on_stderr(tmp_path):
         "the announcement must name the duplicated key"
 
 
+_ID_MODE_SPEC = """\
+## ADDED Requirements
+
+### Requirement: REQ-3 — Foo
+The system MUST allow filtering.
+
+#### Scenario: S1
+- GIVEN one record matches
+- WHEN filter applied
+- THEN one item returned
+
+### Requirement: REQ-4 — Foo
+The system MUST allow something else, same name as REQ-3 on purpose.
+
+#### Scenario: S1
+- GIVEN a different record matches
+- WHEN filter applied
+- THEN one item returned
+"""
+
+
+def test_id_mode_folder_keys_use_req_id_and_plan_key_resolves(tmp_path):
+    """An id-mode requirement header (`### Requirement: REQ-3 — Foo`) keys
+    its scenario as `<change-id> / REQ-3 / Scenario: <name>` — bare id, no
+    `Requirement:` prefix — so a plan citing that same bare-id join key
+    resolves and the folder is fully covered (exit 0).
+
+    A second id-mode requirement (`REQ-4 — Foo`) shares REQ-3's exact NAME
+    and also declares a `Scenario: S1`. Under the legacy name-keyed grammar
+    this would collide into one set entry and trip the duplicate-key
+    warning; keyed by id instead, `REQ-3 / Scenario: S1` and `REQ-4 /
+    Scenario: S1` are two distinct keys, so no collision and no warning —
+    that is the whole point of moving the key off the (unstable,
+    coincidentally shared) name and onto the (stable, always-distinct) id.
+    """
+    change_folder = tmp_path / "2026-07-10-my-change"
+    _write_spec(change_folder, _ID_MODE_SPEC)
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "# Plan: x\n\n"
+        "## Task 1 — foo\n"
+        "- Brief item covered: 2026-07-10-my-change / REQ-3 / Scenario: S1\n\n"
+        "## Task 2 — bar\n"
+        "- Brief item covered: 2026-07-10-my-change / REQ-4 / Scenario: S1\n",
+        encoding="utf-8",
+    )
+    result = _run(change_folder, plan)
+    assert result.returncode == 0, result.stderr
+    assert "duplicate scenario key" not in result.stderr
+
+
 def test_unparsed_change_folder_referent_is_named_not_dropped(tmp_path):
     """A `Brief item covered` value that does not match the join-key
     grammar must be reported with its task and its verbatim text, not

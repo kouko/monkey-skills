@@ -9,13 +9,16 @@ Inputs (positional CLI args):
 - `<change-folder>` is a `docs/loom/<change-id>/` directory in the shape
   `loom-design/scripts/spec/validate_spec_output.py` validates: `specs/<capability>/
   spec.md` delta files, each containing `### Requirement:` blocks that each
-  contain one or more `#### Scenario:` headers. The heading regexes here
-  reuse that exact grammar (`^###\\s+Requirement:` / `^####\\s+Scenario:`),
-  only adding capture groups for the name text — not a new variant.
+  contain one or more `#### Scenario:` headers. The heading regex here
+  widens that grammar to the requirement-identity-hybrid plan's id-aware
+  form (`^###\\s+Requirement:` followed by either `REQ-<n> — <name>` or a
+  legacy prose name), not a new variant of it.
 - `<plan-path>` is a writing-plans plan (`docs/loom/plans/...`). Per
   `loom-code/skills/writing-plans/references/plan-format.md`, a task's
-  `Brief item covered` field MAY be the stable join key
-  `<change-id> / Requirement: <name> / Scenario: <name>` (referent kind (b)).
+  `Brief item covered` field MAY be the stable join key: for a legacy
+  (name-keyed) requirement, `<change-id> / Requirement: <name> / Scenario:
+  <name>`; for an id-mode requirement, `<change-id> / REQ-<n> / Scenario:
+  <name>` — bare id, no `Requirement:` prefix (referent kind (b)).
 
 The script builds the full scenario-key set from the change-folder, the
 covered-key set from the plan's join keys, and reports the difference:
@@ -68,11 +71,21 @@ from pathlib import Path
 
 from adjudication_split import iter_lines_outside_fences
 
-# Same underlying heading grammar as validate_spec_output.py's
-# `_REQUIREMENT_HDR` (`^###\s+Requirement:`) and the pattern
-# `_first_scenario_block` matches (`^####\s+Scenario:.*$`) — these add a
-# capture group for the name text, they do not change the grammar.
-_REQUIREMENT_HDR = re.compile(r"^###\s+Requirement:\s*(.*)$", re.MULTILINE)
+# The id-aware canonical grammar (requirement-identity-hybrid plan, Notes
+# §Canonical grammar) — same underlying heading level as
+# validate_spec_output.py's `_REQUIREMENT_HDR` (`^###\s+Requirement:`), now
+# with three named groups: `id` (present ⇒ id-form header, e.g.
+# `REQ-3 — Foo`), `name` (the id-form's optional display name), and
+# `name_legacy` (the whole legacy prose name, id-form's alternative branch).
+# Mode is decided per FILE, not per header, by `_requirement_scenario_pairs`
+# below: ≥1 id-form header in the file ⇒ id-mode for every header in it
+# (T2 validates that invariant; this script assumes it holds).
+_REQUIREMENT_HDR = re.compile(
+    r"^###\s+Requirement:\s*"
+    r"(?:(?P<id>REQ-\d+)(?:\s+—\s+(?P<name>.+?))?|(?P<name_legacy>.+?))"
+    r"\s*(?:\[(?P<status>[^\]]*)\])?\s*$",
+    re.MULTILINE,
+)
 _SCENARIO_HDR = re.compile(r"^####\s+Scenario:\s*(.*)$", re.MULTILINE)
 
 # A requirement's scope ends at the next header of level 2-3 (a sibling
@@ -95,10 +108,18 @@ _SECTION_BOUNDARY = re.compile(r"^#{2,3}\s", re.MULTILINE)
 _BRIEF_ITEM_LINE = re.compile(
     r"^\s*-\s*(?:\*\*)?Brief item covered(?:\*\*)?\s*:\s*(.+)$", re.MULTILINE)
 
-# The stable join key grammar itself: `<change-id> / Requirement: <name> /
-# Scenario: <name>`, tolerant of optional surrounding quote/backtick chars.
+# The stable join key grammar itself. Legacy form: `<change-id> /
+# Requirement: <name> / Scenario: <name>`. Id-mode form (requirement-
+# identity-hybrid plan, Notes §Canonical grammar): `<change-id> / REQ-<n> /
+# Scenario: <name>` — bare id, no `Requirement:` prefix. The middle segment
+# is EITHER `Requirement:\s*<name>` OR a bare `REQ-\d+`; those two branches
+# need two distinct group names (`req_name` / `req_id`) rather than one
+# shared `req`, because Python's `re` rejects a duplicate group name even
+# across mutually-exclusive alternation branches. Tolerant of optional
+# surrounding quote/backtick chars.
 _JOIN_KEY = re.compile(
-    r"^[\"'`]?\s*(?P<change_id>.+?)\s*/\s*Requirement:\s*(?P<req>.+?)\s*/\s*"
+    r"^[\"'`]?\s*(?P<change_id>.+?)\s*/\s*"
+    r"(?:Requirement:\s*(?P<req_name>.+?)|(?P<req_id>REQ-\d+))\s*/\s*"
     r"Scenario:\s*(?P<scen>.+?)\s*[\"'`]?$")
 
 # Any markdown heading — used only to name which task an unparsed
@@ -172,18 +193,31 @@ _NONE_VALUE = re.compile(
 # `adjudication_split.iter_lines_outside_fences`, tested there.
 
 
-def _requirement_scenario_pairs(text: str) -> list[tuple[str, str]]:
-    """(requirement name, scenario name) pairs found in one delta file's
-    text, per validate_spec_output.py's heading grammar."""
-    pairs: list[tuple[str, str]] = []
-    for req_match in _REQUIREMENT_HDR.finditer(text):
-        req_name = req_match.group(1).strip()
+def _requirement_scenario_pairs(text: str) -> list[tuple[bool, str, str]]:
+    """(is_id_mode, requirement identifier, scenario name) triples found in
+    one delta file's text, per the canonical grammar.
+
+    Mode is decided once per FILE — ≥1 id-form header (a header whose `id`
+    group matched) makes every requirement in this file id-mode, per the
+    plan's per-file invariant (validated elsewhere, by T2; assumed here).
+    In id-mode, `requirement identifier` is the bare `REQ-<n>`; in legacy
+    mode it is the prose name, exactly as before this change.
+    """
+    matches = list(_REQUIREMENT_HDR.finditer(text))
+    is_id_mode = any(m.group("id") for m in matches)
+    pairs: list[tuple[bool, str, str]] = []
+    for req_match in matches:
+        if req_match.group("id"):
+            req_ident = req_match.group("id")
+        else:
+            req_ident = (req_match.group("name")
+                         or req_match.group("name_legacy") or "").strip()
         start = req_match.end()
         boundary = _SECTION_BOUNDARY.search(text, start)
         end = boundary.start() if boundary else len(text)
         body = text[start:end]
         for scen_match in _SCENARIO_HDR.finditer(body):
-            pairs.append((req_name, scen_match.group(1).strip()))
+            pairs.append((is_id_mode, req_ident, scen_match.group(1).strip()))
     return pairs
 
 
@@ -195,22 +229,31 @@ def _delta_files(change_folder: Path) -> list[Path]:
 
 
 def collect_folder_scenario_keys(change_folder: Path, change_id: str) -> set[str]:
-    """Every `<change-id> / Requirement: <name> / Scenario: <name>` join key
-    the change-folder's specs/ delta files define.
+    """Every scenario join key the change-folder's specs/ delta files
+    define — `<change-id> / REQ-<n> / Scenario: <name>` for an id-mode
+    file, `<change-id> / Requirement: <name> / Scenario: <name>` for a
+    legacy one (mode decided per file by `_requirement_scenario_pairs`).
 
-    Duplicate (requirement, scenario) name pairs collapse into one set
+    Duplicate (requirement, scenario) key pairs collapse into one set
     entry — the join-key grammar is fixed (per the plan), so occurrence
     indices can't be added to disambiguate. Instead, a duplicate is
     flagged with a warning on stderr naming the key, so an uncovered
     duplicate instance is at least visible rather than silently
-    undetectable.
+    undetectable. This is a legacy-path cost: the id-mode key is keyed by
+    the requirement's stable id, not its (possibly reused) display name,
+    so two id-mode requirements can share a name without ever colliding on
+    the key — only a genuine repeat of the SAME id in one file could, and
+    that is a different authoring error T2's validator already rejects.
     """
     keys: set[str] = set()
     occurrences: dict[str, int] = {}
     for delta in _delta_files(change_folder):
         text = delta.read_text(encoding="utf-8")
-        for req_name, scen_name in _requirement_scenario_pairs(text):
-            key = f"{change_id} / Requirement: {req_name} / Scenario: {scen_name}"
+        for is_id_mode, req_ident, scen_name in _requirement_scenario_pairs(text):
+            if is_id_mode:
+                key = f"{change_id} / {req_ident} / Scenario: {scen_name}"
+            else:
+                key = f"{change_id} / Requirement: {req_ident} / Scenario: {scen_name}"
             occurrences[key] = occurrences.get(key, 0) + 1
             keys.add(key)
     for key, count in occurrences.items():
@@ -256,8 +299,12 @@ def collect_plan_join_keys(plan_text: str) -> set[str]:
             unparsed.append(
                 (_enclosing_heading(plan_text, line_match.start()), value))
             continue
-        keys.add(f"{m.group('change_id')} / Requirement: {m.group('req')} / "
-                  f"Scenario: {m.group('scen')}")
+        if m.group('req_id'):
+            keys.add(f"{m.group('change_id')} / {m.group('req_id')} / "
+                      f"Scenario: {m.group('scen')}")
+        else:
+            keys.add(f"{m.group('change_id')} / Requirement: "
+                      f"{m.group('req_name')} / Scenario: {m.group('scen')}")
     for heading, value in unparsed:
         where = heading or "(no enclosing heading)"
         print(f"Warning: 'Brief item covered' value under '{where}' is not the "
