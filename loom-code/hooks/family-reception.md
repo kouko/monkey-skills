@@ -73,9 +73,29 @@ This table is the single source of truth — every family entry's §Intake refer
 
 When both row 4 and row 1 fire, recommend discovery first — the principles station consumes discovery's value-commitment output.
 
-**Recommend ONCE, never nag.** Surface the recommendation a single time,
-record the user's choice, then proceed either way — do not re-ask on
-follow-up turns of the same task.
+**Recommend ONCE, as a standalone ask.** Surface the recommendation a
+single time — on Claude Code via the `AskUserQuestion` tool, on any
+other host as a prose ask whose only question is this choice — never
+as a bullet folded into another briefing. The brief's
+`## Design-side on-ramp` line stays `pending` until the user answers;
+the agent may state a recommendation (e.g. "direct — prior vault notes
+cover the principles station") but never records the answer on the
+user's behalf. Once answered, never re-raise it on follow-up turns of
+the same task.
+
+### On-ramp standing choices
+
+A repo may pre-answer a row for every future arc instead of asking
+each time. Record that in `docs/loom/DIRECTION.md` under
+`## On-ramp standing choices`, one entry per row:
+
+```
+- row <n> (<station>): standing <direct|detour> — <reason> (<YYYY-MM-DD>)
+```
+
+A standing entry lets Axis 0 write the `standing` form on the brief
+line without asking. It is a decision, revisited only by editing
+DIRECTION.md.
 
 ## Intake hygiene
 
@@ -83,9 +103,11 @@ follow-up turns of the same task.
 without (the seed idea, target directory, git state), collect everything
 missing in ONE ask — never serially across turns — and fold the on-ramp
 recommendation (if one fired) into that same single ask. PRINCIPLES.md
-and design docs stay governed by the on-ramp table above: they are
-recommendations to surface once, never blocking prerequisites.
-(Evidence + contamination caveats: monkey-skills
+and design docs stay governed by the on-ramp table above: never a
+prerequisite to *run* loom-design — but the *choice* is gated,
+because writing-plans intake and the plan-commit guard refuse an
+unresolved on-ramp line. See `handoff-brief-format.md` for the brief
+line's grammar. (Evidence + contamination caveats: monkey-skills
 `docs/harness-audit/2026-07-06-iteration-roadmap.md` item 7.)
 
 ## Recall before you start
