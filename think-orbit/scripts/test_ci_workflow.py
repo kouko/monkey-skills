@@ -42,10 +42,8 @@ def test_workflow_runs_pytest_structure_hook_and_codex_check():
 
     run_lines = _all_run_lines(workflow)
     assert "python3 -m pytest think-orbit/scripts/" in run_lines
-    assert (
-        "for skill in using-think-orbit decision-session break-assumption"
-    ) in run_lines
-    assert (
-        'bash .claude/hooks/validate-skill-folder-structure.sh "think-orbit/skills/$skill/SKILL.md"'
-    ) in run_lines
+    # The PostToolUse hook ignores argv (reads stdin JSON), so CI must run
+    # the real checker, not the hook.
+    assert "python3 scripts/check-skill-structure.py think-orbit" in run_lines
+    assert "validate-skill-folder-structure.sh" not in run_lines
     assert "python3 scripts/sync_codex_manifests.py --check think-orbit" in run_lines
