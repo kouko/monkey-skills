@@ -11,7 +11,10 @@ move; A4 (maintainer-facing fragments in §BLOCKED fallback, §Plan size
 ceiling, §Consuming) move to references/design-evidence.md (author-facing
 header) while the rules they qualify, and the 5-step process / anti-pattern
 paragraph / detection-cascade rule sentences, stay inline verbatim. Word
-ceiling <=4350 — raised deliberately by the 2026-08-14
+ceiling <=4420 — raised deliberately by the 2026-08-18
+onramp-explicit-choice-gate arc's Task 9 (the §On-ramp choice gate
+paragraph in §Self-review, mirroring the Open-questions gate paragraph
+it sits under; new count 4409), and before that by the 2026-08-14
 language-layering arc's T1 (the §Language policy section + the §Progress
 surface reword reference; new count 4312), and before that TWICE by the
 2026-08-13 brief-item-addressability arc: 4220 -> 4250 for T8's fix round
@@ -626,11 +629,16 @@ def test_open_questions_gate_owning_heading_missing_fails_loudly(monkeypatch):
 
 # --- (f) word cap ------------------------------------------------------------
 
-def test_word_count_at_most_4350():
+def test_word_count_at_most_4420():
     word_count = len(_skill_text().split())
-    assert word_count <= 4350, (
-        f"SKILL.md is {word_count} words, over the 4350 cap (raised "
-        "deliberately from 4250 by the 2026-08-14 language-layering "
+    assert word_count <= 4420, (
+        f"SKILL.md is {word_count} words, over the 4420 cap (raised "
+        "deliberately from 4350 by the 2026-08-18 onramp-explicit-choice-gate "
+        "arc's Task 9 — the §On-ramp choice gate paragraph, mirroring the "
+        "Open-questions gate paragraph it sits directly under in "
+        "§Self-review; untrimmable without dropping the checker invocation, "
+        "the STOP directive, or the git-guard.py cross-reference; prior "
+        "raise from 4250 by the 2026-08-14 language-layering "
         "arc's T1: the §Language policy section + the §Progress surface "
         "reword reference — the policy is untrimmable without dropping "
         "the layered statement or the adjudication-view citation; prior "

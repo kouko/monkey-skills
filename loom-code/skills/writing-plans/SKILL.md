@@ -112,6 +112,8 @@ The prompt also enforces parallel-dispatch checks — see it for the complete li
 
 **Open-questions gate (unconditional):** before dispatching the reviewer, also run `python3 loom-code/scripts/check_open_questions.py <plan-path>` — on every plan, never conditional the way the coverage gate above is. Non-zero exit blocks the plan from PASS (multiple causes — an absent/malformed section, or an unresolved `OQ-<n>`) — STOP, fix it, and re-run before dispatching.
 
+**On-ramp choice gate (unconditional):** before dispatching the reviewer — and before drafting Task 1 — run `python3 loom-code/scripts/check_onramp_choice.py <brief-path>` on the source brief. Exit 2 → STOP: do not draft; relay the printed question to the user, wait, update the brief's `## Design-side on-ramp` line, re-run. Exit 1 → STOP (brief missing). `git-guard.py` enforces this at commit time; grammar SSOT: [`../brainstorming/references/handoff-brief-format.md`](../brainstorming/references/handoff-brief-format.md).
+
 If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-runs the reviewer. Before that re-dispatch, re-run the **Pre-patch before dispatch** self-screen on the revision delta itself — every line the fix added or changed — because three consecutive arcs' round-2 findings were defects the round-2 revision itself introduced. Up to 2 rounds; if still NEEDS_REVISION after round 2, escalate to user (likely the brief itself needs revisiting).
 
 **Amending a PASS plan:** After PASS, any change re-reviews unless it is one of these three kinds — a **closed list**; an amendment that does not clearly match one of the three is outside the list:
