@@ -955,3 +955,53 @@ def test_commit_with_git_dir_global_gates_that_repo(repo, tmp_path_factory):
     ))
     assert res.returncode == 2
     assert "user chose <detour|direct>" in res.stderr
+
+
+def test_commit_with_nonexistent_git_dir_fails_open_loudly(repo, tmp_path_factory):
+    # WHY: fail-open is this gate's posture, but silence is the failure
+    # mode it exists to prevent — a --git-dir pointing nowhere means the
+    # gate did not run, and the model must be told.
+    missing = tmp_path_factory.mktemp("nowhere") / "nope.git"
+
+    res = run_hook(bash_event(f"git --git-dir={missing} commit -m x", cwd=repo))
+    assert res.returncode == 0
+    assert "on-ramp choice gate inactive" in res.stderr
+
+
+def test_commit_outside_any_repo_stays_silent(tmp_path_factory):
+    # WHY: a commit outside any repo is not this gate's business — git
+    # itself refuses it; the guard must not add noise to every such call.
+    outside = tmp_path_factory.mktemp("norepo")
+
+    res = run_hook(bash_event("git commit -m x", cwd=outside))
+    assert res.returncode == 0
+    assert res.stderr == ""
+
+
+def test_commit_with_dash_c_path_gates_that_repo(repo, tmp_path_factory):
+    # WHY: `git -C <repo> commit` from elsewhere must gate the repo named
+    # by -C, not the ambient cwd.
+    _write(repo / "docs" / "loom" / "specs" / "b.md",
+           "# Brief\n\n## Design-side on-ramp\n\npending\n")
+    _write(repo / "docs" / "loom" / "plans" / "p.md",
+           "# Plan: p\n\n**Source brief**: docs/loom/specs/b.md\n")
+    _git_add(repo, "docs/loom/specs/b.md", "docs/loom/plans/p.md")
+    elsewhere = tmp_path_factory.mktemp("elsewhere")
+
+    res = run_hook(bash_event(f"git -C {repo} commit -m x", cwd=elsewhere))
+    assert res.returncode == 2
+    assert "user chose <detour|direct>" in res.stderr
+
+
+def test_commit_plan_with_backticked_source_brief_is_evaluated(repo):
+    # WHY: some plans code-span the brief path; the gate must read the
+    # path, not the backticks (a stray backtick would silently fail open).
+    _write(repo / "docs" / "loom" / "specs" / "b.md",
+           "# Brief\n\n## Design-side on-ramp\n\npending\n")
+    _write(repo / "docs" / "loom" / "plans" / "p.md",
+           "# Plan: p\n\n**Source brief**: `docs/loom/specs/b.md`\n")
+    _git_add(repo, "docs/loom/specs/b.md", "docs/loom/plans/p.md")
+
+    res = run_hook(bash_event("git commit -m x", cwd=repo))
+    assert res.returncode == 2
+    assert "user chose <detour|direct>" in res.stderr
