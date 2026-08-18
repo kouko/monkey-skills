@@ -42,10 +42,13 @@ def test_reception_content_contract():
     # + sanctioned plain-relay additions (plan 2026-08-15-plain-relay-contract):
     #   the imperative <PLAIN-RELAY> trigger card (Task 2) and the
     #   §Brief before a complex fork SSOT section (Task 5) — both load-bearing
-    #   per the frozen brief, so the reception budget grows to accommodate them.
+    #   per the frozen brief, so the reception budget grows to accommodate them;
+    # + the on-ramp explicit-choice gate (plan 2026-08-18-onramp-explicit-choice-gate,
+    #   PR #704: the detour choice is the user's, recorded mechanically) — sanctioned
+    #   addition of ~13 lines; budget raised 85 → 100 to cover it with small headroom.
     non_empty = _non_empty_lines(text)
-    assert len(non_empty) <= 85, (
-        f"family-reception.md has {len(non_empty)} non-empty lines, budget is 85"
+    assert len(non_empty) <= 100, (
+        f"family-reception.md has {len(non_empty)} non-empty lines, budget is 100"
     )
 
     # Family map: all five using-loom-* entries present.
@@ -94,8 +97,10 @@ def test_reception_content_contract():
     assert "one ask" in lower and "never serially" in lower, (
         "missing the one-ask / never-serially phrasing"
     )
-    assert "never blocking prerequisites" in lower, (
-        "missing the recommendations-are-not-prerequisites reconciliation"
+    # PR #704 reworded the reconciliation: the docs are never a prerequisite to
+    # RUN loom-design, but the on-ramp CHOICE itself is gated (explicit user choice).
+    assert "never a prerequisite" in lower and "choice" in lower and "gated" in lower, (
+        "missing the recommendations-are-not-prerequisites / choice-is-gated reconciliation"
     )
 
 
