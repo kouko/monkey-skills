@@ -31,6 +31,9 @@ def test_workflow_runs_pytest_structure_hook_and_codex_check():
     triggers = workflow.get("on", workflow.get(True))
     assert triggers is not None, "workflow has no trigger block"
 
+    # Least-privilege posture must stay pinned (code-quality-reviewer T7 🟡).
+    assert workflow.get("permissions") == {"contents": "read"}
+
     paths_filters = []
     for trigger in ("push", "pull_request"):
         assert trigger in triggers, f"missing {trigger!r} trigger"
