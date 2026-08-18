@@ -273,12 +273,38 @@ def _rule_problems(project: Project) -> list[str]:
     return list(project.problems)
 
 
+def _rule_mermaid_id_collision(project: Project) -> list[str]:
+    """Flag raw ids that sanitize to the same mermaid id (render disambiguates
+    them, but the gate should still surface the underlying naming clash)."""
+    entries: list[tuple[str, Path | None]] = [
+        (n.id, n.path) for n in project.nodes if n.id
+    ] + [(a.id, a.path) for a in project.assumptions if a.id]
+
+    by_base: dict[str, list[tuple[str, Path | None]]] = {}
+    for raw_id, path in entries:
+        by_base.setdefault(_sanitize_mermaid_id(raw_id), []).append((raw_id, path))
+
+    violations = []
+    for base, group in by_base.items():
+        if len(group) < 2:
+            continue
+        group_sorted = sorted(group, key=lambda e: e[0])
+        first_id, _ = group_sorted[0]
+        for other_id, other_path in group_sorted[1:]:
+            relpath = _relpath(other_path, project.root)
+            violations.append(
+                f"{relpath}: id-collision: {first_id} and {other_id} both render as {base}"
+            )
+    return violations
+
+
 _CHECK_RULES = (
     _rule_load_bearing,
     _rule_ref,
     _rule_fact_source,
     _rule_required_field,
     _rule_problems,
+    _rule_mermaid_id_collision,
 )
 
 
@@ -463,29 +489,53 @@ _DEFAULT_SHAPE = ('["', '"]')
 
 
 def _sanitize_mermaid_id(raw_id: str) -> str:
-    """Map an author id to a mermaid-safe token (`[A-Za-z0-9_]` only)."""
+    """Map an author id to a mermaid-safe token (`[A-Za-z0-9_]` only).
+
+    Two distinct raw ids can sanitize to the same token (e.g. `a-1` and
+    `a_1` both become `a_1`) -- callers that must keep nodes distinct use
+    `_mermaid_ids()` instead, which disambiguates collisions.
+    """
     return _ID_UNSAFE_RE.sub("_", raw_id)
 
 
+def _mermaid_ids(project: Project) -> dict[str, str]:
+    """Map every node/assumption raw id to a collision-free mermaid id.
+
+    Built once per render. Ids are sanitized (`_sanitize_mermaid_id`); when
+    two or more raw ids sanitize to the same token, the alphabetically-first
+    raw id keeps the bare token and every later one gets a deterministic
+    `_2`, `_3`, ... suffix -- so colliding nodes never silently merge.
+    """
+    raw_ids = sorted(
+        {n.id for n in project.nodes if n.id} | {a.id for a in project.assumptions if a.id}
+    )
+    mapping: dict[str, str] = {}
+    seen_count: dict[str, int] = {}
+    for raw_id in raw_ids:
+        base = _sanitize_mermaid_id(raw_id)
+        seen_count[base] = seen_count.get(base, 0) + 1
+        count = seen_count[base]
+        mapping[raw_id] = base if count == 1 else f"{base}_{count}"
+    return mapping
+
+
 def _mermaid_label_text(text: str, limit: int = 60) -> str:
-    """Strip newlines, truncate over `limit` chars with '…', escape `"`."""
+    """Strip newlines, truncate over `limit` chars with '…', escape `" < >`."""
     flat = " ".join((text or "").splitlines())
     if len(flat) > limit:
         flat = flat[:limit] + "…"
-    return flat.replace('"', "#quot;")
+    return flat.replace('"', "#quot;").replace("<", "#lt;").replace(">", "#gt;")
 
 
-def _node_mermaid_line(node: Node) -> str:
-    node_id = _sanitize_mermaid_id(node.id)
+def _node_mermaid_line(node: Node, mermaid_id: str) -> str:
     label = f"{node.id}<br/>{_mermaid_label_text(node.summary)}"
     open_tok, close_tok = _NODE_SHAPES.get(node.type, _DEFAULT_SHAPE)
-    return f'    {node_id}{open_tok}{label}{close_tok}'
+    return f'    {mermaid_id}{open_tok}{label}{close_tok}'
 
 
-def _assumption_mermaid_line(assumption: Assumption) -> str:
-    assumption_id = _sanitize_mermaid_id(assumption.id)
+def _assumption_mermaid_line(assumption: Assumption, mermaid_id: str) -> str:
     label = f"{assumption.id}<br/>{_mermaid_label_text(assumption.statement)}"
-    return f'    {assumption_id}(["{label}"])'
+    return f'    {mermaid_id}(["{label}"])'
 
 
 def render_dag(project: Project) -> str:
@@ -508,6 +558,8 @@ def render_dag(project: Project) -> str:
         lines.append("```")
         return "\n".join(lines) + "\n"
 
+    mermaid_ids = _mermaid_ids(project)
+
     nodes_by_branch: dict[str, list[Node]] = {}
     top_level_nodes: list[Node] = []
     for node in project.nodes:
@@ -525,9 +577,9 @@ def render_dag(project: Project) -> str:
             top_level_assumptions.append(assumption)
 
     for node in top_level_nodes:
-        lines.append(_node_mermaid_line(node))
+        lines.append(_node_mermaid_line(node, mermaid_ids[node.id]))
     for assumption in top_level_assumptions:
-        lines.append(_assumption_mermaid_line(assumption))
+        lines.append(_assumption_mermaid_line(assumption, mermaid_ids[assumption.id]))
 
     branches = sorted(set(nodes_by_branch) | set(assumptions_by_branch))
     for branch in branches:
@@ -536,22 +588,22 @@ def render_dag(project: Project) -> str:
         branch_id = _sanitize_mermaid_id(branch)
         lines.append(f'    subgraph {branch_id} ["{branch} ({branch_type})"]')
         for node in members:
-            lines.append(f"    {_node_mermaid_line(node).strip()}")
+            lines.append(f"    {_node_mermaid_line(node, mermaid_ids[node.id]).strip()}")
         for assumption in assumptions_by_branch.get(branch, []):
-            lines.append(f"    {_assumption_mermaid_line(assumption).strip()}")
+            lines.append(f"    {_assumption_mermaid_line(assumption, mermaid_ids[assumption.id]).strip()}")
         lines.append("    end")
 
     for node in project.nodes:
-        node_id = _sanitize_mermaid_id(node.id)
+        node_id = mermaid_ids[node.id]
         for entry in node.inputs:
             if entry.ref is None:
                 continue
-            ref_id = _sanitize_mermaid_id(entry.ref)
+            ref_id = mermaid_ids.get(entry.ref, _sanitize_mermaid_id(entry.ref))
             arrow = "-->" if entry.load_bearing else "-.->"
             lines.append(f"    {ref_id} {arrow} {node_id}")
 
     stale_ids = sorted(
-        _sanitize_mermaid_id(n.id) for n in project.nodes if n.status == "stale" and n.id
+        mermaid_ids[n.id] for n in project.nodes if n.status == "stale" and n.id
     )
     if stale_ids:
         lines.append("    classDef stale fill:#f1f3f5,stroke:#adb5bd,color:#868e96")

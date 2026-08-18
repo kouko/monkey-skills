@@ -68,6 +68,13 @@ whose `status` is `stale`. The file opens with a generated-marker comment —
 it is regenerated from `nodes/`/`assumptions/`/`research/` on every run,
 human-only, and must never be hand-edited or read back by an agent.
 
+Author ids are sanitized to a mermaid-safe token (`[A-Za-z0-9_]` only) for
+node/subgraph ids; when two different ids sanitize to the same token (e.g.
+`a-1` and `a_1`), `render` still keeps them distinct by appending a `_2`,
+`_3`, ... suffix to every later one (alphabetical by raw id), and `check`
+reports the clash as an `id-collision` violation so it gets fixed at the
+source instead of silently living only in the rendered view.
+
 ## Minimal examples
 
 ### Node — `nodes/goal.md`

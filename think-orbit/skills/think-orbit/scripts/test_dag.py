@@ -686,3 +686,123 @@ def test_render_writes_full_dag_mermaid_with_branches_assumptions_and_stale_clas
     assert rc2 == 0
     text2 = out_path.read_text(encoding="utf-8")
     assert text == text2
+
+
+def test_render_disambiguates_colliding_mermaid_ids_and_check_flags_them(tmp_path):
+    # @req: BI-12
+    root = tmp_path
+    _write(
+        root / "nodes" / "a1.md",
+        "id: a-1\n"
+        "type: GOAL\n"
+        "seq: 1\n"
+        "summary: First\n"
+        "status: active\n",
+    )
+    _write(
+        root / "nodes" / "a2.md",
+        "id: a_1\n"
+        "type: GOAL\n"
+        "seq: 2\n"
+        "summary: Second\n"
+        "status: active\n",
+    )
+
+    project = dag.load_project(root)
+
+    check_lines = dag.check(project)
+    collision_lines = [ln for ln in check_lines if "id-collision" in ln]
+    assert len(collision_lines) == 1
+    assert "a-1" in collision_lines[0]
+    assert "a_1" in collision_lines[0]
+    assert "a_1" in collision_lines[0].rsplit("both render as ", 1)[1]
+
+    text = dag.render_dag(project)
+    assert 'a_1{{"a-1<br/>First"}}' in text
+    assert 'a_1_2{{"a_1<br/>Second"}}' in text
+
+
+def test_render_empty_project_emits_placeholder(tmp_path):
+    # @req: BI-12
+    root = tmp_path
+    (root / "nodes").mkdir(parents=True)
+
+    rc = dag.main(["render", str(root)])
+    assert rc == 0
+
+    text = (root / "views" / "dag.md").read_text(encoding="utf-8")
+    assert "```mermaid" in text
+    assert "flowchart TD" in text
+    assert "%% no nodes yet" in text
+
+
+def test_render_branch_with_assumptions_but_no_member_nodes_uses_unknown_branch_type(tmp_path):
+    # @req: BI-12
+    root = tmp_path
+    _write(
+        root / "nodes" / "goal.md",
+        "id: goal\n"
+        "type: GOAL\n"
+        "seq: 1\n"
+        "summary: Ship v0\n"
+        "status: active\n",
+    )
+    _write(
+        root / "assumptions" / "lonely.md",
+        "id: lonely\n"
+        "status: open\n"
+        "statement: Nobody else is in this branch\n"
+        "breaks_if: x\n"
+        "branch: b9\n",
+    )
+
+    project = dag.load_project(root)
+    text = dag.render_dag(project)
+
+    assert 'subgraph b9 ["b9 (?)"]' in text
+
+
+def test_render_truncates_long_labels_including_cjk(tmp_path):
+    # @req: BI-12
+    root = tmp_path
+    english_summary = "This English summary is deliberately written to exceed sixty characters total."
+    cjk_summary = "這是一段刻意寫得很長的中文摘要文字用來測試截斷功能是否能正確處理多位元組字元不會爛掉喔這是重複的部分再加長一點確保超過六十個字元"
+    assert len(english_summary) > 60
+    assert len(cjk_summary) > 60
+
+    _write(
+        root / "nodes" / "goal.md",
+        f"id: goal\ntype: GOAL\nseq: 1\nsummary: {english_summary}\nstatus: active\n",
+    )
+    _write(
+        root / "nodes" / "fact1.md",
+        f"id: fact1\ntype: FACT\nseq: 2\nsummary: {cjk_summary}\nstatus: active\n",
+    )
+
+    project = dag.load_project(root)
+    text = dag.render_dag(project)
+
+    assert english_summary not in text
+    assert english_summary[:60] + "…" in text
+    assert cjk_summary not in text
+    assert cjk_summary[:60] + "…" in text
+
+
+def test_render_escapes_angle_brackets_in_labels(tmp_path):
+    # @req: BI-12
+    root = tmp_path
+    _write(
+        root / "nodes" / "goal.md",
+        "id: goal\n"
+        "type: GOAL\n"
+        "seq: 1\n"
+        "summary: \"Ship <v0> now\"\n"
+        "status: active\n",
+    )
+
+    project = dag.load_project(root)
+    text = dag.render_dag(project)
+
+    assert "Ship #lt;v0#gt; now" in text
+    assert "<v0>" not in text
+    assert "goal<br/>Ship" in text
