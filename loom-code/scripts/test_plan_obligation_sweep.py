@@ -40,8 +40,11 @@ PLAN_DOCUMENT_REVIEWER_PROMPT = (
 # Bumped 16 -> 17 when Check 17 (Reuse-adequacy) shipped, an authorized
 # append, not a renumbering. Bumped 17 -> 18 when Check 18 (Open Questions
 # gate) shipped (docs/loom/plans/2026-08-13-open-question-dispatch-gate.md
-# Task 6), likewise an authorized append.
-PRE_EXISTING_MAX_CHECK_NUMBER = 18
+# Task 6), likewise an authorized append. Bumped 18 -> 19 when Check 19
+# (field-value microstructure) shipped
+# (docs/loom/plans/2026-08-19-field-value-microstructure.md Task 10),
+# likewise an authorized append.
+PRE_EXISTING_MAX_CHECK_NUMBER = 19
 
 
 def _read(path: Path) -> str:
