@@ -133,6 +133,11 @@ class Report:
         # self-reported success signal, which is the one thing this
         # script exists to refuse.
         self.parsed = 0
+        # ...out of how many. Printing `parsed/parsed` reads as full
+        # coverage on a partial run, and a per-diagram timeout or OSError
+        # skips one WITHOUT failing — so the denominator has to come from
+        # the block list, not from the numerator.
+        self.total = 0
 
     def scoped(self, tag):
         outer = self
@@ -210,6 +215,7 @@ def check(path, do_render=False):
         r.fails.append('no <pre class="mermaid"> block found')
         return r
 
+    r.total = len(blocks)
     for n, block in enumerate(blocks, 1):
         check_diagram(block.strip(), r.scoped(f"diagram {n}"))
     if do_render:
@@ -622,11 +628,21 @@ def rebuild_page(md_path, md_text):
     degrades loudly at the call site rather than silently returning the
     page unchanged.
     """
+    # Importing a sibling script writes __pycache__ NEXT TO IT — a nested
+    # subfolder under a skill root, which this repo forbids and whose
+    # PostToolUse hook then blocks every later edit to the skill. One
+    # `--stamp` was enough to recreate it. The suite lives outside the
+    # skill for exactly this reason; this import had reintroduced the
+    # hazard from inside.
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    saved_bytecode = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
     try:
         import render_cot_html
     except Exception:
         return None
+    finally:
+        sys.dont_write_bytecode = saved_bytecode
     try:
         # Normalise line endings first. This function's caller reads the
         # markdown with newline="" so it can preserve CRLF when it writes
@@ -783,6 +799,31 @@ def stamp_markdown(html_path, outcome):
             + f" → {md.name}. Re-render to carry it into the HTML")
 
 
+def render_verdict(do_render, parsed, total):
+    """(claim `--render`?, the note to print) — a pure decision, so it
+    can be tested without npx.
+
+    EVERY diagram must have parsed, not merely one. A per-diagram timeout
+    or OSError skips a diagram with a WARN and no fail, so `parsed > 0`
+    would claim the strong result for a run that checked part of the page
+    — the self-reported-success class, inside the fix for it. And the
+    denominator comes from the block list, never from the numerator:
+    printing `parsed/parsed` reads as full coverage on a partial run.
+
+    It lives out here because both defects survived a mutation battery
+    while sitting inline in main(), where only an end-to-end run with a
+    real parser could reach them.
+    """
+    if do_render and total > 0 and parsed == total:
+        return True, f" (parsed by mermaid: {parsed}/{total} diagram(s))"
+    if do_render:
+        return False, (
+            f" (text only — --render was requested but only {parsed}/{total} "
+            "diagram(s) were parsed; see the WARN above)"
+        )
+    return False, " (text only — add --render to prove it parses)"
+
+
 def main():
     argv = sys.argv[1:]
     if "-h" in argv or "--help" in argv:
@@ -819,21 +860,12 @@ def main():
     # Deriving it from `do_render` alone meant a machine without npx —
     # where render_check warns "nothing was parsed" and returns — still
     # stamped `pass --render` and printed "PASS (parsed by mermaid)".
-    # The no-downgrade branch in stamp_markdown then re-affirmed that
-    # false, stronger claim on every later run.
-    rendered = do_render and r.parsed > 0
+    rendered, note = render_verdict(do_render, r.parsed, r.total)
     outcome = "fail" if r.fails else ("pass --render" if rendered else "pass")
     if do_stamp:
         print(stamp_markdown(argv[0], outcome))
     if r.fails:
         return 1
-    if rendered:
-        note = f" (parsed by mermaid: {r.parsed}/{r.parsed} diagram(s))"
-    elif do_render:
-        note = (" (text only — --render was requested but NOTHING was parsed; "
-                "see the WARN above)")
-    else:
-        note = " (text only — add --render to prove it parses)"
     print("PASS" + note)
     return 0
 

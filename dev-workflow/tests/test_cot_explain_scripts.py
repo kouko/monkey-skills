@@ -593,11 +593,104 @@ def test_render_pass_is_not_claimed_when_nothing_was_parsed(tmp_path):
          str(md.with_suffix(".html"))],
         capture_output=True, text=True, env={"PATH": "/nonexistent"},
     )
-    assert "NOTHING was parsed" in r.stdout, r.stdout
+    assert "0/1 diagram(s) were parsed" in r.stdout, r.stdout
     assert "parsed by mermaid" not in r.stdout
     assert '--render' not in re.search(
         r'^verified: "(.*)"', md.read_text(encoding="utf-8"), re.M
     ).group(1)
+
+
+def test_render_check_counts_the_diagrams_it_really_parsed(tmp_path):
+    """The POSITIVE arm of the counter, which the npx-absent test cannot reach.
+
+    Without this, never incrementing `parsed` passes the suite — the
+    counter would refuse every legitimate `pass --render` and nothing
+    would say so.
+    """
+    calls = []
+
+    def fake_run(cmd, **kw):
+        out = cmd[cmd.index("-o") + 1]
+        Path(out).write_text("<svg>fine</svg>", encoding="utf-8")
+        calls.append(out)
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    r = V.Report()
+    saved_which, saved_run = V.shutil.which, V.subprocess.run
+    V.shutil.which, V.subprocess.run = (lambda _: "/usr/bin/npx"), fake_run
+    try:
+        V.render_check(["graph TB", "graph LR"], r)
+    finally:
+        V.shutil.which, V.subprocess.run = saved_which, saved_run
+    assert len(calls) == 2
+    assert r.parsed == 2, "a clean parse was not counted"
+    assert not r.fails
+
+
+def test_a_partly_parsed_run_does_not_claim_a_full_one(tmp_path):
+    """A per-diagram OSError skips a diagram with a WARN and no fail.
+
+    `parsed > 0` would then stamp the strong result for a run that
+    checked part of the page, and print `1/1` for it.
+    """
+    def half_run(cmd, **kw):
+        out = cmd[cmd.index("-o") + 1]
+        if out.endswith("d1.svg"):
+            raise OSError("boom")
+        Path(out).write_text("<svg>fine</svg>", encoding="utf-8")
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    r = V.Report()
+    r.total = 2
+    saved_which, saved_run = V.shutil.which, V.subprocess.run
+    V.shutil.which, V.subprocess.run = (lambda _: "/usr/bin/npx"), half_run
+    try:
+        V.render_check(["graph TB", "graph LR"], r)
+    finally:
+        V.shutil.which, V.subprocess.run = saved_which, saved_run
+    assert r.parsed == 1 and not r.fails, (r.parsed, r.fails)
+    assert r.parsed != r.total, "the partial run must not read as complete"
+
+
+def test_render_verdict_claims_only_full_coverage():
+    """Both of these survived a mutation battery while inline in main().
+
+    Only an end-to-end run with a real parser could reach them there,
+    which is exactly the run CI cannot do.
+    """
+    assert V.render_verdict(True, 2, 2) == (
+        True, " (parsed by mermaid: 2/2 diagram(s))")
+
+    # Partial: one diagram skipped by a timeout, no failure raised.
+    rendered, note = V.render_verdict(True, 1, 2)
+    assert rendered is False, "a partial parse claimed the strong result"
+    assert "1/2" in note, note
+
+    # The denominator must come from the block list, never the numerator.
+    assert "1/2" in V.render_verdict(True, 1, 2)[1]
+    assert "0/3" in V.render_verdict(True, 0, 3)[1]
+
+    assert V.render_verdict(True, 0, 0)[0] is False
+    assert V.render_verdict(False, 0, 1) == (
+        False, " (text only — add --render to prove it parses)")
+
+
+def test_stamping_writes_no_bytecode_into_the_skill(tmp_path):
+    """`--stamp` imports the renderer; the import must not cache beside it.
+
+    A __pycache__ under a skill root is what this repo's hook blocks
+    edits on — the hazard this branch documents twice and then caused
+    from inside its own fix.
+    """
+    cache = SCRIPTS / "__pycache__"
+    for f in cache.glob("*.pyc") if cache.exists() else []:
+        f.unlink()
+    if cache.exists():
+        cache.rmdir()
+    md = make_md(tmp_path)
+    run(RENDER, md)
+    run(VERIFY, "--stamp", md.with_suffix(".html"))
+    assert not cache.exists(), f"{cache} was created by a --stamp run"
 
 
 def test_the_number_space_observation_still_fires(tmp_path):

@@ -706,6 +706,34 @@ survived the first battery, where a stronger guard was masking the
 fallback beneath it. Two tests force the fallback path directly rather
 than letting the primary guard answer for it.
 
+#### Round four: the fix for self-reported success, reporting success
+
+Confirming the round-three fixes, one reviewer found two more — both
+inside the code that had just closed the same class.
+
+`pass --render` now required a parse, but the success line printed
+`parsed/parsed`: the denominator was the numerator. A per-diagram
+timeout or OSError skips a diagram with a WARN and no failure, so a
+partial run stamped the strong result and printed `1/1` for it. The
+denominator now comes from the block list, and the strong claim requires
+EVERY diagram to have parsed.
+
+Both defects survived a mutation battery while sitting inline in
+`main()`, where only an end-to-end run with a real parser could reach
+them — the run CI cannot do. They are now a pure `render_verdict()` that
+the suite exercises directly. (One mutant on the remaining line is
+equivalent by construction: inside the true branch the guard makes
+`parsed == total`, checked exhaustively rather than argued.)
+
+And `--stamp` had started writing `__pycache__` into the skill folder,
+because the new rebuild-and-compare imports the renderer from beside it.
+That is the hazard this branch documents twice in its own words — the
+test suite moved out of the skill for exactly this reason — reintroduced
+from inside the fix. One `sys.dont_write_bytecode` guard closes it, with
+a test that fails if a stamp leaves a cache behind.
+
+35 tests. Every substantive mutant dies.
+
 #### The suite moved out of the skill
 
 Run inside `skills/cot-explain/scripts/`, pytest creates `__pycache__/`
