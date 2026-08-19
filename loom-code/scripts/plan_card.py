@@ -401,6 +401,51 @@ def build_card(text: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _is_table_row(raw: str) -> bool:
+    """Whether a field-body continuation line is a markdown table row
+    — its stripped content starts with the pipe delimiter. Shared by
+    both `build_detail` continuation loops so a table row is never
+    folded into surrounding prose or bullet text in either the
+    Description or the Acceptance field, wherever it occurs."""
+    return raw.strip().startswith("|")
+
+
+def _fold_sub_bullets(raw_lines: list[str]) -> list[tuple[str, "list[str] | str"]]:
+    """Walk a field's continuation lines (after its own first line)
+    into ordered segments, preserving the order they appear in:
+
+    - a `- ` line opens a `("bullet", [text])` segment; a later line
+      that is neither a `- ` line nor a table row folds into the
+      LAST-opened bullet regardless of what came between (including a
+      table row) — the pre-existing behaviour, unchanged;
+    - a table row (`_is_table_row`) is never folded into a bullet or
+      into prose — always its own `("table", raw)` segment, verbatim,
+      wherever it occurs;
+    - a line before any bullet has opened, that is not a table row,
+      is its own `("pre", raw)` segment — the caller decides whether
+      to fold it into prose (Description) or emit it standalone
+      (Acceptance).
+
+    Shared by the Description and Acceptance loops in `build_detail`
+    — the same table-row and bullet-continuation handling, extracted
+    once rather than duplicated a third time (Task 6 revision round 1,
+    docs/loom/plans/2026-08-19-field-value-microstructure.md)."""
+    items: list[list[str]] = []
+    segments: list[tuple[str, "list[str] | str"]] = []
+    for raw in raw_lines:
+        sub_bullet = re.match(r"^\s*-\s+(.*?)\s*$", raw)
+        if sub_bullet is not None:
+            items.append([sub_bullet.group(1)])
+            segments.append(("bullet", items[-1]))
+        elif _is_table_row(raw):
+            segments.append(("table", raw))
+        elif items:
+            items[-1].append(raw.strip())
+        else:
+            segments.append(("pre", raw))
+    return segments
+
+
 def build_detail(text: str, task_number: int) -> str:
     """One task's fields for `--detail T<N>`: the task line, then
     description / why (brief item) / acceptance (sub-bullets indented) /
@@ -420,35 +465,29 @@ def build_detail(text: str, task_number: int) -> str:
     description_lines = _bullet_lines(block, "Description")
     if description_lines is not None:
         sentence_parts = [description_lines[0]]
-        bullets: list[list[str]] = []
-        for raw in description_lines[1:]:
-            sub_bullet = re.match(r"^\s*-\s+(.*?)\s*$", raw)
-            if sub_bullet is not None:
-                bullets.append([sub_bullet.group(1)])
-            elif bullets:
-                bullets[-1].append(raw.strip())
-            else:
-                sentence_parts.append(raw.strip())
+        rendered: list[str] = []
+        for kind, payload in _fold_sub_bullets(description_lines[1:]):
+            if kind == "bullet":
+                rendered.append("  " + " ".join(payload))
+            elif kind == "table":
+                rendered.append(payload)
+            else:  # "pre" — folds into the sentence, never a table row
+                sentence_parts.append(payload.strip())
         description = " ".join(part.strip() for part in sentence_parts if part.strip())
         if description:
             lines.append(f"description: {description}")
-            lines.extend("  " + " ".join(parts) for parts in bullets)
+            lines.extend(rendered)
     why = _bullet_value(block, "Brief item covered")
     if why:
         lines.append(f"why (brief item): {why}")
     acceptance = _bullet_lines(block, "Acceptance")
     if acceptance is not None:
         lines.append(f"acceptance: {acceptance[0]}".rstrip())
-        items: list[list[str]] = []
-        for raw in acceptance[1:]:
-            sub_bullet = re.match(r"^\s*-\s+(.*?)\s*$", raw)
-            if sub_bullet is not None:
-                items.append([sub_bullet.group(1)])
-            elif items:
-                items[-1].append(raw.strip())
-            else:
-                lines.append(raw)
-        lines.extend("  " + " ".join(parts) for parts in items)
+        for kind, payload in _fold_sub_bullets(acceptance[1:]):
+            if kind == "bullet":
+                lines.append("  " + " ".join(payload))
+            else:  # "table" or "pre" — both emitted verbatim
+                lines.append(payload)
     gloss = _bullet_value(block, "Gloss")
     if gloss:
         lines.append(f"gloss: {gloss}")
