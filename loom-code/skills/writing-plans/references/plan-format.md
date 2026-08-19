@@ -96,15 +96,15 @@ This section deliberately carries no owner field, no deadline field, no routing 
 ```markdown
 ## Task <N> — <short imperative name>
 
-- **Description**: <first line is exactly one sentence, imperative voice, written in English; route every further clause into a nested bullet or a markdown table beneath it — see §Field-value grammar>
+- **Description**: <first line is imperative voice, written in English, and stays within a 300-character ceiling; route every further clause into a nested bullet or a markdown table beneath it — see §Field-value grammar>
 - **Module**: <path or module name; ONE only>
 - **Files touched**: <comma-separated paths the implementer will Write / Edit>
 - **Context paths**:
   - <absolute path to existing code the implementer reads>
   - <... additional context paths>
 - **Acceptance**:
-  - **RED**: <first line carries one assertion sentence plus one optional grounding clause (e.g. the `Fails today because ...` clause below), written in English; route every further clause into a nested bullet or a markdown table beneath it — see §Field-value grammar>
-  - **GREEN**: <same first-line rule as RED — one assertion sentence plus one optional grounding clause, written in English; further clauses go into a nested bullet or a markdown table — see §Field-value grammar>
+  - **RED**: <first line states the assertion, written in English, and stays within the same 300-character ceiling — e.g. the `Fails today because ...` clause below fits inside it; route anything beyond that into a nested bullet or a markdown table beneath it — see §Field-value grammar>
+  - **GREEN**: <same first-line rule as RED — states the assertion, written in English, within the same 300-character ceiling; anything beyond that goes into a nested bullet or a markdown table — see §Field-value grammar>
 - **External surfaces**: <v0.9.0+ — required when task touches non-stdlib external surface. See §External surfaces below. Omit field entirely if task is pure internal logic.>
 - **Reuse-adequacy**: <v0.43.0+ — required when the task's Description instructs the implementer to reuse an existing helper in a new lane. Two author-written slots, `Observed` (ends in a source marker) and `Intended`; no author-side adequacy verdict — that judgement is the reviewer's, not the plan's. See §`Reuse-adequacy` below. Omit field entirely if the task authors new logic instead of reusing an existing helper across lanes.>
 - **Dependencies**: <one of: "none" | "Task N completes first" | "Tasks N, M complete first" (multi-prerequisite — N and M must both finish before this task starts) | "Tasks N, M parallel" (both are prerequisites, may run in parallel). Cross-part ordering: use "none" at task level + a plan-level `Notes` entry; the field is within-plan only and cannot reference a sibling part's tasks.>
@@ -142,25 +142,31 @@ A field's value is bounded by WHERE its content goes, not by how long the
 document is — nothing is deleted, overflow is relocated. This replaces
 the earlier judgment-shaped rule that asked for a single unbounded
 sentence of work, which let a writer producing a 1,452-character
-`Description` believe in good faith that it satisfied that duty. The new
-rule is positional, so a mechanical checker decides it instead of a
-reviewer's judgment.
+`Description` believe in good faith that it satisfied that duty. Two
+later attempts at a machine-checkable *sentence* rule were tried and
+retired in turn: occurrence counting false-positived on `0.89.0`,
+`e.g.`, `i.e.` and an ellipsis; the sentence-boundary heuristic that
+replaced it false-negatived on a lowercase-initial third sentence —
+letting an over-cap field pass silently — while still false-positiving
+on `e.g. Python`. The rule below is a plain character-length cap
+instead, which has no punctuation edge case to enumerate, so a
+mechanical checker decides it the same way every time.
 
-- **`Description`.** State the task in exactly one sentence on the first
-  line, imperative voice. Route every further clause — a caveat, a list
-  of sub-steps, a table of cases — into a nested bullet or a markdown
-  table beneath that first line, never onto the first line itself.
-- **`Acceptance.RED` and `Acceptance.GREEN`.** State the same
-  continuation rule, with one difference: the first line may carry one
-  assertion sentence **plus** one optional grounding clause — the
-  `Fails today because ...` clause this file already teaches (see the
-  Worked example above) IS that grounding sentence, not a second,
-  free-floating clause. Route every clause beyond those two into a
-  nested bullet or a markdown table.
-- **`Goal:`.** State one sentence within a 300-character ceiling, and
-  admit no nested body — `plan_card.py`'s `_header_value` folds any
-  indented continuation into the card's single `goal:` line, so a
-  nested body there is silently flattened rather than rendered.
+- **`Description`, `Acceptance.RED`, `Acceptance.GREEN`.** Keep the
+  field's first line — the text on the bullet's own line, right after
+  the colon — within a **300-character ceiling**. This is the SAME
+  number and the SAME rule for all three fields; there is no per-field
+  branch. Route every further clause — a caveat, a grounding clause
+  such as the `Fails today because ...` clause this file already
+  teaches (see the Worked example below), a list of sub-steps, a table
+  of cases — into a nested bullet or a markdown table beneath that
+  first line, never onto the first line itself.
+- **`Goal:`.** State one sentence within the SAME 300-character
+  ceiling as above — one number, not two independent limits that could
+  drift apart — and admit no nested body: `plan_card.py`'s
+  `_header_value` folds any indented continuation into the card's
+  single `goal:` line, so a nested body there is silently flattened
+  rather than rendered.
 
 See the Worked example section below for a before/after rewrite of an
 over-long `Description` under this rule.
@@ -444,19 +450,16 @@ Tasks 1 + 2 are independent (disjoint `Files touched`) and can run parallel in `
 
 ### Field-value grammar — before/after
 
-Before, under the retired judgment-shaped wording — one unbroken run
-that reads as "one assertion" to its own author:
+Before, under the retired judgment-shaped wording — one unbroken line
+that reads as "one assertion" to its own author, but its first line
+runs to 312 characters, past the 300-character ceiling:
 
 ```markdown
-- **Description**: Add rate limiting to the /export endpoint using a
-  token-bucket algorithm keyed on user id, with a 429 response and a
-  Retry-After header when the bucket is empty, matching the limiter
-  already used on /reports so behavior stays consistent across
-  endpoints, and update the OpenAPI spec to document the new 429 case.
+- **Description**: Add rate limiting to the /export endpoint using a token-bucket algorithm keyed on user id, with a 429 response and a Retry-After header when the bucket is empty, matching the limiter already used on /reports so behavior stays consistent across endpoints, and update the OpenAPI spec to document the new 429 case.
 ```
 
-After, under the positional rule — first line stays one sentence, the
-rest routes into nested bullets:
+After, under the positional rule — first line stays within the
+300-character ceiling, the rest routes into nested bullets:
 
 ```markdown
 - **Description**: Add rate limiting to the `/export` endpoint.
