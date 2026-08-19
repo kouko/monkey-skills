@@ -4,6 +4,33 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.27.1] — 2026-08-19 — `cot-explain` stops pinning the anomalous mermaid
+
+### Changed — the CDN pin moves off 11.16.0
+
+The generated page pinned `mermaid@11.16.0`, which is the short-lived line
+that honoured a subgraph's `direction` even when a node edge left the
+subgraph. While the layout depended on that anomaly the pin was load-bearing
+and nobody knew it; that is why the page looked right locally and collapsed
+in Obsidian and the VS Code preview.
+
+2.27.0 removed the dependency — rows are joined subgraph-to-subgraph, which
+renders identically on every version tested. So the pin has inverted from
+crutch to liability: 11.16.0 is now the **one** version where a regression in
+the row-joining rule would stay invisible. Pinned to 11.17.0, which has
+mermaid's documented behaviour.
+
+`MERMAID_VER` (mermaid-cli, used by `--render`) stays at 11.16.0 — it is the
+latest release, and its comment already records that pinning the CLI does not
+pin the library it draws with.
+
+### Added — one memory entry
+
+`widening-a-grammar-leaves-the-old-regexes-covering-half-of-it` — when the
+edge grammar gained subgraph ids, two guards kept their `[A-Z]` patterns and
+silently covered only half the language. No test failed, because every
+existing test used the old shape.
+
 ## [2.27.0] — 2026-08-19 — `cot-explain` diagrams render the same everywhere
 
 ### Fixed — the layout rested on a two-patch mermaid bug

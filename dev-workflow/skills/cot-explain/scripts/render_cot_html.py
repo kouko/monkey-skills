@@ -124,7 +124,15 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 """.strip()
 
 MERMAID_CDN = """<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.esm.min.mjs';
+  // Pinned to a release with mermaid's DOCUMENTED subgraph behaviour.
+  // The pin was 11.16.0, which is the one short-lived line that honoured a
+  // subgraph `direction` even when a node edge left the subgraph — the
+  // layout depended on that, so the page silently required the anomaly and
+  // every other renderer showed a collapsed diagram. The layout no longer
+  // depends on it (rows are joined subgraph-to-subgraph), so pinning to
+  // the outlier is now a liability rather than a crutch: it would be the
+  // ONE version where a regression in the row-joining rule stays invisible.
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.17.0/dist/mermaid.esm.min.mjs';
   // 'antiscript', not 'loose': node labels are raw HTML by design (the
   // left-align <div>), so 'strict' would render them as literal text.
   // This is defence in depth over what mermaid itself renders, and NOT
