@@ -360,6 +360,8 @@ views of one record format, not two competing records).
 
 ## Worked example
 
+The canonical CSV-export plan below must stay the FIRST fenced markdown code block in this section — the plan-format test suite extracts it by taking the first such fence between this heading and the next `###`-level heading, so a subsection inserted ahead of it (e.g. a shorter example) breaks that extraction. Add new subsections after it, not before.
+
 For a brief at `docs/loom/specs/2026-05-16-csv-export.md` whose Smallest End State is *"add `?format=csv` query param to the existing `/reports/<id>` endpoint":*
 
 ```markdown

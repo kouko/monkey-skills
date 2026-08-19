@@ -247,10 +247,29 @@ def test_reviewer_prompt_gloss_contract_sentence_present():
     assert _normalize(REVIEWER_GLOSS_CONTRACT_SENTENCE) in text
 
 
+def test_canonical_example_is_first_markdown_fence_in_section():
+    """Load-bearing ordering constraint (code-quality review, revision
+    round 1): `_canonical_worked_example_plan_text` below grabs the
+    FIRST ```markdown fence in the §Worked example span. Any subsection
+    (e.g. the before/after Field-value-grammar example) placed ahead of
+    the canonical CSV example silently hijacks that extraction and
+    plan_card.py fails on the wrong plan body — this assertion pins the
+    ordering so a future reordering reds here instead of surfacing as a
+    confusing plan_card.py exit."""
+    section = _worked_example_text()
+    fence_index = section.index("```markdown")
+    assert (
+        "# Plan: CSV export query param" in section[fence_index : fence_index + 200]
+    ), "the first ```markdown fence in §Worked example is no longer the canonical CSV example"
+
+
 def _canonical_worked_example_plan_text() -> str:
     """The fenced ```markdown plan body inside the canonical CSV-export
-    worked example (NOT the wide-but-shallow example) — the literal
-    plan text a reader would copy and run plan_card.py against."""
+    worked example (NOT the wide-but-shallow example). Depends on the
+    canonical example staying the FIRST ```markdown fence between
+    `## Worked example` and `### Wide-but-shallow example` — see
+    test_canonical_example_is_first_markdown_fence_in_section above and
+    the ordering note in plan-format.md's §Worked example heading."""
     section = _worked_example_text()
     fence_start = section.index("```markdown") + len("```markdown")
     fence_end = section.index("```", fence_start)
