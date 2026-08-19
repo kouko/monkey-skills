@@ -267,6 +267,25 @@ def test_readmes_state_the_no_requirement_value_and_its_authority():
 RETIRED_ASSERTION_TOKEN = "one-assertion"
 POSITIONAL_RULE_TOKENS = ["300", "plan-format.md"]
 
+# plan-format.md widened §`Field-value grammar` twice after the wording
+# above was first drafted: (1) the 300-character ceiling binds each
+# nested bullet's own folded text too -- "no per-field branch and no
+# per-bullet exemption" -- not just the field's first line; (2) the plan
+# header's `Goal:` line shares the SAME 300-character ceiling, "one
+# number, not two independent limits that could drift apart" (see that
+# section for both quotes). Each README's field-list bullet must state
+# both widenings, natively per language, not as a loanword copy of the
+# English phrasing. These are language-specific literal substrings the
+# implementer chose when writing each mirror -- a cold reader can still
+# verify the CONCEPT (the ceiling is universal, Goal: is bound too) even
+# though the exact string differs per language.
+PER_BULLET_NO_EXEMPTION_TOKENS = {
+    "README.md": "no per-bullet exemption",
+    "README.ja.md": "箇条書きごとの例外はない",
+    "README.zh-TW.md": "沒有逐項豁免",
+}
+GOAL_CEILING_TOKEN = "Goal:"
+
 
 def test_all_three_readmes_state_positional_rule():
     """Each README's per-task field list must state the shipped
@@ -293,3 +312,26 @@ def test_all_three_readmes_state_positional_rule():
                 f"positional rule -- missing {token!r} (expected a "
                 "300-character ceiling with a pointer to plan-format.md)"
             )
+
+
+def test_readmes_state_per_bullet_ceiling_and_goal_ceiling():
+    """Each README's field-list section must state that the 300-character
+    ceiling binds every nested bullet's own folded text (no per-bullet
+    exemption) AND that the plan header's `Goal:` line shares that same
+    300-character ceiling -- not a second, independently-drifting limit.
+    Both widenings postdate the original positional-rule wording pinned
+    above; a mirror stating only the first-line rule silently implies
+    overflow bullets and `Goal:` are unbounded."""
+    for name, path in READMES.items():
+        section = _field_list_section(path)
+        per_bullet_token = PER_BULLET_NO_EXEMPTION_TOKENS[name]
+        assert per_bullet_token in section, (
+            f"{name}: field-list section does not state that the "
+            "300-character ceiling binds each nested bullet's own folded "
+            f"text -- missing {per_bullet_token!r}"
+        )
+        assert GOAL_CEILING_TOKEN in section, (
+            f"{name}: field-list section does not mention the plan "
+            f"header's {GOAL_CEILING_TOKEN!r} line at all -- it must "
+            "state that Goal: shares the same 300-character ceiling"
+        )
