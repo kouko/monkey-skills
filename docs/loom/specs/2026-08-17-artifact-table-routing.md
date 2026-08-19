@@ -9,8 +9,8 @@
 
 When a loom writer (brainstorming / writing-plans / spec-expansion) puts comparison-shaped content — two or more options weighed on shared axes — into a brief, plan, or spec, that content lands as prose, and the reader has to hold the options in their head to compare them.
 
-- The family already has the rule that fixes this (`family-relay.md` §(b): "≥2 options at a fork → a markdown comparison table"), but it binds only the chat channel — the artifact templates never route the same content to a table.
-- Measured: a 231-note human corpus is 97% table-bearing, against a loom plan corpus that is 3% table-bearing.
+- The family already has the rule that fixes this (`family-relay.md` §(b): "≥2 options at a fork → a markdown comparison table"), but it binds only the chat channel; the artifact templates never route the same content to a table.
+- Measured: a 231-note human corpus is 97% table-bearing, sits opposite a loom plan corpus that is 3% table-bearing.
 - Adding the 2026-08-11 diagram slot did not move that number (0 table rows before and after).
 
 ## Users
