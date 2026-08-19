@@ -316,6 +316,15 @@ def test_check_flags_assumption_missing_breaks_if_and_more_than_three_per_branch
     # brief-item: BI-2
     root = tmp_path
     _write(
+        root / "nodes" / "claim_b1.md",
+        "id: claim_b1\n"
+        "type: CLAIM\n"
+        "seq: 1\n"
+        "summary: A claim on branch b1\n"
+        "status: current\n"
+        "branch: b1\n",  # gives b1 a node so branch-has-node stays silent here
+    )
+    _write(
         root / "assumptions" / "a1.md",
         "id: a1\n"
         "status: open\n"
@@ -355,6 +364,67 @@ def test_check_flags_assumption_missing_breaks_if_and_more_than_three_per_branch
     assert len(lines) == 2
     assert any("a1.md" in ln and "breaks_if" in ln for ln in lines)
     assert any("branch b1 has 4 assumptions (max 3)" in ln for ln in lines)
+
+
+def test_check_flags_a_branch_carried_only_by_assumptions(tmp_path, capsys):
+    # brief-item: BI-4 — a branch id present on assumptions but no node is a
+    # violation; a branch with at least one node is silent; a project-wide
+    # assumption (no `branch` key at all) is out of scope and never flagged.
+    root = tmp_path
+    _write(
+        root / "nodes" / "goal.md",
+        "id: goal\n"
+        "type: GOAL\n"
+        "seq: 1\n"
+        "summary: Ship v0\n"
+        "status: current\n",
+    )
+    # b_ok: carries a node -> silent
+    _write(
+        root / "nodes" / "claim_ok.md",
+        "id: claim_ok\n"
+        "type: CLAIM\n"
+        "seq: 2\n"
+        "summary: A claim on branch b_ok\n"
+        "status: current\n"
+        "branch: b_ok\n",
+    )
+    _write(
+        root / "assumptions" / "a_ok.md",
+        "id: a_ok\n"
+        "status: open\n"
+        "statement: Assumption backing b_ok\n"
+        "breaks_if: x\n"
+        "branch: b_ok\n",
+    )
+    # b_orphan: carries only an assumption, no node -> violation
+    _write(
+        root / "assumptions" / "a_orphan.md",
+        "id: a_orphan\n"
+        "status: open\n"
+        "statement: Assumption with no supporting claim\n"
+        "breaks_if: x\n"
+        "branch: b_orphan\n",
+    )
+    # project-wide assumption: no `branch` key at all -> never flagged
+    _write(
+        root / "assumptions" / "a_wide.md",
+        "id: a_wide\n"
+        "status: open\n"
+        "statement: Project-wide premise\n"
+        "breaks_if: x\n",
+    )
+
+    rc = dag.main(["check", str(root)])
+    out = capsys.readouterr().out
+    lines = [ln for ln in out.splitlines() if ln]
+
+    branch_lines = [ln for ln in lines if "branch-has-node" in ln]
+    assert rc == 1
+    assert len(branch_lines) == 1
+    assert "b_orphan" in branch_lines[0]
+    assert not any("b_ok" in ln for ln in branch_lines)
+    assert not any("a_wide" in ln for ln in branch_lines)
 
 
 def test_check_flags_inputs_entry_without_ref(tmp_path, capsys):
@@ -1668,6 +1738,15 @@ def test_project_wide_assumption_is_gate_clean_and_outside_the_per_branch_cap(tm
     """FINDING-005 — a pivotal premise governing several branches is filed
     project-wide (no `branch`), so the ≤3 cap of one branch cannot force it in."""
     root = tmp_path
+    _write(
+        root / "nodes" / "claim_b1.md",
+        "id: claim_b1\n"
+        "type: CLAIM\n"
+        "seq: 1\n"
+        "summary: A claim on branch b1\n"
+        "status: current\n"
+        "branch: b1\n",  # gives b1 a node so branch-has-node stays silent here
+    )
     _write(
         root / "assumptions" / "checkpoint_go.md",
         "id: checkpoint_go\n"

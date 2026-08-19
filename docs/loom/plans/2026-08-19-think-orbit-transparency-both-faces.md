@@ -49,7 +49,7 @@ N/A — no unresolved question: brief 的 OQ-1（`inputs: []` 節點不適用 `i
 - Dependencies: none
 - Independent: false
 - Brief item covered: BI-3 — `check` rule `input-narration`
-- Status: claimed(@implementer-t1)
+- Status: done(e3c41ef5)
 - Gloss: 把量到的「8 個有上游的節點，0 個交代了上游」釘成可機械偵測的違規；只驗有沒有提到，不驗寫得好不好。
 
 ## Task 2 — `check` 規則 `branch-has-node`
@@ -66,7 +66,7 @@ N/A — no unresolved question: brief 的 OQ-1（`inputs: []` 節點不適用 `i
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: BI-4 — a branch must contain a node (mechanical half; the authoring half is Task 3)
-- Status: pending
+- Status: claimed(@implementer-t2)
 - Gloss: 擋掉檢查點看到的那四條「只裝假設、沒有主張」的空分支，順帶讓每分支 ≤3 假設的上限重新有意義。
 
 ## Task 3 — thinking-session 的授權契約與範例

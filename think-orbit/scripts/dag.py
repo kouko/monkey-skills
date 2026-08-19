@@ -442,6 +442,25 @@ def _rule_assumption_max(project: Project) -> list[str]:
     return violations
 
 
+def _rule_branch_has_node(project: Project) -> list[str]:
+    """A branch id carried by one or more assumptions must also be carried by
+    at least one node — a branch box with only floating premises and no
+    claim to support argues nothing.
+
+    A project-wide assumption (no `branch` key at all) is out of scope here,
+    mirroring the carve-out in `_rule_assumption_max`: it stands outside any
+    branch, so it can never trigger this rule.
+    """
+    node_branches = {node.branch for node in project.nodes if node.branch}
+    assumption_branches = {a.branch for a in project.assumptions if a.branch}
+    violations = []
+    for branch in sorted(assumption_branches - node_branches):
+        violations.append(
+            f"assumptions: branch-has-node: branch {branch} has assumptions but no node"
+        )
+    return violations
+
+
 def _rule_problems(project: Project) -> list[str]:
     return list(project.problems)
 
@@ -653,6 +672,7 @@ _CHECK_RULES = (
     _rule_node_status,
     _rule_assumption_field,
     _rule_assumption_max,
+    _rule_branch_has_node,
     _rule_problems,
     _rule_duplicate_id,
     _rule_mermaid_id_collision,
