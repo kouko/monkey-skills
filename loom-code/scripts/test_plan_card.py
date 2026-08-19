@@ -728,6 +728,43 @@ def test_detail_preserves_nested_description_bullets(tmp_path):
     )
 
 
+def test_detail_preserves_acceptance_table_rows(tmp_path):
+    """--detail on a task whose Acceptance body is a three-row markdown
+    table (no `- ` sub-bullet at all) emits all three rows — table rows
+    arriving before the first sub-bullet used to match neither the
+    sub-bullet branch nor the continuation branch and were silently
+    dropped."""
+    plan_path = _write_plan(
+        tmp_path,
+        (
+            "# Plan: widget fixture\n\n"
+            "Source brief: docs/loom/specs/fixture.md\n"
+            "Goal: Ship the widget pipeline end-to-end.\n"
+            "Stage: sdd:wave-1\n\n"
+            "## Task 1 — parser\n\n"
+            "- Description: Extend the parser.\n"
+            "- Acceptance:\n"
+            "  | Field | Rule |\n"
+            "  | --- | --- |\n"
+            "  | Description | one sentence |\n"
+            "- Status: pending\n\n"
+            "## Notes\n\nFixture notes — never a task.\n"
+        ),
+    )
+
+    result = _run_card(plan_path, "--detail", "T1")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == (
+        "T1 parser\n"
+        "description: Extend the parser.\n"
+        "acceptance:\n"
+        "  | Field | Rule |\n"
+        "  | --- | --- |\n"
+        "  | Description | one sentence |\n"
+    )
+
+
 def test_detail_unknown_task_number_exits_1_naming_it(tmp_path):
     """--detail with a task number the plan has no heading for → exit 1
     loud naming the requested task."""

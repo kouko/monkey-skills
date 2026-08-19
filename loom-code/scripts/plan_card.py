@@ -446,6 +446,8 @@ def build_detail(text: str, task_number: int) -> str:
                 items.append([sub_bullet.group(1)])
             elif items:
                 items[-1].append(raw.strip())
+            else:
+                lines.append(raw)
         lines.extend("  " + " ".join(parts) for parts in items)
     gloss = _bullet_value(block, "Gloss")
     if gloss:
