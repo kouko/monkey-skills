@@ -21,6 +21,7 @@ Stdlib + pytest only (pathlib, re).
 """
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -96,28 +97,33 @@ def test_check19_row_present_and_ranges_updated():
     )
 
 
+PLUGIN_JSON = Path(__file__).parents[1] / ".claude-plugin" / "plugin.json"
+
+
 def test_check19_version_tag_matches_shipping_version():
     """Check 19's leading `(vX.Y.Z+)` tag must name the version this
     arc actually ships under.
 
-    Pinned against the literal target ("0.89.0"), NOT against
-    `loom-code/.claude-plugin/plugin.json`'s current value: this
-    plan's own release task (Task 12 of
-    `docs/loom/plans/2026-08-19-field-value-microstructure.md`) is
-    the one that bumps plugin.json 0.88.0 -> 0.89.0, and Task 12 has
-    not run yet as of this task. Comparing live against plugin.json
-    would make this assertion fail until Task 12 lands (this task
-    must not front-run that bump), so the target is hardcoded to the
-    version the plan declares Task 12 will produce. Task 12 (or a
-    future revision) must update this literal alongside plugin.json
-    if the shipping version ever changes again.
+    Pinned live against `loom-code/.claude-plugin/plugin.json`'s
+    current value, not a hardcoded literal: Task 12 of
+    `docs/loom/plans/2026-08-19-field-value-microstructure.md` bumped
+    plugin.json 0.88.0 -> 0.89.0, and that bump is the objection a
+    hardcoded literal existed to dodge (a live comparison would have
+    failed while plugin.json still read 0.88.0). With the bump landed,
+    the two must move together from here on -- a future version bump
+    that forgets to update the Check 19 tag is exactly the drift this
+    test exists to catch.
     """
     text = _text()
     row = _check19_row(text)
 
+    assert PLUGIN_JSON.is_file(), f"plugin.json is absent at {PLUGIN_JSON}"
+    plugin_version = json.loads(PLUGIN_JSON.read_text(encoding="utf-8"))["version"]
+
     match = re.search(r"\(v(\d+\.\d+\.\d+)\+\)", row)
     assert match is not None, "Check 19 row must open with a `(vX.Y.Z+)` version tag"
-    assert match.group(1) == "0.89.0", (
-        f"Check 19 version tag is v{match.group(1)}+, expected v0.89.0+ "
-        "(the version Task 12 of the field-value-microstructure plan ships)"
+    assert match.group(1) == plugin_version, (
+        f"Check 19 version tag is v{match.group(1)}+, but "
+        f"loom-code/.claude-plugin/plugin.json reads {plugin_version} -- "
+        "whichever one is stale, update it to match the other"
     )

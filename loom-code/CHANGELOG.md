@@ -5,6 +5,46 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.89.0] — 2026-08-19 — field-value microstructure
+
+### Added
+
+- **`check_field_microstructure.py`** — a new checker retiring
+  `plan-format.md`'s `one-assertion unit of work` wording for a
+  positional rule: no prose unit in a plan's `Description` / `RED` /
+  `GREEN` fields may exceed 300 characters, where a unit is either
+  the field's own first line or one nested bullet's text folded
+  across however many physical lines it wraps to. A `--brief` mode
+  applies the sibling rule to brief paragraphs (600 characters, or an
+  authored `<!-- narrative: <reason> -->` declaration directly beneath
+  the paragraph it exempts).
+- **`writing-plans`'s §Self-review** runs the new checker
+  unconditionally as a blocking gate before a plan or brief is
+  handed off, and the plan-document-reviewer prompt gained **Check
+  19**, binding the reviewer to running the checker rather than
+  judging a field "atomic" by eye.
+- **`handoff-brief-format.md`** documents the paragraph-length rule
+  and the `<!-- narrative: ... -->` declaration syntax.
+
+### Fixed
+
+- **`plan_card.py --detail` no longer flattens a nested-bullet
+  `Description`** into single-line prose — the bullet structure now
+  survives rendering.
+- **`plan_card.py` no longer folds a table row under `Acceptance` or
+  `Description`** into the surrounding prose — both silently
+  corrupted the source table before this fix.
+
+### Changed
+
+- **`Goal:`** keeps only its no-nested-body rule; the 300-character
+  ceiling considered for it was dropped, because `plan-format.md`
+  freezes that field's content and the two rules could not both hold
+  for existing plans.
+- The three `writing-plans` READMEs were resynced to the shipped
+  rule, and §Consuming a loom-design change-folder was extracted out
+  of `writing-plans/SKILL.md` into a reference file.
+
 ## [0.88.0] — 2026-08-18 — adjudication render staleness made visible
 
 ### Added
