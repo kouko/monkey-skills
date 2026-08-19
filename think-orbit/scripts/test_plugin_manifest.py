@@ -19,7 +19,7 @@ def test_manifest_marketplace_and_codex_mirror_are_consistent():
     assert plugin_json_path.exists(), f"missing {plugin_json_path}"
     plugin_json = json.loads(plugin_json_path.read_text(encoding="utf-8"))
     assert plugin_json["name"] == "think-orbit"
-    assert plugin_json["version"] == "0.1.3"
+    assert plugin_json["version"] == "0.1.4"
 
     marketplace_path = REPO_ROOT / ".claude-plugin" / "marketplace.json"
     marketplace = json.loads(marketplace_path.read_text(encoding="utf-8"))

@@ -103,7 +103,7 @@ N/A — no unresolved question: brief 的 OQ-1（`inputs: []` 節點不適用 `i
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: BI-1 — three kinds of speech in the contract (router half)
-- Status: claimed(@implementer-t4)
+- Status: done(90278aa5)
 - Gloss: 兩個 skill 說相反的話，agent 會挑安靜的那個聽；路由講同一套，但細節只留在核心 skill 一處。
 
 ## Task 5 — 發佈 0.1.4

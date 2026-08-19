@@ -5,6 +5,40 @@ All notable changes to the `think-orbit` plugin are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] — 2026-08-19
+
+### Fixed
+
+The skill said reasoning must be written silently, and an agent generalised
+that into thinking silently — the reasoning was never articulated at all, so
+there was nothing to write into the node bodies either. Measured on a real
+project (the real-material checkpoint), nodes protected by an interrupt
+narrated their upstream 2/2; nodes written silently did so 0/8. Speech now
+splits three ways instead of being banned wholesale: progress narration
+stays banned, reasoning aloud becomes required — one or two sentences before
+the action, naming what is about to be claimed and what it stands on, never
+awaiting a reply — and the three interrupts are unchanged. `thinking-session`
+also declares itself a deliberate exception to a host-level "be terse, no
+narration" preference, which had stacked with the old silence rule to leave
+no reason to speak at all. `using-think-orbit` states the same three-way
+contract instead of the opposite one, so the two skills in the family no
+longer disagree.
+
+### Added
+
+Node bodies now carry a warrant duty: the first paragraph restates in prose
+which upstream the step stands on, what the step adds, and what would
+collapse it — written even when the same reasoning was just spoken aloud,
+because the two faces are equal and neither substitutes for the other. A
+branch opens with one CLAIM per path stating that path's position; an
+asymmetric fork — one only becoming visible after a path is already under
+way — opens the branch retroactively rather than leaving the earlier path
+unbranched. Two new `check` rules enforce the mechanical floor:
+`input-narration` (a node with load-bearing inputs must name at least one of
+their ids in its body) and `branch-has-node` (a branch carrying only
+assumptions and no claim is a violation). The four self-describing worked
+examples in `thinking-session` are replaced with real ones.
+
 ## [0.1.3] — 2026-08-19
 
 ### Fixed
