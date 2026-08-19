@@ -120,6 +120,40 @@ on harmless edits is one people learn to wave through**, which is how a
 real warning gets missed — the same lesson as a fifteen-warning run,
 arriving on a different mechanism.
 
+## Two decode stages, and the control that has to sit before both
+
+The page delivers the diagram as text inside `<pre class="mermaid">`.
+The browser decodes that to `textContent`; mermaid takes the textContent
+as the diagram source and then inserts each node label with `innerHTML`,
+which decodes **a second time**. Label text comes from whatever document
+was summarised.
+
+The first version un-escaped the whole fence body, so a `<script>` in a
+source document arrived live. The comment above it named mermaid's
+`securityLevel` as the mitigation — but the browser parses `<pre>`
+content before mermaid initializes, so that control sat downstream of
+the injection point and never saw it.
+
+The fix allow-lists the four tags a label may contain and neutralises
+everything else, and the cut is **`<`, not `>`**: a lone `>` cannot open
+a tag while arrows are full of legitimate ones. The first attempt cut
+both and left mermaid a graph with no edges.
+
+Anything meant to READ as text needs one extra level of escaping, so
+that exactly one decode is consumed at each stage. `&amp;lt;` becomes
+`&lt;` in textContent, and the character `<` on screen. That is right for
+fidelity as well as safety: a `<div>` written in the source is text the
+reader should see, not an element that silently vanishes into the label.
+
+Two reviewers found this in two passes — one caught the browser stage,
+the next caught the mermaid stage — which is the shape of the whole
+class: **each fix is correct at the layer it was reported and unguarded
+one layer down.** Three other findings in that round had the same
+skeleton: the gate authenticating a fingerprint rather than the content
+it fingerprints, `pass --render` derived from the flag rather than from a
+parse that happened, and a version claim grounded in a real live run but
+attached to a floating `11` range.
+
 ## Why the vocabulary stays small
 
 The obvious response to a fidelity failure is more expressive power:

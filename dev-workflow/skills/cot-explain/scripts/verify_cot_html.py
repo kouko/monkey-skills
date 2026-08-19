@@ -30,6 +30,13 @@ parser, because a diagram can pass every textual check here and still
 render as a red error box. Needs `npx` and, on first use, network.
 Without it a PASS means "matches the spec as text", not "renders".
 
+`pass --render` is recorded only when a diagram was ACTUALLY parsed, not
+when the flag was passed. On a machine without `npx` the flag alone once
+produced a stamped `pass --render` and a printed "PASS (parsed by
+mermaid)" over a run that parsed nothing — a verdict derived from a
+request rather than from work done, which is the same self-reported
+success signal this field exists to refuse.
+
 **The exit code alone settles nothing**, so `render_check` reads the
 output instead and treats two things as failure: no SVG produced, and an
 SVG carrying an error marker. The inherited grounding —
@@ -53,7 +60,7 @@ from pathlib import Path
 SEP = "<br/>" + "━" * 6 + "<br/>"
 BULLET = "• "
 ARROWS = ("-->", "-.->", "==>")
-MERMAID_VER = "11"
+MERMAID_VER = "11.16.0"   # exact, not the 11.x range — see NUMBER_SPACE_NOTE
 
 # Advisory thresholds. None of these can fail a build.
 WARN_PER_GROUP = 3
@@ -120,6 +127,12 @@ def limit_for(text, base):
 class Report:
     def __init__(self):
         self.fails, self.warns = [], []
+        # How many diagrams the REAL parser actually consumed. `--render`
+        # asks for the check; this records whether it happened. A verdict
+        # derived from the flag rather than from work done is a
+        # self-reported success signal, which is the one thing this
+        # script exists to refuse.
+        self.parsed = 0
 
     def scoped(self, tag):
         outer = self
@@ -253,8 +266,12 @@ def check_diagram(body, s):
     # Legal mermaid, outside this spec. Caught by name so the diagnosis
     # says what is wrong; left to the edge parser it surfaced as "node C
     # has no edge at all", which points at the wrong thing entirely.
+    # `&` reaches this text as `&amp;`: the converter leaves ampersands
+    # entity-encoded so that nothing it emits is decoded twice on the way
+    # to mermaid's label parser. Match both forms.
     if re.search(
-        r"(?:-->|-\.->|==>)\s*(?:\|[^|]*\|)?\s*[A-Z]\s*&\s*[A-Z]", body
+        r"(?:-->|-\.->|==>)\s*(?:\|[^|]*\|)?\s*[A-Z]\s*(?:&|&amp;)\s*[A-Z]",
+        body,
     ):
         s.fail(
             "uses mermaid's multi-destination `A --> B & C` form — this "
@@ -564,6 +581,12 @@ def render_check(blocks, r):
                     f"diagram {n}: mermaid rendered a SYNTAX ERROR image — it "
                     "would appear as a red error box, not a diagram"
                 )
+                continue
+            # Only here — an SVG exists and carries no error marker — has
+            # the real parser actually consumed this diagram. Every path
+            # above `continue`s without counting, so `pass --render`
+            # cannot be claimed for work that did not happen.
+            r.parsed += 1
 
 
 def source_sha(md_text):
@@ -580,7 +603,43 @@ def source_sha(md_text):
     """
     m = re.match(r"^---\r?\n.*?\r?\n---\r?\n(.*)$", md_text, re.S)
     body = m.group(1) if m else md_text
-    return hashlib.sha256(body.encode("utf-8")).hexdigest()
+    # Line endings are not content. Hashing them made a CRLF-authored
+    # artifact impossible to stamp — the renderer reads through universal
+    # newlines and hashes LF, the stamper reads with newline="" so it can
+    # preserve CRLF, and the two then disagreed about a file neither had
+    # changed. A check that fires on a harmless difference is one people
+    # learn to wave through.
+    return hashlib.sha256(body.replace("\r\n", "\n").encode("utf-8")).hexdigest()
+
+
+def rebuild_page(md_path, md_text):
+    """What the converter would build from this markdown, or None.
+
+    None means the comparison could not be made — the renderer is not
+    importable here, usually because markdown-it-py is not installed on a
+    machine that only received the HTML. The caller then falls back to
+    the page's own fingerprint and is weaker for it, which is why this
+    degrades loudly at the call site rather than silently returning the
+    page unchanged.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    try:
+        import render_cot_html
+    except Exception:
+        return None
+    try:
+        # Normalise line endings first. This function's caller reads the
+        # markdown with newline="" so it can preserve CRLF when it writes
+        # back, but the converter's own CLI reads through universal
+        # newlines — so feeding it the raw CRLF text produced a page that
+        # never matched the one on disk, and every CRLF artifact was
+        # refused as "edited by hand".
+        doc, leftovers = render_cot_html.build(
+            md_text.replace("\r\n", "\n"), False, Path(md_path).parent
+        )
+    except Exception:
+        return None
+    return None if leftovers else doc
 
 
 def stamp_markdown(html_path, outcome):
@@ -597,7 +656,16 @@ def stamp_markdown(html_path, outcome):
     md = Path(html_path).with_suffix(".md")
     if not md.exists():
         return f"--stamp: no sibling {md.name} to record into"
-    text = md.read_text(encoding="utf-8")
+    # Read with newline="" so the file's own line endings survive.
+    # read_text() applies universal-newline translation and write_text()
+    # then emits LF, so one --stamp silently rewrote every line of a
+    # CRLF-authored artifact — a whole-file diff where only the
+    # `verified:` line was meant to change. The sibling converter goes out
+    # of its way to accept CRLF; destroying it here would make the two
+    # scripts disagree about whether that input is supported.
+    with open(md, encoding="utf-8", newline="") as fh:
+        text = fh.read()
+    crlf = "\r\n" in text
 
     # The gate judged the HTML; the stamp goes in the markdown. Nothing
     # ties those together unless this does. Editing the markdown without
@@ -608,10 +676,27 @@ def stamp_markdown(html_path, outcome):
     # disagrees with the markdown on disk, this run proved nothing about
     # the current markdown and must not stamp.
     page = Path(html_path).read_text(encoding="utf-8")
+    current = source_sha(text)
+
+    # The meta tag is a self-declared field inside the file being judged,
+    # so on its own it proves the page names this markdown — not that it
+    # was BUILT from it. Hand-fixing a real FAIL in the HTML would
+    # otherwise mint a `verified` the source never earned, and "never
+    # hand-edit the HTML" is a convention, not a control. When the
+    # renderer is importable, rebuild from the markdown and compare; the
+    # meta tag is the fallback for a machine that only has this script.
+    rebuilt = rebuild_page(md, text)
+    if rebuilt is not None and rebuilt.strip() != page.strip():
+        return (
+            f"--stamp: {Path(html_path).name} is not what the converter "
+            f"builds from {md.name} — it has been edited by hand, or was "
+            "rendered by a different version. Re-render, then verify "
+            "again. Nothing recorded"
+        )
+
     pm = re.search(
         r'<meta name="cot-body-sha" content="([0-9a-f]{64})"', page
     )
-    current = source_sha(text)
     if not pm:
         return (
             f"--stamp: {Path(html_path).name} carries no cot-body-sha — it "
@@ -692,7 +777,8 @@ def stamp_markdown(html_path, outcome):
                 "recorded; add the field and re-stamp"
             )
 
-    md.write_text(text, encoding="utf-8")
+    with open(md, "w", encoding="utf-8", newline="\r\n" if crlf else "\n") as fh:
+        fh.write(text.replace("\r\n", "\n"))
     return ("--stamp: " + "; ".join(notes)
             + f" → {md.name}. Re-render to carry it into the HTML")
 
@@ -729,13 +815,26 @@ def main():
         print(f"WARN: {w}")
     for f in r.fails:
         print(f"FAIL: {f}")
-    outcome = "fail" if r.fails else ("pass --render" if do_render else "pass")
+    # `pass --render` is claimed only when a diagram was really parsed.
+    # Deriving it from `do_render` alone meant a machine without npx —
+    # where render_check warns "nothing was parsed" and returns — still
+    # stamped `pass --render` and printed "PASS (parsed by mermaid)".
+    # The no-downgrade branch in stamp_markdown then re-affirmed that
+    # false, stronger claim on every later run.
+    rendered = do_render and r.parsed > 0
+    outcome = "fail" if r.fails else ("pass --render" if rendered else "pass")
     if do_stamp:
         print(stamp_markdown(argv[0], outcome))
     if r.fails:
         return 1
-    print("PASS" + (" (parsed by mermaid)" if do_render else
-                    " (text only — add --render to prove it parses)"))
+    if rendered:
+        note = f" (parsed by mermaid: {r.parsed}/{r.parsed} diagram(s))"
+    elif do_render:
+        note = (" (text only — --render was requested but NOTHING was parsed; "
+                "see the WARN above)")
+    else:
+        note = " (text only — add --render to prove it parses)"
+    print("PASS" + note)
     return 0
 
 

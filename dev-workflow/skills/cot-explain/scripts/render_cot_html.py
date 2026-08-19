@@ -124,7 +124,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 """.strip()
 
 MERMAID_CDN = """<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.esm.min.mjs';
   // 'antiscript', not 'loose': node labels are raw HTML by design (the
   // left-align <div>), so 'strict' would render them as literal text.
   // This is defence in depth over what mermaid itself renders, and NOT
@@ -193,7 +193,10 @@ def body_sha(body):
     from the markdown it is about to stamp. Without that link the gate
     reads one file and fingerprints another.
     """
-    return hashlib.sha256(body.encode("utf-8")).hexdigest()
+    # Normalised, so CRLF and LF copies of the same body hash alike —
+    # must stay identical to verify_cot_html.source_sha, which a test
+    # pins across six frontmatter shapes.
+    return hashlib.sha256(body.replace("\r\n", "\n").encode("utf-8")).hexdigest()
 
 
 # The only tags a mermaid label may contain. Applied first, while their
@@ -230,15 +233,37 @@ def unescape_label_markup(fence_body):
     LABEL_TAGS. Everything else keeps its `&lt;` and renders as text —
     `<script>` included, which is the point.
 
-    Order is load-bearing: tags first (their `&gt;` must still be an
-    entity to be recognised), then `&gt;`, then the quote that delimits
-    labels, and `&amp;` last so nothing it produces is re-read as markup.
+    Order is load-bearing: the allowed tags first, while their `&gt;` is
+    still an entity and can be told from an arrow's; then the `&lt;`
+    neutralisation; then `&gt;` and the quote that delimits labels.
+
+    `&amp;` is deliberately NOT restored. Left alone it decodes to `&`
+    exactly once, at the browser stage, which is what the reader should
+    see — and restoring it would undo the `&lt;` neutralisation above and
+    reconstitute numeric character references like `&#60;` into a second
+    route to the same hole.
     """
     for escaped, raw in LABEL_TAGS:
         fence_body = fence_body.replace(escaped, raw)
+
+    # THERE ARE TWO DECODE STAGES, and this is the one that is easy to
+    # miss. The browser decodes the <pre> to get textContent, mermaid
+    # takes that textContent as the diagram source, and then inserts each
+    # label with innerHTML — which decodes a SECOND time. So a `&lt;` here
+    # becomes the character `<` in textContent and is parsed as a tag by
+    # the innerHTML pass, arriving at mermaid's own sanitizer as real
+    # markup. Defending only the first stage leaves the second one relying
+    # on a downstream control, which is the posture this file rejects.
+    #
+    # Anything meant to READ as text therefore needs one extra level of
+    # escaping, so that exactly one decode is consumed at each stage.
+    # `&amp;lt;` → textContent `&lt;` → innerHTML → the character `<`,
+    # displayed. Correct for fidelity as well as safety: a `<div>` written
+    # in the source is text the reader should see, not an element that
+    # silently disappears into the label.
+    fence_body = fence_body.replace("&lt;", "&amp;lt;")
     fence_body = fence_body.replace("&gt;", ">")
-    fence_body = fence_body.replace("&quot;", '"')
-    return fence_body.replace("&amp;", "&")
+    return fence_body.replace("&quot;", '"')
 
 
 def render_body(md_text):
@@ -284,7 +309,10 @@ def leftover_markdown(rendered):
     scoped = re.sub(r"<code[^>]*>.*?</code>", "", scoped, flags=re.S)
     block = r"(?:^|<(?:p|li|td|th|div|h[1-6])[^>]*>)\s*"
     found = []
-    if re.search(r"(?:^|[\s>])\*\*[^*\n]{1,200}\*\*", scoped, re.M):
+    # The pair must open on a non-space and close on a non-space, as
+    # markdown itself requires — otherwise `2 ** 3 ** 4` in prose matches
+    # and hard-stops a correct page.
+    if re.search(r"(?:^|[\s>])\*\*\S[^*\n]{0,200}\S\*\*", scoped, re.M):
         found.append("literal ** (bold marker)")
     if re.search(block + r"-\s+\S", scoped, re.M):
         found.append("literal `- ` list rows")

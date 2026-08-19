@@ -72,7 +72,7 @@ jobs:
           python-version: '3.12'
 
       # Pinned, like every other external surface on this branch
-      # (checkout@v4, setup-python@v5, mermaid@11). A markdown-it-py major
+      # (checkout@v4, setup-python@v5, mermaid@11.16.0). A markdown-it-py major
       # bump changes the HTML these tests assert on.
       - name: Install test dependencies
         run: python3 -m pip install --quiet 'pytest~=8.3' 'markdown-it-py~=3.0'

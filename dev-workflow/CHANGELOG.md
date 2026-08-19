@@ -660,6 +660,52 @@ this branch pins.
 The lesson, which cost a `FAIL` on correct content: an inherited fact
 about an external tool is a claim with a version attached.
 
+#### Round three: the same class, one layer further down
+
+Two reviewers re-ran the fixes above adversarially, and both reported the
+same shape again — **each fix correct at the layer it was reported, and
+unguarded one layer below it.**
+
+The allow-list defended the browser. But the page delivers the diagram as
+text, the browser decodes it to `textContent`, and mermaid then inserts
+each label with `innerHTML` — **a second decode**. A `&lt;` surviving the
+first stage is a real tag at the second, arriving at mermaid's own
+sanitizer as markup, which is the downstream posture the fix existed to
+end. Anything meant to read as text now carries one extra level of
+escaping, so exactly one decode is consumed per stage. That is right for
+fidelity too: a `<div>` in the source is text the reader should see, not
+an element that silently vanishes into the label.
+
+`pass --render` was derived from the FLAG, not from a parse. With `npx`
+absent, `render_check` warns "nothing was parsed" and returns — and the
+run still stamped `pass --render` and printed "PASS (parsed by mermaid)".
+The no-downgrade branch added in the previous round then re-affirmed that
+false, stronger claim on every later run. The verdict now counts diagrams
+the parser actually consumed.
+
+The stamp authenticated the page's own fingerprint, not its content — so
+hand-fixing a real FAIL in the HTML would mint a `verified` the source
+never earned, and "never hand-edit the HTML" is a convention, not a
+control. `--stamp` now rebuilds the page from the markdown and compares,
+falling back to the fingerprint (loudly) only where the renderer cannot
+be imported.
+
+And `MERMAID_VER = "11"` was a floating range described as "pinned" in
+three places — on a branch that ships a memory note titled *an inherited
+external-tool fact is a claim with a version attached*. Pinned to
+11.16.0, the version the live probes actually ran on.
+
+Two smaller ones, both the "condemns correct input" class: `--stamp`
+rewrote a CRLF artifact to LF whole-file, and the body hash counted line
+endings as content, which made a CRLF artifact impossible to stamp at
+all. Both hashes normalise now, and the stamp writes back the endings it
+found.
+
+The suite is 31 tests, and 12 of 12 mutants die — including one that
+survived the first battery, where a stronger guard was masking the
+fallback beneath it. Two tests force the fallback path directly rather
+than letting the primary guard answer for it.
+
 #### The suite moved out of the skill
 
 Run inside `skills/cot-explain/scripts/`, pytest creates `__pycache__/`

@@ -136,9 +136,11 @@ This is a net, not the main path. A pre-ship trigger eval over 31
 phrasings put the router at 25/31, with every one of its 5 chain-of-
 thought requests firing and all 4 generic-diagram requests going
 elsewhere; plain state-requests — "what does this function do" —
-did not reach here. (Run before shipping, not committed as a fixture:
-this repo's skill-structure checker rejects a `trigger-eval.json` at a
-skill root.) So what lands in this check is material that *looked*
+did not reach here. (Run before shipping; the fixture is not committed,
+because `scripts/check-skill-structure.py` reports a `trigger-eval.json`
+at a skill root as `CHK-SKL-012` — the PostToolUse hook allows it, so the
+two disagree, and the two skills that do ship one currently fail that
+check.) So what lands in this check is material that *looked*
 like a process and turned out not to be one. Reading it and saying "this
 needs a paragraph, not a diagram" is the correct outcome; producing the
 page anyway is not.

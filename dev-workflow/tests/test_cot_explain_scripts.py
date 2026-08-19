@@ -354,7 +354,12 @@ def test_script_in_a_label_never_reaches_the_page_as_markup(tmp_path):
     html = md.with_suffix(".html").read_text(encoding="utf-8")
     assert "<script>" not in html
     assert "<img" not in html
-    assert "&lt;script&gt;" in html or "&lt;script>" in html
+    # DOUBLE-escaped, not merely escaped. The browser decodes the <pre>
+    # to textContent and mermaid then inserts each label with innerHTML,
+    # so a single `&lt;` here becomes a real tag at the second stage and
+    # only mermaid's own sanitizer stands between it and the reader.
+    assert "&amp;lt;script&amp;gt" in html or "&amp;lt;script>" in html
+    assert "&lt;script" not in html.replace("&amp;lt;script", "")
 
 
 def test_arrows_reach_the_page_as_arrows(tmp_path):
@@ -478,6 +483,18 @@ def test_stamp_refuses_a_page_built_from_a_different_body(tmp_path):
     assert "Nothing recorded" in r.stdout, r.stdout
     assert 'verified: ""' in md.read_text(encoding="utf-8")
 
+    # ...and the fingerprint arm on its own. The rebuild comparison
+    # normally reaches this case first, so without forcing the fallback
+    # the sha arm could be deleted with the suite still green — and it is
+    # the only guard left where the renderer cannot be imported.
+    saved, V.rebuild_page = V.rebuild_page, lambda *a, **k: None
+    try:
+        msg = V.stamp_markdown(md.with_suffix(".html"), "pass")
+    finally:
+        V.rebuild_page = saved
+    assert "the markdown changed after the page was rendered" in msg, msg
+    assert 'verified: ""' in md.read_text(encoding="utf-8")
+
 
 def test_stamp_without_render_does_not_downgrade_a_render_pass(tmp_path):
     """`--render` proved the diagram parses; the body has not changed."""
@@ -499,6 +516,118 @@ def test_sha_on_a_missing_file_reports_cleanly(tmp_path):
     r = run(VERIFY, "--sha", tmp_path / "nope.html")
     assert r.returncode == 2
     assert "Traceback" not in r.stderr
+
+
+# ---------------------------------------- F. the third review round
+#
+# Each of these killed a mutant that the 26-case suite let through, or
+# closes a finding the reviewers reproduced against round two.
+
+def test_a_page_without_the_body_sha_is_not_stamped(tmp_path):
+    """Half the binding was unguarded: no test fed a meta-less page.
+
+    Deleting the `if not pm:` arm passed the whole suite, and the
+    meta-less page is not hypothetical — it is the --artifact build.
+    """
+    md = make_md(tmp_path)
+    out = tmp_path / "r.html"
+    run(RENDER, md, "-o", out, "--artifact")
+    r = run(VERIFY, "--stamp", out)
+    assert "Nothing recorded" in r.stdout, r.stdout
+    assert 'verified: ""' in md.read_text(encoding="utf-8")
+
+    # ...and the meta arm specifically, isolated. The rebuild comparison
+    # normally catches this case first, so without forcing the fallback
+    # the meta arm could be deleted with the suite still green — it is
+    # the only guard left on a machine that has this script but not
+    # markdown-it.
+    md2 = make_md(tmp_path)
+    run(RENDER, md2)
+    page = md2.with_suffix(".html")
+    page.write_text(
+        re.sub(r'<meta name="cot-body-sha"[^>]*>\n?', "",
+               page.read_text(encoding="utf-8")),
+        encoding="utf-8",
+    )
+    saved, V.rebuild_page = V.rebuild_page, lambda *a, **k: None
+    try:
+        msg = V.stamp_markdown(page, "pass")
+    finally:
+        V.rebuild_page = saved
+    assert "carries no cot-body-sha" in msg, msg
+    assert 'verified: ""' in md2.read_text(encoding="utf-8")
+
+
+def test_a_hand_edited_page_is_not_stamped(tmp_path):
+    """The meta tag is self-declared inside the file being judged.
+
+    On its own it proves the page NAMES this markdown, not that it was
+    built from it — so a hand-fixed FAIL could mint a verdict the source
+    never earned. "Never hand-edit the HTML" is a convention, not a
+    control.
+    """
+    md = make_md(tmp_path)
+    run(RENDER, md)
+    html_path = md.with_suffix(".html")
+    html_path.write_text(
+        html_path.read_text(encoding="utf-8").replace("一句話結論。", "偷改的結論。", 1),
+        encoding="utf-8",
+    )
+    r = run(VERIFY, "--stamp", html_path)
+    assert "edited by hand" in r.stdout, r.stdout
+    assert 'verified: ""' in md.read_text(encoding="utf-8")
+
+
+def test_render_pass_is_not_claimed_when_nothing_was_parsed(tmp_path):
+    """`pass --render` must follow work done, not the flag.
+
+    With npx off PATH, render_check warns "nothing was parsed" and
+    returns — and the run still stamped `pass --render` and printed
+    "PASS (parsed by mermaid)". The no-downgrade branch then re-affirmed
+    that false, stronger claim on every later run.
+    """
+    md = make_md(tmp_path)
+    run(RENDER, md)
+    r = subprocess.run(
+        [sys.executable, str(VERIFY), "--render", "--stamp",
+         str(md.with_suffix(".html"))],
+        capture_output=True, text=True, env={"PATH": "/nonexistent"},
+    )
+    assert "NOTHING was parsed" in r.stdout, r.stdout
+    assert "parsed by mermaid" not in r.stdout
+    assert '--render' not in re.search(
+        r'^verified: "(.*)"', md.read_text(encoding="utf-8"), re.M
+    ).group(1)
+
+
+def test_the_number_space_observation_still_fires(tmp_path):
+    """The most contestable behavioural change on the branch.
+
+    Deleting the WARN entirely left every other test green, so the
+    demotion could rot into silence unnoticed.
+    """
+    md = make_md(tmp_path, payload=" 1. 第一步")
+    run(RENDER, md)
+    r = run(VERIFY, md.with_suffix(".html"))
+    assert "number. space" in r.stdout
+    assert r.returncode == 0, "the observation must not block"
+
+
+def test_stamping_preserves_crlf(tmp_path):
+    """One --stamp rewrote every line of a CRLF-authored artifact.
+
+    The sibling converter goes out of its way to accept CRLF; destroying
+    it here would make the two scripts disagree about whether that input
+    is supported.
+    """
+    md = make_md(tmp_path)
+    md.write_bytes(md.read_text(encoding="utf-8").replace("\n", "\r\n").encode())
+    run(RENDER, md)
+    before = md.read_bytes().count(b"\r\n")
+    run(VERIFY, "--stamp", md.with_suffix(".html"))
+    after = md.read_bytes()
+    assert after.count(b"\r\n") == before, "CRLF line endings were rewritten"
+    assert b"\n" not in after.replace(b"\r\n", b""), "mixed line endings"
 
 
 if __name__ == "__main__":
