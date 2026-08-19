@@ -24,10 +24,12 @@ of ending, and it exists only when the user actually rules.
 
 The family contract is **three kinds of interrupt** — you confirm the
 GOAL, you ask for the assumptions each time a branch opens, and you
-confirm a DECISION with the owner when one is reached. Everything else is silent file
-writing: no forms, no per-node confirmation, no progress narration. The
-`thinking-session` skill enforces this contract; state it here once and
-do not re-explain it in conversation.
+confirm a DECISION with the owner when one is reached. Outside those
+three, speech splits in two: progress narration ("I wrote node 4")
+stays banned, but reasoning-aloud — saying what you are about to claim
+before you write it — is required. The `thinking-session` skill
+enforces this contract in full; state it here once and do not
+re-explain it in conversation.
 
 ## Intake — resolve `<root>` at every session entry
 
@@ -88,7 +90,7 @@ Open with one short paragraph, then hand over. Restate the last
 DECISION (the `summary` of the DECISION node with the highest `seq`, or
 "no decision yet"), then the open assumptions (`status: open`, by `id`
 and `statement`), then any changed claims from the step above. Do not
-narrate the whole graph, do not re-list every node, and do not ask a
+re-list every node or replay the whole graph here, and do not ask a
 question in this paragraph — the next thing the user says decides the
 route.
 

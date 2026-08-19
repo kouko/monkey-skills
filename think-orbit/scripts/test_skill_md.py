@@ -147,6 +147,44 @@ def test_router_skill_routes_to_verbs_and_forbids_views():
     _asserts_views_prohibition(body)
 
 
+SILENT_FILE_WRITING = re.compile(r"silent\s+file\s+writing", re.IGNORECASE)
+
+
+def test_router_states_the_three_kinds_of_speech():
+    # brief-item: BI-1
+    body = _body(ROUTER_SKILL_MD.read_text(encoding="utf-8"))
+    flat = _flat(body)
+
+    assert re.search(r"reasoning[\s-]*aloud", flat, re.IGNORECASE), (
+        "router body must require reasoning-aloud, mirroring thinking-session"
+    )
+    assert re.search(r"progress\s+narration", flat, re.IGNORECASE), (
+        "router body must still ban progress narration"
+    )
+    assert not SILENT_FILE_WRITING.search(flat), (
+        "router body must drop the old blanket 'silent file writing' summary "
+        "now that reasoning-aloud is required"
+    )
+
+    # SSOT stays in thinking-session — the router summarises and points, it
+    # does not restate the warrant duty's three parts or the interrupt table.
+    # Whitespace-normalized: a phrase that line-wraps mid-word is still a
+    # restatement, and pinning against the raw body would silently miss it.
+    for restated in (
+        r"which\s+upstream\s+node\s+this\s+step\s+stands\s+on",
+        r"what\s+this\s+step\s+adds\s+on\s+top\s+of\s+that",
+        r"what\s+would\s+collapse\s+it",
+    ):
+        assert not re.search(restated, flat, re.IGNORECASE), (
+            f"router body restates the warrant duty (matches {restated!r}); it "
+            "must point at thinking-session instead"
+        )
+
+    assert len(body.split()) <= ROUTER_WORD_CAP, (
+        f"SKILL.md body is {len(body.split())} words, cap is {ROUTER_WORD_CAP}"
+    )
+
+
 ALL_SKILL_MDS = (SKILL_MD, ROUTER_SKILL_MD, BREAK_SKILL_MD)
 
 # Every CLI mention must be copy-pasteable: a bare `dag.py <verb>` sends the

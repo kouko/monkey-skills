@@ -66,7 +66,7 @@ N/A — no unresolved question: brief 的 OQ-1（`inputs: []` 節點不適用 `i
 - Dependencies: Task 1 completes first
 - Independent: false
 - Brief item covered: BI-4 — a branch must contain a node (mechanical half; the authoring half is Task 3)
-- Status: claimed(@implementer-t2)
+- Status: done(536776a1)
 - Gloss: 擋掉檢查點看到的那四條「只裝假設、沒有主張」的空分支，順帶讓每分支 ≤3 假設的上限重新有意義。
 
 ## Task 3 — thinking-session 的授權契約與範例
@@ -85,7 +85,7 @@ N/A — no unresolved question: brief 的 OQ-1（`inputs: []` 節點不適用 `i
 - Dependencies: Task 2 completes first
 - Independent: false
 - Brief item covered: BI-1 — three kinds of speech in the contract (core skill half); BI-2 — warrant duty on every node body; BI-4 — a branch must contain a node (authoring half: a branch opens with a CLAIM, assumptions filed under it); BI-5 — replace the placeholder worked examples
-- Status: pending
+- Status: done(1a0bd897)
 - Gloss: 這一步是根因的修正——推理被講出來，body 才有東西可寫；範例同時換成真的，因為 agent 會照抄示範。
 
 ## Task 4 — 路由 skill 同步同一份契約
@@ -103,7 +103,7 @@ N/A — no unresolved question: brief 的 OQ-1（`inputs: []` 節點不適用 `i
 - Dependencies: Task 3 completes first
 - Independent: false
 - Brief item covered: BI-1 — three kinds of speech in the contract (router half)
-- Status: pending
+- Status: claimed(@implementer-t4)
 - Gloss: 兩個 skill 說相反的話，agent 會挑安靜的那個聽；路由講同一套，但細節只留在核心 skill 一處。
 
 ## Task 5 — 發佈 0.1.4
