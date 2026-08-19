@@ -41,9 +41,26 @@ that never reaches a ruling interrupts on (a) and (b) only.
 | b | When a branch opens, ask 「這條路踩在什麼上面？」 and have the user confirm the assumptions | Only moment the user knows why this path |
 | c | When a DECISION is reached, confirm it — you ask, the owner rules | This is the thing they take away |
 
-Everything else is **silent file writing**. No forms, no per-node
-confirmation, no progress narration. When the mechanical gate passes
-you say nothing at all; it speaks only when it blocks.
+Those three are the complete list of moments you stop and wait — no
+forms, and no per-node confirmation. Everything outside them splits
+into two kinds of speech, and only one of the two is banned.
+
+**Progress narration stays banned.** 「我寫了節點 4」, 「正在整理中」 and
+every other report of your own file activity is noise the user did not
+ask for. When the mechanical gate passes you say nothing at all; it
+speaks only when it blocks.
+
+**Reasoning-aloud is required.** Before writing each node, say in one or
+two sentences what you are about to claim and what it stands on. Say it
+before the action, not after the thought — spoken first, the user can
+stop a wrong step while stopping it is still cheap. You never wait for a
+reply: you say the sentence, then you write the file.
+
+This skill is a deliberate exception to a host-level "be terse, no
+preamble, no narration" preference. Transparency is the product here,
+not a side effect of it — a sitting whose reasoning was never spoken has
+failed even when every file it produced is schema-clean. The exception
+covers reasoning-aloud only, and never licenses progress narration.
 
 Short paragraphs are the house style here — 2–4 sentences each, one
 idea per paragraph. The gate checks this on node files, and this SKILL
@@ -63,7 +80,8 @@ question again. Write the GOAL node from what the user said and ask a
 one-line confirmation of the wording instead. Interrupt (a) is a
 confirmation of the goal, not a ritual question.
 
-From there the discussion runs normally and you write silently. Every
+From there the discussion runs normally: you say the sentence, then you
+write the node. Every
 distinct reasoning step becomes one node file with a monotonic `seq`
 and `inputs: [{ref, load_bearing}]` pointing at the nodes it stands on.
 `load_bearing: true` means this node collapses if that input falls,
@@ -80,6 +98,25 @@ Procedural and social content produces **no node** — scheduling, "thanks",
 judgment, not a rule: extract a node per distinct claim or fact you
 actually use, not per paragraph of input.
 
+### The warrant duty — what every body's first paragraph answers
+
+The first paragraph of every node body answers three things: which
+upstream node this step stands on, restated in prose — naming its `id`
+inside a sentence that says what it claimed, never leaving the id to sit
+alone in `inputs`; what this step adds on top of that upstream; and what
+would collapse it. A reader three weeks later must be able to follow the
+step without opening the upstream file. A node with no upstream — a
+GOAL, or a FACT standing on its own `source` — says so and says why it
+has none, and never invents an upstream to point at.
+
+Write that paragraph even though the same reasoning was already spoken
+aloud a moment earlier. The spoken sentence and the file are two faces
+of one reasoning step and neither substitutes for the other — the
+conversation is gone tomorrow, the file is what is left. The gate's
+`input-narration` rule checks only that an input's `id` appears in the
+prose; the three answers above are what make that sentence worth
+reading.
+
 ### When the discussion forks
 
 The moment two paths appear, open a branch: set `branch` (a short id)
@@ -90,6 +127,25 @@ means they coexist and all get weighed (成本面／風險面／時程面).
 Marking the type is not cosmetic. Between exclusive branches,
 contradiction is the design intent, not a defect — a later reader who
 does not know that will read your deliberate fork as a bug.
+
+Each path then opens with one CLAIM node stating that path's position,
+written before any of that path's assumptions. A branch box holding only
+premises and no claim to support argues nothing, which is why the gate's
+`branch-has-node` rule rejects a branch carried by assumptions alone.
+
+A fork often becomes visible only after one path is already under way,
+its nodes written with no `branch` field at all. Open the branch
+retroactively: tag the existing path's nodes with the new `branch` id
+and `branch_type`, and if none of them already states that path's
+position as a CLAIM, write one now. Both paths end up inside the
+branch; neither is left standing outside it.
+
+The reason is what `exclusive` means: the paths compete for the same
+decision, and a competitor sitting outside the branch is invisible in
+the rendered DAG. A later reader then sees a one-sided argument and
+cannot tell that an alternative was ever weighed. Retroactive tagging is
+editing the record to match what was actually being reasoned about, not
+rewriting history.
 
 Then interrupt (b): ask 「這條路踩在什麼上面？」 and offer the
 blind-spot checklist in `references/blind-spot-checklist.md` **once**,
@@ -102,7 +158,8 @@ and `breaks_if` — the four the gate requires — plus the `branch` id and
 `source` where one exists (recommended, not gated). You draft, the user
 confirms — one exchange, not a questionnaire. The cap of three is
 deliberate: it forces ranking, and needing seven means the branch is not
-thought through yet.
+thought through yet. Three premises supporting one stated position is
+what the cap means — not three premises standing on their own.
 
 A pivotal assumption that governs several branches is not filed under
 one of them. Leave `branch` out and it is project-wide, outside every
@@ -150,7 +207,7 @@ summary: Pick the Q4 growth motion
 status: current
 inputs: []
 ---
-Body text in short paragraphs. Two to four sentences per paragraph.
+One growth motion gets funded for Q4, and the two candidates on the table are a referral programme and an outbound team. This node fixes what the sitting is for, and every step below is judged against it. It stands on no upstream node, and it collapses only if the Q4 funding question itself is withdrawn.
 ```
 
 FACT node — `nodes/churn_fact.md`:
@@ -167,7 +224,7 @@ source: 2026-07 retention export
 quote: "Monthly logo churn: 5.0%"
 inputs: []
 ---
-The quote is verbatim so the figure survives a dead link. Its source line names where to look again.
+The 2026-07 retention export puts monthly logo churn at 5.0%, quoted verbatim above so the figure survives a dead link. This node stands on no upstream node: it is a measurement entering the graph, not an inference drawn inside it. It collapses only if the export is restated or withdrawn.
 ```
 
 CLAIM node with inputs — `nodes/referral_scales.md`:
@@ -186,7 +243,7 @@ inputs:
   - {ref: q4_goal, load_bearing: true}
   - {ref: churn_fact, load_bearing: false}
 ---
-This stands on q4_goal directly: it is the target the referral motion must clear. The churn figure adds context but is not load-bearing here.
+This stands on q4_goal, which asked which growth motion Q4 should fund, and answers it with the referral path. What it adds is a rate argument: referral capacity grows with the installed base, while outbound capacity grows only with headcount. It collapses if customers turn out to be unwilling to refer, which is the assumption filed under this branch, and the churn_fact figure only colours the comparison, so it is tagged non-load-bearing.
 ```
 
 Assumption — `assumptions/customers_will_refer.md`:
@@ -201,6 +258,7 @@ breaks_if: Two referral asks in a row are declined
 source: 2026-08-14 1-on-1
 branch: b_referral
 ---
+The user named this in the 2026-08-14 1-on-1 as the thing the referral path rests on. It is filed under `b_referral` because it carries that path alone, and the CLAIM above is what it supports.
 ```
 
 ## The gate — silent on pass

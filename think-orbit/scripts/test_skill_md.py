@@ -478,3 +478,127 @@ def test_node_schema_documents_optional_branch_and_project_wide_assumptions():
     assert re.search(r"project-wide" + _NEARBY + r"(max 3|\bcap\b)", schema, re.DOTALL), (
         "node-schema.md must say the ≤3 cap counts branch-bound assumptions only"
     )
+
+
+# --- 0.1.4: the transparency contract (both faces) ---
+
+# Prose pins are compared against a whitespace-normalized copy of the file so a
+# phrase that wraps across a newline still matches: `"a b"` is not a contiguous
+# substring of `"a\nb"`, and pinning the wrapped form would silently pin nothing.
+def _flat(text: str) -> str:
+    return re.sub(r"\s+", " ", text)
+
+
+# The four self-describing placeholder bodies BI-5 retires. A worked example is
+# prescriptive — an agent copies the shape it is shown, so a placeholder example
+# teaches placeholder bodies.
+PLACEHOLDER_BODIES = (
+    "Body text in short paragraphs",
+    "Longer body text explaining the goal",
+    "Optional body with more detail",
+    "Optional body with supporting detail",
+)
+
+# The three parts of the warrant duty, stated in both the protocol (SKILL.md)
+# and the field SSOT (node-schema.md).
+WARRANT_DUTY_PARTS = (
+    "restated in prose",
+    "what this step adds",
+    "what would collapse it",
+)
+
+_EXAMPLE_REF = re.compile(r"ref:\s*([A-Za-z0-9_.-]+)")
+
+
+def test_thinking_session_states_the_transparency_contract():
+    """BI-1 / BI-2 / BI-4 (authoring half) / BI-5 — measured 2/2 vs 0/8.
+
+    Nodes protected by an interrupt narrate their upstream; nodes written
+    silently never do, because reasoning that is never spoken is never
+    articulated and so has nothing to write into the body.
+    """
+    body = _body(SKILL_MD.read_text(encoding="utf-8"))
+    schema = NODE_SCHEMA_MD.read_text(encoding="utf-8")
+    flat_body = _flat(body)
+    flat_schema = _flat(schema)
+
+    # (a) progress narration stays banned — the one kind of speech that is noise.
+    assert "Progress narration stays banned" in flat_body, (
+        "the contract must keep progress narration banned"
+    )
+
+    # (b) reasoning-aloud is required, not merely permitted.
+    assert "Reasoning-aloud is required" in flat_body, (
+        "the contract must REQUIRE reasoning-aloud"
+    )
+
+    # (c) granularity: before the action, not after the thought; one or two
+    # sentences; never awaiting a reply.
+    assert "before the action, not after the thought" in flat_body
+    assert "one or two sentences" in flat_body
+    assert re.search(r"never wait|without waiting|not wait", flat_body), (
+        "reasoning-aloud must not turn into a fourth interrupt"
+    )
+
+    # (d) the host-preference exception, stated with its reason.
+    assert "deliberate exception to a host-level" in flat_body
+    assert "Transparency is the product" in flat_body
+
+    # (e) the blanket silence rule is gone — no parallel version left standing.
+    assert "Everything else is" not in flat_body
+    assert "silent file writing" not in flat_body
+    assert "write silently" not in flat_body
+
+    # (f) the warrant duty and the stands-alone rule, in BOTH documents.
+    for name, flat in (("SKILL.md", flat_body), ("node-schema.md", flat_schema)):
+        for part in WARRANT_DUTY_PARTS:
+            assert part in flat, f"{name} must state the warrant duty part {part!r}"
+        assert re.search(
+            r"even (though|when) the same reasoning was already spoken", flat
+        ), f"{name} must say the file stands alone even after the reasoning was spoken"
+
+    # (g) the branch-opening rule — the authoring half of `branch-has-node`.
+    assert "one CLAIM node stating that path's position" in flat_body
+    assert "branch-has-node" in flat_body
+
+    # (h) no placeholder example bodies, and at least one example node carries
+    # non-empty `inputs` whose body names one of them.
+    for placeholder in PLACEHOLDER_BODIES:
+        assert placeholder not in flat_body, f"SKILL.md still ships {placeholder!r}"
+        assert placeholder not in flat_schema, f"node-schema.md still ships {placeholder!r}"
+
+    # (i) a fork that becomes visible only after one path is under way — the
+    # asymmetric case, where three readings give structurally different graphs
+    # and `branch-has-node` cannot arbitrate between them.
+    assert "Open the branch retroactively" in flat_body
+    assert "tag the existing path's nodes" in flat_body
+
+    # (j) the warrant duty does not over-claim for a node with no upstream:
+    # it says so and says why, rather than inventing an upstream ref.
+    for name, flat in (("SKILL.md", flat_body), ("node-schema.md", flat_schema)):
+        assert "says so and says why it has none" in flat, (
+            f"{name} must exempt a node with no upstream from naming one"
+        )
+
+    # (k) the field's owner states that an assumption body is optional, so the
+    # two worked examples stop implying a rule by accident.
+    assert "body is optional and ungated" in flat_schema
+
+    narrating = []
+    for _relpath, content in EXAMPLE_BLOCK.findall(body):
+        front, example_body = dag.split_frontmatter(content)
+        refs = _EXAMPLE_REF.findall(front)
+        # Whole-id matching via dag's own helper — plain `ref in body` is the
+        # containment semantics Task 1 measured and rejected, and shipping it
+        # inside our test set invites someone to copy it back out.
+        if refs and any(dag._id_named_in(ref, example_body) for ref in refs):
+            narrating.append(refs)
+        assert example_body.strip(), (
+            f"the {_relpath} example ships an empty body — worked examples are "
+            "prescriptive, and an empty one teaches empty bodies"
+        )
+    assert narrating, (
+        "at least one SKILL.md example node must carry non-empty `inputs` and "
+        "name one of them in its body, so the example set exercises "
+        "`input-narration`"
+    )
