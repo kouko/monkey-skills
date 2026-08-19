@@ -2,10 +2,11 @@
 
 **Source brief**: docs/loom/specs/2026-08-18-adjudication-render-staleness-visible.md
 Goal: the invocation contract pins WHICH copy of `adjudication_render.py`
-    runs (the one shipped beside the protocol read); every HTML page it
-    emits carries that copy's version — machine-readable, `unknown` when
-    unreadable; a render still holding unconverted markdown exits non-zero
-    without writing a file.
+    runs (the one shipped beside the protocol being read), every HTML page it
+    emits carries the version of the copy that produced it — machine-readable
+    and visible to the reader, `unknown` when the copy cannot name itself —
+    and a render whose rendition still holds unconverted markdown exits
+    non-zero without writing a file.
 Stage: finishing
 Steps:
   1. 蓋章：頁面帶上產生它的版本（含讀不到版本時的 unknown 退路）

@@ -31,13 +31,24 @@ Block extraction and bullet-value extraction are NOT reimplemented here
 so the two scripts never drift on what counts as a task block or a
 bullet's raw lines.
 
-`check_goal` (Task 2) additionally flags a header `Goal:` line: its
-`_header_value`-folded value over 300 characters, or any of its raw
-continuation lines shaped as a nested bullet or a table row (checked
-separately from the fold, because the fold discards the shape
-distinction that rule needs). Sentence counting is not re-derived here
-either — BI-2 dropped "one sentence" from the mechanical check before
-this task was dispatched, for the same reason BI-1 abandoned it above.
+`check_goal` (Task 2) additionally flags a header `Goal:` line: any of
+its raw continuation lines shaped as a nested bullet or a table row
+(read separately from the `_header_value` fold, because the fold
+discards the shape distinction that rule needs). Sentence counting is
+not re-derived here either — BI-2 dropped "one sentence" from the
+mechanical check before this task was dispatched, for the same reason
+BI-1 abandoned it above.
+
+`Goal:` carries NO length ceiling, unlike `Description`/`RED`/`GREEN`.
+Dropped 2026-08-19 (see the field-value-microstructure plan's Decision
+Log): plan-format.md:32-36 freezes `Goal:` "at plan time... never
+edited afterward", so a length cap on a frozen field can only be
+satisfied by an edit the freeze rule forbids — demonstrated concretely
+when two of the five plans T14 reshaped needed genuinely restorative
+edits (320 and 390 characters) that still exceeded 300. The
+no-nested-body rule survives because it has its own, independent
+justification (`plan_card.py` folding indented content into the
+card's single line) and never required editing a frozen value.
 
 `check_brief_paragraphs` (Task 3) additionally checks a brief document
 (SSOT: `loom-code/skills/brainstorming/references/handoff-brief-format.md`
@@ -243,11 +254,13 @@ def check_brief_paragraphs(text: str) -> list[str]:
     return problems
 
 # The one ceiling every prose unit in a plan is measured against: a
-# field's first line, each nested bullet's folded text, and the header's
-# `Goal:` value. The schema states one number deliberately — see
-# plan-format.md §Field-value grammar, "one number, not two independent
-# limits that could drift apart". A second literal here would be that
-# drift.
+# field's first line, and each nested bullet's folded text. The header
+# `Goal:` value is NOT measured against this cap (see check_goal's
+# docstring) — plan-format.md:32-36 freezes `Goal:` at plan time and
+# never edits it afterward, so a cap that can only be satisfied by
+# editing the value is unenforceable against a frozen field; the
+# no-nested-body rule has its own justification (plan_card folding)
+# and does not depend on this constant.
 _FIRST_LINE_MAX_CHARS = 300
 
 
@@ -391,24 +404,25 @@ def _goal_raw_continuation_lines(header: str) -> list[str]:
 
 
 def check_goal(text: str) -> list[str]:
-    """Every header `Goal:` violation in `text`: the folded value
-    exceeding 300 characters, or a continuation line shaped as a nested
-    bullet or a table row (the no-nested-body rule — `plan_card.py`
-    folds any indented content into the card's single `goal:` line, and
-    `family-relay.md` pins that line as one line, verbatim). The two
-    grounds are separate violations with separate messages. Empty when
-    the plan has no `Goal:` header line, or when it is clean."""
+    """Every header `Goal:` violation in `text`: a continuation line
+    shaped as a nested bullet or a table row (the no-nested-body rule —
+    `plan_card.py` folds any indented content into the card's single
+    `goal:` line, and `family-relay.md` pins that line as one line,
+    verbatim). There is no length ceiling on `Goal:` — dropped per the
+    2026-08-19 field-value-microstructure Decision Log: `Goal:` is
+    "transcribed from the brief's Smallest End State at plan time —
+    frozen with the plan... never edited afterward" (plan-format.md:32-
+    36), so a cap enforceable only by editing the value is
+    unenforceable against a frozen field, while the 300-character
+    figure had no justification of its own beyond matching the
+    Description/RED/GREEN cap. Empty when the plan has no `Goal:`
+    header line, or when it is clean."""
     header, _, _ = text.partition("\n## ")
     value = _header_value(header, "Goal")
     if value is None:
         return []
 
     problems: list[str] = []
-    if len(value) > _FIRST_LINE_MAX_CHARS:
-        problems.append(
-            f"Goal: value is {len(value)} characters (max "
-            f"{_FIRST_LINE_MAX_CHARS}): {value!r}"
-        )
     for raw in _goal_raw_continuation_lines(header):
         if _NESTED_BULLET_LINE.match(raw) or _TABLE_LINE.match(raw):
             problems.append(

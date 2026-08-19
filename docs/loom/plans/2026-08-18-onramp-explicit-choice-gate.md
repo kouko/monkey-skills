@@ -1,11 +1,12 @@
 # Plan: on-ramp 顯性選擇閘（brief 的設計側入口決定必須由使用者做，plan 才能落地）
 
 **Source brief**: docs/loom/specs/2026-08-18-onramp-explicit-choice-gate.md
-Goal: brief `## Design-side on-ramp` 行若記 agent 預設而非使用者明選，不能變已提交 plan：
-    三態文法入 brief 格式；checker 解析、非標準當未解決，讀 `docs/loom/DIRECTION.md` 常設選擇；
-    `git-guard.py` 於 `git commit` 新增 `docs/loom/plans/*.md` 時跑 checker、未解決即擋；
-    `writing-plans` 入口早跑同腳本；Axis 0／reception 改「獨立一問、答前寫 `pending`、
-    agent 只能建議」；上線前量 brief 觸發率。
+Goal: brief 的 `## Design-side on-ramp` 行若記的是 agent 預設而非使用者明選，就不能變成已提交的 plan：
+    三態標準文法寫進 brief 格式規格；一支可攜的 checker 腳本解析該行、把非標準寫法一律當未解決、
+    並讀 `docs/loom/DIRECTION.md` 的 repo 級常設選擇；`git-guard.py` 在 `git commit` 新增
+    `docs/loom/plans/*.md` 時順 `**Source brief**:` 跑 checker、未解決就擋（Codex 走既有 shim）；
+    `writing-plans` 入口跑同一支腳本先給早期回饋；brainstorming Axis 0 與 reception 改成
+    「獨立一問、使用者答前寫 `pending`、agent 可建議不可代記」；上線前先量既有 brief 的觸發率。
 Stage: finishing
 Steps:
     1. 文法定案（brief 格式規格加三態文法）

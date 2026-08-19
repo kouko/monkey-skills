@@ -1,11 +1,14 @@
 # Plan: artifact-layer table routing
 
 **Source brief**: docs/loom/specs/2026-08-17-artifact-table-routing.md
-Goal: `family-relay.md` §(b) scopes fork→table to the artifact layer;
-    brief's `## Alternatives Considered` becomes fill-or-declare table;
-    spec-expansion's matrices gain table form; docs-reviewer flags
-    table-routed prose; `visual-companion.md` gains diagram-semantics;
-    loom-code/loom-design ship a bump.
+Goal: `family-relay.md` §(b) carries one added routing bullet that states
+    the artifact-layer scope of the existing fork→table rule; the brief's
+    `## Alternatives Considered` becomes a fill-or-declare comparison table
+    and spec-expansion's two matrix sections gain a validator-checked
+    markdown-table form; docs-reviewer's omission row names comparison
+    prose in a table-routed section; `visual-companion.md` gains the
+    diagram-semantics rule (edges say why, nodes carry title + reason);
+    loom-code and loom-design each ship it as one version bump.
 Stage: finishing
 Steps:
   1. 內容改動五路並行：規則一句、brief 表格化、spec 兩矩陣表格化、審查提示補缺、圖語意規則

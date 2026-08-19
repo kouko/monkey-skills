@@ -1,12 +1,12 @@
 # Plan: think-orbit plugin — Part 1（格式・機械閘・假設傳播・核心對話協定・骨架 → 真實素材檢查點）
 
 **Source brief**: docs/loom/specs/2026-08-18-think-orbit-plugin-part-1.md
-Goal: Part 1 交付後：plugin 骨架在 repo 內、有自己的 CI lane；在任一資料夾說「我要決定 X」，
-    agent 依對話協定寫 `GOAL/FACT/CLAIM/DECISION` 節點檔與假設檔（≤3／分支、agent
-    起草人確認、可證偽測試），每個節點邊界靜默跑機械閘腳本（失敗才一行），使用者宣告假設破裂時腳本沿承重鏈標
-    `stale`、輸出影響範圍視圖、不重算；研究筆記以其 `claim` 一行被引用、`claim` 變了才通知下游；DAG
-    由腳本畫成一張基本 Mermaid 全圖給人看；最後使用者用自己的真實素材跑完一輪、對著
-    DAG 全圖與節點檔寫下檢查點結論。
+Goal: Part 1 交付後：plugin 骨架在 repo 內、有自己的 CI lane；使用者在任一資料夾說「我要決定 X」，
+    agent 依對話協定寫 `GOAL/FACT/CLAIM/DECISION` 節點檔與假設檔（≤3／分支、agent 起草人確認、
+    可證偽測試），每個節點邊界靜默跑機械閘腳本（失敗才一行），使用者宣告假設破裂時腳本沿承重鏈
+    標 `stale`、輸出影響範圍視圖、不重算；研究筆記以其 `claim` 一行被引用、`claim` 變了才通知下游；
+    整張 DAG 由腳本畫成一張基本 Mermaid 全圖給人看；最後使用者用自己的真實素材跑完一輪、
+    對著 DAG 全圖與節點檔寫下檢查點結論。
 Stage: finishing
 Steps:
     1. 骨架與地基（plugin 骨架／載入器＋格式文件／研究規則與盲區清單）

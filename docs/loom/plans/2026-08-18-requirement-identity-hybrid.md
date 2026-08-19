@@ -1,11 +1,13 @@
 # Plan: requirement identity — REQ-<n> + name from the birthplace onward
 
 **Source brief**: docs/loom/specs/2026-08-18-requirement-identity-hybrid.md
-Goal: a change-folder requirement header may carry an authored id
-    (`### Requirement: REQ-<n> — <name>`); the id is the join key
-    (validator, coverage checker, plan referent, `@req` tag); CI
-    namespace widens to change-folders + archive + living root;
-    dangling/duplicate ids reject, legacy prose unchanged.
+Goal: a change-folder requirement header may carry an authored id ahead of
+    its name (`### Requirement: REQ-<n> — <name>`, status suffix unchanged),
+    that id is the join key everywhere the name used to be (validator,
+    coverage checker, plan referent, `@req` tag), and the CI living-spec
+    gate's namespace is widened to live change-folders + archive + living
+    root so an id typed once resolves end to end, with dangling or
+    duplicate ids rejected and legacy prose-only files unchanged.
 Stage: finishing
 Steps:
   1. 四路平行起跑：validator 學會 id 標頭、coverage 用 id 當 key、living-spec 解析器學會 id+名字、慣例文件成為 SSOT

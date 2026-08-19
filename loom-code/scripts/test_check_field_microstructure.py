@@ -82,21 +82,27 @@ def test_rejects_goal_with_nested_body():
     assert any("Goal" in p for p in problems)
 
 
-def test_rejects_overlong_goal():
+def test_accepts_overlong_goal():
+    # `Goal:` carries no length ceiling — plan-format.md:32-36 freezes it
+    # at plan time and never edits it afterward, so a cap enforceable
+    # only by editing the value is unenforceable against a frozen field.
+    # Dropped 2026-08-19 (Decision Log); see check_goal's docstring.
     text = _plan_with_goal(f"Goal: {'x' * 400}\n")
-    problems = check_goal(text)
-    assert problems, "expected a non-empty problem list"
-    assert any("Goal" in p for p in problems)
+    assert check_goal(text) == []
+
+
+def test_rejects_goal_with_nested_body_even_when_short():
+    # The no-nested-body rule survives the length-ceiling removal: it has
+    # its own justification (plan_card folds indented content into the
+    # card's single line) independent of the dropped character cap.
     nested_body_problems = check_goal(
         _plan_with_goal(
             "Goal: Ship the thing.\n"
             "  - a nested bullet\n"
         )
     )
-    assert problems[0] != nested_body_problems[0], (
-        "the ceiling violation and the nested-body violation must carry "
-        "distinct messages"
-    )
+    assert nested_body_problems, "expected a non-empty problem list"
+    assert any("Goal" in p for p in nested_body_problems)
 
 
 def test_accepts_short_single_sentence_goal():

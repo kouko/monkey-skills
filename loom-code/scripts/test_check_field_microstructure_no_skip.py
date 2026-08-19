@@ -60,12 +60,21 @@ def test_check_plan_fields_canary_fires_on_overlong_description():
     )
 
 
-def test_check_goal_canary_fires_on_overlong_header():
-    text = "Goal: " + ("y" * 301) + "\nStage: sdd:wave-1\n\n## Task 1 — t\n"
+def test_check_goal_canary_fires_on_nested_body():
+    # `Goal:` carries no length ceiling as of 2026-08-19 (Decision Log,
+    # docs/loom/plans/2026-08-19-field-value-microstructure.md) — the
+    # surviving rule is the no-nested-body one, so the canary must
+    # engineer THAT violation to still prove check_goal has not gone
+    # blind.
+    text = (
+        "Goal: keep it short\n"
+        "  - a nested bullet under Goal\n"
+        "Stage: sdd:wave-1\n\n## Task 1 — t\n"
+    )
     problems = check_goal(text)
     assert len(problems) >= 1, (
         "check_goal reported no problems on a Goal: header engineered "
-        "to exceed the 300-char cap — the check has gone blind, not "
+        "with a nested bullet body — the check has gone blind, not "
         "clean"
     )
 
