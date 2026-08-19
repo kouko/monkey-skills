@@ -14,11 +14,18 @@ plain 300-character cap on a field's first line, applied identically to
 `Description`, `RED` and `GREEN`. This file's pins were updated to match;
 the SSOT for the rule itself is `loom-code/scripts/check_field_microstructure.py`.
 
+Round 3: the checker (as of `e43e973e`) caps TWO units at 300 characters,
+not one — the field's own first line, AND each nested bullet's folded
+text (its own line plus every wrapped continuation joined). This file's
+wording used to describe nested bullets as pure overflow destination
+with no length limit of their own; that was drift from the checker.
+Pin 1 below is widened to require BOTH units stated under one number.
+
 Pins:
   1. The character-cap rule is stated for `Description`, `RED` and
-     `GREEN` alike — one 300-character ceiling on the first line, no
-     per-field branch — with overflow routed into a nested bullet or a
-     markdown table.
+     `GREEN` alike — one 300-character ceiling that governs BOTH the
+     first line AND each nested bullet's folded text, no per-field
+     branch and no per-bullet exemption.
   2. The `Fails today because ...` grounding-clause teaching still
      appears (it now illustrates what fits inside the RED/GREEN first
      line, not a second sentence-counting rule).
@@ -51,6 +58,8 @@ GOAL_CEILING_PHRASE = "300-character"
 FAILS_TODAY_PHRASE = "Fails today because"
 WORKED_EXAMPLE_HEADING = "## Worked example"
 FIRST_LINE_CAP_PHRASE = "300-character ceiling"
+NO_PER_BULLET_EXEMPTION_PHRASE = "no per-bullet exemption"
+FOLDED_UNIT_PHRASE = "folded across"
 
 
 def _text() -> str:
@@ -83,6 +92,20 @@ def test_plan_format_states_character_cap_rule():
     # example` section.
     assert WORKED_EXAMPLE_HEADING in text
     assert "before/after" in text.lower()
+
+
+def test_plan_format_states_the_cap_governs_nested_bullets_too():
+    """Round 3: `check_field_microstructure.py` caps BOTH the field's
+    first line AND each nested bullet's folded text (its own line plus
+    every wrapped continuation joined) at 300 characters — the same
+    number, no second threshold. plan-format.md must state the duty
+    for both units, not describe the nested bullet as an unlimited
+    overflow destination."""
+    text = _text()
+    normalized = " ".join(text.split())
+
+    assert NO_PER_BULLET_EXEMPTION_PHRASE in normalized
+    assert FOLDED_UNIT_PHRASE in normalized
 
 
 def test_no_reworded_restatement_of_one_assertion_survives():

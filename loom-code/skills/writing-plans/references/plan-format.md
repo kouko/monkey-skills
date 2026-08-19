@@ -152,15 +152,20 @@ on `e.g. Python`. The rule below is a plain character-length cap
 instead, which has no punctuation edge case to enumerate, so a
 mechanical checker decides it the same way every time.
 
-- **`Description`, `Acceptance.RED`, `Acceptance.GREEN`.** Keep the
-  field's first line — the text on the bullet's own line, right after
-  the colon — within a **300-character ceiling**. This is the SAME
-  number and the SAME rule for all three fields; there is no per-field
-  branch. Route every further clause — a caveat, a grounding clause
+- **`Description`, `Acceptance.RED`, `Acceptance.GREEN`.** Keep every
+  prose unit within a **300-character ceiling** — a unit being either
+  the field's first line (the text on the bullet's own line, right
+  after the colon), or one nested bullet's own text folded across
+  however many physical lines it wraps to. This is the SAME number and
+  the SAME rule for all three fields, and for every nested bullet
+  beneath them; there is no per-field branch and no per-bullet
+  exemption. Route every further clause — a caveat, a grounding clause
   such as the `Fails today because ...` clause this file already
   teaches (see the Worked example below), a list of sub-steps, a table
   of cases — into a nested bullet or a markdown table beneath that
-  first line, never onto the first line itself.
+  first line, never onto the first line itself; a markdown table row
+  carries no character ceiling of its own, only the first line and
+  each nested bullet do.
 - **`Goal:`.** State one sentence within the SAME 300-character
   ceiling as above — one number, not two independent limits that could
   drift apart — and admit no nested body: `plan_card.py`'s
@@ -459,7 +464,8 @@ runs to 312 characters, past the 300-character ceiling:
 ```
 
 After, under the positional rule — first line stays within the
-300-character ceiling, the rest routes into nested bullets:
+300-character ceiling, the rest routes into nested bullets, each of
+which stays within the same ceiling too:
 
 ```markdown
 - **Description**: Add rate limiting to the `/export` endpoint.
