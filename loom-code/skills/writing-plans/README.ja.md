@@ -33,7 +33,7 @@ brainstorming → brief                            (Discovery 段階)
 
 *言語注記：Description／Acceptance は英語で書く；Steps／Gloss はセッションの会話言語で書く。*
 
-- **Description**: assertion 1 つ分の命令形アクション
+- **Description**: 命令形の1行目を300文字以内に収める。それを超える分はネストした箇条書きか表に振り分ける — 詳細は[`references/plan-format.md`](references/plan-format.md) §`Field-value grammar`参照
 - **Module**: 1 つのパス / モジュール名（2 つではない）
 - **Context paths**: implementer が読む既存コードのパス（paths-not-content）
 - **Acceptance**: RED テスト名 + GREEN 観察可能条件

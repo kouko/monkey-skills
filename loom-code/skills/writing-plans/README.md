@@ -33,7 +33,7 @@ Per [`references/plan-format.md`](references/plan-format.md), every task ships w
 
 *Language note: Description/Acceptance are written in English; Steps/Gloss in the session's conversation language.*
 
-- **Description**: one-assertion imperative-voice action
+- **Description**: imperative-voice first line, within a 300-character ceiling; anything beyond that routes into a nested bullet or a table — see [`references/plan-format.md`](references/plan-format.md) §`Field-value grammar`
 - **Module**: one path / module name (not two)
 - **Context paths**: existing code the implementer reads (paths-not-content)
 - **Acceptance**: RED test name + GREEN observable condition

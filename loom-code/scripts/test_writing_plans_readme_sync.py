@@ -252,3 +252,44 @@ def test_readmes_state_the_no_requirement_value_and_its_authority():
             f"{SCHEMA_AUTHORITY} as the owning schema, so a reader cannot "
             "tell the README is a summary rather than the grammar itself"
         )
+
+
+# `Description`'s field-list bullet described the retired judgment-shaped
+# "one-assertion" rule (plan-format.md's own words for it -- see that
+# file's §`Field-value grammar` changelog paragraph). It was replaced by a
+# plain 300-character ceiling per prose unit, routing overflow into nested
+# bullets/tables. The English retired token "one-assertion" cannot be
+# grepped in the .ja/.zh-TW mirrors, but both mirrors borrowed the bare
+# English loanword "assertion" rather than translating it, so checking for
+# that word (case-insensitively) inside the scoped field-list section
+# catches all three retired restatements without a katakana/CJK variant
+# enumeration.
+RETIRED_ASSERTION_TOKEN = "one-assertion"
+POSITIONAL_RULE_TOKENS = ["300", "plan-format.md"]
+
+
+def test_all_three_readmes_state_positional_rule():
+    """Each README's per-task field list must state the shipped
+    300-character positional rule for `Description` and must not carry the
+    retired one-assertion wording, in English or in translation (the ja/
+    zh-TW mirrors both used the bare English loanword "assertion" rather
+    than translating it, so a case-insensitive word check catches them
+    too)."""
+    for name, path in READMES.items():
+        section = _field_list_section(path)
+        assert RETIRED_ASSERTION_TOKEN not in section, (
+            f"{name}: per-task field list still carries the retired "
+            f"{RETIRED_ASSERTION_TOKEN!r} wording"
+        )
+        assert "assertion" not in section.lower(), (
+            f"{name}: per-task field list still carries a restatement of "
+            "the retired one-assertion rule (the word 'assertion' appears "
+            "in the field-list section, in English or as a borrowed "
+            "loanword in translation)"
+        )
+        for token in POSITIONAL_RULE_TOKENS:
+            assert token in section, (
+                f"{name}: per-task field list does not state the shipped "
+                f"positional rule -- missing {token!r} (expected a "
+                "300-character ceiling with a pointer to plan-format.md)"
+            )
