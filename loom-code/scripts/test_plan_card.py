@@ -803,6 +803,48 @@ def test_detail_preserves_acceptance_table_row_after_bullet(tmp_path):
     )
 
 
+def test_detail_preserves_order_of_table_between_two_bullets(tmp_path):
+    """--detail on an Acceptance body whose table row sits BETWEEN two
+    sub-bullets: the three segments come out in source order.
+
+    This is the shape `_fold_sub_bullets` exists for. A design that
+    appended table rows immediately and flushed accumulated bullets at
+    the end would emit the table before both bullets and still pass
+    every other table test in this file, because those fixtures put the
+    table at one end of the body. Both reviewers verified this ordering
+    by hand; nothing pinned it until this test.
+    """
+    plan_path = _write_plan(
+        tmp_path,
+        (
+            "# Plan: widget fixture\n\n"
+            "Source brief: docs/loom/specs/fixture.md\n"
+            "Goal: Ship the widget pipeline end-to-end.\n"
+            "Stage: sdd:wave-1\n\n"
+            "## Task 1 — parser\n\n"
+            "- Description: Extend the parser.\n"
+            "- Acceptance: first\n"
+            "  - RED: some test\n"
+            "  | Field | Rule |\n"
+            "  - GREEN: it passes\n"
+            "- Status: pending\n\n"
+            "## Notes\n\nFixture notes — never a task.\n"
+        ),
+    )
+
+    result = _run_card(plan_path, "--detail", "T1")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == (
+        "T1 parser\n"
+        "description: Extend the parser.\n"
+        "acceptance: first\n"
+        "  RED: some test\n"
+        "  | Field | Rule |\n"
+        "  GREEN: it passes\n"
+    )
+
+
 def test_detail_preserves_description_table_row_before_bullet(tmp_path):
     """--detail on a task whose Description body has a table row before
     its first nested bullet: the table row must not be space-joined
