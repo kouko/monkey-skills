@@ -475,6 +475,20 @@ which stays within the same ceiling too:
   - Update the OpenAPI spec to document the new `429` case.
 ```
 
+Moving the overflow into a nested bullet is not on its own enough — the
+ceiling governs each bullet too, so a single long caveat rewrites the
+same violation one level down:
+
+```markdown
+- **Description**: Add rate limiting to the `/export` endpoint.
+  - Use the token-bucket limiter already used on `/reports`, keyed on user id rather than on IP because the export path is authenticated and shared NAT egress would otherwise starve whole offices, and note that the limiter's existing burst allowance was tuned for `/reports`' traffic shape so the export path may need its own bucket size once real usage lands.
+```
+
+That bullet's folded text runs past 300 characters and is rejected, even
+though the field's first line is short. Split it the same way the first
+line was split — one bullet per idea, a table when three or more items
+share axes.
+
 ### Wide-but-shallow example — 8 tasks, critical-path depth 2
 
 A high `Total tasks` count is **not** a discovery failure when the tasks fan out wide instead of chaining deep. Consider a brief whose Smallest End State is *"add a one-line module docstring to each of the 6 renderer files, then run the lint gate, then update the index":*
