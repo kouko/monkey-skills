@@ -670,9 +670,11 @@ def test_a_partly_parsed_run_does_not_claim_a_full_one(tmp_path):
 #   C  -->|…| D    rows collapse to one column     242x1386 sq 0.175
 #   C  -->|…| r2   rows collapse, but LOOK squarer 773x958  sq 0.807
 #
-# The last row is why squareness alone cannot be the gate: it scores best
-# of the three and is wrong. Any node edge that leaves its subgraph kills
-# that subgraph's `direction` — including an edge to a subgraph id.
+# The last row is why squareness alone cannot be the gate: on this fixture
+# it scores best of the three and is wrong. On a different fixture a
+# reviewer got a different ranking — the number moves with the fixture
+# while the property does not. Any node edge that leaves its subgraph
+# kills that subgraph's `direction`, including an edge to a subgraph id.
 
 def test_the_portable_cross_row_form_passes(tmp_path):
     md = make_md(tmp_path, cross="stage")
@@ -740,6 +742,125 @@ def test_a_row_holding_one_node_is_allowed(tmp_path):
     run(RENDER, md)
     r = run(VERIFY, md.with_suffix(".html"))
     assert "no edge at all" not in r.stdout, r.stdout
+    assert r.returncode == 0, r.stdout
+
+
+def _diagram_page(tmp_path, body_lines):
+    """A page carrying exactly the diagram given, for grammar probes."""
+    md = tmp_path / "r.md"
+    md.write_text(
+        FRONTMATTER.format(source="/x.md")
+        + "\n### 概述\n\n一句話結論。\n\n### 推理鏈\n\n#### 弧\n\n```mermaid\n"
+        + "\n".join(body_lines) + "\n```\n",
+        encoding="utf-8",
+    )
+    run(RENDER, md)
+    return run(VERIFY, md.with_suffix(".html"))
+
+
+def _rows(*rows):
+    """graph TB with the given rows; caller supplies the edge lines."""
+    out = ["graph TB"]
+    for n, ids in enumerate(rows, 1):
+        out.append(f'subgraph r{n}["階段{n}"]')
+        out.append("direction LR")
+        out += ["  " + node(c, f"節點{c}") for c in ids]
+        out.append("end")
+    return out
+
+
+def _styles(ids):
+    return [f"style {c} fill:#f8f9fa,stroke:#868e96,stroke-width:2px" for c in ids]
+
+
+# ------------------------------------- H. the row-edge graph is validated
+#
+# Row-to-row wiring moved from node edges — which the stranded-node scan
+# policed indirectly — onto subgraph edges, which nothing policed at all.
+
+def test_an_unknown_row_id_is_refused(tmp_path):
+    """`r1 -->|…| r9` renders a stray empty box at 0.187 — worse than the
+    0.175 collapse this grammar exists to prevent — and exited 0."""
+    r = _diagram_page(tmp_path, _rows("ABC", "DE") + [
+        "A -->|先推導| B", "B -->|再推導| C", "D ==>|收束為| E",
+        "r1 -->|接續| r9",
+    ] + _styles("ABCDE"))
+    assert r.returncode == 1, r.stdout
+    assert "r9" in r.stdout, r.stdout
+
+
+def test_a_row_joined_to_nothing_is_refused(tmp_path):
+    """A row nothing points at renders detached; its lone node was exempted."""
+    r = _diagram_page(tmp_path, _rows("AB", "CD", "E") + [
+        "A -->|先推導| B", "C ==>|收束為| D", "r1 -->|接續| r2",
+    ] + _styles("ABCDE"))
+    assert r.returncode == 1, r.stdout
+    assert "r3" in r.stdout, r.stdout
+
+
+def test_an_off_spec_row_id_is_named(tmp_path):
+    """`R1` cannot match the endpoint grammar, so the row edge went unseen
+    and surfaced as 'an arrow is malformed' — a diagnosis pointing at the
+    wrong thing."""
+    body = ["graph TB",
+            'subgraph R1["階段1"]', "direction LR",
+            "  " + node("A", "節點A"), "  " + node("B", "節點B"), "end",
+            'subgraph R2["階段2"]', "direction LR",
+            "  " + node("C", "節點C"), "end",
+            "A -->|先推導| B", "R1 -->|接續| R2"] + _styles("ABC")
+    r = _diagram_page(tmp_path, body)
+    assert r.returncode == 1, r.stdout
+    assert "off-spec" in r.stdout, r.stdout
+    assert "R1" in r.stdout, r.stdout
+    # and the misleading consequence is suppressed: an off-spec id makes the
+    # row edge unparseable, so the arrow count disagrees for a known reason
+    assert "an arrow is malformed" not in r.stdout, r.stdout
+
+
+def test_an_undefined_node_endpoint_is_named(tmp_path):
+    """A typo'd NODE id, with every row correctly joined.
+
+    Isolated deliberately: with a row left unjoined, the row-joined rule
+    answers first and this arm can be deleted with the suite still green.
+    Before the endpoint check existed, `C -->|漏打| F` was reported as
+    "leaves its subgraph … join rows SUBGRAPH to SUBGRAPH" — advice that
+    would not fix a typo — and nothing else caught it, because the style
+    and stranded scans both key off a node that was never declared.
+    """
+    r = _diagram_page(tmp_path, _rows("ABC", "DE") + [
+        "A -->|先推導| B", "B -->|再推導| C", "D ==>|收束為| E",
+        "r1 -->|接續| r2", "C -->|漏打| F",
+    ] + _styles("ABCDE"))
+    assert r.returncode == 1, r.stdout
+    assert "F" in r.stdout and "neither a declared node nor" in r.stdout, r.stdout
+
+
+def test_a_row_edge_to_itself_is_refused(tmp_path):
+    """`r1 --> r1` satisfied "both endpoints are subgraphs" and meant nothing."""
+    r = _diagram_page(tmp_path, _rows("ABC", "DE") + [
+        "A -->|先推導| B", "B -->|再推導| C", "D ==>|收束為| E",
+        "r1 -->|接續| r2", "r1 -->|自己| r1",
+    ] + _styles("ABCDE"))
+    assert r.returncode == 1, r.stdout
+    assert "itself" in r.stdout, r.stdout
+
+
+def test_a_multi_destination_row_edge_is_refused(tmp_path):
+    """`r1 --> r2 & r3` escaped BOTH guards: the multi-destination refusal
+    matched `[A-Z]` only, and the boundary check saw two subgraphs."""
+    r = _diagram_page(tmp_path, _rows("AB", "CD", "EF") + [
+        "A -->|先推導| B", "C -->|再推導| D", "E ==>|收束為| F",
+        "r1 -->|接續| r2 & r3",
+    ] + _styles("ABCDEF"))
+    assert r.returncode == 1, r.stdout
+    assert "multi-destination" in r.stdout, r.stdout
+
+
+def test_a_single_row_diagram_needs_no_row_edge(tmp_path):
+    """One subgraph has nothing to be joined to; that is not a defect."""
+    r = _diagram_page(tmp_path, _rows("ABC") + [
+        "A -->|先推導| B", "B ==>|收束為| C",
+    ] + _styles("ABC"))
     assert r.returncode == 0, r.stdout
 
 

@@ -32,9 +32,11 @@ branching shape (columns), measured 0.862 against 0.369.
 
 The verifier now refuses any node edge that leaves its subgraph —
 including `C -->|…| r2`, which is the case worth naming: it scores
-**0.807**, the best of the three candidates, and its rows are stacked. It
-was briefly adopted on that number before the node coordinates were read
-out of the SVG.
+**0.807**, the highest of the three on the fixture it was measured on,
+and its rows are stacked. It was briefly adopted on that number before
+the node coordinates were read. A reviewer re-running the three forms on
+another fixture got a different ranking — which condemns the metric
+rather than rescuing it.
 
 ### Changed — squareness is no longer trusted on its own
 

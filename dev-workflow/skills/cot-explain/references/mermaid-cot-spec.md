@@ -90,9 +90,18 @@ exists. Two shapes; the choice is mechanical.
 
 ### Shape 1 — a linear chain → rows
 
-One sequence, at most an occasional cross-link. Outer `graph TB`; each
-row is a `subgraph` declaring `direction LR`; rows hold up to three
-nodes and stack down the page.
+One sequence. Outer `graph TB`; each row is a `subgraph` declaring
+`direction LR`; rows hold up to three nodes and stack down the page.
+
+**A node-level relation cannot cross a row.** Two nodes that must be
+joined directly — a cross-link, or co-premises feeding one node — have
+to sit in the same subgraph, because a node edge leaving its row
+destroys that row's layout (see the invariants below). Rows are a layout
+choice and the content decides them, so the fix is to regroup: put the
+linked nodes in one row. If the reasoning genuinely runs in parallel
+tracks, that is Shape 2, and the same rule holds inside it. If neither
+grouping works, the relation is not lost — it belongs in the node's card
+as 依據, stated in prose rather than drawn.
 
 ```
 graph TB
@@ -355,9 +364,16 @@ release.
 | `C -->\|…\| r2` (node to subgraph) | 773 × 958 | *0.807* | **no — stacked** |
 | `C -->\|…\| D` (node to node) | 242 × 1386 | 0.175 | **no — stacked** |
 
-The middle row is the whole reason the method changed: it is the
-squarest of the three and it is wrong. It was briefly adopted on the
-strength of that number before the coordinates were read.
+The middle row is the whole reason the method changed: **it is the
+squarest of the three here, and it is wrong.** It was briefly adopted on
+the strength of that number, before the coordinates were read.
+
+An independent reviewer re-ran the three forms on a different fixture and
+got a different ORDER — there the false-square form scored below the
+correct one. That does not rescue the metric, it condemns it further: a
+number whose ranking depends on the fixture is not measuring the property
+the rule needs. The collapse itself reproduced identically on both
+fixtures.
 
 **Node count**, subgraph-to-subgraph joins, rows of at most 3:
 

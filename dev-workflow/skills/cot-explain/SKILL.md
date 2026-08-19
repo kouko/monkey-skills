@@ -180,7 +180,10 @@ the table is for roads not taken, not for u-turns.
 
 ## Step 3 — Build the diagram
 
-Follow `references/mermaid-cot-spec.md` literally. The node styling is
+Follow `references/mermaid-cot-spec.md` literally. **Two shapes:** a
+linear chain becomes rows (below); a chain that forks into parallel
+tracks becomes columns — Shape 2 in the spec — and forcing a fork into
+rows is what once hid a whole branch. The node styling is
 the vault's convention, measured across 7,924 notes. The **layout** is a
 deliberate divergence from it, chosen on measured numbers — the spec
 carries the table. Do not "restore" the vault's flat `graph LR` on
@@ -217,7 +220,12 @@ The rules that get broken most often:
   discards a row's `direction` as soon as one of its nodes points at
   anything outside the row, *including another row's id*, and the rows
   then stack into a single narrow column. Node edges stay inside a row;
-  the row-to-row edge carries the transition between stages. Verified
+  the row-to-row edge carries the transition between stages — **label it
+  with the "why" you extracted in Step 2 for the pair that would have
+  crossed**, since that is the transition it stands for. Two nodes that
+  must be joined directly (a cross-link, co-premises) belong in the same
+  row; if they cannot be, the relation goes in the node's 依據 as prose
+  rather than being drawn. Verified
   byte-identical on mermaid 11.13.0 (what Obsidian and the VS Code
   preview run) and 11.17.0 (current).
 - **Rows of at most 3, as even as possible**: 8 nodes → 3/3/2, 7 → 3/2/2,
