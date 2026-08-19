@@ -1,12 +1,11 @@
 # Plan: on-ramp 顯性選擇閘（brief 的設計側入口決定必須由使用者做，plan 才能落地）
 
 **Source brief**: docs/loom/specs/2026-08-18-onramp-explicit-choice-gate.md
-Goal: brief 的 `## Design-side on-ramp` 行若記的是 agent 預設而非使用者明選，就不能變成已提交的 plan：
-    三態標準文法寫進 brief 格式規格；一支可攜的 checker 腳本解析該行、把非標準寫法一律當未解決、
-    並讀 `docs/loom/DIRECTION.md` 的 repo 級常設選擇；`git-guard.py` 在 `git commit` 新增
-    `docs/loom/plans/*.md` 時順 `**Source brief**:` 跑 checker、未解決就擋（Codex 走既有 shim）；
-    `writing-plans` 入口跑同一支腳本先給早期回饋；brainstorming Axis 0 與 reception 改成
-    「獨立一問、使用者答前寫 `pending`、agent 可建議不可代記」；上線前先量既有 brief 的觸發率。
+Goal: brief `## Design-side on-ramp` 行若記 agent 預設而非使用者明選，不能變已提交 plan：
+    三態文法入 brief 格式；checker 解析、非標準當未解決，讀 `docs/loom/DIRECTION.md` 常設選擇；
+    `git-guard.py` 於 `git commit` 新增 `docs/loom/plans/*.md` 時跑 checker、未解決即擋；
+    `writing-plans` 入口早跑同腳本；Axis 0／reception 改「獨立一問、答前寫 `pending`、
+    agent 只能建議」；上線前量 brief 觸發率。
 Stage: finishing
 Steps:
     1. 文法定案（brief 格式規格加三態文法）
@@ -47,7 +46,21 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 
 ## Task 1 — brief 格式規格加入 `## Design-side on-ramp` 三態文法
 
-- **Description**: In `loom-code/skills/brainstorming/references/handoff-brief-format.md`, add `## Design-side on-ramp` to the required-sections list (`## Required sections`, line 24; today the six subsections at lines 28-80 do not include it) and to the `## Template` block (line 142 onward), and specify its canonical grammar as a single line under that heading, exactly one of: `not fired — <reason>`; `fired: rows <comma-separated row numbers> — user chose <detour|direct>`; `fired: rows <…> — standing <detour|direct> (DIRECTION.md)`; `pending`. State that any other wording is *unresolved* (never pass), that `pending` is what the agent writes until the user has answered, and that the `standing` form is legal only when `docs/loom/DIRECTION.md` `## On-ramp standing choices` names every listed row (grammar for that section is owned by `loom-code/hooks/family-reception.md` — point, don't copy). Keep the existing point-don't-copy posture: this file owns the brief-line grammar; brainstorming Axis 0 and the checker point here.
+- **Description**: In `loom-code/skills/brainstorming/references/handoff-brief-format.md`, add `## Design-side on-ramp` to the required-sections list and to the `## Template` block, and specify its canonical grammar as a single line under that heading.
+  - Required-sections list: `## Required sections`, line 24; today the six
+    subsections at lines 28-80 do not include it. `## Template` block: line
+    142 onward.
+  - The grammar is exactly one of: `not fired — <reason>`; `fired: rows
+    <comma-separated row numbers> — user chose <detour|direct>`; `fired: rows
+    <…> — standing <detour|direct> (DIRECTION.md)`; `pending`.
+  - State that any other wording is *unresolved* (never pass), and that
+    `pending` is what the agent writes until the user has answered.
+  - State that the `standing` form is legal only when `docs/loom/DIRECTION.md`
+    `## On-ramp standing choices` names every listed row (grammar for that
+    section is owned by `loom-code/hooks/family-reception.md` — point, don't
+    copy).
+  - Keep the existing point-don't-copy posture: this file owns the brief-line
+    grammar; brainstorming Axis 0 and the checker point here.
 - **Module**: loom-code/skills/brainstorming/references
 - **Files touched**: loom-code/skills/brainstorming/references/handoff-brief-format.md, loom-code/scripts/test_brief_format_onramp_grammar.py
 - **Context paths**:
@@ -55,7 +68,13 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
   - /Users/kouko/GitHub/monkey-skills/docs/loom/specs/2026-08-18-onramp-explicit-choice-gate.md
   - /Users/kouko/GitHub/monkey-skills/loom-code/scripts/test_brainstorming_axis0.py
 - **Acceptance**:
-  - **RED**: `loom-code/scripts/test_brief_format_onramp_grammar.py::test_required_sections_and_template_carry_design_side_on_ramp_three_states` — asserts the reference lists `## Design-side on-ramp` inside `## Required sections` and inside `## Template`, and that the literal tokens `not fired —`, `fired: rows`, `user chose`, `standing`, `pending`, and the phrase `unresolved` all appear in that section. Fails today (0 hits for "on-ramp" in the file).
+  - **RED**: `loom-code/scripts/test_brief_format_onramp_grammar.py::test_required_sections_and_template_carry_design_side_on_ramp_three_states`
+    - Asserts the reference lists `## Design-side on-ramp` inside
+      `## Required sections` and inside `## Template`.
+    - Asserts the literal tokens `not fired —`, `fired: rows`, `user chose`,
+      `standing`, `pending`, and the phrase `unresolved` all appear in that
+      section.
+    - Fails today (0 hits for "on-ramp" in the file).
   - **GREEN**: the test passes; `python3 -m pytest loom-code/scripts/test_brainstorming_axis0.py` still passes (no wording it pins is touched).
 - **Dependencies**: none
 - **Independent**: false
@@ -65,7 +84,35 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 
 ## Task 2 — reception：推薦改為獨立一問、`pending`、常設選擇條目文法、改寫「never blocking」
 
-- **Description**: Edit `loom-code/hooks/family-reception.md` §"On-ramp criteria table (SSOT)" (line 61 onward): (1) replace the paragraph at lines 76-78 (verbatim today: `**Recommend ONCE, never nag.** Surface the recommendation a single time, / record the user's choice, then proceed either way — do not re-ask on / follow-up turns of the same task.`) with: recommend ONCE as a **standalone ask** — on Claude Code the `AskUserQuestion` tool, on any host a prose ask whose only question is this choice — never a bullet inside another briefing; the brief's `## Design-side on-ramp` line is written `pending` until the user answers; the agent may state a recommendation (e.g. "direct — prior vault notes cover the principles station") but never records the answer on the user's behalf; never re-raise after the user answers (keep the substrings `ONCE`, `never re-raise` verbatim — tests pin them). (2) Add a short `### On-ramp standing choices` sub-note: a repo may pre-answer a row for every future arc in `docs/loom/DIRECTION.md` under `## On-ramp standing choices`, one entry per row in the grammar `- row <n> (<station>): standing <direct|detour> — <reason> (<YYYY-MM-DD>)`; a standing entry lets Axis 0 write the `standing` form without asking; the entry is a decision, revisited only by editing DIRECTION.md. (3) Rewrite the sentence at line 87 (`recommendations to surface once, never blocking prerequisites.`) to say: never a prerequisite to *run* loom-design — but the *choice* is gated: writing-plans intake and the plan-commit guard refuse an unresolved line. Point to `handoff-brief-format.md` for the line grammar; do not restate it here.
+- **Description**: Edit `loom-code/hooks/family-reception.md` §"On-ramp criteria table (SSOT)" (line 61 onward), in three parts (1)-(3) below.
+  - (1) Replace the paragraph at lines 76-78 (verbatim today:
+    `**Recommend ONCE, never nag.** Surface the recommendation a single time,
+    / record the user's choice, then proceed either way — do not re-ask on /
+    follow-up turns of the same task.`) with the new wording in the next four
+    bullets.
+    - Recommend ONCE as a **standalone ask** — on Claude Code the
+      `AskUserQuestion` tool, on any host a prose ask whose only question is
+      this choice — never a bullet inside another briefing.
+    - The brief's `## Design-side on-ramp` line is written `pending` until the
+      user answers.
+    - The agent may state a recommendation (e.g. "direct — prior vault notes
+      cover the principles station") but never records the answer on the
+      user's behalf.
+    - Never re-raise after the user answers (keep the substrings `ONCE`,
+      `never re-raise` verbatim — tests pin them).
+  - (2) Add a short `### On-ramp standing choices` sub-note.
+    - A repo may pre-answer a row for every future arc in
+      `docs/loom/DIRECTION.md` under `## On-ramp standing choices`, one entry
+      per row in the grammar
+      `- row <n> (<station>): standing <direct|detour> — <reason> (<YYYY-MM-DD>)`.
+    - A standing entry lets Axis 0 write the `standing` form without asking;
+      the entry is a decision, revisited only by editing DIRECTION.md.
+  - (3) Rewrite the sentence at line 87 (`recommendations to surface once,
+    never blocking prerequisites.`) to say: never a prerequisite to *run*
+    loom-design — but the *choice* is gated: writing-plans intake and the
+    plan-commit guard refuse an unresolved line.
+  - Point to `handoff-brief-format.md` for the line grammar; do not restate it
+    here.
 - **Module**: loom-code/hooks
 - **Files touched**: loom-code/hooks/family-reception.md, loom-code/scripts/test_reception_onramp_choice.py
 - **Context paths**:
@@ -73,7 +120,13 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
   - /Users/kouko/GitHub/monkey-skills/loom-code/scripts/test_asking_user_briefing_escalation.py
   - /Users/kouko/GitHub/monkey-skills/docs/loom/specs/2026-08-18-onramp-explicit-choice-gate.md
 - **Acceptance**:
-  - **RED**: `loom-code/scripts/test_reception_onramp_choice.py::test_reception_requires_standalone_ask_pending_and_standing_choices` — asserts the reception file contains `standalone ask`, `pending`, `never records`/`never record` , `## On-ramp standing choices`, `standing <direct|detour>`, and no longer contains `proceed either way` nor `never blocking prerequisites`. Fails today.
+  - **RED**: `loom-code/scripts/test_reception_onramp_choice.py::test_reception_requires_standalone_ask_pending_and_standing_choices`
+    - Asserts the reception file contains `standalone ask`, `pending`,
+      `never records`/`never record` , `## On-ramp standing choices`,
+      `standing <direct|detour>`.
+    - Asserts it no longer contains `proceed either way` nor `never blocking
+      prerequisites`.
+    - Fails today.
   - **GREEN**: the test passes; `python3 -m pytest loom-code/scripts/test_asking_user_briefing_escalation.py` still passes.
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
@@ -83,7 +136,29 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 
 ## Task 3 — checker 腳本：解析 brief 的 on-ramp 行＋CLI 退出碼
 
-- **Description**: Create `loom-code/scripts/check_onramp_choice.py` (stdlib only, argparse; mirror the CLI shape of `loom-code/scripts/check_open_questions.py:283-300` — one positional path, exit 1 on missing file, problems to stderr, one clean line to stdout). Positional `brief_path`; optional `--repo-root <dir>` (default: `git rev-parse --show-toplevel` of the brief's directory, falling back to cwd). Expose a function `resolve(brief_text: str, standing: dict[int, str]) -> Result` with `Result.status in {"resolved", "unresolved", "not_fired"}`, `Result.rows: list[int]`, `Result.message: str`. Grammar per Task 1: `not fired — …` → not_fired; `fired: rows <n,…> — user chose <detour|direct>` → resolved; `fired: rows <n,…> — standing <detour|direct> (DIRECTION.md)` → resolved only if every row is in `standing` (this task passes an empty dict — Task 7 wires DIRECTION); `pending`, a missing line, or ANY other wording (e.g. `offered — direct per repo precedent`, `使用者未反對`) → unresolved. Exit codes: 0 resolved/not_fired; 2 unresolved (stderr message must name the brief path and the exact question to put to the user: "Design-side on-ramp: rows <n> fired — detour into loom-design first, or go direct? Record the answer as `fired: rows <n> — user chose <detour|direct>`"); 1 file missing. Match the line by the heading text `Design-side on-ramp` in either form the corpus uses (`## Design-side on-ramp` heading followed by the line, or a `> **Design-side on-ramp**: …` blockquote line) — but the *value* grammar is strict.
+- **Description**: Create `loom-code/scripts/check_onramp_choice.py` (stdlib only, argparse; mirror the CLI shape of `loom-code/scripts/check_open_questions.py:283-300` — one positional path, exit 1 on missing file, problems to stderr, one clean line to stdout).
+  - CLI arguments: positional `brief_path`; optional `--repo-root <dir>`
+    (default: `git rev-parse --show-toplevel` of the brief's directory,
+    falling back to cwd).
+  - Expose a function `resolve(brief_text: str, standing: dict[int, str]) -> Result`
+    with `Result.status in {"resolved", "unresolved", "not_fired"}`,
+    `Result.rows: list[int]`, `Result.message: str`.
+  - Grammar per Task 1: `not fired — …` → not_fired; `fired: rows <n,…> —
+    user chose <detour|direct>` → resolved.
+  - `fired: rows <n,…> — standing <detour|direct> (DIRECTION.md)` → resolved
+    only if every row is in `standing` (this task passes an empty dict —
+    Task 7 wires DIRECTION).
+  - `pending`, a missing line, or ANY other wording (e.g. `offered — direct
+    per repo precedent`, `使用者未反對`) → unresolved.
+  - Exit codes: 0 resolved/not_fired; 2 unresolved; 1 file missing.
+  - The exit-2 stderr message must name the brief path and the exact question
+    to put to the user: "Design-side on-ramp: rows <n> fired — detour into
+    loom-design first, or go direct? Record the answer as `fired: rows <n> —
+    user chose <detour|direct>`".
+  - Match the line by the heading text `Design-side on-ramp` in either form
+    the corpus uses (`## Design-side on-ramp` heading followed by the line, or
+    a `> **Design-side on-ramp**: …` blockquote line) — but the *value*
+    grammar is strict.
 - **Module**: loom-code/scripts/check_onramp_choice.py
 - **Files touched**: loom-code/scripts/check_onramp_choice.py, loom-code/scripts/test_check_onramp_choice.py
 - **Context paths**:
@@ -92,7 +167,12 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
   - /Users/kouko/GitHub/monkey-skills/loom-code/skills/brainstorming/references/handoff-brief-format.md
   - /Users/kouko/GitHub/monkey-skills/docs/loom/specs/2026-08-18-strategy-dag-plugin.md (real "agent-default" sample, lines 22-24)
 - **Acceptance**:
-  - **RED**: `loom-code/scripts/test_check_onramp_choice.py::test_fired_without_user_choice_exits_2` — parametrized over fixture briefs: `pending` → 2; `offered — direct per repo precedent` → 2; missing line → 2; `fired: rows 1,3 — user chose direct` → 0; `not fired — increment` → 0; stderr for the exit-2 cases contains `user chose <detour|direct>`. Fails today (script absent).
+  - **RED**: `loom-code/scripts/test_check_onramp_choice.py::test_fired_without_user_choice_exits_2` — parametrized over fixture briefs.
+    - `pending` → 2; `offered — direct per repo precedent` → 2; missing line
+      → 2.
+    - `fired: rows 1,3 — user chose direct` → 0; `not fired — increment` → 0.
+    - stderr for the exit-2 cases contains `user chose <detour|direct>`.
+    - Fails today (script absent).
   - **GREEN**: test passes; `python3 loom-code/scripts/check_onramp_choice.py docs/loom/specs/2026-08-18-onramp-explicit-choice-gate.md` exits 0 (this brief's line is `not fired — …`).
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
@@ -102,7 +182,27 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 
 ## Task 4 — brainstorming Axis 0 改寫：獨立一問、`pending`、不代記
 
-- **Description**: Edit `loom-code/skills/brainstorming/SKILL.md` Axis 0 (lines 107-112; today: `If a criteria row triggers, surface the recommendation **ONCE** — name the concrete design-side sequence … then record the user's choice in the brief under a `## Design-side on-ramp` line ("offered — user chose <direct/detour>") and proceed either way. Never re-raise it after a decline…`). New text: when a row fires, first check `docs/loom/DIRECTION.md` `## On-ramp standing choices` — a standing entry for every fired row → write `fired: rows <n> — standing <direct|detour> (DIRECTION.md)` and continue without asking; otherwise write `pending` in the brief and fire the recommendation ONCE as a standalone ask (per `loom-code/hooks/family-reception.md` §On-ramp — point, don't copy), stating your recommendation inside the ask; only after the user answers, write `fired: rows <n> — user chose <detour|direct>` (grammar SSOT: `references/handoff-brief-format.md`); never record an agent default; never re-raise after the user answers. Preserve verbatim the substrings tests pin: `ONCE`, `Design-side on-ramp`, `offered`, `chose`, `never re-raise`, `using-loom-design` (`test_brainstorming_axis0.py:70-87`, `test_brainstorming_backlog_read.py:198-202`). Extend `test_brainstorming_axis0.py` with the new assertion below.
+- **Description**: Edit `loom-code/skills/brainstorming/SKILL.md` Axis 0 (lines 107-112), replacing today's text with the new text below.
+  - Today: `If a criteria row triggers, surface the recommendation **ONCE** —
+    name the concrete design-side sequence … then record the user's choice in
+    the brief under a `## Design-side on-ramp` line ("offered — user chose
+    <direct/detour>") and proceed either way. Never re-raise it after a
+    decline…`.
+  - New text: when a row fires, first check `docs/loom/DIRECTION.md`
+    `## On-ramp standing choices` — a standing entry for every fired row →
+    write `fired: rows <n> — standing <direct|detour> (DIRECTION.md)` and
+    continue without asking.
+  - Otherwise write `pending` in the brief and fire the recommendation ONCE as
+    a standalone ask (per `loom-code/hooks/family-reception.md` §On-ramp —
+    point, don't copy), stating your recommendation inside the ask.
+  - Only after the user answers, write `fired: rows <n> — user chose
+    <detour|direct>` (grammar SSOT: `references/handoff-brief-format.md`);
+    never record an agent default; never re-raise after the user answers.
+  - Preserve verbatim the substrings tests pin: `ONCE`, `Design-side on-ramp`,
+    `offered`, `chose`, `never re-raise`, `using-loom-design`
+    (`test_brainstorming_axis0.py:70-87`,
+    `test_brainstorming_backlog_read.py:198-202`).
+  - Extend `test_brainstorming_axis0.py` with the new assertion below.
 - **Module**: loom-code/skills/brainstorming
 - **Files touched**: loom-code/skills/brainstorming/SKILL.md, loom-code/scripts/test_brainstorming_axis0.py
 - **Context paths**:
@@ -121,7 +221,14 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 
 ## Task 5 — DIRECTION.md 加 `## On-ramp standing choices` 並記下本 repo 第 1 列的常設決定
 
-- **Description**: Append to `docs/loom/DIRECTION.md` (after `## Later`, line 31-35) a `## On-ramp standing choices` section with one entry in the Task 2 grammar: `- row 1 (product-principles): standing direct — monkey-skills deliberately keeps no docs/loom/PRINCIPLES.md; loom-family arcs go direct to a brief (2026-08-18)`. Precede it with a one-line comment that entries are decisions read by `check_onramp_choice.py` and revisited only by editing this file. Do not add entries for rows 2-4 (not decided; a future arc that fires them gets asked).
+- **Description**: Append to `docs/loom/DIRECTION.md` (after `## Later`, line 31-35) a `## On-ramp standing choices` section with one entry in the Task 2 grammar.
+  - The entry: `- row 1 (product-principles): standing direct — monkey-skills
+    deliberately keeps no docs/loom/PRINCIPLES.md; loom-family arcs go direct
+    to a brief (2026-08-18)`.
+  - Precede it with a one-line comment that entries are decisions read by
+    `check_onramp_choice.py` and revisited only by editing this file.
+  - Do not add entries for rows 2-4 (not decided; a future arc that fires them
+    gets asked).
 - **Module**: docs/loom
 - **Files touched**: docs/loom/DIRECTION.md
 - **Context paths**:
@@ -139,7 +246,10 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 
 ## Task 6 — loom_init 的 DIRECTION 模板加空的 `## On-ramp standing choices`
 
-- **Description**: Add an empty `## On-ramp standing choices` section (heading + one-line explanatory comment + placeholder `_(none — every fired row is asked)_`) to `loom-code/scripts/templates/DIRECTION.md` after `## Later` (line 32), so `loom_init.py` (`_instantiate`, `loom_init.py:56-59`) scaffolds it. Do not change loom_init's refusal logic.
+- **Description**: Add an empty `## On-ramp standing choices` section to `loom-code/scripts/templates/DIRECTION.md` after `## Later` (line 32), so `loom_init.py` (`_instantiate`, `loom_init.py:56-59`) scaffolds it.
+  - The section is: heading + one-line explanatory comment + placeholder
+    `_(none — every fired row is asked)_`.
+  - Do not change loom_init's refusal logic.
 - **Module**: loom-code/scripts/templates
 - **Files touched**: loom-code/scripts/templates/DIRECTION.md, loom-code/scripts/test_loom_init.py
 - **Context paths**:
@@ -157,7 +267,16 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 
 ## Task 7 — checker 讀 DIRECTION.md 常設選擇並解析 `standing` 形
 
-- **Description**: In `loom-code/scripts/check_onramp_choice.py`, add `load_standing(repo_root) -> dict[int, str]` that reads `<repo_root>/docs/loom/DIRECTION.md`, finds the exact heading line `## On-ramp standing choices` (exact-line match, same posture as `backlog_index.py`'s `## Now` scan at `backlog_index.py:607,657-672`), and parses entries `- row <n> (<station>): standing <direct|detour> — <reason> (<YYYY-MM-DD>)` into `{n: "direct"|"detour"}`; a missing file/section → `{}` (never an error). Wire it into the CLI so the `standing` form resolves only when every listed row is present; a `standing` line naming a row with no entry is unresolved, and the exit-2 message says which row lacks a standing entry.
+- **Description**: In `loom-code/scripts/check_onramp_choice.py`, add `load_standing(repo_root) -> dict[int, str]` that reads `<repo_root>/docs/loom/DIRECTION.md`.
+  - It finds the exact heading line `## On-ramp standing choices` (exact-line
+    match, same posture as `backlog_index.py`'s `## Now` scan at
+    `backlog_index.py:607,657-672`).
+  - It parses entries `- row <n> (<station>): standing <direct|detour> —
+    <reason> (<YYYY-MM-DD>)` into `{n: "direct"|"detour"}`; a missing
+    file/section → `{}` (never an error).
+  - Wire it into the CLI so the `standing` form resolves only when every
+    listed row is present; a `standing` line naming a row with no entry is
+    unresolved, and the exit-2 message says which row lacks a standing entry.
 - **Module**: loom-code/scripts/check_onramp_choice.py
 - **Files touched**: loom-code/scripts/check_onramp_choice.py, loom-code/scripts/test_check_onramp_choice.py
 - **Context paths**:
@@ -165,7 +284,12 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
   - /Users/kouko/GitHub/monkey-skills/loom-code/scripts/backlog_index.py
   - /Users/kouko/GitHub/monkey-skills/loom-code/hooks/family-reception.md
 - **Acceptance**:
-  - **RED**: `loom-code/scripts/test_check_onramp_choice.py::test_standing_choice_in_direction_resolves_listed_rows` — tmp repo with a DIRECTION.md carrying `- row 1 (product-principles): standing direct — x (2026-08-18)`; brief `fired: rows 1 — standing direct (DIRECTION.md)` → exit 0; brief `fired: rows 1,3 — standing direct (DIRECTION.md)` → exit 2 with `row 3` in stderr; no DIRECTION.md → exit 2. Fails today.
+  - **RED**: `loom-code/scripts/test_check_onramp_choice.py::test_standing_choice_in_direction_resolves_listed_rows` — tmp repo with a DIRECTION.md carrying `- row 1 (product-principles): standing direct — x (2026-08-18)`.
+    - brief `fired: rows 1 — standing direct (DIRECTION.md)` → exit 0.
+    - brief `fired: rows 1,3 — standing direct (DIRECTION.md)` → exit 2 with
+      `row 3` in stderr.
+    - no DIRECTION.md → exit 2.
+    - Fails today.
   - **GREEN**: test passes with the Task 3 test still green.
 - **Dependencies**: Tasks 2, 3 complete first
 - **Independent**: false
@@ -175,7 +299,23 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 
 ## Task 8 — git-guard：`git commit` 新增 plan 檔時跑 checker，未解決就擋
 
-- **Description**: In `loom-code/hooks/git-guard.py`, add `_gate_commit_plans(cwd, git_globals)` beside `_gate_push` (`git-guard.py:435`), called from `main()`'s commit branch next to the `--no-verify` check (`git-guard.py:526-528`, `if sub == "commit" and _has_no_verify(args)`) for every `commit` subcommand: run `git diff --cached --name-only --diff-filter=A` through the existing `_git()` helper (`git-guard.py:307-312`); for each added path matching `docs/loom/plans/*.md`, read the file, find the header line starting `**Source brief**:` (plan-format SSOT: `writing-plans/references/plan-format.md:31`), resolve that path against the repo toplevel, and call `check_onramp_choice.resolve`/CLI logic (import the module from `Path(__file__).resolve().parent.parent / "scripts"`; if the import or the brief read fails, print exactly one stderr line `loom git-guard: on-ramp choice gate inactive (<reason>)` and allow — loud fail-open, same posture as `.codex/hooks/git-guard-shim.sh`). Unresolved → print the checker's message plus `MSG_ONRAMP` (new constant beside `MSG_REVIEW`, `git-guard.py:114-138`) to stderr and return 2. Modified (not added) plans and commits with no plan files are untouched. Honor `LOOM_CODE_MODE=off` as today (`git-guard.py:496-497`). No Codex-side change: the shim forwards unconditionally to this file (`.codex/hooks/git-guard-shim.sh` final line).
+- **Description**: In `loom-code/hooks/git-guard.py`, add `_gate_commit_plans(cwd, git_globals)` beside `_gate_push` (`git-guard.py:435`), called from `main()`'s commit branch next to the `--no-verify` check (`git-guard.py:526-528`, `if sub == "commit" and _has_no_verify(args)`) for every `commit` subcommand.
+  - Run `git diff --cached --name-only --diff-filter=A` through the existing
+    `_git()` helper (`git-guard.py:307-312`).
+  - For each added path matching `docs/loom/plans/*.md`, read the file, find
+    the header line starting `**Source brief**:` (plan-format SSOT:
+    `writing-plans/references/plan-format.md:31`), resolve that path against
+    the repo toplevel, and call `check_onramp_choice.resolve`/CLI logic.
+  - Import the module from `Path(__file__).resolve().parent.parent /
+    "scripts"`; if the import or the brief read fails, print exactly one
+    stderr line `loom git-guard: on-ramp choice gate inactive (<reason>)` and
+    allow — loud fail-open, same posture as `.codex/hooks/git-guard-shim.sh`.
+  - Unresolved → print the checker's message plus `MSG_ONRAMP` (new constant
+    beside `MSG_REVIEW`, `git-guard.py:114-138`) to stderr and return 2.
+  - Modified (not added) plans and commits with no plan files are untouched.
+    Honor `LOOM_CODE_MODE=off` as today (`git-guard.py:496-497`).
+  - No Codex-side change: the shim forwards unconditionally to this file
+    (`.codex/hooks/git-guard-shim.sh` final line).
 - **Module**: loom-code/hooks/git-guard.py
 - **Files touched**: loom-code/hooks/git-guard.py, loom-code/scripts/test_git_guard.py
 - **Context paths**:
@@ -184,7 +324,16 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
   - /Users/kouko/GitHub/monkey-skills/loom-code/scripts/check_onramp_choice.py
   - /Users/kouko/GitHub/monkey-skills/.codex/hooks/git-guard-shim.sh
 - **Acceptance**:
-  - **RED**: `loom-code/scripts/test_git_guard.py::test_commit_adding_plan_with_unresolved_onramp_blocked` — using the existing `repo` fixture (`test_git_guard.py:84-97`) and `run_hook(bash_event("git commit -m x", cwd=repo))` (`:66-82`): write `docs/loom/specs/b.md` with line `pending`, write `docs/loom/plans/p.md` with `**Source brief**: docs/loom/specs/b.md`, `git add` both → returncode 2 and `user chose <detour|direct>` in stderr; then rewrite the brief line to `fired: rows 1 — user chose direct`, re-add → returncode 0; and a commit that only *modifies* an already-committed plan → returncode 0. Fails today.
+  - **RED**: `loom-code/scripts/test_git_guard.py::test_commit_adding_plan_with_unresolved_onramp_blocked` — using the existing `repo` fixture (`test_git_guard.py:84-97`) and `run_hook(bash_event("git commit -m x", cwd=repo))` (`:66-82`).
+    - write `docs/loom/specs/b.md` with line `pending`, write
+      `docs/loom/plans/p.md` with `**Source brief**: docs/loom/specs/b.md`,
+      `git add` both → returncode 2 and `user chose <detour|direct>` in
+      stderr.
+    - then rewrite the brief line to `fired: rows 1 — user chose direct`,
+      re-add → returncode 0.
+    - and a commit that only *modifies* an already-committed plan →
+      returncode 0.
+    - Fails today.
   - **GREEN**: the new test and the whole `test_git_guard.py` pass.
 - **Dependencies**: Task 7 completes first
 - **Independent**: true
@@ -194,7 +343,16 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 
 ## Task 9 — writing-plans 入口閘：跑 checker、未解決就拒絕規劃
 
-- **Description**: In `loom-code/skills/writing-plans/SKILL.md`, add a paragraph `**On-ramp choice gate (unconditional):**` immediately after the `**Open-questions gate (unconditional):**` paragraph (`SKILL.md:113`) — same shape: before dispatching the reviewer (and, stated explicitly, before drafting Task 1), run `python3 loom-code/scripts/check_onramp_choice.py <brief-path>` on the source brief; exit 2 → STOP: do not draft the plan; relay the checker's question to the user as a standalone ask, wait, update the brief line, re-run. Do not add a `## When NOT to use` row (`SKILL.md:37-46`) — the gate is unconditional, not an exemption. Cross-reference: `git-guard.py` enforces the same rule at commit time (point, don't restate the grammar).
+- **Description**: In `loom-code/skills/writing-plans/SKILL.md`, add a paragraph `**On-ramp choice gate (unconditional):**` immediately after the `**Open-questions gate (unconditional):**` paragraph (`SKILL.md:113`) — same shape.
+  - Before dispatching the reviewer (and, stated explicitly, before drafting
+    Task 1), run `python3 loom-code/scripts/check_onramp_choice.py
+    <brief-path>` on the source brief.
+  - exit 2 → STOP: do not draft the plan; relay the checker's question to the
+    user as a standalone ask, wait, update the brief line, re-run.
+  - Do not add a `## When NOT to use` row (`SKILL.md:37-46`) — the gate is
+    unconditional, not an exemption.
+  - Cross-reference: `git-guard.py` enforces the same rule at commit time
+    (point, don't restate the grammar).
 - **Module**: loom-code/skills/writing-plans
 - **Files touched**: loom-code/skills/writing-plans/SKILL.md, loom-code/scripts/test_writing_plans_onramp_gate.py
 - **Context paths**:
@@ -202,7 +360,13 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
   - /Users/kouko/GitHub/monkey-skills/loom-code/scripts/test_wp_extraction_pointers.py (line 545 pins the open-questions invocation string — mirror the style)
   - /Users/kouko/GitHub/monkey-skills/loom-code/scripts/test_adjudication_wiring_writing_plans.py
 - **Acceptance**:
-  - **RED**: `loom-code/scripts/test_writing_plans_onramp_gate.py::test_intake_runs_onramp_choice_gate_before_drafting` — asserts the SKILL contains the exact string `python3 loom-code/scripts/check_onramp_choice.py` inside a paragraph headed `On-ramp choice gate`, positioned after the `Open-questions gate` paragraph, and that the paragraph contains `STOP`. Fails today.
+  - **RED**: `loom-code/scripts/test_writing_plans_onramp_gate.py::test_intake_runs_onramp_choice_gate_before_drafting`
+    - asserts the SKILL contains the exact string `python3
+      loom-code/scripts/check_onramp_choice.py` inside a paragraph headed
+      `On-ramp choice gate`, positioned after the `Open-questions gate`
+      paragraph.
+    - asserts that the paragraph contains `STOP`.
+    - Fails today.
   - **GREEN**: test passes; `test_wp_extraction_pointers.py` and `test_adjudication_wiring_writing_plans.py` still pass.
 - **Dependencies**: Task 7 completes first
 - **Independent**: true
@@ -212,7 +376,16 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 
 ## Task 10 — 觸發率量測：checker 掃既有 brief 與 plan→brief 對，寫成審計文件
 
-- **Description**: Run `check_onramp_choice.py` over every `docs/loom/specs/*.md` and over the `**Source brief**:` of every `docs/loom/plans/*.md` (repo-root `--repo-root .`), and write `docs/loom/audits/2026-08-18-onramp-choice-gate-fire-rate.md` recording: counts by outcome (exit 0 not-fired / exit 0 resolved / exit 2 unresolved / no line), the list of plan→brief pairs that would be blocked *if they were newly added today*, the DIRECTION.md standing-choice state at run time, and the exact commands used. State plainly that the gate applies to newly added plans only, so none of these historical pairs is affected; the number is the ceremony baseline the brief's BI-7 asks for. Cite the brief's 2026-08-18 pre-measurement (71 / 8 / 3 / 4 by wording family) beside the checker's numbers.
+- **Description**: Run `check_onramp_choice.py` over every `docs/loom/specs/*.md` and over the `**Source brief**:` of every `docs/loom/plans/*.md` (repo-root `--repo-root .`), and write `docs/loom/audits/2026-08-18-onramp-choice-gate-fire-rate.md`.
+  - Record: counts by outcome (exit 0 not-fired / exit 0 resolved / exit 2
+    unresolved / no line), the list of plan→brief pairs that would be blocked
+    *if they were newly added today*, the DIRECTION.md standing-choice state
+    at run time, and the exact commands used.
+  - State plainly that the gate applies to newly added plans only, so none of
+    these historical pairs is affected; the number is the ceremony baseline
+    the brief's BI-7 asks for.
+  - Cite the brief's 2026-08-18 pre-measurement (71 / 8 / 3 / 4 by wording
+    family) beside the checker's numbers.
 - **Module**: docs/loom/audits
 - **Files touched**: docs/loom/audits/2026-08-18-onramp-choice-gate-fire-rate.md
 - **Context paths**:
@@ -230,7 +403,15 @@ N/A — no unresolved question: the brief's `## Open Questions` is `none`; every
 
 ## Task 11 — 發版：loom-code 0.87.0、CHANGELOG、codex manifest 同步
 
-- **Description**: Bump `loom-code/.claude-plugin/plugin.json:3` from `"version": "0.86.0"` to `0.87.0`; add a `## [0.87.0] — 2026-08-18 — on-ramp explicit-choice gate` entry at the top of `loom-code/CHANGELOG.md` (same shape as the `## [0.86.0]` entry at lines 8-15) listing the checker script, the git-guard commit gate, the writing-plans intake gate, the Axis 0 / reception rewording, the DIRECTION standing-choices section, and the fire-rate audit; run `python scripts/sync_codex_manifests.py --all` so `loom-code/.codex-plugin/plugin.json` mirrors the version.
+- **Description**: Bump `loom-code/.claude-plugin/plugin.json:3` from `"version": "0.86.0"` to `0.87.0`.
+  - Add a `## [0.87.0] — 2026-08-18 — on-ramp explicit-choice gate` entry at
+    the top of `loom-code/CHANGELOG.md` (same shape as the `## [0.86.0]` entry
+    at lines 8-15).
+  - The entry lists the checker script, the git-guard commit gate, the
+    writing-plans intake gate, the Axis 0 / reception rewording, the DIRECTION
+    standing-choices section, and the fire-rate audit.
+  - Run `python scripts/sync_codex_manifests.py --all` so
+    `loom-code/.codex-plugin/plugin.json` mirrors the version.
 - **Module**: loom-code (release administration)
 - **Files touched**: loom-code/.claude-plugin/plugin.json, loom-code/CHANGELOG.md, loom-code/.codex-plugin/plugin.json
 - **Context paths**:

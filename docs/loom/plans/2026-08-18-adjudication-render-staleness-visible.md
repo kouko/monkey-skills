@@ -2,11 +2,10 @@
 
 **Source brief**: docs/loom/specs/2026-08-18-adjudication-render-staleness-visible.md
 Goal: the invocation contract pins WHICH copy of `adjudication_render.py`
-    runs (the one shipped beside the protocol being read), every HTML page it
-    emits carries the version of the copy that produced it — machine-readable
-    and visible to the reader, `unknown` when the copy cannot name itself —
-    and a render whose rendition still holds unconverted markdown exits
-    non-zero without writing a file.
+    runs (the one shipped beside the protocol read); every HTML page it
+    emits carries that copy's version — machine-readable, `unknown` when
+    unreadable; a render still holding unconverted markdown exits non-zero
+    without writing a file.
 Stage: finishing
 Steps:
   1. 蓋章：頁面帶上產生它的版本（含讀不到版本時的 unknown 退路）
@@ -41,7 +40,17 @@ flowchart LR
 
 ## Task 1 — stamp every rendered page with the version of the copy that produced it
 
-- **Description**: In `loom-code/scripts/adjudication_render.py`, add `_deployment_version() -> str` reading `"version"` from the `.claude-plugin/plugin.json` that sits beside the running copy (`Path(__file__).resolve().parent.parent / ".claude-plugin" / "plugin.json"`), and thread its value through `_render_page` (`:343-372`) into `DOC_PAGE_TEMPLATE` (`:313-330`) as two new slots: a `<meta name="generator" content="loom-code-adjudication-render/<version>">` tag in `<head>`, and a visible `<footer class="stamp">` line before `</body>` naming the same version. Style the footer in `STYLE` at the muted tier (`--muted`), small, print-visible. Both doc mode and verdict `--html` mode get the stamp — they share `_render_page`, and that sharing is deliberate. This task assumes the manifest is readable; the unreadable case is T2.
+- **Description**: In `loom-code/scripts/adjudication_render.py`, add `_deployment_version() -> str` reading `"version"` from the `.claude-plugin/plugin.json` that sits beside the running copy (`Path(__file__).resolve().parent.parent / ".claude-plugin" / "plugin.json"`).
+  - Thread its value through `_render_page` (`:343-372`) into
+    `DOC_PAGE_TEMPLATE` (`:313-330`) as two new slots: a
+    `<meta name="generator" content="loom-code-adjudication-render/<version>">`
+    tag in `<head>`, and a visible `<footer class="stamp">` line before
+    `</body>` naming the same version.
+  - Style the footer in `STYLE` at the muted tier (`--muted`), small,
+    print-visible.
+  - Both doc mode and verdict `--html` mode get the stamp — they share
+    `_render_page`, and that sharing is deliberate.
+  - This task assumes the manifest is readable; the unreadable case is T2.
 - **Module**: loom-code/scripts
 - **Files touched**: loom-code/scripts/adjudication_render.py, loom-code/scripts/test_adjudication_render_stamp.py
 - **Context paths**:
@@ -49,7 +58,14 @@ flowchart LR
   - /Users/kouko/.supacode/repos/monkey-skills/Html-viewer-fix/loom-code/scripts/test_adjudication_render.py
   - /Users/kouko/.supacode/repos/monkey-skills/Html-viewer-fix/loom-code/.claude-plugin/plugin.json
 - **Acceptance**:
-  - **RED**: `loom-code/scripts/test_adjudication_render_stamp.py::test_doc_page_carries_generator_meta_and_visible_footer` — `render_doc(FIXTURE_UNITS)` output contains `<meta name="generator" content="loom-code-adjudication-render/` followed by the exact `"version"` string read from `loom-code/.claude-plugin/plugin.json` (the test reads the manifest itself rather than hardcoding a number, so a later bump does not break it), AND contains that same version string inside a `<footer` element. Fails today: neither tag exists.
+  - **RED**: `loom-code/scripts/test_adjudication_render_stamp.py::test_doc_page_carries_generator_meta_and_visible_footer` — `render_doc(FIXTURE_UNITS)` output carries both stamp sites.
+    - Contains `<meta name="generator" content="loom-code-adjudication-render/`
+      followed by the exact `"version"` string read from
+      `loom-code/.claude-plugin/plugin.json`.
+    - The test reads the manifest itself rather than hardcoding a number,
+      so a later bump does not break it.
+    - AND contains that same version string inside a `<footer` element.
+    - Fails today: neither tag exists.
   - **GREEN**: the new test passes; `render_verdict_html` output carries the same two markers (assert it in the same file, one extra test); the whole existing `test_adjudication_render*.py` set (33 tests) stays green.
 - **External surfaces**: none beyond stdlib `json` / `pathlib`, both already imported.
 - **Dependencies**: none
@@ -60,14 +76,25 @@ flowchart LR
 
 ## Task 2 — a copy that cannot name itself stamps `unknown`, never crashes
 
-- **Description**: Harden `_deployment_version()` so an absent, unreadable, malformed-JSON, or `"version"`-less manifest returns the literal string `unknown` instead of raising — the page still ships both stamp sites, carrying `loom-code-adjudication-render/unknown`. Rationale to carry in the docstring: a copy that cannot identify itself is exactly as suspect as an old one, so it must still be marked rather than silently unmarked. Catch `OSError` and `ValueError` (`json.JSONDecodeError` subclasses `ValueError`) — never a bare `except`.
+- **Description**: Harden `_deployment_version()` so an absent, unreadable, malformed-JSON, or `"version"`-less manifest returns the literal string `unknown` instead of raising.
+  - The page still ships both stamp sites, carrying
+    `loom-code-adjudication-render/unknown`.
+  - Rationale to carry in the docstring: a copy that cannot identify
+    itself is exactly as suspect as an old one, so it must still be
+    marked rather than silently unmarked.
+  - Catch `OSError` and `ValueError` (`json.JSONDecodeError` subclasses
+    `ValueError`) — never a bare `except`.
 - **Module**: loom-code/scripts
 - **Files touched**: loom-code/scripts/adjudication_render.py, loom-code/scripts/test_adjudication_render_stamp.py
 - **Context paths**:
   - /Users/kouko/.supacode/repos/monkey-skills/Html-viewer-fix/loom-code/scripts/adjudication_render.py
   - /Users/kouko/.supacode/repos/monkey-skills/Html-viewer-fix/loom-code/scripts/adjudication_render.py (`_load_bundled_mermaid` at `:374-410` — the existing unreadable-file-degrades-quietly precedent to mirror in shape, not in outcome)
 - **Acceptance**:
-  - **RED**: `test_adjudication_render_stamp.py::test_unreadable_manifest_stamps_unknown` — with `_deployment_version`'s manifest path monkeypatched to a nonexistent path, and separately to a file containing `not json`, and separately to `{}`, `render_doc(FIXTURE_UNITS)` returns a page containing `loom-code-adjudication-render/unknown` in both the meta tag and the footer, and raises nothing. Fails today: T1's implementation lets the exception escape.
+  - **RED**: `test_adjudication_render_stamp.py::test_unreadable_manifest_stamps_unknown` — `render_doc(FIXTURE_UNITS)` returns a page containing `loom-code-adjudication-render/unknown` in both the meta tag and the footer, and raises nothing.
+    - With `_deployment_version`'s manifest path monkeypatched to a
+      nonexistent path, and separately to a file containing `not json`,
+      and separately to `{}`.
+    - Fails today: T1's implementation lets the exception escape.
   - **GREEN**: the test passes for all three malformed inputs; T1's happy-path test still passes unchanged.
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
@@ -77,7 +104,19 @@ flowchart LR
 
 ## Task 3 — unconverted markdown in the rendition region fails the render loudly
 
-- **Description**: Add `_assert_rendition_converted(page_html: str) -> None` to `adjudication_render.py`, called from `main()` (`:546-579`) **after** rendering and **before** the `-o` write at `:578`, so a violating run writes no file at all. It scans only the rendition regions (`<div class="rendition">…</div>`), never the `原文` `<details><pre>` block, which carries escaped source markdown BY DESIGN (`:439`). Within each rendition region it first removes `<code>…</code>` and `<pre>…</pre>` spans — a rendition legitimately quoting `` `**bold**` `` as an example must not trip the check; this exact false positive was observed twice on this arc's own brief view — then flags a surviving `**…**` pair or a literal ``` ``` `` fence. On a violation: write nothing, print the offending unit's `id` and the marker to stderr, exit non-zero (`main()` returns 1; a `SystemExit` from `sys.exit(main())`). Same severity for both marker kinds (OQ-2).
+- **Description**: Add `_assert_rendition_converted(page_html: str) -> None` to `adjudication_render.py`, called from `main()` (`:546-579`) **after** rendering and **before** the `-o` write at `:578`, so a violating run writes no file at all.
+  - It scans only the rendition regions (`<div class="rendition">…</div>`),
+    never the `原文` `<details><pre>` block, which carries escaped source
+    markdown BY DESIGN (`:439`).
+  - Within each rendition region it first removes `<code>…</code>` and
+    `<pre>…</pre>` spans — a rendition legitimately quoting
+    `` `**bold**` `` as an example must not trip the check; this exact
+    false positive was observed twice on this arc's own brief view.
+  - Then flags a surviving `**…**` pair or a literal ``` ``` `` fence.
+  - On a violation: write nothing, print the offending unit's `id` and
+    the marker to stderr, exit non-zero (`main()` returns 1; a
+    `SystemExit` from `sys.exit(main())`).
+  - Same severity for both marker kinds (OQ-2).
 - **Module**: loom-code/scripts
 - **Files touched**: loom-code/scripts/adjudication_render.py, loom-code/scripts/test_adjudication_render_postcondition.py
 - **Context paths**:
@@ -86,8 +125,24 @@ flowchart LR
   - /Users/kouko/.supacode/repos/monkey-skills/Html-viewer-fix/docs/loom/memory/a-mechanical-check-can-go-green-by-skipping.md
   - /Users/kouko/.supacode/repos/monkey-skills/Html-viewer-fix/docs/loom/memory/a-mutation-test-must-run-the-production-assertion.md
 - **Acceptance**:
-  - **RED**: `test_adjudication_render_postcondition.py::test_unconverted_rendition_exits_nonzero_and_writes_no_file` — invoking the **production entry point** `main(["doc", str(units_path), "-o", str(out_path)])` on a units file whose `rendition` is pre-escaped text carrying a literal `**bold**` (simulating what a pre-markdown-it copy produces) returns non-zero AND `out_path.exists()` is False. Fails today: `main()` always returns 0 and always writes.
-  - **GREEN**: that test passes, plus three non-vacuity companions in the same file, each also driving `main()` rather than the helper: (a) a rendition whose only `**` sits inside an inline code span exits 0 and writes the file (the observed false positive stays green); (b) a normal unit whose `source_text` contains `**bold**` — landing escaped in the `原文` block — exits 0 and writes the file (the by-design block stays excluded); (c) a no-skip probe asserting the scan actually matched something: with the `<div class="rendition">` marker renamed in the fixture the check must NOT silently pass — assert the helper raises on a rendition-region-shaped input, so a future template rename cannot turn the guard into a no-op. The whole `loom-code/scripts/` suite stays green.
+  - **RED**: `test_adjudication_render_postcondition.py::test_unconverted_rendition_exits_nonzero_and_writes_no_file` — invoking the **production entry point** `main(["doc", str(units_path), "-o", str(out_path)])` returns non-zero AND `out_path.exists()` is False.
+    - On a units file whose `rendition` is pre-escaped text carrying a
+      literal `**bold**` (simulating what a pre-markdown-it copy
+      produces).
+    - Fails today: `main()` always returns 0 and always writes.
+  - **GREEN**: that test passes, plus three non-vacuity companions in the same file, each also driving `main()` rather than the helper:
+    - (a) a rendition whose only `**` sits inside an inline code span
+      exits 0 and writes the file (the observed false positive stays
+      green);
+    - (b) a normal unit whose `source_text` contains `**bold**` —
+      landing escaped in the `原文` block — exits 0 and writes the file
+      (the by-design block stays excluded);
+    - (c) a no-skip probe asserting the scan actually matched something:
+      with the `<div class="rendition">` marker renamed in the fixture
+      the check must NOT silently pass — assert the helper raises on a
+      rendition-region-shaped input, so a future template rename cannot
+      turn the guard into a no-op.
+    - The whole `loom-code/scripts/` suite stays green.
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
 - **Brief item covered**: "`adjudication_render.py` fails loud (non-zero exit, no output file written) when a rendered `rendition` still contains unconverted markdown markers."
@@ -96,14 +151,36 @@ flowchart LR
 
 ## Task 4 — the invocation contract pins which copy runs, and gates delivery on the stamp
 
-- **Description**: In `loom-code/skills/using-loom-code/protocols/adjudication-view.md` §Invocation contract (`:190-205`), add two rules. (a) **Which copy**: the scripts to run are the ones shipped beside THIS protocol file — resolve them from this file's own absolute path, `../../../scripts/<script>.py` — never a bare filename, never a hardcoded plugin-cache version directory, never a repo-relative path from the session's working directory. State the reason in one clause (every past silent failure was a copy the executor chose over this one) and carve out the one exception: a session developing these scripts themselves runs its working tree's copy. Do NOT write `${CLAUDE_PLUGIN_ROOT}` — substitution reaches only SKILL.md bodies and `allowed-tools` rules, so in this file the token would survive literally and expand to empty in a shell. (b) **Before delivering**: confirm the produced page carries the generator stamp and that its version matches the plugin whose protocol you are reading; a page with no stamp came from a pre-stamp copy and must not be handed to the user. Keep both additions inside the existing §Invocation contract heading — no new top-level section.
+- **Description**: In `loom-code/skills/using-loom-code/protocols/adjudication-view.md` §Invocation contract (`:190-205`), add two rules.
+  - (a) **Which copy**: the scripts to run are the ones shipped beside
+    THIS protocol file — resolve them from this file's own absolute
+    path, `../../../scripts/<script>.py`.
+  - Never a bare filename, never a hardcoded plugin-cache version
+    directory, never a repo-relative path from the session's working
+    directory.
+  - State the reason in one clause (every past silent failure was a copy
+    the executor chose over this one) and carve out the one exception: a
+    session developing these scripts themselves runs its working tree's
+    copy.
+  - Do NOT write `${CLAUDE_PLUGIN_ROOT}` — substitution reaches only
+    SKILL.md bodies and `allowed-tools` rules, so in this file the token
+    would survive literally and expand to empty in a shell.
+  - (b) **Before delivering**: confirm the produced page carries the
+    generator stamp and that its version matches the plugin whose
+    protocol you are reading; a page with no stamp came from a pre-stamp
+    copy and must not be handed to the user.
+  - Keep both additions inside the existing §Invocation contract heading
+    — no new top-level section.
 - **Module**: loom-code/skills/using-loom-code/protocols
 - **Files touched**: loom-code/skills/using-loom-code/protocols/adjudication-view.md, loom-code/scripts/test_adjudication_protocol_pins.py
 - **Context paths**:
   - /Users/kouko/.supacode/repos/monkey-skills/Html-viewer-fix/loom-code/skills/using-loom-code/protocols/adjudication-view.md
   - /Users/kouko/.supacode/repos/monkey-skills/Html-viewer-fix/loom-code/scripts/test_adjudication_protocol_pins.py (`_section` slicing helper — every new assertion runs against the §Invocation contract slice, never the whole document)
 - **Acceptance**:
-  - **RED**: `test_adjudication_protocol_pins.py::test_invocation_contract_pins_the_shipped_copy` — the §Invocation contract slice contains the relative-resolution rule (assert on the literal `../../../scripts/` path fragment) AND the pre-delivery stamp check (assert on `generator`), AND the slice does NOT contain the literal `CLAUDE_PLUGIN_ROOT`. Fails today: none of the three hold.
+  - **RED**: `test_adjudication_protocol_pins.py::test_invocation_contract_pins_the_shipped_copy` — the §Invocation contract slice contains the relative-resolution rule (assert on the literal `../../../scripts/` path fragment).
+    - AND the pre-delivery stamp check (assert on `generator`).
+    - AND the slice does NOT contain the literal `CLAUDE_PLUGIN_ROOT`.
+    - Fails today: none of the three hold.
   - **GREEN**: the test passes; every pre-existing test in `test_adjudication_protocol_pins.py` stays green; the protocol file stays under the ~3000-word ceiling named in `docs/loom/backlog/2026-08-12-protocol-files-carry-no-size-ceiling.md` (2069 words today — record the post-edit count in the task report).
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
@@ -113,7 +190,21 @@ flowchart LR
 
 ## Task 5 — ship as loom-code 0.88.0
 
-- **Description**: Bump `loom-code/.claude-plugin/plugin.json` to `0.88.0` — NOT the `0.87.0` this task originally named: PR #704 on branch `onramp-explicit-choice-gate` claimed `0.87.0` and merged to main at 2026-08-18T08:41:58Z (verified at implementation time via `gh pr view 704` and `git show origin/main:loom-code/.claude-plugin/plugin.json`), so `0.87.0` was already taken and the marketplace publishes by version — run `python3 scripts/sync_codex_manifests.py loom-code` so `.codex-plugin/plugin.json` follows in lock-step, and add the `0.88.0` entry to `loom-code/CHANGELOG.md` describing the three shipped behaviors (path pin, version stamp, fail-loud postcondition) and naming the five incidents as the motivation. A version bump is mandatory here rather than optional: T4 changes skill-loaded content, and the marketplace publishes by version, so an unbumped PR is a silent no-op on every installed copy.
+- **Description**: Bump `loom-code/.claude-plugin/plugin.json` to `0.88.0` — NOT the `0.87.0` this task originally named.
+  - PR #704 on branch `onramp-explicit-choice-gate` claimed `0.87.0` and
+    merged to main at 2026-08-18T08:41:58Z (verified at implementation
+    time via `gh pr view 704` and
+    `git show origin/main:loom-code/.claude-plugin/plugin.json`).
+  - So `0.87.0` was already taken and the marketplace publishes by
+    version.
+  - Run `python3 scripts/sync_codex_manifests.py loom-code` so
+    `.codex-plugin/plugin.json` follows in lock-step.
+  - Add the `0.88.0` entry to `loom-code/CHANGELOG.md` describing the
+    three shipped behaviors (path pin, version stamp, fail-loud
+    postcondition) and naming the five incidents as the motivation.
+  - A version bump is mandatory here rather than optional: T4 changes
+    skill-loaded content, and the marketplace publishes by version, so an
+    unbumped PR is a silent no-op on every installed copy.
 - **Module**: loom-code
 - **Files touched**: loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/CHANGELOG.md
 - **Context paths**:
@@ -131,7 +222,19 @@ flowchart LR
 
 ## Task 6 — record the un-probed Codex claim in the backlog
 
-- **Description**: Create `docs/loom/backlog/2026-08-18-codex-live-probe-of-the-self-locating-script-path-rule.md` (frontmatter `status: OPEN`, `start: next real loom run under Codex`) recording that T4's self-locating path rule is argued portable to Codex structurally — it names no harness-specific primitive, and Codex installs by git clone so only the stale-clone staleness class exists there — but was never live-probed, which is what the brief's resolved Open Question 0 deferred. Then regenerate the index with `python3 scripts/backlog_index.py --write --output docs/loom/BACKLOG.md`. Mirror the entry shape of `docs/loom/backlog/2026-08-12-protocol-files-carry-no-size-ceiling.md`, including the body `- Origin:` / `- Start:` bullets that must agree with the frontmatter fields.
+- **Description**: Create `docs/loom/backlog/2026-08-18-codex-live-probe-of-the-self-locating-script-path-rule.md` (frontmatter `status: OPEN`, `start: next real loom run under Codex`).
+  - Recording that T4's self-locating path rule is argued portable to
+    Codex structurally — it names no harness-specific primitive, and
+    Codex installs by git clone so only the stale-clone staleness class
+    exists there.
+  - But was never live-probed, which is what the brief's resolved Open
+    Question 0 deferred.
+  - Then regenerate the index with
+    `python3 scripts/backlog_index.py --write --output docs/loom/BACKLOG.md`.
+  - Mirror the entry shape of
+    `docs/loom/backlog/2026-08-12-protocol-files-carry-no-size-ceiling.md`,
+    including the body `- Origin:` / `- Start:` bullets that must agree
+    with the frontmatter fields.
 - **Module**: docs/loom/backlog
 - **Files touched**: docs/loom/backlog/2026-08-18-codex-live-probe-of-the-self-locating-script-path-rule.md, docs/loom/BACKLOG.md
 - **Context paths**:

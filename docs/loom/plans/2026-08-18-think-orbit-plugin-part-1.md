@@ -1,12 +1,12 @@
 # Plan: think-orbit plugin — Part 1（格式・機械閘・假設傳播・核心對話協定・骨架 → 真實素材檢查點）
 
 **Source brief**: docs/loom/specs/2026-08-18-think-orbit-plugin-part-1.md
-Goal: Part 1 交付後：plugin 骨架在 repo 內、有自己的 CI lane；使用者在任一資料夾說「我要決定 X」，
-    agent 依對話協定寫 `GOAL/FACT/CLAIM/DECISION` 節點檔與假設檔（≤3／分支、agent 起草人確認、
-    可證偽測試），每個節點邊界靜默跑機械閘腳本（失敗才一行），使用者宣告假設破裂時腳本沿承重鏈
-    標 `stale`、輸出影響範圍視圖、不重算；研究筆記以其 `claim` 一行被引用、`claim` 變了才通知下游；
-    整張 DAG 由腳本畫成一張基本 Mermaid 全圖給人看；最後使用者用自己的真實素材跑完一輪、
-    對著 DAG 全圖與節點檔寫下檢查點結論。
+Goal: Part 1 交付後：plugin 骨架在 repo 內、有自己的 CI lane；在任一資料夾說「我要決定 X」，
+    agent 依對話協定寫 `GOAL/FACT/CLAIM/DECISION` 節點檔與假設檔（≤3／分支、agent
+    起草人確認、可證偽測試），每個節點邊界靜默跑機械閘腳本（失敗才一行），使用者宣告假設破裂時腳本沿承重鏈標
+    `stale`、輸出影響範圍視圖、不重算；研究筆記以其 `claim` 一行被引用、`claim` 變了才通知下游；DAG
+    由腳本畫成一張基本 Mermaid 全圖給人看；最後使用者用自己的真實素材跑完一輪、對著
+    DAG 全圖與節點檔寫下檢查點結論。
 Stage: finishing
 Steps:
     1. 骨架與地基（plugin 骨架／載入器＋格式文件／研究規則與盲區清單）
@@ -58,7 +58,13 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 1 — plugin 骨架與 marketplace 登錄
 
-- **Description**: Create the `think-orbit/` plugin skeleton: `.claude-plugin/plugin.json` (name `think-orbit`, version `0.1.0`, description, keywords), the Codex mirror `.codex-plugin/plugin.json` produced by `python3 scripts/sync_codex_manifests.py think-orbit`, `README.md` / `README.ja.md` / `README.zh-TW.md` (short: what it is, one usage line, "Part 1 — pre-release"), `CHANGELOG.md` with a `0.1.0` entry, a stub `skills/think-orbit/SKILL.md` (frontmatter `name` + `description` + a one-paragraph body marked "Part 1 draft — protocol lands in T11"), and the marketplace entry appended to `.claude-plugin/marketplace.json` with a description byte-identical to plugin.json's. Write the test first.
+- **Description**: Create the `think-orbit/` plugin skeleton:
+  - `.claude-plugin/plugin.json` (name `think-orbit`, version `0.1.0`, description, keywords),
+  - the Codex mirror `.codex-plugin/plugin.json` produced by `python3 scripts/sync_codex_manifests.py think-orbit`,
+  - `README.md` / `README.ja.md` / `README.zh-TW.md` (short: what it is, one usage line, "Part 1 — pre-release"),
+  - `CHANGELOG.md` with a `0.1.0` entry,
+  - a stub `skills/think-orbit/SKILL.md` (frontmatter `name` + `description` + a one-paragraph body marked "Part 1 draft — protocol lands in T11"),
+  - and the marketplace entry appended to `.claude-plugin/marketplace.json` with a description byte-identical to plugin.json's. Write the test first.
 - **Module**: think-orbit (plugin root)
 - **Files touched**: NEW: think-orbit/.claude-plugin/plugin.json, NEW: think-orbit/.codex-plugin/plugin.json, NEW: think-orbit/README.md, NEW: think-orbit/README.ja.md, NEW: think-orbit/README.zh-TW.md, NEW: think-orbit/CHANGELOG.md, NEW: think-orbit/skills/think-orbit/SKILL.md, NEW: think-orbit/skills/think-orbit/scripts/test_plugin_manifest.py, .claude-plugin/marketplace.json
 - **Context paths**:
@@ -69,7 +75,11 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/scripts/check-marketplace-description-sync.py
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/CLAUDE.md
 - **Acceptance**:
-  - **RED**: `think-orbit/skills/think-orbit/scripts/test_plugin_manifest.py::test_manifest_marketplace_and_codex_mirror_are_consistent` — asserts plugin.json exists with `name == "think-orbit"` and `version == "0.1.0"`, marketplace.json has an entry `name == "think-orbit"` whose `description` equals plugin.json's, `python3 scripts/sync_codex_manifests.py --check think-orbit` exits 0, and the three READMEs + CHANGELOG + SKILL.md exist — fails because none of the files exist.
+  - **RED**: `think-orbit/skills/think-orbit/scripts/test_plugin_manifest.py::test_manifest_marketplace_and_codex_mirror_are_consistent` — fails because none of the files exist.
+    - asserts plugin.json exists with `name == "think-orbit"` and `version == "0.1.0"`,
+    - marketplace.json has an entry `name == "think-orbit"` whose `description` equals plugin.json's,
+    - `python3 scripts/sync_codex_manifests.py --check think-orbit` exits 0,
+    - and the three READMEs + CHANGELOG + SKILL.md exist.
   - **GREEN**: the test passes; `python3 scripts/check-marketplace-description-sync.py` exits 0; `bash .claude/hooks/validate-skill-folder-structure.sh think-orbit/skills/think-orbit/SKILL.md` exits 0.
 - **Dependencies**: none
 - **Independent**: false
@@ -79,7 +89,11 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 2 — 載入器 `dag.py load` 與 node-schema 參考文件
 
-- **Description**: Implement `think-orbit/skills/think-orbit/scripts/dag.py` with `load_project(root: Path) -> Project` that parses YAML frontmatter (`yaml.safe_load`) of every `*.md` under `<root>/nodes/`, `<root>/assumptions/`, and `<root>/research/` into dataclasses: `Node(id, type, seq, inputs: list[Input(ref, load_bearing)], summary, status, branch, branch_type, source, quote, path)`, `Assumption(id, status, statement, breaks_if, source, branch, path)`, and a research note with a frontmatter `claim` loaded as a `Node` of `type == "FACT"` whose `summary` is the `claim` line and whose `id` is the note's frontmatter `id`. Also write `references/node-schema.md` documenting the same field sets, the three schema defaults from the brief (extraction-driven node granularity / multi-role paragraphs / user-chosen project dir), and a minimal example of each file. Write the test first.
+- **Description**: Implement `think-orbit/skills/think-orbit/scripts/dag.py` with `load_project(root: Path) -> Project` that parses YAML frontmatter (`yaml.safe_load`) of every `*.md` under `<root>/nodes/`, `<root>/assumptions/`, and `<root>/research/` into dataclasses:
+  - `Node(id, type, seq, inputs: list[Input(ref, load_bearing)], summary, status, branch, branch_type, source, quote, path)`,
+  - `Assumption(id, status, statement, breaks_if, source, branch, path)`,
+  - and a research note with a frontmatter `claim` loaded as a `Node` of `type == "FACT"` whose `summary` is the `claim` line and whose `id` is the note's frontmatter `id`.
+  - Also write `references/node-schema.md` documenting the same field sets, the three schema defaults from the brief (extraction-driven node granularity / multi-role paragraphs / user-chosen project dir), and a minimal example of each file. Write the test first.
 - **Module**: think-orbit/skills/think-orbit/scripts/dag.py
 - **Files touched**: NEW: think-orbit/skills/think-orbit/scripts/dag.py, NEW: think-orbit/skills/think-orbit/scripts/test_dag.py, NEW: think-orbit/skills/think-orbit/references/node-schema.md
 - **Context paths**:
@@ -88,7 +102,10 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
   - /Users/kouko/kouko-obsidian-vault/research/2026-08-18 決策推演 plugin v0 設計定案.md
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/dev-workflow/skills/handoff/scripts/test_handoff_readmes.py
 - **Acceptance**:
-  - **RED**: `think-orbit/skills/think-orbit/scripts/test_dag.py::test_load_project_parses_nodes_assumptions_and_research_claims` — builds a project under `tmp_path` with one GOAL, one FACT (`source`, `quote`), one CLAIM in branch `b1` (`branch_type: exclusive`, `inputs: [{ref: goal, load_bearing: true}]`), one assumption `q4_budget_holds` (`status: open`, `breaks_if` set), and one `research/r1.md` with `id: r1` and `claim: ...`; asserts the four `Node`s (incl. the research FACT with `summary == claim`) and the one `Assumption` come back with every field populated — fails with `ModuleNotFoundError: dag`.
+  - **RED**: `think-orbit/skills/think-orbit/scripts/test_dag.py::test_load_project_parses_nodes_assumptions_and_research_claims` — fails with `ModuleNotFoundError: dag`.
+    - builds a project under `tmp_path` with one GOAL, one FACT (`source`, `quote`), one CLAIM in branch `b1` (`branch_type: exclusive`, `inputs: [{ref: goal, load_bearing: true}]`),
+    - one assumption `q4_budget_holds` (`status: open`, `breaks_if` set), and one `research/r1.md` with `id: r1` and `claim: ...`;
+    - asserts the four `Node`s (incl. the research FACT with `summary == claim`) and the one `Assumption` come back with every field populated.
   - **GREEN**: the test passes; `references/node-schema.md` exists and names every frontmatter field the dataclasses carry (spot-checked by the test via a `for field in (...)` presence loop over the doc text).
 - **External surfaces**:
   - SDK package: PyYAML `yaml.safe_load` — grounding: in-repo evidence `dev-workflow/skills/handoff/scripts/test_handoff_readmes.py` (imports `yaml`); pinned reference https://pyyaml.org/wiki/PyYAMLDocumentation (captured 2026-08-18)
@@ -100,7 +117,12 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 3 — 研究規則與盲區清單參考文件
 
-- **Description**: Write two prose reference files for the SKILL to point at: `references/research-rules.md` transcribing the brief's BI-7 table (project docs answer → infer; one missing external fact → ≤1 arm, write result + source into the current note; topic survey / explicit request → standalone research note; hard rule: any external fact entering the reasoning must be findable in the docs; the four agent-initiated search triggers), and `references/blind-spot-checklist.md` (the umbrella's list: resources unchanged / competitors static / enough time / people available / regulation unchanged / demand persists — offered once when a branch opens, plus the one extra question 「這條路還踩在什麼上面」). Each file ≤60 lines, paragraphs of 2–4 sentences.
+- **Description**: Write two prose reference files for the SKILL to point at:
+  - `references/research-rules.md` transcribing the brief's BI-7 table
+    - (project docs answer → infer; one missing external fact → ≤1 arm, write result + source into the current note; topic survey / explicit request → standalone research note; hard rule: any external fact entering the reasoning must be findable in the docs; the four agent-initiated search triggers),
+  - and `references/blind-spot-checklist.md`
+    - (the umbrella's list: resources unchanged / competitors static / enough time / people available / regulation unchanged / demand persists — offered once when a branch opens, plus the one extra question 「這條路還踩在什麼上面」).
+  - Each file ≤60 lines, paragraphs of 2–4 sentences.
 - **Module**: think-orbit/skills/think-orbit/references
 - **Files touched**: NEW: think-orbit/skills/think-orbit/references/research-rules.md, NEW: think-orbit/skills/think-orbit/references/blind-spot-checklist.md
 - **Context paths**:
@@ -118,7 +140,13 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 4 — `dag.py check`：結構閘（欄位／參照解析／退出碼）
 
-- **Description**: Add subcommand `check <root>` to `dag.py`: load the project and report (a) every `inputs` entry missing `load_bearing`, (b) every `inputs.ref` that resolves to no node / assumption / research `id`, (c) every FACT missing `source` or `quote`, (d) any node missing a required field (`type`, `id`, `seq`, `summary`). Print nothing and exit 0 when clean; print exactly one line per violation (`<file>: <rule>: <detail>`) and exit 1 otherwise. `check` never writes to any file. Write the test first.
+- **Description**: Add subcommand `check <root>` to `dag.py`: load the project and report:
+  - (a) every `inputs` entry missing `load_bearing`,
+  - (b) every `inputs.ref` that resolves to no node / assumption / research `id`,
+  - (c) every FACT missing `source` or `quote`,
+  - (d) any node missing a required field (`type`, `id`, `seq`, `summary`).
+  - Print nothing and exit 0 when clean; print exactly one line per violation (`<file>: <rule>: <detail>`) and exit 1 otherwise.
+  - `check` never writes to any file. Write the test first.
 - **Module**: think-orbit/skills/think-orbit/scripts/dag.py
 - **Files touched**: think-orbit/skills/think-orbit/scripts/dag.py, think-orbit/skills/think-orbit/scripts/test_dag.py
 - **Context paths**:
@@ -126,7 +154,10 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/memory/fail-closed-default-must-be-enforced-not-emergent.md
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/memory/section-gate-must-flag-entry-lookalikes-not-just-matches.md
 - **Acceptance**:
-  - **RED**: `test_dag.py::test_check_prints_one_line_per_structural_violation_and_is_silent_when_clean` — a fixture with exactly three violations (one `inputs` entry without `load_bearing`, one dangling `ref`, one FACT without `quote`) yields exit 1 and exactly 3 stdout lines each naming its file; the clean fixture from Task 2 yields exit 0 and empty stdout; the fixture files' mtimes are unchanged after the run — fails because `check` is not a recognised subcommand.
+  - **RED**: `test_dag.py::test_check_prints_one_line_per_structural_violation_and_is_silent_when_clean` — fails because `check` is not a recognised subcommand.
+    - a fixture with exactly three violations (one `inputs` entry without `load_bearing`, one dangling `ref`, one FACT without `quote`) yields exit 1 and exactly 3 stdout lines each naming its file;
+    - the clean fixture from Task 2 yields exit 0 and empty stdout;
+    - the fixture files' mtimes are unchanged after the run.
   - **GREEN**: the test passes.
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
@@ -136,14 +167,22 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 5 — `dag.py break`：假設破裂 → 承重鏈 stale 傳播
 
-- **Description**: Add subcommand `break <root> <assumption-id>` to `dag.py`: set the assumption's frontmatter `status: broken`; walk `inputs` edges from that assumption's `id`; every node reached through a chain in which every hop is `load_bearing: true` gets frontmatter `status: stale`; nodes reachable only through a chain containing a `load_bearing: false` hop are listed under `weakened:` on stdout and left unchanged; no other field of any file changes; nothing is recomputed. Frontmatter rewrite preserves key order and the body byte-for-byte. Write the test first.
+- **Description**: Add subcommand `break <root> <assumption-id>` to `dag.py`:
+  - set the assumption's frontmatter `status: broken`;
+  - walk `inputs` edges from that assumption's `id`;
+  - every node reached through a chain in which every hop is `load_bearing: true` gets frontmatter `status: stale`;
+  - nodes reachable only through a chain containing a `load_bearing: false` hop are listed under `weakened:` on stdout and left unchanged;
+  - no other field of any file changes; nothing is recomputed.
+  - Frontmatter rewrite preserves key order and the body byte-for-byte. Write the test first.
 - **Module**: think-orbit/skills/think-orbit/scripts/dag.py
 - **Files touched**: think-orbit/skills/think-orbit/scripts/dag.py, think-orbit/skills/think-orbit/scripts/test_dag.py
 - **Context paths**:
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/specs/2026-08-18-think-orbit-plugin-part-1.md
   - /Users/kouko/kouko-obsidian-vault/research/2026-08-18 決策推演 plugin v0 設計定案.md
 - **Acceptance**:
-  - **RED**: `test_dag.py::test_break_marks_load_bearing_chain_stale_and_reports_weakened` — fixture: assumption `a1`; `n1` inputs `a1` (lb true); `n3` inputs `n1` (lb true); `n2` inputs `a1` (lb false); `n4` inputs `n2` (lb true). After `break a1`: `a1.status == broken`, `n1` and `n3` have `status: stale`, `n2` and `n4` keep `status: current` and appear in the `weakened:` stdout list, every file body is byte-identical to before — fails because `break` is not a recognised subcommand.
+  - **RED**: `test_dag.py::test_break_marks_load_bearing_chain_stale_and_reports_weakened` — fails because `break` is not a recognised subcommand.
+    - fixture: assumption `a1`; `n1` inputs `a1` (lb true); `n3` inputs `n1` (lb true); `n2` inputs `a1` (lb false); `n4` inputs `n2` (lb true).
+    - After `break a1`: `a1.status == broken`, `n1` and `n3` have `status: stale`, `n2` and `n4` keep `status: current` and appear in the `weakened:` stdout list, every file body is byte-identical to before.
   - **GREEN**: the test passes.
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
@@ -153,13 +192,18 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 6 — `dag.py claims`：研究筆記 `claim` 變更 → 列出下游
 
-- **Description**: Add subcommand `claims <root> [--since <git-rev>]` (default `HEAD`) to `dag.py`: for every `research/*.md` with a frontmatter `claim`, read the same file at `<git-rev>` via `git show <rev>:<relpath>` (run with `cwd=<root>`; a file absent at that rev counts as unchanged-new), compare the `claim` values, and for each changed claim print one line `<research-id>: claim changed → dependents: <ids>` listing every node whose `inputs.ref` names that research `id`. Print nothing and exit 0 when no claim changed. Write the test first.
+- **Description**: Add subcommand `claims <root> [--since <git-rev>]` (default `HEAD`) to `dag.py`:
+  - for every `research/*.md` with a frontmatter `claim`, read the same file at `<git-rev>` via `git show <rev>:<relpath>` (run with `cwd=<root>`; a file absent at that rev counts as unchanged-new), compare the `claim` values,
+  - and for each changed claim print one line `<research-id>: claim changed → dependents: <ids>` listing every node whose `inputs.ref` names that research `id`.
+  - Print nothing and exit 0 when no claim changed. Write the test first.
 - **Module**: think-orbit/skills/think-orbit/scripts/dag.py
 - **Files touched**: think-orbit/skills/think-orbit/scripts/dag.py, think-orbit/skills/think-orbit/scripts/test_dag.py
 - **Context paths**:
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/specs/2026-08-18-think-orbit-plugin-part-1.md
 - **Acceptance**:
-  - **RED**: `test_dag.py::test_claims_lists_dependents_only_for_research_claims_changed_since_rev` — `tmp_path` project initialised as a git repo with one commit; `research/r1.md` `claim` edited afterwards, `research/r2.md` untouched; node `n1` inputs `r1`, node `n2` inputs `r2`; `claims --since HEAD` prints exactly one line naming `r1` and `n1`, not `r2`/`n2`; with no edits it prints nothing and exits 0 — fails because `claims` is not a recognised subcommand.
+  - **RED**: `test_dag.py::test_claims_lists_dependents_only_for_research_claims_changed_since_rev` — fails because `claims` is not a recognised subcommand.
+    - `tmp_path` project initialised as a git repo with one commit; `research/r1.md` `claim` edited afterwards, `research/r2.md` untouched; node `n1` inputs `r1`, node `n2` inputs `r2`;
+    - `claims --since HEAD` prints exactly one line naming `r1` and `n1`, not `r2`/`n2`; with no edits it prints nothing and exits 0.
   - **GREEN**: the test passes.
 - **External surfaces**:
   - CLI flag: `git show <rev>:<path>` — grounding: `git show --help` (captured 2026-08-18); in-repo evidence `dev-workflow/skills/git-memory` scripts use `git show`.
@@ -171,7 +215,10 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 7 — CI workflow `think-orbit-ci.yml`
 
-- **Description**: Add `.github/workflows/think-orbit-ci.yml` modelled on `tsundoku-ci.yml`: trigger on `push`/`pull_request` with `paths: ['think-orbit/**', '.github/workflows/think-orbit-ci.yml']`; steps: checkout, setup-python 3.11, `pip install pytest pyyaml`, `python3 -m pytest think-orbit/skills/think-orbit/scripts/ -q`, `bash .claude/hooks/validate-skill-folder-structure.sh think-orbit/skills/think-orbit/SKILL.md`, `python3 scripts/sync_codex_manifests.py --check think-orbit`. Write the test first. Runnable-capability line: the pytest verb for this plugin is declared in this workflow (the plugin has no other command surface) and verified to run locally.
+- **Description**: Add `.github/workflows/think-orbit-ci.yml` modelled on `tsundoku-ci.yml`:
+  - trigger on `push`/`pull_request` with `paths: ['think-orbit/**', '.github/workflows/think-orbit-ci.yml']`;
+  - steps: checkout, setup-python 3.11, `pip install pytest pyyaml`, `python3 -m pytest think-orbit/skills/think-orbit/scripts/ -q`, `bash .claude/hooks/validate-skill-folder-structure.sh think-orbit/skills/think-orbit/SKILL.md`, `python3 scripts/sync_codex_manifests.py --check think-orbit`.
+  - Write the test first. Runnable-capability line: the pytest verb for this plugin is declared in this workflow (the plugin has no other command surface) and verified to run locally.
 - **Module**: .github/workflows/think-orbit-ci.yml
 - **Files touched**: NEW: .github/workflows/think-orbit-ci.yml, NEW: think-orbit/skills/think-orbit/scripts/test_ci_workflow.py
 - **Context paths**:
@@ -179,7 +226,8 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/memory/test-must-land-in-the-ci-lane-its-plugin-runs.md
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/memory/gha-paths-filter-gates-at-workflow-level.md
 - **Acceptance**:
-  - **RED**: `think-orbit/skills/think-orbit/scripts/test_ci_workflow.py::test_workflow_runs_pytest_structure_hook_and_codex_check` — parses the workflow YAML and asserts the `paths` filter contains `think-orbit/**` and the `run:` steps contain the pytest invocation over `think-orbit/skills/think-orbit/scripts/`, the structure-hook invocation, and the codex `--check` — fails because the workflow file does not exist.
+  - **RED**: `think-orbit/skills/think-orbit/scripts/test_ci_workflow.py::test_workflow_runs_pytest_structure_hook_and_codex_check` — fails because the workflow file does not exist.
+    - parses the workflow YAML and asserts the `paths` filter contains `think-orbit/**` and the `run:` steps contain the pytest invocation over `think-orbit/skills/think-orbit/scripts/`, the structure-hook invocation, and the codex `--check`.
   - **GREEN**: the test passes and `python3 -m pytest think-orbit/skills/think-orbit/scripts/ -q` passes locally.
 - **Dependencies**: Tasks 1, 2 complete first
 - **Independent**: false
@@ -189,14 +237,19 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 8 — `check` 加段落形式規則
 
-- **Description**: Extend `dag.py check` with rule (e): every body paragraph of a node file (text below the frontmatter, split on blank lines; skip headings, list items, blockquotes, fenced code, and Mermaid blocks) must contain 2–4 sentences, counting sentence terminators `.`, `!`, `?`, `。`, `！`, `？`; a paragraph outside that range prints one line `<file>: paragraph-form: paragraph <n> has <k> sentences`. Same silent/exit semantics as Task 4. Write the test first.
+- **Description**: Extend `dag.py check` with rule (e):
+  - every body paragraph of a node file (text below the frontmatter, split on blank lines; skip headings, list items, blockquotes, fenced code, and Mermaid blocks) must contain 2–4 sentences, counting sentence terminators `.`, `!`, `?`, `。`, `！`, `？`;
+  - a paragraph outside that range prints one line `<file>: paragraph-form: paragraph <n> has <k> sentences`.
+  - Same silent/exit semantics as Task 4. Write the test first.
 - **Module**: think-orbit/skills/think-orbit/scripts/dag.py
 - **Files touched**: think-orbit/skills/think-orbit/scripts/dag.py, think-orbit/skills/think-orbit/scripts/test_dag.py
 - **Context paths**:
   - /Users/kouko/kouko-obsidian-vault/CLAUDE.md
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/specs/2026-08-18-think-orbit-plugin-part-1.md
 - **Acceptance**:
-  - **RED**: `test_dag.py::test_check_flags_paragraphs_outside_two_to_four_sentences` — a node whose body has one 6-sentence Chinese paragraph (using `。`) and one 1-sentence English paragraph yields exactly two `paragraph-form` lines and exit 1; a body of two 3-sentence paragraphs plus a heading, a bullet list, and a Mermaid block yields exit 0 — fails because no `paragraph-form` rule exists.
+  - **RED**: `test_dag.py::test_check_flags_paragraphs_outside_two_to_four_sentences` — fails because no `paragraph-form` rule exists.
+    - a node whose body has one 6-sentence Chinese paragraph (using `。`) and one 1-sentence English paragraph yields exactly two `paragraph-form` lines and exit 1;
+    - a body of two 3-sentence paragraphs plus a heading, a bullet list, and a Mermaid block yields exit 0.
   - **GREEN**: the test passes and Task 4's test still passes.
 - **Dependencies**: Task 4 completes first
 - **Independent**: false
@@ -206,7 +259,10 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 9 — `check` 加假設檔規則
 
-- **Description**: Extend `dag.py check` with rules on assumption files: (f) required fields `id`, `status` ∈ {open, broken, confirmed}, `statement`, `breaks_if` (non-empty), `branch`; (g) more than three assumptions sharing one `branch` prints one line `assumptions: branch <b> has <n> assumptions (max 3)`. Same silent/exit semantics as Task 4. Write the test first.
+- **Description**: Extend `dag.py check` with rules on assumption files:
+  - (f) required fields `id`, `status` ∈ {open, broken, confirmed}, `statement`, `breaks_if` (non-empty), `branch`;
+  - (g) more than three assumptions sharing one `branch` prints one line `assumptions: branch <b> has <n> assumptions (max 3)`.
+  - Same silent/exit semantics as Task 4. Write the test first.
 - **Module**: think-orbit/skills/think-orbit/scripts/dag.py
 - **Files touched**: think-orbit/skills/think-orbit/scripts/dag.py, think-orbit/skills/think-orbit/scripts/test_dag.py
 - **Context paths**:
@@ -222,14 +278,19 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 10 — `dag.py impact` 與 `break` 產出影響範圍視圖
 
-- **Description**: Add subcommand `impact <root> <assumption-id>` to `dag.py` that writes `<root>/views/impact-<assumption-id>.md` containing a Mermaid `flowchart LR` with the assumption as a stadium node, every load-bearing dependent as a box (class `stale` when its `status` is stale), and weakened nodes as dashed edges; the file starts with an HTML comment `<!-- generated by dag.py impact — regenerate, never hand-edit; agent must not read -->`. Make `break` call `impact` after propagation. Write the test first.
+- **Description**: Add subcommand `impact <root> <assumption-id>` to `dag.py` that writes `<root>/views/impact-<assumption-id>.md`:
+  - containing a Mermaid `flowchart LR` with the assumption as a stadium node, every load-bearing dependent as a box (class `stale` when its `status` is stale), and weakened nodes as dashed edges;
+  - the file starts with an HTML comment `<!-- generated by dag.py impact — regenerate, never hand-edit; agent must not read -->`.
+  - Make `break` call `impact` after propagation. Write the test first.
 - **Module**: think-orbit/skills/think-orbit/scripts/dag.py
 - **Files touched**: think-orbit/skills/think-orbit/scripts/dag.py, think-orbit/skills/think-orbit/scripts/test_dag.py
 - **Context paths**:
   - /Users/kouko/kouko-obsidian-vault/research/2026-08-18 決策推演 plugin v0 設計定案.md
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/memory/a-shared-index-file-is-regenerated-from-entries-never-hand-merged.md
 - **Acceptance**:
-  - **RED**: `test_dag.py::test_break_writes_impact_view_with_stale_dependents` — using Task 5's fixture, after `break a1` the file `views/impact-a1.md` exists, begins with the generated-marker comment, contains a ```` ```mermaid ```` block naming `a1`, `n1`, `n3` with `class n1,n3 stale` (or per-node class lines) and a dashed edge to `n2`; running `impact a1` twice yields byte-identical output — fails because `impact` is not a recognised subcommand.
+  - **RED**: `test_dag.py::test_break_writes_impact_view_with_stale_dependents` — fails because `impact` is not a recognised subcommand.
+    - using Task 5's fixture, after `break a1` the file `views/impact-a1.md` exists, begins with the generated-marker comment, contains a ```` ```mermaid ```` block naming `a1`, `n1`, `n3` with `class n1,n3 stale` (or per-node class lines) and a dashed edge to `n2`;
+    - running `impact a1` twice yields byte-identical output.
   - **GREEN**: the test passes.
 - **Dependencies**: Task 5 completes first
 - **Independent**: false
@@ -239,7 +300,16 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 11 — decision-session SKILL.md：核心對話協定
 
-- **Description**: Write `think-orbit/skills/decision-session/SKILL.md` (created as a stub by Task 14) — the core sitting protocol (body ≤4,500 words; conversation-language examples allowed). Intake and the resume opening live in the router (Task 15) and the break flow in Task 16; this skill assumes the router has already resolved the project dir and hands over. Content: the three interrupt points (confirm GOAL / ask assumptions when a branch opens / confirm DECISION) and the rule that everything else is silent file writing; the first-sitting flow (GOAL → branches with `branch_type` → ≤3 assumptions drafted by agent, confirmed by user, falsifiability check → CLAIM/FACT nodes with monotonic `seq` and `inputs` tagged `load_bearing`); procedural/social content produces no node; run `python3 <skill>/scripts/dag.py check <root>` at every node boundary and relay only failures; run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py render <root>` after every milestone (GOAL confirmed / branch opened / DECISION written / assumption broken) and tell the user where `views/dag.md` is — the DAG is the CoT made visible, the user reads it, the agent never does; when the user says an assumption broke, hand off to the `break-assumption` skill (do not re-implement it); user may hand-edit any file between turns; the agent must not read `views/` files; point at its own `references/node-schema.md`, `references/research-rules.md`, `references/blind-spot-checklist.md` (moved here by Task 14); a short "not yet in Part 1" line naming mainline/branches views, proposal compile, and milestone commits. Frontmatter `description` triggers on 「我要決定」/「決策推演」/「繼續上次的決策」/ "help me decide" / "continue the decision" — but the router (Task 15) is the primary entry; this skill's description must say it is normally reached via `using-think-orbit`. All `dag.py` invocations use `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py <verb> <root>` (plugin-level scripts, Task 14). Write the test first.
+- **Description**: Write `think-orbit/skills/decision-session/SKILL.md` (created as a stub by Task 14) — the core sitting protocol (body ≤4,500 words; conversation-language examples allowed).
+  - Intake and the resume opening live in the router (Task 15) and the break flow in Task 16; this skill assumes the router has already resolved the project dir and hands over.
+  - Content: the three interrupt points (confirm GOAL / ask assumptions when a branch opens / confirm DECISION) and the rule that everything else is silent file writing;
+  - the first-sitting flow (GOAL → branches with `branch_type` → ≤3 assumptions drafted by agent, confirmed by user, falsifiability check → CLAIM/FACT nodes with monotonic `seq` and `inputs` tagged `load_bearing`); procedural/social content produces no node;
+  - run `python3 <skill>/scripts/dag.py check <root>` at every node boundary and relay only failures;
+  - run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py render <root>` after every milestone (GOAL confirmed / branch opened / DECISION written / assumption broken) and tell the user where `views/dag.md` is — the DAG is the CoT made visible, the user reads it, the agent never does;
+  - when the user says an assumption broke, hand off to the `break-assumption` skill (do not re-implement it); user may hand-edit any file between turns; the agent must not read `views/` files;
+  - point at its own `references/node-schema.md`, `references/research-rules.md`, `references/blind-spot-checklist.md` (moved here by Task 14); a short "not yet in Part 1" line naming mainline/branches views, proposal compile, and milestone commits.
+  - Frontmatter `description` triggers on 「我要決定」/「決策推演」/「繼續上次的決策」/ "help me decide" / "continue the decision" — but the router (Task 15) is the primary entry; this skill's description must say it is normally reached via `using-think-orbit`.
+  - All `dag.py` invocations use `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py <verb> <root>` (plugin-level scripts, Task 14). Write the test first.
 - **Module**: think-orbit/skills/decision-session/SKILL.md
 - **Files touched**: think-orbit/skills/decision-session/SKILL.md, NEW: think-orbit/scripts/test_skill_md.py
 - **Context paths**:
@@ -250,7 +320,9 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/loom-code/skills/using-loom-code/SKILL.md (router shape precedent)
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/CLAUDE.md
 - **Acceptance**:
-  - **RED**: `think-orbit/scripts/test_skill_md.py::test_decision_session_skill_names_cli_verbs_interrupts_view_prohibition_and_word_cap` — asserts decision-session SKILL.md body word count ≤4,500, contains the literal strings `dag.py check`, `dag.py claims`, `dag.py render`, `break-assumption` (hand-off), references all three `references/*.md` files by relative path, contains a "views/" prohibition sentence, and names the three interrupt points — fails on the stub (verbs absent).
+  - **RED**: `think-orbit/scripts/test_skill_md.py::test_decision_session_skill_names_cli_verbs_interrupts_view_prohibition_and_word_cap` — fails on the stub (verbs absent).
+    - asserts decision-session SKILL.md body word count ≤4,500, contains the literal strings `dag.py check`, `dag.py claims`, `dag.py render`, `break-assumption` (hand-off),
+    - references all three `references/*.md` files by relative path, contains a "views/" prohibition sentence, and names the three interrupt points.
   - **GREEN**: the test passes; `bash .claude/hooks/validate-skill-folder-structure.sh think-orbit/skills/decision-session/SKILL.md` exits 0; `python3 scripts/check-plugin-description-skill-coherence.py` exits 0.
 - **Dependencies**: Tasks 3, 6, 8, 9, 10, 13, 14 complete first
 - **Independent**: false
@@ -260,7 +332,10 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 12 — 真實素材檢查點（使用者親跑）
 
-- **Description**: Run one real decision of the user's through the Part 1 protocol — reading `views/dag.md` (the basic full DAG) alongside the node files (headless or interactive per `docs/loom/memory/headless-branch-plugin-testing-recipe.md`), then write `docs/loom/dogfood/2026-08-<dd>-think-orbit-real-material.md` with sections `## 素材`, `## 發現`, `## schema 變更`（或「無」）, `## Part 2 go / no-go`. This task is executed by the user + orchestrator in a live session, not by an implementer subagent; SDD sets `Stage: blocked:user-decision` when it reaches this task and resumes on the file's existence.
+- **Description**: Run one real decision of the user's through the Part 1 protocol:
+  - reading `views/dag.md` (the basic full DAG) alongside the node files (headless or interactive per `docs/loom/memory/headless-branch-plugin-testing-recipe.md`),
+  - then write `docs/loom/dogfood/2026-08-<dd>-think-orbit-real-material.md` with sections `## 素材`, `## 發現`, `## schema 變更`（或「無」）, `## Part 2 go / no-go`.
+  - This task is executed by the user + orchestrator in a live session, not by an implementer subagent; SDD sets `Stage: blocked:user-decision` when it reaches this task and resumes on the file's existence.
 - **Module**: docs/loom/dogfood
 - **Files touched**: NEW: docs/loom/dogfood/2026-08-<dd>-think-orbit-real-material.md
 - **Context paths**:
@@ -277,7 +352,12 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 13 — `dag.py render`：基本 DAG 全圖
 
-- **Description**: Add subcommand `render <root>` to `dag.py` that writes `<root>/views/dag.md`: first line the HTML comment `<!-- generated by dag.py render — regenerate, never hand-edit; agent must not read -->`, then one ```` ```mermaid ```` `flowchart TD` block containing every node ordered by `seq` (GOAL as a hexagon `{{ }}`, FACT as a rectangle, CLAIM as a rounded rectangle, DECISION as a double-border rectangle `[[ ]]`; label `<id><br/><summary>`), every assumption as a stadium node `([ ])` inside a `subgraph` per `branch` together with that branch's member nodes (subgraph title `<branch> (<branch_type>)`), one edge per `inputs` entry (`-->` when `load_bearing: true`, `-.->` when false), and `classDef stale` (grey fill) applied to nodes whose `status` is `stale`. No collapsing, no partial rendering (Part 2). Output is deterministic (stable ordering) so two runs are byte-identical. Write the test first.
+- **Description**: Add subcommand `render <root>` to `dag.py` that writes `<root>/views/dag.md`:
+  - first line the HTML comment `<!-- generated by dag.py render — regenerate, never hand-edit; agent must not read -->`,
+  - then one ```` ```mermaid ```` `flowchart TD` block containing every node ordered by `seq` (GOAL as a hexagon `{{ }}`, FACT as a rectangle, CLAIM as a rounded rectangle, DECISION as a double-border rectangle `[[ ]]`; label `<id><br/><summary>`),
+  - every assumption as a stadium node `([ ])` inside a `subgraph` per `branch` together with that branch's member nodes (subgraph title `<branch> (<branch_type>)`),
+  - one edge per `inputs` entry (`-->` when `load_bearing: true`, `-.->` when false), and `classDef stale` (grey fill) applied to nodes whose `status` is `stale`.
+  - No collapsing, no partial rendering (Part 2). Output is deterministic (stable ordering) so two runs are byte-identical. Write the test first.
 - **Module**: think-orbit/skills/think-orbit/scripts/dag.py
 - **Files touched**: think-orbit/skills/think-orbit/scripts/dag.py, think-orbit/skills/think-orbit/scripts/test_dag.py
 - **Context paths**:
@@ -285,7 +365,10 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
   - /Users/kouko/kouko-obsidian-vault/research/2026-08-18 決策推演 plugin v0 設計定案.md
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/memory/a-shared-index-file-is-regenerated-from-entries-never-hand-merged.md
 - **Acceptance**:
-  - **RED**: `test_dag.py::test_render_writes_full_dag_mermaid_with_branches_assumptions_and_stale_class` — using Task 2's fixture plus one node with `status: stale` and one `load_bearing: false` input: after `render`, `views/dag.md` exists, begins with the generated-marker comment, its mermaid block names every node id and the assumption id, contains a `subgraph b1` line, one `-.->` edge, `classDef stale`, and the stale node's id in a `class ... stale` line; running `render` twice yields byte-identical files — fails because `render` is not a recognised subcommand.
+  - **RED**: `test_dag.py::test_render_writes_full_dag_mermaid_with_branches_assumptions_and_stale_class` — fails because `render` is not a recognised subcommand.
+    - using Task 2's fixture plus one node with `status: stale` and one `load_bearing: false` input: after `render`, `views/dag.md` exists, begins with the generated-marker comment, its mermaid block names every node id and the assumption id,
+    - contains a `subgraph b1` line, one `-.->` edge, `classDef stale`, and the stale node's id in a `class ... stale` line;
+    - running `render` twice yields byte-identical files.
   - **GREEN**: the test passes.
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
@@ -295,7 +378,14 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 14 — 搬家：腳本移到 plugin 層＋三個 skill 骨架（B 拆法）
 
-- **Description**: Restructure the plugin for the router + verb-skill layout (user decision 2026-08-18, option B). (1) `git mv think-orbit/skills/think-orbit/scripts/*.py think-orbit/scripts/` (dag.py, test_dag.py, test_plugin_manifest.py, test_ci_workflow.py) — plugin-level scripts shared by all skills; fix `REPO_ROOT`/path constants in the tests (depth changes) and any path in test_ci_workflow.py; (2) `git mv think-orbit/skills/think-orbit/references think-orbit/skills/decision-session/references` and `git mv think-orbit/skills/think-orbit/SKILL.md think-orbit/skills/decision-session/SKILL.md` (stub stays a stub: frontmatter `name: decision-session` + one-paragraph body "Part 1 draft — protocol lands in T11"); remove the now-empty `skills/think-orbit/`; (3) create stub `think-orbit/skills/using-think-orbit/SKILL.md` (frontmatter `name: using-think-orbit`, description = plugin entry/router; body "stub — Task 15") and stub `think-orbit/skills/break-assumption/SKILL.md` (frontmatter `name: break-assumption`; body "stub — Task 16"); (4) update `.github/workflows/think-orbit-ci.yml`: pytest over `think-orbit/scripts/`, structure hook run for each of the three skills; update `test_ci_workflow.py` assertions accordingly; (5) update `plugin.json` description if it names a single skill, keep marketplace byte-identical (re-run description sync), re-sync the Codex mirror; README one-line usage now names `using-think-orbit`. Write the test first (adjust `test_plugin_manifest.py` to assert the three SKILL.md files exist and `think-orbit/scripts/dag.py` exists — RED before the move).
+- **Description**: Restructure the plugin for the router + verb-skill layout (user decision 2026-08-18, option B).
+  - (1) `git mv think-orbit/skills/think-orbit/scripts/*.py think-orbit/scripts/` (dag.py, test_dag.py, test_plugin_manifest.py, test_ci_workflow.py) — plugin-level scripts shared by all skills; fix `REPO_ROOT`/path constants in the tests (depth changes) and any path in test_ci_workflow.py;
+  - (2) `git mv think-orbit/skills/think-orbit/references think-orbit/skills/decision-session/references` and `git mv think-orbit/skills/think-orbit/SKILL.md think-orbit/skills/decision-session/SKILL.md`
+    - (stub stays a stub: frontmatter `name: decision-session` + one-paragraph body "Part 1 draft — protocol lands in T11"); remove the now-empty `skills/think-orbit/`;
+  - (3) create stub `think-orbit/skills/using-think-orbit/SKILL.md` (frontmatter `name: using-think-orbit`, description = plugin entry/router; body "stub — Task 15") and stub `think-orbit/skills/break-assumption/SKILL.md` (frontmatter `name: break-assumption`; body "stub — Task 16");
+  - (4) update `.github/workflows/think-orbit-ci.yml`: pytest over `think-orbit/scripts/`, structure hook run for each of the three skills; update `test_ci_workflow.py` assertions accordingly;
+  - (5) update `plugin.json` description if it names a single skill, keep marketplace byte-identical (re-run description sync), re-sync the Codex mirror; README one-line usage now names `using-think-orbit`.
+  - Write the test first (adjust `test_plugin_manifest.py` to assert the three SKILL.md files exist and `think-orbit/scripts/dag.py` exists — RED before the move).
 - **Module**: think-orbit (plugin root)
 - **Files touched**: think-orbit/scripts/dag.py, think-orbit/scripts/test_dag.py, think-orbit/scripts/test_plugin_manifest.py, think-orbit/scripts/test_ci_workflow.py, think-orbit/skills/decision-session/SKILL.md, think-orbit/skills/decision-session/references/node-schema.md, think-orbit/skills/decision-session/references/research-rules.md, think-orbit/skills/decision-session/references/blind-spot-checklist.md, NEW: think-orbit/skills/using-think-orbit/SKILL.md, NEW: think-orbit/skills/break-assumption/SKILL.md, .github/workflows/think-orbit-ci.yml, think-orbit/.claude-plugin/plugin.json, think-orbit/.codex-plugin/plugin.json, .claude-plugin/marketplace.json, think-orbit/README.md, think-orbit/README.ja.md, think-orbit/README.zh-TW.md, think-orbit/CHANGELOG.md
 - **Context paths**:
@@ -304,8 +394,10 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/CLAUDE.md (skill folder rules)
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/scripts/check-plugin-description-skill-coherence.py
 - **Acceptance**:
-  - **RED**: `think-orbit/scripts/test_plugin_manifest.py::test_layout_is_router_plus_verb_skills` — asserts `think-orbit/scripts/dag.py` exists, the three `skills/{using-think-orbit,decision-session,break-assumption}/SKILL.md` exist with matching frontmatter `name`, `skills/think-orbit/` does not exist, and `decision-session/references/node-schema.md` exists — fails before the move.
-  - **GREEN**: the test passes; `python3 -m pytest think-orbit/scripts/ -q` passes; the structure hook exits 0 for all three SKILL.md; `python3 scripts/check-marketplace-description-sync.py`, `python3 scripts/sync_codex_manifests.py --check think-orbit`, `python3 scripts/check-plugin-description-skill-coherence.py` all exit 0.
+  - **RED**: `think-orbit/scripts/test_plugin_manifest.py::test_layout_is_router_plus_verb_skills` — fails before the move.
+    - asserts `think-orbit/scripts/dag.py` exists, the three `skills/{using-think-orbit,decision-session,break-assumption}/SKILL.md` exist with matching frontmatter `name`, `skills/think-orbit/` does not exist, and `decision-session/references/node-schema.md` exists.
+  - **GREEN**: the test passes; `python3 -m pytest think-orbit/scripts/ -q` passes; the structure hook exits 0 for all three SKILL.md;
+    - `python3 scripts/check-marketplace-description-sync.py`, `python3 scripts/sync_codex_manifests.py --check think-orbit`, `python3 scripts/check-plugin-description-skill-coherence.py` all exit 0.
 - **Dependencies**: Task 13 completes first
 - **Independent**: false
 - **Brief item covered**: BI-8 — Plugin scaffold（B 拆法下的骨架重整；CI lane 路徑更新）
@@ -314,7 +406,14 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 15 — using-think-orbit SKILL.md：入口路由＋intake＋續談開場
 
-- **Description**: Write `think-orbit/skills/using-think-orbit/SKILL.md` (stub from Task 14): the plugin's entry/router (body ≤2,500 words). Content: what think-orbit is (one paragraph, plain language: your discussion becomes a transparent chain of thought — one file per node, a regenerated DAG view); intake once per project (ask for the project dir; sources are local paths — external services via MCP, not this plugin); state detection (`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py check <root>` and, when `research/` exists, `claims --since HEAD`); resume opening line (restate the last DECISION + open assumptions, list changed claims); routing table: new/continue a decision → `decision-session`; user says an assumption broke / situation changed → `break-assumption`; views/compile → "Part 2, not yet"; the agent must not read `views/` files; the "three interrupt points" rule stated once here as the family contract. Frontmatter description triggers on 「我要決定」/「決策推演」/「用 think-orbit」/ "help me decide" / "think-orbit". Write the test first.
+- **Description**: Write `think-orbit/skills/using-think-orbit/SKILL.md` (stub from Task 14): the plugin's entry/router (body ≤2,500 words).
+  - Content: what think-orbit is (one paragraph, plain language: your discussion becomes a transparent chain of thought — one file per node, a regenerated DAG view);
+  - intake once per project (ask for the project dir; sources are local paths — external services via MCP, not this plugin);
+  - state detection (`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py check <root>` and, when `research/` exists, `claims --since HEAD`);
+  - resume opening line (restate the last DECISION + open assumptions, list changed claims);
+  - routing table: new/continue a decision → `decision-session`; user says an assumption broke / situation changed → `break-assumption`; views/compile → "Part 2, not yet";
+  - the agent must not read `views/` files; the "three interrupt points" rule stated once here as the family contract.
+  - Frontmatter description triggers on 「我要決定」/「決策推演」/「用 think-orbit」/ "help me decide" / "think-orbit". Write the test first.
 - **Module**: think-orbit/skills/using-think-orbit/SKILL.md
 - **Files touched**: think-orbit/skills/using-think-orbit/SKILL.md, think-orbit/scripts/test_skill_md.py
 - **Context paths**:
@@ -332,14 +431,21 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 
 ## Task 16 — break-assumption SKILL.md：假設破裂流程
 
-- **Description**: Write `think-orbit/skills/break-assumption/SKILL.md` (stub from Task 14; body ≤2,000 words): the agent may only raise its hand ("this sounds like `<assumption-id>` may have broken — do you declare it broken?"); the user declares; then run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py break <root> <assumption-id>` (rewrites `status`, marks the load-bearing chain stale, prints `stale:`/`weakened:`, writes `views/impact-<id>.md`); offer exactly two follow-ups: "direct dependents only" (list from stdout) vs "full impact" (tell the user to open the impact view — the agent does not read it); nothing is recomputed — the user decides what to re-examine; then hand back to `decision-session` if they want to continue. Point at `${CLAUDE_PLUGIN_ROOT}/skills/decision-session/references/node-schema.md` §assumptions. Frontmatter description triggers on 「假設破了」/「情況變了」/「前提不成立了」/ "assumption broke" / "situation changed". Write the test first.
+- **Description**: Write `think-orbit/skills/break-assumption/SKILL.md` (stub from Task 14; body ≤2,000 words):
+  - the agent may only raise its hand ("this sounds like `<assumption-id>` may have broken — do you declare it broken?"); the user declares;
+  - then run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/dag.py break <root> <assumption-id>` (rewrites `status`, marks the load-bearing chain stale, prints `stale:`/`weakened:`, writes `views/impact-<id>.md`);
+  - offer exactly two follow-ups: "direct dependents only" (list from stdout) vs "full impact" (tell the user to open the impact view — the agent does not read it);
+  - nothing is recomputed — the user decides what to re-examine; then hand back to `decision-session` if they want to continue.
+  - Point at `${CLAUDE_PLUGIN_ROOT}/skills/decision-session/references/node-schema.md` §assumptions.
+  - Frontmatter description triggers on 「假設破了」/「情況變了」/「前提不成立了」/ "assumption broke" / "situation changed". Write the test first.
 - **Module**: think-orbit/skills/break-assumption/SKILL.md
 - **Files touched**: think-orbit/skills/break-assumption/SKILL.md, think-orbit/scripts/test_skill_md.py
 - **Context paths**:
   - /Users/kouko/kouko-obsidian-vault/research/2026-08-18 決策推演 plugin v0 設計定案.md §假設機制 (六條規則)
   - /Users/kouko/.supacode/repos/monkey-skills/strage-dag-skill/docs/loom/specs/2026-08-18-think-orbit-plugin-part-1.md (BI-5, BI-6)
 - **Acceptance**:
-  - **RED**: `think-orbit/scripts/test_skill_md.py::test_break_assumption_skill_names_break_verb_and_two_followups` — asserts the SKILL.md contains `dag.py break`, `impact-`, both follow-up phrases ("direct dependents" and "full impact"), a "does not recompute" sentence, and body ≤2,000 words — fails on the stub.
+  - **RED**: `think-orbit/scripts/test_skill_md.py::test_break_assumption_skill_names_break_verb_and_two_followups` — fails on the stub.
+    - asserts the SKILL.md contains `dag.py break`, `impact-`, both follow-up phrases ("direct dependents" and "full impact"), a "does not recompute" sentence, and body ≤2,000 words.
   - **GREEN**: the test passes; structure hook exits 0; `python3 scripts/check-plugin-description-skill-coherence.py` exits 0.
 - **Dependencies**: Tasks 10, 14 complete first
 - **Independent**: false
