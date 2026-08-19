@@ -186,7 +186,7 @@ inputs:
   - {ref: q4_goal, load_bearing: true}
   - {ref: churn_fact, load_bearing: false}
 ---
-Why this follows from the goal and the churn figure. Second sentence.
+This stands on q4_goal directly: it is the target the referral motion must clear. The churn figure adds context but is not load-bearing here.
 ```
 
 Assumption — `assumptions/customers_will_refer.md`:

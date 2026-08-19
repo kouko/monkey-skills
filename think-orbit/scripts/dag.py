@@ -296,6 +296,84 @@ def _rule_fact_source(project: Project) -> list[str]:
     return violations
 
 
+def _id_named_in(ref: str, body: str) -> bool:
+    """True when `ref` appears in `body` as a whole id, not as a substring
+    of a longer id (`fact1` inside `fact10`) or a longer word (`goal` inside
+    `goals` or `goal-v2`).
+
+    Deliberately NOT `\\bref\\b`: Python's `\\b` is defined by `\\w`, and in
+    Unicode mode CJK characters count as `\\w` -- so there is no boundary
+    between an id and an immediately-following CJK character (`fact1的`),
+    and `\\b` silently fails to match exactly the bodies this feature exists
+    for (this project's real prose is CJK with no inter-word spaces). The
+    lookaround below is ASCII-only on both sides, so it draws a boundary
+    against `[A-Za-z0-9_-]` neighbours -- catching `fact10`, `goals`, and
+    `goal-v2` (the hyphen is excluded so a short id does not match inside
+    a kebab-case sibling id or an ordinary hyphenated compound) -- while
+    still matching an id directly against a CJK neighbour.
+
+    `.` is deliberately LEFT OUT of the excluded class, and that is an
+    accepted residual risk, not an oversight: excluding it would also
+    block the far more common case of an id sitting at the end of an
+    ordinary English sentence (`... rests on fact1.`), to guard against
+    the much rarer dot-versioned-sibling id (`fact1.1`). A future reader
+    "completing" this class by adding `.` would silently reintroduce that
+    false negative -- don't.
+    """
+    pattern = re.compile(r"(?<![A-Za-z0-9_-])" + re.escape(ref) + r"(?![A-Za-z0-9_-])")
+    return pattern.search(body) is not None
+
+
+def _rule_input_narration(project: Project) -> list[str]:
+    """A node's body must name the `id` of at least one load-bearing input.
+
+    Violates when the body names NO load-bearing input's `id` -- naming even
+    one is enough, whole-id containment only (see `_id_named_in`), verifying
+    that the id was NAMED, never whether the surrounding sentence explains
+    anything. When a node's inputs carry no load-bearing entry at all, it
+    must instead name at least one of its non-load-bearing inputs --
+    otherwise a node with only non-load-bearing inputs could never satisfy
+    the check no matter what its author writes. A node with empty/absent
+    `inputs` is never flagged: it has no upstream to name, mirroring the
+    `origin == "research"` carve-out in `_rule_fact_source` rather than
+    inventing a second exemption mechanism. An input entry with no `ref` is
+    skipped -- that is `_rule_ref`'s violation to report, not this rule's.
+
+    A lexical-overlap arm (matching the *topic* of an input's `summary`
+    rather than its id) was tried and measured against the real project and
+    dropped: it passed 10/10 nodes including ones that never refer to any of
+    their inputs, because nodes on one reasoning chain are always about the
+    same topic -- topic overlap cannot distinguish "narrates its upstream"
+    from "is about the same subject". An id arm requiring EVERY load-bearing
+    input to be named was also measured and rejected: it passed only 1/10,
+    stricter than the corpus's own best human-authored nodes -- both
+    DECISION nodes the human checkpoint had identified as genuinely
+    narrating carry several load-bearing inputs and name only some of them.
+    Requiring only that AT LEAST ONE load-bearing input (or, absent any,
+    at least one input at all) be named gives 2/10, exactly those two
+    nodes -- the only threshold measured to reproduce the human reading,
+    and it is deterministic and language-independent besides.
+    """
+    violations = []
+    for node in project.nodes:
+        if not node.inputs:
+            continue
+        refs = [entry.ref for entry in node.inputs if entry.ref]
+        if not refs:
+            continue
+        body = node.body
+        load_bearing_refs = [
+            entry.ref for entry in node.inputs if entry.ref and entry.load_bearing
+        ]
+        candidates = load_bearing_refs if load_bearing_refs else refs
+        if not any(_id_named_in(ref, body) for ref in candidates):
+            relpath = _relpath(node.path, project.root)
+            violations.append(
+                f"{relpath}: input-narration: body names none of its inputs {sorted(candidates)}"
+            )
+    return violations
+
+
 def _rule_required_field(project: Project) -> list[str]:
     violations = []
     for node in project.nodes:
@@ -570,6 +648,7 @@ _CHECK_RULES = (
     _rule_load_bearing,
     _rule_ref,
     _rule_fact_source,
+    _rule_input_narration,
     _rule_required_field,
     _rule_node_status,
     _rule_assumption_field,
