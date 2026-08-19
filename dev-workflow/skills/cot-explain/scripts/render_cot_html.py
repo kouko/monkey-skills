@@ -130,8 +130,20 @@ MERMAID_CDN = """<script type="module">
   // layout depended on that, so the page silently required the anomaly and
   // every other renderer showed a collapsed diagram. The layout no longer
   // depends on it (rows are joined subgraph-to-subgraph), so pinning to
-  // the outlier is now a liability rather than a crutch: it would be the
-  // ONE version where a regression in the row-joining rule stays invisible.
+  // the outlier is now a liability rather than a crutch: the 11.16.x line
+  // (11.16.0 and 11.16.1) is where a regression in the row-joining rule
+  // would stay invisible, because it is the only line that tolerates the
+  // broken form.
+  //
+  // Grounded, not asserted. The behaviour split was measured by rendering
+  // both cross-row forms on each line and comparing node coordinates and
+  // PNG bytes; the table and the method are in
+  // references/mermaid-cot-spec.md's appendix, and the narrative is in
+  // references/why-these-rules.md. "Latest" claims came from
+  // `npm view mermaid version` / `npm view @mermaid-js/mermaid-cli version`
+  // on 2026-08-19. Re-probe before moving this pin: an inherited fact about
+  // an external tool is a claim with a version attached, which is the
+  // mistake that produced the pin being replaced here.
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.17.0/dist/mermaid.esm.min.mjs';
   // 'antiscript', not 'loose': node labels are raw HTML by design (the
   // left-align <div>), so 'strict' would render them as literal text.

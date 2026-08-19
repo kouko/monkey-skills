@@ -864,6 +864,25 @@ def test_a_single_row_diagram_needs_no_row_edge(tmp_path):
     assert r.returncode == 0, r.stdout
 
 
+def test_the_page_does_not_load_the_anomalous_mermaid(tmp_path):
+    """The pin's intent, which lived only in a comment.
+
+    11.16.0 and 11.16.1 are the one line that honours a subgraph
+    `direction` even when a node edge leaves the subgraph — so they are
+    the only versions on which a regression in the row-joining rule would
+    still look correct. This pins the forbidden RANGE rather than the
+    current number, so it survives a future bump and fails one that lands
+    back inside the window.
+    """
+    md = make_md(tmp_path)
+    run(RENDER, md)
+    html = md.with_suffix(".html").read_text(encoding="utf-8")
+    assert "mermaid@11.16." not in html, (
+        "the page loads the one mermaid line that hides a row-joining regression"
+    )
+    assert re.search(r"mermaid@\d+\.\d+\.\d+/", html), "the CDN pin is not exact"
+
+
 def test_render_verdict_claims_only_full_coverage():
     """Both of these survived a mutation battery while inline in main().
 

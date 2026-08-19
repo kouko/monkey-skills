@@ -16,8 +16,9 @@ in Obsidian and the VS Code preview.
 
 2.27.0 removed the dependency — rows are joined subgraph-to-subgraph, which
 renders identically on every version tested. So the pin has inverted from
-crutch to liability: 11.16.0 is now the **one** version where a regression in
-the row-joining rule would stay invisible. Pinned to 11.17.0, which has
+crutch to liability: the **11.16.x line** — both 11.16.0 and 11.16.1 — is
+where a regression in the row-joining rule would stay invisible, because it
+is the only line that tolerates the broken form. Pinned to 11.17.0, which has
 mermaid's documented behaviour.
 
 `MERMAID_VER` (mermaid-cli, used by `--render`) stays at 11.16.0 — it is the
