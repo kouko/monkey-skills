@@ -679,3 +679,37 @@ def test_no_declaration_at_all_message_unchanged():
     assert len(problems) == 1
     assert "no narrative declaration" in problems[0]
     assert "immediately below" not in problems[0]
+
+
+# --- revision round 1, fix 4: fence-adjacent gap check must not merge
+# two independent paragraphs into one block --------------------------
+#
+# Reproduces the spec-reviewer's finding: without the gap check, a
+# paragraph immediately above a fence and a paragraph immediately
+# below it (no blank line separating either from the fence) collapse
+# into a single block and get measured/declaration-checked together.
+# Each paragraph here is comfortably under 600 chars on its own but
+# their concatenation exceeds it, so a merge is visible as a spurious
+# violation rather than an incidental count difference.
+
+
+def test_lf_paragraphs_around_fence_are_not_merged():
+    text = (
+        "## Decision\n\n"
+        + ("a" * 400)
+        + "\n```\nfence content\n```\n"
+        + ("b" * 400)
+        + "\n"
+    )
+    assert check_brief_paragraphs(text) == []
+
+
+def test_crlf_paragraphs_around_fence_are_not_merged():
+    text = (
+        "## Decision\r\n\r\n"
+        + ("a" * 400)
+        + "\r\n```\r\nfence content\r\n```\r\n"
+        + ("b" * 400)
+        + "\r\n"
+    )
+    assert check_brief_paragraphs(text) == []
