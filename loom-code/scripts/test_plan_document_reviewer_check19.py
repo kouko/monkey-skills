@@ -94,3 +94,30 @@ def test_check19_row_present_and_ranges_updated():
     assert _range_list_covers(_needs_revision_range_text(needs_revision_line), 19), (
         "verdict mapping's NEEDS_REVISION range must cover check 19"
     )
+
+
+def test_check19_version_tag_matches_shipping_version():
+    """Check 19's leading `(vX.Y.Z+)` tag must name the version this
+    arc actually ships under.
+
+    Pinned against the literal target ("0.89.0"), NOT against
+    `loom-code/.claude-plugin/plugin.json`'s current value: this
+    plan's own release task (Task 12 of
+    `docs/loom/plans/2026-08-19-field-value-microstructure.md`) is
+    the one that bumps plugin.json 0.88.0 -> 0.89.0, and Task 12 has
+    not run yet as of this task. Comparing live against plugin.json
+    would make this assertion fail until Task 12 lands (this task
+    must not front-run that bump), so the target is hardcoded to the
+    version the plan declares Task 12 will produce. Task 12 (or a
+    future revision) must update this literal alongside plugin.json
+    if the shipping version ever changes again.
+    """
+    text = _text()
+    row = _check19_row(text)
+
+    match = re.search(r"\(v(\d+\.\d+\.\d+)\+\)", row)
+    assert match is not None, "Check 19 row must open with a `(vX.Y.Z+)` version tag"
+    assert match.group(1) == "0.89.0", (
+        f"Check 19 version tag is v{match.group(1)}+, expected v0.89.0+ "
+        "(the version Task 12 of the field-value-microstructure plan ships)"
+    )
