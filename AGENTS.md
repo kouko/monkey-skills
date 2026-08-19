@@ -96,12 +96,16 @@ Role boundaries enforced by behavior, not reading restrictions:
 - **Check a plan's `Description`/`RED`/`GREEN` field microstructure**
   (writing-plans self-check):
   `python3 loom-code/scripts/check_field_microstructure.py <plan-path>`
-  — walks every `## Task <N> —` block; a `Description`, `RED` or
-  `GREEN` first line violates past 300 characters — one cap, the same
-  for all three fields, with no sentence counting and no per-field
-  branch; any field's indented continuation line that is neither a
-  nested bullet nor a markdown table row also violates. rc=1 with every
-  violation named on stderr, rc=0 when the plan is clean.
+  — walks every `## Task <N> —` block; in a `Description`, `RED` or
+  `GREEN`, no prose unit may exceed 300 characters — a unit being the
+  field's own first line, or one nested bullet's text folded across
+  however many physical lines it wraps to. One cap, the same for all
+  three fields and both unit kinds, with no sentence counting and no
+  per-field branch. An indented continuation line that is none of
+  (nested bullet / markdown table row / a wrapped continuation of the
+  nested bullet above it) also violates; a table row ends the preceding
+  bullet's wrap window. rc=1 with every violation named on stderr,
+  rc=0 when the plan is clean.
   Sentence counting was tried twice and abandoned: counting occurrences
   of `.`/`?`/`!` false-positives on `0.89.0`, `e.g.`, `i.e.` and
   ellipsis, and the boundary heuristic that replaced it false-negatives
