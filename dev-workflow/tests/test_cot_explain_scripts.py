@@ -43,6 +43,7 @@ E. The second review round — two reviewers, run against the fixes for A-D
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -688,8 +689,17 @@ def test_stamping_writes_no_bytecode_into_the_skill(tmp_path):
     if cache.exists():
         cache.rmdir()
     md = make_md(tmp_path)
-    run(RENDER, md)
-    run(VERIFY, "--stamp", md.with_suffix(".html"))
+    # Spawn with PYTHONDONTWRITEBYTECODE stripped. CI sets it for the whole
+    # job, and the local run instructions set it too — so with it inherited
+    # this test passes because of the ENVIRONMENT and not because of the
+    # guard, and deleting the guard leaves it green. A check that cannot
+    # fail reads as coverage.
+    env = {k: v for k, v in os.environ.items() if k != "PYTHONDONTWRITEBYTECODE"}
+    for script, *args in ((RENDER, md), (VERIFY, "--stamp", md.with_suffix(".html"))):
+        subprocess.run(
+            [sys.executable, str(script), *map(str, args)],
+            capture_output=True, text=True, env=env,
+        )
     assert not cache.exists(), f"{cache} was created by a --stamp run"
 
 
