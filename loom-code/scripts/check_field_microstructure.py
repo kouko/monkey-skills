@@ -72,6 +72,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from adjudication_split import iter_lines_outside_fences, split_document  # noqa: E402
 from plan_card import _bullet_lines, _header_value, _task_blocks  # noqa: E402
 
+# Exit code for a structurally empty input — see docs/loom/memory/
+# a-mechanical-check-can-go-green-by-skipping.md: a check that can
+# only find a match or find nothing looks identical to a check that
+# never had anything to find. Zero '## Task' blocks (plan mode) or
+# zero '## ' sections (--brief mode) means every check below iterates
+# an empty sequence and returns [] — a clean exit 0 indistinguishable
+# from "nothing violated". Reporting that as exit 2, distinct from
+# both exit 0 (clean) and exit 1 (violation found), makes the
+# distinction visible to the caller instead of silently agreeing.
+_EXIT_STRUCTURALLY_EMPTY = 2
+
 _NESTED_BULLET_LINE = re.compile(r"^\s+[-*+]\s")
 _TABLE_LINE = re.compile(r"^\s*\|")
 
@@ -416,6 +427,14 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Error: brief file not found at {brief_path}.", file=sys.stderr)
             return 1
         text = brief_path.read_text(encoding="utf-8")
+        if not split_document(text):
+            print(
+                f"Error: {brief_path} has no '## ' sections — nothing "
+                "for the paragraph-length check to scan. This is "
+                "reported as an input error, not a clean pass.",
+                file=sys.stderr,
+            )
+            return _EXIT_STRUCTURALLY_EMPTY
         problems = check_brief_paragraphs(text)
         for problem in problems:
             print(problem, file=sys.stderr)
@@ -432,6 +451,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: plan file not found at {plan_path}.", file=sys.stderr)
         return 1
     text = plan_path.read_text(encoding="utf-8")
+    if not _task_blocks(text):
+        print(
+            f"Error: {plan_path} has no '## Task' headings — nothing "
+            "for the field-microstructure check to scan. This is "
+            "reported as an input error, not a clean pass.",
+            file=sys.stderr,
+        )
+        return _EXIT_STRUCTURALLY_EMPTY
 
     problems = check_plan_fields(text) + check_goal(text)
     for problem in problems:
