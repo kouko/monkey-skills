@@ -284,7 +284,20 @@ PER_BULLET_NO_EXEMPTION_TOKENS = {
     "README.ja.md": "箇条書きごとの例外はない",
     "README.zh-TW.md": "沒有逐項豁免",
 }
-GOAL_CEILING_TOKEN = "Goal:"
+# GOAL_CEILING_TOKENS mirrors PER_BULLET_NO_EXEMPTION_TOKENS's shape: each
+# span asserts the RELATIONSHIP (Goal: shares the ceiling) rather than the
+# bare field name `Goal:`. A bare-name pin is satisfied by any sentence that
+# merely mentions the field, including one asserting the opposite ("Goal: is
+# NOT bound by any ceiling") -- proven by a round-2 spec-review mutation that
+# passed both assertions unchanged. These spans are contiguous substrings
+# walking from the field name through the shared-ceiling verb, so
+# reversing the proposition (negating "shares"/"binds") breaks the span even
+# though "Goal:" itself survives.
+GOAL_CEILING_TOKENS = {
+    "README.md": "Goal:` line shares this same 300-character ceiling",
+    "README.ja.md": "Goal:` 行も同じ300文字上限を共有する",
+    "README.zh-TW.md": "Goal:` 那一行也共用這同一個 300 字元上限",
+}
 
 
 def test_all_three_readmes_state_positional_rule():
@@ -330,8 +343,9 @@ def test_readmes_state_per_bullet_ceiling_and_goal_ceiling():
             "300-character ceiling binds each nested bullet's own folded "
             f"text -- missing {per_bullet_token!r}"
         )
-        assert GOAL_CEILING_TOKEN in section, (
-            f"{name}: field-list section does not mention the plan "
-            f"header's {GOAL_CEILING_TOKEN!r} line at all -- it must "
-            "state that Goal: shares the same 300-character ceiling"
+        goal_token = GOAL_CEILING_TOKENS[name]
+        assert goal_token in section, (
+            f"{name}: field-list section does not state that the plan "
+            f"header's `Goal:` line shares the ceiling -- missing "
+            f"{goal_token!r}"
         )
