@@ -200,7 +200,7 @@ adjudication view today reproduces the original bug. At least two of the three
 staleness classes therefore exist under Codex. What remains un-probed is
 whether an executor under Codex resolves the self-locating rule correctly, NOT
 whether Codex can go stale; the backlog entry carries that scope.
-<!-- narrative: retraction of the git-clone claim is only actionable once the live cache check confirms which staleness classes survive under Codex, and that finding in turn sets the exact boundary of what stays unknown — each sentence is the premise for the next, not a coordinate fact -->
+<!-- narrative: the live cache finding is what licenses the "at least two of three classes" conclusion, and that conclusion is what fixes the boundary of what stays unknown — drop either and the next sentence asserts more than its evidence carries. The retraction ahead of them stands on its own documentary evidence and leads into them; split apart, the four read as coordinate facts and the reader re-derives which one bounds which -->
 
 We will NOT touch the plugin cache and will NOT add a second script: both trade
 the problem for device hygiene the repo cannot enforce. We will NOT move these
