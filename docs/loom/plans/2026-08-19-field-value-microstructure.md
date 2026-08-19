@@ -81,14 +81,14 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(e43e973e)
 - **Gloss**: 新檢查器認得「Description 首行一句、RED／GREEN 一句斷言加一句可選的失敗理由、其餘進 bullet 或表格」，並抓出違規的寫法
 
 ## Task 2 — 檢查器：header `Goal:` 規則
 
 - **Description**: Add `check_goal(text) -> list[str]` to `check_field_microstructure.py`, registered in the same CLI run as T1's check.
-  - `Goal:` violates when its value carries more than one sentence-terminal mark, when its joined value exceeds 300 characters, or when any of its continuation lines is a bullet or a table line.
-  - The 300-character ceiling and the no-nested-body rule are separate violations with separate messages, because the brief records the ceiling as the falsifiable half and the structural rule as the load-bearing half.
+  - `Goal:` violates when its joined value exceeds 300 characters, or when any of its continuation lines is a bullet or a table line. Do not count sentences — BI-1 abandoned that after two rounds proved regex cannot do it, and the `Goal:` check must not re-derive the same failures.
+  - The ceiling and the no-nested-body rule are separate violations with separate messages, because the brief records the ceiling as the falsifiable half and the structural rule as the load-bearing half.
   - Read the header region with `plan_card._header_value`'s own fold rule so the checker and the card agree on what the value is.
 - **Module**: loom-code/scripts
 - **Files touched**: loom-code/scripts/check_field_microstructure.py, loom-code/scripts/test_check_field_microstructure.py
@@ -106,7 +106,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-2
-- **Status**: pending
+- **Status**: done(aae81fb7)
 - **Gloss**: `Goal:` 只准一句話、不准掛 bullet——因為 plan_card 會把縮排內容折進卡片那一行，錯的值會直接送到使用者眼前
 
 ## Task 3 — 檢查器：brief 長段落規則
@@ -188,6 +188,9 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Acceptance**:
   - **RED**: `loom-code/scripts/test_plan_card.py::test_detail_preserves_acceptance_table_rows` — `build_detail` on a task whose Acceptance body is a three-row markdown table emits all three rows. Fails today because the rows match neither branch at `plan_card.py:426-436` and are silently dropped.
   - **GREEN**: the test passes; every pre-existing test in `test_plan_card.py` still passes.
+    - A table row arriving AFTER a nested bullet has opened is also emitted verbatim, not space-joined into that bullet's prose — the same corruption reached through the `elif items:` branch instead of the missing `else`.
+    - The Description loop's mirror-image gap is closed the same way, so both loops treat a table row identically.
+    - `plan_card.py` has no remaining input shape where a line reaching either loop is folded into prose that destroys its pipe structure.
 - **Dependencies**: Task 5 completes first
 - **Independent**: false
 - **Brief item covered**: BI-5
@@ -215,7 +218,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-7, BI-8
-- **Status**: pending
+- **Status**: done(bab64113)
 - **Gloss**: plan 的欄位文法 SSOT 從「寫成一個 assertion」（要判斷）改成「首行限句數、其餘進 bullet」（查得到），RED／GREEN 保留既有的失敗理由句
 
 ## Task 8 — `handoff-brief-format.md`：段落規則與敘事宣告語法
@@ -311,6 +314,10 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Description**: Bump `loom-code/plugin.json` to 0.89.0, add the CHANGELOG entry, and sync the Codex manifest.
   - The CHANGELOG entry names the retired `one-assertion` wording, the new positional rule, the new checker, and the two `plan_card.py` silent-corruption fixes.
   - Run the repo's Codex manifest sync script rather than hand-editing the mirror.
+  - Flip `test_plan_document_reviewer_check19.py`'s version pin from its hardcoded `"0.89.0"` literal to a live comparison against `plugin.json`.
+    - T10 pinned the literal deliberately: a live comparison would have failed while `plugin.json` still read 0.88.0.
+    - It rejected `xfail` as the bridge because that marker cannot separate "the bump has not landed yet" from "someone typed a bogus version".
+    - Once this task lands the bump, that objection is gone and the literal becomes the drift surface.
 - **Module**: loom-code
 - **Files touched**: loom-code/plugin.json, loom-code/CHANGELOG.md, .codex/plugins/loom-code.json
 - **Context paths**:
@@ -406,6 +413,8 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Change-folder binding**: none. The declared input is the brainstorming brief at `docs/loom/specs/2026-08-19-field-value-microstructure.md` (Layer 0, explicit handoff). Two non-archived change-folders exist (`docs/loom/2026-07-12-us-sec-primary-source-layer`, `docs/loom/2026-07-19-8k-prose-kpi-intake`); neither relates to this arc's subject and neither is bound.
 - **"brief" and "spec" are the same artifact here.** loom briefs live at `docs/loom/specs/<date>-<topic>.md`, so the brief's BI-3 wording "a brief or spec paragraph" names one file class, not two. T3 and T8 both target that class. loom-design change-folder `spec.md` files are a different artifact and are out of scope.
 - **The 300-character `Goal:` ceiling is the falsifiable half.** Per the brief's Decision and the Axis-4 research, if a plan-time trial shows the ceiling truncating genuinely atomic goals, drop the ceiling and keep the structural no-nested-body rule.
+Recorded at wave 2 (orchestrator-level, no task's gap): parallel implementers share one working tree AND one git index, and the index is shared state no task declares. Three distinct incidents in one wave, all self-caught: T2's `git add` swept in T9's already-staged files and produced a 6-file commit (recovered via `git reset --soft HEAD^`); T9's README edits were reverted on disk between its `git add` and its commit, surfacing as a modified-since-read error (recovered by re-reading and committing atomically); and a reviewer used `git stash` while three implementers held uncommitted work — no loss only because those two had committed minutes earlier. `Files touched` disjointness governs which FILES a task writes; it says nothing about the index, the stash, or `git reset`, which are process-wide. Two guards follow: the no-stash instruction belongs in reviewer packets too — reviewers mutate the tree harder than implementers, reverting files to verify a RED — and a parallel wave should stage-and-commit in one step rather than leaving files staged across tool calls.
+
 Recorded at review (wave 1, orchestrator-level, not any task's gap): `Files touched` disjointness protects against two tasks WRITING the same file, but not against task A writing a file that task B's test READS. T13 edited `docs/loom/backlog/` and `docs/loom/BACKLOG.md` while T7's suite run had `test_backlog_index.py::test_check_against_real_store_reflects_current_migration_phase` in flight — that test drives a subprocess against those real files, so it saw a torn state and failed once, then passed on rerun. T7's implementer attributed it to test-order flakiness; T7's code-quality reviewer read the test and showed that story is not supported by the code (no shared in-process state exists for ordering to perturb), naming the cross-task race as the credible mechanism. Nothing in this arc is wrong because of it, but a parallel wave whose tasks touch real files read by other tasks' tests can produce failures that look like flakiness and get dismissed as such.
 
 Recorded at review (T7, not a gap): T7's `Files touched` omitted `loom-code/scripts/test_plan_format_progress_fields.py`, whose `GOAL_SCHEMA_LINE` pin necessarily goes red when T7 edits the `Goal:` schema line it pins. The spec-reviewer ruled the edit a legitimate unavoidable consequence rather than scope expansion, but `Files touched` is the disjointness oracle for parallel dispatch — no task collided here by luck, not by design. A pinned-constant test belongs in the `Files touched` of whichever task edits the line it pins.
@@ -434,3 +443,6 @@ Kickoff decision: T14/T15 editing merged historical plans and briefs → proceed
 - 2026-08-19 — The continuation-line rule admits a third shape: a wrapped continuation of the nested bullet above it. The original two-shape rule (nested bullet or table row) rejected ordinary markdown bullet wrapping, which T7's own compliance example tripped — the example demonstrating the rule did not pass the rule. Found by T7's spec-reviewer running the checker against the example's verbatim text rather than accepting the implementer's claim that it complied.
 - 2026-08-19 — The 300 cap governs any prose unit in a field, not only its first line. Capping the first line alone let `- a` plus unlimited indented prose pass clean — reproduced. Rejected the narrower alternative of bounding only bullets that actually wrap: it makes the verdict depend on where the author presses Enter (350 characters on one line legal, the same 350 split across two lines illegal) and therefore rewards not wrapping, which is worse formatting than the rule exists to produce. Measured before choosing: 434 nested bullets across the five current plans run median 123 / p90 331 / max 795, so a 300 cap flags 53 of them (12%) — the same order as the first-line rule's 40%, and the same population T14/T15 reshapes. The orchestrator's own "do not edit the plan" instruction to the implementer was lifted for the five bullets in this plan that exceed the cap; that constraint existed for task-boundary hygiene, not as a principle.
 - 2026-08-19 — Task 1's Acceptance was widened to name the eight tests rounds 3 and 4 added, and its Description now states the table-row reset. Both were spec gaps of one kind: across four amendments the Description grew while the Acceptance gate that binds it stayed frozen at round 2, so the task could have been graded GREEN without exercising any behaviour the Description had come to call load-bearing. Found by the spec-reviewer, which is the arm that owns whether the written spec still means anything independent of the artifact. The lesson generalises past this task: when a spec is amended mid-execution, the acceptance criteria are the half that must move, and they are the half everyone forgets because the description is where the thinking happens.
+- 2026-08-19 — BI-2 dropped "one sentence" from the mechanical `Goal:` check before T2 was dispatched. Sentence counting had already been abandoned under BI-1 after two review rounds; leaving it in BI-2 would have sent T2 to re-derive the same two failures in a second function. Brevity guidance may still say one sentence — the check measures characters and structure only.
+- 2026-08-19 — T6's Acceptance was widened mid-task to cover both branches of both loops. The shipped fix closed only the missing-`else` path (a table row before the first bullet); a table row AFTER a bullet still space-joined into that bullet's prose, and the Description loop carried the mirror-image gap — the same corruption class the task exists to remove, reached by another branch. Reproduced by the code-quality reviewer. The widening stays inside BI-5, which says `plan_card.py` renders a table body "without silently corrupting it" without naming a branch; only the task-level Acceptance was narrower. Recorded because the same lesson has now cost this arc twice: when a reviewer shows the defect class is wider than the task's gate, the gate moves, not the finding.
+- 2026-08-19 — T10 pinned Check 19's version tag against a hardcoded `"0.89.0"` rather than against `plugin.json`, and rejected `xfail` as the bridge because an expected-failure marker cannot separate "Task 12 has not run yet" from "the tag is bogus" — it would mask the exact drift the pin exists to catch. The literal is a stated, temporary limitation, and T12's Description now carries the duty to flip it to a live comparison once the bump lands. Recorded so the residual does not outlive the reason for it.
