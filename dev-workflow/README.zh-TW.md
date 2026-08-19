@@ -32,6 +32,7 @@ plugin 還附帶 `skill-creator-advance`（建立 + 大幅重設計）、`skill-
 | [`git-memory`](skills/git-memory/) | 把決策的 context（不是 diff，而是 **why**）寫進 commit trailer 與 PR 內文，讓未來任何 session — Claude Code、Cursor、Codex、aider 或人類 — 只用 `git log` 就能重建 project knowledge。 |
 | [`brief-before-asking`](skills/brief-before-asking/) | 在 user 面臨複雜 engineering 決策問題前（或反應後）的結構化簡報。3 種模式：Mode A（agent 自覺有複雜 fork 即將要問）、Mode B（user 對問題說「看不懂」）、Mode C（user 對解釋說「跟不上」 — 退回 Mental Model + drill menu）。以 Mental Model First 為最高優先的 6-block 格式。 |
 | [`dogfood-skill-testing`](skills/dogfood-skill-testing/) | 開發中 skill 的 behavioral black-box dogfood — 用 fresh subagent 實測 trigger 與 output 品質，輸出可直接修正的 findings 報告。 |
+| [`cot-explain`](skills/cot-explain/) | 把已經存在的推理——一份文件、一個資料夾、或當前對話——渲染成一份自包含 HTML，主體是 CoT Mermaid 圖：每條邊帶標籤、每個節點三條條列，另附被否決的選項與未驗證的前提。一次性產出器，不持久化狀態。 |
 
 九個 skill 全為 **Active**。lifecycle 狀態與所有權：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
@@ -122,6 +123,7 @@ dev-workflow/
 ├── skills/
 │   ├── brief-before-asking/
 │   ├── complexity-critique/
+│   ├── cot-explain/
 │   ├── dbt-model-style/
 │   ├── distill-sessions/
 │   ├── dogfood-skill-testing/

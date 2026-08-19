@@ -26,7 +26,7 @@
     },
     {
       "name": "dev-workflow",
-      "description": "Developer-workflow skills — git memory, decision briefs, critique, recap, handoff, session distill.",
+      "description": "Developer-workflow skills — git memory, decision briefs, critique, recap, handoff, session distill, CoT explainers.",
       "source": "./dev-workflow/"
     },
     {

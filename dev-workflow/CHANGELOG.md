@@ -4,6 +4,557 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.26.0] — 2026-08-19 — new skill `cot-explain`
+
+### Added — `cot-explain` v0.1.0: reasoning → one shareable HTML page
+
+A one-shot generator. It takes reasoning that already exists — in a file,
+a folder, or the current conversation — and renders it as a single
+self-contained HTML page whose centrepiece is a chain-of-thought Mermaid
+diagram. No persistent state, nothing tracked across sessions.
+
+Page structure: one-line conclusion → CoT diagram → per-node expansion
+(claim / evidence / what this step changed) → rejected options with
+reasons → assumptions and open questions. Empty sections are deleted
+rather than shipped as bare headings.
+
+The diagram follows a strict house convention rather than generic
+Mermaid, documented in `references/mermaid-cot-spec.md` and derived from
+~8,760 vault files that use it:
+
+- `graph LR`; node body is
+  `["<div style='text-align:left'>TITLE<br/>━━━━━━<br/>• B1<br/>• B2<br/>• B3</div>"]`
+- separator is the literal `<br/>━━━━━━<br/>` (six U+2501), **not** `---`
+- **every** edge carries a label — a bare `A --> B` is a defect, and
+  empty connectives (`導致` / `然後` / `所以`) are rejected
+- `-->` derivation, `-.->` background/weak link, `==>` the culminating
+  step into the conclusion
+- inline per-node `style` lines; no `classDef`, no `subgraph`
+- 5–9 nodes: fewer does not earn a diagram, more means multiple arcs
+
+Output landed in the repo at `.claude/cot-explain/` in this first pass;
+later in this same entry it moves to a temp directory and the artifact
+becomes markdown. The local HTML build loads `mermaid.js` from a CDN
+(first open needs network); the Artifact build strips that script block
+and the document skeleton, since Artifacts render `<pre class="mermaid">`
+natively. Publishing is asked for once, never done unprompted — it
+uploads the content.
+
+Boundary against the neighbours, stated in both SKILL.md and the READMEs:
+`think-orbit:thinking-session` is for *doing* the thinking with tracked
+state across sessions; `cot-explain` is for *explaining* thinking that
+already happened. They coexist. `recap-state` re-orients you in chat,
+`handoff` writes for a cold AI reader — neither produces a page for a
+human audience.
+
+Verification is a script, not a checklist. The first draft gated the
+output with four `grep` lines; a cold-reader dogfood run broke all four:
+`grep -c` counts matching *lines* and one template line holds two node
+labels (7 nodes counted as 6); the edge grep was not scoped to the
+mermaid block so the page's own `<!-- ... -->` wrapper added phantom
+edges; the labeled-arrow regex `--[>x]` could not match `==>` at all,
+so an unlabeled culminating edge — the most important edge in the
+diagram — passed silently; and the template's authoring comment
+contained a literal `{{PLACEHOLDER}}`, contradicting the skill's own
+"must be 0" rule. Replaced by `scripts/verify_cot_html.py`, which parses
+the mermaid block after stripping HTML comments and exits 1 with one
+`FAIL:` line per violation. A 16-case mutation suite (unlabeled `==>`,
+five-`━` separator, literal `---`, dropped bullet, `graph TD`, missing
+wrapper, missing/misordered `style`, off-palette fill, empty connective,
+`classDef`, `subgraph`, leftover placeholder, retained template comment)
+kills all 16.
+
+Dogfooding conversation mode on this session's own reasoning found two
+more defects, both now fixed. The default output path
+`.claude/cot-explain/` was not in `.gitignore`, so generated explainers
+would have been committed into whatever repo they were produced in —
+`.claude/handoffs/` was already excluded for the same reason. And the
+gate's placeholder check tested for a bare `{{`, which fails any page
+whose prose *discusses* templating; it now matches the placeholder shape
+`{{UPPER_SNAKE}}` instead. Two regression guards were added to the
+mutation suite for legitimate prose that mentions `{{` or an `-->`
+arrow, bringing it to 16 kills + 2 no-trip cases.
+
+Step 1 also gained the boundary rule the run exposed: in conversation
+mode the chain starts at the request that opened the current piece of
+work, not at the first message of the session, and the author's own
+overturned judgments are nodes rather than omissions.
+
+#### Layout diverges from the vault convention, on measured grounds
+
+The node styling follows the vault. The **layout does not**, and that was
+decided from rendered pixels rather than taste. A reasoning chain is long
+and thin: as the vault's flat `graph LR` it rendered **3061 × 227 px —
+13.5:1**, unusable on a page. Fifteen variants were rendered with
+mermaid-cli and measured by SVG viewBox (`squareness = min/max`, 1.00 = a
+square):
+
+| Layout | Size | Squareness |
+|---|---|---|
+| **`graph TB` + subgraph rows w/ `direction LR`, short bullets** | 1022 × 824 | **0.81** |
+| same, long bullets | 1218 × 824 | 0.68 |
+| `graph LR` outer + subgraph cols w/ `direction TB` | 1107 × 739 | 0.67 |
+| `graph TB` + branching, no subgraph | 421 × 1062 | 0.40 |
+| subgraph rows but no `direction` declared | 272 × 1884 | 0.14 |
+| `graph LR` linear (vault convention) | 3061 × 227 | 0.07 |
+| `graph LR` linear + tightened node/rank spacing | 2956 × 221 | 0.07 |
+
+Three findings now encoded as rules. The **`direction LR` line is what
+does the work, not the subgraph** — rows without it give 0.14, and the
+grouping buys nothing. **Spacing config is a dead end**: `nodeSpacing` /
+`rankSpacing` moved 13.48:1 to 13.39:1. And **bullet length is a layout
+lever**, not a style one — same structure, 0.68 long vs 0.81 short —
+so titles and bullets now cap at 8 CJK-widths, with the full claim,
+evidence and consequence carried by that node's card in the HTML body,
+which has no width limit.
+
+Mermaid can ignore a subgraph's inner `direction` when edges cross the
+subgraph boundary. That was checked from rendered node `translate(x,y)`
+values, not by eye: within each row `y` is constant and `x` increases,
+including on the shipped diagram which carries a cross-row `-.->` edge
+(rows at y=118 with x 123/463/833, 139/519/891, 130/502). If a future
+mermaid regresses this the diagrams collapse to the 0.14 case —
+re-measure before blaming the content.
+
+`subgraph` therefore flipped from **forbidden to required** in both the
+spec and the gate, and `graph TB` replaced `graph LR`. The gate gained
+row-size, row-balance, orphan-node, stranded-node, and width-cap checks;
+the mutation suite grew to 22 kills + 3 no-trip guards, all passing.
+
+#### Bullet count is 3-5, and length limits stopped blocking
+
+Counting the vault rather than trusting the sample that seeded the spec:
+across 238,764 nodes in 7,922 files, 79.24% carry three bullets, 20.28%
+carry two, and 0.48% carry four or more. The original "exactly three"
+was inferred from two examples and would have rejected a fifth of what
+the vault actually does.
+
+Rendering settles the rest. Bullet count changes node height and leaves
+node width byte-identical, and since the figure comes out wider than
+tall, each added bullet moves it *towards* square — 2 → 0.736, 3 → 0.807,
+4 → 0.877, 5 → 0.948, a flat +0.070 per bullet with no flattening, so six
+would overshoot. Hence **3-5, aiming for 4-5**, with an explicit "do not
+pad to hit the count".
+
+The width caps flipped from FAIL to WARN. They were also aimed at the
+wrong thing: node width is set by the **single widest bullet** in the
+diagram, not by every bullet, so the gate now warns once on that one line
+and explains that it sets every column. A hard character cap makes an
+author mangle a sentence to satisfy a number, which is worse than a wide
+box. The gate now reports two levels — `FAIL` breaks the contract or the
+parser and exits 1; `WARN` costs readability or squareness and never
+blocks. The spec/gate mismatch a dogfood run caught (spec said edge
+labels were 4-8 CJK, the code enforced 2-12) is resolved by stating both
+numbers: enforced band 3-10, aim for 4-8.
+
+#### Borrowed from `obsidian:obsidian-mermaid-visualizer`
+
+Two of its design choices proved directly applicable. Its validator
+documents that **mermaid-cli does not signal a syntax error through its
+exit code — it writes an error SVG and exits 0**, so a purely textual
+check can pass a diagram that renders as a red error box. `--render` now
+pushes each diagram through the real parser and reads the SVG. Honest
+limit: four attempts to construct a diagram that passes the text stage
+and fails the parser did not succeed — the quoted-label design makes
+labels hard to break — so `--render` is insurance against a documented
+mermaid behaviour, not a demonstrated catch. Without the flag the output
+reads `PASS (text only …)` so the weaker check is never mistaken for the
+stronger one.
+
+Its quirks list also supplied a real trap: a `number. space` run in node
+text makes mermaid parse a markdown ordered list and die. That is now a
+FAIL, verified by mutation.
+
+#### Width budgets widen for Latin script
+
+A third cold-read dogfood, this one on an **English** source, tripped the
+title warning on all seven nodes and forced a real loss of meaning —
+"Reversal: the Codex-immune claim was false" had to become "Codex claim
+false". The budgets are pixel-width budgets expressed in CJK units, and a
+CJK glyph is about twice a Latin one, so a budget that fits 10 Chinese
+characters fits only ~20 Latin ones. Latin-heavy text (>60% ASCII
+letters/digits) now gets 1.4× the budget. Same source, same page: eight
+warnings became one — the one the cold reader had already decided, on its
+own judgment, to keep.
+
+That run also settled a fork the skill had left open: the template ships
+Chinese section headings and card labels, and Step 4 only said "match the
+source's language for all prose", which does not say whether headings
+count. They do — Step 4 and the template comment now say so and give the
+English wordings.
+
+`--help` printed a traceback instead of the usage text it already had.
+
+One reported defect did **not** survive checking: the run claimed the
+text stage has no rule for an HTML-escaped `&lt;div&gt;` wrapper. It does —
+`FAIL: missing the <div style='text-align:left'> wrapper`, now pinned by
+a mutation case. The claim was an inference the reporter never ran.
+
+Mutation suite: 22 FAIL cases + 4 WARN cases + 6 must-stay-clean guards
++ 3 real generated pages, 35 checks, all correct.
+
+#### Branching DAGs broke the layout rules — investigation record
+
+Every dogfood so far produced a near-linear chain, so branching was
+untested. Four synthetic topologies with identical node content — a
+diamond, two independent tracks, a 3-way fan-out, and two independent
+root premises — exposed two defects and one inversion.
+
+**The fixed 3/3/2 row rule is topology-blind.** It packs nodes by
+reading order and never asks what is parallel to what. Rendered
+coordinates: in the two-tracks case the genuinely parallel pair D/E did
+not share an x, while D accidentally aligned with the unrelated F; in the
+fan-out, only two of the three branches shared a row and the third was
+visually decoupled. The diamond and two-roots cases looked correct only
+because their forks happened to fall inside one declared row — nothing in
+the rule guarantees that.
+
+Re-assigning rows by topological rank fixes the grouping completely
+(all forks' siblings then share both row and x, verified by coordinates)
+but the row-size check rejected all three corrected diagrams: `row sizes
+[1,2,2,3] — for 8 nodes the rows should be [3,3,2]`. The rule was
+actively refusing correct output.
+
+**Squareness and correctness point in opposite directions.** Same
+content, same topology, two layouts: the fixed-row fan-out measures 0.846
+squareness with a broken grouping that hides one of three branches; the
+topology-aligned one measures 0.571 and shows all three. Optimising for
+the number selects the diagram that misrepresents the reasoning. Branched
+diagrams are simply taller — a fork stacks vertically inside a row, so
+height grows with branching no matter how rows are assigned (0.469 fixed,
+0.581 topological, and one case got worse at 0.323 because per-rank rows
+added a fourth row without adding width).
+
+**Root cause, named by the user: the layout rules had begun to drive the
+extraction rather than follow it.** Six rules were dictating content for
+layout reasons — node count 5-9, bullets 3-5 "aiming for 4-5" justified by
+squareness, per-edge label widths, title/bullet width caps, one `==>` per
+diagram, and the row quota. The third dogfood run stated the inversion in
+its own words: it chose 4 bullets rather than 5 "mainly to offset" a
+width warning — deciding how much to extract from the source by looking
+at a layout metric.
+
+The mechanism underneath is sound: zero edge crossings in any of the
+seven branched variants (dagre routes merge edges into separate parallel
+bands), and inner `direction` held in every case including single-node
+rows. What failed was the quota layer added on top.
+
+#### Resolved: branching reasoning is drawn as columns
+
+Inverting the axis settles it. Outer `graph LR`, one vertical
+`direction TB` subgraph per branch, branches side by side: the diamond
+measures **0.938** and the 3-way fan **0.930** — the first branched
+topologies to beat the linear baseline's 0.807, against 0.469 for the
+same content in fixed rows. More importantly the two goals stop
+fighting: the column layouts are simultaneously the squarest *and* the
+ones where parallel branches read as parallel (verified by coordinates —
+each track's nodes share an x and step down in y).
+
+A new mermaid behaviour came out of the w3/w4 comparison and is now a
+gate FAIL: **a subgraph whose members have no edges among themselves
+gets its declared `direction` ignored**, and mermaid lays them out along
+the other axis — three independent branches in one `direction TB` box
+rendered as a horizontal row. A subgraph must hold a connected run.
+
+The spec is now organised by **who owns what**: content (which nodes
+exist, what each claims, what each edge names) always wins; layout is
+derived from the chain's shape, never imposed on it; widths, counts and
+squareness are advisory and never block. The gate follows: the fixed
+`[3,3,2]` row quota is gone, node and bullet counts and label widths
+dropped to `WARN`, and `FAIL` is reserved for mechanical invariants —
+the contract, and what mermaid itself requires.
+
+#### Fidelity: the check no gate can perform, and a card field
+
+A round-trip test on a real English source found the well-formedness
+gate proves nothing about honesty. The reader came away believing the
+fix was to "pin to a specific path" when the source had explicitly
+derived why a fixed path fails (`spec:198-208`) and specified a
+self-locating rule instead, and believing an unscoped leftover-markdown
+check when the source states it must be scoped or it "will condemn every
+correct page" (`spec:128-133`). Both would have produced the rejected
+implementation. The judge's verdict: faithful as an account of *why*,
+unusable as an account of *what to do* — every implementation constraint
+carrying engineering risk had been compressed out.
+
+`SKILL.md` gains **Step 6**, a simulatability-style round-trip (forward
+simulation, Doshi-Velez & Kim 2017; Leakage-Adjusted Simulatability,
+Hase et al. 2020) in three rounds: blind reconstruction from the page
+alone, comparison against the source by an agent that never sees the
+page, and a hallucination pass in the reverse direction — the previous
+design measured only what was lost, never what was invented. The leakage
+caveat is recorded too: a page that restates its conclusion verbatim
+scores well on naive reconstruction without being faithful.
+
+The vocabulary fix is one card field: **`例外／失效條件`** — Toulmin's
+*rebuttal* — present only when the source states one, because an empty
+row asserts "no exceptions apply", which is a claim the source did not
+make. The diagram vocabulary did not change at all.
+
+That restraint is evidence-backed, not taste. Argument mapping's
+demonstrated benefits come from deliberately tiny vocabularies (Rationale
+≈ reason/objection/rebuttal; Kialo = pro/con); Suthers (2003) found extra
+ontological elements made student diagrams worse through incorrect use;
+Buckingham Shum's gIBIS retrospective records cognitive overhead
+appearing as soon as types beyond core IBIS were added. This repo's own
+`think-orbit` arrived independently at one relation plus one boolean, and
+its spec records rejecting auto-invalidating attack edges because
+attack-target agreement across corpora was zero — with a separate
+double-blind experiment finding richer node taxonomies collapse
+inter-annotator agreement.
+
+#### The artifact is markdown; the HTML is derived
+
+The first design had the model hand-fill an HTML template. That put
+markup concerns in front of the author at the moment of extracting
+meaning — the same inversion as the layout rules, one level down. It also
+made every structural addition expensive: a new section meant template
+surgery plus new regexes.
+
+Now `assets/cot-report-template.md` is the artifact and
+`scripts/render_cot_html.py` derives the HTML. The markdown carries
+**Obsidian-compatible frontmatter** following the vault's documented note
+standard (`title` / `type` / `date` / `tags` / `aliases` / `status`) plus
+the keys its own notes carry (`language`, `processed_at`, `timezone`,
+`llm_provider`, `llm_model`), so a page worth keeping moves into a vault
+as-is. Structure follows the vault's note shape too: `###` a page
+section, `####` one arc with one diagram, `#####` one node card — which
+answers the multi-diagram question for free, since the house format
+already puts several CoT diagrams in one note.
+
+Output moved to `${TMPDIR:-/tmp}/cot-explain/`. These pages are read once
+in the ordinary case; the skill now says so and says how to keep one. The
+`.gitignore` entry added for the old in-repo path was removed as dead
+config.
+
+**The converter uses markdown-it-py, not a hand-rolled parser.** A
+hand-rolled one was written first and failed its own test suite within
+the hour: an unsupported `##` heading passed through unconverted *and*
+slipped past the leftover-markdown check, because the check matched only
+line-start markdown while the stray text had already been wrapped in
+`<p>`. Switching to the library — the same one
+`loom-code/scripts/adjudication_render.py` already uses — made that
+failure mode cease to exist rather than merely be caught. The switch
+immediately exposed a second bug it had been masking: the template uses
+the vault's `###`/`####`/`#####` levels, markdown-it correctly renders
+those as `h3`/`h4`/`h5`, and the CSS and lede-extraction had been written
+against `h2`/`h3`/`h4`.
+
+What stayed hand-written are the pipeline properties, all three taken
+from the brief this skill has been dogfooding on — a renderer of exactly
+this kind that failed silently five times in five days. It **fails loud
+and writes nothing** when markdown survives conversion, because a run
+that fails but still writes leaves the broken deliverable intact. Its
+check is **scoped**, because mermaid blocks and `<code>` spans
+legitimately contain `|`, `**` and `#` and an unscoped check condemns
+every correct page. And it **stamps** each page with the version of the
+copy that actually ran, read from the manifest beside the script rather
+than from a working directory, falling back to the literal `unknown`
+rather than faking a version. Verified: on unconverted markdown the
+postcondition detects five classes of residue; on correct output it is
+clean; and the mermaid block, whose edge labels are full of `|`, does not
+trip it.
+
+#### Three fidelity rounds, and what each one cost
+
+The check was run three times on the same source, and the record matters
+more than the outcome because each round failed differently.
+
+Round 1 (before any of this): "faithful as an account of *why*, unusable
+as an account of *what to do*". The reader would have pinned to a fixed
+path — the variant the source explicitly derives as broken — and written
+an unscoped leftover-markdown check that condemns every correct page.
+
+Round 2, after the extraction contract gained its hunt items: three of
+those four repaired, but the delivery-side obligation ("confirm the stamp
+before delivering; a page with no stamp must not ship") was absent
+entirely. Obligations are not reasoning steps, so they had no node to
+live in; the markdown gained a `### 這份結論要求你做什麼` section.
+
+Round 3, on the markdown pipeline: **all four named failures fixed, zero
+hallucinations** — the first run where the reverse direction was checked
+at all — and still a FAIL, on two clauses nobody had asked for:
+`no output file written` (stated twice in the source) and the carve-out
+exempting sessions that are developing the scripts themselves.
+
+The diagnosis is worth more than the fix. All three misses share a shape:
+**a normative clause attached to a mechanism**. The slots added after
+round 2 did not catch them because one was a negative requirement — part
+of what the mechanism does, neither an obligation on a person nor an
+exception — and the other was an exception sitting on a node whose
+exception field nobody had thought to interrogate. A hunt item phrased as
+"does the source state a limit" is a passive search; it finds what
+announces itself.
+
+Step 2 now sweeps node by node instead. For every node naming a
+mechanism: what must it NOT do, who is exempt, and under what condition
+is it withdrawn. The cold reader who ran it reported the sweep
+"genuinely productive, not redundant — it surfaced the code-span
+exemption and the fail-loud withdrawal condition, both of which I would
+likely have missed doing a flat read-through."
+
+Round 4 confirmed that: all six named clauses landed, and hallucinations
+stayed at zero for a third consecutive round. It still failed, on three
+things nobody had looked for — that the version must be read from the
+manifest shipped *beside the running copy* (without which a stale copy
+stamps the current version and the mechanism inverts into a false
+all-clear), that the postcondition's failure is *non-zero exit* as well
+as no file written, and the whole reason `${CLAUDE_PLUGIN_ROOT}` was
+rejected.
+
+**The trend is the finding.** New misses per round went 4 → 1 → 2 → 3.
+Each round repaired everything it had been told about and lost something
+else. The first rounds lost whole *categories* — obligations had no node
+to live in, exceptions had no field — and adding a slot fixed those for
+good. Round 4's losses were different in kind: details *inside* a
+mechanism's specification, which is to say ordinary lossy paraphrase.
+Another hunt category cannot fix that; it moves the loss.
+
+#### Rounds 5 and 6, and the class that stopped recurring
+
+Round 5 failed differently from every round before it. It stopped
+producing gaps and produced **confident wrong answers**: it compressed
+"the manifest three levels up, beside the running copy" into "in the same
+directory as the script". An implementer following that finds no file,
+hits the mandated `unknown` fallback, and ships `unknown` on every page
+forever — exit 0, plausible output, no warning. That is a re-run of the
+exact bug the source existed to kill, and it is worse than the gaps it
+replaced: a gap sends the reader back to the source, a false fact does
+not, because they have no reason to look.
+
+The cause was compression. That round had merged three mechanisms into a
+single "the decision" node, so the verbatim-quoting rule covered almost
+nothing and the path rules were paraphrased. Two changes followed —
+**one mechanism, one node**, and the *what* on such a node is quoted or
+absent, never paraphrased. The quotation moved out of a labelled bullet
+into a markdown blockquote, on the reasoning that a blockquote is what a
+quotation *is*, survives into Obsidian as one, and lets the gate check
+**structure** rather than sniff punctuation. That last point was not
+theoretical: the punctuation check had rejected every plain ASCII `"`,
+because markdown-it escapes it to `&quot;` — six characters matching no
+quote mark — and told the author they had omitted marks they had typed.
+
+Round 6 passed. Eleven of eleven tracked clauses carried, zero
+hallucinations for a third consecutive round, and **zero confident-wrong
+statements — the class did not recur**. The residue changed character
+too: five omissions, all of them *reasons* rather than clauses, and the
+reader detected three of the five unaided. It could build the thing and
+could not always defend it. That is a materially safer failure mode, and
+the page's self-stated limit was rewritten to describe it honestly —
+"instructions are carried, reasons are abridged" — after a judge pointed
+out that the previous wording warned about the wrong failure.
+
+#### The pipeline the user took apart
+
+Five questions from the user, each one exposing something the author had
+claimed but not done:
+
+**Is this markdown-first or hand-written HTML?** It was hand-written HTML
+— markup concerns in front of the author at the moment of extracting
+meaning, the same inversion as the layout rules one level down. The
+markdown became the artifact and the HTML its derivation.
+
+**Isn't there an existing tool for markdown→HTML?** There was, and this
+repo already used it: `loom-code/scripts/adjudication_render.py` runs
+markdown-it-py. The hand-rolled converter written first had already
+failed its own tests within the hour — an unsupported `##` passed through
+unconverted *and* slipped past the leftover check, which only matched
+line-start markdown while the stray text sat inside a `<p>`. Switching to
+the library made that failure mode cease to exist rather than be caught,
+and immediately exposed a second bug it had masked: the template used the
+vault's `###`/`####`/`#####` levels, markdown-it correctly rendered them
+as `h3`/`h4`/`h5`, and the CSS and lede-extraction had been written
+against `h2`/`h3`/`h4`.
+
+**Have you post-processed it?** Yes — three transformations, one of which
+deleted a heading. Measured: of twenty headings in the markdown, the old
+pipeline altered twelve and dropped 概述 entirely. "Deterministic" had
+been mistaken for "faithful"; a deterministic move is still a move.
+Everything but the mermaid un-escape (unavoidable — node labels are raw
+HTML) became CSS applied where things already stand. Headings in the
+HTML now match the markdown exactly, 20 for 20.
+
+**Doesn't the frontmatter carry through?** Nineteen keys reached two, and
+one of those two was read under a name the template had since changed, so
+the date rendered blank and nothing said so. All nineteen now emit as
+`<meta name="cot-*">`.
+
+**Can the quotation use markdown's `>` instead of a list item?** Yes, and
+it is better for the reason above.
+
+**Can the paths be absolute and clickable?** Now yes, with two limits
+stated in code: only an absolute path is linked, because a guessed base
+produces links that look right and go nowhere; and the Artifact build
+never links, because it is served over https where `file://` is refused
+and the absolute path would carry the author's directory layout to
+whoever the page is shared with.
+
+#### Checks that cannot be self-reported, and a fix cycle that terminates
+
+`verified` began as a field the author typed. That is the anti-pattern
+the whole source document is about — a self-reported success signal is
+what fooled two review agents — and it failed in the milder direction
+first: it sat empty through a run that passed, so the page announced
+未執行 while the gate said PASS. `--stamp` now writes it, `fail`
+included. `fidelity_checked` has no script to run it, so it is written
+from a verdict file the Step 6 rounds leave beside the page.
+
+That introduced a staleness of its own: a verdict file can outlive the
+page it judged. The verdict now carries `reviewed_md_sha256:` and
+`--stamp` refuses to record a verdict whose hash does not match — which
+**fired on its own**, unprompted, the first time a page was edited after
+a check. The hash covers the body only: an earlier version hashed the
+whole file and invalidated a verdict over a path format change, and a
+check that fires on harmless edits is one people learn to wave through.
+
+Step 6 gained a convergence contract adapted from
+`loom-code:requesting-docs-review`, which faced the same problem of prose
+having no test to terminate on. Rounds 1-3 are the only full check; a
+gating finding is fixed in the markdown, then confirmed by the **same**
+comparator via `SendMessage`, scoped to the delta; `STILL_BLOCKING` after
+one cycle STOPs and surfaces to the user. One deliberate divergence:
+docs-review forbids auto-fixing because it reviews the user's own prose,
+while this page is generated — so fixing is allowed and disclosure is
+mandatory. What gates is defined: a belief the source contradicts, a
+hallucination, or a dropped clause that changes what gets built. A
+dropped *reason* is recorded, not gating.
+
+The cycle was then run for real rather than left as specification. Two
+rationale omissions were fixed, a fresh blind reader dispatched
+(blindness cannot be delta-scoped — an agent that has read the page is no
+longer blind), and the comparator confirmed both. The second confirmation
+is the one worth keeping: the reader could not defend the `_render_page`
+scope boundary, and the comparator ruled the source *only states* it, so
+the page had reproduced a real gap faithfully rather than dropped an
+argument. Without asking that question the fix would have been to invent
+a justification the source never made — manufacturing the very distortion
+the check exists to catch.
+
+Two changes follow. Mechanism nodes now carry a **`規格原文`** line
+quoting the source's normative sentence verbatim, in the source's own
+language — a quotation cannot silently drop "beside the running copy",
+a rewrite can. And the skill now states its own limit: **when the source
+is a specification, the page explains why the spec decided what it
+decided and does not replace reading it**, and says so on the page.
+Verbatim quotes narrow the gap; nothing here closes it.
+
+That limit is worth stating precisely because of what did not fail. In
+all four rounds the reasoning itself arrived intact — the reversals, the
+rejected options with their reasons, the conditional retreats — and the
+reverse-direction check found nothing invented in any round it was run.
+Explaining how a conclusion was reached is the job. Being a spec is not.
+
+Two gaps therefore got no syntax at all. "A is inert without B" is the
+literature's **linked argument** — two edges into one node already say
+it, and no standard system ships an `enables` edge. Epistemic status is
+carried only when the source labels itself ("my take", "leaning no"),
+never rated. The operative rule, now written into the spec: **add slots
+you fill by copying, never slots you fill by judging.**
+
+Files: `skills/cot-explain/{SKILL.md,README.md,README.ja.md,README.zh-TW.md}`,
+`assets/cot-report-template.md`, `references/mermaid-cot-spec.md`,
+`scripts/render_cot_html.py`, `scripts/verify_cot_html.py`.
+
 ## [2.25.1] — 2026-07-25 — bba description summarizes check-question + repeated-confusion signals
 
 ### Fixed — `brief-before-asking`: description-summary gap

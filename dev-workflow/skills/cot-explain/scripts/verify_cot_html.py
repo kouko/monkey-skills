@@ -1,0 +1,600 @@
+#!/usr/bin/env python3
+"""Verify a cot-explain HTML report against references/mermaid-cot-spec.md.
+
+Usage:
+  python3 scripts/verify_cot_html.py <report.html>
+  python3 scripts/verify_cot_html.py --render <report.html>
+
+Two levels, and the split matters more than any individual rule:
+
+  FAIL  a mechanical invariant is broken — the contract, or something
+        mermaid itself requires. Exits 1.
+  WARN  a content or readability observation. NEVER blocks. Counts of
+        nodes and bullets, label widths and squareness all live here on
+        purpose: when a layout rule can fail a build, authors start
+        trimming claims to satisfy it, and the diagram stops matching
+        the reasoning. Content owns content; this script owns form.
+
+`--stamp` records the outcome in the sibling `.md`'s `verified:` field —
+`pass`, `pass --render`, or `fail` — and then the page must be rendered
+again so the HTML carries it. The field exists because a page that
+skipped its checks must say so; it is written **by this script and never
+by hand**, for the same reason the artifact it checks carries a version
+stamp: a self-reported success signal is exactly what fooled two review
+agents into passing a broken page. A hand-typed `verified` can claim a
+check that never ran, and did the opposite here — it stayed empty
+through a run that passed.
+
+`--render` additionally runs each diagram through the real mermaid
+parser. mermaid-cli does NOT report a syntax error through its exit
+code — it writes an error SVG and exits 0 — so a diagram can pass every
+textual check here and still render as a red error box. Needs `npx` and,
+on first use, network. Without it a PASS means "matches the spec as
+text", not "renders".
+
+Neither stage checks fidelity to the source. Nothing mechanical can.
+"""
+import hashlib
+import html
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import unicodedata
+from pathlib import Path
+
+SEP = "<br/>" + "━" * 6 + "<br/>"
+BULLET = "• "
+ARROWS = ("-->", "-.->", "==>")
+MERMAID_VER = "11"
+
+# Advisory thresholds. None of these can fail a build.
+WARN_PER_GROUP = 3
+WARN_MIN_BULLETS, WARN_MAX_BULLETS = 3, 5
+WARN_MIN_NODES, WARN_MAX_NODES = 5, 9
+WARN_EDGE_W_MIN, WARN_EDGE_W_MAX = 4.0, 8.0
+WARN_TITLE_W = 10.0
+WARN_BULLET_W = 10.0      # the WIDEST bullet sets node width — see the spec
+WARN_GROUP_TITLE_W = 8.0
+LATIN_BUDGET_FACTOR = 1.4   # a CJK glyph is ~2 Latin ones; see limit_for()
+
+AXES = {"TB": ("LR", "row", "r"), "LR": ("TB", "column", "c")}
+
+PALETTE = {
+    "#f8f9fa", "#fff4e6", "#ffe3e3", "#ffe8cc", "#e5dbff", "#c5f6fa",
+}
+EMPTY_CONNECTIVES = {"導致", "然後", "接著", "所以", "leads to", "then"}
+
+
+def width(text):
+    """Display width in CJK units: full-width 1, everything else 1/2."""
+    return sum(
+        1.0 if unicodedata.east_asian_width(ch) in ("W", "F") else 0.5
+        for ch in text
+    )
+
+
+def latin_ratio(text):
+    visible = [ch for ch in text if not ch.isspace()]
+    if not visible:
+        return 0.0
+    return sum(1 for ch in visible if ch.isascii() and ch.isalnum()) / len(visible)
+
+
+def limit_for(text, base):
+    """Width budget, widened for Latin-script text.
+
+    Budgets are pixel-width budgets expressed in CJK units, and a CJK
+    glyph is about twice a Latin one — so `base` CJK units buys only
+    ~2x base Latin characters, cramped for English.
+    """
+    return base * LATIN_BUDGET_FACTOR if latin_ratio(text) > 0.6 else base
+
+
+class Report:
+    def __init__(self):
+        self.fails, self.warns = [], []
+
+    def scoped(self, tag):
+        outer = self
+
+        class Scope:
+            def fail(self, msg):
+                outer.fails.append(f"{tag}: {msg}")
+
+            def warn(self, msg):
+                outer.warns.append(f"{tag}: {msg}")
+
+        return Scope()
+
+
+def diagrams(raw):
+    """Every mermaid block, with HTML comments stripped first.
+
+    A comment may itself mention <pre class="mermaid">, which would make
+    the block regex start matching inside the comment.
+    """
+    stripped = re.sub(r"<!--.*?-->", "", raw, flags=re.S)
+    return re.findall(r'<pre class="mermaid">(.*?)</pre>', stripped, re.S | re.I)
+
+
+def parse_edges(body):
+    """(src, arrow, label, dst) tuples, from a skeleton with labels stripped."""
+    skeleton = re.sub(r'\["[^"]*"\]', "", body)
+    skeleton = re.sub(r"^subgraph.*$", "", skeleton, flags=re.M)
+    arrow_re = "|".join(re.escape(a) for a in ARROWS)
+    found = re.findall(
+        rf"([A-Z])\s*({arrow_re})\s*(\|([^|]*)\|)?\s*([A-Z])", skeleton
+    )
+    edges = [(s, a, lab, d) for s, a, _, lab, d in found]
+    return edges, len(re.findall(arrow_re, skeleton))
+
+
+def check(path, do_render=False):
+    r = Report()
+    with open(path, encoding="utf-8") as fh:
+        raw = fh.read()
+
+    # Match the placeholder *shape*, not a bare "{{" — a report may
+    # legitimately discuss templating in its prose.
+    left = sorted(set(re.findall(r"\{\{[A-Z][A-Z_]*\}\}", raw)))
+    if left:
+        r.fails.append(f"unreplaced placeholder(s): {', '.join(left)}")
+    if "cot-explain report template" in raw:
+        r.fails.append(
+            "the template's own authoring comment is still in the file — "
+            "delete the leading <!-- cot-explain report template ... --> block"
+        )
+
+    check_spec_quotes(raw, r)
+
+    blocks = diagrams(raw)
+    if not blocks:
+        r.fails.append('no <pre class="mermaid"> block found')
+        return r
+
+    for n, block in enumerate(blocks, 1):
+        check_diagram(block.strip(), r.scoped(f"diagram {n}"))
+    if do_render:
+        render_check(blocks, r)
+    return r
+
+
+def check_spec_quotes(raw, r):
+    """A node's source quotation must be a blockquote, and non-empty.
+
+    Structure is checkable; punctuation is not. An earlier version looked
+    for quotation characters in a list item and rejected every plain
+    ASCII `"`, because markdown-it escapes it to `&quot;` — six
+    characters that match no quote mark. It blamed the author for
+    omitting marks they had typed. A `<blockquote>` either exists or does
+    not.
+    """
+    for m in re.finditer(r"<blockquote>(.*?)</blockquote>", raw, re.S):
+        if not re.sub(r"<[^>]*>", "", m.group(1)).strip():
+            r.fails.append(
+                "an empty blockquote — delete it, or quote the source. An "
+                "empty one implies the source specified nothing"
+            )
+
+    # The label survives from the older list-item form; it means the quote
+    # was pasted as prose, where nothing can tell it from a paraphrase.
+    stray = re.search(
+        r"<li>\s*<strong>\s*(?:規格原文|Spec verbatim)\s*</strong>", raw
+    )
+    if stray:
+        r.fails.append(
+            "a 規格原文 list item — the source's own sentences go in a "
+            "markdown blockquote (`> …`) under the node, not in a labelled "
+            "bullet. Inside a bullet a quotation and a paraphrase look "
+            "identical, which is the one thing this rule exists to prevent"
+        )
+
+
+def check_diagram(body, s):
+    m = re.match(r"^graph\s+(TB|LR)\b", body)
+    if not m:
+        s.fail(
+            "must start with `graph TB` (a linear chain, drawn as rows) or "
+            "`graph LR` (a branching chain, drawn as columns) — the axis "
+            "follows the shape of the reasoning, see the spec"
+        )
+        return
+    axis = m.group(1)
+    inner, word, prefix = AXES[axis]
+
+    if "classDef" in body:
+        s.fail("uses classDef — the convention forbids it, use inline style lines")
+
+    edges, arrow_count = parse_edges(body)
+    check_groups(body, s, inner, word, prefix, edges)
+    check_nodes(body, s)
+    check_edges(body, s, edges, arrow_count)
+    check_styles(body, s)
+
+
+def check_groups(body, s, inner, word, prefix, edges):
+    groups = re.findall(
+        r"^subgraph\s+(\S+)\s*\[(.*?)\]\s*\n(.*?)^end\s*$", body, re.S | re.M
+    )
+    if not groups:
+        s.fail(
+            f'no subgraph {word}s — every node must sit in a '
+            f'`subgraph {prefix}N["標題"]` block; a flat chain renders 13:1 wide'
+        )
+        return
+
+    adjacency = {}
+    for src, _, _, dst in edges:
+        adjacency.setdefault(src, set()).add(dst)
+        adjacency.setdefault(dst, set()).add(src)
+
+    all_ids = re.findall(r'\b([A-Z])\["', body)
+    grouped = []
+    for gid, title, block in groups:
+        if re.fullmatch(r"[A-Z]", gid):
+            s.fail(
+                f"subgraph id `{gid}` is a bare capital letter and collides "
+                f"with the node id space — use `{prefix}1`, `{prefix}2`, …"
+            )
+        if not re.search(rf"^\s*direction\s+{inner}\s*$", block, re.M):
+            s.fail(
+                f"subgraph {gid}: missing its own `direction {inner}` line — "
+                "without it mermaid emits one flat column (0.14 squareness "
+                "against 0.81) and the subgraph buys nothing"
+            )
+        members = re.findall(r'\b([A-Z])\["', block)
+        grouped += members
+        if not members:
+            s.fail(f"subgraph {gid}: contains no node definitions")
+            continue
+
+        # Mermaid ignores a declared direction when the members have no
+        # edges among themselves, and lays them out along the other axis.
+        if len(members) > 1 and not connected(members, adjacency):
+            s.fail(
+                f"subgraph {gid}: its nodes ({', '.join(members)}) are not "
+                f"connected to each other, so mermaid IGNORES `direction "
+                f"{inner}` and lays them out along the other axis. Group nodes "
+                "that are actually linked; put independent branches in "
+                "separate subgraphs"
+            )
+        if len(members) > WARN_PER_GROUP:
+            s.warn(
+                f"subgraph {gid}: {len(members)} nodes in one {word} — over "
+                f"{WARN_PER_GROUP} the {word} gets unwieldy"
+            )
+        t = re.sub(r'^"|"$', "", title.strip())
+        lim = limit_for(t, WARN_GROUP_TITLE_W)
+        if t and width(t) > lim:
+            s.warn(
+                f"subgraph {gid}: title '{t}' is {width(t):g} wide — over "
+                f"{lim:g} it competes with the node titles"
+            )
+
+    orphans = sorted(set(all_ids) - set(grouped))
+    if orphans:
+        s.fail(f"node(s) defined outside any subgraph: {', '.join(orphans)}")
+
+
+def connected(members, adjacency):
+    """Do these node ids form one connected run under the diagram's edges?"""
+    want = set(members)
+    seen, stack = {members[0]}, [members[0]]
+    while stack:
+        for nxt in adjacency.get(stack.pop(), ()):
+            if nxt in want and nxt not in seen:
+                seen.add(nxt)
+                stack.append(nxt)
+    return seen == want
+
+
+def check_nodes(body, s):
+    # The spec forbids a literal " inside a label, so [^"]* is exact.
+    nodes = re.findall(r'\b([A-Z])\["([^"]*)"\]', body)
+    ids = [i for i, _ in nodes]
+    if len(ids) != len(set(ids)):
+        dupes = sorted({i for i in ids if ids.count(i) > 1})
+        s.fail(f"node id(s) defined more than once: {', '.join(dupes)}")
+    if not WARN_MIN_NODES <= len(set(ids)) <= WARN_MAX_NODES:
+        s.warn(
+            f"{len(set(ids))} nodes — below {WARN_MIN_NODES} a diagram rarely "
+            f"earns its place, above {WARN_MAX_NODES} the source usually holds "
+            "more than one arc. Draw what the reasoning has; this is an "
+            "observation, not a limit"
+        )
+
+    widest = (0.0, None, None)
+    widest_title = (0.0, None, None)
+    for nid, label in nodes:
+        if "<div style='text-align:left'>" not in label:
+            s.fail(f"node {nid}: missing the <div style='text-align:left'> wrapper")
+        if "\n" in label:
+            s.fail(f"node {nid}: literal newline in label — use <br/> only")
+        if "|" in label:
+            s.fail(f"node {nid}: '|' in label breaks the edge parser")
+        if label.count(SEP) != 1:
+            s.fail(
+                f"node {nid}: separator must appear exactly once as "
+                f"<br/>{'━' * 6}<br/> (six U+2501) — found {label.count(SEP)}"
+            )
+            continue
+
+        n_bullets = label.count(BULLET)
+        if n_bullets == 0:
+            s.fail(f"node {nid}: no bullets — each is prefixed with U+2022 + space")
+        elif not WARN_MIN_BULLETS <= n_bullets <= WARN_MAX_BULLETS:
+            s.warn(
+                f"node {nid}: {n_bullets} bullets, outside the usual "
+                f"{WARN_MIN_BULLETS}-{WARN_MAX_BULLETS}. This is an "
+                "observation, not a quota: if the source gives this node "
+                f"{n_bullets} facts then {n_bullets} is the right answer and "
+                "this warning is noise. Adding a bullet to clear it is the "
+                "one response that is always wrong"
+            )
+
+        head, rest = label.split(SEP, 1)
+        title = re.sub(r"<[^>]*>", "", head)
+        if re.search(r"\d+\.\s", title):
+            s.fail(
+                f"node {nid}: title contains a `number. space` run — mermaid "
+                "parses it as a markdown list and dies. Use `1.` with no "
+                "space, `①`, or `(1)`"
+            )
+        if width(title) > widest_title[0]:
+            widest_title = (width(title), nid, title)
+
+        for b in re.sub(r"</?div[^>]*>", "", rest).split("<br/>"):
+            b = b.strip()
+            if not b.startswith(BULLET):
+                continue
+            text = b[len(BULLET):].strip()
+            if re.search(r"\d+\.\s", text):
+                s.fail(
+                    f"node {nid}: bullet '{text}' contains a `number. space` "
+                    "run — mermaid parses it as a markdown list and dies"
+                )
+            if width(text) > widest[0]:
+                widest = (width(text), nid, text)
+
+    # Column width is set by the single widest LINE, so the gate names only
+    # the widest title and the widest bullet. Warning on every long title
+    # produced fifteen warnings on one English page, which is the same as
+    # producing none: nobody reads a list that long, and the one line that
+    # actually drives the layout is lost in it.
+    if widest_title[1] and widest_title[0] > limit_for(widest_title[2], WARN_TITLE_W):
+        s.warn(
+            f"widest title is node {widest_title[1]}'s '{widest_title[2]}' at "
+            f"{widest_title[0]:g} CJK units — titles and bullets share the "
+            "column width, so this is the other line worth shortening. A "
+            "pixel-width budget, not a character count; judge by the rendered "
+            "figure, and the full title is in the card either way"
+        )
+    if widest[1] and widest[0] > limit_for(widest[2], WARN_BULLET_W):
+        s.warn(
+            f"widest bullet is node {widest[1]}'s '{widest[2]}' at "
+            f"{widest[0]:g} CJK units — this one line sets the width of every "
+            "column. Shortening it is the cheapest route to a squarer figure, "
+            "but not at the cost of the claim: the full text is in the card"
+        )
+
+
+def check_edges(body, s, edges, arrow_count):
+    if not edges:
+        s.fail("no edges found")
+        return
+
+    culminating = 0
+    for src, arrow, label, dst in edges:
+        if label is None or not label.strip():
+            s.fail(
+                f"edge {src} {arrow} {dst} carries no label — every edge must "
+                "name the relation; a bare arrow is a defect"
+            )
+            continue
+        lab = label.strip()
+        if lab in EMPTY_CONNECTIVES:
+            s.fail(
+                f"edge {src} {arrow} {dst}: '{lab}' is an empty connective — "
+                "state the actual relation"
+            )
+        hi = limit_for(lab, WARN_EDGE_W_MAX)
+        if not WARN_EDGE_W_MIN <= width(lab) <= hi:
+            s.warn(
+                f"edge {src} {arrow} {dst}: label '{lab}' is {width(lab):g} "
+                f"wide, outside the usual {WARN_EDGE_W_MIN:g}-{hi:g}. Several "
+                "edges may share one label when they really are the same "
+                "relation"
+            )
+        if arrow == "==>":
+            culminating += 1
+
+    if arrow_count != len(edges):
+        s.fail(
+            f"{arrow_count} arrows in the diagram but only {len(edges)} parsed "
+            "as edges — an arrow is malformed"
+        )
+    if culminating == 0:
+        s.warn(
+            "no `==>` edge — it usually marks the culminating step into the "
+            "conclusion. Absent is fine if the reasoning has no single one"
+        )
+
+    connected_ids = {n for e in edges for n in (e[0], e[3])}
+    stranded = sorted(set(re.findall(r'\b([A-Z])\["', body)) - connected_ids)
+    if stranded:
+        s.fail(f"node(s) with no edge at all: {', '.join(stranded)}")
+
+
+def check_styles(body, s):
+    ids = set(re.findall(r'\b([A-Z])\["', body))
+    styled = dict(
+        re.findall(r"^style\s+([A-Z])\s+fill:(#[0-9a-fA-F]{6})", body, re.M)
+    )
+    missing = sorted(ids - set(styled))
+    extra = sorted(set(styled) - ids)
+    if missing:
+        s.fail(f"no style line for node(s): {', '.join(missing)}")
+    if extra:
+        s.fail(f"style line for undefined node(s): {', '.join(extra)}")
+    for nid, fill in styled.items():
+        if fill.lower() not in PALETTE:
+            s.fail(f"node {nid}: fill {fill} is not in the house palette")
+
+    lines = [ln.strip() for ln in body.splitlines() if ln.strip()]
+    first = next((i for i, ln in enumerate(lines) if ln.startswith("style ")), None)
+    if first is not None and [
+        ln for ln in lines[first:] if not ln.startswith("style ")
+    ]:
+        s.fail("style lines must all come after every edge line")
+
+
+def render_check(blocks, r):
+    """Run each diagram through the real parser.
+
+    mermaid-cli writes an error SVG and exits 0 on a syntax error, so the
+    exit code proves nothing — the SVG content is what has to be read.
+    """
+    if not shutil.which("npx"):
+        r.warns.append("--render skipped: npx not on PATH, so nothing was parsed")
+        return
+    with tempfile.TemporaryDirectory() as tmp:
+        for n, block in enumerate(blocks, 1):
+            src = os.path.join(tmp, f"d{n}.mmd")
+            out = os.path.join(tmp, f"d{n}.svg")
+            with open(src, "w", encoding="utf-8") as fh:
+                fh.write(block.strip() + "\n")
+            try:
+                subprocess.run(
+                    ["npx", "-y", f"@mermaid-js/mermaid-cli@{MERMAID_VER}",
+                     "-i", src, "-o", out],
+                    capture_output=True, text=True, timeout=600,
+                )
+            except (subprocess.TimeoutExpired, OSError) as exc:
+                r.warns.append(f"--render skipped for diagram {n}: {exc}")
+                continue
+            if not os.path.exists(out):
+                r.fails.append(f"diagram {n}: mermaid produced no SVG at all")
+                continue
+            with open(out, encoding="utf-8", errors="replace") as fh:
+                svg = fh.read()
+            if "Syntax error" in svg or 'aria-roledescription="error"' in svg:
+                r.fails.append(
+                    f"diagram {n}: mermaid rendered a SYNTAX ERROR image — it "
+                    "would appear as a red error box, not a diagram"
+                )
+
+
+def source_sha(md_text):
+    """SHA-256 of the page body — everything after the frontmatter.
+
+    The verdict is about the reasoning a reader receives, so the hash
+    covers exactly that and nothing else. Frontmatter is provenance:
+    the stamps are written into it (hashing them would invalidate every
+    verdict the moment it was recorded), and editing a title or making a
+    path absolute changes no claim on the page. An earlier version hashed
+    the whole file and duly invalidated a verdict over a path format — a
+    check that fires on harmless edits is one people learn to wave
+    through, which is how a real warning gets missed.
+    """
+    m = re.match(r"^---\n.*?\n---\n(.*)$", md_text, re.S)
+    body = m.group(1) if m else md_text
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()
+
+
+def stamp_markdown(html_path, outcome):
+    """Record the gate outcome, and the fidelity verdict if one exists.
+
+    Neither field is ever typed by hand. `verified` comes from the run
+    that just happened. `fidelity_checked` comes from a verdict file the
+    Step 6 rounds leave beside the page — `<name>.fidelity.md`, whose
+    first line reads `verdict: PASS` or `verdict: FAIL`. No file means
+    the check did not run, and the field stays empty so the page says so.
+    A claimed check nobody can point at is the failure this whole tool
+    was built to catch; it would be absurd to reintroduce it here.
+    """
+    md = Path(html_path).with_suffix(".md")
+    if not md.exists():
+        return f"--stamp: no sibling {md.name} to record into"
+    text = md.read_text(encoding="utf-8")
+    text, n = re.subn(
+        r'^verified:.*$', f'verified: "{outcome}"', text, count=1, flags=re.M
+    )
+    if not n:
+        return f"--stamp: {md.name} has no `verified:` line in its frontmatter"
+    notes = [f'verified: "{outcome}"']
+
+    verdict_file = Path(html_path).with_suffix(".fidelity.md")
+    if verdict_file.exists():
+        head = verdict_file.read_text(encoding="utf-8")[:600]
+        vm = re.search(r"verdict:\s*(PASS|FAIL)", head, re.I)
+        sm = re.search(r"reviewed_md_sha256:\s*([0-9a-f]{64})", head, re.I)
+        current = source_sha(text)
+        if not vm:
+            notes.append(
+                f"{verdict_file.name} states no `verdict: PASS|FAIL` — "
+                "fidelity_checked left empty rather than guessed"
+            )
+        elif not sm:
+            notes.append(
+                f"{verdict_file.name} carries no `reviewed_md_sha256:` — a "
+                "verdict that names no file cannot be shown to be about this "
+                "one. fidelity_checked left empty"
+            )
+        elif sm.group(1).lower() != current:
+            notes.append(
+                f"{verdict_file.name} judged {sm.group(1)[:12]}… but the "
+                f"markdown is now {current[:12]}… — the page changed after "
+                "the check. fidelity_checked left empty; re-run Step 6"
+            )
+        else:
+            value = f"{vm.group(1).upper()} ({verdict_file.name})"
+            text = re.sub(
+                r'^fidelity_checked:.*$', f'fidelity_checked: "{value}"',
+                text, count=1, flags=re.M,
+            )
+            notes.append(f'fidelity_checked: "{value}"')
+
+    md.write_text(text, encoding="utf-8")
+    return ("--stamp: " + "; ".join(notes)
+            + f" → {md.name}. Re-render to carry it into the HTML")
+
+
+def main():
+    argv = sys.argv[1:]
+    if "-h" in argv or "--help" in argv:
+        print(__doc__.strip())
+        return 0
+    do_render = "--render" in argv
+    do_stamp = "--stamp" in argv
+    argv = [a for a in argv if a not in ("--render", "--stamp", "--sha")]
+    if "--sha" in sys.argv[1:]:
+        md = Path(argv[0]).with_suffix(".md")
+        print(source_sha(md.read_text(encoding="utf-8")))
+        return 0
+    if len(argv) != 1:
+        print(
+            "usage: verify_cot_html.py [--render] [--stamp] <report.html>",
+            file=sys.stderr,
+        )
+        return 2
+
+    r = check(argv[0], do_render)
+    for w in r.warns:
+        print(f"WARN: {w}")
+    for f in r.fails:
+        print(f"FAIL: {f}")
+    outcome = "fail" if r.fails else ("pass --render" if do_render else "pass")
+    if do_stamp:
+        print(stamp_markdown(argv[0], outcome))
+    if r.fails:
+        return 1
+    print("PASS" + (" (parsed by mermaid)" if do_render else
+                    " (text only — add --render to prove it parses)"))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

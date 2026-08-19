@@ -32,6 +32,7 @@ Full design rationale: [`docs/skill-evolution-architecture.md`](docs/skill-evolu
 | [`git-memory`](skills/git-memory/) | Capture decision context (the **why**, not the diff) into commit trailers and PR bodies so any future session — Claude Code, Cursor, Codex, aider, or a human — can reconstruct project knowledge from `git log` alone. |
 | [`brief-before-asking`](skills/brief-before-asking/) | Structured briefing before (or in response to) a complex engineering decision question. 3 modes: Mode A (agent self-detects an upcoming fork), Mode B (user says 「看不懂」 to a question), Mode C (user says 「跟不上」 to an explanation — retreat to Mental Model + drill menu). 6-block format with Mental Model First as the load-bearing rule. |
 | [`dogfood-skill-testing`](skills/dogfood-skill-testing/) | Behavioral black-box dogfood for skills-in-development — exercises triggers + output quality via fresh subagents, emits a fix-actionable findings report. |
+| [`cot-explain`](skills/cot-explain/) | Render existing reasoning — a document, a folder, or the current conversation — as one self-contained HTML page centred on a chain-of-thought Mermaid diagram: labeled edges, three-bullet nodes, rejected options, open assumptions. One-shot generator, no persistent state. |
 
 All nine skills are **Active**. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
 
@@ -122,6 +123,7 @@ dev-workflow/
 ├── skills/
 │   ├── brief-before-asking/
 │   ├── complexity-critique/
+│   ├── cot-explain/
 │   ├── dbt-model-style/
 │   ├── distill-sessions/
 │   ├── dogfood-skill-testing/
