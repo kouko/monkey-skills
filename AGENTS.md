@@ -96,14 +96,17 @@ Role boundaries enforced by behavior, not reading restrictions:
 - **Check a plan's `Description`/`RED`/`GREEN` field microstructure**
   (writing-plans self-check):
   `python3 loom-code/scripts/check_field_microstructure.py <plan-path>`
-  — walks every `## Task <N> —` block; a `Description` first line
-  violates past one sentence-terminal mark (`.`/`?`/`!`, backtick-span
-  and trailing-parenthetical content ignored); a `RED`/`GREEN` first
-  line is allowed one assertion sentence plus one optional grounding
-  clause (e.g. `Fails today because ...`), violating only at the third;
-  any field's indented continuation line that is neither a nested
-  bullet nor a markdown table row also violates. rc=1 with every
+  — walks every `## Task <N> —` block; a `Description`, `RED` or
+  `GREEN` first line violates past 300 characters — one cap, the same
+  for all three fields, with no sentence counting and no per-field
+  branch; any field's indented continuation line that is neither a
+  nested bullet nor a markdown table row also violates. rc=1 with every
   violation named on stderr, rc=0 when the plan is clean.
+  Sentence counting was tried twice and abandoned: counting occurrences
+  of `.`/`?`/`!` false-positives on `0.89.0`, `e.g.`, `i.e.` and
+  ellipsis, and the boundary heuristic that replaced it false-negatives
+  on a lowercase-initial sentence. A character cap has no punctuation
+  edge cases to enumerate.
 - **Archive a shipped change-folder, or a single backlog entry file**
   (finishing-a-development-branch archive-on-close step, orchestrator-only,
   once per branch; the file unit is also used to close a
