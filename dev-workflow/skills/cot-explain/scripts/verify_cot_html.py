@@ -60,7 +60,14 @@ from pathlib import Path
 SEP = "<br/>" + "━" * 6 + "<br/>"
 BULLET = "• "
 ARROWS = ("-->", "-.->", "==>")
-MERMAID_VER = "11.16.0"   # exact, not the 11.x range — see NUMBER_SPACE_NOTE
+# The mermaid-cli release used by `--render`. Pinning it does NOT pin the
+# renderer: mermaid-cli declares `mermaid: ^11.14.0`, so the library it
+# actually draws with floats to whatever 11.x is newest at install time.
+# That matters, because the two do not always agree — 11.16.0/11.16.1
+# briefly honoured a subgraph `direction` that every release before and
+# after discards. The layout rules no longer depend on either, so this is
+# a reproducibility aid, not a guarantee.
+MERMAID_VER = "11.16.0"
 
 # Advisory thresholds. None of these can fail a build.
 WARN_PER_GROUP = 3
@@ -92,7 +99,8 @@ EMPTY_CONNECTIVES = {"導致", "然後", "接著", "所以", "leads to", "then"}
 # prevent.
 NUMBER_SPACE_NOTE = (
     "node {nid}: {where} contains a `number. space` run. This parsed "
-    "cleanly on the pinned mermaid ({ver}), but older renderers have "
+    "cleanly on mermaid-cli {ver} (whose bundled library floats), but "
+    "other renderers have "
     "treated it as a markdown list. `--render` settles it for your "
     "parser; if that is unavailable and the target renderer is old, `1.` "
     "with no space, `①` or `(1)` sidestep it"
@@ -174,8 +182,11 @@ def parse_edges(body):
     skeleton = re.sub(r'\["[^"]*"\]', "", body)
     skeleton = re.sub(r"^\s*subgraph.*$", "", skeleton, flags=re.M)
     arrow_re = "|".join(re.escape(a) for a in ARROWS)
+    # An endpoint is a node id (one capital) OR a subgraph id (r1, c2).
+    # Cross-row edges join SUBGRAPHS, never nodes — see check_edges.
+    end = r"(?:[A-Z]|[a-z]+\d+)"
     found = re.findall(
-        rf"([A-Z])\s*({arrow_re})\s*(?:\|([^|]*)\|)?\s*(?=([A-Z])\b)", skeleton
+        rf"({end})\s*({arrow_re})\s*(?:\|([^|]*)\|)?\s*(?=({end})\b)", skeleton
     )
     edges = [(s, a, lab, d) for s, a, lab, d in found]
 
@@ -186,6 +197,17 @@ def parse_edges(body):
     # about a diagram with no malformed arrow.
     bare = re.sub(r"\|[^|]*\|", "", skeleton)
     return edges, len(re.findall(arrow_re, bare))
+
+
+def subgraph_members(body):
+    """{subgraph id: set of node ids declared inside it}."""
+    out = {}
+    for gid, _title, block in re.findall(
+        r"^[ \t]*subgraph\s+(\S+)\s*\[(.*?)\]\s*\n(.*?)^[ \t]*end[ \t]*$",
+        body, re.S | re.M,
+    ):
+        out[gid] = set(re.findall(r'\b([A-Z])\["', block))
+    return out
 
 
 def check(path, do_render=False):
@@ -288,7 +310,7 @@ def check_diagram(body, s):
     edges, arrow_count = parse_edges(body)
     check_groups(body, s, inner, word, prefix, edges)
     check_nodes(body, s)
-    check_edges(body, s, edges, arrow_count)
+    check_edges(body, s, edges, arrow_count, subgraph_members(body))
     check_styles(body, s)
 
 
@@ -483,7 +505,7 @@ def check_widths(widest_title, widest, s):
         )
 
 
-def check_edges(body, s, edges, arrow_count):
+def check_edges(body, s, edges, arrow_count, members):
     if not edges:
         s.fail("no edges found")
         return
@@ -494,6 +516,20 @@ def check_edges(body, s, edges, arrow_count):
             s.fail(
                 f"edge {src} {arrow} {dst} carries no label — every edge must "
                 "name the relation; a bare arrow is a defect"
+            )
+            continue
+        home = {n: g for g, ns in members.items() for n in ns}
+        src_g, dst_g = home.get(src), home.get(dst)
+        src_is_node, dst_is_node = src in home, dst in home
+        if src_is_node != dst_is_node or (src_is_node and src_g != dst_g):
+            s.fail(
+                f"edge {src} {arrow} {dst} leaves its subgraph. mermaid drops a "
+                f"subgraph's `direction` as soon as one of its nodes has an "
+                f"edge to anything outside — including to another subgraph's "
+                f"id — and the rows then stack into a single column. Join "
+                f"NODES only inside one row, and join rows SUBGRAPH to "
+                f"SUBGRAPH (`r1 -->|…| r2`). Measured identical on mermaid "
+                f"11.13.0 and 11.17.0; see the spec's appendix"
             )
             continue
         lab = label.strip()
@@ -525,7 +561,13 @@ def check_edges(body, s, edges, arrow_count):
         )
 
     connected_ids = {n for e in edges for n in (e[0], e[3])}
-    stranded = sorted(set(re.findall(r'\b([A-Z])\["', body)) - connected_ids)
+    # A row holding exactly one node has no inner edge to be part of, and
+    # renders correctly (verified on 11.13.0 and 11.17.0). Its row carries
+    # the connection instead, so it is not stranded.
+    lone = {n for ns in members.values() if len(ns) == 1 for n in ns}
+    stranded = sorted(
+        set(re.findall(r'\b([A-Z])\["', body)) - connected_ids - lone
+    )
     if stranded:
         s.fail(f"node(s) with no edge at all: {', '.join(stranded)}")
 

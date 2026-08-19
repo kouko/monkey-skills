@@ -202,6 +202,7 @@ direction LR
 end
 A -->|邊標籤| B
 ...
+r1 -->|邊標籤| r2
 style A fill:#f8f9fa,stroke:#868e96,stroke-width:2px
 ```
 
@@ -210,15 +211,20 @@ Four sections in order: `graph TB` → subgraph blocks → edges → styles.
 The rules that get broken most often:
 
 - `graph TB` outer, with every node inside a `subgraph` row that
-  declares **its own `direction LR` line**. That one line is what makes
-  the figure roughly square (0.81). Declaring the subgraphs but omitting
-  the `direction` line measures 0.14 — worse than useless, since the
-  structure is there and buys nothing. (The vault's own flat `graph LR`,
-  with no subgraphs at all, is a separate row at 0.07.)
+  declares **its own `direction LR` line**.
+- **Join rows subgraph to subgraph — `r1 -->|…| r2` — and never node to
+  node across rows.** This is the one rule the layout stands on. mermaid
+  discards a row's `direction` as soon as one of its nodes points at
+  anything outside the row, *including another row's id*, and the rows
+  then stack into a single narrow column. Node edges stay inside a row;
+  the row-to-row edge carries the transition between stages. Verified
+  byte-identical on mermaid 11.13.0 (what Obsidian and the VS Code
+  preview run) and 11.17.0 (current).
 - **Rows of at most 3, as even as possible**: 8 nodes → 3/3/2, 7 → 3/2/2,
-  6 → 3/3. On one 8-node chain, rows of 3 measured 0.91 against 0.52 for
-  rows of 2 and 0.43 for rows of 4 — 3 is a peak, not a ceiling
-  (`references/mermaid-cot-spec.md` appendix).
+  6 → 3/3. At 8 nodes, rows of 3 measured 0.938 against 0.456 for rows of
+  2 and 0.512 for rows of 4 — 3 is a peak, not a ceiling
+  (`references/mermaid-cot-spec.md` appendix). A trailing row of one node
+  is fine.
 - The separator is the literal `<br/>━━━━━━<br/>` (six U+2501 `━`).
   Not `---`, not `<hr>`, not a different count.
 - `• ` bullets per node, joined with `<br/>`: **as many as the node
@@ -329,9 +335,16 @@ Structure the converter depends on:
 Write to `${TMPDIR:-/tmp}/cot-explain/<YYYY-MM-DD>-<slug>.md` unless the
 user named a path. If that file already exists, overwrite it — the slug
 identifies the work, and a directory of `-2`, `-3` variants hides which
-one is current. **This is a temporary location**: say so when you
-report it, and say how to keep the page — move the `.md` into a vault, or
-publish the HTML as an Artifact.
+one is current. The `.md` and the `.html` live side by side there;
+**both are temporary**, so say so when you report the paths.
+
+Do not move the `.md` anywhere by default. If the user asks to keep it,
+the two routes are publishing the HTML as an Artifact, or moving the
+`.md` into a vault — and the vault route carries a caveat worth stating:
+**Obsidian and the VS Code preview run mermaid 11.13.x, which renders
+these diagrams the same as everything else does.** That is exactly why
+rows are joined subgraph-to-subgraph (Step 3); a page built the old way
+collapses into one narrow column there.
 
 ## Step 5 — Convert, verify, then offer to publish
 

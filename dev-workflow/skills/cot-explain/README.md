@@ -55,18 +55,21 @@ style A fill:#f8f9fa,stroke:#868e96,stroke-width:2px
 - Node colour encodes role: premise, evidence, obstacle, attempt,
   turning point, conclusion
 
-**Layout is measured, not assumed.** A reasoning chain is long and thin;
-drawn as a flat `graph LR` it rendered 3061 × 227 px — 13.5:1, useless on
-a page. Fifteen variants were rendered with mermaid-cli and measured by
-SVG viewBox. The winner is what the spec now mandates: outer `graph TB`,
-each row a `subgraph` declaring its own `direction LR`, at most 3 nodes
-per row, short bullets — **1022 × 824 px, 0.81 of a square**. The
-`direction` line is the load-bearing part: subgraph rows without it
-measure 0.14. Tightening `nodeSpacing`/`rankSpacing` moved 13.48:1 to
-13.39:1 and is a dead end. Bullet count is a lever too, in the helpful
-direction — the figure is wider than tall, so each extra bullet adds
-height and moves it towards square (3 → 0.81, 5 → 0.95), which is why
-the range is 3–5 rather than a fixed 3.
+**Layout is measured, and the measurements are portable.** A reasoning
+chain is long and thin; drawn as a flat `graph LR` it is unreadable on a
+page. The spec's answer is outer `graph TB`, each row a `subgraph`
+declaring its own `direction LR`, at most 3 nodes per row — **8 nodes in
+3/3/2 renders 773 × 824, 0.938 of a square**.
+
+The load-bearing rule is how the rows are joined: **subgraph to subgraph
+(`r1 -->|…| r2`), never node to node.** mermaid discards a row's
+`direction` as soon as one of its nodes points outside the row, and the
+rows then stack into one narrow column. Every figure is verified by
+reading node coordinates out of the SVG — squareness alone cannot tell a
+laid-out row from a wide box, and one rejected candidate scored *better*
+while its rows were stacked — and by rendering on **mermaid 11.13.0 (what
+Obsidian and the VS Code preview run) and 11.17.0 (current)**, which come
+out byte-identical.
 
 **Length limits are warnings, not failures.** The single widest bullet
 sets the column width for every node, so that one line is what the gate

@@ -109,8 +109,8 @@ direction LR
 end
 A -->|邊標籤| B
 B -->|邊標籤| C
-C -->|邊標籤| D
 D ==>|邊標籤| E
+r1 -->|邊標籤| r2
 style A fill:#f8f9fa,stroke:#868e96,stroke-width:2px
 ```
 
@@ -142,14 +142,14 @@ direction TB
   G["..."]
   H["..."]
 end
-A -->|分出第一條| B
-A -->|分出第二條| C
 B -->|各自查證| D
 C -->|各自查證| E
-D -->|兩線合流| F
-E -->|兩線合流| F
 F -->|再找反證| G
 G ==>|無反證乃定案| H
+c1 -->|分出第一條| c2
+c1 -->|分出第二條| c3
+c2 ==>|兩線合流| c4
+c3 ==>|兩線合流| c4
 style A fill:#f8f9fa,stroke:#868e96,stroke-width:2px
 ```
 
@@ -166,13 +166,18 @@ fails on them.
   structure entirely.
 - **Every subgraph declares its own `direction`** on its own line,
   immediately after the `subgraph` line — `LR` for rows, `TB` for
-  columns. Without it mermaid emits one flat column and the grouping
-  buys nothing (0.14 squareness against 0.81).
-- **A subgraph holds a connected run of nodes.** If its members have no
-  edges among themselves, mermaid **ignores the declared direction** and
-  lays them out along the other axis — three independent nodes in a
-  `direction TB` box came out as a horizontal row. Group nodes that are
-  actually linked; independent branches go in separate subgraphs.
+  columns. Without it the grouping buys nothing.
+- **No node edge may leave its subgraph. Rows and columns are joined
+  SUBGRAPH to SUBGRAPH.** This is the single rule the whole layout rests
+  on. mermaid drops a subgraph's `direction` the moment one of its nodes
+  has an edge to anything outside it — **including an edge to another
+  subgraph's id** — and the boxes then stack along the parent's axis
+  instead. So `A -->|…| B` inside one row, and `r1 -->|…| r2` between
+  rows; never `C -->|…| D` across rows, and never `C -->|…| r2`.
+  Measured identical on mermaid 11.13.0 and 11.17.0; see the appendix.
+- **A subgraph holds a connected run of nodes**, so that its members read
+  as one stage. A subgraph holding exactly ONE node is fine — it has no
+  inner edge to be part of, and renders correctly.
 - **Subgraph ids are `r1`/`r2`/… or `c1`/`c2`/…**, never a bare capital
   letter, which would collide with a node id.
 - **Node ids are single uppercase letters** in reading order.
@@ -328,70 +333,71 @@ Three things the vocabulary deliberately does **not** get:
 
 ## Appendix — the measurements
 
-Rendered SVG viewBox dimensions from mermaid-cli; squareness is
-`min(W,H)/max(W,H)`, 1.00 being a square.
+**Squareness alone is not a valid check, and treating it as one produced
+a wrong rule.** `min(W,H)/max(W,H)` cannot tell "the rows are laid out
+horizontally" from "the boxes happen to be wide", and one candidate
+scored *best of three* while its rows were secretly stacked. Every row
+below is therefore verified two ways: node coordinates parsed from the
+SVG (each declared row must share one y and increase in x — columns, one
+x and increasing y), and a PNG rendered on **two** mermaid versions and
+compared byte for byte.
 
-**Layout of a linear 8-node chain**, fifteen variants:
+Versions: **11.13.0** (the line Obsidian and the VS Code preview ship)
+and **11.17.0** (current). Every measurement below was byte-identical on
+both, so these numbers are portable rather than a property of one
+release.
 
-| Layout | Size | Squareness |
-|---|---|---|
-| **`graph TB` + rows w/ `direction LR`** | 1022 × 824 | **0.81** |
-| `graph LR` outer + columns w/ `direction TB` | 1107 × 739 | 0.67 |
-| `graph TB` + branching, no subgraph | 421 × 1062 | 0.40 |
-| subgraph rows but no `direction` declared | 272 × 1884 | 0.14 |
-| `graph LR`, flat chain | 3061 × 227 | 0.07 |
-| `graph LR` flat + tightened node/rank spacing | 2956 × 221 | 0.07 |
+**How the rows are joined** — a linear 6-node chain, 3 + 3:
 
-Spacing config is a dead end: 13.48:1 to 13.39:1.
-
-**Nodes per row**, a separate 8-node chain, all three rendered in one
-run so they are comparable to each other (they are not comparable to the
-table above, which used different node content):
-
-| Nodes per row | Size | Squareness |
-|---|---|---|
-| 2 | 584 × 1118 | 0.523 |
-| **3** | 909 × 824 | **0.907** |
-| 4 | 1233 × 530 | 0.430 |
-
-Three is a peak rather than a ceiling: the figure gets narrow below it
-and wide above it, and the fall-off is steep on both sides. This is why
-the rule reads "rows of at most 3, as even as possible" — a trailing row
-of 2 costs little, a row of 4 costs a lot.
-
-**Bullet count**, same diagram, nothing else changed. Width was
-byte-identical across all four — extra lines add height only:
-
-| Bullets | Size | Squareness |
-|---|---|---|
-| 2 | 1022 × 752 | 0.736 |
-| 3 | 1022 × 824 | 0.807 |
-| 4 | 1022 × 896 | 0.877 |
-| 5 | 1022 × 968 | 0.948 |
-
-**Branching topologies**, identical node content throughout:
-
-| Topology and layout | Size | Squareness | Parallelism visible |
+| Cross-row edge | Size | Squareness | Rows really horizontal? |
 |---|---|---|---|
-| diamond, columns | 951 × 1014 | **0.938** | yes |
-| 3-way fan, one column per branch | 919 × 988 | **0.930** | yes |
-| 3-way fan, fixed rows | 866 × 1024 | 0.846 | **no — one branch decoupled** |
-| 3-way fan, all branches in one column | 1331 × 988 | 0.742 | **no — `direction` dropped** |
-| two tracks, columns | 951 × 1512 | 0.629 | yes |
-| diamond, topological rows | 882 × 1518 | 0.581 | yes |
-| 3-way fan, topological rows | 866 × 1518 | 0.571 | yes |
-| diamond, fixed rows | 574 × 1224 | 0.469 | **no** |
-| two tracks, fixed rows | 571 × 1224 | 0.467 | **no** |
-| two tracks, topological rows | 555 × 1718 | 0.323 | yes |
+| **`r1 -->\|…\| r2`** (subgraph to subgraph) | 773 × 530 | 0.686 | **yes** |
+| `C -->\|…\| r2` (node to subgraph) | 773 × 958 | *0.807* | **no — stacked** |
+| `C -->\|…\| D` (node to node) | 242 × 1386 | 0.175 | **no — stacked** |
 
-Two rows carry the whole argument for the layer split: the 3-way fan at
-**0.846 hides a branch**, and the same content at **0.571 shows all
-three**. A rule that optimised the number would have shipped the diagram
-that misrepresents the reasoning. Once the axis matches the shape of the
-chain the conflict disappears — the column layouts are both the squarest
-*and* the correct ones.
+The middle row is the whole reason the method changed: it is the
+squarest of the three and it is wrong. It was briefly adopted on the
+strength of that number before the coordinates were read.
 
-Zero edge crossings were found in any branched variant; dagre routes
-converging merge edges into separate parallel bands. Inner `direction`
-held in every case except the one noted above, where the subgraph's
-members had no edges among themselves.
+**Node count**, subgraph-to-subgraph joins, rows of at most 3:
+
+| Nodes | Rows | Size | Squareness |
+|---|---|---|---|
+| 5 | 3 / 2 | 773 × 530 | 0.686 |
+| 6 | 3 / 3 | 773 × 530 | 0.686 |
+| 7 | 3 / 2 / 2 | 773 × 824 | 0.938 |
+| 8 | 3 / 3 / 2 | 773 × 824 | 0.938 |
+| 9 | 3 / 3 / 3 | 773 × 824 | 0.938 |
+
+A row holding a single node (3 / 3 / 1) renders correctly and is not a
+defect — an earlier note called it a hazard, on evidence taken from a
+diagram whose cross-row edges were the broken node-to-node form.
+
+**Nodes per row**, fixed at 8 nodes so only the row width changes:
+
+| Per row | Rows | Size | Squareness |
+|---|---|---|---|
+| 2 | 2/2/2/2 | 510 × 1118 | 0.456 |
+| **3** | 3/3/2 | 773 × 824 | **0.938** |
+| 4 | 4/4 | 1036 × 530 | 0.512 |
+
+Three is a peak, and the fall-off is steep on both sides.
+
+**Branching chains**, columns, 7 nodes in 4 groups:
+
+| Cross-column edge | Size | Squareness | Columns really vertical? |
+|---|---|---|---|
+| **`c1 -->\|…\| c2`** (subgraph to subgraph) | 874 × 1014 | 0.862 | **yes** |
+| `A -->\|…\| B` (node to node) | 1290 × 476 | 0.369 | **no — flattened** |
+
+The same single rule fixes both shapes.
+
+**What the earlier appendix got wrong.** It reported a rows layout at
+0.81 and a flat `graph LR` chain at 0.07, and concluded that declaring
+`direction` on each subgraph bought the difference. The diagrams it
+measured joined rows node-to-node, so on almost every mermaid release
+their `direction` was being discarded and the rows were stacking — the
+0.81 came from a two-patch window (11.16.0 and 11.16.1) where mermaid
+briefly honoured the declaration anyway, and 11.17 restored the
+documented behaviour. Those numbers are withdrawn, not adjusted: they
+were measured on a shape this spec no longer permits.

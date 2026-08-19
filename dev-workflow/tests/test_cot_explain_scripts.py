@@ -97,8 +97,14 @@ def node(nid, title, extra_bullets=0):
 
 
 def diagram(indent="", chained=False, payload="", arrow_in_label=False,
-            multi_destination=False):
-    """A minimal five-node diagram that satisfies the spec."""
+            multi_destination=False, cross="stage"):
+    """A minimal five-node diagram that satisfies the spec.
+
+    `cross` picks how the two rows are joined:
+      "stage"      r1 -->|…| r2      — the portable form; direction survives
+      "node"       C  -->|…| D       — node to node ACROSS rows; collapses
+      "node2stage" C  -->|…| r2      — also collapses, while LOOKING squarer
+    """
     ids = "ABCDE"
     rows = [ids[:3], ids[3:]]
     out = ["graph TB"]
@@ -119,8 +125,10 @@ def diagram(indent="", chained=False, payload="", arrow_in_label=False,
     else:
         out.append("A -->|先推導| B")
         out.append("B -->|再推導| C")
-    out.append("C -->|接續| D")
     out.append("D ==>|收束為| E")
+    out.append({"stage": "r1 -->|接續| r2",
+                "node": "C -->|接續| D",
+                "node2stage": "C -->|接續| r2"}[cross])
     fills = ["#f8f9fa", "#fff4e6", "#ffe3e3", "#e5dbff", "#c5f6fa"]
     strokes = ["#868e96", "#e67700", "#c92a2a", "#5f3dc4", "#0c8599"]
     for m, f, st in zip(ids, fills, strokes):
@@ -651,6 +659,88 @@ def test_a_partly_parsed_run_does_not_claim_a_full_one(tmp_path):
         V.shutil.which, V.subprocess.run = saved_which, saved_run
     assert r.parsed == 1 and not r.fails, (r.parsed, r.fails)
     assert r.parsed != r.total, "the partial run must not read as complete"
+
+
+# ------------------------------------------- G. portable subgraph direction
+#
+# Measured on mermaid 11.13.0 (Obsidian / VS Code preview) and 11.17.0
+# (current), rendering to PNG byte-identically on both:
+#
+#   r1 -->|…| r2   rows really are horizontal      773x530  sq 0.686
+#   C  -->|…| D    rows collapse to one column     242x1386 sq 0.175
+#   C  -->|…| r2   rows collapse, but LOOK squarer 773x958  sq 0.807
+#
+# The last row is why squareness alone cannot be the gate: it scores best
+# of the three and is wrong. Any node edge that leaves its subgraph kills
+# that subgraph's `direction` — including an edge to a subgraph id.
+
+def test_the_portable_cross_row_form_passes(tmp_path):
+    md = make_md(tmp_path, cross="stage")
+    run(RENDER, md)
+    r = run(VERIFY, md.with_suffix(".html"))
+    assert r.returncode == 0, r.stdout
+
+
+def test_a_node_edge_across_rows_is_refused(tmp_path):
+    """The shape that ships today, and collapses everywhere."""
+    md = make_md(tmp_path, cross="node")
+    run(RENDER, md)
+    r = run(VERIFY, md.with_suffix(".html"))
+    assert r.returncode == 1, r.stdout
+    assert "leaves its subgraph" in r.stdout, r.stdout
+
+
+def test_a_node_to_subgraph_edge_is_refused(tmp_path):
+    """Scores 0.807 and still collapses — the false-square case."""
+    md = make_md(tmp_path, cross="node2stage")
+    run(RENDER, md)
+    r = run(VERIFY, md.with_suffix(".html"))
+    assert r.returncode == 1, r.stdout
+    assert "leaves its subgraph" in r.stdout, r.stdout
+
+
+def test_a_stage_edge_still_needs_a_label(tmp_path):
+    md = make_md(tmp_path)
+    html = md.with_suffix(".html")
+    md.write_text(
+        md.read_text(encoding="utf-8").replace("r1 -->|接續| r2", "r1 --> r2", 1),
+        encoding="utf-8",
+    )
+    run(RENDER, md)
+    r = run(VERIFY, html)
+    assert r.returncode == 1
+    assert "carries no label" in r.stdout, r.stdout
+
+
+def test_a_row_holding_one_node_is_allowed(tmp_path):
+    """3/3/1 renders correctly — verified, not assumed.
+
+    An earlier probe called a trailing single-node row a hazard; that
+    reading came from a diagram whose cross-row edges were the broken
+    node-to-node form, not from the row size.
+    """
+    md = tmp_path / "r.md"
+    body = [
+        "graph TB",
+        'subgraph r1["階段1"]', "direction LR",
+        "  " + node("A", "節點A"), "  " + node("B", "節點B"), "end",
+        'subgraph r2["階段2"]', "direction LR", "  " + node("C", "節點C"), "end",
+        "A -->|先推導| B",
+        "r1 -->|接續| r2",
+        "style A fill:#f8f9fa,stroke:#868e96,stroke-width:2px",
+        "style B fill:#fff4e6,stroke:#e67700,stroke-width:2px",
+        "style C fill:#ffe3e3,stroke:#c92a2a,stroke-width:2px",
+    ]
+    md.write_text(
+        FRONTMATTER.format(source="/x.md")
+        + "\n### 概述\n\n一句話結論。\n\n### 推理鏈\n\n#### 弧\n\n```mermaid\n"
+        + "\n".join(body) + "\n```\n",
+        encoding="utf-8",
+    )
+    run(RENDER, md)
+    r = run(VERIFY, md.with_suffix(".html"))
+    assert "no edge at all" not in r.stdout, r.stdout
+    assert r.returncode == 0, r.stdout
 
 
 def test_render_verdict_claims_only_full_coverage():

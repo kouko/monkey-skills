@@ -4,6 +4,67 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.27.0] — 2026-08-19 — `cot-explain` diagrams render the same everywhere
+
+### Fixed — the layout rested on a two-patch mermaid bug
+
+The rows layout was justified by a measurement: 0.81 squareness against
+0.07 for a flat chain, with the per-row `direction LR` line named as the
+load-bearing part. The measurement was real; the conclusion was not.
+
+mermaid discards a subgraph's `direction` as soon as one of its nodes has
+an edge to anything outside it. A reasoning chain crosses rows by
+construction, so on almost every mermaid release that declaration was
+being thrown away and the rows were stacking into one narrow column
+(242 × 1386, squareness 0.175). The original 0.81 was measured inside a
+**two-patch window** — 11.16.0 and 11.16.1 — where mermaid honoured it
+anyway; 11.17 restored the documented behaviour. The generated HTML
+pinned its CDN inside that window, which is why nothing looked wrong
+locally while **Obsidian and the VS Code preview (mermaid 11.13.x)**
+rendered the same page as a column.
+
+**The fix is one rule: rows and columns are joined SUBGRAPH to SUBGRAPH
+(`r1 -->|…| r2`), never node to node.** Node edges stay inside a row; the
+row-to-row edge carries the transition between stages. Verified
+byte-identical on 11.13.0 and 11.17.0, so the layout no longer depends on
+which mermaid the reader happens to run. The same rule fixes the
+branching shape (columns), measured 0.862 against 0.369.
+
+The verifier now refuses any node edge that leaves its subgraph —
+including `C -->|…| r2`, which is the case worth naming: it scores
+**0.807**, the best of the three candidates, and its rows are stacked. It
+was briefly adopted on that number before the node coordinates were read
+out of the SVG.
+
+### Changed — squareness is no longer trusted on its own
+
+`min(W,H)/max(W,H)` cannot distinguish "the rows are laid out
+horizontally" from "the boxes happen to be wide". Every figure in the
+spec's appendix is now verified by parsing node coordinates (each row
+must share one y and increase in x) and by byte-comparing PNG renders on
+two mermaid versions. The old appendix numbers are **withdrawn rather
+than adjusted** — they were measured on a diagram shape the spec no
+longer permits.
+
+New figures: 5 nodes 0.686, 6 nodes 0.686, 7–9 nodes 0.938; at 8 nodes,
+rows of 3 score 0.938 against 0.456 (rows of 2) and 0.512 (rows of 4). A
+trailing row holding one node renders correctly and is not a defect — an
+earlier note called it a hazard on evidence taken from the broken shape.
+
+### Changed — the `.md` stays in the temp directory
+
+Both outputs now live side by side in `${TMPDIR:-/tmp}/cot-explain/`, and
+nothing is moved by default. Keeping the page is a choice the user makes:
+publish the HTML as an Artifact, or move the `.md` into a vault — and the
+vault route now states plainly that Obsidian runs mermaid 11.13.x.
+
+### Fixed — a pin that pinned nothing
+
+`MERMAID_VER = "11.16.0"` pins mermaid-cli, which declares
+`mermaid: ^11.14.0` — so the library it actually draws with floats. Three
+places described it as "the pinned mermaid". The comment and the WARN
+text now say what is and is not pinned.
+
 ## [2.26.1] — 2026-08-19 — `cot-explain` reads as domain-neutral
 
 ### Changed — the skill no longer assumes its source is software

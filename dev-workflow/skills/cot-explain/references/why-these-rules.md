@@ -154,6 +154,49 @@ it fingerprints, `pass --render` derived from the flag rather than from a
 parse that happened, and a version claim grounded in a real live run but
 attached to a floating `11` range.
 
+## The layout rested on a bug, and squareness could not see it
+
+The rows layout was justified by a number: 0.81 squareness against 0.07
+for a flat chain. Both were real measurements. The conclusion drawn from
+them — that declaring `direction` on each subgraph buys the difference —
+was wrong, and stayed wrong for two shipped releases.
+
+mermaid drops a subgraph's `direction` as soon as one of its nodes has an
+edge to anything outside it. The chain crosses rows by construction, so
+on almost every mermaid the declaration was being discarded and the rows
+were stacking into one narrow column. The original 0.81 was measured
+inside a **two-patch window** — 11.16.0 and 11.16.1 — where mermaid
+briefly honoured it anyway; 11.17 restored the documented behaviour. The
+generated HTML happened to pin its CDN inside that window, which is why
+nothing looked broken locally while Obsidian and the VS Code preview
+(mermaid 11.13.x) rendered the same page as a column.
+
+**The metric was the deeper problem.** `min(W,H)/max(W,H)` cannot
+distinguish "the rows are horizontal" from "the boxes are wide". Asked
+for a fix, the candidate `C -->|…| r2` scored **0.807** — the best of
+three — and its rows were stacked the whole time. It was adopted on that
+number and only caught when the node coordinates were read out of the
+SVG. Every appendix figure is now verified by coordinates and by
+byte-comparing renders on two mermaid versions.
+
+The fix is one rule: **rows and columns are joined subgraph to subgraph,
+never node to node.** It renders byte-identically on 11.13.0 and 11.17.0,
+so the layout no longer depends on which mermaid the reader happens to
+have.
+
+Three lessons, all of which had already been written down here in weaker
+form:
+
+- **An inherited fact about an external tool is a claim with a version
+  attached** — this file said that about `number. space` and the exit
+  code, then the layout rule made the same mistake on a larger scale.
+- **A proxy metric is a claim about what it measures.** Squareness was
+  never validated against "did the direction take effect", and for two
+  of the three candidate shapes it disagreed.
+- **Measuring the right thing on the wrong shape is not evidence.** A
+  trailing single-node row was briefly recorded as a hazard; that came
+  from a diagram whose cross-row edges were the broken form.
+
 ## Why the vocabulary stays small
 
 The obvious response to a fidelity failure is more expressive power:
