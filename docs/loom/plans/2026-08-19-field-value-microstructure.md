@@ -4,7 +4,7 @@
 Goal: plan 的欄位值與 brief 的長段落再也無法無界成長——溢出的內容一律進
     bullet 或表格，真正的推論鏈則明文宣告，而判定這件事的是機械檢查而非
     審查者的判斷。
-Stage: sdd:wave-1
+Stage: sdd:wave-4
 Steps:
   1. 四路平行起跑：檢查器的 plan 欄位規則、plan_card 的巢狀 bullet、兩份格式 SSOT、backlog 記帳
   2. 各路加深：檢查器的 Goal 規則、plan_card 的表格保留、三份 README 同步、reviewer 檢查列
@@ -131,7 +131,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: done(08622f87)
 - **Gloss**: brief 裡超過 600 字元的散文段落要嘛拆開、要嘛明文宣告是推論鏈；引用附錄與替代方案表兩節豁免
 
 ## Task 4 — 反作弊探針：證明檢查器不會「什麼都沒比對到」而通過
@@ -151,7 +151,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: Task 3 completes first
 - **Independent**: false
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: done(04a5ed8a)
 - **Gloss**: 證明這支檢查器不會因為 regex 縮成什麼都不比對而假裝通過——空輸入報錯而不是報平安
 
 ## Task 5 — `plan_card.py`：`--detail` 保留巢狀 bullet 不折疊
@@ -194,7 +194,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: Task 5 completes first
 - **Independent**: false
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(285b4a43)
 - **Gloss**: Acceptance 底下寫表格不會再整段消失——這是目前唯一會靜默丟資料的 render 路徑
 
 ## Task 7 — `plan-format.md`：位置規則取代 `one-assertion`
@@ -265,7 +265,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: Task 7 completes first
 - **Independent**: true
 - **Brief item covered**: BI-7, BI-8
-- **Status**: pending
+- **Status**: done(bcd481b0)
 - **Gloss**: 三份 README 是上一次消費者普查第二次漏掉的檔案，這次一起改，避免文法有兩套說法
 
 ## Task 10 — plan-document-reviewer prompt 加一列檢查
@@ -285,7 +285,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: Task 7 completes first
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: done(bbc5a1b1)
 - **Gloss**: 審查者拿到的是「跑這支腳本、回報它報什麼」，不是「自己判斷這段夠不夠原子」
 
 ## Task 11 — 把檢查器接進 `writing-plans` 的閘門序列
@@ -306,7 +306,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: Tasks 3, 8 complete first
 - **Independent**: false
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: done(a78933c2)
 - **Gloss**: 規則有了、檢查器有了，這一步讓它真的在寫 plan 的時候被跑到，而不是躺在 scripts 目錄裡
 
 ## Task 12 — loom-code 0.88.0 → 0.89.0 出貨
@@ -383,7 +383,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: Task 3 completes first
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(953502fa)
 - **Gloss**: 把五份既有 plan 的欄位值改成新形狀——只換排版不動事實，證明這條規則在真實語料上做得到
 
 ## Task 15 — 回頭把七份既有 brief 改到合規
@@ -405,7 +405,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: Task 3 completes first
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: done(3b4dbfc5)
 - **Gloss**: 把七份既有 brief 的長段落改到合規——該拆的拆、該宣告的宣告，這是規則從紙上變成事實的一步
 
 ## Notes
@@ -446,3 +446,6 @@ Kickoff decision: T14/T15 editing merged historical plans and briefs → proceed
 - 2026-08-19 — BI-2 dropped "one sentence" from the mechanical `Goal:` check before T2 was dispatched. Sentence counting had already been abandoned under BI-1 after two review rounds; leaving it in BI-2 would have sent T2 to re-derive the same two failures in a second function. Brevity guidance may still say one sentence — the check measures characters and structure only.
 - 2026-08-19 — T6's Acceptance was widened mid-task to cover both branches of both loops. The shipped fix closed only the missing-`else` path (a table row before the first bullet); a table row AFTER a bullet still space-joined into that bullet's prose, and the Description loop carried the mirror-image gap — the same corruption class the task exists to remove, reached by another branch. Reproduced by the code-quality reviewer. The widening stays inside BI-5, which says `plan_card.py` renders a table body "without silently corrupting it" without naming a branch; only the task-level Acceptance was narrower. Recorded because the same lesson has now cost this arc twice: when a reviewer shows the defect class is wider than the task's gate, the gate moves, not the finding.
 - 2026-08-19 — T10 pinned Check 19's version tag against a hardcoded `"0.89.0"` rather than against `plugin.json`, and rejected `xfail` as the bridge because an expected-failure marker cannot separate "Task 12 has not run yet" from "the tag is bogus" — it would mask the exact drift the pin exists to catch. The literal is a stated, temporary limitation, and T12's Description now carries the duty to flip it to a live comparison once the bump lands. Recorded so the residual does not outlive the reason for it.
+- 2026-08-19 — A pin must be shown to fail on the REVERSAL of its target, not only on its deletion. Three instances in this arc: T8's pin passed with its whole target section deleted (the strings it matched existed elsewhere); T7's held only because a sibling assertion covered the substance; T9's `GOAL_CEILING_TOKEN = "Goal:"` passed against a README rewritten to state that `Goal:` is explicitly unbounded, because a bare field name carries no assertion content. Deletion-testing a pin proves the string is somewhere in the file. Reversal-testing proves the string means something. The reviewer that found each of these did it by mutating the target and re-running, never by reading the assertion — which is the only method that separates the two.
+- 2026-08-19 — The 300 ceiling is dropped from `Goal:`; the no-nested-body rule stays. Three rules could not all hold for an existing plan: BI-2's cap, `check_goal`'s no-split rule, and `plan-format.md`'s freeze on `Goal:`. Task 14 resolved it silently by compressing five frozen Goals by up to 45%; a spec-reviewer found four dropped facts and a docs-reviewer confirmed two of them narrow the stated commitment against the same file's own unchanged text. Re-compressing the two worst to carry the missing facts within 300 produced 320 and 390 characters, so the conflict is structural, not a compression-skill gap. BI-2's own sentence supplies the tiebreak: it justifies the structural rule with "because `plan_card.py` folds any indented content into the card's single `goal:` line" and gives the number no reason beyond matching BI-1. All five Goals are restored to their pre-compression form, uniformly rather than only the two with measured loss, because a half-restored set records no principle.
+- 2026-08-19 — `writing-plans/SKILL.md`'s word cap is not being raised. It stood at 4419 against a cap of 4420 before this arc touched it — one word of headroom after 17 prior raises — and `CLAUDE.md` §Skill Structure sets a ~3,750-word soft target and a ~4,500-word hard cap, so the file was already over the soft target and 4510 would cross the hard one. T11 compressed its gate paragraph from 135 to 91 words, measured the remaining 90-word gap, and left the cap test red rather than raising it an eighteenth time. The resolution is extraction: §Consuming a loom-design change-folder moves to a reference file. A cap that is raised at every touch has stopped being a cap, and this arc is the wrong place to demonstrate that once more.
