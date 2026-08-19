@@ -7,22 +7,16 @@ Task 1 of docs/loom/plans/2026-08-19-field-value-microstructure.md.
 
 Grammar:
 
-- A `Description` first line (the text after the colon on the bullet's
-  own line) violates when it carries more than one sentence *boundary*
-  — not every occurrence of a mark from the closed set `.` `?` `!`.
-  A mark is a boundary only when it is followed by whitespace-then-
-  capital-letter, or by end-of-line; a mark mid-token (a version
-  number's `0.89.0`, `e.g.`, `i.e.`, an ellipsis not followed by a
-  capital) is not a boundary. Counting occurrences instead of
-  boundaries produces false positives on correctly-written prose —
-  reproduced live against this plan's own Task 12. Backtick-span
-  content is still stripped before counting, so a mark inside a
-  filename like `test.py` never counts. `Description` allows exactly
-  one sentence boundary.
-- A `RED` or `GREEN` first line is allowed one assertion sentence plus
-  one optional grounding clause, so it violates only at the third
-  sentence boundary — the `Fails today because ...` clause
-  `plan-format.md` itself teaches is that grounding sentence.
+- A field's first line (the text after the colon on the bullet's own
+  line) violates when it exceeds 300 characters. The same cap applies
+  to `Description`, `RED` and `GREEN` — one rule, no per-field branch.
+  Two prior review rounds proved sentence-counting (occurrence-based,
+  then boundary-heuristic) cannot be made correct here: occurrence
+  counting false-positived on `0.89.0`, `e.g.`, `i.e.` and an
+  ellipsis; the boundary heuristic that replaced it false-negatived on
+  a lowercase-initial third sentence while still false-positiving on
+  `e.g. Python`. A character cap has no punctuation edge case to
+  enumerate.
 - A field's continuation lines (everything after the first line, up to
   the next blank or column-0 line) violate when any indented non-blank
   line is neither a nested bullet (`^\\s+[-*+]\\s`) nor a markdown table
@@ -52,38 +46,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from plan_card import _bullet_lines, _task_blocks  # noqa: E402
 
-# A backtick-quoted span — its content (including any `.`/`?`/`!`
-# inside, e.g. a filename like `test.py`) is never a sentence-terminal
-# mark.
-_BACKTICK_SPAN = re.compile(r"`[^`]*`")
-
-# A sentence *boundary*: a mark from `.` `?` `!` followed by
-# whitespace-then-capital-letter, or by end-of-line. This is what
-# distinguishes a real sentence end from a mark mid-token — a version
-# number (`0.89.0`), an abbreviation (`e.g.`, `i.e.`), or an ellipsis
-# not followed by a new (capitalized) sentence never matches.
-_SENTENCE_TERMINAL = re.compile(r"[.?!](?=\s+[A-Z]|$)")
-
 _NESTED_BULLET_LINE = re.compile(r"^\s+[-*+]\s")
 _TABLE_LINE = re.compile(r"^\s*\|")
 
-# Description: exactly one sentence (>1 terminal mark violates).
-_DESCRIPTION_MAX_TERMINALS = 1
-# RED / GREEN: one assertion + one optional grounding clause (>2 marks
-# violates — the third sentence).
-_RED_GREEN_MAX_TERMINALS = 2
-
-
-def _strip_ignored_marks(line: str) -> str:
-    """`line` with backtick-span content removed — what remains is what
-    `_sentence_count` scans for sentence boundaries."""
-    return _BACKTICK_SPAN.sub("", line).rstrip()
-
-
-def _sentence_count(line: str) -> int:
-    """Number of sentence *boundaries* in `line` (see `_SENTENCE_TERMINAL`),
-    after discounting backtick-span content."""
-    return len(_SENTENCE_TERMINAL.findall(_strip_ignored_marks(line)))
+# A field's first line may not exceed this many characters.
+_FIRST_LINE_MAX_CHARS = 300
 
 
 def _check_continuations(
@@ -106,15 +73,15 @@ def _check_continuations(
 
 
 def _check_first_line(
-    lines: list[str], number: int, name: str, field: str, max_terminals: int
+    lines: list[str], number: int, name: str, field: str
 ) -> list[str]:
     first = lines[0]
-    count = _sentence_count(first)
-    if count <= max_terminals:
+    length = len(first)
+    if length <= _FIRST_LINE_MAX_CHARS:
         return []
     return [
-        f"Task {number} ({name}): '{field}' first line carries {count} "
-        f"sentence-terminal marks (max {max_terminals}): {first!r}"
+        f"Task {number} ({name}): '{field}' first line is {length} "
+        f"characters (max {_FIRST_LINE_MAX_CHARS}): {first!r}"
     ]
 
 
@@ -141,11 +108,7 @@ def _check_acceptance(block: str, number: int, name: str) -> list[str]:
         sub_lines = _bullet_lines(sub_text, field)
         if sub_lines is None:
             continue
-        problems.extend(
-            _check_first_line(
-                sub_lines, number, name, field, _RED_GREEN_MAX_TERMINALS
-            )
-        )
+        problems.extend(_check_first_line(sub_lines, number, name, field))
         problems.extend(_check_continuations(sub_lines, number, name, field))
     return problems
 
@@ -159,13 +122,7 @@ def check_plan_fields(text: str) -> list[str]:
         description_lines = _bullet_lines(block, "Description")
         if description_lines is not None:
             problems.extend(
-                _check_first_line(
-                    description_lines,
-                    number,
-                    name,
-                    "Description",
-                    _DESCRIPTION_MAX_TERMINALS,
-                )
+                _check_first_line(description_lines, number, name, "Description")
             )
             problems.extend(
                 _check_continuations(description_lines, number, name, "Description")

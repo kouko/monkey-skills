@@ -3,13 +3,16 @@ docs/loom/plans/2026-08-19-field-value-microstructure.md.
 
 `check_plan_fields(text) -> list[str]` walks each `## Task <N> —` block
 and flags `Description` / `RED` / `GREEN` field values whose first line
-carries more sentence-terminal marks than the field's grammar allows, or
-whose continuation lines are neither a nested bullet nor a table row.
+exceeds 300 characters, or whose continuation lines are neither a
+nested bullet nor a table row.
 
-`Description` allows exactly one sentence. `RED` / `GREEN` allow one
-assertion sentence plus one optional grounding clause (the
-`Fails today because ...` clause `plan-format.md` itself teaches), so
-they violate only at the third sentence-terminal mark.
+The cap is a plain character count — no sentence counting, no
+per-field branch. Two prior review rounds proved sentence-counting
+(occurrence-based, then boundary-heuristic) cannot be made correct
+here, so the punctuation-shape tests below assert that punctuation is
+irrelevant under the cap: each shape is accepted at a short length and
+at a length just under the cap, and rejected only once the line
+exceeds 300 characters.
 
 Exercised by importing `check_plan_fields` directly (same convention as
 `test_plan_card.py` importing `plan_card` internals) plus one CLI
@@ -34,13 +37,13 @@ _spec.loader.exec_module(check_field_microstructure)
 
 check_plan_fields = check_field_microstructure.check_plan_fields
 
+_MAX = 300
 
-def test_rejects_multi_sentence_description():
-    text = (
+
+def _plan_with_description(description_value: str) -> str:
+    return (
         "## Task 1 — foo\n\n"
-        "- **Description**: Do the first thing. Do the second thing.\n"
-        "- **Module**: x\n"
-        "- **Files touched**: x\n"
+        f"- **Description**: {description_value}\n"
         "- **Acceptance**:\n"
         "  - **RED**: `test.py::test_foo` — asserts something.\n"
         "  - **GREEN**: it passes.\n"
@@ -48,6 +51,34 @@ def test_rejects_multi_sentence_description():
         "- **Independent**: true\n"
         "- **Status**: pending\n"
     )
+
+
+def _plan_with_red(red_value: str) -> str:
+    return (
+        "## Task 1 — foo\n\n"
+        "- **Description**: Do the thing.\n"
+        "- **Acceptance**:\n"
+        f"  - **RED**: {red_value}\n"
+        "  - **GREEN**: it passes.\n"
+        "- **Dependencies**: none\n"
+        "- **Independent**: true\n"
+        "- **Status**: pending\n"
+    )
+
+
+def _pad_to(text: str, length: int, filler: str = "x") -> str:
+    """`text` padded with `filler` to exactly `length` characters, by
+    appending before the trailing period so the padded string still
+    reads as prose ending in `.`."""
+    assert text.endswith(".")
+    assert length >= len(text)
+    body, _, _ = text.rpartition(".")
+    pad_needed = length - len(text)
+    return body + (filler * pad_needed) + "."
+
+
+def test_rejects_over_cap_description():
+    text = _plan_with_description("x" * 301)
     problems = check_plan_fields(text)
     assert problems, "expected a non-empty problem list"
     assert any("1" in p and "Description" in p for p in problems)
@@ -71,107 +102,124 @@ def test_accepts_first_line_plus_nested_bullets():
     assert check_plan_fields(text) == []
 
 
-def _plan_with_red(red_value: str) -> str:
-    return (
-        "## Task 1 — foo\n\n"
-        "- **Description**: Do the thing.\n"
-        "- **Acceptance**:\n"
-        f"  - **RED**: {red_value}\n"
-        "  - **GREEN**: it passes.\n"
-        "- **Dependencies**: none\n"
-        "- **Independent**: true\n"
-        "- **Status**: pending\n"
-    )
+def test_red_accepts_at_300_rejects_at_301():
+    prefix = "`test.py::test_foo` "
+    at_cap_value = prefix + ("a" * (_MAX - len(prefix)))
+    assert len(at_cap_value) == _MAX
+    assert check_plan_fields(_plan_with_red(at_cap_value)) == []
 
-
-def test_red_allows_one_grounding_clause():
-    two_sentence = _plan_with_red(
-        "`test.py::test_foo` asserts something. "
-        "Fails today because the module does not exist."
-    )
-    assert check_plan_fields(two_sentence) == []
-
-    three_sentence = _plan_with_red(
-        "`test.py::test_foo` asserts something. "
-        "Fails today because the module does not exist. "
-        "This is a third sentence."
-    )
-    problems = check_plan_fields(three_sentence)
+    over_cap_value = at_cap_value + "a"
+    problems = check_plan_fields(_plan_with_red(over_cap_value))
     assert problems, "expected a non-empty problem list"
     assert any("1" in p and "RED" in p for p in problems)
 
 
-def _plan_with_description(description_value: str) -> str:
-    return (
-        "## Task 1 — foo\n\n"
-        f"- **Description**: {description_value}\n"
-        "- **Acceptance**:\n"
-        "  - **RED**: `test.py::test_foo` — asserts something.\n"
-        "  - **GREEN**: it passes.\n"
-        "- **Dependencies**: none\n"
-        "- **Independent**: true\n"
-        "- **Status**: pending\n"
-    )
-
-
-def test_accepts_unbackticked_version_number():
-    text = _plan_with_description("Bump the version to 0.89.0.")
+def test_accepts_300_char_first_line():
+    text = _plan_with_description("x" * 300)
     assert check_plan_fields(text) == []
 
 
-def test_rejects_unbackticked_version_number_plus_second_sentence():
-    text = _plan_with_description("Bump the version to 0.89.0. Then ship it.")
+def test_rejects_301_char_first_line():
+    text = _plan_with_description("x" * 301)
     problems = check_plan_fields(text)
     assert problems, "expected a non-empty problem list"
     assert any("1" in p and "Description" in p for p in problems)
 
 
-def test_accepts_eg_abbreviation():
-    text = _plan_with_description(
-        "Fetch data from the API, e.g. the users endpoint, and cache it."
-    )
-    assert check_plan_fields(text) == []
+def test_version_number_accepted_short_and_near_cap():
+    short = "Bump the version to 0.89.0."
+    assert check_plan_fields(_plan_with_description(short)) == []
 
+    near_cap = _pad_to(short, _MAX)
+    assert check_plan_fields(_plan_with_description(near_cap)) == []
 
-def test_rejects_eg_abbreviation_plus_second_sentence():
-    text = _plan_with_description(
-        "Fetch data from the API, e.g. the users endpoint. Then cache it."
-    )
-    problems = check_plan_fields(text)
+    over_cap = _pad_to(short, _MAX + 1)
+    problems = check_plan_fields(_plan_with_description(over_cap))
     assert problems, "expected a non-empty problem list"
     assert any("1" in p and "Description" in p for p in problems)
 
 
-def test_accepts_ie_abbreviation():
-    text = _plan_with_description(
-        "Use the flag, i.e. pass --json, to enable it."
-    )
-    assert check_plan_fields(text) == []
+def test_eg_abbreviation_accepted_short_and_near_cap():
+    short = "Fetch data from the API, e.g. the users endpoint, and cache it."
+    assert check_plan_fields(_plan_with_description(short)) == []
 
+    near_cap = _pad_to(short, _MAX)
+    assert check_plan_fields(_plan_with_description(near_cap)) == []
 
-def test_rejects_ie_abbreviation_plus_second_sentence():
-    text = _plan_with_description(
-        "Use the flag, i.e. pass --json. Then run it."
-    )
-    problems = check_plan_fields(text)
+    over_cap = _pad_to(short, _MAX + 1)
+    problems = check_plan_fields(_plan_with_description(over_cap))
     assert problems, "expected a non-empty problem list"
     assert any("1" in p and "Description" in p for p in problems)
 
 
-def test_accepts_ellipsis_not_starting_new_sentence():
-    text = _plan_with_description(
-        "The scan runs long... eventually finishing."
+def test_ie_abbreviation_accepted_short_and_near_cap():
+    short = "Use the flag, i.e. pass --json, to enable it."
+    assert check_plan_fields(_plan_with_description(short)) == []
+
+    near_cap = _pad_to(short, _MAX)
+    assert check_plan_fields(_plan_with_description(near_cap)) == []
+
+    over_cap = _pad_to(short, _MAX + 1)
+    problems = check_plan_fields(_plan_with_description(over_cap))
+    assert problems, "expected a non-empty problem list"
+    assert any("1" in p and "Description" in p for p in problems)
+
+
+def test_ellipsis_accepted_short_and_near_cap():
+    short = "The scan runs long... eventually finishing."
+    assert check_plan_fields(_plan_with_description(short)) == []
+
+    near_cap = _pad_to(short, _MAX)
+    assert check_plan_fields(_plan_with_description(near_cap)) == []
+
+    over_cap = _pad_to(short, _MAX + 1)
+    problems = check_plan_fields(_plan_with_description(over_cap))
+    assert problems, "expected a non-empty problem list"
+    assert any("1" in p and "Description" in p for p in problems)
+
+
+def test_multi_sentence_description_accepted_under_cap():
+    # Round-1's rule rejected this outright (>1 sentence-terminal mark).
+    # Under a character cap it is accepted as long as it fits.
+    text = _plan_with_description("Do the first thing. Do the second thing.")
+    assert check_plan_fields(text) == []
+
+
+def test_three_sentence_red_accepted_under_cap():
+    # Round-1's rule rejected this at the third sentence-terminal mark.
+    # Under a character cap it is accepted as long as it fits.
+    text = _plan_with_red(
+        "`test.py::test_foo` asserts something. "
+        "Fails today because the module does not exist. "
+        "This is a third sentence."
     )
     assert check_plan_fields(text) == []
 
 
-def test_rejects_ellipsis_starting_new_sentence():
+def test_accepts_reviewer_false_negative_counterexample():
+    # This is the exact counterexample the reviewer used to demonstrate
+    # round-1's boundary heuristic false-negatived: a third sentence
+    # starting with a lowercase token was invisible to the heuristic, so
+    # an over-cap field passed clean. Under a character cap it is
+    # correctly accepted (it fits inside 300 characters) — for a
+    # different reason: there is no sentence machinery to fool.
     text = _plan_with_description(
-        "The scan runs long... Eventually it finishes."
+        "... asserts something. Fails today because the module does not "
+        "exist. returns None when clean."
     )
-    problems = check_plan_fields(text)
-    assert problems, "expected a non-empty problem list"
-    assert any("1" in p and "Description" in p for p in problems)
+    assert check_plan_fields(text) == []
+
+
+def test_accepts_reviewer_false_positive_counterexample():
+    # This is the exact counterexample the reviewer used to demonstrate
+    # round-1's boundary heuristic false-positived: `e.g.` followed by a
+    # capitalised proper noun (a library name) still miscounted as a
+    # sentence boundary. Under a character cap it is correctly accepted
+    # — there is no boundary detection left to trip.
+    text = _plan_with_description(
+        "Route overflow into a bullet, e.g. Python's textwrap."
+    )
+    assert check_plan_fields(text) == []
 
 
 def test_help_exits_zero():
