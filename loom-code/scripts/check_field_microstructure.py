@@ -99,12 +99,29 @@ _PARAGRAPH_MAX_CHARS = 600
 _BRIEF_EXEMPT_SECTIONS = frozenset({"Current State Evidence", "Alternatives Considered"})
 
 
+# A trailing parenthetical decoration — ASCII `(...)` or CJK `（...）`
+# — plus any whitespace directly before it, anchored at the end of the
+# string. Only a SUFFIX is stripped, never a prefix or infix: this is
+# deliberately narrower than a fuzzy match so
+# `## Alternatives Considered And Rejected Approaches` (a genuinely
+# different section that merely starts with the same words) keeps its
+# full text and stays un-exempt.
+_TRAILING_PARENTHETICAL = re.compile(r"\s*[(（][^()（）]*[)）]\s*$")
+
+
 def _normalize_heading(heading: str) -> str:
-    """Casefolded, internal-whitespace-collapsed form of a heading, so
-    `_BRIEF_EXEMPT_SECTIONS` membership survives a case difference or a
-    doubled space without widening into a fuzzy match that would start
-    exempting sections nobody meant to exempt."""
-    return " ".join(heading.split()).casefold()
+    """Casefolded, internal-whitespace-collapsed form of a heading's
+    BASE text (its trailing parenthetical decoration, if any, is
+    stripped first), so `_BRIEF_EXEMPT_SECTIONS` membership survives a
+    case difference, a doubled space, or a decoration like `(Axis 4 —
+    research-grounded)` without widening into a fuzzy or prefix match
+    that would start exempting sections nobody meant to exempt."""
+    folded = " ".join(heading.split()).casefold()
+    while True:
+        stripped = _TRAILING_PARENTHETICAL.sub("", folded)
+        if stripped == folded:
+            return folded
+        folded = stripped
 
 
 _BRIEF_EXEMPT_SECTIONS_NORMALIZED = frozenset(

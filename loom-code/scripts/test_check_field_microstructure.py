@@ -26,6 +26,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 _SCRIPT = Path(__file__).parent / "check_field_microstructure.py"
 _PLAN_FORMAT_MD = (
     Path(__file__).resolve().parents[1]
@@ -651,6 +653,47 @@ def test_genuinely_different_heading_is_not_exempt():
     problems = check_brief_paragraphs(text)
     assert len(problems) == 1
     assert "Current State Overview" in problems[0]
+
+
+# --- revision round 2: parenthetical-suffix normalization -------------
+#
+# Task 15 measured the corpus: 63 of 171 real
+# `## Alternatives Considered` headings carry a trailing parenthetical
+# decoration and silently lost their exemption. Forms below are pulled
+# verbatim from docs/loom/specs/*.md.
+
+
+@pytest.mark.parametrize(
+    "heading",
+    [
+        "## Alternatives Considered (Axis 4)",
+        "## Alternatives Considered (Axis 4 — research-grounded)",
+        "## Alternatives Considered (research-grounded)",
+        "## Alternatives Considered (Axis 4 — research-grounded, EN + JA)",
+        "## Alternatives Considered (settled earlier this session; cited, not reopened)",
+        "## Alternatives Considered（Axis 4 — 已研究）",
+        "## Alternatives Considered（Axis 4 — 本 session 已研究）",
+        "## Alternatives Considered（Axis 4 — 已搜，EN + JA）",
+    ],
+)
+def test_decorated_alternatives_considered_heading_is_exempt(heading):
+    text = heading + "\n\n" + ("a" * 700) + "\n"
+    assert check_brief_paragraphs(text) == []
+
+
+def test_current_state_evidence_brownfield_suffix_is_exempt():
+    text = "## Current State Evidence (brownfield)\n\n" + ("a" * 700) + "\n"
+    assert check_brief_paragraphs(text) == []
+
+
+def test_heading_that_merely_starts_with_exempt_words_is_not_exempt():
+    # Must NOT widen into a prefix match: a genuinely different section
+    # whose name happens to start with "Alternatives Considered" is a
+    # different section, not a decorated exempt one.
+    text = "## Alternatives Considered And Rejected Approaches\n\n" + ("a" * 700) + "\n"
+    problems = check_brief_paragraphs(text)
+    assert len(problems) == 1
+    assert "Alternatives Considered And Rejected Approaches" in problems[0]
 
 
 # --- revision round 1: missing-vs-misplaced declaration message -------
