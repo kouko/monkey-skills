@@ -286,6 +286,101 @@ def test_rejects_indented_prose_with_no_preceding_nested_bullet():
     assert any("1" in p and "Description" in p for p in problems)
 
 
+def test_rejects_crammed_prose_after_table_row_following_earlier_bullet():
+    # Round-4 defect: a nested bullet EARLIER in the field must not
+    # leak its wrap permission past an intervening table row. A table
+    # row ends the preceding bullet's wrap window, so a later
+    # deep-indented prose line is still a violation even though a
+    # bullet appeared somewhere above it in the same field.
+    text = _plan_with_raw_description_block(
+        "- **Description**: Short first line.\n"
+        "  - A nested bullet with some text here.\n"
+        "  | col1 | col2 |\n"
+        "    this deep-indented line is crammed prose after a table "
+        "row, not a continuation\n"
+    )
+    problems = check_plan_fields(text)
+    assert problems, "expected a non-empty problem list"
+    assert any(
+        "1" in p and "Description" in p and "crammed prose" in p
+        for p in problems
+    )
+
+
+def test_accepts_wrapped_continuation_under_bullet_that_reopens_after_table():
+    # Mirror of the round-4 defect: a table row ends the FIRST bullet's
+    # wrap window, but a SECOND nested bullet after the table reopens
+    # it — a wrap under that second bullet is still ordinary markdown
+    # and must be accepted.
+    text = _plan_with_raw_description_block(
+        "- **Description**: Short first line.\n"
+        "  - A nested bullet with some text here.\n"
+        "  | col1 | col2 |\n"
+        "  - Another nested bullet whose text is long enough that a\n"
+        "    human wraps it across two physical lines.\n"
+    )
+    assert check_plan_fields(text) == []
+
+
+def test_rejects_decoy_bullet_with_unbounded_folded_prose():
+    # Round-4 second leak: a nested bullet's wrap window had no upper
+    # bound — a one-word decoy bullet followed by many wrap-shaped
+    # prose lines was accepted unconditionally. The bullet's own text
+    # PLUS every wrap line folded together must still respect the
+    # 300-character cap, same as a field's first line.
+    prose_lines = "\n".join(
+        f"    crammed prose line {i} that has nothing to do with the "
+        "bullet above it and packs unstructured reasoning past the cap."
+        for i in range(10)
+    )
+    text = _plan_with_raw_description_block(
+        "- **Description**: Short first line.\n"
+        "  - a\n"
+        f"{prose_lines}\n"
+    )
+    problems = check_plan_fields(text)
+    assert problems, "expected a non-empty problem list"
+    assert any("1" in p and "Description" in p for p in problems)
+
+
+def test_accepts_folded_bullet_text_at_300_rejects_at_301():
+    prefix = "A nested bullet whose folded text is exactly at the cap "
+    at_cap_text = prefix + ("a" * (_MAX - len(prefix)))
+    assert len(at_cap_text) == _MAX
+    text = _plan_with_raw_description_block(
+        "- **Description**: Short first line.\n"
+        f"  - {at_cap_text}\n"
+    )
+    assert check_plan_fields(text) == []
+
+    over_cap_text = at_cap_text + "a"
+    text = _plan_with_raw_description_block(
+        "- **Description**: Short first line.\n"
+        f"  - {over_cap_text}\n"
+    )
+    problems = check_plan_fields(text)
+    assert problems, "expected a non-empty problem list"
+    assert any("1" in p and "Description" in p for p in problems)
+
+
+def test_rejects_single_unwrapped_bullet_over_cap():
+    # Pins the (a)-vs-(b) distinction: a bullet that is a SINGLE
+    # physical line (no wrap at all) still violates once it exceeds
+    # the cap. Every case above this one involves wrapping; without
+    # this test nothing stops a future edit from re-scoping the cap to
+    # only wrapped bullets (interpretation (a), rejected because it
+    # rewards not wrapping — same content, opposite verdict depending
+    # on where the author presses Enter).
+    single_line = "x" * (_MAX + 50)
+    text = _plan_with_raw_description_block(
+        "- **Description**: Short first line.\n"
+        f"  - {single_line}\n"
+    )
+    problems = check_plan_fields(text)
+    assert problems, "expected a non-empty problem list"
+    assert any("1" in p and "Description" in p for p in problems)
+
+
 def test_accepts_plan_format_md_verbatim_after_example():
     # Extract the "after" example from plan-format.md's
     # §Field-value grammar — before/after section verbatim, and prove

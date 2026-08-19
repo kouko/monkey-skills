@@ -67,25 +67,54 @@ def _check_continuations(
     indented at least as deep as that bullet's own text start. A line
     indented under a table row (with no governing nested bullet) is
     NOT covered by the wrap exemption; the grammar ties it only to
-    nested bullets."""
+    nested bullets, and a table row also ends the wrap window of any
+    earlier nested bullet, so a later deep-indented line does not
+    inherit permission from a bullet a table row has already closed.
+    The wrap window itself is bounded: a nested bullet's own text plus
+    every line folded into it under shape 3 must together respect the
+    same 300-character cap as a field's first line, so a short decoy
+    bullet cannot buy an unlimited crammed-prose exemption."""
     problems = []
     bullet_text_indent: int | None = None
+    bullet_text_parts: list[str] = []
+    bullet_raw: str | None = None
+
+    def _flush_bullet() -> None:
+        if bullet_text_indent is None:
+            return
+        folded = " ".join(bullet_text_parts)
+        if len(folded) > _FIRST_LINE_MAX_CHARS:
+            problems.append(
+                f"Task {number} ({name}): '{field}' nested bullet text "
+                f"is {len(folded)} characters (max "
+                f"{_FIRST_LINE_MAX_CHARS}): {bullet_raw!r}"
+            )
+
     for raw in lines[1:]:
         if not raw.strip():
             continue
         match = _NESTED_BULLET_LINE.match(raw)
         if match:
+            _flush_bullet()
             bullet_text_indent = len(match.group(0))
+            bullet_raw = raw.strip()
+            bullet_text_parts = [raw[match.end():].strip()]
             continue
         if _TABLE_LINE.match(raw):
+            _flush_bullet()
+            bullet_text_indent = None
             continue
         indent = len(raw) - len(raw.lstrip(" "))
         if bullet_text_indent is not None and indent >= bullet_text_indent:
+            bullet_text_parts.append(raw.strip())
             continue
+        _flush_bullet()
+        bullet_text_indent = None
         problems.append(
             f"Task {number} ({name}): '{field}' continuation line is "
             f"neither a nested bullet nor a table row: {raw.strip()!r}"
         )
+    _flush_bullet()
     return problems
 
 

@@ -43,9 +43,14 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 
 - **Description**: Create `loom-code/scripts/check_field_microstructure.py` with a `check_plan_fields(text) -> list[str]` function and a CLI that exits 1 when any violation is found.
   - The function walks each `## Task <N> —` block and inspects three fields: `Description`, and the `RED` / `GREEN` sub-bullets under `Acceptance`.
-  - A `Description` first line (the text after the colon on the bullet's own line) violates when it carries more than one sentence-terminal mark from the closed set `.` `?` `!`, ignoring marks inside backtick spans and inside a trailing parenthetical.
-  - A `RED` or `GREEN` first line is allowed one assertion sentence plus one optional grounding clause, so it violates only at the third sentence — the `Fails today because ...` clause `plan-format.md` teaches is that grounding sentence, and 33 of the 142 `RED`/`GREEN` fields in the current corpus carry it.
-  - A field's continuation lines violate when any indented non-blank line is neither a nested bullet (`^\s+[-*+]\s`) nor a markdown table line (`^\s*\|`).
+  - A prose unit violates when it exceeds 300 characters. A unit is either the field's own first line, or one nested bullet's text folded across however many physical lines it wraps to. The same cap applies to all three fields; there is no sentence counting and no per-field branch.
+  - Capping only the first line is not enough: a one-word decoy bullet (`- a`) followed by ten indented prose lines passed clean, because nothing bounded how much content rode the wrap window once a bullet opened it.
+  - Do not count sentences by any method.
+    - Occurrence counting false-positived on `0.89.0`, `e.g.`, `i.e.` and ellipsis.
+    - The boundary heuristic that replaced it false-negatived on a lowercase-initial third sentence while still false-positiving on `e.g. Python`.
+    - A character cap has no punctuation edge cases to enumerate.
+  - A field's continuation lines violate when any indented non-blank line is none of three shapes: a nested bullet (`^\s+[-*+]\s`), a markdown table line (`^\s*\|`), or a wrapped continuation of the nested bullet above it — a line indented at least as deep as that bullet's own text.
+  - The third shape is not optional. Wrapping a long nested bullet across physical lines is ordinary markdown, and a checker that rejects it false-positives on correct writing — the same defect class the first-line rule already cost two rounds.
   - Reuse `plan_card.py`'s existing `_task_blocks` and `_bullet_lines` by importing them; do not re-implement block extraction.
   - Do not implement the `Goal:` rule (T2) or the brief-paragraph rule (T3) here.
 - **Module**: loom-code/scripts
@@ -55,8 +60,13 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
   - /Users/kouko/GitHub/monkey-skills/loom-code/scripts/check_open_questions.py
   - /Users/kouko/GitHub/monkey-skills/docs/loom/plans/2026-08-18-requirement-identity-hybrid.md
 - **Acceptance**:
-  - **RED**: `loom-code/scripts/test_check_field_microstructure.py::test_rejects_multi_sentence_description` — a plan fixture whose Task 1 `Description` first line carries two sentence-terminal marks returns a non-empty problem list naming the task number and the field. Fails today because the module does not exist.
-  - **GREEN**: the test passes; a second test `test_accepts_first_line_plus_nested_bullets` returns an empty list for a fixture whose Description is one sentence followed by nested bullets and a table; a third test `test_red_allows_one_grounding_clause` returns an empty list for a `RED` first line carrying an assertion sentence plus a `Fails today because ...` clause and a non-empty list for a three-sentence one; the new verb is declared in `AGENTS.md`'s commands section and `python3 loom-code/scripts/check_field_microstructure.py --help` exits 0.
+  - **RED**: `loom-code/scripts/test_check_field_microstructure.py::test_rejects_over_cap_description` — a plan fixture whose Task 1 `Description` first line exceeds 300 characters returns a non-empty problem list naming the task number and the field.
+    - Fails today because the module does not exist.
+  - **GREEN**: the test passes, and every check below holds.
+    - `test_accepts_first_line_plus_nested_bullets` returns an empty list for a fixture whose Description is a short first line followed by nested bullets and a table.
+    - `test_accepts_300_char_first_line` and `test_rejects_301_char_first_line` pin the boundary exactly.
+    - Each punctuation shape — an un-backticked version number, `e.g.`, `i.e.`, an ellipsis — is accepted short and accepted near the cap, proving punctuation no longer affects the verdict.
+    - The new verb is declared in `AGENTS.md`'s commands section and `python3 loom-code/scripts/check_field_microstructure.py --help` exits 0.
 - **External surfaces**: stdlib only (`re`, `sys`, `pathlib`, `argparse`) plus an intra-repo import of `plan_card`.
 - **Reuse-adequacy**:
   - **Observed**: `plan_card._bullet_lines` collects a bullet's first-line remainder plus every indented non-blank continuation line, stopping at the first blank or column-0 line — `read loom-code/scripts/plan_card.py:174`.
@@ -82,7 +92,9 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
   - /Users/kouko/GitHub/monkey-skills/loom-code/hooks/family-relay.md
 - **Reuse-adequacy**:
   - **Observed**: `plan_card._header_value` returns a `<key>:` header line's value with every indented non-blank continuation line folded in and joined by a single space, `None` when the key line is absent and `""` when the value is present but empty — `read loom-code/scripts/plan_card.py:127`.
-  - **Intended**: called by `check_goal` on the `Goal:` header value to obtain exactly the folded string the progress card will print, so the sentence-count and 300-character checks measure the card's value rather than the file's raw first line; the raw header lines are read separately for the nested-body check, because the fold discards the distinction the checker needs.
+  - **Intended**: called by `check_goal` on the `Goal:` header value to obtain exactly the folded string the progress card will print.
+    - The 300-character check therefore measures the card's value rather than the file's raw first line.
+    - The raw header lines are read separately for the nested-body check, because the fold discards the distinction that check needs.
 - **Acceptance**:
   - **RED**: `loom-code/scripts/test_check_field_microstructure.py::test_rejects_goal_with_nested_body` — a plan fixture whose header `Goal:` is followed by an indented `- ` bullet returns a problem naming `Goal`. Fails today because `check_goal` does not exist.
   - **GREEN**: the test passes; `test_rejects_overlong_goal` flags a 400-character single-sentence Goal with a message distinct from the nested-body message; `test_accepts_short_single_sentence_goal` returns an empty list.
@@ -149,12 +161,13 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
   - /Users/kouko/GitHub/monkey-skills/loom-code/scripts/test_plan_card.py
   - /Users/kouko/GitHub/monkey-skills/loom-code/hooks/family-relay.md
 - **Acceptance**:
-  - **RED**: `loom-code/scripts/test_plan_card.py::test_detail_preserves_nested_description_bullets` — `build_detail` on a task whose Description is one sentence plus two nested bullets emits three lines, not one space-joined line. Fails today because `_bullet_value` joins with `" ".join(...)` at `plan_card.py:196`.
+  - **RED**: `loom-code/scripts/test_plan_card.py::test_detail_preserves_nested_description_bullets` — `build_detail` on a task whose Description is one sentence plus two nested bullets emits three lines, not one space-joined line.
+    - Fails today because `_bullet_value` joins with `" ".join(...)` at `plan_card.py:196`.
   - **GREEN**: the test passes; every pre-existing test in `test_plan_card.py` still passes; `python3 loom-code/scripts/plan_card.py docs/loom/plans/2026-08-18-requirement-identity-hybrid.md` exits with the same code and same card body as before this task.
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(57006aca)
 - **Gloss**: `--detail` 不再把子 bullet 用空格黏成一行——這是新寫法能被人讀到的前提
 
 ## Task 6 — `plan_card.py`：`Acceptance` 底下的表格不再被丟掉
@@ -191,7 +204,8 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
   - /Users/kouko/GitHub/monkey-skills/loom-code/scripts/test_plan_diagram_slot.py
   - /Users/kouko/GitHub/monkey-skills/docs/loom/specs/2026-08-19-field-value-microstructure.md
 - **Acceptance**:
-  - **RED**: `loom-code/scripts/test_field_value_grammar.py::test_plan_format_states_positional_rule` — asserts `plan-format.md` contains the positional-rule sentence and a before/after example, and asserts the string `one-assertion unit of work` is absent. Fails today because the old wording is present at `plan-format.md:97`.
+  - **RED**: `loom-code/scripts/test_field_value_grammar.py::test_plan_format_states_positional_rule` — asserts `plan-format.md` contains the positional-rule sentence and a before/after example, and asserts `one-assertion unit of work` is absent.
+    - Fails today because the old wording is present at `plan-format.md:97`.
   - **GREEN**: the test passes; a second assertion checks that no paraphrase of the retired rule survives — grep for `one-assertion` returns zero hits AND the reviewer confirms no reworded restatement of "write one assertion" remains in the file.
 - **Dependencies**: none
 - **Independent**: true
@@ -218,13 +232,16 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-6
-- **Status**: pending
+- **Status**: done(9883a148)
 - **Gloss**: brief 格式規範收下段落規則，並把「這段是推論鏈」的宣告寫成固定字串——分類的是作者，不是機器
 
 ## Task 9 — 三份 README 同步新的欄位文法
 
 - **Description**: Update the field-grammar lines in `loom-code/skills/writing-plans/README.md` and its `README.ja.md` / `README.zh-TW.md` mirrors so all three state the positional rule instead of the retired `one-assertion` wording.
-  - Each mirror states the rule in its own language; the three must agree on the substance — `Description` = exactly one sentence on the first line, `RED` / `GREEN` = one assertion sentence plus one optional grounding clause, every further clause in a nested bullet or table — and on the 300-character `Goal:` ceiling.
+  - Each mirror states the rule in its own language; the three must agree on the substance below and on the `Goal:` ceiling, which is the same 300.
+    - No prose unit in `Description`, `RED` or `GREEN` exceeds 300 characters.
+    - A unit is the field's own first line, or one nested bullet's text folded across the lines it wraps to.
+    - Everything that does not fit becomes another nested bullet or a table row.
   - Change only the field-grammar lines; leave every other line of each README untouched.
 - **Module**: loom-code/skills/writing-plans
 - **Files touched**: loom-code/skills/writing-plans/README.md, loom-code/skills/writing-plans/README.ja.md, loom-code/skills/writing-plans/README.zh-TW.md, loom-code/scripts/test_writing_plans_readme_sync.py
@@ -234,7 +251,9 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
   - /Users/kouko/GitHub/monkey-skills/loom-code/skills/writing-plans/references/plan-format.md
 - **Acceptance**:
   - **RED**: `loom-code/scripts/test_writing_plans_readme_sync.py::test_all_three_readmes_state_positional_rule` — asserts each of the three READMEs carries the positional rule and none carries `one-assertion`. Fails today because all three restate the retired wording at `:34-42`.
-  - **GREEN**: the test passes; every pre-existing assertion in `test_writing_plans_readme_sync.py` still passes; the reviewer additionally confirms no translated restatement of the retired rule survives in the `.ja` or `.zh-TW` mirror — a mechanical `one-assertion` grep cannot see 「一つのアサーション」 or「一個 assertion」, so the judgment leg is required here as well as the grep.
+  - **GREEN**: the test passes and every pre-existing assertion in `test_writing_plans_readme_sync.py` still passes.
+    - The reviewer additionally confirms no translated restatement of the retired rule survives in the `.ja` or `.zh-TW` mirror.
+    - A mechanical `one-assertion` grep cannot see 「一つのアサーション」 or「一個 assertion」, so the judgment leg is required here as well as the grep.
 - **Dependencies**: Task 7 completes first
 - **Independent**: true
 - **Brief item covered**: BI-7, BI-8
@@ -308,7 +327,10 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
   - `2026-08-13-a-widened-field-grammar-has-no-mechanical-consumer-enumeration`: append this arc's consumer census as the worked instance its start condition asked for.
   - `2026-08-18-remaining-container-rules-callout-toc-paragraph-net-plan-tables`: record that the paragraph-net item's "no loom-internal evidence yet" ground no longer holds, and that this arc took the field-value and (S)-slice half while callout / TOC / plan-tables stay parked.
   - `2026-08-18-per-unit-cot-diagram-in-the-adjudication-view`: record the (N)-slice measurement as a narrowing candidate for that arc's scope, and that its start condition is now met.
-  - `2026-08-06-plan-card-cjk-aware-gloss-line-join`: its start condition ("next `scripts/plan_card.py` touch") is met by T5/T6, and the defect is reproduced by this plan's own card (`而 審查者的判斷` — a stray space between CJK codepoints). Record the reproduction and the trigger; do NOT fix it here — it is outside this brief's scope.
+  - `2026-08-06-plan-card-cjk-aware-gloss-line-join`: record the reproduction and the trigger; do NOT fix it here.
+    - Its start condition ("next `scripts/plan_card.py` touch") is met by T5/T6.
+    - The defect is reproduced by this plan's own card: `而 審查者的判斷`, a stray space between CJK codepoints.
+    - Fixing it is outside this brief's scope.
   - Leave the other three entries' status untouched; note only that this arc did not open their named files.
   - Regenerate the index with `python3 loom-code/scripts/backlog_index.py --write` after editing the entries, because `docs/loom/BACKLOG.md` is a generated artifact and `--check` rebuilds it from the entry files and diffs it against the committed copy.
 - **Module**: docs/loom/backlog
@@ -322,13 +344,15 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: none — bookkeeping mandated by the brainstorming ready check, not an outcome the brief declares
-- **Status**: pending
+- **Status**: done(cfa8d9f8)
 - **Gloss**: 把這支 arc 觸發到的四條 backlog 條目結清，免得下一個 session 重新推導一次同樣的判斷
 
 ## Task 14 — 回頭把五份既有 plan 改到合規
 
 - **Description**: Run `check_field_microstructure.py` over the five plans dated 2026-08-17 and 2026-08-18 in `docs/loom/plans/`, and reshape every reported field value until the checker exits 0.
-  - Split each over-long `Description` / `RED` / `GREEN` first line into one sentence — for `RED` and `GREEN`, one assertion sentence plus at most one grounding clause, so the existing `Fails today because ...` clauses are preserved, never stripped — plus nested bullets, and route any three-or-more-way classification into a markdown table.
+  - Reshape every prose unit that exceeds 300 characters — the field's first line, and any nested bullet's folded text — into a shorter unit plus further nested bullets.
+    - Preserve the existing `Fails today because ...` grounding clauses; the cap is on length, so a clause that fits is never stripped.
+    - Route any three-or-more-way classification into a markdown table.
   - Preserve every fact, citation, `file:line` and magic value verbatim; this is a reshaping pass, never a rewrite or a summarisation.
   - Do not touch any `Status`, `Dependencies`, `Files touched` or `Brief item covered` value — those are ledger and contract fields the reshape must leave byte-identical.
   - These plans are closed-out records, so the commit message must state that the edit is form-only.
@@ -340,7 +364,9 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
   - /Users/kouko/GitHub/monkey-skills/docs/loom/plans/2026-08-18-requirement-identity-hybrid.md
 - **Acceptance**:
   - **RED**: `python3 loom-code/scripts/check_field_microstructure.py docs/loom/plans/2026-08-18-requirement-identity-hybrid.md` exits 1 naming at least one over-long `Description`. Fails to exit 0 today because that file's Description values run 918 characters at the median.
-  - **GREEN**: the checker exits 0 on all five files; `git diff --stat` shows no change to any `Status`, `Dependencies`, `Files touched` or `Brief item covered` line, verified by a grep of the diff for those four field names returning zero changed lines; `python3 loom-code/scripts/plan_card.py` on each of the five still exits 0.
+  - **GREEN**: the checker exits 0 on all five files.
+    - `git diff --stat` shows no change to any `Status`, `Dependencies`, `Files touched` or `Brief item covered` line, verified by a grep of the diff for those four field names returning zero changed lines.
+    - `python3 loom-code/scripts/plan_card.py` on each of the five still exits 0.
 - **Review-weight**: prose
 - **Dependencies**: Task 3 completes first
 - **Independent**: true
@@ -375,6 +401,10 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Change-folder binding**: none. The declared input is the brainstorming brief at `docs/loom/specs/2026-08-19-field-value-microstructure.md` (Layer 0, explicit handoff). Two non-archived change-folders exist (`docs/loom/2026-07-12-us-sec-primary-source-layer`, `docs/loom/2026-07-19-8k-prose-kpi-intake`); neither relates to this arc's subject and neither is bound.
 - **"brief" and "spec" are the same artifact here.** loom briefs live at `docs/loom/specs/<date>-<topic>.md`, so the brief's BI-3 wording "a brief or spec paragraph" names one file class, not two. T3 and T8 both target that class. loom-design change-folder `spec.md` files are a different artifact and are out of scope.
 - **The 300-character `Goal:` ceiling is the falsifiable half.** Per the brief's Decision and the Axis-4 research, if a plan-time trial shows the ceiling truncating genuinely atomic goals, drop the ceiling and keep the structural no-nested-body rule.
+Recorded at review (wave 1, orchestrator-level, not any task's gap): `Files touched` disjointness protects against two tasks WRITING the same file, but not against task A writing a file that task B's test READS. T13 edited `docs/loom/backlog/` and `docs/loom/BACKLOG.md` while T7's suite run had `test_backlog_index.py::test_check_against_real_store_reflects_current_migration_phase` in flight — that test drives a subprocess against those real files, so it saw a torn state and failed once, then passed on rerun. T7's implementer attributed it to test-order flakiness; T7's code-quality reviewer read the test and showed that story is not supported by the code (no shared in-process state exists for ordering to perturb), naming the cross-task race as the credible mechanism. Nothing in this arc is wrong because of it, but a parallel wave whose tasks touch real files read by other tasks' tests can produce failures that look like flakiness and get dismissed as such.
+
+Recorded at review (T7, not a gap): T7's `Files touched` omitted `loom-code/scripts/test_plan_format_progress_fields.py`, whose `GOAL_SCHEMA_LINE` pin necessarily goes red when T7 edits the `Goal:` schema line it pins. The spec-reviewer ruled the edit a legitimate unavoidable consequence rather than scope expansion, but `Files touched` is the disjointness oracle for parallel dispatch — no task collided here by luck, not by design. A pinned-constant test belongs in the `Files touched` of whichever task edits the line it pins.
+
 Gloss amendment: T1 and T7 `Gloss:` lines corrected to name both branches — a `Gloss`-only edit the round-4 reviewer pre-authorised in its PASS ("worth a five-word edit... not worth a sixth round"); `Gloss` is accept-and-ignore under the reviewer contract and never rides a dispatch packet, so no re-review.
 
 Kickoff decision: RED/GREEN first-line sentence count → one assertion sentence plus one optional grounding clause; the third sentence violates. `Description` stays at exactly one.
@@ -393,3 +423,8 @@ Kickoff decision: T14/T15 editing merged historical plans and briefs → proceed
 - 2026-08-19 — `## Open Questions` entry grammar excluded from scope: `check_open_questions.py:250-256` already ignores continuation lines, and `.claude/workflows/principles-replay-matrix.js:278` writes those entries, so narrowing costs a producer change for no measured gain.
 - 2026-08-19 — `RED` / `GREEN` first lines allow one assertion sentence plus one optional grounding clause; `Description` allows exactly one. A single-sentence rule across all three fields would have flagged 33 of the 142 `RED`/`GREEN` fields in the current corpus (23%), nearly all of them the `Fails today because ...` clause `plan-format.md` itself teaches. Rejected the alternative of moving that clause into a nested bullet: it is the evidence that the RED is genuinely red, and this arc's brief does not authorise changing the RED convention. Two-way door — reversal is one checker branch and one sentence in `plan-format.md` — so recorded here rather than briefed, and late-vetoable.
 - 2026-08-19 — T14/T15 edit five closed-out plans and seven merged briefs. Two-way door (one `git revert`), so not escalated; bounded instead by a GREEN that requires zero changed lines across the five ledger and contract field classes.
+- 2026-08-19 — Sentence counting counts BOUNDARIES (a terminal mark followed by whitespace-then-capital or end-of-line), not occurrences of `.` `?` `!`. The original T1 Description specified an ignore-set (backtick spans, trailing parentheticals), which the code-quality reviewer demonstrated is incomplete: an un-backticked `0.89.0` made this plan's own Task 12 read as three sentences, and `e.g.` / `i.e.` / `...` each fail the same way. An ignore-set must enumerate every exception and silently misfires on the next one nobody listed; a boundary heuristic fails safe on the same inputs. Two-way door (one function), recorded rather than briefed.
+- 2026-08-19 — Sentence counting abandoned; the first-line rule is a 300-character cap. Round 1 of T1's review killed occurrence counting (false positives on `0.89.0` / `e.g.` / `i.e.` / `...`); round 2 killed the boundary heuristic that replaced it (a lowercase-initial third sentence passes silently — defeating the cap the gate exists to enforce — while `e.g. Python` still false-positives). The reviewer's own summary is the finding: the boundary rule did not remove the enumerate-every-exception problem, it relocated which inputs trigger it. A character cap removes the problem's cause rather than its instances. Chosen value 300 matches BI-2's `Goal:` ceiling, so the schema states one number, not two. Measured: first-line length across the 213 `Description`/`RED`/`GREEN` fields in the current corpus runs median 254 / p90 592 / max 1,550, so a 300 cap flags 40.4% — the same population T14/T15 exists to reshape. Late-vetoable: reversing to a sentence rule costs one function and one schema sentence, but reopens a defect class two rounds could not close.
+- 2026-08-19 — Continuous-mode STOP row 2a (two reviewer round-trips still NEEDS_REVISION on one task) fired on T1 and was answered by changing the primitive rather than spending a third round on the same one, per judgment-rubrics §4 (an error class surviving a fix that should have killed it is a wrong-direction signal, not a retry signal).
+- 2026-08-19 — The continuation-line rule admits a third shape: a wrapped continuation of the nested bullet above it. The original two-shape rule (nested bullet or table row) rejected ordinary markdown bullet wrapping, which T7's own compliance example tripped — the example demonstrating the rule did not pass the rule. Found by T7's spec-reviewer running the checker against the example's verbatim text rather than accepting the implementer's claim that it complied.
+- 2026-08-19 — The 300 cap governs any prose unit in a field, not only its first line. Capping the first line alone let `- a` plus unlimited indented prose pass clean — reproduced. Rejected the narrower alternative of bounding only bullets that actually wrap: it makes the verdict depend on where the author presses Enter (350 characters on one line legal, the same 350 split across two lines illegal) and therefore rewards not wrapping, which is worse formatting than the rule exists to produce. Measured before choosing: 434 nested bullets across the five current plans run median 123 / p90 331 / max 795, so a 300 cap flags 53 of them (12%) — the same order as the first-line rule's 40%, and the same population T14/T15 reshapes. The orchestrator's own "do not edit the plan" instruction to the implementer was lifted for the five bullets in this plan that exceed the cap; that constraint existed for task-boundary hygiene, not as a principle.
