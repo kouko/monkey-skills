@@ -111,6 +111,16 @@ Role boundaries enforced by behavior, not reading restrictions:
   ellipsis, and the boundary heuristic that replaced it false-negatives
   on a lowercase-initial sentence. A character cap has no punctuation
   edge cases to enumerate.
+  `--brief <path>` runs a separate check instead: every blank-line-
+  delimited prose paragraph (none of whose lines is a heading, list
+  item, table row, or blockquote, and none of it inside a fenced code
+  block) over 600 characters violates unless a `<!-- narrative:
+  <reason> -->` declaration line (non-blank reason) sits directly
+  beneath it; `## Current State Evidence` and `## Alternatives
+  Considered` are exempt. No checker classifies a paragraph as
+  narrative — only the declaration string's presence is checked.
+  rc=1 with each violation naming its `## ` section on stderr, rc=0
+  when the brief is clean.
 - **Archive a shipped change-folder, or a single backlog entry file**
   (finishing-a-development-branch archive-on-close step, orchestrator-only,
   once per branch; the file unit is also used to close a

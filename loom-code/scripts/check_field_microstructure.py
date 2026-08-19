@@ -39,12 +39,26 @@ distinction that rule needs). Sentence counting is not re-derived here
 either — BI-2 dropped "one sentence" from the mechanical check before
 this task was dispatched, for the same reason BI-1 abandoned it above.
 
-This file does not implement the brief-paragraph rule (a separate
-task, `--brief` mode) — plan-only, for now.
+`check_brief_paragraphs` (Task 3) additionally checks a brief document
+(SSOT: `loom-code/skills/brainstorming/references/handoff-brief-format.md`
+§Paragraph length), exposed by the `--brief <path>` CLI mode instead of
+the plan mode above: a blank-line-delimited block of prose whose lines
+are none of heading/list-item/table-row/blockquote, and that is not
+inside a fenced code block, is a "paragraph"; one over 600 characters
+violates unless it carries the declaration line `<!-- narrative:
+<reason> -->` directly beneath it, with a non-blank reason. No
+classification of "is this really narrative" happens anywhere here —
+presence of the exact declaration string is the only thing checked,
+per that file's explicit "no checker classifies a paragraph as
+narrative" sentence. `## Current State Evidence` and `## Alternatives
+Considered` are exempt sections. Fence tracking reuses
+`adjudication_split.iter_lines_outside_fences` (via `split_document`
+for section boundaries too) rather than a second fence tracker.
 
 Stdlib only (`re`, `sys`, `pathlib`, `argparse`) plus the intra-repo
-import of `plan_card` (resolved off this file's own directory, same
-convention as `check_open_questions.py` importing `adjudication_split`).
+imports of `plan_card` and `adjudication_split` (resolved off this
+file's own directory, same convention as `check_open_questions.py`
+importing `adjudication_split`).
 """
 
 from __future__ import annotations
@@ -55,10 +69,100 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from adjudication_split import iter_lines_outside_fences, split_document  # noqa: E402
 from plan_card import _bullet_lines, _header_value, _task_blocks  # noqa: E402
 
 _NESTED_BULLET_LINE = re.compile(r"^\s+[-*+]\s")
 _TABLE_LINE = re.compile(r"^\s*\|")
+
+# --- brief-paragraph rule (Task 3) ----------------------------------
+
+_HEADING_LINE = re.compile(r"^\s*#{1,6}\s")
+_LIST_ITEM_LINE = re.compile(r"^\s*(?:[-*+]\s|\d+[.)]\s)")
+_TABLE_ROW_LINE = re.compile(r"^\s*\|")
+_BLOCKQUOTE_LINE = re.compile(r"^\s*>")
+_NARRATIVE_DECLARATION = re.compile(r"^\s*<!--\s*narrative:\s*(.*?)\s*-->\s*$")
+
+_PARAGRAPH_MAX_CHARS = 600
+_BRIEF_EXEMPT_SECTIONS = frozenset({"Current State Evidence", "Alternatives Considered"})
+
+
+def _iter_paragraph_blocks(text: str) -> list[list[tuple[int, str]]]:
+    """Every blank-line-delimited block of `text`'s lines that lie
+    outside a fenced code block, as a list of (offset, content) pairs
+    per block. A fence silently closes whatever block preceded it —
+    `iter_lines_outside_fences` never yields the fenced lines
+    themselves, so without this gap check a paragraph directly above a
+    fence would be merged with unrelated content directly below it
+    (no blank line ever separated them in the filtered stream)."""
+    blocks: list[list[tuple[int, str]]] = []
+    block: list[tuple[int, str]] = []
+    prev_end: int | None = None
+    for offset, content in iter_lines_outside_fences(text):
+        gap = prev_end is not None and offset != prev_end
+        if not content.strip() or gap:
+            if block:
+                blocks.append(block)
+            block = []
+        if content.strip():
+            block.append((offset, content))
+        prev_end = offset + len(content) + 1
+    if block:
+        blocks.append(block)
+    return blocks
+
+
+def _is_paragraph(block: list[tuple[int, str]]) -> bool:
+    """A block is a "paragraph" only when none of its lines is a
+    heading, list item, table row, or blockquote — the grammar pinned
+    in handoff-brief-format.md §Paragraph length."""
+    return not any(
+        _HEADING_LINE.match(content)
+        or _LIST_ITEM_LINE.match(content)
+        or _TABLE_ROW_LINE.match(content)
+        or _BLOCKQUOTE_LINE.match(content)
+        for _, content in block
+    )
+
+
+def check_brief_paragraphs(text: str) -> list[str]:
+    """Every over-600-character prose paragraph in `text` that lacks a
+    valid `<!-- narrative: <reason> --> ` declaration directly beneath
+    it, one problem string per violation naming its `## ` section.
+    `## Current State Evidence` and `## Alternatives Considered` are
+    skipped entirely. Empty when the brief is clean.
+
+    A paragraph never gets classified as narrative or not — presence
+    of the declaration line (with a non-blank reason) is the only
+    thing checked, matching handoff-brief-format.md's own "no checker
+    classifies a paragraph as narrative" statement."""
+    problems: list[str] = []
+    for unit in split_document(text):
+        heading = unit["heading"]
+        if heading in _BRIEF_EXEMPT_SECTIONS:
+            continue
+        for block in _iter_paragraph_blocks(unit["source_text"]):
+            if not _is_paragraph(block):
+                continue
+            prose_lines = block
+            declaration_reason: str | None = None
+            decl_match = _NARRATIVE_DECLARATION.match(block[-1][1])
+            if decl_match:
+                declaration_reason = decl_match.group(1)
+                prose_lines = block[:-1]
+            if not prose_lines:
+                continue
+            folded = " ".join(content.strip() for _, content in prose_lines)
+            if len(folded) <= _PARAGRAPH_MAX_CHARS:
+                continue
+            if declaration_reason is not None and declaration_reason.strip():
+                continue
+            problems.append(
+                f"'{heading}' section: paragraph is {len(folded)} "
+                f"characters (max {_PARAGRAPH_MAX_CHARS}), no narrative "
+                f"declaration: {folded!r}"
+            )
+    return problems
 
 # The one ceiling every prose unit in a plan is measured against: a
 # field's first line, each nested bullet's folded text, and the header's
@@ -243,8 +347,35 @@ def main(argv: list[str] | None = None) -> int:
                     "field values against the plan-field microstructure "
                     "grammar; exit 1 on any violation."
     )
-    parser.add_argument("plan_path", help="path to the writing-plans plan file")
+    parser.add_argument(
+        "plan_path",
+        nargs="?",
+        help="path to the writing-plans plan file (plan mode)",
+    )
+    parser.add_argument(
+        "--brief",
+        metavar="PATH",
+        help="path to a handoff brief file; runs the brief "
+             "paragraph-length check instead of the plan checks",
+    )
     args = parser.parse_args(argv)
+
+    if args.brief:
+        brief_path = Path(args.brief)
+        if not brief_path.is_file():
+            print(f"Error: brief file not found at {brief_path}.", file=sys.stderr)
+            return 1
+        text = brief_path.read_text(encoding="utf-8")
+        problems = check_brief_paragraphs(text)
+        for problem in problems:
+            print(problem, file=sys.stderr)
+        if problems:
+            return 1
+        print(f"Brief paragraph microstructure in {brief_path} is clean — no violations.")
+        return 0
+
+    if not args.plan_path:
+        parser.error("plan_path is required unless --brief is given")
 
     plan_path = Path(args.plan_path)
     if not plan_path.is_file():

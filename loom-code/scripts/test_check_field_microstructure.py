@@ -45,6 +45,7 @@ _spec.loader.exec_module(check_field_microstructure)
 
 check_plan_fields = check_field_microstructure.check_plan_fields
 check_goal = check_field_microstructure.check_goal
+check_brief_paragraphs = check_field_microstructure.check_brief_paragraphs
 
 _MAX = 300
 
@@ -457,6 +458,122 @@ def test_accepts_plan_format_md_verbatim_after_example():
 def test_help_exits_zero():
     result = subprocess.run(
         [sys.executable, str(_SCRIPT), "--help"],
+        capture_output=True,
+        text=True,
+        env=_ENV,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+# --- check_brief_paragraphs (Task 3) --------------------------------
+#
+# SSOT: loom-code/skills/brainstorming/references/handoff-brief-format.md
+# §Paragraph length — 600-character threshold, `<!-- narrative: <reason>
+# -->` declaration line directly beneath the paragraph, empty/whitespace
+# reason counts as absent, `## Current State Evidence` and
+# `## Alternatives Considered` exempt.
+
+
+def test_flags_long_paragraph_without_declaration():
+    text = "## Decision\n\n" + ("a" * 700) + "\n"
+    problems = check_brief_paragraphs(text)
+    assert len(problems) == 1
+    assert "Decision" in problems[0]
+
+
+def test_declared_narrative_paragraph_passes():
+    text = (
+        "## Decision\n\n"
+        + ("a" * 700)
+        + "\n"
+        "<!-- narrative: each sentence depends on the one before it -->\n"
+    )
+    assert check_brief_paragraphs(text) == []
+
+
+def test_skips_evidence_and_alternatives_sections():
+    text = (
+        "## Current State Evidence\n\n"
+        + ("a" * 700)
+        + "\n\n"
+        "## Alternatives Considered\n\n"
+        + ("b" * 700)
+        + "\n"
+    )
+    assert check_brief_paragraphs(text) == []
+
+
+def test_empty_declaration_reason_treated_as_absent():
+    text = "## Decision\n\n" + ("a" * 700) + "\n" "<!-- narrative:    -->\n"
+    problems = check_brief_paragraphs(text)
+    assert len(problems) == 1
+    assert "Decision" in problems[0]
+
+
+def test_whitespace_only_declaration_reason_treated_as_absent():
+    text = "## Decision\n\n" + ("a" * 700) + "\n" "<!-- narrative: \t -->\n"
+    problems = check_brief_paragraphs(text)
+    assert len(problems) == 1
+
+
+def test_fenced_block_content_not_measured_as_paragraph():
+    text = "## Decision\n\n" "```mermaid\n" + ("a" * 700) + "\n" "```\n"
+    assert check_brief_paragraphs(text) == []
+
+
+def test_accepts_600_chars_rejects_601():
+    text_600 = "## Decision\n\n" + ("a" * 600) + "\n"
+    assert check_brief_paragraphs(text_600) == []
+
+    text_601 = "## Decision\n\n" + ("a" * 601) + "\n"
+    problems = check_brief_paragraphs(text_601)
+    assert len(problems) == 1
+    assert "Decision" in problems[0]
+
+
+def test_list_item_block_not_measured_as_paragraph():
+    # A block containing a list-item line is not a "paragraph" per the
+    # grammar ("none of whose lines is a heading, list item, table row,
+    # or blockquote") — never measured, regardless of length.
+    text = "## Decision\n\n- " + ("a" * 700) + "\n"
+    assert check_brief_paragraphs(text) == []
+
+
+def test_table_row_block_not_measured_as_paragraph():
+    text = "## Decision\n\n| " + ("a" * 700) + " |\n"
+    assert check_brief_paragraphs(text) == []
+
+
+def test_blockquote_block_not_measured_as_paragraph():
+    text = "## Decision\n\n> " + ("a" * 700) + "\n"
+    assert check_brief_paragraphs(text) == []
+
+
+def test_heading_line_is_never_a_paragraph():
+    # A too-long heading line is not prose; only its own H2 chunking
+    # matters, not a length rule on the heading text itself.
+    text = "## " + ("a" * 700) + "\n"
+    assert check_brief_paragraphs(text) == []
+
+
+def test_brief_cli_flags_violation(tmp_path):
+    brief = tmp_path / "brief.md"
+    brief.write_text("## Decision\n\n" + ("a" * 700) + "\n", encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, str(_SCRIPT), "--brief", str(brief)],
+        capture_output=True,
+        text=True,
+        env=_ENV,
+    )
+    assert result.returncode == 1
+    assert "Decision" in result.stderr
+
+
+def test_brief_cli_clean_exits_zero(tmp_path):
+    brief = tmp_path / "brief.md"
+    brief.write_text("## Decision\n\nShort paragraph.\n", encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, str(_SCRIPT), "--brief", str(brief)],
         capture_output=True,
         text=True,
         env=_ENV,
