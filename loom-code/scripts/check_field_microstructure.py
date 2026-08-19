@@ -31,9 +31,16 @@ Block extraction and bullet-value extraction are NOT reimplemented here
 so the two scripts never drift on what counts as a task block or a
 bullet's raw lines.
 
-This file does not implement the `Goal:` rule (a separate task) or the
-brief-paragraph rule (a separate task, `--brief` mode) — plan-only, for
-now.
+`check_goal` (Task 2) additionally flags a header `Goal:` line: its
+`_header_value`-folded value over 300 characters, or any of its raw
+continuation lines shaped as a nested bullet or a table row (checked
+separately from the fold, because the fold discards the shape
+distinction that rule needs). Sentence counting is not re-derived here
+either — BI-2 dropped "one sentence" from the mechanical check before
+this task was dispatched, for the same reason BI-1 abandoned it above.
+
+This file does not implement the brief-paragraph rule (a separate
+task, `--brief` mode) — plan-only, for now.
 
 Stdlib only (`re`, `sys`, `pathlib`, `argparse`) plus the intra-repo
 import of `plan_card` (resolved off this file's own directory, same
@@ -48,7 +55,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from plan_card import _bullet_lines, _task_blocks  # noqa: E402
+from plan_card import _bullet_lines, _header_value, _task_blocks  # noqa: E402
 
 _NESTED_BULLET_LINE = re.compile(r"^\s+[-*+]\s")
 _TABLE_LINE = re.compile(r"^\s*\|")
@@ -177,6 +184,54 @@ def check_plan_fields(text: str) -> list[str]:
     return problems
 
 
+def _goal_raw_continuation_lines(header: str) -> list[str]:
+    """The raw (unstripped) continuation lines of a header `Goal:` line —
+    same walk as `plan_card._header_value`, but returning the lines
+    themselves instead of the folded value, so their shape (nested
+    bullet / table row / plain wrapped prose) can still be told apart."""
+    lines = header.splitlines()
+    for i, line in enumerate(lines):
+        if not line.startswith("Goal:"):
+            continue
+        collected = []
+        for continuation in lines[i + 1 :]:
+            if continuation[:1] in (" ", "\t") and continuation.strip():
+                collected.append(continuation)
+            else:
+                break
+        return collected
+    return []
+
+
+def check_goal(text: str) -> list[str]:
+    """Every header `Goal:` violation in `text`: the folded value
+    exceeding 300 characters, or a continuation line shaped as a nested
+    bullet or a table row (the no-nested-body rule — `plan_card.py`
+    folds any indented content into the card's single `goal:` line, and
+    `family-relay.md` pins that line as one line, verbatim). The two
+    grounds are separate violations with separate messages. Empty when
+    the plan has no `Goal:` header line, or when it is clean."""
+    header, _, _ = text.partition("\n## ")
+    value = _header_value(header, "Goal")
+    if value is None:
+        return []
+
+    problems: list[str] = []
+    if len(value) > _FIRST_LINE_MAX_CHARS:
+        problems.append(
+            f"Goal: value is {len(value)} characters (max "
+            f"{_FIRST_LINE_MAX_CHARS}): {value!r}"
+        )
+    for raw in _goal_raw_continuation_lines(header):
+        if _NESTED_BULLET_LINE.match(raw) or _TABLE_LINE.match(raw):
+            problems.append(
+                f"Goal: has a nested bullet or table row in its body "
+                f"(not allowed — plan_card folds it into the card's "
+                f"single goal: line): {raw.strip()!r}"
+            )
+    return problems
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Check a writing-plans plan's Description/RED/GREEN "
@@ -192,7 +247,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     text = plan_path.read_text(encoding="utf-8")
 
-    problems = check_plan_fields(text)
+    problems = check_plan_fields(text) + check_goal(text)
     for problem in problems:
         print(problem, file=sys.stderr)
     if problems:

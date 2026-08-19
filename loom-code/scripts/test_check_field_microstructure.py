@@ -44,8 +44,61 @@ sys.modules["check_field_microstructure"] = check_field_microstructure
 _spec.loader.exec_module(check_field_microstructure)
 
 check_plan_fields = check_field_microstructure.check_plan_fields
+check_goal = check_field_microstructure.check_goal
 
 _MAX = 300
+
+
+def _plan_with_goal(goal_block: str) -> str:
+    """`goal_block` is the raw, already-formatted `Goal: ...` header line
+    (plus any indented continuation lines), inserted verbatim into a
+    minimal plan header followed by one task block."""
+    return (
+        f"{goal_block}"
+        "Stage: sdd:wave-1\n"
+        "\n"
+        "## Task 1 — foo\n\n"
+        "- **Description**: Do the thing.\n"
+        "- **Acceptance**:\n"
+        "  - **RED**: `test.py::test_foo` — asserts something.\n"
+        "  - **GREEN**: it passes.\n"
+        "- **Dependencies**: none\n"
+        "- **Independent**: true\n"
+        "- **Status**: pending\n"
+    )
+
+
+def test_rejects_goal_with_nested_body():
+    text = _plan_with_goal(
+        "Goal: Ship the thing.\n"
+        "  - a nested bullet under Goal, which plan_card folds into the\n"
+        "    card's single goal: line and family-relay pins as verbatim\n"
+    )
+    problems = check_goal(text)
+    assert problems, "expected a non-empty problem list"
+    assert any("Goal" in p for p in problems)
+
+
+def test_rejects_overlong_goal():
+    text = _plan_with_goal(f"Goal: {'x' * 400}\n")
+    problems = check_goal(text)
+    assert problems, "expected a non-empty problem list"
+    assert any("Goal" in p for p in problems)
+    nested_body_problems = check_goal(
+        _plan_with_goal(
+            "Goal: Ship the thing.\n"
+            "  - a nested bullet\n"
+        )
+    )
+    assert problems[0] != nested_body_problems[0], (
+        "the ceiling violation and the nested-body violation must carry "
+        "distinct messages"
+    )
+
+
+def test_accepts_short_single_sentence_goal():
+    text = _plan_with_goal("Goal: Ship the thing.\n")
+    assert check_goal(text) == []
 
 
 def _plan_with_description(description_value: str) -> str:
