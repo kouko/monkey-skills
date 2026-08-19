@@ -33,7 +33,7 @@ Per [`references/plan-format.md`](references/plan-format.md), every task ships w
 
 *Language note: Description/Acceptance are written in English; Steps/Gloss in the session's conversation language.*
 
-- **Description**: imperative-voice first line, within a 300-character ceiling. The same ceiling binds every nested bullet's own folded text too — no per-bullet exemption — and the plan header's `Goal:` line shares this same 300-character ceiling, not a separate limit that could drift from it. Anything beyond a bullet's own text routes into a further nested bullet or a table — see [`references/plan-format.md`](references/plan-format.md) §`Field-value grammar`
+- **Description**: imperative-voice first line, within a 300-character ceiling. The same ceiling binds every nested bullet's own folded text too — no per-bullet exemption. The plan header's `Goal:` line carries no length ceiling of its own — it keeps only the no-nested-body rule. Anything beyond a bullet's own text routes into a further nested bullet or a table — see [`references/plan-format.md`](references/plan-format.md) §`Field-value grammar`
 - **Module**: one path / module name (not two)
 - **Context paths**: existing code the implementer reads (paths-not-content)
 - **Acceptance**: RED test name + GREEN observable condition

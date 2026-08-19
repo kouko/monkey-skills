@@ -37,13 +37,18 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- **`Goal:`** keeps only its no-nested-body rule; the 300-character
-  ceiling considered for it was dropped, because `plan-format.md`
-  freezes that field's content and the two rules could not both hold
-  for existing plans.
-- The three `writing-plans` READMEs were resynced to the shipped
-  rule, and §Consuming a loom-design change-folder was extracted out
-  of `writing-plans/SKILL.md` into a reference file.
+- **`Goal:`** keeps only its no-nested-body rule; a 300-character
+  ceiling for it was considered and never shipped, because
+  `plan-format.md` freezes that field's content and the two rules
+  could not both hold for existing plans.
+- The three `writing-plans` READMEs were resynced to state that
+  `Goal:` carries no length ceiling.
+- §Consuming a loom-design change-folder's task-shape and
+  code-target detail (scenario→task mapping, point-don't-copy, the
+  verbatim-copy carve-out, target-repo recon) was extracted out of
+  `writing-plans/SKILL.md` into a reference file; the detection
+  cascade, the wrong-bind trigger, and the validator/critic gate stay
+  inline in `SKILL.md`.
 
 ## [0.88.0] — 2026-08-18 — adjudication render staleness made visible
 

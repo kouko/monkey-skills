@@ -33,7 +33,7 @@ brainstorming → brief                            (Discovery 段階)
 
 *言語注記：Description／Acceptance は英語で書く；Steps／Gloss はセッションの会話言語で書く。*
 
-- **Description**: 命令形の1行目を300文字以内に収める。この上限は各ネスト箇条書き自身の折り返しテキストにも同じ数値でそのまま適用され——箇条書きごとの例外はない——プランヘッダーの `Goal:` 行も同じ300文字上限を共有する（ずれうる別の上限ではない）。それを超える分はさらにネストした箇条書きか表に振り分ける — 詳細は[`references/plan-format.md`](references/plan-format.md) §`Field-value grammar`参照
+- **Description**: 命令形の1行目を300文字以内に収める。この上限は各ネスト箇条書き自身の折り返しテキストにも同じ数値でそのまま適用され——箇条書きごとの例外はない。プランヘッダーの `Goal:` 行には文字数上限がなく、ネスト本文を持たないというルールのみを保つ。それを超える分はさらにネストした箇条書きか表に振り分ける — 詳細は[`references/plan-format.md`](references/plan-format.md) §`Field-value grammar`参照
 - **Module**: 1 つのパス / モジュール名（2 つではない）
 - **Context paths**: implementer が読む既存コードのパス（paths-not-content）
 - **Acceptance**: RED テスト名 + GREEN 観察可能条件

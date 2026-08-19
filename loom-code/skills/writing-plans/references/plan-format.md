@@ -30,10 +30,10 @@ Free-form plans force SDD to re-parse; this schema makes the parse trivial.
 
 **Source brief**: <path to brief, e.g. docs/loom/specs/2026-05-16-csv-export.md>
 Goal: <one sentence transcribed from the brief's Smallest End State at
-    plan time, within a 300-character ceiling and no nested body — see
-    §Field-value grammar; frozen with the plan (wrap continuation lines
-    WITH indentation — unindented wraps silently truncate the rendered
-    goal); never edited afterward>
+    plan time, no nested body — see §Field-value grammar; frozen with
+    the plan (wrap continuation lines WITH indentation — unindented
+    wraps silently truncate the rendered goal); never edited
+    afterward>
 Stage: <planning | sdd:wave-N | review:round-N | blocked:user-decision |
     finishing — updated by the orchestrator at each transition,
     committed with the nearest ledger or close-out commit>
@@ -166,12 +166,12 @@ mechanical checker decides it the same way every time.
   first line, never onto the first line itself; a markdown table row
   carries no character ceiling of its own, only the first line and
   each nested bullet do.
-- **`Goal:`.** State one sentence within the SAME 300-character
-  ceiling as above — one number, not two independent limits that could
-  drift apart — and admit no nested body: `plan_card.py`'s
-  `_header_value` folds any indented continuation into the card's
-  single `goal:` line, so a nested body there is silently flattened
-  rather than rendered.
+- **`Goal:`.** Carries no length ceiling — admits no nested body:
+  `plan_card.py`'s `_header_value` folds any indented continuation
+  into the card's single `goal:` line, so a nested body there is
+  silently flattened rather than rendered. One sentence is brevity
+  guidance, not a mechanical rule — no check enforces sentence
+  counting on this field.
 
 See the Worked example section below for a before/after rewrite of an
 over-long `Description` under this rule.

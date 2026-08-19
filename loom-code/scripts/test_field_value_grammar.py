@@ -29,9 +29,10 @@ Pins:
   2. The `Fails today because ...` grounding-clause teaching still
      appears (it now illustrates what fits inside the RED/GREEN first
      line, not a second sentence-counting rule).
-  3. The `Goal:` header rule (one sentence, the SAME 300-character
-     ceiling, no nested body, naming `plan_card.py`'s fold as the
-     reason) is stated.
+  3. The `Goal:` header rule — carries no length ceiling (dropped
+     2026-08-19, see the field-value-microstructure plan's Decision
+     Log), admits no nested body, naming `plan_card.py`'s fold as the
+     reason — is stated.
   4. A before/after worked example lives under `## Worked example`.
   5. BI-8: the retired phrase `one-assertion unit of work` is gone, and
      no reworded restatement of "write one assertion" survives either.
@@ -54,7 +55,7 @@ PLAN_FORMAT_MD = (
 )
 
 RETIRED_PHRASE = "one-assertion unit of work"
-GOAL_CEILING_PHRASE = "300-character"
+GOAL_NO_CEILING_PHRASE = "Carries no length ceiling"
 FAILS_TODAY_PHRASE = "Fails today because"
 WORKED_EXAMPLE_HEADING = "## Worked example"
 FIRST_LINE_CAP_PHRASE = "300-character ceiling"
@@ -84,9 +85,9 @@ def test_plan_format_states_character_cap_rule():
     # The Fails-today-because grounding-clause teaching still exists —
     # it now illustrates what fits inside the RED/GREEN first line.
     assert FAILS_TODAY_PHRASE in text
-    # Goal: one sentence, the SAME 300-character ceiling, no nested
-    # body, naming plan_card.py's fold as the reason.
-    assert GOAL_CEILING_PHRASE in text
+    # Goal: carries no length ceiling, admits no nested body, naming
+    # plan_card.py's fold as the reason.
+    assert GOAL_NO_CEILING_PHRASE in text
     assert "plan_card.py" in text
     # Before/after worked example lives under the existing `## Worked
     # example` section.
