@@ -1,42 +1,40 @@
 # Brief: give a requirement one identity from its birthplace onward (REQ-n + name)
 
-Date: 2026-08-18
-Stage: brainstorming output → writing-plans input
-Design-side on-ramp: no criteria row fired (repair of a shipped loom mechanism;
-no UI surface, no new multi-state behavior) — no detour offered.
-Axis 0 queue check: this arc IS `## Now`
-(`2026-08-13-requirement-identity-splits-between-birthplace-and-living-spec`,
-COMMITTED-NEXT, start = "immediately after the brief-item addressability arc
-ships" — that arc merged as PR #692). One OPEN entry fires on this arc's touch
-set: `2026-07-06-four-deferred-items-from-the-living-spec-index-slices-paired-regex-locks`
-(start = "next living-spec script touch"); its item (a) is folded in below,
-(b)–(d) stay open (see Out of Scope).
-Predecessor: `docs/loom/specs/2026-08-13-brief-item-addressability.md` — this
-brief mirrors its `BI-<n>` convention shape (authored id + readable text,
-monotonic never reused, all-or-nothing per document, legacy mode never
-deprecated, convention pinned by tests over the doc).
+- Date: 2026-08-18
+- Stage: brainstorming output → writing-plans input
+- Design-side on-ramp: no criteria row fired (repair of a shipped loom mechanism; no UI surface, no new multi-state behavior) — no detour offered.
+- Axis 0 queue check: this arc IS `## Now` (`2026-08-13-requirement-identity-splits-between-birthplace-and-living-spec`, COMMITTED-NEXT, start = "immediately after the brief-item addressability arc ships" — that arc merged as PR #692). One OPEN entry fires on this arc's touch set: `2026-07-06-four-deferred-items-from-the-living-spec-index-slices-paired-regex-locks` (start = "next living-spec script touch"); its item (a) is folded in below, (b)–(d) stay open (see Out of Scope).
+- Predecessor: `docs/loom/specs/2026-08-13-brief-item-addressability.md` — this brief mirrors its `BI-<n>` convention shape (authored id + readable text, monotonic never reused, all-or-nothing per document, legacy mode never deprecated, convention pinned by tests over the doc).
 
 ## Problem
 
 When a requirement is written for the first time — in a change-folder
 `specs/<capability>/spec.md` — it is named by prose (`### Requirement: <name>`),
 and everything downstream that wants to point at it must repeat that prose:
-the plan's join key (`<change-id> / Requirement: <name> / Scenario: <name>`),
-the coverage checker's keys, any future `@req` tag. A prose key breaks under
+
+- the plan's join key (`<change-id> / Requirement: <name> / Scenario: <name>`)
+- the coverage checker's keys
+- any future `@req` tag
+
+A prose key breaks under
 rewording, cannot disambiguate duplicates (`check_scenario_coverage.py:199-204`
 already warns "the join-key grammar is fixed… occurrence indices can't be
 added" and continues), and never joins to the `REQ-N` vocabulary the living
 spec and its CI gate speak.
 
-Recon reframed the backlog's statement of the defect. There is no split
+Recon reframed the backlog's statement of the defect: there is no split
 between two populated vocabularies — there is ONE populated vocabulary (prose
 names, ~40 real requirements across two live folders + archive) and one
-**documented-but-never-populated** vocabulary (`REQ-N`): zero `### Requirement:
-REQ-` headers exist outside the skill's own placeholder text, zero
-`@req: REQ-N` tags exist in source, no script ever mints a REQ-N (the archive
-verb only `mv`s the folder), and the CI gate's namespace root points at a
-directory that does not exist (`docs/loom/spec`, singular) — the gate has been
-vacuously green since it shipped. Meanwhile a third vocabulary already grew to
+**documented-but-never-populated** vocabulary (`REQ-N`).
+
+Evidence for the documented-but-never-populated vocabulary:
+
+- zero `### Requirement: REQ-` headers exist outside the skill's own placeholder text
+- zero `@req: REQ-N` tags exist in source
+- no script ever mints a REQ-N (the archive verb only `mv`s the folder)
+- the CI gate's namespace root points at a directory that does not exist (`docs/loom/spec`, singular) — the gate has been vacuously green since it shipped
+
+Meanwhile a third vocabulary already grew to
 fill the vacuum: `investing-toolkit/tests/test_exhibit_*.py:13,25,32` carry
 `@req:` lines citing a plan path in prose.
 
@@ -184,17 +182,11 @@ Sources re-verified 2026-08-18 (EN + JA; JA sources — Qiita/dearsystem Kiro
 write-ups — reprint EN mechanics and add no independent detail; no EN/JA
 disagreement found).
 
-My take — **Recommend**: hybrid `REQ-<n> — <name>`, id authored at birth in
-the change-folder, global monotonic sequence, uniqueness enforced by the
-merge-boundary checker. **Why**: every long-lived system surveyed converges on
-immutable-id + mutable-title (StrictDoc/Doorstop `UID`+`TITLE`+auto `MID`
-built for cross-document moves; DOI+title; git SHA+ref; Jira key+summary),
-and loom's own plan (`T3` + `## Task 3 — name`) and brief (`BI-<n> — text`)
-layers already ARE this shape — the convention is proven in-repo twice.
-**Conditional reversal**: if parallel change-folders collide on `REQ-<n>`
-more than once a quarter, switch minting to reserve-on-create keyed by a
-central sequencer (the Matrix MSC pattern — PR number as id,
-spec.matrix.org/proposals) instead of a repo grep.
+My take:
+
+- **Recommend**: hybrid `REQ-<n> — <name>`, id authored at birth in the change-folder, global monotonic sequence, uniqueness enforced by the merge-boundary checker.
+- **Why**: every long-lived system surveyed converges on immutable-id + mutable-title (StrictDoc/Doorstop `UID`+`TITLE`+auto `MID` built for cross-document moves; DOI+title; git SHA+ref; Jira key+summary), and loom's own plan (`T3` + `## Task 3 — name`) and brief (`BI-<n> — text`) layers already ARE this shape — the convention is proven in-repo twice.
+- **Conditional reversal**: if parallel change-folders collide on `REQ-<n>` more than once a quarter, switch minting to reserve-on-create keyed by a central sequencer (the Matrix MSC pattern — PR number as id, spec.matrix.org/proposals) instead of a repo grep.
 
 1. **Name-only, add RENAMED verb + normalization** (OpenSpec's actual
    design: archive applies RENAMED→REMOVED→MODIFIED→ADDED with
@@ -224,17 +216,9 @@ spec.matrix.org/proposals) instead of a repo grep.
 
 ## Decision
 
-Build the hybrid id in the change-folder header, make the id the join key in
-every consumer that today uses the name, widen the CI namespace to see
-change-folders so the chain resolves end to end, and pin the convention with
-doc-schema tests exactly as the `BI-<n>` arc did — one convention doc section
-(the requirement-id twin of `handoff-brief-format.md §Brief item
-identifiers`, living in `spec-expansion`), one grammar in three parsers, one
-minting rule. Do NOT build the living-spec promote/merge, do NOT migrate the
-two live July folders (legacy mode is a first-class state), do NOT add
-scenario-level ids. Trade-off: cross-branch id collisions are handled by
-grep-then-check rather than a central sequencer, accepted because the path
-sees ~2 folders/month; the reversal condition above is written down.
+- Build the hybrid id in the change-folder header, make the id the join key in every consumer that today uses the name, widen the CI namespace to see change-folders so the chain resolves end to end, and pin the convention with doc-schema tests exactly as the `BI-<n>` arc did — one convention doc section (the requirement-id twin of `handoff-brief-format.md §Brief item identifiers`, living in `spec-expansion`), one grammar in three parsers, one minting rule.
+- Do NOT build the living-spec promote/merge, do NOT migrate the two live July folders (legacy mode is a first-class state), do NOT add scenario-level ids.
+- Trade-off: cross-branch id collisions are handled by grep-then-check rather than a central sequencer, accepted because the path sees ~2 folders/month; the reversal condition above is written down.
 
 - BI-9 — One convention section (form / authored-not-derived / monotonic /
   all-or-nothing / split-merge retire / language) is the SSOT for `REQ-<n>`

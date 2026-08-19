@@ -14,14 +14,16 @@
 When the loom family's design-side on-ramp fires (rows 1–4 of the reception
 table), the choice "detour into loom-design first, or go direct to a brief"
 is the user's — but today the agent both surfaces the recommendation and
-records the answer, so in practice the agent decides. Measured over the 86
-briefs in `docs/loom/specs/` that carry a `## Design-side on-ramp` line:
-71 not-fired, **8 fired-and-agent-defaulted-direct** ("offered — direct per
-repo precedent"), 3 fired-with-an-explicit-user-choice, 4 other. The
-2026-08-18 strategy-dag session is the case that made it visible: the
+records the answer, so in practice the agent decides.
+
+- Measured over the 86 briefs in `docs/loom/specs/` that carry a `## Design-side on-ramp` line: 71 not-fired, **8 fired-and-agent-defaulted-direct** ("offered — direct per repo precedent"), 3 fired-with-an-explicit-user-choice, 4 other.
+
+The 2026-08-18 strategy-dag session is the case that made it visible: the
 recommendation was one bullet inside a status paragraph, the agent wrote
 "user did not object", and the user later asked from scratch whether
-loom-design should have owned the work. Job: *when a design-side detour is
+loom-design should have owned the work.
+
+Job: *when a design-side detour is
 recommended, I want the decision to be visibly mine — recorded as my
 answer, never as the agent's default — without adding ceremony to
 increments where the on-ramp does not fire.*
@@ -38,28 +40,13 @@ exactly what squeezes the on-ramp out of the ask and into a status bullet.
 ## Smallest End State
 
 A brief whose on-ramp line records an agent default cannot become a
-committed plan. Concretely: (1) `## Design-side on-ramp` gets a canonical
-three-state grammar (`not fired — <reason>` / `fired: rows <list> — user
-chose <detour|direct>` / `pending`), specified in the brief format reference
-(today the field is specified only in brainstorming's Axis 0 prose and no
-consumer reads it); (2) a checker script parses that line, treats every
-non-canonical wording as unresolved (never as pass — the lookalike lesson),
-and honors **repo-level standing choices** recorded in
-`docs/loom/DIRECTION.md` (e.g. "row 1: standing direct — this repo
-deliberately has no PRINCIPLES.md") so a decision made once for a repo is
-not re-asked per arc; (3) `git-guard.py` runs the checker on `git commit`
-when a **newly added** `docs/loom/plans/*.md` is staged, resolves the
-plan's `**Source brief**:` path, and blocks (exit 2, message names the
-exact question to put to the user) when the brief's line is `pending`,
-non-canonical, or `fired` without a user/standing choice; (4)
-`writing-plans` runs the same checker at intake for early feedback and
-refuses to plan on the same conditions; (5) brainstorming Axis 0 and the
-reception text change from "surface once, record, proceed either way" to
-"surface as a **standalone ask** (host-neutral: `AskUserQuestion` on
-Claude Code, or a prose ask whose only question is this), write `pending`
-until the user answers, agent may recommend but never records the
-answer"; the "never blocking prerequisites" sentence is rewritten to
-"never a prerequisite to *run* loom-design — but the *choice* is gated".
+committed plan. Concretely:
+
+1. `## Design-side on-ramp` gets a canonical three-state grammar (`not fired — <reason>` / `fired: rows <list> — user chose <detour|direct>` / `pending`), specified in the brief format reference (today the field is specified only in brainstorming's Axis 0 prose and no consumer reads it).
+2. A checker script parses that line, treats every non-canonical wording as unresolved (never as pass — the lookalike lesson), and honors **repo-level standing choices** recorded in `docs/loom/DIRECTION.md` (e.g. "row 1: standing direct — this repo deliberately has no PRINCIPLES.md") so a decision made once for a repo is not re-asked per arc.
+3. `git-guard.py` runs the checker on `git commit` when a **newly added** `docs/loom/plans/*.md` is staged, resolves the plan's `**Source brief**:` path, and blocks (exit 2, message names the exact question to put to the user) when the brief's line is `pending`, non-canonical, or `fired` without a user/standing choice.
+4. `writing-plans` runs the same checker at intake for early feedback and refuses to plan on the same conditions.
+5. brainstorming Axis 0 and the reception text change from "surface once, record, proceed either way" to "surface as a **standalone ask** (host-neutral: `AskUserQuestion` on Claude Code, or a prose ask whose only question is this), write `pending` until the user answers, agent may recommend but never records the answer"; the "never blocking prerequisites" sentence is rewritten to "never a prerequisite to *run* loom-design — but the *choice* is gated".
 
 - BI-1 — `## Design-side on-ramp` has a canonical three-state grammar owned by `handoff-brief-format.md`; any other wording is unresolved, not pass.
 - BI-2 — A checker script (`loom-code/scripts/check_onramp_choice.py`) parses a brief's on-ramp line and returns resolved / unresolved with a user-facing message; standing choices in `docs/loom/DIRECTION.md` resolve the rows they name.
@@ -81,20 +68,12 @@ answer"; the "never blocking prerequisites" sentence is rewritten to
 
 ## Decision
 
-Build the gate where loom-code already has a real door and where Codex
-already fires: extend `git-guard.py`'s Bash-matched PreToolUse guard to
-check the on-ramp line at commit-time for newly added plans (BI-3), backed
-by one portable checker script (BI-2) that `writing-plans` also runs at
-intake (BI-4). Make the *choice* the gated thing, not the detour: the user
-saying "direct" is the waiver, so no separate waiver file. Give repos a
-durable place for a standing choice (BI-6) so a repo that has decided "no
-PRINCIPLES.md here" is not re-asked every arc — this is the measured
-8-of-11 pattern made honest. Rewrite the prose (BI-5) so the recommendation
-is a standalone ask and the brief says `pending` until answered; grammar
-canonical in the format reference (BI-1). Ship a fire-rate measurement
-before the gate is live (BI-7). We will NOT define "product-shaped", NOT
-gate Skill/Write tool calls, NOT touch loom-design's own skills, and NOT
-add a PreToolUse-on-Skill hook (Codex-incompatible).
+- Build the gate where loom-code already has a real door and where Codex already fires: extend `git-guard.py`'s Bash-matched PreToolUse guard to check the on-ramp line at commit-time for newly added plans (BI-3), backed by one portable checker script (BI-2) that `writing-plans` also runs at intake (BI-4).
+- Make the *choice* the gated thing, not the detour: the user saying "direct" is the waiver, so no separate waiver file.
+- Give repos a durable place for a standing choice (BI-6) so a repo that has decided "no PRINCIPLES.md here" is not re-asked every arc — this is the measured 8-of-11 pattern made honest.
+- Rewrite the prose (BI-5) so the recommendation is a standalone ask and the brief says `pending` until answered; grammar canonical in the format reference (BI-1).
+- Ship a fire-rate measurement before the gate is live (BI-7).
+- We will NOT define "product-shaped", NOT gate Skill/Write tool calls, NOT touch loom-design's own skills, and NOT add a PreToolUse-on-Skill hook (Codex-incompatible).
 
 - BI-8 — The user's recorded `direct` is the only bypass; no waiver.json for this gate.
 - BI-9 — Enforcement lives only in Bash-matched git-guard + scripts + SessionStart-injected text — surfaces verified on both hosts.
