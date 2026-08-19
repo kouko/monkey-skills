@@ -45,4 +45,7 @@ def test_skill_md_declares_microstructure_gate():
     assert "python3 loom-code/scripts/check_field_microstructure.py" in para
     assert "<plan-path>" in para
     assert "--brief <brief-path>" in para
-    assert "blocks" in para and "plan-document-reviewer" in para
+    # Verbatim spans, not bare keywords: "blocks" alone survives inside a
+    # negated rewrite ("never blocks ...") — these two full clauses do not.
+    assert "a non-zero exit blocks drafting" in para
+    assert "a non-zero exit blocks the plan-document-reviewer dispatch" in para

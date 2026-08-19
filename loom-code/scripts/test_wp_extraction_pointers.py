@@ -11,10 +11,18 @@ move; A4 (maintainer-facing fragments in §BLOCKED fallback, §Plan size
 ceiling, §Consuming) move to references/design-evidence.md (author-facing
 header) while the rules they qualify, and the 5-step process / anti-pattern
 paragraph / detection-cascade rule sentences, stay inline verbatim. Word
-ceiling <=4570 — raised deliberately by the 2026-08-19
-field-value-microstructure arc's Task 11 (the §Field-microstructure gate
-paragraph in §Self-review, mirroring the Open-questions gate paragraph
-it sits directly under; new count 4554), and before that by the 2026-08-18
+ceiling <=4420 — the 2026-08-19 field-value-microstructure arc's Task 11
+(the §Field-microstructure gate paragraph in §Self-review, mirroring the
+Open-questions gate paragraph it sits directly under) tried to land under
+this cap on revision and could not: even compressed to its practical floor
+(91 words — two invocation-mode timings, the exit-1/exit-2 distinction, a
+negation-resistant blocking clause, and the brief-authorship answer, none
+droppable) the file is 4510 words, 90 over. The cap is deliberately NOT
+raised — this test is left failing so the decision (raise the cap with a
+stated cost, or cut normative content elsewhere) surfaces to a human
+rather than disappearing into another silent raise; see
+docs/loom/plans/2026-08-19-field-value-microstructure.md Task 11 revision
+round 1 for the full accounting. Before that, raised by the 2026-08-18
 onramp-explicit-choice-gate arc's Task 9 (the §On-ramp choice gate
 paragraph in §Self-review, mirroring the Open-questions gate paragraph
 it sits under; new count 4409), and before that by the 2026-08-14
@@ -632,17 +640,23 @@ def test_open_questions_gate_owning_heading_missing_fails_loudly(monkeypatch):
 
 # --- (f) word cap ------------------------------------------------------------
 
-def test_word_count_at_most_4570():
+def test_word_count_at_most_4420():
     word_count = len(_skill_text().split())
-    assert word_count <= 4570, (
-        f"SKILL.md is {word_count} words, over the 4570 cap (raised "
-        "deliberately from 4420 by the 2026-08-19 field-value-microstructure "
-        "arc's Task 11 — the §Field-microstructure gate paragraph, "
-        "mirroring the Open-questions gate paragraph it sits directly "
-        "under in §Self-review; untrimmable without dropping either "
-        "invocation mode (`<plan-path>` / `--brief <brief-path>`) or the "
-        "blocking-on-non-zero-exit rule and the upstream-brief STOP "
-        "directive it carries; prior raise from 4350 by the 2026-08-18 "
+    assert word_count <= 4420, (
+        f"SKILL.md is {word_count} words, over the 4420 cap. The "
+        "2026-08-19 field-value-microstructure arc's Task 11 (the "
+        "§Field-microstructure gate paragraph, mirroring the "
+        "Open-questions gate paragraph it sits directly under in "
+        "§Self-review) tried to fit under this cap on revision and could "
+        "not: compressed to its practical floor (91 words — two "
+        "invocation-mode timings, the exit-1/exit-2 distinction, a "
+        "negation-resistant blocking clause, and the brief-authorship "
+        "answer, each pinned and none droppable) it still leaves the file "
+        "90 words over. Left failing deliberately — see "
+        "docs/loom/plans/2026-08-19-field-value-microstructure.md Task 11 "
+        "revision round 1 for the full accounting — rather than raised a "
+        "sixth time with no compression round behind it; prior raise from "
+        "4350 by the 2026-08-18 "
         "onramp-explicit-choice-gate arc's Task 9 — the §On-ramp choice gate "
         "paragraph, mirroring the Open-questions gate paragraph it sits "
         "directly under in §Self-review; untrimmable without dropping the "
