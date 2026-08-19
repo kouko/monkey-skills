@@ -346,6 +346,33 @@ NODE_SCHEMA_MD = (
 )
 
 
+def test_node_schema_examples_pass_check(tmp_path):
+    """node-schema.md's own worked examples must be gate-clean when written
+    verbatim into a project root -- same `<!-- example: <relpath> -->` marker
+    convention SKILL.md uses, so a shipped example can never silently
+    contradict a shipped rule (SKILL.md is covered by
+    test_thinking_session_minimal_examples_pass_check; this is node-schema.md's
+    counterpart)."""
+    text = NODE_SCHEMA_MD.read_text(encoding="utf-8")
+    examples = EXAMPLE_BLOCK.findall(text)
+
+    assert len(examples) == 4, (
+        "expected node-schema.md's GOAL / CLAIM / assumption / research-note "
+        f"examples to carry `<!-- example: ... -->` markers, found {len(examples)}"
+    )
+
+    for relpath, content in examples:
+        target = tmp_path / relpath
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+
+    violations = dag.check(dag.load_project(tmp_path))
+    assert violations == [], (
+        "node-schema.md examples must be gate-clean when written verbatim:\n"
+        + "\n".join(violations)
+    )
+
+
 def test_router_description_owns_intake_and_carries_the_missed_trigger_shapes():
     """FINDING-001/002/010/012 — the router lost every folder-mentioning and
     assumption-broke query because its description described what the plugin is
@@ -594,6 +621,20 @@ def test_thinking_session_states_the_transparency_contract():
         assert re.search(
             r"even (though|when) the same reasoning was already spoken", flat
         ), f"{name} must say the file stands alone even after the reasoning was spoken"
+    # the prose must not permit what the gate flags: `input-narration` only
+    # requires a LOAD-BEARING input's id. A bare "load-bearing" substring
+    # check would pass on the unrelated "non-load-bearing" mention in the
+    # referral_scales example, so these pin the actual clauses instead.
+    assert re.search(r"which load-bearing .{0,40}stands on", flat_body), (
+        "SKILL.md's warrant duty must say it names a LOAD-BEARING upstream node"
+    )
+    assert re.search(r"checks only that a load-bearing input", flat_body), (
+        "SKILL.md must say the gate checks a LOAD-BEARING input's id, "
+        "matching what `input-narration` actually checks"
+    )
+    assert re.search(r"at least one load-bearing input", flat_schema), (
+        "node-schema.md must say `input-narration` requires a LOAD-BEARING input's id"
+    )
 
     # (g) the branch-opening rule — the authoring half of `branch-has-node`.
     assert "one CLAIM node stating that path's position" in flat_body

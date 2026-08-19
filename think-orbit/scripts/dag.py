@@ -368,8 +368,9 @@ def _rule_input_narration(project: Project) -> list[str]:
         candidates = load_bearing_refs if load_bearing_refs else refs
         if not any(_id_named_in(ref, body) for ref in candidates):
             relpath = _relpath(node.path, project.root)
+            kind = "load-bearing inputs" if load_bearing_refs else "inputs"
             violations.append(
-                f"{relpath}: input-narration: body names none of its inputs {sorted(candidates)}"
+                f"{relpath}: input-narration: body names none of its {kind} {sorted(candidates)}"
             )
     return violations
 

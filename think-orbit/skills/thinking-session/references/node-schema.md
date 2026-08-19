@@ -33,8 +33,10 @@ defaults decided at kickoff.
 | `path` | Path | Resolved filesystem path of the file. |
 
 A research note (`research/*.md`) has its own minimal frontmatter (`id`,
-`claim`, optionally `source`/`quote`) and loads as a `Node` with
-`type == "FACT"` and `summary` set to the `claim` text.
+`seq`, `claim`, optionally `source`/`quote`) and loads as a `Node` with
+`type == "FACT"` and `summary` set to the `claim` text; `seq` is still
+required, since `check`'s `required-field` rule applies to every node
+regardless of `origin`.
 
 `check`'s `fact-source` rule (missing `source`/`quote`) does not apply to a
 research-note FACT node — the note file itself is the source and its `claim`
@@ -150,6 +152,7 @@ any file (both `break` and `impact`).
 
 ### Node — `nodes/goal.md`
 
+<!-- example: nodes/goal.md -->
 ```markdown
 ---
 id: goal
@@ -161,8 +164,26 @@ status: current
 The team committed to shipping v0 this quarter, and this node fixes that as the question the rest of the graph answers. It stands on no upstream node, because a GOAL opens the chain rather than continuing one. It collapses only if the commitment itself is withdrawn.
 ```
 
+### Node — `nodes/budget_plan.md`
+
+<!-- example: nodes/budget_plan.md -->
+```markdown
+---
+id: budget_plan
+type: CLAIM
+seq: 2
+summary: Proceed with the Q4 plan under the confirmed budget
+status: current
+branch: b1
+inputs:
+  - {ref: goal, load_bearing: true}
+---
+This stands on `goal`, which fixed shipping v0 this quarter as the question the graph answers, and answers it by committing to a spending plan sized against the confirmed Q4 envelope. What it adds is the decision to proceed now, leaning on the `q4_budget_holds` assumption filed under this same branch. It collapses if that budget assumption breaks, since the plan is costed against exactly that number.
+```
+
 ### Assumption — `assumptions/q4_budget_holds.md`
 
+<!-- example: assumptions/q4_budget_holds.md -->
 ```markdown
 ---
 id: q4_budget_holds
@@ -177,9 +198,11 @@ Finance confirmed the Q4 envelope in the August planning round, so branch `b1` i
 
 ### Research note — `research/r1.md`
 
+<!-- example: research/r1.md -->
 ```markdown
 ---
 id: r1
+seq: 3
 claim: Competitor X raised prices last quarter
 source: press release
 ---

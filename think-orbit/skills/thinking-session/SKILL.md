@@ -101,7 +101,7 @@ actually use, not per paragraph of input.
 ### The warrant duty — what every body's first paragraph answers
 
 The first paragraph of every node body answers three things: which
-upstream node this step stands on, restated in prose — naming its `id`
+load-bearing upstream node this step stands on, restated in prose — naming its `id`
 inside a sentence that says what it claimed, never leaving the id to sit
 alone in `inputs`; what this step adds on top of that upstream; and what
 would collapse it. A reader three weeks later must be able to follow the
@@ -113,7 +113,7 @@ Write that paragraph even though the same reasoning was already spoken
 aloud a moment earlier. The spoken sentence and the file are two faces
 of one reasoning step and neither substitutes for the other — the
 conversation is gone tomorrow, the file is what is left. The gate's
-`input-narration` rule checks only that an input's `id` appears in the
+`input-narration` rule checks only that a load-bearing input's `id` appears in the
 prose; the three answers above are what make that sentence worth
 reading.
 

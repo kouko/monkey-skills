@@ -4,7 +4,7 @@
 Goal: 讓 think-orbit 在討論當下就把推理講出來（講在動作之前，不等回答），並讓每個節點檔即使
     在口頭講過之後仍能獨立成立——body 首段交代承接誰／多說什麼／什麼會垮；兩條新的機械閘
     （body 未提及任何 input、分支只有假設沒有節點）把這兩件事釘住；粒度與既有上限規則不動。
-Stage: sdd:wave-1
+Stage: finishing
 **Total tasks**: 5
 **Critical-path depth**: 5 (≤5)
 **Execution order**: sequential
@@ -121,14 +121,14 @@ N/A — no unresolved question: brief 的 OQ-1（`inputs: []` 節點不適用 `i
 - Dependencies: Task 4 completes first
 - Independent: false
 - Brief item covered: BI-6 — release 0.1.4
-- Status: pending
+- Status: done(9ac79910)
 - Gloss: 沒 bump 版本，marketplace 的 update 會靜默 no-op，改好的契約不會裝到任何一台機器上。
 
 ## Notes
 
 - **T1 的規格於執行中被量測推翻並改寫（2026-08-19，round-2 審查後）。** 原規格允許「body 提到上游的
   `summary` 關鍵詞」即算交代。拿真實專案（使用者本機的私有專案目錄（路徑不入公開 repo），
-  10 個帶 `inputs` 的節點）實跑：關鍵詞那條路 **10/10 全數放行**，包含 `role_axis_one_directional`
+  10 個帶 `inputs` 的節點）實跑：關鍵詞那條路 **10/10 全數放行**，包含其中一個 CLAIM 節點
   ——它的 body 從未提及三個上游中的任何一個，只是在談同一個主題。加了 27 個中文功能詞停用清單也無效，
   審查者立刻用 `他們`／`目前` 重現同一個缺陷，而該類詞是開放集合。根因是**詞彙重疊分不出「交代了上游」
   與「在講同一件事」**，而同一條推理鏈上的節點必然在講同一件事。只認 id 的那條路 **2/10**，
@@ -137,7 +137,7 @@ N/A — no unresolved question: brief 的 OQ-1（`inputs: []` 節點不適用 `i
 
   **同一則紀錄的第二段：門檻本身又被量測修正一次。** 改走認 id 之後的第一版寫成
   「body 必須點名**每個**承重上游的 id」。實跑通過 1/10，而且通過的是一個沒有任何承重上游的 FACT
-  （`routing_authority_granted`，空集合為真），人工判定寫得好的那兩個 DECISION 反而**不及格**
+  （該節點沒有任何承重上游，空集合為真），人工判定寫得好的那兩個 DECISION 反而**不及格**
   ——它們各有 4 個與 3 個承重上游，只點名其中一部分。**比語料中最好的人寫節點還嚴的規則是校準錯誤。**
   最終規格是「**至少**點名一個承重上游」，通過 2/10 且正好是那兩個節點。量測同時揭出一個邊界：
   有上游但無任何承重上游的節點在只認承重的規則下永遠無法及格，故加一條分支——

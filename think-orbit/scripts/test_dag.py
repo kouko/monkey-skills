@@ -770,6 +770,78 @@ def test_check_flags_a_node_whose_body_names_none_of_its_inputs(tmp_path, capsys
     assert not any("claim_k2.md" in ln for ln in narration_lines)  # (k) fact1 at end of an English sentence -> none
 
 
+def test_input_narration_message_names_load_bearing_when_a_load_bearing_input_exists(tmp_path, capsys):
+    """Counter-example the whole-branch reviewer proved by execution: a body
+    that names a NON-load-bearing input (`bfact`) is still told it names
+    "none of its inputs" and shown only the unrelated load-bearing candidate
+    -- an author who re-reads their own body sees the id they wrote and
+    concludes the gate is broken. The message must say `load-bearing` and
+    list only the load-bearing candidates that went unnamed."""
+    root = tmp_path
+    _write(
+        root / "nodes" / "afact.md",
+        "id: afact\ntype: FACT\nseq: 1\nsummary: A fact\nstatus: current\n"
+        "source: x\nquote: \"y\"\n",
+    )
+    _write(
+        root / "nodes" / "bfact.md",
+        "id: bfact\ntype: FACT\nseq: 2\nsummary: B fact\nstatus: current\n"
+        "source: x\nquote: \"y\"\n",
+    )
+    _write(
+        root / "nodes" / "claim1.md",
+        "id: claim1\ntype: CLAIM\nseq: 3\nsummary: Test claim\nstatus: current\n"
+        "inputs:\n"
+        "  - {ref: afact, load_bearing: true}\n"
+        "  - {ref: bfact, load_bearing: false}\n",
+        body="This claim narrates bfact in its body, but never mentions the other one. It stands on prior work.\n",
+    )
+
+    rc = dag.main(["check", str(root)])
+    out = capsys.readouterr().out
+    narration_line = next(ln for ln in out.splitlines() if "input-narration" in ln)
+
+    assert rc == 1
+    assert narration_line == (
+        "nodes/claim1.md: input-narration: body names none of its "
+        "load-bearing inputs ['afact']"
+    ), narration_line
+
+
+def test_input_narration_message_omits_load_bearing_when_no_input_is_load_bearing(tmp_path, capsys):
+    """The all-non-load-bearing fallback arm keeps the plain wording -- there
+    is no load-bearing subset to name, so calling it that would be false too."""
+    root = tmp_path
+    _write(
+        root / "nodes" / "goal.md",
+        "id: goal\ntype: GOAL\nseq: 1\nsummary: Ship v0\nstatus: current\n",
+    )
+    _write(
+        root / "nodes" / "fact1.md",
+        "id: fact1\ntype: FACT\nseq: 2\nsummary: A fact\nstatus: current\n"
+        "source: x\nquote: \"y\"\n",
+    )
+    _write(
+        root / "nodes" / "claim1.md",
+        "id: claim1\ntype: CLAIM\nseq: 3\nsummary: Test claim\nstatus: current\n"
+        "inputs:\n"
+        "  - {ref: goal, load_bearing: false}\n"
+        "  - {ref: fact1, load_bearing: false}\n",
+        body="Nothing here explains anything. This body mentions nothing either.\n",
+    )
+
+    rc = dag.main(["check", str(root)])
+    out = capsys.readouterr().out
+    narration_line = next(ln for ln in out.splitlines() if "input-narration" in ln)
+
+    assert rc == 1
+    assert narration_line == (
+        "nodes/claim1.md: input-narration: body names none of its "
+        "inputs ['fact1', 'goal']"
+    ), narration_line
+    assert "load-bearing" not in narration_line
+
+
 def test_check_lead_in_sentence_followed_by_list_is_not_a_paragraph_violation(tmp_path, capsys):
     # brief-item: BI-4
     root = tmp_path

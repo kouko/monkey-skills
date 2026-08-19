@@ -54,13 +54,13 @@
 
 ### F-T12-02 — CLAIM/FACT 沒有承接上游的敘事義務（🔴）
 
-`inputs: [{ref, load_bearing}]` 只記機器可讀的邊。契約沒有任何一處要求 body 用人話說明「這一步為什麼從上游推得出來」。讀者打開單一節點檔，只看到一個 id（例如 `ref: corpus_coverage`），必須另開檔案才知道那是什麼。
+`inputs: [{ref, load_bearing}]` 只記機器可讀的邊。契約沒有任何一處要求 body 用人話說明「這一步為什麼從上游推得出來」。讀者打開單一節點檔，只看到一個 id（例如 `ref: <某個上游節點的 id>`），必須另開檔案才知道那是什麼。
 
-DECISION 節點天然滿足這項義務（見 `nodes/decide_call_takes_routing.md`：交代被否決的乙方案、指出 `duty_desk_may_reroute` 仍 open 是整條路的單點失效、說明 `call_boundary` 為何刻意標非承重），但那是 interrupt 的副產品，不是契約要求。
+DECISION 節點天然滿足這項義務（見其中一個 DECISION 節點：交代被否決的替代方案、指出某個仍為 open 的假設是整條路的單點失效、說明某個上游為何刻意標成非承重），但那是 interrupt 的副產品，不是契約要求。
 
 ### F-T12-03 — 被否決的路徑沒有成為節點（🟡）
 
-`views/dag.md` 有 4 條分支 —— `b_direct_ask`、`b_headcount_proxy`、`b_keep_manual`、`b_no_prior` —— **只裝假設，沒有任何節點**。替代方案的實質內容只存在於裁定節點的散文裡，圖上讀不到。
+`views/dag.md` 有 4 條分支 —— 四條各自對應一個被考慮過的替代方案 —— **只裝假設，沒有任何節點**。替代方案的實質內容只存在於裁定節點的散文裡，圖上讀不到。
 
 連帶：這些分支的 `branch_type` 顯示 `(?)`，因為 branch id 只由假設攜帶，而假設 schema 沒有 `branch_type` 欄位。
 

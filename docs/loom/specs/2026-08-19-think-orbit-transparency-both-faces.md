@@ -75,7 +75,7 @@ agent 更無理由開口。修正必須在 skill 內明寫本 skill 是該偏好
   **Revised 2026-08-19 after measurement (round-2 review of Task 1).** The rule was first specified as
   "body mentions an input's id OR a keyword from its `summary`". Run against the real project
   (使用者本機的私有專案目錄（路徑不入公開 repo）, 10 nodes carrying `inputs`), the keyword arm
-  passes **10 / 10** — including `role_axis_one_directional`, whose body never refers to any of its three
+  passes **10 / 10** — including one CLAIM whose body never refers to any of its three
   upstream nodes and merely discusses the same subject. A stoplist of CJK function words does not fix
   this: the reviewer reproduced the same zero-connection match on `他們` and `目前` immediately after 27
   entries were added, and the class of such words is open. The deeper reason the whole approach fails is
@@ -91,13 +91,18 @@ agent 更無理由開口。修正必須在 skill 內明寫本 skill 是該偏好
   those two nodes, so that is the shipped threshold. Naming the id is therefore the only discriminator that
   reproduces the human reading, and it is deterministic and language-independent.
   This does not contradict BI-2's "in prose rather than a bare `ref` id": the two good nodes name the id
-  INSIDE a sentence (「`call_boundary` 標為非承重是刻意的」). What BI-2 rejects is an id sitting alone in
+  INSIDE a sentence — «`<upstream_id>` is tagged non-load-bearing deliberately», the id as the subject of a
+  sentence that says something about it. What BI-2 rejects is an id sitting alone in
   frontmatter with no prose around it — not an id used as the subject of a sentence.
 - BI-4 — A branch must contain a node (`thinking-session/SKILL.md`, `scripts/dag.py`):
   when a branch opens, each path first gets one CLAIM stating that path's position; assumptions are filed
   under it. New `check` rule `branch-has-node` — a branch id carried only by assumptions is a violation.
-  This removes the `branch_type: (?)` rendering and the assumption inflation the checkpoint measured
-  (18 assumptions vs 17 nodes), and restores the ≤3 cap's meaning (three assumptions supporting one claim,
+  This removes the assumption inflation the checkpoint measured (18 assumptions vs 17 nodes), and
+  removes the `branch_type: (?)` rendering **for the assumption-only branches** — not for every branch
+  showing `(?)`. `render` falls back to `?` whenever no node in a branch sets `branch_type`, which also
+  covers a branch that HAS nodes whose `branch_type` field is simply absent, and no rule requires that
+  field. That is why the checkpoint counts 5 branches rendering `(?)` but only 4 as assumption-only:
+  the fifth has nodes that omit `branch_type`. Both figures are correct; this arc closes 4 of the 5, and restores the ≤3 cap's meaning (three assumptions supporting one claim,
   not three assumptions standing alone).
 - BI-5 — Replace the placeholder worked examples (`thinking-session/SKILL.md`, `references/node-schema.md`):
   every body example currently describes itself (`Body text in short paragraphs.` /
