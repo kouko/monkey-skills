@@ -158,6 +158,8 @@ A paragraph over 600 characters in a prose section is fill-or-declare, in the sa
 
 An empty or whitespace-only reason counts as absent — the comment must state why the sentences depend on each other, not just exist.
 
+"Directly beneath" means the line immediately below, with no blank line between — a blank line ends the paragraph's block, so a declaration below one belongs to nothing and the paragraph reads as undeclared.
+
 No checker classifies a paragraph as narrative; the author declares, the reviewer checks the declaration. A classifier would reintroduce the judgment this rule exists to remove.
 
 This declaration uses an HTML comment instead of the `N/A — <reason>` form the other fill-or-declare slots use, because a visible `N/A —` line would break the narrative paragraph's own reading flow — staying readable prose is the whole point of the paragraph the declaration sits beneath.
