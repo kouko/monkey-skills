@@ -185,11 +185,14 @@ def check_brief_paragraphs(text: str) -> list[str]:
                 continue
             if declaration_reason is not None and declaration_reason.strip():
                 continue
-            # A blank line put the declaration in the NEXT block instead
-            # of this one — that is a misplaced declaration, not a
-            # missing one, and gets its own message naming the
-            # requirement it fails (declaration line immediately below,
-            # no blank line between).
+            # A declaration line sits in the NEXT block, separated by a
+            # blank line. Report that POSITION and nothing more: whether
+            # that line was written for this paragraph is unknowable
+            # here, and claiming it is would be classifying a block as
+            # this paragraph's declaration — the one thing this rule
+            # forbids a checker from doing. An author who did misplace
+            # theirs learns the requirement; an author whose declaration
+            # belongs elsewhere is not told to attach it here.
             next_block = blocks[index + 1] if index + 1 < len(blocks) else None
             if (
                 next_block is not None
@@ -197,9 +200,10 @@ def check_brief_paragraphs(text: str) -> list[str]:
                 and _NARRATIVE_DECLARATION.match(next_block[0][1])
             ):
                 clause = (
-                    "a narrative declaration was found nearby but is not "
-                    "the line immediately below the paragraph (no blank "
-                    "line is allowed between them)"
+                    "no narrative declaration (a declaration line does "
+                    "follow this block, separated by a blank line; a "
+                    "declaration counts only on the line immediately "
+                    "below, with no blank line between)"
                 )
             else:
                 clause = "no narrative declaration"
