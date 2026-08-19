@@ -579,3 +579,103 @@ def test_brief_cli_clean_exits_zero(tmp_path):
         env=_ENV,
     )
     assert result.returncode == 0, result.stderr
+
+
+# --- revision round 1: CRLF gap-check arithmetic ---------------------
+#
+# `_iter_paragraph_blocks`'s gap check must be newline-width agnostic:
+# `iter_lines_outside_fences` walks `text.splitlines(keepends=True)`,
+# so on CRLF input every physical line is one byte longer than a
+# hardcoded LF (`+1`) assumption accounts for.
+
+
+def test_crlf_multiline_paragraph_merges_and_is_flagged():
+    # False-negative direction: on the old hardcoded-+1 arithmetic, a
+    # CRLF gap fired at every line boundary, so each physical line
+    # became its own (short, unflagged) block and a genuinely long
+    # paragraph was never measured.
+    text = "## Decision\r\n\r\n" + "a" * 250 + "\r\n" + "b" * 250 + "\r\n" + "c" * 250 + "\r\n"
+    problems = check_brief_paragraphs(text)
+    assert len(problems) == 1
+    assert "Decision" in problems[0]
+
+
+def test_lf_multiline_paragraph_merges_and_is_flagged():
+    # LF counterpart of the CRLF case above — guards against a future
+    # normalization fix that repairs CRLF but breaks LF.
+    text = "## Decision\n\n" + "a" * 250 + "\n" + "b" * 250 + "\n" + "c" * 250 + "\n"
+    problems = check_brief_paragraphs(text)
+    assert len(problems) == 1
+    assert "Decision" in problems[0]
+
+
+def test_crlf_correctly_placed_declaration_is_recognised():
+    # False-positive direction: on the old arithmetic, a correctly
+    # placed declaration line was never merged into the paragraph's
+    # block (the CRLF gap already split them apart), so the paragraph
+    # was flagged despite carrying a valid declaration.
+    text = (
+        "## Decision\r\n\r\n"
+        + "a" * 700
+        + "\r\n"
+        "<!-- narrative: because reasons -->\r\n"
+    )
+    assert check_brief_paragraphs(text) == []
+
+
+def test_lf_correctly_placed_declaration_is_recognised():
+    text = (
+        "## Decision\n\n"
+        + "a" * 700
+        + "\n"
+        "<!-- narrative: because reasons -->\n"
+    )
+    assert check_brief_paragraphs(text) == []
+
+
+# --- revision round 1: exempt-section normalization -------------------
+
+
+def test_exempt_section_case_variant_is_exempt():
+    text = "## current state evidence\n\n" + ("a" * 700) + "\n"
+    assert check_brief_paragraphs(text) == []
+
+
+def test_exempt_section_spacing_variant_is_exempt():
+    text = "## Current  State  Evidence\n\n" + ("a" * 700) + "\n"
+    assert check_brief_paragraphs(text) == []
+
+
+def test_genuinely_different_heading_is_not_exempt():
+    text = "## Current State Overview\n\n" + ("a" * 700) + "\n"
+    problems = check_brief_paragraphs(text)
+    assert len(problems) == 1
+    assert "Current State Overview" in problems[0]
+
+
+# --- revision round 1: missing-vs-misplaced declaration message -------
+
+
+def test_misplaced_declaration_message_names_requirement():
+    # A blank line between the paragraph and the declaration is still
+    # a violation (SSOT requires "directly beneath"), but the message
+    # must name the requirement instead of reading identically to the
+    # no-declaration-at-all case.
+    text = (
+        "## Decision\n\n"
+        + ("a" * 700)
+        + "\n\n"
+        "<!-- narrative: because reasons -->\n"
+    )
+    problems = check_brief_paragraphs(text)
+    assert len(problems) == 1
+    assert "immediately below" in problems[0]
+    assert "no blank line" in problems[0]
+
+
+def test_no_declaration_at_all_message_unchanged():
+    text = "## Decision\n\n" + ("a" * 700) + "\n"
+    problems = check_brief_paragraphs(text)
+    assert len(problems) == 1
+    assert "no narrative declaration" in problems[0]
+    assert "immediately below" not in problems[0]

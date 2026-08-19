@@ -82,9 +82,35 @@ _LIST_ITEM_LINE = re.compile(r"^\s*(?:[-*+]\s|\d+[.)]\s)")
 _TABLE_ROW_LINE = re.compile(r"^\s*\|")
 _BLOCKQUOTE_LINE = re.compile(r"^\s*>")
 _NARRATIVE_DECLARATION = re.compile(r"^\s*<!--\s*narrative:\s*(.*?)\s*-->\s*$")
+_LINE_TERMINATOR = re.compile(r"\r\n|\r|\n")
 
 _PARAGRAPH_MAX_CHARS = 600
 _BRIEF_EXEMPT_SECTIONS = frozenset({"Current State Evidence", "Alternatives Considered"})
+
+
+def _normalize_heading(heading: str) -> str:
+    """Casefolded, internal-whitespace-collapsed form of a heading, so
+    `_BRIEF_EXEMPT_SECTIONS` membership survives a case difference or a
+    doubled space without widening into a fuzzy match that would start
+    exempting sections nobody meant to exempt."""
+    return " ".join(heading.split()).casefold()
+
+
+_BRIEF_EXEMPT_SECTIONS_NORMALIZED = frozenset(
+    _normalize_heading(section) for section in _BRIEF_EXEMPT_SECTIONS
+)
+
+
+def _line_terminator_len(text: str, end_of_content: int) -> int:
+    """Length, in characters, of the line terminator (if any) that
+    starts at `text[end_of_content]` — 2 for `\\r\\n`, 1 for a bare
+    `\\n` or `\\r`, 0 at end of text. Used instead of a hardcoded `+1`
+    so the paragraph-block gap check (below) is newline-width agnostic:
+    `iter_lines_outside_fences` walks `text.splitlines(keepends=True)`,
+    so on CRLF input every physical line is one byte longer than a
+    hardcoded LF assumption accounts for."""
+    match = _LINE_TERMINATOR.match(text, end_of_content)
+    return len(match.group(0)) if match else 0
 
 
 def _iter_paragraph_blocks(text: str) -> list[list[tuple[int, str]]]:
@@ -106,7 +132,8 @@ def _iter_paragraph_blocks(text: str) -> list[list[tuple[int, str]]]:
             block = []
         if content.strip():
             block.append((offset, content))
-        prev_end = offset + len(content) + 1
+        end_of_content = offset + len(content)
+        prev_end = end_of_content + _line_terminator_len(text, end_of_content)
     if block:
         blocks.append(block)
     return blocks
@@ -139,9 +166,10 @@ def check_brief_paragraphs(text: str) -> list[str]:
     problems: list[str] = []
     for unit in split_document(text):
         heading = unit["heading"]
-        if heading in _BRIEF_EXEMPT_SECTIONS:
+        if _normalize_heading(heading) in _BRIEF_EXEMPT_SECTIONS_NORMALIZED:
             continue
-        for block in _iter_paragraph_blocks(unit["source_text"]):
+        blocks = _iter_paragraph_blocks(unit["source_text"])
+        for index, block in enumerate(blocks):
             if not _is_paragraph(block):
                 continue
             prose_lines = block
@@ -157,10 +185,28 @@ def check_brief_paragraphs(text: str) -> list[str]:
                 continue
             if declaration_reason is not None and declaration_reason.strip():
                 continue
+            # A blank line put the declaration in the NEXT block instead
+            # of this one — that is a misplaced declaration, not a
+            # missing one, and gets its own message naming the
+            # requirement it fails (declaration line immediately below,
+            # no blank line between).
+            next_block = blocks[index + 1] if index + 1 < len(blocks) else None
+            if (
+                next_block is not None
+                and len(next_block) == 1
+                and _NARRATIVE_DECLARATION.match(next_block[0][1])
+            ):
+                clause = (
+                    "a narrative declaration was found nearby but is not "
+                    "the line immediately below the paragraph (no blank "
+                    "line is allowed between them)"
+                )
+            else:
+                clause = "no narrative declaration"
             problems.append(
                 f"'{heading}' section: paragraph is {len(folded)} "
-                f"characters (max {_PARAGRAPH_MAX_CHARS}), no narrative "
-                f"declaration: {folded!r}"
+                f"characters (max {_PARAGRAPH_MAX_CHARS}), {clause}: "
+                f"{folded!r}"
             )
     return problems
 
