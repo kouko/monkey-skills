@@ -1,9 +1,9 @@
 ---
 name: 2026-08-18-per-unit-cot-diagram-in-the-adjudication-view
-description: the adjudication view's translate step should emit one 譯注-tagged mermaid CoT diagram per unit, rendered directly beneath that unit's target-language rendition — no renderer change (measured), no new skill, three guardrails; the diagram never enters the agent-consumed artifact; its start condition (the staleness arc merging) is now met, and the field-value-microstructure arc (2026-08-19) measured the (N)-slice this diagram targets, narrowing this entry's scope
+description: a 譯注-tagged mermaid CoT diagram per unit in the adjudication view, never in the agent-consumed artifact — but the always-on diagram-beside-prose layout decided inside this entry is REJECTED by 2026-08-19 evidence (redundancy and expertise reversal predict harm for an expert at a sign-off gate, and a machine-drawn diagram compounds it); what survives is a toggle rather than a pair, and a navigation purpose rather than a comprehension one, neither buildable before the measurement in docs/loom/research/2026-08-19-cot-diagram-plus-prose-evidence.md is run
 status: OPEN
 origin: kouko, 2026-08-18 — raised during the adjudication_render staleness arc after asking whether per-paragraph CoT diagrams (as used in the Obsidian vault's references/ notes) belong in the source markdown or the view
-start: after the adjudication_render staleness arc (docs/loom/specs/2026-08-18-adjudication-render-staleness-visible.md) merges
+start: NOT the original merge condition (met, and superseded) — this arc opens only after the three-condition measurement in docs/loom/research/2026-08-19-cot-diagram-plus-prose-evidence.md has been run and shows the diagram earns its place
 ---
 
 # Per-unit CoT diagram in the adjudication view
@@ -14,7 +14,7 @@ question the arc settled was **where the diagram lives**, and the answer
 follows from who benefits.
 
 - **Origin**: kouko, 2026-08-18 — raised during the adjudication_render staleness arc after asking whether per-paragraph CoT diagrams (as used in the Obsidian vault's references/ notes) belong in the source markdown or the view
-- **Start**: after the adjudication_render staleness arc (docs/loom/specs/2026-08-18-adjudication-render-staleness-visible.md) merges
+- **Start**: NOT the original merge condition (met, and superseded) — this arc opens only after the three-condition measurement in docs/loom/research/2026-08-19-cot-diagram-plus-prose-evidence.md has been run and shows the diagram earns its place
 
 ## Decided (2026-08-18 session, with the user)
 
@@ -48,6 +48,14 @@ agent may follow. Against that: this repo's own 2026-08-17 A/B
 found **no measurable comprehension difference for model readers** —
 "the table rule buys human readability, and the model reader is neither
 helped nor hurt". The benefit accrues to the human, who reads the view.
+
+> **RETRACTED 2026-08-19 — do not cite the sentence above.** All 12
+> readers scored 10/10 on both forms, so that A/B hit its ceiling and
+> licenses "not detected", never "neither helped nor hurt". It also
+> compared two text containers, not a diagram. See the corrected
+> `docs/loom/memory/model-readers-are-form-agnostic-at-loom-doc-scale.md`
+> and §"Evidence arrived 2026-08-19" at the end of this entry.
+
 Caveat recorded honestly: that A/B tested tables, not diagrams, and one
 structure in a 4.6 KB document — not ten diagrams. So "no effect on
 agent interpretation" is unproven for the per-unit case; keeping the
@@ -125,3 +133,59 @@ a structural rule (table or bullet) that the diagram would duplicate.
 Not decided here; the arc that opens this entry should re-derive the
 (N) test from `plan-format.md`'s narrative-declaration grammar rather
 than re-classifying paragraphs by hand.
+
+## Evidence arrived 2026-08-19 — the design above needs revising before it opens
+
+Commissioned by kouko after this entry's start condition was met. Full
+record with citations:
+`docs/loom/research/2026-08-19-cot-diagram-plus-prose-evidence.md`.
+
+**Do not open this arc against the design decided above.** That design —
+diagram and prose rendered together, always on — is the one configuration
+the literature predicts is worst for this reader.
+
+Three findings change it:
+
+1. **Expertise reversal.** Experts perform better with diagram-only OR
+   text-only than with both; the integration work is itself the cost once
+   the reader already understands the domain. The reader here is an expert
+   at a sign-off gate — though every study behind the effect measures
+   learners in instructional settings, and none covers review at a gate,
+   so the transfer is argued, not demonstrated. This does not say "no diagram" — it says "not both
+   at once", which is a toggle, and this entry never considered one.
+2. **Redundancy survives the layout fix.** Option A above (diagram beneath
+   the rendition) is the textbook remedy for split-attention, which was
+   never the risk. Redundancy fires under perfect integration. The layout
+   decision was sound and solves a different problem than it was credited
+   with.
+3. **The machine-generation risk is worse than "accepted residual".** LLM
+   diagram hallucination rises with source complexity and models fail to
+   self-detect it; separately, plausible-looking AI output raises trust and
+   automation bias suppresses scrutiny. A subtly wrong diagram at a
+   sign-off gate is therefore more likely to be trusted than caught —
+   stated as the research record states it, an inference across two
+   literatures, not a study of "wrong diagram versus no diagram", which
+   nobody has run. The
+   §"Residual risk, stated" section above accepted this risk without
+   knowing it compounds.
+
+**What survives.** Keeping the diagram out of the agent-consumed artifact
+is MORE justified than this entry argued, but for a replaced reason: not
+"the model reader is unaffected" (untested, and the nearest evidence points
+at contradiction risk and attention dilution) but "a second statement of
+the same content carries an uncharacterized failure mode with no measured
+offsetting gain". The §"Why not the source artifact" section's citation of
+the 2026-08-17 A/B must not be reused as-is — that result is at ceiling and
+covers text containers, not diagrams; see the corrected
+`docs/loom/memory/model-readers-are-form-agnostic-at-loom-doc-scale.md`.
+
+**The candidate that is still alive.** Reframe the purpose from
+comprehension to **navigation** — the diagram helps decide which paragraph
+deserves a close read, not what it means. Redundancy never fires if the
+reader does not read both. No evidence exists for or against this, which
+makes it the honest thing to measure rather than the honest thing to
+assume.
+
+**Measure before building, and design the task to score below ceiling.**
+The A/B shape, including the load-bearing condition where the diagram
+disagrees subtly with its prose, is in the research record's final section.

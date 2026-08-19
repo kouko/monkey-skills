@@ -72,3 +72,16 @@ Question the seed note left open: does the *form* change what a model reader und
 | prose | sonnet | 2 | 10/10 × 2 |
 
 Result: **ceiling on both forms, both tiers — no measurable comprehension difference at this scale** (≈4.6 KB document, 5-row comparison, 10 questions). Consistent with the seed note's literature read (frontier readers are format-indifferent; harm shows up in small models *writing* structured output, not reading it) and with the arc's premise: the table rule buys human readability, and the model reader is neither helped nor hurt. A discriminating test would need larger comparisons (≳12 rows × 6 axes with near-duplicate values), distractor length, and aggregation questions (counts / sums across rows) — the regime where the table-multi-step-reasoning weakness is documented; not run here.
+
+> **Annotation 2026-08-19 — the clause "the model reader is neither helped
+> nor hurt" above is retracted; the rest of this paragraph stands.** It
+> contradicts the same sentence's own "ceiling" observation: all 12 readers
+> scored full marks on both forms, so this run licenses "no difference
+> detected at this difficulty" and cannot license "no effect". The
+> paragraph is left as written because it is the record of what this arc
+> concluded on 2026-08-17; the corrected reading lives in
+> `docs/loom/memory/model-readers-are-form-agnostic-at-loom-doc-scale.md`,
+> and the evidence that prompted the retraction in
+> `docs/loom/research/2026-08-19-cot-diagram-plus-prose-evidence.md`.
+> This result also compared two TEXT CONTAINERS; it has been cited for a
+> diagram, which it does not cover.
