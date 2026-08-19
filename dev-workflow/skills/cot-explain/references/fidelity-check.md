@@ -57,9 +57,15 @@ Then run the two commands that carry the verdict onto the page — the
 verdict file alone changes nothing a reader sees:
 
 ```
-python3 scripts/verify_cot_html.py --stamp <file>.html
+python3 scripts/verify_cot_html.py --render --stamp <file>.html
 python3 scripts/render_cot_html.py <file>.md
 ```
+
+**Keep `--render`.** The outcome written into `verified:` is computed
+from *this* invocation's flags, not carried over from Step 5, so stamping
+without it rewrites `pass --render` down to `pass` — silently discarding
+the record that the mermaid parser actually validated the diagram, when
+nothing about that validation has changed.
 
 The first reads the verdict file and writes `fidelity_checked:` into the
 markdown; the second rebuilds the HTML from it. Stop after the first and

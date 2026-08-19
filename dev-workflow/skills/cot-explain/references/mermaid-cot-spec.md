@@ -243,11 +243,17 @@ a claim.
 
 ## Escaping traps
 
-- **No `number. space` run anywhere in node text** — mermaid parses
-  `1. 第一點` as a markdown ordered list and dies with
-  `Parse error: Unsupported markdown: list`. Write `1.第一點`, or use
-  `①` / `(1)`. (From `obsidian:obsidian-mermaid-visualizer`'s quirks
-  list, where it is the single most common mermaid failure.)
+- **`number. space` runs in node text — a WARN, no longer a rule.**
+  Inherited from `obsidian:obsidian-mermaid-visualizer`'s quirks list as
+  the single most common mermaid failure: `1. 第一點` parsed as a markdown
+  ordered list and died with `Parse error: Unsupported markdown: list`.
+  Probed live against the pinned parser, mermaid-cli 11.16.0 renders it
+  cleanly, both quoted (the form this spec mandates) and unquoted. The
+  checker warns rather than fails, because "Step 1. do this" is an
+  ordinary sentence and rejecting it costs more than the trap does.
+  If the page is bound for an older renderer — Obsidian bundles its own
+  mermaid — `1.第一點`, `①` or `(1)` still sidestep it, and `--render`
+  answers it for whatever parser you actually have.
 - No unescaped `"` inside a node label — the outer quotes end early.
 - No `|` inside an edge label — it terminates the label.
 - No literal newlines inside a node label — use `<br/>` only.
@@ -259,8 +265,11 @@ a claim.
 `scripts/verify_cot_html.py` has two stages. By default it checks the
 text against this spec. With `--render` it pushes each diagram through
 the real mermaid parser and reads the resulting SVG — necessary because
-**mermaid-cli writes an error image and exits 0** on a syntax error, so
-its exit code proves nothing.
+**mermaid-cli's exit code proves nothing either way.** The inherited
+grounding records it writing an error image and exiting 0; a live probe
+on 11.16.0 saw a malformed arrow exit 1 with no image written. The
+checker therefore reads the output — no SVG, or an SVG carrying an error
+marker, both count as failure — and never the exit status.
 
 `FAIL` means the contract or the parser is broken; it exits 1. `WARN` is
 advisory and never blocks.

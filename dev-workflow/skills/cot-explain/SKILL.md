@@ -91,9 +91,10 @@ Write out, as a working list (not shown to the user):
    damaging thing a summary loses: a reader who receives the measure
    without its scope implements the version the source rejected.
 
-   **Sweep for these node by node, do not wait to notice them** — three
-   fidelity runs each lost a normative clause sitting in plain sight next
-   to a mechanism nobody had interrogated (`references/why-these-rules.md`).
+   **Sweep for these node by node, do not wait to notice them** — round
+   3 of the fidelity rounds lost a carve-out sitting in plain sight next
+   to a mechanism nobody had interrogated, and rounds 1–4 each lost a
+   normative clause of some kind (`references/why-these-rules.md`).
 
    A node **names a mechanism** when it says something will be *built,
    changed, or done* — a check, a rule, a script change, a step someone
@@ -110,8 +111,9 @@ Write out, as a working list (not shown to the user):
      half-described.
    - **Who or what is exempt?** Carve-outs — "except when the session is
      developing these scripts" — invert the rule for a case the author
-     thought about. A rule shipped without its carve-out was, in one run,
-     self-defeating.
+     thought about. Round 3 lost one, and a rule that arrives without the
+     case its author deliberately exempted is a rule the reader applies
+     where the source said not to.
    - **Under what condition is it withdrawn?** The rebuttal proper.
 7. **Co-premises** — does any step work only in conjunction with
    another, so that one alone is inert? Draw both edges into the same
@@ -130,9 +132,13 @@ drawing, and answer their question directly instead. A three-box figure
 with a page of scaffolding around it is worse than two sentences, and it
 costs them a file to open.
 
-This is a net, not the main path. A trigger eval found the router
-reliably keeps plain state-requests out — "what does this function do"
-never reaches here — so what lands in this check is material that *looked*
+This is a net, not the main path. A pre-ship trigger eval over 31
+phrasings put the router at 25/31, with every one of its 5 chain-of-
+thought requests firing and all 4 generic-diagram requests going
+elsewhere; plain state-requests — "what does this function do" —
+did not reach here. (Run before shipping, not committed as a fixture:
+this repo's skill-structure checker rejects a `trigger-eval.json` at a
+skill root.) So what lands in this check is material that *looked*
 like a process and turned out not to be one. Reading it and saying "this
 needs a paragraph, not a diagram" is the correct outcome; producing the
 page anyway is not.
@@ -192,8 +198,10 @@ The rules that get broken most often:
 
 - `graph TB` outer, with every node inside a `subgraph` row that
   declares **its own `direction LR` line**. That one line is what makes
-  the figure roughly square (0.81) instead of 13:1 wide (0.07) — a
-  subgraph without it measures 0.14 and buys nothing.
+  the figure roughly square (0.81). Declaring the subgraphs but omitting
+  the `direction` line measures 0.14 — worse than useless, since the
+  structure is there and buys nothing. (The vault's own flat `graph LR`,
+  with no subgraphs at all, is a separate row at 0.07.)
 - **Rows of at most 3, as even as possible**: 8 nodes → 3/3/2, 7 → 3/2/2,
   6 → 3/3. On one 8-node chain, rows of 3 measured 0.91 against 0.52 for
   rows of 2 and 0.43 for rows of 4 — 3 is a peak, not a ceiling
@@ -341,12 +349,14 @@ never blocks — weigh it, do not reflexively obey it. A node count outside
 
 **A reversal-heavy source produces a cluster of warnings, and that is
 the correct output** — a correction stated in two clauses gives a node
-two bullets. Runs have ended with ten warnings and been right to keep
-every one. Read a cluster as a description of the source, not a defect
-list.
+two bullets. Read a cluster as a description of the source, not a defect
+list — the count is an observation about the material, and there is no
+number of warnings at which the right move becomes trimming the claims.
 
 `--render` pushes each diagram through the real mermaid parser. Use it:
-mermaid-cli writes an error image and **exits 0** on a syntax error, so
+**mermaid-cli's exit code settles nothing** — it has been recorded
+writing an error image and exiting 0, and observed exiting 1 with no
+image at all — so
 nothing else proves the diagram renders. It needs `npx` and, first time,
 network. Without the flag the output says `PASS (text only …)`, so a
 text-only pass is never mistaken for a rendered one.

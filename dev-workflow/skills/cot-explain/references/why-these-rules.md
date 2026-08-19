@@ -169,5 +169,23 @@ fixing is allowed and disclosure is mandatory.
 
 The `number. space` trap and the fence-rewrite approach come from
 `obsidian:obsidian-mermaid-visualizer`, whose validator also documents
-the behaviour that makes `--render` necessary: **mermaid-cli writes an
-error image and exits 0**.
+the behaviour that makes `--render` necessary: mermaid-cli writing an
+error image and exiting 0.
+
+Both of those inherited facts were later probed live against the pinned
+parser, and both moved:
+
+- **`number. space` no longer breaks it.** mermaid-cli 11.16.0 rendered
+  `標題 1. 第一步` cleanly, quoted and unquoted. The rule was a `FAIL`; it
+  is now a `WARN`, because "Step 1. do this" is an ordinary sentence and
+  a gate that rejects it is a gate people route around. The caution
+  survives only for older renderers — Obsidian bundles its own mermaid.
+- **The exit code is unreliable in both directions.** The same probe saw
+  a malformed arrow exit 1 with no image written. So `render_check`
+  reads the output rather than the status, and counts both "no SVG" and
+  "SVG with an error marker" as failure.
+
+The general lesson, which cost a `FAIL` on correct content: **an
+inherited fact about an external tool is a claim with a version
+attached.** Re-probe it when you pin a version, and again when the pin
+moves.

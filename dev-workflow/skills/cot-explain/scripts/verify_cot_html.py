@@ -26,11 +26,17 @@ check that never ran, and did the opposite here — it stayed empty
 through a run that passed.
 
 `--render` additionally runs each diagram through the real mermaid
-parser. mermaid-cli does NOT report a syntax error through its exit
-code — it writes an error SVG and exits 0 — so a diagram can pass every
-textual check here and still render as a red error box. Needs `npx` and,
-on first use, network. Without it a PASS means "matches the spec as
-text", not "renders".
+parser, because a diagram can pass every textual check here and still
+render as a red error box. Needs `npx` and, on first use, network.
+Without it a PASS means "matches the spec as text", not "renders".
+
+**The exit code alone settles nothing**, so `render_check` reads the
+output instead and treats two things as failure: no SVG produced, and an
+SVG carrying an error marker. The inherited grounding —
+`obsidian:obsidian-mermaid-visualizer`'s validator — records mermaid-cli
+writing an error image and exiting 0; a live probe on 11.16.0 saw the
+opposite for a malformed arrow, exit 1 with no file. Both happen, which
+is exactly why neither signal is trusted on its own.
 
 Neither stage checks fidelity to the source. Nothing mechanical can.
 """
@@ -65,6 +71,25 @@ PALETTE = {
     "#f8f9fa", "#fff4e6", "#ffe3e3", "#ffe8cc", "#e5dbff", "#c5f6fa",
 }
 EMPTY_CONNECTIVES = {"導致", "然後", "接著", "所以", "leads to", "then"}
+
+# WARN, not FAIL. The rule was inherited as "mermaid parses `1. ` as a
+# markdown list and dies", and against the pinned parser that is no
+# longer true: mermaid-cli 11.16.0 rendered `標題 1. 第一步` cleanly, both
+# quoted (the form this spec mandates) and unquoted — exit 0, no error
+# SVG, verified live rather than cited. It stays as an observation
+# because the artifact is also meant to open in Obsidian, whose bundled
+# mermaid is a different version, and because `--render` now gives the
+# real answer for whatever parser is actually in play. Failing a build on
+# it would reject correct content — "Step 1. do this" is an ordinary
+# sentence — which is the failure this file's WARN/FAIL split exists to
+# prevent.
+NUMBER_SPACE_NOTE = (
+    "node {nid}: {where} contains a `number. space` run. This parsed "
+    "cleanly on the pinned mermaid ({ver}), but older renderers have "
+    "treated it as a markdown list. `--render` settles it for your "
+    "parser; if that is unavailable and the target renderer is old, `1.` "
+    "with no space, `①` or `(1)` sidestep it"
+)
 
 
 def width(text):
@@ -135,7 +160,14 @@ def parse_edges(body):
         rf"([A-Z])\s*({arrow_re})\s*(?:\|([^|]*)\|)?\s*(?=([A-Z])\b)", skeleton
     )
     edges = [(s, a, lab, d) for s, a, lab, d in found]
-    return edges, len(re.findall(arrow_re, skeleton))
+
+    # Count arrows with the edge labels stripped too, the same way node
+    # labels already are. An edge may legitimately say
+    # `A -->|前提 ==> 結論| B`; counting the arrow token inside its own
+    # label made the totals disagree and reported "an arrow is malformed"
+    # about a diagram with no malformed arrow.
+    bare = re.sub(r"\|[^|]*\|", "", skeleton)
+    return edges, len(re.findall(arrow_re, bare))
 
 
 def check(path, do_render=False):
@@ -217,6 +249,18 @@ def check_diagram(body, s):
 
     if "classDef" in body:
         s.fail("uses classDef — the convention forbids it, use inline style lines")
+
+    # Legal mermaid, outside this spec. Caught by name so the diagnosis
+    # says what is wrong; left to the edge parser it surfaced as "node C
+    # has no edge at all", which points at the wrong thing entirely.
+    if re.search(
+        r"(?:-->|-\.->|==>)\s*(?:\|[^|]*\|)?\s*[A-Z]\s*&\s*[A-Z]", body
+    ):
+        s.fail(
+            "uses mermaid's multi-destination `A --> B & C` form — this "
+            "spec draws one edge per line so that every edge can carry "
+            "its own label; write the branches as separate lines"
+        )
 
     edges, arrow_count = parse_edges(body)
     check_groups(body, s, inner, word, prefix, edges)
@@ -377,11 +421,7 @@ def check_node_label(nid, label, s):
     head, rest = label.split(SEP, 1)
     title = re.sub(r"<[^>]*>", "", head)
     if re.search(r"\d+\.\s", title):
-        s.fail(
-            f"node {nid}: title contains a `number. space` run — mermaid "
-            "parses it as a markdown list and dies. Use `1.` with no "
-            "space, `①`, or `(1)`"
-        )
+        s.warn(NUMBER_SPACE_NOTE.format(nid=nid, where="title", ver=MERMAID_VER))
 
     bullets = []
     for b in re.sub(r"</?div[^>]*>", "", rest).split("<br/>"):
@@ -390,10 +430,9 @@ def check_node_label(nid, label, s):
             continue
         text = b[len(BULLET):].strip()
         if re.search(r"\d+\.\s", text):
-            s.fail(
-                f"node {nid}: bullet '{text}' contains a `number. space` "
-                "run — mermaid parses it as a markdown list and dies"
-            )
+            s.warn(NUMBER_SPACE_NOTE.format(
+                nid=nid, where=f"bullet '{text}'", ver=MERMAID_VER
+            ))
         bullets.append(text)
     return title, bullets
 
@@ -560,13 +599,52 @@ def stamp_markdown(html_path, outcome):
         return f"--stamp: no sibling {md.name} to record into"
     text = md.read_text(encoding="utf-8")
 
+    # The gate judged the HTML; the stamp goes in the markdown. Nothing
+    # ties those together unless this does. Editing the markdown without
+    # re-rendering leaves the checker reading a stale page and stamping
+    # the NEW body's hash, so the page comes back saying `pass` for a
+    # conclusion the gate never saw — the whole failure again, one file
+    # to the left. The renderer emits the body hash it built from; if it
+    # disagrees with the markdown on disk, this run proved nothing about
+    # the current markdown and must not stamp.
+    page = Path(html_path).read_text(encoding="utf-8")
+    pm = re.search(
+        r'<meta name="cot-body-sha" content="([0-9a-f]{64})"', page
+    )
+    current = source_sha(text)
+    if not pm:
+        return (
+            f"--stamp: {Path(html_path).name} carries no cot-body-sha — it "
+            "was built by a pre-stamp copy of the converter, or is the "
+            "--artifact build. Re-render with render_cot_html.py, then "
+            "verify again. Nothing recorded"
+        )
+    if pm.group(1) != current:
+        return (
+            f"--stamp: {Path(html_path).name} was built from body "
+            f"{pm.group(1)[:12]}… but {md.name} is now {current[:12]}… — "
+            "the markdown changed after the page was rendered, so this "
+            "run checked a stale page. Re-render, then verify again. "
+            "Nothing recorded"
+        )
+
     # The outcome carries the fingerprint of the body it judged. Without
     # it the field survives any later edit and the rendered page keeps
     # announcing a result for text the gate never saw — the same
     # staleness `reviewed_md_sha256` exists to catch, on the field that
     # reports the catching. The renderer compares this prefix and shows
     # `stale` when it disagrees.
-    value = f"{outcome} @ {source_sha(text)[:12]}"
+    #
+    # A `--stamp` run without `--render` does not erase an existing
+    # `pass --render` for the SAME body. What --render proves is that the
+    # diagram parses, the diagram lives in the body, and the body is
+    # unchanged — so the older, stronger result still holds, and silently
+    # downgrading it would discard a real check nothing had invalidated.
+    if outcome == "pass" and re.search(
+        rf'^verified:\s*"pass --render @ {current[:12]}"\s*$', text, re.M
+    ):
+        outcome = "pass --render"
+    value = f"{outcome} @ {current[:12]}"
     text, n = re.subn(
         r'^verified:.*$', f'verified: "{value}"', text, count=1, flags=re.M
     )
@@ -579,7 +657,6 @@ def stamp_markdown(html_path, outcome):
         head = verdict_file.read_text(encoding="utf-8")[:600]
         vm = re.search(r"verdict:\s*(PASS|FAIL)", head, re.I)
         sm = re.search(r"reviewed_md_sha256:\s*([0-9a-f]{64})", head, re.I)
-        current = source_sha(text)
         if not vm:
             notes.append(
                 f"{verdict_file.name} states no `verdict: PASS|FAIL` — "
@@ -641,6 +718,9 @@ def main():
         return 2
     if do_sha:
         md = Path(argv[0]).with_suffix(".md")
+        if not md.exists():
+            print(f"--sha: no such file: {md}", file=sys.stderr)
+            return 2
         print(source_sha(md.read_text(encoding="utf-8")))
         return 0
 

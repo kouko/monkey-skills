@@ -54,6 +54,11 @@ jobs:
   # Their regression history lived in code comments until it was turned
   # into tests; a suite no workflow runs is the same dead letter the
   # comments were, so it gets a job here.
+  #
+  # The suite lives in dev-workflow/tests/, NOT beside the scripts it
+  # tests: pytest run inside a skill creates __pycache__/ and
+  # .pytest_cache/ there, which this repo's skill-folder hook forbids, so
+  # the skill's own tests would lock the skill against further editing.
   cot-explain-pytest:
     name: cot-explain script tests
     runs-on: ubuntu-latest
@@ -66,8 +71,13 @@ jobs:
         with:
           python-version: '3.12'
 
+      # Pinned, like every other external surface on this branch
+      # (checkout@v4, setup-python@v5, mermaid@11). A markdown-it-py major
+      # bump changes the HTML these tests assert on.
       - name: Install test dependencies
-        run: python3 -m pip install --quiet pytest markdown-it-py
+        run: python3 -m pip install --quiet 'pytest~=8.3' 'markdown-it-py~=3.0'
 
       - name: Run cot-explain script tests
-        run: python3 -m pytest dev-workflow/skills/cot-explain/scripts/ -v
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -m pytest dev-workflow/tests/test_cot_explain_scripts.py -v

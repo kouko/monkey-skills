@@ -126,10 +126,13 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 MERMAID_CDN = """<script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
   // 'antiscript', not 'loose': node labels are raw HTML by design (the
-  // left-align <div>), so 'strict' would render them as literal text —
-  // but 'loose' additionally permits <script> and click handlers inside a
-  // label, and the label text comes from whatever source document was
-  // summarised. 'antiscript' keeps the HTML labels and drops the scripts.
+  // left-align <div>), so 'strict' would render them as literal text.
+  // This is defence in depth over what mermaid itself renders, and NOT
+  // the control that keeps script out of the page — the browser parses
+  // <pre> content as markup before mermaid ever runs, so anything the
+  // converter emits raw is live regardless of this setting. The control
+  // is unescape_label_markup()'s allow-list, upstream, where the fence
+  // body is turned back into markup in the first place.
   mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'antiscript' });
 </script>"""
 
@@ -184,18 +187,70 @@ def body_sha(body):
     page keeps advertising a result for text the gate never saw — the
     exact staleness this tool exists to catch, reintroduced on the field
     that reports the catching.
+
+    It is also emitted into the page as <meta name="cot-body-sha">, which
+    is what lets the verifier prove the HTML it just judged was built
+    from the markdown it is about to stamp. Without that link the gate
+    reads one file and fingerprints another.
     """
     return hashlib.sha256(body.encode("utf-8")).hexdigest()
+
+
+# The only tags a mermaid label may contain. Applied first, while their
+# `&gt;` is still distinguishable from an arrow's.
+LABEL_TAGS = [
+    ("&lt;div style='text-align:left'&gt;", "<div style='text-align:left'>"),
+    ("&lt;/div&gt;", "</div>"),
+    ("&lt;br/&gt;", "<br/>"),
+    ("&lt;br&gt;", "<br>"),
+]
+
+
+def unescape_label_markup(fence_body):
+    """Un-escape what mermaid needs, and no tag outside the allow-list.
+
+    A blanket `html.unescape` here is a cross-site scripting hole, and the
+    review that found it is the reason this function exists. markdown-it
+    runs with `html: False`, so every `<` in the document is escaped and
+    the page is safe — except inside this fence, where the label syntax
+    genuinely needs `<div>` and `<br/>` to arrive as markup. Unescaping
+    the whole body to get them also delivers `<script>` and
+    `<img onerror=…>`, live, from whatever source document was
+    summarised.
+
+    mermaid's own `securityLevel` cannot save this. The browser parses
+    `<pre>` content as markup at load time, before mermaid initializes —
+    the sanitizer sits downstream of the injection point. A control
+    placed after the thing it guards is not a control.
+
+    The cut is **`<`, not `>`**. A lone `>` cannot open a tag, and the
+    diagram is full of legitimate ones: `-->`, `==>`, `-.->` are arrows
+    and mermaid will not parse them escaped. So `&gt;` is restored
+    everywhere, while `&lt;` is restored only as part of a tag in
+    LABEL_TAGS. Everything else keeps its `&lt;` and renders as text —
+    `<script>` included, which is the point.
+
+    Order is load-bearing: tags first (their `&gt;` must still be an
+    entity to be recognised), then `&gt;`, then the quote that delimits
+    labels, and `&amp;` last so nothing it produces is re-read as markup.
+    """
+    for escaped, raw in LABEL_TAGS:
+        fence_body = fence_body.replace(escaped, raw)
+    fence_body = fence_body.replace("&gt;", ">")
+    fence_body = fence_body.replace("&quot;", '"')
+    return fence_body.replace("&amp;", "&")
 
 
 def render_body(md_text):
     out = _MD.render(md_text)
 
     # markdown-it escapes fence bodies. Mermaid node labels are raw HTML
-    # (<div style='text-align:left'>) and must reach the browser unescaped,
-    # so unescape inside mermaid fences only.
+    # (<div style='text-align:left'>) and must reach the browser as
+    # markup, so the allowed tags — and only those — are un-escaped here.
     out = MERMAID_FENCE.sub(
-        lambda m: '<pre class="mermaid">\n' + html.unescape(m.group(1)) + "</pre>",
+        lambda m: '<pre class="mermaid">\n'
+        + unescape_label_markup(m.group(1))
+        + "</pre>",
         out,
     )
 
@@ -206,9 +261,19 @@ def leftover_markdown(rendered):
     """Markdown that survived conversion, ignoring where it is legitimate.
 
     Mermaid blocks and <code> spans really do contain `|`, `**` and `#`.
-    Anchors allow a preceding `>` as well as line start: unconverted text
-    ends up inside a tag, where a line-start-only check cannot see it —
-    that hole let a stray `##` through during development.
+
+    The anchor is a BLOCK-tag open, not a bare `>`. Unconverted text ends
+    up inside a tag, where a line-start-only check cannot see it — that
+    hole let a stray `##` through during development — but `>` alone also
+    matches the close of any inline tag, so `<em>x</em> - 說明` and
+    `<strong>A</strong> | B` were condemned as survived markdown. Both
+    are ordinary prose, and the policy here writes no file at all, so a
+    false accusation is a hard stop on a correct page.
+
+    `**` cannot be anchored that way, because unconverted bold appears
+    mid-paragraph. It needs the PAIR instead: a lone `**` is arithmetic
+    (`2**3`), a pair opening at a word boundary is markdown that did not
+    convert.
     """
     scoped = re.sub(r'<pre class="mermaid">.*?</pre>', "", rendered, flags=re.S)
     # `<code[^>]*>` and not `<code>`: markdown-it tags a fence's inner code
@@ -217,14 +282,15 @@ def leftover_markdown(rendered):
     # searched — and a ```bash block holding `# install …` is then reported
     # as an unconverted heading. The check condemned legitimate content.
     scoped = re.sub(r"<code[^>]*>.*?</code>", "", scoped, flags=re.S)
+    block = r"(?:^|<(?:p|li|td|th|div|h[1-6])[^>]*>)\s*"
     found = []
-    if "**" in scoped:
+    if re.search(r"(?:^|[\s>])\*\*[^*\n]{1,200}\*\*", scoped, re.M):
         found.append("literal ** (bold marker)")
-    if re.search(r"(?:^|>)\s*-\s+\S", scoped, re.M):
+    if re.search(block + r"-\s+\S", scoped, re.M):
         found.append("literal `- ` list rows")
-    if re.search(r"(?:^|>)\s*\|.*\|", scoped, re.M):
+    if re.search(block + r"\|.*\|", scoped, re.M):
         found.append("literal | table rows")
-    if re.search(r"(?:^|>)\s*#{1,6}\s", scoped, re.M):
+    if re.search(block + r"#{1,6}\s", scoped, re.M):
         found.append("literal # headings")
     if "```" in scoped:
         found.append("literal ``` fences")
@@ -335,6 +401,7 @@ def build(md_text, artifact=False, out_dir=None):
         '<html lang="zh-TW">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         f'<meta name="generator" content="{html.escape(stamp)}">\n'
+        f'<meta name="cot-body-sha" content="{body_sha(body)}">\n'
         f"{head_meta}\n"
         f"<title>{html.escape(title)}</title>\n<style>\n{CSS}\n</style>\n</head>\n"
         f"<body>\n<main>\n{inner}\n</main>\n{MERMAID_CDN}\n</body>\n</html>\n"
@@ -355,12 +422,21 @@ def main():
     )
 
     if leftovers:
-        print(
+        msg = (
             "FAIL: markdown survived conversion — " + "; ".join(leftovers)
             + "\nNo file written. A run that fails but still writes leaves "
-              "exactly the broken deliverable this check exists to stop.",
-            file=sys.stderr,
+              "exactly the broken deliverable this check exists to stop."
         )
+        # Writing nothing is not the same as leaving nothing. A page from
+        # an earlier good run sits there looking current, for a source
+        # that no longer converts — say so, or the silence reads as "the
+        # file on disk is fine".
+        if out.exists():
+            msg += (
+                f"\nWARNING: {out} is still on disk from an earlier run and "
+                "is now STALE — it does not reflect the current markdown."
+            )
+        print(msg, file=sys.stderr)
         return 1
 
     out.write_text(doc, encoding="utf-8")

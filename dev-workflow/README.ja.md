@@ -32,7 +32,7 @@ Claude Code 向けの skill 開発は反復的な作業です。skill を draft 
 | [`git-memory`](skills/git-memory/) | 決定の文脈（diff そのものではなく **why**）を commit trailer と PR 本文に書き込み、Claude Code / Cursor / Codex / aider / 人間など将来のあらゆる session が `git log` だけから project knowledge を再構成できるようにする。 |
 | [`brief-before-asking`](skills/brief-before-asking/) | 複雑な engineering 決定の質問を user に投げる前（あるいは反応として）の構造化 briefing。3 モード：Mode A（agent が複雑な fork に気づいて自発 trigger）、Mode B（user が質問に「看不懂」と返す）、Mode C（user が解釈に「跟不上」と返す — Mental Model + drill menu に退く）。Mental Model First を最高優先とする 6-block 形式。 |
 | [`dogfood-skill-testing`](skills/dogfood-skill-testing/) | 開発中 skill の behavioral black-box dogfood — fresh subagent で trigger と output 品質を実地検証し、修正に直結する findings レポートを出力。 |
-| [`cot-explain`](skills/cot-explain/) | すでにある推論——ドキュメント・フォルダ・現在の会話——を、CoT Mermaid 図を中心に据えた自己完結型 HTML 一枚に描き出す：ラベル付きの矢印、三点箇条のノード、却下された選択肢、未検証の前提。ワンショット生成器、状態を持たない。 |
+| [`cot-explain`](skills/cot-explain/) | すでにある推論——ドキュメント・フォルダ・現在の会話——を、CoT Mermaid 図を中心に据えた自己完結型 HTML 一枚に描き出す：ラベル付きの矢印、原典が示すだけの箇条を持つノード、却下された選択肢、未検証の前提。ワンショット生成器、状態を持たない。 |
 
 9 つの skill はすべて **Active**。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
 

@@ -27,6 +27,17 @@ C. Nothing may report success it did not achieve
 
 D. Round trip
    10. render -> verify -> stamp -> render lands the stamp on the page
+
+E. The second review round — two reviewers, run against the fixes for A-D
+   11. no tag outside the label allow-list reaches the page as markup
+   12. ...and arrows still do, which the first cut of that fix broke
+   13. a failing conversion writes no file, and names the stale one it left
+   14. `2**3` and `<em>x</em> - y` are prose, not survived markdown
+   15. an arrow token inside an edge label is not a malformed arrow
+   16. `A --> B & C` is diagnosed by name, not as "C has no edge"
+   17. the renderer's and the verifier's body hashes agree
+   18. a page built from a different body than the markdown is not stamped
+   19. a `--stamp` without `--render` does not erase a `pass --render`
 """
 
 from __future__ import annotations
@@ -39,11 +50,17 @@ from pathlib import Path
 
 import pytest
 
-HERE = Path(__file__).resolve().parent
-RENDER = HERE / "render_cot_html.py"
-VERIFY = HERE / "verify_cot_html.py"
+# The suite lives OUTSIDE the skill it tests, deliberately. Running
+# pytest inside `skills/cot-explain/scripts/` creates `__pycache__/` and
+# `.pytest_cache/` there — nested subfolders under a skill root, which
+# this repo's PostToolUse hook forbids — so the skill's own tests locked
+# the skill against further editing until swept by hand.
+SKILL = Path(__file__).resolve().parents[1] / "skills" / "cot-explain"
+SCRIPTS = SKILL / "scripts"
+RENDER = SCRIPTS / "render_cot_html.py"
+VERIFY = SCRIPTS / "verify_cot_html.py"
 
-sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(SCRIPTS))
 import render_cot_html as R  # noqa: E402
 import verify_cot_html as V  # noqa: E402
 
@@ -78,7 +95,8 @@ def node(nid, title, extra_bullets=0):
     )
 
 
-def diagram(indent="", chained=False):
+def diagram(indent="", chained=False, payload="", arrow_in_label=False,
+            multi_destination=False):
     """A minimal five-node diagram that satisfies the spec."""
     ids = "ABCDE"
     rows = [ids[:3], ids[3:]]
@@ -87,10 +105,16 @@ def diagram(indent="", chained=False):
         out.append(f'{indent}subgraph r{n}["階段{n}"]')
         out.append(f"{indent}direction LR")
         for m in members:
-            out.append(f"{indent}  {node(m, f'節點{m}')}")
+            title = f"節點{m}" + (payload if m == "A" else "")
+            out.append(f"{indent}  {node(m, title)}")
         out.append(f"{indent}end")
     if chained:
         out.append("A -->|先推導| B -->|再推導| C")
+    elif multi_destination:
+        out.append("A -->|先推導| B & C")
+    elif arrow_in_label:
+        out.append("A -->|前提 ==> 中段| B")
+        out.append("B -->|再推導| C")
     else:
         out.append("A -->|先推導| B")
         out.append("B -->|再推導| C")
@@ -219,7 +243,7 @@ def test_template_authoring_comment_is_detected(tmp_path):
     It once looked for "cot-explain report template" while the template
     said "markdown template" — a check that could never fire.
     """
-    template = (HERE.parent / "assets" / "cot-report-template.md").read_text(
+    template = (SKILL / "assets" / "cot-report-template.md").read_text(
         encoding="utf-8"
     )
     first_comment = re.search(r"<!--(.*?)-->", template, re.S).group(1)
@@ -310,6 +334,171 @@ def test_sha_flag_without_a_file_reports_usage(tmp_path):
     r = run(VERIFY, "--sha")
     assert r.returncode == 2
     assert "usage" in (r.stderr + r.stdout).lower()
+
+
+# ------------------------------------------- E. the second review round
+#
+# Every case below is a defect two independent code reviewers reproduced
+# against the first remediation round.
+
+def test_script_in_a_label_never_reaches_the_page_as_markup(tmp_path):
+    """The fence un-escape must not hand the browser live tags.
+
+    Label text comes from whatever source document was summarised, and
+    the page is built to be shared. mermaid's own securityLevel cannot
+    help: the browser parses <pre> content before mermaid initializes,
+    so the sanitizer sits downstream of the injection point.
+    """
+    md = make_md(tmp_path, payload="<script>alert(1)</script><img src=x onerror=alert(2)>")
+    assert run(RENDER, md).returncode == 0
+    html = md.with_suffix(".html").read_text(encoding="utf-8")
+    assert "<script>" not in html
+    assert "<img" not in html
+    assert "&lt;script&gt;" in html or "&lt;script>" in html
+
+
+def test_arrows_reach_the_page_as_arrows(tmp_path):
+    """`-->` must survive as `-->`, not `--&gt;`.
+
+    The narrowing that closed the injection hole cut `>` as well as `<`
+    on its first attempt, which escapes every arrow in the diagram and
+    leaves mermaid with a graph that has no edges.
+    """
+    md = make_md(tmp_path)
+    run(RENDER, md)
+    html = md.with_suffix(".html").read_text(encoding="utf-8")
+    block = re.search(r'<pre class="mermaid">(.*?)</pre>', html, re.S).group(1)
+    assert "-->" in block and "==>" in block
+    assert "--&gt;" not in block
+
+
+def test_fail_loud_writes_no_file(tmp_path):
+    """The module's headline property, which nothing pinned.
+
+    A mutant that keeps the exit code and ALSO writes the broken page
+    passed the whole suite.
+    """
+    md = tmp_path / "r.md"
+    # A table row with no delimiter row: markdown-it leaves it in a
+    # paragraph, which is exactly what "markdown survived conversion"
+    # means. Writing a literal <p> tag would not do — html:False escapes
+    # it, so it never reaches the check.
+    md.write_text(FRONTMATTER.format(source="/x.md") + "\n| 甲 | 乙 |\n",
+                  encoding="utf-8")
+    out = tmp_path / "r.html"
+    r = run(RENDER, md, "-o", out)
+    assert r.returncode == 1
+    assert not out.exists(), "a failing run wrote the broken deliverable anyway"
+
+
+def test_stale_page_left_by_an_earlier_run_is_named(tmp_path):
+    """Writing nothing is not the same as leaving nothing."""
+    md = make_md(tmp_path)
+    assert run(RENDER, md).returncode == 0
+    md.write_text(md.read_text(encoding="utf-8") + "\n| 甲 | 乙 |\n",
+                  encoding="utf-8")
+    r = run(RENDER, md)
+    assert r.returncode == 1
+    assert "STALE" in r.stderr
+
+
+def test_prose_may_contain_arithmetic_double_star(tmp_path):
+    """`2**3` is not unconverted bold; condemning it blocks a correct page."""
+    md = make_md(tmp_path, body_extra="\n### 附註\n\n公式 2**3 的意思。\n")
+    r = run(RENDER, md)
+    assert r.returncode == 0, r.stderr
+
+
+def test_inline_emphasis_followed_by_prose_punctuation(tmp_path):
+    """A `>` anchor matches any inline tag's close, condemning ordinary prose."""
+    md = make_md(
+        tmp_path,
+        body_extra="\n### 附註\n\n**節點 A** - 這是說明文字。\n\n*強調* | 直線 | 收尾\n",
+    )
+    r = run(RENDER, md)
+    assert r.returncode == 0, r.stderr
+
+
+def test_arrow_token_inside_an_edge_label_is_not_a_malformed_arrow(tmp_path):
+    """Edge labels are stripped before arrows are counted, like node labels."""
+    md = make_md(tmp_path, arrow_in_label=True)
+    run(RENDER, md)
+    r = run(VERIFY, md.with_suffix(".html"))
+    assert "an arrow is malformed" not in r.stdout, r.stdout
+    assert r.returncode == 0, r.stdout
+
+
+def test_multi_destination_form_is_diagnosed_by_name(tmp_path):
+    """`A --> B & C` is legal mermaid, outside this spec.
+
+    Left to the edge parser it surfaced as "node C has no edge at all",
+    which points at the wrong thing entirely.
+    """
+    md = make_md(tmp_path, multi_destination=True)
+    run(RENDER, md)
+    r = run(VERIFY, md.with_suffix(".html"))
+    assert r.returncode == 1
+    assert "multi-destination" in r.stdout
+
+
+def test_the_two_body_hashes_agree(tmp_path):
+    """The staleness binding rests on these never diverging.
+
+    They are two independently-authored copies in two modules, edited
+    for different reasons.
+    """
+    shapes = [
+        FRONTMATTER.format(source="/x.md") + "\nbody\n",
+        FRONTMATTER.format(source="/x.md").replace("\n", "\r\n") + "\r\nbody\r\n",
+        "no frontmatter at all\n",
+        "---\n---\nbody\n",
+        FRONTMATTER.format(source="/x.md") + "\nbody with --- inside\n",
+        "\n" + FRONTMATTER.format(source="/x.md") + "\nbody\n",
+    ]
+    for text in shapes:
+        assert R.body_sha(R.split_front_matter(text)[1]) == V.source_sha(text), (
+            f"the renderer and the verifier disagree on the body of {text[:20]!r}"
+        )
+
+
+def test_stamp_refuses_a_page_built_from_a_different_body(tmp_path):
+    """The gate judges the HTML; the stamp lands in the markdown.
+
+    Editing the markdown without re-rendering leaves the checker reading
+    a stale page while fingerprinting the new body — the page then reads
+    `pass` for a conclusion the gate never saw.
+    """
+    md = make_md(tmp_path)
+    run(RENDER, md)
+    md.write_text(
+        md.read_text(encoding="utf-8").replace("一句話結論。", "換掉的結論。", 1),
+        encoding="utf-8",
+    )
+    r = run(VERIFY, "--stamp", md.with_suffix(".html"))
+    assert "Nothing recorded" in r.stdout, r.stdout
+    assert 'verified: ""' in md.read_text(encoding="utf-8")
+
+
+def test_stamp_without_render_does_not_downgrade_a_render_pass(tmp_path):
+    """`--render` proved the diagram parses; the body has not changed."""
+    md = make_md(tmp_path)
+    run(RENDER, md)
+    body12 = V.source_sha(md.read_text(encoding="utf-8"))[:12]
+    md.write_text(
+        md.read_text(encoding="utf-8").replace(
+            'verified: ""', f'verified: "pass --render @ {body12}"', 1
+        ),
+        encoding="utf-8",
+    )
+    run(RENDER, md)
+    run(VERIFY, "--stamp", md.with_suffix(".html"))
+    assert f'verified: "pass --render @ {body12}"' in md.read_text(encoding="utf-8")
+
+
+def test_sha_on_a_missing_file_reports_cleanly(tmp_path):
+    r = run(VERIFY, "--sha", tmp_path / "nope.html")
+    assert r.returncode == 2
+    assert "Traceback" not in r.stderr
 
 
 if __name__ == "__main__":

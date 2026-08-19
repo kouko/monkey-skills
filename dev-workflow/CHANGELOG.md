@@ -22,6 +22,13 @@ The diagram follows a strict house convention rather than generic
 Mermaid, documented in `references/mermaid-cot-spec.md` and derived from
 ~7,924 vault notes that use it:
 
+> **Read this list as the FIRST DRAFT, not as what shipped.** This entry
+> is written as a narrative, and two of the bullets below were reversed
+> later in it on measured grounds — see *Layout diverges from the vault
+> convention* for the axis and the subgraphs, and *Bullet count is 3-5*
+> for the counts. What ships is `graph TB` with mandatory `subgraph`
+> rows, each declaring its own `direction LR`.
+
 - `graph LR`; node body is
   `["<div style='text-align:left'>TITLE<br/>━━━━━━<br/>• B1<br/>• B2<br/>• B3</div>"]`
 - separator is the literal `<br/>━━━━━━<br/>` (six U+2501), **not** `---`
@@ -124,7 +131,7 @@ the mutation suite grew to 22 kills + 3 no-trip guards, all passing.
 #### Bullet count is 3-5, and length limits stopped blocking
 
 Counting the vault rather than trusting the sample that seeded the spec:
-across 238,764 nodes in 7,922 files, 79.24% carry three bullets, 20.28%
+across 238,764 nodes in 7,924 files, 79.24% carry three bullets, 20.28%
 carry two, and 0.48% carry four or more. The original "exactly three"
 was inferred from two examples and would have rejected a fifth of what
 the vault actually does.
@@ -144,8 +151,10 @@ author mangle a sentence to satisfy a number, which is worse than a wide
 box. The gate now reports two levels — `FAIL` breaks the contract or the
 parser and exits 1; `WARN` costs readability or squareness and never
 blocks. The spec/gate mismatch a dogfood run caught (spec said edge
-labels were 4-8 CJK, the code enforced 2-12) is resolved by stating both
-numbers: enforced band 3-10, aim for 4-8.
+labels were 4-8 CJK, the code enforced 2-12) is resolved by collapsing
+the two bands into one: 4-8 CJK-widths, WARN-only. There is no separate
+enforced band — a width has no business failing a build, which is the
+same reasoning that moved every other count to WARN.
 
 #### Borrowed from `obsidian:obsidian-mermaid-visualizer`
 
@@ -589,6 +598,77 @@ all three variants rendered together: rows of 2 at 0.523, rows of 3 at
 0.907, rows of 4 at 0.430. Three is a peak, not a ceiling — the fall-off
 is steep on both sides, which is why a trailing row of 2 costs little
 and a row of 4 costs a lot.
+
+#### Two controls sited downstream of what they guard
+
+The second review round found the same mistake made twice, and it is the
+mistake this skill exists to prevent.
+
+The converter un-escaped the whole mermaid fence body, because node
+labels are raw HTML by design and must reach the browser as markup. That
+also delivered `<script>` and `<img onerror=…>` live, from whatever
+source document was summarised, into a page built to be shared. The
+comment above it named mermaid's `securityLevel` as the mitigation — but
+the browser parses `<pre>` content before mermaid initializes, so the
+sanitizer sat downstream of the injection point and never saw it.
+
+The un-escape is now an allow-list, and the cut is **`<`, not `>`**: a
+lone `>` cannot open a tag, and the diagram is full of legitimate ones,
+so `&gt;` is restored everywhere while `&lt;` comes back only inside
+`<div style='text-align:left'>`, `</div>` and `<br/>`. Because
+markdown-it delivered every `<` escaped, the only literal `<` in the
+output are the ones the allow-list introduces — exhaustive by
+construction rather than by enumerating what to block. The first attempt
+cut `>` as well, which escapes every arrow and leaves mermaid a graph
+with no edges; that has its own test now.
+
+The second: the gate judged the HTML while the stamp fingerprinted the
+markdown, with nothing tying them together. Editing the markdown without
+re-rendering left the checker reading a stale page and recording the new
+body's hash, so the page came back announcing `pass` for a conclusion the
+gate never saw. The renderer now emits `<meta name="cot-body-sha">` and
+the stamp refuses when it disagrees with the markdown on disk — the
+guard the fidelity path already had, on the field that had skipped it.
+
+Both false-positive classes are closed too. The leftover-markdown
+anchors matched any inline tag's close, so `<em>x</em> - 說明` was
+condemned as survived markdown and no file was written; they anchor on a
+block-tag open now, and the `**` arm requires a pair, because `2**3` is
+arithmetic. Edge labels are stripped before arrows are counted, so
+`A -->|前提 ==> 中段| B` no longer reports an arrow that is not malformed.
+
+#### Two inherited facts about mermaid, re-probed and both moved
+
+`number. space` in a node label and "mermaid-cli exits 0 on a syntax
+error" both came in from `obsidian:obsidian-mermaid-visualizer`'s quirks
+list. Both were load-bearing — one was a `FAIL`, the other the entire
+reason `--render` exists — and neither had been run against the version
+this branch pins.
+
+- **`number. space` renders cleanly** on mermaid-cli 11.16.0, quoted (the
+  form this spec mandates) and unquoted. Demoted to `WARN`: "Step 1. do
+  this" is an ordinary sentence, and a gate that rejects it is a gate
+  authors route around. The caution survives for older renderers —
+  Obsidian bundles its own mermaid — and `--render` answers it for
+  whatever parser is actually in play.
+- **The exit code is unreliable in both directions.** The same probe saw
+  a malformed arrow exit 1 with no image written, where the inherited
+  note records an error image and exit 0. `render_check` already read the
+  output rather than the status; the prose claiming otherwise is
+  corrected in three files.
+
+The lesson, which cost a `FAIL` on correct content: an inherited fact
+about an external tool is a claim with a version attached.
+
+#### The suite moved out of the skill
+
+Run inside `skills/cot-explain/scripts/`, pytest creates `__pycache__/`
+and `.pytest_cache/` there — nested subfolders under a skill root, which
+this repo's `validate-skill-folder-structure.sh` forbids. The skill's own
+tests therefore locked the skill against further editing, three times in
+one session. It lives at `dev-workflow/tests/test_cot_explain_scripts.py`
+now, beside the shell suite, and CI runs it there with pinned deps.
+14 tests became 26.
 
 Files: `skills/cot-explain/{SKILL.md,README.md,README.ja.md,README.zh-TW.md}`,
 `assets/cot-report-template.md`,
