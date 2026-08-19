@@ -132,7 +132,7 @@ has no basis in the source at all.
 be acted on rather than merely read — this page explains why it decided
 what it decided; it does not replace reading it. A technical
 specification is the obvious case; a policy, a contract, a clinical
-protocol and a regulation are the same case. That limit is measured. Four
+protocol, a regulation and a style guide are the same case. That limit is measured. Four
 rounds were run against one dense engineering brief: each recovered every
 clause the previous round had been told it lost, and each lost different
 implementation details nobody had thought to look for — one new miss,

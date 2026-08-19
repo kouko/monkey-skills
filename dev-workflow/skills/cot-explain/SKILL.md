@@ -97,13 +97,19 @@ Write out, as a working list (not shown to the user):
    normative clause of some kind (`references/why-these-rules.md`).
 
    A node **names a mechanism** when it says something will be *built,
-   changed, or done* — a rule, a procedure, an obligation, a change to
-   how something is decided. It may be a code change, and it may equally
-   be a policy clause, a contract term, a protocol step, or an editorial
-   standard; what makes it a mechanism is that someone will act on it,
-   not the field it belongs to. Nodes that report a fact, an
-   observation, an insight, or a rejected option are not mechanisms and
-   need no sweep. When unsure,
+   changed, or done* — a rule, a procedure, a change to how something is
+   decided. It may be a code change, and it may equally be a policy
+   clause, a contract term, a protocol step, or an editorial standard;
+   what makes it a mechanism is that someone will act on it, not the
+   field it belongs to. Nodes that report a fact, an observation, an
+   insight, or a rejected option are not mechanisms and need no sweep.
+
+   **A duty the source places on the reader is not a mechanism node** —
+   "before X you must Y" is an obligation, it goes in
+   `### 這份結論要求你做什麼`, and it never becomes a node at all (Step 4).
+   The test is positional, not a judgement about importance: a mechanism
+   is a *state in the reasoning*, something the chain arrived at; an
+   obligation is what the conclusion then asks of you. When unsure,
    sweep it: the cost is three questions answered "none stated", and the
    cost of skipping is a clause that silently never arrives.
 

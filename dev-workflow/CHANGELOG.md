@@ -27,10 +27,15 @@ restriction that was never implemented.
   from it"; "implements the version the source rejected" → "acts on".
 - The carve-out and negative-requirement examples gained non-software
   instances beside the existing ones.
-- Two references to a `規格原文` label were dropped: the template stopped
-  shipping that heading some time ago, and it survives only as a legacy
-  form the verifier rejects. The prose now says "verbatim blockquotes",
-  which is what the artifact actually contains.
+- Two references to a `規格原文` label were dropped. The prose described
+  an artifact the template has never produced: every revision of
+  `assets/cot-report-template.md`, including the first, uses the `>`
+  blockquote form, and `規格原文` exists only as a legacy labelled-list
+  shape that `verify_cot_html.py` still rejects. It now says "verbatim
+  blockquotes", which is what the page actually contains. (The commit
+  message for this change says the template "stopped shipping" the
+  heading — that is wrong in the same way, caught by a reviewer reading
+  git history rather than the current tree; it never shipped it.)
 
 The binding constraint was never the domain — it is the SHAPE of the
 text. A source with a chain of reasoning fits, whether it is a court
