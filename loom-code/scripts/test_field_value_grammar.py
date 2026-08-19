@@ -21,6 +21,11 @@ wording used to describe nested bullets as pure overflow destination
 with no length limit of their own; that was drift from the checker.
 Pin 1 below is widened to require BOTH units stated under one number.
 
+Round 4: the retired-phrase pin (BI-8) resolved only `plan-format.md`
+(the SSOT) and stayed green while the retired phrase still shipped in
+`writing-plans/SKILL.md`'s template — the surface a plan author actually
+copies. The pin now runs against both files.
+
 Pins:
   1. The character-cap rule is stated for `Description`, `RED` and
      `GREEN` alike — one 300-character ceiling that governs BOTH the
@@ -53,6 +58,10 @@ PLAN_FORMAT_MD = (
     / "references"
     / "plan-format.md"
 )
+WRITING_PLANS_SKILL_MD = (
+    REPO_ROOT / "loom-code" / "skills" / "writing-plans" / "SKILL.md"
+)
+RETIRED_PHRASE_TARGETS = (PLAN_FORMAT_MD, WRITING_PLANS_SKILL_MD)
 
 RETIRED_PHRASE = "one-assertion unit of work"
 GOAL_NO_CEILING_PHRASE = "Carries no length ceiling"
@@ -113,13 +122,20 @@ def test_no_reworded_restatement_of_one_assertion_survives():
     """Mechanical leg of the GREEN's second assertion: grep for the
     retired phrase and its closest paraphrases returns zero hits. The
     judgment leg (a reviewer confirming no OTHER reworded restatement
-    survives) is not machine-checkable and is not asserted here."""
-    text = _text()
-    lowered = text.lower()
+    survives) is not machine-checkable and is not asserted here.
 
-    assert "one-assertion unit of work" not in text
-    assert "one assertion unit of work" not in lowered
-    assert "write one assertion" not in lowered
+    Runs against BOTH the SSOT (plan-format.md) and the functional copy
+    a plan author actually copies from (writing-plans/SKILL.md's
+    template) — resolving only the SSOT let the retired phrase survive
+    in the template while this test stayed green."""
+    for target in RETIRED_PHRASE_TARGETS:
+        assert target.is_file(), f"{target} is absent"
+        text = target.read_text(encoding="utf-8")
+        lowered = text.lower()
+
+        assert "one-assertion unit of work" not in text, target
+        assert "one assertion unit of work" not in lowered, target
+        assert "write one assertion" not in lowered, target
 
 
 def test_no_sentence_counting_vocabulary_survives_in_field_grammar():

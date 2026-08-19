@@ -319,6 +319,21 @@ def test_accepts_nested_bullet_wrapped_across_two_lines():
     assert check_plan_fields(text) == []
 
 
+def test_accepts_nested_bullet_wrapped_continuation_indented_with_tab():
+    # Reproduces the defect: _NESTED_BULLET_LINE matches leading `\s`
+    # (tabs included), so a bullet reached via a TAB indent is a legal
+    # nested bullet — but its wrapped continuation line's indent was
+    # measured with spaces only (`raw.lstrip(" ")`), so a tab-indented
+    # continuation always measured as indent 0 and was rejected even
+    # though wrapping a long nested bullet across lines is legal.
+    text = _plan_with_raw_description_block(
+        "- **Description**: Short first line.\n"
+        "\t- A nested bullet reached via a tab indent that a human wraps\n"
+        "\t  across two physical lines, which is ordinary markdown.\n"
+    )
+    assert check_plan_fields(text) == []
+
+
 def test_rejects_wrapped_continuation_under_table_row():
     # A wrapped continuation line is only legal directly under a nested
     # bullet — the grammar does not extend the exemption to table rows.
@@ -346,6 +361,27 @@ def test_rejects_indented_prose_with_no_preceding_nested_bullet():
     problems = check_plan_fields(text)
     assert problems, "expected a non-empty problem list"
     assert any("1" in p and "Description" in p for p in problems)
+
+
+def test_continuation_violation_message_names_all_three_shapes():
+    # The message an author sees on a rejected continuation line must
+    # name all three permitted shapes (nested bullet / table row /
+    # wrapped continuation of the nested bullet above) AND state the
+    # wrapped-continuation remedy: indent to at least the bullet's own
+    # text column. Naming only two shapes tells an author whose bullet
+    # wrapped one column too shallow to convert it to a bullet or a
+    # table, when the actual fix is to indent deeper.
+    text = _plan_with_raw_description_block(
+        "- **Description**: Short first line.\n"
+        "  This is indented prose with no nested bullet above it.\n"
+    )
+    problems = check_plan_fields(text)
+    assert problems, "expected a non-empty problem list"
+    message = next(p for p in problems if "Description" in p)
+    assert "nested bullet" in message
+    assert "table row" in message
+    assert "wrapped continuation" in message
+    assert "indent it to at least that bullet's own text column" in message
 
 
 def test_rejects_crammed_prose_after_table_row_following_earlier_bullet():

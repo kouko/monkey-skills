@@ -194,7 +194,7 @@ Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PA
 N/A — no unresolved question: <one-line reason>
 
 ## Task 1 — <short name>
-- Description: <one-assertion unit of work, imperative voice>
+- Description: <imperative voice, first line only — overflow routes to a nested bullet or table per §Field-value grammar>
 - Module: <path or module name; one only>
 - Files touched: <comma-separated paths the implementer will Write / Edit>
 - Context paths:

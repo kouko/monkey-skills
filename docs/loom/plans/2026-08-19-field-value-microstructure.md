@@ -4,7 +4,7 @@
 Goal: plan 的欄位值與 brief 的長段落再也無法無界成長——溢出的內容一律進
     bullet 或表格，真正的推論鏈則明文宣告，而判定這件事的是機械檢查而非
     審查者的判斷。
-Stage: sdd:wave-4
+Stage: finishing
 Steps:
   1. 四路平行起跑：檢查器的 plan 欄位規則、plan_card 的巢狀 bullet、兩份格式 SSOT、backlog 記帳
   2. 各路加深：檢查器的 Goal 規則、plan_card 的表格保留、三份 README 同步、reviewer 檢查列
@@ -82,13 +82,16 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Independent**: true
 - **Brief item covered**: BI-1
 - **Status**: done(e43e973e)
-- **Gloss**: 新檢查器認得「Description 首行一句、RED／GREEN 一句斷言加一句可選的失敗理由、其餘進 bullet 或表格」，並抓出違規的寫法
+- **Gloss**: 新檢查器用 300 字元上限量每一個散文單位（欄位自己的首行，或一個巢狀 bullet 折疊後的文字），超出的內容一律進 bullet 或表格；不數句子
 
 ## Task 2 — 檢查器：header `Goal:` 規則
 
 - **Description**: Add `check_goal(text) -> list[str]` to `check_field_microstructure.py`, registered in the same CLI run as T1's check.
   - `Goal:` violates when its joined value exceeds 300 characters, or when any of its continuation lines is a bullet or a table line. Do not count sentences — BI-1 abandoned that after two rounds proved regex cannot do it, and the `Goal:` check must not re-derive the same failures.
   - The ceiling and the no-nested-body rule are separate violations with separate messages, because the brief records the ceiling as the falsifiable half and the structural rule as the load-bearing half.
+  - SUPERSEDED — the two bullets above are the text T2 was dispatched with, kept as the record. Do not read them as the current rule.
+  - What changed: the 300-character ceiling on `Goal:` was removed later in the arc. Only the no-nested-body rule shipped, so there is one violation and one message, not two.
+  - Why: the structural rule justifies itself (`plan_card.py` folds indented content into the card's single `goal:` line); the number had no reason of its own. Full entry in `## Decision Log`.
   - Read the header region with `plan_card._header_value`'s own fold rule so the checker and the card agree on what the value is.
 - **Module**: loom-code/scripts
 - **Files touched**: loom-code/scripts/check_field_microstructure.py, loom-code/scripts/test_check_field_microstructure.py
@@ -103,11 +106,12 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Acceptance**:
   - **RED**: `loom-code/scripts/test_check_field_microstructure.py::test_rejects_goal_with_nested_body` — a plan fixture whose header `Goal:` is followed by an indented `- ` bullet returns a problem naming `Goal`. Fails today because `check_goal` does not exist.
   - **GREEN**: the test passes; `test_rejects_overlong_goal` flags a 400-character single-sentence Goal with a message distinct from the nested-body message; `test_accepts_short_single_sentence_goal` returns an empty list.
+  - SUPERSEDED — `test_rejects_overlong_goal` no longer exists. The ceiling it guarded was removed later in the arc, and the shipped suite asserts the opposite (`test_accepts_overlong_goal`). The line above is the gate T2 was dispatched against, kept as the record.
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-2
 - **Status**: done(aae81fb7)
-- **Gloss**: `Goal:` 只准一句話、不准掛 bullet——因為 plan_card 會把縮排內容折進卡片那一行，錯的值會直接送到使用者眼前
+- **Gloss**: `Goal:` 不准掛巢狀內容——因為 plan_card 會把縮排的東西折進卡片那一行，錯的值會直接送到使用者眼前。長度不設限（上限在本弧後段被拿掉，見 Decision Log）
 
 ## Task 3 — 檢查器：brief 長段落規則
 
@@ -203,6 +207,9 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
   - `Description` states the rule as: first line is exactly one sentence; every further clause is a nested bullet or a markdown table.
   - `Acceptance.RED` and `Acceptance.GREEN` state the same continuation rule but allow one assertion sentence plus one optional grounding clause on the first line, naming the `Fails today because ...` clause this file already teaches as that grounding sentence.
   - The header `Goal:` entry states one sentence, a 300-character ceiling, and no nested body, naming `plan_card.py`'s fold as the reason.
+  - SUPERSEDED — the three bullets above are the spec T7 was dispatched with. Read `plan-format.md` itself for the current wording, not these bullets.
+  - What shipped instead: a 300-character cap on any prose unit, with no sentence counting anywhere, and a `Goal:` entry stating only the no-nested-body rule.
+  - Both the sentence rule and the `Goal:` ceiling were dropped later in the arc — two `## Decision Log` entries dated 2026-08-19 carry the evidence for each.
   - Add one before/after worked example under `## Worked example` using a real over-long Description shape.
   - State the rule as a duty to do something ("route the overflow into a bullet"), never as a prohibition on length.
 - **Module**: loom-code/skills/writing-plans/references
@@ -219,7 +226,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Independent**: true
 - **Brief item covered**: BI-7, BI-8
 - **Status**: done(bab64113)
-- **Gloss**: plan 的欄位文法 SSOT 從「寫成一個 assertion」（要判斷）改成「首行限句數、其餘進 bullet」（查得到），RED／GREEN 保留既有的失敗理由句
+- **Gloss**: plan 的欄位文法 SSOT 從「寫成一個 assertion」（要判斷）改成「每個散文單位不超過 300 字元、其餘進 bullet 或表格」（量得到），RED／GREEN 保留既有的失敗理由句
 
 ## Task 8 — `handoff-brief-format.md`：段落規則與敘事宣告語法
 
@@ -247,6 +254,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 
 - **Description**: Update the field-grammar lines in `loom-code/skills/writing-plans/README.md` and its `README.ja.md` / `README.zh-TW.md` mirrors so all three state the positional rule instead of the retired `one-assertion` wording.
   - Each mirror states the rule in its own language; the three must agree on the substance below and on the `Goal:` ceiling, which is the same 300.
+  - SUPERSEDED — the `Goal:` ceiling named above was removed later in the arc. The three READMEs Task 9 shipped state the opposite (`README.md:36`: the header `Goal:` line carries no length ceiling of its own), and `plan-format.md` agrees. Only the substance bullets below still hold.
     - No prose unit in `Description`, `RED` or `GREEN` exceeds 300 characters.
     - A unit is the field's own first line, or one nested bullet's text folded across the lines it wraps to.
     - Everything that does not fit becomes another nested bullet or a table row.
@@ -330,7 +338,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 - **Dependencies**: Tasks 4, 6, 9, 10, 11, 13, 14, 15 complete first
 - **Independent**: false
 - **Brief item covered**: none — release bookkeeping; the brief declares behaviour, not the version it ships under
-- **Status**: pending
+- **Status**: done(1d153923)
 - **Gloss**: 出貨 0.89.0——沒有 bump 的話 marketplace 端 `plugin update` 會靜默 no-op，改了等於沒改
 
 ## Task 13 — backlog 記帳
@@ -412,7 +420,7 @@ N/A — no unresolved question: the brief's only OQ (BI-3's threshold) was resol
 
 - **Change-folder binding**: none. The declared input is the brainstorming brief at `docs/loom/specs/2026-08-19-field-value-microstructure.md` (Layer 0, explicit handoff). Two non-archived change-folders exist (`docs/loom/2026-07-12-us-sec-primary-source-layer`, `docs/loom/2026-07-19-8k-prose-kpi-intake`); neither relates to this arc's subject and neither is bound.
 - **"brief" and "spec" are the same artifact here.** loom briefs live at `docs/loom/specs/<date>-<topic>.md`, so the brief's BI-3 wording "a brief or spec paragraph" names one file class, not two. T3 and T8 both target that class. loom-design change-folder `spec.md` files are a different artifact and are out of scope.
-- **The 300-character `Goal:` ceiling is the falsifiable half.** Per the brief's Decision and the Axis-4 research, if a plan-time trial shows the ceiling truncating genuinely atomic goals, drop the ceiling and keep the structural no-nested-body rule.
+- **The 300-character `Goal:` ceiling is the falsifiable half.** Per the brief's Decision and the Axis-4 research, if a plan-time trial shows the ceiling truncating genuinely atomic goals, drop the ceiling and keep the structural no-nested-body rule. **This condition FIRED and was acted on** — the ceiling is dropped and only the no-nested-body rule shipped; see `## Decision Log`. Kept as the pre-registration it was, not as a live contingency.
 Recorded at wave 2 (orchestrator-level, no task's gap): parallel implementers share one working tree AND one git index, and the index is shared state no task declares. Three distinct incidents in one wave, all self-caught: T2's `git add` swept in T9's already-staged files and produced a 6-file commit (recovered via `git reset --soft HEAD^`); T9's README edits were reverted on disk between its `git add` and its commit, surfacing as a modified-since-read error (recovered by re-reading and committing atomically); and a reviewer used `git stash` while three implementers held uncommitted work — no loss only because those two had committed minutes earlier. `Files touched` disjointness governs which FILES a task writes; it says nothing about the index, the stash, or `git reset`, which are process-wide. Two guards follow: the no-stash instruction belongs in reviewer packets too — reviewers mutate the tree harder than implementers, reverting files to verify a RED — and a parallel wave should stage-and-commit in one step rather than leaving files staged across tool calls.
 
 Recorded at review (wave 1, orchestrator-level, not any task's gap): `Files touched` disjointness protects against two tasks WRITING the same file, but not against task A writing a file that task B's test READS. T13 edited `docs/loom/backlog/` and `docs/loom/BACKLOG.md` while T7's suite run had `test_backlog_index.py::test_check_against_real_store_reflects_current_migration_phase` in flight — that test drives a subprocess against those real files, so it saw a torn state and failed once, then passed on rerun. T7's implementer attributed it to test-order flakiness; T7's code-quality reviewer read the test and showed that story is not supported by the code (no shared in-process state exists for ordering to perturb), naming the cross-task race as the credible mechanism. Nothing in this arc is wrong because of it, but a parallel wave whose tasks touch real files read by other tasks' tests can produce failures that look like flakiness and get dismissed as such.
@@ -422,6 +430,8 @@ Recorded at review (T7, not a gap): T7's `Files touched` omitted `loom-code/scri
 Gloss amendment: T1 and T7 `Gloss:` lines corrected to name both branches — a `Gloss`-only edit the round-4 reviewer pre-authorised in its PASS ("worth a five-word edit... not worth a sixth round"); `Gloss` is accept-and-ignore under the reviewer contract and never rides a dispatch packet, so no re-review.
 
 Kickoff decision: RED/GREEN first-line sentence count → one assertion sentence plus one optional grounding clause; the third sentence violates. `Description` stays at exactly one.
+
+Kickoff decision SUPERSEDED (recorded here because `Kickoff decision:` lines ride implementer dispatch packets, so a stale one would be re-dispatched as live): sentence counting was abandoned entirely two review rounds later — no field counts sentences, and all three are governed by the 300-character cap on any prose unit. Evidence in `## Decision Log`, entry "Sentence counting abandoned". Any future dispatch must carry the character rule, never the sentence rule above.
 
 Kickoff decision: T14/T15 editing merged historical plans and briefs → proceed, form-only; GREEN pins zero changed lines across `Status` / `Dependencies` / `Files touched` / `Brief item covered` / `BI-`.
 

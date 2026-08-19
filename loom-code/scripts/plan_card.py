@@ -433,7 +433,7 @@ def _fold_sub_bullets(raw_lines: list[str]) -> list[tuple[str, "list[str] | str"
     items: list[list[str]] = []
     segments: list[tuple[str, "list[str] | str"]] = []
     for raw in raw_lines:
-        sub_bullet = re.match(r"^\s*-\s+(.*?)\s*$", raw)
+        sub_bullet = re.match(r"^\s*[-*+]\s+(.*?)\s*$", raw)
         if sub_bullet is not None:
             items.append([sub_bullet.group(1)])
             segments.append(("bullet", items[-1]))

@@ -49,3 +49,14 @@ def test_skill_md_declares_microstructure_gate():
     # negated rewrite ("never blocks ...") — these two full clauses do not.
     assert "a non-zero exit blocks drafting" in para
     assert "a non-zero exit blocks the plan-document-reviewer dispatch" in para
+    # Timing clause: brief mode fires at intake, before Task 1 is drafted —
+    # not after. A rewrite claiming the opposite order must go RED.
+    assert "brief mode fires at intake, before drafting Task 1" in para
+    # Exit-code routing: pin number and meaning TOGETHER as one clause each,
+    # so swapping which number gets which meaning (Exit 1 <-> Exit 2 content)
+    # breaks both assertions, not just the paragraph's mere presence.
+    assert "Exit 1: fix the flagged field or paragraph, re-run." in para
+    assert (
+        "Exit 2: structurally empty (no `## Task` headings, or no `## ` "
+        "sections) — supply the missing structure, not a field fix."
+    ) in para

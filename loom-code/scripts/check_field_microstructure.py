@@ -311,7 +311,12 @@ def _check_continuations(
             _flush_bullet()
             bullet_text_indent = None
             continue
-        indent = len(raw) - len(raw.lstrip(" "))
+        # `_NESTED_BULLET_LINE` recognises a bullet via `\s+` (tabs
+        # included) and its indent unit is "count of matched whitespace
+        # characters" (`len(match.group(0))`), NOT tab-expanded columns.
+        # This measurement must agree with that unit — `lstrip(" ")`
+        # (spaces only) would count a tab-indented continuation as 0.
+        indent = len(raw) - len(raw.lstrip())
         if bullet_text_indent is not None and indent >= bullet_text_indent:
             bullet_text_parts.append(raw.strip())
             continue
@@ -319,7 +324,11 @@ def _check_continuations(
         bullet_text_indent = None
         problems.append(
             f"Task {number} ({name}): '{field}' continuation line is "
-            f"neither a nested bullet nor a table row: {raw.strip()!r}"
+            "none of the three permitted shapes (a nested bullet, a "
+            "table row, or a wrapped continuation of the nested "
+            "bullet immediately above it — indent it to at least "
+            "that bullet's own text column to make it one): "
+            f"{raw.strip()!r}"
         )
     _flush_bullet()
     return problems
@@ -437,7 +446,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Check a writing-plans plan's Description/RED/GREEN "
                     "field values against the plan-field microstructure "
-                    "grammar; exit 1 on any violation."
+                    "grammar; exit 0 when clean, exit 1 on any violation, "
+                    "exit 2 when the plan has no '## Task' headings at all."
     )
     parser.add_argument(
         "plan_path",

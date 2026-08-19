@@ -39,3 +39,27 @@ Related: [[construction-guaranteed-invariant-proves-nothing]] (the moved
 property here was itself a whole-word guard against a clean-looking wrong
 scale); [[count-only-regression-pins-false-confidence]] (a green count
 hides a lost exemplar).
+
+**Increment (2026-08-19, branch `plan-field-microstructure`) — classification
+(a) misfires when the deleted test was the only thing exercising a still-live
+shared path.** That arc removed a length ceiling on one plan field. The test
+asserting the ceiling tested behaviour that genuinely no longer existed
+anywhere, so rule (a) above says delete it freely — and that reading was
+correct about the *property*. It was wrong about the *path*: that test was the
+only case in the suite that drove the checker's parsing branch for that field
+at all. The branch stayed live, serving a second rule that survived the
+removal, and after the delete nothing exercised it. Nothing went red, because
+nothing was supposed to.
+
+**Why:** rule (a) asks where the *property* went, which is the right question
+for coverage of a behaviour and the wrong question for coverage of a
+mechanism. A test usually pins one property while incidentally being the sole
+caller of the machinery underneath it. Removing the property does not remove
+the machinery, and a suite cannot report a path it no longer reaches.
+
+**How to apply:** before deleting a test under rule (a), ask the second
+question too — *which production code does this test uniquely reach?* Run the
+suite with the test removed under coverage and diff the reached lines, or grep
+the callers of each function the deleted test touched. Any line that goes from
+covered to uncovered while still being live code needs a replacement test at
+that line, even though the property being retired is genuinely gone.

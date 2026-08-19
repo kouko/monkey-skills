@@ -1,6 +1,6 @@
 ---
 name: skill-in-subagent-loses-internal-orchestration
-description: Handing a multi-agent skill to ONE subagent silently strips its internal orchestration — subagents expose no Agent/Task/Workflow tool (live-probed 2026-07-23), so a writer≠evaluator gate panel degrades to one agent auditing its own draft with no error surfaced; drive such skills from the main conversation and dispatch their panel as sibling subagents
+description: Handing a multi-agent skill to ONE subagent degrades its internal orchestration — a writer≠evaluator gate panel becomes one agent auditing its own draft with no error surfaced; drive such skills from the main conversation and dispatch their panel as sibling subagents. NOTE the stated cause is CORRECTED: subagents DO expose the Agent tool (re-probed 2026-08-19); the 2026-07-23 "no Agent/Task/Workflow" finding is stale for Agent, and the advice now rests on the nested layer being where a child result gets dropped
 type: gotcha
 origin: 2026-07-23 JNJ memo e2e (report-equity-memo Phase 4 delegated to one sonnet subagent; chore-subagent-nesting-gotcha branch)
 ---
@@ -32,3 +32,27 @@ was nevertheless executed degraded, disclose it explicitly in the artifact
 and the user report. Harness-fact sibling: loom-code environment-gotchas §A1
 (named Agent dispatch needs SendMessage) — same Agent-tool family, different
 trap.
+
+**Correction (2026-08-19, re-probed live).** The tool-availability claim above
+is **no longer true for `Agent`**. A `general-purpose` subagent in session
+`db36bf57` found `Agent` in its own tool list, resolved its full schema via
+`ToolSearch "select:Agent"`, and successfully dispatched a child that returned
+a real result. `Task` and `Workflow` were still absent — no tool by either
+name resolved, and the search fell back to `Agent` by name similarity rather
+than refusing. So the honest state of this fact is: **`Agent` yes, `Task` and
+`Workflow` no**, as of 2026-08-19; whether `Agent` was genuinely missing on
+2026-07-23 or the probe that day was mis-read is not recoverable, so treat any
+tool-availability claim in this store as needing a re-probe before it is
+relied on, this one included.
+
+**What this does and does not change.** It removes the *mechanism* this entry
+originally offered — a subagent is not forced to self-execute a panel by a
+missing tool, because the tool is there. The *observed degradation* stands:
+the 2026-07-23 run really did produce all 7 gate verdicts from the artifact's
+own author. And the recommendation stands, on new ground rather than the old
+one: the nested layer is where a child's work gets dropped, because dispatch
+returns an acknowledgement immediately and the child's actual output arrives
+later as a separate notification — see
+[[a-dispatch-return-is-a-receipt-not-the-work]]. A subagent that dispatches a
+panel and then ends its own turn hands the parent that receipt instead of the
+panel's verdicts, which looks like a completed delegation and is not one.

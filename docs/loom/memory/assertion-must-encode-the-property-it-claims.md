@@ -62,3 +62,30 @@ semantic property are unbounded. So the decision is not "tighten until correct"
 is loud, self-explaining and cheap (someone restyles a doc, CI complains, they
 see why), while the hole it guards is silent and is the defect the guard exists
 for. Keep the noisy one, record the over-fire as known debt, and stop swinging.
+
+**Increment (2026-08-19, branch `plan-field-microstructure`) — deletion and
+reversal are two different probes, and passing the first proves nothing about
+the second.** Four assertions on that branch shipped green against a target
+that had been deleted or whose claim had been reversed in place. The arc had
+already adopted the standard probe — delete the target, confirm the test goes
+RED — and every one of the four passed it. They still could not tell a rule
+from its opposite: the assertion matched a heading, a filename, or a
+surrounding phrase that survives a reversal untouched, so flipping the rule's
+content left it green. One of the four was actively pinning a ceiling the same
+arc had already overturned, and it kept the stale wording passing while the
+rule it claimed to guard no longer existed.
+
+**Why the deletion probe misses this:** deleting a target removes its
+container along with its content, so any assertion anchored anywhere near it
+goes RED and looks non-vacuous. Reversing the content leaves the container
+intact — which is exactly the state a wrong edit produces. A rule is far more
+often *changed into something wrong* than *removed*, so the cheaper probe
+tests the rarer failure.
+
+**How to apply:** run both mutations, not one. Delete the target → the
+assertion must go RED (non-vacuous). Then restore it and **reverse its claim
+in place**, keeping its heading, length and surroundings — negate the
+proposition, swap the number for a different one, invert the permitted and
+forbidden cases — and the assertion must go RED again. A test that survives
+the second mutation pins the target's *location*, not its *meaning*, and must
+be rewritten to assert the proposition itself.

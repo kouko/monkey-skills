@@ -104,8 +104,14 @@ Role boundaries enforced by behavior, not reading restrictions:
   per-field branch. An indented continuation line that is none of
   (nested bullet / markdown table row / a wrapped continuation of the
   nested bullet above it) also violates; a table row ends the preceding
-  bullet's wrap window. rc=1 with every violation named on stderr,
-  rc=0 when the plan is clean.
+  bullet's wrap window. Plan mode also runs a `Goal:` check: a
+  continuation line under the header `Goal:` field shaped as a nested
+  bullet or a markdown table row violates (`Goal:` must fold to one
+  line, unlike `Description`/`RED`/`GREEN` it carries no length cap).
+  rc=1 with every violation (field-microstructure or `Goal:`) named on
+  stderr, rc=2 when the plan has no `## Task` headings at all —
+  structurally not a plan, distinct from "nothing violated" — rc=0
+  when the plan is clean.
   Sentence counting was tried twice and abandoned: counting occurrences
   of `.`/`?`/`!` false-positives on `0.89.0`, `e.g.`, `i.e.` and
   ellipsis, and the boundary heuristic that replaced it false-negatives
@@ -119,8 +125,10 @@ Role boundaries enforced by behavior, not reading restrictions:
   beneath it; `## Current State Evidence` and `## Alternatives
   Considered` are exempt. No checker classifies a paragraph as
   narrative — only the declaration string's presence is checked.
-  rc=1 with each violation naming its `## ` section on stderr, rc=0
-  when the brief is clean.
+  rc=1 with each violation naming its `## ` section on stderr, rc=2
+  when the brief has no `## ` sections at all — structurally not a
+  brief, distinct from "nothing violated" — rc=0 when the brief is
+  clean.
 - **Archive a shipped change-folder, or a single backlog entry file**
   (finishing-a-development-branch archive-on-close step, orchestrator-only,
   once per branch; the file unit is also used to close a
