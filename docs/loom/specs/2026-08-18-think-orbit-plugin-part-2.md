@@ -10,6 +10,11 @@
 > **0.1.1 追記（user ruling 2026-08-18）**: plugin 的目的是**思考與規劃**，決策只是其中一種結尾；
 > `decision-session` 已更名為 `thinking-session`，入口語彙擴大到「幫我想／想清楚／規劃／整理思路」，
 > 且一次坐下不必以 DECISION 收尾。Part 2 的 BI 依此框架複核。
+> **Precondition added 2026-08-19**: Part 1 的檢查點（`docs/loom/dogfood/2026-08-19-think-orbit-real-material.md`）
+> 認定 schema 需變更，因此 Part 2 **改排在**
+> `docs/loom/specs/2026-08-19-think-orbit-transparency-both-faces.md` 之後 —— 本 part 的三張視圖蓋在節點內容上，
+> 而節點的敘事形狀正要改變（warrant 義務、分支必須含節點），先蓋視圖等於蓋在舊形狀上。
+> BI-1 mainline view 同時滿足檢查點提到的「線性閱讀版」需求，不另造平行視圖。
 > **STATUS**: DRAFT — 內容於 Part 1 檢查點後複核；BI 編號自本 part 起算。
 
 ## Problem
@@ -60,7 +65,7 @@ Part 2 在 Part 1 驗過的格式上蓋三張視圖、編提案、里程碑 comm
 
 ## Open Questions
 
-- OQ-1 [OPEN] — Does the Part 1 real-material checkpoint change the node/assumption schema? → resolve by reading the checkpoint file before running writing-plans on this part.
+- OQ-1 [RESOLVED] — Does the Part 1 real-material checkpoint change the node/assumption schema? **Yes.** Resolved by `docs/loom/dogfood/2026-08-19-think-orbit-real-material.md` §schema 變更: (1) CLAIM/FACT gain a mandatory body skeleton — which upstream node this stands on, in prose rather than a bare `ref` id, what it adds, and what would collapse it; (2) a branch must contain at least one CLAIM stating that path's position, with assumptions filed under it, which also removes the `branch_type: (?)` rendering and the assumption inflation the checkpoint measured (18 assumptions vs 17 nodes). Node granularity, the ≤3-assumptions-per-branch cap and the `paragraph-form` rule are explicitly NOT changed — the checkpoint refuted granularity as the cause (§F-T12-05). The checkpoint also carries one non-schema contract change (the three kinds of speech: progress narration banned, reasoning-aloud required, interrupts unchanged) and one non-schema addition candidate (a linear reading view emitted by `render`).
 
 ## Diagrams
 

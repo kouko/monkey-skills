@@ -272,7 +272,7 @@ N/A — no unresolved question: the three schema defaults are recorded as decisi
 - **Dependencies**: Tasks 7, 11, 15, 16 complete first
 - **Independent**: false
 - **Brief item covered**: BI-9 — Real-material checkpoint（主）＋ BI-10 — Umbrella (Part 1)（檢查點檔存在＝Part 1 收尾）
-- **Status**: pending
+- **Status**: done(docs/loom/dogfood/2026-08-19-think-orbit-real-material.md)
 - **Gloss**: 唯一剩下的關鍵未知（真實素材下分類站不站得住）在這裡驗——Part 2 的視圖只蓋在驗過的格式上。
 
 ## Task 13 — `dag.py render`：基本 DAG 全圖
