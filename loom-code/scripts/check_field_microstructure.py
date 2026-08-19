@@ -60,7 +60,12 @@ from plan_card import _bullet_lines, _header_value, _task_blocks  # noqa: E402
 _NESTED_BULLET_LINE = re.compile(r"^\s+[-*+]\s")
 _TABLE_LINE = re.compile(r"^\s*\|")
 
-# A field's first line may not exceed this many characters.
+# The one ceiling every prose unit in a plan is measured against: a
+# field's first line, each nested bullet's folded text, and the header's
+# `Goal:` value. The schema states one number deliberately — see
+# plan-format.md §Field-value grammar, "one number, not two independent
+# limits that could drift apart". A second literal here would be that
+# drift.
 _FIRST_LINE_MAX_CHARS = 300
 
 
