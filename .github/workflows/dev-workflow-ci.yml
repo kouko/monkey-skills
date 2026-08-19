@@ -7,8 +7,8 @@ name: dev-workflow CI
 # test-memory-grep-verify.sh) that pin memory-grep.sh's frozen exit-code
 # contract. A regression there had no CI gate to catch it.
 #
-# This job only runs the existing shell tests (glob over
-# dev-workflow/tests/test-*.sh). The post-merge HEAD-body check
+# Two jobs: the shell suite (glob over dev-workflow/tests/test-*.sh) and
+# the cot-explain script pytest suite. The post-merge HEAD-body check
 # (memory-grep.sh --verify-merged) lives in its own workflow file,
 # memory-verify-merged.yml — it needs an unfiltered push-to-main trigger
 # (a memory-worthy PR usually touches paths OTHER than dev-workflow/**),
@@ -48,3 +48,26 @@ jobs:
             bash "$t"
             echo "::endgroup::"
           done
+
+  # cot-explain ships two scripts whose contract is prose-heavy — a
+  # leftover-markdown gate, a staleness stamp, a mermaid spec checker.
+  # Their regression history lived in code comments until it was turned
+  # into tests; a suite no workflow runs is the same dead letter the
+  # comments were, so it gets a job here.
+  cot-explain-pytest:
+    name: cot-explain script tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install test dependencies
+        run: python3 -m pip install --quiet pytest markdown-it-py
+
+      - name: Run cot-explain script tests
+        run: python3 -m pytest dev-workflow/skills/cot-explain/scripts/ -v

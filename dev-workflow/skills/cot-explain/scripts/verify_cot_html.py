@@ -35,7 +35,6 @@ text", not "renders".
 Neither stage checks fidelity to the source. Nothing mechanical can.
 """
 import hashlib
-import html
 import os
 import re
 import shutil
@@ -121,14 +120,21 @@ def diagrams(raw):
 
 
 def parse_edges(body):
-    """(src, arrow, label, dst) tuples, from a skeleton with labels stripped."""
+    """(src, arrow, label, dst) tuples, from a skeleton with labels stripped.
+
+    The destination is matched by lookahead, never consumed. `A -->|x| B
+    -->|y| C` is one legal mermaid line carrying two edges; consuming `B`
+    as the first edge's destination leaves the scan starting after it, so
+    the second edge does not match — and the arrow/edge count then
+    disagrees, reporting a malformed arrow in a correct diagram.
+    """
     skeleton = re.sub(r'\["[^"]*"\]', "", body)
-    skeleton = re.sub(r"^subgraph.*$", "", skeleton, flags=re.M)
+    skeleton = re.sub(r"^\s*subgraph.*$", "", skeleton, flags=re.M)
     arrow_re = "|".join(re.escape(a) for a in ARROWS)
     found = re.findall(
-        rf"([A-Z])\s*({arrow_re})\s*(\|([^|]*)\|)?\s*([A-Z])", skeleton
+        rf"([A-Z])\s*({arrow_re})\s*(?:\|([^|]*)\|)?\s*(?=([A-Z])\b)", skeleton
     )
-    edges = [(s, a, lab, d) for s, a, _, lab, d in found]
+    edges = [(s, a, lab, d) for s, a, lab, d in found]
     return edges, len(re.findall(arrow_re, skeleton))
 
 
@@ -142,10 +148,14 @@ def check(path, do_render=False):
     left = sorted(set(re.findall(r"\{\{[A-Z][A-Z_]*\}\}", raw)))
     if left:
         r.fails.append(f"unreplaced placeholder(s): {', '.join(left)}")
-    if "cot-explain report template" in raw:
+    # The string must match what assets/cot-report-template.md actually
+    # ships. It once read "report template" while the template said
+    # "markdown template", so the check could never fire — a check that
+    # cannot fail is worse than none, because it reads as coverage.
+    if "cot-explain markdown template" in raw:
         r.fails.append(
             "the template's own authoring comment is still in the file — "
-            "delete the leading <!-- cot-explain report template ... --> block"
+            "delete the leading <!-- cot-explain markdown template ... --> block"
         )
 
     check_spec_quotes(raw, r)
@@ -216,8 +226,14 @@ def check_diagram(body, s):
 
 
 def check_groups(body, s, inner, word, prefix, edges):
+    # `^[ \t]*`, not `^`: indenting a subgraph body is ordinary mermaid
+    # style, and the `direction` check already tolerated it. Anchored at
+    # the line start only, an indented diagram was reported as having no
+    # subgraph rows at all — a false diagnosis pointing at the one thing
+    # the diagram did have.
     groups = re.findall(
-        r"^subgraph\s+(\S+)\s*\[(.*?)\]\s*\n(.*?)^end\s*$", body, re.S | re.M
+        r"^[ \t]*subgraph\s+(\S+)\s*\[(.*?)\]\s*\n(.*?)^[ \t]*end[ \t]*$",
+        body, re.S | re.M,
     )
     if not groups:
         s.fail(
@@ -292,9 +308,27 @@ def connected(members, adjacency):
 
 
 def check_nodes(body, s):
+    """The node checks, in three passes: the id set, each label, the widths."""
     # The spec forbids a literal " inside a label, so [^"]* is exact.
     nodes = re.findall(r'\b([A-Z])\["([^"]*)"\]', body)
-    ids = [i for i, _ in nodes]
+    check_node_ids([i for i, _ in nodes], s)
+
+    widest = (0.0, None, None)
+    widest_title = (0.0, None, None)
+    for nid, label in nodes:
+        title, bullets = check_node_label(nid, label, s)
+        if title is None:
+            continue
+        if width(title) > widest_title[0]:
+            widest_title = (width(title), nid, title)
+        for text in bullets:
+            if width(text) > widest[0]:
+                widest = (width(text), nid, text)
+
+    check_widths(widest_title, widest, s)
+
+
+def check_node_ids(ids, s):
     if len(ids) != len(set(ids)):
         dupes = sorted({i for i in ids if ids.count(i) > 1})
         s.fail(f"node id(s) defined more than once: {', '.join(dupes)}")
@@ -306,59 +340,65 @@ def check_nodes(body, s):
             "observation, not a limit"
         )
 
-    widest = (0.0, None, None)
-    widest_title = (0.0, None, None)
-    for nid, label in nodes:
-        if "<div style='text-align:left'>" not in label:
-            s.fail(f"node {nid}: missing the <div style='text-align:left'> wrapper")
-        if "\n" in label:
-            s.fail(f"node {nid}: literal newline in label — use <br/> only")
-        if "|" in label:
-            s.fail(f"node {nid}: '|' in label breaks the edge parser")
-        if label.count(SEP) != 1:
-            s.fail(
-                f"node {nid}: separator must appear exactly once as "
-                f"<br/>{'━' * 6}<br/> (six U+2501) — found {label.count(SEP)}"
-            )
+
+def check_node_label(nid, label, s):
+    """Check one node's label; return its (title, bullet texts).
+
+    Returns (None, []) when the label has no usable separator — the title
+    and bullets cannot be told apart then, and every measurement after
+    that point would be of a structure that does not exist.
+    """
+    if "<div style='text-align:left'>" not in label:
+        s.fail(f"node {nid}: missing the <div style='text-align:left'> wrapper")
+    if "\n" in label:
+        s.fail(f"node {nid}: literal newline in label — use <br/> only")
+    if "|" in label:
+        s.fail(f"node {nid}: '|' in label breaks the edge parser")
+    if label.count(SEP) != 1:
+        s.fail(
+            f"node {nid}: separator must appear exactly once as "
+            f"<br/>{'━' * 6}<br/> (six U+2501) — found {label.count(SEP)}"
+        )
+        return None, []
+
+    n_bullets = label.count(BULLET)
+    if n_bullets == 0:
+        s.fail(f"node {nid}: no bullets — each is prefixed with U+2022 + space")
+    elif not WARN_MIN_BULLETS <= n_bullets <= WARN_MAX_BULLETS:
+        s.warn(
+            f"node {nid}: {n_bullets} bullets, outside the usual "
+            f"{WARN_MIN_BULLETS}-{WARN_MAX_BULLETS}. This is an "
+            "observation, not a quota: if the source gives this node "
+            f"{n_bullets} facts then {n_bullets} is the right answer and "
+            "this warning is noise. Adding a bullet to clear it is the "
+            "one response that is always wrong"
+        )
+
+    head, rest = label.split(SEP, 1)
+    title = re.sub(r"<[^>]*>", "", head)
+    if re.search(r"\d+\.\s", title):
+        s.fail(
+            f"node {nid}: title contains a `number. space` run — mermaid "
+            "parses it as a markdown list and dies. Use `1.` with no "
+            "space, `①`, or `(1)`"
+        )
+
+    bullets = []
+    for b in re.sub(r"</?div[^>]*>", "", rest).split("<br/>"):
+        b = b.strip()
+        if not b.startswith(BULLET):
             continue
-
-        n_bullets = label.count(BULLET)
-        if n_bullets == 0:
-            s.fail(f"node {nid}: no bullets — each is prefixed with U+2022 + space")
-        elif not WARN_MIN_BULLETS <= n_bullets <= WARN_MAX_BULLETS:
-            s.warn(
-                f"node {nid}: {n_bullets} bullets, outside the usual "
-                f"{WARN_MIN_BULLETS}-{WARN_MAX_BULLETS}. This is an "
-                "observation, not a quota: if the source gives this node "
-                f"{n_bullets} facts then {n_bullets} is the right answer and "
-                "this warning is noise. Adding a bullet to clear it is the "
-                "one response that is always wrong"
-            )
-
-        head, rest = label.split(SEP, 1)
-        title = re.sub(r"<[^>]*>", "", head)
-        if re.search(r"\d+\.\s", title):
+        text = b[len(BULLET):].strip()
+        if re.search(r"\d+\.\s", text):
             s.fail(
-                f"node {nid}: title contains a `number. space` run — mermaid "
-                "parses it as a markdown list and dies. Use `1.` with no "
-                "space, `①`, or `(1)`"
+                f"node {nid}: bullet '{text}' contains a `number. space` "
+                "run — mermaid parses it as a markdown list and dies"
             )
-        if width(title) > widest_title[0]:
-            widest_title = (width(title), nid, title)
+        bullets.append(text)
+    return title, bullets
 
-        for b in re.sub(r"</?div[^>]*>", "", rest).split("<br/>"):
-            b = b.strip()
-            if not b.startswith(BULLET):
-                continue
-            text = b[len(BULLET):].strip()
-            if re.search(r"\d+\.\s", text):
-                s.fail(
-                    f"node {nid}: bullet '{text}' contains a `number. space` "
-                    "run — mermaid parses it as a markdown list and dies"
-                )
-            if width(text) > widest[0]:
-                widest = (width(text), nid, text)
 
+def check_widths(widest_title, widest, s):
     # Column width is set by the single widest LINE, so the gate names only
     # the widest title and the widest bullet. Warning on every long title
     # produced fifteen warnings on one English page, which is the same as
@@ -431,7 +471,7 @@ def check_edges(body, s, edges, arrow_count):
 def check_styles(body, s):
     ids = set(re.findall(r'\b([A-Z])\["', body))
     styled = dict(
-        re.findall(r"^style\s+([A-Z])\s+fill:(#[0-9a-fA-F]{6})", body, re.M)
+        re.findall(r"^[ \t]*style\s+([A-Z])\s+fill:(#[0-9a-fA-F]{6})", body, re.M)
     )
     missing = sorted(ids - set(styled))
     extra = sorted(set(styled) - ids)
@@ -499,7 +539,7 @@ def source_sha(md_text):
     check that fires on harmless edits is one people learn to wave
     through, which is how a real warning gets missed.
     """
-    m = re.match(r"^---\n.*?\n---\n(.*)$", md_text, re.S)
+    m = re.match(r"^---\r?\n.*?\r?\n---\r?\n(.*)$", md_text, re.S)
     body = m.group(1) if m else md_text
     return hashlib.sha256(body.encode("utf-8")).hexdigest()
 
@@ -519,12 +559,20 @@ def stamp_markdown(html_path, outcome):
     if not md.exists():
         return f"--stamp: no sibling {md.name} to record into"
     text = md.read_text(encoding="utf-8")
+
+    # The outcome carries the fingerprint of the body it judged. Without
+    # it the field survives any later edit and the rendered page keeps
+    # announcing a result for text the gate never saw — the same
+    # staleness `reviewed_md_sha256` exists to catch, on the field that
+    # reports the catching. The renderer compares this prefix and shows
+    # `stale` when it disagrees.
+    value = f"{outcome} @ {source_sha(text)[:12]}"
     text, n = re.subn(
-        r'^verified:.*$', f'verified: "{outcome}"', text, count=1, flags=re.M
+        r'^verified:.*$', f'verified: "{value}"', text, count=1, flags=re.M
     )
     if not n:
         return f"--stamp: {md.name} has no `verified:` line in its frontmatter"
-    notes = [f'verified: "{outcome}"']
+    notes = [f'verified: "{value}"']
 
     verdict_file = Path(html_path).with_suffix(".fidelity.md")
     if verdict_file.exists():
@@ -550,12 +598,22 @@ def stamp_markdown(html_path, outcome):
                 "the check. fidelity_checked left empty; re-run Step 6"
             )
         else:
-            value = f"{vm.group(1).upper()} ({verdict_file.name})"
-            text = re.sub(
-                r'^fidelity_checked:.*$', f'fidelity_checked: "{value}"',
+            fid = f"{vm.group(1).upper()} ({verdict_file.name})"
+            # `subn`, and the count is read: a markdown with no
+            # `fidelity_checked:` line takes this substitution silently,
+            # and the run then reports writing a field that is not in the
+            # file — a success report for work that did not happen, which
+            # is the failure class this script was built against.
+            text, fn = re.subn(
+                r'^fidelity_checked:.*$', f'fidelity_checked: "{fid}"',
                 text, count=1, flags=re.M,
             )
-            notes.append(f'fidelity_checked: "{value}"')
+            notes.append(
+                f'fidelity_checked: "{fid}"' if fn else
+                f"{md.name} has no `fidelity_checked:` line in its "
+                f"frontmatter — the {vm.group(1).upper()} verdict was NOT "
+                "recorded; add the field and re-stamp"
+            )
 
     md.write_text(text, encoding="utf-8")
     return ("--stamp: " + "; ".join(notes)
@@ -569,17 +627,22 @@ def main():
         return 0
     do_render = "--render" in argv
     do_stamp = "--stamp" in argv
+    do_sha = "--sha" in argv
     argv = [a for a in argv if a not in ("--render", "--stamp", "--sha")]
-    if "--sha" in sys.argv[1:]:
-        md = Path(argv[0]).with_suffix(".md")
-        print(source_sha(md.read_text(encoding="utf-8")))
-        return 0
+    # The arity check comes FIRST, for every mode. `--sha` with no file
+    # used to index argv[0] straight away and die with an IndexError and
+    # a traceback, where every other misuse of this script prints a usage
+    # line and exits 2.
     if len(argv) != 1:
         print(
-            "usage: verify_cot_html.py [--render] [--stamp] <report.html>",
+            "usage: verify_cot_html.py [--render] [--stamp] [--sha] <report.html>",
             file=sys.stderr,
         )
         return 2
+    if do_sha:
+        md = Path(argv[0]).with_suffix(".md")
+        print(source_sha(md.read_text(encoding="utf-8")))
+        return 0
 
     r = check(argv[0], do_render)
     for w in r.warns:

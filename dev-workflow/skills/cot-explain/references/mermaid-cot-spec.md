@@ -189,7 +189,9 @@ fails on them.
   centers multi-line labels, making bulleted content unreadable.
 - The separator is the literal `<br/>━━━━━━<br/>` — six U+2501 (`━`).
   Not `---`, not `<hr>`, not a different count. This is the vault's
-  house convention, observed across ~8,760 files.
+  house convention, observed across 7,924 notes under the vault's
+  `references/` tree (238,764 nodes; counted 2026-08-19 by matching the
+  `<div style='text-align:left'>` node wrapper).
 - Bullets are prefixed `• ` (U+2022 + space), joined with `<br/>`.
 - Quoting is nested: **double** quotes wrap the label, **single** quotes
   wrap the HTML attribute. Swapping them breaks mermaid's parser.
@@ -227,7 +229,13 @@ a claim.
   titles over ~8 compete with the node titles.
 - Edge labels read best at 4–8 CJK-widths.
 - Node count outside 5–9, or bullet count outside 3–5, is worth a second
-  look at whether the arc is really one arc.
+  look at whether the arc is really one arc. Note that fewer than 5
+  reasoning states is *also* SKILL.md Step 2's early exit, and that one
+  is a **stop**, not an observation: the answer there is prose, not a
+  diagram. The two are not in conflict — Step 2 decides whether to draw
+  at all, this warning describes a diagram already being drawn — but a
+  low node count should send you back to Step 2 before it sends you
+  looking for a formatting fix.
 - **Squareness is a reported observation, never a target.** The appendix
   shows why chasing it damages diagrams.
 
@@ -256,6 +264,12 @@ its exit code proves nothing.
 
 `FAIL` means the contract or the parser is broken; it exits 1. `WARN` is
 advisory and never blocks.
+
+`--stamp` records the outcome in the markdown as `pass @ <12 hex>`, the
+hash being the page body the run actually judged. The converter compares
+it against the body it renders, so a page edited after its check shows
+**閘：stale** rather than the old pass. Re-run `--stamp` and re-render to
+clear it.
 
 Neither stage checks **fidelity** — whether the diagram represents the
 source honestly. Nothing mechanical can. See SKILL.md Step 6.
@@ -320,6 +334,21 @@ Rendered SVG viewBox dimensions from mermaid-cli; squareness is
 | `graph LR` flat + tightened node/rank spacing | 2956 × 221 | 0.07 |
 
 Spacing config is a dead end: 13.48:1 to 13.39:1.
+
+**Nodes per row**, a separate 8-node chain, all three rendered in one
+run so they are comparable to each other (they are not comparable to the
+table above, which used different node content):
+
+| Nodes per row | Size | Squareness |
+|---|---|---|
+| 2 | 584 × 1118 | 0.523 |
+| **3** | 909 × 824 | **0.907** |
+| 4 | 1233 × 530 | 0.430 |
+
+Three is a peak rather than a ceiling: the figure gets narrow below it
+and wide above it, and the fall-off is steep on both sides. This is why
+the rule reads "rows of at most 3, as even as possible" — a trailing row
+of 2 costs little, a row of 4 costs a lot.
 
 **Bullet count**, same diagram, nothing else changed. Width was
 byte-identical across all four — extra lines add height only:

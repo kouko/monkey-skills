@@ -42,6 +42,7 @@ that failed silently five times in five days:
     manifest stamps the literal `unknown` rather than faking a version.
 """
 import argparse
+import hashlib
 import html
 import json
 import re
@@ -124,7 +125,12 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 
 MERMAID_CDN = """<script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  // 'antiscript', not 'loose': node labels are raw HTML by design (the
+  // left-align <div>), so 'strict' would render them as literal text —
+  // but 'loose' additionally permits <script> and click handlers inside a
+  // label, and the label text comes from whatever source document was
+  // summarised. 'antiscript' keeps the HTML labels and drops the scripts.
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'antiscript' });
 </script>"""
 
 # Matches ONE mermaid fence's open tag, body and close tag together, so the
@@ -154,7 +160,11 @@ def version():
 
 
 def split_front_matter(text):
-    m = re.match(r"^---\n(.*?)\n---\n(.*)$", text, re.S)
+    # `\r?\n` throughout: a markdown file edited on Windows, or pasted
+    # through a tool that normalises to CRLF, otherwise fails to match at
+    # all — and the failure is silent, since an unmatched frontmatter is
+    # indistinguishable here from a file that has none.
+    m = re.match(r"^---\r?\n(.*?)\r?\n---\r?\n(.*)$", text, re.S)
     if not m:
         return {}, text
     meta = {}
@@ -163,6 +173,19 @@ def split_front_matter(text):
         if km and km.group(2):
             meta[km.group(1)] = km.group(2)
     return meta, m.group(2)
+
+
+def body_sha(body):
+    """Fingerprint of the page body — must match verify_cot_html.source_sha.
+
+    The gate stamp carries the first twelve characters of this, so the
+    page can tell whether the body it is showing is the body the gate
+    judged. Without it `verified: "pass"` survives any later edit and the
+    page keeps advertising a result for text the gate never saw — the
+    exact staleness this tool exists to catch, reintroduced on the field
+    that reports the catching.
+    """
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()
 
 
 def render_body(md_text):
@@ -188,7 +211,12 @@ def leftover_markdown(rendered):
     that hole let a stray `##` through during development.
     """
     scoped = re.sub(r'<pre class="mermaid">.*?</pre>', "", rendered, flags=re.S)
-    scoped = re.sub(r"<code>.*?</code>", "", scoped, flags=re.S)
+    # `<code[^>]*>` and not `<code>`: markdown-it tags a fence's inner code
+    # element with the language (`<code class="language-bash">`), so a bare
+    # `<code>` scope leaves every language-tagged fence in the text being
+    # searched — and a ```bash block holding `# install …` is then reported
+    # as an unconverted heading. The check condemned legitimate content.
+    scoped = re.sub(r"<code[^>]*>.*?</code>", "", scoped, flags=re.S)
     found = []
     if "**" in scoped:
         found.append("literal ** (bold marker)")
@@ -211,15 +239,22 @@ def path_link(value, artifact=False):
     Only an absolute path is linked. A relative one has no defined base
     once the page leaves the directory it was written in, and guessing a
     root would produce links that look right and go nowhere — worse than
-    plain text. The Artifact build never links: it is served over https,
-    where browsers refuse file:// navigation, so the link would be dead
-    and the absolute path would also carry the author's directory layout
-    to whoever the page is shared with.
+    plain text.
+
+    The Artifact build neither links nor prints an absolute path. It is
+    served over https, where browsers refuse file:// navigation, so the
+    link would be dead — and printing the path as plain text still hands
+    the author's directory layout to everyone the page is shared with,
+    which was the other half of the reason for not linking. The file name
+    alone identifies the source to anyone who has it and discloses
+    nothing to anyone who does not.
     """
-    text = html.escape(value)
-    if artifact or not value.startswith("/"):
-        return text
-    return f'<a href="file://{html.escape(quote(value))}">{text}</a>'
+    if artifact:
+        return html.escape(Path(value).name if value.startswith("/") else value)
+    if not value.startswith("/"):
+        return html.escape(value)
+    return (f'<a href="file://{html.escape(quote(value))}">'
+            f"{html.escape(value)}</a>")
 
 
 def build(md_text, artifact=False, out_dir=None):
@@ -230,7 +265,8 @@ def build(md_text, artifact=False, out_dir=None):
     title = meta.get("title") or meta.get("source") or "CoT Explain"
     stamp = f"dev-workflow:cot-explain/{ver}"
 
-    # Every frontmatter key reaches the page. The markdown carried
+    # Every frontmatter key reaches the full page's <head> (the Artifact
+    # build has no <head> of its own, so it carries none). The markdown carried
     # nineteen and an earlier version forwarded two, one of which it read
     # under a name the template had since changed — so the date rendered
     # blank and nothing said so. Whatever the artifact records, the
@@ -243,10 +279,25 @@ def build(md_text, artifact=False, out_dir=None):
     # verified / fidelity_checked are deliberately shown even when empty.
     # A page that ran no checks must say so: silence reads as "fine", and
     # this whole tool exists because a silent artifact was mistaken for a
-    # good one.
-    def status(key, done_prefix, undone):
-        v = meta.get(key, "").strip()
-        return f"{done_prefix}{html.escape(v)}" if v else undone
+    # good one. `verified` additionally carries the fingerprint of the
+    # body the gate judged, so a stale result reads as stale rather than
+    # as a pass.
+    verified_raw = meta.get("verified", "").strip()
+    vm_gate = re.match(r"^(.*?)\s*@\s*([0-9a-f]{6,64})$", verified_raw)
+    if not verified_raw:
+        verified_shown = "<strong>閘：未執行</strong>"
+    elif not vm_gate:
+        verified_shown = (
+            "<strong>閘：stale — 這筆結果沒有頁面指紋，無法證明它判的是這份內容"
+            "（重跑 verify --stamp）</strong>"
+        )
+    elif not body_sha(body).startswith(vm_gate.group(2)):
+        verified_shown = (
+            "<strong>閘：stale — 檢查之後頁面被改過，這筆結果不適用"
+            "（重跑 verify --stamp）</strong>"
+        )
+    else:
+        verified_shown = f"閘：{html.escape(vm_gate.group(1))}"
 
     fidelity_raw = meta.get("fidelity_checked", "").strip()
     fm = re.match(r"^(PASS|FAIL)\s*\((.+)\)$", fidelity_raw)
@@ -260,7 +311,7 @@ def build(md_text, artifact=False, out_dir=None):
         f'來源：{path_link(meta.get("source", "—"), artifact)}',
         f'產出：{html.escape(meta.get("processed_at") or meta.get("date", "—"))}',
         html.escape(stamp),
-        status("verified", "閘：", "<strong>閘：未執行</strong>"),
+        verified_shown,
         (f"忠實度檢查：{fidelity_shown}" if fidelity_shown
          else "<strong>忠實度檢查：未執行</strong>"),
     ])

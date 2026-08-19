@@ -20,7 +20,7 @@ rather than shipped as bare headings.
 
 The diagram follows a strict house convention rather than generic
 Mermaid, documented in `references/mermaid-cot-spec.md` and derived from
-~8,760 vault files that use it:
+~7,924 vault notes that use it:
 
 - `graph LR`; node body is
   `["<div style='text-align:left'>TITLE<br/>━━━━━━<br/>• B1<br/>• B2<br/>• B3</div>"]`
@@ -551,9 +551,49 @@ carried only when the source labels itself ("my take", "leaning no"),
 never rated. The operative rule, now written into the spec: **add slots
 you fill by copying, never slots you fill by judging.**
 
+#### The scripts' regression history became a test suite
+
+Whole-branch review found both scripts carrying their own history in
+comments — "an earlier version looked for quotation characters", "failed
+its own test suite within the hour" — where nothing re-runs it. Those
+comments were the test cases, so they became
+`scripts/test_cot_explain_scripts.py` (14 tests). Written first, they
+failed 8, and each failure was a real defect the prose had recorded but
+not defended:
+
+| Defect | What it did |
+|---|---|
+| Leftover-markdown scope matched only a bare `<code>` | markdown-it tags fence code with the language, so a ```` ```bash ```` block holding `# install …` was condemned as an unconverted heading |
+| `verified` recorded an outcome and nothing about *what* was judged | Any later edit left `pass` standing; the page advertised a gate result for text the gate never saw |
+| The Artifact build printed the absolute source path as plain text | It stopped linking the path but still disclosed the author's directory layout to everyone the page reached |
+| `subgraph` / `style` were anchored at column zero | An indented diagram — ordinary mermaid style, and already tolerated on `direction` — was reported as having no subgraph rows at all |
+| The edge parser consumed each destination | `A -->\|x\| B -->\|y\| C` is one legal line carrying two edges; parsing it as one made the arrow count disagree and reported a malformed arrow in a correct diagram |
+| The template-comment check looked for "report template" | The template ships "markdown template" — the check could never fire, and read as coverage |
+| The `fidelity_checked` write used `re.sub` | A markdown with no such line took the substitution silently and the run reported writing a field that was not in the file |
+| `--sha` with no file indexed `argv[0]` | An IndexError and a traceback, where every other misuse prints a usage line and exits 2 |
+
+Two further changes came from the same review. The mermaid CDN now
+initializes with `securityLevel: 'antiscript'` rather than `'loose'` —
+node labels are raw HTML by design, but `'loose'` also permits `<script>`
+and click handlers inside a label, and label text comes from whatever
+source document was summarised. Both frontmatter splitters accept CRLF,
+where before a CRLF file silently parsed as having no frontmatter at all.
+
+`verified` now reads `pass @ <12 hex of the body hash>`, matching what
+the fidelity verdict file had carried all along. The field that reports
+staleness had been the one field exempt from the check.
+
+The rows-per-row claim was also re-measured, because SKILL.md cited a
+0.58 figure the appendix did not contain. One run of an 8-node chain,
+all three variants rendered together: rows of 2 at 0.523, rows of 3 at
+0.907, rows of 4 at 0.430. Three is a peak, not a ceiling — the fall-off
+is steep on both sides, which is why a trailing row of 2 costs little
+and a row of 4 costs a lot.
+
 Files: `skills/cot-explain/{SKILL.md,README.md,README.ja.md,README.zh-TW.md}`,
-`assets/cot-report-template.md`, `references/mermaid-cot-spec.md`,
-`scripts/render_cot_html.py`, `scripts/verify_cot_html.py`.
+`assets/cot-report-template.md`,
+`references/{mermaid-cot-spec.md,fidelity-check.md,why-these-rules.md}`,
+`scripts/{render_cot_html.py,verify_cot_html.py,test_cot_explain_scripts.py}`.
 
 ## [2.25.1] — 2026-07-25 — bba description summarizes check-question + repeated-confusion signals
 

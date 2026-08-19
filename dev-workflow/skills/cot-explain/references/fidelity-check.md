@@ -53,6 +53,21 @@ The hash is what makes the verdict about *this* page. Without it
 again and tells you to re-run. A verdict that outlives the thing it
 judged is the same failure as a stale render.
 
+Then run the two commands that carry the verdict onto the page — the
+verdict file alone changes nothing a reader sees:
+
+```
+python3 scripts/verify_cot_html.py --stamp <file>.html
+python3 scripts/render_cot_html.py <file>.md
+```
+
+The first reads the verdict file and writes `fidelity_checked:` into the
+markdown; the second rebuilds the HTML from it. Stop after the first and
+the page still reads 忠實度檢查：未執行 — the check ran, and the page
+says it did not, which is the same class of lie in the other direction.
+`--stamp` prints exactly what it wrote; if it says the markdown has no
+`fidelity_checked:` line, the verdict was **not** recorded.
+
 ### What gates
 
 Not every finding blocks. The split follows what the reader would *do*

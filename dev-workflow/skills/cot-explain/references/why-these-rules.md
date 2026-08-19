@@ -106,6 +106,14 @@ the page it judged. Hence `reviewed_md_sha256:`, which **fired on its
 own** the first time a page was edited after a check — no one was testing
 it.
 
+`verified` then repeated the verdict file's own mistake. It recorded the
+outcome and nothing about *what* had been judged, so any later edit to
+the page left `pass` standing and the reader saw a gate result for text
+the gate had never seen. It now carries the body hash the same way the
+verdict file does, and the converter prints **stale** instead of the old
+result — the field that reports staleness had been the one field
+exempt from the check.
+
 The hash covers the body only. An earlier version hashed the whole file
 and invalidated a verdict over a path format change. **A check that fires
 on harmless edits is one people learn to wave through**, which is how a

@@ -162,7 +162,7 @@ the table is for roads not taken, not for u-turns.
 ## Step 3 — Build the diagram
 
 Follow `references/mermaid-cot-spec.md` literally. The node styling is
-the vault's convention, derived from ~8,760 files. The **layout** is a
+the vault's convention, measured across 7,924 notes. The **layout** is a
 deliberate divergence from it, chosen on measured numbers — the spec
 carries the table. Do not "restore" the vault's flat `graph LR` on
 consistency grounds without re-measuring; it renders 13:1 wide.
@@ -195,7 +195,9 @@ The rules that get broken most often:
   the figure roughly square (0.81) instead of 13:1 wide (0.07) — a
   subgraph without it measures 0.14 and buys nothing.
 - **Rows of at most 3, as even as possible**: 8 nodes → 3/3/2, 7 → 3/2/2,
-  6 → 3/3. Rows of 3 measured 0.81 against 0.58 for rows of 2.
+  6 → 3/3. On one 8-node chain, rows of 3 measured 0.91 against 0.52 for
+  rows of 2 and 0.43 for rows of 4 — 3 is a peak, not a ceiling
+  (`references/mermaid-cot-spec.md` appendix).
 - The separator is the literal `<br/>━━━━━━<br/>` (six U+2501 `━`).
   Not `---`, not `<hr>`, not a different count.
 - `• ` bullets per node, joined with `<br/>`: **as many as the node
@@ -250,8 +252,8 @@ Structure the converter depends on:
 | ` ```mermaid ` | the diagram of the arc it sits in |
 
 - `### 概述` — its single paragraph is the one-line conclusion, and the
-  converter lifts it into the page lede. State the conclusion itself,
-  not "本文探討…".
+  page styles it as the lede where it stands. State the conclusion
+  itself, not "本文探討…".
 - One `##### ` card per diagram node, **in diagram order**, giving
   主張 / 依據 / 這一步改變了什麼. No width limit applies here — this is
   where a node's compressed bullets get their full explanation.
@@ -349,10 +351,14 @@ nothing else proves the diagram renders. It needs `npx` and, first time,
 network. Without the flag the output says `PASS (text only …)`, so a
 text-only pass is never mistaken for a rendered one.
 
-`--stamp` writes the outcome into the markdown's `verified:` field.
-**Never type that field yourself** — it is written by the script that did
-the checking, because a self-reported success signal is exactly what
-fooled two review agents in the source this skill was tested against.
+`--stamp` writes the outcome into the markdown's `verified:` field, as
+`pass @ <first 12 of the body hash>`. **Never type that field yourself** —
+it is written by the script that did the checking, because a
+self-reported success signal is exactly what fooled two review agents in
+the source this skill was tested against. The hash is why editing the
+page afterwards does not leave a stale pass standing: the converter
+compares it against the body it is rendering and prints **閘：stale**
+instead of the old result.
 
 `fidelity_checked` is not typed either. Step 6 is judgement rather than a
 command, so nothing can run it for you — but its verdict must land in a
@@ -413,7 +419,9 @@ quotation is this page's rendering of the source, which governs.** If a
 later run shows the residue has moved again, move this sentence with it —
 an accurate warning about the wrong failure is still a wrong warning.
 
-That limit is measured over six rounds, not modest
+That limit is measured, not modest: six rounds against one dense brief,
+the last of which passed with every clause carried and its residue
+entirely in the reasons behind them
 (`references/why-these-rules.md`). So when the source is a spec, say so
 on the page. The provenance note
 should name the source and state plainly that an implementer must work
