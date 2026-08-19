@@ -21,11 +21,19 @@ subprocess test for `--help`.
 
 import importlib.util
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
 
 _SCRIPT = Path(__file__).parent / "check_field_microstructure.py"
+_PLAN_FORMAT_MD = (
+    Path(__file__).resolve().parents[1]
+    / "skills"
+    / "writing-plans"
+    / "references"
+    / "plan-format.md"
+)
 _ENV = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
 
 _spec = importlib.util.spec_from_file_location(
@@ -220,6 +228,82 @@ def test_accepts_reviewer_false_positive_counterexample():
         "Route overflow into a bullet, e.g. Python's textwrap."
     )
     assert check_plan_fields(text) == []
+
+
+def _plan_with_raw_description_block(description_block: str) -> str:
+    """`description_block` is the raw, already-formatted
+    `- **Description**: ...` bullet (plus its nested lines), inserted
+    verbatim into a full task block."""
+    return (
+        "## Task 1 — foo\n\n"
+        f"{description_block}"
+        "- **Acceptance**:\n"
+        "  - **RED**: `test.py::test_foo` — asserts something.\n"
+        "  - **GREEN**: it passes.\n"
+        "- **Dependencies**: none\n"
+        "- **Independent**: true\n"
+        "- **Status**: pending\n"
+    )
+
+
+def test_accepts_nested_bullet_wrapped_across_two_lines():
+    # The defect this round fixes: wrapping a long nested bullet across
+    # two physical lines is ordinary markdown and must not be flagged.
+    text = _plan_with_raw_description_block(
+        "- **Description**: Short first line.\n"
+        "  - A nested bullet whose text is long enough that a human wraps it\n"
+        "    across two physical lines, which is ordinary markdown.\n"
+    )
+    assert check_plan_fields(text) == []
+
+
+def test_rejects_wrapped_continuation_under_table_row():
+    # A wrapped continuation line is only legal directly under a nested
+    # bullet — the grammar does not extend the exemption to table rows.
+    # A deep-indented line following a table row with no preceding
+    # nested bullet still violates.
+    text = _plan_with_raw_description_block(
+        "- **Description**: Short first line.\n"
+        "  | col1 | col2 |\n"
+        "    a wrapped-looking line that is not itself a table row\n"
+    )
+    problems = check_plan_fields(text)
+    assert problems, "expected a non-empty problem list"
+    assert any("1" in p and "Description" in p for p in problems)
+
+
+def test_rejects_indented_prose_with_no_preceding_nested_bullet():
+    # This is the assertion that stops shape 3 from swallowing the
+    # whole rule: an indented prose line under a field with NO
+    # preceding nested bullet is still a violation (prose crammed
+    # under the field, which the rule exists to catch).
+    text = _plan_with_raw_description_block(
+        "- **Description**: Short first line.\n"
+        "  This is indented prose with no nested bullet above it.\n"
+    )
+    problems = check_plan_fields(text)
+    assert problems, "expected a non-empty problem list"
+    assert any("1" in p and "Description" in p for p in problems)
+
+
+def test_accepts_plan_format_md_verbatim_after_example():
+    # Extract the "after" example from plan-format.md's
+    # §Field-value grammar — before/after section verbatim, and prove
+    # it is accepted — the example that exists to demonstrate
+    # compliance must actually comply.
+    text = _PLAN_FORMAT_MD.read_text(encoding="utf-8")
+    match = re.search(
+        r"### Field-value grammar — before/after\n\n"
+        r"Before.*?```markdown\n.*?```\n\n"
+        r"After.*?```markdown\n(?P<after>.*?)```\n",
+        text,
+        re.S,
+    )
+    assert match, "could not locate the after example in plan-format.md"
+    description_block = match.group("after")
+    assert description_block.startswith("- **Description**:")
+    plan_text = _plan_with_raw_description_block(description_block)
+    assert check_plan_fields(plan_text) == []
 
 
 def test_help_exits_zero():

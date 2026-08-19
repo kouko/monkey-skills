@@ -19,8 +19,12 @@ Grammar:
   enumerate.
 - A field's continuation lines (everything after the first line, up to
   the next blank or column-0 line) violate when any indented non-blank
-  line is neither a nested bullet (`^\\s+[-*+]\\s`) nor a markdown table
-  line (`^\\s*\\|`).
+  line is none of three shapes: a nested bullet (`^\\s+[-*+]\\s`), a
+  markdown table line (`^\\s*\\|`), or a wrapped continuation of the
+  nested bullet above it — a line indented at least as deep as that
+  bullet's own text start. Wrapping a long nested bullet across
+  physical lines is ordinary markdown; rejecting it is a false
+  positive on correct writing, so shape 3 is required, not optional.
 
 Block extraction and bullet-value extraction are NOT reimplemented here
 — both are imported from `plan_card.py` (`_task_blocks`, `_bullet_lines`)
@@ -57,13 +61,26 @@ def _check_continuations(
     lines: list[str], number: int, name: str, field: str
 ) -> list[str]:
     """Every indented non-blank line in `lines[1:]` (a field's
-    continuation lines) that is neither a nested bullet nor a table row
-    is a violation."""
+    continuation lines) that is none of three legal shapes is a
+    violation: a nested bullet, a markdown table row, or a wrapped
+    continuation of the nested bullet immediately above it — a line
+    indented at least as deep as that bullet's own text start. A line
+    indented under a table row (with no governing nested bullet) is
+    NOT covered by the wrap exemption; the grammar ties it only to
+    nested bullets."""
     problems = []
+    bullet_text_indent: int | None = None
     for raw in lines[1:]:
         if not raw.strip():
             continue
-        if _NESTED_BULLET_LINE.match(raw) or _TABLE_LINE.match(raw):
+        match = _NESTED_BULLET_LINE.match(raw)
+        if match:
+            bullet_text_indent = len(match.group(0))
+            continue
+        if _TABLE_LINE.match(raw):
+            continue
+        indent = len(raw) - len(raw.lstrip(" "))
+        if bullet_text_indent is not None and indent >= bullet_text_indent:
             continue
         problems.append(
             f"Task {number} ({name}): '{field}' continuation line is "
