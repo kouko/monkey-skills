@@ -1,6 +1,6 @@
 {
   "name": "dev-workflow",
-  "version": "2.26.0",
+  "version": "2.26.1",
   "description": "Developer-workflow skills — git memory, decision briefs, critique, recap, handoff, session distill, CoT explainers.",
   "author": {
     "name": "kouko",

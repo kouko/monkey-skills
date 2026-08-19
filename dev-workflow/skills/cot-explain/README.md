@@ -128,16 +128,18 @@ that reconstruction against the source without ever seeing the page; a
 third pass checks the reverse direction, whether anything in the diagram
 has no basis in the source at all.
 
-**What it does not do.** When the source is a specification — something
-written to be built from — this page explains why the spec decided what
-it decided; it does not replace reading it. That limit is measured. Four
+**What it does not do.** When the source is **operative** — written to
+be acted on rather than merely read — this page explains why it decided
+what it decided; it does not replace reading it. A technical
+specification is the obvious case; a policy, a contract, a clinical
+protocol and a regulation are the same case. That limit is measured. Four
 rounds were run against one dense engineering brief: each recovered every
 clause the previous round had been told it lost, and each lost different
 implementation details nobody had thought to look for — one new miss,
 then two, then three. Adding another category to hunt for moved the loss
-rather than ending it. Verbatim `規格原文` quotes on mechanism nodes
-narrow the gap; they do not close it, and the page says so when the
-source is a spec.
+rather than ending it. Verbatim blockquotes on mechanism nodes narrow
+the gap; they do not close it, and the page says so when the source is
+operative.
 
 What the page is *for* came through intact in all four rounds — the
 reversals, the rejected options with their reasons, the conditional

@@ -89,7 +89,7 @@ Write out, as a working list (not shown to the user):
    dropped ("keep it unless false positives persist")? This is Toulmin's
    *rebuttal*, and a fidelity test found it to be the single most
    damaging thing a summary loses: a reader who receives the measure
-   without its scope implements the version the source rejected.
+   without its scope acts on the version the source rejected.
 
    **Sweep for these node by node, do not wait to notice them** — round
    3 of the fidelity rounds lost a carve-out sitting in plain sight next
@@ -97,23 +97,28 @@ Write out, as a working list (not shown to the user):
    normative clause of some kind (`references/why-these-rules.md`).
 
    A node **names a mechanism** when it says something will be *built,
-   changed, or done* — a check, a rule, a script change, a step someone
-   must perform. Nodes that report a fact, an observation, an insight, or
-   a rejected option are not mechanisms and need no sweep. When unsure,
+   changed, or done* — a rule, a procedure, an obligation, a change to
+   how something is decided. It may be a code change, and it may equally
+   be a policy clause, a contract term, a protocol step, or an editorial
+   standard; what makes it a mechanism is that someone will act on it,
+   not the field it belongs to. Nodes that report a fact, an
+   observation, an insight, or a rejected option are not mechanisms and
+   need no sweep. When unsure,
    sweep it: the cost is three questions answered "none stated", and the
    cost of skipping is a clause that silently never arrives.
 
    For every mechanism node, ask all three:
 
-   - **What must it NOT do?** Negative requirements — "no output file
-     written", "must not be delivered", "never retried" — are part of the
-     specified behaviour. A mechanism described only by what it does is
-     half-described.
-   - **Who or what is exempt?** Carve-outs — "except when the session is
-     developing these scripts" — invert the rule for a case the author
-     thought about. Round 3 lost one, and a rule that arrives without the
-     case its author deliberately exempted is a rule the reader applies
-     where the source said not to.
+   - **What must it NOT do?** Negative requirements — "nothing is
+     written on failure", "must not be delivered", "never applied
+     retroactively" — are part of what was specified. A mechanism
+     described only by what it does is half-described.
+   - **Who or what is exempt?** Carve-outs — "except for filings before
+     2020", "except when the session is developing these scripts" —
+     invert the rule for a case the author thought about. Round 3 lost
+     one, and a rule that arrives without the case its author
+     deliberately exempted is a rule the reader applies where the source
+     said not to.
    - **Under what condition is it withdrawn?** The rebuttal proper.
 7. **Co-premises** — does any step work only in conjunction with
    another, so that one alone is inert? Draw both edges into the same
@@ -275,8 +280,8 @@ Structure the converter depends on:
   as one, and the gate checks structure instead of sniffing punctuation —
   which failed badly once (`references/why-these-rules.md`). The rest of the card explains
   **why** that was decided, in the reader's language — that half is
-  yours to write. What gets built, where it reads from, how it must
-  behave: those are the source's words or nobody's.
+  yours to write. What is required, of whom, under what conditions, and
+  what it must never do: those are the source's words or nobody's.
 
   This is a removed freedom, not another thing to remember. **A gap
   sends the reader back to the source; a false fact does not**, and
@@ -284,8 +289,8 @@ Structure the converter depends on:
   two path rules shipped one that would have failed silently forever
   (`references/why-these-rules.md`).
 
-- **One mechanism, one node.** Several things to build do not merge into
-  a single "the decision" node. Merging is what let that distortion in:
+- **One mechanism, one node.** Several distinct mechanisms do not merge
+  into a single "the decision" node. Merging is what let that distortion in:
   with one mechanism node, the quoting rule covered almost nothing.
 - **`例外／失效條件` — include the bullet only when the source states
   one**, and delete the line entirely when it does not. An empty one
@@ -418,9 +423,12 @@ improvised.
 
 ## What this page is not
 
-When the source is a **specification** — something written to be built
-from — this page explains why the specification decided what it decided.
-**It is not the specification, and it does not replace reading it.**
+When the source is **operative** — written to be acted on rather than
+merely read — this page explains why it decided what it decided. **It is
+not that document, and it does not replace reading it.** A technical
+specification is the obvious case; a policy, a contract, a clinical
+protocol, a regulation and a style guide are the same case, and the
+warning below applies word for word to each.
 
 Say the risk the way it actually runs, and update it when the risk
 changes — two wordings have already gone stale here, each accurate about
@@ -434,11 +442,10 @@ an accurate warning about the wrong failure is still a wrong warning.
 That limit is measured, not modest: six rounds against one dense brief,
 the last of which passed with every clause carried and its residue
 entirely in the reasons behind them
-(`references/why-these-rules.md`). So when the source is a spec, say so
-on the page. The provenance note
-should name the source and state plainly that an implementer must work
-from it, not from this page. Verbatim `規格原文` quotes narrow the gap;
-they do not close it.
+(`references/why-these-rules.md`). So when the source is operative, say
+so on the page. The provenance note should name the source and state
+plainly that anyone acting on it must work from it, not from this page.
+Verbatim blockquotes narrow the gap; they do not close it.
 
 None of this applies to what the page is actually for: across every
 round the reasoning itself came through intact, and the hallucination

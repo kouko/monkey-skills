@@ -4,6 +4,45 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.26.1] — 2026-08-19 — `cot-explain` reads as domain-neutral
+
+### Changed — the skill no longer assumes its source is software
+
+The machinery was already domain-neutral: the extraction vocabulary
+(claim / evidence / what this step changed / rebuttal / co-premises /
+the author's own hedging) is argument analysis, not engineering, and the
+verifier only ever checks diagram form. What was not neutral was the
+*wording* — the examples and the "What this page is not" section both
+assumed the source was a technical specification, which reads as a
+restriction that was never implemented.
+
+- A node "names a mechanism" when someone will act on it. That may be a
+  code change; it may equally be a policy clause, a contract term, a
+  protocol step or an editorial standard.
+- "What this page is not" now speaks of an **operative** source —
+  written to be acted on rather than merely read — and names the
+  specification as the obvious case among policies, contracts, clinical
+  protocols and regulations. The warning applies to each word for word.
+- "an implementer must work from it" → "anyone acting on it must work
+  from it"; "implements the version the source rejected" → "acts on".
+- The carve-out and negative-requirement examples gained non-software
+  instances beside the existing ones.
+- Two references to a `規格原文` label were dropped: the template stopped
+  shipping that heading some time ago, and it survives only as a legacy
+  form the verifier rejects. The prose now says "verbatim blockquotes",
+  which is what the artifact actually contains.
+
+The binding constraint was never the domain — it is the SHAPE of the
+text. A source with a chain of reasoning fits, whether it is a court
+judgment, an investment memo or a design doc; a purely descriptive
+source does not, which is what Step 2's early exit already catches.
+
+No behaviour changed: no script, threshold, or gate was touched, and the
+35-test suite is untouched and green. The routing description is also
+deliberately unchanged — it was measured at 25/31 on a trigger eval, and
+its one software word is a *counter*-example ("what a function does" is
+a state request), which does not narrow what routes in.
+
 ## [2.26.0] — 2026-08-19 — new skill `cot-explain`
 
 ### Added — `cot-explain` v0.1.0: reasoning → one shareable HTML page

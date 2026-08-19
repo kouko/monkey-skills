@@ -69,13 +69,14 @@ fidelity_checked: ""
 > {{NODE_VERBATIM}}
 
 <!-- The `>` blockquote appears ONLY on a node that specifies something
-     to be built, and it holds the source's OWN sentences, in the source's
+     to be done or built — a rule, an obligation, a procedure, a code
+     change — and it holds the source's OWN sentences, in the source's
      own language. Use markdown's quote syntax, not a list item — a
      blockquote is what a quotation is, and the structure is what the gate
      checks. Several sentences go on several `>` lines.
      On such a node the *what* is quoted or it is absent; it is never
      paraphrased. 主張 and 依據 still explain WHY, in the reader's language.
-     One mechanism per node: do not merge several things-to-build into a
+     One mechanism per node: do not merge several mechanisms into a
      single "the decision" node, or this rule covers nothing.
      Delete the blockquote on nodes that report a fact or an insight.
 
