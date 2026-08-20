@@ -23,7 +23,7 @@ When in doubt, write it to a file. The cost of the file is one `git add`; the co
 
 ## Required sections
 
-These five must appear in every brief, plus a sixth (`Current State Evidence`) when the change touches existing code or process, and `## Design-side on-ramp` — always present, whether the reception's on-ramp criteria fired or not (when they don't, the `not fired` line records that). `## Design-side on-ramp` sits at the TOP of the brief: immediately after the title / author metadata, before `## Problem` — see §Template for the exact skeleton. Order matters — `writing-plans` parses top-down.
+These five must appear in every brief, plus a sixth (`Current State Evidence`) when the change touches existing code or process, `## Design-side on-ramp` — always present, whether the reception's on-ramp criteria fired or not (when they don't, the `not fired` line records that) — and `## Queue relation` — always present (until the user resolves it, the agent writes `pending`). `## Design-side on-ramp` sits at the TOP of the brief: immediately after the title / author metadata, before `## Problem` — see §Template for the exact skeleton. Order matters — `writing-plans` parses top-down.
 
 ### `## Problem`
 
@@ -91,6 +91,18 @@ Bulleted list of adjacent things explicitly NOT in this change. Each bullet shou
 - `pending`
 
 Any other wording is *unresolved* — never treated as a pass (lookalike wording does not resolve the gate). `pending` is what the agent writes until the user has answered; it is never the agent's own default. The `standing` form is legal only when `docs/loom/DIRECTION.md`'s `## On-ramp standing choices` section names every row cited on that line — that section's own grammar is owned by `loom-code/hooks/family-reception.md`, not repeated here.
+
+### `## Queue relation`
+
+**Required in every brief.** One line, exactly one of these three canonical forms:
+
+- `in-queue: <entry-name>`
+- `unqueued — <reason>`
+- `displaces: <entry-name> — <reason>`
+
+`in-queue: <entry-name>` states that this arc is the queue entry of that name. `unqueued — <reason>` states that this arc is not in the queue, and states the reason. `displaces: <entry-name> — <reason>` states that this arc goes before a queued entry, and states the reason.
+
+Any other wording is *unresolved* — never treated as a pass (lookalike wording does not resolve the gate). `pending` is what the agent writes until the user has answered; it is never the agent's own default.
 
 ## Optional sections
 
@@ -183,6 +195,10 @@ Copy-paste this skeleton:
 ## Design-side on-ramp
 
 (one of: `not fired — <reason>` / `fired: rows <list> — user chose <detour|direct>` / `fired: rows <list> — standing <detour|direct> (DIRECTION.md)` / `pending`; any other wording is unresolved)
+
+## Queue relation
+
+(one of: `in-queue: <entry-name>` / `unqueued — <reason>` / `displaces: <entry-name> — <reason>`; any other wording is unresolved; `pending` until the user has answered)
 
 ## Problem
 
