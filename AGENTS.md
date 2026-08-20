@@ -248,6 +248,26 @@ Role boundaries enforced by behavior, not reading restrictions:
   a bootstrap verb has no repo-root tier (its precondition is the
   repo lacking the layer). `${CLAUDE_PLUGIN_ROOT}` is a load-time
   substitution, as above.
+- **Check a brief's direction freshness** (arc-entry gate):
+  `python3 loom-code/scripts/check_direction_freshness.py <brief-path> [--repo-root <path>]`
+  — does two jobs on every run. Advisory: prints every unlanded
+  `docs/loom/DIRECTION.md` / `docs/loom/backlog/<name>.md` change any
+  local branch still carries relative to the base branch, one
+  `Unlanded direction change: <branch> — <path> (tip <date>)` line per
+  hit — this never affects the exit code. Gating: resolves the brief's
+  `## Queue relation` line against the closed grammar — the three
+  canonical forms are enumerated once, in
+  `handoff-brief-format.md`'s own `## Queue relation` section (and
+  the script's module docstring points there too), and are
+  deliberately not re-listed here: `review_scope.py`'s entry above
+  already records what happens when a population gets restated in a
+  second place — it drifted to a different count three times before
+  the entry stopped restating it. Blocks on anything outside that
+  grammar. Exit 0 when the queue relation resolves;
+  exit 1 when `<brief-path>` is missing or is not a regular file (a
+  directory path takes this exit too); exit 2 when the queue
+  relation is missing or malformed (the question to relay verbatim is
+  printed to stderr).
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams

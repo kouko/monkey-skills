@@ -200,6 +200,9 @@ Brainstorming's deliverable is a **structured brief** that `writing-plans` consu
 
 ## Out of Scope
 (Bulleted list of adjacent things explicitly NOT in this change)
+
+## Queue relation
+(grammar SSOT `references/handoff-brief-format.md` — write the line there, do not leave it `pending`)
 ```
 
 Optional but recommended sections: What Becomes Obsolete (Axis 5), Open Questions. `## Alternatives Considered` (Axis 4) and `## Diagrams` are fill-or-declare — see `references/handoff-brief-format.md`.

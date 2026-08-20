@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-20-direction-queue-gate.md
 Goal: 開工前，倉庫狀態與宣告的佇列若對不上，流程會停下來問一個必須回答的問題，而答案落進提交的 brief——不是多印一行報告讓人滑過去。
-Stage: sdd:wave-2
+Stage: sdd:wave-4
 Steps:
   1. 三路平行起跑：未合併偵測、宣告文法 SSOT、卡片標籤改名
   2. 兩個檢查合流成一支 CLI 與阻斷退出碼
@@ -125,7 +125,7 @@ N/A — no unresolved question: both triggers are decided, both are computable f
 - **Dependencies**: Tasks 1, 2 complete first
 - **Independent**: false
 - **Brief item covered**: BI-2, BI-3
-- **Status**: pending
+- **Status**: done(539aa070)
 - **Gloss**: 兩個檢查合成一道閘，違規時退出碼是「停下來問」而不是「印個警告」
 
 ## Task 5 — 反作弊探針
@@ -145,7 +145,7 @@ N/A — no unresolved question: both triggers are decided, both are computable f
 - **Dependencies**: Task 4 completes first
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: done(765d96b3)
 - **Gloss**: 這個 repo 有前科：檢查因為什麼都沒比對到而假裝通過。這支證明它不會
 
 ## Task 6 — 接進開工路徑並宣告停等契約
@@ -166,7 +166,7 @@ N/A — no unresolved question: both triggers are decided, both are computable f
 - **Dependencies**: Task 4 completes first
 - **Independent**: true
 - **Brief item covered**: BI-3, BI-4
-- **Status**: pending
+- **Status**: done(765d96b3)
 - **Gloss**: 讓這道閘真的在開工時被跑到，而不是躺在 scripts 目錄裡；停等契約寫成契約而不是建議
 
 ## Task 7 — 命令面登錄
@@ -185,7 +185,7 @@ N/A — no unresolved question: both triggers are decided, both are computable f
 - **Dependencies**: Task 4 completes first
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: done(765d96b3)
 - **Gloss**: 新的可執行動詞要在命令面上有登錄，不然它等於不存在
 
 ## Task 8 — loom-code 0.89.0 → 0.90.0 出貨
@@ -214,7 +214,7 @@ Kickoff decision: both checks share one CLI and one invocation, so the caller wi
 
 Recorded at plan time: the trigger evidence is n=1. Two control projects measured zero instances of both trigger conditions, so this gate will never fire in them. That is the intended cost profile — a gate that is silent where there is no conflict — but it also means the design is validated by one project only, and the first real firing outside that project is the observation that would confirm or refute it.
 
-Recorded at plan time: `writing-plans/SKILL.md` was at 4232 words against a 4420 cap after the previous arc's extraction. Task 6 must fit inside that headroom or report an extraction; raising the cap an eighteenth time is out of scope, per `docs/loom/memory/a-cap-raised-at-every-touch-is-not-a-cap.md`.
+Recorded at plan time: `writing-plans/SKILL.md` was at 4232 words. CORRECTED 2026-08-20 — the cap stated here was 4420, which does not reproduce: `scripts/check-skill-structure.py:305` sets `WORD_HARD_CAP = 4500`. The 4420 figure was carried from an earlier arc's memory rather than re-read, which is the same defect this arc caught twice in implementer reports. Task 6 must fit inside that headroom or report an extraction; raising the cap an eighteenth time is out of scope, per `docs/loom/memory/a-cap-raised-at-every-touch-is-not-a-cap.md`.
 
 Recorded at plan time, after five measurement probes: no offline git signal cleanly separates "this change never landed" from "it landed and the base branch has since changed the same file". Ancestry fails under squash merge (6 of 6 branches misreported); upstream and remote presence fail because merged branches lose their remote; blob-in-history fails because a squash reshapes the content. The intersection test in Task 1 is the best of the five, clearing 4 of 6 correctly, and its residual false-positive class is a branch whose change landed in reshaped form. That residual is why Task 1 reports and Task 4's declaration check is the only thing that blocks — a heuristic must not gate work, and an exact declaration can.
 
@@ -227,3 +227,9 @@ Amendment skip note: the header's verdict and stage were stamped from the review
 - 2026-08-20 — Task 3's scope is extended to three sites the rename made false, outside its declared `Files touched`: `check_field_microstructure.py`'s runtime violation message and docstring, its test's docstring, and `plan-format.md:171` — all of which still tell a plan author that `plan_card` folds content into "the card's single `goal:` line", a line the card no longer emits. Recorded rather than briefed: it is a two-way door, and the distinction that decides it is that these strings were correct before this arc and were made wrong BY it, which makes them this arc's debt rather than pre-existing debt the surgical-edit rule would leave alone. The repo's own memory entry `error-message-text-is-not-the-rules-statement.md`, written one day earlier, states that a checker's user-facing strings are part of its rule's contract surface — this is the first instance since. Verified before deciding: none of the three files appears in any other task's `Files touched`, so the parallel-dispatch disjointness oracle still holds.
 
 - 2026-08-20 — Task 1's ban on ancestry was derived independently by measurement, and only afterwards found to have prior art in this repo: `loom-code/scripts/review_scope.py` already documents that a squash merge leaves `merge-base..HEAD` carrying already-squashed foreign commits whose patch-ids changed, so rebase's duplicate-skip cannot drop them. The two modules are NOT duplicates — `review_scope.py` asks whether the CURRENT branch's base is fresh against the remote tip; Task 1 asks whether OTHER branches carry governing-file changes that never landed. Recorded because a future reader who finds both will otherwise suspect one of reimplementing the other, and because the corroboration strengthens the ban: two independent derivations, one measured on this repo's six branches and one written down months earlier.
+
+- 2026-08-20 — Task 4 converges at PASS_WITH_NOTES with one 🟢 residual carried as debt rather than a fourth iteration on the same message: the em-dash hint now fires on every unresolved case, including a name that is simply not an entry, where it points at a formatting cause that does not exist. Not false, but unwarranted. Recorded rather than fixed because the reviewer graded it optional and because the message has already been rewritten twice; a third pass buys wording, not correctness. Worth knowing for whoever touches it next: the reviewer found, while grading the strictness decision, that `DIRECTION.md`'s charter declares `## Now` GENERATED and never hand-edited — so the hyphen case can only arise from a charter violation or a generator bug, which is a stronger justification for keeping the strict separator than the one the implementer gave.
+
+- 2026-08-20 — Task 7's `AGENTS.md` entry lost its inline grammar and gained a pointer, reversing an instruction the orchestrator had already relayed. Two review arms disagreed: code-quality judged inlining defensible for a command reference, spec-review judged it a second copy that will drift. The spec arm won on evidence, not on argument — `AGENTS.md:198-201` records the `review_scope.py` entry's own history of the same restatement drifting to three different counts before it stopped restating. The orchestrator's error was relaying the first arm's judgement as settled before the second reported; parallel arms exist so they can disagree, and closing that early wastes the second opinion. Exit-1's wording was tightened in the same pass on the spec arm's recommendation.
+
+- 2026-08-20 — Recorded from Task 6's review, not filed as a gap by it: the queue-gate pin's exit-0 assertion matches the substring `resolv`, which `unresolved` also contains, so that one assertion passes even when the exit numbers are swapped. The test as a whole still goes RED via its exit-2 assertion, which is why the arm passed it. Noted because the arc has spent five findings on assertions that pin a location rather than a claim, and this is the same defect surviving inside a test written to guard against it — a latent one, waiting for the sibling assertion to change.

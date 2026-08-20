@@ -14,6 +14,7 @@ from pathlib import Path
 from check_direction_freshness import find_unlanded_direction_changes
 
 SCRIPT = Path(__file__).parent / "check_direction_freshness.py"
+AGENTS_MD = Path(__file__).parents[2] / "AGENTS.md"
 
 _ENV = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
 
@@ -322,3 +323,45 @@ def test_advisory_printed_alongside_resolved_declaration(tmp_path: Path) -> None
     assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
     assert "Unlanded direction change" in result.stdout
     assert "rescope" in result.stdout
+
+
+def _direction_freshness_entry() -> str:
+    """The ONE command-surface bullet that declares check_direction_freshness.py.
+
+    Sliced (not just searched) so the content pins below can only be
+    satisfied by text living inside this entry — the same words parked
+    in a neighbouring bullet would declare nothing about this command.
+    """
+    assert AGENTS_MD.is_file(), f"AGENTS.md is absent at {AGENTS_MD}"
+    text = AGENTS_MD.read_text(encoding="utf-8")
+    start = text.index("BEGIN command-surface (managed)")
+    end = text.index("END command-surface (managed)")
+    managed_block = text[start:end]
+    assert "check_direction_freshness.py" in managed_block, \
+        "AGENTS.md managed command-surface block must declare check_direction_freshness.py"
+
+    entry_start = managed_block.index("- **Check a brief's direction freshness**")
+    tail = managed_block[entry_start + 1:]
+    next_bullet = tail.find("\n- **")
+    stop = len(managed_block) if next_bullet == -1 else entry_start + 1 + next_bullet
+    return managed_block[entry_start:stop]
+
+
+def test_agents_md_declares_direction_freshness_script_exit_codes():
+    """Command-surface accretion obligation: AGENTS.md's managed
+    command-surface block must declare check_direction_freshness.py, and
+    the entry's stated exit-2 meaning must match the script's actual
+    behavior — a missing or malformed '## Queue relation' declaration —
+    not just the script's mere presence in the block."""
+    entry = _direction_freshness_entry()
+    low = entry.lower()
+
+    assert "exit 2" in low, "must state the exit-2 meaning"
+    assert "queue relation" in low and (
+        "missing or malformed" in low
+    ), (
+        "exit-2 must be documented as the queue relation being missing "
+        "or malformed, matching the script's actual gate"
+    )
+    assert "exit 0" in low, "must state the exit-0 (resolved) meaning"
+    assert "exit 1" in low, "must state the exit-1 (brief-path absent) meaning"
