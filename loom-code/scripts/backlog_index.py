@@ -235,7 +235,7 @@ _FIELD_BULLET_PATTERNS = {
         rf"^-\s*\**{field}\**\s*(?:\([^)]*\))?\s*:\s*(.*?)(?=\n[ \t]*\n|\n-\s|\Z)",
         re.MULTILINE | re.DOTALL,
     )
-    for field in ("Origin", "Start")
+    for field in ("Origin", "Start", "Serves")
 }
 
 
@@ -384,11 +384,66 @@ def _check_description(display: str, frontmatter: dict[str, str]) -> list[Violat
     return []
 
 
+def _principles_path_for(store: Path) -> Path:
+    """Where the `serves` gate looks for the north-star document: the
+    store's parent directory, mirroring `_direction_path_for`'s convention
+    (docs/loom/PRINCIPLES.md beside docs/loom/backlog/). Its mere presence
+    or absence is the gate — content is never read here."""
+    return store.parent / "PRINCIPLES.md"
+
+
+_SERVES_UNRELATED_RE = re.compile(r"^unrelated\s*—\s*\S.*$")
+
+
+def _is_well_formed_serves(value: str) -> bool:
+    """Closed two-form grammar (plan Task 1): either `unrelated — <reason>`
+    (reason clause mandatory) or any other non-empty text (the link
+    prose). A bare `unrelated` with no reason clause is malformed."""
+    value = value.strip()
+    if not value:
+        return False
+    if value == "unrelated" or value.startswith("unrelated ") or value.startswith("unrelated—"):
+        return bool(_SERVES_UNRELATED_RE.match(value))
+    return True
+
+
+def _check_serves(
+    display: str, frontmatter: dict[str, str], status: str | None, store: Path
+) -> list[Violation]:
+    """`serves:` is required only when status is COMMITTED-NEXT AND the
+    repo has docs/loom/PRINCIPLES.md (plan Task 1 — the gate is load-
+    bearing: monkey-skills' own store has no PRINCIPLES.md by standing
+    choice and must stay unaffected)."""
+    if status != "COMMITTED-NEXT":
+        return []
+    if not _principles_path_for(store).is_file():
+        return []
+    serves = frontmatter.get("serves")
+    if serves is None:
+        return [
+            Violation(
+                "field-agreement",
+                display,
+                "COMMITTED-NEXT entry missing required 'serves' field",
+            )
+        ]
+    if not _is_well_formed_serves(serves):
+        return [
+            Violation(
+                "field-agreement",
+                display,
+                f"'serves: {serves}' is not well-formed — use 'serves: <how this "
+                "serves the north star>' or 'serves: unrelated — <reason>'",
+            )
+        ]
+    return []
+
+
 def _check_field_agreement(display: str, frontmatter: dict[str, str], body: str) -> list[Violation]:
     """(v) frontmatter <-> body-bullet agreement, only when both are present
     (revision-round-1 DECISION — see module docstring)."""
     violations: list[Violation] = []
-    for field_key, field_label in (("origin", "Origin"), ("start", "Start")):
+    for field_key, field_label in (("origin", "Origin"), ("start", "Start"), ("serves", "Serves")):
         fm_value = frontmatter.get(field_key)
         if fm_value is None:
             continue
@@ -421,6 +476,7 @@ def find_violations(store: Path) -> list[Violation]:
         violations.extend(_check_archive_tier(display, status, is_archived))
         violations.extend(_check_archived_date(display, frontmatter, is_archived))
         violations.extend(_check_description(display, frontmatter))
+        violations.extend(_check_serves(display, frontmatter, status, store))
         violations.extend(_check_field_agreement(display, frontmatter, _body_text(text)))
 
     return violations

@@ -1693,3 +1693,76 @@ def test_direction_write_preserves_indented_next_heading(tmp_path):
     after = direction.read_text(encoding="utf-8")
     assert " ## Next" in after, after
     assert "- a fixture next theme" in after, after
+
+
+# ---------------------------------------------------------------------------
+# Task 1 (docs/loom/plans/2026-08-20-north-star-serves-link.md) --
+# `serves:` frontmatter field on COMMITTED-NEXT entries, gated on the
+# repo having docs/loom/PRINCIPLES.md.
+# ---------------------------------------------------------------------------
+
+
+def test_committed_next_entry_missing_serves_is_rejected_when_principles_exists(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    (tmp_path / "PRINCIPLES.md").write_text("## North Star\n\nSomething.\n", encoding="utf-8")
+    _write(store, "2026-08-01-alpha.md", _entry("2026-08-01-alpha", "COMMITTED-NEXT"))
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1
+    assert "2026-08-01-alpha.md" in result.stdout
+    assert "serves" in result.stdout
+
+
+def test_committed_next_entry_serves_unrelated_with_no_reason_is_rejected(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    (tmp_path / "PRINCIPLES.md").write_text("## North Star\n\nSomething.\n", encoding="utf-8")
+    text = _entry("2026-08-01-alpha", "COMMITTED-NEXT").replace(
+        "status: COMMITTED-NEXT\n", "status: COMMITTED-NEXT\nserves: unrelated\n"
+    )
+    _write(store, "2026-08-01-alpha.md", text)
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1
+    assert "2026-08-01-alpha.md" in result.stdout
+    assert "serves" in result.stdout
+
+
+def test_committed_next_entry_serves_unrelated_with_reason_validates_clean(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    (tmp_path / "PRINCIPLES.md").write_text("## North Star\n\nSomething.\n", encoding="utf-8")
+    text = _entry("2026-08-01-alpha", "COMMITTED-NEXT").replace(
+        "status: COMMITTED-NEXT\n",
+        "status: COMMITTED-NEXT\nserves: unrelated — churn cleanup\n",
+    )
+    _write(store, "2026-08-01-alpha.md", text)
+
+    result = _run_validate(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_open_entry_with_no_serves_validates_clean(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    (tmp_path / "PRINCIPLES.md").write_text("## North Star\n\nSomething.\n", encoding="utf-8")
+    _write(store, "2026-08-01-alpha.md", _entry("2026-08-01-alpha", "OPEN"))
+
+    result = _run_validate(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_committed_next_entry_with_no_serves_validates_clean_without_principles_md(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    # No PRINCIPLES.md written under tmp_path -- exemption case.
+    _write(store, "2026-08-01-alpha.md", _entry("2026-08-01-alpha", "COMMITTED-NEXT"))
+
+    result = _run_validate(store)
+
+    assert result.returncode == 0, result.stdout + result.stderr
