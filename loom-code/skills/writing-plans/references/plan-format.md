@@ -168,7 +168,7 @@ mechanical checker decides it the same way every time.
   each nested bullet do.
 - **`Goal:`.** Carries no length ceiling — admits no nested body:
   `plan_card.py`'s `_header_value` folds any indented continuation
-  into the card's single `goal:` line, so a nested body there is
+  into the card's single `end-state:` line, so a nested body there is
   silently flattened rather than rendered. One sentence is brevity
   guidance, not a mechanical rule — no check enforces sentence
   counting on this field.

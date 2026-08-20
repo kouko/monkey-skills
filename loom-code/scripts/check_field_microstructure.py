@@ -416,7 +416,7 @@ def check_goal(text: str) -> list[str]:
     """Every header `Goal:` violation in `text`: a continuation line
     shaped as a nested bullet or a table row (the no-nested-body rule —
     `plan_card.py` folds any indented content into the card's single
-    `goal:` line, and `family-relay.md` pins that line as one line,
+    `end-state:` line, and `family-relay.md` pins that line as one line,
     verbatim). There is no length ceiling on `Goal:` — dropped per the
     2026-08-19 field-value-microstructure Decision Log: `Goal:` is
     "transcribed from the brief's Smallest End State at plan time —
@@ -437,7 +437,7 @@ def check_goal(text: str) -> list[str]:
             problems.append(
                 f"Goal: has a nested bullet or table row in its body "
                 f"(not allowed — plan_card folds it into the card's "
-                f"single goal: line): {raw.strip()!r}"
+                f"single end-state: line): {raw.strip()!r}"
             )
     return problems
 

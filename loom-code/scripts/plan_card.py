@@ -18,7 +18,7 @@ per N1's wrapped-schema shape); the body must carry at least one
 
 Output (stdout), field order fixed by N5:
 
-    goal: <goal>
+    end-state: <goal>
     tasks: D done / C claimed / P pending / B blocked
     [v]|[~]|[ ]|[!] T<N> <name>    (ASCII marks: done/claimed/pending/blocked)
     <mark> T<N> <name>              (one row per task, file order)
@@ -354,7 +354,7 @@ def build_card(text: str) -> str:
         counts[kind] += 1
 
     lines = [
-        f"goal: {goal}",
+        f"end-state: {goal}",
         "tasks: "
         + " / ".join(f"{counts[kind]} {kind}" for kind in _MARKS),
     ]

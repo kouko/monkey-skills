@@ -71,7 +71,10 @@ convention — same grounding logic as §(d)'s jargon-and-stakes gate.
 ### (a2) Progress card
 
 The plan-progress variant of the rollup card. Field order is fixed:
-**Goal** (one line, verbatim from the plan header), **task table**
+**Goal** (one line, verbatim from the plan header — rendered with
+the label `end-state:`, not `goal:`, so it never collides with the
+host's built-in `/goal` session-scoped directive; the plan schema
+field itself keeps the name `Goal:`), **task table**
 (`[v]` done / `[~]` claimed / `[ ]` pending / `[!]` blocked — plain-ASCII
 marks for cross-platform rendering; counts then rows), **Stage**,
 **next** (first not-done task in roadmap order, or close-out). Within
@@ -83,7 +86,7 @@ The body is rendered mechanically by `plan_card.py` (ships in the
 loom-code plugin; a repo-root `scripts/` copy wins when present) —
 never compose it by hand when the script is available, never re-order
 or drop fields. The relayer's frame, in the live conversation language:
-a plain-translation gloss under the goal line; a grounded explanatory
+a plain-translation gloss under the end-state line; a grounded explanatory
 gloss for `next:` (derived from that task's own plan fields — cite
 the source item, never invent); and for every `[!]` row an
 explanation that OPENS with the stop reason — "needs your decision:

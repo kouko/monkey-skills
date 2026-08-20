@@ -75,11 +75,29 @@ def test_rejects_goal_with_nested_body():
     text = _plan_with_goal(
         "Goal: Ship the thing.\n"
         "  - a nested bullet under Goal, which plan_card folds into the\n"
-        "    card's single goal: line and family-relay pins as verbatim\n"
+        "    card's single end-state: line and family-relay pins as verbatim\n"
     )
     problems = check_goal(text)
     assert problems, "expected a non-empty problem list"
     assert any("Goal" in p for p in problems)
+
+
+def test_goal_violation_message_names_end_state_not_goal_line():
+    # Pins the runtime message's claim about which rendered line
+    # plan_card folds nested Goal: content into. The card renamed its
+    # label from `goal:` to `end-state:`; a message that still says
+    # "goal:" teaches the wrong fact to the author reading it at the
+    # moment of violation (docs/loom/memory/
+    # error-message-text-is-not-the-rules-statement.md).
+    text = _plan_with_goal(
+        "Goal: Ship the thing.\n"
+        "  - a nested bullet under Goal\n"
+    )
+    problems = check_goal(text)
+    assert problems, "expected a non-empty problem list"
+    message = problems[0]
+    assert "single end-state: line" in message
+    assert "single goal: line" not in message
 
 
 def test_accepts_overlong_goal():

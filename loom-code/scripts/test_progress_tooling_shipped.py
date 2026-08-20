@@ -70,13 +70,13 @@ def test_repo_root_shims_exist_and_match_the_plugin_copies():
     assert SHIM_PLAN_CARD.is_file(), f"missing shim at {SHIM_PLAN_CARD}"
     assert SHIM_BACKLOG_INDEX.is_file(), f"missing shim at {SHIM_BACKLOG_INDEX}"
 
-    # plan_card WITH a real plan path renders the card (exit 0, "goal:"
-    # line); an argv-dropping shim falls to the flagless usage error
-    # (exit 2) and both asserts below fail.
+    # plan_card WITH a real plan path renders the card (exit 0,
+    # "end-state:" line); an argv-dropping shim falls to the flagless
+    # usage error (exit 2) and both asserts below fail.
     plan_path = "docs/loom/plans/2026-08-10-ship-progress-tooling.md"
     shim = _run(SHIM_PLAN_CARD, plan_path)
     plugin = _run(PLUGIN_PLAN_CARD, plan_path)
-    assert shim.returncode == 0 and "goal:" in shim.stdout, (
+    assert shim.returncode == 0 and "end-state:" in shim.stdout, (
         shim.stdout + shim.stderr
     )
     assert (shim.returncode, shim.stdout, shim.stderr) == (

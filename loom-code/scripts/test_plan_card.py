@@ -105,7 +105,7 @@ def test_happy_path_mixed_statuses_renders_the_exact_card(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == (
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 1 done / 1 claimed / 1 pending / 1 blocked\n"
         "[v] T1 parser\n"
         "[~] T2 renderer\n"
@@ -114,6 +114,22 @@ def test_happy_path_mixed_statuses_renders_the_exact_card(tmp_path):
         "stage: sdd:wave-1\n"
         "next: T2 renderer\n"
     )
+
+
+def test_card_labels_the_goal_field_end_state(tmp_path):
+    """The rendered card's first line names the field `end-state:`, not
+    `goal:` — the plan schema field keeps the name `Goal:`, only the
+    rendered label changes (collision with the host's built-in `/goal`
+    session-scoped directive; `end-state:` names the field's own
+    provenance per plan-format.md's Smallest End State)."""
+    plan_path = _write_plan(tmp_path, _plan_text(tasks=[("parser", "pending")]))
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    first_line = result.stdout.splitlines()[0]
+    assert first_line.startswith("end-state: "), first_line
+    assert not any(line.startswith("goal: ") for line in result.stdout.splitlines())
 
 
 def test_all_done_plan_renders_next_close_out(tmp_path):
@@ -131,7 +147,7 @@ def test_all_done_plan_renders_next_close_out(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == (
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 2 done / 0 claimed / 0 pending / 0 blocked\n"
         "[v] T1 parser\n"
         "[v] T2 renderer\n"
@@ -180,7 +196,7 @@ def test_plan_missing_goal_header_exits_1_naming_goal(tmp_path):
     assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
     assert "Goal" in result.stdout
     assert result.stdout.count("\n") == 1, "message must be one line"
-    assert "goal:" not in result.stdout, "must never render a partial card"
+    assert "end-state:" not in result.stdout, "must never render a partial card"
 
 
 def test_plan_missing_stage_header_exits_1_naming_stage(tmp_path):
@@ -196,7 +212,7 @@ def test_plan_missing_stage_header_exits_1_naming_stage(tmp_path):
     assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
     assert "Stage" in result.stdout
     assert result.stdout.count("\n") == 1, "message must be one line"
-    assert "goal:" not in result.stdout, "must never render a partial card"
+    assert "end-state:" not in result.stdout, "must never render a partial card"
 
 
 def test_statusless_old_format_plan_exits_1_naming_status(tmp_path):
@@ -215,7 +231,7 @@ def test_statusless_old_format_plan_exits_1_naming_status(tmp_path):
     assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
     assert "Status" in result.stdout
     assert result.stdout.count("\n") == 1, "message must be one line"
-    assert "goal:" not in result.stdout, "must never render a partial card"
+    assert "end-state:" not in result.stdout, "must never render a partial card"
 
 
 def test_plan_with_no_task_headings_exits_1_loudly(tmp_path):
@@ -229,7 +245,7 @@ def test_plan_with_no_task_headings_exits_1_loudly(tmp_path):
     assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
     assert "## Task" in result.stdout
     assert result.stdout.count("\n") == 1, "message must be one line"
-    assert "goal:" not in result.stdout, "must never render a partial card"
+    assert "end-state:" not in result.stdout, "must never render a partial card"
 
 
 def test_bold_status_bullet_renders_same_card_as_plain_style(tmp_path):
@@ -257,7 +273,7 @@ def test_bold_status_bullet_renders_same_card_as_plain_style(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == (
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 1 done / 1 claimed / 0 pending / 0 blocked\n"
         "[v] T1 parser\n"
         "[~] T2 renderer\n"
@@ -279,7 +295,7 @@ def test_status_value_outside_the_four_kinds_exits_1_naming_it(tmp_path):
     assert result.returncode == 1, result.stdout + result.stderr
     assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
     assert "wip-maybe" in result.stdout
-    assert "goal:" not in result.stdout, "must never render a partial card"
+    assert "end-state:" not in result.stdout, "must never render a partial card"
 
 
 # --- roadmap view: steps, glosses, --detail ---------------------------------
@@ -319,7 +335,7 @@ def test_titled_steps_with_glosses_render_the_exact_stepped_card(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == (
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 1 done / 0 claimed / 2 pending / 0 blocked\n"
         "-- step 1: parse layer --\n"
         "[v] T1 parser\n"
@@ -355,7 +371,7 @@ def test_deps_without_steps_render_untitled_separators(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == (
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 1 done / 0 claimed / 1 pending / 0 blocked\n"
         "-- step 1 --\n"
         "[v] T1 parser\n"
@@ -408,7 +424,7 @@ def test_needs_list_sorts_ascending_and_parallel_form_parses(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == (
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 3 done / 0 claimed / 1 pending / 0 blocked\n"
         "-- step 1 --\n"
         "[v] T100 parser\n"
@@ -441,7 +457,7 @@ def test_depless_glossless_plan_output_byte_identical_to_flat_card(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == (
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 1 done / 1 claimed / 1 pending / 1 blocked\n"
         "[v] T1 parser\n"
         "[~] T2 renderer\n"
@@ -471,7 +487,7 @@ def test_all_none_deps_without_steps_render_flat_no_separator(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == (
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 1 done / 0 claimed / 1 pending / 0 blocked\n"
         "[v] T1 parser\n"
         "[ ] T2 renderer\n"
@@ -500,7 +516,7 @@ def test_all_none_deps_with_declared_one_line_steps_renders_titled_step(tmp_path
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert result.stdout == (
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 1 done / 0 claimed / 1 pending / 0 blocked\n"
         "-- step 1: single wave --\n"
         "[v] T1 parser\n"
@@ -529,7 +545,7 @@ def test_steps_count_mismatch_exits_1_loudly(tmp_path):
     assert "Steps" in result.stdout
     assert "2" in result.stdout and "1" in result.stdout
     assert result.stdout.count("\n") == 1, "message must be one line"
-    assert "goal:" not in result.stdout, "must never render a partial card"
+    assert "end-state:" not in result.stdout, "must never render a partial card"
 
 
 def test_inline_steps_declaration_fails_loud(tmp_path):
@@ -563,7 +579,7 @@ def test_inline_steps_declaration_fails_loud(tmp_path):
         "message must name the indented numbered-titles form"
     )
     assert result.stdout.count("\n") == 1, "message must be one line"
-    assert "goal:" not in result.stdout, "must never render a partial card"
+    assert "end-state:" not in result.stdout, "must never render a partial card"
 
 
 def test_steps_mention_in_task_prose_does_not_trigger_inline_guard(tmp_path):
@@ -589,7 +605,7 @@ def test_steps_mention_in_task_prose_does_not_trigger_inline_guard(tmp_path):
     result = _run_card(plan_path)
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "goal: Ship the widget pipeline end-to-end.\n" in result.stdout
+    assert "end-state: Ship the widget pipeline end-to-end.\n" in result.stdout
     assert "[ ] T1 parser\n" in result.stdout
 
 
@@ -613,7 +629,7 @@ def test_dependency_cycle_exits_1_naming_the_cycle(tmp_path):
     assert "cycle" in result.stdout
     assert "T1" in result.stdout and "T2" in result.stdout
     assert result.stdout.count("\n") == 1, "message must be one line"
-    assert "goal:" not in result.stdout, "must never render a partial card"
+    assert "end-state:" not in result.stdout, "must never render a partial card"
 
 
 def test_dependency_on_nonexistent_task_exits_1_naming_it(tmp_path):
@@ -633,7 +649,7 @@ def test_dependency_on_nonexistent_task_exits_1_naming_it(tmp_path):
     assert "T5" in result.stdout
     assert "nonexistent" in result.stdout
     assert result.stdout.count("\n") == 1, "message must be one line"
-    assert "goal:" not in result.stdout, "must never render a partial card"
+    assert "end-state:" not in result.stdout, "must never render a partial card"
 
 
 def _detail_fixture_text() -> str:
@@ -990,7 +1006,7 @@ def test_set_status_rewrites_in_place(tmp_path):
         "old: - Status: pending\n"
         "new: - Status: done(abc1234)\n"
         "\n"
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 1 done / 0 claimed / 0 pending / 0 blocked\n"
         "[v] T1 parser\n"
         "stage: sdd:wave-1\n"
@@ -1027,7 +1043,7 @@ def test_set_status_preserves_bold_field_markup(tmp_path):
         "old: - **Status**: pending\n"
         "new: - **Status**: done(abc1234)\n"
         "\n"
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 1 done / 0 claimed / 0 pending / 0 blocked\n"
         "[v] T1 parser\n"
         "stage: sdd:wave-1\n"
@@ -1052,7 +1068,7 @@ def test_set_status_pending_kind(tmp_path):
         "old: - Status: done(abc1234)\n"
         "new: - Status: pending\n"
         "\n"
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 0 done / 0 claimed / 1 pending / 0 blocked\n"
         "[ ] T1 parser\n"
         "stage: sdd:wave-1\n"
@@ -1074,7 +1090,7 @@ def test_set_status_claimed_kind(tmp_path):
         "old: - Status: pending\n"
         "new: - Status: claimed(@implementer)\n"
         "\n"
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 0 done / 1 claimed / 0 pending / 0 blocked\n"
         "[~] T1 parser\n"
         "stage: sdd:wave-1\n"
@@ -1099,7 +1115,7 @@ def test_set_status_blocked_kind(tmp_path):
         "old: - Status: claimed(@implementer)\n"
         "new: - Status: blocked\n"
         "\n"
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 0 done / 0 claimed / 0 pending / 1 blocked\n"
         "[!] T1 parser\n"
         "stage: sdd:wave-1\n"
@@ -1124,7 +1140,7 @@ def test_set_status_stdout_includes_card_body_after_new_line(tmp_path):
     assert marker in stdout
     after_new = stdout.split(marker, 1)[1]
     assert after_new.startswith("\n"), "blank line must separate new: from the card"
-    assert "goal: Ship the widget pipeline end-to-end." in after_new
+    assert "end-state: Ship the widget pipeline end-to-end." in after_new
     assert "[v] T1 parser" in after_new
     assert "stage: sdd:wave-1" in after_new
 
@@ -1364,7 +1380,7 @@ def test_set_stage_happy_path_rewrites_and_prints_card(tmp_path):
         "old: Stage: sdd:wave-1\n"
         "new: Stage: sdd:wave-2\n"
         "\n"
-        "goal: Ship the widget pipeline end-to-end.\n"
+        "end-state: Ship the widget pipeline end-to-end.\n"
         "tasks: 0 done / 0 claimed / 1 pending / 0 blocked\n"
         "[ ] T1 parser\n"
         "stage: sdd:wave-2\n"
