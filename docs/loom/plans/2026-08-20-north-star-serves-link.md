@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-20-north-star-serves-link.md
 Goal: 給長期目的一個自己的檔案，讓每次押注都必須連回它，沒有它就提醒你補
-Stage: sdd:wave-2
+Stage: finishing
 Total tasks: 9
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
