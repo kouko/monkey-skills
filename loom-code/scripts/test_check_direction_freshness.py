@@ -223,6 +223,21 @@ def test_unqueued_with_reason_exits_zero(tmp_path: Path) -> None:
     assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
 
 
+def test_unqueued_with_hyphen_separator_exits_two(tmp_path: Path) -> None:
+    """`_UNQUEUED_RE` requires an em dash '—' separator, matching the
+    same strictness `_NOW_ENTRY_RE` already defends — a plain hyphen
+    in the brief's own `unqueued` declaration must not satisfy the
+    gate (Decision Log: strictness stays on the parser, not the
+    grammar)."""
+    repo = _init_repo_no_direction(tmp_path)
+    brief = _write_brief(tmp_path, "unqueued - not part of any queued arc")
+
+    result = _run_cli(repo, brief)
+
+    assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "Queue relation" in result.stderr
+
+
 def test_displaces_a_now_entry_exits_zero(tmp_path: Path) -> None:
     repo = _init_repo_no_direction(tmp_path)
     _write_direction_with_now_entry(repo)
@@ -233,6 +248,36 @@ def test_displaces_a_now_entry_exits_zero(tmp_path: Path) -> None:
     result = _run_cli(repo, brief)
 
     assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+
+def test_displaces_with_hyphen_separator_exits_two(tmp_path: Path) -> None:
+    """`_DISPLACES_RE` requires an em dash '—' separator between the
+    displaced entry's name and the reason — a plain hyphen in the
+    brief's own `displaces:` declaration must not satisfy the gate
+    (Decision Log: strictness stays on the parser, not the grammar).
+
+    The Now entry's own name is deliberately hyphen-free
+    ('widgetrevamp'), unlike the shared 'widget-revamp' fixture — a
+    hyphen inside the name would let a loosened separator regex's
+    non-greedy name group swallow only the name's own internal hyphen
+    and still land on an unrelated-name rejection, masking the
+    separator mutation this test exists to catch."""
+    repo = _init_repo_no_direction(tmp_path)
+    _write_direction(
+        repo,
+        body=(
+            "# Direction\n\n## Now\n\n"
+            "- widgetrevamp — rescope the widget flow\n\n## Next\n"
+        ),
+    )
+    brief = _write_brief(
+        tmp_path, "displaces: widgetrevamp - this is more urgent"
+    )
+
+    result = _run_cli(repo, brief)
+
+    assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "Queue relation" in result.stderr
 
 
 def test_pending_exits_two(tmp_path: Path) -> None:
@@ -325,6 +370,39 @@ def test_advisory_printed_alongside_resolved_declaration(tmp_path: Path) -> None
     assert "rescope" in result.stdout
 
 
+def test_non_git_repo_root_does_not_gate(tmp_path: Path) -> None:
+    """`--repo-root` pointed at a directory that is not a git work tree,
+    but that does carry a DIRECTION.md with a non-empty '## Now', must
+    not turn the advisory's git failure into a gating exit code. Only
+    the '## Queue relation' declaration may gate; here it resolves, so
+    the correct exit is 0 regardless of the advisory's git failure."""
+    repo = tmp_path / "not-a-repo"
+    repo.mkdir()
+    _write_direction(repo)
+    brief = _write_brief(tmp_path, "unqueued — testing")
+
+    result = _run_cli(repo, brief)
+
+    assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+
+def test_non_git_repo_root_announces_degraded_advisory_on_stderr(tmp_path: Path) -> None:
+    """The advisory's inability to inspect branches must still be
+    visible (Rule 12, fail-loud) — a silent empty advisory is a check
+    that went green by matching nothing."""
+    repo = tmp_path / "not-a-repo"
+    repo.mkdir()
+    _write_direction(repo)
+    brief = _write_brief(tmp_path, "unqueued — testing")
+
+    result = _run_cli(repo, brief)
+
+    assert "advisory" in result.stderr.lower() or "unlanded" in result.stderr.lower(), (
+        f"stderr must name what could not be inspected: {result.stderr}"
+    )
+    assert "git" in result.stderr.lower()
+
+
 def _direction_freshness_entry() -> str:
     """The ONE command-surface bullet that declares check_direction_freshness.py.
 
@@ -363,5 +441,16 @@ def test_agents_md_declares_direction_freshness_script_exit_codes():
         "exit-2 must be documented as the queue relation being missing "
         "or malformed, matching the script's actual gate"
     )
-    assert "exit 0" in low, "must state the exit-0 (resolved) meaning"
-    assert "exit 1" in low, "must state the exit-1 (brief-path absent) meaning"
+    exit0_idx = low.index("exit 0")
+    exit1_idx = low.index("exit 1")
+    exit2_idx = low.index("exit 2")
+    exit0_clause = low[exit0_idx:exit1_idx]
+    exit1_clause = low[exit1_idx:exit2_idx]
+    assert "resolve" in exit0_clause, (
+        "exit-0 clause must pin the queue relation resolving, not just "
+        "the token 'exit 0'"
+    )
+    assert "brief-path" in exit1_clause and "missing" in exit1_clause, (
+        "exit-1 clause must pin brief-path being missing, not just the "
+        "token 'exit 1'"
+    )

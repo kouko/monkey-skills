@@ -121,3 +121,59 @@ def test_required_sections_overview_names_queue_relation_as_required():
             f"overview paragraph must not restate canonical form {form!r} — "
             "the enumeration names sections, the subsection owns the grammar"
         )
+
+
+def _queue_relation_subsection(text: str) -> str:
+    """Body of the `### `## Queue relation`` subsection inside
+    `## Required sections` — the same body `_body_after_forms`
+    scopes its assertions to."""
+    required_sections = _section(text, r"Required sections")
+    heading_match = re.search(
+        r"^###\s+`## Queue relation`\s*$", required_sections, re.MULTILINE
+    )
+    assert heading_match is not None, (
+        "Required sections must declare a '### `## Queue relation`' subsection"
+    )
+    rest = required_sections[heading_match.end():]
+    next_subsection = re.search(r"^###\s+\S", rest, re.MULTILINE)
+    return rest[: next_subsection.start()] if next_subsection else rest
+
+
+def test_queue_relation_states_name_must_exist_in_now():
+    """A well-formed `in-queue:`/`displaces:` line naming an entry
+    absent from DIRECTION.md's `## Now` is exactly what
+    `check_direction_freshness.py`'s `resolve_queue_relation` rejects
+    (loom-code/scripts/check_direction_freshness.py). The SSOT must
+    say so in its own voice — not merely contain the word 'exist',
+    which a reversed sentence ('need not exist') would also contain.
+    Anchor on the specific claim 'must ... exist', not the bare token,
+    so a deletion AND a reversal both fail this test."""
+    text = _text()
+    body = _queue_relation_subsection(text)
+
+    assert re.search(r"must (also )?exist", body), (
+        "'## Queue relation' section must state that a name cited by "
+        "in-queue:/displaces: must exist as a '## Now' entry — a "
+        "well-formed line naming an absent entry is still unresolved"
+    )
+    assert "need not exist" not in body and "does not need to exist" not in body, (
+        "'## Queue relation' section must not state the reversed claim "
+        "(a cited name need not exist in '## Now')"
+    )
+
+
+def test_queue_relation_states_empty_now_guidance():
+    text = _text()
+    body = _queue_relation_subsection(text)
+
+    assert re.search(r"## Now.{0,40}(is )?empty", body) or re.search(
+        r"empty.{0,40}## Now", body
+    ), (
+        "'## Queue relation' section must state what an author does "
+        "when '## Now' is empty (in-queue:/displaces: can never "
+        "resolve until an entry exists)"
+    )
+    assert "unqueued" in body, (
+        "the empty-'## Now' guidance must point the author at "
+        "'unqueued — <reason>' as the usable form"
+    )

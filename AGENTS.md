@@ -263,11 +263,13 @@ Role boundaries enforced by behavior, not reading restrictions:
   already records what happens when a population gets restated in a
   second place — it drifted to a different count three times before
   the entry stopped restating it. Blocks on anything outside that
-  grammar. Exit 0 when the queue relation resolves;
-  exit 1 when `<brief-path>` is missing or is not a regular file (a
-  directory path takes this exit too); exit 2 when the queue
-  relation is missing or malformed (the question to relay verbatim is
-  printed to stderr).
+  grammar, and also blocks a well-formed `in-queue:`/`displaces:` line
+  that names an entry absent from DIRECTION.md's `## Now` — the
+  existence requirement is the SSOT's, not restated here. Exit 0 when
+  the queue relation resolves; exit 1 when `<brief-path>` is missing
+  or is not a regular file (a directory path takes this exit too);
+  exit 2 when the queue relation is missing or malformed, or names an
+  absent entry (the question to relay verbatim is printed to stderr).
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams

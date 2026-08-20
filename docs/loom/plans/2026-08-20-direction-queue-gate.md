@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-20-direction-queue-gate.md
 Goal: 開工前，倉庫狀態與宣告的佇列若對不上，流程會停下來問一個必須回答的問題，而答案落進提交的 brief——不是多印一行報告讓人滑過去。
-Stage: sdd:wave-4
+Stage: finishing
 Steps:
   1. 三路平行起跑：未合併偵測、宣告文法 SSOT、卡片標籤改名
   2. 兩個檢查合流成一支 CLI 與阻斷退出碼
@@ -203,7 +203,7 @@ N/A — no unresolved question: both triggers are decided, both are computable f
 - **Dependencies**: Tasks 3, 5, 6, 7 complete first
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-2, BI-3, BI-4, BI-5
-- **Status**: pending
+- **Status**: done(7ba65d5d)
 - **Gloss**: 沒有 bump 的話 marketplace 端 `plugin update` 會靜默 no-op，改了等於沒改
 
 ## Notes
@@ -232,6 +232,6 @@ Amendment skip note: the header's verdict and stage were stamped from the review
 
 - 2026-08-20 — Task 7's `AGENTS.md` entry lost its inline grammar and gained a pointer, reversing an instruction the orchestrator had already relayed. Two review arms disagreed: code-quality judged inlining defensible for a command reference, spec-review judged it a second copy that will drift. The spec arm won on evidence, not on argument — `AGENTS.md:198-201` records the `review_scope.py` entry's own history of the same restatement drifting to three different counts before it stopped restating. The orchestrator's error was relaying the first arm's judgement as settled before the second reported; parallel arms exist so they can disagree, and closing that early wastes the second opinion. Exit-1's wording was tightened in the same pass on the spec arm's recommendation.
 
-- 2026-08-20 — Recorded from Task 6's review, not filed as a gap by it: the queue-gate pin's exit-0 assertion matches the substring `resolv`, which `unresolved` also contains, so that one assertion passes even when the exit numbers are swapped. The test as a whole still goes RED via its exit-2 assertion, which is why the arm passed it. Noted because the arc has spent five findings on assertions that pin a location rather than a claim, and this is the same defect surviving inside a test written to guard against it — a latent one, waiting for the sibling assertion to change.
+- 2026-08-20 — Recorded from Task 6's review, not filed as a gap by it: the queue-gate pin's exit-0 assertion matches the substring `resolv`, which `unresolved` also contains, so that one assertion passes even when the exit numbers are swapped. The test as a whole still goes RED via its exit-2 assertion, which is why the arm passed it. Noted because the arc has spent five findings on assertions that pin a location rather than a claim, and this is the same defect surviving inside a test written to guard against it — a latent one, waiting for the sibling assertion to change. CORRECTED 2026-08-20 — the latent defect no longer exists: the quality arm demonstrated it live by editing the paragraph to say the opposite and watching the test stay green, and the assertion was then hardened to require `resolves` present AND `unresolved` absent in the same clause. This entry described a live state and was left describing a state that had been fixed — the same record-goes-stale shape the whole-branch review filed against it as a finding.
 
 - 2026-08-20 — Task 8's Acceptance named `loom-code/scripts/test_plugin_manifest.py` as the shipping-version pin. That file does not exist in this plugin; the real pin is `test_docs_review_blocking_class.py::test_plugin_version_and_changelog_at_<version>`, plus a second one in `test_plan_document_reviewer_check19.py` asserting the Check 19 version tag tracks `plugin.json`. The implementer found both by grep after the bump reddened them, and fixed both — they are self-declared move-with-every-bump pins, not incidental breakage, so the five-file diff is correct and the three-file instruction was wrong. Recorded because the citation was written from memory of a sibling plugin and survived two rounds of plan review: a plan can cite a `file:line` that does not exist and still pass, because the reviewer checks that the field is present and plausible, not that the path resolves. The cheap guard is to run `ls` on every path a plan's Acceptance names before dispatching it.

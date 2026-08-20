@@ -17,11 +17,11 @@ Versioning: [Semantic Versioning](https://semver.org/).
   misreports every branch as unmerged under this repo's squash-merge
   history, so a heuristic with that false-positive class must not gate.
   The second check reads a brief's `## Queue relation` declaration and
-  gates: exit 0 when the declaration resolves (including a named entry
-  absent from `## Now`, which is treated as unresolved), exit 1 when the
+  gates: exit 0 when the declaration resolves, exit 1 when the
   path is unreadable, exit 2 — STOP-and-ask, printing the relayable
-  question on stderr — when the line is missing, malformed, or
-  `pending`. Both checks run in one invocation, so the first check's
+  question on stderr — when the line is missing, malformed, `pending`,
+  or names an entry absent from `## Now`. Both checks run in one
+  invocation, so the first check's
   findings surface on every run, including exit 2, while the reader is
   already stopped rather than in a report they can scroll past.
 - **`writing-plans/SKILL.md`** wires the gate in as an unconditional

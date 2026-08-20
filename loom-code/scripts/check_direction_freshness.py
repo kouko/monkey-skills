@@ -24,7 +24,12 @@ the old one.
 
 This check REPORTS; it never blocks or raises for an unhealthy repo
 state — a missing `DIRECTION.md`, or a `DIRECTION.md` with no
-`## Now` section, yields an empty list rather than an exception.
+`## Now` section, yields an empty list rather than an exception. The
+same holds when the git plumbing itself fails (`--repo-root` pointed
+at a non-git directory, or any other git-inspection failure):
+`find_unlanded_direction_changes` catches it, announces the
+degradation on stderr, and still returns a list rather than raising —
+see the containment comment at that function's git calls.
 
 # grounding: four git plumbing surfaces used throughout this module —
 # `diff --name-only`, `merge-base`, `for-each-ref --format=%(refname:short)`,
@@ -52,7 +57,7 @@ import argparse
 import re
 import subprocess
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 _NOW_HEADING_RE = re.compile(r"^##\s+Now\s*$")
@@ -121,9 +126,30 @@ def find_unlanded_direction_changes(
     if not governing:
         return []
 
-    branches = _git_lines(
-        repo_root, "for-each-ref", "--format=%(refname:short)", "refs/heads/"
-    )
+    # Containment boundary: this whole advisory body is wrapped here,
+    # at the call site inside `find_unlanded_direction_changes` itself
+    # — not inside `_git_lines` — because the function's own docstring
+    # and the module docstring both promise "REPORTS; never gates" as
+    # a property of this function's return value, not of any one git
+    # plumbing call. `repo_root` not being a git work tree (`git
+    # for-each-ref` exit 128), and `git` itself being unavailable
+    # (`FileNotFoundError`) are the two reachable failure modes; either
+    # must degrade to an empty/partial advisory, never propagate. A
+    # swallowed failure is still announced on stderr (Rule 12,
+    # fail-loud) so an empty advisory reads as "could not inspect",
+    # never as "nothing unlanded".
+    try:
+        branches = _git_lines(
+            repo_root, "for-each-ref", "--format=%(refname:short)", "refs/heads/"
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+        print(
+            f"Warning: unlanded-direction-change advisory is incomplete — "
+            f"could not list branches under {repo_root} via git ({exc}).",
+            file=sys.stderr,
+        )
+        return []
+
     findings: list[str] = []
     for branch in branches:
         if branch == base_branch:
@@ -135,23 +161,29 @@ def find_unlanded_direction_changes(
                 capture_output=True,
                 text=True,
             ).stdout.strip()
-        except subprocess.CalledProcessError:
+            branch_changed = set(
+                _git_lines(repo_root, "diff", "--name-only", f"{merge_base}..{branch}")
+            )
+            still_differs = set(
+                _git_lines(repo_root, "diff", "--name-only", base_branch, branch)
+            )
+            unlanded = branch_changed & still_differs & governing
+            if not unlanded:
+                continue
+            tip_date = subprocess.run(
+                ["git", "-C", str(repo_root), "log", "-1", "--format=%as", branch],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+            print(
+                f"Warning: unlanded-direction-change advisory is incomplete — "
+                f"could not inspect branch '{branch}' under {repo_root} via "
+                f"git ({exc}).",
+                file=sys.stderr,
+            )
             continue
-        branch_changed = set(
-            _git_lines(repo_root, "diff", "--name-only", f"{merge_base}..{branch}")
-        )
-        still_differs = set(
-            _git_lines(repo_root, "diff", "--name-only", base_branch, branch)
-        )
-        unlanded = branch_changed & still_differs & governing
-        if not unlanded:
-            continue
-        tip_date = subprocess.run(
-            ["git", "-C", str(repo_root), "log", "-1", "--format=%as", branch],
-            check=True,
-            capture_output=True,
-            text=True,
-        ).stdout.strip()
         for path in sorted(unlanded):
             findings.append(f"{branch} — {path} (tip {tip_date})")
     return findings
