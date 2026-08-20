@@ -11,6 +11,9 @@ skeleton from the templates shipped beside this script:
                                   --direction-check diffs the whole section
                                   against regenerated output, so any drift
                                   in that line is exit 1
+  docs/loom/PURPOSE.md          — purpose skeleton (templates/PURPOSE.md);
+                                  a prompt for the author to fill in, never
+                                  pre-filled prose — see its own file header
   docs/loom/plans/.gitkeep      — git cannot track an empty directory;
   docs/loom/specs/.gitkeep        without the keep-file the scaffolded dirs
                                   would silently vanish from the target
@@ -123,6 +126,7 @@ def main(argv: list[str]) -> int:
 
     store = target / "docs" / "loom" / "backlog"
     direction = target / "docs" / "loom" / "DIRECTION.md"
+    purpose = target / "docs" / "loom" / "PURPOSE.md"
     if store.is_dir():
         print(
             f"loom-init: refusing — {store} already exists; this repo has "
@@ -140,6 +144,12 @@ def main(argv: list[str]) -> int:
         print(
             f"loom-init: refusing — {direction} already exists; its themes "
             "are human-owned and loom-init never overwrites them"
+        )
+        return 1
+    if purpose.exists():
+        print(
+            f"loom-init: refusing — {purpose} already exists; its content "
+            "is human-owned and loom-init never overwrites it"
         )
         return 1
     # Whole-branch review 🟡 (2026-08-10): precheck EVERY path the
@@ -163,6 +173,7 @@ def main(argv: list[str]) -> int:
         (keep_dir / ".gitkeep").touch()
     _instantiate(TEMPLATES_DIR / "backlog-README.md", store / "README.md", stamp)
     _instantiate(TEMPLATES_DIR / "DIRECTION.md", direction, stamp)
+    _instantiate(TEMPLATES_DIR / "PURPOSE.md", purpose, stamp)
 
     if _self_verify(target) != 0:
         return 1

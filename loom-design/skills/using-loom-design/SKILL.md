@@ -118,11 +118,11 @@ The constitution station. This station does intake + routing, then hands off;
 it does not write the constitution itself.
 
 **Hand off.** Once intake confirms this is the right station, hand off to
-`product-principles` — the member skill that elicits the idea, drafts the
-`## North Star`, and derives the 3–7 falsifiable principles into
-`PRINCIPLES.md`. If `docs/loom/PRINCIPLES.md` already exists in the target
-repo, confirm with the user whether this station's work is already done before
-proceeding.
+`product-principles` — the member skill that elicits the idea, reads
+`docs/loom/PURPOSE.md` as background context when present, and derives the
+3–7 falsifiable principles into `PRINCIPLES.md`. If `docs/loom/PRINCIPLES.md`
+already exists in the target repo, confirm with the user whether this
+station's work is already done before proceeding.
 
 **Unarticulated problem/users.** If the problem/users are unarticulated (no
 evidence for who needs what), route to `§Discovery station` first; resume here
@@ -140,8 +140,9 @@ modality (GUI/TUI/CLI). Three load-bearing rules:
    flows are expressed.
 2. **PRINCIPLES.md governs.** Read the product's `PRINCIPLES.md` (produced by
    `product-principles`) as the **governing context**. Every design decision is
-   checked against it — the design must not contradict the North Star or any
-   non-negotiable principle. If `PRINCIPLES.md` is absent, surface that gap;
+   checked against it — the design must not contradict the product's purpose
+   (`docs/loom/PURPOSE.md`, when present) or any non-negotiable principle.
+   If `PRINCIPLES.md` is absent, surface that gap;
    the principles layer comes first.
 3. **Two generate skills, one per concern.** Route to `design-system` for the
    static design-system artifact and `interaction-flows` for the dynamic

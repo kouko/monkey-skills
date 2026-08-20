@@ -5,7 +5,7 @@
 > is kept as the historical record of the standalone plugin, not as current
 > documentation. See `README.md` for the live plugin.
 
-The **cross-cutting constitution** layer that sits *above* the whole spec→code pipeline: turn a sparse product idea into a `PRINCIPLES.md` — a project constitution whose North Star and non-negotiable principles, organized by **jurisdiction** (Product / Design / Engineering), **govern every downstream station** (interface-design, spec, code).
+The **cross-cutting constitution** layer that sits *above* the whole spec→code pipeline: turn a sparse product idea into a `PRINCIPLES.md` — a project constitution whose non-negotiable principles, organized by **jurisdiction** (Product / Design / Engineering), **govern every downstream station** (interface-design, spec, code).
 
 ```
                     PRINCIPLES.md  (this toolkit — the constitution)
@@ -23,8 +23,7 @@ Agent-portable and key-free: the skill drives the host agent's own LLM — no ex
 Two skills:
 
 - **`using-loom-product-principles`** — the family entry: intake + routing. It runs the §Intake checks (upstream check against the family-reception hook (now loom-code's) on-ramp criteria, plus a peer-station redirect when the ask belongs to another loom family), then hands off to `product-principles`. It does not author the constitution itself.
-- **`product-principles`** — takes a sparse product idea and emits a single **`PRINCIPLES.md`** organized by jurisdiction:
-  - **`## North Star`** — the product's original goal plus a concrete definition of "success".
+- **`product-principles`** — takes a sparse product idea and emits a single **`PRINCIPLES.md`** organized by jurisdiction (why the product exists lives in a separate `docs/loom/PURPOSE.md` artifact, not here):
   - **`## Product Principles`** (required) — **3–7 non-negotiable principles, each carrying a falsifiable check.** Platitudes are rejected at generation: ❌ "be delightful" → ✅ "primary task completes in ≤3 steps", "never block the primary flow with a modal", "offline-readable". The falsifiable check is what makes a principle usable as a downstream gate.
   - **`## Design Principles`** and **`## Engineering Principles`** (optional, 1–7 each, never empty if present) — the same falsifiable-check discipline, scoped to design and engineering trade-offs when the product warrants them.
 
@@ -46,7 +45,7 @@ flowchart TD
 
 The gap it closes is **cross-cutting**: today product principles live in your head or in scattered prose, and there is nothing concrete to **check implementations against**. Because the constitution is project-level — not design-craft — it applies to **headless / CLI / TUI / GUI** alike. Folding it into a visual-design step would mis-scope it and make it dead weight on non-UI products; hence its own plugin.
 
-The required `## Product Principles` jurisdiction is **product design principles + target user**, not a full market/business-model/strategy document. North Star is a lightweight decision filter, not a business plan. The optional `## Design Principles` and `## Engineering Principles` jurisdictions extend the same falsifiable-check discipline to design and engineering trade-offs, elicited only when the product warrants them.
+The required `## Product Principles` jurisdiction is **product design principles + target user**, not a full market/business-model/strategy document. Why the product exists lives in a separate `docs/loom/PURPOSE.md` artifact, not in `PRINCIPLES.md`. The optional `## Design Principles` and `## Engineering Principles` jurisdictions extend the same falsifiable-check discipline to design and engineering trade-offs, elicited only when the product warrants them.
 
 ## Output format
 
@@ -54,7 +53,6 @@ A single project-level file written into the **consumer project** under the esta
 
 ```
 docs/loom/PRINCIPLES.md
-  ## North Star                # original goal + concrete definition of success
   ## Product Principles        # required — 3–7 non-negotiable principles, each with a falsifiable check
   ## Design Principles         # optional — 1–7, never empty if present
   ## Engineering Principles    # optional — 1–7, never empty if present

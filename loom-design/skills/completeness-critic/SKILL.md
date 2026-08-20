@@ -226,8 +226,9 @@ five). The sixth is **conditional** — it runs only when the consumer project h
    not object-layer — a state grid never surfaces them. Persona: 3am on-call ops.
 
 6. **Principles-entailed omission — conditional (only when `PRINCIPLES.md` present).**
-   Read the consumer's `docs/loom/PRINCIPLES.md` (North Star +
-   the falsifiable `— check:` clauses) as this lens's input view. Ask the **omission**
+   Read the consumer's `docs/loom/PRINCIPLES.md` (the falsifiable `— check:`
+   clauses) and `docs/loom/PURPOSE.md` (the product's Why + Done-when, when
+   present) as this lens's input view. Ask the **omission**
    question, not the violation question: *"what behavior that a principle ENTAILS did
    the spec silently OMIT?"* — e.g. a principle "must work offline" → hunt where the
    draft drops offline / sync-conflict handling; "介面極簡 for pro users" → hunt the

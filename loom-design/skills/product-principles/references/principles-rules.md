@@ -52,39 +52,15 @@ clause and what turf that clause covers:
 
 ---
 
-## Required section — `## North Star`
+## Why the product exists — `PURPOSE.md`, not this file
 
-The `## North Star` section states **two** things:
-
-1. The product's **original goal** — the one-sentence reason the product exists.
-2. A **concrete, checkable definition of "success"** — a condition you could
-   actually evaluate against a shipped product, not an aspiration.
-
-North Star is the product goal used as a **decision filter**. Keep it
-lightweight — it is *not* a market/business-model/strategy document (that turf
-belongs to a `PRODUCT-SPEC.md`).
-
-**Format:**
-
-```markdown
-## North Star
-
-**Goal:** <one sentence — why this product exists>
-
-**Success:** <a concrete, checkable condition that means the goal is met>
-```
-
-**Synthetic example:**
-
-```markdown
-## North Star
-
-**Goal:** Let a solo operator capture a structured note in under five seconds
-without leaving the keyboard.
-
-**Success:** A first-time user completes capture-to-saved in ≤5s measured on the
-happy-path flow, keyboard-only, with zero mouse events.
-```
+`PRINCIPLES.md` no longer states the product's original goal or a
+top-level definition of "success" — that turf now belongs to a separate,
+project-level artifact, **`docs/loom/PURPOSE.md`** (`**Why:**` one
+sentence + `**Done when:**` one checkable condition). This file is a
+**rules artifact**: it keeps only product / design / engineering
+principles. If you were looking for where to state why the product
+exists, that is `PURPOSE.md`, not a section here.
 
 ---
 
@@ -383,30 +359,27 @@ falsifiable condition.
 
 `scripts/validate_principles_output.py` enforces, at minimum:
 
-1. A `## North Star` section exists and is **non-empty** — at least one
-   non-whitespace, non-heading line of body text appears under the heading
-   before the next `##`.
-2. A `## Product Principles` section exists with **3–7** principle **entries**,
+1. A `## Product Principles` section exists with **3–7** principle **entries**,
    where an entry is a **top-level ordered-list item** (a line matching
    `^\d+\.\s` — i.e. `1.`, `2.`, …). Unordered bullets, nested items, and the
    ✅/❌ example lines are NOT counted as entries.
-3. **Every** principle entry — in `## Product Principles` and, when present, in
+2. **Every** principle entry — in `## Product Principles` and, when present, in
    `## Design Principles` / `## Engineering Principles` — carries a falsifiable
    check. The check marker is the **literal token `— check:`** — an em dash
    (U+2014 `—`), a single space, the lowercase word `check`, then a colon —
    appearing **on the same line as the entry**. An entry without that exact
    marker fails validation.
-4. A legacy `## Principles` heading (the pre-rename name) is detected as a
+3. A legacy `## Principles` heading (the pre-rename name) is detected as a
    whole header line and fails validation with a **targeted migration
    message** naming `## Product Principles` as the rename target. A
    `## Product Principles` heading never triggers this check — the match is on
    the whole heading line, not a substring.
-5. `## Design Principles` and `## Engineering Principles` are **optional**:
+4. `## Design Principles` and `## Engineering Principles` are **optional**:
    absent is valid; present requires **1–7** entries following the same
-   ordered-list + `— check:` rules as `## Product Principles` (rule 2/3 above,
+   ordered-list + `— check:` rules as `## Product Principles` (rule 1/2 above,
    with the floor lowered to 1). A present-but-empty section (0 entries) is
    invalid — it must be omitted, not left empty.
-6. `## Anchors` is **optional**: absent is valid; present requires a
+5. `## Anchors` is **optional**: absent is valid; present requires a
    markdown table detected as: a header row (a `|`-delimited line), a GFM
    separator row immediately below it matching `^\|[\s:-]+\|` (pipes,
    whitespace, colons, and hyphens only), and **at least 1** data row after
@@ -414,13 +387,13 @@ falsifiable condition.
    the separator whose version/edition cell (the second pipe-delimited
    cell) is non-empty. A present-but-empty table (header + separator, zero
    data rows) is invalid — it must be omitted, not left with no rows.
-7. `## Deviation Ledger` is **optional**: absent is valid; present requires
+6. `## Deviation Ledger` is **optional**: absent is valid; present requires
    **at least 1** ordered-list entry (a line matching `^\d+\.\s`), and
    **every** entry carries both literal markers — `— reason:` and
    `— principle:` (em dash U+2014, single space, lowercase word, colon) —
    bound to that same entry. A present-but-empty section (0 entries) is
    invalid — it must be omitted, not left empty.
-8. `## Open Questions` is **optional**: absent is valid; present requires
+7. `## Open Questions` is **optional**: absent is valid; present requires
    **at least 1** ordered-list entry (a line matching `^\d+\.\s`), and
    **every** entry carries the literal `— re-trigger:` marker (em dash
    U+2014, single space, the lowercase word `re-trigger`, colon) on the

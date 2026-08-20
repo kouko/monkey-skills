@@ -134,8 +134,16 @@ def test_description_states_principles_md_output():
     front = _frontmatter()
     assert "PRINCIPLES.md" in front, \
         "description must state it produces a PRINCIPLES.md"
-    low = front.lower()
-    assert "north star" in low, "description must mention the North Star"
+
+
+def test_description_drops_north_star_term():
+    """North Star moved out of the PRINCIPLES.md contract — the
+    description must no longer advertise it; 'why the product exists' is
+    now `docs/loom/PURPOSE.md`'s job, a different artifact this skill does
+    not author."""
+    low = _frontmatter().lower()
+    assert "north star" not in low, \
+        "description must drop the retired 'North Star' term"
 
 
 # --- principles-first body procedure ----------------------------------------
@@ -152,12 +160,20 @@ def test_body_references_validator_by_relative_path():
         "body must reference the validator by relative path"
 
 
-def test_body_has_north_star_and_principles_sections():
+def test_body_has_principles_section_and_no_north_star():
+    """North Star moved OUT of the PRINCIPLES.md contract — the body must
+    no longer instruct writing a '## North Star' section, and must point a
+    reader who was told to write one at PURPOSE.md instead (a dangling
+    instruction gap is its own defect)."""
     text = _text()
-    assert "## North Star" in text, \
-        "body must instruct writing a '## North Star' section"
     assert "## Product Principles" in text, \
         "body must instruct writing a '## Product Principles' section"
+    assert "## North Star" not in text, \
+        "body must NOT instruct writing a '## North Star' section"
+    assert "north star" not in text.lower(), \
+        "body must drop the 'North Star' term entirely"
+    assert "PURPOSE.md" in text, \
+        "body must point readers at PURPOSE.md where North Star used to be"
 
 
 def test_body_mandates_falsifiable_check_marker():
@@ -636,18 +652,21 @@ def test_headless_seed_item_granularity_is_decidable():
         "a bullet-granularity walk must be named as the violation it is"
 
 
-def test_headless_north_star_bound_facts_land_in_north_star():
-    """R2 🟡2b: the landing spots did not cover North-Star-bound seed facts
-    (the idea / the target user / the success condition) — the `## North
-    Star` section is their legitimate landing spot."""
+def test_headless_idea_and_success_condition_route_to_purpose_md():
+    """North Star retirement: the product's original idea and success
+    condition are no longer a PRINCIPLES.md landing spot at all — they are
+    `docs/loom/PURPOSE.md`'s jurisdiction, named out-of-jurisdiction during
+    the seed walk like the §Boundary market/strategy content. The target
+    user is UNCHANGED: it still lands via a carrying Product/Design
+    Principles entry, not out-of-jurisdiction."""
     section = _section(_text(), "## Headless / seeded mode")
-    assert "## North Star" in section, \
-        "§Headless must name the ## North Star section as a landing spot"
+    assert "## North Star" not in section, \
+        "§Headless must not name a retired '## North Star' landing spot"
     low = section.lower()
-    assert "north-star-bound" in low, \
-        "the North Star landing must be scoped to North-Star-bound facts"
+    assert "purpose.md" in low, \
+        "the idea/success-condition facts must route to PURPOSE.md"
     assert "target user" in low, \
-        "the North-Star-bound facts must name the target user"
+        "the target user must still be named as in-jurisdiction"
 
 
 def test_headless_out_of_jurisdiction_noted_not_silently_skipped():

@@ -2,11 +2,11 @@
 name: product-principles
 # soft-lint 150-250 exceeded (329 rendered): retains three-jurisdiction principle-guidance triggers the corpus doesn't yet cover
 description: >-
-  Turn a sparse product idea into a PRINCIPLES.md constitution (north star +
-  falsifiable principles). Use BEFORE design/spec/build, or when asked what
-  principles should guide a product/design/engineering decision or trade-off.
-  Design/spec critique → design-critic/completeness-critic. Triggers: 產品原則 /
-  設計原則 / 工程原則 / 產品憲章 / プロダクト指針.
+  Turn a sparse product idea into a PRINCIPLES.md constitution (falsifiable
+  product/design/engineering principles). Use BEFORE design/spec/build, or
+  when asked what principles should guide a product/design/engineering
+  decision or trade-off. Design/spec critique → design-critic/completeness-
+  critic. Triggers: 產品原則 / 設計原則 / 工程原則 / 產品憲章 / プロダクト指針.
 version: 0.4.0
 ---
 
@@ -30,26 +30,27 @@ full jurisdiction table.
 ## Executor model — who does what
 
 **You (the agent running this skill) are the executor.** You supply the LLM
-reasoning (probing, canon mapping, drafting the North Star, deriving falsifiable
-principles, pushing back on platitudes). There is no external runtime and no API
-key — the method rides the host agent you are already in. The only tool is a
-stdlib validator you run at the end.
+reasoning (probing, canon mapping, deriving falsifiable principles, pushing
+back on platitudes). There is no external runtime and no API key — the method
+rides the host agent you are already in. The only tool is a stdlib validator
+you run at the end.
 
 ## Boundary — principles, not strategy
 
 This produces **product design principles + the target user**, NOT a full
 market / business-model / strategy document — that turf stays in a
-`PRODUCT-SPEC.md`. The **North Star** here is the product goal used as a
-lightweight **decision filter**, not a business plan. Stop at the constitution;
-do not run TDD, write code, or design the UI — those are downstream stations
-that *read* this file.
+`PRODUCT-SPEC.md`. Why the product exists is a separate artifact,
+**`docs/loom/PURPOSE.md`** — this skill does not author it; read it as
+background context when present. Stop at the constitution; do not run TDD,
+write code, or design the UI — those are downstream stations that *read*
+this file.
 
 **Tripwire — unanswerable grilling.** If the user cannot answer the
 problem/users probing with evidence (they would be guessing at who
-needs what), do not dead-end into a fabricated North Star: route to
+needs what), do not dead-end into fabricated principles: route to
 `using-loom-design` (user-insights) for evidence-backed needs mapping
 first, then resume this skill using its value-commitment output as the
-seed for the North Star and Product Principles.
+seed for the Product Principles.
 
 ## Procedure — construction flow (user-stated-first, canon-anchored)
 
@@ -68,9 +69,9 @@ user states direction (their own words)
 ### Step 1 — Read the authoring contract
 
 Read **`references/principles-rules.md`** before writing anything. It is the
-authoring contract: it pins the exact section formats (`## North Star`,
-`## Product Principles`, the optional jurisdictions, `## Anchors`,
-`## Deviation Ledger`, `## Open Questions`), the **load-bearing per-principle `— check:`
+authoring contract: it pins the exact section formats (`## Product Principles`,
+the optional jurisdictions, `## Anchors`, `## Deviation Ledger`,
+`## Open Questions`), the **load-bearing per-principle `— check:`
 falsifiable-marker rule** (an em dash `—`, a single space, lowercase `check`,
 a colon — on the same line as the principle), and the synthetic ✅/❌ examples.
 The emitted `PRINCIPLES.md` **MUST** follow that contract exactly — the
@@ -131,7 +132,7 @@ the audit is sanctioned.
   popularity head, re-check.
 - **Tone & manner — the primary visual anchor (do this FIRST).** Before any
   visual canon **candidate round**, derive **3-5 tone & manner adjectives**
-  from the product's **values** — the North Star + the **Product Principles**
+  from the product's **values** — the **Product Principles**
   (e.g. *calm, precise, unhurried*). These adjectives — **not** a movement
   name — are the **primary visual anchor**, so they MUST land as their own
   **version-pinned `## Anchors` row** (the same Anchors machinery as any
@@ -186,10 +187,10 @@ framework is *some* principles entries, never all of them.
 
 ### Step 5 — Write the sections
 
-Write per the contract in `references/principles-rules.md`:
+Write per the contract in `references/principles-rules.md` (why the product
+exists lives in a separate `docs/loom/PURPOSE.md` artifact — not written by
+this step):
 
-- **`## North Star`** — **Goal:** one sentence why the product exists +
-  **Success:** a concrete, checkable condition (not an aspiration).
 - **`## Product Principles`** — **3–7 non-negotiable principles**, a
   top-level ordered list, each carrying the literal `— check:` falsifiable
   marker on the same line. A good check is **observable**, **binary or
@@ -294,11 +295,11 @@ to its **"delegate to agent"** answer:
   intent the caller supplied; a **run-input seed** may pre-supply answers
   to any question — a seeded answer counts as user-stated.
 - **Thin seed → refuse loudly.** The no-fabrication rule is unconditional
-  here too: if the seed is too thin to ground a North Star (you would be
-  guessing at who needs what), return a **BLOCKED**-style structured
+  here too: if the seed is too thin to ground the product's principles (you
+  would be guessing at who needs what), return a **BLOCKED**-style structured
   refusal to the conductor — state what the seed lacks and name
   `using-loom-design` (user-insights) as the human-side remedy. Never
-  fabricate a North Star to keep the run going.
+  fabricate a principle to keep the run going.
 - **Inventory authoring — BEFORE drafting.** Before writing any
   `PRINCIPLES.md` section, extract every seed-named entity (canon,
   guideline, model, framework, language, library, format, technology,
@@ -317,23 +318,25 @@ to its **"delegate to agent"** answer:
   of the interactive coverage self-check: EVERY seed item must land in the
   artifact in at least one of a carrying principle, an `## Anchors` row, an
   Open Question (with a re-trigger condition, formatted per the
-  `## Open Questions` contract in `references/principles-rules.md`), an
-  explicit `## Deviation Ledger` entry, or — for North-Star-bound facts
-  (the idea, the target user, the success condition) — the `## North Star`
-  section. A seed **item** is each individual stance, named canon,
-  tech-stack choice, or deferred marker, even when several of them share
-  one bullet or line of the seed — a walk at bullet granularity that drops
-  stances packed inside one bullet violates the invariant. Seed content
-  outside this skill's jurisdiction (per §Boundary — market /
-  business-model / strategy turf) is explicitly noted as
-  **out-of-jurisdiction** during the seed walk — not silently skipped, and
-  not laundered into a spurious Open Question. A seed-named canon,
-  tradition, or tech-stack choice is never out-of-jurisdiction — that
-  landing applies **only to the §Boundary-listed categories** (market /
-  business-model / strategy-document content); classifying a named canon
-  or stack choice as "downstream spec" or "TECH-SPEC turf" during the seed
-  walk is a **violation** of this invariant. Name it as such (the flow's
-  own tech-stack slot proves stack choices are in-jurisdiction). A seed stance marked
+  `## Open Questions` contract in `references/principles-rules.md`), or an
+  explicit `## Deviation Ledger` entry. A seed **item** is each individual
+  stance, named canon, tech-stack choice, or deferred marker, even when
+  several of them share one bullet or line of the seed — a walk at
+  bullet granularity that drops stances packed inside one bullet
+  violates the invariant. Seed content outside this skill's jurisdiction (per §Boundary
+  — market / business-model / strategy turf, plus the product's original
+  idea and success condition, now `docs/loom/PURPOSE.md`'s jurisdiction) is
+  explicitly noted as **out-of-jurisdiction** during the seed walk — not
+  silently skipped, and not laundered into a spurious Open Question. The
+  target user is NOT out-of-jurisdiction — it still lands via a carrying
+  `## Product Principles` (or `## Design Principles`) entry. A seed-named
+  canon, tradition, or tech-stack choice is never out-of-jurisdiction
+  either — that landing applies **only to the §Boundary-listed categories**
+  plus the PURPOSE.md-bound idea/success pair named above; classifying a
+  named canon or stack choice as "downstream spec" or "TECH-SPEC turf"
+  during the seed walk is a **violation** of this invariant. Name it as
+  such (the flow's own tech-stack slot proves stack choices are
+  in-jurisdiction). A seed stance marked
   undecidable/deferred (e.g. 無法判斷) MUST become an Open Question with a
   re-trigger — never dropped; every seed-named canon or tech-stack choice
   MUST land as a version-pinned `## Anchors` row; every seed stance MUST

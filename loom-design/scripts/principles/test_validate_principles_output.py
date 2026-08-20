@@ -3,25 +3,25 @@ load-bearing falsifiable-check rule (Task 5).
 
 The validator checks a single PRINCIPLES.md file against the pinned contract in
 `skills/product-principles/references/principles-rules.md`
-("Validator contract (summary)" section). Valid iff:
-  1. A `## North Star` section exists and is non-empty (>=1 non-whitespace,
-     non-heading body line before the next `##`).
-  2. A `## Product Principles` section exists with 3-7 entries, where an entry is a
+("Validator contract (summary)" section). `## North Star` is NOT part of
+this contract — that "why the product exists" turf moved to a separate
+`docs/loom/PURPOSE.md` artifact (a different pipeline). Valid iff:
+  1. A `## Product Principles` section exists with 3-7 entries, where an entry is a
      top-level ordered-list item (line matching `^\\d+\\.\\s`). Unordered
      bullets / nested items / the ✅❌ example lines do NOT count.
-  3. Every principle entry carries the literal `— check:` marker (em dash
+  2. Every principle entry carries the literal `— check:` marker (em dash
      U+2014, single space, lowercase `check`, colon) on the same line.
-  4. `## Design Principles` / `## Engineering Principles` are optional:
+  3. `## Design Principles` / `## Engineering Principles` are optional:
      absent valid; present = 1-7 entries, same marker rules; empty invalid.
-  5. No legacy `## Principles` heading (whole-line) — invalid with a
+  4. No legacy `## Principles` heading (whole-line) — invalid with a
      migration message naming `## Product Principles`.
-  6. `## Anchors` is optional: absent valid; present = well-formed table
+  5. `## Anchors` is optional: absent valid; present = well-formed table
      (header row + GFM separator row + >=1 data row with a non-empty
      version/edition cell); present-but-empty table invalid.
-  7. `## Deviation Ledger` is optional: absent valid; present = >=1
+  6. `## Deviation Ledger` is optional: absent valid; present = >=1
      ordered-list entry, every entry carrying both `— reason:` and
      `— principle:` markers on the same line; present-but-empty invalid.
-  8. `## Open Questions` is optional: absent valid; present = >=1
+  7. `## Open Questions` is optional: absent valid; present = >=1
      ordered-list entry, every entry carrying the `— re-trigger:` marker
      on the same line; present-but-empty invalid.
 
@@ -50,18 +50,6 @@ EM = "—"  # em dash U+2014
 
 # --- fixture builders (inline; no fixtures/ subdir) -------------------------
 
-def _north_star() -> str:
-    return (
-        "## North Star\n"
-        "\n"
-        "**Goal:** Let a solo operator capture a structured note in under five "
-        "seconds without leaving the keyboard.\n"
-        "\n"
-        "**Success:** A first-time user completes capture-to-saved in <=5s "
-        "measured on the happy-path flow, keyboard-only, with zero mouse events.\n"
-    )
-
-
 def _principles(n: int, *, marker: str = f" {EM} check:") -> str:
     """`## Product Principles` with n ordered-list entries, each carrying
     `marker`."""
@@ -77,13 +65,11 @@ def _principles(n: int, *, marker: str = f" {EM} check:") -> str:
 def _valid_doc(n: int = 3) -> str:
     return (
         "# PRINCIPLES\n\n"
-        + _north_star()
-        + "\n"
         + _principles(n)
     )
 
 
-# --- North Star section checks ---------------------------------------------
+# --- North Star retirement --------------------------------------------------
 
 def test_valid_doc_passes(tmp_path):
     p = tmp_path / "PRINCIPLES.md"
@@ -93,17 +79,22 @@ def test_valid_doc_passes(tmp_path):
     assert problems == []
 
 
-def test_missing_north_star_flagged(tmp_path):
+def test_no_north_star_section_validates_clean(tmp_path):
+    """`## North Star` is no longer part of the contract at all — a
+    PRINCIPLES.md with none must validate clean, and no problem message may
+    mention it."""
     doc = "# PRINCIPLES\n\n" + _principles(3)
     p = tmp_path / "PRINCIPLES.md"
     p.write_text(doc, encoding="utf-8")
     ok, problems = validate(p)
-    assert not ok
-    assert any("North Star" in m for m in problems), problems
+    assert ok, f"a doc with no '## North Star' section should pass, got: {problems}"
+    assert not any("North Star" in m for m in problems), problems
 
 
-def test_empty_north_star_flagged(tmp_path):
-    # Heading present but no body line before the next `##`.
+def test_a_leftover_north_star_section_is_harmlessly_ignored(tmp_path):
+    """The validator no longer checks `## North Star` at all — a document
+    that still carries the (now-unenforced) heading validates the same as
+    one without it; presence is neither required nor penalized."""
     doc = (
         "# PRINCIPLES\n\n"
         "## North Star\n"
@@ -113,14 +104,13 @@ def test_empty_north_star_flagged(tmp_path):
     p = tmp_path / "PRINCIPLES.md"
     p.write_text(doc, encoding="utf-8")
     ok, problems = validate(p)
-    assert not ok
-    assert any("North Star" in m for m in problems), problems
+    assert ok, f"a leftover '## North Star' section must not fail validation, got: {problems}"
 
 
 # --- Principles section + count checks -------------------------------------
 
 def test_missing_principles_flagged(tmp_path):
-    doc = "# PRINCIPLES\n\n" + _north_star()
+    doc = "# PRINCIPLES\n\n"
     p = tmp_path / "PRINCIPLES.md"
     p.write_text(doc, encoding="utf-8")
     ok, problems = validate(p)
@@ -155,7 +145,6 @@ def test_unordered_bullets_do_not_count_as_entries(tmp_path):
     # Bullets and nested items are NOT ordered-list entries -> count 0 -> too low.
     doc = (
         "# PRINCIPLES\n\n"
-        + _north_star()
         + "\n## Product Principles\n\n"
         f"- A bullet statement {EM} check: not an ordered entry\n"
         f"   1. A nested ordered item {EM} check: indented, not top-level\n"
@@ -171,7 +160,6 @@ def test_example_lines_do_not_count_as_entries(tmp_path):
     # The ✅/❌ example bullet lines must not be counted as principle entries.
     doc = (
         "# PRINCIPLES\n\n"
-        + _north_star()
         + "\n## Product Principles\n\n"
         f"- ✅ `Primary task completes in <=3 steps {EM} check: count steps`\n"
         "- ❌ `Be delightful` — no check.\n"
@@ -189,7 +177,6 @@ def test_principle_without_check_flagged(tmp_path):
     # One entry uses a hyphen instead of the em-dash `— check:` marker.
     doc = (
         "# PRINCIPLES\n\n"
-        + _north_star()
         + "\n## Product Principles\n\n"
         f"1. First principle{EM} check: testable condition in the flow.\n"
         f"2. Second principle{EM} check: another testable condition.\n"
@@ -206,7 +193,6 @@ def test_hyphen_marker_does_not_satisfy(tmp_path):
     # Every entry uses `-- check:` (double hyphen) — none satisfies the marker.
     doc = (
         "# PRINCIPLES\n\n"
-        + _north_star()
         + "\n## Product Principles\n\n"
         "1. First principle -- check: condition one.\n"
         "2. Second principle -- check: condition two.\n"
@@ -223,7 +209,6 @@ def test_wrong_case_check_does_not_satisfy(tmp_path):
     # `— Check:` (capital C) must NOT satisfy the lowercase-`check` marker.
     doc = (
         "# PRINCIPLES\n\n"
-        + _north_star()
         + "\n## Product Principles\n\n"
         f"1. First principle{EM} Check: capital C does not satisfy.\n"
         f"2. Second principle{EM} check: lowercase ok here.\n"
@@ -241,7 +226,6 @@ def test_accepts_product_principles_heading(tmp_path):
     # with the same 3-7-entries + marker rules as the legacy `## Principles`.
     doc = (
         "# PRINCIPLES\n\n"
-        + _north_star()
         + "\n## Product Principles\n\n"
         f"1. First principle{EM} check: testable condition one.\n"
         f"2. Second principle{EM} check: testable condition two.\n"
@@ -263,7 +247,6 @@ def test_legacy_heading_gets_migration_message(tmp_path):
     # the migration message names `## Product Principles` as the rename target.
     doc = (
         "# PRINCIPLES\n\n"
-        + _north_star()
         + "\n## Principles\n\n"
         f"1. First principle{EM} check: testable condition one.\n"
         f"2. Second principle{EM} check: testable condition two.\n"
@@ -391,7 +374,7 @@ def test_optional_section_seven_entries_marked_is_ok(tmp_path):
 
 
 def test_all_three_sections_combined_validates_ok(tmp_path):
-    # North Star + Product Principles + both optional sections together.
+    # Product Principles + both optional sections together.
     doc = (
         _valid_doc(3)
         + "\n" + _optional_section("## Design Principles", 2)
@@ -740,7 +723,7 @@ def test_evidence_needed_invented_value_flagged(tmp_path):
 
 def test_assumption_marker_with_reason_passes(tmp_path):
     doc = (
-        "# PRINCIPLES\n\n" + _north_star() + "\n## Product Principles\n\n"
+        "# PRINCIPLES\n\n## Product Principles\n\n"
         f"1. First principle{EM} check: testable condition{EM} assumption: "
         f"industry churn benchmark unavailable, used an analogous vertical.\n"
         f"2. Second principle{EM} check: testable condition two.\n"
@@ -757,7 +740,7 @@ def test_assumption_marker_empty_reason_flagged(tmp_path):
     # later reader could re-verify -- the exact evasion knowledge-triage.md
     # §Standing posture warns against.
     doc = (
-        "# PRINCIPLES\n\n" + _north_star() + "\n## Product Principles\n\n"
+        "# PRINCIPLES\n\n## Product Principles\n\n"
         f"1. First principle{EM} check: testable condition{EM} assumption:\n"
         f"2. Second principle{EM} check: testable condition two.\n"
         f"3. Third principle{EM} check: testable condition three.\n"

@@ -116,7 +116,8 @@ checks the direction file at `<store>/../DIRECTION.md` — the
 convention's fixed location — ONLY when it exists; an absent file is
 silently valid (the direction layer is opt-in per repo). Its three
 independent checks: `## Now` content matches the COMMITTED-NEXT entry
-files; `## Next`/`## Later` headings present; and no date-like token
+files; `## Now`/`## Next` headings present (`## Later` is optional —
+tolerated if present, never required); and no date-like token
 (`20\\d\\d[-/年.]` or `Q[1-4]`) anywhere OUTSIDE the generated `## Now`
 body — the charter's no-dates rule as a checked invariant. The `## Now`
 body is exempt from the date scan because entry NAMES are date-prefixed
@@ -384,12 +385,14 @@ def _check_description(display: str, frontmatter: dict[str, str]) -> list[Violat
     return []
 
 
-def _principles_path_for(store: Path) -> Path:
+def _purpose_path_for(store: Path) -> Path:
     """Where the `serves` gate looks for the north-star document: the
     store's parent directory, mirroring `_direction_path_for`'s convention
-    (docs/loom/PRINCIPLES.md beside docs/loom/backlog/). Its mere presence
-    or absence is the gate — content is never read here."""
-    return store.parent / "PRINCIPLES.md"
+    (docs/loom/PURPOSE.md beside docs/loom/backlog/). Its mere presence
+    or absence is the gate — content is never read here. PRINCIPLES.md
+    (the field's original 1fe7b2c1 target) holds design/engineering
+    principles only and is deliberately NOT probed here."""
+    return store.parent / "PURPOSE.md"
 
 
 _SERVES_UNRELATED_RE = re.compile(r"^unrelated\s*—\s*\S.*$")
@@ -411,12 +414,12 @@ def _check_serves(
     display: str, frontmatter: dict[str, str], status: str | None, store: Path
 ) -> list[Violation]:
     """`serves:` is required only when status is COMMITTED-NEXT AND the
-    repo has docs/loom/PRINCIPLES.md (plan Task 1 — the gate is load-
-    bearing: monkey-skills' own store has no PRINCIPLES.md by standing
-    choice and must stay unaffected)."""
+    repo has docs/loom/PURPOSE.md (plan Task 1, retargeted by Task 3 — the
+    gate is load-bearing: monkey-skills' own store has no PURPOSE.md by
+    standing choice and must stay unaffected)."""
     if status != "COMMITTED-NEXT":
         return []
-    if not _principles_path_for(store).is_file():
+    if not _purpose_path_for(store).is_file():
         return []
     serves = frontmatter.get("serves")
     if serves is None:
@@ -779,7 +782,7 @@ def find_direction_violations(direction_path: Path, store: Path) -> list[Violati
     lines = text.splitlines()
     violations: list[Violation] = []
 
-    for heading in ("## Now", "## Next", "## Later"):
+    for heading in ("## Now", "## Next"):
         if not any(line.strip() == heading for line in lines):
             violations.append(
                 Violation("direction-heading", display, f"missing required '{heading}' heading")

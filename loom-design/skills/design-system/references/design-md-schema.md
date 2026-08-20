@@ -72,7 +72,7 @@ Carry, in the **prose body** of this section (the YAML keys below stay thin):
   them verbatim into `brand_voice` and **do not re-derive** a mood of your own.
   A visual concept that fights the adjectives is a defect, not a style choice.
   **Fallback — when there is no `## Anchors` tone & manner row** (an older
-  `PRINCIPLES.md`): derive the mood from the North Star + Product Principles,
+  `PRINCIPLES.md`): derive the mood from `docs/loom/PURPOSE.md` + Product Principles,
   exactly as before — **and say so explicitly** to the user ("no tone & manner
   anchor found; mood derived here, ungoverned upstream"). **Never silently
   invent** a mood while presenting it as inherited.

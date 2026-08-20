@@ -18,6 +18,7 @@ status: <COMMITTED-NEXT | OPEN | PARKED | UPSTREAM | SHIPPED | CLOSED — SUPERS
 origin: <optional; where the item came from>
 start: <optional; the start / re-trigger condition>
 archived: <optional; required when status is archived — YYYY-MM-DD the entry was archived>
+serves: <required only when status is COMMITTED-NEXT and this repo has docs/loom/PURPOSE.md; otherwise optional>
 ---
 ```
 
@@ -25,6 +26,18 @@ archived: <optional; required when status is archived — YYYY-MM-DD the entry w
 below) and is what the generated index's compact `## Archived` line
 (`- <name> (archived <date>)`) reads its date from. It carries no
 meaning on a live entry and must not be set on one.
+
+`serves` states how the entry connects to the repo's north star. It is
+required only when BOTH hold: `status` is `COMMITTED-NEXT`, and the
+repo has a `docs/loom/PURPOSE.md` (this repo, monkey-skills, has no
+such file today). That absence is NOT a silent exemption — betting on
+a COMMITTED-NEXT entry here prompts for a `docs/loom/PURPOSE.md` to be
+written first, rather than skipping the field. Where required, the
+value must take one of a closed two-form grammar: `serves: unrelated —
+<reason>` (em dash; the reason clause after `unrelated` is mandatory —
+a bare `unrelated` with no reason is a violation), or `serves: <any
+other non-empty text>` describing the link. `scripts/backlog_index.py
+--validate` enforces both the presence rule and the grammar.
 
 Live entries — those directly under `docs/loom/backlog/`, excluding
 `archive/` — carry any status **except** `archived`. Entries under
@@ -94,7 +107,8 @@ feels:
   --direction-write` (see §Verbs' Bet flow). This is a PARALLEL ACTIVE
   SET, not a serial queue: one entry typically maps to one
   worktree/lane, and the ≤5 cap is parallel-steering capacity. See
-  `docs/loom/DIRECTION.md`'s charter header — the convention's SSOT.
+  `loom-code/hooks/family-reception.md` §DIRECTION.md charter — the
+  convention's SSOT.
 - `OPEN` — agreed to be worth doing, not yet scheduled. Anyone may
   pick it up.
 - `PARKED` — deliberately not being done for now, with the reason

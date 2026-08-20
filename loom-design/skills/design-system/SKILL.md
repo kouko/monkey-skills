@@ -81,7 +81,7 @@ regex the row (the row's formatting is not a contract).
 
 **Fallback — when there is no `## Anchors` tone & manner row** (an older
 `PRINCIPLES.md`, written before the anchor existed): derive the mood yourself
-from the North Star + Product Principles, exactly as before — **and say so
+from `docs/loom/PURPOSE.md` + Product Principles, exactly as before — **and say so
 explicitly** to the user ("no tone & manner anchor found; mood derived here,
 ungoverned upstream"). **Never silently invent** a mood while presenting it as
 inherited.

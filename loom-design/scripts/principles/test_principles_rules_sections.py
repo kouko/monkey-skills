@@ -52,8 +52,20 @@ def _section(text: str, heading: str) -> str:
 
 def test_existing_required_sections_still_present():
     text = _text()
-    for heading in ("## North Star", "## Product Principles", "## Design Principles"):
+    for heading in ("## Product Principles", "## Design Principles"):
         assert heading in text, f"existing heading {heading!r} must survive"
+
+
+def test_north_star_section_is_gone():
+    """North Star moved out of the PRINCIPLES.md contract — 'why the product
+    exists' now lives in a separate `docs/loom/PURPOSE.md` artifact. A
+    reader who was told to write a `## North Star` section must instead be
+    pointed at PURPOSE.md — a dangling instruction gap is its own defect."""
+    text = _text()
+    assert "## North Star" not in text, \
+        "'## North Star' must be fully retired from the authoring contract"
+    assert "PURPOSE.md" in text, \
+        "readers must be pointed at PURPOSE.md where North Star used to be"
 
 
 def test_existing_validator_contract_rules_1_through_5_still_present():
@@ -235,8 +247,9 @@ def test_validator_contract_documents_open_questions_rule():
         "Validator contract must document a rule (row 8) for '## Open Questions'"
     assert f"{EM} re-trigger:" in contract, \
         "the Open Questions contract rule must pin the '— re-trigger:' marker"
-    assert re.search(r"(?m)^8\.\s", contract), \
-        "the Open Questions rule must be numbered as rule 8"
+    assert re.search(r"(?m)^7\.\s", contract), \
+        "the Open Questions rule must be numbered as rule 7 (North Star's " \
+        "retirement shifted every rule down by one)"
 
 
 # --- Round-2 fix pins (reviewer findings) -----------------------------------

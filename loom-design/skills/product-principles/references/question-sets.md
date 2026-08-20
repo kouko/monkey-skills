@@ -55,7 +55,7 @@ want, anti-references you reject).
 **Tone & manner — the primary visual anchor (do this FIRST).** Before
 any visual canon **candidate round**, the visual lens derives
 **3-5 tone & manner adjectives** from the product's **values** —
-the North Star + the **Product Principles**
+the **Product Principles**
 (e.g. *calm, precise, unhurried*).
 These adjectives — **not** a movement name — are the
 **primary visual anchor**, so they MUST land as their own

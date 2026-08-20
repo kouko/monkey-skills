@@ -7,49 +7,51 @@ the load-bearing falsifiable-check marker mechanically; the *quality* of a
 check (truly falsifiable vs disguised platitude) is the generator's and
 reviewer's responsibility.
 
+`## North Star` is NOT part of this contract — "why the product exists"
+moved to a separate `docs/loom/PURPOSE.md` artifact, authored by a
+different pipeline. A leftover `## North Star` heading in a PRINCIPLES.md
+is neither required nor penalized; this validator does not look for it.
+
 Valid iff:
-  1. A `## North Star` section exists and is non-empty — at least one
-     non-whitespace, non-heading body line appears under the heading before
-     the next `##`.
-  2. A `## Product Principles` section exists with 3-7 principle ENTRIES,
+  1. A `## Product Principles` section exists with 3-7 principle ENTRIES,
      where an entry is a TOP-LEVEL ordered-list item (a line matching
      `^\\d+\\.\\s`).
      Unordered bullets, nested (indented) items, and the ✅/❌ example lines
      are NOT counted.
-  3. EVERY principle entry carries the literal `— check:` marker — an em dash
+  2. EVERY principle entry carries the literal `— check:` marker — an em dash
      (U+2014 `—`), a single space, the lowercase word `check`, then a colon —
      on the same line as the entry. A hyphen `-`/`--` or different casing does
      NOT satisfy it.
-  4. `## Design Principles` and `## Engineering Principles` are OPTIONAL:
+  3. `## Design Principles` and `## Engineering Principles` are OPTIONAL:
      absent is valid; present requires 1-7 entries with the same ordered-list
      + `— check:` rules as `## Product Principles`. A present-but-empty
      section (0 entries) is invalid — it must be omitted, not left empty.
-  5. No legacy `## Principles` heading remains — a whole-line legacy heading
+  4. No legacy `## Principles` heading remains — a whole-line legacy heading
      is invalid and yields a targeted migration message naming
      `## Product Principles` as the rename target.
-  6. `## Anchors` is OPTIONAL: absent is valid; present requires a
+  5. `## Anchors` is OPTIONAL: absent is valid; present requires a
      well-formed table — a header row, a GFM separator row
      (`^\\|[\\s:-]+\\|`) immediately below it, and at least 1 data row
      whose version/edition cell (second pipe-delimited cell) is
      non-empty. A present-but-empty table (header + separator, zero
      data rows) is invalid.
-  7. `## Deviation Ledger` is OPTIONAL: absent is valid; present requires
+  6. `## Deviation Ledger` is OPTIONAL: absent is valid; present requires
      at least 1 ordered-list entry, and every entry carries both the
      literal `— reason:` and `— principle:` markers on the same
      physical line. A present-but-empty section (0 entries) is invalid.
-  8. `## Open Questions` is OPTIONAL: absent is valid; present requires
+  7. `## Open Questions` is OPTIONAL: absent is valid; present requires
      at least 1 ordered-list entry, and every entry carries the literal
      `— re-trigger:` marker (em dash U+2014, single space, the lowercase
      word `re-trigger`, colon) on the same physical line. A
      present-but-empty section (0 entries) is invalid.
-  9. Any `evidence_needed:` tag anywhere in the file must have a value in
+  8. Any `evidence_needed:` tag anywhere in the file must have a value in
      {craft, domain-convention, project-local}; any `— assumption:` marker
      must carry a nonempty reason on the same line. Both are OPTIONAL
      (absent is valid) but malformed-when-present is not.
-  10. OPTIONAL, gated behind `--seed <path>`: `## Anchors` rows whose
-      provenance cell claims seed origin (contains "seed") must share a
-      literal substring with the seed file (see `_PROVENANCE_MIN_MATCH`).
-      No `--seed` -> this check is skipped entirely.
+  9. OPTIONAL, gated behind `--seed <path>`: `## Anchors` rows whose
+     provenance cell claims seed origin (contains "seed") must share a
+     literal substring with the seed file (see `_PROVENANCE_MIN_MATCH`).
+     No `--seed` -> this check is skipped entirely.
 
 Design: each check is a function (text: str) -> list[str] of problem messages
 (empty == ok), mirroring `loom-design/scripts/spec/validate_spec_output.py`.
@@ -70,7 +72,6 @@ import re
 import sys
 from pathlib import Path
 
-_NORTH_STAR = "## North Star"
 _PRINCIPLES = "## Product Principles"
 _LEGACY_PRINCIPLES = "## Principles"
 
@@ -160,21 +161,6 @@ def _principle_entries(body: str) -> list[str]:
 
 
 # --- checks: each returns list[str] of problems (empty == ok) ---------------
-
-def _check_north_star(text: str) -> list[str]:
-    body = _section_body(text, _NORTH_STAR)
-    if body is None:
-        return [f"missing '{_NORTH_STAR}' section "
-                f"(state the product Goal + a concrete checkable Success)"]
-    has_body = any(
-        line.strip() and not line.lstrip().startswith("#")
-        for line in body.splitlines()
-    )
-    if not has_body:
-        return [f"'{_NORTH_STAR}' section is empty "
-                f"(it MUST carry >=1 body line: Goal + Success)"]
-    return []
-
 
 def _check_principles_count(text: str) -> list[str]:
     body = _section_body(text, _PRINCIPLES)
@@ -404,7 +390,6 @@ def _check_legacy_heading(text: str) -> list[str]:
 
 
 _CHECKS = [
-    _check_north_star,
     _check_principles_count,
     _check_every_principle_has_check,
     _check_optional_jurisdiction_sections,
@@ -522,8 +507,8 @@ def validate(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Validate a product's PRINCIPLES.md against the authoring "
-                    "contract (North Star + 3-7 principles, each with a "
-                    "falsifiable '— check:' marker).")
+                    "contract (3-7 principles, each with a falsifiable "
+                    "'— check:' marker).")
     parser.add_argument("principles_md", help="path to PRINCIPLES.md")
     parser.add_argument(
         "--seed", default=None,
