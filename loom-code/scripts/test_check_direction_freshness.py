@@ -1,4 +1,5 @@
-"""Tests for check_direction_freshness.find_unlanded_direction_changes.
+"""Tests for check_direction_freshness.find_unlanded_direction_changes
+and the module's queue-relation gate + CLI.
 
 Each test builds a THROWAWAY git repo under tmp_path — never asserts
 against this repo's live branch state, which changes over time.
@@ -7,9 +8,23 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 from check_direction_freshness import find_unlanded_direction_changes
+
+SCRIPT = Path(__file__).parent / "check_direction_freshness.py"
+
+_ENV = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+
+
+def _run_cli(repo: Path, brief_path: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), str(brief_path), "--repo-root", str(repo)],
+        capture_output=True,
+        text=True,
+        env=_ENV,
+    )
 
 
 def _git(repo: Path, *args: str) -> str:
@@ -146,3 +161,164 @@ def test_missing_direction_file_yields_empty_list(tmp_path: Path) -> None:
     findings = find_unlanded_direction_changes(repo, base_branch="main")
 
     assert findings == []
+
+
+# --- CLI / queue-relation gate ------------------------------------------
+
+
+def _init_repo_no_direction(tmp_path: Path) -> Path:
+    repo = _init_repo(tmp_path)
+    (repo / "README.md").write_text("hello\n", encoding="utf-8")
+    _commit(repo, "initial", date="2026-01-01T00:00:00 +0000")
+    return repo
+
+
+def _write_brief(tmp_path: Path, queue_relation_body: str | None) -> Path:
+    brief = tmp_path / "brief.md"
+    text = "# Brief: x\n\n"
+    if queue_relation_body is not None:
+        text += f"## Queue relation\n\n{queue_relation_body}\n\n"
+    text += "## Problem\n\nsome job.\n"
+    brief.write_text(text, encoding="utf-8")
+    return brief
+
+
+def test_missing_queue_relation_exits_two_with_a_relayable_question(tmp_path: Path) -> None:
+    """No `## Queue relation` section at all: exit 2, and stderr carries
+    a question the caller can relay verbatim to the user."""
+    repo = _init_repo_no_direction(tmp_path)
+    brief = _write_brief(tmp_path, None)
+
+    result = _run_cli(repo, brief)
+
+    assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "Queue relation" in result.stderr
+    assert "?" in result.stderr
+
+
+def _write_direction_with_now_entry(repo: Path) -> None:
+    (repo / "docs" / "loom").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "loom" / "DIRECTION.md").write_text(
+        _DIRECTION_WITH_NOW_ENTRY, encoding="utf-8"
+    )
+
+
+def test_in_queue_naming_a_now_entry_exits_zero(tmp_path: Path) -> None:
+    repo = _init_repo_no_direction(tmp_path)
+    _write_direction_with_now_entry(repo)
+    brief = _write_brief(tmp_path, "in-queue: widget-revamp")
+
+    result = _run_cli(repo, brief)
+
+    assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+
+def test_unqueued_with_reason_exits_zero(tmp_path: Path) -> None:
+    repo = _init_repo_no_direction(tmp_path)
+    brief = _write_brief(tmp_path, "unqueued — not part of any queued arc")
+
+    result = _run_cli(repo, brief)
+
+    assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+
+def test_displaces_a_now_entry_exits_zero(tmp_path: Path) -> None:
+    repo = _init_repo_no_direction(tmp_path)
+    _write_direction_with_now_entry(repo)
+    brief = _write_brief(
+        tmp_path, "displaces: widget-revamp — this is more urgent"
+    )
+
+    result = _run_cli(repo, brief)
+
+    assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+
+def test_pending_exits_two(tmp_path: Path) -> None:
+    repo = _init_repo_no_direction(tmp_path)
+    brief = _write_brief(tmp_path, "pending")
+
+    result = _run_cli(repo, brief)
+
+    assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "Queue relation" in result.stderr
+
+
+def test_named_entry_absent_from_now_exits_two(tmp_path: Path) -> None:
+    """A typo'd or nonexistent entry name must not silently satisfy
+    the gate — this is the plan's explicit anti-typo validation."""
+    repo = _init_repo_no_direction(tmp_path)
+    _write_direction_with_now_entry(repo)
+    brief = _write_brief(tmp_path, "in-queue: totally-made-up-entry")
+
+    result = _run_cli(repo, brief)
+
+    assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "totally-made-up-entry" in result.stderr
+
+
+def test_hyphen_separated_now_entry_message_names_em_dash_requirement(
+    tmp_path: Path,
+) -> None:
+    """`_NOW_ENTRY_RE` requires an em dash '—' separator (the same
+    canonical form `backlog_index.py:38` documents); a plain hyphen
+    entry is silently dropped by `_parse_now_entry_names`, so
+    `widget-revamp` never lands in `now_names` even though it visibly
+    sits under '## Now'. The message must not assert the entry is
+    absent from the section (a reader can see it there) — it must
+    instead name the real cause: the parser's em-dash requirement."""
+    repo = _init_repo_no_direction(tmp_path)
+    direction_with_hyphen = (
+        "# Direction\n\n## Now\n\n"
+        "- widget-revamp - rescope the widget flow\n\n## Next\n"
+    )
+    (repo / "docs" / "loom").mkdir(parents=True, exist_ok=True)
+    (repo / "docs" / "loom" / "DIRECTION.md").write_text(
+        direction_with_hyphen, encoding="utf-8"
+    )
+    brief = _write_brief(tmp_path, "in-queue: widget-revamp")
+
+    result = _run_cli(repo, brief)
+
+    assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "is not in DIRECTION.md's" not in result.stderr, (
+        "message must not assert the entry is absent from a section "
+        f"it visibly sits in: {result.stderr}"
+    )
+    assert "em dash" in result.stderr
+    assert "widget-revamp" in result.stderr
+
+
+def test_missing_brief_file_exits_one(tmp_path: Path) -> None:
+    repo = _init_repo_no_direction(tmp_path)
+    brief = tmp_path / "does-not-exist.md"
+
+    result = _run_cli(repo, brief)
+
+    assert result.returncode == 1, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+
+def test_advisory_printed_alongside_resolved_declaration(tmp_path: Path) -> None:
+    """Task 1's findings print even on the exit-0 path when the
+    declaration resolves — the report rides the co-print, not a
+    separate scrollable output."""
+    repo = _init_repo_no_direction(tmp_path)
+    _write_direction_with_now_entry(repo)
+    backlog_dir = repo / "docs" / "loom" / "backlog"
+    backlog_dir.mkdir(parents=True, exist_ok=True)
+    entry = backlog_dir / "widget-revamp.md"
+    entry.write_text("status: OPEN\nname: widget-revamp\n", encoding="utf-8")
+    _commit(repo, "add now entry", date="2026-01-02T00:00:00 +0000")
+
+    _git(repo, "checkout", "-q", "-b", "rescope")
+    entry.write_text("status: OPEN\nname: widget-revamp\nrescoped: true\n", encoding="utf-8")
+    _commit(repo, "rescope widget-revamp", date="2026-01-05T00:00:00 +0000")
+    _git(repo, "checkout", "-q", "main")
+
+    brief = _write_brief(tmp_path, "in-queue: widget-revamp")
+
+    result = _run_cli(repo, brief)
+
+    assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "Unlanded direction change" in result.stdout
+    assert "rescope" in result.stdout

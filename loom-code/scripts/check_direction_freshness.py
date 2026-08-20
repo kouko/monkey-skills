@@ -48,8 +48,11 @@ Stdlib only.
 """
 from __future__ import annotations
 
+import argparse
 import re
 import subprocess
+import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 
 _NOW_HEADING_RE = re.compile(r"^##\s+Now\s*$")
@@ -152,3 +155,185 @@ def find_unlanded_direction_changes(
         for path in sorted(unlanded):
             findings.append(f"{branch} — {path} (tip {tip_date})")
     return findings
+
+
+# --- `## Queue relation` gate -------------------------------------------
+#
+# Grammar SSOT: `loom-code/skills/brainstorming/references/
+# handoff-brief-format.md` `### `## Queue relation``. Exactly three
+# canonical forms resolve the gate; any other wording (including
+# `pending`, a missing section, or a malformed line) is unresolved.
+# This check is the only thing in this module that blocks — see the
+# module docstring: Task 1's heuristic never gates.
+
+_QUEUE_HEADING_RE = re.compile(r"^##\s+Queue relation\s*$")
+_IN_QUEUE_RE = re.compile(r"^in-queue:\s*(?P<name>.+?)\s*$")
+_UNQUEUED_RE = re.compile(r"^unqueued\s*—\s*.+$")
+_DISPLACES_RE = re.compile(r"^displaces:\s*(?P<name>.+?)\s*—\s*.+$")
+
+
+def _find_queue_relation_value(brief_text: str) -> str | None:
+    """The `## Queue relation` line's value (stripped), or None if the
+    section heading is absent entirely."""
+    lines = brief_text.splitlines()
+    for i, raw in enumerate(lines):
+        if _QUEUE_HEADING_RE.match(raw):
+            for nxt in lines[i + 1:]:
+                if nxt.strip():
+                    return nxt.strip()
+            return None
+    return None
+
+
+@dataclass
+class QueueRelationResult:
+    status: str  # "resolved" | "unresolved"
+    message: str = ""
+    named_entry: str | None = None
+
+
+def resolve_queue_relation(
+    brief_text: str, now_names: list[str]
+) -> QueueRelationResult:
+    """Resolve a brief's `## Queue relation` line against the canonical
+    grammar. `now_names` is the list parsed from `## Now` (see
+    `_parse_now_entry_names`) — a name cited by `in-queue:` or
+    `displaces:` must appear in it, or the declaration is unresolved
+    (a typo must not silently satisfy the gate)."""
+    value = _find_queue_relation_value(brief_text)
+    if value is None:
+        return QueueRelationResult(
+            "unresolved", "no '## Queue relation' line found in the brief"
+        )
+
+    match = _IN_QUEUE_RE.match(value)
+    if match is not None:
+        name = match.group("name")
+        if name not in now_names:
+            return QueueRelationResult(
+                "unresolved",
+                f"in-queue names '{name}', which does not match any entry "
+                "name parsed from DIRECTION.md's '## Now' section (each "
+                "entry must read '- <name> — ...' with an em dash "
+                "'—', not a hyphen)",
+                named_entry=name,
+            )
+        return QueueRelationResult("resolved", value, named_entry=name)
+
+    if _UNQUEUED_RE.match(value):
+        return QueueRelationResult("resolved", value)
+
+    match = _DISPLACES_RE.match(value)
+    if match is not None:
+        name = match.group("name")
+        if name not in now_names:
+            return QueueRelationResult(
+                "unresolved",
+                f"displaces names '{name}', which does not match any entry "
+                "name parsed from DIRECTION.md's '## Now' section (each "
+                "entry must read '- <name> — ...' with an em dash "
+                "'—', not a hyphen)",
+                named_entry=name,
+            )
+        return QueueRelationResult("resolved", value, named_entry=name)
+
+    # `pending`, or any other wording — unresolved.
+    return QueueRelationResult("unresolved", value)
+
+
+def build_queue_relation_question(result: QueueRelationResult) -> str:
+    """The exact user-facing question for an `unresolved`
+    `QueueRelationResult` — what `main()` prints to stderr and the
+    caller must relay verbatim."""
+    if result.named_entry is not None:
+        return (
+            f"Queue relation: '{result.named_entry}' does not match any "
+            "entry name parsed from DIRECTION.md's '## Now' section "
+            "(each entry must read '- <name> — ...' with an em dash "
+            "'—', not a hyphen). Is this arc `in-queue: "
+            "<entry-name>` (name it exactly as it appears in ## Now), "
+            "`unqueued — <reason>`, or `displaces: <entry-name> — "
+            "<reason>`?"
+        )
+    return (
+        "Queue relation: is this arc `in-queue: <entry-name>`, "
+        "`unqueued — <reason>`, or `displaces: <entry-name> — "
+        "<reason>`? Record the answer in the brief's '## Queue "
+        "relation' section."
+    )
+
+
+# --- CLI -----------------------------------------------------------------
+
+
+def _resolve_repo_root(explicit: str | None, brief_dir: Path) -> Path:
+    if explicit is not None:
+        return Path(explicit)
+    try:
+        # grounding: in-repo precedent loom_init.py:108 (same flag) +
+        # `git rev-parse --help`
+        out = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=brief_dir,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return Path(out.stdout.strip())
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return Path.cwd()
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Report unlanded direction-layer changes (advisory) "
+                    "and gate on a brief's '## Queue relation' "
+                    "declaration (blocking)."
+    )
+    parser.add_argument("brief_path", help="path to the handoff brief file")
+    parser.add_argument(
+        "--repo-root",
+        default=None,
+        help="repo root used to locate docs/loom/DIRECTION.md and the "
+             "branches to scan (default: `git rev-parse --show-toplevel` "
+             "of the brief's directory, falling back to cwd)",
+    )
+    args = parser.parse_args(argv)
+
+    brief_path = Path(args.brief_path)
+    repo_root = _resolve_repo_root(args.repo_root, brief_path.parent)
+
+    # Task 1's advisory findings print on every run, including exit 2 —
+    # the reader meets them while already stopped, not in a report they
+    # can scroll past.
+    findings = find_unlanded_direction_changes(repo_root)
+    for finding in findings:
+        print(f"Unlanded direction change: {finding}")
+
+    if not brief_path.is_file():
+        print(f"Error: brief file not found at {brief_path}.", file=sys.stderr)
+        return 1
+    brief_text = brief_path.read_text(encoding="utf-8")
+
+    direction_path = repo_root / "docs" / "loom" / "DIRECTION.md"
+    now_names: list[str] = []
+    if direction_path.is_file():
+        parsed = _parse_now_entry_names(
+            direction_path.read_text(encoding="utf-8")
+        )
+        if parsed is not None:
+            now_names = parsed
+
+    result = resolve_queue_relation(brief_text, now_names)
+
+    if result.status == "resolved":
+        print(f"Queue relation in {brief_path} is resolved ({result.message}).")
+        return 0
+
+    question = build_queue_relation_question(result)
+    print(f"Error: {brief_path}: {question}", file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())
