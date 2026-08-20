@@ -77,10 +77,7 @@ This skill is light on novel logic — its value is orchestration; the work happ
 | 6 | gh CLI | `gh pr create --title "<title>" --body "<body>"`; authorization is request-derived — it arrived with the close-out request, so Step 11 opens the PR without a re-ask (up-front opt-out honored) |
 | 7 | `using-git-worktrees` | Worktree cleanup pattern lives in that skill; this orchestrator just offers to invoke its `git worktree remove` flow |
 
-**The orchestrator does NOT**:
-- Duplicate git-memory's trailer-decision logic (P3-D — would create drift)
-- Decide commit messages from scratch (delegates to git-memory output)
-- Force the merge — merge stays with the user, never auto-run (PR-open is different: request-derived authorization, see §What this skill does NOT do)
+**The orchestrator does NOT** duplicate delegate logic, decide commit messages from scratch, or force the merge — full list in [`references/delegation-boundaries.md`](references/delegation-boundaries.md).
 
 ## Default flow — what happens if user just says "finish this branch"
 
@@ -190,14 +187,9 @@ This skill is light on novel logic — its value is orchestration; the work happ
      | Stage-flip duty | The branch has a plan carrying the progress headers (the same plan Step 1 rendered). | BEFORE the close-out commit, flip the plan's terminal state: run `python3 scripts/plan_card.py <plan-path> --set-stage "finishing"` — repo-root `scripts/plan_card.py` when it exists; otherwise the plugin-shipped copy: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path> --set-stage "finishing"` (a load-time substitution, not a run-time shell variable). Then stage the flipped plan file (`git add docs/loom/plans/<plan>.md`) into THIS close-out commit. | No plan, a plan with no Status lines at all (old-format), or a plan whose ledger predates the `Stage:` header (Status lines but no `Stage:` — `--set-stage` refuses nonzero on that shape) → skip silently, per Step 1's entry-card rules. |
      | Stale-scan relay | Every close-out where the repo has a `docs/loom/plans/` directory. | Run `python3 scripts/plan_card.py --stale-scan docs/loom/plans` — repo-root `scripts/plan_card.py` when it exists; otherwise the plugin-shipped copy: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" --stale-scan docs/loom/plans` (a load-time substitution, not a run-time shell variable). Relay its stdout VERBATIM and loudly to the user — including the single `stale-scan: clean` line. A candidate plan belonging to an already-merged arc gets fixed on the spot: the same `--set-stage "finishing"` flip, staged into THIS close-out commit. A candidate belonging to a live parallel arc is named and passed through untouched. The scan is advisory by design — it always exits 0, because all-done at `review:round-N` is a legitimate transient state of a live arc; never harden a candidate line into a block or a STOP. | No `docs/loom/plans/` directory → skip silently (nothing to scan, auditable from the tree). |
    - **Purpose-linked betting.** Immediately before listing betting candidates in the Backlog-close row above, print `docs/loom/PURPOSE.md` verbatim so the user decides against the purpose, not from memory. When `PURPOSE.md` is absent, say so loudly and offer to write one — never silently skip the print. After the user promotes an entry to COMMITTED-NEXT, run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_north_star_link.py" <backlog-store>` (a load-time substitution, not a run-time shell variable) — this script ships only inside the plugin, with no repo-root shim. Exit 0 means every live COMMITTED-NEXT entry is linked to the purpose — proceed. Exit 1 means the backlog store path is unreadable — treat it the same as this row's own store-absent case. Exit 2 means the link is unresolved, for either of two distinct causes named in its stderr: `PURPOSE.md` is absent, or the just-promoted entry lacks a well-formed `serves:` line. Either cause is STOP-and-ask: relay the printed question verbatim, wait for the user's answer, record it in the entry's `serves:` line, then re-run the checker until it exits 0.
-   - **N/A consolidation (close-out report)**: when two or more close-out
-     sub-checks above are N/A, do NOT stack ~4-5 separate "N/A — checker not
-     present" lines before the conclusion. Each N/A stays STATEABLE (the
-     per-check "say loudly" semantics are preserved — the check still runs
-     and names its reason), but in the Step 13 report they consolidate inapplicable checks into
-     ONE summary line after the plain conclusion: "N inapplicable checks skipped: <list>; details on request."
-     Conclusion-first — the user sees the outcome before skipped-checks noise. A single N/A still emits its
-     own one-line note; only the multi-N/A case collapses.
+   - **N/A consolidation (close-out report)**: each N/A sub-check above stays STATEABLE
+     on its own, but when the Step 13 report would otherwise list two or more of them,
+     collapse the formatting per [`references/close-out-report-formatting.md`](references/close-out-report-formatting.md).
    - Attached-HEAD check: run `git symbolic-ref -q HEAD` in the main
      working tree — it must print the branch being finished. Detached
      HEAD or a different branch means something (typically a subagent)
@@ -312,14 +304,8 @@ Close-out shortcuts to refuse — *"skip review just push," "tests passed yester
 
 ## What this skill does NOT do
 
-Does **not** merge into main, force-push, amend commits (creates new per CLAUDE.md), or auto-remove worktrees — worktree removal needs explicit user authorization, while PR-open does not re-ask (authorization arrived with the close-out request). Delegation is by the table above; shortcut-refusal rationale for merge/force-push/amend lives in [`references/red-flags.md`](references/red-flags.md).
+Never merges into main or force-pushes; see full boundary list in [`references/delegation-boundaries.md`](references/delegation-boundaries.md).
 
 ## See also
 
-- [`../requesting-code-review/SKILL.md`](../requesting-code-review/SKILL.md) — Phase 1 delegate.
-- [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — Phase 2 delegate.
-- [`../ui-verification/SKILL.md`](../ui-verification/SKILL.md) — Phase 2 conditional sibling (rendered-UI gate).
-- [`../using-git-worktrees/SKILL.md`](../using-git-worktrees/SKILL.md) — Phase 7 delegate (worktree cleanup).
-- `dev-workflow:git-memory` — Phase 3 delegate (commit-trailer gate, P3-D MANDATORY).
-- [`../using-loom-code/SKILL.md`](../using-loom-code/SKILL.md) — router; this skill is Stage 8 (Branch close).
-- CLAUDE.md §"Committing changes with git" — git policy (no amend, no skip hooks, no force-push without authorization) this skill inherits.
+Sibling-skill delegates and the git policy this skill inherits — full list in [`references/delegation-boundaries.md`](references/delegation-boundaries.md).
