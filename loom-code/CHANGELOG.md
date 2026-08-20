@@ -5,6 +5,54 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.90.0] — 2026-08-20 — direction queue gate
+
+### Added
+
+- **`check_direction_freshness.py`** — a new script with two checks. The
+  first is a report-only heuristic: every commit reachable from any
+  local branch but not from `HEAD` that touches `docs/loom/DIRECTION.md`
+  or a backlog file currently named in `## Now` prints as
+  `<branch> — <path> (tip <date>)`. It never blocks — ancestry
+  misreports every branch as unmerged under this repo's squash-merge
+  history, so a heuristic with that false-positive class must not gate.
+  The second check reads a brief's `## Queue relation` declaration and
+  gates: exit 0 when the declaration resolves (including a named entry
+  absent from `## Now`, which is treated as unresolved), exit 1 when the
+  path is unreadable, exit 2 — STOP-and-ask, printing the relayable
+  question on stderr — when the line is missing, malformed, or
+  `pending`. Both checks run in one invocation, so the first check's
+  findings surface on every run, including exit 2, while the reader is
+  already stopped rather than in a report they can scroll past.
+- **`writing-plans/SKILL.md`** wires the gate in as an unconditional
+  intake step alongside the existing on-ramp gate, stating the three
+  exits and the exit-2 stop/relay/wait/record contract in its own
+  sentence. **`brainstorming/SKILL.md`** tells the brief's author to
+  write the `## Queue relation` line, pointing at
+  `handoff-brief-format.md` for the grammar rather than restating it.
+
+### Changed
+
+- **The progress card's `Goal:` label renders as `end-state:`**, not
+  `goal:` — the old label collided with the host's built-in `/goal`
+  session directive now that both surfaces are read in the same
+  session. The plan schema field keeps the name `Goal:`; only the
+  rendered label changed.
+
+### Rejected
+
+- This arc started out intending two more remedies and dropped both
+  after measurement, not cost: **showing the direction on the progress
+  card** — the information was already displayed, and it was itself
+  stale, so a card line would have broadcast a superseded objective
+  with more authority; it is deferred until the gate makes the file
+  trustworthy. **Forcing a trace when the direction is rewritten** —
+  the agent already traced it, unprompted, with reasoning written down;
+  the trace existed and was forgotten, so tracing was never the missing
+  part. The blocking gate is the one shape with a working precedent in
+  this repo (the on-ramp choice gate): it works because it refuses, not
+  because it informs.
+
 ## [0.89.0] — 2026-08-19 — field-value microstructure
 
 ### Added
