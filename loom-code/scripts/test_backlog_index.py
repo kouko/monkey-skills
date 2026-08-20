@@ -1814,3 +1814,81 @@ def test_committed_next_entry_with_no_serves_validates_clean_with_only_principle
     result = _run_validate(store)
 
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+# Whole-branch review F3 (2026-08-20): `serves` presence/grammar failures
+# were emitted under the "field-agreement" kind, which in this module
+# means frontmatter <-> body-bullet disagreement (_check_field_agreement).
+# A `serves`-absent violation is not a disagreement between two present
+# values — it reads misleadingly under that kind.
+
+
+def test_missing_serves_violation_uses_its_own_kind_not_field_agreement(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    (tmp_path / "PURPOSE.md").write_text("## North Star\n\nSomething.\n", encoding="utf-8")
+    _write(store, "2026-08-01-alpha.md", _entry("2026-08-01-alpha", "COMMITTED-NEXT"))
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "[serves]" in result.stdout, result.stdout
+    assert "[field-agreement]" not in result.stdout, (
+        "a missing 'serves' field is not a frontmatter<->body disagreement:\n"
+        f"{result.stdout}"
+    )
+
+
+def test_malformed_serves_violation_uses_its_own_kind_not_field_agreement(tmp_path):
+    store = tmp_path / "backlog"
+    store.mkdir()
+    (tmp_path / "PURPOSE.md").write_text("## North Star\n\nSomething.\n", encoding="utf-8")
+    text = _entry("2026-08-01-alpha", "COMMITTED-NEXT").replace(
+        "status: COMMITTED-NEXT\n", "status: COMMITTED-NEXT\nserves: unrelated\n"
+    )
+    _write(store, "2026-08-01-alpha.md", text)
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "[serves]" in result.stdout, result.stdout
+    assert "[field-agreement]" not in result.stdout, (
+        "a malformed 'serves' value is not a frontmatter<->body "
+        f"disagreement:\n{result.stdout}"
+    )
+
+
+# Whole-branch review F6 (2026-08-20): the charter (rules for editing
+# DIRECTION.md) moved out of DIRECTION.md itself and into
+# loom-code/hooks/family-reception.md § DIRECTION.md charter. Three
+# in-code statements were never updated after that move and now claim
+# DIRECTION.md carries "its own charter header" — it does not.
+
+
+def test_direction_write_missing_file_message_does_not_claim_charter_header(
+    tmp_path,
+):
+    store, direction = _direction_store(tmp_path, [])
+    direction.unlink()
+
+    result = _run_direction_write(direction, store)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "charter header" not in result.stdout, (
+        "DIRECTION.md no longer carries its own charter header — the "
+        f"charter moved to family-reception.md:\n{result.stdout}"
+    )
+
+
+def test_backlog_index_source_does_not_claim_direction_owns_its_charter_header():
+    text = BACKLOG_SCRIPT.read_text(encoding="utf-8")
+    assert "the file's own charter header" not in text, (
+        "backlog_index.py still claims DIRECTION.md's ## Now section is "
+        "machine-owned per its own charter header — the charter moved to "
+        "family-reception.md"
+    )
+    assert "the direction file's charter header" not in text, (
+        "backlog_index.py still claims splice_direction_now's section is "
+        "machine-owned per the direction file's own charter header — the "
+        "charter moved to family-reception.md"
+    )

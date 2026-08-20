@@ -1,8 +1,8 @@
 # Direction — monkey-skills
 
 > Charter (rules for editing this file) owned by
-> `loom-code/hooks/family-reception.md` §DIRECTION.md charter — read
-> there, never copy back here.
+> `loom-code/hooks/direction-charter.md` — read there, never copy back
+> here.
 
 ## Now
 

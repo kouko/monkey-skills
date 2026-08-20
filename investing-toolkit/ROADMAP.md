@@ -1,5 +1,5 @@
 # investing-toolkit Roadmap
-> **Historical design record — superseded.** Forward direction lives in `docs/loom/DIRECTION.md` (see `loom-code/hooks/family-reception.md` §DIRECTION.md charter for its rules); this file is kept as a design-era artifact and is no longer maintained.
+> **Historical design record — superseded.** Forward direction lives in `docs/loom/DIRECTION.md` (see `loom-code/hooks/direction-charter.md` for its rules); this file is kept as a design-era artifact and is no longer maintained.
 
 ---
 

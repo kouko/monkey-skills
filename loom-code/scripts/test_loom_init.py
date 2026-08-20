@@ -424,9 +424,14 @@ def test_stray_file_at_store_path_is_not_called_adoption(tmp_path):
 
 # Task 5 of docs/loom/plans/2026-08-20-north-star-serves-link.md: the
 # 18-line Charter block moves out of DIRECTION.md and its template into
-# family-reception.md, which becomes its SSOT. Normalized (whitespace-
-# collapsed) so line-wrap position isn't part of the pin — wording is.
+# a dedicated on-demand file. family-reception.md is loaded by five
+# skills per touch and carries a line budget precisely to stay cheap —
+# per-DIRECTION.md-file editing rules belong somewhere read only by
+# someone editing DIRECTION.md, not preloaded for every family-reception
+# reader. Normalized (whitespace-collapsed) so line-wrap position isn't
+# part of the pin — wording is.
 FAMILY_RECEPTION = REPO_ROOT / "loom-code" / "hooks" / "family-reception.md"
+DIRECTION_CHARTER_FILE = REPO_ROOT / "loom-code" / "hooks" / "direction-charter.md"
 LIVE_DIRECTION = REPO_ROOT / "docs" / "loom" / "DIRECTION.md"
 ROADMAP = REPO_ROOT / "loom-code" / "ROADMAP.md"
 
@@ -437,10 +442,12 @@ DIRECTION_CHARTER_RULES = (
     "`## Now` is a PARALLEL ACTIVE SET, not a serial queue: one entry "
     "typically maps to one worktree/lane; the ≤5 cap is parallel-steering "
     "capacity.",
-    "`## Next` / `## Later` are human-written themes only; a `## Next` "
-    "line MAY point at a roadmap entry in `docs/loom/backlog/` by "
-    "filename (the filename's date prefix — YYYY-MM-DD — is a file "
-    "identifier, exempt from the no-dates rule below).",
+    "`## Next` (scaffolded) and an optional `## Later` — a repo may add "
+    "one, it is not part of the scaffold — are human-written themes "
+    "only; a `## Next` line MAY point at a roadmap entry in "
+    "`docs/loom/backlog/` by filename (the filename's date prefix — "
+    "YYYY-MM-DD — is a file identifier, exempt from the no-dates rule "
+    "below).",
     "No dates anywhere in this file (entry names inside the generated "
     "`## Now` are exempt — file identifiers, not schedule promises).",
     "Betting promotes backlog entries to COMMITTED-NEXT — user-only; "
@@ -454,15 +461,22 @@ def _normalized(text: str) -> str:
     return " ".join(text.split())
 
 
-def test_direction_charter_moved_to_family_reception():
+def test_direction_charter_lives_in_dedicated_charter_file():
+    assert DIRECTION_CHARTER_FILE.exists(), (
+        f"expected dedicated charter file missing: {DIRECTION_CHARTER_FILE}"
+    )
+    charter_file = _normalized(DIRECTION_CHARTER_FILE.read_text(encoding="utf-8"))
     family_reception = _normalized(FAMILY_RECEPTION.read_text(encoding="utf-8"))
     live_direction = _normalized(LIVE_DIRECTION.read_text(encoding="utf-8"))
     template_direction = _normalized(TEMPLATE_DIRECTION.read_text(encoding="utf-8"))
 
     for rule in DIRECTION_CHARTER_RULES:
         normalized_rule = _normalized(rule)
-        assert normalized_rule in family_reception, (
-            f"family-reception.md missing charter rule verbatim: {rule!r}"
+        assert normalized_rule in charter_file, (
+            f"direction-charter.md missing charter rule verbatim: {rule!r}"
+        )
+        assert normalized_rule not in family_reception, (
+            f"family-reception.md must no longer carry charter rule: {rule!r}"
         )
         assert normalized_rule not in live_direction, (
             f"docs/loom/DIRECTION.md still carries charter rule: {rule!r}"
@@ -471,13 +485,18 @@ def test_direction_charter_moved_to_family_reception():
             f"template DIRECTION.md still carries charter rule: {rule!r}"
         )
 
+    # family-reception.md must point at the new home, not hold the rules.
+    assert "direction-charter.md" in family_reception.replace(" ", ""), (
+        "family-reception.md must point readers at direction-charter.md"
+    )
+
     roadmap_text = ROADMAP.read_text(encoding="utf-8")
     assert "see its charter header" not in roadmap_text, (
         "ROADMAP.md must no longer point at a DIRECTION.md-resident charter, "
         f"got:\n{roadmap_text[:400]}"
     )
-    assert "family-reception.md" in roadmap_text, (
-        "ROADMAP.md's charter pointer must retarget to family-reception.md"
+    assert "direction-charter.md" in roadmap_text, (
+        "ROADMAP.md's charter pointer must retarget to direction-charter.md"
     )
 
 
@@ -503,13 +522,13 @@ FALSE_SSOT_CLAIM = "charter header — the convention's SSOT."
 
 
 def test_no_file_claims_direction_md_charter_header_is_the_ssot():
-    # Finding 1: the charter moved to family-reception.md, but this claim
+    # Finding 1: the charter moved out of DIRECTION.md, but this claim
     # (live doc + its scaffold template) was never updated to say so.
     for path in (BACKLOG_README, TEMPLATE_BACKLOG_README):
         text = path.read_text(encoding="utf-8")
         assert FALSE_SSOT_CLAIM not in text, (
             f"{path} still claims DIRECTION.md's charter header is the SSOT, "
-            "but the charter now lives in family-reception.md"
+            "but the charter now lives in direction-charter.md"
         )
 
 
@@ -523,23 +542,24 @@ def test_all_sibling_roadmaps_retarget_the_charter_pointer():
         assert "see its charter header" not in text, (
             f"{path} still points at a DIRECTION.md-resident charter header"
         )
-        assert "family-reception.md" in text, (
-            f"{path}'s charter pointer must retarget to family-reception.md"
+        assert "direction-charter.md" in text, (
+            f"{path}'s charter pointer must retarget to direction-charter.md"
         )
 
 
-def test_family_reception_direction_write_invocation_carries_a_path():
-    # Finding 3: family-reception.md's charter section names the actual
-    # invocation `scripts/backlog_index.py --direction-write` with no PATH
-    # argument, which the real CLI rejects (argparse requires it). The
-    # shorthand back-reference at "regenerate via --direction-write" is a
-    # verb reference, not an invocation, and is untouched by this assert.
-    normalized_text = _normalized(FAMILY_RECEPTION.read_text(encoding="utf-8"))
+def test_direction_charter_file_direction_write_invocation_carries_a_path():
+    # Finding 3: the charter's --direction-write invocation names the
+    # actual invocation `scripts/backlog_index.py --direction-write` with
+    # no PATH argument, which the real CLI rejects (argparse requires
+    # it). The shorthand back-reference at "regenerate via
+    # --direction-write" is a verb reference, not an invocation, and is
+    # untouched by this assert.
+    normalized_text = _normalized(DIRECTION_CHARTER_FILE.read_text(encoding="utf-8"))
     assert (
         "`scripts/backlog_index.py --direction-write docs/loom/DIRECTION.md`"
         in normalized_text
     ), (
-        "family-reception.md's --direction-write invocation is missing its "
+        "direction-charter.md's --direction-write invocation is missing its "
         "required PATH argument"
     )
 
@@ -580,3 +600,119 @@ def test_backlog_readmes_document_serves_contract():
                 f"{path} must not describe the no-PURPOSE.md case as exempt — "
                 "it is prompted for one at betting instead"
             )
+
+
+# Whole-branch review F2/F4 (2026-08-20): a fresh scaffold ships a pointer
+# to `loom-code/hooks/family-reception.md` as if that path exists inside
+# the CONSUMING repo. It does not — loom-code is a plugin, not a vendored
+# directory. The scaffolded output (not just the template's raw text) is
+# the thing that must read correctly outside this plugin repo.
+
+
+def _stripped_blockquote(text: str) -> str:
+    """Strip leading '> ' blockquote markers before normalizing, so a
+    prose phrase that wraps across blockquote lines matches on its words
+    alone, not the literal '>' the wrap left between them."""
+    lines = [line[2:] if line.startswith("> ") else line for line in text.splitlines()]
+    return _normalized("\n".join(lines))
+
+
+def test_scaffolded_direction_pointer_does_not_name_an_unresolvable_repo_path(
+    tmp_path,
+):
+    target = tmp_path / "repo"
+    _scaffold_ok(target)
+
+    direction = _stripped_blockquote(
+        (target / "docs" / "loom" / "DIRECTION.md").read_text(encoding="utf-8")
+    )
+    assert "`loom-code/hooks/direction-charter.md`" not in direction, (
+        "scaffolded DIRECTION.md must not name a bare repo-relative path "
+        "to the plugin's hook file — that path does not exist in a "
+        "consuming repo"
+    )
+    assert "the loom-code plugin's `hooks/direction-charter.md`" in direction, (
+        "scaffolded DIRECTION.md must name the charter pointer as the "
+        "loom-code plugin's file, not a repo-relative path"
+    )
+    assert not (target / "loom-code").exists(), (
+        "sanity check: a fresh scaffold target has no loom-code/ directory"
+    )
+
+
+def test_scaffolded_backlog_readme_pointer_does_not_name_an_unresolvable_repo_path(
+    tmp_path,
+):
+    target = tmp_path / "repo"
+    _scaffold_ok(target)
+
+    readme = _normalized(
+        (target / "docs" / "loom" / "backlog" / "README.md").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert "`loom-code/hooks/direction-charter.md`" not in readme, (
+        "scaffolded backlog README.md must not name a bare repo-relative "
+        "path to the plugin's hook file — that path does not exist in a "
+        "consuming repo"
+    )
+    assert "the loom-code plugin's `hooks/direction-charter.md`" in readme, (
+        "scaffolded backlog README.md must name the charter pointer as the "
+        "loom-code plugin's file, not a repo-relative path"
+    )
+
+
+def test_loom_init_ok_message_lists_purpose_skeleton(tmp_path):
+    # F4: loom_init.py writes docs/loom/PURPOSE.md but its success message's
+    # parenthetical inventory omits it, so a reader trusting the message
+    # would not know PURPOSE.md was scaffolded.
+    target = tmp_path / "repo"
+    result = _scaffold_ok(target)
+    assert (target / "docs" / "loom" / "PURPOSE.md").is_file()
+    assert "PURPOSE" in result.stdout, (
+        f"loom-init OK message omits PURPOSE.md from its inventory:\n"
+        f"{result.stdout}"
+    )
+
+
+def test_direction_charter_file_does_not_present_later_as_a_current_section():
+    # F6: the charter says "`## Next` / `## Later` are human-written
+    # themes only" as if both are scaffolded, live sections.
+    # templates/DIRECTION.md drops `## Later` entirely, and
+    # find_direction_violations only requires `## Now` / `## Next`
+    # (backlog_index.py) — `## Later` must read as optional, not standard.
+    text = DIRECTION_CHARTER_FILE.read_text(encoding="utf-8")
+    assert "## Later" not in TEMPLATE_DIRECTION.read_text(encoding="utf-8"), (
+        "sanity check: the template must not scaffold ## Later"
+    )
+    idx = text.index("`## Next` / `## Later`") if "`## Next` / `## Later`" in text else -1
+    assert idx == -1, (
+        "direction-charter.md must not present `## Next` / `## Later` as "
+        "parallel scaffolded sections when only `## Next` is scaffolded "
+        f"and `## Later` is optional:\n{text}"
+    )
+    assert "optional" in text.lower() and "## Later" in text, (
+        "direction-charter.md must describe `## Later` as an optional "
+        f"section, not a standard one:\n{text}"
+    )
+
+
+def test_scaffolded_direction_onramp_comment_does_not_name_an_unresolvable_repo_path(
+    tmp_path,
+):
+    # Final-sweep finding, same shape as F2: the On-ramp standing choices
+    # HTML comment also named the bare repo-relative hook path.
+    target = tmp_path / "repo"
+    _scaffold_ok(target)
+
+    direction = _stripped_blockquote(
+        (target / "docs" / "loom" / "DIRECTION.md").read_text(encoding="utf-8")
+    )
+    assert "owned by loom-code/hooks/family-reception.md" not in direction, (
+        "scaffolded DIRECTION.md's on-ramp comment must not name a bare "
+        "repo-relative path to the plugin's hook file"
+    )
+    assert "owned by the loom-code plugin's" in direction, (
+        "scaffolded DIRECTION.md's on-ramp comment must name the pointer "
+        "as the loom-code plugin's file, not a repo-relative path"
+    )

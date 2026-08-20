@@ -180,8 +180,8 @@ def main(argv: list[str]) -> int:
 
     print(
         f"loom-init: OK — queue layer scaffolded at {target} "
-        "(backlog charter + DIRECTION skeleton + plans/ + specs/), "
-        "self-verified against backlog_index.py"
+        "(backlog charter + DIRECTION skeleton + PURPOSE skeleton + "
+        "plans/ + specs/), self-verified against backlog_index.py"
     )
     return 0
 

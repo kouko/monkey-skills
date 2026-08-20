@@ -107,8 +107,7 @@ feels:
   --direction-write` (see §Verbs' Bet flow). This is a PARALLEL ACTIVE
   SET, not a serial queue: one entry typically maps to one
   worktree/lane, and the ≤5 cap is parallel-steering capacity. See
-  `loom-code/hooks/family-reception.md` §DIRECTION.md charter — the
-  convention's SSOT.
+  `loom-code/hooks/direction-charter.md` — the convention's SSOT.
 - `OPEN` — agreed to be worth doing, not yet scheduled. Anyone may
   pick it up.
 - `PARKED` — deliberately not being done for now, with the reason

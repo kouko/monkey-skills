@@ -4,10 +4,11 @@
 > this document. From that moment it is THIS repo's own file —
 > it never syncs back to the plugin; edit it freely.
 
-Two fields, both required. Fill them in when the answer is knowable —
-if it is not yet knowable, say that instead of guessing; a filled-in
-placeholder is worse than an honest gap because it passes every later
-check while saying nothing.
+Two fields, both required. Fill them in when the answer is knowable. A
+filled-in placeholder is worse than an honest gap because it passes
+every later check while saying nothing — if the answer is not yet
+knowable, replace the placeholder below with `not yet — <reason>`
+instead of guessing.
 
 **Why:** _(one sentence — why this product exists)_
 

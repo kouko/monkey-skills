@@ -5,6 +5,40 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.91.0] — 2026-08-20 — purpose layer + serves link
+
+### Added
+
+- **`PURPOSE.md`** — a new foundational-artifact contract: one `Why:` line
+  stating why the project exists, and one `Done when:` line stating the
+  checkable condition that means it is met. loom-init gained a scaffold
+  template for it.
+- **COMMITTED-NEXT backlog entries require a `serves:` field.** Closed
+  two-form grammar: `serves: <how this serves the purpose>`, or
+  `serves: unrelated — <reason>` when a bet deliberately serves nothing
+  the purpose states.
+- **`check_north_star_link.py`** — runs at the betting moment (promoting a
+  backlog entry to COMMITTED-NEXT). Exit 0 when the `serves:` link
+  resolves, exit 1 when `PURPOSE.md` is unreadable, exit 2 — STOP and ask —
+  when the link is unresolved. `PURPOSE.md` prints before candidates are
+  listed; an absent file prompts for one rather than silently exempting
+  the repo.
+
+### Changed
+
+- **`DIRECTION.md`'s 18-line charter header moved** to
+  `loom-code/hooks/family-reception.md`. Its `## Later` section — three
+  entries that never had a forcing function to promote them — was
+  retired; the entries became ordinary backlog entries instead.
+
+### Rejected
+
+- `loom-design`'s `PRINCIPLES.md` `## North Star` section, which
+  overlapped this arc's purpose, moved OUT of the principles contract
+  (see `loom-design` 0.4.0) rather than being duplicated here — a
+  project states its purpose once, in `PURPOSE.md`, not in two
+  documents that can drift apart.
+
 ## [0.90.0] — 2026-08-20 — direction queue gate
 
 ### Added

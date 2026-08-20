@@ -11,6 +11,19 @@ The five plugins this one absorbed keep their own histories alongside:
 `CHANGELOG-interface-design.md`, `CHANGELOG-product-principles.md`. Their
 version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
 
+## [0.4.0] — 2026-08-20 — North Star retargeted to PURPOSE.md
+
+### Changed
+
+- **`## North Star` moved OUT of `PRINCIPLES.md`'s contract.**
+  `PRINCIPLES.md` now holds only product / design / engineering
+  principles; the project's long-horizon purpose lives in `loom-code`'s
+  new `PURPOSE.md` artifact instead (see `loom-code` 0.91.0).
+  `validate_principles_output.py` no longer requires or parses a
+  `## North Star` section, and `product-principles`'s `SKILL.md` +
+  `references/principles-rules.md` + `references/question-sets.md`
+  stop asking for one.
+
 ## [0.3.0] — 2026-08-18 — requirement identifiers
 
 ### Added

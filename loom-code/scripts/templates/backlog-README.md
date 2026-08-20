@@ -109,9 +109,9 @@ feels:
   generated `## Now` section by `scripts/backlog_index.py
   --direction-write docs/loom/DIRECTION.md` (see §Verbs' Bet flow). This is a PARALLEL ACTIVE
   SET, not a serial queue: one entry typically maps to one
-  worktree/lane, and the ≤5 cap is parallel-steering capacity. See
-  `loom-code/hooks/family-reception.md` §DIRECTION.md charter — the
-  convention's SSOT.
+  worktree/lane, and the ≤5 cap is parallel-steering capacity. See the
+  loom-code plugin's `hooks/direction-charter.md` — the convention's
+  SSOT.
 - `OPEN` — agreed to be worth doing, not yet scheduled. Anyone may
   pick it up.
 - `PARKED` — deliberately not being done for now, with the reason

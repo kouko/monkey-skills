@@ -102,7 +102,8 @@ regenerates the given DIRECTION.md's `## Now` section — one
 `- <name> — <description>` line per COMMITTED-NEXT entry in filename
 (= file-date) order, or exactly `_(queue empty — bet at the next
 close-out)_` when the queue is empty — replacing the section body
-wholesale (it is machine-owned per the file's own charter header) and
+wholesale (it is machine-owned per DIRECTION.md's charter — SSOT
+`loom-code/hooks/direction-charter.md`) and
 leaving every other line untouched. It refuses loudly (exit 1, no write)
 when the file lacks a `## Now` heading or an entry's frontmatter is
 malformed (status outside the closed vocabulary). `--direction-check` is
@@ -197,7 +198,7 @@ STATUS_SECTION_ORDER = [
 
 @dataclass(frozen=True)
 class Violation:
-    kind: str  # "name" | "status" | "archive-tier" | "archived-date" | "description" | "field-agreement"
+    kind: str  # "name" | "status" | "archive-tier" | "archived-date" | "description" | "field-agreement" | "serves"
     file: str
     detail: str
 
@@ -425,7 +426,7 @@ def _check_serves(
     if serves is None:
         return [
             Violation(
-                "field-agreement",
+                "serves",
                 display,
                 "COMMITTED-NEXT entry missing required 'serves' field",
             )
@@ -433,7 +434,7 @@ def _check_serves(
     if not _is_well_formed_serves(serves):
         return [
             Violation(
-                "field-agreement",
+                "serves",
                 display,
                 f"'serves: {serves}' is not well-formed — use 'serves: <how this "
                 "serves the north star>' or 'serves: unrelated — <reason>'",
@@ -752,8 +753,9 @@ def _direction_section_bounds(
 def splice_direction_now(direction_text: str, now_lines: list[str]) -> str:
     """Replace the `## Now` section body WHOLESALE with `now_lines`
     (blank-line padded). Unlike the memory checker's splice, no in-section
-    prose survives — the section is machine-owned per the direction file's
-    charter header. Every line outside the section is left untouched.
+    prose survives — the section is machine-owned per DIRECTION.md's
+    charter (`loom-code/hooks/family-reception.md` §DIRECTION.md
+    charter). Every line outside the section is left untouched.
 
     Raises ValueError when `direction_text` has no `## Now` heading —
     there is nothing to regenerate into, and writing one in would invent
@@ -850,7 +852,8 @@ def _run_direction_write(args: argparse.Namespace) -> int:
     if not direction_path.is_file():
         print(
             f"backlog_index --direction-write: FAIL — {direction_path} does "
-            "not exist; create it with its charter header and sections first"
+            "not exist; create it with its `## Now` / `## Next` sections "
+            "first (charter: loom-code/hooks/direction-charter.md)"
         )
         return 1
     try:

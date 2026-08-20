@@ -29,12 +29,32 @@ Exit codes:
         COMMITTED-NEXT entries at all (nothing to bet on yet).
     1 — the given backlog store path does not exist or is not a
         readable directory.
-    2 — either of two distinct causes, distinguishable by message:
+    2 — one of three distinct causes, distinguishable by message:
         (a) a live COMMITTED-NEXT entry exists but `PURPOSE.md` is
             absent — stderr asks the user to write one;
-        (b) a live COMMITTED-NEXT entry lacks a well-formed `serves:`
+        (b) `PURPOSE.md` exists but is still unanswered — either the
+            shipped template's placeholder text is untouched, or the
+            file records a bare `not yet` deferral with no reason —
+            stderr names the template state and the `not yet — <reason>`
+            escape hatch;
+        (c) a live COMMITTED-NEXT entry lacks a well-formed `serves:`
             line — stderr names the offending entry and the question
             the user must answer.
+
+Cause (b) treats `PURPOSE.md`'s body as opaque prose except for two
+narrow, literal probes it is licensed to make: the shipped template's
+own placeholder text (loom-code ships that string, so it controls it),
+and the phrase `not yet` as a deferral marker — the family's existing
+three-state grammar (`serves: unrelated — <reason>`,
+`check_onramp_choice.py`'s `not fired — <reason>`), applied here as
+`not yet — <reason>`. The `not yet` probe is anchored to the start of
+a line (optionally after a generic bold-emphasis prefix) rather than
+matched anywhere in the file, so the template's own instructional
+sentence explaining the escape hatch ("if the answer is not yet
+knowable, replace...") can never be mistaken for the user's answer.
+Neither probe keys on any bold sub-label (Why / Done-when / Goal /
+Success) sketched elsewhere in the convention — those remain wholly
+unenforced, by design.
 
 Stdlib only.
 """
@@ -42,10 +62,36 @@ Stdlib only.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
 from backlog_index import _entry_files, _is_well_formed_serves, _purpose_path_for, parse_frontmatter
+
+# The shipped template's own placeholder text (templates/PURPOSE.md) —
+# loom-code controls this literal string. Its presence means the file
+# was scaffolded but never edited. Deliberately NOT the bold sub-label
+# beside it — see module docstring.
+_TEMPLATE_PLACEHOLDER = "_(one sentence — why this product exists)_"
+
+# The `not yet` deferral marker, mirroring `serves: unrelated —
+# <reason>` / `check_onramp_choice.py`'s `not fired — <reason>`.
+# Anchored to the START of a line (optionally after a generic
+# `**...:**` bold-emphasis prefix) rather than matched anywhere in the
+# file: the shipped template's own instructional prose explains the
+# escape hatch mid-sentence ("if the answer is not yet knowable,
+# replace the placeholder below with `not yet — <reason>`") and a
+# bare "matched anywhere" scan finds THAT occurrence first, which has
+# no reason, and never reaches the line the user actually edited. The
+# line-start anchor is structural/positional only — it does not key on
+# any specific label text ("Why", "Done when", ...), so it stays
+# licensed under the same no-bold-label-parsing boundary as the rest
+# of this module. A reason is non-empty text after an em-dash or `--`;
+# without one, the deferral is bare and does not resolve.
+_NOT_YET_RE = re.compile(
+    r"^\s*(?:\*\*[^*\n]+\*\*\s*)?not yet\b(?:\s*(?:—|--)\s*(?P<reason>\S.*))?",
+    re.MULTILINE,
+)
 
 
 def find_committed_next_entries(store: Path) -> list[tuple[str, dict[str, str]]]:
@@ -77,6 +123,27 @@ def find_offending_entry(
     return None
 
 
+def determine_purpose_state(purpose_path: Path) -> str:
+    """One of `"absent"` / `"template"` / `"answered"`. `"template"`
+    covers both an unedited scaffold and a bare `not yet` deferral with
+    no reason — both leave nothing actionable recorded. A `not yet —
+    <reason>` deferral (non-empty reason) counts as `"answered"`,
+    regardless of whether the template's own placeholder text is still
+    present elsewhere in the file — the deferral IS the answer."""
+    if not purpose_path.is_file():
+        return "absent"
+    text = purpose_path.read_text(encoding="utf-8")
+    not_yet = _NOT_YET_RE.search(text)
+    if not_yet is not None:
+        reason = not_yet.group("reason")
+        if reason and reason.strip():
+            return "answered"
+        return "template"
+    if _TEMPLATE_PLACEHOLDER in text:
+        return "template"
+    return "answered"
+
+
 def build_purpose_missing_question(purpose_path: Path) -> str:
     """The exact user-facing question when `PURPOSE.md` is absent but a
     live COMMITTED-NEXT entry exists — shared by `main()`'s stderr
@@ -85,6 +152,19 @@ def build_purpose_missing_question(purpose_path: Path) -> str:
         f"no {purpose_path} found, but a COMMITTED-NEXT backlog entry "
         "exists. What is this repo's purpose? Write it to "
         f"{purpose_path} before betting on this entry."
+    )
+
+
+def build_purpose_template_question(purpose_path: Path) -> str:
+    """The exact user-facing question when `PURPOSE.md` exists but is
+    still unanswered (shipped template untouched, or a bare `not yet`
+    with no reason) — distinct from the absent-file message so the
+    user's next action is clear."""
+    return (
+        f"{purpose_path} still carries the shipped template's placeholder "
+        "text (or an unexplained 'not yet'). What is this repo's purpose? "
+        "Write it there, or if you genuinely cannot say yet, record "
+        "'not yet — <reason>' in place of the placeholder."
     )
 
 
@@ -131,8 +211,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     purpose_path = _purpose_path_for(store)
-    if not purpose_path.is_file():
+    purpose_state = determine_purpose_state(purpose_path)
+    if purpose_state == "absent":
         print(f"Error: {build_purpose_missing_question(purpose_path)}", file=sys.stderr)
+        return 2
+    if purpose_state == "template":
+        print(f"Error: {build_purpose_template_question(purpose_path)}", file=sys.stderr)
         return 2
 
     offending = find_offending_entry(entries)

@@ -117,3 +117,108 @@ def test_exit_2_asks_for_purpose_md_when_absent_but_entries_exist(tmp_path):
     assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
     assert str(purpose_path) in result.stderr
     assert "entry-a" not in result.stderr
+
+
+_TEMPLATE = (Path(__file__).parent / "templates" / "PURPOSE.md").read_text(encoding="utf-8")
+
+
+def test_exit_2_when_purpose_md_is_unedited_template(tmp_path):
+    """A scaffolded-but-untouched PURPOSE.md must not silently pass — the
+    Decision's whole point is that a filled-in placeholder is worse than
+    an absent file. Message must name the template state, distinct from
+    the absent-file message."""
+    store = tmp_path / "docs" / "loom" / "backlog"
+    purpose_path = tmp_path / "docs" / "loom" / "PURPOSE.md"
+    purpose_path.parent.mkdir(parents=True, exist_ok=True)
+    purpose_path.write_text("<!-- scaffolded by loom-init v9.9.9 -->\n" + _TEMPLATE, encoding="utf-8")
+    _write_entry(store, "entry-a", "COMMITTED-NEXT", "ships the thing")
+
+    result = _run(store)
+
+    assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "template" in result.stderr.lower()
+    assert "entry-a" not in result.stderr
+
+
+def test_absent_and_template_messages_are_distinguishable(tmp_path):
+    store_a = tmp_path / "a" / "docs" / "loom" / "backlog"
+    _write_entry(store_a, "entry-a", "COMMITTED-NEXT", "ships the thing")
+    result_absent = _run(store_a)
+
+    store_b = tmp_path / "b" / "docs" / "loom" / "backlog"
+    purpose_b = tmp_path / "b" / "docs" / "loom" / "PURPOSE.md"
+    purpose_b.parent.mkdir(parents=True, exist_ok=True)
+    purpose_b.write_text(_TEMPLATE, encoding="utf-8")
+    _write_entry(store_b, "entry-a", "COMMITTED-NEXT", "ships the thing")
+    result_template = _run(store_b)
+
+    assert result_absent.returncode == 2
+    assert result_template.returncode == 2
+    assert result_absent.stderr != result_template.stderr
+
+
+def test_exit_0_when_purpose_is_not_yet_with_reason(tmp_path):
+    store = tmp_path / "docs" / "loom" / "backlog"
+    purpose_path = tmp_path / "docs" / "loom" / "PURPOSE.md"
+    purpose_path.parent.mkdir(parents=True, exist_ok=True)
+    purpose_path.write_text(
+        "# Purpose\n\n**Why:** not yet — no product decision yet\n",
+        encoding="utf-8",
+    )
+    _write_entry(store, "entry-a", "COMMITTED-NEXT", "ships the thing")
+
+    result = _run(store)
+
+    assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+
+def test_bare_not_yet_does_not_resolve(tmp_path):
+    store = tmp_path / "docs" / "loom" / "backlog"
+    purpose_path = tmp_path / "docs" / "loom" / "PURPOSE.md"
+    purpose_path.parent.mkdir(parents=True, exist_ok=True)
+    purpose_path.write_text("# Purpose\n\n**Why:** not yet\n", encoding="utf-8")
+    _write_entry(store, "entry-a", "COMMITTED-NEXT", "ships the thing")
+
+    result = _run(store)
+
+    assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+
+def test_exit_0_when_purpose_is_genuinely_written(tmp_path):
+    store = tmp_path / "docs" / "loom" / "backlog"
+    purpose_path = tmp_path / "docs" / "loom" / "PURPOSE.md"
+    purpose_path.parent.mkdir(parents=True, exist_ok=True)
+    purpose_path.write_text(
+        "# Purpose\n\n**Why:** ship the internal wiki tool for the team.\n"
+        "**Done when:** every team member can find a doc in <30s.\n",
+        encoding="utf-8",
+    )
+    _write_entry(store, "entry-a", "COMMITTED-NEXT", "ships the thing")
+
+    result = _run(store)
+
+    assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+
+def test_exit_0_when_real_template_why_replaced_with_not_yet_reason(tmp_path):
+    """Regression: the shipped template's own instructional prose ("if
+    the answer is not yet knowable, replace the placeholder below with
+    `not yet — <reason>`") must not be mistaken for the user's escape
+    hatch. Fixture is the ACTUAL shipped template with only the Why
+    placeholder edited, the way a real user edits it — a hand-written
+    minimal fixture can't catch a defect that lives in the template's
+    own shipped prose."""
+    store = tmp_path / "docs" / "loom" / "backlog"
+    purpose_path = tmp_path / "docs" / "loom" / "PURPOSE.md"
+    purpose_path.parent.mkdir(parents=True, exist_ok=True)
+    edited = _TEMPLATE.replace(
+        "**Why:** _(one sentence — why this product exists)_",
+        "**Why:** not yet — 產品方向還沒決定",
+    )
+    assert edited != _TEMPLATE  # sanity: the replace actually matched the shipped text
+    purpose_path.write_text(edited, encoding="utf-8")
+    _write_entry(store, "entry-a", "COMMITTED-NEXT", "ships the thing")
+
+    result = _run(store)
+
+    assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
