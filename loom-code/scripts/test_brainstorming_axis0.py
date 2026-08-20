@@ -127,9 +127,9 @@ def test_axis0_standalone_ask_pending_no_agent_default():
     assert "pending" in low, \
         "Axis 0 must name the 'pending' brief-line state before the user answers"
     assert "standing" in low, \
-        "Axis 0 must check DIRECTION.md's standing choices before asking"
-    assert "direction.md" in low, \
-        "Axis 0 must name DIRECTION.md as the standing-choice source"
+        "Axis 0 must check KICKOFF-DEFAULTS.md's standing choices before asking"
+    assert "kickoff-defaults.md" in low, \
+        "Axis 0 must name KICKOFF-DEFAULTS.md as the standing-choice source"
     assert "proceed either way" not in low, \
         "Axis 0 must drop the old 'proceed either way' phrasing"
 

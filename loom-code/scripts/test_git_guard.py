@@ -908,19 +908,19 @@ def test_commit_plan_with_traversing_source_brief_never_read(
 
 
 def test_commit_plan_with_standing_choice_allowed(repo):
-    # WHY: the `standing` form resolves only when DIRECTION.md names the
-    # cited row — this drives load_standing() through the hook.
-    _write(repo / "docs" / "loom" / "DIRECTION.md",
-           "# Direction\n\n## On-ramp standing choices\n\n"
+    # WHY: the `standing` form resolves only when KICKOFF-DEFAULTS.md
+    # names the cited row — this drives load_standing() through the hook.
+    _write(repo / "docs" / "loom" / "KICKOFF-DEFAULTS.md",
+           "# Kickoff Defaults\n\n## On-ramp standing choices\n\n"
            "- row 1 (product-principles): standing direct — no PRINCIPLES.md "
            "in this repo (2026-08-18)\n")
     _write(repo / "docs" / "loom" / "specs" / "b.md",
            "# Brief\n\n## Design-side on-ramp\n\n"
-           "fired: rows 1 — standing direct (DIRECTION.md)\n")
+           "fired: rows 1 — standing direct (KICKOFF-DEFAULTS.md)\n")
     _write(repo / "docs" / "loom" / "plans" / "p.md",
            "# Plan: p\n\n**Source brief**: docs/loom/specs/b.md\n")
     _git_add(repo, "docs/loom/plans/p.md", "docs/loom/specs/b.md",
-             "docs/loom/DIRECTION.md")
+             "docs/loom/KICKOFF-DEFAULTS.md")
 
     res = run_hook(bash_event("git commit -m x", cwd=repo))
     assert res.returncode == 0
@@ -1025,14 +1025,15 @@ def test_commit_adding_non_ascii_named_plan_is_gated(repo):
     assert "user chose <detour|direct>" in res.stderr
 
 
-def test_commit_with_unreadable_direction_file_fails_open_loudly(repo):
-    # WHY: load_standing() reads DIRECTION.md once, before the per-plan
-    # loop. An undecodable file there must surface as THIS gate's named
-    # fail-open note, not as __main__'s anonymous internal-error line —
-    # otherwise the operator cannot tell which gate stopped working.
-    direction = repo / "docs" / "loom" / "DIRECTION.md"
-    direction.parent.mkdir(parents=True, exist_ok=True)
-    direction.write_bytes(b"# Direction\n\xff\xfe not utf-8\n")
+def test_commit_with_unreadable_kickoff_defaults_file_fails_open_loudly(repo):
+    # WHY: load_standing() reads KICKOFF-DEFAULTS.md once, before the
+    # per-plan loop. An undecodable file there must surface as THIS
+    # gate's named fail-open note, not as __main__'s anonymous
+    # internal-error line — otherwise the operator cannot tell which
+    # gate stopped working.
+    kickoff_defaults = repo / "docs" / "loom" / "KICKOFF-DEFAULTS.md"
+    kickoff_defaults.parent.mkdir(parents=True, exist_ok=True)
+    kickoff_defaults.write_bytes(b"# Kickoff Defaults\n\xff\xfe not utf-8\n")
     _write(repo / "docs" / "loom" / "specs" / "b.md",
            "# Brief\n\n## Design-side on-ramp\n\npending\n")
     _write(repo / "docs" / "loom" / "plans" / "p.md",
@@ -1042,4 +1043,4 @@ def test_commit_with_unreadable_direction_file_fails_open_loudly(repo):
     res = run_hook(bash_event("git commit -m x", cwd=repo))
     assert res.returncode == 0
     assert "on-ramp choice gate inactive" in res.stderr
-    assert "DIRECTION.md" in res.stderr
+    assert "KICKOFF-DEFAULTS.md" in res.stderr

@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from check_onramp_choice import build_question, resolve
+from check_onramp_choice import build_question, load_standing, resolve
 
 SCRIPT = Path(__file__).parent / "check_onramp_choice.py"
 
@@ -126,15 +126,68 @@ def test_stderr_names_brief_path_on_unresolved(tmp_path):
     assert str(brief) in result.stderr
 
 
-def test_standing_choice_in_direction_resolves_listed_rows(tmp_path):
+def test_standing_choices_load_from_kickoff_defaults(tmp_path):
+    """`load_standing` resolves row 1 from a fixture repo whose only
+    choices file is docs/loom/KICKOFF-DEFAULTS.md — the standing-choices
+    home moved off the old filename entirely. Companion: a brief line
+    spelled with the new filename resolves, while the old spelling is
+    unresolved. The old-spelling literal is built by splitting INSIDE
+    the matched token (not around the parentheses, which the sweep's
+    bare-token alternative still catches) so this fixture's SOURCE
+    carries no matching substring — see the arc sweep pattern in the
+    plan's `## Notes`."""
+    kickoff_dir = tmp_path / "docs" / "loom"
+    kickoff_dir.mkdir(parents=True)
+    (kickoff_dir / "KICKOFF-DEFAULTS.md").write_text(
+        "## On-ramp standing choices\n\n"
+        "- row 1 (product-principles): standing direct — x (2026-08-18)\n",
+        encoding="utf-8",
+    )
+
+    assert load_standing(tmp_path) == {1: "direct"}
+
+    old_spelling_paren = "(" + "DIREC" + "TION" + ".md)"
+
+    new_dir = tmp_path / "new"
+    new_dir.mkdir()
+    brief_new = _write_brief(
+        new_dir,
+        "Design-side on-ramp: fired: rows 1 — standing direct "
+        "(KICKOFF-DEFAULTS.md)",
+    )
+    result_new = subprocess.run(
+        [sys.executable, str(SCRIPT), str(brief_new), "--repo-root", str(tmp_path)],
+        capture_output=True, text=True, env=_ENV,
+    )
+    assert result_new.returncode == 0, (
+        f"stdout: {result_new.stdout}\nstderr: {result_new.stderr}"
+    )
+
+    old_dir = tmp_path / "old"
+    old_dir.mkdir()
+    brief_old = _write_brief(
+        old_dir,
+        f"Design-side on-ramp: fired: rows 1 — standing direct "
+        f"{old_spelling_paren}",
+    )
+    result_old = subprocess.run(
+        [sys.executable, str(SCRIPT), str(brief_old), "--repo-root", str(tmp_path)],
+        capture_output=True, text=True, env=_ENV,
+    )
+    assert result_old.returncode == 2, (
+        f"stdout: {result_old.stdout}\nstderr: {result_old.stderr}"
+    )
+
+
+def test_standing_choice_in_kickoff_defaults_resolves_listed_rows(tmp_path):
     """`load_standing` wiring: a `standing` on-ramp line resolves only
-    when every cited row has a matching entry under DIRECTION.md's
+    when every cited row has a matching entry under KICKOFF-DEFAULTS.md's
     `## On-ramp standing choices` heading. Also covers the
     default-resolution path (`--repo-root` omitted, resolved via `git
     rev-parse --show-toplevel` from the brief's directory)."""
-    direction_dir = tmp_path / "docs" / "loom"
-    direction_dir.mkdir(parents=True)
-    (direction_dir / "DIRECTION.md").write_text(
+    kickoff_dir = tmp_path / "docs" / "loom"
+    kickoff_dir.mkdir(parents=True)
+    (kickoff_dir / "KICKOFF-DEFAULTS.md").write_text(
         "## On-ramp standing choices\n\n"
         "- row 1 (product-principles): standing direct — x (2026-08-18)\n",
         encoding="utf-8",
@@ -142,7 +195,8 @@ def test_standing_choice_in_direction_resolves_listed_rows(tmp_path):
 
     brief_ok = _write_brief(
         tmp_path,
-        "Design-side on-ramp: fired: rows 1 — standing direct (DIRECTION.md)",
+        "Design-side on-ramp: fired: rows 1 — standing direct "
+        "(KICKOFF-DEFAULTS.md)",
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), str(brief_ok), "--repo-root", str(tmp_path)],
@@ -152,7 +206,8 @@ def test_standing_choice_in_direction_resolves_listed_rows(tmp_path):
 
     brief_extra_row = _write_brief(
         tmp_path,
-        "Design-side on-ramp: fired: rows 1,3 — standing direct (DIRECTION.md)",
+        "Design-side on-ramp: fired: rows 1,3 — standing direct "
+        "(KICKOFF-DEFAULTS.md)",
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), str(brief_extra_row), "--repo-root", str(tmp_path)],
@@ -161,16 +216,17 @@ def test_standing_choice_in_direction_resolves_listed_rows(tmp_path):
     assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
     assert "row 3" in result.stderr
 
-    no_direction_root = tmp_path / "no-direction"
-    no_direction_root.mkdir()
-    brief_no_direction = _write_brief(
-        no_direction_root,
-        "Design-side on-ramp: fired: rows 1 — standing direct (DIRECTION.md)",
+    no_kickoff_defaults_root = tmp_path / "no-kickoff-defaults"
+    no_kickoff_defaults_root.mkdir()
+    brief_no_kickoff_defaults = _write_brief(
+        no_kickoff_defaults_root,
+        "Design-side on-ramp: fired: rows 1 — standing direct "
+        "(KICKOFF-DEFAULTS.md)",
     )
     result = subprocess.run(
         [
-            sys.executable, str(SCRIPT), str(brief_no_direction),
-            "--repo-root", str(no_direction_root),
+            sys.executable, str(SCRIPT), str(brief_no_kickoff_defaults),
+            "--repo-root", str(no_kickoff_defaults_root),
         ],
         capture_output=True, text=True, env=_ENV,
     )
@@ -182,16 +238,17 @@ def test_standing_choice_in_direction_resolves_listed_rows(tmp_path):
     git_repo.mkdir()
     subprocess.run(["git", "init"], cwd=git_repo, capture_output=True,
                     text=True, check=True)
-    git_direction_dir = git_repo / "docs" / "loom"
-    git_direction_dir.mkdir(parents=True)
-    (git_direction_dir / "DIRECTION.md").write_text(
+    git_kickoff_dir = git_repo / "docs" / "loom"
+    git_kickoff_dir.mkdir(parents=True)
+    (git_kickoff_dir / "KICKOFF-DEFAULTS.md").write_text(
         "## On-ramp standing choices\n\n"
         "- row 1 (product-principles): standing direct — x (2026-08-18)\n",
         encoding="utf-8",
     )
     brief_git = _write_brief(
         git_repo,
-        "Design-side on-ramp: fired: rows 1 — standing direct (DIRECTION.md)",
+        "Design-side on-ramp: fired: rows 1 — standing direct "
+        "(KICKOFF-DEFAULTS.md)",
     )
     result = subprocess.run(
         [sys.executable, str(SCRIPT), str(brief_git)],
@@ -206,7 +263,7 @@ def test_resolve_sets_missing_rows_for_standing_form():
     brief_text = (
         "# Brief: x\n\n"
         "Design-side on-ramp: fired: rows 1,3 — standing direct "
-        "(DIRECTION.md)\n\n"
+        "(KICKOFF-DEFAULTS.md)\n\n"
         "## Problem\n\nsome job.\n"
     )
     result = resolve(brief_text, {1: "direct"})
@@ -226,7 +283,7 @@ def test_build_question_names_missing_standing_row():
     brief_text = (
         "# Brief: x\n\n"
         "Design-side on-ramp: fired: rows 1,3 — standing direct "
-        "(DIRECTION.md)\n\n"
+        "(KICKOFF-DEFAULTS.md)\n\n"
         "## Problem\n\nsome job.\n"
     )
     result = resolve(brief_text, {1: "direct"})

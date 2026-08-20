@@ -149,7 +149,8 @@ MSG_ONRAMP = (
     "record the user's Design-side on-ramp choice. Your two options: put "
     "the question above to the user and write their answer into {brief}'s "
     "`## Design-side on-ramp` line, or — when a standing choice covers it "
-    "— cite it there in the `standing <detour|direct> (DIRECTION.md)` "
+    "— cite it there in the `standing <detour|direct> "
+    "(KICKOFF-DEFAULTS.md)` "
     "form. Do not answer on the user's behalf. "
     "loom gate: a newly added plan's source brief must record the "
     "on-ramp answer before the plan enters git (loom-code gate)."
@@ -654,11 +655,11 @@ def _gate_commit_plans(cwd, git_globals=()):
     try:
         standing = checker.load_standing(root)
     except Exception as exc:  # OSError, UnicodeDecodeError, anything else
-        # Name the gate: an unreadable DIRECTION.md here would otherwise
-        # escape to __main__'s anonymous "internal error" line, hiding
-        # WHICH gate stopped working.
+        # Name the gate: an unreadable KICKOFF-DEFAULTS.md here would
+        # otherwise escape to __main__'s anonymous "internal error" line,
+        # hiding WHICH gate stopped working.
         return 0, [_inactive(
-            f"cannot read DIRECTION.md standing choices: {exc}"
+            f"cannot read KICKOFF-DEFAULTS.md standing choices: {exc}"
         )]
     for plan in plans:
         try:

@@ -87,10 +87,10 @@ Bulleted list of adjacent things explicitly NOT in this change. Each bullet shou
 
 - `not fired — <reason>`
 - `fired: rows <comma-separated row numbers> — user chose <detour|direct>`
-- `fired: rows <comma-separated row numbers> — standing <detour|direct> (DIRECTION.md)`
+- `fired: rows <comma-separated row numbers> — standing <detour|direct> (KICKOFF-DEFAULTS.md)`
 - `pending`
 
-Any other wording is *unresolved* — never treated as a pass (lookalike wording does not resolve the gate). `pending` is what the agent writes until the user has answered; it is never the agent's own default. The `standing` form is legal only when `docs/loom/DIRECTION.md`'s `## On-ramp standing choices` section names every row cited on that line — that section's own grammar is owned by `loom-code/hooks/family-reception.md`, not repeated here.
+Any other wording is *unresolved* — never treated as a pass (lookalike wording does not resolve the gate). `pending` is what the agent writes until the user has answered; it is never the agent's own default. The `standing` form is legal only when `docs/loom/KICKOFF-DEFAULTS.md`'s `## On-ramp standing choices` section names every row cited on that line — that section's own grammar is owned by `loom-code/hooks/family-reception.md`, not repeated here.
 
 ### `## Queue relation`
 
@@ -196,7 +196,7 @@ Copy-paste this skeleton:
 
 ## Design-side on-ramp
 
-(one of: `not fired — <reason>` / `fired: rows <list> — user chose <detour|direct>` / `fired: rows <list> — standing <detour|direct> (DIRECTION.md)` / `pending`; any other wording is unresolved)
+(one of: `not fired — <reason>` / `fired: rows <list> — user chose <detour|direct>` / `fired: rows <list> — standing <detour|direct> (KICKOFF-DEFAULTS.md)` / `pending`; any other wording is unresolved)
 
 ## Queue relation
 
