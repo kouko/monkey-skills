@@ -68,16 +68,16 @@ This skill is light on novel logic — its value is orchestration; the work happ
 
 | Step | Delegate | Why this skill doesn't do it directly |
 |---|---|---|
-| 1 | `requesting-code-review` (four-way dispatch; docs-only → `requesting-docs-review`) | Human-judgment quality review is its own skill with its own subagent; this orchestrator just dispatches |
-| 2 | `verification-before-completion` | Package-level test invocation has its own per-stack command table; this orchestrator just invokes the gate |
-| 2b | `ui-verification` (conditional) | Main acceptance stage for a UI-bearing branch; has its own tooling/degradation contract (browser/device automation, N/A-loud); fires only when the branch touched UI and a `ui-flows.md` exists |
-| 3 | `dev-workflow:git-memory` | P3-D MANDATORY — git-memory decides whether memory trailers are warranted on this commit. Orchestrator passes the diff + recent commits; git-memory returns the trailer set (or empty, if routine) |
-| 4 | git CLI | Standard `git commit -m "<msg>" -m "<body with trailers>"` |
-| 5 | git CLI | `git push -u origin <branch>` if new; `git push` if upstream set |
-| 6 | gh CLI | `gh pr create --title "<title>" --body "<body>"`; authorization is request-derived — it arrived with the close-out request, so Step 11 opens the PR without a re-ask (up-front opt-out honored) |
-| 7 | `using-git-worktrees` | Worktree cleanup pattern lives in that skill; this orchestrator just offers to invoke its `git worktree remove` flow |
+| 1 | `requesting-code-review` (four-way dispatch; docs-only → `requesting-docs-review`) | Own subagent |
+| 2 | `verification-before-completion` | Own per-stack command table |
+| 2b | `ui-verification` (conditional) | Own tooling/degradation contract |
+| 3 | `dev-workflow:git-memory` | P3-D MANDATORY |
+| 4 | git CLI | Standard commit |
+| 5 | git CLI | Standard push |
+| 6 | gh CLI | Request-derived authorization |
+| 7 | `using-git-worktrees` | Own cleanup pattern |
 
-**The orchestrator does NOT** duplicate delegate logic, decide commit messages from scratch, or force the merge — full list in [`references/delegation-boundaries.md`](references/delegation-boundaries.md).
+Full per-step rationale + **the orchestrator does NOT** boundary list in [`references/delegation-boundaries.md`](references/delegation-boundaries.md).
 
 ## Default flow — what happens if user just says "finish this branch"
 
@@ -187,9 +187,14 @@ This skill is light on novel logic — its value is orchestration; the work happ
      | Stage-flip duty | The branch has a plan carrying the progress headers (the same plan Step 1 rendered). | BEFORE the close-out commit, flip the plan's terminal state: run `python3 scripts/plan_card.py <plan-path> --set-stage "finishing"` — repo-root `scripts/plan_card.py` when it exists; otherwise the plugin-shipped copy: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path> --set-stage "finishing"` (a load-time substitution, not a run-time shell variable). Then stage the flipped plan file (`git add docs/loom/plans/<plan>.md`) into THIS close-out commit. | No plan, a plan with no Status lines at all (old-format), or a plan whose ledger predates the `Stage:` header (Status lines but no `Stage:` — `--set-stage` refuses nonzero on that shape) → skip silently, per Step 1's entry-card rules. |
      | Stale-scan relay | Every close-out where the repo has a `docs/loom/plans/` directory. | Run `python3 scripts/plan_card.py --stale-scan docs/loom/plans` — repo-root `scripts/plan_card.py` when it exists; otherwise the plugin-shipped copy: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" --stale-scan docs/loom/plans` (a load-time substitution, not a run-time shell variable). Relay its stdout VERBATIM and loudly to the user — including the single `stale-scan: clean` line. A candidate plan belonging to an already-merged arc gets fixed on the spot: the same `--set-stage "finishing"` flip, staged into THIS close-out commit. A candidate belonging to a live parallel arc is named and passed through untouched. The scan is advisory by design — it always exits 0, because all-done at `review:round-N` is a legitimate transient state of a live arc; never harden a candidate line into a block or a STOP. | No `docs/loom/plans/` directory → skip silently (nothing to scan, auditable from the tree). |
    - **Purpose-linked betting.** Immediately before listing betting candidates in the Backlog-close row above, print `docs/loom/PURPOSE.md` verbatim so the user decides against the purpose, not from memory. When `PURPOSE.md` is absent, say so loudly and offer to write one — never silently skip the print. After the user promotes an entry to COMMITTED-NEXT, run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_north_star_link.py" <backlog-store>` (a load-time substitution, not a run-time shell variable) — this script ships only inside the plugin, with no repo-root shim. Exit 0 means every live COMMITTED-NEXT entry is linked to the purpose — proceed. Exit 1 means the backlog store path is unreadable — treat it the same as this row's own store-absent case. Exit 2 means the link is unresolved, for either of two distinct causes named in its stderr: `PURPOSE.md` is absent, or the just-promoted entry lacks a well-formed `serves:` line. Either cause is STOP-and-ask: relay the printed question verbatim, wait for the user's answer, record it in the entry's `serves:` line, then re-run the checker until it exits 0.
-   - **N/A consolidation (close-out report)**: each N/A sub-check above stays STATEABLE
-     on its own, but when the Step 13 report would otherwise list two or more of them,
-     collapse the formatting per [`references/close-out-report-formatting.md`](references/close-out-report-formatting.md).
+   - **N/A consolidation (close-out report)**: when two or more close-out
+     sub-checks above are N/A, do NOT stack ~4-5 separate "N/A — checker not
+     present" lines before the conclusion. Each N/A stays STATEABLE (the
+     per-check "say loudly" semantics are preserved — the check still runs
+     and names its reason), but in the Step 13 report they consolidate inapplicable checks into
+     ONE summary line after the plain conclusion: "N inapplicable checks skipped: <list>; details on request."
+     Conclusion-first — the user sees the outcome before skipped-checks noise. A single N/A still emits its
+     own one-line note; only the multi-N/A case collapses.
    - Attached-HEAD check: run `git symbolic-ref -q HEAD` in the main
      working tree — it must print the branch being finished. Detached
      HEAD or a different branch means something (typically a subagent)
