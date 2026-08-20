@@ -1,7 +1,7 @@
 ---
 name: 2026-07-10-on-ramp-row-4-vs-rows-2-3-precedence-unstated
 description: On-ramp row 4 vs rows 2/3 precedence unstated
-status: OPEN
+status: open
 origin: loom-discovery dogfood FINDING-007 + router cold-reader (2026-07-10); Probe A q9 live-confirmed the adjacent row-4-vs-row-1 seam splits 50/50 at description level.
 start: a real session where discovery and interface-design/spec on-ramp rows fire together and the session visibly picks wrong (the row-4-vs-row-1 case is already resolved in the reception file).
 ---

@@ -1,7 +1,7 @@
 ---
 name: 2026-08-21-lane-level-standing-bet-walk-a-line-without-per-arc-ratification
 description: lane-level standing bet — the user bets a LINE of entries once, and agents auto-promote the next entry in that lane at each close-out citing the recorded standing decision; per-arc user-only betting stays the base rule
-status: OPEN
+status: open
 origin: 2026-08-21 dissolve-direction-layer brainstorming — the user asked whether agents could walk toward a far PURPOSE more autonomously than one user-ratified bet per arc; adjudicated in conversation, keep user-only as base, design the standing-bet extension later
 start: the first real lane of 3 or more entries that needs consecutive arcs walked without per-arc ratification — or the design session on 2026-08-10-loom-lacks-a-milestone-layer-between-plan-stage-and-direction opening, whichever comes first (the two are one design: a lane must be expressible before it can be bet on)
 ---

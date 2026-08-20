@@ -1,7 +1,7 @@
 ---
 name: 2026-08-19-the-field-microstructure-gate-has-no-corpus-sweep
 description: check_field_microstructure.py is invoked only by the three skills that author a plan or brief, never by CI and never over the corpus, so a document written outside that route is never measured — and the corpus it would measure is 216 of 224 plans failing, because the arc's retrofit deliberately covered 5 plans and 4 briefs, not the history
-status: OPEN
+status: open
 origin: field-value-microstructure close-out (2026-08-19) — found at rebase, when the arc's own gate flagged a plan that had arrived on main from a concurrent arc
 start: next touch of the loom CI workflows, or the second time a non-compliant plan is noticed in the corpus
 ---

@@ -1,7 +1,7 @@
 ---
 name: 2026-07-25-investing-toolkit-top-line-revenue-lane-2-36-0-post-ship-follow-ups
 description: investing-toolkit top-line revenue lane 2.36.0 — post-ship follow-ups
-status: OPEN
+status: open
 origin: company total (top-line) revenue arc (branch feat-total-revenue-lane, 2026-07-25, 2.36.0). Brief `docs/loom/specs/2026-07-25-company-total-revenue.md`, plan `docs/loom/plans/2026-07-25-company-total-revenue.md`. Every item below is a per-task review ruling that was deliberately NOT closed in-branch, with the reason recorded — none is an oversight.
 start: next touch of `analysis-kpi/scripts/kpi_xbrl_ingest.py`, `analysis-kpi/scripts/kpi_store.py`, `analysis-kpi/scripts/kpi_xbrl.py`, or `data-markets/scripts/sec_edgar_client.py`.
 ---

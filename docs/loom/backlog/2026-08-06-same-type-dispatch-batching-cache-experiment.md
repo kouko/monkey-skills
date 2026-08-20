@@ -1,7 +1,7 @@
 ---
 name: 2026-08-06-same-type-dispatch-batching-cache-experiment
 description: Same-type subagent batching within the cache TTL is theory-supported (identical definition prefixes share API-level cache) but locally unproven — a haiku zero-tool experiment showed no detectable duration effect (warm mean 9.9s vs cold 10.6s, within spread); the JP-measured 2x win used ~119k-token real workloads, so the re-test needs realistic mass
-status: OPEN
+status: open
 origin: dispatch-efficiency arc research (docs/loom/research/2026-08-06-subagent-latency-and-cache-research.md §4), pre-registered decision rule "no clear win → backlog with data"
 start: re-test with sonnet-tier, tool-using workloads ≥100k tokens (e.g. two identical review arms staggered vs batched), duration + /cost cache fields as metrics
 ---

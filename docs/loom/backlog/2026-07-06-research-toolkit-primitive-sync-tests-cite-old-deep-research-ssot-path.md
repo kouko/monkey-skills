@@ -1,7 +1,7 @@
 ---
 name: 2026-07-06-research-toolkit-primitive-sync-tests-cite-old-deep-research-ssot-path
 description: research-toolkit primitive-sync tests cite old deep-research SSOT path
-status: OPEN
+status: open
 origin: whole-branch review of research-skill-r2 (2026-07-06, docs/loom/dogfood/2026-07-06-research-toolkit-firing-ab.md branch)
 start: next research-toolkit scripts/primitives touch, or as a tiny surgical PR
 ---

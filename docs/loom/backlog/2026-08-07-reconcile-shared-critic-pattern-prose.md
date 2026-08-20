@@ -1,7 +1,8 @@
 ---
 name: 2026-08-07-reconcile-shared-critic-pattern-prose
 description: The two sanctioned co-writer critics restate the writer-vs-judge pattern in ~500 words of parallel but diverging prose
-status: PARKED
+status: open
+blocked: waiting on the next semantic change to the shared co-writer critic pattern
 origin: 2026-08-07 family complexity audit (docs/loom/audits/2026-08-07-family-complexity-audit.md, item C3)
 start: the next semantic change to the sanctioned co-writer critic pattern (any change that must land in both critics)
 ---

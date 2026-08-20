@@ -1,7 +1,7 @@
 ---
 name: 2026-07-27-investing-toolkit-a-ticker-resolving-to-a-re-registered-holding-company
 description: investing-toolkit — a ticker resolving to a re-registered holding company returns nothing, successfully
-status: OPEN
+status: open
 origin: dogfood of `pack.py --pack reconstruct`. `XOM` returns `requested: 0 / succeeded: 0 / failed: 0`, `failed_items: []`, `_status: "ok"`, exit 0, in 0.1 s — a clean success over zero filings.
 start: READY. Smallest end state is a typed error when a resolved CIK yields zero filings of the requested form, naming the CIK so the reader can see the entity is wrong rather than the history empty.
 ---

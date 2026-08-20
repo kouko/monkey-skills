@@ -1,7 +1,7 @@
 ---
 name: 2026-08-01-four-repo-hooks-carry-a-copy-pasted-stdin-parse-preamble
 description: Four repo hooks carry a copy-pasted stdin-parse preamble
-status: OPEN
+status: open
 origin: PR #636 (`check-memory-store-integrity.sh`), which deliberately copied the sibling shape rather than extracting, because extraction touches all four and was out of that branch's scope.
 start: the next time a fifth hook is added, or any change is needed to how a hook reads its stdin payload — that change is a four-file edit today.
 ---

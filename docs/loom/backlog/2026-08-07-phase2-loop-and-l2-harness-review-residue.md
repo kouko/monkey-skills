@@ -1,7 +1,7 @@
 ---
 name: 2026-08-07-phase2-loop-and-l2-harness-review-residue
 description: deferred whole-branch review findings from the Phase 2 loop + L2 e2e harness branch
-status: OPEN
+status: open
 origin: whole-branch review of `feat/u1-nightly-phase2-loop` (2026-08-07, loom-code 0.64.0 panel — 2 code-reviewer + 2 docs-reviewer arms). The branch fixed the 2 fatal findings and the highest-value should-fix cluster; the items below were deliberately left, each with its reason.
 start: next substantive touch of `scripts/phase2-loop/` or `dbt-wiki/tests/`
 ---

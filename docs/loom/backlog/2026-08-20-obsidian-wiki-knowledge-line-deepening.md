@@ -1,7 +1,7 @@
 ---
 name: 2026-08-20-obsidian-wiki-knowledge-line-deepening
 description: obsidian wiki 知識線深化——強化 wiki-ingest / wiki-query 等技能的知識沉澱與檢索深度
-status: OPEN
+status: open
 origin: docs/loom/DIRECTION.md `## Later` cleanup（north-star-serves-link 弧，2026-08-20）
 start: 下次規劃 obsidian 相關弧時，評估是否把這條納入該弧的範圍
 ---

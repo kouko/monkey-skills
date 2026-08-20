@@ -1,7 +1,7 @@
 ---
 name: 2026-07-31-institutionalise-the-implementer-s-refusal-to-work
 description: Institutionalise the implementer's refusal to work
-status: OPEN
+status: open
 origin: `docs/loom/audits/2026-07-31-a-class-interceptability-backtest.md` §候選 6, proposed there and left unadjudicated.
 start: after the `Reuse-adequacy` arc closes, or the next time an implementer returns `NEEDS_CONTEXT` / `BLOCKED` on a plan-fact defect and the refusal reads as a judgment call rather than a contract obligation.
 ---

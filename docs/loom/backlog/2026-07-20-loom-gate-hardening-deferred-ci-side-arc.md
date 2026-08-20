@@ -1,7 +1,7 @@
 ---
 name: 2026-07-20-loom-gate-hardening-deferred-ci-side-arc
 description: loom gate hardening — deferred CI-side arc
-status: OPEN
+status: open
 origin: loom gate-hardening mechanical arc (branch `loom-gate-hardening-mechanical`, 2026-07-20/21); audit `docs/loom/audits/2026-07-20-loom-mechanism-weakness-audit.md` §7 + the branch brief §Out of Scope. The mechanical fixes (verified→`--run`, push-guard wrappers, batch precursor guard, version-bump `scripts/`) shipped this branch; the items below were deferred because they are NOT locally solvable as mechanical fixes.
 start: next substantive touch of `loom-code/scripts/loom_gate_markers.py`, the pipeline seg2 validator (`loom-pipeline/scripts/driver_40_seg2.js`), or a decision to add server-side gate re-checks.
 ---

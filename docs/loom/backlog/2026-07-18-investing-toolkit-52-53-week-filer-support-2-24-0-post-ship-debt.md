@@ -1,7 +1,7 @@
 ---
 name: 2026-07-18-investing-toolkit-52-53-week-filer-support-2-24-0-post-ship-debt
 description: investing-toolkit 52/53-week filer support 2.24.0 — post-ship debt
-status: SHIPPED
+status: closed
 ---
 
 - Debt (all 🟢, fire on next touch of the named file):

@@ -1,7 +1,7 @@
 ---
 name: 2026-08-10-plan-document-reviewer-misrouted-as-agent-type
 description: writing-plans' self-review wording led a cold operator to look up plan-document-reviewer in the agent registry, find nothing, and substitute docs-reviewer with the wrong checklist for 3 rounds — field incident in an external consumer repo
-status: SHIPPED
+status: closed
 origin: 2026-08-10 review-cost discussion — diagnosed from the consumer repo's session transcripts (kumiko, private; disclosed per committed-docs precedent)
 start: next touch of loom-code/skills/writing-plans/SKILL.md §Self-review, or the next reported plan-gate misroute — whichever comes first
 ---

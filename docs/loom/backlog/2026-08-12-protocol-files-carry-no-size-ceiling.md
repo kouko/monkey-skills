@@ -1,7 +1,7 @@
 ---
 name: 2026-08-12-protocol-files-carry-no-size-ceiling
 description: every word-cap test in the repo targets a SKILL.md, so `<plugin>/skills/*/protocols/*.md` grows unbudgeted even though protocols are loaded at runtime like skill bodies — the adjudication-view protocol grew 1937 → 2069 words in one fix round with nothing to notice
-status: OPEN
+status: open
 origin: 2026-08-12 adjudication-view Japanese-support arc, fix round — the implementer adding the §Invocation contract checked for a ceiling before writing and found none, and flagged the gap rather than silently benefiting from it
 start: a protocol file crosses ~3000 words, OR a second protocol file lands under any plugin — whichever comes first
 ---

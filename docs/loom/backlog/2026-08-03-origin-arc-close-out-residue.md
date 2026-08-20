@@ -1,7 +1,7 @@
 ---
 name: 2026-08-03-origin-arc-close-out-residue
 description: small claim-accuracy items filed at the finding-origin-attribution arc's close-out, each a one-clause edit that a fifth review round would have cost more to catch than to fix later
-status: OPEN
+status: open
 origin: the finding-origin-attribution arc (loom-code 0.45.0), whole-branch review rounds 4-5 — carried forward under the PASS_WITH_NOTES rule rather than fixed, to stop a fix-generates-findings loop
 start: the next time anyone opens one of the named files for another reason
 ---

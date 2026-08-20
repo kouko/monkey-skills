@@ -1,7 +1,7 @@
 ---
 name: 2026-07-19-investing-toolkit-quarterly-jnj-restatementaxis-signature-blind-spot
 description: investing-toolkit quarterly — JNJ RestatementAxis signature blind spot
-status: SHIPPED
+status: closed
 ---
 
 - What: `_dimension_signature` (sec_edgar_client.py ~:2073, shipped

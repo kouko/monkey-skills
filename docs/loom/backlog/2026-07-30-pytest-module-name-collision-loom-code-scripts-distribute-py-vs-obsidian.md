@@ -1,7 +1,7 @@
 ---
 name: 2026-07-30-pytest-module-name-collision-loom-code-scripts-distribute-py-vs-obsidian
 description: pytest module-name collision: loom-code/scripts/distribute.py vs obsidian/scripts/distribute.py
-status: OPEN
+status: open
 origin: 2026-07-30 chore-description-diet whole-branch review, both code arms independently reproduced (stash-and-rerun on main confirmed pre-existing).
 start: next time a whole-repo pytest run is wanted, or a third `distribute.py` appears.
 ---

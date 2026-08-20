@@ -1,7 +1,7 @@
 ---
 name: 2026-08-18-remaining-container-rules-callout-toc-paragraph-net-plan-tables
 description: the four container rules the artifact-layer table-routing arc (PR #699) deliberately left out — callout roles, TOC, a 2–4-sentence paragraph net, plan-level tables — each with the cost/risk that parked it and the evidence that would unpark it; the field-value-microstructure arc (2026-08-19) took the field-value and (S)-slice half of the readability problem, leaving these four still parked
-status: OPEN
+status: open
 origin: PR #699 close-out (2026-08-17) — brief `docs/loom/specs/2026-08-17-artifact-table-routing.md` §Out of Scope; user-ratified evaluation in the same session that only comparison→table was worth doing without further evidence
 start: docs-reviewer's table-routed-prose omission dimension yields its first real findings, or ≥30 post-#699 briefs/specs exist so the seed audit's corpus measurement can be re-run — whichever comes first
 ---

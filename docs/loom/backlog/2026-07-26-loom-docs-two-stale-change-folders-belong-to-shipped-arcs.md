@@ -1,7 +1,7 @@
 ---
 name: 2026-07-26-loom-docs-two-stale-change-folders-belong-to-shipped-arcs
 description: loom docs — two stale change-folders belong to shipped arcs
-status: OPEN
+status: open
 ---
 
 - **What.** `docs/loom/2026-07-12-us-sec-primary-source-layer` and

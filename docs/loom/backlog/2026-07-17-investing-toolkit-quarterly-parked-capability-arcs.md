@@ -1,7 +1,8 @@
 ---
 name: 2026-07-17-investing-toolkit-quarterly-parked-capability-arcs
 description: investing-toolkit quarterly — parked capability arcs
-status: PARKED
+status: open
+blocked: waiting on a real filer hitting the calc-linkbase or Form-NT trigger
 origin: rebuild-findings.md §REJECTED/parked (2026-07-17); archived change-folder docs/loom/archive/2026-07-18-2026-07-16-operational-kpi-quarterly/.
 start: (calc-linkbase) a real filer whose dimensional concepts genuinely lack "Revenue" and misclassify — insurance was the hypothesized case and its concepts already carry Revenue; (Form-NT) a user asks for not-yet-due vs overdue vs late distinction in coverage reports.
 ---

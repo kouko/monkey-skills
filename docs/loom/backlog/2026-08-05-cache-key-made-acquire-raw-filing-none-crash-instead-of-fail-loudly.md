@@ -1,7 +1,7 @@
 ---
 name: 2026-08-05-cache-key-made-acquire-raw-filing-none-crash-instead-of-fail-loudly
 description: Task B's cache key made _acquire_raw_filing(None) crash where it used to fail loudly — the root cause is fixed; four call sites remain untraced
-status: OPEN
+status: open
 origin: found by Task J's implementer while fixing the same root cause in its own loop; independently reproduced by both of Task J's reviewers (branch `feat-us-quarterly-statement-series`, 2026-08-05).
 start: the ROOT CAUSE is fixed; what remains is auditing four call sites nobody has traced — do that before trusting any of them with a producer that can yield None
 ---

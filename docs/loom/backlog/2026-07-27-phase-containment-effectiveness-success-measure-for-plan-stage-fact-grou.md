@@ -1,7 +1,7 @@
 ---
 name: 2026-07-27-phase-containment-effectiveness-success-measure-for-plan-stage-fact-grou
 description: Phase Containment Effectiveness — success measure for plan-stage fact grounding
-status: OPEN
+status: open
 origin: `docs/loom/specs/2026-07-27-plan-stage-fact-grounding.md` Open Question 1 — "How is success measured? … Without this the change ships unfalsifiable." Plan Task 9 (`docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md:452-455`) fixes the measure's cheapest viable form. Evidence: `docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md` §2 (root-cause taxonomy) and §3 (arc-by-arc dossier).
 start: FORWARD half only — evaluate at the close-out (whole-branch review and/or live dogfood) of each investing-toolkit arc that ships AFTER the plan-stage fact-grounding change (`docs/loom/plans/2026-07-27-plan-stage-fact-grounding.md`) lands. The HISTORICAL BASELINE half is WONTDO as of 2026-08-03 — see the decision block at the top of the body; do not re-open it without new grounds.
 ---

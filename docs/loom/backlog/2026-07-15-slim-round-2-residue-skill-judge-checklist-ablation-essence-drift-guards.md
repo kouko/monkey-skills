@@ -1,7 +1,7 @@
 ---
 name: 2026-07-15-slim-round-2-residue-skill-judge-checklist-ablation-essence-drift-guards
 description: slim-round-2 residue — skill-judge checklist ablation + Essence-drift guards
-status: OPEN
+status: open
 origin: slim-round-2 branch whole-branch review (2 🟢) + further-slimming assessment (2026-07-15 session).
 start: ablation piece = next skill-judge touch, or when roadmap C ships writing-lean's sentence-level no-op test (whichever first); lockstep-test piece = next touch of either pointer paragraph.
 ---

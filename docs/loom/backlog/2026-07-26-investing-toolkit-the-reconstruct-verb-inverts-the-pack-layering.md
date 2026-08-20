@@ -1,7 +1,7 @@
 ---
 name: 2026-07-26-investing-toolkit-the-reconstruct-verb-inverts-the-pack-layering
 description: investing-toolkit — the `reconstruct` verb inverts the pack layering
-status: OPEN
+status: open
 ---
 
 - **What.** `pack_us.py` is a Layer-1 I/O module, and the `reconstruct` verb

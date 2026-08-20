@@ -1,7 +1,7 @@
 ---
 name: 2026-07-15-afk-research-lane-569-next-touches
 description: AFK research lane (#569) next-touches
-status: OPEN
+status: open
 origin: PR #569 per-task + whole-branch reviews (all 🟢).
 start: next kickoff-briefing.md touch.
 ---

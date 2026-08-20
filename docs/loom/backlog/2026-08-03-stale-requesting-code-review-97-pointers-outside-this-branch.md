@@ -1,7 +1,7 @@
 ---
 name: 2026-08-03-stale-requesting-code-review-97-pointers-outside-this-branch
 description: Documents outside branch `feat-repair-side-sweep` still cite `requesting-code-review/SKILL.md:97` for the citation pre-pass fence/blockquote caveat, which loom-code 0.46.0 moved to `requesting-docs-review/SKILL.md:54` — the cited line is now blank, so the pointer fails silently and the bounds-only citation checker cannot see it; the surviving copies are listed here by path, without a total, because this entry is itself inside the swept corpus
-status: OPEN
+status: open
 origin: found by `scripts/claim_copy_sweep.py` while repairing the in-scope copies on branch `feat-repair-side-sweep` (2026-08-03). A docs reviewer, working from the branch diff, named only the copies inside review scope; the sweep found more outside it — and a first draft of THIS entry then undercounted its own sweep output, which a later reviewer caught.
 start: the next time anyone opens one of the listed files for another reason — or immediately, if a reader is about to follow one of these pointers. Re-run the sweep first (below); do not work from the list alone.
 ---

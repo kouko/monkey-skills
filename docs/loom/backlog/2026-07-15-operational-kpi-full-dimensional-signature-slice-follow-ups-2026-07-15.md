@@ -1,7 +1,7 @@
 ---
 name: 2026-07-15-operational-kpi-full-dimensional-signature-slice-follow-ups-2026-07-15
 description: operational-kpi full-dimensional-signature slice — follow-ups (2026-07-15)
-status: OPEN
+status: open
 ---
 
 Context: docs/loom/{specs,plans}/2026-07-15-operational-kpi-full-dimensional-signature.md

@@ -1,7 +1,7 @@
 ---
 name: 2026-08-10-loom-lacks-a-milestone-layer-between-plan-stage-and-direction
 description: loom's progress model has a task layer (plan Status/Stage, machine-verified) and a direction layer (DIRECTION.md/BACKLOG.md, generated) but nothing between them — no milestone/roadmap surface that spans multiple plans of one deliverable, which is exactly the layer external repos hand-invent and then let drift
-status: OPEN
+status: open
 origin: 2026-08-10 kumiko-zaiku-app-icons session 63262433 — the repo hand-maintains a progress.md tracking M1 Parts 1-5 across multiple plans; it drifted from reality four times, each drift surviving every gate because no gate recognizes a hand-copy; the session's own diagnosis ("a hand-copy standing in for the layer loom lacks") was verified against this repo the same day: plan_card.py covers per-plan state only, backlog_index.py covers cross-plan queue/direction only, and no artifact covers milestone-of-one-deliverable
 start: next time a repo (this one or external) needs to answer "how far along is deliverable X" where X spans ≥2 plans — or the first design session on the progress model after the ship-progress-tooling arc merges
 ---

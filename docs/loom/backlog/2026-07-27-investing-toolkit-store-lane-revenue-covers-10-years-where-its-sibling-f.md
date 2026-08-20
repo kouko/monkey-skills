@@ -1,7 +1,7 @@
 ---
 name: 2026-07-27-investing-toolkit-store-lane-revenue-covers-10-years-where-its-sibling-f
 description: investing-toolkit — store-lane revenue covers 10 years where its sibling fields cover 18-20
-status: OPEN
+status: open
 origin: post-#621 end-to-end run. `KO` through `statement-backfill → kpi_us_statements_ingest → kpi_store dump → kpi_spine_view derive`: `revenue` covers 2016-2025 (10 years) while **eight** fields cover 2007-2025 (19 years: gross_profit, operating_income, net_income, eps_basic, and the cash-flow trio plus capex), `pretax_income` and `total_assets` cover 2008-2025 (18), and `total_equity`/`cash` reach 2006 (20). `total_liabilities` is absent from KO's store lane entirely. The store holds exactly one revenue-family series for KO, `us-gaap:Revenues`.
 start: READY. Smallest end state is a chain-membership audit — for each roster filer, which revenue-family concepts appear in its companyfacts and which of those the chain lists — not a new mechanism.
 ---

@@ -1,7 +1,7 @@
 ---
 name: 2026-08-02-a-one-character-origin-quote-still-verifies
 description: the origin field's anti-fabrication property rests on a quote being hard to invent, but the validator accepts any non-blank substring, so a one-character quote verifies against almost any file and counts as a genuine origin
-status: CLOSED — SUPERSEDED
+status: closed
 origin: Task 2 of the finding-origin-attribution arc (docs/loom/plans/2026-08-02-finding-origin-attribution.md), code-quality review round 2 — routed to the user rather than fixed in-task
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: 2026-07-27-investing-toolkit-the-as-filed-lane-returns-revenue-with-no-cells-at-all
 description: investing-toolkit — the as-filed lane returns revenue with no cells at all for banks
-status: OPEN
+status: open
 origin: `pack.py --pack reconstruct --ticker JPM` → `kpi_spine_view derive-as-filed`. The `revenue` field comes back with **zero periods** — not one typed cell — while `gross_profit`, `cash` and `capex` in the same payload correctly carry `not_presented`.
 start: READY. The roster census this would normally need is already in `post/sweep.jsonl` (the `ambiguous_total` and `revenue_concept: null` counts above came from it), so the open question is only whether to add a cell state or to reuse `not_presented` with a reason.
 ---

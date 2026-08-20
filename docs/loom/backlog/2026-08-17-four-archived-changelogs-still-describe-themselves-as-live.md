@@ -1,7 +1,7 @@
 ---
 name: 2026-08-17-four-archived-changelogs-still-describe-themselves-as-live
 description: loom-design's four sibling CHANGELOG-*.md archives still open in present or future tense for plugins retired in the 6→2 merge — two of them literally say "will be documented in this file" — so a reader cannot tell they are historical records
-status: OPEN
+status: open
 origin: 2026-08-17 review of the CHANGELOG-pipeline.md archival-header fix — the reviewer checked the symmetry that fix claimed to restore and found it never existed; none of the four siblings carries archival framing
 start: the next edit to any loom-design/CHANGELOG-*.md, OR a reader/agent misreads one as the live changelog — whichever comes first
 ---

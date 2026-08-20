@@ -1,7 +1,7 @@
 ---
 name: 2026-08-07-52-53-week-calendar-boundary-never-verified-against-a-real-filer
 description: The quarterly series' day-span classifier was never verified against a 52/53-week filer — Task G planned it, the branch shipped without it
-status: OPEN
+status: open
 origin: planned as Task G of the US quarterly-statement-series arc (`docs/loom/plans/2026-07-28-us-quarterly-statement-series.md`), which shipped 9 of its 10 tasks. A whole-branch reviewer noticed the branch had filed backlog entries for two lesser deferrals while the one planned blocking task that was never built had neither an amendment nor an entry. **Verified 2026-08-07**: neither `us_52_53_week_periods.json` nor `test_52_53_week_period_keys_classify_to_their_exact_kind` exists in the tree.
 start: before trusting the quarterly series on a 52/53-week filer — retailers and many manufacturers use one. Also the natural moment to close brief Open Question 4, which this task was written to answer.
 ---

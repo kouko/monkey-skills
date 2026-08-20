@@ -1,7 +1,7 @@
 ---
 name: 2026-07-24-investing-toolkit-tw-financial-ixbrl-2-32-1-post-ship-follow-ups
 description: investing-toolkit TW financial iXBRL 2.32.1 — post-ship follow-ups
-status: OPEN
+status: open
 origin: TW financial iXBRL Phase-4 consumption arc (branch tw-fin-ixbrl-followups, 2026-07-24, 2.32.1 — renumbered from 2.31.1 after main advanced to 2.32.0); 2882.TW live render dogfood.
 ---
 

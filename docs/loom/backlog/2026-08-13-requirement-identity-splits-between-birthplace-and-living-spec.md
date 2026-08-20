@@ -1,7 +1,7 @@
 ---
 name: 2026-08-13-requirement-identity-splits-between-birthplace-and-living-spec
 description: a requirement is born in a change-folder as a prose NAME and lives forever in the living spec as REQ-N, with nothing joining the two — one concept, two vocabularies, across the longest-lived identifier in the repo
-status: SHIPPED
+status: closed
 origin: 2026-08-13 identifier-design recon for the brief-addressability arc — the inventory of every identifier in the loom pipeline surfaced this split as an existing defect rather than as a design choice anyone made
 start: user bet it at the 2026-08-13 close-out — run immediately after the brief-item addressability arc ships
 ---

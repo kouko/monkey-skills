@@ -1,7 +1,7 @@
 ---
 name: 2026-07-23-investing-toolkit-tw-financial-ixbrl-2-31-0-post-ship-follow-ups
 description: investing-toolkit TW financial iXBRL 2.31.0 — post-ship follow-ups
-status: OPEN
+status: open
 origin: TW financial-sector iXBRL (branch feat-tw-ixbrl-fh, 2026-07-23, 2.31.0); whole-branch review PASS with carried 🟢 debt.
 ---
 

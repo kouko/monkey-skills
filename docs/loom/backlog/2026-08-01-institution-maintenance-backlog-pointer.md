@@ -1,7 +1,8 @@
 ---
 name: 2026-08-01-institution-maintenance-backlog-pointer
 description: institution-maintenance.md §1 still says BACKLOG.md's header defines the entry format, which this arc made false
-status: UPSTREAM
+status: open
+blocked: waiting on a human to review and approve the institution-maintenance.md diff
 origin: docs-backlog-one-entry-per-file branch — the backlog-store-split arc that made the claim false
 start: a human reviews and approves the diff to institution-maintenance.md
 ---

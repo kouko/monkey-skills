@@ -1,7 +1,7 @@
 ---
 name: 2026-08-18-loom-decision-trail-as-dag-view-via-think-orbit-render
 description: loom's engineering decisions are recorded in four disconnected carriers (brief Decision / plan Decision Log + Kickoff decision lines / commit Decision trailers / review verdicts) with no "what does this rest on" edge between them — give them one shared inputs field and reuse think-orbit's `render` as the human-facing DAG view instead of building loom a fifth trail
-status: OPEN
+status: open
 origin: 2026-08-18 think-orbit Part 1 SDD session — user asked whether loom itself needs a DAG-form CoT view to explain current decisions/specs; assessment was "the need is real, the missing piece is the dependency edge, not another renderer"
 start: after the think-orbit Part 1 real-material checkpoint file (docs/loom/dogfood/2026-08-*-think-orbit-real-material.md) records go — the DAG-as-decision-trail bet must survive its own experiment first
 ---

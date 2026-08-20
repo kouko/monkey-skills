@@ -1,7 +1,7 @@
 ---
 name: 2026-08-10-yellow-findings-should-default-to-debt-not-revision-loops
 description: relax the 2+🟡→NEEDS_REVISION aggregation so 🟡 findings ship as documented debt at any count and only 🔴/instruction-class findings open a revision loop — mechanical count rule, weak-model-safe
-status: CLOSED — SUPERSEDED
+status: closed
 origin: 2026-08-10 review-cost discussion — review→fix loops in both the dev repo and the external consumer repo were dominated by 🟡-class conventional findings, each forcing a fix + re-verdict round
 start: user authorizes the review-cost-reduction arc, or the next arc where a 🟡-driven revision loop demonstrably burns a round — whichever comes first
 ---

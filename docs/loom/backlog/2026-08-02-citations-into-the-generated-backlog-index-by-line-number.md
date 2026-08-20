@@ -1,7 +1,7 @@
 ---
 name: 2026-08-02-citations-into-the-generated-backlog-index-by-line-number
 description: documents still cite docs/loom/BACKLOG.md by line number or heading anchor, both of which are invalidated by the generated file — six by line number (resolve silently wrong), eleven more by a §-heading the generated index has no headings for
-status: OPEN
+status: open
 origin: whole-branch review of the docs-backlog-one-entry-per-file arc, 2026-08-02 — the arc repointed every citation whose anchor had already gone out of range, and left these, which resolve today
 start: whenever a batch of entries is added or archived, since that is what shifts the line numbers and turns these from correct into silently wrong
 ---

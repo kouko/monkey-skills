@@ -1,7 +1,7 @@
 ---
 name: 2026-07-10-dogfood-replay-eval-harness-for-the-principles-construction-flow
 description: Dogfood replay/eval harness for the principles construction flow
-status: OPEN
+status: open
 origin: 2026-07-10 cold-operator dogfood close-out discussion — the user asked whether human-run dogfood records can become automated test / iteration material. Three human-grounded seeds already exist: pip-note-app (paper run, `docs/loom/dogfood/2026-07-10-designer-pm-loop-paper/`), quote-tool (simulated-user Target B, `docs/loom/dogfood/2026-07-10-weak-model-dual-dogfood/`), and meeting-transcriber (live cold-operator run — structured seed + verbatim transcript in `docs/loom/dogfood/2026-07-10-principles-flow-cold-operator/` `seed.md` / `transcript.md`).
 start: several rounds of real L1/L2 data accumulated, or a regression suspicion the manual loop is too slow to chase.
 ---

@@ -1,7 +1,7 @@
 ---
 name: 2026-07-02-468-reviewer-next-touch-nits-loom-code-tech-spec-ci
 description: #468 reviewer next-touch nits (loom-code TECH-SPEC + CI)
-status: OPEN
+status: open
 origin: PR #468 whole-branch reviewer 🟢 next-touch nits (2026-07-02)
 start: next loom-code/TECH-SPEC.md touch
 ---

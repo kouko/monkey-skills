@@ -1,7 +1,7 @@
 ---
 name: 2026-08-18-modal-token-extracted-as-an-anchor-collides-with-the-modality-map
 description: adjudication_split extracts a bare modal like MUST as an ALLCAPS anchor, so lint demands it verbatim in the rendition, while the protocol's fixed modality map says must→必須 (translated) — two rules pointing opposite directions at the same token, hit twice independently on 2026-08-18
-status: OPEN
+status: open
 origin: 2026-08-18 stale-render arc — hit first by the orchestrator rendering this arc's own brief view (lint reported `missing anchor 'MUST'`), then independently by a cold dogfood agent following the protocol from scratch; both resolved it the same ad-hoc way
 start: next adjudication_split.py or adjudication_lint.py touch, or the next time a rendition trips this lint line
 ---

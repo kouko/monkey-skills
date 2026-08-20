@@ -1,7 +1,7 @@
 ---
 name: 2026-07-14-loom-code-ask-triage-0-30-0-live-telemetry-a-b
 description: loom-code ask-triage 0.30.0 — live telemetry A/B
-status: OPEN
+status: open
 origin: PR #564 (loom-code 0.30.0 layered ask-autonomy defense); HANDOFF-2026-07-14 P2.
 start: ~2-4 weeks after 2026-07-14 (needs organic session volume on the shipped ask-triage hook + kickoff L1-lite harvest; same pattern as the ascii-graph re-run below — run both in one telemetry pass if timing aligns).
 ---

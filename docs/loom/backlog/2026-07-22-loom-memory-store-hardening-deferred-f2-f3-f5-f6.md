@@ -1,7 +1,7 @@
 ---
 name: 2026-07-22-loom-memory-store-hardening-deferred-f2-f3-f5-f6
 description: loom-memory store hardening — deferred F2/F3/F5/F6
-status: OPEN
+status: open
 origin: loom-memory design review (2026-07-22; branch `loom-memory-integrity`). F1 (integrity checker + CI) + F4 (recall staleness caveat) SHIPPED this branch; the review's other findings were triaged DEFER because they are slow-burn or hard to mechanize.
 start: at ~150 store entries, on a real recall miss, or next substantive touch of `loom-pipeline/skills/loom-memory/SKILL.md`.
 ---

@@ -1,7 +1,7 @@
 ---
 name: 2026-07-24-investing-toolkit-tw-ixbrl-endorsement-guarantee-2-33-0-post-ship-follow
 description: investing-toolkit TW iXBRL endorsement/guarantee 2.33.0 — post-ship follow-ups
-status: OPEN
+status: open
 origin: TW iXBRL endorsement/guarantee ingestion (branch tw-ixbrl-endorsement, 2026-07-24, 2.33.0); whole-branch review PASS, all 🟢.
 ---
 

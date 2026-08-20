@@ -1,7 +1,7 @@
 ---
 name: 2026-07-30-standalone-docs-review-skill-shape-decided-shipped-this-arc-0-42-0
 description: Standalone docs-review skill — shape decided this arc (0.42.0)
-status: SHIPPED
+status: closed
 origin: 2026-07-30 four-stream root-cause reassessment of the doc-branch review loops (PR #626–628 archaeology; 30-item repo-evidence scan; review-machinery map; 35-day session mining that found ~10 doc-artifact loops of 2–6 rounds vs ~3 code loops all converging in 2). User discussion following the reassessment.
 start: unpark if, after 0.41.0's blocking-class change has governed 2–3 docs-heavy branch close-outs, either (a) a mixed (`.md`+code) branch runs a pathological review loop — the second measured loop was mixed and 0.41.0's docs-only trigger does not cover it (`docs/loom/specs/2026-07-30-docs-review-blocking-class.md:196-201`) — or (b) the docs-mode dispatch-prose override fails in practice (a reviewer ignores the Step 1 override and falls back to code rubrics). If prose branches converge in 1–2 rounds and neither trigger fires, close this entry instead — the mode-inside-code-review design is sufficient.
 ---

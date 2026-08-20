@@ -1,7 +1,8 @@
 ---
 name: 2026-08-07-extract-completeness-critic-lens-block-to-reference
 description: completeness-critic keeps its ~600-word 6-lens block inline; design-critic already extracted its equivalent
-status: PARKED
+status: open
+blocked: waiting on the next edit to completeness-critic/SKILL.md needing word-cap headroom
 origin: 2026-08-07 family complexity audit (docs/loom/audits/2026-08-07-family-complexity-audit.md, item C1); reaffirms the earlier parked decision to extract loom-spec skills only when an edit needs the headroom
 start: the next edit to loom-spec/skills/completeness-critic/SKILL.md needs word-cap headroom
 ---

@@ -1,7 +1,7 @@
 ---
 name: 2026-08-04-directive-1-does-not-say-what-follows-a-failed-authorized-round
 description: the convergence contract defines the STOP after round 2 but not the state after a user-authorized round also ends NEEDS_REVISION
-status: SHIPPED
+status: closed
 origin: PR #645 — its own verification round (an authorized round 3) ended NEEDS_REVISION, landing in a state the contract does not describe
 start: next edit to `requesting-docs-review` Directive 1, or the next time an authorized round fails
 ---

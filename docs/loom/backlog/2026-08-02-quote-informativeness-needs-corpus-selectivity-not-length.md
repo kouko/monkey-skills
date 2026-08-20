@@ -1,7 +1,7 @@
 ---
 name: 2026-08-02-quote-informativeness-needs-corpus-selectivity-not-length
 description: no length or width threshold can separate an informative origin quote from a corpus-universal fragment — the measured axis is document frequency, and a selectivity gate is the successor mechanism
-status: OPEN
+status: open
 origin: the finding-origin-attribution arc (docs/loom/plans/2026-08-02-finding-origin-attribution.md), five code-quality review rounds on one grammar floor, 2026-08-02
 start: when the origin field's ≥40-finding tally fills with human-rejected quotes rather than with `none` — that is the observable saying the screen was load-bearing after all
 ---

@@ -1,7 +1,7 @@
 ---
 name: 2026-08-10-foreign-repo-cold-start-probe-for-plugin-shipped-mechanisms
 description: No gate ever runs a loom skill's own commands from a repo that is not monkey-skills, so delivery defects (a mandated tool that ships in no plugin, a path that only resolves here) are structurally invisible to every existing check — candidate mechanism is a cold-start probe that installs the plugins in a scratch foreign repo and follows the skill text literally
-status: OPEN
+status: open
 origin: 2026-08-10 ship-progress-tooling arc — the plan_card.py/backlog_index.py delivery gap survived plan gates, SDD triads, and whole-branch reviews for the mechanism's whole life because every check ran inside monkey-skills, the one repo where the defect cannot manifest; the arc's whole-branch code arm B then demonstrated the probe shape works (ran the plugin copies from a scratch cwd with a fake docs/loom store and exercised render/--set-status/--validate/--write/--ready/--direction-write)
 start: next time a loom-code/loom-pipeline arc changes what the plugins DELIVER (new script, new hook, renamed path — not prose-only edits), or the first recurrence of an external-repo-only failure
 ---

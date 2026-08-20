@@ -1,7 +1,7 @@
 ---
 name: 2026-08-13-relay-surface-has-no-didnt-land-repitch-affordance
 description: loom can explain something badly and nothing in the system notices — the relay surface has no user-invoked "that didn't land, re-pitch it" affordance, which is the one place a register instruction has a real detector (the reader) and immediate judgment
-status: OPEN
+status: open
 origin: 2026-08-13 discussion of whether to declare a lightweight writing register in loom's document schemas — the register idea was sound but misplaced, because the third-party skill it came from works by firing at a detected failure moment, and a document schema has no such moment
 start: the blinded-panel harness from the 2026-08-13 authoring-form arc exists and has produced one result, OR the next substantive touch of requesting-code-review/references/relay-phrasing.md — whichever comes first
 ---

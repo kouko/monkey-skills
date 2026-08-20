@@ -1,7 +1,7 @@
 ---
 name: 2026-07-18-knowledge-triage-v2-1-mechanize-enforcement-semantics
 description: knowledge-triage v2.1 — mechanize enforcement semantics
-status: OPEN
+status: open
 origin: 2026-07-18 live dogfood, both weak-model legs (`docs/loom/dogfood/2026-07-18-knowledge-triage-live-spec-leg.md`); knowledge-triage arc PR #581/#582.
 ---
 

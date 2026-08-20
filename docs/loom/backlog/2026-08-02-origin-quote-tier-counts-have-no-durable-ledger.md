@@ -1,7 +1,7 @@
 ---
 name: 2026-08-02-origin-quote-tier-counts-have-no-durable-ledger
 description: the origin-quote match-tier counts are written to a marker the next review-pass overwrites, so the observable the pre-registered stop rule depends on does not accumulate
-status: SHIPPED
+status: closed
 origin: Task 2 of the finding-origin-attribution arc (docs/loom/plans/2026-08-02-finding-origin-attribution.md), code-quality review rounds 1-2
 start: before the origin field's ≥40-finding tally is read — or the moment the second arc using the field begins, whichever comes first
 ---

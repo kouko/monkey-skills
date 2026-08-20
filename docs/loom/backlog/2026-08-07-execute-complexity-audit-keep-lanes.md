@@ -1,7 +1,7 @@
 ---
 name: 2026-08-07-execute-complexity-audit-keep-lanes
 description: Execute the ten KEEP / KEEP-WITH-CAVEAT items from the 2026-08-07 family complexity audit, in four arcs
-status: SHIPPED
+status: closed
 origin: 2026-08-07 family complexity audit + proposal-critique triage (docs/loom/audits/2026-08-07-family-complexity-audit.md)
 ---
 

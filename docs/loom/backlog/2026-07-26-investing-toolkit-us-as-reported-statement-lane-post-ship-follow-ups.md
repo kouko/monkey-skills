@@ -1,7 +1,7 @@
 ---
 name: 2026-07-26-investing-toolkit-us-as-reported-statement-lane-post-ship-follow-ups
 description: investing-toolkit US as-reported statement lane — post-ship follow-ups
-status: OPEN
+status: open
 ---
 
 - (a) 🟢 **ACCEPTED RESIDUAL — a silent-NCI filer can still be falsely flagged by the

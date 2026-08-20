@@ -1,7 +1,7 @@
 ---
 name: 2026-08-13-a-brief-item-can-name-a-mechanism-with-no-observable-consequence
 description: nothing requires a Smallest End State item to state an observable difference, so an item can name an internal mechanism instead — one shipped this arc that was specified, implemented, tested and released while having no effect any output could distinguish
-status: OPEN
+status: open
 origin: brief-item-addressability arc (2026-08-13) — "coverage is the union of citing tasks" survived brief, plan, implementation, per-task review and release before mutation testing showed the union was unobservable
 start: next touch of brainstorming's handoff-brief-format.md, or the next arc whose Smallest End State contains an item phrased as a data structure or algorithm
 ---

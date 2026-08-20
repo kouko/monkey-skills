@@ -1,7 +1,7 @@
 ---
 name: 2026-08-10-queue-layer-family-ownership-north-star
 description: the queue layer (backlog store + DIRECTION + plan ledger) is conceptually family-wide but physically owned by loom-code, because `${CLAUDE_PLUGIN_ROOT}` cannot point at sibling plugins — a cross-plugin primitive gap; north-star decision on where the layer should eventually live
-status: OPEN
+status: open
 origin: 2026-08-10 cheap-hardening-batch arc — adjudicated in conversation during the direction-layer follow-up; filed so the decision is citable instead of re-litigated
 start: next cross-plugin primitive change, or the partial-merge evaluation arc opening
 ---

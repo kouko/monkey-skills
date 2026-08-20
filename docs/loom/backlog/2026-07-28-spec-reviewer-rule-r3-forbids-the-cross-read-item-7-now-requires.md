@@ -1,7 +1,7 @@
 ---
 name: 2026-07-28-spec-reviewer-rule-r3-forbids-the-cross-read-item-7-now-requires
 description: spec-reviewer Rule R3 forbids the cross-read item 7 now requires
-status: SHIPPED
+status: closed
 origin: whole-branch review of `feat-plan-fact-grounding`, finding 3. The contradiction was latent before 0.39.0; item 7 makes it adjacent — the two rules now sit ~30 lines apart in the same document.
 start: next edit to either reviewer contract's discipline rules, or the next time a reviewer's R3 compliance lets a false reported figure through.
 ---

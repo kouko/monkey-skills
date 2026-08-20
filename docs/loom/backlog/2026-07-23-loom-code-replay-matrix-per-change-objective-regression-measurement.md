@@ -1,7 +1,7 @@
 ---
 name: 2026-07-23-loom-code-replay-matrix-per-change-objective-regression-measurement
 description: loom-code replay matrix — per-change objective regression measurement
-status: OPEN
+status: open
 origin: 2026-07-23 discussion (purpose aligned: objective per-change better/worse measurement, not one-shot evaluation); survey + seed inventory in `docs/loom/research/2026-07-23-loom-mechanism-quantitative-eval-methods.md`.
 start: user commits to the arc; or the next wave of loom-code skill-text changes where "did this make it worse?" is asked without a measurement to answer it.
 ---

@@ -1,7 +1,7 @@
 ---
 name: 2026-07-24-investing-toolkit-kpi-tearsheet-multi-granularity-per-market-period-menu
 description: investing-toolkit KPI tearsheet — multi-granularity + per-market period menu
-status: OPEN
+status: open
 origin: 2026-07-24 first real tearsheet dogfood (JNJ, US annual — CLEAN) then a mixed annual+quarterly probe surfaced that a flat date-sorted table interleaves granularities; user asked whether it should be per-market. Research: `docs/loom/research/2026-07-24-market-period-granularity-regimes.md` (PR #609), three regulator-primary-source agents (US/JP/TW/KR/CN) + a layout survey + a local `_qtrs` probe.
 start: a real need to tearsheet a TW/JP company (monthly / half-year data), or the next substantive touch of `report-kpi-tearsheet` / `kpi_store`'s period classifier. NOT triggered by US-only annual+quarterly use — that works today.
 ---

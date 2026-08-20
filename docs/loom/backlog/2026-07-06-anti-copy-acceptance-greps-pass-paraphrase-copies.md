@@ -1,7 +1,7 @@
 ---
 name: 2026-07-06-anti-copy-acceptance-greps-pass-paraphrase-copies
 description: Anti-copy acceptance greps pass paraphrase copies
-status: OPEN
+status: open
 origin: 2026-07-06 loom-memory-skill task 1 quality review — the plan's anti-copy GREEN criterion grepped for verbatim charter-row text; the implementer shipped a complete five-row PARAPHRASE of the charter's jurisdiction table that passed the mechanical grep while violating its intent; only the quality reviewer's judgment leg caught it
 start: writing-plans/SKILL.md's next touch, expected to be the slimming arc's slim round 2 pass over that file (2026-07-14-pocock-loom-roadmap-arcs-c-d-e-remainder.md leg D — the deferred leg)
 ---

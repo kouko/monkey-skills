@@ -1,7 +1,7 @@
 ---
 name: 2026-08-02-backlog-index-two-frontmatter-readers-disagree-on-duplicate-keys
 description: four generator and reader nits in scripts/backlog_index.py and its neighbours, all latent today
-status: OPEN
+status: open
 origin: whole-branch review of the docs-backlog-one-entry-per-file arc, 2026-08-02 — green-level findings deferred out of that branch
 start: the next substantive edit to scripts/backlog_index.py, or the first time an entry file is found with duplicate frontmatter keys
 ---

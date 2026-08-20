@@ -1,7 +1,7 @@
 ---
 name: 2026-08-18-protocol-silent-on-a-view-already-produced-by-the-wrong-copy
 description: the adjudication-view delivery gate says what to do about a missing or mismatched stamp, but not about the case a cold dogfood agent actually met — being handed a finished view that a stale copy produced; it inferred the right action from the stated equivalence, which is an inference the protocol does not make
-status: OPEN
+status: open
 origin: 2026-08-18 stale-render arc, dogfood probe B — a cold agent given a stale-produced view correctly refused to deliver it, and reported that it had to extend the stated rule to get there
 start: next touch of the adjudication-view protocol's §Invocation contract
 ---

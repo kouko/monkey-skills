@@ -1,7 +1,8 @@
 ---
 name: 2026-07-06-codex-hook-events-apply-patch-handler-emits-none
 description: Codex hook events — apply_patch handler emits none
-status: UPSTREAM
+status: open
+blocked: waiting on openai/codex#17532
 origin: 2026-07-06 live-fire test on Codex 0.139.0 — apply_patch wrote files but the rollout log carried zero hook events; official docs say apply_patch matches Edit/Write matchers, so wiring is dormant-correct
 start: openai/codex#17532 closing, or the next Codex-side live re-probe in this environment, whichever first
 ---

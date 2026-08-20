@@ -1,7 +1,7 @@
 ---
 name: 2026-08-19-should-required-field-skip-seq-for-research-notes
 description: should `required-field` skip `seq` for `origin == "research"`, matching the two existing research carve-outs? Three pieces of evidence in dag.py say a research note was designed not to need a position in the reasoning chain — two sibling rules already carve out that origin, and the loader's sort deliberately tolerates a missing seq — but the required-field rule demands it anyway; the transparency arc documented the wart instead of resolving it, because adding a third carve-out is a behaviour change to a shipped rule
-status: OPEN
+status: open
 origin: 2026-08-19 think-orbit transparency arc, T3 follow-up — surfaced when node-schema.md's worked examples were brought under the `<!-- example: -->` marker convention and the real `check`; the research-note example failed `required-field` and the file's own "minimal frontmatter" sentence had omitted `seq` too
 start: next `think-orbit/scripts/dag.py` touch, or the next time a research note trips `required-field`
 ---

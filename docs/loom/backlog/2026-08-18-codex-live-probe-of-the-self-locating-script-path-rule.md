@@ -1,7 +1,7 @@
 ---
 name: 2026-08-18-codex-live-probe-of-the-self-locating-script-path-rule
 description: the adjudication-view invocation contract's self-locating script path rule is argued portable to Codex by structure, but no loom render has ever been executed under Codex to confirm it actually resolves and runs the right script copy
-status: OPEN
+status: open
 origin: 2026-08-18 adjudication-render-staleness-visible arc, brief Open Question 0 — recorded rather than made a blocking task because "portable by construction" is an argument, not a measurement
 start: the next Codex session that renders an adjudication view, or an explicitly scheduled probe of it
 ---

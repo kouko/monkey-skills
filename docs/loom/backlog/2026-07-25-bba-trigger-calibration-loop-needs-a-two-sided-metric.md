@@ -1,7 +1,8 @@
 ---
 name: 2026-07-25-bba-trigger-calibration-loop-needs-a-two-sided-metric
 description: bba trigger calibration loop — needs a two-sided metric
-status: PARKED
+status: open
+blocked: waiting on the ~2026-07-28 deployed-surface telemetry A/B report
 origin: bba proactive-trigger-hardening arc (2026-07-25, PR #613 → cf332584). After round-over-round dogfood iteration visibly moved the firing rate, the user asked whether the same method could iterate indefinitely to raise it further; offered, left undecided at close-out, parked here in the follow-up hygiene session.
 start: after the ~2026-07-28 deployed-surface telemetry A/B reports an organic BARE-ASK RATE (baseline `docs/harness-audit/2026-07-22-bba-trigger-baseline.md`) — and only if that measurement shows the shipped cards still under-fire. Building before then means tuning against the pre-merge weak-model dogfood, which is directional only (5 rounds, hand-picked scenarios).
 ---

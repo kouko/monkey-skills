@@ -1,7 +1,7 @@
 ---
 name: 2026-08-06-plan-card-cjk-aware-gloss-line-join
 description: plan_card.py joins wrapped bullet lines with a space, which is correct for Latin text but inserts a stray mid-word space in CJK glosses (e.g. 大聲報錯教 你正確寫法) — the join should be width-aware (no space between CJK codepoints); reproduced again 2026-08-19 by the field-value-microstructure plan's own Goal line (而 審查者的判斷), still unfixed
-status: OPEN
+status: open
 origin: 0.63.0 plan review round-2 note 3 (plan-document-reviewer, 2026-08-06) — pre-existing renderer behavior affecting every plan with zh-TW Gloss lines
 start: next scripts/plan_card.py touch
 ---

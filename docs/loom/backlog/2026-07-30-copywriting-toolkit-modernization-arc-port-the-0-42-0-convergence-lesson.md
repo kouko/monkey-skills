@@ -1,7 +1,7 @@
 ---
 name: 2026-07-30-copywriting-toolkit-modernization-arc-port-the-0-42-0-convergence-lesson
 description: copywriting-toolkit modernization arc — port the 0.42.0 convergence lessons
-status: SHIPPED
+status: closed
 origin: 2026-07-30 three-stream audit (structure/mechanics, architecture/convergence, knowledge layer) after the description-diet arc; user committed to both knives.
 ---
 

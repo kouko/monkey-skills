@@ -1,7 +1,7 @@
 ---
 name: 2026-07-25-investing-toolkit-tw-kpi-producer-2-35-0-post-ship-follow-ups
 description: investing-toolkit TW KPI producer 2.35.0 — post-ship follow-ups
-status: OPEN
+status: open
 origin: TW-market kpi_store producer (branch tw-kpi-store, 2.35.0, 2026-07-25); brief/plan `docs/loom/{specs,plans}/2026-07-25-tw-kpi-store-producer.md`.
 start: next substantive touch of `analysis-kpi/scripts/kpi_tw.py` / `kpi_tw_ingest.py`, or the next TW-KPI-lane arc.
 ---

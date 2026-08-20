@@ -1,7 +1,7 @@
 ---
 name: 2026-07-26-investing-toolkit-spine-chain-misses-33-filer-years-of-reported-history
 description: investing-toolkit — spine chain misses 33 filer-years of reported history
-status: CLOSED — SUPERSEDED
+status: closed
 ---
 
   - **What this does NOT cover, stated so the closure is not oversold.** The

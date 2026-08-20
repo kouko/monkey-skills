@@ -1,7 +1,7 @@
 ---
 name: 2026-08-12-loom-plugin-consolidation-needs-sync-cost-data
 description: whether to merge the six loom plugins into one — parked until shared-mechanism sync cost is measured, not decided on felt friction; loom-code already acts as the de facto anchor for shared infrastructure
-status: SHIPPED
+status: closed
 origin: 2026-08-12 adjudication-digest design discussion — the user observed shared mechanisms accumulating across plugins (progress tooling SSOT + shims in PR#680, gate markers, cross-plugin reviewer agents, family-relay, and the upcoming adjudication-digest protocol) and asked whether the plugins should be merged
 start: a third shared-mechanism shim cascade lands, OR a per-ship sync-cost inventory (files touched across plugins per release, sampled over recent PRs) shows multi-plugin overhead dominating — whichever comes first
 ---

@@ -1,7 +1,7 @@
 ---
 name: 2026-07-31-cache-util-load-cache-breaks-its-never-raises-contract
 description: cache_util.load_cache breaks its own "Never raises" contract on a non-mapping payload
-status: OPEN
+status: open
 origin: Task B's round-2 code-quality review (branch `feat-us-quarterly-statement-series`, 2026-07-31), found by probing shapes the new raw-filing cache's own six recovery rows do not cover.
 start: next touch of `cache_util.py`, or the first report of a cache entry that will not self-heal. Cheap enough to ride along with any unrelated edit to that file.
 ---

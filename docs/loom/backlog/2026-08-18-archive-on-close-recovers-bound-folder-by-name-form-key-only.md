@@ -1,7 +1,7 @@
 ---
 name: 2026-08-18-archive-on-close-recovers-bound-folder-by-name-form-key-only
 description: finishing-a-development-branch's archive-on-close row recovers a plan's bound change-folder by grepping the name-form join key `<change-id> / Requirement: <name> / Scenario: <name>` only — an id-mode plan citing `<change-id> / REQ-<n> / Scenario: <name>` (or a bare `REQ-<n>`) reads as unbound, so the folder is never archived at close-out
-status: OPEN
+status: open
 origin: requirement-identity-hybrid arc, whole-branch docs review (2026-08-18) — surfaced as an out-of-scope observation by both docs-reviewer arms; the file was not in the arc's touch set
 start: first arc that consumes an id-mode change-folder (the first real user of `REQ-<n> — <name>` headers), or the next touch of `loom-code/skills/finishing-a-development-branch/SKILL.md` Step 8 — whichever comes first
 ---

@@ -1,7 +1,7 @@
 ---
 name: 2026-08-04-claim-copy-sweep-blind-to-py-module-docstrings
 description: claim_copy_sweep.py scans only .md files, so contract-prose mirrors living in .py module docstrings are invisible to the sweep, and its leak report does not name that blind spot
-status: SHIPPED
+status: closed
 origin: 0.50.0 fix arc close-out (2026-08-04) — third copy of the "never biased" ledger claim found only by manual grep
 ---
 

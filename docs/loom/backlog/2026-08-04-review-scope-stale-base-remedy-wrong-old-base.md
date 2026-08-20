@@ -1,7 +1,7 @@
 ---
 name: 2026-08-04-review-scope-stale-base-remedy-wrong-old-base
 description: review_scope.py's stale-base refusal prints a rebase remedy whose old-base argument is not the branch's fork point, so following the printed command verbatim replays main's own commits and wedges in conflicts
-status: SHIPPED
+status: closed
 origin: 0.50.0 fix arc close-out (2026-08-04) — defect observed live on branch fix-docs-review-0490-adjudicated-defects
 ---
 

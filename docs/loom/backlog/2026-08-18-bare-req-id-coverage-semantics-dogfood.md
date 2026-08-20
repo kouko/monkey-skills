@@ -1,7 +1,7 @@
 ---
 name: 2026-08-18-bare-req-id-coverage-semantics-dogfood
 description: blind dogfood of the bare `REQ-<n>` plan-referent semantics (a bare id covers every scenario of the requirement) — measure the over-claim rate of cold plan-writers on an id-mode fixture folder and the plan-document-reviewer's catch rate; results bind whether OQ-3 flips to scenario-only citations
-status: OPEN
+status: open
 origin: requirement-identity-hybrid arc kickoff (2026-08-18) — the user chose option A (bare id = requirement-level coverage) and asked for the dogfood AFTER the arc ships rather than as a plan task
 start: after loom-code 0.86.0 / loom-design 0.3.0 land on main (this arc's PR) — first quiet slot; needs no other arc
 ---

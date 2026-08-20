@@ -1,7 +1,7 @@
 ---
 name: 2026-07-27-reuse-adequacy-got-the-gate-it-had-been-missing
 description: `Reuse-adequacy` got the gate it had been missing
-status: SHIPPED
+status: closed
 origin: source audit `docs/loom/audits/2026-07-27-investing-arc-defect-provenance-audit.md` §8 candidate 3; retargeted by `docs/loom/audits/2026-07-31-a-class-interceptability-backtest.md`, which ruled out candidate 1 as structurally unable to reach PR #619 A-2.
 ---
 

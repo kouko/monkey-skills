@@ -1,7 +1,7 @@
 ---
 name: 2026-07-31-citation-checking-has-no-answer-for-anchor-only-documents
 description: Citation checking has no answer for anchor-only documents
-status: OPEN
+status: open
 origin: PR #634 (loom-code 0.42.3). Whole-branch review demonstrated it on that PR's own audit note.
 start: when a docs-review round misses a citation defect in a document that cites by `§N` anchor, OR when the `docs/loom/` corpus's anchor-cited population grows enough that `checked 0` runs stop being rare. Not urgent today — the gap is documented at both ends (loom-code CHANGELOG 0.42.3 "Known gap"; `docs/loom/audits/2026-07-31-a-class-interceptability-backtest.md` §附帶產出), so a reader who hits it is not misled.
 ---

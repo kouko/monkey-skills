@@ -1,7 +1,7 @@
 ---
 name: 2026-08-02-finding-block-field-scanner-false-refuses-on-indent-drift
 description: loom_gate_markers' per-finding field scanner anchors on one column, so two shapes of benign indentation drift refuse a well-formed verdict and blame the wrong field
-status: OPEN
+status: open
 origin: Task 1 of the finding-origin-attribution arc (docs/loom/plans/2026-08-02-finding-origin-attribution.md), code-quality review of the column-anchoring hardening round
 start: when a real reviewer verdict is refused for a reason its author cannot locate, or when the scanner is next opened for any reason
 ---

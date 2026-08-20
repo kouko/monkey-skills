@@ -1,7 +1,7 @@
 ---
 name: 2026-07-28-plan-stage-fact-grounding-what-0-39-0-does-not-close
 description: Plan-stage fact grounding — what 0.39.0 does NOT close
-status: OPEN
+status: open
 origin: whole-branch review of `feat-plan-fact-grounding` (loom-code 0.39.0), which held the branch to the standard the branch itself argues for. Findings 1-3 of that review plus the orchestrator's carried close-out list.
 start: next time a planning-origin defect reaches close-out despite 0.39.0's contracts — or when the PCE entry above is first evaluated, whichever comes first. Each item below is independently actionable; do not treat the list as one unit of work.
 ---

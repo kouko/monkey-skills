@@ -1,7 +1,7 @@
 ---
 name: 2026-07-20-investing-toolkit-non-monetary-operational-kpi-automation
 description: investing-toolkit 非金錢營運 KPI 自動化 (2026-07-19..20; Route B SHIPPED; ARC PIVOTED to a narrative-evidence layer; XBRL Route A demoted)
-status: OPEN
+status: open
 ---
 
 - **Pivot evidence (2026-07-20):** a live probe of the 7 mega-caps showed the

@@ -1,7 +1,7 @@
 ---
 name: 2026-07-26-investing-toolkit-kpi-id-identity-2-37-0-post-ship-follow-ups
 description: investing-toolkit kpi_id identity 2.37.0 — post-ship follow-ups
-status: OPEN
+status: open
 ---
 
 - (a) 🟡 **No committed dogfood HARNESS.** The close-out dogfood (real

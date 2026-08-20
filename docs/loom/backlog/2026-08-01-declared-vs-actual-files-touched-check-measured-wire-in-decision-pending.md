@@ -1,7 +1,7 @@
 ---
 name: 2026-08-01-declared-vs-actual-files-touched-check-measured-wire-in-decision-pending
 description: Declared-vs-actual `Files touched` check — measured, wire-in decision pending
-status: OPEN
+status: open
 origin: HANDOFF-2026-08-01 P1, agreed after the Reuse-adequacy arc's seven-vs-zero caveat; evidence base `docs/loom/memory/files-touched-misses-machinery-coupled-files.md`.
 ---
 

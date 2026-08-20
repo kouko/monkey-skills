@@ -1,7 +1,8 @@
 ---
 name: 2026-07-28-whole-branch-review-round-ledger-bad-fix-re-check-planned-parked-before
 description: Whole-branch review round ledger + bad-fix re-check — planned but not yet implemented
-status: PARKED
+status: open
+blocked: waiting on the docs-review blocking-class change shipping and a prose-heavy branch closing under it
 origin: `docs/loom/audits/2026-07-28-doc-branch-review-loop-audit.md` §3.2, planned in full as the (P1+P2) slice of the three-slice review-mechanism plan. Brief: `docs/loom/specs/2026-07-29-review-round-ledger-and-bad-fix-recheck.md`. Plan: `docs/loom/plans/2026-07-30-review-round-ledger-and-bad-fix-recheck.md` (8 tasks, depth 5, plan-document-reviewer returned NEEDS_REVISION with five narrow fixes, listed below). Both artifacts were left on branch `feat-review-round-ledger`, uncommitted and unmerged.
 start: re-evaluate **after** the docs-review blocking-class change ships and one prose-heavy branch has closed out under it. If that branch's review still runs past ~3 rounds, unpark and build the ledger. If prose branches converge in 1-2 rounds, the ledger has no unbounded loop left to instrument — close this entry instead.
 ---

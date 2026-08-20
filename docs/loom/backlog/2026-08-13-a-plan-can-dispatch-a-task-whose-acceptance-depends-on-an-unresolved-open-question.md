@@ -1,7 +1,7 @@
 ---
 name: 2026-08-13-a-plan-can-dispatch-a-task-whose-acceptance-depends-on-an-unresolved-open-question
 description: nothing stops a plan from dispatching a task whose acceptance criteria depend on a question the plan itself records as unresolved, so a known-undecided fork ships as implemented behaviour and surfaces as a whole-branch finding instead of a planning decision
-status: SHIPPED
+status: closed
 origin: brief-item-addressability arc (2026-08-13) — the arc's only 🔴 was a fork the plan had written down as an open question and deferred to review
 start: next touch of writing-plans' plan-document-reviewer prompt, or the next arc whose plan carries a non-empty Open Questions section
 ---

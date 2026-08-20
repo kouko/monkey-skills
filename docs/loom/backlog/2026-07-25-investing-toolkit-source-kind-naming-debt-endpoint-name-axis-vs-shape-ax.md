@@ -1,7 +1,7 @@
 ---
 name: 2026-07-25-investing-toolkit-source-kind-naming-debt-endpoint-name-axis-vs-shape-ax
 description: investing-toolkit `source_kind` naming debt — endpoint-name axis vs shape axis
-status: OPEN
+status: open
 origin: company total (top-line) revenue lane arc (branch feat-total-revenue-lane, 2026-07-25); plan `docs/loom/plans/2026-07-25-company-total-revenue.md` §Notes "Known naming debt, deliberately NOT fixed in this arc" + Task 11's RFC 6648 / BCP 178 evaluation (uniform "ours" prefixes carry zero discriminating information and must be renamed once a value becomes de facto standard — exactly the situation a durable-store rename creates).
 start: the next rename/migration touch of a `source_kind` stored value — NOT a plain next-touch of the two named files, since either rename is a durable-store migration (existing points already carry the value), not a code edit.
 ---

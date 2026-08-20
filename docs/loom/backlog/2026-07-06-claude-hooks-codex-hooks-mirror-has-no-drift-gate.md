@@ -1,7 +1,7 @@
 ---
 name: 2026-07-06-claude-hooks-codex-hooks-mirror-has-no-drift-gate
 description: .claude/hooks ↔ .codex/hooks mirror has no drift gate
-status: OPEN
+status: open
 origin: PR (this branch) Tasks 6+7 quality review, 2026-07-06 — remind-memory-mirror.sh became the SECOND byte-identical .claude/.codex hook pair (first: validate-skill-folder-structure.sh, since 2026-06-17); nothing enforces identity (check-codex-manifest-drift.sh gates only */plugin.json; loom-code CI pytests .claude/hooks/ only; CLAUDE.md documents the manifest mirror, not the hook-script mirror)
 start: third mirrored hook-script pair, or next touch of check-codex-manifest-drift.sh — whichever comes first
 ---
