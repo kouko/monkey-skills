@@ -466,9 +466,13 @@ def _bucket_entry(
     Takes the frontmatter its caller already parsed rather than re-reading
     the file: the vocabulary guard now lives once, upstream in
     `iter_validated_entries()`, so this function no longer re-derives it.
-    It still raises ValueError on a status with no section — that is a
-    narrower condition (a vocabulary word `STATUS_SECTION_ORDER` has no
-    home for), not a second copy of the vocabulary check.
+    Its remaining ValueError is a COUPLING GUARD, not a live condition:
+    `CLOSED_STATUS_VOCABULARY` and `STATUS_SECTION_ORDER` hold the same
+    three words (they differ only in order, which is the documented
+    contract above), so every live entry reaching here has already been
+    accepted upstream and the raise cannot fire today. It stays because
+    the two lists are separate module constants and nothing else would
+    notice if a word were added to one and not the other.
     """
     status = frontmatter.get("status")
     if status not in by_status:
@@ -493,12 +497,14 @@ def _collect_index_entries(store: Path) -> dict[str, list[tuple[str, str]]]:
     """
     by_status: dict[str, list[tuple[str, str]]] = {status: [] for status in STATUS_SECTION_ORDER}
 
-    # Validate EVERY entry, archive tier included, before skipping the
-    # archived ones: an archive-tier entry outside the closed vocabulary is
-    # a `--validate` violation (`_check_archive_tier`), and a reader that
-    # skips it unvalidated disagrees with every other reader about the same
-    # store. Round 4 found exactly that divergence — `build_index()`
-    # returned normally on a store `build_ready()` refused.
+    # Route through the shared walk so this reader agrees with the other
+    # three about which LIVE statuses are legal. Archive-tier entries are
+    # skipped here and are NOT vocabulary-validated by any reader — the
+    # tier overrides the status, and `_check_archive_tier()` owns it in
+    # `--validate`. (This comment first shipped stating the opposite: it
+    # described the alternative the same commit rejected. Round 5 found it
+    # — a design call taken, with the prose beside it written for the road
+    # not taken.)
     for path, is_archived, frontmatter in iter_validated_entries(store):
         if is_archived:
             continue
@@ -559,13 +565,16 @@ def build_ready(store: Path) -> str:
     files' frontmatter text. Entries render in `_entry_files()` order,
     which is sorted-by-filename per tier — i.e. file-date order.
 
-    Raises ValueError (caller decides exit codes) on a status outside the
-    closed vocabulary, mirroring `_bucket_entry()` — an unrecognized
-    status must not be silently laundered into the excluded tally.
+    Raises ValueError (caller decides exit codes) on a LIVE entry whose
+    status is outside the closed vocabulary — via
+    `iter_validated_entries()`, the one home of that guard. An
+    unrecognized LIVE status must not be silently laundered into the
+    excluded tally. An unrecognized ARCHIVED status is a different case
+    and IS tallied as closed: the tier overrides the status, and
+    `--validate` reports it via `_check_archive_tier()`.
 
     An entry physically under `archive/` is excluded regardless of its
-    frontmatter `status:` — the archive tier overrides the status field,
-    same as `_bucket_entry()`. A `bet`-or-`open` entry carrying a
+    frontmatter `status:` — the archive tier overrides the status field. A `bet`-or-`open` entry carrying a
     `blocked:` field is excluded too (brief BI-2 — that is what the field is for). These
     are two distinct exclusion axes, tallied separately in the closing
     line: a `closed`/archive-tier entry is not actionable as written; a
@@ -622,7 +631,11 @@ def _run_validate(args: argparse.Namespace) -> int:
     """--validate (also the flagless default): check every entry's
     frontmatter against the store's invariants."""
     store = Path(args.store)
-    violations = find_violations(store)
+    try:
+        violations = find_violations(store)
+    except OSError as exc:
+        print(f"backlog_index --validate: FAIL — store is unreadable ({exc}).")
+        return 1
     if not violations:
         print("backlog_index --validate: OK — every invariant holds.")
         return 0
@@ -637,10 +650,17 @@ def _run_write(args: argparse.Namespace) -> int:
     --output."""
     try:
         text = build_index(Path(args.store))
+    except OSError as exc:
+        print(f"backlog_index --write: FAIL — store is unreadable ({exc}).")
+        return 1
     except ValueError as exc:
         print(f"backlog_index --write: FAIL — {exc}")
         return 1
-    Path(args.output).write_text(text, encoding="utf-8")
+    try:
+        Path(args.output).write_text(text, encoding="utf-8")
+    except OSError as exc:
+        print(f"backlog_index --write: FAIL — {args.output} is unwritable ({exc}).")
+        return 1
     print(f"backlog_index --write: wrote {args.output}")
     return 0
 
@@ -650,6 +670,9 @@ def _run_check(args: argparse.Namespace) -> int:
     --output without writing; exit 1 on drift or a missing --output file."""
     try:
         generated = build_index(Path(args.store))
+    except OSError as exc:
+        print(f"backlog_index --check: FAIL — store is unreadable ({exc}).")
+        return 1
     except ValueError as exc:
         print(f"backlog_index --check: FAIL — {exc}")
         return 1
@@ -662,7 +685,11 @@ def _run_check(args: argparse.Namespace) -> int:
         )
         return 1
 
-    committed = output_path.read_text(encoding="utf-8")
+    try:
+        committed = output_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"backlog_index --check: FAIL — {output_path} is unreadable ({exc}).")
+        return 1
     if committed != generated:
         print(
             "backlog_index --check: FAIL — the committed index has "
@@ -686,6 +713,9 @@ def _run_ready(args: argparse.Namespace) -> int:
     a closing count line."""
     try:
         ready_text = build_ready(Path(args.store))
+    except OSError as exc:
+        print(f"backlog_index --ready: FAIL — store is unreadable ({exc}).")
+        return 1
     except ValueError as exc:
         print(f"backlog_index --ready: FAIL — {exc}")
         return 1

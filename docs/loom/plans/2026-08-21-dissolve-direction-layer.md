@@ -852,6 +852,43 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
   file" — true when written, false the moment round 3's guards landed. Pins that
   state what the code happens to do age into false contracts; pins that state
   what the reader must be told do not.
+- **DL-28 (2026-08-21, close-out) — round 5 sharpened the class, and the
+  sharper version refutes what DL-27 said.** Both arms NEEDS_REVISION; union
+  7 (5 🟡 + 2 🟢). DL-27 named the class "a fix lands at the site a reviewer
+  cited and not at its twins". One arm proved that too wide:
+
+  > The class is narrower and more stubborn: **prose describing shipped
+  > behaviour is authored in the same commit as the behaviour and states the
+  > alternative that was rejected.** Findings 1 and 2 are both inside the
+  > round-4 hunk, describing the design call that hunk took, backwards. That
+  > is a different failure from a missed twin, and no sweep pattern over file
+  > paths will catch it.
+
+  It was right. The block comment I wrote to introduce the live-only guard
+  said "Validate EVERY entry, archive tier included" — the road not taken,
+  written beside the road taken, in the same commit, by the same author, in
+  the same minute. A twin-sweep would never have found it because it has no
+  twin; it contradicts the function three lines below it.
+- **DL-29 (2026-08-21, close-out) — the arc's second mechanical oracle, and
+  why it is behavioural.** Five rounds each found a bare filesystem read in
+  the same four-script family, each time in the sibling the previous fix did
+  not reach (round 3: `check_queue_relation`; round 4:
+  `check_north_star_link`; round 5: `check_onramp_choice` AND
+  `backlog_index`, which had no `OSError` handler at all while hosting the
+  docstring calling itself "the ONE home"). Both round-5 arms independently
+  recommended the same remedy. `test_gate_scripts_fail_loud_on_unreadable_input.py`
+  is it.
+  It is deliberately **behavioural, not syntactic**. The obvious form — grep
+  for `read_text(` outside a `try:` — pins the SHAPE of today's fix; a guard
+  placed at the CLI boundary instead of the read site would fail it while
+  satisfying the contract perfectly. The contract is what a gate owes its
+  operator: nonzero exit, no traceback, the unreadable path named. Three legs:
+  one case per read site, a membership leg deriving the family from import
+  edges and argv rather than a filename pattern, and a completeness leg that
+  fails when a script grows a read with no case. The completeness leg caught
+  me during authoring — I gave `backlog_index` one case for three read sites.
+  Same lesson as this arc's `## Notes` §"Arc sweep pattern": after the second
+  hand-written enumeration misses something, stop enumerating.
 
 ## Notes
 

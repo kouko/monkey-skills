@@ -16,10 +16,10 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- **`## Now` materialized as a view, not a hand-maintained document.**
-  The live "what's in flight" list is generated from the backlog
-  store's `bet` entries instead of being written by hand into
-  `DIRECTION.md`.
+- **The `## Now` materialized view is gone; the live answer is a query.**
+  "What's in flight" is no longer a section anyone maintains — ask the
+  store directly with `backlog_index.py --ready`, which reads the live
+  `status: bet` entries.
 - **Status vocabulary collapsed to `open` / `bet` / `closed`.**
   Blocked-ness is no longer a status word — it moved to a `blocked:`
   field on an `open` entry, read only by `--ready`.
@@ -33,6 +33,18 @@ Versioning: [Semantic Versioning](https://semver.org/).
 - **On-ramp standing choices moved to `docs/loom/KICKOFF-DEFAULTS.md`**
   — the old `(DIRECTION.md)` grammar is retired; the section heading
   itself (`## On-ramp standing choices`) is unchanged.
+- **`archive_change_folder.py` stamps `status: closed`, not
+  `status: archived`.** `archived` is retired vocabulary: no
+  `archived: <date>` field is written by either unit any more, and the
+  file unit additionally strips a `blocked:` field from the entry it
+  moves (a closed entry cannot be blocked).
+- **Gate scripts fail loud on an unreadable input.** `backlog_index.py`,
+  `check_onramp_choice.py`, `check_queue_relation.py` and
+  `check_north_star_link.py` now print one actionable line and exit
+  nonzero when a store entry, brief, `KICKOFF-DEFAULTS.md`,
+  `PURPOSE.md`, or the committed index exists but cannot be read —
+  previously several of these died on a raw traceback, and one of them
+  read an unreadable store as an ABSENT one and exited 0.
 - Promotion to `bet` is unchanged and stays **user-only**.
 
 ## [0.91.0] — 2026-08-20 — purpose layer + serves link

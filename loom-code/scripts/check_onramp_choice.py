@@ -31,7 +31,7 @@ regardless of which form located it.
 Exit codes:
 
     0 — `resolved` or `not_fired`.
-    1 — the brief file does not exist.
+    1 — the brief file does not exist, or the brief or `docs/loom/KICKOFF-DEFAULTS.md` exists but is unreadable.
     2 — `unresolved` (fired but not recorded as an explicit choice, a
         pending answer, or a missing/malformed line). Stderr names the
         brief path and the exact question to put to the user.
@@ -290,10 +290,28 @@ def main(argv: list[str] | None = None) -> int:
     if not brief_path.is_file():
         print(f"Error: brief file not found at {brief_path}.", file=sys.stderr)
         return 1
-    brief_text = brief_path.read_text(encoding="utf-8")
+    # Both reads are guarded for the same reason its two siblings are
+    # (`check_queue_relation.py`, `check_north_star_link.py`): a gate owes
+    # its operator one actionable line, never a raw traceback. This script
+    # was the third sibling of that family and stayed bare through two
+    # rounds that fixed the other two; the contract is now pinned
+    # mechanically by test_gate_scripts_fail_loud_on_unreadable_input.py.
+    try:
+        brief_text = brief_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"Error: brief at {brief_path} is unreadable ({exc}).", file=sys.stderr)
+        return 1
 
     repo_root = _resolve_repo_root(args.repo_root, brief_path.parent)
-    standing = load_standing(repo_root)
+    try:
+        standing = load_standing(repo_root)
+    except OSError as exc:
+        print(
+            f"Error: {repo_root / 'docs' / 'loom' / 'KICKOFF-DEFAULTS.md'} "
+            f"is unreadable ({exc}).",
+            file=sys.stderr,
+        )
+        return 1
 
     result = resolve(brief_text, standing)
 

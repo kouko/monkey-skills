@@ -245,8 +245,10 @@ Role boundaries enforced by behavior, not reading restrictions:
   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/loom_init.py" [repo-root]`
   — creates the backlog charter + KICKOFF-DEFAULTS skeleton + PURPOSE
   skeleton + plans/ + specs/, self-verifies the fresh store via
-  `backlog_index.py`, and refuses when either artifact already
-  exists. Plugin-shipped ONLY —
+  `backlog_index.py`, and refuses — writing nothing — when the store,
+  the KICKOFF-DEFAULTS skeleton, or the PURPOSE skeleton already
+  exists, when the store path exists but is not a directory, or when
+  a `plans/`/`specs/` path clashes with a non-directory. Plugin-shipped ONLY —
   a bootstrap verb has no repo-root tier (its precondition is the
   repo lacking the layer). `${CLAUDE_PLUGIN_ROOT}` is a load-time
   substitution, as above.
@@ -267,8 +269,12 @@ Role boundaries enforced by behavior, not reading restrictions:
   directory reports a loud `N/A` on stdout and exits 0, rather than
   gating a repo that never adopted the queue layer. Exit 0 when the
   queue relation resolves (or the repo has no queue layer); exit 1
-  when `<brief-path>` is missing or is not a regular file (a
-  directory path takes this exit too); exit 2 when the queue relation
+  for any of four causes its stderr distinguishes — `<brief-path>` is
+  missing or is not a regular file (a directory path takes this exit
+  too), the brief exists but is unreadable, the backlog store exists
+  but is unreadable (NOT the store-absent case above, which exits 0),
+  or a store entry's `status:` falls outside the closed status
+  vocabulary; exit 2 when the queue relation
   is missing or malformed, or names an absent entry (the question to
   relay verbatim is printed to stderr).
 <!-- END command-surface (managed) -->
