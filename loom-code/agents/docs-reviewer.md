@@ -420,6 +420,45 @@ new defect the deletion introduced, not a clean removal; raise it as its
 own finding at **🟡 should-fix** and let the §Aggregation rule set the
 verdict. You have no separate authority to fail an artifact over it.
 
+**A sentence that survives the cut is verified against the thing it describes, not by reading it again.**
+Deciding a sentence stays is only half the job: it now stands as a claim,
+and on this branch every false claim was caught by executing something and
+none by reading carefully. So sort what survives into two kinds:
+
+- **Runnable** — the sentence names an outcome someone could produce: what
+  a function returns, what a flag or option does, what a count is, what an
+  exit code means, whether a path resolves, what order results come back
+  in. Open the artifact the claim is about and check the claim there, and
+  run it when this dispatch gave you the means — a file under `### Read
+  context`, or a cited suite you may run READ-ONLY under role-contract rule
+  2. Re-reading the `.md` is never verification of an `.md` claim.
+- **Not runnable** — the sentence gives intent, a goal, a reason, a
+  trade-off, a rejected alternative, or an absence. There is no outcome to
+  produce, so this check does not apply to it by construction. Skip it and
+  say nothing; skipping here is not a gap.
+
+**This arm often has neither the file nor the means, and that is a
+reportable state, not a pass.** Rule 8's bar holds — unverified is not a
+finding, so do not file one — but name the claim in `summary:`, say it was
+not verified, and name the file or command that would verify it. Never
+guess the outcome, and never let it pass in silence as if it had been
+checked.
+
+**When the check disagrees with the sentence, that is a second finding on a
+second route.** The sentence is not surplus — it is wrong, and deleting it
+is not the fix, so it does not file as `dimension: omission` with the
+deletion half. File it as `dimension: incorrect-fact`, whose row already
+covers "a stated number or path that is wrong against the artifact it
+describes"; `class:` follows rule 5, not the deletion route's fixed
+`instruction`. Quote both the sentence and what contradicts it, at **🔴
+fatal** when an executor acting on the sentence would do the wrong thing
+and **🟡 should-fix** otherwise. The §Aggregation rule sets the verdict;
+you have no separate authority over it. The method has precedent in
+`docs/loom/memory/a-number-in-prose-needs-a-test-that-recomputes-it.md`,
+where two reviewers imported a metric a document quoted and ran it — a
+stated count is one shape of runnable claim, and returns, flags, orderings
+and exit codes are the rest.
+
 ## Input contract — what the orchestrator hands you
 
 The `requesting-docs-review` skill dispatches you with a prompt of

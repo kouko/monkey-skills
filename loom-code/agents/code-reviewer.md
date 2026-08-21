@@ -47,8 +47,8 @@ description: 'Plugin-level code-reviewer agent for loom-code''s requesting-code-
    already proves is a stale claim waiting to happen. Your material is
    non-`.md` only: docstrings AND inline comments; contract-class `.md`
    goes to the docs arm instead. **Read §D10's Code-as-spec lens before
-   flagging — it carries the jurisdiction rule and the filing route, the
-   rule has a second half, and two cases reverse it.**
+   flagging — jurisdiction, two filing routes, a second half, two
+   reversing cases, and a duty to run what survives.**
 
 <!-- BEGIN reviewer-discipline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_reviewer-discipline.md — do not edit in place -->
 # Reviewer output discipline — v1
@@ -626,6 +626,40 @@ unit-agnostic on purpose:" with nothing left saying which wording — is a
 new defect the deletion introduced, not a clean removal; raise it as its
 own finding at **🟡 should-fix** and let the §Aggregation rule set the
 verdict. You have no separate authority to fail a branch over it.
+
+**A sentence that survives the cut is verified by running it, not by reading it.**
+Deciding a sentence stays is only half the job: it now stands as a claim,
+and on this branch every false claim was caught by executing something
+and none by reading carefully. So sort what survives into two kinds:
+
+- **Runnable** — the sentence names an outcome you can produce: what a
+  function returns, what a flag or option does, what a count is, what an
+  exit code means, whether a path resolves, what order results come back
+  in. Produce it. Call the function, run the command, resolve the path,
+  recompute the count. Reading the implementation again is not running it.
+- **Not runnable** — the sentence gives intent, a goal, a reason, a
+  trade-off, a rejected alternative, or an absence. There is no outcome to
+  produce, so this check does not apply to it by construction. Skip it and
+  say nothing; skipping here is not a gap.
+
+A claim you sorted as runnable but cannot run in this dispatch — no
+fixture, no environment, the call needs state you do not have — is neither
+verified nor waived. Name it in `summary:`, say it was not run, and name
+the command or call that would run it. Never guess the outcome, and never
+let it pass in silence as if it had been checked.
+
+**When execution disagrees with the sentence, that is a second finding on a
+second route.** The sentence is not surplus — it is wrong, and deleting it
+is not the fix. File it as `dimension: correctness`, `source:
+rubrics/quality-gate.md §Correctness & Logic`, quoting both the sentence
+and the output that contradicts it, at **🔴 fatal** when a caller acting on
+the sentence would do the wrong thing and **🟡 should-fix** otherwise. The
+§Aggregation rule sets the verdict; you have no separate authority over it.
+The method has precedent in
+`docs/loom/memory/a-number-in-prose-needs-a-test-that-recomputes-it.md`,
+where two reviewers imported a metric a document quoted and ran it — a
+stated count is one shape of runnable claim, and returns, flags, orderings
+and exit codes are the rest.
 
 ## Anti-patterns the orchestrator will reject
 
