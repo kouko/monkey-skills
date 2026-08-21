@@ -22,6 +22,13 @@ parameter (Python API) or the CLI's ``--unit`` flag (see below; defaults to
   a silent skip (contrast the folder unit, which tolerates a missing
   ``proposal.md`` child).
 
+The file unit also drops any ``blocked:`` line from the stamped frontmatter
+(``_strip_field``): the backlog store's invariant (iv) makes ``blocked:``
+illegal on anything but an ``open`` entry, so leaving it in place while
+stamping ``status: closed`` would hand back a store that immediately fails
+its own ``--validate`` (DL-13 re-run with the new field). This is
+unconditional and requires no separate action from the caller.
+
 Both units stamp ``status: closed``, never ``status: archived`` — the
 backlog store's closed status vocabulary is exactly ``open`` / ``bet`` /
 ``closed`` (``scripts/backlog_index.py``'s ``CLOSED_STATUS_VOCABULARY``);
@@ -96,8 +103,6 @@ import sys
 from pathlib import Path
 from typing import Callable
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-
 _FRONTMATTER_RE = re.compile(r"\A---\n(.*?\n)---\n", re.DOTALL)
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -151,9 +156,14 @@ def _validate_date(date: str) -> None:
     file — the exact hand-edit the generated-index design exists to
     eliminate. Duplicates ``scripts/backlog_index.py``'s
     ``_is_valid_date_shape`` (the twin strict-date check) rather than
-    importing it: loom-code ships as a standalone marketplace plugin, and
-    importing a monkey-skills-repo-root script would couple this
-    self-contained plugin script to one specific host repo's layout."""
+    importing it: ``backlog_index.py`` is a sibling script within this
+    same plugin directory, not an external dependency, but importing it
+    would still require path-manipulation machinery (a ``sys.path``
+    insert) to make the sibling importable — coupling this script's
+    ability to run standalone to how the plugin happens to be laid out
+    on disk at runtime. loom-code ships as a standalone marketplace
+    plugin, so duplicating the ~10-line check avoids that coupling
+    entirely."""
     if not _DATE_RE.match(date):
         raise ArchiveError(
             f"invalid --date {date!r}: must match YYYY-MM-DD"
@@ -207,6 +217,29 @@ def _stamp_field(text: str, key: str, value: str) -> str:
         new_body = field_re.sub(f"{key}: {value}", body)
     else:
         new_body = body + f"{key}: {value}\n"
+    return f"---\n{new_body}---\n" + text[match.end():]
+
+
+def _strip_field(text: str, key: str) -> str:
+    """Return ``text`` with its frontmatter ``key:`` line removed entirely
+    (a no-op if the key is absent or there is no frontmatter block at all).
+
+    Exists for exactly one caller: the file unit's ``status: closed`` stamp
+    also drops ``blocked:``, because the backlog store's invariant (iv)
+    (``scripts/backlog_index.py``'s ``_check_blocked``) makes ``blocked:``
+    illegal on anything but an ``open`` entry — DL-13 re-run with the new
+    field: this script's earlier fix taught the reader half of the retired
+    ``archived`` field's writer/reader split, then opened an identical split
+    for ``blocked:`` by stamping ``status: closed`` without ever touching
+    it. Dropping the line here, unconditionally, means archiving a blocked
+    entry can never again leave a store that fails its own ``--validate``
+    — no separate charter duty for a human to remember and possibly skip."""
+    match = _FRONTMATTER_RE.match(text)
+    if match is None:
+        return text
+    body = match.group(1)
+    field_re = re.compile(rf"^{re.escape(key)}\s*:.*\n?", re.MULTILINE)
+    new_body = field_re.sub("", body)
     return f"---\n{new_body}---\n" + text[match.end():]
 
 
@@ -321,7 +354,9 @@ def archive_change_folder(
         # fail loudly rather than leave an unstamped file at dest.
         _write_stamp_or_restore(
             dest, dest, source, noun,
-            lambda text: _stamp_field(text, "status", "closed"),
+            lambda text: _strip_field(
+                _stamp_field(text, "status", "closed"), "blocked"
+            ),
         )
     else:
         dest_proposal = dest / "proposal.md"

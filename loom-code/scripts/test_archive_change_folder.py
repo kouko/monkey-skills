@@ -39,6 +39,7 @@ _BACKLOG_INDEX_PATH = Path(__file__).parent / "backlog_index.py"
 def _load(path: Path, name: str):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module  # dataclass() needs this pre-registered
     spec.loader.exec_module(module)
     return module
 
@@ -430,7 +431,7 @@ def test_file_unit_archive_keeps_the_filename_unchanged(tmp_path):
     mod = _load(_MODULE_PATH, "archive_change_folder")
     _make_entry_file(
         tmp_path, "2026-08-01-alpha.md",
-        "---\nname: 2026-08-01-alpha\nstatus: OPEN\n---\n\nBody.\n",
+        "---\nname: 2026-08-01-alpha\nstatus: closed\n---\n\nBody.\n",
     )
 
     dest = mod.archive_change_folder(
@@ -485,7 +486,7 @@ def test_file_unit_refuses_calendar_invalid_date_without_touching_filesystem(tmp
     mod = _load(_MODULE_PATH, "archive_change_folder")
     source = _make_entry_file(
         tmp_path, "2026-08-01-alpha.md",
-        "---\nname: 2026-08-01-alpha\nstatus: OPEN\n---\n\nBody.\n",
+        "---\nname: 2026-08-01-alpha\nstatus: closed\n---\n\nBody.\n",
     )
 
     with pytest.raises(mod.ArchiveError):
@@ -692,7 +693,7 @@ def test_cli_unit_file_exit_zero_on_success(tmp_path):
     mod = _load(_MODULE_PATH, "archive_change_folder")
     _make_entry_file(
         tmp_path, "2026-08-01-alpha.md",
-        "---\nname: 2026-08-01-alpha\nstatus: OPEN\n---\n\nBody.\n",
+        "---\nname: 2026-08-01-alpha\nstatus: closed\n---\n\nBody.\n",
     )
 
     rc = mod.main(
@@ -790,6 +791,75 @@ def test_living_spec_index_still_green_after_archive(tmp_path):
 # shape ("status: archived" in text) rather than whether that output is
 # legal input to backlog_index.py — this is the assertion that closes that
 # gap.
+
+def test_file_unit_archiving_a_blocked_open_entry_passes_backlog_index_validate(tmp_path):
+    """DL-13 re-run with the new field: `blocked:` is legal only on an
+    `open` entry (backlog_index._check_blocked, invariant iv). The archiver
+    stamps `status: closed` but, before this fix, left `blocked:` in place
+    -- so archiving any blocked entry produced a store that failed its own
+    `--validate` immediately after the archive that is supposed to leave it
+    clean. This is the RED test: it fails pre-fix with a `[blocked]`
+    violation ('blocked' field is only legal on 'open' entries, not
+    'closed')."""
+    archive_mod = _load(_MODULE_PATH, "archive_change_folder")
+    backlog_index_mod = _load(_BACKLOG_INDEX_PATH, "backlog_index")
+    _make_entry_file(
+        tmp_path, "2026-08-01-alpha.md",
+        "---\nname: 2026-08-01-alpha\nstatus: open\n"
+        "blocked: waiting on upstream\n"
+        "description: An example entry.\n---\n\nBody.\n",
+    )
+
+    dest = archive_mod.archive_change_folder(
+        tmp_path, "2026-08-01-alpha.md", date="2026-08-02", unit="file"
+    )
+
+    text = dest.read_text(encoding="utf-8")
+    assert "status: closed" in text
+    assert "blocked:" not in text  # dropped when the entry is closed
+
+    store = tmp_path / "docs" / "loom" / "backlog"
+    violations = backlog_index_mod.find_violations(store)
+    assert violations == []
+
+
+def test_file_unit_archiving_leaves_unrelated_frontmatter_fields_intact(tmp_path):
+    """The `blocked:` strip must be scoped to that one key -- a sibling
+    field must survive unchanged."""
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_entry_file(
+        tmp_path, "2026-08-01-alpha.md",
+        "---\nname: 2026-08-01-alpha\nstatus: open\n"
+        "blocked: waiting on upstream\n"
+        "description: An example entry.\n---\n\nBody.\n",
+    )
+
+    dest = mod.archive_change_folder(
+        tmp_path, "2026-08-01-alpha.md", date="2026-08-02", unit="file"
+    )
+
+    text = dest.read_text(encoding="utf-8")
+    assert "description: An example entry." in text
+    assert "name: 2026-08-01-alpha" in text
+
+
+def test_file_unit_archiving_a_non_blocked_entry_is_unaffected(tmp_path):
+    """No `blocked:` field present -> the strip is a no-op, not an error."""
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_entry_file(
+        tmp_path, "2026-08-01-alpha.md",
+        "---\nname: 2026-08-01-alpha\nstatus: open\n"
+        "description: An example entry.\n---\n\nBody.\n",
+    )
+
+    dest = mod.archive_change_folder(
+        tmp_path, "2026-08-01-alpha.md", date="2026-08-02", unit="file"
+    )
+
+    text = dest.read_text(encoding="utf-8")
+    assert "status: closed" in text
+    assert "description: An example entry." in text
+
 
 def test_file_unit_archived_entry_passes_backlog_index_validate(tmp_path):
     """Archive a backlog entry, then run backlog_index.find_violations
