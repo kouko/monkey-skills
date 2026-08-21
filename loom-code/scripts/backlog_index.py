@@ -661,7 +661,14 @@ def _run_write(args: argparse.Namespace) -> int:
     except OSError as exc:
         print(f"backlog_index --write: FAIL — {args.output} is unwritable ({exc}).")
         return 1
-    print(f"backlog_index --write: wrote {Path(args.output).resolve()}")
+    # `.resolve()` touches the filesystem and can raise (symlink loops, an
+    # unreadable parent). Reporting where the write landed must never be the
+    # thing that turns a successful write into a traceback.
+    try:
+        landed = Path(args.output).resolve()
+    except OSError:
+        landed = Path(args.output).absolute()
+    print(f"backlog_index --write: wrote {landed}")
     return 0
 
 

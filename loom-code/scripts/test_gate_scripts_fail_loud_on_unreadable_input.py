@@ -49,20 +49,53 @@ SCRIPTS = Path(__file__).resolve().parent
 # of this arc's review — one of them fail-OPEN, because the unhandled raise
 # was the only thing keeping an unreadable store out of an exit-0 branch.
 _FS_CALLS = frozenset({
-    "read_text", "write_text", "read_bytes", "write_bytes",
-    "iterdir", "glob", "rglob", "mkdir", "stat",
-    "is_file", "is_dir", "exists",
+    # pathlib.Path
+    "read_text", "write_text", "read_bytes", "write_bytes", "open",
+    "iterdir", "glob", "rglob", "mkdir", "rmdir", "touch", "unlink",
+    "rename", "replace", "symlink_to", "hardlink_to", "samefile",
+    "stat", "lstat", "chmod", "resolve", "readlink",
+    # `is_file`/`is_dir`/`exists` are here deliberately: an unreadable
+    # PARENT makes them raise PermissionError, and that exact case was a
+    # finding in two separate rounds of this arc — one of them fail-OPEN,
+    # because the unhandled raise was the only thing keeping an unreadable
+    # store out of an exit-0 branch.
+    "is_file", "is_dir", "exists", "is_symlink",
+    # os / os.path / shutil, matched on the attribute name alone (so
+    # `os.listdir`, `from os import listdir`, and an aliased import all
+    # land the same way).
+    "listdir", "scandir", "walk", "makedirs", "removedirs", "remove",
+    "link", "readlink", "access", "getsize", "getmtime",
+    "copy", "copy2", "copyfile", "copytree", "move", "rmtree",
 })
+
+# Builtins that touch the filesystem when called bare (not as an attribute).
+_FS_BUILTINS = frozenset({"open"})
+
+# Module-level code is always reachable — it runs at import.
+_MODULE_SCOPE = "<module>"
 
 _OSERROR_SUPERSETS = frozenset({
     "OSError", "IOError", "EnvironmentError", "Exception", "BaseException",
 })
 
-# CLI scripts in this directory that are NOT store/brief gates. Listed with a
-# reason so that classifying a new script is a decision, never an omission.
-# Widening the fail-loud contract to cover these is filed as backlog work —
-# they are exempt from the CONTRACT, not judged safe.
+# Modules in this directory that are NOT store/brief gates. Listed with a
+# reason so that classifying a new one is a decision, never an omission.
+# They are exempt from the CONTRACT, not judged safe: three of them
+# (`archive_change_folder.py`, `loom_init.py`, `plan_card.py`) are leaky by
+# this file's own metric today. Widening the contract to cover them is filed
+# at docs/loom/backlog/2026-08-21-fail-loud-contract-covers-only-the-four-
+# store-brief-gates.md — an earlier revision of this comment claimed that
+# filing before it existed, which is the same overclaim this file has now
+# been caught in twice.
 EXEMPT = {
+    # Helper modules with no CLI at all (no `main`, no `__main__`). They
+    # cannot be gates; their callers own the fail-loud contract.
+    "adjudication_profiles.py": "helper module, no CLI entry point",
+    "living_spec_collect.py": "helper module, no CLI entry point",
+    "living_spec_drift.py": "helper module, no CLI entry point",
+    "living_spec_gitref.py": "helper module, no CLI entry point",
+    "living_spec_index.py": "helper module, no CLI entry point",
+    "living_spec_tags.py": "helper module, no CLI entry point",
     "adjudication_lint.py": "renders a document view; reads no store or brief",
     "adjudication_render.py": "renders a document view; reads no store or brief",
     "adjudication_split.py": "renders a document view; reads no store or brief",
@@ -240,16 +273,31 @@ def _guarded_line_ranges(tree: ast.AST) -> list[tuple[int, int]]:
     return ranges
 
 
-def leaky_functions(source: str) -> set[str]:
-    """Every module-level function from which an `OSError` can escape.
+def leaky_scopes(source: str) -> set[str]:
+    """Every top-level scope from which an `OSError` can escape.
 
-    A function is leaky when it makes an unguarded filesystem call, or when
-    it calls another leaky function from outside a guarded `try`. Iterated to
-    a fixpoint, so a guard placed anywhere up the call chain counts — which
-    is the whole reason this is an AST analysis and not a grep. The syntactic
-    check this replaces (`.read_text(` occurrences vs a case count) was
-    proven non-load-bearing: two round-6 reviewers each injected a genuinely
-    bare read and the suite stayed green.
+    A scope is leaky when it makes an unguarded filesystem call, or calls a
+    leaky scope from outside a guarded `try`. Iterated to a fixpoint, so a
+    guard placed anywhere up the call chain counts — which is why this is an
+    AST analysis and not a grep, and why a guard at the CLI boundary is as
+    good as one at the read site.
+
+    ## What this DOES and does NOT catch
+
+    Recognition is by CALLEE NAME (`_FS_CALLS`) plus the bare builtin
+    `open`, so it sees `p.open()`, `os.listdir(...)`, `shutil.copy(...)` and
+    an aliased import of any of them equally. Calls are attributed to their
+    enclosing TOP-LEVEL scope, so a read inside a class method, a nested
+    def, a lambda, or module-level code all count.
+
+    It does NOT catch: a filesystem call reached through a variable holding
+    a bound method (`f = p.read_text; f()`), a call whose callee name is
+    none of the recognised ones (a third-party or newly-added stdlib I/O
+    entry point), or I/O performed by a C extension. Those remain the
+    behavioural cases' job — and the honest statement of this leg's claim is
+    "no RECOGNISED escape shape reaches `main`", not "no OSError can
+    escape". The previous revision asserted the stronger sentence and a
+    reviewer defeated it with a bare `path.open()` in one try.
     """
     tree = ast.parse(source)
     ranges = _guarded_line_ranges(tree)
@@ -257,26 +305,48 @@ def leaky_functions(source: str) -> set[str]:
     def guarded(lineno: int) -> bool:
         return any(lo <= lineno <= hi for lo, hi in ranges)
 
-    funcs = {
+    top_level = {
         node.name: node
         for node in tree.body
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
     }
+    # Everything that is not a top-level def belongs to the module scope,
+    # which is always reachable (it runs at import time).
+    module_nodes = [
+        node
+        for node in tree.body
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    ]
+
+    def calls_in(nodes) -> list[ast.Call]:
+        found: list[ast.Call] = []
+        for root in nodes:
+            for node in ast.walk(root):
+                if isinstance(node, ast.Call):
+                    found.append(node)
+        return found
+
+    scopes: dict[str, list[ast.Call]] = {
+        name: calls_in([fn]) for name, fn in top_level.items()
+    }
+    scopes[_MODULE_SCOPE] = calls_in(module_nodes)
+
     leaky: set[str] = set()
     changed = True
     while changed:
         changed = False
-        for name, fn in funcs.items():
+        for name, calls in scopes.items():
             if name in leaky:
                 continue
-            for node in ast.walk(fn):
-                if not isinstance(node, ast.Call) or guarded(node.lineno):
+            for node in calls:
+                if guarded(node.lineno):
                     continue
                 func = node.func
                 escapes = (
                     (isinstance(func, ast.Attribute) and func.attr in _FS_CALLS)
-                    or (isinstance(func, ast.Name) and func.id == "open")
+                    or (isinstance(func, ast.Name) and func.id in _FS_BUILTINS)
                     or (isinstance(func, ast.Name) and func.id in leaky)
+                    or (isinstance(func, ast.Attribute) and func.attr in leaky)
                 )
                 if escapes:
                     leaky.add(name)
@@ -286,56 +356,53 @@ def leaky_functions(source: str) -> set[str]:
 
 
 @pytest.mark.parametrize("script", FAMILY)
-def test_no_oserror_can_escape_main(script: str) -> None:
-    """The load-bearing completeness leg: `OSError` must not be able to
-    reach the top of any gate script.
+def test_no_recognised_oserror_escape_reaches_main(script: str) -> None:
+    """The completeness leg: no RECOGNISED filesystem-call shape may reach
+    the top of a gate script unguarded.
 
-    This replaces a leg that counted `.read_text(` occurrences against a
-    case count. Both round-6 reviewers independently defeated that one by
-    injecting a bare read into a script that had slack in its count — the
-    headline mechanism telling the next round it could stop looking, on
-    exactly the defect class it was built for. Counting occurrences was
-    never going to work; reachability is the property that matters.
-
-    Note this is a COMPANION to the behavioural cases above, not a
-    replacement. This leg proves nothing escapes; the behavioural cases
-    prove the operator gets something they can act on. Neither implies the
-    other: a bare `except OSError: pass` would satisfy this leg and fail
-    every case above.
+    Read `leaky_scopes`'s docstring for exactly what "recognised" covers and
+    what it does not — the scope of the claim is part of the contract here,
+    because two earlier revisions of this leg asserted more than they
+    delivered and a reviewer defeated each in one try. This leg is a
+    COMPANION to the behavioural cases above, never a replacement: it proves
+    nothing recognised escapes, they prove the operator gets something
+    actionable. `except OSError: pass` satisfies this leg and fails every
+    one of them.
     """
     source = (SCRIPTS / script).read_text(encoding="utf-8")
-    leaky = leaky_functions(source)
-    assert "main" not in leaky, (
-        f"an OSError can escape {script}'s main() — the operator gets a raw "
-        f"traceback instead of one actionable line. Leaky call chain reaches: "
-        f"{sorted(leaky)}"
+    leaky = leaky_scopes(source)
+    escaping = leaky & {"main", _MODULE_SCOPE}
+    assert not escaping, (
+        f"a recognised OSError escape reaches {script}'s "
+        f"{sorted(escaping)} — the operator gets a raw traceback instead of "
+        f"one actionable line. Leaky scopes: {sorted(leaky)}"
     )
 
 
-def test_every_cli_script_is_classified() -> None:
-    """No script joins the family silently.
+def test_every_script_here_is_classified() -> None:
+    """No script joins this directory silently.
 
-    The leg this replaces derived membership from `import backlog_index` or
-    an argv named `brief_path`. A round-6 reviewer defeated it by writing a
-    plausible new gate that walks the store, reads entries bare, imports
-    nothing and names its argv differently — 14/14 green. Structural signals
-    guess at intent; this asks instead that every CLI script in this
-    directory be a decision someone made. A new script fails here until it
-    is either put in FAMILY (and given cases) or exempted with a reason.
+    Two earlier revisions of this leg used a structural signal — first
+    `import backlog_index`, then the literal `"def main("` — and a reviewer
+    defeated each by writing a plausible store-reading gate that did not
+    match it (the second fell to renaming the entry point from `main` to
+    `run`). A signal guesses at intent. This asks instead that EVERY
+    non-test module in this directory be a decision someone recorded: in
+    `FAMILY` and given unreadable-input cases, or in `EXEMPT` with a stated
+    reason. A new file fails here until someone answers the question.
     """
     classified = set(FAMILY) | set(EXEMPT)
     actual = {
         path.name
         for path in sorted(SCRIPTS.glob("*.py"))
         if not path.name.startswith("test_")
-        and "def main(" in path.read_text(encoding="utf-8")
     }
     unclassified = actual - classified
     assert not unclassified, (
-        "these CLI scripts are neither in FAMILY (gets unreadable-input "
-        "cases) nor in EXEMPT (with a stated reason): "
-        f"{sorted(unclassified)}. Classify each one — a gate that reads a "
-        "store or a brief belongs in FAMILY."
+        "these modules are neither in FAMILY (gets unreadable-input cases) "
+        f"nor in EXEMPT (with a stated reason): {sorted(unclassified)}. "
+        "Classify each one — anything that reads a backlog store or a "
+        "handoff brief belongs in FAMILY."
     )
-    stale = classified - actual - {"__none__"}
+    stale = classified - actual
     assert not stale, f"classified but no longer present: {sorted(stale)}"

@@ -952,6 +952,51 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
   proves nothing escapes, the behavioural cases prove the operator gets
   something actionable. `except OSError: pass` would satisfy the first and
   fail every one of the second.
+- **DL-33 (2026-08-21, close-out) — round 7: the overclaim recurred one level
+  up, and the fix is to size the claim, not only to widen the mechanism.**
+  Both arms 🔴, on the same thing, by the same method that killed the previous
+  revision. Arm B named it exactly:
+
+  > Round 6's finding was "the docstring describes a property it does not
+  > have." **That is still the finding.** "Proves nothing escapes" is asserted
+  > in the test docstring *and* in DL-32, and `path.open()` — one of the most
+  > ordinary reads in Python — walks straight through. The leg is a strong
+  > *regression* guard and a weak *completeness* guard, which is its stated
+  > purpose. **Sizing the claim to the mechanism would be worth as much as
+  > widening the mechanism.**
+
+  Both were done. The recogniser set now matches by callee NAME across
+  pathlib, `os`, `os.path` and `shutil` (so an aliased import lands the same
+  way), the builtin `open` is recognised bare, and calls are attributed to
+  their enclosing TOP-LEVEL scope — which is what brings class methods,
+  nested defs, lambdas and module-level code inside the fence. And the claim
+  is now written as what it is: *no RECOGNISED escape shape reaches `main`*,
+  with the docstring naming what still escapes (a call through a variable
+  holding a bound method; an I/O entry point whose name is not in the set).
+  Verified by replaying the reviewers' own experiments rather than by
+  assertion: **6 of 6 escape shapes now caught**, including arm A's and arm
+  B's decisive one (a guarded existence probe followed by a bare
+  `cfg.open()`); mutation over the family went **19 mutants / 0 survivors**.
+  The membership leg failed a third time — keyed first on `import
+  backlog_index`, then on the literal `"def main("`, each defeated in one
+  try (the second by renaming an entry point from `main` to `run`). It no
+  longer uses a signal at all: EVERY non-test module in the directory must
+  be in `FAMILY` or in `EXEMPT` with a reason. It surfaced six unclassified
+  helper modules the moment it ran.
+  **And a third instance of the same class, in the same file:** the `EXEMPT`
+  block said widening the contract was "filed as backlog work". It was not
+  filed. Both arms caught it. The entry now exists
+  (`2026-08-21-fail-loud-contract-covers-only-the-four-store-brief-gates`),
+  and it carries the honest measurement — three exempt scripts are leaky by
+  the contract's own metric today, `plan_card.py` being the one users meet
+  most often.
+  **What seven rounds taught, stated once:** every round of this arc that
+  produced prose alongside a mechanism overclaimed the mechanism, and no
+  round caught its own overclaim. The defect is not carelessness about
+  wording — it is that the author of a mechanism knows what it was FOR, and
+  writes that, while a reader knows only what it DOES. Round 7's arm B put
+  the tell precisely: *my own decisive finding came from running an
+  injection, not from reading the AST code, which reads plausibly.*
 
 ## Notes
 
