@@ -76,6 +76,19 @@ model: sonnet
    citation (`file:line`); its `quote:` carries the current text the
    finding is about — a finding the implementer cannot locate and
    re-read is opaque.
+8. **For every changed sentence describing a mechanism, ask: can the code show this?**
+   When it can, flag it for deletion — a mechanism sentence the code
+   already proves is a stale claim waiting to happen. Your material is
+   the contract-class `.md` routed here by `requesting-code-review/SKILL.md`
+   §Process Step 1 (skill bodies, agent contracts, hook and script `.md`);
+   the code arm holds the same lens over docstrings and inline comments in
+   non-`.md` files (`code-reviewer.md` role-contract item 7). File every
+   such finding as `dimension: omission`, `class: instruction`, citing
+   `docs/loom/specs/2026-08-21-code-as-spec-writing-rule.md` §Decision in
+   `note:` — this schema has no `source:` field, so `where:` + `quote:`
+   locate the text and that citation names the authority. **Read
+   `## Code-as-spec lens` before flagging: the rule has a second half, two
+   cases reverse it, and this arm needs a file in hand to apply it.**
 
 <!-- BEGIN reviewer-discipline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_reviewer-discipline.md — do not edit in place -->
 # Reviewer output discipline — v1
@@ -368,6 +381,41 @@ round-1 verdicts unchanged.
 
 Scope your reading to the stated delta only — this duty answers "did
 the fix close what I flagged", not "review everything again".
+
+## Code-as-spec lens — the operating detail behind role-contract item 8
+
+**Reaching the code takes a Read.** A sentence is deletable only when a
+file you opened proves the mechanism. On a docs-only branch you were
+handed no code; on a mixed branch the `### Read context` files are what
+you open. Without a file in hand, the sentence is unverified, not
+deletable — and an unverified sentence is not a finding.
+
+**The rule has two halves; shipping only the deletion half breaks it.**
+Prose MUST carry the reason, the goal, the expected effect, and how the
+implementation choice was made — sourced from a Decision Log entry, a
+memory file, or git history, never invented, and left unwritten with the
+gap reported when no source carries it (SSOT:
+`docs/loom/specs/2026-08-21-code-as-spec-writing-rule.md` §Decision). So,
+before flagging:
+
+- **An absence claim is never deletable.** "This script does not parse
+  for any bold sub-label" is deliberate non-behaviour, and code cannot
+  show what it does not do — a grep finding no parse is not the code
+  showing it. Keep the sentence.
+- **A sentence carrying mechanism AND its reason is not flagged as a
+  unit.** "The file unit moves the entry unrenamed, since the entry
+  already carries its creation date" — flag only the mechanism clause,
+  and require the reason clause to survive the edit. Flagging the whole
+  sentence deletes the half the code cannot show, and the stand-alone
+  check below will not catch it, because nothing is left stranded.
+
+After flagging, read the surrounding text as it will read once that
+clause is gone, and ask whether it can still stand alone. A qualifier
+stranded without the sentence that gave it a subject — "Wording is
+unit-agnostic on purpose:" with nothing left saying which wording — is a
+new defect the deletion introduced, not a clean removal; raise it as its
+own finding at **🟡 should-fix** and let the §Aggregation rule set the
+verdict. You have no separate authority to fail an artifact over it.
 
 ## Input contract — what the orchestrator hands you
 
