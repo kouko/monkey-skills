@@ -148,22 +148,20 @@ def _validate_date(date: str) -> None:
     existing callers.
 
     Calendar-strict, not just shape-strict: a shape-valid but
-    calendar-impossible date (``2026-02-30``, February has no 30th) must
-    also be refused BEFORE any filesystem mutation. Without this,
-    ``scripts/backlog_index.py``'s ``--validate``/``--write`` (which run
-    ``strptime``) would reject the ALREADY-MOVED entry after the fact,
-    leaving the store unregenerable until a human hand-edited the archived
-    file — the exact hand-edit the generated-index design exists to
-    eliminate. Duplicates ``scripts/backlog_index.py``'s
-    ``_is_valid_date_shape`` (the twin strict-date check) rather than
-    importing it: ``backlog_index.py`` is a sibling script within this
-    same plugin directory, not an external dependency, but importing it
-    would still require path-manipulation machinery (a ``sys.path``
-    insert) to make the sibling importable — coupling this script's
-    ability to run standalone to how the plugin happens to be laid out
-    on disk at runtime. loom-code ships as a standalone marketplace
-    plugin, so duplicating the ~10-line check avoids that coupling
-    entirely."""
+    calendar-impossible date (``2026-02-30``, February has no 30th) passes
+    ``_DATE_RE`` and would become a real directory named for a day that
+    never existed. It must be refused BEFORE any filesystem mutation,
+    because **nothing downstream catches it any more**: when the
+    ``archived:`` date field was retired (BI-10, plan DL-13),
+    ``scripts/backlog_index.py`` stopped parsing dates entirely — it has no
+    ``strptime`` left — so this check went from a first line of defence to
+    the only one. It formerly duplicated that module's
+    ``_is_valid_date_shape``; that twin was deleted with the rest of the
+    date machinery, so there is no longer a duplicate to justify. The check
+    stays here rather than being imported from anywhere: loom-code ships as
+    a standalone marketplace plugin, and importing even a same-directory
+    sibling needs ``sys.path`` machinery that couples this script's ability
+    to run standalone to how the plugin happens to be laid out on disk."""
     if not _DATE_RE.match(date):
         raise ArchiveError(
             f"invalid --date {date!r}: must match YYYY-MM-DD"
