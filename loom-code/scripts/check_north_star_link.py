@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Betting-moment checker: every live `COMMITTED-NEXT` backlog entry
+"""Betting-moment checker: every live `bet` backlog entry
 must carry a well-formed `serves:` line, checked against
 `docs/loom/PURPOSE.md` — same family and exit-code contract as
-`check_onramp_choice.py` / `check_direction_freshness.py`.
+`check_onramp_choice.py`.
 
 Grammar SSOT: `backlog_index._is_well_formed_serves` — this script
 imports it rather than re-implementing it, so the two-form grammar
@@ -11,7 +11,7 @@ the two checkers that enforce it (plan Task 1's `--validate` path, and
 this betting-moment path).
 
 `PURPOSE.md` is a FOUNDATIONAL artifact (the arc's Decision), not an
-optional one: a repo with live COMMITTED-NEXT entries but no
+optional one: a repo with live `bet` entries but no
 `PURPOSE.md` is not silently exempt — it is asked to write one. A
 fresh repo with nothing committed yet is never blocked, so absence of
 the file is only checked once a live entry exists. This script treats the file's body as wholly opaque — it never parses
@@ -24,20 +24,20 @@ convention with a different sub-structure.
 
 Exit codes:
 
-    0 — every live COMMITTED-NEXT entry has a well-formed `serves:`
+    0 — every live `bet` entry has a well-formed `serves:`
         line and `docs/loom/PURPOSE.md` exists, OR there are no live
-        COMMITTED-NEXT entries at all (nothing to bet on yet).
+        `bet` entries at all (nothing to bet on yet).
     1 — the given backlog store path does not exist or is not a
         readable directory.
     2 — one of three distinct causes, distinguishable by message:
-        (a) a live COMMITTED-NEXT entry exists but `PURPOSE.md` is
+        (a) a live `bet` entry exists but `PURPOSE.md` is
             absent — stderr asks the user to write one;
         (b) `PURPOSE.md` exists but is still unanswered — either the
             shipped template's placeholder text is untouched, or the
             file records a bare `not yet` deferral with no reason —
             stderr names the template state and the `not yet — <reason>`
             escape hatch;
-        (c) a live COMMITTED-NEXT entry lacks a well-formed `serves:`
+        (c) a live `bet` entry lacks a well-formed `serves:`
             line — stderr names the offending entry and the question
             the user must answer.
 
@@ -94,8 +94,8 @@ _NOT_YET_RE = re.compile(
 )
 
 
-def find_committed_next_entries(store: Path) -> list[tuple[str, dict[str, str]]]:
-    """Every live COMMITTED-NEXT entry (in `_entry_files()` order) as
+def find_bet_entries(store: Path) -> list[tuple[str, dict[str, str]]]:
+    """Every live `bet` entry (in `_entry_files()` order) as
     `(display_name, frontmatter)`. Archived entries are never checked —
     a closed entry cannot be re-bet."""
     entries = []
@@ -103,7 +103,7 @@ def find_committed_next_entries(store: Path) -> list[tuple[str, dict[str, str]]]
         if is_archived:
             continue
         frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
-        if frontmatter.get("status") != "COMMITTED-NEXT":
+        if frontmatter.get("status") != "bet":
             continue
         name = frontmatter.get("name", path.stem)
         entries.append((name, frontmatter))
@@ -146,10 +146,10 @@ def determine_purpose_state(purpose_path: Path) -> str:
 
 def build_purpose_missing_question(purpose_path: Path) -> str:
     """The exact user-facing question when `PURPOSE.md` is absent but a
-    live COMMITTED-NEXT entry exists — shared by `main()`'s stderr
+    live `bet` entry exists — shared by `main()`'s stderr
     message."""
     return (
-        f"no {purpose_path} found, but a COMMITTED-NEXT backlog entry "
+        f"no {purpose_path} found, but a bet backlog entry "
         "exists. What is this repo's purpose? Write it to "
         f"{purpose_path} before betting on this entry."
     )
@@ -172,7 +172,7 @@ def build_serves_question(name: str, purpose_path: Path) -> str:
     """The exact user-facing question for an offending entry — shared
     by `main()`'s stderr message."""
     return (
-        f"backlog entry '{name}' is COMMITTED-NEXT but has no well-formed "
+        f"backlog entry '{name}' is a bet but has no well-formed "
         f"'serves' line. How does it serve the purpose recorded in "
         f"{purpose_path}? Record the answer as 'serves: <how this "
         "serves the purpose>' or 'serves: unrelated — <reason>'."
@@ -181,7 +181,7 @@ def build_serves_question(name: str, purpose_path: Path) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Check every live COMMITTED-NEXT backlog entry "
+        description="Check every live bet backlog entry "
                     "carries a well-formed 'serves:' line against "
                     "docs/loom/PURPOSE.md."
     )
@@ -198,14 +198,14 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     try:
-        entries = find_committed_next_entries(store)
+        entries = find_bet_entries(store)
     except OSError as exc:
         print(f"Error: backlog store at {store} is unreadable ({exc}).", file=sys.stderr)
         return 1
 
     if not entries:
         print(
-            "North-star link check: OK — no live COMMITTED-NEXT backlog "
+            "North-star link check: OK — no live bet backlog "
             "entries to check yet."
         )
         return 0
@@ -222,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
     offending = find_offending_entry(entries)
     if offending is None:
         print(
-            "North-star link check: OK — every live COMMITTED-NEXT entry "
+            "North-star link check: OK — every live bet entry "
             "carries a well-formed 'serves' line."
         )
         return 0
