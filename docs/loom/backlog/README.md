@@ -232,15 +232,6 @@ from `docs/loom/backlog/<name>.md` to
 `closed` by then — the close-out flip is a separate, earlier step — and
 the move must leave it that way.
 
-**Known defect, verified by execution on 2026-08-21.**
-`archive_change_folder.py --unit file` still stamps the retired word
-`archived` over the moved entry's `status:` and adds a stray
-`archived: <YYYY-MM-DD>` field, so the store it leaves behind fails
-`--validate` with both an `[archive-tier]` and a `[status]` violation.
-Until that script is fixed, re-set the moved entry's `status:` to
-`closed` and delete the stray date field by hand, then re-run
-`--validate`.
-
 Knowing what the move does lets you verify the script's result; it is
 not an invitation to perform it by hand. Archiving **never renames**
 the file (the filename rule above still applies) and **never deletes**
