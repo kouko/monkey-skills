@@ -54,7 +54,7 @@ def test_source_does_not_parse_bold_labels():
     assert "**Success:**" not in source
 
 
-def test_exit_0_when_every_committed_next_entry_is_well_formed(tmp_path):
+def test_exit_0_when_every_bet_entry_is_well_formed(tmp_path):
     store = tmp_path / "docs" / "loom" / "backlog"
     store.mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "loom" / "PURPOSE.md").write_text(
@@ -68,7 +68,7 @@ def test_exit_0_when_every_committed_next_entry_is_well_formed(tmp_path):
     assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
 
 
-def test_exit_0_when_no_committed_next_entries_and_no_purpose_md(tmp_path):
+def test_exit_0_when_no_bet_entries_and_no_purpose_md(tmp_path):
     """A fresh repo with nothing committed yet must not be blocked —
     the Decision's 'never block a fresh repo with nothing in it yet.'"""
     store = tmp_path / "docs" / "loom" / "backlog"
@@ -86,21 +86,6 @@ def test_exit_1_on_missing_store_path(tmp_path):
 
     assert result.returncode == 1
     assert str(missing) in result.stderr
-
-
-def test_exit_2_names_offending_entry_and_question(tmp_path):
-    store = tmp_path / "docs" / "loom" / "backlog"
-    store.mkdir(parents=True, exist_ok=True)
-    (tmp_path / "docs" / "loom" / "PURPOSE.md").write_text(
-        "Some long-horizon purpose.\n", encoding="utf-8"
-    )
-    _write_entry(store, "entry-c", "bet", None)
-
-    result = _run(store)
-
-    assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
-    assert "entry-c" in result.stderr
-    assert "serves" in result.stderr
 
 
 def test_bet_entry_without_serves_exits_2(tmp_path):
