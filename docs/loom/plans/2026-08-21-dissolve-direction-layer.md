@@ -4,7 +4,7 @@ Source brief: docs/loom/specs/2026-08-20-dissolve-direction-layer.md
 Goal: backlog store 成為「接下來做什麼」的唯一紀錄——status 三詞 open/bet/closed
     加 blocked: 欄位；DIRECTION.md 與其產生器、憲章、新鮮度警報全數刪除；
     佇列閘門改對 bet 條目解析、無佇列層時大聲 N/A；下注維持 user-only。
-Stage: review:round-4
+Stage: finishing
 Steps:
     1. 詞彙核心與開場預設新家（雙線並行起步）
     2. 讀取端跟上（north-star 鍵／共用 parser／閘門重生／init／定義 SSOT）

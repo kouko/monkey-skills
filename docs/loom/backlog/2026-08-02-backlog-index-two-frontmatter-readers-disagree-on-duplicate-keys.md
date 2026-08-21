@@ -14,6 +14,16 @@ the three this same remediation round added (this entry among them) —
 found none.
 
 **1. Two readers of the same frontmatter disagree on duplicate keys.**
+_(CLOSED 2026-08-21 by the dissolve-direction-layer arc, by deletion: the
+second reader no longer exists. `archive_change_folder.py`'s `_read_status`
+is gone — once `archived` was retired from the status vocabulary, a
+frontmatter status could no longer distinguish "closed and live" from
+"already archived", so the archiver stopped reading status at all and keys
+its idempotency guard on the archive tier instead. Findings 2, 3 and 4 below
+are UNCHANGED and are why this entry stays `open`; in particular finding 2's
+`name`-not-`path.stem` link target is still live at `backlog_index.py:483`
+and `:605`.)_
+
 `scripts/backlog_index.py`'s `parse_frontmatter` is **last-wins**;
 `loom-code/scripts/archive_change_folder.py`'s `_read_status` uses a
 regex `search`, which is **first-match**. So a file carrying
