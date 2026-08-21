@@ -419,14 +419,18 @@ def test_no_file_claims_direction_md_charter_header_is_the_ssot():
         assert FALSE_SSOT_CLAIM not in text, (
             f"{path} still claims the old direction skeleton's charter "
             "header is the SSOT, but the charter now lives in "
-            "direction-charter.md"
+            "docs/loom/backlog/README.md (this file itself)"
         )
 
 
 def test_all_sibling_roadmaps_retarget_the_charter_pointer():
     # Finding 2: loom-code/ROADMAP.md was already retargeted; the other
     # four sibling ROADMAP.md files still point at a charter header that
-    # no longer exists.
+    # no longer exists. The direction layer's document-side artifacts
+    # (docs/loom/DIRECTION.md and its hooks-side charter file) were later
+    # dissolved entirely (commit 0c480079, Task 14 of
+    # 2026-08-21-dissolve-direction-layer.md) — the charter now lives in
+    # docs/loom/backlog/README.md, the sole live target for this pointer.
     for path in SIBLING_ROADMAPS:
         assert path.exists(), f"expected sibling roadmap missing: {path}"
         text = path.read_text(encoding="utf-8")
@@ -434,8 +438,9 @@ def test_all_sibling_roadmaps_retarget_the_charter_pointer():
             f"{path} still points at the old direction-skeleton-resident "
             "charter header"
         )
-        assert "direction-charter.md" in text, (
-            f"{path}'s charter pointer must retarget to direction-charter.md"
+        assert "docs/loom/backlog/README.md" in text, (
+            f"{path}'s charter pointer must retarget to "
+            "docs/loom/backlog/README.md"
         )
 
 
@@ -484,8 +489,9 @@ def test_backlog_readmes_document_serves_contract():
 # the thing that must read correctly outside this plugin repo.
 #
 # Round 2 (2026-08-21, DL-10): Task 11's charter rewrite dropped the
-# direction-charter.md pointer this test originally pinned (that file dies
-# in Task 14 of docs/loom/plans/2026-08-21-dissolve-direction-layer.md).
+# hooks-side direction-layer charter pointer this test originally pinned
+# (that file dies in Task 14 of
+# docs/loom/plans/2026-08-21-dissolve-direction-layer.md).
 # The concern — a scaffolded pointer must not name a bare repo-relative
 # path that won't resolve outside this plugin repo — still applies, and
 # the charter still carries exactly this shape for the archive script
