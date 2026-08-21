@@ -157,6 +157,31 @@ _CROSS_MODULE_BLIND_SPOT_SURVIVORS = {
     ("check_north_star_link.py", "find_bet_entries"),
 }
 _ALL_SURVIVOR_KEYS = _BY_DESIGN_SURVIVORS | _CROSS_MODULE_BLIND_SPOT_SURVIVORS
+
+# `(script, desc)` is deliberately line-number-independent (see above), but
+# that means it is not injective over discovered sites: `_guarded_call_desc`
+# degrades to the same label for two distinct calls sharing a receiver name
+# (or two distinct bare-name calls). A collision that lands OUTSIDE the
+# survivor set is harmless — every matching case is still individually
+# mutated below, just under a shared label. A collision that lands INSIDE
+# the survivor set is not: the filter below would silently exempt every
+# site sharing that key, not just the one meant to be exempted, and the
+# un-exempted twin would never be mutated at all. Rather than disambiguate
+# every desc with an occurrence ordinal (which would make the reasoned
+# survivor tuples above harder to read as plain "(script, call)" pairs a
+# human can check by eye), assert the one place aliasing is actually
+# dangerous: no survivor key may match more than one discovered site.
+for _survivor_key in _ALL_SURVIVOR_KEYS:
+    _matching_sites = [c for c in _ALL_CASES if (c[0], c[3]) == _survivor_key]
+    assert len(_matching_sites) == 1, (
+        f"survivor key {_survivor_key!r} matches {len(_matching_sites)} "
+        f"discovered guard sites {_matching_sites} -- this key is not "
+        "unique among mutation sites, so exempting it would silently "
+        "exempt every site sharing the label, not just the one reasoned "
+        "about above. Disambiguate the colliding calls (or the survivor "
+        "reasoning) before trusting this exemption."
+    )
+
 _KILLED_CASES = [c for c in _ALL_CASES if (c[0], c[3]) not in _ALL_SURVIVOR_KEYS]
 _BY_DESIGN_CASES = [c for c in _ALL_CASES if (c[0], c[3]) in _BY_DESIGN_SURVIVORS]
 _CROSS_MODULE_CASES = [
