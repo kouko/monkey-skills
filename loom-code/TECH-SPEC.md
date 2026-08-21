@@ -3,7 +3,7 @@
 > **Owner**: code-team (technical contract — module / data-flow / interface / SSOT)
 > **Companion**: [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — business + design direction (planning-team owned)
 > **Source of design**: `<obsidian-vault>/research/2026-05-15 Superpowers vs code-team 架構比較研究.md`
-> **Roadmap**: forward direction lives in [`docs/loom/DIRECTION.md`](../docs/loom/DIRECTION.md); [ROADMAP.md](ROADMAP.md) is a historical design record
+> **Roadmap**: forward direction lives in [`docs/loom/backlog/`](../docs/loom/backlog/) (the loom queue store); [ROADMAP.md](ROADMAP.md) is a historical design record
 
 ## Revision History
 

@@ -233,8 +233,8 @@ Role boundaries enforced by behavior, not reading restrictions:
   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" …` — where
   `${CLAUDE_PLUGIN_ROOT}` is a load-time substitution performed when
   skill text is rendered, not a run-time shell variable.
-- **Validate/regenerate the backlog index and DIRECTION `## Now`**:
-  `python3 scripts/backlog_index.py {--ready | --validate | --write | --check | --direction-write <path> | --direction-check <path>}`
+- **Validate/regenerate the backlog index**:
+  `python3 scripts/backlog_index.py {--ready | --validate | --write | --check}`
   — the backlog store's generator/validator (charter:
   `docs/loom/backlog/README.md`). Same two-tier resolution: repo-root
   `scripts/backlog_index.py` first, else the loom-code plugin-shipped
@@ -242,21 +242,17 @@ Role boundaries enforced by behavior, not reading restrictions:
   (load-time substitution, as above).
 - **Scaffold the queue layer into a repo (one-time)**:
   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/loom_init.py" [repo-root]`
-  — creates the backlog charter + DIRECTION.md skeleton + plans/ +
-  specs/, self-verifies the fresh store via `backlog_index.py`, and
-  refuses when either artifact already exists. Plugin-shipped ONLY —
+  — creates the backlog charter + KICKOFF-DEFAULTS skeleton + PURPOSE
+  skeleton + plans/ + specs/, self-verifies the fresh store via
+  `backlog_index.py`, and refuses when either artifact already
+  exists. Plugin-shipped ONLY —
   a bootstrap verb has no repo-root tier (its precondition is the
   repo lacking the layer). `${CLAUDE_PLUGIN_ROOT}` is a load-time
   substitution, as above.
-- **Check a brief's direction freshness** (arc-entry gate):
-  `python3 loom-code/scripts/check_direction_freshness.py <brief-path> [--repo-root <path>]`
-  — does two jobs on every run. Advisory: prints every unlanded
-  `docs/loom/DIRECTION.md` / `docs/loom/backlog/<name>.md` change any
-  local branch still carries relative to the base branch, one
-  `Unlanded direction change: <branch> — <path> (tip <date>)` line per
-  hit — this never affects the exit code. Gating: resolves the brief's
-  `## Queue relation` line against the closed grammar — the three
-  canonical forms are enumerated once, in
+- **Check a brief's queue relation** (arc-entry gate):
+  `python3 loom-code/scripts/check_queue_relation.py <brief-path> [--repo-root <path>]`
+  — resolves the brief's `## Queue relation` line against the closed
+  grammar — the three canonical forms are enumerated once, in
   `handoff-brief-format.md`'s own `## Queue relation` section (and
   the script's module docstring points there too), and are
   deliberately not re-listed here: `review_scope.py`'s entry above
@@ -264,12 +260,16 @@ Role boundaries enforced by behavior, not reading restrictions:
   second place — it drifted to a different count three times before
   the entry stopped restating it. Blocks on anything outside that
   grammar, and also blocks a well-formed `in-queue:`/`displaces:` line
-  that names an entry absent from DIRECTION.md's `## Now` — the
-  existence requirement is the SSOT's, not restated here. Exit 0 when
-  the queue relation resolves; exit 1 when `<brief-path>` is missing
-  or is not a regular file (a directory path takes this exit too);
-  exit 2 when the queue relation is missing or malformed, or names an
-  absent entry (the question to relay verbatim is printed to stderr).
+  that names an entry absent from the live `status: bet` entries
+  under `docs/loom/backlog/` — the existence requirement is the
+  SSOT's, not restated here. A repo with no `docs/loom/backlog/`
+  directory reports a loud `N/A` on stdout and exits 0, rather than
+  gating a repo that never adopted the queue layer. Exit 0 when the
+  queue relation resolves (or the repo has no queue layer); exit 1
+  when `<brief-path>` is missing or is not a regular file (a
+  directory path takes this exit too); exit 2 when the queue relation
+  is missing or malformed, or names an absent entry (the question to
+  relay verbatim is printed to stderr).
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams
@@ -318,8 +318,7 @@ Philosophical thinking frameworks for problem clarification and deeper
 reasoning — 12 shipped skills (11 frameworks + 1 router).
 `philosophers-toolkit/ROADMAP.md` is a historical design record that
 holds the original planned-frameworks list; future planned work, when
-it exists, lives in repo-root `docs/loom/DIRECTION.md` and
-`docs/loom/backlog/` entries.
+it exists, lives in `docs/loom/backlog/` entries.
 
 ## Installation
 

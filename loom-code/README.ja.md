@@ -179,7 +179,7 @@ SessionStart hook は portable な JSON shape を発出し、Claude Code の `ho
 
 - [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — 設計意図、ターゲットユーザ、Q-lock 決定
 - [TECH-SPEC.md](TECH-SPEC.md) — アーキテクチャ、SSOT メカニズム、hook contract
-- [ROADMAP.md](ROADMAP.md) — phase 計画、決定台帳、Phase 1.5 rolling backlog（過去の設計記録 — 今後の方向はリポジトリルートの `docs/loom/DIRECTION.md`）
+- [ROADMAP.md](ROADMAP.md) — phase 計画、決定台帳、Phase 1.5 rolling backlog（過去の設計記録 — 今後の方向は `docs/loom/backlog/` のキューストア）
 - [CHANGELOG.md](CHANGELOG.md) — Journey overview + バージョンごと詳細
 - [docs/examples/](docs/examples/) — 3 つの end-to-end 完全例（Python / TypeScript / Swift）
 - [docs/announcement/v1.0.0-announcement.md](docs/announcement/v1.0.0-announcement.md) — 公開 announcement ドラフト（v1.0.0 で公開）

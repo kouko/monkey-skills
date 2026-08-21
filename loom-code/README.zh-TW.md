@@ -179,7 +179,7 @@ SessionStart hook 發出可移植 JSON shape，涵蓋 Claude Code 的 `hookSpeci
 
 - [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — 設計意圖、目標使用者、Q-lock 決策
 - [TECH-SPEC.md](TECH-SPEC.md) — 架構、SSOT 機制、hook contracts
-- [ROADMAP.md](ROADMAP.md) — phase 計畫、決策台帳、Phase 1.5 rolling backlog（歷史設計紀錄——後續方向見 repo 根目錄的 `docs/loom/DIRECTION.md`）
+- [ROADMAP.md](ROADMAP.md) — phase 計畫、決策台帳、Phase 1.5 rolling backlog（歷史設計紀錄——後續方向見 `docs/loom/backlog/` 佇列儲存區）
 - [CHANGELOG.md](CHANGELOG.md) — Journey overview + 每版細節
 - [docs/examples/](docs/examples/) — 3 個 end-to-end 完整範例（Python / TypeScript / Swift）
 - [docs/announcement/v1.0.0-announcement.md](docs/announcement/v1.0.0-announcement.md) — 公開 announcement 草稿（v1.0.0 時發布）

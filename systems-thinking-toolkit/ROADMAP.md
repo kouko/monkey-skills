@@ -1,5 +1,5 @@
 # Systems Thinking Toolkit Roadmap
-> **Historical design record — superseded.** Forward direction lives in `docs/loom/DIRECTION.md` (see `loom-code/hooks/direction-charter.md` for its rules); this file is kept as a design-era artifact and is no longer maintained.
+> **Historical design record — superseded.** Forward direction lives in the `docs/loom/backlog/` queue store (see `docs/loom/backlog/README.md` for its charter); this file is kept as a design-era artifact and is no longer maintained.
 
 ## v0.1.0 (initial release, 2026-05-12)
 

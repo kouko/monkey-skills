@@ -1,5 +1,5 @@
 # Philosophers Toolkit — Roadmap
-> **Historical design record — superseded.** Forward direction lives in `docs/loom/DIRECTION.md` (see `loom-code/hooks/direction-charter.md` for its rules); this file is kept as a design-era artifact and is no longer maintained.
+> **Historical design record — superseded.** Forward direction lives in the `docs/loom/backlog/` queue store (see `docs/loom/backlog/README.md` for its charter); this file is kept as a design-era artifact and is no longer maintained.
 
 哲學家/理論の索引。各項目は将来 skill として実装予定。
 優先度は使用者の工作流（企画 → 規格 → 實作 → 迭代）との関連性で判断。

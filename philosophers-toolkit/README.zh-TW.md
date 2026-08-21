@@ -218,7 +218,7 @@ skill 提問。你回答。skill 再深入挖。結論是你的，不是 Claude 
 
 考慮中的框架列在 [ROADMAP.md](ROADMAP.md) — 包括 Occam's Razor、
 pragmatism、功利主義／義務論、三現主義、道家／無為等。
-（歷史設計紀錄——後續方向見 repo 根目錄的 `docs/loom/DIRECTION.md`）
+（歷史設計紀錄——後續方向見 `docs/loom/backlog/` 佇列儲存區）
 
 ## Contributing
 

@@ -185,7 +185,7 @@ Cross-plugin behavior is verified by 5 integration test scripts in [`tests/integ
 
 - [PRODUCT-SPEC.md](PRODUCT-SPEC.md) — design intent, target users, Q-lock decisions
 - [TECH-SPEC.md](TECH-SPEC.md) — architecture, SSOT mechanism, hook contracts
-- [ROADMAP.md](ROADMAP.md) — phase plan, decision ledger, Phase 1.5 rolling backlog (historical design record — forward direction: repo-root `docs/loom/DIRECTION.md`)
+- [ROADMAP.md](ROADMAP.md) — phase plan, decision ledger, Phase 1.5 rolling backlog (historical design record — forward direction: the `docs/loom/backlog/` queue store)
 - [CHANGELOG.md](CHANGELOG.md) — Journey overview + per-version detail
 - [docs/examples/](docs/examples/) — 3 worked end-to-end examples (Python / TypeScript / Swift)
 - [docs/announcement/v1.0.0-announcement.md](docs/announcement/v1.0.0-announcement.md) — public announcement draft (publishes at v1.0.0)
