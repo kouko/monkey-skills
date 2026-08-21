@@ -4,7 +4,7 @@ Source brief: docs/loom/specs/2026-08-20-dissolve-direction-layer.md
 Goal: backlog store 成為「接下來做什麼」的唯一紀錄——status 三詞 open/bet/closed
     加 blocked: 欄位；DIRECTION.md 與其產生器、憲章、新鮮度警報全數刪除；
     佇列閘門改對 bet 條目解析、無佇列層時大聲 N/A；下注維持 user-only。
-Stage: planning
+Stage: finishing
 Steps:
     1. 詞彙核心與開場預設新家（雙線並行起步）
     2. 讀取端跟上（north-star 鍵／共用 parser／閘門重生／init／定義 SSOT）
@@ -71,7 +71,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-2
-- **Status**: pending
+- **Status**: done(61d0a464)
 - **Gloss**: 狀態詞從 7 收斂到 3、「被擋住」變成欄位，store 裡每一筆條目一次遷移完——這是整個新詞彙的地基。
 
 ## Task 2 — check_north_star_link 觸發鍵改 bet
@@ -91,7 +91,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: BI-8
-- **Status**: pending
+- **Status**: done(98abd499)
 - **Gloss**: 「每筆押注要對長期目標交代」的檢查跟上新詞——沒有這步，serves: 檢查會對所有 bet 視而不見。
 
 ## Task 3 — archive_change_folder 共用 frontmatter parser（2026-08-02 發現 1 順風）
@@ -114,7 +114,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: none — rider sanctioned by the brief's §Out of Scope (finding 1 of the 2026-08-02 entry rides this arc's touch of backlog_index.py)
-- **Status**: pending
+- **Status**: done(b5d0810f)
 - **Gloss**: 兩個讀同一份 frontmatter 的程式從此只有一個答案——修掉一個潛伏的「驗證說活、封存說死」分歧。
 
 ## Task 4 — 佇列閘門重生：check_direction_freshness.py → check_queue_relation.py
@@ -140,7 +140,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: done(bbfb07a8)
 - **Gloss**: 閘門的三個病一次修完——別名不再指向已死的功能、STOP 訊息終於列出可選名稱、沒佇列層的 repo 不再被永遠擋住。
 
 ## Task 5 — on-ramp 常設選擇搬進 KICKOFF-DEFAULTS.md
@@ -183,7 +183,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: done(305e338b)
 - **Gloss**: 常設選擇有了自己的小檔案，檔名就是它唯一的職責——DIRECTION.md 因此少掉最後一個活著的讀者。
 
 ## Task 6 — loom_init 改架設面（KICKOFF-DEFAULTS 範本進、DIRECTION 範本退場準備）
@@ -209,7 +209,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: Task 5 completes first
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: done(ada7afe6)
 - **Gloss**: 新採用 loom 的 repo 從此拿到的是「backlog＋目的＋設定檔」三件套，不再連同整個方向層一起被架設。
 
 ## Task 7 — 方向層本體刪除
@@ -230,7 +230,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: Tasks 4, 5, 6 complete first
 - **Independent**: false
 - **Brief item covered**: BI-6
-- **Status**: pending
+- **Status**: done(e7df15b5)
 - **Gloss**: 物化視圖和它的產生器、憲章、範本在同一步消失——到這步為止，repo 裡再沒有任何活機制讀寫 DIRECTION.md。
 
 ## Task 8 — brainstorming Axis 0 與佇列文法 SSOT 改寫
@@ -254,7 +254,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: Tasks 4, 6 complete first
 - **Independent**: false
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: done(5a6a4c4d)
 - **Gloss**: 開工時的佇列讀取只剩一個動作（--ready），brief 文法的裁判也從已刪的區段換成 store 本身。
 
 ## Task 9 — writing-plans 閘門段落改寫
@@ -273,7 +273,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: Task 4 completes first
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: done(eb733f2e)
 - **Gloss**: 計畫入口的閘門說明跟上新腳本名與「沒佇列層就大聲 N/A」的新姿勢——skill 文字與程式行為重新對齊。
 
 ## Task 10 — finishing 收尾列重寫（下注入 store、user-only 不變）
@@ -296,7 +296,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: Tasks 1, 2 complete first
 - **Independent**: true
 - **Brief item covered**: BI-9
-- **Status**: pending
+- **Status**: done(6652ed7f)
 - **Gloss**: 下注職責活著、只換了掛鉤——從「DIRECTION.md 存在才問」變成「store 沒有活注就問」；代打下注依然被明文禁止。
 
 ## Task 11 — 狀態詞定義 SSOT（BI-11）
@@ -316,7 +316,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: BI-11
-- **Status**: pending
+- **Status**: done(f7788f4e)
 - **Gloss**: 每個狀態詞的意思、誰能設、何時翻動、附帶義務，白紙黑字只寫一份——skill 全部用指向，不各自改寫。
 
 ## Task 12 — 全庫活文件掃更（凍結紀錄不動）
@@ -347,7 +347,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: Task 7 completes first
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(d25fa164)
 - **Gloss**: 活文件全面改口、歷史紀錄一字不動——grep 以後還找得到 ## Now，但那只是化石，不再是機制。
 
 ## Task 13 — 版本、CHANGELOG 與 backlog 收尾記帳
@@ -375,7 +375,7 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: Tasks 8, 9, 10, 11, 12, 14 complete first
 - **Independent**: false
 - **Brief item covered**: none — release administration (version bump required by the repo's skill-content-PR rule) plus close-out bookkeeping the brief's §Out of Scope names (kumiko entry, milestone note, findings 2-4 note)
-- **Status**: pending
+- **Status**: done(8bab8024)
 - **Gloss**: 版本推進、變更紀錄、三筆記帳一次落地——沒有 bump，marketplace 更新會靜默 no-op。
 
 ## Task 14 — 刪除 DIRECTION.md、憲章與範本三個檔案
@@ -394,8 +394,369 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
 - **Dependencies**: Tasks 4, 5, 6 complete first
 - **Independent**: true
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(0c480079)
 - **Gloss**: 三個檔案的葬禮——讀者都改完之後才動手，套件全綠就是「沒人還在讀它們」的證明。
+
+## Decision Log
+
+- **DL-1 (2026-08-21, wave 1)** — `test_progress_tooling_shipped.py:96` pinned
+  the literal `"## OPEN"` as its marker that the repo-root shim really forwards
+  `--ready`. Task 1's section rename broke it, and no task in this plan declares
+  that file — a plan gap, not an implementer error. The orchestrator applied the
+  one-line marker fix (`"## OPEN"` → `"## open"`) rather than re-planning: the
+  change is fully determined by Task 1's shipped output, reversible, and carries
+  no product consequence, so it sits below the two-axis escalation threshold.
+
+- **DL-2 (2026-08-21, wave 1)** — the arc has an exhaustiveness oracle for the
+  DIRECTION deletion but NONE for the vocabulary change, so a retired status word
+  surviving in a live file is invisible until a test happens to pin it (which is
+  exactly how DL-1 surfaced). Task 13's close-out therefore additionally runs
+  `grep -rlEi '(committed[-_]next|status: (OPEN|PARKED|UPSTREAM|SHIPPED|archived))' loom-code/ docs/loom/backlog/README.md --exclude=CHANGELOG.md --exclude-dir=__pycache__`
+  — **case-insensitive and separator-agnostic on purpose**: the first draft of
+  this sweep matched only the uppercase hyphenated literal, and Task 2's review
+  found two test functions named `committed_next` in snake_case that such a
+  pattern cannot see. That is the same shape-specific-grep failure rounds 5-7 of
+  the plan review kept hitting, reproduced one layer down.
+  and reports any hit, under the same STOP-do-not-edit rule as the DIRECTION
+  oracle. Recorded here rather than edited into Task 13's block because the plan
+  is past review; the close-out task reads this log.
+
+- **DL-3 (2026-08-21, wave 1)** — wave-1 parallelism was dispatched into ONE
+  working tree, so T5's implementer saw T1's uncommitted migration as 40 suite
+  failures and could not use "full suite green" as its own gate. `Files touched`
+  disjointness prevents edit conflicts, not shared-tree visibility. Later waves
+  either dispatch with worktree isolation or drop the whole-suite gate to a
+  task-scoped one. Related: T5's identifier rename broke
+  `test_backlog_index.py:1654`, a cross-module drift pin between the two tasks'
+  files — a semantic dependency the plan's file-disjointness check cannot see
+  (`writing-plans` §"Guard — disjoint files ≠ independent" names this class).
+
+- **DL-4 (2026-08-21, wave 1)** — a verdict-only reviewer subagent ran
+  `git stash` mid-review, sweeping four working-tree files into `stash@{0}`
+  and resetting to HEAD: the plan's own Decision Log and task-status flips,
+  the DL-1 fix, and two unrelated pre-existing user edits. Root cause is a
+  dispatch-packet omission — the standing "do not use `git stash`" guard was
+  written into the implementer packets but not the reviewer packets, even
+  though a verdict-only role has MORE reason to carry it (it has no
+  legitimate need to mutate the tree at all). Recovery used
+  `git show 'stash@{0}:<path>' > <path>` per path rather than `git stash pop`,
+  which always takes `stash@{0}` and has grabbed a foreign stash three times
+  in this repo's history. Every reviewer packet from wave 2 onward carries the
+  guard. `stash@{0}` is left in place, redundant but not deleted.
+
+- **DL-5 (2026-08-21, wave 1)** — correction to commit `305e338b`'s own
+  message. It claims the cross-module drift pin in `test_backlog_index.py`
+  was repaired "as a same-diff collateral fix". That is false: the file is
+  absent from that commit's 8-file diff, and checking `305e338b` out alone
+  fails on `AttributeError: module 'check_onramp_choice' has no attribute
+  'DIRECTION_STANDING_HEADING'`. The pin was actually repaired by the sibling
+  commit `61d0a464` (Task 1) later in the same wave — the interim red is the
+  breakage DL-3 already names. Recorded here rather than amended into the
+  message: `305e338b` is no longer HEAD, and rewriting a landed commit's
+  message to fix a wording claim is not worth the rebase. Surfaced by Task 5's
+  code-quality review as a 🟡 should-fix; the reviewer explicitly judged that
+  re-dispatching Task 5 to touch a file outside its declared scope would be
+  the wrong fix.
+
+- **DL-6 (2026-08-21, wave 2) — debt carried out of Task 3.** Its code-quality
+  review returned PASS_WITH_NOTES with a reproduced latent defect: unifying on
+  `backlog_index.parse_frontmatter` means an unclosed frontmatter fence now
+  scans to EOF instead of yielding `{}`, so a proposal whose body quotes a
+  `status: archived`-shaped line is read as already-archived and refused. This
+  corpus quotes status values in prose routinely, so the case is plausible, not
+  theoretical. It fails toward over-refusal rather than data loss, and the
+  reuse's own cited claim (last-wins duplicate keys) does carry over — hence
+  PASS_WITH_NOTES, not a block. Task 13 files this as a backlog entry at
+  close-out; the fix shape is a closing-fence guard in `parse_frontmatter`,
+  which is `backlog_index.py`'s surface, not Task 3's.
+- **DL-7 (2026-08-21, wave 2)** — second finding from the same review, recorded
+  because it is a convention question, not a bug: Task 3's RED test asserts
+  through the private `_read_status`, the only one of that file's 48 tests to
+  reach past the public entry point. A fixture driving `archive_change_folder()`
+  would have pinned the consumer-visible behaviour (the idempotency refusal at
+  `archive_change_folder.py:303`) instead of a helper's return value. Left as
+  shipped — the private assertion does pin the last-wins fact — but the next
+  touch of that file should prefer the public path.
+
+- **DL-8 (2026-08-21, wave 2) — recorded scope extension for Task 11.** Both of
+  Task 11's review arms independently returned NEEDS_REVISION on the same
+  defect: round 1 left the charter asserting two mutually exclusive closed
+  enums for `status` — the new three-word table and the untouched seven-word
+  `## Closed status vocabulary` section, plus the frontmatter contract's
+  `status: <...>` grammar line — in BOTH files, template included, so the
+  contradiction would ship to every repo `loom_init.py` scaffolds. The
+  docs-reviewer graded all four sites 🔴 fatal, instruction-class: prescriptive
+  text a reader follows, and following it writes a status `--validate` rejects.
+  Round 1 justified leaving it by citing DL-2; both reviewers ruled DL-2 is a
+  report-only close-out backstop for stragglers no task owns, not a waiver for
+  the owning task. Task 11's `Files touched` already covers both files, so
+  round 2 was re-dispatched with the reconciliation in scope. Recording it
+  because the extension goes beyond the block's literal "purge DIRECTION-era
+  content" wording, and a silent scope extension is how a plan stops describing
+  what was built.
+- **DL-9 (2026-08-21, wave 2)** — pending from Task 11 round 2: the retired
+  `COMMITTED-NEXT` section carried a policy the new four-row table does not —
+  a "PARALLEL ACTIVE SET, not a serial queue" framing with a ≤5 cap. Round 2
+  was told to rule explicitly whether that policy survives under `bet` and to
+  say which, rather than dropping a live policy silently. Its answer lands
+  here.
+
+- **DL-10 (2026-08-21, wave 2) — the third instance of one coupling shape.**
+  `test_loom_init.py` (Task 6's file) asserts on the CONTENT of
+  `backlog-README.md` and `templates/backlog-README.md` (Task 11's files):
+  `test_scaffolded_readme_carries_the_charter_sections`,
+  `test_mutation_stripped_charter_section_fails_the_production_assertion`,
+  `test_backlog_readmes_document_serves_contract`, and
+  `test_scaffolded_backlog_readme_pointer_does_not_name_an_unresolvable_repo_path`
+  went red when Task 11 rewrote the charter. Task 6 correctly refused to fix
+  content it does not own and reported instead.
+  The same shape has now bitten three times this arc — T5's rename broke a pin
+  in T1's test file, T1's section rename broke a pin in a file NO task owned,
+  and now T11's rewrite broke four pins in T6's test file. The invariant: a
+  plan's `Files touched` disjointness proves nobody writes the same file, and
+  proves nothing about whose TESTS READ whose files. `writing-plans`
+  §"Guard — disjoint files ≠ independent" names the class; nothing in the plan
+  format makes the read-edge visible, which is why all three slipped past eight
+  review rounds.
+  Sequencing: these four assertions are fixed in a Task 6 follow-up round AFTER
+  Task 11 round 3 settles the charter — fixing them against a charter still
+  being rewritten would pin a moving target.
+
+- **DL-11 (2026-08-21, wave 2) — a sanctioned arc-sweep hit, ruled by both of
+  Task 4's review arms.** Task 4's block mandates the RED test name
+  `test_in_queue_resolves_against_bet_entry_without_direction_md` verbatim, and
+  that name contains `_direction_` — so it matches the plan's own §"Arc sweep
+  pattern". Both reviewers ruled independently: **keep the name, delete the
+  assertion.** The name is plan-mandated and renaming it to dodge the oracle
+  would trade plan↔artifact traceability for a quiet grep, which is precisely
+  the gaming the STOP-do-not-edit rule exists to prevent; the companion
+  assertion `assert not (repo / "docs" / "loom" / "DIRECTION.md").exists()` runs
+  against a fresh `tmp_path` nothing populates, so it is tautologically true,
+  unkillable by any mutation, and was never mandated — the block asks for
+  DIRECTION.md's absence as a fixture precondition, not as an assertion.
+  **Task 13 must expect exactly TWO surviving sweep hits, both sanctioned.**
+  (1) `test_queue_relation_grammar.py` — the plan-mandated test name above.
+  (2) `test_finishing_backlog_close.py` — `assert "--direction-write" not in row`,
+  which Task 10's own RED acceptance leg requires verbatim ("contains no
+  `--direction-write`") and which cannot be written without matching the
+  pattern. Same shape as (1): an acceptance criterion that mandates a literal
+  the oracle also matches. This entry was written when only (1) existed and
+  said "exactly ONE"; (2) appeared in wave 3 and the count is corrected here
+  rather than left to contradict the artifact. Anything the oracle reports
+  beyond these two is a real defect.
+- **DL-12 (2026-08-21, wave 2) — coverage the rewrite dropped, split by owner.**
+  Task 4's rework deleted two whole test files and rewrote a third, taking with
+  it: (a) behavioural coverage of `displaces:` — one of the three canonical
+  grammar forms, now with ZERO tests over its resolver branch — plus the
+  em-dash-vs-ASCII-hyphen separator guards and the absent-section case; and
+  (b) four tests pinning `handoff-brief-format.md`'s `## Queue relation` prose,
+  while the same commit's docstring newly declares that file the "Grammar
+  SSOT". Nothing else in the repo pins it. Split: (a) and the three stable
+  prose pins go back in Task 4 round 2; the fourth prose pin — the must-exist
+  rule, whose wording changes from "`## Now`" to "a live bet entry" — belongs
+  to Task 8, which owns that rewrite and can pin the new wording as it writes
+  it. Pinning it in Task 4 would pin a sentence that does not exist yet.
+
+- **DL-13 (2026-08-21, wave 2) — a ship-broken gap the plan never assigned.**
+  BI-10 retires the archive tier's separate `archived` status and its
+  `archived: <date>` field. Task 1 removed the READER half (vocabulary,
+  invariants, index rendering). Nothing removed the WRITER half:
+  `archive_change_folder.py:321,328` still stamps `status: archived` plus an
+  `archived:` date onto every entry it moves. Verified live — an entry stamped
+  that way fails `--validate` with two violations at once (`[archive-tier]`
+  and `[status]`). So after this arc lands, running the archive verb corrupts
+  the store it is meant to maintain. Task 3 owns that file and scoped only its
+  reader; the writer is assigned to a Task 3 follow-up round rather than a new
+  task, since the file already has an owner. Blast radius today is zero — the
+  `archive/` tier has never held an entry and the directory does not exist —
+  which is exactly why no test caught it.
+- **DL-14 (2026-08-21, wave 2) — round 2's justification was wrong twice.**
+  Task 11 round 2 reworded prose "so the DL-2 sweep no longer false-hits on the
+  still-valid `archived` value". Round 3 established both halves are false:
+  `archived` is not valid (`--validate` rejects it), AND the DL-2 pattern never
+  matched the reworded text in the first place — it needs the literal
+  `status: archived`, which `status: <open | bet | closed | archived>` does not
+  contain. The lesson generalizes past this arc: an agent that believes a check
+  is misfiring should prove it by RUNNING the check, not by reasoning about the
+  pattern. Round 3's packet made that a standing instruction and its report
+  carries thirteen claims verified by execution.
+
+- **DL-15 (2026-08-21, wave 3) — two read-edge corrections, caught BEFORE
+  dispatch this time.**
+  (a) Task 8 rewrites `handoff-brief-format.md:105` from `## Now` to
+  bet-entry wording, which reds `test_queue_relation_states_empty_now_guidance`
+  in `test_queue_relation_grammar.py` — a file Task 8's `Files touched` does
+  not list. Task 8's scope is extended to include it; without that, Task 8
+  cannot reach GREEN except by editing a file it does not own. Surfaced by
+  Task 4's code-quality re-review as a routing note, not a finding.
+  (b) Task 14 declares `Dependencies: Tasks 4, 5, 6` but must also follow
+  Task 7: `test_direction_later_backlog.py` calls `DIRECTION_PATH.read_text()`
+  on `docs/loom/DIRECTION.md`, and Task 7 is what deletes that test. Deleting
+  the file first turns an assertion failure into a missing-file error and
+  strands Task 14's own "suite stays green" GREEN. Task 14 is dispatched after
+  Task 7 lands; the declared edge is wrong but is not edited, since the plan is
+  past review and this log is what the executing orchestrator reads.
+  Both are the same class DL-10 named — the plan records who WRITES each file
+  and never who READS it — now at instances four and five. The difference this
+  time: both were caught before dispatch rather than by a red suite afterwards,
+  because a reviewer was asked to look for downstream routing rather than only
+  to grade the artifact in front of it.
+- **DL-16 (2026-08-21, wave 3)** — `check_queue_relation.py:65-68`'s docstring
+  points at "the sibling `## Now`-line builder in `backlog_index.py`" — a role
+  reference to `build_direction_now`, which Task 7 deletes. The reference will
+  dangle, and the arc sweep cannot see it because it names no matched token.
+  Task 7's packet carries the fix.
+
+- **DL-17 (2026-08-21, wave 3) — parallel implementers share the git INDEX, not
+  just the working tree.** Task 10 round 2 staged exactly its own two paths with
+  `git add`, then ran a bare `git commit` — which commits the **whole index**,
+  not the paths just added. Task 7 had concurrently staged its deletion of
+  `test_direction_later_backlog.py`, so that deletion landed inside Task 10's
+  commit `6652ed7f` (3 files, not 2). Nothing is lost and the branch content is
+  correct; commit atomicity is not — Task 7's own commit will legitimately not
+  contain the deletion it performed.
+  DL-3 named the shared **working tree** as the parallelism hazard and drew the
+  wrong boundary: the index is shared too, and `git add <paths>` does not make a
+  later `git commit` path-scoped. The mechanical fix is one word:
+  **`git commit -- <paths>`** (pathspec-limited), which commits only the named
+  paths regardless of what else sits in the index. Every implementer packet from
+  here on carries it.
+  The index was NOT unwound: Task 7 was mid-flight with its own files staged,
+  and `git reset` would have clobbered a peer's live state — the same reason the
+  standing trap-guards forbid agents from running it. Task 10's implementer
+  reached the same conclusion independently and reported rather than repaired,
+  which is the behaviour those guards exist to produce.
+
+- **DL-18 (2026-08-21, wave 3) — one reviewer report carries a wrong
+  `standards_version`.** Task 9's round-2 spec review stamped
+  `standards_version: "0.92.0"`. The plugin manifest read `0.91.0` at that
+  moment and still does — Task 13 performs the bump, and `git log` on
+  `plugin.json` shows no commit since `d0bf167a`. Every other review this arc
+  stamped `0.91.0` correctly. Not re-dispatched: the field is report metadata
+  and the verdict beneath it is backed by live runs and an isolated-worktree
+  mutation probe, none of which the wrong stamp affects. Recorded because once
+  Task 13 bumps to 0.92.0 the stamp will read as though that review graded the
+  bumped version, when it graded 0.91.0 code — a reader reconciling verdicts to
+  versions later would otherwise find a contradiction with no explanation.
+
+- **DL-19 (2026-08-21, wave 4) — the close-out oracle earned its keep.** Run by
+  the orchestrator after Task 12 landed and before dispatching Task 13, both
+  legs plus the DL-2 vocabulary sweep. Full classification of every hit:
+
+  | Hit | Verdict |
+  |---|---|
+  | `test_queue_relation_grammar.py` (mandated test name) | sanctioned, DL-11 (1) |
+  | `test_finishing_backlog_close.py` (`--direction-write` negative assertion) | sanctioned, DL-11 (2) |
+  | `test_backlog_index.py::test_direction_verbs_removed` | **sanctioned, new — DL-11 (3)**. Task 7's mandated RED test must contain `--direction-write` to prove the CLI rejects it. Same shape as (1) and (2): an acceptance criterion that requires a literal the oracle also matches. |
+  | `test_queue_relation_grammar.py:376,395` fixtures carrying `status: COMMITTED-NEXT` | legitimate — they are the negative fixtures proving an out-of-vocabulary status raises. |
+  | `backlog_index.py:18,132,340` | legitimate — comments describing what was retired and citing this plan; historical explanation, not live instruction. |
+  | `archive_change_folder.py`, `test_archive_change_folder.py` | expected — Task 3 round 2 mid-flight (TDD RED phase). |
+  | **`brainstorming/SKILL.md:75`** | **REAL DEFECT** — live instruction: "surface to the user any COMMITTED-NEXT items plus OPEN items". An agent following it searches for two retired statuses and surfaces nothing. In Task 8's own file, which Task 8 edited at `:80-84` and `:92` and missed here. |
+  | **`test_loom_init.py:413-438`** | **REAL DEFECT (minor)** — a comment and a failure message instruct a future reader to point at `direction-charter.md`, deleted in `0c480079`. The assertion itself is negative and passes; only the guidance is dangling. |
+
+  The two real defects are exactly what a close-out backstop is for: both sit in
+  files whose owning task ran a scoped sweep and passed it. `SKILL.md:75` escaped
+  because Task 8's sweep used the DIRECTION pattern, and this line carries only
+  the retired VOCABULARY — two different oracles, and only the second sees it.
+  That is DL-2's asymmetry (the arc has an oracle for the deletion and one for
+  the vocabulary, and per-task sweeps ran only one of them) showing up in
+  practice rather than in theory.
+
+- **DL-20 (2026-08-21, wave 4) — the review layer inherits the acceptance
+  criteria's blind spots.** DL-19 found `brainstorming/SKILL.md:75` (live
+  instruction telling every arc kickoff to surface "COMMITTED-NEXT items plus
+  OPEN items" — two retired statuses) by running the DL-2 vocabulary sweep.
+  Task 8's implementer, its spec review, AND its code-quality review had all
+  just examined that exact file and all three passed it.
+  None of them failed. Task 8's acceptance criteria named **one** oracle — the
+  arc sweep pattern, which matches DIRECTION-shaped tokens — and that line
+  carries only retired VOCABULARY, which that pattern cannot see. All three
+  ran the check they were told to run, correctly, and got a clean result.
+  The generalizable point, and the reason this is filed rather than just fixed:
+  **adding review rounds does not close a gap in the acceptance criteria**,
+  because reviewers grade against those criteria. The defect survived one
+  self-check and two independent adversarial reviews, and was caught only by a
+  backstop running a *different* oracle. Where an arc retires two things at
+  once, every task's acceptance must name both sweeps — DL-2 predicted this
+  asymmetry in the abstract; this is its measured instance.
+  Routed: Task 8 round 2 fixes `SKILL.md:75`; Task 6 round 3 fixes
+  `test_loom_init.py`'s dangling `direction-charter.md` guidance (DL-19's
+  second real hit, same class — a file whose owner's scoped sweep passed).
+
+- **DL-21 (2026-08-21, close-out) — the final sanctioned-hit list Task 13 asserts
+  against.** Measured by the orchestrator after every task landed. Task 13 STOPs
+  on anything NOT in this table.
+
+  **Content leg + filename leg** — filename leg returns nothing (clean). Content leg, 4 files, all sanctioned:
+
+  | File | Why sanctioned |
+  |---|---|
+  | `test_queue_relation_grammar.py` | Task 4's plan-mandated RED test name (DL-11) |
+  | `test_finishing_backlog_close.py` | Task 10's mandated `assert "--direction-write" not in row` (DL-11) |
+  | `test_backlog_index.py` | Task 7's mandated RED test — must contain `--direction-write` to prove the CLI rejects it (DL-19) |
+  | `test_loom_init.py` | a guard-against-X test whose NAME states what it guards against, plus one historical comment explaining the dissolution |
+
+  **DL-2 vocabulary sweep** — 5 files, all sanctioned:
+
+  | File | Why sanctioned |
+  |---|---|
+  | `backlog_index.py` | comments describing what was retired and citing this plan |
+  | `archive_change_folder.py` | the docstring explaining the fix ("stamps `status: closed`, never `status: archived`") |
+  | `test_queue_relation_grammar.py` | negative fixtures carrying `status: COMMITTED-NEXT` to prove an out-of-vocabulary status raises |
+  | `test_backlog_index.py` | vocabulary-violation fixtures, same shape |
+  | `test_archive_change_folder.py` | fixtures carrying legacy `status: OPEN` as archiver input — **see the caveat below** |
+
+  **One caveat, deliberately left as debt rather than fixed at close-out.**
+  `test_archive_change_folder.py`'s fixtures (`:450`, `:505`, `:601`) seed
+  entries with `status: OPEN`, retired uppercase. The tests pass because the
+  archiver overwrites whatever status it finds, so they prove normalization —
+  but they start from input a real store can no longer contain, and they keep
+  the vocabulary sweep permanently dirty on that file, which costs future
+  readers the ability to tell stale fixture from real residue. Task 3's
+  code-quality review was in flight over this exact file when this was found;
+  its ruling decides whether this becomes a fix or a filed follow-up. Recorded
+  here so the hit is explained either way and Task 13 does not STOP on it.
+
+- **DL-22 (2026-08-21, close-out) — the orchestrator reported a green branch
+  eight times while the branch was two tests short.** DL-1's one-line fix to
+  `test_progress_tooling_shipped.py` was written by the orchestrator in wave 1,
+  swept into `stash@{0}` by a reviewer's `git stash` (DL-4), restored to the
+  working tree by `git show stash@{0}:<path> > <path>` — and never staged or
+  committed. It sat uncommitted for the rest of the arc. Every full-suite run
+  afterwards measured the **working tree** (which carried the fix) and reported
+  1459/0, while `HEAD` carried the old literal and would have failed CI on a
+  freshly-opened PR.
+  Found by Task 3 round 2's code-quality reviewer, which ran the suite in a
+  temporary worktree checked out at a commit — the only measurement in this arc
+  taken against committed state rather than the working tree. It reported the
+  discrepancy as a note rather than a finding, correctly: the failures were not
+  its artifact's doing.
+  Two rules this arc did not have and should:
+  (a) **An orchestrator-side edit is an implementer-side edit.** It needs the
+      same stage-verify-commit discipline; the orchestrator has no exemption
+      just because the change is one line and it made it itself.
+  (b) **"The suite is green" must be measured against committed state**, not a
+      working tree that may hold uncommitted work. `git worktree add <tmp> HEAD`
+      then running there is the cheap way; it is what caught this.
+  Fixed in `383f0296`; a clean-checkout run then confirmed 1459 passed, zero
+  failures.
+
+- **DL-23 (2026-08-21, close-out) — Task 13's scope extension, adjudicated and
+  allowed.** Bumping to 0.92.0 broke two pins that assert against the *current*
+  shipping version by design — `test_docs_review_blocking_class.py:200-225` and
+  `plan-document-reviewer-prompt.md:51`'s `(v0.91.0+)` tag — neither of which is
+  in Task 13's declared `Files touched`. The implementer updated both and
+  reported it plainly.
+  Allowed, not returned for rework: a version-lockstep pin is a consequence of
+  the bump in the same sense a compiler error is a consequence of a rename. The
+  two are one atomic act, and splitting them across tasks would manufacture an
+  intermediate commit that is red by construction — which is precisely the
+  hazard DL-15(b) had to unwind for Task 14. This arc was otherwise strict
+  about editing outside a declared surface (see DL-8's recorded extension for
+  Task 11), so this is recorded rather than waived silently: the difference is
+  that Task 11's extension changed what the arc DELIVERS, while this one only
+  keeps the arc's own gate reachable.
+  Precedent for the shape: the prior bump `d0bf167a` did the same.
 
 ## Notes
 
