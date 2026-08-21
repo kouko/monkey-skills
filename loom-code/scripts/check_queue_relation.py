@@ -62,6 +62,11 @@ def _find_queue_relation_value(brief_text: str) -> str | None:
 def live_bet_names(store: Path) -> list[str]:
     """The live bet names a caller can cite via `in-queue:`/`displaces:`.
 
+    Each name is the entry's frontmatter `name`, or the filename stem
+    when absent — see `live_entries()` for why that fallback is live
+    rather than defensive. Returned in `_entry_files()`'s filename
+    order.
+
     Raises ValueError (caller decides exit codes) on a status outside the
     closed status vocabulary — the guard lives once, in
     `backlog_index.iter_validated_entries()`, which `live_entries()` walks:

@@ -108,6 +108,12 @@ _NOT_YET_RE = re.compile(
 def find_bet_entries(store: Path) -> list[tuple[str, dict[str, str]]]:
     """The live bet entries a caller can check for a `serves:` line.
 
+    Each pair's display name is the entry's frontmatter `name`, or the
+    filename stem when absent — see `live_entries()` for why that
+    fallback is live rather than defensive. Returned in
+    `_entry_files()`'s filename order — `find_offending_entry()` relies
+    on it to pick a deterministic "first" offender.
+
     Archived entries are never checked — a closed entry cannot be
     re-bet.
 

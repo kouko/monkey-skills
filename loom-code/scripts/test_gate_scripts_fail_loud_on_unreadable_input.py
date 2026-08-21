@@ -297,6 +297,15 @@ def leaky_scopes(source: str) -> set[str]:
     script contains a `yield` today, so that shape is latent rather than
     live; it is listed because a reviewer built it and the leg passed.
 
+    It also does NOT catch a guard placed around a top-level helper whose
+    body delegates the filesystem read to a symbol imported from another
+    module — `leaky_scopes` parses one file at a time, so the delegate's
+    leakiness never enters the caller file's AST. This shape is LIVE, not
+    latent: `check_queue_relation.live_bet_names` and
+    `check_north_star_link.find_bet_entries` both delegate today to
+    `live_entries`, imported from `backlog_index` (filed at
+    docs/loom/backlog/2026-08-21-leaky-scopes-cannot-see-a-guard-over-a-cross-module-delegating-helper.md).
+
     It can also FALSE-POSITIVE on an attribute call whose name collides with
     a recognised one (`obj.open()` on something that is not a path). That
     direction is safe — it demands a guard that is not needed, rather than
