@@ -15,6 +15,7 @@ transcribed verbatim from the plan that created this store:
 name: <YYYY-MM-DD-slug — identical to the filename without .md>
 description: <one line; what the item is>
 status: <open | bet | closed>
+blocked: <optional; why this cannot be picked up now — legal only on an open entry>
 origin: <optional; where the item came from>
 start: <optional; the start / re-trigger condition>
 serves: <required only when status is bet and this repo has docs/loom/PURPOSE.md; otherwise optional>

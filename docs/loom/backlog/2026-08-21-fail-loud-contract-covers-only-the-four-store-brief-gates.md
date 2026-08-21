@@ -1,15 +1,14 @@
 ---
 name: 2026-08-21-fail-loud-contract-covers-only-the-four-store-brief-gates
-description: the unreadable-input fail-loud contract binds only the four store/brief gates; twenty other modules in loom-code/scripts/ are EXEMPT, and three of them are leaky by the contract's own metric today
+description: the unreadable-input fail-loud contract binds only the four store/brief gates; 23 other modules in loom-code/scripts/ are EXEMPT, and 14 of them are leaky by the contract's own metric today (measured, not estimated — the count is pinned by test_exempt_leak_count_matches_the_filed_ledger)
 status: open
 origin: 2026-08-21 dissolve-direction-layer round-7 review — the EXEMPT block claimed this widening was already filed as backlog work when no such entry existed; the reviewer caught the overclaim and this entry is the filing that comment now points at
-start: the next time a non-gate script in loom-code/scripts/ dies on a raw traceback in front of a user, or the next arc that touches archive_change_folder.py, loom_init.py, or plan_card.py for any other reason
+start: the next time a non-gate script in loom-code/scripts/ dies on a raw traceback in front of a user, or the next arc that touches ANY of the 14 leaky modules the pinned metric names for any other reason
 ---
 
 - Start: the next time a non-gate script in loom-code/scripts/ dies on a
-  raw traceback in front of a user, or the next arc that touches
-  archive_change_folder.py, loom_init.py, or plan_card.py for any other
-  reason
+  raw traceback in front of a user, or the next arc that touches ANY of the
+  14 leaky modules the pinned metric names for any other reason
 
 - Origin: 2026-08-21 dissolve-direction-layer round-7 review — the EXEMPT
   block claimed this widening was already filed as backlog work when no
@@ -23,10 +22,21 @@ start: the next time a non-gate script in loom-code/scripts/ dies on a raw trace
   named. Every other module in that directory sits in `EXEMPT` with a
   stated reason. Exempt means "outside the contract", not "checked and
   safe", and the difference is measurable: running the file's own
-  `leaky_scopes()` over the exempt set shows `archive_change_folder.py`,
-  `loom_init.py` and `plan_card.py` leaky today. `plan_card.py` is the
-  one a user meets most often — it renders the progress card at every
-  station of the close-out.
+  `leaky_scopes()` over the 23 exempt modules returns **14 leaky** —
+  adjudication_lint / _render / _split, archive_change_folder,
+  check-living-spec-index, check-skill-crossrefs, check_doc_citations,
+  check_field_microstructure, check_open_questions, check_scenario_coverage,
+  distribute, loom_init, plan_card, verify-drift. `plan_card.py` is the one
+  a user meets most often — it renders the progress card at every station of
+  the close-out.
+
+  That number is PINNED by `test_exempt_leak_count_matches_the_filed_ledger`,
+  which recomputes it and refuses to let this entry and the metric drift
+  apart. It is pinned because the first version of this entry said "three",
+  written from a measurement taken before the recogniser was widened and
+  never re-run — the same overclaim, in the entry filed to be the honest
+  ledger for it. Two independent reviewers caught it by running the metric
+  the entry cites.
 
 - Why not now: the arc that built this contract was dissolving the
   direction layer, and widening it to twenty more scripts is a different

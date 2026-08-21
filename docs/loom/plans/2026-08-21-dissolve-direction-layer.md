@@ -976,7 +976,12 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
   Verified by replaying the reviewers' own experiments rather than by
   assertion: **6 of 6 escape shapes now caught**, including arm A's and arm
   B's decisive one (a guarded existence probe followed by a bare
-  `cfg.open()`); mutation over the family went **19 mutants / 0 survivors**.
+  `cfg.open()`); mutation over the family went **19 mutants / 0 survivors**
+  — a figure a round-8 reviewer refined: counting the two
+  `except (CalledProcessError, FileNotFoundError, OSError)` tuple handlers
+  makes it 21 / 2, and both survivors survive because `FileNotFoundError`
+  still catches the realistic case. 19 / 0 is the number excluding those
+  two, which DL-33 did not say.
   The membership leg failed a third time — keyed first on `import
   backlog_index`, then on the literal `"def main("`, each defeated in one
   try (the second by renaming an entry point from `main` to `run`). It no
@@ -997,6 +1002,54 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
   writes that, while a reader knows only what it DOES. Round 7's arm B put
   the tell precisely: *my own decisive finding came from running an
   injection, not from reading the AST code, which reads plausibly.*
+- **DL-34 (2026-08-21, close-out) — round 8: the class recurred a FOURTH time,
+  inside the entry filed to be its honest ledger, and both arms found it the
+  same way.** They ran `leaky_scopes()` — the metric the prose quotes — over
+  the set the prose describes. It returns **14**, not the 3 stated in three
+  shipped artifacts. The 3 was measured BEFORE the same commit widened the
+  recogniser, and never re-run after. Two independent reviewers, same method,
+  same number.
+  Their shared instruction is the most useful sentence produced in eight
+  rounds:
+
+  > When a file ships a metric and prose quoting that metric, **run the
+  > metric**. Seven rounds cited that function; none executed it against its
+  > own claim. The useful instruction is not "look harder at the AST" but
+  > **"execute every number this branch's prose states."**
+
+  The fix is therefore NOT a corrected number — a hand-written count is what
+  went stale twice. `test_exempt_leak_count_matches_the_filed_ledger`
+  recomputes it, and additionally reads the backlog entry and fails if the
+  two have drifted apart. The ledger's `start:` trigger was also sized to
+  three named files, so an arc touching any of the other eleven would never
+  have woken it; it now names the measured set.
+- **DL-35 (2026-08-21, close-out) — replaying a reviewer's experiment one
+  variant further is where the last real defect came from.** Round 8 also
+  proved `from os import listdir` escaped the recogniser: a from-import
+  produces an `ast.Name`, and the Name branch tested only the one-element
+  builtin set while the comment beside it claimed from-imports and aliases
+  "all land the same way". Fixing that surfaced two more things neither
+  reviewer had reached:
+  (a) **A false positive.** `check_onramp_choice.resolve()` is a pure parser
+  whose name collides with `Path.resolve`. Name-based recognition flagged it
+  the moment the Name branch widened. Local definitions now take priority —
+  a locally defined name is handled by the leaky-propagation branch, which is
+  the accurate treatment.
+  (b) **The alias form still escaped.** `from os import listdir as ls` was
+  invisible, one variant past where the reviewer stopped. Import aliases are
+  now resolved to their original names, so the comment's claim is true rather
+  than aspirational.
+  Verified by execution, every number stated here run rather than
+  remembered: **6/6 escape shapes caught** (bare `path.open()`, class-method
+  read, plain from-import, aliased from-import, aliased module import,
+  `os.path` from-import); **21 mutants / 2 survivors**, both survivors being
+  tuple handlers where `FileNotFoundError` still catches; **14 of 23** EXEMPT
+  modules leaky, now pinned by a test rather than by a sentence.
+  Two limits are disclosed rather than closed, both latent (no FAMILY script
+  contains a `yield`, and none has a module-level `try`): I/O deferred past
+  its call site by a generator, and a `def` nested inside a module-level
+  `try` inheriting that guard's line range. Both were built by a reviewer and
+  are named in the leg's docstring.
 
 ## Notes
 

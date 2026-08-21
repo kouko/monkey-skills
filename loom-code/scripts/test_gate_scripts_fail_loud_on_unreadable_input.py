@@ -80,9 +80,9 @@ _OSERROR_SUPERSETS = frozenset({
 
 # Modules in this directory that are NOT store/brief gates. Listed with a
 # reason so that classifying a new one is a decision, never an omission.
-# They are exempt from the CONTRACT, not judged safe: three of them
-# (`archive_change_folder.py`, `loom_init.py`, `plan_card.py`) are leaky by
-# this file's own metric today. Widening the contract to cover them is filed
+# They are exempt from the CONTRACT, not judged safe: 14 of the 23 are
+# leaky by this file's own metric today — see `exempt_leaks()` below, which
+# computes the list rather than restating it. Widening the contract to cover them is filed
 # at docs/loom/backlog/2026-08-21-fail-loud-contract-covers-only-the-four-
 # store-brief-gates.md — an earlier revision of this comment claimed that
 # filing before it existed, which is the same overclaim this file has now
@@ -293,7 +293,18 @@ def leaky_scopes(source: str) -> set[str]:
     It does NOT catch: a filesystem call reached through a variable holding
     a bound method (`f = p.read_text; f()`), a call whose callee name is
     none of the recognised ones (a third-party or newly-added stdlib I/O
-    entry point), or I/O performed by a C extension. Those remain the
+    entry point), I/O performed by a C extension, or **I/O deferred past its
+    call site** — a generator or a lazily-evaluated object constructed
+    inside a guarded `try` but consumed outside it runs its body where it is
+    consumed, and this leg credits the guard at construction. No FAMILY
+    script contains a `yield` today, so that shape is latent rather than
+    live; it is listed because a reviewer built it and the leg passed.
+
+    It can also FALSE-POSITIVE on an attribute call whose name collides with
+    a recognised one (`obj.open()` on something that is not a path). That
+    direction is safe — it demands a guard that is not needed, rather than
+    missing one that is. Bare-name calls do not have this problem: a name
+    this module defines itself takes priority over the recogniser set. Those remain the
     behavioural cases' job — and the honest statement of this leg's claim is
     "no RECOGNISED escape shape reaches `main`", not "no OSError can
     escape". The previous revision asserted the stronger sentence and a
@@ -304,6 +315,22 @@ def leaky_scopes(source: str) -> set[str]:
 
     def guarded(lineno: int) -> bool:
         return any(lo <= lineno <= hi for lo, hi in ranges)
+
+    # Local binding -> the name it was imported under, so
+    # `from os import listdir as ls` makes `ls` recognised. Without this the
+    # alias form escaped while the comment above claimed it did not — caught
+    # by replaying a reviewer's own experiment one variant further than they
+    # ran it.
+    aliases: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            for spec in node.names:
+                if spec.asname:
+                    aliases[spec.asname] = spec.name.rsplit(".", 1)[-1]
+
+    def recognised_name(identifier: str) -> bool:
+        target = aliases.get(identifier, identifier)
+        return target in _FS_BUILTINS or target in _FS_CALLS
 
     top_level = {
         node.name: node
@@ -343,8 +370,24 @@ def leaky_scopes(source: str) -> set[str]:
                     continue
                 func = node.func
                 escapes = (
-                    (isinstance(func, ast.Attribute) and func.attr in _FS_CALLS)
-                    or (isinstance(func, ast.Name) and func.id in _FS_BUILTINS)
+                    (isinstance(func, ast.Attribute) and recognised_name(func.attr))
+                    # A from-import (`from os import listdir`) produces an
+                    # ast.Name, not an Attribute. An earlier revision tested
+                    # only `_FS_BUILTINS` here and the comment above claimed
+                    # from-imports and aliases "all land the same way" — a
+                    # reviewer defeated it with `from os import listdir` in
+                    # one try. Recognise the same name set either way, EXCEPT
+                    # where the name is a function this module defines itself:
+                    # `check_onramp_choice.resolve()` is a pure parser that
+                    # collides with `Path.resolve`, and name-based recognition
+                    # flagged it until local definitions were given priority.
+                    # A locally defined name is handled by the `in leaky`
+                    # branch below, which is the accurate treatment.
+                    or (
+                        isinstance(func, ast.Name)
+                        and func.id not in top_level
+                        and recognised_name(func.id)
+                    )
                     or (isinstance(func, ast.Name) and func.id in leaky)
                     or (isinstance(func, ast.Attribute) and func.attr in leaky)
                 )
@@ -406,3 +449,46 @@ def test_every_script_here_is_classified() -> None:
     )
     stale = classified - actual
     assert not stale, f"classified but no longer present: {sorted(stale)}"
+
+
+# The number of EXEMPT modules that leak by this file's own metric. Pinned
+# rather than written into prose, because a hand-written count is exactly
+# what went stale: three shipped artifacts said "three" while the metric
+# said fourteen, and no round ran the metric against the sentence quoting
+# it. Anything that changes this number must also update the backlog entry
+# that sizes the follow-up work.
+EXEMPT_LEAK_COUNT = 14
+EXEMPT_LEAK_LEDGER = (
+    "docs/loom/backlog/"
+    "2026-08-21-fail-loud-contract-covers-only-the-four-store-brief-gates.md"
+)
+
+
+def exempt_leaks() -> list[str]:
+    """Every EXEMPT module from which a recognised OSError escape reaches
+    `main` or module scope. Exempt means outside the CONTRACT, never
+    'measured safe' — this function is what makes that distinction
+    checkable instead of asserted."""
+    leaking = []
+    for name in sorted(EXEMPT):
+        source = (SCRIPTS / name).read_text(encoding="utf-8")
+        if leaky_scopes(source) & {"main", _MODULE_SCOPE}:
+            leaking.append(name)
+    return leaking
+
+
+def test_exempt_leak_count_matches_the_filed_ledger() -> None:
+    """The debt this file defers must be sized by running the metric, not
+    by remembering it."""
+    leaking = exempt_leaks()
+    assert len(leaking) == EXEMPT_LEAK_COUNT, (
+        f"{len(leaking)} EXEMPT modules leak, not {EXEMPT_LEAK_COUNT}: "
+        f"{leaking}.\nUpdate EXEMPT_LEAK_COUNT and the entry at "
+        f"{EXEMPT_LEAK_LEDGER}, which sizes the follow-up work against this "
+        "number. Do not update one without the other."
+    )
+    ledger = (SCRIPTS.parents[1] / EXEMPT_LEAK_LEDGER).read_text(encoding="utf-8")
+    assert str(EXEMPT_LEAK_COUNT) in ledger, (
+        f"{EXEMPT_LEAK_LEDGER} does not state the measured count "
+        f"{EXEMPT_LEAK_COUNT}; the ledger and the metric have drifted apart."
+    )
