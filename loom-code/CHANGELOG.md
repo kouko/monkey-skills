@@ -5,6 +5,36 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.92.0] — 2026-08-21 — direction layer dissolved
+
+### Removed
+
+- **`DIRECTION.md`, its generator verbs, charter, and template all
+  deleted.** The direction layer's document side no longer exists: no
+  live reader remains once the `## Now` view moved out (below) and the
+  queue gate stopped resolving against it.
+
+### Changed
+
+- **`## Now` materialized as a view, not a hand-maintained document.**
+  The live "what's in flight" list is generated from the backlog
+  store's `bet` entries instead of being written by hand into
+  `DIRECTION.md`.
+- **Status vocabulary collapsed to `open` / `bet` / `closed`.**
+  Blocked-ness is no longer a status word — it moved to a `blocked:`
+  field on an `open` entry, read only by `--ready`.
+- **The queue gate reborn as `check_queue_relation.py`** (renamed from
+  `check_direction_freshness.py`). `in-queue:`/`displaces:` now
+  resolve against live `status: bet` entries instead of a DIRECTION.md
+  `## Now` list; an unresolved name lists the live candidates instead
+  of a literal placeholder; a repo with no queue layer at all gets a
+  loud `queue-relation: N/A — no queue layer in this repo` at exit 0,
+  never a silent skip.
+- **On-ramp standing choices moved to `docs/loom/KICKOFF-DEFAULTS.md`**
+  — the old `(DIRECTION.md)` grammar is retired; the section heading
+  itself (`## On-ramp standing choices`) is unchanged.
+- Promotion to `bet` is unchanged and stays **user-only**.
+
 ## [0.91.0] — 2026-08-20 — purpose layer + serves link
 
 ### Added

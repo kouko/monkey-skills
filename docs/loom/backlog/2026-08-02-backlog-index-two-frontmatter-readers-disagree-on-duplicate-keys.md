@@ -63,3 +63,10 @@ re-deriving the shape from the plan later.
 2026-08-10 note: since PR #680 the canonical code lives at
 `loom-code/scripts/backlog_index.py` (the repo-root `scripts/backlog_index.py`
 is an exec shim); the code references in this entry refer to the canonical file.
+
+2026-08-21 note: finding 1 (the two readers' duplicate-key disagreement)
+shipped via docs/loom/plans/2026-08-21-dissolve-direction-layer.md Task 3 —
+`archive_change_folder.py`'s `_read_status` now delegates to
+`backlog_index.parse_frontmatter`, so both readers resolve the same
+bytes to the same value, duplicate keys included. Findings 2-4 were
+passed by on this touch and stay open.

@@ -40,3 +40,11 @@ start: next time a repo (this one or external) needs to answer "how far along is
   Related: docs/loom/DIRECTION.md (direction layer, PR#677),
   docs/loom/specs/2026-08-10-ship-progress-tooling.md (the delivery
   half of the same observation).
+
+- 2026-08-21 note: option (a) is foreclosed by
+  docs/loom/plans/2026-08-21-dissolve-direction-layer.md — `DIRECTION.md`
+  no longer exists, so a bets-grow-a-parts-checklist sub-structure has
+  no document to grow inside. The remaining options are (b) a
+  multi-part-brief index artifact and (c) declare per-plan Stage +
+  the generated `## Now` view sufficient. This entry stays open with
+  its option set narrowed to those two.
