@@ -34,7 +34,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from backlog_index import _entry_files, parse_frontmatter
+from backlog_index import CLOSED_STATUS_VOCABULARY, _entry_files, parse_frontmatter
 
 # --- `## Queue relation` gate -------------------------------------------
 
@@ -60,13 +60,22 @@ def _find_queue_relation_value(brief_text: str) -> str | None:
 def live_bet_names(store: Path) -> list[str]:
     """Names (frontmatter `name`, falling back to the filename stem) of
     every live (non-archived) `status: bet` entry under `store`, in
-    `_entry_files()` order."""
+    `_entry_files()` order.
+
+    Raises ValueError (caller decides exit codes) on a status outside the
+    closed status vocabulary — mirrors the sibling `## Now`-line builder in
+    backlog_index.py's stated policy: malformed frontmatter must fail
+    loudly, never be silently dropped from the queue it might belong to."""
     names: list[str] = []
     for path, is_archived in _entry_files(store):
-        if is_archived:
-            continue
         frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
-        if frontmatter.get("status") != "bet":
+        status = frontmatter.get("status")
+        if status not in CLOSED_STATUS_VOCABULARY:
+            raise ValueError(
+                f"{path.name}: entry has status {status!r}, outside the "
+                "closed status vocabulary"
+            )
+        if is_archived or status != "bet":
             continue
         names.append(frontmatter.get("name", path.stem))
     return names
@@ -212,7 +221,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     brief_text = brief_path.read_text(encoding="utf-8")
 
-    bet_names = live_bet_names(store)
+    try:
+        bet_names = live_bet_names(store)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
     result = resolve_queue_relation(brief_text, bet_names)
 
     if result.status == "resolved":

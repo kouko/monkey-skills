@@ -5,11 +5,18 @@ the old per-repo "now" list and its unlanded-change advisory are gone,
 and a repo with no `docs/loom/backlog/` store reports a loud N/A at
 exit 0 rather than gating.
 
+Also carries the three stable `## Queue relation` prose pins against
+`handoff-brief-format.md` (the Grammar SSOT this script's own docstring
+cites) — the fourth pin ("cited name must exist in the queue") is
+deliberately NOT restored here; its wording changes when Task 8
+rewrites that prose (plan DL-12).
+
 Stdlib only.
 """
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -24,6 +31,52 @@ from check_queue_relation import (
 )
 
 _SCRIPT = Path(__file__).parent / "check_queue_relation.py"
+_REFERENCE = (
+    Path(__file__).parent
+    / ".."
+    / "skills"
+    / "brainstorming"
+    / "references"
+    / "handoff-brief-format.md"
+).resolve()
+
+_CANONICAL_FORMS = ["in-queue:", "unqueued —", "displaces:"]
+
+
+def _reference_text() -> str:
+    assert _REFERENCE.is_file(), f"handoff-brief-format.md is absent at {_REFERENCE}"
+    return _REFERENCE.read_text(encoding="utf-8")
+
+
+def _section(text: str, heading_pattern: str) -> str:
+    match = re.search(rf"^##\s+{heading_pattern}\s*$", text, re.MULTILINE)
+    assert match is not None, f"heading matching {heading_pattern!r} not found"
+    rest = text[match.end():]
+    next_heading = re.search(r"^##\s+\S", rest, re.MULTILINE)
+    return rest[: next_heading.start()] if next_heading else rest
+
+
+def _queue_relation_subsection(text: str) -> str:
+    required_sections = _section(text, r"Required sections")
+    heading_match = re.search(
+        r"^###\s+`## Queue relation`\s*$", required_sections, re.MULTILINE
+    )
+    assert heading_match is not None, (
+        "Required sections must declare a '### `## Queue relation`' subsection"
+    )
+    rest = required_sections[heading_match.end():]
+    next_subsection = re.search(r"^###\s+\S", rest, re.MULTILINE)
+    return rest[: next_subsection.start()] if next_subsection else rest
+
+
+def _overview_paragraph(text: str) -> str:
+    required_sections = _section(text, r"Required sections")
+    first_subsection = re.search(r"^###\s+\S", required_sections, re.MULTILINE)
+    return (
+        required_sections[: first_subsection.start()]
+        if first_subsection
+        else required_sections
+    )
 
 
 def _write_bet_entry(store: Path, name: str) -> None:
@@ -40,7 +93,6 @@ def test_in_queue_resolves_against_bet_entry_without_direction_md(
     repo = tmp_path
     store = repo / "docs" / "loom" / "backlog"
     _write_bet_entry(store, "ship-the-widget")
-    assert not (repo / "docs" / "loom" / "DIRECTION.md").exists()
 
     brief = repo / "brief.md"
     brief.write_text(
@@ -201,3 +253,133 @@ def test_no_advisory_output_on_resolved_brief(tmp_path: Path) -> None:
     )
     assert result.returncode == 0
     assert "Unlanded direction change" not in result.stdout
+
+
+# --- Finding 1: `displaces:` coverage + separator guards -----------------
+
+
+def test_displaces_resolves_against_live_bet_entry() -> None:
+    brief_text = "## Queue relation\n\ndisplaces: alpha-arc — supersedes it\n"
+    result = resolve_queue_relation(brief_text, ["alpha-arc"])
+    assert result.status == "resolved"
+
+
+def test_displaces_unresolved_against_name_not_a_bet() -> None:
+    brief_text = "## Queue relation\n\ndisplaces: ghost-arc — supersedes it\n"
+    result = resolve_queue_relation(brief_text, ["alpha-arc"])
+    assert result.status == "unresolved"
+    assert result.named_entry == "ghost-arc"
+
+
+def test_displaces_ascii_hyphen_separator_does_not_resolve() -> None:
+    """`displaces:` requires an em dash (—) before the reason. An ASCII
+    hyphen (-) must NOT resolve — this is what the deleted
+    `_no_skip.py` probe existed to stop from passing vacuously."""
+    brief_text = "## Queue relation\n\ndisplaces: alpha-arc - supersedes it\n"
+    result = resolve_queue_relation(brief_text, ["alpha-arc"])
+    assert result.status == "unresolved"
+
+
+def test_unqueued_ascii_hyphen_separator_does_not_resolve() -> None:
+    brief_text = "## Queue relation\n\nunqueued - nothing live yet\n"
+    result = resolve_queue_relation(brief_text, ["alpha-arc"])
+    assert result.status == "unresolved"
+
+
+def test_no_queue_relation_section_at_all_is_unresolved() -> None:
+    result = resolve_queue_relation("Some brief with no such section.\n", ["alpha-arc"])
+    assert result.status == "unresolved"
+
+
+# --- Finding 2: stable prose pins against handoff-brief-format.md --------
+# Restores 3 of the 4 tests deleted in round 1. The 4th ("cited name must
+# exist in '## Now'") is deliberately NOT restored — its wording changes
+# under Task 8 (plan DL-12).
+
+
+def test_handoff_format_states_three_canonical_queue_forms() -> None:
+    text = _reference_text()
+    body = _queue_relation_subsection(text)
+    for form in _CANONICAL_FORMS:
+        assert form in body, (
+            f"'## Queue relation' section missing canonical form {form!r}"
+        )
+
+
+def test_required_sections_overview_names_queue_relation_as_required() -> None:
+    text = _reference_text()
+    overview = _overview_paragraph(text)
+
+    assert "## Queue relation" in overview, (
+        "'## Required sections' overview paragraph must name "
+        "'## Queue relation' by name"
+    )
+    mention_index = overview.index("## Queue relation")
+    clause = overview[max(0, mention_index - 20) : mention_index + 80]
+    assert "always present" in clause, (
+        "'## Queue relation' mention in the overview paragraph must state "
+        "it is always present (required)"
+    )
+    assert "optional" not in clause, (
+        "'## Queue relation' mention in the overview paragraph must not be "
+        "phrased as optional"
+    )
+
+
+def test_queue_relation_states_empty_now_guidance() -> None:
+    text = _reference_text()
+    body = _queue_relation_subsection(text)
+
+    assert re.search(r"## Now.{0,40}(is )?empty", body) or re.search(
+        r"empty.{0,40}## Now", body
+    ), (
+        "'## Queue relation' section must state what an author does "
+        "when '## Now' is empty"
+    )
+    assert "unqueued" in body, (
+        "the empty-queue guidance must point the author at "
+        "'unqueued — <reason>' as the usable form"
+    )
+
+
+# --- Finding 3: an out-of-vocabulary status must not vanish silently -----
+
+
+def test_live_bet_names_raises_on_out_of_vocabulary_status(tmp_path: Path) -> None:
+    store = tmp_path / "backlog"
+    store.mkdir(parents=True)
+    (store / "mystery.md").write_text(
+        "---\nname: mystery\nstatus: COMMITTED-NEXT\n---\n\nBody.\n",
+        encoding="utf-8",
+    )
+    try:
+        live_bet_names(store)
+    except ValueError as exc:
+        assert "mystery" in str(exc)
+    else:
+        raise AssertionError(
+            "live_bet_names silently dropped an entry with an "
+            "out-of-vocabulary status instead of failing loudly"
+        )
+
+
+def test_cli_names_the_bad_file_on_out_of_vocabulary_status(tmp_path: Path) -> None:
+    repo = tmp_path
+    store = repo / "docs" / "loom" / "backlog"
+    store.mkdir(parents=True)
+    (store / "mystery.md").write_text(
+        "---\nname: mystery\nstatus: COMMITTED-NEXT\n---\n\nBody.\n",
+        encoding="utf-8",
+    )
+
+    brief = repo / "brief.md"
+    brief.write_text("## Queue relation\n\nin-queue: mystery\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(_SCRIPT), str(brief), "--repo-root", str(repo)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+    assert "mystery" in result.stderr
+    assert "no live bet entries exist yet" not in result.stderr
