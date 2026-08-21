@@ -4,7 +4,7 @@ Source brief: docs/loom/specs/2026-08-20-dissolve-direction-layer.md
 Goal: backlog store 成為「接下來做什麼」的唯一紀錄——status 三詞 open/bet/closed
     加 blocked: 欄位；DIRECTION.md 與其產生器、憲章、新鮮度警報全數刪除；
     佇列閘門改對 bet 條目解析、無佇列層時大聲 N/A；下注維持 user-only。
-Stage: finishing
+Stage: review:round-4
 Steps:
     1. 詞彙核心與開場預設新家（雙線並行起步）
     2. 讀取端跟上（north-star 鍵／共用 parser／閘門重生／init／定義 SSOT）
@@ -757,6 +757,61 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
   that Task 11's extension changed what the arc DELIVERS, while this one only
   keeps the arc's own gate reachable.
   Precedent for the shape: the prior bump `d0bf167a` did the same.
+
+- **DL-24 (2026-08-21, close-out) — whole-branch review, two rounds, and what
+  the two rounds cost.** Round 1: 8 🟡 across two code reviewers, all real,
+  three with live blast radius (a betting gate reporting a clean pass over an
+  unreadable store; archiving a `blocked:` entry leaving a store that fails its
+  own `--validate`; a committed brief being asked to re-answer a question it
+  had already answered). Round 2: 4 🟡 + 2 🟢, of which **two were created by
+  round 1's own fixes**, one was a twin the fix missed thirty lines away in the
+  same file, and one was a round-1 finding I reported closed against a commit
+  range I had not checked — the fix was sitting uncommitted in the working
+  tree, and the reviewer disproved my attribution from the branch's own log.
+  Every round-2 finding sat in one class: **shipped behaviour changed and a
+  description of it did not** — a docstring, a user-facing tally label, a test
+  assertion's string. None was a logic bug. The recurring mechanism is that the
+  description lives in a file no compiler connects to the code, and this arc's
+  tests repeatedly **defended** those descriptions rather than checking them:
+  a comment asserting "TWO distinct exit-2 causes" when the script had three,
+  a pin asserting `ready: … excluded by status` when 41% of that count was not
+  a status exclusion, an assertion checking `returncode != 0` for a contract
+  that specifies exit 1.
+- **DL-25 (2026-08-21, close-out) — two 🟢 carried as debt, deliberately.**
+  (a) `test_backlog_index.py`'s `_STATUS_TABLE_ROW` excludes the charter's
+  `blocked:` documentation row only because `[\w-]+` happens not to match a
+  trailing colon — incidental punctuation doing load-bearing work, so a future
+  non-status row written without a colon would silently break the pin for a
+  legitimate reason. (b) `find_bet_entries` validates the vocabulary *before*
+  its archive-tier skip while `build_ready` skips archived entries first, so
+  the three readers still disagree about archived entries — harmless while
+  `archive/` is empty, and arguably the safer direction, but it is the exact
+  coherence property round 1 asked for, now inverted rather than resolved.
+  Both are 🟢 and do not gate. Filed here rather than fixed because each is a
+  design call better made with a live instance in front of it than at a
+  close-out gate.
+- **DL-26 (2026-08-21, close-out) — round 3 named the mechanism, so the fix was
+  structural rather than local.** Two arms: one PASS_WITH_NOTES, one
+  NEEDS_REVISION; union 4 🟡, re-aggregated to NEEDS_REVISION. Three of the four
+  were one class, and arm B stated it plainly: the same store walk had been
+  hand-copied at three sites, each carrying its own copy of the
+  out-of-vocabulary raise, and the code **documented** the duplication ("same
+  bytes, same guard") instead of removing it. That is why round 2's fix at one
+  call site left its twin diverging, and why fixing only the twin would very
+  likely have produced a round 4. The remedy was `iter_validated_entries()` /
+  `live_entries()` in `backlog_index.py` — one home for the walk and the raise,
+  three delegating call sites.
+  Two things worth keeping past this arc. First, **the worse half of the
+  unguarded `is_dir()` probe was not the traceback**: the unhandled raise was
+  the only thing keeping an unreadable store out of the `N/A — no queue layer
+  in this repo` branch, which exits 0. A "fail loud" finding was really a
+  fail-*open* finding wearing a traceback. Second, the folder-unit archive gap
+  (`dest.exists()` missing a re-archive on a different day) had been rated
+  "safe anyway" by the other arm because an earlier guard happens to fire
+  first — but the docstring claimed the coverage unconditionally for both
+  units, so the safety rested on a guard the prose did not name. The two arms
+  split on it; the panel rule takes the severer, and that was right here.
+  Cost of the third round: one arm found the class, the other did not.
 
 ## Notes
 
