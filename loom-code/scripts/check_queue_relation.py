@@ -63,9 +63,10 @@ def live_bet_names(store: Path) -> list[str]:
     `_entry_files()` order.
 
     Raises ValueError (caller decides exit codes) on a status outside the
-    closed status vocabulary — mirrors the sibling `## Now`-line builder in
-    backlog_index.py's stated policy: malformed frontmatter must fail
-    loudly, never be silently dropped from the queue it might belong to."""
+    closed status vocabulary — mirrors `_bucket_entry()` in backlog_index.py,
+    which raises the same way when bucketing a live entry: malformed
+    frontmatter must fail loudly, never be silently dropped from the queue
+    it might belong to."""
     names: list[str] = []
     for path, is_archived in _entry_files(store):
         frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
