@@ -106,9 +106,10 @@ _NOT_YET_RE = re.compile(
 
 
 def find_bet_entries(store: Path) -> list[tuple[str, dict[str, str]]]:
-    """Every live `bet` entry (in `_entry_files()` order) as
-    `(display_name, frontmatter)`. Archived entries are never checked —
-    a closed entry cannot be re-bet.
+    """The live bet entries a caller can check for a `serves:` line.
+
+    Archived entries are never checked — a closed entry cannot be
+    re-bet.
 
     Raises ValueError (caller decides exit codes) on a status outside the
     closed status vocabulary — the guard lives once, in

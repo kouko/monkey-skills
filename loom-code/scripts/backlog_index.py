@@ -276,10 +276,8 @@ def iter_validated_entries(
 
 
 def live_entries(store: Path, status: str) -> list[tuple[str, dict[str, str]]]:
-    """Every live (non-archived) entry whose `status:` equals `status`,
-    as `(display_name, frontmatter)` in `_entry_files()` order. The
-    display name is the frontmatter `name`, falling back to the filename
-    stem.
+    """The live entries at `status`, as `(display_name, frontmatter)`
+    pairs a caller can render or cite.
 
     Archived entries are never returned: the archive tier overrides an
     entry's literal status, so a re-bet of an archived entry is not a
@@ -294,7 +292,6 @@ def live_entries(store: Path, status: str) -> list[tuple[str, dict[str, str]]]:
 
 
 def _check_name(display: str, frontmatter: dict[str, str], stem: str) -> list[Violation]:
-    """(i) filename stem == frontmatter name."""
     name = frontmatter.get("name")
     if name is None:
         return [Violation("name", display, "frontmatter missing 'name' key")]
@@ -304,7 +301,6 @@ def _check_name(display: str, frontmatter: dict[str, str], stem: str) -> list[Vi
 
 
 def _check_status(display: str, status: str | None) -> list[Violation]:
-    """(ii) status is a member of the closed vocabulary."""
     if status is None:
         return [Violation("status", display, "frontmatter missing 'status' key")]
     if status not in CLOSED_STATUS_VOCABULARY:
@@ -313,9 +309,9 @@ def _check_status(display: str, status: str | None) -> list[Violation]:
 
 
 def _check_archive_tier(display: str, status: str | None, is_archived: bool) -> list[Violation]:
-    """(iii) an entry under archive/ carries status: closed. One-directional
-    — a LIVE entry carrying status: closed is legal (SHIPPED/CLOSED —
-    SUPERSEDED migrated there without being archived)."""
+    """(iii) is one-directional: a LIVE entry carrying `status: closed` is
+    legal (SHIPPED/CLOSED — SUPERSEDED migrated there without being
+    archived)."""
     if status is None:
         return []
     if is_archived and status != "closed":
@@ -330,7 +326,6 @@ def _check_archive_tier(display: str, status: str | None, is_archived: bool) -> 
 
 
 def _check_blocked(display: str, frontmatter: dict[str, str], status: str | None) -> list[Violation]:
-    """(iv) `blocked: <reason>` is legal only on an `open` entry."""
     if "blocked" in frontmatter and status != "open":
         return [
             Violation(

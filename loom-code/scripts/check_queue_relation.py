@@ -60,9 +60,7 @@ def _find_queue_relation_value(brief_text: str) -> str | None:
 
 
 def live_bet_names(store: Path) -> list[str]:
-    """Names (frontmatter `name`, falling back to the filename stem) of
-    every live (non-archived) `status: bet` entry under `store`, in
-    `_entry_files()` order.
+    """The live bet names a caller can cite via `in-queue:`/`displaces:`.
 
     Raises ValueError (caller decides exit codes) on a status outside the
     closed status vocabulary — the guard lives once, in
