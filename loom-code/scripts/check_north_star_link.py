@@ -28,7 +28,12 @@ Exit codes:
         line and `docs/loom/PURPOSE.md` exists, OR there are no live
         `bet` entries at all (nothing to bet on yet).
     1 — the given backlog store path does not exist or is not a
-        readable directory.
+        readable directory, OR an entry's `status` falls outside the
+        closed status vocabulary (`backlog_index.CLOSED_STATUS_VOCABULARY`)
+        — a malformed entry fails loudly rather than being silently
+        dropped from the live-bet set it might belong to (mirrors
+        `check_queue_relation.py`'s `live_bet_names()` over the same
+        bytes).
     2 — one of three distinct causes, distinguishable by message:
         (a) a live `bet` entry exists but `PURPOSE.md` is
             absent — stderr asks the user to write one;
@@ -66,7 +71,13 @@ import re
 import sys
 from pathlib import Path
 
-from backlog_index import _entry_files, _is_well_formed_serves, _purpose_path_for, parse_frontmatter
+from backlog_index import (
+    CLOSED_STATUS_VOCABULARY,
+    _entry_files,
+    _is_well_formed_serves,
+    _purpose_path_for,
+    parse_frontmatter,
+)
 
 # The shipped template's own placeholder text (templates/PURPOSE.md) —
 # loom-code controls this literal string. Its presence means the file
@@ -97,13 +108,23 @@ _NOT_YET_RE = re.compile(
 def find_bet_entries(store: Path) -> list[tuple[str, dict[str, str]]]:
     """Every live `bet` entry (in `_entry_files()` order) as
     `(display_name, frontmatter)`. Archived entries are never checked —
-    a closed entry cannot be re-bet."""
+    a closed entry cannot be re-bet.
+
+    Raises ValueError (caller decides exit codes) on a status outside the
+    closed status vocabulary — mirrors `live_bet_names()` in
+    `check_queue_relation.py` (same bytes, same guard): malformed
+    frontmatter must fail loudly, never be silently dropped as
+    nothing-to-check."""
     entries = []
     for path, is_archived in _entry_files(store):
-        if is_archived:
-            continue
         frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
-        if frontmatter.get("status") != "bet":
+        status = frontmatter.get("status")
+        if status not in CLOSED_STATUS_VOCABULARY:
+            raise ValueError(
+                f"{path.name}: entry has status {status!r}, outside the "
+                "closed status vocabulary"
+            )
+        if is_archived or status != "bet":
             continue
         name = frontmatter.get("name", path.stem)
         entries.append((name, frontmatter))
@@ -201,6 +222,9 @@ def main(argv: list[str] | None = None) -> int:
         entries = find_bet_entries(store)
     except OSError as exc:
         print(f"Error: backlog store at {store} is unreadable ({exc}).", file=sys.stderr)
+        return 1
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
         return 1
 
     if not entries:

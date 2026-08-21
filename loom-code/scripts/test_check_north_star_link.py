@@ -61,7 +61,7 @@ def test_exit_0_when_every_bet_entry_is_well_formed(tmp_path):
         "Some long-horizon purpose.\n", encoding="utf-8"
     )
     _write_entry(store, "entry-a", "bet", "ships the thing")
-    _write_entry(store, "entry-b", "OPEN", None)
+    _write_entry(store, "entry-b", "open", None)
 
     result = _run(store)
 
@@ -72,7 +72,7 @@ def test_exit_0_when_no_bet_entries_and_no_purpose_md(tmp_path):
     """A fresh repo with nothing committed yet must not be blocked —
     the Decision's 'never block a fresh repo with nothing in it yet.'"""
     store = tmp_path / "docs" / "loom" / "backlog"
-    _write_entry(store, "entry-a", "OPEN", None)
+    _write_entry(store, "entry-a", "open", None)
 
     result = _run(store)
 
@@ -124,6 +124,22 @@ def test_exit_2_asks_for_purpose_md_when_absent_but_entries_exist(tmp_path):
 
 
 _TEMPLATE = (Path(__file__).parent / "templates" / "PURPOSE.md").read_text(encoding="utf-8")
+
+
+def test_retired_status_fails_loudly_instead_of_clean_pass(tmp_path):
+    """A store holding only an out-of-vocabulary status (e.g. a retired
+    `PARKED` entry) must not be silently dropped as nothing-to-check —
+    it must fail loudly, matching `live_bet_names`'s ValueError posture
+    over the same bytes (`check_queue_relation.py`), not report a clean
+    'OK — no live bet backlog entries to check yet.'"""
+    store = tmp_path / "docs" / "loom" / "backlog"
+    _write_entry(store, "entry-a", "PARKED", None)
+
+    result = _run(store)
+
+    assert result.returncode != 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "entry-a" in result.stderr
+    assert "PARKED" in result.stderr
 
 
 def test_exit_2_when_purpose_md_is_unedited_template(tmp_path):
