@@ -42,6 +42,20 @@ description: 'Plugin-level code-reviewer agent for loom-code''s requesting-code-
    introduces `userId`, another uses `user_id`); duplicated logic that
    should have been extracted; scope creep (task did more than its
    description); test coverage of cross-task interactions.
+7. **For every changed sentence describing a mechanism, ask: can the code show this?**
+   When it can, flag the sentence for deletion — a mechanism sentence
+   the code already proves is a stale claim waiting to happen, not
+   documentation. This lens binds contract-class `.md` (skills,
+   agents) and script docstrings; it does not reach generated records
+   such as backlog entries and plans.
+   After flagging a sentence for deletion, check what the deletion
+   leaves behind: read the surrounding text as it will read once that
+   sentence is gone, and ask whether it can still stand alone. A
+   qualifier stranded without the sentence that gave it a subject —
+   "Wording is unit-agnostic on purpose:" with nothing left saying
+   which wording — is a new defect the deletion introduced, not a
+   clean removal; flag it too, and do not pass a deletion that leaves
+   one behind.
 
 <!-- BEGIN reviewer-discipline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_reviewer-discipline.md — do not edit in place -->
 # Reviewer output discipline — v1
