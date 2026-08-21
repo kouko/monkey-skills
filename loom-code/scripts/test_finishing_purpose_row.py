@@ -47,6 +47,16 @@ def test_skill_md_declares_the_purpose_row():
     assert exit_1_clause, "exit 1 not stated as its own clause"
     assert "unreadable" in exit_1_clause.group(0), "exit 1 not bound to 'unreadable' in one clause"
 
+    # exit 1 has TWO causes since the retired-vocabulary guard landed: an
+    # unreadable store path, and an entry whose status: falls outside the
+    # closed vocabulary. Their remedies differ — the first is treated as
+    # store-absent, the second is that entry's frontmatter to fix — so the
+    # text must name both. The exit-2 clause shipped this exact defect
+    # (a cause count drifting out from under the prose) and no assertion
+    # here noticed; pinning the second cause is what closes that gap.
+    assert "vocabulary" in exit_1_clause.group(0), "exit 1 clause omits the out-of-vocabulary-status cause"
+    assert "frontmatter" in exit_1_clause.group(0), "exit 1 clause omits the remedy for the out-of-vocabulary cause"
+
     exit_2_clause = re.search(r"[Ee]xit 2[\s\S]*?\.(?=\s|$)", para)
     assert exit_2_clause, "exit 2 not stated as its own clause"
     assert "unresolved" in exit_2_clause.group(0), "exit 2 not bound to 'unresolved' in one clause"
