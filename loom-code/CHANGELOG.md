@@ -5,6 +5,48 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.93.0] — 2026-08-22 — code-as-spec writing rule
+
+### Added
+
+- **A reviewer lens in both review arms: for every changed sentence
+  describing a mechanism, ask whether the code can show it.** When it can,
+  the sentence is flagged for deletion — a mechanism sentence the code
+  already proves is a stale claim waiting to happen. Each arm is scoped to
+  the material it is actually handed: the code arm holds docstrings and
+  inline comments in non-`.md` files, the docs arm holds contract-class
+  `.md`. Record-class documents are reached by neither, and both arms say
+  so rather than implying coverage they lack.
+- **The other half of the same rule: what survives the cut gets run, not
+  re-read.** A surviving sentence that names a produceable outcome —
+  returns, a flag, a count, an exit code, whether a path resolves, an
+  ordering — is produced. A claim sorted runnable but unrunnable in that
+  dispatch is named in `summary:` with the command that would run it,
+  never guessed and never passed in silence. Failed execution files on a
+  second route (`correctness` in the code arm, `incorrect-fact` in the
+  docs arm), because such a sentence is wrong rather than surplus and
+  deleting it is not the fix.
+- **`scripts/test_oracle_capability_claims.py`** — the OSError-escape
+  oracle's two capability claims about itself, asserted in-process on its
+  own `leaky_scopes` expression: no recognised filesystem-guard mutant
+  survives except a named four-member survivor set, and every
+  scope-attribution shape its docstring enumerates is caught. Promoted out
+  of a session-scoped scratchpad, where the same assertions had lived and
+  would have died.
+
+### Changed
+
+- **Six gate scripts state what their code cannot.** Sentences restating a
+  list comprehension, a one-line delegation, or the `if` directly below
+  them are gone; interface facts a caller needs — a parameter default, a
+  return contract, an ordering guarantee, a raises clause — stay, because
+  the split runs along interface versus implementation and not along
+  derivability. No executable line changed in any of the six.
+- **`leaky_scopes`'s bounds list gained a gap the arc demonstrated.** A
+  guard wrapped around a top-level helper that delegates its filesystem
+  read to an imported symbol is invisible to a one-file-at-a-time parse.
+  Two live sites carry that shape; the gap is filed, not papered over.
+
 ## [0.92.0] — 2026-08-21 — direction layer dissolved
 
 ### Removed

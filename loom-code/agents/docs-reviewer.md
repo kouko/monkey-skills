@@ -422,7 +422,7 @@ verdict. You have no separate authority to fail an artifact over it.
 
 **A sentence that survives the cut is verified against the thing it describes, not by reading it again.**
 Deciding a sentence stays is only half the job: it now stands as a claim,
-and on this branch every false claim was caught by executing something and
+and on the arc that wrote this rule every false claim was caught by executing something and
 none by reading carefully. So sort what survives into two kinds:
 
 - **Runnable** — the sentence names an outcome someone could produce: what
