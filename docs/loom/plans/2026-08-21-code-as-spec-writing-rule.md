@@ -161,7 +161,10 @@ N/A — no unresolved question: the three forks this arc reached were each put t
   - Worked case for that split, verified in the tree: `check_onramp_choice.py:93-95` says continuation lines are joined in before the grammar is applied, then points at `_join_blockquote_continuation`.
   - Keep that a multi-line value is not silently truncated; drop the pointer at the helper. That file belongs to Task 3 — quoted here as the shared example, not to be touched by this task.
   - Worked pair, verified in the tree, so the line is not left to taste. KEEP `backlog_index.py:6-8` — the `--store` default and the fact it covers the live tier and its `archive/` subdirectory; a caller passing no store needs it.
-  - DELETE `live_entries`'s FIRST paragraph only (`backlog_index.py:279-282`) — it restates the list comprehension below it. KEEP the archive-override rationale and the `Raises` note that follow: the first is a reason, the second is interface.
+  - REWRITE `live_entries`'s first paragraph rather than deleting it. Its mechanism half restates the list comprehension below and goes; its interface half stays.
+  - The interface half is the returned display name — the frontmatter `name`, falling back to the filename stem — in a deterministic order. That is what a caller gets.
+  - This bullet said DELETE in the version the implementers executed, and both deleted the whole paragraph faithfully. Two whole-branch reviewers caught the loss. A worked example that says DELETE where the rule says KEEP beats the rule; the example is the operative instruction.
+  - KEEP the archive-override rationale and the `Raises` note that follow: the first is a reason, the second is interface.
   - ADD, where deleting a restatement leaves a docstring with no reason at all: the reason, the goal, the expected effect, and how the implementation choice was made.
   - Every added sentence must come from a record — a Decision Log entry in `docs/loom/plans/`, a file in `docs/loom/memory/`, or a commit message reachable by `git log -S` on the code it describes. Cite the source in the report.
   - When no record carries the reason, write NOTHING and list that docstring in the report as an unsourced gap. Inventing a plausible rationale is the exact defect this arc exists to stop, and is worse here than silence.
