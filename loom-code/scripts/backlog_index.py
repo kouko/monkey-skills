@@ -80,10 +80,10 @@ entries, each section in filename order (filenames start YYYY-MM-DD, so
 filename order is file-date order) — one `- <name> — <description>` line
 per entry, plus an indented `  start: <value>` second line for an entry
 whose frontmatter carries `start:`. `closed` entries, archive-tier
-entries, and `open` entries carrying a `blocked:` field are excluded
+entries, and entries carrying a `blocked:` field are excluded
 from the listing and only tallied in the closing
 `ready: N bet / M open / P closed / Q blocked` line — two separate
-axes, since a `closed`/archive-tier entry and a `blocked` `open` entry
+axes, since a `closed`/archive-tier entry and a `blocked` entry
 are excluded for different reasons (the former will never be ready as
 written; the latter is one `blocked:` line away from it).
 
@@ -235,26 +235,38 @@ def iter_validated_entries(
 ) -> list[tuple[Path, bool, dict[str, str]]]:
     """Every entry under `store` as `(path, is_archived, frontmatter)` in
     `_entry_files()` order, raising ValueError (the caller decides exit
-    codes) on any entry whose `status:` falls outside
+    codes) on any LIVE entry whose `status:` falls outside
     `CLOSED_STATUS_VOCABULARY`.
 
-    This is the ONE home of the out-of-vocabulary guard. Three call sites
-    — `build_ready()` here, `check_queue_relation.live_bet_names()`, and
+    This is the ONE home of the out-of-vocabulary guard. All four readers
+    — `build_ready()` and `_collect_index_entries()` here,
+    `check_queue_relation.live_bet_names()`, and
     `check_north_star_link.find_bet_entries()` — each carried a
     hand-copied walk with its own copy of the raise, and the copies
     documented the duplication ("same bytes, same guard") instead of
     removing it. They then drifted exactly as Fowler's Duplicated Code /
     Shotgun Surgery predicts: one whole-branch review round had to patch
-    two of them in lockstep, and the next round still found a third site
-    diverging. Validation always runs BEFORE any archived/status filter,
-    so a malformed entry can never be silently dropped by a filter that
-    happens to exclude it anyway.
+    two of them in lockstep, the next round found a third site diverging,
+    and the round after that found the fourth.
+
+    **Archive-tier entries are yielded unvalidated, deliberately.** The
+    archive tier OVERRIDES an entry's literal status (`build_ready()`
+    tallies every archived entry as `closed` "independent of what its
+    frontmatter literally says"), so that value is not load-bearing for
+    any reader — and `--validate` owns it directly via
+    `_check_archive_tier()`. Validating it here would make a repo whose
+    archive holds historical retired vocabulary unable to render its own
+    index, which is the opposite of the migration posture this vocabulary
+    collapse ships. A live entry is the reverse: its status IS what every
+    reader routes on, so a malformed one must never be silently dropped by
+    a filter that happens to exclude it anyway — validation runs before
+    any status filter.
     """
     entries: list[tuple[Path, bool, dict[str, str]]] = []
     for path, is_archived in _entry_files(store):
         frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
         status = frontmatter.get("status")
-        if status not in CLOSED_STATUS_VOCABULARY:
+        if not is_archived and status not in CLOSED_STATUS_VOCABULARY:
             raise ValueError(
                 f"{path.name}: entry has status {status!r}, outside the "
                 "closed status vocabulary"
@@ -446,22 +458,26 @@ def find_violations(store: Path) -> list[Violation]:
 
 def _bucket_entry(
     path: Path,
+    frontmatter: dict[str, str],
     by_status: dict[str, list[tuple[str, str]]],
 ) -> None:
-    """Classify one LIVE entry file into `by_status` in place. Raises
-    ValueError (see `_collect_index_entries()`'s docstring for the
-    condition) rather than mutating the collection on a bad entry."""
-    frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
-    name = frontmatter.get("name", path.stem)
+    """Classify one LIVE entry into `by_status` in place.
 
+    Takes the frontmatter its caller already parsed rather than re-reading
+    the file: the vocabulary guard now lives once, upstream in
+    `iter_validated_entries()`, so this function no longer re-derives it.
+    It still raises ValueError on a status with no section — that is a
+    narrower condition (a vocabulary word `STATUS_SECTION_ORDER` has no
+    home for), not a second copy of the vocabulary check.
+    """
     status = frontmatter.get("status")
     if status not in by_status:
         raise ValueError(
-            f"{path.name}: live entry has status {status!r}, outside the "
-            "closed vocabulary of live statuses"
+            f"{path.name}: live entry has status {status!r}, which has no "
+            "section in STATUS_SECTION_ORDER"
         )
-    description = frontmatter.get("description", "")
-    by_status[status].append((name, description))
+    name = frontmatter.get("name", path.stem)
+    by_status[status].append((name, frontmatter.get("description", "")))
 
 
 def _collect_index_entries(store: Path) -> dict[str, list[tuple[str, str]]]:
@@ -477,10 +493,16 @@ def _collect_index_entries(store: Path) -> dict[str, list[tuple[str, str]]]:
     """
     by_status: dict[str, list[tuple[str, str]]] = {status: [] for status in STATUS_SECTION_ORDER}
 
-    for path, is_archived in _entry_files(store):
+    # Validate EVERY entry, archive tier included, before skipping the
+    # archived ones: an archive-tier entry outside the closed vocabulary is
+    # a `--validate` violation (`_check_archive_tier`), and a reader that
+    # skips it unvalidated disagrees with every other reader about the same
+    # store. Round 4 found exactly that divergence — `build_index()`
+    # returned normally on a store `build_ready()` refused.
+    for path, is_archived, frontmatter in iter_validated_entries(store):
         if is_archived:
             continue
-        _bucket_entry(path, by_status)
+        _bucket_entry(path, frontmatter, by_status)
 
     for entries in by_status.values():
         entries.sort(key=lambda item: item[0])
@@ -547,8 +569,12 @@ def build_ready(store: Path) -> str:
     `blocked:` field is excluded too (brief BI-2 — that is what the field is for). These
     are two distinct exclusion axes, tallied separately in the closing
     line: a `closed`/archive-tier entry is not actionable as written; a
-    `blocked` `open` entry is otherwise-ready and one `blocked:` line
-    away from it. An archive-tier entry is always tallied as `closed`
+    `blocked` entry is otherwise-ready and one `blocked:` line away from
+    it. The exclusion is written against `bet`-or-`open` rather than
+    `open` alone because it is the CODE's condition; invariant (iv)
+    separately makes `blocked:` illegal on a `bet` entry, so the `bet`
+    half is a guard against a store that already violates (iv), not a
+    supported combination. An archive-tier entry is always tallied as `closed`
     (the archive tier overriding its status is exactly what makes it
     closed for `--ready`'s purposes, independent of what its frontmatter
     literally says).

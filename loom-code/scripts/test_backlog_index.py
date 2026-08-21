@@ -1260,3 +1260,54 @@ def test_direction_verbs_removed(tmp_path):
     assert result.returncode != 0, result.stdout + result.stderr
     assert "unrecognized arguments" in result.stderr, result.stderr
     assert "--direction-write" in result.stderr, result.stderr
+
+
+def test_index_and_ready_agree_on_an_archive_tier_entry_with_a_bad_status(tmp_path):
+    """Round-4 finding: the shared-walk extraction closed three of FOUR
+    copies, and the fourth (`_collect_index_entries`) skipped archive-tier
+    entries WITHOUT validating them while the other three validated every
+    entry — so one store made `build_index()` return normally and
+    `build_ready()` raise.
+
+    The agreed direction is the one two shipped artifacts already record:
+    `test_write_ignores_archive_tier_entry_with_bogus_status` ("that is
+    `--validate`'s job") and `build_ready`'s own docstring ("an archive-tier
+    entry is always tallied as `closed` ... independent of what its
+    frontmatter literally says"). The archive tier OVERRIDES the status, so
+    no reader routes on it; `--validate` owns it via `_check_archive_tier`.
+    Validating it in the readers would leave a repo holding historical
+    retired vocabulary unable to render its own index.
+
+    Pinned at FUNCTION level deliberately: at CLI level `--check` exits 1
+    via `find_violations` either way, which hides the divergence."""
+    store = tmp_path / "backlog"
+    (store / "archive").mkdir(parents=True)
+    _write(store, "2026-08-01-live.md", _entry("2026-08-01-live", "open"))
+    _write(
+        store,
+        "archive/2026-07-01-stale.md",
+        _entry("2026-07-01-stale", "SHIPPED"),
+    )
+
+    # Both readers accept the store, and both treat the archived entry as
+    # closed rather than as its literal status.
+    ready = backlog_index.build_ready(store)
+    index = backlog_index.build_index(store)
+    assert "2026-07-01-stale" not in index
+    assert "SHIPPED" not in ready and "SHIPPED" not in index
+    assert "/ 1 closed /" in ready, ready
+
+    # A LIVE entry with the same status still fails loudly in both.
+    _write(store, "2026-08-02-bad.md", _entry("2026-08-02-bad", "SHIPPED"))
+    with pytest.raises(ValueError, match="SHIPPED"):
+        backlog_index.build_ready(store)
+    with pytest.raises(ValueError, match="SHIPPED"):
+        backlog_index.build_index(store)
+
+    # And `--validate` — the owner of the archive-tier rule — still flags
+    # the archived entry, so nothing is laundered by the readers' silence.
+    flagged = [
+        v for v in backlog_index.find_violations(store)
+        if v.kind == "archive-tier" and "2026-07-01-stale" in v.file
+    ]
+    assert flagged, backlog_index.find_violations(store)

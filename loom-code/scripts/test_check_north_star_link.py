@@ -242,3 +242,29 @@ def test_exit_0_when_real_template_why_replaced_with_not_yet_reason(tmp_path):
     result = _run(store)
 
     assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+
+
+def test_unreadable_purpose_file_exits_1_not_a_traceback(tmp_path):
+    """Round-4 finding (arm B): round 3 guarded the reads in
+    `check_queue_relation.py` and its commit message even cited THIS
+    file's `is_dir()` guard as the model — but the sweep went one
+    direction and did not come back. `determine_purpose_state()`'s own
+    `read_text` stayed bare, so an existing-but-unreadable PURPOSE.md
+    died on a raw traceback.
+
+    Exit 1, not 2: an unreadable file is a different fact from an absent
+    one, and only the absent case is a question for the user."""
+    store = tmp_path / "docs" / "loom" / "backlog"
+    _write_entry(store, "a-bet", "bet", "the purpose")
+    purpose = tmp_path / "docs" / "loom" / "PURPOSE.md"
+    purpose.write_text("Ship the thing.\n", encoding="utf-8")
+    purpose.chmod(0o000)
+
+    try:
+        result = _run(store)
+    finally:
+        purpose.chmod(0o644)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "Traceback" not in result.stderr
+    assert "unreadable" in result.stderr

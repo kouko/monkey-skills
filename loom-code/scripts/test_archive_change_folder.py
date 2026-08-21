@@ -915,3 +915,18 @@ def test_file_unit_archived_entry_passes_backlog_index_validate(tmp_path):
     store = tmp_path / "docs" / "loom" / "backlog"
     violations = backlog_index_mod.find_violations(store)
     assert violations == []
+
+
+def test_unrelated_archive_directory_does_not_false_refuse(tmp_path):
+    """Round-4 finding (arm B, 🟢): the folder unit's date-independent
+    idempotency check compared `name[11:]` to the change-id without
+    checking the first ten characters are actually a date, so an
+    unrelated `archive/my-archive-foo/` refused change-id `foo`."""
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_change_folder(tmp_path, "foo", "## Why\nBecause.\n")
+    decoy = tmp_path / "docs" / "loom" / "archive" / "my-archive-foo"
+    decoy.mkdir(parents=True)
+
+    dest = mod.archive_change_folder(tmp_path, "foo", date="2026-08-21")
+    assert dest.name == "2026-08-21-foo"
+    assert decoy.is_dir()

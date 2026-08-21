@@ -782,11 +782,18 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
   `blocked:` documentation row only because `[\w-]+` happens not to match a
   trailing colon — incidental punctuation doing load-bearing work, so a future
   non-status row written without a colon would silently break the pin for a
-  legitimate reason. (b) `find_bet_entries` validates the vocabulary *before*
-  its archive-tier skip while `build_ready` skips archived entries first, so
-  the three readers still disagree about archived entries — harmless while
-  `archive/` is empty, and arguably the safer direction, but it is the exact
-  coherence property round 1 asked for, now inverted rather than resolved.
+  legitimate reason. (b) **superseded 2026-08-21 by round 4 — the deferral stands, its
+  stated grounds do not.** As written, (b) said `find_bet_entries` and
+  `build_ready` disagree about archived entries. Commit `84714c6b` routed
+  both through `iter_validated_entries()`, so the three readers named here
+  now agree; a reader picking this debt up off the original sentence would
+  have been pointed at three already-consistent sites. The reader that
+  actually disagreed was `_bucket_entry` / `_collect_index_entries` — a
+  FOURTH hand-copy the extraction did not reach, which round 4 found and
+  which is now routed through the same walk. The archive tier's status is
+  deliberately left unvalidated by all four readers (`--validate` owns it
+  via `_check_archive_tier`), so the coherence property round 1 asked for
+  is resolved rather than inverted.
   Both are 🟢 and do not gate. Filed here rather than fixed because each is a
   design call better made with a live instance in front of it than at a
   close-out gate.
@@ -812,6 +819,39 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
   units, so the safety rested on a guard the prose did not name. The two arms
   split on it; the panel rule takes the severer, and that was right here.
   Cost of the third round: one arm found the class, the other did not.
+- **DL-27 (2026-08-21, close-out) — round 4: the class was named in round 3
+  and still not swept, including by me.** Both arms returned NEEDS_REVISION;
+  union 7 (5 🟡 + 2 🟢). One arm put it exactly: *round 3 fixed the instances
+  the reviewer cited; nothing swept the class.* The evidence was four twins:
+  (a) the extraction reached three of FOUR copies of the store walk — the
+  fourth, `_collect_index_entries` / `_bucket_entry`, sat ~200 lines below it
+  in the same file, and my new docstring called itself "the ONE home"; (b) the
+  `OSError` guards were added to `check_queue_relation` while
+  `check_north_star_link`'s own `read_text` stayed bare — and round 3's commit
+  message had cited that very file as the model, so the sweep went one
+  direction and did not come back; (c) the `blocked:` docstring correction
+  landed in one of three sentences in one file; (d) DL-25(b), written the same
+  day, described a disagreement the commit before it had already resolved.
+  **And then my own round-4 fix reproduced the class a fifth time**: guarding
+  `PURPOSE.md` gave `check_north_star_link` a third exit-1 cause while its
+  docstring, `finishing-a-development-branch`'s prose, and the test pinning
+  that prose all still said two. I caught that one only because I went looking
+  for it after reading the finding.
+  **Design call taken, not asked.** Fixing (a) forced a choice: validate the
+  archive tier in every reader, or in none. Two shipped artifacts already
+  recorded the answer — `test_write_ignores_archive_tier_entry_with_bogus_status`
+  ("that is `--validate`'s job") and `build_ready`'s own docstring ("independent
+  of what its frontmatter literally says") — so the guard is now scoped to LIVE
+  entries and `_check_archive_tier` keeps sole ownership. The rejected direction
+  would have left any repo whose archive holds retired vocabulary unable to
+  render its own index, which is the opposite of the migration posture this
+  vocabulary collapse ships.
+  **One test was pinning a fact, not a duty, and it went stale.**
+  `test_writing_plans_queue_gate` asserted `"unreadable" not in` the exit-1
+  clause, with the comment "it never attempts to open an existing-but-unreadable
+  file" — true when written, false the moment round 3's guards landed. Pins that
+  state what the code happens to do age into false contracts; pins that state
+  what the reader must be told do not.
 
 ## Notes
 

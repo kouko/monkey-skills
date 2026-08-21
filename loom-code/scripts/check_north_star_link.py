@@ -28,8 +28,10 @@ Exit codes:
         line and `docs/loom/PURPOSE.md` exists, OR there are no live
         `bet` entries at all (nothing to bet on yet).
     1 — the given backlog store path does not exist or is not a
-        readable directory, OR an entry's `status` falls outside the
-        closed status vocabulary (`backlog_index.CLOSED_STATUS_VOCABULARY`)
+        readable directory, OR `docs/loom/PURPOSE.md` exists but is
+        unreadable (distinct from absent, which is exit 2 — absence is a
+        question for the user, unreadability is a permissions fix), OR an
+        entry's `status` falls outside the closed status vocabulary (`backlog_index.CLOSED_STATUS_VOCABULARY`)
         — a malformed entry fails loudly rather than being silently
         dropped from the live-bet set it might belong to (mirrors
         `check_queue_relation.py`'s `live_bet_names()` over the same
@@ -138,7 +140,7 @@ def determine_purpose_state(purpose_path: Path) -> str:
     present elsewhere in the file — the deferral IS the answer."""
     if not purpose_path.is_file():
         return "absent"
-    text = purpose_path.read_text(encoding="utf-8")
+    text = purpose_path.read_text(encoding="utf-8")  # OSError -> main() exit 1
     not_yet = _NOT_YET_RE.search(text)
     if not_yet is not None:
         reason = not_yet.group("reason")
@@ -220,7 +222,16 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     purpose_path = _purpose_path_for(store)
-    purpose_state = determine_purpose_state(purpose_path)
+    # Same guard as the store read above: an unreadable PURPOSE.md is a
+    # different fact from an absent one (absent is a legitimate exit-2
+    # question to the user), and neither may surface as a traceback.
+    try:
+        purpose_state = determine_purpose_state(purpose_path)
+    except OSError as exc:
+        print(
+            f"Error: {purpose_path} is unreadable ({exc}).", file=sys.stderr
+        )
+        return 1
     if purpose_state == "absent":
         print(f"Error: {build_purpose_missing_question(purpose_path)}", file=sys.stderr)
         return 2

@@ -11,7 +11,7 @@ move; A4 (maintainer-facing fragments in §BLOCKED fallback, §Plan size
 ceiling, §Consuming) move to references/design-evidence.md (author-facing
 header) while the rules they qualify, and the 5-step process / anti-pattern
 paragraph / detection-cascade rule sentences, stay inline verbatim. Word
-ceiling <=4420 — the 2026-08-19 field-value-microstructure arc's Task 11
+ceiling <=4430 — the 2026-08-19 field-value-microstructure arc's Task 11
 (the §Field-microstructure gate paragraph in §Self-review, mirroring the
 Open-questions gate paragraph it sits directly under) landed the gate
 paragraph on revision round 1 at 4510 words, 90 over the cap, and left
@@ -646,10 +646,18 @@ def test_open_questions_gate_owning_heading_missing_fails_loudly(monkeypatch):
 
 # --- (f) word cap ------------------------------------------------------------
 
-def test_word_count_at_most_4420():
+def test_word_count_at_most_4430():
     word_count = len(_skill_text().split())
-    assert word_count <= 4420, (
-        f"SKILL.md is {word_count} words, over the 4420 cap. The "
+    assert word_count <= 4430, (
+        f"SKILL.md is {word_count} words, over the 4430 cap. "
+        "Raised from 4420 by the 2026-08-21 dissolve-direction-layer "
+        "arc's round-4 review fix: the §Queue-relation gate paragraph's "
+        "exit-1 clause named two causes while the shipped script had "
+        "four — the round-3 fix guarded main()'s store and brief reads, "
+        "and each guard is its own exit-1 cause with its own remedy. "
+        "Compressed twice before raising; it cannot lose the "
+        "store-absent distinction without reintroducing the fail-open "
+        "reading the guard exists to prevent. Prior accounting: the "
         "2026-08-19 field-value-microstructure arc's Task 11 (the "
         "§Field-microstructure gate paragraph, mirroring the "
         "Open-questions gate paragraph it sits directly under in "

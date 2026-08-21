@@ -135,11 +135,12 @@ Role boundaries enforced by behavior, not reading restrictions:
   `docs/loom/backlog/` entry per that store's README.md Archive rule):
   `python3 loom-code/scripts/archive_change_folder.py <identifier> [root] [--date YYYY-MM-DD] [--unit folder|file]`
   — `--unit` defaults to `folder` (`docs/loom/<identifier>/` moves to
-  `docs/loom/archive/<date>-<identifier>/`, stamping `status: archived`
+  `docs/loom/archive/<date>-<identifier>/`, stamping `status: closed`
   into the moved `proposal.md`'s frontmatter); `--unit file` moves
   `docs/loom/backlog/<identifier>` to `docs/loom/backlog/archive/<identifier>`
-  unrenamed, stamping both `status: archived` and `archived: <date>` into
-  the moved file itself. rc=1 with actionable stderr on any refusal
+  unrenamed, stamping `status: closed` into the moved file itself and
+  stripping any `blocked:` field from it (`archived` is retired
+  vocabulary and no `archived: <date>` field is written any more). rc=1 with actionable stderr on any refusal
   (missing source, already-archived, destination collision, unsafe
   identifier/date, unrecognized `--unit`), zero filesystem mutation on
   refusal.

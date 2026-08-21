@@ -46,5 +46,9 @@ start: next time a repo (this one or external) needs to answer "how far along is
   no longer exists, so a bets-grow-a-parts-checklist sub-structure has
   no document to grow inside. The remaining options are (b) a
   multi-part-brief index artifact and (c) declare per-plan Stage +
-  the generated `## Now` view sufficient. This entry stays open with
-  its option set narrowed to those two.
+  the live `--ready` queue sufficient. This entry stays open with
+  its option set narrowed to those two. (Corrected 2026-08-21 during
+  the same arc's round-4 review: this note as first written offered
+  the generated `## Now` view, which that arc deleted — the note
+  recording what the dissolution foreclosed had itself named a
+  foreclosed surface.)

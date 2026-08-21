@@ -56,15 +56,20 @@ def test_gate_paragraph_names_queue_relation_script():
 
     exit_1_clause = re.search(r"[Ee]xit 1[^.]*\.", para)
     assert exit_1_clause, "exit 1 not stated as its own clause"
-    # The script's actual condition is a missing path, not an unreadable
-    # one (it never attempts to open an existing-but-unreadable file) —
-    # the clause must use the accurate word.
+    # Exit 1 has FOUR causes. Two of them are new as of the round-3
+    # whole-branch fix that guarded `main()`'s store and brief reads —
+    # before it, this assertion read `"unreadable" not in ...` with the
+    # comment "it never attempts to open an existing-but-unreadable
+    # file", which was true then and false the moment the guards landed.
+    # A pin that states a fact rather than a duty goes stale with the
+    # code; both words are asserted PRESENT now, and the store-absent
+    # distinction with them, because an unreadable store must never be
+    # read as an absent one (absence exits 0).
     assert "not found" in exit_1_clause.group(0), "exit 1 not bound to 'not found' in one clause"
-    assert "unreadable" not in exit_1_clause.group(0), "exit 1 clause uses the inaccurate word 'unreadable'"
-    # Exit 1 now has two real causes (missing brief path, or a store
-    # entry's status outside the closed vocabulary) — the paragraph must
-    # not claim it means only one thing, and must give each cause its own
-    # remedy so a reader can tell them apart and act.
+    assert "unreadable" in exit_1_clause.group(0), "exit 1 clause omits the unreadable-path causes the guards added"
+    assert "NOT the store-absent case" in exit_1_clause.group(0), "exit 1 clause does not separate an unreadable store from an absent one (absent exits 0)"
+    # The paragraph must not claim exit 1 means only one thing, and must
+    # give each cause its own remedy so a reader can tell them apart.
     assert "vocabulary" in exit_1_clause.group(0), "exit 1 clause omits the second cause (status outside the closed vocabulary)"
     assert "fix the path" in exit_1_clause.group(0), "exit 1 clause omits the remedy for a missing brief path"
     assert "frontmatter" in exit_1_clause.group(0), "exit 1 clause omits the remedy for a bad-status backlog entry"

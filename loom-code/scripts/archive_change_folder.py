@@ -149,9 +149,11 @@ def _existing_folder_archive(archive_root: Path, change_id: str) -> Path | None:
     destination interpolates a date, so a re-archive on a different day
     lands beside the first copy instead of refusing — the identifier, not
     the dated path, is what "already archived" means. Matched by exact
-    segment arithmetic (a 10-character date, then ``-``, then the rest)
+    segment arithmetic (a ``YYYY-MM-DD`` date, then ``-``, then the rest)
     rather than a glob, because ``change_id`` is validated as a safe path
-    segment but is NOT guaranteed free of glob metacharacters.
+    segment but is NOT guaranteed free of glob metacharacters. The date
+    SHAPE is checked, not just the length: without it an unrelated
+    ``archive/my-archive-foo/`` would false-refuse change-id ``foo``.
     """
     if not archive_root.is_dir():
         return None
@@ -159,7 +161,12 @@ def _existing_folder_archive(archive_root: Path, change_id: str) -> Path | None:
         if not candidate.is_dir():
             continue
         name = candidate.name
-        if len(name) > 11 and name[10] == "-" and name[11:] == change_id:
+        if (
+            len(name) > 11
+            and name[10] == "-"
+            and name[11:] == change_id
+            and _DATE_RE.match(name[:10])
+        ):
             return candidate
     return None
 
