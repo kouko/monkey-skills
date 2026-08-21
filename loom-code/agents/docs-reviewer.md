@@ -80,9 +80,10 @@ model: sonnet
    When it can, flag it for deletion — a mechanism sentence the code
    already proves is a stale claim waiting to happen. Your material is
    the contract-class `.md` routed here by `requesting-code-review/SKILL.md`
-   §Process Step 1 (skill bodies, agent contracts, hook and script `.md`);
-   the code arm holds the same lens over docstrings and inline comments in
-   non-`.md` files (`code-reviewer.md` role-contract item 7). File every
+   §Process Step 1 — **## Scope contract** below carries that path rule,
+   cited from the SSOT and never re-derived; the code arm holds the same
+   lens over docstrings and inline comments in non-`.md` files
+   (`code-reviewer.md` role-contract item 7). File every
    such finding as `dimension: omission`, `class: instruction`, citing
    `docs/loom/specs/2026-08-21-code-as-spec-writing-rule.md` §Decision in
    `note:` — this schema has no `source:` field, so `where:` + `quote:`
@@ -395,8 +396,10 @@ Prose MUST carry the reason, the goal, the expected effect, and how the
 implementation choice was made — sourced from a Decision Log entry, a
 memory file, or git history, never invented, and left unwritten with the
 gap reported when no source carries it (SSOT:
-`docs/loom/specs/2026-08-21-code-as-spec-writing-rule.md` §Decision). So,
-before flagging:
+`docs/loom/specs/2026-08-21-code-as-spec-writing-rule.md` §Decision). A
+counterfactual — what the text says would happen were the mechanism absent
+— IS that reason, not a mechanism the code can show; this half keeps it, so
+no reversing case below is needed to reach that. So, before flagging:
 
 - **An absence claim is never deletable.** "This script does not parse
   for any bold sub-label" is deliberate non-behaviour, and code cannot
@@ -605,7 +608,7 @@ closed).
 
 | Dimension | What fires it |
 |---|---|
-| **omission** | An obligation or referent the text needs and lacks — a step the reader cannot execute, a term used but never defined, a promised section absent. A diagram slot required by the artifact's own template contract (fill-or-declare) that is absent, and an `N/A — no flow/state/architecture-shaped content:` declaration whose reason does not hold against the artifact's own content, are both omissions. Comparison-shaped content — ≥2 options weighed on shared axes — left as prose in a section the artifact's own template routes to a markdown table (fill-or-declare), and an `N/A — no alternatives found:` declaration whose reason does not hold against the artifact's own content, are likewise omissions. Assert only after the full-text read (rule 1). |
+| **omission** | An obligation or referent the text needs and lacks — a step the reader cannot execute, a term used but never defined, a promised section absent. A diagram slot required by the artifact's own template contract (fill-or-declare) that is absent, and an `N/A — no flow/state/architecture-shaped content:` declaration whose reason does not hold against the artifact's own content, are both omissions. Comparison-shaped content — ≥2 options weighed on shared axes — left as prose in a section the artifact's own template routes to a markdown table (fill-or-declare), and an `N/A — no alternatives found:` declaration whose reason does not hold against the artifact's own content, are likewise omissions. A sentence stating a mechanism the code already shows is an omission of the same shape: what the text lacks is the reason, the goal, or the expected effect that only prose can carry, and deleting the surplus mechanism is what exposes that lack (role-contract rule 8; operating detail in `## Code-as-spec lens`). Assert only after the full-text read (rule 1). |
 | **ambiguity** | An absolute — "only", "never", "zero" — without support; a sentence with two live readings that fork what the executor does. |
 | **inconsistency** | Two passages contradicting, including changed-vs-unchanged: the diff says X, an untouched paragraph still says not-X. |
 | **incorrect-fact** | A citation that does not support its claim — open the source and read the cited span before scoring; a stated number or path that is wrong against the artifact it describes. |

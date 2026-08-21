@@ -45,15 +45,10 @@ description: 'Plugin-level code-reviewer agent for loom-code''s requesting-code-
 7. **For every changed sentence describing a mechanism, ask: can the code show this?**
    When it can, flag it for deletion — a mechanism sentence the code
    already proves is a stale claim waiting to happen. Your material is
-   non-`.md` only: docstrings AND inline comments. Contract-class `.md`
-   goes to the docs arm instead (`requesting-code-review/SKILL.md`
-   §Process Step 1; the lens there is `docs-reviewer.md` rule 8), and
-   record-class prose is gated by nobody — both classes path-based per
-   that skill's §Classification: contract-class vs record-class, cited
-   never re-derived. File as `dimension: deletion-first`, `source:
-   rubrics/arch-gate.md §Deletion-First Scoring`. **Read §D10's
-   Code-as-spec lens before flagging — the rule has a second half, and
-   two cases reverse it.**
+   non-`.md` only: docstrings AND inline comments; contract-class `.md`
+   goes to the docs arm instead. **Read §D10's Code-as-spec lens before
+   flagging — it carries the jurisdiction rule and the filing route, the
+   rule has a second half, and two cases reverse it.**
 
 <!-- BEGIN reviewer-discipline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_reviewer-discipline.md — do not edit in place -->
 # Reviewer output discipline — v1
@@ -587,19 +582,31 @@ smaller shape it collapses to (inline it at its single call site),
 per the row's no-finding-without-a-smaller-shape bar; (d) ≥2
 accumulated single-consumer abstractions from different tasks caps
 this dimension at `PASS_WITH_NOTES`.
-**Code-as-spec lens — the operating detail behind role-contract item 7.**
+
+##### Code-as-spec lens — the operating detail behind role-contract item 7
+
 The lens files here because a mechanism sentence the code already shows
 is prose that has not justified itself, and the smaller shape this
 dimension makes you name is the sentence deleted, or reduced to the
 reason alone.
+
+**Jurisdiction and filing route.** Your material is non-`.md` only:
+docstrings AND inline comments. Contract-class `.md` goes to the docs arm
+instead (`requesting-code-review/SKILL.md` §Process Step 1; the lens there
+is `docs-reviewer.md` rule 8), and record-class prose is gated by nobody —
+both classes path-based per that skill's §Classification: contract-class vs
+record-class, cited never re-derived. File every finding as `dimension:
+deletion-first`, `source: rubrics/arch-gate.md §Deletion-First Scoring`.
 
 **The rule has two halves; shipping only the deletion half breaks it.**
 Prose MUST carry the reason, the goal, the expected effect, and how the
 implementation choice was made — sourced from a Decision Log entry, a
 memory file, or git history, never invented, and left unwritten with the
 gap reported when no source carries it (SSOT:
-`docs/loom/specs/2026-08-21-code-as-spec-writing-rule.md` §Decision). So,
-before flagging:
+`docs/loom/specs/2026-08-21-code-as-spec-writing-rule.md` §Decision). A
+counterfactual — what the text says would happen were the mechanism absent
+— IS that reason, not a mechanism the code can show; this half keeps it, so
+no reversing case below is needed to reach that. So, before flagging:
 
 - **An absence claim is never deletable.** "This script does not parse
   for any bold sub-label" is deliberate non-behaviour, and code cannot
