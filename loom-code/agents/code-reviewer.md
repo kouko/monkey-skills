@@ -596,7 +596,10 @@ instead (`requesting-code-review/SKILL.md` §Process Step 1; the lens there
 is `docs-reviewer.md` rule 8), and record-class prose is gated by nobody —
 both classes path-based per that skill's §Classification: contract-class vs
 record-class, cited never re-derived. File every finding as `dimension:
-deletion-first`, `source: rubrics/arch-gate.md §Deletion-First Scoring`.
+deletion-first`, `source: rubrics/arch-gate.md §Deletion-First Scoring`, at
+**🟡 should-fix** — a surplus mechanism sentence is not wrong today, it is a
+stale claim waiting to happen, and that is the should-fix bar. A sentence
+that is wrong today is the other route below and carries its own severity.
 
 **The rule has two halves; shipping only the deletion half breaks it.**
 Prose MUST carry the reason, the goal, the expected effect, and how the

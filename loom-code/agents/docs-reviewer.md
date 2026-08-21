@@ -391,6 +391,11 @@ handed no code; on a mixed branch the `### Read context` files are what
 you open. Without a file in hand, the sentence is unverified, not
 deletable — and an unverified sentence is not a finding.
 
+**Severity for the deletion route.** A surplus mechanism sentence files at
+**🟡 should-fix**: it is not wrong today, it is a stale claim waiting to
+happen, and that is the should-fix bar. A sentence that is wrong today is
+the other route below and carries its own severity.
+
 **The rule has two halves; shipping only the deletion half breaks it.**
 Prose MUST carry the reason, the goal, the expected effect, and how the
 implementation choice was made — sourced from a Decision Log entry, a
