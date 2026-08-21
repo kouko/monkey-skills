@@ -51,10 +51,16 @@ def test_skill_md_declares_the_purpose_row():
     assert exit_2_clause, "exit 2 not stated as its own clause"
     assert "unresolved" in exit_2_clause.group(0), "exit 2 not bound to 'unresolved' in one clause"
 
-    # The checker has TWO distinct exit-2 causes (absent PURPOSE.md vs. a
-    # malformed serves: line) — the text must name both, not collapse them
-    # into one generic phrase.
+    # check_north_star_link.py has THREE distinct exit-2 causes, each with its
+    # own question builder: PURPOSE.md absent (build_purpose_missing_question),
+    # PURPOSE.md present but still unanswered — template placeholder or a bare
+    # "not yet" (build_purpose_template_question), and a bet entry lacking a
+    # well-formed serves: line (build_serves_question). The text must name all
+    # three, not collapse them. An earlier revision of this test asserted TWO
+    # and so pinned the undercount it was meant to catch; the whole-branch
+    # review found the SKILL.md sentence still wrong underneath it.
     assert "PURPOSE.md` is absent" in exit_2_clause.group(0), "exit 2 clause does not name the absent-PURPOSE.md cause"
+    assert "unanswered" in exit_2_clause.group(0), "exit 2 clause does not name the unanswered-PURPOSE.md cause"
     assert "serves" in exit_2_clause.group(0), "exit 2 clause does not name the malformed-serves cause"
 
     assert "print" in para and "docs/loom/PURPOSE.md" in para, "print-before-listing duty missing"
@@ -67,7 +73,12 @@ def test_skill_md_declares_the_purpose_row():
         "STOP-and-ask",
         "relay the printed question",
         "wait",
-        "record it in the entry's `serves:` line",
+        # The remedy is cause-dependent: the serves: line answers only the
+        # third cause; the first two are answered in PURPOSE.md itself. An
+        # earlier revision pinned a single unconditional destination, which
+        # was wrong for two of the three causes.
+        "record it where that question asks",
+        "`PURPOSE.md` itself",
         "re-run",
     ):
         assert duty_phrase in para, f"missing exit-2 duty phrase: {duty_phrase!r}"

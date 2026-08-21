@@ -103,7 +103,7 @@ this block; none paraphrases it.
 | `open` | Recorded, not chosen. The default at creation; may stay open forever. | Anyone filing an entry | → `bet` at a betting moment; → `closed` when shipped/superseded/abandoned | Optional `start:` memo (prose trigger, never machine-read). Optional `blocked: <reason>` — present ⇒ excluded from `--ready`. |
 | `bet` | Chosen by the user at a close-out betting moment as what the repo works on next. A bet can be lost — dropping one back to `open` is legal and carries no ceremony beyond removing the promotion. | **User only** — agents never promote | → `closed` at that arc's close-out; → `open` if the user withdraws it | Must carry a well-formed `serves:` line (`check_north_star_link.py`); the queue-relation gate resolves `in-queue:`/`displaces:` against live bets. |
 | `closed` | This line ended — shipped, superseded, or deliberately abandoned. The reason is one body line naming the evidence (branch/PR/decision), not a status variant. | Agent at close-out, per the user's instruction | Terminal (an entry under `archive/` is `closed` by construction) | Body line naming the evidence. |
-| `blocked:` (field, not a status) | Why this `open` entry cannot be picked right now. | Whoever knows the fact | Delete the line when the impediment lifts — the entry re-enters `--ready` | None — it is a filter flag, `--ready` is its only reader. |
+| `blocked:` (field, not a status) | Why this `open` entry cannot be picked right now. | Whoever knows the fact | Delete the line when the impediment lifts — the entry re-enters `--ready` | Legal only on an `open` entry — `--validate` rejects it elsewhere (`_check_blocked`); otherwise a filter flag, `--ready` is its only reader. |
 
 ### `bet` is a parallel active set, not a serial queue
 
