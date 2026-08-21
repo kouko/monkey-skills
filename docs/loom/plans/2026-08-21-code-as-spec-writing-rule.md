@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-21-code-as-spec-writing-rule.md
 Goal: 四份工件改成「散文只寫程式碼顯示不了的東西」，並把 oracle 的兩個能力宣稱從會消失的暫存檔升級成常設測試
-Stage: review:round-1
+Stage: review:round-2
 Total tasks: 7
 Critical-path depth: 2 (≤5)
 Execution order: parallel-where-possible
