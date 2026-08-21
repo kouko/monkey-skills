@@ -5,12 +5,10 @@
 skeleton from the templates shipped beside this script:
 
   docs/loom/backlog/README.md   — charter instance (templates/backlog-README.md)
-  docs/loom/DIRECTION.md        — direction skeleton (templates/DIRECTION.md);
-                                  its `## Now` body IS the generator's
-                                  empty-queue placeholder line, verbatim —
-                                  --direction-check diffs the whole section
-                                  against regenerated output, so any drift
-                                  in that line is exit 1
+  docs/loom/KICKOFF-DEFAULTS.md — kickoff-defaults skeleton
+                                  (templates/KICKOFF-DEFAULTS.md); an empty
+                                  `## On-ramp standing choices` section, the
+                                  home for repo-level on-ramp decisions
   docs/loom/PURPOSE.md          — purpose skeleton (templates/PURPOSE.md);
                                   a prompt for the author to fill in, never
                                   pre-filled prose — see its own file header
@@ -27,14 +25,14 @@ parent; `unknown` on any read failure) and thereafter belongs to the
 target repo. No drift checking, ever.
 
 Never overwrites: an existing `docs/loom/backlog/` (an adopted store) or
-an existing `docs/loom/DIRECTION.md` (human-owned themes) refuses with
-one explanatory line and exit 1, writing nothing.
+an existing `docs/loom/KICKOFF-DEFAULTS.md` (human-owned choices)
+refuses with one explanatory line and exit 1, writing nothing.
 
 Self-verify: after writing, the sibling `backlog_index.py` (resolved via
-Path(__file__).parent) runs `--validate` and `--direction-check
-docs/loom/DIRECTION.md` with cwd at the target repo; both exit codes are
-relayed, and any nonzero makes this script exit 1 — a scaffold that the
-live validators reject is a failure, not a success with caveats.
+Path(__file__).parent) runs `--validate` with cwd at the target repo;
+its exit code is relayed, and nonzero makes this script exit 1 — a
+scaffold that the live validator rejects is a failure, not a success
+with caveats.
 """
 
 from __future__ import annotations
@@ -68,12 +66,11 @@ def _instantiate(template: Path, dest: Path, stamp: str) -> None:
 
 
 def _self_verify(target: Path) -> int:
-    """Run the sibling validators against the fresh store; relay both exit
-    codes; return 0 only when both are 0."""
+    """Run the sibling validator against the fresh store; relay its exit
+    code; return 0 only when it is 0."""
     results: list[tuple[str, subprocess.CompletedProcess]] = []
     for label, argv in (
         ("--validate", ["--validate"]),
-        ("--direction-check", ["--direction-check", "docs/loom/DIRECTION.md"]),
     ):
         proc = subprocess.run(
             [sys.executable, str(BACKLOG_INDEX), *argv],
@@ -125,7 +122,7 @@ def main(argv: list[str]) -> int:
         pass
 
     store = target / "docs" / "loom" / "backlog"
-    direction = target / "docs" / "loom" / "DIRECTION.md"
+    kickoff_defaults = target / "docs" / "loom" / "KICKOFF-DEFAULTS.md"
     purpose = target / "docs" / "loom" / "PURPOSE.md"
     if store.is_dir():
         print(
@@ -140,10 +137,10 @@ def main(argv: list[str]) -> int:
             "re-running"
         )
         return 1
-    if direction.exists():
+    if kickoff_defaults.exists():
         print(
-            f"loom-init: refusing — {direction} already exists; its themes "
-            "are human-owned and loom-init never overwrites them"
+            f"loom-init: refusing — {kickoff_defaults} already exists; its "
+            "choices are human-owned and loom-init never overwrites them"
         )
         return 1
     if purpose.exists():
@@ -172,7 +169,7 @@ def main(argv: list[str]) -> int:
         keep_dir.mkdir(exist_ok=True)
         (keep_dir / ".gitkeep").touch()
     _instantiate(TEMPLATES_DIR / "backlog-README.md", store / "README.md", stamp)
-    _instantiate(TEMPLATES_DIR / "DIRECTION.md", direction, stamp)
+    _instantiate(TEMPLATES_DIR / "KICKOFF-DEFAULTS.md", kickoff_defaults, stamp)
     _instantiate(TEMPLATES_DIR / "PURPOSE.md", purpose, stamp)
 
     if _self_verify(target) != 0:
@@ -180,7 +177,7 @@ def main(argv: list[str]) -> int:
 
     print(
         f"loom-init: OK — queue layer scaffolded at {target} "
-        "(backlog charter + DIRECTION skeleton + PURPOSE skeleton + "
+        "(backlog charter + KICKOFF-DEFAULTS skeleton + PURPOSE skeleton + "
         "plans/ + specs/), self-verified against backlog_index.py"
     )
     return 0

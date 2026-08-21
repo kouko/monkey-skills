@@ -3,11 +3,11 @@ validators.
 
 Task 1 of docs/loom/plans/2026-08-10-loom-init-scaffold.md: 5 of 7
 consuming repos run without the queue layer because adoption requires
-hand-copying the charter + DIRECTION skeleton; the one repo that
+hand-copying the charter + kickoff-defaults skeleton; the one repo that
 hand-copied got drift. `loom_init.py` mints the store from templates
 shipped beside it and then self-verifies the fresh store by running the
-sibling `backlog_index.py --validate` and `--direction-check` — the same
-validators every adopted store lives under.
+sibling `backlog_index.py --validate` — the same validator every
+adopted store lives under.
 
 False-green discipline (docs/loom/memory/
 subprocess-red-tests-go-false-green-before-the-script-exists.md): the
@@ -43,14 +43,8 @@ SCRIPTS = Path(__file__).resolve().parent
 LOOM_INIT = SCRIPTS / "loom_init.py"
 BACKLOG_INDEX = SCRIPTS / "backlog_index.py"
 TEMPLATE_README = SCRIPTS / "templates" / "backlog-README.md"
-TEMPLATE_DIRECTION = SCRIPTS / "templates" / "DIRECTION.md"
+TEMPLATE_KICKOFF_DEFAULTS = SCRIPTS / "templates" / "KICKOFF-DEFAULTS.md"
 REPO_ROOT = SCRIPTS.parent.parent
-
-# The exact line backlog_index.py's --direction-write renders into `## Now`
-# for an EMPTY queue (backlog_index.py DIRECTION_EMPTY_QUEUE_LINE). The
-# template must carry it verbatim: --direction-check diffs the whole
-# section body against regenerated output, so any drift is exit 1.
-DIRECTION_PLACEHOLDER = "_(queue empty — bet at the next close-out)_"
 
 # Charter sections the scaffolded README must carry (structural pins on
 # the template — no validator reads the README, so this test is the guard).
@@ -100,7 +94,7 @@ def _scratch_scripts(tmp_path: Path) -> Path:
 def test_loom_init_ships_with_its_templates_and_runs(tmp_path):
     assert LOOM_INIT.is_file(), f"loom_init.py does not exist at {LOOM_INIT}"
     assert TEMPLATE_README.is_file(), f"missing template {TEMPLATE_README}"
-    assert TEMPLATE_DIRECTION.is_file(), f"missing template {TEMPLATE_DIRECTION}"
+    assert TEMPLATE_KICKOFF_DEFAULTS.is_file(), f"missing template {TEMPLATE_KICKOFF_DEFAULTS}"
     # Run probe against a tmp fixture with a pre-made store: the refusal
     # branch is a positive fact only a real run produces — and probing a
     # fixture keeps the suite decoupled from the live repo's adoption state.
@@ -129,26 +123,32 @@ def test_agents_md_declares_loom_init():
         "AGENTS.md managed command-surface block must declare loom_init.py"
 
 
-def test_direction_template_carries_the_placeholder_line_verbatim():
-    text = TEMPLATE_DIRECTION.read_text(encoding="utf-8")
-    assert f"\n{DIRECTION_PLACEHOLDER}\n" in text, (
-        "the DIRECTION template's ## Now body must carry the generator's "
-        f"empty-queue placeholder verbatim, got:\n{text}"
+def test_scaffold_creates_kickoff_defaults_not_direction(tmp_path):
+    """Task 6: loom_init scaffolds docs/loom/KICKOFF-DEFAULTS.md instead of
+    the old direction skeleton — a fresh scaffold target ends up with the
+    former and none of the latter."""
+    target = tmp_path / "repo"
+    _scaffold_ok(target)
+
+    loom = target / "docs" / "loom"
+    assert (loom / "KICKOFF-DEFAULTS.md").is_file(), "KICKOFF-DEFAULTS.md not scaffolded"
+    assert not (loom / ("DIREC" + "TION.md")).exists(), (
+        "loom_init must no longer scaffold the old direction skeleton"
     )
 
 
-def test_direction_scaffold_has_onramp_standing_choices_section(tmp_path):
-    """Task 6: the scaffolded DIRECTION.md carries an empty
+def test_kickoff_defaults_scaffold_has_onramp_standing_choices_section(tmp_path):
+    """Task 6: the scaffolded KICKOFF-DEFAULTS.md carries an empty
     `## On-ramp standing choices` section so a fresh repo does not need
     a manual first-touch addition before check_onramp_choice.py can
     read it."""
     target = tmp_path / "repo"
     result = _scaffold_ok(target)
 
-    direction = target / "docs" / "loom" / "DIRECTION.md"
-    text = direction.read_text(encoding="utf-8")
+    kickoff_defaults = target / "docs" / "loom" / "KICKOFF-DEFAULTS.md"
+    text = kickoff_defaults.read_text(encoding="utf-8")
     assert "## On-ramp standing choices" in text, (
-        f"scaffolded DIRECTION.md missing the section, got:\n{text}\n"
+        f"scaffolded KICKOFF-DEFAULTS.md missing the section, got:\n{text}\n"
         f"{result.stdout}{result.stderr}"
     )
 
@@ -166,24 +166,27 @@ def test_refuses_when_the_store_already_exists(tmp_path):
     assert sentinel.read_text(encoding="utf-8").startswith("SENTINEL"), (
         "loom-init must never touch an existing store"
     )
-    assert not (target / "docs" / "loom" / "DIRECTION.md").exists(), (
+    assert not (target / "docs" / "loom" / "KICKOFF-DEFAULTS.md").exists(), (
         "refusal must write nothing at all"
     )
 
 
-def test_refuses_when_direction_exists_without_a_store(tmp_path):
-    """Half-adopted repo: DIRECTION.md present, backlog absent. The verb's
-    never-overwrite posture covers the human-owned DIRECTION themes too."""
+def test_refuses_when_kickoff_defaults_exists_without_a_store(tmp_path):
+    """Half-adopted repo: KICKOFF-DEFAULTS.md present, backlog absent. The
+    verb's never-overwrite posture covers the human-owned choices too."""
     target = tmp_path / "repo"
     loom = target / "docs" / "loom"
     loom.mkdir(parents=True)
-    direction = loom / "DIRECTION.md"
-    direction.write_text("# Direction\n\n## Now\n\nhuman themes\n", encoding="utf-8")
+    kickoff_defaults = loom / "KICKOFF-DEFAULTS.md"
+    kickoff_defaults.write_text(
+        "# Kickoff Defaults\n\n## On-ramp standing choices\n\nhuman choices\n",
+        encoding="utf-8",
+    )
 
     result = _run_init(target)
     assert result.returncode == 1, result.stdout + result.stderr
-    assert "DIRECTION.md" in result.stdout, result.stdout + result.stderr
-    assert "human themes" in direction.read_text(encoding="utf-8")
+    assert "KICKOFF-DEFAULTS.md" in result.stdout, result.stdout + result.stderr
+    assert "human choices" in kickoff_defaults.read_text(encoding="utf-8")
 
 
 def test_refuses_when_purpose_exists_and_never_overwrites_it(tmp_path):
@@ -212,9 +215,9 @@ def test_scaffold_creates_all_artifacts_with_vintage_stamps(tmp_path):
 
     loom = target / "docs" / "loom"
     readme = loom / "backlog" / "README.md"
-    direction = loom / "DIRECTION.md"
+    kickoff_defaults = loom / "KICKOFF-DEFAULTS.md"
     assert readme.is_file(), "charter instance missing"
-    assert direction.is_file(), "DIRECTION skeleton missing"
+    assert kickoff_defaults.is_file(), "KICKOFF-DEFAULTS skeleton missing"
     assert (loom / "plans" / ".gitkeep").is_file(), "plans/ not git-persistable"
     assert (loom / "specs" / ".gitkeep").is_file(), "specs/ not git-persistable"
 
@@ -224,16 +227,15 @@ def test_scaffold_creates_all_artifacts_with_vintage_stamps(tmp_path):
         )
     )["version"]
     stamp = f"<!-- scaffolded by loom-init (loom-code {expected_version}) -->"
-    for path in (readme, direction):
+    for path in (readme, kickoff_defaults):
         first_line = path.read_text(encoding="utf-8").splitlines()[0]
         assert first_line == stamp, (
             f"{path.name} first line is {first_line!r}, expected {stamp!r}"
         )
 
-    # The contract says the two validator exit codes are RELAYED, not
-    # swallowed into a bare success line.
+    # The contract says the validator exit code is RELAYED, not swallowed
+    # into a bare success line.
     assert "--validate exit 0" in result.stdout, result.stdout
-    assert "--direction-check exit 0" in result.stdout, result.stdout
 
 
 def test_scaffold_creates_purpose_md_with_prompt_not_prose(tmp_path):
@@ -250,9 +252,10 @@ def test_scaffold_creates_purpose_md_with_prompt_not_prose(tmp_path):
     # The template body is a PROMPT to the author, never pre-filled prose —
     # a filled-in template would pass this same check while saying nothing
     # (docs/loom/specs/2026-08-20-north-star-serves-link.md ## Decision).
-    # DIRECTION.md's own placeholder line is the negative control: it is
-    # not purpose prose, so its presence in PURPOSE.md would mean the
-    # wrong template got copied, not that PURPOSE.md was pre-filled.
+    # The old direction skeleton's placeholder line is the negative
+    # control: it is not purpose prose, so its presence in PURPOSE.md
+    # would mean the wrong template got copied, not that PURPOSE.md was
+    # pre-filled.
     assert "queue empty" not in text
     assert "one sentence" in text.lower() or "one-sentence" in text.lower()
 
@@ -274,24 +277,6 @@ def test_fresh_store_passes_the_real_validators(tmp_path):
     )
     assert validate.returncode == 0, validate.stdout + validate.stderr
 
-    direction_check = subprocess.run(
-        [
-            sys.executable,
-            str(BACKLOG_INDEX),
-            "--direction-check",
-            "docs/loom/DIRECTION.md",
-        ],
-        capture_output=True,
-        text=True,
-        cwd=target,
-    )
-    assert "backlog_index --direction-check: OK" in direction_check.stdout, (
-        direction_check.stdout + direction_check.stderr
-    )
-    assert direction_check.returncode == 0, (
-        direction_check.stdout + direction_check.stderr
-    )
-
 
 def test_scaffolded_readme_carries_the_charter_sections(tmp_path):
     target = tmp_path / "repo"
@@ -301,29 +286,6 @@ def test_scaffolded_readme_carries_the_charter_sections(tmp_path):
     )
     for heading in REQUIRED_CHARTER_HEADINGS:
         assert heading in readme, f"charter instance lost section {heading!r}"
-
-
-def test_mutation_stripped_placeholder_turns_init_self_verify_red(tmp_path):
-    """Mutate the INPUT (DIRECTION template loses the placeholder line) and
-    run the whole PRODUCTION pipeline: init's self-verify must go red and
-    init itself must exit 1."""
-    scratch = _scratch_scripts(tmp_path)
-    template = scratch / "templates" / "DIRECTION.md"
-    text = template.read_text(encoding="utf-8")
-    mutated = text.replace(f"{DIRECTION_PLACEHOLDER}\n", "")
-    assert DIRECTION_PLACEHOLDER not in mutated, "mutation did not apply"
-    template.write_text(mutated, encoding="utf-8")
-
-    target = tmp_path / "repo"
-    target.mkdir()
-    result = subprocess.run(
-        [sys.executable, str(scratch / "loom_init.py"), str(target)],
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 1, result.stdout + result.stderr
-    assert "loom-init: FAIL" in result.stdout, result.stdout + result.stderr
-    assert "loom-init: OK" not in result.stdout, result.stdout
 
 
 def test_mutation_stripped_charter_section_fails_the_production_assertion(
@@ -364,8 +326,8 @@ def test_refuses_before_any_write_when_a_file_blocks_a_scaffold_path(tmp_path):
     assert not (target / "docs" / "loom" / "backlog").exists(), (
         "residue: backlog/ was created before the refusal"
     )
-    assert not (target / "docs" / "loom" / "DIRECTION.md").exists(), (
-        "residue: DIRECTION.md was created before the refusal"
+    assert not (target / "docs" / "loom" / "KICKOFF-DEFAULTS.md").exists(), (
+        "residue: KICKOFF-DEFAULTS.md was created before the refusal"
     )
 
 
@@ -389,7 +351,7 @@ def test_nested_cwd_run_warns_but_proceeds(tmp_path):
     assert (sub / "docs" / "loom" / "backlog" / "README.md").is_file(), (
         "advisory must never block the scaffold"
     )
-    assert (sub / "docs" / "loom" / "DIRECTION.md").is_file(), (
+    assert (sub / "docs" / "loom" / "KICKOFF-DEFAULTS.md").is_file(), (
         "advisory must never block the scaffold"
     )
     assert "not the git repo root" in result.stderr, result.stderr
@@ -422,86 +384,13 @@ def test_stray_file_at_store_path_is_not_called_adoption(tmp_path):
     assert "adopted the queue layer" not in result.stdout, result.stdout
 
 
-# Task 5 of docs/loom/plans/2026-08-20-north-star-serves-link.md: the
-# 18-line Charter block moves out of DIRECTION.md and its template into
-# a dedicated on-demand file. family-reception.md is loaded by five
-# skills per touch and carries a line budget precisely to stay cheap —
-# per-DIRECTION.md-file editing rules belong somewhere read only by
-# someone editing DIRECTION.md, not preloaded for every family-reception
-# reader. Normalized (whitespace-collapsed) so line-wrap position isn't
-# part of the pin — wording is.
-FAMILY_RECEPTION = REPO_ROOT / "loom-code" / "hooks" / "family-reception.md"
-DIRECTION_CHARTER_FILE = REPO_ROOT / "loom-code" / "hooks" / "direction-charter.md"
-LIVE_DIRECTION = REPO_ROOT / "docs" / "loom" / "DIRECTION.md"
-ROADMAP = REPO_ROOT / "loom-code" / "ROADMAP.md"
-
-DIRECTION_CHARTER_RULES = (
-    "`## Now` is GENERATED from COMMITTED-NEXT entry files by "
-    "`scripts/backlog_index.py --direction-write docs/loom/DIRECTION.md` "
-    "(repo-root first, else the loom-code plugin copy) — never hand-edit it.",
-    "`## Now` is a PARALLEL ACTIVE SET, not a serial queue: one entry "
-    "typically maps to one worktree/lane; the ≤5 cap is parallel-steering "
-    "capacity.",
-    "`## Next` (scaffolded) and an optional `## Later` — a repo may add "
-    "one, it is not part of the scaffold — are human-written themes "
-    "only; a `## Next` line MAY point at a roadmap entry in "
-    "`docs/loom/backlog/` by filename (the filename's date prefix — "
-    "YYYY-MM-DD — is a file identifier, exempt from the no-dates rule "
-    "below).",
-    "No dates anywhere in this file (entry names inside the generated "
-    "`## Now` are exempt — file identifiers, not schedule promises).",
-    "Betting promotes backlog entries to COMMITTED-NEXT — user-only; "
-    "agents never promote.",
-    "On a `## Now` merge conflict: take either side wholesale, then "
-    "regenerate via `--direction-write` — never hand-merge.",
-)
+# Fix round on Task 5 (code-quality review NEEDS_REVISION): three residual
+# false statements left over from the charter move above.
 
 
 def _normalized(text: str) -> str:
     return " ".join(text.split())
 
-
-def test_direction_charter_lives_in_dedicated_charter_file():
-    assert DIRECTION_CHARTER_FILE.exists(), (
-        f"expected dedicated charter file missing: {DIRECTION_CHARTER_FILE}"
-    )
-    charter_file = _normalized(DIRECTION_CHARTER_FILE.read_text(encoding="utf-8"))
-    family_reception = _normalized(FAMILY_RECEPTION.read_text(encoding="utf-8"))
-    live_direction = _normalized(LIVE_DIRECTION.read_text(encoding="utf-8"))
-    template_direction = _normalized(TEMPLATE_DIRECTION.read_text(encoding="utf-8"))
-
-    for rule in DIRECTION_CHARTER_RULES:
-        normalized_rule = _normalized(rule)
-        assert normalized_rule in charter_file, (
-            f"direction-charter.md missing charter rule verbatim: {rule!r}"
-        )
-        assert normalized_rule not in family_reception, (
-            f"family-reception.md must no longer carry charter rule: {rule!r}"
-        )
-        assert normalized_rule not in live_direction, (
-            f"docs/loom/DIRECTION.md still carries charter rule: {rule!r}"
-        )
-        assert normalized_rule not in template_direction, (
-            f"template DIRECTION.md still carries charter rule: {rule!r}"
-        )
-
-    # family-reception.md must point at the new home, not hold the rules.
-    assert "direction-charter.md" in family_reception.replace(" ", ""), (
-        "family-reception.md must point readers at direction-charter.md"
-    )
-
-    roadmap_text = ROADMAP.read_text(encoding="utf-8")
-    assert "see its charter header" not in roadmap_text, (
-        "ROADMAP.md must no longer point at a DIRECTION.md-resident charter, "
-        f"got:\n{roadmap_text[:400]}"
-    )
-    assert "direction-charter.md" in roadmap_text, (
-        "ROADMAP.md's charter pointer must retarget to direction-charter.md"
-    )
-
-
-# Fix round on Task 5 (code-quality review NEEDS_REVISION): three residual
-# false statements left over from the charter move above.
 
 BACKLOG_README = REPO_ROOT / "docs" / "loom" / "backlog" / "README.md"
 TEMPLATE_BACKLOG_README = (
@@ -522,13 +411,15 @@ FALSE_SSOT_CLAIM = "charter header — the convention's SSOT."
 
 
 def test_no_file_claims_direction_md_charter_header_is_the_ssot():
-    # Finding 1: the charter moved out of DIRECTION.md, but this claim
-    # (live doc + its scaffold template) was never updated to say so.
+    # Finding 1: the charter moved out of the old direction skeleton, but
+    # this claim (live doc + its scaffold template) was never updated to
+    # say so.
     for path in (BACKLOG_README, TEMPLATE_BACKLOG_README):
         text = path.read_text(encoding="utf-8")
         assert FALSE_SSOT_CLAIM not in text, (
-            f"{path} still claims DIRECTION.md's charter header is the SSOT, "
-            "but the charter now lives in direction-charter.md"
+            f"{path} still claims the old direction skeleton's charter "
+            "header is the SSOT, but the charter now lives in "
+            "direction-charter.md"
         )
 
 
@@ -540,28 +431,12 @@ def test_all_sibling_roadmaps_retarget_the_charter_pointer():
         assert path.exists(), f"expected sibling roadmap missing: {path}"
         text = path.read_text(encoding="utf-8")
         assert "see its charter header" not in text, (
-            f"{path} still points at a DIRECTION.md-resident charter header"
+            f"{path} still points at the old direction-skeleton-resident "
+            "charter header"
         )
         assert "direction-charter.md" in text, (
             f"{path}'s charter pointer must retarget to direction-charter.md"
         )
-
-
-def test_direction_charter_file_direction_write_invocation_carries_a_path():
-    # Finding 3: the charter's --direction-write invocation names the
-    # actual invocation `scripts/backlog_index.py --direction-write` with
-    # no PATH argument, which the real CLI rejects (argparse requires
-    # it). The shorthand back-reference at "regenerate via
-    # --direction-write" is a verb reference, not an invocation, and is
-    # untouched by this assert.
-    normalized_text = _normalized(DIRECTION_CHARTER_FILE.read_text(encoding="utf-8"))
-    assert (
-        "`scripts/backlog_index.py --direction-write docs/loom/DIRECTION.md`"
-        in normalized_text
-    ), (
-        "direction-charter.md's --direction-write invocation is missing its "
-        "required PATH argument"
-    )
 
 
 # Plan Task 2 (2026-08-20-north-star-serves-link.md) — the `serves:`
@@ -617,29 +492,6 @@ def _stripped_blockquote(text: str) -> str:
     return _normalized("\n".join(lines))
 
 
-def test_scaffolded_direction_pointer_does_not_name_an_unresolvable_repo_path(
-    tmp_path,
-):
-    target = tmp_path / "repo"
-    _scaffold_ok(target)
-
-    direction = _stripped_blockquote(
-        (target / "docs" / "loom" / "DIRECTION.md").read_text(encoding="utf-8")
-    )
-    assert "`loom-code/hooks/direction-charter.md`" not in direction, (
-        "scaffolded DIRECTION.md must not name a bare repo-relative path "
-        "to the plugin's hook file — that path does not exist in a "
-        "consuming repo"
-    )
-    assert "the loom-code plugin's `hooks/direction-charter.md`" in direction, (
-        "scaffolded DIRECTION.md must name the charter pointer as the "
-        "loom-code plugin's file, not a repo-relative path"
-    )
-    assert not (target / "loom-code").exists(), (
-        "sanity check: a fresh scaffold target has no loom-code/ directory"
-    )
-
-
 def test_scaffolded_backlog_readme_pointer_does_not_name_an_unresolvable_repo_path(
     tmp_path,
 ):
@@ -675,44 +527,25 @@ def test_loom_init_ok_message_lists_purpose_skeleton(tmp_path):
     )
 
 
-def test_direction_charter_file_does_not_present_later_as_a_current_section():
-    # F6: the charter says "`## Next` / `## Later` are human-written
-    # themes only" as if both are scaffolded, live sections.
-    # templates/DIRECTION.md drops `## Later` entirely, and
-    # find_direction_violations only requires `## Now` / `## Next`
-    # (backlog_index.py) — `## Later` must read as optional, not standard.
-    text = DIRECTION_CHARTER_FILE.read_text(encoding="utf-8")
-    assert "## Later" not in TEMPLATE_DIRECTION.read_text(encoding="utf-8"), (
-        "sanity check: the template must not scaffold ## Later"
-    )
-    idx = text.index("`## Next` / `## Later`") if "`## Next` / `## Later`" in text else -1
-    assert idx == -1, (
-        "direction-charter.md must not present `## Next` / `## Later` as "
-        "parallel scaffolded sections when only `## Next` is scaffolded "
-        f"and `## Later` is optional:\n{text}"
-    )
-    assert "optional" in text.lower() and "## Later" in text, (
-        "direction-charter.md must describe `## Later` as an optional "
-        f"section, not a standard one:\n{text}"
-    )
-
-
-def test_scaffolded_direction_onramp_comment_does_not_name_an_unresolvable_repo_path(
+def test_scaffolded_kickoff_defaults_onramp_comment_does_not_name_an_unresolvable_repo_path(
     tmp_path,
 ):
-    # Final-sweep finding, same shape as F2: the On-ramp standing choices
-    # HTML comment also named the bare repo-relative hook path.
+    # Same shape as F2: the On-ramp standing choices HTML comment must not
+    # name the bare repo-relative hook path — that path does not exist in
+    # a consuming repo.
     target = tmp_path / "repo"
     _scaffold_ok(target)
 
-    direction = _stripped_blockquote(
-        (target / "docs" / "loom" / "DIRECTION.md").read_text(encoding="utf-8")
+    kickoff_defaults = _stripped_blockquote(
+        (target / "docs" / "loom" / "KICKOFF-DEFAULTS.md").read_text(
+            encoding="utf-8"
+        )
     )
-    assert "owned by loom-code/hooks/family-reception.md" not in direction, (
-        "scaffolded DIRECTION.md's on-ramp comment must not name a bare "
-        "repo-relative path to the plugin's hook file"
+    assert "owned by loom-code/hooks/family-reception.md" not in kickoff_defaults, (
+        "scaffolded KICKOFF-DEFAULTS.md's on-ramp comment must not name a "
+        "bare repo-relative path to the plugin's hook file"
     )
-    assert "owned by the loom-code plugin's" in direction, (
-        "scaffolded DIRECTION.md's on-ramp comment must name the pointer "
-        "as the loom-code plugin's file, not a repo-relative path"
+    assert "owned by the loom-code plugin's" in kickoff_defaults, (
+        "scaffolded KICKOFF-DEFAULTS.md's on-ramp comment must name the "
+        "pointer as the loom-code plugin's file, not a repo-relative path"
     )

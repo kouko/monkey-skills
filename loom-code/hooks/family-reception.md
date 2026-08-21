@@ -69,7 +69,7 @@ This table is the single source of truth — every family entry's §Intake refer
 | 3 | The work is multi-state/multi-object behavior AND no spec or change-folder exists for it | Suggest **using-loom-design first** (routes to the spec station) |
 | Negative guard | The work is a bug fix, a refactor, or a test-covered increment | **Do not interrupt** — proceed directly, skip the recommendation silently |
 | 4 | The work is product-shaped AND no `docs/loom/discovery/*/user-insights.md` already covers it AND the problem/users cannot yet be articulated with evidence (the user would be guessing at who-needs-what) | Suggest **using-loom-design first** (routes to the discovery station) |
-| 5 | Neither `docs/loom/backlog/` nor `docs/loom/DIRECTION.md` in the target repo (the queue layer is not adopted; the verb refuses on either existing) AND the work is loom-family-scoped | Suggest running **loom-init** once — the scaffold verb shipped in loom-code |
+| 5 | Neither `docs/loom/backlog/` nor `docs/loom/KICKOFF-DEFAULTS.md` in the target repo (the queue layer is not adopted; the verb refuses on either existing) AND the work is loom-family-scoped | Suggest running **loom-init** once — the scaffold verb shipped in loom-code |
 
 When both row 4 and row 1 fire, recommend discovery first — the principles station consumes discovery's value-commitment output.
 
@@ -86,14 +86,14 @@ the same task.
 ### On-ramp standing choices
 
 A repo may pre-answer a row for every future arc instead of asking
-each time. Record that in `docs/loom/DIRECTION.md` under
+each time. Record that in `docs/loom/KICKOFF-DEFAULTS.md` under
 `## On-ramp standing choices`, one entry per row:
 
 `- row <n> (<station>): standing <direct|detour> — <reason> (<YYYY-MM-DD>)`
 
 A standing entry lets Axis 0 write the `standing` form on the brief
 line without asking. It is a decision, revisited only by editing
-DIRECTION.md.
+KICKOFF-DEFAULTS.md.
 
 ## Intake hygiene
 
@@ -109,10 +109,6 @@ guard refuse an unresolved on-ramp line. See `handoff-brief-format.md`
 for the brief line's grammar. (Evidence + contamination caveats:
 monkey-skills `docs/harness-audit/2026-07-06-iteration-roadmap.md`
 item 7.)
-
-## DIRECTION.md charter
-
-Rules for editing `docs/loom/DIRECTION.md`: [`direction-charter.md`](direction-charter.md) (read on demand, never copied here).
 
 ## Recall before you start
 
