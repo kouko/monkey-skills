@@ -90,6 +90,9 @@ def test_axis0_reads_ready_not_direction():
     that layer itself no longer exists for Axis 0 to read)."""
     axis0 = _axis0_section()
     assert "--ready" in axis0, "Axis 0 must instruct the --ready read"
+    # Split so this test's own source carries no matching substring —
+    # otherwise it would trip the arc sweep's own grep pattern
+    # (see the arc sweep pattern in the plan's `## Notes`).
     direction_token = "DIREC" + "TION"
     assert direction_token not in axis0, \
         "Axis 0 must not instruct reading the deleted direction layer"

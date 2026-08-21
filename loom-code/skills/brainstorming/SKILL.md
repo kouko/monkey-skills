@@ -72,7 +72,7 @@ multi-state new work.
 **Backlog ready check** — when the target repo has
 `docs/loom/backlog/`, run `python3 scripts/backlog_index.py --ready`
 before settling the arc's scope, and surface to the user any
-COMMITTED-NEXT items plus OPEN items related to the seed idea (no
+`bet` items plus `open` items related to the seed idea (no
 store, or neither copy of `backlog_index.py` → skip silently, N/A).
 Repo-root `scripts/backlog_index.py` when it exists; otherwise run
 the plugin-shipped copy:
