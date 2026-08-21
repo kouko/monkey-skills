@@ -50,7 +50,7 @@ REPO_ROOT = SCRIPTS.parent.parent
 # the template — no validator reads the README, so this test is the guard).
 REQUIRED_CHARTER_HEADINGS = (
     "## Frontmatter contract",
-    "## Closed status vocabulary",
+    "## Status word definitions",
     "## Verbs",
     "## Filename rule",
     "is generated — never hand-edit it",  # ## `docs/loom/BACKLOG.md` heading
@@ -298,7 +298,7 @@ def test_mutation_stripped_charter_section_fails_the_production_assertion(
     scratch = _scratch_scripts(tmp_path)
     template = scratch / "templates" / "backlog-README.md"
     text = template.read_text(encoding="utf-8")
-    mutated = text.replace("## Closed status vocabulary", "## (section removed)")
+    mutated = text.replace("## Status word definitions", "## (section removed)")
     assert mutated != text, "mutation did not apply"
     template.write_text(mutated, encoding="utf-8")
 
@@ -448,8 +448,8 @@ def test_backlog_readmes_document_serves_contract():
     # No registered REQ-ids in this plan's dispatch — @req tag omitted.
     for path in (BACKLOG_README, TEMPLATE_BACKLOG_README):
         text = path.read_text(encoding="utf-8")
-        assert "COMMITTED-NEXT" in text and "serves" in text, (
-            f"{path} must document the serves: field alongside COMMITTED-NEXT"
+        assert "bet" in text and "serves" in text, (
+            f"{path} must document the serves: field alongside the bet status word"
         )
         assert "serves: unrelated" in text, (
             f"{path} must show the 'serves: unrelated — <reason>' canonical form"
@@ -482,6 +482,17 @@ def test_backlog_readmes_document_serves_contract():
 # the CONSUMING repo. It does not — loom-code is a plugin, not a vendored
 # directory. The scaffolded output (not just the template's raw text) is
 # the thing that must read correctly outside this plugin repo.
+#
+# Round 2 (2026-08-21, DL-10): Task 11's charter rewrite dropped the
+# direction-charter.md pointer this test originally pinned (that file dies
+# in Task 14 of docs/loom/plans/2026-08-21-dissolve-direction-layer.md).
+# The concern — a scaffolded pointer must not name a bare repo-relative
+# path that won't resolve outside this plugin repo — still applies, and
+# the charter still carries exactly this shape for the archive script
+# pointer: the template uses the `<loom-code plugin>` placeholder while
+# this repo's own live instance (docs/loom/backlog/README.md, which is
+# NOT scaffolded output) is free to name the bare path because loom-code
+# really is vendored here. Re-pointed at that pointer.
 
 
 def _stripped_blockquote(text: str) -> str:
@@ -503,14 +514,15 @@ def test_scaffolded_backlog_readme_pointer_does_not_name_an_unresolvable_repo_pa
             encoding="utf-8"
         )
     )
-    assert "`loom-code/hooks/direction-charter.md`" not in readme, (
+    assert "loom-code/scripts/archive_change_folder.py" not in readme, (
         "scaffolded backlog README.md must not name a bare repo-relative "
-        "path to the plugin's hook file — that path does not exist in a "
-        "consuming repo"
+        "path to the plugin's archive script — that path only resolves "
+        "when loom-code happens to be vendored at that path, which is not "
+        "true of every consuming repo"
     )
-    assert "the loom-code plugin's `hooks/direction-charter.md`" in readme, (
-        "scaffolded backlog README.md must name the charter pointer as the "
-        "loom-code plugin's file, not a repo-relative path"
+    assert "<loom-code plugin>/scripts/archive_change_folder.py" in readme, (
+        "scaffolded backlog README.md must name the archive script pointer "
+        "via the loom-code-plugin placeholder, not a repo-relative path"
     )
 
 
