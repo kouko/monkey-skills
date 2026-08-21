@@ -94,6 +94,20 @@ must be able to act on it. State what the item is, why it matters, and
 what the next step is, inside the entry itself. Do not write a body
 that only makes sense to someone who already knows the context.
 
+## Status word definitions
+
+This is the canonical definition of every status word and the
+`blocked:` field — meaning, who sets it, when it flips, what duties
+attach. Every skill surface that reads or flips a status points at
+this block; none paraphrases it.
+
+| Word | Means | Set by | Flips when | Duties attached |
+|---|---|---|---|---|
+| `open` | Recorded, not chosen. The default at creation; may stay open forever. | Anyone filing an entry | → `bet` at a betting moment; → `closed` when shipped/superseded/abandoned | Optional `start:` memo (prose trigger, never machine-read). Optional `blocked: <reason>` — present ⇒ excluded from `--ready`. |
+| `bet` | Chosen by the user at a close-out betting moment as what the repo works on next. A bet can be lost — dropping one back to `open` is legal and carries no ceremony beyond removing the promotion. | **User only** — agents never promote | → `closed` at that arc's close-out; → `open` if the user withdraws it | Must carry a well-formed `serves:` line (`check_north_star_link.py`); the queue-relation gate resolves `in-queue:`/`displaces:` against live bets. |
+| `closed` | This line ended — shipped, superseded, or deliberately abandoned. The reason is one body line naming the evidence (branch/PR/decision), not a status variant. | Agent at close-out, per the user's instruction | Terminal (an entry under `archive/` is `closed` by construction) | Body line naming the evidence. |
+| `blocked:` (field, not a status) | Why this `open` entry cannot be picked right now. | Whoever knows the fact | Delete the line when the impediment lifts — the entry re-enters `--ready` | None — it is a filter flag, `--ready` is its only reader. |
+
 ## Closed status vocabulary
 
 The `status` field is a closed enum — exactly these seven values, no
@@ -101,13 +115,10 @@ others. Pick by what is *blocking the item*, not by how important it
 feels:
 
 - `COMMITTED-NEXT` — decided, scheduled, and active/claimed for the
-  parallel set. Nothing is blocking it but our own turn to start. When
-  `docs/loom/DIRECTION.md` exists, this queue is mirrored into its
-  generated `## Now` section by `scripts/backlog_index.py
-  --direction-write` (see §Verbs' Bet flow). This is a PARALLEL ACTIVE
-  SET, not a serial queue: one entry typically maps to one
-  worktree/lane, and the ≤5 cap is parallel-steering capacity. See
-  `loom-code/hooks/direction-charter.md` — the convention's SSOT.
+  parallel set. Nothing is blocking it but our own turn to start. This
+  is a PARALLEL ACTIVE SET, not a serial queue: one entry typically
+  maps to one worktree/lane, and the ≤5 cap is parallel-steering
+  capacity.
 - `OPEN` — agreed to be worth doing, not yet scheduled. Anyone may
   pick it up.
 - `PARKED` — deliberately not being done for now, with the reason
@@ -156,26 +167,23 @@ else only writes it.
 - **Bet (promote)** — promoting a backlog entry into `COMMITTED-NEXT`
   is **user-only**; agents never promote. Triggered by
   `finishing-a-development-branch`'s close-out when that close-out
-  flips a backlog entry (the duty lives in its Backlog-close row), the
-  `COMMITTED-NEXT` queue is empty after the flip, and the repo has
-  `docs/loom/DIRECTION.md` — or manually at any time. Candidates: the
-  active roadmap entries' next arcs first (same-lane first — when an
-  arc of theme X just closed, theme X's next arc leads the list), then
-  the ready query's `OPEN` output. To promote, the user edits the
-  chosen entry's `status:` to `COMMITTED-NEXT`; `--write` and
-  `--direction-write` then regenerate `BACKLOG.md` and DIRECTION.md's
-  `## Now` from it. Those flags belong to the same script, resolved per
-  the generated-index section below (repo-root first, else the
-  loom-code plugin copy).
+  flips a backlog entry (the duty lives in its Backlog-close row) and
+  the `COMMITTED-NEXT` queue is empty after the flip — or manually at
+  any time. Candidates: the active roadmap entries' next arcs first
+  (same-lane first — when an arc of theme X just closed, theme X's
+  next arc leads the list), then the ready query's `OPEN` output. To
+  promote, the user edits the chosen entry's `status:` to
+  `COMMITTED-NEXT`; `--write` then regenerates `BACKLOG.md` from it.
+  The flag belongs to the same script, resolved per the
+  generated-index section below (repo-root first, else the loom-code
+  plugin copy).
 
 ## Roadmap entries — a named pattern, not a new file type
 
 A **roadmap entry** is an ordinary backlog entry whose body is an
-ordered arc list with dependency notes, serving one DIRECTION theme —
-not a new file type, not a DIRECTION section. `docs/loom/DIRECTION.md`'s
-`## Next` lines may point at one by filename (the filename's date
-prefix is a file identifier, exempt from DIRECTION.md's no-dates
-rule). As each arc ships, its evidence line accumulates in the entry's
+ordered arc list with dependency notes, serving one theme across
+multiple arcs — not a new file type. As each arc ships, its evidence
+line accumulates in the entry's
 body rather than opening a new entry per arc. Precedent for the shape
 (not the cadence — per-arc
 evidence accumulation is the prescription going forward):
