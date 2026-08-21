@@ -37,42 +37,40 @@ check_onramp_choice = importlib.util.module_from_spec(_ONRAMP_SPEC)
 sys.modules["check_onramp_choice"] = check_onramp_choice
 _ONRAMP_SPEC.loader.exec_module(check_onramp_choice)
 
-# Transcribed VERBATIM from the plan's §Pinned frontmatter contract
-# (docs/loom/plans/2026-08-01-backlog-one-entry-per-file.md, ## Notes).
-CLOSED_STATUS_VOCABULARY = [
-    "COMMITTED-NEXT",
-    "OPEN",
-    "PARKED",
-    "UPSTREAM",
-    "SHIPPED",
-    "CLOSED — SUPERSEDED",
-    "archived",
-]
+def _charter_status_word_section(text: str | None = None) -> str:
+    """The charter's §Status word definitions body, nothing else.
 
+    Scoped deliberately (mirrors the retired §Closed status vocabulary
+    scoping): the status words also appear throughout the charter's
+    ordinary prose, so a whole-file substring search cannot tell "the
+    table documents this value" from "the English word happens to
+    occur". Section-scoped is what makes the assertion fail when a
+    table row is actually removed.
 
-def _charter_vocabulary_section() -> str:
-    """The charter's §Closed status vocabulary body, nothing else.
-
-    Scoped deliberately: the bare word "archived" also appears ~8 times in
-    the charter's ordinary archive-rule prose, so a whole-file substring
-    search cannot tell "the enum documents this value" from "the English
-    word happens to occur". Section-scoped + backtick-fenced is what makes
-    the assertion fail when an enum entry is actually removed.
+    Accepts optional `text` so the mutation-kill check below can probe a
+    scratch copy of the charter without touching the real file.
     """
-    text = CHARTER_PATH.read_text(encoding="utf-8")
-    _, _, after = text.partition("## Closed status vocabulary")
-    assert after, "charter has no '## Closed status vocabulary' section"
+    if text is None:
+        text = CHARTER_PATH.read_text(encoding="utf-8")
+    _, _, after = text.partition("## Status word definitions")
+    assert after, "charter has no '## Status word definitions' section"
     body, _, _ = after.partition("\n## ")
     return body
 
 
 def test_charter_documents_the_closed_status_vocabulary():
+    """The charter's status-word table must list exactly the words the
+    code enforces (`backlog_index.CLOSED_STATUS_VOCABULARY`) — not a
+    heading pin that would pass even if the charter documented the wrong
+    words. Table row shape: "| `<word>` | ... |" (see
+    docs/loom/backlog/README.md, ## Status word definitions).
+    """
     assert CHARTER_PATH.is_file(), f"charter missing at {CHARTER_PATH}"
-    section = _charter_vocabulary_section()
-    for status in CLOSED_STATUS_VOCABULARY:
-        assert f"- `{status}`" in section, (
-            f"charter's vocabulary section does not LIST status {status!r} "
-            f"as an enum bullet (prose mentioning it does not count)"
+    section = _charter_status_word_section()
+    for status in backlog_index.CLOSED_STATUS_VOCABULARY:
+        assert f"| `{status}` |" in section, (
+            f"charter's status word table does not LIST status {status!r} "
+            f"as a table row (prose mentioning it does not count)"
         )
 
 
