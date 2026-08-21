@@ -195,23 +195,6 @@ def test_unclosed_frontmatter_treated_as_plain_body(tmp_path):
     assert "title: Add widget" in text  # original (unclosed) text preserved as body
 
 
-def test_duplicate_status_keys_read_last_wins(tmp_path):
-    """A frontmatter block carrying `status:` twice must be read as the
-    LAST occurrence, matching `backlog_index.parse_frontmatter`'s
-    last-wins resolution of duplicate keys — not the first match.
-
-    Regression for docs/loom/backlog/2026-08-02-backlog-index-two-
-    frontmatter-readers-disagree-on-duplicate-keys.md: `_read_status` used
-    to `re.search` (first match: `closed`) while `parse_frontmatter`
-    iterates and overwrites (last match: `open`) — the same bytes read
-    two different statuses depending which reader touched them."""
-    mod = _load(_MODULE_PATH, "archive_change_folder")
-
-    assert mod._read_status(
-        "---\nstatus: closed\nstatus: open\n---\n\n## Why\nBecause.\n"
-    ) == "open"
-
-
 # --- refusal cases -------------------------------------------------------
 
 def test_refuses_missing_change_folder(tmp_path):

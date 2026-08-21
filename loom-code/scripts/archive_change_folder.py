@@ -97,7 +97,6 @@ from pathlib import Path
 from typing import Callable
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from backlog_index import parse_frontmatter  # noqa: E402
 
 _FRONTMATTER_RE = re.compile(r"\A---\n(.*?\n)---\n", re.DOTALL)
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -167,22 +166,6 @@ def _validate_date(date: str) -> None:
         )
 
 
-def _read_status(proposal_text: str) -> str | None:
-    """Return the frontmatter ``status:`` value, or None if absent/no
-    frontmatter. Delegates to ``backlog_index.parse_frontmatter`` (last-wins
-    on duplicate keys) so this reader and backlog_index's validator can
-    never disagree on the same bytes — see docs/loom/backlog/2026-08-02-
-    backlog-index-two-frontmatter-readers-disagree-on-duplicate-keys.md.
-
-    Not called by ``archive_change_folder()`` any more (BI-10, plan
-    DL-13): once ``archived`` is retired, ``status: closed`` is legal on
-    both a live and an already-archived entry, so reading the frontmatter
-    status can no longer serve as the idempotency guard — see the module
-    docstring's Refusals list. Kept as a small, independently useful
-    reader (and to keep the last-wins parity it exists to pin)."""
-    return parse_frontmatter(proposal_text).get("status")
-
-
 def _stamp_field(text: str, key: str, value: str) -> str:
     """Return ``text`` with its frontmatter ``key:`` field set to ``value``,
     adding a minimal frontmatter block first if none exists. Generalizes the
@@ -190,9 +173,9 @@ def _stamp_field(text: str, key: str, value: str) -> str:
     units now call this once, to stamp ``status: closed``.
 
     The line-matching pattern deliberately does NOT reuse a single-token
-    ``status\\s*:\\s*(\\S+)\\s*$`` shape (the original, since-removed
-    ``_read_status`` pattern, whose ``(\\S+)`` value is a single
-    whitespace-free token): the backlog
+    ``status\\s*:\\s*(\\S+)\\s*$`` shape (a pattern this module's earlier,
+    now-removed status-only stamp helper used, whose ``(\\S+)`` value is a
+    single whitespace-free token): the backlog
     store's closed status vocabulary has one multi-word member, ``CLOSED —
     SUPERSEDED`` (em dash), and a single-token pattern misses that line
     entirely, causing this function to APPEND a duplicate ``key:`` line

@@ -65,8 +65,12 @@ re-deriving the shape from the plan later.
 is an exec shim); the code references in this entry refer to the canonical file.
 
 2026-08-21 note: finding 1 (the two readers' duplicate-key disagreement)
-shipped via docs/loom/plans/2026-08-21-dissolve-direction-layer.md Task 3 —
-`archive_change_folder.py`'s `_read_status` now delegates to
-`backlog_index.parse_frontmatter`, so both readers resolve the same
-bytes to the same value, duplicate keys included. Findings 2-4 were
-passed by on this touch and stay open.
+shipped via docs/loom/plans/2026-08-21-dissolve-direction-layer.md Task 3.
+The second frontmatter reader named above no longer exists in the
+codebase at all (a later debt-clearing pass on the same task deleted it
+as a function with no production caller left); the last-wins property
+it existed to pin now lives directly against `parse_frontmatter` in
+`test_backlog_index.py`. There is now only one frontmatter reader in
+this codebase, so the disagreement this entry describes is structurally
+gone, not just reconciled. Findings 2-4 were passed by on this touch and
+stay open.

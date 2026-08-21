@@ -104,6 +104,27 @@ def _run_validate(store: Path) -> subprocess.CompletedProcess:
     )
 
 
+def test_duplicate_frontmatter_keys_resolve_last_wins():
+    """A frontmatter block carrying `status:` twice must be read as the
+    LAST occurrence, not the first.
+
+    Regression for docs/loom/backlog/2026-08-02-backlog-index-two-
+    frontmatter-readers-disagree-on-duplicate-keys.md: this repo used to
+    carry a second frontmatter reader, a private helper in
+    archive_change_folder.py, that `re.search`'d for the first match
+    (`closed`) while this function
+    iterates and overwrites (last match: `open`) — the same bytes read two
+    different statuses depending which reader touched them. That second
+    reader is gone (loom-code/scripts/archive_change_folder.py no longer
+    has any caller needing it), so this property now lives here, pinned
+    directly against `parse_frontmatter` itself — the only reader left."""
+    frontmatter = backlog_index.parse_frontmatter(
+        "---\nstatus: closed\nstatus: open\n---\n\n## Why\nBecause.\n"
+    )
+
+    assert frontmatter["status"] == "open"
+
+
 def test_rejects_entry_whose_filename_does_not_match_frontmatter_name(tmp_path):
     store = tmp_path / "backlog"
     store.mkdir()
