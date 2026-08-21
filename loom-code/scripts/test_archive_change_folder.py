@@ -245,6 +245,32 @@ def test_refuses_destination_collision(tmp_path):
     assert (dest / "sentinel.txt").read_text(encoding="utf-8") == "pre-existing"
 
 
+def test_folder_unit_idempotency_survives_a_date_change(tmp_path):
+    """Round-3 finding (arm B): the `status: archived` idempotency guard
+    was dropped for BOTH units, justified by a property only the FILE
+    unit has — its destination is a function of the identifier alone.
+    The folder unit's destination interpolates a date, so a re-archive
+    on a different day lands beside the first copy instead of refusing.
+    The refusal must key on the change-id, not on the dated path."""
+    mod = _load(_MODULE_PATH, "archive_change_folder")
+    _make_change_folder(tmp_path, "add-widget", "## Why\nBecause.\n")
+
+    first = mod.archive_change_folder(tmp_path, "add-widget", date="2026-08-01")
+    assert first.is_dir()
+
+    # Re-create the source (the real-world shape: a folder restored, or
+    # re-created under the same change-id) and archive again a day later.
+    _make_change_folder(tmp_path, "add-widget", "## Why\nBecause.\n")
+    with pytest.raises(mod.ArchiveError, match="already exists"):
+        mod.archive_change_folder(tmp_path, "add-widget", date="2026-08-02")
+
+    archive_root = tmp_path / "docs" / "loom" / "archive"
+    copies = sorted(p.name for p in archive_root.iterdir() if p.is_dir())
+    assert copies == ["2026-08-01-add-widget"], (
+        f"a second archive copy was created for the same change-id: {copies}"
+    )
+
+
 # --- path-safety (OpenSpec #412 bug class) --------------------------------
 
 @pytest.mark.parametrize(

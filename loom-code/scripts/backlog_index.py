@@ -230,6 +230,57 @@ def _entry_files(store: Path) -> list[tuple[Path, bool]]:
     return [(p, False) for p in live] + [(p, True) for p in archived]
 
 
+def iter_validated_entries(
+    store: Path,
+) -> list[tuple[Path, bool, dict[str, str]]]:
+    """Every entry under `store` as `(path, is_archived, frontmatter)` in
+    `_entry_files()` order, raising ValueError (the caller decides exit
+    codes) on any entry whose `status:` falls outside
+    `CLOSED_STATUS_VOCABULARY`.
+
+    This is the ONE home of the out-of-vocabulary guard. Three call sites
+    — `build_ready()` here, `check_queue_relation.live_bet_names()`, and
+    `check_north_star_link.find_bet_entries()` — each carried a
+    hand-copied walk with its own copy of the raise, and the copies
+    documented the duplication ("same bytes, same guard") instead of
+    removing it. They then drifted exactly as Fowler's Duplicated Code /
+    Shotgun Surgery predicts: one whole-branch review round had to patch
+    two of them in lockstep, and the next round still found a third site
+    diverging. Validation always runs BEFORE any archived/status filter,
+    so a malformed entry can never be silently dropped by a filter that
+    happens to exclude it anyway.
+    """
+    entries: list[tuple[Path, bool, dict[str, str]]] = []
+    for path, is_archived in _entry_files(store):
+        frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
+        status = frontmatter.get("status")
+        if status not in CLOSED_STATUS_VOCABULARY:
+            raise ValueError(
+                f"{path.name}: entry has status {status!r}, outside the "
+                "closed status vocabulary"
+            )
+        entries.append((path, is_archived, frontmatter))
+    return entries
+
+
+def live_entries(store: Path, status: str) -> list[tuple[str, dict[str, str]]]:
+    """Every live (non-archived) entry whose `status:` equals `status`,
+    as `(display_name, frontmatter)` in `_entry_files()` order. The
+    display name is the frontmatter `name`, falling back to the filename
+    stem.
+
+    Archived entries are never returned: the archive tier overrides an
+    entry's literal status, so a re-bet of an archived entry is not a
+    thing this can surface. Raises ValueError via
+    `iter_validated_entries()` on an out-of-vocabulary status.
+    """
+    return [
+        (frontmatter.get("name", path.stem), frontmatter)
+        for path, is_archived, frontmatter in iter_validated_entries(store)
+        if not is_archived and frontmatter.get("status") == status
+    ]
+
+
 def _check_name(display: str, frontmatter: dict[str, str], stem: str) -> list[Violation]:
     """(i) filename stem == frontmatter name."""
     name = frontmatter.get("name")
@@ -492,8 +543,8 @@ def build_ready(store: Path) -> str:
 
     An entry physically under `archive/` is excluded regardless of its
     frontmatter `status:` — the archive tier overrides the status field,
-    same as `_bucket_entry()`. An `open` entry carrying a `blocked:` field
-    is excluded too (brief BI-2 — that is what the field is for). These
+    same as `_bucket_entry()`. A `bet`-or-`open` entry carrying a
+    `blocked:` field is excluded too (brief BI-2 — that is what the field is for). These
     are two distinct exclusion axes, tallied separately in the closing
     line: a `closed`/archive-tier entry is not actionable as written; a
     `blocked` `open` entry is otherwise-ready and one `blocked:` line
@@ -507,14 +558,8 @@ def build_ready(store: Path) -> str:
     excluded_closed = 0
     excluded_blocked = 0
 
-    for path, is_archived in _entry_files(store):
-        frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
+    for path, is_archived, frontmatter in iter_validated_entries(store):
         status = frontmatter.get("status")
-        if status not in CLOSED_STATUS_VOCABULARY:
-            raise ValueError(
-                f"{path.name}: entry has status {status!r}, outside the "
-                "closed status vocabulary"
-            )
         if is_archived or status not in READY_STATUSES:
             excluded_closed += 1
             continue

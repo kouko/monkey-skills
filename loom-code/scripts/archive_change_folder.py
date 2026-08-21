@@ -52,17 +52,20 @@ both units, one copy of each guard:
   does not exist;
 - the source is a symlink (never archive a live symlink — only a real
   folder/file);
-- the destination path already exists — this is ALSO the idempotency guard
-  against double-archiving, and deliberately the only one: ``status:
-  closed`` is legal on a live, not-yet-archived entry too (the close-out
-  flip is a separate, earlier step than archiving — see
-  ``docs/loom/backlog/README.md``'s Archive rule), so a frontmatter status
-  can no longer distinguish "closed and live" from "already archived"
-  once ``archived`` is retired. The destination path can: for the file
-  unit it is a deterministic function of the identifier alone (no date in
-  the path), so "the destination already exists" means exactly "an
-  archive copy for this identifier already exists" — genuinely
-  already-archived, not merely closed;
+- an archive copy for this identifier already exists — the idempotency
+  guard against double-archiving, and deliberately the only one:
+  ``status: closed`` is legal on a live, not-yet-archived entry too (the
+  close-out flip is a separate, earlier step than archiving — see
+  ``docs/loom/backlog/README.md``'s Archive rule), so a frontmatter
+  status can no longer distinguish "closed and live" from "already
+  archived". The archive tier can. The two units read it differently,
+  because only one of their destinations is a function of the identifier
+  alone: for the FILE unit there is no date in the path, so
+  ``dest.exists()`` already means "an archive copy for this identifier
+  exists"; for the FOLDER unit the destination interpolates a date, so
+  ``dest.exists()`` would miss a re-archive on a different day and
+  ``_existing_folder_archive()`` supplies the date-independent form.
+  Both units end up refusing on the identifier, not on the dated path;
 - the identifier (a change-id for the folder unit, an entry filename for
   the file unit) is not a single, safe path segment — empty, ``.``/``..``,
   containing a path separator, or absolute. This is the path-safety guard:
@@ -135,6 +138,30 @@ def _validate_change_id(change_id: str) -> None:
         raise ArchiveError(
             f"invalid identifier {change_id!r}: must not be an absolute path"
         )
+
+
+def _existing_folder_archive(archive_root: Path, change_id: str) -> Path | None:
+    """The folder unit's date-independent idempotency guard: any existing
+    ``<archive_root>/<YYYY-MM-DD>-<change_id>/``, or None.
+
+    ``dest.exists()`` alone is the whole guard for the FILE unit, whose
+    destination is a function of the identifier alone. The folder unit's
+    destination interpolates a date, so a re-archive on a different day
+    lands beside the first copy instead of refusing — the identifier, not
+    the dated path, is what "already archived" means. Matched by exact
+    segment arithmetic (a 10-character date, then ``-``, then the rest)
+    rather than a glob, because ``change_id`` is validated as a safe path
+    segment but is NOT guaranteed free of glob metacharacters.
+    """
+    if not archive_root.is_dir():
+        return None
+    for candidate in sorted(archive_root.iterdir()):
+        if not candidate.is_dir():
+            continue
+        name = candidate.name
+        if len(name) > 11 and name[10] == "-" and name[11:] == change_id:
+            return candidate
+    return None
 
 
 def _validate_date(date: str) -> None:
@@ -305,9 +332,10 @@ def archive_change_folder(
 
     Returns the destination path on success. Raises ``ArchiveError`` (no
     filesystem mutation) on any refusal: unsafe identifier, missing source,
-    a destination collision (the idempotency guard — see the module
-    docstring's Refusals list for why this, not a frontmatter status, is
-    what now means "already archived").
+    an existing archive copy for this identifier (the idempotency guard —
+    see the module docstring's Refusals list for why the archive tier,
+    not a frontmatter status, is what now means "already archived", and
+    why the folder unit needs a date-independent form of the check).
     """
     if unit not in _UNITS:
         raise ArchiveError(f"invalid unit {unit!r}: must be one of {_UNITS}")
@@ -345,6 +373,12 @@ def archive_change_folder(
     # "already archived".
     if dest.exists():
         raise ArchiveError(f"archive destination already exists: {dest}")
+    if not is_file_unit:
+        existing = _existing_folder_archive(dest.parent, change_id)
+        if existing is not None:
+            raise ArchiveError(
+                f"an archive copy for {change_id!r} already exists: {existing}"
+            )
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(str(source), str(dest))

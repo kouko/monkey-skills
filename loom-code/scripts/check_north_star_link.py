@@ -72,11 +72,9 @@ import sys
 from pathlib import Path
 
 from backlog_index import (
-    CLOSED_STATUS_VOCABULARY,
-    _entry_files,
     _is_well_formed_serves,
     _purpose_path_for,
-    parse_frontmatter,
+    live_entries,
 )
 
 # The shipped template's own placeholder text (templates/PURPOSE.md) —
@@ -111,24 +109,11 @@ def find_bet_entries(store: Path) -> list[tuple[str, dict[str, str]]]:
     a closed entry cannot be re-bet.
 
     Raises ValueError (caller decides exit codes) on a status outside the
-    closed status vocabulary — mirrors `live_bet_names()` in
-    `check_queue_relation.py` (same bytes, same guard): malformed
-    frontmatter must fail loudly, never be silently dropped as
-    nothing-to-check."""
-    entries = []
-    for path, is_archived in _entry_files(store):
-        frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
-        status = frontmatter.get("status")
-        if status not in CLOSED_STATUS_VOCABULARY:
-            raise ValueError(
-                f"{path.name}: entry has status {status!r}, outside the "
-                "closed status vocabulary"
-            )
-        if is_archived or status != "bet":
-            continue
-        name = frontmatter.get("name", path.stem)
-        entries.append((name, frontmatter))
-    return entries
+    closed status vocabulary — the guard lives once, in
+    `backlog_index.iter_validated_entries()`, which `live_entries()`
+    walks: malformed frontmatter must fail loudly, never be silently
+    dropped as nothing-to-check."""
+    return live_entries(store, "bet")
 
 
 def find_offending_entry(

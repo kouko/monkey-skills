@@ -439,3 +439,71 @@ def test_cli_names_the_bad_file_on_out_of_vocabulary_status(tmp_path: Path) -> N
     assert result.returncode == 1
     assert "mystery" in result.stderr
     assert "no live bet entries exist yet" not in result.stderr
+
+
+# --- Round-3 finding: round 2 guarded ONE of this function's three reads ---
+
+
+def test_unreadable_store_parent_exits_1_not_a_traceback_and_never_claims_na(
+    tmp_path: Path,
+) -> None:
+    """Round-3 finding (arm B): round 2 added the OSError guard at the
+    `live_bet_names()` call site but not at the `store.is_dir()` probe
+    above it. The failure mode is worse than a traceback: without a
+    guard the raise is the ONLY thing keeping an unreadable store out of
+    the `N/A — no queue layer in this repo` branch, which exits 0. So
+    this pins both halves — exit 1, and the N/A line absent.
+    check_north_star_link.py already guards its own `is_dir()` probe
+    this way; this is the untouched half of that twinned pair."""
+    repo = tmp_path
+    store = repo / "docs" / "loom" / "backlog"
+    _write_bet_entry(store, "some-entry")
+
+    brief = repo / "brief.md"
+    brief.write_text("## Queue relation\n\nunqueued — nothing to queue\n", encoding="utf-8")
+
+    parent = repo / "docs" / "loom"
+    parent.chmod(0o000)
+    try:
+        result = subprocess.run(
+            [sys.executable, str(_SCRIPT), str(brief), "--repo-root", str(repo)],
+            capture_output=True,
+            text=True,
+        )
+    finally:
+        parent.chmod(0o755)
+
+    assert result.returncode == 1, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "Traceback" not in result.stderr
+    assert "unreadable" in result.stderr
+    assert "N/A" not in result.stdout, (
+        "an unreadable store was reported as 'no queue layer in this repo' — "
+        "absence and unreadability are different facts"
+    )
+
+
+def test_unreadable_brief_file_exits_1_not_a_traceback(tmp_path: Path) -> None:
+    """Round-3 finding (arm A): the brief read sits three lines ABOVE the
+    guard round 2 added, and is itself unguarded. `is_file()` covers the
+    common missing-brief case, so only an existing-but-unreadable brief
+    escapes — but it escapes as a raw traceback."""
+    repo = tmp_path
+    store = repo / "docs" / "loom" / "backlog"
+    _write_bet_entry(store, "some-entry")
+
+    brief = repo / "brief.md"
+    brief.write_text("## Queue relation\n\nunqueued — nothing to queue\n", encoding="utf-8")
+    brief.chmod(0o000)
+
+    try:
+        result = subprocess.run(
+            [sys.executable, str(_SCRIPT), str(brief), "--repo-root", str(repo)],
+            capture_output=True,
+            text=True,
+        )
+    finally:
+        brief.chmod(0o644)
+
+    assert result.returncode == 1, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "Traceback" not in result.stderr
+    assert "unreadable" in result.stderr

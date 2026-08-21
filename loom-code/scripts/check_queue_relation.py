@@ -34,7 +34,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from backlog_index import CLOSED_STATUS_VOCABULARY, _entry_files, parse_frontmatter
+from backlog_index import live_entries
 
 # --- `## Queue relation` gate -------------------------------------------
 
@@ -63,23 +63,11 @@ def live_bet_names(store: Path) -> list[str]:
     `_entry_files()` order.
 
     Raises ValueError (caller decides exit codes) on a status outside the
-    closed status vocabulary — mirrors `_bucket_entry()` in backlog_index.py,
-    which raises the same way when bucketing a live entry: malformed
-    frontmatter must fail loudly, never be silently dropped from the queue
-    it might belong to."""
-    names: list[str] = []
-    for path, is_archived in _entry_files(store):
-        frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
-        status = frontmatter.get("status")
-        if status not in CLOSED_STATUS_VOCABULARY:
-            raise ValueError(
-                f"{path.name}: entry has status {status!r}, outside the "
-                "closed status vocabulary"
-            )
-        if is_archived or status != "bet":
-            continue
-        names.append(frontmatter.get("name", path.stem))
-    return names
+    closed status vocabulary — the guard lives once, in
+    `backlog_index.iter_validated_entries()`, which `live_entries()` walks:
+    malformed frontmatter must fail loudly, never be silently dropped from
+    the queue it might belong to."""
+    return [name for name, _frontmatter in live_entries(store, "bet")]
 
 
 @dataclass
@@ -210,7 +198,17 @@ def main(argv: list[str] | None = None) -> int:
     repo_root = _resolve_repo_root(args.repo_root, brief_path.parent)
 
     store = repo_root / "docs" / "loom" / "backlog"
-    if not store.is_dir():
+    # The probe is guarded because an unreadable store must never be read
+    # as an ABSENT one: absence exits 0 with a loud N/A, unreadability is
+    # a failure. Without the guard the only thing separating the two is
+    # an unhandled traceback (mirrors check_north_star_link.py's own
+    # is_dir() guard — the twin this one was missing).
+    try:
+        store_present = store.is_dir()
+    except OSError as exc:
+        print(f"Error: backlog store at {store} is unreadable ({exc}).", file=sys.stderr)
+        return 1
+    if not store_present:
         print(
             "queue-relation: N/A — no queue layer in this repo "
             "(docs/loom/backlog/ absent)"
@@ -220,7 +218,11 @@ def main(argv: list[str] | None = None) -> int:
     if not brief_path.is_file():
         print(f"Error: brief file not found at {brief_path}.", file=sys.stderr)
         return 1
-    brief_text = brief_path.read_text(encoding="utf-8")
+    try:
+        brief_text = brief_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"Error: brief at {brief_path} is unreadable ({exc}).", file=sys.stderr)
+        return 1
 
     try:
         bet_names = live_bet_names(store)
