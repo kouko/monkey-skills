@@ -218,15 +218,15 @@ def _entry_files(store: Path) -> list[tuple[Path, bool]]:
 
     Live entries are `store/*.md` excluding README.md and excluding
     `archive/` itself (a directory, never matched by `*.md`). Archived
-    entries are `store/archive/*.md`.
+    entries are `store/archive/*.md`, also excluding README.md.
 
     Returned in filename order, live entries first, then archived —
     filenames start `YYYY-MM-DD`, so this is file-date order. Every
     reader that walks this list (directly or via
     `iter_validated_entries()`) inherits that order; it is what makes
     two `--write` runs over unchanged input produce a byte-identical
-    `BACKLOG.md`, and what makes `find_offending_entry()`'s "first
-    entry" deterministic.
+    `BACKLOG.md`, and what makes a "first entry" pick by any reader of
+    this list deterministic.
     """
     live = sorted(p for p in store.glob("*.md") if p.name != "README.md")
     archive_dir = store / "archive"
@@ -287,13 +287,14 @@ def live_entries(store: Path, status: str) -> list[tuple[str, dict[str, str]]]:
     """The live entries at `status`, as `(display_name, frontmatter)`
     pairs a caller can render or cite.
 
-    `display_name` is the entry's frontmatter `name`, or the filename
-    stem when `name` is absent. This is live, not defensive: only
-    `status` is validated (`iter_validated_entries()`), so an entry
-    whose `name` disagrees with its stem really does surface here under
-    the stem — `check_queue_relation`'s callers string-match against
-    this value for `in-queue:`/`displaces:` citations, so it is the
-    string an author must cite even from an otherwise-invalid store.
+    `display_name` is the entry's frontmatter `name` when the key is
+    present (even a `name` that disagrees with the filename stem — only
+    `status` is validated by `iter_validated_entries()`, not the (i)
+    name/stem agreement), or the filename stem when the key is absent
+    entirely. This is live, not defensive: `check_queue_relation`'s
+    callers string-match against this value for `in-queue:`/`displaces:`
+    citations, so it is the string an author must cite even from an
+    otherwise-invalid store.
 
     Archived entries are never returned: the archive tier overrides an
     entry's literal status, so a re-bet of an archived entry is not a
