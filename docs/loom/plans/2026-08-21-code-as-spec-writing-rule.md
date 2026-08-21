@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-21-code-as-spec-writing-rule.md
 Goal: 四份工件改成「散文只寫程式碼顯示不了的東西」，並把 oracle 的兩個能力宣稱從會消失的暫存檔升級成常設測試
-Stage: planning
+Stage: review:round-1
 Total tasks: 7
 Critical-path depth: 2 (≤5)
 Execution order: parallel-where-possible
@@ -144,7 +144,7 @@ N/A — no unresolved question: the three forks this arc reached were each put t
 - Dependencies: none
 - Independent: true
 - Brief item covered: BI-1, BI-6
-- Status: pending
+- Status: done(7c8dbf6f)
 - Gloss: 讓那筆條目停止說謊——它現在還寫著要蓋一個已經被判死的檢查器。
 
 ## Task 2 — docstring 逐句分類（第一組三個腳本）
@@ -181,7 +181,7 @@ N/A — no unresolved question: the three forks this arc reached were each put t
 - Dependencies: none
 - Independent: true
 - Brief item covered: BI-2
-- Status: pending
+- Status: done(59ba54eb)
 - Gloss: 三個腳本的註解只留程式碼講不出來的話；不動任何一行會執行的程式碼。
 
 ## Task 3 — docstring 逐句分類（第二組三個腳本）＋一處已驗證的重複
@@ -210,7 +210,7 @@ N/A — no unresolved question: the three forks this arc reached were each put t
 - Dependencies: none
 - Independent: true
 - Brief item covered: BI-2, BI-8
-- Status: pending
+- Status: done(55672f02)
 - Gloss: 另外三個腳本同樣處理，並清掉 oracle 裡確實寫了兩次的那段理由。
 
 ## Task 4 — reviewer 加一句審查透鏡，並寫明它管不到哪裡
@@ -240,7 +240,7 @@ N/A — no unresolved question: the three forks this arc reached were each put t
 - Dependencies: none
 - Independent: true
 - Brief item covered: BI-3, BI-5
-- Status: pending
+- Status: done(69ba7e9a)
 - Gloss: 給下一輪審查一個透鏡，同時誠實標註它的覆蓋邊界，不讓它被當成全面防護。
 
 ## Task 5 — 把兩個探針升級成常設測試
@@ -276,7 +276,7 @@ N/A — no unresolved question: the three forks this arc reached were each put t
 - Dependencies: none
 - Independent: true
 - Brief item covered: BI-4
-- Status: pending
+- Status: done(9a3d5150)
 - Gloss: 兩個原本只活在暫存檔的驗證變成常設測試——它們是目前唯一抓得到那類缺陷的可執行工具。
 
 ## Task 6 — 把 oracle 的跨檔案盲區歸檔，並讓測試指向它
@@ -301,7 +301,7 @@ N/A — no unresolved question: the three forks this arc reached were each put t
 - Dependencies: Task 5 completes first
 - Independent: false
 - Brief item covered: BI-4
-- Status: pending
+- Status: done(f5c26ffa)
 - Gloss: 讓那個新發現的盲區有一個歸檔位置，而不是只活在一句註解裡。
 
 ## Task 7 — 補上規則缺的那一句：刪完之後剩下的必須還能獨立讀
@@ -329,5 +329,5 @@ N/A — no unresolved question: the three forks this arc reached were each put t
 - Dependencies: Task 4 completes first
 - Independent: false
 - Brief item covered: BI-3
-- Status: pending
+- Status: done(51c20004)
 - Gloss: 這個 PR 自己做出來的透鏡，第一次真用就發現它不完整——補上「刪完要能讀」那一句。
