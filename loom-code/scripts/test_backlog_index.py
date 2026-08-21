@@ -6,8 +6,11 @@ generator/check/migration tests.
 """
 
 import importlib.util
+import re
 import subprocess
 import sys
+
+import pytest
 from pathlib import Path
 
 # This file lives at loom-code/scripts/ (inside the plugin — Task 1 of
@@ -15,6 +18,11 @@ from pathlib import Path
 # root is three levels up; the script under test ships beside it.
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 CHARTER_PATH = REPO_ROOT / "docs" / "loom" / "backlog" / "README.md"
+# BI-11: templates/backlog-README.md is the canonical block; the live
+# charter above is its instantiated copy. Both must agree with
+# CLOSED_STATUS_VOCABULARY, or loom_init.py scaffolds a wrong charter
+# into every newly adopting repo.
+TEMPLATE_PATH = Path(__file__).resolve().parent / "templates" / "backlog-README.md"
 BACKLOG_SCRIPT = Path(__file__).resolve().parent / "backlog_index.py"
 
 # Direct import (not subprocess) so the revision-round-1 tests below can reuse
@@ -37,7 +45,7 @@ check_onramp_choice = importlib.util.module_from_spec(_ONRAMP_SPEC)
 sys.modules["check_onramp_choice"] = check_onramp_choice
 _ONRAMP_SPEC.loader.exec_module(check_onramp_choice)
 
-def _charter_status_word_section(text: str | None = None) -> str:
+def _charter_status_word_section(text: str | None = None, *, path: Path = CHARTER_PATH) -> str:
     """The charter's §Status word definitions body, nothing else.
 
     Scoped deliberately (mirrors the retired §Closed status vocabulary
@@ -48,30 +56,48 @@ def _charter_status_word_section(text: str | None = None) -> str:
     table row is actually removed.
 
     Accepts optional `text` so the mutation-kill check below can probe a
-    scratch copy of the charter without touching the real file.
+    scratch copy of the charter (or the template) without touching the
+    real file. `path` only names the file for the error message.
     """
     if text is None:
-        text = CHARTER_PATH.read_text(encoding="utf-8")
+        text = path.read_text(encoding="utf-8")
     _, _, after = text.partition("## Status word definitions")
-    assert after, "charter has no '## Status word definitions' section"
+    assert after, f"{path} has no '## Status word definitions' section"
     body, _, _ = after.partition("\n## ")
     return body
 
 
-def test_charter_documents_the_closed_status_vocabulary():
-    """The charter's status-word table must list exactly the words the
-    code enforces (`backlog_index.CLOSED_STATUS_VOCABULARY`) — not a
-    heading pin that would pass even if the charter documented the wrong
-    words. Table row shape: "| `<word>` | ... |" (see
-    docs/loom/backlog/README.md, ## Status word definitions).
+# Table row shape: "| `<word>` | ..." with nothing else inside the
+# backticks — this is what excludes the `| `blocked:` (field, not a
+# status) | ...` row, which is documented in the same table but is not
+# a `status:` value.
+_STATUS_TABLE_ROW = re.compile(r"^\| `([\w-]+)` \|", re.MULTILINE)
+
+
+def _charter_table_status_words(section: str) -> set[str]:
+    return set(_STATUS_TABLE_ROW.findall(section))
+
+
+@pytest.mark.parametrize("path", [CHARTER_PATH, TEMPLATE_PATH])
+def test_charter_documents_the_closed_status_vocabulary(path):
+    """The status-word table (in both the live charter AND its BI-11
+    canonical template — a drift between the two would let `loom_init.py`
+    scaffold a wrong charter into every newly adopting repo) must list
+    EXACTLY the words the code enforces
+    (`backlog_index.CLOSED_STATUS_VOCABULARY`) — not a subset check that
+    would pass with a missing word, and not a heading pin that would pass
+    with a retired word still present. Table row shape: "| `<word>` | ..."
+    (see docs/loom/backlog/README.md, ## Status word definitions).
     """
-    assert CHARTER_PATH.is_file(), f"charter missing at {CHARTER_PATH}"
-    section = _charter_status_word_section()
-    for status in backlog_index.CLOSED_STATUS_VOCABULARY:
-        assert f"| `{status}` |" in section, (
-            f"charter's status word table does not LIST status {status!r} "
-            f"as a table row (prose mentioning it does not count)"
-        )
+    assert path.is_file(), f"charter missing at {path}"
+    section = _charter_status_word_section(path=path)
+    table_words = _charter_table_status_words(section)
+    assert table_words == set(backlog_index.CLOSED_STATUS_VOCABULARY), (
+        f"{path}'s status word table lists {sorted(table_words)}, but "
+        f"the code enforces {sorted(backlog_index.CLOSED_STATUS_VOCABULARY)} "
+        "— every code word must appear as a table row, and no extra "
+        "(e.g. retired) word may remain"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -919,9 +945,9 @@ def test_agreement_check_is_a_noop_when_body_has_no_matching_bullet(tmp_path):
 # ---------------------------------------------------------------------------
 # --ready — the store's single READ surface (plan
 # docs/loom/plans/2026-08-06-backlog-ready-verb-and-close-loop.md, Task 1).
-# COMMITTED-NEXT first (filename order), then OPEN; excluded statuses
-# (PARKED / UPSTREAM / SHIPPED / CLOSED — SUPERSEDED / archived) never
-# listed; closing `ready: N committed / M open / K excluded by status` line.
+# `bet` first (filename order), then `open`; excluded statuses (`closed`,
+# archived, or an `open` entry carrying `blocked:`) never listed; closing
+# `ready: N bet / M open / K excluded by status` line.
 # ---------------------------------------------------------------------------
 
 

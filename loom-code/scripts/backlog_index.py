@@ -107,25 +107,7 @@ import difflib
 import re
 import sys
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
-
-_DATE_SHAPE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-
-
-def _is_valid_date_shape(value: str) -> bool:
-    """True when `value` is a real calendar date in YYYY-MM-DD shape.
-
-    Regex alone would accept a calendar-invalid string like 2026-13-40;
-    strptime rejects those too, so both must agree.
-    """
-    if not _DATE_SHAPE.match(value):
-        return False
-    try:
-        datetime.strptime(value, "%Y-%m-%d")
-    except ValueError:
-        return False
-    return True
 
 # Collapsed vocabulary (plan docs/loom/plans/2026-08-21-dissolve-
 # direction-layer.md Task 1, brief BI-2): exactly three words. The prior
