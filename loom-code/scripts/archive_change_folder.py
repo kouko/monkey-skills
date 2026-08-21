@@ -83,8 +83,10 @@ import sys
 from pathlib import Path
 from typing import Callable
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from backlog_index import parse_frontmatter  # noqa: E402
+
 _FRONTMATTER_RE = re.compile(r"\A---\n(.*?\n)---\n", re.DOTALL)
-_STATUS_LINE_RE = re.compile(r"^status\s*:\s*(\S+)\s*$", re.MULTILINE)
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 _UNIT_FOLDER = "folder"
@@ -152,12 +154,11 @@ def _validate_date(date: str) -> None:
 
 def _read_status(proposal_text: str) -> str | None:
     """Return the frontmatter ``status:`` value, or None if absent/no
-    frontmatter."""
-    match = _FRONTMATTER_RE.match(proposal_text)
-    if match is None:
-        return None
-    status_match = _STATUS_LINE_RE.search(match.group(1))
-    return status_match.group(1) if status_match else None
+    frontmatter. Delegates to ``backlog_index.parse_frontmatter`` (last-wins
+    on duplicate keys) so this reader and backlog_index's validator can
+    never disagree on the same bytes — see docs/loom/backlog/2026-08-02-
+    backlog-index-two-frontmatter-readers-disagree-on-duplicate-keys.md."""
+    return parse_frontmatter(proposal_text).get("status")
 
 
 def _stamp_field(text: str, key: str, value: str) -> str:
@@ -167,8 +168,10 @@ def _stamp_field(text: str, key: str, value: str) -> str:
     file unit can stamp both ``status`` and ``archived`` by calling this
     twice.
 
-    The line-matching pattern deliberately does NOT reuse ``_STATUS_LINE_RE``
-    (whose ``(\\S+)`` value is a single whitespace-free token): the backlog
+    The line-matching pattern deliberately does NOT reuse a single-token
+    ``status\\s*:\\s*(\\S+)\\s*$`` shape (the original, since-removed
+    ``_read_status`` pattern, whose ``(\\S+)`` value is a single
+    whitespace-free token): the backlog
     store's closed status vocabulary has one multi-word member, ``CLOSED —
     SUPERSEDED`` (em dash), and a single-token pattern misses that line
     entirely, causing this function to APPEND a duplicate ``key:`` line
