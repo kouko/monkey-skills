@@ -33,6 +33,7 @@ Stdlib only.
 
 from __future__ import annotations
 
+import ast
 import os
 import subprocess
 import sys
@@ -41,6 +42,47 @@ from pathlib import Path
 import pytest
 
 SCRIPTS = Path(__file__).resolve().parent
+
+# Filesystem calls from which an OSError can escape. `is_file`/`is_dir`/
+# `exists` are included deliberately: an unreadable PARENT makes them raise
+# PermissionError, and that exact case was a finding in two separate rounds
+# of this arc's review — one of them fail-OPEN, because the unhandled raise
+# was the only thing keeping an unreadable store out of an exit-0 branch.
+_FS_CALLS = frozenset({
+    "read_text", "write_text", "read_bytes", "write_bytes",
+    "iterdir", "glob", "rglob", "mkdir", "stat",
+    "is_file", "is_dir", "exists",
+})
+
+_OSERROR_SUPERSETS = frozenset({
+    "OSError", "IOError", "EnvironmentError", "Exception", "BaseException",
+})
+
+# CLI scripts in this directory that are NOT store/brief gates. Listed with a
+# reason so that classifying a new script is a decision, never an omission.
+# Widening the fail-loud contract to cover these is filed as backlog work —
+# they are exempt from the CONTRACT, not judged safe.
+EXEMPT = {
+    "adjudication_lint.py": "renders a document view; reads no store or brief",
+    "adjudication_render.py": "renders a document view; reads no store or brief",
+    "adjudication_split.py": "renders a document view; reads no store or brief",
+    "archive_change_folder.py": "writes the store but is not a gate; its own "
+                                "refusal contract is pinned in its own tests",
+    "check_doc_citations.py": "checks prose citations, not the store",
+    "check_field_microstructure.py": "checks field shape in a brief or plan, "
+                                     "not the store",
+    "check_open_questions.py": "checks a plan's Open Questions section",
+    "check_scenario_coverage.py": "checks a change-folder's scenarios",
+    "check-living-spec-index.py": "structural scan over docs/loom/, not the store",
+    "check-skill-crossrefs.py": "checks skill cross-references",
+    "distribute.py": "packaging helper",
+    "loom_firing_harness.py": "probes skill firing; reads no store or brief",
+    "loom_gate_markers.py": "mints and verifies gate markers",
+    "review_scope.py": "resolves a review's changed-file set from git",
+    "verify-drift.py": "compares two copies of a synced file",
+    "loom_init.py": "scaffolds a new store; has no store to read yet",
+    "plan_card.py": "reads plans, not the store",
+}
 
 FAMILY = (
     "backlog_index.py",
@@ -86,9 +128,16 @@ _ENTRY_REL = "docs/loom/backlog/2026-08-01-an-entry.md"
 _CASES_BY_SCRIPT: dict[str, list[tuple[str, tuple[str, ...]]]] = {
     # Three read sites: iter_validated_entries (--validate / --ready),
     # find_violations (--validate), and the committed index (--check).
+    # One case per guard, not per verb. Round 6 mutation-tested every
+    # `except OSError` in this family and found five survivors — three of
+    # them here, including the `--write` output-write guard the commit
+    # message singled out as newly added while its oracle never ran it.
     "backlog_index.py": [
         (_ENTRY_REL, ("--validate",)),
         (_ENTRY_REL, ("--ready",)),
+        (_ENTRY_REL, ("--write",)),
+        (_ENTRY_REL, ("--check",)),
+        ("docs/loom/BACKLOG.md", ("--write",)),
         ("docs/loom/BACKLOG.md", ("--check",)),
     ],
     "check_onramp_choice.py": [
@@ -166,48 +215,127 @@ def test_unreadable_input_exits_loudly_without_a_traceback(
     )
 
 
-def test_family_membership_is_complete() -> None:
-    """The hand-listed FAMILY must still be every non-test CLI script that
-    reads the backlog store or a handoff brief. Derived from the source,
-    so a new gate that skips this file fails here rather than shipping
-    unguarded."""
-    qualifying = set()
-    for path in sorted(SCRIPTS.glob("*.py")):
-        if path.name.startswith("test_"):
+def _guarded_line_ranges(tree: ast.AST) -> list[tuple[int, int]]:
+    """Body line ranges of every `try:` whose handlers catch OSError (or a
+    superset of it). A call inside one of these ranges is guarded."""
+    ranges: list[tuple[int, int]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Try):
             continue
-        source = path.read_text(encoding="utf-8")
-        if "def main(" not in source:
-            continue
-        # Two structural signals, not a filename pattern: the store's own
-        # module, anything that imports it (every store reader does), and
-        # anything taking a handoff brief as argv.
-        reads_the_store = (
-            path.name == "backlog_index.py"
-            or "from backlog_index import" in source
-            or "import backlog_index" in source
-        )
-        reads_a_brief = '"brief_path"' in source
-        if reads_the_store or reads_a_brief:
-            qualifying.add(path.name)
+        catches = False
+        for handler in node.handlers:
+            if handler.type is None:
+                catches = True
+                continue
+            names: list[str] = []
+            if isinstance(handler.type, ast.Name):
+                names = [handler.type.id]
+            elif isinstance(handler.type, ast.Tuple):
+                names = [e.id for e in handler.type.elts if isinstance(e, ast.Name)]
+            if any(n in _OSERROR_SUPERSETS for n in names):
+                catches = True
+        if catches:
+            for stmt in node.body:
+                ranges.append((stmt.lineno, getattr(stmt, "end_lineno", stmt.lineno)))
+    return ranges
 
-    assert qualifying == set(FAMILY), (
-        "FAMILY has drifted from the scripts that actually read the store or "
-        f"a brief.\n  only in FAMILY: {sorted(set(FAMILY) - qualifying)}\n"
-        f"  only in the source: {sorted(qualifying - set(FAMILY))}"
-    )
+
+def leaky_functions(source: str) -> set[str]:
+    """Every module-level function from which an `OSError` can escape.
+
+    A function is leaky when it makes an unguarded filesystem call, or when
+    it calls another leaky function from outside a guarded `try`. Iterated to
+    a fixpoint, so a guard placed anywhere up the call chain counts — which
+    is the whole reason this is an AST analysis and not a grep. The syntactic
+    check this replaces (`.read_text(` occurrences vs a case count) was
+    proven non-load-bearing: two round-6 reviewers each injected a genuinely
+    bare read and the suite stayed green.
+    """
+    tree = ast.parse(source)
+    ranges = _guarded_line_ranges(tree)
+
+    def guarded(lineno: int) -> bool:
+        return any(lo <= lineno <= hi for lo, hi in ranges)
+
+    funcs = {
+        node.name: node
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+    leaky: set[str] = set()
+    changed = True
+    while changed:
+        changed = False
+        for name, fn in funcs.items():
+            if name in leaky:
+                continue
+            for node in ast.walk(fn):
+                if not isinstance(node, ast.Call) or guarded(node.lineno):
+                    continue
+                func = node.func
+                escapes = (
+                    (isinstance(func, ast.Attribute) and func.attr in _FS_CALLS)
+                    or (isinstance(func, ast.Name) and func.id == "open")
+                    or (isinstance(func, ast.Name) and func.id in leaky)
+                )
+                if escapes:
+                    leaky.add(name)
+                    changed = True
+                    break
+    return leaky
 
 
 @pytest.mark.parametrize("script", FAMILY)
-def test_every_family_read_site_has_a_case(script: str) -> None:
-    """Each `read_text(` call site in a FAMILY script must be covered by a
-    case above. This is the leg that catches a NEW bare read: adding one
-    without adding its case fails here, which is exactly how five review
-    rounds each found a bare read in this family by hand."""
+def test_no_oserror_can_escape_main(script: str) -> None:
+    """The load-bearing completeness leg: `OSError` must not be able to
+    reach the top of any gate script.
+
+    This replaces a leg that counted `.read_text(` occurrences against a
+    case count. Both round-6 reviewers independently defeated that one by
+    injecting a bare read into a script that had slack in its count — the
+    headline mechanism telling the next round it could stop looking, on
+    exactly the defect class it was built for. Counting occurrences was
+    never going to work; reachability is the property that matters.
+
+    Note this is a COMPANION to the behavioural cases above, not a
+    replacement. This leg proves nothing escapes; the behavioural cases
+    prove the operator gets something they can act on. Neither implies the
+    other: a bare `except OSError: pass` would satisfy this leg and fail
+    every case above.
+    """
     source = (SCRIPTS / script).read_text(encoding="utf-8")
-    read_sites = source.count(".read_text(")
-    cases = len(_CASES_BY_SCRIPT[script])
-    assert read_sites <= cases, (
-        f"{script} has {read_sites} `.read_text(` call sites but only "
-        f"{cases} unreadable-input cases in this file. Add the case for the "
-        f"new read, then make it pass."
+    leaky = leaky_functions(source)
+    assert "main" not in leaky, (
+        f"an OSError can escape {script}'s main() — the operator gets a raw "
+        f"traceback instead of one actionable line. Leaky call chain reaches: "
+        f"{sorted(leaky)}"
     )
+
+
+def test_every_cli_script_is_classified() -> None:
+    """No script joins the family silently.
+
+    The leg this replaces derived membership from `import backlog_index` or
+    an argv named `brief_path`. A round-6 reviewer defeated it by writing a
+    plausible new gate that walks the store, reads entries bare, imports
+    nothing and names its argv differently — 14/14 green. Structural signals
+    guess at intent; this asks instead that every CLI script in this
+    directory be a decision someone made. A new script fails here until it
+    is either put in FAMILY (and given cases) or exempted with a reason.
+    """
+    classified = set(FAMILY) | set(EXEMPT)
+    actual = {
+        path.name
+        for path in sorted(SCRIPTS.glob("*.py"))
+        if not path.name.startswith("test_")
+        and "def main(" in path.read_text(encoding="utf-8")
+    }
+    unclassified = actual - classified
+    assert not unclassified, (
+        "these CLI scripts are neither in FAMILY (gets unreadable-input "
+        "cases) nor in EXEMPT (with a stated reason): "
+        f"{sorted(unclassified)}. Classify each one — a gate that reads a "
+        "store or a brief belongs in FAMILY."
+    )
+    stale = classified - actual - {"__none__"}
+    assert not stale, f"classified but no longer present: {sorted(stale)}"

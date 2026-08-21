@@ -287,7 +287,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     brief_path = Path(args.brief_path)
-    if not brief_path.is_file():
+    try:
+        brief_present = brief_path.is_file()
+    except OSError as exc:
+        print(
+            f"Error: brief at {brief_path} is unreadable ({exc}).", file=sys.stderr
+        )
+        return 1
+    if not brief_present:
         print(f"Error: brief file not found at {brief_path}.", file=sys.stderr)
         return 1
     # Both reads are guarded for the same reason its two siblings are

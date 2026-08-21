@@ -42,9 +42,28 @@ Versioning: [Semantic Versioning](https://semver.org/).
   `check_onramp_choice.py`, `check_queue_relation.py` and
   `check_north_star_link.py` now print one actionable line and exit
   nonzero when a store entry, brief, `KICKOFF-DEFAULTS.md`,
-  `PURPOSE.md`, or the committed index exists but cannot be read —
-  previously several of these died on a raw traceback, and one of them
-  read an unreadable store as an ABSENT one and exited 0.
+  `PURPOSE.md`, or the committed index exists but cannot be read, or when
+  `--write`'s output cannot be written — previously several of these died
+  on a raw traceback, and one of them read an unreadable store as an
+  ABSENT one and exited 0.
+- **`backlog_index.py` refuses a `--store` path that is not there.** A typo
+  in `--store` used to print `OK — every invariant holds` at exit 0: an
+  absent directory globs to no entries and every invariant holds vacuously.
+  All four verbs now fail loudly. (A repo that never adopted the queue
+  layer is still exempt — that judgment belongs to `check_queue_relation.py`,
+  which reports a loud N/A at exit 0.)
+- **`backlog_index.py --output` defaults beside its own `--store`,** not
+  beside the current directory. Running `--write --store <other-repo>` used
+  to overwrite the standing repo's `BACKLOG.md` with the other store's
+  entries, silently. The success line now prints an absolute path. For the
+  canonical layout the default is unchanged.
+- **`archive_change_folder.py --help` prints usage.** It hand-rolls its argv
+  parsing, so `--help` was consumed as the positional identifier and
+  produced `change-folder does not exist: .../docs/loom/--help`.
+- **The queue gate names the em dash** when a `## Queue relation` line has
+  the right form but an ASCII `--`. The hint is earned by re-matching a
+  dash-swapped copy against the grammar, so it never fires on a line that
+  was wrong anyway.
 - Promotion to `bet` is unchanged and stays **user-only**.
 
 ## [0.91.0] — 2026-08-20 — purpose layer + serves link

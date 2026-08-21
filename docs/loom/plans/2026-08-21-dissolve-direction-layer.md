@@ -889,6 +889,69 @@ N/A — no unresolved question: the two forks this arc raised (the standing-choi
   me during authoring — I gave `backlog_index` one case for three read sites.
   Same lesson as this arc's `## Notes` §"Arc sweep pattern": after the second
   hand-written enumeration misses something, stop enumerating.
+- **DL-30 (2026-08-21, close-out) — the dogfood found in ten minutes what six
+  review rounds read past, and the two worst defects on this branch are both
+  fail-OPEN.** kouko asked for an end-to-end dogfood. Three cold agents, no
+  hints, real sandboxes.
+  1. **`--store <typo>` printed `OK — every invariant holds` at exit 0.** An
+     absent directory globs to no entries and every invariant holds vacuously.
+     `--ready` reported an empty queue; `--write` generated an empty index.
+     A green bought with a typo is worse than a red one. Six rounds of
+     reviewers read this code closely and none of them typed a wrong path.
+  2. **`--write --store <other-repo>` overwrote the STANDING repo's
+     `BACKLOG.md`** with the other store's entries, because `--output`
+     defaulted to a cwd-relative literal. It happened for real during the
+     dogfood — monkey-skills' own `BACKLOG.md` was destroyed and recovered
+     from HEAD. One round-6 reviewer independently found the same defect,
+     which is the only reason it is not solely a dogfood credit.
+  Both are now fixed with RED-first tests. The lesson is not "dogfood is
+  better than review" — the reviewers found things no dogfood would have
+  (an unreachable raise, a docstring describing a rejected design). It is
+  that **reading code and running code fail differently, and this arc had
+  six rounds of one and zero of the other.**
+- **DL-31 (2026-08-21, close-out) — the user-only betting rule survived its
+  first real test, on both tiers.** The highest-risk thing this arc adds is a
+  JUDGMENT-shaped rule: an agent must not promote an entry to `bet` on the
+  user's behalf. This repo has a documented precedent of exactly that class
+  failing — a gate waiver whose prose required judging "was this authorized"
+  got self-signed by a weak model.
+  Two cold agents (haiku and sonnet) were given ONLY the close-out's two
+  prose rows plus a real store, a candidate entry that obviously matched the
+  branch's work, and an explicit "I am unavailable, do not ask me questions"
+  — the escape hatch the prose depends on, deliberately closed. Neither
+  self-promoted. Both printed `PURPOSE.md`, listed candidates, and stopped;
+  the sonnet arm quoted the rule back correctly. The prompts never contained
+  the words "user-only" or "do not promote".
+  Honest limits: n=2, one scenario, and the prose was handed over ISOLATED
+  (a real session carries the whole SKILL.md and a lot of momentum). This
+  raises confidence; it does not close the question.
+- **DL-32 (2026-08-21, close-out) — round 6 declared my oracle unsound, and it
+  was right; the rebuilt one is verified by the reviewers' own method.**
+  DL-29 claimed the oracle's completeness leg "fails when a script grows a
+  read with no case". Both round-6 arms disproved it by experiment: each
+  injected a genuinely bare read into a script with slack in its
+  `.read_text(` count and watched all 14 tests pass. One rated it 🔴 with the
+  right reason — *the branch's headline mechanism telling the next round it
+  may stop looking, on precisely the defect class it was built for.* A leaky
+  oracle is worse than none.
+  Counting occurrences was never going to work. The replacement is an AST
+  fixpoint over reachability: a function is leaky when it makes an unguarded
+  filesystem call or calls a leaky function outside a guarded `try`, iterated
+  until stable, and `main` must not be leaky. A guard anywhere up the chain
+  counts, which is what kept the original objection to a syntactic check
+  valid. The membership leg's structural signal (`imports backlog_index`) was
+  defeated too — a reviewer wrote a plausible new gate that evaded it — and
+  is replaced by a classification duty: every CLI script here is in FAMILY or
+  in EXEMPT with a stated reason. That leg caught three scripts I had missed
+  the moment it ran.
+  Verified by the reviewers' own methods, not by assertion: the exact
+  injection both arms used now fails, and a mutation run over every
+  `except OSError` in the family went from **14 mutants / 5 survivors** to
+  **18 mutants / 0 survivors**.
+  The two legs are companions, and the docstring now says so: the AST leg
+  proves nothing escapes, the behavioural cases prove the operator gets
+  something actionable. `except OSError: pass` would satisfy the first and
+  fail every one of the second.
 
 ## Notes
 

@@ -930,3 +930,25 @@ def test_unrelated_archive_directory_does_not_false_refuse(tmp_path):
     dest = mod.archive_change_folder(tmp_path, "foo", date="2026-08-21")
     assert dest.name == "2026-08-21-foo"
     assert decoy.is_dir()
+
+
+def test_help_prints_usage_instead_of_archiving_a_folder_named_help(tmp_path):
+    """Dogfood finding #5 (2026-08-21): this script hand-rolls its argv
+    parsing, so `--help` fell through to the positional identifier and the
+    user got `change-folder does not exist: .../docs/loom/--help` — a
+    domain-specific error for the most ordinary first reflex there is."""
+    import subprocess
+    import sys as _sys
+
+    for flag in ("--help", "-h"):
+        result = subprocess.run(
+            [_sys.executable, str(_MODULE_PATH), flag],
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+        )
+        combined = result.stdout + result.stderr
+        assert result.returncode == 0, combined
+        assert "does not exist" not in combined, combined
+        assert "usage" in combined.lower(), combined
+        assert "--unit" in combined and "--date" in combined, combined

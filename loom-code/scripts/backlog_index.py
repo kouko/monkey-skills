@@ -661,7 +661,7 @@ def _run_write(args: argparse.Namespace) -> int:
     except OSError as exc:
         print(f"backlog_index --write: FAIL — {args.output} is unwritable ({exc}).")
         return 1
-    print(f"backlog_index --write: wrote {args.output}")
+    print(f"backlog_index --write: wrote {Path(args.output).resolve()}")
     return 0
 
 
@@ -678,7 +678,12 @@ def _run_check(args: argparse.Namespace) -> int:
         return 1
 
     output_path = Path(args.output)
-    if not output_path.is_file():
+    try:
+        output_present = output_path.is_file()
+    except OSError as exc:
+        print(f"backlog_index --check: FAIL — {output_path} is unreadable ({exc}).")
+        return 1
+    if not output_present:
         print(
             f"backlog_index --check: FAIL — {output_path} does not exist; "
             "run --write first"
@@ -752,10 +757,47 @@ def main() -> int:
     )
     parser.add_argument(
         "--output",
-        default="docs/loom/BACKLOG.md",
-        help="path to write (--write) or compare against (--check) the generated index",
+        default=None,
+        help="path to write (--write) or compare against (--check) the "
+             "generated index (default: BACKLOG.md beside --store's parent)",
     )
     args = parser.parse_args()
+
+    # The index belongs beside ITS OWN store, not beside whatever directory
+    # the process happens to stand in. A cwd-relative default let
+    # `--write --store <other-repo>` overwrite the standing repo's
+    # BACKLOG.md with another store's contents, silently — found by running
+    # the thing, after six review rounds read past it (plan DL-30). For the
+    # canonical layout (`--store docs/loom/backlog` from a repo root) the
+    # derived path is byte-identical to the old default.
+    if args.output is None:
+        args.output = str(Path(args.store).parent / "BACKLOG.md")
+
+    # `--store` is the ONLY way to locate the store here (there is no
+    # `--repo-root`), so a typo in it used to buy a green validate: glob a
+    # directory that is not there, get an empty list, and every invariant
+    # holds vacuously. `--ready` reported an empty queue and `--write`
+    # generated an empty index. A green bought with a typo is worse than a
+    # red one. Absence of a store IS a legitimate state for a repo that
+    # never adopted the queue layer — but that is the caller's judgment to
+    # make (`check_queue_relation.py` reports a loud N/A at exit 0 for
+    # exactly that); a script pointed at a store explicitly and unable to
+    # find it has failed. Found by running the thing (plan DL-30), after
+    # six review rounds read past it.
+    store_path = Path(args.store)
+    try:
+        store_is_dir = store_path.is_dir()
+        store_exists = store_path.exists()
+    except OSError as exc:
+        print(f"backlog_index: FAIL — store at {store_path} is unreadable ({exc}).")
+        return 1
+    if not store_is_dir:
+        what = "is not a directory" if store_exists else "does not exist"
+        print(
+            f"backlog_index: FAIL — backlog store {what}: {store_path}. "
+            "Check the --store path (it is not resolved against a repo root)."
+        )
+        return 1
 
     if not any(
         (

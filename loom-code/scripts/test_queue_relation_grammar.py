@@ -507,3 +507,50 @@ def test_unreadable_brief_file_exits_1_not_a_traceback(tmp_path: Path) -> None:
     assert result.returncode == 1, f"stdout: {result.stdout}\nstderr: {result.stderr}"
     assert "Traceback" not in result.stderr
     assert "unreadable" in result.stderr
+
+
+# --- Dogfood finding #2: the ASCII near-miss deserves its own sentence ---
+
+
+def test_ascii_double_hyphen_near_miss_names_the_character(tmp_path: Path) -> None:
+    """A newcomer wrote `unqueued -- this is exploratory spike work` and got
+    the same generic grammar message as someone using the wrong form
+    entirely. They re-read it several times before suspecting the dash
+    character itself. The form was right; only the character was wrong, and
+    the message must say so."""
+    repo = tmp_path
+    (repo / "docs" / "loom" / "backlog").mkdir(parents=True)
+    brief = repo / "brief.md"
+    brief.write_text(
+        "## Queue relation\n\nunqueued -- this is exploratory spike work\n",
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, str(_SCRIPT), str(brief), "--repo-root", str(repo)],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "ASCII '--'" in result.stderr, result.stderr
+    assert "em dash" in result.stderr, result.stderr
+
+
+def test_a_genuinely_wrong_form_does_not_get_the_dash_hint(tmp_path: Path) -> None:
+    """The hint must not fire on every unresolved line — it is earned by
+    re-matching a dash-swapped copy against the grammar, so it says 'this
+    line would have resolved' rather than 'I saw two hyphens'."""
+    repo = tmp_path
+    (repo / "docs" / "loom" / "backlog").mkdir(parents=True)
+    brief = repo / "brief.md"
+    brief.write_text("## Queue relation\n\npending -- decide later\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(_SCRIPT), str(brief), "--repo-root", str(repo)],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "ASCII" not in result.stderr, result.stderr

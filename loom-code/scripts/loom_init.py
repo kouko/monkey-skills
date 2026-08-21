@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import pathlib
 import sys
 from pathlib import Path
 
@@ -170,6 +171,18 @@ def main(argv: list[str]) -> int:
         f"loom-init: OK — queue layer scaffolded at {target} "
         "(backlog charter + KICKOFF-DEFAULTS skeleton + PURPOSE skeleton + "
         "plans/ + specs/), self-verified against backlog_index.py"
+    )
+    # Dogfood finding #3 (2026-08-21): the charter this just wrote says to
+    # use "the repo-root scripts/backlog_index.py when it exists; otherwise
+    # the copy shipped inside the loom-code plugin" — and a freshly
+    # scaffolded repo has no scripts/ directory, so every command in the
+    # charter needs a path the newcomer has no way to know. This script IS
+    # inside that plugin, so it can just say where.
+    print(
+        "loom-init: this repo has no repo-root scripts/ copy, so run the "
+        "plugin-shipped tools by absolute path, e.g.\n"
+        f"    python3 {pathlib.Path(__file__).resolve().parent}/backlog_index.py "
+        "--ready --store docs/loom/backlog"
     )
     return 0
 

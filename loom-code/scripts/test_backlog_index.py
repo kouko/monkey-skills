@@ -1311,3 +1311,98 @@ def test_index_and_ready_agree_on_an_archive_tier_entry_with_a_bad_status(tmp_pa
         if v.kind == "archive-tier" and "2026-07-01-stale" in v.file
     ]
     assert flagged, backlog_index.find_violations(store)
+
+
+def test_output_defaults_beside_its_store_not_beside_the_cwd(tmp_path):
+    """Dogfood finding (2026-08-21, end-to-end shakedown): `--write` with an
+    explicit `--store` and a defaulted `--output` resolved the output against
+    the CWD, so running it from one repo against another repo's store wrote
+    the wrong index over the standing repo's `BACKLOG.md` — silently, and with
+    a success line printing a relative path that hid where it landed. It
+    happened for real: a dogfood agent destroyed monkey-skills' own
+    docs/loom/BACKLOG.md this way (recovered from HEAD).
+
+    The index belongs beside its own store. For the canonical layout
+    (`--store docs/loom/backlog` from the repo root) the derived default is
+    byte-identical to the old one — only the cross-repo case, which was
+    always wrong, changes.
+
+    Six whole-branch review rounds did not find this; ten minutes of running
+    the thing did. Recorded in DL-30.
+    """
+    store = tmp_path / "theirs" / "docs" / "loom" / "backlog"
+    store.mkdir(parents=True)
+    _write(store, "2026-08-01-alpha.md", _entry("2026-08-01-alpha", "open"))
+
+    standing = tmp_path / "mine" / "docs" / "loom"
+    standing.mkdir(parents=True)
+    victim = standing / "BACKLOG.md"
+    victim.write_text("PRECIOUS — this repo's own index\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(BACKLOG_SCRIPT), "--write", "--store", str(store)],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path / "mine",
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert victim.read_text(encoding="utf-8") == "PRECIOUS — this repo's own index\n", (
+        "writing another store's index clobbered the standing repo's "
+        "BACKLOG.md:\n" + victim.read_text(encoding="utf-8")
+    )
+    written = store.parent / "BACKLOG.md"
+    assert written.is_file(), (
+        f"the index was not written beside its own store at {written}:\n"
+        + result.stdout
+    )
+    assert "2026-08-01-alpha" in written.read_text(encoding="utf-8")
+    # The success line must name where it landed, absolutely — a relative
+    # path is exactly what hid the cross-repo write.
+    assert str(written) in result.stdout, result.stdout
+
+
+def test_a_store_path_that_does_not_exist_is_a_failure_not_a_clean_empty_store(tmp_path):
+    """Dogfood finding #1 (2026-08-21, end-to-end shakedown) — the worst
+    defect this arc shipped, and six whole-branch review rounds read past it.
+
+    `--store` is the ONLY way to locate the store (there is no `--repo-root`
+    here), and a typo in it produced `OK — every invariant holds` at exit 0:
+    `_entry_files` globs a directory that is not there, gets an empty list,
+    and every invariant holds vacuously. `--ready` reported an empty queue and
+    `--write` generated an empty index over whatever `--output` pointed at.
+    A green validate bought with a typo is worse than a red one.
+
+    Absence of a store is a legitimate state for a repo that never adopted the
+    queue layer — but that is the CALLER's judgment (see
+    `check_queue_relation.py`, which reports a loud N/A and exits 0 for
+    exactly that case). This script is pointed at a store explicitly; being
+    unable to find it is a failure.
+    """
+    missing = tmp_path / "docs" / "loom" / "backlogg"
+
+    for mode in ("--validate", "--ready", "--write", "--check"):
+        result = subprocess.run(
+            [sys.executable, str(BACKLOG_SCRIPT), mode, "--store", str(missing)],
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+        )
+        combined = result.stdout + result.stderr
+        assert result.returncode != 0, (
+            f"{mode} reported success against a store that does not exist "
+            f"at {missing}:\n{combined}"
+        )
+        assert "every invariant holds" not in combined, combined
+        assert str(missing) in combined, combined
+
+    # A path that exists but is not a directory is the same failure.
+    not_a_dir = tmp_path / "PURPOSE.md"
+    not_a_dir.write_text("not a store\n", encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, str(BACKLOG_SCRIPT), "--validate", "--store", str(not_a_dir)],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+    )
+    assert result.returncode != 0, result.stdout + result.stderr

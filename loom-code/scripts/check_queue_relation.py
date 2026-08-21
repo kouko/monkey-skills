@@ -42,6 +42,8 @@ _QUEUE_HEADING_RE = re.compile(r"^##\s+Queue relation\s*$")
 _IN_QUEUE_RE = re.compile(r"^in-queue:\s*(?P<name>.+?)\s*$")
 _UNQUEUED_RE = re.compile(r"^unqueued\s*—\s*.+$")
 _DISPLACES_RE = re.compile(r"^displaces:\s*(?P<name>.+?)\s*—\s*.+$")
+# The ASCII near-miss most keyboards produce for an em dash.
+_ASCII_DASH_RE = re.compile(r"\s--\s")
 
 
 def _find_queue_relation_value(brief_text: str) -> str | None:
@@ -75,6 +77,11 @@ class QueueRelationResult:
     status: str  # "resolved" | "unresolved"
     message: str = ""
     named_entry: str | None = None
+    # True when the section's line is a near-miss using an ASCII "--" where
+    # the grammar requires an em dash. Carried so the question can name the
+    # character instead of restating the whole grammar at someone who
+    # already had the form right.
+    ascii_dash: bool = False
 
 
 def resolve_queue_relation(
@@ -120,8 +127,17 @@ def resolve_queue_relation(
             )
         return QueueRelationResult("resolved", value, named_entry=name)
 
-    # `pending`, or any other wording — unresolved.
-    return QueueRelationResult("unresolved", value)
+    # `pending`, or any other wording — unresolved. Before giving up, check
+    # for the one near-miss worth naming: the right FORM with an ASCII "--"
+    # where the grammar wants an em dash. Re-matching against a dash-swapped
+    # copy is what makes the answer trustworthy — it says "this line would
+    # have resolved" rather than guessing from the presence of two hyphens.
+    swapped = _ASCII_DASH_RE.sub("\u2014", value)
+    ascii_dash = swapped != value and (
+        _UNQUEUED_RE.match(swapped) is not None
+        or _DISPLACES_RE.match(swapped) is not None
+    )
+    return QueueRelationResult("unresolved", value, ascii_dash=ascii_dash)
 
 
 def build_queue_relation_question(
@@ -142,6 +158,18 @@ def build_queue_relation_question(
             "cannot resolve until one does"
         )
 
+    # Dogfood finding #2 (2026-08-21): the grammar requires a literal em
+    # dash, and a newcomer typing the ASCII `--` that most keyboards produce
+    # got the SAME generic message as someone using the wrong form entirely.
+    # They re-read it several times before suspecting the character. Name it.
+    dash_hint = ""
+    if result.ascii_dash:
+        dash_hint = (
+            " NOTE: the line uses an ASCII '--'; this grammar requires a "
+            "literal em dash (U+2014, \u2014). That is the only thing wrong "
+            "with it."
+        )
+
     if result.named_entry is not None:
         return (
             f"Queue relation: '{result.named_entry}' does not match any "
@@ -154,7 +182,7 @@ def build_queue_relation_question(
         f"Queue relation: is this arc `in-queue:` naming a live bet "
         f"entry ({names_clause}), `unqueued — <reason>`, or `displaces:` "
         "naming a live bet entry followed by ' — <reason>'? Record the "
-        "answer in the brief's '## Queue relation' section."
+        "answer in the brief's '## Queue relation' section." + dash_hint
     )
 
 
@@ -215,7 +243,14 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 0
 
-    if not brief_path.is_file():
+    try:
+        brief_present = brief_path.is_file()
+    except OSError as exc:
+        print(
+            f"Error: brief at {brief_path} is unreadable ({exc}).", file=sys.stderr
+        )
+        return 1
+    if not brief_present:
         print(f"Error: brief file not found at {brief_path}.", file=sys.stderr)
         return 1
     try:

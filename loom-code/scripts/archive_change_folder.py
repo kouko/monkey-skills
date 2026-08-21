@@ -425,6 +425,32 @@ def main(argv: list[str] | None = None) -> int:
     #       keeps working unchanged)
     args = list(sys.argv[1:] if argv is None else argv)
 
+    # This script hand-rolls its argv parsing (the shapes above), so it gets
+    # no argparse `--help` for free. Without this branch `--help` fell through
+    # to the positional identifier and produced "change-folder does not
+    # exist: .../docs/loom/--help" — a domain-specific error for the most
+    # ordinary first reflex there is (found by dogfood, 2026-08-21).
+    if "--help" in args or "-h" in args:
+        print(
+            "usage: archive_change_folder.py <identifier> [root] "
+            "[--date YYYY-MM-DD] [--unit folder|file]\n"
+            "\n"
+            "  <identifier>  change-id (folder unit), or entry filename\n"
+            "                (file unit); a single safe path segment\n"
+            "  [root]        repo root (default: cwd)\n"
+            "  --date        date stamp for the folder unit's destination\n"
+            "                (default: today); a real YYYY-MM-DD date\n"
+            "  --unit        folder (default): docs/loom/<id>/ becomes\n"
+            "                docs/loom/archive/<date>-<id>/\n"
+            "                file: docs/loom/backlog/<id> becomes\n"
+            "                docs/loom/backlog/archive/<id>, unrenamed\n"
+            "\n"
+            "Stamps `status: closed` into the moved object and, for the\n"
+            "file unit, strips any `blocked:` field. Exit 0 on success\n"
+            "(prints the destination), 1 on any refusal, writing nothing."
+        )
+        return 0
+
     date_override = None
     if "--date" in args:
         i = args.index("--date")
