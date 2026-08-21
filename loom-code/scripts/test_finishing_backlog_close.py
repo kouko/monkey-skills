@@ -4,7 +4,7 @@ Pins the Backlog-close check row in finishing-a-development-branch/
 SKILL.md Step 8's close-out sub-checks table (flip a shipped or
 superseded backlog entry's status in the same close-out commit,
 regenerate the index, silent skip without a hit or a store) and the
-Step 13 queue-tail report line ("backlog next: <name>"). Added by the
+Step 13 queue-tail report line ("next bet: <name>"). Added by the
 backlog ready-verb-and-close-loop arc: 90 entries filed, zero ever
 closed, because no flow ever read or closed the store. The five Step 8
 ONCE-per-branch bullets collapsed into one table in loom arc 4b; these
@@ -84,9 +84,9 @@ def test_backlog_close_follows_memory_store_integrity_row():
 
 
 def test_step13_queue_tail_phrase_present():
-    """Step 13's report ends naming the top of the remaining
-    COMMITTED-NEXT queue."""
-    assert '"backlog next: <name>"' in _normalized_text()
+    """Step 13's report ends naming the top of the remaining bet
+    queue."""
+    assert '"next bet: <name>"' in _normalized_text()
 
 
 def test_backlog_close_script_absent_na_string_present():
@@ -113,9 +113,9 @@ def test_step13_skip_clause_names_the_script_path():
 
 def test_step13_queue_empty_alternative_phrase_present():
     """Step 13's report line has two renderings depending on queue
-    state: 'backlog next: <name>' when non-empty, or this literal
-    string when the COMMITTED-NEXT queue has nothing in it."""
-    assert '"COMMITTED-NEXT queue empty"' in _normalized_text()
+    state: 'next bet: <name>' when non-empty, or this literal
+    string when the bet queue has nothing in it."""
+    assert '"bet queue empty"' in _normalized_text()
 
 
 def _backlog_close_row_text() -> str:

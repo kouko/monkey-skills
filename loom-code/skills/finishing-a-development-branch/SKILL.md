@@ -291,8 +291,8 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
     guidance as Step 11 (glance the prefilled dialog before confirming,
     plus the ready-to-run `gh pr merge <N> --squash` CLI alternative) —
     and worktree status. End the report with one line naming the top
-    of the remaining COMMITTED-NEXT backlog queue ("backlog next:
-    <name>" — or "COMMITTED-NEXT queue empty"), from
+    of the remaining bet queue ("next bet:
+    <name>" — or "bet queue empty"), from
     `python3 scripts/backlog_index.py --ready` (repo-root copy; when
     absent, the plugin-shipped
     `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backlog_index.py" --ready`);
