@@ -67,7 +67,7 @@ We ship the rule's zero-risk and low-risk layers and defer its direction-changin
 - Extending the reviewer lens to generated documents (backlog entries, plans) — the stated coverage gap; recorded as debt in this PR, not closed by it.
 - A standalone chain-of-thought page recording how eight review rounds produced this rule — genuinely valuable, and the reasoning currently survives only in this brief; deliberately left to a follow-up so this PR stays four artifacts wide.
 - Mermaid decision diagrams inside the changed artifacts — the repo's own visual routing sends option comparisons to a table, which `## Alternatives Considered` already is, and a three-node diagram is a sentence.
-- Promoting `measure_exempt.py` or `probe_ast.py` — their assertions already live permanently inside the oracle (`test_gate_scripts_fail_loud_on_unreadable_input.py:467-494`, `:276-398`); re-asserting them would be duplicate coverage.
+- Promoting `measure_exempt.py` or `probe_ast.py` — their assertions already live permanently inside the oracle as `exempt_leaks` plus `test_exempt_leak_count_matches_the_filed_ledger`, and as `leaky_scopes` itself, in `test_gate_scripts_fail_loud_on_unreadable_input.py`; re-asserting them would be duplicate coverage. Cited by symbol, not line: this arc's own docstring pass shifted every line number in that file after the citation was written.
 
 ## Alternatives Considered
 
