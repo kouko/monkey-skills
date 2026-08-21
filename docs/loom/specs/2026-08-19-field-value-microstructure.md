@@ -6,7 +6,7 @@
 
 ## Design-side on-ramp
 
-fired: rows 1 — standing direct (DIRECTION.md)
+fired: rows 1 — standing direct (KICKOFF-DEFAULTS.md)
 
 ## Problem
 
