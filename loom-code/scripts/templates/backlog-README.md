@@ -11,24 +11,18 @@
 
 ## Frontmatter contract
 
-Every entry (live or archived) carries this frontmatter:
+Every entry — live or under `archive/` — carries this frontmatter:
 
 ```
 ---
 name: <YYYY-MM-DD-slug — identical to the filename without .md>
 description: <one line; what the item is>
-status: <open | bet | closed | archived>
+status: <open | bet | closed>
 origin: <optional; where the item came from>
 start: <optional; the start / re-trigger condition>
-archived: <optional; required when status is archived — YYYY-MM-DD the entry was archived>
 serves: <required only when status is bet and this repo has docs/loom/PURPOSE.md; otherwise optional>
 ---
 ```
-
-`archived` is stamped when an entry is closed (see the Archive rule
-below) and is what the generated index's compact `## Archived` line
-(`- <name> (archived <date>)`) reads its date from. It carries no
-meaning on a live entry and must not be set on one.
 
 `serves` states how the entry connects to the repo's north star. It is
 required only when BOTH hold: `status` is `bet`, and the
@@ -42,10 +36,12 @@ violation), or `serves: <any other non-empty text>` describing the
 link. `scripts/backlog_index.py --validate` enforces both the
 presence rule and the grammar.
 
-Live entries — those directly under `docs/loom/backlog/`, excluding
-`archive/` — carry any status **except** `archived`. Entries under
-`docs/loom/backlog/archive/` carry `archived` as their `status` value and
-no other.
+An entry under `docs/loom/backlog/archive/` carries `status: closed` and
+no other value — `--validate` reports an `[archive-tier]` violation for
+anything else. The rule runs one way only: a live entry directly under
+`docs/loom/backlog/` may equally carry `closed`, because the close-out
+flip and the physical move into `archive/` are separate steps (see the
+Close duty verb and the Archive rule below).
 
 **`description` never restates the status.** Write `description: the CI
 lane drops coverage for foreign carrier files`, never `… (open)`. The
@@ -124,10 +120,9 @@ depth.
 promotion — the promotion step exists for the parallel set's capacity
 limit, not as a gate on who may act.
 
-The `status` field is otherwise a closed enum of exactly the four
-values in the frontmatter contract above (`open` / `bet` / `closed` /
-`archived`); a live entry never carries `archived`, and an archived
-entry never carries any other value.
+The `status` field is otherwise a closed enum of exactly the three
+values in the frontmatter contract above (`open` / `bet` / `closed`);
+`--validate` rejects any other value as outside the vocabulary.
 
 ## Verbs
 
@@ -229,17 +224,23 @@ python3 <loom-code plugin>/scripts/archive_change_folder.py <identifier> [root] 
 For a backlog entry, `--unit file` and `<identifier>` is the entry's
 filename including `.md` (e.g. `2026-08-01-example-entry.md`).
 
-Under the hood, closing an entry means:
+Under the hood, archiving an entry means one thing: moving the file
+from `docs/loom/backlog/<name>.md` to
+`docs/loom/backlog/archive/<name>.md`. The entry's `status:` is already
+`closed` by then — the close-out flip is a separate, earlier step — and
+the move must leave it that way.
 
-1. Move the entry file from `docs/loom/backlog/<name>.md` to
-   `docs/loom/backlog/archive/<name>.md`.
-2. Stamp `archived` as the moved file's `status` value.
-3. Stamp `archived: <YYYY-MM-DD>` (the archive date) into the same
-   frontmatter — the generated index's `## Archived` line needs it and
-   has no other source for it.
+**Known defect, verified by execution on 2026-08-21.**
+`archive_change_folder.py --unit file` still stamps the retired word
+`archived` over the moved entry's `status:` and adds a stray
+`archived: <YYYY-MM-DD>` field, so the store it leaves behind fails
+`--validate` with both an `[archive-tier]` and a `[status]` violation.
+Until that script is fixed, re-set the moved entry's `status:` to
+`closed` and delete the stray date field by hand, then re-run
+`--validate`.
 
-Knowing these three steps lets you verify the script's result; it is
-not an invitation to perform them by hand. Archiving **never renames**
+Knowing what the move does lets you verify the script's result; it is
+not an invitation to perform it by hand. Archiving **never renames**
 the file (the filename rule above still applies) and **never deletes**
 the file. The entry's full body and history remain readable at its new
 path indefinitely.
