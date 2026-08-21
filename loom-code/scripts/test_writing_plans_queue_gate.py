@@ -46,14 +46,28 @@ def test_gate_paragraph_names_queue_relation_script():
     assert "unresolved" not in exit_0_clause.group(0), "exit 0's clause says 'unresolved' — the meanings are swapped"
     # No-queue-layer posture: exit 0 also covers the loud N/A report.
     assert "N/A" in exit_0_clause.group(0), "exit 0 clause omits the no-queue-layer N/A posture"
+    # The three canonical forms don't all resolve the same way: `unqueued`
+    # resolves with zero live bets (the only form any brief can use while
+    # the store holds no `status: bet` entries), while `in-queue:`/
+    # `displaces:` need a matching live bet entry. The clause must say so,
+    # not claim a single condition for all three.
+    assert "unconditionally" in exit_0_clause.group(0), "exit 0 clause doesn't distinguish unqueued's unconditional resolution from in-queue/displaces needing a live bet match"
+    assert "in-queue" in exit_0_clause.group(0) and "displaces" in exit_0_clause.group(0), "exit 0 clause doesn't name the two forms that need a live bet match"
 
     exit_1_clause = re.search(r"[Ee]xit 1[^.]*\.", para)
     assert exit_1_clause, "exit 1 not stated as its own clause"
-    assert "unreadable" in exit_1_clause.group(0), "exit 1 not bound to 'unreadable path' in one clause"
-    # Exit 1 now has two real causes (unreadable brief path, or a store
+    # The script's actual condition is a missing path, not an unreadable
+    # one (it never attempts to open an existing-but-unreadable file) —
+    # the clause must use the accurate word.
+    assert "not found" in exit_1_clause.group(0), "exit 1 not bound to 'not found' in one clause"
+    assert "unreadable" not in exit_1_clause.group(0), "exit 1 clause uses the inaccurate word 'unreadable'"
+    # Exit 1 now has two real causes (missing brief path, or a store
     # entry's status outside the closed vocabulary) — the paragraph must
-    # not claim it means only one thing.
+    # not claim it means only one thing, and must give each cause its own
+    # remedy so a reader can tell them apart and act.
     assert "vocabulary" in exit_1_clause.group(0), "exit 1 clause omits the second cause (status outside the closed vocabulary)"
+    assert "fix the path" in exit_1_clause.group(0), "exit 1 clause omits the remedy for a missing brief path"
+    assert "frontmatter" in exit_1_clause.group(0), "exit 1 clause omits the remedy for a bad-status backlog entry"
 
     assert re.search(r"[Ee]xit 2[^.]*unresolved", para), "exit 2 not bound to 'unresolved' in one clause"
 
