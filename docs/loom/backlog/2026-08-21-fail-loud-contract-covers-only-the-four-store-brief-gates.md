@@ -50,10 +50,20 @@ start: the next time a non-gate script in loom-code/scripts/ dies on a raw trace
   actionable failure line should SAY — which is judgment, not mechanism,
   and is why this is worth doing deliberately rather than in a sweep.
 
-- Known limit to carry forward: the contract's completeness leg
-  recognises filesystem calls by callee NAME. A call reached through a
-  variable holding a bound method, or an I/O entry point whose name is
-  not in `_FS_CALLS`, still escapes it. That limit is stated in the
+- Known limits to carry forward, all four disclosed in the leg's own
+  docstring rather than closed. Recognition limits: a call reached
+  through a variable holding a bound method, an I/O entry point whose
+  name is not in `_FS_CALLS`, or I/O performed by a C extension.
+  REACHABILITY limits, both found by round-8 reviewers and both latent
+  today (no FAMILY script contains a `yield`, none has a module-level
+  `try`): I/O deferred past its call site — a generator constructed
+  inside a guarded `try` runs its body where it is CONSUMED, and the leg
+  credits the guard at construction — and a `def` nested inside a
+  module-level `try`, whose body inherits that guard's line range though
+  the `try` only runs at definition time. Whoever widens this contract
+  should decide whether to close the reachability pair or keep disclosing
+  it; the cheap predicate for the first is "a scope containing
+  `ast.Yield` can never be guarded by its call site". That limit is stated in the
   leg's own docstring; two review rounds caught earlier revisions
   claiming more than they delivered, so keep the claim sized to the
   mechanism when this is widened.
