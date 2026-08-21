@@ -947,7 +947,7 @@ def test_agreement_check_is_a_noop_when_body_has_no_matching_bullet(tmp_path):
 # docs/loom/plans/2026-08-06-backlog-ready-verb-and-close-loop.md, Task 1).
 # `bet` first (filename order), then `open`; excluded statuses (`closed`,
 # archived, or an `open` entry carrying `blocked:`) never listed; closing
-# `ready: N bet / M open / K excluded by status` line.
+# `ready: N bet / M open / P closed / Q blocked` line.
 # ---------------------------------------------------------------------------
 
 
@@ -1049,12 +1049,12 @@ def test_ready_start_line_rendered_only_for_entries_that_have_the_field(tmp_path
 
 def test_ready_count_line_reports_exact_numbers(tmp_path):
     """(d) the output ends with the exact tally: 1 bet, 2 open,
-    3 excluded (blocked + closed + archived)."""
+    2 closed (1 closed entry + 1 archive-tier entry), 1 blocked."""
     result = _run_ready(_ready_store(tmp_path))
 
     assert result.returncode == 0, result.stdout + result.stderr
     non_empty = [line for line in result.stdout.splitlines() if line.strip()]
-    assert non_empty[-1] == "ready: 1 bet / 2 open / 3 excluded by status"
+    assert non_empty[-1] == "ready: 1 bet / 2 open / 2 closed / 1 blocked"
 
 
 def test_ready_is_a_mode_on_its_own_and_flagless_defaults_to_validate(tmp_path):
@@ -1176,7 +1176,7 @@ def test_ready_excludes_archive_tier_entry_regardless_of_status(tmp_path):
     assert "- 2026-08-01-open-plain — Legit open marker." in open_section
     assert "2026-07-01-mis-tiered" not in open_section
     non_empty = [line for line in out.splitlines() if line.strip()]
-    assert non_empty[-1] == "ready: 0 bet / 1 open / 1 excluded by status", non_empty[-1]
+    assert non_empty[-1] == "ready: 0 bet / 1 open / 1 closed / 0 blocked", non_empty[-1]
 
 
 def test_ready_fails_loudly_on_status_outside_closed_vocabulary(tmp_path):
@@ -1215,7 +1215,7 @@ def test_ready_on_empty_store_prints_zero_count_line_only(tmp_path):
     result = _run_ready(store)
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout == "ready: 0 bet / 0 open / 0 excluded by status\n"
+    assert result.stdout == "ready: 0 bet / 0 open / 0 closed / 0 blocked\n"
 
 
 def test_ready_omits_bet_heading_when_empty(tmp_path):
@@ -1245,7 +1245,7 @@ def test_ready_omits_bet_heading_when_empty(tmp_path):
     assert "## bet" not in out, out
     assert "## open" in out
     non_empty = [line for line in out.splitlines() if line.strip()]
-    assert non_empty[-1] == "ready: 0 bet / 1 open / 1 excluded by status"
+    assert non_empty[-1] == "ready: 0 bet / 1 open / 0 closed / 1 blocked"
 
 
 def test_direction_verbs_removed(tmp_path):

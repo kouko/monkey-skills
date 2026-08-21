@@ -82,7 +82,10 @@ per entry, plus an indented `  start: <value>` second line for an entry
 whose frontmatter carries `start:`. `closed` entries, archive-tier
 entries, and `open` entries carrying a `blocked:` field are excluded
 from the listing and only tallied in the closing
-`ready: N bet / M open / K excluded by status` line.
+`ready: N bet / M open / P closed / Q blocked` line — two separate
+axes, since a `closed`/archive-tier entry and a `blocked` `open` entry
+are excluded for different reasons (the former will never be ready as
+written; the latter is one `blocked:` line away from it).
 
 The validate mode (which a FLAGLESS invocation now defaults to,
 mirroring check_loom_memory_integrity.py's trio shape) checks every
@@ -490,11 +493,19 @@ def build_ready(store: Path) -> str:
     An entry physically under `archive/` is excluded regardless of its
     frontmatter `status:` — the archive tier overrides the status field,
     same as `_bucket_entry()`. An `open` entry carrying a `blocked:` field
-    is excluded too (brief BI-2 — that is what the field is for).
+    is excluded too (brief BI-2 — that is what the field is for). These
+    are two distinct exclusion axes, tallied separately in the closing
+    line: a `closed`/archive-tier entry is not actionable as written; a
+    `blocked` `open` entry is otherwise-ready and one `blocked:` line
+    away from it. An archive-tier entry is always tallied as `closed`
+    (the archive tier overriding its status is exactly what makes it
+    closed for `--ready`'s purposes, independent of what its frontmatter
+    literally says).
     """
     entry_lines: dict[str, list[str]] = {status: [] for status in READY_STATUSES}
     counts: dict[str, int] = {status: 0 for status in READY_STATUSES}
-    excluded = 0
+    excluded_closed = 0
+    excluded_blocked = 0
 
     for path, is_archived in _entry_files(store):
         frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
@@ -504,9 +515,11 @@ def build_ready(store: Path) -> str:
                 f"{path.name}: entry has status {status!r}, outside the "
                 "closed status vocabulary"
             )
-        blocked = "blocked" in frontmatter
-        if is_archived or status not in READY_STATUSES or blocked:
-            excluded += 1
+        if is_archived or status not in READY_STATUSES:
+            excluded_closed += 1
+            continue
+        if "blocked" in frontmatter:
+            excluded_blocked += 1
             continue
         counts[status] += 1
         name = frontmatter.get("name", path.stem)
@@ -529,7 +542,7 @@ def build_ready(store: Path) -> str:
         lines.append("")
     lines.append(
         f"ready: {counts['bet']} bet / {counts['open']} open "
-        f"/ {excluded} excluded by status"
+        f"/ {excluded_closed} closed / {excluded_blocked} blocked"
     )
     return "\n".join(lines) + "\n"
 
