@@ -369,7 +369,9 @@ def main() -> int:
 
 
 @pytest.mark.parametrize("shape", sorted(_ESCAPE_SHAPES))
-def test_every_known_escape_shape_reaches_main(shape: str) -> None:
+def test_every_known_escape_shape_reaches_a_top_level_scope(shape: str) -> None:
     source = _ESCAPE_SHAPES[shape]
     leaky = leaky_scopes(source) & {"main", _MODULE_SCOPE}
-    assert leaky, f"escape shape {shape!r} did not reach main: {source}"
+    assert leaky, (
+        f"escape shape {shape!r} reached neither `main` nor module scope: {source}"
+    )
