@@ -137,7 +137,7 @@ def test_retired_status_fails_loudly_instead_of_clean_pass(tmp_path):
 
     result = _run(store)
 
-    assert result.returncode != 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert result.returncode == 1, f"stdout: {result.stdout}\nstderr: {result.stderr}"
     assert "entry-a" in result.stderr
     assert "PARKED" in result.stderr
 

@@ -224,6 +224,9 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         bet_names = live_bet_names(store)
+    except OSError as exc:
+        print(f"Error: backlog store at {store} is unreadable ({exc}).", file=sys.stderr)
+        return 1
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

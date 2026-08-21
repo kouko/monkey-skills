@@ -235,6 +235,38 @@ def test_missing_brief_file_exits_one(tmp_path: Path) -> None:
     assert result.returncode == 1
 
 
+def test_unreadable_entry_file_prints_one_actionable_line_not_a_traceback(
+    tmp_path: Path,
+) -> None:
+    """Round-2 finding: `live_bet_names` reads entry files the same way
+    `find_bet_entries` in check_north_star_link.py does, so an unreadable
+    entry must be reported the same way — one actionable line on stderr,
+    never a raw traceback. Mirrors check_north_star_link.py's OSError
+    handling (its module docstring names this exact same-bytes guard)."""
+    repo = tmp_path
+    store = repo / "docs" / "loom" / "backlog"
+    _write_bet_entry(store, "unreadable-entry")
+    entry = store / "unreadable-entry.md"
+    entry.chmod(0o000)
+
+    brief = repo / "brief.md"
+    brief.write_text("## Queue relation\n\nunqueued — nothing to queue\n", encoding="utf-8")
+
+    try:
+        result = subprocess.run(
+            [sys.executable, str(_SCRIPT), str(brief), "--repo-root", str(repo)],
+            capture_output=True,
+            text=True,
+        )
+    finally:
+        entry.chmod(0o644)
+
+    assert result.returncode == 1, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    assert "Traceback" not in result.stderr
+    assert "unreadable" in result.stderr
+    assert str(store) in result.stderr
+
+
 def test_no_advisory_output_on_resolved_brief(tmp_path: Path) -> None:
     """Half A (the unlanded-direction-change advisory) is deleted — a
     resolved run must print only the resolution line, never an
