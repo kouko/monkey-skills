@@ -84,35 +84,9 @@ entries, and `open` entries carrying a `blocked:` field are excluded
 from the listing and only tallied in the closing
 `ready: N bet / M open / K excluded by status` line.
 
-`--direction-write <path>` / `--direction-check <path>` (direction-layer
-arc, plan docs/loom/plans/2026-08-07-loom-direction-layer.md Task 1) are
-the DIRECTION.md counterparts of --write/--check: `--direction-write`
-regenerates the given DIRECTION.md's `## Now` section — one
-`- <name> — <description>` line per `bet` entry in filename
-(= file-date) order, or exactly `_(queue empty — bet at the next
-close-out)_` when the queue is empty — replacing the section body
-wholesale (it is machine-owned per DIRECTION.md's charter — SSOT
-`loom-code/hooks/direction-charter.md`) and
-leaving every other line untouched. It refuses loudly (exit 1, no write)
-when the file lacks a `## Now` heading or an entry's frontmatter is
-malformed (status outside the closed vocabulary). `--direction-check` is
-self-confirmation — the generator confirming itself (arc-3 lesson): it
-re-runs the generator in memory and diffs against the committed file,
-exit 1 on drift or a missing file, never writing.
-
 The validate mode (which a FLAGLESS invocation now defaults to,
-mirroring check_loom_memory_integrity.py's trio shape) additionally
-checks the direction file at `<store>/../DIRECTION.md` — the
-convention's fixed location — ONLY when it exists; an absent file is
-silently valid (the direction layer is opt-in per repo). Its three
-independent checks: `## Now` content matches the `bet` entry
-files; `## Now`/`## Next` headings present (`## Later` is optional —
-tolerated if present, never required); and no date-like token
-(`20\\d\\d[-/年.]` or `Q[1-4]`) anywhere OUTSIDE the generated `## Now`
-body — the charter's no-dates rule as a checked invariant. The `## Now`
-body is exempt from the date scan because entry NAMES are date-prefixed
-by store convention; the now-matches-entries check is what keeps that
-exemption safe (nothing but generator output can live there).
+mirroring check_loom_memory_integrity.py's trio shape) checks every
+entry's frontmatter against the store's invariants above.
 
 Usage:
     python3 scripts/backlog_index.py [--store docs/loom/backlog]
@@ -120,13 +94,10 @@ Usage:
     python3 scripts/backlog_index.py --write [--store docs/loom/backlog] [--output docs/loom/BACKLOG.md]
     python3 scripts/backlog_index.py --check [--store docs/loom/backlog] [--output docs/loom/BACKLOG.md]
     python3 scripts/backlog_index.py --ready [--store docs/loom/backlog]
-    python3 scripts/backlog_index.py --direction-write docs/loom/DIRECTION.md [--store docs/loom/backlog]
-    python3 scripts/backlog_index.py --direction-check docs/loom/DIRECTION.md [--store docs/loom/backlog]
 
 Exit codes: 0 = clean/written/matches, 1 = at least one invariant violation
-(--validate, flagless), a build error (--write, --check, --ready,
---direction-write, --direction-check), or drift / a missing committed file
-(--check, --direction-check).
+(--validate, flagless), a build error (--write, --check, --ready), or
+drift / a missing committed file (--check).
 """
 
 from __future__ import annotations
@@ -338,8 +309,8 @@ def _check_description(display: str, frontmatter: dict[str, str]) -> list[Violat
 
 def _purpose_path_for(store: Path) -> Path:
     """Where the `serves` gate looks for the north-star document: the
-    store's parent directory, mirroring `_direction_path_for`'s convention
-    (docs/loom/PURPOSE.md beside docs/loom/backlog/). Its mere presence
+    store's parent directory (docs/loom/PURPOSE.md beside
+    docs/loom/backlog/). Its mere presence
     or absence is the gate — content is never read here. PRINCIPLES.md
     (the field's original 1fe7b2c1 target) holds design/engineering
     principles only and is deliberately NOT probed here."""
@@ -581,260 +552,11 @@ def build_ready(store: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
-# The exact line an empty `bet` queue renders into `## Now`
-# (pinned by the plan; the betting prompt at close-out is what refills it).
-DIRECTION_EMPTY_QUEUE_LINE = "_(queue empty — bet at the next close-out)_"
-
-DIRECTION_NOW_HEADING = "## Now"
-
-# The charter's no-dates rule as a checked invariant (plan Task 1):
-# calendar-year tokens (2026-, 2026/, 2026年, 2026.) and quarter tokens
-# (Q1-Q4). Scanned over everything OUTSIDE the generated `## Now` body.
-DIRECTION_DATE_TOKEN_RE = re.compile(r"20\d\d[-/年.]|Q[1-4]")
-
-# User-ratified exemption: a `## Next`/`## Later` line may point at a
-# backlog-entry FILENAME (the charter permits this pointer pattern), which
-# necessarily carries a date-like token by store convention. Matched
-# substrings are stripped from the line before the date scan below runs,
-# so a bare date token elsewhere on the same line is still caught.
-DIRECTION_ENTRY_FILENAME_RE = re.compile(r"20\d\d-\d\d-\d\d-[A-Za-z0-9_-]+\.md")
-
-# Second user-ratified exemption: a well-formed `## On-ramp standing
-# choices` entry carries a trailing `(YYYY-MM-DD)` by design — grammar
-# SSOT is check_onramp_choice.py's `_STANDING_ENTRY` / family-reception.md
-# §On-ramp standing choices. Kept semantically IDENTICAL to
-# `_STANDING_ENTRY` (same quantifiers/character classes; the only
-# difference is the added `date` capture group, needed here to strip
-# just that span before the date scan) — deliberately not imported
-# (this module must not depend on the checker CLI), so
-# test_standing_entry_regex_matches_check_onramp_choice pins the two
-# against drift. Only the trailing date group is stripped before the
-# date scan, so a malformed line, or a date anywhere else on a
-# well-formed line, is still caught.
-DIRECTION_STANDING_ENTRY_RE = re.compile(
-    r"^-\s*row\s+(?P<row>\d+)\s*\([^)]*\):\s*standing\s+"
-    r"(?P<choice>direct|detour)\s*—\s*.+(?P<date>\(\d{4}-\d{2}-\d{2}\))\s*$"
-)
-DIRECTION_STANDING_HEADING = "## On-ramp standing choices"
-
-
-def _direction_path_for(store: Path) -> Path:
-    """Where the validate mode looks for the direction file: the store's
-    parent directory (the convention fixes both locations together —
-    docs/loom/DIRECTION.md beside docs/loom/backlog/)."""
-    return store.parent / "DIRECTION.md"
-
-
-def build_direction_now(store: Path) -> list[str]:
-    """The generated `## Now` section body: one `- <name> — <description>`
-    line per live `bet` entry, in `_entry_files()` order (sorted
-    by filename = file-date order), or exactly the empty-queue line.
-
-    Same purity contract as `build_index()`/`build_ready()`. Raises
-    ValueError (caller decides exit codes) on a status outside the closed
-    vocabulary — malformed frontmatter must fail loudly, never be silently
-    dropped from the queue it might belong to.
-    """
-    lines: list[str] = []
-    for path, is_archived in _entry_files(store):
-        frontmatter = parse_frontmatter(path.read_text(encoding="utf-8"))
-        status = frontmatter.get("status")
-        if status not in CLOSED_STATUS_VOCABULARY:
-            raise ValueError(
-                f"{path.name}: entry has status {status!r}, outside the "
-                "closed status vocabulary"
-            )
-        if is_archived or status != "bet":
-            continue
-        name = frontmatter.get("name", path.stem)
-        description = frontmatter.get("description", "")
-        lines.append(f"- {name} — {description}")
-    return lines or [DIRECTION_EMPTY_QUEUE_LINE]
-
-
-def _direction_section_bounds(
-    lines: list[str], heading: str
-) -> tuple[int, int] | None:
-    """(heading index, section end) of the `heading` section in `lines`,
-    or None when the heading is absent. The section body runs from the
-    line after the heading to the next `## ` heading or EOF. Shared by
-    every direction-file section scan so the two readers of DIRECTION.md
-    cannot disagree on where a section starts and ends."""
-    for i, line in enumerate(lines):
-        if line.strip() == heading:
-            section_end = len(lines)
-            for j in range(i + 1, len(lines)):
-                if lines[j].lstrip().startswith("## "):
-                    section_end = j
-                    break
-            return i, section_end
-    return None
-
-
-def splice_direction_now(direction_text: str, now_lines: list[str]) -> str:
-    """Replace the `## Now` section body WHOLESALE with `now_lines`
-    (blank-line padded). Unlike the memory checker's splice, no in-section
-    prose survives — the section is machine-owned per DIRECTION.md's
-    charter (`loom-code/hooks/family-reception.md` §DIRECTION.md
-    charter). Every line outside the section is left untouched.
-
-    Raises ValueError when `direction_text` has no `## Now` heading —
-    there is nothing to regenerate into, and writing one in would invent
-    file structure the human owns.
-    """
-    lines = direction_text.splitlines()
-    bounds = _direction_section_bounds(lines, DIRECTION_NOW_HEADING)
-    if bounds is None:
-        raise ValueError(
-            f"the direction file has no {DIRECTION_NOW_HEADING!r} heading "
-            "to regenerate into"
-        )
-    heading_idx, section_end = bounds
-    new_lines = lines[: heading_idx + 1] + [""] + now_lines + [""] + lines[section_end:]
-    return "\n".join(new_lines) + "\n"
-
-
-def find_direction_violations(direction_path: Path, store: Path) -> list[Violation]:
-    """The validate mode's independent DIRECTION.md checks (see the module
-    docstring). Absent file = no violations — the direction layer is
-    opt-in per repo, mirroring the stations' silent-skip posture."""
-    if not direction_path.is_file():
-        return []
-    display = direction_path.name
-    text = direction_path.read_text(encoding="utf-8")
-    lines = text.splitlines()
-    violations: list[Violation] = []
-
-    for heading in ("## Now", "## Next"):
-        if not any(line.strip() == heading for line in lines):
-            violations.append(
-                Violation("direction-heading", display, f"missing required '{heading}' heading")
-            )
-
-    bounds = _direction_section_bounds(lines, DIRECTION_NOW_HEADING)
-    if bounds is not None:
-        try:
-            regenerated = splice_direction_now(text, build_direction_now(store))
-        except ValueError as exc:
-            violations.append(Violation("direction-now", display, str(exc)))
-        else:
-            if regenerated != text:
-                violations.append(
-                    Violation(
-                        "direction-now",
-                        display,
-                        "'## Now' does not match the 'bet' entry "
-                        "files; regenerate with --direction-write",
-                    )
-                )
-
-    now_body = range(bounds[0] + 1, bounds[1]) if bounds is not None else range(0)
-    standing_bounds = _direction_section_bounds(lines, DIRECTION_STANDING_HEADING)
-    standing_body = (
-        range(standing_bounds[0] + 1, standing_bounds[1])
-        if standing_bounds is not None
-        else range(0)
-    )
-
-    for lineno, line in enumerate(lines):
-        if lineno in now_body:
-            continue  # generated body: entry names are date-prefixed by convention
-        scan_source = line
-        if lineno in standing_body:
-            # Match the STRIPPED line, as check_onramp_choice.load_standing
-            # does — otherwise a CommonMark-legal indented entry the checker
-            # honours as a standing choice would be flagged here.
-            entry = line.strip()
-            standing_match = DIRECTION_STANDING_ENTRY_RE.match(entry)
-            if standing_match is not None:
-                # Strip only the trailing (YYYY-MM-DD) group — a date
-                # elsewhere on a well-formed line is still caught. Offsets
-                # are into `entry`, so the surviving text comes from it too.
-                start, end = standing_match.span("date")
-                scan_source = entry[:start] + entry[end:]
-        scan_line = DIRECTION_ENTRY_FILENAME_RE.sub("", scan_source)
-        match = DIRECTION_DATE_TOKEN_RE.search(scan_line)
-        if match:
-            violations.append(
-                Violation(
-                    "direction-date",
-                    display,
-                    f"line {lineno + 1} carries date-like token "
-                    f"{match.group(0)!r} — the charter bans dates in this file",
-                )
-            )
-    return violations
-
-
-def _run_direction_write(args: argparse.Namespace) -> int:
-    """--direction-write: regenerate the given DIRECTION.md's `## Now`
-    section from `bet` entry files and write it back."""
-    direction_path = Path(args.direction_write)
-    if not direction_path.is_file():
-        print(
-            f"backlog_index --direction-write: FAIL — {direction_path} does "
-            "not exist; create it with its `## Now` / `## Next` sections "
-            "first (charter: loom-code/hooks/direction-charter.md)"
-        )
-        return 1
-    try:
-        new_text = splice_direction_now(
-            direction_path.read_text(encoding="utf-8"),
-            build_direction_now(Path(args.store)),
-        )
-    except ValueError as exc:
-        print(f"backlog_index --direction-write: FAIL — {exc}")
-        return 1
-    direction_path.write_text(new_text, encoding="utf-8")
-    print(f"backlog_index --direction-write: wrote {direction_path}")
-    return 0
-
-
-def _run_direction_check(args: argparse.Namespace) -> int:
-    """--direction-check: re-run the `## Now` generator in memory and diff
-    it against the given DIRECTION.md without writing; exit 1 on drift."""
-    direction_path = Path(args.direction_check)
-    if not direction_path.is_file():
-        print(
-            f"backlog_index --direction-check: FAIL — {direction_path} does "
-            "not exist; run --direction-write first"
-        )
-        return 1
-    committed_direction = direction_path.read_text(encoding="utf-8")
-    try:
-        generated_direction = splice_direction_now(
-            committed_direction, build_direction_now(Path(args.store))
-        )
-    except ValueError as exc:
-        print(f"backlog_index --direction-check: FAIL — {exc}")
-        return 1
-    if committed_direction != generated_direction:
-        print(
-            "backlog_index --direction-check: FAIL — the committed '## Now' "
-            f"has drifted from the entry files (compare against {direction_path}).\n"
-        )
-        diff = difflib.unified_diff(
-            committed_direction.splitlines(keepends=True),
-            generated_direction.splitlines(keepends=True),
-            fromfile=f"{direction_path} (committed)",
-            tofile="<regenerated from entry files>",
-        )
-        sys.stdout.writelines(diff)
-        return 1
-    print(
-        f"backlog_index --direction-check: OK — {direction_path} matches "
-        "the entry files."
-    )
-    return 0
-
-
 def _run_validate(args: argparse.Namespace) -> int:
     """--validate (also the flagless default): check every entry's
-    frontmatter against the store's invariants, plus the direction file's
-    independent checks when one exists at the store's fixed location."""
+    frontmatter against the store's invariants."""
     store = Path(args.store)
     violations = find_violations(store)
-    violations.extend(find_direction_violations(_direction_path_for(store), store))
     if not violations:
         print("backlog_index --validate: OK — every invariant holds.")
         return 0
@@ -937,20 +659,6 @@ def main() -> int:
         default="docs/loom/BACKLOG.md",
         help="path to write (--write) or compare against (--check) the generated index",
     )
-    parser.add_argument(
-        "--direction-write",
-        metavar="PATH",
-        help="regenerate the given DIRECTION.md's '## Now' section from "
-        "'bet' entry files and write it back",
-    )
-    parser.add_argument(
-        "--direction-check",
-        metavar="PATH",
-        help="re-run the '## Now' generator in memory and diff it against the "
-        "given DIRECTION.md without writing (self-confirmation — the generator "
-        "confirming itself; the independent guard is the flagless validate "
-        "mode); exit 1 on drift",
-    )
     args = parser.parse_args()
 
     if not any(
@@ -959,13 +667,11 @@ def main() -> int:
             args.write,
             args.check,
             args.ready,
-            args.direction_write,
-            args.direction_check,
         )
     ):
         # Flagless invocation defaults to validate, mirroring
-        # check_loom_memory_integrity.py's trio shape (direction-layer arc;
-        # formerly a "no mode specified" parser error).
+        # check_loom_memory_integrity.py's trio shape (formerly a "no mode
+        # specified" parser error).
         args.validate = True
 
     if args.validate:
@@ -985,16 +691,6 @@ def main() -> int:
 
     if args.ready:
         result = _run_ready(args)
-        if result != 0:
-            return result
-
-    if args.direction_write:
-        result = _run_direction_write(args)
-        if result != 0:
-            return result
-
-    if args.direction_check:
-        result = _run_direction_check(args)
         if result != 0:
             return result
 
