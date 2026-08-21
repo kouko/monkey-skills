@@ -1,179 +1,203 @@
-"""Structural grep-test guarding `handoff-brief-format.md`'s new
-`## Queue relation` closed grammar (direction-queue-gate plan, Task 2 /
-BI-2).
+"""Behavioral tests for `check_queue_relation.py` (plan docs/loom/
+plans/2026-08-21-dissolve-direction-layer.md Task 4). `in-queue:`/
+`displaces:` names resolve against live `status: bet` backlog entries;
+the old per-repo "now" list and its unlanded-change advisory are gone,
+and a repo with no `docs/loom/backlog/` store reports a loud N/A at
+exit 0 rather than gating.
 
-The reference is prose, not executable code. Its correctness is the
-PRESENCE of a `## Queue relation` section naming all three canonical
-forms verbatim, plus the unresolved-wording rule, inside that
-section's own body (not merely somewhere in the file).
-
-Stdlib only (pathlib + re). Resolve the reference relative to this
-test file.
+Stdlib only.
 """
 
-import re
+from __future__ import annotations
+
+import subprocess
+import sys
 from pathlib import Path
 
-REFERENCE = (
-    Path(__file__).parent
-    / ".."
-    / "skills"
-    / "brainstorming"
-    / "references"
-    / "handoff-brief-format.md"
-).resolve()
+sys.path.insert(0, str(Path(__file__).parent))
 
-CANONICAL_FORMS = [
-    "in-queue:",
-    "unqueued —",
-    "displaces:",
-]
+from check_queue_relation import (
+    QueueRelationResult,
+    build_queue_relation_question,
+    live_bet_names,
+    resolve_queue_relation,
+)
+
+_SCRIPT = Path(__file__).parent / "check_queue_relation.py"
 
 
-def _text() -> str:
-    assert REFERENCE.is_file(), f"handoff-brief-format.md is absent at {REFERENCE}"
-    return REFERENCE.read_text(encoding="utf-8")
-
-
-def _section(text: str, heading_pattern: str) -> str:
-    """Return the body of the first `##`-level section whose heading matches
-    heading_pattern, up to (not including) the next `##`-level heading."""
-    match = re.search(rf"^##\s+{heading_pattern}\s*$", text, re.MULTILINE)
-    assert match is not None, f"heading matching {heading_pattern!r} not found"
-    rest = text[match.end():]
-    next_heading = re.search(r"^##\s+\S", rest, re.MULTILINE)
-    return rest[: next_heading.start()] if next_heading else rest
-
-
-def test_handoff_format_states_three_canonical_queue_forms():
-    text = _text()
-
-    required_sections = _section(text, r"Required sections")
-
-    heading_match = re.search(
-        r"^###\s+`## Queue relation`\s*$", required_sections, re.MULTILINE
-    )
-    assert heading_match is not None, (
-        "Required sections must declare a '### `## Queue relation`' subsection"
-    )
-    rest = required_sections[heading_match.end():]
-    next_subsection = re.search(r"^###\s+\S", rest, re.MULTILINE)
-    body = rest[: next_subsection.start()] if next_subsection else rest
-
-    for form in CANONICAL_FORMS:
-        assert form in body, (
-            f"'## Queue relation' section missing canonical form {form!r}"
-        )
-
-    assert "unresolved" in body, (
-        "'## Queue relation' section must state the unresolved-wording rule"
-    )
-    assert re.search(r"never treated as a pass", body), (
-        "'## Queue relation' section must state that other wording is "
-        "never treated as a pass"
-    )
-    assert re.search(r"pending", body), (
-        "'## Queue relation' section must mention `pending` as the "
-        "agent's placeholder"
-    )
-    assert re.search(r"never.*agent'?s own default|never the agent'?s own default", body), (
-        "'## Queue relation' section must state that `pending` is never "
-        "the agent's own default"
+def _write_bet_entry(store: Path, name: str) -> None:
+    store.mkdir(parents=True, exist_ok=True)
+    (store / f"{name}.md").write_text(
+        f"---\nname: {name}\nstatus: bet\n---\n\nBody.\n",
+        encoding="utf-8",
     )
 
 
-def _overview_paragraph(text: str) -> str:
-    """Return the `## Required sections` overview paragraph — the body
-    before its first `###` subsection heading."""
-    required_sections = _section(text, r"Required sections")
-    first_subsection = re.search(r"^###\s+\S", required_sections, re.MULTILINE)
-    return (
-        required_sections[: first_subsection.start()]
-        if first_subsection
-        else required_sections
+def test_in_queue_resolves_against_bet_entry_without_direction_md(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path
+    store = repo / "docs" / "loom" / "backlog"
+    _write_bet_entry(store, "ship-the-widget")
+    assert not (repo / "docs" / "loom" / "DIRECTION.md").exists()
+
+    brief = repo / "brief.md"
+    brief.write_text(
+        "## Queue relation\n\nin-queue: ship-the-widget\n", encoding="utf-8"
     )
 
+    result = subprocess.run(
+        [sys.executable, str(_SCRIPT), str(brief), "--repo-root", str(repo)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
 
-def test_required_sections_overview_names_queue_relation_as_required():
-    text = _text()
-    overview = _overview_paragraph(text)
 
-    assert "## Queue relation" in overview, (
-        "'## Required sections' overview paragraph must name "
-        "'## Queue relation' by name, the same way it names "
-        "'## Design-side on-ramp'"
+def test_no_store_exits_zero_with_na_line(tmp_path: Path) -> None:
+    repo = tmp_path
+    assert not (repo / "docs" / "loom" / "backlog").exists()
+
+    brief = repo / "brief.md"
+    brief.write_text("## Queue relation\n\npending\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(_SCRIPT), str(brief), "--repo-root", str(repo)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "queue-relation: N/A" in result.stdout
+    assert "docs/loom/backlog/ absent" in result.stdout
+
+
+def test_unresolved_output_lists_live_bet_names_not_placeholder(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path
+    store = repo / "docs" / "loom" / "backlog"
+    _write_bet_entry(store, "alpha-arc")
+    _write_bet_entry(store, "beta-arc")
+
+    brief = repo / "brief.md"
+    brief.write_text("## Queue relation\n\npending\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(_SCRIPT), str(brief), "--repo-root", str(repo)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2
+    assert "alpha-arc" in result.stderr
+    assert "beta-arc" in result.stderr
+    assert "<entry-name>" not in result.stderr
+
+
+def test_unqueued_resolves_against_empty_bet_set(tmp_path: Path) -> None:
+    repo = tmp_path
+    store = repo / "docs" / "loom" / "backlog"
+    store.mkdir(parents=True)
+
+    brief = repo / "brief.md"
+    brief.write_text(
+        "## Queue relation\n\nunqueued — nothing live yet\n", encoding="utf-8"
     )
 
-    mention_index = overview.index("## Queue relation")
-    clause = overview[max(0, mention_index - 20) : mention_index + 80]
-    assert "always present" in clause, (
-        "'## Queue relation' mention in the overview paragraph must state "
-        "it is always present (required), matching the on-ramp line's shape"
+    result = subprocess.run(
+        [sys.executable, str(_SCRIPT), str(brief), "--repo-root", str(repo)],
+        capture_output=True,
+        text=True,
     )
-    assert "optional" not in clause, (
-        "'## Queue relation' mention in the overview paragraph must not be "
-        "phrased as optional — the subsection itself says it is required "
-        "in every brief"
-    )
-
-    for form in CANONICAL_FORMS:
-        assert form not in overview, (
-            f"overview paragraph must not restate canonical form {form!r} — "
-            "the enumeration names sections, the subsection owns the grammar"
-        )
+    assert result.returncode == 0, result.stderr
 
 
-def _queue_relation_subsection(text: str) -> str:
-    """Body of the `### `## Queue relation`` subsection inside
-    `## Required sections` — the same body `_body_after_forms`
-    scopes its assertions to."""
-    required_sections = _section(text, r"Required sections")
-    heading_match = re.search(
-        r"^###\s+`## Queue relation`\s*$", required_sections, re.MULTILINE
-    )
-    assert heading_match is not None, (
-        "Required sections must declare a '### `## Queue relation`' subsection"
-    )
-    rest = required_sections[heading_match.end():]
-    next_subsection = re.search(r"^###\s+\S", rest, re.MULTILINE)
-    return rest[: next_subsection.start()] if next_subsection else rest
+def test_in_queue_unresolvable_against_empty_bet_set(tmp_path: Path) -> None:
+    repo = tmp_path
+    store = repo / "docs" / "loom" / "backlog"
+    store.mkdir(parents=True)
 
-
-def test_queue_relation_states_name_must_exist_in_now():
-    """A well-formed `in-queue:`/`displaces:` line naming an entry
-    absent from DIRECTION.md's `## Now` is exactly what
-    `check_direction_freshness.py`'s `resolve_queue_relation` rejects
-    (loom-code/scripts/check_direction_freshness.py). The SSOT must
-    say so in its own voice — not merely contain the word 'exist',
-    which a reversed sentence ('need not exist') would also contain.
-    Anchor on the specific claim 'must ... exist', not the bare token,
-    so a deletion AND a reversal both fail this test."""
-    text = _text()
-    body = _queue_relation_subsection(text)
-
-    assert re.search(r"must (also )?exist", body), (
-        "'## Queue relation' section must state that a name cited by "
-        "in-queue:/displaces: must exist as a '## Now' entry — a "
-        "well-formed line naming an absent entry is still unresolved"
-    )
-    assert "need not exist" not in body and "does not need to exist" not in body, (
-        "'## Queue relation' section must not state the reversed claim "
-        "(a cited name need not exist in '## Now')"
+    brief = repo / "brief.md"
+    brief.write_text(
+        "## Queue relation\n\nin-queue: anything\n", encoding="utf-8"
     )
 
-
-def test_queue_relation_states_empty_now_guidance():
-    text = _text()
-    body = _queue_relation_subsection(text)
-
-    assert re.search(r"## Now.{0,40}(is )?empty", body) or re.search(
-        r"empty.{0,40}## Now", body
-    ), (
-        "'## Queue relation' section must state what an author does "
-        "when '## Now' is empty (in-queue:/displaces: can never "
-        "resolve until an entry exists)"
+    result = subprocess.run(
+        [sys.executable, str(_SCRIPT), str(brief), "--repo-root", str(repo)],
+        capture_output=True,
+        text=True,
     )
-    assert "unqueued" in body, (
-        "the empty-'## Now' guidance must point the author at "
-        "'unqueued — <reason>' as the usable form"
+    assert result.returncode == 2
+
+
+def test_live_bet_names_excludes_non_bet_and_archived(tmp_path: Path) -> None:
+    store = tmp_path / "backlog"
+    store.mkdir(parents=True)
+    (store / "one.md").write_text(
+        "---\nname: one\nstatus: bet\n---\n\nBody.\n", encoding="utf-8"
     )
+    (store / "two.md").write_text(
+        "---\nname: two\nstatus: open\n---\n\nBody.\n", encoding="utf-8"
+    )
+    archive = store / "archive"
+    archive.mkdir()
+    (archive / "three.md").write_text(
+        "---\nname: three\nstatus: closed\n---\n\nBody.\n", encoding="utf-8"
+    )
+
+    assert live_bet_names(store) == ["one"]
+
+
+def test_resolve_queue_relation_typo_is_unresolved_not_silently_passed() -> None:
+    brief_text = "## Queue relation\n\nin-queue: typo-name\n"
+    result = resolve_queue_relation(brief_text, ["real-name"])
+    assert result.status == "unresolved"
+    assert result.named_entry == "typo-name"
+
+
+def test_build_question_lists_names_when_named_entry_unresolved() -> None:
+    result = QueueRelationResult(
+        "unresolved", "in-queue names 'typo'", named_entry="typo"
+    )
+    question = build_queue_relation_question(result, ["real-one", "real-two"])
+    assert "real-one" in question
+    assert "real-two" in question
+    assert "<entry-name>" not in question
+
+
+def test_missing_brief_file_exits_one(tmp_path: Path) -> None:
+    repo = tmp_path
+    (repo / "docs" / "loom" / "backlog").mkdir(parents=True)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(_SCRIPT),
+            str(repo / "does-not-exist.md"),
+            "--repo-root",
+            str(repo),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 1
+
+
+def test_no_advisory_output_on_resolved_brief(tmp_path: Path) -> None:
+    """Half A (the unlanded-direction-change advisory) is deleted — a
+    resolved run must print only the resolution line, never an
+    'Unlanded direction change:' line."""
+    repo = tmp_path
+    store = repo / "docs" / "loom" / "backlog"
+    _write_bet_entry(store, "an-entry")
+
+    brief = repo / "brief.md"
+    brief.write_text("## Queue relation\n\nin-queue: an-entry\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(_SCRIPT), str(brief), "--repo-root", str(repo)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "Unlanded direction change" not in result.stdout
