@@ -68,26 +68,17 @@ def _instantiate(template: Path, dest: Path, stamp: str) -> None:
 def _self_verify(target: Path) -> int:
     """Run the sibling validator against the fresh store; relay its exit
     code; return 0 only when it is 0."""
-    results: list[tuple[str, subprocess.CompletedProcess]] = []
-    for label, argv in (
-        ("--validate", ["--validate"]),
-    ):
-        proc = subprocess.run(
-            [sys.executable, str(BACKLOG_INDEX), *argv],
-            capture_output=True,
-            text=True,
-            cwd=target,
-        )
-        print(f"loom-init: backlog_index {label} exit {proc.returncode}")
-        results.append((label, proc))
-
-    failed = [(label, proc) for label, proc in results if proc.returncode != 0]
-    for label, proc in failed:
+    proc = subprocess.run(
+        [sys.executable, str(BACKLOG_INDEX), "--validate"],
+        capture_output=True,
+        text=True,
+        cwd=target,
+    )
+    print(f"loom-init: backlog_index --validate exit {proc.returncode}")
+    if proc.returncode != 0:
         sys.stdout.write(proc.stdout)
         sys.stderr.write(proc.stderr)
-    if failed:
-        labels = ", ".join(label for label, _ in failed)
-        print(f"loom-init: FAIL — self-verify red ({labels}); the scaffold does not pass the live validators")
+        print("loom-init: FAIL — self-verify red (--validate); the scaffold does not pass the live validators")
         return 1
     return 0
 
