@@ -77,11 +77,7 @@ store, or neither copy of `backlog_index.py` → skip silently, N/A).
 Repo-root `scripts/backlog_index.py` when it exists; otherwise run
 the plugin-shipped copy:
 `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backlog_index.py" --ready`
-(a load-time substitution, not a run-time shell variable). When
-the target repo has `docs/loom/DIRECTION.md` — with or without a
-backlog store — read it and surface its `## Now` and `## Next`
-sections alongside the ready queue (no file → skip silently, same
-posture as the no-store case above).
+(a load-time substitution, not a run-time shell variable).
 The queue informs the arc decision — it never hijacks it: the user's seed
 idea stays the default subject. This check is independent of the
 Negative guard above — a bug-fix or refactor arc that skips the rest
@@ -89,7 +85,7 @@ of Axis 0 still runs the ready check (backlog entries are often
 exactly bug-fix shaped).
 
 **No queue layer yet** — when the ready check skips because the target
-repo has no `docs/loom/backlog/` store **and no `docs/loom/DIRECTION.md`**
+repo has no `docs/loom/backlog/` store **and no `docs/loom/KICKOFF-DEFAULTS.md`**
 (the verb refuses on either existing — never offer a guaranteed
 refusal), offer scaffolding one **ONCE**
 via the plugin-shipped verb:

@@ -292,9 +292,10 @@ def test_no_queue_relation_section_at_all_is_unresolved() -> None:
 
 
 # --- Finding 2: stable prose pins against handoff-brief-format.md --------
-# Restores 3 of the 4 tests deleted in round 1. The 4th ("cited name must
-# exist in '## Now'") is deliberately NOT restored — its wording changes
-# under Task 8 (plan DL-12).
+# Restores 3 of the 4 tests deleted in round 1, plus the 4th ("cited name
+# must exist") below — its wording changes from '## Now' to a live
+# `status: bet` entry under Task 8 (plan DL-12), which is why it lands
+# here rather than in Task 4.
 
 
 def test_handoff_format_states_three_canonical_queue_forms() -> None:
@@ -327,18 +328,41 @@ def test_required_sections_overview_names_queue_relation_as_required() -> None:
 
 
 def test_queue_relation_states_empty_now_guidance() -> None:
+    """Empty-queue resting-state guidance — reworded under Task 8 from
+    '## Now is empty' to 'no live bet entries' (the direction-layer file
+    this prose used to point at no longer exists)."""
     text = _reference_text()
     body = _queue_relation_subsection(text)
 
-    assert re.search(r"## Now.{0,40}(is )?empty", body) or re.search(
-        r"empty.{0,40}## Now", body
-    ), (
+    assert re.search(r"no live bet entries", body), (
         "'## Queue relation' section must state what an author does "
-        "when '## Now' is empty"
+        "when there are no live bet entries"
+    )
+    assert "## Now" not in body, (
+        "'## Queue relation' section must no longer reference the "
+        "deleted direction-layer file's '## Now' section"
     )
     assert "unqueued" in body, (
         "the empty-queue guidance must point the author at "
         "'unqueued — <reason>' as the usable form"
+    )
+
+
+def test_queue_relation_names_cited_must_exist_as_live_bet_entry() -> None:
+    """The fourth prose pin (DL-12): a name cited by `in-queue:` or
+    `displaces:` must resolve against a live `status: bet` entry under
+    `docs/loom/backlog/` — the deleted direction-layer file's `## Now`
+    section this rule used to point at is gone."""
+    text = _reference_text()
+    body = _queue_relation_subsection(text)
+
+    assert re.search(
+        r"must also exist as a live `status: bet` entry under "
+        r"`docs/loom/backlog/`",
+        body,
+    ), (
+        "'## Queue relation' section must state the must-exist rule "
+        "against a live 'status: bet' entry under docs/loom/backlog/"
     )
 
 

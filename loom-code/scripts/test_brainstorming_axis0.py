@@ -9,7 +9,7 @@ PRESENCE + POSITION of a compact new subsection: "Axis 0 — Upstream artifacts
 1. Point at the loom family reception's on-ramp criteria table
    (`loom-code/hooks/family-reception.md`) rather than copy it — SSOT
    drift prevention (plan-level note "Reception SSOT rule").
-2. On a triggered row, first honor a DIRECTION.md standing choice; otherwise
+2. On a triggered row, first honor a KICKOFF-DEFAULTS.md standing choice; otherwise
    write `pending` in the brief's `## Design-side on-ramp` line and surface
    the recommendation ONCE as a standalone ask (naming the concrete
    design-side sequence); only the user's answer is recorded — never an
@@ -80,6 +80,21 @@ def test_axis0_references_reception_criteria():
         "Axis 0 must reference 'the loom family reception' by name"
 
 
+# --- queue read (dissolve-direction-layer Task 8) ------------------------
+
+
+def test_axis0_reads_ready_not_direction():
+    """The Backlog ready check instructs the `--ready` read only — the
+    old per-repo direction-layer file's `## Now`/`## Next` read is gone
+    (plan docs/loom/plans/2026-08-21-dissolve-direction-layer.md Task 8:
+    that layer itself no longer exists for Axis 0 to read)."""
+    axis0 = _axis0_section()
+    assert "--ready" in axis0, "Axis 0 must instruct the --ready read"
+    direction_token = "DIREC" + "TION"
+    assert direction_token not in axis0, \
+        "Axis 0 must not instruct reading the deleted direction layer"
+
+
 # --- recommend-once + record-choice --------------------------------------
 
 
@@ -115,7 +130,7 @@ def test_axis0_recommend_once_and_record_choice():
 
 
 def test_axis0_standalone_ask_pending_no_agent_default():
-    """A fired row must first check DIRECTION.md's standing choices; absent
+    """A fired row must first check KICKOFF-DEFAULTS.md's standing choices; absent
     a standing entry, the brief line starts `pending` and the recommendation
     fires as a standalone ask — never an agent-recorded default. The old
     'proceed either way' phrasing (which let an unanswered ask sit

@@ -102,44 +102,7 @@ def test_negative_guard_paragraph_announces_ready_check_runs_regardless():
     assert "runs regardless" in guard_paragraph, guard_paragraph
 
 
-# --- Task 3: DIRECTION.md read, conditional on the file's presence ---
-
-DIRECTION_CONDITIONAL_LEAD = "When the target repo has `docs/loom/DIRECTION.md`"
-DIRECTION_INDEPENDENT_OF_STORE = "with or without a backlog store"
-DIRECTION_NOW_NEXT_SECTIONS = "`## Now` and `## Next`"
-DIRECTION_NO_FILE_SKIP = "no file → skip silently, same posture as the no-store case"
 BLOCK_END_MARKER = "exactly bug-fix shaped)."
-
-
-def test_direction_md_conditional_lead_present():
-    """The new sentence's conditional opener is pinned verbatim — this
-    is the phrase a cold reader must see to know the DIRECTION.md read
-    is gated on the file's presence, not mandatory."""
-    assert DIRECTION_CONDITIONAL_LEAD in _normalized_text()
-
-
-def test_direction_md_independent_of_backlog_store_present():
-    """Fix round 2: the DIRECTION.md read is independent of the
-    backlog-store condition on the sentence before it — a repo with
-    DIRECTION.md but no backlog store must still fire this read (spec
-    §8's portability contract). The old conjunctive wording ("also
-    has") made this read as gated on the block's earlier condition;
-    this pin fails on that regression and only passes when the
-    sentence states the independence explicitly."""
-    assert DIRECTION_INDEPENDENT_OF_STORE in _normalized_text()
-
-
-def test_direction_md_now_next_sections_present():
-    """Both sections the ready check must surface when DIRECTION.md
-    exists are named."""
-    assert DIRECTION_NOW_NEXT_SECTIONS in _normalized_text()
-
-
-def test_direction_md_no_file_skip_clause_present():
-    """Absent-file posture matches the no-store case already pinned
-    above (NA_SILENT_CLAUSE) — this is the DIRECTION.md-specific
-    restatement of that same silent-skip rule."""
-    assert DIRECTION_NO_FILE_SKIP in _normalized_text()
 
 
 # --- loom-init offer branch (loom-init scaffold, Task 2) ---
@@ -223,31 +186,3 @@ def test_loom_init_offer_keeps_na_state_for_missing_script_copies():
     the offer paragraph itself must carve that out."""
     para = _loom_init_paragraph()
     assert "neither copy" in para, para
-
-
-def test_direction_md_sentence_inside_backlog_ready_check_block():
-    """The new sentence must land inside the Backlog ready check block
-    (between its lead phrase and the block's closing sentence), not
-    elsewhere in the file — the plan's placement requirement.
-
-    Fix round 2: the negative-guard paragraph's own exception sentence
-    now names "the **Backlog ready check**" too (forward reference), so
-    LEAD_PHRASE's FIRST occurrence in the file sits inside that guard
-    paragraph, not the block. Anchoring the window on the first
-    occurrence would make this test pass even if the new sentence were
-    moved wholly into the guard paragraph and deleted from the block
-    (a real weakened-pin failure mode, confirmed via probe). Fix:
-    start the LEAD_PHRASE search after the guard paragraph's own
-    closing sentence, so the window can only anchor on the block's
-    actual lead phrase."""
-    normalized = _normalized_text()
-    guard_end_marker = "multi-state new work."
-    guard_end_idx = normalized.find(guard_end_marker)
-    assert guard_end_idx != -1
-    search_start = guard_end_idx + len(guard_end_marker)
-    lead_idx = normalized.find(LEAD_PHRASE, search_start)
-    block_end_idx = normalized.find(BLOCK_END_MARKER, lead_idx)
-    assert lead_idx != -1
-    assert block_end_idx != -1
-    block = normalized[lead_idx : block_end_idx + len(BLOCK_END_MARKER)]
-    assert DIRECTION_CONDITIONAL_LEAD in block, block
