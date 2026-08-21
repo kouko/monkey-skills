@@ -5,9 +5,11 @@ the session that ran them.
 
 Claim A: no mutant of a recognised filesystem-guard handler in the FAMILY
 survives an oracle run — except a named, reasoned survivor set.
-Claim B: every known escape shape from the oracle's own docstring (bare
-`open()`, class-method read, plain/aliased from-import, aliased module
-import, `os.path` from-import) is caught.
+Claim B: every scope-attribution shape the oracle's own `leaky_scopes`
+docstring names (a read inside a class method, a nested def, a lambda,
+or module-level code) is caught, alongside a spread of recognised-name
+import forms (bare `open()`, plain/aliased from-import, aliased module
+import, `os.path` from-import).
 
 Both claims are asserted IN-PROCESS on the oracle's own production
 expression — `leaky_scopes(source) & {"main", _MODULE_SCOPE}` — imported
@@ -330,6 +332,37 @@ def _load(root: Path) -> bool:
 
 def main() -> int:
     _load(Path("."))
+    return 0
+""",
+    "nested def read": """
+from pathlib import Path
+
+def _load(root: Path) -> str:
+    def _inner() -> str:
+        return root.read_text(encoding="utf-8")
+    return _inner()
+
+def main() -> int:
+    _load(Path("."))
+    return 0
+""",
+    "lambda read": """
+from pathlib import Path
+
+def _load(root: Path) -> str:
+    fn = lambda: root.read_text(encoding="utf-8")
+    return fn()
+
+def main() -> int:
+    _load(Path("."))
+    return 0
+""",
+    "module-level read": """
+from pathlib import Path
+
+Path(".").read_text(encoding="utf-8")
+
+def main() -> int:
     return 0
 """,
 }
