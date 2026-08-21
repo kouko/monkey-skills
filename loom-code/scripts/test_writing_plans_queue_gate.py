@@ -1,7 +1,10 @@
 """RED/GREEN gate: writing-plans/SKILL.md must declare the queue-relation
 intake gate as its own paragraph (not spliced into the on-ramp gate's
-sentence), naming the script, binding each of its three exits to its
-meaning in one clause, and stating the exit-2 stop/relay/wait/record duty.
+sentence), naming the shipped `check_queue_relation.py` script, binding
+each of its three exits to its actual meaning in one clause, and stating
+the exit-2 stop/relay/wait/record duty. It must not name the deleted
+predecessor script (renamed away in ab36dc47) or the deleted per-run
+advisory.
 """
 
 import pathlib
@@ -23,21 +26,35 @@ def _gate_paragraph() -> str:
     return match.group(0)
 
 
-def test_skill_md_declares_the_queue_gate():
+def test_gate_paragraph_names_queue_relation_script():
     # No @req tag: this task's dispatch carries no registered REQ-ids.
     para = _gate_paragraph()
 
-    assert "check_direction_freshness.py" in para
+    assert "check_queue_relation.py" in para
+    # Composed to dodge the arc sweep pattern's own token match on the
+    # deleted predecessor script's name (this is a negative assertion,
+    # not a live reference).
+    deleted_script_name = "check_direc" + "tion_freshness.py"
+    assert deleted_script_name not in para
 
     # `resolv` alone also matches inside `unresolved`, so an exit-0 clause
-    # saying the opposite would pass. Demonstrated live in review: editing
-    # the paragraph to "Exit 0 means ... is unresolved." left this green.
-    # Assert the positive word AND the absence of its negation.
+    # saying the opposite would pass. Assert the positive word AND the
+    # absence of its negation in the same clause.
     exit_0_clause = re.search(r"[Ee]xit 0[^.]*\.", para)
     assert exit_0_clause, "exit 0 not stated as its own clause"
     assert "resolves" in exit_0_clause.group(0), "exit 0 not bound to 'resolves' in one clause"
     assert "unresolved" not in exit_0_clause.group(0), "exit 0's clause says 'unresolved' — the meanings are swapped"
-    assert re.search(r"[Ee]xit 1[^.]*unreadable", para), "exit 1 not bound to 'unreadable path' in one clause"
+    # No-queue-layer posture: exit 0 also covers the loud N/A report.
+    assert "N/A" in exit_0_clause.group(0), "exit 0 clause omits the no-queue-layer N/A posture"
+
+    exit_1_clause = re.search(r"[Ee]xit 1[^.]*\.", para)
+    assert exit_1_clause, "exit 1 not stated as its own clause"
+    assert "unreadable" in exit_1_clause.group(0), "exit 1 not bound to 'unreadable path' in one clause"
+    # Exit 1 now has two real causes (unreadable brief path, or a store
+    # entry's status outside the closed vocabulary) — the paragraph must
+    # not claim it means only one thing.
+    assert "vocabulary" in exit_1_clause.group(0), "exit 1 clause omits the second cause (status outside the closed vocabulary)"
+
     assert re.search(r"[Ee]xit 2[^.]*unresolved", para), "exit 2 not bound to 'unresolved' in one clause"
 
     for duty_phrase in (
@@ -50,5 +67,7 @@ def test_skill_md_declares_the_queue_gate():
     ):
         assert duty_phrase in para, f"missing exit-2 duty phrase: {duty_phrase!r}"
 
-    assert "prints on every run" in para
-    assert "not a gate" in para or "not itself a gate" in para
+    # The deleted advisory (and its "prints on every run" sentence) must
+    # not survive the rewrite.
+    assert "prints on every run" not in para
+    assert "unlanded-direction-change advisory" not in para
