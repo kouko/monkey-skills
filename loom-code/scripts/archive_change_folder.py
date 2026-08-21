@@ -119,12 +119,10 @@ class ArchiveError(Exception):
 
 
 def _validate_change_id(change_id: str) -> None:
-    """Path-safety guard (OpenSpec #412 bug class), shared by both units: an
-    identifier — a change-id for the folder unit, an entry filename for the
-    file unit — MUST be a single, non-empty, non-special path segment with
-    no separators and no absolute-path form, never allowed to escape its
-    base directory. Wording is unit-agnostic on purpose: a file-unit caller
-    must never receive an error message about folders."""
+    """The path-safety guard shared by both units — see the module
+    docstring's Refusals list for the full contract and its OpenSpec
+    #412 grounding. Wording is unit-agnostic on purpose: a file-unit
+    caller must never receive an error message about folders."""
     if not change_id or change_id in (".", ".."):
         raise ArchiveError(
             f"invalid identifier {change_id!r}: must be a non-empty name"

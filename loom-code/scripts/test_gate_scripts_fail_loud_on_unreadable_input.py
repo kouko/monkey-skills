@@ -54,11 +54,8 @@ _FS_CALLS = frozenset({
     "iterdir", "glob", "rglob", "mkdir", "rmdir", "touch", "unlink",
     "rename", "replace", "symlink_to", "hardlink_to", "samefile",
     "stat", "lstat", "chmod", "resolve", "readlink",
-    # `is_file`/`is_dir`/`exists` are here deliberately: an unreadable
-    # PARENT makes them raise PermissionError, and that exact case was a
-    # finding in two separate rounds of this arc — one of them fail-OPEN,
-    # because the unhandled raise was the only thing keeping an unreadable
-    # store out of an exit-0 branch.
+    # `is_file`/`is_dir`/`exists` are here for the same reason given above
+    # the frozenset.
     "is_file", "is_dir", "exists", "is_symlink",
     # os / os.path / shutil, matched on the attribute name alone (so
     # `os.listdir`, `from os import listdir`, and an aliased import all

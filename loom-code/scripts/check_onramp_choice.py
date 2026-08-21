@@ -72,9 +72,7 @@ def _join_blockquote_continuation(lines: list[str], start_idx: int, value: str) 
     plain continuation text — CommonMark lets a blockquote's own
     paragraph soft-wrap across physical lines, and the corpus does
     this for on-ramp values (see docs/loom/specs/2026-08-18-onramp-
-    explicit-choice-gate.md's own `not fired — ...` line). Stops at the
-    first line that is not a `>` line, is blank, or starts a new
-    labelled field."""
+    explicit-choice-gate.md's own `not fired — ...` line)."""
     parts = [value]
     for nxt in lines[start_idx + 1:]:
         stripped = nxt.lstrip()
@@ -91,8 +89,8 @@ def _find_onramp_value_line(brief_text: str) -> str | None:
     """The on-ramp line's value (stripped), from whichever corpus form
     is found first in document order, or None if neither form is
     present. A blockquote-form value's soft-wrapped continuation lines
-    (subsequent `>` lines) are joined in before the grammar is applied
-    — see `_join_blockquote_continuation`."""
+    (subsequent `>` lines) are joined in before the grammar is applied,
+    so a multi-line value is not silently truncated."""
     lines = brief_text.splitlines()
     for i, raw in enumerate(lines):
         inline = _INLINE_LINE.match(raw)
