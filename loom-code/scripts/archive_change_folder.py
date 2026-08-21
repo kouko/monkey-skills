@@ -183,11 +183,15 @@ def _stamp_field(text: str, key: str, value: str) -> str:
     The line-matching pattern deliberately does NOT reuse a single-token
     ``status\\s*:\\s*(\\S+)\\s*$`` shape (a pattern this module's earlier,
     now-removed status-only stamp helper used, whose ``(\\S+)`` value is a
-    single whitespace-free token): the backlog
-    store's closed status vocabulary has one multi-word member, ``CLOSED —
-    SUPERSEDED`` (em dash), and a single-token pattern misses that line
-    entirely, causing this function to APPEND a duplicate ``key:`` line
-    instead of replacing the existing one. The pattern below requires the
+    single whitespace-free token): this helper is generic over ``key``, not
+    status-only, and the backlog store's own frontmatter contract
+    (``docs/loom/backlog/README.md``'s Frontmatter contract; enforced by
+    ``scripts/backlog_index.py``'s ``_check_description``) requires a
+    ``description:`` field that is free-form prose — genuinely multi-word —
+    on every entry. A single-token pattern would miss a ``description:``
+    line entirely the moment a caller stamps that field, causing this
+    function to APPEND a duplicate ``key:`` line instead of replacing the
+    existing one. The pattern below requires the
     value to start with a non-whitespace character (so an empty/whitespace-
     only value still does not count as "present", matching the original
     single-token pattern's behaviour on that edge) and then allows the rest

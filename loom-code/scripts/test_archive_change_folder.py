@@ -445,12 +445,18 @@ def test_file_unit_archive_keeps_the_filename_unchanged(tmp_path):
     assert "archived:" not in text  # retired field is never written
 
 
-def test_file_unit_stamp_replaces_multi_word_status_without_duplicating_the_field(tmp_path):
-    """`CLOSED — SUPERSEDED` (em dash, U+2014) is a real member of the
-    backlog store's closed status vocabulary (scripts/backlog_index.py,
-    docs/loom/backlog/README.md) — the one member that is not a single
-    whitespace-free token. A `(\\S+)` value pattern in the stamp regex
-    misses this line entirely, so the stamp APPENDS a second `status:` line
+def test_file_unit_stamp_replaces_a_multi_word_value_without_duplicating_the_field(tmp_path):
+    """`_stamp_field` is generic over `key` (not status-only), and the
+    backlog store's own frontmatter contract requires at least one field —
+    `description:` — that is genuinely free-form, multi-word prose on every
+    entry (docs/loom/backlog/README.md's Frontmatter contract; enforced by
+    scripts/backlog_index.py's `_check_description`). `CLOSED — SUPERSEDED`
+    here is NOT a real member of the closed status vocabulary (that
+    vocabulary is exactly `open` / `bet` / `closed`,
+    `backlog_index.CLOSED_STATUS_VOCABULARY`) — it stands in as an
+    arbitrary pre-existing multi-word value on the field being stamped, the
+    shape a single-token `(\\S+)` value pattern in the stamp regex would
+    miss entirely, causing the stamp to APPEND a second `status:` line
     instead of replacing the first. parse_frontmatter is last-wins, so
     --validate would resolve 'closed' and pass — but any first-match
     reader (`grep -m1 '^status:'`, a human opening the file, a strict YAML
