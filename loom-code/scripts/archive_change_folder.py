@@ -7,7 +7,7 @@ parameter (Python API) or the CLI's ``--unit`` flag (see below; defaults to
 - ``unit="folder"`` (default, unchanged from the original single-unit
   script): moves ``docs/loom/<change-id>/`` ->
   ``docs/loom/archive/<date>-<change-id>/`` and stamps a ``status:
-  archived`` field into the moved ``proposal.md``'s YAML frontmatter — a
+  closed`` field into the moved ``proposal.md``'s YAML frontmatter — a
   single-command move, not a manual ``mv`` (OpenSpec's own ``archive``
   command exists for the same reason: issue #412 shows path handling is the
   move approach's real risk, so every path is validated before any
@@ -16,11 +16,18 @@ parameter (Python API) or the CLI's ``--unit`` flag (see below; defaults to
   ``docs/loom/backlog/archive/<name>.md`` **unrenamed** — no date prefix,
   since the entry already carries its creation date in its filename and
   prefixing the archive date produces a double-date defect — and stamps
-  BOTH ``status: archived`` and ``archived: <date>`` into the moved file's
-  own frontmatter, unconditionally: an unstamped archived entry reads as
-  live to any agent that greps the store, so a stamp failure rolls the move
-  back and raises loudly rather than tolerating a silent skip (contrast the
-  folder unit, which tolerates a missing ``proposal.md`` child).
+  ``status: closed`` into the moved file's own frontmatter, unconditionally:
+  an unstamped entry reads as live to any agent that greps the store, so a
+  stamp failure rolls the move back and raises loudly rather than tolerating
+  a silent skip (contrast the folder unit, which tolerates a missing
+  ``proposal.md`` child).
+
+Both units stamp ``status: closed``, never ``status: archived`` — the
+backlog store's closed status vocabulary is exactly ``open`` / ``bet`` /
+``closed`` (``scripts/backlog_index.py``'s ``CLOSED_STATUS_VOCABULARY``);
+``archived`` and the separate ``archived: <date>`` field are retired
+vocabulary (plan docs/loom/plans/2026-08-21-dissolve-direction-layer.md,
+brief item BI-10) and are never written by this script.
 
 Frontmatter handling (identical for both units; the object being stamped is
 ``proposal.md`` for the folder unit and the moved file itself for the file
@@ -38,10 +45,17 @@ both units, one copy of each guard:
   does not exist;
 - the source is a symlink (never archive a live symlink — only a real
   folder/file);
-- the source's frontmatter already reads ``status: archived`` (idempotency
-  guard against double-archiving);
-- the destination path already exists (would silently clobber a prior
-  archive);
+- the destination path already exists — this is ALSO the idempotency guard
+  against double-archiving, and deliberately the only one: ``status:
+  closed`` is legal on a live, not-yet-archived entry too (the close-out
+  flip is a separate, earlier step than archiving — see
+  ``docs/loom/backlog/README.md``'s Archive rule), so a frontmatter status
+  can no longer distinguish "closed and live" from "already archived"
+  once ``archived`` is retired. The destination path can: for the file
+  unit it is a deterministic function of the identifier alone (no date in
+  the path), so "the destination already exists" means exactly "an
+  archive copy for this identifier already exists" — genuinely
+  already-archived, not merely closed;
 - the identifier (a change-id for the folder unit, an entry filename for
   the file unit) is not a single, safe path segment — empty, ``.``/``..``,
   containing a path separator, or absolute. This is the path-safety guard:
@@ -51,10 +65,9 @@ both units, one copy of each guard:
   but not a real calendar date (e.g. ``2026-02-30``). For the folder unit
   the date is interpolated straight into the destination path, so it gets
   the same path-safety guard as the identifier; for the file unit the date
-  is only ever written into the ``archived:`` frontmatter field, but it is
-  validated identically so that field is never malformed — and never
-  rejected downstream by ``scripts/backlog_index.py``'s stricter check
-  after the move has already happened.
+  is no longer written anywhere (no ``archived:`` field is stamped), but it
+  is still validated identically as a defensive input-shape contract for
+  existing callers.
 
 If the post-move stamp write fails, the moved object is moved back to its
 original location before ``ArchiveError`` is raised, so a failure never
@@ -125,8 +138,10 @@ def _validate_date(date: str) -> None:
     destination path (``.../archive/<date>-<change-id>/``), so it MUST match
     ``YYYY-MM-DD`` exactly — refuse anything else (including traversal-shaped
     values like ``../../etc``) before any filesystem use. For the file unit
-    the date is only ever written into the ``archived:`` frontmatter field
-    (never interpolated into a path), but it is validated identically here.
+    the date is no longer written into the moved entry at all (no
+    ``archived:`` field is stamped — BI-10, plan DL-13), but it is still
+    validated identically here as a defensive input-shape contract for
+    existing callers.
 
     Calendar-strict, not just shape-strict: a shape-valid but
     calendar-impossible date (``2026-02-30``, February has no 30th) must
@@ -157,16 +172,22 @@ def _read_status(proposal_text: str) -> str | None:
     frontmatter. Delegates to ``backlog_index.parse_frontmatter`` (last-wins
     on duplicate keys) so this reader and backlog_index's validator can
     never disagree on the same bytes — see docs/loom/backlog/2026-08-02-
-    backlog-index-two-frontmatter-readers-disagree-on-duplicate-keys.md."""
+    backlog-index-two-frontmatter-readers-disagree-on-duplicate-keys.md.
+
+    Not called by ``archive_change_folder()`` any more (BI-10, plan
+    DL-13): once ``archived`` is retired, ``status: closed`` is legal on
+    both a live and an already-archived entry, so reading the frontmatter
+    status can no longer serve as the idempotency guard — see the module
+    docstring's Refusals list. Kept as a small, independently useful
+    reader (and to keep the last-wins parity it exists to pin)."""
     return parse_frontmatter(proposal_text).get("status")
 
 
 def _stamp_field(text: str, key: str, value: str) -> str:
     """Return ``text`` with its frontmatter ``key:`` field set to ``value``,
     adding a minimal frontmatter block first if none exists. Generalizes the
-    original single-field ``status:`` stamp to any frontmatter key, so the
-    file unit can stamp both ``status`` and ``archived`` by calling this
-    twice.
+    original single-field ``status:`` stamp to any frontmatter key; both
+    units now call this once, to stamp ``status: closed``.
 
     The line-matching pattern deliberately does NOT reuse a single-token
     ``status\\s*:\\s*(\\S+)\\s*$`` shape (the original, since-removed
@@ -253,20 +274,22 @@ def archive_change_folder(
 ) -> Path:
     """Move a change-folder (``unit="folder"``, the default) or a single
     entry file (``unit="file"``) into its unit's archive location, and stamp
-    the moved object's frontmatter as archived.
+    ``status: closed`` into the moved object's frontmatter.
 
     ``unit="folder"``: ``<root>/docs/loom/<change_id>/`` moves to
-    ``<root>/docs/loom/archive/<date>-<change_id>/``; ``status: archived`` is
+    ``<root>/docs/loom/archive/<date>-<change_id>/``; ``status: closed`` is
     stamped into the moved ``proposal.md``.
 
     ``unit="file"``: ``<root>/docs/loom/backlog/<change_id>`` moves to
     ``<root>/docs/loom/backlog/archive/<change_id>`` unrenamed (no date
-    prefix); both ``status: archived`` and ``archived: <date>`` are stamped
-    into the moved file itself, unconditionally.
+    prefix); ``status: closed`` is stamped into the moved file itself,
+    unconditionally.
 
     Returns the destination path on success. Raises ``ArchiveError`` (no
     filesystem mutation) on any refusal: unsafe identifier, missing source,
-    already-archived source, or a destination collision.
+    a destination collision (the idempotency guard — see the module
+    docstring's Refusals list for why this, not a frontmatter status, is
+    what now means "already archived").
     """
     if unit not in _UNITS:
         raise ArchiveError(f"invalid unit {unit!r}: must be one of {_UNITS}")
@@ -296,15 +319,12 @@ def archive_change_folder(
             f"may be archived)"
         )
 
-    status_source = source if is_file_unit else source / "proposal.md"
-    status_text = (
-        status_source.read_text(encoding="utf-8") if status_source.is_file() else ""
-    )
-    if _read_status(status_text) == "archived":
-        raise ArchiveError(
-            f"{noun} is already archived: {status_source} carries status: archived"
-        )
-
+    # Idempotency guard: `dest.exists()` is the ONLY signal, deliberately —
+    # see the module docstring's Refusals list. A frontmatter status check
+    # was tried and retired: once `archived` is gone, `status: closed` is
+    # legal on a live entry too (the close-out flip happens before
+    # archiving), so it can no longer distinguish "closed and live" from
+    # "already archived".
     if dest.exists():
         raise ArchiveError(f"archive destination already exists: {dest}")
 
@@ -318,14 +338,14 @@ def archive_change_folder(
         # fail loudly rather than leave an unstamped file at dest.
         _write_stamp_or_restore(
             dest, dest, source, noun,
-            lambda text: _stamp_field(_stamp_field(text, "status", "archived"), "archived", stamp),
+            lambda text: _stamp_field(text, "status", "closed"),
         )
     else:
         dest_proposal = dest / "proposal.md"
         if dest_proposal.is_file():
             _write_stamp_or_restore(
                 dest_proposal, dest, source, noun,
-                lambda text: _stamp_field(text, "status", "archived"),
+                lambda text: _stamp_field(text, "status", "closed"),
             )
 
     return dest
