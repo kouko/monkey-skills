@@ -12,10 +12,13 @@ or `.sh` comment reaches no model, so those are out of scope by design (see
 `docs/loom/specs/2026-08-22-contracts-cite-only-what-ships.md`, this
 script's own governing spec).
 
-A citation counts ONLY inside backtick delimiters — the shape every real
-citation in this corpus uses, and the one that keeps a bare substring match
-from sweeping in external URLs that merely contain `docs/` (two exist in
-`loom-design` prose, outside backticks, and are correctly never touched).
+A citation counts wherever it appears — backticked or in plain prose. An
+earlier revision extracted only from backtick spans, claiming those were the
+shape every real citation uses. That was false, and it left the gate blind: a
+dated record cited in bare prose sat three lines from a backticked one and the
+checker printed OK. External URLs containing `docs/` are excluded by the
+`docs/loom` prefix filter instead, which is what actually did that work all
+along — no URL in this corpus contains `docs/loom`.
 
 The exemption boundary is PROTOCOL versus RECORD, not directory versus
 filename. A path loom defines for every host repository is exempt whatever
@@ -25,9 +28,12 @@ candidate is exempt (never a citation) when any of these hold:
 
   - it names a directory, not a file — its final path segment carries no
     extension (e.g. `docs/loom/plans/`, `docs/loom/memory`, `docs/loom/`,
-    `docs/loom/spec/`, `docs/**`). Any store loom scaffolds for a host
-    repo is exempt this way, whatever the store is named — the closed
-    protocol-filename list below is for named FILES only;
+    `docs/loom/spec/`, `docs/**`) AND no path segment carries a literal
+    `YYYY-MM-DD`. Any store loom scaffolds for a host repo is exempt this
+    way, whatever the store is named; a dated folder such as
+    `docs/loom/archive/2026-08-13-some-change` is one of THIS repo's
+    records and is banned, directory or not. The closed protocol-filename
+    list below is for named FILES only;
   - it contains a `<...>` template placeholder, or is the `docs/**` glob —
     a grammar SHAPE the host repo will instantiate, not a citation of an
     existing document (e.g. `docs/loom/specs/<date>-<topic>.md`,

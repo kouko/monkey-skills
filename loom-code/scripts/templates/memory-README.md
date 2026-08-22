@@ -57,7 +57,8 @@ agent who never saw the work that produced it>
 byte-identical to that entry's frontmatter `description` field. Never
 hand-edit it. This invariant — plus "every body file has an index
 line", "every index line points to an existing file", and "no
-duplicate index lines" — is machine-enforced; run the checker from the
+duplicate index lines" — is machine-enforced only where a checker exists — read the note
+below before running anything. From the
 repo root:
 
 ```
@@ -72,7 +73,7 @@ A hand-edit to `## Index` is drift and will be overwritten by
 **This repo may not have that checker.** `check_loom_memory_integrity.py`
 does NOT ship inside the loom-code plugin — it lives only in the repository
 that authored loom. Until someone writes or copies one here, the §Index
-invariant below is a convention you keep by hand, not a machine-enforced
+invariant described above is a convention you keep by hand, not a machine-enforced
 one. Keeping it by hand is workable: one index line per entry, its
 description copied verbatim from that entry's frontmatter.
 

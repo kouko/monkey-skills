@@ -691,7 +691,7 @@ returns, flags, orderings and exit codes are the rest.
 
 ## See also
 
-- [`loom-code/skills/requesting-code-review/references/design-evidence.md`](loom-code/skills/requesting-code-review/references/design-evidence.md) — author-facing provenance for the rules in this contract; not loaded at runtime. Where a rule's reason was sourced from a dated record, that record is named there rather than in this contract, which a reader in another repository cannot open.
+- `loom-code/skills/requesting-code-review/references/design-evidence.md` — author-facing provenance for the rules in this contract; not loaded at runtime. Where a rule's reason was sourced from a dated record, that record is named there rather than in this contract, which a reader in another repository cannot open.
 
 - `loom-code/skills/requesting-code-review/SKILL.md` — orchestration spec.
 - `loom-code/agents/code-quality-reviewer.md` — per-task evaluator

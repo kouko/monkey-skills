@@ -87,3 +87,23 @@ widened it: the same defect class has a second and more damaging form.
   substring search (Sphinx `literalinclude`, mkdocs Snippets). Ours is the
   cheap tier: `check_doc_citations.py` already resolves paths and bounds, and
   "does this string still occur in this file" costs about the same.
+
+## Leg 1 shipped 2026-08-22, with one exit condition recorded as unreachable
+
+Leg 1 (citations that do not travel) shipped: a checker with a shrink-only
+debt list, the rule written into `CLAUDE.md`, the three agent contracts
+cleared, and `loom_init.py` scaffolding the memory store its own skills cite.
+
+A whole-branch reviewer named a limit worth carrying forward rather than
+rediscovering. Provenance removed from the agent contracts was relocated into
+the `references/design-evidence.md` siblings — but those files are themselves
+inside the checker's scope and on the debt list, so the relocation moved
+citations from one banned file into another. Since the list is shrink-only and
+every relocation re-pins its target, the list cannot reach empty while that
+pattern continues.
+
+Two ways out, neither chosen here: move the relocation target outside the
+checker's scope, or make `references/design-evidence.md` an exempt shape by
+rule — which reopens the self-signed-exemption question this arc deliberately
+answered no to. Whoever runs leg 2 should decide it explicitly rather than
+inherit it.
