@@ -94,12 +94,12 @@ findings:
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
     dimension: omission | ambiguity | inconsistency | incorrect-fact | missing-population
     class: instruction | evidence   # unclear → instruction (fail closed); may read `instruction (defaulted)` when the reviewer could not tell. A `(defaulted)` tag is treated exactly as `instruction` by the aggregation rule.
-    where: <file:line>              # REQUIRED, path-like — empty/missing flips verdict to NEEDS_REVISION
+    where: <path + anchor; line optional>              # REQUIRED — empty/missing flips verdict to NEEDS_REVISION
     quote: <the exact current text the finding is about>
     note: <1-2 sentence finding>
 
 read_context_findings:              # omit when empty or when no read-context was supplied
-  - where: <read-context file:line>
+  - where: <read-context path + anchor; line optional>
     note: <a defect noticed IN a read-context file while verifying a claim>
     # No severity, no dimension, no class — never enters a dimension score.
     # The orchestrator forwards these to the code arm (§Aggregation rule).
@@ -108,7 +108,7 @@ out_of_scope:                       # omit on round 1 (unbounded -- nothing
                                      # is out of scope there); populated by
                                      # a delta confirmation (Directive 2),
                                      # which is scoped to the delta only
-  - where: <file:line>
+  - where: <path + anchor; line optional>
     note: <a defect noticed outside the delta while confirming a fix>
     # Emitted, never scored. Surfaced to the user with the verdict;
     # persisted nowhere — deferral survives only if the user or

@@ -24,8 +24,10 @@ The reviewer's verdict text (not the marker JSON) must contain:
   is rejected outright.
 - A `dimension_scores:` block (just the key needs to be present).
 - Every `- severity:` finding block needs a `where:` line whose value
-  is path-like (contains `/` or `.`, or is a bare 7-40 char hex commit
-  SHA). A finding without one is an opaque finding and fails schema.
+  is a path plus an anchor (a verbatim string or stable heading), with
+  an optional line number for precision — `where: <path + anchor; line
+  optional>`. A finding without one is an opaque finding and fails
+  schema.
 - Every `- severity:` finding block whose `dimension:` is absent, or does
   not fall in the docs-arm set (`omission`, `ambiguity`, `inconsistency`,
   `incorrect-fact`, `missing-population`), must carry an `origin:` line

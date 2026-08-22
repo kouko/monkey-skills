@@ -145,14 +145,14 @@ dimension_scores:
 findings:
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
     dimension: <which of the dimensions scored above>
-    where: <file:line OR commit SHA range>     # REQUIRED — empty/missing flips verdict to NEEDS_REVISION
+    where: <path + anchor; line optional>     # REQUIRED — empty/missing flips verdict to NEEDS_REVISION
     source: <rubric / checklist / standard file:section that triggered this>
     note: <1-2 sentence finding>
     origin: none | <path> :: "<verbatim quote from that file>"  # REQUIRED on code-arm findings only (docs-arm exempt, per Step 1) — quote-gate rule owned by `code-reviewer.md` §Output contract — what you return `origin:` field; not restated here
     class: instruction | evidence              # docs-arm findings only (mixed branches, per Step 1) — semantics owned by requesting-docs-review; omitted for code-branch findings
 
 simplification_ledger:                         # grep -rn "LOOM-SIMPLIFY:" over the branch diff (Step 4); [] when none
-  - where: <file:line>
+  - where: <path + anchor; line optional>
     shortcut: <what corner was cut>
     ceiling: <checkable condition under which it breaks>
     upgrade: <path to the proper version>
