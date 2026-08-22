@@ -189,7 +189,7 @@ Brainstorming's deliverable is a **structured brief** that `writing-plans` consu
 (Axis 3 — minimum shippable resolution)
 
 ## Current State Evidence
-(Required when touching existing code. Five sub-bullets — Forward / Reverse / Error / Data / Boundary — each citing a path plus an anchor: a verbatim string or stable heading. A line number is optional precision only when the anchor is ambiguous; plus Evidence paths appendix. `N/A — greenfield` allowed only for truly greenfield work. Agent fills via grep / Read / Explore; user reviews — same model as Axis 4 research.)
+(Required when touching existing code. Five sub-bullets — Forward / Reverse / Error / Data / Boundary — each citing a path plus an anchor: a verbatim string or stable heading. A line number is optional precision only when the anchor is ambiguous. Choose the anchor by artifact type using [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence; plus Evidence paths appendix. `N/A — greenfield` allowed only for truly greenfield work. Agent fills via grep / Read / Explore; user reviews — same model as Axis 4 research.)
 
 ## Decision
 (One paragraph: what we will build, what we will NOT build, why)

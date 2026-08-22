@@ -224,3 +224,26 @@ def test_brief_author_surfaces_are_anchor_primary():
     combined = "\n".join(path.read_text(encoding="utf-8") for path in AUTHOR_SURFACES)
     for phrase in stale:
         assert phrase not in combined, f"stale line-primary wording remains: {phrase}"
+
+    skill = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+    match = re.search(
+        r"^## Output Contract — the brief.*?^## Current State Evidence\s*\n"
+        r"(?P<body>.*?)(?=^## \S)",
+        skill,
+        re.MULTILINE | re.DOTALL,
+    )
+    assert match is not None, "Output Contract must retain its Current State Evidence entry"
+    current_state_evidence = _flatten(match.group("body")).lower()
+
+    assert "path plus an anchor" in current_state_evidence, (
+        "the brief entry must require a path plus an anchor"
+    )
+    assert "line number is optional precision only when the anchor is ambiguous" in current_state_evidence, (
+        "the brief entry must restrict line precision to ambiguous anchors"
+    )
+    assert "handoff-brief-format.md" in current_state_evidence and "artifact type" in current_state_evidence, (
+        "the brief entry must point anchor selection by artifact type to the canonical format"
+    )
+    assert "file:line" not in current_state_evidence, (
+        "the brief entry must not retain retired line-primary citation wording"
+    )
