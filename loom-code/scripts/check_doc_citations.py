@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounds-check `path:line` / `path:line-range` citations in Markdown docs.
+"""Verify path+anchor and legacy path+line citations in Markdown docs.
 
 Reimplements, as a durable script, the mid-loop ad-hoc check described in
 `docs/loom/audits/2026-07-28-doc-branch-review-loop-audit.md` §5: every
@@ -10,7 +10,9 @@ its line (or, for a range, the range end) does not exceed the file's
 line count.
 
 Scope (v1 — Task 1 + Task 2 only):
-- ONLY backtick-wrapped `path:line` citations are parsed. A bare,
+- Backtick-wrapped `path:line` citations are parsed, as are canonical
+  line-less path citations when paired with a following same-line
+  verbatim anchor (`path` "anchor"). A bare,
   unbackticked `path:line` in prose is deliberately ignored — backticks
   are the reliable signal that a token is a path-citation rather than
   incidental text (e.g. a ratio, a clock time, a URL fragment); adding
@@ -113,12 +115,13 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-# Matches a backtick-quoted `path:line` or `path:line-range` citation.
+# Matches a backtick-quoted `path`, `path:line`, or `path:line-range` candidate.
 # The path segment excludes backticks/whitespace/colons; requiring a
 # `.` in the final path component (checked in `_looks_like_citation`)
 # keeps this from matching unrelated `key:value`-shaped backtick spans
-# that happen to end in digits.
-_CITATION_RE = re.compile(r"`([^`\s:]+):(\d+)(?:-(\d+))?`")
+# that happen to end in digits. A line-less candidate is retained only
+# when `extract_citations` finds its required following anchor.
+_CITATION_RE = re.compile(r"`([^`\s:]+)(?::(\d+)(?:-(\d+))?)?`")
 
 # Matches a paired double-quoted `"..."` string on the same line as a
 # backtick citation. The captured group is the verbatim anchor string
@@ -139,17 +142,19 @@ def _looks_like_citation(path: str) -> bool:
 
 def extract_citations(
     text: str,
-) -> list[tuple[int, str, int, int | None, str | None]]:
+) -> list[tuple[int, str, int | None, int | None, str | None]]:
     """Return `(doc_lineno, cited_path, start_line, end_line, anchor)` per citation.
 
     `doc_lineno` is 1-indexed (the line in `text` the citation appears
-    on). `end_line` is `None` for a single-line citation (`path:N`) and
-    the range end for a range citation (`path:N-M`). `anchor` is the
+    on). `start_line` and `end_line` are both `None` for a canonical
+    line-less path+anchor citation. `end_line` is otherwise `None` for
+    a single-line citation (`path:N`) and the range end for a range
+    citation (`path:N-M`). `anchor` is the
     paired double-quoted `"..."` string found on the same line as the
     citation, or `None` when no such quote is present (the substring
     check then does not fire). Order matches first-seen order in `text`.
     """
-    citations: list[tuple[int, str, int, int | None, str | None]] = []
+    citations: list[tuple[int, str, int | None, int | None, str | None]] = []
     for lineno, line in enumerate(text.splitlines(), start=1):
         matches = list(_CITATION_RE.finditer(line))
         for index, match in enumerate(matches):
@@ -163,8 +168,11 @@ def extract_citations(
                 line, match.end(), next_citation_start
             )
             anchor = anchor_match.group(1) if anchor_match is not None else None
+            if start_str is None and anchor is None:
+                continue
             end = int(end_str) if end_str is not None else None
-            citations.append((lineno, path, int(start_str), end, anchor))
+            start = int(start_str) if start_str is not None else None
+            citations.append((lineno, path, start, end, anchor))
     return citations
 
 
@@ -232,7 +240,7 @@ def resolve_cited_path(
 def check_citation(
     repo_root: Path,
     cited_path: str,
-    start: int,
+    start: int | None,
     end: int | None,
     repo_files: list[str],
     anchor: str | None = None,
@@ -275,6 +283,7 @@ def check_citation(
     # Secondary check: line-bounds, when no anchor is present (backward
     # compatible — citations without a paired quote rely on the line
     # number alone).
+    assert start is not None
     line_count = len(file_text.splitlines())
     check_line = end if end is not None else start
     if check_line > line_count:
@@ -438,8 +447,13 @@ def check_doc_report(
         checked += 1
         if reason is None:
             continue
-        cited_repr = f"{start}-{end}" if end is not None else str(start)
-        findings.append(f"{doc_path}:{lineno} -> {cited_path}:{cited_repr} {reason}")
+        if start is None:
+            findings.append(f"{doc_path}:{lineno} -> {cited_path} {reason}")
+        else:
+            cited_repr = f"{start}-{end}" if end is not None else str(start)
+            findings.append(
+                f"{doc_path}:{lineno} -> {cited_path}:{cited_repr} {reason}"
+            )
     unchecked += count_pathless_citations(text)
     if check_sections:
         for lineno, target_doc_name, major, minor in extract_section_refs(text):
