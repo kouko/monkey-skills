@@ -63,3 +63,15 @@ The rule stays inline (the whole-artifact scope instruction and the unchanged-cl
 ## Aggregation rule — revisit-if clause
 
 The rule stays inline ("these thresholds are inherited unexamined from `requesting-code-review`... no docs-specific evidence sets them") — unchanged by the 0.75.0 retirement; these thresholds were never part of the bounded-cap contract. Maintainer note: revisit if the docs arm's false-positive economics prove different.
+
+## Assert-absence discipline (originally `agents/docs-reviewer.md` rule 1)
+
+The rule it qualifies ("Assert absence only after reading the full text — 'the document never states X' is a claim about the whole document, not about the diff or a skim") stays inline in `agents/docs-reviewer.md`. Its discipline citation: `docs/loom/memory/asserting-absence-needs-full-text-not-an-abstract.md`.
+
+## Omission lens no-op-bar — supporting evidence (originally `agents/docs-reviewer.md`, omission lens)
+
+The rule it qualifies ("this lens is never a no-op on any dispatch you receive") stays inline in `agents/docs-reviewer.md`. Its evidence tail: a measured run on the code arm scored a dimension PASS with no findings in a way indistinguishable from never applying the lens (`docs/loom/specs/2026-08-22-code-as-spec-lens-no-op-bar.md` §Decision).
+
+## Incorrect-fact — runnable-claim precedent (originally `agents/docs-reviewer.md`, incorrect-fact route)
+
+The rule it qualifies ("a stated count is one shape of runnable claim, and returns, flags, orderings and exit codes are the rest") stays inline in `agents/docs-reviewer.md`. Its precedent: two reviewers imported a metric a document quoted and ran it (`docs/loom/memory/a-number-in-prose-needs-a-test-that-recomputes-it.md`).

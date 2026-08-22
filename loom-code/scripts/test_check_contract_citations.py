@@ -81,6 +81,17 @@ def test_checker_exits_0_against_the_current_tree() -> None:
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def test_agent_contracts_are_not_on_the_debt_list() -> None:
+    from check_contract_citations import DEBT_LIST
+
+    agent_files = {
+        "loom-code/agents/code-reviewer.md",
+        "loom-code/agents/docs-reviewer.md",
+        "loom-code/agents/code-quality-reviewer.md",
+    }
+    assert not (agent_files & DEBT_LIST), agent_files & DEBT_LIST
+
+
 def test_store_directory_citation_is_exempt() -> None:
     assert classify_citation("docs/loom/plans/") == "exempt"
     assert classify_citation("docs/loom/memory") == "exempt"

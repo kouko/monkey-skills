@@ -66,13 +66,16 @@ def test_the_bar_carries_its_reason_in_both_arms():
     carry its reason, sourced and never invented. Both arms shipped the bar
     without one, and the whole-branch docs review filed that as the rule text
     breaking its own rule. This pins the remedy so it cannot silently rot
-    back out."""
-    citation = "docs/loom/specs/2026-08-22-code-as-spec-lens-no-op-bar.md"
+    back out.
+
+    The provenance citation itself moved out of the contract to
+    `requesting-code-review/references/design-evidence.md` and
+    `requesting-docs-review/references/design-evidence.md` (plan
+    `docs/loom/plans/2026-08-22-contracts-cite-only-what-ships.md` Task 3);
+    the reason sentence stays inline, uncited, since an injected system
+    prompt reader has no way to fetch the cited document anyway."""
     for path in (CODE_REVIEWER, DOCS_REVIEWER):
         flattened = _flatten(path.read_text(encoding="utf-8"))
         assert "The reason is that a reader sees only the verdict" in flattened, (
             f"{path.name}'s no-op bar must state its reason inline"
-        )
-        assert citation in flattened, (
-            f"{path.name}'s no-op bar must cite the brief that sources its reason"
         )

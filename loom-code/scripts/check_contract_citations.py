@@ -213,9 +213,6 @@ def evaluate(
 #     import scan_repo; print('\n'.join(sorted(scan_repo(Path('.')))))"
 DEBT_LIST: frozenset[str] = frozenset(
     {
-        "loom-code/agents/code-quality-reviewer.md",
-        "loom-code/agents/code-reviewer.md",
-        "loom-code/agents/docs-reviewer.md",
         "loom-code/skills/finishing-a-development-branch/SKILL.md",
         "loom-code/skills/requesting-code-review/SKILL.md",
         "loom-code/skills/requesting-code-review/references/design-evidence.md",

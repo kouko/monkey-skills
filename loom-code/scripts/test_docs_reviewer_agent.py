@@ -363,12 +363,12 @@ def test_convergence_duties_present():
         "the re-litigation ban (never re-raise a closed finding in new "
         "words) must be stated"
     )
-    assert (
-        "asserting-absence-needs-full-text-not-an-abstract.md" in text
-    ), (
-        "absence assertions must cite the full-text-before-absence "
-        "discipline (docs/loom/memory/"
-        "asserting-absence-needs-full-text-not-an-abstract.md)"
+    assert "Assert absence only after reading the full text" in _norm(text), (
+        "the full-text-before-absence discipline must be stated inline "
+        "(its provenance citation moved to "
+        "requesting-docs-review/references/design-evidence.md, plan "
+        "docs/loom/plans/2026-08-22-contracts-cite-only-what-ships.md "
+        "Task 3)"
     )
 
 

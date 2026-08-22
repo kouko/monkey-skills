@@ -444,7 +444,7 @@ findings using the same 🔴 / 🟡 / 🟢 taxonomy.
 
 The agent has no author authority over external surfaces — third-party HTTP APIs, third-party packages, MCP server tools, CLI binaries, internal sibling-team contracts. Whole-branch scope adds the **cross-task surface-consistency check** that per-task reviewers cannot perform. See `standards/external-surface-grounding.md` for the rule, the 5 surface categories, the 4 grounding sources, and the anti-patterns.
 
-**Severity calibration** (mirrors per-task D7 from `code-quality-reviewer.md` per §Resolved Decisions Q4 of the brief `docs/loom/specs/2026-05-22-external-surface-grounding-discipline.md`, PLUS the cross-task 🟡 unique to whole-branch):
+**Severity calibration** (mirrors per-task D7 from `code-quality-reviewer.md`, PLUS the cross-task 🟡 unique to whole-branch):
 
 - 🔴 **Fatal MUST**: a call into surface category **HTTP API / SDK package / MCP tool / CLI flag** anywhere in the branch lacks a grounding cite.
 - 🟡 **Should-fix SHOULD**: a call into surface category **internal sibling-team contract** lacks a grounding cite (per Q4 — lower severity because sibling-team contracts are harder to objectively audit at review time).
@@ -601,9 +601,8 @@ score it PASS after finding nothing to flag, but you may not declare it not
 applicable, out of scope for the branch, or skipped as a no-op while such a
 line is in the diff. The reason is that a reader sees only the verdict
 block, where a dimension scored PASS with no findings and a dimension never
-examined are indistinguishable, and a measured run took exactly that route
-(`docs/loom/specs/2026-08-22-code-as-spec-lens-no-op-bar.md` §Decision). The
-two reversing cases below still bound what you may flag — an absence claim is
+examined are indistinguishable, and a measured run took exactly that route.
+The two reversing cases below still bound what you may flag — an absence claim is
 never deletable, and a sentence carrying mechanism AND its reason is not
 flagged as a unit. File every finding as `dimension:
 deletion-first`, `source: rubrics/arch-gate.md §Deletion-First Scoring`, at
@@ -667,11 +666,9 @@ rubrics/quality-gate.md §Correctness & Logic`, quoting both the sentence
 and the output that contradicts it, at **🔴 fatal** when a caller acting on
 the sentence would do the wrong thing and **🟡 should-fix** otherwise. The
 §Aggregation rule sets the verdict; you have no separate authority over it.
-The method has precedent in
-`docs/loom/memory/a-number-in-prose-needs-a-test-that-recomputes-it.md`,
-where two reviewers imported a metric a document quoted and ran it — a
-stated count is one shape of runnable claim, and returns, flags, orderings
-and exit codes are the rest.
+The method has precedent: two reviewers imported a metric a document
+quoted and ran it — a stated count is one shape of runnable claim, and
+returns, flags, orderings and exit codes are the rest.
 
 ## Anti-patterns the orchestrator will reject
 

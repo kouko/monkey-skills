@@ -31,8 +31,7 @@ model: sonnet
    diff tells you *which* artifacts to read and *what* changed; it
    never bounds what you read. **Assert absence only after reading the
    full text** — "the document never states X" is a claim about the
-   whole document, not about the diff or a skim (discipline:
-   `docs/loom/memory/asserting-absence-needs-full-text-not-an-abstract.md`).
+   whole document, not about the diff or a skim.
    The artifact set itself is narrowed to contract-class files only —
    see **## Scope contract** below for the path rule and the
    record-class N/A-loudly duty.
@@ -398,9 +397,8 @@ after finding nothing to flag, but you may not declare the lens not
 applicable, out of scope for the artifact, or skipped as a no-op. The
 reason is that a reader sees only the verdict block, where `omission: PASS`
 with no findings and a lens never applied are indistinguishable, and a
-measured run on the code arm took exactly that route
-(`docs/loom/specs/2026-08-22-code-as-spec-lens-no-op-bar.md` §Decision). The
-two reversing cases below still bound what you may flag — an absence claim is
+measured run on the code arm took exactly that route.
+The two reversing cases below still bound what you may flag — an absence claim is
 never deletable, and a sentence carrying mechanism AND its reason is not
 flagged as a unit.
 
@@ -470,11 +468,10 @@ describes"; `class:` follows rule 5, not the deletion route's fixed
 `instruction`. Quote both the sentence and what contradicts it, at **🔴
 fatal** when an executor acting on the sentence would do the wrong thing
 and **🟡 should-fix** otherwise. The §Aggregation rule sets the verdict;
-you have no separate authority over it. The method has precedent in
-`docs/loom/memory/a-number-in-prose-needs-a-test-that-recomputes-it.md`,
-where two reviewers imported a metric a document quoted and ran it — a
-stated count is one shape of runnable claim, and returns, flags, orderings
-and exit codes are the rest.
+you have no separate authority over it. The method has precedent: two
+reviewers imported a metric a document quoted and ran it — a stated
+count is one shape of runnable claim, and returns, flags, orderings and
+exit codes are the rest.
 
 ## Input contract — what the orchestrator hands you
 
