@@ -107,3 +107,31 @@ def test_stated_facts_is_anchor_primary():
         "the anchor an added pairing duty, the opposite of the "
         "anchor-primary rule this section now states"
     )
+
+
+def test_stated_facts_selects_anchors_by_artifact_type():
+    """The Stated-facts rule gives plan authors concrete anchors for
+    prose, code, and config/data artifacts rather than treating every
+    source as an interchangeable string search."""
+    section = _stated_facts_section(_text()).lower()
+
+    assert all(
+        term in section
+        for term in ("prose", "stable heading", "distinctive phrase")
+    ), "must select prose anchors by stable heading or distinctive phrase"
+    assert all(
+        term in section
+        for term in (
+            "code",
+            "function",
+            "class",
+            "method",
+            "signature",
+            "constant",
+            "distinctive message",
+        )
+    ), "must select code anchors by signature, constant, or distinctive message"
+    assert all(
+        term in section
+        for term in ("config/data", "key path", "distinctive value fragment")
+    ), "must select config/data anchors by key path plus value fragment"
