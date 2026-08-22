@@ -108,9 +108,16 @@ summary:
 Filed zero surplus-class findings and scored `deletion-first: PASS`. The
 summary's third bullet shows why: it treated planted `d` — mechanism and
 reason welded into one sentence — as a *truth* question, executed it,
-found it true, and stopped. The lens's deletion half never fired. It also
-called deletion-first a "no-op for this branch", which is the carve-out
-escape the README's instability note predicts.
+found it true, and stopped. It then listed deletion-first among the
+dimensions that are "no-ops for this branch".
+
+Note what this is NOT: it never invoked either carve-out. The earlier
+non-deployed rerun reached 0/2 by *using* the exemptions ("the reason must
+survive", "an absence claim is never deletable") to spare every surplus
+sentence. This arm reached the same 0/2 by never engaging the deletion half
+at all — the execution duty absorbed the sentence first, answered "true",
+and closed it. Two different mechanisms, same score. The competition
+between the lens's two halves is the one this arm demonstrates.
 
 The unplanted regex dead branch was caught by execution, as by every prior
 arm.
