@@ -1,16 +1,16 @@
-"""Structural grep-test guarding the Continuous-mode FREEZE (entry) extension
+"""Structural grep-test guarding the autonomous-execution entry extension
 that accepts a human-approved loom-design change-folder as an alternative entry
 artifact alongside the brainstorming brief (Task 3 of the spec→code wiring).
 
-After the router structural refactor the Continuous-mode doctrine — including
-the freeze/entry discrimination — lives in `references/continuous-mode.md`
+After the router structural refactor the autonomous-execution doctrine —
+including the freeze/entry discrimination — lives in `references/continuous-mode.md`
 (the router body carries only a short stub, since it is SessionStart-injected
 and token-budgeted). These checks therefore assert against the REFERENCE.
 
 Correctness is the PRESENCE of the load-bearing convention described in
 `docs/loom/specs/2026-06-21-spec-to-code-wiring.md` Decision §2 (R6):
 
-  Continuous-mode freeze accepts EITHER the brainstorming brief OR a
+  Autonomous execution accepts EITHER the brainstorming brief OR a
   human-approved loom-design change-folder. Discrimination is NOT content-shape
   sniffing — the USER DECLARES which artifact, and the freeze CONFIRMS by
   (a) named-artifact presence (`specs/<capability>/spec.md` at the declared
@@ -38,14 +38,14 @@ def _ref() -> str:
 
 
 def _freeze_window() -> str:
-    """The Continuous-mode ENTRY/freeze block — from the 'Continuous mode'
-    heading down to (but excluding) the 'Auto-advance behavior' heading.
+    """The approved ENTRY/freeze block — from the stable Entry heading down
+    to (but excluding) the 'Auto-advance behavior' heading.
     The change-folder alternative must live inside the entry/freeze block,
     not anywhere else in the reference."""
     low = _ref().lower()
-    start = low.find("continuous mode")
-    assert start != -1, "Continuous mode section must exist"
-    end = low.find("auto-advance behavior", start)
+    start = low.find("## entry — at the spec, not the plan")
+    assert start != -1, "approved-entry section must exist"
+    end = low.find("## auto-advance behavior", start)
     assert end != -1, "Auto-advance behavior heading must follow the entry block"
     return low[start:end]
 

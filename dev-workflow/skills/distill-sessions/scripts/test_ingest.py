@@ -31,7 +31,12 @@ _HERE = Path(__file__).resolve().parent
 if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 
-from ingest import ingest_claude_jsonl  # noqa: E402
+from ingest import (  # noqa: E402
+    _classify_codex_stop,
+    _codex_tool_error,
+    ingest_claude_jsonl,
+    ingest_codex_jsonl,
+)
 
 FIXTURE_DIR = _HERE
 EXPECTED_SESSION = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
@@ -183,3 +188,72 @@ def test_ingest_returns_iterator_not_list():
     )
     # Confirm it's actually iterable (consume one item).
     iter(result)
+
+
+def test_ingest_codex_jsonl_normalizes_observable_messages(tmp_path: Path):
+    """Codex records retain observable messages/errors/stops, never reasoning."""
+    session = "rollout-2026-08-22T17-34-26-01a028d2.jsonl"
+    (tmp_path / session).write_text(
+        "\n".join(
+            [
+                '{"type":"response_item","timestamp":"2026-08-22T09:35:00Z","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"continue autonomously; discuss privacy BLOCK"}]}}',
+                '{"type":"response_item","timestamp":"2026-08-22T09:35:01Z","payload":{"type":"reasoning","summary":[{"text":"private chain of thought"}]}}',
+                '{"type":"response_item","timestamp":"2026-08-22T09:35:02Z","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Stopped: privacy BLOCK requires user input."}]}}',
+                '{"type":"response_item","timestamp":"2026-08-22T09:35:03Z","payload":{"type":"function_call","name":"exec","call_id":"call-1","arguments":"{\\"cmd\\":\\"false\\"}"}}',
+                '{"type":"response_item","timestamp":"2026-08-22T09:35:04Z","payload":{"type":"custom_tool_call_output","call_id":"call-1","output":[{"type":"input_text","text":"Script completed\\n"},{"type":"output_text","text":"command failed: exit 1"},{"type":"reasoning","text":"do not expose"}]}}',
+                '{"type":"response_item","timestamp":"2026-08-22T09:35:05Z","payload":{"type":"custom_tool_call_output","call_id":"call-2","output":[{"type":"text","text":"Script completed successfully"}]}}',
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    events = list(ingest_codex_jsonl(tmp_path))
+
+    assert all(event.agent == "codex" for event in events)
+    assert [event.role for event in events] == ["user", "assistant", "tool", "tool", "tool"]
+    assert events[0].text == "continue autonomously; discuss privacy BLOCK"
+    assert events[0].stop_policy_outcome is None
+    assert events[0].stop_policy_reason is None
+    assert "privacy BLOCK" in events[1].text
+    assert all("private chain of thought" not in event.text for event in events)
+    assert all("do not expose" not in event.text for event in events)
+    assert events[2].tool_name == "exec"
+    assert events[3].tool_error == "Script completed\n\ncommand failed: exit 1"
+    assert events[3].text == "Script completed\n\ncommand failed: exit 1"
+    assert events[4].text == "Script completed successfully"
+    assert events[4].tool_error is None
+    assert events[1].stop_policy_outcome == "halt"
+    assert events[1].stop_policy_reason == "privacy"
+
+
+def test_codex_tool_failure_parser_rejects_successful_explanatory_text():
+    """A successful result mentioning failure is not a tool failure."""
+    output = {
+        "payload": {
+            "output": [
+                {
+                    "type": "output_text",
+                    "text": "Success: the report explains why failed commands are retried.",
+                }
+            ]
+        }
+    }
+
+    assert _codex_tool_error(output) is None
+
+
+def test_codex_tool_failure_parser_recognizes_observed_failure_shapes():
+    """Unflagged observed Codex failures still surface as tool errors."""
+    for text in ("Script error: exit 1", "Process exited with code 127"):
+        assert _codex_tool_error({"payload": {"output": text}}) == text
+
+
+def test_codex_stop_policy_requires_user_facing_stop_construction():
+    """Policy explanation alone is telemetry text, not an interaction stop."""
+    assert _classify_codex_stop("scope / decision rule permits continuation") == (None, None)
+    assert _classify_codex_stop("privacy BLOCK") == (None, None)
+    assert _classify_codex_stop("Stopped: privacy BLOCK requires user input.") == (
+        "halt",
+        "privacy",
+    )

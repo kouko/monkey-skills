@@ -1,4 +1,4 @@
-"""ingest.py — Claude Code session JSONL → Event[] adapter.
+"""ingest.py — Claude Code and Codex session JSONL → Event[] adapters.
 
 External surface (memory project_external_surface_grounding_discipline.md):
 Claude Code stores per-session transcripts as JSONL files under
@@ -51,12 +51,38 @@ from event import Event
 # Default JSONL traversal root — overridable for tests / cross-host use.
 DEFAULT_ROOT = Path.home() / ".claude" / "projects"
 
+# Codex persists rollout transcripts separately from Claude Code.  The
+# adapter deliberately reads only observable response items; reasoning records
+# carry internal content and are not telemetry for this skill.
+DEFAULT_CODEX_ROOT = Path.home() / ".codex" / "sessions"
+
 # Default exclusion: subagent transcripts (own session tree, not the
 # orchestrator's first-person trajectory we want to mine).
 DEFAULT_EXCLUDE_GLOBS: list[str] = ["**/subagents/**"]
 
 # Layer-A agent literal at v0.1. Future adapters set their own.
 _AGENT_LITERAL = "claude-code"
+_CODEX_AGENT_LITERAL = "codex"
+
+# These are deliberately literal, user-facing policy reasons.  A reason is a
+# stop only when the same message also has an explicit stop/ask construction.
+_CODEX_STOP_REASON_PATTERNS: tuple[tuple[re.Pattern[str], str, str], ...] = (
+    (re.compile(r"\bprivacy\s+block\b", re.IGNORECASE), "halt", "privacy"),
+    (re.compile(r"\bscope\s*/\s*decision\b", re.IGNORECASE), "ask", "scope-decision"),
+    (re.compile(r"\bmerge\b", re.IGNORECASE), "ask", "merge"),
+    (re.compile(r"\bdeploy(?:ment)?\b", re.IGNORECASE), "ask", "deploy"),
+    (re.compile(r"\bdelete\b", re.IGNORECASE), "ask", "delete"),
+)
+_CODEX_STOP_CONSTRUCTION_RE = re.compile(
+    r"\b(?:stopped|paused|halted)\s*:"
+    r"|\b(?:ask|pause|stop|halt)\s+(?:the\s+)?user\b"
+    r"|\b(?:requires|needs)\s+(?:user\s+)?(?:approval|input)\b",
+    re.IGNORECASE,
+)
+_CODEX_TOOL_FAILURE_LINE_RE = re.compile(
+    r"(?im)^(?:command|script|tool)\s+(?:failed|failure|error)\b"
+    r"|^process\s+exited\s+with\s+code\s+\d+\b|^error\s*:",
+)
 
 # `Skill(skill: "...")` form sometimes appears in transcript text (when
 # the harness echoes the call into a text node rather than a tool_use
@@ -286,4 +312,146 @@ def ingest_claude_jsonl(
         except OSError:
             # Permission / IO error on one file shouldn't kill the
             # whole ingest.
+            continue
+
+
+def _codex_observable_text(content: object) -> str:
+    """Flatten only observable text blocks from a Codex payload value."""
+    if isinstance(content, str):
+        return content
+    if not isinstance(content, list):
+        return ""
+    parts: list[str] = []
+    for item in content:
+        if not isinstance(item, dict):
+            continue
+        if item.get("type") not in {"input_text", "output_text", "text"}:
+            continue
+        text = item.get("text")
+        if isinstance(text, str):
+            parts.append(text)
+    return "\n".join(parts)
+
+
+def _classify_codex_stop(text: str) -> tuple[str | None, str | None]:
+    """Map explicit user-facing policy text to its normalized stop metadata."""
+    if not _CODEX_STOP_CONSTRUCTION_RE.search(text):
+        return None, None
+    for pattern, outcome, reason in _CODEX_STOP_REASON_PATTERNS:
+        if pattern.search(text):
+            return outcome, reason
+    return None, None
+
+
+def _codex_tool_error(record: dict) -> str | None:
+    """Return an observable tool failure, if this output records one."""
+    payload = record.get("payload")
+    if not isinstance(payload, dict):
+        return None
+    output = _codex_observable_text(payload.get("output"))
+    if not output:
+        return None
+    if payload.get("is_error") or payload.get("isError"):
+        return output
+    if _CODEX_TOOL_FAILURE_LINE_RE.search(output):
+        return output
+    return None
+
+
+def _codex_skill_invocation(name: object, arguments: object) -> str | None:
+    """Extract a Skill call when Codex represents it as a function call."""
+    if name != "Skill" or not isinstance(arguments, str):
+        return None
+    try:
+        parsed = json.loads(arguments)
+    except json.JSONDecodeError:
+        return None
+    skill = parsed.get("skill") if isinstance(parsed, dict) else None
+    return skill.strip() if isinstance(skill, str) else None
+
+
+def ingest_codex_jsonl(root: Path | None = None) -> Iterator[Event]:
+    """Walk Codex rollout JSONL files and yield observable normalized events.
+
+    Codex's persisted format is an observed host transcript format, not a
+    public API.  It records conversational items inside top-level
+    ``response_item`` records.  This adapter retains only user/assistant
+    text, function calls, and function outputs that indicate a failure.  In
+    particular, it never reads ``reasoning`` content or encrypted reasoning
+    fields.
+    """
+    root = Path(root).expanduser() if root is not None else DEFAULT_CODEX_ROOT
+    if not root.exists():
+        return
+
+    for path in sorted(root.rglob("*.jsonl")):
+        if not path.is_file():
+            continue
+        # Rollout file names are session-scoped and remain available even when
+        # individual response records omit a session identifier.
+        session = path.stem
+        tool_names: dict[str, str] = {}
+        try:
+            with path.open("r", encoding="utf-8") as f:
+                for line in f:
+                    try:
+                        record = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if not isinstance(record, dict) or record.get("type") != "response_item":
+                        continue
+                    payload = record.get("payload")
+                    timestamp = record.get("timestamp")
+                    if not isinstance(payload, dict) or not isinstance(timestamp, str):
+                        continue
+
+                    item_type = payload.get("type")
+                    if item_type == "message":
+                        role = payload.get("role")
+                        if role not in {"user", "assistant"}:
+                            continue
+                        text = _codex_observable_text(payload.get("content"))
+                        stop_outcome, stop_reason = (
+                            _classify_codex_stop(text)
+                            if role == "assistant"
+                            else (None, None)
+                        )
+                        yield Event(
+                            agent=_CODEX_AGENT_LITERAL,
+                            session=session,
+                            ts=timestamp,
+                            role=role,
+                            text=text,
+                            stop_policy_outcome=stop_outcome,
+                            stop_policy_reason=stop_reason,
+                        )
+                    elif item_type in {"function_call", "custom_tool_call"}:
+                        name = payload.get("name")
+                        call_id = payload.get("call_id")
+                        if isinstance(call_id, str) and isinstance(name, str):
+                            tool_names[call_id] = name
+                        arguments = payload.get("arguments", payload.get("input"))
+                        text = arguments if isinstance(arguments, str) else ""
+                        yield Event(
+                            agent=_CODEX_AGENT_LITERAL,
+                            session=session,
+                            ts=timestamp,
+                            role="tool",
+                            text=text,
+                            tool_name=name if isinstance(name, str) else None,
+                            skill_invocation=_codex_skill_invocation(name, arguments),
+                        )
+                    elif item_type in {"function_call_output", "custom_tool_call_output"}:
+                        call_id = payload.get("call_id")
+                        text = _codex_observable_text(payload.get("output"))
+                        yield Event(
+                            agent=_CODEX_AGENT_LITERAL,
+                            session=session,
+                            ts=timestamp,
+                            role="tool",
+                            text=text,
+                            tool_name=tool_names.get(call_id) if isinstance(call_id, str) else None,
+                            tool_error=_codex_tool_error(record),
+                        )
+        except OSError:
             continue

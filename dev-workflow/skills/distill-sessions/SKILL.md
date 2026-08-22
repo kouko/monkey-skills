@@ -1,14 +1,14 @@
 ---
 name: distill-sessions
 description: |
-  Mine past Claude Code session transcripts + /insights for friction patterns → a per-skill improvement-proposals doc. Use to audit skill-activation telemetry, or gather evidence before a refactor. For creating a skill use skill-creator-advance.
+  Mine past Claude Code and Codex session transcripts + /insights for friction patterns → a per-skill improvement-proposals doc. Use to audit skill-activation telemetry, or gather evidence before a refactor. For creating a skill use skill-creator-advance.
 version: 0.5.2
 ---
 
 # distill-sessions
 
-Stage 1+2+3+5 of the v2 mining architecture: ingest Claude Code session
-transcripts, attach `/insights` per-session facets, detect friction
+Stage 1+2+3+5 of the v2 mining architecture: ingest Claude Code and Codex
+session transcripts, attach `/insights` per-session facets where available, detect friction
 signals, aggregate per target Skill, dispatch per-trajectory subagents
 in parallel, and emit a reviewable SKILL.md edit proposal.
 
@@ -109,9 +109,9 @@ Five steps; Python (Stage 1+2) → orchestrator + Sonnet 4.6 subagents
 write-back).
 
 ```
-~/.claude/projects/**/*.jsonl                ~/.claude/usage-data/facets/*.json
-              \                              /
-               \                            /
+~/.claude/projects/**/*.jsonl   ~/.codex/sessions/**/*.jsonl   ~/.claude/usage-data/facets/*.json
+              \                         |                       /
+               \                        |                      /
                 v                          v
         +-----------------------------------------+
         | scripts/main.py  (Stage 1+2)            |
@@ -171,13 +171,26 @@ python scripts/main.py \
   > top.json
 ```
 
-`main.py` walks `~/.claude/projects/**/*.jsonl`, joins
-`~/.claude/usage-data/facets/*.json` per-session facets, runs four
+`main.py` walks `~/.claude/projects/**/*.jsonl` and
+`~/.codex/sessions/**/*.jsonl`, joins `~/.claude/usage-data/facets/*.json`
+per-session facets where available, runs four
 signal detectors (interrupt-after-brainstorm, tool-error clusters,
 NEEDS_REVISION streaks, re-dispatch concentration), aggregates by
 target skill, ranks top-N by a four-axis confidence score (frequency
 + time-cost + cross-project + recency), and emits a JSON payload on
 stdout plus a markdown summary on stderr.
+
+Codex ingest retains only observable user/assistant text, tool calls, and
+tool outputs; it classifies observable tool failures separately. It
+intentionally excludes reasoning records and encrypted reasoning content. The
+Claude `/insights` facet join remains Claude-specific;
+Codex events participate in the same signal and aggregation pipeline without
+a facet when no matching record exists. When an observable assistant message
+contains both an explicit user-facing stop/ask construction and a policy reason
+(for example `Stopped: privacy BLOCK requires user input`), the preview emits a
+conservative `policy_stops[]` record with its normalized outcome and reason; it
+never infers a stop from reasoning, generic risk language, or explanatory rule
+mentions.
 
 `top.json` carries `top_skills[]` (per-skill aggregates + per-session
 friction levels) and `subagent_payload[]` (per-trajectory dispatch
@@ -491,7 +504,8 @@ that key — `main.py` merges over the defaults.
   Operator can override at orchestration time per v0.1 bare-invocation
   protocol (pause-for-confirmation gate at Stage 3).
 - **Local-only by default** — mining reads
-  `~/.claude/projects/**/*.jsonl` from the user's machine. No
+  `~/.claude/projects/**/*.jsonl` and `~/.codex/sessions/**/*.jsonl` from the
+  user's machine. No
   network calls in `main.py`, `propose.py`, or `apply.py`. The
   Stage 3 subagent dispatch is the only step that talks to the
   Anthropic API, and it's invoked by the orchestrator, not by these scripts.
@@ -552,8 +566,6 @@ roadmap":
   ledger so re-runs across days can deduplicate by signal
   fingerprint, not just within-run (Q6). v0.1 counts within-run only
   for the cross-project confidence tag.
-- **Codex CLI adapter** — read `~/.codex/sessions/*.jsonl` per
-  research memo §Cross-agent universality.
 - **Gemini / Cline / Cursor adapters** — same pattern, different
   on-disk paths.
 - **`AGENTS.md` / `GEMINI.md` / `.cursorrules` write-back** —

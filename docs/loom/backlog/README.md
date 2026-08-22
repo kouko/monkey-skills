@@ -101,8 +101,8 @@ this block; none paraphrases it.
 
 | Word | Means | Set by | Flips when | Duties attached |
 |---|---|---|---|---|
-| `open` | Recorded, not chosen. The default at creation; may stay open forever. | Anyone filing an entry | → `bet` at a betting moment; → `closed` when shipped/superseded/abandoned | Optional `start:` memo (prose trigger, never machine-read). Optional `blocked: <reason>` — present ⇒ excluded from `--ready`. |
-| `bet` | Chosen by the user at a close-out betting moment as what the repo works on next. A bet can be lost — dropping one back to `open` is legal and carries no ceremony beyond removing the promotion. | **User only** — agents never promote | → `closed` at that arc's close-out; → `open` if the user withdraws it | Must carry a well-formed `serves:` line (`check_north_star_link.py`); the queue-relation gate resolves `in-queue:`/`displaces:` against live bets. |
+| `open` | Recorded, not chosen. The default at creation; may stay open forever. | Anyone filing an entry | → `bet` only by an explicit user request to choose or promote; → `closed` when shipped/superseded/abandoned | Optional `start:` memo (prose trigger, never machine-read). Optional `blocked: <reason>` — present ⇒ excluded from `--ready`. |
+| `bet` | Chosen by the user as what the repo works on next. An empty queue at close-out is notification-only, not a betting moment. A bet can be lost — dropping one back to `open` is legal and carries no ceremony beyond removing the promotion. | **User only** — agents never promote | → `closed` at that arc's close-out; → `open` if the user withdraws it | Must carry a well-formed `serves:` line (`check_north_star_link.py`); the queue-relation gate resolves `in-queue:`/`displaces:` against live bets. |
 | `closed` | This line ended — shipped, superseded, or deliberately abandoned. The reason is one body line naming the evidence (branch/PR/decision), not a status variant. | Agent at close-out, per the user's instruction | Terminal (an entry under `archive/` is `closed` by construction) | Body line naming the evidence. |
 | `blocked:` (field, not a status) | Why this `open` entry cannot be picked right now. | Whoever knows the fact | Delete the line when the impediment lifts — the entry re-enters `--ready` | Legal only on an `open` entry — `--validate` rejects it elsewhere (`_check_blocked`); otherwise a filter flag, `--ready` is its only reader. |
 
@@ -145,11 +145,11 @@ else only writes it.
 - **Kickoff read** — `brainstorming`'s Axis 0 Backlog ready check runs
   the ready query at arc kickoff, so the queue informs new work.
 - **Bet (promote)** — promoting a backlog entry into `bet`
-  is **user-only**; agents never promote. Triggered by
-  `finishing-a-development-branch`'s close-out when that close-out
-  flips a backlog entry (the duty lives in its Backlog-close row) and
-  the `bet` queue is empty after the flip — or manually at
-  any time. Candidates: the active roadmap entries' next arcs first
+  is **user-only**; agents never promote. It is triggered only by an
+  explicit user request to choose or promote, never because close-out
+  found an empty `bet` queue. That state is reported as `bet queue
+  empty` without candidate listing or a prompt. When the user requests
+  a choice, candidates are the active roadmap entries' next arcs first
   (same-lane first — when an arc of theme X just closed, theme X's
   next arc leads the list), then the ready query's `open` output. To
   promote, the user edits the chosen entry's `status:` to

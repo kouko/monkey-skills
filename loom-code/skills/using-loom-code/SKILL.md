@@ -18,7 +18,7 @@ Five load-bearing rules:
 2. **TDD is the iron law.** No production code without a failing test first. Call `tdd-iron-law`. Beck (2002, ISBN 978-0321146533) Preface: *"Write the test you wish you had. Make it fail. Make it pass. Make it clean."* Floor, not aspiration.
 3. **Split + dispatch (SDD).** Task >1 hour or >1 module → `subagent-driven-development`; atomic one-failing-test units; three subagents per task (implementer / spec-reviewer / code-quality-reviewer).
 4. **Never push without review — and a real close-out means `finishing-a-development-branch`, not review alone.** `git push` / `gh pr create` / `gh pr merge` without prior review PASS = violation. A `requesting-code-review` PASS is the floor, not the whole close-out: if the push is meant to finish/merge the branch (not just fetch a mid-work review opinion), route the whole thing through `finishing-a-development-branch` — it delegates to `requesting-code-review` as its own Step 1, so nothing is lost, and it additionally bundles verification-before-completion + same-branch memory-timing + the git-memory trailer decision, none of which a standalone review-then-manual-push gets you. Calling `requesting-code-review` directly and pushing by hand is the narrow exception (`finishing-a-development-branch`'s own §When to use names it: "review WITHOUT merging") — not the default path for a real close-out.
-5. **Research before asking.** Non-trivial design / strategy / tech-stack question to user MUST cite WebSearch findings (2-4 industry approaches w/ sources). *"X or Y?"* without industry context = violation. Use `brainstorming` Axis 4 protocol for the research. This is gate ② of the full asking-the-user discipline — gate ① (whether to ask: do reversible/inferable steps without asking, always confirm outward/irreversible actions — asked once — see §Continuous mode's request-recognition block) and gate ③ (plain, jargon-free phrasing with a state anchor) are enforced in the downstream skills (`brainstorming` / `subagent-driven-development` / `requesting-code-review`).
+5. **Research before asking.** Non-trivial design / strategy / tech-stack question to user MUST cite WebSearch findings (2-4 industry approaches w/ sources). *"X or Y?"* without industry context = violation. Use `brainstorming` Axis 4 protocol for the research. This is gate ② of the full asking-the-user discipline — gate ① follows the four-outcome policy in `references/continuous-mode.md`: auto-resolve approved, checkable in-scope work; ask only when scope or a user decision is genuinely missing; halt for irreversible safety boundaries. Gate ③ (plain, jargon-free phrasing with a state anchor) is enforced in the downstream skills (`brainstorming` / `subagent-driven-development` / `requesting-code-review`).
 
 **Skipping any of these = violation.** "I'll just quickly…" / "just push" / "just ask" / 「ちょっと試すだけ」 / 「先 push 再說」 / 「先問再說」 are rationalizations — refuse them.
 </EXTREMELY-IMPORTANT>
@@ -63,32 +63,24 @@ Walk through these stages in order. Skip a stage only when its precondition is a
 
 **Auto-suggest hook** (Stage 3 → Auxiliary): When SDD is about to consume a plan that contains **≥2 tasks** marked `Independent: true` with **disjoint `Files touched`**, the router suggests `dispatching-parallel-agents` for those tasks (the implementer fan-out happens in one assistant message; the rest of the plan stays on SDD's per-task triad). The user can decline; SDD's sequential dispatch is always the fallback. This is the **only** time the toolkit dispatches multiple implementers within one plan — every other path keeps SDD's "one implementer at a time" floor.
 
-## Continuous mode (opt-in): spec-frozen → PR auto-advance
+## Autonomous execution (default): approved scope → PR-ready
 
-**Continuous mode** is an **opt-in** convention that lets the orchestrator auto-advance stage→stage from a frozen spec to a PR without a human "go" between stages (the default stays human-pumped). **Entry precondition:** the user opts in explicitly **and** a **human-approved** frozen entry artifact exists — either the `brainstorming` brief or a validated loom-design change-folder.
-
-**Opt-in is also recognized from the request itself**: a kickoff
-request that names a publish endpoint — "finish this branch", "ship
-it", "開 PR", "run to PR" — is an explicit continuous opt-in (the
-anchor phrases are examples; the operative test is whether the request
-names a publish endpoint). Record the recognition in one line in the
-plan header ("endpoint named: yes → continuous"); downstream stations
-read the recording, never re-judge the request. A request naming no
-endpoint never triggers this; saying 「一站一站來」 (stage-by-stage)
-restores human-pumped mode from that point, and the recording flips.
-
-It adds a STOP rule, not a brain; the full doctrine lives in the reference.
-
-**MANDATORY:** when the user opts into continuous mode ("run continuous to PR" / "連續跑到 PR"), **READ `references/continuous-mode.md` IN FULL before auto-advancing.** The stub here is not enough to run safely.
-
-**Invariant (one line):** **never auto-merge**; **HALT** and escalate on re-plan / re-scope / re-route (and every STOP-contract row); **PR-open is the terminal stop** — the human merges.
+**Autonomy-by-default:** after a **human-approved**, frozen brief or validated
+loom-design change-folder fixes scope, auto-advance stage→stage; 「一站一站來」
+is the per-session human-pumped override.
+The approved entry, not a request phrase, is the authority boundary: a named
+publish endpoint may set the terminal, but is not required to start autonomous
+execution. Downstream stations follow the shared four-outcome policy, not their own confirmation defaults.
+**MANDATORY:** before auto-advancing, **READ references/continuous-mode.md IN
+FULL.** **Never auto-merge; HALT** for privacy, merge, deploy, delete, failed
+safety gates, or another STOP-contract row; PR-open is terminal.
 
 ## Red flags — agent rationalizations to refuse
 
 | Agent says | Reality | Correct response |
 |---|---|---|
 | "I'll quickly fix this without a test." | Iron-Law violation. | Load `tdd-iron-law`, write the failing test first. |
-| "This change is trivial, skip planning." | Trivial changes accumulate scope. | Ask 2-3 clarifying Qs. If still trivial after, proceed with TDD. |
+| "This change is trivial, skip planning." | Trivial changes accumulate scope. | Auto-resolve an approved, checkable in-scope change under TDD; ask only when scope or a user decision is genuinely missing. |
 | "I'll write all the code, tests last." | Test-after rationalization. | Refuse. Beck 2002 §Preface forbids. |
 | "Subagents add overhead." | Context-window logic, not quality logic. | If task >1 hour or >1 module, SDD is mandatory. |
 | "User said skip TDD." | Valid only if user is explicit *and* the work matches `tdd-iron-law/SKILL.md` §When NOT to Use (throwaway / generated / pure config). | Quote §When NOT to Use back; ask for explicit confirmation. |
@@ -110,7 +102,10 @@ It adds a STOP rule, not a brain; the full doctrine lives in the reference.
 ## What this router does NOT do
 
 - Does **not** write or review code itself — it routes.
-- Does **not** auto-invoke downstream skills — the harness invokes them when the user's next message + Skill Priority match. **Exception:** when the user explicitly opts into **continuous mode** (see §"Continuous mode"), the orchestrator auto-advances stage→stage until a stop condition fires.
+- Does **not** auto-invoke downstream skills before an approved entry artifact
+  exists — the harness invokes them when the user's next message + Skill
+  Priority match. **Exception:** autonomy-by-default auto-advances an approved
+  scope stage→stage until an ask-policy outcome or safety stop fires.
 - Does **not** enforce one workflow for every task — Flexible skills (§Skill types) cover tailoring.
 - Does **not** replace `domain-teams:code-team` — both ship; pick by use-case (build vs audit).
 
@@ -118,11 +113,17 @@ It adds a STOP rule, not a brain; the full doctrine lives in the reference.
 
 Load each file **only when its trigger fires** — do NOT speculatively load all of them.
 
-- `references/continuous-mode.md` — full Continuous-mode doctrine (entry/freeze, STOP contract, never-auto-merge). **MANDATORY:** when the user opts into continuous mode, READ this **IN FULL** before auto-advancing (the §"Continuous mode" stub above is not enough to run safely).
+- `references/continuous-mode.md` — full autonomy-by-default doctrine
+  (entry/freeze, ask policy, STOP contract, never-auto-merge). **MANDATORY:**
+  after an approved entry artifact, READ this **IN FULL** before auto-advancing
+  (the §"Autonomous execution" stub above is not enough to run safely).
 - `references/claude-code-tools.md` — Claude Code canonical tool names. Read only when the host is **Claude Code**.
 - `references/codex-tools.md` — Codex CLI tool mapping (Phase 2.5 ship target). Read only when the host is **Codex CLI**.
 - `references/engineering-baselines.md` — 12-rule engineering baseline carried by every loom-code plugin-level agent (SSOT in `../../scripts/_baseline.md`; v0.5.2 / P15-12).
 - `references/environment-gotchas.md` — consolidated orchestrator harness / dcg / Read-tool-precondition gotchas (cross-cutting; pointed at by SDD / tdd-iron-law / finishing-a-development-branch / using-git-worktrees). Read only when an orchestrator hits a harness friction (blocked git command, "File has not been read yet", rebase conflict).
 - `../../PRODUCT-SPEC.md` / `../../TECH-SPEC.md` / `../../ROADMAP.md` — design lock + phase plan.
 
-**Do NOT load** every reference file up front — `continuous-mode.md` only on opt-in, the host-tool files only under their matching host, `environment-gotchas.md` only on a harness-friction trigger. The router body alone routes the common (human-pumped) path.
+**Do NOT load** every reference file up front — load `continuous-mode.md` when
+an approved entry begins autonomous execution, the host-tool files only under
+their matching host, and `environment-gotchas.md` only on a harness-friction
+trigger. The router body alone routes pre-approval work.

@@ -1,20 +1,9 @@
-"""Prose-pin test for request-derived authorization, Task 1 (router +
-doctrine endpoint recognition).
+"""Prose-pin test for approved-entry autonomy authorization (Task 1).
 
-Pins, whitespace-normalized contiguous (plan
-docs/loom/plans/2026-08-05-request-derived-authorization.md, ## Notes
-N1/N2):
-
-- using-loom-code/SKILL.md §Continuous mode: the N1 recognition-block
-  lead, the non-trigger sentence, the 「一站一站來」 escape hatch, and
-  the plan-header recording format "endpoint named: yes → continuous";
-  plus the router rule-5 once-clause pointer at §Continuous mode's
-  request-recognition block.
-- references/continuous-mode.md §Entry: the N2 recognition lead, the
-  same escape hatch + recording format, and the doctrine paragraph's
-  closing "never auto-merge" restatement.
-- One positive-fact control per file (pre-existing headings) proving
-  the matches are not vacuous.
+The approval of the frozen entry artifact, not a named publish endpoint,
+authorizes autonomous execution. The router and doctrine each retain the
+stage-by-stage escape hatch and never-auto-merge invariant; Rule 5 points to
+the canonical four-outcome policy rather than carrying a second ask rule.
 """
 
 from pathlib import Path
@@ -33,12 +22,10 @@ def _normalized_text(path: Path) -> str:
 
 # --- positive-fact controls (must pass even before the edits) ---------------
 
-def test_control_skill_continuous_mode_heading_present():
-    """Positive-fact control: the pre-existing §Continuous mode heading
-    is present in the router body — proves SKILL.md is actually being
-    read/matched, not a stub."""
+def test_control_skill_autonomous_execution_heading_present():
+    """Positive-fact control: the router's autonomous-execution heading exists."""
     assert (
-        "## Continuous mode (opt-in): spec-frozen → PR auto-advance"
+        "## Autonomous execution (default): approved scope → PR-ready"
         in _normalized_text(SKILL)
     )
 
@@ -49,79 +36,68 @@ def test_control_ref_entry_heading_present():
     assert "## Entry — at the SPEC, not the plan" in _normalized_text(REF)
 
 
-# --- N1: router recognition block (SKILL.md §Continuous mode) ---------------
+# --- Router authorization block ---------------------------------------------
 
-def test_router_recognition_lead():
-    """N1 lead: opt-in is also recognized from the request itself —
-    a kickoff request naming a publish endpoint is an explicit opt-in."""
+def test_router_approved_entry_starts_autonomy():
+    """A human-approved frozen entry, not an opt-in phrase, starts autonomy."""
     assert (
-        "**Opt-in is also recognized from the request itself**: a kickoff "
-        'request that names a publish endpoint — "finish this branch", '
-        '"ship it", "開 PR", "run to PR" — is an explicit continuous opt-in'
+        "**Autonomy-by-default:** after a **human-approved**, frozen brief or "
+        "validated loom-design change-folder fixes scope, auto-advance"
         in _normalized_text(SKILL)
     )
 
 
-def test_router_non_trigger_sentence():
-    """N1: a request naming no endpoint never triggers the recognition."""
+def test_router_publish_endpoint_is_not_required():
+    """A publish endpoint can name a terminal but is not a precondition."""
     assert (
-        "A request naming no endpoint never triggers this"
+        "a named publish endpoint may set the terminal, but is not required to "
+        "start autonomous execution"
         in _normalized_text(SKILL)
     )
 
 
 def test_router_escape_hatch_stage_by_stage():
-    """N1: 「一站一站來」 restores human-pumped mode and flips the
-    recording."""
+    """「一站一站來」 remains the explicit per-session override."""
     normalized = _normalized_text(SKILL)
     assert "「一站一站來」" in normalized
     assert (
-        "restores human-pumped mode from that point, and the recording flips"
+        "is the per-session human-pumped override"
         in normalized
     )
 
 
-def test_router_plan_header_recording_format():
-    """N1: the recognition is recorded in the plan header in the pinned
-    one-line format."""
-    assert "endpoint named: yes → continuous" in _normalized_text(SKILL)
+# --- Rule 5 points at the canonical policy ----------------------------------
 
-
-# --- rule-5 sweep: once-clause pointer (SKILL.md router rule 5) -------------
-
-def test_router_rule5_once_clause_pointer():
-    """Rule-5 parenthetical carries the asked-once pointer at
-    §Continuous mode's request-recognition block (no re-ask per
-    outward action)."""
+def test_router_rule5_points_to_canonical_policy():
+    """Rule 5 delegates ask decisions to the shared four-outcome policy."""
     assert (
-        "asked once — see §Continuous mode's request-recognition block"
+        "four-outcome policy in `references/continuous-mode.md`"
         in _normalized_text(SKILL)
     )
+    assert "halt for irreversible safety boundaries" in _normalized_text(SKILL)
 
 
-# --- N2: doctrine §Entry recognition paragraph (continuous-mode.md) ---------
+# --- Doctrine authorization block -------------------------------------------
 
-def test_doctrine_entry_recognition_lead():
-    """N2 lead: entry opt-in is also satisfied by the request itself."""
+def test_doctrine_entry_approval_authorizes_autonomy():
+    """The doctrine names the entry artifact as the authority boundary."""
     assert (
-        "Entry opt-in is also satisfied by the request itself: a kickoff "
-        "request naming a publish endpoint"
+        "The entry artifact, not a request naming a publish endpoint, "
+        "authorizes autonomous execution"
         in _normalized_text(REF)
     )
 
 
-def test_doctrine_escape_hatch_and_recording_format():
-    """N2: same escape hatch and plan-header recording format in the
-    doctrine register."""
+def test_doctrine_escape_hatch_and_approved_entry_recording():
+    """The doctrine keeps the override and records the approved entry path."""
     normalized = _normalized_text(REF)
     assert "「一站一站來」" in normalized
-    assert "endpoint named: yes → continuous" in normalized
+    assert "Record the approved-entry path in the plan header" in normalized
 
 
 def test_doctrine_closing_never_auto_merge_restatement():
-    """N2 closes by restating the invariant: the merge invariant is
-    untouched — never auto-merge."""
+    """The doctrine retains the never-auto-merge invariant."""
     assert (
-        "the merge invariant is untouched: **never auto-merge**"
+        "the merge invariant remains **never auto-merge**"
         in _normalized_text(REF)
     )

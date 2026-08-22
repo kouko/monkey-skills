@@ -53,6 +53,10 @@ class Event:
       this. Forward-reference string avoids the circular import that
       would result from `from facets import FacetRecord` here, since
       facets.py imports Event from this module.
+    - stop_policy_outcome / stop_policy_reason: a conservative normalized
+      classification of an explicit, user-facing policy stop. Both remain
+      None unless an adapter observes an exact policy phrase; they never
+      derive from reasoning content.
     """
 
     agent: str
@@ -66,3 +70,5 @@ class Event:
     is_subagent: bool = False
     skill_invocation: str | None = None
     facet: "FacetRecord | None" = None  # noqa: F821  forward ref to facets.FacetRecord
+    stop_policy_outcome: str | None = None
+    stop_policy_reason: str | None = None

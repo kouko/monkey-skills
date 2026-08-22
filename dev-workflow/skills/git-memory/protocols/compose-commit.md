@@ -144,18 +144,26 @@ Skip the diagram for trivial changes.
      └───────────┘                   └───────────┘
 ```
 
-## Step 5 — Confirm with user before finalizing
+## Step 5 — Determine whether confirmation is needed
 
-If you proposed adding memory trailers, briefly tell the user what you
-are about to add and give them a chance to edit or veto:
+### Delegated loom close-out exception
+
+Evaluate this condition before any confirmation action. When
+`loom-code:finishing-a-development-branch` delegates this protocol and the
+initiating request already authorizes the commit and any requested push or PR,
+the close-out orchestrator owns consent. Git-memory drafts the memory carrier
+and does not re-confirm that authorized publish action. It may proceed only
+after the privacy gate PASSes. Privacy BLOCK remains a required human stop;
+delegation never authorizes a blocked carrier.
+
+### All other calls — confirm before finalizing
+
+Otherwise — including a direct git-memory invocation, a non-loom caller, or a
+loom close-out whose initiating request does not authorize publication — briefly
+tell the user what you are about to add and give them a chance to edit or veto:
 
 > "I'm going to add `Decision:` + `Gotcha:` trailers about the gws
 > scope-flag issue. OK to commit?"
-
-If the user has been consistently writing memory trailers throughout
-the conversation, you may commit without asking each time — but
-surface any non-obvious memory judgments (e.g. classifying something
-as a Decision vs a Learning).
 
 ## Quick reference — minimum viable memory commit
 

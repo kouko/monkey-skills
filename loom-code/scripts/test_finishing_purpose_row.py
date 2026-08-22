@@ -73,8 +73,11 @@ def test_skill_md_declares_the_purpose_row():
     assert "unanswered" in exit_2_clause.group(0), "exit 2 clause does not name the unanswered-PURPOSE.md cause"
     assert "serves" in exit_2_clause.group(0), "exit 2 clause does not name the malformed-serves cause"
 
-    assert "print" in para and "docs/loom/PURPOSE.md" in para, "print-before-listing duty missing"
-    assert "before listing betting candidates" in para, "print-before-listing duty missing its 'before listing' timing"
+    assert (
+        "Only AFTER the user explicitly requests choosing or promoting a bet, "
+        "and before listing betting candidates, print `docs/loom/PURPOSE.md`"
+        in para
+    ), "explicit-request print-before-listing duty missing"
 
     assert "absent" in para and "offer to write one" in para, "absent-file prompt duty missing"
     assert "never silently skip the print" in para, "absent-file prompt duty missing its loud-not-silent clause"

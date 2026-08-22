@@ -29,6 +29,7 @@ Per Plan Part 2 §Task 9.
 from __future__ import annotations
 
 import argparse
+from itertools import chain
 import json
 import sys
 import uuid
@@ -52,7 +53,7 @@ from friction_signals import (
     detect_tool_error_clusters,
     load_thresholds,
 )
-from ingest import ingest_claude_jsonl
+from ingest import ingest_claude_jsonl, ingest_codex_jsonl
 
 # Subagent model for per-trajectory dispatch.  Switched from Haiku 200K to
 # Sonnet 4.6 1M-context in v0.4 (brief Q-v0.4-1) after v0.3 dogfood showed
@@ -344,8 +345,11 @@ def _render_summary_markdown(
     top_skills: list[dict[str, object]],
     config: dict[str, object],
     subagent_payload: list[dict[str, object]],
+    policy_stops: list[dict[str, str]] | None = None,
 ) -> str:
     """Human-readable summary block for stderr."""
+    if policy_stops is None:
+        policy_stops = []
     lines: list[str] = []
     lines.append("# distill-sessions v0.1 — run summary")
     lines.append("")
@@ -379,6 +383,17 @@ def _render_summary_markdown(
                     f"events={sess['event_count']}"
                 )
     lines.append("")
+    lines.append("## Explicit policy stops")
+    lines.append("")
+    if policy_stops:
+        for stop in policy_stops:
+            lines.append(
+                f"- session `{stop['session_id']}`: "
+                f"{stop['outcome']} / {stop['reason']}"
+            )
+    else:
+        lines.append("_(none observed)_")
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -391,7 +406,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="main",
         description=(
-            "Stage 1+2 orchestrator: walk Claude Code JSONL transcripts, "
+            "Stage 1+2 orchestrator: walk Claude Code and Codex JSONL transcripts, "
             "detect friction signals, aggregate per target Skill, emit "
             "subagent dispatch payload on stdout + markdown summary on stderr."
         ),
@@ -446,7 +461,12 @@ def main(argv: list[str] | None = None) -> int:
 
     # Step (b) — walk JSONL.
     project_root = Path(args.project_root).expanduser() if args.project_root else None
-    events_iter = ingest_claude_jsonl(root=project_root)
+    claude_events = ingest_claude_jsonl(root=project_root)
+    # An explicit Claude fixture root is test/forensics scope, so do not mix
+    # the operator's live Codex history into it. The normal no-override
+    # preview combines both host transcript sources.
+    codex_events = ingest_codex_jsonl() if project_root is None else iter(())
+    events_iter = chain(claude_events, codex_events)
 
     # Step (c) — load facets and join.
     facets_root = Path(args.facets_root).expanduser() if args.facets_root else None
@@ -573,13 +593,31 @@ def main(argv: list[str] | None = None) -> int:
         "config": config_block,
         "top_skills": top_skills_out,
         "subagent_payload": subagent_payload,
+        "policy_stops": [
+            {
+                "session_id": event.session,
+                "ts": event.ts,
+                "outcome": event.stop_policy_outcome,
+                "reason": event.stop_policy_reason,
+            }
+            for event in events
+            if event.stop_policy_outcome is not None
+            and event.stop_policy_reason is not None
+        ],
     }
 
     # Stdout — single JSON object, no trailing newline noise.
     sys.stdout.write(json.dumps(payload, indent=2, sort_keys=True))
 
     # Stderr — markdown summary for human read-along.
-    sys.stderr.write(_render_summary_markdown(top_skills_out, config_block, subagent_payload))
+    sys.stderr.write(
+        _render_summary_markdown(
+            top_skills_out,
+            config_block,
+            subagent_payload,
+            payload["policy_stops"],
+        )
+    )
 
     return 0
 

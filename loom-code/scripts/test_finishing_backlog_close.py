@@ -21,6 +21,7 @@ SKILL_MD = (
     / "finishing-a-development-branch"
     / "SKILL.md"
 )
+BACKLOG_CHARTER = REPO_ROOT / "docs" / "loom" / "backlog" / "README.md"
 
 
 def _normalized_text() -> str:
@@ -28,6 +29,11 @@ def _normalized_text() -> str:
     contiguous-phrase match doesn't depend on line breaks)."""
     text = SKILL_MD.read_text(encoding="utf-8")
     return " ".join(text.split())
+
+
+def _normalized_charter_text() -> str:
+    """Whitespace-normalized backlog charter text."""
+    return " ".join(BACKLOG_CHARTER.read_text(encoding="utf-8").split())
 
 
 def test_step8_hygiene_control_phrase_present():
@@ -130,21 +136,35 @@ def _backlog_close_row_text() -> str:
     return normalized[close_idx:head_idx]
 
 
-def test_backlog_close_betting_prompt_never_auto_promotes():
-    """Direction-layer arc (task 4): the betting duty surfaces a prompt
-    but only the USER promotes a candidate to `bet` — agents
-    must never auto-promote. Promotion is never a silent default."""
+def test_zero_live_bets_are_reported_without_a_user_prompt():
+    """An empty bet queue is visible in the close-out report, but it
+    must not turn close-out into a user-decision stop."""
+    row = _backlog_close_row_text()
+    assert "bet queue empty" in row
+    assert "do not ask" in row
+    assert "surface a betting prompt to the user" not in row
+
+
+def test_backlog_close_never_auto_promotes():
+    """An empty queue does not authorize an agent to choose the next
+    bet; agents never auto-promote candidates."""
     assert "agents never auto-promote" in _backlog_close_row_text()
 
 
-def test_close_out_row_bets_on_store_without_direction():
-    """dissolve-direction-layer arc (Task 10): the betting prompt no
-    longer keys on the retired file existing — it fires when the
-    backlog store is present and holds zero live `bet` entries. The
-    retired regeneration verb is gone, and the agents-never-auto-
-    promote rule survives verbatim (the only place in this skill the
-    user-only promotion ruling is written down)."""
+def test_close_out_row_reports_empty_store_without_direction():
+    """The queue status depends on zero live bets, without the retired
+    direction-write verb or a prompt-based promotion flow."""
     row = _backlog_close_row_text()
     assert "zero live `bet` entries" in row
     assert "--direction-write" not in row
     assert "agents never auto-promote — promotion is never a silent default" in row
+
+
+def test_backlog_charter_and_close_out_agree_on_empty_queue_authority():
+    """Both sources keep an empty queue notification-only; promotion
+    starts only when the user explicitly asks to choose or promote."""
+    assert "do not ask" in _backlog_close_row_text()
+    charter = _normalized_charter_text()
+    assert "only by an explicit user request to choose or promote" in charter
+    assert "never because close-out found an empty `bet` queue" in charter
+    assert "**user-only**; agents never promote" in charter

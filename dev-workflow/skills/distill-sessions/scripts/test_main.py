@@ -26,6 +26,7 @@ import main
 from aggregate import AggregateRecord
 from event import Event
 from friction_signals import Signal
+from ingest import ingest_codex_jsonl
 
 
 HERE = Path(__file__).parent
@@ -306,6 +307,89 @@ def test_stderr_contains_markdown_summary(tmp_path: Path) -> None:
     assert "## Top skills" in stderr_text
     # And at least the qualifying skill name printed in the summary.
     assert "loom-code:brainstorming" in stderr_text
+
+
+def test_main_combines_codex_and_claude_events(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The default preview appends Codex telemetry to Claude telemetry."""
+    projects_root, facets_root = _build_fixture_tree(tmp_path)
+    observed_agents: set[str] = set()
+    real_aggregate = main.aggregate_by_skill
+    real_ingest_claude = main.ingest_claude_jsonl
+    codex_root = tmp_path / "codex-sessions"
+    codex_root.mkdir()
+    (codex_root / "rollout-fixture.jsonl").write_text(
+        '{"type":"response_item","timestamp":"2026-08-22T09:35:00Z","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Stopped: privacy BLOCK requires user input."}]}}\n',
+        encoding="utf-8",
+    )
+
+    def capture_agents(events, signals, target_pattern):
+        observed_agents.update(event.agent for event in events)
+        return real_aggregate(events, signals, target_pattern)
+
+    monkeypatch.setattr(
+        main,
+        "ingest_claude_jsonl",
+        lambda root=None: real_ingest_claude(root=projects_root),
+    )
+    monkeypatch.setattr(
+        main,
+        "ingest_codex_jsonl",
+        lambda: ingest_codex_jsonl(codex_root),
+    )
+    monkeypatch.setattr(main, "aggregate_by_skill", capture_agents)
+
+    payload, stderr_text = _run_main(
+        [
+            "--target-skill-pattern",
+            "loom-code:*",
+            "--facets-root",
+            str(facets_root),
+        ]
+    )
+
+    assert observed_agents == {"claude-code", "codex"}
+    assert payload["policy_stops"] == [
+        {
+            "session_id": "rollout-fixture",
+            "ts": "2026-08-22T09:35:00Z",
+            "outcome": "halt",
+            "reason": "privacy",
+        }
+    ]
+    assert "## Explicit policy stops" in stderr_text
+
+
+def test_main_explicit_project_root_does_not_read_codex_events(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A Claude fixture run must not silently consume live Codex sessions."""
+    projects_root, facets_root = _build_fixture_tree(tmp_path)
+    observed_agents: set[str] = set()
+    real_aggregate = main.aggregate_by_skill
+
+    def capture_agents(events, signals, target_pattern):
+        observed_agents.update(event.agent for event in events)
+        return real_aggregate(events, signals, target_pattern)
+
+    monkeypatch.setattr(
+        main,
+        "ingest_codex_jsonl",
+        lambda: (_ for _ in ()).throw(AssertionError("Codex must not be read")),
+    )
+    monkeypatch.setattr(main, "aggregate_by_skill", capture_agents)
+
+    _run_main(
+        [
+            "--target-skill-pattern",
+            "loom-code:*",
+            "--project-root",
+            str(projects_root),
+            "--facets-root",
+            str(facets_root),
+        ]
+    )
+
+    assert observed_agents == {"claude-code"}
 
 
 # ---------------------------------------------------------------------------

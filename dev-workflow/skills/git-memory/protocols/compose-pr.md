@@ -268,10 +268,23 @@ the two-layer privacy check before it is used:
    BLOCK (never as PASS). This is an explicit branch, not an emergent
    default.
 
-## Step 7 — Confirm with user before opening
+## Step 7 — Determine whether confirmation is needed
 
-Before firing `gh pr create`, summarize the `## Memory` draft for the
-user:
+### Delegated loom close-out exception
+
+Evaluate this condition before any confirmation action. When
+`loom-code:finishing-a-development-branch` delegates this protocol and the
+initiating request already authorizes the commit and PR, the close-out
+orchestrator owns consent. Git-memory drafts the memory carrier and does not
+re-confirm that authorized publish action. It may proceed only after the
+privacy gate PASSes. Privacy BLOCK remains a required human stop; delegation
+never authorizes a blocked PR body.
+
+### All other calls — confirm before opening
+
+Otherwise — including a direct git-memory invocation, a non-loom caller, or a
+loom close-out whose initiating request does not authorize publication — before
+firing `gh pr create`, summarize the `## Memory` draft for the user:
 
 > "PR body includes a `## Memory` section with 1 Decision, 1 Learning,
 > 1 Gotcha, and a before/after architecture diagram. OK to open?"

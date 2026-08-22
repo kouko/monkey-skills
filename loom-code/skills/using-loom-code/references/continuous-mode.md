@@ -1,24 +1,42 @@
-# Continuous mode (opt-in): spec-frozen → PR auto-advance
+# Autonomous execution (default): approved scope → PR-ready
 
-> Loaded on demand by the `using-loom-code` router when the user opts into
-> continuous mode. The router body carries only a stub; this file holds the
+> Loaded on demand by the `using-loom-code` router when an approved entry
+> begins autonomous execution. The router body carries only a stub; this file holds the
 > full doctrine. **Read it IN FULL before auto-advancing — do not act on the
 > stub alone.** Every STOP row, the never-auto-merge terminal, and the
 > crutch-vs-verification line below are load-bearing and must not be weakened.
 
-By default the pipeline is **human-pumped**: between every stage the user says
-"go". **Continuous mode** is an **opt-in** convention that lets the
-orchestrator run stage→stage unattended — from a frozen spec all the way to a
-PR — **without losing the verification gates**. It adds a STOP rule, not a
-brain.
+**Autonomy-by-default** means the orchestrator runs stage→stage unattended —
+from an approved, frozen scope all the way to a PR-ready terminal — **without
+losing verification gates**. Before that approval, design and scope decisions
+remain human-gated. Saying 「一站一站來」 is the explicit per-session override
+that restores human-pumped execution. This contract adds a shared ask policy,
+not a brain.
+
+## Shared ask policy — exactly four outcomes
+
+Every loom station and delegated skill applies exactly one outcome below;
+local confirmation defaults are not allowed.
+
+- **auto-resolve** — perform a checkable, reversible action already inside the
+  approved brief/spec, then report it normally.
+- **notify** — report an advisory or administrative state without stopping
+  execution; it needs no user decision.
+- **ask** — stop for a user-only preference, or a scope / decision the
+  approved brief/spec does not specify.
+- **halt** — stop for privacy, merge, deploy, delete, a failed safety gate, or
+  another non-delegable authority boundary; state why and what is required.
+
+No station may turn an `auto-resolve` or `notify` outcome into a confirmation
+request. **Never auto-merge**: PR-open remains terminal even when all prior
+work auto-resolved.
 
 ## Entry — at the SPEC, not the plan
 
-Continuous mode starts only when **both** hold:
+Autonomous execution starts only when a **human-approved, frozen entry
+artifact** exists:
 
-1. The user **opts in** explicitly (e.g. "run continuous to PR" / "連續跑到
-   PR"). The default stays human-pumped.
-2. A **human-approved, frozen spec** exists. Two entry artifacts are accepted
+1. A **human-approved, frozen spec** exists. Two entry artifacts are accepted
    (the user picks one — see freeze discrimination below):
    - **(a) the `brainstorming` hand-off brief** (`docs/loom/specs/<topic>.md`),
      the per-feature artifact that locks the *approach*; or
@@ -36,15 +54,12 @@ Continuous mode starts only when **both** hold:
    gate**, PASS / NEEDS_REVISION). The plan becomes one more
    auto-advance-with-gate stage.
 
-Entry opt-in is also satisfied by the request itself: a kickoff
-request naming a publish endpoint ("finish this branch", "ship it",
-"開 PR", "run to PR") is an explicit opt-in — judged once at kickoff
-against the operative test "does the request name a publish
-endpoint?", recorded in the plan header ("endpoint named: yes →
-continuous"), and flipped by a mid-arc 「一站一站來」. A request
-naming no endpoint keeps the human-pumped default. The STOP contract
-below is unchanged by this recognition, and the merge invariant is
-untouched: **never auto-merge**.
+The entry artifact, not a request naming a publish endpoint, authorizes
+autonomous execution. Record the approved-entry path in the plan header so
+downstream stations read it rather than re-judge the request. A mid-arc
+「一站一站來」 flips the current session back to human-pumped execution. The
+STOP contract below is unchanged, and the merge invariant remains **never
+auto-merge**.
 
 ## Freeze discrimination — declared, NOT content-shape sniffed (R6)
 
@@ -85,7 +100,7 @@ terminal below are **unchanged**.
 
 ## Auto-advance behavior
 
-Within continuous mode the orchestrator proceeds `writing-plans → plan gate →
+Within autonomous execution the orchestrator proceeds `writing-plans → plan gate →
 SDD per-task triad → whole-branch review → verification → finish→PR` without
 waiting for a human "go", **unless a stop condition fires**.
 

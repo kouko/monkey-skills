@@ -1,25 +1,27 @@
-"""Structural grep-test guarding the opt-in "Continuous mode" convention.
+"""Structural grep-test guarding autonomy-by-default execution.
 
-Continuous mode is SessionStart-hook-injected via the using-loom-code router,
-so the router body is token-budgeted (~2000 tokens). The full Continuous-mode
-doctrine therefore lives in `references/continuous-mode.md`; the router body
-carries only a short STUB (what it is + entry precondition + a MANDATORY
+Autonomous execution is SessionStart-hook-injected via the using-loom-code
+router, so the router body is token-budgeted (~2000 tokens). The full doctrine
+therefore lives in `references/continuous-mode.md`; the router body carries
+only a short STUB (what it is + approved-entry precondition + a MANDATORY
 loading trigger + a one-line invariant pointer).
 
 Correctness is the PRESENCE of the load-bearing convention + stop contract
 described in `docs/loom/specs/2026-06-17-continuous-mode-auto-advance.md`:
-spec-frozen (NOT plan-frozen) entry, design/spec stay human-gated while the
-plan is auto-generated + gated, an explicit stop contract (every trigger row
-of the spec's table), a crutch-vs-verification line forbidding
+human-approved, spec-frozen (NOT plan-frozen) entry, design/spec stay
+human-gated while the plan is auto-generated + gated, an explicit stop
+contract (every trigger row of the spec's table), a crutch-vs-verification
+line forbidding
 re-plan/re-scope/re-route, two-layer escalation (stop-and-wait baseline +
-optional proactive push that degrades gracefully), and an opt-in
-continuous-mode exception amended onto the router's "does not auto-invoke
-downstream skills" caveat.
+optional proactive push that degrades gracefully), and the autonomy-by-default
+exception amended onto the router's "does not auto-invoke downstream skills"
+caveat.
 
 After the structural refactor the FULL doctrine is asserted against the
 REFERENCE (`references/continuous-mode.md`); the router STUB is asserted to
-name continuous mode, carry the mandatory loading trigger, and point at the
-never-auto-merge invariant. No invariant is lost — each is asserted somewhere.
+name autonomy-by-default, carry the mandatory loading trigger, and point at
+the never-auto-merge invariant. No invariant is lost — each is asserted
+somewhere.
 
 These checks assert on the load-bearing PHRASES (intent), tolerant of wording
 variation (lowercase substring / regex), so the test guards MEANING without
@@ -67,14 +69,11 @@ def test_reference_is_single_level():
 
 # --- STUB (router body) assertions -----------------------------------------
 
-def test_stub_names_continuous_mode_and_opt_in():
-    """The router body STUB must name continuous mode AND mark it opt-in
-    (the default stays human-pumped)."""
+def test_stub_names_autonomy_by_default():
+    """The router body names the autonomy-by-default contract."""
     low = _skill().lower()
-    assert "continuous mode" in low, \
-        "the router body stub must name 'continuous mode'"
-    assert "opt-in" in low or "opt in" in low, \
-        "continuous mode must be marked opt-in (not a changed default)"
+    assert "autonomy-by-default" in low or "autonomy by default" in low, \
+        "the router body stub must name autonomy-by-default"
 
 
 def test_stub_has_mandatory_loading_trigger():
@@ -86,7 +85,7 @@ def test_stub_has_mandatory_loading_trigger():
     assert "in full" in low, \
         "the stub must require reading the reference IN FULL"
     assert ("read references/continuous-mode.md" in low
-            or re.search(r"read .{0,40}continuous-mode\.md", low)), \
+            or re.search(r"read[\s*`]{1,40}references/continuous-mode\.md", low)), \
         "the stub must instruct READING the reference before auto-advancing"
 
 
@@ -111,15 +110,45 @@ def test_stub_invariant_pointer_never_auto_merge():
     assert "halt" in low, "the stub must point at the HALT-on-deviation invariant"
 
 
-# --- 1. the reference exists and is opt-in ---------------------------------
+def test_default_execution_is_autonomy_by_default():
+    """An approved brief/spec advances by default; human-pumped is opt-out."""
+    text = _skill()
+    low = text.lower()
+    assert "autonomy-by-default" in low or "autonomy by default" in low, \
+        "the router must make autonomy-by-default the standard posture"
+    assert "the default stays human-pumped" not in low, \
+        "the router must not retain human-pumped as the default"
+    assert "human-approved" in low or "human approved" in low, \
+        "autonomy must start only after human approval of a brief/spec"
+    assert "一站一站來" in text, \
+        "the explicit per-session human-pumped override must remain available"
+    assert "not required to start autonomous\nexecution" in text, \
+        "an approved entry must auto-advance without a publish endpoint"
 
-def test_continuous_mode_section_is_opt_in():
-    """The reference must mark continuous mode opt-in (default human-pumped)."""
+
+def test_autonomy_policy_has_exactly_four_outcomes():
+    """The shared policy has one closed outcome vocabulary for every station."""
+    policy = _ref().split("## Shared ask policy", 1)[1].split("\n## ", 1)[0]
+    outcomes = set(re.findall(
+        r"^- \*\*([^*]+)\*\*\s*[—-]",
+        policy,
+        flags=re.MULTILINE | re.IGNORECASE,
+    ))
+    assert outcomes == {"auto-resolve", "notify", "ask", "halt"}, \
+        "the autonomy policy must define exactly auto-resolve, notify, ask, and halt"
+    assert _ref().count("## Shared ask policy") == 1, \
+        "the four-outcome policy must have one canonical definition"
+
+
+# --- 1. the reference makes autonomy the default ----------------------------
+
+def test_reference_makes_autonomy_the_default():
+    """The reference makes approved work autonomous by default."""
     low = _ref().lower()
-    assert "continuous mode" in low, \
-        "a 'continuous mode' section must exist in the reference"
-    assert "opt-in" in low or "opt in" in low, \
-        "continuous mode must be marked opt-in (not a changed default)"
+    assert "autonomy-by-default" in low or "autonomy by default" in low, \
+        "the reference must make autonomy-by-default explicit"
+    assert "the default stays human-pumped" not in low, \
+        "the reference must not retain human-pumped as the default"
 
 
 # --- 2. entry / freeze at the spec, human-gated design, auto-gated plan -----
@@ -318,13 +347,10 @@ def test_escalation_is_two_layer():
         "the proactive layer must degrade gracefully (not a hard dependency)"
 
 
-# --- 6. router caveat carries the opt-in continuous-mode exception ----------
+# --- 6. router caveat carries the autonomy-by-default exception -------------
 
-def test_router_caveat_has_continuous_mode_exception():
-    """The router's 'does not auto-invoke downstream skills' caveat must
-    carry an explicit opt-in continuous-mode exception. Assert BOTH the
-    original caveat phrase AND a nearby opt-in / continuous-mode exception
-    token are present (this stays in the router body)."""
+def test_router_caveat_has_autonomy_by_default_exception():
+    """The router's default caveat must yield to an approved autonomous run."""
     text = _skill()
     low = text.lower()
     assert "does not auto-invoke downstream skills" in low \
@@ -338,6 +364,5 @@ def test_router_caveat_has_continuous_mode_exception():
             break
     assert caveat_idx is not None, "could not locate the auto-invoke caveat line"
     window = "\n".join(lines[max(0, caveat_idx - 3):caveat_idx + 4])
-    assert "continuous mode" in window or "continuous-mode" in window \
-        or "opt-in" in window or "exception" in window, \
-        "the caveat must carry an opt-in continuous-mode exception nearby"
+    assert "autonomy" in window or "approved" in window or "exception" in window, \
+        "the caveat must carry the approved autonomous-run exception nearby"
