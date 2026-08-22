@@ -55,17 +55,17 @@ Each outcome declared here takes a brief item identifier — see [§Brief item i
 
 If the work is genuinely greenfield (new module, no existing system touched), write `N/A — greenfield` and skip the sub-bullets. Do not use `N/A` to dodge reconnaissance work — see anti-patterns below.
 
-Five sub-bullets (each takes a 1-liner with `file:line` citation, or `N/A — <reason>`):
+Five sub-bullets (each takes a 1-liner with an anchor citation, or `N/A — <reason>`). An anchor is a verbatim string quoted from the cited site or a stable heading name; a line number is optional precision appended after the anchor, not a citation on its own:
 
-- **Forward** — downstream impact when the touched code/process runs (1-3 bullets, each citing `file:line`).
-- **Reverse** — upstream callers / dependants of the touch points (1-3 bullets, each citing `file:line`).
+- **Forward** — downstream impact when the touched code/process runs (1-3 bullets, each citing an anchor).
+- **Reverse** — upstream callers / dependants of the touch points (1-3 bullets, each citing an anchor).
 - **Error** — current failure-handling at the touch points; what the change preserves / changes / breaks (1-2 bullets, or `N/A — not error-path code`).
 - **Data** — input / output / persistence flowing through the touch points (1-3 bullets, or `N/A — pure logic`).
 - **Boundary** — external systems the change reaches. Tag with `[SECURITY]` / `[DB]` / `[API]` / `[ASYNC]` / `[FRAGILE]` (1-3 bullets, or `N/A — no boundaries crossed`).
 
 Plus a citations appendix:
 
-- **Evidence paths** — bullet list of every `file:line` the agent actually read while filling the five sub-bullets above. Reviewers spot-check this list to verify reconnaissance was real.
+- **Evidence paths** — bullet list of every anchor the agent actually read while filling the five sub-bullets above. Reviewers spot-check this list to verify reconnaissance was real.
 
 The agent fills this section by running `grep` / `Read` / dispatching `Explore` — the user does not answer 5 new questions; they review the recon recommendation, same model as Axis 4 research.
 
@@ -220,14 +220,14 @@ Copy-paste this skeleton:
 
 ## Current State Evidence
 
-(Required when touching existing code. Five sub-bullets; each with file:line or `N/A — <reason>`. Use `N/A — greenfield` only when nothing pre-existing is touched.)
+(Required when touching existing code. Five sub-bullets; each with an anchor — a verbatim string or a stable heading — or `N/A — <reason>`. A line number is optional precision after the anchor. Use `N/A — greenfield` only when nothing pre-existing is touched.)
 
-- **Forward**: (downstream impact, file:line)
-- **Reverse**: (upstream callers, file:line)
-- **Error**: (current failure-handling, file:line)
-- **Data**: (input/output/persistence, file:line)
-- **Boundary**: (external systems hit — `[SECURITY]` / `[DB]` / `[API]` / `[ASYNC]` / `[FRAGILE]`, file:line)
-- **Evidence paths**: (file:line citations the agent actually read)
+- **Forward**: (downstream impact, anchor)
+- **Reverse**: (upstream callers, anchor)
+- **Error**: (current failure-handling, anchor)
+- **Data**: (input/output/persistence, anchor)
+- **Boundary**: (external systems hit — `[SECURITY]` / `[DB]` / `[API]` / `[ASYNC]` / `[FRAGILE]`, anchor)
+- **Evidence paths**: (anchor citations the agent actually read)
 
 ## Decision
 
@@ -268,13 +268,13 @@ Copy-paste this skeleton:
 - ❌ **Smallest End State that matches the first proposal verbatim.** Possible, but suspicious. Did you actually explore Axis 3 or just copy the user's first ask?
 - ❌ **Empty Out of Scope.** Every non-trivial change has 2-5 things someone might ask *"why didn't you also…"* Name them.
 - ❌ **Open Questions left unanswered going into `writing-plans`.** `writing-plans` is **blocked** until resolved. Don't slip ahead.
-- ❌ **Current State Evidence bullets without `file:line` citations.** Hallucinated reconnaissance — the section exists precisely to be verifiable. Bullets that read *"this probably calls X somewhere"* defeat the purpose; run `grep` / `Read` / `Explore` and quote what you actually read.
+- ❌ **Current State Evidence bullets without an anchor citation.** Hallucinated reconnaissance — the section exists precisely to be verifiable. Bullets that read *"this probably calls X somewhere"* defeat the purpose; run `grep` / `Read` / `Explore` and quote an anchor (a verbatim string or a stable heading) you actually read. A bare line number is not an anchor — it rots at the first reformat.
 - ❌ **`N/A — greenfield` on a brief that clearly touches existing code.** Dodge. If the change adds a new method to an existing class, integrates with an existing API, or modifies an existing config — that is not greenfield. Fill the sub-bullets.
 - ❌ **Skipping the identifier on an in-scope item.** An item in `## Smallest End State`, `## What Becomes Obsolete`, or `## Decision` with no `BI-<n>` cannot be cited by a plan; the plan re-quotes its wording instead, and the quote rots at the first reword.
 - ❌ **Renumbering on insert.** Inserting an item above `BI-3` and shifting the existing items down makes every already-written citation point at the wrong item, silently. The new item takes the next unused number wherever it sits in the document.
 - ❌ **Reusing a retired number.** A deleted item's number stays dead. Handing `BI-2` to a new item makes an old citation resolve — to something the citing plan never meant.
 - ❌ **Deriving the identifier from the heading.** Slugs and hashes of the item's text (`BI-smallest-end-state`, `BI-a1b2c3`) desync the moment the text is reworded. The author types the number.
-- ❌ **Empty `Evidence paths` while sub-bullets are populated.** The appendix proves the recon happened. If you cited file:line in any sub-bullet, the same file:line belongs in Evidence paths.
+- ❌ **Empty `Evidence paths` while sub-bullets are populated.** The appendix proves the recon happened. If you cited an anchor in any sub-bullet, the same anchor belongs in Evidence paths.
 
 ## See also
 
