@@ -5,6 +5,14 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.96.1] — 2026-08-22 — autonomy-by-default release
+
+### Changed
+
+- Advance approved, bounded work by default under a uniform authority and
+  safety-stop policy.
+- Make an empty bet queue notification-only during close-out.
+
 ## [0.96.0] — 2026-08-22 — line-cite rule inverted to anchor-primary
 
 ### Changed
