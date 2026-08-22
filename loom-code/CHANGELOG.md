@@ -5,6 +5,19 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.94.0] — 2026-08-22 — code-as-spec lens no-op bar
+
+### Fixed
+
+- **The code-as-spec lens may no longer be declared a no-op on a diff that
+  touches the prose it governs, in both the code arm and the docs arm.** A
+  measured reviewer run scored the dimension PASS and listed it among
+  "no-ops for this branch" without examining a single sentence, and that
+  failure was invisible in a verdict block — a PASS reads the same whether
+  the lens ran or was skipped. The bar closes that gap: a diff carrying
+  changed prose the lens governs can no longer clear the dimension by
+  silently not applying it.
+
 ## [0.93.0] — 2026-08-22 — code-as-spec writing rule
 
 ### Added

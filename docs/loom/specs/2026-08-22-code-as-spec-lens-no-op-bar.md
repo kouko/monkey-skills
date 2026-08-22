@@ -57,12 +57,15 @@ with the transcripts retained this time, whatever the outcome.
   `1/2, 2/2, 0/2, 0/2, 2/2`, against `0/4` on the old contract
   (`docs/skill-dogfood/2026-08-22-code-as-spec-reviewer-lens/README.md`
   §Results).
-- **Boundary** — the version pin lives in four coupled places:
+- **Boundary** — the version pin lives in five coupled places:
   `loom-code/.claude-plugin/plugin.json` `version` field,
   `loom-code/.codex-plugin/plugin.json` `version` field, the `## [0.93.0]` heading in
-  `loom-code/CHANGELOG.md`, and `test_plugin_version_and_changelog_at_0_93_0`'s name, its two assertions
+  `loom-code/CHANGELOG.md`, `test_plugin_version_and_changelog_at_0_93_0`'s name, its two assertions
   and its docstring in
-  `loom-code/scripts/test_docs_review_blocking_class.py`.
+  `loom-code/scripts/test_docs_review_blocking_class.py`, and Check 19's
+  `(vX.Y.Z+)` tag in `plan-document-reviewer-prompt.md`, which
+  `test_check19_version_tag_matches_shipping_version` binds live to
+  `plugin.json`.
 
 ## Decision
 
