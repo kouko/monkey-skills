@@ -99,9 +99,9 @@ contract violations are among the most costly quality failures.*
 ## Output Format
 
 1. **Flags**: List each triggered flag with `[🔴 Dimension]` or `[🟡 Dimension]`
-2. **Evidence**: File path + line number + specific problem
+2. **Evidence**: Anchor (verbatim string or stable heading) + specific problem; a line number is optional precision
 3. **Fix Instruction**: How the worker should resolve this flag
 4. **Verdict**: PASS / PASS_WITH_NOTES / NEEDS_REVISION
 
 PASS_WITH_NOTES issues will be auto-fixed without human review.
-Include exact file paths and line numbers.
+Include the anchor (verbatim string or stable heading) that locates the problem; a line number is optional precision.

@@ -225,3 +225,58 @@ def test_docs_reviewer_rule_7_and_schema_are_anchor_primary():
     assert "primary locator" in low_schema, (
         "the schema `quote:` field must be annotated as the primary locator"
     )
+
+
+# ---------------------------------------------------------------------------
+# T7 surface -- quality-gate.md SSOT Output Format + closing line.
+#
+# `domain-teams/skills/code-team/rubrics/quality-gate.md` is the SSOT that
+# `distribute.py` propagates into the loom-code copy. This test pins the
+# anchor-primary inversion of that surface so a later revert to line-first
+# is caught at CI before the block propagates.
+# ---------------------------------------------------------------------------
+
+QUALITY_GATE_SSOT = (
+    Path(__file__).parents[2]
+    / "domain-teams"
+    / "skills"
+    / "code-team"
+    / "rubrics"
+    / "quality-gate.md"
+)
+
+
+def _quality_gate_text() -> str:
+    assert QUALITY_GATE_SSOT.is_file(), (
+        f"quality-gate.md SSOT is absent at {QUALITY_GATE_SSOT}"
+    )
+    return QUALITY_GATE_SSOT.read_text(encoding="utf-8")
+
+
+def test_quality_gate_is_anchor_primary_at_ssot():
+    """The quality-gate SSOT cites the ANCHOR as the locator, with a line
+    number as optional precision -- not the line-first `File path + line
+    number` prescription the Output Format carried before the inversion."""
+    flat = _flatten(_quality_gate_text())
+    low = flat.lower()
+
+    # PRESENCE: anchor-primary wording
+    assert "anchor" in low, (
+        "quality-gate SSOT must use the term 'anchor' for the "
+        "verbatim-string / stable-heading locator"
+    )
+    assert ("verbatim string" in low) or ("stable heading" in low), (
+        "quality-gate SSOT must name the anchor forms -- 'verbatim string' "
+        "or 'stable heading' -- as the locator"
+    )
+    assert "optional precision" in low, (
+        "quality-gate SSOT must state a line number is OPTIONAL precision, "
+        "not the locator itself"
+    )
+
+    # ABSENCE: the retired line-first prescription
+    assert "file path + line number" not in low, (
+        "the line-first prescription 'File path + line number' is retired "
+        "from the quality-gate SSOT -- it made the line number the citation, "
+        "the opposite of the anchor-primary rule"
+    )
