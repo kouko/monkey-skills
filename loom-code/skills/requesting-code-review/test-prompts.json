@@ -8,7 +8,7 @@
       "id": 1,
       "category": "happy-path",
       "prompt": "I've finished the feature work on branch feat/user-prefs (6 commits vs main, touches src/prefs/ and tests/). Review my branch — is it ready to merge?",
-      "expected_behavior": "Determines diff scope (git diff main...HEAD), dispatches TWO code-reviewer subagents in parallel with byte-identical prompts (panel), waits for both, unions findings by file:line+dimension keeping severer severity, re-aggregates per the aggregation rule to one panel verdict, mints the review-pass gate marker via loom_gate_markers.py, then relays the verdict in plain language (state anchor first, jargon translated, ledger surfaced).",
+      "expected_behavior": "Determines diff scope (git diff main...HEAD), dispatches TWO code-reviewer subagents in parallel with byte-identical prompts (panel), waits for both, unions findings by path+anchor+dimension while ignoring optional line precision and keeping severer severity, re-aggregates per the aggregation rule to one panel verdict, mints the review-pass gate marker via loom_gate_markers.py, then relays the verdict in plain language (state anchor first, jargon translated, ledger surfaced).",
       "edge_case_dimensions": []
     },
     {

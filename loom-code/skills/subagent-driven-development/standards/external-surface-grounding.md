@@ -74,9 +74,10 @@ preference:
    --help` with `capture-date: 2026-05-22`.
 
 (d) **In-repo evidence** — an existing working call to the same surface
-   in this repo, cited as `file:line`. Weakest grounding (in-repo
-   callers can themselves be wrong); acceptable when live verification
-   was unavailable.
+   in this repo, cited with its path plus an anchor (a verbatim string or
+   stable heading); a line number is optional precision only when the
+   anchor is ambiguous. Weakest grounding (in-repo callers can themselves
+   be wrong); acceptable when live verification was unavailable.
    Example: `salesforce-toolkit/scripts/upsert.py:42` already calls
    `sObjects/Contact/External_Id__c` so this PR mirrors it.
 
