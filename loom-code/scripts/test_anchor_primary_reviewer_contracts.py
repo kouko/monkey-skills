@@ -96,6 +96,34 @@ def test_r2_is_anchor_primary_at_ssot():
         "the anchor can be silently dropped"
     )
 
+    # Each artifact type needs its own anchor form. Checking complete clauses
+    # prevents unrelated tokens elsewhere in R2 from masking a swapped or
+    # incomplete category pairing.
+    category_clauses = {
+        "prose": (
+            r"prose\s+uses\s+a\s+stable\s+heading\s+or\s+"
+            r"distinctive\s+phrase\b"
+        ),
+        "code": (
+            r"code\s+uses\s+a\s+function,\s+class,\s+or\s+method\s+"
+            r"signature,\s+a\s+constant,\s+or\s+a\s+distinctive\s+"
+            r"message\b"
+        ),
+        "config/data": (
+            r"config/data\s+uses\s+a\s+key\s+path\s+plus\s+a\s+"
+            r"distinctive\s+value\s+fragment\b"
+        ),
+    }
+    for artifact_type, clause in category_clauses.items():
+        assert re.search(clause, low), (
+            f"R2 must keep the complete {artifact_type}-to-anchor clause; "
+            "independent tokens can conceal a wrong category pairing"
+        )
+    assert "commit sha or commit sha range" in low, (
+        "R2 must retain commit SHA and commit SHA range as alternatives for "
+        "revision-history evidence"
+    )
+
     # ABSENCE: the retired line-first prescription
     assert "file:line, commit sha, or commit sha range" not in low, (
         "the line-first prescription 'file:line, commit SHA, or commit SHA "

@@ -89,11 +89,15 @@ in effect now or a prior revision.
 
 Every finding / gap in your output must include the evidence
 citation field defined by your agent-specific output schema (typically
-`where:`, `artifact:`, or `spec_ref:`). The value's locator is an
-anchor — a verbatim string or a stable heading in the cited file. A
-line number is optional precision, required only when the anchor alone
-is ambiguous (the string occurs more than once in the file). A commit
-SHA or commit SHA range is also a valid locator.
+`where:`, `artifact:`, or `spec_ref:`). For source artifacts, every
+citation pairs a file path plus an anchor — a verbatim string or stable
+heading in the cited file. Select the anchor by artifact type: prose uses a
+stable heading or distinctive phrase; code uses a function, class, or method
+signature, a constant, or a distinctive message; config/data uses a key path
+plus a distinctive value fragment. A line number is optional precision,
+required only when the anchor alone is ambiguous (the string occurs more than
+once in the file). A commit SHA or commit SHA range is also a valid locator
+for revision-history evidence.
 
 An element without evidence is opaque — the implementer or user
 cannot remediate *"naming is off somewhere."* Missing evidence flips
