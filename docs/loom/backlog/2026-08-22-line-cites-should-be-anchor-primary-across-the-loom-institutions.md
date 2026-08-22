@@ -1,10 +1,10 @@
 ---
 name: 2026-08-22-line-cites-should-be-anchor-primary-across-the-loom-institutions
-description: contract text must cite only what its reader can resolve, and loom breaks that two ways — line numbers that rot within a single change, and 28 citations pointing at `docs/loom/**` that the plugin bundle does not ship, so every deployed agent holds references it cannot open; one rule and one checker cover both
+description: contract text must cite only what its reader can resolve, and loom breaks that two ways — line numbers that rot within the change that writes them, and 28 citations naming `docs/loom/**`, which resolve inside monkey-skills but not in any repo that merely installed the plugin; one rule and one checker cover both
 status: bet
 origin: 2026-08-22 code-as-spec-lens-no-op-bar arc — three citation defects in one plan, all in the line numbers, none in the anchors those cites were paired with; user asked for the rule to be made explicit in the loom mechanism
 start: promoted to bet 2026-08-22; the dangling-path half is already broken in production and is the first leg
-serves: A citation a reader cannot resolve is the most direct blocker to the purpose's "Done when" — a foreign repo installs loom cold and no contract text cites a document that repo cannot open. The 28 dangling `docs/loom/**` citations are that exact failure, live in the deployed 0.94.0 bundle today.
+serves: The purpose's "Done when" requires a foreign repo to install loom cold with no contract text citing a document that repo cannot open. The 28 `docs/loom/**` citations are exactly that: they resolve in monkey-skills and nowhere else, so they are the standing blocker on that condition.
 ---
 
 - The problem is not a missing rule; it is a rule pointing the other way.
@@ -58,8 +58,17 @@ widened it: the same defect class has a second and more damaging form.
   `agents`, `hooks`, `scripts`, `skills` and `loom-code/docs` — not the
   repository's `docs/loom/`. Verified against the deployed cache at
   `~/.claude/plugins/cache/monkey-skills/loom-code/0.94.0`: no `docs/loom`
-  directory exists there, so all 28 are unresolvable for every dispatched
-  agent, in this repo and in any other. This is broken now, not after a split.
+  directory exists there.
+
+  **Corrected 2026-08-22, same day, before any work started.** The first
+  write-up of this leg said all 28 were unresolvable for every dispatched
+  agent. That is false, and the error was mine. A dispatched agent has
+  filesystem tools and reads the WORKING REPOSITORY, not the plugin bundle —
+  inside monkey-skills these citations resolve, and a docs-reviewer on this
+  repo reported opening one and checking a claim against it. What actually
+  breaks is a repo that installed the plugin and has no `docs/loom/` of its
+  own. That makes this a portability blocker against the purpose's Done-when,
+  not a live defect here — a smaller claim, and the true one.
 
 - **Leg 2 — citations that rot.** Line numbers drift within the change that
   writes them. Three shipped in one plan in one day, all in the numbers, none
