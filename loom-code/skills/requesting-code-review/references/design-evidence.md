@@ -1,8 +1,8 @@
-Source: `requesting-code-review/SKILL.md` — maintainer-facing evidence extracted from §Verdict structure and §Process — serves `requesting-code-review`.
+Source: `requesting-code-review/SKILL.md` and `loom-code/agents/code-reviewer.md` — maintainer-facing evidence extracted from SKILL.md's §Verdict structure and §Process, and from the agent contract's dimension sections — serves `requesting-code-review`.
 
 # Design evidence — author-facing, do NOT load at runtime
 
-This file is author-facing: it exists for maintainers reviewing or redesigning this skill's panel-width and aggregation decisions. Runtime agents executing `requesting-code-review` do NOT load this file at runtime — the rules these fragments qualify already stay inline in SKILL.md; only the supporting citations and archaeology live here.
+This file is author-facing: it exists for maintainers reviewing or redesigning this skill's panel-width and aggregation decisions. Runtime agents executing `requesting-code-review` do NOT load this file at runtime — the rules these fragments qualify already stay inline in their own host — SKILL.md, or the agent contract each entry names; only the supporting citations and archaeology live here.
 
 ## Exit clause (originally §Verdict structure)
 

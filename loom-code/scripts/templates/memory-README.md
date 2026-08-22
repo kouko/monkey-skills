@@ -29,7 +29,8 @@ why it is deleted rather than archived.
 
 ## Format — one fact per file
 
-Each entry is `<store>/<kebab-slug>.md`, with `---`-delimited
+Each entry is `docs/loom/memory/<kebab-slug>.md` — this file's own
+directory — with `---`-delimited
 frontmatter:
 
 ```markdown
@@ -66,10 +67,14 @@ python3 scripts/check_loom_memory_integrity.py --check    # diff the committed i
 ```
 
 A hand-edit to `## Index` is drift and will be overwritten by
-`--write`, and is detected as drift by `--check`. If the repo has no
-repo-root `scripts/check_loom_memory_integrity.py` yet, the copy
-shipped inside the loom-code plugin (beside this scaffold's own
-`loom_init.py`) applies the same invariants.
+`--write`, and is detected as drift by `--check`.
+
+**This repo may not have that checker.** `check_loom_memory_integrity.py`
+does NOT ship inside the loom-code plugin — it lives only in the repository
+that authored loom. Until someone writes or copies one here, the §Index
+invariant below is a convention you keep by hand, not a machine-enforced
+one. Keeping it by hand is workable: one index line per entry, its
+description copied verbatim from that entry's frontmatter.
 
 ## Index
 

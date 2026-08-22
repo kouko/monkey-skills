@@ -6,9 +6,8 @@ skeleton from the templates shipped beside this script:
 
   docs/loom/backlog/README.md   — charter instance (templates/backlog-README.md)
   docs/loom/memory/README.md    — practice-memory charter instance
-                                  (templates/memory-README.md); the store
-                                  loom-memory and the knowledge-triage
-                                  references route a reader to
+                                  (templates/memory-README.md); the practice-memory store that `loom-memory` and the
+  knowledge-triage references tell a reader to consult
   docs/loom/KICKOFF-DEFAULTS.md — kickoff-defaults skeleton
                                   (templates/KICKOFF-DEFAULTS.md); an empty
                                   `## On-ramp standing choices` section, the

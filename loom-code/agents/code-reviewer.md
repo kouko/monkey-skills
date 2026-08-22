@@ -447,11 +447,11 @@ The agent has no author authority over external surfaces — third-party HTTP AP
 **Severity calibration** (mirrors per-task D7 from `code-quality-reviewer.md`, PLUS the cross-task 🟡 unique to whole-branch):
 
 - 🔴 **Fatal MUST**: a call into surface category **HTTP API / SDK package / MCP tool / CLI flag** anywhere in the branch lacks a grounding cite.
-- 🟡 **Should-fix SHOULD**: a call into surface category **internal sibling-team contract** lacks a grounding cite (per Q4 — lower severity because sibling-team contracts are harder to objectively audit at review time).
+- 🟡 **Should-fix SHOULD**: a call into surface category **internal sibling-team contract** lacks a grounding cite (lower severity because sibling-team contracts are harder to objectively audit at review time).
 - 🟡 **Should-fix SHOULD (whole-branch only)**: **two or more tasks in this branch call the SAME external surface with CONFLICTING parameter shapes / version pins / endpoints / output expectations**. Per-task reviewers could not see this; the whole-branch reviewer owns it. Cite both task numbers and the conflicting lines in `where`.
 - 🟢 **Nit**: cite uses **in-repo evidence (source 4d)** when **live verification (source 4a)** was available — next-touch opportunity to anchor on higher-fidelity source.
 
-**Scope** (per §Resolved Decisions Q3): this dimension's cross-task-conflict check (the second 🟡 above) is **whole-branch reviewer's exclusive responsibility** — per-task `code-quality-reviewer.md` is structurally blind to sibling tasks and that 🟡 will never fire there.
+**Scope**: this dimension's cross-task-conflict check (the second 🟡 above) is **whole-branch reviewer's exclusive responsibility** — per-task `code-quality-reviewer.md` is structurally blind to sibling tasks and that 🟡 will never fire there.
 
 #### D8 — Principles Conformance (conditional; whole-branch)
 
@@ -690,6 +690,8 @@ returns, flags, orderings and exit codes are the rest.
   reviewer.
 
 ## See also
+
+- [`loom-code/skills/requesting-code-review/references/design-evidence.md`](loom-code/skills/requesting-code-review/references/design-evidence.md) — author-facing provenance for the rules in this contract; not loaded at runtime. Where a rule's reason was sourced from a dated record, that record is named there rather than in this contract, which a reader in another repository cannot open.
 
 - `loom-code/skills/requesting-code-review/SKILL.md` — orchestration spec.
 - `loom-code/agents/code-quality-reviewer.md` — per-task evaluator

@@ -126,11 +126,34 @@ def test_dated_record_citation_is_banned() -> None:
     )
 
 
-def test_only_backtick_delimited_candidates_are_extracted() -> None:
-    text = "bare docs/loom/specs/2026-01-01-x.md is not a citation, but `docs/loom/specs/2026-01-01-x.md` is.\n"
+def test_a_bare_text_citation_is_extracted_too() -> None:
+    """A citation without backticks counts.
+
+    This test previously asserted the opposite — that only backtick-delimited
+    spans were extracted — and so pinned the gate's own blind spot. A
+    whole-branch reviewer found a dated record cited in plain prose three
+    lines from a backticked one in the live corpus: the gate reported OK while
+    a real violation sat in the file. A contributor who omitted backticks
+    defeated the whole mechanism.
+    """
+    text = (
+        "bare docs/loom/specs/2026-01-01-x.md counts, "
+        "and so does `docs/loom/specs/2026-01-02-y.md`.\n"
+    )
     assert extract_docs_candidates(text) == [
-        "docs/loom/specs/2026-01-01-x.md"
+        "docs/loom/specs/2026-01-01-x.md",
+        "docs/loom/specs/2026-01-02-y.md",
     ]
+
+
+def test_an_external_url_containing_docs_is_not_a_candidate() -> None:
+    """Dropping the backtick constraint must not re-admit external URLs.
+
+    The constraint had been added to exclude them; the prefix filter already
+    does, since no URL in this corpus contains `docs/loom`.
+    """
+    text = "see https://source.android.com/docs/core/display/material and code.claude.com/docs/en/workflows.md\n"
+    assert extract_docs_candidates(text) == []
 
 
 def test_the_rule_is_documented_in_claude_md() -> None:
@@ -149,3 +172,26 @@ def test_the_rule_is_documented_in_claude_md() -> None:
     ) in flattened
     assert "loom-scaffolded store directories" in flattened
     assert ".py/.sh provenance comments" in flattened
+
+
+def test_a_dated_directory_citation_is_banned() -> None:
+    """A bare directory naming one dated record is not a store.
+
+    The exemption first read "no extension in the basename → exempt", which
+    waved through `docs/loom/archive/2026-08-13-some-change` — this
+    repository's own history, cited as a folder. A whole-branch reviewer
+    probed the predicate directly and found it. No live citation exploited
+    the hole, which is why it was dormant rather than a false pass.
+    """
+    assert classify_citation("docs/loom/archive/2026-08-13-my-change") == "banned"
+
+
+def test_store_directories_and_placeholder_shapes_stay_exempt() -> None:
+    """The dated-segment rule must not catch the shapes it sits beside."""
+    for path in (
+        "docs/loom/backlog",
+        "docs/loom/memory",
+        "docs/loom/plans",
+        "docs/loom/discovery/<date>-<slug>",
+    ):
+        assert classify_citation(path) == "exempt", path

@@ -4,7 +4,7 @@
 Goal: A rule, a mechanical check that enforces it going forward, the one
     genuinely functional citation moved inside the skill tree, and the
     bootstrap gap closed.
-Stage: sdd:wave-1
+Stage: finishing
 Steps:
     1. 立檢查器把現況釘住，同時補上 bootstrap 缺口
     2. 內嵌唯一功能性的引用，並寫下規則條文
@@ -59,7 +59,7 @@ N/A — no unresolved question: the rule's boundary, both exemptions, and the on
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: done(75fd37db)
 - **Gloss**: 先立檢查器並把現有的違規全數記在案，新的違規從第一天起就進不來
 
 ## Task 2 — Inline the code-as-spec decision so the rule stands without the spec
@@ -106,7 +106,7 @@ N/A — no unresolved question: the rule's boundary, both exemptions, and the on
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
 - **Brief item covered**: BI-4
-- **Status**: done(pendingT3)
+- **Status**: done(c873a9ed)
 - **Gloss**: agent 契約是注入 system prompt 的，讀者最沒有退路，所以先清它
 
 ## Task 4 — Scaffold the memory store loom's own skills tell a reader to consult

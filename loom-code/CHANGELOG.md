@@ -5,6 +5,23 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.95.0] — 2026-08-22 — contracts cite only what ships
+
+### Fixed
+
+- **A shipped contract may no longer cite this repository's own development
+  records.** A dispatched agent reads files from whatever repository it is
+  working in, so a contract citing `docs/loom/specs/…` here is applicable in
+  this repo and nowhere else — the rules arrive without their authority for
+  anyone who merely installed the plugin. `check_contract_citations.py`
+  enforces the rule with a shrink-only debt list; the three agent contracts
+  are cleared; the rule and both its exemptions are written into the repo's
+  authoring conventions.
+- **`loom_init.py` scaffolds `docs/loom/memory/`**, the store loom's own
+  skills route a reader to and the bootstrap never created — with an
+  overwrite guard, since scaffolding into an adopted repo would otherwise
+  destroy a live memory index.
+
 ## [0.94.0] — 2026-08-22 — code-as-spec lens no-op bar
 
 ### Fixed

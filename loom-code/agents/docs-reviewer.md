@@ -85,8 +85,9 @@ model: sonnet
    (`code-reviewer.md` role-contract item 7). File every
    such finding as `dimension: omission`, `class: instruction`, citing this
    file's `## Code-as-spec lens` section in `note:` — this schema has no
-   `source:` field, so `where:` + `quote:` locate the text and that
-   citation names the authority. **Read
+   `source:` field, so `where:` + `quote:` locate the text, and the lens
+   section states the rule in full. There is no external authority to name:
+   the contract is self-contained by design. **Read
    `## Code-as-spec lens` before flagging: the rule has a second half, two
    cases reverse it, and this arm needs a file in hand to apply it.**
 
@@ -693,6 +694,8 @@ thing) / 🟡 should-fix / 🟢 nit (informational).
   `quote:` — opaque; the finding cannot be verified or remediated.
 
 ## See also
+
+- [`loom-code/skills/requesting-docs-review/references/design-evidence.md`](loom-code/skills/requesting-docs-review/references/design-evidence.md) — author-facing provenance for the rules in this contract; not loaded at runtime. Where a rule's reason was sourced from a dated record, that record is named there rather than in this contract, which a reader in another repository cannot open.
 
 - `loom-code/skills/requesting-docs-review/SKILL.md` — orchestration
   spec (dispatch, single whole-artifact round, same-reviewer

@@ -68,6 +68,7 @@ _SCOPE_DIRS: tuple[tuple[str, bool], ...] = (
     ("loom-code/skills", True),
     ("loom-code/agents", False),
     ("loom-design/skills", True),
+    ("loom-code/scripts/templates", False),
 )
 
 # One backtick-delimited span, single line (every real citation in this
@@ -78,7 +79,15 @@ _BACKTICK_RE = re.compile(r"`([^`\n]+)`")
 # A `docs/...`-shaped candidate inside a backtick span, up to the next
 # whitespace — isolates the path out of a longer backticked command
 # (e.g. `` `git add docs/loom/archive/<date>-<change-id>/` ``).
-_DOCS_CANDIDATE_RE = re.compile(r"docs/\S*")
+# Path-shaped characters only. `docs/\S*` was safe while extraction ran
+# inside backtick spans, whose delimiters were already stripped; scanning
+# plain text it swallowed the trailing backtick, comma or paren and broke the
+# protocol-basename comparison (`PRINCIPLES.md\`` != `PRINCIPLES.md`).
+_DOCS_CANDIDATE_RE = re.compile(r"docs/[A-Za-z0-9_.<>*/-]+")
+
+# A literal `YYYY-MM-DD` inside a path segment: the mark of one dated
+# record rather than a store. Directory citations carrying one are banned.
+_DATED_SEGMENT_RE = re.compile(r"/\d{4}-\d{2}-\d{2}")
 
 # Trailing `:<line>` or `:<line>-<line>` citation-line suffix, stripped
 # before classifying (it never changes exempt/banned status).
@@ -104,6 +113,10 @@ _PROTOCOL_BASENAMES = frozenset(
         "README.md",
         "ui-flows.md",
         "queue-state.json",
+        # Generated index of the backlog store; every adopting repo has one,
+        # written by `backlog_index.py --write`. Surfaced when the scope
+        # widened to `scripts/templates/`, whose backlog charter cites it.
+        "BACKLOG.md",
     }
 )
 
@@ -124,26 +137,43 @@ def classify_citation(candidate: str) -> str:
     if basename in _PROTOCOL_BASENAMES:
         return "exempt"
     if "." not in basename:
-        # A bare directory citation — a loom-scaffolded store, whatever
-        # its name. Not a citation of a file at all.
+        # A bare directory citation. Exempt as a loom-scaffolded store —
+        # UNLESS a segment carries a literal date, which means it names one
+        # specific record rather than a store every host repo owns:
+        # `docs/loom/archive/2026-08-13-some-change` is this repo's history,
+        # `docs/loom/backlog` is anyone's store. Placeholder shapes such as
+        # `docs/loom/discovery/<date>-<slug>` never reach here — the `<...>`
+        # rule above exempts them first.
+        if _DATED_SEGMENT_RE.search(stripped):
+            return "banned"
         return "exempt"
     return "banned"
 
 
 def extract_docs_candidates(text: str) -> list[str]:
-    """Return every backtick-quoted `docs/loom/...`-shaped candidate in `text`.
+    """Return every `docs/loom/...`-shaped candidate in `text`.
+
+    Scans the WHOLE text, not only backtick spans. An earlier revision
+    extracted only from inside backticks, on the stated ground that backticks
+    were "the shape every real citation in this corpus uses". That was false:
+    a whole-branch reviewer found a dated record cited in plain prose three
+    lines from a backticked one, invisible to the gate. Since the gate exists
+    to catch every new citation, a contributor omitting backticks defeated it
+    entirely and the script still printed OK.
+
+    The backtick constraint had been added to exclude external URLs
+    containing `docs/`, but the prefix filter below already does that: the two
+    such URLs in this corpus are `.../docs/core/display/material` and
+    `.../docs/en/workflows.md`, neither of which starts `docs/loom`. No URL in
+    this corpus contains `docs/loom`, so scanning plain text costs nothing.
 
     Only candidates that could plausibly be one of this repo's `docs/loom`
     citations are returned — `docs/loom...`, the `docs/**` glob, or a
-    `docs/<placeholder>...` shape — so an unrelated backtick-quoted
-    `docs/something-else` (none exist in this corpus, but the filter is
-    defensive) is never miscounted.
+    `docs/<placeholder>...` shape.
     """
     candidates: list[str] = []
-    for span_match in _BACKTICK_RE.finditer(text):
-        span = span_match.group(1)
-        for cand_match in _DOCS_CANDIDATE_RE.finditer(span):
-            cand = cand_match.group(0)
+    for cand_match in _DOCS_CANDIDATE_RE.finditer(text):
+            cand = cand_match.group(0).rstrip(".,;:-")
             if (
                 cand.startswith("docs/loom")
                 or cand.startswith("docs/**")
@@ -223,6 +253,7 @@ DEBT_LIST: frozenset[str] = frozenset(
         "loom-code/skills/subagent-driven-development/SKILL.md",
         "loom-code/skills/subagent-driven-development/references/dispatch-hygiene-notes.md",
         "loom-code/skills/subagent-driven-development/references/research-escalation.md",
+        "loom-code/skills/ui-verification/SKILL.md",
         "loom-code/skills/using-loom-code/references/codex-tools.md",
         "loom-code/skills/writing-plans/SKILL.md",
         "loom-code/skills/writing-plans/references/design-evidence.md",

@@ -55,6 +55,10 @@ repository's development records under `docs/`.
   除非它主動開檔
 - 用 `loom-code/scripts/check_contract_citations.py` 檢查；違規的完整定義在
   該腳本裡，這裡不重複（重複＝第二個漂移面）
+- **既有債務是分階段清的**：腳本裡的 `DEBT_LIST` 記著規則上線時就已違規的
+  檔案，清單只能變短。在清單上的檔案仍算違規，只是尚未清理——新的違規
+  在任何地方都會即刻被擋。看到一個 on-list 檔案裡還有引用，那是待辦，
+  不是規則的例外
 
 ### Quality Gates
 - 四級系統：SELF / MUST / SHOULD / MAY

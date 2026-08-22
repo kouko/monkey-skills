@@ -328,7 +328,12 @@ def test_scaffold_refuses_when_the_memory_store_already_exists(tmp_path):
     result = _run_init(target)
 
     assert result.returncode == 1, result.stdout + result.stderr
-    assert "memory" in result.stdout, result.stdout
+    # Name the ADOPTION guard specifically, not just the word "memory". A
+    # whole-branch reviewer deleted this guard's whole `is_dir()` block and
+    # both memory tests still passed: the stray-file `exists()` guard fired
+    # instead and its message also contains "memory". A refusal test that any
+    # refusal satisfies pins nothing.
+    assert "has adopted the practice-memory store" in result.stdout, result.stdout
     assert not (target / "docs" / "loom" / "backlog").exists(), (
         "residue: backlog/ was created before the refusal"
     )
@@ -623,3 +628,22 @@ def test_scaffolded_kickoff_defaults_onramp_comment_does_not_name_an_unresolvabl
         "scaffolded KICKOFF-DEFAULTS.md's on-ramp comment must name the "
         "pointer as the loom-code plugin's file, not a repo-relative path"
     )
+
+
+def test_scaffold_refuses_a_stray_file_at_the_memory_store_path(tmp_path):
+    """The second memory guard, previously untested.
+
+    A plain FILE at docs/loom/memory is not an adopted store — it is a
+    mistake — and the two cases must be distinguishable, or neither is
+    pinned. Mirrors `test_stray_file_at_store_path_is_not_called_adoption`
+    for the backlog store.
+    """
+    target = tmp_path / "repo"
+    (target / "docs" / "loom").mkdir(parents=True)
+    (target / "docs" / "loom" / "memory").write_text("not a store\n", encoding="utf-8")
+
+    result = _run_init(target)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "exists but is not a" in result.stdout, result.stdout
+    assert "has adopted" not in result.stdout, result.stdout

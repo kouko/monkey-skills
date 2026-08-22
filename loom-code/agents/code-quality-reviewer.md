@@ -433,7 +433,7 @@ The agent has no author authority over external surfaces — third-party HTTP AP
 - 🟡 **Should-fix SHOULD**: a call into surface category **internal sibling-team contract** lacks a grounding cite. Lower severity than the four external categories because sibling-team contracts are harder to objectively audit; the whole-branch reviewer carries the harder cross-task version.
 - 🟢 **Nit**: the grounding cite uses **in-repo evidence (source 4d)** when **live verification (source 4a)** was available in this session — flag for next-touch opportunity to anchor on the higher-fidelity source.
 
-**Scope** (per §Resolved Decisions Q3): D7 evaluates **this task's artifact only**. Cross-task surface-consistency checks (sibling tasks calling the same surface with conflicting parameter shapes / version pins / endpoints) are **out of scope for per-task review** and live in whole-branch `code-reviewer.md` D7. Per-task reviewer is structurally blind to sibling tasks.
+**Scope**: D7 evaluates **this task's artifact only**. Cross-task surface-consistency checks (sibling tasks calling the same surface with conflicting parameter shapes / version pins / endpoints) are **out of scope for per-task review** and live in whole-branch `code-reviewer.md` D7. Per-task reviewer is structurally blind to sibling tasks.
 
 #### D8 — Deletion-First (per-task scope)
 
