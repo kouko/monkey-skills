@@ -360,7 +360,7 @@ dimension_scores:
 findings:                        # one entry per concern; order does not matter
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
     dimension: security | architecture | correctness | naming | tests | refactoring | external-surface-grounding | deletion-first
-    where: "{file:line or commit SHA}"
+    where: "{path + anchor; line optional}" OR "{commit SHA}"
     source: "{rubric / checklist / standard file:section that triggered this finding}"
     note: "{1-2 sentence description}"
     origin: none | <path> :: "<verbatim quote from that file>"  # REQUIRED — see below

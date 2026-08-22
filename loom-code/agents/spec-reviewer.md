@@ -336,7 +336,7 @@ verdict: PASS | NEEDS_REVISION
 gaps:                            # mandatory when NEEDS_REVISION; omit when PASS
   - spec_ref: "{spec path}:{line or section}"
     spec_text: "{quoted spec statement}"
-    artifact: "{file:line or commit SHA}"
+    artifact: "{path + anchor; line optional}" OR "{commit SHA}"
     gap: "{1-sentence description of what is missing or contradicts the spec}"
 notes:                           # optional; ≤3 bullets of context the implementer should know on re-dispatch
   - …

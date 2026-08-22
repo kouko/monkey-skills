@@ -371,7 +371,7 @@ dimension_scores:
 findings:
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
     dimension: security | architecture | correctness | naming | tests | refactoring | cross-task-coherence | external-surface-grounding | principles-conformance | deliberate-simplification | deletion-first
-    where: <file:line OR commit SHA range>
+    where: <path + anchor; line optional> OR <commit SHA range>
     source: <rubric / checklist / standard file:section that triggered this>
     note: <1-2 sentence finding>
     origin: none | <path> :: "<verbatim quote from that file>"  # REQUIRED on code-arm findings only (docs-arm exempt) — see below
