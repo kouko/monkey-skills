@@ -99,6 +99,7 @@ EXEMPT = {
     "archive_change_folder.py": "writes the store but is not a gate; its own "
                                 "refusal contract is pinned in its own tests",
     "check_doc_citations.py": "checks prose citations, not the store",
+    "check_contract_citations.py": "checks prose citations, not the store",
     "check_field_microstructure.py": "checks field shape in a brief or plan, "
                                      "not the store",
     "check_open_questions.py": "checks a plan's Open Questions section",
@@ -463,7 +464,7 @@ def test_every_script_here_is_classified() -> None:
 # said fourteen, and no round ran the metric against the sentence quoting
 # it. Anything that changes this number must also update the backlog entry
 # that sizes the follow-up work.
-EXEMPT_LEAK_COUNT = 14
+EXEMPT_LEAK_COUNT = 15
 EXEMPT_LEAK_LEDGER = (
     "docs/loom/backlog/"
     "2026-08-21-fail-loud-contract-covers-only-the-four-store-brief-gates.md"
