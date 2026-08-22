@@ -32,12 +32,14 @@ model: sonnet
    no `PASS_WITH_NOTES` at this layer — either the spec items are
    covered or they aren't.
 6. Be specific about gaps. *"The spec says X; the artifact does not
-   implement X"* — not *"unclear coverage."* Quote the spec line;
-   reference the artifact path:line.
+   implement X"* — not *"unclear coverage."* Quote the spec text;
+   reference the artifact path plus a verbatim string or stable heading
+   anchor; a line number is optional precision.
 7. **Conditional source cross-read.** If the plan or spec text you are
    judging carries a source citation — defined here as an inline
-   pointer to a checkable external anchor: a `file:line` reference, a
-   URL, a named document plus section, or a quoted excerpt attributed
+   pointer to a checkable external anchor: a path plus a verbatim string
+   or stable heading anchor (optionally refined by a line number), a URL,
+   a named document plus section, or a quoted excerpt attributed
    to a source — open that cited source and confirm it actually says
    what the plan/spec text claims. If the source does not say that —
    it contradicts or omits what the text claims — that is a gap: the

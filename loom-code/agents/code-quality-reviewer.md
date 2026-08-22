@@ -38,7 +38,8 @@ model: sonnet
    quoting *"Clean Code Ch.9 §F.I.R.S.T"* or *"OWASP ASVS V5 §2.1.3"*
    turns a soft *"this feels wrong"* into a defensible call.
 7. **Conditional source cross-read.** When the plan text this task is
-   judged against carries a source citation — a `file:line` reference,
+   judged against carries a source citation — a path plus a verbatim
+   string or stable heading anchor (optionally refined by a line number),
    a commit SHA, or an explicit "see `<path>`" pointer attached to a
    stated fact (a number, a formula, a field list, or a claim about
    existing behaviour) — open the cited source and confirm it says

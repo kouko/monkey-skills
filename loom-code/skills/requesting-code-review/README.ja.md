@@ -37,7 +37,7 @@
 
 - **`standards_version`** スタンプ（`plugin.json` の `version` から）— ダウンストリーム読者が「この review はどのバージョンの rubric で採点されたか」を判別できる（v0.7.0 reviewer-discipline R1）。
 - 11 次元スコア（security / architecture / correctness / naming / tests / refactoring / **cross-task-coherence** — ブランチ限定 / external-surface-grounding / principles-conformance — 条件付き / **deliberate-simplification** — ブランチ限定 / deletion-first）。
-- 重大度タグ付き findings（🔴 fatal / 🟡 should-fix / 🟢 nit）— 各 finding は `where:`（file:line または commit SHA range）を必須記載。**`where` が欠落すると重大度に関わらず verdict は `NEEDS_REVISION` に反転**（v0.7.0 reviewer-discipline R2 — 不透明な finding は修正不能）。
+- 重大度タグ付き findings（🔴 fatal / 🟡 should-fix / 🟢 nit）— 各 finding は `where:`（パスと逐語文字列／安定した見出しアンカー。行番号は任意の精度情報。または commit SHA range）を必須記載。**`where` が欠落すると重大度に関わらず verdict は `NEEDS_REVISION` に反転**（v0.7.0 reviewer-discipline R2 — 不透明な finding は修正不能）。
 - ≤5 行 summary。
 
 集計（`rubrics/quality-gate.md` SSOT に整合）：

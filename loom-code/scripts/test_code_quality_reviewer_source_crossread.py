@@ -107,9 +107,12 @@ def test_code_quality_reviewer_carries_conditional_crossread():
     )
 
     # (d) inline definition of what counts as a source citation
-    assert "file:line" in low, (
-        "must define what counts as a source citation (file:line, "
-        "commit SHA, or an explicit pointer)"
+    assert "path" in low and "verbatim" in low and "stable heading" in low, (
+        "must define an anchor-primary source citation (path plus verbatim "
+        "string or stable heading)"
+    )
+    assert "optionally refined by a line number" in low, (
+        "must make line precision optional rather than the locator identity"
     )
 
     # (e) trigger, not mandate -- scoped to the ADDED section only.

@@ -37,7 +37,7 @@ Every verdict carries:
 
 - **`standards_version`** stamp (from `plugin.json` `version`) — lets downstream readers date the review against a specific rubric revision (v0.7.0 reviewer-discipline R1).
 - 11-dimension scores (security / architecture / correctness / naming / tests / refactoring / **cross-task-coherence** — branch-only / external-surface-grounding / principles-conformance — conditional / **deliberate-simplification** — branch-only / deletion-first).
-- Severity-tagged findings (🔴 fatal / 🟡 should-fix / 🟢 nit), each citing `where:` (file:line or commit SHA range). **Missing `where` flips the verdict to `NEEDS_REVISION`** regardless of severity (v0.7.0 reviewer-discipline R2 — opaque findings are unfixable).
+- Severity-tagged findings (🔴 fatal / 🟡 should-fix / 🟢 nit), each citing `where:` with a path plus verbatim string/stable heading anchor (optional line precision), or a commit SHA range. **Missing `where` flips the verdict to `NEEDS_REVISION`** regardless of severity (v0.7.0 reviewer-discipline R2 — opaque findings are unfixable).
 - ≤5-bullet summary.
 
 Aggregation (aligned with `rubrics/quality-gate.md` SSOT):

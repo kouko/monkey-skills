@@ -280,3 +280,68 @@ def test_quality_gate_is_anchor_primary_at_ssot():
         "from the quality-gate SSOT -- it made the line number the citation, "
         "the opposite of the anchor-primary rule"
     )
+
+
+def test_reviewer_family_local_contracts_do_not_require_line_locators():
+    """Local reviewer prose uses path + anchor; a line is never identity."""
+    surfaces = {
+        "code-quality-reviewer.md": Path(__file__).parents[1]
+        / "agents"
+        / "code-quality-reviewer.md",
+        "spec-reviewer.md": Path(__file__).parents[1]
+        / "agents"
+        / "spec-reviewer.md",
+        "code-reviewer.md": Path(__file__).parents[1]
+        / "agents"
+        / "code-reviewer.md",
+    }
+    retired = {
+        "code-quality-reviewer.md": ["a `file:line` reference"],
+        "spec-reviewer.md": [
+            "reference the artifact path:line",
+            "a `file:line` reference",
+        ],
+        "code-reviewer.md": [
+            "violating `file:line` in `where`",
+            "one row per marker with its `file:line`",
+            "marker's `file:line` in `where`",
+            "cite the marker's `file:line`",
+        ],
+    }
+
+    for name, path in surfaces.items():
+        low = _flatten(path.read_text(encoding="utf-8")).lower()
+        for phrase in retired[name]:
+            assert phrase not in low, f"{name} retains line-first contract: {phrase}"
+        assert "verbatim string" in low and "stable heading" in low, (
+            f"{name} must retain anchor-primary evidence wording"
+        )
+
+
+def test_docs_review_panel_union_ignores_optional_line_precision():
+    """Panel dedupe identity is path + anchor + dimension, not file:line."""
+    path = (
+        Path(__file__).parents[1]
+        / "skills"
+        / "requesting-docs-review"
+        / "SKILL.md"
+    )
+    low = _flatten(path.read_text(encoding="utf-8")).lower()
+
+    assert "same `file:line` and same dimension" not in low
+    assert "path + anchor + dimension" in low
+    assert "line" in low and "ignored" in low and "identity" in low
+
+
+def test_requesting_code_review_published_readmes_are_anchor_primary():
+    skill_dir = (
+        Path(__file__).parents[1] / "skills" / "requesting-code-review"
+    )
+    retired = {
+        "README.md": "file:line or commit sha range",
+        "README.zh-TW.md": "file:line 或 commit sha range",
+        "README.ja.md": "file:line または commit sha range",
+    }
+    for filename, phrase in retired.items():
+        low = _flatten((skill_dir / filename).read_text(encoding="utf-8")).lower()
+        assert phrase not in low, f"{filename} retains line-first where contract"

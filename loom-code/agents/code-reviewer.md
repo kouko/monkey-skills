@@ -451,7 +451,7 @@ The agent has no author authority over external surfaces — third-party HTTP AP
 
 - 🔴 **Fatal MUST**: a call into surface category **HTTP API / SDK package / MCP tool / CLI flag** anywhere in the branch lacks a grounding cite.
 - 🟡 **Should-fix SHOULD**: a call into surface category **internal sibling-team contract** lacks a grounding cite (lower severity because sibling-team contracts are harder to objectively audit at review time).
-- 🟡 **Should-fix SHOULD (whole-branch only)**: **two or more tasks in this branch call the SAME external surface with CONFLICTING parameter shapes / version pins / endpoints / output expectations**. Per-task reviewers could not see this; the whole-branch reviewer owns it. Cite both task numbers and the conflicting lines in `where`.
+- 🟡 **Should-fix SHOULD (whole-branch only)**: **two or more tasks in this branch call the SAME external surface with CONFLICTING parameter shapes / version pins / endpoints / output expectations**. Per-task reviewers could not see this; the whole-branch reviewer owns it. Cite both task numbers and the conflicting paths plus verbatim strings or stable heading anchors in `where`; line numbers are optional precision.
 - 🟢 **Nit**: cite uses **in-repo evidence (source 4d)** when **live verification (source 4a)** was available — next-touch opportunity to anchor on higher-fidelity source.
 
 **Scope**: this dimension's cross-task-conflict check (the second 🟡 above) is **whole-branch reviewer's exclusive responsibility** — per-task `code-quality-reviewer.md` is structurally blind to sibling tasks and that 🟡 will never fire there.
@@ -478,7 +478,7 @@ principles lens performs on the spec.
 **Severity calibration:**
 
 - 🔴 **Fatal**: the diff clearly violates a `— check:` clause on a **safety / security / privacy-bearing** principle.
-- 🟡 **Should-fix**: the diff clearly violates a `— check:` clause on any other principle. Cite the principle text + the violating `file:line` in `where`.
+- 🟡 **Should-fix**: the diff clearly violates a `— check:` clause on any other principle. Cite the principle text plus the violating path and a verbatim string or stable heading anchor in `where`; a line number is optional precision.
 - 🟢 **Nit**: the diff is in tension with a principle's *spirit* but does not clearly fail its falsifiable check (ambiguous — flag for human judgment, do not manufacture a violation).
 - **`N/A`**: no `PRINCIPLES.md` found in the target repo (checked directly; no override path resolves either). Emit `principles-conformance: N/A` and no findings — never fabricate principles to score against.
 
@@ -525,7 +525,8 @@ LOOM-SIMPLIFY: <shortcut> | ceiling: <checkable condition> | upgrade: <proper pa
 ```
 
 **Surface a ledger view.** In `summary`, render the collected markers
-as a compact ledger — one row per marker with its `file:line`,
+as a compact ledger — one row per marker with its path and verbatim marker
+string (plus an optional line number for precision),
 `shortcut`, `ceiling`, and `ref` — so the human at the gate can see at a
 glance exactly what each corner-cut costs. If the grep returns nothing,
 state that no markers were found (silence is reported, not skipped —
@@ -535,14 +536,15 @@ Rule 12 fail-loud).
 **malformed or vague**:
 
 - 🟡 **Missing field**: the marker lacks `ceiling:`, `upgrade:`, or
-  `ref:` (the standard requires all four fields). Cite the marker's
-  `file:line` in `where`; `source:`
+  `ref:` (the standard requires all four fields). Cite the marker's path
+  and verbatim string in `where`; a line number is optional precision.
+  `source:`
   `standards/deliberate-simplification.md §Field Rules`.
 - 🟡 **Vague ceiling**: `ceiling:` is not a checkable condition — it
   reads `later` / `someday` / `eventually` rather than a threshold,
   named event, or version (§Field Rules 1; §Anti-Patterns). A vague
-  ceiling is uncheckable and so cannot be managed. Cite the marker's
-  `file:line`.
+  ceiling is uncheckable and so cannot be managed. Cite the marker's path
+  and verbatim string; a line number is optional precision.
 - 🟢 **Nit**: marker is well-formed but its shortcut looks like it may
   exceed its own stated ceiling already, or the `ref:` does not resolve
   to a brief/task in this branch — flag for human judgment, do not
