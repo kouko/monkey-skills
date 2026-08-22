@@ -5,6 +5,12 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.96.0] — 2026-08-22 — line-cite rule inverted to anchor-primary
+
+### Changed
+
+- **The line-cite rule inverts from line-number-first to anchor-primary across every surface that states or consumes it.** The anchor (a verbatim string or a stable heading) is the citation; a line number is optional precision, required only when the anchor alone is ambiguous. `check_doc_citations.py` gains substring (anchor) verification as the primary check, with line-bounds kept as a secondary check when no anchor is present. The R2 reviewer block, plan-format §Stated facts, handoff-brief §Current State Evidence, the gate-marker schemas, docs-reviewer rule 7 + output schema, and the quality-gate SSOT are all inverted in the same arc.
+
 ## [0.95.0] — 2026-08-22 — contracts cite only what ships
 
 ### Fixed
