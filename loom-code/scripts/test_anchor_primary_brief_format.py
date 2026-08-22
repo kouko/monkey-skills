@@ -134,6 +134,38 @@ def test_copyable_template_current_state_evidence_is_anchor_primary():
     )
 
 
+def test_current_state_evidence_selects_anchors_by_artifact_type():
+    text = _text()
+    required_sections = _section(text, r"Required sections")
+    explanatory = _flatten(
+        _subsection(required_sections, r"`## Current State Evidence`")
+    ).lower()
+
+    template_marker = "## Template"
+    template = text.split(template_marker, 1)[1]
+    match = re.search(
+        r"^## Current State Evidence\s*$\n(?P<body>.*?)(?=^## \S)",
+        template,
+        re.MULTILINE | re.DOTALL,
+    )
+    assert match is not None, "copyable template must contain Current State Evidence"
+    copyable = _flatten(match.group("body")).lower()
+
+    for surface_name, surface in (
+        ("explanatory guidance", explanatory),
+        ("copyable template", copyable),
+    ):
+        assert "prose" in surface and "stable heading" in surface and "distinctive phrase" in surface, (
+            f"{surface_name} must select prose anchors by stable heading or distinctive phrase"
+        )
+        assert all(term in surface for term in ("code", "function", "class", "method", "signature", "constant", "distinctive message")), (
+            f"{surface_name} must select code anchors by signature, constant, or distinctive message"
+        )
+        assert all(term in surface for term in ("config/data", "key path", "distinctive value fragment")), (
+            f"{surface_name} must select config/data anchors by key path plus value fragment"
+        )
+
+
 def test_anti_pattern_bullet_is_anchor_primary():
     text = _text()
     anti = _section(text, r"Anti-patterns")

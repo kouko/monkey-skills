@@ -55,7 +55,7 @@ Each outcome declared here takes a brief item identifier — see [§Brief item i
 
 If the work is genuinely greenfield (new module, no existing system touched), write `N/A — greenfield` and skip the sub-bullets. Do not use `N/A` to dodge reconnaissance work — see anti-patterns below.
 
-Five sub-bullets (each takes a 1-liner with an anchor citation, or `N/A — <reason>`). Each citation requires a path paired with an anchor. An anchor is a verbatim string quoted from the cited site or a stable heading name. A line number is optional precision only when the anchor alone is ambiguous; it is appended after the anchor and is not a citation on its own:
+Five sub-bullets (each takes a 1-liner with an anchor citation, or `N/A — <reason>`). Each citation requires a path paired with an anchor. Select the anchor by artifact type: prose uses a stable heading or distinctive phrase; code uses a function, class, or method signature, a constant, or a distinctive message; config/data uses a key path plus a distinctive value fragment. An anchor is a verbatim string quoted from the cited site or a stable heading name. A line number is optional precision only when the anchor alone is ambiguous; it is appended after the anchor and is not a citation on its own:
 
 - **Forward** — downstream impact when the touched code/process runs (1-3 bullets, each citing an anchor).
 - **Reverse** — upstream callers / dependants of the touch points (1-3 bullets, each citing an anchor).
@@ -220,7 +220,7 @@ Copy-paste this skeleton:
 
 ## Current State Evidence
 
-(Required when touching existing code. Five sub-bullets; each item requires a path plus an anchor — a verbatim string or a stable heading — or `N/A — <reason>`. A line number is optional precision only when the anchor alone is ambiguous. Use `N/A — greenfield` only when nothing pre-existing is touched.)
+(Required when touching existing code. Five sub-bullets; each item requires a path plus an anchor — a verbatim string or a stable heading — or `N/A — <reason>`. Select anchors by artifact type: prose uses a stable heading or distinctive phrase; code uses a function, class, or method signature, a constant, or a distinctive message; config/data uses a key path plus a distinctive value fragment. A line number is optional precision only when the anchor alone is ambiguous. Use `N/A — greenfield` only when nothing pre-existing is touched.)
 
 - **Forward**: (downstream impact, anchor)
 - **Reverse**: (upstream callers, anchor)
