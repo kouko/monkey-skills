@@ -55,7 +55,7 @@ N/A — no unresolved question: the user chose a loom-wide default and the brief
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-2
-- **Status**: pending
+- **Status**: done(5c5b4405)
 
 ## Task 2 — Make an empty bet queue notification-only at close-out
 
@@ -77,7 +77,7 @@ N/A — no unresolved question: the user chose a loom-wide default and the brief
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: done(5c5b4405)
 
 ## Task 3 — Honor close-out authorization inside git-memory delegation
 
@@ -98,7 +98,7 @@ N/A — no unresolved question: the user chose a loom-wide default and the brief
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: done(5c5b4405)
 
 ## Task 4 — Add a Codex session adapter to distill-sessions
 
@@ -124,7 +124,7 @@ N/A — no unresolved question: the user chose a loom-wide default and the brief
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(5c5b4405)
 
 ## Task 5 — Run contract verification and weak-model dogfood
 
@@ -144,7 +144,7 @@ N/A — no unresolved question: the user chose a loom-wide default and the brief
 - **Dependencies**: Tasks 2, 3, 4 complete first
 - **Independent**: false
 - **Brief item covered**: BI-6
-- **Status**: pending
+- **Status**: done(5c5b4405)
 
 ## Notes
 
