@@ -26,7 +26,7 @@ If the user or agent invokes implementation moves (drafting code, opening files,
 
 ## Current State Evidence — recon discipline (v0.7.0+)
 
-When the change touches existing code or process, the brief carries a `## Current State Evidence` section with 5 sub-bullets (Forward / Reverse / Error / Data / Boundary) + Evidence paths appendix — every bullet cites `file:line`. The agent fills this via `grep` / `Read` / dispatching `Explore`; recon is the agent's job, not the user's. Greenfield work allowed `N/A — greenfield` skip. See [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence for the schema.
+When the change touches existing code or process, the brief carries a `## Current State Evidence` section with 5 sub-bullets (Forward / Reverse / Error / Data / Boundary) + Evidence paths appendix — every bullet cites a path plus an anchor: a verbatim string or stable heading. A line number is optional precision only when the anchor is ambiguous. The agent fills this via `grep` / `Read` / dispatching `Explore`; recon is the agent's job, not the user's. Greenfield work allowed `N/A — greenfield` skip. See [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence for the schema.
 
 ## Output
 

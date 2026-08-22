@@ -25,6 +25,14 @@ REFERENCE = (
     / "handoff-brief-format.md"
 ).resolve()
 
+SKILL_DIR = REFERENCE.parent.parent
+
+AUTHOR_SURFACES = (
+    SKILL_DIR / "SKILL.md",
+    SKILL_DIR / "README.md",
+    REFERENCE.parent / "red-flags.md",
+)
+
 
 def _text() -> str:
     assert REFERENCE.is_file(), f"handoff-brief-format.md is absent at {REFERENCE}"
@@ -101,3 +109,27 @@ def test_anti_pattern_bullet_is_anchor_primary():
         "§Anti-patterns must drop the line-number-first 'without `file:line` "
         "citations' wording"
     )
+
+
+def test_brief_author_surfaces_are_anchor_primary():
+    for path in AUTHOR_SURFACES:
+        assert path.is_file(), f"brainstorming author surface is absent at {path}"
+        low = _flatten(path.read_text(encoding="utf-8")).lower()
+
+        assert "path" in low and "verbatim string" in low and "stable heading" in low, (
+            f"{path.name} must require a path plus a verbatim-string or "
+            "stable-heading anchor"
+        )
+        assert "line number" in low and "optional" in low and "ambiguous" in low, (
+            f"{path.name} must make a line number optional precision only when "
+            "the anchor is ambiguous"
+        )
+
+    stale = (
+        "each citing file:line",
+        "every bullet cites `file:line`",
+        "grounded `file:line` citations",
+    )
+    combined = "\n".join(path.read_text(encoding="utf-8") for path in AUTHOR_SURFACES)
+    for phrase in stale:
+        assert phrase not in combined, f"stale line-primary wording remains: {phrase}"
