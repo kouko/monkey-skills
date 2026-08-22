@@ -22,6 +22,16 @@ def test_in_repo_grounding_is_path_plus_anchor_in_ssot_and_functional_copy() -> 
     assert expected_rule in functional_copy
     assert functional_copy_text.endswith(CANONICAL.read_text())
 
+    expected_example = (
+        'Example: `salesforce-toolkit/scripts/upsert.py` with anchor '
+        '`"sObjects/Contact/External_Id__c"` already calls that surface, so this '
+        "PR mirrors it."
+    )
+    assert expected_example in canonical
+    assert expected_example in functional_copy
+    assert "Example: `salesforce-toolkit/scripts/upsert.py:42`" not in canonical
+    assert "Example: `salesforce-toolkit/scripts/upsert.py:42`" not in functional_copy
+
 
 def test_review_panel_oracle_keys_findings_by_path_anchor_and_dimension() -> None:
     suite = json.loads(REVIEW_ORACLES.read_text())
