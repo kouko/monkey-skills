@@ -55,7 +55,7 @@ Each outcome declared here takes a brief item identifier — see [§Brief item i
 
 If the work is genuinely greenfield (new module, no existing system touched), write `N/A — greenfield` and skip the sub-bullets. Do not use `N/A` to dodge reconnaissance work — see anti-patterns below.
 
-Five sub-bullets (each takes a 1-liner with an anchor citation, or `N/A — <reason>`). An anchor is a verbatim string quoted from the cited site or a stable heading name; a line number is optional precision appended after the anchor, not a citation on its own:
+Five sub-bullets (each takes a 1-liner with an anchor citation, or `N/A — <reason>`). Each citation requires a path paired with an anchor. An anchor is a verbatim string quoted from the cited site or a stable heading name. A line number is optional precision only when the anchor alone is ambiguous; it is appended after the anchor and is not a citation on its own:
 
 - **Forward** — downstream impact when the touched code/process runs (1-3 bullets, each citing an anchor).
 - **Reverse** — upstream callers / dependants of the touch points (1-3 bullets, each citing an anchor).

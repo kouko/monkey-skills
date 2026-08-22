@@ -89,14 +89,17 @@ def test_current_state_evidence_is_anchor_primary():
     cse = _subsection(required_sections, r"`## Current State Evidence`")
     flat = _flatten(cse)
 
-    # The section frames the citation as anchor-primary: an anchor is the
-    # required form, a line number is optional precision.
-    assert "anchor" in flat.lower(), (
-        "§Current State Evidence must name an anchor as the required citation"
+    # The section frames the citation as anchor-primary: a path must be paired
+    # with either supported anchor form, while a line number is conditional.
+    assert "requires a path paired with an anchor" in flat.lower(), (
+        "§Current State Evidence must require a path paired with its anchor"
     )
-    assert "line number" in flat.lower() and "optional" in flat.lower(), (
-        "§Current State Evidence must state that a line number is optional "
-        "precision, not the required form"
+    assert "verbatim string" in flat.lower() and "stable heading" in flat.lower(), (
+        "§Current State Evidence must retain both permitted anchor forms"
+    )
+    assert "line number is optional precision only when the anchor alone is ambiguous" in flat.lower(), (
+        "§Current State Evidence must limit optional line precision to cases "
+        "where the anchor alone is ambiguous"
     )
 
     # The five sub-bullets describe their citation as an anchor (not as
