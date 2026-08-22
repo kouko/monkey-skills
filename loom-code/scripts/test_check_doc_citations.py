@@ -662,6 +662,24 @@ def test_a_citation_whose_quoted_string_is_present_in_the_target_is_clean(
     assert check_doc(doc, tmp_path) == []
 
 
+def test_a_citation_whose_anchor_resolves_but_line_is_out_of_bounds_is_clean(
+    tmp_path: Path,
+) -> None:
+    # The anchor (paired `"..."` string) is the PRIMARY check; the line
+    # number is optional precision. When the anchor resolves as a verbatim
+    # substring in the target file, the citation is clean — a stale
+    # out-of-bounds line does NOT invalidate a resolved anchor (the rule
+    # this checker enforces: the anchor survives the change that writes
+    # it, the line number rots within it). Pre-fix this returned the
+    # "line ... exceeds file length" finding because line-bounds ran first
+    # and short-circuited before the anchor check.
+    _write(tmp_path / "target.py", "the verbatim string is here\n")
+    doc = tmp_path / "doc.md"
+    _write(doc, 'See `target.py:999` "the verbatim string".\n')
+
+    assert check_doc(doc, tmp_path) == []
+
+
 def test_citation_without_paired_quote_is_unaffected(tmp_path: Path) -> None:
     # Backward compatibility: a citation with NO paired `"..."` quote on the
     # same line is unaffected — the substring check does not fire.

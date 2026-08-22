@@ -242,19 +242,35 @@ def check_citation(
     docstring).
 
     `anchor` (the paired `"..."` string from the same line, or `None`)
-    is verified as a substring in the target file text when present;
-    the existing line-bounds check remains as a secondary check.
+    is the PRIMARY check: when present and resolved as a verbatim
+    substring in the target file, the citation is clean — the line
+    number is optional precision, and a stale out-of-bounds line does
+    not invalidate a resolved anchor (the anchor survives the change
+    that writes it; the line number rots within it). The line-bounds
+    check is SECONDARY and runs only when no anchor is present (backward
+    compatible — citations without a paired quote rely on the line
+    number alone).
     """
     target = resolve_cited_path(repo_root, cited_path, repo_files)
     if target is None:
         return False, None
     file_text = target.read_text(encoding="utf-8", errors="replace")
+    # Primary check: the anchor (verbatim substring). When an anchor is
+    # present and resolves in the target file, the citation is valid —
+    # the line number is optional precision, and a stale out-of-bounds
+    # line does not invalidate a resolved anchor (the rule this checker
+    # enforces: the anchor survives the change that writes it).
+    if anchor is not None:
+        if anchor not in file_text:
+            return True, "quoted string not found in target"
+        return True, None
+    # Secondary check: line-bounds, when no anchor is present (backward
+    # compatible — citations without a paired quote rely on the line
+    # number alone).
     line_count = len(file_text.splitlines())
     check_line = end if end is not None else start
     if check_line > line_count:
         return True, f"line {check_line} exceeds file length ({line_count} lines)"
-    if anchor is not None and anchor not in file_text:
-        return True, "quoted string not found in target"
     return True, None
 
 
