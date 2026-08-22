@@ -7,6 +7,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CODE_REVIEWER = REPO_ROOT / "loom-code" / "agents" / "code-reviewer.md"
+DOCS_REVIEWER = REPO_ROOT / "loom-code" / "agents" / "docs-reviewer.md"
 
 NO_OP_CLAUSE = "makes this dimension never a no-op"
 
@@ -25,4 +26,17 @@ def test_code_arm_bars_the_no_op_declaration():
         "code-reviewer.md's code-as-spec lens must bar declaring the "
         "deletion-first dimension a no-op when the diff touches docstring "
         "or comment lines"
+    )
+
+
+def test_docs_arm_bars_the_no_op_declaration():
+    # Mirrors the code arm's bar: the two reviewer arms hold mirrored
+    # halves of one rule, so both must carry the shared no-op clause or
+    # the rule binds only one arm.
+    text = DOCS_REVIEWER.read_text(encoding="utf-8")
+    flattened = _flatten(text)
+    assert NO_OP_CLAUSE in flattened, (
+        "docs-reviewer.md's code-as-spec lens must bar declaring the "
+        "omission dimension a no-op when the diff touches contract-class "
+        "prose lines"
     )

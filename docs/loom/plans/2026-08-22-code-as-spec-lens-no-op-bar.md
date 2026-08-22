@@ -56,7 +56,7 @@ flowchart LR
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: BI-1
-- **Status**: done(pending-sha)
+- **Status**: done(fbe66cd4)
 - **Gloss**: 讓審查者不能再宣告「這個維度本分支不適用」——這正是部署臂 1 掛零的那條路
 
 ## Task 2 — Mirror the bar into the docs arm
@@ -75,7 +75,7 @@ flowchart LR
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-2, BI-3
-- **Status**: pending
+- **Status**: done(pending-sha)
 - **Gloss**: 文件審查臂拿到同一條禁令，兩邊同時被測試釘住，避免只修一半
 
 ## Task 3 — Bump loom-code to 0.94.0 across its four coupled sites
