@@ -342,6 +342,33 @@ def test_requesting_code_review_published_readmes_are_anchor_primary():
         "README.zh-TW.md": "file:line 或 commit sha range",
         "README.ja.md": "file:line または commit sha range",
     }
+    required_semantics = {
+        "README.md": (
+            "path",
+            "verbatim string",
+            "stable heading",
+            "optional line precision",
+        ),
+        "README.zh-TW.md": (
+            "路徑",
+            "逐字字串",
+            "穩定標題錨點",
+            "行號只是可選精度",
+        ),
+        "README.ja.md": (
+            "パス",
+            "逐語文字列",
+            "安定した見出しアンカー",
+            "行番号は任意の精度情報",
+        ),
+    }
     for filename, phrase in retired.items():
         low = _flatten((skill_dir / filename).read_text(encoding="utf-8")).lower()
         assert phrase not in low, f"{filename} retains line-first where contract"
+        for semantic in required_semantics[filename]:
+            assert semantic.lower() in low, (
+                f"{filename} must state anchor-primary evidence semantic: {semantic}"
+            )
+        assert "commit sha range" in low, (
+            f"{filename} must preserve the commit SHA range alternative"
+        )
