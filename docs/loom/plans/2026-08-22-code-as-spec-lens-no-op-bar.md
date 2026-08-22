@@ -75,10 +75,10 @@ flowchart LR
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-2, BI-3
-- **Status**: done(pending-sha)
+- **Status**: done(5221564c)
 - **Gloss**: 文件審查臂拿到同一條禁令，兩邊同時被測試釘住，避免只修一半
 
-## Task 3 — Bump loom-code to 0.94.0 across its four coupled sites
+## Task 3 — Bump loom-code to 0.94.0 across its coupled sites
 
 - **Description**: Bump the plugin version so the edited contracts actually deploy, updating every coupled site in one task.
   | Site | Change |
@@ -86,6 +86,7 @@ flowchart LR
   | `loom-code/.claude-plugin/plugin.json` `version` field | version → 0.94.0 |
   | `loom-code/.codex-plugin/plugin.json` `version` field | version → 0.94.0 |
   | `loom-code/CHANGELOG.md` | new `## [0.94.0]` heading describing the bar |
+  | `plan-document-reviewer-prompt.md`, Check 19's `(vX.Y.Z+)` tag | repinned — a FIFTH site this table originally missed, enforced live by `test_check19_version_tag_matches_shipping_version`, which compares the tag against `plugin.json`'s current value |
   | `loom-code/scripts/test_docs_review_blocking_class.py`, `test_plugin_version_and_changelog_at_0_93_0` | `test_plugin_version_and_changelog_at_0_93_0` renamed, its two assertions and its docstring repinned to 0.94.0 |
 - **Module**: loom-code
 - **Files touched**: loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/CHANGELOG.md, loom-code/scripts/test_docs_review_blocking_class.py
@@ -99,7 +100,7 @@ flowchart LR
 - **Dependencies**: Task 2 completes first
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: done(384041fc)
 - **Gloss**: 沒有 bump，合併後外掛更新是靜默 no-op，這一行等於沒改
 
 ## Task 4 — Re-run the sandbox against the edited contract and retain the transcripts
@@ -120,7 +121,7 @@ flowchart LR
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(pending4)
 - **Gloss**: 拿同一個沙盒實測這一行有沒有用，結果不論好壞都逐字留檔
 
 ## Notes
@@ -159,3 +160,8 @@ flowchart LR
   the half that resolves. No asserted fact changed — each cite still points
   at the same text — so this is a citation-form conformance fix, recorded
   here rather than silently applied.
+- Task 3 correction: this plan and its brief both said the version pin lives
+  in FOUR coupled sites. It lives in five. The implementer's grep found
+  Check 19's `(v0.93.0+)` tag in `plan-document-reviewer-prompt.md`, which a
+  live test binds to `plugin.json`'s current value, and reported it rather
+  than silently absorbing it. Corrected in both documents.
