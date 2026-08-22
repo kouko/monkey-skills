@@ -4,7 +4,7 @@
 Goal: Invert loom's line-cite rule from line-number-first to anchor-primary
     across every surface that states or consumes it, plus a checker that
     verifies the anchor, so a citation survives the change that writes it.
-Stage: review:round-6
+Stage: finishing
 Steps:
     1. 檢查器加錨點驗證、翻轉 plan/brief/schema/R2 五處規則（平行波）
     2. 翻轉 docs-reviewer 專屬規則與 schema
