@@ -84,10 +84,10 @@ model: sonnet
    cited from the SSOT and never re-derived; the code arm holds the same
    lens over docstrings and inline comments in non-`.md` files
    (`code-reviewer.md` role-contract item 7). File every
-   such finding as `dimension: omission`, `class: instruction`, citing
-   `docs/loom/specs/2026-08-21-code-as-spec-writing-rule.md` §Decision in
-   `note:` — this schema has no `source:` field, so `where:` + `quote:`
-   locate the text and that citation names the authority. **Read
+   such finding as `dimension: omission`, `class: instruction`, citing this
+   file's `## Code-as-spec lens` section in `note:` — this schema has no
+   `source:` field, so `where:` + `quote:` locate the text and that
+   citation names the authority. **Read
    `## Code-as-spec lens` before flagging: the rule has a second half, two
    cases reverse it, and this arm needs a file in hand to apply it.**
 
@@ -413,8 +413,7 @@ the other route below and carries its own severity.
 Prose MUST carry the reason, the goal, the expected effect, and how the
 implementation choice was made — sourced from a Decision Log entry, a
 memory file, or git history, never invented, and left unwritten with the
-gap reported when no source carries it (SSOT:
-`docs/loom/specs/2026-08-21-code-as-spec-writing-rule.md` §Decision). A
+gap reported when no source carries it. A
 counterfactual — what the text says would happen were the mechanism absent
 — IS that reason, not a mechanism the code can show; this half keeps it, so
 no reversing case below is needed to reach that. So, before flagging:

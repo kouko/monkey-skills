@@ -41,6 +41,21 @@ skills/init/references/v1/spec.md     ← references/ 下開 v1/
 - Reference files 從 SKILL.md 直接引用，路徑都是 `<subfolder>/<file>` 一層 deep
 - **違規會被 `.claude/hooks/validate-skill-folder-structure.sh` 擋下**（PostToolUse on Write|Edit）
 
+### Contract Citations
+
+**MUST：執行期散文契約不得引用本 repo 的開發紀錄** — a runtime prose
+contract under the loom skill and agent trees must not cite one of this
+repository's development records under `docs/`.
+
+- 原因：派出去的 agent 讀的是**它當下所在的 repo**，所以這種引用只在本
+  repo 解得開。這是可攜性缺陷，不是風格偏好
+- 豁免一 **loom-scaffolded store directories**：loom 為任何 adopting repo 定義
+  的協定路徑（store 目錄、協定檔名、文法佔位符）——那是 schema，不是引用
+- 豁免二 **`.py`/`.sh` provenance comments**：出處註解沒有 model 會讀到，
+  除非它主動開檔
+- 用 `loom-code/scripts/check_contract_citations.py` 檢查；違規的完整定義在
+  該腳本裡，這裡不重複（重複＝第二個漂移面）
+
 ### Quality Gates
 - 四級系統：SELF / MUST / SHOULD / MAY
 - Gate 定義明確指定檔案路徑（相對路徑）

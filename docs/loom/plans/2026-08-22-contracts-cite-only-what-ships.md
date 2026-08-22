@@ -85,7 +85,7 @@ N/A — no unresolved question: the rule's boundary, both exemptions, and the on
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-2
-- **Status**: pending
+- **Status**: done(pendingT2)
 - **Gloss**: 那條規則以後自己站得住，不再把權威交給一份讀者可能沒有的檔案
 
 ## Task 3 — Clear the remaining citations from the agent contracts
@@ -148,7 +148,7 @@ N/A — no unresolved question: the rule's boundary, both exemptions, and the on
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(pendingT5)
 - **Gloss**: 規則寫進撰寫慣例，讓下一個作者在寫出違規之前就讀到它
 
 ## Notes

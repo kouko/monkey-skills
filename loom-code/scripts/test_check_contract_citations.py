@@ -120,3 +120,21 @@ def test_only_backtick_delimited_candidates_are_extracted() -> None:
     assert extract_docs_candidates(text) == [
         "docs/loom/specs/2026-01-01-x.md"
     ]
+
+
+def test_the_rule_is_documented_in_claude_md() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    claude_md = repo_root / "CLAUDE.md"
+    # Normalise backticks as well as whitespace. Asserting on raw text made an
+    # earlier implementer strip code-span formatting OUT of the document to
+    # satisfy the test — the document degraded to fit the assertion, which is
+    # the wrong direction. The prose owns its formatting; the test adapts.
+    raw = claude_md.read_text(encoding="utf-8").replace("`", "")
+    flattened = " ".join(raw.split())
+    assert (
+        "a runtime prose contract under the loom skill and agent trees "
+        "must not cite one of this repository's development records "
+        "under docs/"
+    ) in flattened
+    assert "loom-scaffolded store directories" in flattened
+    assert ".py/.sh provenance comments" in flattened
