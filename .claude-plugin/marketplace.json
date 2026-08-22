@@ -123,6 +123,11 @@
       "name": "think-orbit",
       "description": "Single-user thinking-and-planning partner — turns a discussion into a transparent chain of thought: one markdown file per node, assumption files with stale propagation, silent mechanical gates, and a regenerated DAG view; decisions are one kind of ending, not the only one.",
       "source": "./think-orbit/"
+    },
+    {
+      "name": "hermes-tweet",
+      "description": "Native Hermes Agent X/Twitter plugin for Xquik automation with read-first workflows and approval-gated actions. Not affiliated with X Corp.",
+      "source": "./hermes-tweet/"
     }
   ]
 }
