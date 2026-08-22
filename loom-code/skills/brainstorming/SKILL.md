@@ -169,7 +169,7 @@ Examples:
 
 If nothing becomes obsolete, that is a flag: either the change is purely additive (probably YAGNI — see `dev-workflow:complexity-critique`) or the design space wasn't explored enough.
 
-**Pairs with `## Current State Evidence` in the brief**: Axis 5 is forward-looking (what gets removed); Current State Evidence is backward-looking (what currently exists at the touch points). The same `file:line` citations often serve both — the recon you do to fill Evidence is the same recon that surfaces obsolescence candidates here. See [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence for the format.
+**Pairs with `## Current State Evidence` in the brief**: Axis 5 is forward-looking (what gets removed); Current State Evidence is backward-looking (what currently exists at the touch points). The same evidence citations often serve both: each requires a path plus an anchor, either a verbatim string or a stable heading. A line number is optional precision only when the anchor is ambiguous. The recon you do to fill Evidence is the same recon that surfaces obsolescence candidates here. See [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence for the format.
 
 ## Output Contract — the brief
 

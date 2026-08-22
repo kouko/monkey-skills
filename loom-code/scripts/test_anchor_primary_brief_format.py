@@ -30,8 +30,21 @@ SKILL_DIR = REFERENCE.parent.parent
 AUTHOR_SURFACES = (
     SKILL_DIR / "SKILL.md",
     SKILL_DIR / "README.md",
+    SKILL_DIR / "README.zh-TW.md",
+    SKILL_DIR / "README.ja.md",
     REFERENCE.parent / "red-flags.md",
 )
+
+LOCALIZED_README_SEMANTICS = {
+    "README.zh-TW.md": (
+        ("path", "逐字字串", "穩定標題"),
+        ("行號", "可選", "歧義"),
+    ),
+    "README.ja.md": (
+        ("path", "逐語文字列", "安定した見出し"),
+        ("行番号", "任意", "曖昧"),
+    ),
+}
 
 
 def _text() -> str:
@@ -112,7 +125,10 @@ def test_anti_pattern_bullet_is_anchor_primary():
 
 
 def test_brief_author_surfaces_are_anchor_primary():
-    for path in AUTHOR_SURFACES:
+    english_surfaces = tuple(
+        path for path in AUTHOR_SURFACES if path.name not in LOCALIZED_README_SEMANTICS
+    )
+    for path in english_surfaces:
         assert path.is_file(), f"brainstorming author surface is absent at {path}"
         low = _flatten(path.read_text(encoding="utf-8")).lower()
 
@@ -125,10 +141,26 @@ def test_brief_author_surfaces_are_anchor_primary():
             "the anchor is ambiguous"
         )
 
+    for filename, (anchor_terms, precision_terms) in LOCALIZED_README_SEMANTICS.items():
+        path = SKILL_DIR / filename
+        assert path.is_file(), f"brainstorming author surface is absent at {path}"
+        text = _flatten(path.read_text(encoding="utf-8"))
+        assert all(term in text for term in anchor_terms), (
+            f"{filename} must require a path plus a localized verbatim-string "
+            "or stable-heading anchor"
+        )
+        assert all(term in text for term in precision_terms), (
+            f"{filename} must make a line number optional precision only when "
+            "the anchor is ambiguous"
+        )
+
     stale = (
         "each citing file:line",
         "every bullet cites `file:line`",
         "grounded `file:line` citations",
+        "same `file:line` citations often serve both",
+        "每個 bullet 都附 `file:line` 引用",
+        "各ブレットは `file:line` を引用",
     )
     combined = "\n".join(path.read_text(encoding="utf-8") for path in AUTHOR_SURFACES)
     for phrase in stale:

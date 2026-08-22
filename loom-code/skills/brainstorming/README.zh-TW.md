@@ -26,7 +26,7 @@
 
 ## Current State Evidence — recon 紀律（v0.7.0+）
 
-當變更觸碰既有 code 或流程，brief 必須帶上 `## Current State Evidence` section：5 個 sub-bullets（Forward / Reverse / Error / Data / Boundary）+ Evidence paths appendix，每個 bullet 都附 `file:line` 引用。Agent 用 `grep` / `Read` / 派 `Explore` 自己填；recon 是 agent 的工作，不是使用者的。Greenfield 任務允許 `N/A — greenfield` 跳過。Schema 見 [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence。
+當變更觸碰既有 code 或流程，brief 必須帶上 `## Current State Evidence` section：5 個 sub-bullets（Forward / Reverse / Error / Data / Boundary）+ Evidence paths appendix。每個 bullet 都必須引用 path 加 anchor；anchor 是來源中的逐字字串或穩定標題。只有 anchor 有歧義時，行號才是可選的精確定位。Agent 用 `grep` / `Read` / 派 `Explore` 自己填；recon 是 agent 的工作，不是使用者的。Greenfield 任務允許 `N/A — greenfield` 跳過。Schema 見 [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence。
 
 ## 產出
 

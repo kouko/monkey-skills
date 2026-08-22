@@ -26,7 +26,7 @@
 
 ## Current State Evidence — recon 規律（v0.7.0+）
 
-変更が既存コードや既存プロセスに触れる場合、ブリーフに `## Current State Evidence` セクション（5 サブブレット：Forward / Reverse / Error / Data / Boundary + Evidence paths appendix）を含める。各ブレットは `file:line` を引用。エージェントが `grep` / `Read` / `Explore` のディスパッチで自分で埋める — recon はエージェントの仕事であってユーザの仕事ではない。Greenfield 作業は `N/A — greenfield` でスキップ可。スキーマは [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence を参照。
+変更が既存コードや既存プロセスに触れる場合、ブリーフに `## Current State Evidence` セクション（5 サブブレット：Forward / Reverse / Error / Data / Boundary + Evidence paths appendix）を含める。各ブレットは path と anchor を引用し、anchor にはソース中の逐語文字列または安定した見出しを使う。anchor が曖昧な場合に限り、行番号を任意の精密化として付けられる。エージェントが `grep` / `Read` / `Explore` のディスパッチで自分で埋める — recon はエージェントの仕事であってユーザの仕事ではない。Greenfield 作業は `N/A — greenfield` でスキップ可。スキーマは [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence を参照。
 
 ## 成果物
 
