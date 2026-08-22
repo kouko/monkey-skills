@@ -5,6 +5,10 @@
 skeleton from the templates shipped beside this script:
 
   docs/loom/backlog/README.md   — charter instance (templates/backlog-README.md)
+  docs/loom/memory/README.md    — practice-memory charter instance
+                                  (templates/memory-README.md); the store
+                                  loom-memory and the knowledge-triage
+                                  references route a reader to
   docs/loom/KICKOFF-DEFAULTS.md — kickoff-defaults skeleton
                                   (templates/KICKOFF-DEFAULTS.md); an empty
                                   `## On-ramp standing choices` section, the
@@ -114,6 +118,7 @@ def main(argv: list[str]) -> int:
         pass
 
     store = target / "docs" / "loom" / "backlog"
+    memory_store = target / "docs" / "loom" / "memory"
     kickoff_defaults = target / "docs" / "loom" / "KICKOFF-DEFAULTS.md"
     purpose = target / "docs" / "loom" / "PURPOSE.md"
     if store.is_dir():
@@ -127,6 +132,20 @@ def main(argv: list[str]) -> int:
             f"loom-init: refusing — {store} exists but is not a directory; "
             "inspect and remove it (possibly a crashed scaffold) before "
             "re-running"
+        )
+        return 1
+    if memory_store.is_dir():
+        print(
+            f"loom-init: refusing — {memory_store} already exists; this "
+            "repo has adopted the practice-memory store and loom-init "
+            "never overwrites it"
+        )
+        return 1
+    if memory_store.exists():  # a stray FILE at the store path, not adoption
+        print(
+            f"loom-init: refusing — {memory_store} exists but is not a "
+            "directory; inspect and remove it (possibly a crashed "
+            "scaffold) before re-running"
         )
         return 1
     if kickoff_defaults.exists():
@@ -156,11 +175,13 @@ def main(argv: list[str]) -> int:
 
     stamp = f"<!-- scaffolded by loom-init (loom-code {_plugin_version()}) -->"
     store.mkdir(parents=True)
+    memory_store.mkdir(parents=True)
     for dirname in ("plans", "specs"):
         keep_dir = target / "docs" / "loom" / dirname
         keep_dir.mkdir(exist_ok=True)
         (keep_dir / ".gitkeep").touch()
     _instantiate(TEMPLATES_DIR / "backlog-README.md", store / "README.md", stamp)
+    _instantiate(TEMPLATES_DIR / "memory-README.md", memory_store / "README.md", stamp)
     _instantiate(TEMPLATES_DIR / "KICKOFF-DEFAULTS.md", kickoff_defaults, stamp)
     _instantiate(TEMPLATES_DIR / "PURPOSE.md", purpose, stamp)
 
