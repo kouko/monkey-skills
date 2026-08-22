@@ -595,7 +595,11 @@ docstrings AND inline comments. Contract-class `.md` goes to the docs arm
 instead (`requesting-code-review/SKILL.md` §Process Step 1; the lens there
 is `docs-reviewer.md` rule 8), and record-class prose is gated by nobody —
 both classes path-based per that skill's §Classification: contract-class vs
-record-class, cited never re-derived. File every finding as `dimension:
+record-class, cited never re-derived. A diff that adds or changes any
+docstring or comment line makes this dimension never a no-op: you may still
+score it PASS after finding nothing to flag, but you may not declare it not
+applicable, out of scope for the branch, or skipped as a no-op while such a
+line is in the diff. File every finding as `dimension:
 deletion-first`, `source: rubrics/arch-gate.md §Deletion-First Scoring`, at
 **🟡 should-fix** — a surplus mechanism sentence is not wrong today, it is a
 stale claim waiting to happen, and that is the should-fix bar. A sentence
