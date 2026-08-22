@@ -103,3 +103,125 @@ def test_r2_is_anchor_primary_at_ssot():
         "anchor an added pairing duty, the opposite of the anchor-primary "
         "rule R2 now states"
     )
+
+
+# ---------------------------------------------------------------------------
+# T6 surface -- docs-reviewer.md role-contract item 7 + output schema.
+#
+# `docs-reviewer.md` is a prose contract under the loom tree, so its
+# evidence-citation surface is edited in place (NOT via distribute.py).
+# This test pins the anchor-primary inversion of that local surface so a
+# later revert to line-first is caught at CI.
+# ---------------------------------------------------------------------------
+
+DOCS_REVIEWER_AGENT = (
+    Path(__file__).parents[1] / "agents" / "docs-reviewer.md"
+)
+
+
+def _docs_reviewer_text() -> str:
+    assert DOCS_REVIEWER_AGENT.is_file(), (
+        f"docs-reviewer.md is absent at {DOCS_REVIEWER_AGENT}"
+    )
+    return DOCS_REVIEWER_AGENT.read_text(encoding="utf-8")
+
+
+def _item_7_region(text: str) -> str:
+    """Isolate role-contract item 7.
+
+    The role contract is a numbered list; item 7 starts at a line beginning
+    with `7.` and runs until the next top-level list item (`8.` at line
+    start). The region is small and self-contained.
+    """
+    match = re.search(r"^7\.\s+Cite the exact text\.", text, re.MULTILINE)
+    assert match is not None, (
+        "docs-reviewer.md carries no '7. Cite the exact text.' item -- the "
+        "evidence-citation rule must be a findable numbered item in the "
+        "role contract"
+    )
+    rest = text[match.start():]
+    next_item = re.search(r"^8\.\s", rest[1:], re.MULTILINE)
+    return rest[: 1 + next_item.start()] if next_item else rest
+
+
+def _output_schema_region(text: str) -> str:
+    """Isolate the Output contract fenced block + the aggregation rule.
+
+    The `where:` placeholders live in the fenced code block under
+    `## Output contract`. The section runs from that heading to the next
+    `##`-level heading (`### Aggregation rule` / `### Dimensions`).
+    """
+    match = re.search(r"^##\s+Output contract\b", text, re.MULTILINE)
+    assert match is not None, (
+        "docs-reviewer.md carries no '## Output contract' heading -- the "
+        "output schema must be a findable section"
+    )
+    rest = text[match.end():]
+    # the next ##-level heading inside Output contract is `### Aggregation
+    # rule`; include it so the schema block is fully captured.
+    next_heading = re.search(r"^##\s+\S", rest, re.MULTILINE)
+    return rest[: next_heading.start()] if next_heading else rest
+
+
+def test_docs_reviewer_rule_7_and_schema_are_anchor_primary():
+    """docs-reviewer.md item 7 + output schema cite the ANCHOR as the
+    locator, with a line number as optional precision -- not the line-first
+    `file:line` prescription the surface carried before the inversion."""
+    text = _docs_reviewer_text()
+
+    # ---- Surface 1: role-contract item 7 ----
+    item7 = _flatten(_item_7_region(text))
+    low7 = item7.lower()
+
+    # PRESENCE: anchor-primary terms
+    assert ("file path" in low7) or ("path" in low7), (
+        "item 7 must name 'file path' (or 'path') as what `where:` locates"
+    )
+    assert "primary locator" in low7, (
+        "item 7 must name `quote:` the PRIMARY locator -- the term is the "
+        "load-bearing inversion marker distinguishing anchor-primary from "
+        "the old line-first prescription"
+    )
+    assert "optional precision" in low7, (
+        "item 7 must state a line number is OPTIONAL precision, not the "
+        "locator itself"
+    )
+    assert ("anchor" in low7) or ("verbatim string" in low7), (
+        "item 7 must use the term 'anchor' or 'verbatim string' for the "
+        "primary locator `quote:` carries"
+    )
+
+    # ABSENCE: the retired line-first prescription
+    assert "where:` is a path-like citation (`file:line`)" not in low7, (
+        "the line-first prescription '`where:` is a path-like citation "
+        "(`file:line`)' is retired from item 7 -- it made the line number "
+        "the citation, the opposite of the anchor-primary rule"
+    )
+
+    # ---- Surface 2: output schema `where:` placeholders ----
+    schema = _flatten(_output_schema_region(text))
+    low_schema = schema.lower()
+
+    # ABSENCE: the old required `where: <file:line>` form
+    assert "where: <file:line>" not in low_schema, (
+        "the schema placeholder `where: <file:line>` is retired -- the "
+        "output schema must not prescribe a line number as the required "
+        "`where:` form"
+    )
+    assert "where: <read-context file:line>" not in low_schema, (
+        "the read-context schema placeholder `where: <read-context "
+        "file:line>` is retired -- it must drop the line-number prescription"
+    )
+
+    # PRESENCE: the new anchor-primary `where: <path>` form
+    assert "where: <path>" in low_schema, (
+        "the schema placeholder `where: <path>` must be present -- the "
+        "file path is the required `where:` form under anchor-primary"
+    )
+    assert "where: <read-context path>" in low_schema, (
+        "the read-context schema placeholder `where: <read-context path>` "
+        "must be present -- the file path, not file:line"
+    )
+    assert "primary locator" in low_schema, (
+        "the schema `quote:` field must be annotated as the primary locator"
+    )

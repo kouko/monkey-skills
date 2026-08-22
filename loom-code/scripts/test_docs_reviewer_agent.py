@@ -183,9 +183,10 @@ def test_verdict_template_satisfies_gate_marker_schema():
     ), "`dimension_scores:` must appear at line start in the template"
     assert "- severity:" in window
     assert "where:" in window
-    assert "file:line" in window, (
+    assert "where: <path>" in window, (
         "the template's `where:` must demand a path-like citation "
-        "(file:line) — loom_gate_markers rejects findings without one"
+        "(the file path; a line number is optional precision) — "
+        "loom_gate_markers rejects findings without one"
     )
 
 

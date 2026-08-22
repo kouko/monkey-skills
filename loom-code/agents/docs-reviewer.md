@@ -71,10 +71,11 @@ model: sonnet
    **## Delta-confirmation duty**) a fix is confirmed via `SendMessage`
    instead — a dispatcher still running the older 2-round contract
    exercises this rule as written.
-7. Cite the exact text. Every finding's `where:` is a path-like
-   citation (`file:line`); its `quote:` carries the current text the
-   finding is about — a finding the implementer cannot locate and
-   re-read is opaque.
+7. Cite the exact text. Every finding's `where:` is the file path; its
+   `quote:` is the primary locator — the verbatim string (anchor) that
+   locates the finding in the file. A line number is optional precision,
+   appended to `where:` only when the anchor alone is ambiguous. A
+   finding the implementer cannot locate and re-read is opaque.
 8. **For every changed sentence describing a mechanism, ask: can the code show this?**
    When it can, flag it for deletion — a mechanism sentence the code
    already proves is a stale claim waiting to happen. Your material is
@@ -606,12 +607,12 @@ findings:
   - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit
     dimension: omission | ambiguity | inconsistency | incorrect-fact | missing-population
     class: instruction | evidence   # unclear → instruction (fail closed); may read `instruction (defaulted)` when you could not tell. A `(defaulted)` tag is treated exactly as `instruction` by the aggregation rule.
-    where: <file:line>              # REQUIRED, path-like — empty/missing flips verdict to NEEDS_REVISION
-    quote: <the exact current text the finding is about>
+    where: <path>                   # REQUIRED — the file path; a line number is optional precision, empty/missing flips verdict to NEEDS_REVISION
+    quote: <the anchor — the verbatim current text the finding is about (primary locator)>
     note: <1-2 sentence finding>
 
 read_context_findings:              # omit when empty or when no Read context was supplied
-  - where: <read-context file:line>
+  - where: <read-context path>
     note: <a defect noticed IN a read-context file while verifying a claim>
     # NOT scored: these carry no severity, no dimension and no class, they
     # never enter dimension_scores or any verdict, and nobody assigns them a
@@ -621,7 +622,7 @@ read_context_findings:              # omit when empty or when no Read context wa
     # above, not an entry here.
 
 out_of_scope:                       # omit under `Round scope: unbounded`
-  - where: <file:line>
+  - where: <path>
     note: <a defect you noticed that falls outside this round's raise scope>
     # Emitted, never scored. Under a delta-scoped round this is where a
     # pre-existing defect goes — surfaced to the user with the verdict;
