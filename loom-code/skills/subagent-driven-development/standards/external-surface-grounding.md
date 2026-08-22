@@ -57,8 +57,9 @@ preference:
 
 (a) **Live verification** in *this session* — `WebFetch` of the
    official doc URL, `Read` of installed source under `node_modules/`
-   / `site-packages/` / `vendor/` (cite `file:line`), or `<cli> --help`
-   output captured this session.
+   / `site-packages/` / `vendor/` (cite its path plus an anchor: a
+   verbatim string or stable heading; add a line number only when the
+   anchor is ambiguous), or `<cli> --help` output captured this session.
    Example: `WebFetch https://docs.anthropic.com/en/api/messages` for
    `@anthropic-ai/sdk` v0.40 `client.messages.create`.
 

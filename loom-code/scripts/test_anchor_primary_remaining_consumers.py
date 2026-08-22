@@ -32,6 +32,16 @@ def test_in_repo_grounding_is_path_plus_anchor_in_ssot_and_functional_copy() -> 
     assert "Example: `salesforce-toolkit/scripts/upsert.py:42`" not in canonical
     assert "Example: `salesforce-toolkit/scripts/upsert.py:42`" not in functional_copy
 
+    expected_installed_source_rule = (
+        "`Read` of installed source under `node_modules/` / `site-packages/` / "
+        "`vendor/` (cite its path plus an anchor: a verbatim string or stable "
+        "heading; add a line number only when the anchor is ambiguous)"
+    )
+    assert expected_installed_source_rule in canonical
+    assert expected_installed_source_rule in functional_copy
+    assert "`vendor/` (cite `file:line`)" not in canonical
+    assert "`vendor/` (cite `file:line`)" not in functional_copy
+
 
 def test_review_panel_oracle_keys_findings_by_path_anchor_and_dimension() -> None:
     suite = json.loads(REVIEW_ORACLES.read_text())
