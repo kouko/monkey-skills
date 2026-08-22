@@ -629,3 +629,44 @@ def test_main_sections_flag_enables_section_anchor_check(
     out = capsys.readouterr().out
     assert rc == 1
     assert "sibling.md:§9 section not found" in out
+
+
+# --- anchor substring verification (paired `"..."` on same line) ---
+
+
+def test_a_citation_whose_quoted_string_is_absent_from_the_target_is_flagged(
+    tmp_path: Path,
+) -> None:
+    # A backtick `path:line` citation carrying a paired `"..."` quote whose
+    # string does NOT occur in the target file is flagged. The substring
+    # (anchor) check is the new primary verification; the line-bounds check
+    # remains as a secondary check.
+    _write(tmp_path / "target.py", "line1\nline2\nline3\n")
+    doc = tmp_path / "doc.md"
+    _write(doc, 'See `target.py:1` "this string is not in the file".\n')
+
+    findings = check_doc(doc, tmp_path)
+
+    assert len(findings) == 1
+    assert "target.py" in findings[0]
+
+
+def test_a_citation_whose_quoted_string_is_present_in_the_target_is_clean(
+    tmp_path: Path,
+) -> None:
+    # The paired `"..."` string DOES occur in the target file — no finding.
+    _write(tmp_path / "target.py", "the verbatim string is here\n")
+    doc = tmp_path / "doc.md"
+    _write(doc, 'See `target.py:1` "the verbatim string".\n')
+
+    assert check_doc(doc, tmp_path) == []
+
+
+def test_citation_without_paired_quote_is_unaffected(tmp_path: Path) -> None:
+    # Backward compatibility: a citation with NO paired `"..."` quote on the
+    # same line is unaffected — the substring check does not fire.
+    _write(tmp_path / "target.py", "line1\nline2\nline3\n")
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `target.py:1` (no paired quote, unaffected).\n")
+
+    assert check_doc(doc, tmp_path) == []
