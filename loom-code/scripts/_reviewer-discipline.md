@@ -29,8 +29,11 @@ in effect now or a prior revision.
 
 Every finding / gap in your output must include the evidence
 citation field defined by your agent-specific output schema (typically
-`where:`, `artifact:`, or `spec_ref:`). The value cites `file:line`,
-commit SHA, or commit SHA range.
+`where:`, `artifact:`, or `spec_ref:`). The value's locator is an
+anchor — a verbatim string or a stable heading in the cited file. A
+line number is optional precision, required only when the anchor alone
+is ambiguous (the string occurs more than once in the file). A commit
+SHA or commit SHA range is also a valid locator.
 
 An element without evidence is opaque — the implementer or user
 cannot remediate *"naming is off somewhere."* Missing evidence flips
