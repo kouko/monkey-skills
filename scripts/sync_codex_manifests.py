@@ -75,6 +75,7 @@ CODEX_ELIGIBLE = (
     "systems-thinking-toolkit",
     "translation-toolkit",
     "tsundoku",
+    "xquik-toolkit",
     "loom-code",
     "dev-workflow",
     "collab-toolkit",
