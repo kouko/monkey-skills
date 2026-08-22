@@ -599,7 +599,13 @@ record-class, cited never re-derived. A diff that adds or changes any
 docstring or comment line makes this dimension never a no-op: you may still
 score it PASS after finding nothing to flag, but you may not declare it not
 applicable, out of scope for the branch, or skipped as a no-op while such a
-line is in the diff. File every finding as `dimension:
+line is in the diff. The reason is that a reader sees only the verdict
+block, where a dimension scored PASS with no findings and a dimension never
+examined are indistinguishable, and a measured run took exactly that route
+(`docs/loom/specs/2026-08-22-code-as-spec-lens-no-op-bar.md` §Decision). The
+two reversing cases below still bound what you may flag — an absence claim is
+never deletable, and a sentence carrying mechanism AND its reason is not
+flagged as a unit. File every finding as `dimension:
 deletion-first`, `source: rubrics/arch-gate.md §Deletion-First Scoring`, at
 **🟡 should-fix** — a surplus mechanism sentence is not wrong today, it is a
 stale claim waiting to happen, and that is the should-fix bar. A sentence

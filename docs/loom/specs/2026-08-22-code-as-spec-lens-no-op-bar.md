@@ -25,18 +25,28 @@ indistinguishable to that reader.
 
 ## Smallest End State
 
-One sentence added to the lens in both agent contracts: a diff that adds or
-changes any docstring or comment line makes this dimension never a no-op.
-Plus the version bump that puts it in force, and a re-run of the existing
-sandbox to see whether the route it targets is actually closed.
+One sentence added to the lens in each agent contract, barring the reviewer
+from declaring the lens not applicable, out of scope, or a no-op — each stated
+in that arm's own terms, because the two arms govern different material and
+score different dimensions. Plus the version bump that puts it in force, and a
+re-run of the existing sandbox to see whether the route it targets is actually
+closed.
 
 BI-1 — the no-op bar, in `loom-code/agents/code-reviewer.md` §D10.
-BI-2 — the same bar mirrored in `loom-code/agents/docs-reviewer.md`.
-BI-3 — a test pinning both, whitespace-flattened, so the sentence cannot
-be silently dropped by a later edit.
-BI-4 — the version bump across its four coupled sites.
-BI-5 — a re-run of the deployed dogfood arms against the unchanged sandbox,
-with the transcripts retained this time, whatever the outcome.
+
+BI-2 — the same bar in `loom-code/agents/docs-reviewer.md`, stated in that
+arm's own terms rather than mirrored word for word: it governs contract-class
+prose and has no `deletion-first` dimension, so the bar there names `omission`
+and the lens itself. Literally mirroring the code arm's sentence ships a
+dangling referent, which is what the first attempt did.
+
+BI-3 — a test pinning both arms, whitespace-flattened and per-arm, covering
+the prohibition itself and not only its headline clause.
+
+BI-4 — the version bump across its five coupled sites.
+
+BI-5 — a re-run of the dogfood arms against the unchanged sandbox, with the
+transcripts retained this time, whatever the outcome.
 
 ## Current State Evidence
 

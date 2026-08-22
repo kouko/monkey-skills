@@ -5,7 +5,7 @@ Goal: One sentence added to the lens in both agent contracts — a diff that
     adds or changes any docstring or comment line makes this dimension never
     a no-op — plus the version bump that puts it in force, and a re-run of
     the existing sandbox to see whether the route it targets is closed.
-Stage: sdd:wave-1
+Stage: finishing
 Steps:
     1. 先在程式碼審查臂立下禁令
     2. 鏡像到文件審查臂，兩邊一起被測試釘住
@@ -121,7 +121,7 @@ flowchart LR
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-5
-- **Status**: done(pending4)
+- **Status**: done(c1e39a1a)
 - **Gloss**: 拿同一個沙盒實測這一行有沒有用，結果不論好壞都逐字留檔
 
 ## Notes
