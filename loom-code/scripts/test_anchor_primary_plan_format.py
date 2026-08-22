@@ -22,6 +22,7 @@ Stdlib only (pathlib). plan-format.md is resolved relative to this
 test file.
 """
 
+import re
 from pathlib import Path
 
 PLAN_FORMAT = (
@@ -114,24 +115,23 @@ def test_stated_facts_selects_anchors_by_artifact_type():
     prose, code, and config/data artifacts rather than treating every
     source as an interchangeable string search."""
     section = _stated_facts_section(_text()).lower()
+    category_clauses = {
+        "prose": (
+            r"\bprose\s+uses\s+a\s+stable\s+heading\s+or\s+"
+            r"distinctive\s+phrase\b"
+        ),
+        "code": (
+            r"\bcode\s+uses\s+a\s+function,\s+class,\s+or\s+method\s+"
+            r"signature,\s+a\s+constant,\s+or\s+a\s+distinctive\s+message\b"
+        ),
+        "config/data": (
+            r"\bconfig/data\s+uses\s+a\s+key\s+path\s+plus\s+a\s+"
+            r"distinctive\s+value\s+fragment\b"
+        ),
+    }
 
-    assert all(
-        term in section
-        for term in ("prose", "stable heading", "distinctive phrase")
-    ), "must select prose anchors by stable heading or distinctive phrase"
-    assert all(
-        term in section
-        for term in (
-            "code",
-            "function",
-            "class",
-            "method",
-            "signature",
-            "constant",
-            "distinctive message",
+    for artifact_type, clause in category_clauses.items():
+        assert re.search(clause, section), (
+            f"must keep the complete {artifact_type}-to-anchor clause; "
+            "independent tokens can conceal a wrong category pairing"
         )
-    ), "must select code anchors by signature, constant, or distinctive message"
-    assert all(
-        term in section
-        for term in ("config/data", "key path", "distinctive value fragment")
-    ), "must select config/data anchors by key path plus value fragment"
