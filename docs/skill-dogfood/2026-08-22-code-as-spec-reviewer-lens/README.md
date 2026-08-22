@@ -25,48 +25,57 @@ Six defects planted in one 42-line Python module, reviewed blind. Neither arm wa
 
 Arms: two reviewers on the branch's contract, two on `main`'s, all `sonnet`, all general-purpose agents handed the contract file as their role prompt.
 
+**Deployed run (2026-08-22, after merge).** Two more arms, same sandbox, same
+model, dispatched as the registered `loom-code:code-reviewer` agent type against
+a real two-commit git repo rather than as general-purpose agents holding a file.
+Until `plugin update` landed, the earlier arms could only test the contract
+text; nothing had tested that a dispatched, registered reviewer receives it.
+
 Materials: `sandbox/` here. Transcripts: `transcripts/`.
 
 ---
 
 ## Results
 
-| Planted | OLD 1 | OLD 2 | NEW 1 | NEW 2 |
-|---|---|---|---|---|
-| a — pure restatement | ✗ | ✗ | ✗ | 🟡 whole-sentence delete |
-| b — false claim | 🟡 executed | 🟡 executed | 🔴 executed | 🔴 executed |
-| c — absence claim | kept | kept | kept | kept |
-| d — mechanism + reason | ✗ | ✗ | 🟡 split | 🟡 split |
-| e — stranded / dead branch | 🟡 | 🟢 | 🔴 | 🔴 |
-| f — control | no finding | no finding | no finding | no finding |
-| tool calls | 10 | 7 | 5 | 6 |
+| Planted | OLD 1 | OLD 2 | NEW 1 | NEW 2 | DEPLOYED 1 | DEPLOYED 2 |
+|---|---|---|---|---|---|---|
+| a — pure restatement | ✗ | ✗ | ✗ | 🟡 whole-sentence delete | ✗ | 🟡 |
+| b — false claim | 🟡 executed | 🟡 executed | 🔴 executed | 🔴 executed | 🔴 executed | 🔴 executed |
+| c — absence claim | kept | kept | kept | kept | kept | kept |
+| d — mechanism + reason | ✗ | ✗ | 🟡 split | 🟡 split | ✗ | 🟡 split |
+| e — stranded / dead branch | 🟡 | 🟢 | 🔴 | 🔴 | 🔴 | 🟡 |
+| f — control | no finding | no finding | no finding | no finding | no finding | no finding |
+| tool calls | 10 | 7 | 5 | 6 | 21 | 8 |
 
-An unplanted defect surfaced: `retry_budget`'s guard against negative values is unreachable, because the module's own regex captures `\d+` and never matches a sign. All four arms found it by execution. It was not planted; the sandbox author did not notice it.
+An unplanted defect surfaced: `retry_budget`'s guard against negative values is unreachable, because the module's own regex captures `\d+` and never matches a sign. All six arms found it by execution. It was not planted; the sandbox author did not notice it.
 
 ---
 
 ## What is settled
 
-**The execution duty works in both directions — measured, 4/4 plus 2 reruns.**
+**The execution duty works in both directions — measured, 6/6 arms plus 1 rerun.**
 Every false claim in this exercise was caught by running something. None was caught by reading. The reverse also held once: an OLD-arm reviewer *wrongly flagged a true sentence* by reading it, while a NEW-arm reviewer executed the same sentence, confirmed it true, and stayed silent. The duty raises catch rate and lowers false-positive rate.
 
 **Severity moved, and that is a merge-gate difference — measured.**
 The same defect scored 🟡/🟢 under the old contract and 🔴 under the new one, because the new text ties severity to consequence ("a caller acting on this sentence would do the wrong thing"). Under this repo's aggregation rule that is the difference between "should fix" and "does not merge".
 
-**No over-firing — measured, 4/4 plus reruns.**
+**No over-firing — measured, 6/6 arms plus 1 rerun.**
 The control drew no finding from any arm, and both NEW arms named the rule that excluded it rather than passing it over silently.
 
 **Cost did not rise — measured, small.**
-5–6 tool calls under the new contract against 7–10 under the old. This measures calls, not reading burden; on a large branch the run-what-survives duty is an unmeasured ongoing cost.
+5–6 tool calls under the new contract against 7–10 under the old. This measures calls, not reading burden; on a large branch the run-what-survives duty is an unmeasured ongoing cost. The deployed arms spread wider (8 and 21), and the 21-call arm is the one that found *fewer* defects — call count does not track catch rate here.
+
+**Deployment carries the contract — measured, 2/2, and this is what the deployed run was for.**
+The dispatched agents receive the reviewer contract in their *injected system prompt*, not by reading a file: one arm reported it "was already present in my system prompt when the task began" and quoted role-contract item 7 back verbatim, including "can the code show this? When it can, flag it for deletion". That sentence occurs 1× in 0.93.0's `agents/code-reviewer.md` and 0× in 0.92.0's. The other arm named `~/.claude/plugins/cache/monkey-skills/loom-code/0.93.0` as its standards source. Both stamped `standards_version: "0.93.0"`. `plugin update` is therefore the operative step — a merged contract that has not been deployed is not in force for any dispatch.
 
 ## What is NOT settled
 
 **Surplus-class detection is unstable — this reverses the first reading.**
-The four-arm run showed 3/4 on the deletion class (a and d) against a baseline of 0/4, and that was reported as the lens's headline new capability. A later independent rerun of one NEW arm filed **zero** deletion findings: it used the lens's own carve-outs — "the reason must survive", "an absence claim is never deletable" — to exempt every surplus sentence, including the pure restatement. n=2 against n=1. The direction (baseline is blind to this class) is unchallenged; the magnitude is not established, and the carve-outs are a plausible mechanism for the instability.
+The four-arm run showed 3/4 on the deletion class (a and d) against a baseline of 0/4, and that was reported as the lens's headline new capability. A later independent rerun of one NEW arm filed **zero** deletion findings: it used the lens's own carve-outs — "the reason must survive", "an absence claim is never deletable" — to exempt every surplus sentence, including the pure restatement. The deployed run split the same way: same contract, same model, same diff, one arm caught both surplus plants and the other caught neither and scored `deletion-first: PASS`, calling it "a no-op for this branch".
+
+Five samples of the deletion class now read `1/2, 2/2, 0/2, 0/2, 2/2`. The direction is unchallenged — the baseline is structurally blind to this class, 0/4. The magnitude is not merely unestablished; the spread is bimodal, and the carve-outs are the visible mechanism: a reviewer that reaches for an exemption exempts everything, and one that does not catches everything. That is a property of the rule text, not sampling noise, and it is the strongest argument for the recommendation below to stop growing reviewer prose.
 
 **Nothing here bears on Checker 1.** Checker 1 — "a load-bearing superlative must carry a pin" — was dropped as judgment-heavy. This exercise was used to argue that drop was weakly grounded. It does not: only one of the six planted defects contains any of Checker 1's trigger words, and the exercise measures mechanism-versus-intent classification, not load-bearing-versus-decorative. The drop stands on its original grounds. Recorded because the argument was made and is wrong.
-
-**Deployment is untested.** The `loom-code:code-reviewer` agent type resolves from the plugin cache, not the working tree. These arms were general-purpose agents handed the contract file. This tests the contract text; it does not test that a dispatched, registered reviewer receives it. That needs `plugin update` after merge.
 
 **Weak-model behaviour is untested.** All arms ran `sonnet`. The lens's value proposition includes "a reviewer who would not otherwise do this now must" — that claim is about weaker models and was not exercised.
 
@@ -84,5 +93,5 @@ The brief's purpose was to stop review rounds being spent on sentences. Three me
 
 1. **Run the deferred A/B.** It is the prevention layer for skill bodies, and its design — arms, subjects, measure, pre-committed outcomes, and its own scope limit — is recorded at `docs/loom/backlog/2026-08-21-code-as-spec-writing-rule-and-its-deferred-ab.md`.
 2. **Extend execution-style verification to record-class documents at close-out**, using the cold-agent pattern in `docs/loom/memory/reading-code-and-running-code-fail-differently.md`, rather than growing reviewer-contract prose further. The lens added roughly 170 lines of judgment-shaped prose to two contracts — the genre this arc distrusts — and shipped without the cold-reader reliability check this repo requires of rule text.
-3. **Re-run this dogfood at n≥4 per arm** before treating the surplus-class number as real, and include a weak-model arm.
+3. **Fix the carve-out escape, or accept the class as coin-flip.** The deployed run added two samples and the split widened rather than converged (see §What is NOT settled). More samples will not settle a bimodal split — the next useful move is to change the rule text so an exemption cannot swallow the whole class, then re-measure. A weak-model arm is still unrun and is a separate question.
 4. **Wire `check_doc_citations.py` into CI** as cheap hardening. Not a headline: the brief records that it would have caught none of the source arc's eight defects.
