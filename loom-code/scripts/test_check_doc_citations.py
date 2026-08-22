@@ -688,3 +688,23 @@ def test_citation_without_paired_quote_is_unaffected(tmp_path: Path) -> None:
     _write(doc, "See `target.py:1` (no paired quote, unaffected).\n")
 
     assert check_doc(doc, tmp_path) == []
+
+
+def test_citation_with_empty_paired_quote_is_flagged(tmp_path: Path) -> None:
+    _write(tmp_path / "target.py", "line1\n")
+    doc = tmp_path / "doc.md"
+    _write(doc, 'See `target.py:1` "".\n')
+
+    findings = check_doc(doc, tmp_path)
+
+    assert len(findings) == 1
+    assert "quoted string not found in target" in findings[0]
+
+
+def test_multiple_citations_each_use_their_adjacent_quote(tmp_path: Path) -> None:
+    _write(tmp_path / "a.py", "alpha\n")
+    _write(tmp_path / "b.py", "beta\n")
+    doc = tmp_path / "doc.md"
+    _write(doc, '`a.py:1` "alpha" and `b.py:1` "beta"\n')
+
+    assert check_doc(doc, tmp_path) == []

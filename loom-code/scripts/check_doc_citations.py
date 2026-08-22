@@ -151,12 +151,18 @@ def extract_citations(
     """
     citations: list[tuple[int, str, int, int | None, str | None]] = []
     for lineno, line in enumerate(text.splitlines(), start=1):
-        anchor_match = _ANCHOR_RE.search(line)
-        anchor = anchor_match.group(1) if anchor_match is not None else None
-        for match in _CITATION_RE.finditer(line):
+        matches = list(_CITATION_RE.finditer(line))
+        for index, match in enumerate(matches):
             path, start_str, end_str = match.group(1), match.group(2), match.group(3)
             if not _looks_like_citation(path):
                 continue
+            next_citation_start = (
+                matches[index + 1].start() if index + 1 < len(matches) else len(line)
+            )
+            anchor_match = _ANCHOR_RE.search(
+                line, match.end(), next_citation_start
+            )
+            anchor = anchor_match.group(1) if anchor_match is not None else None
             end = int(end_str) if end_str is not None else None
             citations.append((lineno, path, int(start_str), end, anchor))
     return citations
@@ -261,6 +267,8 @@ def check_citation(
     # line does not invalidate a resolved anchor (the rule this checker
     # enforces: the anchor survives the change that writes it).
     if anchor is not None:
+        if not anchor:
+            return True, "quoted string not found in target"
         if anchor not in file_text:
             return True, "quoted string not found in target"
         return True, None
