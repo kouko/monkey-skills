@@ -48,6 +48,7 @@ EXCLUDED_RELATIVE_PATHS = frozenset(
 EXPECTED_INVENTORY = {
     "loom-code/hooks/ask-triage.py": 1,
     "loom-code/hooks/router-card.md": 1,
+    "loom-code/scripts/test_anchor_primary_reviewer_contracts.py": 1,
     "loom-code/skills/brainstorming/SKILL.md": 1,
     "loom-code/skills/requesting-code-review/references/relay-phrasing.md": 1,
     "loom-code/skills/requesting-code-review/SKILL.md": 2,
