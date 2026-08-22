@@ -2,6 +2,11 @@
 
 Date: 2026-08-22
 
+## Design-side on-ramp
+
+not fired — a clarification to existing loom author and reviewer contracts;
+it adds no product surface or interaction design.
+
 ## Problem
 
 The anchor-primary rule says to cite a verbatim string or stable heading, but
@@ -72,7 +77,8 @@ verdict.
 
 ## Queue relation
 
-N/A — follow-up clarification to the active anchor-primary branch.
+unqueued — follow-up clarification shipped within the already-selected
+anchor-primary branch, rather than as a separate backlog commitment.
 
 ## Open Questions
 

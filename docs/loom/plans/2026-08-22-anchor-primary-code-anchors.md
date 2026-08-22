@@ -3,7 +3,7 @@
 **Source brief**: docs/loom/specs/2026-08-22-anchor-primary-code-anchors.md
 Goal: Teach authors and reviewers which stable anchors to choose for prose,
 code, and configuration, then cold-read the rule with a weak model.
-Stage: review:round-1
+Stage: finishing
 Steps:
     1. Add artifact-type guidance to the brief format
     2. Update the plan format and brainstorming entry
@@ -12,7 +12,7 @@ Steps:
 **Total tasks**: 5
 **Critical-path depth**: 4
 **Execution order**: sequential
-**Plan-document-reviewer verdict**: PENDING
+**Plan-document-reviewer verdict**: PASS
 
 ## Task-flow diagram
 
@@ -42,6 +42,7 @@ N/A — no unresolved question: the brief fixes the artifact categories and the 
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: BI-1
+- **Status**: done(97f390fe)
 
 ## Task 2 — Add artifact-type anchors to the plan format
 
@@ -56,6 +57,7 @@ N/A — no unresolved question: the brief fixes the artifact categories and the 
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-1
+- **Status**: done(dedc0a30)
 
 ## Task 3 — Add artifact-type anchors to reviewer R2
 
@@ -71,6 +73,7 @@ N/A — no unresolved question: the brief fixes the artifact categories and the 
 - **Dependencies**: Task 2 completes first
 - **Independent**: false
 - **Brief item covered**: BI-2
+- **Status**: done(678157b3)
 
 ## Task 4 — Correct the brainstorming entry contract
 
@@ -85,6 +88,7 @@ N/A — no unresolved question: the brief fixes the artifact categories and the 
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-3
+- **Status**: done(be85e0d7)
 
 ## Task 5 — Cold-read the guidance with a weak model
 
@@ -99,3 +103,4 @@ N/A — no unresolved question: the brief fixes the artifact categories and the 
 - **Dependencies**: Tasks 3, 4 complete first
 - **Independent**: false
 - **Brief item covered**: BI-4
+- **Status**: done(3de65fb5)

@@ -1,7 +1,7 @@
 ---
 name: 2026-08-22-line-cites-should-be-anchor-primary-across-the-loom-institutions
 description: contract text must cite only what its reader can resolve, and loom breaks that two ways — line numbers that rot within the change that writes them, and 28 citations naming `docs/loom/**`, which resolve inside monkey-skills but not in any repo that merely installed the plugin; one rule and one checker cover both
-status: bet
+status: closed
 origin: 2026-08-22 code-as-spec-lens-no-op-bar arc — three citation defects in one plan, all in the line numbers, none in the anchors those cites were paired with; user asked for the rule to be made explicit in the loom mechanism
 start: promoted to bet 2026-08-22; the dangling-path half is already broken in production and is the first leg
 serves: The purpose's "Done when" requires a foreign repo to install loom cold with no contract text citing a document that repo cannot open. The 28 `docs/loom/**` citations are exactly that: they resolve in monkey-skills and nowhere else, so they are the standing blocker on that condition.
@@ -107,3 +107,8 @@ checker's scope, or make `references/design-evidence.md` an exempt shape by
 rule — which reopens the self-signed-exemption question this arc deliberately
 answered no to. Whoever runs leg 2 should decide it explicitly rather than
 inherit it.
+
+- Shipped on branch `anchor-primary-line-cite-rule`: leg 2 made anchors the
+  primary locator across author, plan, reviewer, and checker contracts; the
+  follow-up dogfood also confirms the rule is explicit for prose, code, and
+  configuration anchors.
