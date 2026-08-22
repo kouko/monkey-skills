@@ -220,7 +220,7 @@ Copy-paste this skeleton:
 
 ## Current State Evidence
 
-(Required when touching existing code. Five sub-bullets; each with an anchor — a verbatim string or a stable heading — or `N/A — <reason>`. A line number is optional precision after the anchor. Use `N/A — greenfield` only when nothing pre-existing is touched.)
+(Required when touching existing code. Five sub-bullets; each item requires a path plus an anchor — a verbatim string or a stable heading — or `N/A — <reason>`. A line number is optional precision only when the anchor alone is ambiguous. Use `N/A — greenfield` only when nothing pre-existing is touched.)
 
 - **Forward**: (downstream impact, anchor)
 - **Reverse**: (upstream callers, anchor)

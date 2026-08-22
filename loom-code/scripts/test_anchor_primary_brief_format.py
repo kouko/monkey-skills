@@ -110,6 +110,30 @@ def test_current_state_evidence_is_anchor_primary():
     )
 
 
+def test_copyable_template_current_state_evidence_is_anchor_primary():
+    text = _text()
+    template_marker = "## Template"
+    assert template_marker in text, "handoff brief must retain its copyable template"
+    template = text.split(template_marker, 1)[1]
+    match = re.search(
+        r"^## Current State Evidence\s*$\n(?P<body>.*?)(?=^## \S)",
+        template,
+        re.MULTILINE | re.DOTALL,
+    )
+    assert match is not None, "copyable template must contain Current State Evidence"
+    flat = _flatten(match.group("body")).lower()
+
+    assert "each item requires a path plus an anchor" in flat, (
+        "copyable template must require path-plus-anchor evidence per item"
+    )
+    assert "verbatim string" in flat and "stable heading" in flat, (
+        "copyable template must name both permitted anchor forms"
+    )
+    assert "line number is optional precision only when the anchor alone is ambiguous" in flat, (
+        "copyable template must condition line precision on anchor ambiguity"
+    )
+
+
 def test_anti_pattern_bullet_is_anchor_primary():
     text = _text()
     anti = _section(text, r"Anti-patterns")
