@@ -5,6 +5,12 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.97.1] — 2026-08-23
+
+### Changed
+
+- Publish the portable dispatch profile update under a new marketplace version.
+
 ## [0.97.0] — 2026-08-23 — independently installable loom family
 
 ### Changed
