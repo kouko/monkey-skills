@@ -1,6 +1,6 @@
 {
   "name": "loom-design",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "The loom family's design side: discovery (what users need, is it worth building) → product principles → interface design → spec, plus the deterministic pipeline conductor.",
   "author": {
     "name": "kouko",

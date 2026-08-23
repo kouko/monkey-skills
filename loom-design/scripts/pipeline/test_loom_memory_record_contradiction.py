@@ -64,11 +64,11 @@ def test_contradiction_check_points_at_git_memory_doctrine_not_copy():
     """
     Mirrors git-memory's backward-pointing `Supersedes:` doctrine by
     pointer, per the family anti-copy convention (SSOT section above)
-    — the step must cite the standards file path, not restate its
-    table.
+    — the step must cite its public skill surface, not a sibling
+    plugin's private standards-file path.
     """
     record = _record_section(_read(SKILL_MD))
-    assert "memory-conventions.md" in record
+    assert "loom-workflow:git-memory" in record
 
 
 def test_skill_version_bumped_to_0_2_1():
