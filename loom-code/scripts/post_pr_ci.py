@@ -27,7 +27,6 @@ _PASS_BUCKETS = {"pass", "skipping"}
 _FAIL_BUCKETS = {"fail"}
 _PENDING_BUCKETS = {"pending", "queued", "in_progress", "waiting"}
 _CANCEL_BUCKETS = {"cancel", "cancelled"}
-# Normalize the CLI's no-check response into the configured grace period.
 _NO_CHECKS_ERROR = re.compile(r"no checks reported on the '.+' branch")
 
 
@@ -194,7 +193,7 @@ def main(argv: list[str] | None = None) -> int:
             no_check_grace_seconds=args.no_check_grace_seconds,
         )
     except ValueError as exc:
-        result = {"status": "argument_error", "exit_code": EXIT_OPERATIONAL_ERROR, "error": str(exc)}
+        result = {"status": "argument_error", "exit_code": EXIT_ARGUMENT_ERROR, "error": str(exc)}
     print(json.dumps(result, sort_keys=True))
     return result["exit_code"]
 

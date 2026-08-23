@@ -2,9 +2,9 @@
 
 Source brief: docs/loom/specs/2026-08-23-post-pr-ci-loop.md
 Goal: Make `finishing-a-development-branch` wait for and repair CI after opening a PR.
-Stage: finishing
+Stage: review:round-2
 Critical-path depth: 3 (≤5)
-Total tasks: 3
+Total tasks: 4
 Execution order: sequential
 Plan-document-reviewer verdict: PASS (2026-08-23, round 3)
 
@@ -57,6 +57,22 @@ Plan-document-reviewer verdict: PASS (2026-08-23, round 3)
   - **RED**: `loom-code/scripts/test_finishing_post_pr_ci.py::test_plugin_version_and_changelog_ship_the_ci_loop` fails while both manifests remain `0.97.6` and the changelog has no post-PR CI entry.
   - **GREEN**: `python3 scripts/sync_codex_manifests.py --check loom-code`, living-spec checks, targeted tests, and `python3 -m pytest loom-code/scripts/ -q` pass with a non-zero test count after the patch bump and changelog entry.
 - **Dependencies**: Task 2 completes first
+- **Independent**: false
+- **Review-weight**: full
+
+## Task 4 — Close-out ordering and autonomous entry corrections
+
+- Status: done(uncommitted)
+
+- **Brief item covered**: BI-6, BI-7
+- **Module**: `loom-code/skills/finishing-a-development-branch/SKILL.md`
+- **Context paths**: `loom-code/skills/subagent-driven-development/SKILL.md`, `loom-code/scripts/post_pr_ci.py`
+- **Files touched**: `loom-code/scripts/post_pr_ci.py`, `loom-code/scripts/test_post_pr_ci.py`, `loom-code/skills/finishing-a-development-branch/SKILL.md`, `loom-code/skills/subagent-driven-development/SKILL.md`, `loom-code/scripts/test_finishing_post_pr_ci.py`, `loom-code/.claude-plugin/plugin.json`, `loom-code/.codex-plugin/plugin.json`, `loom-code/CHANGELOG.md`
+- **Description**: Correct the CLI argument-error category, place PR-carrier validation before creation, require a repair commit before markers and push, and start finishing automatically after an approved autonomous plan completes.
+- **Acceptance**:
+  - **RED**: The targeted tests reject exit 4 for `nan`, PR-carrier validation after creation, missing repair commit ordering, and an SDD final-summary pause in autonomous mode.
+  - **GREEN**: `python3 -m pytest loom-code/scripts/test_post_pr_ci.py loom-code/scripts/test_finishing_post_pr_ci.py -q` passes with the corrected ordering and `0.97.8` release metadata.
+- **Dependencies**: Task 3 completes first
 - **Independent**: false
 - **Review-weight**: full
 

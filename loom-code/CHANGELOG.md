@@ -5,6 +5,15 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.97.8] — 2026-08-23
+
+### Fixed
+
+- Start branch finishing automatically after an approved autonomous plan;
+  preserve `一站一站來` as the explicit user-controlled pause.
+- Validate post-PR CI body carriers before creation, commit CI repairs before
+  their markers, and classify invalid timing values as argument errors.
+
 ## [0.97.7] — 2026-08-23
 
 ### Added

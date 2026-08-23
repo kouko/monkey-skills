@@ -45,9 +45,13 @@ After `gh pr create`, finishing waits for every check attached to the current PR
 
 ## Decision
 
-Add one stdlib-only helper under `loom-code/scripts/` that polls PR-wide checks, binds every poll to the expected PR head, applies explicit timeout and no-check grace rules, and emits one JSON result plus stable exit codes. Extend `finishing-a-development-branch` with an internal post-PR CI phase that calls this helper, delegates failures to existing skills, and permits at most two automated repair attempts before stopping. Do not add a new user-visible skill, a persistent bot, or automatic merge.
+Add one stdlib-only helper under `loom-code/scripts/` that polls PR-wide checks, binds every poll to the expected PR head, applies explicit timeout and no-check grace rules, and emits one JSON result plus stable exit codes. Extend `finishing-a-development-branch` with an internal post-PR CI phase that calls this helper, delegates failures to existing skills, and permits at most two automated repair attempts before stopping.
+
+When SDD completes an approved autonomous plan, it enters this close-out flow automatically; `一站一站來` remains the opt-out. Do not add a new user-visible skill, a persistent bot, or automatic merge.
 
 - BI-4 — The helper and finishing orchestration together own the post-PR CI loop without creating another skill entry point.
+- BI-6 — Semantic CLI argument errors use the published argument-error exit code, and repair/PR-carrier ordering is explicit.
+- BI-7 — An approved autonomous plan enters `finishing-a-development-branch` after its final task without a separate user prompt.
 
 ## Out of Scope
 

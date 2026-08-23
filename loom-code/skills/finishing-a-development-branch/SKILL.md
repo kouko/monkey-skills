@@ -267,6 +267,12 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
       and do NOT create the PR until the user resolves it. This is explicit, not transitive:
       the PR body is an outward-facing carrier and gets the identical mechanized gate as the
       commit, per the arc's mechanize-don't-rely-on-prose premise.
+    - PR-carrier check (memory-worthy branch only): before creating the PR,
+      grep the composed body for a `## Memory` section. If Phase 3 returned a
+      non-empty trailer set and the section is absent, add it. Also verify the
+      true last block is the raw `Decision:`/`Learning:`/`Gotcha:` trailer
+      footer required by `loom-workflow:git-memory`'s `compose-pr.md` Step 4;
+      fix the body before submitting if either carrier is missing or misplaced.
     - **Resolve the dispatch profile** in [`using-loom-code`'s portable
       profile](../using-loom-code/references/dispatch-profile.md) before the
       fresh-context PR-body judge spawn. Its packet is
@@ -289,7 +295,7 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
         `systematic-debugging` using the remote CI evidence. After its fix,
         re-run `requesting-code-review`, then
         `verification-before-completion`, then `loom-workflow:git-memory`.
-        Run the privacy gate before `git commit`; mint fresh
+        Run the privacy gate, then `git commit` the repair. Mint fresh
         `loom_gate_markers.py` markers at that repaired head; then `git push`.
         Resolve the new HEAD with `gh pr view "$PR_NUMBER" --json headRefOid` and wait
         again with `post_pr_ci.py` against that new HEAD.
@@ -301,17 +307,6 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
       - On `timeout`, `no_checks`, `operational_error`, or `head_drift`, STOP
         with the helper JSON and actionable evidence. The orchestrator must
         never auto-merge.
-    - PR-carrier check (memory-worthy branch only): before declaring the PR ready,
-      grep the PR body you just composed for a `## Memory` section. If Phase 3
-      returned a non-empty trailer set and body has no `## Memory` section, flag
-      it and add the section (both-carrier policy: commit AND PR carry memory;
-      no new tooling, it's a grep on the body you're about to submit). Also
-      verify the raw trailer footer carrier — the PR body's true last block
-      must be a raw trailer block (one or more plain `Decision:`/`Learning:`/
-      `Gotcha:` `Key: value` lines, blank-line-separated from what precedes,
-      NOTHING after them — a single such line qualifies), per
-      `loom-workflow:git-memory`'s `compose-pr.md` Step 4 for full
-      placement rules; fix the body before submitting if missing/not last.
     - Offer BOTH merge paths in the report: the PR web URL — with a reminder
       to glance that the merge dialog's description box is prefilled before
       confirming — AND the ready-to-run `gh pr merge <N> --squash` CLI

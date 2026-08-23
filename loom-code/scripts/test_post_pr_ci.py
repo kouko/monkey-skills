@@ -358,11 +358,11 @@ def test_cli_invalid_timing_emits_one_json_result_with_stable_exit_code():
         capture_output=True, text=True,
     )
 
-    assert result.returncode == post_pr_ci.EXIT_OPERATIONAL_ERROR
+    assert result.returncode == post_pr_ci.EXIT_ARGUMENT_ERROR
     assert result.stderr == ""
     assert json.loads(result.stdout) == {
         "error": "timeout and grace must be non-negative; poll interval must be positive",
-        "exit_code": post_pr_ci.EXIT_OPERATIONAL_ERROR,
+        "exit_code": post_pr_ci.EXIT_ARGUMENT_ERROR,
         "status": "argument_error",
     }
 

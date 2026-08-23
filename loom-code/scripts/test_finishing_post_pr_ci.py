@@ -9,6 +9,7 @@ CONTINUOUS = (
     Path(__file__).parents[1] / "skills" / "using-loom-code" / "references"
     / "continuous-mode.md"
 )
+SDD = Path(__file__).parents[1] / "skills" / "subagent-driven-development" / "SKILL.md"
 PLUGIN = Path(__file__).parents[1]
 CLAUDE_MANIFEST = PLUGIN / ".claude-plugin" / "plugin.json"
 CODEX_MANIFEST = PLUGIN / ".codex-plugin" / "plugin.json"
@@ -71,6 +72,18 @@ def test_finishing_captures_created_pr_identity_before_ci_waiting():
     assert "$PR_NUMBER" in step[resolve:helper]
 
 
+def test_finishing_validates_pr_body_before_creation_and_commits_ci_repairs():
+    step = _step_11()
+    create = step.index('PR_URL="$(gh pr create')
+    carrier = step.index("PR-carrier check")
+    repair = step.index('On status `"fail"`')
+    commit = step.index("git commit", repair)
+    marker = step.index("loom_gate_markers.py", repair)
+
+    assert carrier < create
+    assert repair < commit < marker
+
+
 def test_phase_overview_and_cross_skill_table_name_post_pr_ci_delegation():
     text = SKILL.read_text(encoding="utf-8")
     overview = text[text.index("finishing-a-development-branch"):text.index("## When NOT")]
@@ -95,9 +108,18 @@ def test_continuous_mode_stops_only_after_ci_verified_pr_without_duplication():
     assert "finishing-a-development-branch" in terminal_row
 
 
+def test_sdd_automatically_enters_finishing_after_an_approved_plan_completes():
+    text = SDD.read_text(encoding="utf-8")
+    completion = text[text.index("## Continuous execution"):text.index("## Asking the user")]
+
+    assert "automatically invokes" in completion
+    assert "finishing-a-development-branch" in completion
+    assert "一站一站來" in completion
+
+
 def test_plugin_version_and_changelog_ship_the_ci_loop():
-    assert json.loads(CLAUDE_MANIFEST.read_text(encoding="utf-8"))["version"] == "0.97.7"
-    assert json.loads(CODEX_MANIFEST.read_text(encoding="utf-8"))["version"] == "0.97.7"
+    assert json.loads(CLAUDE_MANIFEST.read_text(encoding="utf-8"))["version"] == "0.97.8"
+    assert json.loads(CODEX_MANIFEST.read_text(encoding="utf-8"))["version"] == "0.97.8"
     changelog = CHANGELOG.read_text(encoding="utf-8")
-    release = changelog.split("## [0.97.7]", 1)[1].split("\n## [", 1)[0]
+    release = changelog.split("## [0.97.8]", 1)[1].split("\n## [", 1)[0]
     assert "post-PR CI" in release
