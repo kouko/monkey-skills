@@ -5,6 +5,15 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.97.0] — 2026-08-23 — independently installable loom family
+
+### Changed
+
+- Package requirement identifiers and family policy locally so loom-code no
+  longer needs loom-design at runtime to interpret its own plan contracts.
+- Compose with loom-design only through public skill names and project-owned
+  artifacts, with isolated-install boundary tests in CI.
+
 ## [0.96.1] — 2026-08-22 — autonomy-by-default release
 
 ### Changed

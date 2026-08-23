@@ -99,14 +99,10 @@ but if it leaves a core object's lifecycle unstated, surface that gap rather tha
 it. If no `ui-flows.md` exists, ignore this section and treat the input as a generic seed.
 
 **Validate before fan-out.** Before consuming a `ui-flows.md` seed from a change-folder,
-run loom-design's own `mint_critic_verdict.py` to confirm `design-critic` actually reviewed
-this exact content — the script is packaged from the **PLUGIN repo** under the
-**installed plugin root**, while the
-artifact lives in the **CONSUMER project**. The host resolves `${CLAUDE_PLUGIN_ROOT}`
-to that installed loom-design root, so the command receives an absolute script path.
-Run the direct argv contract from the consumer project root (mirrors
-loom-design's user-insights SKILL.md Step 6). Keep every dynamic value as a
-separate argv element and never pass the command through a shell:
+run loom-design's own `mint_critic_verdict.py` to confirm `design-critic`
+reviewed this exact content. Run this direct argv from the consumer project root;
+`${CLAUDE_PLUGIN_ROOT}` is the absolute installed **PLUGIN repo** root. Keep values
+separate; never pass the command through a shell:
 
 ```
 argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/spec/mint_critic_verdict.py", "validate", "--change-folder", "<design-change-folder>", "--critic", "design-critic", "--files", "DESIGN.md,ui-flows.md"]
@@ -214,11 +210,9 @@ the transitions between them).
 
 Dispatch this per-object work under
 [`references/design-panel-dispatch.md`](references/design-panel-dispatch.md):
-use **multi-agent fan-out** with one worker per object, dispatched in a single
-message so the host runs them concurrently, then join their findings before
-editing the shared artifact. Keep the call shape host-neutral ("dispatch N
-subagents") rather than naming one host's workflow primitive. The local
-contract owns writer/critic separation, artifact ownership, and union rules.
+use one worker per object in a single concurrent dispatch, then join findings
+before editing the shared artifact. Keep the call host-neutral ("dispatch N
+subagents"). The local contract owns separation, ownership, and union rules.
 
 **Visible artifact:** emit a `## OOUX object model` section in `proposal.md` —
 the object inventory, plus, for each object, its state machine (states +
@@ -233,8 +227,7 @@ Do not delete the section heading — an absent heading or a bare section is
 a reviewable omission, and an N/A whose reason does not hold against the
 artifact's own content is a reviewable claim. A paragraph that suffices
 needs no diagram — the slot forces the declaration, not the drawing.
-This is the station's local visual default; it requires no sibling plugin
-policy file at runtime.
+This local visual default requires no sibling at runtime.
 
 ### Phase ③ 自動拓展矩陣 (auto-expansion matrix) — grid, prune, emit
 
@@ -301,8 +294,7 @@ Render it as a markdown table — one row per surviving path/edge, columns
 lens needs more). The table is fill-or-declare: when the pruned grid is
 genuinely empty, the body is the single line
 `N/A — no surviving path/edge: <one-line reason>` — never a padded
-table. The fill-or-declare rule above is the complete local routing contract;
-it requires no sibling plugin policy file at runtime.
+table. This local routing contract requires no sibling at runtime.
 
 **Phase ③b — cross-object combinations.**
 **Announce:** say in the conversation language what this step does — e.g. "next I'll enumerate cross-object combinations for interaction-dense stages". The internal phase identifier (Phase ③b cross-object combinations) stays in the artifact only; never print it to chat as a marker.

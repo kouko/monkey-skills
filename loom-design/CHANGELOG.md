@@ -11,6 +11,17 @@ The five plugins this one absorbed keep their own histories alongside:
 `CHANGELOG-interface-design.md`, `CHANGELOG-product-principles.md`. Their
 version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
 
+## [0.5.0] — 2026-08-23 — design-specialized standalone operation
+
+### Changed
+
+- Own design relay, critic-panel, and artifact contracts instead of borrowing
+  loom-code's code-review and dispatch semantics.
+- Resolve every station command from the installed plugin root and preserve
+  hostile dynamic values through direct argv or the encoded pipeline bridge.
+- Prove standalone and optional composition behavior from renamed isolated
+  installs with sibling-absence and no-op mutation tests.
+
 ## [0.4.0] — 2026-08-20 — North Star retargeted to PURPOSE.md
 
 ### Changed
