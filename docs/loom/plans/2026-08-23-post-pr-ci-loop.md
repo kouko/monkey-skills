@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-23-post-pr-ci-loop.md
 Goal: Make `finishing-a-development-branch` wait for and repair CI after opening a PR.
-Stage: review:round-2
+Stage: finishing
 Critical-path depth: 3 (≤5)
 Total tasks: 4
 Execution order: sequential

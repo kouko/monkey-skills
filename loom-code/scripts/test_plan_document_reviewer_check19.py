@@ -21,7 +21,6 @@ Stdlib + pytest only (pathlib, re).
 """
 from __future__ import annotations
 
-import json
 import re
 from pathlib import Path
 
@@ -97,33 +96,61 @@ def test_check19_row_present_and_ranges_updated():
     )
 
 
-PLUGIN_JSON = Path(__file__).parents[1] / ".claude-plugin" / "plugin.json"
+PLAN_FORMAT_MD = (
+    Path(__file__).parents[1]
+    / "skills"
+    / "writing-plans"
+    / "references"
+    / "plan-format.md"
+)
 
 
-def test_check19_version_tag_matches_shipping_version():
-    """Check 19's leading `(vX.Y.Z+)` tag must name the version this
-    arc actually ships under.
+def test_check19_version_tag_matches_schema_introduction_version():
+    """Check 19's leading `(vX.Y.Z+)` tag must name the INTRODUCTION
+    version of the grammar it enforces -- the same tag its SSOT schema
+    heading carries (`plan-format.md` `#### Field-value grammar
+    (vX.Y.Z+)`) -- matching the frozen-introduction-version semantics of
+    every other tagged row in the table (13/14: v0.8.0+, 17: v0.43.0+,
+    18: v0.79.0+).
 
-    Pinned live against `loom-code/.claude-plugin/plugin.json`'s
-    current value, not a hardcoded literal: Task 12 of
-    `docs/loom/plans/2026-08-19-field-value-microstructure.md` bumped
-    plugin.json 0.88.0 -> 0.89.0, and that bump is the objection a
-    hardcoded literal existed to dodge (a live comparison would have
-    failed while plugin.json still read 0.88.0). With the bump landed,
-    the two must move together from here on -- a future version bump
-    that forgets to update the Check 19 tag is exactly the drift this
-    test exists to catch.
+    History: from 0.89.0 to 0.98.0 this test compared the tag against
+    plugin.json's CURRENT version (to avoid a hardcoded literal going
+    stale mid-bump), which silently ratcheted the tag on every release
+    and made row 19 the only drifting tag in the table -- reading as
+    "applies from <current version> onward", factually wrong since the
+    check has been in force since 0.89.0 (commit 544a586e). The 0.98.0
+    docs-review panel caught the drift (both arms, independently:
+    dual-semantics instruction defect + incorrect-fact). The live
+    comparison target is now the schema SSOT heading, which keeps the
+    original no-hardcoded-literal property without the ratchet: if the
+    grammar is ever re-introduced at a new version, updating the schema
+    heading updates the expectation here automatically.
     """
     text = _text()
     row = _check19_row(text)
 
-    assert PLUGIN_JSON.is_file(), f"plugin.json is absent at {PLUGIN_JSON}"
-    plugin_version = json.loads(PLUGIN_JSON.read_text(encoding="utf-8"))["version"]
+    assert PLAN_FORMAT_MD.is_file(), f"plan-format.md is absent at {PLAN_FORMAT_MD}"
+    schema_heading = next(
+        (
+            line
+            for line in PLAN_FORMAT_MD.read_text(encoding="utf-8").splitlines()
+            if line.startswith("#### Field-value grammar")
+        ),
+        None,
+    )
+    assert schema_heading is not None, (
+        "plan-format.md `#### Field-value grammar` heading not found"
+    )
+    schema_match = re.search(r"\(v(\d+\.\d+\.\d+)\+\)", schema_heading)
+    assert schema_match is not None, (
+        "Field-value grammar heading must carry a `(vX.Y.Z+)` introduction tag"
+    )
 
-    match = re.search(r"\(v(\d+\.\d+\.\d+)\+\)", row)
-    assert match is not None, "Check 19 row must open with a `(vX.Y.Z+)` version tag"
-    assert match.group(1) == plugin_version, (
-        f"Check 19 version tag is v{match.group(1)}+, but "
-        f"loom-code/.claude-plugin/plugin.json reads {plugin_version} -- "
-        "whichever one is stale, update it to match the other"
+    row_match = re.search(r"\(v(\d+\.\d+\.\d+)\+\)", row)
+    assert row_match is not None, "Check 19 row must open with a `(vX.Y.Z+)` version tag"
+    assert row_match.group(1) == schema_match.group(1), (
+        f"Check 19 version tag is v{row_match.group(1)}+, but its SSOT schema "
+        f"heading (plan-format.md §Field-value grammar) reads "
+        f"v{schema_match.group(1)}+ -- the row tag must mirror the schema's "
+        "introduction version, never the shipping plugin version"
     )
