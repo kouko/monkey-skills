@@ -149,12 +149,12 @@ here; a copied table would drift.
 
 ### 7. Validate and fix
 
-Run the change-folder validator (repo-root-relative path
-`loom-design/scripts/interface/validate_design_output.py <design-output-dir>`;
-the skill-relative form is `../../scripts/interface/validate_design_output.py`) on the
+Run the change-folder validator
+(`argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/interface/validate_design_output.py", "<design-output-dir>"]`) on the
 emitted **change folder** (`docs/loom/<change-id>/`) and **fix every flagged
 issue** before handing off. Do not declare the artifact done with validator
 failures outstanding (Rule 12).
+Pass this argv array directly to process execution; never through a shell.
 
 **Note — the validator checks the *whole* change-folder.** It requires
 `ui-flows.md` (this skill) in the change folder and resolves `DESIGN.md`

@@ -12,6 +12,11 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+DESIGN_ROOT = REPO_ROOT / "loom-design"
+PIPELINE_SKILL = (
+    REPO_ROOT / "loom-design" / "skills" / "using-loom-pipeline" / "SKILL.md"
+)
+PACKAGED_RECEPTION_TARGET = "../using-loom-design/references/family-reception.md"
 # The family reception hooks ship from the loom-code plugin.
 PLUGIN_ROOT = REPO_ROOT / "loom-code"
 HOOKS_DIR = PLUGIN_ROOT / "hooks"
@@ -26,6 +31,29 @@ FAMILY_ENTRIES = [
     "using-loom-code",
     "using-loom-pipeline",
 ]
+
+
+def _assert_packaged_target(source: Path, target: str) -> Path:
+    resolved = (source.parent / target).resolve()
+    try:
+        resolved.relative_to(DESIGN_ROOT.resolve())
+    except ValueError:
+        raise AssertionError(f"contract link escapes loom-design: {target}") from None
+    assert resolved.is_file(), f"contract link is not a file: {target}"
+    return resolved
+
+
+def test_pipeline_reads_packaged_reception_contract():
+    text = PIPELINE_SKILL.read_text(encoding="utf-8")
+
+    assert (
+        "[family reception](../using-loom-design/references/family-reception.md)"
+        in text
+    )
+    assert "loom-code/hooks/family-reception.md" not in text
+    assert "`loom-code:using-loom-code` for code work" in text
+    assert "`using-loom-code` for code work" not in text
+    _assert_packaged_target(PIPELINE_SKILL, PACKAGED_RECEPTION_TARGET)
 
 
 def _non_empty_lines(text: str) -> list:
@@ -45,11 +73,25 @@ def test_reception_content_contract():
     #   per the frozen brief, so the reception budget grows to accommodate them;
     # + the on-ramp explicit-choice gate (plan 2026-08-18-onramp-explicit-choice-gate,
     #   PR #704: the detour choice is the user's, recorded mechanically) — sanctioned
-    #   addition of ~18 lines (80 → 98 non-empty); budget raised 85 → 100 — 2 lines
-    #   of headroom on purpose: further accretion must be sanctioned in the same PR.
-    non_empty = _non_empty_lines(text)
-    assert len(non_empty) <= 100, (
-        f"family-reception.md has {len(non_empty)} non-empty lines, budget is 100"
+    #   addition of ~18 lines (80 → 98 non-empty); budget raised 85 → 100;
+    # + the sibling-optional standalone contract
+    #   (plan 2026-08-23-loom-design-specialization, Task 1) — 7 load-bearing
+    #   lines covering availability, artifact preservation, and local fallback
+    #   (98 → 105); reviewer hardening then added 3 lines for the complete local
+    #   six-block brief and the availability-gated writing-plans contract
+    #   (105 → 108); budget raised 100 → 110, retaining 2 lines of headroom.
+    # Further accretion must be sanctioned in the same PR.
+    # Generated copies carry a five-line management header. Keep that transport
+    # metadata outside the policy-body budget so growth in either remains visible.
+    header, separator, body = text.partition("-->\n")
+    assert separator, "family-reception.md is missing its managed-copy header"
+    assert len(_non_empty_lines(header + separator)) == 5, (
+        "family-reception.md managed-copy header changed; update the sync contract"
+    )
+    body_non_empty = _non_empty_lines(body)
+    assert len(body_non_empty) <= 110, (
+        f"family-reception.md policy body has {len(body_non_empty)} non-empty lines, "
+        "budget is 110"
     )
 
     # Family map: all five using-loom-* entries present.
@@ -106,6 +148,10 @@ def test_reception_content_contract():
     ), (
         "missing the recommendations-are-not-prerequisites / choice-is-gated reconciliation"
     )
+    assert "and its public skill is available" in lower
+    assert "owning plugin's path continues" in lower
+    assert "if `dev-workflow:brief-before-asking` is available" in lower
+    assert "handoff-brief-format.md" not in text
 
 
 def test_reception_onramp_row_suggests_loom_init_once():
@@ -120,8 +166,14 @@ def test_reception_onramp_row_suggests_loom_init_once():
         "loom-init row must condition on the missing queue layer (docs/loom/backlog/)"
     )
     assert "once" in row.lower(), "loom-init row must carry the once wording"
-    assert "loom-code" in row, (
-        "loom-init row must name loom-code as where the scaffold verb ships"
+    assert "public" in row.lower() and "available" in row.lower(), (
+        "loom-init must be gated on public capability availability"
+    )
+    assert "otherwise skip" in row.lower(), (
+        "loom-init must define the sibling-absent fallback"
+    )
+    assert "loom-code" not in row, (
+        "loom-init must not require the loom-code sibling"
     )
 
     # Negative pin: this hook file is read raw — no placeholder literal.

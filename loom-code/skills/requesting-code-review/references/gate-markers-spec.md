@@ -2,8 +2,8 @@
 
 Reference for `loom-code/scripts/loom_gate_markers.py` (the marker
 writer) and `loom-code/hooks/git-guard.py` (the PreToolUse reader).
-Written up per
-[`docs/loom/plans/2026-07-06-gate-friction-pack.md`](../../../../docs/loom/plans/2026-07-06-gate-friction-pack.md)
+Written up per the repository's
+[`docs/loom/plans/2026-07-06-gate-friction-pack.md`](https://github.com/kouko/monkey-skills/blob/main/docs/loom/plans/2026-07-06-gate-friction-pack.md)
 task 6 — the requirements previously lived only in code (discovered by
 exit-4 retries); this file is the readable version.
 

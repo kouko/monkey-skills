@@ -103,13 +103,11 @@ def test_relay_section():
     )
 
 
-def test_relay_progress_card_renderer_ships_in_plugin():
+def test_relay_progress_card_renderer_is_optional_with_local_fallback():
     """
-    Task 4 (2026-08-10 ship-progress-tooling plan): §(a2)'s sentence
-    describing the mechanical renderer must state that plan_card.py
-    ships in the loom-code plugin (repo-root scripts/ copy wins when
-    present) — post-T1 the script is no longer repo-root-only, and an
-    external repo has no repo-root copy at all.
+    Task 1 (2026-08-23 loom-design-specialization): the neutral relay may
+    use plan_card.py when the owning install exposes it, but must carry a
+    complete local plain-text fallback instead of requiring loom-code.
 
     Raw-read constraint (plan §Notes kickoff decision): this file is a
     hook reference read RAW — load-time substitutions never expand
@@ -123,10 +121,10 @@ def test_relay_progress_card_renderer_ships_in_plugin():
     # whitespace-normalized: the source wraps sentences across lines
     section = " ".join(text[a2_idx:b_idx].split())
     assert "plan_card.py" in section, "missing the mechanical-renderer sentence"
-    assert "ships in the loom-code plugin" in section, (
-        "the renderer sentence must state plan_card.py ships in the "
-        "loom-code plugin (repo-root copy wins when present)"
-    )
+    assert "When `plan_card.py` is available" in section
+    assert "If `plan_card.py` is unavailable" in section
+    assert "local plain-text progress card" in section
+    assert "ships in the loom-code plugin" not in section
     assert "${CLAUDE_PLUGIN_ROOT}" not in text, (
         "family-relay.md is read RAW — never write the substitution "
         "literal into it; prose only"

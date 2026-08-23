@@ -99,12 +99,15 @@ def test_rule_11_names_change_folder_headers_as_namespace_source():
     `### Requirement: REQ-<n> — <name>` header in a live change-folder,
     the archive, or docs/loom/spec/ — that is what an implementer must
     actually check against. The rule must also say `--next-req-id` is
-    for spec AUTHORS, not implementers, and point at the SSOT reference
-    file. The never-mint sentence (test_rule_11_forbids_minting_ids)
+    for spec AUTHORS, not implementers, and point at loom-code's packaged
+    identifier contract. Design-side spec authoring remains optional rather
+    than becoming an identifier-runtime dependency. The never-mint sentence
+    (test_rule_11_forbids_minting_ids)
     must survive verbatim.
     """
     block = _rule_11_block(_text(AGENT))
     lowered = block.lower()
+    normalized = " ".join(block.split())
     assert "resolves in the `loom-design` namespace" not in lowered, (
         "rule 11 must no longer point at the nonexistent `loom-design` "
         "namespace lookup"
@@ -127,9 +130,17 @@ def test_rule_11_names_change_folder_headers_as_namespace_source():
         "implementers"
     )
     assert (
-        "loom-design/skills/spec-expansion/references/requirement-identifiers.md"
+        "../skills/writing-plans/references/requirement-identifiers.md"
         in block
-    ), "rule 11 must point at the SSOT requirement-identifiers reference"
+    ), "rule 11 must point at loom-code's packaged identifier contract"
+    assert (
+        "Do not invoke `loom-design:spec-expansion` to interpret identifiers."
+        in block
+    ), "rule 11 must not delegate identifier interpretation to loom-design"
+    assert (
+        "optional upstream input, not a runtime dependency of this agent"
+        in normalized
+    ), "a design artifact must remain optional upstream input"
     assert "never mint" in lowered, (
         "rule 11 must keep the never-mint sentence"
     )

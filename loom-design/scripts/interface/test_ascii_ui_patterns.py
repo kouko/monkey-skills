@@ -28,12 +28,16 @@ DOC = (
     / "references"
     / "ascii-ui-patterns.md"
 )
+DESIGN_ROOT = Path(__file__).parents[2].resolve()
 
 BORDER_STARTS = ("┌", "├", "└", "│")
 
 CHANNEL_SSOT_SENTENCE = (
-    "Channel rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual defaults`."
+    "Channel rule SSOT: "
+    "[`family-relay.md` §(b) Visual defaults]"
+    "(../../using-loom-design/references/family-relay.md)."
 )
+CHANNEL_SSOT_TARGET = "../../using-loom-design/references/family-relay.md"
 
 OLD_HAND_DRAW_BULLET = (
     "Use box-drawing characters (`┌ ─ ┐ │ └ ┘ ├ ┤ ┬ ┴ ┼`) for region borders."
@@ -43,6 +47,16 @@ OLD_HAND_DRAW_BULLET = (
 def _text() -> str:
     assert DOC.is_file(), f"ascii-ui-patterns.md is absent at {DOC}"
     return DOC.read_text(encoding="utf-8")
+
+
+def _assert_packaged_target(source: Path, target: str) -> Path:
+    resolved = (source.parent / target).resolve()
+    try:
+        resolved.relative_to(DESIGN_ROOT)
+    except ValueError:
+        raise AssertionError(f"contract link escapes loom-design: {target}") from None
+    assert resolved.is_file(), f"contract link is not a file: {target}"
+    return resolved
 
 
 def _normalize(text: str) -> str:
@@ -99,6 +113,11 @@ def test_generation_guard_full_phrases_present():
     assert CHANNEL_SSOT_SENTENCE in when_section_match.group(0), (
         "Channel rule SSOT sentence must be inside "
         "## When ASCII vs when Mermaid"
+    )
+    _assert_packaged_target(DOC, CHANNEL_SSOT_TARGET)
+
+    assert "loom-code/hooks/" not in text, (
+        "the interaction-flow contract must resolve inside loom-design"
     )
 
     # Other Conventions bullets stay intact.

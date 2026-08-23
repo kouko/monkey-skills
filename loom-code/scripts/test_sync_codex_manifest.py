@@ -12,6 +12,7 @@ it, so loom-code/scripts/ needs no sys.path hacking to reach the repo-level
 module. Stdlib only (subprocess).
 """
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -19,6 +20,12 @@ from pathlib import Path
 # loom-code/scripts/<this file> -> repo root is two parents up from loom-code/.
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ENGINE = REPO_ROOT / "scripts" / "sync_codex_manifests.py"
+MANDATORY_DEPENDENCY_KEYS = {
+    "dependencies",
+    "pluginDependencies",
+    "requiredPlugins",
+    "requires",
+}
 
 
 def test_loom_code_codex_manifest_in_sync_via_shared_engine():
@@ -35,3 +42,25 @@ def test_loom_code_codex_manifest_in_sync_via_shared_engine():
         text=True,
     )
     assert proc.returncode == 0, proc.stderr
+
+
+def test_loom_code_manifest_and_docs_preserve_optional_composition():
+    for host_manifest in (".claude-plugin", ".codex-plugin"):
+        manifest = json.loads(
+            (REPO_ROOT / "loom-code" / host_manifest / "plugin.json").read_text()
+        )
+        mandatory = {
+            key: manifest[key]
+            for key in MANDATORY_DEPENDENCY_KEYS
+            if key in manifest
+        }
+        assert "loom-design" not in json.dumps(mandatory, sort_keys=True)
+
+    readme = (REPO_ROOT / "loom-code" / "README.md").read_text()
+    for phrase in (
+        "independently installable",
+        "plugin-qualified skill names",
+        "docs/loom/",
+        "N/A with the reason",
+    ):
+        assert phrase in readme

@@ -18,7 +18,7 @@ For the Mermaid flow half, invoke the `obsidian:obsidian-mermaid-visualizer`
 skill — it owns canonical Mermaid syntax (flowchart / state / sequence),
 renderer-compatibility quirks, and worked examples. Do **not** re-author
 Mermaid rules here; this file is only for the ASCII layout half.
-Channel rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual defaults`.
+Channel rule SSOT: [`family-relay.md` §(b) Visual defaults](../../using-loom-design/references/family-relay.md).
 
 ## Conventions
 

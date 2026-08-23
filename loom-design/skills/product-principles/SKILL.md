@@ -261,22 +261,22 @@ consumer project root:
 
 ```
 cd <consumer-project-root>
-python <resolved-absolute-path-to>/loom-design/scripts/principles/validate_principles_output.py docs/loom/PRINCIPLES.md
+argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/principles/validate_principles_output.py", "<principles-file>"]
 ```
+
+Pass each argv array directly to process execution; never through a shell.
 
 It mechanically enforces the contract summary in
 `references/principles-rules.md` §Validator contract — required sections,
 entry counts, the literal `— check:` marker on **every** entry, the
 `## Anchors` / `## Deviation Ledger` / `## Open Questions` rules, and the legacy-heading
-migration check (the path relative to this skill dir is
-`../../scripts/principles/validate_principles_output.py`). The validator checks
+migration check (run the argv contract above). The validator checks
 *structure*; the *quality* of each check (truly falsifiable vs disguised
 platitude) is your responsibility.
 
 **Interactive sessions ALSO run the seed-coverage checker.** After the
 structural validator passes, also run
-`check_seed_traceability.py <artifact> <inventory>` (path relative to this
-skill dir: `../../scripts/principles/check_seed_traceability.py`) against the
+`argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/principles/check_seed_traceability.py", "<principles-file>", "<seed-inventory-file>"]` against the
 `docs/loom/PRINCIPLES.md` artifact and the seed-inventory document, fix
 any miss line it reports, and **proceed only on exit 0** — mirroring the
 same gate-then-proceed shape as `writing-plans/SKILL.md`'s validator
@@ -305,7 +305,7 @@ to its **"delegate to agent"** answer:
   guideline, model, framework, language, library, format, technology,
   or deferred/undecidable stance) into a `seed-inventory.md` file, one
   token per named entity, using the checker's oracle key format (the
-  format contract in `../../scripts/principles/check_seed_traceability.py`): a
+  format contract exposed by the seed-traceability argv contract above): a
   `named_anchors:` line for canons/traditions/tech-stack choices, a
   `deferred_items:` line for undecidable/deferred stances, each a
   `;`-separated token list, empty sentinel `none in this seed` when a

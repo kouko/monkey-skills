@@ -117,9 +117,15 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     `### Requirement: REQ-<n>` header (with or without ` — <name>`) — in
     a live change-folder's `specs/<capability>/spec.md`, in the archive,
     or in `docs/loom/spec/` — which is what
-    `loom-code/scripts/check-living-spec-index.py` actually reads; see
-    `loom-design/skills/spec-expansion/references/requirement-identifiers.md`
-    for the full grammar. `--next-req-id` mints the next number, but that
+    `loom-code/scripts/check-living-spec-index.py` actually reads. Resolve
+    the full grammar from the
+    [packaged requirement-identifier contract](../skills/writing-plans/references/requirement-identifiers.md).
+    Do not invoke `loom-design:spec-expansion` to interpret identifiers.
+    It is an optional upstream spec-authoring handoff, only when that public
+    skill is available and spec authoring is actually required; an existing
+    design-authored spec artifact is likewise optional upstream input, not a
+    runtime dependency of this agent.
+    `--next-req-id` mints the next number, but that
     flag is for spec AUTHORS assigning a NEW requirement's id, not for an
     implementer tagging a test — an implementer only ever cites an id
     that already exists there. **Never mint** a new REQ-id and never

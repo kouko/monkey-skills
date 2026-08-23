@@ -100,14 +100,16 @@ it. If no `ui-flows.md` exists, ignore this section and treat the input as a gen
 
 **Validate before fan-out.** Before consuming a `ui-flows.md` seed from a change-folder,
 run loom-design's own `mint_critic_verdict.py` to confirm `design-critic` actually reviewed
-this exact content — the script lives in the **PLUGIN repo**, the artifact lives in the
-**CONSUMER project**: resolve the script to an absolute path and run from the consumer
-project root (mirrors loom-design's user-insights SKILL.md Step 6):
+this exact content — the script is packaged from the **PLUGIN repo** under the
+**installed plugin root**, while the
+artifact lives in the **CONSUMER project**. The host resolves `${CLAUDE_PLUGIN_ROOT}`
+to that installed loom-design root, so the command receives an absolute script path.
+Run the direct argv contract from the consumer project root (mirrors
+loom-design's user-insights SKILL.md Step 6). Keep every dynamic value as a
+separate argv element and never pass the command through a shell:
 
 ```
-cd <consumer-project-root>
-python3 <resolved-absolute-path-to>/loom-design/scripts/spec/mint_critic_verdict.py validate \
-  --change-folder docs/loom/<change-id>/ --critic design-critic --files DESIGN.md,ui-flows.md
+argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/spec/mint_critic_verdict.py", "validate", "--change-folder", "<design-change-folder>", "--critic", "design-critic", "--files", "DESIGN.md,ui-flows.md"]
 ```
 
 Proceed only on exit 0. On any non-zero exit, **STOP** and report which condition blocked,
@@ -210,13 +212,13 @@ For **each object** the journey touches, fan out **ORCA** — its:
 and model the object's **states as a state machine** (the legal states and
 the transitions between them).
 
-Dispatch this per-object work as **multi-agent fan-out**: dispatch N
-subagents (one per object), per `loom-code:dispatching-parallel-agents`,
-in a single message so the host runs them concurrently. Describe the fan-out
-abstractly ("dispatch N subagents") — do not hard-code one host's workflow
-primitive, so the skill stays agent-portable. Each per-object expansion is
-independent (disjoint objects, no shared state), which is exactly the case
-the fan-out convention is for.
+Dispatch this per-object work under
+[`references/design-panel-dispatch.md`](references/design-panel-dispatch.md):
+use **multi-agent fan-out** with one worker per object, dispatched in a single
+message so the host runs them concurrently, then join their findings before
+editing the shared artifact. Keep the call shape host-neutral ("dispatch N
+subagents") rather than naming one host's workflow primitive. The local
+contract owns writer/critic separation, artifact ownership, and union rules.
 
 **Visible artifact:** emit a `## OOUX object model` section in `proposal.md` —
 the object inventory, plus, for each object, its state machine (states +
@@ -231,7 +233,8 @@ Do not delete the section heading — an absent heading or a bare section is
 a reviewable omission, and an N/A whose reason does not hold against the
 artifact's own content is a reviewable claim. A paragraph that suffices
 needs no diagram — the slot forces the declaration, not the drawing.
-Channel rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual defaults`.
+This is the station's local visual default; it requires no sibling plugin
+policy file at runtime.
 
 ### Phase ③ 自動拓展矩陣 (auto-expansion matrix) — grid, prune, emit
 
@@ -298,8 +301,8 @@ Render it as a markdown table — one row per surviving path/edge, columns
 lens needs more). The table is fill-or-declare: when the pruned grid is
 genuinely empty, the body is the single line
 `N/A — no surviving path/edge: <one-line reason>` — never a padded
-table. Routing rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual
-defaults`.
+table. The fill-or-declare rule above is the complete local routing contract;
+it requires no sibling plugin policy file at runtime.
 
 **Phase ③b — cross-object combinations.**
 **Announce:** say in the conversation language what this step does — e.g. "next I'll enumerate cross-object combinations for interaction-dense stages". The internal phase identifier (Phase ③b cross-object combinations) stays in the artifact only; never print it to chat as a marker.
@@ -319,7 +322,7 @@ stages and prunes its junk, so do not enumerate combinations where the
 reaction is just the union of individual reactions.
 
 **Wide stages (≥4 co-active objects).** On a ≥4-object stage you
-**MUST run `../../scripts/spec/pairwise.py`** (path relative to this skill's directory — the script ships under the plugin's `scripts/spec/`) — and **MUST NOT enumerate** a wide
+**MUST run `argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/spec/pairwise.py"]`** — and **MUST NOT enumerate** a wide
 stage's combinations **inline** by reasoning. Inline reasoning-based
 enumeration on wide stages is the A/B-validated **leak** (the exhaustive grid
 catches gold that pure-prompt enumeration misses, `missed_by_both` up to 11);
@@ -330,6 +333,7 @@ combinations — and you **MUST show the invocation** (the actual command /
 stdin payload) in the output trace so the tool-use is auditable. For
 ≤3-object stages, full in-prompt enumeration of the joint grid suffices (the
 ban is wide-stage-only).
+Pass this argv array directly to process execution; never through a shell.
 Residue a pairwise set cannot guarantee (gold reachable only via a
 higher-order combination) is **blind-spotted, never padded** — carry the
 honesty rail: an honest "pairwise-covered + listed residue" beats a fabricated
@@ -431,7 +435,7 @@ blind spots:
   Rendered as the markdown table Phase ③ specifies, or its pinned N/A line.
 - `## Cross-object combinations` — Phase ③b artifact: per interaction-dense
   stage, the joint state combinations of its co-active objects and the
-  reaction each requires (wide stages reduced via `../../scripts/spec/pairwise.py`).
+  reaction each requires (wide stages reduced via the pairwise argv contract above).
   **Structurally required — always emitted**. Rendered as a markdown
   table — one row per joint state combination, columns
   `Stage | Co-active objects | Joint state | Required reaction`.
@@ -459,9 +463,9 @@ SHAPING-class `evidence_needed: domain-convention` tags FIRST** (see
 such tag blocks VERIFY unless it carries an explicit `deferred: <reason>`
 note.
 
-Validate the emitted directory with
-`../../scripts/spec/validate_spec_output.py <output-dir>` (relative to this skill's
-directory) before handoff.
+Validate the emitted directory with the validator from the installed plugin
+root before handoff. Pass this argv array directly to process execution; never
+through a shell: `argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/spec/validate_spec_output.py", "<output-dir>"]`.
 
 ### Language policy — layered by artifact role
 
@@ -475,7 +479,7 @@ journey navigation, provenance, and blind-spots sections) — stays in
 the session's **conversation language**.
 
 For a zh-Hant / ja session, read the English precision layers through
-the [`adjudication-view`](../../../loom-code/skills/using-loom-code/protocols/adjudication-view.md)
+the local [`adjudication-view`](references/adjudication-view.md)
 display layer (BI-4): it renders the English artifact for careful
 reading in the profile language without touching the machine-precise
 artifact underneath.

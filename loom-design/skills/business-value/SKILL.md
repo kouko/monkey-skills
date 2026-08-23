@@ -154,8 +154,10 @@ NEEDS-MORE-RESEARCH, not a hopeful GO.
 
    ```
    cd <consumer-project-root>
-   python3 <resolved-absolute-path-to>/loom-design/scripts/discovery/validate_discovery_artifacts.py docs/loom/discovery/<date>-<slug>/
+   argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/discovery/validate_discovery_artifacts.py", "<discovery-folder>"]
    ```
+
+   Pass this argv array directly to process execution; never through a shell.
 
    Fix any flagged issue and re-run, **bounded at 2 attempts**; on the 2nd
    failure, stop and surface the remaining problems to the user rather than

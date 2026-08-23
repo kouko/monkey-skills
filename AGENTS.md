@@ -154,6 +154,27 @@ Role boundaries enforced by behavior, not reading restrictions:
   `python3 scripts/sync_codex_manifests.py --check <plugin>` — pure
   read; rc=0 when the Codex manifest's shared fields match the Claude
   SSOT, rc=1 on divergence.
+- **Check standalone plugin filesystem boundaries** (CI gate):
+  `python3 scripts/check_plugin_boundaries.py loom-code` and
+  `python3 scripts/check_plugin_boundaries.py loom-design` — scan each
+  installable root independently; fail on relative Markdown links that escape
+  that root or references to another loom plugin's private hooks, skills, or
+  scripts. Changelogs, research notes, and `TECH-SPEC.md` are historical
+  records and are outside the install-runtime scan.
+- **Sync the loom-family policy copies**:
+  `python3 scripts/sync_loom_family_contracts.py` — regenerates the packaged
+  `family-reception`, `family-relay`, and `plain-relay` contracts for both
+  independently installable plugins from `scripts/canonical/loom-family/`.
+  `python3 scripts/sync_loom_family_contracts.py --check` is the read-only CI
+  drift gate.
+- **Verify isolated loom installs and public composition**:
+  `python3 -m pytest scripts/test_loom_plugin_install_layout.py
+  scripts/test_loom_plugin_composition.py -q` — copies each plugin into an
+  unrelated install root, verifies standalone behavior, then proves their
+  optional handoff resolves only through plugin-qualified skills and
+  project-owned `docs/loom/` artifacts. The composition probe also verifies
+  that removing the exported target makes the public skill name stop
+  resolving; manifest tests separately forbid a mandatory sibling dependency.
 - **Rebuild the loom-pipeline driver asset**:
   `python3 loom-design/scripts/pipeline/build_driver.py` — concatenates
   `loom-design/scripts/pipeline/driver_NN_*.js` sources in filename order into

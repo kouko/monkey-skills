@@ -1,10 +1,13 @@
 ---
 name: 2026-08-17-spec-expansion-skill-md-escapes-plugin-boundary-with-a-relative-path
 description: loom-design/skills/spec-expansion/SKILL.md reaches into loom-code with `../../../loom-code/skills/...`, a filesystem escape across a plugin boundary that the repo's own cross-plugin delegation contract forbids — it resolves today only because both plugins sit in this monorepo
-status: open
+status: closed
 origin: 2026-08-17 whole-branch review of the loom-design-merge arc (6→2 consolidation), finding 🟡 F4 — surfaced while auditing the reverse-dependency invariant; the reference predates the merge and its depth is still correct, so it was out of that branch's scope
 start: the next edit to spec-expansion/SKILL.md's §Adjudication-view section, OR the first report that the adjudication-view pointer fails to resolve on an installed (non-monorepo) host — whichever comes first
 ---
+
+Closed by `codex/loom-plugin-specialization`: spec-expansion now packages its
+own adjudication view and standalone boundary tests reject sibling escapes.
 
 - Start: the next edit to spec-expansion/SKILL.md's §Adjudication-view section, OR the first report that the adjudication-view pointer fails to resolve on an installed (non-monorepo) host — whichever comes first
 

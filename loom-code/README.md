@@ -31,6 +31,16 @@ See [`docs/examples/`](docs/examples/) for 3 fully-worked end-to-end flows (Pyth
 
 ## Install
 
+`loom-code` and `loom-design` are independently installable. `loom-code`
+does not require `loom-design`; when a workflow reaches an optional design
+handoff and the sibling is absent, report the handoff as N/A with the reason
+and continue only where the current skill's contract allows it.
+
+When both plugins are installed, they compose only through public,
+plugin-qualified skill names such as `loom-design:interaction-flows` and
+project-owned `docs/loom/` artifacts. Neither plugin reads the other's
+private `hooks/`, `skills/`, or `scripts/` paths.
+
 ### Claude Code
 
 ```bash
@@ -65,6 +75,13 @@ cd monkey-skills
 claude plugin marketplace add . --scope local
 claude plugin install loom-code@monkey-skills --scope local
 ```
+
+The shared family-policy source lives at
+`scripts/canonical/loom-family/` in this repository. Regenerate the packaged
+copies with `python3 scripts/sync_loom_family_contracts.py`; use `--check` in
+CI. Verify independent installs and their optional composition with
+`python3 -m pytest scripts/test_loom_plugin_install_layout.py
+scripts/test_loom_plugin_composition.py -q`.
 
 ---
 
@@ -203,4 +220,4 @@ For real-use dogfood notes (the v1.0.0-blocking P15-5 backlog item), drop them a
 
 ## License
 
-MIT — see [LICENSE](../LICENSE) at repo root.
+MIT — see the repository [LICENSE](https://github.com/kouko/monkey-skills/blob/main/LICENSE).

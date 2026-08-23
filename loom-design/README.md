@@ -55,7 +55,7 @@ segments:
 
 ```mermaid
 flowchart TD
-    RH["SessionStart reception hook<br/>loom-code/hooks/family-reception.md"] -.->|awareness only, never auto-opens| CON
+    RH["SessionStart reception hook<br/>packaged family-reception contract"] -.->|awareness only, never auto-opens| CON
     INV["Explicit invocation<br/>'run the loom pipeline'"] --> CON
     CON["using-loom-pipeline conductor<br/>collects the 6-field run-input contract"]
     CON --> GAC["Gate (a) change-id minting<br/>Gate (c) cost policy"]
@@ -77,8 +77,8 @@ flowchart TD
 
 Each segment delegates all judgment (drafts, critic panels, verdicts,
 validator/review gates) to its station; the on-ramp criteria the
-reception hook injects live in `loom-code/hooks/family-reception.md`
-(the SSOT — the family hooks moved to loom-code in the 6→2 merge),
+reception hook injects live in the packaged
+[`family-reception` contract](skills/using-loom-design/references/family-reception.md),
 not here.
 
 ## Running the tests
@@ -103,18 +103,40 @@ loom-siblings-ci.yml` runs them as separate jobs for the same reason.
 ## Install + requirements
 
 Install from the monkey-skills marketplace like any other plugin.
-Requirements, checked before the entry skill fires:
+`loom-design` and `loom-code` are independently installable: every design
+station works interactively without `loom-code`. The full
+`using-loom-pipeline` conductor is an optional composition feature and checks
+for both plugins at entry; if `loom-code` is absent, it reports
+`loom-design: N/A` with the reason and stops the whole conductor before any
+segment runs.
 
-- The two station plugins the conductor drives, installed: `loom-design`
-  (this plugin — it carries the principles, design, and spec stations)
-  and `loom-code`. (The discovery station, inside `loom-design`, sits
-  upstream of principles and is v0.1 interactive-only — not required by
-  the conductor and never driven as a Workflow segment.)
+When both plugins are installed, they compose only through public,
+plugin-qualified skill names such as `loom-code:using-loom-code` and
+project-owned `docs/loom/` artifacts. Neither plugin reads the other's
+private `hooks/`, `skills/`, or `scripts/` paths.
+
+Conductor requirements, checked before that entry skill fires:
+
+- Both station plugins are installed: `loom-design` and `loom-code`. The
+  conductor uses `loom-code`'s public plugin-qualified agents and skills — for
+  example `loom-code:implementer`, `loom-code:spec-reviewer`,
+  `loom-code:requesting-code-review`, and `loom-code:ui-verification`. Their
+  independent installation guarantee applies to interactive stations, not to
+  a partial conductor run. (The discovery station, inside `loom-design`, sits
+  upstream of principles and is v0.1 interactive-only — not required by the
+  conductor and never driven as a Workflow segment.)
 - A Claude Code host that exposes the **Workflow** primitive (a tool
   accepting an arbitrary `scriptPath`). No Workflow tool → the skill
   reports `loom-design: N/A` with the reason and stops; it never
   fakes the orchestration by hand-driving the stations one call at a
   time.
+
+The shared family-policy source lives at
+`scripts/canonical/loom-family/` in this repository. Regenerate the packaged
+copies with `python3 scripts/sync_loom_family_contracts.py`; use `--check` in
+CI. Verify independent installs and their optional composition with
+`python3 -m pytest scripts/test_loom_plugin_install_layout.py
+scripts/test_loom_plugin_composition.py -q`.
 
 ## Run inputs
 
@@ -177,7 +199,7 @@ other entries carry `§Intake` and `using-loom-code` instead points into
 brainstorming's Axis 0.
 
 **Reception**: a `SessionStart` hook
-(`loom-code/hooks/family-reception.md`) injects the family map and
+([`family-reception`](skills/using-loom-design/references/family-reception.md)) injects the family map and
 the on-ramp criteria table (the SSOT every `§Intake`/Axis 0 references)
 at the start of every session. The **Workflow door remains
 explicit-invocation only** — reception only describes it for awareness,

@@ -15,15 +15,136 @@ variation, so the test guards meaning without being brittle.
 Stdlib only (pathlib + re). Resolve SKILL.md relative to this test file.
 """
 
+import json
 import re
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 SKILL = Path(__file__).parents[2] / "skills" / "spec-expansion" / "SKILL.md"
+SKILL_ROOT = SKILL.parent
 
 
 def _text() -> str:
     assert SKILL.is_file(), f"SKILL.md is absent at {SKILL}"
     return SKILL.read_text(encoding="utf-8")
+
+
+def _filesystem_escapes(markdown_file: Path, root: Path) -> list[str]:
+    text = markdown_file.read_text(encoding="utf-8")
+    targets = re.findall(r"\[[^\]]+\]\(([^)]+)\)", text)
+    targets += re.findall(r"^ {0,3}\[[^\]]+\]:\s*(\S+)", text, re.MULTILINE)
+    escapes = re.findall(
+        r"loom-(?!design\b)[a-z0-9-]+/(?:hooks|skills|scripts)/[^\s`)]+",
+        text,
+    )
+
+    for raw_target in targets:
+        target = raw_target.split("#", 1)[0].strip("<>")
+        if not target or "://" in target:
+            continue
+        resolved = (markdown_file.parent / target).resolve()
+        if not resolved.is_relative_to(root.resolve()):
+            escapes.append(target)
+    return escapes
+
+
+def test_boundary_parser_catches_reference_style_relative_escape(tmp_path):
+    root = tmp_path / "skill"
+    root.mkdir()
+    markdown_file = root / "contract.md"
+    markdown_file.write_text(
+        "See [outside][policy].\n\n[policy]: ../../outside.md\n",
+        encoding="utf-8",
+    )
+    assert _filesystem_escapes(markdown_file, root) == ["../../outside.md"]
+
+
+def test_spec_station_has_no_cross_plugin_filesystem_reference():
+    """Every relative Markdown target shipped by this station stays inside it."""
+    markdown_files = [SKILL, *sorted((SKILL_ROOT / "references").glob("*.md"))]
+    escapes: list[str] = []
+
+    for markdown_file in markdown_files:
+        escapes.extend(
+            f"{markdown_file.relative_to(SKILL_ROOT)} -> {target}"
+            for target in _filesystem_escapes(markdown_file, SKILL_ROOT)
+        )
+
+    assert escapes == [], "cross-plugin filesystem references:\n" + "\n".join(escapes)
+
+
+def test_validator_command_executes_from_arbitrarily_named_plugin_root(tmp_path):
+    """The documented output validator resolves from the installed plugin root."""
+    source_plugin_root = SKILL.parents[2]
+    installed_plugin_root = tmp_path / "renamed loom-design's install"
+    shutil.copytree(source_plugin_root, installed_plugin_root)
+
+    consumer_root = tmp_path / "consumer project"
+    consumer_root.mkdir()
+    output_dir = tmp_path / "valid output's hostile path"
+    (output_dir / "specs" / "login").mkdir(parents=True)
+    (output_dir / "proposal.md").write_text(
+        "## USM backbone\n- Log in\n\n"
+        "## OOUX object model\n- User\n\n"
+        "## Provenance\n- Login: seeded\n\n"
+        "## Blind spots — needs human/field input\n- Policy needs field input.\n\n"
+        "## Path × edge matrix\n| path | edge |\n| --- | --- |\n| login | error |\n\n"
+        "## Cross-object combinations\n| Stage | Objects |\n| --- | --- |\n| Login | User |\n\n"
+        "## Journey navigation\n- Login to home\n",
+        encoding="utf-8",
+    )
+    (output_dir / "specs" / "login" / "spec.md").write_text(
+        "## ADDED Requirements\n\n"
+        "### Requirement: Login\n"
+        "The system MUST authenticate a user.\n\n"
+        "#### Scenario: Valid credentials\n"
+        "- GIVEN a registered user\n"
+        "- WHEN valid credentials are submitted\n"
+        "- THEN a session is granted\n",
+        encoding="utf-8",
+    )
+
+    skill_text = (installed_plugin_root / "skills" / "spec-expansion" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    documented = re.search(r"argv: (\[[^\n`]*validate_spec_output\.py[^\n`]*\])", skill_text)
+    assert documented, "SKILL.md must document the executable output-validator command"
+    command = json.loads(documented.group(1))
+    assert command == [
+        "python3",
+        "${CLAUDE_PLUGIN_ROOT}/scripts/spec/validate_spec_output.py",
+        "<output-dir>",
+    ]
+    argv = [
+        sys.executable,
+        command[1].replace("${CLAUDE_PLUGIN_ROOT}", str(installed_plugin_root)),
+        str(output_dir),
+    ]
+    result = subprocess.run(
+        argv,
+        cwd=consumer_root,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_local_adjudication_view_preserves_supported_language_duties():
+    contract = SKILL_ROOT / "references" / "adjudication-view.md"
+    assert contract.is_file(), "spec-expansion must package its adjudication-view contract"
+    text = contract.read_text(encoding="utf-8")
+    assert "zh-Hant" in text and "ja" in text
+    assert "--lang" in text, "both supported profiles require an explicit language tag"
+    zh_hant = re.search(r"^### zh-Hant\n(.*?)(?=^### |^## |\Z)", text,
+                        re.MULTILINE | re.DOTALL)
+    ja = re.search(r"^### ja\n(.*?)(?=^### |^## |\Z)", text,
+                   re.MULTILINE | re.DOTALL)
+    assert zh_hant and "hard-fail" in zh_hant.group(1), \
+        "zh-Hant negation preservation must remain hard-fail"
+    assert ja and "warning" in ja.group(1), \
+        "ja negation preservation must remain warning-tier"
 
 
 def _package_docs_text() -> str:
@@ -219,6 +340,59 @@ def test_multi_agent_fan_out_referenced():
     assert "dispatching-parallel-agents" in text or "fan-out" in text \
         or "fan out" in text or "parallel" in text, \
         "must reference multi-agent fan-out for per-object expansion"
+
+
+DESIGN_PANEL_DUTIES = (
+    "a critic never rewrites the artifact it judges",
+    "workers return bounded findings and do not write the shared artifact directly",
+    "wait for all results before synthesis",
+    "resolve contradictions explicitly",
+)
+
+
+def _assert_design_panel_duties(policy: str) -> None:
+    low = " ".join(policy.lower().split())
+    for duty in DESIGN_PANEL_DUTIES:
+        assert duty in low, f"design dispatch contract must require: {duty}"
+
+
+def test_object_fanout_uses_packaged_design_panel_contract():
+    """Object expansion follows loom-design's artifact-oriented dispatch rules."""
+    text = _text()
+    contract = SKILL_ROOT / "references" / "design-panel-dispatch.md"
+
+    assert "loom-code:dispatching-parallel-agents" not in text
+    assert "references/design-panel-dispatch.md" in text
+    assert contract.is_file(), "spec-expansion must package its dispatch contract"
+
+    policy = contract.read_text(encoding="utf-8").lower()
+    for phrase in (
+        "one worker per object",
+        "one worker per journey",
+        "one worker per lens",
+        "writer",
+        "critic",
+        "artifact owner",
+        "union",
+    ):
+        assert phrase in policy, f"design dispatch contract must define {phrase!r}"
+    _assert_design_panel_duties(policy)
+
+
+def test_design_panel_behavior_duties_are_independently_load_bearing():
+    """Deleting any role/join duty must make the contract check fail."""
+    contract = SKILL_ROOT / "references" / "design-panel-dispatch.md"
+    policy = contract.read_text(encoding="utf-8")
+    normalized = " ".join(policy.lower().split())
+
+    for duty in DESIGN_PANEL_DUTIES:
+        assert duty in normalized, f"mutation probe fixture lacks duty: {duty}"
+        mutated = normalized.replace(duty, "", 1)
+        try:
+            _assert_design_panel_duties(mutated)
+        except AssertionError:
+            continue
+        raise AssertionError(f"contract check survived removal of duty: {duty}")
 
 
 # --- L3 journey-navigation layer --------------------------------------------

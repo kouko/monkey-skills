@@ -33,13 +33,13 @@ Run these three steps first, once per dispatch, before `§When it fires`
 below gates on this skill's own two orchestration conditions.
 
 1. **前站檢查 (upstream check)** — check the target repo against the loom
-   family reception's on-ramp criteria table
-   (`loom-code/hooks/family-reception.md`, "On-ramp criteria table
-   (SSOT)") — reference it by name/path, never copy its rows here.
+   [family reception](../using-loom-design/references/family-reception.md)'s
+   "On-ramp criteria table (SSOT)" — reference the packaged contract, never
+   copy its rows here.
 2. **對站檢查 (station check)** — if the ask is interactive design/spec/code
    work rather than a full pipeline run, hand off to that family's own
    entry point instead of driving it from here: `using-loom-design` for
-   design or spec work, `using-loom-code` for code work.
+   design or spec work, `loom-code:using-loom-code` for code work.
 3. **本站再確認 (this station's fire condition, unchanged)** — this skill
    still only fires under `§When it fires`'s BOTH-conditions gate below;
    its N/A-loud wording governs unchanged — nothing in this §Intake grants
@@ -80,7 +80,7 @@ default is explicitly stated below):
 | **token budgets** | yes | run-level: host default budget cap; per-station: the driver's documented per-station defaults (`STATION_TOKEN_BUDGETS` in `driver_20_runstation.js`) | Canonical shape: `{ run: <number>, perStation: { <stationName>: <number>, ... } }`. `perStation` keys are station names (`principles`, `design`, `design-critic`, `spec`, `critic`, `validator`, `code`, `review`, `probe`) — omit a station's key to fall back to the driver's documented default for that station. Over-budget at either level is fail-loud inside the driver, never a silent continue. |
 | **model policy** | yes | Claude default model tier for all stations | Which model tier each station runs on (Workflow's `model` param is Claude-family only — no cross-vendor judging in v1). |
 | **resumeRunId** | no | none (fresh run) | Optional. Maps directly to Workflow's native `resumeFromRunId` — passing it resumes a previously checkpointed run instead of starting over. (Grounding: `scriptPath`/`resumeFromRunId` parameter names verified live — 2026-07-03 F5 dispatch spike run `wf_667ec006-ec2` and the same-day pipeline dogfood both exercised them against the real Workflow tool.) |
-| **skillsRoot** | yes for runs that include segment 2 | none | Absolute path to the monkey-skills checkout / plugin source root — the orchestrator resolves it (e.g. the repo root of the loom plugins install/checkout). Segment 2 uses it to locate the loom-design validator script; missing it is a fail-loud stop inside the driver, never a guessed path. |
+| **skillsRoot** | yes for runs that include segment 2 | none | Absolute path to the installed loom-design plugin root. The host supplies this root as `${CLAUDE_PLUGIN_ROOT}` when rendering the skill. Segment 2 uses it to locate loom-design's packaged validator script; missing it is a fail-loud stop inside the driver, never a guessed path. |
 
 ## §Invocation — resolve the driver asset, one call per segment
 
@@ -106,7 +106,7 @@ Workflow({
     projectPath: "<target project absolute path>",
     budgets: { run: <run-level cap>, perStation: { principles: <cap>, design: <cap>, "design-critic": <cap>, spec: <cap>, critic: <cap>, validator: <cap>, code: <cap>, review: <cap>, probe: <cap> } },
     models: { /* per-station or blanket model policy */ },
-    skillsRoot: "<absolute path to the monkey-skills checkout — required for segment 2>",
+    skillsRoot: "<absolute path to the installed loom-design plugin root — required for segment 2>",
     resumeRunId: "<optional — omit for a fresh run>"
   }
 })
@@ -235,12 +235,45 @@ happens interactively before queueing, never inside the unattended run.
 ### The dispatcher-only loop
 
 A fresh session **taking over an in-progress batch** (resuming after a
-restart, a new session picking up someone else's queue) MUST run
-`python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py reconcile --project <projectPath>`
-once, BEFORE its first `next` call — this reconciles any entry left RUNNING
+restart, a new session picking up someone else's queue) MUST invoke
+`batch_queue.py reconcile` once, BEFORE its first `next` call — this
+reconciles any entry left RUNNING
 by the prior session against wf-record evidence (see below) before the loop
 resumes. A session that starts a batch from empty state has nothing to
 reconcile and may skip straight to `next`.
+
+### Invocation contract: pass an argument vector, not shell text
+
+Every `batchQueueArgv` below is an **argument vector (argv)** and a closed
+schema for `batch_queue.py` (it starts with the verb, not the interpreter).
+Never interpolate a project path, change id, run id, session directory,
+reason, or plugin root into command text: each dynamic value occupies exactly
+one array element and is therefore passed literally, including quotes, dollar
+signs, command substitutions, backticks, semicolons, and newlines.
+
+When the host supports direct process invocation, pass
+`["python3", batchQueueScript, *batchQueueArgv]` without a shell. When the host
+accepts only a Bash command string, encode `batchQueueArgv` as a
+UTF-8 **JSON list of strings**, then apply Python stdlib
+`base64.urlsafe_b64encode(json_bytes).decode("ascii").rstrip("=")`. Confirm the
+result matches `[A-Za-z0-9_-]+`, substitute it for the sole placeholder below,
+and execute this fixed command shape:
+
+`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/pipeline/argv_exec.py" <URL_SAFE_BASE64_JSON_ARGV>`
+
+The bridge decodes and validates the closed schema, then calls the packaged
+`batch_queue.py` directly; it never sends decoded content through a shell.
+
+Set `pluginRoot` to the host-rendered `${CLAUDE_PLUGIN_ROOT}` value and
+`batchQueueScript` to
+`pluginRoot + "/scripts/pipeline/batch_queue.py"`. For takeover reconciliation:
+
+```text
+batchQueueArgv = ["reconcile", "--project", projectPath]
+```
+
+Below, `batch_queue.py next` is shorthand for an argv array whose executable
+path remains below the installed `${CLAUDE_PLUGIN_ROOT}`.
 
 The main agent then repeats exactly this loop, one iteration per change,
 until `next` prints `{"done": true}` or exits 3 (circuit-breaker HALT). While
@@ -249,12 +282,14 @@ non-terminal entries (QUEUED/RUNNING) remain, `next` instead prints
 `id`/`status`/`reason` — `done` never goes silent on a stuck batch (see the
 exit-code table below):
 
-1. `python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py next --project <projectPath> --skills-root <skillsRoot>`
+1. `batchQueueArgv = ["next", "--project", projectPath, "--skills-root", pluginRoot]`
    — this also runs `reconcile` internally at its top, so per-iteration
    staleness is caught even without a takeover.
 2. `Workflow({scriptPath: "<resolved assets/loom-pipeline.js>", args: <the JSON stdout from step 1, verbatim>})`
 3. Immediately after `Workflow()` returns, the dispatcher MUST call
-   `python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py mark-running <id> --run-id <the Workflow run id, wf_...> --session-dir <this session's directory — the one whose workflows/ subfolder holds wf_<runId>.json, NOT the workflows/ subfolder itself> --project <projectPath>`
+   `batchQueueArgv = ["mark-running", id, "--run-id", workflowRunId, "--session-dir", sessionDir, "--project", projectPath]`
+   Here `sessionDir` contains the `workflows/` subfolder; it is not that
+   subfolder itself.
    — without this the runId is never recorded and `reconcile`'s
    definitive-evidence path has nothing to check against.
 
@@ -273,7 +308,8 @@ exit-code table below):
    the entry then has no `sessionDir` recorded, so `reconcile` can only
    ever resolve it via the staleness path (`SUSPECT`, human decides),
    never via definitive wf-record evidence.
-4. `python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py mark <id> done|failed --project <projectPath> --run-id <the Workflow run id>`
+4. `batchQueueArgv = ["mark", id, outcome, "--project", projectPath, "--run-id", workflowRunId]`
+   Here outcome is exactly `done` or `failed`.
 
 The main agent is **dispatcher-only**: it never parses the queue file, it
 never composes git commands, and it never diagnoses failures mid-batch —
@@ -285,11 +321,12 @@ end-of-batch human report below.
 Two subcommands exist for a human operator to correct a stuck entry; the
 dispatcher loop above never calls either on its own:
 
-- `python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py reset <id> --project <projectPath> [--reason <text>]`
+- `batchQueueArgv = ["reset", id, "--project", projectPath, "--reason", reason]`
   — requeues a RUNNING or FAILED entry back to QUEUED (`attempts += 1`,
   audit line appended). Use when a stuck or wrongly-failed entry should
-  simply run again.
-- `python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py force-fail <id> --reason <text> --project <projectPath>`
+  simply run again. The reason is optional; when absent, omit both elements
+  `"--reason"` and `reason` from the array.
+- `batchQueueArgv = ["force-fail", id, "--reason", reason, "--project", projectPath]`
   — transitions a RUNNING entry straight to FAILED (audit line appended;
   counts toward the circuit breaker). Use when an entry is confirmed dead
   and should not be retried automatically.
@@ -321,7 +358,7 @@ can trip HALT, with no human-confirmation step.
 
 ### End of batch
 
-`python3 <skillsRoot>/loom-design/scripts/pipeline/batch_queue.py status --project <projectPath>`
+`batchQueueArgv = ["status", "--project", projectPath]`
 prints the one-screen report a fresh session reads first. A finished batch
 of N changes leaves N ledgers at
 `<projectPath>/docs/loom/<changeId>/pipeline-ledger.md` and N PR-ready

@@ -242,7 +242,7 @@ def check_frozen(entry: dict, project_path: Path, skills_root: Path) -> tuple[bo
     """Freeze predicate — two accepted forms, both requiring the plan file.
 
     Form A (change-folder): ``docs/loom/<id>/`` exists → it must pass the
-    loom-design validator (``python3 <skills_root>/loom-design/scripts/spec/
+    loom-design validator (``python3 <skills_root>/scripts/spec/
     validate_spec_output.py <project_path>/docs/loom/<id>``, invocation
     convention driver_40_seg2.js:106-127). This is the original v1.1
     Decision §"Freeze predicate = loom-spec validator exit-0 + plan
@@ -308,7 +308,7 @@ def check_frozen(entry: dict, project_path: Path, skills_root: Path) -> tuple[bo
             "line — not frozen under either form.",
         )
 
-    validator_script = Path(skills_root) / "loom-design" / "scripts" / "spec" / "validate_spec_output.py"
+    validator_script = Path(skills_root) / "scripts" / "spec" / "validate_spec_output.py"
     result = subprocess.run(
         ["python3", str(validator_script), str(change_dir)],
         capture_output=True,
@@ -1331,7 +1331,7 @@ def _add_next_subparser(subparsers: argparse._SubParsersAction) -> None:
         "--skills-root",
         dest="skills_root",
         required=True,
-        help="absolute path to the monkey-skills checkout / plugin source root",
+        help="absolute path to the installed loom-design plugin root",
     )
     next_parser.add_argument(
         "--queue",

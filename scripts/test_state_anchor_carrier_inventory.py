@@ -19,7 +19,9 @@ the brief's recon list. The brief's recon figure (10 files / 11 hits) was
 simply miscounted against main; verified against branch base d1e50685 the
 count was already 9 files / 12 hits. The live measurement is 10 files / 13
 hits after this branch adds one intentional carrier in its anchor-primary
-reviewer-contract test.
+reviewer-contract test. The sibling-neutral family-policy distribution and
+the design-specialized relay add three managed/design-local carriers, making
+the live measurement 13 files / 17 hits.
 
 Granularity is file -> hit-count, not file:line — per the plan's Kickoff
 decision, line numbers churn on unrelated edits; a count change in any file
@@ -57,6 +59,9 @@ EXPECTED_INVENTORY = {
     "loom-code/skills/subagent-driven-development/SKILL.md": 3,
     "loom-code/skills/using-loom-code/SKILL.md": 1,
     "loom-code/hooks/family-relay.md": 1,
+    "loom-design/scripts/discovery/test_using_skill.py": 2,
+    "loom-design/skills/using-loom-design/references/design-relay.md": 1,
+    "loom-design/skills/using-loom-design/references/family-relay.md": 1,
 }
 
 

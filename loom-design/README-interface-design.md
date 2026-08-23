@@ -29,7 +29,7 @@ Two generate skills, a critic, and a router:
   - **TUI / CLI** → a lightweight conventions doc (terminal palette/layout for TUI; output-format + command/flag naming + help/error style for CLI). *Phase-2 — the GUI path ships first.*
 - **`interaction-flows`** (modality-aware) → **`ui-flows.md`** (per-feature/change): screen/panel/command inventory (with a *flag* of which render variants exist — empty/loading/error/success), **user flows** as mermaid, **UI structure** as ascii layout blocks, plus transitions, entry/exit points, information density, and mobile flow — a 7-dimension UX-flow checklist. For CLI/TUI the same dimensions render as command/output or panel/keybinding flows.
 - **`design-critic`** → adversarial critique of the emitted change-folder (`DESIGN.md` + `ui-flows.md`) via a writer≠judge panel hunting **surface omissions** — undrawn states, dead-end flows, a11y gaps — plus principle-conformance against `PRINCIPLES.md` when present. Surface only, never code.
-- **`using-loom-interface-design`** (entry/router) — runs the family **§Intake** reception check (upstream `PRINCIPLES.md` on-ramp per `loom-code/hooks/family-reception.md`, adjacent-station redirects to `using-loom-spec` / `using-loom-code`), then records the modality and routes to the three skills.
+- **`using-loom-interface-design`** (entry/router) — runs the family **§Intake** reception check (upstream `PRINCIPLES.md` on-ramp per the packaged [`family-reception` contract](skills/using-loom-design/references/family-reception.md), adjacent-station redirects to `using-loom-spec` / `loom-code:using-loom-code`), then records the modality and routes to the three skills.
 
 ## Execution flow
 

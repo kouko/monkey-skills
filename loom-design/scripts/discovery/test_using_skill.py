@@ -24,6 +24,9 @@ SKILL_DIR = Path(__file__).parents[2] / "skills" / "using-loom-design"
 SKILL = SKILL_DIR / "SKILL.md"
 CC_TOOLS = SKILL_DIR / "references" / "discovery-claude-code-tools.md"
 CODEX_TOOLS = SKILL_DIR / "references" / "discovery-codex-tools.md"
+PACKAGED_RECEPTION = "references/family-reception.md"
+PACKAGED_RELAY = "references/family-relay.md"
+DESIGN_RELAY = "references/design-relay.md"
 
 _DESC_CAP = 1536
 
@@ -107,7 +110,7 @@ def test_intake_section_present():
 def test_intake_references_family_reception_ssot_without_copying_rows():
     text = _text()
     assert "family-reception.md" in text, \
-        "§Intake must reference loom-code/hooks/family-reception.md (SSOT)"
+        "§Intake must reference its packaged family-reception policy"
     # never-copy discipline: the on-ramp table's own column header must not
     # be reproduced verbatim in this router
     assert "| Condition | Recommendation |" not in text, \
@@ -157,6 +160,60 @@ def test_professional_isolation_line_present():
         "must state the professional-isolation contract (no shared artifact)"
     assert ("no agent" in low) or ("share no artifact and no agent" in low), \
         "must state the professional-isolation contract (no shared agent)"
+
+
+def test_router_uses_only_packaged_family_policy_and_public_code_handoff():
+    text = _text()
+    for packaged_policy in (PACKAGED_RECEPTION, PACKAGED_RELAY):
+        assert packaged_policy in text, \
+            f"router must load its packaged policy: {packaged_policy}"
+        target = (SKILL_DIR / packaged_policy).resolve()
+        assert target.is_relative_to(SKILL_DIR.resolve()), \
+            f"packaged policy must resolve inside loom-design: {target}"
+        assert target.is_file(), f"packaged policy target is missing: {target}"
+    assert "loom-code:using-loom-code" in text, \
+        "router must preserve the public plugin-qualified code handoff"
+    assert not re.search(r"loom-code/(?:hooks|skills|scripts)/", text), \
+        "router must not reach into loom-code's internal filesystem"
+
+
+def _assert_design_relay_routes(relay: str) -> None:
+    bullets = [" ".join(block.split()) for block in re.findall(
+        r"(?ms)^- .*?(?=^- |^## |\Z)", relay
+    )]
+    design_rule = next((rule for rule in bullets if "DESIGN.md" in rule), "")
+    spec_rule = next((rule for rule in bullets if "spec artifact" in rule.lower()), "")
+    assert "ui-flows.md" in design_rule \
+        and "loom-design:design-critic" in design_rule \
+        and "loom-design:completeness-critic" not in design_rule, \
+        "DESIGN.md/ui-flows.md must route specifically to design-critic"
+    assert "loom-design:completeness-critic" in spec_rule \
+        and "loom-design:design-critic" not in spec_rule, \
+        "spec artifacts must route specifically to completeness-critic"
+
+
+def test_router_uses_design_specific_relay_without_code_review_dependency():
+    text = _text()
+    assert DESIGN_RELAY in text, \
+        "router must route design-side relay decisions through design-relay.md"
+
+    relay_path = (SKILL_DIR / DESIGN_RELAY).resolve()
+    assert relay_path.is_relative_to(SKILL_DIR.resolve()), \
+        "design relay must resolve inside the loom-design plugin"
+    assert relay_path.is_file(), f"design relay is missing: {relay_path}"
+
+    relay = relay_path.read_text(encoding="utf-8")
+    _assert_design_relay_routes(relay)
+    assert "state anchor" in relay.lower() and "stakes" in relay.lower(), \
+        "ordinary narration needs a complete local state-anchor/stakes fallback"
+    assert "loom-code:requesting-code-review" not in text + relay, \
+        "design-side relay must never depend on loom-code's code-review skill"
+    folded_router = " ".join(text.split())
+    assert re.search(
+        r"write / change / review / ship code \| code \| "
+        r"`loom-code:using-loom-code`",
+        folded_router,
+    ), "genuine implementation work must map specifically to using-loom-code"
 
 
 # --- references ---------------------------------------------------------------

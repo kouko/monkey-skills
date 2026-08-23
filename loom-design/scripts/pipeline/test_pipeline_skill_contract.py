@@ -3,7 +3,12 @@ gate, the N/A-loud clause, the 6-field run-input contract, and the
 Workflow({scriptPath...}) invocation resolved from the skill's base path.
 
 """
+import base64
+import json
+import os
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 PLUGIN_ROOT = Path(__file__).parents[2]
@@ -82,9 +87,11 @@ def test_skill_batch_mode_section_contract():
     # next -> Workflow -> mark loop, in that order, within §Batch mode
     # (the §Invocation section earlier in the file has its own unrelated
     # Workflow({ call, so this must not scan the whole document).
-    next_idx = batch_section.find("batch_queue.py next")
+    next_match = re.search(r'batchQueueArgv = \["next"', batch_section)
     workflow_idx = batch_section.find("Workflow(")
-    mark_idx = batch_section.find("batch_queue.py mark")
+    mark_match = re.search(r'batchQueueArgv = \["mark-running"', batch_section)
+    next_idx = next_match.start() if next_match else -1
+    mark_idx = mark_match.start() if mark_match else -1
     assert -1 not in (next_idx, workflow_idx, mark_idx), \
         "missing one of next / Workflow / mark in the §Batch mode loop description"
     assert next_idx < workflow_idx < mark_idx, \
@@ -143,3 +150,181 @@ def test_skill_intake_section_contract():
     pinned_phrase = "never silently skip, and never fake the orchestration inline"
     assert pinned_phrase in body, \
         "existing N/A-loud phrase was altered or removed — no softening allowed"
+
+
+def test_pipeline_public_commands_use_installed_plugin_root_and_preserve_code_handoffs(
+    tmp_path,
+):
+    """Public commands resolve from loom-design's installed root, while the
+    conductor retains only public, plugin-qualified code-stage composition.
+
+    Check both the positive command shape and the obsolete checkout shape so
+    deleting either half of the contract makes this test fail.
+    """
+    body = _body(SKILL_MD.read_text())
+
+    assert (
+        "**skillsRoot**" in body
+        and "installed loom-design plugin root" in body
+    ), "skillsRoot must be defined as the installed loom-design plugin root"
+    batch_commands = re.findall(r"batchQueueArgv\s*=\s*\[([^\]]+)\]", body)
+    assert len(batch_commands) == 7, \
+        "expected every one of the seven public batch argv arrays"
+    required_arguments = {
+        "reconcile": ('"--project", projectPath',),
+        "next": ('"--project", projectPath', '"--skills-root", pluginRoot'),
+        "mark-running": (
+            'id', '"--run-id", workflowRunId', '"--session-dir", sessionDir',
+            '"--project", projectPath',
+        ),
+        "mark": (
+            'id', 'outcome', '"--project", projectPath',
+            '"--run-id", workflowRunId',
+        ),
+        "reset": ('id', '"--project", projectPath', '"--reason", reason'),
+        "force-fail": ('id', '"--reason", reason', '"--project", projectPath'),
+        "status": ('"--project", projectPath',),
+    }
+    for verb, arguments in required_arguments.items():
+        command = next(
+            command for command in batch_commands if f'"{verb}"' in command
+        )
+        assert command.lstrip().startswith(f'"{verb}"'), \
+            f"{verb} must be the first batch_queue argv element"
+        for argument in arguments:
+            assert argument in command, \
+                f"{verb} must pass dynamic argument as an argv element: {argument}"
+    assert "<skillsRoot>/loom-design/scripts/" not in body, \
+        "checkout-shaped sibling path remains in the public contract"
+    assert "monkey-skills checkout / plugin source root" not in body, \
+        "skillsRoot still describes the monorepo checkout"
+    assert "loom-code/" not in body, \
+        "pipeline contract must not reach into loom-code private paths"
+
+    for public_handoff in (
+        "loom-code:subagent-driven-development",
+        "loom-code:requesting-code-review",
+        "loom-code:ui-verification",
+    ):
+        assert public_handoff in body, \
+            f"Segment 3 lost public code-stage handoff {public_handoff}"
+
+    # Execute the documented read-only status command from roots containing
+    # both whitespace and a single quote. A lexical-only check cannot prove
+    # the shell example survives real argument parsing.
+    installed_root = tmp_path / "installed loom-design's root"
+    script_dir = installed_root / "scripts" / "pipeline"
+    script_dir.mkdir(parents=True)
+    shutil.copy2(PLUGIN_ROOT / "scripts" / "pipeline" / "batch_queue.py", script_dir)
+    project_path = tmp_path / "consumer project's files"
+    loom_dir = project_path / "docs" / "loom"
+    loom_dir.mkdir(parents=True)
+    (loom_dir / "QUEUE.toml").write_text(
+        '[[change]]\nid = "quote-safe"\nplan = "docs/loom/plans/x.md"\n'
+        '[change.budgets]\nrun = 1\n',
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [
+            "python3", str(script_dir / "batch_queue.py"), "status",
+            "--project", str(project_path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "quote-safe" in result.stdout
+
+
+def test_pipeline_dynamic_values_are_passed_as_literal_argv(tmp_path):
+    """Consumer values are data, never shell source code."""
+    body = _body(SKILL_MD.read_text())
+
+    # Characterize why the former double-quoted shell-template contract is
+    # unsafe: command substitution is still evaluated inside double quotes.
+    old_side_effect = tmp_path / "old-shell-side-effect"
+    hostile_old_value = f'$(touch "{old_side_effect}")'
+    subprocess.run(
+        f'python3 -c "import sys" "{hostile_old_value}"',
+        shell=True,
+        executable="/bin/bash",
+        check=True,
+    )
+    assert old_side_effect.exists(), "fixture no longer demonstrates the old risk"
+
+    command_match = re.search(
+        r'`(python3 "\$\{CLAUDE_PLUGIN_ROOT\}/scripts/pipeline/'
+        r'argv_exec\.py" <URL_SAFE_BASE64_JSON_ARGV>)`',
+        body,
+    )
+    assert command_match, "missing the fixed shell-host bridge command"
+    assert "urlsafe_b64encode" in body and "JSON list of strings" in body
+    assert "outcome is exactly `done` or `failed`" in body
+    assert "omit both elements" in body, \
+        "reset must define how its optional reason is omitted"
+
+    installed_root = tmp_path / "installed loom-design's root"
+    script_dir = installed_root / "scripts" / "pipeline"
+    script_dir.mkdir(parents=True)
+    for script_name in ("argv_exec.py", "batch_queue.py"):
+        shutil.copy2(PLUGIN_ROOT / "scripts" / "pipeline" / script_name, script_dir)
+    project_path = tmp_path / "consumer project's files"
+    loom_dir = project_path / "docs" / "loom"
+    loom_dir.mkdir(parents=True)
+    (loom_dir / "QUEUE.toml").write_text(
+        '[[change]]\nid = "safe-id"\nplan = "docs/loom/plans/x.md"\n'
+        '[change.budgets]\nrun = 1\n',
+        encoding="utf-8",
+    )
+    (loom_dir / "queue-state.json").write_text(
+        json.dumps({"safe-id": {"status": "FAILED"}}),
+        encoding="utf-8",
+    )
+    forbidden_side_effect = tmp_path / "argv-side-effect"
+    hostile_reason = (
+        'double " quote $literal-dollar '
+        f'$(touch "{forbidden_side_effect}") '
+        f'`touch "{forbidden_side_effect}"` '
+        f'; touch "{forbidden_side_effect}"\nsecond line'
+    )
+    argv = [
+        "reset", "safe-id", "--project", str(project_path),
+        "--reason", hostile_reason,
+    ]
+    payload = base64.urlsafe_b64encode(
+        json.dumps(argv).encode("utf-8")
+    ).decode("ascii").rstrip("=")
+    assert re.fullmatch(r"[A-Za-z0-9_-]+", payload)
+    command = command_match.group(1).replace(
+        "<URL_SAFE_BASE64_JSON_ARGV>", payload
+    )
+    env = os.environ.copy()
+    env["CLAUDE_PLUGIN_ROOT"] = str(installed_root)
+    subprocess.run(
+        command,
+        shell=True,
+        executable="/bin/bash",
+        env=env,
+        check=True,
+    )
+    state = json.loads((loom_dir / "queue-state.json").read_text())
+    assert state["safe-id"]["audit"][-1]["reason"] == hostile_reason
+    assert not forbidden_side_effect.exists()
+
+    helper = script_dir / "argv_exec.py"
+    malformed_payloads = [
+        "not+url-safe",  # forbidden alphabet
+        base64.urlsafe_b64encode(b"not json").decode("ascii"),
+        base64.urlsafe_b64encode(json.dumps({"not": "a list"}).encode()).decode(),
+        base64.urlsafe_b64encode(json.dumps(["status", 1]).encode()).decode(),
+        base64.urlsafe_b64encode(json.dumps(["unknown"]).encode()).decode(),
+        base64.urlsafe_b64encode(
+            json.dumps(["status", "--project", ".", "--extra", "x"]).encode()
+        ).decode(),
+    ]
+    for malformed in malformed_payloads:
+        rejected = subprocess.run(
+            ["python3", str(helper), malformed], capture_output=True, text=True
+        )
+        assert rejected.returncode == 2, malformed

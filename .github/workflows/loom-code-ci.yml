@@ -98,6 +98,11 @@ jobs:
           PYTHONDONTWRITEBYTECODE: "1"
         run: python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -v
 
+      - name: Verify standalone plugin filesystem boundaries
+        run: |
+          python3 scripts/check_plugin_boundaries.py loom-code
+          python3 scripts/check_plugin_boundaries.py loom-design
+
       - name: Verify code-team <-> loom-code knowledge SSOT
         # canonical/ is the single source of truth; each skill carries routed
         # functional copies. Any byte-level divergence fails the build.

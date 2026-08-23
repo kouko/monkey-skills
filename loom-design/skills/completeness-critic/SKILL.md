@@ -430,7 +430,7 @@ revise/proceed signal instead of inferring one from prose:
 
 - **`NEEDS_REVISION`** — a **severity-3** consolidated finding could **not** be
   concretely re-seeded (it needs writer rework — e.g. it contradicts the
-  draft's existing structure), **or** `../../scripts/spec/validate_spec_output.py`
+  draft's existing structure), **or** `argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/spec/validate_spec_output.py", "<change-folder>"]`
   fails on the extended output after write-back. Resolution: back to the
   `spec-expansion` writer before any handoff. The outer writer↔critic revision
   cycle is capped at 2: on the 2nd consecutive `NEEDS_REVISION` after a
@@ -441,9 +441,15 @@ revise/proceed signal instead of inferring one from prose:
   re-seeded (`critic-found`), and `## Blind spots` is non-empty as required.
   Resolution: hand to human review → loom-code VERIFY.
 
-Then mint it — both values mint: `../../scripts/spec/mint_critic_verdict.py mint
---change-folder <path> --critic completeness-critic --verdict-file <path>
---files <comma-list>`.
+Then mint it — both values mint: `argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/spec/mint_critic_verdict.py", "mint", "--change-folder", "<change-folder>", "--critic", "completeness-critic", "--verdict-file", "<verdict-file>", "--files", "proposal.md,specs/authentication/spec.md"]`.
+Pass every argv array directly to process execution; never through a shell.
+
+Public consumer contract — validate the minted verdict from this installed
+plugin's root, without assuming a sibling repository layout:
+
+```
+argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/spec/mint_critic_verdict.py", "validate", "--change-folder", "<change-folder>", "--critic", "completeness-critic", "--files", "proposal.md,specs/authentication/spec.md"]
+```
 
 There is deliberately **no unqualified PASS** in this enum: a critic verdict
 claiming nothing remains would itself be a completeness claim (§Ban claiming
@@ -454,6 +460,6 @@ carries notes by construction.
 
 - `../spec-expansion/SKILL.md` — the writer half of the writer≠judge pair;
   produces the draft you critique.
-- `../../scripts/spec/validate_spec_output.py` — the executable contract; it checks
+- The validator argv above is the executable contract; it checks
   the `## Blind spots — needs human/field input` section is present AND
   non-empty (your load-bearing output) plus the OpenSpec skeleton.

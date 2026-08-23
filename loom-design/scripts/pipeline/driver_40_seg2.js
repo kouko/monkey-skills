@@ -103,10 +103,14 @@ function seg2CriticPreamble(lens, changeDir, round) {
   ].join('\n')
 }
 
+function shellQuote(value) {
+  return `'${String(value).replace(/'/g, `'"'"'`)}'`
+}
+
 function seg2ValidatorPreamble(changeDir, validatorScript) {
   return [
     'STATION: spec validator gate.',
-    `Run via Bash: python3 ${validatorScript} ${changeDir}`,
+    `Run via Bash: python3 ${shellQuote(validatorScript)} ${shellQuote(changeDir)}`,
     'Report the REAL exit code you observed as `validator_exit` — never assert exit 0 without having actually run the command.',
     `G3: also check ${changeDir}/proposal.md for a "## Decisions" section (decisions made + why + rejected alternatives — required by seg2SpecPreamble's own instruction to the writer, not assumed from loom-spec's template). If it is ABSENT, add one entry to \`interventions\` as {bucket: 'B', text: '<name the gap>'} — a human should supply the missing rationale; do not fabricate a Decisions section just to satisfy this check.`,
   ].join('\n')
@@ -124,7 +128,7 @@ async function runSegment2(args) {
       'runSegment2: segment 2 requires args.skillsRoot to locate the loom-design validator — refusing to guess.'
     )
   }
-  const validatorScript = args.skillsRoot + '/loom-design/scripts/spec/validate_spec_output.py'
+  const validatorScript = args.skillsRoot + '/scripts/spec/validate_spec_output.py'
 
   const results = []
   const changeDir = `${projectPath}/docs/loom/${changeId}`

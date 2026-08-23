@@ -132,8 +132,8 @@ Before briefing, grep the **target repo's** `docs/loom/PRINCIPLES.md` for
 the phrase `escalation appetite`, bounded to the region between the
 `## Engineering Principles` heading and the next `##` heading. Landing
 shape (what the entry looks like, how it's scoped) is owned by
-`loom-design/skills/product-principles/references/principles-rules.md`
-§Escalation appetite — landing shape — follow that scoped-grep contract
+`loom-design:product-principles` §Escalation appetite — landing shape;
+follow that scoped-grep contract
 exactly; do not re-derive it here.
 
 Read the entry **once**, apply its dial, **never re-ask** — a documented

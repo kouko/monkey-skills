@@ -53,9 +53,7 @@ def test_seed_section_documents_validate_before_fan_out_step():
 
 def test_invocation_names_design_critic_and_the_two_files():
     section = _seed_section()
-    assert "--critic design-critic" in section or re.search(
-        r"--critic\s+design-critic", section
-    )
+    assert '"--critic", "design-critic"' in section
     assert "DESIGN.md,ui-flows.md" in section or re.search(
         r"DESIGN\.md,\s*ui-flows\.md", section
     )
@@ -105,4 +103,5 @@ def test_path_resolution_convention_documented():
     assert re.search(r"PLUGIN repo", section, re.I)
     assert re.search(r"CONSUMER project", section, re.I)
     assert re.search(r"absolute", section, re.I)
-    assert re.search(r"cd\s", section)
+    assert "consumer project root" in section.lower()
+    assert "never pass the command through a shell" in section

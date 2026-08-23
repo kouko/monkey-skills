@@ -15,6 +15,7 @@ Stdlib only (pathlib + re). Resolve SKILL.md relative to this test file.
 """
 
 import re
+import subprocess
 from pathlib import Path
 
 SKILL = Path(__file__).parents[2] / "skills" / "completeness-critic" / "SKILL.md"
@@ -247,10 +248,65 @@ def test_verdict_step_mints_critic_verdict():
     low = text.lower()
     assert "mint_critic_verdict.py" in text, \
         "verdict section must cite the mint_critic_verdict.py script"
-    assert "--critic completeness-critic" in text, \
-        "mint invocation must pass --critic completeness-critic"
+    assert '"--critic", "completeness-critic"' in text, \
+        "mint argv must pass --critic and completeness-critic separately"
     assert "both" in low and "mint" in low, \
         "must state both verdict values mint (NEEDS_REVISION still mints)"
+
+
+def test_public_contract_exposes_installed_root_verdict_validation_command():
+    """Consumers must not guess a sibling checkout path to validate a verdict."""
+    text = _text()
+    assert (
+        'argv: ["python3", '
+        '"${CLAUDE_PLUGIN_ROOT}/scripts/spec/mint_critic_verdict.py", '
+        '"validate"'
+    ) in text, "public skill must expose an installed-root direct-argv validate command"
+    for argument_pair in (
+        '"--change-folder", "<change-folder>"',
+        '"--critic", "completeness-critic"',
+        '"--files", "proposal.md,specs/authentication/spec.md"',
+    ):
+        assert argument_pair in text, (
+            f"validate argv missing required argument pair: {argument_pair}"
+        )
+
+
+def test_documented_python_command_validates_a_minted_verdict(tmp_path):
+    """The documented interpreter + script + validate arguments execute."""
+    script = Path(__file__).with_name("mint_critic_verdict.py")
+    change_folder = tmp_path / "change"
+    change_folder.mkdir()
+    (change_folder / "proposal.md").write_text("proposal\n", encoding="utf-8")
+    verdict = tmp_path / "verdict.md"
+    verdict.write_text("verdict: PASS_WITH_NOTES\n", encoding="utf-8")
+
+    mint = subprocess.run(
+        [
+            "python3", str(script), "mint",
+            "--change-folder", str(change_folder),
+            "--critic", "completeness-critic",
+            "--verdict-file", str(verdict),
+            "--files", "proposal.md",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert mint.returncode == 0, mint.stderr
+
+    validate = subprocess.run(
+        [
+            "python3", str(script), "validate",
+            "--change-folder", str(change_folder),
+            "--critic", "completeness-critic",
+            "--files", "proposal.md",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert validate.returncode == 0, validate.stderr
 
 
 def test_severity_scale_defined():

@@ -17,11 +17,13 @@ If you are a subagent already dispatched with an explicit role prompt, **do not*
 ## §Intake
 
 All user-facing narration in this router — briefs, routing decisions,
-recommendation asks — follows `loom-code/hooks/family-relay.md
-§Family relay discipline` (pointer, never copy).
+recommendation asks — follows `references/design-relay.md` (the local
+design-artifact and narration relay). That contract builds on
+`references/family-relay.md §Family relay discipline`; load it through the
+design relay rather than routing design work through a code-review skill.
 
 **Step 1 — 前站檢查 (upstream check).** Check the target repo against the loom
-family's on-ramp criteria table (`loom-code/hooks/family-reception.md` — the
+family's on-ramp criteria table (`references/family-reception.md` — the
 reception SSOT; reference it, don't copy its rows here). The negative guard: a
 bug fix, a refactor, or a test-covered increment skips the design side entirely
 and proceeds straight to whichever downstream station applies
@@ -59,7 +61,7 @@ choice, a value commitment, an on-ramp choice) can itself be non-trivial. When
 the fork is complex enough to warrant a brief, run
 `dev-workflow:brief-before-asking` first instead of improvising the question —
 the trigger threshold and stakes-first framing live in
-`loom-code/hooks/family-reception.md §Brief before a complex fork` (the
+`references/family-reception.md §Brief before a complex fork` (the
 single source; reference it, don't copy it).
 
 <EXTREMELY-IMPORTANT>

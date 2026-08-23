@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -303,13 +304,13 @@ def test_load_state_fails_loud_on_non_dict_json(tmp_path):
 
 
 def _write_stub_validator(skills_root: Path, exit_code: int) -> None:
-    """Write a stub loom-design validator under skills_root that exits exit_code.
+    """Write a stub validator under the installed loom-design root.
 
-    Stands in for the real ``loom-design/scripts/spec/validate_spec_output.py`` so
+    Stands in for the real ``scripts/spec/validate_spec_output.py`` so
     tests never invoke the real validator (host convention: stub, don't
     shell out to sibling-team scripts from unit tests).
     """
-    validator_path = skills_root / "loom-design" / "scripts" / "spec" / "validate_spec_output.py"
+    validator_path = skills_root / "scripts" / "spec" / "validate_spec_output.py"
     validator_path.parent.mkdir(parents=True, exist_ok=True)
     validator_path.write_text(f"import sys\nsys.exit({exit_code})\n", encoding="utf-8")
 
@@ -827,6 +828,61 @@ def test_next_emits_workflow_args_and_marks_running(tmp_path, capsys):
     assert state["add-export-csv"]["status"] == "RUNNING"
     assert state["add-export-csv"]["branch"] == "loom/add-export-csv"
     assert state["add-export-csv"]["worktree"] == str(worktree_path)
+
+
+def test_next_uses_installed_plugin_root_for_validation(tmp_path, capsys):
+    project_path = _make_tmp_git_repo(tmp_path)
+    plan_rel = "docs/loom/plans/2026-07-03-add-export-csv.md"
+    plan_path = project_path / plan_rel
+    plan_path.parent.mkdir(parents=True)
+    plan_path.write_text("plan\n", encoding="utf-8")
+
+    change_dir = project_path / "docs" / "loom" / "add-export-csv"
+    (change_dir / "specs" / "auth").mkdir(parents=True)
+    (change_dir / "proposal.md").write_text(
+        "# Proposal\n\nWhy.\n\n"
+        "## USM backbone\n- Sign up → Log in\n\n"
+        "## OOUX object model\n- User (objects)\n\n"
+        "## Provenance\n- Login: seeded\n\n"
+        "## Blind spots — needs human/field input\n- Policy unknown.\n\n"
+        "## Path × edge matrix\n| path | edge |\n| --- | --- |\n| login | error |\n\n"
+        "## Cross-object combinations\n| Stage | Objects |\n| --- | --- |\n| Login | User |\n\n"
+        "## Journey navigation\n- Login → Home\n",
+        encoding="utf-8",
+    )
+    (change_dir / "specs" / "auth" / "spec.md").write_text(
+        "## ADDED Requirements\n\n"
+        "### Requirement: User login\n"
+        "The system MUST authenticate users.\n\n"
+        "#### Scenario: Valid credentials\n"
+        "- GIVEN a registered user\n"
+        "- WHEN valid credentials are submitted\n"
+        "- THEN a session is granted\n",
+        encoding="utf-8",
+    )
+    _run_git(["add", plan_rel, "docs/loom/add-export-csv"], project_path)
+    _run_git(["commit", "-m", "add frozen change"], project_path)
+
+    loom_dir = project_path / "docs" / "loom"
+    (loom_dir / "QUEUE.toml").write_text(
+        '[[change]]\nid = "add-export-csv"\n'
+        f'plan = "{plan_rel}"\n[change.budgets]\nrun = 200000\n',
+        encoding="utf-8",
+    )
+
+    installed_root = tmp_path / "installed design's root"
+    validator = Path(__file__).parents[1] / "spec" / "validate_spec_output.py"
+    installed_validator = installed_root / "scripts" / "spec" / validator.name
+    installed_validator.parent.mkdir(parents=True)
+    shutil.copy2(validator, installed_validator)
+
+    exit_code = main(
+        ["next", "--project", str(project_path), "--skills-root", str(installed_root)]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["skillsRoot"] == str(installed_root.resolve())
 
 
 def test_next_reports_done_when_queue_empty(tmp_path, capsys):

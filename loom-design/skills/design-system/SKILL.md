@@ -196,11 +196,13 @@ Run the validator against the emitted design output directory and **fix any
 flagged issue before declaring done**:
 
 ```
-python loom-design/scripts/interface/validate_design_output.py <design-output-dir>
+argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/interface/validate_design_output.py", "<design-output-dir>"]
 ```
 
-The path relative to this skill dir is `../../scripts/interface/validate_design_output.py`
-(the script ships under the plugin's `scripts/interface/`).
+Pass this argv array directly to process execution; never through a shell.
+
+The command resolves from the installed plugin root (the script ships under
+the plugin's `scripts/interface/`).
 It mechanically checks the change-folder structure (the design-system doc
 present, the GUI `DESIGN.md` carrying all 8 canonical `##` sections). The
 validator checks *structure*; the *quality* of the tokens (palette derived from

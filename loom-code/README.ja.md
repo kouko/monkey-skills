@@ -197,4 +197,4 @@ Issue + PR 歓迎：https://github.com/kouko/monkey-skills/issues に `loom-code
 
 ## ライセンス
 
-MIT — repo ルートの [LICENSE](../LICENSE) を参照。
+MIT — リポジトリの [LICENSE](https://github.com/kouko/monkey-skills/blob/main/LICENSE) を参照。

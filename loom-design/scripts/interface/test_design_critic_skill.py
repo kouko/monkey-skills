@@ -266,8 +266,8 @@ def test_verdict_step_mints_critic_verdict():
     low = text.lower()
     assert "mint_critic_verdict.py" in text, \
         "verdict section must cite the mint_critic_verdict.py script"
-    assert "--critic design-critic" in text, \
-        "mint invocation must pass --critic design-critic"
+    assert '"--critic", "design-critic"' in text, \
+        "mint argv must pass --critic and design-critic as separate arguments"
     assert "both" in low and "mint" in low, \
         "must state both verdict values mint (NEEDS_REVISION still mints)"
 

@@ -197,4 +197,4 @@ SessionStart hook 發出可移植 JSON shape，涵蓋 Claude Code 的 `hookSpeci
 
 ## 授權
 
-MIT — 見 repo 根目錄 [LICENSE](../LICENSE)。
+MIT — 見 repository 的 [LICENSE](https://github.com/kouko/monkey-skills/blob/main/LICENSE)。

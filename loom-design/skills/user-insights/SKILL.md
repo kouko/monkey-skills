@@ -162,8 +162,10 @@ translate):
 
    ```
    cd <consumer-project-root>
-   python3 <resolved-absolute-path-to>/loom-design/scripts/discovery/validate_discovery_artifacts.py docs/loom/discovery/<date>-<slug>/
+   argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/discovery/validate_discovery_artifacts.py", "<discovery-folder>"]
    ```
+
+   Pass this argv array directly to process execution; never through a shell.
 
    Non-zero exit → fix the reported problems and re-run, **bounded at 2 attempts**;
    if still non-zero after 2 fix-and-rerun cycles, stop and
