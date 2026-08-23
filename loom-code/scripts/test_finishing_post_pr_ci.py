@@ -115,6 +115,7 @@ def test_sdd_automatically_enters_finishing_after_an_approved_plan_completes():
     assert "automatically invokes" in completion
     assert "finishing-a-development-branch" in completion
     assert "一站一站來" in completion
+    assert "after a task DONE" not in text
 
 
 def test_plugin_version_and_changelog_ship_the_ci_loop():
