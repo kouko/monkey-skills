@@ -55,7 +55,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: claimed(@neutral_family)
+- **Status**: done(1e9955ba)
 - **Gloss**: 共用底層只保留兩邊都成立的規則，不再假設整個 family 一定存在。
 
 ## Task 2 — Add a loom-design-specific relay contract
@@ -73,7 +73,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-1
-- **Status**: claimed(@design_relay)
+- **Status**: done(1e9955ba)
 - **Gloss**: Design 交付件由 design critic 判斷，普通說明則有完整本地規則。
 
 ## Task 3 — Add a design-panel dispatch contract
@@ -91,7 +91,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: claimed(@design_dispatch)
+- **Status**: done(1e9955ba)
 - **Gloss**: Design 分派以 object、journey、critic lens 為單位，不再借用 code module 的平行規則。
 
 ## Task 4 — Extend deterministic sync to neutral identifier grammar
@@ -109,7 +109,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-3
-- **Status**: claimed(@identifier_sync)
+- **Status**: done(1e9955ba)
 - **Gloss**: BI／REQ 格式維護一份，兩邊各自安裝時都能讀懂。
 - **Reuse-adequacy**:
   - **Observed**: `ROUTE` maps a canonical source to multiple managed destinations — read scripts/sync_loom_family_contracts.py:20
@@ -130,7 +130,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: Task 4 completes first
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: claimed(@verified-uncommitted)
+- **Status**: done(1e9955ba)
 - **Gloss**: Code agent 自己能解讀 REQ，不需為了格式去啟動 design plugin。
 
 ## Task 6 — Make spec-expansion commands install-root-relative
@@ -148,7 +148,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: Task 3 completes first
 - **Independent**: false
 - **Brief item covered**: BI-5
-- **Status**: claimed(@spec_root_command)
+- **Status**: done(1e9955ba)
 - **Gloss**: Spec station 從自己的安裝根目錄找 validator，不猜 monorepo 路徑。
 
 ## Task 7 — Make pipeline segment 2 install-root-relative
@@ -166,7 +166,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-5
-- **Status**: claimed(@pipeline_driver_root)
+- **Status**: done(1e9955ba)
 - **Gloss**: Segment 2 直接接收 loom-design 安裝根目錄，不再接收 skills repository 父目錄。
 
 ## Task 8 — Make batch queue validation install-root-relative
@@ -184,7 +184,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: Task 7 completes first
 - **Independent**: false
 - **Brief item covered**: BI-5
-- **Status**: claimed(@batch_root)
+- **Status**: done(1e9955ba)
 - **Gloss**: Batch mode 與互動 pipeline 使用同一種安裝根目錄契約。
 
 ## Task 9 — Prove behavioral standalone operation
@@ -202,7 +202,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: Tasks 2, 5, 6, 10, 11 complete first
 - **Independent**: false
 - **Brief item covered**: BI-6
-- **Status**: claimed(@verified-uncommitted)
+- **Status**: done(1e9955ba)
 - **Gloss**: Cold-start proof 會執行核心路徑，也會證明移除必要本地能力時確實失敗。
 
 ## Task 10 — Make writing-plans consume its local identifier contract
@@ -220,7 +220,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: Task 4 completes first
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: claimed(@verified-uncommitted)
+- **Status**: done(1e9955ba)
 - **Gloss**: Plan schema 也只讀 loom-code 自己帶的格式契約。
 
 ## Task 11 — Publish the installed-root pipeline contract
@@ -238,7 +238,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: Tasks 7, 8 complete first
 - **Independent**: false
 - **Brief item covered**: BI-2
-- **Status**: claimed(@verified-uncommitted)
+- **Status**: done(1e9955ba)
 - **Gloss**: Full conductor 仍是兩-plugin 組合，但它自己的命令不再依賴 monorepo 形狀。
 
 ## Task 12 — Make every interactive design station install-root-relative
@@ -258,7 +258,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: Task 6 completes first
 - **Independent**: true
 - **Brief item covered**: BI-7
-- **Status**: claimed(@verified-uncommitted)
+- **Status**: done(1e9955ba)
 - **Gloss**: 不只 pipeline；每個 design station 都能從自己的安裝位置找到工具。
 
 ## Task 13 — Make pipeline arguments immune to shell re-interpretation
@@ -276,7 +276,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: Task 11 completes first
 - **Independent**: true
 - **Brief item covered**: BI-8
-- **Status**: claimed(@verified-uncommitted)
+- **Status**: done(1e9955ba)
 - **Gloss**: 動態值是參數資料，不再是會被 shell 再解讀的命令文字。
 
 ## Task 14 — Expand the standalone proof to every command family
@@ -292,7 +292,7 @@ N/A — no unresolved question: the user selected separate plugins with loom-des
 - **Dependencies**: Tasks 12, 13 complete first
 - **Independent**: false
 - **Brief item covered**: BI-6
-- **Status**: claimed(@verified-uncommitted)
+- **Status**: done(1e9955ba)
 - **Gloss**: 獨立安裝保證由完整 station matrix 支撐，不只抽查 spec 工具。
 
 ## Notes
