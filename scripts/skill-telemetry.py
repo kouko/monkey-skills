@@ -2,12 +2,12 @@
 """skill-telemetry.py — append skill invocation events to a JSONL telemetry log.
 
 Optional Layer-0 infrastructure for the skill-evolution architecture
-(see dev-workflow/docs/skill-evolution-architecture.md §6 H4 horizon).
+(see loom-workflow/docs/skill-evolution-architecture.md §6 H4 horizon).
 
 This script is **opt-in** and **per-user**. The telemetry log is
 not committed to any repo; each user runs it locally for their
 own usage tracking. Privacy considerations are documented inline
-and in dev-workflow/docs/telemetry-setup.md.
+and in loom-workflow/docs/telemetry-setup.md.
 
 Two modes of invocation:
 
@@ -28,7 +28,7 @@ JSONL entry schema:
         "session_id": "<session identifier; optional>",
         "event_type": "skill_invoke" | "skill_complete" | "skill_error",
         "skill_name": "<skill identifier>",
-        "plugin": "<plugin name; e.g. dev-workflow>",
+        "plugin": "<plugin name; e.g. loom-workflow>",
         "prompt_hash": "<sha256 of user prompt; do NOT log raw prompt by default>",
         "prompt_summary": "<optional, user-confirmed summary; default null>",
         "duration_ms": <optional integer>,
@@ -62,7 +62,7 @@ Usage:
     python3 scripts/skill-telemetry.py log \
         --log ~/.claude/skill-telemetry.jsonl \
         --skill complexity-critique \
-        --plugin dev-workflow \
+        --plugin loom-workflow \
         --event-type skill_invoke
 
     python3 scripts/skill-telemetry.py summarize \

@@ -75,7 +75,7 @@ flowchart TD
 
 ### Verdict 詞彙
 
-跟 dev-workflow 的 critique skill 平行：
+跟 loom-workflow 的 critique skill 平行：
 
 | Verdict | 條件 | 動作 |
 |---|---|---|
@@ -218,7 +218,7 @@ skill 撰寫的生命週期（全部在 `skill-dev-toolkit`）：
 - `dogfood-skill-testing` — 盲測行為
 
 通用 critique gate（`proposal-critique` / `complexity-critique`）
-留在 `dev-workflow`。
+留在 `loom-workflow`。
 
 `skill-refactor`（Phase A）跟 `skill-tuning`（Phase B）的拆分
 反映 Fowler Two Hats 套到 skill：refactor 保留行為、tuning 改變

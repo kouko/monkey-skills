@@ -62,6 +62,7 @@ EXPECTED_INVENTORY = {
     "loom-design/scripts/discovery/test_using_skill.py": 2,
     "loom-design/skills/using-loom-design/references/design-relay.md": 1,
     "loom-design/skills/using-loom-design/references/family-relay.md": 1,
+    "loom-workflow/skills/handoff/references/handoff-schema.md": 1,
 }
 
 

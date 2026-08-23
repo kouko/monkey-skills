@@ -50,14 +50,14 @@ Anthropic's official Agent Skills documentation emphasizes:
 
 - Each skill is a self-contained unit of progressive disclosure
 - Skills are independently loadable
-- Skill consumers (e.g., `dev-workflow:skill-creator-advance`) load one skill directory at a time
+- Skill consumers (e.g., `loom-workflow:skill-creator-advance`) load one skill directory at a time
 
 Plugin-level SoT erodes this principle:
 
 1. Skill consumers loading just `artifact-deconstruct/` would not see `docs/lenses/`
 2. Cross-plugin SSOT (PR #159) is materially different — there each consumer is in a different plugin and there is no in-plugin alternative
 3. Within one plugin, allowing skills to reference plugin-level resources blurs the skill-as-unit boundary
-4. If a `dev-workflow:skill-creator-advance` audit reads `artifact-deconstruct` standalone, references to plugin-level lens content become broken pointers
+4. If a `loom-workflow:skill-creator-advance` audit reads `artifact-deconstruct` standalone, references to plugin-level lens content become broken pointers
 
 The self-containment cost (up to 5x duplication for high-reuse lenses at v1.0) is accepted in exchange for full Anthropic compliance.
 
@@ -89,7 +89,7 @@ The self-containment cost (up to 5x duplication for high-reuse lenses at v1.0) i
 
     Lens files do **not** need to be byte-identical across skills. They need to be **primary-source-faithful**. A `lens-persuasion` operationalized for landing-page analysis may differ from one operationalized for pricing-page analysis — both are correct, both cite Cialdini 2021.
 
-3. **Quarterly skill audit** (folds into existing `dev-workflow:quarterly-audit-runbook.md`)
+3. **Quarterly skill audit** (folds into existing `loom-workflow:quarterly-audit-runbook.md`)
 
     When 2+ skills cite the same primary source, audit confirms:
     - Version consistency (all citing same edition)
@@ -126,4 +126,4 @@ Rejected because:
 - Anthropic Agent Skills documentation (skill self-containment)
 - monkey-skills CLAUDE.md (subfolder structure rules)
 - PR #159 SSOT-and-functional-copy precedent (rejected for intra-plugin use here)
-- `dev-workflow:quarterly-audit-runbook.md` (drift mitigation hook)
+- `loom-workflow:quarterly-audit-runbook.md` (drift mitigation hook)

@@ -6,10 +6,10 @@
 
 ```
 Skill(skill: "<skill-name>")          # e.g. Skill(skill: "tdd-iron-law")
-Skill(skill: "<plugin>:<skill-name>") # plugin-scoped — Skill(skill: "dev-workflow:git-memory")
+Skill(skill: "<plugin>:<skill-name>") # plugin-scoped — Skill(skill: "loom-workflow:git-memory")
 ```
 
-Plugin-scoped form is required when invoking skills from a different plugin (e.g. delegations to `dev-workflow:*` from `loom-code:*`).
+Plugin-scoped form is required when invoking skills from a different plugin (e.g. delegations to `loom-workflow:*` from `loom-code:*`).
 
 ## Subagent dispatch
 

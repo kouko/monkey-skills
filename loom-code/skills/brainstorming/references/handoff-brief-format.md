@@ -115,7 +115,7 @@ Strongly recommended for non-trivial work; can be omitted for genuinely small ch
 Axis 4 — 2-3 other ways this could be solved, and why they were rejected. Even if the chosen path is obviously best, write the alternatives down. Format: a markdown comparison table — one row per alternative, columns `Alternative | Who ships it / source | Why rejected` (add the shared trade-off axes as further columns when the comparison is multi-dimensional). This section is fill-or-declare: either fill the table, or replace the body with the single line `N/A — no alternatives found: <one-line reason>`. Do not delete the section heading — an absent heading or a bare section is a reviewable omission. The narrative rationale for the chosen path belongs in `## Decision`, not in a table cell.
 Routing rule SSOT: `loom-code/hooks/family-relay.md §(b) Visual defaults`.
 
-If `dev-workflow:proposal-critique` was invoked during discovery, paste its KEEP / DEFER / DROP verdicts here. If `dev-workflow:complexity-critique` was invoked, paste its smallest-end-state / LOC-delta / obsolescence verdicts.
+If `loom-workflow:proposal-critique` was invoked during discovery, paste its KEEP / DEFER / DROP verdicts here. If `loom-workflow:complexity-critique` was invoked, paste its smallest-end-state / LOC-delta / obsolescence verdicts.
 
 ### `## What Becomes Obsolete`
 

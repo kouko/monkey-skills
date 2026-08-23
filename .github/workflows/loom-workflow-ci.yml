@@ -1,0 +1,83 @@
+name: loom-workflow CI
+
+# Runs the loom-workflow plugin's shell test suite
+# (loom-workflow/tests/test-*.sh), which previously ran in NO workflow —
+# including the three memory-grep tests
+# (test-memory-grep-match.sh / test-memory-grep-supersedes.sh /
+# test-memory-grep-verify.sh) that pin memory-grep.sh's frozen exit-code
+# contract. A regression there had no CI gate to catch it.
+#
+# Two jobs: the shell suite (glob over loom-workflow/tests/test-*.sh) and
+# the cot-explain script pytest suite. The post-merge HEAD-body check
+# (memory-grep.sh --verify-merged) lives in its own workflow file,
+# memory-verify-merged.yml — it needs an unfiltered push-to-main trigger
+# (a memory-worthy PR usually touches paths OTHER than loom-workflow/**),
+# which this file's `paths:`-scoped triggers cannot provide without
+# losing their scoping for this job. See that file's header for the
+# full reasoning.
+#
+# Status: intended for `main` branch protection.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'loom-workflow/**'
+      - '.github/workflows/loom-workflow-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'loom-workflow/**'
+      - '.github/workflows/loom-workflow-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  shell-tests:
+    name: loom-workflow shell tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run loom-workflow/tests shell suite
+        run: |
+          for t in loom-workflow/tests/test-*.sh; do
+            echo "::group::$t"
+            bash "$t"
+            echo "::endgroup::"
+          done
+
+  # cot-explain ships two scripts whose contract is prose-heavy — a
+  # leftover-markdown gate, a staleness stamp, a mermaid spec checker.
+  # Their regression history lived in code comments until it was turned
+  # into tests; a suite no workflow runs is the same dead letter the
+  # comments were, so it gets a job here.
+  #
+  # The suite lives in loom-workflow/tests/, NOT beside the scripts it
+  # tests: pytest run inside a skill creates __pycache__/ and
+  # .pytest_cache/ there, which this repo's skill-folder hook forbids, so
+  # the skill's own tests would lock the skill against further editing.
+  cot-explain-pytest:
+    name: cot-explain script tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Pinned, like every other external surface on this branch
+      # (checkout@v4, setup-python@v5, mermaid@11.16.0). A markdown-it-py major
+      # bump changes the HTML these tests assert on.
+      - name: Install test dependencies
+        run: python3 -m pip install --quiet 'pytest~=8.3' 'markdown-it-py~=3.0'
+
+      - name: Run cot-explain script tests
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -m pytest loom-workflow/tests/test_cot_explain_scripts.py -v

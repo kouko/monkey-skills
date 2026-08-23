@@ -23,7 +23,7 @@ A token "looks like a skill slug" iff:
     `stock-flow`, `limits-to-growth`, `lead-measure`).
 
 Edge cases handled:
-  - Plugin with no skills/ folder (e.g. dev-workflow has skills/ — but some
+  - Plugin with no skills/ folder (e.g. loom-workflow has skills/ — but some
     other plugins may not): skipped gracefully.
   - plugin.json with no `description` field: skipped.
   - Cross-plugin skill references in `plugin:skill` form (e.g.

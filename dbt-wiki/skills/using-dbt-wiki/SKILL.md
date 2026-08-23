@@ -76,4 +76,4 @@ init → update → query → review
 
 - Obsidian vault notes → `obsidian:using-obsidian` (`wiki-*` skills).
 - A source-code repository's wiki → `repo-wiki`.
-- dbt SQL style/authoring → `dev-workflow:dbt-model-style`.
+- dbt SQL style/authoring → `loom-workflow:dbt-model-style`.

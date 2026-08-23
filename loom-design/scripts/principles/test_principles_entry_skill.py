@@ -137,7 +137,7 @@ def test_entry_router_names_bba():
     (commit 9f190e07) replaced the WHOLE in-place brief-before-fork
     template (skill id + trigger triple) with a one-line pointer to
     family-reception.md §Brief before a complex fork, so the router no
-    longer names dev-workflow:brief-before-asking inline (the SSOT
+    longer names loom-workflow:brief-before-asking inline (the SSOT
     carries it); this test asserts the pointer invariant T8 established."""
     text = _text()
     assert "family-reception.md" in text and "Brief before a complex fork" in text, \

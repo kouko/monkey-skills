@@ -20,7 +20,7 @@ If the user or agent invokes implementation moves (drafting code, opening files,
 |---|---|---|
 | 1 — Problem | What job is the user hiring this change to do? **Not the solution they proposed.** | Christensen et al. (2016) JTBD, ISBN 978-0062435613 |
 | 2 — Users | Who, in what conditions, with what existing tools and constraints? | Klement (2018) job-story format, ISBN 978-1718626751 |
-| 3 — Smallest End State | What is the minimum shippable resolution? | Often delegates to `dev-workflow:complexity-critique` |
+| 3 — Smallest End State | What is the minimum shippable resolution? | Often delegates to `loom-workflow:complexity-critique` |
 | 4 — Alternatives Considered | What are 2-3 other ways this could be solved, and why rejected? | Forces trade-off articulation |
 | 5 — What Becomes Obsolete | What existing code / process this change makes redundant — and removes in the same PR | YAGNI + same-PR cleanup discipline |
 
@@ -45,8 +45,8 @@ If the task is not on this list, the HARD-GATE applies.
 
 ## Cross-skill delegation
 
-- **`dev-workflow:complexity-critique`** — optional; invoked from Axis 3 when the change feels too big. Runs deletion-first triage (3 questions: smallest end state, before-after LOC, what becomes obsolete).
-- **`dev-workflow:proposal-critique`** — optional; invoked from Axis 4 when 3+ real alternatives need KEEP / DEFER / DROP triage.
+- **`loom-workflow:complexity-critique`** — optional; invoked from Axis 3 when the change feels too big. Runs deletion-first triage (3 questions: smallest end state, before-after LOC, what becomes obsolete).
+- **`loom-workflow:proposal-critique`** — optional; invoked from Axis 4 when 3+ real alternatives need KEEP / DEFER / DROP triage.
 - **`writing-plans`** (Phase 2) — the next stage. Consumes the brief.
 - **`tdd-iron-law`** — fires once `writing-plans` finishes and SDD dispatches an implementer subagent.
 
@@ -54,7 +54,7 @@ If the task is not on this list, the HARD-GATE applies.
 
 - Does **not** write code.
 - Does **not** make the final decision for the user. It surfaces axes; the user decides.
-- Does **not** replace `dev-workflow:complexity-critique`. complexity-critique critiques a specific proposal; brainstorming explores an open problem.
+- Does **not** replace `loom-workflow:complexity-critique`. complexity-critique critiques a specific proposal; brainstorming explores an open problem.
 
 ## See also
 

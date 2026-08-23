@@ -46,4 +46,4 @@ Stdlib only (`json`). Mirrors the `distribute.py` (write) / `verify-drift.py` (`
 
 ## Why this pattern
 
-Mirrors `legal-toolkit/scripts/canonical/` (Phase 1.10) and `dev-workflow:complexity-critique` mindset functional-copy arrangement (see `domain-teams:code-team/SKILL.md` §Resource Manifest cross-plugin paragraph). Keeps each plugin runtime self-contained while preserving a single editable source of truth.
+Mirrors `legal-toolkit/scripts/canonical/` (Phase 1.10) and `loom-workflow:complexity-critique` mindset functional-copy arrangement (see `domain-teams:code-team/SKILL.md` §Resource Manifest cross-plugin paragraph). Keeps each plugin runtime self-contained while preserving a single editable source of truth.

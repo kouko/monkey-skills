@@ -17,7 +17,7 @@ Every question spends the user's attention; asking on autopilot is confirmation 
 
 This skill mostly relays a verdict and asks the user to choose: fix the findings now, defer them, or merge anyway. Whichever you ask, **lead with a scoped `(Recommended)` option and one line of why** — never hand the user an open-ended punt they have to fill in themselves. Research industry practice first for design/strategy calls ([`using-loom-code`](../../using-loom-code/SKILL.md) router rule #5 / `brainstorming`'s Axis-4 — point to them, do not re-implement the protocol here). *(Grounded: Horvitz, Principles of Mixed-Initiative User Interfaces, CHI 1999.)*
 
-**Complex remediation fork → brief before you ask.** The trigger and its threshold triple live in [`../SKILL.md`](../SKILL.md) §Asking the user (lockstep-guarded there with SDD and kickoff-briefing) — when it fires, run `dev-workflow:brief-before-asking` before the `AskUserQuestion`; that skill owns the 6-block format.
+**Complex remediation fork → brief before you ask.** The trigger and its threshold triple live in [`../SKILL.md`](../SKILL.md) §Asking the user (lockstep-guarded there with SDD and kickoff-briefing) — when it fires, run `loom-workflow:brief-before-asking` before the `AskUserQuestion`; that skill owns the 6-block format.
 
 ## ③ How to phrase
 

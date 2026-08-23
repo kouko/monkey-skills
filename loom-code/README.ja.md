@@ -20,7 +20,7 @@
 
 **何が起きるか**（loom-code インストール済み）：
 
-SessionStart で注入された router が Rule #1（*"implementing 前に brainstorm"*）を発火。`brainstorming` skill が 5-axis HARD-GATE で起動。discovery のスキップを拒否、JTBD framing を明文化、alternatives を提示（何もしない / 単一 env var / 完全 flag system）、最後に `dev-workflow:complexity-critique` への次ステップ委譲を推奨 — フィーチャーフラグシステムはまさに PAGNI の典型的 smell だから。
+SessionStart で注入された router が Rule #1（*"implementing 前に brainstorm"*）を発火。`brainstorming` skill が 5-axis HARD-GATE で起動。discovery のスキップを拒否、JTBD framing を明文化、alternatives を提示（何もしない / 単一 env var / 完全 flag system）、最後に `loom-workflow:complexity-critique` への次ステップ委譲を推奨 — フィーチャーフラグシステムはまさに PAGNI の典型的 smell だから。
 
 **得られないもの**：まだ surfaced していない問題のために前もって書かれた 200 行の feature-flag infrastructure。
 
@@ -125,7 +125,7 @@ SDD orchestrator 継続
 finishing-a-development-branch
   ↓ Step 1: requesting-code-review (cross-task-coherence 次元；verdict は standards_version スタンプ付き)
   ↓ Step 2: verification-before-completion (npm test / pytest / etc.)
-  ↓ Step 3: dev-workflow:git-memory (Decision: / Learning: / Gotcha: trailers)
+  ↓ Step 3: loom-workflow:git-memory (Decision: / Learning: / Gotcha: trailers)
   ↓ Step 4: git commit (privacy gate 通過後)
   ↓ Step 5: git push (review-gated——再確認なし)
   ↓ Step 6: gh pr create (request-derived——再確認なし、事前 opt-out 可)
@@ -156,8 +156,8 @@ SessionStart hook は portable な JSON shape を発出し、Claude Code の `ho
 | Plugin | 関係 |
 |---|---|
 | **[`domain-teams:code-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/code-team)** | パッシブ gate コンプライアンス reviewer。loom-code はアクティブ build orchestrator で、code-team の standards を知識層として使用（`scripts/distribute.py` 経由でバイト一致 functional copy、`scripts/verify-drift.py` で drift check）。同じ一次情報源、異なる呼び出しモード。 |
-| **[`dev-workflow:git-memory`](https://github.com/kouko/monkey-skills/tree/main/dev-workflow/skills/git-memory)** | `finishing-a-development-branch` Step 3 で必須委譲先（P3-D）。Commit-trailer 判断（Decision: / Learning: / Gotcha:）を決める；loom-code は重複実装しない。 |
-| **[`dev-workflow:complexity-critique`](https://github.com/kouko/monkey-skills/tree/main/dev-workflow/skills/complexity-critique)** | `brainstorming` Axis 3 で complexity smell が出たときの任意委譲先。同じ SSOT-and-functional-copy mindset framing。 |
+| **[`loom-workflow:git-memory`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow/skills/git-memory)** | `finishing-a-development-branch` Step 3 で必須委譲先（P3-D）。Commit-trailer 判断（Decision: / Learning: / Gotcha:）を決める；loom-code は重複実装しない。 |
+| **[`loom-workflow:complexity-critique`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow/skills/complexity-critique)** | `brainstorming` Axis 3 で complexity smell が出たときの任意委譲先。同じ SSOT-and-functional-copy mindset framing。 |
 | **[`obra/superpowers`](https://github.com/obra/superpowers)** | 設計インスピレーション；`LOOM_CODE_MODE=off` env var escape hatch 経由で共存（env var 設定で loom-code hook を無効化、superpowers のみ発火）。両プラグイン同時インストール可；env var で切替。 |
 
 クロスプラグイン挙動は [`tests/integration/`](tests/integration/) 内 5 つの integration test script で検証。

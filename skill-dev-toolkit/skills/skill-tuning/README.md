@@ -74,7 +74,7 @@ flowchart TD
 
 ### Verdict vocabulary
 
-Parallel to dev-workflow's critique skills:
+Parallel to loom-workflow's critique skills:
 
 | Verdict | When | Action |
 |---|---|---|
@@ -234,7 +234,7 @@ The skill-authoring lifecycle (all in `skill-dev-toolkit`):
 - `dogfood-skill-testing` — blind behavioral test
 
 The general critique gates (`proposal-critique` / `complexity-critique`)
-stay in `dev-workflow`.
+stay in `loom-workflow`.
 
 The split between `skill-refactor` (Phase A) and `skill-tuning`
 (Phase B) is foundational — it reflects Fowler's Two Hats applied

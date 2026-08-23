@@ -23,7 +23,7 @@ skill オーサリングのライフサイクルを dev-workflow から独立し
 各 skill は worth-it / 最小 skill チェックを内蔵し、他プラグインに委譲しません。
 よって **他プラグインへの `plugin:skill` 参照はゼロ**。（汎用のコード変更クリティーク
 `complexity-critique` / `proposal-critique` と、セッションログ採掘 `distill-sessions`
-は `dev-workflow` に残ります。本ツールキットはそれらに依存しません。）
+は `loom-workflow` に残ります。本ツールキットはそれらに依存しません。）
 
 ## ライセンス
 

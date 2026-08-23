@@ -30,7 +30,7 @@ monkey-skills 已有 `domain-teams:code-team`（v5.6.0），具備完整的 8 �
 ### 1.2 Why now
 
 - **monkey-skills marketplace 起穩定**：15 plugin shipped；plugin convention（3-lang README / flat subfolder / SSOT-and-functional-copy / marketplace description byte-identical）已成熟可直接 reuse
-- **SSOT-and-functional-copy 機制已驗證**：`dev-workflow:complexity-critique` bundle `code-team` mindset、`legal-toolkit` Phase 1.10 用 `scripts/canonical/` + `distribute.py` + drift gate — Option A「自包含知識層」的工程基底已備齊
+- **SSOT-and-functional-copy 機制已驗證**：`loom-workflow:complexity-critique` bundle `code-team` mindset、`legal-toolkit` Phase 1.10 用 `scripts/canonical/` + `distribute.py` + drift gate — Option A「自包含知識層」的工程基底已備齊
 - **Superpowers v5.1.0 公開**：source 可直接學，但採 zero-dependency + 純英文 + 8-harness pluggin.json — 不適合直接 fork；需要本地化版本
 - **個人 dogfood 累積**：5 個 toolkit（legal / investing / copywriting / gws / translation）+ domain-teams 5.6.0 累積的 code-team grounding 已經 ready，需要一個「主動建構」入口把它們組起來
 
@@ -90,8 +90,8 @@ monkey-skills 已有 `domain-teams:code-team`（v5.6.0），具備完整的 8 �
 | ❌ 跨 7 個 harness（Gemini / Cursor / Copilot / OpenCode / Droid） | Phase 1-3 只做 Claude Code + Codex CLI；其他 harness 等使用者要求再加 |
 | ❌ 自己重寫 8 本書的 standards | 走 SSOT-and-functional-copy：canonical 留在 `domain-teams:code-team/standards/`，loom-code 用 distribute.py 拷過來 |
 | ❌ Visual brainstorming / brainstorm server（Superpowers 5.1.0 的新 feature） | Phase 4+；MVP 不做。Superpowers 自己也是後加的 |
-| ❌ 取代 `dev-workflow:complexity-critique` | complexity-critique 已存在；loom-code 在 brainstorming 階段可選擇性引用，但不重複實作 |
-| ❌ 取代 `dev-workflow:git-memory` | git-memory 已是 commit 前的 gate；loom-code `finishing-a-development-branch` 直接 delegate 過去 |
+| ❌ 取代 `loom-workflow:complexity-critique` | complexity-critique 已存在；loom-code 在 brainstorming 階段可選擇性引用，但不重複實作 |
+| ❌ 取代 `loom-workflow:git-memory` | git-memory 已是 commit 前的 gate；loom-code `finishing-a-development-branch` 直接 delegate 過去 |
 | ❌ 取代 `skill-dev-toolkit:skill-creator-advance` / `skill-judge` / `skill-refactor` | 那些是「寫 skill」的 meta toolkit；loom-code 是「寫 code」的 toolkit。不重疊 |
 | ❌ 全套等同 Superpowers v5.1.0 的所有 skill（11 個） | MVP 只做 4 個；Phase 2-3 補到 9 個。`dispatching-parallel-agents` / `receiving-code-review` 列觀察名單 |
 
@@ -132,7 +132,7 @@ loom-code:subagent-driven-development → 每任務 dispatch 3 subagent
   ↓ 載入 loom-code/rubrics/quality-gate.md
   ↓ 評分 PASS / PASS_WITH_NOTES / NEEDS_REVISION
 loom-code:finishing-a-development-branch → PR / merge
-  ↓ 內部 delegate dev-workflow:git-memory commit gate
+  ↓ 內部 delegate loom-workflow:git-memory commit gate
 ```
 
 ---
@@ -147,7 +147,7 @@ loom-code:finishing-a-development-branch → PR / merge
 | **Codex CLI plugin schema 變動**：OpenAI 更新 plugin spec | Codex 載入失敗 | Phase 1 只發 Claude Code；Phase 2 才 ship Codex variant 並寫 integration test |
 | **「鐵律措辭」過度** | 使用者覺得煩；關掉 hook | measure 強度匹配真實壓測結果（Phase 1.5 dogfood）；提供 `--soft-mode` flag |
 | **subagent context 爆掉** | 大任務切不夠細，SDD 失效 | `writing-plans` 強制每任務一個失敗測試；implementer 回報 BLOCKED 時 fall back 切更細 |
-| **與 `dev-workflow:complexity-critique` / `git-memory` 重疊** | 使用者搞混入口 | router skill `using-loom-code` 內附決策表，明示何時 delegate 出去 |
+| **與 `loom-workflow:complexity-critique` / `git-memory` 重疊** | 使用者搞混入口 | router skill `using-loom-code` 內附決策表，明示何時 delegate 出去 |
 
 ---
 
@@ -177,8 +177,8 @@ loom-code:finishing-a-development-branch → PR / merge
 |---|---|---|
 | OQ-1 | TDD 鐵律 `--soft-mode` flag 怎麼實作？env var / 對話切換 / plugin config？ | Phase 1.5 |
 | OQ-2 | systematic-debugging 是 MVP 必備還是 Phase 2 補？目前傾向 Phase 2 | Phase 2 |
-| OQ-3 | brainstorming skill 要不要強制呼叫 `dev-workflow:complexity-critique` 做 deletion-first 檢查？ | Phase 2 |
-| OQ-4 | finishing-a-development-branch 與 `dev-workflow:git-memory` 的呼叫順序：先 memory 還是先 finish？ | Phase 3 |
+| OQ-3 | brainstorming skill 要不要強制呼叫 `loom-workflow:complexity-critique` 做 deletion-first 檢查？ | Phase 2 |
+| OQ-4 | finishing-a-development-branch 與 `loom-workflow:git-memory` 的呼叫順序：先 memory 還是先 finish？ | Phase 3 |
 | OQ-5 | 是否提供 `loom-code-only-mode` env var 來關掉 hook（給已裝 Superpowers 的使用者）？ | Phase 1.5 |
 
 ---
@@ -188,7 +188,7 @@ loom-code:finishing-a-development-branch → PR / merge
 | Q | 決定 | 理由 |
 |---|---|---|
 | Q1 (Harness) | **Claude Code + Codex CLI** | 比照 Superpowers 主力雙平台；不過度承諾 |
-| Q2 (code-team 去留) | **並存** — loom-code 主動建構入口，code-team 被動 gate 入口 | 兩用途不衝突；不破壞既有 `dev-workflow:complexity-critique` 對 code-team mindset 的 SSOT 指向 |
+| Q2 (code-team 去留) | **並存** — loom-code 主動建構入口，code-team 被動 gate 入口 | 兩用途不衝突；不破壞既有 `loom-workflow:complexity-critique` 對 code-team mindset 的 SSOT 指向 |
 | Q3 (啟動方式) | **先寫設計文件（PRODUCT-SPEC / TECH-SPEC / ROADMAP）** | 規模夠大需要先把 SSOT 邊界 / Phase 切分定下來，避免 Phase 1 蓋到一半發現要重做 |
 | Q4 (工作位置) | **新開 git worktree `feat/loom-code-design`** | 不影響 main；後續 Phase 拆 PR 容易 |
 | Q5 (Knowledge layer SSOT) | **SSOT 留 `domain-teams:code-team/standards/`；loom-code 用 `scripts/distribute.py` 拷 byte-identical functional copy** | 符合 monkey-skills 既有慣例（legal-toolkit Phase 1.10）；避免雙份維護 |

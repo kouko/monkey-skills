@@ -1,0 +1,25 @@
+{
+  "name": "loom-workflow",
+  "version": "1.0.0",
+  "description": "Loom workflow skills — git memory, decision briefs, critique, recap, handoff, session distill, CoT explainers.",
+  "author": {
+    "name": "kouko",
+    "url": "https://github.com/kouko"
+  },
+  "homepage": "https://github.com/kouko/monkey-skills/tree/main/loom-workflow",
+  "repository": "https://github.com/kouko/monkey-skills",
+  "license": "MIT",
+  "keywords": [
+    "git-memory",
+    "brief-before-asking",
+    "proposal-critique",
+    "complexity-critique",
+    "developer-workflow",
+    "distill-sessions",
+    "recap-state",
+    "handoff",
+    "cot-explain",
+    "dbt-model-style",
+    "dbt"
+  ]
+}

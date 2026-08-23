@@ -197,7 +197,7 @@ Reviewer prompts intentionally constrain scope: spec-reviewer **cannot** evaluat
 
 - **[`tdd-iron-law`](../tdd-iron-law/SKILL.md)** — implementer prompts must load this skill before writing code. The reviewer's `tests` dimension scores against `standards/tdd-standard.md` (functional copy of code-team SSOT).
 - **`writing-plans`** — produces the task list SDD consumes.
-- **`finishing-a-development-branch`** — runs after the last task is DONE; delegates to `dev-workflow:git-memory` for commit-message memory.
+- **`finishing-a-development-branch`** — runs after the last task is DONE; delegates to `loom-workflow:git-memory` for commit-message memory.
 - **`domain-teams:code-team`** — passive gate; not invoked by SDD directly. The knowledge layer here is a functional copy of code-team's standards / rubrics / checklists, kept byte-identical by `scripts/distribute.py` + `scripts/verify-drift.py`.
 
 ## Knowledge layer

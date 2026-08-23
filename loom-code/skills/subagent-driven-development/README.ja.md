@@ -52,7 +52,7 @@
 - 判定を出さない — reviewer をディスパッチする。
 - SDD 適用判断をしない — `using-loom-code` がルーティングする。
 - 計画を作らない — `writing-plans` (Phase 2; それまでインラインで作る) が作る。
-- 最終タスク後の処理をしない — `finishing-a-development-branch` (Phase 3) がブランチを閉じ、`dev-workflow:git-memory` に委譲する。
+- 最終タスク後の処理をしない — `finishing-a-development-branch` (Phase 3) がブランチを閉じ、`loom-workflow:git-memory` に委譲する。
 
 ## 関連
 

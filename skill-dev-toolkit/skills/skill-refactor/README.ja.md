@@ -80,7 +80,7 @@ flowchart TD
 
 ### Verdict 語彙
 
-dev-workflow の critique skill と並行：
+loom-workflow の critique skill と並行：
 
 | Verdict | 条件 | アクション |
 |---|---|---|
@@ -233,7 +233,7 @@ skill オーサリングのライフサイクル（すべて `skill-dev-toolkit`
 - `dogfood-skill-testing` — ブラインド挙動テスト
 
 汎用 critique gate（`proposal-critique` / `complexity-critique`）は
-`dev-workflow` に残ります。
+`loom-workflow` に残ります。
 
 `skill-refactor`（Phase A）と `skill-tuning`（Phase B）の分割
 は、Fowler の Two Hats を skill に適用したもの：refactor は動作

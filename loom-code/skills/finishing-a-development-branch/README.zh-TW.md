@@ -2,7 +2,7 @@
 
 [English](README.md) | [日本語](README.ja.md) | **繁體中文**
 
-> Orchestrator skill — 把 branch 收尾流程串起來：[`requesting-code-review`](../requesting-code-review)（Step 1 人類審查） → [`verification-before-completion`](../verification-before-completion)（Step 2 套件層級測試） → P3-D 強制 `dev-workflow:git-memory` 委派（commit message trailer） → git commit → push → 可選 gh pr create → 可選 [`using-git-worktrees`](../using-git-worktrees) 清理。**不自動 merge** — 最終 merge 決定保留給使用者。
+> Orchestrator skill — 把 branch 收尾流程串起來：[`requesting-code-review`](../requesting-code-review)（Step 1 人類審查） → [`verification-before-completion`](../verification-before-completion)（Step 2 套件層級測試） → P3-D 強制 `loom-workflow:git-memory` 委派（commit message trailer） → git commit → push → 可選 gh pr create → 可選 [`using-git-worktrees`](../using-git-worktrees) 清理。**不自動 merge** — 最終 merge 決定保留給使用者。
 
 [loom-code](../..) plugin 的一部分。Agent 載入的是 [`SKILL.md`](SKILL.md)；本 README 是給人類看的。
 
@@ -12,7 +12,7 @@
 finishing-a-development-branch
   ├─→ Step 1: requesting-code-review        （人類審判品質）
   ├─→ Step 2: verification-before-completion （套件層級測試 pass）
-  ├─→ Step 3: dev-workflow:git-memory       （commit message trailer，P3-D 強制）
+  ├─→ Step 3: loom-workflow:git-memory       （commit message trailer，P3-D 強制）
   ├─→ Step 4: git commit                    （用 Step 3 的訊息）
   ├─→ Step 5: git push
   ├─→ Step 6: gh pr create                  （request-derived——不再問、可事先 opt-out）
@@ -44,7 +44,7 @@ finishing-a-development-branch
 |---|---|---|
 | 1 | `requesting-code-review` | 品質審查本身就是一個 skill |
 | 2 | `verification-before-completion` | 套件層級測試 invocation 本身就是一個 skill |
-| 3 | `dev-workflow:git-memory` | P3-D 強制 — git-memory 判斷 trailer 是否需要；orchestrator 不重複 |
+| 3 | `loom-workflow:git-memory` | P3-D 強制 — git-memory 判斷 trailer 是否需要；orchestrator 不重複 |
 | 4 | git CLI | 標準 git commit |
 | 5 | git CLI | git push（新 branch 要設 upstream） |
 | 6 | gh CLI | gh pr create（request-derived、不再問） |
@@ -67,6 +67,6 @@ finishing-a-development-branch
 - [`../requesting-code-review/SKILL.md`](../requesting-code-review/SKILL.md) — Step 1 委派
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — Step 2 委派
 - [`../using-git-worktrees/SKILL.md`](../using-git-worktrees/SKILL.md) — Step 7 委派
-- `dev-workflow:git-memory` — Step 3 委派（P3-D 強制）
+- `loom-workflow:git-memory` — Step 3 委派（P3-D 強制）
 - [`../using-loom-code/SKILL.md`](../using-loom-code/SKILL.md) — Router；本 skill 是 Stage 8（Branch close）
 - CLAUDE.md §"Committing changes with git" — 繼承的 git 政策

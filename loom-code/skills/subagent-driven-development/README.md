@@ -52,7 +52,7 @@ Auto-injected by `distribute.py` alongside the 12-rule engineering baseline. The
 - Does not produce gate verdicts — dispatches reviewers.
 - Does not decide whether SDD applies — `using-loom-code` routes.
 - Does not produce the plan — `writing-plans` does (Phase 2; until then inline plan).
-- Does not run after the final task — `finishing-a-development-branch` (Phase 3) closes the branch and delegates to `dev-workflow:git-memory`.
+- Does not run after the final task — `finishing-a-development-branch` (Phase 3) closes the branch and delegates to `loom-workflow:git-memory`.
 
 ## See also
 

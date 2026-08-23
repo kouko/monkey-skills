@@ -116,7 +116,7 @@ Query patterns (mix-and-match per round):
 | **Upstream invocation** | `tdd-iron-law` §False-green diagnostic | When the diagnostic returns *"the test passes on first run AND commenting out the production code does not fail it,"* the test isn't testing what you think. systematic-debugging takes over to isolate why. |
 | **Upstream invocation** | SDD `implementer` returning `BLOCKED` with `unblock_step: "test will not go RED"` | The implementer cannot create a failing test for a real-world bug. systematic-debugging takes over from Phase 1 REPRODUCE. |
 | **Downstream (post-VERIFY)** | `tdd-iron-law` | Once the hypothesis is confirmed, the regression test is written under tdd-iron-law's RED-GREEN-REFACTOR cycle. The repro IS the RED. |
-| **Lateral delegate (optional)** | `dev-workflow:complexity-critique` | When ISOLATE reveals the bug is in a module that's too tangled to bisect cleanly, complexity-critique's deletion-first lens may surface refactor-before-fix as the better path. |
+| **Lateral delegate (optional)** | `loom-workflow:complexity-critique` | When ISOLATE reveals the bug is in a module that's too tangled to bisect cleanly, complexity-critique's deletion-first lens may surface refactor-before-fix as the better path. |
 | **Lateral delegate (optional)** | `repo-wiki:query` / `dbt-wiki:query` | When ISOLATE needs to understand *"why was this code written this way"* — query the knowledge base before re-deriving. |
 
 Delegation contract per CLAUDE.md: pass **paths + structured seed context**, not file content.

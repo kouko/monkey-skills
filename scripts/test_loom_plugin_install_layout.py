@@ -23,6 +23,12 @@ MANDATORY_DEPENDENCY_KEYS = {
     "requiredPlugins",
     "requires",
 }
+REQUIRED_LOOM_WORKFLOW_SKILLS = {
+    "brief-before-asking",
+    "complexity-critique",
+    "git-memory",
+    "proposal-critique",
+}
 
 
 def _install_plugin(source_name: str, destination: Path) -> Path:
@@ -362,6 +368,56 @@ def test_isolated_plugins_execute_local_behavior_without_sibling(tmp_path: Path)
     code_root = _install_plugin("loom-code", tmp_path / "unrelated code cache's root")
 
     _assert_local_behavior_executes(design_root, code_root, tmp_path)
+
+
+def test_isolated_loom_workflow_bundle_contains_required_skills_and_executes(
+    tmp_path: Path,
+) -> None:
+    """A renamed workflow install remains usable without the source checkout."""
+
+    workflow_root = _install_plugin(
+        "loom-workflow", tmp_path / "unrelated workflow cache's root"
+    )
+    assert not (workflow_root.parent / "dev-workflow").exists()
+    assert find_boundary_violations(workflow_root) == []
+    for skill_name in REQUIRED_LOOM_WORKFLOW_SKILLS:
+        assert (workflow_root / "skills" / skill_name / "SKILL.md").is_file()
+
+    consumer_root = tmp_path / "consumer repository"
+    consumer_root.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=consumer_root, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "loom@example.test"],
+        cwd=consumer_root,
+        check=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "Loom Test"],
+        cwd=consumer_root,
+        check=True,
+    )
+    (consumer_root / "README.md").write_text("# Consumer\n", encoding="utf-8")
+    subprocess.run(["git", "add", "README.md"], cwd=consumer_root, check=True)
+    subprocess.run(
+        [
+            "git",
+            "commit",
+            "-qm",
+            "test: seed consumer\n\nDecision: prove copied workflow scripts run locally",
+        ],
+        cwd=consumer_root,
+        check=True,
+    )
+
+    memory_grep = workflow_root / "skills/git-memory/scripts/memory-grep.sh"
+    verified = subprocess.run(
+        ["bash", str(memory_grep), "--verify", "HEAD", f"--repo={consumer_root}"],
+        cwd=consumer_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert verified.returncode == 0, verified.stderr
 
 
 def _station_argv_tools(document: str, expected_tools: tuple[str, ...]) -> list[list[str]]:

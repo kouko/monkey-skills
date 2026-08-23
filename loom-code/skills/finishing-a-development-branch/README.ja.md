@@ -2,7 +2,7 @@
 
 [English](README.md) | **日本語** | [繁體中文](README.zh-TW.md)
 
-> オーケストレータスキル — ブランチクローズシーケンスを束ねる：[`requesting-code-review`](../requesting-code-review)（Step 1 人間レビュー） → [`verification-before-completion`](../verification-before-completion)（Step 2 パッケージレベルテスト） → P3-D 必須 `dev-workflow:git-memory` 委譲（commit メッセージ trailer） → git commit → push → 任意 gh pr create → 任意 [`using-git-worktrees`](../using-git-worktrees) クリーンアップ。**自動 merge しない** — 最終 merge 決定はユーザの権限。
+> オーケストレータスキル — ブランチクローズシーケンスを束ねる：[`requesting-code-review`](../requesting-code-review)（Step 1 人間レビュー） → [`verification-before-completion`](../verification-before-completion)（Step 2 パッケージレベルテスト） → P3-D 必須 `loom-workflow:git-memory` 委譲（commit メッセージ trailer） → git commit → push → 任意 gh pr create → 任意 [`using-git-worktrees`](../using-git-worktrees) クリーンアップ。**自動 merge しない** — 最終 merge 決定はユーザの権限。
 
 [loom-code](../..) プラグインの一部。エージェントが読み込むのは [`SKILL.md`](SKILL.md)、本 README は人間向け。
 
@@ -12,7 +12,7 @@
 finishing-a-development-branch
   ├─→ Step 1: requesting-code-review        （人間判断品質）
   ├─→ Step 2: verification-before-completion （パッケージレベルテスト pass）
-  ├─→ Step 3: dev-workflow:git-memory       （commit メッセージ trailer、P3-D 必須）
+  ├─→ Step 3: loom-workflow:git-memory       （commit メッセージ trailer、P3-D 必須）
   ├─→ Step 4: git commit                    （Step 3 のメッセージ使用）
   ├─→ Step 5: git push
   ├─→ Step 6: gh pr create                  （request-derived——再確認なし、事前 opt-out 可）
@@ -44,7 +44,7 @@ finishing-a-development-branch
 |---|---|---|
 | 1 | `requesting-code-review` | 品質レビューはそれ自体スキル |
 | 2 | `verification-before-completion` | パッケージレベルテスト invocation はそれ自体スキル |
-| 3 | `dev-workflow:git-memory` | P3-D 必須 — git-memory が trailer 必要性を判断；オーケストレータは複製しない |
+| 3 | `loom-workflow:git-memory` | P3-D 必須 — git-memory が trailer 必要性を判断；オーケストレータは複製しない |
 | 4 | git CLI | 標準 git commit |
 | 5 | git CLI | git push（新規ブランチなら upstream 設定） |
 | 6 | gh CLI | gh pr create（request-derived、再確認なし） |
@@ -67,6 +67,6 @@ finishing-a-development-branch
 - [`../requesting-code-review/SKILL.md`](../requesting-code-review/SKILL.md) — Step 1 委譲先
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — Step 2 委譲先
 - [`../using-git-worktrees/SKILL.md`](../using-git-worktrees/SKILL.md) — Step 7 委譲先
-- `dev-workflow:git-memory` — Step 3 委譲先（P3-D 必須）
+- `loom-workflow:git-memory` — Step 3 委譲先（P3-D 必須）
 - [`../using-loom-code/SKILL.md`](../using-loom-code/SKILL.md) — ルータ；本スキルは Stage 8（Branch close）
 - CLAUDE.md §"Committing changes with git" — 継承される git ポリシー

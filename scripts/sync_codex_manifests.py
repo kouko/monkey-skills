@@ -51,7 +51,7 @@ CODEX_MANIFEST = (".codex-plugin", "plugin.json")
 
 # Plugins whose Codex manifest is in scope for sync/scaffold: the 21 Batch-A
 # plugins plus loom-code (which shipped its Codex manifest first).
-# Phase 2b made the whole repo eligible: dev-workflow (a PostToolUse validation
+# Phase 2b made the whole repo eligible: loom-workflow (a PostToolUse validation
 # hook, no SessionStart context-injection), collab-toolkit + salesforce-toolkit
 # (MCP servers) now ship Codex manifests too — every repo plugin has a
 # .codex-plugin/plugin.json under the SSOT.
@@ -76,7 +76,7 @@ CODEX_ELIGIBLE = (
     "translation-toolkit",
     "tsundoku",
     "loom-code",
-    "dev-workflow",
+    "loom-workflow",
     "collab-toolkit",
     "salesforce-toolkit",
     "think-orbit",

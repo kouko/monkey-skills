@@ -2,7 +2,7 @@
 # test-git-memory-delegation.sh
 #
 # Verify loom-code's finishing-a-development-branch skill invokes
-# dev-workflow:git-memory (Default-flow Step 6 / Phase 3) per ROADMAP P3-D MANDATORY.
+# loom-workflow:git-memory (Default-flow Step 6 / Phase 3) per ROADMAP P3-D MANDATORY.
 #
 # Usage:
 #   bash loom-code/tests/integration/test-git-memory-delegation.sh
@@ -11,7 +11,7 @@ set -u
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 FINISH_SKILL="${REPO_ROOT}/loom-code/skills/finishing-a-development-branch/SKILL.md"
-GIT_MEMORY_SKILL="${REPO_ROOT}/dev-workflow/skills/git-memory/SKILL.md"
+GIT_MEMORY_SKILL="${REPO_ROOT}/loom-workflow/skills/git-memory/SKILL.md"
 
 PASS_COUNT=0
 FAIL_COUNT=0
@@ -29,10 +29,10 @@ if [ ! -f "${FINISH_SKILL}" ]; then
   exit 1
 fi
 
-if grep -q "dev-workflow:git-memory" "${FINISH_SKILL}"; then
-  pass "finishing-a-development-branch references dev-workflow:git-memory"
+if grep -q "loom-workflow:git-memory" "${FINISH_SKILL}"; then
+  pass "finishing-a-development-branch references loom-workflow:git-memory"
 else
-  fail "finishing-a-development-branch does NOT reference dev-workflow:git-memory"
+  fail "finishing-a-development-branch does NOT reference loom-workflow:git-memory"
 fi
 
 # -------------------------------------------------------------------------
@@ -46,12 +46,12 @@ fi
 
 # -------------------------------------------------------------------------
 # Check 3 — offline: the Default flow's git-memory step names git-memory
-# (git-memory is Step 6 of the numbered Default flow — "Invoke dev-workflow:git-memory")
+# (git-memory is Step 6 of the numbered Default flow — "Invoke loom-workflow:git-memory")
 
-if grep -E "^6\. Invoke dev-workflow:git-memory" "${FINISH_SKILL}" >/dev/null; then
-  pass "Default-flow Step 6 names dev-workflow:git-memory"
+if grep -E "^6\. Invoke loom-workflow:git-memory" "${FINISH_SKILL}" >/dev/null; then
+  pass "Default-flow Step 6 names loom-workflow:git-memory"
 else
-  fail "Default-flow Step 6 does NOT explicitly name dev-workflow:git-memory"
+  fail "Default-flow Step 6 does NOT explicitly name loom-workflow:git-memory"
 fi
 
 # -------------------------------------------------------------------------
@@ -68,7 +68,7 @@ fi
 if grep -- 'memory-grep.sh' "${FINISH_SKILL}" >/dev/null; then
   pass "finishing-a-development-branch references the memory-grep.sh script by path"
 else
-  fail "finishing-a-development-branch does NOT reference dev-workflow's memory-grep.sh script"
+  fail "finishing-a-development-branch does NOT reference loom-workflow's memory-grep.sh script"
 fi
 
 # -------------------------------------------------------------------------
@@ -118,20 +118,20 @@ else
 fi
 
 # -------------------------------------------------------------------------
-# Check 4 — prerequisite: dev-workflow:git-memory installed
+# Check 4 — prerequisite: loom-workflow:git-memory installed
 
 if [ -f "${GIT_MEMORY_SKILL}" ]; then
-  pass "git-memory skill exists in dev-workflow plugin"
+  pass "git-memory skill exists in loom-workflow plugin"
 else
   fail "git-memory SKILL.md not found at ${GIT_MEMORY_SKILL}"
 fi
 
 if command -v claude >/dev/null 2>&1; then
   # `claude plugin list` is multi-line per plugin; use -A 3 to capture Status
-  if claude plugin list 2>&1 | grep -A 3 "[❯>] dev-workflow" | grep -q "Status: ✔ enabled"; then
-    pass "dev-workflow plugin enabled (git-memory dispatchable)"
+  if claude plugin list 2>&1 | grep -A 3 "[❯>] loom-workflow" | grep -q "Status: ✔ enabled"; then
+    pass "loom-workflow plugin enabled (git-memory dispatchable)"
   else
-    fail "dev-workflow plugin not enabled — git-memory delegation will fail"
+    fail "loom-workflow plugin not enabled — git-memory delegation will fail"
   fi
 else
   skip "claude CLI not found"
@@ -163,8 +163,8 @@ Offline checks PASSED. Live verification (manual, in fresh Claude session):
      - Skill(loom-code:finishing-a-development-branch) auto-loads
      - Phases 1 + 2 run (requesting-code-review + verification-before-
        completion)
-     - Phase 3 EXPLICITLY invokes dev-workflow:git-memory (transcript
-       should show "Skill(dev-workflow:git-memory) → Successfully
+     - Phase 3 EXPLICITLY invokes loom-workflow:git-memory (transcript
+       should show "Skill(loom-workflow:git-memory) → Successfully
        loaded skill" before commit message draft)
      - Step 4 commit message includes git-memory's trailer decisions
        (Decision: / Learning: / Gotcha: as warranted)

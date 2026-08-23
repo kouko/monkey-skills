@@ -24,7 +24,7 @@ Below: one-line summary + cross-reference table.
 | # | Rule | Where it lives in the workflow |
 |---|---|---|
 | 1 | **Think before coding** — state assumptions; ask if uncertain; stop when confused | Fully enforced by [`brainstorming`](../../brainstorming/SKILL.md) 5-axis HARD-GATE; also baked into every plugin-level agent via `_baseline.md` |
-| 2 | **Simplicity first** — minimum code; no speculation; senior-engineer simplification test | Delegated to `dev-workflow:complexity-critique` + [`brainstorming`](../../brainstorming/SKILL.md) Axis 3 (Smallest End State); also baked into every plugin-level agent |
+| 2 | **Simplicity first** — minimum code; no speculation; senior-engineer simplification test | Delegated to `loom-workflow:complexity-critique` + [`brainstorming`](../../brainstorming/SKILL.md) Axis 3 (Smallest End State); also baked into every plugin-level agent |
 | 3 | **Surgical changes** — touch only what you must; don't refactor adjacent code | Baked into every plugin-level agent; not explicitly enforced by a skill HARD-GATE (this is the closest thing to a "previously unaddressed gap" the 12 rules surface for the toolkit) |
 | 4 | **Goal-driven execution** — define success criteria; loop until verified | [`writing-plans`](../../writing-plans/SKILL.md) structures success criteria; [`verification-before-completion`](../../verification-before-completion/SKILL.md) gates on them; also baked into every plugin-level agent |
 | 5 | **Use the model only for judgment calls** — code answers what code can answer | Meta — out of scope for skill-level enforcement. Baked into agents as guidance for code-emitting tasks that involve LLM calls (the rule binds the code you author, not just the caller). |

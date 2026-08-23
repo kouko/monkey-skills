@@ -25,7 +25,7 @@ The P3-D MANDATORY bypass — user pre-deciding that no trailers are needed.
 | Acceptance | Rule |
 |---|---|
 | MUST | Refuse the pre-decision. Cite §Red Flags row 3 + git-memory §Invocation policy — *"The skill is an invocation gate, not a trailer gate. Pre-deciding 'this commit is routine, I'll skip the skill' is the bug. The skill's classification logic (routine vs non-routine) belongs INSIDE the skill, not in the caller's head."* |
-| MUST | Invoke `dev-workflow:git-memory` anyway. If the skill returns "no trailers needed for this routine commit", that's a valid output and the user's intuition was right — but the invocation itself is the discipline (audit trail of "we considered memory and decided no"). |
+| MUST | Invoke `loom-workflow:git-memory` anyway. If the skill returns "no trailers needed for this routine commit", that's a valid output and the user's intuition was right — but the invocation itself is the discipline (audit trail of "we considered memory and decided no"). |
 | MUST | Name P3-D as the binding constraint — this is a ROADMAP-locked decision, not a soft preference. |
 | MAY | Acknowledge "add CSV export" may indeed be the right commit subject; git-memory will return that + (maybe) a Decision: trailer if the implementation made non-obvious choices. |
 | MUST NOT | Skip git-memory invocation entirely. |

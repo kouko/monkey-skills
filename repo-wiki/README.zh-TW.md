@@ -142,7 +142,7 @@ Trigger 命中時，答案以 **分段格式** 呈現：
 | Roo Memory Bank | 全文注入、沒有 page type、沒有 verification |
 | RepoAgent | auto-commit 知識更新（多人協作風險） |
 | SamurAIGPT/llm-wiki-agent | 通用文件、不懂 git/code |
-| `dev-workflow:git-memory` | 捕捉 **commit 當下** 的決策；`repo-wiki` 處理 **跨 commit 的整體架構知識** — 互補不衝突 |
+| `loom-workflow:git-memory` | 捕捉 **commit 當下** 的決策；`repo-wiki` 處理 **跨 commit 的整體架構知識** — 互補不衝突 |
 
 `repo-wiki` 的獨特組合：**git-aware ingest + 多態 context capture + 結構化 WHY 知識 + AI-owned wiki + verification-fenced reads + 零外部依賴**。
 

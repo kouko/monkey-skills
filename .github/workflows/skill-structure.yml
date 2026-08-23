@@ -50,12 +50,16 @@ jobs:
         if: ${{ !cancelled() }}
         run: python3 scripts/check-skill-structure.py loom-design
 
+      - name: Run check-skill-structure.py against loom-workflow
+        if: ${{ !cancelled() }}
+        run: python3 scripts/check-skill-structure.py loom-workflow
+
       - name: Run check-skill-structure.py against copywriting-toolkit
         if: ${{ !cancelled() }}
         run: python3 scripts/check-skill-structure.py copywriting-toolkit
 
   shared-conventions-drift:
-    name: dev-workflow shared conventions drift
+    name: loom-workflow shared conventions drift
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -73,7 +77,7 @@ jobs:
         # skill-tuning (functional copies). Header blockquotes that
         # mark canonical-vs-copy are stripped before diff so legitimate
         # SSOT-vs-copy header divergence does not trigger false positives.
-        # Same-PR drift rule from dev-workflow PR-2/PR-3 NOTICE.
+        # Same-PR drift rule from loom-workflow PR-2/PR-3 NOTICE.
         run: python3 scripts/check-shared-conventions-drift.py
 
   marketplace-description-sync:

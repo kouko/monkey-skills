@@ -40,7 +40,7 @@ SessionStart フックでルーターを注入するのは、ユーザーが「�
 ## 共存
 
 - **`domain-teams:code-team`** — 監査用のパッシブ gate として維持。本 toolkit の知識層はその functional copy で、`scripts/verify-drift.py` がドリフトを監視。
-- **`dev-workflow:{git-memory, complexity-critique, proposal-critique}`** — 必要箇所で委譲する（再実装しない）。
+- **`loom-workflow:{git-memory, complexity-critique, proposal-critique}`** — 必要箇所で委譲する（再実装しない）。
 - **`obra/superpowers`** — skill 名称と SessionStart フックが重複。フックを無効化したい場合は `export LOOM_CODE_MODE=off`。
 
 ## 関連

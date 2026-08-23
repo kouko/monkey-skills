@@ -51,7 +51,7 @@ def test_workflow_file_exists():
 def test_verify_step_still_invokes_verify_merged_head():
     text = _normalized(WORKFLOW.read_text(encoding="utf-8"))
     assert (
-        "bash dev-workflow/skills/git-memory/scripts/memory-grep.sh --verify-merged HEAD" in text
+        "bash loom-workflow/skills/git-memory/scripts/memory-grep.sh --verify-merged HEAD" in text
     ), "the --verify-merged HEAD invocation was removed or reworded"
 
 

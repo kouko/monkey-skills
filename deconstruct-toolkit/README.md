@@ -41,7 +41,7 @@ This plugin is for **non-code artifacts only**. Use a different tool when:
 |---|---|
 | Codebase reverse-engineering | [`sourceatlas`](https://github.com/kouko/monkey-skills/tree/main/sourceatlas) (impact / flow / overview / pattern / deps) |
 | Self-thinking / problem clarification | [`philosophers-toolkit`](https://github.com/kouko/monkey-skills/tree/main/philosophers-toolkit) — operates on `you vs your problem` |
-| Dev-artifact critique (proposals / commits / skills) | [`dev-workflow`](https://github.com/kouko/monkey-skills/tree/main/dev-workflow) (proposal-critique / complexity-critique / skill-judge) |
+| Dev-artifact critique (proposals / commits / skills) | [`loom-workflow`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow) (proposal-critique / complexity-critique / skill-judge) |
 | Forward-direction copy / docs / design **production** | [`copywriting-toolkit`](https://github.com/kouko/monkey-skills/tree/main/copywriting-toolkit), [`docs-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/docs-team), [`design-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/design-team) |
 | Investment / equity reverse-engineering | [`investing-toolkit`](https://github.com/kouko/monkey-skills/tree/main/investing-toolkit) |
 

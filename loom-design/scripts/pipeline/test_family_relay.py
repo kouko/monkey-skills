@@ -43,7 +43,7 @@ REVIEW_SKILL = REPO_ROOT / "loom-code/skills/requesting-code-review/SKILL.md"
 BRAINSTORM_VISUAL_COMPANION = REPO_ROOT / "loom-code/skills/brainstorming/references/visual-companion.md"
 BRAINSTORM_HANDOFF_BRIEF = REPO_ROOT / "loom-code/skills/brainstorming/references/handoff-brief-format.md"
 BRAINSTORM_SKILL = REPO_ROOT / "loom-code/skills/brainstorming/SKILL.md"
-BRIEF_BEFORE_ASKING_SKILL = REPO_ROOT / "dev-workflow/skills/brief-before-asking/SKILL.md"
+BRIEF_BEFORE_ASKING_SKILL = REPO_ROOT / "loom-workflow/skills/brief-before-asking/SKILL.md"
 
 DESIGN_SIDE_FILES = {
     "using-loom-design": REPO_ROOT / "loom-design/skills/using-loom-design/SKILL.md",
@@ -228,7 +228,7 @@ def test_design_side_pointers(skill_id):
 
 def test_brief_before_asking_ordering():
     """
-    Task 11 edits dev-workflow/skills/brief-before-asking/SKILL.md:
+    Task 11 edits loom-workflow/skills/brief-before-asking/SKILL.md:
       - turn-ordering marker: "never bury a briefing and an
         AskUserQuestion" (same phrase as the relay section, ~line 20-22)
       - anti-diagram carve-out marker: "explicit user request for a

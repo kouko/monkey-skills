@@ -59,7 +59,7 @@ leaves for `using-loom-code`.
 **Step 3 — brief before a complex fork.** A fork this router surfaces (a station
 choice, a value commitment, an on-ramp choice) can itself be non-trivial. When
 the fork is complex enough to warrant a brief, run
-`dev-workflow:brief-before-asking` first instead of improvising the question —
+`loom-workflow:brief-before-asking` first instead of improvising the question —
 the trigger threshold and stakes-first framing live in
 `references/family-reception.md §Brief before a complex fork` (the
 single source; reference it, don't copy it).

@@ -41,7 +41,7 @@ Read this in: [English](README.md) | [日本語](README.ja.md) | **繁體中文*
 |---|---|
 | 程式碼逆向工程 | [`sourceatlas`](https://github.com/kouko/monkey-skills/tree/main/sourceatlas)（impact / flow / overview / pattern / deps）|
 | 自我思考 / 問題釐清 | [`philosophers-toolkit`](https://github.com/kouko/monkey-skills/tree/main/philosophers-toolkit) — 處理「你 vs 你的問題」 |
-| Dev 產出物 critique（提案 / commit / skill）| [`dev-workflow`](https://github.com/kouko/monkey-skills/tree/main/dev-workflow)（proposal-critique / complexity-critique / skill-judge）|
+| Dev 產出物 critique（提案 / commit / skill）| [`loom-workflow`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow)（proposal-critique / complexity-critique / skill-judge）|
 | 正向**生產**文案 / 文件 / 設計 | [`copywriting-toolkit`](https://github.com/kouko/monkey-skills/tree/main/copywriting-toolkit), [`docs-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/docs-team), [`design-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/design-team) |
 | 投資 / 個股逆向 | [`investing-toolkit`](https://github.com/kouko/monkey-skills/tree/main/investing-toolkit) |
 

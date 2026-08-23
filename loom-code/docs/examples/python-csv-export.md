@@ -276,7 +276,7 @@ Orchestrator runs 7-step flow:
 
 1. ✅ `requesting-code-review` — PASS (verdict above)
 2. ✅ `verification-before-completion` — PASS (pytest output above)
-3. **`dev-workflow:git-memory`** — invoked; decides 1 Decision: trailer warranted (the choice not to support XLSX / streaming is non-obvious and worth recording for future maintainers)
+3. **`loom-workflow:git-memory`** — invoked; decides 1 Decision: trailer warranted (the choice not to support XLSX / streaming is non-obvious and worth recording for future maintainers)
 4. **git commit** — user approves commit message:
    ```
    feat(reports): add ?format=csv export to /reports/:id

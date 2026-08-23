@@ -4,7 +4,7 @@
 SKILL.md is a prompt artifact, not executable code. The contract under guard:
 when a technical fork surfaced to the user is genuinely complex — the shared
 threshold triple (>=3 trade-offs / >=2 implementation paths / architectural
-blast radius) — the agent must run `dev-workflow:brief-before-asking`
+blast radius) — the agent must run `loom-workflow:brief-before-asking`
 (6-block briefing, Mental Model first) BEFORE firing the AskUserQuestion,
 instead of dumping options on a user who cannot evaluate them (the observed
 pain: "technical choices I can't really evaluate").
@@ -91,18 +91,18 @@ def test_rcr_gate2_carries_complex_fork_briefing():
     briefing instead of a bare fix/defer/merge ask."""
     assert _carries_escalation(_text(RCR)), \
         "requesting-code-review must brief complex forks via " \
-        "dev-workflow:brief-before-asking with the shared threshold triple"
+        "loom-workflow:brief-before-asking with the shared threshold triple"
 
 
 def test_router_card_names_bba_with_triple():
     """The SessionStart router card (rule 5) is the action-moment surface —
-    it must NAME dev-workflow:brief-before-asking (not just paraphrase
+    it must NAME loom-workflow:brief-before-asking (not just paraphrase
     'research before asking') and carry the shared threshold triple
     verbatim, so the imperative fires proactively before the ask, not just
     inside the deeper skills a session may never load. NOT dedup'd — a
     pointer would defeat the proactive inline fire."""
     assert _carries_escalation(_text(ROUTER_CARD)), \
-        "router-card.md rule 5 must name dev-workflow:brief-before-asking " \
+        "router-card.md rule 5 must name loom-workflow:brief-before-asking " \
         "with the shared threshold triple"
 
 

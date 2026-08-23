@@ -75,4 +75,4 @@ If you find yourself unsure where to stop, ask: *"Would I be comfortable if this
 - [`../SKILL.md`](../SKILL.md) — Phase 4 VERIFY produces the bug class; this file decides what defenses follow.
 - [`root-cause-tracing.md`](root-cause-tracing.md) — must complete before defense layering (no defense without understanding).
 - [`../../subagent-driven-development/checklists/security-checklist.md`](../../subagent-driven-development/checklists/security-checklist.md) — security-grounded version of the input validation / allow-list discipline.
-- `dev-workflow:complexity-critique` — for layer 6 (architectural refactor) decisions, especially the Rule-of-Three trigger.
+- `loom-workflow:complexity-critique` — for layer 6 (architectural refactor) decisions, especially the Rule-of-Three trigger.

@@ -353,7 +353,7 @@ belong to):
 
 | Artifact | Why docs-team is required |
 |---|---|
-| Plugin-level `README.md` (e.g., `dev-workflow/README.md`) | Multi-skill scope; needs cross-skill consistency; public-facing |
+| Plugin-level `README.md` (e.g., `loom-workflow/README.md`) | Multi-skill scope; needs cross-skill consistency; public-facing |
 | Repo-level `README.md` (root of monkey-skills) | Maximum scope; multiple plugins; project identity |
 | Public release READMEs / changelogs | External-user-facing; tone / voice gates apply |
 | ADR / API reference / Runbook | Diátaxis-mode discipline mandatory |

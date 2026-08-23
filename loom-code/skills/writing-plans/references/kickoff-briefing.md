@@ -107,7 +107,7 @@ agent-decides-silently cell.
 ## (c) ONE batched briefing
 
 Batch the round's 1-3 one-way-door hits into **ONE** briefing — never
-one ask per decision. Format authority: `dev-workflow:brief-before-asking`
+one ask per decision. Format authority: `loom-workflow:brief-before-asking`
 (pointer — load that skill's 6-block structure; do not copy it here).
 Per decision inside the batch:
 
@@ -204,6 +204,6 @@ Sweeping the tasks (§b):
 Only Task 2's decision batches into ONE kickoff briefing (§c): Mental
 Model in plain language ("who runs the login you'll depend on"), 2
 options with product consequences, a recommendation, phrased per
-`dev-workflow:brief-before-asking`. If `docs/loom/PRINCIPLES.md` already
+`loom-workflow:brief-before-asking`. If `docs/loom/PRINCIPLES.md` already
 states an engineering stance on third-party auth, present Task 2 as a
 derivation-for-confirmation instead of an open menu (§c).

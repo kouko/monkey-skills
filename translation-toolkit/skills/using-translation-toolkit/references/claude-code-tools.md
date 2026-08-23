@@ -53,7 +53,7 @@ sibling-skill reference file, not this router's own `references/`)
 documents literal ids like `claude-haiku-4-5` in the toolkit's
 own `model:` config field. Whether Claude Code's `Agent()` call needs
 that literal id or the harness-level alias (`"haiku"`) is a per-harness
-detail — `dev-workflow:distill-sessions` hit exactly this gap
+detail — `loom-workflow:distill-sessions` hit exactly this gap
 (`references/claude-code-tools.md` there: the literal model id fails
 `Agent()`'s enum validation; only the alias works). Verify which form
 `resolve_model_for_role` ultimately hands to the dispatch call before

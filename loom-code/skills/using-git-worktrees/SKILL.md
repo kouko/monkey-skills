@@ -106,7 +106,7 @@ File operations inside a worktree have sharp edges (e.g. renaming an untracked j
 | **Upstream invocation** | User starting a parallel branch | Direct user invocation |
 | **Upstream invocation** | `brainstorming` produces a brief that explicitly says "this will be a long-running design phase" | Optional — recommend worktree for the design phase |
 | **Downstream** | `finishing-a-development-branch` | When closing a branch that lives in a worktree, finishing-a-branch's cleanup phase invokes this skill's `git worktree remove` flow |
-| **Lateral** | `dev-workflow:git-memory` | Worktrees share the same `.git/`; git-memory's commit-trailer mechanism works identically across worktrees (no special handling needed) |
+| **Lateral** | `loom-workflow:git-memory` | Worktrees share the same `.git/`; git-memory's commit-trailer mechanism works identically across worktrees (no special handling needed) |
 
 ## Red Flags — refuse these rationalizations
 

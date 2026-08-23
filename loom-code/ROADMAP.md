@@ -4,7 +4,7 @@
 > **Status**: Design-only (no skill shipped yet)
 > **Source of design**: `<obsidian-vault>/research/2026-05-15 Superpowers vs code-team 架構比較研究.md` + Q1-Q4 lock
 > **Target**: 個人開發者（資料分析師 / App 設計師），Claude Code + Codex CLI
-> **Coexists with**: `domain-teams:code-team`（被動 gate 入口）、`dev-workflow:{git-memory, complexity-critique, proposal-critique}`、`obra/superpowers`（with conflict env var）
+> **Coexists with**: `domain-teams:code-team`（被動 gate 入口）、`loom-workflow:{git-memory, complexity-critique, proposal-critique}`、`obra/superpowers`（with conflict env var）
 
 ---
 
@@ -49,7 +49,7 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 
 **觀察名單（不一定做）**：
 - `dispatching-parallel-agents`（Superpowers 有；待 Phase 3 後評估）
-- `receiving-code-review`（功能與 `dev-workflow:git-memory` 重疊；待評估）
+- `receiving-code-review`（功能與 `loom-workflow:git-memory` 重疊；待評估）
 - `writing-skills`（範圍重疊 `skill-dev-toolkit:skill-creator-advance`；不做）
 - `visual brainstorming server`（Superpowers 5.1.0 新 feature；MVP 不做）
 
@@ -170,7 +170,7 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 
 | Q | 決定 |
 |---|---|
-| P2-A | `brainstorming` HARD-GATE 措辭沿用 Superpowers；加碼「複雜度 critique」可選 delegation 到 `dev-workflow:complexity-critique` |
+| P2-A | `brainstorming` HARD-GATE 措辭沿用 Superpowers；加碼「複雜度 critique」可選 delegation 到 `loom-workflow:complexity-critique` |
 | P2-B | `writing-plans` 每任務一個失敗測試；BLOCKED 時 fallback 更小切割 |
 | P2-C | `systematic-debugging` 4-phase 沿用 Superpowers；新增 `references/character-encoding-debug.md` 連結到 code-team `character-encoding-security.md` |
 
@@ -219,7 +219,7 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 | `requesting-code-review` | `SKILL.md` + `agents/code-reviewer.md`（review subagent prompt） + README×3 |
 | `verification-before-completion` | `SKILL.md` + README×3 |
 | `using-git-worktrees` | `SKILL.md` + README×3 |
-| `finishing-a-development-branch` | `SKILL.md`（delegate to `dev-workflow:git-memory`） + README×3 |
+| `finishing-a-development-branch` | `SKILL.md`（delegate to `loom-workflow:git-memory`） + README×3 |
 
 ### Q-lock (Phase 3)
 
@@ -228,7 +228,7 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 | P3-A | `requesting-code-review` 的 reviewer subagent 載入 loom-code `rubrics/`（不再走 SDD 內嵌 reviewer） |
 | P3-B | `verification-before-completion` 強制 `npm test` / `pytest` / `go test` 等套件層級驗證；不靠單一檔案 lint |
 | P3-C | `using-git-worktrees` 預設 Native git worktree（不額外 wrapper） |
-| P3-D | `finishing-a-development-branch` commit 前 mandatory 走 `dev-workflow:git-memory`；不重複 git-memory 邏輯 |
+| P3-D | `finishing-a-development-branch` commit 前 mandatory 走 `loom-workflow:git-memory`；不重複 git-memory 邏輯 |
 
 ### Acceptance test
 
@@ -254,8 +254,8 @@ Phase    v0.x.0   天數     Skill 累計   重點                              
 **Scope**：cross-skill delegation 硬化 + release。
 
 **交付物**：
-- `dev-workflow:complexity-critique` brainstorming-time 整合測試
-- `dev-workflow:git-memory` commit-time 整合測試
+- `loom-workflow:complexity-critique` brainstorming-time 整合測試
+- `loom-workflow:git-memory` commit-time 整合測試
 - `domain-teams:code-team` 並存測試（同一 vault 跑兩個 plugin 無衝突）
 - CHANGELOG.md 從 v0.1.0 累積到 v1.0.0
 - 公開 announcement 草稿
@@ -317,9 +317,9 @@ claude plugin install loom-code@monkey-skills --scope local
 
 | Source | Target | Trigger |
 |---|---|---|
-| `loom-code:finishing-a-development-branch` | `dev-workflow:git-memory` | commit gate（必呼） |
-| `loom-code:brainstorming` | `dev-workflow:complexity-critique` | 複雜度疑慮（建議） |
-| `loom-code:brainstorming` | `dev-workflow:proposal-critique` | 多方案 triage（建議） |
+| `loom-code:finishing-a-development-branch` | `loom-workflow:git-memory` | commit gate（必呼） |
+| `loom-code:brainstorming` | `loom-workflow:complexity-critique` | 複雜度疑慮（建議） |
+| `loom-code:brainstorming` | `loom-workflow:proposal-critique` | 多方案 triage（建議） |
 | `loom-code:requesting-code-review` | `domain-teams:code-team` | 既有大產出要 audit（可選） |
 
 ---

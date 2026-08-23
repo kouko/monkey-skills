@@ -7,7 +7,7 @@ Build-time tooling for the **SSOT-and-functional-copy** pattern (TECH-SPEC Decis
 Anthropic's skill spec says each skill folder must be self-contained — a skill can only `Read` files **inside its own directory** at runtime. We have shared knowledge (the 4D loop, glossaries, JLReq summary, NICT corpus notes) that all four active translation skills need verbatim. Two ways to solve that:
 
 1. **Symlink** every skill's `references/foo.md` to a single source. Works on disk but breaks under archive / CI / non-POSIX consumers and silently leaves dangling pointers when the skill is published as an artifact.
-2. **Bundle a functional copy in every skill, kept byte-identical to a single source of truth via build tooling.** The pattern used by `dev-workflow:complexity-critique` (memory: SSOT-and-functional-copy v1.5.0).
+2. **Bundle a functional copy in every skill, kept byte-identical to a single source of truth via build tooling.** The pattern used by `loom-workflow:complexity-critique` (memory: SSOT-and-functional-copy v1.5.0).
 
 We use option 2.
 

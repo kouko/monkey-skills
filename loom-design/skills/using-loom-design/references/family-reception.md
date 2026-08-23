@@ -32,7 +32,7 @@ Before EVERY user-visible reply while a loom skill is active:
 
 When a fork this router surfaces is genuinely complex — **≥3 trade-offs,
 ≥2 implementation paths, or architectural blast radius** — brief before
-you ask. If `dev-workflow:brief-before-asking` is available, use it; otherwise
+you ask. If `loom-workflow:brief-before-asking` is available, use it; otherwise
 produce the complete local six-block fallback: **Mental Model** explains the
 thing and stakes, **Situation** gives current evidence, **Why this is a fork**
 names the competing consequences, **Options** compares 2–3 paths, **My take**

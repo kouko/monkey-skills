@@ -4,7 +4,7 @@ A **self-contained** toolkit for authoring Claude Agent Skills end-to-end. Zero
 cross-plugin dependencies — install it alone and it works.
 
 Extracted from `dev-workflow` (2026-06-20) so the skill-authoring lifecycle can be
-distributed independently of dev-workflow's session/git/critique tools.
+distributed independently of loom-workflow's session/git/critique tools.
 
 ## Skills (the lifecycle)
 
@@ -26,7 +26,7 @@ These skills carry their own worth-it / smallest-skill checks inline rather than
 delegating to other plugins, so the toolkit has **no `plugin:skill` references to
 other plugins**. (Generic code-change critique — `complexity-critique` /
 `proposal-critique` — and session-log mining — `distill-sessions` — remain in
-`dev-workflow`, which this toolkit does not depend on.)
+`loom-workflow`, which this toolkit does not depend on.)
 
 ## License
 

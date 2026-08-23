@@ -53,7 +53,7 @@ git worktree remove .worktrees/feat-foo
 ## Cross-skill
 
 - **`finishing-a-development-branch`** がブランチクリーンアップとして `git worktree remove` を呼ぶ
-- **`dev-workflow:git-memory`** は worktree 間で同じ動作（`.git/` 共有なので commit trailer は特別扱い不要）
+- **`loom-workflow:git-memory`** は worktree 間で同じ動作（`.git/` 共有なので commit trailer は特別扱い不要）
 
 ## このスキルがしないこと
 

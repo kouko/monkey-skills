@@ -45,7 +45,7 @@
 
 - **上流**: `tdd-iron-law`（false-green diagnostic）または `subagent-driven-development`（implementer BLOCKED on test-cannot-go-RED）から呼び出される。
 - **下流**: Phase 4 VERIFY の fix が `tdd-iron-law` の回帰テストを駆動（再現が RED）。
-- **横（任意）**: ISOLATE で untanglable モジュールが判明した時は `dev-workflow:complexity-critique` で refactor-before-fix；*"なぜこのコードはこう書かれているのか"* の再導出前に `repo-wiki:query` / `dbt-wiki:query`。
+- **横（任意）**: ISOLATE で untanglable モジュールが判明した時は `loom-workflow:complexity-critique` で refactor-before-fix；*"なぜこのコードはこう書かれているのか"* の再導出前に `repo-wiki:query` / `dbt-wiki:query`。
 
 ## このスキルがしないこと
 

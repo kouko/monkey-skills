@@ -2,12 +2,12 @@
 # test-complexity-critique-delegation.sh
 #
 # Verify loom-code's brainstorming skill correctly references
-# dev-workflow:complexity-critique as an optional Axis 3 delegation
+# loom-workflow:complexity-critique as an optional Axis 3 delegation
 # target.
 #
 # Phase 4 integration test — combines offline reference check
 # (SKILL.md mentions the delegate target) + prerequisite presence
-# check (dev-workflow plugin is installed) + manual verification
+# check (loom-workflow plugin is installed) + manual verification
 # prompt for live session.
 #
 # Usage:
@@ -34,10 +34,10 @@ if [ ! -f "${BRAINSTORMING_SKILL}" ]; then
   exit 1
 fi
 
-if grep -q "dev-workflow:complexity-critique" "${BRAINSTORMING_SKILL}"; then
-  pass "brainstorming/SKILL.md references dev-workflow:complexity-critique"
+if grep -q "loom-workflow:complexity-critique" "${BRAINSTORMING_SKILL}"; then
+  pass "brainstorming/SKILL.md references loom-workflow:complexity-critique"
 else
-  fail "brainstorming/SKILL.md does NOT reference dev-workflow:complexity-critique"
+  fail "brainstorming/SKILL.md does NOT reference loom-workflow:complexity-critique"
   fail "  Expected per ROADMAP §Cross-plugin delegation contract + PRODUCT-SPEC §3.2 / §5.6"
 fi
 
@@ -51,32 +51,32 @@ else
 fi
 
 # -------------------------------------------------------------------------
-# Check 3 — prerequisite: dev-workflow plugin installed
+# Check 3 — prerequisite: loom-workflow plugin installed
 
 if ! command -v claude >/dev/null 2>&1; then
-  skip "claude CLI not found — cannot verify dev-workflow plugin install"
+  skip "claude CLI not found — cannot verify loom-workflow plugin install"
 else
-  if claude plugin list 2>&1 | grep -q "dev-workflow"; then
-    pass "dev-workflow plugin installed (delegate target available)"
+  if claude plugin list 2>&1 | grep -q "loom-workflow"; then
+    pass "loom-workflow plugin installed (delegate target available)"
     # `claude plugin list` emits multi-line blocks per plugin; use -A 3 to
     # capture the Status line for the matched plugin
-    if claude plugin list 2>&1 | grep -A 3 "[❯>] dev-workflow" | grep -q "Status: ✔ enabled"; then
-      pass "dev-workflow plugin enabled"
+    if claude plugin list 2>&1 | grep -A 3 "[❯>] loom-workflow" | grep -q "Status: ✔ enabled"; then
+      pass "loom-workflow plugin enabled"
     else
-      fail "dev-workflow plugin installed but NOT enabled — delegation will fail in live session"
+      fail "loom-workflow plugin installed but NOT enabled — delegation will fail in live session"
     fi
   else
-    fail "dev-workflow plugin NOT installed — complexity-critique unavailable"
-    fail "  Install: claude plugin install dev-workflow@monkey-skills"
+    fail "loom-workflow plugin NOT installed — complexity-critique unavailable"
+    fail "  Install: claude plugin install loom-workflow@monkey-skills"
   fi
 fi
 
 # -------------------------------------------------------------------------
-# Check 4 — prerequisite: complexity-critique skill exists in dev-workflow
+# Check 4 — prerequisite: complexity-critique skill exists in loom-workflow
 
-DEV_WORKFLOW_DIR="${REPO_ROOT}/dev-workflow/skills/complexity-critique"
+DEV_WORKFLOW_DIR="${REPO_ROOT}/loom-workflow/skills/complexity-critique"
 if [ -d "${DEV_WORKFLOW_DIR}" ] && [ -f "${DEV_WORKFLOW_DIR}/SKILL.md" ]; then
-  pass "complexity-critique skill exists in dev-workflow plugin"
+  pass "complexity-critique skill exists in loom-workflow plugin"
 else
   fail "complexity-critique SKILL.md not found at ${DEV_WORKFLOW_DIR}/SKILL.md"
 fi
@@ -114,12 +114,12 @@ Offline checks PASSED. Live verification (manual, in fresh Claude session):
      - Skill(loom-code:brainstorming) auto-loads
      - Brainstorming walks Axis 3 (Smallest End State)
      - On Axis 3 complexity-smell, SHOULD surface or invoke
-       dev-workflow:complexity-critique as optional triage
+       loom-workflow:complexity-critique as optional triage
      - Reference: loom-code/tests/brainstorming-pressure/prompts/
        this-is-simple.txt (this exact prompt is the brainstorming
        pressure case)
 
-  5. PASS if agent mentions or invokes dev-workflow:complexity-critique
+  5. PASS if agent mentions or invokes loom-workflow:complexity-critique
      (per the cross-skill delegation contract in
      loom-code/ROADMAP.md §Cross-plugin delegation)
 EOF

@@ -9,7 +9,7 @@ Read this in: **English** | [日本語](README.ja.md) | [繁體中文](README.zh
 | Plugin | Version | Skills | Commands | Description |
 |--------|---------|-------:|---------:|-------------|
 | [`domain-teams`](domain-teams/) | 5.5.1 | 11 | 9 | Domain team skills — planning, code, design, research, copywriting with checkpoint-based quality gates. |
-| [`dev-workflow`](dev-workflow/) | 2.0.0 | 7 | 4 | Skill creation, skill quality scoring, git-backed project memory, proposal triage, complexity critique, skill refactor, and skill tuning. |
+| [`loom-workflow`](loom-workflow/) | 1.0.0 | 7 | 4 | Loom workflow skills for git-backed project memory, decision briefs, critique, recap, handoff, and session distill. |
 | [`philosophers-toolkit`](philosophers-toolkit/) | 1.0.4 | 12 | 12 | Philosophical thinking frameworks for problem clarification and deeper reasoning. |
 | [`obsidian`](obsidian/) | 3.5.0 | 13 | 1 | Obsidian vault workflows — daily notes, markdown, bases, diagrams, canvas, file intel, vault management, dashboard design. |
 | [`investing-toolkit`](investing-toolkit/) | 1.16.5 | 15 | 5 | Investing research toolkit — macro regime diagnosis (US/JP/TW/KR/CN), DCF, screener, equity snapshots via primary-source adapters. |
@@ -58,7 +58,7 @@ monkey-skills/
 │   ├── skill-structure.yml       # CI: enforce skill conventions
 │   └── scraper-deps-monthly.yml  # CI: monthly dep refresh
 ├── domain-teams/                 # plugin
-├── dev-workflow/                 # plugin
+├── loom-workflow/                # plugin
 ├── philosophers-toolkit/         # plugin
 ├── obsidian/                     # plugin
 ├── investing-toolkit/            # plugin

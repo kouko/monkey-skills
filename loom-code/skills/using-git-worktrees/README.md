@@ -53,7 +53,7 @@ See [`SKILL.md`](SKILL.md) §When to use + §When NOT to use. Quick rule: if you
 ## Cross-skill
 
 - **`finishing-a-development-branch`** invokes `git worktree remove` as part of branch cleanup.
-- **`dev-workflow:git-memory`** works identically across worktrees (shared `.git/` means commit trailers don't need special handling).
+- **`loom-workflow:git-memory`** works identically across worktrees (shared `.git/` means commit trailers don't need special handling).
 
 ## What this skill does NOT do
 

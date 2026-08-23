@@ -150,7 +150,7 @@ def test_reception_content_contract():
     )
     assert "and its public skill is available" in lower
     assert "owning plugin's path continues" in lower
-    assert "if `dev-workflow:brief-before-asking` is available" in lower
+    assert "if `loom-workflow:brief-before-asking` is available" in lower
     assert "handoff-brief-format.md" not in text
 
 

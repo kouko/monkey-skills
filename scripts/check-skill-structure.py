@@ -394,13 +394,13 @@ def check_chk_skl_011(skill_dir: Path) -> list[CheckError]:
 REQUIRED_SUBDIRS = {"standards", "protocols", "checklists", "rubrics"}
 # Optional subdirs allowed across all plugins per CLAUDE.md §Skill Structure:
 #   research/ + references/ — documentation / grounding evidence
-#   agents/ + scripts/ + assets/ — runtime assets that ship with the skill
+#   agents/ + scripts/ + assets/ + evals/ — runtime and evaluation assets
 # Router skills and process-toolkit-style skills (e.g. loom-code) often
 # have agents/ + scripts/ instead of the 4 REQUIRED_SUBDIRS; the router-skill
 # exemption in CHK-SKL-012 already handles the "no protocols/" case, but the
 # optional subdirs list must include agents/ + scripts/ + assets/ so they
 # are not flagged as "unexpected subdirectory" by check_chk_skl_012.
-OPTIONAL_SUBDIRS = {"research", "references", "agents", "scripts", "assets"}
+OPTIONAL_SUBDIRS = {"research", "references", "agents", "scripts", "assets", "evals"}
 RESEARCH_FILENAME = re.compile(r"^grounding-v\d+\.\d+\.\d+\.md$")
 
 
@@ -412,7 +412,12 @@ def _is_noise_file(name: str) -> bool:
     GitHub Actions sees on a fresh checkout, so we skip them locally
     too to avoid spurious local-only failures.
     """
-    return name == ".DS_Store" or name.startswith("._") or name == "Thumbs.db"
+    return (
+        name == ".DS_Store"
+        or name.startswith("._")
+        or name == "Thumbs.db"
+        or name == "__pycache__"
+    )
 
 
 _README_TOP_LEVEL_RE = re.compile(r"^README(?:\.[A-Za-z]{2,3}(?:-[A-Za-z]{2,4})?)?\.md$")
@@ -427,15 +432,17 @@ def _is_allowed_top_level_file(name: str) -> bool:
       - README.md — optional, human-facing GitHub-rendered overview
       - README.{lang}.md — optional BCP 47-tagged translations
         (e.g., README.ja.md, README.zh-TW.md, README.fr.md)
-      - test-prompts.json — optional behavioral eval input set; the
+      - test-prompts.json / trigger-eval.json — optional behavioral eval input
+        sets; the
         skill-refactor/skill-tuning shared schema mandates this exact
         location ("same level as SKILL.md")
+      - LICENSE / NOTICE — optional per-skill license and attribution records
 
     Other top-level files are FATAL per CHK-SKL-012.
     """
     if name == "SKILL.md":
         return True
-    if name == "test-prompts.json":
+    if name in {"test-prompts.json", "trigger-eval.json", "LICENSE", "NOTICE"}:
         return True
     if _README_TOP_LEVEL_RE.match(name):
         return True
@@ -467,6 +474,8 @@ def check_chk_skl_012(skill_dir: Path) -> list[CheckError]:
             # No nested subdirectories inside any required/optional subdir.
             for child in entry.iterdir():
                 if child.is_dir():
+                    if _is_noise_file(child.name):
+                        continue
                     errors.append(
                         CheckError(
                             "CHK-SKL-012",

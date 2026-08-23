@@ -26,7 +26,7 @@ finishing-a-development-branch (this skill)
   │     package-level tests → exit 0 + N>0 → PASS; blocks on failure
   │     + ui-verification (CONDITIONAL): UI-bearing branch with a ui-flows.md
   │
-  ├─→ Phase 3: dev-workflow:git-memory (P3-D MANDATORY)
+  ├─→ Phase 3: loom-workflow:git-memory (P3-D MANDATORY)
   │     decides Decision: / Learning: / Gotcha: trailers for the close-out commit
   │
   ├─→ Phase 4: git commit (orchestrator runs this)
@@ -49,7 +49,7 @@ procedure — "Phase N" and "Step N" are distinct numbering schemes.)
 
 ## When NOT to use
 
-Exempt: **mid-task work** (SDD plan incomplete), **trivial direct-to-main commits** (solo, tiny doc fix), a **branch you're abandoning** (close out first if real), and **explicit user override** with a real reason. Near-miss rationalizations ("I'm tired of this branch") do NOT qualify. These waive the close-out orchestration (review / verification / PR) but **NEVER waive `dev-workflow:git-memory`** — it gates every commit. Full table in [`references/when-not-to-use.md`](references/when-not-to-use.md).
+Exempt: **mid-task work** (SDD plan incomplete), **trivial direct-to-main commits** (solo, tiny doc fix), a **branch you're abandoning** (close out first if real), and **explicit user override** with a real reason. Near-miss rationalizations ("I'm tired of this branch") do NOT qualify. These waive the close-out orchestration (review / verification / PR) but **NEVER waive `loom-workflow:git-memory`** — it gates every commit. Full table in [`references/when-not-to-use.md`](references/when-not-to-use.md).
 
 ## When to use
 
@@ -71,7 +71,7 @@ This skill is light on novel logic — its value is orchestration; the work happ
 | 1 | `requesting-code-review` (four-way dispatch; docs-only → `requesting-docs-review`) | Own subagent |
 | 2 | `verification-before-completion` | Own per-stack command table |
 | 2b | `ui-verification` (conditional) | Own tooling/degradation contract |
-| 3 | `dev-workflow:git-memory` | P3-D MANDATORY |
+| 3 | `loom-workflow:git-memory` | P3-D MANDATORY |
 | 4 | git CLI | Standard commit |
 | 5 | git CLI | Standard push |
 | 6 | gh CLI | Request-derived authorization |
@@ -147,7 +147,7 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
      marked future/deferred): surface findings; STOP — route to the
      implementer, or flag the design station if the enumeration itself is wrong.
    - PASS_WITH_NOTES: proceed; carry untestable-state notes into the PR body.
-6. Invoke dev-workflow:git-memory
+6. Invoke loom-workflow:git-memory
    - Pass: diff, recent commits, branch name
    - Receive: trailer set (Decision: / Learning: / Gotcha: lines) + commit body suggestion
    - **The moment this trailer set comes back non-empty, run the Memory-timing check NOW** (see
@@ -159,12 +159,10 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
      the exact lapse this inline check exists to prevent (documented recurrence: PR #519, PR #520).
 7. Run the privacy gate on the composed commit message + trailers —
    git-memory's compose-commit protocol Step 3.5, the fail-closed
-   two-layer check: layer-1 deterministic scan via
-   `dev-workflow/skills/git-memory/scripts/privacy-scan.py`
-   (`--text-file <path>`), then layer-2 fresh-context judge per
-   `dev-workflow/skills/git-memory/protocols/privacy-judge-spec.md`
-   (both live in the dev-workflow plugin — pass the judge this full
-   path, not a bare filename).
+   two-layer check: ask `loom-workflow:git-memory` to run its deterministic
+   `privacy-scan.py` (`--text-file <path>`), then its fresh-context judge
+   using `privacy-judge-spec.md`. The public skill owns both implementation
+   details; do not resolve sibling-plugin paths.
    - **Resolve the dispatch profile** in [`using-loom-code`'s portable
      profile](../using-loom-code/references/dispatch-profile.md) before the
      fresh-context judge spawn. Privacy review is security-sensitive, so its
@@ -220,7 +218,7 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
 9. git commit (only after Step 7's privacy gate PASSes, or after the
    user resolves a Step-7 BLOCK)
 9b. Commit-carrier verify gate — MANDATORY, runs AFTER the commit, BEFORE push:
-    - Run `dev-workflow/skills/git-memory/scripts/memory-grep.sh --verify HEAD`
+    - Ask `loom-workflow:git-memory` to run `memory-grep.sh --verify HEAD`
       (exit 0 = a Decision/Learning/Gotcha trailer is retrievable from HEAD's body;
       exit 4 = none).
     - If Phase 3 (Step 6) returned a NON-empty trailer set (the branch is
@@ -256,7 +254,7 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
     ambiguous row confirmed at entry). Skip only if gh CLI is
     unconfigured or the user opted out up front — then stop after
     push and say so.
-    - Compose the PR body per `dev-workflow/skills/git-memory/protocols/compose-pr.md`,
+    - Ask `loom-workflow:git-memory` to compose the PR body per its `compose-pr.md` protocol,
       then run its Step 6 privacy gate over that composed body BEFORE `gh pr create` — the
       same two-layer gate (privacy-scan.py + the privacy-judge-spec.md judge, full
       cross-plugin paths in Step 7, fail-closed)
@@ -280,7 +278,7 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
       must be a raw trailer block (one or more plain `Decision:`/`Learning:`/
       `Gotcha:` `Key: value` lines, blank-line-separated from what precedes,
       NOTHING after them — a single such line qualifies), per
-      `dev-workflow/skills/git-memory/protocols/compose-pr.md` Step 4 for full
+      `loom-workflow:git-memory`'s `compose-pr.md` Step 4 for full
       placement rules; fix the body before submitting if missing/not last.
     - Offer BOTH merge paths in the report: the PR web URL — with a reminder
       to glance that the merge dialog's description box is prefilled before

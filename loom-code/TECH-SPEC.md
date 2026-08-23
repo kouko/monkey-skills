@@ -313,9 +313,9 @@ Sync via: loom-code/scripts/distribute.py
 
 | 觸發情境 | loom-code skill | Delegate to |
 |---|---|---|
-| Commit 前 | `finishing-a-development-branch` | `dev-workflow:git-memory`（mandatory gate） |
-| 複雜度疑慮 | `brainstorming` 或 `writing-plans` | `dev-workflow:complexity-critique`（建議；可選） |
-| 多方案 triage | `brainstorming` | `dev-workflow:proposal-critique`（建議；可選） |
+| Commit 前 | `finishing-a-development-branch` | `loom-workflow:git-memory`（mandatory gate） |
+| 複雜度疑慮 | `brainstorming` 或 `writing-plans` | `loom-workflow:complexity-critique`（建議；可選） |
+| 多方案 triage | `brainstorming` | `loom-workflow:proposal-critique`（建議；可選） |
 | 寫新 skill | （不適用 — 不在 loom-code 範圍） | `skill-dev-toolkit:skill-creator-advance` |
 | 已產出要 audit | `requesting-code-review` 子代理 | 可選 `domain-teams:code-team`（被動 gate 入口） |
 
@@ -534,7 +534,7 @@ A 4-task plan + a tiny TypeScript repo as fixture. Run SDD end-to-end; assert:
 | 2.5 | v0.2.5 | + Codex CLI variant ship + Codex tool mapping | + Codex integration test |
 | 3 | v0.3.0 | + requesting-code-review + verification-before-completion + using-git-worktrees + finishing-a-development-branch | full Superpowers parity |
 | 3.5 | v0.3.5 | hardening + dogfood polish | |
-| 4 | v1.0.0 | GA: cross-skill delegation working with dev-workflow + domain-teams | full eval suite |
+| 4 | v1.0.0 | GA: cross-skill delegation working with loom-workflow + domain-teams | full eval suite |
 
 ---
 
@@ -546,7 +546,7 @@ Both stay shipped. Router behavior:
 - `using-loom-code` SessionStart → 主動建構入口（從零開始的功能 / fix / refactor）
 - `domain-teams:code-team` 自願呼叫 → 被動 gate 評分入口（既有產出要審查）
 
-No file conflict（不同 plugin 路徑）。`dev-workflow:complexity-critique` 對 code-team mindset 的 SSOT 指向不變。
+No file conflict（不同 plugin 路徑）。`loom-workflow:complexity-critique` 對 code-team mindset 的 SSOT 指向不變。
 
 ### 8.2 與 `obra/superpowers` 並存
 
@@ -559,12 +559,12 @@ Resolution:
 - 提供 `LOOM_CODE_MODE=off` env var 關閉 hook
 - 可選二選一安裝
 
-### 8.3 與 `dev-workflow` 並存
+### 8.3 與 `loom-workflow` 並存
 
 No conflict — loom-code delegates to:
-- `dev-workflow:git-memory`（commit gate）
-- `dev-workflow:complexity-critique`（optional brainstorm aid）
-- `dev-workflow:proposal-critique`（optional triage）
+- `loom-workflow:git-memory`（commit gate）
+- `loom-workflow:complexity-critique`（optional brainstorm aid）
+- `loom-workflow:proposal-critique`（optional triage）
 
 ---
 
@@ -576,6 +576,6 @@ No conflict — loom-code delegates to:
 | TQ-2 | implementer subagent 是否要強制呼叫 `tdd-iron-law` skill（透過 prompt 內嵌 Skill tool 指令）？ | Phase 1 PoC 完再決定 |
 | TQ-3 | Codex CLI 的 hook 機制與 Claude Code 是否完全相容（JSON shape）？ | Phase 2.5 ship Codex 前驗證 |
 | TQ-4 | 是否要包 `dispatching-parallel-agents`（Superpowers 也有）？ | Phase 3+ 觀察名單 |
-| TQ-5 | `receiving-code-review` 是否需要？目前傾向用 `dev-workflow:git-memory` 取代 | Phase 3 |
+| TQ-5 | `receiving-code-review` 是否需要？目前傾向用 `loom-workflow:git-memory` 取代 | Phase 3 |
 | TQ-6 | 是否在 `tdd-iron-law` 之外另開 `verification-before-completion`？兩者功能有重疊 | Phase 3 |
 | TQ-7 | 全 plugin 是否需要 PEP 723 inline metadata（如 dbt-wiki 的 sqlglot 模式）？ | Phase 1 build 階段定（傾向：scripts 純 stdlib，不需要） |

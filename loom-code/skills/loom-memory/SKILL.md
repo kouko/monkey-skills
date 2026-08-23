@@ -7,7 +7,7 @@ description: >-
   experience before loom work, or propose keep/merge/retire cleanup
   (never auto-deletes). CONDITIONAL: fires only when the repo has
   `docs/loom/memory/README.md` — otherwise `loom-memory: N/A` with the
-  reason, loudly. NOT for git commit trailers (dev-workflow:git-memory)
+  reason, loudly. NOT for git commit trailers (loom-workflow:git-memory)
   nor Claude auto-memory. Triggers: "有沒有相關經驗", "記住這個做法",
   "記憶整理", "この教訓を残して", "過去の知見はある？".
 version: 0.2.1
@@ -58,9 +58,8 @@ Given a fact worth keeping:
    rewrite it; git history is the archive) instead of adding a
    contradicting sibling, and note the replacement in the entry's
    frontmatter `description` (the regenerated index line then carries
-   it). This mirrors git-memory's backward-pointing `Supersedes:` doctrine
-   (`dev-workflow/skills/git-memory/standards/memory-conventions.md`)
-   — point at it, don't copy its table (SSOT above).
+   it). This mirrors the backward-pointing `Supersedes:` doctrine owned by
+   `loom-workflow:git-memory` — point at it, don't copy its table (SSOT above).
 3. **Write `<slug>.md`** in `docs/loom/memory/` following the
    charter's format block exactly (frontmatter fields, body sections).
 4. **Regenerate the index** — run

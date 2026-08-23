@@ -34,7 +34,7 @@ Specific design distinctions from `darwin-skill`:
    equivalent" votes when one judge's specific reason was correct.
 4. **Three-question gate (Q1 equivalence + Q2 token reduction ≥10%
    + Q3 invariant preservation)** — vs `darwin-skill`'s 8-dim
-   weighted score. The three-question shape parallels dev-workflow's
+   weighted score. The three-question shape parallels loom-workflow's
    critique skills (`proposal-critique`,
    `complexity-critique`).
 5. **Verdict vocabulary** — PROCEED / RESHAPE / REJECT — parallel

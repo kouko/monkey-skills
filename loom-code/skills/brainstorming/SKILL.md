@@ -55,7 +55,7 @@ When that axis question fires, phrase it for the warm-but-interrupted user who r
 
 These three join the two gates already woven into the axes: gate ① (ask only when genuinely uncertain) lives in **Axis 1** as the confident-JTBD-read rule — state a confident reading as a committed interpretation rather than re-asking — and gate ② (bring a recommendation, not an open question) lives in **Axis 4** as the research-then-"My take: Recommend / Why / Conditional reversal" protocol; together the three read as one coherent set.
 
-**Above all — brief first when the fork is complex.** The trigger threshold and stakes-first framing live in `loom-code/hooks/family-reception.md §Brief before a complex fork` — run `dev-workflow:brief-before-asking` before firing the `AskUserQuestion` for an axis fork. When the brief presents ≥2 options, render them as a markdown comparison table by default (a trivial binary ask may stay prose) — per `loom-code/hooks/family-relay.md §Family relay discipline`.
+**Above all — brief first when the fork is complex.** The trigger threshold and stakes-first framing live in `loom-code/hooks/family-reception.md §Brief before a complex fork` — run `loom-workflow:brief-before-asking` before firing the `AskUserQuestion` for an axis fork. When the brief presents ≥2 options, render them as a markdown comparison table by default (a trivial binary ask may stay prose) — per `loom-code/hooks/family-relay.md §Family relay discipline`.
 
 ### Axis 0 — Upstream artifacts (family §Intake)
 
@@ -144,7 +144,7 @@ Examples of "smaller than first ask":
 - *"Add a feature-flag system"* → smallest may be: *"add one env var + a hardcoded list check"* (defer the whole flag system).
 - *"Refactor `OrderService`"* → smallest may be: *"extract just the email-notification subset that's blocking the current bug"* (defer the rest).
 
-This axis often delegates to `dev-workflow:complexity-critique` for systematic deletion-first triage. See §Cross-skill delegation.
+This axis often delegates to `loom-workflow:complexity-critique` for systematic deletion-first triage. See §Cross-skill delegation.
 
 ### Axis 4 — Alternatives Considered (**research-grounded, not imagined**)
 
@@ -167,7 +167,7 @@ Examples:
 - New feature flag → the hardcoded behavior it replaces becomes obsolete; remove it in the same PR.
 - New helper function → if it's covering for an existing API's shortcomings, can the existing API be improved instead?
 
-If nothing becomes obsolete, that is a flag: either the change is purely additive (probably YAGNI — see `dev-workflow:complexity-critique`) or the design space wasn't explored enough.
+If nothing becomes obsolete, that is a flag: either the change is purely additive (probably YAGNI — see `loom-workflow:complexity-critique`) or the design space wasn't explored enough.
 
 **Pairs with `## Current State Evidence` in the brief**: Axis 5 is forward-looking (what gets removed); Current State Evidence is backward-looking (what currently exists at the touch points). The same evidence citations often serve both: each requires a path plus an anchor, either a verbatim string or a stable heading. A line number is optional precision only when the anchor is ambiguous. The recon you do to fill Evidence is the same recon that surfaces obsolescence candidates here. See [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence for the format.
 
@@ -227,8 +227,8 @@ Rationalizations that push to skip discovery — *"this is simple," "I know what
 
 | When | Delegate to | Why |
 |---|---|---|
-| Axis 3 surfaces "this change might be bigger than necessary" (smell of accidental complexity / YAGNI) | `dev-workflow:complexity-critique` | Systematic deletion-first triage (three questions: smallest end state / before-after LOC / what becomes obsolete). Optional but strongly recommended. |
-| Axis 4 produces 3+ real options that need triage | `dev-workflow:proposal-critique` | Evidence-grounded KEEP / DEFER / DROP triage. Optional. |
+| Axis 3 surfaces "this change might be bigger than necessary" (smell of accidental complexity / YAGNI) | `loom-workflow:complexity-critique` | Systematic deletion-first triage (three questions: smallest end state / before-after LOC / what becomes obsolete). Optional but strongly recommended. |
+| Axis 4 produces 3+ real options that need triage | `loom-workflow:proposal-critique` | Evidence-grounded KEEP / DEFER / DROP triage. Optional. |
 | Brainstorming output indicates work >1 hour OR >1 module | `writing-plans` (next stage) | Brief becomes the input to plan-splitting. Before delegating, surface Axis 1 + Axis 3 (smallest end state) + Out-of-Scope as a visible checkpoint and require explicit user sign-off — do not proceed on an implicit "ok continue." Per the firing conditions in [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md), produce the brief's document view before requesting sign-off. |
 | Brainstorming output indicates a simple one-line known-pattern fix | Skip writing-plans; route straight to `tdd-iron-law` | The brief documented the smallness; trust it. |
 | Greenfield UI feature needs **high-coverage / high-risk** state fan-out (beyond the inline six-category reminder) | `loom-design:spec-expansion` | Runs the full lens (USM / OOUX / auto-expansion matrix) on a sparse seed. **Active / wired**: `writing-plans` now reads loom-design change-folders (see its **§Consuming a loom-design change-folder**), so the full spec can flow spec→plan→code. Use the inline §Greenfield UI-state nudge for lightweight cases; escalate to `loom-design:spec-expansion` (→ a validated change-folder) for the high-coverage path. |
@@ -245,7 +245,7 @@ Flow / state diagrams in briefs and user-facing summaries are GENERATED via `asc
 
 - Does **not** write code. The brief is text + diagrams; implementation starts in `writing-plans` → SDD → `tdd-iron-law`.
 - Does **not** make the final decision for the user. It surfaces the 5 axes so the *user* can decide intelligently. The agent's role is to enforce the framework, not to choose.
-- Does **not** replace `dev-workflow:complexity-critique`. complexity-critique runs deletion-first against a specific proposal; brainstorming runs discovery against an open problem. Sequence: brainstorming first, complexity-critique invoked on demand from inside brainstorming.
+- Does **not** replace `loom-workflow:complexity-critique`. complexity-critique runs deletion-first against a specific proposal; brainstorming runs discovery against an open problem. Sequence: brainstorming first, complexity-critique invoked on demand from inside brainstorming.
 - Does **not** require all 5 axes to surface novel content. Sometimes Axis 4 returns *"no real alternatives — the problem space is narrow"* and that is a valid output. The discipline is walking the axes, not generating volume.
 
 ## See also
@@ -255,5 +255,5 @@ Flow / state diagrams in briefs and user-facing summaries are GENERATED via `asc
 - [`references/axis4-research-protocol.md`](references/axis4-research-protocol.md) — full Axis-4 research protocol (bilingual query patterns, edge cases, anti-patterns).
 - [`../using-loom-code/SKILL.md`](../using-loom-code/SKILL.md) — router; routes to this skill at Stage 1 (Discovery) of any coding task.
 - [`../tdd-iron-law/SKILL.md`](../tdd-iron-law/SKILL.md) — the discipline that fires once implementation begins.
-- `dev-workflow:complexity-critique` — optional delegation target when Axis 3 surfaces complexity smell.
-- `dev-workflow:proposal-critique` — optional delegation target when Axis 4 surfaces multi-option triage.
+- `loom-workflow:complexity-critique` — optional delegation target when Axis 3 surfaces complexity smell.
+- `loom-workflow:proposal-critique` — optional delegation target when Axis 4 surfaces multi-option triage.

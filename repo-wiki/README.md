@@ -142,7 +142,7 @@ Verification depth is bounded by `budget = max(1, min(10, ceil(0.05 × total_pat
 | Roo Memory Bank | Full-text injection, no page types, no verification |
 | RepoAgent | Auto-commits knowledge updates (multi-person risk) |
 | SamurAIGPT/llm-wiki-agent | General documents, not git/code-aware |
-| `dev-workflow:git-memory` | Captures decision context **at commit time**; `repo-wiki` covers the **cross-commit architectural picture** — complementary, not competing |
+| `loom-workflow:git-memory` | Captures decision context **at commit time**; `repo-wiki` covers the **cross-commit architectural picture** — complementary, not competing |
 
 `repo-wiki`'s unique combination: **git-aware ingest + polymorphic context capture + structured WHY knowledge + AI-owned wiki + verification-fenced reads + zero external dependencies**.
 

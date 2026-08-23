@@ -1,13 +1,13 @@
 # Integration tests — cross-plugin behaviors
 
-> **Phase**: v0.4.0-draft Phase 4 build. Tests verify loom-code's cross-plugin contracts hold when other plugins (dev-workflow, domain-teams:code-team, obra/superpowers) are installed alongside.
+> **Phase**: v0.4.0-draft Phase 4 build. Tests verify loom-code's cross-plugin contracts hold when other plugins (loom-workflow, domain-teams:code-team, obra/superpowers) are installed alongside.
 
 ## Test surface
 
 | Script | What it tests | Prereqs (auto-detected) |
 |---|---|---|
-| `test-complexity-critique-delegation.sh` | `brainstorming` SKILL.md references `dev-workflow:complexity-critique` as Axis 3 delegate; both plugins installed | dev-workflow plugin installed |
-| `test-git-memory-delegation.sh` | `finishing-a-development-branch` SKILL.md invokes `dev-workflow:git-memory` at Step 3 per P3-D MANDATORY | dev-workflow plugin installed |
+| `test-complexity-critique-delegation.sh` | `brainstorming` SKILL.md references `loom-workflow:complexity-critique` as Axis 3 delegate; both plugins installed | loom-workflow plugin installed |
+| `test-git-memory-delegation.sh` | `finishing-a-development-branch` SKILL.md invokes `loom-workflow:git-memory` at Step 3 per P3-D MANDATORY | loom-workflow plugin installed |
 | `test-code-team-coexistence.sh` | loom-code + domain-teams:code-team coexist (no skill collisions; SSOT-and-functional-copy intact; coexistence framing in SKILL.md) | domain-teams plugin installed; verify-drift.py works |
 | `test-superpowers-mode-on.sh` | Default mode (LOOM_CODE_MODE unset or =on) → both plugins fire | obra/superpowers (optional; some checks offline-only) |
 | `test-superpowers-mode-off.sh` | LOOM_CODE_MODE=off escape hatch → loom-code hook silenced; superpowers fires alone | obra/superpowers (optional) |
@@ -44,8 +44,8 @@ The **manual verification handoff** is the actual integration test — offline c
 
 | Test | Offline scope | Manual scope |
 |---|---|---|
-| complexity-critique delegation | SKILL.md reference; dev-workflow installed; complexity-critique exists | Live: PAGNI prompt → agent invokes complexity-critique |
-| git-memory delegation | SKILL.md reference + P3-D MANDATORY framing; Step 3 names git-memory; dev-workflow installed | Live: "finish this branch" → Step 3 dispatches git-memory before commit |
+| complexity-critique delegation | SKILL.md reference; loom-workflow installed; complexity-critique exists | Live: PAGNI prompt → agent invokes complexity-critique |
+| git-memory delegation | SKILL.md reference + P3-D MANDATORY framing; Step 3 names git-memory; loom-workflow installed | Live: "finish this branch" → Step 3 dispatches git-memory before commit |
 | code-team coexistence | No skill-name collisions; verify-drift PASS; both plugins discoverable; coexistence framing in router | Live: hybrid prompt invoking both plugins in same session without conflict |
 | superpowers ON | Hook emits >1000 char context when var unset or =on; superpowers installation check | Live: both plugins' SessionStart hooks fire; skill lists discoverable |
 | superpowers OFF | Hook emits valid JSON with EMPTY context when LOOM_CODE_MODE=off; hookEventName + 3 portable keys still present; sanity check unset mode | Live: LOOM_CODE_MODE=off → only superpowers active; unset → both active |

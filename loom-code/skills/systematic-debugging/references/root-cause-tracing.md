@@ -56,7 +56,7 @@ The 5-Whys protocol (Sakichi Toyoda, Toyota Production System) walks causation b
    → because <root>
 ```
 
-You don't always get to 5 — 3 or 4 layers may already reach actionable root. You also don't STOP at code: many bugs ladder up to *"the spec didn't say what to do here"* (use `brainstorming` to fix the spec) or *"the deploy step was wrong"* (use `dev-workflow:git-memory` to record the deploy-fix decision).
+You don't always get to 5 — 3 or 4 layers may already reach actionable root. You also don't STOP at code: many bugs ladder up to *"the spec didn't say what to do here"* (use `brainstorming` to fix the spec) or *"the deploy step was wrong"* (use `loom-workflow:git-memory` to record the deploy-fix decision).
 
 **Anti-pattern**: stopping at *"the developer made a mistake."* That's true and useless. Walk one more layer — *why* did the developer make this mistake? Usually: missing test, ambiguous spec, no observability. Each is actionable.
 
@@ -73,4 +73,4 @@ You don't always get to 5 — 3 or 4 layers may already reach actionable root. Y
 - [`../SKILL.md`](../SKILL.md) — the 4-phase framework these axes serve.
 - [`condition-based-waiting.md`](condition-based-waiting.md) — for time-axis bisection (race / heisenbug).
 - [`character-encoding-debug.md`](character-encoding-debug.md) — for input-axis bisection on encoded inputs.
-- `dev-workflow:complexity-critique` — when ISOLATE reveals the bug lives in a too-tangled module, refactor-before-fix may be the better path.
+- `loom-workflow:complexity-critique` — when ISOLATE reveals the bug lives in a too-tangled module, refactor-before-fix may be the better path.

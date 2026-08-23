@@ -24,7 +24,7 @@ invention here — the repo already treats it as a checkpoint the guard
 and the memory skill both reason about. See
 loom-code/hooks/git-guard.py:14 (git-guard's own comment lists
 ``gh pr create``, ``gh pr merge`` as commands requiring fresh markers)
-and dev-workflow/skills/git-memory/SKILL.md:27 ("`gh pr merge` (esp.
+and loom-workflow/skills/git-memory/SKILL.md:27 ("`gh pr merge` (esp.
 `--squash`) is the last checkpoint before the branch closes").
 
 Stdlib only (pathlib). Resolve SKILL.md relative to this test file.

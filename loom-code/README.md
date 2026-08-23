@@ -21,7 +21,7 @@ the design is obvious.
 
 **What happens** (with loom-code installed):
 
-The router auto-injected at SessionStart fires Rule #1 (*"Brainstorm before implementing"*). The `brainstorming` skill activates with the 5-axis HARD-GATE measure. It refuses to skip discovery, articulates the JTBD framing, surfaces the alternatives (do nothing / single env var only / full flag system), and ends with `dev-workflow:complexity-critique` as the recommended next-step delegation — because feature-flag systems are the canonical PAGNI smell.
+The router auto-injected at SessionStart fires Rule #1 (*"Brainstorm before implementing"*). The `brainstorming` skill activates with the 5-axis HARD-GATE measure. It refuses to skip discovery, articulates the JTBD framing, surfaces the alternatives (do nothing / single env var only / full flag system), and ends with `loom-workflow:complexity-critique` as the recommended next-step delegation — because feature-flag systems are the canonical PAGNI smell.
 
 **What you didn't get**: 200 lines of premature feature-flag infrastructure for a problem that hasn't surfaced yet.
 
@@ -148,7 +148,7 @@ SDD orchestrator continues
 finishing-a-development-branch
   ↓ Step 1: requesting-code-review (cross-task-coherence dimension)
   ↓ Step 2: verification-before-completion (npm test / pytest / etc.)
-  ↓ Step 3: dev-workflow:git-memory (Decision: / Learning: / Gotcha: trailers)
+  ↓ Step 3: loom-workflow:git-memory (Decision: / Learning: / Gotcha: trailers)
   ↓ Step 4: git commit (after the privacy gate passes)
   ↓ Step 5: git push (review-gated — no re-ask)
   ↓ Step 6: gh pr create (request-derived — no re-ask, opt-out honored)
@@ -179,8 +179,8 @@ This plugin is designed to coexist with related plugins, not compete:
 | Plugin | Relationship |
 |---|---|
 | **[`domain-teams:code-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/code-team)** | Passive-gate compliance reviewer. loom-code is the active-build orchestrator that uses code-team's standards as its knowledge layer (byte-identical functional-copied via `scripts/distribute.py`, drift-checked by `scripts/verify-drift.py`). Same primary sources, different invocation mode. |
-| **[`dev-workflow:git-memory`](https://github.com/kouko/monkey-skills/tree/main/dev-workflow/skills/git-memory)** | Mandatory delegation target in `finishing-a-development-branch` Step 3 per P3-D. Decides commit-trailer decisions (Decision: / Learning: / Gotcha:); loom-code does NOT duplicate. |
-| **[`dev-workflow:complexity-critique`](https://github.com/kouko/monkey-skills/tree/main/dev-workflow/skills/complexity-critique)** | Optional delegation from `brainstorming` Axis 3 when complexity smell surfaces. Same SSOT-and-functional-copy mindset framing. |
+| **[`loom-workflow:git-memory`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow/skills/git-memory)** | Mandatory delegation target in `finishing-a-development-branch` Step 3 per P3-D. Decides commit-trailer decisions (Decision: / Learning: / Gotcha:); loom-code does NOT duplicate. |
+| **[`loom-workflow:complexity-critique`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow/skills/complexity-critique)** | Optional delegation from `brainstorming` Axis 3 when complexity smell surfaces. Same SSOT-and-functional-copy mindset framing. |
 | **[`obra/superpowers`](https://github.com/obra/superpowers)** | Design inspiration; coexists via `LOOM_CODE_MODE=off` escape hatch (set env var to disable loom-code hook; only superpowers fires). Both plugins can be installed; switch via env var. |
 
 Cross-plugin behavior is verified by 5 integration test scripts in [`tests/integration/`](tests/integration/).

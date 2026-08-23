@@ -70,6 +70,32 @@ def test_marker_only_exempts_its_own_line() -> None:
     assert len(errors) == 1
 
 
+def test_chk_skl_012_allows_shipped_license_and_eval_assets(tmp_path: Path) -> None:
+    """Legal notices and packaged evaluation fixtures are valid skill assets."""
+
+    skill_dir = tmp_path / "licensed-skill"
+    skill_dir.mkdir()
+    for filename in ("SKILL.md", "LICENSE", "NOTICE", "trigger-eval.json"):
+        (skill_dir / filename).write_text("fixture\n", encoding="utf-8")
+    evals = skill_dir / "evals"
+    evals.mkdir()
+    (evals / "trigger.json").write_text("[]\n", encoding="utf-8")
+
+    assert check_skill_structure.check_chk_skl_012(skill_dir) == []
+
+
+def test_chk_skl_012_ignores_nested_python_cache(tmp_path: Path) -> None:
+    """A local Python cache must not make an otherwise valid skill fail CI parity."""
+
+    skill_dir = tmp_path / "router-skill"
+    scripts = skill_dir / "scripts"
+    scripts.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("fixture\n", encoding="utf-8")
+    (scripts / "__pycache__").mkdir()
+
+    assert check_skill_structure.check_chk_skl_012(skill_dir) == []
+
+
 def test_real_plugins_unaffected(tmp_path: Path) -> None:
     """No repo plugin other than copywriting-toolkit currently uses the
     marker, and the marker mechanism must not change their check results.

@@ -5,18 +5,18 @@ name: memory verify-merged
 # heading) landed without a Decision:/Learning:/Gotcha: key surviving
 # under it — the #574 silent-drop case.
 #
-# WHY THIS IS A SEPARATE FILE, not a second job in dev-workflow-ci.yml:
-# dev-workflow-ci.yml's `on:` block scopes its pull_request/push triggers
-# with `paths: dev-workflow/**` (+ its own workflow file), so unrelated
-# pushes don't spend CI minutes re-running the dev-workflow shell-test
+# WHY THIS IS A SEPARATE FILE, not a second job in loom-workflow-ci.yml:
+# loom-workflow-ci.yml's `on:` block scopes its pull_request/push triggers
+# with `paths: loom-workflow/**` (+ its own workflow file), so unrelated
+# pushes don't spend CI minutes re-running the loom-workflow shell-test
 # suite. But a memory-worthy PR usually touches OTHER paths (that's the
 # #574 case exactly), so gating this check behind the same path filter
 # would silently skip it on precisely the pushes it exists to catch.
 # GitHub Actions path filters gate at the `on:` (workflow-trigger) level,
-# not per-job, so no job inside dev-workflow-ci.yml can ever see a push
+# not per-job, so no job inside loom-workflow-ci.yml can ever see a push
 # its path filter excluded. An unfiltered push-to-main trigger in its own
 # file is the only way to run this check on every merge while leaving
-# dev-workflow-ci.yml's path scoping intact for its own job.
+# loom-workflow-ci.yml's path scoping intact for its own job.
 #
 # fetch-depth: 1 (the actions/checkout@v4 default) is sufficient — the
 # script only inspects HEAD's own commit body (`git log -1 --format=%B
@@ -47,7 +47,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set +e
-          bash dev-workflow/skills/git-memory/scripts/memory-grep.sh --verify-merged HEAD
+          bash loom-workflow/skills/git-memory/scripts/memory-grep.sh --verify-merged HEAD
           rc=$?
           set -e
           if [ "$rc" -eq 4 ]; then

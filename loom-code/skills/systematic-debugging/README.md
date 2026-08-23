@@ -45,7 +45,7 @@ Enumerated exemptions in [`SKILL.md`](SKILL.md) §When NOT to Use:
 
 - **Upstream**: invoked from `tdd-iron-law` (false-green diagnostic) or `subagent-driven-development` (implementer BLOCKED on test-cannot-go-RED).
 - **Downstream**: Phase 4 VERIFY's fix triggers `tdd-iron-law` for the regression test (the repro IS the RED).
-- **Lateral (optional)**: `dev-workflow:complexity-critique` for refactor-before-fix when ISOLATE reveals untanglable module; `repo-wiki:query` / `dbt-wiki:query` for *"why was this code written this way"* before re-deriving.
+- **Lateral (optional)**: `loom-workflow:complexity-critique` for refactor-before-fix when ISOLATE reveals untanglable module; `repo-wiki:query` / `dbt-wiki:query` for *"why was this code written this way"* before re-deriving.
 
 ## What this skill does NOT do
 

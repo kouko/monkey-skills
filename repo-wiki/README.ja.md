@@ -142,7 +142,7 @@ Verification depth は `budget = max(1, min(10, ceil(0.05 × total_paths)))` で
 | Roo Memory Bank | 全文注入、page type なし、verification なし |
 | RepoAgent | 知識更新を auto-commit（多人数リスク） |
 | SamurAIGPT/llm-wiki-agent | 汎用ドキュメント、git/コード非対応 |
-| `dev-workflow:git-memory` | **commit 時点**の決定コンテキストを捕捉；`repo-wiki` は **cross-commit のアーキテクチャ的全体像** — 補完的・競合せず |
+| `loom-workflow:git-memory` | **commit 時点**の決定コンテキストを捕捉；`repo-wiki` は **cross-commit のアーキテクチャ的全体像** — 補完的・競合せず |
 
 `repo-wiki` の独自の組み合わせ：**git-aware ingest + 多態的コンテキスト捕捉 + 構造化された WHY ナレッジ + AI 所有 wiki + verification-fenced reads + ゼロ外部依存**。
 

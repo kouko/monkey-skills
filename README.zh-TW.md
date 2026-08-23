@@ -9,7 +9,7 @@
 | Plugin | 版本 | Skill 數 | Command 數 | 說明 |
 |--------|------|---------:|-----------:|------|
 | [`domain-teams`](domain-teams/) | 5.5.1 | 11 | 9 | Domain team skill — planning、code、design、research、copywriting，搭配 checkpoint 為基礎的 quality gate。 |
-| [`dev-workflow`](dev-workflow/) | 2.0.0 | 7 | 4 | Skill 建立、skill 品質評分、git 為基底的 project memory、proposal triage、complexity critique、skill refactor、skill tuning。 |
+| [`loom-workflow`](loom-workflow/) | 1.0.0 | 7 | 4 | 提供 git 為基底的 project memory、決策 brief、critique、recap、handoff 與 session distill 的 loom workflow skills。 |
 | [`philosophers-toolkit`](philosophers-toolkit/) | 1.0.4 | 12 | 12 | 用於釐清問題與深化推理的哲學思考 framework。 |
 | [`obsidian`](obsidian/) | 3.5.0 | 13 | 1 | Obsidian vault workflow — daily note、markdown、base file、diagram、canvas、file intel、vault 管理、dashboard 設計。 |
 | [`investing-toolkit`](investing-toolkit/) | 1.16.5 | 15 | 5 | 投資研究 toolkit — macro regime 診斷（US/JP/TW/KR/CN）、DCF、screener、透過 primary source adapter 取得的 equity snapshot。 |
@@ -58,7 +58,7 @@ monkey-skills/
 │   ├── skill-structure.yml       # CI：強制 skill 結構規範
 │   └── scraper-deps-monthly.yml  # CI：每月相依套件更新
 ├── domain-teams/                 # plugin
-├── dev-workflow/                 # plugin
+├── loom-workflow/                # plugin
 ├── philosophers-toolkit/         # plugin
 ├── obsidian/                     # plugin
 ├── investing-toolkit/            # plugin

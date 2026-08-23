@@ -154,7 +154,7 @@ for the human's answer before the next Workflow call.
 (b) **Product forks** — during any segment, whenever a station surfaces a
     genuine product decision (not an implementation detail). The
     conductor briefs it per the **#475 complex-fork escalation**
-    (`dev-workflow:brief-before-asking`) instead of letting the station
+    (`loom-workflow:brief-before-asking`) instead of letting the station
     improvise a default — the same discipline #475 established for
     complex forks inside SDD applies here at the pipeline level.
 

@@ -188,7 +188,7 @@ See `references/preference-log-schema.md`.
 
 ## Verdict Vocabulary
 
-Parallel to dev-workflow's critique skills:
+Parallel to loom-workflow's critique skills:
 
 | Verdict | When | Action |
 |---|---|---|

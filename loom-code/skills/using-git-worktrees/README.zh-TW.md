@@ -53,7 +53,7 @@ git worktree remove .worktrees/feat-foo
 ## Cross-skill
 
 - **`finishing-a-development-branch`** 在 branch 清理流程呼 `git worktree remove`
-- **`dev-workflow:git-memory`** 在 worktree 間運作完全相同（共用 `.git/`，commit trailer 不需特殊處理）
+- **`loom-workflow:git-memory`** 在 worktree 間運作完全相同（共用 `.git/`，commit trailer 不需特殊處理）
 
 ## 這個 skill 不做的事
 

@@ -138,10 +138,10 @@ defaults`.
 - ❌ **Committing fuzzy whiteboard sketches as artifacts.** Excalidraw scratch is for thinking; once a decision is made, redraw as clean Mermaid in the brief. The brief survives 6 months; the whiteboard does not.
 - ❌ **Bare-arrow flowchart.** Edges with no why and one-word nodes tell the reader that things connect, not why — see §Diagram semantics.
 
-## How this fits with `dev-workflow`
+## How this fits with `loom-workflow`
 
-- `dev-workflow:complexity-critique` — when you draw an architecture diagram and the "after" side is meaningfully bigger than the "before" side without proportional value, that is the deletion-first triage trigger. Delegate.
-- `dev-workflow:proposal-critique` — when your alternatives flowchart has 3+ leaves and each has its own consequences, that is the multi-item triage trigger. Delegate.
+- `loom-workflow:complexity-critique` — when you draw an architecture diagram and the "after" side is meaningfully bigger than the "before" side without proportional value, that is the deletion-first triage trigger. Delegate.
+- `loom-workflow:proposal-critique` — when your alternatives flowchart has 3+ leaves and each has its own consequences, that is the multi-item triage trigger. Delegate.
 
 ## See also
 

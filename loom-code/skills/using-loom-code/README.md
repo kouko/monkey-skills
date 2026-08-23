@@ -40,7 +40,7 @@ The router is injected at SessionStart so the agent does **not** rely on the use
 ## Coexistence
 
 - **`domain-teams:code-team`** — passive gate entry, kept for auditing. Knowledge layer here is its functional copy; drift-checked by `scripts/verify-drift.py`.
-- **`dev-workflow:{git-memory, complexity-critique, proposal-critique}`** — loom-code delegates to these at the right moments.
+- **`loom-workflow:{git-memory, complexity-critique, proposal-critique}`** — loom-code delegates to these at the right moments.
 - **`obra/superpowers`** — overlapping skill names + dual SessionStart hook. To disable loom-code's hook: `export LOOM_CODE_MODE=off`.
 
 ## See also

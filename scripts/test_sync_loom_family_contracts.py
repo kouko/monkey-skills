@@ -86,7 +86,7 @@ def test_neutral_family_policy_has_no_mandatory_sibling_skill():
 
     assert "and its public skill is available" in reception
     assert "owning plugin's path continues" in reception
-    assert "If `dev-workflow:brief-before-asking` is available" in reception
+    assert "If `loom-workflow:brief-before-asking` is available" in reception
     for heading in (
         "Mental Model",
         "Situation",

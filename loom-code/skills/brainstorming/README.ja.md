@@ -20,7 +20,7 @@
 |---|---|---|
 | 1 — 問題 | ユーザがこの変更を雇う「ジョブ」は何か。**ユーザが提案した解決策ではない。** | Christensen et al. (2016) JTBD, ISBN 978-0062435613 |
 | 2 — ユーザ | 誰が、どんな条件で、どんな既存ツール・制約のもとで | Klement (2018) job-story 形式, ISBN 978-1718626751 |
-| 3 — 最小終状態 | 出荷可能な最小の解決は何か | Axis 3 で `dev-workflow:complexity-critique` に委譲することが多い |
+| 3 — 最小終状態 | 出荷可能な最小の解決は何か | Axis 3 で `loom-workflow:complexity-critique` に委譲することが多い |
 | 4 — 代替案 | この問題を他に 2-3 通り解決する方法と、なぜ却下したか | トレードオフの明示化 |
 | 5 — 何が陳腐化するか | この変更で冗長になる既存コード・プロセス — **同じ PR で削除すること** | YAGNI + same-PR クリーンアップ規律 |
 
@@ -45,8 +45,8 @@
 
 ## 共有スキルへの委譲
 
-- **`dev-workflow:complexity-critique`** — 任意；Axis 3 で「変更が大きすぎる」匂いが出た時。3 問の削除優先 triage（最小終状態 / 前後 LOC / 何が陳腐化）。
-- **`dev-workflow:proposal-critique`** — 任意；Axis 4 で 3 つ以上の本物の代替案が出て KEEP / DEFER / DROP triage が要る時。
+- **`loom-workflow:complexity-critique`** — 任意；Axis 3 で「変更が大きすぎる」匂いが出た時。3 問の削除優先 triage（最小終状態 / 前後 LOC / 何が陳腐化）。
+- **`loom-workflow:proposal-critique`** — 任意；Axis 4 で 3 つ以上の本物の代替案が出て KEEP / DEFER / DROP triage が要る時。
 - **`writing-plans`**（Phase 2）— 次段階。ブリーフを消費する。
 - **`tdd-iron-law`** — `writing-plans` 終了後、SDD が implementer サブエージェントをディスパッチした時点で発火。
 
@@ -54,7 +54,7 @@
 
 - コードを書かない。
 - ユーザの代わりに決定しない。軸を提示するだけ。決定はユーザ。
-- `dev-workflow:complexity-critique` の代わりにはならない。complexity-critique は特定提案を批評；brainstorming は開かれた問題を探索。
+- `loom-workflow:complexity-critique` の代わりにはならない。complexity-critique は特定提案を批評；brainstorming は開かれた問題を探索。
 
 ## 関連
 

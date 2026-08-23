@@ -20,7 +20,7 @@
 
 **會發生什麼**（裝了 loom-code）：
 
-SessionStart 注入的 router 觸發 Rule #1（*"implementing 前先 brainstorm"*）。`brainstorming` skill 用 5-axis HARD-GATE 措辭啟動。它拒絕跳過 discovery、把 JTBD framing 講白、攤開 alternatives（什麼都不做 / 只用一個 env var / 完整 flag system），最後以 `dev-workflow:complexity-critique` 作為下一步建議委派 — 因為 feature flag 系統正是 PAGNI 的典型 smell。
+SessionStart 注入的 router 觸發 Rule #1（*"implementing 前先 brainstorm"*）。`brainstorming` skill 用 5-axis HARD-GATE 措辭啟動。它拒絕跳過 discovery、把 JTBD framing 講白、攤開 alternatives（什麼都不做 / 只用一個 env var / 完整 flag system），最後以 `loom-workflow:complexity-critique` 作為下一步建議委派 — 因為 feature flag 系統正是 PAGNI 的典型 smell。
 
 **你沒得到的**：200 行為了還沒出現的問題而早寫的 feature flag infrastructure。
 
@@ -125,7 +125,7 @@ SDD orchestrator 繼續
 finishing-a-development-branch
   ↓ Step 1: requesting-code-review (cross-task-coherence 維度；verdict 帶 standards_version)
   ↓ Step 2: verification-before-completion (npm test / pytest / 等)
-  ↓ Step 3: dev-workflow:git-memory (Decision: / Learning: / Gotcha: trailers)
+  ↓ Step 3: loom-workflow:git-memory (Decision: / Learning: / Gotcha: trailers)
   ↓ Step 4: git commit (privacy gate 通過後)
   ↓ Step 5: git push (review-gated——不再問)
   ↓ Step 6: gh pr create (request-derived——不再問、可事先 opt-out)
@@ -156,8 +156,8 @@ SessionStart hook 發出可移植 JSON shape，涵蓋 Claude Code 的 `hookSpeci
 | Plugin | 關係 |
 |---|---|
 | **[`domain-teams:code-team`](https://github.com/kouko/monkey-skills/tree/main/domain-teams/skills/code-team)** | 被動 gate compliance reviewer。loom-code 是主動構建 orchestrator，把 code-team 的 standards 作為知識層使用（透過 `scripts/distribute.py` byte-identical functional copy，由 `scripts/verify-drift.py` 做 drift check）。同樣的一級書目、不同的呼叫模式。 |
-| **[`dev-workflow:git-memory`](https://github.com/kouko/monkey-skills/tree/main/dev-workflow/skills/git-memory)** | `finishing-a-development-branch` Step 3 強制委派目標（P3-D）。決定 commit-trailer 判斷（Decision: / Learning: / Gotcha:）；loom-code 不重複實作。 |
-| **[`dev-workflow:complexity-critique`](https://github.com/kouko/monkey-skills/tree/main/dev-workflow/skills/complexity-critique)** | `brainstorming` Axis 3 出現 complexity smell 時的選擇性委派。同樣的 SSOT-and-functional-copy mindset framing。 |
+| **[`loom-workflow:git-memory`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow/skills/git-memory)** | `finishing-a-development-branch` Step 3 強制委派目標（P3-D）。決定 commit-trailer 判斷（Decision: / Learning: / Gotcha:）；loom-code 不重複實作。 |
+| **[`loom-workflow:complexity-critique`](https://github.com/kouko/monkey-skills/tree/main/loom-workflow/skills/complexity-critique)** | `brainstorming` Axis 3 出現 complexity smell 時的選擇性委派。同樣的 SSOT-and-functional-copy mindset framing。 |
 | **[`obra/superpowers`](https://github.com/obra/superpowers)** | 設計靈感；透過 `LOOM_CODE_MODE=off` 環境變數 escape hatch 並存（設定後關閉 loom-code 的 hook、只有 superpowers 啟動）。兩個 plugin 都可以裝；用環境變數切換。 |
 
 跨 plugin 行為由 [`tests/integration/`](tests/integration/) 內 5 個 integration test script 驗證。

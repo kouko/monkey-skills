@@ -40,7 +40,7 @@
 ## 並存契約
 
 - **`domain-teams:code-team`** — 保留為審查用的被動 gate 入口。本 toolkit 的知識層是它的 functional copy，`scripts/verify-drift.py` 監測 drift。
-- **`dev-workflow:{git-memory, complexity-critique, proposal-critique}`** — 在對應節點 delegate 過去（不重新實作）。
+- **`loom-workflow:{git-memory, complexity-critique, proposal-critique}`** — 在對應節點 delegate 過去（不重新實作）。
 - **`obra/superpowers`** — Skill 名稱與 SessionStart hook 重疊。要關掉 loom-code 的 hook 注入：`export LOOM_CODE_MODE=off`。
 
 ## 參考

@@ -14,7 +14,7 @@ The orchestrator does NOT:
 | 1 | `requesting-code-review` (four-way dispatch; docs-only → `requesting-docs-review`) | Human-judgment quality review is its own skill with its own subagent; this orchestrator just dispatches |
 | 2 | `verification-before-completion` | Package-level test invocation has its own per-stack command table; this orchestrator just invokes the gate |
 | 2b | `ui-verification` (conditional) | Main acceptance stage for a UI-bearing branch; has its own tooling/degradation contract (browser/device automation, N/A-loud); fires only when the branch touched UI and a `ui-flows.md` exists |
-| 3 | `dev-workflow:git-memory` | P3-D MANDATORY — git-memory decides whether memory trailers are warranted on this commit. Orchestrator passes the diff + recent commits; git-memory returns the trailer set (or empty, if routine) |
+| 3 | `loom-workflow:git-memory` | P3-D MANDATORY — git-memory decides whether memory trailers are warranted on this commit. Orchestrator passes the diff + recent commits; git-memory returns the trailer set (or empty, if routine) |
 | 4 | git CLI | Standard `git commit -m "<msg>" -m "<body with trailers>"` |
 | 5 | git CLI | `git push -u origin <branch>` if new; `git push` if upstream set |
 | 6 | gh CLI | `gh pr create --title "<title>" --body "<body>"`; authorization is request-derived — it arrived with the close-out request, so Step 11 opens the PR without a re-ask (up-front opt-out honored) |
@@ -30,6 +30,6 @@ Does **not** merge into main, force-push, amend commits (creates new per CLAUDE.
 - [`../verification-before-completion/SKILL.md`](../verification-before-completion/SKILL.md) — Phase 2 delegate.
 - [`../ui-verification/SKILL.md`](../ui-verification/SKILL.md) — Phase 2 conditional sibling (rendered-UI gate).
 - [`../using-git-worktrees/SKILL.md`](../using-git-worktrees/SKILL.md) — Phase 7 delegate (worktree cleanup).
-- `dev-workflow:git-memory` — Phase 3 delegate (commit-trailer gate, P3-D MANDATORY).
+- `loom-workflow:git-memory` — Phase 3 delegate (commit-trailer gate, P3-D MANDATORY).
 - [`../using-loom-code/SKILL.md`](../using-loom-code/SKILL.md) — router; this skill is Stage 8 (Branch close).
 - CLAUDE.md §"Committing changes with git" — git policy (no amend, no skip hooks, no force-push without authorization) this skill inherits.

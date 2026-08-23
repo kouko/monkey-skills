@@ -3,7 +3,7 @@
 
 Cross-skill regression CI: when the same convention is bundled in
 multiple skills as functional copies (per the SSOT-and-functional-
-copy pattern from PR #159 / dev-workflow PR-2/PR-3), edits must land
+copy pattern from PR #159 / loom-workflow PR-2/PR-3), edits must land
 in **all** copies in the same PR. This script enforces that rule by
 diffing the body content (everything after the header blockquote)
 of each shared convention across all skills that bundle it.

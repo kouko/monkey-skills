@@ -45,7 +45,7 @@
 
 - **上游**：被 `tdd-iron-law`（false-green diagnostic）或 `subagent-driven-development`（implementer BLOCKED on test-cannot-go-RED）呼叫。
 - **下游**：Phase 4 VERIFY 的 fix 觸發 `tdd-iron-law` 寫 regression test（再現本身就是 RED）。
-- **橫向（可選）**：ISOLATE 發現 module 太糾結時 `dev-workflow:complexity-critique` 走 refactor-before-fix；要理解「這段 code 為什麼這樣寫」之前先用 `repo-wiki:query` / `dbt-wiki:query`。
+- **橫向（可選）**：ISOLATE 發現 module 太糾結時 `loom-workflow:complexity-critique` 走 refactor-before-fix；要理解「這段 code 為什麼這樣寫」之前先用 `repo-wiki:query` / `dbt-wiki:query`。
 
 ## 這個 skill 不做的事
 

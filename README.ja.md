@@ -9,7 +9,7 @@
 | Plugin | Version | Skill 数 | Command 数 | 説明 |
 |--------|---------|---------:|-----------:|------|
 | [`domain-teams`](domain-teams/) | 5.5.1 | 11 | 9 | Domain team skill — planning、code、design、research、copywriting を checkpoint ベースの quality gate と共に提供。 |
-| [`dev-workflow`](dev-workflow/) | 2.0.0 | 7 | 4 | Skill 作成、skill 品質評価、git ベースの project memory、proposal triage、complexity critique、skill refactor、skill tuning。 |
+| [`loom-workflow`](loom-workflow/) | 1.0.0 | 7 | 4 | git ベースの project memory、意思決定 brief、critique、recap、handoff、session distill 向けの loom workflow skills。 |
 | [`philosophers-toolkit`](philosophers-toolkit/) | 1.0.4 | 12 | 12 | 問題の明確化と深い推論のための哲学的思考 framework。 |
 | [`obsidian`](obsidian/) | 3.5.0 | 13 | 1 | Obsidian vault workflow — daily note、markdown、base file、diagram、canvas、file intel、vault 管理、dashboard 設計。 |
 | [`investing-toolkit`](investing-toolkit/) | 1.16.5 | 15 | 5 | 投資調査 toolkit — macro regime 診断（US/JP/TW/KR/CN）、DCF、screener、primary source adapter 経由の equity snapshot。 |
@@ -58,7 +58,7 @@ monkey-skills/
 │   ├── skill-structure.yml       # CI：skill 規約を強制
 │   └── scraper-deps-monthly.yml  # CI：月次の依存リフレッシュ
 ├── domain-teams/                 # plugin
-├── dev-workflow/                 # plugin
+├── loom-workflow/                # plugin
 ├── philosophers-toolkit/         # plugin
 ├── obsidian/                     # plugin
 ├── investing-toolkit/            # plugin

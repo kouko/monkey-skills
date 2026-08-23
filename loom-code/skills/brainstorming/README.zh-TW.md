@@ -20,7 +20,7 @@
 |---|---|---|
 | 1 — 問題 | 使用者請這個變更來做什麼工作？**不是他提的解法。** | Christensen et al. (2016) JTBD, ISBN 978-0062435613 |
 | 2 — 使用者 | 誰、在什麼條件下、用什麼現有工具與限制 | Klement (2018) job-story 形式, ISBN 978-1718626751 |
-| 3 — 最小終局 | 解決問題的最小可出貨終局是什麼 | Axis 3 常常委派到 `dev-workflow:complexity-critique` |
+| 3 — 最小終局 | 解決問題的最小可出貨終局是什麼 | Axis 3 常常委派到 `loom-workflow:complexity-critique` |
 | 4 — 替代方案 | 還有哪 2-3 種解法、為什麼被刷掉 | 強制把 trade-off 講白 |
 | 5 — 什麼變多餘 | 這個變更會讓哪些既有 code / 流程變冗 — 並 **在同個 PR 刪掉** | YAGNI + same-PR cleanup 紀律 |
 
@@ -45,8 +45,8 @@
 
 ## Cross-skill 委派
 
-- **`dev-workflow:complexity-critique`** — 任選；Axis 3 出現「變更看起來太大」訊號時。跑 3 題刪除優先 triage（最小終局 / 前後 LOC / 什麼變多餘）。
-- **`dev-workflow:proposal-critique`** — 任選；Axis 4 出現 3 個以上真實 option 要做 KEEP / DEFER / DROP triage 時。
+- **`loom-workflow:complexity-critique`** — 任選；Axis 3 出現「變更看起來太大」訊號時。跑 3 題刪除優先 triage（最小終局 / 前後 LOC / 什麼變多餘）。
+- **`loom-workflow:proposal-critique`** — 任選；Axis 4 出現 3 個以上真實 option 要做 KEEP / DEFER / DROP triage 時。
 - **`writing-plans`**（Phase 2）— 下個階段。消費這個 brief。
 - **`tdd-iron-law`** — `writing-plans` 跑完 + SDD 派 implementer subagent 開始實作時觸發。
 
@@ -54,7 +54,7 @@
 
 - 不寫 code。
 - 不替使用者做最終決定。只攤開 5 軸；決定由使用者下。
-- 不取代 `dev-workflow:complexity-critique`。complexity-critique 對特定提案做批評；brainstorming 對開放問題做探索。
+- 不取代 `loom-workflow:complexity-critique`。complexity-critique 對特定提案做批評；brainstorming 對開放問題做探索。
 
 ## 參考
 

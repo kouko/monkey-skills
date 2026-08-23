@@ -174,8 +174,8 @@ def test_entry_router_names_bba():
     (the triple lives in family-reception.md §Brief before a complex fork,
     not duplicated here post-dedup)."""
     text = _text()
-    assert "dev-workflow:brief-before-asking" in text, \
-        "router must name the dev-workflow:brief-before-asking skill id"
+    assert "loom-workflow:brief-before-asking" in text, \
+        "router must name the loom-workflow:brief-before-asking skill id"
     assert "family-reception.md" in text and "Brief before a complex fork" in text, \
         "router must point at family-reception.md §Brief before a complex " \
         "fork for the trigger threshold (dedup'd SSOT), not carry the triple"

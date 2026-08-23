@@ -52,7 +52,7 @@
 - 不產 verdict — 派 reviewer 去評。
 - 不決定要不要用 SDD — `using-loom-code` 負責 routing。
 - 不產 plan — `writing-plans`（Phase 2；之前用 inline plan）負責。
-- 不收尾 — `finishing-a-development-branch`（Phase 3）關 branch 並 delegate 到 `dev-workflow:git-memory`。
+- 不收尾 — `finishing-a-development-branch`（Phase 3）關 branch 並 delegate 到 `loom-workflow:git-memory`。
 
 ## 參考
 

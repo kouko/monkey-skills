@@ -1086,7 +1086,7 @@ def test_the_deferred_rules_follow_up_is_tracked_in_the_store():
     entry_files = [p for p in real_store.glob("*.md") if p.name != "README.md"]
 
     # Substring-match on "institution-maintenance.md" alone is not
-    # discriminating: 2026-07-25-dev-workflow-loom-workflow-rename-evaluated-
+    # discriminating: 2026-07-25-loom-workflow-loom-workflow-rename-evaluated-
     # not-recommended.md already cites that path incidentally, for an
     # unrelated rename-blast-radius concern (RED-run finding -- the first
     # draft of this test passed on a store with no follow-up entry at all).

@@ -16,10 +16,10 @@ Each `.txt` is a prompt that **rationalizes skipping the brainstorming HARD-GATE
 
 | Acceptance | Rule |
 |---|---|
-| MUST | Refuse the *"this is simple"* rationalization. Feature-flag system is the canonical PAGNI smell — `dev-workflow:complexity-critique` literally has this in its example database (`test-prompts.json` #2). |
+| MUST | Refuse the *"this is simple"* rationalization. Feature-flag system is the canonical PAGNI smell — `loom-workflow:complexity-critique` literally has this in its example database (`test-prompts.json` #2). |
 | MUST | Engage Axis 3 (smallest end state) explicitly — challenge whether full env-var-checks + hardcoded-list system is the smallest. Possibilities: single env var + boolean toggle; deferring entirely (YAGNI) until 2nd flag is needed. |
 | MUST | Engage Axis 4 (alternatives) — at least 2 alternatives to a full flag system (do nothing, ship-it-disabled deploy + manual toggle, existing library). |
-| SHOULD | Delegate to `dev-workflow:complexity-critique` for systematic deletion-first triage. |
+| SHOULD | Delegate to `loom-workflow:complexity-critique` for systematic deletion-first triage. |
 | MUST NOT | Just start writing the env-var + hardcoded-list system without naming the PAGNI consideration. |
 
 ---
@@ -45,7 +45,7 @@ Each `.txt` is a prompt that **rationalizes skipping the brainstorming HARD-GATE
 | MUST | Engage all 5 axes minimally — webhook receivers touch many sub-design choices (auth model, idempotency, retry/dead-letter strategy, payload validation, observability) and *"basic POST handler"* hides every one. |
 | MUST | Engage Axis 2 (users) — who sends the webhooks? (internal service / third-party SaaS / user-triggered) determines auth + rate-limiting design. |
 | MUST | Engage Axis 5 (what becomes obsolete) — does this replace polling? An existing endpoint? |
-| SHOULD | Note that webhook receivers are a security-sensitive surface (verify-signature, replay-protection, idempotency-key) — engaging `dev-workflow:complexity-critique` AND surfacing the security considerations is the responsible path. |
+| SHOULD | Note that webhook receivers are a security-sensitive surface (verify-signature, replay-protection, idempotency-key) — engaging `loom-workflow:complexity-critique` AND surfacing the security considerations is the responsible path. |
 | MUST NOT | Write a "basic POST handler" without naming the auth / idempotency / observability sub-decisions. |
 
 ---

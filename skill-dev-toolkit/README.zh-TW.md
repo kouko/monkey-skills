@@ -21,7 +21,7 @@
 
 每個 skill 內建 worth-it / 最小 skill 檢查,不委派給其他 plugin,因此**對其他 plugin
 零 `plugin:skill` 引用**。(通用的程式碼變更 critique —— `complexity-critique` /
-`proposal-critique` —— 與 session log 探勘 `distill-sessions` 留在 `dev-workflow`;
+`proposal-critique` —— 與 session log 探勘 `distill-sessions` 留在 `loom-workflow`;
 本工具組不依賴它們。)
 
 ## 授權

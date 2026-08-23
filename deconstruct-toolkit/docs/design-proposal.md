@@ -69,7 +69,7 @@ Boundary analysis against existing plugins:
 | Plugin | Description | Why artifact-deconstruct doesn't fit |
 |---|---|---|
 | `copywriting-toolkit` | Pipeline-structured copy **production** | Wrong direction (forward, not reverse); only lens-persuasion / lens-rhetoric overlap; lens-ux / lens-genre / lens-semiotic unrelated to copy production |
-| `dev-workflow` | Skill creation + **dev-artifact critique** (proposals / changes / skills) | Object mismatch: `dev-workflow`'s critique trio targets dev artifacts, not external marketing / UX / playbook artifacts |
+| `loom-workflow` | Skill creation + **dev-artifact critique** (proposals / changes / skills) | Object mismatch: `loom-workflow`'s critique trio targets dev artifacts, not external marketing / UX / playbook artifacts |
 | `domain-teams` | Worker + evaluator + checkpoint gate **team shape** | Abstraction mismatch: teams have worker/evaluator agents; deconstruct skills are analytical tools, not teams |
 | `philosophers-toolkit` | Philosophical thinking for **self-reflection** | Object mismatch: philosophers act on `you vs your problem`; deconstruct acts on `you vs external object` |
 | `sourceatlas` | **Codebase** reverse-engineering | Object mismatch: covers code; we cover non-code artifacts |
@@ -101,13 +101,13 @@ Hard fences against scope creep:
 |---|---|---|
 | Codebase reverse-engineering | sourceatlas already does this well | `sourceatlas` (impact / flow / overview / pattern / deps) |
 | Self-thinking / problem clarification | Different abstraction — operates on `you vs your problem` | `philosophers-toolkit` |
-| Dev-artifact critique (proposals / commits / skills) | Different domain | `dev-workflow` (proposal-critique / complexity-critique / skill-judge) |
+| Dev-artifact critique (proposals / commits / skills) | Different domain | `loom-workflow` (proposal-critique / complexity-critique / skill-judge) |
 | Forward-direction copy / doc / design production | This is a reverse toolkit; production lives elsewhere | `copywriting-toolkit`, `docs-team`, `design-team` |
 | Investment / equity reverse-engineering | Domain-specific, has its own grounding stack | `investing-toolkit` |
 
 ### 2.3 Boundary statement (will be in plugin README)
 
-> `deconstruct-toolkit` reverses external, polished, non-code artifacts to surface their hidden design. For codebase reverse use `sourceatlas`. For self-reflection / problem clarification use `philosophers-toolkit`. For dev-artifact critique use `dev-workflow`. For forward-direction copy / doc / design production use `copywriting-toolkit` / `docs-team` / `design-team`.
+> `deconstruct-toolkit` reverses external, polished, non-code artifacts to surface their hidden design. For codebase reverse use `sourceatlas`. For self-reflection / problem clarification use `philosophers-toolkit`. For dev-artifact critique use `loom-workflow`. For forward-direction copy / doc / design production use `copywriting-toolkit` / `docs-team` / `design-team`.
 
 ---
 
@@ -255,7 +255,7 @@ Rationale: Anthropic's official Skills convention emphasizes that each skill is 
 
 1. The cross-plugin SSOT use case (PR #159) is materially different — there each consumer is in a different plugin (no in-plugin alternative)
 2. Within one plugin, allowing skills to reference plugin-level SoT erodes the independence principle
-3. Skill consumers (e.g., `dev-workflow:skill-creator-advance`) load one skill's directory at a time; plugin-level SoT is invisible to them
+3. Skill consumers (e.g., `loom-workflow:skill-creator-advance`) load one skill's directory at a time; plugin-level SoT is invisible to them
 4. Anthropic best-practice docs treat each skill as a self-contained unit of progressive disclosure
 
 ### 5.2 The shared-content reality
@@ -284,7 +284,7 @@ Manual but disciplined:
 
 2. **Different operationalizations are allowed and expected** — `lens-persuasion` in `artifact-deconstruct` may emphasize different examples than the same lens in `product-deconstruct`. The lens files do NOT need to be byte-identical; they need to be *primary-source-faithful*.
 
-3. **Quarterly skill audit** (already in dev-workflow `quarterly-audit-runbook.md`) folds in lens consistency check: when 2+ skills cite the same primary source, audit confirms (a) version consistency, (b) no contradictions in core method.
+3. **Quarterly skill audit** (already in loom-workflow `quarterly-audit-runbook.md`) folds in lens consistency check: when 2+ skills cite the same primary source, audit confirms (a) version consistency, (b) no contradictions in core method.
 
 4. **Same-PR conscientiousness rule** — when a PR touches a lens that lives in multiple skills, the PR description must list all instances and either justify why only one is changed, or update all consistently.
 
