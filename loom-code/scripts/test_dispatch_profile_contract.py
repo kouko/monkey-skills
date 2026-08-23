@@ -89,6 +89,8 @@ def test_stations_do_not_keep_a_competing_host_model_policy():
     assert "OPTIONAL `model` field to `opus`" not in code_review
     assert "legacy `OPTIONAL model`" not in docs_review
     assert "inherits the main session's effort" in docs_review
+    assert "resolved `tier` plus `effort`" not in docs_review
+    assert "requested_effort` and `effective_effort" in docs_review
 
 
 def test_codex_adapter_matches_the_current_one_child_lifecycle():

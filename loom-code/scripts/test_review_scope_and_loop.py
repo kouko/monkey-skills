@@ -257,7 +257,7 @@ def test_rdr_profile_override_pass_down():
     step3 = process[step3_start:step4_start]
 
     # Packet carries semantic inputs and translates them exactly once.
-    assert "resolved `tier` plus `effort`" in step3
+    assert "resolved `tier` plus `requested_effort` and `effective_effort`" in step3
     assert "translate them once through `dispatch-profile.md`" in step3
     assert "OPTIONAL `model` field" not in step3
     assert "frontmatter default" not in step3
