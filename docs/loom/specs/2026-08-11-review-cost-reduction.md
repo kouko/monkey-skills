@@ -115,3 +115,15 @@ Record-only branches (26% of md commits): dispatches → 0. Remaining branches: 
 ## Design-side on-ramp
 
 Axis 0 walk skipped per negative guard (mechanism increment). Ready check RAN (queue empty; seeds surfaced). Ignited-start-condition entries surfaced at checkpoint: anti-copy greps (writing-plans touch), rule-skill-vs-agent-contract (reviewer rule edits — honored in-arc by editing both surfaces, mechanism deferred), out-of-scope-deferrals (partially retired by B, remainder re-filed), change-binding-chain (generic next-touch). loom-init: N/A.
+
+## Amendment 2026-08-24 — code-reviewer inherit carve-out overturned
+
+The Out-of-Scope row "Changing implementer / whole-branch code-reviewer model
+defaults" is superseded for **code-reviewer only**: its frontmatter now pins
+`model: sonnet` (dispatch-time `model` param remains the upward-override path
+for frontier branches). Basis: post-0.75.0 dispatch tally (2026-08-12 →
+2026-08-23, n=145) — 101 dispatches inherited opus/fable, 7 ran sonnet;
+post-#728 3/3 still inherited; G4 A/B (2×Sonnet union panel, zero false
+positives) covers recall. Decision: kouko, 2026-08-24. Full brief:
+`docs/loom/specs/2026-08-24-code-reviewer-sonnet-default.md`. The
+**implementer** half of that row remains in force (still inherits).

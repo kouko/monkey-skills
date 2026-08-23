@@ -197,7 +197,7 @@ PLUGIN_JSON = Path(__file__).parents[1] / ".claude-plugin" / "plugin.json"
 CHANGELOG_MD = Path(__file__).parents[1] / "CHANGELOG.md"
 
 
-def test_plugin_version_and_changelog_at_0_97_9():
+def test_plugin_version_and_changelog_at_0_98_0():
     """Originally Task 6 of
     docs/loom/plans/2026-08-02-finding-origin-attribution.md, and rewritten
     by every subsequent bump -- loom-code/CHANGELOG.md is the release
@@ -215,13 +215,13 @@ def test_plugin_version_and_changelog_at_0_97_9():
     rewrites it, which is what makes a missing bump fail CI rather than
     ship a silent marketplace no-op."""
     plugin_text = PLUGIN_JSON.read_text(encoding="utf-8")
-    assert '"version": "0.97.9"' in plugin_text, (
-        "loom-code/.claude-plugin/plugin.json must read version 0.97.9"
+    assert '"version": "0.98.0"' in plugin_text, (
+        "loom-code/.claude-plugin/plugin.json must read version 0.98.0"
     )
 
     changelog_text = CHANGELOG_MD.read_text(encoding="utf-8")
-    assert "## [0.97.8]" in changelog_text, (
-        "loom-code/CHANGELOG.md must carry a `## [0.97.8]` heading"
+    assert "## [0.97.9]" in changelog_text, (
+        "loom-code/CHANGELOG.md must carry a `## [0.97.9]` heading"
     )
 
 

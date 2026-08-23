@@ -5,6 +5,17 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.98.0] — 2026-08-24
+
+### Changed
+
+- `agents/code-reviewer.md` frontmatter now pins `model: sonnet`, overturning
+  the 0.75.0 inherit carve-out for the whole-branch review panel (dispatch-time
+  `model` param remains the upward-override path for frontier branches).
+  Evidence + decision record: `docs/loom/specs/2026-08-24-code-reviewer-sonnet-default.md`;
+  amendment appended to `docs/loom/specs/2026-08-11-review-cost-reduction.md`.
+  Implementer continues to inherit the session model tier.
+
 ## [0.97.9] — 2026-08-24
 
 ### Removed
