@@ -135,6 +135,8 @@ def test_claude_roles_inherit_the_main_session_effort():
     profile = _profile()
     assert "inherits the main session's effort" in profile
     assert "must halt when high effort cannot be verified" not in profile
+    assert "model-tier or runtime capability halts the dispatch" in profile
+    assert "unverified effective effort halts" not in profile
 
 
 def test_dispatch_record_separates_requested_and_effective_effort():

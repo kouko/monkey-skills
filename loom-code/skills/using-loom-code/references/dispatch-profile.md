@@ -32,8 +32,10 @@ and `frontier`, paired with `low`, `medium`, and `high` effort.
 - A host policy, organization allowlist, or environment override can win over
   loom's request. Do not infer effective capability from the child agent's
   self-report. For `frontier`, unavailable **or unverified** effective
-  capability halts the dispatch and is surfaced; lower tiers may continue with
-  `effective_runtime: unverified` only when their requested floor still holds.
+  model-tier or runtime capability halts the dispatch and is surfaced; lower
+  tiers may continue with `effective_runtime: unverified` only when their
+  requested floor still holds. An inherited `effective_effort` is recorded as
+  such; it does not itself make the model-tier or runtime capability unverified.
 
 ## Claude Code adapter
 
