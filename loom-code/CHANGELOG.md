@@ -5,6 +5,12 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.97.6] — 2026-08-23
+
+### Changed
+
+- Publish the workflow-companion hard cut under a new marketplace version.
+
 ## [0.97.5] — 2026-08-23
 
 ### Fixed
