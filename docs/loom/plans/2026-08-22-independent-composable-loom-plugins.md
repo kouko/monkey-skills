@@ -52,7 +52,7 @@ N/A — no unresolved question: the approved brief fixes the standalone boundary
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: done(1e9955ba)
+- **Status**: done(a662ebe0)
 - **Gloss**: 先讓 CI 看得見「只在 monorepo 才成立」的路徑，之後同類問題不再靠人工發現。
 
 ## Task 2 — Package sibling-neutral family policy into both plugins
@@ -74,7 +74,7 @@ N/A — no unresolved question: the approved brief fixes the standalone boundary
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-5
-- **Status**: done(1e9955ba)
+- **Status**: done(a662ebe0)
 - **Gloss**: 兩個 plugin 各自帶著會用到的規約，但維護者仍只改一份來源。
 - **Reuse-adequacy**:
   - **Observed**: `loom-code/scripts/distribute.py` builds deterministic functional copies by prepending an SSOT header to canonical bytes — read loom-code/scripts/distribute.py:103
@@ -95,7 +95,7 @@ N/A — no unresolved question: the approved brief fixes the standalone boundary
 - **Dependencies**: Tasks 1, 2 complete first
 - **Independent**: true
 - **Brief item covered**: BI-9
-- **Status**: done(1e9955ba)
+- **Status**: done(a662ebe0)
 - **Gloss**: 設計入口單獨安裝時仍能做完整分流；兩邊同時存在時，原本的 code handoff 也不變。
 
 ## Task 4 — Remove spec-station filesystem coupling
@@ -114,7 +114,7 @@ N/A — no unresolved question: the approved brief fixes the standalone boundary
 - **Dependencies**: Tasks 1, 2 complete first
 - **Independent**: true
 - **Brief item covered**: BI-8
-- **Status**: done(1e9955ba)
+- **Status**: done(a662ebe0)
 - **Gloss**: spec station 不再翻出自己的安裝目錄找檔案，語言顯示與需求編號規則仍保持原意。
 
 ## Task 5 — Move remaining design consumers onto local contracts
@@ -133,7 +133,7 @@ N/A — no unresolved question: the approved brief fixes the standalone boundary
 - **Dependencies**: Tasks 1, 2 complete first
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: done(1e9955ba)
+- **Status**: done(a662ebe0)
 - **Gloss**: 其餘設計流程也只讀自己包內的規約，缺少其他 plugin 時會清楚降級而不是找不到檔案。
 
 ## Task 6 — Prove standalone and combined install layouts
@@ -152,7 +152,7 @@ N/A — no unresolved question: the approved brief fixes the standalone boundary
 - **Dependencies**: Task 8 completes first
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: done(1e9955ba)
+- **Status**: done(a662ebe0)
 - **Gloss**: 驗證環境終於長得像真正安裝後的 cache，而不是只在 monorepo 裡自我證明。
 
 ## Task 7 — Publish the standalone composition contract
@@ -172,7 +172,7 @@ N/A — no unresolved question: the approved brief fixes the standalone boundary
 - **Dependencies**: Tasks 6, 9 complete first
 - **Independent**: false
 - **Brief item covered**: BI-6
-- **Status**: done(1e9955ba)
+- **Status**: done(a662ebe0)
 - **Gloss**: 使用者與維護者都能看見兩個 plugin 各自保證什麼、一起裝時又如何合作。
 
 ## Task 8 — Remove shipped-root coupling and gate the real repository
@@ -190,7 +190,7 @@ N/A — no unresolved question: the approved brief fixes the standalone boundary
 - **Dependencies**: Tasks 3, 4, 5 complete first
 - **Independent**: false
 - **Brief item covered**: BI-10
-- **Status**: done(1e9955ba)
+- **Status**: done(a662ebe0)
 - **Gloss**: 先清掉實際會隨 plugin 載入的耦合，再讓歷史記錄不會被誤判成執行期依賴，最後把同一條規則接進 CI。
 
 ## Task 9 — Prove public composition without shared filesystem state
@@ -209,7 +209,7 @@ N/A — no unresolved question: the approved brief fixes the standalone boundary
 - **Dependencies**: Task 8 completes first
 - **Independent**: true
 - **Brief item covered**: BI-2
-- **Status**: done(1e9955ba)
+- **Status**: done(a662ebe0)
 - **Gloss**: 兩個 plugin 一起裝時靠公開名稱接上，而不是因為剛好住在相鄰資料夾。
 
 ## Notes
