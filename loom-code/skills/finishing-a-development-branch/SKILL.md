@@ -39,7 +39,10 @@ finishing-a-development-branch (this skill)
   ├─→ Phase 6 (optional): gh pr create
   │     only if gh CLI configured AND not opted out; PR body per git-memory convention
   │
-  └─→ Phase 7 (optional): git worktree cleanup
+  ├─→ Phase 7: Post-PR CI
+  │     post_pr_ci.py waits on the created PR's current head; bounded repair on fail
+  │
+  └─→ Phase 8 (optional): git worktree cleanup
         if branch was in .worktrees/, offer (do NOT auto-execute) the remove
         per using-git-worktrees §Removing a worktree
 
@@ -75,7 +78,8 @@ This skill is light on novel logic — its value is orchestration; the work happ
 | 4 | git CLI | Standard commit |
 | 5 | git CLI | Standard push |
 | 6 | gh CLI | Request-derived authorization |
-| 7 | `using-git-worktrees` | Own cleanup pattern |
+| 7 | `post_pr_ci.py` + `systematic-debugging` | Post-PR CI waits on the current PR head; own bounded CI repair evidence |
+| 8 | `using-git-worktrees` | Own cleanup pattern |
 
 Full per-step rationale + **the orchestrator does NOT** boundary list in [`references/delegation-boundaries.md`](references/delegation-boundaries.md).
 
@@ -268,7 +272,35 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
       fresh-context PR-body judge spawn. Its packet is
       `tier=frontier; requested_effort=high`; the host adapter records its
       effective effort separately.
-    - Then: gh pr create with title/body from git-memory + branch name
+    - Then: `PR_URL="$(gh pr create --title "$PR_TITLE" --body-file
+      "$PR_BODY_FILE")"`, using the title/body composed by git-memory. The
+      locally verified `gh pr create --help` documents stdout URL output and
+      exposes no `--json` flag.
+    - Resolve `PR_NUMBER="$(gh pr view "$PR_URL" --json number --jq .number)"`.
+      Use `$PR_NUMBER` for every later `gh pr view` and helper call.
+    - **Post-PR CI phase:** after `gh pr create` succeeds, resolve the created
+      PR and its current head with `gh pr view "$PR_NUMBER" --json headRefOid`, then
+      run `python3 <plugin-root>/scripts/post_pr_ci.py --pr "$PR_NUMBER"
+      --expected-head <current-head>`. This helper owns polling and does not
+      replace its algorithm with prose here.
+      - On status `"pass"`, report that the PR is CI-verified and continue to
+        the final report.
+      - On status `"fail"`, enter one repair attempt through
+        `systematic-debugging` using the remote CI evidence. After its fix,
+        re-run `requesting-code-review`, then
+        `verification-before-completion`, then `loom-workflow:git-memory`.
+        Run the privacy gate before `git commit`; mint fresh
+        `loom_gate_markers.py` markers at that repaired head; then `git push`.
+        Resolve the new HEAD with `gh pr view "$PR_NUMBER" --json headRefOid` and wait
+        again with `post_pr_ci.py` against that new HEAD.
+      - Permit at most two automated repair attempts. A third `"fail"` is
+        budget exhaustion: STOP, surface the CI evidence, and wait for user
+        direction.
+      - On `cancelled`, STOP with the helper JSON and cancellation evidence;
+        do not let a cancelled check fall through to repair or a pass report.
+      - On `timeout`, `no_checks`, `operational_error`, or `head_drift`, STOP
+        with the helper JSON and actionable evidence. The orchestrator must
+        never auto-merge.
     - PR-carrier check (memory-worthy branch only): before declaring the PR ready,
       grep the PR body you just composed for a `## Memory` section. If Phase 3
       returned a non-empty trailer set and body has no `## Memory` section, flag
@@ -306,6 +338,8 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
     `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backlog_index.py" --ready`);
     skip the line when the repo has no backlog store or neither copy
     of `backlog_index.py`.
+    Include CI evidence: the checked PR head, helper status, and any repair
+    attempt count or stopping evidence.
 ```
 
 **ASK = stop and wait for user.** Exception-based, not blanket: close-out is autonomous on the happy path — Steps 1–10 proceed silently once each step's gate PASSes. What asks: one outward-facing action — Step 12 (worktree removal — touches shared state) — and a Step 7 privacy-gate BLOCK (human returns only because the gate failed). Step 11 (open a PR) reports loudly instead of asking — authorization arrived with the request. For any remaining question, run the ask-vs-resolve triage at `subagent-driven-development` §Asking the user, gate ① (the cross-skill SSOT) before asking.

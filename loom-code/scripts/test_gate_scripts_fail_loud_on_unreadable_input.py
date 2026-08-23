@@ -113,6 +113,7 @@ EXEMPT = {
     "verify-drift.py": "compares two copies of a synced file",
     "loom_init.py": "scaffolds a new store; has no store to read yet",
     "plan_card.py": "reads plans, not the store",
+    "post_pr_ci.py": "waits for GitHub PR checks, not the store or a brief",
 }
 
 FAMILY = (

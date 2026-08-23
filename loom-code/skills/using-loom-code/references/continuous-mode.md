@@ -118,7 +118,7 @@ The run halts and escalates when any row fires:
 | 4 | the agent **self-declares an assumption** outside plan/spec coverage | honest self-declaration trigger, not a fuzzy confidence detector |
 | 5 | **whole-branch review = NEEDS_REVISION** (cross-task) | direct stop; cross-task issues most need human eyes — do NOT auto-remediate |
 | 6 | any **PASS_WITH_NOTES** (per-task or whole-branch) | **auto-advance**; accumulate the notes, surface them all at the PR |
-| 7 | **PR-open reached** | terminal stop; human merges; **never auto-merge** (inherited from `finishing-a-development-branch`) |
+| 7 | **PR-open reached with CI-verified current HEAD** | terminal stop; human merges; **never auto-merge** (the bounded CI algorithm is inherited from `finishing-a-development-branch`) |
 
 ## Crutch-vs-verification line (load-bearing)
 

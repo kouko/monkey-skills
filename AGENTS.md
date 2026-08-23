@@ -246,6 +246,12 @@ Role boundaries enforced by behavior, not reading restrictions:
   schedule doc). Pure stdlib plus pytest, so no dedicated venv is required;
   this directory IS already covered by CI, since `loom-code-ci.yml` runs
   `pytest … scripts/ …` over the whole tree.
+- **Wait for post-PR checks**:
+  `python3 loom-code/scripts/post_pr_ci.py --pr <number-or-url> --expected-head <sha>`
+  — polls checks bound to that exact PR head and prints one JSON result;
+  exit codes distinguish pass, failed/cancelled checks, timeout, no-check
+  grace expiry, GitHub operational errors, head drift, and malformed CLI
+  arguments (exit 7).
 - **Print/update a plan-ledger progress card**:
   `python3 scripts/plan_card.py <plan-path> [--set-status "T<N>=<status>"] [--set-stage "<text>"]`
   — reads (or flips, with a `--set-*` flag) a plan's ledger fields and

@@ -5,6 +5,13 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.97.7] — 2026-08-23
+
+### Added
+
+- Wait for post-PR CI on the current head and run at most two bounded repair
+  attempts before reporting CI-verified readiness or stopping with evidence.
+
 ## [0.97.6] — 2026-08-23
 
 ### Changed
