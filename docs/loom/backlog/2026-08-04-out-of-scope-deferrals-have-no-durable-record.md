@@ -6,6 +6,15 @@ origin: loom-code 0.50.0 -- D5 retracted the "deferred on the record" overclaim;
 start: when a docs-review out_of_scope finding is lost across a session boundary in practice, or when the next branch touches requesting-docs-review's Aggregation rule / Verdict structure sections
 ---
 
+## Dependency retired 2026-08-24
+
+The durable origin ledger named below has been removed because its rows
+measured `review-pass` invocation coverage rather than reviewer quality. The
+cross-session deferral gap remains open, but extending that ledger is no longer
+a candidate mechanism; any future solution needs a carrier written when the
+review verdict is produced. The original analysis below is retained as the
+historical reason this gap was filed.
+
 ## The gap
 
 `out_of_scope:` entries (Directive 2's block for what a delta-scoped round

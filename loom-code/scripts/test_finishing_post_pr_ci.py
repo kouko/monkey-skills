@@ -1,6 +1,5 @@
 """Structural contracts for the bounded post-PR CI phase (plan Tasks 2–3)."""
 
-import json
 from pathlib import Path
 
 
@@ -11,8 +10,6 @@ CONTINUOUS = (
 )
 SDD = Path(__file__).parents[1] / "skills" / "subagent-driven-development" / "SKILL.md"
 PLUGIN = Path(__file__).parents[1]
-CLAUDE_MANIFEST = PLUGIN / ".claude-plugin" / "plugin.json"
-CODEX_MANIFEST = PLUGIN / ".codex-plugin" / "plugin.json"
 CHANGELOG = PLUGIN / "CHANGELOG.md"
 
 
@@ -118,9 +115,7 @@ def test_sdd_automatically_enters_finishing_after_an_approved_plan_completes():
     assert "after a task DONE" not in text
 
 
-def test_plugin_version_and_changelog_ship_the_ci_loop():
-    assert json.loads(CLAUDE_MANIFEST.read_text(encoding="utf-8"))["version"] == "0.97.8"
-    assert json.loads(CODEX_MANIFEST.read_text(encoding="utf-8"))["version"] == "0.97.8"
+def test_changelog_0_97_8_ships_the_ci_loop():
     changelog = CHANGELOG.read_text(encoding="utf-8")
     release = changelog.split("## [0.97.8]", 1)[1].split("\n## [", 1)[0]
     assert "post-PR CI" in release

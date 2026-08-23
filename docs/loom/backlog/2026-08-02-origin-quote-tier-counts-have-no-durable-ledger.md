@@ -6,6 +6,17 @@ origin: Task 2 of the finding-origin-attribution arc (docs/loom/plans/2026-08-02
 start: before the origin field's ≥40-finding tally is read — or the moment the second arc using the field begins, whichever comes first
 ---
 
+## Retired 2026-08-24
+
+Cross-project Claude Code transcript analysis found 84 grammar-valid code-arm
+origin quotes among 1,032 findings, including quotes that still verify against
+current committed content, while the durable ledgers recorded zero verified
+quotes. The ledger was therefore measuring `review-pass` invocation coverage,
+not reviewer quality. Durable JSON persistence, cross-worktree locking, and
+corruption recovery are removed; the `origin:` field and ephemeral committed-
+HEAD quote verification remain. The shipped account below is retained as
+history.
+
 ## Shipped (Tasks 7-8 of the same arc, commit 517a4777)
 
 The gap this entry describes is fixed. `loom_gate_markers.py` now writes an

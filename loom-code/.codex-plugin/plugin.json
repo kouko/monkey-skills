@@ -1,6 +1,6 @@
 {
   "name": "loom-code",
-  "version": "0.97.8",
+  "version": "0.97.9",
   "description": "Canon-grounded coding-discipline workflow (TDD/brainstorm/SDD/review) for Claude Code + Codex.",
   "author": {
     "name": "kouko",

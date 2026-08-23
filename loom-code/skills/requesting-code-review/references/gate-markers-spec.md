@@ -8,11 +8,7 @@ task 6 — the requirements previously lived only in code (discovered by
 exit-4 retries); this file is the readable version.
 
 All markers live under `<git-dir>/loom/`, resolved via `git rev-parse
---git-dir` from the target repo — **except** `origin-ledger.json` (below),
-which resolves via `git rev-parse --git-common-dir` instead, so every
-`git worktree` checkout of the repo appends to the SAME ledger rather than
-forking a private, per-checkout copy that `git worktree remove` would
-delete.
+--git-dir` from the target repo.
 
 ## Verdict-text schema (`review-pass --verdict-file`)
 
@@ -57,61 +53,36 @@ either (exit 4, every violation listed — see `validate` below).
 
 A grammar-valid `origin:` whose value is `<path> :: "<quote>"` (not
 `none`) is checked against the file's content **at `head_sha`** — via
-`git show <head_sha>:<path>`, never the worktree — so the recorded
+`git show <head_sha>:<path>`, never the worktree — so the ephemeral
 result reflects what was actually reviewed, not a since-edited file.
 Matching is two-stage: byte-exact first, then one shared normaliser
 (NFC, whitespace collapse, typographic-quote/dash folding) on a miss.
-A match records `verified-exact` or `verified-normalised` in the origin
-ledger (below).
+A match produces an ephemeral `verified-exact` or `verified-normalised`
+status for the current invocation. Normalised matches emit one aggregated
+advisory; no quote result is persisted across review rounds.
+`review-pass` never creates or updates `origin-ledger.json`; an existing
+legacy file under `.git/loom/` is ignored.
 
-A quote that does NOT verify is recorded, never refused — this used to
+A quote that does NOT verify is classified ephemerally, never refused — this used to
 be a mint-time refusal and was demoted (0 of 24 severity-🔴 findings
 measured on this repo ever reached it — a transcript tally, not a
 script; population and method at
 `docs/loom/plans/2026-08-02-finding-origin-attribution.md` §Re-cut after
-Tasks 1-6). Five reasons are distinguished, each recorded as
+Tasks 1-6). Five reasons are distinguished internally as
 `unverified-<reason>`:
 `sha-unresolvable`, `file-absent`, `not-a-file`, `undecodable-blob` (the
 committed blob couldn't be read as text), and `quote-absent` (the file
-read fine but never contained the quote). `origin: none` records
-`none`; a malformed `origin:` value records `malformed`; an absent
-`origin:` line records `absent` regardless of arm — a code-arm finding
-that refuses the mint for a missing `origin:` still lands an `absent`
-entry, the same as an exempt docs-arm finding's absence; a duplicate
-`origin:` records `duplicate` (also grammar-refused — see above — but
+read fine but never contained the quote). `origin: none` returns
+`none`; a malformed `origin:` value returns `malformed`; an absent
+`origin:` line returns `absent` regardless of arm — a code-arm finding
+that refuses the mint for a missing `origin:` is classified the same
+way as an exempt docs-arm finding's absence; a duplicate
+`origin:` produces `duplicate` (also grammar-refused — see above — but
 distinct from `absent`, since an `origin:` line did exist, just twice).
 
 `validate` (below) takes no `--repo` and therefore has no `head_sha` to
 verify a quote against — it says so loudly rather than skipping
 silently.
-
-## Origin ledger (`origin-ledger.json`)
-
-`{"schema": 1, "branches": {<branch>: [{"round", "verdict", "head_sha",
-"written_at", "findings": [{"arm", "dimension", "origin_raw",
-"quote_status"}, ...]}, ...]}}` — append-only, **never reset**, one
-entry appended per `review-pass` invocation whose verdict file is
-readable and whose branch resolves — including the `NEEDS_REVISION`
-and schema-failure paths that mint no `review-pass.json` at all. This
-keeps the recorded sample unbiased by which rounds happened to pass
-ONLY IF every round invokes this CLI; shipped orchestration invokes it
-on mint attempts, so the recorded sample is invocation-skewed in
-practice — a round nobody bothers to invoke leaves no row at all.
-
-Its directory resolves via `--git-common-dir` (not `--git-dir` like the
-three markers above), so every `git worktree` checkout of a repo shares
-the same ledger, and `git worktree remove` cannot delete it. The
-read-modify-write is held under an exclusive `flock` on a dedicated
-lock file — concurrent `review-pass` invocations from separate
-worktrees are the normal case this exists for. A write failure here
-(including lock contention beyond 10s) is reported on stderr and
-swallowed: unlike every other marker, **it never changes the exit code
-or blocks the mint**. Five corrupt-ledger shapes (unparseable JSON, a
-directory sitting at the ledger path, and three valid-JSON-but-wrong-
-shape variants) are recovered by moving the bad file aside as
-`origin-ledger.json.corrupt-<UTC timestamp>` and starting fresh, both
-reported on stderr — no single corruption shape biases every future
-round to empty.
 
 ## Run-command binding (`verified --run`)
 

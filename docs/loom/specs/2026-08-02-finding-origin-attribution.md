@@ -6,7 +6,16 @@
   docs-side A-class defects are extractable from shipped verdict blocks, and
   code-side ones are not — the plan-origin attribution is lost at the point of
   recording.
-- **Status**: brief, awaiting user ratification.
+- **Status**: shipped; durable ledger retired 2026-08-24, quote attribution retained.
+
+> **Amendment 2026-08-24.** A local transcript census across projects found
+> 84 grammar-valid code-arm origin quotes among 1,032 findings, while the two
+> surviving durable ledgers recorded zero verified quotes. The quote field is
+> therefore retained, but `origin-ledger.json` is retired as an
+> invocation-skewed measurement store. `review-pass` still verifies quotes
+> against committed HEAD content and emits its normalised-match advisory; it
+> no longer persists cross-round quote statuses. The ledger design below is
+> preserved as the historical decision record, not current behavior.
 
 ## Design-side on-ramp
 

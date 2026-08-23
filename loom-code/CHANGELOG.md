@@ -5,6 +5,14 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.97.9] — 2026-08-24
+
+### Removed
+
+- Retire the invocation-skewed durable origin ledger, including its shared
+  worktree lock and corruption-recovery paths, while preserving `origin:`
+  schema enforcement and ephemeral committed-HEAD quote verification.
+
 ## [0.97.8] — 2026-08-23
 
 ### Fixed
