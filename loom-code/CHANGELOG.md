@@ -5,6 +5,12 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.97.2] — 2026-08-23
+
+### Changed
+
+- Let Claude Code loom roles inherit the main session's effort while retaining task-tier model selection.
+
 ## [0.97.1] — 2026-08-23
 
 ### Changed

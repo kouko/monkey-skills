@@ -88,7 +88,7 @@ def test_stations_do_not_keep_a_competing_host_model_policy():
     assert "profile tier to `frontier`" in code_review
     assert "OPTIONAL `model` field to `opus`" not in code_review
     assert "legacy `OPTIONAL model`" not in docs_review
-    assert "reviewer frontmatter only to supply" in docs_review
+    assert "inherits the main session's effort" in docs_review
 
 
 def test_codex_adapter_matches_the_current_one_child_lifecycle():
@@ -119,7 +119,7 @@ def test_profile_precedes_host_spawn_and_replaces_inheritance_evidence():
     assert "reviewers inherit the session model by design" not in evidence
 
 
-def test_all_loom_agent_roles_supply_the_claude_standard_effort_baseline():
+def test_claude_roles_inherit_the_main_session_effort():
     for role in (
         "implementer.md",
         "spec-reviewer.md",
@@ -128,7 +128,11 @@ def test_all_loom_agent_roles_supply_the_claude_standard_effort_baseline():
         "docs-reviewer.md",
     ):
         text = (ROOT / "agents" / role).read_text(encoding="utf-8")
-        assert "effort: medium" in text
+        assert "effort:" not in text
+
+    profile = _profile()
+    assert "inherits the main session's effort" in profile
+    assert "must halt when high effort cannot be verified" not in profile
 
 
 def test_privacy_judges_are_frontier_high_profile_dispatches():

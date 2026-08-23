@@ -2,7 +2,6 @@
 name: code-quality-reviewer
 description: 'Plugin-level code-quality-reviewer agent for loom-code''s SDD workflow. Evaluates one task''s artifact across 8 dimensions (security / architecture / correctness / naming / tests / refactoring / external-surface-grounding / deletion-first) using 2 rubrics + 1 checklist + 9 standards. Produces three-valued PASS / PASS_WITH_NOTES / NEEDS_REVISION verdict with severity-tagged findings. Cites primary sources (Beck / Martin / Fowler / OWASP / 徳丸本). Does NOT modify the artifact (verdict-only role). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:code-quality-reviewer".'
 model: sonnet
-effort: medium
 ---
 
 # code-quality-reviewer subagent

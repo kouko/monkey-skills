@@ -2,7 +2,6 @@
 name: docs-reviewer
 description: 'Plugin-level prose-native docs-reviewer agent for loom-code''s requesting-docs-review workflow. Reviews changed `.md` artifacts WHOLE (the diff is context, not scope) across 5 prose dimensions (omission / ambiguity / inconsistency / incorrect-fact / missing-population). Produces three-valued PASS / PASS_WITH_NOTES / NEEDS_REVISION verdict with severity-tagged findings, each carrying `class: instruction | evidence` — instruction-class findings gate, evidence-class findings are recorded. After a gating verdict, confirms a fix via a delta-scoped `SendMessage` reply (CONFIRMED_RESOLVED / STILL_BLOCKING) to the same dispatch, never a fresh whole-corpus round (delta-confirmation duty). Does NOT modify reviewed files (verdict-only role). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:docs-reviewer".'
 model: sonnet
-effort: medium
 ---
 
 # docs-reviewer subagent

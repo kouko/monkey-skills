@@ -1,9 +1,10 @@
-"""Tests for the model: pin in loom-code agent frontmatter.
+"""Tests for Claude role defaults in loom-code agent frontmatter.
 
 Checklist arms (spec-reviewer, code-quality-reviewer, docs-reviewer) run
-every task/round and default to sonnet. Judgment arms (implementer,
-code-reviewer) inherit the dispatching session's model tier and must
-carry no model: key.
+every task/round and default to sonnet. All roles inherit the dispatching
+session's effort so the portable profile cannot be overridden by a static
+frontmatter value. Judgment arms (implementer, code-reviewer) also inherit
+the dispatching session's model tier.
 """
 from pathlib import Path
 
@@ -17,7 +18,7 @@ def _frontmatter(agent_name):
     return text[4:end]
 
 
-def test_checklist_arms_default_to_standard_medium_judgment_arms_inherit():
+def test_checklist_arms_pin_model_but_all_roles_inherit_effort():
     checklist_arms = ["spec-reviewer", "code-quality-reviewer", "docs-reviewer"]
     judgment_arms = ["implementer", "code-reviewer"]
 
@@ -26,8 +27,10 @@ def test_checklist_arms_default_to_standard_medium_judgment_arms_inherit():
         assert "model: sonnet" in frontmatter, (
             f"{agent_name}.md frontmatter must pin model: sonnet"
         )
-        assert "effort: medium" in frontmatter, (
-            f"{agent_name}.md frontmatter must pin effort: medium"
+    for agent_name in checklist_arms + judgment_arms:
+        frontmatter = _frontmatter(agent_name)
+        assert "effort:" not in frontmatter, (
+            f"{agent_name}.md frontmatter must inherit session effort"
         )
 
     for agent_name in judgment_arms:

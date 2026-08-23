@@ -1,6 +1,5 @@
 ---
 name: code-reviewer
-effort: medium
 description: 'Plugin-level code-reviewer agent for loom-code''s requesting-code-review workflow. Reviews whole-branch diff (not per-task) against 2 rubrics + 1 checklist + 9 standards across 11 dimensions including the branch-unique cross-task-coherence dimension. Produces three-valued PASS / PASS_WITH_NOTES / NEEDS_REVISION verdict with severity-tagged findings. Cites primary sources (Beck / Martin / Fowler / OWASP / 徳丸本). Does NOT modify code (verdict-only role). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:code-reviewer".'
 ---
 
