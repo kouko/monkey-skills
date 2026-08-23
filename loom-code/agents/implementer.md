@@ -1,5 +1,6 @@
 ---
 name: implementer
+effort: medium
 description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Dispatched for a single atomic task (one failing test, ≤1 module) under TDD iron law. Produces code + tests + status (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED). Carries the 12-rule engineering baseline baked in. Reusable cross-plugin via subagent_type "loom-code:implementer".'
 ---
 

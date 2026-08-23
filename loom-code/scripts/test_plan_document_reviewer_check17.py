@@ -221,9 +221,9 @@ def test_sdd_skill_points_at_check17_without_restating_the_floor():
     )
 
     preceding_line = _preceding_nonblank_line(lines, idx)
-    assert "most-capable tier" in preceding_line or "most capable tier" in preceding_line, (
-        "the pointer's paragraph must sit immediately beside the existing "
-        "most-capable-tier exception paragraph, not float elsewhere in the "
+    assert "code-quality reviewer remains `frontier`" in preceding_line, (
+        "the pointer's paragraph must sit immediately beside the portable "
+        "frontier reviewer exception paragraph, not float elsewhere in the "
         "section"
     )
 

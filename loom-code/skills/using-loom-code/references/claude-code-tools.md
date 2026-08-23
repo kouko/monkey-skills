@@ -35,6 +35,14 @@ Available `subagent_type` values vary by host configuration; common ones surface
 
 Role contracts live at `loom-code/agents/<role>.md`. Each agent carries the 12-rule engineering baseline ([`loom-code/scripts/_baseline.md`](../../../scripts/_baseline.md)) baked into its system prompt. Reviewer agents may also carry a `model:` frontmatter key that sets their host-native default; a dispatch-time `model` param on the `Agent` call takes precedence over the frontmatter default — by loom convention, used only to upgrade the tier.
 
+Before every spawn, **resolve the dispatch profile** in
+[`dispatch-profile.md`](dispatch-profile.md). Translate its semantic tier and
+effort to Claude's current family alias and supported `effort` value, and put
+the dispatch record in the packet. Frontmatter is a manual-invocation fallback;
+the resolved profile is loom's source of truth. If Claude's policy rejects a
+`frontier` request, follow the profile's fail-loud rule rather than inheriting
+the parent model.
+
 ### Parallel fan-out (`dispatching-parallel-agents`)
 
 Claude Code runs `Agent` calls concurrently **only when they appear in the same assistant message**. Sequential calls across separate messages run sequentially:

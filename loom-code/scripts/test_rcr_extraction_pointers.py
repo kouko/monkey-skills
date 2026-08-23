@@ -121,9 +121,11 @@ def test_advisory_only_rule_sentence_stays_inline_evidence_tail_gone():
     assert "Evidence: G4 A/B" not in text
 
 
-def test_inherit_by_design_rule_stays_inline_calibration_parenthetical_gone():
+def test_profile_driven_review_rule_stays_inline_calibration_parenthetical_gone():
     text = _skill_text()
-    assert "reviewers inherit the session model by design" in text
+    assert "Resolve the dispatch profile" in text
+    assert "profile's dispatch record" in text
+    assert "reviewers inherit the session model by design" not in text
     assert "G4's evidence was measured on exactly the inherit configuration" not in text
 
 

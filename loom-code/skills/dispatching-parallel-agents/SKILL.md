@@ -62,7 +62,7 @@ Packet context — anchoring, provenance, locate arms, reviewer independence: [`
 
 ### 3. Dispatch all N subagents in one fan-out step
 
-Your host determines exactly what "one fan-out step" looks like as a tool call — see your host's tool-mapping reference under `using-loom-code/references/` (`claude-code-tools.md`'s "concurrent calls in one assistant message" shape, or `codex-tools.md`'s native multi-agent spawn-and-wait) for the concrete syntax, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid (Codex has no equivalent). The invariant that holds regardless of host:
+**Resolve the dispatch profile** in [`using-loom-code`'s portable profile](../using-loom-code/references/dispatch-profile.md) independently for every child before the fan-out. Your host determines exactly what "one fan-out step" looks like as a tool call — see your host's tool-mapping reference under `using-loom-code/references/` (`claude-code-tools.md`'s "concurrent calls in one assistant message" shape, or `codex-tools.md`'s native multi-agent spawn-and-wait) for the concrete syntax, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid (Codex has no equivalent). The invariant that holds regardless of host:
 
 ```
 ✅ Concurrent — all N dispatch calls issued together, in the same fan-out step

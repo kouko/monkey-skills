@@ -12,9 +12,11 @@ This file is author-facing: it exists for maintainers reviewing or redesigning t
 
 The rule sentence itself ("each arm's own `verdict:` is advisory only — the gate verdict is produced by applying the aggregation rule above to the union of both arms' findings, never by picking one arm's verdict") stays inline in SKILL.md — it is pinned. This is its evidence tail: Evidence: G4 A/B — a single-Sonnet verdict missed the correct call 1-of-2 times, while union-aggregation over both arms reproduced the correct verdict with zero false positives across all 4 tested arms (`docs/loom/dogfood/2026-07-06-g4-sonnet-vs-fable-ab.md`).
 
-## Process Step 2 — model-inherit calibration note
+## Process Step 2 — calibration note
 
-The rule it qualifies ("Do not pin a model on either dispatch — reviewers inherit the session model by design: that keeps the panel's tier matched to whatever the session actually runs") stays inline in SKILL.md §Process Step 2. Its calibration parenthetical: G4's evidence was measured on exactly the inherit configuration (see §Aggregation rule's "Panel union" note; G4's honesty clause cautions against extrapolating across tiers or diff types).
+The historical G4 measurement used inherited session models. Current dispatch
+policy is the portable profile in `using-loom-code/references/dispatch-profile.md`;
+that evidence does not prescribe a host model or override its resolved tier.
 
 ## Process Step 3 — union-merge supporting evidence
 

@@ -164,15 +164,7 @@ A task that adds a **new runnable capability** must have that verb **declared in
 
 ## Model selection
 
-Pick the cheapest model that meets the task's actual reasoning load.
-
-| Task category | Model class | Examples |
-|---|---|---|
-| Mechanical | cheap (Haiku / equivalent) | Rename a symbol across files; add a simple test fixture; format / lint cleanup |
-| Integration | standard (Sonnet / equivalent) | Wire a new endpoint; add a feature flag check; refactor a function while preserving tests |
-| Architecture | most capable (Opus / equivalent) | Introduce a new module boundary; design an interface; non-trivial security-sensitive logic |
-
-Reviewers usually run at one tier below the implementer — they grade against fixed rubrics, which is cheaper than producing the artifact. **Exception**: when the implementer ran at the most-capable tier on an architectural task, the code-quality-reviewer also runs at most-capable (subtle design errors need the same horsepower to catch). The three checklist arms carry `model: sonnet` defaults; upgrading (incl. the exception above) uses the dispatch-time `model` override (`claude-code-tools.md`).
+**Resolve the dispatch profile** in [`using-loom-code`'s portable profile](../using-loom-code/references/dispatch-profile.md) before every implementer or reviewer spawn. It owns the semantic tiers, effort boundary, reviewer exception, host adapters, and bounded fallback; this station does not restate host model names or invent a lower-tier fallback. In particular, the code-quality reviewer remains `frontier` when it evaluates a `frontier` architecture task.
 
 A second, unrelated tier floor applies to `plan-document-reviewer`'s Check 17 (c2) — see [`writing-plans/references/plan-document-reviewer-prompt.md`](../writing-plans/references/plan-document-reviewer-prompt.md), Check 17 row, which is the SSOT for that floor's value.
 

@@ -17,7 +17,7 @@ def _frontmatter(agent_name):
     return text[4:end]
 
 
-def test_checklist_arms_default_sonnet_judgment_arms_inherit():
+def test_checklist_arms_default_to_standard_medium_judgment_arms_inherit():
     checklist_arms = ["spec-reviewer", "code-quality-reviewer", "docs-reviewer"]
     judgment_arms = ["implementer", "code-reviewer"]
 
@@ -25,6 +25,9 @@ def test_checklist_arms_default_sonnet_judgment_arms_inherit():
         frontmatter = _frontmatter(agent_name)
         assert "model: sonnet" in frontmatter, (
             f"{agent_name}.md frontmatter must pin model: sonnet"
+        )
+        assert "effort: medium" in frontmatter, (
+            f"{agent_name}.md frontmatter must pin effort: medium"
         )
 
     for agent_name in judgment_arms:

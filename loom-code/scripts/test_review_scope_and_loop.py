@@ -175,8 +175,8 @@ def test_rcr_m3_upgrade_rule():
     """Task 12 (fix round, T12 code-quality-reviewer 🔴+🟡, both
     confirmed): requesting-code-review/SKILL.md must install the M3
     mechanical upgrade rule directly after Step 1's routing bullets --
-    three path-based triggers that set the dispatch packet's OPTIONAL
-    `model` field to `opus` (or route a contested finding to a second
+    three path-based triggers that set the dispatch packet's portable
+    `frontier` tier (or route a contested finding to a second
     opinion / the user), plus the honesty note that catch-quality-by-
     tier is unmeasured. The 🔴 fix: the packet-field pass-down must
     also appear on the Docs-only and Mixed routing bullets themselves,
@@ -194,7 +194,7 @@ def test_rcr_m3_upgrade_rule():
     text = _rcr_text()
     process = _section(text, "## Process")
     m3_start = process.index("**M3")
-    step2_start = process.index("2. **Dispatch TWO")
+    step2_start = process.index("2. **Resolve the dispatch profile")
     m3 = process[m3_start:step2_start]
 
     docs_only_start = process.index("**Docs-only branch**")
@@ -206,19 +206,19 @@ def test_rcr_m3_upgrade_rule():
     # 🔴 fix: the packet-field pass-down is declared on BOTH routing
     # bullets that hand off to requesting-docs-review -- not just
     # asserted in the M3 paragraph with no execution channel
-    assert "OPTIONAL `model` field" in docs_only_bullet, (
-        "docs-only hand-off must declare the optional model pass-down "
-        "field in its own dispatch-packet list"
+    assert "profile tier" in docs_only_bullet, (
+        "docs-only hand-off must declare the portable profile pass-down "
+        "in its own dispatch-packet list"
     )
-    assert "OPTIONAL `model` field" in mixed_bullet, (
-        "mixed-branch hand-off must declare the optional model "
-        "pass-down field in its own dispatch-packet list"
+    assert "profile tier" in mixed_bullet, (
+        "mixed-branch hand-off must declare the portable profile "
+        "pass-down in its own dispatch-packet list"
     )
 
     # trigger 1: any agents/*.md among changed contract-class files ->
-    # packet's model field set to opus
+    # packet's profile tier set to frontier
     assert "agents/*.md" in m3
-    assert "OPTIONAL `model` field to `opus`" in m3
+    assert "profile tier to `frontier`" in m3
 
     # trigger 2: literal threshold 10 (plan kickoff decision, Task 12)
     assert "10 or more contract-class" in m3
@@ -231,7 +231,7 @@ def test_rcr_m3_upgrade_rule():
     assert "STILL_BLOCKING" in m3
     assert "ONE second-opinion review" in m3
     assert "one tier above the arm's current tier" in m3
-    assert "already ran at the top tier" in m3 and "the user instead" in m3
+    assert "already `frontier`" in m3 and "the user instead" in m3
 
     # honesty note, verbatim per the brief
     assert (
@@ -240,29 +240,27 @@ def test_rcr_m3_upgrade_rule():
     ) in m3
 
 
-def test_rdr_model_override_pass_down():
+def test_rdr_profile_override_pass_down():
     """Fix round (T12 code-quality-reviewer 🔴, confirmed): rcr's M3
-    upgrade rule ("dispatch the docs arm with model: opus") has no
+    upgrade rule ("dispatch the docs arm at frontier tier") has no
     execution channel unless requesting-docs-review's own dispatch-
     packet contract (§Process Step 3) and dispatch instruction both
     consume an optional `model` field. Clause-scoped to Step 3's own
     paragraph (first _section()-bounded to "## Process", then sliced
-    from the "3. **Dispatch TWO" lead to Step 4's numbered marker) so
+    from the profile-resolution lead through Step 4's numbered marker) so
     a mutation inside this one paragraph is guaranteed to redden this
     test, not a whole-file substring search."""
     text = _rdr_text()
     process = _section(text, "## Process")
-    step3_start = process.index("3. **Dispatch TWO")
+    step3_start = process.index("**Dispatch-profile gate")
     step4_start = process.index("4. **Wait for BOTH verdicts")
     step3 = process[step3_start:step4_start]
 
-    # packet contract declares the optional field
-    assert "OPTIONAL `model` field" in step3
-
-    # Step 3's dispatch instruction actually consumes it: present ->
-    # override the dispatch-time model; absent -> frontmatter default
-    assert "dispatch both `docs-reviewer` subagents with that `model`" in step3
-    assert "frontmatter default" in step3
+    # Packet carries semantic inputs and translates them exactly once.
+    assert "resolved `tier` plus `effort`" in step3
+    assert "translate them once through `dispatch-profile.md`" in step3
+    assert "OPTIONAL `model` field" not in step3
+    assert "frontmatter default" not in step3
 
 
 def test_docs_reviewer_scope_and_confirmation():

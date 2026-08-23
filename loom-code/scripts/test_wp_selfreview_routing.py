@@ -42,9 +42,9 @@ def test_prompt_file_never_registry_never_substitute():
     assert "docs-reviewer included" in norm
     assert "may substitute" in norm
 
-    # §Self-review: dispatch model default + dispatch-time upward override.
-    assert "model: sonnet" in norm
-    assert "dispatch-time upward override" in norm
+    # §Self-review: the portable profile owns the host model/effort mapping.
+    assert "Tier: profile." in norm
+    assert "Resolve the dispatch profile" in norm
 
     # SUBAGENT-STOP: plan-document-reviewer disambiguated as a prompt-file
     # role, not a registered agent type, distinct from the roles it is

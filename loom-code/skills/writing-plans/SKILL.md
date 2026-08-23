@@ -96,7 +96,9 @@ This mirrors Kent Beck's "Child Test" pattern — citation + verbatim quote: [`r
 
 ## Self-review — plan-document-reviewer
 
-`plan-document-reviewer` is a **PROMPT FILE** ([`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md)) dispatched via a generic subagent — NEVER an agent-registry lookup, and no other reviewer agent (docs-reviewer included) may substitute for it. Dispatch defaults to `model: sonnet`, with dispatch-time upward override for high-stakes plans.
+`plan-document-reviewer` is a **PROMPT FILE** ([prompt](references/plan-document-reviewer-prompt.md)) dispatched via a generic subagent — NEVER an agent-registry lookup; no other reviewer agent (docs-reviewer included) may substitute. Tier: profile.
+
+**Resolve the dispatch profile** in [`dispatch-profile.md`](../using-loom-code/references/dispatch-profile.md) before spawn; it owns translation and escalation.
 
 After producing the plan, writing-plans **must** dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent — a one-shot blocking call that waits for and returns its verdict directly (see your host's tool-mapping reference for the exact shape, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid — Codex has no equivalent). That prompt holds the **authoritative, full check list** — do not maintain a duplicate copy here (it drifts). The highest-value checks, so you can self-pre-screen before dispatch:
 
