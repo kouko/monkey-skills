@@ -135,8 +135,20 @@ def test_claude_roles_inherit_the_main_session_effort():
     assert "must halt when high effort cannot be verified" not in profile
 
 
-def test_privacy_judges_are_frontier_high_profile_dispatches():
+def test_dispatch_record_separates_requested_and_effective_effort():
+    profile = _profile()
+    claude_tools = (
+        ROOT / "skills" / "using-loom-code" / "references" / "claude-code-tools.md"
+    ).read_text(encoding="utf-8")
+
+    assert "requested_effort=<low|medium|high>" in profile
+    assert "effective_effort: <host-applied value, inherited, or unverified>" in profile
+    assert "requested_effort=<low|medium|high>; effective_effort=inherited" in claude_tools
+
+
+def test_privacy_judges_request_high_effort_without_claiming_it_is_effective():
     closeout = DISPATCH_STATIONS[-1].read_text(encoding="utf-8")
 
     assert closeout.count("Resolve the dispatch profile") >= 2
-    assert closeout.count("tier=frontier; effort=high") >= 2
+    assert closeout.count("tier=frontier; requested_effort=high") >= 2
+    assert "tier=frontier; effort=high" not in closeout

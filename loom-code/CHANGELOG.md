@@ -5,6 +5,12 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.97.3] — 2026-08-23
+
+### Fixed
+
+- Separate requested and effective effort in dispatch records so Claude session inheritance is never reported as enforced high effort.
+
 ## [0.97.2] — 2026-08-23
 
 ### Changed

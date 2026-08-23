@@ -17,9 +17,10 @@ and `frontier`, paired with `low`, `medium`, and `high` effort.
 3. Apply the reviewer rule: reviewers run one tier below the implementer when
    that still meets the task's floor. A code-quality reviewer for a `frontier`
    architecture task remains `frontier`.
-4. Put the resolved `tier` and `effort` in the dispatch packet, then use the
-   current host adapter below. The dispatch packet—not an agent file's hidden
-   default—is loom-code's source of truth.
+4. Put the resolved `tier` and `requested_effort` in the dispatch packet, then
+   use the current host adapter below. The host adapter records
+   `effective_effort` separately. The dispatch packet—not an agent file's
+   hidden default—is loom-code's source of truth.
 
 ## Failure and fallback policy
 
@@ -73,8 +74,10 @@ Every station includes this compact record in its packet and final status when
 the host exposes it:
 
 ```text
-dispatch_profile: tier=<economy|standard|frontier>; effort=<low|medium|high|inherited>
+dispatch_profile: tier=<economy|standard|frontier>; requested_effort=<low|medium|high>
+effective_effort: <host-applied value, inherited, or unverified>
 effective_runtime: <host metadata or unverified>
 ```
 
-The record is observability, not a promise that a provider accepted a request.
+The record distinguishes loom's requested budget from the host's effective
+budget. It is observability, not a promise that a provider accepted a request.

@@ -38,8 +38,9 @@ Role contracts live at `loom-code/agents/<role>.md`. Each agent carries the 12-r
 Before every spawn, **resolve the dispatch profile** in
 [`dispatch-profile.md`](dispatch-profile.md). Translate its semantic tier to
 Claude's current family alias, leave per-agent `effort` unset, and record
-`effort=inherited` in the packet. The resolved profile is loom's source of
-truth for model selection; Claude applies the main session's effort. If
+`requested_effort=<low|medium|high>; effective_effort=inherited` in the
+packet. The resolved profile is loom's source of truth for model selection;
+Claude applies the main session's effort. If
 Claude's policy rejects a `frontier` model request, follow the profile's
 fail-loud rule rather than inheriting the parent model.
 

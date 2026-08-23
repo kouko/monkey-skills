@@ -168,7 +168,8 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
    - **Resolve the dispatch profile** in [`using-loom-code`'s portable
      profile](../using-loom-code/references/dispatch-profile.md) before the
      fresh-context judge spawn. Privacy review is security-sensitive, so its
-     packet is `tier=frontier; effort=high`; the host adapter translates it.
+     packet is `tier=frontier; requested_effort=high`; the host adapter
+     records its effective effort separately.
    - PASS (layer-1 clean AND layer-2 PASS): proceed silently — no user ask.
    - BLOCK (any layer-1 finding, a layer-2 BLOCK, or a fail-closed
      condition — script error, judge dispatch failure, or
@@ -266,8 +267,9 @@ Full per-step rationale + **the orchestrator does NOT** boundary list in [`refer
       commit, per the arc's mechanize-don't-rely-on-prose premise.
     - **Resolve the dispatch profile** in [`using-loom-code`'s portable
       profile](../using-loom-code/references/dispatch-profile.md) before the
-      fresh-context PR-body judge spawn. Its packet is `tier=frontier; effort=high`;
-      the host adapter translates it.
+      fresh-context PR-body judge spawn. Its packet is
+      `tier=frontier; requested_effort=high`; the host adapter records its
+      effective effort separately.
     - Then: gh pr create with title/body from git-memory + branch name
     - PR-carrier check (memory-worthy branch only): before declaring the PR ready,
       grep the PR body you just composed for a `## Memory` section. If Phase 3
