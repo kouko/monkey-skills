@@ -105,6 +105,17 @@ value makes the packet malformed, so do not produce a verdict. Never accept,
 infer, or derive a separate SHA; the reviewed artifact/diff must be bound to
 that same packet value.
 
+## Rule R1b — Cross-read repository citations from that same snapshot
+
+When a role contract requires a repository-path cross-read to confirm a
+citation, read that path with
+`git -C "<target_repo>" show <reviewed_sha>:<path>`. Never read it from the
+mutable working tree, even when the cited path is outside the changed files.
+This rule applies only to paths in `target_repo`; URLs and approved plugin-local
+resources retain the access method their role contract specifies.
+If the path does not exist at `reviewed_sha`, report that missing snapshot
+evidence rather than falling back to the live tree.
+
 ## Rule R2 — Every output element needs an evidence citation
 
 Every finding / gap in your output must include the evidence

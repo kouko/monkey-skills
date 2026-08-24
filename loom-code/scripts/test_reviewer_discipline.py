@@ -126,3 +126,19 @@ def test_all_reviewers_read_only_the_immutable_snapshot():
         assert "never the mutable working tree" in contract, (
             f"{name} must reject mutable-worktree artifact reads"
         )
+
+
+def test_all_reviewer_cross_reads_use_the_immutable_snapshot():
+    """Citation cross-reads of repository files cannot read a live tree."""
+    required = (
+        "repository-path cross-read",
+        'git -c "<target_repo>" show <reviewed_sha>:<path>',
+        "never read it from the mutable working tree",
+    )
+    for name, path in REVIEWERS.items():
+        reviewer = re.sub(r"\s+", " ", path.read_text(encoding="utf-8").lower())
+        for phrase in required:
+            assert phrase in reviewer, (
+                f"{name} must bind repository citation cross-reads to "
+                f"the reviewed_sha snapshot: {phrase!r}"
+            )
