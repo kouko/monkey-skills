@@ -47,7 +47,7 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(d335bc68)
 - **Gloss**: reviewer 所需規則都有明確、可驗證的來源，不必自行猜 plugin 路徑。
 
 ## Task 2 — 統一 reviewer input 合約
