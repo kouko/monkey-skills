@@ -193,7 +193,20 @@ def test_rcr_marker_mint_follows_r3_and_simplification_gate():
         "evidence is known"
     )
     assert "review-pass --repo <target_repo> --verdict-file" in step4
-    assert "valid, empty simplification ledger" in step4
+    assert "simplification finding prevents this marker path" in step4
+
+
+def test_valid_nonempty_simplification_ledger_mints_marker():
+    """A declared shortcut is evidence to review, not an automatic
+    rejection: after every entry validates, the normal PASS marker path
+    must permit both an empty and a nonempty ledger."""
+    process = _section(_rcr_text(), "## Process")
+    step4_start = process.index("4. **Harvest the deliberate-simplification ledger")
+    step5_start = process.index("5. **Surface to user**")
+    step4 = process[step4_start:step5_start]
+
+    assert "valid simplification ledger, whether empty or nonempty" in step4
+    assert "valid, empty simplification ledger" not in step4
 
 
 def test_rcr_r3_downgrade_sets_panel_aggregation_floor():
@@ -301,7 +314,7 @@ def test_rdr_profile_override_pass_down():
     assert "frontmatter default" not in step3
 
 
-def test_docs_reviewer_scope_and_confirmation():
+def test_docs_reviewer_scope_and_post_fix_packet():
     """docs-reviewer.md (Task 7) must carry: (a) the scope contract --
     the SAME glob literal as rcr SKILL.md's SSOT heading (byte-equal;
     Task 13's cross-file lockstep assertion pins the two against each
@@ -309,10 +322,11 @@ def test_docs_reviewer_scope_and_confirmation():
     (not the bare `SSOT` token, which recurs elsewhere in this file's
     injected boilerplate -- e.g. the baseline/rule-sheet blocks' own
     "SSOT note" headers), and the record-class N/A-loudly jurisdiction
-    duty as ONE contiguous restrictive sentence; (b) the NEW
-    delta-confirmation duty -- the CONFIRMED_RESOLVED / STILL_BLOCKING
-    reply, delta-scoped via SendMessage, with the NEVER polarity on the
-    whole-corpus re-sample ban intact (not just the bare noun phrase).
+    duty as ONE contiguous restrictive sentence; (b) the portable
+    post-fix confirmation packet -- immutable core plus original gating
+    findings and delta evidence. Claude's same-session SendMessage and
+    Codex's labelled fresh whole-artifact delivery differ, but each agent
+    emits only an ordinary verdict and the orchestrator maps it.
 
     Each clause is asserted inside `_section()`'s slice of the ONE
     section that carries it -- clause-scoped, not whole-file -- and the
@@ -322,7 +336,7 @@ def test_docs_reviewer_scope_and_confirmation():
     two temp-mutated copies; see the T7 fix-round report)."""
     text = _docs_reviewer_text()
     scope = _section(text, "## Scope contract")
-    delta = _section(text, "## Delta-confirmation duty")
+    confirmation = _section(text, "## Post-fix confirmation duty")
 
     # (a) scope contract: glob literal byte-equal to rcr's SSOT --
     # checked against the RAW (un-normalized) slice: _norm strips `*`,
@@ -368,43 +382,61 @@ def test_docs_reviewer_scope_and_confirmation():
         "restriction, not two independently-flippable clauses"
     )
 
-    # (b) NEW delta-confirmation duty
-    assert "SendMessage" in delta
-    assert "CONFIRMED_RESOLVED" in delta
-    assert "STILL_BLOCKING" in delta
-
-    norm_delta = _norm(delta)
-    assert (
-        "never a fresh whole-corpus re-sample of the artifact set"
-        in norm_delta
-    ), (
-        "the NEVER polarity must survive on the whole-corpus re-sample "
-        "ban, not just the bare noun phrase"
+    # (b) portable post-fix confirmation packet
+    norm_confirmation = _norm(confirmation)
+    low_confirmation = norm_confirmation.lower()
+    for field in (
+        "post-fix confirmation packet",
+        "target_repo",
+        "reviewed_sha",
+        "plugin_version",
+        "resources",
+        "original gating findings",
+        "delta evidence",
+    ):
+        assert field in low_confirmation, (
+            f"post-fix duty must require packet field `{field}`"
+        )
+    assert "claude code" in low_confirmation and "sendmessage" in low_confirmation
+    assert "codex" in low_confirmation and "fresh whole-artifact review" in low_confirmation
+    assert "ordinary verdict" in low_confirmation, (
+        "each host delivery must produce an ordinary agent verdict"
     )
+    assert "the orchestrator normalizes each host's ordinary verdict as:" in low_confirmation, (
+        "the orchestrator, not the reviewer, must map confirmation outcomes"
+    )
+    for retired in ("delta-confirmation duty", "prior_findings_check", "round scope"):
+        assert retired not in low_confirmation, (
+            f"post-fix duty must not retain retired `{retired}` machinery"
+        )
 
 
-def test_rdr_single_round_confirmation():
+def test_rdr_single_round_post_fix_packet():
     """requesting-docs-review/SKILL.md (Task 9) must carry the
     single-round-with-confirmation contract that REPLACES the 2-round
     cap + qualifying-shape auto-delta-round design: round 1 whole-artifact
-    is the ONLY full review; a gating verdict is fixed then confirmed by
-    the SAME reviewer via SendMessage, delta-scoped, never a fresh
-    whole-corpus re-sample; STILL_BLOCKING after one fix cycle STOPs and
-    surfaces to the user; the terminal state is 'no gating findings',
-    never 'clean'; the old bounded-cap machinery (2-round cap, the
-    qualifying-shape auto-delta round) is gone from the shipped text."""
+    is the ONLY full review; a gating verdict is fixed then bound to one
+    post-fix packet. Claude's SendMessage and Codex's fresh whole-artifact
+    delivery receive that same packet; the ordinary verdict is normalized
+    to a terminal confirmation outcome. STILL_BLOCKING after one fix cycle
+    STOPs and surfaces to the user; the terminal state is 'no gating
+    findings', never 'clean'; the old bounded-cap machinery is gone."""
     text = _rdr_text()
     low = text.lower()
 
     assert "round 1" in low and "only full review" in low, (
         "must state round 1 whole-artifact is the ONLY full review"
     )
-    assert "delta confirmation" in low, (
-        "must name the delta-confirmation step"
+    for field in ("post-fix confirmation packet", "original gating findings", "delta evidence"):
+        assert field in low, f"must name post-fix packet field `{field}`"
+    assert "claude code" in low and "sendmessage" in low, (
+        "must name Claude's same-session delivery"
     )
-    assert "sendmessage" in low, (
-        "confirmation must be dispatched via SendMessage, not a fresh "
-        "Agent dispatch"
+    assert "codex" in low and "fresh whole-artifact review" in low, (
+        "must name Codex's fresh-review delivery"
+    )
+    assert "ordinary verdict" in low and "map ordinary" in low, (
+        "the host routes must retain ordinary verdict then mapping semantics"
     )
     assert "confirmed_resolved" in low and "still_blocking" in low, (
         "must name both confirmation verdicts"
@@ -415,9 +447,6 @@ def test_rdr_single_round_confirmation():
     )
     assert "no gating findings" in low, (
         "the terminal state must be 'no gating findings', never 'clean'"
-    )
-    assert "whole-corpus re-sample" in low, (
-        "delta confirmation must never be a fresh whole-corpus re-sample"
     )
 
     # old bounded-cap machinery must be gone from the shipped text.
@@ -436,8 +465,8 @@ def test_rdr_single_round_confirmation():
 def test_finishing_confirmation_stop():
     """finishing-a-development-branch/SKILL.md Step 3's docs-arm routing
     (Task 10) must re-point to requesting-docs-review's single-round +
-    same-reviewer delta-confirmation contract: a STILL_BLOCKING
-    confirmation, dispatched via SendMessage, surfaces to the user --
+    host-specific convergence contract: a STILL_BLOCKING confirmation
+    surfaces to the user while Directive 2 owns the delivery mechanism --
     replacing the old 2-round-plus-auto-delta cap language. Verdict
     THRESHOLDS at :117/:119/:135-136 (any 🔴 fatal, or 2+ 🟡 should-fix)
     are UNTOUCHED by this task (2026-08-11 user decision) -- this test
@@ -453,9 +482,12 @@ def test_finishing_confirmation_stop():
     assert "surface" in low and "user" in low, (
         "Step 3 must surface a STILL_BLOCKING confirmation to the user"
     )
-    assert "sendmessage" in low, (
-        "Step 3 must name that delta confirmation is dispatched via "
-        "SendMessage, matching requesting-docs-review's Directive 2"
+    assert "host-specific" in low and "directive 2" in low, (
+        "Step 3 must defer Claude/Codex delivery to requesting-docs-review's "
+        "binding convergence contract"
+    )
+    assert "sendmessage" not in low and "fresh whole" not in low, (
+        "Step 3 must not falsely prescribe either host's delivery mechanism"
     )
 
     # old 2-round-plus-auto-delta cap machinery must be gone from this section.

@@ -252,9 +252,9 @@ class TestVerdictRoutingSurfacesCapStop:
 def test_cap_stop_routes_on_confirmation_contract():
     """Task 10: the cap-STOP bullet routes on requesting-docs-review's
     single-round-with-confirmation contract by POINTER: it names round 1
-    as the only full review, names delta confirmation dispatched via
-    SendMessage, points at Directive 2 for the confirmation mechanics
-    rather than restating them (anti-copy convention), and keeps a
+    as the only full review, delegates host-specific confirmation mechanics
+    to Directive 2 rather than falsely prescribing Claude's SendMessage path,
+    and keeps a
     second confirmation cycle behind explicit user authorization."""
     bullet = _norm(_cap_stop_bullet(_step3_window(_text())))
     low = bullet.lower()
@@ -264,9 +264,12 @@ def test_cap_stop_routes_on_confirmation_contract():
     assert "round 1" in low and "only full review" in low, (
         "bullet must name round 1 as the only full review"
     )
-    assert "sendmessage" in low, (
-        "bullet must state delta confirmation is dispatched via "
-        "SendMessage"
+    assert "host-specific" in low, (
+        "bullet must defer Claude/Codex delivery differences to the "
+        "convergence contract"
+    )
+    assert "sendmessage" not in low and "fresh whole" not in low, (
+        "the release skill must not restate one host's delivery mechanism"
     )
     assert "directive 2" in low, (
         "bullet must point at requesting-docs-review's Directive 2 for "

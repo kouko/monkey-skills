@@ -546,8 +546,8 @@ def test_code_station_packet_has_absolute_context_and_reviewed_sha():
     assert "Only after those checks" in marker_section, (
         "marker minting must follow, not precede, simplification checks"
     )
-    assert "valid, empty simplification ledger" in marker_section, (
-        "a simplification finding must prevent the clean marker path"
+    assert "valid simplification ledger, whether empty or nonempty" in marker_section, (
+        "a valid nonempty simplification ledger must be able to mint"
     )
 
 

@@ -48,12 +48,28 @@ def test_sdd_dispatch_uses_sha_bound_scope_and_cross_reads() -> None:
     """Every SDD reviewer receives only snapshot-bound review evidence."""
     text = _normalized_skill()
 
-    assert '"<review_scope>" --repo <target_repo> --reviewed-sha <reviewed_sha>' in text
-    assert "approved packet resource `review_scope`" in text
     assert "immutable repository citation cross-read contract" in text
     assert '`git -C "<target_repo>" show <reviewed_sha>:<path>`' in text
     assert "every spec-reviewer, code-quality-reviewer, and docs-reviewer prompt" in text
     assert "Do not use mutable working-tree reads for reviewer evidence." in text
-    assert "If review_scope exits non-zero, REFUSE the fan-out" in text
     assert "do not dispatch any reviewer" in text
-    assert "only reviewer artifact scope is the file list printed by review_scope" in text
+    assert (
+        "only reviewer artifact scope is the repository-relative file list "
+        "declared in the task packet's `Files touched` field"
+    ) in text
+
+
+def test_sdd_per_task_reviewer_scope_uses_declared_task_files() -> None:
+    """A task triad must review its own declared files, never branch scope."""
+    skill = SDD_SKILL.read_text(encoding="utf-8")
+    process = skill[skill.index("## Process — per-task triad"):skill.index("**Parallel dispatch")]
+    step1 = process[process.index("1. **Dispatch"):process.index("2. **Read")]
+    step3 = process[process.index("3. **If"):process.index("4. **Resolve")]
+
+    assert "plan task's existing `Files touched` declaration unchanged into the task packet" in step1
+    assert "task packet's `Files touched` field" in step3
+    assert "only reviewer artifact scope" in step3
+    assert "non-empty repository-relative `Files touched` list" in step3
+    assert "otherwise REFUSE the fan-out" in step3
+    assert 'git -C "<target_repo>" cat-file -e "<reviewed_sha>:<path>"' in step3
+    assert 'python3 "<review_scope>"' not in step3

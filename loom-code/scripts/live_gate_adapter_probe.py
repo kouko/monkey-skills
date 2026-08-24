@@ -53,12 +53,26 @@ def _loaded_reference(host: str, raw_path: str) -> int:
             "loaded-reference-host-mismatch",
         )
     try:
-        plugin_root = path.parents[3]
-    except IndexError:
+        canonical_reference = path.resolve(strict=True)
+        plugin_root = canonical_reference.parents[3]
+    except (IndexError, OSError):
         return _emit(
             REFUSAL_TYPE,
             "invalid-reference",
             "loaded-reference-root-unresolvable",
+        )
+    expected_reference = (
+        plugin_root
+        / "skills"
+        / "using-loom-code"
+        / "references"
+        / REFERENCE_NAMES[host]
+    )
+    if canonical_reference != expected_reference:
+        return _emit(
+            REFUSAL_TYPE,
+            "invalid-reference",
+            "loaded-reference-layout-invalid",
         )
     try:
         root_is_invalid = not (plugin_root / "scripts/review_context.py").is_file()

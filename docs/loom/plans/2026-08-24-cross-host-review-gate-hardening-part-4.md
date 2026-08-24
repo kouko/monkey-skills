@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-24-cross-host-review-gate-hardening-part-4.md
 Goal: 從 context 到 marker 的每個可執行節點都綁定同一 SHA，並在隔離 consumer repo 證明全流程。
-Stage: planning
+Stage: review:round-1
 Steps:
   1. 建立 SHA、資源與 host adapter 的底層不變量
   2. 將 citation、code 與 SDD 接到 primitives
@@ -245,14 +245,14 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Acceptance**:
   - **RED**: `test_live_host_review_gate.py` fails because no runner creates an isolated copy, requires all three cases, or exits non-zero on a failed host case.
   - **GREEN**:
-    - Runner makes candidate plugin and consumer worktree read-only, except its temporary `.git/loom` marker directory; Claude uses session-only `--plugin-dir <temporary-copy> --no-session-persistence` with minimal read-only tools, plus pre/post user-state snapshots.
+    - Runner makes candidate plugin and consumer worktree read-only, except its temporary `.git/loom` marker directory; Claude uses the fixed `~/.claude-test` profile with `--permission-mode bypassPermissions`, minimal Read/Bash tools, and pre/post protected-daily-state snapshots.
     - Codex uses a temporary `CODEX_HOME`, marketplace, and install. It copies only the caller-supplied authentication material into that root with private permissions, never logs or hashes it, and deletes it in finally cleanup; unavailable safe auth bootstrap is a fail-closed release blocker.
     - Runner resolves one schema-valid packet per host before four station sessions. Its resolver event is the sole source; root/resources/SHA equal copied install and fixture commit.
     - Sessions receive it verbatim and prove candidate-skill loading through host tool events plus exact packet trace. Echo alone is rejected; stations never re-resolve. This is a gate-only Read→receipt/probe route, not a downstream whole review.
-    - Claude allows only the case's exact candidate-SKILL Read and exact receipt/probe Bash command. `dontAsk` stays enabled; exploratory commands, broad tool approval, and reviewer dispatch are forbidden.
+    - Claude uses the dedicated profile's `bypassPermissions` mode, exposes only Read/Bash, and validates the exact candidate-SKILL Read plus receipt/probe Bash pair; exploratory commands, broad tool approval, and reviewer dispatch are forbidden.
     - Per host cases: valid loaded-reference success; negative cases execute the candidate adapter probe and expose its typed refusal event without downstream work. The runner purges inherited `LOOM_LIVE_GATE_*`; only valid sessions receive the five gate values.
-    - Claude's mutable sandbox requires an exact matching authorization flag and a non-symlinked path chain. Negative slash commands are exact. Only Codex's exact `/bin/zsh -lc` event wrapper is accepted; all other wrapper shapes fail.
-    - Any failed assertion, timeout, host case, user-provided Claude-config mutation, or cleanup failure exits non-zero. Report records CLI versions and redacted evidence only: no raw prompt, auth data/path, or temporary absolute path.
+    - Claude's fixed `~/.claude-test` profile is the only supported live-gate profile; `--permission-mode bypassPermissions` is the supported invocation. Negative slash commands are exact. Only Codex's exact `/bin/zsh -lc` event wrapper is accepted; all other wrapper shapes fail.
+    - Any failed assertion, timeout, host case, protected daily-state mutation, or cleanup failure exits non-zero. Report records CLI versions and redacted evidence only: no raw prompt, auth data/path, or temporary absolute path.
 - **Dependencies**: Task 11 completes first
 - **Independent**: false
 - **Brief item covered**: BI-3, BI-4, BI-5

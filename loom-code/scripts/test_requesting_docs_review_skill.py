@@ -62,6 +62,8 @@ REFERENCE_MD = (
     / "convergence-contract.md"
 )
 
+DOCS_REVIEWER_MD = Path(__file__).parents[1] / "agents" / "docs-reviewer.md"
+
 
 def _text() -> str:
     assert SKILL_MD.is_file(), f"SKILL.md is absent at {SKILL_MD}"
@@ -214,6 +216,9 @@ def test_frontmatter_name_and_trigger_description():
         "budget caps at 1536"
     )
     low = desc.lower()
+    assert "host-specific" in low and "fresh whole-artifact" in low, (
+        "frontmatter must preserve the host-specific confirmation routes"
+    )
     assert "before" in low and ("push" in low or "merge" in low), (
         "description must fire BEFORE push/merge (imperative trigger "
         "phrasing, not a capability summary)"
@@ -569,9 +574,9 @@ def test_convergence_directives():
         "confirmation as what follows a gating verdict"
     )
 
-    # Directive 2 -- delta confirmation: SAME reviewer, via SendMessage,
-    # delta-scoped, never a fresh whole-corpus re-sample; two verdicts;
-    # STILL_BLOCKING after one cycle STOPs.
+    # Directive 2 -- one shared post-fix packet. Claude uses the same
+    # reviewer and delta; Codex uses a fresh whole-artifact review, but both
+    # normalize into the two terminal confirmation outcomes.
     assert "same reviewer" in ref, (
         "the reference must state the SAME reviewer confirms the fix"
     )
@@ -579,9 +584,9 @@ def test_convergence_directives():
         "the reference must state confirmation is dispatched via "
         "SendMessage, never a fresh Agent dispatch"
     )
-    assert "whole-corpus re-sample" in low and "whole-corpus re-sample" in ref, (
-        "both the inline summary and the reference must forbid a fresh "
-        "whole-corpus re-sample"
+    assert "fresh whole-artifact review" in low and "fresh whole-artifact review" in ref, (
+        "both the inline summary and the reference must name Codex's "
+        "fresh whole-artifact confirmation delivery"
     )
     assert "confirmed_resolved" in ref and "still_blocking" in ref, (
         "the reference must name both confirmation verdicts"
@@ -631,6 +636,96 @@ def test_convergence_directives():
     )
     assert "no prior_findings_check" in ref or "prior_findings_check`" in ref, (
         "the reference must explicitly retire prior_findings_check"
+    )
+
+
+def test_codex_confirmation_packet_is_consistent_with_binding_convergence_contract():
+    """Both hosts must judge the same post-fix evidence and normalize
+    their host-native replies into the same terminal confirmation result.
+
+    Claude's same-session delivery and Codex's fresh-review delivery may
+    differ, but neither may omit the original gated findings or the delta
+    evidence that binds the confirmation to the repair being judged.
+    """
+    ref = _norm(_reference_text()).lower()
+    skill = _norm(_steps_window(_text())).lower()
+    reviewer = _norm(DOCS_REVIEWER_MD.read_text(encoding="utf-8")).lower()
+
+    required_packet = (
+        "post-fix confirmation packet",
+        "target_repo",
+        "reviewed_sha",
+        "plugin_version",
+        "resources",
+        "original gating findings",
+        "delta evidence",
+    )
+    for phrase in required_packet:
+        assert phrase in ref, (
+            "the binding convergence reference must define the complete "
+            f"post-fix confirmation packet field `{phrase}`"
+        )
+
+    for text, owner in ((skill, "SKILL.md"), (reviewer, "docs-reviewer.md")):
+        assert "post-fix confirmation packet" in text, (
+            f"{owner} must require the binding post-fix confirmation packet"
+        )
+        assert "original gating findings" in text and "delta evidence" in text, (
+            f"{owner} must hand both original findings and delta evidence "
+            "to every confirmation route"
+        )
+
+    frontmatter = _norm(_frontmatter(_text())).lower()
+    assert "host-specific" in frontmatter and "fresh whole-artifact" in frontmatter, (
+        "the dispatch-visible description must preserve both host routes"
+    )
+
+    assert "claude code" in ref and "sendmessage" in ref, (
+        "the binding reference must name Claude's same-session delivery"
+    )
+    assert "codex" in ref and "fresh whole-artifact review" in ref, (
+        "the binding reference must name Codex's fresh-review delivery"
+    )
+    assert "pass" in ref and "pass_with_notes" in ref and "confirmed_resolved" in ref, (
+        "the binding reference must map non-gating ordinary verdicts to "
+        "CONFIRMED_RESOLVED"
+    )
+    assert "needs_revision" in ref and "still_blocking" in ref, (
+        "the binding reference must map a gating ordinary verdict to "
+        "STILL_BLOCKING"
+    )
+
+    # The reviewer prompt itself must no longer carry the retired execution
+    # contract. These are instruction-bearing packet/schema fields, not
+    # historical prose: their presence tells a reviewer to run the old
+    # two-round carrier alongside the portable post-fix confirmation packet.
+    for retired in (
+        "## delta-confirmation duty",
+        "### round scope",
+        "### prior-round findings",
+        "prior_findings_check:",
+        "older 2-round contract",
+    ):
+        assert retired not in reviewer, (
+            "docs-reviewer.md must not retain the retired confirmation "
+            f"execution contract `{retired}`"
+        )
+
+    assert "same session via `sendmessage`" in reviewer, (
+        "docs-reviewer.md may name SendMessage only as Claude's "
+        "same-session packet delivery"
+    )
+    assert "codex" in reviewer and "ordinary verdict" in reviewer, (
+        "docs-reviewer.md must describe Codex's fresh ordinary verdict "
+        "before the orchestrator normalizes it"
+    )
+    assert "the orchestrator normalizes each host's ordinary verdict as:" in reviewer, (
+        "only the orchestrator may map each host's ordinary verdict to a "
+        "confirmation outcome"
+    )
+    assert "in either delivery, normalize the outcome as:" not in reviewer, (
+        "docs-reviewer.md must not instruct a fresh reviewer to normalize "
+        "its own ordinary verdict"
     )
 
 
@@ -855,22 +950,18 @@ def test_cross_skill_contract_names_callers():
 
 def test_prior_findings_carrier_every_later_round():
     """The old round-N-handoff carrier (Directive 2's multi-round
-    `prior_findings_check` propagation) is RETIRED, not generalized: Task
-    9's single-round-plus-confirmation contract replaces it with a single
-    delta-confirmation cycle -- the SAME reviewer, dispatched via
-    SendMessage, scoped to the delta only, returning CONFIRMED_RESOLVED
-    or STILL_BLOCKING (docs/loom/plans/2026-08-11-review-cost-reduction.md
-    Task 9, absorbing Task 19's convergence-contract.md rewrite). No
+    `prior_findings_check` propagation) is RETIRED, not generalized: one
+    portable post-fix packet replaces it. Claude sends that packet to the
+    same reviewer; Codex receives it in a fresh whole-artifact review; both
+    normalize to CONFIRMED_RESOLVED or STILL_BLOCKING. No
     round-2-specific OR round-N-generalized carrier language may survive
     anywhere in the shipped text."""
     ref = _norm(_reference_text()).lower()
-    assert "delta confirmation — same reviewer, delta-scoped, one cycle" in ref, (
-        "Directive 2 must be the delta-confirmation contract: same "
-        "reviewer, delta-scoped, one cycle"
+    assert "post-fix confirmation — one portable packet, one cycle" in ref, (
+        "Directive 2 must define one portable post-fix packet and one cycle"
     )
-    assert "sendmessage" in ref and "never a fresh agent dispatch" in ref, (
-        "Directive 2 must state confirmation is dispatched via "
-        "SendMessage, never a fresh Agent dispatch"
+    assert "sendmessage" in ref and "fresh whole-artifact review" in ref, (
+        "Directive 2 must state both host-native confirmation deliveries"
     )
     assert "round-n handoff" not in ref, (
         "the retired round-N-handoff carrier must not survive in the "
@@ -986,6 +1077,33 @@ def test_out_of_scope_not_claimed_persisted():
     )
 
 
+def test_post_fix_out_of_scope_cannot_suppress_a_new_gating_problem():
+    """Codex's fresh whole-artifact confirmation may find a new blocker.
+
+    `out_of_scope` is reserved for non-gating observations on either host;
+    a new gating problem must remain an ordinary scored finding so the
+    orchestrator maps NEEDS_REVISION to STILL_BLOCKING.
+    """
+    skill = _norm(_out_of_scope_fence_window(_text())).lower()
+    reviewer = _norm(DOCS_REVIEWER_MD.read_text(encoding="utf-8")).lower()
+
+    assert "non-gating observation" in skill, (
+        "the station schema must limit out_of_scope to non-gating observations"
+    )
+    assert "never use for a new gating problem" in skill, (
+        "the station schema must forbid suppressing a new confirmation blocker"
+    )
+    assert "scoped to the delta only" not in skill, (
+        "the station schema must not impose Claude's delta scope on Codex"
+    )
+    assert "non-gating observation" in reviewer, (
+        "the reviewer schema must share the host-neutral out_of_scope boundary"
+    )
+    assert "never use for a new gating problem" in reviewer, (
+        "the reviewer must keep a new confirmation blocker in findings[]"
+    )
+
+
 def test_window_precision():
     """Windows are narrow, not whole-file greps in disguise: each
     window's distinctive phrase exists in the file exactly where
@@ -1008,7 +1126,7 @@ def test_window_precision():
     )
     # a distinctive Directive-2 sentence lives in the extracted reference
     # only, not inline in SKILL.md's convergence window or its steps.
-    distinctive = "the reviewer does not re-read the whole artifact from scratch"
+    distinctive = "both hosts receive this entire packet"
     assert distinctive in ref
     assert distinctive not in conv, (
         "Directive 2's full mechanical detail must not have leaked back "

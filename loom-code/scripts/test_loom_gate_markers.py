@@ -77,6 +77,17 @@ findings:
     note: naming nit
 """
 
+VALID_SIMPLIFICATION_LEDGER = """\
+simplification_ledger:
+  - where: loom-code/scripts/foo.py:12
+    shortcut: linear scan
+    ceiling: input exceeds 5k rows
+    upgrade: add an index
+    ref: BI-4
+    marker_valid: true
+    snapshot_read: verified
+"""
+
 
 def _write_verdict(tmp_path: Path, text: str) -> Path:
     path = tmp_path / "verdict.md"
@@ -91,6 +102,10 @@ def _with_reviewed_sha(text: str, reviewed_sha: str) -> str:
         f"standards_version: 2026-06\nreviewed_sha: {reviewed_sha}\n",
         1,
     )
+
+
+def _with_simplification_ledger(text: str, ledger: str) -> str:
+    return f"{text}{ledger}"
 
 
 # ---------------------------------------------------------------- review-pass
@@ -341,6 +356,70 @@ def test_review_pass_with_notes_accepted(tmp_path):
         (_marker_dir(repo) / "review-pass.json").read_text(encoding="utf-8")
     )
     assert data["verdict"] == "PASS_WITH_NOTES"
+
+
+def test_review_pass_valid_nonempty_simplification_ledger_mints(tmp_path):
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path, _with_simplification_ledger(VALID_VERDICT, VALID_SIMPLIFICATION_LEDGER)
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+@pytest.mark.parametrize(
+    ("ledger", "error_fragment"),
+    [
+        (
+            VALID_SIMPLIFICATION_LEDGER.replace("    upgrade: add an index\n", ""),
+            "simplification ledger entry 1: upgrade: missing or empty",
+        ),
+        (
+            VALID_SIMPLIFICATION_LEDGER.replace("marker_valid: true", "marker_valid: false"),
+            "simplification ledger entry 1: marker_valid must be true",
+        ),
+        (
+            VALID_SIMPLIFICATION_LEDGER.replace("snapshot_read: verified", "snapshot_read: failed"),
+            "simplification ledger entry 1: snapshot_read must be verified",
+        ),
+        (
+            "simplification_ledger: forged\n",
+            "simplification_ledger: malformed value",
+        ),
+        (
+            "simplification_ledger: [] # comment\n",
+            "simplification_ledger: malformed value",
+        ),
+        (
+            "simplification_ledger:\n",
+            "simplification_ledger: empty body must be written as []",
+        ),
+        (
+            "simplification_ledger:\n  # no entries\n",
+            "simplification_ledger: empty body must be written as []",
+        ),
+    ],
+)
+def test_review_pass_refuses_invalid_simplification_ledger(
+    tmp_path, capsys, ledger, error_fragment
+):
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(
+        tmp_path, _with_simplification_ledger(VALID_VERDICT, ledger)
+    )
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert error_fragment in capsys.readouterr().err
 
 
 def test_review_needs_revision_exits_3_and_writes_nothing(tmp_path):

@@ -11,16 +11,17 @@ not the thing that turns the dimension on — otherwise an orchestrator that
 forgets to pass the path silently suppresses a dimension that should have
 fired.
 
-The fix: the agent contract must say the reviewer checks the target repo for
-docs/loom/PRINCIPLES.md itself (self-derived activation), that an
-orchestrator-passed path is only an override for non-standard locations, and
-must retain the N/A-honesty rule (no findings fabricated when the file is
-genuinely absent).
+The fix: the agent contract must derive `docs/loom/PRINCIPLES.md` from the
+reviewed Git snapshot itself (self-derived activation), use a packet-provided
+repository-relative path only as a fallback for non-standard locations, and
+retain the N/A-honesty rule (no findings fabricated when both snapshot paths
+are genuinely absent).
 
 These checks assert on load-bearing PHRASES (intent), tolerant of exact
 wording, so the test guards meaning without being brittle. Stdlib only.
 """
 
+import re
 from pathlib import Path
 
 _ROOT = Path(__file__).parents[1]
@@ -56,9 +57,7 @@ def _requesting_review_text() -> str:
 
 
 def test_reviewer_derives_principles_existence_itself():
-    """The contract must instruct the agent to check the TARGET REPO for
-    docs/loom/PRINCIPLES.md itself — activation is a filesystem derivation,
-    not something only the orchestrator can supply."""
+    """The contract derives the standard path from the reviewed snapshot."""
     text = _text()
     assert "docs/loom/PRINCIPLES.md" in text
     derivation_markers = [
@@ -110,21 +109,60 @@ def test_na_honesty_retained_no_fabrication():
     )
 
 
-def test_d8_anchors_via_concrete_git_toplevel_mechanism():
-    """Round-2 fix (finding 2): D8's self-derivation must reuse the SAME
-    concrete anchor pattern R1 already uses six lines up (git rev-parse
-    --show-toplevel, then check <root>/docs/loom/PRINCIPLES.md) — not the
-    vague "checks the target repo for ... itself" phrase alone, which gives
-    no executable resolution and risks a false-N/A from a nested/worktree
-    cwd."""
+def test_d8_anchors_standard_principles_to_the_reviewed_sha():
+    """D8's standard-location discovery must read the immutable snapshot."""
     d8 = _d8_block()
-    assert "git rev-parse --show-toplevel" in d8, (
-        "code-reviewer.md's D8 block must anchor principles-conformance "
-        "derivation at the repo root via `git rev-parse --show-toplevel` "
-        "(the same concrete mechanism R1 uses for standards_version), so "
-        "worktree/nested-cwd dispatches can't false-N/A"
+    assert (
+        'git -C "<target_repo>" cat-file -e '
+        '"<reviewed_sha>:docs/loom/PRINCIPLES.md"' in d8
+    ), "D8 must check the standard path at reviewed_sha"
+    assert (
+        'git -C "<target_repo>" show '
+        '"<reviewed_sha>:docs/loom/PRINCIPLES.md"' in d8
+    ), "D8 must read the standard path at reviewed_sha"
+    assert "git rev-parse --show-toplevel" not in d8, (
+        "D8 must not discover PRINCIPLES.md through the mutable worktree"
     )
-    assert "docs/loom/PRINCIPLES.md" in d8
+
+
+def test_d8_uses_repo_relative_override_only_after_standard_snapshot_misses():
+    """A packet override is a fallback, never a replacement for standard D8."""
+    d8 = _d8_block()
+    normalized = re.sub(r"\s+", " ", d8)
+    flow = re.search(r"```bash\n(.*?)```", d8, re.DOTALL).group(1)
+    standard_probe = (
+        'git -C "<target_repo>" cat-file -e '
+        '"<reviewed_sha>:docs/loom/PRINCIPLES.md"'
+    )
+    override_probe = (
+        'git -C "<target_repo>" cat-file -e '
+        '"<reviewed_sha>:${principles_override}"'
+    )
+    override_show = (
+        'git -C "<target_repo>" show '
+        '"<reviewed_sha>:${principles_override}"'
+    )
+    assert "If the standard path exists, read it; do not inspect an override." in normalized
+    assert "only if the standard path is absent" in normalized
+    assert "repository-relative override" in normalized
+    assert standard_probe in d8
+    assert override_probe in d8
+    assert override_show in d8
+    assert "elif <principles_override> is" not in d8
+    assert "cat-file -e <principles_override>" not in d8
+    assert "show <principles_override>" not in d8
+    assert d8.index(standard_probe) < d8.index(override_probe), (
+        "D8 must try the standard snapshot path before the packet override"
+    )
+    assert re.search(
+        r"elif \[ -n \"\$\{principles_override:-\}\" \] && "
+        r"\[\[ \"\$principles_override\" != /\* \]\] && \\\n"
+        r"  git -C \"<target_repo>\" cat-file -e "
+        r"\"<reviewed_sha>:\$\{principles_override\}\"; then\n"
+        r"  git -C \"<target_repo>\" show "
+        r"\"<reviewed_sha>:\$\{principles_override\}\"",
+        flow,
+    ), "D8 must show the override only inside its validated elif branch"
 
 
 def test_requesting_review_step2_old_gating_wording_is_gone():

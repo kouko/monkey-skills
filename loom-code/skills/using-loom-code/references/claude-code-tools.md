@@ -47,9 +47,12 @@ replace the reviewed SHA or any approved resource path.
 Claude Code's `SendMessage` continuation may be used only for the same
 reviewer that raised a docs finding. After a fix, first resolve or receive a
 fresh immutable context packet for the fresh post-fix SHA, not the pre-fix
-`reviewed_sha`. Send that same reviewer the delta only, tied to the fresh
-packet; it returns `CONFIRMED_RESOLVED` or `STILL_BLOCKING` and echoes the
-fresh packet `reviewed_sha`.
+`reviewed_sha`. Send that same reviewer the complete post-fix confirmation
+packet — immutable context, original gating findings, and delta evidence —
+tied to the fresh packet. The reviewer returns only its ordinary three-valued
+verdict and echoes the fresh packet `reviewed_sha`; the orchestrator maps that
+ordinary verdict to `CONFIRMED_RESOLVED` or `STILL_BLOCKING` under the binding
+convergence contract.
 
 Record the initial round `reviewed_sha` before dispatching the first reviewer.
 If the post-fix packet `reviewed_sha` equals the initial round `reviewed_sha`,

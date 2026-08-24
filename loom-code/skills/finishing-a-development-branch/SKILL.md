@@ -112,9 +112,9 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
      surface the finding and the reviewer's reason to the user now — do NOT fold this
      into the fix→re-review loop below. That skill runs a single-round-with-confirmation
      contract: round 1 is whole-artifact and the only full review; a gating verdict is
-     fixed once, then confirmed by the SAME reviewer via SendMessage, delta-scoped, never
-     a fresh whole-corpus re-sample (mechanics live in its Directive 2, not restated
-     here). STILL_BLOCKING after that one fix cycle STOPs here — no second confirmation
+     fixed once, then confirmed through its host-specific convergence route
+     (mechanics live in its Directive 2, not restated here). STILL_BLOCKING after
+     that one fix cycle STOPs here — no second confirmation
      cycle and no fresh round 1 run without explicit user authorization.
    - Budget/quota failure fallback: if the code-reviewer subagent fails to launch due to
      budget or quota exhaustion, perform an inline B2 self-review — Read the diff, surface

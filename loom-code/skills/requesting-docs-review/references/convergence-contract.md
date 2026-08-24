@@ -9,12 +9,30 @@ Binding contract: read this before dispatching or verifying any round — the di
 - **No gating findings → done.** The review is complete.
 - **Gating verdict → fix, then delta confirmation** (Directive 2). Non-gating findings never gate; they are recorded as debt. Aggregation thresholds — what makes a finding gating vs. non-gating — are UNCHANGED from today; see `requesting-code-review/SKILL.md`'s §Aggregation rule for the exact thresholds. This contract does not restate the numbers.
 
-**2. Delta confirmation — same reviewer, delta-scoped, one cycle.** After fixing a gating verdict, dispatch the SAME reviewer that raised the finding — via `SendMessage`, never a fresh Agent dispatch — to confirm the fix. Scope is the delta only: the findings that gated and the text that changed to address them. It is never a whole-corpus re-sample; the reviewer does not re-read the whole artifact from scratch.
+**2. Post-fix confirmation — one portable packet, one cycle.** After fixing a
+gating verdict, create one **post-fix confirmation packet**. It contains the
+complete immutable context fields `target_repo`, `reviewed_sha`,
+`plugin_version`, and `resources`, plus the **original gating findings**
+verbatim and **delta evidence** identifying the text changed to address each
+finding. The post-fix `reviewed_sha` is the only snapshot either host may
+read. Both hosts receive this entire packet; delivery mechanics do not change
+the evidence being judged.
 
-The reviewer returns one of two verdicts:
+- **Claude Code** delivers the packet to the SAME reviewer via `SendMessage`.
+  Its confirmation is delta-scoped: it checks the original gating findings
+  against the delta evidence, never a fresh whole-corpus re-sample.
+- **Codex** delivers the same packet to a labelled fresh whole-artifact
+  review. The fresh reviewer still receives the original gating findings and
+  delta evidence, then reports an ordinary verdict under the packet's
+  post-fix snapshot.
 
-- **`CONFIRMED_RESOLVED`** — the gating finding is fixed. This is a terminal state (Directive 3).
-- **`STILL_BLOCKING` + reason** — the finding is not resolved, or the fix introduced a new gating problem.
+Normalize either delivery to one of two confirmation outcomes:
+
+- **`PASS` or `PASS_WITH_NOTES` → `CONFIRMED_RESOLVED`** only when every
+  original gating finding is fixed. This is a terminal state (Directive 3).
+- **`NEEDS_REVISION` → `STILL_BLOCKING` + reason**. The reason identifies an
+  original finding that survives or a new gating problem found while checking
+  the post-fix snapshot.
 
 **`STILL_BLOCKING` after this one fix cycle → STOP.** Surface the finding and the reviewer's reason to the user. Do not dispatch a second fix-and-confirm cycle, and do not fall back to a fresh whole-artifact round, without explicit user authorization.
 

@@ -104,6 +104,14 @@ _DOCS_ARM_DIMENSIONS = {
     "missing-population",
 }
 _TOP_KEY_RE = re.compile(r"^\S+\s*:")
+_SIMPLIFICATION_LEDGER_RE = re.compile(
+    r"^simplification_ledger:[^\S\n]*(\[\])?[^\S\n]*$"
+)
+_SIMPLIFICATION_LEDGER_ANCHOR_RE = re.compile(r"^simplification_ledger:")
+_LEDGER_LIST_FIELD_RE = re.compile(
+    r"^\s*-\s*([a-z_]+):[^\S\n]*(.*)$"
+)
+_LEDGER_FIELD_RE = re.compile(r"^\s+([a-z_]+):[^\S\n]*(.*)$")
 _PASSED_RE = re.compile(r"(\d+) passed")
 # where: value counts as location-like if it has a path separator /
 # extension dot, or is a bare commit SHA (reviewer output contract
@@ -444,7 +452,94 @@ def validate_verdict_text(text: str) -> tuple[str | None, list[str]]:
         problems.append("dimension_scores: block missing")
 
     problems.extend(_finding_problems(text))
+    problems.extend(_simplification_ledger_problems(text))
     return verdict, problems
+
+
+def _simplification_ledger_problems(text: str) -> list[str]:
+    """Validate an optional, harvested simplification ledger.
+
+    Older verdict artifacts did not carry this field, so an absent ledger
+    remains schema-valid.  When a review supplies one, however, every
+    nonempty entry is gate evidence: each required marker field must be
+    present, the reviewer must have marked it valid, and the evidence must
+    have been read from the reviewed snapshot.  A failure must therefore
+    refuse the pass marker instead of letting a prose-only ledger claim an
+    all-clear.
+    """
+    lines = text.splitlines()
+    headings = [
+        index
+        for index, line in enumerate(lines)
+        if _SIMPLIFICATION_LEDGER_ANCHOR_RE.match(line)
+    ]
+    if not headings:
+        return []
+    if len(headings) > 1:
+        return ["simplification_ledger: must appear at most once"]
+
+    start = headings[0]
+    heading = _SIMPLIFICATION_LEDGER_RE.match(lines[start])
+    if heading is None:
+        return [
+            "simplification_ledger: malformed value; use [] or an indented list"
+        ]
+    if heading.group(1) == "[]":
+        return []
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        if _TOP_KEY_RE.match(lines[index]):
+            end = index
+            break
+    block = lines[start + 1 : end]
+    meaningful = [line for line in block if line.strip() and not line.lstrip().startswith("#")]
+    if not meaningful:
+        return ["simplification_ledger: empty body must be written as []"]
+
+    entry_starts = [
+        index for index, line in enumerate(block) if _LEDGER_LIST_FIELD_RE.match(line)
+    ]
+    if not entry_starts:
+        return ["simplification_ledger: nonempty ledger must be a list of entries"]
+
+    problems: list[str] = []
+    required = ("where", "shortcut", "ceiling", "upgrade", "ref")
+    for number, start_index in enumerate(entry_starts, start=1):
+        end_index = (
+            entry_starts[number]
+            if number < len(entry_starts)
+            else len(block)
+        )
+        fields: dict[str, list[str]] = {}
+        entry_lines = block[start_index:end_index]
+        for offset, line in enumerate(entry_lines):
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            match = (
+                _LEDGER_LIST_FIELD_RE.match(line)
+                if offset == 0
+                else _LEDGER_FIELD_RE.match(line)
+            )
+            if match is None:
+                problems.append(
+                    f"simplification ledger entry {number}: malformed field line"
+                )
+                continue
+            fields.setdefault(match.group(1), []).append(match.group(2).strip())
+
+        for field in required:
+            values = fields.get(field, [])
+            if len(values) != 1 or not values[0]:
+                problems.append(
+                    f"simplification ledger entry {number}: {field}: missing or empty"
+                )
+        for field, expected in (("marker_valid", "true"), ("snapshot_read", "verified")):
+            values = fields.get(field, [])
+            if len(values) != 1 or values[0].lower() != expected:
+                problems.append(
+                    f"simplification ledger entry {number}: {field} must be {expected}"
+                )
+    return problems
 
 
 def _terminal_reviewed_sha(text: str) -> tuple[str | None, str | None]:

@@ -104,6 +104,12 @@ that same packet value.
 
 ## Rule R1b — Cross-read repository citations from that same snapshot
 
+Repository artifact paths are repository-relative to `target_repo` before
+they are used as `<path>` in an immutable snapshot command. Reject an
+absolute repository artifact path as malformed; it could designate mutable
+filesystem state rather than a committed artifact. This includes changed
+artifacts, Specs, task context, and repository citation cross-reads.
+
 When a role contract requires a repository-path cross-read to confirm a
 citation, read that path with
 `git -C "<target_repo>" show <reviewed_sha>:<path>`. Never read it from the
@@ -346,10 +352,10 @@ explicit and avoids the validator warning.
 
 ```
 ### Artifact
-{git diff <base>..<reviewed_sha> OR absolute paths to changed files at <reviewed_sha>}
+{git diff <base>..<reviewed_sha> OR repository-relative paths to changed files at <reviewed_sha>}
 
 ### Spec
-{absolute path to TECH-SPEC.md / PRODUCT-SPEC.md / inline plan doc}
+{repository-relative path to TECH-SPEC.md / PRODUCT-SPEC.md at <reviewed_sha> / inline plan doc}
 
 ### Immutable review context (copy verbatim from the shared packet)
 - target_repo: {absolute target repository path}
@@ -369,7 +375,7 @@ Read every path artifact from the immutable commit snapshot:
 {resources.spec_consistency_checklist}
 
 ### Task context (informational; the implementer worked from this)
-{absolute paths to task description, optional}
+{repository-relative paths to task description at <reviewed_sha>, optional}
 ```
 
 You **must** load the Spec and the Checklist via the Read tool before

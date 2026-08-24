@@ -51,7 +51,7 @@ def test_codex_adapter_derives_installed_root_without_cache_guessing() -> None:
     text = _normalise(_text())
 
     assert "loaded `codex-tools.md` absolute path" in text
-    assert "$(cd \"$(dirname \"$loaded_reference_path\")/../../..\" && pwd -P)" in text
+    assert "$(cd \"$(dirname \"$canonical_reference\")/../../..\" && pwd -P)" in text
     assert 'test -f "$plugin_root/scripts/review_context.py" || {' in _text()
     assert "exit 1" in _text()
     assert "refuse the review" in text
@@ -71,6 +71,17 @@ def test_codex_adapter_rejects_an_untrusted_loaded_reference_path() -> None:
     assert "not use the current working directory as a fallback" in _normalise(source)
 
 
+def test_codex_adapter_requires_canonical_expected_reference_layout() -> None:
+    """A same-named foreign file must not select a foreign plugin root."""
+    source = _text()
+
+    assert "canonical_reference" in source
+    assert "skills/using-loom-code/references/codex-tools.md" in source
+    assert '"$canonical_reference" != "$expected_reference"' in source
+    assert "must match the installed loom-code reference layout" in source
+    assert '[ -L "$loaded_reference_path" ]' in source
+
+
 def test_codex_adapter_requires_labelled_fresh_whole_artifact_docs_review() -> None:
     """A docs fix gets a new SHA review, never a fictional SendMessage reuse."""
     text = _normalise(_text())
@@ -81,3 +92,35 @@ def test_codex_adapter_requires_labelled_fresh_whole_artifact_docs_review() -> N
     assert "echoes that fresh packet's `reviewed_sha`" in text
     assert "`CONFIRMED_RESOLVED` or `STILL_BLOCKING`" in text
     assert "must differ from the initial packet's `reviewed_sha`" in text
+
+
+def test_codex_post_fix_maps_to_public_reviewer_agent_paths() -> None:
+    """Codex dispatches role prompts from the loaded installed plugin root."""
+    source = _text()
+    plugin_root = CODEX_TOOLS.parents[3]
+
+    assert "skills/subagent-driven-development/agents/*.md" not in source
+    for role in (
+        "implementer",
+        "spec-reviewer",
+        "code-quality-reviewer",
+        "code-reviewer",
+        "docs-reviewer",
+    ):
+        public_path = f"loom-code/agents/{role}.md"
+        assert public_path in source
+        assert (plugin_root / "agents" / f"{role}.md").is_file()
+        assert f"$plugin_root/agents/{role}.md" in source
+
+    assert "consumer checkout" in source
+    assert "current working directory as a fallback" in source
+    guard = re.search(
+        r'for role_prompt in .*?; do\n(?P<body>.*?)\ndone', source, re.DOTALL
+    )
+    assert guard, "runtime reviewer-prompt loop is absent"
+    assert 'test -f "$role_prompt" || {' in guard["body"]
+    assert (
+        'echo "reviewer prompt is absent from the installed plugin: '
+        '$role_prompt" >&2'
+    ) in guard["body"]
+    assert "exit 1" in guard["body"]

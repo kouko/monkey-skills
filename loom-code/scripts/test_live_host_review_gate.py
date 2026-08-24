@@ -12,15 +12,22 @@ import os
 import shutil
 import subprocess
 import sys
-import tempfile
-import atexit
 from pathlib import Path
 
 import live_host_review_gate as gate
 import pytest
 
-_TEMP_SANDBOXES: list[tempfile.TemporaryDirectory[str]] = []
-atexit.register(lambda: [sandbox.cleanup() for sandbox in _TEMP_SANDBOXES])
+@pytest.fixture(autouse=True)
+def _named_claude_test_profile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> Path:
+    """Give every unit test the one supported, private Claude profile."""
+
+    home = tmp_path / "home"
+    profile = home / ".claude-test"
+    profile.mkdir(parents=True, mode=0o700)
+    monkeypatch.setattr(gate.Path, "home", classmethod(lambda _cls: home))
+    return profile
 
 
 def _candidate(tmp_path: Path) -> Path:
@@ -58,25 +65,73 @@ def _auth(tmp_path: Path) -> Path:
 
 
 def _claude_config(tmp_path: Path) -> Path:
-    """Represents a user-created, preauthenticated disposable config root."""
+    """Return the test's stand-in for the fixed ~/.claude-test profile."""
 
-    sandbox = tempfile.TemporaryDirectory(prefix="loom-live-claude-auth.", dir="/tmp")
-    _TEMP_SANDBOXES.append(sandbox)
-    config = Path(sandbox.name).resolve()
-    config.chmod(0o700)
-    return config
+    del tmp_path
+    return Path.home() / ".claude-test"
 
 
 def _main_args(
     candidate: Path, auth: Path, config: Path, report: Path
 ) -> list[str]:
+    del config
     return [
         "--candidate", str(candidate),
         "--codex-auth-source", str(auth),
-        "--claude-config-dir", str(config),
-        "--allow-mutable-claude-sandbox", str(config),
         "--report", str(report),
     ]
+
+
+def test_live_gate_uses_only_named_claude_test_profile_without_home_rewrite(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    candidate = _candidate(tmp_path)
+    auth = _auth(tmp_path)
+    profile = _claude_config(tmp_path)
+    profile_marker = profile / "plugin-state"
+    profile_marker.write_text("before", encoding="utf-8")
+    monkeypatch.setenv("HOME", "daily-home-must-not-be-rewritten")
+
+    workspace = gate.create_workspace(candidate, auth)
+    captured: list[dict[str, str]] = []
+
+    def capture(_command, *, cwd, env):
+        del cwd
+        captured.append(dict(env))
+        return 0, ""
+
+    monkeypatch.setattr(gate, "_run", capture)
+    try:
+        assert workspace.claude_config_dir == profile
+        assert workspace.claude_config_source == profile
+        assert gate.check_claude_auth(command_runner=capture) is None
+        gate._real_host_runner(workspace, "claude", "invalid-reference")
+        assert all(env["CLAUDE_CONFIG_DIR"] == str(profile) for env in captured)
+        assert all(env["HOME"] == "daily-home-must-not-be-rewritten" for env in captured)
+        assert profile_marker.read_text(encoding="utf-8") == "before"
+    finally:
+        gate.cleanup_workspace(workspace)
+
+
+def test_part4_runner_contract_has_no_removed_claude_sandbox_flags() -> None:
+    """Active Part 4 records describe the fixed test profile, not removed flags."""
+
+    repo_root = Path(__file__).resolve().parents[2]
+    records = (
+        repo_root / "docs/loom/specs/2026-08-24-cross-host-review-gate-hardening-part-4.md",
+        repo_root / "docs/loom/plans/2026-08-24-cross-host-review-gate-hardening-part-4.md",
+    )
+    removed_runner_contract = (
+        "--allow-mutable-claude-sandbox",
+        "--claude-config-dir",
+        "user-provided Claude-config mutation",
+    )
+    assert "protected daily-state mutation" in records[1].read_text(encoding="utf-8")
+    for record in records:
+        text = record.read_text(encoding="utf-8")
+        assert "~/.claude-test" in text
+        assert "--permission-mode bypassPermissions" in text
+        assert not any(stale_text in text for stale_text in removed_runner_contract)
 
 
 def _transcript(workspace: gate.Workspace, host: str, case: str) -> str:
@@ -197,14 +252,10 @@ def test_gate_requires_both_caller_supplied_auth_bootstraps(tmp_path: Path) -> N
     assert result != 0
     assert not (tmp_path / "report.md").exists()
 
-    with pytest.raises(SystemExit):
-        gate.main(
-            [
-                "--candidate", str(candidate),
-                "--codex-auth-source", str(_auth(tmp_path)),
-                "--report", str(tmp_path / "report.md"),
-            ]
-        )
+    assert gate.main(
+        _main_args(candidate, _auth(tmp_path), config, tmp_path / "valid.md"),
+        host_runner=_fake_result,
+    ) == 0
 
 
 def test_gate_fails_closed_when_any_required_host_case_fails(tmp_path: Path) -> None:
@@ -262,83 +313,119 @@ def test_gate_uses_read_only_copies_and_cleans_temporary_auth(tmp_path: Path) ->
     rendered = report.read_text(encoding="utf-8")
     assert "PASS" in rendered
     assert "finally cleanup: PASS" in rendered
-    assert "pre/post user state: unchanged" in rendered
+    assert "protected daily state: unchanged" in rendered
     assert "cli versions: Claude Code=not-probed; Codex=not-probed" in rendered
     assert str(candidate) not in rendered
     assert str(auth) not in rendered
     assert str(claude_config) not in rendered
 
 
-def test_claude_config_must_be_a_disposable_tmp_sandbox_not_a_user_config(tmp_path: Path) -> None:
+def test_codex_prepares_a_legacy_install_then_replaces_it_with_candidate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The release gate proves the installed root changes across an upgrade."""
+
+    workspace = gate.create_workspace(
+        _candidate(tmp_path), _auth(tmp_path), _claude_config(tmp_path)
+    )
+    commands: list[tuple[str, ...]] = []
+    legacy_root = workspace.codex_home / "plugins" / "legacy" / "loom-code"
+    candidate_root = workspace.codex_home / "plugins" / "candidate" / "loom-code"
+
+    def fake_run(command, **_kwargs):
+        commands.append(tuple(command))
+        if command[:3] == ("codex", "plugin", "add") and command[3] == "loom-code@legacy-live-host-gate":
+            (legacy_root / ".codex-plugin").mkdir(parents=True)
+            (legacy_root / ".codex-plugin" / "plugin.json").write_text(
+                '{"name": "loom-code", "version": "legacy"}\n', encoding="utf-8"
+            )
+        elif command[:3] == ("codex", "plugin", "remove"):
+            shutil.rmtree(legacy_root)
+        elif command[:3] == ("codex", "plugin", "add"):
+            shutil.copytree(workspace.candidate_root, candidate_root)
+            candidate_root.chmod(0o755)
+            (candidate_root / ".codex-plugin").mkdir(exist_ok=True)
+            (candidate_root / ".codex-plugin" / "plugin.json").write_text(
+                '{"name": "loom-code", "version": "candidate"}\n', encoding="utf-8"
+            )
+        return 0, "ok"
+
+    monkeypatch.setattr(gate, "_run", fake_run)
+    try:
+        assert gate._prepare_codex(workspace) == (True, "")
+        assert workspace.expected_root("codex") == candidate_root.resolve()
+        assert (workspace.expected_root("codex") / "scripts/review_context.py").is_file()
+        assert not legacy_root.exists()
+        assert commands == [
+            ("codex", "plugin", "marketplace", "add", str(workspace.temporary_root / "legacy-marketplace")),
+            ("codex", "plugin", "add", "loom-code@legacy-live-host-gate"),
+            ("codex", "plugin", "remove", "loom-code@legacy-live-host-gate"),
+            ("codex", "plugin", "marketplace", "add", str(workspace.temporary_root / "marketplace")),
+            ("codex", "plugin", "add", "loom-code@live-host-gate"),
+        ]
+    finally:
+        gate.cleanup_workspace(workspace)
+
+
+def test_claude_config_is_fixed_to_the_named_test_profile(tmp_path: Path) -> None:
     non_temporary = tmp_path / "not-disposable"
     non_temporary.mkdir(mode=0o700)
-    with pytest.raises(ValueError, match="temporary"):
+    with pytest.raises(ValueError, match="named"):
         gate.create_workspace(_candidate(tmp_path), _auth(tmp_path), non_temporary)
 
 
-def test_claude_config_rejects_a_symlink_or_symlinked_ancestor(tmp_path: Path) -> None:
-    candidate = _candidate(tmp_path)
-    auth = _auth(tmp_path)
-    real_config = _claude_config(tmp_path)
-    direct_link = tmp_path / "loom-live-claude-auth.direct-link"
-    direct_link.symlink_to(real_config, target_is_directory=True)
-    with pytest.raises(ValueError, match="symlink"):
-        gate.create_workspace(candidate, auth, direct_link)
-
-    real_parent = tmp_path / "real-parent"
-    real_parent.mkdir()
-    nested = real_parent / "loom-live-claude-auth.nested"
-    nested.mkdir(mode=0o700)
-    parent_link = tmp_path / "parent-link"
-    parent_link.symlink_to(real_parent, target_is_directory=True)
-    with pytest.raises(ValueError, match="symlink"):
-        gate.create_workspace(
-            candidate, auth, parent_link / nested.name
-        )
-
-
-def test_claude_config_accepts_only_the_macos_system_tmp_alias(tmp_path: Path) -> None:
-    lexical_tmp = Path(
-        tempfile.mkdtemp(prefix="loom-live-claude-auth.", dir="/tmp")
-    )
-    lexical_tmp.chmod(0o700)
-    assert str(lexical_tmp).startswith("/tmp/")
-    assert lexical_tmp.resolve().parent == Path("/private/tmp")
-    try:
-        workspace = gate.create_workspace(
-            _candidate(tmp_path), _auth(tmp_path), lexical_tmp
-        )
-        try:
-            assert workspace.claude_config_source == lexical_tmp.resolve()
-            assert workspace.claude_config_dir == lexical_tmp
-            assert workspace.claude_config_source.name == lexical_tmp.name
-        finally:
-            gate.cleanup_workspace(workspace)
-    finally:
-        shutil.rmtree(lexical_tmp)
-
-
-def test_claude_auth_validates_canonical_path_but_exports_lexical_tmp(
-    tmp_path: Path,
+def test_named_claude_test_profile_accepts_dotfiles_standard_mode(
+    tmp_path: Path, _named_claude_test_profile: Path
 ) -> None:
-    lexical_tmp = Path(
-        tempfile.mkdtemp(prefix="loom-live-claude-auth.", dir="/tmp")
-    )
-    lexical_tmp.chmod(0o700)
+    """The established dotfiles profiles are directories with mode 0755."""
+
+    _named_claude_test_profile.chmod(0o755)
+    calls: list[tuple[str, ...]] = []
+
+    def authenticated(command, **_kwargs):
+        calls.append(tuple(command))
+        return 0, "logged in"
+
+    workspace = gate.create_workspace(_candidate(tmp_path), _auth(tmp_path))
+    try:
+        assert workspace.claude_config_source == _named_claude_test_profile
+        assert gate.check_claude_auth(command_runner=authenticated) is None
+        assert calls == [("claude", "auth", "status", "--text")]
+    finally:
+        gate.cleanup_workspace(workspace)
+
+
+@pytest.mark.parametrize("profile_kind", ("symlink", "regular-file"))
+def test_named_claude_test_profile_still_rejects_non_directory_or_symlink(
+    tmp_path: Path,
+    _named_claude_test_profile: Path,
+    profile_kind: str,
+) -> None:
+    _named_claude_test_profile.rmdir()
+    if profile_kind == "symlink":
+        target = tmp_path / "profile-target"
+        target.mkdir()
+        _named_claude_test_profile.symlink_to(target, target_is_directory=True)
+    else:
+        _named_claude_test_profile.write_text("not a directory", encoding="utf-8")
+
+    with pytest.raises(ValueError):
+        gate.create_workspace(_candidate(tmp_path), _auth(tmp_path))
+
+
+def test_claude_auth_exports_only_the_named_test_profile(tmp_path: Path) -> None:
     seen_env: dict[str, str] = {}
 
     def allowed(_command, **kwargs):
         seen_env.update(kwargs["env"])
         return 0, "logged in"
 
-    try:
-        assert gate.check_claude_auth(lexical_tmp, command_runner=allowed) is None
-        assert seen_env["CLAUDE_CONFIG_DIR"] == str(lexical_tmp)
-    finally:
-        shutil.rmtree(lexical_tmp)
+    assert gate.check_claude_auth(command_runner=allowed) is None
+    assert seen_env["CLAUDE_CONFIG_DIR"] == str(_claude_config(tmp_path))
+    assert "HOME" in seen_env
 
 
-def test_cli_requires_explicit_matching_mutable_claude_sandbox_authorization(
+def test_cli_rejects_arbitrary_claude_profile_flags(
     tmp_path: Path,
 ) -> None:
     candidate = _candidate(tmp_path)
@@ -357,25 +444,11 @@ def test_cli_requires_explicit_matching_mutable_claude_sandbox_authorization(
             host_runner=lambda *_args: pytest.fail("runner must not start"),
         )
 
-    assert gate.main(
-        [*common, "--allow-mutable-claude-sandbox", str(tmp_path / "wrong")],
-        host_runner=lambda *_args: pytest.fail("runner must not start"),
-    ) == 2
-
-
-def test_claude_tmp_sandbox_is_used_directly_and_is_not_runner_deleted(tmp_path: Path) -> None:
-    sandbox = Path(tempfile.mkdtemp(prefix="loom-live-claude-auth.", dir="/tmp")).resolve()
-    sandbox.chmod(0o700)
-    try:
-        workspace = gate.create_workspace(_candidate(tmp_path), _auth(tmp_path), sandbox)
-        try:
-            assert workspace.claude_config_dir == sandbox
-            assert not workspace.claude_config_dir.is_relative_to(workspace.temporary_root)
-        finally:
-            gate.cleanup_workspace(workspace)
-        assert sandbox.is_dir()
-    finally:
-        shutil.rmtree(sandbox)
+    with pytest.raises(SystemExit):
+        gate.main(
+            [*common, "--allow-mutable-claude-sandbox", str(tmp_path / "wrong")],
+            host_runner=lambda *_args: pytest.fail("runner must not start"),
+        )
 
 
 def test_each_valid_station_session_must_bind_to_the_one_candidate_packet(tmp_path: Path) -> None:
@@ -652,7 +725,8 @@ def test_real_host_argv_is_read_only_and_uses_native_station_slash_command(tmp_p
         claude = gate.host_argv_for_case(workspace, "claude", "valid-code")
         codex = gate.host_argv_for_case(workspace, "codex", "valid-code")
         assert "Write" not in claude and "Edit" not in claude
-        assert "dontAsk" in claude
+        assert "bypassPermissions" in claude
+        assert "dontAsk" not in claude
         assert "workspace-write" in codex
         assert any(value.startswith("/loom-code:requesting-code-review") for value in claude)
         assert any(value.startswith("/loom-code:requesting-code-review") for value in codex)
@@ -724,6 +798,8 @@ def test_real_host_runner_purges_inherited_live_gate_environment(
             assert sentinel == ""
             present = {key for key in env if key.startswith("LOOM_LIVE_GATE_")}
             assert present == (set() if index % 2 == 0 else expected_valid)
+            if index < 2:
+                assert env["HOME"] == os.environ["HOME"]
     finally:
         gate.cleanup_workspace(workspace)
 
@@ -909,12 +985,11 @@ def test_claude_auth_check_uses_the_noninteractive_text_status_form(tmp_path: Pa
     assert seen == [("claude", "auth", "status", "--text")]
 
 
-def test_claude_auth_check_rejects_a_symlink_path_before_running_the_cli(
+def test_claude_auth_check_rejects_any_non_profile_path_before_running_the_cli(
     tmp_path: Path,
 ) -> None:
-    config = _claude_config(tmp_path)
     caller_path = tmp_path / "caller-spelling"
-    caller_path.symlink_to(config, target_is_directory=True)
+    caller_path.mkdir()
     called = False
 
     def allowed(_command, **_kwargs):
@@ -923,7 +998,7 @@ def test_claude_auth_check_rejects_a_symlink_path_before_running_the_cli(
         return 0, "logged in"
 
     assert gate.check_claude_auth(caller_path, command_runner=allowed) == (
-        "Claude config path contains symlink"
+        "Claude live gate uses only the named ~/.claude-test profile"
     )
     assert not called
 
@@ -942,8 +1017,87 @@ def test_caller_claude_config_mutation_fails_closed_and_redacts_its_path(tmp_pat
         _main_args(candidate, auth, config, report), host_runner=mutating_host
     ) == 0
     rendered = report.read_text(encoding="utf-8")
-    assert "Claude sandbox metadata: CHANGED (authorized disposable sandbox)" in rendered
+    assert "Claude test-profile metadata: CHANGED (expected dedicated profile)" in rendered
+    assert "protected daily state: unchanged" in rendered
     assert str(config) not in rendered
+
+
+@pytest.mark.parametrize(
+    "daily_path",
+    (".claude/settings.local.json", ".codex/config.toml"),
+)
+def test_daily_configuration_mutation_fails_closed(
+    tmp_path: Path, daily_path: str,
+) -> None:
+    candidate = _candidate(tmp_path)
+    auth = _auth(tmp_path)
+    report = tmp_path / "report.md"
+    daily_metadata = Path.home() / daily_path
+
+    def mutating_host(workspace: gate.Workspace, host: str, case: str) -> gate.HostResult:
+        daily_metadata.parent.mkdir(parents=True, exist_ok=True)
+        daily_metadata.write_text("changed", encoding="utf-8")
+        return _fake_result(workspace, host, case)
+
+    assert gate.main(
+        _main_args(candidate, auth, _claude_config(tmp_path), report),
+        host_runner=mutating_host,
+    ) == 1
+    rendered = report.read_text(encoding="utf-8")
+    assert "status: FAIL" in rendered
+    assert "protected daily state: CHANGED" in rendered
+    assert "- protected daily state changed during live probe" in rendered
+    assert str(daily_metadata) not in rendered
+
+
+def test_user_state_snapshot_covers_configuration_and_plugins(tmp_path: Path) -> None:
+    for relative_path in (
+        ".claude/settings.json",
+        ".claude/plugins/installed_plugins.json",
+        ".codex/config.toml",
+        ".codex/auth.json",
+        ".codex/plugins/cache/example/.codex-plugin/plugin.json",
+    ):
+        metadata = Path.home() / relative_path
+        metadata.parent.mkdir(parents=True, exist_ok=True)
+        metadata.write_text("same metadata shape", encoding="utf-8")
+
+    snapshot = gate._snapshot_user_state()
+
+    names = {entry[0] for entry in snapshot}
+    assert ".claude/settings.json" in names
+    assert ".claude/plugins/installed_plugins.json" in names
+    assert ".codex/config.toml" in names
+    assert ".codex/auth.json" in names
+    assert ".codex/plugins/cache/example/.codex-plugin/plugin.json" in names
+
+
+def test_user_state_snapshot_ignores_runtime_sessions(tmp_path: Path) -> None:
+    for relative_path in (
+        ".claude/projects/session-state.json",
+        ".codex/plugins/cache/example/runtime.log",
+    ):
+        runtime_metadata = Path.home() / relative_path
+        runtime_metadata.parent.mkdir(parents=True, exist_ok=True)
+        runtime_metadata.write_text("runtime only", encoding="utf-8")
+
+    names = {entry[0] for entry in gate._snapshot_user_state()}
+
+    assert ".claude/projects/session-state.json" not in names
+    assert ".codex/plugins/cache/example/runtime.log" not in names
+
+
+def test_user_state_snapshot_follows_daily_settings_symlink(tmp_path: Path) -> None:
+    target = tmp_path / "managed-settings.json"
+    target.write_text('{"mode":"before"}', encoding="utf-8")
+    settings = Path.home() / ".claude/settings.json"
+    settings.parent.mkdir(parents=True, exist_ok=True)
+    settings.symlink_to(target)
+
+    before = gate._snapshot_user_state()
+    target.write_text('{"mode":"after"}', encoding="utf-8")
+
+    assert before != gate._snapshot_user_state()
 
 
 def test_structured_skill_read_parser_rejects_cross_field_substring_spoof(tmp_path: Path) -> None:

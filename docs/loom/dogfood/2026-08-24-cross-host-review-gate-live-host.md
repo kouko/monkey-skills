@@ -2,11 +2,11 @@
 
 status: PASS
 candidate root: [CANDIDATE_PLUGIN]
-consumer SHA: ea8af1ae459a99a7511ac3f810c083acaabd78b6
+consumer SHA: f4f341140825049ec5ecf78520c4098b6295fc6b
 cli versions: Claude Code=2.1.241 (Claude Code); Codex=codex-cli 0.149.0
-authentication: caller-supplied private Codex file is copied only into disposable CODEX_HOME; the explicitly authorized disposable Claude sandbox is used directly and never deleted.
-pre/post user state: unchanged
-Claude sandbox metadata: CHANGED (authorized disposable sandbox)
+authentication: caller-supplied private Codex file is copied only into disposable CODEX_HOME; Claude uses only the named ~/.claude-test profile.
+protected daily state: unchanged
+Claude test-profile metadata: CHANGED (expected dedicated profile)
 finally cleanup: PASS
 
 ## Cases
@@ -16,10 +16,10 @@ exit: 0
 output:
 ```text
 CANDIDATE_ROOT: [CANDIDATE_PLUGIN]
-REVIEWED_SHA: ea8af1ae459a99a7511ac3f810c083acaabd78b6
+REVIEWED_SHA: f4f341140825049ec5ecf78520c4098b6295fc6b
 PACKET_SOURCE: scripts/review_context.py
 HOST_SKILL_INVOKED: CODE
-CODE_STATION_PACKET: [CANDIDATE_PLUGIN] ea8af1ae459a99a7511ac3f810c083acaabd78b6
+CODE_STATION_PACKET: [CANDIDATE_PLUGIN] f4f341140825049ec5ecf78520c4098b6295fc6b
 ```
 ### claude / valid-docs
 command: claude session invocation [REDACTED_ARGUMENTS]
@@ -27,10 +27,10 @@ exit: 0
 output:
 ```text
 CANDIDATE_ROOT: [CANDIDATE_PLUGIN]
-REVIEWED_SHA: ea8af1ae459a99a7511ac3f810c083acaabd78b6
+REVIEWED_SHA: f4f341140825049ec5ecf78520c4098b6295fc6b
 PACKET_SOURCE: scripts/review_context.py
 HOST_SKILL_INVOKED: DOCS
-DOCS_STATION_PACKET: [CANDIDATE_PLUGIN] ea8af1ae459a99a7511ac3f810c083acaabd78b6
+DOCS_STATION_PACKET: [CANDIDATE_PLUGIN] f4f341140825049ec5ecf78520c4098b6295fc6b
 ```
 ### claude / valid-mixed
 command: claude session invocation [REDACTED_ARGUMENTS]
@@ -38,10 +38,10 @@ exit: 0
 output:
 ```text
 CANDIDATE_ROOT: [CANDIDATE_PLUGIN]
-REVIEWED_SHA: ea8af1ae459a99a7511ac3f810c083acaabd78b6
+REVIEWED_SHA: f4f341140825049ec5ecf78520c4098b6295fc6b
 PACKET_SOURCE: scripts/review_context.py
 HOST_SKILL_INVOKED: MIXED
-MIXED_STATION_PACKET: [CANDIDATE_PLUGIN] ea8af1ae459a99a7511ac3f810c083acaabd78b6
+MIXED_STATION_PACKET: [CANDIDATE_PLUGIN] f4f341140825049ec5ecf78520c4098b6295fc6b
 ```
 ### claude / valid-sdd
 command: claude session invocation [REDACTED_ARGUMENTS]
@@ -49,10 +49,10 @@ exit: 0
 output:
 ```text
 CANDIDATE_ROOT: [CANDIDATE_PLUGIN]
-REVIEWED_SHA: ea8af1ae459a99a7511ac3f810c083acaabd78b6
+REVIEWED_SHA: f4f341140825049ec5ecf78520c4098b6295fc6b
 PACKET_SOURCE: scripts/review_context.py
 HOST_SKILL_INVOKED: SDD
-SDD_STATION_PACKET: [CANDIDATE_PLUGIN] ea8af1ae459a99a7511ac3f810c083acaabd78b6
+SDD_STATION_PACKET: [CANDIDATE_PLUGIN] f4f341140825049ec5ecf78520c4098b6295fc6b
 ```
 ### claude / invalid-reference
 command: claude session invocation [REDACTED_ARGUMENTS]
@@ -74,10 +74,10 @@ exit: 0
 output:
 ```text
 CANDIDATE_ROOT: [CANDIDATE_PLUGIN]
-REVIEWED_SHA: ea8af1ae459a99a7511ac3f810c083acaabd78b6
+REVIEWED_SHA: f4f341140825049ec5ecf78520c4098b6295fc6b
 PACKET_SOURCE: scripts/review_context.py
 HOST_SKILL_INVOKED: CODE
-CODE_STATION_PACKET: [CANDIDATE_PLUGIN] ea8af1ae459a99a7511ac3f810c083acaabd78b6
+CODE_STATION_PACKET: [CANDIDATE_PLUGIN] f4f341140825049ec5ecf78520c4098b6295fc6b
 ```
 ### codex / valid-docs
 command: codex session invocation [REDACTED_ARGUMENTS]
@@ -85,10 +85,10 @@ exit: 0
 output:
 ```text
 CANDIDATE_ROOT: [CANDIDATE_PLUGIN]
-REVIEWED_SHA: ea8af1ae459a99a7511ac3f810c083acaabd78b6
+REVIEWED_SHA: f4f341140825049ec5ecf78520c4098b6295fc6b
 PACKET_SOURCE: scripts/review_context.py
 HOST_SKILL_INVOKED: DOCS
-DOCS_STATION_PACKET: [CANDIDATE_PLUGIN] ea8af1ae459a99a7511ac3f810c083acaabd78b6
+DOCS_STATION_PACKET: [CANDIDATE_PLUGIN] f4f341140825049ec5ecf78520c4098b6295fc6b
 ```
 ### codex / valid-mixed
 command: codex session invocation [REDACTED_ARGUMENTS]
@@ -96,10 +96,10 @@ exit: 0
 output:
 ```text
 CANDIDATE_ROOT: [CANDIDATE_PLUGIN]
-REVIEWED_SHA: ea8af1ae459a99a7511ac3f810c083acaabd78b6
+REVIEWED_SHA: f4f341140825049ec5ecf78520c4098b6295fc6b
 PACKET_SOURCE: scripts/review_context.py
 HOST_SKILL_INVOKED: MIXED
-MIXED_STATION_PACKET: [CANDIDATE_PLUGIN] ea8af1ae459a99a7511ac3f810c083acaabd78b6
+MIXED_STATION_PACKET: [CANDIDATE_PLUGIN] f4f341140825049ec5ecf78520c4098b6295fc6b
 ```
 ### codex / valid-sdd
 command: codex session invocation [REDACTED_ARGUMENTS]
@@ -107,10 +107,10 @@ exit: 0
 output:
 ```text
 CANDIDATE_ROOT: [CANDIDATE_PLUGIN]
-REVIEWED_SHA: ea8af1ae459a99a7511ac3f810c083acaabd78b6
+REVIEWED_SHA: f4f341140825049ec5ecf78520c4098b6295fc6b
 PACKET_SOURCE: scripts/review_context.py
 HOST_SKILL_INVOKED: SDD
-SDD_STATION_PACKET: [CANDIDATE_PLUGIN] ea8af1ae459a99a7511ac3f810c083acaabd78b6
+SDD_STATION_PACKET: [CANDIDATE_PLUGIN] f4f341140825049ec5ecf78520c4098b6295fc6b
 ```
 ### codex / invalid-reference
 command: codex session invocation [REDACTED_ARGUMENTS]

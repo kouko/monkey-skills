@@ -18,6 +18,7 @@ REVIEWERS = {
     "spec-reviewer": ROOT / "agents" / "spec-reviewer.md",
     "code-quality-reviewer": ROOT / "agents" / "code-quality-reviewer.md",
 }
+DISCIPLINE = ROOT / "scripts" / "_reviewer-discipline.md"
 PACKET_FIELDS = ("target_repo", "reviewed_sha", "plugin_version", "resources")
 
 
@@ -128,6 +129,49 @@ def test_all_reviewers_read_only_the_immutable_snapshot():
         )
 
 
+def test_reviewer_artifact_paths_are_repo_relative_before_sha_reads():
+    """Reviewed repository evidence cannot name a mutable absolute path."""
+    required = (
+        "Repository artifact paths are repository-relative",
+        "Reject an absolute repository artifact path as malformed",
+        'git -C "<target_repo>" show <reviewed_sha>:<path>',
+        "Never read it from the mutable working tree",
+    )
+    shared = re.sub(r"\s+", " ", DISCIPLINE.read_text(encoding="utf-8")).lower()
+    for phrase in required:
+        assert phrase.lower() in shared, (
+            "shared discipline must require immutable repo-relative paths"
+        )
+
+    forbidden_packet_paths = (
+        "absolute path to tech-spec",
+        "absolute path to product-spec",
+        "absolute paths to changed files",
+        "absolute paths to task description",
+    )
+    for name, path in REVIEWERS.items():
+        text = re.sub(r"\s+", " ", _input_contract(path)).lower()
+        assert "git show <reviewed_sha>:<path>" in text, (
+            f"{name} input contract must bind path artifacts to reviewed_sha"
+        )
+        assert "never the mutable working tree" in text, (
+            f"{name} input contract must prohibit a mutable path fallback"
+        )
+        for forbidden in forbidden_packet_paths:
+            assert forbidden not in text, (
+                f"{name} input contract must not accept {forbidden!r}"
+            )
+
+    for name in ("spec-reviewer", "code-quality-reviewer"):
+        contract = _input_contract(REVIEWERS[name]).lower()
+        assert "repository-relative paths to changed files" in contract, (
+            f"{name} must make changed-file packet paths repository-relative"
+        )
+    assert "repository-relative path to tech-spec" in _input_contract(
+        REVIEWERS["spec-reviewer"]
+    ).lower()
+
+
 def test_all_reviewer_cross_reads_use_the_immutable_snapshot():
     """Citation cross-reads of repository files cannot read a live tree."""
     required = (
@@ -142,3 +186,48 @@ def test_all_reviewer_cross_reads_use_the_immutable_snapshot():
                 f"{name} must bind repository citation cross-reads to "
                 f"the reviewed_sha snapshot: {phrase!r}"
             )
+
+
+def test_code_reviewer_principles_and_simplifications_use_reviewed_sha():
+    """D8/D9 must never derive evidence from the mutable worktree."""
+    reviewer = REVIEWERS["code-reviewer"].read_text(encoding="utf-8")
+    d8 = reviewer[reviewer.index("#### D8"):reviewer.index("#### D9")]
+    d9 = reviewer[reviewer.index("#### D9"):reviewer.index("#### D10")]
+    d8_commands = re.search(r"```bash\n(.*?)```", d8, re.DOTALL).group(1)
+    d9_commands = re.search(r"```bash\n(.*?)```", d9, re.DOTALL).group(1)
+
+    assert (
+        'git -C "<target_repo>" cat-file -e '
+        '"<reviewed_sha>:docs/loom/PRINCIPLES.md"' in d8_commands
+    ), "D8 must test PRINCIPLES.md existence in the reviewed snapshot"
+    assert (
+        'git -C "<target_repo>" show '
+        '"<reviewed_sha>:docs/loom/PRINCIPLES.md"' in d8_commands
+    ), "D8 must read PRINCIPLES.md from the reviewed snapshot"
+    for mutable_probe in (
+        "git rev-parse",
+        "test -e",
+        "test -f",
+        "[ -e",
+        "[ -f",
+        "HEAD:docs/loom/PRINCIPLES.md",
+    ):
+        assert mutable_probe not in d8_commands, (
+            f"D8 must not derive PRINCIPLES evidence through {mutable_probe!r}"
+        )
+
+    assert 'git -C "<target_repo>" diff --name-only -z ' in d9_commands, (
+        "D9 must enumerate branch files through Git"
+    )
+    assert 'git -C "<target_repo>" show "<reviewed_sha>:$path"' in d9_commands, (
+        "D9 must read each changed file from the reviewed snapshot"
+    )
+    assert "xargs grep" not in d9_commands, "D9 must not grep mutable worktree files"
+    assert "cat <diff-path>" not in d9_commands, "D9 must not read mutable diff files"
+    for mutable_read in (
+        "git show HEAD:",
+        "git show <base>:",
+    ):
+        assert mutable_read not in d9_commands, (
+            f"D9 must not derive marker evidence through {mutable_read!r}"
+        )

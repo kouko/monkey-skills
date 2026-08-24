@@ -96,12 +96,18 @@ case "$loaded_reference_path" in
     exit 1
     ;;
 esac
-if [ ! -f "$loaded_reference_path" ] || \
+if [ -L "$loaded_reference_path" ] || [ ! -f "$loaded_reference_path" ] || \
    [ "$(basename "$loaded_reference_path")" != "codex-tools.md" ]; then
   echo "loaded reference must be the codex-tools.md regular file" >&2
   exit 1
 fi
-plugin_root="$(cd "$(dirname "$loaded_reference_path")/../../.." && pwd -P)"
+canonical_reference="$(cd "$(dirname "$loaded_reference_path")" && pwd -P)/$(basename "$loaded_reference_path")"
+plugin_root="$(cd "$(dirname "$canonical_reference")/../../.." && pwd -P)"
+expected_reference="$plugin_root/skills/using-loom-code/references/codex-tools.md"
+if [ "$canonical_reference" != "$expected_reference" ]; then
+  echo "loaded reference must match the installed loom-code reference layout" >&2
+  exit 1
+fi
 test -f "$plugin_root/scripts/review_context.py" || {
   echo "review_context.py is absent from the loaded plugin" >&2
   exit 1
@@ -109,11 +115,14 @@ test -f "$plugin_root/scripts/review_context.py" || {
 ```
 
 The adapter validates that source before deriving `plugin_root`: it must be an
-absolute path to the `codex-tools.md` regular file. The adapter must not infer
-the root from a cache, marketplace, or consumer path. It must not use the
-current working directory as a fallback. The loaded reference is the authority; the
-derived root is not the target repository or working directory. If the script
-is absent, refuse the review. It then runs the common resolver once:
+absolute, non-symlink regular `codex-tools.md` file whose canonical location
+is exactly `skills/using-loom-code/references/codex-tools.md` under the
+derived root. A same-named foreign file is not an installed loom-code
+reference. The adapter must not infer the root from a cache, marketplace, or
+consumer path. It must not use the current working directory as a fallback.
+The loaded reference is the authority; the derived root is not the target
+repository or working directory. If the layout or script is absent, refuse the
+review. It then runs the common resolver once:
 
 ```
 python3 <installed-plugin-root>/scripts/review_context.py --repo <target_repo>
@@ -127,14 +136,17 @@ same command is used for every direct review entry; an upstream station hands
 its already-resolved packet to a delegate unchanged instead of resolving a
 replacement packet.
 
-After a docs fix, resolve one packet for the post-fix SHA, then dispatch a
-labelled `fresh whole-artifact review (Codex)` using that complete packet. This
-is a new review of the entire changed artifact set, not a delta continuation:
-do not represent this as a `SendMessage` continuation. Its terminal result
-must label exactly one terminal signal: `CONFIRMED_RESOLVED` or
-`STILL_BLOCKING`. It echoes that fresh packet's `reviewed_sha`, which must
+After a docs fix, assemble the post-fix confirmation packet specified by the
+binding [`convergence contract`](../../requesting-docs-review/references/convergence-contract.md):
+the complete immutable context, original gating findings, and delta evidence.
+Resolve its post-fix SHA, then dispatch a labelled `fresh whole-artifact review
+(Codex)` using that complete packet. This is a new review of the entire changed
+artifact set; do not represent this as a `SendMessage` continuation. The fresh reviewer returns its
+ordinary verdict under that packet and echoes that fresh packet's `reviewed_sha`, which must
 differ from the initial packet's `reviewed_sha`; otherwise reject the result.
-Only that result may feed the current-SHA terminal verdict or marker path.
+The orchestrator, not the fresh reviewer, maps that ordinary verdict to
+`CONFIRMED_RESOLVED` or `STILL_BLOCKING` under the convergence contract. Only
+that mapped result may feed the current-SHA terminal verdict or marker path.
 
 ## Subagent dispatch
 
@@ -163,13 +175,48 @@ Architectural differences from Claude Code's `Agent()` tool that matter for re-b
   no loom procedure may require one.
 - **`name` means something different.** Custom agent *identity* in Codex lives in TOML files under `~/.codex/agents/` (`name` / `description` / `developer_instructions` required fields) — a reusable, session-level profile roughly analogous to Claude Code's `subagent_type`, not a per-dispatch ephemeral tracking label.
 - **No plugin-bundled agent definitions.** Codex's plugin manifest schema has no field for shipping reusable custom-agent definitions alongside a plugin (only `skills`). loom-code's `agents/*.md` role-prompt files (`implementer.md`, `spec-reviewer.md`, `code-quality-reviewer.md`, `code-reviewer.md`, `docs-reviewer.md` — five files) still have **no confirmed Codex-native equivalent** — this remains an open gap. See [`loom-code/research/2026-07-05-claude-code-codex-dual-compat-patterns.md`](../../../research/2026-07-05-claude-code-codex-dual-compat-patterns.md) for the full survey.
-- **No mailbox/SendMessage confirmation primitive.** Claude Code's delta-confirmation mechanism (`requesting-docs-review` Directive 2) addresses an unnamed agent's dispatch handle via `SendMessage` to resume it in-session — Codex has no equivalent primitive. N/A-with-route on Codex hosts: confirm a gating-verdict fix via ONE fresh single round instead — the same session-death fallback the contract already defines (Directive 4), reused here as the Codex substitute.
+- **No mailbox/SendMessage confirmation primitive.** Claude Code's delta-confirmation mechanism (`requesting-docs-review` Directive 2) addresses an unnamed agent's dispatch handle via `SendMessage` to resume it in-session — Codex has no equivalent primitive. On Codex, give the labelled fresh whole-artifact reviewer the complete post-fix confirmation packet, then let the orchestrator normalize its ordinary verdict under the [convergence contract](../../requesting-docs-review/references/convergence-contract.md).
 
-The agent prompts in `loom-code/agents/*.md` are plain Markdown specifically so they re-bind cleanly to whatever the actual Codex dispatch surface is — that design intent holds, but the target primitives are `spawn_agent` and `wait_agent`, not a guessed `Agent(subagent_type, prompt)`-shaped call. (Path corrected 2026-07-05: these role-prompt files live at `loom-code/agents/*.md`, not the pre-P15-12 `skills/subagent-driven-development/agents/*.md` path this section previously named.)
+The public role prompts are `loom-code/agents/implementer.md`,
+`loom-code/agents/spec-reviewer.md`, `loom-code/agents/code-quality-reviewer.md`,
+`loom-code/agents/code-reviewer.md`, and `loom-code/agents/docs-reviewer.md`.
+They are plain Markdown so they re-bind cleanly to the actual Codex dispatch
+surface. The target primitives are `spawn_agent` and `wait_agent`, not a guessed
+`Agent(subagent_type, prompt)`-shaped call.
 
 ### Re-binding loom-code's dispatch points onto Codex (doc-sourced, not session-exercised)
 
-Where a loom-code SKILL.md says "dispatch a `<role>` subagent" (e.g. `subagent-driven-development`'s implementer / spec-reviewer / code-quality-reviewer, or `requesting-code-review`'s code-reviewer panel), resolve the portable profile first. The Codex-side equivalent is one `spawn_agent` call per role with the corresponding `loom-code/agents/<role>.md` content as the agent's instructions and the profile's translated `model` and `reasoning_effort`; then use `wait_agent` to collect every child result and consolidate in the orchestrator. Live probes now show Codex can spawn autonomously off a standing AGENTS.md directive (see "Explicit-trigger claim corrected" above), so the orchestrator has two live-verified routes: an explicit per-dispatch spawn instruction ("spawn an implementer agent for task N using `loom-code/agents/implementer.md`'s instructions") — the more session-exercised of the two, still the safer default — or a standing AGENTS.md delegation directive that lets the model decide to spawn without restating the instruction each time.
+Where a loom-code SKILL.md says "dispatch a `<role>` subagent" (e.g.
+`subagent-driven-development`'s implementer / spec-reviewer /
+code-quality-reviewer, or `requesting-code-review`'s code-reviewer panel),
+resolve the portable profile first. The public logical identities are
+`loom-code/agents/<role>.md`; their runtime files must come from the installed
+root derived above, never a consumer checkout or the current working directory:
+
+```sh
+implementer_prompt="$plugin_root/agents/implementer.md"
+spec_reviewer_prompt="$plugin_root/agents/spec-reviewer.md"
+code_quality_reviewer_prompt="$plugin_root/agents/code-quality-reviewer.md"
+code_reviewer_prompt="$plugin_root/agents/code-reviewer.md"
+docs_reviewer_prompt="$plugin_root/agents/docs-reviewer.md"
+for role_prompt in "$implementer_prompt" "$spec_reviewer_prompt" \
+  "$code_quality_reviewer_prompt" "$code_reviewer_prompt" "$docs_reviewer_prompt"; do
+  test -f "$role_prompt" || {
+    echo "reviewer prompt is absent from the installed plugin: $role_prompt" >&2
+    exit 1
+  }
+done
+```
+
+The Codex-side equivalent is one `spawn_agent` call per role with the matching
+runtime prompt above as its instructions and the profile's translated `model`
+and `reasoning_effort`; then use `wait_agent` to collect every child result and
+consolidate in the orchestrator. Live probes now show Codex can spawn
+autonomously off a standing AGENTS.md directive (see "Explicit-trigger claim
+corrected" above), so the orchestrator has two live-verified routes: an
+explicit per-dispatch spawn instruction — the safer default — or a standing
+AGENTS.md delegation directive that lets the model decide to spawn without
+restating the instruction each time.
 
 ### Portable per-subagent model selection
 
@@ -215,7 +262,9 @@ and summarize the set in the orchestrator.
 | List directory | `ls` via Bash | likely a `list_dir` or Bash — assumed |
 | Find files | `Glob(pattern)` / `Grep` via Bash | assumed |
 
-The skill prompts in `skills/subagent-driven-development/agents/*.md` use the abstract phrasing *"Read the file"* / *"Write to the file"* — not the literal Claude Code tool names — so they transcribe to whatever Codex's primitives are without modification.
+The public role prompts in `loom-code/agents/*.md` use the abstract phrasing
+*"Read the file"* / *"Write to the file"* — not literal Claude Code tool
+names — so they transcribe to whatever Codex primitives are available.
 
 ## Shell
 

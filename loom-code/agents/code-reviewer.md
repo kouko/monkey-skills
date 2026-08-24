@@ -101,6 +101,12 @@ that same packet value.
 
 ## Rule R1b — Cross-read repository citations from that same snapshot
 
+Repository artifact paths are repository-relative to `target_repo` before
+they are used as `<path>` in an immutable snapshot command. Reject an
+absolute repository artifact path as malformed; it could designate mutable
+filesystem state rather than a committed artifact. This includes changed
+artifacts, Specs, task context, and repository citation cross-reads.
+
 When a role contract requires a repository-path cross-read to confirm a
 citation, read that path with
 `git -C "<target_repo>" show <reviewed_sha>:<path>`. Never read it from the
@@ -515,19 +521,29 @@ The agent has no author authority over external surfaces — third-party HTTP AP
 
 #### D8 — Principles Conformance (conditional; whole-branch)
 
-**Activation is self-derived, not orchestrator-gated.** The agent
-checks the target repo for `docs/loom/PRINCIPLES.md` itself before scoring this
-dimension, using the same concrete anchor pattern this file's Rule R1 uses for
-`standards_version`: anchor at the repository root via
-`git rev-parse --show-toplevel`, then check whether
-`<root>/docs/loom/PRINCIPLES.md` exists. Anchoring at the repo root (not the
-dispatch's working directory) is what keeps this derivation correct from a
-worktree or a nested cwd — a relative check from cwd would false-N/A in
-either case. An orchestrator-passed path is an **override**, used only when
-PRINCIPLES.md lives at a non-standard location — it is never the condition
-that turns this dimension on. The agent has no authority to invent principles —
-it judges the branch diff **against
-the falsifiable `— check:` clauses already written in that file** (industry analogue: Spec
+**Activation is self-derived, not orchestrator-gated.** The agent checks the
+standard repository-relative path only in the reviewed snapshot before scoring
+this dimension. If the standard path exists, read it; do not inspect an
+override. A packet-provided repository-relative override is considered only if
+the standard path is absent. If neither snapshot path resolves, emit `N/A`.
+
+```bash
+if git -C "<target_repo>" cat-file -e "<reviewed_sha>:docs/loom/PRINCIPLES.md"; then
+  git -C "<target_repo>" show "<reviewed_sha>:docs/loom/PRINCIPLES.md"
+elif [ -n "${principles_override:-}" ] && [[ "$principles_override" != /* ]] && \
+  git -C "<target_repo>" cat-file -e "<reviewed_sha>:${principles_override}"; then
+  git -C "<target_repo>" show "<reviewed_sha>:${principles_override}"
+else
+  printf '%s\n' 'principles-conformance: N/A'
+fi
+```
+
+Do not use worktree filesystem discovery for either path. Under Rule R1b, a
+packet path is valid only when it is repository-relative and is read with the
+reviewed SHA. The override does not activate the dimension and cannot replace
+the standard path when that path exists. The agent has no authority to invent
+principles — it judges the branch diff **against the falsifiable `— check:`
+clauses already written in that file** (industry analogue: Spec
 Kit's `/speckit.review` constitution gate). It is a **conformance** check (does the diff
 violate a stated principle?), distinct from the omission-hunting that `loom-design:completeness-critic`'s
 principles lens performs on the spec.
@@ -560,20 +576,22 @@ marker the SSOT and scopes the harvest to **this** branch's review gate
 — do not attempt a lifetime / cross-codebase marker count (gameable per
 the SATD-removal literature).
 
-**Harvest step.** Grep the files changed by this branch for the
-marker. Use whichever form the input contract supplies:
+**Harvest step.** Enumerate changed repository-relative paths and read each
+one from the reviewed snapshot. The `### Diff scope` right endpoint must be
+`<reviewed_sha>`; derive `<base>` from that validated scope. Do not use a
+dispatcher-supplied file path or the working tree as an evidence source.
 
 ```bash
-# Case A — Diff scope is a git range (e.g. main...HEAD):
-git diff --name-only <diff-scope> | xargs grep -n "LOOM-SIMPLIFY:"
-
-# Case B — Diff was supplied as file content (not a range):
-grep "LOOM-SIMPLIFY:" <<< "<diff-content>"
-# or: cat <diff-path> | grep "LOOM-SIMPLIFY:"
+git -C "<target_repo>" diff --name-only -z <base>..<reviewed_sha> |
+  while IFS= read -r -d '' path; do
+    git -C "<target_repo>" show "<reviewed_sha>:$path" |
+      grep -n "LOOM-SIMPLIFY:"
+  done
 ```
 
-Substitute `<diff-scope>` / `<diff-content>` / `<diff-path>` with the
-actual value from `### Diff scope` / `### Diff` in the input contract.
+The path loop is null-delimited so repository paths containing spaces remain
+one path. A path absent at `reviewed_sha` is missing snapshot evidence, not a
+reason to fall back to the mutable worktree.
 
 Each marker carries exactly four fields per the standard:
 

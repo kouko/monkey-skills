@@ -4,8 +4,8 @@
 The normal test suite calls this module with a fake host runner.  ``main``
 uses the real Claude Code and Codex CLIs, but only after building a temporary
 plugin copy, a temporary consumer git fixture, and a temporary CODEX_HOME.
-No auth is discovered implicitly: callers supply a private Codex auth file
-and a separately preauthenticated, disposable Claude configuration directory.
+No auth is discovered implicitly: callers supply a private Codex auth file,
+while Claude uses the named, preauthenticated ``~/.claude-test`` profile.
 """
 
 from __future__ import annotations
@@ -200,19 +200,28 @@ def _make_read_only(path: Path, writable: Path | None = None) -> None:
         writable.chmod(0o700)
 
 
-def create_workspace(candidate: Path, auth_source: Path, claude_config_dir: Path) -> Workspace:
+def _claude_test_profile() -> Path:
+    """Return the one Claude profile this release gate is permitted to use."""
+
+    return Path.home() / ".claude-test"
+
+
+def create_workspace(
+    candidate: Path, auth_source: Path, claude_config_dir: Path | None = None
+) -> Workspace:
     candidate = candidate.resolve()
     auth_source = auth_source.resolve()
-    claude_config_lexical = claude_config_dir.absolute()
+    expected_claude_config = _claude_test_profile().absolute()
+    if claude_config_dir is not None and claude_config_dir.absolute() != expected_claude_config:
+        raise ValueError("Claude live gate uses only the named ~/.claude-test profile")
+    claude_config_lexical = expected_claude_config
     claude_config_source = _canonical_claude_config_path(claude_config_lexical)
     if not candidate.is_dir() or not (candidate / "scripts/review_context.py").is_file():
         raise ValueError("candidate must be a loom-code root containing scripts/review_context.py")
     if not auth_source.is_file() or auth_source.stat().st_mode & 0o077:
         raise ValueError("codex auth source must be an existing private regular file")
-    if not claude_config_source.is_dir() or claude_config_source.stat().st_mode & 0o077:
-        raise ValueError("claude config dir must be an existing private directory")
-    if not claude_config_source.is_relative_to(Path("/private/tmp")) or not claude_config_source.name.startswith("loom-live-claude-auth."):
-        raise ValueError("claude config dir must be a caller-owned disposable temporary sandbox")
+    if not claude_config_source.is_dir():
+        raise ValueError("claude config dir must be an existing directory")
 
     temporary_root = Path(tempfile.mkdtemp(prefix="loom-live-host-")).resolve()
     copied_root = temporary_root / "candidate" / "loom-code"
@@ -230,9 +239,8 @@ def create_workspace(candidate: Path, auth_source: Path, claude_config_dir: Path
     # hash, serialize, or report the authentication material.
     shutil.copyfile(auth_source, auth_target)
     auth_target.chmod(0o600)
-    # Safety checks and snapshots use the canonical path. Claude authentication
-    # stays bound to the caller's validated lexical spelling (`/tmp` on macOS).
-    # The caller-owned sandbox is never copied or deleted.
+    # The named profile is intentionally persistent: it owns the Claude Max
+    # login and its own mutable cache, while daily ~/.claude remains watched.
     claude_config_dir = claude_config_lexical
     _make_read_only(copied_root)
     _make_read_only(consumer, marker)
@@ -336,27 +344,72 @@ def _redacted_evidence(output: str, workspace: Workspace) -> str:
     return "\n".join(dict.fromkeys(evidence))
 
 
-def _snapshot_user_state() -> tuple[tuple[str, int, int], ...]:
-    """Inventory only paths that session/plugin actions could change.
+def _state_fingerprint(path: Path, label: str) -> tuple[object, ...]:
+    """Return a non-reportable integrity record for one protected path."""
 
-    This deliberately records neither file contents nor content hashes, so
-    credentials and session data are not inspected while proving state stayed
-    untouched.
+    try:
+        link_data = path.lstat()
+    except FileNotFoundError:
+        return (label, "missing")
+    record: list[object] = [
+        label, "link", link_data.st_mode, link_data.st_ino, link_data.st_dev,
+        link_data.st_ctime_ns, link_data.st_mtime_ns, link_data.st_size,
+    ]
+    try:
+        data = path.stat()
+    except OSError as error:
+        return (*record, "target-error", type(error).__name__)
+    record.extend((
+        "target", data.st_mode, data.st_ino, data.st_dev, data.st_ctime_ns,
+        data.st_mtime_ns, data.st_size,
+    ))
+    if stat.S_ISREG(data.st_mode):
+        digest = hashlib.sha256()
+        with path.open("rb") as handle:
+            for block in iter(lambda: handle.read(64 * 1024), b""):
+                digest.update(block)
+        record.extend(("sha256", digest.digest()))
+    return tuple(record)
+
+
+def _protected_plugin_metadata(root: Path) -> tuple[Path, ...]:
+    """Return plugin state files and manifests, never runtime cache payloads."""
+
+    candidates = {
+        root / name
+        for name in ("installed_plugins.json", "known_marketplaces.json", "blocklist.json")
+    }
+    if not root.exists():
+        return tuple(sorted(candidates))
+    for path in root.rglob("plugin.json"):
+        if ".claude-plugin" in path.parts or ".codex-plugin" in path.parts:
+            candidates.add(path)
+    return tuple(sorted(candidates))
+
+
+def _snapshot_user_state() -> tuple[tuple[object, ...], ...]:
+    """Inventory daily configuration and plugin metadata without contents.
+
+    A SHA-256 digest is retained only in process memory for protected regular
+    files and is never written to the report. It protects the durable release
+    boundary (configuration, Codex auth, and plugin installations) while
+    excluding ordinary session, log, and cache activity that desktop hosts
+    update independently. The named ``.claude-test`` profile is outside this
+    inventory.
     """
 
-    homes = (Path.home() / ".claude" / "plugins", Path.home() / ".codex" / "plugins")
-    snapshot: list[tuple[str, int, int]] = []
-    for root in homes:
-        if root.exists():
-            for path in sorted(root.rglob("*")):
-                try:
-                    data = path.lstat()
-                except FileNotFoundError:
-                    continue
-                # Finder's directory metadata is not a plugin/config/cache
-                # mutation and can change while we merely traverse a folder.
-                if path.name != ".DS_Store":
-                    snapshot.append((str(path), data.st_mtime_ns, data.st_size))
+    home = Path.home()
+    monitored_paths = [
+        home / ".claude" / "settings.json",
+        home / ".claude" / "settings.local.json",
+        home / ".codex" / "config.toml",
+        home / ".codex" / "auth.json",
+    ]
+    monitored_paths.extend(_protected_plugin_metadata(home / ".claude" / "plugins"))
+    monitored_paths.extend(_protected_plugin_metadata(home / ".codex" / "plugins"))
+    snapshot: list[tuple[object, ...]] = []
+    for path in sorted(set(monitored_paths)):
+        snapshot.append(_state_fingerprint(path, str(path.relative_to(home))))
     return tuple(snapshot)
 
 
@@ -524,7 +577,7 @@ def host_argv_for_case(workspace: Workspace, host: str, case: str) -> tuple[str,
             "claude", "-p", "--verbose", "--no-session-persistence", "--plugin-dir", str(root),
             "--tools", "Read,Bash",
             "--allowedTools", f"Read({skill_path})", f"Bash({gate_command})",
-            "--permission-mode", "dontAsk", "--output-format", "stream-json", prompt,
+            "--permission-mode", "bypassPermissions", "--output-format", "stream-json", prompt,
         )
     return (
         "codex", "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules",
@@ -810,21 +863,24 @@ def _canonical_packet(workspace: Workspace, host: str) -> str | None:
 
 
 def check_claude_auth(
-    config_dir: Path,
+    config_dir: Path | None = None,
     *,
     command_runner: Callable[..., tuple[int, str]] = _run,
 ) -> str | None:
-    """Check a caller-created Claude config without ever reading its contents."""
+    """Check the named Claude test profile without reading its contents."""
 
-    lexical_config_dir = config_dir.absolute()
+    expected = _claude_test_profile().absolute()
+    if config_dir is not None and config_dir.absolute() != expected:
+        return "Claude live gate uses only the named ~/.claude-test profile"
+    lexical_config_dir = expected
     try:
         canonical_config_dir = _canonical_claude_config_path(lexical_config_dir)
     except ValueError as error:
         if "symlink" in str(error):
             return "Claude config path contains symlink"
         return "Claude config path could not be validated"
-    if not canonical_config_dir.is_dir() or canonical_config_dir.stat().st_mode & 0o077:
-        return "Claude config directory is unavailable or not private"
+    if not canonical_config_dir.is_dir():
+        return "Claude config directory is unavailable"
     env = os.environ.copy()
     env["CLAUDE_CONFIG_DIR"] = str(lexical_config_dir)
     code, _ = command_runner(("claude", "auth", "status", "--text"), cwd=Path.cwd(), env=env)
@@ -868,7 +924,7 @@ def _safe_report_error(error: str) -> str:
         return error.split(":", 1)[0] + ": canonical packet validation failed"
     fixed = {
         "Claude auth status failed",
-        "user plugin state changed during live probe",
+        "protected daily state changed during live probe",
         "codex/install: failed",
     }
     if error in fixed:
@@ -890,6 +946,25 @@ def _marketplace_for(workspace: Workspace) -> Path:
     return marketplace
 
 
+def _legacy_marketplace_for(workspace: Workspace) -> Path:
+    """Build a disposable pre-resolver marketplace for the upgrade probe."""
+
+    marketplace = workspace.temporary_root / "legacy-marketplace"
+    legacy_root = marketplace / "loom-code"
+    shutil.copytree(workspace.candidate_root, legacy_root, symlinks=True)
+    legacy_root.chmod(0o755)
+    scripts = legacy_root / "scripts"
+    scripts.chmod(0o755)
+    (scripts / "review_context.py").unlink()
+    manifest_dir = marketplace / ".claude-plugin"
+    manifest_dir.mkdir()
+    (manifest_dir / "marketplace.json").write_text(
+        json.dumps({"name": "legacy-live-host-gate", "owner": {"name": "fixture"}, "plugins": [{"name": "loom-code", "source": "./loom-code/"}]}),
+        encoding="utf-8",
+    )
+    return marketplace
+
+
 def _find_codex_plugin_root(workspace: Workspace) -> Path | None:
     candidates = []
     for manifest in workspace.codex_home.rglob("plugin.json"):
@@ -905,13 +980,32 @@ def _find_codex_plugin_root(workspace: Workspace) -> Path | None:
 
 def _prepare_codex(workspace: Workspace) -> tuple[bool, str]:
     marketplace = _marketplace_for(workspace)
+    legacy_marketplace = _legacy_marketplace_for(workspace)
     env = os.environ.copy()
     env["CODEX_HOME"] = str(workspace.codex_home)
-    commands = (
+    legacy_commands = (
+        ("codex", "plugin", "marketplace", "add", str(legacy_marketplace)),
+        ("codex", "plugin", "add", "loom-code@legacy-live-host-gate"),
+    )
+    for command in legacy_commands:
+        code, output = _run(command, cwd=workspace.consumer_root, env=env)
+        if code:
+            return False, output
+    legacy_root = _find_codex_plugin_root(workspace)
+    if legacy_root is None or (legacy_root / "scripts/review_context.py").exists():
+        return False, "Codex legacy install was not the expected pre-resolver version"
+    code, output = _run(
+        ("codex", "plugin", "remove", "loom-code@legacy-live-host-gate"),
+        cwd=workspace.consumer_root,
+        env=env,
+    )
+    if code:
+        return False, output
+    candidate_commands = (
         ("codex", "plugin", "marketplace", "add", str(marketplace)),
         ("codex", "plugin", "add", "loom-code@live-host-gate"),
     )
-    for command in commands:
+    for command in candidate_commands:
         code, output = _run(command, cwd=workspace.consumer_root, env=env)
         if code:
             return False, output
@@ -932,9 +1026,8 @@ def _real_host_runner(workspace: Workspace, host: str, case: str) -> HostResult:
         if not key.startswith("LOOM_LIVE_GATE_")
     }
     if host == "claude":
-        # Caller owns this disposable, preauthenticated root.  The runner does
-        # not inspect, copy, or delete it; Claude may keep its session cache
-        # there, never in the existing user configuration.
+        # This is the sole Claude override. HOME must remain untouched because
+        # the named profile's account credentials are stored by the host user.
         env["CLAUDE_CONFIG_DIR"] = str(workspace.claude_config_dir)
         if case.startswith("valid-"):
             env.update({"LOOM_LIVE_GATE_PACKET": str(workspace.host_packet_paths[host]), "LOOM_LIVE_GATE_MARKER_DIR": str(workspace.marker_directory), "LOOM_LIVE_GATE_NONCE": workspace.host_nonces[(host, case)], "LOOM_LIVE_GATE_PLUGIN_ROOT": str(workspace.expected_root(host)), "LOOM_LIVE_GATE_REPO": str(workspace.consumer_root)})
@@ -950,121 +1043,91 @@ def _real_host_runner(workspace: Workspace, host: str, case: str) -> HostResult:
     return HostResult(host, case, command, output, code, before, after)
 
 
-def validate_host_result(workspace: Workspace, result: HostResult) -> list[str]:
+def _validate_valid_host_result(workspace: Workspace, result: HostResult) -> list[str]:
     errors: list[str] = []
-    if result.returncode != 0:
-        errors.append(f"{result.host}/{result.case}: cli exited {result.returncode}")
+    if not result.case.startswith("valid-"):
         return errors
     output = result.output
-    if result.case.startswith("valid-"):
-        station = result.case.removeprefix("valid-").upper()
-        root = str(workspace.expected_root(result.host))
-        required = (
-            f"CANDIDATE_ROOT: {root}",
-            f"REVIEWED_SHA: {workspace.reviewed_sha}",
-            "PACKET_SOURCE: scripts/review_context.py",
-            f"HOST_SKILL_INVOKED: {station}",
-            f"{station}_STATION_PACKET: {root} {workspace.reviewed_sha}",
-        )
-        for item in required:
-            if item not in output:
-                errors.append(f"{result.host}/valid: missing {item}")
-        resolver = str(workspace.expected_root(result.host) / "scripts/review_context.py")
-        event_commands = _event_command_strings(output, result.host)
-        event_argvs = _event_command_argvs(output, result.host)
-        resolver_events = _event_commands(workspace.host_packet_events.get(result.host, ""))
-        if not event_commands:
-            errors.append(f"{result.host}/{result.case}: missing host JSON tool event")
-        expected_skill = _station_skill_path(workspace.expected_root(result.host), station)
-        if not _event_loaded_candidate_skill(output, result.host, expected_skill):
-            errors.append(f"{result.host}/{result.case}: missing candidate station skill tool event")
-        expected_sequence = (
-            (("read", (str(expected_skill),)), ("command", expected_receipt_argv(station)))
-            if result.host == "claude"
-            else (
-                ("command", ("cat", str(expected_skill))),
-                ("command", expected_receipt_argv(station)),
-            )
-        )
-        if _event_tool_sequence(output, result.host) != expected_sequence:
-            errors.append(f"{result.host}/{result.case}: exact gate tool sequence mismatch")
-        if result.host in workspace.host_packets:
-            nonce = workspace.host_nonces[(result.host, result.case)]
-            receipt = workspace.marker_directory / f"{station}-{nonce}.json"
-            try:
-                data = json.loads(receipt.read_text(encoding="utf-8"))
-                packet = workspace.host_packets[result.host]
-                packet_digest = hashlib.sha256(
-                    (json.dumps(packet, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
-                ).hexdigest()
-                if data != {
-                    "station": station,
-                    "nonce": nonce,
-                    "reviewed_sha": workspace.reviewed_sha,
-                    "plugin_root": root,
-                    "target_repo": str(workspace.consumer_root),
-                    "packet_sha256": packet_digest,
-                }:
-                    errors.append(f"{result.host}/{result.case}: receipt content mismatch")
-            except (OSError, json.JSONDecodeError):
-                errors.append(f"{result.host}/{result.case}: missing station receipt")
-            expected_files = tuple(sorted((*result.marker_files_before, receipt.name)))
-            if result.marker_files_after and result.marker_files_after != expected_files:
-                errors.append(f"{result.host}/{result.case}: marker directory changed outside one receipt")
-        if result.host in workspace.host_packets and not any(resolver in command for command in resolver_events):
-            errors.append(f"{result.host}/{result.case}: missing candidate resolver tool event")
-        if any("review_context.py" in token for argv in event_argvs for token in argv):
-            errors.append(f"{result.host}/{result.case}: station re-ran handed packet resolver")
-        receipt_argvs = tuple(
-            argv for argv in event_argvs
-            if any("live_gate_station_receipt.py" in token for token in argv)
-        )
-        if receipt_argvs != (expected_receipt_argv(station),):
-            errors.append(f"{result.host}/{result.case}: missing exact station receipt command event")
-        expected_slash = f"/loom-code:{STATION_SKILLS[station]}\n"
-        if not result.command or not result.command[-1].startswith(expected_slash):
-            errors.append(f"{result.host}/{result.case}: missing native station slash invocation")
-    else:
-        if "REFUSE:" not in output:
-            errors.append(f"{result.host}/{result.case}: did not refuse")
-        refusal_station = "CODE" if result.case == "invalid-reference" else "DOCS"
-        refusal_skill = _station_skill_path(workspace.expected_root(result.host), refusal_station)
-        if not _event_loaded_candidate_skill(output, result.host, refusal_skill):
-            errors.append(f"{result.host}/{result.case}: missing candidate refusal skill tool event")
-        expected_probe = expected_adapter_probe_argv(
-            workspace, result.host, result.case
-        )
-        probe_argvs = tuple(
-            argv
-            for argv in _event_command_argvs(output, result.host)
-            if any("live_gate_adapter_probe.py" in token for token in argv)
-        )
-        if probe_argvs != (expected_probe,):
-            errors.append(
-                f"{result.host}/{result.case}: missing exact adapter probe command event"
-            )
-        if not _event_has_typed_adapter_refusal(
-            output,
-            result.host,
-            expected_probe,
-            ADAPTER_REFUSALS[result.case],
-        ):
-            errors.append(
-                f"{result.host}/{result.case}: missing typed adapter refusal event"
-            )
-        expected_slash = f"/loom-code:{STATION_SKILLS[refusal_station]}\n"
-        if not result.command or not result.command[-1].startswith(expected_slash):
-            errors.append(
-                f"{result.host}/{result.case}: missing native refusal slash invocation"
-            )
-        if any(
-            any(token in command.lower() for token in FORBIDDEN_REFUSAL_OUTPUT)
-            for command in _event_command_strings(output, result.host)
-        ):
-            errors.append(f"{result.host}/{result.case}: refusal performed forbidden downstream work")
-        if result.marker_files_after != result.marker_files_before:
-            errors.append(f"{result.host}/{result.case}: refusal changed marker directory")
+    station = result.case.removeprefix("valid-").upper()
+    root = str(workspace.expected_root(result.host))
+    required = (
+        f"CANDIDATE_ROOT: {root}", f"REVIEWED_SHA: {workspace.reviewed_sha}",
+        "PACKET_SOURCE: scripts/review_context.py", f"HOST_SKILL_INVOKED: {station}",
+        f"{station}_STATION_PACKET: {root} {workspace.reviewed_sha}",
+    )
+    for item in required:
+        if item not in output:
+            errors.append(f"{result.host}/valid: missing {item}")
+    resolver = str(workspace.expected_root(result.host) / "scripts/review_context.py")
+    event_commands = _event_command_strings(output, result.host)
+    event_argvs = _event_command_argvs(output, result.host)
+    resolver_events = _event_commands(workspace.host_packet_events.get(result.host, ""))
+    if not event_commands:
+        errors.append(f"{result.host}/{result.case}: missing host JSON tool event")
+    expected_skill = _station_skill_path(workspace.expected_root(result.host), station)
+    if not _event_loaded_candidate_skill(output, result.host, expected_skill):
+        errors.append(f"{result.host}/{result.case}: missing candidate station skill tool event")
+    expected_sequence = (("read", (str(expected_skill),)), ("command", expected_receipt_argv(station))) if result.host == "claude" else (("command", ("cat", str(expected_skill))), ("command", expected_receipt_argv(station)))
+    if _event_tool_sequence(output, result.host) != expected_sequence:
+        errors.append(f"{result.host}/{result.case}: exact gate tool sequence mismatch")
+    if result.host in workspace.host_packets:
+        nonce = workspace.host_nonces[(result.host, result.case)]
+        receipt = workspace.marker_directory / f"{station}-{nonce}.json"
+        try:
+            data = json.loads(receipt.read_text(encoding="utf-8"))
+            packet = workspace.host_packets[result.host]
+            packet_digest = hashlib.sha256((json.dumps(packet, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")).hexdigest()
+            if data != {"station": station, "nonce": nonce, "reviewed_sha": workspace.reviewed_sha, "plugin_root": root, "target_repo": str(workspace.consumer_root), "packet_sha256": packet_digest}:
+                errors.append(f"{result.host}/{result.case}: receipt content mismatch")
+        except (OSError, json.JSONDecodeError):
+            errors.append(f"{result.host}/{result.case}: missing station receipt")
+        expected_files = tuple(sorted((*result.marker_files_before, receipt.name)))
+        if result.marker_files_after and result.marker_files_after != expected_files:
+            errors.append(f"{result.host}/{result.case}: marker directory changed outside one receipt")
+    if result.host in workspace.host_packets and not any(resolver in command for command in resolver_events):
+        errors.append(f"{result.host}/{result.case}: missing candidate resolver tool event")
+    if any("review_context.py" in token for argv in event_argvs for token in argv):
+        errors.append(f"{result.host}/{result.case}: station re-ran handed packet resolver")
+    receipt_argvs = tuple(argv for argv in event_argvs if any("live_gate_station_receipt.py" in token for token in argv))
+    if receipt_argvs != (expected_receipt_argv(station),):
+        errors.append(f"{result.host}/{result.case}: missing exact station receipt command event")
+    expected_slash = f"/loom-code:{STATION_SKILLS[station]}\n"
+    if not result.command or not result.command[-1].startswith(expected_slash):
+        errors.append(f"{result.host}/{result.case}: missing native station slash invocation")
     return errors
+
+
+def _validate_refusal_host_result(workspace: Workspace, result: HostResult) -> list[str]:
+    errors: list[str] = []
+    output = result.output
+    if "REFUSE:" not in output:
+        errors.append(f"{result.host}/{result.case}: did not refuse")
+    refusal_station = "CODE" if result.case == "invalid-reference" else "DOCS"
+    refusal_skill = _station_skill_path(workspace.expected_root(result.host), refusal_station)
+    if not _event_loaded_candidate_skill(output, result.host, refusal_skill):
+        errors.append(f"{result.host}/{result.case}: missing candidate refusal skill tool event")
+    expected_probe = expected_adapter_probe_argv(workspace, result.host, result.case)
+    probe_argvs = tuple(argv for argv in _event_command_argvs(output, result.host) if any("live_gate_adapter_probe.py" in token for token in argv))
+    if probe_argvs != (expected_probe,):
+        errors.append(f"{result.host}/{result.case}: missing exact adapter probe command event")
+    if not _event_has_typed_adapter_refusal(output, result.host, expected_probe, ADAPTER_REFUSALS[result.case]):
+        errors.append(f"{result.host}/{result.case}: missing typed adapter refusal event")
+    expected_slash = f"/loom-code:{STATION_SKILLS[refusal_station]}\n"
+    if not result.command or not result.command[-1].startswith(expected_slash):
+        errors.append(f"{result.host}/{result.case}: missing native refusal slash invocation")
+    if any(any(token in command.lower() for token in FORBIDDEN_REFUSAL_OUTPUT) for command in _event_command_strings(output, result.host)):
+        errors.append(f"{result.host}/{result.case}: refusal performed forbidden downstream work")
+    if result.marker_files_after != result.marker_files_before:
+        errors.append(f"{result.host}/{result.case}: refusal changed marker directory")
+    return errors
+
+
+def validate_host_result(workspace: Workspace, result: HostResult) -> list[str]:
+    if result.returncode != 0:
+        return [f"{result.host}/{result.case}: cli exited {result.returncode}"]
+    if result.case.startswith("valid-"):
+        return _validate_valid_host_result(workspace, result)
+    return _validate_refusal_host_result(workspace, result)
 
 
 def _render_report(
@@ -1081,9 +1144,9 @@ def _render_report(
         f"consumer SHA: {workspace.reviewed_sha}",
         "cli versions: Claude Code=" + _safe_version(workspace.host_versions.get("claude", "not-probed"))
         + "; Codex=" + _safe_version(workspace.host_versions.get("codex", "not-probed")),
-        "authentication: caller-supplied private Codex file is copied only into disposable CODEX_HOME; the explicitly authorized disposable Claude sandbox is used directly and never deleted.",
-        f"pre/post user state: {'unchanged' if user_state_unchanged else 'CHANGED'}",
-        "Claude sandbox metadata: " + ("CHANGED (authorized disposable sandbox)" if claude_sandbox_changed else "unchanged"),
+        "authentication: caller-supplied private Codex file is copied only into disposable CODEX_HOME; Claude uses only the named ~/.claude-test profile.",
+        f"protected daily state: {'unchanged' if user_state_unchanged else 'CHANGED'}",
+        "Claude test-profile metadata: " + ("CHANGED (expected dedicated profile)" if claude_sandbox_changed else "unchanged"),
         f"finally cleanup: {'PASS' if cleanup_ok else 'FAIL'}",
         "",
         "## Cases",
@@ -1108,36 +1171,25 @@ def main(argv: Sequence[str] | None = None, *, host_runner: HostRunner | None = 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--candidate", required=True, type=Path)
     parser.add_argument("--codex-auth-source", required=True, type=Path)
-    parser.add_argument("--claude-config-dir", required=True, type=Path)
-    parser.add_argument(
-        "--allow-mutable-claude-sandbox",
-        required=True,
-        type=Path,
-        help="repeat the exact disposable Claude config path to authorize its mutation",
-    )
     parser.add_argument("--report", required=True, type=Path)
     args = parser.parse_args(argv)
 
-    if (
-        args.allow_mutable_claude_sandbox.absolute()
-        != args.claude_config_dir.absolute()
-    ):
-        print(
-            "live-host gate: refused: mutable Claude sandbox authorization must exactly match --claude-config-dir",
-            file=sys.stderr,
-        )
-        return 2
-
     try:
-        workspace = create_workspace(args.candidate, args.codex_auth_source, args.claude_config_dir)
+        workspace = create_workspace(args.candidate, args.codex_auth_source)
     except ValueError as error:
         print(f"live-host gate: refused: {error}", file=sys.stderr)
         return 2
-    before_state = _snapshot_user_state()
-    before_claude_config = _snapshot_metadata(workspace.claude_config_source)
     results: list[HostResult] = []
     errors: list[str] = []
     cleanup_ok = False
+    before_state: tuple[tuple[object, ...], ...] = ()
+    before_state_ok = True
+    try:
+        before_state = _snapshot_user_state()
+    except OSError:
+        before_state_ok = False
+        errors.append("protected daily state snapshot failed")
+    before_claude_config = _snapshot_metadata(workspace.claude_config_source)
     try:
         runner = host_runner or _real_host_runner
         if host_runner is None:
@@ -1177,11 +1229,15 @@ def main(argv: Sequence[str] | None = None, *, host_runner: HostRunner | None = 
                     results.append(result)
                     errors.extend(validate_host_result(workspace, result))
     finally:
-        after_state = _snapshot_user_state()
+        try:
+            after_state = _snapshot_user_state()
+        except OSError:
+            after_state = ()
+            errors.append("protected daily state snapshot failed")
         after_claude_config = _snapshot_metadata(workspace.claude_config_source)
-        user_state_unchanged = before_state == after_state
+        user_state_unchanged = before_state_ok and before_state == after_state
         if not user_state_unchanged:
-            errors.append("user plugin state changed during live probe")
+            errors.append("protected daily state changed during live probe")
         claude_sandbox_changed = before_claude_config != after_claude_config
         try:
             cleanup_workspace(workspace)

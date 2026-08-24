@@ -37,8 +37,8 @@ def test_claude_adapter_resolves_and_forwards_immutable_review_context() -> None
     assert "copy the packet verbatim" in text.lower()
 
 
-def test_claude_same_reviewer_confirmation_requires_fresh_post_fix_packet() -> None:
-    """Claude's SendMessage convenience cannot certify the old reviewed SHA."""
+def test_claude_same_reviewer_confirmation_uses_full_packet_and_ordinary_verdict() -> None:
+    """Claude's transport preserves the portable packet and agent boundary."""
     text = _normalized_adapter()
 
     assert "SendMessage" in text
@@ -46,7 +46,12 @@ def test_claude_same_reviewer_confirmation_requires_fresh_post_fix_packet() -> N
     assert "fresh post-fix SHA" in text
     assert "fresh immutable context packet" in text
     assert "not the pre-fix `reviewed_sha`" in text
-    assert "delta only" in text
+    assert "original gating findings" in text
+    assert "delta evidence" in text
+    assert "ordinary three-valued verdict" in text
+    assert "orchestrator maps" in text
+    assert "delta only" not in text
+    assert "it returns `confirmed_resolved` or `still_blocking`" not in text.lower()
     assert "echoes the fresh packet `reviewed_sha`" in text
     assert "terminal evidence only" in text
 

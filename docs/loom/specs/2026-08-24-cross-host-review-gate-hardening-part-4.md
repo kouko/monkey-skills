@@ -57,7 +57,9 @@ Each live session is therefore a gate-only two-tool protocol, not the station's
 downstream reviewer workflow: first read the exact candidate station SKILL,
 then execute the exact receipt or refusal-probe command, with no exploration or
 reviewer dispatch. Claude exposes only those two case-specific tool patterns
-through `--allowedTools`; `dontAsk` remains active and broad Read/Bash approval
+through `--allowedTools`; the dedicated noninteractive profile uses
+`bypassPermissions`, while the validator rejects any tool call beyond the exact
+Read/Bash pair and broad Read/Bash approval
 is forbidden.
 
 The live gate may supply a nonce, packet path, and marker directory only to its
@@ -73,10 +75,10 @@ adapter probe and must expose its exact typed refusal through the host's
 command-result event; prompt prose or a final `REFUSE:` line alone is not
 evidence. The native negative slash command must also match its station.
 
-The mutable Claude authentication sandbox is authorized by a required
-`--allow-mutable-claude-sandbox` argument whose lexical absolute path exactly
-matches `--claude-config-dir`. The directory and every path component must be
-non-symlinked. Command evidence accepts a wrapper only when Codex records its
+Claude runs through the fixed `~/.claude-test` profile. Its configuration
+sets `bypassPermissions`, and the runner invokes Claude with
+`--permission-mode bypassPermissions`; the protected daily state must remain
+unchanged. Command evidence accepts a wrapper only when Codex records its
 host transport as exact `/bin/zsh -lc`; Claude and every other wrapper shape
 are rejected.
 

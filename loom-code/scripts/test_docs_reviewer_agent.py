@@ -70,31 +70,6 @@ def _input_contract() -> str:
     return text[start:end]
 
 
-def _prior_findings_check_window() -> str:
-    """The `prior_findings_check:` fence entry inside `## Output
-    contract` -- from the `prior_findings_check:` line to the next
-    top-level key line (`findings:`). Narrower than `_output_contract`,
-    which also contains `findings:`'s own `- severity:` line and would
-    false-green an assertion that no `- severity:` line appears inside
-    the prior_findings_check fence."""
-    window = _output_contract()
-    lines = window.splitlines(keepends=True)
-    start = None
-    for i, line in enumerate(lines):
-        if line.strip().startswith("prior_findings_check:"):
-            start = i
-            break
-    assert start is not None, (
-        "## Output contract carries no `prior_findings_check:` fence"
-    )
-    end = len(lines)
-    for j in range(start + 1, len(lines)):
-        if re.match(r"^[a-z_]+:", lines[j]):
-            end = j
-            break
-    return "".join(lines[start:end])
-
-
 def _role_contract_window() -> str:
     """Isolate `## Role contract — behavioral rules` — from its heading
     to the injected reviewer-discipline-v1 marker. Bounding on the
@@ -217,59 +192,36 @@ def test_class_default_provenance_marker():
     )
 
 
-def test_prior_findings_carrier_every_later_round():
-    """The prior-findings carrier is not round-2-specific in either the
-    input or output contract: every round after round 1 receives (and
-    echoes back) the previous round's surviving findings (D1)."""
+def test_post_fix_confirmation_packet_replaces_prior_findings_carrier():
+    """The confirmation input is one portable post-fix packet, not a
+    round-N carrier: it binds original gating findings and delta evidence
+    to the immutable context supplied to either host."""
     input_window = _norm(_input_contract())
-    assert (
-        "### Prior-round findings (every round after round 1)"
-        in input_window
-    ), (
-        "the input-contract heading must generalize to every round "
-        "after round 1"
-    )
-    assert "round 2 only" not in input_window, (
-        "the input-contract heading must not restrict the carrier to "
-        "round 2 only"
-    )
-    assert "one extra round" in input_window and "retained" in input_window, (
-        "the input-contract section must tell the reviewer that a "
-        "fix-verified finding is retained in the carrier for exactly "
-        "one extra round, so it knows a fix-verified item can appear "
-        "once more and what to do with it"
-    )
-
-    output_window = _norm(_output_contract())
-    assert "every round after round 1" in output_window, (
-        "the output-template comment must generalize prior_findings_check "
-        "to every round after round 1"
-    )
-    assert "round 2 only" not in output_window, (
-        "the output-template comment must not restrict prior_findings_check "
-        "to round 2 only"
-    )
+    for required in (
+        "### Post-fix confirmation",
+        "original_gating_findings",
+        "delta_evidence",
+        "claude_same_session",
+        "codex_fresh_whole_artifact",
+    ):
+        assert required in input_window, (
+            f"input contract must carry post-fix packet field `{required}`"
+        )
+    for retired in ("### Prior-round findings", "### Round scope"):
+        assert retired not in input_window, (
+            f"input contract must not retain retired `{retired}` carrier"
+        )
 
 
-def test_prior_findings_restated_as_scalar():
-    """A prior finding is restated as a one-line scalar, never the
-    original `- severity:` block -- `_FINDING_RE`
-    (`loom_gate_markers.py`) matches `- severity:` at ANY indent, so a
-    verbatim block nested under `finding:` would land in the origin
-    ledger a second time as a later-round finding, contaminating the
-    population partition the ledger exists to keep clean (I2)."""
-    raw = _prior_findings_check_window()
-    norm = " ".join(raw.split()).lower()
-    assert "one-line" in norm and "scalar" in norm, (
-        "the restatement instruction must tell the reviewer to restate "
-        "the prior finding as a one-line scalar summary"
-    )
-    assert not re.search(r"(?m)^\s*-\s*severity\s*:", raw), (
-        "the prior_findings_check fence must not itself carry a "
-        "`- severity:` finding-block line (the exact pattern "
-        "loom_gate_markers.py's _FINDING_RE matches at any indent) -- "
-        "a nested one would double-count the finding in the origin "
-        "ledger as a new later-round finding"
+def test_post_fix_confirmation_uses_ordinary_verdict_schema():
+    """The reviewer emits only its ordinary three-valued verdict; the
+    orchestrator, not a nested prior-findings result, owns terminal
+    confirmation mapping."""
+    output_window = _norm(_output_contract()).lower()
+    assert "verdict: pass | pass_with_notes | needs_revision" in output_window
+    assert "orchestrator maps a" in output_window and "confirmation review" in output_window
+    assert "prior_findings_check:" not in output_window, (
+        "the output template must not reintroduce the retired round-N carrier"
     )
 
 
@@ -348,22 +300,23 @@ def test_whole_artifact_scope_duty():
 
 
 def test_convergence_duties_present():
-    """Agent-side convergence duties (skill owns orchestration): verify
-    prior-round findings against quoted current text before raising
-    anything new; never re-raise a closed finding in new words; assert
-    absence only after reading the full text."""
+    """Agent-side convergence duty judges the supplied original finding
+    and delta evidence, while the orchestrator alone owns the terminal
+    outcome; full-text-before-absence remains unchanged."""
+    role = _norm(_role_contract_window()).lower()
+    assert "original gating findings" in role and "delta evidence" in role, (
+        "the role contract must judge the original findings against delta evidence"
+    )
+    assert "quoted post-fix text" in role, (
+        "fix-verification must be against quoted post-fix text"
+    )
+    assert "re-raise a fixed original finding" in role, (
+        "the re-litigation ban must apply to a fixed original finding"
+    )
+    assert "orchestrator alone maps" in role, (
+        "the reviewer must not map terminal confirmation outcomes"
+    )
     text = _text()
-    assert "prior-round" in text or "round 1" in text or "previous round" in text, (
-        "the contract must handle dispatch packets carrying prior-round "
-        "findings"
-    )
-    assert "quoted" in text, (
-        "fix-verification must be against QUOTED current text"
-    )
-    assert "re-raise" in text and "closed finding" in text, (
-        "the re-litigation ban (never re-raise a closed finding in new "
-        "words) must be stated"
-    )
     assert "Assert absence only after reading the full text" in _norm(text), (
         "the full-text-before-absence discipline must be stated inline "
         "(its provenance citation moved to "
