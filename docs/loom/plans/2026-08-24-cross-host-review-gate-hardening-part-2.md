@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-24-cross-host-review-gate-hardening-part-2.md
 Goal: 所有 reviewer 入口都傳遞同一份可攜且可追溯的審查封包，並以獨立安裝情境驗證它。
-Stage: planning
+Stage: blocked:user-decision
 Steps:
   1. 擴充共用封包與 reviewer 合約
   2. 將 code、docs、SDD 三個入口接上封包
@@ -84,7 +84,7 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
   - **Intended**: SDD resolves that existing packet once before its reviewer dispatches, then forwards it unchanged to spec, quality, and prose-review paths.
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2
-- **Status**: pending
+- **Status**: blocked
 - **Gloss**: 日常子任務審查不會因為共用規則改版而失去必要資訊。
 
 ## Task 4 — 將 docs review 入口接上封包
@@ -104,7 +104,7 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
   - **Intended**: The docs-review dispatcher resolves that existing packet once and forwards it unchanged to the docs reviewer and its terminal verdict route.
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2
-- **Status**: pending
+- **Status**: blocked
 - **Gloss**: 純文件變更也能在獨立安裝時走完同一套可靠的閘門。
 
 ## Task 5 — 完成 code review 入口與聚合訊號
@@ -121,7 +121,7 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
 - **Dependencies**: Task 2 completes first
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2
-- **Status**: pending
+- **Status**: blocked
 - **Gloss**: code review 會審到同一個 commit，也不會丟失尚未驗證或可簡化的訊號。
 
 ## Task 6 — 說明 Claude Code adapter
@@ -178,4 +178,5 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
 ## Notes
 
 - This is part 2 of the approved cross-host hardening brief. The original Task 3 draft is superseded and must not be committed.
+- Tasks 3–5 are superseded by `2026-08-24-cross-host-review-gate-hardening-part-3`; retain only changes that meet that plan's stronger packet data-flow contract.
 - The dogfood test is local and deterministic. Live Claude Code or Codex runs require separate user approval because they consume model quota.
