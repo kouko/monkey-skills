@@ -1023,3 +1023,173 @@ def test_window_precision():
     assert "check_doc_citations.py" not in agg, (
         "the aggregation window must not swallow the dispatch steps"
     )
+
+
+def test_docs_dispatch_carries_portable_context_and_terminal_sha():
+    """Task 4: the docs station resolves one immutable packet, copies it
+    unchanged to both reviewers, and binds its docs-only marker to that
+    packet's reviewed SHA.  This prevents a standalone installation from
+    reconstructing plugin paths below the consumer repository or minting a
+    pass for a later commit than the panel reviewed."""
+    text = _text()
+    steps = _norm(_steps_window(text)).lower()
+
+    assert "active host adapter" in steps, (
+        "the docs station must ask the host that loaded it to resolve its "
+        "installed plugin root"
+    )
+    assert 'python3 "${claude_plugin_root}/scripts/review_context.py"' not in steps, (
+        "a dual-host docs station must not treat Claude's environment "
+        "variable as its portable root source"
+    )
+    assert "once" in steps and "full immutable context packet" in steps, (
+        "the docs station must resolve one full immutable packet before "
+        "dispatching reviewers"
+    )
+    for field in ("target_repo", "reviewed_sha", "plugin_version", "resources"):
+        assert field in steps, (
+            f"the docs station must name immutable packet field {field!r}"
+        )
+
+    dispatch_match = re.search(
+        r"^3\.\s+\*\*Dispatch TWO `docs-reviewer`.*?(?=^4\.\s)",
+        text,
+        re.MULTILINE | re.DOTALL,
+    )
+    assert dispatch_match is not None, "Step 3 dispatch section must exist"
+    dispatch = dispatch_match.group(0).lower()
+    assert "copied verbatim" in dispatch, (
+        "both docs-reviewer prompts must receive the packet unchanged"
+    )
+    assert "approved absolute" in dispatch and "resources" in dispatch, (
+        "reviewer resource paths must remain the packet's approved "
+        "absolute paths"
+    )
+
+    mint_match = re.search(
+        r"^4\.\s+\*\*Wait for BOTH verdicts.*?(?=^5\.\s)",
+        text,
+        re.MULTILINE | re.DOTALL,
+    )
+    assert mint_match is not None, "Step 4 mint section must exist"
+    mint = mint_match.group(0).lower()
+    assert "<resources.gate_markers>" in mint, (
+        "docs-only minting must use the packet-approved gate-marker path"
+    )
+    assert "--expected-head <reviewed_sha>" in mint, (
+        "docs-only minting must bind to the packet reviewed SHA"
+    )
+    assert "python3 loom-code/scripts" not in text, (
+        "the docs station must not reconstruct plugin scripts below the "
+        "consumer repository"
+    )
+
+
+def test_docs_context_handoff_and_post_fix_terminal_routes_are_executable():
+    """T4 remediation: an upstream packet wins over local resolution, and
+    each host has a current-SHA terminal route that produces a marker-valid
+    PASS artifact instead of trying to mint a confirmation token itself.
+
+    The mutation probes keep this as a behavioral contract: merely naming
+    packets, hosts, or a SHA elsewhere cannot satisfy the routing rule.
+    """
+    text = _text()
+    steps = _steps_window(text)
+    step1_match = re.search(r"^1\.\s.*?(?=^2\.\s)", steps, re.M | re.S)
+    step6_match = re.search(r"^6\.\s.*?(?=^## |\Z)", steps, re.M | re.S)
+    assert step1_match is not None and step6_match is not None
+    step1 = _norm(step1_match.group(0)).lower()
+    step6 = _norm(step6_match.group(0)).lower()
+
+    def assert_handoff_route(value: str) -> None:
+        assert "complete immutable context packet" in value
+        assert "handed down" in value
+        assert "consume it verbatim" in value
+        assert "do not invoke review_context.py" in value
+        assert "only when no complete packet was handed down" in value
+
+    assert_handoff_route(step1)
+    with pytest.raises(AssertionError):
+        assert_handoff_route(
+            step1.replace("do not invoke review_context.py", "may resolve again")
+        )
+
+    def assert_terminal_routes(value: str) -> None:
+        assert "claude code" in value and "sendmessage" in value
+        assert "same reviewer" in value
+        assert "codex" in value and "fresh whole-artifact review" in value
+        assert "post-fix sha" in value and "fresh immutable context packet" in value
+        assert "must not mint confirmed_resolved directly" in value
+        assert "schema-valid terminal wrapper" in value
+        for required in ("standards_version", "reviewed_sha", "verdict: pass"):
+            assert required in value
+        assert "<resources.gate_markers>" in value
+        assert "--expected-head <reviewed_sha>" in value
+
+    assert_terminal_routes(step6)
+    with pytest.raises(AssertionError):
+        assert_terminal_routes(
+            step6.replace("schema-valid terminal wrapper", "terminal note")
+        )
+
+
+def test_docs_station_uses_only_packet_resources_and_preserves_r3_floor():
+    """Part 4 T9: direct docs review must be host-neutral and immutable.
+
+    A station may make one context packet when none was handed down, but it
+    must ask the active host adapter for that operation.  Once it has the
+    packet, both scope and citation evidence are restricted to the approved
+    paths and its SHA.  Terminal wrapping may make a marker-schema artifact,
+    but it must not erase the R3 ``PASS_WITH_NOTES`` evidence floor.
+    """
+    text = _text()
+    steps = _steps_window(text)
+    step1_match = re.search(r"^1\.\s.*?(?=^2\.\s)", steps, re.M | re.S)
+    step2_match = re.search(r"^2\.\s.*?(?=^3\.\s)", steps, re.M | re.S)
+    step6_match = re.search(r"^6\.\s.*?(?=^## |\Z)", steps, re.M | re.S)
+    assert step1_match is not None and step2_match is not None
+    assert step6_match is not None
+    step1 = _norm(step1_match.group(0)).lower()
+    step2 = _norm(step2_match.group(0)).lower()
+    step6 = _norm(step6_match.group(0)).lower()
+
+    assert "active host adapter" in step1
+    assert "${claude_plugin_root}" not in step1
+    assert "<plugin-root>" not in step1
+    assert "resources.review_scope" in step1
+    assert "--reviewed-sha <reviewed_sha>" in step1
+
+    assert "resources.doc_citation_checker" in step2
+    assert "--reviewed-sha <reviewed_sha>" in step2
+    assert "<plugin-root>" not in step2
+
+    assert "pass_with_notes" in step6
+    assert "r3" in step6
+    assert "must not upgrade" in step6
+    assert "--repo <target_repo>" in step6
+
+
+def test_citation_prepass_refuses_only_operational_failures():
+    """A cited-document finding is review evidence, not a broken station.
+
+    The checker returns 1 for findings, so treating every nonzero status as
+    a refusal would silently remove the pre-pass from a normal docs review.
+    Conversely, usage/status 2 or a failed process means its evidence cannot
+    be trusted and must stop before panel dispatch or marker minting.
+    """
+    steps = _steps_window(_text())
+    match = re.search(r"^2\.\s.*?(?=^3\.\s)", steps, re.M | re.S)
+    assert match is not None
+    prepass = _norm(match.group(0)).lower()
+
+    def assert_exit_contract(value: str) -> None:
+        assert "exit 0" in value and "exit 1" in value
+        assert "exit 2" in value
+        assert "execution failure" in value
+        assert "refuse" in value
+        assert "do not dispatch" in value and "do not mint" in value
+        assert "stderr" in value
+
+    assert_exit_contract(prepass)
+    with pytest.raises(AssertionError):
+        assert_exit_contract(prepass.replace("exit 2", "exit 1"))
