@@ -44,7 +44,7 @@ N/A — no unresolved question: the user authorized re-cutting around the verifi
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(08261a9e)
 - **Gloss**: 每份 reviewer 結果都能明確回答「它審的是哪一個 commit」。
 
 ## Task 2 — 交接 code 到 docs 的同一封包
