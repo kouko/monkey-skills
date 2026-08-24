@@ -37,8 +37,23 @@ def test_sdd_reviewer_dispatch_carries_portable_context_packet() -> None:
     assert "approved absolute paths" in text
     assert "never derive plugin paths from `target_repo`" in text
     assert "The docs-reviewer receives the same immutable packet" in text
-    assert "`git diff <base>..<reviewed_sha>`" in text
+    assert "`git diff <base>..<reviewed_sha>`" not in text
     assert "paths at `<reviewed_sha>`" in text
     assert "changed-artifact list and diff scope are the ones at `<reviewed_sha>`" in text
     assert "through the active host adapter" in text
     assert "${CLAUDE_PLUGIN_ROOT}/scripts/review_context.py" not in text
+
+
+def test_sdd_dispatch_uses_sha_bound_scope_and_cross_reads() -> None:
+    """Every SDD reviewer receives only snapshot-bound review evidence."""
+    text = _normalized_skill()
+
+    assert '"<review_scope>" --repo <target_repo> --reviewed-sha <reviewed_sha>' in text
+    assert "approved packet resource `review_scope`" in text
+    assert "immutable repository citation cross-read contract" in text
+    assert '`git -C "<target_repo>" show <reviewed_sha>:<path>`' in text
+    assert "every spec-reviewer, code-quality-reviewer, and docs-reviewer prompt" in text
+    assert "Do not use mutable working-tree reads for reviewer evidence." in text
+    assert "If review_scope exits non-zero, REFUSE the fan-out" in text
+    assert "do not dispatch any reviewer" in text
+    assert "only reviewer artifact scope is the file list printed by review_scope" in text
