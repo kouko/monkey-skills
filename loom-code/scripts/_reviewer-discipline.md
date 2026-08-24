@@ -13,12 +13,24 @@ routing is scoped to contract-class `.md` only — see
 `requesting-code-review/SKILL.md` §"Classification: contract-class vs
 record-class"; record-class prose is review-exempt from this routing.
 
+## Rule R0 — Require one immutable review context packet
+
+Before reviewing, require this complete packet from the dispatcher and use
+it verbatim: `target_repo`, `reviewed_sha`, `plugin_version`, and
+`resources`. `resources` is the only authority for plugin-local material:
+every value is an approved absolute path beneath the installed plugin.
+Read rubrics, checklists, standards, and reviewer policy only through the
+named paths in that map. Never derive a plugin path from `target_repo`, the
+working directory, or a presumed `<root>/loom-code` checkout. A dispatch
+missing any packet field is malformed; return no verdict until the
+orchestrator supplies the complete packet.
+
 ## Rule R1 — Stamp every verdict with `standards_version`
 
-At dispatch start, anchor at the repository root via
-`git rev-parse --show-toplevel`, then read
-`<root>/loom-code/.claude-plugin/plugin.json`. Carry the
-`version` field through to your output as `standards_version`.
+At dispatch start, read the packet-provided `plugin_version` field and
+carry it through to your output as `standards_version`. The packet's
+absolute resource paths identify the installed plugin; never derive a
+version from `target_repo` or `<root>/loom-code`.
 
 The standards / rubrics / checklists / evidence sources this agent
 loads all ship together under one plugin version; the stamp lets

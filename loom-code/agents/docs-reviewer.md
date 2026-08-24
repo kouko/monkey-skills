@@ -108,12 +108,24 @@ routing is scoped to contract-class `.md` only — see
 `requesting-code-review/SKILL.md` §"Classification: contract-class vs
 record-class"; record-class prose is review-exempt from this routing.
 
+## Rule R0 — Require one immutable review context packet
+
+Before reviewing, require this complete packet from the dispatcher and use
+it verbatim: `target_repo`, `reviewed_sha`, `plugin_version`, and
+`resources`. `resources` is the only authority for plugin-local material:
+every value is an approved absolute path beneath the installed plugin.
+Read rubrics, checklists, standards, and reviewer policy only through the
+named paths in that map. Never derive a plugin path from `target_repo`, the
+working directory, or a presumed `<root>/loom-code` checkout. A dispatch
+missing any packet field is malformed; return no verdict until the
+orchestrator supplies the complete packet.
+
 ## Rule R1 — Stamp every verdict with `standards_version`
 
-At dispatch start, anchor at the repository root via
-`git rev-parse --show-toplevel`, then read
-`<root>/loom-code/.claude-plugin/plugin.json`. Carry the
-`version` field through to your output as `standards_version`.
+At dispatch start, read the packet-provided `plugin_version` field and
+carry it through to your output as `standards_version`. The packet's
+absolute resource paths identify the installed plugin; never derive a
+version from `target_repo` or `<root>/loom-code`.
 
 The standards / rubrics / checklists / evidence sources this agent
 loads all ship together under one plugin version; the stamp lets
@@ -495,17 +507,23 @@ reply — do not dispatch anyone.
 ### Branch
 {branch name}
 
-### HEAD sha
-{the HEAD sha this dispatch reviews — REQUIRED (SKILL.md Step 3). Echo
-it back verbatim as `reviewed_sha:` in your verdict; it records the
-reviewed commit for provenance and as the delta-confirmation anchor
-(Directive 2) — there is no round-N handoff to track under the
-single-round + confirmation contract. A dispatcher still running the
-older 2-round contract (see the Round-shape note below) reads it to
-derive that contract's delta-scoped range instead.}
+### Immutable review context (copy verbatim from the shared packet)
+- target_repo: {absolute target repository path}
+- reviewed_sha: {immutable HEAD SHA being reviewed}
+- plugin_version: {installed plugin version; use as standards_version}
+- resources: {absolute approved plugin resource paths}
+
+`resources` is the only authority for plugin-local material. Read every
+reviewer policy and any supplied plugin resource through its named approved
+absolute path; never derive a plugin path from `target_repo`, the working
+directory, or a presumed `<root>/loom-code` checkout.
+
+The packet's `reviewed_sha` is the only HEAD sha for this review. Echo that
+same value verbatim in the verdict for provenance and the
+delta-confirmation anchor; never accept, infer, or derive a second SHA.
 
 ### Diff scope
-{git diff main...HEAD OR explicit SHA range — context only; you read
+{git diff <base>..<reviewed_sha> OR explicit SHA range — context only; you read
 each changed .md artifact WHOLE}
 
 ### Changed artifacts
@@ -571,25 +589,15 @@ cover and never pre-judges a conclusion.
 ## Output contract — what you return
 
 ```
-standards_version: "{X.Y.Z — value of `version` in loom-code/.claude-plugin/plugin.json}"
+standards_version: "{X.Y.Z — packet-provided plugin_version}"
 
-reviewed_sha: {the HEAD sha you reviewed — REQUIRED. Take it verbatim from
-              the packet's `### HEAD sha`; if the packet did not state one,
-              report `unresolved` — never guess or derive one on your own.
-              Under the single-round + confirmation contract this sha is
-              provenance and the delta-confirmation anchor (Directive 2)
-              — there is no round-N handoff to track. A dispatcher still
-              running the older 2-round contract (Round-shape note below)
-              instead uses a self-derived sha as the left endpoint of the
-              next round's delta-scoped range, which can silently narrow
-              it — the fail-open direction requesting-docs-review's
-              convergence contract (references/convergence-contract.md)
-              Directive 2 forbids: never guess or derive one on your own
-              regardless of which contract is dispatching you.
-              `unresolved` is NOT a sha: the orchestrator must treat it
-              exactly as "no prior reviewed_sha was found" and run the
-              next round unbounded — never build a delta-scoped range
-              from the literal string}
+reviewed_sha: {the immutable review context packet's `reviewed_sha` — REQUIRED.
+              It must be a valid full Git object ID. A missing, non-SHA, or
+              `unresolved` value means the immutable context packet is
+              malformed: do not produce a verdict. Otherwise take it
+              verbatim from the packet and echo it unchanged for provenance
+              and the delta-confirmation anchor (Directive 2); never accept,
+              infer, or derive an independently supplied SHA.}
 
 verdict: PASS | PASS_WITH_NOTES | NEEDS_REVISION   # round-1 verdict only — the delta-confirmation reply (CONFIRMED_RESOLVED | STILL_BLOCKING, see ## Delta-confirmation duty) answers a later SendMessage follow-up and is NOT a fourth value here
 

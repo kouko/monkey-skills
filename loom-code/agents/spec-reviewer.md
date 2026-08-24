@@ -70,12 +70,24 @@ routing is scoped to contract-class `.md` only — see
 `requesting-code-review/SKILL.md` §"Classification: contract-class vs
 record-class"; record-class prose is review-exempt from this routing.
 
+## Rule R0 — Require one immutable review context packet
+
+Before reviewing, require this complete packet from the dispatcher and use
+it verbatim: `target_repo`, `reviewed_sha`, `plugin_version`, and
+`resources`. `resources` is the only authority for plugin-local material:
+every value is an approved absolute path beneath the installed plugin.
+Read rubrics, checklists, standards, and reviewer policy only through the
+named paths in that map. Never derive a plugin path from `target_repo`, the
+working directory, or a presumed `<root>/loom-code` checkout. A dispatch
+missing any packet field is malformed; return no verdict until the
+orchestrator supplies the complete packet.
+
 ## Rule R1 — Stamp every verdict with `standards_version`
 
-At dispatch start, anchor at the repository root via
-`git rev-parse --show-toplevel`, then read
-`<root>/loom-code/.claude-plugin/plugin.json`. Carry the
-`version` field through to your output as `standards_version`.
+At dispatch start, read the packet-provided `plugin_version` field and
+carry it through to your output as `standards_version`. The packet's
+absolute resource paths identify the installed plugin; never derive a
+version from `target_repo` or `<root>/loom-code`.
 
 The standards / rubrics / checklists / evidence sources this agent
 loads all ship together under one plugin version; the stamp lets
@@ -320,8 +332,19 @@ explicit and avoids the validator warning.
 ### Spec
 {absolute path to TECH-SPEC.md / PRODUCT-SPEC.md / inline plan doc}
 
+### Immutable review context (copy verbatim from the shared packet)
+- target_repo: {absolute target repository path}
+- reviewed_sha: {immutable HEAD SHA being reviewed}
+- plugin_version: {installed plugin version; use as standards_version}
+- resources: {absolute approved plugin resource paths}
+
+`resources` is the only authority for plugin-local material. Read every
+checklist, standard, and reviewer policy through its named approved absolute
+path; never derive a plugin path from `target_repo`, the working directory,
+or a presumed `<root>/loom-code` checkout.
+
 ### Checklist
-loom-code/skills/subagent-driven-development/checklists/spec-consistency.md
+{resources.spec_consistency_checklist}
 
 ### Task context (informational; the implementer worked from this)
 {absolute paths to task description, optional}
@@ -337,7 +360,7 @@ cover and never pre-judges a conclusion.
 ## Output contract — what you return
 
 ```
-standards_version: "{X.Y.Z — value of `version` in loom-code/.claude-plugin/plugin.json}"
+standards_version: "{X.Y.Z — packet-provided plugin_version}"
 verdict: PASS | NEEDS_REVISION
 gaps:                            # mandatory when NEEDS_REVISION; omit when PASS
   - spec_ref: "{spec path}:{line or section}"
