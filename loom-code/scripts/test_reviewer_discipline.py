@@ -89,3 +89,40 @@ def test_docs_reviewer_rejects_invalid_packet_reviewed_sha():
         "docs-reviewer must refuse rather than emit a verdict for an "
         "invalid packet reviewed_sha"
     )
+
+
+def test_all_reviewer_outputs_echo_only_packet_reviewed_sha():
+    """Every verdict needs the same immutable SHA provenance."""
+    for name in REVIEWERS:
+        reviewer = REVIEWERS[name].read_text(encoding="utf-8")
+        input_contract = _input_contract(REVIEWERS[name])
+        output_contract = reviewer[reviewer.index("## Output contract"):]
+        normalized = re.sub(r"\s+", " ", output_contract.lower())
+
+        assert "<reviewed_sha>" in input_contract, (
+            f"{name} artifact/diff input must be bound to the packet SHA"
+        )
+        assert "immutable review context packet's `reviewed_sha`" in output_contract, (
+            f"{name} must identify packet reviewed_sha as verdict provenance"
+        )
+        assert "missing, non-sha, or `unresolved`" in normalized, (
+            f"{name} must reject an invalid packet reviewed_sha"
+        )
+        assert "do not produce a verdict" in normalized, (
+            f"{name} must refuse a verdict without a valid packet reviewed_sha"
+        )
+
+
+def test_all_reviewers_read_only_the_immutable_snapshot():
+    """No reviewer can inspect a mutable worktree for path artifacts."""
+    for name in REVIEWERS:
+        contract = _input_contract(REVIEWERS[name])
+        assert "git diff <base>..<reviewed_sha>" in contract, (
+            f"{name} must bind its diff scope's right endpoint to reviewed_sha"
+        )
+        assert "git show <reviewed_sha>:<path>" in contract, (
+            f"{name} must load path artifacts from the immutable snapshot"
+        )
+        assert "never the mutable working tree" in contract, (
+            f"{name} must reject mutable-worktree artifact reads"
+        )

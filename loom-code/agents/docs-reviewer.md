@@ -132,6 +132,14 @@ loads all ship together under one plugin version; the stamp lets
 downstream readers tell whether a verdict was scored under the rules
 in effect now or a prior revision.
 
+## Rule R1a — Echo the packet's reviewed SHA
+
+Every verdict must echo `reviewed_sha` verbatim from the immutable packet.
+It must be a valid full Git object ID: a missing, non-SHA, or `unresolved`
+value makes the packet malformed, so do not produce a verdict. Never accept,
+infer, or derive a separate SHA; the reviewed artifact/diff must be bound to
+that same packet value.
+
 ## Rule R2 — Every output element needs an evidence citation
 
 Every finding / gap in your output must include the evidence
@@ -523,11 +531,14 @@ same value verbatim in the verdict for provenance and the
 delta-confirmation anchor; never accept, infer, or derive a second SHA.
 
 ### Diff scope
-{git diff <base>..<reviewed_sha> OR explicit SHA range — context only; you read
+{git diff <base>..<reviewed_sha> OR explicit SHA range whose right endpoint is <reviewed_sha> — context only; you read
 each changed .md artifact WHOLE}
 
 ### Changed artifacts
 {list of changed .md paths — read each one in full}
+
+Read every changed or read-context path artifact from the immutable commit
+snapshot: `git show <reviewed_sha>:<path>`, never the mutable working tree.
 
 ### Citation pre-pass
 {output of check_doc_citations.py over the changed files; findings

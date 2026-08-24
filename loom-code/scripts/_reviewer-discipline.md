@@ -37,6 +37,14 @@ loads all ship together under one plugin version; the stamp lets
 downstream readers tell whether a verdict was scored under the rules
 in effect now or a prior revision.
 
+## Rule R1a — Echo the packet's reviewed SHA
+
+Every verdict must echo `reviewed_sha` verbatim from the immutable packet.
+It must be a valid full Git object ID: a missing, non-SHA, or `unresolved`
+value makes the packet malformed, so do not produce a verdict. Never accept,
+infer, or derive a separate SHA; the reviewed artifact/diff must be bound to
+that same packet value.
+
 ## Rule R2 — Every output element needs an evidence citation
 
 Every finding / gap in your output must include the evidence

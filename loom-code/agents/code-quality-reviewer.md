@@ -97,6 +97,14 @@ loads all ship together under one plugin version; the stamp lets
 downstream readers tell whether a verdict was scored under the rules
 in effect now or a prior revision.
 
+## Rule R1a — Echo the packet's reviewed SHA
+
+Every verdict must echo `reviewed_sha` verbatim from the immutable packet.
+It must be a valid full Git object ID: a missing, non-SHA, or `unresolved`
+value makes the packet malformed, so do not produce a verdict. Never accept,
+infer, or derive a separate SHA; the reviewed artifact/diff must be bound to
+that same packet value.
+
 ## Rule R2 — Every output element needs an evidence citation
 
 Every finding / gap in your output must include the evidence
@@ -330,7 +338,7 @@ explicit and avoids the validator warning.
 
 ```
 ### Artifact
-{commit SHA range OR absolute paths to changed files}
+{git diff <base>..<reviewed_sha> OR absolute paths to changed files at <reviewed_sha>}
 
 ### Immutable review context (copy verbatim from the shared packet)
 - target_repo: {absolute target repository path}
@@ -342,6 +350,9 @@ explicit and avoids the validator warning.
 rubric, checklist, standard, and reviewer policy through its named approved
 absolute path; never derive a plugin path from `target_repo`, the working
 directory, or a presumed `<root>/loom-code` checkout.
+
+Read every path artifact from the immutable commit snapshot:
+`git show <reviewed_sha>:<path>`, never the mutable working tree.
 
 ### Rubrics (load via Read)
 - {resources.quality_rubric}
@@ -375,6 +386,12 @@ cover and never pre-judges a conclusion.
 
 ```
 standards_version: "{X.Y.Z — packet-provided plugin_version}"
+reviewed_sha: {the immutable review context packet's `reviewed_sha` — REQUIRED.
+              It must be a valid full Git object ID. A missing, non-SHA, or
+              `unresolved` value means the immutable context packet is
+              malformed: do not produce a verdict. Otherwise take it
+              verbatim from the packet and echo it unchanged; never accept,
+              infer, or derive an independently supplied SHA.}
 verdict: PASS | PASS_WITH_NOTES | NEEDS_REVISION
 dimension_scores:
   security: PASS | PASS_WITH_NOTES | NEEDS_REVISION
