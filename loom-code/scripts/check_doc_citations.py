@@ -111,6 +111,7 @@ from __future__ import annotations
 
 import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -406,6 +407,130 @@ class DocReport:
     unchecked: int
 
 
+def _git_text(repo_root: Path, *args: str) -> str:
+    """Return git stdout, refusing rather than falling back to the worktree."""
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), *args],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.strip() or "git command failed"
+        raise ValueError(detail)
+    return result.stdout
+
+
+def resolve_reviewed_sha(repo_root: Path, supplied_sha: str) -> str:
+    """Validate a packet SHA and ensure it is still this repository's HEAD."""
+    try:
+        object_format = _git_text(
+            repo_root, "rev-parse", "--show-object-format"
+        ).strip()
+    except ValueError as exc:
+        raise ValueError(f"cannot determine repository object format: {exc}") from exc
+    expected_length = {"sha1": 40, "sha256": 64}.get(object_format)
+    if expected_length is None:
+        raise ValueError(f"unsupported repository object format: {object_format}")
+    if re.fullmatch(rf"[0-9a-fA-F]{{{expected_length}}}", supplied_sha) is None:
+        raise ValueError(
+            f"reviewed SHA must be a full {object_format} commit object ID"
+        )
+    try:
+        reviewed_sha = _git_text(
+            repo_root, "rev-parse", "--verify", f"{supplied_sha}^{{commit}}"
+        )
+        current_head = _git_text(repo_root, "rev-parse", "HEAD")
+    except ValueError as exc:
+        raise ValueError(f"invalid reviewed SHA: {exc}") from exc
+    reviewed_sha = reviewed_sha.strip()
+    if reviewed_sha != current_head.strip():
+        raise ValueError("reviewed SHA does not match current HEAD")
+    return reviewed_sha
+
+
+def snapshot_repo_files(repo_root: Path, reviewed_sha: str) -> list[str]:
+    """List committed files in the packet snapshot, never from the worktree."""
+    return _git_text(repo_root, "ls-tree", "-r", "--name-only", reviewed_sha).splitlines()
+
+
+def _read_snapshot_file(repo_root: Path, reviewed_sha: str, path: str) -> str:
+    """Read one repository-relative file from the immutable packet snapshot."""
+    return _git_text(repo_root, "show", f"{reviewed_sha}:{path}")
+
+
+def _resolve_snapshot_cited_path(cited_path: str, repo_files: list[str]) -> str | None:
+    if cited_path in repo_files:
+        return cited_path
+    matches = [path for path in repo_files if path.endswith("/" + cited_path)]
+    return matches[0] if len(matches) == 1 else None
+
+
+def _snapshot_doc_relative(doc_path: Path, repo_root: Path) -> str:
+    """Convert a packet document path to a safe repository-relative path."""
+    try:
+        return doc_path.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError as exc:
+        raise ValueError(f"document is outside repo root: {doc_path}") from exc
+
+
+def check_snapshot_doc_report(
+    doc_path: Path,
+    repo_root: Path,
+    reviewed_sha: str,
+    repo_files: list[str],
+    check_sections: bool = False,
+) -> DocReport:
+    """Check a document exclusively from `reviewed_sha`.
+
+    This deliberately has no worktree fallback: both the citing document and
+    every cited source are read with `git show <sha>:<repo-relative-path>`.
+    """
+    doc_relative = _snapshot_doc_relative(doc_path, repo_root)
+    if doc_relative not in repo_files:
+        raise ValueError(f"document is absent from reviewed SHA: {doc_relative}")
+    text = _read_snapshot_file(repo_root, reviewed_sha, doc_relative)
+    findings: list[str] = []
+    checked = 0
+    unchecked = 0
+    for lineno, cited_path, start, end, anchor in extract_citations(text):
+        target = _resolve_snapshot_cited_path(cited_path, repo_files)
+        if target is None:
+            unchecked += 1
+            continue
+        file_text = _read_snapshot_file(repo_root, reviewed_sha, target)
+        reason: str | None = None
+        if anchor is not None:
+            if not anchor or anchor not in file_text:
+                reason = "quoted string not found in target"
+        else:
+            assert start is not None
+            check_line = end if end is not None else start
+            line_count = len(file_text.splitlines())
+            if check_line > line_count:
+                reason = f"line {check_line} exceeds file length ({line_count} lines)"
+        checked += 1
+        if reason is not None:
+            cited_repr = f"{start}-{end}" if end is not None else str(start)
+            findings.append(f"{doc_path}:{lineno} -> {cited_path}:{cited_repr} {reason}")
+    unchecked += count_pathless_citations(text)
+    if check_sections:
+        for lineno, target_doc_name, major, minor in extract_section_refs(text):
+            target = doc_relative if target_doc_name is None else _resolve_snapshot_cited_path(target_doc_name, repo_files)
+            target_repr = str(doc_path) if target_doc_name is None else target_doc_name
+            if target is None:
+                unchecked += 1
+                continue
+            headings = parse_headings(_read_snapshot_file(repo_root, reviewed_sha, target))
+            if not headings:
+                unchecked += 1
+                continue
+            checked += 1
+            if (major, minor) not in headings:
+                section_repr = f"{major}.{minor}" if minor is not None else str(major)
+                findings.append(f"{doc_path}:{lineno} -> {target_repr}:§{section_repr} section not found")
+    return DocReport(findings=findings, checked=checked, unchecked=unchecked)
+
+
 def check_doc_report(
     doc_path: Path,
     repo_root: Path,
@@ -497,6 +622,7 @@ def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
 
     repo_root: Path | None = None
+    reviewed_sha: str | None = None
     check_sections = False
     doc_args: list[str] = []
     i = 0
@@ -510,6 +636,15 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             repo_root = Path(args[i + 1])
             i += 2
+        elif args[i] == "--reviewed-sha":
+            if i + 1 >= len(args):
+                print(
+                    "usage error: --reviewed-sha requires a commit SHA",
+                    file=sys.stderr,
+                )
+                return 2
+            reviewed_sha = args[i + 1]
+            i += 2
         elif args[i] == "--sections":
             check_sections = True
             i += 1
@@ -520,7 +655,7 @@ def main(argv: list[str] | None = None) -> int:
     if not doc_args:
         print(
             "usage: check_doc_citations.py <file.md> [more.md ...] "
-            "[--repo-root PATH] [--sections]\n"
+            "[--repo-root PATH] [--reviewed-sha SHA] [--sections]\n"
             "  --sections  EXPERIMENTAL, opt-in: also check §N section-anchor\n"
             "              citations (off by default — see module docstring's\n"
             "              Round 4 note for why and the re-measure trigger).",
@@ -534,15 +669,32 @@ def main(argv: list[str] | None = None) -> int:
     repo_files_by_root: dict[Path, list[str]] = {}
     for doc_str in doc_args:
         doc_path = Path(doc_str)
-        if not doc_path.is_file():
+        if reviewed_sha is None and not doc_path.is_file():
             print(f"usage error: not a file: {doc_str}", file=sys.stderr)
             return 2
         root = repo_root if repo_root is not None else find_repo_root(doc_path)
-        if root not in repo_files_by_root:
-            repo_files_by_root[root] = list_repo_files(root)
-        report = check_doc_report(
-            doc_path, root, repo_files_by_root[root], check_sections
-        )
+        try:
+            if reviewed_sha is None:
+                if root not in repo_files_by_root:
+                    repo_files_by_root[root] = list_repo_files(root)
+                report = check_doc_report(
+                    doc_path, root, repo_files_by_root[root], check_sections
+                )
+            else:
+                resolved_sha = resolve_reviewed_sha(root, reviewed_sha)
+                cache_key = root / resolved_sha
+                if cache_key not in repo_files_by_root:
+                    repo_files_by_root[cache_key] = snapshot_repo_files(root, resolved_sha)
+                report = check_snapshot_doc_report(
+                    doc_path,
+                    root,
+                    resolved_sha,
+                    repo_files_by_root[cache_key],
+                    check_sections,
+                )
+        except ValueError as exc:
+            print(f"usage error: {exc}", file=sys.stderr)
+            return 2
         all_findings.extend(report.findings)
         total_checked += report.checked
         total_unchecked += report.unchecked

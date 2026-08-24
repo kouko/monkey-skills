@@ -18,8 +18,10 @@ match check-living-spec-index.py's usage-error convention).
 """
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
+import check_doc_citations
 from check_doc_citations import (
     check_doc,
     check_doc_report,
@@ -32,6 +34,21 @@ from check_doc_citations import (
 def _write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
+
+
+def _git(repo: Path, *args: str) -> str:
+    return subprocess.run(
+        ["git", *args], cwd=repo, check=True, text=True, capture_output=True
+    ).stdout.strip()
+
+
+def _commit_snapshot(repo: Path) -> str:
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "test@example.com")
+    _git(repo, "config", "user.name", "Citation test")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-qm", "snapshot")
+    return _git(repo, "rev-parse", "HEAD")
 
 
 def test_flags_out_of_range_line(tmp_path: Path) -> None:
@@ -268,6 +285,101 @@ def test_main_exits_2_on_no_args() -> None:
 
 def test_main_exits_2_on_missing_doc_file(tmp_path: Path) -> None:
     assert main([str(tmp_path / "missing.md")]) == 2
+
+
+def test_checker_reads_supplied_reviewed_sha_snapshot(
+    tmp_path: Path, capsys
+) -> None:
+    """The packet SHA, not later worktree edits, is the review evidence."""
+    _write(tmp_path / "target.py", "committed evidence\n")
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `target.py:1`.\n")
+    reviewed_sha = _commit_snapshot(tmp_path)
+
+    # These post-packet edits would make a mutable-tree checker report a
+    # finding. The supplied commit still contains the clean document and
+    # cited source, so a snapshot checker must pass.
+    _write(tmp_path / "target.py", "")
+    _write(doc, "See `target.py:99`.\n")
+
+    rc = main(
+        [
+            str(doc),
+            "--repo-root",
+            str(tmp_path),
+            "--reviewed-sha",
+            reviewed_sha,
+        ]
+    )
+
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "checked 1 / unchecked 0 / findings 0" in out
+
+
+def test_checker_refuses_invalid_or_drifted_reviewed_sha(
+    tmp_path: Path, capsys
+) -> None:
+    _write(tmp_path / "target.py", "evidence\n")
+    doc = tmp_path / "doc.md"
+    _write(doc, "See `target.py:1`.\n")
+    reviewed_sha = _commit_snapshot(tmp_path)
+
+    invalid_rc = main(
+        [
+            str(doc),
+            "--repo-root",
+            str(tmp_path),
+            "--reviewed-sha",
+            "not-a-commit",
+        ]
+    )
+    invalid_err = capsys.readouterr().err
+    assert invalid_rc == 2
+    assert "reviewed SHA" in invalid_err
+
+    _write(tmp_path / "target.py", "next commit\n")
+    _git(tmp_path, "add", ".")
+    _git(tmp_path, "commit", "-qm", "advance HEAD")
+    drifted_rc = main(
+        [
+            str(doc),
+            "--repo-root",
+            str(tmp_path),
+            "--reviewed-sha",
+            reviewed_sha,
+        ]
+    )
+    drifted_err = capsys.readouterr().err
+    assert drifted_rc == 2
+    assert "does not match current HEAD" in drifted_err
+
+
+def test_resolve_reviewed_sha_rejects_sha256_abbreviations(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """A SHA-256 repository must not accept 40/63-character prefixes."""
+    calls: list[tuple[str, ...]] = []
+
+    def fake_git_text(_root: Path, *args: str) -> str:
+        calls.append(args)
+        if args == ("rev-parse", "--show-object-format"):
+            return "sha256\n"
+        raise AssertionError("abbreviated SHA must be rejected before git resolves it")
+
+    monkeypatch.setattr(check_doc_citations, "_git_text", fake_git_text)
+
+    for abbreviated_sha in ("a" * 40, "a" * 63):
+        try:
+            check_doc_citations.resolve_reviewed_sha(tmp_path, abbreviated_sha)
+        except ValueError as exc:
+            assert "full sha256" in str(exc)
+        else:
+            raise AssertionError("SHA-256 abbreviation was accepted")
+    assert calls == [
+        ("rev-parse", "--show-object-format"),
+        ("rev-parse", "--show-object-format"),
+    ]
 
 
 # --- §N section-anchor checks (Task 2) ---
