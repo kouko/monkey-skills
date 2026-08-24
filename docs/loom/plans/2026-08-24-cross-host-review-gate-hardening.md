@@ -45,7 +45,7 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-6
-- **Status**: claimed(@codex-review-context)
+- **Status**: done(c9b82198)
 - **Gloss**: 讓審查者拿到明確地圖，不再把使用者專案誤認成 plugin 安裝目錄。
 
 ## Task 2 — 綁定 marker 到 reviewed SHA
