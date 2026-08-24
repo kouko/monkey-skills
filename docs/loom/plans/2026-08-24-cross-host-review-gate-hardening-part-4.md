@@ -53,7 +53,7 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(8ab3d04d)
 - **Gloss**: docs 不必再從 skill 位置猜 citation 工具，封包提供唯一來源。
 
 ## Task 2 — 將 review scope 綁到 packet SHA
@@ -70,7 +70,7 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(43122306)
 - **Gloss**: scope 清單與封包 commit 同步，避免 A 的封包搭配 B 的檔案集合。
 
 ## Task 3 — 將 citation pre-pass 綁到 packet SHA
@@ -104,7 +104,7 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-2
-- **Status**: pending
+- **Status**: done(2e17dba4)
 - **Gloss**: marker 不只看目前 HEAD，也會檢查 verdict 自己聲稱審的是同一個 SHA。
 
 ## Task 5 — 綁定 reviewer citation cross-read
@@ -121,7 +121,7 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: claimed(@codex-reviewer-crossread)
 - **Gloss**: reviewer 找證據時也只看被審 commit，不會把之後的檔案混進來。
 
 ## Task 6 — 固定 Claude adapter 的 root 與 drift 序列
@@ -138,7 +138,7 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: claimed(@codex-claude-root)
 - **Gloss**: Claude 的同 reviewer 確認只能確認真正的新 commit，不能把未提交修正當新審查。
 
 ## Task 7 — 固定 Codex adapter 的 root 與終態訊號
@@ -155,7 +155,7 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: claimed(@codex-codex-root)
 - **Gloss**: Codex 的 plugin 位置有可執行來源，不需要猜 cache 結構。
 
 ## Task 8 — 將 code station 接到完成的 primitives
