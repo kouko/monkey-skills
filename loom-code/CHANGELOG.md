@@ -5,6 +5,13 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.98.1] — 2026-08-25
+
+### Fixed
+
+- Bind reviewer evidence, post-fix confirmation, and installed role prompts
+  to immutable packets and canonical plugin roots across Claude Code and Codex.
+
 ## [0.98.0] — 2026-08-24
 
 ### Changed
