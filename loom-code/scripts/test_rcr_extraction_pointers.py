@@ -169,8 +169,11 @@ def test_pinned_refusal_and_pass_down_contracts_untouched():
 # last raise by the 2026-08-12 adjudication-view arc's T7 pointer
 # sentence at Step 5 — the conversation-language findings-rendition
 # duty, ~15 words, pointer-not-copy so untrimmable without losing the
-# duty).
-WORD_CEILING = 4315
+# duty). Raised 4315 -> 4401 by the 2026-08-24 cross-host review-gate
+# hardening arc: CODE and MIXED each pin the complete executable receipt
+# argv so a host event can be compared token-for-token rather than trusted
+# as prose.
+WORD_CEILING = 4401
 
 def test_word_count_within_ceiling():
     word_count = len(_skill_text().split())
@@ -185,7 +188,8 @@ def test_word_count_within_ceiling():
         "8 contract/record classification SSOT + record-only routing, "
         "then 4150 -> 4300 by the same arc's Task 12 M3 upgrade-rule "
         "paragraph + stale-cross-ref rewrite, then 4300 -> 4315 by the "
-        "2026-08-12 adjudication-view arc's T7 Step-5 pointer sentence; "
+        "2026-08-12 adjudication-view arc's T7 Step-5 pointer sentence, "
+        "then 4315 -> 4401 for Task 13's two complete receipt argv; "
         "the extraction-pilot brief reserves ~600 words of true headroom "
         "to CHK-SKL-010)"
     )

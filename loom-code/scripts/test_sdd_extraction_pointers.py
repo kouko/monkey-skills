@@ -92,8 +92,10 @@ ENVIRONMENT_GOTCHAS = (
 # paragraph stating how the record-class N/A path resolves through the
 # §Verdict resolution table (spec-reviewer's verdict alone; the
 # code-quality-reviewer column N/A by construction) -- zero margin was
-# again left at 4250.
-WORD_CEILING = 4300
+# again left at 4250. Raised 4300 -> 4397 by Task 13 of the 2026-08-24
+# cross-host review-gate hardening arc: the complete receipt argv is the
+# host-event oracle and cannot be replaced by a prose placeholder.
+WORD_CEILING = 4397
 
 # --- distinctive phrases, whitespace-normalized ---------------------------
 
@@ -419,7 +421,8 @@ def test_skill_md_word_count_within_ceiling():
         "by the 2026-08-11 review-cost-reduction arc, Task 11, to admit "
         "the Record-class scope narrowing paragraph; raised again "
         "4250 -> 4300, same Task 11, review-round-1 fix, to admit the "
-        "verdict-table-composition sentence)"
+        "verdict-table-composition sentence; raised 4300 -> 4397 by the "
+        "2026-08-24 Task 13 complete receipt argv)"
     )
 
 

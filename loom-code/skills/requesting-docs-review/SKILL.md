@@ -17,6 +17,16 @@ version: 0.1.0
 If you are a subagent dispatched with an explicit role prompt (docs-reviewer / code-reviewer / implementer / spec-reviewer / plan-document-reviewer), the parent orchestrator already invoked this skill. **Do not** re-route through it; follow your dispatched prompt directly.
 </SUBAGENT-STOP>
 
+## Live-gate receipt (DOCS only)
+
+Only when all five `LOOM_LIVE_GATE_PACKET`, `LOOM_LIVE_GATE_MARKER_DIR`,
+`LOOM_LIVE_GATE_NONCE`, `LOOM_LIVE_GATE_PLUGIN_ROOT`, and
+`LOOM_LIVE_GATE_REPO` are supplied: after consuming the handed packet, run
+exactly once (no wrapper, redirection, prefix, or suffix):
+`python3 "$LOOM_LIVE_GATE_PLUGIN_ROOT/scripts/live_gate_station_receipt.py" --packet "$LOOM_LIVE_GATE_PACKET" --plugin-root "$LOOM_LIVE_GATE_PLUGIN_ROOT" --marker-dir "$LOOM_LIVE_GATE_MARKER_DIR" --repo "$LOOM_LIVE_GATE_REPO" --station DOCS --nonce "$LOOM_LIVE_GATE_NONCE"`
+Otherwise do nothing. Never re-run `review_context.py` in a live-gate station;
+the runner-owned packet is the sole packet source.
+
 ## What this skill does
 
 Owns the **docs arm** of whole-branch review. Dispatches **two `docs-reviewer` subagents in parallel (a panel)** to review every changed `.md` artifact on a branch — each artifact read whole, the diff as context — across five prose defect dimensions, unions their findings, aggregates over instruction-class findings only, and, on a docs-only branch, mints the same review-pass gate marker the code arm mints (on a mixed branch it returns its verdict instead — Step 4). Documents have no tests, so prose review has no termination oracle of its own; this skill therefore also carries what the code arm never needed: a **convergence contract** — round 1 whole-artifact is the only full review; a gating verdict is fixed, then confirmed by the SAME reviewer via a delta-scoped check, never a fresh whole-corpus re-sample.

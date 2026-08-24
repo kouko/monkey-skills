@@ -77,7 +77,7 @@ _OSERROR_SUPERSETS = frozenset({
 
 # Modules in this directory that are NOT store/brief gates. Listed with a
 # reason so that classifying a new one is a decision, never an omission.
-# They are exempt from the CONTRACT, not judged safe: 14 of the 23 are
+# They are exempt from the CONTRACT, not judged safe: the exact leaky count is
 # leaky by this file's own metric today — see `exempt_leaks()` below, which
 # computes the list rather than restating it. Widening the contract to cover them is filed
 # at docs/loom/backlog/2026-08-21-fail-loud-contract-covers-only-the-four-
@@ -111,6 +111,12 @@ EXEMPT = {
     "loom_gate_markers.py": "mints and verifies gate markers",
     "review_context.py": "resolves a review packet from local git and plugin files",
     "review_scope.py": "resolves a review's changed-file set from git",
+    "live_gate_station_receipt.py": "writes a live-gate receipt; its own atomic "
+                                    "refusal contract is pinned in its tests",
+    "live_gate_adapter_probe.py": "exercises typed adapter refusals; its own "
+                                  "executable contract is pinned in its tests",
+    "live_host_review_gate.py": "orchestrates disposable host probes, not a "
+                                "store or handoff-brief gate",
     "verify-drift.py": "compares two copies of a synced file",
     "loom_init.py": "scaffolds a new store; has no store to read yet",
     "plan_card.py": "reads plans, not the store",
@@ -466,7 +472,7 @@ def test_every_script_here_is_classified() -> None:
 # said fourteen, and no round ran the metric against the sentence quoting
 # it. Anything that changes this number must also update the backlog entry
 # that sizes the follow-up work.
-EXEMPT_LEAK_COUNT = 15
+EXEMPT_LEAK_COUNT = 16
 EXEMPT_LEAK_LEDGER = (
     "docs/loom/backlog/"
     "2026-08-21-fail-loud-contract-covers-only-the-four-store-brief-gates.md"

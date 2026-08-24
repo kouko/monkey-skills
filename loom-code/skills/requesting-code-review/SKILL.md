@@ -9,6 +9,19 @@ version: 0.13.0
 If you are a subagent dispatched with an explicit role prompt (implementer / spec-reviewer / code-quality-reviewer / code-reviewer / plan-document-reviewer), the parent orchestrator already invoked this skill. **Do not** re-route through it; follow your dispatched prompt directly.
 </SUBAGENT-STOP>
 
+## Live-gate receipt (CODE / MIXED only)
+
+Only when all five `LOOM_LIVE_GATE_PACKET`, `LOOM_LIVE_GATE_MARKER_DIR`,
+`LOOM_LIVE_GATE_NONCE`, `LOOM_LIVE_GATE_PLUGIN_ROOT`, and
+`LOOM_LIVE_GATE_REPO` are supplied: after consuming the handed packet, run
+exactly one matching command (no wrapper, redirection, prefix, or suffix):
+
+- CODE: `python3 "$LOOM_LIVE_GATE_PLUGIN_ROOT/scripts/live_gate_station_receipt.py" --packet "$LOOM_LIVE_GATE_PACKET" --plugin-root "$LOOM_LIVE_GATE_PLUGIN_ROOT" --marker-dir "$LOOM_LIVE_GATE_MARKER_DIR" --repo "$LOOM_LIVE_GATE_REPO" --station CODE --nonce "$LOOM_LIVE_GATE_NONCE"`
+- MIXED: `python3 "$LOOM_LIVE_GATE_PLUGIN_ROOT/scripts/live_gate_station_receipt.py" --packet "$LOOM_LIVE_GATE_PACKET" --plugin-root "$LOOM_LIVE_GATE_PLUGIN_ROOT" --marker-dir "$LOOM_LIVE_GATE_MARKER_DIR" --repo "$LOOM_LIVE_GATE_REPO" --station MIXED --nonce "$LOOM_LIVE_GATE_NONCE"`
+
+Otherwise do nothing. Never re-run `review_context.py` in a live-gate station;
+the runner-owned packet is the sole packet source.
+
 ## What this skill does
 
 Dispatches **two `code-reviewer` subagents in parallel (a panel)** to review a non-trivial diff as a whole — typically the cumulative changes on a feature branch before merge. Both reviewers load the same rubrics SDD's per-task reviewer uses (`quality-gate.md` / `arch-gate.md` / `security-checklist.md`, functional-copied from `domain-teams:code-team`), but apply them at branch scope rather than per-atomic-task.

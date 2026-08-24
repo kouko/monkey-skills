@@ -1,14 +1,14 @@
 ---
 name: 2026-08-21-fail-loud-contract-covers-only-the-four-store-brief-gates
-description: the unreadable-input fail-loud contract binds only the four store/brief gates; 24 other modules in loom-code/scripts/ are EXEMPT, and 15 of them are leaky by the contract's own metric today (measured, not estimated — the count is pinned by test_exempt_leak_count_matches_the_filed_ledger)
+description: the unreadable-input fail-loud contract binds only the four store/brief gates; 27 other modules in loom-code/scripts/ are EXEMPT, and 16 of them are leaky by the contract's own metric today (measured, not estimated — the count is pinned by test_exempt_leak_count_matches_the_filed_ledger)
 status: open
 origin: 2026-08-21 dissolve-direction-layer round-7 review — the EXEMPT block claimed this widening was already filed as backlog work when no such entry existed; the reviewer caught the overclaim and this entry is the filing that comment now points at
-start: the next time a non-gate script in loom-code/scripts/ dies on a raw traceback in front of a user, or the next arc that touches ANY of the 15 leaky modules the pinned metric names for any other reason
+start: the next time a non-gate script in loom-code/scripts/ dies on a raw traceback in front of a user, or the next arc that touches ANY of the 16 leaky modules the pinned metric names for any other reason
 ---
 
 - Start: the next time a non-gate script in loom-code/scripts/ dies on a
   raw traceback in front of a user, or the next arc that touches ANY of the
-  15 leaky modules the pinned metric names for any other reason
+  16 leaky modules the pinned metric names for any other reason
 
 - Origin: 2026-08-21 dissolve-direction-layer round-7 review — the EXEMPT
   block claimed this widening was already filed as backlog work when no
@@ -22,11 +22,12 @@ start: the next time a non-gate script in loom-code/scripts/ dies on a raw trace
   named. Every other module in that directory sits in `EXEMPT` with a
   stated reason. Exempt means "outside the contract", not "checked and
   safe", and the difference is measurable: running the file's own
-  `leaky_scopes()` over the 24 exempt modules returns **15 leaky** —
+  `leaky_scopes()` over the 27 exempt modules returns **16 leaky** —
   adjudication_lint / _render / _split, archive_change_folder,
   check-living-spec-index, check-skill-crossrefs, check_contract_citations,
   check_doc_citations, check_field_microstructure, check_open_questions,
-  check_scenario_coverage, distribute, loom_init, plan_card, verify-drift.
+  check_scenario_coverage, distribute, live_host_review_gate, loom_init,
+  plan_card, verify-drift.
   `plan_card.py` is the one a user meets most often — it renders the
   progress card at every station of the close-out.
 

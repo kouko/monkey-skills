@@ -193,9 +193,10 @@ def test_todo_mirror_conditional_posture_present():
 # T1 moved plan_card.py / backlog_index.py into loom-code/scripts/ (plugin-
 # shipped) with exec shims at the repo root. Every skill-body invocation must
 # therefore carry the two-step resolution cascade: repo-root copy first, then
-# the plugin-shipped copy via the `${CLAUDE_PLUGIN_ROOT}` load-time
-# substitution. A paragraph (or table row) that invokes the script without
-# naming the fallback silently degrades external repos to hand-editing.
+# the plugin-shipped copy via either the load-time `${CLAUDE_PLUGIN_ROOT}`
+# substitution or the active adapter's verified `<installed-plugin-root>`.
+# A paragraph (or table row) that invokes the script without either fallback
+# silently degrades external repos to hand-editing.
 
 CASCADE_SKILLS = [
     "subagent-driven-development",
@@ -208,7 +209,10 @@ CASCADE_SKILLS = [
 _TOOLING_INVOCATION_RE = re.compile(
     r"python3 scripts/(?:plan_card|backlog_index)\.py"
 )
-PLUGIN_FALLBACK = "${CLAUDE_PLUGIN_ROOT}/scripts/"
+PLUGIN_FALLBACKS = (
+    "${CLAUDE_PLUGIN_ROOT}/scripts/",
+    "<installed-plugin-root>/scripts/",
+)
 
 
 def _units(text: str) -> list[str]:
@@ -235,10 +239,10 @@ def test_every_tooling_invocation_unit_carries_plugin_fallback(skill):
         unit
         for unit in _units(_read(path))
         if _TOOLING_INVOCATION_RE.search(unit)
-        and PLUGIN_FALLBACK not in unit
+        and not any(fallback in unit for fallback in PLUGIN_FALLBACKS)
     ]
     assert not offenders, (
         f"{skill}/SKILL.md: {len(offenders)} invocation unit(s) lack the "
-        f"plugin fallback {PLUGIN_FALLBACK!r}:\n"
+        f"a plugin fallback from {PLUGIN_FALLBACKS!r}:\n"
         + "\n---\n".join(u[:200] for u in offenders)
     )

@@ -12,6 +12,8 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
 
 REVIEWER_CONTRACT_RESOURCES = {
+    "live_gate_station_receipt",
+    "live_gate_adapter_probe",
     "review_scope",
     "gate_markers",
     "doc_citation_checker",

@@ -33,11 +33,11 @@ def _plugin_root() -> Path:
     return Path(__file__).resolve().parents[1]
 
 
-def _resources(plugin_root: Path) -> dict[str, str]:
-    """Return existing plugin-local files a review station may read."""
-    relative_paths = {
+RESOURCE_RELATIVE_PATHS = {
         "review_scope": "scripts/review_scope.py",
         "gate_markers": "scripts/loom_gate_markers.py",
+        "live_gate_station_receipt": "scripts/live_gate_station_receipt.py",
+        "live_gate_adapter_probe": "scripts/live_gate_adapter_probe.py",
         "doc_citation_checker": "scripts/check_doc_citations.py",
         "reviewer_discipline": "scripts/_reviewer-discipline.md",
         "code_reviewer": "agents/code-reviewer.md",
@@ -57,10 +57,14 @@ def _resources(plugin_root: Path) -> dict[str, str]:
         "refactoring_standard": "skills/subagent-driven-development/standards/refactoring-standard.md",
         "solid_principles_standard": "skills/subagent-driven-development/standards/solid-principles.md",
         "tdd_standard": "skills/subagent-driven-development/standards/tdd-standard.md",
-    }
+}
+
+
+def _resources(plugin_root: Path) -> dict[str, str]:
+    """Return existing plugin-local files a review station may read."""
     root = plugin_root.resolve()
     resources = {}
-    for name, relative_path in relative_paths.items():
+    for name, relative_path in RESOURCE_RELATIVE_PATHS.items():
         path = (root / relative_path).resolve()
         if not path.is_relative_to(root):
             raise ValueError(f"approved resource escapes plugin root: {name}")

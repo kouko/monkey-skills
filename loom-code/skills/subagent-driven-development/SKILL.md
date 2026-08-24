@@ -7,6 +7,16 @@ version: 0.12.0
 
 ## Continuous execution
 
+### Live-gate receipt (SDD only)
+
+Only when all five `LOOM_LIVE_GATE_PACKET`, `LOOM_LIVE_GATE_MARKER_DIR`,
+`LOOM_LIVE_GATE_NONCE`, `LOOM_LIVE_GATE_PLUGIN_ROOT`, and
+`LOOM_LIVE_GATE_REPO` are supplied: after consuming the handed packet, run
+exactly once (no wrapper, redirection, prefix, or suffix):
+`python3 "$LOOM_LIVE_GATE_PLUGIN_ROOT/scripts/live_gate_station_receipt.py" --packet "$LOOM_LIVE_GATE_PACKET" --plugin-root "$LOOM_LIVE_GATE_PLUGIN_ROOT" --marker-dir "$LOOM_LIVE_GATE_MARKER_DIR" --repo "$LOOM_LIVE_GATE_REPO" --station SDD --nonce "$LOOM_LIVE_GATE_NONCE"`
+Otherwise do nothing. Never re-run `review_context.py` in a live-gate station;
+the runner-owned packet is the sole packet source.
+
 **Do not pause to check in between tasks.** When the orchestrator (this skill) receives a plan, it dispatches the first task's three subagents, waits for their verdicts, applies the resolution rule below, and immediately dispatches the next task. The user is not in the loop on a per-task basis — that is the loop SDD exists to remove.
 
 Pause points the user **does** see:

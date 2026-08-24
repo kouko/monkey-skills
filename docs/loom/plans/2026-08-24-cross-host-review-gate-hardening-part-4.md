@@ -8,9 +8,10 @@ Steps:
   2. 將 citation、code 與 SDD 接到 primitives
   3. 完成 docs 終態 consumer
   4. 執行端到端 dogfood
-  5. 執行 Claude Code 與 Codex 實機出貨 gate
-Total tasks: 12
-Critical-path depth: 5
+  5. 建立可驗證的 gate-only station receipt
+  6. 執行 Claude Code 與 Codex 實機出貨 gate
+Total tasks: 13
+Critical-path depth: 6
 Execution order: parallel-where-possible
 Plan-document-reviewer verdict: PASS (2026-08-24, live-host gate recut)
 
@@ -35,6 +36,7 @@ flowchart LR
     T9 --> T11["T11 dogfood"]
     T10 --> T11
     T11 --> T12["T12 live-host gate"]
+    T12 --> T13["T13 station receipt"]
 ```
 
 ## Open Questions
@@ -213,22 +215,24 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Status**: done(3bdbefca)
 - **Gloss**: SDD 每次派 reviewer 都在同一份不可變證據上工作。
 
-## Task 11 — 執行完整隔離安裝 dogfood
+## Task 11 — 執行隔離安裝 primitive dogfood
 
-- **Description**: Add an isolated-consumer dogfood fixture that proves every route preserves one packet SHA through marker validation.
+- **Description**: Add an isolated-consumer dogfood fixture that executes the packet, scope, citation, and marker primitives from a copied plugin.
 - **Module**: loom-code/scripts/test_loom_plugin_composition.py
 - **Files touched**: loom-code/scripts/test_loom_plugin_composition.py
 - **Context paths**:
   - /Users/kouko/GitHub/monkey-skills/loom-code/scripts/test_loom_plugin_composition.py
   - /Users/kouko/GitHub/monkey-skills/loom-code/scripts/review_context.py
 - **Acceptance**:
-  - **RED**: `test_loom_plugin_composition.py::test_isolated_consumer_review_flow_is_sha_bound_end_to_end` fails because no fixture connects the primitives and stations.
-  - **GREEN**: A copied plugin and consumer repo without `loom-code/` prove code, docs, mixed, and SDD routes use one SHA; stale/mismatched verdicts refuse and valid current terminal verdicts mint.
+  - **RED**: `test_loom_plugin_composition.py::test_isolated_consumer_review_primitives_are_sha_bound_end_to_end` does not exist before the fixture is added.
+  - **GREEN**:
+    - A copied plugin and consumer repo without `loom-code/` execute packet, SHA-bound scope/citations, terminal marker, and record-only marker paths.
+    - Stale/mismatched verdicts refuse and valid current verdicts mint. Station execution remains a T12 live-host assertion.
 - **Dependencies**: Tasks 9, 10 complete first
 - **Independent**: false
 - **Brief item covered**: BI-4
-- **Status**: pending
-- **Gloss**: 最終 dogfood 直接證明資料流，而不是依賴多個局部文字測試推論。
+- **Status**: done(fd4370d8)
+- **Gloss**: 本機 dogfood 證明已安裝 primitives 能串接；真正的 station dispatch 由下一關兩個 host 實機證明。
 
 ## Task 12 — 以兩個真實 host 驗證 adapter
 
@@ -241,16 +245,35 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Acceptance**:
   - **RED**: `test_live_host_review_gate.py` fails because no runner creates an isolated copy, requires all three cases, or exits non-zero on a failed host case.
   - **GREEN**:
-    - Runner makes candidate plugin and consumer fixture read-only; Claude uses session-only `--plugin-dir <temporary-copy> --no-session-persistence` with minimal read-only tools, plus pre/post user-state snapshots.
+    - Runner makes candidate plugin and consumer worktree read-only, except its temporary `.git/loom` marker directory; Claude uses session-only `--plugin-dir <temporary-copy> --no-session-persistence` with minimal read-only tools, plus pre/post user-state snapshots.
     - Codex uses a temporary `CODEX_HOME`, marketplace, and install. It copies only the caller-supplied authentication material into that root with private permissions, never logs or hashes it, and deletes it in finally cleanup; unavailable safe auth bootstrap is a fail-closed release blocker.
-    - Raw transcripts prove each host ran the candidate `scripts/review_context.py`; packet root and SHA equal copied root and fixture commit.
-    - Per host cases: valid loaded-reference success; invalid reference `REFUSE` without scope/marker; unchanged post-fix SHA `REFUSE` without wrapper/marker.
-    - Any failed assertion or host case exits non-zero. Report records CLI versions, redacted commands/output, roots, SHA, cases, finally cleanup, and unchanged user-state snapshots.
+    - Runner resolves one schema-valid packet per host before four station sessions. Its resolver event is the sole source; root/resources/SHA equal copied install and fixture commit.
+    - Sessions receive it verbatim and prove candidate-skill loading through host tool events plus exact packet trace. Echo alone is rejected; stations never re-resolve. This is a gate-only Read→receipt/probe route, not a downstream whole review.
+    - Claude allows only the case's exact candidate-SKILL Read and exact receipt/probe Bash command. `dontAsk` stays enabled; exploratory commands, broad tool approval, and reviewer dispatch are forbidden.
+    - Per host cases: valid loaded-reference success; negative cases execute the candidate adapter probe and expose its typed refusal event without downstream work. The runner purges inherited `LOOM_LIVE_GATE_*`; only valid sessions receive the five gate values.
+    - Claude's mutable sandbox requires an exact matching authorization flag and a non-symlinked path chain. Negative slash commands are exact. Only Codex's exact `/bin/zsh -lc` event wrapper is accepted; all other wrapper shapes fail.
+    - Any failed assertion, timeout, host case, user-provided Claude-config mutation, or cleanup failure exits non-zero. Report records CLI versions and redacted evidence only: no raw prompt, auth data/path, or temporary absolute path.
 - **Dependencies**: Task 11 completes first
 - **Independent**: false
 - **Brief item covered**: BI-3, BI-4, BI-5
-- **Status**: pending
+- **Status**: done(live-host-gate-2026-08-24)
 - **Gloss**: 發布前要讓 Claude 與 Codex 實際載入候選 plugin；任一 host 不遵守路徑或 SHA 契約即阻擋出貨。
+
+## Task 13 — gate-only station receipt
+
+- **Description**: Make live station consumption observable without changing ordinary review dispatch.
+- **Module**: loom-code/scripts/live_gate_station_receipt.py
+- **Files touched**: receipt script, four station SKILL.md files, live-host runner/tests.
+- **Acceptance**:
+  - **RED**: receipt tests reject missing/wrong nonce, packet schema/root/SHA, non-marker destination, symlink escape, duplicate receipt, fake echo, and a negative route that writes or executes downstream work.
+  - **GREEN**:
+    - Only a valid live token creates one receipt under fixture `.git/loom`; normal dispatch without a token is unchanged.
+    - Runner proves exact loaded SKILL route, host tool command, and receipt for code/docs/mixed/SDD. Packet schema is complete; all other paths are read-only.
+    - Negative cases run the package-local adapter probe, bind its exact argv to a typed command-result refusal, and reject prompt-only or wrong-slash evidence.
+- **Dependencies**: Task 12 completes first
+- **Independent**: false
+- **Brief item covered**: BI-4, BI-5
+- **Status**: done(live-host-gate-2026-08-24)
 
 ## Notes
 
