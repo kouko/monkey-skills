@@ -90,9 +90,18 @@ def _write_verdict(tmp_path: Path, text: str) -> Path:
 def test_review_pass_writes_marker_matching_contract(tmp_path, capsys):
     repo = _init_repo(tmp_path)
     verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+    expected_sha = _head(repo)
 
     rc = main(
-        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+        [
+            "review-pass",
+            "--repo",
+            str(repo),
+            "--verdict-file",
+            str(verdict_file),
+            "--expected-head",
+            expected_sha,
+        ]
     )
 
     assert rc == 0
@@ -103,12 +112,73 @@ def test_review_pass_writes_marker_matching_contract(tmp_path, capsys):
     assert set(data) == {"schema", "branch", "head_sha", "verdict", "written_at"}
     assert data["schema"] == 1
     assert data["branch"] == _git(repo, "rev-parse", "--abbrev-ref", "HEAD")
-    assert data["head_sha"] == _head(repo)
+    assert data["head_sha"] == expected_sha == _head(repo)
     assert len(data["head_sha"]) == 40  # full sha, not abbreviated
     assert data["verdict"] == "PASS"
     datetime.fromisoformat(data["written_at"])  # parses as iso8601
     # Marker path printed for the orchestrator.
     assert str(marker) in capsys.readouterr().out
+
+
+def test_review_pass_refuses_when_expected_head_is_stale(tmp_path, capsys):
+    repo = _init_repo(tmp_path)
+    reviewed_sha = _head(repo)
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+    _git(repo, "commit", "--allow-empty", "-m", "advance after review")
+    current_sha = _head(repo)
+
+    rc = main(
+        [
+            "review-pass",
+            "--repo",
+            str(repo),
+            "--verdict-file",
+            str(verdict_file),
+            "--expected-head",
+            reviewed_sha,
+        ]
+    )
+
+    assert rc == 3
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    err = capsys.readouterr().err
+    assert reviewed_sha in err
+    assert current_sha in err
+
+
+def test_review_pass_refuses_when_head_advances_before_marker_write(
+    tmp_path, capsys, monkeypatch
+):
+    repo = _init_repo(tmp_path)
+    reviewed_sha = _head(repo)
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+    original_compute_patch_id = loom_gate_markers.compute_patch_id
+
+    def advance_head_before_write(target_repo):
+        _git(target_repo, "commit", "--allow-empty", "-m", "advance before write")
+        return original_compute_patch_id(target_repo)
+
+    monkeypatch.setattr(
+        loom_gate_markers, "compute_patch_id", advance_head_before_write
+    )
+
+    rc = main(
+        [
+            "review-pass",
+            "--repo",
+            str(repo),
+            "--verdict-file",
+            str(verdict_file),
+            "--expected-head",
+            reviewed_sha,
+        ]
+    )
+
+    assert rc == 3
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    err = capsys.readouterr().err
+    assert reviewed_sha in err
+    assert _head(repo) in err
 
 
 def test_review_pass_with_notes_accepted(tmp_path):

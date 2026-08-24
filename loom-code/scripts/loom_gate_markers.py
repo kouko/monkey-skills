@@ -818,6 +818,14 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
     if branch is None or head_sha is None:
         print("loom-gate-markers: cannot resolve HEAD.", file=sys.stderr)
         return 2
+    if args.expected_head is not None and head_sha != args.expected_head:
+        print(
+            "loom-gate-markers: current HEAD does not match the reviewed "
+            "SHA; no marker written. "
+            f"Expected: {args.expected_head}; current: {head_sha}",
+            file=sys.stderr,
+        )
+        return 3
 
     quote_statuses = _quote_verification_statuses(text, repo, head_sha)
 
@@ -843,6 +851,21 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
     patch_id_fields = compute_patch_id(repo)
     if patch_id_fields is not None:
         payload["base_sha"], payload["patch_id"] = patch_id_fields
+    current_head_sha = _git(repo, "rev-parse", "HEAD")
+    if current_head_sha is None:
+        print("loom-gate-markers: cannot resolve HEAD.", file=sys.stderr)
+        return 2
+    if (
+        args.expected_head is not None
+        and current_head_sha != args.expected_head
+    ):
+        print(
+            "loom-gate-markers: current HEAD does not match the reviewed "
+            "SHA; no marker written. "
+            f"Expected: {args.expected_head}; current: {current_head_sha}",
+            file=sys.stderr,
+        )
+        return 3
     path = _write_marker(marker_dir, "review-pass.json", payload)
     print(path)
     _print_normalised_quote_advisory(quote_statuses)
@@ -1069,7 +1092,7 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entry: `review-pass --verdict-file <path>` /
+    """CLI entry: `review-pass --verdict-file <path> [--expected-head <SHA>]` /
     `verified --run "<cmd>"` / `waiver --reason "<text>"` /
     `mint --review-na-record-only` /
     `validate --verdict-file <path> [--suite-line "<text>"]`,
@@ -1089,6 +1112,10 @@ def main(argv: list[str] | None = None) -> int:
     rp = subparsers.add_parser("review-pass")
     rp.add_argument("--repo", default=".", help="repo path (default: cwd)")
     rp.add_argument("--verdict-file", required=True)
+    rp.add_argument(
+        "--expected-head",
+        help="reviewed commit SHA; refuse marker creation if HEAD differs",
+    )
     rp.set_defaults(func=_cmd_review_pass)
 
     vf = subparsers.add_parser("verified")
