@@ -82,6 +82,60 @@ The hook script emits:
 
 Both Claude Code and Codex 0.139.0 read `hookSpecificOutput.additionalContext`, so a single emitted shape covers both harnesses — no Codex-specific adapter or alternate key is needed. (Earlier drafts of this doc speculated a top-level `additional_context` snake_case key; that is **not** what Codex 0.139.0 consumes — the nested key is correct.)
 
+## Immutable review-context adapter
+
+Before any loom review station dispatches reviewers, set
+`loaded_reference_path` to the loaded `codex-tools.md` absolute path and derive
+the installed `loom-code` plugin root from that path alone:
+
+```sh
+case "$loaded_reference_path" in
+  /*) ;;
+  *)
+    echo "loaded_reference_path must be absolute" >&2
+    exit 1
+    ;;
+esac
+if [ ! -f "$loaded_reference_path" ] || \
+   [ "$(basename "$loaded_reference_path")" != "codex-tools.md" ]; then
+  echo "loaded reference must be the codex-tools.md regular file" >&2
+  exit 1
+fi
+plugin_root="$(cd "$(dirname "$loaded_reference_path")/../../.." && pwd -P)"
+test -f "$plugin_root/scripts/review_context.py" || {
+  echo "review_context.py is absent from the loaded plugin" >&2
+  exit 1
+}
+```
+
+The adapter validates that source before deriving `plugin_root`: it must be an
+absolute path to the `codex-tools.md` regular file. The adapter must not infer
+the root from a cache, marketplace, or consumer path. It must not use the
+current working directory as a fallback. The loaded reference is the authority; the
+derived root is not the target repository or working directory. If the script
+is absent, refuse the review. It then runs the common resolver once:
+
+```
+python3 <installed-plugin-root>/scripts/review_context.py --repo <target_repo>
+```
+
+The adapter must forward the resulting JSON packet verbatim to every downstream
+station and reviewer. A downstream consumer must not derive, replace, or merge
+packet fields: `target_repo`, `reviewed_sha`, `plugin_version`, and the
+approved absolute `resources` paths remain exactly the resolver's output. The
+same command is used for every direct review entry; an upstream station hands
+its already-resolved packet to a delegate unchanged instead of resolving a
+replacement packet.
+
+After a docs fix, resolve one packet for the post-fix SHA, then dispatch a
+labelled `fresh whole-artifact review (Codex)` using that complete packet. This
+is a new review of the entire changed artifact set, not a delta continuation:
+do not represent this as a `SendMessage` continuation. Its terminal result
+must label exactly one terminal signal: `CONFIRMED_RESOLVED` or
+`STILL_BLOCKING`. It echoes that fresh packet's `reviewed_sha`, which must
+differ from the initial packet's `reviewed_sha`; otherwise reject the result.
+Only that result may feed the current-SHA terminal verdict or marker path.
+
 ## Subagent dispatch
 
 Per TECH-SPEC §3.3-3.4, loom-code's `subagent-driven-development` skill dispatches three subagents per atomic task (implementer / spec-reviewer / code-quality-reviewer).
