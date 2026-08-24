@@ -14,6 +14,7 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 REVIEWER_CONTRACT_RESOURCES = {
     "review_scope",
     "gate_markers",
+    "doc_citation_checker",
     "reviewer_discipline",
     "code_reviewer",
     "docs_reviewer",
@@ -121,6 +122,32 @@ def test_context_includes_all_reviewer_contract_resources(tmp_path: Path) -> Non
         assert resource_path.is_absolute()
         assert resource_path.is_file()
         assert resource_path.is_relative_to(installed_root)
+
+
+def test_context_includes_doc_citation_checker_resource(tmp_path: Path) -> None:
+    """A copied install approves the docs citation checker from its own root."""
+    installed_root = tmp_path / "plugin-cache" / "loom-code" / "0.98.0"
+    installed_root.parent.mkdir(parents=True)
+    shutil.copytree(PLUGIN_ROOT, installed_root)
+    consumer = _consumer_repo(tmp_path)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(installed_root / "scripts" / "review_context.py"),
+            "--repo",
+            str(consumer),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    resource = Path(json.loads(result.stdout)["resources"]["doc_citation_checker"])
+
+    assert resource == installed_root / "scripts" / "check_doc_citations.py"
+    assert resource.is_absolute()
+    assert resource.is_file()
+    assert resource.is_relative_to(installed_root)
 
 
 def test_context_refuses_damaged_or_escaping_installed_resources(

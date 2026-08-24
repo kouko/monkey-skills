@@ -38,6 +38,7 @@ def _resources(plugin_root: Path) -> dict[str, str]:
     relative_paths = {
         "review_scope": "scripts/review_scope.py",
         "gate_markers": "scripts/loom_gate_markers.py",
+        "doc_citation_checker": "scripts/check_doc_citations.py",
         "reviewer_discipline": "scripts/_reviewer-discipline.md",
         "code_reviewer": "agents/code-reviewer.md",
         "docs_reviewer": "agents/docs-reviewer.md",
