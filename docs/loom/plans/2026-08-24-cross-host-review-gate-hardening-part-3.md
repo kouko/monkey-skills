@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-24-cross-host-review-gate-hardening-part-3.md
 Goal: 讓所有 review 資料流從同一個不可變 SHA 出發、跨 caller 與 host 仍可追溯，並以隔離安裝 dogfood 證明它。
-Stage: planning
+Stage: blocked:user-decision
 Steps:
   1. 固定 reviewer 的 SHA 綁定契約
   2. 完成 code 上游交接與兩個 host adapter
@@ -61,7 +61,7 @@ N/A — no unresolved question: the user authorized re-cutting around the verifi
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-2
-- **Status**: pending
+- **Status**: blocked
 - **Gloss**: code 入口不再遺失封包，交給 docs 的仍是同一個審查事實。
 
 ## Task 3 — 明確化 Claude Code adapter
@@ -78,7 +78,7 @@ N/A — no unresolved question: the user authorized re-cutting around the verifi
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: blocked
 - **Gloss**: Claude 的便利確認流程仍保留，但不會沿用舊 commit 的審查結果。
 
 ## Task 4 — 明確化 Codex adapter
@@ -95,7 +95,7 @@ N/A — no unresolved question: the user authorized re-cutting around the verifi
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: blocked
 - **Gloss**: Codex 不假裝擁有 Claude 的續談能力，而是在新 commit 上重新做可追溯審查。
 
 ## Task 5 — 完成 docs 終態 consumer
@@ -136,5 +136,6 @@ N/A — no unresolved question: the user authorized re-cutting around the verifi
 ## Notes
 
 - Part 3 supersedes incomplete part-2 Tasks 3–5; keep their working changes only if they satisfy this plan's stronger contracts.
+- Tasks 2–4 are superseded by `2026-08-24-cross-host-review-gate-hardening-part-4`; retain only changes that satisfy its executable primitives-first contracts.
 - Tasks 3 and 4 are parallel only because their files and host-specific semantics are disjoint.
 - Local dogfood is mandatory; live host execution remains a separately authorized, quota-consuming follow-up.
