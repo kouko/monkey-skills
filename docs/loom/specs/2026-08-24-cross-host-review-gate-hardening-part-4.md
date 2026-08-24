@@ -30,6 +30,9 @@ must consume plugin resources through the packet.
   rules and hand the same packet to their stations.
 - BI-4 — Code, docs, and SDD stations consume only the completed primitives;
   an isolated consumer dogfood test proves the complete SHA-bound flow.
+- BI-5 — A reproducible live-host gate proves that both real CLIs load the
+  candidate copy, preserve its packet SHA, and refuse unsafe adapter inputs
+  without changing a user installation.
 
 ## Decision
 
@@ -39,5 +42,6 @@ citation, marker, or adapter invariant.
 
 ## Out of Scope
 
-- Live model-costing host runs.
+- Model-cost research beyond the mandatory, recorded Claude Code and Codex
+  live-host release gate.
 - Privacy judge redesign and reviewer-model selection.

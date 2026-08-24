@@ -8,10 +8,11 @@ Steps:
   2. 將 citation、code 與 SDD 接到 primitives
   3. 完成 docs 終態 consumer
   4. 執行端到端 dogfood
-Total tasks: 11
-Critical-path depth: 4
+  5. 執行 Claude Code 與 Codex 實機出貨 gate
+Total tasks: 12
+Critical-path depth: 5
 Execution order: parallel-where-possible
-Plan-document-reviewer verdict: PASS (2026-08-24, round 2, 17/17)
+Plan-document-reviewer verdict: PASS (2026-08-24, live-host gate recut)
 
 ## Task-flow diagram
 
@@ -33,6 +34,7 @@ flowchart LR
     T8 --> T9
     T9 --> T11["T11 dogfood"]
     T10 --> T11
+    T11 --> T12["T12 live-host gate"]
 ```
 
 ## Open Questions
@@ -87,7 +89,7 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(a10c09ca)
 - **Gloss**: citation 判讀也固定在同一 commit，不能被後續工作樹變更污染。
 
 ## Task 4 — 驗證 marker verdict SHA
@@ -117,11 +119,11 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
   - /Users/kouko/GitHub/monkey-skills/loom-code/scripts/distribute.py
 - **Acceptance**:
   - **RED**: `test_reviewer_discipline.py::test_reviewer_cross_reads_use_reviewed_sha_snapshot` fails because a cited source may be read from mutable worktree state.
-  - **GREEN**: Every generated reviewer contract requires `git show <reviewed_sha>:<path>` for repository cross-reads and prohibits mutable path reads.
+  - **GREEN**: Every generated reviewer contract requires `git -C "<target_repo>" show <reviewed_sha>:<path>` for repository cross-reads and prohibits mutable path reads.
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: claimed(@codex-reviewer-crossread)
+- **Status**: done(f19c4af6)
 - **Gloss**: reviewer 找證據時也只看被審 commit，不會把之後的檔案混進來。
 
 ## Task 6 — 固定 Claude adapter 的 root 與 drift 序列
@@ -138,7 +140,7 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: claimed(@codex-claude-root)
+- **Status**: done(ab598b0f)
 - **Gloss**: Claude 的同 reviewer 確認只能確認真正的新 commit，不能把未提交修正當新審查。
 
 ## Task 7 — 固定 Codex adapter 的 root 與終態訊號
@@ -155,7 +157,7 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-3
-- **Status**: claimed(@codex-codex-root)
+- **Status**: done(42a83f5c)
 - **Gloss**: Codex 的 plugin 位置有可執行來源，不需要猜 cache 結構。
 
 ## Task 8 — 將 code station 接到完成的 primitives
@@ -173,7 +175,7 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Dependencies**: Tasks 1, 2, 4 complete first
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-2
-- **Status**: pending
+- **Status**: done(755b228c)
 - **Gloss**: code station 只負責接線，所有 SHA 保障都來自可測的底層 primitive。
 
 ## Task 9 — 將 docs station 接到完成的 primitives
@@ -191,7 +193,7 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Dependencies**: Tasks 1, 2, 3, 4, 6, 7, 8 complete first
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-2, BI-3
-- **Status**: pending
+- **Status**: done(59d6c892)
 - **Gloss**: docs route 不猜工具位置、不改寫警告，也只在同一 SHA 上產生終態結果。
 
 ## Task 10 — 將 SDD station 接到完成的 primitives
@@ -208,7 +210,7 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Dependencies**: Tasks 1, 2, 5, 6, 7 complete first
 - **Independent**: false
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(3bdbefca)
 - **Gloss**: SDD 每次派 reviewer 都在同一份不可變證據上工作。
 
 ## Task 11 — 執行完整隔離安裝 dogfood
@@ -228,8 +230,30 @@ N/A — no unresolved question: the data-flow census assigned each remaining inv
 - **Status**: pending
 - **Gloss**: 最終 dogfood 直接證明資料流，而不是依賴多個局部文字測試推論。
 
+## Task 12 — 以兩個真實 host 驗證 adapter
+
+- **Description**: Build and run a fail-closed live-host gate against real Claude Code and Codex CLIs in isolated temporary installs before release.
+- **Module**: loom-code/scripts/live_host_review_gate.py
+- **Files touched**: loom-code/scripts/live_host_review_gate.py, loom-code/scripts/test_live_host_review_gate.py, docs/loom/dogfood/2026-08-24-cross-host-review-gate-live-host.md
+- **Context paths**:
+  - /Users/kouko/GitHub/monkey-skills/loom-code/skills/using-loom-code/references/claude-code-tools.md
+  - /Users/kouko/GitHub/monkey-skills/loom-code/skills/using-loom-code/references/codex-tools.md
+- **Acceptance**:
+  - **RED**: `test_live_host_review_gate.py` fails because no runner creates an isolated copy, requires all three cases, or exits non-zero on a failed host case.
+  - **GREEN**:
+    - Runner makes candidate plugin and consumer fixture read-only; Claude uses session-only `--plugin-dir <temporary-copy> --no-session-persistence` with minimal read-only tools, plus pre/post user-state snapshots.
+    - Codex uses a temporary `CODEX_HOME`, marketplace, and install. It copies only the caller-supplied authentication material into that root with private permissions, never logs or hashes it, and deletes it in finally cleanup; unavailable safe auth bootstrap is a fail-closed release blocker.
+    - Raw transcripts prove each host ran the candidate `scripts/review_context.py`; packet root and SHA equal copied root and fixture commit.
+    - Per host cases: valid loaded-reference success; invalid reference `REFUSE` without scope/marker; unchanged post-fix SHA `REFUSE` without wrapper/marker.
+    - Any failed assertion or host case exits non-zero. Report records CLI versions, redacted commands/output, roots, SHA, cases, finally cleanup, and unchanged user-state snapshots.
+- **Dependencies**: Task 11 completes first
+- **Independent**: false
+- **Brief item covered**: BI-3, BI-4, BI-5
+- **Status**: pending
+- **Gloss**: 發布前要讓 Claude 與 Codex 實際載入候選 plugin；任一 host 不遵守路徑或 SHA 契約即阻擋出貨。
+
 ## Notes
 
 - Part 4 supersedes incomplete part-3 Tasks 2–4. Preserve their working changes only when they satisfy the primitives-first contracts here.
 - Tasks 1, 2, 4, 5, 6, and 7 are independent after confirming their listed files are disjoint.
-- Local dogfood is mandatory; live host runs remain separately authorized because they consume model quota.
+- Local dogfood and both live-host probes are mandatory release gates. The user authorized the live probes on 2026-08-24; run them only against temporary copies and temporary consumer repos, never by replacing an installed plugin. The live-host runner is fail-closed and must preserve a redacted committed report even when one host fails.
