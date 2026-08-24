@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-24-cross-host-review-gate-hardening.md
 Goal: Claude Code 與 Codex 都只能以明確資源與同一個被審 commit 完成可追溯的 review pass
-Stage: planning
+Stage: blocked:user-decision
 Steps:
   1. 建立不可變 review context、marker SHA 閘門與 Check 17 修正
   2. 將 code review station 改接 context 合約
@@ -62,7 +62,7 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-2
-- **Status**: pending
+- **Status**: done(8d39d24a)
 - **Gloss**: 避免舊 verdict 在新 commit 上被誤蓋成已通過。
 
 ## Task 3 — 將 code review station 改接 context
@@ -80,7 +80,7 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-2, BI-6
-- **Status**: pending
+- **Status**: blocked
 - **Gloss**: code review 的輸入改為跨工具相同的明確契約。
 
 ## Task 4 — 完成 docs review 的可 mint 終態
@@ -116,7 +116,7 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: claimed(@codex-check17)
 - **Gloss**: 「重用既有 helper」不再能在沒有證據時被漏過。
 
 ## Task 6 — 保留 R3 與 simplification 的閘門訊號
@@ -139,7 +139,7 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 
 ## Task 7 — 跨 host 回歸與版本鏈
 
-- **Description**: Add isolated-install regression coverage, update release documentation and manifests, and run the full review-gate verification matrix from a consumer-repository fixture.
+- **Description**: Add isolated-install regression coverage, run a local dogfood matrix from a consumer-repository fixture, then update release documentation and manifests.
 - **Module**: loom-code/.claude-plugin/plugin.json
 - **Files touched**: loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/CHANGELOG.md, loom-code/scripts/test_loom_plugin_composition.py
 - **Context paths**:
@@ -148,7 +148,7 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
   - /Users/kouko/GitHub/monkey-skills/loom-code/CHANGELOG.md
 - **Acceptance**:
   - **RED**: `test_loom_plugin_composition.py::test_review_context_contract_survives_isolated_consumer_install` fails because no isolated fixture proves both adapters avoid a consumer `loom-code/` directory.
-  - **GREEN**: Targeted review-gate tests, isolated composition tests, manifest drift check, and the full plugin script suite all pass before the versioned release entry is accepted.
+  - **GREEN**: The local dogfood fixture proves standalone context, stale-SHA refusal, fresh-SHA mint, docs terminal route, and retained R3/simplification signals; composition tests, manifest drift check, and the full plugin script suite pass.
 - **Dependencies**: Tasks 4, 5, 6 complete first
 - **Independent**: false
 - **Brief item covered**: BI-6
@@ -157,6 +157,9 @@ N/A — no unresolved question: the user fixed the high-priority scope and host 
 
 ## Notes
 
+- Task 3 is superseded by `2026-08-24-cross-host-review-gate-hardening-part-2`; its uncommitted draft must not be committed.
 - Task 1 is the sole producer of context fields. Tasks 3 and 4 may only add
   host adapters; they may not fork the field semantics.
 - No task revives the retired durable ledger or changes model selection.
+- Task 7 separates no-quota local dogfood from live Claude Code/Codex runs;
+  invoke the latter only after the user confirms the model-costing commands.
