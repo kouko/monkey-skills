@@ -1070,6 +1070,14 @@ def _cmd_mint(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int:
     if branch is None or head_sha is None:
         print("loom-gate-markers: cannot resolve HEAD.", file=sys.stderr)
         return 2
+    if args.expected_head is not None and head_sha != args.expected_head:
+        print(
+            "loom-gate-markers: current HEAD does not match the reviewed "
+            "SHA; no marker written. "
+            f"Expected: {args.expected_head}; current: {head_sha}",
+            file=sys.stderr,
+        )
+        return 3
 
     payload = {
         "schema": 1,
@@ -1081,6 +1089,18 @@ def _cmd_mint(repo: Path, marker_dir: Path, args: argparse.Namespace) -> int:
     patch_id_fields = compute_patch_id(repo)
     if patch_id_fields is not None:
         payload["base_sha"], payload["patch_id"] = patch_id_fields
+    current_head_sha = _git(repo, "rev-parse", "HEAD")
+    if current_head_sha is None:
+        print("loom-gate-markers: cannot resolve HEAD.", file=sys.stderr)
+        return 2
+    if args.expected_head is not None and current_head_sha != args.expected_head:
+        print(
+            "loom-gate-markers: current HEAD does not match the reviewed "
+            "SHA; no marker written. "
+            f"Expected: {args.expected_head}; current: {current_head_sha}",
+            file=sys.stderr,
+        )
+        return 3
     path = _write_marker(marker_dir, "review-pass.json", payload)
     print(path)
     return 0
@@ -1159,7 +1179,7 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     """CLI entry: `review-pass --verdict-file <path> [--expected-head <SHA>]` /
     `verified --run "<cmd>"` / `waiver --reason "<text>"` /
-    `mint --review-na-record-only` /
+    `mint --review-na-record-only [--expected-head <SHA>]` /
     `validate --verdict-file <path> [--suite-line "<text>"]`,
     each of the first four with optional `--repo <path>` (default
     cwd). `validate` is a dry-run text check — no repo, no marker
@@ -1200,6 +1220,10 @@ def main(argv: list[str] | None = None) -> int:
 
     mt = subparsers.add_parser("mint")
     mt.add_argument("--repo", default=".", help="repo path (default: cwd)")
+    mt.add_argument(
+        "--expected-head",
+        help="reviewed commit SHA; refuse marker creation if HEAD differs",
+    )
     mt.add_argument(
         "--review-na-record-only",
         action="store_true",

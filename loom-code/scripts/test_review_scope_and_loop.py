@@ -141,7 +141,10 @@ def test_rcr_scope_classification():
     assert "exempt from review at any mix" in text
 
     # record-only continuity mechanism, named (Task 14's marker verb)
-    assert "mint --review-na-record-only" in text
+    assert (
+        "mint --repo <target_repo> --expected-head <reviewed_sha> "
+        "--review-na-record-only"
+    ) in text
 
     # Debt (T8 review, ride-along on Task 12): the docs-only and
     # mixed-branch Step-1 bullets' hand-off text must CLAUSE-SCOPE the
@@ -169,6 +172,41 @@ def test_rcr_scope_classification():
         "mixed-branch hand-off must restrict to the contract-class "
         "subset, not the whole .md list"
     )
+
+
+def test_rcr_marker_mint_follows_r3_and_simplification_gate():
+    """The branch-review marker must only be minted after the panel has
+    retained R3 caveats and harvested simplification evidence.  A mutation
+    that moves the command back into Step 3 would make the gate claim a
+    clean review before it has seen all relevant evidence."""
+    process = _section(_rcr_text(), "## Process")
+    step3_start = process.index("3. **Wait for BOTH verdicts")
+    step4_start = process.index("4. **Harvest the deliberate-simplification ledger")
+    step5_start = process.index("5. **Surface to user**")
+    step3 = process[step3_start:step4_start]
+    step4 = process[step4_start:step5_start]
+
+    assert "R3 downgrade" in step3
+    assert "do not collapse it to PASS" in step3
+    assert "review-pass --verdict-file" not in step3, (
+        "Step 3 must aggregate evidence, not mint before simplification "
+        "evidence is known"
+    )
+    assert "review-pass --repo <target_repo> --verdict-file" in step4
+    assert "valid, empty simplification ledger" in step4
+
+
+def test_rcr_r3_downgrade_sets_panel_aggregation_floor():
+    """Findings-union re-aggregation may not erase unconfirmed-evidence
+    caveats: one arm's R3 downgrade makes the panel at least
+    PASS_WITH_NOTES, even if the merged findings list is otherwise empty."""
+    verdict = _rcr_text().split("**Aggregation rule**", 1)[1].split(
+        "**Docs findings**", 1
+    )[0]
+    normalized = _norm(verdict)
+    assert "R3 downgrade" in normalized
+    assert "at least `PASS_WITH_NOTES`" in normalized
+    assert "even when the findings union is otherwise empty" in normalized
 
 
 def test_rcr_m3_upgrade_rule():

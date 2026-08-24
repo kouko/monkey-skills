@@ -2372,6 +2372,77 @@ def test_record_only_exemption_mints_and_validates(tmp_path):
     assert result.returncode == 0, result.stderr
 
 
+def test_record_only_mint_refuses_packet_head_drift_without_marker(tmp_path, capsys):
+    """A record-only route cannot mint B using a packet captured at A.
+
+    The branch remains record-only after B, so this exercises the required
+    sequence rather than merely failing classification: packet A resolves and
+    classifies cleanly, HEAD advances to B, then mint must refuse and leave no
+    marker behind.
+    """
+    repo = _init_repo_with_main(tmp_path)
+    _git(repo, "checkout", "-b", "feat/record-only-drift")
+    _commit_new_files(repo, {"docs/first.md": "A\n"}, "docs: packet A")
+    packet_sha = _head(repo)
+    _commit_new_files(repo, {"docs/second.md": "B\n"}, "docs: advance to B")
+
+    rc = main(
+        [
+            "mint",
+            "--repo",
+            str(repo),
+            "--expected-head",
+            packet_sha,
+            "--review-na-record-only",
+        ]
+    )
+
+    assert rc == 3
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert "current HEAD does not match the reviewed SHA" in capsys.readouterr().err
+
+
+def test_record_only_mint_refuses_head_race_before_marker_write(
+    tmp_path, capsys, monkeypatch
+):
+    """Re-check packet SHA after work between the initial check and write.
+
+    `compute_patch_id` is the real intervening work.  Advancing HEAD from its
+    hook proves the second check prevents a marker that would claim packet A
+    while writing during B.
+    """
+    repo = _init_repo_with_main(tmp_path)
+    _git(repo, "checkout", "-b", "feat/record-only-race")
+    _commit_new_files(repo, {"docs/notes.md": "A\n"}, "docs: packet A")
+    packet_sha = _head(repo)
+    original_compute_patch_id = loom_gate_markers.compute_patch_id
+
+    def advance_head_before_write(target_repo):
+        _git(target_repo, "commit", "--allow-empty", "-m", "advance before write")
+        return original_compute_patch_id(target_repo)
+
+    monkeypatch.setattr(
+        loom_gate_markers, "compute_patch_id", advance_head_before_write
+    )
+
+    rc = main(
+        [
+            "mint",
+            "--repo",
+            str(repo),
+            "--expected-head",
+            packet_sha,
+            "--review-na-record-only",
+        ]
+    )
+
+    assert rc == 3
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    err = capsys.readouterr().err
+    assert packet_sha in err
+    assert _head(repo) in err
+
+
 def test_record_only_exemption_refuses_contract_class_file_naming_offender(
     tmp_path, capsys
 ):

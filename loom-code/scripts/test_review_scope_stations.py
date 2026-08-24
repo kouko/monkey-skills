@@ -477,3 +477,231 @@ def test_mixed_branch_handoff_oracle_rejects_prose_mention_without_handoff():
         "mentions `resolved-scope` without an instruction to hand it "
         "off within this clause"
     )
+
+
+def test_code_station_packet_has_absolute_context_and_reviewed_sha():
+    """Task 3's code-review panel must receive Task 1's complete immutable
+    packet from the installed plugin, not paths reconstructed beneath the
+    consumer repository.  The packet is supplied once and copied unchanged
+    to both reviewer prompts, so the reviewed commit, plugin version, and
+    approved absolute resources cannot diverge between panel arms."""
+    text = _text()
+    routing = _routing_section(text)
+
+    assert "active host's immutable review-context adapter" in routing, (
+        "Process Step 1 must resolve immutable review context through the "
+        "active host adapter, never a consumer-repository or cache path"
+    )
+    assert "<installed-plugin-root>/scripts/review_context.py" in routing
+    assert "CLAUDE_PLUGIN_ROOT" not in text, (
+        "the host-neutral station must not make Claude's environment "
+        "variable its portable path source at any station step"
+    )
+    assert "python3 loom-code/scripts" not in text, (
+        "no consumer-repository-relative loom-code/scripts command may "
+        "survive in the code review station contract"
+    )
+    for field in ("target_repo", "reviewed_sha", "plugin_version", "resources"):
+        assert field in text, (
+            f"the code-review station contract must name immutable packet "
+            f"field {field!r}"
+        )
+
+    panel = _numbered_step_section(
+        text,
+        r"^2\.\s+\*\*Resolve the dispatch profile",
+        "2. **Resolve the dispatch profile**",
+    )
+    assert "full immutable context packet" in panel, (
+        "Step 2 must pass the complete immutable packet to both panel arms"
+    )
+    assert "byte-identical prompts" in panel, (
+        "Step 2 must give both code reviewers identical packet semantics"
+    )
+
+    discipline = (
+        Path(__file__).parents[1] / "scripts" / "_reviewer-discipline.md"
+    ).read_text(encoding="utf-8")
+    assert "packet-provided `plugin_version`" in discipline, (
+        "Rule R1 must use the packet's plugin_version, rather than derive "
+        "a version from the target repository"
+    )
+
+    agent = (Path(__file__).parents[1] / "agents" / "code-reviewer.md").read_text(
+        encoding="utf-8"
+    )
+    for field in ("target_repo", "reviewed_sha", "plugin_version", "resources"):
+        assert field in agent, (
+            f"code-reviewer input contract must accept packet field {field!r}"
+        )
+
+    marker_section = _numbered_step_section(
+        text,
+        r"^4\.\s+\*\*Harvest the deliberate-simplification ledger",
+        "4. **Harvest the deliberate-simplification ledger**",
+    )
+    assert "--expected-head <reviewed_sha>" in marker_section, (
+        "review-pass minting must bind to the packet's reviewed SHA"
+    )
+    assert "Only after those checks" in marker_section, (
+        "marker minting must follow, not precede, simplification checks"
+    )
+    assert "valid, empty simplification ledger" in marker_section, (
+        "a simplification finding must prevent the clean marker path"
+    )
+
+
+def test_code_station_routes_scope_and_docs_handoff_through_packet_sha():
+    """Task 8's station wiring has one immutable endpoint throughout.
+
+    Scope must consume the packet resource and SHA, and both docs routes must
+    receive that exact packet rather than a host-specific reconstructed path.
+    The terminal marker then binds to that same SHA.
+    """
+    routing = _routing_section(_text())
+    marker = _marker_sweep_section(_text())
+    docs_only = routing[
+        routing.index("**Docs-only branch**"):routing.index("**Mixed branch**")
+    ]
+    mixed = routing[
+        routing.index("**Mixed branch**"):routing.index("**Code-only branch**")
+    ]
+
+    assert "<resources.review_scope> --repo <target_repo> --reviewed-sha <reviewed_sha>" in routing
+    assert "same unchanged immutable context packet" in docs_only
+    assert "same unchanged immutable context packet" in mixed
+    assert "--expected-head <reviewed_sha>" in marker
+
+
+def test_code_station_marker_paths_bind_the_packet_target_repo_and_head():
+    """Every marker command must validate the packet's repository, not cwd.
+
+    A host may run the station outside the consumer checkout.  Passing the
+    packet target makes both record-only and terminal verdict minting refuse
+    when that target's HEAD drifts from `reviewed_sha`.
+    """
+    routing = _routing_section(_text())
+    marker = _marker_sweep_section(_text())
+
+    record_only = routing[
+        routing.index("**Record-only branch**"):routing.index("**Docs-only branch**")
+    ]
+    assert (
+        "mint --repo <target_repo> --expected-head <reviewed_sha> "
+        "--review-na-record-only"
+    ) in record_only
+    assert "review-pass --repo <target_repo>" in marker
+    assert "target's HEAD drifts from `reviewed_sha`" in marker
+
+
+def test_code_station_mints_non_simplification_pass_with_notes_but_not_simplification_findings():
+    """R3 is an evidence caveat, not a synthetic simplification finding.
+
+    A valid empty ledger therefore permits PASS_WITH_NOTES (including the R3
+    floor) to mint.  A simplification finding remains a blocking condition.
+    """
+    marker = _marker_sweep_section(_text())
+
+    assert "`PASS` or `PASS_WITH_NOTES`" in marker
+    assert "R3 downgrade alone does not block this marker path" in marker
+    assert "simplification finding prevents this marker path" in marker
+
+
+def test_code_station_reads_simplification_evidence_from_packet_sha_snapshot():
+    """Ledger evidence must not be read from a changed worktree after packet A.
+
+    The station reads each already-resolved path from target_repo at
+    reviewed_sha, so a later HEAD/worktree drift cannot add or remove a
+    simplification finding before marker minting.
+    """
+    marker = _marker_sweep_section(_text())
+    blocks = _fenced_code_blocks(marker)
+
+    assert any(
+        "git -C <target_repo> show <reviewed_sha>:<path>" in block
+        for block in blocks
+    )
+    assert "never the mutable working tree or current HEAD" in marker
+
+
+def test_code_station_preserves_r3_downgrades_before_clean_marker_path():
+    """An arm's unconfirmed-evidence downgrade is review evidence, not
+    disposable prose: panel aggregation must retain it, and only an exact
+    clean PASS may proceed to the marker after the ledger check."""
+    text = _text()
+    panel = _numbered_step_section(
+        text,
+        r"^3\.\s+\*\*Wait for BOTH verdicts",
+        "3. **Wait for BOTH verdicts**",
+    )
+    marker_section = _marker_sweep_section(text)
+
+    assert "R3 downgrade" in panel, (
+        "panel aggregation must preserve an arm's R3 downgrade"
+    )
+    assert "do not collapse it to PASS" in panel, (
+        "R3 evidence must not be relabelled as a clean PASS"
+    )
+    assert "panel verdict is `PASS` or `PASS_WITH_NOTES`" in marker_section, (
+        "a non-simplification PASS_WITH_NOTES may enter the marker path"
+    )
+
+
+def test_code_station_terminal_verdict_echoes_packet_reviewed_sha():
+    """The panel's returned schema must carry the immutable SHA it reviewed;
+    otherwise a caller cannot prove that the terminal verdict belongs to the
+    packet passed to both arms."""
+    verdict = _text().split("## Verdict structure", 1)[1].split(
+        "## Red Flags", 1
+    )[0]
+    assert "reviewed_sha:" in verdict
+    assert "packet's immutable `reviewed_sha`" in verdict
+
+
+def test_mixed_route_mints_only_after_the_shared_ledger_gate():
+    """Mixed branches must not resurrect the former Step-3 mint path: their
+    joined verdict waits for Step 4, where simplification evidence is known."""
+    routing = _routing_section(_text())
+    mixed = routing[routing.index("**Mixed branch**"):routing.index("**Code-only branch**")]
+
+    assert "Step 4's shared ledger-and-mint mechanics" in mixed
+    assert "Step 3's mint mechanics" not in mixed
+
+
+def test_explicit_range_refuses_when_endpoint_is_not_packet_sha():
+    """A hand-selected historical range must not borrow the current packet's
+    SHA and then mint a marker for a different commit."""
+    routing = _routing_section(_text())
+    assert "explicit range endpoint equals `reviewed_sha`" in routing
+    assert "REFUSES before dispatch or marker minting" in routing
+
+
+def test_code_review_hands_unchanged_packet_to_docs_only_and_mixed_routes():
+    """Both delegated docs routes must receive the exact Step-1 packet.
+
+    Passing only a scope, read-context, or profile tier lets the docs station
+    resolve a later HEAD and split one logical review across commits.  The
+    delegate therefore receives the full immutable packet unchanged, plus its
+    route-specific fields.
+    """
+    routing = _routing_section(_text())
+    docs_only_start = routing.index("**Docs-only branch**")
+    mixed_start = routing.index("**Mixed branch**")
+    code_only_start = routing.index("**Code-only branch**")
+    docs_only = routing[docs_only_start:mixed_start]
+    mixed = routing[mixed_start:code_only_start]
+
+    for route_name, route in (("docs-only", docs_only), ("mixed", mixed)):
+        assert "same unchanged immutable context packet" in route, (
+            f"the {route_name} docs dispatch must hand down the exact "
+            "Step-1 immutable context packet, not only route metadata"
+        )
+        for field in ("target_repo", "reviewed_sha", "plugin_version", "resources"):
+            assert field in route, (
+                f"the {route_name} docs dispatch must name packet field "
+                f"{field!r} in its own hand-off clause"
+            )
+
+    assert "resolved-scope" in docs_only
+    assert "resolved-scope" in mixed
+    assert "read-context" in mixed
