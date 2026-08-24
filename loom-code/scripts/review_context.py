@@ -47,6 +47,15 @@ def _resources(plugin_root: Path) -> dict[str, str]:
         "architecture_rubric": "skills/subagent-driven-development/rubrics/arch-gate.md",
         "security_checklist": "skills/subagent-driven-development/checklists/security-checklist.md",
         "spec_consistency_checklist": "skills/subagent-driven-development/checklists/spec-consistency.md",
+        "app_security_standard": "skills/subagent-driven-development/standards/app-security-standard.md",
+        "character_encoding_security_standard": "skills/subagent-driven-development/standards/character-encoding-security.md",
+        "deliberate_simplification_standard": "skills/subagent-driven-development/standards/deliberate-simplification.md",
+        "external_surface_grounding_standard": "skills/subagent-driven-development/standards/external-surface-grounding.md",
+        "naming_and_functions_standard": "skills/subagent-driven-development/standards/naming-and-functions.md",
+        "pragmatic_principles_standard": "skills/subagent-driven-development/standards/pragmatic-principles.md",
+        "refactoring_standard": "skills/subagent-driven-development/standards/refactoring-standard.md",
+        "solid_principles_standard": "skills/subagent-driven-development/standards/solid-principles.md",
+        "tdd_standard": "skills/subagent-driven-development/standards/tdd-standard.md",
     }
     root = plugin_root.resolve()
     resources = {}

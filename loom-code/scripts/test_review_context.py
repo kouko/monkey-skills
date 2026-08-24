@@ -11,6 +11,30 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 
 
+REVIEWER_CONTRACT_RESOURCES = {
+    "review_scope",
+    "gate_markers",
+    "reviewer_discipline",
+    "code_reviewer",
+    "docs_reviewer",
+    "code_review_skill",
+    "docs_review_skill",
+    "quality_rubric",
+    "architecture_rubric",
+    "security_checklist",
+    "spec_consistency_checklist",
+    "app_security_standard",
+    "character_encoding_security_standard",
+    "deliberate_simplification_standard",
+    "external_surface_grounding_standard",
+    "naming_and_functions_standard",
+    "pragmatic_principles_standard",
+    "refactoring_standard",
+    "solid_principles_standard",
+    "tdd_standard",
+}
+
+
 def _git(repo: Path, *args: str) -> str:
     result = subprocess.run(
         ["git", "-C", str(repo), *args],
@@ -64,6 +88,34 @@ def test_context_uses_script_parent_not_consumer_repo(tmp_path: Path) -> None:
     assert context["reviewed_sha"] == _git(consumer, "rev-parse", "HEAD")
     assert context["plugin_version"] == "0.98.0"
     assert context["resources"]
+    for resource in context["resources"].values():
+        resource_path = Path(resource)
+        assert resource_path.is_absolute()
+        assert resource_path.is_file()
+        assert resource_path.is_relative_to(installed_root)
+
+
+def test_context_includes_all_reviewer_contract_resources(tmp_path: Path) -> None:
+    """Every reviewer contract gets an approved absolute plugin resource."""
+    installed_root = tmp_path / "plugin-cache" / "loom-code" / "0.98.0"
+    installed_root.parent.mkdir(parents=True)
+    shutil.copytree(PLUGIN_ROOT, installed_root)
+    consumer = _consumer_repo(tmp_path)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(installed_root / "scripts" / "review_context.py"),
+            "--repo",
+            str(consumer),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    context = json.loads(result.stdout)
+
+    assert set(context["resources"]) == REVIEWER_CONTRACT_RESOURCES
     for resource in context["resources"].values():
         resource_path = Path(resource)
         assert resource_path.is_absolute()
