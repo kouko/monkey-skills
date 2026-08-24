@@ -64,6 +64,8 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+import pytest
+
 import review_scope
 
 
@@ -481,6 +483,83 @@ def test_cli_emits_file_list_matching_three_dot_diff(tmp_path, capsys):
     assert exit_code == 0
     assert captured.out == raw.stdout
     assert captured.out == "new_file.txt\n"
+
+
+def test_scope_uses_supplied_reviewed_sha_not_mutable_head(tmp_path, capsys):
+    """A packet for A must never produce B's scope after HEAD advances.
+
+    The first invocation proves that the explicit endpoint yields A's
+    population.  After B lands locally, reusing A's packet must refuse rather
+    than silently returning a scope computed from mutable HEAD.
+    """
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+    _git(repo, "checkout", "-q", "-b", "feature")
+
+    (repo / "a.txt").write_text("A\n")
+    _git(repo, "add", "a.txt")
+    _git(repo, "commit", "-q", "-m", "A")
+    reviewed_sha = _head(repo)
+
+    exit_code = review_scope.main(
+        ["--repo", str(repo), "--reviewed-sha", reviewed_sha]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert captured.out == "a.txt\n"
+
+    (repo / "b.txt").write_text("B\n")
+    _git(repo, "add", "b.txt")
+    _git(repo, "commit", "-q", "-m", "B")
+
+    exit_code = review_scope.main(
+        ["--repo", str(repo), "--reviewed-sha", reviewed_sha]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code != 0
+    assert captured.out == ""
+    assert "reviewed SHA no longer matches current HEAD" in captured.err
+
+
+def test_scope_refuses_reviewed_sha_that_is_not_a_commit(tmp_path, capsys):
+    """An invalid packet SHA must not fall back to a mutable-head scope."""
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+    _git(repo, "checkout", "-q", "-b", "feature")
+    (repo / "changed.txt").write_text("change\n")
+    _git(repo, "add", "changed.txt")
+    _git(repo, "commit", "-q", "-m", "feature change")
+
+    exit_code = review_scope.main(
+        ["--repo", str(repo), "--reviewed-sha", "f" * 40]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code != 0
+    assert captured.out == ""
+    assert "reviewed SHA does not resolve to a commit" in captured.err
+
+
+@pytest.mark.parametrize("symbolic_ref", ["HEAD", "feature"])
+def test_scope_refuses_symbolic_reviewed_sha(tmp_path, capsys, symbolic_ref):
+    """A packet endpoint must be a full immutable object ID, never a ref."""
+    upstream = _init_upstream(tmp_path)
+    repo = _clone(tmp_path, upstream)
+    _git(repo, "checkout", "-q", "-b", "feature")
+    (repo / "changed.txt").write_text("change\n")
+    _git(repo, "add", "changed.txt")
+    _git(repo, "commit", "-q", "-m", "feature change")
+
+    exit_code = review_scope.main(
+        ["--repo", str(repo), "--reviewed-sha", symbolic_ref]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code != 0
+    assert captured.out == ""
+    assert "reviewed SHA must be a full commit SHA" in captured.err
 
 
 def test_stale_origin_head_after_default_branch_rename_refuses(tmp_path):

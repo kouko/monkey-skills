@@ -11,12 +11,13 @@ refusal signal, for a genuinely stale base and for an unestablishable
 one alike; `base_sha`/`remote_sha` stay `None` on the latter, since no
 comparison ever ran.
 
-`main` is the CLI entry point: `python3 review_scope.py [--repo <path>]`.
+`main` is the CLI entry point:
+`python3 review_scope.py [--repo <path>] [--reviewed-sha <sha>]`.
 
 Exit codes:
   0 — the base is fresh. The branch's changed-file list is printed to
       stdout, one path per line, byte-identical to
-      `git diff <default-branch>...HEAD --name-only` (three-dot,
+      `git diff <default-branch>...<reviewed-sha> --name-only` (three-dot,
       unchanged — the brief's §Decision is that the defect was the
       base, never the dot count).
   1 — refusal. No file list is printed. stderr carries the reason from
@@ -134,6 +135,21 @@ def _git(repo: Path, *args: str, timeout: float | None = None) -> str | None:
     return result.stdout.strip()
 
 
+def _is_full_object_id(repo: Path, candidate: str) -> bool:
+    """Return whether ``candidate`` is a full hex object ID for ``repo``.
+
+    A revision name (including HEAD or a branch) may resolve today and move
+    tomorrow, so it cannot be accepted as an immutable review-packet endpoint.
+    """
+    object_format = _git(repo, "rev-parse", "--show-object-format")
+    expected_length = {"sha1": 40, "sha256": 64}.get(object_format)
+    return (
+        expected_length is not None
+        and len(candidate) == expected_length
+        and all(character in "0123456789abcdefABCDEF" for character in candidate)
+    )
+
+
 def split_fetch_target(ref: str) -> tuple[str, str] | None:
     """Split a `default_branch_ref` revision NAME into (remote, branch)
     for `git fetch <remote> <branch>`. `git fetch origin origin/main` is
@@ -173,10 +189,13 @@ def _remote_live_default_branch(
 
 
 def check_freshness(
-    repo: Path, *, fetch_timeout: float = _FETCH_TIMEOUT_SECONDS
+    repo: Path,
+    *,
+    fetch_timeout: float = _FETCH_TIMEOUT_SECONDS,
+    reviewed_sha: str = "HEAD",
 ) -> FreshnessResult:
-    """Report whether `repo`'s HEAD branch base is current with the
-    remote default branch. Never exits — see module docstring; every
+    """Report whether `reviewed_sha`'s base is current with the remote
+    default branch. Never exits — see module docstring; every
     failure-to-establish-freshness shape refuses via `fresh=False` with
     `base_sha`/`remote_sha` left `None`, per §Pinned refusal contract."""
     ref = default_branch_ref(repo)
@@ -220,7 +239,7 @@ def check_freshness(
             fresh=False, reason=f"could not resolve {ref} after fetch"
         )
 
-    base_sha = _git(repo, "merge-base", "HEAD", ref)
+    base_sha = _git(repo, "merge-base", reviewed_sha, ref)
     if base_sha is None:
         return FreshnessResult(fresh=False, reason="merge-base computation failed")
 
@@ -259,13 +278,16 @@ def branch_creation_sha(repo: Path) -> str | None:
     return sha
 
 
-def resolve_changed_files(repo: Path, ref: str) -> list[str] | None:
+def resolve_changed_files(
+    repo: Path, ref: str, *, reviewed_sha: str = "HEAD"
+) -> list[str] | None:
     """Return `repo`'s branch's changed-file list against `ref`, computed
-    the same way the review stations do today — `git diff <ref>...HEAD
-    --name-only`, three-dot — so the output is byte-identical to what
-    they already compute. Returns None on any git failure; an empty list
-    is a valid ("no changes") result, distinct from failure."""
-    output = _git(repo, "diff", f"{ref}...HEAD", "--name-only")
+    the same way the review stations do today — `git diff
+    <ref>...<reviewed-sha> --name-only`, three-dot — so the output is
+    byte-identical to what they already compute. Returns None on any git
+    failure; an empty list is a valid ("no changes") result, distinct from
+    failure."""
+    output = _git(repo, "diff", f"{ref}...{reviewed_sha}", "--name-only")
     if output is None:
         return None
     if output == "":
@@ -274,16 +296,49 @@ def resolve_changed_files(repo: Path, ref: str) -> list[str] | None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """CLI entry: `python3 review_scope.py [--repo <path>]` (default cwd).
+    """CLI entry: `python3 review_scope.py [--repo <path>]
+    [--reviewed-sha <sha>]` (default cwd / current HEAD).
     See the module docstring for the exit-code contract."""
     parser = argparse.ArgumentParser(
         description="Resolve review scope: a changed-file list gated on base freshness"
     )
     parser.add_argument("--repo", default=".", help="repo path (default: cwd)")
+    parser.add_argument(
+        "--reviewed-sha",
+        help=(
+            "immutable commit this review packet authorizes "
+            "(default: current HEAD)"
+        ),
+    )
     args = parser.parse_args(argv)
     repo = Path(args.repo)
 
-    result = check_freshness(repo)
+    reviewed_sha = "HEAD"
+    if args.reviewed_sha is not None:
+        if not _is_full_object_id(repo, args.reviewed_sha):
+            print(
+                "review-scope: refused — reviewed SHA must be a full commit SHA",
+                file=sys.stderr,
+            )
+            return 1
+        reviewed_sha = _git(
+            repo, "rev-parse", "--verify", f"{args.reviewed_sha}^{{commit}}"
+        )
+        if reviewed_sha is None:
+            print(
+                "review-scope: refused — reviewed SHA does not resolve to a commit",
+                file=sys.stderr,
+            )
+            return 1
+        current_head = _git(repo, "rev-parse", "HEAD")
+        if current_head != reviewed_sha:
+            print(
+                "review-scope: refused — reviewed SHA no longer matches current HEAD",
+                file=sys.stderr,
+            )
+            return 1
+
+    result = check_freshness(repo, reviewed_sha=reviewed_sha)
     if not result.fresh:
         print(f"review-scope: refused — {result.reason}", file=sys.stderr)
         if result.base_sha is not None and result.remote_sha is not None:
@@ -328,7 +383,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     ref = default_branch_ref(repo)
-    files = resolve_changed_files(repo, ref) if ref is not None else None
+    files = (
+        resolve_changed_files(repo, ref, reviewed_sha=reviewed_sha)
+        if ref is not None
+        else None
+    )
     if files is None:
         print(
             "review-scope: refused — changed-file list could not be resolved",
