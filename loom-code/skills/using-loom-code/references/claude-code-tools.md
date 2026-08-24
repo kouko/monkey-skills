@@ -11,6 +11,57 @@ Skill(skill: "<plugin>:<skill-name>") # plugin-scoped — Skill(skill: "loom-wor
 
 Plugin-scoped form is required when invoking skills from a different plugin (e.g. delegations to `loom-workflow:*` from `loom-code:*`).
 
+## Review-context adapter
+
+Before a Claude Code review station dispatches a panel, resolve the common
+review context from this **installed plugin root**, once per review attempt.
+The root derives from the absolute path of the loaded reference file:
+
+1. Start from that absolute path and walk upward until the directory named
+   `loom-code`; assign it to `derived_plugin_root`. If no such directory is
+   found, REFUSE the review attempt. Resolve `derived_plugin_root` to its
+   canonical absolute path before any comparison.
+2. `CLAUDE_PLUGIN_ROOT` is a cross-check only, never a path source. If
+   `CLAUDE_PLUGIN_ROOT` is missing or differs from `derived_plugin_root`,
+   REFUSE the review attempt. Canonicalize `CLAUDE_PLUGIN_ROOT` to an absolute
+   path, then compare the two canonical absolute paths.
+3. Use only `derived_plugin_root` for every plugin-local command:
+
+```
+python3 "${derived_plugin_root}/scripts/review_context.py" --repo <target_repo>
+```
+
+Do not infer it from a cache layout, the working directory, or the consumer
+repository. The script emits one
+unchanged immutable context packet containing `target_repo`, `reviewed_sha`,
+`plugin_version`, and `resources`. Do not derive plugin paths from
+`target_repo`, the working directory, or an assumed source checkout.
+
+Copy the packet verbatim into every downstream station and reviewer prompt.
+When an upstream station already handed down the complete packet, consume it
+verbatim rather than resolving another packet; a station must not silently
+replace the reviewed SHA or any approved resource path.
+
+### Claude post-fix confirmation
+
+Claude Code's `SendMessage` continuation may be used only for the same
+reviewer that raised a docs finding. After a fix, first resolve or receive a
+fresh immutable context packet for the fresh post-fix SHA, not the pre-fix
+`reviewed_sha`. Send that same reviewer the delta only, tied to the fresh
+packet; it returns `CONFIRMED_RESOLVED` or `STILL_BLOCKING` and echoes the
+fresh packet `reviewed_sha`.
+
+Record the initial round `reviewed_sha` before dispatching the first reviewer.
+If the post-fix packet `reviewed_sha` equals the initial round `reviewed_sha`,
+REFUSE confirmation: do not create a wrapper verdict and do not mint a marker.
+Commit the fix, resolve a genuinely new packet, then restart the confirmation
+sequence.
+
+The confirmation is terminal evidence only when its echoed SHA equals the
+fresh packet SHA. It is never a pass for the original packet and must not
+mint a marker by itself; the calling docs station constructs and validates the
+current-packet terminal verdict before any marker operation.
+
 ## Subagent dispatch
 
 ```
