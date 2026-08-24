@@ -64,7 +64,7 @@ N/A — no unresolved question: the user approved splitting this shared-caller r
 - **Dependencies**: Task 1 completes first
 - **Independent**: false
 - **Brief item covered**: BI-1, BI-2
-- **Status**: pending
+- **Status**: done(0148fbd5)
 - **Gloss**: 共用規則不再只對 code reviewer 有效，所有 reviewer 都有相同輸入前提。
 
 ## Task 3 — 將 SDD reviewer 派工接上封包
