@@ -109,6 +109,7 @@ EXEMPT = {
     "distribute.py": "packaging helper",
     "loom_firing_harness.py": "probes skill firing; reads no store or brief",
     "loom_gate_markers.py": "mints and verifies gate markers",
+    "review_context.py": "resolves a review packet from local git and plugin files",
     "review_scope.py": "resolves a review's changed-file set from git",
     "verify-drift.py": "compares two copies of a synced file",
     "loom_init.py": "scaffolds a new store; has no store to read yet",
