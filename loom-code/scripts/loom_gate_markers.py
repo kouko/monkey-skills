@@ -86,6 +86,9 @@ _KEY_RE = {
     "verdict": re.compile(r"^\s*verdict:[^\S\n]*([A-Z_]+)[^\S\n]*$", re.M),
     "dimension_scores": re.compile(r"^\s*dimension_scores:", re.M),
 }
+_TERMINAL_REVIEWED_SHA_RE = re.compile(r"^reviewed_sha:[^\S\n]*(.*)$")
+_FENCED_CODE_DELIMITER_RE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
+_FULL_SHA_RE = re.compile(r"[0-9a-fA-F]{40}")
 _FINDING_RE = re.compile(r"^\s*-\s*severity\s*:")
 _WHERE_RE = re.compile(r"^\s*where\s*:[^\S\n]*(\S.*)$")
 _DIMENSION_RE = re.compile(r"^\s*dimension\s*:[^\S\n]*(.*)$")
@@ -442,6 +445,46 @@ def validate_verdict_text(text: str) -> tuple[str | None, list[str]]:
 
     problems.extend(_finding_problems(text))
     return verdict, problems
+
+
+def _terminal_reviewed_sha(text: str) -> tuple[str | None, str | None]:
+    """Return a terminal verdict's SHA, or one precise refusal reason.
+
+    This is deliberately separate from ``validate_verdict_text``: historical
+    callers that omit ``--expected-head`` retain their legacy verdict schema.
+    A caller that binds a marker to an immutable head opts into this stronger
+    terminal-verdict provenance contract.
+    """
+    matches: list[str] = []
+    fence: tuple[str, int] | None = None
+    for line in text.splitlines():
+        delimiter = _FENCED_CODE_DELIMITER_RE.match(line)
+        if delimiter:
+            run = delimiter.group(1)
+            if fence is None:
+                fence = (run[0], len(run))
+            elif (
+                run[0] == fence[0]
+                and len(run) >= fence[1]
+                and not line[delimiter.end() :].strip(" \t")
+            ):
+                fence = None
+            continue
+        if fence is None:
+            match = _TERMINAL_REVIEWED_SHA_RE.match(line)
+            if match:
+                matches.append(match.group(1))
+    if not matches:
+        return None, "reviewed_sha: missing from terminal verdict"
+    if len(matches) != 1:
+        return None, "reviewed_sha: must appear exactly once in terminal verdict"
+
+    value = matches[0].strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        value = value[1:-1]
+    if not _FULL_SHA_RE.fullmatch(value):
+        return None, "reviewed_sha: invalid terminal verdict SHA"
+    return value.lower(), None
 
 
 def _origin_required(dimension_value: str | None) -> bool:
@@ -826,6 +869,28 @@ def _cmd_review_pass(repo: Path, marker_dir: Path, args: argparse.Namespace) -> 
             file=sys.stderr,
         )
         return 3
+
+    # `--expected-head` is the SHA-bound route used by the cross-host review
+    # stations.  It requires the terminal artifact itself to attest to the
+    # same commit; checking only repository HEAD would permit verdict A to
+    # mint a marker for B.  The no-flag branch remains intentionally backward
+    # compatible for older callers until they migrate to the immutable packet.
+    if args.expected_head is not None:
+        verdict_reviewed_sha, verdict_sha_problem = _terminal_reviewed_sha(text)
+        if verdict_sha_problem is not None:
+            print(
+                f"loom-gate-markers: {verdict_sha_problem}; no marker written.",
+                file=sys.stderr,
+            )
+            return 4
+        if verdict_reviewed_sha != args.expected_head.lower():
+            print(
+                "loom-gate-markers: terminal verdict reviewed_sha does not match "
+                f"--expected-head; verdict: {verdict_reviewed_sha}; "
+                f"expected: {args.expected_head}",
+                file=sys.stderr,
+            )
+            return 3
 
     quote_statuses = _quote_verification_statuses(text, repo, head_sha)
 

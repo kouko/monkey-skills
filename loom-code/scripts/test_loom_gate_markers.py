@@ -84,13 +84,24 @@ def _write_verdict(tmp_path: Path, text: str) -> Path:
     return path
 
 
+def _with_reviewed_sha(text: str, reviewed_sha: str) -> str:
+    """Add the terminal verdict provenance field to an otherwise valid verdict."""
+    return text.replace(
+        "standards_version: 2026-06\n",
+        f"standards_version: 2026-06\nreviewed_sha: {reviewed_sha}\n",
+        1,
+    )
+
+
 # ---------------------------------------------------------------- review-pass
 
 
 def test_review_pass_writes_marker_matching_contract(tmp_path, capsys):
     repo = _init_repo(tmp_path)
-    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
     expected_sha = _head(repo)
+    verdict_file = _write_verdict(
+        tmp_path, _with_reviewed_sha(VALID_VERDICT, expected_sha)
+    )
 
     rc = main(
         [
@@ -118,6 +129,138 @@ def test_review_pass_writes_marker_matching_contract(tmp_path, capsys):
     datetime.fromisoformat(data["written_at"])  # parses as iso8601
     # Marker path printed for the orchestrator.
     assert str(marker) in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    ("reviewed_sha", "error_fragment"),
+    [
+        (None, "reviewed_sha: missing"),
+        ("not-a-sha", "reviewed_sha: invalid"),
+        ("0" * 40, "does not match --expected-head"),
+    ],
+)
+def test_review_pass_refuses_terminal_verdict_sha_not_matching_expected_head(
+    tmp_path, capsys, reviewed_sha, error_fragment
+):
+    repo = _init_repo(tmp_path)
+    expected_sha = _head(repo)
+    verdict = VALID_VERDICT
+    if reviewed_sha is not None:
+        verdict = _with_reviewed_sha(verdict, reviewed_sha)
+    verdict_file = _write_verdict(tmp_path, verdict)
+
+    rc = main(
+        [
+            "review-pass",
+            "--repo",
+            str(repo),
+            "--verdict-file",
+            str(verdict_file),
+            "--expected-head",
+            expected_sha,
+        ]
+    )
+
+    assert rc in {3, 4}
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert error_fragment in capsys.readouterr().err
+
+
+def test_review_pass_refuses_duplicate_terminal_verdict_reviewed_sha(tmp_path, capsys):
+    repo = _init_repo(tmp_path)
+    expected_sha = _head(repo)
+    verdict_file = _write_verdict(
+        tmp_path,
+        _with_reviewed_sha(
+            _with_reviewed_sha(VALID_VERDICT, expected_sha),
+            expected_sha,
+        ),
+    )
+
+    rc = main(
+        [
+            "review-pass",
+            "--repo",
+            str(repo),
+            "--verdict-file",
+            str(verdict_file),
+            "--expected-head",
+            expected_sha,
+        ]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert "reviewed_sha: must appear exactly once" in capsys.readouterr().err
+
+
+def test_review_pass_refuses_reviewed_sha_only_inside_fenced_code_block(
+    tmp_path, capsys
+):
+    repo = _init_repo(tmp_path)
+    expected_sha = _head(repo)
+    verdict_file = _write_verdict(
+        tmp_path,
+        VALID_VERDICT + f"\n```yaml\nreviewed_sha: {expected_sha}\n```\n",
+    )
+
+    rc = main(
+        [
+            "review-pass",
+            "--repo",
+            str(repo),
+            "--verdict-file",
+            str(verdict_file),
+            "--expected-head",
+            expected_sha,
+        ]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert "reviewed_sha: missing" in capsys.readouterr().err
+
+
+def test_review_pass_keeps_non_closing_fence_text_inside_code_block(tmp_path, capsys):
+    repo = _init_repo(tmp_path)
+    expected_sha = _head(repo)
+    verdict_file = _write_verdict(
+        tmp_path,
+        VALID_VERDICT
+        + "\n```yaml\n"
+        + "example terminal verdict:\n"
+        + "``` explanatory text, not a closing fence\n"
+        + f"reviewed_sha: {expected_sha}\n"
+        + "```\n",
+    )
+
+    rc = main(
+        [
+            "review-pass",
+            "--repo",
+            str(repo),
+            "--verdict-file",
+            str(verdict_file),
+            "--expected-head",
+            expected_sha,
+        ]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert "reviewed_sha: missing" in capsys.readouterr().err
+
+
+def test_review_pass_without_expected_head_keeps_legacy_verdict_contract(tmp_path):
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 0
+    assert (_marker_dir(repo) / "review-pass.json").is_file()
 
 
 def test_review_pass_refuses_when_expected_head_is_stale(tmp_path, capsys):
@@ -151,7 +294,9 @@ def test_review_pass_refuses_when_head_advances_before_marker_write(
 ):
     repo = _init_repo(tmp_path)
     reviewed_sha = _head(repo)
-    verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
+    verdict_file = _write_verdict(
+        tmp_path, _with_reviewed_sha(VALID_VERDICT, reviewed_sha)
+    )
     original_compute_patch_id = loom_gate_markers.compute_patch_id
 
     def advance_head_before_write(target_repo):
