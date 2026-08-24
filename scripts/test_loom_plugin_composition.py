@@ -9,6 +9,8 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 import check_plugin_boundaries
@@ -56,6 +58,45 @@ def _copy_plugin(source_name: str, destination: Path) -> Path:
     source = REPO_ROOT / source_name
     shutil.copytree(source, destination)
     return destination
+
+
+def _git(repo: Path, *args: str) -> str:
+    """Run a successful git command in an isolated consumer fixture."""
+    result = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
+
+
+def _isolated_review_consumer(tmp_path: Path) -> Path:
+    """Build a fresh consumer branch whose base is a live local remote."""
+    upstream = tmp_path / "upstream"
+    upstream.mkdir()
+    _git(upstream, "init", "-q", "-b", "main")
+    _git(upstream, "config", "user.email", "review@example.test")
+    _git(upstream, "config", "user.name", "Review Fixture")
+    (upstream / "README.md").write_text("# Consumer\n", encoding="utf-8")
+    _git(upstream, "add", "README.md")
+    _git(upstream, "commit", "-qm", "base")
+
+    consumer = tmp_path / "consumer-project"
+    subprocess.run(
+        ["git", "clone", "-q", str(upstream), str(consumer)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    _git(consumer, "config", "user.email", "review@example.test")
+    _git(consumer, "config", "user.name", "Review Fixture")
+    _git(consumer, "checkout", "-qb", "review-flow")
+    (consumer / "feature.py").write_text("VALUE = 1\n", encoding="utf-8")
+    (consumer / "CONTRACT.md").write_text("# Contract\n", encoding="utf-8")
+    _git(consumer, "add", "feature.py", "CONTRACT.md")
+    _git(consumer, "commit", "-qm", "reviewable mixed change")
+    return consumer
 
 
 def _loom_artifacts(markdown: str) -> set[str]:
@@ -165,6 +206,224 @@ def test_plugins_compose_only_through_public_skills_and_artifacts(tmp_path: Path
         for plugin_root in (design_root, code_root)
     }
     assert not any(violations.values()), violations
+
+
+def test_isolated_consumer_review_primitives_are_sha_bound_end_to_end(
+    tmp_path: Path,
+) -> None:
+    """A copied plugin keeps every executable review primitive on one SHA.
+
+    This is deliberately an installed-plugin test rather than an import of
+    repository modules: the consumer has no ``loom-code/`` directory and the
+    bundle name carries no cache-layout signal to guess from.
+    """
+    installed_root = _copy_plugin(
+        "loom-code", tmp_path / "host-install" / "review-bundle-983"
+    )
+    consumer = _isolated_review_consumer(tmp_path)
+    assert not (consumer / "loom-code").exists()
+
+    context_result = subprocess.run(
+        [
+            sys.executable,
+            str(installed_root / "scripts" / "review_context.py"),
+            "--repo",
+            str(consumer),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    packet = json.loads(context_result.stdout)
+    reviewed_sha = _git(consumer, "rev-parse", "HEAD")
+    assert packet["target_repo"] == str(consumer.resolve())
+    assert packet["reviewed_sha"] == reviewed_sha
+    assert packet["resources"]
+    for resource in packet["resources"].values():
+        assert Path(resource).is_relative_to(installed_root)
+
+    scope_result = subprocess.run(
+        [
+            sys.executable,
+            packet["resources"]["review_scope"],
+            "--repo",
+            packet["target_repo"],
+            "--reviewed-sha",
+            packet["reviewed_sha"],
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert set(scope_result.stdout.splitlines()) == {"CONTRACT.md", "feature.py"}
+
+    # Deliberately poison only the mutable worktree after packet creation.
+    # The ordinary mode must see the bad citation, while the packet mode must
+    # still read the committed snapshot and produce a different result.
+    contract = consumer / "CONTRACT.md"
+    contract.write_text(
+        "# Contract\n\nBad mutable citation: `feature.py:999`\n",
+        encoding="utf-8",
+    )
+    mutable_citation_result = subprocess.run(
+        [
+            sys.executable,
+            packet["resources"]["doc_citation_checker"],
+            str(contract),
+            "--repo-root",
+            packet["target_repo"],
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert mutable_citation_result.returncode == 1
+    assert "line 999 exceeds file length" in mutable_citation_result.stdout
+
+    # Citation checking executes from the packet-approved installed resource,
+    # and reads the committed document snapshot rather than this worktree.
+    citation_result = subprocess.run(
+        [
+            sys.executable,
+            packet["resources"]["doc_citation_checker"],
+            str(contract),
+            "--repo-root",
+            packet["target_repo"],
+            "--reviewed-sha",
+            packet["reviewed_sha"],
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert "checked 0 / unchecked 0 / findings 0" in citation_result.stdout
+
+    marker = Path(packet["resources"]["gate_markers"])
+    verdict = tmp_path / "terminal-verdict.md"
+    marker_path = consumer / ".git" / "loom" / "review-pass.json"
+
+    # A syntactically valid verdict for another commit must not authorize the
+    # packet commit, and it must leave no marker behind.
+    verdict.write_text(
+        "\n".join(
+            (
+                "standards_version: 2026-08",
+                "reviewed_sha: " + "0" * 40,
+                "verdict: PASS",
+                "dimension_scores:",
+                "  correctness: 5",
+                "findings: []",
+                "",
+            )
+        ),
+        encoding="utf-8",
+    )
+    mismatch = subprocess.run(
+        [
+            sys.executable,
+            str(marker),
+            "review-pass",
+            "--repo",
+            packet["target_repo"],
+            "--verdict-file",
+            str(verdict),
+            "--expected-head",
+            packet["reviewed_sha"],
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert mismatch.returncode != 0
+    assert not marker_path.exists()
+
+    # A valid terminal verdict for the exact packet commit is mintable.
+    verdict.write_text(
+        verdict.read_text(encoding="utf-8").replace("0" * 40, reviewed_sha),
+        encoding="utf-8",
+    )
+    current = subprocess.run(
+        [
+            sys.executable,
+            str(marker),
+            "review-pass",
+            "--repo",
+            packet["target_repo"],
+            "--verdict-file",
+            str(verdict),
+            "--expected-head",
+            packet["reviewed_sha"],
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert str(marker_path) in current.stdout
+    assert json.loads(marker_path.read_text(encoding="utf-8"))["head_sha"] == reviewed_sha
+
+    # HEAD drift after packet creation is also a refusal; an old verdict never
+    # authorizes a later commit merely because both are otherwise valid.
+    (consumer / "later.md").write_text("later\n", encoding="utf-8")
+    _git(consumer, "add", "later.md")
+    _git(consumer, "commit", "-qm", "later commit")
+    marker_path.unlink()
+    stale = subprocess.run(
+        [
+            sys.executable,
+            str(marker),
+            "review-pass",
+            "--repo",
+            packet["target_repo"],
+            "--verdict-file",
+            str(verdict),
+            "--expected-head",
+            packet["reviewed_sha"],
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert stale.returncode != 0
+    assert not marker_path.exists()
+
+    # The code station's record-only route intentionally has no reviewer
+    # verdict, but it still must bind its continuity marker to a fresh packet.
+    _git(consumer, "reset", "--hard", "origin/main")
+    record = consumer / "docs" / "review-record.md"
+    record.parent.mkdir()
+    record.write_text("# Review record\n", encoding="utf-8")
+    _git(consumer, "add", "docs/review-record.md")
+    _git(consumer, "commit", "-qm", "record-only change")
+    record_packet = json.loads(
+        subprocess.run(
+            [
+                sys.executable,
+                str(installed_root / "scripts" / "review_context.py"),
+                "--repo",
+                str(consumer),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    )
+    record_marker = Path(record_packet["resources"]["gate_markers"])
+    record_mint = subprocess.run(
+        [
+            sys.executable,
+            str(record_marker),
+            "mint",
+            "--repo",
+            record_packet["target_repo"],
+            "--expected-head",
+            record_packet["reviewed_sha"],
+            "--review-na-record-only",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert str(marker_path) in record_mint.stdout
+    assert json.loads(marker_path.read_text(encoding="utf-8"))["head_sha"] == record_packet[
+        "reviewed_sha"
+    ]
 
 
 def test_loom_workflow_hard_cut_is_the_only_runtime_dependency_namespace() -> None:
