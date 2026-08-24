@@ -72,6 +72,69 @@ def _check17_row(text: str) -> str:
     raise AssertionError("Check 17 table row (`| 17 |`) not found")
 
 
+def test_check17_requires_source_access_and_missing_reuse_block():
+    """Check 17 may inspect only the repository-relative evidence its
+    Reuse-adequacy declaration cites, and a reuse instruction makes the
+    check applicable even when the declaration is absent.
+
+    The first condition prevents the prompt's plan/brief/schema triangle
+    from blocking the cross-read it explicitly requires. The second prevents
+    the old false-N/A escape hatch: a missing block is the (a) failure, not
+    a reason to skip Check 17.
+    """
+    text = _text()
+    behavioral_rules = _section(text, "## Behavioral rules")
+    row = _norm(_check17_row(text)).lower()
+    verdict_mapping = _section(text, "### Verdict mapping").lower()
+
+    allowed_evidence_rule = next(
+        (line for line in behavioral_rules.splitlines() if "Reuse-adequacy" in line),
+        None,
+    )
+    assert allowed_evidence_rule is not None, (
+        "Behavioral rules must grant Check 17 its narrow Reuse-adequacy "
+        "evidence exception"
+    )
+    normalized_evidence_rule = _norm(allowed_evidence_rule).lower()
+    assert "may read only" in normalized_evidence_rule, (
+        "Check 17 must permit only its cited evidence, not unrestricted "
+        "repository reconnaissance"
+    )
+    assert "repo-relative" in normalized_evidence_rule, (
+        "the allowed Check 17 evidence must be repo-relative"
+    )
+    assert "source/call-path evidence" in normalized_evidence_rule, (
+        "the allowed Check 17 evidence must cover source and call-path evidence"
+    )
+    assert "cited" in normalized_evidence_rule, (
+        "the allowed Check 17 evidence must be cited by Reuse-adequacy"
+    )
+    assert "observed" in normalized_evidence_rule and "`read` marker" in normalized_evidence_rule, (
+        "the source exception must resolve only the repo-relative read marker "
+        "in Observed"
+    )
+    assert "intended" in normalized_evidence_rule and "concrete call path" in normalized_evidence_rule, (
+        "the call-path exception must resolve only the concrete call path "
+        "named in Intended"
+    )
+
+    assert "applies" in row and "whether or not the block is present" in row, (
+        "Check 17 must apply to a reuse-instructing Description even when "
+        "the Reuse-adequacy block is absent"
+    )
+    assert "without the block" in row and "needs_revision" in row, (
+        "a reuse-instructing task without Reuse-adequacy must explicitly "
+        "produce NEEDS_REVISION"
+    )
+    assert "only when no task" in verdict_mapping, (
+        "Check 17's N/A mapping must be limited to plans with no reuse "
+        "instruction and no Reuse-adequacy block"
+    )
+    assert "description instructs reuse" in verdict_mapping, (
+        "the N/A mapping must test reuse instructions, not merely block presence"
+    )
+
+
 def test_check17_row_has_four_graded_parts_and_marker_vocabulary():
     """Check 17 names all four graded parts -- (a) presence, (b) marker,
     (c1) cross-read, (c2) adequacy -- and the (b) part carries the three
