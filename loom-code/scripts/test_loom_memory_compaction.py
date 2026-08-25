@@ -70,7 +70,7 @@ def test_entrypoint_preserves_conditional_record_recall_prune_contract_within_wo
         "Classify everything else by the charter",
         "Tell the user the chosen route and why",
         "Check the store for contradictions",
-        "Grep both index and bodies",
+        "First grep both index and bodies",
         "update or replace",
         "never add a contradicting sibling",
         "frontmatter `description`",

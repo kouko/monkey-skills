@@ -46,13 +46,13 @@ charter wins.
    practice memory: do not blur these destinations. Tell the user the
    chosen route and why, including when the fact is rejected from this
    store.
-2. **Check the store for contradictions.** Grep both index and bodies
+2. **Check the store for contradictions.** First grep both index and bodies
    before writing. On a hit, update or replace the entry (git history
    is the archive), never add a contradicting sibling. Note replacement
    in its frontmatter `description`, which the regenerated index carries.
    Follow `loom-workflow:git-memory`'s backward-pointing `Supersedes:`
    doctrine by reference; do not copy it.
-3. Write `docs/loom/memory/<slug>.md` as `<slug>.md`, following the
+3. **Write `<slug>.md`** to `docs/loom/memory/<slug>.md`, following the
    charter's format block exactly, including frontmatter and body sections.
 4. Run `python3 scripts/check_loom_memory_integrity.py --write`; it
    generates `## Index` from entry frontmatter, so never append a line
