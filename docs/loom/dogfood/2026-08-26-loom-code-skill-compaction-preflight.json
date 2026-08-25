@@ -1,0 +1,3172 @@
+{
+  "schema_version": 1,
+  "captured": "2026-08-26",
+  "acknowledgement": "The user previously acknowledged genuine prompts and weak-model equivalence testing on Claude Code and Codex.",
+  "models": {
+    "claude": "haiku",
+    "codex": "gpt-5.6-luna"
+  },
+  "replicates_per_host": 2,
+  "skills": {
+    "brainstorming": {
+      "word_count": 3645,
+      "frontmatter": {
+        "name": "brainstorming",
+        "description": "Use BEFORE implementing new behavior or non-obvious design — explore intent + alternatives via an upstream-artifact gate (Axis 0) → a brief. Refuses 'this is simple' / 'just start coding'.",
+        "version": "0.12.1"
+      },
+      "declared_dependencies": [
+        " (→ a validated change-folder) for the high-coverage path. |\n\nDelegation contract (see CLAUDE.md cross-plugin section): pass **paths + structured seed context**, not full file content. The target skill loads its own resources.\n\n## Visual companion\n\nFor non-trivial system design — especially when axes 1+2 (problem + users) need a flow / interaction diagram, or axis 5 (what becomes obsolete) needs an architecture-before-and-after — see [",
+        " field itself, not only in prose above the call; the user sees the rendered menu first. A bare axis prompt («Which approach?» with no context) is the failure.\n- **Outcome, not mechanism.** Each option says what the user *gets* or which design direction it commits to (\"ship CSV as a URL query param, no UI work\"), not the internal machinery — no axis numbers, no \"Option B\", no cluster names.\n- **Numbers (and symbols) carry their meaning.** Translate raw counts and jargon into plain words in the option text: \"3 industry approaches found\" → \"the three ways teams actually ship this\"; let any bare count sink to a sub-line, never the headline.\n\nThese three join the two gates already woven into the axes: gate ① (ask only when genuinely uncertain) lives in **Axis 1** as the confident-JTBD-read rule — state a confident reading as a committed interpretation rather than re-asking — and gate ② (bring a recommendation, not an open question) lives in **Axis 4** as the research-then-\"My take: Recommend / Why / Conditional reversal\" protocol; together the three read as one coherent set.\n\n**Above all — brief first when the fork is complex.** The trigger threshold and stakes-first framing live in ",
+        " for systematic deletion-first triage. See §Cross-skill delegation.\n\n### Axis 4 — Alternatives Considered (**research-grounded, not imagined**)\n\nWhat are 2-3 other ways this could be solved, and why were they rejected? Force the user (or yourself, in conversation with the user) to enumerate.\n\nThe point is not to pick from the alternatives — it is to make the chosen path's trade-offs visible. *\"We picked X over Y because Z\"* is a sentence that survives 6 months of context loss; *\"X is the obvious choice\"* does not.\n\n**Research the SHIPPED options, not imagined ones.** Run **WebSearch** for what the industry currently does — the agent's training data is frozen, so *\"alternatives I can imagine\"* produces hallucinated libraries / deprecated patterns. Per round, search **at minimum one English AND one Japanese** query (single-language is sampling bias; JA blogs / post-mortems often cover what EN misses). EN+JA agreement is a stronger signal — and **a disagreement between EN and JA is itself a finding** worth surfacing, not a tie to resolve silently. Lead with an explicit recommendation (\"my take\", recommendation first — the user learns which one before the alternatives' evidence), citing sources in **both languages**, each labeled by source language.\n\n**Output format** — lead with the \"My take: Recommend / Why / Conditional reversal\" block, then surface each alternative with source + pros/cons + who ships it. Concrete template in [",
+        " the distribution/sync script (e.g. ",
+        " | Evidence-grounded KEEP / DEFER / DROP triage. Optional. |\n| Brainstorming output indicates work >1 hour OR >1 module | ",
+        " | Runs the full lens (USM / OOUX / auto-expansion matrix) on a sparse seed. **Active / wired**: ",
+        " | Systematic deletion-first triage (three questions: smallest end state / before-after LOC / what becomes obsolete). Optional but strongly recommended. |\n| Axis 4 produces 3+ real options that need triage | ",
+        " | The brief documented the smallness; trust it. |\n| Greenfield UI feature needs **high-coverage / high-risk** state fan-out (beyond the inline six-category reminder) | ",
+        "../tdd-iron-law/SKILL.md",
+        "../using-loom-code/SKILL.md",
+        "../using-loom-code/protocols/adjudication-view.md",
+        "; **do not reproduce it here**.\n\n## Red Flags — refuse these rationalizations\n\nRationalizations that push to skip discovery — *\"this is simple,\" \"I know what to build, let's just start,\" \"let's just start coding and see,\" \"the user already gave me a spec,\" \"it's just refactoring,\" \"I'll fill Current State Evidence from memory,\" \"it's greenfield, skip Evidence\"* (and localized variants 「太簡單了 / 簡単すぎる」). Refuse each; walk Axis 1+2 minimally, then name a §When NOT to Use exemption only if the task is genuinely trivial after. Full table (rationalization → why it is one → correct response) in [",
+        "Loom-init offer: offered — user chose <scaffold/decline>",
+        "N/A — greenfield",
+        "](references/axis4-research-protocol.md) §Output format.\n\nFull protocol — the bilingual query-pattern tables, the why-both-languages rationale, WebSearch-unavailable handling, the \"only ≤3 alternatives exist\" case, the anti-patterns, and the output-format template — in [",
+        "](references/axis4-research-protocol.md). That protocol is also referenced by **router rule #5** (Research before asking) for decisions arising outside Axis 4 (e.g. an SDD implementer asking \"which retry strategy?\" mid-execution).\n\n### Axis 5 — What Becomes Obsolete\n\nWhat existing code / process / convention does this make redundant? Anything that becomes obsolete and is **not removed in the same change** is technical debt by design.\n\nExamples:\n- New CSV export endpoint → the documented Sheets-copy-paste runbook becomes obsolete; delete it in the same PR.\n- New feature flag → the hardcoded behavior it replaces becomes obsolete; remove it in the same PR.\n- New helper function → if it's covering for an existing API's shortcomings, can the existing API be improved instead?\n\nIf nothing becomes obsolete, that is a flag: either the change is purely additive (probably YAGNI — see ",
+        "](references/red-flags.md).\n\n## Cross-skill delegation\n\n| When | Delegate to | Why |\n|---|---|---|\n| Axis 3 surfaces \"this change might be bigger than necessary\" (smell of accidental complexity / YAGNI) | ",
+        "](references/visual-companion.md). The companion documents when a Mermaid sequence / C4 / ER diagram pays for itself vs when prose is enough.\n\nFlow / state diagrams in briefs and user-facing summaries are GENERATED via ",
+        "backlog_index.py",
+        "docs/loom/KICKOFF-DEFAULTS.md",
+        "docs/loom/backlog/",
+        "docs/loom/specs/<date>-<topic>.md",
+        "fired: rows <n> — standing <direct|detour> (KICKOFF-DEFAULTS.md)",
+        "loom-code/hooks/family-reception.md",
+        "loom-code/hooks/family-relay.md §(b) Visual defaults",
+        "loom-code/hooks/family-relay.md §Family relay discipline",
+        "package.json",
+        "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/backlog_index.py\" --ready",
+        "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/loom_init.py\"",
+        "python3 loom-code/scripts/check_field_microstructure.py --brief <brief-path>",
+        "python3 scripts/backlog_index.py --ready",
+        "references/axis4-research-protocol.md",
+        "references/handoff-brief-format.md",
+        "references/red-flags.md",
+        "references/visual-companion.md",
+        "scripts/backlog_index.py",
+        "sync.sh",
+        "tdd-iron-law/SKILL.md"
+      ],
+      "file_structure": [
+        "README.ja.md",
+        "README.md",
+        "README.zh-TW.md",
+        "SKILL.md",
+        "references/",
+        "references/axis4-research-protocol.md",
+        "references/handoff-brief-format.md",
+        "references/red-flags.md",
+        "references/visual-companion.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "5e6abe41dd9cfeb3ba8d4b39e9d8b422954c3dfe3e5a250618a3499d8d6b8dbd",
+      "corpus_sha256": "78a56481e63351f10edc4053a6eda3754023bf86c0b1ddf745df1a798f7cfceb",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:brainstorming",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:brainstorming",
+            "result_subtype": "completed",
+            "tool_count": 6
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "success",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "completed",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "success",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": "obsidian:dashboard-design",
+            "result_subtype": "success",
+            "tool_count": 22
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:brainstorming",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:brainstorming",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-codex-r1.jsonl"
+        }
+      ]
+    },
+    "dispatching-parallel-agents": {
+      "word_count": 1827,
+      "frontmatter": {
+        "name": "dispatching-parallel-agents",
+        "description": "Use when 2+ independent domains can run concurrently — unrelated failing tests, atomic tasks marked independent:true, disjoint data fetches. Dispatch one subagent per domain in one message (multiple Agent calls). Not when domains share files/state.",
+        "version": "0.9.0"
+      },
+      "declared_dependencies": [
+        "\n\nThe same rule applies to mixed shapes — e.g. one implementer + one Explore + one reviewer for independent domains all dispatched in the same fan-out step.\n\n### 4. Aggregate results\n\nWhen all parallel agents return:\n\n1. Read each verdict / status. Don't drop or smooth any of them.\n2. Check for accidental file overlap: did any two agents edit the same file? Should not happen if step 1 was honest; if it did, treat as a plan error — resolve manually now, split better in the next plan.\n3. Aggregate by rule:\n   - All ",
+        " / ",
+        " atomic tasks this skill consumes. |\n| **Upstream** | Direct user invocation | \"Fix these 3 unrelated test files in parallel\" / \"audit these 4 modules at once\". |\n| **Inside (per branch)** | [",
+        " disjoint | ✅ Yes — dispatch those implementers concurrently |\n| Two reviewers on one artifact (spec-rev + code-quality-rev) | ❌ SDD already does this per-task; don't double-wrap |\n| Single domain, complex but cohesive | ❌ One focused subagent, not N fragmented ones |\n| Tasks share a file or symbol | ❌ Merge conflicts + non-deterministic state — sequence, or split the file first |\n| Sequential data dependency (B needs A's output) | ❌ By definition not parallel |\n| Failures might share a root cause / root cause unknown | ❌ One agent investigates first — fragmenting hides the shared cause |\n\nDefault is **sequential**; parallel dispatch is the exception you justify per the criteria below.\n\n## The pattern\n\n### 1. Identify independent domains\n\nA domain is independent when **all** hold:\n\n- No shared file with any other domain (or the shared file is read-only in all branches).\n- No shared symbol that any branch will rename / remove / re-export.\n- No sequential data dependency (Agent B's input does not include Agent A's output).\n\nIf you cannot state the independence in one sentence per domain, the work is not independent. Stop and split better.\n\n### 2. Compose focused agent prompts\n\nEach agent gets:\n\n- **Specific scope** — one domain, one set of files, one outcome.\n- **Self-contained context** — all paths and reference docs in the prompt. Subagents do NOT inherit this session's history.\n- **Constraints** — what NOT to touch (the other domains' files, by path).\n- **Expected output** — the verdict / status shape (",
+        " disjointness partition (step 2) is the real collision defense, not the worktree.** Verify partition disjointness before launching concurrent agents.\n\n**Practical ceiling:** ~3–5 concurrent agents. Beyond that, wait-time + integration/merge cost dominate and throughput stops scaling linearly.\n\n## Red flags — refuse these rationalizations\n\n| Agent / user says | Reality | Correct response |\n|---|---|---|\n| *\"Let's run three implementers on the same branch at once.\"* | Multiple implementers on shared files = conflicts + non-deterministic state. | Refuse. Across-task parallelism requires disjoint ",
+        " is opt-in by the plan author.\n\n## Multiple concurrent sessions on one repo (mode b)\n\nEverything above is **mode (a)**: one orchestrator fans out subagents in a single assistant message — they **share one checkout**, the harness runs them concurrently, results aggregate in that orchestrator. Mode **(b)** is different: **several independent sessions/agents working the same repo at once** (e.g. you run two Claude sessions in parallel). The harness does **not** coordinate across sessions, so (b) needs an explicit convention. The industry-canonical stack (worktree + branch + partition + PR) applies:\n\n1. **Worktree-per-agent** — each concurrent agent gets its own ",
+        " per branch — every branch still writes the failing test first.\n\n## When to use vs. when NOT to\n\n| Scenario | Dispatch in parallel? |\n|---|---|\n| 3+ test files failing for unrelated reasons | ✅ Yes — one implementer per file |\n| Security audit across multiple modules | ✅ Yes — one reviewer per module |\n| Data fetch for N tickers / N regions / N feeds | ✅ Yes — one data agent per input |\n| Plan atomic tasks marked ",
+        " runs once on the merged state. |\n| *\"Investigate these 3 failures in parallel.\"* (root cause unknown) | If the failures share a root cause, fragmenting the investigation hides it. | One agent investigates first, identifies domains, then dispatch parallel fixes. |\n| *\"They probably don't touch the same file — just dispatch.\"* | \"Probably\" is not \"do not\". | Verify file disjointness before dispatching. |\n| 「重なってないから並行で / 應該不會衝突吧」 | Same rationalization, localized. | Same refusal — verify, don't assume. |\n\n## Cross-skill contract\n\n| Direction | Skill | Role |\n|---|---|---|\n| **Upstream** | [",
+        " sets are disjoint *by the plan*, no runtime locking/claiming is needed — partition is the simplest robust claim when the tasks are known up front. (Dynamic runtime claiming is out of scope; revisit only if many agents must load-balance an unknown task set.)\n3. **Shared ledger = the plan's ",
+        " — SDD's triad is per-task within one domain; this skill is across-task / across-domain.\n- A license to parallelize implementers writing to the same files — file conflicts are forbidden.\n- An exemption from ",
+        " → integrate, but surface the concerns / notes to the user; do not silently drop them (they are the non-blocking design-feedback channel).\n   - Any ",
+        "'s portable profile](../using-loom-code/references/dispatch-profile.md) independently for every child before the fan-out. Your host determines exactly what \"one fan-out step\" looks like as a tool call — see your host's tool-mapping reference under ",
+        "../../agents/implementer.md",
+        "../subagent-driven-development/SKILL.md",
+        "../subagent-driven-development/references/dispatch-hygiene-notes.md",
+        "../tdd-iron-law/SKILL.md",
+        "../using-git-worktrees/SKILL.md",
+        "../using-loom-code/SKILL.md",
+        "../using-loom-code/references/dispatch-profile.md",
+        "../using-loom-code/references/environment-gotchas.md",
+        "../verification-before-completion/SKILL.md",
+        "../writing-plans/SKILL.md",
+        "../writing-plans/references/plan-format.md",
+        "PASS / PASS_WITH_NOTES / NEEDS_REVISION",
+        "](../tdd-iron-law/SKILL.md) via ",
+        "](../writing-plans/SKILL.md) | Produces the ",
+        "claude-code-tools.md",
+        "codex-tools.md",
+        "markdown\n## Task 3 — Add CSV export\n- independent: true\n- files touched: src/export/csv.ts, src/export/csv.test.ts\n- ...\n\n## Task 4 — Add JSON export\n- independent: true\n- files touched: src/export/json.ts, src/export/json.test.ts\n- ...\n"
+      ],
+      "file_structure": [
+        "README.ja.md",
+        "README.md",
+        "README.zh-TW.md",
+        "SKILL.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "6c189dbfe28d796ebd93df2f28c7e9e0ec3d7f02480de912568bd8215e21127e",
+      "corpus_sha256": "40c18f0f46c5f12bf3b3d5a2bcf0e71c25d20629b2889ecb674d044abcd70a4d",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:dispatching-parallel-agents",
+            "result_subtype": "completed",
+            "tool_count": 9
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:dispatching-parallel-agents",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:dispatching-parallel-agents",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:dispatching-parallel-agents",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:dispatching-parallel-agents",
+            "result_subtype": "completed",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:dispatching-parallel-agents",
+            "result_subtype": "completed",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:dispatching-parallel-agents",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p3-codex-r1.jsonl"
+        }
+      ]
+    },
+    "finishing-a-development-branch": {
+      "word_count": 4470,
+      "frontmatter": {
+        "name": "finishing-a-development-branch",
+        "description": "Use when ready to close out a development branch — about to merge or open a PR. Fires on 'finish this branch', 'wrap up', 'ready to merge', 'open a PR', 'ship it'. Orchestrates review → verification → git-memory commit → git push. No auto-merge.",
+        "version": "0.10.1"
+      },
+      "declared_dependencies": [
+        "\nfinishing-a-development-branch (this skill)\n  │\n  ├─→ Phase 1: requesting-code-review\n  │     four-way dispatch by file type (record-only / docs-only / mixed / code-only;\n  │     docs-only delegates to requesting-docs-review)\n  │     → verdict: PASS / PASS_WITH_NOTES / NEEDS_REVISION\n  │     blocks on NEEDS_REVISION (any 🔴, or 2+ 🟡); PASS_WITH_NOTES (1 🟡) auto-proceeds\n  │\n  ├─→ Phase 2: verification-before-completion\n  │     package-level tests → exit 0 + N>0 → PASS; blocks on failure\n  │     + ui-verification (CONDITIONAL): UI-bearing branch with a ui-flows.md\n  │\n  ├─→ Phase 3: loom-workflow:git-memory (P3-D MANDATORY)\n  │     decides Decision: / Learning: / Gotcha: trailers for the close-out commit\n  │\n  ├─→ Phase 4: git commit (orchestrator runs this)\n  │     message + trailers from Phase 3; no hook bypass, no amend\n  │     then memory-grep.sh --verify HEAD (memory-worthy + exit 4 → STOP pre-push)\n  │\n  ├─→ Phase 5: git push (orchestrator runs this)\n  │     pushes the branch; sets upstream first if local-only\n  │\n  ├─→ Phase 6 (optional): gh pr create\n  │     only if gh CLI configured AND not opted out; PR body per git-memory convention\n  │\n  ├─→ Phase 7: Post-PR CI\n  │     post_pr_ci.py waits on the created PR's current head; bounded repair on fail\n  │\n  └─→ Phase 8 (optional): git worktree cleanup\n        if branch was in .worktrees/, offer (do NOT auto-execute) the remove\n        per using-git-worktrees §Removing a worktree\n\n(Diagram = phase overview; §Default flow's numbered **Step** list is the granular\nprocedure — \"Phase N\" and \"Step N\" are distinct numbering schemes.)\n",
+        " (conditional) | Own tooling/degradation contract |\n| 3 | ",
+        " / ",
+        " as a durable,\n     cross-branch-reusable practice/gotcha/process, not just this commit's local trailer? Do NOT\n     defer this question to Step 8's later checklist pass — a non-empty trailer set writing rich\n     \"why\" content is itself the trigger, and treating \"trailers written\" as \"memory handled\" is\n     the exact lapse this inline check exists to prevent (documented recurrence: PR #519, PR #520).\n7. Run the privacy gate on the composed commit message + trailers —\n   git-memory's compose-commit protocol Step 3.5, the fail-closed\n   two-layer check: ask ",
+        " entry, or section absent/malformed) → **STOP**; surface stderr verbatim (it names the unresolved ",
+        " on\n      main (the #445 leak). This is a hard STOP, consistent with finishing's other\n      gates (NEEDS_REVISION review / test-failure both STOP).\n    - If Phase 3 returned an EMPTY trailer set (routine branch), exit 4 is expected →\n      proceed to push.\n    - If ",
+        " §Asking the user, gate ① (the cross-skill SSOT) before asking.\nEvery gate STOP that surfaces to the user (a NEEDS_REVISION, a privacy BLOCK, a probe FAIL) leads with the progress card — the user sees where the arc stopped before deciding.\n\n## Red Flags — refuse these rationalizations\n\nClose-out shortcuts to refuse — *\"skip review just push,\" \"tests passed yesterday skip verification,\" \"message is obvious skip git-memory,\" \"auto-merge after push,\" \"force-push to clean up history,\" \"just amend the last commit,\" \"I already have an SDD commit message\"* (and 「review skip / 跳過審查」). Default: refuse the shortcut, dispatch the gate it bypasses. Full table in [",
+        " — the\n      same two-layer gate (privacy-scan.py + the privacy-judge-spec.md judge, full\n      cross-plugin paths in Step 7, fail-closed)\n      that Step 7 runs on the commit carrier. Gate PASS → proceed to create; gate BLOCK\n      (any layer-1 finding, layer-2 BLOCK, or a fail-closed condition) → surface findings\n      and do NOT create the PR until the user resolves it. This is explicit, not transitive:\n      the PR body is an outward-facing carrier and gets the identical mechanized gate as the\n      commit, per the arc's mechanize-don't-rely-on-prose premise.\n    - PR-carrier check (memory-worthy branch only): before creating the PR,\n      grep the composed body for a ",
+        "'s portable\n      profile](../using-loom-code/references/dispatch-profile.md) before the\n      fresh-context PR-body judge spawn. Its packet is\n      ",
+        "'s portable\n     profile](../using-loom-code/references/dispatch-profile.md) before the\n     fresh-context judge spawn. Privacy review is security-sensitive, so its\n     packet is ",
+        ") — details in\n     [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S2/§D1.\n   - If any review-driven fixes were applied in Steps 3–4, re-run verification-before-completion\n     here (Step 5 result is stale) before committing.\n9. git commit (only after Step 7's privacy gate PASSes, or after the\n   user resolves a Step-7 BLOCK)\n9b. Commit-carrier verify gate — MANDATORY, runs AFTER the commit, BEFORE push:\n    - Ask ",
+        ", append one body line naming the evidence (this branch/PR); if ",
+        ", or describes the absent/malformed section) and route back to the user or plan author — do not commit past it. No plan → skip silently, per Step 1. |\n     | Stage-flip duty | The branch has a plan carrying the progress headers (the same plan Step 1 rendered). | BEFORE the close-out commit, flip the plan's terminal state: run ",
+        ", or the section carries the well-formed N/A line. Prose orchestrator check, not hook-level — ",
+        ", using the title/body composed by git-memory. The\n      locally verified ",
+        ".\n   - Explicit contract: NEEDS_REVISION review loops — fix → re-review, whether inside\n     SDD's per-task triad during development or this step's own fix-up cycle — digest\n     silently; the user sees only the terminal verdict, never each iteration.\n     PASS_WITH_NOTES above auto-proceeds without asking — consistent with this\n     digest-silently posture, not an exception to it. The docs-arm STILL_BLOCKING\n     confirmation above IS the one exception: it surfaces to the user immediately\n     rather than looping silently.\n4. Before applying any review findings from Step 3: Read each file you intend to Edit\n   (Bash inspection does NOT satisfy the Edit/Write precondition) — details in\n   [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §S1.\n   When a finding's fix edits a prose contract, the new material goes in its OWN\n   sentence or inside the placeholder it governs — never spliced into an existing\n   sentence that pins or enumerations depend on (repo memory:\n   splicing-into-a-pinned-sentence-creates-false-readings).\n5. Dispatch verification-before-completion\n   - MANDATORY even if tests were run immediately before invoking this skill. Step 3\n     fix-ups may have modified files; a pre-invocation test run does NOT satisfy this gate.\n   - If test failure: surface output; STOP. Route user to tdd-iron-law or systematic-debugging.\n   - If 0 tests ran: surface as failure (configuration bug, not a pass).\n   - If PASS: proceed silently.\n5b. Dispatch ui-verification — for a UI-bearing branch, this IS the user's main\n    acceptance stage: what the user judges \"done\" by is the rendered product,\n    not test counts (CONDITIONAL — skip as N/A when the branch touched no UI\n    surface or no ui-flows.md exists; state the N/A, don't silently omit)\n   - NEEDS_REVISION (state mismatch, or unreachable state whose ui-flows.md row is NOT\n     marked future/deferred): surface findings; STOP — route to the\n     implementer, or flag the design station if the enumeration itself is wrong.\n   - PASS_WITH_NOTES: proceed; carry untestable-state notes into the PR body.\n6. Invoke loom-workflow:git-memory\n   - Pass: diff, recent commits, branch name\n   - Receive: trailer set (Decision: / Learning: / Gotcha: lines) + commit body suggestion\n   - **The moment this trailer set comes back non-empty, run the Memory-timing check NOW** (see\n     Step 8's Memory-timing row for the exact rule) — using the returned Decision/Learning/Gotcha\n     content itself as the input: does any of it also belong in ",
+        "../using-loom-code/references/dispatch-profile.md",
+        "../using-loom-code/references/environment-gotchas.md",
+        "../writing-plans/SKILL.md",
+        "../writing-plans/references/plan-format.md",
+        "/",
+        "/ultrareview",
+        "; the host adapter\n     records its effective effort separately.\n   - PASS (layer-1 clean AND layer-2 PASS): proceed silently — no user ask.\n   - BLOCK (any layer-1 finding, a layer-2 BLOCK, or a fail-closed\n     condition — script error, judge dispatch failure, or\n     non-conforming judge output): surface the findings; ASK the user\n     to resolve before proceeding. This is now the ONLY user stop Step\n     7 has, and it fires only on failure — the user may still edit the\n     message to clear the finding.\n8. git hygiene before the close-out commit:\n   - Close-out sub-checks — all orchestrator-only, ONCE per branch; a parallel wave\n     would race each check's target file:\n\n     | Check | When it fires | Action | On failure or N/A |\n     |---|---|---|---|\n     | Living-spec index regen | The repo has a ",
+        "<change-id> / Requirement: <name> / Scenario: <name>",
+        "PURPOSE.md",
+        "](references/delegation-boundaries.md).\n\n## See also\n\nSibling-skill delegates and the git policy this skill inherits — full list in [",
+        "](references/red-flags.md).\n\n## What this skill does NOT do\n\nNever merges into main or force-pushes; see full boundary list in [",
+        "backlog-close: index not regenerated — backlog_index.py not present",
+        "backlog_index.py",
+        "compose-pr.md",
+        "docs/loom/<change-id>/",
+        "docs/loom/INDEX.md",
+        "docs/loom/PURPOSE.md",
+        "docs/loom/backlog/",
+        "docs/loom/backlog/README.md",
+        "docs/loom/memory/",
+        "docs/loom/memory/README.md",
+        "docs/loom/memory/squash-dialog-can-drop-entire-pr-body.md",
+        "docs/loom/plans/",
+        "docs/loom/plans/<date>-<topic>.md",
+        "git add docs/loom/INDEX.md",
+        "git add docs/loom/archive/<date>-<change-id>/",
+        "git add docs/loom/plans/<plan>.md",
+        "hooks/git-guard.py",
+        "loom-code/hooks/family-relay.md",
+        "loom-code/hooks/family-relay.md §(a2) Progress card",
+        "loom_gate_markers.py",
+        "memory-grep.sh --verify HEAD",
+        "memory-store integrity: N/A — checker not present in this repo",
+        "post_pr_ci.py",
+        "privacy-judge-spec.md",
+        "privacy-scan.py",
+        "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/backlog_index.py\"",
+        "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/backlog_index.py\" --ready",
+        "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/check_north_star_link.py\" <backlog-store>",
+        "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py\"\n   <plan-path>",
+        "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py\" --stale-scan docs/loom/plans",
+        "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py\" <plan-path> --set-stage \"finishing\"",
+        "python3 <plugin-root>/scripts/loom_gate_markers.py verified --run \"<test command>\"",
+        "python3 <plugin-root>/scripts/post_pr_ci.py --pr \"$PR_NUMBER\"\n      --expected-head <current-head>",
+        "python3 loom-code/scripts/archive_change_folder.py <change-id> <repo-root>",
+        "python3 loom-code/scripts/check-living-spec-index.py --write-index docs/loom/INDEX.md <repo-root>",
+        "python3 loom-code/scripts/check_open_questions.py <plan-path>",
+        "python3 scripts/backlog_index.py --ready",
+        "python3 scripts/backlog_index.py --write",
+        "python3 scripts/check_loom_memory_integrity.py",
+        "python3 scripts/check_loom_memory_integrity.py --write",
+        "python3 scripts/plan_card.py --stale-scan docs/loom/plans",
+        "python3 scripts/plan_card.py <plan-path>",
+        "references/delegation-boundaries.md",
+        "references/red-flags.md",
+        "references/when-not-to-use.md",
+        "scripts/plan_card.py",
+        "… loom_gate_markers.py review-pass --verdict-file <file>",
+        "… loom_gate_markers.py waiver --reason \"<user's words>\""
+      ],
+      "file_structure": [
+        "README.ja.md",
+        "README.md",
+        "README.zh-TW.md",
+        "SKILL.md",
+        "references/",
+        "references/delegation-boundaries.md",
+        "references/red-flags.md",
+        "references/when-not-to-use.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "3714411b1a037b79ef749d855e9ee56faf4f4a79c1a058f38a96939e996760e0",
+      "corpus_sha256": "0651882b7fd62dcbd6623c85492b75ebbd695f4f5571d4bdb12e2af1e90faca4",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:finishing-a-development-branch",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:finishing-a-development-branch",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:verification-before-completion",
+            "result_subtype": "completed",
+            "tool_count": 10
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:verification-before-completion",
+            "result_subtype": "completed",
+            "tool_count": 7
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:finishing-a-development-branch",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:finishing-a-development-branch",
+            "result_subtype": "success",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:finishing-a-development-branch",
+            "result_subtype": "completed",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:verification-before-completion",
+            "result_subtype": "completed",
+            "tool_count": 6
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:finishing-a-development-branch",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-codex-r1.jsonl"
+        }
+      ]
+    },
+    "loom-memory": {
+      "word_count": 1058,
+      "frontmatter": {
+        "name": "loom-memory",
+        "# firing-evidence": "2026-07-14 baseline 4/4 EXACT (docs/skill-dogfood/2026-07-14-description-token-economy/baseline.md)",
+        "description": ">-\nRecord, recall, or prune the repo-native loom practice-memory store\n(`docs/loom/memory/`) — save a distilled lesson/gotcha, check prior\nexperience before loom work, or propose keep/merge/retire cleanup\n(never auto-deletes). CONDITIONAL: fires only when the repo has\n`docs/loom/memory/README.md` — otherwise `loom-memory: N/A` with the\nreason, loudly. NOT for git commit trailers (loom-workflow:git-memory)\nnor Claude auto-memory. Triggers: \"有沒有相關經驗\", \"記住這個做法\",\n\"記憶整理\", \"この教訓を残して\", \"過去の知見はある？\".",
+        "version": "0.2.1"
+      },
+      "declared_dependencies": [
+        " predates the most recent\n  shipped work touching the same area (check via git log on the cited\n  paths), so the practice may already have been absorbed;\n- **superseded by a repo artifact** — a skill, hook, script, or\n  standard now encodes the rule; **cite that artifact** in the verdict;\n- **no plausible future trigger** — the situation the memory guards\n  against can no longer occur (tool removed, workflow retired).\n\nOutput one **keep / merge / retire** table — every file gets a row and\na one-line reason (keep-rows included; silence is not a verdict):\n\n| file | verdict | reason |\n|---|---|---|\n\n- **keep** — still operative, trigger still plausible.\n- **merge** — duplicates or near-duplicates; propose the combined file\n  and the index update.\n- **retire** — propose deletion (git history is the archive, per the\n  charter — no archive folder).\n\n**NEVER delete without explicit user approval.** Merge and retire are\nproposals; execute them only after the user approves, then regenerate\nthe index in the same pass — run\n",
+        ") for any merged file.\n\n## Red flags — refuse these\n\n| Impulse | Refusal |\n|---|---|\n| \"Load all memories at session start so they're handy\" | Pull, not push — grep, then read hits only. The charter's anti-preload decision is evidence-backed; don't relitigate it per session. |\n| \"Copy the charter's jurisdiction table / format spec here or into a prompt for convenience\" | Point at ",
+        "<slug>.md",
+        "docs/loom/backlog/",
+        "docs/loom/backlog/README.md",
+        "docs/loom/memory/",
+        "docs/loom/memory/<file>.md",
+        "docs/loom/memory/README.md",
+        "loom-memory: N/A",
+        "loom-memory: N/A (no docs/loom/memory/README.md in\nthis repo)",
+        "python3 scripts/check_loom_memory_integrity.py",
+        "python3 scripts/check_loom_memory_integrity.py --write"
+      ],
+      "file_structure": [
+        "SKILL.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "1222c095e77eca2ef048fead4521288328a896342366989f02b2349c669fbecb",
+      "corpus_sha256": "a99a4f3e2bca1a41cb93e91685a6593fa5682edff918c07b3b9ea7b747823da3",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:loom-memory",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:loom-memory",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:loom-memory",
+            "result_subtype": "completed",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:loom-memory",
+            "result_subtype": "completed",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:loom-memory",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:loom-memory",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-codex-r1.jsonl"
+        }
+      ]
+    },
+    "requesting-code-review": {
+      "word_count": 4496,
+      "frontmatter": {
+        "name": "requesting-code-review",
+        "description": "Use BEFORE any push/merge/PR on a non-trivial branch — whole-branch review of the cumulative diff. Fires on 'review my branch', 'ready to merge?', and excuses it refuses: 'just push', 'skip review', git push / gh pr create with no prior review-PASS.",
+        "version": "0.13.0"
+      },
+      "declared_dependencies": [
+        "\n   for path in <files from Step 1's review_scope.py output>; do\n     git -C <target_repo> show <reviewed_sha>:<path> | grep -n \"LOOM-SIMPLIFY:\"\n   done\n   ",
+        "\n- Any finding with empty / missing ",
+        " (merges to base branch)\n- Any agent-side helper that invokes the above\n\n**Why**: pushing publishes code to teammates / CI / production-deploy paths. The review-before-publish gate exists so reviewers see clean diffs, not \"we'll catch it in CI.\" A push without review is the failure mode this skill exists to prevent.\n\nPush-intent excuses and their refusals: see [",
+        " (passive gate entry, different use case) |\n| Diff is trivial (one-line typo fix, version bump, generated/sync output — mechanical doc edits only; contract-class authored prose routes to ",
+        " / ",
+        " by name (even framed as skip-intent)** | **✅ Yes — name-mention is a fire-trigger; the skip-intent framing is the rationalization this skill exists to refuse, NOT permission to bypass it** |\n| <!-- sync-marker push-rule:1 — see §Push-as-trigger below for the full spec --> **Push-as-trigger** — user runs / asks to run ",
+        " calls in **one** assistant message so they run concurrently), and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific mistake to avoid (naming a dispatch call turns it into an async mailbox teammate whose output is never delivered — Codex has no equivalent pitfall). **Open each dispatch prompt with the role anchor from the agent's §Input contract — \"You ARE the reviewer\" — verbatim**; \"review request\" phrasing without it can role-confuse the dispatched agent into acting as an orchestrator (\"I've dispatched the review\" — to nobody). Both prompts receive the full immutable context packet from Step 1, diff range, absolute rubric/checklist paths, branch context (recent commits, related issues if known), and the profile's dispatch record — \"byte-identical\" means identical **to each other**; conditional additions (e.g. the PRINCIPLES.md path below) go to both. The packet is copied verbatim, so no arm derives plugin paths or version from ",
+        " field; not restated here\n    class: instruction | evidence              # docs-arm findings only (mixed branches, per Step 1) — semantics owned by requesting-docs-review; omitted for code-branch findings\n\nsimplification_ledger:                         # grep -rn \"LOOM-SIMPLIFY:\" over the branch diff (Step 4); [] when none\n  - where: <path + anchor; line optional>\n    shortcut: <what corner was cut>\n    ceiling: <checkable condition under which it breaks>\n    upgrade: <path to the proper version>\n    ref: <originating brief/task>\n    marker_valid: true | false                  # false when ceiling:, upgrade:, or ref: is missing (or ceiling: uncheckable) → also emit a finding\n    snapshot_read: verified | failed            # verified only when read via reviewed_sha; failed always emits a finding and blocks marker minting\n\nsummary:\n  - <≤5 bullet observations about the branch as a whole>\n",
+        " in loom-code/.claude-plugin/plugin.json}\"\nreviewed_sha: \"{packet's immutable ",
+        " — echoed verbatim}\"\n\nverdict: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n\ndimension_scores:\n  security: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n  architecture: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n  correctness: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n  naming: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n  tests: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n  refactoring: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n  cross-task-coherence: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # NEW at branch scope\n  external-surface-grounding: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # mirrors per-task D7 + cross-task surface-consistency\n  principles-conformance: PASS | PASS_WITH_NOTES | NEEDS_REVISION | N/A  # vs consumer PRINCIPLES.md; N/A when absent\n  deliberate-simplification: PASS | PASS_WITH_NOTES | NEEDS_REVISION  # LOOM-SIMPLIFY marker harvest + completeness check; PASS with empty ledger when no markers\n  deletion-first: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n\nfindings:\n  - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit\n    dimension: <which of the dimensions scored above>\n    where: <path + anchor; line optional>     # REQUIRED — empty/missing flips verdict to NEEDS_REVISION\n    source: <rubric / checklist / standard file:section that triggered this>\n    note: <1-2 sentence finding>\n    origin: none | <path> :: \"<verbatim quote from that file>\"  # REQUIRED on code-arm findings only (docs-arm exempt, per Step 1) — quote-gate rule owned by ",
+        "'s own §When to use (branch is done / ready to merge / opening a PR intending to merge — not merely \"let me see the diff quality mid-work\") — STOP this procedure and invoke ",
+        "'s portable profile](../using-loom-code/references/dispatch-profile.md), then **dispatch TWO ",
+        ", record-class authored prose is exempt) | ❌ Skip — review overhead > value |\n\n## When NOT to use\n\n| Exempt category | What qualifies | What does NOT qualify |\n|---|---|---|\n| **Trivial diffs** | One-line fixes, version bumps, generated code regen, mechanical doc edits only (single-line typo fix, version bump, generated/sync output) | \"I changed 3 lines\" — if those 3 lines touch behavior, review applies; contract-class authored prose of any length is NOT trivial — it routes to ",
+        "../../agents/code-reviewer.md",
+        "../../scripts/_baseline.md",
+        "../finishing-a-development-branch/SKILL.md",
+        "../requesting-docs-review/SKILL.md",
+        "../subagent-driven-development/SKILL.md",
+        "../subagent-driven-development/checklists/security-checklist.md",
+        "../subagent-driven-development/references/dispatch-hygiene-notes.md",
+        "../subagent-driven-development/rubrics/arch-gate.md",
+        "../subagent-driven-development/rubrics/quality-gate.md",
+        "../subagent-driven-development/standards/deliberate-simplification.md",
+        "../using-loom-code/SKILL.md",
+        "../using-loom-code/protocols/adjudication-view.md",
+        "../using-loom-code/references/claude-code-tools.md",
+        "../using-loom-code/references/codex-tools.md",
+        "../using-loom-code/references/dispatch-profile.md",
+        "../using-loom-code/references/environment-gotchas.md",
+        "../verification-before-completion/SKILL.md",
+        ".md",
+        "/",
+        "<plugin>/agents/*.md",
+        "<plugin>/hooks/*.md",
+        "<plugin>/scripts/*.md",
+        "<plugin>/skills/**/*.md",
+        "](../requesting-docs-review/SKILL.md) §Aggregation rule (instruction-class gating lives there, not here); the mixed-branch verdict join is Step 1's worse-of-the-two-arm-verdicts rule.\n\n**Panel union**: each arm's own ",
+        "](../requesting-docs-review/SKILL.md)**: invoke that skill, handing it ONLY the contract-class subset as ",
+        "](../using-loom-code/protocols/adjudication-view.md) protocol (verdict mode) whenever that protocol's own §Firing conditions are met — the structured verdict block above stays machine-precise and untouched.\n6. **Re-dispatch if user fixed and wants re-review** — same skill, fresh subagent (no state carry-over between rounds for clean evaluation).\n\nCross-skill delegation passes paths, not content — see [",
+        "](references/cross-skill-map.md) for the full directional map (upstream / downstream / lateral).\n\n## Verdict structure\n\nReturns:\n\n",
+        "](references/push-trigger-rationalizations.md).\n\n**Procedure when push-as-trigger fires**:\n\n0. **Check scope first: is this a full close-out, or just a review opinion?** If the trigger context matches ",
+        "agents/*.md",
+        "arch-gate.md",
+        "claude-code-tools.md",
+        "code-reviewer.md",
+        "codex-tools.md",
+        "dispatch-hygiene-notes.md",
+        "dispatch-profile.md",
+        "docs/**",
+        "docs/loom/PRINCIPLES.md",
+        "docs/loom/plans/2026-08-11-review-cost-reduction.md",
+        "live_gate_station_receipt.py",
+        "loom-code/agents/code-reviewer.md",
+        "loom-code/agents/docs-reviewer.md",
+        "loom-code/hooks/family-relay.md §Family relay discipline",
+        "loom-code/scripts/_baseline.md",
+        "loom-code/scripts/loom_gate_markers.py",
+        "loom_gate_markers.py validate --verdict-file <file>",
+        "principles-conformance: N/A",
+        "python3 \"$LOOM_LIVE_GATE_PLUGIN_ROOT/scripts/live_gate_station_receipt.py\" --packet \"$LOOM_LIVE_GATE_PACKET\" --plugin-root \"$LOOM_LIVE_GATE_PLUGIN_ROOT\" --marker-dir \"$LOOM_LIVE_GATE_MARKER_DIR\" --repo \"$LOOM_LIVE_GATE_REPO\" --station CODE --nonce \"$LOOM_LIVE_GATE_NONCE\"",
+        "python3 \"$LOOM_LIVE_GATE_PLUGIN_ROOT/scripts/live_gate_station_receipt.py\" --packet \"$LOOM_LIVE_GATE_PACKET\" --plugin-root \"$LOOM_LIVE_GATE_PLUGIN_ROOT\" --marker-dir \"$LOOM_LIVE_GATE_MARKER_DIR\" --repo \"$LOOM_LIVE_GATE_REPO\" --station MIXED --nonce \"$LOOM_LIVE_GATE_NONCE\"",
+        "python3 <installed-plugin-root>/scripts/plan_card.py <plan-path> --set-stage \"review:round-N\"",
+        "python3 <installed-plugin-root>/scripts/review_context.py --repo <path>",
+        "python3 <installed-plugin-root>/scripts/review_context.py --validate <packet-file>",
+        "python3 scripts/plan_card.py <plan-path> --set-stage \"review:round-N\"",
+        "quality-gate.md",
+        "references/cross-skill-map.md",
+        "references/design-evidence.md",
+        "references/gate-markers-spec.md",
+        "references/push-trigger-rationalizations.md",
+        "references/red-flags.md",
+        "references/relay-phrasing.md",
+        "references/scope-comparison.md",
+        "review_context.py",
+        "review_scope.py",
+        "rubrics/quality-gate.md",
+        "security-checklist.md",
+        "using-loom-code/references/",
+        "🔴/🟡/🟢"
+      ],
+      "file_structure": [
+        "README.ja.md",
+        "README.md",
+        "README.zh-TW.md",
+        "SKILL.md",
+        "references/",
+        "references/cross-skill-map.md",
+        "references/design-evidence.md",
+        "references/gate-markers-spec.md",
+        "references/push-trigger-rationalizations.md",
+        "references/red-flags.md",
+        "references/relay-phrasing.md",
+        "references/scope-comparison.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "1b20254d7909e54c8060a6de62a6f21340e900c7a31ef9912e4a49bc5168d85d",
+      "corpus_sha256": "9685524019c6d122bbb585dc3ca8ed539b7acb37bb843a75547fdb3ee31e9e0a",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:finishing-a-development-branch",
+            "result_subtype": "error_max_turns",
+            "tool_count": 7
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:finishing-a-development-branch",
+            "result_subtype": "success",
+            "tool_count": 6
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-code-review",
+            "result_subtype": "completed",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-code-review",
+            "result_subtype": "completed",
+            "tool_count": 6
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:finishing-a-development-branch",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:finishing-a-development-branch",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-code-review",
+            "result_subtype": "completed",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-code-review",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-code-review",
+            "result_subtype": "completed",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-code-review",
+            "result_subtype": "completed",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p3-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 4,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": "code-review",
+            "result_subtype": "success",
+            "tool_count": 80
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 4,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": "code-review",
+            "result_subtype": "success",
+            "tool_count": 7
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 4,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-code-review",
+            "result_subtype": "completed",
+            "tool_count": 7
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 4,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-code-review",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-codex-r1.jsonl"
+        }
+      ]
+    },
+    "requesting-docs-review": {
+      "word_count": 4063,
+      "frontmatter": {
+        "name": "requesting-docs-review",
+        "description": "Whole-artifact review of every changed `.md` file on a docs-heavy branch —\nfive prose dimensions, instruction/evidence blocking class,\nsingle-round-with-confirmation contract: round 1 whole-artifact is the\nonly full review; a gating verdict is fixed then confirmed through one\nhost-specific packet route — Claude same-session delta check or Codex fresh\nwhole-artifact review (still-blocking after one fix cycle → STOP and surface\nto the user).\nFires BEFORE push/merge when every changed file is `.md`; also the docs\narm of requesting-code-review's routing. Use for 'review my docs' / 'are\nthese docs ready to merge?'.",
+        "version": "0.1.0"
+      },
+      "declared_dependencies": [
+        "\n\n## Red Flags — refuse these rationalizations\n\n| Agent / user says | Reality | Correct response |\n|---|---|---|\n| *\"Just one more round to be safe.\"* | The single-round-plus-confirmation contract IS the design. What \"to be safe\" means here is waiting for an empty round, and for an artifact with many small real defects that state is not reachable — so it cannot be what you wait for (Directive 3). A second dispatch that is NOT the one delta confirmation Directive 2 authorizes is exactly what this row refuses. | Refuse. Round 1 is the only full review (Directive 1); a gating verdict gets exactly one fix-and-confirm cycle (Directive 2); ",
+        " (code arm / four-way routing) |\n| Per-task prose review inside SDD (",
+        " agent, different orchestrator |\n\n## When NOT to use\n\n| Exempt category | What qualifies | What does NOT qualify |\n|---|---|---|\n| **Mechanical doc edits** | Typo fix, version bump, generated/sync output regen | Authored prose of any length — a 3-line instruction edit can misdirect an executor; it routes here |\n| **Already-reviewed branch** | A prior invocation this session PASSed and nothing changed since | \"I tweaked a paragraph after review\" — re-review (review state is session-scoped: it restarts at a session boundary, so a fresh session simply reruns round 1 rather than assuming continuity). A session that dies mid-confirmation instead falls to Directive 4's fresh-single-round rule, not this row |\n| **Explicit user override** | User literally says \"skip docs review\" AND the diff matches the mechanical category | \"It's just docs\" — that framing is the reason this skill exists |\n\n## Process\n\n**CONVERGENCE CONTRACT — read [",
+        " by the aggregation rule.\n    where: <path + anchor; line optional>              # REQUIRED — empty/missing flips verdict to NEEDS_REVISION\n    quote: <the exact current text the finding is about>\n    note: <1-2 sentence finding>\n\nread_context_findings:              # omit when empty or when no read-context was supplied\n  - where: <read-context path + anchor; line optional>\n    note: <a defect noticed IN a read-context file while verifying a claim>\n    # No severity, no dimension, no class — never enters a dimension score.\n    # The orchestrator forwards these to the code arm (§Aggregation rule).\n\nout_of_scope:                       # omit when there is no non-gating\n                                     # observation outside the original\n                                     # confirmation findings\n  - where: <path + anchor; line optional>\n    note: <a non-gating observation noticed while confirming a fix>\n    # Never use for a new gating problem: emit that as an ordinary\n    # instruction-class finding so it is scored. These entries are emitted,\n    # never scored, and surfaced to the user with the verdict;\n    # persisted nowhere — deferral survives only if the user or\n    # orchestrator acts on it.\n\nsummary:\n  - <≤5 bullet observations about the branch's artifacts as a whole>\n",
+        " in loom-code/.claude-plugin/plugin.json}\"\n\nreviewed_sha: {the HEAD sha this round reviewed — REQUIRED; records the\n              reviewed commit for provenance and as the delta-confirmation\n              anchor (Directive 2) — there is no round-N handoff to track}\n\nverdict: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n\ndimension_scores:\n  omission: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n  ambiguity: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n  inconsistency: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n  incorrect-fact: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n  missing-population: PASS | PASS_WITH_NOTES | NEEDS_REVISION\n\nfindings:\n  - severity: 🔴 fatal | 🟡 should-fix | 🟢 nit\n    dimension: omission | ambiguity | inconsistency | incorrect-fact | missing-population\n    class: instruction | evidence   # unclear → instruction (fail closed); may read ",
+        " is exactly this: the fix did not close the finding, or introduced a new gating problem. | Directive 2 — STOP after this one cycle; surface the finding and the reviewer's reason to the user, never loop again on your own authority. |\n| *\"Just rewrite that old paragraph in place.\"* | Evidence-class fix against unchanged prose — in-place rewrites destroy the record. | Appended correction naming what it replaces (§Aggregation rule). |\n| *\"It's just docs, skip review.\"* | Wrong instructions misdirect executors more cheaply than wrong code — code at least fails tests. | Only the mechanical category in §When NOT to use skips. Authored prose reviews. |\n| 「もう1ラウンドだけ / 再審一輪就好」 | Same rationalization, localized. | Same refusal. |\n\n## Cross-skill contract\n\n| Direction | Skill | Role |\n|---|---|---|\n| **Upstream routing** | ",
+        " or a malformed verdict refuses to mint (exit 3/4). Dead-arm rule: an arm that errors out with no verdict is re-dispatched once; if it dies again, proceed single-arm and say so in the verdict summary and the user relay. An arm returning ",
+        " paths — and **do not invoke review_context.py to re-resolve it**. This applies equally to docs-only delegation and the ",
+        " | Code-side test-suite gate; on a docs-only branch it still runs whatever suite pins the prose (grep-window tests) |\n\n## What this skill does NOT do\n\n- Does **not** modify any reviewed document — reviewers are verdict-only; remediation is the user's / implementer's.\n- Does **not** review code — any non-",
+        "'s mixed-branch per-file split | ✅ Yes — this skill's dispatch + aggregation contract governs the docs arm |\n| User says *\"review my docs\"* / *\"are these docs ready to merge?\"* on a docs-only branch | ✅ Yes (direct invocation) |\n| Code files changed and need review | ❌ ",
+        "'s portable profile](../using-loom-code/references/dispatch-profile.md) before the panel's host-native spawn; M3 contributes ",
+        "../../agents/docs-reviewer.md",
+        "../finishing-a-development-branch/SKILL.md",
+        "../requesting-code-review/SKILL.md",
+        "../using-loom-code/protocols/adjudication-view.md",
+        "../using-loom-code/references/dispatch-profile.md",
+        ".md",
+        "; any finding with empty/missing ",
+        "](../../agents/docs-reviewer.md) | Verdict-only prose reviewer; also reused by SDD's ",
+        "](references/convergence-contract.md) before running any round; its four directives are binding.**\n\n- **Directive 1 — Round 1 is the only full review.** Whole-artifact, every changed ",
+        "check_doc_citations.py",
+        "dispatch-profile.md",
+        "docs/loom/audits/2026-07-28-doc-branch-review-loop-audit.md",
+        "docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md",
+        "git-guard.py",
+        "live_gate_station_receipt.py",
+        "loom-code/agents/docs-reviewer.md",
+        "loom-code/scripts/check_doc_citations.py",
+        "loom-code/scripts/loom_gate_markers.py",
+        "loom_gate_markers.py review-pass",
+        "python3 \"$LOOM_LIVE_GATE_PLUGIN_ROOT/scripts/live_gate_station_receipt.py\" --packet \"$LOOM_LIVE_GATE_PACKET\" --plugin-root \"$LOOM_LIVE_GATE_PLUGIN_ROOT\" --marker-dir \"$LOOM_LIVE_GATE_MARKER_DIR\" --repo \"$LOOM_LIVE_GATE_REPO\" --station DOCS --nonce \"$LOOM_LIVE_GATE_NONCE\"",
+        "python3 <resources.doc_citation_checker> <changed .md files> --repo-root <target_repo> --reviewed-sha <reviewed_sha>",
+        "references/convergence-contract.md",
+        "references/design-evidence.md",
+        "review_context.py",
+        "review_scope.py",
+        "scripts/review_context.py --repo <target_repo>",
+        "scripts/review_context.py --validate <packet-file>"
+      ],
+      "file_structure": [
+        "SKILL.md",
+        "references/",
+        "references/convergence-contract.md",
+        "references/design-evidence.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "5e6fdc4ae931bde18a3c8dd3b6f817f781ee10e0dceaff2101f78b57422bb850",
+      "corpus_sha256": "93a23b610570f3e37211851bad34044fea0b2c31b81ce9857e736b6c1b2ebcc7",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-docs-review",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-docs-review",
+            "result_subtype": "success",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-docs-review",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-docs-review",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": "code-review",
+            "result_subtype": "success",
+            "tool_count": 7
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 6
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-docs-review",
+            "result_subtype": "completed",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-docs-review",
+            "result_subtype": "completed",
+            "tool_count": 8
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-docs-review",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-docs-review",
+            "result_subtype": "completed",
+            "tool_count": 7
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-docs-review",
+            "result_subtype": "completed",
+            "tool_count": 7
+          },
+          "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-codex-r1.jsonl"
+        }
+      ]
+    },
+    "systematic-debugging": {
+      "word_count": 2200,
+      "frontmatter": {
+        "name": "systematic-debugging",
+        "description": "Use when a bug/production failure needs investigation — exceptions, wrong output, intermittent/CI failures, race conditions, 'works on my machine'. Enforces a 4-phase gate REPRODUCE → ISOLATE → HYPOTHESIZE → VERIFY; no fixing without reproducing.",
+        "version": "0.9.1"
+      },
+      "declared_dependencies": [
+        "\n- Stack Overflow / GitHub Issues / vendor Developer Forums for the framework\n\n**Output**: 2-3 known patterns from the industry that match observed symptoms. Hypothesis #3 must explicitly reference one of them OR document why none apply.\n\n**Why this gate exists**: hypotheses are formed from the agent's prior mental model of the system. When 2+ have falsified in a row, the prior model itself is the bug — not the code. External information (search results) is the cheapest way to break the loop. Cost: 1-2 minutes of WebSearch. Avoided cost: another speculative-fix cycle (often 10-30 min including diagnostic, revert, re-isolate).\n\n**Empirically validated 2026-05-27** (komado-Refs M1.F.2 polish round 5 — image-rendering letterbox bug): 3 hypotheses were falsified before WebSearch was invoked at user prompting; the first search returned the exact answer (SwiftUI Image's CGImage intrinsic dimensions propagate up to parent layout even with ",
+        " / ",
+        " | When ISOLATE needs to understand *\"why was this code written this way\"* — query the knowledge base before re-deriving. |\n\nDelegation contract per CLAUDE.md: pass **paths + structured seed context**, not file content.\n\n## Red Flags — refuse these rationalizations\n\n| Agent / user says | Reality | Correct response |\n|---|---|---|\n| *\"I'll just try a few fixes and see what works.\"* | Random-patching. No hypothesis = no learning. Each failed patch leaves the code in a worse-understood state. | Refuse. Return to Phase 3; articulate a falsifiable hypothesis BEFORE any change. Kernighan & Pike (1999) Ch.5: *\"Debugging requires thinking, not changing.\"* |\n| *\"It's probably X.\"* | *Probably* is not a hypothesis — it's a guess. A hypothesis predicts an observation. | Refuse. Restate as *\"if it's X, then observing Y when I do Z will confirm; observing ¬Y will falsify.\"* |\n| *\"It works on my machine.\"* | Failure to bound the repro conditions. The bug isn't gone; the environment shifted. | Phase 1 returned 🟡 Intermittent. Use [",
+        " §False-green diagnostic already produced a RED test; you can see the wrong line; the fix is one-edit obvious. | \"I think I see the line\" — that's a hypothesis, not a verified isolation. Use this skill. |\n| **Trivial typo / config value** | A literal typo in a string; a config value that's wrong by inspection (no behavior chain to trace). | A symptom that *looks* like a typo but you haven't traced to first appearance. |\n| **Working as designed** | The \"bug\" is the spec — code does what the spec says; the spec is wrong. | The code does something the spec doesn't say AND you're not sure if it's intended. Repro it to confirm. |\n| **Already root-caused in a prior session** | You're picking up a known-cause bug and the fix is queued. | You think you remember the cause but haven't re-confirmed. The fix-of-record is the bug-of-record; verify before fixing. |\n\nWhen uncertain, ask: *\"If I made a change right now, could I prove it fixed the bug?\"* If no (because you can't trigger the bug to test against), this skill is mandatory.\n\n## The 4 phases\n\nEach phase has a **gate** to the next. Skipping a gate is a violation.\n\n### Phase 1 — REPRODUCE\n\n**Goal**: a reliable trigger that fails reproducibly.\n\nThe repro is your equivalent of a RED test (tdd-iron-law). Ideally it IS a failing test in the test suite — that gives you regression protection for free. Worst-case it's a documented command + input + observation: *\"run X with input Y, observe Z.\"*\n\n| Repro quality | Description |\n|---|---|\n| 🟢 **Reliable** | Triggers every time. Move to Phase 2. |\n| 🟡 **Intermittent** | Triggers some-of-the-time. Use [",
+        " §False-green diagnostic. That diagnostic is the *entry condition* to this skill, not its substitute.\n- Does **not** add defense-in-depth proactively. The defense layer is a Phase-4 *result* of finding the bug, not a Phase-0 *posture*. Adding defenses without understanding what they defend against is paranoia.\n- Does **not** decide blast radius / priority. The user / orchestrator decides whether this bug is worth Phase-1-through-4 effort. The skill, once invoked, runs the 4 phases.\n\n## See also\n\n- [",
+        " — fix per [Alejandro M. P. — Image aspectRatio without frames](https://alejandromp.com/development/blog/image-aspectratio-without-frames/) and [Sarunw — resize image to fit container](https://sarunw.com/posts/how-to-resize-an-image-to-fit-a-container-view-in-swiftui/)).\n\n**Anti-pattern**: *\"I'll try one more hypothesis on my intuition before searching.\"* — that's the anchored-thinking voice. The whole point of this gate is that intuition has already been falsified twice. Refuse; run WebSearch.\n\n## Cross-skill contract\n\n| Direction | Skill | Trigger |\n|---|---|---|\n| **Upstream invocation** | ",
+        "../subagent-driven-development/SKILL.md",
+        "../tdd-iron-law/SKILL.md",
+        "../using-loom-code/SKILL.md",
+        "](references/character-encoding-debug.md) for encoding-specific bisection.) |\n| **Dependency bisect** | Bug appears after a dependency upgrade. Pin known-good version → confirm fix → bisect package version. |\n| **Component bisect** | Bug is \"somewhere in the pipeline.\" Insert observation points at module boundaries; binary-search through stages. |\n| **5-Whys** | Bug is non-code (process / data / human). [",
+        "](references/character-encoding-debug.md) — encoding-specific bisection protocol (BOM / UTF mismatch / NFC-NFD / surrogate pairs); links to ",
+        "](references/condition-based-waiting.md) to bound the conditions; isolate the race / timing factor before Phase 2. |\n| 🔴 **Cannot reproduce** | The bug has not been observed by you. Surface back to user: do you have a reliable trigger? If no, the bug is not actionable yet — instrument the production code to capture it next time. **Do NOT proceed to Phase 2.** |\n\n**Gate to Phase 2**: repro is 🟢 or 🟡 with bounded conditions documented.\n\n### Phase 2 — ISOLATE\n\n**Goal**: narrow the bug surface to the smallest possible bisection.\n\n| Bisection axis | When to use |\n|---|---|\n| **Git bisect** | The bug appeared after a known-good version. Binary-search through commits. |\n| **Input bisect** | Bug appears with input X but not X'. Narrow which field / byte / character matters. (See [",
+        "](references/condition-based-waiting.md) to enumerate environment differences; bound the repro. |\n| *\"Let me add more logging and see what happens.\"* | Fishing without a hypothesis. Logging is observation, not investigation. | Refuse. Form a hypothesis first; add ONLY the logging that tests the hypothesis. Otherwise you produce a log soup nobody reads. |\n| *\"Just wrap it in try/except and move on.\"* | Masking the bug. The exception is the bug telling you what's wrong; suppressing it converts a known failure into a silent corruption. | Refuse. Find the root cause via Phase 2-3. After root cause, defense-in-depth may add a graceful-degradation layer — but that's a deliberate decision, not a panic move. |\n| *\"It's intermittent so let's move on.\"* | Heisenbug refusal. Intermittent = race condition / timing / leak. These compound silently in production. | Refuse. Phase 1 🟡 → Phase 2 with timing-axis bisection. If genuinely cannot bound after 1 hour of effort, surface to user as known-unknown with observability instrumentation. |\n| *\"The error message is clear, I'll just fix it.\"* | Symptom ≠ root cause. The error message is where the bug surfaced, not where it lives. | Phase 2 ISOLATE first; the line that throws is rarely the line that broke. |\n| *\"Let me try a 3rd hypothesis on my intuition\"* (after 2 falsifications) | Anchored thinking compounding — the initial mental model is now the bias source, not the code. | §Anchored-thinking guard: WebSearch mandatory before Hypothesis #3+. Internal intuition has been falsified twice; ground the next round in external industry knowledge. |\n| 「先試試看 / とりあえず直してみる」 | Same rationalization, localized. | Same refusal — hypothesis-first. |\n\n## What this skill does NOT do\n\n- Does **not** write features. Implementation flows through ",
+        "](references/condition-based-waiting.md) — Phase 1 🟡 + race-condition isolation.\n- [",
+        "](references/defense-in-depth.md) — Phase 4 post-VERIFY defensive-layer placement (proportional to blast radius).\n- [",
+        "](references/root-cause-tracing.md) — Phase 2 ISOLATE sub-protocols (bisection axes + 5-Whys for non-code causes).\n- [",
+        "](references/root-cause-tracing.md). |\n\nThe output of ISOLATE is the smallest possible *\"the bug lives in this {line / function / dependency / input field}.\"*\n\n**Gate to Phase 3**: bug surface is narrowed to a single component / input field / line — you can point at it.\n\n### Phase 3 — HYPOTHESIZE\n\n**Goal**: a falsifiable hypothesis that predicts an observation you have not yet made.\n\nA hypothesis is **not** *\"I think it's X\"*. A hypothesis is *\"if it's X, then observing Y will happen when I do Z, and observing ¬Y will not happen when I do W.\"* The asymmetry is the whole point — the hypothesis predicts an experiment, and the experiment's outcome falsifies or confirms.\n\n**Anti-pattern**: *\"I think the cache isn't invalidating.\"* → not a hypothesis, no prediction. **Correct**: *\"If the cache isn't invalidating on write, then setting ",
+        "https://alejandromp.com/development/blog/image-aspectratio-without-frames/",
+        "https://sarunw.com/posts/how-to-resize-an-image-to-fit-a-container-view-in-swiftui/",
+        "references/character-encoding-debug.md",
+        "references/condition-based-waiting.md",
+        "references/defense-in-depth.md",
+        "references/root-cause-tracing.md"
+      ],
+      "file_structure": [
+        "README.ja.md",
+        "README.md",
+        "README.zh-TW.md",
+        "SKILL.md",
+        "references/",
+        "references/character-encoding-debug.md",
+        "references/condition-based-waiting.md",
+        "references/defense-in-depth.md",
+        "references/root-cause-tracing.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "dab613bd4902680cb06d57dee4f6a60c1d443cbd7b667a812402880873a1c2f9",
+      "corpus_sha256": "79c8c93f332c1ea70b9ec56e04721e270da166abb8b089272a800e30ad8d5ce2",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 37
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:systematic-debugging",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:systematic-debugging",
+            "result_subtype": "completed",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:systematic-debugging",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:systematic-debugging",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:systematic-debugging",
+            "result_subtype": "completed",
+            "tool_count": 7
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:systematic-debugging",
+            "result_subtype": "completed",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:systematic-debugging",
+            "result_subtype": "completed",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p3-codex-r1.jsonl"
+        }
+      ]
+    },
+    "tdd-iron-law": {
+      "word_count": 1833,
+      "frontmatter": {
+        "name": "tdd-iron-law",
+        "description": "Use before writing implementation code for any feature, fix, refactor, or migration. Enforces the iron law — no production code without a failing test. Exceptions (throwaway / generated / config) in §When NOT to Use; legacy backfill ≠ violation.",
+        "version": "0.9.0"
+      },
+      "declared_dependencies": [
+        "\n\n**Three steps. In order. Every time.**\n\n- **RED**: write the smallest test expressing the next increment of behavior. Run it. **It MUST fail.** If a test passes on first run without any production code change, either the behavior already exists (no new test needed) or the test is not actually testing anything (false green — see Red Flag below).\n- **GREEN**: write the simplest code that makes the failing test pass. *Simplest* does not mean *sloppy* — it means no speculative generality, no premature abstraction. Ugly duplication at GREEN is acceptable; you remove it in REFACTOR.\n- **REFACTOR**: with all tests green, improve internal structure without changing behavior. If a test goes red during refactor, **revert and take a smaller step**. Skipping refactor is \"tests-first,\" which is not TDD — see Beck (2002) Preface.\n\n## When NOT to Use\n\nThe Iron Law has a narrow, enumerated exception list. If your work is **not** on this list, the Iron Law applies. Do not invent new exceptions.\n\n| Exempt category | What qualifies | What does NOT qualify |\n|---|---|---|\n| **Throwaway / spike** | Code you will delete within the same session, never commit, never reference again. | \"I'll clean it up later.\" That's not throwaway — that's tests-last. |\n| **Pure code generation** | Output of a generator that is regenerated from a spec (protobuf, OpenAPI stubs, ORM migrations). | Hand-written code in a generated-looking style. |\n| **Trivial getter / setter / pure delegation** | One-line field exposure or a method whose body is ",
+        " / ",
+        " with no executable behavior. | A \"config\" file with embedded Python / shell / Jinja logic — that's code. |\n| **Explicit user override** | User says *literally* \"skip TDD for this task\" AND the task matches one of the above categories. | User says *\"I just want a quick fix\"* — that's the rationalization the Iron Law is for. |\n\nWhen uncertain, ask: *\"Would I be comfortable if this code shipped to production and broke silently?\"* If the answer is no, you are on the critical path — TDD applies.\n\n## Red Flags — refuse these rationalizations\n\n| Agent / user says | Reality | Correct response |\n|---|---|---|\n| \"I'll write the code first, tests second.\" | Tests-after rationalization. The feedback loop is lost. | Refuse. Cite Beck (2002) Preface: *\"Write the test you wish you had.\"* |\n| \"Just this once — it's a small change.\" | Iron Law violation. Small changes accumulate. | Refuse. Write the failing test. |\n| \"Tests are slow / flaky / annoying.\" | The pain is the message. (Beck 2002 Preface: *\"If it's hard to test, it's probably hard to use.\"*) | Refactor production code until tests are fast. Do not skip. |\n| \"I already wrote the code. Now what?\" | Code without a preceding failing test = Iron Law violation. **Distinct** from legitimate legacy-code backfill (Feathers 2004) — see §Legitimate legacy-code backfill below; time elapsed alone does not convert violation into legacy. | **Delete the code. Write the test. Start over.** |\n| \"The test passed on first run — done!\" | False green. The test was not actually testing the change. | Force RED first: comment out the production code, confirm the test fails, restore the code, confirm it passes. |\n| \"Subagents add too much overhead.\" | Context-window argument, not quality argument. | If the task warrants SDD (see ",
+        "), it warrants TDD inside each subagent. |\n| 「ちょっと試すだけ / 我先快速試一下」 | Same rationalization, localized. | Same refusal. テストを先に書く。先寫測試。 |\n| \"User said skip TDD.\" | Valid only if user is explicit AND the work matches §When NOT to Use. | Quote §When NOT to Use back. Ask for explicit confirmation. |\n\n## Legitimate legacy-code backfill (Feathers 2004) — NOT the same as Iron Law violation\n\nInherited code without tests — written by a previous developer / team / contractor — is **legacy code** in the technical sense of:\n\n> **Michael Feathers (2004) *Working Effectively with Legacy Code*, Prentice Hall (Robert C. Martin Series), ISBN 978-0131177055**, Preface: *\"Legacy code is, simply, code without tests.\"*\n\nThis is a real practice with its own discipline: **Characterization Tests** (Feathers 2004 Ch.13). You write tests that pin down what the code *currently does* — including its bugs — giving you the safety net to refactor toward what it *should do*. New behavior added on top of legacy code still falls under the Iron Law.\n\n### The line — what qualifies as Feathers legacy vs Iron Law violation\n\n| Case | Category |\n|---|---|\n| You inherit 50,000 lines of untested COBOL from a previous team and need to add a new feature. | ✅ Feathers legacy. Characterization tests around the touched modules, then TDD for the new behavior. |\n| Last quarter you wrote a ",
+        "../../scripts/canonical/README.md",
+        "../using-loom-code/SKILL.md",
+        "../using-loom-code/references/environment-gotchas.md",
+        "mermaid\nflowchart LR\n    RED[\"🔴 RED<br/>Write a failing test<br/>(smallest increment of behavior)\"] --> GREEN\n    GREEN[\"🟢 GREEN<br/>Make it pass<br/>(simplest possible code)\"] --> REFACTOR\n    REFACTOR[\"🔵 REFACTOR<br/>Improve internal structure<br/>(behavior unchanged; all tests green)\"] --> RED\n    REFACTOR -.->|or: next increment| RED\n",
+        "payment_processor.py",
+        "references/testing-anti-patterns.md",
+        "rubrics/quality-gate.md",
+        "standards/tdd-standard.md",
+        "tdd-standard.md"
+      ],
+      "file_structure": [
+        "README.ja.md",
+        "README.md",
+        "README.zh-TW.md",
+        "SKILL.md",
+        "references/",
+        "references/testing-anti-patterns.md",
+        "standards/",
+        "standards/tdd-standard.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "31e53704e08768dc3822335e659fb53d2a26408abb1e84e0084230bede5d20de",
+      "corpus_sha256": "9cba14b0930008c20b260cad4a17cc42a496bfa8b631e0ce41cecd6d389f73f8",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "success",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "completed",
+            "tool_count": 11
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:tdd-iron-law",
+            "result_subtype": "completed",
+            "tool_count": 9
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "success",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:tdd-iron-law",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:tdd-iron-law",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p3-codex-r1.jsonl"
+        }
+      ]
+    },
+    "ui-verification": {
+      "word_count": 1196,
+      "frontmatter": {
+        "name": "ui-verification",
+        "description": "Use when the branch touched UI and ui-flows.md exists — drive each state before branch close, otherwise N/A. GUI only; not for package tests (verification-before-completion). Triggers: \"verify the UI\", \"did the screens actually render\", 畫面驗證, UI 検証.",
+        "version": "0.1.0"
+      },
+      "declared_dependencies": [
+        " (could not drive the app into it through the UI)\n   / ",
+        " (reached, contradicts the row — e.g. variant missing, dead-end\n   present) / ",
+        " (reached, matches the row) /\n   ",
+        " (the state/flow\n   + the artifact row) and the observation evidence, mirroring the R2\n   evidence-citation discipline every loom-code gate uses.\n\n## Verdict — two-valued, machine-readable\n\n- **",
+        " / README) — same declared-first\n   posture as ",
+        " MCP (boot / open / click / type / press / screenshot / snapshot) |\n| TUI / CLI | **out of scope for v1** — matches the design station's phase-2 posture; note it and stop |\n\n**No usable tooling → ",
+        " MCP (navigate / click / fill / snapshot / screenshot / wait_for), or Playwright-family tooling |\n| iOS / Android / macOS app | ",
+        " rows —\n   they were added by the design-critic precisely because the writer missed\n   them; they are first-class checklist items, not optional extras.\n2. **Launch the real app.** Serve/open it the way a user would (static file,\n   dev server, simulator build). If launching needs a command, prefer the\n   project's declared surface (",
+        " state whose row\n  is not marked as future/deferred in ",
+        " — logic verification stays\n  with the test suite; this gate covers only what a suite cannot see\n  (the rendered runtime).\n- **Not DESIGN.md token conformance.** Checking whether the UI's colors /\n  spacing / typography match ",
+        ".\n3. **Walk the enumeration.** For each inventory row and each flagged variant:\n   drive the app into that state through the UI (click / type / wait —\n   through real interactions, not by poking internal state), and record one\n   observation per state — a screenshot or accessibility/DOM snapshot plus a\n   one-line \"what I saw vs what the row promises\". For flows: walk each\n   mermaid flow end-to-end; confirm every entry point lands and no dead-end\n   appears that ",
+        ".** Never fake it: do not \"simulate\" a\nwalkthrough by re-reading the source, do not fabricate observations from what\nthe code *should* do, do not let a static read stand in for a rendered check.\nA faked pass here recreates exactly the hole this skill exists to close. If a\nstatic read is all you can offer, say N/A and say why — the finishing flow\nsurfaces that honestly to the user.\n\n## Process\n\n1. **Load the checklist.** Read ",
+        "../finishing-a-development-branch/SKILL.md",
+        "../verification-before-completion/SKILL.md",
+        ": collect every §1 inventory row\n   with its render-variant flags (empty / loading / error / success / …),\n   the user flows, and the entry/exit points. Note ",
+        "docs/loom/",
+        "docs/loom/<change-id>/ui-flows.md",
+        "loom-code/agents/code-reviewer.md",
+        "loom-design/README-interface-design.md",
+        "ui-flows.md",
+        "ui-verification: N/A"
+      ],
+      "file_structure": [
+        "README.ja.md",
+        "README.md",
+        "README.zh-TW.md",
+        "SKILL.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "f9328755e4f902060edf07c524427ad4d21add5d3b84d0b8eeb009d7201d02b4",
+      "corpus_sha256": "ced5ab6c54ac4f2ef5c1f90662df192b4839c8ddc5fac36857cbec5babb6661c",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": "run",
+            "result_subtype": "success",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:ui-verification",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:ui-verification",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:ui-verification",
+            "result_subtype": "success",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:ui-verification",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:ui-verification",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:ui-verification",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:ui-verification",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:ui-verification",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p3-codex-r1.jsonl"
+        }
+      ]
+    },
+    "using-git-worktrees": {
+      "word_count": 1298,
+      "frontmatter": {
+        "name": "using-git-worktrees",
+        "description": "Use for parallel branches at once — features in flight, long experiments, design-then-build cycles outliving a session. Fires on 'work on X while keeping main', 'worktree for the redesign'. Uses git worktree; refuses 'just stash and switch'.",
+        "version": "0.9.0"
+      },
+      "declared_dependencies": [
+        "\nrepo-root/                   # main checkout, default branch\n├── .git/                    # shared across all worktrees\n├── .gitignore               # contains: .worktrees/\n├── .worktrees/              # excluded from git, holds worktree checkouts\n│   ├── feat-X/              # worktree on branch feat/X\n│   ├── feat-Y/              # worktree on branch feat/Y\n│   └── fix-prod-bug-2026-05/  # worktree on branch fix/prod-bug-2026-05\n└── src/                     # main checkout's files\n",
+        " (they would otherwise — git sees them as random directories).\n- **Subdirectory of repo root** — finder/explorer/IDE side-by-side navigation; easy to glob (",
+        " themselves (or asks the agent to run the command); this skill provides the convention + guard rails.\n- Does **not** sync worktree state. Each worktree has its own checkout; the user / git handles refs.\n- Does **not** track worktree count. If you have 20 worktrees in flight, that's a workflow problem this skill cannot solve. Prune aggressively.\n\n## See also\n\n- [",
+        "); fully synced (one remote, shared hooks, shared object store).\n\n## When to use\n\n| Scenario | Use worktree? |\n|---|---|\n| Feature branch in flight + production bug fix needed | ✅ Yes — worktree for the bug fix, keep feature checkout intact |\n| Long-running experiment / design exploration | ✅ Yes — design lives in ",
+        ". |\n| *\"My IDE doesn't handle worktrees well.\"* | Most modern IDEs do (VS Code, JetBrains, Vim, Emacs). If yours doesn't, open the worktree directory as its own workspace — not the repo root. | Treat each worktree as its own workspace; the IDE never knows it's a worktree. |\n| 「stash でいい / 用 stash 就好」 | Same rationalization, localized. | Same refusal — worktree for ongoing parallelism. |\n\n## What this skill does NOT do\n\n- Does **not** wrap ",
+        "../finishing-a-development-branch/SKILL.md",
+        "../using-loom-code/SKILL.md",
+        "../using-loom-code/references/environment-gotchas.md",
+        ".git/",
+        ".worktrees/",
+        ".worktrees/<branch-slug>/",
+        ".worktrees/loom-code-design/",
+        "](../finishing-a-development-branch/SKILL.md) — invokes ",
+        "](../using-loom-code/references/environment-gotchas.md).\n\n## Cross-skill contract\n\n| Direction | Skill | Role |\n|---|---|---|\n| **Upstream invocation** | User starting a parallel branch | Direct user invocation |\n| **Upstream invocation** | ",
+        "bash\n# Add to .gitignore\necho \".worktrees/\" >> .gitignore\nmkdir -p .worktrees\ngit add .gitignore\ngit commit -m \"chore: add .worktrees/ convention\"\n",
+        "bash\n# For a new branch off main\ngit worktree add -b feat/foo .worktrees/feat-foo main\n\n# For an existing branch (someone else pushed it; you want to work on it locally)\ngit fetch origin\ngit worktree add .worktrees/feat-foo feat/foo\n\n# Then cd into it\ncd .worktrees/feat-foo\n",
+        "bash\n# When the branch is merged or abandoned\ncd <repo-root>\ngit worktree remove .worktrees/feat-foo\n\n# If the directory was already deleted manually\ngit worktree prune\n",
+        "feat-X/",
+        "feat/X"
+      ],
+      "file_structure": [
+        "README.ja.md",
+        "README.md",
+        "README.zh-TW.md",
+        "SKILL.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "7421f1aa7e0a9ed89ccd5dc9dd3b022b2d335f46f2f56e3405ca0c9b76fa6cc2",
+      "corpus_sha256": "acd9977b124f7f785e7e842df66613b2f5d080d0a1c0d30d00164050da24243d",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-git-worktrees",
+            "result_subtype": "success",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-git-worktrees",
+            "result_subtype": "success",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-git-worktrees",
+            "result_subtype": "completed",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-git-worktrees",
+            "result_subtype": "completed",
+            "tool_count": 6
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "completed",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "completed",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-git-worktrees",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-git-worktrees",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-codex-r1.jsonl"
+        }
+      ]
+    },
+    "using-loom-code": {
+      "word_count": 1671,
+      "frontmatter": {
+        "name": "using-loom-code",
+        "description": "Router for loom-code — invoke when the user wants to build, change, debug, or review code (features / fixes / refactors / migrations / reviews). Drives brainstorm → plan → SDD → TDD → debugging → code review → finish branch.",
+        "version": "0.12.0"
+      },
+      "declared_dependencies": [
+        " (the design side's entry — it routes on to the principles / interface / spec station) first. | Load ",
+        " / ",
+        " / project conventions — local rules always win.\n2. loom-code skills loaded into context — this router + invoked specialists.\n3. Host default behavior — fallback only.\n\n## How to access skills\n\n| Harness | Mechanism |\n|---|---|\n| Claude Code | Use the ",
+        " PASS is the floor, not the whole close-out: if the push is meant to finish/merge the branch (not just fetch a mid-work review opinion), route the whole thing through ",
+        " for those tasks (the implementer fan-out happens in one assistant message; the rest of the plan stays on SDD's per-task triad). The user can decline; SDD's sequential dispatch is always the fallback. This is the **only** time the toolkit dispatches multiple implementers within one plan — every other path keeps SDD's \"one implementer at a time\" floor.\n\n## Autonomous execution (default): approved scope → PR-ready\n\n**Autonomy-by-default:** after a **human-approved**, frozen brief or validated\nloom-design change-folder fixes scope, auto-advance stage→stage; 「一站一站來」\nis the per-session human-pumped override.\nThe approved entry, not a request phrase, is the authority boundary: a named\npublish endpoint may set the terminal, but is not required to start autonomous\nexecution. Downstream stations follow the shared four-outcome policy, not their own confirmation defaults.\n**MANDATORY:** before auto-advancing, **READ references/continuous-mode.md IN\nFULL.** **Never auto-merge; HALT** for privacy, merge, deploy, delete, failed\nsafety gates, or another STOP-contract row; PR-open is terminal.\n\n## Red flags — agent rationalizations to refuse\n\n| Agent says | Reality | Correct response |\n|---|---|---|\n| \"I'll quickly fix this without a test.\" | Iron-Law violation. | Load ",
+        " — 5-axis framework (\"5-axis\" is the historical name; the walk starts at Axis 0) (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) → structured brief.\n2. **TDD is the iron law.** No production code without a failing test first. Call ",
+        " — parallel branches / long-running experiments / design-then-build cycles with one repo, N checkouts.\n- ",
+        "'s own §When to use names it: \"review WITHOUT merging\") — not the default path for a real close-out.\n5. **Research before asking.** Non-trivial design / strategy / tech-stack question to user MUST cite WebSearch findings (2-4 industry approaches w/ sources). *\"X or Y?\"* without industry context = violation. Use ",
+        ").\n\n**Skipping any of these = violation.** \"I'll just quickly…\" / \"just push\" / \"just ask\" / 「ちょっと試すだけ」 / 「先 push 再說」 / 「先問再說」 are rationalizations — refuse them.\n</EXTREMELY-IMPORTANT>\n\n## Instruction priority\n\nWhen instructions conflict, follow this order:\n\n1. User's ",
+        "). Across-task / across-domain dispatch via one assistant message with multiple ",
+        "../../PRODUCT-SPEC.md",
+        "../../ROADMAP.md",
+        "../../TECH-SPEC.md",
+        "../../scripts/_baseline.md",
+        "/skill-name",
+        "; atomic one-failing-test units; three subagents per task (implementer / spec-reviewer / code-quality-reviewer).\n4. **Never push without review — and a real close-out means ",
+        "checklists/",
+        "code-team/",
+        "continuous-mode.md",
+        "environment-gotchas.md",
+        "obra/superpowers",
+        "references/claude-code-tools.md",
+        "references/codex-tools.md",
+        "references/continuous-mode.md",
+        "references/engineering-baselines.md",
+        "references/environment-gotchas.md",
+        "rubrics/",
+        "scripts/distribute.py",
+        "scripts/verify-drift.py",
+        "standards/",
+        "tdd-iron-law/SKILL.md",
+        "ui-flows.md"
+      ],
+      "file_structure": [
+        "README.ja.md",
+        "README.md",
+        "README.zh-TW.md",
+        "SKILL.md",
+        "protocols/",
+        "protocols/adjudication-view.md",
+        "references/",
+        "references/claude-code-tools.md",
+        "references/codex-tools.md",
+        "references/continuous-mode.md",
+        "references/dispatch-profile.md",
+        "references/engineering-baselines.md",
+        "references/environment-gotchas.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "9f83f61d7c48de501e8d6991fca73ddf793bb1b812d17a03182053eb174ff093",
+      "corpus_sha256": "160e9e8789290ef26c98efdc6250c08a7bcd454b28943e64c6ce157b127dc2ea",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "error_max_turns",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "completed",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:tdd-iron-law",
+            "result_subtype": "completed",
+            "tool_count": 15
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": "code-review",
+            "result_subtype": "error_max_turns",
+            "tool_count": 38
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-code-review",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:requesting-code-review",
+            "result_subtype": "completed",
+            "tool_count": 8
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "completed",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p3-codex-r1.jsonl"
+        }
+      ]
+    },
+    "verification-before-completion": {
+      "word_count": 1154,
+      "frontmatter": {
+        "name": "verification-before-completion",
+        "description": "Use BEFORE declaring 'done' — claiming complete without running the package-level test suite. Fires on 'I'm done', 'ready to ship', 'tests pass' (no invocation shown), 'merge'.",
+        "version": "0.9.0"
+      },
+      "declared_dependencies": [
+        " / ",
+        " / SDD's per-task reviewer), decide which tests should exist, or replace CI — CI runs on push to remote; this skill runs *before* push so push carries only clean diffs. The rendered-UI half of verification (driving the real app through ",
+        " / etc.) is the failure mode this skill exists to prevent. Single-file lint passes, individual test files passing, \"the code looks right\" — none of these are verification. The package-level invocation is the verification.\n\nThree failure modes only the package-level run catches:\n\n1. **Test interaction bugs**: Test A passes alone; Test B passes alone; A + B together fail (shared mutable state, database fixtures, port conflicts, env leakage).\n2. **Orphan tests**: A test file exists but isn't included in the default suite (missing from ",
+        " edit | Config that affects runtime behavior (retries: 3 → 5; feature flag flipped) — not exempt |\n| **Test infrastructure broken** | The test runner itself crashes (not a test failure — the runner doesn't run); a dependency-install failure prevents even starting tests | \"Tests are slow so I skipped them\" — that's a Red Flag below |\n| **Explicit user override + scoped** | User says \"skip verification for this PR because it's only doc\" AND the change matches exempt category 2 | \"Just merge, I checked manually\" — that's the rationalization |\n\nWhen uncertain, ask: *\"If this shipped and broke production, would I be able to point to the test run that should have caught it?\"* If no, verification applies.\n\n## Red Flags — refuse these rationalizations\n\nEach maps to a failure mode in The HARD-GATE above.\n\n| Agent / user says | Reality | Correct response |\n|---|---|---|\n| *\"Tests pass.\"* (no invocation shown) | Unverified claim; their mental model of \"passing\" may not match what the runner actually says. | Run the suite; paste output; THEN you have evidence. |\n| *\"I ran the one test file, it passed.\"* | Misses interaction + orphan modes (1, 2). | Run package-level — single-file is necessary, not sufficient. |\n| *\"Lint passes / it compiles.\"* | Static ≠ runtime (mode 3). | Run tests; lint is orthogonal. |\n| *\"Tests are slow, I'll let CI catch it.\"* | CI catches it AFTER you push; this gate exists so you push only clean diffs. | Run locally first. If genuinely >10 min, see ",
+        " glob, excluded by config, wrong file extension) — a coverage hole the author, CI, and reality each assume someone else filled.\n3. **Lint passes ≠ tests pass**: TypeScript compiles + ESLint clean + a runtime null dereference covered by no test. Static analysis is orthogonal to verification.\n\n## When NOT to use\n\n| Exempt category | What qualifies | What does NOT qualify |\n|---|---|---|\n| **No tests exist yet** | Brand-new repo, no test infrastructure set up, this is the commit that adds the first test | \"Tests exist but I didn't write any for this change\" — that's Iron Law violation; not exempt |\n| **Pure doc / config / generated regen** | Markdown change, version bump, regenerated protobuf stubs, ",
+        " slow-suite isolation. |\n| *\"It worked when I tested manually.\"* | Manual testing is exploration, not verification; it doesn't ratchet against the next regression. | Run the suite; add a test for what you checked by hand if it isn't covered. |\n| *\"Just a 1-line tweak after tests passed.\"* | The tweak might be the bug. | Re-run — 30 seconds now vs weeks recovering a 1-line prod regression. |\n| *\"Known-failing tests, just ignore them.\"* | \"One more won't matter\" is how 1 known-fail becomes 30. | Distinguish documented xfail / skip-with-ticket from new-fail; if your change is the new-fail, that's the bug. |\n| 「テストはパスしてる / 測試 OK / 跑過了」 | Same rationalization, localized. | Same refusal — show the invocation. |\n\n## Process\n\n1. **Resolve the test command** for this project — declared-first consult (the project's declared commands: ",
+        "../..",
+        "../finishing-a-development-branch/SKILL.md",
+        "../requesting-code-review/SKILL.md",
+        "../systematic-debugging/SKILL.md",
+        "../tdd-iron-law/SKILL.md",
+        "../ui-verification/SKILL.md",
+        "../using-loom-code/SKILL.md",
+        ".git/loom/verified.json",
+        "/",
+        "](../ui-verification/SKILL.md)'s job — a conditional sibling gate, not part of this one.\n\nInvoked by ",
+        "hooks/git-guard.py",
+        "loom-code/hooks/plain-relay.md",
+        "package.json",
+        "python3 <plugin-root>/scripts/loom_gate_markers.py verified --run \"<test command>\"",
+        "references/test-invocation-by-stack.md"
+      ],
+      "file_structure": [
+        "README.ja.md",
+        "README.md",
+        "README.zh-TW.md",
+        "SKILL.md",
+        "references/",
+        "references/test-invocation-by-stack.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "0b19bf340fd1e36030bf231717767a51880c95bed6b4edc8ef686b7dd91439b0",
+      "corpus_sha256": "d01b23a549d69428f4f8214b5af1ae747417ee82bd022ca3024604fc48c15268",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:verification-before-completion",
+            "result_subtype": "completed",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:verification-before-completion",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:verification-before-completion",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:verification-before-completion",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:finishing-a-development-branch",
+            "result_subtype": "error_max_turns",
+            "tool_count": 6
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:verification-before-completion",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:verification-before-completion",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-codex-r1.jsonl"
+        }
+      ]
+    },
+    "writing-plans": {
+      "word_count": 4498,
+      "frontmatter": {
+        "name": "writing-plans",
+        "description": "Use AFTER brainstorming produces a brief, BEFORE subagent-driven-development dispatches implementers. Splits it into atomic tasks — each with one RED/GREEN test and a single module boundary — into a dependency graph.",
+        "version": "0.12.2"
+      },
+      "declared_dependencies": [
+        "\n\n## When NOT to use\n\nEnumerated exemptions only.\n\n| Exempt category | What qualifies | What does NOT qualify |\n|---|---|---|\n| **No brief upstream** | brainstorming has not produced a brief yet — routing this skill prematurely. | \"I have a vague idea\" — that needs brainstorming first, not skipping to plans. |\n| **Brief explicitly says \"single atomic task\"** | brainstorming's Smallest End State is itself one file with one assertion, and Out of Scope is exhaustive. The brief IS the plan. | Brief that says \"small\" but Open Questions are non-empty — Open Questions block. |\n| **Implementer returned BLOCKED with a sub-task fallback request** | This is the entry condition for the §BLOCKED fallback flow below — see that section, not §When NOT to Use. | An implementer returning BLOCKED for non-decomposition reasons (broken test infra, missing dependency) — that surfaces to user, not re-planned. |\n| **Explicit user override** | User literally says \"skip planning, here are the tasks\" AND hands in a list that already satisfies the plan-format schema. | \"Just figure it out\" — that's an instruction to plan, not skip. |\n\n## The splitting framework\n\nWalk these in order for each prospective task. Stop expanding a task as soon as **all three** criteria are met.\n\n| # | Criterion | Test |\n|---|---|---|\n| 1 | **Acceptance criterion** (primary) | Can you write ONE failing test now that goes green when this task is done? If you need 3 tests, this is 3 tasks. |\n| 2 | **Module scope** | Does this touch ≤1 module / ≤1 file boundary? If it crosses, split by boundary. |\n| 3 | **No hidden coupling** | Could this task be done in isolation, with only its declared dependencies satisfied? If you need to \"also remember to update X,\" that's a missing dep — declare it. |\n\n**Runnable-capability note.** When a task introduces a runnable capability — a new test suite, build step, lint target, e2e suite, migration command, or similar — its ",
+        "\n<verdict-validation command from loom-design:completeness-critic> validate --change-folder <path> --critic completeness-critic --files proposal.md,specs/<capability>/spec.md\n",
+        "\nbrainstorming → brief (docs/loom/specs/<topic>.md)\n                  ↓\n              writing-plans\n                  ↓\n              plan + plan-document-reviewer self-review\n                  ↓ (PASS) → kickoff briefing (one-way-door decisions)\n              subagent-driven-development\n                  ↓ (per task: implementer → spec-reviewer + code-quality-reviewer)\n              tdd-iron-law (inside each implementer)\n                  ↓\n              finishing-a-development-branch (Phase 3)\n",
+        " (GIVEN / WHEN / THEN) acceptance criteria.\n\n**Detecting which change-folder to consume.** A layered cascade, evaluated in order — stop at the first layer that resolves. Grounded in ",
+        " / ",
+        " actually reviewed and approved this content — **structural-clean ≠ critic-fresh-and-passed**, two different gates, neither subsumes the other. Additionally invoke that public skill's verdict-validation command ([source](https://github.com/<repository>/blob/main/loom-design/scripts/spec/mint_critic_verdict.py)); resolve it through the installed skill, never a sibling layout:\n\n",
+        " are disjoint **AND** there is no semantic dependency (no shared data / symbol, no doc-mirrors-code relationship), mark **both** ",
+        " is a **PROMPT FILE** ([prompt](references/plan-document-reviewer-prompt.md)) dispatched via a generic subagent — NEVER an agent-registry lookup; no other reviewer agent (docs-reviewer included) may substitute. Tier: profile.\n\n**Resolve the dispatch profile** in [",
+        " line, patch those fields now. They are the most common Check-1 / Check-3 failures; one Read saves a full round-trip.\n\n**Coverage gate:** before dispatching the reviewer, run the Coverage self-check in §Consuming a loom-design change-folder — brief mode (",
+        " requirement deltas map to change/removal tasks plus a test update, same discipline. Full detail in [",
+        " so it reviews the current bytes before writing-plans trusts the verdict again.\n\n**Task-shape and code-target detail** (scenario → task mapping, point-don't-copy, verbatim-copy carve-out, target-repo recon, MODIFIED/REMOVED deltas). Map each ",
+        "## Part 1 / ## Part 2",
+        "../brainstorming/SKILL.md",
+        "../brainstorming/references/handoff-brief-format.md",
+        "../dispatching-parallel-agents/SKILL.md",
+        "../subagent-driven-development/SKILL.md",
+        "../tdd-iron-law/SKILL.md",
+        "../using-loom-code/SKILL.md",
+        "../using-loom-code/protocols/adjudication-view.md",
+        "../using-loom-code/references/dispatch-profile.md",
+        "../using-loom-code/references/environment-gotchas.md",
+        "/",
+        "<change-id> / REQ-<n> / Scenario: <name>",
+        "<change-id> / Requirement: <name> / Scenario: <name>",
+        "<topic>-part-N.md",
+        "<topic>-part-{1..N}.md",
+        "AGENTS.md",
+        "Acceptance: RED/GREEN",
+        "](../using-loom-code/references/dispatch-profile.md) before spawn; it owns translation and escalation.\n\nAfter producing the plan, writing-plans **must** dispatch [",
+        "](references/consuming-a-change-folder.md).\n\n**Consumer read-only.** **NEVER edit the producer's change-folder** — loom-design is SSOT, so a consumer edit makes sibling consumers read a different spec than the one the freeze validated, and races the freeze's ",
+        "](references/plan-document-reviewer-prompt.md) as an evaluator subagent — a one-shot blocking call that waits for and returns its verdict directly (see your host's tool-mapping reference for the exact shape, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid — Codex has no equivalent). That prompt holds the **authoritative, full check list** — do not maintain a duplicate copy here (it drifts). The highest-value checks, so you can self-pre-screen before dispatch:\n\n- **one-failing-test acceptance** — each task names a specific RED test (criterion 1, primary);\n- **every brief item covered** — every Smallest End State / Decision item maps to ≥1 task, no orphan tasks;\n- **DAG, no cycles** — ",
+        "docs/loom/",
+        "docs/loom/<change-id>",
+        "docs/loom/<change-id>/",
+        "docs/loom/backlog/",
+        "docs/loom/plans/<date>-<topic>.md",
+        "git-guard.py",
+        "https://github.com/<repository>/blob/main/loom-design/scripts/spec/mint_critic_verdict.py",
+        "loom-code/hooks/family-relay.md §(a2) Progress\ncard",
+        "markdown\n# Plan: <topic>\n\nSource brief: docs/loom/specs/<date>-<topic>.md\nGoal: <one sentence transcribed from the brief's Smallest End State at\n    plan time — frozen with the plan; never edited afterward>\nStage: planning   ← at emit; enum planning | sdd:wave-N | review:round-N |\n    blocked:user-decision | finishing — orchestrator updates it at each\n    transition\nTotal tasks: <N>   ← uncapped\nCritical-path depth: <D> (≤5)   ← longest Dependencies chain; this is the ceiling\nExecution order: sequential | parallel-where-possible\nPlan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PASS (timestamp)\n\n## Task-flow diagram\n\n<!-- mermaid flowchart LR of the task dependency DAG (or the pinned N/A line) -->\n\n## Open Questions\n\nN/A — no unresolved question: <one-line reason>\n\n## Task 1 — <short name>\n- Description: <imperative voice, first line only — overflow routes to a nested bullet or table per §Field-value grammar>\n- Module: <path or module name; one only>\n- Files touched: <comma-separated paths the implementer will Write / Edit>\n- Context paths:\n  - <path to existing code the implementer reads>\n- Acceptance:\n  - RED: <failing test name / diagnostic>\n  - GREEN: <observable condition when done>\n- External surfaces: <required when the task touches a non-stdlib external surface —\n    five categories + stdlib-preference rule in ",
+        "mint_critic_verdict.py",
+        "package.json",
+        "proposal.md,specs/<capability>/spec.md",
+        "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py\" <plan-path>",
+        "python3 loom-code/scripts/check_field_microstructure.py --brief <brief-path>",
+        "python3 loom-code/scripts/check_field_microstructure.py <plan-path>",
+        "python3 loom-code/scripts/check_onramp_choice.py <brief-path>",
+        "python3 loom-code/scripts/check_open_questions.py <plan-path>",
+        "python3 loom-code/scripts/check_queue_relation.py <brief-path>",
+        "python3 loom-code/scripts/check_scenario_coverage.py --brief <brief> <plan>",
+        "python3 loom-code/scripts/check_scenario_coverage.py <change-folder> <plan>",
+        "python3 loom-code/scripts/check_seam_coverage.py <plan-path>",
+        "python3 scripts/plan_card.py <plan-path>",
+        "references/consuming-a-change-folder.md",
+        "references/cross-skill-map.md",
+        "references/design-evidence.md",
+        "references/kickoff-briefing.md",
+        "references/plan-document-reviewer-prompt.md",
+        "references/plan-format.md",
+        "references/red-flags.md",
+        "scripts/plan_card.py",
+        "specs/<capability>/spec.md",
+        "validate_spec_output.py"
+      ],
+      "file_structure": [
+        "README.ja.md",
+        "README.md",
+        "README.zh-TW.md",
+        "SKILL.md",
+        "references/",
+        "references/consuming-a-change-folder.md",
+        "references/cross-skill-map.md",
+        "references/design-evidence.md",
+        "references/kickoff-briefing.md",
+        "references/plan-document-reviewer-prompt.md",
+        "references/plan-format.md",
+        "references/red-flags.md",
+        "references/requirement-identifiers.md",
+        "test-prompts.json"
+      ],
+      "skill_sha256": "83ac3459730ecb73cf3d26143c6ec3de1ef608960e8cce0545f164280b3646d8",
+      "corpus_sha256": "5cb3e686084ccc3e6190e0c850b99bd287d1d61d00913a9967a2cfba37aa7c77",
+      "baseline_root": {
+        "commit": "821bc93874136e96887bb32505b18f1352f73ff3",
+        "tree": "864e5a3d74a4b8ec4338b2ded6977ffae46bacde",
+        "label": "baseline/loom-code"
+      },
+      "raw_evidence": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/",
+      "runs": [
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:writing-plans",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:writing-plans",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:writing-plans",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 1,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:writing-plans",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p2-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p2-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:writing-plans",
+            "result_subtype": "completed",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p2-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 2,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:subagent-driven-development",
+            "result_subtype": "completed",
+            "tool_count": 2
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p2-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "error_max_turns",
+            "tool_count": 4
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:writing-plans",
+            "result_subtype": "success",
+            "tool_count": 1
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:writing-plans",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 3,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "EXACT",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:writing-plans",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-codex-r1.jsonl"
+        },
+        {
+          "prompt_id": 4,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 0,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p4-claude-r0.jsonl"
+        },
+        {
+          "prompt_id": 4,
+          "host": "claude",
+          "model": "haiku",
+          "replicate": 1,
+          "classification": "MISS",
+          "status": "completed",
+          "observable": {
+            "fired": null,
+            "result_subtype": "success",
+            "tool_count": 0
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p4-claude-r1.jsonl"
+        },
+        {
+          "prompt_id": 4,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 0,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:subagent-driven-development",
+            "result_subtype": "completed",
+            "tool_count": 3
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p4-codex-r0.jsonl"
+        },
+        {
+          "prompt_id": 4,
+          "host": "codex",
+          "model": "gpt-5.6-luna",
+          "replicate": 1,
+          "classification": "FAMILY",
+          "status": "completed",
+          "observable": {
+            "fired": "loom-code:using-loom-code",
+            "result_subtype": "completed",
+            "tool_count": 5
+          },
+          "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p4-codex-r1.jsonl"
+        }
+      ]
+    }
+  },
+  "raw_workspaces": [
+    "loom-code-preflight-20260826-first-half-v2",
+    "loom-code-preflight-20260826-second-half-v2",
+    "loom-code-preflight-20260826-first-half-v2",
+    "loom-code-preflight-20260826-second-half-v2"
+  ]
+}
