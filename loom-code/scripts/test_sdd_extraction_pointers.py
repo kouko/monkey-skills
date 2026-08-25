@@ -111,7 +111,7 @@ ENVIRONMENT_GOTCHAS = (
 # refusal sentence (Step 3), the "(any quality verdict)" cell narrowing,
 # and the MALFORMED_PACKET-row precedence sentence under the Verdict
 # resolution table (measured 4518 + 12 margin).
-WORD_CEILING = 4500
+WORD_CEILING = 4521
 
 # --- distinctive phrases, whitespace-normalized ---------------------------
 
@@ -441,7 +441,9 @@ def test_skill_md_word_count_within_ceiling():
         "2026-08-24 Task 13 complete receipt argv; raised 4397 -> 4424 "
         "by the 2026-08-25 reviewer-packet-fail-closed arc T5 "
         "--validate refusal sentence; raised 4424 -> 4464 same arc, "
-        "review round 1, MALFORMED_PACKET verdict-table row)"
+        "review round 1, MALFORMED_PACKET verdict-table row; raised "
+        "4500 -> 4521 by the 2026-08-25 seam-contracts arc T5 to admit "
+        "the dispatch-step Seam-lines-into-packet sentence)"
     )
 
 
