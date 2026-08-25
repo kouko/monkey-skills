@@ -507,6 +507,93 @@ def test_compare_hosts_normalizes_baseline_candidate_replicates(tmp_path, monkey
     assert json.loads(comparison_out.read_text(encoding="utf-8"))["comparisons"]
 
 
+def test_compare_hosts_passes_explicit_economy_models_to_each_host(tmp_path):
+    """The two CLIs must receive their own explicitly pinned economy model."""
+    record = {"query": "exercise the skill", "expected": "NONE", "notes": "model pin"}
+
+    claude_argv = loom_firing_harness.host_argv_for_root(
+        "claude", tmp_path, record, max_turns=4, working_directory=tmp_path,
+        claude_model="haiku", codex_model="gpt-5.6-luna",
+    )
+    codex_argv = loom_firing_harness.host_argv_for_root(
+        "codex", tmp_path, record, max_turns=4, working_directory=tmp_path,
+        claude_model="haiku", codex_model="gpt-5.6-luna",
+    )
+
+    assert claude_argv[claude_argv.index("--model") + 1] == "haiku"
+    assert codex_argv[codex_argv.index("--model") + 1] == "gpt-5.6-luna"
+
+
+def test_run_host_rejects_nonzero_exit(monkeypatch, tmp_path):
+    """Authentication and host failures must never normalize into PASS."""
+    invocation = loom_firing_harness.HostInvocation(
+        host="claude",
+        root_label="baseline",
+        plugin_root=tmp_path,
+        record={"query": "probe", "expected": "NONE", "notes": "failure"},
+        replicate=0,
+        argv=("claude", "-p", "probe"),
+        codex_home=None,
+        environment={},
+    )
+
+    class Failed:
+        returncode = 1
+        stdout = '{"type":"error","message":"unauthorized"}\n'
+        stderr = "credential detail must not leak"
+
+    monkeypatch.setattr(loom_firing_harness.subprocess, "run", lambda *a, **k: Failed())
+
+    with pytest.raises(RuntimeError, match="claude host exited with status 1"):
+        loom_firing_harness.run_host(invocation)
+
+
+def test_codex_root_invocation_loads_isolated_plugin_config(tmp_path):
+    """CODEX_HOME is isolated already; ignoring its config hides the plugin."""
+    argv = loom_firing_harness.host_argv_for_root(
+        "codex", tmp_path,
+        {"query": "probe", "expected": "NONE", "notes": "plugin load"},
+        max_turns=4, working_directory=tmp_path,
+    )
+
+    assert "--ignore-user-config" not in argv
+
+
+def test_codex_observable_detects_loaded_plugin_skill_path():
+    transcript = json.dumps({
+        "type": "item.completed",
+        "item": {
+            "type": "command_execution",
+            "command": "sed -n 1,240p /tmp/cache/loom/loom-workflow/1.0.0/skills/distill-sessions/SKILL.md",
+        },
+    })
+
+    observable = loom_firing_harness._normalize_observable("codex", transcript)
+
+    assert observable["fired"] == "loom-workflow:distill-sessions"
+
+
+def test_comparison_verdict_reports_tokens_without_treating_cost_as_behavior_change():
+    baseline = {
+        "expected": "loom-code:brainstorming",
+        "observable": {
+            "fired": "loom-code:brainstorming", "result_subtype": "completed",
+            "tool_sequence": ("Skill",), "tokens": {"input_tokens": 100},
+        },
+    }
+    candidate = {
+        "expected": "loom-code:brainstorming",
+        "observable": {
+            "fired": "loom-code:brainstorming", "result_subtype": "completed",
+            "tool_sequence": ("Skill",), "tokens": {"input_tokens": 60},
+        },
+    }
+
+    assert loom_firing_harness._comparison_verdict(
+        [(baseline, candidate), (baseline, candidate)]
+    ) == "PASS"
+
+
 def test_shipped_corpus_validates():
     """F2: EVERY shipped firing corpus parses and validates cleanly.
 

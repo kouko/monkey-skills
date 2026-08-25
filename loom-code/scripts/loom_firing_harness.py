@@ -61,6 +61,7 @@ from dataclasses import dataclass
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -373,6 +374,10 @@ def run_host(invocation: HostInvocation) -> str:
     proc = subprocess.run(
         invocation.argv, capture_output=True, text=True, check=False, env=env
     )
+    if proc.returncode:
+        raise RuntimeError(
+            f"{invocation.host} host exited with status {proc.returncode}"
+        )
     return proc.stdout + proc.stderr
 
 
@@ -422,6 +427,8 @@ def host_argv_for_root(
     *,
     max_turns: int,
     working_directory: Path,
+    claude_model: str | None = None,
+    codex_model: str | None = None,
 ) -> tuple[str, ...]:
     """Build the host-specific argv for one explicitly named plugin root.
 
@@ -431,18 +438,20 @@ def host_argv_for_root(
     """
     root = Path(plugin_root).resolve()
     if host == "claude":
-        return (
+        argv = (
             "claude", "-p", record["query"], "--max-turns", str(max_turns),
             "--allowedTools", "Skill", "--output-format", "stream-json",
             "--verbose", "--plugin-dir", str(root),
         )
+        return argv if claude_model is None else argv + ("--model", claude_model)
     if host == "codex":
-        return (
-            "codex", "exec", "--ephemeral", "--ignore-user-config",
+        argv = (
+            "codex", "exec", "--ephemeral",
             "--ignore-rules", "--sandbox", "workspace-write",
             "--skip-git-repo-check", "-C", str(Path(working_directory).resolve()),
             "--json", record["query"],
         )
+        return argv if codex_model is None else argv[:-1] + ("--model", codex_model, argv[-1])
     raise ValueError(f"unsupported host: {host}")
 
 
@@ -477,6 +486,13 @@ def _normalize_observable(host: str, transcript: str) -> dict:
                 parts = command.split(maxsplit=1)
                 if fired is None and len(parts) == 2 and parts[0] == "skill":
                     fired = parts[1]
+                if fired is None:
+                    match = re.search(
+                        r"/(loom-[^/\s]+)/[^/\s]+/skills/([^/\s]+)/SKILL\.md",
+                        command,
+                    )
+                    if match:
+                        fired = f"{match.group(1)}:{match.group(2)}"
         usage = event.get("usage")
         if isinstance(usage, dict):
             tokens = dict(usage)
@@ -492,8 +508,16 @@ def _comparison_verdict(pairs: list[tuple[dict, dict]]) -> str:
     """Require two identical observable changes before assigning direction."""
     differences: dict[tuple[str, str], list[tuple[dict, dict]]] = {}
     for baseline, candidate in pairs:
-        before = json.dumps(baseline["observable"], sort_keys=True, default=list)
-        after = json.dumps(candidate["observable"], sort_keys=True, default=list)
+        before_observable = {
+            key: value for key, value in baseline["observable"].items()
+            if key != "tokens"
+        }
+        after_observable = {
+            key: value for key, value in candidate["observable"].items()
+            if key != "tokens"
+        }
+        before = json.dumps(before_observable, sort_keys=True, default=list)
+        after = json.dumps(after_observable, sort_keys=True, default=list)
         if before != after:
             differences.setdefault((before, after), []).append((baseline, candidate))
     if not differences:
@@ -520,6 +544,8 @@ def compare_hosts(
     runner,
     max_turns: int = _MAX_TURNS_FLOOR,
     working_directory: Path | None = None,
+    claude_model: str | None = None,
+    codex_model: str | None = None,
 ) -> dict:
     """Run baseline and candidate roots through both hosts and compare facts.
 
@@ -540,7 +566,11 @@ def compare_hosts(
                 for replicate in range(replicates):
                     invocation = HostInvocation(
                         host, root_label, plugin_root, record, replicate,
-                        host_argv_for_root(host, plugin_root, record, max_turns=max_turns, working_directory=cwd),
+                        host_argv_for_root(
+                            host, plugin_root, record, max_turns=max_turns,
+                            working_directory=cwd, claude_model=claude_model,
+                            codex_model=codex_model,
+                        ),
                         raw_directory / f"codex-home-{root_label}" if host == "codex" else None,
                         {"CODEX_HOME": str(raw_directory / f"codex-home-{root_label}")} if host == "codex" else {},
                     )
@@ -553,6 +583,7 @@ def compare_hosts(
                         "root_label": root_label,
                         "plugin_root": str(plugin_root),
                         "replicate": replicate,
+                        "model": claude_model if host == "claude" else codex_model,
                         "argv": invocation.argv,
                         "raw_transcript_path": str(raw_path),
                         "observable": _normalize_observable(host, transcript),
@@ -604,6 +635,8 @@ def _cmd_compare(args: argparse.Namespace) -> None:
         runner=run_host,
         max_turns=args.max_turns,
         working_directory=args.working_directory,
+        claude_model=args.claude_model,
+        codex_model=args.codex_model,
     )
     output = json.dumps(result, ensure_ascii=False, default=list)
     if args.out:
@@ -635,6 +668,8 @@ def main(argv: list[str] | None = None) -> None:
     compare_parser.add_argument("--replicates", type=int, default=2)
     compare_parser.add_argument("--max-turns", type=int, default=_MAX_TURNS_FLOOR)
     compare_parser.add_argument("--working-directory", type=Path, default=Path.cwd())
+    compare_parser.add_argument("--claude-model")
+    compare_parser.add_argument("--codex-model")
     compare_parser.set_defaults(func=_cmd_compare)
 
     args = parser.parse_args(argv)
