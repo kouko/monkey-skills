@@ -173,7 +173,9 @@ def test_pinned_refusal_and_pass_down_contracts_untouched():
 # hardening arc: CODE and MIXED each pin the complete executable receipt
 # argv so a host event can be compared token-for-token rather than trusted
 # as prose.
-WORD_CEILING = 4401
+# Raised 4401 -> 4406 by the 2026-08-25 reviewer-packet-fail-closed
+# arc, T5: the `--validate` fail-closed refusal sentence at Step 1.
+WORD_CEILING = 4406
 
 def test_word_count_within_ceiling():
     word_count = len(_skill_text().split())
@@ -189,7 +191,9 @@ def test_word_count_within_ceiling():
         "then 4150 -> 4300 by the same arc's Task 12 M3 upgrade-rule "
         "paragraph + stale-cross-ref rewrite, then 4300 -> 4315 by the "
         "2026-08-12 adjudication-view arc's T7 Step-5 pointer sentence, "
-        "then 4315 -> 4401 for Task 13's two complete receipt argv; "
+        "then 4315 -> 4401 for Task 13's two complete receipt argv, "
+        "then 4401 -> 4406 by the 2026-08-25 reviewer-packet-fail-closed "
+        "arc T5 --validate refusal sentence; "
         "the extraction-pilot brief reserves ~600 words of true headroom "
         "to CHK-SKL-010)"
     )

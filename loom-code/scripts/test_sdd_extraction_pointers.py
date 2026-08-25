@@ -95,7 +95,10 @@ ENVIRONMENT_GOTCHAS = (
 # again left at 4250. Raised 4300 -> 4397 by Task 13 of the 2026-08-24
 # cross-host review-gate hardening arc: the complete receipt argv is the
 # host-event oracle and cannot be replaced by a prose placeholder.
-WORD_CEILING = 4397
+# Raised 4397 -> 4424 by the 2026-08-25 reviewer-packet-fail-closed
+# arc, T5: the `--validate` fail-closed refusal sentence at Step 3 --
+# the mechanical packet gate never runs unless the prose invokes it.
+WORD_CEILING = 4424
 
 # --- distinctive phrases, whitespace-normalized ---------------------------
 
@@ -422,7 +425,9 @@ def test_skill_md_word_count_within_ceiling():
         "the Record-class scope narrowing paragraph; raised again "
         "4250 -> 4300, same Task 11, review-round-1 fix, to admit the "
         "verdict-table-composition sentence; raised 4300 -> 4397 by the "
-        "2026-08-24 Task 13 complete receipt argv)"
+        "2026-08-24 Task 13 complete receipt argv; raised 4397 -> 4424 "
+        "by the 2026-08-25 reviewer-packet-fail-closed arc T5 "
+        "--validate refusal sentence)"
     )
 
 
