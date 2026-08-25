@@ -14,11 +14,11 @@ If you are a subagent already dispatched with an explicit role prompt (implement
 
 Five load-bearing rules:
 
-1. **Brainstorm before implementing.** Explore intent + alternatives first. Call `brainstorming` — 5-axis framework ("5-axis" is the historical name; the walk starts at Axis 0) (Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete) → structured brief.
-2. **TDD is the iron law.** No production code without a failing test first. Call `tdd-iron-law`. Beck (2002, ISBN 978-0321146533) Preface: *"Write the test you wish you had. Make it fail. Make it pass. Make it clean."* Floor, not aspiration.
+1. **Brainstorm before implementing.** Call `brainstorming`; the historical 5-axis walk starts at Axis 0, then Problem / Users / Smallest End State / Alternatives / What Becomes Obsolete produce the brief.
+2. **TDD is the iron law.** Call `tdd-iron-law`: no production code without a failing test first.
 3. **Split + dispatch (SDD).** Task >1 hour or >1 module → `subagent-driven-development`; atomic one-failing-test units; three subagents per task (implementer / spec-reviewer / code-quality-reviewer).
-4. **Never push without review — and a real close-out means `finishing-a-development-branch`, not review alone.** `git push` / `gh pr create` / `gh pr merge` without prior review PASS = violation. A `requesting-code-review` PASS is the floor, not the whole close-out: if the push is meant to finish/merge the branch (not just fetch a mid-work review opinion), route the whole thing through `finishing-a-development-branch` — it delegates to `requesting-code-review` as its own Step 1, so nothing is lost, and it additionally bundles verification-before-completion + same-branch memory-timing + the git-memory trailer decision, none of which a standalone review-then-manual-push gets you. Calling `requesting-code-review` directly and pushing by hand is the narrow exception (`finishing-a-development-branch`'s own §When to use names it: "review WITHOUT merging") — not the default path for a real close-out.
-5. **Research before asking.** Non-trivial design / strategy / tech-stack question to user MUST cite WebSearch findings (2-4 industry approaches w/ sources). *"X or Y?"* without industry context = violation. Use `brainstorming` Axis 4 protocol for the research. This is gate ② of the full asking-the-user discipline — gate ① follows the four-outcome policy in `references/continuous-mode.md`: auto-resolve approved, checkable in-scope work; ask only when scope or a user decision is genuinely missing; halt for irreversible safety boundaries. Gate ③ (plain, jargon-free phrasing with a state anchor) is enforced in the downstream skills (`brainstorming` / `subagent-driven-development` / `requesting-code-review`).
+4. **Never push without review.** A real close-out routes through `finishing-a-development-branch`, which adds review, verification, memory timing, and git-memory; standalone `requesting-code-review` is only for review without merging. `git push` / `gh pr create` / `gh pr merge` without review PASS violates the gate.
+5. **Research before asking.** Non-trivial design/strategy/stack questions cite 2–4 sourced industry approaches via `brainstorming` Axis 4. Follow the four-outcome policy in `references/continuous-mode.md`: auto-resolve approved checkable work, ask only for missing scope/decision, and halt for irreversible safety boundaries; downstream skills own plain phrasing.
 
 **Skipping any of these = violation.** "I'll just quickly…" / "just push" / "just ask" / 「ちょっと試すだけ」 / 「先 push 再說」 / 「先問再說」 are rationalizations — refuse them.
 </EXTREMELY-IMPORTANT>
@@ -71,21 +71,21 @@ is the per-session human-pumped override.
 The approved entry, not a request phrase, is the authority boundary: a named
 publish endpoint may set the terminal, but is not required to start autonomous
 execution. Downstream stations follow the shared four-outcome policy, not their own confirmation defaults.
-**MANDATORY:** before auto-advancing, **READ references/continuous-mode.md IN
-FULL.** **Never auto-merge; HALT** for privacy, merge, deploy, delete, failed
-safety gates, or another STOP-contract row; PR-open is terminal.
+**MANDATORY:** before auto-advancing, **READ references/continuous-mode.md IN FULL.**
+**Never auto-merge; HALT** for privacy, merge, deploy, delete, failed safety gates,
+or another STOP-contract row; PR-open is terminal.
 
 ## Red flags — agent rationalizations to refuse
 
 | Agent says | Reality | Correct response |
 |---|---|---|
-| "I'll quickly fix this without a test." | Iron-Law violation. | Load `tdd-iron-law`, write the failing test first. |
-| "This change is trivial, skip planning." | Trivial changes accumulate scope. | Auto-resolve an approved, checkable in-scope change under TDD; ask only when scope or a user decision is genuinely missing. |
-| "I'll write all the code, tests last." | Test-after rationalization. | Refuse. Beck 2002 §Preface forbids. |
-| "Subagents add overhead." | Context-window logic, not quality logic. | If task >1 hour or >1 module, SDD is mandatory. |
-| "User said skip TDD." | Valid only if user is explicit *and* the work matches `tdd-iron-law/SKILL.md` §When NOT to Use (throwaway / generated / pure config). | Quote §When NOT to Use back; ask for explicit confirmation. |
+| "I'll quickly fix this without a test." | Iron-Law violation. | Load `tdd-iron-law`; write RED first. |
+| "This change is trivial, skip planning." | Scope still needs grounding. | Auto-resolve approved checkable work; ask only for missing scope/decision. |
+| "I'll write all the code, tests last." | Tests-after. | Refuse. |
+| "Subagents add overhead." | Not a quality argument. | SDD is mandatory above its threshold. |
+| "User said skip TDD." | Valid only under `tdd-iron-law/SKILL.md` §When NOT to Use. | Quote it and confirm. |
 | 「我先快速試一下 / ちょっと試すだけ」 | Same rationalization, localized. | Same refusal — load `tdd-iron-law`. |
-| "I'll skip straight to the brief." | Skipping `brainstorming`'s Axis 0 upstream check before writing a brief = violation — new product-shaped work may need `using-loom-design` (the design side's entry — it routes on to the principles / interface / spec station) first. | Load `brainstorming`; Axis 0 checks the reception criteria before Axis 1. |
+| "I'll skip straight to the brief." | Skipping Axis 0 before a brief is a violation; it may route to `using-loom-design`. | Run Axis 0 first. |
 
 ## Skill types
 
@@ -94,18 +94,16 @@ safety gates, or another STOP-contract row; PR-open is terminal.
 
 ## Coexistence
 
-- **`domain-teams:code-team`** — passive gate entry. Use it to audit existing artifacts; this toolkit is for building from scratch. The knowledge layer (`standards/`, `rubrics/`, `checklists/`) here is a byte-identical functional copy of `code-team/`; sync via `scripts/distribute.py`, drift-checked by `scripts/verify-drift.py`.
-- **`loom-workflow:{git-memory, complexity-critique, proposal-critique}`** — loom-code **delegates** to these at the right moments. Never duplicate their logic.
-- **`obra/superpowers`** — overlapping skill names + dual SessionStart hook. To disable loom-code's hook injection: `export LOOM_CODE_MODE=off` in shell rc.
-- **loom family reception** — `loom-code`'s SessionStart hook carries the family map (the six `using-loom-*` entries) + the on-ramp criteria table; `brainstorming`'s Axis 0 points to it rather than duplicating it here.
+- **`domain-teams:code-team`** audits existing artifacts; loom-code builds. Its knowledge copies sync via `scripts/distribute.py` and `scripts/verify-drift.py`.
+- **`loom-workflow:{git-memory, complexity-critique, proposal-critique}`** — delegate; never duplicate.
+- **`obra/superpowers`** overlaps names/hooks; disable loom-code injection with `LOOM_CODE_MODE=off`.
+- **loom family reception** — SessionStart owns the family map/on-ramp; Axis 0 points to it.
 
 ## What this router does NOT do
 
 - Does **not** write or review code itself — it routes.
-- Does **not** auto-invoke downstream skills before an approved entry artifact
-  exists — the harness invokes them when the user's next message + Skill
-  Priority match. **Exception:** autonomy-by-default auto-advances an approved
-  scope stage→stage until an ask-policy outcome or safety stop fires.
+- Does **not** auto-invoke downstream skills before an approved entry; afterward autonomy advances
+  until an ask-policy outcome or safety stop.
 - Does **not** enforce one workflow for every task — Flexible skills (§Skill types) cover tailoring.
 - Does **not** replace `domain-teams:code-team` — both ship; pick by use-case (build vs audit).
 
@@ -119,7 +117,7 @@ Load each file **only when its trigger fires** — do NOT speculatively load all
   (the §"Autonomous execution" stub above is not enough to run safely).
 - `references/claude-code-tools.md` — Claude Code canonical tool names. Read only when the host is **Claude Code**.
 - `references/codex-tools.md` — Codex CLI tool mapping (Phase 2.5 ship target). Read only when the host is **Codex CLI**.
-- `references/engineering-baselines.md` — 12-rule engineering baseline carried by every loom-code plugin-level agent (SSOT in `../../scripts/_baseline.md`; v0.5.2 / P15-12).
+- `references/engineering-baselines.md` — agent baseline (SSOT: `../../scripts/_baseline.md`).
 - `references/environment-gotchas.md` — consolidated orchestrator harness / dcg / Read-tool-precondition gotchas (cross-cutting; pointed at by SDD / tdd-iron-law / finishing-a-development-branch / using-git-worktrees). Read only when an orchestrator hits a harness friction (blocked git command, "File has not been read yet", rebase conflict).
 - `../../PRODUCT-SPEC.md` / `../../TECH-SPEC.md` / `../../ROADMAP.md` — design lock + phase plan.
 
