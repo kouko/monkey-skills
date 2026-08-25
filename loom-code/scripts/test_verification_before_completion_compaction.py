@@ -22,6 +22,10 @@ def test_entrypoint_preserves_package_evidence_failure_routing_and_marker_within
     required = (
         "<SUBAGENT-STOP>",
         'NO "DONE" WITHOUT PACKAGE-LEVEL TEST INVOCATION',
+        "Evidence predating current HEAD is invalid",
+        "A focused test is never package verification",
+        "do not enter finishing or close-out",
+        "run the current package suite first",
         "Single-file",
         "Test interaction bugs",
         "Orphan tests",

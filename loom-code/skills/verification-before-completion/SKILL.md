@@ -13,6 +13,8 @@ If you are a subagent dispatched with an explicit role prompt, your dispatcher a
 
 > **NO "DONE" WITHOUT PACKAGE-LEVEL TEST INVOCATION.**
 
+Evidence predating current HEAD is invalid. A focused test is never package verification. Until the current package suite passes, do not enter finishing or close-out: run the current package suite first.
+
 Run the actual package suite (`npm test`, `pytest`, `go test ./...`, `cargo test`, etc.). Single-file tests, lint, or inspection are not verification.
 
 Three failure modes only the package-level run catches:
