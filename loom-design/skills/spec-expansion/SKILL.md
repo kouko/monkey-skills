@@ -7,96 +7,56 @@ version: 0.3.0
 
 # spec-expansion
 
-Turn a **sparse seed** into a **high-recall spec draft**. The job: when a
-coding task starts from a few lines of intent, the agent silently picks its
-own definition of "done" and builds happy-path-only slop. This skill
-systematically expands the seed across objects / states / paths / edge cases
-so the right *and* complete thing gets specified on the first pass — then
-hands the result to `loom-code`'s VERIFY layer.
+Turn a **sparse seed** into a **high-recall spec draft** by expanding objects,
+states, paths, and edge cases before handing the result to `loom-code` VERIFY.
+Its output must remain inspectable, attributable, and directly usable by the
+downstream planning and verification stations.
 
 This is the **GENERATE** layer of the GENERATE → DECLARE → VERIFY pipeline.
 It produces a spec draft; it does **not** run TDD, write code, or review code
 (see Boundary below).
-
-## Executor model — who does what
-
-**You (the agent running this skill) are the executor.** You supply the LLM
-reasoning (object extraction, OOUX fan-out, lens pruning, scenario drafting)
-and the parallel fan-out. There is no external runtime, no API key, no
-program to install — the method rides on the host agent you are already in.
 
 ## Honesty rails — read before you start
 
 The engine **auto-expands (strong) but cannot auto-complete (a theoretical
 floor)**. Three hard boundaries govern every claim you make:
 
-1. **The seed sets the ceiling.** Completeness is relative to all external
-   knowledge; a sparse seed + LLM priors are not a complete source. The
-   completeness-critic re-seeding raises the ceiling *locally* but cannot
-   break it.
-2. **Combinatorial ≠ aspectual completeness — and the grid over-generates.**
-   The `object × CTA × state` grid enumerates *internal* combinations but
-   produces illegal cells while missing system-layer / NFR *aspects*. You
-   MUST prune (legality + priority) and rely on the critic to add aspects the
-   grid cannot reach.
-3. **False completeness is the most dangerous failure.** A filled grid
-   *looks* thorough → false confidence. Trust is earned by execution
-   (loom-code's gate), not by a spec that looks finished.
+1. **The seed sets the ceiling.** LLM priors and critic re-seeding cannot turn
+   missing external knowledge into fact.
+2. **The grid over-generates yet misses aspects.** Prune illegal/noisy cells;
+   use the critic for system and NFR aspects the grid cannot reach.
+3. **A filled grid is not proof.** Execution, not apparent thoroughness,
+   earns trust.
 
-**Guardrail — ban the word "complete".** Never describe the output as
-"complete", "comprehensive", "exhaustive", or "all cases covered". State
-**"coverage relative to seed + N lenses"** instead — e.g. "coverage relative
-to seed + 6 lenses; blind spots listed below". This is baseline Rule 12
-(fail loud) applied to spec recall: an honest coverage statement, never a
-false completeness claim.
+**Ban the word "complete".** Never claim complete/comprehensive/exhaustive
+coverage. Say **"coverage relative to seed + N lenses"** and list blind spots.
 
 ## Governing constraint — PRINCIPLES.md first (constitution→spec seam)
 
-Before expanding anything, **read the product's `PRINCIPLES.md`** (from
-`loom-design`, at `docs/loom/PRINCIPLES.md` in the consumer
-project) **when present**. It is the **product constitution** and it
-**governs the fan-out**: the scope boundary (what the grid may enumerate at
-all), pruning priorities in Phase ③ (a principle like "primary task in ≤3
-steps" demotes paths that violate it), and the NFR posture the critic will
-later hold the draft against. Reading it here is what makes the expansion
-governed at GENERATE time — the `completeness-critic`'s principles lens
-(lens 6) is the post-hoc check, not a substitute for this intake.
+Before expanding, read `docs/loom/PRINCIPLES.md` when present. It governs
+fan-out scope, Phase ③ pruning priorities, and NFR posture; the critic's later
+principles lens is not a substitute.
 
-**If `PRINCIPLES.md` is absent, surface that loudly** — do not silently
-expand an unconstrained spec. Tell the user the expansion is **ungoverned**
-and either ask them to run `loom-design:product-principles`
-first or proceed only with an explicit, flagged "no PRINCIPLES — spec is
-unconstrained" caveat recorded in the proposal (baseline Rule 12 — fail
-loud). This intake is **read-only**: never edit the constitution from here.
+If `PRINCIPLES.md` is absent, surface that the spec is ungoverned. Ask for
+`loom-design:product-principles`, or proceed only with an explicit
+`no PRINCIPLES — spec is unconstrained` caveat in the proposal. This intake
+is read-only.
 
 ## Consuming a `ui-flows.md` seed (DESIGN→spec seam)
 
-When the seed is a `ui-flows.md` produced by `loom-design:interaction-flows`
-(by convention it sits in **this change's own folder** —
-`docs/loom/<change-id>/ui-flows.md`, the same `<change-id>` this skill emits
-into — rather than a few raw lines of intent), the interface **surface** is already specified —
-the inventory, user flows, entry/exit points and density flags. Do **not** re-derive or
-re-express that surface here; that is the design station's output, and copying it in
-creates a second source of truth that drifts.
+When the seed is `docs/loom/<change-id>/ui-flows.md`, emit into that same
+change folder. Point-don't-copy: link its named sections and add only net-new
+state machines, transition guards, edge cases, and scenarios. Read
+[`references/execution-details.md`](references/execution-details.md)
+§`ui-flows.md` seed for the phase mapping and rich-seed edge case.
 
-Instead, **point-don't-copy**: in the proposal, **link back** to the named `ui-flows.md`
-sections and fan out only the **NET-NEW behavior** the surface implies — object state
-machines, transition guard rules, edge cases, and `#### Scenario:` acceptance blocks. The
-surface is the input; the behavioral depth is what this skill adds.
-
-Map the seed's sections to the phases below (this table is the canonical seam mapping —
-`interaction-flows` points here rather than copying it):
-
-| `ui-flows.md` section | feeds |
-|---|---|
-| §inventory + render-variant flags | Phase ② OOUX object / state model |
-| §User flows + §Entry + §Exit | Phase ③c `## Journey navigation` |
-| §Transitions (character) | guard-rule lenses (Phase ③ matrix pruning) |
-| interaction-dense surface (density flag) | `## Cross-object combinations` |
-
-The seed-adequacy pre-flight (Phase ①) still applies — a `ui-flows.md` is a *rich* seed,
-but if it leaves a core object's lifecycle unstated, surface that gap rather than inventing
-it. If no `ui-flows.md` exists, ignore this section and treat the input as a generic seed.
+The surface inventory, user flows, entry/exit points, and density flags are
+already design-owned facts. Re-expressing them here would create a second
+source of truth. The spec station instead deepens their behavioral meaning:
+inventory and render variants feed the object/state model; flow entry and
+exit feed journey navigation; transition character constrains legal guards;
+interaction-density decides whether cross-object enumeration runs. A rich
+seed still fails the pre-flight if a core object's lifecycle is unstated.
 
 **Validate before fan-out.** Before consuming a `ui-flows.md` seed from a change-folder,
 run loom-design's own `mint_critic_verdict.py` to confirm `design-critic`
@@ -108,45 +68,40 @@ separate; never pass the command through a shell:
 argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/spec/mint_critic_verdict.py", "validate", "--change-folder", "<design-change-folder>", "--critic", "design-critic", "--files", "DESIGN.md,ui-flows.md"]
 ```
 
-Proceed only on exit 0. On any non-zero exit, **STOP** and report which condition blocked,
-routing accordingly — the three exit codes are distinct failures, never interchangeable:
+Proceed only on exit 0. Otherwise **STOP** and route by the distinct failure:
 
 - **exit 2** — no verdict file: `design-critic` never ran on this change-folder. Route to
   `loom-design:design-critic` before fanning out.
 - **exit 3** — fresh verdict is `NEEDS_REVISION`: the critic blocked this draft. Route back
   to the design writer (`loom-design:interaction-flows`) to address the findings.
-- **exit 4** — three distinct causes, same remediation: a `--files` list diverging from what
-  was recorded at mint, `DESIGN.md`/`ui-flows.md` edited since mint (stale hash), or a covered
-  file unreadable since mint. Re-run design-critic on the current content before proceeding.
+- **exit 4** — files differ from the minted set, are stale/edited, or became
+  unreadable. Re-run design-critic on current content.
 
 ## Consuming the persisted intent layer as prior-state
 
-When the capability you are spec-ing **already has a persisted intent layer**
-(the durable `docs/loom/spec/` root this skill authors — see *Authoring the
-persistent intent layer* below), Read
+When the capability already has a persisted intent layer, read
 [`references/intent-layer.md`](references/intent-layer.md) §Consuming
-**before Phase ①** — it maps each prior-state file to the phase it feeds.
-The binding rules, in brief: this intake is **READ-ONLY**;
-**point-don't-copy** (reference persisted files by path and section, never
-copy content — a copy is a second source of truth that drifts); fan
-**NET-NEW only** where an INDEX exists. **Empty base case:** an empty or
-absent layer is never authoritative — no cold-start deadlock; if nothing is
-persisted, skip this intake and treat the input as a generic seed.
+before Phase ①. This is read-only and point-don't-copy; fan net-new only where
+an INDEX exists. An empty layer is not authoritative.
+If absent, treat input as a generic seed.
 
 ## The three phases
 
-Run **three explicit phases in order**. Each phase (a) **announces itself
-in the conversation language** as it runs — say in plain words what the
-step does, never print an internal phase marker to chat — and (b)
-**emits a visible intermediate artifact** (a named `##` section in
-`proposal.md`) before the next phase starts. Provenance is tagged at every
-step. Do not collapse the phases into one silent pass: the visibility *is*
-the contract — a reader watching the run sees backbone → object model →
-matrix appear in order, and can audit each before the spec is emitted.
+Run three phases in order. Announce each in the conversation language (never
+print internal phase markers), emit its named `proposal.md` section before
+continuing, and tag provenance throughout.
+
+Do not collapse the phases into one silent drafting pass. The ordered
+artifacts are review checkpoints: the backbone constrains which objects are
+in scope; the object model defines legal states and transitions; only then
+may the matrix form and prune candidate paths. Finish and expose each section
+before using it as input to the next phase so a reader can audit where an
+inference entered. Announcements describe the user-visible work in plain
+language; phase identifiers belong in the artifact, not as chat jargon.
 
 ### Phase ① USM — lay the user-journey backbone
 
-**Announce:** before you start, say in the conversation language what this step does — e.g. "next I'll lay the user-journey backbone". The internal phase identifier (Phase ① USM backbone) stays in the artifact only; never print it to chat as a marker.
+**Announce:** say in the conversation language, e.g. "next I'll lay the user-journey backbone".
 
 **Seed-adequacy pre-flight (gate) — run this BEFORE you fan out.** A sparse
 seed sets the ceiling (honesty rail #1); fanning out a too-sparse seed
@@ -158,211 +113,149 @@ before extracting actors/objects, check the seed against two tripwires:
 - **the core object's lifecycle (its states / what can happen to it) is
   unstated.**
 
-If either tripwire fires, **stop and surface what's missing — ask the user
-(or flag it explicitly as a blind spot) BEFORE expanding.** Name the specific
-gap ("seed names 1 object and no lifecycle — need the X states / the second
-actor"). Do **not** silently invent the missing actors, objects, or
-lifecycle to make the grid look full — that is the manufacture-fiction
-failure this gate exists to stop. Only once the seed clears the pre-flight
-(or the user fills the gap) do you proceed to extraction.
+If either fires, stop before fan-out, name the gap, and ask the user or flag a
+blind spot. Do not manufacture fiction by inventing actors, objects, or a
+lifecycle. Proceed only after the gate clears.
 
-Lay the **USM backbone**: the happy-path **spine** of ordered user steps (the
-left-to-right user-journey of who does what, in sequence). Extraction folds
-in here — from the seed, identify the **actors**, their **journey**, the
-**objects** (the nouns the system manipulates) and the **CTAs**
-(call-to-action verbs — what actors *do* to objects) that the journey
-touches. Tag each extracted item `seeded` (straight from the seed text) or
-`inferred` (you supplied it from domain priors) — the seed-ceiling boundary
-in action: be explicit about what you added.
+The gate tests whether expansion has enough declared intent to transform,
+not whether the model can imagine plausible domain details. A seed naming
+one object but no lifecycle must identify the missing states; one with no
+second actor/object must identify that missing perspective. If the user
+chooses to proceed with the gap, preserve it as an explicit blind spot rather
+than silently treating inference as intent.
 
-**Also build the backbone as a navigation graph.** Beyond the left-to-right
-happy-path spine, model the journey as a **navigation graph**: nodes = stages,
-edges typed `{forward, back, skip, abandon, resume_reenter, error_escape,
-retry_self}`. The spine captures only `forward`; the typed edges capture how a
-real user moves *between* stages (goes back, skips ahead, abandons and resumes,
-escapes on error, retries in place). This graph is the input Phase ③c walks.
+Lay the ordered happy-path **USM backbone**. Extract actors, journey, objects,
+and CTAs; tag each `seeded` or `inferred`.
 
-**Single-surface collapse.** For a **single-surface / utility / floating app
-with no sequential journey** (e.g. a persistent edit-and-preview note pane —
-where the mode is a place you stay, not a stage you pass through), the USM
-backbone may legitimately **collapse to ~1 stage node**. In that case the
-**navigation graph (Phase ③c) carries the structure** — the modal escapes,
-back / abandon / resume edges — and the linear spine does not. Do **not**
-force a multi-stage spine where none exists; forcing one manufactures fiction
-(the seed-adequacy honesty rail above). A single-node backbone with a rich
-navigation graph is a legitimate, honest output shape, not a degenerate one.
+Also build a navigation graph (stage nodes, typed edges) for Phase ③c. For a
+single-surface utility, the backbone may **collapse** to one node while the
+navigation graph carries the structure. Read
+[`references/execution-details.md`](references/execution-details.md)
+§Phase ① navigation edge cases when either branch applies.
+
+Use typed edges `{forward, back, skip, abandon, resume_reenter,
+error_escape, retry_self}`. The spine captures the expected forward journey;
+the graph records how real users leave, reverse, recover, and return. Do not
+force a multi-stage spine onto a persistent utility surface merely to make
+the artifact look substantial.
 
 **Visible artifact:** emit a `## USM backbone` section in `proposal.md` — an
 ordered list (or table) of the journey steps that form the spine.
 
 ### Phase ② OOUX — fan out the object model
 
-**Announce:** before you start, say in the conversation language what this step does — e.g. "next I'll fan out the object model". The internal phase identifier (Phase ② OOUX object model) stays in the artifact only; never print it to chat as a marker.
+**Announce:** say in the conversation language, e.g. "next I'll fan out the object model".
 
-For **each object** the journey touches, fan out **ORCA** — its:
-- **Objects** — confirm the object as a first-class noun,
-- **Relationships** — links to other objects,
-- **CTAs** — the actions performed on it,
-- **Attributes** — the data it carries,
-
-and model the object's **states as a state machine** (the legal states and
-the transitions between them).
+For each object, fan out ORCA: Objects, Relationships, CTAs, and Attributes;
+model legal states/transitions as a state machine.
 
 Dispatch this per-object work under
 [`references/design-panel-dispatch.md`](references/design-panel-dispatch.md):
-use one worker per object in a single concurrent dispatch, then join findings
-before editing the shared artifact. Keep the call host-neutral ("dispatch N
-subagents"). The local contract owns separation, ownership, and union rules.
+use one worker per object concurrently, join all findings, then edit the
+shared artifact. Keep dispatch host-neutral.
 
-**Visible artifact:** emit a `## OOUX object model` section in `proposal.md` —
-the object inventory, plus, for each object, its state machine (states +
-legal transitions) rendered as a fenced ```mermaid `stateDiagram-v2` block,
-plus one fenced ```mermaid `erDiagram` block for the object-to-object
-relations. Both diagram slots are governed by the fill-or-declare contract:
-
-This section is fill-or-declare: either embed the diagram(s) this section
-names, or replace the body with the single line
+**Visible artifact:** `## OOUX object model`: inventory, one Mermaid
+`stateDiagram-v2` per object, and one `erDiagram` for relations. Fill the
+diagrams or replace the body with
 `N/A — no flow/state/architecture-shaped content: <one-line reason>`.
-Do not delete the section heading — an absent heading or a bare section is
-a reviewable omission, and an N/A whose reason does not hold against the
-artifact's own content is a reviewable claim. A paragraph that suffices
-needs no diagram — the slot forces the declaration, not the drawing.
-This local visual default requires no sibling at runtime.
+Never omit or leave the section bare; the N/A reason must fit the content.
 
 ### Phase ③ 自動拓展矩陣 (auto-expansion matrix) — grid, prune, emit
 
-**Announce:** before you start, say in the conversation language what this step does — e.g. "next I'll build and prune the auto-expansion matrix". The internal phase identifier (Phase ③ auto-expansion matrix) stays in the artifact only; never print it to chat as a marker.
+**Announce:** say in the conversation language, e.g. "next I'll build and prune the auto-expansion matrix".
 
 **Build the grid (cartesian, mechanical).** Take the cartesian product
 `backbone × object × CTA × state`. Each cell is a candidate path/edge. This
 is mechanical and deliberately over-generates — pruning happens next.
 
-**Domain-tag triage FIRST.** Before writing the expected behavior of any
-edge case or acceptance criterion NOT derivable from the seed,
-`PRINCIPLES.md`, or `ui-flows.md`, read
+**Domain-tag triage FIRST.** Before specifying behavior not derivable from
+the seed, `PRINCIPLES.md`, or `ui-flows.md`, read
 [`references/domain-tag-triage.md`](references/domain-tag-triage.md) and
-classify it FIRST: craft / project-local → expand normally; domain-convention
-→ write a tagged open question (`evidence_needed: domain-convention`), never
-an invented answer.
+classify it: craft/project-local → expand; domain-convention → tagged open
+question (`evidence_needed: domain-convention`), never an invented answer.
 
-**Prune through the lens layer.** Walk the grid through fixed **lenses**,
-dropping illegal cells and surfacing aspects the cartesian grid cannot see.
-Each lens below teaches **when it dominates** and a **keep / flag / drop**
-discriminator — apply the discriminator cell-by-cell; the lens layer is the
-engine of the high-recall claim, so judge each cell, don't just enumerate:
+**Prune through the lens layer.** Apply these six lenses cell-by-cell; read
+[`references/execution-details.md`](references/execution-details.md)
+§Phase ③ lens discrimination when a decision is ambiguous.
 
-- **state-transition legality** — *dominates when* the object has a rich
-  lifecycle. **KEEP** every legal transition as a path; **FLAG** each illegal
-  transition (e.g. `refund → ship`) as an edge case; **DROP** impossible
-  cells (e.g. ship before pay).
-- **BVA** (boundary-value analysis) — *dominates when* a CTA takes numeric /
-  sized / dated input. **KEEP** min / max / off-by-one / empty as distinct
-  paths; **FLAG** the just-past-boundary case as the bug-prone edge; **DROP**
-  redundant interior values (one nominal mid-range value suffices — extra
-  ones are noise).
-- **CRUD** — *dominates when* an object is persisted. **KEEP** each
-  create / read / update / delete the actors actually perform; **FLAG** a
-  missing leg (e.g. no delete path) as a coverage gap; **DROP** CRUD legs the
-  object's lifecycle forbids (e.g. update on an immutable record).
-- **permissions** — *dominates when* more than one actor role exists. **KEEP**
-  the authorized actor × CTA cell **and** the unauthorized-actor-denied path;
-  **FLAG** any CTA whose authorization is unstated; **DROP** role × CTA cells
-  the role can never reach.
-- **empty / error / loading** states — *dominates when* the CTA crosses a
-  network / async / collection boundary. **KEEP** empty, error, and loading
-  as explicit states happy-path specs skip; **FLAG** any path with no defined
-  error state; **DROP** the loading state for a purely synchronous local CTA
-  (noise).
-- **NFR checklist** — *dominates when* the system has scale / security /
-  concurrency / timing obligations OOUX alone cannot reach. **KEEP** the
-  performance / security / concurrency / network-failure / timing aspect that
-  binds a real obligation; **FLAG** an NFR the seed implies but never
-  quantifies (needs human input); **DROP** speculative NFRs no requirement
-  asks for (gold-plating noise).
+- **state-transition legality** — dominates for rich lifecycles; KEEP legal,
+  FLAG illegal attempts, DROP impossible ordering.
+- **BVA** — dominates for numeric/sized/dated input; KEEP boundaries, FLAG
+  just-past-boundary, DROP redundant interior values.
+- **CRUD** — dominates for persisted objects; KEEP supported operations, FLAG
+  a missing needed leg, DROP lifecycle-forbidden legs.
+- **permissions** — dominates with multiple roles; KEEP allowed and denied
+  paths, FLAG unstated authorization, DROP unreachable role/actions.
+- **empty / error / loading** — dominates at async/network/collection
+  boundaries; KEEP applicable states, FLAG missing errors, DROP sync noise.
+- **NFR** — dominates for real scale/security/concurrency/timing obligations;
+  KEEP bound obligations, FLAG unquantified implications, DROP speculation.
 
-**Sparse-output fallback.** If, after pruning, **no high-priority surviving
-paths** remain, **report that honestly** — say so plainly and point back to
-the seed-adequacy pre-flight — **do not pad** the matrix with low-value or
-invented cells to make it look fuller. An honest near-empty matrix beats
-padding (Rule 12, fail loud).
+`KEEP` means the cell becomes a specified path, `FLAG` means it becomes a
+question or explicit edge case, and `DROP` means it adds no truthful coverage.
+Apply the discriminator independently for every applicable lens rather than
+listing lens names beside an unpruned grid. For example, state legality can
+retain an authorized transition while permissions simultaneously adds the
+unauthorized-denied path; BVA can add minimum/maximum/off-by-one cases without
+duplicating arbitrary mid-range values. NFRs are obligations only when the
+seed or constitution binds them—otherwise they are gold-plating noise.
 
-**Visible artifact:** emit a `## Path × edge matrix` section in `proposal.md`
-— the grid plus the surviving paths/edges that remain post-prune.
-Render it as a markdown table — one row per surviving path/edge, columns
+If no high-priority paths survive pruning, report it and point to the
+seed-adequacy gate; do not pad the matrix.
+
+**Visible artifact:** `## Path × edge matrix`, one row per survivor, columns
 `Backbone step | Object | CTA | State | Lens verdict | Expected reaction`
-(`Lens verdict` is keep / flag; add a column rather than prose when a
-lens needs more). The table is fill-or-declare: when the pruned grid is
-genuinely empty, the body is the single line
+(`Lens verdict`: keep/flag). If empty, use exactly
 `N/A — no surviving path/edge: <one-line reason>` — never a padded
-table. This local routing contract requires no sibling at runtime.
+table.
 
 **Phase ③b — cross-object combinations.**
-**Announce:** say in the conversation language what this step does — e.g. "next I'll enumerate cross-object combinations for interaction-dense stages". The internal phase identifier (Phase ③b cross-object combinations) stays in the artifact only; never print it to chat as a marker.
-For each flow-stage, identify the **co-active objects** on that stage (the
-objects simultaneously live), enumerate their **joint state combinations**,
-and specify the **reaction each combination requires** (what the system must
-do when those objects sit in that joint state — and especially where the
-joint reaction is *not* just the union of the per-object reactions).
+**Announce:** say in the conversation language, e.g. "next I'll enumerate cross-object combinations for interaction-dense stages". For each stage, identify co-active objects, enumerate joint states, and specify reactions.
 
-**Gate it on interaction-density.** Run ③b on a stage **only when** that
-stage's required reaction depends on the **joint state** of ≥2 objects —
-i.e. some object-pair's joint reaction ≠ the union of their individual
-reactions (`interaction-density`). Otherwise **skip ③b for that stage** and
-let the per-object grid (Phase ③) + the completeness-critic handle it; the
-critic out-recalls joint enumeration on separable single-object-failure
-stages and prunes its junk, so do not enumerate combinations where the
-reaction is just the union of individual reactions.
+Run ③b only on `interaction-density`: some pair's joint reaction differs from
+the union of individual reactions. Otherwise skip that stage.
 
-**Wide stages (≥4 co-active objects).** On a ≥4-object stage you
-**MUST run `argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/spec/pairwise.py"]`** — and **MUST NOT enumerate** a wide
-stage's combinations **inline** by reasoning. Inline reasoning-based
-enumeration on wide stages is the A/B-validated **leak** (the exhaustive grid
-catches gold that pure-prompt enumeration misses, `missed_by_both` up to 11);
-the tool exists precisely to prevent it, so reasoning the grid in your head is
-never an acceptable substitute. Pipe `{"params": {"<Object>": ["<state>",
-...], ...}}` to its stdin and it returns a **pairwise-covering** set of
-combinations — and you **MUST show the invocation** (the actual command /
-stdin payload) in the output trace so the tool-use is auditable. For
-≤3-object stages, full in-prompt enumeration of the joint grid suffices (the
-ban is wide-stage-only).
-Pass this argv array directly to process execution; never through a shell.
-Residue a pairwise set cannot guarantee (gold reachable only via a
-higher-order combination) is **blind-spotted, never padded** — carry the
-honesty rail: an honest "pairwise-covered + listed residue" beats a fabricated
-full grid.
+For a qualifying stage, enumerate the joint states of all co-active objects
+and name the system reaction for each combination, especially where that
+reaction is not the sum of per-object reactions. On separable stages the
+ordinary Phase ③ grid plus the critic provides better signal, so combination
+enumeration would only manufacture volume.
+
+On a wide stage (≥4 objects), **MUST run `argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/spec/pairwise.py"]`** and **MUST NOT enumerate** combinations inline. Pass `{"params": {"<Object>": ["<state>", ...]}}` on stdin directly, never through a shell; show argv and payload in the trace. For ≤3 objects, enumerate fully in prompt. Read [`references/execution-details.md`](references/execution-details.md) §Phase ③b combination residue and list uncovered higher-order residue as blind spots.
+
+The tool returns a pairwise-covering set: every pair of parameter values is
+represented, but higher-order interactions may remain. That residue is a
+blind spot, never evidence that the generated set is exhaustive. Showing the
+actual argv and stdin makes tool use auditable and prevents an agent from
+substituting unaudited reasoning for the mandated wide-stage computation.
 
 **Phase ③c — journey-navigation coverage.**
-**Announce:** say in the conversation language what this step does — e.g. "next I'll walk every navigation edge for journey coverage". The internal phase identifier (Phase ③c journey navigation) stays in the artifact only; never print it to chat as a marker.
-Apply **0-switch state-transition coverage** to the navigation
-graph from Phase ①: **walk every navigation edge exactly once** and, for each
-legal transition, specify the **reaction it requires** (what the system must do
-when the user takes that edge — restore which state, land on which step, warn,
-re-validate, etc.). 0-switch means single-edge coverage: each typed edge
-(`forward / back / skip / abandon / resume_reenter / error_escape /
-retry_self`) is exercised once, not every edge-pair sequence. Apply this
-**broadly to any flow with ≥2 stages** — it is **not** gated behind a lens
-trigger; a multi-stage journey always has navigation edges worth specifying.
-The completeness-critic remains the **deep complement** for nuanced
-resume / re-entry landing-point decisions (exactly *where* to land, *what* to
-restore) — L3 systematic coverage gets breadth across every edge, the critic
-gets those deep per-case judgments.
+**Announce:** say in the conversation language, e.g. "next I'll walk every navigation edge for journey coverage". For every flow with ≥2 stages, apply **0-switch state-transition coverage**: walk each navigation edge once and specify its reaction. This is not lens-gated; the critic handles nuanced resume/re-entry judgments.
 
-**Emit (hybrid output format).** Emit the surviving paths/edges as the hybrid
-output format below. Every emitted item carries a provenance tag. Close with
-a coverage statement ("coverage relative to seed + N lenses") — never a
-completeness claim.
+0-switch is single-edge coverage, not every edge-pair sequence. For each
+legal edge, state what must be restored, where the user lands, whether a
+warning appears, and what is revalidated. This systematic pass provides
+breadth; the critic remains responsible for deeper per-case judgments such
+as exact resume landing points and restoration semantics.
+
+Emit the hybrid format below, tag every item, and close with "coverage
+relative to seed + N lenses" plus blind spots.
 
 ## Provenance tagging
 
-**Every emitted item MUST be tagged with one of three provenance values:**
+Every emitted item MUST use one provenance value:
 
-- `seeded` — stated in or directly entailed by the seed.
-- `inferred` — you derived it from OOUX/USM/lens priors (not in the seed).
-- `critic-found` — surfaced by the completeness-critic's loop (re-seeded
-  back into the spec on a later pass).
+- `seeded` — stated or directly entailed by the seed.
+- `inferred` — derived from OOUX/USM/lens priors.
+- `critic-found` — recovered by the completeness-critic loop.
 
-Provenance makes the seed-ceiling boundary auditable: a reader can see how
-much of the spec is real intent vs model inference vs critic recovery.
+Tag the smallest independently reviewable item, not merely the section that
+contains it. A seeded object may have an inferred state, and a critic-found
+path may contain a seeded CTA; assigning one label to the whole section would
+hide that boundary. When a later critic pass adds an omission, retain
+`critic-found` even after integrating it into the draft. Provenance records
+where an assertion entered the specification, not how confident the writer
+currently feels about it, and it never upgrades inference into user intent.
 
 ## The hybrid output format
 
@@ -410,6 +303,12 @@ GREEN condition for `loom-code:writing-plans`. Keep RFC-2119 keywords
 (MUST / SHALL / SHOULD / MAY) on the requirement body line, and keep the
 delta free of loom-design-specific sections.
 
+Requirement bodies state one normative obligation; scenarios make it
+observable through GIVEN/WHEN/THEN. Do not move provenance, matrices,
+diagrams, blind spots, or explanatory design prose into this delta: those
+belong in `proposal.md`. This separation lets the verification station parse
+acceptance criteria without treating design commentary as executable scope.
+
 ### proposal.md — additive richness
 
 loom-design's differentiating richness goes in `proposal.md` additive
@@ -454,6 +353,13 @@ SHAPING-class `evidence_needed: domain-convention` tags FIRST** (see
 [`references/domain-tag-triage.md`](references/domain-tag-triage.md)): any
 such tag blocks VERIFY unless it carries an explicit `deferred: <reason>`
 note.
+
+This check happens after all sections exist but before validation/handoff.
+Resolve the convention from evidence, or preserve the uncertainty as a
+deferred item with a concrete reason; never convert an unanswered domain
+question into a normative requirement. Validation proves structural shape,
+not that external domain knowledge was recovered, so it cannot replace this
+triage gate.
 
 Validate the emitted directory with the validator from the installed plugin
 root before handoff. Pass this argv array directly to process execution; never
