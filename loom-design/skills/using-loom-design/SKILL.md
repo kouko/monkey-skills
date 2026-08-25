@@ -16,28 +16,20 @@ If you are a subagent already dispatched with an explicit role prompt, **do not*
 
 ## §Intake
 
-All user-facing narration in this router — briefs, routing decisions,
-recommendation asks — follows `references/design-relay.md` (the local
-design-artifact and narration relay). That contract builds on
-`references/family-relay.md §Family relay discipline`; load it through the
-design relay rather than routing design work through a code-review skill.
+All user-facing narration follows `references/design-relay.md`, which builds on
+`references/family-relay.md §Family relay discipline`. Never route design work
+through a code-review skill.
 
-**Step 1 — 前站檢查 (upstream check).** Check the target repo against the loom
-family's on-ramp criteria table (`references/family-reception.md` — the
-reception SSOT; reference it, don't copy its rows here). The negative guard: a
-bug fix, a refactor, or a test-covered increment skips the design side entirely
-and proceeds straight to whichever downstream station applies
-(`loom-code:using-loom-code`). The design side is also internally ordered —
-discovery normally comes FIRST (unarticulated problem/users →
-`§Discovery station`), then product-principles (no `docs/loom/PRINCIPLES.md` +
-product-shaped work → recommend `using-loom-design`'s own intake — this
-section — as the starting point, then proceed to `§Product-principles
-station`), then interface-design (no `DESIGN.md` / `ui-flows.md` exists yet →
-`§Interface-design station`), then spec. When an upstream recommendation
-fires, recommend **once**, record the user's choice, then proceed either way.
-When both a discovery row and another row fire on the same ask, the
-precedence note recorded in `family-reception.md` governs — don't re-derive
-it here.
+**Step 1 — 前站檢查 (upstream check).** Apply the on-ramp table in
+`references/family-reception.md` (the family reception SSOT; do not copy it).
+A bug fix, refactor, or test-covered increment skips design and goes to
+`loom-code:using-loom-code`. Within design, discovery normally comes FIRST
+(unarticulated problem/users), then product-principles (product-shaped work
+without `docs/loom/PRINCIPLES.md`: recommend this `using-loom-design` intake,
+then `§Product-principles station`), then interface-design (no `DESIGN.md` /
+`ui-flows.md`), then spec. Recommend an upstream stop once, record the choice,
+and proceed either way. If discovery and another row both fire, use the
+precedence rule in `family-reception.md`.
 
 **Step 2 — 對站檢查 (station check).** Route by what the ask actually is —
 redirect to the matching station rather than forcing the ask through the wrong
@@ -51,34 +43,23 @@ one:
 | spec fan-out / draft-or-critique a spec | spec | `§Spec station` |
 | write / change / review / ship code | code | `loom-code:using-loom-code` |
 
-The UI/UX-surface and spec rows both redirect within this same router —
-`using-loom-design` — via `§Interface-design station` (see its own
-`Skill priority` table below) and `§Spec station`; only the code row
-leaves for `using-loom-code`.
+UI/UX and spec redirect within `using-loom-design` to `§Interface-design
+station` (its Skill priority table) and `§Spec station`; only code leaves.
 
-**Step 3 — brief before a complex fork.** A fork this router surfaces (a station
-choice, a value commitment, an on-ramp choice) can itself be non-trivial. When
-the fork is complex enough to warrant a brief, run
-`loom-workflow:brief-before-asking` first instead of improvising the question —
-the trigger threshold and stakes-first framing live in
-`references/family-reception.md §Brief before a complex fork` (the
-single source; reference it, don't copy it).
+**Step 3 — brief before a complex fork.** Before a non-trivial station, value,
+or on-ramp choice, run `loom-workflow:brief-before-asking`. Use the trigger and
+stakes framing in `references/family-reception.md §Brief before a complex fork`.
 
 <EXTREMELY-IMPORTANT>
-**You have loom-design.** This router does not map needs, assess worth, draft
-constitutions, design interfaces, or write specs itself — it is the thin entry
-that decides which of the four design-side stations the work needs — discovery /
-product-principles / interface-design / spec — after checking whether the
-design side is even the right station yet, then routes to that station's member
-skill(s).
+**You have loom-design.** This thin entry does not map needs, assess worth,
+author constitutions, design interfaces, or write specs. It checks whether
+design applies, then routes to discovery / product-principles /
+interface-design / spec member skills.
 </EXTREMELY-IMPORTANT>
 
 ## Discovery station
 
-The problem-space station. Discovery sits upstream of principles/design/spec/
-code — it is normally the FIRST station a product-shaped idea reaches, not a
-station something else feeds into. Route between its two members by the
-specific verb:
+Discovery is the upstream problem-space station. Route by the verb:
 
 - **"worth doing?" / is this worth my time or resources** — an adversarial
   worth-it check, a GO / NO-GO / NEEDS-MORE-RESEARCH call →
@@ -91,24 +72,20 @@ When in doubt, ask "are we deciding whether it's worth doing, or are we
 figuring out what the problem/users actually are?" — the answer picks the
 member.
 
-**Family.**
-- `business-value` — adversarial worth-it check (Shape Up betting register, not
-  a Cagan business-viability study). Optional: fires only under its own named
-  trigger conditions (see its SKILL.md), silently skipped for personal tools or
-  an already-decided GO. Produces `business-value.md`.
-- `user-insights` — the core research verb. Maps the opportunity space
-  (evidence-linked needs) and then proposes a value commitment the user must
-  ratify. Produces `user-insights.md`, `evidence.md`, `research/`.
+`business-value` is an optional adversarial worth-it check; it fires only under
+its SKILL.md triggers, skips personal tools or an already-decided GO, and emits
+`business-value.md`. `user-insights` maps evidence-linked needs, proposes a
+user-ratified value commitment, and emits `user-insights.md`, `evidence.md`,
+and `research/`.
 
-**Typical sequence: `user-insights` ↔ `business-value`.** Most discovery work
-starts with `user-insights` — map the opportunity space with evidence before
-anyone can judge whether it's worth doing. `business-value` (the "assess" step)
-is **skippable** — it only fires under its own trigger conditions — and
-**re-entrant**: it can run again after `user-insights` surfaces more research,
-and `user-insights` can loop back after a NEEDS-MORE-RESEARCH verdict. Neither
-member is a required gate on the other; call the one the ask actually names.
+**Typical sequence: `user-insights` ↔ `business-value`.** Start with evidence
+mapping when needed. The assess step is skippable and re-entrant: rerun it after
+new research, or return to research after NEEDS-MORE-RESEARCH. Neither member
+gates the other; call the verb requested.
 
-**Professional isolation is contract-level.** The two skills share no artifact and no agent: `business-value`'s agents may not map needs; `user-insights`'s agents may not render investment verdicts. Do not blend their outputs into one file or one dispatch.
+**Professional isolation is contract-level.** They share no artifact and no agent:
+business-value agents may not map needs; user-insights agents may not
+render investment verdicts. Never combine their file or dispatch.
 
 Host tool call shapes for discovery's research dispatch and delegation:
 `references/discovery-claude-code-tools.md` (Claude Code) /
@@ -116,45 +93,36 @@ Host tool call shapes for discovery's research dispatch and delegation:
 
 ## Product-principles station
 
-The constitution station. This station does intake + routing, then hands off;
-it does not write the constitution itself.
+This constitution station routes; it does not write. Hand off to
+`product-principles`, which elicits the idea, reads `docs/loom/PURPOSE.md` when
+present, and derives 3–7 falsifiable principles into `PRINCIPLES.md`. If that
+file exists, confirm whether this work is already done.
 
-**Hand off.** Once intake confirms this is the right station, hand off to
-`product-principles` — the member skill that elicits the idea, reads
-`docs/loom/PURPOSE.md` as background context when present, and derives the
-3–7 falsifiable principles into `PRINCIPLES.md`. If `docs/loom/PRINCIPLES.md`
-already exists in the target repo, confirm with the user whether this
-station's work is already done before proceeding.
-
-**Unarticulated problem/users.** If the problem/users are unarticulated (no
-evidence for who needs what), route to `§Discovery station` first; resume here
-with its output as seed.
+If evidence does not articulate who needs what, route to `§Discovery station`
+first, then resume here with its output.
 
 ## Interface-design station
 
-The surface station — design a product's interface/interaction/UX in any
-modality (GUI/TUI/CLI). Three load-bearing rules:
+The surface station handles GUI/TUI/CLI. Three load-bearing rules:
 
-1. **Record the modality first.** Before any design work, ask the user which
-   **modality** the product is — **GUI / TUI / CLI** — and record it. If the
-   user does not specify, **default to GUI**. The modality decides which
-   design-system artifact you produce (GUI → `DESIGN.md`) and how interaction
-   flows are expressed.
-2. **PRINCIPLES.md governs.** Read the product's `PRINCIPLES.md` (produced by
-   `product-principles`) as the **governing context**. Every design decision is
-   checked against it — the design must not contradict the product's purpose
-   (`docs/loom/PURPOSE.md`, when present) or any non-negotiable principle.
-   If `PRINCIPLES.md` is absent, surface that gap;
-   the principles layer comes first.
-3. **Two generate skills, one per concern.** Route to `design-system` for the
-   static design-system artifact and `interaction-flows` for the dynamic
-   interaction/flow artifact. Both are governed by the recorded modality +
-   `PRINCIPLES.md`.
+1. **Record the modality first.** Ask once for **GUI / TUI / CLI**; if
+   unspecified, default to and record GUI. It determines the artifact (GUI →
+   `DESIGN.md`) and flow notation.
+2. **PRINCIPLES.md governs.** Read it first and check every decision against it
+   and `docs/loom/PURPOSE.md` when present. If absent, surface the gap; the
+   principles layer comes first.
+3. **Two generate skills, one per concern.** `design-system` owns the static
+   artifact; `interaction-flows` owns dynamic flows. Both receive modality and
+   principles.
 
-**Skipping the modality step or the PRINCIPLES governance = violation.**
-"It's obviously a GUI, skip asking" / "I don't need the principles" are
-rationalizations — record the modality (default GUI) and read `PRINCIPLES.md`
-first.
+Skipping modality recording or principles governance is a violation.
+
+Do not accept shortcuts that erase these boundaries. An apparently obvious GUI
+still requires one recorded modality decision (with GUI as the fallback), and
+design work still reads or explicitly surfaces the missing `PRINCIPLES.md`.
+Static design-system choices and dynamic interaction flows remain separate
+artifacts owned by separate member skills. The router records and passes the
+inputs; it does not fill either artifact itself.
 
 ### Instruction priority
 
@@ -173,13 +141,11 @@ When instructions conflict, follow this order:
 | **TUI** | Terminal UI — panes, keybindings, in-terminal layout | design-system artifact (TUI shape) |
 | **CLI** | Command-line surface — commands, flags, output format | design-system artifact (CLI shape) |
 
-Ask the user once; if unspecified, default to **GUI**. Record the answer before
-routing. The modality is passed to both generate skills.
+Record the answer before routing and pass it to both generators.
 
 ### Skill priority — decision order for interface-design tasks
 
-Walk through these stages in order. Skip a stage only when its precondition is
-already met.
+Follow this order; skip only an already-satisfied stage.
 
 | # | Stage | Skill (target) | Output |
 |---|---|---|---|
@@ -190,36 +156,21 @@ already met.
 
 Stages 1–2 read the product's `PRINCIPLES.md` as governing context.
 
-**Stage 3 — the design station's completeness gate.** Once `design-system` +
-`interaction-flows` have emitted their artifacts, route to `design-critic` for
-an adversarial heuristic-evaluation pass (writer≠judge) that hunts SURFACE
-omissions — undrawn empty/error/loading states, navigational dead-ends,
-unreachable screens, missing entry/exit — **before** `ui-flows.md` is handed to
-`spec-expansion`. It critiques the surface only; behavioral fan-out stays
-downstream.
+**Stage 3 — completeness gate.** After both generators emit artifacts, route to
+writer≠judge `design-critic` to hunt SURFACE omissions (missing states,
+dead-ends, unreachable screens, entry/exit) before handing `ui-flows.md` to
+`spec-expansion`. Behavioral fan-out remains downstream.
 
-**Stage-3 resolution rule.** `design-critic` ends with a two-valued verdict:
-`NEEDS_REVISION` → route back to `design-system` / `interaction-flows` for the
-flagged surfaces, then re-run the critic; `PASS_WITH_NOTES` → the change-folder
-proceeds (`ui-flows.md` hands to `spec-expansion`). There is no bare `PASS` —
-the critic never claims the surface is complete.
-
-### Red flags — agent rationalizations to refuse
-
-| Agent says | Reality | Correct response |
-|---|---|---|
-| "It's clearly a GUI, no need to ask the modality." | Modality is load-bearing; assuming it skips the recorded contract. | Ask once; if no answer, default GUI and **record** it. |
-| "I'll design without reading PRINCIPLES.md." | The design must be checked against the product constitution. | Read `PRINCIPLES.md` first; surface it if absent. |
-| "Design system and flows are the same artifact." | Static system ≠ dynamic interaction. | Route `design-system` and `interaction-flows` separately. |
+**Stage-3 resolution.** `NEEDS_REVISION` → repair via `design-system` /
+`interaction-flows`, then re-run the critic. `PASS_WITH_NOTES` → proceed and
+hand `ui-flows.md` to `spec-expansion`. There is no bare `PASS`.
 
 ### Coexistence
 
-- **`product-principles`** — produces the `PRINCIPLES.md` this toolkit reads as
-  governing context. The principles layer comes **before** interface design;
-  this station consumes its output, never duplicates it.
-- Downstream **spec** (`spec-expansion`) consumes `ui-flows.md`; the **code /
-  frontend** layer consumes the `DESIGN.md` tokens directly at implementation
-  time (a human / code-level seam, not a loom-code skill).
+- `product-principles` produces the governing `PRINCIPLES.md`; interface design
+  consumes, never duplicates it.
+- `spec-expansion` consumes `ui-flows.md`; code/frontend consumes `DESIGN.md`
+  tokens at implementation time (a human/code seam, not a loom-code skill).
 
 Host tool call shapes for the design critic's multi-lens panel:
 `references/interface-claude-code-tools.md` (Claude Code) /
@@ -227,9 +178,7 @@ Host tool call shapes for the design critic's multi-lens panel:
 
 ## Spec station
 
-The requirements station — fans a sparse seed out into a spec draft, or
-critiques an existing draft for omissions. Route between its two members by the
-specific verb — this distinction is load-bearing, not cosmetic:
+The requirements station routes by a load-bearing verb distinction:
 
 - **draft/expand a spec from a seed** — a few lines of feature intent, or a
   `ui-flows.md`, that needs fan-out into objects/states/paths/edge cases →
@@ -238,22 +187,20 @@ specific verb — this distinction is load-bearing, not cosmetic:
   already exists and needs a completeness pass before VERIFY →
   `completeness-critic`.
 
-This closes the **#456-documented adjacent mis-route**: a critique-an-existing-
-spec ask getting sent to `spec-expansion` (which would silently re-draft instead
-of auditing) instead of `completeness-critic`. When in doubt, ask "does a draft
-already exist to critique, or am I starting from a seed?" — the answer picks the
-member.
+This closes the **#456-documented adjacent mis-route** where critique was sent
+to a re-drafter. If unclear, ask whether a draft exists or this starts from a
+seed.
 
-**Family.**
-- `spec-expansion` — GENERATE-layer writer. Fans a sparse seed out into a
-  high-recall spec draft (OpenSpec change-folder shape).
-- `completeness-critic` — GENERATE-layer critic. Adversarially hunts omissions
-  in an existing `spec-expansion` draft via a fresh-context lens panel; never
-  touches code.
+`spec-expansion` is the GENERATE-layer writer; `completeness-critic` is its
+fresh-context omission critic and never touches code.
 
-Both stop at GENERATE — `loom-code:writing-plans` reads the emitted
-`#### Scenario:` criteria downstream; that is the one-directional spec→code
-handoff, not this router's job.
+Both stop at GENERATE. Downstream `loom-code:writing-plans` reads emitted
+`#### Scenario:` criteria; this one-way spec→code handoff is not router work.
+
+The distinction depends on the input state, not merely the word "spec": a seed
+needs generation, while an already-authored draft needs independent omission
+critique. Never replace the existing draft during an audit request, and never
+ask the critic to invent the first draft.
 
 Host tool call shapes for the completeness critic's multi-lens panel:
 `references/spec-claude-code-tools.md` (Claude Code) /
@@ -263,7 +210,7 @@ Host tool call shapes for the completeness critic's multi-lens panel:
 
 | Harness | Mechanism |
 |---|---|
-| Claude Code | Use the `Skill` tool, e.g. `Skill(skill: "business-value")`, `Skill(skill: "user-insights")`, `Skill(skill: "product-principles")`, `Skill(skill: "design-system")`, `Skill(skill: "interaction-flows")`, `Skill(skill: "design-critic")`, `Skill(skill: "spec-expansion")`, or `Skill(skill: "completeness-critic")`. |
+| Claude Code | Use the `Skill` tool with the listed member name. |
 | Codex CLI | Use the `skill` tool (Codex shape). |
 
 If the user types a member skill's `/name`, that is an explicit invocation —
