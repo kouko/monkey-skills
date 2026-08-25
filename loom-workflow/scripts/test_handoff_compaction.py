@@ -50,6 +50,8 @@ def test_entrypoint_preserves_prepare_resume_verification_and_stop_under_word_ce
             "run every command",
             "verbatim output",
             "expected output",
+            "If the schema read is unavailable",
+            "missing expected output",
         ],
         "tier mismatch policy": [
             "[T1]",

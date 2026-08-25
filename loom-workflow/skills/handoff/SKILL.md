@@ -88,6 +88,12 @@ Do not reconstruct the schema from this entrypoint. Then:
 This read happens before judging, verifying, summarizing, or acting on the
 artifact; do not rely on memory of a prior schema version. Then:
 
+If the schema read is unavailable, fail closed: do not interpret or execute the
+artifact. Still report any self-evident missing evidence in the supplied input,
+such as a verification command with missing expected output, and request the
+schema plus a corrected HANDOFF rather than treating read access as the only
+blocker.
+
 1. Find the latest file:
    ```
    ls -t .claude/handoffs/ | head -1

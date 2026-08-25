@@ -25,6 +25,9 @@ def test_entrypoint_preserves_l3_blocks_verbatim_rules_and_synthesis_gate_under_
             "exactly two sibling top-level tags",
             "<thinking>",
             "<recap>",
+            "The first output character is `<`",
+            "Do not add prose before `<thinking>`",
+            "Do not wrap either tag in a Markdown fence",
         ],
         "schema before every recap": [
             "Read `references/seven-block-schema.md`",
@@ -70,6 +73,8 @@ def test_entrypoint_preserves_l3_blocks_verbatim_rules_and_synthesis_gate_under_
     assert schema_read < render_contract
 
     template_start = text.index("<recap>", render_contract)
+    template_lead = text[text.index("2. Output exactly", schema_read) : template_start]
+    assert "```" not in template_lead, "literal output skeleton must not model a fence"
     blocks = (
         "### Block 1 — Situation",
         "### Block 2 — Background",
