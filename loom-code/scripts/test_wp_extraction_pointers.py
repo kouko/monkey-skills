@@ -646,10 +646,15 @@ def test_open_questions_gate_owning_heading_missing_fails_loudly(monkeypatch):
 
 # --- (f) word cap ------------------------------------------------------------
 
-def test_word_count_at_most_4430():
+def test_word_count_at_most_4458():
     word_count = len(_skill_text().split())
-    assert word_count <= 4430, (
-        f"SKILL.md is {word_count} words, over the 4430 cap. "
+    assert word_count <= 4458, (
+        f"SKILL.md is {word_count} words, over the 4458 cap. "
+        "Raised from 4430 by the 2026-08-25 seam-contracts arc's Task 7: "
+        "the §Guard — disjoint files ≠ independent paragraph now points "
+        "the operative rule at the Seam grammar (`#### Seam` in "
+        "plan-format.md) instead of leaving the Dependencies-only "
+        "execution-floor sentence unpinned to a contract. "
         "Raised from 4420 by the 2026-08-21 dissolve-direction-layer "
         "arc's round-4 review fix: the §Queue-relation gate paragraph's "
         "exit-1 clause named two causes while the shipped script had "
