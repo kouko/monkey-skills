@@ -124,6 +124,7 @@ This section deliberately carries no owner field, no deadline field, no routing 
     referent — do NOT add a second field; point at the source `### Requirement:` / `#### Scenario:`
     names rather than copying their prose. One no-requirement value is legal: `none — <reason>`.
     See §`Brief item covered` below for kind (c), that value, and the tie-break rule.>
+- **Seam**: <v0.100.0+ — required when this task's `Dependencies` is not "none"; one bullet per incoming dependency edge. See §Seam below. Omit field entirely when `Dependencies` is "none".>
 - **Status**: <runtime ledger field, DEFAULT-ON — see §Progress ledger. One of:
     "pending" | "claimed(@<agent>)" | "done(<sha>)" | "blocked". writing-plans emits
     "pending" at plan time; an old plan without Status fields behaves exactly as
@@ -290,6 +291,17 @@ Before v0.43.0, this field was one free-prose line combining a behaviour-match c
 **The no-requirement value.** `none — <reason>` is legal because a task that delivers no brief outcome — release administration, a version bump, a manifest mirror — must not be forced into a false citation: a citation naming an item the task does not deliver reads as satisfied to every downstream reader and to the coverage checker, which makes it worse than no citation at all. The reason is mandatory, and that is what keeps the value from becoming a silent opt-out — a bare `none`, an empty reason, or a whitespace-only reason is invalid. Task 9 of `docs/loom/plans/2026-08-13-brief-item-addressability.md` is this rule's own worked instance: the release-administration task that introduced the value uses it.
 
 **Tie-break — one primary referent per task.** When a task plausibly delivers two brief items, the primary referent is the item the task's RED test asserts. The RED test is this repo's definition of done, so it is the least arbitrary anchor available; the rejected alternative — the item most of `Files touched` serves — tracks effort rather than outcome, and a task can spend most of its edits on the item it does not actually deliver.
+
+#### Seam (v0.100.0+)
+
+**`Seam` is a per-task field on the consumer task**, REQUIRED whenever that task's `Dependencies` is not "none" — one bullet per incoming dependency edge. The field attaches to the existing `Dependencies` edges; there is no plan-level parallel section that declares seams separately.
+
+Each bullet takes one of exactly two forms:
+
+- `from Task <N>: payload: none` — nothing crosses the edge; `Dependencies` on `Task <N>` is ordering only.
+- `from Task <N>: payload: <shape>; owner: Task <M>; probe: <name of the executed cross-seam probe in this task's Acceptance>` — data crosses the edge. `owner` names the task that defines the shared parser or schema for that payload; `probe` names the executed check, in this task's own `Acceptance`, that exercises the seam rather than a same-task assumption about it.
+
+Why: a seam owned by no task is how two individually green tasks integrate red — each side's `Acceptance` passes against its own assumption of the shape crossing the edge, and nothing in either task's RED/GREEN pair ever runs the other side's code against it.
 
 ### Stated facts — the pointer-not-copy rule (v0.39.0+)
 
