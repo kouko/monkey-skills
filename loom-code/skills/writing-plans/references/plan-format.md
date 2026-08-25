@@ -303,6 +303,8 @@ Each bullet takes one of exactly two forms:
 
 Why: a seam owned by no task is how two individually green tasks integrate red — each side's `Acceptance` passes against its own assumption of the shape crossing the edge, and nothing in either task's RED/GREEN pair ever runs the other side's code against it.
 
+A payload-bearing seam obligates two things on top of the bullet itself: (a) one executed cross-seam probe, named in the consumer task's `Acceptance`, whose `probe:` slot matches an `Acceptance` entry verbatim — not a same-task unit test that only exercises the consumer's own assumption of the shape; (b) both tasks import one shared parser or schema defined by the `owner` task — never two hand-rolled readers of the same bytes, since two independent readers can each pass while agreeing on nothing. Enforcement splits: presence of the `Seam` field and the `probe:`/`owner:` cross-reference is checked mechanically (`check_seam_coverage.py`) and again at plan review (Check 20); whether the named probe is actually adequate — whether it would catch a real shape mismatch — stays the reviewers' judgment, not something either check can decide.
+
 ### Stated facts — the pointer-not-copy rule (v0.39.0+)
 
 A plan is a technical SSOT that nothing validates: every downstream station judges the artifact **against the plan**, so a fact the plan states wrongly is implemented faithfully, reviewed as conformant, and typically surfaces only at close-out — the most expensive point to catch it. This rule makes the copy unnecessary — it is not extra ceremony on top of it.
@@ -457,6 +459,9 @@ N/A — no unresolved question: brief left nothing undecided at plan time.
   - **RED**: `reports.test.ts > GET /reports/:id?format=csv returns text/csv body matching renderer output`
   - **GREEN**: end-to-end request returns valid CSV; Content-Type header correct
 - **Dependencies**: Tasks 1, 2 complete first
+- **Seam**:
+  - from Task 1: payload: none
+  - from Task 2: payload: CSV string; owner: Task 2; probe: `reports.test.ts > GET /reports/:id?format=csv returns text/csv body matching renderer output`
 - **Independent**: false  # touches files Task 1 also touches; must run after Task 1
 - **Brief item covered**: "minimum shippable change: end-to-end CSV download path"
 - **Status**: pending
