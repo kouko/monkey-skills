@@ -11,6 +11,7 @@ SDD dispatches three subagents per task (implementer + spec-reviewer + code-qual
 - **Context paths** — what the implementer reads (paths-not-content delegation).
 - **Acceptance** — for tdd-iron-law's RED-GREEN-REFACTOR cycle (failing test name + GREEN condition).
 - **Dependencies** — for sequencing / parallelization.
+- **Seam** — the inter-task payload contract SDD carries into dispatch packets (see §Seam).
 
 Free-form plans force SDD to re-parse; this schema makes the parse trivial.
 
@@ -303,7 +304,7 @@ Each bullet takes one of exactly two forms:
 
 Why: a seam owned by no task is how two individually green tasks integrate red — each side's `Acceptance` passes against its own assumption of the shape crossing the edge, and nothing in either task's RED/GREEN pair ever runs the other side's code against it.
 
-A payload-bearing seam obligates two things on top of the bullet itself: (a) one executed cross-seam probe, named in the consumer task's `Acceptance`, whose `probe:` slot matches an `Acceptance` entry verbatim — not a same-task unit test that only exercises the consumer's own assumption of the shape; (b) both tasks import one shared parser or schema defined by the `owner` task — never two hand-rolled readers of the same bytes, since two independent readers can each pass while agreeing on nothing. Enforcement splits: presence of the `Seam` field and the `probe:`/`owner:` cross-reference is checked mechanically (`check_seam_coverage.py`) and again at plan review (Check 20); whether the named probe is actually adequate — whether it would catch a real shape mismatch — stays the reviewers' judgment, not something either check can decide.
+A payload-bearing seam obligates two things on top of the bullet itself: (a) one executed cross-seam probe, named in the consumer task's `Acceptance` — the `probe:` value appears verbatim inside that task's `Acceptance` block (substring containment, the checker's rule) — not a same-task unit test that only exercises the consumer's own assumption of the shape; (b) both tasks import one shared parser or schema defined by the `owner` task — never two hand-rolled readers of the same bytes, since two independent readers can each pass while agreeing on nothing. Enforcement splits: `check_seam_coverage.py` — run as writing-plans' unconditional Seam-coverage gate before the plan-document-reviewer dispatch — mechanically checks field presence, per-edge coverage by `from Task <N>` identity, and the `probe:`↔`Acceptance` containment; Check 20 re-checks the same ground at plan review; whether the named probe is actually adequate — whether it would catch a real shape mismatch — stays the reviewers' judgment, not something either check can decide.
 
 ### Stated facts — the pointer-not-copy rule (v0.39.0+)
 

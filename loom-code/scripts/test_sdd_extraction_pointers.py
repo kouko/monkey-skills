@@ -123,7 +123,7 @@ ENVIRONMENT_GOTCHAS = (
 # initial cuts collided with pinned test strings in
 # test_packet_validate_stations.py / test_subagent_driven_development_skill.py
 # and were restored verbatim) to reach measured 4496.
-WORD_CEILING = 4496
+WORD_CEILING = 4500  # Raised 4496 -> 4500 by the 2026-08-25 seam-contracts arc whole-branch fix round (adjacent-seam definition sentence); equals CHK-SKL-010's fixed hard cap — zero headroom, the next addition must compress first.
 
 # --- distinctive phrases, whitespace-normalized ---------------------------
 

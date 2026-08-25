@@ -228,3 +228,7 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
 - T2 與 T5/T6/T7 同層可並行（檔案不相交、無共用符號）；T3/T4 同層可並行。
 - 觸及檔案皆不在 distribute.py 的 ROUTE 同步集內（recon #6）；implementer.md 僅動手編區（rule-sheet 標記之下）。
 - Version-tag 慣例：新 subsection 標 `(v0.100.0+)`，與 T8 的 bump 一致。
+
+## Decision Log
+
+- 2026-08-25 whole-branch fix round：docs 臂 NEEDS_REVISION（1🔴+4🟡）後未依 continuous-mode row 5 停等，直接修復＋差分確認。理由：🔴（checker 未接線）即 brief BI-5 明文要求的缺件、其餘修法皆 reviewer 指名且在核准範圍內；使用者 /goal 常設指示要求做到 PR 前。非範圍發明。

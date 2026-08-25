@@ -646,10 +646,10 @@ def test_open_questions_gate_owning_heading_missing_fails_loudly(monkeypatch):
 
 # --- (f) word cap ------------------------------------------------------------
 
-def test_word_count_at_most_4458():
+def test_word_count_at_most_4498():
     word_count = len(_skill_text().split())
-    assert word_count <= 4458, (
-        f"SKILL.md is {word_count} words, over the 4458 cap. "
+    assert word_count <= 4498, (  # Raised 4458 -> 4498 by the 2026-08-25 seam-contracts arc whole-branch fix round (Seam-coverage gate paragraph + template Seam line).
+        f"SKILL.md is {word_count} words, over the 4498 cap. "
         "Raised from 4430 by the 2026-08-25 seam-contracts arc's Task 7: "
         "the §Guard — disjoint files ≠ independent paragraph now points "
         "the operative rule at the Seam grammar (`#### Seam` in "
