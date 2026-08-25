@@ -156,6 +156,7 @@ Unlike the mechanical exemption, this substitution does **not** bypass the §Ver
 | `PASS` | `PASS_WITH_NOTES` | Task DONE. 🟡 / 🟢 findings surfaced in final summary as debt; do not block. |
 | `PASS` | `NEEDS_REVISION` | Re-dispatch implementer with `findings`. Up to **3 rounds** then escalate to user. |
 | `NEEDS_REVISION` | (any) | Re-dispatch implementer with `gaps` + (if any) `findings`. Same 3-round cap. |
+| `MALFORMED_PACKET` (from either reviewer) | (any) | The dispatch packet is defective: fix the packet and re-dispatch THAT reviewer with a fresh fan-out packet. Do NOT re-dispatch the implementer; the round does not count against the 3-round cap. |
 
 When the 2nd round's `NEEDS_REVISION` repeats the SAME unresolved question, read [`references/research-escalation.md`](references/research-escalation.md) and run its triage FIRST — before the 3rd re-dispatch — so research evidence rides that round. A reviewer finding carrying `evidence_needed:` → run this same triage IMMEDIATELY, before any re-dispatch — do not wait for the 2nd round.
 

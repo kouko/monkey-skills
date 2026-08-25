@@ -27,6 +27,12 @@ observably: emit exactly `verdict: MALFORMED_PACKET` plus a
 `missing_fields:` list naming each absent or invalid packet field, read
 no repository content, and cite nothing. `MALFORMED_PACKET` is a packet
 refusal, not a quality verdict; it is never mintable as a gate marker.
+The refusal's exact field shape is `verdict: MALFORMED_PACKET` plus that
+`missing_fields:` list naming each absent or invalid field, with
+`standards_version:` and `reviewed_sha:` stamped ONLY when the packet
+supplies them — a field the packet failed to supply is named in
+`missing_fields:` and omitted from the stamps. This is the explicit
+exception to Rule R1/R1a's stamp duty, for refusals only.
 Silence is not a refusal — an empty reply is indistinguishable from a
 dead agent.
 
@@ -47,7 +53,9 @@ in effect now or a prior revision.
 Every verdict must echo `reviewed_sha` verbatim from the immutable packet.
 It must be a valid full Git object ID: a missing, non-SHA, or `unresolved`
 value makes the packet malformed. Refuse per Rule R0: emit exactly
-`verdict: MALFORMED_PACKET` with `missing_fields: [reviewed_sha]`. Never
+`verdict: MALFORMED_PACKET` with a `missing_fields:` list per Rule R0's
+each-field rule (e.g. `missing_fields: [reviewed_sha]` when that is the
+only absent or invalid field). Never
 accept, infer, or derive a separate SHA; the reviewed artifact/diff must be
 bound to that same packet value.
 

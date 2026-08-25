@@ -98,7 +98,11 @@ ENVIRONMENT_GOTCHAS = (
 # Raised 4397 -> 4424 by the 2026-08-25 reviewer-packet-fail-closed
 # arc, T5: the `--validate` fail-closed refusal sentence at Step 3 --
 # the mechanical packet gate never runs unless the prose invokes it.
-WORD_CEILING = 4424
+# Raised 4424 -> 4464 by the 2026-08-25 reviewer-packet-fail-closed
+# arc, review round 1: the MALFORMED_PACKET row in the Verdict
+# resolution table (fix the packet, re-dispatch that reviewer; no
+# implementer re-dispatch; round exempt from the 3-round cap).
+WORD_CEILING = 4464
 
 # --- distinctive phrases, whitespace-normalized ---------------------------
 
@@ -427,7 +431,8 @@ def test_skill_md_word_count_within_ceiling():
         "verdict-table-composition sentence; raised 4300 -> 4397 by the "
         "2026-08-24 Task 13 complete receipt argv; raised 4397 -> 4424 "
         "by the 2026-08-25 reviewer-packet-fail-closed arc T5 "
-        "--validate refusal sentence)"
+        "--validate refusal sentence; raised 4424 -> 4464 same arc, "
+            "review round 1, MALFORMED_PACKET verdict-table row)"
     )
 
 

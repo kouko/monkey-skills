@@ -175,7 +175,11 @@ def test_pinned_refusal_and_pass_down_contracts_untouched():
 # as prose.
 # Raised 4401 -> 4406 by the 2026-08-25 reviewer-packet-fail-closed
 # arc, T5: the `--validate` fail-closed refusal sentence at Step 1.
-WORD_CEILING = 4406
+# Raised 4406 -> 4439 by the 2026-08-25 reviewer-packet-fail-closed
+# arc, review round 1: the MALFORMED_PACKET packet-refusal consumer
+# sentence after the dead-arm rule at Step 3 (neither scored nor dead;
+# fix packet, re-dispatch that arm).
+WORD_CEILING = 4439
 
 def test_word_count_within_ceiling():
     word_count = len(_skill_text().split())
