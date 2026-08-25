@@ -73,11 +73,13 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
 - **Acceptance**:
   - **RED**: `grep -q 'seam obligates' loom-code/skills/writing-plans/references/plan-format.md` exits 1 today (verified 0 occurrences; the earlier `cross-seam probe` anchor went stale — T1's grammar placeholder already contains that substring).
   - **GREEN**: the grep exits 0; the obligation paragraph covers probe-in-Acceptance and shared-parser-owned-by-owner, inside `#### Seam`; the worked example's Task 3 carries `- **Seam**:` bullets.
+- **Seam**:
+  - from Task 1: payload: the `#### Seam` subsection prose in plan-format.md; owner: Task 1; probe: `grep -q 'seam obligates' loom-code/skills/writing-plans/references/plan-format.md`
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-3
-- **Status**: claimed(@feat/seam-contracts)
+- **Status**: done(a00c6c8b)
 - **Gloss**: 有資料流過的接縫必須被「執行過的探針」驗證、且兩端讀寫同一份 parser——#479/#705 的教訓正式入法。
 
 ## Task 3 — 機械檢查器 check_seam_coverage.py
@@ -98,11 +100,11 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
   - **GREEN**: that pytest passes; CI collects it automatically (workflow already runs `python3 -m pytest loom-code/scripts/`).
     - Fixture matrix: undeclared edge → exit 1 + stderr line; fully-declared plan → exit 0; payload bullet missing probe → exit 1; probe name not in Acceptance → exit 1; zero dependent tasks → exit 0 (vacuous).
 - **Seam**:
-  - from Task 2: payload: the `#### Seam` grammar prose in plan-format.md; owner: Task 1; probe: fixture-driven pytest asserting the checker accepts/rejects the exact bullet forms the grammar defines
+  - from Task 2: payload: the `#### Seam` grammar prose in plan-format.md; owner: Task 1; probe: `python3 -m pytest loom-code/scripts/test_check_seam_coverage.py`
 - **Dependencies**: Task 2 completes first
 - **Independent**: true
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: claimed(@feat/seam-contracts)
 - **Gloss**: 接縫規則有機械牙齒——不靠審查者散文自律，漏宣告的邊直接 exit 1。
 
 ## Task 4 — 審查 Check 20
@@ -121,11 +123,11 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
   - **RED**: `python3 -m pytest loom-code/scripts/test_plan_document_reviewer_check20.py` fails today (test absent; prompt has no Check 20 row and mapping stops at 19).
   - **GREEN**: that pytest passes; checks table row 20 present; verdict mapping includes 20.
 - **Seam**:
-  - from Task 2: payload: the `#### Seam` grammar prose in plan-format.md; owner: Task 1; probe: test_plan_document_reviewer_check20.py asserting the check row cites the `#### Seam` heading rather than restating the grammar
+  - from Task 2: payload: the `#### Seam` grammar prose in plan-format.md; owner: Task 1; probe: `python3 -m pytest loom-code/scripts/test_plan_document_reviewer_check20.py`
 - **Dependencies**: Task 2 completes first
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: claimed(@feat/seam-contracts)
 - **Gloss**: 計畫審查者從此把「依賴邊沒接縫宣告」當計畫缺陷擋下——與機械檢查器互為雙保險。
 
 ## Task 5 — SDD 派工步驟帶接縫
@@ -142,12 +144,12 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
   - **RED**: `grep -q 'Seam' loom-code/skills/subagent-driven-development/SKILL.md` exits 1 today (no mention).
   - **GREEN**: the dispatch-step sentence names the Seam lines as packet content with the adjacent-seams-only bound; grep exits 0.
 - **Seam**:
-  - from Task 1: payload: the `#### Seam` field name and bullet forms referenced by the dispatch sentence; owner: Task 1; probe: covered by Task 1's GREEN grep plus this task's GREEN grep asserting the same field name `Seam` (prose-to-prose seam; executed probe is the paired greps)
+  - from Task 1: payload: the `#### Seam` field name and bullet forms referenced by the dispatch sentence; owner: Task 1; probe: `grep -q 'Seam' loom-code/skills/subagent-driven-development/SKILL.md`
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-2
-- **Status**: claimed(@feat/seam-contracts)
+- **Status**: done(f891b013)
 - **Gloss**: 接縫契約真的被送進每個 implementer 的派工包——superpowers 驗證過的形，補上 loom 缺的那一節。
 
 ## Task 6 — implementer 輸入契約加 Seam 槽
@@ -164,12 +166,12 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
   - **RED**: `grep -q '### Seam contracts' loom-code/agents/implementer.md` exits 1 today (Input contract slots are Task / Context / Resource Paths only).
   - **GREEN**: the grep exits 0; the slot sits inside the Input-contract fenced block after `### Resource Paths`; wording binds the implementer to the shared parser.
 - **Seam**:
-  - from Task 1: payload: the `#### Seam` bullet forms the slot receives verbatim; owner: Task 1; probe: this task's GREEN grep paired with Task 1's GREEN grep on the shared field name (prose-to-prose seam)
+  - from Task 1: payload: the `#### Seam` bullet forms the slot receives verbatim; owner: Task 1; probe: `grep -q '### Seam contracts' loom-code/agents/implementer.md`
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-2
-- **Status**: claimed(@feat/seam-contracts)
+- **Status**: done(6be3a464)
 - **Gloss**: SKILL 規則同步進 agent 契約本體——避免「規則進了 skill 卻沒進執行者契約」的既知缺口（backlog 2026-08-04）。
 
 ## Task 7 — writing-plans 守衛措辭改指 Seam
@@ -184,11 +186,13 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
 - **Acceptance**:
   - **RED**: `grep -q 'Seam' loom-code/skills/writing-plans/SKILL.md` exits 1 today (guard paragraph names no operative grammar).
   - **GREEN**: the guard paragraph cites `#### Seam` as where the dependency's contract is declared; grep exits 0; the motivating example sentence is retained.
+- **Seam**:
+  - from Task 1: payload: the `#### Seam` heading anchor cited by the guard; owner: Task 1; probe: `grep -q 'Seam' loom-code/skills/writing-plans/SKILL.md`
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-7
-- **Status**: claimed(@feat/seam-contracts)
+- **Status**: done(f7a249aa)
 - **Gloss**: 舊的「憑判斷」守衛句改為指向可檢查的文法——敘事保留、法源升級。
 
 ## Task 8 — 版本收尾
@@ -202,6 +206,12 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
 - **Acceptance**:
   - **RED**: `python3 scripts/check_version_bump.py` (branch diff mode as CI runs it) fails today once skill files changed with version still 0.99.0.
   - **GREEN**: version reads 0.100.0 in both manifests; `python3 scripts/sync_codex_manifests.py --check --all` exits 0; check_version_bump passes.
+- **Seam**:
+  - from Task 3: payload: none
+  - from Task 4: payload: none
+  - from Task 5: payload: none
+  - from Task 6: payload: none
+  - from Task 7: payload: none
 - **Dependencies**: Tasks 3, 4, 5, 6, 7 complete first
 - **Independent**: false
 - **Review-weight**: mechanical
@@ -211,6 +221,7 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
 
 ## Notes
 
+- Seam 補宣告修正（T3 落地後）：check_seam_coverage.py 對本計畫初跑 exit 1（T2/T7/T8 缺 Seam 欄、T3-T6 probe 非 Acceptance 逐字）——已補齊/改為逐字子串，重跑 exit 0。本計畫先於文法誕生，此為 schema 追齊，語義無變；由 whole-branch review 覆核。
 - Reviewer advisory (round 1): T5/T6/T7 的 GREEN grep 只驗「Seam」字樣出現，擋不住「改寫文法而非指向 heading」的違規——派工包需明令 point-at-`#### Seam`-heading、不得改寫文法；whole-branch review 留意。
 
 - 本計畫自身即用了新 Seam 文法（T3/T4/T5/T6 的 Seam 欄位）——checker 尚不存在時作為人工示例；T3 完成後可回頭以 checker 自驗本計畫。
