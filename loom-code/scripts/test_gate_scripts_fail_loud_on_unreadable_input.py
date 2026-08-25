@@ -104,6 +104,8 @@ EXEMPT = {
                                      "not the store",
     "check_open_questions.py": "checks a plan's Open Questions section",
     "check_scenario_coverage.py": "checks a change-folder's scenarios",
+    "check_seam_coverage.py": "checks a plan's Seam field coverage against "
+                              "its Dependencies edges",
     "check-living-spec-index.py": "structural scan over docs/loom/, not the store",
     "check-skill-crossrefs.py": "checks skill cross-references",
     "distribute.py": "packaging helper",
