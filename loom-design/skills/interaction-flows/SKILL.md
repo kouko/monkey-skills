@@ -7,115 +7,84 @@ version: 0.3.0
 
 # interaction-flows
 
-Generate a **`ui-flows.md`** — the **interaction-flow** artifact for one product
-feature or change. It captures the **interface surface**: the screen / panel /
-command inventory, navigation, user flows, layout, transitions, entry/exit
-points, and information density — **modality-aware** across GUI, TUI, and CLI.
+Generate one feature/change's **`ui-flows.md`**: a modality-aware interface
+surface covering inventory, navigation, flows, layout, transitions, entry/exit,
+and information density across GUI, TUI, and CLI.
 
-This is a **GENERATE** skill in the DESIGN → spec → code pipeline. It produces a
-seed; it does **not** fan out the behavioral depth (state machines, edge cases,
-acceptance scenarios) — that is `loom-design:spec-expansion`'s job (see Seam
-below). Design stops at the surface; spec owns the behavior.
+This DESIGN-stage GENERATE skill seeds `loom-design:spec-expansion`; it does not
+fan out state machines, edge cases, or acceptance scenarios. Design stops at
+the surface; spec owns the behavior.
 
 **Ending gate — before you end ANY run of this skill → confirm `ui-flows.md` exists on disk and §7's validator ran, FIRST. A narrated analysis with no file written is a FAILED run, never a partial success.**
 
-## Executor model — who does what
-
-**You (the agent running this skill) are the executor.** You supply the LLM
-reasoning (modality detection, inventory enumeration, flow synthesis, layout
-drafting) and any fan-out. There is no external runtime, no API key, no program
-to install — the method rides on the host agent you are already in.
-
 ## Governing constraint — PRINCIPLES.md first
 
-Before generating anything, **read the product's `PRINCIPLES.md`** (from
-`loom-design`, at
-`docs/loom/PRINCIPLES.md` in the consumer project). It is
-the **product constitution** and **governs every design decision** here —
-inventory choices, transition character, density posture, and exit-design must
-stay consistent with it instead of drifting.
+Before generating anything, read the consumer project's
+`docs/loom/PRINCIPLES.md`. It governs inventory, transition character, density,
+and exit design.
 
-**If `PRINCIPLES.md` is absent, surface that loudly** — do not silently invent a
-product constitution. Tell the user the design is **ungoverned** and either ask
-them to run `loom-design:product-principles` first or proceed only
-with an explicit, flagged "no PRINCIPLES — design is unconstrained" caveat
-recorded in the output. (Baseline Rule 12 — fail loud.)
+**If `PRINCIPLES.md` is absent, surface that loudly.** Ask the user to run
+`loom-design:product-principles`, or proceed only with their explicit approval
+and record `no PRINCIPLES — design is unconstrained` in the output.
 
 ## Procedure
 
 ### 1. Load the references and follow them
 
-Read both bundled references and follow them as you generate — do not re-author
-their rules:
+Read and follow these bundled references; do not re-author their rules:
 
-- `references/ux-flow-checklist.md` — the **7 generation dimensions** (these are
-  active generation prompts, not post-hoc capture questions) plus the
-  **render-variant flag rule**.
-- `references/ascii-ui-patterns.md` — the **ASCII layout skeletons** for the
-  per-screen structure half, and the ASCII-vs-Mermaid split.
+- `references/ux-flow-checklist.md` — 7 active generation dimensions and the
+  render-variant flag rule.
+- `references/ascii-ui-patterns.md` — ASCII skeletons and the
+  ASCII-vs-Mermaid split.
 
 ### 2. Read PRINCIPLES.md as the governing constraint
 
-Per the section above — load `docs/loom/PRINCIPLES.md`, or
-surface its absence loudly.
+Load `docs/loom/PRINCIPLES.md`; apply the absent-file behavior above.
 
 ### 3. Detect (or ask) the modality
 
-Determine the product's interface **modality** — the artifact's whole shape
-depends on it:
+Determine the interface **modality**:
 
 - **GUI** — screens + visual components; navigation between screens.
 - **TUI** — panels / panes + keybindings; focus-driven movement.
 - **CLI** — commands + sub-commands; command-output chaining.
 
-If the feature spans more than one modality (e.g. a CLI tool with a TUI mode),
-generate the relevant dimensions for each. If the modality is not inferable from
-the feature description or PRINCIPLES.md, **ask the user** — do not guess.
+Cover each modality a feature spans. If neither the seed nor PRINCIPLES.md makes
+the modality inferable, **ask the user** — do not guess.
 
 ### 4. Generate `ui-flows.md` covering the 7 dimensions
 
-Walk `references/ux-flow-checklist.md` and **generate** (not merely record) each
-dimension, reading each through the detected modality:
+Using `references/ux-flow-checklist.md`, generate each dimension for the
+detected modality:
 
-1. **Screen / panel / command inventory** — the full list of interface surfaces
-   this feature introduces or touches, each **flagged** with its render variants
-   (`empty / loading / error / success`) per the flag rule below.
-2. **User flows (Mermaid)** — the user's path through the surfaces as a Mermaid
-   diagram. **Invoke `obsidian:obsidian-mermaid-visualizer`** for the flow
-   diagrams (`flowchart` for branching task paths, `stateDiagram` for mode-bound
-   flows, `journey` for end-to-end journeys) — it owns canonical Mermaid syntax;
-   do not re-author Mermaid rules.
-3. **UI structure (ASCII layout)** — the spatial layout of each key surface as an
-   ASCII skeleton per `references/ascii-ui-patterns.md` (Mermaid has no native
-   wireframe primitive, so structure-within-a-screen is ASCII).
-4. **Transitions** — for each move between surfaces, its character: **instant**
-   (no friction) / **guided** (wizard / confirm step) / **deliberate**
-   (heavyweight, gated-behind-intent). This is *feel/pacing*, not the behavioral
-   guard rules spec-expansion owns.
-5. **Entry points** — every way a user can *arrive* (deep link, nav item,
-   sub-command, alias, keybinding, pipe) — do not assume a single front door.
-6. **Exit points** — the exit from *every* surface; actively **kill dead-ends**
-   (every surface must offer a way forward, back, or out).
-7. **Information density + mobile flow** — the density posture of each surface
-   and the small/constrained-form-factor flow (GUI mobile reflow / TUI
-   narrow-terminal / CLI non-TTY-piped output).
+1. **Screen / panel / command inventory** — every introduced or touched surface,
+   flagged with its `empty / loading / error / success` render variants.
+2. **User flows (Mermaid)** — paths through surfaces. Invoke
+   `obsidian:obsidian-mermaid-visualizer`: `flowchart` for branches,
+   `stateDiagram` for mode-bound flows, and `journey` for end-to-end journeys.
+3. **UI structure (ASCII layout)** — each key surface as an ASCII skeleton per
+   `references/ascii-ui-patterns.md`; Mermaid is for flow, not wireframes.
+4. **Transitions** — label every move **instant**, **guided**, or **deliberate**.
+   Capture feel/pacing, not spec-expansion's behavioral guards.
+5. **Entry points** — every arrival route (deep link, nav, sub-command, alias,
+   keybinding, pipe); do not assume one front door.
+6. **Exit points** — kill dead-ends: every surface needs a way forward, back,
+   or out.
+7. **Information density + mobile flow** — each surface's density and constrained
+   form (GUI mobile reflow, TUI narrow terminal, CLI non-TTY/piped output).
 
-**Before drafting any flow, state transition, or display convention (color /
-sign / period) whose correct form is not derivable from `PRINCIPLES.md` or
-the feature seed, read `references/knowledge-triage.md` and run its
-classification question FIRST** — do not guess a domain convention into the
-flow; classify, then tag or route per that reference.
+**Before drafting a flow, transition, or display convention (color/sign/period)
+not derivable from PRINCIPLES.md or the seed, read
+`references/knowledge-triage.md` and run its classification question FIRST.**
+Classify, then tag or route; never guess a domain convention.
 
 ### 5. Apply the render-variant **flag-only** rule
 
-When you inventory a surface (dimension 1), **flag** which render variants it can
-present (`empty / loading / error / success`). This is **flag-only**: name the
-variants that exist — do **not** author the transition logic, guards, or the full
-state machine that moves between them. Enumerating *when* and *why* a surface
-moves empty → loading → error is the **domain lifecycle**, which is
-`loom-design:spec-expansion`'s job. **Design stops at "these variants exist";
-spec owns "here is how they transition."** Doing the state-machine / edge fan-out
-here would duplicate loom-design — do not.
+For each inventory item, use the **flag-only** rule: name its
+`empty / loading / error / success` variants, but do not author transition
+logic, guards, or the state machine. Design names which variants exist; spec
+owns why and how they transition.
 
 ### 6. Emit `ui-flows.md` into the consumer project
 
