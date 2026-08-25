@@ -13,33 +13,23 @@ directly.
 
 # ui-verification — drive the real pixels before the branch closes
 
-The 2026-07-03 pipeline dogfood shipped a GUI product whose test suite was
-28/28 green while **the rendered half had zero behavioral verification** —
-"no live browser was used" (the code station's own ledger). Package tests
-verify logic; they cannot verify that the empty state renders, that the error
-toast is reachable, that pause actually swaps the controls. For a UI-bearing
-branch, this skill is the user's main acceptance stage (design SSOT:
-docs/loom/design/2026-07-10-designer-pm-loop-architecture.md §1 #4) — the
-running app is the only surface a non-engineer user can adjudicate "done" by,
-not test counts: **open the real app, walk the states the design station
-already enumerated, and report what you observed.**
+Package tests cannot prove rendered states or interactions. **Open the real
+app, walk every state already enumerated by design, and report observations.**
+Design SSOT: `docs/loom/design/2026-07-10-designer-pm-loop-architecture.md §1 #4`.
 
 ## The gate is CONDITIONAL — check both conditions first
 
 Mirroring the D8 principles-conformance pattern (`loom-code/agents/code-reviewer.md`):
 
-1. **A `ui-flows.md` exists** for this change — canonically
-   `docs/loom/<change-id>/ui-flows.md` (legacy side-by-side `docs/loom/`
-   also occurs). It is the checklist: its §1 inventory rows + render-variant
-   flags + flows + entry/exit points are what you verify. The design station
-   owns that enumeration (do not re-derive it); this skill owns the runtime
-   check — the same seam split as the spec→code validator (#442 precedent).
+1. **A `ui-flows.md` exists** (normally `docs/loom/<change-id>/ui-flows.md`).
+   Its §1 inventory, variants, flows, and entry/exit points are the checklist;
+   design owns enumeration, this skill owns runtime verification.
 2. **The branch touched a UI surface** — HTML/JSX/templates/styles/DOM
    wiring. A pure-logic branch under a UI-bearing repo does not fire this
    gate.
 
-Either condition false → emit **`ui-verification: N/A`** with the reason and
-move on. N/A is a first-class honest outcome, never a silent skip.
+Either false → emit **`ui-verification: N/A`** with reason. N/A is a
+first-class honest outcome, never a silent skip.
 
 ## Tooling — use what the host has, and be loud when it has nothing
 
@@ -52,32 +42,21 @@ capabilities, not one vendor:
 | iOS / Android / macOS app | `agent-device` MCP (boot / open / click / type / press / screenshot / snapshot) |
 | TUI / CLI | **out of scope for v1** — matches the design station's phase-2 posture; note it and stop |
 
-**No usable tooling → `ui-verification: N/A (no browser/device automation
-available in this environment)`.** Never fake it: do not "simulate" a
-walkthrough by re-reading the source, do not fabricate observations from what
-the code *should* do, do not let a static read stand in for a rendered check.
-A faked pass here recreates exactly the hole this skill exists to close. If a
-static read is all you can offer, say N/A and say why — the finishing flow
-surfaces that honestly to the user.
+**No tooling → `ui-verification: N/A (no browser/device automation available
+in this environment)`.** Never fake it with source reading or expected
+behavior; report N/A and why.
 
 ## Process
 
-1. **Load the checklist.** Read `ui-flows.md`: collect every §1 inventory row
-   with its render-variant flags (empty / loading / error / success / …),
-   the user flows, and the entry/exit points. Note `critic-found` rows —
-   they were added by the design-critic precisely because the writer missed
-   them; they are first-class checklist items, not optional extras.
-2. **Launch the real app.** Serve/open it the way a user would (static file,
-   dev server, simulator build). If launching needs a command, prefer the
-   project's declared surface (`AGENTS.md` / README) — same declared-first
-   posture as `verification-before-completion`.
-3. **Walk the enumeration.** For each inventory row and each flagged variant:
-   drive the app into that state through the UI (click / type / wait —
-   through real interactions, not by poking internal state), and record one
-   observation per state — a screenshot or accessibility/DOM snapshot plus a
-   one-line "what I saw vs what the row promises". For flows: walk each
-   mermaid flow end-to-end; confirm every entry point lands and no dead-end
-   appears that `ui-flows.md` says shouldn't exist.
+1. **Load the checklist.** Collect every §1 inventory row and variant, flow,
+   entry/exit point, and `critic-found` row; none is optional.
+2. **Launch the real app** as a user would. Prefer the project's declared surface
+   (`AGENTS.md` / README) for launch commands.
+3. **Walk each inventory row and each flagged variant** through real interactions,
+   never internal state. Capture a screenshot or accessibility/DOM snapshot plus
+   one-line observed-vs-promised evidence.
+   Walk every flow end-to-end; confirm entries land and forbidden dead-ends do
+   not appear.
 4. **Classify per state**: `verified` (reached, matches the row) /
    `mismatch` (reached, contradicts the row — e.g. variant missing, dead-end
    present) / `unreachable` (could not drive the app into it through the UI)
