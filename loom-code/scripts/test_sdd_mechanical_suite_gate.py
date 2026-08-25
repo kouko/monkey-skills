@@ -39,7 +39,11 @@ SDD_SKILL = (
     / "SKILL.md"
 )
 
-WORD_HARD_CAP = 4500
+# Raised 4500 -> 4530 by the 2026-08-25 reviewer-packet-fail-closed
+# arc, review round 2 (aligned with test_sdd_extraction_pointers.py's
+# ceiling): the live-gate SKIP clause + verdict-table precedence
+# sentence pushed SKILL.md to 4518 words.
+WORD_HARD_CAP = 4530
 
 PART_3_SENTENCE = (
     "3. **Suite green.** Run the resolved package test command after "

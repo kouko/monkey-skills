@@ -179,7 +179,13 @@ def test_pinned_refusal_and_pass_down_contracts_untouched():
 # arc, review round 1: the MALFORMED_PACKET packet-refusal consumer
 # sentence after the dead-arm rule at Step 3 (neither scored nor dead;
 # fix packet, re-dispatch that arm).
-WORD_CEILING = 4439
+# Raised 4439 -> 4505 by the 2026-08-25 reviewer-packet-fail-closed
+# arc, review round 2: the live-gate SKIP clause after the `--validate`
+# refusal sentence (Step 1) -- reconciling the new validation duty with
+# "Never re-run `review_context.py` in a live-gate station" -- plus the
+# one-packet-fix retry bound on the Step 3 MALFORMED_PACKET consumer
+# (measured 4496 + 9 margin).
+WORD_CEILING = 4505
 
 def test_word_count_within_ceiling():
     word_count = len(_skill_text().split())

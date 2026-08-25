@@ -102,7 +102,12 @@ ENVIRONMENT_GOTCHAS = (
 # arc, review round 1: the MALFORMED_PACKET row in the Verdict
 # resolution table (fix the packet, re-dispatch that reviewer; no
 # implementer re-dispatch; round exempt from the 3-round cap).
-WORD_CEILING = 4464
+# Raised 4464 -> 4530 by the 2026-08-25 reviewer-packet-fail-closed
+# arc, review round 2: the live-gate SKIP clause after the `--validate`
+# refusal sentence (Step 3), the "(any quality verdict)" cell narrowing,
+# and the MALFORMED_PACKET-row precedence sentence under the Verdict
+# resolution table (measured 4518 + 12 margin).
+WORD_CEILING = 4530
 
 # --- distinctive phrases, whitespace-normalized ---------------------------
 
