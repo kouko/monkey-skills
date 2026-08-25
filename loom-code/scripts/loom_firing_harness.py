@@ -57,7 +57,9 @@ Stdlib only.
 """
 
 import argparse
+from dataclasses import dataclass
 import json
+from pathlib import Path
 import subprocess
 import sys
 
@@ -343,6 +345,181 @@ def run_corpus(
     return results
 
 
+_HOSTS = ("claude", "codex")
+_OUTCOME_SCORE = {"EXACT": 3, "FAMILY": 2, "MISS": 1, "OVER": 0}
+
+
+@dataclass(frozen=True)
+class HostInvocation:
+    """One root-specific host run, kept injectable for offline tests."""
+
+    host: str
+    root_label: str
+    plugin_root: Path
+    record: dict
+    replicate: int
+    argv: tuple[str, ...]
+
+
+def run_host(invocation: HostInvocation) -> str:
+    """Execute one host invocation; callers can replace this in unit tests."""
+    proc = subprocess.run(
+        invocation.argv, capture_output=True, text=True, check=False
+    )
+    return proc.stdout + proc.stderr
+
+
+def host_argv_for_root(
+    host: str,
+    plugin_root: Path,
+    record: dict,
+    *,
+    max_turns: int,
+    working_directory: Path,
+) -> tuple[str, ...]:
+    """Build the host-specific argv for one explicitly named plugin root.
+
+    Claude accepts a source plugin directory directly. Codex loads plugins
+    from its configured installation, so the root stays in the invocation
+    provenance rather than being passed as Claude's unsupported flag.
+    """
+    root = Path(plugin_root).resolve()
+    if host == "claude":
+        return (
+            "claude", "-p", record["query"], "--max-turns", str(max_turns),
+            "--allowedTools", "Skill", "--output-format", "stream-json",
+            "--verbose", "--plugin-dir", str(root),
+        )
+    if host == "codex":
+        return (
+            "codex", "exec", "--ephemeral", "--ignore-user-config",
+            "--ignore-rules", "--sandbox", "workspace-write",
+            "--skip-git-repo-check", "-C", str(Path(working_directory).resolve()),
+            "--json", record["query"],
+        )
+    raise ValueError(f"unsupported host: {host}")
+
+
+def _host_events(transcript: str) -> list[dict]:
+    events, _ = _parse_stream_json_lines(transcript)
+    return events
+
+
+def _normalize_observable(host: str, transcript: str) -> dict:
+    """Keep only structured host observations; deliberately omit prose."""
+    events = _host_events(transcript)
+    if host == "claude":
+        fired = _extract_fired_skill(events)
+        subtype, _ = _extract_result(events)
+        tool_sequence = tuple(
+            block.get("name")
+            for event in events if event.get("type") == "assistant"
+            for block in event.get("message", {}).get("content", [])
+            if block.get("type") == "tool_use" and isinstance(block.get("name"), str)
+        )
+        return {"fired": fired, "result_subtype": subtype, "tool_sequence": tool_sequence}
+
+    commands = []
+    fired = None
+    tokens = None
+    for event in events:
+        item = event.get("item")
+        if event.get("type") == "item.completed" and isinstance(item, dict):
+            if item.get("type") == "command_execution" and isinstance(item.get("command"), str):
+                command = item["command"]
+                commands.append(command)
+                parts = command.split(maxsplit=1)
+                if fired is None and len(parts) == 2 and parts[0] == "skill":
+                    fired = parts[1]
+        usage = event.get("usage")
+        if isinstance(usage, dict):
+            tokens = dict(usage)
+    return {
+        "fired": fired,
+        "result_subtype": "completed" if events else "",
+        "tool_sequence": tuple(commands),
+        "tokens": tokens,
+    }
+
+
+def _comparison_verdict(pairs: list[tuple[dict, dict]]) -> str:
+    """Require two identical observable changes before assigning direction."""
+    differences: dict[tuple[str, str], list[tuple[dict, dict]]] = {}
+    for baseline, candidate in pairs:
+        before = json.dumps(baseline["observable"], sort_keys=True, default=list)
+        after = json.dumps(candidate["observable"], sort_keys=True, default=list)
+        if before != after:
+            differences.setdefault((before, after), []).append((baseline, candidate))
+    if not differences:
+        return "PASS"
+    matching = max(differences.values(), key=len)
+    if len(matching) < 2:
+        return "INCONCLUSIVE"
+    before = grade_record({"expected": matching[0][0]["expected"], **matching[0][0]["observable"]})
+    after = grade_record({"expected": matching[0][1]["expected"], **matching[0][1]["observable"]})
+    if _OUTCOME_SCORE[after] < _OUTCOME_SCORE[before]:
+        return "REGRESSION"
+    if _OUTCOME_SCORE[after] > _OUTCOME_SCORE[before]:
+        return "IMPROVEMENT"
+    return "INCONCLUSIVE"
+
+
+def compare_hosts(
+    records: list[dict],
+    baseline_root: Path,
+    candidate_root: Path,
+    *,
+    replicates: int = 2,
+    raw_dir: Path,
+    runner,
+    max_turns: int = _MAX_TURNS_FLOOR,
+    working_directory: Path | None = None,
+) -> dict:
+    """Run baseline and candidate roots through both hosts and compare facts.
+
+    ``runner`` receives a :class:`HostInvocation` and returns raw JSONL. This
+    preserves transcript evidence while making unit tests and future live
+    adapters share the same comparison logic.
+    """
+    if replicates < 2:
+        raise ValueError("comparison requires at least two replicates")
+    roots = (("baseline", Path(baseline_root).resolve()), ("candidate", Path(candidate_root).resolve()))
+    raw_directory = Path(raw_dir)
+    raw_directory.mkdir(parents=True, exist_ok=True)
+    cwd = Path.cwd() if working_directory is None else Path(working_directory)
+    runs = []
+    for record_index, record in enumerate(records):
+        for host in _HOSTS:
+            for root_label, plugin_root in roots:
+                for replicate in range(replicates):
+                    invocation = HostInvocation(
+                        host, root_label, plugin_root, record, replicate,
+                        host_argv_for_root(host, plugin_root, record, max_turns=max_turns, working_directory=cwd),
+                    )
+                    transcript = runner(invocation)
+                    raw_path = raw_directory / f"{record_index}-{host}-{root_label}-{replicate}.jsonl"
+                    raw_path.write_text(transcript, encoding="utf-8")
+                    runs.append({
+                        **record,
+                        "host": host,
+                        "root_label": root_label,
+                        "plugin_root": str(plugin_root),
+                        "replicate": replicate,
+                        "argv": invocation.argv,
+                        "raw_transcript_path": str(raw_path),
+                        "observable": _normalize_observable(host, transcript),
+                    })
+    comparisons = []
+    for record_index, record in enumerate(records):
+        for host in _HOSTS:
+            pairs = []
+            for replicate in range(replicates):
+                matching = [run for run in runs if run["host"] == host and run["replicate"] == replicate and run["query"] == record["query"]]
+                pairs.append((next(run for run in matching if run["root_label"] == "baseline"), next(run for run in matching if run["root_label"] == "candidate")))
+            comparisons.append({"record_index": record_index, "host": host, "verdict": _comparison_verdict(pairs)})
+    return {"runs": runs, "comparisons": comparisons}
+
+
 def _cmd_run(args: argparse.Namespace) -> None:
     with open(args.corpus, encoding="utf-8") as f:
         records = parse_corpus(f.read())
@@ -367,9 +544,24 @@ def _cmd_grade(args: argparse.Namespace) -> None:
         print(f"{key}: {counts[key]}")
 
 
+def _cmd_compare(args: argparse.Namespace) -> None:
+    with open(args.corpus, encoding="utf-8") as f:
+        records = parse_corpus(f.read())
+    result = compare_hosts(
+        records,
+        args.baseline,
+        args.candidate,
+        replicates=args.replicates,
+        raw_dir=args.raw_dir,
+        runner=run_host,
+        max_turns=args.max_turns,
+        working_directory=args.working_directory,
+    )
+    print(json.dumps(result, ensure_ascii=False, default=list))
+
+
 def main(argv: list[str] | None = None) -> None:
-    """CLI entry: `run --corpus <path> [--max-turns N] [--out <path>]` or
-    `grade --in <path>`."""
+    """CLI entry for Claude-only run/grade and dual-host comparison."""
     parser = argparse.ArgumentParser(description="loom-* firing/refusal harness")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -382,6 +574,16 @@ def main(argv: list[str] | None = None) -> None:
     grade_parser = subparsers.add_parser("grade")
     grade_parser.add_argument("--in", dest="in_path", required=True)
     grade_parser.set_defaults(func=_cmd_grade)
+
+    compare_parser = subparsers.add_parser("compare")
+    compare_parser.add_argument("--corpus", required=True)
+    compare_parser.add_argument("--baseline", required=True, type=Path)
+    compare_parser.add_argument("--candidate", required=True, type=Path)
+    compare_parser.add_argument("--raw-dir", required=True, type=Path)
+    compare_parser.add_argument("--replicates", type=int, default=2)
+    compare_parser.add_argument("--max-turns", type=int, default=_MAX_TURNS_FLOOR)
+    compare_parser.add_argument("--working-directory", type=Path, default=Path.cwd())
+    compare_parser.set_defaults(func=_cmd_compare)
 
     args = parser.parse_args(argv)
     args.func(args)

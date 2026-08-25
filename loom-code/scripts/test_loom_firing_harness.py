@@ -392,6 +392,77 @@ def test_run_corpus_refuses_below_floor(monkeypatch):
         run_corpus(records, claude_bin="claude", max_turns=3)
 
 
+def test_compare_hosts_normalizes_baseline_candidate_replicates(tmp_path, monkeypatch, capsys):
+    """Both hosts retain raw evidence, but compare only observables.
+
+    One changed replicate is not enough to claim a regression.  The same
+    baseline/candidate observable difference must recur in at least two
+    replicates before the comparison has a divergence verdict.
+    """
+    baseline = tmp_path / "baseline"
+    candidate = tmp_path / "candidate"
+    raw_dir = tmp_path / "raw"
+    baseline.mkdir()
+    candidate.mkdir()
+
+    def runner(invocation):
+        changed = (
+            invocation.root_label == "candidate"
+            and invocation.record["query"] == "diverge"
+            and (invocation.replicate == 0 or invocation.record.get("repeat"))
+        )
+        fired = "loom-code:other" if changed else "loom-code:brainstorming"
+        if invocation.host == "claude":
+            return "\n".join((
+                json.dumps({"type": "assistant", "message": {"content": [{
+                    "type": "tool_use", "name": "Skill",
+                    "input": {"skill": fired},
+                }]} }),
+                json.dumps({"type": "result", "subtype": "success", "result": "wording varies"}),
+            ))
+        return "\n".join((
+            json.dumps({"type": "item.completed", "item": {
+                "type": "command_execution", "command": "skill " + fired,
+            }}),
+            json.dumps({"type": "turn.completed", "usage": {"input_tokens": 3}}),
+        ))
+
+    records = [{"query": "diverge", "expected": "loom-code:brainstorming", "notes": "n"}]
+    inconclusive = loom_firing_harness.compare_hosts(
+        records, baseline, candidate, replicates=2, raw_dir=raw_dir, runner=runner
+    )
+    assert {item["host"] for item in inconclusive["runs"]} == {"claude", "codex"}
+    assert all(Path(item["raw_transcript_path"]).is_file() for item in inconclusive["runs"])
+    assert {item["plugin_root"] for item in inconclusive["runs"]} == {str(baseline), str(candidate)}
+    assert all("text" not in item["observable"] for item in inconclusive["runs"])
+    assert {item["verdict"] for item in inconclusive["comparisons"]} == {"INCONCLUSIVE"}
+
+    compared = loom_firing_harness.compare_hosts(
+        [{**records[0], "repeat": True}], baseline, candidate,
+        replicates=3, raw_dir=raw_dir, runner=runner
+    )
+    assert {item["verdict"] for item in compared["comparisons"]} == {"REGRESSION"}
+
+    claude_argv = loom_firing_harness.host_argv_for_root(
+        "claude", baseline, records[0], max_turns=4, working_directory=tmp_path
+    )
+    codex_argv = loom_firing_harness.host_argv_for_root(
+        "codex", candidate, records[0], max_turns=4, working_directory=tmp_path
+    )
+    assert "--plugin-dir" in claude_argv and str(baseline) in claude_argv
+    assert codex_argv[:2] == ("codex", "exec")
+    assert "--plugin-dir" not in codex_argv
+
+    corpus = tmp_path / "corpus.jsonl"
+    corpus.write_text(json.dumps(records[0]) + "\n", encoding="utf-8")
+    monkeypatch.setattr(loom_firing_harness, "run_host", runner)
+    loom_firing_harness.main([
+        "compare", "--corpus", str(corpus), "--baseline", str(baseline),
+        "--candidate", str(candidate), "--raw-dir", str(raw_dir),
+    ])
+    assert '"verdict": "INCONCLUSIVE"' in capsys.readouterr().out
+
+
 def test_shipped_corpus_validates():
     """F2: EVERY shipped firing corpus parses and validates cleanly.
 
