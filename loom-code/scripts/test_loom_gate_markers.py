@@ -564,6 +564,41 @@ def test_review_invalid_verdict_value_exits_4(tmp_path):
     assert not (_marker_dir(repo) / "review-pass.json").exists()
 
 
+def test_malformed_packet_verdict_never_mints_and_names_refusal(
+    tmp_path, capsys
+):
+    """A reviewer refusing a malformed dispatch packet returns
+    `verdict: MALFORMED_PACKET` (with the packet's `missing_fields:`
+    listed). That refusal is an explicit state, NOT a verdict value:
+    it must never mint a review-pass marker, and the error must be the
+    distinct `malformed-packet refusal` message telling the
+    orchestrator to fix the dispatch packet and re-dispatch — not the
+    generic invalid-verdict enum error, and `missing_fields:` must not
+    itself be flagged as a schema violation."""
+    repo = _init_repo(tmp_path)
+    refusal = (
+        "verdict: MALFORMED_PACKET\n"
+        f"reviewed_sha: {DUMMY_REVIEWED_SHA}\n"
+        "missing_fields:\n"
+        "  - base_sha\n"
+        "  - artifact_paths\n"
+    )
+    verdict_file = _write_verdict(tmp_path, refusal)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc != 0
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    err = capsys.readouterr().err
+    assert "malformed-packet refusal" in err
+    assert "invalid value" not in err
+    assert "missing_fields" not in err.replace(
+        "missing_fields: list", ""
+    )  # the field is accepted syntax, never flagged as a violation
+
+
 def test_review_finding_without_where_exits_4(tmp_path, capsys):
     repo = _init_repo(tmp_path)
     verdict_file = _write_verdict(
