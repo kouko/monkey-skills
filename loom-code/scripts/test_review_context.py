@@ -68,7 +68,7 @@ def _make_review_scope_escape(plugin_root: Path, outside: Path) -> None:
 
 def test_context_uses_script_parent_not_consumer_repo(tmp_path: Path) -> None:
     """A copied standalone plugin must not look for consumer/loom-code."""
-    installed_root = tmp_path / "plugin-cache" / "loom-code" / "0.98.1"
+    installed_root = tmp_path / "plugin-cache" / "loom-code" / "0.99.0"
     installed_root.parent.mkdir(parents=True)
     shutil.copytree(PLUGIN_ROOT, installed_root)
     consumer = _consumer_repo(tmp_path)
@@ -89,7 +89,7 @@ def test_context_uses_script_parent_not_consumer_repo(tmp_path: Path) -> None:
 
     assert context["target_repo"] == str(consumer.resolve())
     assert context["reviewed_sha"] == _git(consumer, "rev-parse", "HEAD")
-    assert context["plugin_version"] == "0.98.1"
+    assert context["plugin_version"] == "0.99.0"
     assert context["resources"]
     for resource in context["resources"].values():
         resource_path = Path(resource)
@@ -100,7 +100,7 @@ def test_context_uses_script_parent_not_consumer_repo(tmp_path: Path) -> None:
 
 def test_context_includes_all_reviewer_contract_resources(tmp_path: Path) -> None:
     """Every reviewer contract gets an approved absolute plugin resource."""
-    installed_root = tmp_path / "plugin-cache" / "loom-code" / "0.98.1"
+    installed_root = tmp_path / "plugin-cache" / "loom-code" / "0.99.0"
     installed_root.parent.mkdir(parents=True)
     shutil.copytree(PLUGIN_ROOT, installed_root)
     consumer = _consumer_repo(tmp_path)
@@ -166,7 +166,7 @@ def test_context_refuses_damaged_or_escaping_installed_resources(
             ),
         ),
     ):
-        installed_root = tmp_path / name / "loom-code" / "0.98.1"
+        installed_root = tmp_path / name / "loom-code" / "0.99.0"
         installed_root.parent.mkdir(parents=True)
         shutil.copytree(PLUGIN_ROOT, installed_root)
         (tmp_path / "outside-plugin.py").write_text("# outside\n", encoding="utf-8")

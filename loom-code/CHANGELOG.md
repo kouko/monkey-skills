@@ -5,6 +5,25 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.99.0] — 2026-08-25
+
+### Added
+
+- `review_context.py --validate`: pre-dispatch packet gate that verifies a
+  reviewer packet before fan-out; the three orchestrator dispatch stations
+  (code review, docs review, SDD per-task review) now carry REFUSE lines that
+  stop dispatch when the packet fails validation.
+
+### Changed
+
+- Malformed-packet handling is fail-closed and observable: reviewers now
+  return `verdict: MALFORMED_PACKET` instead of the silent-refusal contract in
+  `_reviewer-discipline.md` R0/R1a (regenerated into the four reviewer
+  agents); `loom_gate_markers.py` treats `MALFORMED_PACKET` as an un-mintable
+  refusal state — it can never become a gate marker.
+- `validate_verdict_text` now requires a full 40-hex `reviewed_sha`
+  unconditionally (no short-SHA or conditional acceptance path).
+
 ## [0.98.1] — 2026-08-25
 
 ### Fixed
