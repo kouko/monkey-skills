@@ -15,6 +15,9 @@ from pathlib import Path
 
 
 PACKET_KEYS = ("target_repo", "reviewed_sha", "plugin_version", "resources")
+# Deliberately strict lowercase, diverging from loom_gate_markers'
+# case-normalizing _FULL_SHA_RE intake: git emits lowercase; --validate
+# is the strict end.
 SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
 
@@ -105,6 +108,14 @@ def resolve_context(repo: Path) -> dict[str, object]:
     }
 
 
+def _containing_plugin_root(path: Path) -> Path | None:
+    """Nearest ancestor holding .claude-plugin/plugin.json, or None."""
+    for ancestor in (path, *path.parents):
+        if (ancestor / ".claude-plugin" / "plugin.json").is_file():
+            return ancestor
+    return None
+
+
 def validate_packet(packet_path: Path) -> list[str]:
     """Return one message per failing packet field; empty means well-formed."""
     try:
@@ -121,10 +132,17 @@ def validate_packet(packet_path: Path) -> list[str]:
 
     reviewed_sha = packet.get("reviewed_sha")
     target_repo = packet.get("target_repo")
+    target_repo_absolute = (
+        isinstance(target_repo, str)
+        and bool(target_repo)
+        and Path(target_repo).is_absolute()
+    )
+    if isinstance(target_repo, str) and target_repo and not target_repo_absolute:
+        errors.append("target_repo: must be an absolute path")
     if isinstance(reviewed_sha, str) and reviewed_sha:
         if SHA_PATTERN.fullmatch(reviewed_sha) is None:
             errors.append("reviewed_sha: must match ^[0-9a-f]{40}$")
-        elif isinstance(target_repo, str) and target_repo:
+        elif target_repo_absolute:
             # `<sha>^{commit}` peels/asserts commit-ness — gitrevisions(7)
             # (`git help revisions`); mirrors the in-repo `cat-file -e
             # <sha>:<path>` precedent, with `^{commit}` as the delta.
@@ -138,11 +156,32 @@ def validate_packet(packet_path: Path) -> list[str]:
     if resources and not isinstance(resources, dict):
         errors.append("resources: must be an object of name -> absolute path")
     elif isinstance(resources, dict):
+        # NOT confined to this script's own root: the validator may
+        # legitimately run from a different copy than the resources it
+        # checks (e.g. working-tree script, installed-cache resources).
+        # Instead all values must live under ONE plugin installation.
+        roots: dict[str, Path] = {}
         for name, value in resources.items():
             if not isinstance(value, str) or not Path(value).is_absolute():
                 errors.append(f"resources: {name} is not an absolute path")
             elif not Path(value).exists():
                 errors.append(f"resources: {name} does not exist ({value})")
+            else:
+                root = _containing_plugin_root(Path(value))
+                if root is None:
+                    errors.append(
+                        f"resources: {name} is not under a plugin root "
+                        "(no .claude-plugin/plugin.json ancestor)"
+                    )
+                else:
+                    roots[name] = root
+        if len(set(roots.values())) > 1:
+            listing = ", ".join(
+                f"{name} -> {root}" for name, root in sorted(roots.items())
+            )
+            errors.append(
+                f"resources: values span multiple plugin roots ({listing})"
+            )
     return errors
 
 

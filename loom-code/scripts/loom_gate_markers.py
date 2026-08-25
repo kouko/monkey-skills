@@ -445,14 +445,12 @@ def validate_verdict_text(text: str) -> tuple[str | None, list[str]]:
     if not vm:
         problems.append("verdict: missing")
     elif vm.group(1) == _MALFORMED_PACKET_REFUSAL:
-        # Recognized BEFORE the allowed-values check: this is a
-        # reviewer's explicit refusal of a malformed dispatch packet,
+        # A reviewer's explicit refusal of a malformed dispatch packet,
         # not a verdict value — deliberately NOT in ALLOWED_VERDICTS,
         # so it can never mint a review-pass marker. Its
         # `missing_fields:` list is accepted refusal syntax (nothing
-        # here flags it). The whole text is a refusal document, so the
-        # remaining schema checks are skipped: the fix is upstream in
-        # the dispatch packet, not in this text's shape.
+        # here flags it). The whole text is a refusal document: the fix
+        # is upstream in the dispatch packet, not in this text's shape.
         return None, [
             "verdict: MALFORMED_PACKET is a malformed-packet refusal, "
             "not a review verdict — no marker can ever be minted from "
