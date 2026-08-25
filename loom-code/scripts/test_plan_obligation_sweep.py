@@ -43,8 +43,10 @@ PLAN_DOCUMENT_REVIEWER_PROMPT = (
 # Task 6), likewise an authorized append. Bumped 18 -> 19 when Check 19
 # (field-value microstructure) shipped
 # (docs/loom/plans/2026-08-19-field-value-microstructure.md Task 10),
+# likewise an authorized append. Bumped 19 -> 20 when Check 20 (Seam
+# field) shipped (docs/loom/plans/2026-08-25-seam-contracts.md Task 4),
 # likewise an authorized append.
-PRE_EXISTING_MAX_CHECK_NUMBER = 19
+PRE_EXISTING_MAX_CHECK_NUMBER = 20
 
 
 def _read(path: Path) -> str:
