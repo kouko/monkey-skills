@@ -13,19 +13,13 @@ requirements, actors, states, failures, and constraints the writer of the
 draft did not think of. You are the second half of the writer≠judge pair: a
 *fresh* critic, not the author re-reading their own work.
 
-Your value is the **defensible differentiator** of loom-design: CoDD
-expands-only, Spec Kit clarifies-but-not-adversarial. You find *omissions*,
-not just inconsistencies, and you are honest about the omissions you yourself
-cannot close.
+You find omissions rather than inconsistencies and state what you cannot judge.
 
 ## Why a separate critic — writer≠judge
 
-Grounded in the Anthropic **Planner-Generator-Evaluator** pattern: a generator
-asked to **self-evaluate** its own output fails — it returns confident praise,
-not gaps. Self-evaluation is structurally blind to the author's own omissions.
-So the critic MUST be a separate role with **fresh context**, whose only job is
-to refute the draft's claim to coverage. The writer (`spec-expansion`) produces;
-you (the evaluator/judge) challenge. Never blend the two roles.
+Self-evaluation is structurally blind to the author's omissions. The
+`spec-expansion` writer produces; a separate evaluator/judge with **fresh
+context** challenges. Never blend the roles.
 
 ## What you are NOT — the hard boundary
 
@@ -34,36 +28,21 @@ not a code-level one:
 
 - You do **NOT** review code. You read the spec draft, not an implementation.
 - You do **NOT** run TDD, write tests, or check test coverage.
-- Code review and TDD are **loom-code's** (and **VSDD's**) job — a different
-  target, a different layer. The semantic joint is one-directional:
-  `loom-design` writes the spec → `loom-code` reads + verifies by
-  execution. You stop at the spec. "Trust is earned by execution, not by a
-  spec that looks complete" — and execution is the VERIFY layer's truth, not
-  yours.
-
-Staying on the spec side of this line is what keeps you from reinventing
-loom-code's reviewer.
+- Code review and TDD are **loom-code's** (and **VSDD's**) job. `loom-design`
+  writes the spec; `loom-code` verifies it by execution. You stop at the spec.
 
 ## Dual role — you are NOT merely "lighter" under v0.2
 
-spec-expansion **v0.2** now **systematizes L2 (cross-object combinations)** and
-**L3 (journey navigation)** — coverage the critic used to backstop by hand. So
-your omission hunt **refocuses**, it does not shrink to a rubber-stamp: it still
-**wins the single-object-failure regime** and is the **deep complement** for
-nuanced resume / re-entry landing-point decisions
-(`docs/loom/design/2026-06-11-L2-ab-validation-results.md` §8). You are a
-recall source in the regimes systematic coverage misses — a **refocused** role,
-not a lighter one. *How* you run that refocused hunt is the panel below.
+spec-expansion v0.2 systematizes L2 cross-object combinations and L3 journey
+navigation. This critic therefore refocuses on residual regimes, especially
+single-object failures and nuanced resume/re-entry landing points; it does not
+become a lighter rubber stamp.
 
 ## loop-until-dry — the termination rule
 
-Run the multi-lens interrogation in **rounds**. **Mind the cost**: a panel round
-is **N fresh-context subagent dispatches** (one per lens) — a *blanket* re-sweep
-of all five lenses every round is ~15 subagent calls across a 3-round loop (the
-*blanket worst case* — targeted re-seeding below makes the real cost far lower),
-and that cost is exactly the pressure that tempts the executor to **silently skip the
-loop** (the F-1 failure). The fix is not to abandon the loop — it is to make the
-re-runs **targeted**.
+Run the multi-lens interrogation in rounds. Each panel round costs N
+fresh-context dispatches, so re-runs are targeted; never silently skip the loop
+to save cost.
 
 1. **Re-seed**: every gap you find is fed **back into the expansion** as a new
    seed item (a missing object becomes an object to fan out; a missing state
@@ -91,14 +70,6 @@ re-runs **targeted**.
 5. **Honesty rail**: "dry" means *no new gap found under the current lenses* —
    it does **NOT** mean the spec is complete. See the blind-spots rule below.
 
-> **Anti-pattern (F-1) — do NOT silently skip the loop to save cost.** Running
-> one round and calling it done "because re-running all five critics is
-> expensive" is the F-1 failure: the cost objection is real, but the fix is
-> **targeted re-seeding** (rule 2 — re-run only the changed-input lens), **not**
-> abandoning the loop. Skipping the loop trades the named cost for an unnamed
-> recall loss; the targeted mechanism pays the cost only where a lens's input
-> actually moved.
-
 Re-seeding cannot break the theoretical ceiling: external completeness is
 relative to all external knowledge, and a sparse seed + LLM priors are not a
 complete source. The loop raises the ceiling *locally*; it never reaches it.
@@ -109,8 +80,8 @@ The five fixed lenses run as a **dispatched panel**, not one agent doing five
 sequential passes. **Dispatch one subagent per lens, each with fresh context** —
 phrase this fan-out portably (like `research-toolkit:deep-research`'s fan-out),
 **not** bound to any one harness/tool, because this skill is agent-portable (see
-[`../using-loom-design/references/claude-code-tools.md`](../using-loom-design/references/claude-code-tools.md)
-/ [`codex-tools.md`](../using-loom-design/references/codex-tools.md) for the
+[`../using-loom-design/references/spec-claude-code-tools.md`](../using-loom-design/references/spec-claude-code-tools.md)
+/ [`spec-codex-tools.md`](../using-loom-design/references/spec-codex-tools.md) for the
 concrete per-host call shape).
 **Pin the subagent to a general reasoning agent — never a read-only / search /
 explore-restricted type.** Lens-critique is pure design reasoning (it reads the
@@ -120,11 +91,7 @@ the panel silently loses that lens. On a host whose *default* subagent is a
 search/explore type, you MUST override it to a general agent when dispatching each
 lens-critic — otherwise a dropped lens reads as "no gaps in that lens", a false
 negative.
-**Fresh context per lens is the mechanism that decorrelates the critics** — it is
-why the validation experiment's pairwise finding-overlap dropped from 0.67–0.96
-(one agent's shared-context passes) to 0.22–0.40 (fresh-context subagents), and
-why off-target noise fell ~3–4× (each critic stays in lane). One agent re-reading
-its own prior passes anchors on them; fresh subagents do not.
+Fresh context decorrelates critics and keeps each in lane.
 
 Each lens-critic carries:
 
@@ -146,25 +113,6 @@ consumes.
 
 For each lens, ask the omission question — "**what is missing here?**" — not the
 consistency question. Inconsistency-hunting is Spec Kit's job; you hunt absence.
-
-### Each lens is designed deletable (Bitter Lesson)
-
-The **panel as a verification mechanism** (writer≠judge — an external check on
-the writer) is **Bitter-Lesson-proof: keep it regardless of model strength**;
-but each **individual lens is closer to a crutch** — it enumerates coverage a
-stronger model may later derive unaided. So **each lens is designed deletable**:
-the panel mechanics (fan-out, union, loop-until-dry, overlap diagnostic) do
-**not** depend on the specific lens set, so a future model that subsumes a
-lens's defect-class can have that lens **removed without redesign**. The paying
-lens set is model-bound and regime-bound — **re-baseline periodically**: re-run
-a bare-model-vs-panel check and prune any lens the current model has subsumed
-(`docs/loom/research/2026-06-12-sdd-harness-bitter-lesson.md` §Part 3).
-The experiment already named the **standing prune candidate**: the
-**state-completeness lens** (lens #4 — empty/error/loading) is the most
-redundant, because a generic omissions-hunt already covers it (H4:
-`docs/loom/design/2026-06-12-diverse-critic-decorrelation-and-experiment.md`);
-the load-bearing lenses (NFR/security, permissions/data-boundary) are the last
-to go.
 
 ### Overlap-rate diagnostic — is the panel actually diverse?
 
@@ -260,22 +208,9 @@ This is your **load-bearing output** and a non-negotiable rule (baseline Rule
 > **non-empty**. An empty Blind spots section is itself a defect — it means you
 > falsely claimed omniscience.
 
-Why this is mandatory, not optional:
-
-- **writer≠judge / self-evaluation fails** — even as the judge, you are an
-  LLM, and an LLM asked whether *it* found everything will say yes. The
-  structural fix is to force the inverse output: enumerate what you *know you
-  cannot* close. The **evaluator** role only earns trust by surfacing its own
-  limits, not by asserting completeness.
-- **要件定義 caution — you cannot manufacture missing business reality.** The
-  hinge of requirements is distilling **business**/**domain** reality, and the
-  customer's own resolution is low: there is no complete answer sitting in the
-  seed to extract. A generator/critic can surface that a gap *exists*, but it
-  **cannot manufacture** the missing business-domain fact (the actual SLA, the
-  real legal jurisdiction, the true retention period). Such
-  unknowable-from-seed gaps are **first-class output** — write them as
-  "needs human/field input", **never silently hallucinate** a plausible-looking
-  answer. Inventing the missing fact is worse than naming the gap.
+This counters failed writer self-evaluation: an evaluator earns trust by naming
+its limits. You cannot manufacture or hallucinate missing business/domain
+reality such as an SLA, jurisdiction, or retention period.
 
 Each blind spot is tagged **needs human/field input** and names the **human**
 or **field** source that could close it (a domain expert, a legal review, a
@@ -303,29 +238,10 @@ what you **found** (the union of gaps); make **no claim about the unseen**.
 — "≥N, likely many more" — as a pure stop/continue signal, never a percentage.
 Reach for it rarely; the ban is the default.)*
 
-**Why — correlated critics make the estimator lie.** Capture-recapture's
-validity needs **independent** captures. Your K lens-critics share one base
-model, so they are **positively correlated** — they find the same gaps and miss
-the same gaps. The estimator reads that high overlap as "the captures barely
-add anything new, so we've nearly exhausted the population", and therefore
-**systematically under-counts the residual → false completeness** — the most
-dangerous honesty failure (a confident number is trusted more than a vague
-claim). Numeric illustration: 100 true gaps, correlated critics each find the
-same easy 12 (overlap 11) → Lincoln-Petersen N̂ = 12·12/11 ≈ 13 → claims ~92%
-complete while **88 gaps remain unfound**.
-
-This is **empirically confirmed**, not just theory: `design §Part C H2`
-(`docs/loom/design/2026-06-12-diverse-critic-decorrelation-and-experiment.md`)
-showed **homogeneous** panels under-estimate the KNOWN residual (false
-completeness reproduced — e.g. overlap 0.93 → Chao 15 < true 18); **diverse**
-panels did NOT under-estimate. Decorrelation reduces the bias but never makes
-the estimate safe (residual correlation remains), so the ban stands regardless
-of how diverse the panel looks.
-
-This connects to the **overlap-rate diagnostic** above: high overlap signals
-panel **redundancy** (diversify the panel), it is **not** the input to a
-completeness number. That diagnostic deliberately stops at "diversify"; this
-rule is the explicit ban on turning the overlap into an estimate.
+Critics share a base model and remain correlated, so capture-recapture
+under-counts unseen gaps. Decorrelation does not make an estimate safe. Use
+overlap only to diagnose panel redundancy and diversify; never turn it into a
+completeness number.
 
 ## Consolidate the panel union before writing back
 
