@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-26-loom-code-skill-compaction.md
 Goal: Shorten all 13 remaining loom-code skill entrypoints by 20–30% without changing observable behavior on Claude Code or Codex.
-Stage: preflight
+Stage: review:round-1
 Steps:
   1. 凍結十三項 prompt corpus、baseline 與 invariant
   2. 依序壓縮十三個 loom-code skill
@@ -72,7 +72,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: BI-0
-- **Status**: claimed(@codex-preflight)
+- **Status**: done(36bc5826)
 - **Gloss**: 先固定真實測例、原始輸出與不可遺失行為，之後才允許縮文。
 
 ## Task 1 — 壓縮 brainstorming
@@ -98,7 +98,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen brainstorming corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes brainstorming prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(1296d9a9)
 - **Gloss**: 保留探索意圖、研究與 brief 交棒的完整門檻，只刪去重複教材。
 
 ## Task 2 — 壓縮 dispatching-parallel-agents
@@ -123,7 +123,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen dispatching corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes dispatching prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-2
-- **Status**: pending
+- **Status**: done(2ee6e41c)
 - **Gloss**: 保留真正獨立才並行與合併後再驗證的安全條件。
 
 ## Task 3 — 壓縮 finishing-a-development-branch
@@ -149,7 +149,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen finishing corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes finishing prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: done(d53b7376)
 - **Gloss**: 保留從整體審查到 PR 與 CI 的完整關站流程，不弱化任何安全停點。
 
 ## Task 4 — 壓縮 loom-memory
@@ -174,7 +174,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen loom-memory corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes loom-memory prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: done(966bf227)
 - **Gloss**: 保留記錄、召回與整理三個動詞，以及未經同意絕不刪除的界線。
 
 ## Task 5 — 壓縮 requesting-code-review
@@ -200,7 +200,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen requesting-code-review corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes requesting-code-review prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(e67a4eff)
 - **Gloss**: 保留不可變範圍、四路分流與發佈前雙人審查，避免短文放寬 gate。
 
 ## Task 6 — 壓縮 requesting-docs-review
@@ -226,7 +226,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen requesting-docs-review corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes requesting-docs-review prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-6
-- **Status**: pending
+- **Status**: done(9dc62e4a)
 - **Gloss**: 保留整份文件的雙人審查與一次確認上限，避免無止盡追求「零 finding」。
 
 ## Task 7 — 壓縮 systematic-debugging
@@ -251,7 +251,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen systematic-debugging corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes systematic-debugging prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-7
-- **Status**: pending
+- **Status**: done(96feb0e5)
 - **Gloss**: 保留先重現、再隔離、單一假說驗證與根因後修復的證據鏈。
 
 ## Task 8 — 壓縮 tdd-iron-law
@@ -276,7 +276,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen tdd-iron-law corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes tdd-iron-law prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-8
-- **Status**: pending
+- **Status**: done(eccb40aa)
 - **Gloss**: 保留先看測試真的失敗再寫最小實作的硬規則與假紅燈診斷。
 
 ## Task 9 — 壓縮 ui-verification
@@ -301,7 +301,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen ui-verification corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes ui-verification prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-9
-- **Status**: pending
+- **Status**: done(0aee3999)
 - **Gloss**: 保留真實畫面逐狀態驗證、降級證據與失敗停點，不和套件測試混為一談。
 
 ## Task 10 — 壓縮 using-git-worktrees
@@ -326,7 +326,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen using-git-worktrees corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes using-git-worktrees prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-10
-- **Status**: pending
+- **Status**: done(047f6a77)
 - **Gloss**: 保留平行分支的安全建立與清理，避免 stash、重複 clone 或共用工作目錄。
 
 ## Task 11 — 壓縮 using-loom-code
@@ -352,7 +352,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen using-loom-code corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes using-loom-code prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-11
-- **Status**: pending
+- **Status**: done(9b333962)
 - **Gloss**: 保留從探索到關站的路由、核准後自動前進與不可越過的安全停止。
 
 ## Task 12 — 壓縮 verification-before-completion
@@ -377,7 +377,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen verification-before-completion corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes verification-before-completion prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-12
-- **Status**: pending
+- **Status**: done(f5f14662)
 - **Gloss**: 保留套件層級、有實際測試數與綁定最終 HEAD 的完成證據。
 
 ## Task 13 — 壓縮 writing-plans
@@ -403,7 +403,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 0: payload: frozen writing-plans corpus, baseline, and invariant snapshot; owner: Task 0; probe: `preflight freezes writing-plans prompts, baseline outputs, word count, and invariant snapshot before refactor`
 - **Independent**: false
 - **Brief item covered**: BI-13
-- **Status**: pending
+- **Status**: done(eeb59629)
 - **Gloss**: 保留原子拆分、所有廉價 gate、不可變審查與 change-folder 交接契約。
 
 ## Task 14 — 執行 loom-code 雙宿主弱模型 A/B
@@ -443,7 +443,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 13: payload: writing-plans candidate and oracle; owner: Task 13; probe: `all 13 new candidates and the fixed SDD candidate pass their owning essence oracle on both hosts`
 - **Independent**: false
 - **Brief item covered**: BI-14
-- **Status**: pending
+- **Status**: claimed(@codex-ab14)
 - **Gloss**: 用兩個宿主的弱模型重播十四個 skill，只升級真正仍無法判定的差異。
 
 ## Notes
