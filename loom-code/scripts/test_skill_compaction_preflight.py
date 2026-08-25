@@ -62,7 +62,7 @@ def test_all_target_corpora_and_preflight_record_exist_and_validate():
 
     assert RECORD.is_file(), "preflight record is missing"
     record = json.loads(RECORD.read_text(encoding="utf-8"))
-    assert record["schema_version"] == 1
+    assert record["schema_version"] == 2
     assert set(record["skills"]) == set(TARGETS)
     for skill_name, snapshot in record["skills"].items():
         assert snapshot["word_count"] > 0
@@ -191,6 +191,48 @@ def test_merge_refuses_conflicts_incomplete_and_host_errors(tmp_path):
         preflight.merge_records([a], out, expected_targets=("demo",))
 
 
+def test_merge_allows_exact_duplicate_dedupes_workspace_and_rejects_snapshot_conflict(tmp_path):
+    skill_dir = tmp_path / "demo"
+    skill_dir.mkdir()
+    corpus_path = _corpus(skill_dir)
+    corpus = json.loads(corpus_path.read_text(encoding="utf-8"))
+    runs = []
+    for prompt in corpus["prompts"]:
+        for host in ("claude", "codex"):
+            for replicate in (0, 1):
+                runs.append({
+                    "prompt_id": prompt["id"], "host": host,
+                    "replicate": replicate, "status": "completed", "exit_code": 0,
+                    "fingerprint": "f" * 64, "raw_sha256": "a" * 64,
+                    "expected_behavior_sha256": preflight.sha256_text(prompt["expected_behavior"]),
+                    "raw_metadata": "workspace/raw.meta.json", "observable": {},
+                })
+    snapshot = {
+        "corpus_sha256": preflight.sha256_bytes(corpus_path.read_bytes()),
+        "word_count": 10, "runs": runs,
+    }
+    part = {
+        "schema_version": 2, "models": {"claude": "haiku", "codex": "gpt-5.6-luna"},
+        "replicates_per_host": 2, "baseline": {"commit": "c", "tree": "t"},
+        "raw_workspace": "one", "skills": {"demo": snapshot},
+    }
+    a = tmp_path / "a.json"; b = tmp_path / "b.json"; out = tmp_path / "out.json"
+    a.write_text(json.dumps(part), encoding="utf-8")
+    b.write_text(json.dumps(part), encoding="utf-8")
+    merged = preflight.merge_records(
+        [a, b], out, expected_targets=("demo",), corpora_root=tmp_path
+    )
+    assert merged["raw_workspaces"] == ["one"]
+
+    conflicting = json.loads(json.dumps(part))
+    conflicting["skills"]["demo"]["word_count"] = 11
+    b.write_text(json.dumps(conflicting), encoding="utf-8")
+    with pytest.raises(ValueError, match="conflicting snapshot"):
+        preflight.merge_records(
+            [a, b], out, expected_targets=("demo",), corpora_root=tmp_path
+        )
+
+
 def test_auth_link_is_removed_when_run_raises(monkeypatch, tmp_path):
     link = tmp_path / "auth.json"
     source = tmp_path / "source-auth.json"
@@ -200,3 +242,71 @@ def test_auth_link_is_removed_when_run_raises(monkeypatch, tmp_path):
         with preflight.temporary_auth_link(link):
             raise RuntimeError("boom")
     assert not link.exists() and not link.is_symlink()
+
+
+def test_raw_and_expected_behavior_hashes_make_semantics_recoverable(tmp_path):
+    raw = tmp_path / "raw" / "demo" / "p1-claude-r0.jsonl"
+    raw.parent.mkdir(parents=True)
+    provenance = {
+        "expected_behavior_sha256": preflight.sha256_text("Expected behavior"),
+    }
+    metadata = {
+        "raw_sha256": preflight.sha256_text("transcript\n"),
+        "provenance": provenance,
+    }
+    raw.write_text("transcript\n", encoding="utf-8")
+    run = {
+        "raw": "workspace/raw/demo/p1-claude-r0.jsonl",
+        "raw_sha256": metadata["raw_sha256"],
+        "expected_behavior_sha256": provenance["expected_behavior_sha256"],
+    }
+    prompt = {"expected_behavior": "Expected behavior"}
+    preflight.verify_run_semantics(run, prompt, raw)
+
+
+def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
+    skill_dir = tmp_path / "corpora" / "demo"
+    skill_dir.mkdir(parents=True)
+    corpus_path = _corpus(skill_dir)
+    corpus = json.loads(corpus_path.read_text(encoding="utf-8"))
+    workspace = tmp_path / "raw-base" / "workspace"
+    raw = workspace / "raw" / "demo" / "p1-claude-r0.jsonl"
+    raw.parent.mkdir(parents=True)
+    provenance = preflight.invocation_provenance(
+        commit="c", tree="t",
+        corpus_sha256=preflight.sha256_bytes(corpus_path.read_bytes()),
+        prompt=corpus["prompts"][0], host="claude", model="haiku",
+        replicate=0, max_turns=12, timeout_seconds=180,
+    )
+    fingerprint = preflight.provenance_fingerprint(provenance)
+    metadata = preflight.write_raw_with_metadata(
+        raw, preflight.RunOutcome("transcript\n", 0, "completed"),
+        provenance, fingerprint,
+    )
+    run = {
+        "prompt_id": 1, "host": "claude", "model": "haiku", "replicate": 0,
+        "status": "completed", "exit_code": 0, "fingerprint": fingerprint,
+        "raw_sha256": metadata["raw_sha256"],
+        "expected_behavior_sha256": provenance["expected_behavior_sha256"],
+        "raw": "workspace/raw/demo/p1-claude-r0.jsonl",
+        "raw_metadata": "workspace/raw/demo/p1-claude-r0.meta.json",
+    }
+    record = {
+        "schema_version": 2, "baseline": {"commit": "c", "tree": "t"},
+        "models": {"claude": "haiku", "codex": "gpt-5.6-luna"},
+        "skills": {"demo": {"corpus_sha256": provenance["corpus_sha256"], "runs": [run]}},
+    }
+    record_path = tmp_path / "record.json"
+    record_path.write_text(json.dumps(record), encoding="utf-8")
+    assert preflight.verify_raw_record(
+        record_path, tmp_path / "raw-base", tmp_path / "corpora"
+    ) == 1
+
+    metadata_path = preflight.metadata_path(raw)
+    altered = json.loads(metadata_path.read_text(encoding="utf-8"))
+    altered["provenance"]["timeout_seconds"] = 999
+    metadata_path.write_text(json.dumps(altered), encoding="utf-8")
+    with pytest.raises(ValueError, match="fingerprint"):
+        preflight.verify_raw_record(
+            record_path, tmp_path / "raw-base", tmp_path / "corpora"
+        )

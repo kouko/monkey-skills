@@ -192,10 +192,6 @@ def _record_observable(observable: dict) -> dict:
     }
 
 
-def _sanitize_dependency(value: str) -> str:
-    return re.sub(r"https://github\.com/[^/]+/[^/]+", "https://github.com/<repository>", value)
-
-
 def invocation_provenance(
     *, commit: str, tree: str, corpus_sha256: str, prompt: dict,
     host: str, model: str, replicate: int, max_turns: int,
@@ -245,6 +241,30 @@ def load_cached_raw(raw_path: Path, fingerprint: str) -> str | None:
     return raw.decode("utf-8")
 
 
+def load_bound_raw(raw_path: Path, expected_case: dict) -> tuple[str, dict] | None:
+    """Load exit-zero evidence whose own provenance fingerprint is exact."""
+    try:
+        raw = raw_path.read_bytes()
+        metadata = json.loads(metadata_path(raw_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    provenance = metadata.get("provenance")
+    invariant_fields = (
+        "baseline_commit", "baseline_tree", "corpus_sha256", "prompt_id",
+        "prompt_sha256", "expected_behavior_sha256", "host", "model", "replicate",
+    )
+    if (
+        not isinstance(provenance, dict)
+        or any(provenance.get(field) != expected_case.get(field) for field in invariant_fields)
+        or metadata.get("fingerprint") != provenance_fingerprint(provenance)
+        or metadata.get("exit_code") != 0
+        or metadata.get("status") != "completed"
+        or metadata.get("raw_sha256") != sha256_bytes(raw)
+    ):
+        return None
+    return raw.decode("utf-8"), metadata
+
+
 def write_raw_with_metadata(
     raw_path: Path, outcome: RunOutcome, provenance: dict, fingerprint: str
 ) -> dict:
@@ -291,6 +311,76 @@ def migrate_legacy_raw(
         raw_path, RunOutcome(raw, 0, "completed"), provenance, fingerprint
     )
     return raw, metadata
+
+
+def verify_run_semantics(run: dict, prompt: dict, raw_path: Path) -> None:
+    if sha256_bytes(raw_path.read_bytes()) != run.get("raw_sha256"):
+        raise ValueError(f"raw hash mismatch: {raw_path}")
+    if sha256_text(prompt["expected_behavior"]) != run.get("expected_behavior_sha256"):
+        raise ValueError(f"expected behavior hash mismatch: prompt {prompt.get('id')}")
+
+
+def _external_path(raw_base: Path, label: str) -> Path:
+    relative = Path(label)
+    if relative.is_absolute() or ".." in relative.parts:
+        raise ValueError(f"unsafe raw evidence label: {label}")
+    return raw_base / relative
+
+
+def verify_raw_record(
+    record_path: Path, raw_base: Path,
+    corpora_root: Path = REPO_ROOT / "loom-code" / "skills",
+) -> int:
+    """Verify that every accepted run remains recoverable from bound raw evidence."""
+    record = json.loads(record_path.read_text(encoding="utf-8"))
+    verified = 0
+    for skill_name, snapshot in record.get("skills", {}).items():
+        corpus_path = corpora_root / skill_name / "test-prompts.json"
+        corpus = validate_corpus(corpus_path, skill_name)
+        if snapshot.get("corpus_sha256") != sha256_bytes(corpus_path.read_bytes()):
+            raise ValueError(f"corpus hash mismatch: {skill_name}")
+        prompts = {prompt["id"]: prompt for prompt in corpus["prompts"]}
+        for run in snapshot.get("runs", []):
+            raw_path = _external_path(raw_base, run["raw"])
+            meta_path = _external_path(raw_base, run["raw_metadata"])
+            if meta_path != metadata_path(raw_path):
+                raise ValueError(f"metadata label mismatch: {skill_name}")
+            try:
+                metadata = json.loads(meta_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                raise ValueError(f"unreadable raw metadata: {meta_path}") from exc
+            provenance = metadata.get("provenance")
+            if (
+                not isinstance(provenance, dict)
+                or metadata.get("fingerprint") != provenance_fingerprint(provenance)
+                or run.get("fingerprint") != metadata.get("fingerprint")
+            ):
+                raise ValueError(f"fingerprint mismatch: {skill_name} p{run.get('prompt_id')}")
+            prompt = prompts.get(run.get("prompt_id"))
+            expected = {
+                "baseline_commit": record["baseline"]["commit"],
+                "baseline_tree": record["baseline"]["tree"],
+                "corpus_sha256": snapshot["corpus_sha256"],
+                "prompt_id": run["prompt_id"],
+                "prompt_sha256": sha256_text(prompt["prompt"]) if prompt else None,
+                "expected_behavior_sha256": sha256_text(prompt["expected_behavior"]) if prompt else None,
+                "host": run["host"], "model": run["model"],
+                "replicate": run["replicate"],
+            }
+            if any(provenance.get(key) != value for key, value in expected.items()):
+                raise ValueError(f"provenance mismatch: {skill_name} p{run.get('prompt_id')}")
+            if (
+                metadata.get("exit_code") != 0
+                or metadata.get("status") != "completed"
+                or run.get("exit_code") != 0
+                or run.get("status") != "completed"
+            ):
+                raise ValueError(f"nonzero raw evidence: {skill_name} p{run.get('prompt_id')}")
+            verify_run_semantics(run, prompt, raw_path)
+            if metadata.get("raw_sha256") != run.get("raw_sha256"):
+                raise ValueError(f"metadata raw hash mismatch: {skill_name}")
+            verified += 1
+    return verified
 
 
 @contextmanager
@@ -382,7 +472,13 @@ def capture(
                 metadata = None
                 if raw is not None:
                     metadata = json.loads(metadata_path(raw_path).read_text(encoding="utf-8"))
-                elif migrate_legacy:
+                else:
+                    bound = load_bound_raw(raw_path, provenance)
+                    if bound is not None:
+                        raw, metadata = bound
+                        provenance = metadata["provenance"]
+                        fingerprint = metadata["fingerprint"]
+                if metadata is None and migrate_legacy:
                     legacy_provenance = invocation_provenance(
                         commit=commit, tree=tree, corpus_sha256=corpus_hash,
                         prompt=prompt, host=host, model=model, replicate=replicate,
@@ -517,7 +613,13 @@ def main() -> None:
     parser.add_argument("--baseline-commit")
     parser.add_argument("--migrate-legacy", action="store_true")
     parser.add_argument("--merge", nargs="+", type=Path)
+    parser.add_argument("--verify-record-raw", type=Path)
+    parser.add_argument("--raw-base", type=Path, default=Path("/tmp"))
     args = parser.parse_args()
+    if args.verify_record_raw:
+        count = verify_raw_record(args.verify_record_raw, args.raw_base)
+        print(f"PASS: verified {count} bound raw runs")
+        return
     if args.merge:
         if args.out is None:
             raise SystemExit("--out is required with --merge")

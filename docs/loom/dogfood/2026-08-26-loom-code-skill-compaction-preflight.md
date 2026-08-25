@@ -9,7 +9,8 @@ Verdict: PASS — all pre-refactor inputs and weak-model baseline runs are froze
 - All 13 target directories have a schema-valid `test-prompts.json`; the two existing corpora were not semantically changed.
 - Every prompt ran twice on Claude Code `haiku` and twice on Codex `gpt-5.6-luna` against an immutable full-plugin `HEAD` export.
 - Each invocation used an isolated work directory; every Codex invocation also used an isolated `CODEX_HOME`. Temporary authentication links were removed after use.
-- Six initial 180-second timeouts were retained as errors, removed from accepted evidence, and rerun with a 300-second bound. The accepted set has zero host errors.
+- An audit rejected 26 Claude runs that had exited nonzero at the original four-turn bound. All 26 were rerun to exit zero with bounded turn limits; one Codex run was also rerun because its original invocation provenance was not deterministically recoverable. The accepted set has zero host errors.
+- Every accepted raw file has a sidecar whose fingerprint binds the baseline commit/tree, corpus and prompt hashes, expected-behavior hash, host/model/replicate, argument semantics, turn limit, and timeout. The machine record also binds each raw file's SHA-256.
 
 ## Evidence
 
@@ -21,9 +22,15 @@ Verdict: PASS — all pre-refactor inputs and weak-model baseline runs are froze
 | Claude / Codex runs | 82 / 82 |
 | Replicates per prompt and host | 2 |
 | Host errors in accepted record | 0 |
-| Baseline classifications | 82 EXACT / 23 FAMILY / 59 MISS |
+| Baseline classifications | 78 EXACT / 22 FAMILY / 64 MISS |
 
 `MISS` and `FAMILY` are frozen baseline observations, not candidate regressions. Later A/B compares each candidate against these same per-prompt, per-host replicates.
+
+These classifications describe routing only; they are not a new correctness judgment. Final multi-judge semantic equivalence consumes the bound host-native raw outputs and the expected-behavior hashes, not only the compact observable fields in the machine record.
+
+Accepted invocation provenance: 139 runs at 4 turns, 15 at 12 turns, 7 at 24 turns, and 3 at 48 turns. Every accepted run exited zero and remains independently checkable with:
+
+`python3 scripts/skill_compaction_preflight.py --verify-record-raw docs/loom/dogfood/2026-08-26-loom-code-skill-compaction-preflight.json`
 
 Machine record: `docs/loom/dogfood/2026-08-26-loom-code-skill-compaction-preflight.json`
 
