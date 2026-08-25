@@ -43,6 +43,7 @@ def test_entrypoint_preserves_conditional_record_recall_prune_contract_within_wo
     # Conditional activation must stop loudly and must not bootstrap a store.
     for marker in (
         "Fire only when the target repo has the store charter",
+        "The target repo is the user's current project repository, never the plugin installation or skill directory",
         "loom-memory: N/A (no docs/loom/memory/README.md in this repo)",
         "stop",
         "never scaffold",

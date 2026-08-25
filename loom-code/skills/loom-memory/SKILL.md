@@ -25,6 +25,9 @@ docs/loom/memory/README.md in this repo)`** and stop. Never silently
 skip, never scaffold a store, and never substitute machine-local
 memory. Store creation is a separate user decision.
 
+The target repo is the user's current project repository, never the
+plugin installation or skill directory.
+
 ## SSOT — point, never copy
 
 The charter owns the jurisdiction table, one-fact-per-file and index
