@@ -8,11 +8,9 @@ description: |
 
 ## Purpose
 
-When an agent needs to involve the user in a **complex engineering decision**, the failure mode is rarely "agent said too little" or "agent said too much." It's almost always **"agent started at the wrong abstraction level."**
-
-The agent defaults to implementation-level detail with embedded jargon. The user needs to start from system-level understanding with business semantics. Without a bridge, no amount of detail will land.
-
-**brief-before-asking** enforces a 6-block briefing structure where **Mental Model leads** — the plain-English scaffolding that lets all subsequent technical content land.
+Before involving the user in a complex engineering decision, bridge from
+implementation detail to the system and business meaning they need. Use the
+6-block briefing below, always leading with **Mental Model**.
 
 ## Four Trigger Modes
 
@@ -23,14 +21,8 @@ The agent defaults to implementation-level detail with embedded jargon. The user
 
 **Turn-ordering rule (hard)**: the briefing must land as turn-final text, with the ask as inline text right after it in that same turn — **never bury a briefing and an AskUserQuestion in the same turn** by stacking them, i.e. never fire the `AskUserQuestion` dialog in the same turn as the briefing such that the dialog visually covers the briefing (it renders on top and the user never scrolls back to read the six blocks). This recurred twice on 2026-07-03 — the briefing was invisible both times. If a structured choice is needed, let the briefing's prose end the turn, then ask in the next turn.
 
-**Mini-example** — index decision briefing (compressed):
-
-> **Mental Model**: Our orders-list page is slow because the database scans every row instead of jumping to recent pending ones.
-> **Situation**: `OrderRepository.findRecentPending` (orders.ts:142) p95 = 12s in prod; orders table 4.2M rows; only PK index; EXPLAIN shows Seq Scan.
-> **Why-this-fork**: Deploy window tomorrow; index choice constrains 2 mirror tables we'll add Q2.
-> **Options**: **A.** composite `(status, created_at DESC)` — 320 MB storage / read p95 → <100 ms / two-way door. **B.** cursor pagination on `created_at` — query rewrite ~40 lines / 0 storage / one-way door (API contract change).
-> **My take**: Lean **A**. (1) Deploy pressure favors low-blast-radius; (2) read-heavy access pattern stable 6+ months per usage logs; (3) 320 MB storage cost is negligible vs API contract churn. **But if** the orders-list endpoint is being deprecated Q3 anyway, B's one-way-door cost vanishes — switch to B.
-> **Open ends**: Q3 deprecation timeline confirmed? Dev DB storage ceiling? Your call on contract-stability vs storage trade-off.
+For worked Mode A and index examples, optionally load
+`references/EXAMPLES.md` when an example would materially improve the output.
 
 ### Mode B — Reactive on Question
 **Triggered by user phrases** indicating they didn't understand the *question*:
@@ -58,8 +50,6 @@ The agent defaults to implementation-level detail with embedded jargon. The user
 3. **Pause** and ask user where to drill: "A. technical details / B. options + my take / C. expand a specific term"
 4. After user picks, continue with that block only
 
-> **Why Mode C pauses**: The user already drowned in jargon once. Dumping 6 more blocks just drowns them again, even reordered. The fix is to land Mental Model first, then let the user pick the drill direction.
-
 > **First Mode C of session — optional load**: `references/EXAMPLES.md` §Saga/Outbox demo shows a worked Mode C output (Mental Model + glossary + drill menu). Skip if you've already produced one this session.
 
 ### Mode D — Reactive on Stakes
@@ -73,8 +63,6 @@ The agent defaults to implementation-level detail with embedded jargon. The user
 3. *Then* My take (lean + why).
 4. **Drop or define the internal labels** (e.g. `Arm A`, `D`/`E`, `WARN`, `thin/thick-slice`) — replace them with the analogy and plain outcome words. Do not carry the raw jargon *alongside* the plain framing, or the stakes stay half-buried (a real dogfood blemish).
 5. **Do NOT** answer stakes-confusion with more options, more detail, or a structural / dataflow diagram **instead of** plain words — those deepen the fog (see Anti-Patterns). Carve-out: an explicit user request for a visual is always honored; when comparing options, default to a markdown comparison table.
-
-> **Why Mode D differs from C**: Mode C is *lost in jargon* (fix: define terms, land the Mental Model). Mode D is *the words parsed fine but the significance didn't* — the user could read three well-framed options and still not see why they're being asked. The fix is consequence + outcome-contrast, not glossary.
 
 > **Repeated-confusion guard (meta-trigger, overrides mode choice)**: the **2nd consecutive** confusion signal — even differently phrased (「X 是啥」then「不能一起做嗎」), even if each alone seems minor — is a hard STOP. Do not add more detail, options, or another diagram. Drop to the Mental Model and reframe from scratch. Escalating detail after the user is already lost is the exact failure this guard breaks.
 
@@ -106,92 +94,43 @@ Open ends        What I don't know / what would flip my answer / what needs your
 
 ### Block 1 — Mental Model (highest priority)
 
-The block everyone wants to skip. The block that makes everything else land.
-
-**Depth requirements**:
-- 1–2 sentences, **no jargon**, **no code refs**
-- Must answer:
-  1. "Where in the system are we?" (locate on user's mental map, in business semantics)
-  2. "Why does this matter from the user's perspective?" (business consequence, not implementation framing)
-  3. "What will the reader actually **experience** differently?" — the
-     user-visible difference this decision makes (what they will see, do,
-     or stop doing), not only how the system changes internally. A system
-     analogy alone still draws a clarification round — the one recurring
-     content-side follow-up cause in live trigger history.
-- If any **potentially unfamiliar term** is used: either define inline in 1 sentence, OR end the block with a flag list: "If any of these are unfamiliar, ask: [saga, outbox, offset commit]"
-
-**Forbidden in Mental Model**:
-- ❌ Code refs (those belong in Situation)
-- ❌ Quantitative metrics (those belong in Situation)
-- ❌ Undefined or unflagged jargon
-- ❌ Abstract framings like "we have an issue" with no grounding
-- ❌ Using service names or pattern names as if they were explanations
-
-**Contrast**:
-
-❌ Bad Mental Model:
-> "OrderService has a race condition under high concurrency and needs idempotency."
-> (Three jargon terms, zero plain English, no system location.)
-
-✅ Good Mental Model:
-> "This is the async 'deduct inventory after checkout' flow: once an order is written, a message is sent to InventoryService to deduct stock. Problem: the same message sometimes gets processed twice, causing the same order to deduct stock twice (oversells)."
-> (Business semantics, no jargon, consequence is graspable.)
+Use 1–2 plain-English sentences with no code refs or metrics. Locate the
+decision in the system using business semantics, say why it matters to the
+user, and name what they will experience differently. Define any potentially
+unfamiliar term inline or flag it explicitly; service and pattern names are
+not explanations. Worked contrasts live in `references/EXAMPLES.md`.
 
 ### Block 2 — Situation
 
-**Depth requirements**:
-- ≥1 **code ref** (filename:lineno or function name)
-- ≥1 **quantitative metric** (if truly unmeasured, say "not measured")
-- What **investigation** the agent performed
-
-**Forbidden**: "looks complex" / "seems slow" / "doesn't feel right"
+Include at least one code ref (filename:line or function), at least one
+quantitative metric (or say "not measured"), and the investigation performed.
+Do not substitute impressions such as "seems slow."
 
 ### Block 3 — Why this is a fork
 
-**Depth requirements**:
-- **Trigger condition** — why ask now (not last week, not next week)
-- **Constraint** — what makes this a fork (not something agent can decide alone)
-- **What happens if not asked** — cost of agent deciding unilaterally
-
-**Forbidden**: "want to confirm with you" / "I think we should change something"
+State the trigger condition (why now), the constraint that requires the user's
+decision, and the cost of deciding unilaterally. "Want to confirm" is not a
+reason.
 
 ### Block 4 — Options
 
-**Each option requires**:
-1. **Concrete approach** (at code-review level of specificity)
-2. **Quantitative impact** (files affected, lines, perf numbers, storage, cost)
-3. **Trade-off** (the real cost — not just upside)
-4. **Reversibility** (two-way door vs one-way door)
-5. **Downstream implications** (effect on other systems, teams, processes)
-
-- **Minimum 2, maximum 4** options
-- **Equal-depth treatment** — banned: A in 5 lines, B in 1 line (fake balance)
-- **Forbidden**: abstract adjectives like "simpler" / "modern" / "industry standard" / "best practice"
+Give 2–4 options at equal depth. For each, name the concrete code-review-level
+approach, quantitative impact, real trade-off, reversibility, and downstream
+effects. Avoid ungrounded labels such as "simpler," "modern," or "best
+practice."
 
 ### Block 5 — My take
 
-**Required**:
-- **Explicit lean** (A / B / C) — never "either works" or "up to you"
-- **Reasoning chain** ≥3 causal steps
-- **Conditional reversal** — "but if X condition holds, I'd switch to Y"
-
-**Forbidden**:
-- ❌ "I have no preference" (agent read the code; pretending neutrality is a lie)
-- ❌ "Both are good"
-- ❌ "Up to you" / "your call" (offloading thinking)
-- ❌ "I think A is good, OK to go with A?" (this is asking permission, not stating a lean)
+State an explicit A/B/C lean, a reasoning chain of at least three causal steps,
+and a condition that would reverse it. Do not claim neutrality, say "both are
+good," or offload the analysis with "up to you."
 
 ### Block 6 — Open ends
 
-**Three categories**:
-1. **Context the agent lacks** (info the user holds)
-2. **Future conditions that would flip the answer** (e.g., "if read pattern changes in 6 months")
-3. **Value judgments needing the user** (e.g., "you prefer latency or storage?")
-
-**Forbidden**:
-- ❌ "Need more context" (vague — be specific)
-- ❌ Fake open ends (questions agent could answer itself)
-- ❌ "Above is for reference only" (disclaimer fluff)
+Name three categories: specific context only the user has, future conditions
+that would flip the recommendation, and value judgments only the user can
+make. Exclude vague requests, questions the agent can answer, and disclaimer
+fluff.
 
 ## Anti-Patterns (cross-block / cross-mode)
 

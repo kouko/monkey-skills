@@ -2,6 +2,15 @@
 
 Three side-by-side examples covering: low-complexity fork, medium-complexity fork, and the **Mode C demo** for "long explanation but user can't follow."
 
+## Compact Pattern — Index Decision (Mode A)
+
+> **Mental Model**: Our orders-list page is slow because the database scans every row instead of jumping to recent pending ones.
+> **Situation**: `OrderRepository.findRecentPending` (`orders.ts:142`) has a 12s production p95 over 4.2M rows; EXPLAIN shows a sequential scan.
+> **Why-this-fork**: Tomorrow's deploy window and two planned mirror tables make the index choice consequential now.
+> **Options**: **A.** composite `(status, created_at DESC)` — 320 MB, p95 under 100 ms, two-way door. **B.** cursor pagination — about 40 changed lines, no storage, one-way API-contract change.
+> **My take**: Lean **A** because deploy pressure favors low blast radius, the read pattern has been stable for six months, and storage is cheaper than contract churn. If the endpoint is being retired in Q3, switch to B.
+> **Open ends**: Is Q3 retirement confirmed? What is the dev database storage ceiling? Which matters more here: contract stability or storage?
+
 ## Example 1 — Race Condition (Mode A: Proactive)
 
 ### ❌ Bad briefing (typical agent default)
