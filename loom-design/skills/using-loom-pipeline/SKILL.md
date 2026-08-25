@@ -4,169 +4,111 @@ name: using-loom-pipeline
 description: >-
   Drives the loom principles→design→spec→code pipeline end-to-end via
   deterministic Claude Code Workflow segments. Use when asked to run the
-  whole pipeline or to auto-implement a change from principles through
-  code. CONDITIONAL: fires only when the Workflow tool is available AND
-  the two station plugins are installed — otherwise `loom-design: N/A`
-  with the reason, loudly (Codex hosts are N/A). Triggers: "run the loom
-  pipeline", "全管線", "全流程跑一遍", 自動實作, "run the conductor".
+  whole pipeline or auto-implement a change from principles through code.
+  CONDITIONAL: fires only when Workflow is available and both station plugins
+  are installed; otherwise report `loom-design: N/A` with the reason (Codex is
+  N/A). Triggers: "run the loom pipeline", "全管線", "全流程跑一遍", 自動實作,
+  "run the conductor".
 version: 0.1.0
 ---
 
 <SUBAGENT-STOP>
-If you are a subagent dispatched with an explicit role prompt, your dispatcher
-already decided whether the pipeline conductor applies. Follow your dispatched
-prompt directly — do not re-derive fire conditions or re-invoke Workflow
-yourself.
+If dispatched as a subagent with an explicit role, follow that prompt; do not re-derive fire conditions or invoke Workflow yourself.
 </SUBAGENT-STOP>
 
-# using-loom-pipeline — the thin conductor over 4 of the 5 loom stations
+# using-loom-pipeline — thin conductor over 4 of 5 loom stations
 
-This skill is orchestration only. It never authors PRINCIPLES.md, DESIGN.md,
-ui-flows.md, a spec draft, or code, and it never produces a verdict — those
-stay with `loom-design` and `loom-code`. Its entire job is: collect the run-input contract, resolve
-the driver asset's absolute path, and invoke `Workflow({scriptPath})` once
-per pipeline segment.
+This skill only collects run inputs, resolves the driver, invokes Workflow,
+and records orchestration. It never authors station artifacts or verdicts.
 
 ## §Intake
 
-Run these three steps first, once per dispatch, before `§When it fires`
-below gates on this skill's own two orchestration conditions.
+Before checking this skill's own fire conditions:
 
-1. **前站檢查 (upstream check)** — check the target repo against the loom
-   [family reception](../using-loom-design/references/family-reception.md)'s
-   "On-ramp criteria table (SSOT)" — reference the packaged contract, never
-   copy its rows here.
-2. **對站檢查 (station check)** — if the ask is interactive design/spec/code
-   work rather than a full pipeline run, hand off to that family's own
-   entry point instead of driving it from here: `using-loom-design` for
-   design or spec work, `loom-code:using-loom-code` for code work.
-3. **本站再確認 (this station's fire condition, unchanged)** — this skill
-   still only fires under `§When it fires`'s BOTH-conditions gate below;
-   its N/A-loud wording governs unchanged — nothing in this §Intake grants
-   permission to hand-drive the four Workflow-driven stations or auto-open
-   the Workflow door.
+1. **前站檢查** — check the repo against [family reception](../using-loom-design/references/family-reception.md)'s On-ramp criteria table (SSOT); do not copy it here.
+2. **對站檢查** — interactive design/spec work goes to `using-loom-design`; use `loom-code:using-loom-code` for code work.
+3. **本站再確認** — apply the BOTH-conditions gate below. Intake never permits hand-driving Workflow stations or auto-opening Workflow.
 
 ## §When it fires — BOTH conditions, checked first
 
-1. **The Workflow tool is available** in this host (Claude Code exposes a
-   `Workflow` primitive that accepts an arbitrary `scriptPath`).
-2. **The two station plugins are installed**: `loom-design`, `loom-code`.
-   (loom-design's discovery station is v0.1 interactive-only and not
-   required here — the conductor never drives it as a Workflow segment.)
+1. The **Workflow tool is available** (Claude Code exposes `Workflow` with an arbitrary `scriptPath`).
+2. Both station plugins are installed: `loom-design` and `loom-code`. Discovery is interactive-only and is not a segment.
 
-Either condition false → emit **`loom-design: N/A`** with the specific
-reason (which condition failed) and stop. N/A is a first-class honest
-outcome — **never silently skip, and never fake the orchestration inline**
-(e.g. by hand-driving the four Workflow-driven stations one Task/Skill call at a time and
-presenting it as if the conductor ran). A faked run here reproduces exactly
-the babysitting problem this plugin exists to remove.
+If either is false, emit **`loom-design: N/A`** with the failed condition and
+stop: never silently skip, and never fake the orchestration inline by manually
+calling stations. **Codex hosts: N/A by definition** because they lack Workflow;
+report `loom-design: N/A (no Workflow primitive on this host)` and stop. There
+is **no fallback path** or shell substitute; that is a separate parked retrigger.
 
-**Codex hosts: N/A by definition.** Codex has no Workflow primitive (verified
-against the plugin-components reference); this skill has no fallback path
-for it. Report `loom-design: N/A (no Workflow primitive on this host)` and
-stop — do not attempt a shell-script substitute here (that is a parked,
-separate re-trigger, not this skill's job).
+## §Run inputs — exactly 6 fields
 
-## §Run inputs — the 6-field contract
+Missing required data is a fail-loud stop; only stated defaults apply.
 
-Before invoking Workflow, collect exactly these fields. A missing required
-field is a fail-loud stop, never an improvised default (except where a
-default is explicitly stated below):
+| Field | Required | Default / contract |
+|---|---|---|
+| **change-id** | yes | None. Identifies `docs/loom/<change-id>/`; thread through unchanged. |
+| **target project path** | yes | None; absolute consumer-project path. |
+| **token budgets** | yes | `{ run, perStation }`; run defaults to the host cap, while omitted station keys use `STATION_TOKEN_BUDGETS` in `driver_20_runstation.js`. Names: `principles`, `design`, `design-critic`, `spec`, `critic`, `validator`, `code`, `review`, `probe`. Either overage fails loud. |
+| **model policy** | yes | Claude default tier; per-station or blanket. Workflow is Claude-family only. |
+| **resumeRunId** | no | None; maps to `resumeFromRunId`. Live-verified 2026-07-03 by F5 run `wf_667ec006-ec2` and pipeline dogfood. |
+| **skillsRoot** | segment 2 | None; absolute installed loom-design plugin root, rendered as `${CLAUDE_PLUGIN_ROOT}`. The validator path must fail loud, never be guessed. |
 
-| Field | Required | Default | Notes |
-|---|---|---|---|
-| **change-id** | yes | none | Identifies the per-change folder (`docs/loom/<change-id>/`); loom-design owns that layout — this skill only threads the id through. |
-| **target project path** | yes | none | Absolute path to the consumer project the pipeline runs against. |
-| **token budgets** | yes | run-level: host default budget cap; per-station: the driver's documented per-station defaults (`STATION_TOKEN_BUDGETS` in `driver_20_runstation.js`) | Canonical shape: `{ run: <number>, perStation: { <stationName>: <number>, ... } }`. `perStation` keys are station names (`principles`, `design`, `design-critic`, `spec`, `critic`, `validator`, `code`, `review`, `probe`) — omit a station's key to fall back to the driver's documented default for that station. Over-budget at either level is fail-loud inside the driver, never a silent continue. |
-| **model policy** | yes | Claude default model tier for all stations | Which model tier each station runs on (Workflow's `model` param is Claude-family only — no cross-vendor judging in v1). |
-| **resumeRunId** | no | none (fresh run) | Optional. Maps directly to Workflow's native `resumeFromRunId` — passing it resumes a previously checkpointed run instead of starting over. (Grounding: `scriptPath`/`resumeFromRunId` parameter names verified live — 2026-07-03 F5 dispatch spike run `wf_667ec006-ec2` and the same-day pipeline dogfood both exercised them against the real Workflow tool.) |
-| **skillsRoot** | yes for runs that include segment 2 | none | Absolute path to the installed loom-design plugin root. The host supplies this root as `${CLAUDE_PLUGIN_ROOT}` when rendering the skill. Segment 2 uses it to locate loom-design's packaged validator script; missing it is a fail-loud stop inside the driver, never a guessed path. |
+## §Invocation — absolute driver path, one call per segment
 
-## §Invocation — resolve the driver asset, one call per segment
+Resolve the **absolute** path to `assets/loom-pipeline.js` from the host's
+**Base directory for this skill**: append `skills/using-loom-pipeline/assets/loom-pipeline.js`
+when given the plugin root, or `assets/loom-pipeline.js` when given this skill
+directory. Never derive it from the current working directory.
 
-The driver ships as a single self-contained asset at
-`assets/loom-pipeline.js`, relative to this skill's own directory. Resolve
-its **absolute** path from the base directory the host gives this skill (the
-host provides "Base directory for this skill" — join it with
-`skills/using-loom-pipeline/assets/loom-pipeline.js` if that base is the
-plugin root, or `assets/loom-pipeline.js` if the base is already this
-skill's own directory). Never hardcode a path guessed from the current
-working directory — the asset must resolve correctly regardless of which
-project the pipeline is driving.
+Invoke Workflow once per segment:
 
-Once resolved, invoke Workflow once per pipeline segment — never once for
-the whole run:
-
-```
-Workflow({
-  scriptPath: "<resolved absolute path to assets/loom-pipeline.js>",
-  args: {
-    segment: <1 | 2 | 3>,
-    changeId: "<change-id>",
-    projectPath: "<target project absolute path>",
-    budgets: { run: <run-level cap>, perStation: { principles: <cap>, design: <cap>, "design-critic": <cap>, spec: <cap>, critic: <cap>, validator: <cap>, code: <cap>, review: <cap>, probe: <cap> } },
-    models: { /* per-station or blanket model policy */ },
-    skillsRoot: "<absolute path to the installed loom-design plugin root — required for segment 2>",
-    resumeRunId: "<optional — omit for a fresh run>"
-  }
-})
+```text
+Workflow({scriptPath: "<absolute assets/loom-pipeline.js>", args: {
+  segment: <1|2|3>, changeId, projectPath,
+  budgets: {run, perStation: {principles, design, "design-critic", spec,
+    critic, validator, code, review, probe}},
+  models, skillsRoot: "<required for segment 2>",
+  resumeRunId: "<optional; omit when fresh>"
+}})
 ```
 
-## §Segments — the 3-segment execution map
+## §Segments — 3 segments
 
-One `Workflow` invocation per segment, never one call for the whole run.
-Segment names match the driver meta's phases (Principles + Design / Spec /
-Code) — same vocabulary end to end so a paused run's segment number always
-maps back to a station-plugin phase.
+Use one Workflow call per segment, never one call for the whole run.
 
-1. **Segment 1 — Principles + Design.** `loom-design:product-principles`
-   drafts PRINCIPLES.md, then `loom-design:design-system` and
-   `loom-design:interaction-flows` draft DESIGN.md + ui-flows.md, then the
-   **design-critic panel**
-   (`loom-design:design-critic`) adversarially reviews the draft
-   for surface omissions before the segment closes.
-2. **Segment 2 — Spec.** `loom-design:spec-expansion` fans the seed out into
-   an OpenSpec-shape draft, the **completeness-critic** panel
-   (`loom-design:completeness-critic`) hunts omissions, then the **validator
-   gate** (the spec station's exit-0 binary validator) must pass before the
-   segment closes.
-3. **Segment 3 — Code.** `loom-code:subagent-driven-development` implements
-   the spec task-by-task under the TDD iron law, then a **whole-branch
-   review** (`loom-code:requesting-code-review`) covers the cumulative
-   diff, then **ui-verify** (`loom-code:ui-verification`) exercises the
-   running surface before the segment closes.
+1. **Segment 1 — Principles + Design.** `loom-design:product-principles`, then `loom-design:design-system` + `loom-design:interaction-flows`, then the `loom-design:design-critic` panel.
+2. **Segment 2 — Spec.** `loom-design:spec-expansion`, then `loom-design:completeness-critic`, then the spec validator must exit 0.
+3. **Segment 3 — Code.** `loom-code:subagent-driven-development` under TDD, then whole-branch `loom-code:requesting-code-review`, then `loom-code:ui-verification` on the running surface.
 
-loom-design's discovery station is v0.1 **interactive-only** — the conductor does not
-drive it as a Workflow segment; pipeline runs start at Segment 1
-(Principles + Design), and the discovery on-ramp (family reception's
-on-ramp row 4) is surfaced to the human before minting a change-id, not
-sequenced here.
+Segment names intentionally match the driver's Principles + Design / Spec /
+Code phases. That keeps a paused run's numeric segment aligned with its owning
+station phase. Segment 1 closes only after the design critic has searched for
+surface omissions. Segment 2 closes only after the completeness critic has
+hunted specification omissions and the binary validator succeeds. Segment 3
+closes only after task-by-task implementation, cumulative-diff review, and the
+conditional running-surface check. The driver orchestrates these owners; it
+does not replace their own protocols or quality decisions.
 
-## §Human gates (between segments)
+Discovery remains interactive-only: surface family reception's on-ramp row 4
+before minting a change-id; never sequence discovery as a segment.
 
-Exactly 4 gates. Each is a stop, not a notification — the conductor waits
-for the human's answer before the next Workflow call.
+## §Human gates — exactly 4
 
-(a) **Change-id minting** — before Segment 1. The human names the
-    per-change folder (`docs/loom/<change-id>/`); the conductor never
-    invents a change-id.
+Each gate stops and waits for the human.
 
-(b) **Product forks** — during any segment, whenever a station surfaces a
-    genuine product decision (not an implementation detail). The
-    conductor briefs it per the **#475 complex-fork escalation**
-    (`loom-workflow:brief-before-asking`) instead of letting the station
-    improvise a default — the same discipline #475 established for
-    complex forks inside SDD applies here at the pipeline level.
+(a) **Change-id minting** — before Segment 1; the human names `docs/loom/<change-id>/`.
 
-(c) **Cost policy** — before each segment. The human confirms (or
-    revises) the token budgets and model-tier policy for the segment
-    about to run; a stale budget/model confirmation from a prior segment
-    is never silently reused across a segment boundary.
+(b) **Product forks** — when any segment surfaces a genuine product decision, brief it via the **#475 complex-fork escalation** (`loom-workflow:brief-before-asking`); never improvise a default.
 
-(d) **Final merge** — after Segment 3. The pipeline **never merges**. The
-    conductor's output is PR branches + the run ledger; a human takes it
-    from there. This mirrors gate (b)'s stance: judgment-bearing actions
-    are never automated inside the conductor.
+(c) **Cost policy** — before each segment, reconfirm or revise that segment's budgets and model tier; never reuse prior confirmation silently.
+
+(d) **Final merge** — after Segment 3. The pipeline never merges; it returns PR branches plus the ledger for human action.
+
+Gate (b) covers product judgment, not ordinary implementation details. Gate
+(c) is deliberately per-segment because later phases have different cost
+profiles; a confirmation is not durable across a segment boundary. Gate (d)
+also bounds authorization: producing a reviewable branch does not authorize a
+push, merge, or equivalent judgment-bearing action.
 
 ## §Driver prohibitions
 
@@ -174,25 +116,20 @@ for the human's answer before the next Workflow call.
 - The driver never produces verdicts.
 - The driver never merges.
 
-Judgment stays in the four Workflow-driven station plugins (cross-plugin delegation contract)
-— and in loom-design's discovery station, the fifth loom station, which the conductor
-never drives at all — the conductor only orchestrates and records.
+Judgment remains in the four Workflow-driven station plugins (cross-plugin delegation contract); discovery is the fifth station and is never driven.
+Under the **stable-prefix** convention, append the per-change payload to
+cacheable station preambles — appended, never prepended.
 
-**Stable-prefix dispatch convention**: station preambles are
-stable/cacheable; the per-change payload is appended, never prepended —
-prepending would invalidate the cache on every dispatch.
+## §Batch mode — frozen decisions, unattended sequential queue
 
-## §Batch mode — freeze many changes, run the queue unattended
+Batch mode moves gates (a) and (c) to freeze time, then runs Segment 3
+sequentially. Parallel execution remains parked in `loom-design/README.md`.
 
-Batch mode moves every per-change human decision (gates (a) and (c)) to
-**freeze time**, so a whole queue of changes runs Segment 3 unattended —
-walk away, come back to N reviewable PR branches. Sequential only; a
-parallel variant is parked (`loom-design/README.md` §Parked items).
+### Queue intent and machine state
 
-### Queue file — `docs/loom/QUEUE.toml`
-
-Human-edited, in the target project, one `[[change]]` array-of-tables entry
-per change, authored at freeze time:
+`docs/loom/QUEUE.toml` is the human's **intent**, hand-edited only at freeze
+time. Each `[[change]]` requires `id`, project-relative `plan`, and
+`budgets.run`; `budgets.perStation` and `models` are optional.
 
 ```toml
 [[change]]
@@ -204,163 +141,118 @@ run = 200000
 perStation = { code = 40000, review = 20000 }
 ```
 
-Required: `id`, `plan` (project-relative path to the change's plan),
-`budgets.run`. Optional: `budgets.perStation`, `models`.
-
-### Intent vs. state — two files, two owners
-
-`QUEUE.toml` is the human's **intent** — hand-edited at freeze time, never
-machine-written. `docs/loom/queue-state.json` is the machine's **state** —
-owned by `batch_queue.py` alone (records `RUNNING`/`DONE`/`FAILED`/`SKIPPED`
-per change id), never hand-edited. Neither file writes the other.
+`docs/loom/queue-state.json` is the machine's **state**, owned only by
+`batch_queue.py`, with `RUNNING`/`DONE`/`FAILED`/`SKIPPED` per id. Neither
+file writes the other.
 
 ### Freeze predicate
 
-An entry is eligible for `next` under either of two forms, both requiring
-the plan file to be committed:
+The plan must be committed, and one form must hold:
 
-- **Change-folder form** — `docs/loom/<id>/` exists: it must pass the
-  loom-design validator (exit 0). A folder that exists but fails is a hard
-  reject, never a fallback.
-- **Brief+plan form** — no `docs/loom/<id>/` folder: the plan itself must
-  carry a `Plan-document-reviewer verdict: PASS` line (the
-  brainstorm→brief→plan path produces exactly this and no change folder).
+- **Change-folder form** — `docs/loom/<id>/` exists and its loom-design validator exits 0. Failure is a hard reject, never fallback.
+- **Brief+plan form** — the folder is absent and the plan contains `Plan-document-reviewer verdict: PASS`.
 
-An ineligible entry skips before any worktree exists; an uncommitted plan
-(invisible to the worktree, which branches from HEAD) is caught after
-worktree creation — that entry is SKIPPED and its just-created worktree
-and branch are torn down. No segment 2.5: freezing
-happens interactively before queueing, never inside the unattended run.
+Ineligible entries skip before worktree creation. A plan invisible from HEAD
+is detected after creation, marked SKIPPED, and its new worktree/branch removed.
+There is no segment 2.5: freeze interactively before queueing.
 
-### The dispatcher-only loop
+The two freeze forms are alternatives, not fallback stages. If a change folder
+exists, its failed validator cannot be bypassed by finding a PASS line in the
+plan. Conversely, the brief+plan form applies only when that folder does not
+exist. This keeps freeze-time human intent stable during the unattended run
+and prevents the dispatcher from manufacturing readiness.
 
-A fresh session **taking over an in-progress batch** (resuming after a
-restart, a new session picking up someone else's queue) MUST invoke
-`batch_queue.py reconcile` once, BEFORE its first `next` call — this
-reconciles any entry left RUNNING
-by the prior session against wf-record evidence (see below) before the loop
-resumes. A session that starts a batch from empty state has nothing to
-reconcile and may skip straight to `next`.
+### Safe invocation
 
-### Invocation contract: pass an argument vector, not shell text
+Every `batchQueueArgv` below is an **argument vector (argv)** beginning with
+the verb, never shell text. Each dynamic project path, id, run id, session
+directory, reason, and plugin root occupies one literal array element.
 
-Every `batchQueueArgv` below is an **argument vector (argv)** and a closed
-schema for `batch_queue.py` (it starts with the verb, not the interpreter).
-Never interpolate a project path, change id, run id, session directory,
-reason, or plugin root into command text: each dynamic value occupies exactly
-one array element and is therefore passed literally, including quotes, dollar
-signs, command substitutions, backticks, semicolons, and newlines.
-
-When the host supports direct process invocation, pass
-`["python3", batchQueueScript, *batchQueueArgv]` without a shell. When the host
-accepts only a Bash command string, encode `batchQueueArgv` as a
-UTF-8 **JSON list of strings**, then apply Python stdlib
-`base64.urlsafe_b64encode(json_bytes).decode("ascii").rstrip("=")`. Confirm the
-result matches `[A-Za-z0-9_-]+`, substitute it for the sole placeholder below,
-and execute this fixed command shape:
+Prefer `["python3", batchQueueScript, ...batchQueueArgv]` without a shell. For
+a Bash-string-only host, encode the argv as a UTF-8 **JSON list of strings**,
+then `base64.urlsafe_b64encode(json_bytes).decode("ascii").rstrip("=")`;
+require `[A-Za-z0-9_-]+` and substitute it as the sole payload in:
 
 `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/pipeline/argv_exec.py" <URL_SAFE_BASE64_JSON_ARGV>`
 
-The bridge decodes and validates the closed schema, then calls the packaged
-`batch_queue.py` directly; it never sends decoded content through a shell.
+The bridge validates the closed schema and directly calls packaged
+`batch_queue.py`; decoded data never reaches a shell. Set `pluginRoot` to
+rendered `${CLAUDE_PLUGIN_ROOT}` and `batchQueueScript` to
+`pluginRoot + "/scripts/pipeline/batch_queue.py"`.
 
-Set `pluginRoot` to the host-rendered `${CLAUDE_PLUGIN_ROOT}` value and
-`batchQueueScript` to
-`pluginRoot + "/scripts/pipeline/batch_queue.py"`. For takeover reconciliation:
+### Dispatcher lifecycle
 
-```text
-batchQueueArgv = ["reconcile", "--project", projectPath]
-```
+A fresh session taking over an active batch MUST run reconciliation before
+its first `next`; an empty-state start may omit it:
 
-Below, `batch_queue.py next` is shorthand for an argv array whose executable
-path remains below the installed `${CLAUDE_PLUGIN_ROOT}`.
+`batchQueueArgv = ["reconcile", "--project", projectPath]`
 
-The main agent then repeats exactly this loop, one iteration per change,
-until `next` prints `{"done": true}` or exits 3 (circuit-breaker HALT). While
-non-terminal entries (QUEUED/RUNNING) remain, `next` instead prints
-`{"done": false, "non_terminal": [...]}`, enumerating each blocking entry by
-`id`/`status`/`reason` — `done` never goes silent on a stuck batch (see the
-exit-code table below):
+This reconciliation checks entries left RUNNING by the prior session against
+wf-record evidence. Below, `batch_queue.py next` means the argv form using the
+installed packaged script, not shell-composed command text.
 
-1. `batchQueueArgv = ["next", "--project", projectPath, "--skills-root", pluginRoot]`
-   — this also runs `reconcile` internally at its top, so per-iteration
-   staleness is caught even without a takeover.
-2. `Workflow({scriptPath: "<resolved assets/loom-pipeline.js>", args: <the JSON stdout from step 1, verbatim>})`
-3. Immediately after `Workflow()` returns, the dispatcher MUST call
-   `batchQueueArgv = ["mark-running", id, "--run-id", workflowRunId, "--session-dir", sessionDir, "--project", projectPath]`
-   Here `sessionDir` contains the `workflows/` subfolder; it is not that
-   subfolder itself.
-   — without this the runId is never recorded and `reconcile`'s
-   definitive-evidence path has nothing to check against.
+Then repeat until `next` reports `{"done": true}` or exits 3. If non-terminal
+QUEUED/RUNNING entries remain, it reports `{"done": false,
+"non_terminal": [{"id", "status", "reason"}, ...]}` rather than silently
+claiming completion.
 
-   **Deriving `--session-dir`**: typical shape is
-   `~/.claude/projects/<project-slug>/<session-id>/` — the directory that
-   CONTAINS `workflows/wf_<runId>.json`, one level above `workflows/`.
-   (Grounding: this wf-record layout is undocumented host-internal
-   surface — not in code.claude.com/docs/en/workflows.md or sessions.md —
-   confirmed against 16 observed `wf_*.json` files, all terminal status;
-   see `docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md` §4c,
-   verified 2026-07-18. Same grounding-note convention as the `resumeRunId`
-   citation above.)
+Run one iteration per change and preserve the returned JSON unchanged. The
+dispatcher does not inspect TOML, choose branches, build git commands, or
+reinterpret a failure. `next` owns selection, freeze validation, worktree
+creation, and Workflow arguments; the later state-recording steps attach host
+evidence and record the terminal outcome. This ownership split is what makes a
+restarted session safe to reconcile.
 
-   **Fallback**: if the dispatcher cannot determine its own session
-   directory, skip this `mark-running` call rather than guess a path —
-   the entry then has no `sessionDir` recorded, so `reconcile` can only
-   ever resolve it via the staleness path (`SUSPECT`, human decides),
-   never via definitive wf-record evidence.
-4. `batchQueueArgv = ["mark", id, outcome, "--project", projectPath, "--run-id", workflowRunId]`
-   Here outcome is exactly `done` or `failed`.
+1. `batchQueueArgv = ["next", "--project", projectPath, "--skills-root", pluginRoot]` — also reconciles internally.
+2. Call `Workflow({scriptPath: "<resolved assets/loom-pipeline.js>", args: <step-1 JSON verbatim>})`.
+3. Immediately on return call `batchQueueArgv = ["mark-running", id, "--run-id", workflowRunId, "--session-dir", sessionDir, "--project", projectPath]` so reconcile has definitive evidence. `sessionDir` contains the `workflows/` subfolder, not that subfolder itself. Typical shape: `~/.claude/projects/<project-slug>/<session-id>/`, containing `workflows/wf_<runId>.json`. **Grounding:** this undocumented host-internal layout was confirmed across 16 terminal files; see `docs/loom/audits/2026-07-18-agent-loop-convergence-audit.md` §4c (2026-07-18). **Fallback:** if the dispatcher cannot locate its session directory, skip this `mark-running` call rather than guess; reconcile can then reach only stale `SUSPECT`, never definitive wf-record evidence.
+4. `batchQueueArgv = ["mark", id, outcome, "--project", projectPath, "--run-id", workflowRunId]`, where outcome is exactly `done` or `failed`.
 
-The main agent is **dispatcher-only**: it never parses the queue file, it
-never composes git commands, and it never diagnoses failures mid-batch —
-all of that is script-owned (`batch_queue.py`) or deferred to the
-end-of-batch human report below.
+The main agent is **dispatcher-only**: it never parses the queue file, it never composes git commands, and it never diagnoses failures mid-batch. The script owns those mechanics and the human receives the end report.
 
 ### Recovery verbs — human operator only
 
-Two subcommands exist for a human operator to correct a stuck entry; the
-dispatcher loop above never calls either on its own:
+The dispatcher never calls these autonomously:
 
-- `batchQueueArgv = ["reset", id, "--project", projectPath, "--reason", reason]`
-  — requeues a RUNNING or FAILED entry back to QUEUED (`attempts += 1`,
-  audit line appended). Use when a stuck or wrongly-failed entry should
-  simply run again. The reason is optional; when absent, omit both elements
-  `"--reason"` and `reason` from the array.
-- `batchQueueArgv = ["force-fail", id, "--reason", reason, "--project", projectPath]`
-  — transitions a RUNNING entry straight to FAILED (audit line appended;
-  counts toward the circuit breaker). Use when an entry is confirmed dead
-  and should not be retried automatically.
+- `batchQueueArgv = ["reset", id, "--project", projectPath, "--reason", reason]` requeues RUNNING/FAILED to QUEUED, increments attempts, and appends audit. The reason is optional; if absent, omit both elements.
+- `batchQueueArgv = ["force-fail", id, "--reason", reason, "--project", projectPath]` moves confirmed-dead RUNNING to FAILED with audit and breaker impact.
 
-`reconcile` (both the standalone verb and `next`'s internal call) surfaces
-two informational flags for the human operator — it never mutates state
-for either of these two flags:
+Reconcile surfaces two informational flags and never mutates state for either
+of these two flags: **SUSPECT** means stale RUNNING without definitive evidence
+(human uses reset/force-fail); **SUSPECT-COMPLETE** means wf-record completion
+without a recorded outcome (human confirms, then uses mark). Definitive
+failed/killed wf-record evidence instead auto-transitions RUNNING to
+**AUTO-FAILED**, a real breaker-visible mutation that may trigger HALT.
 
-- **`SUSPECT`** — a RUNNING entry with no definitive wf-record evidence,
-  stale past its grace window. Informational only; the human decides via
-  `reset` or `force-fail` above.
-- **`SUSPECT-COMPLETE`** — wf-record evidence says the workflow finished,
-  but the entry was never marked done/failed. The human confirms the
-  actual outcome and records it via `mark`.
-
-On definitive `failed`/`killed` wf-record evidence, reconcile instead
-auto-transitions the RUNNING entry straight to `AUTO-FAILED` — a real,
-breaker-visible mutation (unlike the two informational flags above) that
-can trip HALT, with no human-confirmation step.
+Do not treat either SUSPECT flag as a workflow outcome. `reset` is appropriate
+when the human wants another attempt; `force-fail` is appropriate only after
+confirming the run is dead. SUSPECT-COMPLETE requires checking the actual
+result before `mark`. These are operator recovery decisions, so the unattended
+dispatcher may surface them but cannot select a recovery verb.
 
 ### `next` exit codes
 
 | Code | Meaning |
 |---|---|
-| 0 | dispatched an entry (Workflow args JSON on stdout), or the queue is done (`{"done": true}`), or the queue is stuck with non-terminal entries remaining (`{"done": false, "non_terminal": [{"id", "status", "reason"}, ...]}`) |
-| 1 | fail-loud error (malformed `QUEUE.toml`, etc.) |
-| 2 | argparse usage error |
-| 3 | circuit-breaker HALT — 2 consecutive `FAILED` entries; `--override-halt` bypasses after human review |
+| 0 | Dispatched JSON, `{"done": true}`, or explicit stuck `{"done": false, "non_terminal": [...]}`. |
+| 1 | Fail-loud error such as malformed `QUEUE.toml`. |
+| 2 | Argparse usage error. |
+| 3 | circuit-breaker HALT after 2 consecutive FAILED entries; `--override-halt` requires human review. |
 
-### End of batch
+### Terminal state
 
-`batchQueueArgv = ["status", "--project", projectPath]`
-prints the one-screen report a fresh session reads first. A finished batch
-of N changes leaves N ledgers at
-`<projectPath>/docs/loom/<changeId>/pipeline-ledger.md` and N PR-ready
-`loom/<id>` branches — merge stays human (gate (d) is unchanged by batch
-mode).
+`batchQueueArgv = ["status", "--project", projectPath]` prints the report a
+fresh session reads first. A completed N-change batch leaves N
+`docs/loom/<changeId>/pipeline-ledger.md` files and N PR-ready `loom/<id>`
+branches. Merge remains human under gate (d).
+
+The status report is also the handoff surface after interruption: read it
+before deciding whether the queue is terminal, halted, or waiting for an
+operator. Terminal means every entry has left QUEUED/RUNNING and the promised
+ledgers and branches exist; an exit-0 response containing non-terminal entries
+is explicitly not completion. Preserve that distinction when reporting batch
+results, and never present a paused or suspect queue as successfully finished.
+
+The final branch/ledger pair remains review material, not proof of merge or
+deployment. The conductor's authority ends at this terminal state, matching
+the same human-only merge boundary used by interactive segmented mode.
