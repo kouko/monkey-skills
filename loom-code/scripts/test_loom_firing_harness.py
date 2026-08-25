@@ -404,8 +404,16 @@ def test_compare_hosts_normalizes_baseline_candidate_replicates(tmp_path, monkey
     raw_dir = tmp_path / "raw"
     baseline.mkdir()
     candidate.mkdir()
+    for root in (baseline, candidate):
+        (root / ".codex-plugin").mkdir()
+        (root / ".codex-plugin" / "plugin.json").write_text(
+            '{"name": "loom-code"}\n', encoding="utf-8"
+        )
+
+    invocations = []
 
     def runner(invocation):
+        invocations.append(invocation)
         changed = (
             invocation.root_label == "candidate"
             and invocation.record["query"] == "diverge"
@@ -436,6 +444,38 @@ def test_compare_hosts_normalizes_baseline_candidate_replicates(tmp_path, monkey
     assert {item["plugin_root"] for item in inconclusive["runs"]} == {str(baseline), str(candidate)}
     assert all("text" not in item["observable"] for item in inconclusive["runs"])
     assert {item["verdict"] for item in inconclusive["comparisons"]} == {"INCONCLUSIVE"}
+    codex_invocations = [item for item in invocations if item.host == "codex"]
+    assert {item.codex_home for item in codex_invocations} == {
+        raw_dir / "codex-home-baseline", raw_dir / "codex-home-candidate",
+    }
+    assert all(item.environment["CODEX_HOME"] == str(item.codex_home) for item in codex_invocations)
+
+    commands = []
+
+    class Completed:
+        returncode = 0
+        stdout = "{}\n"
+        stderr = ""
+
+    def fake_subprocess(argv, *, env, **_kwargs):
+        commands.append((tuple(argv), env["CODEX_HOME"]))
+        return Completed()
+
+    monkeypatch.setattr(loom_firing_harness.subprocess, "run", fake_subprocess)
+    loom_firing_harness.run_host(codex_invocations[0])
+    baseline_home = raw_dir / "codex-home-baseline"
+    assert commands == [
+        (
+            ("codex", "plugin", "marketplace", "add", str(baseline_home / "marketplace")),
+            str(baseline_home),
+        ),
+        (
+            ("codex", "plugin", "add", "loom-code@loom-harness-baseline"),
+            str(baseline_home),
+        ),
+        (codex_invocations[0].argv, str(baseline_home)),
+    ]
+    assert (baseline_home / "marketplace" / "loom-code" / ".codex-plugin" / "plugin.json").is_file()
 
     compared = loom_firing_harness.compare_hosts(
         [{**records[0], "repeat": True}], baseline, candidate,
@@ -454,13 +494,17 @@ def test_compare_hosts_normalizes_baseline_candidate_replicates(tmp_path, monkey
     assert "--plugin-dir" not in codex_argv
 
     corpus = tmp_path / "corpus.jsonl"
+    comparison_out = tmp_path / "comparison.json"
     corpus.write_text(json.dumps(records[0]) + "\n", encoding="utf-8")
     monkeypatch.setattr(loom_firing_harness, "run_host", runner)
     loom_firing_harness.main([
         "compare", "--corpus", str(corpus), "--baseline", str(baseline),
         "--candidate", str(candidate), "--raw-dir", str(raw_dir),
+        "--out", str(comparison_out),
     ])
-    assert '"verdict": "INCONCLUSIVE"' in capsys.readouterr().out
+    stdout = capsys.readouterr().out
+    assert '"verdict": "INCONCLUSIVE"' in stdout
+    assert json.loads(comparison_out.read_text(encoding="utf-8"))["comparisons"]
 
 
 def test_shipped_corpus_validates():

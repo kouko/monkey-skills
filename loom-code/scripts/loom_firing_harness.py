@@ -59,7 +59,9 @@ Stdlib only.
 import argparse
 from dataclasses import dataclass
 import json
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 
@@ -359,14 +361,58 @@ class HostInvocation:
     record: dict
     replicate: int
     argv: tuple[str, ...]
+    codex_home: Path | None
+    environment: dict[str, str]
 
 
 def run_host(invocation: HostInvocation) -> str:
     """Execute one host invocation; callers can replace this in unit tests."""
+    env = {**os.environ, **invocation.environment}
+    if invocation.host == "codex":
+        _prepare_codex_root(invocation, env)
     proc = subprocess.run(
-        invocation.argv, capture_output=True, text=True, check=False
+        invocation.argv, capture_output=True, text=True, check=False, env=env
     )
     return proc.stdout + proc.stderr
+
+
+def _prepare_codex_root(invocation: HostInvocation, env: dict[str, str]) -> None:
+    """Install one source root into its own disposable Codex home."""
+    if invocation.codex_home is None:
+        raise ValueError("Codex invocation requires an isolated CODEX_HOME")
+    manifest = invocation.plugin_root / ".codex-plugin" / "plugin.json"
+    try:
+        plugin_name = json.loads(manifest.read_text(encoding="utf-8"))["name"]
+    except (OSError, json.JSONDecodeError, KeyError) as exc:
+        raise ValueError("Codex plugin root must contain a named .codex-plugin manifest") from exc
+    if not isinstance(plugin_name, str) or not plugin_name:
+        raise ValueError("Codex plugin root manifest name must be a non-empty string")
+    marketplace = invocation.codex_home / "marketplace"
+    marker = invocation.codex_home / ".loom-harness-prepared"
+    if not marker.exists():
+        invocation.codex_home.mkdir(parents=True, exist_ok=True)
+        if marketplace.exists():
+            shutil.rmtree(marketplace)
+        shutil.copytree(invocation.plugin_root, marketplace / plugin_name, symlinks=True)
+        manifest_dir = marketplace / ".claude-plugin"
+        manifest_dir.mkdir()
+        marketplace_name = f"loom-harness-{invocation.root_label}"
+        (manifest_dir / "marketplace.json").write_text(
+            json.dumps({
+                "name": marketplace_name,
+                "owner": {"name": "loom-harness"},
+                "plugins": [{"name": plugin_name, "source": f"./{plugin_name}/"}],
+            }),
+            encoding="utf-8",
+        )
+        for command in (
+            ("codex", "plugin", "marketplace", "add", str(marketplace)),
+            ("codex", "plugin", "add", f"{plugin_name}@{marketplace_name}"),
+        ):
+            result = subprocess.run(command, capture_output=True, text=True, check=False, env=env)
+            if result.returncode:
+                raise RuntimeError("Codex plugin installation failed for comparison root")
+        marker.write_text("prepared\n", encoding="utf-8")
 
 
 def host_argv_for_root(
@@ -495,6 +541,8 @@ def compare_hosts(
                     invocation = HostInvocation(
                         host, root_label, plugin_root, record, replicate,
                         host_argv_for_root(host, plugin_root, record, max_turns=max_turns, working_directory=cwd),
+                        raw_directory / f"codex-home-{root_label}" if host == "codex" else None,
+                        {"CODEX_HOME": str(raw_directory / f"codex-home-{root_label}")} if host == "codex" else {},
                     )
                     transcript = runner(invocation)
                     raw_path = raw_directory / f"{record_index}-{host}-{root_label}-{replicate}.jsonl"
@@ -557,7 +605,10 @@ def _cmd_compare(args: argparse.Namespace) -> None:
         max_turns=args.max_turns,
         working_directory=args.working_directory,
     )
-    print(json.dumps(result, ensure_ascii=False, default=list))
+    output = json.dumps(result, ensure_ascii=False, default=list)
+    if args.out:
+        args.out.write_text(output + "\n", encoding="utf-8")
+    print(output)
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -580,6 +631,7 @@ def main(argv: list[str] | None = None) -> None:
     compare_parser.add_argument("--baseline", required=True, type=Path)
     compare_parser.add_argument("--candidate", required=True, type=Path)
     compare_parser.add_argument("--raw-dir", required=True, type=Path)
+    compare_parser.add_argument("--out", type=Path)
     compare_parser.add_argument("--replicates", type=int, default=2)
     compare_parser.add_argument("--max-turns", type=int, default=_MAX_TURNS_FLOOR)
     compare_parser.add_argument("--working-directory", type=Path, default=Path.cwd())
