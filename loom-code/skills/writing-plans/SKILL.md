@@ -72,6 +72,8 @@ If the critical-path **depth** exceeds 5, the brief is too big. **Do not silentl
 1. **Route back to brainstorming**: the Smallest End State (Axis 3) was not actually smallest — it baked in a long sequential dependency chain. Surface this and ask the user to re-cut.
 2. **Split into multiple sequential briefs**: if the work genuinely needs a chain deeper than 5 and the user agrees, write *N* separate brief files (each with depth ≤5), explicitly labeled `<topic>-part-{1..N}.md`. Each brief is a standalone input to its own `writing-plans` run and its own SDD run. **Split = N brief files, not N plans from one brief.** A plan is 1-to-1 with one brief — `## Part 1 / ## Part 2` sections inside a single plan file are not valid splitting.
 
+The two options are a closed list: there is no depth-limit exception or “record the risk and continue” path.
+
 Deep chains usually reveal a discovery failure; wide-but-shallow plans are valid.
 
 **Why depth `5` is a heuristic, not a law** — the compounding-error rationale and worked example: [`references/design-evidence.md`](references/design-evidence.md).
@@ -134,7 +136,7 @@ A qualifying amendment records a one-line skip note in the plan's `Notes` naming
 
 ## Kickoff briefing
 
-After PASS and before SDD, follow [`references/kickoff-briefing.md`](references/kickoff-briefing.md): batch-brief 1–3 one-way-door decisions and foreseeable forks; route the rest to the Decision Log. Show the plan using [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md) doc mode per its firing conditions.
+After PASS and before SDD, kickoff is mandatory even for a small or obvious plan. Never skip it. Follow [`references/kickoff-briefing.md`](references/kickoff-briefing.md): batch-brief 1–3 one-way-door decisions and forks; route others to the Decision Log. Show the plan through [`adjudication-view`](../using-loom-code/protocols/adjudication-view.md) doc mode per its firing conditions.
 
 **Progress surface.** From birth, the plan carries `Goal:`, `Stage:`, per-task `Status:`, an optional `Steps:` title block, and per-task `Gloss:` lines. Steps titles and Gloss lines are written at plan time in the user's conversation language per §Language policy. After PASS, run repo-root `scripts/plan_card.py` as `python3 scripts/plan_card.py <plan-path>`,
 otherwise `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path>`. Relay it — fire-and-continue, not a new pause — per `loom-code/hooks/family-relay.md §(a2) Progress card`; if family-relay or both scripts are absent, render the four fields inline: goal, task table, stage, next. Apply [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md) doc mode per its firing conditions.
@@ -212,7 +214,7 @@ Two per-task fields — `Independent` and `Files touched` — signal parallel-di
 
 ## Consuming a loom-design change-folder
 
-Alongside the brainstorming brief, writing-plans can consume a **validated loom-design change-folder** — `docs/loom/<change-id>/` emitted by `loom-design:spec-expansion`. "Validated" means the change-folder is **`validate_spec_output.py`-clean** (the validator ran and exited 0). The change-folder's `specs/<capability>/spec.md` delta is the structure `validate_spec_output.py` enforces: `### Requirement:` blocks each containing one or more `#### Scenario:` (GIVEN / WHEN / THEN) acceptance criteria.
+Writing-plans can consume a validated `docs/loom/<change-id>/` from `loom-design:spec-expansion`. Validated means `validate_spec_output.py` exited 0 on its `specs/<capability>/spec.md` `### Requirement:` blocks and `#### Scenario:` criteria.
 
 **Detecting which change-folder to consume.** Evaluate these layers in order; stop on resolution. Evidence: `docs/loom/research/2026-07-10-change-binding-and-lifecycle-research.md` and [`references/design-evidence.md`](references/design-evidence.md).
 
