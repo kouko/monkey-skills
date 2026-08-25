@@ -6,170 +6,137 @@ version: 0.1.0
 
 # business-value
 
-The **adversarial worth-it check**. The job: before you sink real time into a
-product-shaped idea, decide honestly whether **this** idea deserves **your** time
-budget — over everything else that same time could go to. It produces a short,
-git-diffable `business-value.md` so the reasoning survives for the re-reader six
-months later.
+Decide whether this product-shaped idea deserves the user's fixed time budget
+over its alternatives. Produce a short, git-diffable `business-value.md` whose
+reasoning remains useful later.
 
-## Register — Shape Up betting, NOT Cagan viability
+## Register and executor
 
-This is a **betting** call in the Shape Up sense (Basecamp's method: bet a
-**fixed time-box** on an idea — *"is this worth my time budget?"*) — a personal
-appetite decision, bounded and reversible. It is explicitly **NOT** Cagan-style
-business viability (SVPG's market-level assessment): no market sizing, no
-revenue model, no GTM. Those are a different profession (see the delegation
-boundary below).
-Frame every question as *how I spend a fixed time budget*, never *how big the
-market is*.
+This is Shape Up betting: a bounded, reversible appetite decision about *worth
+my time budget*. It is **not Cagan business viability**. Do not size markets,
+model revenue, or create GTM strategy here.
 
-## Executor model — who does what
+Keep the frame personal and comparative: ask whether this idea earns a fixed
+appetite over everything else that appetite could buy. Do not turn the exercise
+into a forecast of market size or company success. The output records a choice,
+its evidence, and its displaced alternative so a later reader can understand
+the bet without reconstructing the conversation.
 
-**You (the agent running this skill) are the executor.** You supply the LLM
-reasoning — running the interrogation, weighing the answers, drafting the
-recommendation and pushing back on hand-waving. There is no external runtime and
-no API key; the method rides the host agent you are already in. The one artifact
-is `business-value.md`, authored from `assets/business-value-template.md`.
+**You (the agent running this skill) are the executor.** Interrogate the user,
+challenge hand-waving, weigh answers, propose the verdict, and author the
+artifact. There is no separate runtime or API. Start from
+`assets/business-value-template.md`.
 
-## When it fires — decidable trigger enumeration
+## Fire or skip
 
-This step is **optional**. A weak-model session must be able to decide fire-vs-skip
-**without judgment**, so the conditions are enumerated, not vibes.
+This optional check uses explicit guards so weak models need no judgment.
 
 **Fire when ANY of:**
 
-- **(a)** the outcome is **for others** — it will be **published** or **maintained**
-  (someone other than you-right-now depends on it; a **team-internal tool counts
-  as for-others**);
-- **(b)** **multiple ideas compete** for the **same time budget** (you can only
-  build one now);
-- **(c)** it means a **meaningful resource spend** (non-trivial hours, money, or
-  ongoing upkeep).
+- **(a)** the outcome is **for others**: it will be published or maintained;
+  team-internal tools count;
+- **(b)** multiple ideas compete for the same time budget; or
+- **(c)** it requires meaningful resource spend: non-trivial time, money, or
+  continuing upkeep.
 
-**Skip silently when** (negative-guard style — emit **no** noise, do not announce
-the skip):
+**Skip silently when:**
 
-- it is a **personal tool** for yourself only (throwaway, private, unpublished); OR
-- a **GO is already decided** by the user (they have committed; do not re-litigate
-  — an **incremental feature on an already-shipped product is a decided GO**,
-  fire only if the increment itself meets (b) or (c)).
+- it is a personal tool for the user alone: private, throwaway, unpublished; OR
+- a GO is already decided by the user. An incremental feature on an
+  already-shipped product is a decided GO unless that increment independently
+  meets (b) or (c).
 
-When skipped, **proceeding downstream is the implicit GO** — do **not** write an
-empty `business-value.md`. A skipped check leaves no artifact; the absence *is*
-the signal, and a blank file would be a false audit record. ("Silently" bounds
-the workflow — no artifact, no interrogation; a one-line conversational note
-that you are proceeding is fine, going mute is not the goal.)
+Silent skip means no interrogation and **no artifact**. Downstream progress is
+the implicit GO; never create an empty `business-value.md`. A brief note that
+work is proceeding is allowed.
 
-## Re-entrant — a checkpoint, not a one-way gate
+## Re-entrant interrogation
 
-This check is **re-entrant**. It may run on **rough evidence** before
-`user-insights` has done its research, and be **revisited** after research
-deepens (a `NEEDS-MORE-RESEARCH` verdict is the explicit invitation to come back).
-It is a **checkpoint** you may pass through more than once — **not a one-way gate**
-that locks a decision forever. Re-running it and overwriting `business-value.md`
-with a firmer verdict is the intended flow, not a violation.
+This is a **re-entrant checkpoint, not a one-way gate**. It may run on rough
+evidence, then be revisited and overwrite the artifact after research. A
+`NEEDS-MORE-RESEARCH` verdict explicitly invites that return.
 
-## The interrogation — one question at a time
+Ask the user **one question at a time**. Let each answer determine the next
+question, reject aspirations presented as evidence, and cover all three axes:
 
-Grill the **user** with **value-judgment questions only**, **one question at a
-time** (never a wall of questions — ask, hear the answer, let it steer the next
-one). Cover three axes; push back on any answer that is an aspiration rather than
-a checkable reason:
+1. **Why now?** Why now rather than later or never? What changes if they wait?
+2. **Why me?** Why this user rather than another person, an existing tool, or
+   nobody? What advantage or specific itch do they have?
+3. **Opportunity cost.** What concrete alternative loses this time? If nothing
+   is displaced, the appetite claim is hollow.
 
-1. **Why now?** — why is this the right moment, versus later or never? What
-   changes if you wait?
-2. **Why me?** — why you specifically, versus someone else / an existing tool /
-   not at all? What is the unfair advantage or the itch only you feel?
-3. **Opportunity cost** — what does this time **NOT** go to? Name the concrete
-   thing you are giving up. If nothing real is displaced, the appetite claim is
-   hollow.
+Ask only value-judgment questions. Feasibility, need mapping, and implementation
+are outside this skill.
 
-Only **value-judgment** questions belong here. Feasibility, need-mapping, and how
-to build it are **out of jurisdiction** (see boundaries below).
+Concrete answers name an observable change, a specific advantage, or an actual
+competing commitment. When an answer stays abstract, ask for an example rather
+than accepting confidence as evidence. Do not batch the remaining axes into the
+same turn: preserving one-question-at-a-time pacing is part of the method, not
+merely a presentation preference.
 
-## Jurisdiction boundary — delegate, never inline
+## Jurisdiction and authority
 
-**Market sizing / GTM / revenue modeling → delegate to
-`domain-teams:planning-team`.** Follow the cross-plugin delegation contract:
-**pass paths + a structured seed context**, hand the target full authority to run
-its own analysis and gates, and let its verdict flow back — **never inline** that
-analysis into `business-value.md`. If the worth-it call genuinely turns on market
-economics, that is planning-team's turf; record the hand-off and its returned
-verdict, do not reproduce the reasoning here.
+Market sizing, GTM, and revenue modeling go to
+`domain-teams:planning-team`: pass relevant paths plus structured seed context,
+give it authority to run its analysis and gates, and use only its returned
+verdict. **Never inline** that work or its reasoning into `business-value.md`.
 
-**Need-mapping is `user-insights`' profession, not yours.** This skill decides
-*worth-it*; it does **not** map user needs, job stories, or opportunity spaces.
-When the interrogation reveals you don't actually know who this is for or what
-they need, that is a `NEEDS-MORE-RESEARCH` verdict pointing at `user-insights`.
+Need mapping belongs to `user-insights`. Business-value agents **may not map
+user needs**, job stories, or opportunity spaces, and the skills share neither
+artifact nor agent. Unknown users or needs therefore produce
+`NEEDS-MORE-RESEARCH` and a `user-insights` handoff.
 
-## Agent behavioral contract
+The agent renders and recommends the worth-it verdict; ratification remains the
+user's call to ratify. The agent never commits the user's time unilaterally.
+If the user rejects the recommendation, record the user's ratified verdict and
+the disagreement plainly; do not disguise the proposal as the final authority.
 
-- business-value agents **render the worth-it verdict** (GO / NO-GO /
-  NEEDS-MORE-RESEARCH) and author `business-value.md`.
-- business-value agents **may NOT map user needs** — that is `user-insights`'
-  profession; the two skills share **no artifact and no agent** (contract-level
-  professional isolation).
-- The verdict is the user's call to ratify; the agent proposes a recommendation
-  with a one-paragraph rationale, it does not unilaterally commit the user's time.
+## Verdict
 
-## Verdict enum
+Every non-skipped run ends with exactly one recommendation and a one-paragraph
+rationale:
 
-Every non-skipped run ends in exactly one of:
+- **GO** — worth the time budget; continue downstream.
+- **NO-GO** — not worth it now; preserve why to avoid blind re-litigation.
+- **NEEDS-MORE-RESEARCH** — current evidence cannot support the call; route to
+  `user-insights`, or planning-team for market economics, then revisit.
 
-- **GO** — worth the time budget; proceed downstream.
-- **NO-GO** — not worth it now; record why so the decision isn't re-litigated blind.
-- **NEEDS-MORE-RESEARCH** — the worth-it call can't be made on current evidence;
-  route to `user-insights` (or planning-team for market economics), then revisit
-  (re-entrant).
-
-Weak-axis guidance: **one** weak axis with two concrete ones may still net GO —
-name the weak axis in the rationale, never bury it. **Two or more** weak axes →
-NEEDS-MORE-RESEARCH, not a hopeful GO.
+One weak axis alongside two concrete axes may still produce GO, but name that
+weak axis. Two or more weak axes require NEEDS-MORE-RESEARCH, never hopeful GO.
 
 ## Procedure
 
-1. **Check the triggers.** If a skip condition holds, stop silently — no artifact,
-   implicit GO downstream.
-2. **Read the template** — `assets/business-value-template.md` — so the artifact
-   shape (and its verdict enum) is fixed before you write.
-3. **Run the interrogation** one question at a time across why-now / why-me /
-   opportunity-cost. Consult the sibling artifact at
-   `docs/loom/discovery/<date>-<slug>/user-insights.md` for evidence when it
-   exists. When an answer's factual claim is web-checkable in one search,
-   check it and cite — don't leave every axis purely self-attested.
-4. **Delegate** any market/GTM/revenue sub-question to `domain-teams:planning-team`
-   (pass paths + seed context); fold only its returned verdict back in. Host
-   invocation shapes for delegation/handoff live in
-   `../using-loom-design/references/claude-code-tools.md` (Codex:
-   `codex-tools.md` beside it).
-5. **Emit `business-value.md`** into the change's discovery folder at
-   `docs/loom/discovery/<date>-<slug>/business-value.md` (`<date>` = today,
-   `YYYY-MM-DD`; `<slug>` = kebab-case topic; reuse the folder when the same
-   topic already has one), following the template, with a
-   **GO / NO-GO / NEEDS-MORE-RESEARCH** recommendation + one-paragraph
-   rationale.
-6. **Validate, then fix.** Before declaring done, run the discovery validator
-   against the change's discovery folder — resolve the script path to an
-   absolute path and run from the consumer project root:
+1. Apply the fire/skip guards. On skip, stop this check silently with implicit
+   GO and no file.
+2. Read `assets/business-value-template.md` before writing so its shape and
+   verdict enum control the artifact.
+3. Interrogate one question at a time across Why now, Why me, and Opportunity
+   cost. If present, consult
+   `docs/loom/discovery/<date>-<slug>/user-insights.md`. Verify and cite a
+   factual claim when one web search can check it.
+4. Delegate market/GTM/revenue questions to `domain-teams:planning-team` using
+   paths and seed context. Invocation forms are in
+   `../using-loom-design/references/discovery-claude-code-tools.md` and the
+   adjacent `discovery-codex-tools.md`.
+5. Following the template, write
+   `docs/loom/discovery/<date>-<slug>/business-value.md`, where the date is
+   today (`YYYY-MM-DD`) and the topic slug is kebab-case. Reuse an existing
+   folder for the same topic.
+6. From the consumer project root, resolve the validator to an absolute path
+   and pass this argv directly to process execution, never through a shell:
 
-   ```
-   cd <consumer-project-root>
+   ```text
    argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/discovery/validate_discovery_artifacts.py", "<discovery-folder>"]
    ```
 
-   Pass this argv array directly to process execution; never through a shell.
-
-   Fix any flagged issue and re-run, **bounded at 2 attempts**; on the 2nd
-   failure, stop and surface the remaining problems to the user rather than
-   looping silently. The validator tolerates the assess-first greenfield state
-   (`business-value.md` alone, before `user-insights.md` exists) — a fresh
-   first run in that state is not a failure.
-7. On `NEEDS-MORE-RESEARCH`, hand off to `user-insights`; revisit this checkpoint
-   once evidence deepens.
+   Fix reported issues and retry, bounded at 2 attempts. After the second
+   failure, stop and surface the remaining problems to the user. The validator
+   accepts the greenfield first run containing only `business-value.md` before
+   `user-insights.md` exists.
+7. For NEEDS-MORE-RESEARCH, hand off to `user-insights` and revisit when evidence
+   improves.
 
 ## Boundary
 
-Stop at the worth-it one-pager. Do **not** map user needs (`user-insights`), do
-**not** size the market or model revenue (`domain-teams:planning-team`), and do
-**not** design, spec, or build. Those are downstream stations that *read* this
-verdict.
+Stop at the worth-it one-pager. Do not map needs, analyze market economics,
+design, spec, or build. Those downstream stations read this verdict.
