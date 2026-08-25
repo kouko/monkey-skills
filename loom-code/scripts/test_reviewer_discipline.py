@@ -86,9 +86,9 @@ def test_docs_reviewer_rejects_invalid_packet_reviewed_sha():
         "docs-reviewer must classify every absent or invalid packet "
         "reviewed_sha as malformed"
     )
-    assert "do not produce a verdict" in output_contract, (
-        "docs-reviewer must refuse rather than emit a verdict for an "
-        "invalid packet reviewed_sha"
+    assert "verdict: malformed_packet" in output_contract, (
+        "docs-reviewer must refuse observably (MALFORMED_PACKET) rather "
+        "than emit a quality verdict for an invalid packet reviewed_sha"
     )
 
 
@@ -109,8 +109,47 @@ def test_all_reviewer_outputs_echo_only_packet_reviewed_sha():
         assert "missing, non-sha, or `unresolved`" in normalized, (
             f"{name} must reject an invalid packet reviewed_sha"
         )
-        assert "do not produce a verdict" in normalized, (
-            f"{name} must refuse a verdict without a valid packet reviewed_sha"
+        assert "verdict: malformed_packet" in normalized, (
+            f"{name} must refuse observably (MALFORMED_PACKET) without a "
+            "valid packet reviewed_sha"
+        )
+
+
+def test_malformed_packet_refusal_is_observable():
+    """A malformed packet yields MALFORMED_PACKET + missing_fields, never silence.
+
+    Live tests (n=2) showed a "return no verdict" silence instruction is both
+    violated in practice and indistinguishable from a dead agent.  The refusal
+    must therefore be an observable output: ``verdict: MALFORMED_PACKET`` plus
+    a ``missing_fields:`` list naming each absent/invalid packet field.
+    """
+    shared = re.sub(r"\s+", " ", DISCIPLINE.read_text(encoding="utf-8"))
+    assert "return no verdict" not in shared, (
+        "shared discipline must not instruct silent refusal — silence is "
+        "indistinguishable from a dead agent"
+    )
+    assert "verdict: MALFORMED_PACKET" in shared, (
+        "shared discipline must require the observable MALFORMED_PACKET refusal"
+    )
+    assert "missing_fields:" in shared, (
+        "shared discipline must require a missing_fields: list naming each "
+        "absent or invalid packet field"
+    )
+    for name, path in REVIEWERS.items():
+        text = path.read_text(encoding="utf-8")
+        assert "return no verdict" not in text, (
+            f"{name} still carries the silent-refusal instruction"
+        )
+        output_contract = re.sub(
+            r"\s+", " ", text[text.index("## Output contract"):]
+        )
+        assert "MALFORMED_PACKET" in output_contract, (
+            f"{name} output contract must define the MALFORMED_PACKET "
+            "packet-refusal state"
+        )
+        assert "never mintable" in output_contract.lower(), (
+            f"{name} must state MALFORMED_PACKET is never mintable as a "
+            "gate marker"
         )
 
 
