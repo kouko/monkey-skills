@@ -111,7 +111,19 @@ ENVIRONMENT_GOTCHAS = (
 # refusal sentence (Step 3), the "(any quality verdict)" cell narrowing,
 # and the MALFORMED_PACKET-row precedence sentence under the Verdict
 # resolution table (measured 4518 + 12 margin).
-WORD_CEILING = 4521
+# Raised 4530 -> 4521 by the 2026-08-25 seam-contracts arc, round 1:
+# the Step 1 Seam-carry sentence (task's `Seam` lines carried verbatim,
+# owner parser/schema path per payload-bearing seam, adjacent-seams-only
+# bound, pointer to plan-format.md `#### Seam`).
+# Lowered 4521 -> 4496 on 2026-08-25 (same arc, round 2, CI-repair): the
+# CI hard cap in scripts/check-skill-structure.py (CHK-SKL-010) is a
+# fixed 4500, so the round-1 raise still broke CI. Tightened the Step 1
+# Seam-carry sentence and compressed verbose Step 3 / Content-match
+# wording elsewhere in the same file (meaning-preserving only; two
+# initial cuts collided with pinned test strings in
+# test_packet_validate_stations.py / test_subagent_driven_development_skill.py
+# and were restored verbatim) to reach measured 4496.
+WORD_CEILING = 4496
 
 # --- distinctive phrases, whitespace-normalized ---------------------------
 
