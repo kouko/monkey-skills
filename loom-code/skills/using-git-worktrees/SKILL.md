@@ -11,13 +11,10 @@ If you are a subagent dispatched with an explicit role prompt, the parent orches
 
 ## What git worktrees solve
 
-`git worktree` lets one repo have multiple checked-out branches in separate directories simultaneously. Without worktrees, the choices are:
-
-1. **Branch-switch with stash** — `git stash` your work, `git switch other-branch`, do work, `git switch back`, `git stash pop`. Loses the running build artifacts, IDE state, open files. Stash conflicts are a recurring sharp edge.
-2. **Multiple clones** — `git clone` the repo into a second directory. Costs disk space (full `.git/` × N) and de-syncs (each clone has its own remote refs, branch list, hooks).
-3. **Just don't context-switch** — works until reality forces a switch (production bug while feature is in flight).
-
-`git worktree` is a fourth option: one `.git/` shared across N checkouts in N directories, each on its own branch. Cheap to create (no full clone); cheap to destroy (just delete the directory + `git worktree prune`); fully synced (one remote, shared hooks, shared object store).
+`git worktree` gives one repo parallel branch directories: one `.git/` shared
+across N checkouts, each on its own branch. It preserves builds and IDE state
+without stash conflicts or duplicate clones, while sharing refs, hooks, and
+objects.
 
 ## When to use
 
@@ -41,24 +38,10 @@ If you are a subagent dispatched with an explicit role prompt, the parent orches
 
 ## The `.worktrees/` convention
 
-This repo uses (and recommends) the `.worktrees/<branch-slug>/` subdirectory pattern:
-
-```
-repo-root/                   # main checkout, default branch
-├── .git/                    # shared across all worktrees
-├── .gitignore               # contains: .worktrees/
-├── .worktrees/              # excluded from git, holds worktree checkouts
-│   ├── feat-X/              # worktree on branch feat/X
-│   ├── feat-Y/              # worktree on branch feat/Y
-│   └── fix-prod-bug-2026-05/  # worktree on branch fix/prod-bug-2026-05
-└── src/                     # main checkout's files
-```
-
-Why this layout:
-
-- **`.worktrees/` is `.gitignore`'d** — checkouts don't show up as untracked in the main checkout's `git status` (they would otherwise — git sees them as random directories).
-- **Subdirectory of repo root** — finder/explorer/IDE side-by-side navigation; easy to glob (`ls .worktrees/`) all in-flight branches.
-- **Slug-named** — `feat/X` becomes `feat-X/` (slashes → dashes). Mirrors branch name predictably.
+Use `.worktrees/<branch-slug>/` under repo root; ignore `.worktrees/` so its
+checkouts never appear untracked. Slug branch names predictably (`feat/X` →
+`feat-X`). Before creating, run `git check-ignore .worktrees/`; nonzero stops setup — add and commit `.worktrees/` in `.gitignore` first. Then run `git worktree list`; refuse an existing path or a branch already attached to a worktree, but allow an existing unattached branch. Concurrent sessions use
+one worktree and one branch per concurrent session — never share either.
 
 ### Initial setup (one-time per repo)
 
@@ -96,6 +79,7 @@ git worktree prune
 ```
 
 `git worktree remove` refuses if the worktree has uncommitted changes — that's a feature, not a bug. Force with `--force` only if you've verified the changes are intentional throwaways.
+Always confirm before removing a worktree; never discard another session's state.
 
 File operations inside a worktree have sharp edges (e.g. renaming an untracked just-written file needs plain `mv`, not `git mv`) — see [`environment-gotchas`](../using-loom-code/references/environment-gotchas.md).
 
@@ -112,11 +96,11 @@ File operations inside a worktree have sharp edges (e.g. renaming an untracked j
 
 | Agent / user says | Reality | Correct response |
 |---|---|---|
-| *"I'll just stash and switch."* | Repeated stash/switch is the friction worktrees exist to remove. If you're stashing more than once a week to context-switch, you want a worktree. | Set up worktree once; no more stash-and-switch loop. |
-| *"Disk space is precious."* | Worktree shares `.git/`; per-worktree cost is just the checked-out file tree (which you'd need anyway). Cheap. | The cost is the file tree, not duplicated `.git/`. Worry about disk space only if your repo's working tree is multi-GB. |
-| *"I'll clone the repo a second time."* | Full clone = duplicated `.git/` + de-synced refs + duplicated hooks + duplicated config. All the cost, none of the sharing. | Use worktree; it's the same outcome with shared state. |
-| *"Worktrees are confusing."* | One-time setup learning curve; long-term reduces switching friction. Same pattern this very repo uses. | Walk the §The .worktrees/ convention section once; then it's just `git worktree add`. |
-| *"My IDE doesn't handle worktrees well."* | Most modern IDEs do (VS Code, JetBrains, Vim, Emacs). If yours doesn't, open the worktree directory as its own workspace — not the repo root. | Treat each worktree as its own workspace; the IDE never knows it's a worktree. |
+| *"I'll just stash and switch."* | Repeated switching loses state and risks conflicts. | Use one worktree. |
+| *"Disk space is precious."* | Only the file tree is duplicated; `.git/` is shared. | Clone only when separate Git state is required. |
+| *"I'll clone the repo a second time."* | Clones duplicate `.git/`, refs, hooks, and config. | Use a worktree. |
+| *"Worktrees are confusing."* | Setup is one-time. | Follow §The `.worktrees/` convention. |
+| *"My IDE doesn't handle worktrees well."* | Each directory is an ordinary workspace. | Open that directory directly. |
 | 「stash でいい / 用 stash 就好」 | Same rationalization, localized. | Same refusal — worktree for ongoing parallelism. |
 
 ## What this skill does NOT do
