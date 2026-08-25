@@ -63,8 +63,11 @@ def _marker_dir(repo: Path) -> Path:
     return repo / ".git" / "loom"
 
 
+DUMMY_REVIEWED_SHA = "1234567890abcdef1234567890abcdef12345678"
+
 VALID_VERDICT = """\
 standards_version: 2026-06
+reviewed_sha: 1234567890abcdef1234567890abcdef12345678
 verdict: PASS
 dimension_scores:
   security: 5
@@ -96,12 +99,17 @@ def _write_verdict(tmp_path: Path, text: str) -> Path:
 
 
 def _with_reviewed_sha(text: str, reviewed_sha: str) -> str:
-    """Add the terminal verdict provenance field to an otherwise valid verdict."""
+    """Rebind the verdict provenance field to a specific SHA."""
     return text.replace(
-        "standards_version: 2026-06\n",
-        f"standards_version: 2026-06\nreviewed_sha: {reviewed_sha}\n",
+        f"reviewed_sha: {DUMMY_REVIEWED_SHA}\n",
+        f"reviewed_sha: {reviewed_sha}\n",
         1,
     )
+
+
+def _without_reviewed_sha(text: str) -> str:
+    """Strip the verdict provenance field (missing-reviewed_sha cases)."""
+    return text.replace(f"reviewed_sha: {DUMMY_REVIEWED_SHA}\n", "", 1)
 
 
 def _with_simplification_ledger(text: str, ledger: str) -> str:
@@ -159,9 +167,9 @@ def test_review_pass_refuses_terminal_verdict_sha_not_matching_expected_head(
 ):
     repo = _init_repo(tmp_path)
     expected_sha = _head(repo)
-    verdict = VALID_VERDICT
+    verdict = _without_reviewed_sha(VALID_VERDICT)
     if reviewed_sha is not None:
-        verdict = _with_reviewed_sha(verdict, reviewed_sha)
+        verdict = _with_reviewed_sha(VALID_VERDICT, reviewed_sha)
     verdict_file = _write_verdict(tmp_path, verdict)
 
     rc = main(
@@ -186,10 +194,8 @@ def test_review_pass_refuses_duplicate_terminal_verdict_reviewed_sha(tmp_path, c
     expected_sha = _head(repo)
     verdict_file = _write_verdict(
         tmp_path,
-        _with_reviewed_sha(
-            _with_reviewed_sha(VALID_VERDICT, expected_sha),
-            expected_sha,
-        ),
+        _with_reviewed_sha(VALID_VERDICT, expected_sha)
+        + f"reviewed_sha: {expected_sha}\n",
     )
 
     rc = main(
@@ -216,7 +222,8 @@ def test_review_pass_refuses_reviewed_sha_only_inside_fenced_code_block(
     expected_sha = _head(repo)
     verdict_file = _write_verdict(
         tmp_path,
-        VALID_VERDICT + f"\n```yaml\nreviewed_sha: {expected_sha}\n```\n",
+        _without_reviewed_sha(VALID_VERDICT)
+        + f"\n```yaml\nreviewed_sha: {expected_sha}\n```\n",
     )
 
     rc = main(
@@ -241,7 +248,7 @@ def test_review_pass_keeps_non_closing_fence_text_inside_code_block(tmp_path, ca
     expected_sha = _head(repo)
     verdict_file = _write_verdict(
         tmp_path,
-        VALID_VERDICT
+        _without_reviewed_sha(VALID_VERDICT)
         + "\n```yaml\n"
         + "example terminal verdict:\n"
         + "``` explanatory text, not a closing fence\n"
@@ -266,8 +273,12 @@ def test_review_pass_keeps_non_closing_fence_text_inside_code_block(tmp_path, ca
     assert "reviewed_sha: missing" in capsys.readouterr().err
 
 
-def test_review_pass_without_expected_head_keeps_legacy_verdict_contract(tmp_path):
+def test_review_pass_without_expected_head_skips_sha_equality_check(tmp_path):
+    # No --expected-head: a full-length reviewed_sha that does NOT equal
+    # the repo HEAD still mints — presence/shape is unconditional (see
+    # test below), but SHA equality binding is the --expected-head opt-in.
     repo = _init_repo(tmp_path)
+    assert DUMMY_REVIEWED_SHA != _head(repo)
     verdict_file = _write_verdict(tmp_path, VALID_VERDICT)
 
     rc = main(
@@ -276,6 +287,34 @@ def test_review_pass_without_expected_head_keeps_legacy_verdict_contract(tmp_pat
 
     assert rc == 0
     assert (_marker_dir(repo) / "review-pass.json").is_file()
+
+
+@pytest.mark.parametrize(
+    ("verdict_text", "error_fragment"),
+    [
+        (_without_reviewed_sha(VALID_VERDICT), "reviewed_sha: missing"),
+        (_with_reviewed_sha(VALID_VERDICT, "abc123"), "reviewed_sha: invalid"),
+        (_with_reviewed_sha(VALID_VERDICT, "not-hex-" + "g" * 32), "reviewed_sha: invalid"),
+        (_with_reviewed_sha(VALID_VERDICT, "unresolved"), "reviewed_sha: invalid"),
+    ],
+    ids=["missing", "short-sha", "non-hex", "literal-unresolved"],
+)
+def test_verdict_requires_full_sha_without_expected_head(
+    tmp_path, capsys, verdict_text, error_fragment
+):
+    # Fail-closed verdict intake: even with NO --expected-head, a verdict
+    # must carry a full 40-hex reviewed_sha — a SHA-less verdict is
+    # evidence-unbound and must not mint a review-pass marker.
+    repo = _init_repo(tmp_path)
+    verdict_file = _write_verdict(tmp_path, verdict_text)
+
+    rc = main(
+        ["review-pass", "--repo", str(repo), "--verdict-file", str(verdict_file)]
+    )
+
+    assert rc == 4
+    assert not (_marker_dir(repo) / "review-pass.json").exists()
+    assert error_fragment in capsys.readouterr().err
 
 
 def test_review_pass_refuses_when_expected_head_is_stale(tmp_path, capsys):
@@ -530,6 +569,7 @@ def test_review_finding_without_where_exits_4(tmp_path, capsys):
     verdict_file = _write_verdict(
         tmp_path,
         "standards_version: 2026-06\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: 5\n"
@@ -574,6 +614,7 @@ def test_review_finding_where_commit_sha_accepted(tmp_path):
     verdict_file = _write_verdict(
         tmp_path,
         "standards_version: 2026-06\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: 5\n"
@@ -601,6 +642,7 @@ def test_review_finding_where_without_pathlike_token_exits_4(tmp_path, capsys):
     verdict_file = _write_verdict(
         tmp_path,
         "standards_version: 2026-06\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: 5\n"
@@ -636,6 +678,7 @@ def _verdict_with_finding(
     with nothing after it" for the fail-closed partition tests."""
     lines = [
         "standards_version: 2026-06",
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
         "verdict: PASS",
         "dimension_scores:",
         "  security: 5",
@@ -827,6 +870,7 @@ def test_docs_arm_finding_with_duplicate_origin_refuses_to_mint(tmp_path):
     verdict_file = _write_verdict(
         tmp_path,
         "standards_version: 2026-06\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: 5\n"
@@ -997,6 +1041,7 @@ def test_duplicate_dimension_lines_treated_as_unparseable_requires_origin(tmp_pa
     verdict_file = _write_verdict(
         tmp_path,
         "standards_version: 2026-06\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: 5\n"
@@ -1028,6 +1073,7 @@ def test_duplicate_dimension_lines_refuses_to_mint_even_with_origin_satisfied(
     verdict_file = _write_verdict(
         tmp_path,
         "standards_version: 2026-06\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: 5\n"
@@ -1055,6 +1101,7 @@ def test_duplicate_origin_lines_refuses_to_mint(tmp_path):
     verdict_file = _write_verdict(
         tmp_path,
         "standards_version: 2026-06\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: 5\n"
@@ -1086,6 +1133,7 @@ def test_dimension_nested_inside_note_does_not_grant_exemption(tmp_path):
     verdict_file = _write_verdict(
         tmp_path,
         "standards_version: 2026-06\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: 5\n"
@@ -1114,6 +1162,7 @@ def test_origin_nested_inside_note_does_not_satisfy_requirement(tmp_path):
     verdict_file = _write_verdict(
         tmp_path,
         "standards_version: 2026-06\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: 5\n"
@@ -1144,6 +1193,7 @@ def test_where_nested_inside_note_does_not_satisfy_requirement(tmp_path, capsys)
     verdict_file = _write_verdict(
         tmp_path,
         "standards_version: 2026-06\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: 5\n"
@@ -1174,6 +1224,7 @@ def test_finding_fields_at_consistent_nonstandard_indent_still_mints(tmp_path):
     verdict_file = _write_verdict(
         tmp_path,
         "standards_version: 2026-06\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: 5\n"
@@ -1203,6 +1254,7 @@ def test_finding_with_blank_line_before_first_field_still_mints(tmp_path):
     verdict_file = _write_verdict(
         tmp_path,
         "standards_version: 2026-06\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: 5\n"
@@ -1568,6 +1620,8 @@ def test_normalised_advisory_aggregates_across_findings(tmp_path, capsys):
     text = "\n".join(
         [
             "standards_version: 2026-06",
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
+            "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
             "verdict: PASS",
             "dimension_scores:",
             "  security: 5",
@@ -1615,6 +1669,8 @@ def test_normalised_advisory_has_no_durable_path(tmp_path, capsys):
     text = "\n".join(
         [
             "standards_version: 2026-06",
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
+            "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
             "verdict: PASS",
             "dimension_scores:",
             "  security: 5",
@@ -2028,6 +2084,8 @@ def test_review_pass_marker_no_longer_carries_origin_quote_tier_counts(tmp_path)
     text = "\n".join(
         [
             "standards_version: 2026-06",
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
+            "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
             "verdict: PASS",
             "dimension_scores:",
             "  security: 5",
