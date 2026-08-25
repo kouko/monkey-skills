@@ -13,9 +13,9 @@ If you are a subagent dispatched with an explicit role prompt (implementer / spe
 
 > **NO FIXING WITHOUT REPRODUCING.**
 
-This is the debugging analogue of tdd-iron-law's *"no production code without a failing test."* You cannot fix what you cannot reproduce; what you "fix" without a repro is either decoration (the bug was already gone) or theater (the bug will re-emerge from a different angle). **Phase 1 — REPRODUCE — must produce a reliable trigger before Phase 2 starts.**
+This is tdd-iron-law's debugging analogue. **Phase 1 — REPRODUCE — must produce a reliable trigger before Phase 2 starts.**
 
-When REPRODUCE returns *"I can't reproduce"*, that is a discovery — usually one of: (a) the bug needs production-only conditions you haven't surfaced, (b) the bug is a race or heisenbug, (c) the reporter's description is inaccurate. Each is a different next move. **None of them is "fix anyway."**
+"Cannot reproduce" means production-only conditions, a race/heisenbug, or an inaccurate report remain unresolved — never "fix anyway."
 
 ## When NOT to use
 
@@ -38,7 +38,7 @@ Each phase has a **gate** to the next. Skipping a gate is a violation.
 
 **Goal**: a reliable trigger that fails reproducibly.
 
-The repro is your equivalent of a RED test (tdd-iron-law). Ideally it IS a failing test in the test suite — that gives you regression protection for free. Worst-case it's a documented command + input + observation: *"run X with input Y, observe Z."*
+Prefer a failing test; otherwise record command + input + observation: "run X with Y, observe Z."
 
 | Repro quality | Description |
 |---|---|
@@ -60,7 +60,7 @@ The repro is your equivalent of a RED test (tdd-iron-law). Ideally it IS a faili
 | **Component bisect** | Bug is "somewhere in the pipeline." Insert observation points at module boundaries; binary-search through stages. |
 | **5-Whys** | Bug is non-code (process / data / human). [`references/root-cause-tracing.md`](references/root-cause-tracing.md). |
 
-The output of ISOLATE is the smallest possible *"the bug lives in this {line / function / dependency / input field}."*
+Output: the smallest defensible line, function, dependency, or input field.
 
 **Gate to Phase 3**: bug surface is narrowed to a single component / input field / line — you can point at it.
 
@@ -68,11 +68,9 @@ The output of ISOLATE is the smallest possible *"the bug lives in this {line / f
 
 **Goal**: a falsifiable hypothesis that predicts an observation you have not yet made.
 
-A hypothesis is **not** *"I think it's X"*. A hypothesis is *"if it's X, then observing Y will happen when I do Z, and observing ¬Y will not happen when I do W."* The asymmetry is the whole point — the hypothesis predicts an experiment, and the experiment's outcome falsifies or confirms.
+A hypothesis predicts an experiment: "if X, doing Z yields Y; W yields ¬Y." "I think it's X" is not falsifiable.
 
-**Anti-pattern**: *"I think the cache isn't invalidating."* → not a hypothesis, no prediction. **Correct**: *"If the cache isn't invalidating on write, then setting `cache.set(k, v)` followed by `cache.get(k)` should return stale data ONLY when there's an intermediate `cache.get(k)` between them. Run this sequence; observe."*
-
-The discipline: every fix attempt requires a hypothesis stated in advance. If you cannot articulate the prediction, you're not debugging — you're random-patching (Red Flag below).
+The discipline: every fix attempt requires a hypothesis stated in advance. Log each experiment: hypothesis; one variable changed; command/input; observed result; confirmed/falsified.
 
 **Gate to Phase 4**: hypothesis is falsifiable (states a specific observation that would prove it wrong).
 
@@ -91,23 +89,15 @@ The discipline: every fix attempt requires a hypothesis stated in advance. If yo
 
 #### Anchored-thinking guard (≥2 falsifications)
 
-When two hypotheses have been falsified in a row, the agent (and human collaborator) is now in **anchored-thinking territory** — the initial framing of the bug is biasing every subsequent hypothesis. Forming Hypothesis #3 on the same internal mental model has high probability of producing another falsification.
+After two falsifications, the initial framing may be biasing every next hypothesis.
 
 **Mandatory before forming Hypothesis #3+**: run **WebSearch** on the problem class using the same protocol as `brainstorming` Axis 4 (EN + JA at minimum, cite sources, document empty results explicitly).
 
-Query patterns (mix-and-match per round):
-- `<framework> <observed-symptom>` — e.g. *"SwiftUI Image aspectRatio not filling parent"*
-- `<framework> <component> <unexpected-behavior>`
-- `<framework 日本語> <症状> 原因`
-- Stack Overflow / GitHub Issues / vendor Developer Forums for the framework
+Query the framework + symptom/component in English and Japanese; include vendor forums and issue trackers.
 
 **Output**: 2-3 known patterns from the industry that match observed symptoms. Hypothesis #3 must explicitly reference one of them OR document why none apply.
 
-**Why this gate exists**: hypotheses are formed from the agent's prior mental model of the system. When 2+ have falsified in a row, the prior model itself is the bug — not the code. External information (search results) is the cheapest way to break the loop. Cost: 1-2 minutes of WebSearch. Avoided cost: another speculative-fix cycle (often 10-30 min including diagnostic, revert, re-isolate).
-
-**Empirically validated 2026-05-27** (komado-Refs M1.F.2 polish round 5 — image-rendering letterbox bug): 3 hypotheses were falsified before WebSearch was invoked at user prompting; the first search returned the exact answer (SwiftUI Image's CGImage intrinsic dimensions propagate up to parent layout even with `.resizable() + .aspectRatio(.fit)` — fix per [Alejandro M. P. — Image aspectRatio without frames](https://alejandromp.com/development/blog/image-aspectratio-without-frames/) and [Sarunw — resize image to fit container](https://sarunw.com/posts/how-to-resize-an-image-to-fit-a-container-view-in-swiftui/)).
-
-**Anti-pattern**: *"I'll try one more hypothesis on my intuition before searching."* — that's the anchored-thinking voice. The whole point of this gate is that intuition has already been falsified twice. Refuse; run WebSearch.
+External evidence breaks the failed mental-model loop. Refuse "one more intuition"; run WebSearch.
 
 ## Cross-skill contract
 
@@ -137,16 +127,16 @@ Delegation contract per CLAUDE.md: pass **paths + structured seed context**, not
 
 ## What this skill does NOT do
 
-- Does **not** write features. Implementation flows through `brainstorming` → `writing-plans` → SDD → `tdd-iron-law`. systematic-debugging is reactive (something broke), not generative.
-- Does **not** replace `tdd-iron-law` §False-green diagnostic. That diagnostic is the *entry condition* to this skill, not its substitute.
-- Does **not** add defense-in-depth proactively. The defense layer is a Phase-4 *result* of finding the bug, not a Phase-0 *posture*. Adding defenses without understanding what they defend against is paranoia.
-- Does **not** decide blast radius / priority. The user / orchestrator decides whether this bug is worth Phase-1-through-4 effort. The skill, once invoked, runs the 4 phases.
+- Does **not** write features; use `brainstorming` → `writing-plans` → SDD → `tdd-iron-law`.
+- Does **not** replace `tdd-iron-law` §False-green diagnostic; that is an entry condition.
+- Adds defense-in-depth only after Phase 4 establishes the root cause.
+- The user/orchestrator decides priority; once invoked, this skill runs all four phases.
 
 ## See also
 
-- [`references/root-cause-tracing.md`](references/root-cause-tracing.md) — Phase 2 ISOLATE sub-protocols (bisection axes + 5-Whys for non-code causes).
-- [`references/condition-based-waiting.md`](references/condition-based-waiting.md) — Phase 1 🟡 + race-condition isolation.
-- [`references/defense-in-depth.md`](references/defense-in-depth.md) — Phase 4 post-VERIFY defensive-layer placement (proportional to blast radius).
+- [`references/root-cause-tracing.md`](references/root-cause-tracing.md) — Phase 2 bisection + 5-Whys.
+- [`references/condition-based-waiting.md`](references/condition-based-waiting.md) — Phase 1 🟡 race isolation.
+- [`references/defense-in-depth.md`](references/defense-in-depth.md) — proportional post-VERIFY defenses.
 - [`references/character-encoding-debug.md`](references/character-encoding-debug.md) — encoding-specific bisection protocol (BOM / UTF mismatch / NFC-NFD / surrogate pairs); links to `domain-teams:code-team/standards/character-encoding-security.md` (徳丸本 Ch.6) for the security-grounded version.
 - [`../tdd-iron-law/SKILL.md`](../tdd-iron-law/SKILL.md) — the discipline that invokes this skill via §False-green diagnostic; also the discipline that writes the regression test in Phase 4.
 - [`../subagent-driven-development/SKILL.md`](../subagent-driven-development/SKILL.md) — the orchestrator that invokes this skill when implementer returns BLOCKED on test-cannot-go-RED.
