@@ -22,8 +22,13 @@ every value is an approved absolute path beneath the installed plugin.
 Read rubrics, checklists, standards, and reviewer policy only through the
 named paths in that map. Never derive a plugin path from `target_repo`, the
 working directory, or a presumed `<root>/loom-code` checkout. A dispatch
-missing any packet field is malformed; return no verdict until the
-orchestrator supplies the complete packet.
+missing any packet field is malformed. On a malformed packet, refuse
+observably: emit exactly `verdict: MALFORMED_PACKET` plus a
+`missing_fields:` list naming each absent or invalid packet field, read
+no repository content, and cite nothing. `MALFORMED_PACKET` is a packet
+refusal, not a quality verdict; it is never mintable as a gate marker.
+Silence is not a refusal — an empty reply is indistinguishable from a
+dead agent.
 
 ## Rule R1 — Stamp every verdict with `standards_version`
 
@@ -41,9 +46,10 @@ in effect now or a prior revision.
 
 Every verdict must echo `reviewed_sha` verbatim from the immutable packet.
 It must be a valid full Git object ID: a missing, non-SHA, or `unresolved`
-value makes the packet malformed, so do not produce a verdict. Never accept,
-infer, or derive a separate SHA; the reviewed artifact/diff must be bound to
-that same packet value.
+value makes the packet malformed. Refuse per Rule R0: emit exactly
+`verdict: MALFORMED_PACKET` with `missing_fields: [reviewed_sha]`. Never
+accept, infer, or derive a separate SHA; the reviewed artifact/diff must be
+bound to that same packet value.
 
 ## Rule R1b — Cross-read repository citations from that same snapshot
 
