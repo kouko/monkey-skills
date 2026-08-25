@@ -102,12 +102,16 @@ ENVIRONMENT_GOTCHAS = (
 # arc, review round 1: the MALFORMED_PACKET row in the Verdict
 # resolution table (fix the packet, re-dispatch that reviewer; no
 # implementer re-dispatch; round exempt from the 3-round cap).
+# Lowered 4530 -> 4500 on 2026-08-25 (same arc, CI-repair round): the CI
+# hard cap in scripts/check-skill-structure.py is a fixed 4500 and the
+# earlier raise crossed it; the REFUSE/live-gate sentences were trimmed
+# back under the cap instead.
 # Raised 4464 -> 4530 by the 2026-08-25 reviewer-packet-fail-closed
 # arc, review round 2: the live-gate SKIP clause after the `--validate`
 # refusal sentence (Step 3), the "(any quality verdict)" cell narrowing,
 # and the MALFORMED_PACKET-row precedence sentence under the Verdict
 # resolution table (measured 4518 + 12 margin).
-WORD_CEILING = 4530
+WORD_CEILING = 4500
 
 # --- distinctive phrases, whitespace-normalized ---------------------------
 
