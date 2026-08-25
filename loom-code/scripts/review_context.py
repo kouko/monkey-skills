@@ -125,6 +125,9 @@ def validate_packet(packet_path: Path) -> list[str]:
         if SHA_PATTERN.fullmatch(reviewed_sha) is None:
             errors.append("reviewed_sha: must match ^[0-9a-f]{40}$")
         elif isinstance(target_repo, str) and target_repo:
+            # `<sha>^{commit}` peels/asserts commit-ness — gitrevisions(7)
+            # (`git help revisions`); mirrors the in-repo `cat-file -e
+            # <sha>:<path>` precedent, with `^{commit}` as the delta.
             exists = _git(
                 Path(target_repo), "cat-file", "-e", f"{reviewed_sha}^{{commit}}"
             )
