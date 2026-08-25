@@ -129,6 +129,16 @@ Role boundaries enforced by behavior, not reading restrictions:
   when the brief has no `## ` sections at all — structurally not a
   brief, distinct from "nothing violated" — rc=0 when the brief is
   clean.
+- **Check a plan's Seam coverage** (writing-plans self-check):
+  `python3 loom-code/scripts/check_seam_coverage.py <plan-path>` —
+  every task whose `Dependencies` is not "none" must carry a `Seam`
+  field with one bullet per incoming edge, matched by `from Task <N>`
+  identity; payload-bearing bullets must name `owner:` + `probe:`, and
+  the `probe:` value must appear verbatim inside that task's
+  `Acceptance` block (substring containment). rc=1 with one
+  agent-actionable violation per stderr line; rc=0 when every edge is
+  covered or the plan has no dependent tasks (vacuous). Grammar SSOT:
+  `loom-code/skills/writing-plans/references/plan-format.md` `#### Seam`.
 - **Archive a shipped change-folder, or a single backlog entry file**
   (finishing-a-development-branch archive-on-close step, orchestrator-only,
   once per branch; the file unit is also used to close a
