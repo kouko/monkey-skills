@@ -11,12 +11,12 @@ If you are a subagent dispatched with an explicit role prompt (implementer / spe
 
 ## What this skill does
 
-Takes a `brainstorming` output brief and produces a **plan**: an ordered list of atomic tasks that `subagent-driven-development` (SDD) can dispatch one at a time. It can also consume a validated `loom-design` change-folder as an alternate input — see §Consuming a loom-design change-folder. Each task must be:
+Turns a `brainstorming` brief or validated `loom-design` change-folder into a reviewed plan for `subagent-driven-development` (SDD). Each task must be:
 
-- **Independently verifiable** — has a RED test (or RED diagnostic) that goes GREEN when the task is done. This is the primary sizing constraint — see §The splitting framework.
+- **Independently verifiable** — one RED test or diagnostic goes GREEN when done.
 - **One module** of touch surface (consistent with SDD's per-task scope).
 
-The plan is the **paths-not-content handoff** between brainstorming and SDD; this skill produces it and self-reviews it before declaring DONE.
+The plan is a **paths-not-content handoff**; review it before DONE.
 
 ## The pipeline
 
@@ -36,8 +36,6 @@ brainstorming → brief (docs/loom/specs/<topic>.md)
 
 ## When NOT to use
 
-Enumerated exemptions only.
-
 | Exempt category | What qualifies | What does NOT qualify |
 |---|---|---|
 | **No brief upstream** | brainstorming has not produced a brief yet — routing this skill prematurely. | "I have a vague idea" — that needs brainstorming first, not skipping to plans. |
@@ -55,26 +53,26 @@ Walk these in order for each prospective task. Stop expanding a task as soon as 
 | 2 | **Module scope** | Does this touch ≤1 module / ≤1 file boundary? If it crosses, split by boundary. |
 | 3 | **No hidden coupling** | Could this task be done in isolation, with only its declared dependencies satisfied? If you need to "also remember to update X," that's a missing dep — declare it. |
 
-**Runnable-capability note.** When a task introduces a runnable capability — a new test suite, build step, lint target, e2e suite, migration command, or similar — its `Acceptance` criterion must include a line stating that the new verb is declared in the command surface (the project's declared commands — `AGENTS.md` commands section, `make`/`just` recipes, `package.json` scripts) and verified to run. This makes command-surface accretion visible at plan time, before the implementer ships it silently without a declared entry point.
+**Runnable-capability note.** For a new test/build/lint/e2e/migration or similar verb, `Acceptance` must require both declaration in the command surface (`AGENTS.md`, `make`/`just`, or `package.json`) and a successful run.
 
-**No time-box criterion.** Tasks are never sized by wall-clock estimate — an LLM agent has no grounding in duration; sizing follows file/diff boundaries. A task that "feels long" signals to re-examine criterion 1 — it likely resolves to more than one assertion or crosses a module boundary.
+**No time-box criterion.** Never size by duration; re-check the assertion and module boundary.
 
-**Post-split parallel-marking pass.** After splitting, for each pair of tasks at the **same dependency level**: if their `Files touched` are disjoint **AND** there is no semantic dependency (no shared data / symbol, no doc-mirrors-code relationship), mark **both** `Independent: true`. This is the step that turns a flat task list into a parallelism-aware plan.
+**Post-split parallel-marking pass.** At the **same dependency level**, mark both tasks `Independent: true` only when `Files touched` are disjoint and no semantic dependency exists.
 
-**Guard — disjoint files ≠ independent.** Disjoint `Files touched` is necessary but not sufficient. A real semantic dependency keeps two tasks sequential **regardless** of file-disjointness — e.g. a doc task that mirrors a code task (doc-mirrors-code), or a consumer task that imports a symbol the producer task defines. In those cases the tasks touch different files yet must run in order. The `Dependencies` field is the **execution floor**: if a semantic dependency exists, declare it in `Dependencies` and leave `Independent: false`, even when the files do not overlap. That declaration is not just the edge — the dependency's contract must also be spelled out as the edge's `Seam` bullet (`payload: none` when nothing crosses), per [`references/plan-format.md`](references/plan-format.md) `#### Seam`.
+**Guard — disjoint files ≠ independent.** Shared data/symbols, doc-mirrors-code, or producer/consumer relationships remain sequential. Declare every semantic edge in `Dependencies`, keep `Independent: false`, and describe its contract in `Seam` (`payload: none` when nothing crosses); see [`references/plan-format.md`](references/plan-format.md) `#### Seam`.
 
 ## Plan size ceiling — critical-path depth ≤5
 
-The ceiling is on **critical-path depth**, NOT total task count. Critical-path depth is the **longest chain of tasks linked by `Dependencies`** (the longest sequential path through the dependency DAG). N independent tasks at the **same dependency level** (disjoint `Files touched`, no semantic dependency) count as **ONE level**, not N. A plan with 8 tasks where 6 are parallel leaves at one level has a depth of ~2-3, not 8.
+Critical-path depth is the longest `Dependencies` chain. Parallel tasks at one level count once; total task count is irrelevant.
 
-**No hard width cap in the plan.** Mark every parallel-eligible task `Independent: true` and let the dispatch layer queue the concurrency. A very wide wave gets at most a soft "sanity-check that these really are independent" advisory — it is **never** a hard split-trigger. The only hard split-trigger is **depth >5**.
+**No hard width cap.** Mark eligible tasks `Independent: true`; only **depth >5** triggers a hard split.
 
 If the critical-path **depth** exceeds 5, the brief is too big. **Do not silently produce a deep chain.** Two options:
 
 1. **Route back to brainstorming**: the Smallest End State (Axis 3) was not actually smallest — it baked in a long sequential dependency chain. Surface this and ask the user to re-cut.
 2. **Split into multiple sequential briefs**: if the work genuinely needs a chain deeper than 5 and the user agrees, write *N* separate brief files (each with depth ≤5), explicitly labeled `<topic>-part-{1..N}.md`. Each brief is a standalone input to its own `writing-plans` run and its own SDD run. **Split = N brief files, not N plans from one brief.** A plan is 1-to-1 with one brief — `## Part 1 / ## Part 2` sections inside a single plan file are not valid splitting.
 
-A **deep chain** (critical-path depth >5) is almost always a discovery failure, not a planning failure; a **wide-but-shallow** plan (many independent leaves, shallow depth) parallelizes cleanly and is NOT a discovery failure.
+Deep chains usually reveal a discovery failure; wide-but-shallow plans are valid.
 
 **Why depth `5` is a heuristic, not a law** — the compounding-error rationale and worked example: [`references/design-evidence.md`](references/design-evidence.md).
 
@@ -90,9 +88,9 @@ When SDD dispatches an implementer subagent and the implementer returns `BLOCKED
 4. Self-reviews the child decomposition via plan-document-reviewer.
 5. Returns the child plan to SDD.
 
-This mirrors Kent Beck's "Child Test" pattern — citation + verbatim quote: [`references/design-evidence.md`](references/design-evidence.md) (author-facing; not loaded at runtime). The implementer's BLOCKED signal is "the test got too big to make pass in one step" — write smaller tests (= split into child tasks), get them green, then re-attempt the parent.
+This is Beck's Child Test pattern: split an oversized test into smaller green steps, then retry the parent; evidence: [`references/design-evidence.md`](references/design-evidence.md).
 
-**Anti-pattern**: silently ignoring BLOCKED and re-dispatching the same task hoping the implementer will figure it out. That violates SDD's 3-round retry cap and burns subagent budget. Always re-invoke writing-plans when BLOCKED carries a decomposition signal.
+**Anti-pattern**: never retry the same decomposition BLOCKED task unchanged; re-invoke writing-plans.
 
 ## Self-review — plan-document-reviewer
 
@@ -100,7 +98,7 @@ This mirrors Kent Beck's "Child Test" pattern — citation + verbatim quote: [`r
 
 **Resolve the dispatch profile** in [`dispatch-profile.md`](../using-loom-code/references/dispatch-profile.md) before spawn; it owns translation and escalation.
 
-After producing the plan, writing-plans **must** dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator subagent — a one-shot blocking call that waits for and returns its verdict directly (see your host's tool-mapping reference for the exact shape, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid — Codex has no equivalent). That prompt holds the **authoritative, full check list** — do not maintain a duplicate copy here (it drifts). The highest-value checks, so you can self-pre-screen before dispatch:
+Dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator in a one-shot blocking call. Its checklist is authoritative; host details are in the tool mapping and Claude's naming pitfall in [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1. Pre-screen:
 
 - **one-failing-test acceptance** — each task names a specific RED test (criterion 1, primary);
 - **every brief item covered** — every Smallest End State / Decision item maps to ≥1 task, no orphan tasks;
@@ -108,19 +106,19 @@ After producing the plan, writing-plans **must** dispatch [`references/plan-docu
 
 The prompt also enforces parallel-dispatch checks — see it for the complete list.
 
-**Pre-patch before dispatch (saves a NEEDS_REVISION round):** Before dispatching the reviewer, Read [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) and scan Check 1 and Check 3. If the plan is missing `Plan-document-reviewer verdict: PENDING` in the top-level header, or if any task is missing a `Brief item covered:` line, patch those fields now. They are the most common Check-1 / Check-3 failures; one Read saves a full round-trip.
+**Pre-patch before dispatch:** Read reviewer Checks 1 and 3; add missing top-level `Plan-document-reviewer verdict: PENDING` and per-task `Brief item covered:` fields.
 
-**Coverage gate:** before dispatching the reviewer, run the Coverage self-check in §Consuming a loom-design change-folder — brief mode (`--brief`) fires on any brief declaring `BI-` ids, change-folder or not.
+**Coverage gate:** before dispatching the reviewer, run §Consuming a loom-design change-folder — Coverage self-check; brief mode (`--brief`) applies to every brief declaring `BI-` ids.
 
-**Open-questions gate (unconditional):** before dispatching the reviewer, also run `python3 loom-code/scripts/check_open_questions.py <plan-path>` — on every plan, never conditional the way the coverage gate above is. Non-zero exit blocks the plan from PASS (multiple causes — an absent/malformed section, or an unresolved `OQ-<n>`) — STOP, fix it, and re-run before dispatching.
+**Open-questions gate (unconditional):** on every plan run `python3 loom-code/scripts/check_open_questions.py <plan-path>` before review. A non-zero exit blocks the plan from PASS; fix and rerun.
 
-**On-ramp choice gate (unconditional):** (fires at intake — earlier than this section's other gates) before dispatching the reviewer — and before drafting Task 1 — run `python3 loom-code/scripts/check_onramp_choice.py <brief-path>` on the source brief. Exit 2 → STOP: do not draft; relay the printed question to the user, wait, update the brief's `## Design-side on-ramp` line, re-run. Exit 1 → STOP (brief missing). `git-guard.py` enforces this at commit time; grammar SSOT: [`../brainstorming/references/handoff-brief-format.md`](../brainstorming/references/handoff-brief-format.md).
+**On-ramp choice gate (unconditional, intake):** before Task 1 run `python3 loom-code/scripts/check_onramp_choice.py <brief-path>`. Exit 2 → STOP: do not draft; relay the printed question to the user, wait, update the brief's `## Design-side on-ramp` line, re-run. Exit 1 → STOP (brief missing). `git-guard.py` repeats this at commit; grammar: [`../brainstorming/references/handoff-brief-format.md`](../brainstorming/references/handoff-brief-format.md).
 
-**Queue-relation gate (unconditional):** (fires at intake, alongside the On-ramp choice gate, before drafting Task 1) run `python3 loom-code/scripts/check_queue_relation.py <brief-path>` on the source brief. Exit 0 means the brief's `## Queue relation` line resolves: `unqueued — <reason>` resolves unconditionally, with no live bet entry required, while `in-queue:`/`displaces:` resolve only when the name they cite matches a live `status: bet` backlog entry — or, when the repo has no `docs/loom/backlog/` store at all, the gate loudly reports N/A on stdout instead of blocking. Exit 1 means the check could not even run, for one of four causes the printed stderr distinguishes: the brief path was not found (fix the path, re-run); the brief or the store exists but is unreadable — a permissions fix, NOT the store-absent case (that exits 0); or a store entry's status falls outside the closed status vocabulary (fix that entry's `status:` frontmatter, re-run). Exit 2 means the line is unresolved — STOP: do not draft, relay the printed question verbatim to the user, wait for their answer, write it into the brief's `## Queue relation` line, then re-run. Grammar SSOT: [`../brainstorming/references/handoff-brief-format.md`](../brainstorming/references/handoff-brief-format.md).
+**Queue-relation gate (unconditional):** at intake, before drafting Task 1, run `python3 loom-code/scripts/check_queue_relation.py <brief-path>`. Exit 0 resolves `unqueued` unconditionally, resolves `in-queue`/`displaces` with a matching live bet, or reports N/A when the store is absent. Exit 1 means the brief path was not found (fix the path), the brief/store is unreadable (NOT the store-absent case; fix permissions), or an entry status is outside the closed vocabulary (fix its frontmatter), then re-run. Exit 2 means unresolved: STOP, do not draft, relay the printed question, wait, write it into the brief's `## Queue relation`, and re-run. Grammar: [`../brainstorming/references/handoff-brief-format.md`](../brainstorming/references/handoff-brief-format.md).
 
-**Field-microstructure gate (unconditional):** brief mode fires at intake, before drafting Task 1 (mirrors the On-ramp choice gate) — run `python3 loom-code/scripts/check_field_microstructure.py --brief <brief-path>`; a non-zero exit blocks drafting, even on a brief you did not author — STOP, fix it, re-run. Plan mode fires before dispatching the reviewer — run `python3 loom-code/scripts/check_field_microstructure.py <plan-path>`; a non-zero exit blocks the plan-document-reviewer dispatch. Exit 1: fix the flagged field or paragraph, re-run. Exit 2: structurally empty (no `## Task` headings, or no `## ` sections) — supply the missing structure, not a field fix.
+**Field-microstructure gate (unconditional):** brief mode fires at intake, before drafting Task 1: run `python3 loom-code/scripts/check_field_microstructure.py --brief <brief-path>`; a non-zero exit blocks drafting. Before review run `python3 loom-code/scripts/check_field_microstructure.py <plan-path>`; a non-zero exit blocks the plan-document-reviewer dispatch. Exit 1: fix the flagged field or paragraph, re-run. Exit 2: structurally empty (no `## Task` headings, or no `## ` sections) — supply the missing structure, not a field fix.
 
-**Seam-coverage gate (unconditional):** before dispatching the reviewer, run `python3 loom-code/scripts/check_seam_coverage.py <plan-path>`; non-zero exit blocks the dispatch — the script is the sole authority on seam-edge coverage (fix, re-run).
+**Seam-coverage gate (unconditional):** before review run `python3 loom-code/scripts/check_seam_coverage.py <plan-path>`; non-zero blocks. Fix and rerun; the script owns seam-edge coverage.
 
 If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-runs the reviewer. Before that re-dispatch, re-run the **Pre-patch before dispatch** self-screen on the revision delta itself — every line the fix added or changed — because three consecutive arcs' round-2 findings were defects the round-2 revision itself introduced. Up to 2 rounds; if still NEEDS_REVISION after round 2, escalate to user (likely the brief itself needs revisiting).
 
@@ -136,29 +134,10 @@ A qualifying amendment records a one-line skip note in the plan's `Notes` naming
 
 ## Kickoff briefing
 
-After PASS, before SDD handoff: run the kickoff briefing — read [`references/kickoff-briefing.md`](references/kickoff-briefing.md) and batch-brief the round's one-way-door decisions (expect 1-3) and foreseeable implementation forks; the rest route to the Decision Log. For this kickoff-briefing moment, produce the plan's document view per the adjudication-view protocol's own firing conditions (doc mode) for the user's plan reading — see [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md).
+After PASS and before SDD, follow [`references/kickoff-briefing.md`](references/kickoff-briefing.md): batch-brief 1–3 one-way-door decisions and foreseeable forks; route the rest to the Decision Log. Show the plan using [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md) doc mode per its firing conditions.
 
-**Progress surface.** The plan carries `Goal:`, `Stage:`, per-task
-`Status:`, an optional `Steps:` title block, and per-task `Gloss:`
-lines from birth (schema below) — Steps titles and Gloss lines are
-written at plan time in the user's conversation language per §Language
-policy. After the
-reviewer PASS
-is stamped, run `python3 scripts/plan_card.py <plan-path>` and relay
-its card in the conversation language — fire-and-continue, not a new
-pause, framed per `loom-code/hooks/family-relay.md §(a2) Progress
-card` (family-relay absent, or both script copies absent → render the
-four fields inline: goal,
-task table, stage, next). Repo-root `scripts/plan_card.py` when it
-exists; otherwise run the plugin-shipped copy:
-`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path>` (a
-load-time substitution, not a run-time shell variable). The card
-re-reads the plan file by
-construction; never compose it from memory. For this post-PASS
-progress-card relay moment, also produce the plan's document view per
-the adjudication-view protocol's own firing conditions (doc mode) for
-the user's plan reading —
-see [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md).
+**Progress surface.** From birth, the plan carries `Goal:`, `Stage:`, per-task `Status:`, an optional `Steps:` title block, and per-task `Gloss:` lines. Steps titles and Gloss lines are written at plan time in the user's conversation language per §Language policy. After PASS, run repo-root `scripts/plan_card.py` as `python3 scripts/plan_card.py <plan-path>`,
+otherwise `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path>`. Relay it — fire-and-continue, not a new pause — per `loom-code/hooks/family-relay.md §(a2) Progress card`; if family-relay or both scripts are absent, render the four fields inline: goal, task table, stage, next. Apply [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md) doc mode per its firing conditions.
 
 ## Language policy
 
@@ -235,12 +214,12 @@ Two per-task fields — `Independent` and `Files touched` — signal parallel-di
 
 Alongside the brainstorming brief, writing-plans can consume a **validated loom-design change-folder** — `docs/loom/<change-id>/` emitted by `loom-design:spec-expansion`. "Validated" means the change-folder is **`validate_spec_output.py`-clean** (the validator ran and exited 0). The change-folder's `specs/<capability>/spec.md` delta is the structure `validate_spec_output.py` enforces: `### Requirement:` blocks each containing one or more `#### Scenario:` (GIVEN / WHEN / THEN) acceptance criteria.
 
-**Detecting which change-folder to consume.** A layered cascade, evaluated in order — stop at the first layer that resolves. Grounded in `docs/loom/research/2026-07-10-change-binding-and-lifecycle-research.md` §Resolved decisions (industry-precedent survey: [`references/design-evidence.md`](references/design-evidence.md)).
+**Detecting which change-folder to consume.** Evaluate these layers in order; stop on resolution. Evidence: `docs/loom/research/2026-07-10-change-binding-and-lifecycle-research.md` and [`references/design-evidence.md`](references/design-evidence.md).
 
-**All detection layers anchor at the TARGET repo's root, not the ambient working directory.** Before evaluating layer (i) or layer (ii), resolve the target repo's root via `git rev-parse --show-toplevel` run **in the repo being planned for** — never in whatever directory the dispatch happened to start in. Branch name (layer i) and the `docs/loom/` folder count (layer ii) are both evaluated **against that resolved root**, not a relative guess from cwd (design precedent this mirrors: [`references/design-evidence.md`](references/design-evidence.md)).
+First resolve the target repo's root: run `git rev-parse --show-toplevel` there. Anchor all layers at that TARGET repo's root, never ambient cwd.
 
 - **Layer 0 — explicit handoff wins.** If the caller (a conductor, an orchestrator, the user) hands writing-plans a change-folder path directly, bind to it immediately. Detection never runs — layers (i) and (ii) below exist only for when no path was named.
-- **Layer (i) — branch-slug match, opportunistic only.** Exact match between the current branch name and a `docs/loom/<change-id>` slug. This layer is **opportunistic**, not authoritative: a miss falls through **silently** to layer (ii) — no error, no note. When this layer DOES decide the binding, **surface it explicitly** ("bound to `<change-id>` via branch name") — never bind silently. Any **ambiguity** (the branch name could plausibly match more than one folder) skips straight to the ask sub-step of layer (ii) below — never guess.
+- **Layer (i) — branch-slug match, opportunistic only.** Exact branch/`docs/loom/<change-id>` match binds and must be announced. A miss silently falls through; ambiguity goes to layer (ii)'s ask—never guess.
 - **Layer (ii) — non-archived folder count.** List non-archived `docs/loom/<change-id>/` folders:
   - **0 → N/A, loudly.** State that no change-folder was found and proceed on the brainstorming-brief input instead — never a silent skip.
   - **1 → auto-bind, and state it.** Bind to the single folder and say so ("bound to `<change-id>`, the only non-archived change-folder found").
@@ -281,11 +260,11 @@ Planning-skip shortcuts to refuse — *"just skip planning, the brief is enough,
 
 What this skill does NOT do (write code, dispatch SDD subagents, invoke implementer/reviewer prompts directly, estimate dev-time, or decide task priority) — full list: [`references/cross-skill-map.md`](references/cross-skill-map.md) §What this skill does NOT do.
 
-## See also
+## Links
 
-- [`references/plan-format.md`](references/plan-format.md) — full plan schema.
-- [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) — evaluator subagent prompt.
-- [`references/consuming-a-change-folder.md`](references/consuming-a-change-folder.md) — scenario→task mapping, point-don't-copy, verbatim-copy carve-out, and target-repo recon detail for §Consuming a loom-design change-folder.
+- [`references/plan-format.md`](references/plan-format.md) — schema.
+- [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) — reviewer.
+- [`references/consuming-a-change-folder.md`](references/consuming-a-change-folder.md) — change-folder details.
 - [`../brainstorming/SKILL.md`](../brainstorming/SKILL.md) — upstream brief producer.
 - [`../brainstorming/references/handoff-brief-format.md`](../brainstorming/references/handoff-brief-format.md) — input contract.
 - [`../subagent-driven-development/SKILL.md`](../subagent-driven-development/SKILL.md) — downstream plan consumer.
