@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-24-cross-host-review-gate-hardening-part-4.md
 Goal: 從 context 到 marker 的每個可執行節點都綁定同一 SHA，並在隔離 consumer repo 證明全流程。
-Stage: review:round-1
+Stage: finishing
 Steps:
   1. 建立 SHA、資源與 host adapter 的底層不變量
   2. 將 citation、code 與 SDD 接到 primitives

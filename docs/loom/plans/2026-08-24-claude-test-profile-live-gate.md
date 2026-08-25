@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-24-claude-test-profile-live-gate.md
 Goal: 讓 live-host gate 使用可重複使用的 `claude-test` profile，同時保持日常設定、登入與 plugin 狀態不變。
-Stage: review:round-1
+Stage: finishing
 Steps:
   1. 建立與驗證專用 Claude profile
   2. 將實機 gate 固定到該 profile

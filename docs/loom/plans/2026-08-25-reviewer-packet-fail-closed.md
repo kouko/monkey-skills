@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-25-reviewer-packet-fail-closed.md
 Goal: 派發前封包機械驗證＋可觀察的 MALFORMED_PACKET 拒絕狀態＋verdict 收件端常開 SHA 檢查，三腿一次落地，Codex 相容由共用腳本／SSOT 結構保證。
-Stage: sdd:wave-1
+Stage: finishing
 Total tasks: 6
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
@@ -59,7 +59,7 @@ N/A — no unresolved question: OQ-1 is resolved by adopting the brief's stated 
 - Dependencies: none
 - Independent: true
 - Brief item covered: "Leg A — pre-dispatch packet gate. `review_context.py` gains a `--validate` mode (packet JSON in → exit 0 / nonzero with the missing/invalid field named)"
-- Status: claimed(@implementer-w1)
+- Status: done(3d612276)
 - Gloss: 給封包產生腳本加上驗證模式——派發前先過機械檢查，缺欄位／假 SHA 當場點名拒絕。
 
 ## Task 2 — Leg C：validate_verdict_text 常開 reviewed_sha 檢查
@@ -76,7 +76,7 @@ N/A — no unresolved question: OQ-1 is resolved by adopting the brief's stated 
 - Dependencies: none
 - Independent: true
 - Brief item covered: "Leg C — always-on SHA check at verdict intake. `validate_verdict_text` requires `reviewed_sha` present and full-40-hex even when `--expected-head` is not passed"
-- Status: claimed(@implementer-w1)
+- Status: done(1a85334a)
 - Gloss: verdict 收件端永遠檢查完整 40 位 SHA——不再依賴呼叫端記得帶旗標。
 
 ## Task 3 — Leg B（腳本側）：MALFORMED_PACKET 永不可 mint 的拒絕狀態
@@ -95,7 +95,7 @@ N/A — no unresolved question: OQ-1 is resolved by adopting the brief's stated 
 - Dependencies: Task 2 completes first
 - Independent: false
 - Brief item covered: "`loom_gate_markers.py` recognizes `MALFORMED_PACKET` as an explicit never-mintable refusal (clear message, distinct from a schema error)"
-- Status: pending
+- Status: done(161174e4)
 - Gloss: 讓「封包不合格」成為機器看得懂的專用狀態——永遠 mint 不出通行證，訊息直接叫 orchestrator 補封包重派。
 
 ## Task 4 — Leg B（契約側）：SSOT 改寫 R0/R1a ＋ distribute 再生成
@@ -118,7 +118,7 @@ N/A — no unresolved question: OQ-1 is resolved by adopting the brief's stated 
 - Dependencies: Task 3 completes first
 - Independent: true
 - Brief item covered: "Leg B — observable refusal state. `scripts/_reviewer-discipline.md` R0/R1a change from \"return no verdict\" … to: emit exactly `verdict: MALFORMED_PACKET` plus a `missing_fields:` list, read no repository content, cite nothing"
-- Status: pending
+- Status: done(94a1c7d9)
 - Gloss: 把「沉默拒絕」改成「舉手拒絕」——四個 reviewer 契約經 SSOT 一次改齊，兩個 host 同步生效。
 
 ## Task 5 — Leg A（呼叫點）：三個 orchestrator SKILL.md 加 REFUSE 行
@@ -137,7 +137,7 @@ N/A — no unresolved question: OQ-1 is resolved by adopting the brief's stated 
 - Dependencies: Task 1 completes first
 - Independent: true
 - Brief item covered: "The three orchestrator call sites … add one REFUSE line: run the validator before any reviewer dispatch; nonzero exit → do not dispatch"
-- Status: pending
+- Status: done(961c4edc)
 - Gloss: 三個派工站各加一行守門令——封包沒過驗證器就不准派 reviewer。
 
 ## Task 6 — 版本 bump 0.99.0 ＋ CHANGELOG ＋ manifest 同步
@@ -154,5 +154,5 @@ N/A — no unresolved question: OQ-1 is resolved by adopting the brief's stated 
 - Dependencies: Tasks 1, 4, 5 complete first
 - Independent: false
 - Brief item covered: "Regenerate agents via `distribute.py`; bump plugin version to 0.99.0" (Decision)
-- Status: pending
+- Status: done(efd10d92)
 - Gloss: 收尾——版本號、更新日誌、兩個 host 的 manifest 一次同步，讓 plugin update 能真的把新機制發出去。
