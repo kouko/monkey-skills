@@ -1,188 +1,139 @@
 ---
 name: user-insights
 description: |
-  The problem-space research verb of loom-design — map, with recorded
-  evidence, WHAT users need and which needs are worth serving, before any
-  design or spec work. Two modes: opportunity-space mapping (knowledge work —
-  research the world, never interrogate the user for researchable facts) and
-  value commitment (a value judgment — the agent proposes a recommendation and
-  writes the commitment only after the user ratifies it). Produces
-  user-insights.md + evidence.md + per-question research/ reports under
-  docs/loom/discovery/<date>-<slug>/. Problem-space-pure: states needs and
-  outcomes, never solutions. Delegates heavyweight research to
-  research-toolkit:deep-deep-research. Use for: user needs / what do users need
-  / needs research / 使用者需求 / 使用者洞察 / ユーザーインサイト. Not for
-  business worth-it verdicts (that is business-value) nor for designing the
-  solution (that is loom-design / loom-design).
+  The problem-space research verb of loom-design: map, with recorded evidence,
+  what users need and which needs are worth serving before design or spec work.
+  Two modes: opportunity-space mapping researches the world without asking the
+  user for researchable facts; value commitment lets the agent recommend but
+  writes only what the user ratifies. Produces user-insights.md, evidence.md,
+  and per-question research reports under docs/loom/discovery/<date>-<slug>/.
+  Problem-space-pure: needs and outcomes, never solutions. Heavy research goes
+  to research-toolkit:deep-deep-research. Use for user needs / what do users
+  need / needs research / 使用者需求 / 使用者洞察 / ユーザーインサイト. Not for
+  business worth-it verdicts (business-value) or solution design (loom-design).
 version: 0.1.0
 ---
 
 # user-insights
 
-The core research verb of the loom-design station. The job: **when I bring a
-product-shaped idea to loom, establish — with recorded evidence — what problem
-exists, for whom, and which needs are worth serving**, so downstream stations
-consume verified needs instead of whatever was in my head.
+Establish, with recorded evidence, what problem exists, for whom, and which
+needs are worth serving, so downstream work starts from verified needs.
 
-This skill is **problem-space-pure**. It states WHAT users need and the outcomes
-they want; it never states HOW to solve them (Intercom rule — no solution
-content). Solutions are the job of loom-design, loom-design, loom-code.
+This skill is **problem-space-pure**: it states WHAT users need and their desired
+outcomes, and never states HOW to solve them. Park mechanisms and solution ideas
+in Risks & open questions for downstream design.
 
-## Two modes — assigned per work nature
+## Two modes
 
-The skill runs in two distinct modes. Which one applies is decided by the nature
-of the work, not by preference. Both can run in one session (map first, then
-commit); keep them separated because their **ground truth lives in different
-places**.
+Assign modes by the nature of the work, not preference. They may run in one
+session, but keep them separated because their ground truth differs.
 
-### Mode 1 — Opportunity-space mapping (KNOWLEDGE work)
+### Mode 1 — Opportunity-space mapping (knowledge work)
 
-Mapping the space of needs is a knowledge question: the ground truth is **in the
-world** (users, competitors, prior art, the repo). Therefore this is
-**research/explore mode**.
+Ground truth is in the world: users, competitors, prior art, and the repo.
 
-- **Never interrogate the user for facts that are researchable** in the world or
-  in the repo. Grilling the user for what a search or a repo read can answer is
-  the anti-pattern this station exists to replace (grill-me's own author demoted
-  user-interrogation in favor of domain grounding).
-- Output: the **Opportunity space** section of `user-insights.md` — each need as
-  a job story ("When …, I want …, so I can …"), evidence-linked, with its
-  context / journey stage and today's workaround.
-- **Purity self-check per job story**: before writing one, strip mechanism
-  nouns (folder structures, UI elements, automation verbs like "automatically
-  moved") — state the *outcome* the user wants; park any mechanism in §Risks &
-  open questions. The no-`## Solution`-heading rule alone does not catch
-  mechanism baked *inside* a job story.
+- **Never interrogate the user for facts that are researchable** through search
+  or repo reading. Research them.
+- Write the Opportunity space in `user-insights.md`. Express each need as an
+  evidence-linked job story — “When …, I want …, so I can …” — plus context or
+  journey stage and today's workaround.
+- Keep job stories outcome-only. Strip mechanism nouns such as UI elements,
+  folder structures, or “automatically moved”; park them in Risks & open
+  questions. A missing Solution heading does not catch mechanisms inside a
+  story.
 - Every asserted need cites a claim row in `evidence.md`. A need with no evidence
   is an open question, not a finding.
 
-### Mode 2 — Value commitment (VALUE JUDGMENT)
+### Mode 2 — Value commitment (value judgment)
 
-Deciding **which** needs to serve is not a knowledge question — it is a value
-judgment, and its ground truth is **with the user**. Therefore this is
-**research-then-"my take"** mode, the same protocol as loom-code brainstorming
-Axis 4.
+Ground truth is with the user. Research first, then provide “my take”:
 
-**Commitment interaction contract:**
+1. Present the evidence-backed opportunity space and an explicit recommendation:
+   - **Recommend** — needs to serve.
+   - **Why** — supporting evidence and reasoning.
+   - **Conditional reversal** — the fact that would flip the call.
+2. Write the commitment only after the user ratifies it through an **explicit
+   affirmative user reply** to that recommendation; no sign-off ritual is
+   required. Mark `ratified by user on <date>`. If the user chooses a different
+   set, write what was ratified and record the divergence.
+3. **Agents never self-commit** on the user's behalf. Mapping and recommending
+   belong to the agent; deciding belongs to the user.
 
-1. The agent presents the mapped opportunity space with its evidence, then makes
-   an **explicit recommendation** in the Axis-4 shape:
-   - **Recommend** — which needs to serve, stated plainly.
-   - **Why** — the evidence and reasoning behind it.
-   - **Conditional reversal** — what fact, if true, would flip the call.
-2. The commitment is written into `user-insights.md` **only after the user
-   ratifies** it (ratification = an **explicit affirmative user reply in
-   conversation** to the presented recommendation — no keyword or sign-off
-   ritual needed; mark it "ratified by user on <date>"). If the user ratifies
-   a **different** set than recommended, write what was **ratified** and record
-   the divergence.
-3. **Agents never self-commit on the user's behalf.** Mapping and proposing is
-   the agent's job; deciding is the user's. A commitment written without
-   ratification is a contract violation, not a shortcut.
+## Research routing
 
-## Research delegation boundary
+- Delegate to `research-toolkit:deep-deep-research` when discovery has **more
+  than 3 research questions**, or requires **primary user evidence** such as
+  interviews or usage data. Pass artifact paths plus structured seed context;
+  never inline the analysis. The delegate runs its pipeline and returns findings.
+- Otherwise research inline. Run **EN + JA** web queries each round and cite both,
+  labelled by language. Report a language's zero relevant hits as a finding.
+  If live search is unavailable, delegate through the host's heavyweight route
+  to `research-toolkit:deep-deep-research`; do not guess.
 
-Pick the research path by scope (resolves the brief's Open Q2):
+In both paths, place findings in `evidence.md` claim rows and per-question
+`research/` reports, never as unsourced assertions.
 
-- **Delegate to `research-toolkit:deep-deep-research`** when the discovery needs
-  **more than 3 research questions**, OR when **primary user evidence**
-  (interviews, usage data — evidence a web search cannot provide) is required.
-  Pass paths + seed context per the cross-plugin
-  delegation contract (monkey-skills `CLAUDE.md` §Cross-Plugin Delegation
-  Contract) — pass file paths and a structured seed, never inline analysis; the
-  delegate loads its own standards, runs its own pipeline, returns findings.
-- **Inline WebSearch** otherwise (small scopes, ≤3 questions, world-researchable).
-  Run **EN + JA** queries every round (single-language search is sampling bias);
-  cite both, labelled by source language. If a language returns 0 hits, surface
-  that as a finding.
+## Artifacts and evidence chain
 
-Either way, findings land as claim rows in `evidence.md` and as `research/`
-reports — never as unsourced assertions.
+Use `docs/loom/discovery/<date>-<slug>/`, where date is today's `YYYY-MM-DD` and
+slug is kebab-case. Reuse an existing folder for the same topic.
 
-## Artifact set
-
-All under `docs/loom/discovery/<date>-<slug>/` (`<date>` = today, `YYYY-MM-DD`;
-`<slug>` = kebab-case topic; reuse the folder when the same topic already has
-one):
-
-| File | Role |
+| Artifact | Role |
 |---|---|
-| `user-insights.md` | The insights + ratified commitment (per `assets/user-insights-template.md`). |
-| `research/` | One intermediate report **per research question**: goals → method → findings → insights skeleton. Kept for audit and re-understanding. |
-| `evidence.md` | Claims-to-evidence registry (per `assets/evidence-template.md`). |
+| `user-insights.md` | Insights and ratified commitment, following `assets/user-insights-template.md`. |
+| `research/` | One auditable report per research question: goal, method, findings, insight skeleton. |
+| `evidence.md` | Claims-to-evidence registry, following `assets/evidence-template.md`. |
 
-### Evidence-chain doctrine
-
-```
+```text
 evidence.md (facts) → research/ (reports) → user-insights.md (insights + commitment)
 ```
 
-**Evidence outlives any single report** (ResearchOps atomic-research model). A
-`research/` report can be re-run or discarded; the underlying facts stay in
-`evidence.md`. This is what makes the discovery re-understandable months later
-and is the user's explicit drift-prevention requirement.
+**Evidence outlives any single report.** Reports may be rerun or discarded;
+their underlying facts remain in `evidence.md`, keeping discovery understandable
+months or years later.
 
-## Downstream consumers
+Downstream, committed outcomes inform falsifiable `PRINCIPLES.md` checks, needs
+and journey stages seed interaction flows, and job stories seed acceptance
+criteria. State these inputs in problem-space terms; consumers translate them.
 
-What this artifact feeds (state it in problem-space terms, let each consumer
-translate):
+## Behavioral boundary
 
-- **Value-commitment outcomes** → `PRINCIPLES.md` `— check:` material for
-  loom-design (falsifiable checks derive from committed outcomes).
-- **Needs + journey stage** → loom-design flow seeds.
-- **Job stories** → loom-design acceptance-criteria seeds.
-
-## Agent behavioral contract
-
-- user-insights agents **map needs and propose commitments**; they may **NOT
-  render investment / worth-it verdicts** — that is business-value's profession.
-  Professional isolation is contract-level: the two skills share no artifact and
-  no agent.
-- Agents never self-commit (see Mode 2). Writer ≠ decider on the commitment.
+user-insights agents map needs and propose commitments. They **may not render
+investment / worth-it verdicts**; that belongs to business-value. The skills
+share no artifact or agent. Agents never self-commit.
 
 ## Workflow
 
-1. **Frame** the problem (what + why now + whose) into `user-insights.md`
-   §Problem framing. No solutions.
-2. **Map** the opportunity space (Mode 1): research the world / repo, record
-   claims in `evidence.md`, write each need as an evidence-linked job story.
-   Route research per the delegation boundary above.
-3. **Propose** the commitment (Mode 2): first gather the user's value inputs
-   (priorities among the mapped needs, appetite) — these are value judgments,
-   the legitimate user questions — then present the space + an explicit
-   Recommend / Why / Conditional-reversal recommendation grounded in them.
-4. **Ratify**: write the commitment into §Value commitment only after the user
-   ratifies; mark the ratification date.
-5. **Close** with §Risks & open questions; unsupported claims live there, never
-   in Opportunity space as if settled.
-6. **Validate, then fix.** Run the validator on the produced artifact folder
-   **before declaring the discovery done**. The script lives in the PLUGIN
-   repo; the artifact lives in the CONSUMER project — resolve the script path
-   to an absolute path and run from the consumer project root:
+1. **Frame** what the user struggles with, why now, and whose problem it is in
+   `user-insights.md` §Problem framing. Include no solution.
+2. **Map** Mode 1: research through the route above, record atomic claims in
+   `evidence.md`, and write evidence-linked job stories.
+3. **Propose** Mode 2: ask only legitimate value questions—priorities among
+   mapped needs and appetite—then present Recommend / Why / Conditional reversal.
+4. **Ratify**: update §Value commitment only after ratification and record its
+   date and any divergence.
+5. **Close** with Risks & open questions. Unsupported claims belong there, not
+   in Opportunity space as settled findings.
+6. **Validate, then fix** before declaring discovery done. The script is in the
+   PLUGIN repo while artifacts are in the CONSUMER project; resolve the script
+   to an absolute path and run from the consumer root:
 
-   ```
+   ```text
    cd <consumer-project-root>
    argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/discovery/validate_discovery_artifacts.py", "<discovery-folder>"]
    ```
 
-   Pass this argv array directly to process execution; never through a shell.
-
-   Non-zero exit → fix the reported problems and re-run, **bounded at 2 attempts**;
-   if still non-zero after 2 fix-and-rerun cycles, stop and
-   surface the remaining problems to the user in plain language — never
-   silently proceed. The validator tolerates greenfield/first-run artifact
-   creation (the assess-first intermediate state — `business-value.md` alone,
-   before `user-insights.md` exists — is a sanctioned pass, not a failure); a
-   genuine schema violation must never be waved through under that same
-   "it's new" excuse.
+   Pass the argv array directly to process execution, never through a shell.
+   On non-zero, fix and rerun, **bounded at 2 attempts**. If still non-zero after
+   2 fix-and-rerun cycles, stop and surface remaining problems in plain language.
+   The validator accepts sanctioned greenfield/first-run states such as an
+   assess-first `business-value.md` alone, but never waive a schema violation.
 
 ## References
 
-- `assets/user-insights-template.md` — the artifact skeleton.
-- `assets/evidence-template.md` — the claims-to-evidence registry.
-- loom-code brainstorming `references/axis4-research-protocol.md` — the
-  research-then-"my take" protocol Mode 2 reuses (EN+JA queries, recommendation
-  shape).
-- `../using-loom-design/references/claude-code-tools.md` (Codex:
-  `codex-tools.md` beside it) — host invocation shapes for the delegation
-  targets named above.
+- `assets/user-insights-template.md` — output skeleton.
+- `assets/evidence-template.md` — claims-to-evidence registry.
+- loom-code brainstorming `references/axis4-research-protocol.md` — Mode 2's
+  research-then-my-take protocol.
+- `../using-loom-design/references/discovery-claude-code-tools.md` (Codex:
+  `discovery-codex-tools.md` beside it) — host-specific research invocation.
