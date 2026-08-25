@@ -34,9 +34,17 @@ def _target_repo(tmp_path: Path) -> Path:
     return repo
 
 
+def _plugin_root(tmp_path: Path, name: str = "plugin") -> Path:
+    """Create a minimal plugin installation root (.claude-plugin/plugin.json)."""
+    root = tmp_path / name
+    (root / ".claude-plugin").mkdir(parents=True)
+    (root / ".claude-plugin" / "plugin.json").write_text("{}\n", encoding="utf-8")
+    return root
+
+
 def _well_formed_packet(tmp_path: Path) -> dict[str, object]:
     repo = _target_repo(tmp_path)
-    resource = tmp_path / "resource.md"
+    resource = _plugin_root(tmp_path) / "resource.md"
     resource.write_text("resource\n", encoding="utf-8")
     return {
         "target_repo": str(repo),
@@ -49,10 +57,13 @@ def _well_formed_packet(tmp_path: Path) -> dict[str, object]:
 def _validate(tmp_path: Path, packet: dict[str, object]) -> subprocess.CompletedProcess[str]:
     packet_path = tmp_path / "packet.json"
     packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    # cwd pinned to tmp_path: a relative target_repo must fail on
+    # absoluteness itself, not by luck of the validator's cwd.
     return subprocess.run(
         [sys.executable, str(SCRIPT), "--validate", str(packet_path)],
         capture_output=True,
         text=True,
+        cwd=str(tmp_path),
     )
 
 
@@ -78,6 +89,26 @@ def _missing_resource(packet: dict[str, object], tmp_path: Path) -> None:
     packet["resources"] = {"reviewer_discipline": str(tmp_path / "does-not-exist.md")}
 
 
+def _relative_target_repo(packet: dict[str, object], tmp_path: Path) -> None:
+    packet["target_repo"] = "target"
+
+
+def _rootless_resource(packet: dict[str, object], tmp_path: Path) -> None:
+    # Absolute and existing, but no .claude-plugin/plugin.json ancestor.
+    resource = tmp_path / "rootless.md"
+    resource.write_text("resource\n", encoding="utf-8")
+    packet["resources"] = {"reviewer_discipline": str(resource)}
+
+
+def _split_root_resources(packet: dict[str, object], tmp_path: Path) -> None:
+    # A second value under a DIFFERENT plugin root than the first.
+    extra = _plugin_root(tmp_path, "plugin-b") / "extra.md"
+    extra.write_text("resource\n", encoding="utf-8")
+    resources = dict(packet["resources"])  # type: ignore[arg-type]
+    resources["gate_markers"] = str(extra)
+    packet["resources"] = resources
+
+
 @pytest.mark.parametrize(
     ("mutate", "field"),
     [
@@ -90,6 +121,9 @@ def _missing_resource(packet: dict[str, object], tmp_path: Path) -> None:
         pytest.param(_set_sha("0" * 40), "reviewed_sha", id="sha-not-in-repo"),
         pytest.param(_relative_resource, "resources", id="relative-resource-path"),
         pytest.param(_missing_resource, "resources", id="nonexistent-resource-path"),
+        pytest.param(_relative_target_repo, "target_repo", id="relative-target_repo"),
+        pytest.param(_rootless_resource, "reviewer_discipline", id="resource-outside-plugin-root"),
+        pytest.param(_split_root_resources, "gate_markers", id="resources-two-plugin-roots"),
     ],
 )
 def test_validate_rejects_malformed_packets(tmp_path: Path, mutate, field: str) -> None:
