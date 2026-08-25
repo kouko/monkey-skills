@@ -7,45 +7,25 @@ description: |
 
 # Handoff
 
-## What this skill does
+Preserve session state for a cold AI reader in a structured file under
+`.claude/handoffs/`. Use **Prepare mode** when a user is ending a session and
+**Resume mode** when starting from a prior HANDOFF. For in-session
+re-orientation use `loom-workflow:recap-state`; this is not `/recap` or
+agent-to-agent delegation.
 
-Produces or consumes a structured 10-block HANDOFF file in
-`.claude/handoffs/`. Two modes:
+The artifact is an operational restart record, not a polished human summary.
+Its job is to let a new session prove that repository and tool state still
+match, recover the user's exact intent, and stop before changing anything.
+Completeness and precision therefore outrank narrative flow, but repeated
+schema teaching belongs in the reference rather than this always-loaded file.
 
-- **Prepare mode** — end of session. Gather live git state via Bash,
-  then Write a file named `HANDOFF-YYYY-MM-DD-HHMMSS-<slug>.md` under
-  `.claude/handoffs/`. All 10 blocks per `references/handoff-schema.md`, then
-  emit a copy-paste **Resume Launcher** (init prompt) for the next session.
-- **Resume mode** — start of session. Find the latest HANDOFF file, Read it,
-  run every Verification Command via Bash, report verbatim output, and surface
-  any mismatch before acting.
+## Prepare mode
 
-The HANDOFF file is for a cold AI reader (new session, zero context). It is
-not a human-readable summary — precision beats readability here (see
-`technical-precision` principle below).
+**Before authoring any HANDOFF artifact, read `references/handoff-schema.md` fully.**
+It is the unchanged authority for the template, field semantics, and examples.
+Do not reconstruct the schema from this entrypoint. Then:
 
-## When to fire
-
-Fire when you recognise any prepare-mode or resume-mode trigger from the
-frontmatter. When in doubt: if the user is ending a session → prepare mode;
-if the user is starting work and mentions a prior session → resume mode.
-
-**Layer table** — choose the right skill:
-
-| Situation | Skill |
-|---|---|
-| Lost thread mid-session (human still in conversation) | `loom-workflow:recap-state` (L3 in-session) |
-| Ending session; want cold AI to resume later | `loom-workflow:handoff` prepare mode (L2 cross-session) |
-| Starting new session; loading prior state | `loom-workflow:handoff` resume mode (L2 cross-session) |
-| User returns to a session after being away (built-in) | Claude Code `/recap` away-summary (built-in, different tool) |
-| Delegating a sub-task to a parallel agent | OpenAI Agents SDK `handoff_<id>_tool` or similar (not this skill) |
-
-## Prepare mode — what to do
-
-**HARD-GATE: do not skip these Bash steps. State gathered here is the ground
-truth for the future cold AI reader.**
-
-1. Run via Bash (report all output verbatim in the HANDOFF file):
+1. Run these state-gathering commands and preserve their output verbatim:
    ```
    git rev-parse HEAD
    git rev-parse --abbrev-ref HEAD
@@ -54,135 +34,122 @@ truth for the future cold AI reader.**
    claude --version
    ```
 
-2. Use Write to create `.claude/handoffs/HANDOFF-YYYY-MM-DD-HHMMSS-<slug>.md`
-   where `<slug>` is a short kebab-case description of the work (e.g.
-   `handoff-skill-t2`, `auth-refactor-session-3`).
+2. Write
+   `.claude/handoffs/HANDOFF-YYYY-MM-DD-HHMMSS-<slug>.md`, with a short
+   kebab-case slug, using all 10 blocks in schema order:
+   1. Frontmatter
+   2. Situation
+   3. Background
+   4. All user messages
+   5. Recent decisions
+   6. Pending
+   7. Critical files
+   8. Do Not Touch
+   9. Verification commands
+   10. Confidence flags
 
-3. Author all 10 blocks per `references/handoff-schema.md`:
-   1. Frontmatter (YAML — `conversation_language` = the language you have been
-      replying to the user in this session; git.head, git.dirty, tools.claude_code)
-   2. Situation (one sentence — exact present state)
-   3. Background (decisions + rejected paths + critical paths, verbatim)
-   4. All user messages (every turn verbatim — no filtering)
-   5. Recent decisions (Decision / WHY / Rejected alternative triples)
-   6. Pending (checklist with P1/P2/P3 priority)
-   7. Critical files (path + why-it-matters + recently-modified)
-   8. Do Not Touch (explicit guardrails — exact paths + reasons)
-   9. Verification commands (runnable shell assertions + expected output)
-   10. Confidence flags (per-block ✅/⚠️/❓ table)
+   Populate them according to the schema: frontmatter records
+   `conversation_language`, git state, and the Claude Code version; Situation
+   is one exact sentence; Background retains decisions, rejected paths, and
+   critical paths. All user messages includes every turn verbatim. Recent
+   decisions uses Decision / WHY / Rejected alternative triples. Pending is a
+   P1/P2/P3 checklist. Critical files names each path, why it matters, and
+   whether it changed. Do Not Touch gives exact paths and reasons. Verification
+   commands are runnable assertions with expected output. Confidence flags rate
+   every block with the schema's ✅/⚠️/❓ vocabulary.
 
-4. When authoring Block 9, **tag each verification command [T1] load-bearing or
-   [T2] advisory** per `references/handoff-schema.md` §Block 9, and account for
-   the self-reference: the HANDOFF file you just wrote adds an untracked entry to
-   `git status --short` (the snapshot in step 1 predates the Write), so **never
-   encode a raw git-status line count as a [T1] assertion** — keep it [T2] with a
-   "+1 for `.claude/handoffs/` itself" benign-drift note, or re-snapshot after
-   the Write.
+   Set `conversation_language` to the language used with the user, not the
+   language returned by a subagent or command. Preserve exact paths,
+   identifiers, commands, full error messages, decisions, rejected
+   alternatives, and user turns. The reader has zero conversational context;
+   vague phrases such as "the usual file" or "tests mostly pass" are invalid.
 
-5. Apply `technical-precision` throughout: exact file paths, full error
-   messages, precise command names. The reader is a cold AI tool — vague
-   descriptions cause wrong-path assumptions.
+3. In Block 9 tag every command **[T1] load-bearing** or **[T2] advisory**.
+   Use [T1] for facts whose drift makes the saved next action unsafe or wrong,
+   such as HEAD, branch, tool version, PR state, or test counts. Use [T2] for
+   informative state that can change benignly but still deserves review.
+   The new HANDOFF itself may add one untracked `git status --short` entry after
+   the initial snapshot. Never make the raw status line count [T1]: either
+   re-snapshot after writing or label it [T2] and record this known benign drift.
 
-6. **Emit the Resume Launcher** — after the file is written, produce a
-   copy-paste **init prompt** in a fenced code block per
-   `references/handoff-schema.md` §6 Resume Launcher. Do two things with it:
-   **(a)** append it as a closing `## Resume Launcher` section of the HANDOFF
-   file (so it survives the session and is retrievable with `tail`), and
-   **(b)** print it in chat so the user can copy it immediately. The launcher is
-   a **thin pointer**, not a context re-dump: it names the **exact HANDOFF
-   path**, tells the next session to read that file and resume per its
-   instructions (run [T1] verification → report [T2] drift → synthesis-check
-   before acting), uses **portable phrasing** that works whether or not the new
-   session has `loom-workflow:handoff` installed, carries a line telling the next
-   session to **reply in the `conversation_language`** from the frontmatter (so
-   the resumed session continues in the user's language instead of defaulting to
-   English — subagent / tool output stays in its source language, localized
-   before surfacing), and ends with a blank `USER DIRECTIVE:` line. It does NOT
-   reproduce any block content — the file is the single source of truth.
+4. Append a closing `## Resume Launcher` and print the same copy-paste init
+   prompt in chat. This launcher is a **thin pointer**, not a context re-dump.
+   It must name the exact HANDOFF path, work without this skill installed,
+   direct the next session to read the file, run [T1] checks, report [T2] drift,
+   perform the Synthesis-check before acting, reply in `conversation_language`,
+   and end with a blank `USER DIRECTIVE:` line. Do not reproduce any HANDOFF
+   blocks in the launcher: the file remains the single source of truth. Append
+   first so the launcher survives the current session, then show the identical
+   text to the user for immediate copying.
 
-## Resume mode — what to do
+## Resume mode
 
-**HARD-GATE: run ALL Verification Commands and report verbatim. A [T1
-load-bearing] mismatch means STOP. A [T2 advisory] mismatch is reported and
-judged, not an automatic stop — see step 4.**
+**Before interpreting any HANDOFF artifact, read `references/handoff-schema.md` fully.**
+This read happens before judging, verifying, summarizing, or acting on the
+artifact; do not rely on memory of a prior schema version. Then:
 
-1. Run via Bash to find the latest HANDOFF:
+1. Find the latest file:
    ```
    ls -t .claude/handoffs/ | head -1
    ```
 
-2. Read the file. Read it fully — do not skim. Adopt its `conversation_language`
-   for all user-facing replies in this resumed session — do NOT default to
-   English; subagent / tool output stays in its source language and is localized
-   before surfacing (same as a normal session).
+2. Read that HANDOFF fully. Adopt its `conversation_language` for every
+   user-facing reply instead of defaulting to English. Keep subagent and tool
+   output in its source language internally, but localize it before surfacing it
+   to the user. Do not skim or begin pending work while reading.
 
-3. Run EACH Verification Command from Block 9 via Bash. Report the verbatim
-   output next to the expected output. Example format:
+3. **run every command** in Block 9. Report verbatim output next to expected
+   output; do not collapse several results into a summary:
    ```
    Command: git log --oneline -5
    Expected: abc123 at top
    Actual: abc123 feat(loom-workflow): ...  ← MATCH
    ```
 
-4. **Apply the tier rule to each mismatch** (Block 9 tags every command [T1] or
-   [T2]; an untagged command is treated as [T1], fail-safe):
-   - **[T1] load-bearing mismatch** (HEAD / branch / version / PR state / test
-     counts) → **REFUSE TO CONTINUE.** State has drifted since the HANDOFF was
-     written. Surface it:
-     > "Load-bearing verification mismatch on `<command>`: expected `<X>`, got
+4. Apply the mismatch tiers command by command; an untagged command is treated as [T1], fail-safe.
+   - A **[T1]** mismatch in HEAD, branch, version, PR state, test count, or other
+     load-bearing state means **REFUSE TO CONTINUE**. Quote command, expected,
+     and actual output, explain that state drifted, and ask how to proceed:
+     > Load-bearing verification mismatch on `<command>`: expected `<X>`, got
      > `<Y>`. State has changed since the handoff was written. How do you want
-     > to proceed?"
-   - **[T2] advisory mismatch** (e.g. `git status` line count) → **report it
-     verbatim, state whether it matches the known benign drift, and proceed only
-     if benign.** Do NOT silently wave it through, and do NOT hard-stop on it:
-     > "Advisory mismatch on `git status --short`: expected 3 untracked lines,
+     > to proceed?
+   - A **[T2]** mismatch must still be reported verbatim and judged. Proceed
+     only when it matches a recorded benign cause such as the known benign drift
+     from the HANDOFF file itself; otherwise ask the user. Never silently waive
+     it or treat every advisory mismatch as a hard stop. For example:
+     > Advisory mismatch on `git status --short`: expected 3 untracked lines,
      > got 4 — the extra line is `.claude/handoffs/` itself (the known benign
-     > drift). Proceeding."
+     > drift). Proceeding.
 
-5. After all verifications PASS, produce a Synthesis-check (soft gate):
-   summarise your understanding of the situation, pending work, and next
-   step in 3–5 bullets, then ask the user to confirm or redirect before
-   acting. Do not act until the user responds.
+5. Only after full verification passes, give a 3–5 bullet **Synthesis-check**
+   covering situation, pending work, and next step, then ask the user to confirm
+   or redirect. **Do not act until the user responds.**
 
-## Apply all 5 共通核心原則
+## Invariants
 
-See `references/handoff-schema.md` §3 for full definitions. One-line reminder
-per principle:
+Apply the schema's five principles every time:
 
-- **structured-schema**: use all 10 blocks every time — no free-form narrative.
-- **quote-not-paraphrase**: blocks 3, 4, 5 reproduce exact strings — file
-  paths, error messages, user turns verbatim.
-- **all-user-messages**: block 4 lists every user turn — no LLM filtering of
-  "unimportant" messages (the cold reader has no other source of user intent).
-- **synthesis-check**: resume mode always ends with a directed question; agent
-  does not continue until the user confirms.
-- **technical-precision**: HANDOFF output uses full paths, exact identifiers,
-  complete error messages. Reader is a cold AI tool — plain-language softening
-  removes load-bearing precision.
+- **structured-schema** — use all 10 blocks in order, never a free-form
+  narrative substitute.
+- **quote-not-paraphrase** — preserve load-bearing strings exactly, especially
+  user intent, paths, identifiers, and errors.
+- **all-user-messages** — include every user turn without deciding which ones
+  seem important; the cold reader has no other user-intent record.
+- **synthesis-check** — Resume mode ends at the directed confirmation question
+  and waits for the user's answer.
+- **technical-precision** — retain exact paths, identifiers, errors, commands,
+  and expectations even when plainer wording would sound smoother.
 
-## What NOT to do
+## Boundaries
 
-- **Do not replace the built-in `/recap`** (away-summary). That fires when the
-  user returns to a session after being away. This skill fires when the user
-  explicitly wants to end a session or resume from a prior one.
-- **Do not use this for in-session re-orientation** — that is
-  `loom-workflow:recap-state` (L3). If the user is still in the current session and
-  just needs a "where were we", use recap.
-- **Do not treat this as agent-to-agent delegation** — not the OpenAI
-  `handoff_<id>_tool` pattern. That is a parallel-agent orchestration problem;
-  this is a cross-session state-preservation problem.
-- **Do not skip Verification Commands on resume** (HARD-GATE). Even if the
-  HANDOFF looks recent, run the commands. State may have drifted.
-- **Do not produce a free-form narrative instead of the 10 blocks** — the
-  schema is the cold reader's navigation map; a prose summary with "basically
-  we were doing X" is not equivalent.
-- **Do not author `.claude/handoffs/` files outside prepare mode** — the
-  directory is the canonical storage for HANDOFF files. Other paths break
-  the `ls -t .claude/handoffs/ | head -1` discovery command.
-- **Do not compact context to "save space" instead of handoff** — compaction
-  loses the verbatim user-message record (Block 4). Use this skill for
-  intentional state preservation; use built-in `/compact` only when context
-  pressure (not session end) forces it.
+- Do not author `.claude/handoffs/` outside Prepare mode; other locations break
+  the discovery command and this directory is canonical.
+- Do not skip or sample Verification commands in Resume mode, even when the
+  HANDOFF is recent. Run all of them before synthesis.
+- Do not substitute a free-form summary for the 10 blocks or filter Block 4.
+- Do not use this for in-session recap, an away-summary, or parallel delegation.
+- Do not use `/compact` as a substitute for intentional handoff: compaction does
+  not preserve the complete verbatim user-message record.
 
 ## See also
 
