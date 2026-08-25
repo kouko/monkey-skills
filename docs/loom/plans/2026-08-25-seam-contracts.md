@@ -15,7 +15,7 @@ Steps:
 **Total tasks**: 8
 **Critical-path depth**: 4 (≤5)
 **Execution order**: parallel-where-possible
-**Plan-document-reviewer verdict**: PASS (2026-08-25, round 1, 17/17)
+**Plan-document-reviewer verdict**: PASS (2026-08-25, round 2 — T2 amendment re-review, 17/17)
 
 ## Task-flow diagram
 
@@ -56,7 +56,7 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
 - **Independent**: false
 - **Review-weight**: prose
 - **Brief item covered**: BI-1
-- **Status**: claimed(@feat/seam-contracts)
+- **Status**: done(5a0d9d4b)
 - **Gloss**: 計畫格式從此有「這條依賴邊傳什麼、誰擁有格式」的宣告位——接縫第一次成為一級公民。
 
 ## Task 2 — 探針與共用 parser 義務
@@ -65,18 +65,19 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
   - Obligation (a): one executed cross-seam probe named in the consumer task's `Acceptance` — the `probe:` slot must match an Acceptance entry.
   - Obligation (b): both tasks import one shared parser/schema defined by the owner task — never two hand-rolled readers of the same bytes.
   - State the enforcement split: presence is checked mechanically (Task 3's checker) and at plan review (Check 20); adequacy of the probe remains the reviewers' judgment.
+  - Also add `- **Seam**:` lines to the canonical worked example's Task 3 (the block whose Dependencies reads "Tasks 1, 2 complete first") so the example satisfies the new required-when rule (T1 docs-review 🟡 fix, folded in — same file).
 - **Module**: loom-code/skills/writing-plans
 - **Files touched**: loom-code/skills/writing-plans/references/plan-format.md
 - **Context paths**:
   - /Users/kouko/GitHub/monkey-skills/loom-code/skills/writing-plans/references/plan-format.md
 - **Acceptance**:
-  - **RED**: `grep -q 'cross-seam probe' loom-code/skills/writing-plans/references/plan-format.md` exits 1 today.
-  - **GREEN**: the grep exits 0; the obligation paragraph covers probe-in-Acceptance and shared-parser-owned-by-owner, inside `#### Seam`.
+  - **RED**: `grep -q 'seam obligates' loom-code/skills/writing-plans/references/plan-format.md` exits 1 today (verified 0 occurrences; the earlier `cross-seam probe` anchor went stale — T1's grammar placeholder already contains that substring).
+  - **GREEN**: the grep exits 0; the obligation paragraph covers probe-in-Acceptance and shared-parser-owned-by-owner, inside `#### Seam`; the worked example's Task 3 carries `- **Seam**:` bullets.
 - **Dependencies**: Task 1 completes first
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: claimed(@feat/seam-contracts)
 - **Gloss**: 有資料流過的接縫必須被「執行過的探針」驗證、且兩端讀寫同一份 parser——#479/#705 的教訓正式入法。
 
 ## Task 3 — 機械檢查器 check_seam_coverage.py
@@ -146,7 +147,7 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-2
-- **Status**: pending
+- **Status**: claimed(@feat/seam-contracts)
 - **Gloss**: 接縫契約真的被送進每個 implementer 的派工包——superpowers 驗證過的形，補上 loom 缺的那一節。
 
 ## Task 6 — implementer 輸入契約加 Seam 槽
@@ -168,7 +169,7 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-2
-- **Status**: pending
+- **Status**: claimed(@feat/seam-contracts)
 - **Gloss**: SKILL 規則同步進 agent 契約本體——避免「規則進了 skill 卻沒進執行者契約」的既知缺口（backlog 2026-08-04）。
 
 ## Task 7 — writing-plans 守衛措辭改指 Seam
@@ -187,7 +188,7 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-7
-- **Status**: pending
+- **Status**: claimed(@feat/seam-contracts)
 - **Gloss**: 舊的「憑判斷」守衛句改為指向可檢查的文法——敘事保留、法源升級。
 
 ## Task 8 — 版本收尾
