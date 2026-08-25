@@ -38,7 +38,7 @@ def test_entrypoint_preserves_splitting_gates_review_schema_and_change_binding_w
         "critical-path depth ≤5",
         "No hard width cap",
         "depth >5",
-        "The two options are a closed list: there is no depth-limit exception or “record the risk and continue” path.",
+        "For an initial depth>5 brief, the two options are a closed list: there is no depth-limit exception, structural-split escape hatch, or “record the risk and continue” path.",
         "Structural-split escape hatch",
         "round-2 NEEDS_REVISION",
         "fresh sibling",

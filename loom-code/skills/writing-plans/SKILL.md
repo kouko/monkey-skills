@@ -72,9 +72,9 @@ If the critical-path **depth** exceeds 5, the brief is too big. **Do not silentl
 1. **Route back to brainstorming**: the Smallest End State (Axis 3) was not actually smallest — it baked in a long sequential dependency chain. Surface this and ask the user to re-cut.
 2. **Split into multiple sequential briefs**: if the work genuinely needs a chain deeper than 5 and the user agrees, write *N* separate brief files (each with depth ≤5), explicitly labeled `<topic>-part-{1..N}.md`. Each brief is a standalone input to its own `writing-plans` run and its own SDD run. **Split = N brief files, not N plans from one brief.** A plan is 1-to-1 with one brief — `## Part 1 / ## Part 2` sections inside a single plan file are not valid splitting.
 
-The two options are a closed list: there is no depth-limit exception or “record the risk and continue” path.
+For an initial depth>5 brief, the two options are a closed list: there is no depth-limit exception, structural-split escape hatch, or “record the risk and continue” path.
 
-Deep chains usually reveal a discovery failure; wide-but-shallow plans are valid.
+Deep chains reveal discovery failure; wide plans are valid.
 
 **Why depth `5` is a heuristic, not a law** — the compounding-error rationale and worked example: [`references/design-evidence.md`](references/design-evidence.md).
 
@@ -214,9 +214,9 @@ Two per-task fields — `Independent` and `Files touched` — signal parallel-di
 
 ## Consuming a loom-design change-folder
 
-Writing-plans can consume a validated `docs/loom/<change-id>/` from `loom-design:spec-expansion`. Validated means `validate_spec_output.py` exited 0 on its `specs/<capability>/spec.md` `### Requirement:` blocks and `#### Scenario:` criteria.
+Writing-plans consumes a validated `docs/loom/<change-id>/` from `loom-design:spec-expansion`. Validated means `validate_spec_output.py` exited 0 on its `specs/<capability>/spec.md` `### Requirement:` blocks and `#### Scenario:` criteria.
 
-**Detecting which change-folder to consume.** Evaluate these layers in order; stop on resolution. Evidence: `docs/loom/research/2026-07-10-change-binding-and-lifecycle-research.md` and [`references/design-evidence.md`](references/design-evidence.md).
+**Detecting which change-folder to consume.** Evaluate layers in order; stop on resolution. Evidence: `docs/loom/research/2026-07-10-change-binding-and-lifecycle-research.md` and [`references/design-evidence.md`](references/design-evidence.md).
 
 First resolve the target repo's root: run `git rev-parse --show-toplevel` there. Anchor all layers at that TARGET repo's root, never ambient cwd.
 
