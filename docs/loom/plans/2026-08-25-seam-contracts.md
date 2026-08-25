@@ -6,7 +6,7 @@ Goal: A plan written under the new format leaves no dependency edge without a
     into dispatch packets and consumer acceptance (probe + shared parser),
     and the rule is enforced by both a reviewer check and a mechanical
     checker.
-Stage: review:round-1
+Stage: finishing
 Steps:
     1. 定義 Seam 文法（plan-format）
     2. 佈線到派工面（SDD 派工步驟／implementer 契約／writing-plans 措辭）
