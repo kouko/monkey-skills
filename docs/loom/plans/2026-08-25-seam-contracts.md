@@ -6,7 +6,7 @@ Goal: A plan written under the new format leaves no dependency edge without a
     into dispatch packets and consumer acceptance (probe + shared parser),
     and the rule is enforced by both a reviewer check and a mechanical
     checker.
-Stage: planning
+Stage: review:round-1
 Steps:
     1. 定義 Seam 文法（plan-format）
     2. 佈線到派工面（SDD 派工步驟／implementer 契約／writing-plans 措辭）
@@ -104,7 +104,7 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
 - **Dependencies**: Task 2 completes first
 - **Independent**: true
 - **Brief item covered**: BI-5
-- **Status**: claimed(@feat/seam-contracts)
+- **Status**: done(db3a087d)
 - **Gloss**: 接縫規則有機械牙齒——不靠審查者散文自律，漏宣告的邊直接 exit 1。
 
 ## Task 4 — 審查 Check 20
@@ -127,7 +127,7 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
 - **Dependencies**: Task 2 completes first
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: claimed(@feat/seam-contracts)
+- **Status**: done(491430ae)
 - **Gloss**: 計畫審查者從此把「依賴邊沒接縫宣告」當計畫缺陷擋下——與機械檢查器互為雙保險。
 
 ## Task 5 — SDD 派工步驟帶接縫
@@ -216,7 +216,7 @@ N/A — no unresolved question: grammar shape, checker CLI, and check numbering 
 - **Independent**: false
 - **Review-weight**: mechanical
 - **Brief item covered**: none — release administration (version bump + manifest mirror deliver no brief outcome)
-- **Status**: pending
+- **Status**: done(cc17797d)
 - **Gloss**: 沒 bump 版本則 marketplace 靜默不發佈——歷史判例（PR#539）的例行防呆。
 
 ## Notes
