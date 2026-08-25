@@ -7,159 +7,72 @@ version: 0.5.2
 
 # distill-sessions
 
-Stage 1+2+3+5 of the v2 mining architecture: ingest Claude Code and Codex
-session transcripts, attach `/insights` per-session facets where available, detect friction
-signals, aggregate per target Skill, dispatch per-trajectory subagents
-in parallel, and emit a reviewable SKILL.md edit proposal.
-
-The skill is engine-generic; v0.1 ships `loom-code:*` as the default
-target preset (14 sessions of dogfood evidence) with `--target-skill-pattern`
-parameterizing wider scopes. Stage 4 (full SDD spec-reviewer +
-code-quality-reviewer consolidation) is deferred to v0.2 if dogfood
-shows orchestrator merge conflicts.
+Mine completed Claude Code and Codex sessions, join Claude `/insights`
+facets when available, rank friction by existing Skill, and produce reviewable
+SKILL.md proposals. The default target preset is `loom-code:*`; use
+`--target-skill-pattern` for another scope. This is post-hoc evidence mining,
+not real-time coaching or new-skill discovery.
 
 ## When to use
 
-Triggered by any of:
+Use this skill after several changes to a skill family, before a skill
+refactor, when recurring missed activations need evidence, or when MEMORY.md
+has crossed its 24.4 KB soft cap and needs evidence-backed graduation
+candidates. Typical requests include “mine my skill logs for loom-code,”
+「最近の loom-code ログを掘って改善提案を出して」, and
+「挖一下最近 loom-code 的 session log」.
 
-- **After a multi-PR cycle on a skill family** — e.g. several PRs in
-  one week against `loom-code:*`. Friction patterns
-  (NEEDS_REVISION re-dispatch streaks, interrupt-after-brainstorm,
-  tool-error clusters) have accumulated and are now mineable.
-- **MEMORY.md soft-limit breach** — when MEMORY.md exceeds its
-  24.4 KB soft cap, you need a graduation pipeline: which auto-memory
-  feedback entries should land in a skill body. Mining surfaces the
-  candidates from telemetry instead of mental archaeology.
-- **Before a `skill-refactor` session** — gather the evidence first;
-  let the refactor diff be data-grounded, not taste-grounded.
-- **Recurring "skill didn't fire when it should have"** — missed-trigger
-  patterns are exactly what the `interrupt-after-brainstorm` and
-  description-vs-actual-invocation diff aim at.
+Do not use it for:
 
-Example trigger phrases:
+- real-time coaching;
+- a single-session reflection already served by `/insights`;
+- discovering or creating new skills;
+- taste-driven output tuning; or
+- token-only refactors where output equivalence, rather than session evidence,
+  is the objective.
 
-- EN: "mine my skill logs for loom-code", "audit skill activation
-  telemetry", "what skills are graduation candidates from MEMORY.md".
-- JA:「最近の loom-code ログを掘って改善提案を出して」「SKILL.md
-  をテレメトリ根拠で iterate したい」「MEMORY.md から graduation
-  候補を抽出して」.
-- ZH-TW:「挖一下最近 loom-code 的 session log」「想根據觸發資料
-  改 SKILL.md」「從 MEMORY.md 找出可以畢業到 skill 的條目」.
+## Bare invocation — preview, then confirm
 
-## Bare invocation — preview-then-confirm
+When the user names no target, run only the local Stage 1+2 preview:
 
-When invoked with no scoping context (e.g. user types `/distill-sessions`
-alone, or "fire distill-sessions" with no target named), do NOT default
-to full pipeline. Instead:
-
-1. **Run Stage 1+2 preview only** — `python scripts/main.py
-   --target-skill-pattern 'loom-code:*'` (the brief-locked v0.1
-   default). This is cost-free local Python — no API call, seconds to
-   complete. Print the stderr summary block (top-N skills + per-session
-   friction levels) verbatim to chat.
-2. **Pause for user confirmation before Stage 3** — Stage 3 is the
-   expensive step (N parallel Sonnet subagents, each consuming a
-   multi-hour session as input). Ask which subset to dispatch:
-   single highest-friction skill / top-3 / all / different target
-   pattern / stop at preview.
-3. **Surface the context-overflow status** in the preview summary when
-   relevant — the locked Sonnet 4.6 model has a 1M-context window.
-   Overflow is a theoretical floor: the v0.3 post-ship dogfood
-   observed max 559K tokens (56% of the 1M cap); skip+warn fires only
-   for trajectories exceeding 1M tokens, none observed across v0.1 +
-   v0.3 dogfood rounds. If any payload entry is projected to exceed 1M
-   tokens (rough: `len(json.dumps(payload.input)) // 4 > 1_000_000`),
-   warn the user and recommend filtering down before dispatch. The v0.3
-   post-ship dogfood run is the empirical overflow-distribution baseline.
-
-This protocol exists because (a) bare invocation has no signal about
-intent — `loom-code:*` is the v0.1 preset but the user may actually
-want a different scope, (b) Stage 3 budget cost is non-trivial and
-asymmetric to the cheap-preview, and (c) user's CLAUDE.md "Issue First"
-discipline expects confirmation before deliverable-producing work.
-
-When the user provides explicit scoping in their prompt (e.g. "挖一下
-writing-plans", "audit loom-code:brainstorming activations", "MEMORY.md
-graduation candidates"), skip the preview-pause and execute the
-referenced flow directly.
-
-## When NOT to use
-
-- **Real-time in-session coaching** — claude-coach territory; this
-  skill is post-hoc batch analysis of completed sessions.
-- **Discovering brand-new skills via clustering** — crune-style
-  reusability scoring on unstructured prompts; this skill iterates
-  *existing* SKILL.md files, it does not propose new ones.
-- **`/insights` already covers it** — Claude Code 2.1.x's `/insights`
-  slash command produces the per-session report. If you only need the
-  session-level reflection, use `/insights` directly. This skill
-  *consumes* the facet output as Stage 1 input for per-skill
-  cross-session aggregation.
-- **Creating a new skill from scratch** — use
-  `skill-dev-toolkit:skill-creator-advance`.
-- **Taste-driven output A/B tuning** — use `skill-dev-toolkit:skill-tuning`.
-- **Token / structure refactor with output equivalence** — use
-  `skill-dev-toolkit:skill-refactor`.
-
-## Pipeline
-
-Five steps; Python (Stage 1+2) → orchestrator + Sonnet 4.6 subagents
-(Stage 3 fan-out) → Python (Stage 5 proposal render + approval-gated
-write-back).
-
-```
-~/.claude/projects/**/*.jsonl   ~/.codex/sessions/**/*.jsonl   ~/.claude/usage-data/facets/*.json
-              \                         |                       /
-               \                        |                      /
-                v                          v
-        +-----------------------------------------+
-        | scripts/main.py  (Stage 1+2)            |
-        |  ingest -> facet-join -> signal detect  |
-        |  -> aggregate per skill -> rank top-N   |
-        +-----------------------------------------+
-                              |
-                              v
-                          top.json  (stdout)
-                              |
-                              v
-        +-----------------------------------------+
-        | Orchestrator reads top.json             |
-        | dispatches N subagents in parallel via  |
-        | loom-code:dispatching-parallel-agents   |
-        |  one subagent per session-trajectory    |
-        |  prompts: agents/prompt-{failure,       |
-        |           success}-analysis.md          |
-        |  model:   Sonnet 4.6 (per-host dispatch |
-        |           shape: references/{claude-    |
-        |           code,codex}-tools.md)         |
-        +-----------------------------------------+
-                              |
-                              v
-                       merged.json  (orchestrator collects)
-                              |
-                              v
-        +-----------------------------------------+         +-----------------------------------------+
-        | scripts/propose.py  (Stage 5a)          |         | scripts/report.py  (Stage 5c)           |
-        |   merged.json + target SKILL.md         |         |   merged.json + --lang {zh-TW|en|ja}    |
-        |   -> docs/skill-mining/<date>-<t>.md    |         |   -> JSON dispatch payload (stdout)     |
-        +-----------------------------------------+         |   -> orchestrator dispatches subagent   |
-                              |                             |    at agents/prompt-advisory-analyst.md |
-                              |                             |   -> orchestrator writes returned md to |
-                              |                             |      docs/skill-mining/<date>-          |
-                              |                             |      advisory-report.md                 |
-                              |                             +-----------------------------------------+
-                              v
-                  Human reviews the diff
-                              |
-                              v  (on approval)
-        +-----------------------------------------+
-        | scripts/apply.py  (Stage 5b)            |
-        |   --approved gate; refuses references/  |
-        |   atomic write-back to SKILL.md         |
-        +-----------------------------------------+
+```bash
+python scripts/main.py --target-skill-pattern 'loom-code:*'
 ```
 
-### Step 1 — Stage 1+2 orchestrator (Python)
+Show the stderr summary (top skills and per-session friction) verbatim. Then
+pause and confirm which subset to send to Stage 3: the highest-friction skill,
+top three, all, another target, or stop after preview. Do not infer approval
+from invoking the skill: Stage 3 sends session-derived text to paid subagents.
+
+If any serialized dispatch input is projected above the 1M-token context
+window (`len(json.dumps(payload.input)) // 4 > 1_000_000`), skip that
+trajectory, warn the user, and recommend narrowing the filter before Stage 3.
+The observed maximum was 559K tokens, but that history does not waive the
+check.
+
+When the prompt already names a target, execute that scoped flow directly;
+the explicit scope replaces the preview pause, not later approval or privacy
+gates.
+
+## Privacy and evidence boundaries
+
+Local-only stages read `~/.claude/projects/**/*.jsonl`,
+`~/.codex/sessions/**/*.jsonl`, and available
+`~/.claude/usage-data/facets/*.json`. No network calls occur in `main.py`,
+`propose.py`, or `apply.py`. Stage 3 and the optional advisory report are the
+only subagent dispatch steps, so their cost and data movement must remain
+visible to the user.
+
+For Codex, retain only observable user/assistant text, tool calls, and tool
+outputs. Exclude reasoning records and encrypted reasoning content. A
+`policy_stops[]` record requires both an observable user-facing stop/ask and a
+policy reason; never infer a stop from hidden reasoning, generic risk language,
+or a quoted rule. Claude events without a matching `/insights` facet still
+participate through the friction heuristic.
+
+## Workflow
+
+### 1. Ingest, detect, and rank
 
 ```bash
 python scripts/main.py \
@@ -170,140 +83,46 @@ python scripts/main.py \
   > top.json
 ```
 
-`main.py` walks `~/.claude/projects/**/*.jsonl` and
-`~/.codex/sessions/**/*.jsonl`, joins `~/.claude/usage-data/facets/*.json`
-per-session facets where available, runs four
-signal detectors (interrupt-after-brainstorm, tool-error clusters,
-NEEDS_REVISION streaks, re-dispatch concentration), aggregates by
-target skill, ranks top-N by a four-axis confidence score (frequency
-+ time-cost + cross-project + recency), and emits a JSON payload on
-stdout plus a markdown summary on stderr.
+`main.py` joins available facets, detects interrupt-after-brainstorm,
+tool-error clusters, NEEDS_REVISION streaks, and re-dispatch concentration,
+then ranks skills by frequency, time cost, cross-project occurrence, and
+recency. It emits `top_skills[]` plus per-trajectory `subagent_payload[]`.
+Trajectory ids are deterministic UUID5 values over skill, session, and kind.
 
-Codex ingest retains only observable user/assistant text, tool calls, and
-tool outputs; it classifies observable tool failures separately. It
-intentionally excludes reasoning records and encrypted reasoning content. The
-Claude `/insights` facet join remains Claude-specific;
-Codex events participate in the same signal and aggregation pipeline without
-a facet when no matching record exists. When an observable assistant message
-contains both an explicit user-facing stop/ask construction and a policy reason
-(for example `Stopped: privacy BLOCK requires user input`), the preview emits a
-conservative `policy_stops[]` record with its normalized outcome and reason; it
-never infers a stop from reasoning, generic risk language, or explanatory rule
-mentions.
+A high-friction session whose facet says success creates both failure- and
+success-analysis dispatches. Therefore `--max-trajectories-per-skill` counts
+dispatches, not sessions.
 
-`top.json` carries `top_skills[]` (per-skill aggregates + per-session
-friction levels) and `subagent_payload[]` (per-trajectory dispatch
-entries with locked Sonnet 4.6 model literal + prompt path + session
-events). Each `trajectory_id` is a deterministic uuid5 over
-`(skill, session, kind)` so re-runs of the same mine produce stable IDs.
+### 2. Dispatch per trajectory
 
-High-friction-success sessions (friction_level="high" AND
-facet.outcome ∈ success-strings) emit TWO entries with distinct
-`trajectory_id` values — one routed to `prompt-failure-analysis.md`,
-one to `prompt-success-analysis.md`. **Counting caveat**: `--max-trajectories-per-skill`
-counts dispatches, not sessions, so one such session consumes 2 of
-the budget.
+After the bare-invocation confirmation (or with explicit initial scope), read
+`top.json` and dispatch one independent subagent per payload. Use
+`agents/prompt-failure-analysis.md` or
+`agents/prompt-success-analysis.md` according to `kind`, include the target
+SKILL.md body and observable session events, and use the current Sonnet
+generation. Fan out only disjoint trajectories.
 
-### Step 2 — Stage 3 subagent fan-out (orchestrator + Sonnet 4.6 subagents)
+Each subagent returns the strict-markdown Memory Item shape defined by its
+prompt. Do not ask it for JSON. Claude Code dispatch uses the harness alias
+`sonnet`; the literal `claude-sonnet-4-6` is metadata and fails Claude Code's
+dispatch enum. Codex uses its host-specific dispatch mechanism.
 
-The orchestrator reads `top.json`, then dispatches one subagent per
-`subagent_payload[]` entry, all fanned out concurrently in a single
-round (concrete per-host call shape: `references/claude-code-tools.md` /
-`references/codex-tools.md`). Each subagent:
+### 3. Collect `merged.json`
 
-- runs on `claude-sonnet-4-6` (model literal locked in
-  `scripts/main.py`),
-- loads `agents/prompt-failure-analysis.md` for failure-kind sessions
-  or `agents/prompt-success-analysis.md` for success-kind sessions
-  (`kind` is set per session by `main.py` from `/insights`
-  outcome facet, falling back to friction-level heuristic),
-- receives the session events + the target SKILL.md body as input,
-- **returns strict-markdown Memory Items** per the schema in
-  `agents/prompt-{failure,success}-analysis.md` §"Memory Item schema
-  (strict markdown)" — `# {Failure|Success} Memory Item <i>` with
-  `## Title` / `## Description` / `## Content` sub-headings, **not**
-  raw JSON.
+Mechanically convert each returned Memory Item into `memory_items[]`, carrying
+the source `session_id` and `target_skill_path`. Every item needs `title`,
+`description`, `content`, `kind`, and a non-blank `section_anchor` that names a
+real target heading. `requires_new_reference_file` is optional and defaults to
+false.
 
-Use `loom-code:dispatching-parallel-agents` for the fan-out — it
-encapsulates the host-specific concurrent-dispatch pattern, the
-per-branch TDD iron-law discipline, and verdict aggregation. See
-its SKILL.md for parallel-eligibility rules (no shared files / no
-sequential data dependency between sibling subagents — satisfied here
-because each subagent reads a disjoint session).
+Do not silently default a missing anchor to `Examples`. Invalid anchors must
+remain visible for review. The canonical schema, conversion procedure, and
+host-specific dispatch forms are conditional runtime details: read
+[references/runtime-protocol.md](references/runtime-protocol.md) when
+performing Stage 2, converting Memory Items, running the advisory report,
+changing configuration thresholds, or diagnosing folder/runtime failures.
 
-### Step 3 — Collect + convert subagent outputs → `merged.json`
-
-Each subagent emits strict-markdown Memory Items (per
-`agents/prompt-{failure,success}-analysis.md` §"Memory Item schema").
-**The orchestrator must convert these markdown blocks into JSON
-`memory_items[]` before piping to `propose.py`** — `propose.py` reads JSON, not
-markdown. The conversion is mechanical: each `# {Failure|Success}
-Memory Item <i>` block becomes one `memory_items[]` entry, with
-`## Title` → `title`, `## Description` → `description`, `## Content` →
-`content`, and `kind` set from which prompt was dispatched.
-
-The merged.json top-level shape (consumed by `propose.py`,
-source-of-truth schema lives at `scripts/propose.py:32-49` + canonical
-example at `scripts/fixture_subagent_results.json`):
-
-```json
-[
-  {
-    "session_id": "<from subagent_payload>",
-    "target_skill_path": "<from subagent_payload>",
-    "memory_items": [
-      {
-        "title": "Use Read before Edit on existing files",
-        "description": "Failure: agent attempted Edit before Read; tool errored.",
-        "content": "When editing an existing file, always invoke Read first so the harness can track file state.",
-        "kind": "failure",
-        "section_anchor": "Examples",          // REQUIRED (v0.2) — must match a real heading in the target SKILL.md
-        "requires_new_reference_file": false   // optional, default false
-      }
-    ]
-  }
-]
-```
-
-Field notes:
-
-- `kind` ∈ `{"failure", "success"}` — drives §"Proposed modifications"
-  vs §"Proposed additions" routing in `propose.py`.
-- `section_anchor` — target heading in the SKILL.md being iterated
-  (e.g. `"Examples"`, `"When to Use"`). **REQUIRED** as of v0.2 — the
-  field must be present and non-blank, or `normalize_memory_item`
-  raises `ValueError`. v0.1's silent default of `"Examples"` proved
-  dead on real loom-code SKILL.md files; the orchestrator (or the
-  subagent populating the item) MUST pick a real heading. If
-  `propose.py` finds the anchor doesn't match any heading in the
-  target SKILL.md at render time, the item routes to
-  §"Anchor mismatch — needs review" rather than producing a
-  dead-anchor addition / modification.
-- `requires_new_reference_file` — `true` routes the item into
-  §"Marked for v0.2" per Q4 (v0.1 ships SKILL.md write-back only).
-  Optional; defaults to `false`.
-
-### Step 3.5 — Stage 4 cluster: cross-session promotion (Python)
-
-`propose.py` calls `cluster_memory_items(items, min_n=2)` (from
-`scripts/cluster.py`) **before** the partition-and-render step. This
-clusters Memory Items by normalized title + section anchor, splits them
-into:
-
-- **`promoted[]`** — items with N≥2 supporting sessions; these flow
-  through to §"Proposed additions" / §"Proposed modifications" as usual
-  (per decision Q-v0.3-1 Choice A from the brief),
-- **`pending[]`** — items from a single session; these route to the new
-  §"Cross-session evidence pending" bucket where they preserve their
-  per-session anchor and wait for more evidence.
-
-This is the minimal Stage 4 cluster promised in the v0.1 brief (§"Stage 4
-full SDD consolidation"). Single-session items are not silent — operators
-see them grouped, can manually re-route high-confidence ones if desired,
-and they re-promote automatically on the next run once N≥2 sessions
-support the same item (by title + anchor match).
-
-### Step 4 — Stage 5a proposal render (Python)
+### 4. Render proposals
 
 ```bash
 python scripts/propose.py \
@@ -312,25 +131,44 @@ python scripts/propose.py \
   --output docs/skill-mining/<date>-<target>-proposals.md
 ```
 
-`propose.py` consolidates the N subagent edit suggestions into a
-single reviewable markdown with:
+Before rendering, `propose.py` clusters normalized title plus section anchor.
+Items supported by at least two sessions become proposed additions or
+modifications. Single-session evidence remains under “Cross-session evidence
+pending.” Dead anchors appear under “Anchor mismatch — needs review,” and
+items requiring a new reference file remain visibly deferred. None of these
+buckets may be silently discarded.
 
-- `## Proposed additions` — `### Addition <n> [insert into §<Section>]`
-  blocks with fenced verbatim text,
-- `## Proposed modifications` — `### Modification <n> [§<Section>]`
-  blocks with `- old` / `+ new` diff bodies,
-- `## Anchor mismatch — needs review` — items whose `section_anchor`
-  doesn't match any heading in the target SKILL.md (v0.2). Each entry
-  names the dead anchor + lists the valid headings so the operator can
-  re-route. `apply.py` would refuse these at the DiffMismatch gate
-  anyway — surfacing them up-front prevents silent misapplication.
-- `## Cross-session evidence pending` — Memory Items from a single
-  session (N=1 cluster). Not yet pattern-confirmed; preserved here
-  pending more evidence. Re-run after more session data accumulates.
-- `## Marked for v0.2` — proposals requiring new `references/*.md`
-  files are bucketed here per brief Q4 (SKILL.md-only at v0.1).
+The proposal is the required per-target artifact. It is review material, not
+authorization to edit a Skill.
 
-### Step 4b — Stage 5c advisory report (Python + Sonnet 4.6 subagent)
+### 5. Human review and approval-gated application
+
+The user must complete a Human review of each proposed addition and
+modification. Only after explicit approval run:
+
+```bash
+python scripts/apply.py \
+  --proposal docs/skill-mining/<date>-<target>-proposals.md \
+  --target-skill /path/to/target/SKILL.md \
+  --approved
+```
+
+`apply.py` must refuse without `--approved`, refuse writes under
+`references/`, and require exact section-anchor plus contiguous old-text
+matches. It writes atomic updates using a temporary file, `fsync`, and replace;
+failure must leave the target unchanged. Approval is an intent gate even for
+an empty proposal, not an environment override.
+
+Final verification requires confirming all expected `top.json`,
+`merged.json`, and proposal artifacts exist, reviewing the proposal rather
+than trusting exit status, and running the relevant tests before claiming the
+workflow complete. Stop rather than bypass any approval, anchor, privacy,
+overflow, or write-boundary refusal.
+
+## Optional advisory report
+
+After `merged.json` exists, a cross-target report can complement per-target
+proposals:
 
 ```bash
 python scripts/report.py \
@@ -340,255 +178,205 @@ python scripts/report.py \
   > dispatch_payload.json
 ```
 
-v0.5 architecture: `report.py` is a thin payload constructor — it reads
-the same `merged.json` produced by the subagent fan-out (Step 3),
-validates `--lang`, and emits a JSON dispatch payload on stdout. The
-orchestrator then dispatches one Sonnet 4.6 subagent at
-`agents/prompt-advisory-analyst.md`, reads the returned markdown, and
-writes it to `--output` (default `docs/skill-mining/<today>-advisory-report.md`).
-The analyst — not Python — does the clustering, dedup, and prose.
+`--lang` is mandatory and accepts `zh-TW`, `en`, or `ja`. The command creates
+a dispatch payload; it does not write the analyst's prose. Read the advisory
+prompt, dispatch one current-Sonnet subagent with
+`dispatch_payload.input`, then write its returned markdown verbatim to the
+reported `output_path`. Do not add a preamble or edit the response. Skip this
+surface when only per-target proposals are needed.
 
-**Orchestrator dispatch — 4 steps (cold-start checklist)**:
+## Configuration and operating invariants
 
-```
-1. Read  agents/prompt-advisory-analyst.md
-         → load the subagent's role, workflow, output template, hard constraints.
-2. Read  the stdout JSON from `python report.py --input <merged.json> --lang <locale>`
-         → extract `dispatch_payload.input` (merged_data / lang / date_str)
-           and `output_path` (where to write the result).
-3. Dispatch a single general-purpose subagent on the current Sonnet
-         generation, passing the prompt body + JSON input data as its task
-         → wait for the subagent to return the rendered markdown.
-4. Write the subagent's response verbatim to `output_path`.
-         No editing, no preamble — the response IS the file body.
-```
+`--config` accepts a partial JSON object merged over six defaults:
+`interrupt_window_sec=600`, `needs_revision_threshold=2`,
+`redispatch_threshold=2`, `tool_error_proximity_events=10`,
+`min_session_count=3`, and `cross_project_count=2`. Use JSON; the scripts are
+stdlib-only. Read the runtime protocol before interpreting or changing these
+thresholds.
 
-Concrete per-host dispatch call shape (including the model-alias gotcha
-below): `references/claude-code-tools.md` / `references/codex-tools.md`.
+Preserve these invariants:
 
-**Model alias note (Claude Code only)**: the prompt's YAML frontmatter
-declares `model: claude-sonnet-4-6` as documentation reference; on Claude
-Code the actual dispatch call uses the harness-level alias `model:
-"sonnet"` (which routes to the current Sonnet generation — currently
-4.6) — passing the literal `"claude-sonnet-4-6"` string fails enum
-validation. This alias quirk is Claude-Code-specific; Codex has no
-per-call model-alias parameter (see `references/codex-tools.md`).
+- When several target skills occur in one session, attribute a Memory Item to
+  the highest signal-severity pair; alphabetic order is only the tie-break.
+- Single-session items are pending evidence, not errors. Leave them reviewable
+  until another run supplies corroboration.
+- Claude `/insights` facets may disappear after the configured retention
+  period (commonly 30 days). Mine what is present; this skill does not archive
+  facets or claim absent facets existed.
+- `/insights` is interactive-only. Sessions without facets remain eligible via
+  observable friction signals.
+- The per-trajectory model is locked by `scripts/main.py`; an operator may
+  choose a different model only at the confirmed orchestration boundary.
+- `main.py`, `propose.py`, and `apply.py` remain local and deterministic. LLM
+  judgment belongs only in the declared subagent stages.
+- Proposal application changes SKILL.md only. It must not turn a mined idea
+  into a new reference file or another agent-instruction surface.
 
-Key properties:
-
-- **Mandatory `--lang zh-TW|en|ja`** — no default; explicit per
-  invocation. The flag controls explanatory prose only; code blocks /
-  identifiers / target SKILL.md and CLAUDE.md snippets stay English
-  because they are English source artifacts. Mirrors the user's
-  CLAUDE.md "Working languages: Traditional Chinese / Japanese /
-  English (match my message language)" rule.
-- **Independent surface** — report.py is not required for the
-  `propose.py` → `apply.py` flow. Run it after Step 4 (propose.py) for
-  a cross-target human summary; skip if you only need per-target
-  proposals.
-- **Inputs** — same `merged.json` as `propose.py`; no target SKILL.md
-  argument (report is cross-target, not per-target).
-- **Output** — single file (not one-per-target like proposals); 7
-  sections: top anti-patterns (≤5 semantic clusters), per-target
-  SKILL.md modification list, ≤5 CLAUDE.md candidates (semantic dedup
-  across targets), new-skill candidates, numbers summary, action steps,
-  and a header block naming the run + `--lang`.
-- **Semantic clustering via LLM** — the advisory-analyst subagent does
-  the clustering natively in its prompt. This supersedes v0.4.1's
-  surface-token heuristic which merged unrelated items via shared
-  generic tokens (the v0.4.1 first-dogfood collapsed 31/33 Memory
-  Items into a single cluster via the `axis` token); semantic
-  clustering is the v0.5 fix and there is no `--mode heuristic`
-  fallback (clean break per Q-v0.5-3).
-- **Cost** — ~$0.23 / run (1 Sonnet 4.6 call, ~50K input + ~5K output
-  tokens). Negligible vs Stage 3 (~$3-8 / run across N parallel
-  trajectory subagents).
-- **Suggested invocation** — run post-`propose.py`, same `merged.json`.
-  Provides the "why am I repeatedly fixing this?" human perspective that
-  complements the per-target machine-actionable proposals.
-
-### Step 5 — Human review + Stage 5b approval-gated write-back
-
-Read the proposal markdown. Eyeball each addition / modification. On
-approval:
+Run Python tests with bytecode disabled so the skill-folder structure stays
+valid:
 
 ```bash
-python scripts/apply.py \
-  --proposal docs/skill-mining/<date>-<target>-proposals.md \
-  --target-skill /path/to/target/SKILL.md \
-  --approved
+PYTHONDONTWRITEBYTECODE=1 python -m pytest \
+  loom-workflow/skills/distill-sessions/scripts/ -v
 ```
 
-`apply.py` enforces three gates:
+If `__pycache__` appears, use the non-destructive two-pass `find -delete`
+procedure in the runtime protocol; do not use recursive removal shortcuts.
 
-1. **`--approved` flag required** — without it, exit 2 (brief
-   Decision §"No silent writes"). Approval is an intent statement,
-   not an environment override.
-2. **`references/` write refused** — exit 3. v0.1 ships SKILL.md
-   write-back only; new reference files defer to v0.2.
-3. **Anchor + diff exact match** — section headings must exist in
-   the target; `- old` lines must match a contiguous run inside the
-   anchored section. No fuzzy matching at v0.1.
+## Artifact contract
 
-Writes are atomic (temp file + `os.fsync` + `Path.replace`) so a
-failed write never corrupts the target.
+Treat the three intermediate files as a chain of evidence, not interchangeable
+scratch output. `top.json` records what the deterministic miner observed and
+which trajectories it proposed for dispatch. Keep its stdout separate from the
+human preview on stderr; mixing them makes the dispatch input invalid.
+`merged.json` records what the approved subagents returned after the mechanical
+markdown conversion. It must retain each source session id and target path so
+cross-session support can be audited. The per-target proposal records the
+promotion decision and is the only input `apply.py` may use for Skill changes.
 
-## Configuration
+Before leaving each stage, verify its output can be parsed by the next stage.
+An empty but valid result is different from a missing or malformed artifact:
+report the former as “no qualifying evidence” and stop cleanly; report the
+latter as a failure that needs repair. Never manufacture placeholder Memory
+Items to keep the pipeline moving. Preserve run-local artifacts until the user
+has reviewed the proposal or chosen to stop, because they are the evidence for
+why an edit was suggested.
 
-`main.py` accepts `--config path/to/override.json` to swap any of the
-six baked Q5 defaults derived empirically from the v0.1 mining demo
-(Pattern 1-4 findings). JSON over YAML at v0.1 per Q1 stdlib-lean
-discipline — no third-party deps.
+The proposal must expose all four outcomes: supported additions, supported
+modifications, anchor mismatches, and single-session evidence pending. The
+deferred-reference bucket is also required whenever an item requests a new
+file. A zero-count section may remain explicit; deleting a non-empty bucket is
+behavior loss because the user can no longer audit excluded evidence.
 
-Default values (when `--config` is omitted):
+## Signal interpretation
 
-```json
-{
-  "interrupt_window_sec": 600,
-  "needs_revision_threshold": 2,
-  "redispatch_threshold": 2,
-  "tool_error_proximity_events": 10,
-  "min_session_count": 3,
-  "cross_project_count": 2
-}
-```
+Signals identify review candidates; they do not prove that a Skill is wrong.
+An interrupt after brainstorming may reflect a changed user priority. A tool
+error cluster may belong to the environment. A NEEDS_REVISION streak may
+indicate a difficult task rather than weak instructions. Preserve the source
+events and let cross-session recurrence raise confidence instead of converting
+one event directly into policy.
 
-Threshold meanings:
+Use the four-axis rank only to decide review order. Frequency asks how often a
+pattern recurs; time cost estimates its practical drag; cross-project spread
+reduces the chance of a repository-specific explanation; recency keeps old,
+already-fixed behavior from dominating. Do not reinterpret the score as
+severity, probability, or authorization to edit. When two target skills share
+a session, the signal weights choose attribution so one Memory Item is not
+duplicated across every invoked Skill.
 
-| Threshold | Meaning |
-| --- | --- |
-| `interrupt_window_sec` | A user interrupt within N seconds of a `brainstorming` / `writing-plans` invocation counts as an interrupt-after-brainstorm signal. 600 s = 10 min covers "I changed my mind mid-plan" without firing on next-day resumes. |
-| `needs_revision_threshold` | N or more consecutive `NEEDS_REVISION` verdicts from a code-quality-reviewer on the same task trigger a streak signal. 2 = catches "reviewer rejected, implementer fixed, reviewer rejected again" patterns. |
-| `redispatch_threshold` | N or more implementer re-dispatches on a single atomic task trigger a re-dispatch-concentration signal. 2 = catches the case where the first fix didn't take. |
-| `tool_error_proximity_events` | N events surrounding a tool error count as a tool-error cluster. 10 events ≈ "the tool error wasn't isolated; the surrounding context was also struggling." |
-| `min_session_count` | A target skill must have at least N qualifying sessions to be ranked. 3 = filters one-off coincidences from real patterns. |
-| `cross_project_count` | A signal that appears across N or more distinct project paths gets a cross-project confidence bump. 2 = "this isn't just one repo's quirk." |
+Success trajectories matter alongside failures. A high-friction successful
+session is deliberately analyzed twice: the failure prompt asks what caused
+avoidable work, while the success prompt asks what existing instruction helped
+recovery. Keep both dispatches and distinct trajectory ids. Merging them before
+analysis would erase the difference between a guardrail worth preserving and a
+friction source worth changing.
 
-To override only one threshold, supply a JSON file containing just
-that key — `main.py` merges over the defaults.
+Policy-stop extraction is deliberately conservative. Accept only an assistant
+message that visibly asks or states a stop and also gives the policy reason.
+Do not classify explanatory discussion, quoted instructions, generic mentions
+of privacy, or tool internals. This protects the privacy analysis from relying
+on records an operator could not inspect.
 
-## Operating notes
+## Dispatch and collection discipline
 
-- **Cross-skill friction-density routing** — when a session invokes
-  multiple target skills (e.g. brainstorming + writing-plans), the
-  orchestrator computes a severity score for each (session, skill) pair
-  based on accumulated signal weights in that session. Memory Items
-  route to the skill with the highest score; alphabetic is the tie-break.
-  This ensures Memory Items attribute to the friction-owning skill, not
-  lexically-first.
-- **§Cross-session evidence pending bucket** — when reviewing proposals,
-  triage single-session items (N=1) separately. They are preserved
-  intentionally, not bugs; they become promotable to full proposals once
-  a subsequent run shows a second session with the same evidence.
-- **`cleanupPeriodDays` default 30** — Claude Code's `/insights`
-  facets under `~/.claude/usage-data/facets/` auto-delete after 30
-  days by default. Mining picks up the live state. If you want
-  longer history, extend retention in Claude Code config; this skill
-  does not archive facets itself.
-- **No silent writes** — `apply.py` refuses to run without
-  `--approved`. The flag is required even when the proposal is
-  empty; the gate is an intent statement, not a content check.
-- **`/insights` is interactive-only** (Claude Code 2.1.x) — to warm
-  facets for a session you must type `/insights` inside Claude Code.
-  There is no headless flag at the time of writing. Sessions without
-  facets still flow through mining; `main.py` falls back to the
-  friction-level heuristic for `kind` classification.
-- **Locked subagent model (v0.4)** — `scripts/main.py` pins
-  `SUBAGENT_MODEL_ID = "claude-sonnet-4-6"` for per-trajectory
-  subagents (previously Haiku 4.5, swapped in v0.4). The 1M-context
-  window covers all v0.3-observed trajectory sizes (max 559K observed
-  in v0.3 post-ship dogfood = 56% of cap). Cost note: ~3× prior Haiku
-  pricing; acceptable at a locked 2-5×/week post-PR cadence according to the
-  v0.4 release decision.
-  Operator can override at orchestration time per v0.1 bare-invocation
-  protocol (pause-for-confirmation gate at Stage 3).
-- **Local-only by default** — mining reads
-  `~/.claude/projects/**/*.jsonl` and `~/.codex/sessions/**/*.jsonl` from the
-  user's machine. No
-  network calls in `main.py`, `propose.py`, or `apply.py`. The
-  Stage 3 subagent dispatch is the only step that talks to the
-  Anthropic API, and it's invoked by the orchestrator, not by these scripts.
-- **Skill-folder structure + `__pycache__`** — the repo's skill-folder
-  rule forbids nested subdirs under any subfolder. pytest's
-  `__pycache__` is mitigated via `scripts/conftest.py`
-  (`sys.dont_write_bytecode = True` + `pytest_sessionfinish` cleanup)
-  and `scripts/pytest.ini` (`cache_dir → /tmp`). A root
-  `pyproject.toml` migration may replace this in v0.2 — see §Future.
+Dispatch only after the Stage 3 scope is approved. The preview choice controls
+which trajectories leave the local-only portion of the workflow; it does not
+authorize broader logs, a different target pattern, or later write-back. If a
+chosen trajectory would exceed the context estimate, omit it from the fan-out
+and identify it in the user-facing summary. Do not truncate the trajectory
+silently, because a partial session can invert the apparent cause of friction.
 
-  **Operator discipline (v2.6.1)**: always run pytest with
-  `PYTHONDONTWRITEBYTECODE=1`:
+Give every analysis subagent only its own payload, the matching analysis
+prompt, and the current target SKILL.md. Do not add the desired conclusion,
+suspected change, or other trajectories’ results. Independent inputs keep the
+fan-out parallel and prevent one analysis from anchoring another. A subagent is
+an analyst here: it returns Memory Items and does not edit repository files,
+issue verdicts, or invoke `apply.py`.
 
-  ```bash
-  PYTHONDONTWRITEBYTECODE=1 python -m pytest loom-workflow/skills/distill-sessions/scripts/ -v
-  ```
+At collection time, parse the prompt-defined headings literally and reject an
+incomplete item. Copy title, description, and content without rewriting them;
+attach `kind` from the selected prompt rather than guessing it from prose.
+Resolve `section_anchor` against the current target headings. If an anchor is
+wrong, retain it for the mismatch report instead of silently choosing the
+nearest heading. These rules make `merged.json` reproducible from the visible
+subagent returns.
 
-  Reason: `conftest.py`'s own bytecode is written *before*
-  `sys.dont_write_bytecode = True` runs (chicken-and-egg). The env-var
-  blocks all bytecode at interpreter start, before any module loads —
-  no `__pycache__` ever appears, so the `validate-skill-folder-structure.sh`
-  PostToolUse hook does not fire on subsequent Edit/Write tool calls.
-  If `__pycache__` does accidentally appear, do NOT use `rm -rf` — the
-  repo's `dcg` safety hook blocks it. **Also avoid** the inline
-  `python -c "import shutil; shutil.rmtree(...)"` shortcut: `dcg` rule
-  `heredoc.python:shutil_rmtree` matches the string `shutil.rmtree(`
-  inside a `python -c` heredoc and refuses too. The dcg-safe pattern
-  is a two-pass `find -delete`:
+When the same session produced failure and success items, keep both records.
+When repeated items support the same normalized title and anchor, clustering
+may promote them; it must still preserve their session support. A single
+session cannot satisfy the cross-session threshold by producing two similar
+items.
 
-  ```bash
-  find loom-workflow/skills/distill-sessions -type d -name __pycache__ \
-    -print | xargs -I {} find {} -type f -delete
-  find loom-workflow/skills/distill-sessions -type d -name __pycache__ \
-    -empty -delete
-  ```
+## Proposal review discipline
 
-## Future (v0.2+)
+Review proposals as evidence-backed hypotheses. For each addition, verify the
+target heading exists and the text changes a future agent’s decision. For each
+modification, compare the exact old lines with the current file and check that
+the replacement does not broaden authorization or remove an important
+boundary. For pending items, decide whether more sessions are needed; do not
+promote them merely because they sound plausible. For anchor mismatches,
+re-route manually only after identifying the intended section.
 
-Deferred per brief Decision §"Out of Scope (v0.1)" and §"Future
-roadmap":
+No proposal may directly modify `references/`, agent instructions, global
+rules, or another Skill. A Memory Item requesting such scope remains in the
+deferred bucket for a separately authorized task. Likewise, the optional
+advisory report is explanatory output. Its cross-target recommendations are
+not an approval token for `apply.py`.
 
-- **v1.0 broad-scope `skill-log-mining` sibling** — this skill
-  (`distill-sessions`) is the narrow v0.1 ship of a wider vision
-  documented in `docs/loom/specs/2026-05-22-skill-log-mining-v0.1-brief.md`.
-  The broad-scope `skill-log-mining` is planned to also surface
-  (a) new-skill proposals from clustering recurring prompts (crune-style),
-  (b) `CLAUDE.md` rule extractions from recurring user corrections
-  (claude-coach-style). v0.1 explicitly excluded both to ship the
-  narrowest end state first; v1.0 will re-brainstorm the unified
-  pipeline that covers all three surfaces.
-- **Stage 4 full SDD consolidation** — minimal Stage 4 (title+anchor
-  cluster + N≥2 promotion) shipped at v0.3 part-2; full `spec-reviewer` +
-  `code-quality-reviewer` triad version deferred to v0.5+ if minimal
-  proves insufficient.
-- **YAML config swap** — JSON at v0.1 for stdlib-lean (Q1). If users
-  demand inline comments or anchors, swap to YAML with PyYAML in v0.2.
-- **Persistent cross-run fingerprint ledger** — SQLite or JSON
-  ledger so re-runs across days can deduplicate by signal
-  fingerprint, not just within-run (Q6). v0.1 counts within-run only
-  for the cross-project confidence tag.
-- **Gemini / Cline / Cursor adapters** — same pattern, different
-  on-disk paths.
-- **`AGENTS.md` / `GEMINI.md` / `.cursorrules` write-back** —
-  apply.py-style proposal application against agent-specific
-  instruction files, not just SKILL.md.
-- **Layer A standalone OSS surface** — extract the engine-generic
-  ingest / facet-join / signal-detect / aggregate layers as a
-  stand-alone tool that other agents can consume, riding the OTEL
-  GenAI semantic-convention convergence.
-- **`pyproject.toml` root migration** — single project-root build
-  config to eliminate the per-skill `conftest.py` + `pytest.ini`
-  pair, contingent on the rest of the repo migrating.
+Before running `apply.py`, show or otherwise establish the exact proposal the
+user approved. If the target changed after review, exact-match validation must
+refuse rather than rebasing the suggestion automatically. Re-render or review
+again against the new target. After a successful atomic replacement, inspect
+the resulting section and run the relevant Skill and plugin tests. “Command
+returned zero” is insufficient if the approved change is absent, misplaced, or
+causes a reference failure.
+
+## Completion evidence
+
+A complete run reports the selected target and trajectory count, which inputs
+had facets, which overflow or validation exclusions occurred, and the paths to
+`top.json`, `merged.json`, and every proposal. If the advisory report was
+requested, also report its locale and output path. Do not claim a full run when
+the user stopped at preview; call that outcome “preview complete, dispatch not
+approved.”
+
+For an applied proposal, final verification includes the approval gate, exact
+anchor/diff match, atomic write, and relevant tests with no failures or skips.
+For a review-only run, completion means the proposal is renderable and all
+pending, mismatch, and deferred evidence remains visible. In either mode,
+state excluded trajectories and unavailable facets rather than treating them
+as analyzed. This keeps the result bounded by observable data and the scope the
+user actually approved.
+
+## Stop conditions
+
+Stop and surface the reason when:
+
+- the target is absent or ambiguous after preview;
+- the user declines Stage 3 or proposal application;
+- a trajectory exceeds the 1M-token estimate;
+- input would include hidden or encrypted reasoning rather than observable
+  records;
+- a required prompt, target SKILL.md, `top.json`, or `merged.json` is missing;
+- a Memory Item lacks required fields or has an unresolved anchor;
+- `apply.py` refuses approval, path, anchor, or diff validation; or
+- any relevant test fails or is skipped.
+
+Do not convert a refusal into a best-effort write. Preserve partial artifacts
+for inspection and state what the user must decide or repair next.
 
 ## References
 
-- **Trace2Skill** — architecture template for trajectory → skill-edit
-  distillation. arxiv 2603.25158 ·
-  github Qwen-Applications/Trace2Skill (Apache 2.0).
-- **crune** — reusability scoring on unstructured prompts. Useful
-  contrast: crune *discovers* skills from clusters, this skill
-  *iterates* existing ones. github chigichan24/crune.
-- **claude-coach** — signal taxonomy + agent-guardrail framing.
-  github netresearch/claude-coach-plugin.
-- **Brief** — `docs/loom/specs/2026-05-22-distill-sessions-v0.1-brief.md`
-  carries the six locked decisions (Q1-Q6) and the empirical
-  derivation of the Q5 thresholds from the mining-demo Pattern 1-4
-  findings.
+- [Runtime protocol](references/runtime-protocol.md) — Read it when performing
+  dispatch, markdown-to-JSON conversion, advisory rendering, threshold
+  interpretation, or runtime cleanup. It contains conditional schemas,
+  per-host mechanics, history, and troubleshooting rather than default-path
+  policy.
+- `agents/prompt-{failure,success}-analysis.md` — strict Memory Item output
+  contract.
+- `agents/prompt-advisory-analyst.md` — advisory report role and template.
+- `scripts/propose.py:32-49` and
+  `scripts/fixture_subagent_results.json` — executable schema SSOT.
+- `docs/loom/specs/2026-05-22-distill-sessions-v0.1-brief.md` — original
+  decisions and empirical threshold derivation.
