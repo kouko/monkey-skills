@@ -5,6 +5,28 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.100.0] — 2026-08-25
+
+### Added
+
+- Seam contracts: `plan-format.md` `#### Seam (v0.100.0+)` — every plan task
+  with a non-"none" `Dependencies` declares one bullet per incoming edge
+  (`payload: none`, or payload shape + `owner` + `probe`); payload-bearing
+  seams obligate an executed cross-seam probe named in the consumer's
+  Acceptance and a shared parser/schema owned by the `owner` task.
+- `check_seam_coverage.py` + tests: mechanical seam-coverage gate (exit 1
+  with agent-actionable stderr per violation).
+- plan-document-reviewer Check 20: seam completeness (verdict mapping now
+  1–4, 6–14, 16–20).
+- SDD step-1 dispatch packet carries the task's `Seam` lines (adjacent seams
+  only); `implementer.md` Input contract gains a `### Seam contracts` slot
+  with a fixed shared-parser enforcement clause.
+
+### Changed
+
+- `writing-plans` "disjoint files ≠ independent" guard now points at
+  `#### Seam` as the operative rule.
+
 ## [0.99.0] — 2026-08-25
 
 ### Added
