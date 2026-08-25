@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-26-loom-code-skill-compaction.md
 Goal: Shorten all 13 remaining loom-code skill entrypoints by 20–30% without changing observable behavior on Claude Code or Codex.
-Stage: review:round-1
+Stage: finishing
 Steps:
   1. 凍結十三項 prompt corpus、baseline 與 invariant
   2. 依序壓縮十三個 loom-code skill
@@ -443,7 +443,7 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
   - from Task 13: payload: writing-plans candidate and oracle; owner: Task 13; probe: `all 13 new candidates and the fixed SDD candidate pass their owning essence oracle on both hosts`
 - **Independent**: false
 - **Brief item covered**: BI-14
-- **Status**: claimed(@codex-ab14)
+- **Status**: done(496eda33)
 - **Gloss**: 用兩個宿主的弱模型重播十四個 skill，只升級真正仍無法判定的差異。
 
 ## Notes
@@ -453,4 +453,4 @@ N/A — no unresolved question: the source brief fixes scope, ranges, task order
 - No implementation task may add or expand a reference file. The 20–30% target is measured from the brief's frozen `wc -w` baseline and must be true deletion from the owning `SKILL.md`.
 - Every per-skill commit uses immutable commit SHA inputs for specification and quality review. A reviewer finding invalidates that pass; repair creates a new immutable input and reruns the same test, reference, privacy, and review gates.
 - The final immutable baseline and candidate inputs are complete loom-code plugin roots, never isolated skill directories or a mutable worktree sampled at different times.
-- `subagent-driven-development` remains unchanged and appears only in Task 14's family corpus with its existing `test_sdd_compaction.py` oracle.
+- `subagent-driven-development` entered through the earlier pilot; the final extraction-adjusted audit added a deletion-only follow-up and made `test_sdd_compaction.py` count its extracted reference toward the 10% floor.
