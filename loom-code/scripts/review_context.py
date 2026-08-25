@@ -116,6 +116,78 @@ def _containing_plugin_root(path: Path) -> Path | None:
     return None
 
 
+def _validate_required_keys(packet: dict) -> list[str]:
+    """One error per PACKET_KEYS entry that is missing or empty."""
+    return [f"{key}: missing or empty" for key in PACKET_KEYS if not packet.get(key)]
+
+
+def _is_absolute_repo(target_repo: object) -> bool:
+    """True when target_repo is a non-empty absolute path string."""
+    return (
+        isinstance(target_repo, str)
+        and bool(target_repo)
+        and Path(target_repo).is_absolute()
+    )
+
+
+def _validate_target_repo(target_repo: object) -> list[str]:
+    """Flag a present-but-relative target_repo (missing is caught elsewhere)."""
+    if isinstance(target_repo, str) and target_repo and not _is_absolute_repo(target_repo):
+        return ["target_repo: must be an absolute path"]
+    return []
+
+
+def _validate_reviewed_sha(reviewed_sha: object, target_repo: object) -> list[str]:
+    """Check sha shape, then commit existence when target_repo is usable."""
+    if not (isinstance(reviewed_sha, str) and reviewed_sha):
+        return []
+    if SHA_PATTERN.fullmatch(reviewed_sha) is None:
+        return ["reviewed_sha: must match ^[0-9a-f]{40}$"]
+    if not _is_absolute_repo(target_repo):
+        return []
+    # `<sha>^{commit}` peels/asserts commit-ness — gitrevisions(7)
+    # (`git help revisions`); mirrors the in-repo `cat-file -e
+    # <sha>:<path>` precedent, with `^{commit}` as the delta.
+    exists = _git(Path(target_repo), "cat-file", "-e", f"{reviewed_sha}^{{commit}}")
+    if exists is None:
+        return ["reviewed_sha: commit does not exist in target_repo"]
+    return []
+
+
+def _validate_resources(resources: object) -> list[str]:
+    """Every resource must exist, be absolute, and share ONE plugin root."""
+    if resources and not isinstance(resources, dict):
+        return ["resources: must be an object of name -> absolute path"]
+    if not isinstance(resources, dict):
+        return []
+    # NOT confined to this script's own root: the validator may
+    # legitimately run from a different copy than the resources it
+    # checks (e.g. working-tree script, installed-cache resources).
+    # Instead all values must live under ONE plugin installation.
+    errors = []
+    roots: dict[str, Path] = {}
+    for name, value in resources.items():
+        if not isinstance(value, str) or not Path(value).is_absolute():
+            errors.append(f"resources: {name} is not an absolute path")
+        elif not Path(value).exists():
+            errors.append(f"resources: {name} does not exist ({value})")
+        else:
+            root = _containing_plugin_root(Path(value))
+            if root is None:
+                errors.append(
+                    f"resources: {name} is not under a plugin root "
+                    "(no .claude-plugin/plugin.json ancestor)"
+                )
+            else:
+                roots[name] = root
+    if len(set(roots.values())) > 1:
+        listing = ", ".join(
+            f"{name} -> {root}" for name, root in sorted(roots.items())
+        )
+        errors.append(f"resources: values span multiple plugin roots ({listing})")
+    return errors
+
+
 def validate_packet(packet_path: Path) -> list[str]:
     """Return one message per failing packet field; empty means well-formed."""
     try:
@@ -125,64 +197,13 @@ def validate_packet(packet_path: Path) -> list[str]:
     if not isinstance(packet, dict):
         return ["packet: top level must be a JSON object"]
 
-    errors = []
-    for key in PACKET_KEYS:
-        if not packet.get(key):
-            errors.append(f"{key}: missing or empty")
-
-    reviewed_sha = packet.get("reviewed_sha")
     target_repo = packet.get("target_repo")
-    target_repo_absolute = (
-        isinstance(target_repo, str)
-        and bool(target_repo)
-        and Path(target_repo).is_absolute()
-    )
-    if isinstance(target_repo, str) and target_repo and not target_repo_absolute:
-        errors.append("target_repo: must be an absolute path")
-    if isinstance(reviewed_sha, str) and reviewed_sha:
-        if SHA_PATTERN.fullmatch(reviewed_sha) is None:
-            errors.append("reviewed_sha: must match ^[0-9a-f]{40}$")
-        elif target_repo_absolute:
-            # `<sha>^{commit}` peels/asserts commit-ness — gitrevisions(7)
-            # (`git help revisions`); mirrors the in-repo `cat-file -e
-            # <sha>:<path>` precedent, with `^{commit}` as the delta.
-            exists = _git(
-                Path(target_repo), "cat-file", "-e", f"{reviewed_sha}^{{commit}}"
-            )
-            if exists is None:
-                errors.append("reviewed_sha: commit does not exist in target_repo")
-
-    resources = packet.get("resources")
-    if resources and not isinstance(resources, dict):
-        errors.append("resources: must be an object of name -> absolute path")
-    elif isinstance(resources, dict):
-        # NOT confined to this script's own root: the validator may
-        # legitimately run from a different copy than the resources it
-        # checks (e.g. working-tree script, installed-cache resources).
-        # Instead all values must live under ONE plugin installation.
-        roots: dict[str, Path] = {}
-        for name, value in resources.items():
-            if not isinstance(value, str) or not Path(value).is_absolute():
-                errors.append(f"resources: {name} is not an absolute path")
-            elif not Path(value).exists():
-                errors.append(f"resources: {name} does not exist ({value})")
-            else:
-                root = _containing_plugin_root(Path(value))
-                if root is None:
-                    errors.append(
-                        f"resources: {name} is not under a plugin root "
-                        "(no .claude-plugin/plugin.json ancestor)"
-                    )
-                else:
-                    roots[name] = root
-        if len(set(roots.values())) > 1:
-            listing = ", ".join(
-                f"{name} -> {root}" for name, root in sorted(roots.items())
-            )
-            errors.append(
-                f"resources: values span multiple plugin roots ({listing})"
-            )
-    return errors
+    return [
+        *_validate_required_keys(packet),
+        *_validate_target_repo(target_repo),
+        *_validate_reviewed_sha(packet.get("reviewed_sha"), target_repo),
+        *_validate_resources(packet.get("resources")),
+    ]
 
 
 def main(argv: list[str] | None = None) -> int:
