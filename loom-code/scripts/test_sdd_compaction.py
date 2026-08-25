@@ -1,6 +1,7 @@
 """Behavioral essence guard for the SDD entrypoint compaction."""
 
 from pathlib import Path
+import subprocess
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -16,11 +17,20 @@ CONDITIONAL_OPERATIONS = SKILL.parent / "references" / "conditional-operations.m
 
 def test_entrypoint_preserves_orchestration_under_word_ceiling() -> None:
     text = SKILL.read_text(encoding="utf-8")
-    words = len(text.split())
+    words = int(subprocess.check_output(("wc", "-w", str(SKILL)), text=True).split()[0])
+    reference_words = int(
+        subprocess.check_output(
+            ("wc", "-w", str(CONDITIONAL_OPERATIONS)), text=True
+        ).split()[0]
+    )
 
-    assert 3063 <= words <= 3513, (
-        "the 4,504-word baseline must shrink by 22-32%; "
+    assert 3063 <= words <= 3241, (
+        "the entrypoint must stay compact after counting extracted prose; "
         f"measured {words} words"
+    )
+    assert words + reference_words <= 4053, (
+        "SKILL.md plus the extracted reference must reduce the 4,504-word "
+        f"baseline by at least 10%; measured {words + reference_words} words"
     )
 
     required = (

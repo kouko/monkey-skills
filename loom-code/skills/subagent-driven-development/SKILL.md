@@ -17,11 +17,13 @@ exactly once (no wrapper, redirection, prefix, or suffix):
 Otherwise do nothing. Never re-run `review_context.py` in a live-gate station;
 the runner-owned packet is the sole packet source.
 
-**Do not pause to check in between tasks.** When the orchestrator (this skill) receives a plan, it dispatches the first task's three subagents, waits for their verdicts, applies the resolution rule below, and immediately dispatches the next task. The user is not in the loop on a per-task basis — that is the loop SDD exists to remove.
+**Do not pause between tasks.** After approval, dispatch each triad, await
+verdicts, apply resolution below, and continue. SDD removes the per-task user
+loop.
 
 Pause points the user **does** see:
 
-- The plan itself, before any task is dispatched (user approves the task list).
+- Plan approval, before any task dispatch.
 - A `NEEDS_CONTEXT` from any implementer that survives the step-2 triage (orchestrator surfaces the question, waits for an answer; task-scoped checkable facts are resolved and re-dispatched without pausing).
 - A `BLOCKED` from any implementer that the orchestrator cannot unblock by re-dispatch (e.g. missing dependency the user must install).
 - After all tasks `DONE` (or `DONE_WITH_CONCERNS` triaged), an autonomous run with a human-approved frozen entry automatically invokes [`finishing-a-development-branch`](../finishing-a-development-branch/SKILL.md). It runs review + verification + push + PR-open in one pass; `一站一站來` keeps the final summary as the user-controlled pause point. Surface peer alternatives only when the user explicitly defers close-out.
