@@ -7,234 +7,190 @@ version: 0.3.0
 
 # design-system
 
-Generate a product's **visual design system** — the brand voice, color
-palette, type scale, spacing, elevation, shape language, and component-token
-defaults that the frontend implements and the spec inherits. This is the
-**interface-design station's visual half**: it produces the **design-system
-artifact** for a product, governed by the product's constitution.
+Generate the product's **visual design system**: brand voice, palette, type,
+spacing, elevation, shapes, and component-token defaults, governed by its
+constitution.
 
-The skill is **modality-aware**. The same design concerns (palette / type /
-spacing / components) render differently per modality: a **GUI** has visual
-tokens and screens; a **TUI** has a terminal palette and panels; a **CLI** has
-output formatting and command/flag ergonomics. The MVP implements **GUI**
-fully; **TUI / CLI** emit a lightweight stub plus a phase-2 note.
-
-All output is **key-free**, **in-repo**, and **git-diffable**.
+It is **modality-aware**: **GUI** gets full visual tokens; **TUI** gets terminal
+palette/panel conventions; **CLI** gets output and command/flag conventions.
+TUI / CLI currently emit a lightweight stub plus a phase-2 note.
 
 **Ending gate — before you end ANY run of this skill → confirm the artifact exists on disk (`DESIGN.md` for GUI; the Step 4b stub for TUI/CLI) and, for GUI runs, that Step 6's validator ran, FIRST (TUI/CLI validator coverage is phase-2 — the on-disk check still applies). A narrated analysis with no file written is a FAILED run, never a partial success.**
 
-## Executor model — who does what
-
-**You (the agent running this skill) are the executor.** You supply the LLM
-reasoning (deriving the palette from the brand voice, picking a type scale,
-binding component tokens, checking contrast). There is no external runtime and
-no API key — the method rides the host agent you are already in. The only
-deterministic tool is a stdlib validator you run at the end, plus the
-spec's lint (`npx @google/design.md`) where available.
-
 ## Scope — visual system only, NOT flows
 
-`DESIGN.md` documents the product's **visual system** only — brand, color,
-type, spacing, elevation, shape, and component-token defaults. It does
-**NOT** address user **flows**, screen/command inventory, navigation, or
-interaction — those live in **`ui-flows.md`**, produced by the
-**`interaction-flows`** skill. Do not put flows, screen inventories, or
-render-variant tables in `DESIGN.md`.
+`DESIGN.md` is the **visual system only** — brand, color, type, spacing,
+elevation, shape, and component-token defaults. It is NOT flows, screens,
+navigation, or interaction; those belong in `ui-flows.md` via
+`interaction-flows`.
 
-The emitted **`DESIGN.md` tokens are a side-channel** straight to
-loom-code's frontend implementation (styling / lint) — the design system
-the UI code reads its colors, spacing, and component defaults from.
+Its tokens are a **side-channel** to frontend styling and lint.
+
+## Executor model
+
+The agent running this skill is the executor: derive the palette from brand
+voice, choose type and surface treatment, bind component tokens, and check
+contrast. No external runtime or API key is required. Deterministic checks are
+the bundled stdlib validator and, where available, `npx @google/design.md`.
 
 ## Procedure — modality-aware design-system generation
 
 ### Step 1 — Read the schema contract
 
-Read **`references/design-md-schema.md`** before writing anything. It is the
-authoring contract for the GUI artifact: the **8 canonical `##` sections** (in
-order: Overview / Brand · Colors · Typography · Layout · Elevation & Depth ·
-Shapes · Components · Do's & Don'ts), the YAML token keys per section, and the
-**WCAG-AA contrast** requirement. The emitted `DESIGN.md` **MUST** follow it.
-The schema also flags that the exact Google `DESIGN.md` keys and lint command
-are young-ecosystem and should be **confirmed against the authoritative spec at
-generation time**.
+Read **`references/design-md-schema.md`** before writing. It governs the 8
+canonical sections, YAML token keys, and **WCAG-AA contrast**. Follow it and
+confirm the young Google `DESIGN.md` keys/lint against the authoritative spec
+at generation time.
 
 ### Step 2 — Read the governing PRINCIPLES.md
 
-Read the product's **`PRINCIPLES.md`** (from `loom-design`, at
-**`docs/loom/PRINCIPLES.md`** in the consumer project) as
-the **governing constraint** on the visual system. The constitution's North
-Star and principles **constrain** the design — e.g. a "minimal interface"
-principle constrains the palette to few colors and a restrained component set;
-a "calm, low-stimulus" principle constrains accent usage and motion. Every
-design choice should be defensible against a principle.
+Read **`docs/loom/PRINCIPLES.md`** as the visual system's **governing
+constraint**; every choice must be defensible against it.
 
-**Read its `## Anchors` section — the tone & manner row is the governing
-mood.** `PRINCIPLES.md` pins **3-5 tone & manner adjectives** (e.g. *calm,
-precise, unhurried*) as its own version-pinned `## Anchors` row — upstream
-calls them the **primary visual anchor**. Those adjectives ARE this design
-system's **governing mood**: **inherit** them verbatim as the mood of the
-visual concept (Step 4a) — **do not re-derive** a mood of your own, and never
-contradict them. A palette, type scale, or component default that fights the
-adjectives is a defect, not a style choice. This is a **read-and-honor**
-instruction: read the section as prose and honor it — do not parse, grep, or
-regex the row (the row's formatting is not a contract).
+**Read its `## Anchors` section.** Its **3-5 tone & manner adjectives** are the
+**governing mood**: **inherit** them verbatim; **do not re-derive** or
+contradict them. Read and honor the prose rather than parsing its formatting.
 
-**Fallback — when there is no `## Anchors` tone & manner row** (an older
-`PRINCIPLES.md`, written before the anchor existed): derive the mood yourself
-from `docs/loom/PURPOSE.md` + Product Principles, exactly as before — **and say so
-explicitly** to the user ("no tone & manner anchor found; mood derived here,
-ungoverned upstream"). **Never silently invent** a mood while presenting it as
-inherited.
+**Fallback — when there is no `## Anchors` tone & manner row:** derive mood
+from `docs/loom/PURPOSE.md` plus Product Principles and **say so explicitly**
+to the user. **Never silently invent** an inherited mood.
 
-**If `PRINCIPLES.md` is absent, surface it** — do not invent a constitution.
-Tell the user the design system will be ungoverned and recommend running
-`loom-design:product-principles` first; proceed only on their
-say-so, noting the design is principle-ungoverned.
+If `PRINCIPLES.md` is absent, surface that the design would be ungoverned,
+recommend `loom-design:product-principles`, and proceed only on their say-so;
+never invent a constitution.
 
 ### Step 3 — Detect / ask the modality
 
-Detect or **ask** the product's modality (**GUI / TUI / CLI**); default to
-**GUI** when unstated. Branch on it:
+Detect or ask the modality (**GUI / TUI / CLI**), defaulting to GUI:
 
 - **GUI** → go to Step 4a (full 8-section `DESIGN.md`).
 - **TUI / CLI** → go to Step 4b (lightweight conventions stub + phase-2 note).
 
-**Before deriving any color, type, or component token/convention whose
-correct form is not derivable from `PRINCIPLES.md` or the seed, read
-`references/knowledge-triage.md` and run its classification question
-FIRST** — do not guess a domain convention into a token; classify, then tag
-or route per that reference. Applies in both Step 4a and Step 4b.
+**Before deriving any color, type, component token, or convention not
+derivable from `PRINCIPLES.md` or the seed, read
+`references/knowledge-triage.md` and run its classification question FIRST.**
+Classify and tag/route; do not guess. This applies to both branches.
+
+The reference separates craft, domain-convention, and project-local facts.
+Resolve craft/project-local facts through their prescribed sources. Never
+invent a domain-semantic token: a SHAPING question must resolve before the
+critic, while a DEFERRABLE one remains a tagged open question in `DESIGN.md`.
 
 ### Step 4a — GUI: emit the 8-section `DESIGN.md`
 
 Emit a **`DESIGN.md`** following the schema contract from Step 1:
 
-1. Confirm the exact YAML token keys against the authoritative Google
-   `DESIGN.md` spec at generation time.
-2. **Run the surface-treatment candidate round** (below) — the pick is the
-   generative choice the concept, the shape tokens, and Elevation & Depth's
-   prose hang off.
-3. **Commit the visual concept** in **Overview / Brand** — one specific
-   art-direction idea plus the **3-5 generative visual principles** it leans on
-   (per the schema's *Derivation contract*), with the chosen surface treatment
-   named in its prose. This is the conceptual ground for
-   everything below; a generic identity here is what makes output look
-   "AI-generated."
+1. Confirm exact YAML token keys against the authoritative Google spec.
+2. **Run the surface-treatment candidate round** below; the concept, shape
+   tokens, and Elevation & Depth prose hang off the pick.
+3. **Commit the visual concept** in **Overview / Brand**: one specific art
+   direction, **3-5 generative visual principles**, and the chosen treatment.
 4. Emit **all 8 `##` sections in order** (Overview / Brand → Colors →
    Typography → Layout → Elevation & Depth → Shapes → Components → Do's &
-   Don'ts), each with a short prose rationale. Only five of the eight carry a
-   YAML token block — **colors**, **typography**, **spacing** (Layout),
-   **rounded** (Shapes), **components**; Overview / Brand, Elevation & Depth
-   and Do's & Don'ts stay prose-only. Then **derive every token from that
-   committed concept + the `PRINCIPLES.md` constraints** — each token
-   defensible against the concept, never an arbitrary default.
-5. **Verify WCAG-AA contrast** for every foreground/background pairing (body
-   text ≥ 4.5:1, large text ≥ 3:1). Treat an AA failure as a **blocker**.
+   Don'ts), each with rationale. YAML blocks exist only for **colors**,
+   **typography**, **spacing**, **rounded**, and **components**; the other
+   three stay prose-only. Derive every token from the concept and principles.
+5. **Verify WCAG-AA contrast** for every pairing (body ≥ 4.5:1, large text ≥
+   3:1); failure is a **blocker**.
 6. Run the spec lint `npx @google/design.md` where available and resolve
    violations.
 
-**Surface treatment — the candidate round (step 2 above, in full).** The
-surface-treatment axis (skeuomorphic / flat / material-elevation / neumorphic /
-glassmorphic / neubrutalist …) is a **choice over how depth is conveyed and
-how corners/borders are shaped** — the `rounded` and border tokens in Shapes,
-plus Elevation & Depth's prose description. This station owns that choice; it
-is never an unnamed default.
+The eight sections have distinct jobs:
 
-- **This round is downstream of the tone & manner anchor** (Step 2): the
-  inherited **3-5 tone & manner adjectives** are the governing mood and they
-  **constrain which treatments are even proposable**. Run this round only with
-  the anchor in hand — never before it.
-- **Propose 3-5 surface-treatment candidates**, drawn from
+- **Overview / Brand** carries the committed concept, inherited mood, chosen
+  surface treatment, and generative principles.
+- **Colors** uses semantic palette tokens rather than scattered literals.
+- **Typography** defines named levels and their family, size, weight,
+  line-height, tracking, and relevant font features.
+- **Layout** carries the `spacing` scale, including container, grid, gutter,
+  and breakpoint choices.
+- **Elevation & Depth** explains layering and shadows in prose; it has no YAML
+  token group.
+- **Shapes** carries `rounded` plus border conventions.
+- **Components** maps global tokens into presentational defaults and states;
+  behavioral state machines remain out of scope.
+- **Do's & Don'ts** records concise usage guardrails in prose.
+
+Use token references instead of duplicated literals where the schema permits.
+Keep every rationale traceable to the concept and constitution; familiar
+defaults are not self-justifying. Avoid generic generated-UI habits such as an
+unreasoned ubiquitous font, cliché purple-blue gradients, one radius on every
+component, or uncontrolled accent colors.
+
+**Surface treatment — the candidate round (step 2 above, in full).** This is a
+**choice over how depth is conveyed and how corners/borders are shaped** via
+Shapes' `rounded`/border tokens and Elevation & Depth prose; never leave it an
+unnamed default.
+
+- **This round is downstream of the tone & manner anchor**: its adjectives
+  **constrain which treatments are even proposable**.
+- **Propose 3-5 surface-treatment candidates** from
   **`references/canon-design-surface.md`**, each with **fit/tension** notes.
-  The canon is agent-facing recall insurance — a completeness audit ("did I
-  miss a closer treatment?"); the user **never sees the raw list**, only the
-  fitted candidates.
+  Use the canon as recall insurance; show only fitted candidates.
 - **Name 1-2 considered-but-rejected candidates** and **surface them to the
-  user with reasons** — the rejection list is the honesty device, not an
-  internal note.
-- **The user decides.** Present the candidates and let them pick;
-  "**bespoke — no canon treatment fits**" is a legal **escape hatch** (a
-  bespoke treatment loses the third-party anchor, so it compensates with a
-  stricter written rationale against the adjectives).
-- **Name and rationalize the pick in prose** in **Overview / Brand**:
-  `Surface treatment: X — because <the tone & manner adjectives> +
-  <constraint>`. It rides inside that existing section — **do not add a 9th
-  `##` section**; the 8-section contract is frozen.
-- **The pick then constrains the `## Elevation & Depth` prose and the
-  `## Shapes` token block** — Elevation & Depth stays prose-only, describing
-  how the chosen treatment conveys depth (shadow spread/blur/colour, or the
-  flat-design alternative); Shapes' `rounded` and border tokens are
-  **derived from the chosen treatment**, never an arbitrary default. A flat
-  pick with a deep shadow ramp is a defect.
-- **Anti-costume law.** A treatment may enrich candidates but **never
-  overrides a PRINCIPLES value**. Its vocabulary is inspiration; the values are
-  non-negotiable — when the two collide, the treatment loses.
-- **The canon's WCAG risk flag is a BLOCKER, not a note.** A flagged treatment
-  (e.g. neumorphism, dark-mode surfaces, mesh-gradient backdrops) **cannot
-  ship until the flag is resolved** against WCAG-AA — surface the flag when you
-  propose it, and if the resolution fails contrast, the treatment is out.
+  user with reasons**.
+- **The user decides.** "**bespoke — no canon treatment fits**" is a legal
+  **escape hatch**, requiring stricter rationale against the adjectives.
+- Name and rationalize it in **Overview / Brand**: `Surface treatment: X —
+  because <adjectives + constraint>`. **Do not add a 9th `##` section**.
+- The pick **constrains the `## Elevation & Depth` prose and the `## Shapes`
+  token block**. Elevation & Depth stays prose-only; derive Shapes' `rounded`
+  and borders from the pick. Contradictory depth is a defect.
+- **Anti-costume law:** a treatment **never overrides a PRINCIPLES value**.
+- **The canon's WCAG risk flag is a BLOCKER, not a note.** Surface it and do
+  not ship until resolved against WCAG-AA.
+
+The canon is a completeness audit, not a menu to copy. Tone anchors narrow the
+candidate set; the user sees only plausible fitted choices. A bespoke pick
+loses the external anchor and therefore needs a stronger written explanation.
+The selected treatment must agree across depth prose, radii, borders, and
+component defaults. For example, a flat treatment cannot silently acquire a
+deep shadow ramp. A treatment enriches the visual vocabulary but loses whenever
+it conflicts with a product principle or accessibility requirement.
 
 ### Step 4b — TUI / CLI: lightweight conventions stub (phase-2)
 
-The full TUI / CLI design-system is **not yet built** (phase-2). Emit a
-**minimal stub** conventions doc capturing what is known — for a TUI the
-terminal palette and panel layout conventions; for a CLI the output-format,
-command/flag naming, and help/error style — and add a clear **phase-2 note**
-that the full TUI/CLI design-system (with a validator and lint) is deferred.
-Do not fake an 8-section `DESIGN.md` for a non-GUI modality.
+Emit a **minimal lightweight conventions stub**: TUI terminal palette and
+panel layout, or CLI output format, command/flag naming, and help/error style.
+Add a **phase-2 note** deferring the full system, validator, and lint. Do not
+fake an 8-section `DESIGN.md` for TUI/CLI.
+
+The stub still records the governing principles and known conventions. A TUI
+stub should cover terminal color limits, semantic roles, panel hierarchy,
+spacing density, and fallback behavior. A CLI stub should cover plain-text and
+machine-readable output, command/flag naming, help hierarchy, error wording,
+and color/no-color behavior. Apply the same knowledge triage before assigning
+domain semantics.
 
 ### Step 5 — Emit into the consumer project
 
-Emit the artifact into the consumer project under
-**`docs/loom/`** (the established `docs/<toolkit>/`
-convention). `DESIGN.md` is **product-level — one per product** (the design
-*system*), so place it at the toolkit root, not per-feature.
+Write under **`docs/loom/`**. `DESIGN.md` is **product-level — one per
+product**, at that root rather than per feature.
 
 ### Step 6 — Validate, then fix
 
-Run the validator against the emitted design output directory and **fix any
-flagged issue before declaring done**:
+Run the validator and fix every issue before declaring done:
 
 ```
 argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/interface/validate_design_output.py", "<design-output-dir>"]
 ```
 
-Pass this argv array directly to process execution; never through a shell.
+Pass the argv array directly, never through a shell. The validator checks file
+presence and all 8 GUI headings; token derivation and contrast remain your
+responsibility.
 
-The command resolves from the installed plugin root (the script ships under
-the plugin's `scripts/interface/`).
-It mechanically checks the change-folder structure (the design-system doc
-present, the GUI `DESIGN.md` carrying all 8 canonical `##` sections). The
-validator checks *structure*; the *quality* of the tokens (palette derived from
-the brand voice, contrast actually meeting AA, choices defensible against the
-principles) is your responsibility.
+It checks the *whole* `docs/loom/<change-id>/`: `ui-flows.md` must exist and
+`DESIGN.md` resolves most-specific-first (change folder, then parent). Run it
+after `interaction-flows`; a DESIGN-only run correctly reports missing flows.
 
-**Note — the validator checks the *whole* change-folder.** It requires
-`ui-flows.md` (the `interaction-flows` skill) in the change folder
-(`docs/loom/<change-id>/`) and resolves `DESIGN.md` (this skill)
-most-specific-first — change folder, then its parent: this skill's canonical
-home is the product level, `docs/loom/DESIGN.md`, one per product. Run the
-full validation once the change-folder is assembled — after
-`interaction-flows` has emitted (the `using-loom-design` router
-coordinates this). A `DESIGN.md`-only run will correctly report the missing
-`ui-flows.md`.
+The validator proves structure only. Before completion, independently inspect
+that the chosen palette actually meets AA, every token follows the committed
+concept and `PRINCIPLES.md`, the lint completed where available, and the final
+artifact—not merely an explanation—exists on disk.
 
-## Downstream — where the design system goes
+## Boundary and handoff
 
-- **Frontend implementation:** the `DESIGN.md` tokens side-channel directly to
-  the UI code — colors, spacing, type scale, and component defaults the
-  styling/lint reads. This seam is the frontend build itself (human / code
-  level), **not** a loom-code skill — no loom-code skill reads `DESIGN.md`.
-  That is a **deliberate park, not a gap** (audit 2026-07-02, reaffirming
-  #456): consumer-side machinery is undecidable until a real frontend
-  consumer exists. Re-trigger conditions live in the plugin README §Scope.
-- **Spec (loom-design):** the design system is the *visual* surface; the
-  *behavioral* fan-out (object state machines, edges, acceptance scenarios) is
-  `spec-expansion`'s turf, seeded by `ui-flows.md` — not duplicated here.
-
-**Next station.** Once `DESIGN.md` is done, hand off to `using-loom-design` to
-expand the feature into a spec — or to `interaction-flows` first if the
-product's flows haven't been mapped yet.
-
-This skill *writes* the visual system; it does not run TDD, write frontend
-code, or design the flows — those are downstream stations that *read* it.
+Frontend styling consumes the tokens; `spec-expansion` receives behavioral
+detail from `ui-flows.md`, not here. After `DESIGN.md`, hand off to
+`interaction-flows` if needed, then `using-loom-design`. This skill writes the
+visual system; it does not write frontend code, flows, or behavioral specs.
