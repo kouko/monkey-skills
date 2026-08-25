@@ -8,24 +8,15 @@ description: |
 
 ## Purpose & scope
 
-An adoptable dbt + Redshift **model writing-style template**: once a team adopts it, every model anyone (or an agent) writes looks consistent, reads well, maintains easily, and parses cleanly for tooling. **This is an opinionated default, not the only right answer** — items tagged `(adapt)` (naming vocabulary, header schema, warehouse-persistence mechanism) are tuned per project; the remaining MUST/SHOULD rules are cross-project dbt good habits.
+An opinionated dbt + Redshift model-writing template. Tune `(adapt)` items per project; treat MUST as required, SHOULD as the default, and MAY as situational.
 
 **When it applies**: whenever you author / edit / review **any** dbt model. **Write comment text and frontmatter *values* in the user's working language** (the examples in this doc stay in Chinese as a demonstration).
 
 **Style & structure only — not computation.** This skill covers how CTEs are arranged, how columns are named, how comments are written, how JOINs are declared. It does **not** cover calculation logic, business rules, metric formulas, NULL/denominator semantics, or layer-dependency design — those are a separate matter, out of scope here.
 
-**When a request mixes style and logic** (common — e.g. "fix the source-A→B fallback *and* tidy the `final` CTE"): do the **style/structure** part under this skill; for the **calculation/business-rule** part, name it explicitly and hand it back as out of scope — don't silently change computation, and don't refuse the whole request. Split the edit; don't let "I'm already in here" pull you across the boundary.
+If a request mixes style and logic, do the style part here and identify the calculation or business-rule part as out of scope. Split the edit; do not silently change computation or refuse the whole request.
 
 **One boundary that genuinely blurs — name-vs-content.** A few style rules can only be *checked* by glancing at the computation: the **name-matches-content MUST** (§3) says a `__paid` column must not smuggle in trial rows, so confirming the **name matches what the column computes** requires reading the logic. That read-to-verify-the-name is in scope; **changing** the computation to fix a mismatch is not — flag the mismatch and hand the logic fix back.
-
-Rules come in four levels:
-
-| Level | Meaning |
-|---|---|
-| **MUST** | Hard rule; violating it is non-conforming |
-| **SHOULD** | Strongly recommended; do it when you can |
-| **MAY** | Situational preference; fall back when you can't |
-| **(adapt)** | Opinionated default; tune per project (naming vocabulary, header schema, warehouse-persistence mechanism, etc.) |
 
 > The one MUST to remember: **the `final` CTE has zero logic — column selection + comments only.** Every other MUST is structural discipline that keeps a model traceable and machine-parseable.
 
@@ -42,81 +33,22 @@ This template applies to **newly created models and the model you're currently e
 
 ---
 
-## The whole picture: what a model looks like + writing order
+## The whole picture: writing order
 
-First the overall skeleton (condensed; details in the sections below):
-
-```sql
-/* ---                                          ← header ①: YAML frontmatter (reaches the table comment)  §5.1
-title:   ... / summary: ... / grain: ...              all layers
-purpose: ... / keys: {...}                            consumer layers
-sources: [...] / related: [...] / refresh: ...
----
-<1–3 sentence unstructured narrative — context the frontmatter can't express>
-*/
-
-/* business rules / mapping (header ②: human-facing, not in the comment) */                       §5.2
-
-{% if target.type=='redshift' %}                 ← config (only when a table)                       §7
-{{ config(materialized='table', sort=[...], tags=[...]) }}
-{% endif %}
-
-WITH SOURCE_MODEL AS (                            ← reference CTE: UPPERCASE, prefix dropped, SELECT *  §1.1
-    SELECT * FROM {{ ref('int_...') }}
-),
-transformed AS (                                  ← intermediate CTE: lowercase, one concern, all logic here  §1.1
-    SELECT SOURCE_MODEL.*, ...                          pass through with .* when you can             §2
-    FROM SOURCE_MODEL
-),
-final AS (                                        ← final: zero logic, explicit columns + aligned comments + tags  §1.2 §4
-    SELECT col_a,        -- [OUTPUT] ...
-           col_b         -- [AUDIT]  ...
-    FROM transformed
-)
-
-SELECT * FROM final                               ← fixed ending
-```
-
-**Recommended writing order** (inside-out; backfill the header last):
+Use the complete runnable model in `references/example-model.sql`. Write inside-out:
 
 1. **Decide `grain` and `keys` first** — what one row represents, the primary / join keys. This shapes the whole model.
 2. Write the **reference CTE** (UPPERCASE, `SELECT *` off the upstream).
 3. Write the **intermediate transform CTEs** — one CTE per step, **all calculation/logic lives here**.
 4. Write **`final`** — explicit column list + aligned comments + tags, **no logic**.
 5. Close with `SELECT * FROM final`, add `config`.
-6. **Backfill the header**: `grain`/`keys` were decided in step 1; fill in `summary`/`purpose`/`sources`/`related` + the second business-rules block.
-
-> Full runnable example: `references/example-model.sql`. Section details: §1 CTE structure · §2 `.*` conciseness · §3 naming · §4 comments & layout · §5 header · §6 Redshift syntax · §7 config.
+6. Backfill both headers: `summary`/`purpose`/`sources`/`related` and business rules.
 
 ---
 
 ## 1. CTE structure
 
 ### 1.1 The three CTE roles
-
-```sql
-/* == 取得每日維度資料 ================================================== */
-WITH DAILY_DIMENSION AS (            -- ① 初次引用 model 的 CTE：全大寫
-    SELECT *
-    FROM {{ ref('int_metric__daily_dimension') }}
-),
-
-/* == 計算週起始日 ================================================== */
-daily_with_week AS (                 -- ② 中間轉換 CTE：小寫描述性
-    SELECT DAILY_DIMENSION.*,
-           DATE_TRUNC('week', data_date)::DATE AS week_start_date
-    FROM DAILY_DIMENSION
-),
-
-/* == 最終輸出 ================================================== */
-final AS (                           -- ③ final CTE：純選欄 + 註解，零邏輯
-    SELECT week_start_date,          -- 週起始日（星期一）
-           data_date                 -- 資料日期
-    FROM daily_with_week
-)
-
-SELECT * FROM final
-```
 
 - **MUST** — the CTE that first references an external model is **UPPERCASE**, drops the `stg_/int_/mart_` prefix, and contains `SELECT *` (no column-by-column list). The name reflects the referenced model's business content; for over-long names, extract the key dimensions (`int_dim__metric_by_segment_region` → `SEGMENT_REGION`).
 - **MUST** — **don't rename CTEs.** Once a CTE name is set, keep it — the name must trace back to the model it references; renaming breaks that thread. (This is about the CTE's *own name*, distinct from §3's *column aliases*.)
@@ -128,30 +60,7 @@ SELECT * FROM final
 
 **MUST — the `final` CTE must contain no business logic.** Only column selection + aliases + comments. Every `CASE`, `WHERE` filter, rename computation, or arithmetic moves up into a dedicated preceding CTE.
 
-```sql
--- ❌ 錯：邏輯混在 final
-final AS (
-    SELECT id,
-           CASE WHEN score >= 0.7 THEN 'high' ELSE 'low' END AS tier,  -- 業務邏輯不該在這
-           amount
-    FROM src
-)
-
--- ✅ 對：邏輯上移，final 只選欄
-classified AS (
-    SELECT src.*,
-           CASE WHEN score >= 0.7 THEN 'high' ELSE 'low' END AS tier
-    FROM src
-),
-final AS (
-    SELECT id,        -- 識別碼
-           tier,      -- 分級
-           amount     -- 金額
-    FROM classified
-)
-```
-
-Why: separating logic from output shape → easier to test, review, debug; `final` becomes a stable column-schema contract, so a drop-in replacement is a direct column diff.
+Move every `CASE`, `WHERE`, arithmetic expression, and computed rename into a preceding CTE. This makes `final` a stable, directly diffable column-schema contract.
 
 ---
 
@@ -159,12 +68,12 @@ Why: separating logic from output shape → easier to test, review, debug; `fina
 
 **SHOULD / MAY — an optional conciseness idiom.** Pass columns through with `.*` so adding an upstream column changes only one line in `final`. **Be concise when you can; fall back to explicit declaration the moment it doesn't fit.** It never overrides `final` zero-logic (§1.2).
 
-Four scenarios, in brief:
+Choose among four cases:
 
-- **Single-source (no JOIN)** — `SOURCE_CTE.*` + your derived columns. Always works.
-- **JOIN** — `JOIN ... USING (key)` + an **unqualified `SELECT *`** keeps the join key single; ⚠️ `a.*, b.*` does **not** dedupe even with USING (key appears twice → collision). Pre-rename so keys share a name if needed.
-- **Few renames** — pull the renamed columns out explicitly (`source_cte.col AS new`) + `source_cte.*` for the rest; don't enumerate the whole CTE just to rename a few.
-- **Fall back** — enumerate explicitly when value columns collide / need renaming (e.g. both sources expose a `value` column), or keys are differently named so USING can't fold them. (USING still folds identically-named keys even under `FULL OUTER JOIN`.)
+- Single source: use `SOURCE_CTE.*` plus derived columns.
+- JOIN: `JOIN ... USING (key)` plus unqualified `SELECT *` keeps one key; `a.*, b.*` duplicates it.
+- Few renames: select renamed columns explicitly and use `source_cte.*` for the rest.
+- Fall back to an explicit list for value collisions or differently named keys.
 
 > **When a CTE JOINs ≥2 sources and you intend `.*` passthrough, read `references/dotstar-passthrough.md` in full before writing it** — that file holds the exact `USING` + unqualified-`*` rule, the duplicate-column trap, and the fallback chain. (Single-source passthrough — the common case — doesn't need it.)
 
@@ -174,54 +83,24 @@ Four scenarios, in brief:
 
 - **MUST** — **model / column names are a user-facing contract.** Once pushed and documented, don't rename them for cosmetics — downstream models, Tableau filter keys, and BI reports depend on them. When you need to change what's shown, change the **display label**; keep the technical column id unchanged.
 - **MUST** — **name matches content.** A column name's qualifier is its promise: a `__paid` metric must not smuggle in trial rows. To add coverage, open a **parallel column** (`__trial` / `__total`) — don't loosen the existing column's semantics.
-- **MUST — variant-naming principle (stable prefix, suffix distinguishes the variant)**: for models / CTEs / columns sharing one base, the **prefix stays the same** to mark shared identity; different variants (time scale, classification, source, scope…) are always distinguished by a **`__`-separated suffix** — not by changing the prefix or the base name.
+- **MUST — variant-naming principle (stable prefix, suffix distinguishes the variant)**: keep the shared base and distinguish time, class, source, or scope with a `__`-separated suffix.
 - **MUST — prefix per the dbt official style guide**: layer prefix + `__` separating source/entity (`stg_<source>__<entity>`, `int_`, marts use `fct_` / `dim_`). This is a general dbt convention, not a claim unique to this template.
 - **MUST** — **always qualify column references with the source CTE** (`source_cte.col`); no bare column names, no short table aliases (`t` / `o` / `ci`); write the full CTE name inside JOINs too.
-- **(adapt)** — **prefix tokens** (example; each project defines its own set): marts use `mart_` / `dash_` / `expt_`, paired with a domain code (e.g. `rev_` / `cust_` / `ads_` / `prod_`) and region (e.g. `region_a_` / `region_b_`).
-- **(adapt)** — **variant-suffix vocabulary** (example; each project defines its own): time scale `__daily` `__weekly` `__mtd` `__qtd` `__ytd` `__yoy` `__mom`; role `__denom` `__predict_value`; scope/grain `__region_b` `__by_customer`; multi-source symmetric `__from_<source>` (leave no implicit default); a version suffix (e.g. `__v2`) goes **only on new models** (keep existing names; never `replace_all` the token in bulk).
+- **(adapt)** — define project-specific prefix and variant-suffix vocabularies. Put version suffixes only on new models; never bulk-rename existing ones.
 
 ---
 
 ## 4. Column layout & comments
 
-- **MUST** — 4-space indent; `SELECT` columns vertically aligned; inline `--` comments aligned.
+- **MUST** — 4-space indent; vertically align `SELECT` columns and inline `--` comments.
 
-```sql
-SELECT month,                               -- 統計月份
-       city,                                -- 縣市
-       SUM(amount) AS total_amount          -- 總金額
-```
+- **MUST** — every `final` column has a purpose comment; group columns with section headers.
 
-- **MUST** — every `final` column has a purpose comment. Group with section headers:
+- **MAY** — continue long column comments on aligned `--` lines so they remain attached to the column.
 
-```sql
-final AS (
-    SELECT -- === 識別欄位 ===
-           entity_id,                       -- 實體唯一識別碼
+- **(adapt)** A schema generator may merge aligned continuation lines and normalize their indentation.
 
-           -- === 主要輸出 ===
-           output_value,                    -- [OUTPUT] 處理後輸出值
-
-           -- === 品質監控 ===
-           quality_score                    -- [METADATA] 品質評分
-    FROM cleaned
-)
-```
-
-- **MAY — column comments can span multiple lines**: when one column's description is too long, continue on **aligned `--` continuation lines** — the continuation `--` aligns under the first comment's `--`, so it reads as belonging to that column.
-
-```sql
-final AS (
-    SELECT entity_id,          -- 實體編號：整合多來源後的唯一識別，
-                               -- 來源優先序 A > B > C，C 僅補缺漏、不覆蓋既有值
-           amount              -- 金額
-    FROM cleaned
-)
-```
-
-  **(adapt)** if your project generates schema YAML from inline comments, aligned continuation lines are merged into **the same column's description**; note the generator may normalize the continuation indentation (don't rely on indentation inside the comment for layout).
-
-- **SHOULD** — a column-tag system marking provenance / role: `[OUTPUT]` primary business output, `[METADATA]` monitoring/debug, `[AUDIT]` lineage/audit. **Tags are extensible** to source/lens tags (`[BU_B]` `[地理視角]` `[ERP+product]`).
+- **SHOULD** — tag column roles such as `[OUTPUT]`, `[METADATA]`, and `[AUDIT]`; extend tags per project.
 - **SHOULD** — **3-site comment sync**: when you change a column's description, update the header frontmatter/narrative, the internal inline comment, and the `final` column comment **all three at once**. Drift leaves readers with contradictory descriptions of the same column.
 - **MAY** — align CJK comments/tables by **visual width** (CJK char = 2, ASCII = 1), not character count, or mixed CJK/ASCII goes ragged.
 - **(adapt)** — if your project generates schema YAML from inline comments (instead of hand-written `.yml`), then **inline comments = the single source of truth for the schema**; comment quality is load-bearing, not decoration.
