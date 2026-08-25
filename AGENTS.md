@@ -314,6 +314,11 @@ Role boundaries enforced by behavior, not reading restrictions:
   vocabulary; exit 2 when the queue relation
   is missing or malformed, or names an absent entry (the question to
   relay verbatim is printed to stderr).
+- **Compare loom skill behavior across Claude Code and Codex**:
+  `python3 loom-code/scripts/loom_firing_harness.py compare --corpus <corpus.json> --baseline <baseline-root> --candidate <candidate-root> --raw-dir <raw-dir> --out <comparison.json> --replicates 2`
+  — runs both plugin roots through both hosts, retains raw JSONL under
+  `<raw-dir>`, and writes normalized behavioral comparisons to
+  `<comparison.json>`. Use at least two replicates for A/B evidence.
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams
