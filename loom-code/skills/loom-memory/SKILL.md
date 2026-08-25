@@ -15,128 +15,99 @@ version: 0.2.1
 
 # loom-memory — record / recall / prune for the practice-memory store
 
-Three verbs over one store. This skill executes the store's charter —
-it never redefines it.
+Three verbs over one store; execute its charter, never redefine it.
 
 ## When it fires — N/A-loud gate
 
-**Condition: the target repo has `docs/loom/memory/README.md`** (the
-store charter).
-
-Missing → emit **`loom-memory: N/A (no docs/loom/memory/README.md in
-this repo)`** and stop. N/A is a first-class honest outcome — never
-silently skip, never scaffold a store on the fly to make the verb
-"work", and never improvise an equivalent from machine-local memory.
-Creating a store is a deliberate, separate act by the user.
+Fire only when the target repo has the store charter,
+`docs/loom/memory/README.md`. If missing, emit **`loom-memory: N/A (no
+docs/loom/memory/README.md in this repo)`** and stop. Never silently
+skip, never scaffold a store, and never substitute machine-local
+memory. Store creation is a separate user decision.
 
 ## SSOT — point, never copy
 
-The charter (`docs/loom/memory/README.md`) owns the jurisdiction
-table, the one-fact-per-file format spec, the index-line format, and
-the pull-not-push retrieval policy. Every verb below **reads the
-charter at execution time** and follows what it finds there. Do not
-reproduce the charter's table rows or format fence in this skill, in
-prompts, or in dispatch payloads — a copy drifts; the pointer never
-does. If this skill's summary ever disagrees with the charter, the
+The charter owns the jurisdiction table, one-fact-per-file and index
+formats, and pull-not-push policy. Every verb **reads the charter at
+execution time**. Do not reproduce its rows or format block in this
+skill, prompts, or dispatch payloads. If this summary differs, the
 charter wins.
 
 ## record
 
-Given a fact worth keeping:
-
-1. **Classify against the charter's jurisdiction table** (read it
-   first). Not everything belongs in the store — e.g. a backlog-shaped
-   item (open item / debt / re-trigger) routes to creating an entry
-   file in `docs/loom/backlog/` per its own charter
-   (`docs/loom/backlog/README.md`), and harness/dcg friction routes to
-   the loom-code plugin-shipped gotchas reference. Everything else:
-   classify per the charter's jurisdiction table (read it — it wins).
-   Tell the user where you routed the fact and why.
-2. **Check the store for contradictions.** Before writing, grep the
-   store — the index and the file bodies — for entries the new fact
-   contradicts. On a hit, update or replace that entry (delete and
-   rewrite it; git history is the archive) instead of adding a
-   contradicting sibling, and note the replacement in the entry's
-   frontmatter `description` (the regenerated index line then carries
-   it). This mirrors the backward-pointing `Supersedes:` doctrine owned by
-   `loom-workflow:git-memory` — point at it, don't copy its table (SSOT above).
-3. **Write `<slug>.md`** in `docs/loom/memory/` following the
-   charter's format block exactly (frontmatter fields, body sections).
-4. **Regenerate the index** — run
-   `python3 scripts/check_loom_memory_integrity.py --write`. The
-   validator rebuilds the charter's `## Index` section from every
-   entry's frontmatter; do not hand-append an index line. If
-   `--write` refuses, its FAIL output names the offending file and
-   the reason (broken frontmatter, unexpected prose in the index
-   region) — fix that named file first, then re-run.
-5. **Re-run the validator** before declaring done:
-   `python3 scripts/check_loom_memory_integrity.py` (default validate
-   mode) must exit 0 — it independently checks all five invariants
-   the validator's docstring defines. Also run `--check`, which
-   additionally catches hand-edits or drift in the committed index;
-   `--check` re-runs the generator, so it is not itself the
-   certification.
-
-   A nonzero exit is a fail-loud fix-now, not a note.
+1. **Classify against the charter's jurisdiction table.** A
+   backlog-shaped open item/debt/re-trigger becomes an entry under
+   `docs/loom/backlog/` per `docs/loom/backlog/README.md`; harness/dcg
+   friction routes to the plugin-shipped gotchas reference. Classify
+   everything else by the charter. Not every useful fact belongs in
+   practice memory: do not blur these destinations. Tell the user the
+   chosen route and why, including when the fact is rejected from this
+   store.
+2. **Check the store for contradictions.** Grep both index and bodies
+   before writing. On a hit, update or replace the entry (git history
+   is the archive), never add a contradicting sibling. Note replacement
+   in its frontmatter `description`, which the regenerated index carries.
+   Follow `loom-workflow:git-memory`'s backward-pointing `Supersedes:`
+   doctrine by reference; do not copy it.
+3. Write `docs/loom/memory/<slug>.md` as `<slug>.md`, following the
+   charter's format block exactly, including frontmatter and body sections.
+4. Run `python3 scripts/check_loom_memory_integrity.py --write`; it
+   generates `## Index` from entry frontmatter, so never append a line
+   manually. If it refuses, its FAIL output identifies the offending
+   file and cause, such as broken frontmatter or unexpected index prose;
+   fix that named file before rerunning.
+5. Before declaring done, `python3 scripts/check_loom_memory_integrity.py`
+   must exit 0, independently checking the validator docstring's five
+   invariants. Also run `--check` for committed-index drift; because it
+   regenerates, it is not the certification. Any nonzero exit is
+   fail-loud and fix-now.
 
 ## recall
 
-Given a topic or task description:
-
-1. **Grep the index first** (the charter's Index section) for the
-   topic's keywords; then grep the store file bodies for terms the
-   index lines may not carry.
-2. **Read ONLY the hit files.** Never read the whole store — retrieval
-   is pull-based by charter policy (the anti-preload decision lives
-   there; respect it).
-3. **Surface the operative rules** — the "how to apply" content — with
-   a file citation per rule (`docs/loom/memory/<file>.md`) —
-   conversational surfacing in the user's conversation language,
-   quoted file text verbatim. Before acting on a recalled entry, verify
-   any file/flag/skill it names still exists — a memory reflects what
-   was true when written, and a named path may have been renamed or
-   removed since.
-4. **No hits → say "no hits" honestly.** Never fabricate a memory and
-   never stretch a loosely related one to look relevant; a clean miss
-   is useful information.
+1. **Grep the index first** for topic keywords, then bodies for terms
+   index lines may omit.
+2. **Read ONLY the hit files.** Never preload the store; recall is
+   pull-based by charter policy.
+3. Surface applicable rules in the user's conversation language,
+   especially their operative "how to apply" content, quoting text
+   verbatim with a file citation per rule
+   (`docs/loom/memory/<file>.md`). Before acting, verify any
+   file/flag/skill it names still exists; memories can become stale.
+4. **No hits → say "no hits" honestly.** Never fabricate or stretch a
+   near-match; label adjacent material clearly, if offered.
 
 ## prune
 
-Invoked explicitly, never ambient (no cron, no hook-driven pruning).
-For **each** file in the store, check the expiry signals:
+Invoked explicitly, never ambient: no cron or hook-driven pruning. For
+**each** file, check:
 
-- **origin age** — the frontmatter `origin` predates the most recent
-  shipped work touching the same area (check via git log on the cited
-  paths), so the practice may already have been absorbed;
-- **superseded by a repo artifact** — a skill, hook, script, or
-  standard now encodes the rule; **cite that artifact** in the verdict;
-- **no plausible future trigger** — the situation the memory guards
-  against can no longer occur (tool removed, workflow retired).
+- **origin age**: compare frontmatter `origin` with git log for shipped
+  work on cited paths;
+- **superseded by a repo artifact**: a skill, hook, script, or standard
+  encodes it; cite that artifact;
+- **no plausible future trigger**: the guarded situation cannot recur.
 
-Output one **keep / merge / retire** table — every file gets a row and
-a one-line reason (keep-rows included; silence is not a verdict):
+Output one **keep / merge / retire** table; every file gets a row and
+one-line reason, including keeps:
 
 | file | verdict | reason |
 |---|---|---|
 
-- **keep** — still operative, trigger still plausible.
-- **merge** — duplicates or near-duplicates; propose the combined file
-  and the index update.
-- **retire** — propose deletion (git history is the archive, per the
-  charter — no archive folder).
+- **keep**: operative with a plausible trigger.
+- **merge**: duplicate/near-duplicate; propose combined file and index.
+- **retire**: propose deletion; git history is the archive, not a folder.
 
 **NEVER delete without explicit user approval.** Merge and retire are
-proposals; execute them only after the user approves, then regenerate
-the index in the same pass — run
-`python3 scripts/check_loom_memory_integrity.py --write` — and re-run
-the validator (`--check`) for any merged file.
+proposals. After approval, execute and regenerate the index in the same
+pass with `python3 scripts/check_loom_memory_integrity.py --write`, then
+run `--check` for merged files.
 
 ## Red flags — refuse these
 
 | Impulse | Refusal |
 |---|---|
-| "Load all memories at session start so they're handy" | Pull, not push — grep, then read hits only. The charter's anti-preload decision is evidence-backed; don't relitigate it per session. |
-| "Copy the charter's jurisdiction table / format spec here or into a prompt for convenience" | Point at `docs/loom/memory/README.md`. Copies drift; the family anti-copy convention is test-pinned. |
+| "Load all memories at session start" | Pull, not push: grep, then read hits only. |
+| "Copy the charter table/spec into a prompt" | Point at `docs/loom/memory/README.md`; copies drift. |
 | "This entry is obviously dead — just delete it" | Prune outputs a proposal. Deletion is user-approved only. |
-| "No exact hit, but this memory is close enough — present it as the answer" | Report "no hits" and offer the near-miss as clearly labeled adjacent material, or not at all. |
+| "A near hit is close enough" | Report "no hits"; label it adjacent or omit it. |
 | "The repo has no store — create one so the verb can run" | `loom-memory: N/A`, loudly. Store creation is the user's deliberate act. |
