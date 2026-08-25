@@ -181,6 +181,7 @@ def _mint_markers(repo, tmp_path):
     verdict_file = tmp_path / "verdict.txt"
     verdict_file.write_text(
         "standards_version: v1\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: green\n"
@@ -517,6 +518,7 @@ def test_e2e_markers_cli_to_hook_allows_push(repo, tmp_path):
     verdict_file = tmp_path / "verdict.txt"
     verdict_file.write_text(
         "standards_version: v1\n"
+        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678\n"
         "verdict: PASS\n"
         "dimension_scores:\n"
         "  security: green\n"

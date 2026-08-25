@@ -451,6 +451,14 @@ def validate_verdict_text(text: str) -> tuple[str | None, list[str]]:
     if not _KEY_RE["dimension_scores"].search(text):
         problems.append("dimension_scores: block missing")
 
+    # reviewed_sha is required UNCONDITIONALLY (fail-closed intake): a
+    # verdict without a full 40-hex reviewed_sha is evidence-unbound.
+    # `--expected-head` adds its equality binding ON TOP of this shape
+    # check; presence/shape is not opt-in.
+    _, sha_problem = _terminal_reviewed_sha(text)
+    if sha_problem is not None:
+        problems.append(sha_problem)
+
     problems.extend(_finding_problems(text))
     problems.extend(_simplification_ledger_problems(text))
     return verdict, problems
@@ -545,10 +553,10 @@ def _simplification_ledger_problems(text: str) -> list[str]:
 def _terminal_reviewed_sha(text: str) -> tuple[str | None, str | None]:
     """Return a terminal verdict's SHA, or one precise refusal reason.
 
-    This is deliberately separate from ``validate_verdict_text``: historical
-    callers that omit ``--expected-head`` retain their legacy verdict schema.
-    A caller that binds a marker to an immutable head opts into this stronger
-    terminal-verdict provenance contract.
+    ``validate_verdict_text`` calls this for the unconditional
+    presence/shape requirement (a full 40-hex ``reviewed_sha:`` exactly
+    once, outside fenced code); ``--expected-head`` callers additionally
+    compare the returned SHA for equality against the pinned head.
     """
     matches: list[str] = []
     fence: tuple[str, int] | None = None

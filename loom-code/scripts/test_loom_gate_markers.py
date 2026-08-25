@@ -1620,7 +1620,6 @@ def test_normalised_advisory_aggregates_across_findings(tmp_path, capsys):
     text = "\n".join(
         [
             "standards_version: 2026-06",
-        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
             "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
             "verdict: PASS",
             "dimension_scores:",
@@ -1669,7 +1668,6 @@ def test_normalised_advisory_has_no_durable_path(tmp_path, capsys):
     text = "\n".join(
         [
             "standards_version: 2026-06",
-        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
             "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
             "verdict: PASS",
             "dimension_scores:",
@@ -2084,7 +2082,6 @@ def test_review_pass_marker_no_longer_carries_origin_quote_tier_counts(tmp_path)
     text = "\n".join(
         [
             "standards_version: 2026-06",
-        "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
             "reviewed_sha: 1234567890abcdef1234567890abcdef12345678",
             "verdict: PASS",
             "dimension_scores:",
