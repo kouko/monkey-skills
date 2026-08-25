@@ -8,9 +8,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
+
+
+PACKET_KEYS = ("target_repo", "reviewed_sha", "plugin_version", "resources")
+SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
 
 def _git(repo: Path, *args: str) -> str | None:
@@ -100,10 +105,62 @@ def resolve_context(repo: Path) -> dict[str, object]:
     }
 
 
+def validate_packet(packet_path: Path) -> list[str]:
+    """Return one message per failing packet field; empty means well-formed."""
+    try:
+        packet = json.loads(packet_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return [f"packet: unreadable or not JSON ({error})"]
+    if not isinstance(packet, dict):
+        return ["packet: top level must be a JSON object"]
+
+    errors = []
+    for key in PACKET_KEYS:
+        if not packet.get(key):
+            errors.append(f"{key}: missing or empty")
+
+    reviewed_sha = packet.get("reviewed_sha")
+    target_repo = packet.get("target_repo")
+    if isinstance(reviewed_sha, str) and reviewed_sha:
+        if SHA_PATTERN.fullmatch(reviewed_sha) is None:
+            errors.append("reviewed_sha: must match ^[0-9a-f]{40}$")
+        elif isinstance(target_repo, str) and target_repo:
+            exists = _git(
+                Path(target_repo), "cat-file", "-e", f"{reviewed_sha}^{{commit}}"
+            )
+            if exists is None:
+                errors.append("reviewed_sha: commit does not exist in target_repo")
+
+    resources = packet.get("resources")
+    if resources and not isinstance(resources, dict):
+        errors.append("resources: must be an object of name -> absolute path")
+    elif isinstance(resources, dict):
+        for name, value in resources.items():
+            if not isinstance(value, str) or not Path(value).is_absolute():
+                errors.append(f"resources: {name} is not an absolute path")
+            elif not Path(value).exists():
+                errors.append(f"resources: {name} does not exist ({value})")
+    return errors
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Resolve immutable review context")
     parser.add_argument("--repo", default=".", help="target repository (default: cwd)")
+    parser.add_argument(
+        "--validate",
+        metavar="PACKET_JSON",
+        help="validate an existing packet file instead of emitting one",
+    )
     args = parser.parse_args(argv)
+    if args.validate is not None:
+        try:
+            errors = validate_packet(Path(args.validate))
+        except OSError as error:
+            print(f"PACKET-INVALID: packet: {error}", file=sys.stderr)
+            return 1
+        for error in errors:
+            print(f"PACKET-INVALID: {error}", file=sys.stderr)
+        return 1 if errors else 0
     try:
         context = resolve_context(Path(args.repo))
     except (OSError, ValueError) as error:
