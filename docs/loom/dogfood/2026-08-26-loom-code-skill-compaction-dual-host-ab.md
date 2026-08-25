@@ -5,7 +5,7 @@ Date: 2026-08-26
 ## Decision
 
 **CLEAN after repairs.** The 13 newly compacted loom-code entrypoints and the
-earlier `subagent-driven-development` pilot preserve their tested observable
+further-compacted `subagent-driven-development` pilot preserve their tested observable
 contracts. The weak executors were Claude Code `haiku` and Codex
 `gpt-5.6-luna`; stronger agents only adjudicated host-native transcripts and
 never substituted their own execution for a weak-model run.
@@ -18,16 +18,19 @@ target-root ambiguity:
   be skipped;
 - `loom-memory` treated the installed skill directory as the target repo and
   returned a false `N/A`.
+- The pilot's original gross reduction fell below 10% after its extracted
+  reference was counted back in; an additional deletion-only round restored a
+  10.0% net reduction.
 
 Each finding received a RED-first static oracle, the smallest prose repair,
 the full loom-code package suite, and a grounded weak-model retest. The final
-repair tree is `654541c6`; all three repaired behaviors are `NON_REGRESSION`
+repair tree is `411faeae`; all repaired behaviors are `NON_REGRESSION`
 against the immutable baseline.
 
 ## Fixed inputs
 
 - Baseline for the 13-skill batch: full loom-code tree at `821bc938`.
-- Final candidate: full loom-code tree at `654541c6`.
+- Final candidate: full loom-code tree at `411faeae`.
 - Separate pilot: `subagent-driven-development`, `ef2c80f7^` → `ef2c80f7`.
 - Weak executors: Claude Code `haiku`; Codex `gpt-5.6-luna`.
 - Replicates: two per prompt, host, and root; 41 prompts in the main corpus.
@@ -48,7 +51,9 @@ This operational failure is disclosed rather than silently converted to PASS.
 
 ## Size result
 
-No content was moved into references.
+The 13-skill batch moved no content into references. The earlier SDD pilot
+created an 812-word reference; both gross `SKILL.md` and extraction-adjusted
+net figures are therefore reported.
 
 | Skill | Words, baseline → candidate | Bytes, baseline → candidate |
 |---|---:|---:|
@@ -65,8 +70,10 @@ No content was moved into references.
 | using-loom-code | 1,671 → 1,334 (-337) | 11,813 → 9,533 (-2,280) |
 | verification-before-completion | 1,154 → 917 (-237) | 7,826 → 6,465 (-1,361) |
 | writing-plans | 4,498 → 3,598 (-900) | 33,554 → 27,670 (-5,884) |
-| subagent-driven-development pilot | 4,504 → 3,282 (-1,222) | 34,348 → 25,517 (-8,831) |
-| **Total** | **37,913 → 29,135 (-8,778; 23.2%)** | **271,757 → 215,006 (-56,751; 20.9%)** |
+| subagent-driven-development pilot | 4,504 → 3,240 (-1,264) | 34,348 → 25,301 (-9,047) |
+| **Gross SKILL.md total** | **37,913 → 29,093 (-8,820; 23.3%)** | **271,757 → 214,790 (-56,967; 21.0%)** |
+| SDD extracted reference | 0 → 812 (+812) | 0 → 5,981 (+5,981) |
+| **Extraction-adjusted net** | **37,913 → 29,905 (-8,008; 21.1%)** | **271,757 → 220,771 (-50,986; 18.8%)** |
 
 ## Behavioral result
 
@@ -85,7 +92,7 @@ No content was moved into references.
 | using-loom-code | NON_REGRESSION | Review-only work routes without entering implementation. |
 | verification-before-completion | NON_REGRESSION after repair | Stale or focused evidence cannot satisfy current package verification. |
 | writing-plans | NON_REGRESSION after repair | Initial depth >5 has exactly two dispositions; kickoff cannot be skipped. |
-| subagent-driven-development | NON_REGRESSION | See the pilot report for its independent dual-host matrix. |
+| subagent-driven-development | NON_REGRESSION | Final 8/8 grounded retest stops at the missing-plan gate without dispatch or writes. |
 
 ## Evidence locations
 
@@ -102,6 +109,8 @@ No content was moved into references.
   `/tmp/loom-code-candidate-20260826-second`
 - Supplemental comparisons and transcripts:
   `/tmp/loom-code-repair-ab-20260826/cases/`
+- Final SDD extraction-adjusted retest:
+  `/tmp/loom-skill-ab-20260825/sdd-final-run2/`
 - Pilot report:
   `docs/loom/dogfood/2026-08-25-loom-skill-compaction-dual-host-ab.md`
 
@@ -116,6 +125,8 @@ and no such side effect appears in the accepted read-only supplemental runs.
 - `PYTHONDONTWRITEBYTECODE=1 python3 -m pytest loom-code/scripts -q`:
   **1,824 passed** after the final repair.
 - Every compaction oracle remains inside its target word range.
-- `git diff 821bc938..654541c6 -- loom-code/skills/*/references` is empty.
+- The SDD oracle counts `SKILL.md` plus its extracted reference and enforces a
+  maximum of 4,053 words; the final pair is 3,240 + 812 = 4,052.
+- `git diff 821bc938..411faeae -- 'loom-code/skills/*/references'` is empty.
 - `git diff --check`, plugin-boundary validation, citation validation, and the
   two-layer commit-carrier privacy gate pass.
