@@ -13,24 +13,21 @@ If you are a subagent dispatched with an explicit role prompt (implementer / spe
 
 > **DO NOT START IMPLEMENTING UNTIL YOU HAVE EXPLORED INTENT.**
 
-This is not a guideline. The pressure to skip — *"this is simple,"* *"I know what to build,"* *"let's just start coding"* — is exactly the failure mode this skill exists to prevent. **The first 5 minutes of brainstorming saves the next 50 minutes of building the wrong thing and the 500 minutes of refactoring out of it.**
-
-If you catch yourself drafting code, opening files, or reaching for the Skill tool to call `tdd-iron-law` *before* the user has answered the axes below (Axis 0 through Axis 5) — **stop**. Return to this skill. Beck's *"if it's hard to test, it's probably hard to use"* (Preface, 2002) has a discovery-phase analogue: *if it's hard to articulate what success looks like, it's probably the wrong target.*
+Pressure to skip — *"this is simple," "I know what to build," "just start coding"* — is the failure mode. If you start drafting code, opening implementation files, or invoking `tdd-iron-law` before completing Axis 0–5, stop and return here.
 
 ### What counts as "before implementation"
 
 | Phase | Iron-Law on TDD applies? | brainstorming applies? |
 |---|---|---|
 | User says *"add feature X"* | Not yet (no code being written) | **YES — start here** |
-| Brief sketched, plan being drafted | Not yet | Skill complete; hand off to `writing-plans` |
-| writing-plans split into atomic tasks | Each task triggers it | Skill complete |
-| implementer subagent dispatched | YES — Iron Law applies | Skill complete (subagent has the brief in its prompt) |
+| Brief complete; plan being drafted | Not yet | Hand off to `writing-plans` |
+| Atomic task / implementer dispatched | YES | Already complete; brief is in the prompt |
 
-If you are in the first row and the task is non-trivial (touches new behavior, new module boundary, or non-obvious design space), this skill is **mandatory** before anything else.
+For new behavior, module boundaries, or non-obvious design, the first row is mandatory.
 
 ## When NOT to use
 
-Narrow, enumerated exemption list. If your task is **not** on this list, the HARD-GATE applies.
+This list is exhaustive; otherwise the HARD-GATE applies.
 
 | Exempt category | What qualifies | What does NOT qualify |
 |---|---|---|
@@ -39,137 +36,79 @@ Narrow, enumerated exemption list. If your task is **not** on this list, the HAR
 | **Bug fix where the failing test already exists** | A test is RED reproducibly; you know which line is wrong. | A bug where *"the test should fail but doesn't"* (false-green diagnostic; see `tdd-iron-law/SKILL.md` §False-green diagnostic). |
 | **Explicit user override** | User says *literally* "skip brainstorming, here's the spec, go" AND hands in a written spec / plan that already covers the 5 axes. | User says *"just figure it out"* — that's an instruction to brainstorm, not to skip. |
 
-When uncertain, ask: *"Could a reasonable engineer pick the wrong solution from the user's prompt as written?"* If yes, you are in brainstorming scope.
+If a reasonable engineer could choose wrongly from the prompt, brainstorming applies.
 
 ## The 5-axis exploration framework
 
-"5-axis" is the framework's historical name; the walk itself now starts one step earlier. Walk all axes below, starting at Axis 0 — a mandatory member of the walk (its own negative guard is the only sanctioned skip, and it skips only the upstream-artifact walk — the ready check inside Axis 0 always runs). Don't skip any. If an axis returns *"don't know"* or *"need more from user"* — that is itself a discovery output and goes into Open Questions in the brief.
+"5-axis" is the historical name. Walk all axes below, starting at Axis 0. Only Axis 0's negative guard may skip its upstream-artifact walk; its ready check still runs. Record unknowns in the brief's Open Questions.
 
-When axis uncertainty requires user input, ask **at most one axis per `AskUserQuestion` call** — the single highest-uncertainty one. Bundling multiple axes (e.g. Axis 1 + Axis 3 + Axis 4 with 3-4 options each) overloads the call and will be rejected by the harness as too many options.
+When user input is necessary, ask **at most one axis per `AskUserQuestion` call**: the highest-uncertainty axis.
 
-When that axis question fires, phrase it for the warm-but-interrupted user who reads the rendered question, not your chat preamble:
+Make the rendered question self-contained:
 
-- **Open with a one-line state anchor inside the `AskUserQuestion` `question` field** — *here's what we've settled, here's the axis still open.* The anchor must live in the `question` field itself, not only in prose above the call; the user sees the rendered menu first. A bare axis prompt («Which approach?» with no context) is the failure.
-- **Outcome, not mechanism.** Each option says what the user *gets* or which design direction it commits to ("ship CSV as a URL query param, no UI work"), not the internal machinery — no axis numbers, no "Option B", no cluster names.
-- **Numbers (and symbols) carry their meaning.** Translate raw counts and jargon into plain words in the option text: "3 industry approaches found" → "the three ways teams actually ship this"; let any bare count sink to a sub-line, never the headline.
+- Put a **one-line state anchor** in the `question` field: what is settled and what remains open.
+- Use **Outcome, not mechanism**: options describe what the user gets, without axis numbers, internal labels, or cluster names.
+- Give numbers and symbols plain-language meaning; keep bare counts out of headlines.
 
-These three join the two gates already woven into the axes: gate ① (ask only when genuinely uncertain) lives in **Axis 1** as the confident-JTBD-read rule — state a confident reading as a committed interpretation rather than re-asking — and gate ② (bring a recommendation, not an open question) lives in **Axis 4** as the research-then-"My take: Recommend / Why / Conditional reversal" protocol; together the three read as one coherent set.
+Axis 1 avoids re-asking a confident interpretation; Axis 4 brings a researched recommendation rather than an empty choice.
 
-**Above all — brief first when the fork is complex.** The trigger threshold and stakes-first framing live in `loom-code/hooks/family-reception.md §Brief before a complex fork` — run `loom-workflow:brief-before-asking` before firing the `AskUserQuestion` for an axis fork. When the brief presents ≥2 options, render them as a markdown comparison table by default (a trivial binary ask may stay prose) — per `loom-code/hooks/family-relay.md §Family relay discipline`.
+For a complex fork, follow `loom-code/hooks/family-reception.md §Brief before a complex fork`: run `loom-workflow:brief-before-asking` before `AskUserQuestion`. Per `family-relay.md`, show ≥2 options in a markdown comparison table unless the ask is a trivial binary.
 
 ### Axis 0 — Upstream artifacts (family §Intake)
 
-Before Axis 1, check the target repo against **the loom family reception's**
-on-ramp criteria table (`loom-code/hooks/family-reception.md`) — point to
-it, never copy its rows here (SSOT: that file owns the table body).
+Before Axis 1, check the target repo against **the loom family reception's** on-ramp criteria (`loom-code/hooks/family-reception.md`); it owns the table.
 
-**Negative guard (silent skip)**: if the work is a bug fix, a refactor, or a
-test-covered increment, Axis 0's upstream-artifact walk is skipped silently —
-no noise on incremental work; the **Backlog ready check** below runs
-regardless. Only proceed past this guard for product-shaped / user-facing /
-multi-state new work.
+**Negative guard (silent skip)**: skip the upstream-artifact walk for a bug fix, refactor, or test-covered increment. The **Backlog ready check** runs regardless. Continue the full walk only for product-shaped, user-facing, or multi-state new work.
 
-**Backlog ready check** — when the target repo has
-`docs/loom/backlog/`, run `python3 scripts/backlog_index.py --ready`
-before settling the arc's scope, and surface to the user any
-`bet` items plus `open` items related to the seed idea (no
-store, or neither copy of `backlog_index.py` → skip silently, N/A).
-Repo-root `scripts/backlog_index.py` when it exists; otherwise run
-the plugin-shipped copy:
+**Backlog ready check** — if `docs/loom/backlog/` exists, run `python3 scripts/backlog_index.py --ready` before fixing scope; surface `bet` items and related `open` items. Prefer the repo script, else run:
 `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/backlog_index.py" --ready`
-(a load-time substitution, not a run-time shell variable).
-The queue informs the arc decision — it never hijacks it: the user's seed
-idea stays the default subject. This check is independent of the
-Negative guard above — a bug-fix or refactor arc that skips the rest
-of Axis 0 still runs the ready check (backlog entries are often
-exactly bug-fix shaped).
+`${CLAUDE_PLUGIN_ROOT}` is load-time substitution: no store, or neither copy of `backlog_index.py` → skip silently, N/A. The queue informs the arc decision; it never hijacks it, and the user's seed remains the default subject. This check is independent of the Negative guard (backlog entries are often exactly bug-fix shaped).
 
-**No queue layer yet** — when the ready check skips because the target
-repo has no `docs/loom/backlog/` store **and no `docs/loom/KICKOFF-DEFAULTS.md`**
-(the verb refuses on either existing — never offer a guaranteed
-refusal), offer scaffolding one **ONCE**
-via the plugin-shipped verb:
+**No queue layer yet** — only when both `docs/loom/backlog/` and `docs/loom/KICKOFF-DEFAULTS.md` are absent, offer scaffolding **ONCE** via:
 `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/loom_init.py"`
-(a load-time substitution, not a run-time shell variable; a bootstrap
-verb has no repo-root tier — its precondition is the repo lacking the
-layer). If the user
-declines or does not engage, proceed silently exactly as today, and
-never re-raise it — the same recommend-once rule as the on-ramp
-recommendation below. Record the answer inside the brief's
-`## Design-side on-ramp` section, on its OWN line BELOW that section's
-on-ramp value line, as
+This plugin-only bootstrap uses load-time substitution and refuses if either artifact exists. If declined or ignored, proceed and never re-raise it. Below the `## Design-side on-ramp` value line record:
 `Loom-init offer: offered — user chose <scaffold/decline>`. Never write
-it as the on-ramp value itself: that value line takes one of the four
-canonical forms only, and any other wording there reads as unresolved
-and blocks the plan. When
-neither copy of `backlog_index.py` resolves, stay N/A as today — the
-scaffold verb ships alongside it, so there is no offer to make.
+it as the value itself; that line accepts only the four canonical forms. When neither copy of `backlog_index.py` resolves, stay N/A as today; the scaffold ships alongside it, so there is no offer to make.
 
-If a criteria row triggers, first check `docs/loom/KICKOFF-DEFAULTS.md`'s
-`## On-ramp standing choices` — a standing entry for every fired row means
-write `fired: rows <n> — standing <direct|detour> (KICKOFF-DEFAULTS.md)` in the
-`## Design-side on-ramp` line and continue without asking. Otherwise write
-`pending` and surface the recommendation **ONCE** as a standalone ask (per
-`loom-code/hooks/family-reception.md` §On-ramp — point, don't copy),
-naming the concrete design-side sequence (e.g. `using-loom-design`,
-whichever rows fired) and stating the recommendation inside the ask. Only
-after the user answers, write `fired: rows <n> — user chose <detour|direct>`
-(grammar SSOT: `references/handoff-brief-format.md`) — never record an
-agent default, and never re-raise it after the user answers.
+If a criteria row triggers, first read `docs/loom/KICKOFF-DEFAULTS.md` `## On-ramp standing choices`. If every row has a standing choice, record `fired: rows <n> — standing <direct|detour> (KICKOFF-DEFAULTS.md)` and continue. Otherwise record `pending`, then ask **ONCE** in a standalone ask that recommends and names the concrete sequence (for example `using-loom-design`). After the answer, record `fired: rows <n> — user chose <detour|direct>` per `references/handoff-brief-format.md`; never invent a default or re-ask.
 
 ### Axis 1 — Problem
 
-What is the user trying to accomplish? **Not the solution they proposed — the problem behind the solution.**
+Identify the problem behind the proposed solution and its measurable success criteria. Use Christensen et al. (2016), *Competing Against Luck*'s Jobs-To-Be-Done framing: articulate the job before the product.
 
-If the user says *"add a CSV export button,"* the problem is not *"have a button."* It might be *"share daily numbers with a non-technical stakeholder who lives in Excel,"* OR *"backup data before deletion,"* OR *"feed data into a downstream pipeline."* Each problem has different success criteria.
+One requested feature may hide different jobs: sharing daily numbers with a non-technical stakeholder, backing up data before deletion, or feeding a downstream pipeline. Do not treat the proposed interface as the job; each underlying purpose implies different acceptance criteria.
 
-Grounded in: **Christensen, C.M., Hall, T., Dillon, K., & Duncan, D.S. (2016) *Competing Against Luck*, Harper Business** (and the HBR companion "Know Your Customers' Jobs to Be Done", Sept 2016) — the Jobs-To-Be-Done framing: *"customers don't buy products; they hire them to do a job."* Articulate the job before the product. (Note: this framing is **not** in *The Innovator's Dilemma* (1997), which is about disruption — a common misattribution; JTBD's origin is also contested with Ulwick's Outcome-Driven Innovation, HBR 2002.)
-
-When session context gives a confident JTBD read (e.g. the user's prior messages or inline comment already name the job), state it as a committed interpretation — *"I read this as X — correct me if wrong"* — and proceed to Axis 4. `AskUserQuestion` fits genuine cold-start ambiguity; re-presenting an already-confident prose reading as a multiple-choice menu wastes a turn and signals the agent isn't listening.
+If context gives a confident JTBD read, state `I read this as X — correct me if wrong` and proceed to Axis 4. Reserve `AskUserQuestion` for genuine ambiguity.
 
 ### Axis 2 — Users
 
-Who specifically? Under what conditions? With what existing tools and constraints?
+Identify specific users, conditions, tools, and constraints. Combine Axes 1+2 with Klement's job-story format: `When [situation], I want to [motivation], so I can [outcome].`
 
-*"Internal data analysts who currently export by SQL-copy-paste to Sheets, on a daily cadence, blocked by IT from installing new desktop tools"* is a different design than *"external API consumers who need a stable CSV format for nightly ETL."*
-
-Grounded in: **Klement, A. (2018) *When Coffee and Kale Compete*, ISBN 978-1718626751** — job story format: *"When [situation], I want to [motivation], so I can [expected outcome]."* Use this format when articulating Axis 1+2 together.
+Be concrete enough to distinguish, for example, an internal analyst copying SQL results into Sheets under installation restrictions from an external API consumer running nightly ETL. Their tooling and stability needs produce different designs.
 
 ### Axis 3 — Smallest End State
 
-What is the *minimum* shippable end state that solves the problem? Defaulting to the user's first-suggested solution is a smell — the first solution is usually bigger than necessary.
+Define the *minimum shippable* end state. Challenge the first proposed solution; for example, a CSV query parameter may solve an export need without UI. Delegate suspected accidental complexity to `loom-workflow:complexity-critique`.
 
-Examples of "smaller than first ask":
-- *"Add a CSV export button"* → smallest may be: *"add a `?format=csv` query param to the existing report URL"* (no UI work at all).
-- *"Add a feature-flag system"* → smallest may be: *"add one env var + a hardcoded list check"* (defer the whole flag system).
-- *"Refactor `OrderService`"* → smallest may be: *"extract just the email-notification subset that's blocking the current bug"* (defer the rest).
-
-This axis often delegates to `loom-workflow:complexity-critique` for systematic deletion-first triage. See §Cross-skill delegation.
+Shrink systems as well as features: one environment variable may replace a proposed feature-flag system, and extracting only the email-notification path may unblock a bug without refactoring an entire service. Explicitly defer the rest rather than leaving an implied expansion.
 
 ### Axis 4 — Alternatives Considered (**research-grounded, not imagined**)
 
-What are 2-3 other ways this could be solved, and why were they rejected? Force the user (or yourself, in conversation with the user) to enumerate.
+Enumerate 2–3 shipped alternatives and why each was rejected so the chosen trade-off survives context loss.
 
-The point is not to pick from the alternatives — it is to make the chosen path's trade-offs visible. *"We picked X over Y because Z"* is a sentence that survives 6 months of context loss; *"X is the obvious choice"* does not.
-
-**Research the SHIPPED options, not imagined ones.** Run **WebSearch** for what the industry currently does — the agent's training data is frozen, so *"alternatives I can imagine"* produces hallucinated libraries / deprecated patterns. Per round, search **at minimum one English AND one Japanese** query (single-language is sampling bias; JA blogs / post-mortems often cover what EN misses). EN+JA agreement is a stronger signal — and **a disagreement between EN and JA is itself a finding** worth surfacing, not a tie to resolve silently. Lead with an explicit recommendation ("my take", recommendation first — the user learns which one before the alternatives' evidence), citing sources in **both languages**, each labeled by source language.
+**Research shipped options, not imagined ones.** Per round, WebSearch at least **one English AND one Japanese** query. Cite and label both languages; agreement strengthens evidence, while **disagreement between EN and JA is itself a finding**. Lead with a recommendation.
 
 **Output format** — lead with the "My take: Recommend / Why / Conditional reversal" block, then surface each alternative with source + pros/cons + who ships it. Concrete template in [`references/axis4-research-protocol.md`](references/axis4-research-protocol.md) §Output format.
 
-Full protocol — the bilingual query-pattern tables, the why-both-languages rationale, WebSearch-unavailable handling, the "only ≤3 alternatives exist" case, the anti-patterns, and the output-format template — in [`references/axis4-research-protocol.md`](references/axis4-research-protocol.md). That protocol is also referenced by **router rule #5** (Research before asking) for decisions arising outside Axis 4 (e.g. an SDD implementer asking "which retry strategy?" mid-execution).
+Use [`references/axis4-research-protocol.md`](references/axis4-research-protocol.md) for query patterns, unavailable-search handling, edge cases, anti-patterns, and the template. Router rule #5 applies it to decisions outside Axis 4 too.
 
 ### Axis 5 — What Becomes Obsolete
 
-What existing code / process / convention does this make redundant? Anything that becomes obsolete and is **not removed in the same change** is technical debt by design.
+Name code, process, or conventions made redundant and remove them in the same change. If nothing becomes obsolete, check for additive YAGNI or incomplete exploration.
 
-Examples:
-- New CSV export endpoint → the documented Sheets-copy-paste runbook becomes obsolete; delete it in the same PR.
-- New feature flag → the hardcoded behavior it replaces becomes obsolete; remove it in the same PR.
-- New helper function → if it's covering for an existing API's shortcomings, can the existing API be improved instead?
+Count documentation and operational procedures too: a new export endpoint can obsolete a copy-paste runbook, while a new flag must replace—not coexist indefinitely with—the hardcoded behavior. Ask whether a new helper merely covers for an API that should instead be corrected.
 
-If nothing becomes obsolete, that is a flag: either the change is purely additive (probably YAGNI — see `loom-workflow:complexity-critique`) or the design space wasn't explored enough.
-
-**Pairs with `## Current State Evidence` in the brief**: Axis 5 is forward-looking (what gets removed); Current State Evidence is backward-looking (what currently exists at the touch points). The same evidence citations often serve both: each requires a path plus an anchor, either a verbatim string or a stable heading. A line number is optional precision only when the anchor is ambiguous. The recon you do to fill Evidence is the same recon that surfaces obsolescence candidates here. See [`references/handoff-brief-format.md`](references/handoff-brief-format.md) §Current State Evidence for the format.
+Pair this forward-looking axis with backward-looking `## Current State Evidence`. Both use a path plus verbatim-string or stable-heading anchor; add a line number only when ambiguous. See the handoff format.
 
 ## Output Contract — the brief
 
