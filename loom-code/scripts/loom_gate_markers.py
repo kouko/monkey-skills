@@ -74,6 +74,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ALLOWED_VERDICTS = {"PASS", "PASS_WITH_NOTES", "NEEDS_REVISION"}
+# A reviewer's explicit refusal of a malformed dispatch packet.
+# NEVER added to ALLOWED_VERDICTS: the refusal is machine-readable but
+# un-mintable — see `validate_verdict_text`.
+_MALFORMED_PACKET_REFUSAL = "MALFORMED_PACKET"
 MIN_WAIVER_REASON_CHARS = 10
 
 # NOTE: value-capturing regexes use [^\S\n]* (horizontal whitespace),
@@ -440,6 +444,21 @@ def validate_verdict_text(text: str) -> tuple[str | None, list[str]]:
     vm = _KEY_RE["verdict"].search(text)
     if not vm:
         problems.append("verdict: missing")
+    elif vm.group(1) == _MALFORMED_PACKET_REFUSAL:
+        # Recognized BEFORE the allowed-values check: this is a
+        # reviewer's explicit refusal of a malformed dispatch packet,
+        # not a verdict value — deliberately NOT in ALLOWED_VERDICTS,
+        # so it can never mint a review-pass marker. Its
+        # `missing_fields:` list is accepted refusal syntax (nothing
+        # here flags it). The whole text is a refusal document, so the
+        # remaining schema checks are skipped: the fix is upstream in
+        # the dispatch packet, not in this text's shape.
+        return None, [
+            "verdict: MALFORMED_PACKET is a malformed-packet refusal, "
+            "not a review verdict — no marker can ever be minted from "
+            "it. Fix the dispatch packet (see the refusal's "
+            "missing_fields: list) and re-dispatch the reviewer."
+        ]
     elif vm.group(1) not in ALLOWED_VERDICTS:
         problems.append(
             f"verdict: invalid value {vm.group(1)!r} "
