@@ -3716,5 +3716,81 @@
   "raw_workspaces": [
     "loom-code-preflight-20260826-first-half-v2",
     "loom-code-preflight-20260826-second-half-v2"
+  ],
+  "capture_contracts": [
+    {
+      "host": "claude",
+      "model": "haiku",
+      "argv_semantics": {
+        "allowed_tools": [
+          "Skill"
+        ],
+        "max_turns": 12,
+        "mode": "claude-plugin-dir",
+        "sandbox": null
+      },
+      "timeout_seconds": 360
+    },
+    {
+      "host": "claude",
+      "model": "haiku",
+      "argv_semantics": {
+        "allowed_tools": [
+          "Skill"
+        ],
+        "max_turns": 24,
+        "mode": "claude-plugin-dir",
+        "sandbox": null
+      },
+      "timeout_seconds": 900
+    },
+    {
+      "host": "claude",
+      "model": "haiku",
+      "argv_semantics": {
+        "allowed_tools": [
+          "Skill"
+        ],
+        "max_turns": 4,
+        "mode": "claude-plugin-dir",
+        "sandbox": null
+      },
+      "timeout_seconds": 180
+    },
+    {
+      "host": "claude",
+      "model": "haiku",
+      "argv_semantics": {
+        "allowed_tools": [
+          "Skill"
+        ],
+        "max_turns": 48,
+        "mode": "claude-plugin-dir",
+        "sandbox": null
+      },
+      "timeout_seconds": 900
+    },
+    {
+      "host": "codex",
+      "model": "gpt-5.6-luna",
+      "argv_semantics": {
+        "allowed_tools": null,
+        "max_turns": 12,
+        "mode": "codex-isolated-plugin",
+        "sandbox": "workspace-write"
+      },
+      "timeout_seconds": 360
+    },
+    {
+      "host": "codex",
+      "model": "gpt-5.6-luna",
+      "argv_semantics": {
+        "allowed_tools": null,
+        "max_turns": 4,
+        "mode": "codex-isolated-plugin",
+        "sandbox": "workspace-write"
+      },
+      "timeout_seconds": 180
+    }
   ]
 }

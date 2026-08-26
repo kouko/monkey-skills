@@ -385,6 +385,11 @@ def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
     record = {
         "schema_version": 2, "baseline": {"commit": "c", "tree": "t"},
         "models": {"claude": "haiku", "codex": "gpt-5.6-luna"},
+        "capture_contracts": [{
+            "host": "claude", "model": "haiku",
+            "argv_semantics": provenance["argv_semantics"],
+            "timeout_seconds": provenance["timeout_seconds"],
+        }],
         "skills": {"demo": {"corpus_sha256": provenance["corpus_sha256"], "runs": [run]}},
     }
     record_path = tmp_path / "record.json"
@@ -393,6 +398,23 @@ def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
         record_path, tmp_path / "raw-base", tmp_path / "corpora"
     ) == 1
 
+    wrong_header = json.loads(record_path.read_text(encoding="utf-8"))
+    wrong_header["models"]["claude"] = "wrong"
+    record_path.write_text(json.dumps(wrong_header), encoding="utf-8")
+    with pytest.raises(ValueError, match="model header mismatch"):
+        preflight.verify_raw_record(
+            record_path, tmp_path / "raw-base", tmp_path / "corpora"
+        )
+
+    wrong_contract = json.loads(json.dumps(record))
+    wrong_contract["capture_contracts"][0]["timeout_seconds"] = 1
+    record_path.write_text(json.dumps(wrong_contract), encoding="utf-8")
+    with pytest.raises(ValueError, match="capture contract mismatch"):
+        preflight.verify_raw_record(
+            record_path, tmp_path / "raw-base", tmp_path / "corpora"
+        )
+
+    record_path.write_text(json.dumps(record), encoding="utf-8")
     corrupted = json.loads(record_path.read_text(encoding="utf-8"))
     corrupted["skills"]["demo"]["runs"][0]["observable"]["tool_count"] = 9
     record_path.write_text(json.dumps(corrupted), encoding="utf-8")
@@ -436,3 +458,12 @@ def test_verify_record_raw_rejects_incomplete_run_matrix(tmp_path):
         preflight.verify_raw_record(
             record, tmp_path, tmp_path / "corpora", expected_targets=("demo",)
         )
+
+
+def test_capture_completion_gate_rejects_host_errors():
+    record = {"skills": {"demo": {"runs": [
+        {"status": "completed", "exit_code": 0},
+        {"status": "host-error", "exit_code": 0},
+    ]}}}
+    with pytest.raises(ValueError, match="capture incomplete"):
+        preflight.require_complete_capture(record)

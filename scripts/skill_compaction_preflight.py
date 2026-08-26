@@ -235,6 +235,14 @@ def provenance_fingerprint(provenance: dict) -> str:
     return sha256_text(json.dumps(provenance, sort_keys=True, separators=(",", ":")))
 
 
+def capture_contract(provenance: dict) -> dict:
+    return {
+        "host": provenance["host"], "model": provenance["model"],
+        "argv_semantics": provenance["argv_semantics"],
+        "timeout_seconds": provenance["timeout_seconds"],
+    }
+
+
 def metadata_path(raw_path: Path) -> Path:
     return raw_path.with_suffix(".meta.json")
 
@@ -320,6 +328,10 @@ def verify_raw_record(
         raise ValueError("no skill evidence")
     if expected_targets is not None and set(skills) != set(expected_targets):
         raise ValueError("record does not contain all expected targets")
+    contract_set = {
+        json.dumps(contract, sort_keys=True, separators=(",", ":"))
+        for contract in record.get("capture_contracts", [])
+    }
     verified = 0
     for skill_name, snapshot in skills.items():
         corpus_path = corpora_root / skill_name / "test-prompts.json"
@@ -369,6 +381,13 @@ def verify_raw_record(
             }
             if any(provenance.get(key) != value for key, value in expected.items()):
                 raise ValueError(f"provenance mismatch: {skill_name} p{run.get('prompt_id')}")
+            if run.get("model") != record.get("models", {}).get(run.get("host")):
+                raise ValueError(f"model header mismatch: {skill_name} p{run.get('prompt_id')}")
+            encoded_contract = json.dumps(
+                capture_contract(provenance), sort_keys=True, separators=(",", ":")
+            )
+            if contract_set and encoded_contract not in contract_set:
+                raise ValueError(f"capture contract mismatch: {skill_name} p{run.get('prompt_id')}")
             if (
                 metadata.get("exit_code") != 0
                 or metadata.get("status") != "completed"
@@ -503,6 +522,17 @@ def _capture_run(
     }
 
 
+def require_complete_capture(record: dict) -> None:
+    failed = [
+        (skill_name, run.get("prompt_id"), run.get("host"), run.get("replicate"))
+        for skill_name, snapshot in record.get("skills", {}).items()
+        for run in snapshot.get("runs", [])
+        if run.get("status") != "completed" or run.get("exit_code") != 0
+    ]
+    if failed:
+        raise ValueError(f"capture incomplete: {len(failed)} failed runs; first={failed[0]}")
+
+
 def capture(
     repo: Path, out: Path, raw_workspace: Path, targets=TARGETS,
     timeout_seconds: int = 180, max_turns: int = 12,
@@ -520,6 +550,19 @@ def capture(
         "captured": "2026-08-26",
         "acknowledgement": "The user previously acknowledged genuine prompts and weak-model equivalence testing on Claude Code and Codex.",
         "models": {"claude": "haiku", "codex": "gpt-5.6-luna"},
+        "capture_contracts": [
+            {
+                "host": host, "model": model,
+                "argv_semantics": {
+                    "mode": "claude-plugin-dir" if host == "claude" else "codex-isolated-plugin",
+                    "max_turns": max_turns,
+                    "allowed_tools": ["Skill"] if host == "claude" else None,
+                    "sandbox": None if host == "claude" else "workspace-write",
+                },
+                "timeout_seconds": timeout_seconds,
+            }
+            for host, model in (("claude", "haiku"), ("codex", "gpt-5.6-luna"))
+        ],
         "replicates_per_host": 2,
         "baseline": {"commit": commit, "tree": tree},
         "raw_workspace": raw_workspace.name,
@@ -573,7 +616,10 @@ def merge_records(
     parts = [json.loads(path.read_text(encoding="utf-8")) for path in paths]
     if not parts:
         raise ValueError("merge requires at least one record")
-    header_fields = ("schema_version", "models", "replicates_per_host", "baseline")
+    header_fields = (
+        "schema_version", "models", "capture_contracts",
+        "replicates_per_host", "baseline",
+    )
     for field in header_fields:
         if any(part.get(field) != parts[0].get(field) for part in parts[1:]):
             raise ValueError(f"merge {field} conflict")
@@ -659,10 +705,11 @@ def main() -> None:
     if args.out is None:
         raise SystemExit("--out is required unless --validate-only is used")
     workspace = args.raw_workspace or Path(tempfile.mkdtemp(prefix="loom-code-preflight-"))
-    capture(
+    record = capture(
         args.repo, args.out, workspace, tuple(args.skills or TARGETS), args.timeout,
         args.max_turns, args.baseline_commit,
     )
+    require_complete_capture(record)
     print(f"PASS: record={args.out} raw={workspace}")
 
 
