@@ -95,3 +95,38 @@ def test_accounting_counts_moved_words_in_package_total(tmp_path: Path) -> None:
         "verdict": "REFUSED",
         "reason": "baseline drift detected",
     }
+
+
+def test_dual_host_error_is_ungradeable_and_blocks_package_pass() -> None:
+    """A host failure is missing behavioral evidence, never a passing replay."""
+    from package_gate import reduce_package_evidence
+
+    accounting = {
+        "verdict": "PASS",
+        "target": {"words": {"baseline": 10, "candidate": 8, "delta": -2}},
+        "package": {"words": {"baseline": 20, "candidate": 18, "delta": -2}},
+    }
+    result = reduce_package_evidence(
+        {
+            "resource": [{"verdict": "PASS"}],
+            "owning-skill": [{"verdict": "PASS"}],
+            "package": [{"verdict": "PASS"}],
+            "host_evidence": [
+                {"host": "claude", "replicate": 0, "verdict": "PASS"},
+                {"host": "claude", "replicate": 1, "verdict": "PASS"},
+                {"host": "codex", "replicate": 0, "verdict": "PASS"},
+                {"host": "codex", "replicate": 1, "error": "host exited with status 1"},
+            ],
+            "accounting": accounting,
+        },
+        dual_host=True,
+    )
+
+    assert result["verdict"] == "UNGRADABLE"
+    assert [layer["layer"] for layer in result["layers"]] == [
+        "resource",
+        "owning-skill",
+        "package",
+    ]
+    assert result["layers"][-1]["accounting"] == accounting
+    assert result["host_evidence"][-1]["verdict"] == "UNGRADABLE"
