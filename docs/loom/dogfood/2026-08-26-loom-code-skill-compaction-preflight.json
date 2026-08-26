@@ -91,7 +91,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-claude-r1.meta.json"
@@ -110,7 +110,7 @@
           "observable": {
             "fired": "loom-code:brainstorming",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-codex-r0.meta.json"
@@ -129,7 +129,7 @@
           "observable": {
             "fired": "loom-code:brainstorming",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 6
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-codex-r1.meta.json"
@@ -148,7 +148,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-claude-r0.meta.json"
@@ -167,7 +167,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-claude-r1.meta.json"
@@ -186,7 +186,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-codex-r0.meta.json"
@@ -205,7 +205,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-codex-r1.meta.json"
@@ -224,7 +224,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-claude-r0.meta.json"
@@ -243,7 +243,7 @@
           "observable": {
             "fired": "obsidian:dashboard-design",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 22
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-claude-r1.meta.json"
@@ -262,7 +262,7 @@
           "observable": {
             "fired": "loom-code:brainstorming",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-codex-r0.meta.json"
@@ -281,7 +281,7 @@
           "observable": {
             "fired": "loom-code:brainstorming",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-codex-r1.meta.json"
@@ -378,7 +378,7 @@
           "observable": {
             "fired": "loom-code:dispatching-parallel-agents",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 9
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p1-codex-r0.meta.json"
@@ -397,7 +397,7 @@
           "observable": {
             "fired": "loom-code:dispatching-parallel-agents",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p1-codex-r1.meta.json"
@@ -416,7 +416,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 10
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-claude-r0.meta.json"
@@ -435,7 +435,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-claude-r1.meta.json"
@@ -454,7 +454,7 @@
           "observable": {
             "fired": "loom-code:dispatching-parallel-agents",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-codex-r0.meta.json"
@@ -473,7 +473,7 @@
           "observable": {
             "fired": "loom-code:dispatching-parallel-agents",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-codex-r1.meta.json"
@@ -530,7 +530,7 @@
           "observable": {
             "fired": "loom-code:dispatching-parallel-agents",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p3-codex-r0.meta.json"
@@ -549,7 +549,7 @@
           "observable": {
             "fired": "loom-code:dispatching-parallel-agents",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p3-codex-r1.meta.json"
@@ -623,7 +623,7 @@
           "observable": {
             "fired": "loom-code:finishing-a-development-branch",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-claude-r0.meta.json"
@@ -642,7 +642,7 @@
           "observable": {
             "fired": "loom-code:finishing-a-development-branch",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-claude-r1.meta.json"
@@ -661,7 +661,7 @@
           "observable": {
             "fired": "loom-code:verification-before-completion",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 10
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-codex-r0.meta.json"
@@ -680,7 +680,7 @@
           "observable": {
             "fired": "loom-code:verification-before-completion",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 7
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-codex-r1.meta.json"
@@ -699,7 +699,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 6
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-claude-r0.meta.json"
@@ -718,7 +718,7 @@
           "observable": {
             "fired": "loom-code:finishing-a-development-branch",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-claude-r1.meta.json"
@@ -737,7 +737,7 @@
           "observable": {
             "fired": "loom-code:finishing-a-development-branch",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-codex-r0.meta.json"
@@ -756,7 +756,7 @@
           "observable": {
             "fired": "loom-code:verification-before-completion",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 6
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-codex-r1.meta.json"
@@ -775,7 +775,7 @@
           "observable": {
             "fired": "loom-code:finishing-a-development-branch",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 41
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-claude-r0.meta.json"
@@ -794,7 +794,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-claude-r1.meta.json"
@@ -813,7 +813,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-codex-r0.meta.json"
@@ -832,7 +832,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-codex-r1.meta.json"
@@ -899,7 +899,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-claude-r1.meta.json"
@@ -918,7 +918,7 @@
           "observable": {
             "fired": "loom-code:loom-memory",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-codex-r0.meta.json"
@@ -937,7 +937,7 @@
           "observable": {
             "fired": "loom-code:loom-memory",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-codex-r1.meta.json"
@@ -994,7 +994,7 @@
           "observable": {
             "fired": "loom-code:loom-memory",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p2-codex-r0.meta.json"
@@ -1013,7 +1013,7 @@
           "observable": {
             "fired": "loom-code:loom-memory",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p2-codex-r1.meta.json"
@@ -1032,7 +1032,7 @@
           "observable": {
             "fired": "update-config",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 84
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-claude-r0.meta.json"
@@ -1051,7 +1051,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 19
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-claude-r1.meta.json"
@@ -1070,7 +1070,7 @@
           "observable": {
             "fired": "loom-code:loom-memory",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-codex-r0.meta.json"
@@ -1089,7 +1089,7 @@
           "observable": {
             "fired": "loom-code:loom-memory",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-codex-r1.meta.json"
@@ -1185,7 +1185,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 6
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-claude-r0.meta.json"
@@ -1204,7 +1204,7 @@
           "observable": {
             "fired": "loom-code:finishing-a-development-branch",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 6
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-claude-r1.meta.json"
@@ -1223,7 +1223,7 @@
           "observable": {
             "fired": "loom-code:requesting-code-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-codex-r0.meta.json"
@@ -1242,7 +1242,7 @@
           "observable": {
             "fired": "loom-code:requesting-code-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 6
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-codex-r1.meta.json"
@@ -1261,7 +1261,7 @@
           "observable": {
             "fired": "loom-code:finishing-a-development-branch",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 106
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-claude-r0.meta.json"
@@ -1280,7 +1280,7 @@
           "observable": {
             "fired": "loom-code:finishing-a-development-branch",
             "result_subtype": "error_max_turns",
-            "tool_count": 0
+            "tool_count": 34
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-claude-r1.meta.json"
@@ -1299,7 +1299,7 @@
           "observable": {
             "fired": "loom-code:requesting-code-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-codex-r0.meta.json"
@@ -1318,7 +1318,7 @@
           "observable": {
             "fired": "loom-code:requesting-code-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-codex-r1.meta.json"
@@ -1375,7 +1375,7 @@
           "observable": {
             "fired": "loom-code:requesting-code-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p3-codex-r0.meta.json"
@@ -1394,7 +1394,7 @@
           "observable": {
             "fired": "loom-code:requesting-code-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p3-codex-r1.meta.json"
@@ -1413,7 +1413,7 @@
           "observable": {
             "fired": "code-review",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 80
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-claude-r0.meta.json"
@@ -1432,7 +1432,7 @@
           "observable": {
             "fired": "code-review",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 7
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-claude-r1.meta.json"
@@ -1451,7 +1451,7 @@
           "observable": {
             "fired": "loom-code:requesting-code-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 7
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-codex-r0.meta.json"
@@ -1470,7 +1470,7 @@
           "observable": {
             "fired": "loom-code:requesting-code-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-codex-r1.meta.json"
@@ -1534,7 +1534,7 @@
           "observable": {
             "fired": "code-review",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 36
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-claude-r0.meta.json"
@@ -1553,7 +1553,7 @@
           "observable": {
             "fired": "loom-code:requesting-docs-review",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-claude-r1.meta.json"
@@ -1572,7 +1572,7 @@
           "observable": {
             "fired": "loom-code:requesting-docs-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-codex-r0.meta.json"
@@ -1591,7 +1591,7 @@
           "observable": {
             "fired": "loom-code:requesting-docs-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-codex-r1.meta.json"
@@ -1610,7 +1610,7 @@
           "observable": {
             "fired": "code-review",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 7
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-claude-r0.meta.json"
@@ -1629,7 +1629,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 6
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-claude-r1.meta.json"
@@ -1648,7 +1648,7 @@
           "observable": {
             "fired": "loom-code:requesting-docs-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-codex-r0.meta.json"
@@ -1667,7 +1667,7 @@
           "observable": {
             "fired": "loom-code:requesting-docs-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 8
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-codex-r1.meta.json"
@@ -1705,7 +1705,7 @@
           "observable": {
             "fired": "loom-code:requesting-docs-review",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-claude-r1.meta.json"
@@ -1724,7 +1724,7 @@
           "observable": {
             "fired": "loom-code:requesting-docs-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 7
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-codex-r0.meta.json"
@@ -1743,7 +1743,7 @@
           "observable": {
             "fired": "loom-code:requesting-docs-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 7
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-codex-r1.meta.json"
@@ -1801,7 +1801,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 37
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-claude-r0.meta.json"
@@ -1820,7 +1820,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-claude-r1.meta.json"
@@ -1839,7 +1839,7 @@
           "observable": {
             "fired": "loom-code:systematic-debugging",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-codex-r0.meta.json"
@@ -1858,7 +1858,7 @@
           "observable": {
             "fired": "loom-code:systematic-debugging",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-codex-r1.meta.json"
@@ -1877,7 +1877,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-claude-r0.meta.json"
@@ -1896,7 +1896,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 40
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-claude-r1.meta.json"
@@ -1915,7 +1915,7 @@
           "observable": {
             "fired": "loom-code:systematic-debugging",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-codex-r0.meta.json"
@@ -1934,7 +1934,7 @@
           "observable": {
             "fired": "loom-code:systematic-debugging",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 7
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-codex-r1.meta.json"
@@ -1991,7 +1991,7 @@
           "observable": {
             "fired": "loom-code:systematic-debugging",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p3-codex-r0.meta.json"
@@ -2010,7 +2010,7 @@
           "observable": {
             "fired": "loom-code:systematic-debugging",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p3-codex-r1.meta.json"
@@ -2068,7 +2068,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-claude-r0.meta.json"
@@ -2087,7 +2087,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 6
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-claude-r1.meta.json"
@@ -2106,7 +2106,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 11
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-codex-r0.meta.json"
@@ -2125,7 +2125,7 @@
           "observable": {
             "fired": "loom-code:tdd-iron-law",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 9
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-codex-r1.meta.json"
@@ -2144,7 +2144,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-claude-r0.meta.json"
@@ -2182,7 +2182,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-codex-r0.meta.json"
@@ -2201,7 +2201,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-codex-r1.meta.json"
@@ -2258,7 +2258,7 @@
           "observable": {
             "fired": "loom-code:tdd-iron-law",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p3-codex-r0.meta.json"
@@ -2277,7 +2277,7 @@
           "observable": {
             "fired": "loom-code:tdd-iron-law",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p3-codex-r1.meta.json"
@@ -2331,7 +2331,7 @@
           "observable": {
             "fired": "run",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-claude-r0.meta.json"
@@ -2350,7 +2350,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-claude-r1.meta.json"
@@ -2369,7 +2369,7 @@
           "observable": {
             "fired": "loom-code:ui-verification",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-codex-r0.meta.json"
@@ -2388,7 +2388,7 @@
           "observable": {
             "fired": "loom-code:ui-verification",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-codex-r1.meta.json"
@@ -2407,7 +2407,7 @@
           "observable": {
             "fired": "loom-code:ui-verification",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-claude-r0.meta.json"
@@ -2426,7 +2426,7 @@
           "observable": {
             "fired": "loom-code:ui-verification",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-claude-r1.meta.json"
@@ -2445,7 +2445,7 @@
           "observable": {
             "fired": "loom-code:ui-verification",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-codex-r0.meta.json"
@@ -2464,7 +2464,7 @@
           "observable": {
             "fired": "loom-code:ui-verification",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-codex-r1.meta.json"
@@ -2521,7 +2521,7 @@
           "observable": {
             "fired": "loom-code:ui-verification",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p3-codex-r0.meta.json"
@@ -2540,7 +2540,7 @@
           "observable": {
             "fired": "loom-code:ui-verification",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p3-codex-r1.meta.json"
@@ -2589,7 +2589,7 @@
           "observable": {
             "fired": "loom-code:using-git-worktrees",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-claude-r0.meta.json"
@@ -2608,7 +2608,7 @@
           "observable": {
             "fired": "loom-code:using-git-worktrees",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-claude-r1.meta.json"
@@ -2627,7 +2627,7 @@
           "observable": {
             "fired": "loom-code:using-git-worktrees",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-codex-r0.meta.json"
@@ -2646,7 +2646,7 @@
           "observable": {
             "fired": "loom-code:using-git-worktrees",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 6
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-codex-r1.meta.json"
@@ -2741,7 +2741,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-claude-r0.meta.json"
@@ -2760,7 +2760,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-claude-r1.meta.json"
@@ -2779,7 +2779,7 @@
           "observable": {
             "fired": "loom-code:using-git-worktrees",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-codex-r0.meta.json"
@@ -2798,7 +2798,7 @@
           "observable": {
             "fired": "loom-code:using-git-worktrees",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-codex-r1.meta.json"
@@ -2869,7 +2869,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-claude-r0.meta.json"
@@ -2888,7 +2888,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 8
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-claude-r1.meta.json"
@@ -2907,7 +2907,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-codex-r0.meta.json"
@@ -2926,7 +2926,7 @@
           "observable": {
             "fired": "loom-code:tdd-iron-law",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 15
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-codex-r1.meta.json"
@@ -2945,7 +2945,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-claude-r0.meta.json"
@@ -2964,7 +2964,7 @@
           "observable": {
             "fired": "code-review",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 90
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-claude-r1.meta.json"
@@ -2983,7 +2983,7 @@
           "observable": {
             "fired": "loom-code:requesting-code-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-codex-r0.meta.json"
@@ -3002,7 +3002,7 @@
           "observable": {
             "fired": "loom-code:requesting-code-review",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 8
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-codex-r1.meta.json"
@@ -3059,7 +3059,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p3-codex-r0.meta.json"
@@ -3078,7 +3078,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p3-codex-r1.meta.json"
@@ -3139,7 +3139,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 23
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-claude-r0.meta.json"
@@ -3177,7 +3177,7 @@
           "observable": {
             "fired": "loom-code:verification-before-completion",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-codex-r0.meta.json"
@@ -3196,7 +3196,7 @@
           "observable": {
             "fired": "loom-code:verification-before-completion",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-codex-r1.meta.json"
@@ -3253,7 +3253,7 @@
           "observable": {
             "fired": "loom-code:verification-before-completion",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p2-codex-r0.meta.json"
@@ -3272,7 +3272,7 @@
           "observable": {
             "fired": "loom-code:verification-before-completion",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p2-codex-r1.meta.json"
@@ -3310,7 +3310,7 @@
           "observable": {
             "fired": "loom-code:finishing-a-development-branch",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 100
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-claude-r1.meta.json"
@@ -3329,7 +3329,7 @@
           "observable": {
             "fired": "loom-code:verification-before-completion",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-codex-r0.meta.json"
@@ -3348,7 +3348,7 @@
           "observable": {
             "fired": "loom-code:verification-before-completion",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-codex-r1.meta.json"
@@ -3431,7 +3431,7 @@
           "observable": {
             "fired": "loom-code:writing-plans",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-claude-r0.meta.json"
@@ -3450,7 +3450,7 @@
           "observable": {
             "fired": null,
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 4
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-claude-r1.meta.json"
@@ -3469,7 +3469,7 @@
           "observable": {
             "fired": "loom-code:writing-plans",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-codex-r0.meta.json"
@@ -3488,7 +3488,7 @@
           "observable": {
             "fired": "loom-code:writing-plans",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-codex-r1.meta.json"
@@ -3545,7 +3545,7 @@
           "observable": {
             "fired": "loom-code:writing-plans",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p2-codex-r0.meta.json"
@@ -3564,7 +3564,7 @@
           "observable": {
             "fired": "loom-code:subagent-driven-development",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 2
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p2-codex-r1.meta.json"
@@ -3583,7 +3583,7 @@
           "observable": {
             "fired": "loom-code:writing-plans",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-claude-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-claude-r0.meta.json"
@@ -3602,7 +3602,7 @@
           "observable": {
             "fired": "loom-code:writing-plans",
             "result_subtype": "success",
-            "tool_count": 0
+            "tool_count": 1
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-claude-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-claude-r1.meta.json"
@@ -3621,7 +3621,7 @@
           "observable": {
             "fired": "loom-code:writing-plans",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-codex-r0.meta.json"
@@ -3640,7 +3640,7 @@
           "observable": {
             "fired": "loom-code:writing-plans",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-codex-r1.meta.json"
@@ -3697,7 +3697,7 @@
           "observable": {
             "fired": "loom-code:subagent-driven-development",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 3
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p4-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p4-codex-r0.meta.json"
@@ -3716,7 +3716,7 @@
           "observable": {
             "fired": "loom-code:using-loom-code",
             "result_subtype": "completed",
-            "tool_count": 0
+            "tool_count": 5
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p4-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p4-codex-r1.meta.json"

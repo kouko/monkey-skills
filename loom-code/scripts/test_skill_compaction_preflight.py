@@ -152,6 +152,29 @@ def test_nonzero_subprocess_is_a_host_error(monkeypatch, tmp_path):
     assert outcome.status == "host-error"
 
 
+def test_zero_exit_with_structured_host_failure_is_a_host_error(monkeypatch, tmp_path):
+    class Result:
+        returncode = 0
+        stdout = '{"type":"result","subtype":"error_max_turns"}\n'
+        stderr = ""
+    monkeypatch.setattr(preflight.subprocess, "run", lambda *a, **k: Result())
+    invocation = preflight.HostInvocation(
+        "claude", "baseline", tmp_path, {"query": "q"}, 0,
+        ("claude",), None, {},
+    )
+    outcome = preflight._run_bounded(invocation, 10)
+    assert outcome.exit_code == 0
+    assert outcome.status == "host-error"
+
+
+def test_legacy_raw_without_independent_binding_is_not_migrated(tmp_path):
+    raw = tmp_path / "legacy.jsonl"
+    raw.write_text('{"type":"result","subtype":"success"}\n', encoding="utf-8")
+    provenance = {"host": "claude", "prompt_id": 2}
+    assert preflight.migrate_legacy_raw(raw, provenance, "f" * 64) is None
+    assert not preflight.metadata_path(raw).exists()
+
+
 def test_cache_reuse_requires_exact_fingerprint_exit_zero_and_raw_hash(tmp_path):
     raw = tmp_path / "run.jsonl"
     raw.write_text("ok\n", encoding="utf-8")
@@ -205,7 +228,8 @@ def test_merge_allows_exact_duplicate_dedupes_workspace_and_rejects_snapshot_con
                     "replicate": replicate, "status": "completed", "exit_code": 0,
                     "fingerprint": "f" * 64, "raw_sha256": "a" * 64,
                     "expected_behavior_sha256": preflight.sha256_text(prompt["expected_behavior"]),
-                    "raw_metadata": "workspace/raw.meta.json", "observable": {},
+                    "raw_metadata": "workspace/raw.meta.json",
+                    "observable": {"fired": True, "result_subtype": "ok", "tool_count": 3},
                 })
     snapshot = {
         "corpus_sha256": preflight.sha256_bytes(corpus_path.read_bytes()),
@@ -223,6 +247,10 @@ def test_merge_allows_exact_duplicate_dedupes_workspace_and_rejects_snapshot_con
         [a, b], out, expected_targets=("demo",), corpora_root=tmp_path
     )
     assert merged["raw_workspaces"] == ["one"]
+    assert all(
+        run["observable"] == {"fired": True, "result_subtype": "ok", "tool_count": 3}
+        for run in merged["skills"]["demo"]["runs"]
+    )
 
     conflicting = json.loads(json.dumps(part))
     conflicting["skills"]["demo"]["word_count"] = 11
@@ -279,8 +307,9 @@ def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
         replicate=0, max_turns=12, timeout_seconds=180,
     )
     fingerprint = preflight.provenance_fingerprint(provenance)
+    transcript = '{"type":"result","subtype":"success"}\n'
     metadata = preflight.write_raw_with_metadata(
-        raw, preflight.RunOutcome("transcript\n", 0, "completed"),
+        raw, preflight.RunOutcome(transcript, 0, "completed"),
         provenance, fingerprint,
     )
     run = {
@@ -288,6 +317,8 @@ def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
         "status": "completed", "exit_code": 0, "fingerprint": fingerprint,
         "raw_sha256": metadata["raw_sha256"],
         "expected_behavior_sha256": provenance["expected_behavior_sha256"],
+        "classification": "MISS",
+        "observable": {"fired": None, "result_subtype": "success", "tool_count": 0},
         "raw": "workspace/raw/demo/p1-claude-r0.jsonl",
         "raw_metadata": "workspace/raw/demo/p1-claude-r0.meta.json",
     }
@@ -301,6 +332,15 @@ def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
     assert preflight.verify_raw_record(
         record_path, tmp_path / "raw-base", tmp_path / "corpora"
     ) == 1
+
+    corrupted = json.loads(record_path.read_text(encoding="utf-8"))
+    corrupted["skills"]["demo"]["runs"][0]["observable"]["tool_count"] = 9
+    record_path.write_text(json.dumps(corrupted), encoding="utf-8")
+    with pytest.raises(ValueError, match="observable mismatch"):
+        preflight.verify_raw_record(
+            record_path, tmp_path / "raw-base", tmp_path / "corpora"
+        )
+    record_path.write_text(json.dumps(record), encoding="utf-8")
 
     metadata_path = preflight.metadata_path(raw)
     altered = json.loads(metadata_path.read_text(encoding="utf-8"))

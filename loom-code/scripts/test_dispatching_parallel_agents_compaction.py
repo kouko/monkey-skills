@@ -41,7 +41,6 @@ def test_entrypoint_preserves_independence_fanout_tdd_and_integration_within_wor
     ):
         assert phrase in text
 
-    # Each child has one domain and all children start in the same fan-out step.
     assert "one domain" in text
     assert "self-contained paths and reference context" in text
     assert "explicit paths it must not touch" in text

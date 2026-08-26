@@ -23,6 +23,7 @@ sys.path.insert(0, str(REPO_ROOT / "loom-code" / "scripts"))
 
 from loom_firing_harness import (
     HostInvocation,
+    _normalize_observable,
     _prepare_codex_root,
     grade_record,
     host_argv_for_root,
@@ -185,10 +186,13 @@ def _classification(skill_name: str, observable: dict) -> str:
 
 def _record_observable(observable: dict) -> dict:
     """Persist behavioral facts, not host-specific commands or absolute paths."""
+    tool_count = observable.get("tool_count")
+    if tool_count is None:
+        tool_count = len(observable.get("tool_sequence") or ())
     return {
         "fired": observable.get("fired"),
         "result_subtype": observable.get("result_subtype"),
-        "tool_count": len(observable.get("tool_sequence") or ()),
+        "tool_count": tool_count,
     }
 
 
@@ -301,16 +305,8 @@ def raw_has_successful_exit(host: str, raw: str) -> bool:
 def migrate_legacy_raw(
     raw_path: Path, provenance: dict, fingerprint: str
 ) -> tuple[str, dict] | None:
-    try:
-        raw = raw_path.read_text(encoding="utf-8")
-    except OSError:
-        return None
-    if not raw_has_successful_exit(provenance["host"], raw):
-        return None
-    metadata = write_raw_with_metadata(
-        raw_path, RunOutcome(raw, 0, "completed"), provenance, fingerprint
-    )
-    return raw, metadata
+    """Refuse to attach new provenance to evidence that was never bound."""
+    return None
 
 
 def verify_run_semantics(run: dict, prompt: dict, raw_path: Path) -> None:
@@ -379,6 +375,14 @@ def verify_raw_record(
             verify_run_semantics(run, prompt, raw_path)
             if metadata.get("raw_sha256") != run.get("raw_sha256"):
                 raise ValueError(f"metadata raw hash mismatch: {skill_name}")
+            raw = raw_path.read_text(encoding="utf-8")
+            if not raw_has_successful_exit(run["host"], raw):
+                raise ValueError(f"structured host failure: {skill_name} p{run.get('prompt_id')}")
+            observable = _record_observable(_normalize_observable(run["host"], raw))
+            if observable != run.get("observable"):
+                raise ValueError(f"observable mismatch: {skill_name} p{run.get('prompt_id')}")
+            if _classification(skill_name, observable) != run.get("classification"):
+                raise ValueError(f"classification mismatch: {skill_name} p{run.get('prompt_id')}")
             verified += 1
     return verified
 
@@ -401,7 +405,11 @@ def _run_bounded(invocation: HostInvocation, timeout_seconds: int) -> RunOutcome
         env=env, timeout=timeout_seconds,
     )
     transcript = proc.stdout + proc.stderr
-    status = "completed" if proc.returncode == 0 else "host-error"
+    status = (
+        "completed"
+        if proc.returncode == 0 and raw_has_successful_exit(invocation.host, transcript)
+        else "host-error"
+    )
     return RunOutcome(transcript, proc.returncode, status)
 
 
@@ -510,7 +518,6 @@ def capture(
                         raw_path, outcome, provenance, fingerprint
                     )
                 status = metadata["status"]
-                from loom_firing_harness import _normalize_observable
                 observable = _normalize_observable(host, raw)
                 result = {
                     "prompt_id": prompt["id"], "host": host,
