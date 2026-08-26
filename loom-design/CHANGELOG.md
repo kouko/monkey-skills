@@ -11,6 +11,15 @@ The five plugins this one absorbed keep their own histories alongside:
 `CHANGELOG-interface-design.md`, `CHANGELOG-product-principles.md`. Their
 version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
 
+## [0.5.2] — 2026-08-26 — behavior-preserving skill compaction
+
+### Changed
+
+- Compacted all loom-design skill entrypoints with static invariants and
+  Claude Code/Codex weak-model A/B evidence.
+- Made dry-loop termination and the design-system → interaction-flows →
+  integrated-validation seam executable without weakening its validators.
+
 ## [0.5.0] — 2026-08-23 — design-specialized standalone operation
 
 ### Changed

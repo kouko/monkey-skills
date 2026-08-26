@@ -4,6 +4,15 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] — 2026-08-26 — behavior-preserving skill compaction
+
+### Changed
+
+- Compacted all loom-workflow skill entrypoints with static invariants and
+  Claude Code/Codex weak-model A/B evidence.
+- Clarified publication-before-fidelity, paid-dispatch staging, and
+  cross-host handoff version capture without changing their safety gates.
+
 ## [2.27.1] — 2026-08-19 — `cot-explain` stops pinning the anomalous mermaid
 
 ### Changed — the CDN pin moves off 11.16.0

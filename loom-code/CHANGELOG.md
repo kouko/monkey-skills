@@ -5,6 +5,17 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.100.1] — 2026-08-26
+
+### Changed
+
+- Compacted all loom-code skill entrypoints while preserving their routing,
+  safety gates, and observable behavior across Claude Code and Codex.
+- Added immutable dual-host weak-model comparison evidence and hardened its
+  cache, host-identity, raw-transcript, and isolated-home boundaries.
+- Resolved cross-skill review findings in closeout, verification, TDD, and
+  handoff contracts.
+
 ## [0.100.0] — 2026-08-25
 
 ### Added
