@@ -128,7 +128,7 @@ Begin:
 | Other frontmatter fields (e.g., `compatibility`) | Never change |
 | Declared dependencies (scripts called, references referenced) | Never change without going to skill-creator-advance |
 | Subdirectory structure (`agents/`, `references/`, `scripts/`) | Allowed to add files (e.g. extract content); never to remove without skill-creator-advance |
-| Bundled file *contents* | Allowed (refactor cascades) but each cascade is its own round |
+| Bundled file *contents* | Allowed. Entrypoint mode: each cascade is its own round. Package mode follows §Round scope: one isolated package round may include target + directly supporting bundled resources; unrelated resources split. |
 
 **Pass rule**: all "never change" items unchanged; "allowed" items
 verified to still serve the skill's documented behavior.

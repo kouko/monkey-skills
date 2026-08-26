@@ -72,6 +72,23 @@ def test_skill_distinguishes_entrypoint_and_package_round_scope() -> None:
         assert rule in skill
 
 
+def test_q3_bundled_contents_row_preserves_mode_specific_cascade_scope() -> None:
+    row = next(
+        line
+        for line in (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8").splitlines()
+        if "Bundled file *contents*" in line
+    )
+
+    for rule in (
+        "Entrypoint mode: each cascade is its own round",
+        "Package mode follows §Round scope",
+        "isolated package round",
+        "target + directly supporting bundled resources",
+        "unrelated resources split",
+    ):
+        assert rule in row
+
+
 def test_package_gate_cli_reduces_json_evidence() -> None:
     evidence = {
         "accounting": {"verdict": "PASS"},
