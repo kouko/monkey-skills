@@ -177,6 +177,8 @@ def export_baseline(
         ("git", "-C", str(repo), "archive", "--format=tar", commit, "loom-code"),
         check=True, capture_output=True,
     ).stdout
+    if root.is_symlink():
+        raise ValueError("cached baseline root is a symlink")
     if not root.is_dir():
         with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as tar:
             tar.extractall(workspace / "baseline", filter="data")

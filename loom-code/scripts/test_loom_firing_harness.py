@@ -548,6 +548,53 @@ def test_run_host_rejects_nonzero_exit(monkeypatch, tmp_path):
         loom_firing_harness.run_host(invocation)
 
 
+def _codex_invocation(plugin_root, codex_home):
+    return loom_firing_harness.HostInvocation(
+        host="codex", root_label="baseline", plugin_root=plugin_root,
+        record={"query": "probe", "expected": "NONE", "notes": "isolation"},
+        replicate=0, argv=("codex", "exec", "probe"), codex_home=codex_home,
+        environment={"CODEX_HOME": str(codex_home)},
+    )
+
+
+def test_prepare_codex_root_rejects_manifest_name_path_traversal(tmp_path):
+    plugin_root = tmp_path / "plugin"
+    (plugin_root / ".codex-plugin").mkdir(parents=True)
+    (plugin_root / ".codex-plugin" / "plugin.json").write_text(
+        '{"name": "../escaped"}\n', encoding="utf-8"
+    )
+
+    with pytest.raises(ValueError, match="invalid identifier"):
+        loom_firing_harness._prepare_codex_root(
+            _codex_invocation(plugin_root, tmp_path / "home"), {}
+        )
+    assert not (tmp_path / "home" / "escaped").exists()
+
+
+def test_prepare_codex_root_refreshes_changed_plugin_bytes(tmp_path, monkeypatch):
+    roots = []
+    for label in ("old", "new"):
+        root = tmp_path / label
+        (root / ".codex-plugin").mkdir(parents=True)
+        (root / ".codex-plugin" / "plugin.json").write_text(
+            '{"name": "loom-code"}\n', encoding="utf-8"
+        )
+        (root / "identity").write_text(label, encoding="utf-8")
+        roots.append(root)
+
+    class Completed:
+        returncode = 0
+
+    monkeypatch.setattr(
+        loom_firing_harness.subprocess, "run", lambda *args, **kwargs: Completed()
+    )
+    home = tmp_path / "home"
+    for root in roots:
+        loom_firing_harness._prepare_codex_root(_codex_invocation(root, home), {})
+
+    assert (home / "marketplace" / "loom-code" / "identity").read_text() == "new"
+
+
 def test_codex_root_invocation_loads_isolated_plugin_config(tmp_path):
     """CODEX_HOME is isolated already; ignoring its config hides the plugin."""
     argv = loom_firing_harness.host_argv_for_root(

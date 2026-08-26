@@ -58,6 +58,7 @@ Stdlib only.
 
 import argparse
 from dataclasses import dataclass
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -381,24 +382,59 @@ def run_host(invocation: HostInvocation) -> str:
     return proc.stdout + proc.stderr
 
 
+def _plugin_tree_fingerprint(root: Path) -> str:
+    """Hash one regular, symlink-free plugin tree for cache identity."""
+    if root.is_symlink() or not root.is_dir():
+        raise ValueError("Codex plugin root must be a regular directory")
+    digest = hashlib.sha256()
+    for path in sorted(root.rglob("*"), key=lambda item: str(item.relative_to(root))):
+        relative = str(path.relative_to(root))
+        if path.is_symlink():
+            raise ValueError(f"Codex plugin root contains symlink: {relative}")
+        if path.is_dir():
+            digest.update(f"D\0{relative}\0".encode())
+        elif path.is_file():
+            digest.update(f"F\0{relative}\0".encode())
+            digest.update(path.read_bytes())
+        else:
+            raise ValueError(f"Codex plugin root contains special file: {relative}")
+    return digest.hexdigest()
+
+
 def _prepare_codex_root(invocation: HostInvocation, env: dict[str, str]) -> None:
     """Install one source root into its own disposable Codex home."""
     if invocation.codex_home is None:
         raise ValueError("Codex invocation requires an isolated CODEX_HOME")
+    plugin_fingerprint = _plugin_tree_fingerprint(invocation.plugin_root)
     manifest = invocation.plugin_root / ".codex-plugin" / "plugin.json"
     try:
         plugin_name = json.loads(manifest.read_text(encoding="utf-8"))["name"]
     except (OSError, json.JSONDecodeError, KeyError) as exc:
         raise ValueError("Codex plugin root must contain a named .codex-plugin manifest") from exc
-    if not isinstance(plugin_name, str) or not plugin_name:
-        raise ValueError("Codex plugin root manifest name must be a non-empty string")
+    if (
+        not isinstance(plugin_name, str)
+        or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", plugin_name) is None
+    ):
+        raise ValueError("Codex plugin root manifest name has an invalid identifier")
     marketplace = invocation.codex_home / "marketplace"
     marker = invocation.codex_home / ".loom-harness-prepared"
-    if not marker.exists():
+    marker_payload = {
+        "plugin_fingerprint": plugin_fingerprint,
+        "plugin_name": plugin_name,
+        "root_label": invocation.root_label,
+    }
+    try:
+        prepared = json.loads(marker.read_text(encoding="utf-8")) == marker_payload
+    except (OSError, json.JSONDecodeError):
+        prepared = False
+    if not prepared:
         invocation.codex_home.mkdir(parents=True, exist_ok=True)
         if marketplace.exists():
             shutil.rmtree(marketplace)
-        shutil.copytree(invocation.plugin_root, marketplace / plugin_name, symlinks=True)
+        target = marketplace / plugin_name
+        if target.parent.resolve() != marketplace.resolve():
+            raise ValueError("Codex plugin manifest name escapes marketplace")
+        shutil.copytree(invocation.plugin_root, target)
         manifest_dir = marketplace / ".claude-plugin"
         manifest_dir.mkdir()
         marketplace_name = f"loom-harness-{invocation.root_label}"
@@ -417,7 +453,7 @@ def _prepare_codex_root(invocation: HostInvocation, env: dict[str, str]) -> None
             result = subprocess.run(command, capture_output=True, text=True, check=False, env=env)
             if result.returncode:
                 raise RuntimeError("Codex plugin installation failed for comparison root")
-        marker.write_text("prepared\n", encoding="utf-8")
+        marker.write_text(json.dumps(marker_payload, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def host_argv_for_root(

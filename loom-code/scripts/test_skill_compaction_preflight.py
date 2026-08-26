@@ -218,6 +218,25 @@ def test_export_baseline_rejects_cached_symlink(tmp_path):
         preflight.export_baseline(repo, workspace)
 
 
+def test_export_baseline_rejects_cached_root_symlink(tmp_path):
+    repo = tmp_path / "repo"; repo.mkdir()
+    subprocess.run(("git", "init", str(repo)), check=True, capture_output=True)
+    (repo / "loom-code").mkdir()
+    (repo / "loom-code" / "marker").write_text("baseline", encoding="utf-8")
+    subprocess.run(("git", "-C", str(repo), "add", "loom-code/marker"), check=True)
+    subprocess.run((
+        "git", "-C", str(repo), "-c", "user.name=Test",
+        "-c", "user.email=test@example.invalid", "commit", "-m", "baseline",
+    ), check=True, capture_output=True)
+    workspace = tmp_path / "workspace"
+    root, _, _ = preflight.export_baseline(repo, workspace)
+    outside = tmp_path / "outside"
+    root.rename(outside)
+    root.symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ValueError, match="symlink"):
+        preflight.export_baseline(repo, workspace)
+
+
 def test_bound_cache_rejects_changed_invocation_and_structured_failure(tmp_path):
     raw = tmp_path / "run.jsonl"
     provenance = {
@@ -264,8 +283,9 @@ def test_claude_run_does_not_touch_codex_auth_link(monkeypatch, tmp_path):
 
 
 def test_external_cli_surfaces_have_live_help_grounding():
-    """Grounding: live BSD `wc -w`, `claude --help`, and `codex exec --help`
-    captured on 2026-08-26; the production argv mirrors those installed CLIs.
+    """Grounding: live BSD `wc -w`, `claude --help`, `codex exec --help`,
+    `codex plugin marketplace add --help`, and `codex plugin add --help`
+    captured on 2026-08-26; production argv mirrors those installed CLIs.
     """
     assert preflight.TARGETS
 
