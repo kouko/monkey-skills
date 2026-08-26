@@ -615,6 +615,27 @@ def test_prepare_codex_root_rejects_symlinked_home_ancestor_without_deleting_tar
     assert sentinel.read_text(encoding="utf-8") == "keep"
 
 
+def test_prepare_codex_root_rejects_symlinked_marker_without_overwriting_target(
+    tmp_path,
+):
+    plugin_root = tmp_path / "plugin"
+    (plugin_root / ".codex-plugin").mkdir(parents=True)
+    (plugin_root / ".codex-plugin" / "plugin.json").write_text(
+        '{"name": "loom-code"}\n', encoding="utf-8"
+    )
+    home = tmp_path / "home"
+    home.mkdir()
+    sentinel = tmp_path / "sentinel"
+    sentinel.write_text("KEEP", encoding="utf-8")
+    (home / ".loom-harness-prepared").symlink_to(sentinel)
+
+    with pytest.raises(ValueError, match="marker.*symlink"):
+        loom_firing_harness._prepare_codex_root(
+            _codex_invocation(plugin_root, home), {}
+        )
+    assert sentinel.read_text(encoding="utf-8") == "KEEP"
+
+
 def test_prepare_codex_root_refreshes_changed_plugin_bytes(tmp_path, monkeypatch):
     roots = []
     for label in ("old", "new"):

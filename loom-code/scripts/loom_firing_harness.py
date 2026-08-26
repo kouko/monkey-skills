@@ -66,6 +66,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 
 _SELF_CONTAINED_MIN_LEN = 15
 _REQUIRED_FIELDS = ("query", "expected", "notes")
@@ -433,6 +434,8 @@ def _prepare_codex_root(invocation: HostInvocation, env: dict[str, str]) -> None
     if marketplace.is_symlink():
         raise ValueError("Codex marketplace must not be a symlink")
     marker = invocation.codex_home / ".loom-harness-prepared"
+    if marker.is_symlink():
+        raise ValueError("Codex preparation marker must not be a symlink")
     marker_payload = {
         "plugin_fingerprint": plugin_fingerprint,
         "plugin_name": plugin_name,
@@ -477,7 +480,16 @@ def _prepare_codex_root(invocation: HostInvocation, env: dict[str, str]) -> None
             result = subprocess.run(command, capture_output=True, text=True, check=False, env=env)
             if result.returncode:
                 raise RuntimeError("Codex plugin installation failed for comparison root")
-        marker.write_text(json.dumps(marker_payload, sort_keys=True) + "\n", encoding="utf-8")
+        descriptor, temporary_name = tempfile.mkstemp(
+            prefix=".loom-harness-prepared.", dir=invocation.codex_home
+        )
+        temporary = Path(temporary_name)
+        try:
+            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+                stream.write(json.dumps(marker_payload, sort_keys=True) + "\n")
+            os.replace(temporary, marker)
+        finally:
+            temporary.unlink(missing_ok=True)
 
 
 def host_argv_for_root(
