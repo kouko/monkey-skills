@@ -153,7 +153,10 @@ def _content_manifest(root: Path) -> dict[str, str]:
                 f"cached baseline contains symlink: {path.relative_to(root)}"
             )
         if path.is_file():
-            manifest[str(path.relative_to(root))] = sha256_bytes(path.read_bytes())
+            executable = path.stat().st_mode & 0o111
+            manifest[str(path.relative_to(root))] = (
+                f"{executable:o}:{sha256_bytes(path.read_bytes())}"
+            )
     return manifest
 
 
@@ -528,6 +531,11 @@ def _capture_invocation(
     }
     codex_home = raw_workspace / "homes" / f"codex-{skill_name}-{prompt['id']}-{replicate}"
     if host == "codex":
+        if (
+            codex_home.is_symlink()
+            or not codex_home.resolve().is_relative_to(raw_workspace.resolve())
+        ):
+            raise ValueError("Codex home escapes raw workspace or is a symlink")
         codex_home.mkdir(parents=True, exist_ok=True)
     invocation_work = work_dir / f"{skill_name}-p{prompt['id']}-{host}-r{replicate}"
     invocation_work.mkdir(parents=True, exist_ok=True)

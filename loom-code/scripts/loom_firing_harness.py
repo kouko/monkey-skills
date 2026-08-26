@@ -400,7 +400,10 @@ def _plugin_tree_fingerprint(root: Path) -> str:
         else:
             raise ValueError(f"Codex plugin root contains special file: {relative}")
         entry = json.dumps(
-            [kind, relative, hashlib.sha256(payload).hexdigest()],
+            [
+                kind, relative, path.stat().st_mode & 0o111,
+                hashlib.sha256(payload).hexdigest(),
+            ],
             ensure_ascii=False, separators=(",", ":"),
         ).encode()
         digest.update(len(entry).to_bytes(8, "big"))
@@ -412,6 +415,8 @@ def _prepare_codex_root(invocation: HostInvocation, env: dict[str, str]) -> None
     """Install one source root into its own disposable Codex home."""
     if invocation.codex_home is None:
         raise ValueError("Codex invocation requires an isolated CODEX_HOME")
+    if invocation.codex_home.is_symlink():
+        raise ValueError("Codex home must not be a symlink")
     plugin_fingerprint = _plugin_tree_fingerprint(invocation.plugin_root)
     manifest = invocation.plugin_root / ".codex-plugin" / "plugin.json"
     try:
@@ -424,6 +429,8 @@ def _prepare_codex_root(invocation: HostInvocation, env: dict[str, str]) -> None
     ):
         raise ValueError("Codex plugin root manifest name has an invalid identifier")
     marketplace = invocation.codex_home / "marketplace"
+    if marketplace.is_symlink():
+        raise ValueError("Codex marketplace must not be a symlink")
     marker = invocation.codex_home / ".loom-harness-prepared"
     marker_payload = {
         "plugin_fingerprint": plugin_fingerprint,

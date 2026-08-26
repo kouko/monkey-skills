@@ -237,6 +237,25 @@ def test_export_baseline_rejects_cached_root_symlink(tmp_path):
         preflight.export_baseline(repo, workspace)
 
 
+def test_export_baseline_rejects_executable_mode_drift(tmp_path):
+    repo = tmp_path / "repo"; repo.mkdir()
+    subprocess.run(("git", "init", str(repo)), check=True, capture_output=True)
+    (repo / "loom-code").mkdir()
+    marker = repo / "loom-code" / "marker"
+    marker.write_text("baseline", encoding="utf-8")
+    subprocess.run(("git", "-C", str(repo), "add", "loom-code/marker"), check=True)
+    subprocess.run((
+        "git", "-C", str(repo), "-c", "user.name=Test",
+        "-c", "user.email=test@example.invalid", "commit", "-m", "baseline",
+    ), check=True, capture_output=True)
+    workspace = tmp_path / "workspace"
+    root, _, _ = preflight.export_baseline(repo, workspace)
+    cached_marker = root / "marker"
+    cached_marker.chmod(cached_marker.stat().st_mode | 0o100)
+    with pytest.raises(ValueError, match="does not match"):
+        preflight.export_baseline(repo, workspace)
+
+
 def test_bound_cache_rejects_changed_invocation_and_structured_failure(tmp_path):
     raw = tmp_path / "run.jsonl"
     provenance = {

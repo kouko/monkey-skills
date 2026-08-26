@@ -571,6 +571,28 @@ def test_prepare_codex_root_rejects_manifest_name_path_traversal(tmp_path):
     assert not (tmp_path / "home" / "escaped").exists()
 
 
+def test_prepare_codex_root_rejects_symlinked_home_without_deleting_target(
+    tmp_path, monkeypatch
+):
+    plugin_root = tmp_path / "plugin"
+    (plugin_root / ".codex-plugin").mkdir(parents=True)
+    (plugin_root / ".codex-plugin" / "plugin.json").write_text(
+        '{"name": "loom-code"}\n', encoding="utf-8"
+    )
+    outside = tmp_path / "outside"
+    (outside / "marketplace").mkdir(parents=True)
+    sentinel = outside / "marketplace" / "sentinel"
+    sentinel.write_text("keep", encoding="utf-8")
+    home = tmp_path / "home"
+    home.symlink_to(outside, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="symlink"):
+        loom_firing_harness._prepare_codex_root(
+            _codex_invocation(plugin_root, home), {}
+        )
+    assert sentinel.read_text(encoding="utf-8") == "keep"
+
+
 def test_prepare_codex_root_refreshes_changed_plugin_bytes(tmp_path, monkeypatch):
     roots = []
     for label in ("old", "new"):
@@ -610,6 +632,15 @@ def test_plugin_tree_fingerprint_frames_file_boundaries(tmp_path):
         loom_firing_harness._plugin_tree_fingerprint(first)
         != loom_firing_harness._plugin_tree_fingerprint(second)
     )
+
+
+def test_plugin_tree_fingerprint_includes_executable_mode(tmp_path):
+    root = tmp_path / "plugin"; root.mkdir()
+    executable = root / "hook"
+    executable.write_text("#!/bin/sh\n", encoding="utf-8")
+    before = loom_firing_harness._plugin_tree_fingerprint(root)
+    executable.chmod(executable.stat().st_mode | 0o100)
+    assert loom_firing_harness._plugin_tree_fingerprint(root) != before
 
 
 def test_compare_hosts_empty_transcripts_are_inconclusive(tmp_path):
