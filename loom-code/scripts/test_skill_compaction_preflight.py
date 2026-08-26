@@ -200,11 +200,31 @@ def test_export_baseline_rejects_option_like_revision_without_touching_file(tmp_
     assert sentinel.read_text(encoding="utf-8") == "keep"
 
 
-def test_weak_cache_surface_is_removed():
-    source = (REPO_ROOT / "scripts" / "skill_compaction_preflight.py").read_text(
-        encoding="utf-8"
+def test_bound_cache_rejects_changed_invocation_and_structured_failure(tmp_path):
+    raw = tmp_path / "run.jsonl"
+    provenance = {
+        "baseline_commit": "c", "baseline_tree": "t", "corpus_sha256": "h",
+        "prompt_id": 1, "prompt_sha256": "p", "expected_behavior_sha256": "e",
+        "host": "claude", "model": "haiku", "replicate": 0,
+        "argv_semantics": {"max_turns": 12}, "timeout_seconds": 180,
+    }
+    fingerprint = preflight.provenance_fingerprint(provenance)
+    preflight.write_raw_with_metadata(
+        raw,
+        preflight.RunOutcome('{"type":"result","subtype":"success"}\n', 0, "completed"),
+        provenance, fingerprint,
     )
-    assert "load_cached_raw" not in source
+    changed = {**provenance, "argv_semantics": {"max_turns": 4}}
+    assert preflight.load_bound_raw(raw, changed) is None
+
+    preflight.write_raw_with_metadata(
+        raw,
+        preflight.RunOutcome(
+            '{"type":"result","subtype":"error_max_turns"}\n', 0, "completed"
+        ),
+        provenance, fingerprint,
+    )
+    assert preflight.load_bound_raw(raw, provenance) is None
 
 
 def test_claude_run_does_not_touch_codex_auth_link(monkeypatch, tmp_path):
@@ -397,3 +417,22 @@ def test_verify_record_raw_rejects_empty_evidence(tmp_path):
     record.write_text(json.dumps({"schema_version": 2, "skills": {}}), encoding="utf-8")
     with pytest.raises(ValueError, match="no skill evidence"):
         preflight.verify_raw_record(record, tmp_path)
+
+
+def test_verify_record_raw_rejects_incomplete_run_matrix(tmp_path):
+    skill_dir = tmp_path / "corpora" / "demo"
+    skill_dir.mkdir(parents=True)
+    corpus = _corpus(skill_dir)
+    record = tmp_path / "incomplete.json"
+    record.write_text(json.dumps({
+        "schema_version": 2,
+        "replicates_per_host": 2,
+        "skills": {"demo": {
+            "corpus_sha256": preflight.sha256_bytes(corpus.read_bytes()),
+            "runs": [],
+        }},
+    }), encoding="utf-8")
+    with pytest.raises(ValueError, match="incomplete run matrix"):
+        preflight.verify_raw_record(
+            record, tmp_path, tmp_path / "corpora", expected_targets=("demo",)
+        )

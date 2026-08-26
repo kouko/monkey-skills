@@ -240,24 +240,22 @@ def metadata_path(raw_path: Path) -> Path:
 
 
 def load_bound_raw(raw_path: Path, expected_case: dict) -> tuple[str, dict] | None:
-    """Load exit-zero evidence whose own provenance fingerprint is exact."""
     try:
         raw = raw_path.read_bytes()
         metadata = json.loads(metadata_path(raw_path).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return None
     provenance = metadata.get("provenance")
-    invariant_fields = (
-        "baseline_commit", "baseline_tree", "corpus_sha256", "prompt_id",
-        "prompt_sha256", "expected_behavior_sha256", "host", "model", "replicate",
-    )
+    expected_fingerprint = provenance_fingerprint(expected_case)
     if (
         not isinstance(provenance, dict)
-        or any(provenance.get(field) != expected_case.get(field) for field in invariant_fields)
+        or provenance != expected_case
         or metadata.get("fingerprint") != provenance_fingerprint(provenance)
+        or metadata.get("fingerprint") != expected_fingerprint
         or metadata.get("exit_code") != 0
         or metadata.get("status") != "completed"
         or metadata.get("raw_sha256") != sha256_bytes(raw)
+        or not raw_has_successful_exit(expected_case["host"], raw.decode("utf-8"))
     ):
         return None
     return raw.decode("utf-8"), metadata
@@ -329,6 +327,19 @@ def verify_raw_record(
         if snapshot.get("corpus_sha256") != sha256_bytes(corpus_path.read_bytes()):
             raise ValueError(f"corpus hash mismatch: {skill_name}")
         prompts = {prompt["id"]: prompt for prompt in corpus["prompts"]}
+        if expected_targets is not None:
+            expected_runs = {
+                (prompt_id, host, replicate)
+                for prompt_id in prompts
+                for host in ("claude", "codex")
+                for replicate in range(record.get("replicates_per_host", 0))
+            }
+            actual_runs = {
+                (run.get("prompt_id"), run.get("host"), run.get("replicate"))
+                for run in snapshot.get("runs", [])
+            }
+            if not expected_runs or actual_runs != expected_runs or len(snapshot.get("runs", [])) != len(expected_runs):
+                raise ValueError(f"incomplete run matrix: {skill_name}")
         for run in snapshot.get("runs", []):
             raw_path = _external_path(raw_base, run["raw"])
             meta_path = _external_path(raw_base, run["raw_metadata"])
@@ -420,6 +431,78 @@ def _run_with_auth(
         return _run_bounded(invocation, timeout_seconds)
 
 
+def _capture_invocation(
+    *, host: str, model: str, skill_name: str, prompt: dict, replicate: int,
+    baseline_root: Path, raw_workspace: Path, work_dir: Path, max_turns: int,
+) -> HostInvocation:
+    item = {
+        "query": prompt["prompt"], "expected": f"loom-code:{skill_name}",
+        "notes": prompt["expected_behavior"],
+    }
+    codex_home = raw_workspace / "homes" / f"codex-{skill_name}-{prompt['id']}-{replicate}"
+    if host == "codex":
+        codex_home.mkdir(parents=True, exist_ok=True)
+    invocation_work = work_dir / f"{skill_name}-p{prompt['id']}-{host}-r{replicate}"
+    invocation_work.mkdir(parents=True, exist_ok=True)
+    return HostInvocation(
+        host, "baseline", baseline_root, item, replicate,
+        host_argv_for_root(
+            host, baseline_root, item, max_turns=max_turns,
+            working_directory=invocation_work,
+            claude_model=model if host == "claude" else None,
+            codex_model=model if host == "codex" else None,
+        ),
+        codex_home if host == "codex" else None,
+        {"CODEX_HOME": str(codex_home)} if host == "codex" else {},
+    )
+
+
+def _capture_run(
+    job: tuple[dict, str, str, int], *, skill_name: str, baseline_root: Path,
+    raw_workspace: Path, work_dir: Path, skill_raw: Path, commit: str, tree: str,
+    corpus_hash: str, max_turns: int, timeout_seconds: int, auth_source: Path,
+) -> dict:
+    prompt, host, model, replicate = job
+    invocation = _capture_invocation(
+        host=host, model=model, skill_name=skill_name, prompt=prompt,
+        replicate=replicate, baseline_root=baseline_root,
+        raw_workspace=raw_workspace, work_dir=work_dir, max_turns=max_turns,
+    )
+    raw_path = skill_raw / f"p{prompt['id']}-{host}-r{replicate}.jsonl"
+    provenance = invocation_provenance(
+        commit=commit, tree=tree, corpus_sha256=corpus_hash, prompt=prompt,
+        host=host, model=model, replicate=replicate, max_turns=max_turns,
+        timeout_seconds=timeout_seconds,
+    )
+    fingerprint = provenance_fingerprint(provenance)
+    bound = load_bound_raw(raw_path, provenance)
+    if bound is None:
+        try:
+            outcome = _run_with_auth(invocation, timeout_seconds, auth_source)
+        except Exception as exc:
+            outcome = RunOutcome(json.dumps({
+                "type": "harness_error", "host": host, "error": str(exc),
+            }, ensure_ascii=False) + "\n", 124, "host-error")
+        raw = outcome.raw
+        metadata = write_raw_with_metadata(raw_path, outcome, provenance, fingerprint)
+    else:
+        raw, metadata = bound
+    status = metadata["status"]
+    observable = _normalize_observable(host, raw)
+    return {
+        "prompt_id": prompt["id"], "host": host, "model": model,
+        "replicate": replicate,
+        "classification": _classification(skill_name, observable) if status == "completed" else "HOST_ERROR",
+        "status": status, "exit_code": metadata["exit_code"],
+        "fingerprint": metadata["fingerprint"],
+        "raw_sha256": metadata["raw_sha256"],
+        "expected_behavior_sha256": provenance["expected_behavior_sha256"],
+        "observable": _record_observable(observable),
+        "raw": f"{raw_workspace.name}/raw/{skill_name}/{raw_path.name}",
+        "raw_metadata": f"{raw_workspace.name}/raw/{skill_name}/{metadata_path(raw_path).name}",
+    }
+
+
 def capture(
     repo: Path, out: Path, raw_workspace: Path, targets=TARGETS,
     timeout_seconds: int = 180, max_turns: int = 12,
@@ -462,65 +545,14 @@ def capture(
                     for replicate in range(2):
                         jobs.append((prompt, host, model, replicate))
 
-            def run_job(job):
-                prompt, host, model, replicate = job
-                item = {"query": prompt["prompt"], "expected": f"loom-code:{skill_name}", "notes": prompt["expected_behavior"]}
-                codex_home = raw_workspace / "homes" / f"codex-{skill_name}-{prompt['id']}-{replicate}"
-                if host == "codex":
-                    codex_home.mkdir(parents=True, exist_ok=True)
-                invocation_work = work_dir / f"{skill_name}-p{prompt['id']}-{host}-r{replicate}"
-                invocation_work.mkdir(parents=True, exist_ok=True)
-                invocation = HostInvocation(
-                    host, "baseline", baseline_root, item, replicate,
-                    host_argv_for_root(host, baseline_root, item, max_turns=max_turns, working_directory=invocation_work, claude_model=model if host == "claude" else None, codex_model=model if host == "codex" else None),
-                    codex_home if host == "codex" else None,
-                    {"CODEX_HOME": str(codex_home)} if host == "codex" else {},
-                )
-                raw_path = skill_raw / f"p{prompt['id']}-{host}-r{replicate}.jsonl"
-                provenance = invocation_provenance(
-                    commit=commit, tree=tree, corpus_sha256=corpus_hash,
-                    prompt=prompt, host=host, model=model, replicate=replicate,
-                    max_turns=max_turns, timeout_seconds=timeout_seconds,
-                )
-                fingerprint = provenance_fingerprint(provenance)
-                metadata = None
-                bound = load_bound_raw(raw_path, provenance)
-                if bound is not None:
-                    raw, metadata = bound
-                    provenance = metadata["provenance"]
-                    fingerprint = metadata["fingerprint"]
-                if metadata is None:
-                    try:
-                        outcome = _run_with_auth(invocation, timeout_seconds, auth_source)
-                    except Exception as exc:  # preserve, classify, continue
-                        outcome = RunOutcome(json.dumps({
-                            "type": "harness_error",
-                            "host": host,
-                            "error": str(exc),
-                        }, ensure_ascii=False) + "\n", 124, "host-error")
-                    raw = outcome.raw
-                    metadata = write_raw_with_metadata(
-                        raw_path, outcome, provenance, fingerprint
-                    )
-                status = metadata["status"]
-                observable = _normalize_observable(host, raw)
-                result = {
-                    "prompt_id": prompt["id"], "host": host,
-                    "model": model, "replicate": replicate,
-                    "classification": _classification(skill_name, observable) if status == "completed" else "HOST_ERROR",
-                    "status": status,
-                    "exit_code": metadata["exit_code"],
-                    "fingerprint": fingerprint,
-                    "raw_sha256": metadata["raw_sha256"],
-                    "expected_behavior_sha256": provenance["expected_behavior_sha256"],
-                    "observable": _record_observable(observable),
-                    "raw": f"{raw_workspace.name}/raw/{skill_name}/{raw_path.name}",
-                    "raw_metadata": f"{raw_workspace.name}/raw/{skill_name}/{metadata_path(raw_path).name}",
-                }
-                return result
-
             with ThreadPoolExecutor(max_workers=4) as pool:
-                futures = [pool.submit(run_job, job) for job in jobs]
+                futures = [pool.submit(
+                    _capture_run, job, skill_name=skill_name,
+                    baseline_root=baseline_root, raw_workspace=raw_workspace,
+                    work_dir=work_dir, skill_raw=skill_raw, commit=commit, tree=tree,
+                    corpus_hash=corpus_hash, max_turns=max_turns,
+                    timeout_seconds=timeout_seconds, auth_source=auth_source,
+                ) for job in jobs]
                 for future in as_completed(futures):
                     snapshot["runs"].append(future.result())
             snapshot["runs"].sort(key=lambda run: (run["prompt_id"], run["host"], run["replicate"]))
