@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-26-skill-refactor-package-mode.md
 Goal: `skill-refactor` gains a package-resource mode with immutable baselines, dual-host evidence, layered gates, and honest whole-package net accounting.
-Stage: verification:final
+Stage: finishing
 Steps:
   1. 建立不可變基準
   2. 加入 package 淨會計
