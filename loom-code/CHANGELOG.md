@@ -5,6 +5,18 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.101.0] — 2026-08-27
+
+### Changed
+
+- Distinguished review-only requests from authorized change tasks so
+  deterministic in-scope documentation fixes do not require repeated
+  permission batches.
+- Defined `STILL_BLOCKING` as a bounded quality diagnosis rather than an
+  authorization-renewal prompt.
+- Made local/remote main mutation, PR merge, and auto-merge explicit
+  agent-never actions while allowing local synchronization after a user merge.
+
 ## [0.100.1] — 2026-08-26
 
 ### Changed

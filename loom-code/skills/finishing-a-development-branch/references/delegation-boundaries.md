@@ -22,7 +22,17 @@ The orchestrator does NOT:
 
 ## What this skill does NOT do
 
-Does **not** merge into main, force-push, amend commits (creates new per CLAUDE.md), or auto-remove worktrees — worktree removal needs explicit user authorization, while PR-open does not re-ask (authorization arrived with the close-out request). Delegation is by the Cross-skill contract table in SKILL.md; shortcut-refusal rationale for merge/force-push/amend lives in [`red-flags.md`](red-flags.md).
+Does **not** merge a feature branch into local `main`, push directly to remote
+`main`, run `gh pr merge` or an equivalent API/UI merge, enable auto-merge,
+force-push, amend commits (creates new per CLAUDE.md), or auto-remove
+worktrees. These main-changing actions remain agent-never regardless of words
+such as “merge,” “ship,” or “finish.” After the user has merged the PR,
+fetching and fast-forwarding local `main` to `origin/main` is synchronization,
+not an agent-performed merge. Worktree removal needs explicit user
+authorization, while PR-open does not re-ask (authorization arrived with the
+close-out request). Delegation is by the Cross-skill contract table in
+SKILL.md; shortcut-refusal rationale for merge/force-push/amend lives in
+[`red-flags.md`](red-flags.md).
 
 ## See also
 

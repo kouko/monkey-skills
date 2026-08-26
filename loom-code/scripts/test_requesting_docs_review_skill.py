@@ -598,9 +598,13 @@ def test_convergence_directives():
         "the reference must state STILL_BLOCKING after this one fix "
         "cycle STOPs"
     )
-    assert "explicit user authorization" in ref, (
-        "the reference must forbid a second cycle or a fallback round "
-        "without explicit user authorization"
+    assert "quality-limit diagnosis" in ref, (
+        "the reference must classify the second-cycle stop as a quality "
+        "limit rather than another permission request"
+    )
+    assert "another batch of repair authorization" in ref, (
+        "the reference must forbid turning the stop into piecemeal "
+        "authorization"
     )
 
     # Directive 3 -- terminal state is "no gating findings", never

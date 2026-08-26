@@ -34,7 +34,7 @@ Normalize either delivery to one of two confirmation outcomes:
   original finding that survives or a new gating problem found while checking
   the post-fix snapshot.
 
-**`STILL_BLOCKING` after this one fix cycle → STOP.** Surface the finding and the reviewer's reason to the user. Do not dispatch a second fix-and-confirm cycle, and do not fall back to a fresh whole-artifact round, without explicit user authorization.
+**`STILL_BLOCKING` after this one fix cycle → STOP.** Surface the finding and the reviewer's reason as a quality-limit diagnosis. Do not dispatch a second fix-and-confirm cycle or fall back to a fresh whole-artifact round. The stop does not request another batch of repair authorization; further work begins only after the underlying scope, intent, or diagnosis changes.
 
 **3. Terminal state is "no gating findings" — never "clean."** For an artifact carrying many small real defects, a clean round is not a reachable state: each review samples that pool, so a pass that raises nothing is not evidence the pool is empty (pool-arithmetic rationale: `docs/loom/audits/2026-08-04-docs-review-convergence-experiment.md`). Report the outcome as "round 1 found no gating findings" or "the fix was confirmed resolved" — never as "the doc is clean."
 

@@ -272,7 +272,13 @@ Close-out shortcuts to refuse — *"skip review just push," "tests passed yester
 
 ## What this skill does NOT do
 
-Never merges into main or force-pushes; see full boundary list in [`references/delegation-boundaries.md`](references/delegation-boundaries.md).
+Main-changing actions are **agent-never**: never merge a feature branch into
+local `main`, push directly to remote `main`, run `gh pr merge`, or enable
+auto-merge, regardless of request wording.
+Stop at a ready PR. After the user has merged the PR, fast-forward local `main`
+to `origin/main`; this is synchronization, not an agent-performed merge. Never
+force-push; details:
+[`references/delegation-boundaries.md`](references/delegation-boundaries.md).
 
 ## See also
 

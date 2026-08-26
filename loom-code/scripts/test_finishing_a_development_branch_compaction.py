@@ -18,7 +18,7 @@ def test_entrypoint_preserves_closeout_gates_publish_ci_and_report_within_word_r
             text=True,
         ).stdout.split()[0]
     )
-    assert 3129 <= words <= 3576
+    assert 3129 <= words <= 3620
 
     # Loader-visible identity, stop behavior, and reference-consumed headings stay stable.
     for phrase in (
