@@ -91,6 +91,31 @@ def test_baseline_fingerprint_includes_executable_mode(tmp_path: Path) -> None:
     assert verify_baseline(manifest_path)["verdict"] == "REFUSED"
 
 
+def test_baseline_verification_reanchors_a_mutated_manifest_to_git(tmp_path: Path) -> None:
+    from package_gate import export_baseline, verify_baseline
+
+    repo = tmp_path / "repo"
+    skill_dir = repo / "skills" / "demo"
+    skill_dir.mkdir(parents=True)
+    original = b"---\nname: demo\n---\n\nOriginal\n"
+    (skill_dir / "SKILL.md").write_bytes(original)
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "baseline")
+    manifest_path = export_baseline(repo, tmp_path / "workspace", "skills/demo", "HEAD")
+
+    drifted = b"---\nname: demo\n---\n\nDrifted\n"
+    (manifest_path.parent / "skill" / "SKILL.md").write_bytes(drifted)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["files"]["SKILL.md"]["sha256"] = hashlib.sha256(drifted).hexdigest()
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    result = verify_baseline(manifest_path)
+
+    assert result["verdict"] == "REFUSED"
+    assert "Git" in result["reason"]
+
+
 def test_accounting_counts_moved_words_in_package_total(tmp_path: Path) -> None:
     from package_gate import account_package, export_baseline
 

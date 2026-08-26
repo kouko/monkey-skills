@@ -80,6 +80,16 @@ def test_package_protocol_defines_whole_package_q2_and_combines_verdicts() -> No
         assert rule in protocol
 
 
+def test_package_protocol_keeps_git_provenance_available_for_verification() -> None:
+    protocol = " ".join(
+        (SKILL_DIR / "references" / "package-resource-mode.md")
+        .read_text(encoding="utf-8")
+        .split()
+    )
+
+    assert "original Git repository and pinned commit" in protocol
+
+
 def test_skill_distinguishes_entrypoint_and_package_round_scope() -> None:
     skill = " ".join((SKILL_DIR / "SKILL.md").read_text(encoding="utf-8").split())
 

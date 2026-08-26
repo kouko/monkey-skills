@@ -36,7 +36,10 @@ and use no Claude-only environment variable or runtime dependency.
    python3 "<package-gate>" export --repo <repo> --workspace <workspace> --skill-path <skill-path> --revision <revision>
    ```
 
-   Retain the JSON `manifest` path returned by the command.
+   Retain the JSON `manifest` path returned by the command. Keep the original
+   Git repository and pinned commit available through final verification;
+   `verify` re-resolves that Git tree so changing the exported files and their
+   colocated manifest together cannot manufacture a passing baseline.
 2. Create an **isolated candidate** by copying the exported baseline into a
    separate workspace. Edit only that copy; do not edit the user's worktree.
 3. Verify the frozen baseline before comparing it:

@@ -96,6 +96,28 @@ def _extract_skill(archive: bytes, destination: Path) -> None:
         tar.extractall(destination, members=members, filter="data")
 
 
+def _archive_file_hashes(archive: bytes) -> dict[str, dict[str, object]]:
+    """Fingerprint regular files directly from a trusted Git archive."""
+    files: dict[str, dict[str, object]] = {}
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as tar:
+        for member in tar.getmembers():
+            path = PurePosixPath(member.name)
+            if path.is_absolute() or ".." in path.parts or member.issym() or member.islnk():
+                raise ValueError(f"unsafe baseline archive member: {member.name}")
+            if member.isdir():
+                continue
+            if not member.isfile():
+                raise ValueError(f"unsupported baseline archive member: {member.name}")
+            stream = tar.extractfile(member)
+            if stream is None:
+                raise ValueError(f"unreadable baseline archive member: {member.name}")
+            files[path.as_posix()] = {
+                "sha256": hashlib.sha256(stream.read()).hexdigest(),
+                "executable": bool(member.mode & 0o111),
+            }
+    return files
+
+
 def export_baseline(repo: Path, workspace: Path, skill_path: str, revision: str) -> Path:
     """Export one skill from *revision* and return its immutable manifest path."""
     relative_path = _skill_path(skill_path)
@@ -118,6 +140,8 @@ def export_baseline(repo: Path, workspace: Path, skill_path: str, revision: str)
     try:
         _extract_skill(archive, skill_root)
         manifest = {
+            "repository": str(repo.resolve()),
+            "skill_path": relative_path.as_posix(),
             "resolved_commit": commit,
             "skill_tree": tree,
             "files": _file_hashes(skill_root),
@@ -141,20 +165,45 @@ def verify_baseline(manifest_path: Path) -> dict[str, str]:
     """Return PASS when exported bytes match the manifest, otherwise REFUSED."""
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        repository = manifest["repository"]
+        skill_path = manifest["skill_path"]
+        commit = manifest["resolved_commit"]
+        tree = manifest["skill_tree"]
         expected = manifest["files"]
-        if not isinstance(expected, dict) or not all(
+        if (
+            not isinstance(repository, str)
+            or not isinstance(skill_path, str)
+            or not isinstance(commit, str)
+            or not isinstance(tree, str)
+            or not isinstance(expected, dict)
+            or not all(
             isinstance(path, str)
             and isinstance(fingerprint, dict)
             and set(fingerprint) == {"sha256", "executable"}
             and isinstance(fingerprint["sha256"], str)
             and isinstance(fingerprint["executable"], bool)
             for path, fingerprint in expected.items()
+            )
         ):
             raise ValueError("invalid file fingerprint manifest")
+        repo = Path(repository)
+        relative_path = _skill_path(skill_path)
+        if _resolved_commit(repo, commit) != commit:
+            raise ValueError("resolved commit no longer matches Git")
+        if _git(repo, "rev-parse", f"{commit}:{relative_path.as_posix()}") != tree:
+            raise ValueError("skill tree no longer matches Git")
+        archive = subprocess.run(
+            ("git", "-C", str(repo), "archive", "--format=tar", f"{commit}:{relative_path.as_posix()}"),
+            check=True,
+            capture_output=True,
+        ).stdout
+        git_expected = _archive_file_hashes(archive)
         actual = _file_hashes(manifest_path.parent / "skill")
-    except (OSError, ValueError, json.JSONDecodeError) as error:
+    except (OSError, ValueError, json.JSONDecodeError, KeyError, subprocess.CalledProcessError) as error:
         return {"verdict": "REFUSED", "reason": f"baseline verification failed: {error}"}
 
+    if git_expected != expected:
+        return {"verdict": "REFUSED", "reason": "Git baseline drift detected"}
     if actual != expected:
         return {"verdict": "REFUSED", "reason": "baseline drift detected"}
     return {"verdict": "PASS", "reason": "baseline matches manifest"}
