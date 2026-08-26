@@ -64,6 +64,15 @@ Use **entrypoint mode** when only `SKILL.md` changes. Use package-resource
 mode only when the candidate changes a bundled resource; then read
 `references/package-resource-mode.md` before creating the candidate.
 
+### Round scope
+
+- **Entrypoint mode: split a round** when it would change `SKILL.md` and a
+  bundled resource; retain the one-file-per-round rule.
+- **Package mode: one isolated package round may change** its target and
+  **directly supporting bundled resources** when the package protocol needs
+  them together for equivalent behavior. Unrelated bundled resources remain
+  split into later rounds.
+
 If any of (1)-(4) cannot be obtained (e.g., skill has no
 deterministic test prompts because output is purely creative), the
 gate cannot run safely. Report the blocker to the user and suggest
@@ -215,7 +224,7 @@ into "which output is better?", we've left refactor territory.
 | Q1 says equivalent but token reduction <5% | The refactor cost exceeds the gain; reject |
 | Q1's ensemble disagrees and you want to "majority-rules" anyway | Don't — that's how taste creep enters via judge bias |
 | Skill has no `test-prompts.json` and user is unwilling to write any | The gate cannot run; revert to `skill-creator-advance` |
-| Refactor would touch SKILL.md and bundled files in same round | Cascade-refactor — split into separate rounds (one file per round) |
+| Entrypoint mode would touch `SKILL.md` and bundled files in one round | Split the round; package mode has the narrow directly-supporting-resource exception in §Round scope |
 
 ## Rationalization Prevention
 

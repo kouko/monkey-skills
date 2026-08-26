@@ -47,13 +47,16 @@ def _skill_path(skill_path: str) -> PurePosixPath:
     return path
 
 
-def _file_hashes(root: Path) -> dict[str, str]:
-    files: dict[str, str] = {}
+def _file_hashes(root: Path) -> dict[str, dict[str, object]]:
+    files: dict[str, dict[str, object]] = {}
     for path in sorted(root.rglob("*")):
         if path.is_symlink():
             raise ValueError(f"baseline contains symlink: {path.relative_to(root)}")
         if path.is_file():
-            files[str(path.relative_to(root))] = hashlib.sha256(path.read_bytes()).hexdigest()
+            files[str(path.relative_to(root))] = {
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                "executable": bool(path.stat().st_mode & 0o111),
+            }
     return files
 
 
@@ -140,8 +143,12 @@ def verify_baseline(manifest_path: Path) -> dict[str, str]:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         expected = manifest["files"]
         if not isinstance(expected, dict) or not all(
-            isinstance(path, str) and isinstance(digest, str)
-            for path, digest in expected.items()
+            isinstance(path, str)
+            and isinstance(fingerprint, dict)
+            and set(fingerprint) == {"sha256", "executable"}
+            and isinstance(fingerprint["sha256"], str)
+            and isinstance(fingerprint["executable"], bool)
+            for path, fingerprint in expected.items()
         ):
             raise ValueError("invalid file fingerprint manifest")
         actual = _file_hashes(manifest_path.parent / "skill")

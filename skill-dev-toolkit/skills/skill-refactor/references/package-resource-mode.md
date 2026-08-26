@@ -5,6 +5,22 @@ as, or instead of, `SKILL.md`. It keeps the entrypoint-mode Q2 threshold out
 of package accounting: package mode measures the target file and the whole
 package, so extracted prose is not counted as a saving.
 
+## Package Q2 — whole-package reduction
+
+Q2 uses **whole-package words** from `account`, not a target-file count.
+
+| Whole-package word reduction | Overall Q2 result |
+|---|---|
+| ≥10% | **PROCEED** when the other gates pass |
+| 5–10% | **RESHAPE** only when the other gates pass; the user decides whether to keep the weak win |
+| <5% or increase | **REJECT** |
+
+Bytes are report-only: retain them for diagnosis, but do not use them for the
+Q2 threshold. The reducer judges only **layered behavioral evidence**; it does
+not decide Q2. The overall skill verdict consumes Q2 and the reducer verdict,
+together with the normal Q1 and Q3 results, before it applies an
+isolated candidate.
+
 ## Safe candidate sequence
 
 1. Before any candidate edit, export the Git-pinned baseline:

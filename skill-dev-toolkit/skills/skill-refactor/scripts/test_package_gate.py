@@ -44,8 +44,14 @@ def test_exported_baseline_is_revision_bound_and_drift_refuses(tmp_path: Path) -
     assert manifest["resolved_commit"] == commit
     assert manifest["skill_tree"] == _git(repo, "rev-parse", f"{commit}:skills/demo")
     assert manifest["files"] == {
-        "SKILL.md": hashlib.sha256(b"---\nname: demo\n---\n\nOriginal\n").hexdigest(),
-        "resource.txt": hashlib.sha256(b"immutable resource\n").hexdigest(),
+        "SKILL.md": {
+            "sha256": hashlib.sha256(b"---\nname: demo\n---\n\nOriginal\n").hexdigest(),
+            "executable": False,
+        },
+        "resource.txt": {
+            "sha256": hashlib.sha256(b"immutable resource\n").hexdigest(),
+            "executable": False,
+        },
     }
 
     exported_file = manifest_path.parent / "skill" / "SKILL.md"
@@ -56,6 +62,33 @@ def test_exported_baseline_is_revision_bound_and_drift_refuses(tmp_path: Path) -
     assert result["verdict"] == "REFUSED"
     assert "drift" in result["reason"]
     assert exported_file.read_bytes() == b"drifted bytes\n"
+
+
+def test_baseline_fingerprint_includes_executable_mode(tmp_path: Path) -> None:
+    from package_gate import export_baseline, verify_baseline
+
+    repo = tmp_path / "repo"
+    skill_dir = repo / "skills" / "demo"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("skill\n", encoding="utf-8")
+    executable = skill_dir / "run.sh"
+    executable.write_bytes(b"#!/bin/sh\n")
+    executable.chmod(0o755)
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "baseline")
+
+    manifest_path = export_baseline(repo, tmp_path / "workspace", "skills/demo", "HEAD")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    assert manifest["files"]["run.sh"] == {
+        "sha256": hashlib.sha256(b"#!/bin/sh\n").hexdigest(),
+        "executable": True,
+    }
+
+    (manifest_path.parent / "skill" / "run.sh").chmod(0o644)
+
+    assert verify_baseline(manifest_path)["verdict"] == "REFUSED"
 
 
 def test_accounting_counts_moved_words_in_package_total(tmp_path: Path) -> None:
