@@ -200,6 +200,24 @@ def test_export_baseline_rejects_option_like_revision_without_touching_file(tmp_
     assert sentinel.read_text(encoding="utf-8") == "keep"
 
 
+def test_export_baseline_rejects_cached_symlink(tmp_path):
+    repo = tmp_path / "repo"; repo.mkdir()
+    subprocess.run(("git", "init", str(repo)), check=True, capture_output=True)
+    (repo / "loom-code").mkdir()
+    (repo / "loom-code" / "marker").write_text("baseline", encoding="utf-8")
+    subprocess.run(("git", "-C", str(repo), "add", "loom-code/marker"), check=True)
+    subprocess.run((
+        "git", "-C", str(repo), "-c", "user.name=Test",
+        "-c", "user.email=test@example.invalid", "commit", "-m", "baseline",
+    ), check=True, capture_output=True)
+    workspace = tmp_path / "workspace"
+    root, _, _ = preflight.export_baseline(repo, workspace)
+    outside = tmp_path / "outside"; outside.mkdir()
+    (root / "injected").symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ValueError, match="symlink"):
+        preflight.export_baseline(repo, workspace)
+
+
 def test_bound_cache_rejects_changed_invocation_and_structured_failure(tmp_path):
     raw = tmp_path / "run.jsonl"
     provenance = {
@@ -352,6 +370,16 @@ def test_merge_allows_exact_duplicate_dedupes_workspace_and_rejects_snapshot_con
     contractless.pop("capture_contracts")
     a.write_text(json.dumps(contractless), encoding="utf-8")
     with pytest.raises(ValueError, match="capture contracts missing"):
+        preflight.merge_records(
+            [a], out, expected_targets=("demo",), corpora_root=tmp_path
+        )
+
+    swapped = json.loads(json.dumps(part))
+    for run in swapped["skills"]["demo"]["runs"]:
+        other = "codex" if run["host"] == "claude" else "claude"
+        run["capture_contract_fingerprint"] = contract_fingerprints[other]
+    a.write_text(json.dumps(swapped), encoding="utf-8")
+    with pytest.raises(ValueError, match="run capture contract mismatch"):
         preflight.merge_records(
             [a], out, expected_targets=("demo",), corpora_root=tmp_path
         )

@@ -146,10 +146,15 @@ def _git(repo: Path, *args: str) -> str:
 
 
 def _content_manifest(root: Path) -> dict[str, str]:
-    return {
-        str(path.relative_to(root)): sha256_bytes(path.read_bytes())
-        for path in root.rglob("*") if path.is_file()
-    }
+    manifest = {}
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            raise ValueError(
+                f"cached baseline contains symlink: {path.relative_to(root)}"
+            )
+        if path.is_file():
+            manifest[str(path.relative_to(root))] = sha256_bytes(path.read_bytes())
+    return manifest
 
 
 def export_baseline(
@@ -247,6 +252,31 @@ def capture_contract_fingerprint(contract: dict) -> str:
     return sha256_text(json.dumps(contract, sort_keys=True, separators=(",", ":")))
 
 
+def _capture_contract_map(contracts: object) -> dict[str, dict]:
+    if not isinstance(contracts, list) or not contracts:
+        raise ValueError("capture contracts missing")
+    return {
+        capture_contract_fingerprint(contract): contract
+        for contract in contracts
+    }
+
+
+def _validate_run_capture_contract(
+    run: dict, contract_map: dict[str, dict], models: dict, label: str
+) -> None:
+    host = run.get("host")
+    model = run.get("model")
+    if model != models.get(host):
+        raise ValueError(f"model header mismatch: {label}")
+    contract = contract_map.get(run.get("capture_contract_fingerprint"))
+    if (
+        not isinstance(contract, dict)
+        or contract.get("host") != host
+        or contract.get("model") != model
+    ):
+        raise ValueError(f"run capture contract mismatch: {label}")
+
+
 def metadata_path(raw_path: Path) -> Path:
     return raw_path.with_suffix(".meta.json")
 
@@ -339,8 +369,7 @@ def verify_raw_record(
     if expected_targets is not None and set(skills) != set(expected_targets):
         raise ValueError("record does not contain all expected targets")
     contracts = record.get("capture_contracts")
-    if not isinstance(contracts, list) or not contracts:
-        raise ValueError("capture contracts missing")
+    contract_map = _capture_contract_map(contracts)
     contract_set = {
         json.dumps(contract, sort_keys=True, separators=(",", ":"))
         for contract in contracts
@@ -394,8 +423,10 @@ def verify_raw_record(
             }
             if any(provenance.get(key) != value for key, value in expected.items()):
                 raise ValueError(f"provenance mismatch: {skill_name} p{run.get('prompt_id')}")
-            if run.get("model") != record.get("models", {}).get(run.get("host")):
-                raise ValueError(f"model header mismatch: {skill_name} p{run.get('prompt_id')}")
+            _validate_run_capture_contract(
+                run, contract_map, record.get("models", {}),
+                f"{skill_name} p{run.get('prompt_id')}",
+            )
             encoded_contract = json.dumps(
                 capture_contract(provenance), sort_keys=True, separators=(",", ":")
             )
@@ -641,12 +672,9 @@ def merge_records(
             raise ValueError(f"merge {field} conflict")
     if parts[0].get("schema_version") != 2:
         raise ValueError("merge schema_version must be 2")
-    if any(
-        not isinstance(part.get("capture_contracts"), list)
-        or not part["capture_contracts"]
-        for part in parts
-    ):
-        raise ValueError("capture contracts missing")
+    contract_maps = [
+        _capture_contract_map(part.get("capture_contracts")) for part in parts
+    ]
     merged = dict(parts[0])
     contracts = {
         json.dumps(contract, sort_keys=True, separators=(",", ":")): contract
@@ -661,8 +689,12 @@ def merge_records(
     merged["raw_workspaces"] = list(dict.fromkeys(workspaces))
     merged.pop("raw_workspace", None)
     merged["skills"] = {}
-    for part in parts:
+    for part, contract_map in zip(parts, contract_maps, strict=True):
         for skill_name, snapshot in part.get("skills", {}).items():
+            for run in snapshot.get("runs", []):
+                _validate_run_capture_contract(
+                    run, contract_map, part.get("models", {}), skill_name
+                )
             if skill_name in merged["skills"] and merged["skills"][skill_name] != snapshot:
                 raise ValueError(f"conflicting snapshot for {skill_name}")
             merged["skills"][skill_name] = snapshot
@@ -689,12 +721,11 @@ def merge_records(
         if actual != expected or len(snapshot["runs"]) != len(expected):
             raise ValueError(f"incomplete run matrix for {skill_name}")
         for run in snapshot["runs"]:
-            if run.get("model") != merged.get("models", {}).get(run.get("host")):
-                raise ValueError(f"model header mismatch for {skill_name}")
-            if run.get("capture_contract_fingerprint") not in {
-                capture_contract_fingerprint(contract) for contract in contracts.values()
-            }:
-                raise ValueError(f"capture contract mismatch for {skill_name}")
+            _validate_run_capture_contract(
+                run,
+                {capture_contract_fingerprint(value): value for value in contracts.values()},
+                merged.get("models", {}), skill_name,
+            )
             run["observable"] = _record_observable(run["observable"])
             for field in ("fingerprint", "raw_sha256", "expected_behavior_sha256", "raw_metadata"):
                 if not run.get(field):
