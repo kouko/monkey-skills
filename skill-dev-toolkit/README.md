@@ -20,6 +20,15 @@ Typical flow: **create** (`skill-creator-advance`) → **score** (`skill-judge`)
 **behavioral-test** (`dogfood-skill-testing`) → **refactor** (`skill-refactor`) /
 **tune output** (`skill-tuning`).
 
+## Package-resource refactors
+
+When a refactor changes a bundled resource as well as `SKILL.md`,
+`skill-refactor` captures an **immutable baseline** and edits an isolated
+candidate. Its **layered gates** check the resource, owning skill, and package
+in order; **dual-host evidence** from Claude and Codex is required when that
+mode is requested. **Package net accounting** measures the complete package,
+so moving text is not misreported as a reduction.
+
 ## Self-contained
 
 These skills carry their own worth-it / smallest-skill checks inline rather than

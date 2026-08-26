@@ -4,6 +4,17 @@ All notable changes to the `skill-dev-toolkit` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-08-26
+
+### Added — `skill-refactor` package-resource mode
+
+- **Package-resource mode for bundled files**: captures an immutable baseline
+  before an isolated candidate is edited, then reports both target-resource
+  and package net accounting so moved text is not reported as a reduction.
+- **Layered gates with dual-host evidence**: resource and owning-skill checks
+  run before package evidence; when requested, Claude and Codex each provide
+  gradeable replay evidence. Any host error is `UNGRADABLE` and blocks a pass.
+
 ## [0.3.2] — 2026-07-17
 
 ### Changed

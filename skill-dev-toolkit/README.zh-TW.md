@@ -17,6 +17,14 @@
 
 典型流程:**建立** → **評分 / 行為測試** → **重構 / 輸出調校**。
 
+## Package-resource 重構
+
+當重構同時修改 `SKILL.md` 與 bundled resource 時，`skill-refactor` 會先保存
+**不可變基準（immutable baseline）**，並在隔離的 candidate 中編輯。它的
+**分層關卡（layered gates）** 依序檢查 resource、所屬 skill 與整個 package；要求時，
+Claude 與 Codex 都必須提供可評定的 **雙主機證據（dual-host evidence）**。**整包淨會計
+（package net accounting）** 會衡量完整 package，避免把搬動文字誤報成刪減。
+
 ## 自足
 
 每個 skill 內建 worth-it / 最小 skill 檢查,不委派給其他 plugin,因此**對其他 plugin
