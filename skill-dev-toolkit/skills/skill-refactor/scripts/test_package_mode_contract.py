@@ -38,6 +38,26 @@ def test_package_resource_protocol_names_all_gate_capabilities() -> None:
         assert capability in protocol
 
 
+def test_package_protocol_resolves_its_bundled_cli_without_repo_runtime() -> None:
+    protocol = " ".join(
+        (SKILL_DIR / "references" / "package-resource-mode.md")
+        .read_text(encoding="utf-8")
+        .split()
+    )
+
+    for rule in (
+        "relative to the loaded `skill-refactor` skill directory",
+        "absolute `<package-gate>` path",
+        'python3 "<package-gate>" export',
+        'python3 "<package-gate>" verify',
+        'python3 "<package-gate>" account',
+        'python3 "<package-gate>" reduce',
+        "Never derive this path from the target repository or current working directory",
+        "no Claude-only environment variable or runtime dependency",
+    ):
+        assert rule in protocol
+
+
 def test_package_protocol_defines_whole_package_q2_and_combines_verdicts() -> None:
     protocol = (SKILL_DIR / "references" / "package-resource-mode.md").read_text(
         encoding="utf-8"

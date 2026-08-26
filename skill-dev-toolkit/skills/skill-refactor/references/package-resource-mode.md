@@ -21,12 +21,19 @@ not decide Q2. The overall skill verdict consumes Q2 and the reducer verdict,
 together with the normal Q1 and Q3 results, before it applies an
 isolated candidate.
 
+## Locate the bundled gate
+
+Resolve `scripts/package_gate.py` relative to the loaded `skill-refactor` skill
+directory into an absolute `<package-gate>` path before running this protocol.
+Never derive this path from the target repository or current working directory,
+and use no Claude-only environment variable or runtime dependency.
+
 ## Safe candidate sequence
 
 1. Before any candidate edit, export the Git-pinned baseline:
 
    ```sh
-   python3 skill-dev-toolkit/skills/skill-refactor/scripts/package_gate.py export --repo <repo> --workspace <workspace> --skill-path <skill-path> --revision <revision>
+   python3 "<package-gate>" export --repo <repo> --workspace <workspace> --skill-path <skill-path> --revision <revision>
    ```
 
    Retain the JSON `manifest` path returned by the command.
@@ -35,13 +42,13 @@ isolated candidate.
 3. Verify the frozen baseline before comparing it:
 
    ```sh
-   python3 skill-dev-toolkit/skills/skill-refactor/scripts/package_gate.py verify --manifest <manifest>
+   python3 "<package-gate>" verify --manifest <manifest>
    ```
 
 4. Account for the candidate's target and full package:
 
    ```sh
-   python3 skill-dev-toolkit/skills/skill-refactor/scripts/package_gate.py account --manifest <manifest> --candidate-root <candidate-root> --target-file <target-file>
+   python3 "<package-gate>" account --manifest <manifest> --candidate-root <candidate-root> --target-file <target-file>
    ```
 
 5. Run resource, owning-skill, then package evidence in that order. Submit
@@ -49,7 +56,7 @@ isolated candidate.
    package gate requires Claude and Codex replays:
 
    ```sh
-   python3 skill-dev-toolkit/skills/skill-refactor/scripts/package_gate.py reduce [--dual-host] < evidence.json
+   python3 "<package-gate>" reduce [--dual-host] < evidence.json
    ```
 
    The CLI returns JSON and preserves the closed verdict vocabulary:
