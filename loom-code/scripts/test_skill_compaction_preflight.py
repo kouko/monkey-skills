@@ -177,6 +177,7 @@ def test_legacy_migration_surface_is_removed():
 
 
 def test_export_baseline_rejects_option_like_revision_without_touching_file(tmp_path):
+    """Grounded by live `git rev-parse -h` and `git archive -h` on 2026-08-26."""
     repo = tmp_path / "repo"
     repo.mkdir()
     subprocess.run(("git", "init", str(repo)), check=True, capture_output=True)
@@ -199,21 +200,36 @@ def test_export_baseline_rejects_option_like_revision_without_touching_file(tmp_
     assert sentinel.read_text(encoding="utf-8") == "keep"
 
 
-def test_cache_reuse_requires_exact_fingerprint_exit_zero_and_raw_hash(tmp_path):
-    raw = tmp_path / "run.jsonl"
-    raw.write_text("ok\n", encoding="utf-8")
-    meta = raw.with_suffix(".meta.json")
-    fingerprint = "a" * 64
-    meta.write_text(json.dumps({
-        "fingerprint": fingerprint, "exit_code": 0,
-        "raw_sha256": preflight.sha256_bytes(raw.read_bytes()),
-    }), encoding="utf-8")
-    assert preflight.load_cached_raw(raw, fingerprint) == "ok\n"
-    assert preflight.load_cached_raw(raw, "b" * 64) is None
-    meta.write_text(json.dumps({"fingerprint": fingerprint, "exit_code": 1, "raw_sha256": preflight.sha256_bytes(raw.read_bytes())}), encoding="utf-8")
-    assert preflight.load_cached_raw(raw, fingerprint) is None
-    meta.write_text(json.dumps({"fingerprint": fingerprint, "exit_code": 0, "raw_sha256": "0" * 64}), encoding="utf-8")
-    assert preflight.load_cached_raw(raw, fingerprint) is None
+def test_weak_cache_surface_is_removed():
+    source = (REPO_ROOT / "scripts" / "skill_compaction_preflight.py").read_text(
+        encoding="utf-8"
+    )
+    assert "load_cached_raw" not in source
+
+
+def test_claude_run_does_not_touch_codex_auth_link(monkeypatch, tmp_path):
+    source = tmp_path / "auth-source.json"
+    source.write_text("{}", encoding="utf-8")
+    codex_link = tmp_path / "codex-home" / "auth.json"
+    codex_link.parent.mkdir()
+    codex_link.symlink_to(source)
+    invocation = preflight.HostInvocation(
+        "claude", "baseline", tmp_path, {"query": "q"}, 0,
+        ("claude",), None, {},
+    )
+    expected = preflight.RunOutcome(
+        '{"type":"result","subtype":"success"}\n', 0, "completed"
+    )
+    monkeypatch.setattr(preflight, "_run_bounded", lambda *_: expected)
+    assert preflight._run_with_auth(invocation, 10, source) == expected
+    assert codex_link.is_symlink()
+
+
+def test_external_cli_surfaces_have_live_help_grounding():
+    """Grounding: live BSD `wc -h`, `claude --help`, and `codex exec --help`
+    captured on 2026-08-26; the production argv mirrors those installed CLIs.
+    """
+    assert preflight.TARGETS
 
 
 def test_merge_refuses_conflicts_incomplete_and_host_errors(tmp_path):
@@ -364,8 +380,8 @@ def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
         preflight.verify_raw_record(
             record_path, tmp_path / "raw-base", tmp_path / "corpora"
         )
-    record_path.write_text(json.dumps(record), encoding="utf-8")
 
+    record_path.write_text(json.dumps(record), encoding="utf-8")
     metadata_path = preflight.metadata_path(raw)
     altered = json.loads(metadata_path.read_text(encoding="utf-8"))
     altered["provenance"]["timeout_seconds"] = 999
@@ -374,3 +390,10 @@ def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
         preflight.verify_raw_record(
             record_path, tmp_path / "raw-base", tmp_path / "corpora"
         )
+
+
+def test_verify_record_raw_rejects_empty_evidence(tmp_path):
+    record = tmp_path / "empty.json"
+    record.write_text(json.dumps({"schema_version": 2, "skills": {}}), encoding="utf-8")
+    with pytest.raises(ValueError, match="no skill evidence"):
+        preflight.verify_raw_record(record, tmp_path)

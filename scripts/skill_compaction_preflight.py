@@ -239,22 +239,6 @@ def metadata_path(raw_path: Path) -> Path:
     return raw_path.with_suffix(".meta.json")
 
 
-def load_cached_raw(raw_path: Path, fingerprint: str) -> str | None:
-    meta_path = metadata_path(raw_path)
-    try:
-        raw = raw_path.read_bytes()
-        metadata = json.loads(meta_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    if (
-        metadata.get("fingerprint") != fingerprint
-        or metadata.get("exit_code") != 0
-        or metadata.get("raw_sha256") != sha256_bytes(raw)
-    ):
-        return None
-    return raw.decode("utf-8")
-
-
 def load_bound_raw(raw_path: Path, expected_case: dict) -> tuple[str, dict] | None:
     """Load exit-zero evidence whose own provenance fingerprint is exact."""
     try:
@@ -329,11 +313,17 @@ def _external_path(raw_base: Path, label: str) -> Path:
 def verify_raw_record(
     record_path: Path, raw_base: Path,
     corpora_root: Path = REPO_ROOT / "loom-code" / "skills",
+    expected_targets: tuple[str, ...] | None = None,
 ) -> int:
     """Verify that every accepted run remains recoverable from bound raw evidence."""
     record = json.loads(record_path.read_text(encoding="utf-8"))
+    skills = record.get("skills")
+    if not isinstance(skills, dict) or not skills:
+        raise ValueError("no skill evidence")
+    if expected_targets is not None and set(skills) != set(expected_targets):
+        raise ValueError("record does not contain all expected targets")
     verified = 0
-    for skill_name, snapshot in record.get("skills", {}).items():
+    for skill_name, snapshot in skills.items():
         corpus_path = corpora_root / skill_name / "test-prompts.json"
         corpus = validate_corpus(corpus_path, skill_name)
         if snapshot.get("corpus_sha256") != sha256_bytes(corpus_path.read_bytes()):
@@ -416,6 +406,20 @@ def _run_bounded(invocation: HostInvocation, timeout_seconds: int) -> RunOutcome
     return RunOutcome(transcript, proc.returncode, status)
 
 
+def _run_with_auth(
+    invocation: HostInvocation, timeout_seconds: int, auth_source: Path
+) -> RunOutcome:
+    if invocation.host != "codex":
+        return _run_bounded(invocation, timeout_seconds)
+    if invocation.codex_home is None:
+        raise ValueError("Codex invocation has no CODEX_HOME")
+    auth_link = invocation.codex_home / "auth.json"
+    if auth_source.is_file() and not auth_link.exists():
+        auth_link.symlink_to(auth_source)
+    with temporary_auth_link(auth_link):
+        return _run_bounded(invocation, timeout_seconds)
+
+
 def capture(
     repo: Path, out: Path, raw_workspace: Path, targets=TARGETS,
     timeout_seconds: int = 180, max_turns: int = 12,
@@ -479,23 +483,15 @@ def capture(
                     max_turns=max_turns, timeout_seconds=timeout_seconds,
                 )
                 fingerprint = provenance_fingerprint(provenance)
-                raw = load_cached_raw(raw_path, fingerprint)
                 metadata = None
-                if raw is not None:
-                    metadata = json.loads(metadata_path(raw_path).read_text(encoding="utf-8"))
-                else:
-                    bound = load_bound_raw(raw_path, provenance)
-                    if bound is not None:
-                        raw, metadata = bound
-                        provenance = metadata["provenance"]
-                        fingerprint = metadata["fingerprint"]
+                bound = load_bound_raw(raw_path, provenance)
+                if bound is not None:
+                    raw, metadata = bound
+                    provenance = metadata["provenance"]
+                    fingerprint = metadata["fingerprint"]
                 if metadata is None:
-                    auth_link = codex_home / "auth.json"
-                    if host == "codex" and auth_source.is_file() and not auth_link.exists():
-                        auth_link.symlink_to(auth_source)
                     try:
-                        with temporary_auth_link(auth_link):
-                            outcome = _run_bounded(invocation, timeout_seconds)
+                        outcome = _run_with_auth(invocation, timeout_seconds, auth_source)
                     except Exception as exc:  # preserve, classify, continue
                         outcome = RunOutcome(json.dumps({
                             "type": "harness_error",
@@ -612,7 +608,9 @@ def main() -> None:
     parser.add_argument("--raw-base", type=Path, default=Path("/tmp"))
     args = parser.parse_args()
     if args.verify_record_raw:
-        count = verify_raw_record(args.verify_record_raw, args.raw_base)
+        count = verify_raw_record(
+            args.verify_record_raw, args.raw_base, expected_targets=TARGETS
+        )
         print(f"PASS: verified {count} bound raw runs")
         return
     if args.merge:

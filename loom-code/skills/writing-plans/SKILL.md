@@ -53,7 +53,7 @@ Walk these in order for each prospective task. Stop expanding a task as soon as 
 | 2 | **Module scope** | Does this touch ≤1 module / ≤1 file boundary? If it crosses, split by boundary. |
 | 3 | **No hidden coupling** | Could this task be done in isolation, with only its declared dependencies satisfied? If you need to "also remember to update X," that's a missing dep — declare it. |
 
-**Runnable-capability note.** For a new test/build/lint/e2e/migration or similar verb, `Acceptance` must require both declaration in the command surface (`AGENTS.md`, `make`/`just`, or `package.json`) and a successful run.
+**runnable capability note.** For a new test/build/lint/e2e/migration or similar verb, `Acceptance` must require both declaration in the command surface (`AGENTS.md`, `make`/`just`, or `package.json`) and a successful run.
 
 **No time-box criterion.** Never size by duration; re-check the assertion and module boundary.
 
