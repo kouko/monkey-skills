@@ -36,23 +36,31 @@ and use no Claude-only environment variable or runtime dependency.
    python3 "<package-gate>" export --repo <repo> --workspace <workspace> --skill-path <skill-path> --revision <revision>
    ```
 
-   Retain the JSON `manifest` path returned by the command. Keep the original
-   Git repository and pinned commit available through final verification;
-   `verify` re-resolves that Git tree so changing the exported files and their
-   colocated manifest together cannot manufacture a passing baseline.
+   Retain both returned values: the JSON `manifest` path and the external
+   manifest digest (`manifest_sha256`). Keep that digest outside the baseline
+   directory as part of the immutable orchestration packet. Never recompute it
+   from the manifest after export. Treat the returned path as the canonical
+   manifest path; do not copy it, symlink it, or substitute an alias. Keep the
+   original Git repository and pinned commit available through final
+   verification. `verify` first checks the external manifest digest, then
+   re-resolves the Git tree, so changing or repointing the exported files and
+   their colocated manifest together cannot manufacture a passing baseline.
 2. Create an **isolated candidate** by copying the exported baseline into a
    separate workspace. Edit only that copy; do not edit the user's worktree.
 3. Verify the frozen baseline before comparing it:
 
    ```sh
-   python3 "<package-gate>" verify --manifest <manifest>
+   python3 "<package-gate>" verify --manifest <manifest> --manifest-sha256 <manifest-sha256>
    ```
 
 4. Account for the candidate's target and full package:
 
    ```sh
-   python3 "<package-gate>" account --manifest <manifest> --candidate-root <candidate-root> --target-file <target-file>
+   python3 "<package-gate>" account --manifest <manifest> --manifest-sha256 <manifest-sha256> --candidate-root <candidate-root> --target-file <target-file>
    ```
+
+   Accounting consumes the verified snapshot captured during that same
+   operation; it must not reread mutable baseline files after verification.
 
 5. Run resource, owning-skill, then package evidence in that order. Submit
    the normalized evidence JSON to the reducer; add `--dual-host` when the

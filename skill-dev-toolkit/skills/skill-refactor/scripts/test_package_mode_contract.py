@@ -88,6 +88,11 @@ def test_package_protocol_keeps_git_provenance_available_for_verification() -> N
     )
 
     assert "original Git repository and pinned commit" in protocol
+    assert "external manifest digest" in protocol
+    assert "Never recompute" in protocol
+    assert "canonical manifest path" in protocol
+    assert "verified snapshot" in protocol
+    assert protocol.count("--manifest-sha256") >= 2
 
 
 def test_skill_distinguishes_entrypoint_and_package_round_scope() -> None:

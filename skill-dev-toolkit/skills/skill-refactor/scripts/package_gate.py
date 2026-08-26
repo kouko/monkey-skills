@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import io
 import json
+import os
 from pathlib import Path, PurePosixPath
 import subprocess
 import sys
@@ -47,30 +48,43 @@ def _skill_path(skill_path: str) -> PurePosixPath:
     return path
 
 
-def _file_hashes(root: Path) -> dict[str, dict[str, object]]:
-    files: dict[str, dict[str, object]] = {}
-    for path in sorted(root.rglob("*")):
-        if path.is_symlink():
-            raise ValueError(f"baseline contains symlink: {path.relative_to(root)}")
-        if path.is_file():
-            files[str(path.relative_to(root))] = {
-                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-                "executable": bool(path.stat().st_mode & 0o111),
-            }
-    return files
-
-
-def _file_contents(root: Path) -> dict[str, bytes]:
+def _file_snapshot(
+    root: Path,
+) -> tuple[dict[str, bytes], dict[str, dict[str, object]]]:
     if not root.is_dir() or root.is_symlink():
         raise ValueError(f"invalid package root: {root}")
 
-    files: dict[str, bytes] = {}
+    contents: dict[str, bytes] = {}
+    files: dict[str, dict[str, object]] = {}
     for path in sorted(root.rglob("*")):
         if path.is_symlink():
             raise ValueError(f"package contains symlink: {path.relative_to(root)}")
         if path.is_file():
-            files[str(path.relative_to(root))] = path.read_bytes()
-    return files
+            relative = str(path.relative_to(root))
+            with path.open("rb") as stream:
+                before = os.fstat(stream.fileno())
+                content = stream.read()
+                after = os.fstat(stream.fileno())
+            if (before.st_size, before.st_mtime_ns, before.st_mode) != (
+                after.st_size,
+                after.st_mtime_ns,
+                after.st_mode,
+            ):
+                raise ValueError(f"package file changed while reading: {relative}")
+            contents[relative] = content
+            files[relative] = {
+                "sha256": hashlib.sha256(content).hexdigest(),
+                "executable": bool(after.st_mode & 0o111),
+            }
+    return contents, files
+
+
+def _file_hashes(root: Path) -> dict[str, dict[str, object]]:
+    return _file_snapshot(root)[1]
+
+
+def _file_contents(root: Path) -> dict[str, bytes]:
+    return _file_snapshot(root)[0]
 
 
 def _counts(contents: dict[str, bytes]) -> dict[str, int]:
@@ -158,13 +172,29 @@ def export_baseline(repo: Path, workspace: Path, skill_path: str, revision: str)
                     path.rmdir()
             skill_root.rmdir()
         raise
-    return manifest_path
+    return manifest_path.resolve()
 
 
-def verify_baseline(manifest_path: Path) -> dict[str, str]:
-    """Return PASS when exported bytes match the manifest, otherwise REFUSED."""
+def _verified_baseline_snapshot(
+    manifest_path: Path, manifest_sha256: str
+) -> tuple[
+    dict[str, bytes] | None,
+    dict[str, dict[str, object]] | None,
+    dict[str, str],
+]:
     try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if not manifest_path.is_absolute() or manifest_path.resolve() != manifest_path:
+            return None, None, {
+                "verdict": "REFUSED",
+                "reason": "manifest path is not canonical",
+            }
+        manifest_bytes = manifest_path.read_bytes()
+        if hashlib.sha256(manifest_bytes).hexdigest() != manifest_sha256:
+            return None, None, {
+                "verdict": "REFUSED",
+                "reason": "manifest digest mismatch",
+            }
+        manifest = json.loads(manifest_bytes.decode("utf-8"))
         repository = manifest["repository"]
         skill_path = manifest["skill_path"]
         commit = manifest["resolved_commit"]
@@ -198,32 +228,54 @@ def verify_baseline(manifest_path: Path) -> dict[str, str]:
             capture_output=True,
         ).stdout
         git_expected = _archive_file_hashes(archive)
-        actual = _file_hashes(manifest_path.parent / "skill")
+        actual_contents, actual = _file_snapshot(manifest_path.parent / "skill")
     except (OSError, ValueError, json.JSONDecodeError, KeyError, subprocess.CalledProcessError) as error:
-        return {"verdict": "REFUSED", "reason": f"baseline verification failed: {error}"}
+        return None, None, {
+            "verdict": "REFUSED",
+            "reason": f"baseline verification failed: {error}",
+        }
 
     if git_expected != expected:
-        return {"verdict": "REFUSED", "reason": "Git baseline drift detected"}
+        return None, None, {
+            "verdict": "REFUSED",
+            "reason": "Git baseline drift detected",
+        }
     if actual != expected:
-        return {"verdict": "REFUSED", "reason": "baseline drift detected"}
-    return {"verdict": "PASS", "reason": "baseline matches manifest"}
+        return None, None, {
+            "verdict": "REFUSED",
+            "reason": "baseline drift detected",
+        }
+    return actual_contents, actual, {
+        "verdict": "PASS",
+        "reason": "baseline matches manifest",
+    }
 
 
-def account_package(manifest_path: Path, candidate_root: Path, target_file: str) -> dict[str, object]:
+def verify_baseline(manifest_path: Path, manifest_sha256: str) -> dict[str, str]:
+    """Return PASS when exported bytes match the manifest, otherwise REFUSED."""
+    return _verified_baseline_snapshot(manifest_path, manifest_sha256)[2]
+
+
+def account_package(
+    manifest_path: Path,
+    manifest_sha256: str,
+    candidate_root: Path,
+    target_file: str,
+) -> dict[str, object]:
     """Report target and whole-package word/byte deltas from a verified baseline."""
-    verification = verify_baseline(manifest_path)
+    baseline_files, baseline_fingerprints, verification = _verified_baseline_snapshot(
+        manifest_path, manifest_sha256
+    )
     if verification["verdict"] != "PASS":
         return verification
 
     try:
         target = _skill_path(target_file).as_posix()
-        baseline_root = manifest_path.parent / "skill"
-        baseline_files = _file_contents(baseline_root)
-        candidate_files = _file_contents(candidate_root)
+        if baseline_files is None or baseline_fingerprints is None:
+            raise ValueError("verified baseline snapshot is unavailable")
+        candidate_files, candidate_fingerprints = _file_snapshot(candidate_root)
         baseline_target = baseline_files[target]
         candidate_target = candidate_files[target]
-        baseline_fingerprints = _file_hashes(baseline_root)
-        candidate_fingerprints = _file_hashes(candidate_root)
     except (KeyError, OSError, ValueError) as error:
         return {"verdict": "REFUSED", "reason": f"package accounting failed: {error}"}
 
@@ -374,9 +426,11 @@ def main(argv: list[str] | None = None) -> int:
 
     verify = commands.add_parser("verify")
     verify.add_argument("--manifest", required=True)
+    verify.add_argument("--manifest-sha256", required=True)
 
     account = commands.add_parser("account")
     account.add_argument("--manifest", required=True)
+    account.add_argument("--manifest-sha256", required=True)
     account.add_argument("--candidate-root", required=True)
     account.add_argument("--target-file", required=True)
 
@@ -386,19 +440,22 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "export":
+            manifest_path = export_baseline(
+                Path(args.repo), Path(args.workspace), args.skill_path, args.revision
+            )
             result: dict[str, object] = {
                 "verdict": "PASS",
-                "manifest": str(
-                    export_baseline(
-                        Path(args.repo), Path(args.workspace), args.skill_path, args.revision
-                    )
-                ),
+                "manifest": str(manifest_path),
+                "manifest_sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
             }
         elif args.command == "verify":
-            result = verify_baseline(Path(args.manifest))
+            result = verify_baseline(Path(args.manifest), args.manifest_sha256)
         elif args.command == "account":
             result = account_package(
-                Path(args.manifest), Path(args.candidate_root), args.target_file
+                Path(args.manifest),
+                args.manifest_sha256,
+                Path(args.candidate_root),
+                args.target_file,
             )
         else:
             result = reduce_package_evidence(json.load(sys.stdin), dual_host=args.dual_host)

@@ -17,6 +17,10 @@ def _git(repo: Path, *args: str) -> str:
     ).stdout.strip()
 
 
+def _manifest_sha256(manifest_path: Path) -> str:
+    return hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+
+
 def test_exported_baseline_is_revision_bound_and_drift_refuses(tmp_path: Path) -> None:
     """Ground the Git surfaces used by export_baseline.
 
@@ -39,6 +43,7 @@ def test_exported_baseline_is_revision_bound_and_drift_refuses(tmp_path: Path) -
     commit = _git(repo, "rev-parse", "HEAD")
 
     manifest_path = export_baseline(repo, tmp_path / "workspace", "skills/demo", commit)
+    manifest_sha256 = _manifest_sha256(manifest_path)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
     assert manifest["resolved_commit"] == commit
@@ -57,7 +62,7 @@ def test_exported_baseline_is_revision_bound_and_drift_refuses(tmp_path: Path) -
     exported_file = manifest_path.parent / "skill" / "SKILL.md"
     exported_file.write_bytes(b"drifted bytes\n")
 
-    result = verify_baseline(manifest_path)
+    result = verify_baseline(manifest_path, manifest_sha256)
 
     assert result["verdict"] == "REFUSED"
     assert "drift" in result["reason"]
@@ -79,6 +84,7 @@ def test_baseline_fingerprint_includes_executable_mode(tmp_path: Path) -> None:
     _git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "baseline")
 
     manifest_path = export_baseline(repo, tmp_path / "workspace", "skills/demo", "HEAD")
+    manifest_sha256 = _manifest_sha256(manifest_path)
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
     assert manifest["files"]["run.sh"] == {
@@ -88,7 +94,7 @@ def test_baseline_fingerprint_includes_executable_mode(tmp_path: Path) -> None:
 
     (manifest_path.parent / "skill" / "run.sh").chmod(0o644)
 
-    assert verify_baseline(manifest_path)["verdict"] == "REFUSED"
+    assert verify_baseline(manifest_path, manifest_sha256)["verdict"] == "REFUSED"
 
 
 def test_baseline_verification_reanchors_a_mutated_manifest_to_git(tmp_path: Path) -> None:
@@ -103,6 +109,7 @@ def test_baseline_verification_reanchors_a_mutated_manifest_to_git(tmp_path: Pat
     _git(repo, "add", ".")
     _git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "baseline")
     manifest_path = export_baseline(repo, tmp_path / "workspace", "skills/demo", "HEAD")
+    manifest_sha256 = _manifest_sha256(manifest_path)
 
     drifted = b"---\nname: demo\n---\n\nDrifted\n"
     (manifest_path.parent / "skill" / "SKILL.md").write_bytes(drifted)
@@ -110,10 +117,116 @@ def test_baseline_verification_reanchors_a_mutated_manifest_to_git(tmp_path: Pat
     manifest["files"]["SKILL.md"]["sha256"] = hashlib.sha256(drifted).hexdigest()
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
-    result = verify_baseline(manifest_path)
+    result = verify_baseline(manifest_path, manifest_sha256)
 
     assert result["verdict"] == "REFUSED"
-    assert "Git" in result["reason"]
+    assert "manifest digest" in result["reason"]
+
+
+def test_baseline_verification_refuses_full_provenance_repoint(tmp_path: Path) -> None:
+    from package_gate import export_baseline, verify_baseline
+
+    original_repo = tmp_path / "original-repo"
+    original_skill = original_repo / "skills" / "demo"
+    original_skill.mkdir(parents=True)
+    (original_skill / "SKILL.md").write_text("original\n", encoding="utf-8")
+    _git(original_repo, "init", "-q")
+    _git(original_repo, "add", ".")
+    _git(original_repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "original")
+    manifest_path = export_baseline(
+        original_repo, tmp_path / "workspace", "skills/demo", "HEAD"
+    )
+    manifest_sha256 = _manifest_sha256(manifest_path)
+
+    replacement_repo = tmp_path / "replacement-repo"
+    replacement_skill = replacement_repo / "skills" / "demo"
+    replacement_skill.mkdir(parents=True)
+    replacement_bytes = b"replacement\n"
+    (replacement_skill / "SKILL.md").write_bytes(replacement_bytes)
+    _git(replacement_repo, "init", "-q")
+    _git(replacement_repo, "add", ".")
+    _git(replacement_repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "replacement")
+    replacement_commit = _git(replacement_repo, "rev-parse", "HEAD")
+
+    (manifest_path.parent / "skill" / "SKILL.md").write_bytes(replacement_bytes)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest.update(
+        repository=str(replacement_repo.resolve()),
+        resolved_commit=replacement_commit,
+        skill_tree=_git(
+            replacement_repo, "rev-parse", f"{replacement_commit}:skills/demo"
+        ),
+    )
+    manifest["files"]["SKILL.md"]["sha256"] = hashlib.sha256(
+        replacement_bytes
+    ).hexdigest()
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    assert verify_baseline(manifest_path, manifest_sha256) == {
+        "verdict": "REFUSED",
+        "reason": "manifest digest mismatch",
+    }
+
+
+def test_baseline_verification_refuses_manifest_path_alias(tmp_path: Path) -> None:
+    from package_gate import export_baseline, verify_baseline
+
+    repo = tmp_path / "repo"
+    skill_dir = repo / "skills" / "demo"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("original\n", encoding="utf-8")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "baseline")
+    manifest_path = export_baseline(repo, tmp_path / "workspace", "skills/demo", "HEAD")
+    manifest_sha256 = _manifest_sha256(manifest_path)
+
+    alias = tmp_path / "manifest-alias.json"
+    alias.symlink_to(manifest_path)
+
+    assert verify_baseline(alias, manifest_sha256) == {
+        "verdict": "REFUSED",
+        "reason": "manifest path is not canonical",
+    }
+
+
+def test_accounting_uses_the_verified_baseline_snapshot(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import package_gate
+
+    repo = tmp_path / "repo"
+    skill_dir = repo / "skills" / "demo"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("one two\n", encoding="utf-8")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "baseline")
+    manifest_path = package_gate.export_baseline(
+        repo, tmp_path / "workspace", "skills/demo", "HEAD"
+    )
+    manifest_sha256 = _manifest_sha256(manifest_path)
+    candidate = tmp_path / "candidate"
+    candidate.mkdir()
+    (candidate / "SKILL.md").write_text("one\n", encoding="utf-8")
+
+    original_verify = package_gate.verify_baseline
+
+    def mutate_after_verification(path: Path, digest: str):
+        verdict = original_verify(path, digest)
+        (path.parent / "skill" / "SKILL.md").write_text(
+            "attacker controlled baseline words\n", encoding="utf-8"
+        )
+        return verdict
+
+    monkeypatch.setattr(package_gate, "verify_baseline", mutate_after_verification)
+
+    result = package_gate.account_package(
+        manifest_path, manifest_sha256, candidate, "SKILL.md"
+    )
+
+    assert result["verdict"] == "PASS"
+    assert result["package"]["words"]["baseline"] == 2
 
 
 def test_accounting_counts_moved_words_in_package_total(tmp_path: Path) -> None:
@@ -127,13 +240,14 @@ def test_accounting_counts_moved_words_in_package_total(tmp_path: Path) -> None:
     _git(repo, "add", ".")
     _git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "baseline")
     manifest_path = export_baseline(repo, tmp_path / "workspace", "skills/demo", "HEAD")
+    manifest_sha256 = _manifest_sha256(manifest_path)
 
     candidate = tmp_path / "candidate"
     candidate.mkdir()
     (candidate / "SKILL.md").write_bytes(b"keep ")
     (candidate / "reference.md").write_bytes(b"moved words\n")
 
-    result = account_package(manifest_path, candidate, "SKILL.md")
+    result = account_package(manifest_path, manifest_sha256, candidate, "SKILL.md")
 
     assert result == {
         "verdict": "PASS",
@@ -149,7 +263,7 @@ def test_accounting_counts_moved_words_in_package_total(tmp_path: Path) -> None:
 
     (manifest_path.parent / "skill" / "SKILL.md").write_bytes(b"drifted\n")
 
-    assert account_package(manifest_path, candidate, "SKILL.md") == {
+    assert account_package(manifest_path, manifest_sha256, candidate, "SKILL.md") == {
         "verdict": "REFUSED",
         "reason": "baseline drift detected",
     }
@@ -169,6 +283,7 @@ def test_accounting_refuses_candidate_executable_mode_drift(tmp_path: Path) -> N
     _git(repo, "add", ".")
     _git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "baseline")
     manifest_path = export_baseline(repo, tmp_path / "workspace", "skills/demo", "HEAD")
+    manifest_sha256 = _manifest_sha256(manifest_path)
 
     candidate = tmp_path / "candidate"
     candidate.mkdir()
@@ -177,7 +292,7 @@ def test_accounting_refuses_candidate_executable_mode_drift(tmp_path: Path) -> N
     candidate_script.write_bytes(b"#!/bin/sh\n")
     candidate_script.chmod(0o644)
 
-    assert account_package(manifest_path, candidate, "SKILL.md") == {
+    assert account_package(manifest_path, manifest_sha256, candidate, "SKILL.md") == {
         "verdict": "REFUSED",
         "reason": "candidate executable mode drift detected: run.sh",
     }
@@ -236,10 +351,15 @@ def test_cli_drives_export_verify_and_account(tmp_path: Path) -> None:
         ],
         check=True, capture_output=True, text=True,
     )
-    manifest = Path(json.loads(export.stdout)["manifest"])
+    export_result = json.loads(export.stdout)
+    manifest = Path(export_result["manifest"])
+    manifest_sha256 = export_result["manifest_sha256"]
 
     verify = subprocess.run(
-        [sys.executable, str(script), "verify", "--manifest", str(manifest)],
+        [
+            sys.executable, str(script), "verify", "--manifest", str(manifest),
+            "--manifest-sha256", manifest_sha256,
+        ],
         check=True, capture_output=True, text=True,
     )
     assert json.loads(verify.stdout)["verdict"] == "PASS"
@@ -250,6 +370,7 @@ def test_cli_drives_export_verify_and_account(tmp_path: Path) -> None:
     account = subprocess.run(
         [
             sys.executable, str(script), "account", "--manifest", str(manifest),
+            "--manifest-sha256", manifest_sha256,
             "--candidate-root", str(candidate), "--target-file", "SKILL.md",
         ],
         check=True, capture_output=True, text=True,
