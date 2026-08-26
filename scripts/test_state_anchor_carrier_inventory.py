@@ -42,6 +42,8 @@ EXCLUDED_RELATIVE_PATHS = frozenset(
     {
         "loom-code/CHANGELOG.md",
         "loom-code/hooks/test-prompts.json",
+        "loom-code/scripts/test_brainstorming_compaction.py",
+        "loom-code/scripts/test_requesting_code_review_compaction.py",
     }
 )
 
@@ -56,8 +58,7 @@ EXPECTED_INVENTORY = {
     "loom-code/skills/requesting-code-review/references/relay-phrasing.md": 1,
     "loom-code/skills/requesting-code-review/SKILL.md": 2,
     "loom-code/skills/requesting-code-review/test-prompts.json": 1,
-    "loom-code/skills/subagent-driven-development/SKILL.md": 3,
-    "loom-code/skills/using-loom-code/SKILL.md": 1,
+    "loom-code/skills/subagent-driven-development/SKILL.md": 1,
     "loom-code/hooks/family-relay.md": 1,
     "loom-design/scripts/discovery/test_using_skill.py": 2,
     "loom-design/skills/using-loom-design/references/design-relay.md": 1,

@@ -175,7 +175,7 @@ Run the validator and fix every issue before declaring done:
 argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/interface/validate_design_output.py", "<design-output-dir>"]
 ```
 
-Pass the argv array directly, never through a shell. The validator checks file
+Pass the argv array directly to process execution; never through a shell. The validator checks file
 presence and all 8 GUI headings; token derivation and contrast remain your
 responsibility.
 

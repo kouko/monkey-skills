@@ -212,7 +212,7 @@ dry, which is why a qualified passing verdict always carries notes.
 There is **no unqualified `PASS`** and no bare PASS: that would imply no omissions
 remain despite mandatory Blind spots. Both values mint with direct execution:
 `argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/interface/mint_critic_verdict.py", "mint", "--change-folder", "<design-output-dir>", "--critic", "design-critic", "--verdict-file", "<verdict-file>", "--files", "DESIGN.md,ui-flows.md"]`.
-Pass argv arrays directly to process execution, never through a shell.
+Pass argv arrays directly to process execution; never through a shell.
 
 ## Deletable lenses (Bitter Lesson)
 

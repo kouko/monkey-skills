@@ -46,8 +46,7 @@
         "references/axis4-research-protocol.md",
         "references/handoff-brief-format.md",
         "references/red-flags.md",
-        "references/visual-companion.md",
-        "test-prompts.json"
+        "references/visual-companion.md"
       ],
       "skill_sha256": "5e6abe41dd9cfeb3ba8d4b39e9d8b422954c3dfe3e5a250618a3499d8d6b8dbd",
       "corpus_sha256": "78a56481e63351f10edc4053a6eda3754023bf86c0b1ddf745df1a798f7cfceb",
@@ -314,8 +313,7 @@
         "README.ja.md",
         "README.md",
         "README.zh-TW.md",
-        "SKILL.md",
-        "test-prompts.json"
+        "SKILL.md"
       ],
       "skill_sha256": "6c189dbfe28d796ebd93df2f28c7e9e0ec3d7f02480de912568bd8215e21127e",
       "corpus_sha256": "40c18f0f46c5f12bf3b3d5a2bcf0e71c25d20629b2889ecb674d044abcd70a4d",
@@ -597,8 +595,7 @@
         "references/",
         "references/delegation-boundaries.md",
         "references/red-flags.md",
-        "references/when-not-to-use.md",
-        "test-prompts.json"
+        "references/when-not-to-use.md"
       ],
       "skill_sha256": "3714411b1a037b79ef749d855e9ee56faf4f4a79c1a058f38a96939e996760e0",
       "corpus_sha256": "0651882b7fd62dcbd6623c85492b75ebbd695f4f5571d4bdb12e2af1e90faca4",
@@ -854,8 +851,7 @@
         "docs/loom/memory/README.md"
       ],
       "file_structure": [
-        "SKILL.md",
-        "test-prompts.json"
+        "SKILL.md"
       ],
       "skill_sha256": "1222c095e77eca2ef048fead4521288328a896342366989f02b2349c669fbecb",
       "corpus_sha256": "a99a4f3e2bca1a41cb93e91685a6593fa5682edff918c07b3b9ea7b747823da3",
@@ -1508,8 +1504,7 @@
         "SKILL.md",
         "references/",
         "references/convergence-contract.md",
-        "references/design-evidence.md",
-        "test-prompts.json"
+        "references/design-evidence.md"
       ],
       "skill_sha256": "5e6fdc4ae931bde18a3c8dd3b6f817f781ee10e0dceaff2101f78b57422bb850",
       "corpus_sha256": "93a23b610570f3e37211851bad34044fea0b2c31b81ce9857e736b6c1b2ebcc7",
@@ -1775,8 +1770,7 @@
         "references/character-encoding-debug.md",
         "references/condition-based-waiting.md",
         "references/defense-in-depth.md",
-        "references/root-cause-tracing.md",
-        "test-prompts.json"
+        "references/root-cause-tracing.md"
       ],
       "skill_sha256": "dab613bd4902680cb06d57dee4f6a60c1d443cbd7b667a812402880873a1c2f9",
       "corpus_sha256": "79c8c93f332c1ea70b9ec56e04721e270da166abb8b089272a800e30ad8d5ce2",
@@ -2042,8 +2036,7 @@
         "references/",
         "references/testing-anti-patterns.md",
         "standards/",
-        "standards/tdd-standard.md",
-        "test-prompts.json"
+        "standards/tdd-standard.md"
       ],
       "skill_sha256": "31e53704e08768dc3822335e659fb53d2a26408abb1e84e0084230bede5d20de",
       "corpus_sha256": "9cba14b0930008c20b260cad4a17cc42a496bfa8b631e0ce41cecd6d389f73f8",
@@ -2305,8 +2298,7 @@
         "README.ja.md",
         "README.md",
         "README.zh-TW.md",
-        "SKILL.md",
-        "test-prompts.json"
+        "SKILL.md"
       ],
       "skill_sha256": "f9328755e4f902060edf07c524427ad4d21add5d3b84d0b8eeb009d7201d02b4",
       "corpus_sha256": "ced5ab6c54ac4f2ef5c1f90662df192b4839c8ddc5fac36857cbec5babb6661c",
@@ -2563,8 +2555,7 @@
         "README.ja.md",
         "README.md",
         "README.zh-TW.md",
-        "SKILL.md",
-        "test-prompts.json"
+        "SKILL.md"
       ],
       "skill_sha256": "7421f1aa7e0a9ed89ccd5dc9dd3b022b2d335f46f2f56e3405ca0c9b76fa6cc2",
       "corpus_sha256": "acd9977b124f7f785e7e842df66613b2f5d080d0a1c0d30d00164050da24243d",
@@ -2843,8 +2834,7 @@
         "references/continuous-mode.md",
         "references/dispatch-profile.md",
         "references/engineering-baselines.md",
-        "references/environment-gotchas.md",
-        "test-prompts.json"
+        "references/environment-gotchas.md"
       ],
       "skill_sha256": "9f83f61d7c48de501e8d6991fca73ddf793bb1b812d17a03182053eb174ff093",
       "corpus_sha256": "160e9e8789290ef26c98efdc6250c08a7bcd454b28943e64c6ce157b127dc2ea",
@@ -3113,8 +3103,7 @@
         "README.zh-TW.md",
         "SKILL.md",
         "references/",
-        "references/test-invocation-by-stack.md",
-        "test-prompts.json"
+        "references/test-invocation-by-stack.md"
       ],
       "skill_sha256": "0b19bf340fd1e36030bf231717767a51880c95bed6b4edc8ef686b7dd91439b0",
       "corpus_sha256": "d01b23a549d69428f4f8214b5af1ae747417ee82bd022ca3024604fc48c15268",

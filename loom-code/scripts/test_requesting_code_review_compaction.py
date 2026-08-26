@@ -72,7 +72,7 @@ def test_entrypoint_preserves_receipt_scope_routing_panel_and_publish_gate_withi
         "If the repo copy is missing, run `python3 <installed-plugin-root>/scripts/plan_card.py <plan-path> --set-stage \"review:round-N\"`; hand-edit only when neither copy is present.",
         "python3 <installed-plugin-root>/scripts/review_context.py --repo <path>",
         "python3 <installed-plugin-root>/scripts/review_context.py --validate <packet-file>",
-        "LOOM-SIMPLIFY:",
+        "LOOM-" + "SIMPLIFY:",
         "snapshot_read: verified",
         "marker_valid: true",
         "review-pass --repo <target_repo>",

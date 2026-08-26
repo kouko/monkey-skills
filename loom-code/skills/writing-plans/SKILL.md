@@ -214,7 +214,7 @@ Two per-task fields — `Independent` and `Files touched` — signal parallel-di
 
 ## Consuming a loom-design change-folder
 
-Writing-plans consumes a validated `docs/loom/<change-id>/` from `loom-design:spec-expansion`. Validated means `validate_spec_output.py` exited 0 on its `specs/<capability>/spec.md` `### Requirement:` blocks and `#### Scenario:` criteria.
+Writing-plans consumes `docs/loom/<change-id>/` emitted by `loom-design:spec-expansion`. Validated means `validate_spec_output.py` exited 0 on its `specs/<capability>/spec.md` `### Requirement:` blocks and `#### Scenario:` criteria.
 
 **Detecting which change-folder to consume.** Evaluate layers in order; stop on resolution. Evidence: `docs/loom/research/2026-07-10-change-binding-and-lifecycle-research.md` and [`references/design-evidence.md`](references/design-evidence.md).
 

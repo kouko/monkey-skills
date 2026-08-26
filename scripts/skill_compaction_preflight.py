@@ -155,7 +155,17 @@ def _content_manifest(root: Path) -> dict[str, str]:
 def export_baseline(
     repo: Path, workspace: Path, baseline_commit: str | None = None
 ) -> tuple[Path, str, str]:
-    commit = _git(repo, "rev-parse", baseline_commit or "HEAD")
+    revision = baseline_commit or "HEAD"
+    resolved = subprocess.run(
+        (
+            "git", "-C", str(repo), "rev-parse", "--verify",
+            "--end-of-options", f"{revision}^{{commit}}",
+        ),
+        check=False, capture_output=True, text=True,
+    )
+    commit = resolved.stdout.strip()
+    if resolved.returncode != 0 or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+        raise ValueError(f"invalid baseline commit: {revision}")
     tree = _git(repo, "rev-parse", f"{commit}:loom-code")
     root = workspace / "baseline" / "loom-code"
     archive = subprocess.run(
@@ -302,13 +312,6 @@ def raw_has_successful_exit(host: str, raw: str) -> bool:
     return any(event.get("type") == "turn.completed" for event in events)
 
 
-def migrate_legacy_raw(
-    raw_path: Path, provenance: dict, fingerprint: str
-) -> tuple[str, dict] | None:
-    """Refuse to attach new provenance to evidence that was never bound."""
-    return None
-
-
 def verify_run_semantics(run: dict, prompt: dict, raw_path: Path) -> None:
     if sha256_bytes(raw_path.read_bytes()) != run.get("raw_sha256"):
         raise ValueError(f"raw hash mismatch: {raw_path}")
@@ -416,7 +419,7 @@ def _run_bounded(invocation: HostInvocation, timeout_seconds: int) -> RunOutcome
 def capture(
     repo: Path, out: Path, raw_workspace: Path, targets=TARGETS,
     timeout_seconds: int = 180, max_turns: int = 12,
-    baseline_commit: str | None = None, migrate_legacy: bool = False,
+    baseline_commit: str | None = None,
 ) -> dict:
     skills_root = repo / "loom-code" / "skills"
     baseline_root, commit, tree = export_baseline(repo, raw_workspace, baseline_commit)
@@ -440,7 +443,7 @@ def capture(
             corpus_path = skills_root / skill_name / "test-prompts.json"
             corpus = validate_corpus(corpus_path, skill_name)
             corpus_hash = sha256_bytes(corpus_path.read_bytes())
-            snapshot = snapshot_skill(skills_root / skill_name)
+            snapshot = snapshot_skill(baseline_root / "skills" / skill_name)
             snapshot.update({
                 "corpus_sha256": corpus_hash,
                 "baseline_root": {"commit": commit, "tree": tree, "label": "baseline/loom-code"},
@@ -486,20 +489,6 @@ def capture(
                         raw, metadata = bound
                         provenance = metadata["provenance"]
                         fingerprint = metadata["fingerprint"]
-                if metadata is None and migrate_legacy:
-                    legacy_provenance = invocation_provenance(
-                        commit=commit, tree=tree, corpus_sha256=corpus_hash,
-                        prompt=prompt, host=host, model=model, replicate=replicate,
-                        max_turns=4, timeout_seconds=180,
-                    )
-                    legacy_fingerprint = provenance_fingerprint(legacy_provenance)
-                    migrated = migrate_legacy_raw(
-                        raw_path, legacy_provenance, legacy_fingerprint
-                    )
-                    if migrated is not None:
-                        raw, metadata = migrated
-                        fingerprint = legacy_fingerprint
-                        provenance = legacy_provenance
                 if metadata is None:
                     auth_link = codex_home / "auth.json"
                     if host == "codex" and auth_source.is_file() and not auth_link.exists():
@@ -618,7 +607,6 @@ def main() -> None:
     parser.add_argument("--timeout", type=int, default=180)
     parser.add_argument("--max-turns", type=int, default=12)
     parser.add_argument("--baseline-commit")
-    parser.add_argument("--migrate-legacy", action="store_true")
     parser.add_argument("--merge", nargs="+", type=Path)
     parser.add_argument("--verify-record-raw", type=Path)
     parser.add_argument("--raw-base", type=Path, default=Path("/tmp"))
@@ -643,7 +631,7 @@ def main() -> None:
     workspace = args.raw_workspace or Path(tempfile.mkdtemp(prefix="loom-code-preflight-"))
     capture(
         args.repo, args.out, workspace, tuple(args.skills or TARGETS), args.timeout,
-        args.max_turns, args.baseline_commit, args.migrate_legacy,
+        args.max_turns, args.baseline_commit,
     )
     print(f"PASS: record={args.out} raw={workspace}")
 

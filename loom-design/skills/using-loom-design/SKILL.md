@@ -20,8 +20,9 @@ All user-facing narration follows `references/design-relay.md`, which builds on
 `references/family-relay.md §Family relay discipline`. Never route design work
 through a code-review skill.
 
-**Step 1 — 前站檢查 (upstream check).** Apply the on-ramp table in
-`references/family-reception.md` (the family reception SSOT; do not copy it).
+**Step 1 — 前站檢查 (upstream check).** Load `references/family-reception.md`
+and apply its on-ramp table (the family
+reception SSOT; do not copy it).
 A bug fix, refactor, or test-covered increment skips design and goes to
 `loom-code:using-loom-code`. Within design, discovery normally comes FIRST
 (unarticulated problem/users), then product-principles (product-shaped work

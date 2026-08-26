@@ -123,7 +123,7 @@ share no artifact or agent. Agents never self-commit.
    argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/discovery/validate_discovery_artifacts.py", "<discovery-folder>"]
    ```
 
-   Pass the argv array directly to process execution, never through a shell.
+   Pass the argv array directly to process execution; never through a shell.
    On non-zero, fix and rerun, **bounded at 2 attempts**. If still non-zero after
    2 fix-and-rerun cycles, stop and surface remaining problems in plain language.
    The validator accepts sanctioned greenfield/first-run states such as an

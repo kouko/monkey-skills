@@ -12,8 +12,8 @@ lives canonically in `loom-code/hooks/family-reception.md`
 rule drift when edited in one place and not the others; this test pins
 the brainstorming copy as a pointer, not a duplicate.
 
-Block scoping: the check is scoped to the region between the anchor
-line ending "coherent set." (close of the preceding paragraph) and
+Block scoping: the check is scoped to the region between the question-contract
+heading and
 "### Axis 0 — Upstream artifacts" (open of the next section). This is
 the ~line 58 region ONLY — it deliberately excludes the ~line 150/152
 Axis-4 research-protocol prose, which Task 14 edits separately. A
@@ -43,7 +43,7 @@ SSOT_REL = "loom-code/hooks/family-reception.md"
 # two lines (confirmed verbatim substrings in the file). Scoping the
 # search here is what makes the test false-green-resistant: a threshold
 # match in the Axis-4 region (~line 150) does NOT count.
-REGION_START = "together the three read as one coherent set."
+REGION_START = "Make the rendered question self-contained:"
 REGION_END = "### Axis 0 — Upstream artifacts"
 
 # Pointer tokens that MUST appear in the region after the edit.

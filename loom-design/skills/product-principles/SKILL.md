@@ -197,7 +197,7 @@ cd <consumer-project-root>
 argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/principles/validate_principles_output.py", "<principles-file>"]
 ```
 
-Pass argv directly to process execution, never through a shell. The validator
+Pass argv directly to process execution; never through a shell. The validator
 enforces the rules contract's structure, counts, markers, optional sections,
 and legacy-heading migration; you remain responsible for check quality.
 

@@ -123,7 +123,7 @@ weak axis. Two or more weak axes require NEEDS-MORE-RESEARCH, never hopeful GO.
    today (`YYYY-MM-DD`) and the topic slug is kebab-case. Reuse an existing
    folder for the same topic.
 6. From the consumer project root, resolve the validator to an absolute path
-   and pass this argv directly to process execution, never through a shell:
+   and pass this argv directly to process execution; never through a shell:
 
    ```text
    argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/discovery/validate_discovery_artifacts.py", "<discovery-folder>"]

@@ -1,6 +1,7 @@
 import json
 import importlib.util
 from pathlib import Path
+import subprocess
 import sys
 
 import pytest
@@ -167,12 +168,35 @@ def test_zero_exit_with_structured_host_failure_is_a_host_error(monkeypatch, tmp
     assert outcome.status == "host-error"
 
 
-def test_legacy_raw_without_independent_binding_is_not_migrated(tmp_path):
-    raw = tmp_path / "legacy.jsonl"
-    raw.write_text('{"type":"result","subtype":"success"}\n', encoding="utf-8")
-    provenance = {"host": "claude", "prompt_id": 2}
-    assert preflight.migrate_legacy_raw(raw, provenance, "f" * 64) is None
-    assert not preflight.metadata_path(raw).exists()
+def test_legacy_migration_surface_is_removed():
+    source = (REPO_ROOT / "scripts" / "skill_compaction_preflight.py").read_text(
+        encoding="utf-8"
+    )
+    assert "migrate_legacy_raw" not in source
+    assert "--migrate-legacy" not in source
+
+
+def test_export_baseline_rejects_option_like_revision_without_touching_file(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(("git", "init", str(repo)), check=True, capture_output=True)
+    (repo / "loom-code").mkdir()
+    (repo / "loom-code" / "marker").write_text("baseline", encoding="utf-8")
+    subprocess.run(("git", "-C", str(repo), "add", "loom-code/marker"), check=True)
+    subprocess.run(
+        (
+            "git", "-C", str(repo), "-c", "user.name=Test",
+            "-c", "user.email=test@example.invalid", "commit", "-m", "baseline",
+        ),
+        check=True, capture_output=True,
+    )
+    sentinel = tmp_path / "sentinel"
+    sentinel.write_text("keep", encoding="utf-8")
+    with pytest.raises(ValueError, match="invalid baseline commit"):
+        preflight.export_baseline(
+            repo, tmp_path / "workspace", f"--output={sentinel}"
+        )
+    assert sentinel.read_text(encoding="utf-8") == "keep"
 
 
 def test_cache_reuse_requires_exact_fingerprint_exit_zero_and_raw_hash(tmp_path):

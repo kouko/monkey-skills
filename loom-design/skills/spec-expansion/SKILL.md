@@ -62,7 +62,7 @@ seed still fails the pre-flight if a core object's lifecycle is unstated.
 run loom-design's own `mint_critic_verdict.py` to confirm `design-critic`
 reviewed this exact content. Run this direct argv from the consumer project root;
 `${CLAUDE_PLUGIN_ROOT}` is the absolute installed **PLUGIN repo** root. Keep values
-separate; never pass the command through a shell:
+separate; pass it directly to process execution; never through a shell—never pass the command through a shell:
 
 ```
 argv: ["python3", "${CLAUDE_PLUGIN_ROOT}/scripts/spec/mint_critic_verdict.py", "validate", "--change-folder", "<design-change-folder>", "--critic", "design-critic", "--files", "DESIGN.md,ui-flows.md"]
