@@ -32,13 +32,15 @@ only plugin needed. No cross-plugin dependency.
 ## The Iron Law
 
 ```
-NO REFACTOR SHIPS WITHOUT (1) EQUIVALENCE PROVEN
-                          (2) TOKEN REDUCTION ≥10%
-                          (3) INVARIANTS PRESERVED
+NO REFACTOR AUTO-SHIPS WITHOUT (1) EQUIVALENCE PROVEN
+                               (2) TOKEN REDUCTION ≥10%
+                               (3) INVARIANTS PRESERVED
 ```
 
-If any check fails, discard the candidate. This is the ratchet — only refactors that **measurably preserve
-behavior while measurably shrinking the file** survive.
+If either behavior or invariant preservation fails, discard the candidate. A
+5–10% reduction may ship only after explicit user acceptance of the marginal
+win; it does not auto-advance the ratchet. Only refactors that **measurably
+preserve behavior while measurably shrinking the file** survive.
 
 ## Before You Begin — Establish Baseline
 
@@ -145,7 +147,7 @@ After Q1, Q2, Q3:
 
 - **PROCEED** — all three pass strictly. Apply the isolated candidate to the
   user's worktree, then `git commit` it; ratchet advances.
-- **RESHAPE** — Q1 or Q3 passes, Q2 marginal (5–10% reduction). Show
+- **RESHAPE** — Q1 and Q3 pass, Q2 marginal (5–10% reduction). Show
   user the candidate + which dimension is weak; user decides keep
   or further-refactor. Do not auto-merge.
 - **REJECT** — Q1 fails (output not equivalent), or Q2 shows
@@ -383,6 +385,6 @@ matches golden anchor pattern"; see `golden-anchor-protocol.md`.
 ## Bottom Line
 
 ```
-Output preserved. Tokens shrunk. Invariants intact. Or revert.
+Output preserved. Tokens shrunk. Invariants intact. Otherwise discard the candidate.
 Refactor is structure, not feature. Prove equivalence; don't promise it.
 ```

@@ -73,8 +73,11 @@ and use no Claude-only environment variable or runtime dependency.
    The CLI returns JSON and preserves the closed verdict vocabulary:
    `PASS`, `FAIL`, or `UNGRADABLE`. A host error is `UNGRADABLE`, never
    `PASS`.
-6. Apply the isolated candidate to the user worktree only after a `PASS`.
-   On `FAIL` or `UNGRADABLE`, discard the isolated candidate. Discarding that
+6. Combine the reducer result with Q1, whole-package Q2, and Q3. Apply the
+   isolated candidate only after the overall `PROCEED` verdict. A `RESHAPE`
+   remains isolated unless the user explicitly accepts the marginal reduction;
+   record that acceptance as `PROCEED` before applying it. On `FAIL`,
+   `UNGRADABLE`, or `REJECT`, discard the isolated candidate. Discarding that
    copy is the rollback; do not use `git revert` as package-mode evidence.
 
 The `export`, `verify`, `account`, and `reduce` commands are stdlib-only

@@ -20,6 +20,19 @@ def test_package_mode_is_conditional_and_keeps_entrypoint_threshold() -> None:
     assert "discard" in skill.lower()
 
 
+def test_verdict_contract_requires_both_behavior_gates_and_never_reverts() -> None:
+    skill = " ".join((SKILL_DIR / "SKILL.md").read_text(encoding="utf-8").split())
+    protocol = " ".join(
+        (SKILL_DIR / "references" / "package-resource-mode.md")
+        .read_text(encoding="utf-8")
+        .split()
+    )
+
+    assert "Q1 and Q3 pass, Q2 marginal" in skill
+    assert "Or revert" not in skill
+    assert "overall `PROCEED` verdict" in protocol
+
+
 def test_package_mode_fails_closed_until_its_protocol_is_loaded() -> None:
     skill = " ".join((SKILL_DIR / "SKILL.md").read_text(encoding="utf-8").split())
 
