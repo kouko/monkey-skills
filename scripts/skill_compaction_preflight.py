@@ -617,6 +617,7 @@ def capture(
     timeout_seconds: int = 180, max_turns: int = 12,
     baseline_commit: str | None = None,
 ) -> dict:
+    raw_workspace = raw_workspace.resolve()
     skills_root = repo / "loom-code" / "skills"
     baseline_root, commit, tree = export_baseline(repo, raw_workspace, baseline_commit)
     raw_dir = raw_workspace / "raw"

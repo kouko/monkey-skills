@@ -415,8 +415,9 @@ def _prepare_codex_root(invocation: HostInvocation, env: dict[str, str]) -> None
     """Install one source root into its own disposable Codex home."""
     if invocation.codex_home is None:
         raise ValueError("Codex invocation requires an isolated CODEX_HOME")
-    if invocation.codex_home.is_symlink():
-        raise ValueError("Codex home must not be a symlink")
+    lexical_home = Path(os.path.abspath(os.fspath(invocation.codex_home)))
+    if invocation.codex_home.is_symlink() or lexical_home != invocation.codex_home.resolve():
+        raise ValueError("Codex home must not contain a symlink alias")
     plugin_fingerprint = _plugin_tree_fingerprint(invocation.plugin_root)
     manifest = invocation.plugin_root / ".codex-plugin" / "plugin.json"
     try:
@@ -588,6 +589,8 @@ def _comparison_verdict(pairs: list[tuple[dict, dict]]) -> str:
             differences.setdefault((before, after), []).append((baseline, candidate))
     if not differences:
         return "PASS"
+    if len(differences) != 1:
+        return "INCONCLUSIVE"
     matching = max(differences.values(), key=len)
     if len(matching) < 2:
         return "INCONCLUSIVE"
@@ -622,7 +625,7 @@ def compare_hosts(
     if replicates < 2:
         raise ValueError("comparison requires at least two replicates")
     roots = (("baseline", Path(baseline_root).resolve()), ("candidate", Path(candidate_root).resolve()))
-    raw_directory = Path(raw_dir)
+    raw_directory = Path(raw_dir).resolve()
     raw_directory.mkdir(parents=True, exist_ok=True)
     cwd = Path.cwd() if working_directory is None else Path(working_directory)
     runs = []

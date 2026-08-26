@@ -593,6 +593,28 @@ def test_prepare_codex_root_rejects_symlinked_home_without_deleting_target(
     assert sentinel.read_text(encoding="utf-8") == "keep"
 
 
+def test_prepare_codex_root_rejects_symlinked_home_ancestor_without_deleting_target(
+    tmp_path,
+):
+    plugin_root = tmp_path / "plugin"
+    (plugin_root / ".codex-plugin").mkdir(parents=True)
+    (plugin_root / ".codex-plugin" / "plugin.json").write_text(
+        '{"name": "loom-code"}\n', encoding="utf-8"
+    )
+    outside = tmp_path / "outside"
+    (outside / "home" / "marketplace").mkdir(parents=True)
+    sentinel = outside / "home" / "marketplace" / "sentinel"
+    sentinel.write_text("keep", encoding="utf-8")
+    alias = tmp_path / "alias"
+    alias.symlink_to(outside, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="alias|symlink"):
+        loom_firing_harness._prepare_codex_root(
+            _codex_invocation(plugin_root, alias / "home"), {}
+        )
+    assert sentinel.read_text(encoding="utf-8") == "keep"
+
+
 def test_prepare_codex_root_refreshes_changed_plugin_bytes(tmp_path, monkeypatch):
     roots = []
     for label in ("old", "new"):
@@ -731,6 +753,26 @@ def test_comparison_verdict_reports_tokens_without_treating_cost_as_behavior_cha
     assert loom_firing_harness._comparison_verdict(
         [(baseline, candidate), (baseline, candidate)]
     ) == "PASS"
+
+
+def test_comparison_verdict_refuses_conflicting_difference_groups():
+    def run(fired):
+        return {
+            "expected": "loom-code:brainstorming",
+            "observable": {
+                "fired": fired, "result_subtype": "completed", "tool_sequence": (),
+            },
+        }
+
+    exact = run("loom-code:brainstorming")
+    miss = run(None)
+    over = run("loom-code:other")
+    assert loom_firing_harness._comparison_verdict(
+        [(exact, miss), (exact, miss), (miss, exact), (miss, exact)]
+    ) == "INCONCLUSIVE"
+    assert loom_firing_harness._comparison_verdict(
+        [(exact, miss), (exact, miss), (exact, over)]
+    ) == "INCONCLUSIVE"
 
 
 def test_shipped_corpus_validates():
