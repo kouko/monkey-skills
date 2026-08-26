@@ -35,8 +35,9 @@ Route active reasoning elsewhere: `think-orbit:thinking-session` when the
 problem is still being worked out across sessions with tracked assumptions,
 `think-orbit:break-assumption` when an assumption behind past reasoning just
 broke, `loom-workflow:recap-state` for in-chat re-orientation,
-`loom-workflow:handoff` for future-session state, and a general Mermaid skill
-for diagrams that are not reasoning chains.
+`loom-workflow:handoff` for future-session state, and
+`obsidian:obsidian-mermaid-visualizer` for a generic diagram that is not a
+reasoning chain.
 
 ## Step 1 — Resolve the source
 

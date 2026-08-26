@@ -50,7 +50,7 @@ Count lines, functions, and files before and after:
 
 | Result | Interpretation |
 |---|---|
-| after > before | **RESHAPE** — unless the added volume is explicitly justified and costed, and then only **PROCEED-WITH-CAVEAT** |
+| after > before | **RESHAPE** or **REJECT** per §Verdict; **PROCEED-WITH-CAVEAT** only when the added volume is explicitly justified and costed — never a silent PROCEED |
 | after = before | Net-neutral; continue to Q3 |
 | after < before | Strong signal in favor |
 

@@ -29,17 +29,19 @@ def test_entrypoint_preserves_orchestration_under_word_ceiling() -> None:
     # "Version / semver work in implementer tasks" rule and its NEEDS_REVISION
     # consequence had been dropped by accident and are restored here. The
     # package total below now lands at 8.9% under the 4,504-word baseline, a
-    # documented 5-10% weak win rather than the >=10% target, accepted because
-    # the shortfall is restored content that should never have left.
+    # documented 5-10% weak win rather than the >=10% target. The weak-win
+    # disposition is the user's to make; kouko ratified it on the
+    # fix/740-compaction-followups review, the shortfall being restored
+    # content that should never have left.
     assert 3063 <= words <= 3300, (
         "the entrypoint must stay compact after counting extracted prose; "
         f"measured {words} words"
     )
     assert words + reference_words <= 4110, (
         "SKILL.md plus the extracted reference must stay at or below the "
-        "re-baselined 4,110-word bound (8.9% under the 4,504-word baseline — a "
-        "documented weak win, see the comment above); measured "
-        f"{words + reference_words} words"
+        "re-baselined 4,110-word bound; the current pair measures 8.9% under "
+        "the 4,504-word baseline, a documented weak win (see the comment "
+        f"above); measured {words + reference_words} words"
     )
 
     required = (
