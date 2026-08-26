@@ -50,6 +50,30 @@ def _file_hashes(root: Path) -> dict[str, str]:
     return files
 
 
+def _file_contents(root: Path) -> dict[str, bytes]:
+    if not root.is_dir() or root.is_symlink():
+        raise ValueError(f"invalid package root: {root}")
+
+    files: dict[str, bytes] = {}
+    for path in sorted(root.rglob("*")):
+        if path.is_symlink():
+            raise ValueError(f"package contains symlink: {path.relative_to(root)}")
+        if path.is_file():
+            files[str(path.relative_to(root))] = path.read_bytes()
+    return files
+
+
+def _counts(contents: dict[str, bytes]) -> dict[str, int]:
+    return {
+        "words": sum(len(content.decode("utf-8", errors="replace").split()) for content in contents.values()),
+        "bytes": sum(len(content) for content in contents.values()),
+    }
+
+
+def _delta(baseline: int, candidate: int) -> dict[str, int]:
+    return {"baseline": baseline, "candidate": candidate, "delta": candidate - baseline}
+
+
 def _extract_skill(archive: bytes, destination: Path) -> None:
     with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as tar:
         members = tar.getmembers()
@@ -120,3 +144,35 @@ def verify_baseline(manifest_path: Path) -> dict[str, str]:
     if actual != expected:
         return {"verdict": "REFUSED", "reason": "baseline drift detected"}
     return {"verdict": "PASS", "reason": "baseline matches manifest"}
+
+
+def account_package(manifest_path: Path, candidate_root: Path, target_file: str) -> dict[str, object]:
+    """Report target and whole-package word/byte deltas from a verified baseline."""
+    verification = verify_baseline(manifest_path)
+    if verification["verdict"] != "PASS":
+        return verification
+
+    try:
+        target = _skill_path(target_file).as_posix()
+        baseline_files = _file_contents(manifest_path.parent / "skill")
+        candidate_files = _file_contents(candidate_root)
+        baseline_target = baseline_files[target]
+        candidate_target = candidate_files[target]
+    except (KeyError, OSError, ValueError) as error:
+        return {"verdict": "REFUSED", "reason": f"package accounting failed: {error}"}
+
+    baseline_counts = _counts(baseline_files)
+    candidate_counts = _counts(candidate_files)
+    baseline_target_counts = _counts({target: baseline_target})
+    candidate_target_counts = _counts({target: candidate_target})
+    return {
+        "verdict": "PASS",
+        "target": {
+            "words": _delta(baseline_target_counts["words"], candidate_target_counts["words"]),
+            "bytes": _delta(baseline_target_counts["bytes"], candidate_target_counts["bytes"]),
+        },
+        "package": {
+            "words": _delta(baseline_counts["words"], candidate_counts["words"]),
+            "bytes": _delta(baseline_counts["bytes"], candidate_counts["bytes"]),
+        },
+    }

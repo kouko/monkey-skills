@@ -48,3 +48,42 @@ def test_exported_baseline_is_revision_bound_and_drift_refuses(tmp_path: Path) -
     assert result["verdict"] == "REFUSED"
     assert "drift" in result["reason"]
     assert exported_file.read_bytes() == b"drifted bytes\n"
+
+
+def test_accounting_counts_moved_words_in_package_total(tmp_path: Path) -> None:
+    from package_gate import account_package, export_baseline
+
+    repo = tmp_path / "repo"
+    skill_dir = repo / "skills" / "demo"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_bytes(b"keep moved words\n")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "baseline")
+    manifest_path = export_baseline(repo, tmp_path / "workspace", "skills/demo", "HEAD")
+
+    candidate = tmp_path / "candidate"
+    candidate.mkdir()
+    (candidate / "SKILL.md").write_bytes(b"keep ")
+    (candidate / "reference.md").write_bytes(b"moved words\n")
+
+    result = account_package(manifest_path, candidate, "SKILL.md")
+
+    assert result == {
+        "verdict": "PASS",
+        "target": {
+            "words": {"baseline": 3, "candidate": 1, "delta": -2},
+            "bytes": {"baseline": 17, "candidate": 5, "delta": -12},
+        },
+        "package": {
+            "words": {"baseline": 3, "candidate": 3, "delta": 0},
+            "bytes": {"baseline": 17, "candidate": 17, "delta": 0},
+        },
+    }
+
+    (manifest_path.parent / "skill" / "SKILL.md").write_bytes(b"drifted\n")
+
+    assert account_package(manifest_path, candidate, "SKILL.md") == {
+        "verdict": "REFUSED",
+        "reason": "baseline drift detected",
+    }
