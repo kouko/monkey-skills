@@ -451,6 +451,12 @@ def test_codex_provenance_does_not_claim_claude_turn_limit():
     assert codex_four["argv_semantics"] == codex_ninety_nine["argv_semantics"]
     assert "max_turns" not in codex_four["argv_semantics"]
 
+    header_contracts = preflight.capture_contracts_for_models(
+        {"claude": "haiku", "codex": "gpt-5.6-luna"},
+        max_turns=4, timeout_seconds=180,
+    )
+    assert preflight.capture_contract(codex_four) in header_contracts
+
 
 def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
     skill_dir = tmp_path / "corpora" / "demo"

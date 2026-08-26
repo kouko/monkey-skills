@@ -213,11 +213,7 @@ def _record_observable(observable: dict) -> dict:
     }
 
 
-def invocation_provenance(
-    *, commit: str, tree: str, corpus_sha256: str, prompt: dict,
-    host: str, model: str, replicate: int, max_turns: int,
-    timeout_seconds: int,
-) -> dict:
+def invocation_argv_semantics(host: str, max_turns: int) -> dict:
     argv_semantics = {
         "mode": "claude-plugin-dir" if host == "claude" else "codex-isolated-plugin",
         "allowed_tools": ["Skill"] if host == "claude" else None,
@@ -225,6 +221,14 @@ def invocation_provenance(
     }
     if host == "claude":
         argv_semantics["max_turns"] = max_turns
+    return argv_semantics
+
+
+def invocation_provenance(
+    *, commit: str, tree: str, corpus_sha256: str, prompt: dict,
+    host: str, model: str, replicate: int, max_turns: int,
+    timeout_seconds: int,
+) -> dict:
     return {
         "baseline_commit": commit,
         "baseline_tree": tree,
@@ -235,7 +239,7 @@ def invocation_provenance(
         "host": host,
         "model": model,
         "replicate": replicate,
-        "argv_semantics": argv_semantics,
+        "argv_semantics": invocation_argv_semantics(host, max_turns),
         "timeout_seconds": timeout_seconds,
     }
 
@@ -254,6 +258,19 @@ def capture_contract(provenance: dict) -> dict:
 
 def capture_contract_fingerprint(contract: dict) -> str:
     return sha256_text(json.dumps(contract, sort_keys=True, separators=(",", ":")))
+
+
+def capture_contracts_for_models(
+    models: dict[str, str], max_turns: int, timeout_seconds: int
+) -> list[dict]:
+    return [
+        {
+            "host": host, "model": model,
+            "argv_semantics": invocation_argv_semantics(host, max_turns),
+            "timeout_seconds": timeout_seconds,
+        }
+        for host, model in models.items()
+    ]
 
 
 def _capture_contract_map(contracts: object) -> dict[str, dict]:
@@ -604,19 +621,10 @@ def capture(
         "captured": "2026-08-26",
         "acknowledgement": "The user previously acknowledged genuine prompts and weak-model equivalence testing on Claude Code and Codex.",
         "models": {"claude": "haiku", "codex": "gpt-5.6-luna"},
-        "capture_contracts": [
-            {
-                "host": host, "model": model,
-                "argv_semantics": {
-                    "mode": "claude-plugin-dir" if host == "claude" else "codex-isolated-plugin",
-                    "max_turns": max_turns,
-                    "allowed_tools": ["Skill"] if host == "claude" else None,
-                    "sandbox": None if host == "claude" else "workspace-write",
-                },
-                "timeout_seconds": timeout_seconds,
-            }
-            for host, model in (("claude", "haiku"), ("codex", "gpt-5.6-luna"))
-        ],
+        "capture_contracts": capture_contracts_for_models(
+            {"claude": "haiku", "codex": "gpt-5.6-luna"},
+            max_turns, timeout_seconds,
+        ),
         "replicates_per_host": 2,
         "baseline": {"commit": commit, "tree": tree},
         "raw_workspace": raw_workspace.name,
