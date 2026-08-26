@@ -20,6 +20,19 @@ def test_package_mode_is_conditional_and_keeps_entrypoint_threshold() -> None:
     assert "discard" in skill.lower()
 
 
+def test_package_mode_fails_closed_until_its_protocol_is_loaded() -> None:
+    skill = " ".join((SKILL_DIR / "SKILL.md").read_text(encoding="utf-8").split())
+
+    for rule in (
+        "PACKAGE-MODE LOAD GATE",
+        "before explaining, planning, or capturing a baseline",
+        "read `references/package-resource-mode.md` whole",
+        "STOP with `UNGRADABLE`",
+        "Do not reconstruct package mode from this entrypoint",
+    ):
+        assert rule in skill
+
+
 def test_package_resource_protocol_names_all_gate_capabilities() -> None:
     protocol = (SKILL_DIR / "references" / "package-resource-mode.md").read_text(
         encoding="utf-8"

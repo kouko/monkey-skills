@@ -64,6 +64,12 @@ Use **entrypoint mode** when only `SKILL.md` changes. Use package-resource
 mode only when the candidate changes a bundled resource; then read
 `references/package-resource-mode.md` before creating the candidate.
 
+**PACKAGE-MODE LOAD GATE.** For any bundled-resource request, before
+explaining, planning, or capturing a baseline, use the host's file-reading
+capability to read `references/package-resource-mode.md` whole. If that read
+is unavailable or fails, STOP with `UNGRADABLE`. Do not reconstruct package
+mode from this entrypoint or continue from memory.
+
 ### Round scope
 
 - **Entrypoint mode: split a round** when it would change `SKILL.md` and a
