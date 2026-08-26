@@ -323,12 +323,9 @@ exists to catch. Both fields render on the page even when empty, in red,
 saying 未執行. That is the intended default: a page that skipped its
 checks says so, because silence gets read as "fine".
 
-**Publishing.** The local file is the deliverable. Ask once whether to
-publish as an Artifact; do not publish unprompted, since that uploads the
-content. If yes, re-run the converter with `--artifact` (it drops the
-document skeleton and the mermaid CDN script, which Artifacts supply
-themselves) and publish that. Load the `artifact-design` skill first, as
-the Artifact tool requires.
+**Publishing intent.** The local file is the deliverable. Ask once whether the
+user wants an Artifact; do not publish unprompted. Record the answer only:
+Step 6 must pass before conversion or publication for anyone else.
 
 ## Step 6 — Fidelity check, before anything gets shared
 
@@ -356,6 +353,11 @@ stale render.
 before running the check — the round prompts, the blindness constraints
 and the one-cycle stop rule are all there, and none of them survive being
 improvised.
+
+After a PASS, honor the recorded publishing choice. Re-run the converter with
+`--artifact` (it drops the document skeleton and mermaid CDN script supplied by
+Artifacts), load `artifact-design` as required by the Artifact tool, and publish.
+On FAIL, do not convert or publish the Artifact.
 
 ## What this page is not
 

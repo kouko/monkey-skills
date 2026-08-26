@@ -5,7 +5,7 @@ converting their outputs, changing threshold configuration, or diagnosing
 runtime/folder failures. The entrypoint remains the authority for approval,
 privacy, required artifacts, stop conditions, and final verification.
 
-## Stage 3 dispatch
+## Step 2 dispatch
 
 Read `top.json`, then fan out one subagent for every
 `subagent_payload[]` entry. Select

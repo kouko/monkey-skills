@@ -79,8 +79,7 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
    If both scripts or family-relay are absent, render the four fields inline: goal, task table, stage, next.
 2. Verify branch has commits (else: "nothing to finish; branch matches main")
 3. Dispatch requesting-code-review — route on the returned verdict, not raw severity:
-   - NEEDS_REVISION (any 🔴 or 2+ 🟡): surface findings; STOP for remediation;
-     do NOT push.
+   - NEEDS_REVISION (any 🔴 or 2+ 🟡): do NOT push; enter fix → re-review loop.
    - If PASS_WITH_NOTES (exactly 1 🟡, no 🔴): auto-proceed — carry the 🟡 finding forward
      into the PR body and the final close-out report as noted debt.
    - If PASS (all 🟢): proceed silently.

@@ -28,9 +28,12 @@ Three failure modes only the package-level run catches:
 | Exempt category | What qualifies | What does NOT qualify |
 |---|---|---|
 | **No tests exist yet** | Brand-new repo, no test infrastructure set up, this is the commit that adds the first test | "Tests exist but I didn't write any for this change" — that's Iron Law violation; not exempt |
-| **Pure doc / config / generated regen** | Markdown change, version bump, regenerated protobuf stubs, `.gitignore` edit | Config that affects runtime behavior (retries: 3 → 5; feature flag flipped) — not exempt |
 | **Test infrastructure broken** | The test runner itself crashes (not a test failure — the runner doesn't run); a dependency-install failure prevents even starting tests | "Tests are slow so I skipped them" — that's a Red Flag below |
-| **Explicit user override + scoped** | User says "skip verification for this PR because it's only doc" AND the change matches exempt category 2 | "Just merge, I checked manually" — that's the rationalization |
+
+**Pure doc / config / generated regen** and **Explicit user override + scoped**
+are not exemptions when a runnable suite exists: prose and generated outputs can
+still break links, contracts, or checked artifacts. Only **No tests exist yet**
+can make those changes N/A.
 
 If you cannot point to the run that should catch a production break, verify.
 

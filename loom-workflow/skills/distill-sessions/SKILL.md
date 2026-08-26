@@ -33,20 +33,21 @@ Do not use it for:
 
 ## Bare invocation — preview, then confirm
 
-When the user names no target, run only the local Stage 1+2 preview:
+When the user names no target, run only the local Stage 1 preview:
 
 ```bash
 python scripts/main.py --target-skill-pattern 'loom-code:*'
 ```
 
 Show the stderr summary (top skills and per-session friction) verbatim. Then
-pause and confirm which subset to send to Stage 3: the highest-friction skill,
+pause and confirm which subset to send to Step 2: the highest-friction skill,
 top three, all, another target, or stop after preview. Do not infer approval
-from invoking the skill: Stage 3 sends session-derived text to paid subagents.
+from invoking the skill: Step 2 sends session-derived text to paid subagents.
+That approval necessarily occurs before Stage 3, which only collects results.
 
 If any serialized dispatch input is projected above the 1M-token context
 window (`len(json.dumps(payload.input)) // 4 > 1_000_000`), skip that
-trajectory, warn the user, and recommend narrowing the filter before Stage 3.
+trajectory, warn the user, and recommend narrowing the filter before Step 2.
 The observed maximum was 559K tokens, but that history does not waive the
 check.
 
@@ -59,7 +60,7 @@ gates.
 Local-only stages read `~/.claude/projects/**/*.jsonl`,
 `~/.codex/sessions/**/*.jsonl`, and available
 `~/.claude/usage-data/facets/*.json`. No network calls occur in `main.py`,
-`propose.py`, or `apply.py`. Stage 3 and the optional advisory report are the
+`propose.py`, or `apply.py`. Step 2 and the optional advisory report are the
 only subagent dispatch steps, so their cost and data movement must remain
 visible to the user.
 
@@ -280,7 +281,7 @@ on records an operator could not inspect.
 
 ## Dispatch and collection discipline
 
-Dispatch only after the Stage 3 scope is approved. The preview choice controls
+Dispatch only after the Step 2 scope is approved. The preview choice controls
 which trajectories leave the local-only portion of the workflow; it does not
 authorize broader logs, a different target pattern, or later write-back. If a
 chosen trajectory would exceed the context estimate, omit it from the fan-out
@@ -354,7 +355,7 @@ user actually approved.
 Stop and surface the reason when:
 
 - the target is absent or ambiguous after preview;
-- the user declines Stage 3 or proposal application;
+- the user declines Step 2 dispatch or proposal application;
 - a trajectory exceeds the 1M-token estimate;
 - input would include hidden or encrypted reasoning rather than observable
   records;

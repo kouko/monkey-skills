@@ -31,7 +31,7 @@ Do not reconstruct the schema from this entrypoint. Then:
    git rev-parse --abbrev-ref HEAD
    git status --short
    git log --oneline -5
-   claude --version
+   claude --version 2>/dev/null || codex --version 2>/dev/null || printf '%s\n' 'N/A — host CLI unavailable'
    ```
 
 2. Write
@@ -49,7 +49,9 @@ Do not reconstruct the schema from this entrypoint. Then:
    10. Confidence flags
 
    Populate them according to the schema: frontmatter records
-   `conversation_language`, git state, and the Claude Code version; Situation
+   `conversation_language`, git state, and active-host version. The legacy
+   `tools.claude_code` field holds Claude output or `N/A — Codex <version>`.
+   Situation
    is one exact sentence; Background retains decisions, rejected paths, and
    critical paths. All user messages includes every turn verbatim. Recent
    decisions uses Decision / WHY / Rejected alternative triples. Pending is a

@@ -94,8 +94,9 @@ dead-end becomes an exit to design.
 Count a gap as new only when it adds a missing surface, state, transition, entry,
 exit, recovery, or modality requirement not already represented by the semantic
 union. Wording changes and a second persona naming the same gap are corroboration,
-not new findings. Track consecutive dry rounds explicitly; a targeted round with
-no eligible changed lens does not fabricate work merely to increment the count.
+not new findings. Track consecutive dry rounds explicitly. If a dry round leaves
+no eligible changed lens, record the unchanged semantic union as the second dry
+observation and stop; do not dispatch empty work merely to increment the count.
 
 ## Fixed Nielsen lenses
 
