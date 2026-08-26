@@ -243,6 +243,10 @@ def capture_contract(provenance: dict) -> dict:
     }
 
 
+def capture_contract_fingerprint(contract: dict) -> str:
+    return sha256_text(json.dumps(contract, sort_keys=True, separators=(",", ":")))
+
+
 def metadata_path(raw_path: Path) -> Path:
     return raw_path.with_suffix(".meta.json")
 
@@ -313,7 +317,13 @@ def _external_path(raw_base: Path, label: str) -> Path:
     relative = Path(label)
     if relative.is_absolute() or ".." in relative.parts:
         raise ValueError(f"unsafe raw evidence label: {label}")
-    return raw_base / relative
+    base = raw_base.resolve()
+    candidate = (base / relative).resolve()
+    try:
+        candidate.relative_to(base)
+    except ValueError as exc:
+        raise ValueError(f"path escapes raw evidence root: {label}") from exc
+    return candidate
 
 
 def verify_raw_record(
@@ -328,9 +338,12 @@ def verify_raw_record(
         raise ValueError("no skill evidence")
     if expected_targets is not None and set(skills) != set(expected_targets):
         raise ValueError("record does not contain all expected targets")
+    contracts = record.get("capture_contracts")
+    if not isinstance(contracts, list) or not contracts:
+        raise ValueError("capture contracts missing")
     contract_set = {
         json.dumps(contract, sort_keys=True, separators=(",", ":"))
-        for contract in record.get("capture_contracts", [])
+        for contract in contracts
     }
     verified = 0
     for skill_name, snapshot in skills.items():
@@ -386,8 +399,11 @@ def verify_raw_record(
             encoded_contract = json.dumps(
                 capture_contract(provenance), sort_keys=True, separators=(",", ":")
             )
-            if contract_set and encoded_contract not in contract_set:
+            if encoded_contract not in contract_set:
                 raise ValueError(f"capture contract mismatch: {skill_name} p{run.get('prompt_id')}")
+            expected_contract_fp = capture_contract_fingerprint(capture_contract(provenance))
+            if run.get("capture_contract_fingerprint") not in (None, expected_contract_fp):
+                raise ValueError(f"run capture contract mismatch: {skill_name} p{run.get('prompt_id')}")
             if (
                 metadata.get("exit_code") != 0
                 or metadata.get("status") != "completed"
@@ -516,6 +532,9 @@ def _capture_run(
         "fingerprint": metadata["fingerprint"],
         "raw_sha256": metadata["raw_sha256"],
         "expected_behavior_sha256": provenance["expected_behavior_sha256"],
+        "capture_contract_fingerprint": capture_contract_fingerprint(
+            capture_contract(provenance)
+        ),
         "observable": _record_observable(observable),
         "raw": f"{raw_workspace.name}/raw/{skill_name}/{raw_path.name}",
         "raw_metadata": f"{raw_workspace.name}/raw/{skill_name}/{metadata_path(raw_path).name}",
@@ -616,16 +635,19 @@ def merge_records(
     parts = [json.loads(path.read_text(encoding="utf-8")) for path in paths]
     if not parts:
         raise ValueError("merge requires at least one record")
-    header_fields = (
-        "schema_version", "models", "capture_contracts",
-        "replicates_per_host", "baseline",
-    )
+    header_fields = ("schema_version", "models", "replicates_per_host", "baseline")
     for field in header_fields:
         if any(part.get(field) != parts[0].get(field) for part in parts[1:]):
             raise ValueError(f"merge {field} conflict")
     if parts[0].get("schema_version") != 2:
         raise ValueError("merge schema_version must be 2")
     merged = dict(parts[0])
+    contracts = {
+        json.dumps(contract, sort_keys=True, separators=(",", ":")): contract
+        for part in parts for contract in part.get("capture_contracts", [])
+    }
+    if contracts:
+        merged["capture_contracts"] = [contracts[key] for key in sorted(contracts)]
     workspaces = []
     for part in parts:
         workspaces.extend(part.get("raw_workspaces", []))
@@ -662,6 +684,12 @@ def merge_records(
         if actual != expected or len(snapshot["runs"]) != len(expected):
             raise ValueError(f"incomplete run matrix for {skill_name}")
         for run in snapshot["runs"]:
+            if run.get("model") != merged.get("models", {}).get(run.get("host")):
+                raise ValueError(f"model header mismatch for {skill_name}")
+            if contracts and run.get("capture_contract_fingerprint") not in {
+                capture_contract_fingerprint(contract) for contract in contracts.values()
+            }:
+                raise ValueError(f"capture contract mismatch for {skill_name}")
             run["observable"] = _record_observable(run["observable"])
             for field in ("fingerprint", "raw_sha256", "expected_behavior_sha256", "raw_metadata"):
                 if not run.get(field):

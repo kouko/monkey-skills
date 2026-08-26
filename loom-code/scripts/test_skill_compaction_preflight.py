@@ -285,6 +285,7 @@ def test_merge_allows_exact_duplicate_dedupes_workspace_and_rejects_snapshot_con
             for replicate in (0, 1):
                 runs.append({
                     "prompt_id": prompt["id"], "host": host,
+                    "model": "haiku" if host == "claude" else "gpt-5.6-luna",
                     "replicate": replicate, "status": "completed", "exit_code": 0,
                     "fingerprint": "f" * 64, "raw_sha256": "a" * 64,
                     "expected_behavior_sha256": preflight.sha256_text(prompt["expected_behavior"]),
@@ -318,6 +319,14 @@ def test_merge_allows_exact_duplicate_dedupes_workspace_and_rejects_snapshot_con
     with pytest.raises(ValueError, match="conflicting snapshot"):
         preflight.merge_records(
             [a, b], out, expected_targets=("demo",), corpora_root=tmp_path
+        )
+
+    bad_model = json.loads(json.dumps(part))
+    bad_model["skills"]["demo"]["runs"][0]["model"] = "unapproved"
+    a.write_text(json.dumps(bad_model), encoding="utf-8")
+    with pytest.raises(ValueError, match="model header mismatch"):
+        preflight.merge_records(
+            [a], out, expected_targets=("demo",), corpora_root=tmp_path
         )
 
 
@@ -414,6 +423,14 @@ def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
             record_path, tmp_path / "raw-base", tmp_path / "corpora"
         )
 
+    missing_contracts = json.loads(json.dumps(record))
+    missing_contracts.pop("capture_contracts")
+    record_path.write_text(json.dumps(missing_contracts), encoding="utf-8")
+    with pytest.raises(ValueError, match="capture contracts missing"):
+        preflight.verify_raw_record(
+            record_path, tmp_path / "raw-base", tmp_path / "corpora"
+        )
+
     record_path.write_text(json.dumps(record), encoding="utf-8")
     corrupted = json.loads(record_path.read_text(encoding="utf-8"))
     corrupted["skills"]["demo"]["runs"][0]["observable"]["tool_count"] = 9
@@ -449,6 +466,10 @@ def test_verify_record_raw_rejects_incomplete_run_matrix(tmp_path):
     record.write_text(json.dumps({
         "schema_version": 2,
         "replicates_per_host": 2,
+        "capture_contracts": [{
+            "host": "claude", "model": "haiku", "argv_semantics": {},
+            "timeout_seconds": 1,
+        }],
         "skills": {"demo": {
             "corpus_sha256": preflight.sha256_bytes(corpus.read_bytes()),
             "runs": [],
@@ -467,3 +488,12 @@ def test_capture_completion_gate_rejects_host_errors():
     ]}}}
     with pytest.raises(ValueError, match="capture incomplete"):
         preflight.require_complete_capture(record)
+
+
+def test_external_path_rejects_symlink_escape(tmp_path):
+    raw_base = tmp_path / "raw-base"
+    outside = tmp_path / "outside"
+    raw_base.mkdir(); outside.mkdir()
+    (raw_base / "link").symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ValueError, match="escapes raw evidence root"):
+        preflight._external_path(raw_base, "link/evidence.jsonl")
