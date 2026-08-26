@@ -402,7 +402,7 @@ def verify_raw_record(
             if encoded_contract not in contract_set:
                 raise ValueError(f"capture contract mismatch: {skill_name} p{run.get('prompt_id')}")
             expected_contract_fp = capture_contract_fingerprint(capture_contract(provenance))
-            if run.get("capture_contract_fingerprint") not in (None, expected_contract_fp):
+            if run.get("capture_contract_fingerprint") != expected_contract_fp:
                 raise ValueError(f"run capture contract mismatch: {skill_name} p{run.get('prompt_id')}")
             if (
                 metadata.get("exit_code") != 0
@@ -641,13 +641,18 @@ def merge_records(
             raise ValueError(f"merge {field} conflict")
     if parts[0].get("schema_version") != 2:
         raise ValueError("merge schema_version must be 2")
+    if any(
+        not isinstance(part.get("capture_contracts"), list)
+        or not part["capture_contracts"]
+        for part in parts
+    ):
+        raise ValueError("capture contracts missing")
     merged = dict(parts[0])
     contracts = {
         json.dumps(contract, sort_keys=True, separators=(",", ":")): contract
         for part in parts for contract in part.get("capture_contracts", [])
     }
-    if contracts:
-        merged["capture_contracts"] = [contracts[key] for key in sorted(contracts)]
+    merged["capture_contracts"] = [contracts[key] for key in sorted(contracts)]
     workspaces = []
     for part in parts:
         workspaces.extend(part.get("raw_workspaces", []))
@@ -686,7 +691,7 @@ def merge_records(
         for run in snapshot["runs"]:
             if run.get("model") != merged.get("models", {}).get(run.get("host")):
                 raise ValueError(f"model header mismatch for {skill_name}")
-            if contracts and run.get("capture_contract_fingerprint") not in {
+            if run.get("capture_contract_fingerprint") not in {
                 capture_contract_fingerprint(contract) for contract in contracts.values()
             }:
                 raise ValueError(f"capture contract mismatch for {skill_name}")

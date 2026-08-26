@@ -246,15 +246,20 @@ def test_claude_run_does_not_touch_codex_auth_link(monkeypatch, tmp_path):
 
 
 def test_external_cli_surfaces_have_live_help_grounding():
-    """Grounding: live BSD `wc -h`, `claude --help`, and `codex exec --help`
+    """Grounding: live BSD `wc -w`, `claude --help`, and `codex exec --help`
     captured on 2026-08-26; the production argv mirrors those installed CLIs.
     """
     assert preflight.TARGETS
 
 
 def test_merge_refuses_conflicts_incomplete_and_host_errors(tmp_path):
+    contract = {
+        "host": "claude", "model": "haiku", "argv_semantics": {},
+        "timeout_seconds": 1,
+    }
     base = {
         "schema_version": 2, "models": {"claude": "haiku", "codex": "gpt-5.6-luna"},
+        "capture_contracts": [contract],
         "replicates_per_host": 2, "baseline": {"commit": "c", "tree": "t"},
         "raw_workspace": "one", "skills": {},
     }
@@ -264,7 +269,11 @@ def test_merge_refuses_conflicts_incomplete_and_host_errors(tmp_path):
     with pytest.raises(ValueError, match="models"):
         preflight.merge_records([a, b], out, expected_targets=())
 
-    bad = {**base, "skills": {"demo": {"corpus_sha256": "x", "runs": [{"status": "host-error"}]}}}
+    bad = {**base, "skills": {"demo": {"corpus_sha256": "x", "runs": [{
+        "status": "host-error", "exit_code": 1, "host": "claude",
+        "model": "haiku",
+        "capture_contract_fingerprint": preflight.capture_contract_fingerprint(contract),
+    }]}}}
     a.write_text(json.dumps(bad), encoding="utf-8")
     with pytest.raises(ValueError, match="host-error"):
         preflight.merge_records([a], out, expected_targets=("demo",))
@@ -279,6 +288,14 @@ def test_merge_allows_exact_duplicate_dedupes_workspace_and_rejects_snapshot_con
     skill_dir.mkdir()
     corpus_path = _corpus(skill_dir)
     corpus = json.loads(corpus_path.read_text(encoding="utf-8"))
+    contracts = [
+        {"host": host, "model": model, "argv_semantics": {}, "timeout_seconds": 1}
+        for host, model in (("claude", "haiku"), ("codex", "gpt-5.6-luna"))
+    ]
+    contract_fingerprints = {
+        contract["host"]: preflight.capture_contract_fingerprint(contract)
+        for contract in contracts
+    }
     runs = []
     for prompt in corpus["prompts"]:
         for host in ("claude", "codex"):
@@ -289,7 +306,8 @@ def test_merge_allows_exact_duplicate_dedupes_workspace_and_rejects_snapshot_con
                     "replicate": replicate, "status": "completed", "exit_code": 0,
                     "fingerprint": "f" * 64, "raw_sha256": "a" * 64,
                     "expected_behavior_sha256": preflight.sha256_text(prompt["expected_behavior"]),
-                    "raw_metadata": "workspace/raw.meta.json",
+                        "raw_metadata": "workspace/raw.meta.json",
+                        "capture_contract_fingerprint": contract_fingerprints[host],
                     "observable": {"fired": True, "result_subtype": "ok", "tool_count": 3},
                 })
     snapshot = {
@@ -298,6 +316,7 @@ def test_merge_allows_exact_duplicate_dedupes_workspace_and_rejects_snapshot_con
     }
     part = {
         "schema_version": 2, "models": {"claude": "haiku", "codex": "gpt-5.6-luna"},
+        "capture_contracts": contracts,
         "replicates_per_host": 2, "baseline": {"commit": "c", "tree": "t"},
         "raw_workspace": "one", "skills": {"demo": snapshot},
     }
@@ -325,6 +344,14 @@ def test_merge_allows_exact_duplicate_dedupes_workspace_and_rejects_snapshot_con
     bad_model["skills"]["demo"]["runs"][0]["model"] = "unapproved"
     a.write_text(json.dumps(bad_model), encoding="utf-8")
     with pytest.raises(ValueError, match="model header mismatch"):
+        preflight.merge_records(
+            [a], out, expected_targets=("demo",), corpora_root=tmp_path
+        )
+
+    contractless = json.loads(json.dumps(part))
+    contractless.pop("capture_contracts")
+    a.write_text(json.dumps(contractless), encoding="utf-8")
+    with pytest.raises(ValueError, match="capture contracts missing"):
         preflight.merge_records(
             [a], out, expected_targets=("demo",), corpora_root=tmp_path
         )
@@ -387,7 +414,10 @@ def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
         "raw_sha256": metadata["raw_sha256"],
         "expected_behavior_sha256": provenance["expected_behavior_sha256"],
         "classification": "MISS",
-        "observable": {"fired": None, "result_subtype": "success", "tool_count": 0},
+            "observable": {"fired": None, "result_subtype": "success", "tool_count": 0},
+            "capture_contract_fingerprint": preflight.capture_contract_fingerprint(
+                preflight.capture_contract(provenance)
+            ),
         "raw": "workspace/raw/demo/p1-claude-r0.jsonl",
         "raw_metadata": "workspace/raw/demo/p1-claude-r0.meta.json",
     }
@@ -427,6 +457,16 @@ def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
     missing_contracts.pop("capture_contracts")
     record_path.write_text(json.dumps(missing_contracts), encoding="utf-8")
     with pytest.raises(ValueError, match="capture contracts missing"):
+        preflight.verify_raw_record(
+            record_path, tmp_path / "raw-base", tmp_path / "corpora"
+        )
+
+    missing_run_contract = json.loads(json.dumps(record))
+    missing_run_contract["skills"]["demo"]["runs"][0].pop(
+        "capture_contract_fingerprint", None
+    )
+    record_path.write_text(json.dumps(missing_run_contract), encoding="utf-8")
+    with pytest.raises(ValueError, match="run capture contract mismatch"):
         preflight.verify_raw_record(
             record_path, tmp_path / "raw-base", tmp_path / "corpora"
         )
