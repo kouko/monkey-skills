@@ -24,6 +24,13 @@
       "prompt": "shrink this skill",
       "expected_behavior": "Skill asks which skill (no target in context). Once provided, checks prerequisites; if test-prompts.json missing, asks user to provide ≥3 representative prompts before proceeding (gate cannot run safely without baseline). Does NOT proceed with refactor moves until baseline + invariants are captured.",
       "edge_case_dimensions": ["missing target", "missing test-prompts", "prerequisite enforcement"]
+    },
+    {
+      "id": 4,
+      "category": "edge-case",
+      "prompt": "Shorten this skill by moving its long bundled reference into a smaller, clearer resource without changing behavior.",
+      "expected_behavior": "Skill captures an immutable baseline before editing, creates an isolated candidate, measures both the target resource and full package, and applies the candidate only after layered evidence passes. A failed or ungradeable package result discards the isolated candidate rather than reverting the user's worktree.",
+      "edge_case_dimensions": ["bundled resource", "package accounting", "isolated candidate", "layered evidence"]
     }
   ]
 }

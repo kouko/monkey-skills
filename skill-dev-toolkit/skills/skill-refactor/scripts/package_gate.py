@@ -3,11 +3,13 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import io
 import json
 from pathlib import Path, PurePosixPath
 import subprocess
+import sys
 import tarfile
 
 
@@ -279,3 +281,62 @@ def reduce_package_evidence(evidence: object, *, dual_host: bool = False) -> dic
     else:
         verdict = "PASS"
     return {"verdict": verdict, "layers": layers, "host_evidence": hosts}
+
+
+def _cli_result(result: dict[str, object]) -> dict[str, object]:
+    """Keep the CLI boundary within the package-mode verdict vocabulary."""
+    if result.get("verdict") == "REFUSED":
+        result = {**result, "verdict": "UNGRADABLE"}
+    return result
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Expose package-gate APIs as one JSON stdin/stdout CLI."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+
+    export = commands.add_parser("export")
+    export.add_argument("--repo", required=True)
+    export.add_argument("--workspace", required=True)
+    export.add_argument("--skill-path", required=True)
+    export.add_argument("--revision", required=True)
+
+    verify = commands.add_parser("verify")
+    verify.add_argument("--manifest", required=True)
+
+    account = commands.add_parser("account")
+    account.add_argument("--manifest", required=True)
+    account.add_argument("--candidate-root", required=True)
+    account.add_argument("--target-file", required=True)
+
+    reduce = commands.add_parser("reduce")
+    reduce.add_argument("--dual-host", action="store_true")
+
+    args = parser.parse_args(argv)
+    try:
+        if args.command == "export":
+            result: dict[str, object] = {
+                "verdict": "PASS",
+                "manifest": str(
+                    export_baseline(
+                        Path(args.repo), Path(args.workspace), args.skill_path, args.revision
+                    )
+                ),
+            }
+        elif args.command == "verify":
+            result = verify_baseline(Path(args.manifest))
+        elif args.command == "account":
+            result = account_package(
+                Path(args.manifest), Path(args.candidate_root), args.target_file
+            )
+        else:
+            result = reduce_package_evidence(json.load(sys.stdin), dual_host=args.dual_host)
+    except (OSError, ValueError, subprocess.CalledProcessError, json.JSONDecodeError) as error:
+        result = {"verdict": "UNGRADABLE", "reason": str(error)}
+
+    print(json.dumps(_cli_result(result), sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

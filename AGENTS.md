@@ -319,6 +319,12 @@ Role boundaries enforced by behavior, not reading restrictions:
   — runs both plugin roots through both hosts, retains raw JSONL under
   `<raw-dir>`, and writes normalized behavioral comparisons to
   `<comparison.json>`. Use at least two replicates for A/B evidence.
+- **Run the skill-refactor package gate**:
+  `python3 skill-dev-toolkit/skills/skill-refactor/scripts/package_gate.py {export|verify|account|reduce} [arguments]`
+  — JSON CLI over the tested immutable-baseline, verification, whole-package
+  accounting, and layered-evidence APIs. `reduce` reads evidence JSON from
+  stdin and emits only `PASS`, `FAIL`, or `UNGRADABLE`; see the bundled
+  package-resource protocol for each subcommand's required arguments.
 <!-- END command-surface (managed) -->
 
 ## Plugin: domain-teams

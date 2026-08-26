@@ -130,3 +130,42 @@ def test_dual_host_error_is_ungradeable_and_blocks_package_pass() -> None:
     ]
     assert result["layers"][-1]["accounting"] == accounting
     assert result["host_evidence"][-1]["verdict"] == "UNGRADABLE"
+
+
+def test_cli_drives_export_verify_and_account(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    skill_dir = repo / "skills" / "demo"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("original words\n", encoding="utf-8")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "baseline")
+
+    script = SCRIPTS_DIR / "package_gate.py"
+    export = subprocess.run(
+        [
+            sys.executable, str(script), "export", "--repo", str(repo),
+            "--workspace", str(tmp_path / "workspace"), "--skill-path", "skills/demo",
+            "--revision", "HEAD",
+        ],
+        check=True, capture_output=True, text=True,
+    )
+    manifest = Path(json.loads(export.stdout)["manifest"])
+
+    verify = subprocess.run(
+        [sys.executable, str(script), "verify", "--manifest", str(manifest)],
+        check=True, capture_output=True, text=True,
+    )
+    assert json.loads(verify.stdout)["verdict"] == "PASS"
+
+    candidate = tmp_path / "candidate"
+    candidate.mkdir()
+    (candidate / "SKILL.md").write_text("smaller\n", encoding="utf-8")
+    account = subprocess.run(
+        [
+            sys.executable, str(script), "account", "--manifest", str(manifest),
+            "--candidate-root", str(candidate), "--target-file", "SKILL.md",
+        ],
+        check=True, capture_output=True, text=True,
+    )
+    assert json.loads(account.stdout)["package"]["words"]["delta"] == -1

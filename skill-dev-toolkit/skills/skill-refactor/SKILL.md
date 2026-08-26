@@ -37,8 +37,7 @@ NO REFACTOR SHIPS WITHOUT (1) EQUIVALENCE PROVEN
                           (3) INVARIANTS PRESERVED
 ```
 
-If any of three fails, the round is rolled back via `git revert`.
-This is the ratchet — only refactors that **measurably preserve
+If any check fails, discard the candidate. This is the ratchet — only refactors that **measurably preserve
 behavior while measurably shrinking the file** survive.
 
 ## Before You Begin — Establish Baseline
@@ -59,7 +58,11 @@ Before proposing any refactor, the target skill needs:
    non-description fields, declared dependencies, file structure
    (subdirectories, key bundled files). This is what Q3 protects.
 
-**Do not propose Q1's refactor moves until baseline is captured.**
+**Do not edit a candidate or propose Q1's refactor moves until baseline is captured.**
+
+Use **entrypoint mode** when only `SKILL.md` changes. Use package-resource
+mode only when the candidate changes a bundled resource; then read
+`references/package-resource-mode.md` before creating the candidate.
 
 If any of (1)-(4) cannot be obtained (e.g., skill has no
 deterministic test prompts because output is purely creative), the
@@ -90,9 +93,9 @@ auto-escalate to human Tier 2 (do not auto-keep).
 **Pass = output is functionally the same as before.** This is the
 load-bearing guarantee of refactor work.
 
-### Q2. Token reduction ≥10%
+### Q2. Entrypoint-mode token reduction ≥10%
 
-`wc -w` on candidate SKILL.md compared to baseline:
+Entrypoint mode measures `wc -w` on candidate `SKILL.md` compared to baseline:
 
 | Reduction | Verdict |
 |---|---|
@@ -125,13 +128,13 @@ verified to still serve the skill's documented behavior.
 
 After Q1, Q2, Q3:
 
-- **PROCEED** — all three pass strictly. `git commit` the candidate;
-  ratchet advances.
+- **PROCEED** — all three pass strictly. Apply the isolated candidate to the
+  user's worktree, then `git commit` it; ratchet advances.
 - **RESHAPE** — Q1 or Q3 passes, Q2 marginal (5–10% reduction). Show
   user the candidate + which dimension is weak; user decides keep
   or further-refactor. Do not auto-merge.
 - **REJECT** — Q1 fails (output not equivalent), or Q2 shows
-  increase / no reduction, or Q3 violated. `git revert` the
+  increase / no reduction, or Q3 violated. Discard the isolated
   candidate; record the failed move in `results.tsv`; move to next
   round (or skill, if this skill has hit its bound).
 
@@ -351,6 +354,11 @@ Scripts:
 - `scripts/multi_judge.py` — runs 3-judge ensemble, returns consensus
 - `scripts/golden_compare.py` — compares candidate output to a
   golden reference (used in Tier 2 escalation)
+
+For a bundled-resource refactor only, read
+`references/package-resource-mode.md`. It supplies the immutable-baseline,
+whole-package accounting, and layered evidence protocol; entrypoint-only
+requests do not load it.
 
 Optional Tier 3 hand-off path: if golden anchors exist for the
 target skill (in `<skill>/golden/`), Q1's pass criterion can be
