@@ -168,12 +168,27 @@ def account_package(manifest_path: Path, candidate_root: Path, target_file: str)
 
     try:
         target = _skill_path(target_file).as_posix()
-        baseline_files = _file_contents(manifest_path.parent / "skill")
+        baseline_root = manifest_path.parent / "skill"
+        baseline_files = _file_contents(baseline_root)
         candidate_files = _file_contents(candidate_root)
         baseline_target = baseline_files[target]
         candidate_target = candidate_files[target]
+        baseline_fingerprints = _file_hashes(baseline_root)
+        candidate_fingerprints = _file_hashes(candidate_root)
     except (KeyError, OSError, ValueError) as error:
         return {"verdict": "REFUSED", "reason": f"package accounting failed: {error}"}
+
+    mode_drift = sorted(
+        path
+        for path in baseline_fingerprints.keys() & candidate_fingerprints.keys()
+        if baseline_fingerprints[path]["executable"]
+        != candidate_fingerprints[path]["executable"]
+    )
+    if mode_drift:
+        return {
+            "verdict": "REFUSED",
+            "reason": f"candidate executable mode drift detected: {', '.join(mode_drift)}",
+        }
 
     baseline_counts = _counts(baseline_files)
     candidate_counts = _counts(candidate_files)

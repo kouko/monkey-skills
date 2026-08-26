@@ -130,6 +130,34 @@ def test_accounting_counts_moved_words_in_package_total(tmp_path: Path) -> None:
     }
 
 
+def test_accounting_refuses_candidate_executable_mode_drift(tmp_path: Path) -> None:
+    from package_gate import account_package, export_baseline
+
+    repo = tmp_path / "repo"
+    skill_dir = repo / "skills" / "demo"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("skill\n", encoding="utf-8")
+    executable = skill_dir / "run.sh"
+    executable.write_bytes(b"#!/bin/sh\n")
+    executable.chmod(0o755)
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "baseline")
+    manifest_path = export_baseline(repo, tmp_path / "workspace", "skills/demo", "HEAD")
+
+    candidate = tmp_path / "candidate"
+    candidate.mkdir()
+    (candidate / "SKILL.md").write_text("skill\n", encoding="utf-8")
+    candidate_script = candidate / "run.sh"
+    candidate_script.write_bytes(b"#!/bin/sh\n")
+    candidate_script.chmod(0o644)
+
+    assert account_package(manifest_path, candidate, "SKILL.md") == {
+        "verdict": "REFUSED",
+        "reason": "candidate executable mode drift detected: run.sh",
+    }
+
+
 def test_dual_host_error_is_ungradeable_and_blocks_package_pass() -> None:
     """A host failure is missing behavioral evidence, never a passing replay."""
     from package_gate import reduce_package_evidence
