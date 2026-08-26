@@ -5,6 +5,21 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.101.1] — 2026-08-27 — restore rules dropped by the 0.100.1 compaction
+
+### Fixed
+
+- `subagent-driven-development`: restored the version/semver rule requiring
+  implementers to confirm a stdlib import over a third-party one, together with
+  its `NEEDS_REVISION` consequence. The 0.100.1 compaction dropped the rule
+  entirely rather than moving it to a reference.
+- `verification-before-completion/README.md`: the "When NOT to use" list still
+  advertised the pure-doc/config and explicit-user-override exemptions that
+  0.100.1's `SKILL.md` had revoked. README and SKILL.md now agree.
+- `test_sdd_compaction.py`: re-baselined both word bounds and their assertion
+  message. The originals were calibrated on the premise that the compaction was
+  lossless; the package total now lands 8.9% under baseline, a documented weak
+  win rather than the >=10% target, because the shortfall is restored content.
 ## [0.101.0] — 2026-08-27
 
 ### Changed

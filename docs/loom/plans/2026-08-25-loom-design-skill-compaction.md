@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-25-loom-design-skill-compaction.md
 Goal: Shorten all nine remaining loom-design skill entrypoints by 20–30% without changing observable behavior on Claude Code or Codex.
-Stage: complete
+Stage: finishing
 Steps:
   1. 平行壓縮九個 design skill
   2. 執行雙宿主弱模型 A/B 並修復任何回歸

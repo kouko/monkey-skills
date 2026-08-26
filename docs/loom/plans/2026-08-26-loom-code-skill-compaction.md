@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-26-loom-code-skill-compaction.md
 Goal: Shorten all 13 remaining loom-code skill entrypoints by 20–30% without changing observable behavior on Claude Code or Codex.
-Stage: review:round-15
+Stage: finishing
 Steps:
   1. 凍結十三項 prompt corpus、baseline 與 invariant
   2. 依序壓縮十三個 loom-code skill

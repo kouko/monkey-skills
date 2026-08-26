@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-25-loom-workflow-skill-compaction.md
 Goal: Shorten all eight remaining loom-workflow skill entrypoints without changing observable behavior on Claude Code or Codex.
-Stage: complete
+Stage: finishing
 Steps:
   1. 平行壓縮八個 workflow skill
   2. 執行雙宿主弱模型 A/B 並裁決差異

@@ -168,6 +168,13 @@ ambiguity still fails closed rather than silently narrowing review.
 
 **Decision Log maintenance.** SDD appends non-briefed, classified engineering decisions to the plan's `## Decision Log` during execution: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Decision Log maintenance.
 
+**Version / semver work in implementer tasks.** Before importing a package for
+version parsing or manifest handling, the implementer must confirm it is stdlib
+(`importlib.metadata`, or a plain `tuple(int(x) for x in v.split('.'))`) rather
+than third-party (e.g. `packaging`). Third-party imports in new code fail the
+code-quality-reviewer's external-surface-grounding check and return
+`NEEDS_REVISION`.
+
 **Environment hygiene.** Standing rules remain at
 [`references/dispatch-hygiene-notes.md`](references/dispatch-hygiene-notes.md)
 §Environment hygiene. For post-review edits, command hygiene, or version metadata, read

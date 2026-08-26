@@ -16,7 +16,10 @@ def test_entrypoint_preserves_panel_lenses_synthesis_and_bounded_verdict_within_
     assert "writer" in LOW and "judge" in LOW
     assert "review code" in LOW and "run tdd" in LOW and "hard boundary" in LOW
     words = len(TEXT.split())
-    assert 2_803 <= words <= 3_203, f"expected 2803..3203 words, got {words}"
+    # Ceiling raised from 3_203 in the #740 follow-up: the original bound was
+    # calibrated on the assumption that the compaction was lossless, but the
+    # "Deletable lenses (Bitter Lesson)" section had been dropped by accident.
+    assert 2_803 <= words <= 3_300, f"expected 2803..3300 words, got {words}"
 
 
 def test_targeted_loop_preserves_dry_and_no_skip_semantics():

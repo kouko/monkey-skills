@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-25-loom-skill-text-compaction-part-1.md
 Goal: Establish cross-host behavioral equivalence evidence and compact three representative loom skills without changing observable behavior.
-Stage: complete
+Stage: finishing
 Steps:
   1. 建立雙宿主比較基線
   2. 平行壓縮三個代表性 skill 並補公開命令

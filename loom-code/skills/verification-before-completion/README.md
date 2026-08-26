@@ -20,11 +20,13 @@ Part of the [loom-code](../..) plugin. Operational spec the agent loads is [`SKI
 
 ## When NOT to use
 
-Per [`SKILL.md`](SKILL.md) §When NOT to Use:
+Per [`SKILL.md`](SKILL.md) §When NOT to Use — only two categories exempt:
 - No tests exist yet (brand-new repo, this commit adds the first test)
-- Pure doc / config / generated regen (no runtime behavior change)
 - Test infrastructure broken (runner crashes, not test failures)
-- Explicit user override AND change matches exempt category
+
+Pure doc / config / generated regen and explicit user override are **not**
+exemptions when a runnable suite exists; only "no tests exist yet" makes such
+a change N/A.
 
 ## What ships
 

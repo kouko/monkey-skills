@@ -132,6 +132,7 @@
 - [2026-08-24-code-reviewer-sonnet-pin-two-week-telemetry](backlog/2026-08-24-code-reviewer-sonnet-pin-two-week-telemetry.md) — re-run the requested→resolved dispatch tally for loom-code:code-reviewer to verify the 0.98.0 model-sonnet frontmatter pin holds in organic sessions, and check the conditional-reversal clause against any post-merge defect a sonnet panel PASSed
 - [2026-08-24-planning-file-boundaries-vs-data-flow-boundaries](backlog/2026-08-24-planning-file-boundaries-vs-data-flow-boundaries.md) — decide when loom plans should split work by files versus packet and contract data flow
 - [2026-08-25-reviewer-checklist-loading-has-no-mechanical-witness](backlog/2026-08-25-reviewer-checklist-loading-has-no-mechanical-witness.md) — a reviewer can emit a correct verdict without ever opening the checklist/rubric its contract says it MUST Read — tool-trace inspection caught a spec-reviewer doing exactly that (1 tool call total), and nothing mechanical witnesses the load
+- [2026-08-27-compaction-word-count-assertions-wrong-shape](backlog/2026-08-27-compaction-word-count-assertions-wrong-shape.md) — Compaction word-count assertions are the wrong shape — drop the floor, move the ceiling to family level
 
 ## closed
 - [2026-07-04-validate-design-output-py-dual-root-mode](backlog/2026-07-04-validate-design-output-py-dual-root-mode.md) — validate_design_output.py dual-root mode

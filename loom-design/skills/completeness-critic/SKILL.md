@@ -137,6 +137,16 @@ exactly the capture-recapture misread: when critics converge it tells you the
 out there are precisely the ones a redundant panel cannot see. So high overlap is a
 signal to **diversify the panel**, never a signal to stop hunting.
 
+### Deletable lenses (Bitter Lesson)
+
+Keep the panel's writer≠judge mechanism regardless of model strength, but treat
+each individual lens as deletable — a lens enumerates coverage a stronger model
+may later derive unaided. Periodically re-baseline bare model versus panel and
+prune any lens the current model has subsumed without weakening coverage. The
+standing prune candidate is the **state-completeness lens** (empty / error /
+loading); the **NFR-security** and **permissions / data-boundary** lenses are the
+last to go.
+
 ### The lenses (load-bearing order)
 
 The first five are the **always-on fixed panel** (the cost model above counts these

@@ -26,6 +26,8 @@ Do not proceed without a named mindset. The bundled references make this skill s
 - [Expensive to add later](references/mindset-expensive-to-add-later.md): use when "we might need this later" invokes PAGNI rather than YAGNI.
 - [Simplicity versus easy](references/mindset-simplicity-vs-easy.md): use when a familiar option may be easier but less simple.
 
+The bundled copies track canonical versions at `domain-teams:code-team/standards/mindset-*.md`: edits land in the canonical standards first and the bundled copies are updated to match in the same PR. Adding a fifth mindset is governed by that same standards directory's `mindset-extension-standard.md`.
+
 The iron law is: **no change ships without a named mindset and all three questions, in order.**
 
 ## Q1. What's the smallest end state that solves this?
@@ -48,7 +50,7 @@ Count lines, functions, and files before and after:
 
 | Result | Interpretation |
 |---|---|
-| after > before | Reject or justify the added volume explicitly |
+| after > before | **RESHAPE** — unless the added volume is explicitly justified and costed, and then only **PROCEED-WITH-CAVEAT** |
 | after = before | Net-neutral; continue to Q3 |
 | after < before | Strong signal in favor |
 
