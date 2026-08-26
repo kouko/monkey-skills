@@ -66,7 +66,8 @@ to save cost.
    or class for any re-run lens; if no lens's input changed after a productive
    round, that round is dry _by definition_** — you do **not** force a blanket
    re-sweep of all five critics just to "prove" dryness (doing so would re-incur
-   the very F-1 cost the targeted mechanism exists to avoid).
+   the very F-1 cost the targeted mechanism exists to avoid). Record the
+   unchanged union as the second dry observation; stop without an empty round.
 5. **Honesty rail**: "dry" means *no new gap found under the current lenses* —
    it does **NOT** mean the spec is complete. See the blind-spots rule below.
 

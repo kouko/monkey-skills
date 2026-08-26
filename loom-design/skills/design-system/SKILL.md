@@ -167,7 +167,7 @@ domain semantics.
 Write under **`docs/loom/`**. `DESIGN.md` is **product-level — one per
 product**, at that root rather than per feature.
 
-### Step 6 — Validate, then fix
+### Step 6 — Validate after flows, then fix
 
 Run the validator and fix every issue before declaring done:
 
@@ -180,8 +180,10 @@ presence and all 8 GUI headings; token derivation and contrast remain your
 responsibility.
 
 It checks the *whole* `docs/loom/<change-id>/`: `ui-flows.md` must exist and
-`DESIGN.md` resolves most-specific-first (change folder, then parent). Run it
-after `interaction-flows`; a DESIGN-only run correctly reports missing flows.
+`DESIGN.md` resolves most-specific-first (change folder, then parent). Stage 1
+authors `DESIGN.md`, then suspends this step; after `interaction-flows`, the
+router resumes Step 6 and fixes every issue. A DESIGN-only run correctly reports
+missing flows and is not a completion verdict.
 
 The validator proves structure only. Before completion, independently inspect
 that the chosen palette actually meets AA, every token follows the committed

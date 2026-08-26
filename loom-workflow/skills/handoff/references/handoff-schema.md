@@ -68,7 +68,7 @@ git:
   head: <output of git rev-parse HEAD>
   dirty: <list of uncommitted files from git status --short, or []>
 tools:
-  claude_code: <output of claude --version, or "N/A — Codex <codex --version output>">
+  claude_code: <output of claude --version, "N/A — Codex <codex --version output>", or "N/A — host CLI unavailable">
 ---
 ```
 

@@ -153,6 +153,7 @@ Follow this order; skip only an already-satisfied stage.
 | 0 | Modality | (this router — Step 0) | recorded modality (GUI / TUI / CLI) |
 | 1 | Static design system | `design-system` | the design-system artifact (GUI → `DESIGN.md`) |
 | 2 | Interaction / flows | `interaction-flows` | `ui-flows.md` |
+| 2a | Integrated validation | resume `design-system` Step 6 | validated change folder |
 | 3 | Review (writer≠judge gate) | `design-critic` | gap-hunted design + `## Blind spots` |
 
 Stages 1–2 read the product's `PRINCIPLES.md` as governing context.

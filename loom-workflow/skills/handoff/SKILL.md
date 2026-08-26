@@ -49,8 +49,9 @@ Do not reconstruct the schema from this entrypoint. Then:
    10. Confidence flags
 
    Populate them according to the schema: frontmatter records
-   `conversation_language`, git state, and active-host version. The legacy
-   `tools.claude_code` field holds Claude output or `N/A — Codex <version>`.
+   `conversation_language`, git state, and host version. The
+   `tools.claude_code` field holds Claude output, `N/A — Codex <version>`, or
+   `N/A — host CLI unavailable`.
    Situation
    is one exact sentence; Background retains decisions, rejected paths, and
    critical paths. All user messages includes every turn verbatim. Recent
