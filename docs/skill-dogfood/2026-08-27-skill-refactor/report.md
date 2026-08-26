@@ -96,3 +96,21 @@ Required but absent tool event: Read references/package-resource-mode.md
 FAIL — the output is valid-looking but contradicts the controlling package
 protocol on accounting scope, manifest-digest meaning, and rollback behavior.
 ```
+
+## Resolution verification
+
+Commit `37b0b293` replaced the soft handoff with `PACKAGE-MODE LOAD GATE`.
+The final real-host replay retained raw JSONL under
+`/private/tmp/skill-refactor-package-replay-load-gate-final/raw/`:
+
+- Claude Code `haiku`, replicates 0 and 1: both fired
+  `skill-dev-toolkit:skill-refactor`, then emitted `Read` for
+  `references/package-resource-mode.md`; both outputs matched the package
+  contract.
+- Codex `gpt-5.6-luna`, replicates 0 and 1: both read the installed
+  `SKILL.md` and `references/package-resource-mode.md`; both outputs matched
+  the package contract.
+
+The finding is behaviorally resolved for this probe. This still does not turn
+the partial run into a full dogfood PASS: the broad activation distractor
+corpus and cold-reader pass remain outside this release replay.
