@@ -218,6 +218,13 @@ def invocation_provenance(
     host: str, model: str, replicate: int, max_turns: int,
     timeout_seconds: int,
 ) -> dict:
+    argv_semantics = {
+        "mode": "claude-plugin-dir" if host == "claude" else "codex-isolated-plugin",
+        "allowed_tools": ["Skill"] if host == "claude" else None,
+        "sandbox": None if host == "claude" else "workspace-write",
+    }
+    if host == "claude":
+        argv_semantics["max_turns"] = max_turns
     return {
         "baseline_commit": commit,
         "baseline_tree": tree,
@@ -228,12 +235,7 @@ def invocation_provenance(
         "host": host,
         "model": model,
         "replicate": replicate,
-        "argv_semantics": {
-            "mode": "claude-plugin-dir" if host == "claude" else "codex-isolated-plugin",
-            "max_turns": max_turns,
-            "allowed_tools": ["Skill"] if host == "claude" else None,
-            "sandbox": None if host == "claude" else "workspace-write",
-        },
+        "argv_semantics": argv_semantics,
         "timeout_seconds": timeout_seconds,
     }
 

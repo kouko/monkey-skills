@@ -436,6 +436,22 @@ def test_raw_and_expected_behavior_hashes_make_semantics_recoverable(tmp_path):
     preflight.verify_run_semantics(run, prompt, raw)
 
 
+def test_codex_provenance_does_not_claim_claude_turn_limit():
+    prompt = {"id": 1, "prompt": "probe", "expected_behavior": "route"}
+    common = {
+        "commit": "c", "tree": "t", "corpus_sha256": "h", "prompt": prompt,
+        "model": "gpt-5.6-luna", "replicate": 0, "timeout_seconds": 180,
+    }
+    codex_four = preflight.invocation_provenance(
+        **common, host="codex", max_turns=4
+    )
+    codex_ninety_nine = preflight.invocation_provenance(
+        **common, host="codex", max_turns=99
+    )
+    assert codex_four["argv_semantics"] == codex_ninety_nine["argv_semantics"]
+    assert "max_turns" not in codex_four["argv_semantics"]
+
+
 def test_verify_record_raw_rejects_metadata_fingerprint_drift(tmp_path):
     skill_dir = tmp_path / "corpora" / "demo"
     skill_dir.mkdir(parents=True)

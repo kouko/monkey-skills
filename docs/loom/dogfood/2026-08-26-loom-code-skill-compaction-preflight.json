@@ -105,7 +105,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "18c0c6b6e500de619e07ffb1a7aad9c53997638d45f7b6a18dd34d75bfd786ed",
+          "fingerprint": "a1b57b8eb01fc36f3ffe20635c54058102d6a9b0572744f362d3d50783cfe317",
           "raw_sha256": "61d331d7d1bc5cb0bc5f1f04c61de31acede75a12efe903b81fd0ea3ad401d39",
           "expected_behavior_sha256": "86e089521d83bee2ce39ba19045c8f7d07d7db95a2668a444e2a7db564d5f887",
           "observable": {
@@ -115,7 +115,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -125,7 +125,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "0ee62978f9941271a9d65ddb8d91589a53894ab80a3c15fcbb0ea0eef7a42df5",
+          "fingerprint": "cade43a43a4e5b0f1962e74c221134516eca9811ad8574549c6ff21099b3902f",
           "raw_sha256": "4a288c31e9910c4aab5778cc743002de04b1e243968ec9ac56e914b62b931019",
           "expected_behavior_sha256": "86e089521d83bee2ce39ba19045c8f7d07d7db95a2668a444e2a7db564d5f887",
           "observable": {
@@ -135,7 +135,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -185,7 +185,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "a125e3123b9aedfc1f2b2107b0ab8cc7be59ae53387fb29079d9947db1e51088",
+          "fingerprint": "9d252eee25e7259e273222c1d043c0b154a3fb7c3305b72ecdb1d6b1222712cc",
           "raw_sha256": "9aad063155746275a4ee490b13715019c579b9e2b6aaec7966268bd7809b7b1b",
           "expected_behavior_sha256": "3931dbe6da4703cfe31f504f32a70aa62bf85fd2c871f92a76543ed115cdf490",
           "observable": {
@@ -195,7 +195,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -205,7 +205,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "7e474c8e2674a274e52634f263da5c2a7f49dfca9d6dcea3a1dce8753e192ce2",
+          "fingerprint": "234297d9c6f6abab7e1f146692b9f66371ae6ac9b2ba6edfe2cea1880cbebdfb",
           "raw_sha256": "5ee0c31b5390f908b0a436fda9f971217c8126023c99659cc164a0369a337fa3",
           "expected_behavior_sha256": "3931dbe6da4703cfe31f504f32a70aa62bf85fd2c871f92a76543ed115cdf490",
           "observable": {
@@ -215,7 +215,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -265,7 +265,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "e6b0cf1752fd62e0fa7147cc8d0c87bcc8b3cb21a6056971f5fa9c1a8d0a61f8",
+          "fingerprint": "4d62cb828e02a9a7c85f6bffc892dc57643c2c345d83eaf39e0df641b1439c98",
           "raw_sha256": "b9b8193f52b564dec0a2118f739367da073e73b80b2e945596104bb92eb8c88a",
           "expected_behavior_sha256": "8f398cea7cdc8ccb3cd39a3ddea2e66debb0ea94f9d2ae865a6f55e64f8d0ca3",
           "observable": {
@@ -275,7 +275,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "e107b405493135eec2f6c30059683dc2917074408d65a80a0f27d67559f7ae54"
+          "capture_contract_fingerprint": "3d0c2dd6f33aa078c869cfdc39ff2828d5fad89033ab5658028eeed05884cc8d"
         },
         {
           "prompt_id": 3,
@@ -285,7 +285,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "05cb0e20962fabbc68538006561a0d7583915cccdd0514b336e1c93b5b727a4b",
+          "fingerprint": "8863021d183a57b45563a6eb0e5247622521e4523699655caf48d53471575179",
           "raw_sha256": "b470de7e68e4eb62dfe14d372336b6cc5585a1b0ed6cfd57f758b156d30f3eb3",
           "expected_behavior_sha256": "8f398cea7cdc8ccb3cd39a3ddea2e66debb0ea94f9d2ae865a6f55e64f8d0ca3",
           "observable": {
@@ -295,7 +295,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/brainstorming/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     },
@@ -384,7 +384,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "4b33f04f3b3876e666be7749d4c0e5964e357ce395d9edca82c936ee3eed5677",
+          "fingerprint": "2d8fab2d3a49fbd6443cf8a9cb6839376cc921116f8b700f2497085187258b27",
           "raw_sha256": "7fe540a7c5b16aa6cf5b9b30fa6ae259a8c4e3e995e9df0c2283851e6846e1de",
           "expected_behavior_sha256": "3cc1acc204d758944fba21703cec4c26f12ab93215a027cabd74ed0bb65f6e4b",
           "observable": {
@@ -394,7 +394,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -404,7 +404,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "5a15487828bfbdb15bc9c044e6f2213f27744905c5c7eee41501431c8ddbe40e",
+          "fingerprint": "66716bcd4a649eaba923f92cf710b47a21be24862fae9433b294a3c5311dea8b",
           "raw_sha256": "3649d65386c2e97c64a3cc46c61ea79e73066d5f5af6e68e05f72535e1e371c8",
           "expected_behavior_sha256": "3cc1acc204d758944fba21703cec4c26f12ab93215a027cabd74ed0bb65f6e4b",
           "observable": {
@@ -414,7 +414,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -464,7 +464,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "53df966daa96a400663b15ebcd410315dbc1cf0f5d431fe796ae91610862eaba",
+          "fingerprint": "d2bc493def8b9d103a58764775aec52506e047c8958bf1dc4e406ad0ed7d2a1e",
           "raw_sha256": "0c42a1418bebc423671944323e93fe334ec7875c2f92ae66c64f03835d022a52",
           "expected_behavior_sha256": "6108bb6e495844f03699923656292cc2598dd65a62fc1c408b255ca7640f7467",
           "observable": {
@@ -474,7 +474,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -484,7 +484,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "feeb3ebb4549202a06fa3ae6b23750c5055638d8653bb63308b512c416a20e05",
+          "fingerprint": "57c9def7cf538a92cd43df50ef79a7c682ead24436933b77d21eac171eb5d336",
           "raw_sha256": "a79e75b6a365bc120c64da818d39cf90ddb56b9421108546ade1a8f50d75718f",
           "expected_behavior_sha256": "6108bb6e495844f03699923656292cc2598dd65a62fc1c408b255ca7640f7467",
           "observable": {
@@ -494,7 +494,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -544,7 +544,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "c03272f2839b67a98c55fb8a92bb5601e64002dbc19aa8be2733e4e855239e53",
+          "fingerprint": "9a7a3b58f08162deedd45d3d6b59d8bd71d3c778efc9861dc337fca8a193475d",
           "raw_sha256": "8c85fadbc62551f88b843bd3bd322de15d3538a9332e8821f8ffe735f42127e5",
           "expected_behavior_sha256": "1bed0fcb4c95200a15e521766d86dedab0fbdec526d749f4b495057706e12ff2",
           "observable": {
@@ -554,7 +554,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -564,7 +564,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "353524bf8a2a64e9d721b74572f1c4bcb41931289f045a394ba76776448e366d",
+          "fingerprint": "05a651a16c04e7a4036489c7dfc114c807442ba593ca87500bb71717bc463892",
           "raw_sha256": "8a17dc99721502af398918d6173e7fdff44415727818801307ab509244b76f71",
           "expected_behavior_sha256": "1bed0fcb4c95200a15e521766d86dedab0fbdec526d749f4b495057706e12ff2",
           "observable": {
@@ -574,7 +574,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/dispatching-parallel-agents/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     },
@@ -678,7 +678,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "650072e44071489f38132f5152cc08bf977af5630b01624e87cb816ec13fca8e",
+          "fingerprint": "0e98598b067b10e324f77269948f3264af7824dbb47620c78afb54020e6242af",
           "raw_sha256": "dd7fbf082cb2cd86c623faf6cc54bc0b4ea0573a43a4394af53ef08733acd82d",
           "expected_behavior_sha256": "ccbe9118ad6004b11482d7c5fdfc51ed6aaddb32f0664b1dcdbc40984ee7eb29",
           "observable": {
@@ -688,7 +688,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -698,7 +698,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "4f14d799fc802f0ee2049e3ceb4dbe603820b9e3a204792bae2b207b162c7cd7",
+          "fingerprint": "f54db5a7aca09474693f095fd0e349632400d5eb421b530ca3f1b0e7608adc16",
           "raw_sha256": "3669f0972d39264ccd2c3c4002e7fcefa3ee701c87d90c47547d59f11a01446f",
           "expected_behavior_sha256": "ccbe9118ad6004b11482d7c5fdfc51ed6aaddb32f0664b1dcdbc40984ee7eb29",
           "observable": {
@@ -708,7 +708,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -758,7 +758,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "fb8324dab1e2305d1c9cd199e78393ddc17a57bd15d135ff7f1378721aabe3a5",
+          "fingerprint": "e7a6d6d79cc9da7157847db483a2f9473d46c5834fd6c784e65eb8fd07d999fa",
           "raw_sha256": "4262da5adff74d33d89cf390fe6e055ce271f9795bc87009194cff2335058ad4",
           "expected_behavior_sha256": "ef03a7d0c28f60cd0e0bd3721e869440cb6a50e2cd94d79bd34eaf9138b34833",
           "observable": {
@@ -768,7 +768,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -778,7 +778,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "014496419ccb4dceb1eba36656d97eacd7127afe33acc610115e1df54c7b2cac",
+          "fingerprint": "49637404183b29bb40015225f73f31fe85f46bdcfe1dc1f607dcb36f2c0e1977",
           "raw_sha256": "1edbab78f19bc52c8d8b510eed57e7f0d1a5786207a2a16b7551f190a90eaf3d",
           "expected_behavior_sha256": "ef03a7d0c28f60cd0e0bd3721e869440cb6a50e2cd94d79bd34eaf9138b34833",
           "observable": {
@@ -788,7 +788,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -838,7 +838,7 @@
           "classification": "MISS",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "1137e012a94b4a6b8caa49fa768d518e73261f4ce46787dec4f824d679f421a4",
+          "fingerprint": "d6f1ec57ab3bdd2dce9bcfe790d5d68d4f51d16d3280ea30d3007ed47863974c",
           "raw_sha256": "22413db2e7e3a9c90a75ad49da25002899fda49b4d8aaca0dba869d6f0d15d85",
           "expected_behavior_sha256": "4e56ec247e61d4819dedd720fcbf3e6c94b7c8d88d3edf20d5e114985892b3a1",
           "observable": {
@@ -848,7 +848,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -858,7 +858,7 @@
           "classification": "MISS",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "688b8a130834f935011d4d396a64ae5b70a065cc24f0314fd5b8a0fad03d3448",
+          "fingerprint": "81600c43ff1cf6548a6193540f77ea8ec3f6bf508c70c9aaa63358b5ccfdd2d9",
           "raw_sha256": "f378614e20530c502d90b707655549e31cefbc91f7cb21177948006856ab4d7c",
           "expected_behavior_sha256": "4e56ec247e61d4819dedd720fcbf3e6c94b7c8d88d3edf20d5e114985892b3a1",
           "observable": {
@@ -868,7 +868,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/finishing-a-development-branch/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     },
@@ -946,7 +946,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "dff2e80a471473a944960fcbc193c9fed7d02b388d47cd4bf6f3cef0a567043d",
+          "fingerprint": "1b9c3aefd537ff44226c071698b3cdb8355356ef51a00d4f802ef43bafa28e2d",
           "raw_sha256": "691b2233b2c09110e1420b1697362b0febef39b8a85969c1e513dc62866ed739",
           "expected_behavior_sha256": "e9dd043dced7a60c2a79d60c0e0190e79ead2e52cd8ff9718aafd787b8d94ef4",
           "observable": {
@@ -956,7 +956,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -966,7 +966,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "41a5fb8d2b4d59c3a4c58da1daad513882f9b3e082a4fa8df6e15da339a5cc9c",
+          "fingerprint": "42d1acffd4f596e41798f51c781e1945a5a29d9031962ce3f4fbc607a23cdd61",
           "raw_sha256": "fd9728f0261ab88f037320cafe8c16c3b9539a73b27567e2939175841a8231e9",
           "expected_behavior_sha256": "e9dd043dced7a60c2a79d60c0e0190e79ead2e52cd8ff9718aafd787b8d94ef4",
           "observable": {
@@ -976,7 +976,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -1026,7 +1026,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "0e98a8fd7d51f5189bb8f53b39cfbea0a4a8598994e2656450e46347afd50f74",
+          "fingerprint": "3eb2b8008a8ba866a54ad839f2c22fe86e007477d27d3b2b14cadff27adfb68a",
           "raw_sha256": "65b149fd5bf9f202295970d9fcb6e49c26437368d608cf345aac8855899c5d68",
           "expected_behavior_sha256": "f7d756749afa2653b3312965437722e16d7ef6be0a709f058ea5ae67b5d93fda",
           "observable": {
@@ -1036,7 +1036,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -1046,7 +1046,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "933190b7b3f62eb58b33e5d6fdcdc09a6cd6de2bfec437a13887df42fea888eb",
+          "fingerprint": "54fef37d43a2b0bc6af645e19a4f9497aad56eb8e51d6cffe3eaa86afbf9a720",
           "raw_sha256": "5329f8cf9abad022d86b8adec68bcc0ec1b6d583d20a7de484d8bb846e6623e9",
           "expected_behavior_sha256": "f7d756749afa2653b3312965437722e16d7ef6be0a709f058ea5ae67b5d93fda",
           "observable": {
@@ -1056,7 +1056,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -1106,7 +1106,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "6e63837543c5aca1a5356438328f4a0b29df285011fd8a9c01a599dedcca03cd",
+          "fingerprint": "557ebdde93cfe3e2b866a34493b6769753b5150452f569c460e89443b84d63e1",
           "raw_sha256": "963c5364b132a5515631fe5fc33abdfbe62631416c882f6db347a5e94855f979",
           "expected_behavior_sha256": "01eacef3ac0a5362fcd5596a850fef13184646e181c2aeff3ec802af78c09635",
           "observable": {
@@ -1116,7 +1116,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -1126,7 +1126,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "0c2157909a012934198ea6de8e799ef5823b246cb77283ec7a5fca38a692b01a",
+          "fingerprint": "78d7554f16a89bd6a7c79a0ac2cca04b02eb4188971c3eca029b15c6ce9f185b",
           "raw_sha256": "2fc1c6418b8a0614f9dae59041df395ba960966457c8d6e254833fe07f139b83",
           "expected_behavior_sha256": "01eacef3ac0a5362fcd5596a850fef13184646e181c2aeff3ec802af78c09635",
           "observable": {
@@ -1136,7 +1136,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/loom-memory/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     },
@@ -1263,7 +1263,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "d79326d455e6d5d0c6ec49f41474017bdc87a5f4af4f9fb51672da53bff1adf3",
+          "fingerprint": "2c3a70b252804f608de190daeea05e5dbb8cdbcc257192ae0692c3ca44965fb6",
           "raw_sha256": "0bf0f0bbc3133c3b319ba0f4e03df48376c2e85a2b11eef58d0e59951afbf4bb",
           "expected_behavior_sha256": "a2f95b5bf27ae439368336cc51234b24f6abc3e261508027ffe116a22d8a1781",
           "observable": {
@@ -1273,7 +1273,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -1283,7 +1283,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "e2afb5f71d6ad1659ab6d5d6b5f66048507e1f2ca656a4b36045c08a0b305268",
+          "fingerprint": "34a48039ddcc82b98f3edfa7fd5f3f71f8a6ef68ee73f5c93aa9887921664e03",
           "raw_sha256": "edd3b5027451f2fae8d02d41da2765ef9f39743387079526f29ee50668720fca",
           "expected_behavior_sha256": "a2f95b5bf27ae439368336cc51234b24f6abc3e261508027ffe116a22d8a1781",
           "observable": {
@@ -1293,7 +1293,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -1343,7 +1343,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "658922fdfb57c57e28834133206f42465acc0b0d44edbefd6c427e760fd2bb18",
+          "fingerprint": "638635df2d68c116956c3b56a3ec32379330a34b499c21712011ccc5a3b15f5f",
           "raw_sha256": "ee2a3767cf593303b8f21830c5188a320361fac1f5e430070a487625a930936d",
           "expected_behavior_sha256": "f6ce5ba44c994456a9f22c0502a0069f3785dcd2318aa4694681fbdbc4ed1948",
           "observable": {
@@ -1353,7 +1353,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -1363,7 +1363,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "0bac35c5a2ed27ee59d9f9b87874ac1cdd00b69c5c445718b1f0d42008164f80",
+          "fingerprint": "3e9d099524fc1eac47da1a7454edf18a08a33ef4caee6a3483d1c48875d043c8",
           "raw_sha256": "1ef54044832ae13daa066ec47c5fa6e6e4839f3399ed56b2feb1c3ad2a0a42af",
           "expected_behavior_sha256": "f6ce5ba44c994456a9f22c0502a0069f3785dcd2318aa4694681fbdbc4ed1948",
           "observable": {
@@ -1373,7 +1373,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -1423,7 +1423,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "6845d5e3a3cba2f00faf4db48ad90c8586b3215cc334b5432b9bd8b08c9fea50",
+          "fingerprint": "7072d406493bbe4e561ce41ba726783aa72a5140434459af2a8c29a32df01929",
           "raw_sha256": "64d95e0618172adaf3be0afc80fffaf2262062e140bbacc3f967d0af9535551e",
           "expected_behavior_sha256": "8eee60d708c15ff9cca319fbba32a4ad47af806f38995ceb1e67204a547b95c5",
           "observable": {
@@ -1433,7 +1433,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -1443,7 +1443,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "08f5309abcc2c3899d170b88115a35f01a37f53c42e23f05b729e86ce626c579",
+          "fingerprint": "d539165aa1073a688d5da1a85e2618bf1d791b124b9c725e409ff7a67ce92d89",
           "raw_sha256": "1f571bfce06144b298f59c2b7d16d0f6ef0aa31cdcf02591dfcb5568dd3465dd",
           "expected_behavior_sha256": "8eee60d708c15ff9cca319fbba32a4ad47af806f38995ceb1e67204a547b95c5",
           "observable": {
@@ -1453,7 +1453,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 4,
@@ -1503,7 +1503,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "ba3fd7c7a46db98c0c869263b95d09d626913e6bcf1b91ee20554763ce5b7020",
+          "fingerprint": "98d9962f838bba61f9bcc9eac8125b8bce0919d314ca13a8d35a6770aeef727c",
           "raw_sha256": "3dcb38a09715cdd9bd6be22939cc1b3630b2803543d1fffa6a50541f34f3cd43",
           "expected_behavior_sha256": "fc32f666150b9b715262538d3dcbc7f13b775e1e3c012a724e92d246b1a01d36",
           "observable": {
@@ -1513,7 +1513,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 4,
@@ -1523,7 +1523,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "d9eadc5d54ab9e1c0617d4f15aa78103286080cf1f0be24c36b5c08fe4681b5f",
+          "fingerprint": "385791f3d23142be79e7e4cf53b7ce44743cfb4a8e69540b32b3dc85392382f5",
           "raw_sha256": "2e793e102054353ede676294a4fa9b22fce5a3a9e4ea20b848854d6b5b25944c",
           "expected_behavior_sha256": "fc32f666150b9b715262538d3dcbc7f13b775e1e3c012a724e92d246b1a01d36",
           "observable": {
@@ -1533,7 +1533,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-code-review/p4-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     },
@@ -1627,7 +1627,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "fcbeaedb8fd2c5725e0f895da3276dc48fb78be8594f04aaa423d89abe6a365c",
+          "fingerprint": "f31201ed7c002c505209c00f8af473576440410278d303c0c1966103096ca7b4",
           "raw_sha256": "33c7aab001ae1159d68d3149e7a81b8c6f8bc2ed6d6e02b4c4ed6a93fdf66566",
           "expected_behavior_sha256": "349d9308fef882a447fb78849733e50dbc0b8e19fb70f15c7a3a4b62bf166cdc",
           "observable": {
@@ -1637,7 +1637,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -1647,7 +1647,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "0db7b803ab59128aef2a4e28f06b30af2132b4ed376bb929f15751375078f4b5",
+          "fingerprint": "d02663f721d7860bb9cd51ea91ec765d0d57c15f7152df808491322268bd8d25",
           "raw_sha256": "5558277e4c106fe4eb0c1d3be83b8ebf2124e871c7cbde54dadaae20f96584fc",
           "expected_behavior_sha256": "349d9308fef882a447fb78849733e50dbc0b8e19fb70f15c7a3a4b62bf166cdc",
           "observable": {
@@ -1657,7 +1657,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -1707,7 +1707,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "2ca5f364ccb7bcca9867de180054b00f31a961db90c425a137835e3a9ac1569b",
+          "fingerprint": "2f00cf5d9a7b3c007434587538dfc5383aa784b5c33e050e19b89849ea9d7806",
           "raw_sha256": "263b23d75651884171b58f404118cea30056167f902c58e348e11e3cb00f70e6",
           "expected_behavior_sha256": "d7a00daa1531b8a33a4d2db465f558bb60601a715ba318ddf3c56dfe4d1e2a5e",
           "observable": {
@@ -1717,7 +1717,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -1727,7 +1727,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "1f4c01e729f9a6d8ee99094faaee9c05eda32b4a27ef77e0f59e4f6c1b17d131",
+          "fingerprint": "b20f0c14544b39b8f344c7ed6c9fec4327acc5acb2be4d6c9bc2b6e083679ee7",
           "raw_sha256": "8bfa40964246ee2c9e63a992391a2f802acafdeb220f36d9dfda6ff9fcd89b02",
           "expected_behavior_sha256": "d7a00daa1531b8a33a4d2db465f558bb60601a715ba318ddf3c56dfe4d1e2a5e",
           "observable": {
@@ -1737,7 +1737,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -1787,7 +1787,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "5a524b468a3d7ebdfb57b1cfa19149c17fdc1fce2d169cebde347d9b48117e77",
+          "fingerprint": "81c4dc47edc3cbc8050023dd6171a95deb35e42c55a22935df5d352535146220",
           "raw_sha256": "0f1af38d1cb3d5bf15b1284215ff965b0fc2b1697cf890b491c14cd490386986",
           "expected_behavior_sha256": "afa56be541ffbb194d6281b518abc254c87eb57672663e027f640da16585831a",
           "observable": {
@@ -1797,7 +1797,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -1807,7 +1807,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "811df65f36d070d7eb484a2b6634a87f44852f240ae83835019faac15492fe27",
+          "fingerprint": "91b8ffce61609d1b3337eec8653c5cf9d5cf1a46c3dbe680e3f486d3b55f533d",
           "raw_sha256": "e75329377990fec1dffcb7b2071cbbb2d52dc8c64f948e040801aeba95d84a3c",
           "expected_behavior_sha256": "afa56be541ffbb194d6281b518abc254c87eb57672663e027f640da16585831a",
           "observable": {
@@ -1817,7 +1817,7 @@
           },
           "raw": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-first-half-v2/raw/requesting-docs-review/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     },
@@ -1905,7 +1905,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "2593c9ae2e737222cc3020c3195e718523c5da2ddbcf7de674fa440b250b5644",
+          "fingerprint": "0b6dcc340b2e4c4b50637fdaf251a3a18cdc02832fe0a08ecea59c48d8fc9793",
           "raw_sha256": "43aec43f10c43924184b1472494e7c1b97ac4d79714ee7e69cedbf1fcf2cf0b2",
           "expected_behavior_sha256": "214712109ac9ae851c9cd58f9d435586f3b83aa938754124acaa57e3f8d3acce",
           "observable": {
@@ -1915,7 +1915,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -1925,7 +1925,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "bc8f5873c96dad061fefe3ddb673898be5cfa6a4b907adb1ca18f2112d9bb570",
+          "fingerprint": "ebb06c0085b3de43f0fdb7102648c41d422249c11b5bc69b69008d66ec7f44a2",
           "raw_sha256": "477955fc768a5c9cd6b6b112d070da8b7e4bd8795fb4041844d3fa0dcf926fbe",
           "expected_behavior_sha256": "214712109ac9ae851c9cd58f9d435586f3b83aa938754124acaa57e3f8d3acce",
           "observable": {
@@ -1935,7 +1935,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -1985,7 +1985,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "7a8dcff291897c7628925ace3de8852df0de19ad2a20b4bef4c13d9e76529877",
+          "fingerprint": "e1ee8d9d7284f6a40080df2a6df0786edbfb9e949fd2dc2d21718ed78b0d79b3",
           "raw_sha256": "96b0c9eb5014cf4fce6e541a5adca3c26ce7555f20332427d3fe5b4f58f96910",
           "expected_behavior_sha256": "f36cc6a55569932c35dde973a3ef53437bb8a03dcaa1b6fbfb4bc9d51f49f459",
           "observable": {
@@ -1995,7 +1995,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -2005,7 +2005,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "4f8243624755039a422d8ed477319f32db2a28c7941c5f686c661b7039707414",
+          "fingerprint": "da93f959d61c2010370e019b89f5df0ae3f0ee6c610a0fb6083457e61649efe8",
           "raw_sha256": "c2297b220b763d2a09345defa658a9f320c8e0bffb7b34169dd5ba2b8e24cb79",
           "expected_behavior_sha256": "f36cc6a55569932c35dde973a3ef53437bb8a03dcaa1b6fbfb4bc9d51f49f459",
           "observable": {
@@ -2015,7 +2015,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -2065,7 +2065,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "658990dac0ee7e87acf9bddaeba2219a3a25a90100ad0d20b664b4892368a4b3",
+          "fingerprint": "00fe9dc3a3222ee781b38934a72338c56f165539ef748b7767983ce82f931936",
           "raw_sha256": "aabc09c157e6cb0872b0f504d8fcd76ee8fee1e661cc99a30970b43d235afd6b",
           "expected_behavior_sha256": "cce7b213047af1499d956a9cc597604394427b6c6f49b8baca56a541a88bc36b",
           "observable": {
@@ -2075,7 +2075,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -2085,7 +2085,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "efe37c3bea3ad76e72024b9c5834ec7b17e3e934ce886a108d47ce1974c0dcea",
+          "fingerprint": "6094291167734e0782e27ee1bc22384c1a3b4f281ad04d69e7ec6711ff6950b1",
           "raw_sha256": "80e82df4b9aac5a57cc4a49baf03d34a826e6a216c714725d2ce45f083a0b739",
           "expected_behavior_sha256": "cce7b213047af1499d956a9cc597604394427b6c6f49b8baca56a541a88bc36b",
           "observable": {
@@ -2095,7 +2095,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/systematic-debugging/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     },
@@ -2183,7 +2183,7 @@
           "classification": "MISS",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "adf1d1cd4d037ffd4a9af812e6a119ab3c8a85868598f233331311ca8071795d",
+          "fingerprint": "6e2ca7a1d4d9f1dbb3e67af797604aac0bb81a4154ce353613e30120815e76e7",
           "raw_sha256": "5f47b50981fd32d0eb28a83d223ce3610cc2bc9e7cdccea8844ca2842625a58d",
           "expected_behavior_sha256": "14eb5269d0d33af06fd3891dd1258b023425482b8bc76fc7b2d63c4fc0d91ddb",
           "observable": {
@@ -2193,7 +2193,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -2203,7 +2203,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "ee3d3b29f05fb4d96960ef8d6bd9a0dfb88f72e4da3b53df37669334c4bd41d8",
+          "fingerprint": "cf17b08c33eeff79a33edb1473b620d5d13d333c4fd58249cbe7408bf39c0069",
           "raw_sha256": "15088ae122f9bbc1d33f2e62e6d0fc00c44b409ed56698e1fcc637ba2999fc4c",
           "expected_behavior_sha256": "14eb5269d0d33af06fd3891dd1258b023425482b8bc76fc7b2d63c4fc0d91ddb",
           "observable": {
@@ -2213,7 +2213,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -2263,7 +2263,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "3914f70bd5992582c3e6f77ca5bad42495cc272d6569759f966be412b9472841",
+          "fingerprint": "2162204407cccbbad18d24c916dd484e620c9a0e27ef7476a6a3a8be6d2b8e7a",
           "raw_sha256": "020c716e4ee808682f9d0c9e5ed3d58a91e7730f4d5340b97b085f063ca2121a",
           "expected_behavior_sha256": "60bd65a1643555a2e9480f4d130753af078ca5cff67385eb08d0eda2b779b85a",
           "observable": {
@@ -2273,7 +2273,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -2283,7 +2283,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "be6647f2e0fcd39eb49416c1b4057d2ff2262a3c44d321757e42e23e78df4ada",
+          "fingerprint": "cddba800bce94440085f295dd44e47592c215177b1cefeb0ec334f8280250c6a",
           "raw_sha256": "df339a554c34c58afe062ff557e319bd4cf43d61f5b3717e14b9e6b626c179cc",
           "expected_behavior_sha256": "60bd65a1643555a2e9480f4d130753af078ca5cff67385eb08d0eda2b779b85a",
           "observable": {
@@ -2293,7 +2293,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -2343,7 +2343,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "4547960a73a6016fd438d03da530795b5faf669715c88fa4d7b1336951d34514",
+          "fingerprint": "cbc0ac7e81d5dd15d3cf4c090febabae19b89a23a88e6e1c182061ee1d7a28b6",
           "raw_sha256": "37578de41c32f8840707ffb13bb89c3ea85314306b57191b59d2206fde9e6a30",
           "expected_behavior_sha256": "5d9b45c361be11c6e95372eccdcaac337a00ce70cecba95f83cc11d89f94c152",
           "observable": {
@@ -2353,7 +2353,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -2363,7 +2363,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "79dc61fc98f1dfaf78476bc4601a121a4ec66d5804c5f2c41a9738ea3a166b02",
+          "fingerprint": "6292f0e09468b10b46372a670e30c470de291489eb79f4761a64d6d4f7f6aa51",
           "raw_sha256": "e07e0a1bce817ecb1e6c21950b285b0a2672f5bc1d9b4b5e0e44bb1b231f3f37",
           "expected_behavior_sha256": "5d9b45c361be11c6e95372eccdcaac337a00ce70cecba95f83cc11d89f94c152",
           "observable": {
@@ -2373,7 +2373,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/tdd-iron-law/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     },
@@ -2457,7 +2457,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "e5d9554990c8c0e61f322f9e3fcaa2f397efb4414fe1458e36521ba7d19bb0cb",
+          "fingerprint": "c4b2b0f5cc5a862add6af54f57cb176205ebe27e65a93269ee6532fb76b0f2f3",
           "raw_sha256": "36615ede7042890f91bc321345a58686a8393023d9fc6d40dd1c2cb36af291c4",
           "expected_behavior_sha256": "dbab330c6c65e684129350f79a611dbf64c64f94e3a3575757c06308b995acb6",
           "observable": {
@@ -2467,7 +2467,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -2477,7 +2477,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "536b4f346fa6b46540212a984a7f23c60b26016a4c42e489cdb48532c418dec9",
+          "fingerprint": "39ff1060cc54ad0d08c11eb41bc130dc144dbd0d288ecd808767ecfa5e5eaad4",
           "raw_sha256": "688fcf0011d5ed9f5369bf4d674daebae2aaec6c91192ab44aeae7516dff59c9",
           "expected_behavior_sha256": "dbab330c6c65e684129350f79a611dbf64c64f94e3a3575757c06308b995acb6",
           "observable": {
@@ -2487,7 +2487,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -2537,7 +2537,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "2410a66437b226abe54eb48508c750a09086d6ee1171ce33adecf7f57b82693f",
+          "fingerprint": "ed39bdca77df001d466fc8b2e3377fe388c8a118f686edb3507e4875a6390963",
           "raw_sha256": "ffb97daf0e31bfea2c0bc89e63307ba6c052aadbd72361a3ca01f7c6fc9556fc",
           "expected_behavior_sha256": "aa742edd718f81ee6bf4c8e47e29ac7ee3692de1cea8b4684c1d56649005a23b",
           "observable": {
@@ -2547,7 +2547,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -2557,7 +2557,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "c251ce32527f18cc76e1e171deacaa52d51264fd38b76bb28c50cff265429d5d",
+          "fingerprint": "a51460ebbcd5f2183794ae24393920183f12cfe8e57638eda34c1480622bbd3b",
           "raw_sha256": "6b9a5e9f63cb461da594b867c34d3b488739a7885beeadec03c2a239c03f232c",
           "expected_behavior_sha256": "aa742edd718f81ee6bf4c8e47e29ac7ee3692de1cea8b4684c1d56649005a23b",
           "observable": {
@@ -2567,7 +2567,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -2617,7 +2617,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "d1b4f2d863d933692fa9afe4fe2f97f4d310a64f4b36c68bd0d8fc3a7abb10d9",
+          "fingerprint": "d08a1826de8dd17aa738988289782da4a33259fde02352f96373cb692ca4d0e8",
           "raw_sha256": "5b45e014a05004995a627b193975b0ccd0905f51efa84cc3a329a52f89e6697d",
           "expected_behavior_sha256": "44c990fbc630db4d814f828aec4c99fdf96e5c6facf662b5c10ae38f20d3fba4",
           "observable": {
@@ -2627,7 +2627,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -2637,7 +2637,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "f901966e4614515f8df69d2a2b68d3d4565d82e67276ff2c8e8b94ca571686ff",
+          "fingerprint": "c27fc6db22f4f369d4a5bcc7bbcb8a975979eec9a87ff044922fb5ab7ff36856",
           "raw_sha256": "59a700b276fd7ccdbf535f7ca7bff3f0a9aeccbeefe0584b58b53b1915b5f6aa",
           "expected_behavior_sha256": "44c990fbc630db4d814f828aec4c99fdf96e5c6facf662b5c10ae38f20d3fba4",
           "observable": {
@@ -2647,7 +2647,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/ui-verification/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     },
@@ -2726,7 +2726,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "2e1d2457a7e0b827307a15ee4438ecbecf5fd8c469824a9d62e16a79f7a3210d",
+          "fingerprint": "ff44c41ce33a8018bc164c95977b7d9842b872522b1d4a86f16e0b0d8f18eacf",
           "raw_sha256": "12678874849af010afe3a802bc7253c7ddcc59ef28d2fe0685aa28c976631a1a",
           "expected_behavior_sha256": "3f32e35c701a7a4111d8d7c610a430b81142b58c5837e647e75552737dbaad07",
           "observable": {
@@ -2736,7 +2736,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -2746,7 +2746,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "430b9eeb99b8eedd91c32e06ea78185e596b0953a50b9997cf8a17de557a0695",
+          "fingerprint": "b2f8159aec6536cded8c1f1649323571272113af7342b9b86e60746af5582f32",
           "raw_sha256": "4d8f072d31d4e582e86f031bbdafa03da8cab4682b002a29dba017e818d8a661",
           "expected_behavior_sha256": "3f32e35c701a7a4111d8d7c610a430b81142b58c5837e647e75552737dbaad07",
           "observable": {
@@ -2756,7 +2756,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -2806,7 +2806,7 @@
           "classification": "MISS",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "8b21192c654e041d3d7fe7646f27a135f22cf2a435a9658be1ed9b39b426fa08",
+          "fingerprint": "b17bb12ebd683e443ccfc103269e73c1ce534636c80ca6c8b834fa8d74491b8f",
           "raw_sha256": "339b27aa879fd0e73be340422213449500544ebf786cbe403a3e045cc965dea5",
           "expected_behavior_sha256": "a1e36702e7e8071c121915fb3063648b6f08bae3a78198e3b2300b602422c3df",
           "observable": {
@@ -2816,7 +2816,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -2826,7 +2826,7 @@
           "classification": "MISS",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "a8ca4ac89b4960af0b1ac0073c9959dbb635306fa09b0306c6720f8a90018f19",
+          "fingerprint": "af8fb2ac704a35ce42bdc5beca19cba4b516e3970f999e4bc2c81095abf7df87",
           "raw_sha256": "4e2522967fb272715bb1603ec987817c820b795fa211f570282afecbd60c3b53",
           "expected_behavior_sha256": "a1e36702e7e8071c121915fb3063648b6f08bae3a78198e3b2300b602422c3df",
           "observable": {
@@ -2836,7 +2836,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -2886,7 +2886,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "c7a3db0af976fcf7b93c7a590a53c39f4ef758618997b3e631819cc3fea8ceb3",
+          "fingerprint": "1ef99c37e4abb3258a847cc27fd12db4967c329f0c19fe43fc55c34ccc79d038",
           "raw_sha256": "0b834ae353dd6c84d146499a5fa23d37a0e9f40cdfa145f1c9374664692c474e",
           "expected_behavior_sha256": "6dd983025c7c07b6c771e9c552f8e7ee2744961f9b6dcf791131f4022eaf5774",
           "observable": {
@@ -2896,7 +2896,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -2906,7 +2906,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "73175b10bbf7d599b3adcd770e5a87b3ff451dce6aac30207b92ccc0203c543a",
+          "fingerprint": "ef73f6522f8ec8e9889acaafadeede0d0692a4972f7a01d7da8b8cedc78949c4",
           "raw_sha256": "181965428ec06039661003d4989de5011a0a0c6b355ecefe1faae50d58fd057e",
           "expected_behavior_sha256": "6dd983025c7c07b6c771e9c552f8e7ee2744961f9b6dcf791131f4022eaf5774",
           "observable": {
@@ -2916,7 +2916,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-git-worktrees/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     },
@@ -3017,7 +3017,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "31212a6a9dc87bc92dc7d54c8ffa4beb1ef238ee9db19d0f87f301b1a3559cf9",
+          "fingerprint": "86fcbb2aba3f74a2bddd55846347138e9cf8c5f75b78c332fbd20f1f4b8d5db7",
           "raw_sha256": "6352cd9c311518c80f85c87ca1cdf359093465de3b67176037ef6e3767391f5b",
           "expected_behavior_sha256": "887f1634b3366faf18214b1d81f5bc389fca183d81ef532de58bd70d1684dd07",
           "observable": {
@@ -3027,7 +3027,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -3037,7 +3037,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "a3e9c0264a1e186e6dcd773a15c04b92912a74c99086684ef9901e5c1a067d32",
+          "fingerprint": "0149f3a0b90001f4d95f2d1d75f94f83f2d52c8637ac03e6943c3445e7805666",
           "raw_sha256": "8cca4ab5ff61a6599f4c01990c881dd5193ce3e3853e31626745c926d9b0bfef",
           "expected_behavior_sha256": "887f1634b3366faf18214b1d81f5bc389fca183d81ef532de58bd70d1684dd07",
           "observable": {
@@ -3047,7 +3047,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -3097,7 +3097,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "3e932e44e0ab43cf147edd7d5534c0250e39693b19d910d6aa5f80c2d90e435e",
+          "fingerprint": "804f001016ca20d9b337cc33735a1a1a5753f98900b3fb5ce1912e926594a161",
           "raw_sha256": "0e44b0ebf502f1b1e81d04181a811f91b676f08cf28dc0025c13338f0d44f388",
           "expected_behavior_sha256": "98231b68a811d0b95c0b4a30cd226fd124f943462acc177d62f5edfac38d175e",
           "observable": {
@@ -3107,7 +3107,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -3117,7 +3117,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "3ae7dd1fadd9a1b3ab5d02c24bb5ecd3c5f813dc3b0fad978b15ed33f98420f1",
+          "fingerprint": "9577fcf1a4ef0c068b0d9d21a1afa2500f47dafe17e084f9d9df89eda1ef4fd8",
           "raw_sha256": "adb364961537c9ee73401dac2bdc63cbd5a7898107f003bd5f666cf1a7c13975",
           "expected_behavior_sha256": "98231b68a811d0b95c0b4a30cd226fd124f943462acc177d62f5edfac38d175e",
           "observable": {
@@ -3127,7 +3127,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -3177,7 +3177,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "7e82f761de0be04d449c40a63723d3ab1d8e84e7d4e1ac24d7c1ff81dbf6ab88",
+          "fingerprint": "58488ddc52926a0627e4bb96768d6122b2c07d8f21ba33b61609eea4127c18fb",
           "raw_sha256": "e0f6c968d0eea2dcc68aa71ddde163ec5518bd93814225170c2d42993c166271",
           "expected_behavior_sha256": "81eaa672e95506e3b3d1fe14544a281ff5beb7890c1106c7a26da1ca8c85943f",
           "observable": {
@@ -3187,7 +3187,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -3197,7 +3197,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "90fb99f342d1d3dfa75e51a7fd0c87a35fc84ca1f26168d0d3af9bc769fa8b39",
+          "fingerprint": "705b338dcc5b0d61f92c20ca15da361bbfee5bd96a9606ddb90decca4d1fb10d",
           "raw_sha256": "63a53e897c4a5aa4c903ed42d699b6f6ca07570de888d4588587592bfd5347df",
           "expected_behavior_sha256": "81eaa672e95506e3b3d1fe14544a281ff5beb7890c1106c7a26da1ca8c85943f",
           "observable": {
@@ -3207,7 +3207,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/using-loom-code/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     },
@@ -3298,7 +3298,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "1514505af72a247d921990a80b23391edf0a7485d71e75b38027579e6502f24f",
+          "fingerprint": "de5b62c0d865d20500cf324b01896807637ce2154b77c6ba8b8961d289070fb4",
           "raw_sha256": "e8e47a192476c30f3ebcb180b0779f2f594a6508093bb0873d1d21594d0fbf2e",
           "expected_behavior_sha256": "fea0066517cd0d3ef04fcb45cf3f422332f2c2d6e8d5c20a47651cd8c05a1f94",
           "observable": {
@@ -3308,7 +3308,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -3318,7 +3318,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "3d31af5def8fa7a2519c44dd0077eeea1b0fc2cf19ffedc1e0a707607d14e959",
+          "fingerprint": "7a6b423382811db7e14a1e7f3bbc1d837bc408c412ee01eab9d8d5d52f734960",
           "raw_sha256": "1bd875041550a077c87d9be03ce1e38bcb83b4bdabb72b3e0ac54de70ea19b19",
           "expected_behavior_sha256": "fea0066517cd0d3ef04fcb45cf3f422332f2c2d6e8d5c20a47651cd8c05a1f94",
           "observable": {
@@ -3328,7 +3328,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -3378,7 +3378,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "fa61c4c9faa4c2e1b51b51356e38bedecbb30f8ed28e73c7082567795dcb73d1",
+          "fingerprint": "6c0db7342cfe6e6f21d84984d3fca1a584198698ea0c95b0ddd48ca26125979b",
           "raw_sha256": "6e6e467d2103a9a7fb3baef2def3d0819305a2f47ef2fdb7ed6a4bc1303c0988",
           "expected_behavior_sha256": "aae334e6f3c65f88773e51774b02c4f4f1331c7c6c956c701f16f885d33ef1ad",
           "observable": {
@@ -3388,7 +3388,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -3398,7 +3398,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "660ef76ce29eaf05a27364a5c486311c1d4c03863ceeaddf7b766a668c775fe7",
+          "fingerprint": "5340722e640acb0ad509ff30db377112f799227f99e241f042e5e310c1fd6900",
           "raw_sha256": "b886a46bd9ca1da853b0d638f2bb6e0f3680adeedae96b08dc142016e1be85e7",
           "expected_behavior_sha256": "aae334e6f3c65f88773e51774b02c4f4f1331c7c6c956c701f16f885d33ef1ad",
           "observable": {
@@ -3408,7 +3408,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -3458,7 +3458,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "bb7db6a8d4ff32ec15bebe804b0016dbc8778bb55d6ea4683259eb09362137c4",
+          "fingerprint": "9aa9639c3b076b3f6ec0d80009456feee8e51fda19bfa324fbfb0885f732793c",
           "raw_sha256": "f0720d49e699cd91c674978aa1942034e677ff9bb7e29e6b46125829fd1f0ce8",
           "expected_behavior_sha256": "7a5ff9a6b6f08f9e0fe9152f83a4f62fc0bf3a5c781605daa39baaa4d8b12776",
           "observable": {
@@ -3468,7 +3468,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -3478,7 +3478,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "0f2a5eff6579694a976e5e8df0008c503618ce877e8d957ec1e8b8ef67be8a29",
+          "fingerprint": "f67e9f44089498c913823b2a198bd0cf3cf7d28886bdc273c9a34bf2489a4c34",
           "raw_sha256": "e8eae3e4c240009c21f66a7fff461c14fc98639cf006c56ba800e016fc58f155",
           "expected_behavior_sha256": "7a5ff9a6b6f08f9e0fe9152f83a4f62fc0bf3a5c781605daa39baaa4d8b12776",
           "observable": {
@@ -3488,7 +3488,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/verification-before-completion/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     },
@@ -3602,7 +3602,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "e2e88f4c54f4a0df28f3f71b20756cbebb8768c4431e92ed4ee2984efc461b3e",
+          "fingerprint": "13c24fd542a8b8c123f046cedb9956e64d3be3af95a362ae284bf8bb9ce4f728",
           "raw_sha256": "cd74b6f2dba2adcba1f2e085fa2bc28a2bc6358eea55645cf6ecbec653dcd879",
           "expected_behavior_sha256": "2f5d06336a8c7f57e33acf1ffcb73e85c56f0d452380beb75cba044350cc5d91",
           "observable": {
@@ -3612,7 +3612,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 1,
@@ -3622,7 +3622,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "c3d6bcb0b6527d1b982364f06df0fb46662e23952d21173c3148835120963492",
+          "fingerprint": "17cfc513912e4f08c36c8b30d431d3be58bdb7f0e619e58cb540401e64443786",
           "raw_sha256": "34e143a69394b57cac419add81f14c6a626e94fb07412507b94c5231803d40bd",
           "expected_behavior_sha256": "2f5d06336a8c7f57e33acf1ffcb73e85c56f0d452380beb75cba044350cc5d91",
           "observable": {
@@ -3632,7 +3632,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p1-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -3682,7 +3682,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "380847800fba3e2c486a509f586ada771b567f74d4653162f8f0d3419bcddd6d",
+          "fingerprint": "d24b52aac78cac780254300c9509938b2c7bf635a77c31bdbc23b38dd69914f3",
           "raw_sha256": "ba76f2e9394f3576d5c15b535584c37aec0b7b3ac542509e99b36b630a394d98",
           "expected_behavior_sha256": "6c051be8b9279b1e93e831f0b66e530335ea28b43b8a247c0a7c97d62e201a97",
           "observable": {
@@ -3692,7 +3692,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p2-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p2-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 2,
@@ -3702,7 +3702,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "142c03d1b0b3b9caf784e616aac195bbca73ba3fceb609a9400223c255c0b3ae",
+          "fingerprint": "71078a4a28a2cf5327ab21ab1859c1e74c98ab64fa3b8c51d3055601580761aa",
           "raw_sha256": "83265f1ef9885c91118490fe97e43a1d5a6be4b8db78de8e9f737655b11a4dd0",
           "expected_behavior_sha256": "6c051be8b9279b1e93e831f0b66e530335ea28b43b8a247c0a7c97d62e201a97",
           "observable": {
@@ -3712,7 +3712,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p2-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p2-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -3762,7 +3762,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "f24a6c07d2d8ad153d548be8d1222f9ca9bd9f7b40d56efcdc91752e13449be8",
+          "fingerprint": "4dbd7888cd7f10399c50e7c8dc9a9dc716eff6d4e4c1e1797e8628c8ae505f16",
           "raw_sha256": "a0847c0cee10853ccc006d7e65d66273786f8de671753c2dfbac24ec20766e92",
           "expected_behavior_sha256": "30a92aa0a21c51589521df13da91e106c80cb8cc9f82fd8582e4bae4731be543",
           "observable": {
@@ -3772,7 +3772,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 3,
@@ -3782,7 +3782,7 @@
           "classification": "EXACT",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "62630fb2ea641f661b05da13626d57b3fdd4e8207c26c24ad5e2b5bd28d0db90",
+          "fingerprint": "3b4600adfe59c58eea879447005b5feac1cc5361f7c2847429d9ade5d8eaa3d8",
           "raw_sha256": "028df853e9991b57fdcfa404d654bf2c747b10bcb23b905e62ee6d1138040d01",
           "expected_behavior_sha256": "30a92aa0a21c51589521df13da91e106c80cb8cc9f82fd8582e4bae4731be543",
           "observable": {
@@ -3792,7 +3792,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p3-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 4,
@@ -3842,7 +3842,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "413e4d9f80c013554517dc09222cdffda37a8e96584e09e7838885a6c940895a",
+          "fingerprint": "d800fe0541e2a6de7c7f2a5d5f979e1272fb46e71d2f0fa88d59bcd172dbedb8",
           "raw_sha256": "8c267de09d00c05414644426d13d0912d69e999ef6ec7aa5f7db0bea1dc78925",
           "expected_behavior_sha256": "834317811e8fd7f8777aaedd29f35d37bb52198c71da0159bdec9c1ec10ae7a7",
           "observable": {
@@ -3852,7 +3852,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p4-codex-r0.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p4-codex-r0.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         },
         {
           "prompt_id": 4,
@@ -3862,7 +3862,7 @@
           "classification": "FAMILY",
           "status": "completed",
           "exit_code": 0,
-          "fingerprint": "e4281177e3dab81b4d0dcb891d9c114736f9bf191914ebd7e4d8b8df8a3c7e11",
+          "fingerprint": "6725b78901728c435f65bf656ceaa89c820ed26018de9bb6559251af8923ff54",
           "raw_sha256": "5f760696a3a1ef6d812b80a1fdde186d6996e4e55ae230da7379d7ade958735d",
           "expected_behavior_sha256": "834317811e8fd7f8777aaedd29f35d37bb52198c71da0159bdec9c1ec10ae7a7",
           "observable": {
@@ -3872,7 +3872,7 @@
           },
           "raw": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p4-codex-r1.jsonl",
           "raw_metadata": "loom-code-preflight-20260826-second-half-v2/raw/writing-plans/p4-codex-r1.meta.json",
-          "capture_contract_fingerprint": "28df51aec0e1c825a3fd13c5954dfd2109cb4e9f04d46f27696383116777db6c"
+          "capture_contract_fingerprint": "18d66694f92b4b6336aecea991956c3fd70a863df30712dde77a5accf4949b35"
         }
       ]
     }
@@ -3939,22 +3939,20 @@
       "model": "gpt-5.6-luna",
       "argv_semantics": {
         "allowed_tools": null,
-        "max_turns": 12,
         "mode": "codex-isolated-plugin",
         "sandbox": "workspace-write"
       },
-      "timeout_seconds": 360
+      "timeout_seconds": 180
     },
     {
       "host": "codex",
       "model": "gpt-5.6-luna",
       "argv_semantics": {
         "allowed_tools": null,
-        "max_turns": 4,
         "mode": "codex-isolated-plugin",
         "sandbox": "workspace-write"
       },
-      "timeout_seconds": 180
+      "timeout_seconds": 360
     }
   ]
 }

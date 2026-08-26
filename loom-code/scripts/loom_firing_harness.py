@@ -392,12 +392,19 @@ def _plugin_tree_fingerprint(root: Path) -> str:
         if path.is_symlink():
             raise ValueError(f"Codex plugin root contains symlink: {relative}")
         if path.is_dir():
-            digest.update(f"D\0{relative}\0".encode())
+            payload = b""
+            kind = "D"
         elif path.is_file():
-            digest.update(f"F\0{relative}\0".encode())
-            digest.update(path.read_bytes())
+            payload = path.read_bytes()
+            kind = "F"
         else:
             raise ValueError(f"Codex plugin root contains special file: {relative}")
+        entry = json.dumps(
+            [kind, relative, hashlib.sha256(payload).hexdigest()],
+            ensure_ascii=False, separators=(",", ":"),
+        ).encode()
+        digest.update(len(entry).to_bytes(8, "big"))
+        digest.update(entry)
     return digest.hexdigest()
 
 
@@ -423,15 +430,24 @@ def _prepare_codex_root(invocation: HostInvocation, env: dict[str, str]) -> None
         "plugin_name": plugin_name,
         "root_label": invocation.root_label,
     }
+    target = marketplace / plugin_name
     try:
-        prepared = json.loads(marker.read_text(encoding="utf-8")) == marker_payload
+        installed_matches = (
+            not target.is_symlink()
+            and _plugin_tree_fingerprint(target) == plugin_fingerprint
+        )
+        prepared = (
+            json.loads(marker.read_text(encoding="utf-8")) == marker_payload
+            and installed_matches
+        )
     except (OSError, json.JSONDecodeError):
+        prepared = False
+    except ValueError:
         prepared = False
     if not prepared:
         invocation.codex_home.mkdir(parents=True, exist_ok=True)
         if marketplace.exists():
             shutil.rmtree(marketplace)
-        target = marketplace / plugin_name
         if target.parent.resolve() != marketplace.resolve():
             raise ValueError("Codex plugin manifest name escapes marketplace")
         shutil.copytree(invocation.plugin_root, target)
@@ -532,9 +548,10 @@ def _normalize_observable(host: str, transcript: str) -> dict:
         usage = event.get("usage")
         if isinstance(usage, dict):
             tokens = dict(usage)
+    completed = any(event.get("type") == "turn.completed" for event in events)
     return {
         "fired": fired,
-        "result_subtype": "completed" if events else "",
+        "result_subtype": "completed" if completed else "",
         "tool_sequence": tuple(commands),
         "tokens": tokens,
     }
@@ -542,6 +559,12 @@ def _normalize_observable(host: str, transcript: str) -> dict:
 
 def _comparison_verdict(pairs: list[tuple[dict, dict]]) -> str:
     """Require two identical observable changes before assigning direction."""
+    gradeable = {"success", "error_max_turns", "completed"}
+    if any(
+        run["observable"].get("result_subtype") not in gradeable
+        for pair in pairs for run in pair
+    ):
+        return "INCONCLUSIVE"
     differences: dict[tuple[str, str], list[tuple[dict, dict]]] = {}
     for baseline, candidate in pairs:
         before_observable = {
@@ -615,6 +638,7 @@ def compare_hosts(
                     raw_path.write_text(transcript, encoding="utf-8")
                     runs.append({
                         **record,
+                        "record_index": record_index,
                         "host": host,
                         "root_label": root_label,
                         "plugin_root": str(plugin_root),
@@ -629,7 +653,12 @@ def compare_hosts(
         for host in _HOSTS:
             pairs = []
             for replicate in range(replicates):
-                matching = [run for run in runs if run["host"] == host and run["replicate"] == replicate and run["query"] == record["query"]]
+                matching = [
+                    run for run in runs
+                    if run["host"] == host
+                    and run["replicate"] == replicate
+                    and run["record_index"] == record_index
+                ]
                 pairs.append((next(run for run in matching if run["root_label"] == "baseline"), next(run for run in matching if run["root_label"] == "candidate")))
             comparisons.append({"record_index": record_index, "host": host, "verdict": _comparison_verdict(pairs)})
     return {"runs": runs, "comparisons": comparisons}

@@ -593,6 +593,67 @@ def test_prepare_codex_root_refreshes_changed_plugin_bytes(tmp_path, monkeypatch
         loom_firing_harness._prepare_codex_root(_codex_invocation(root, home), {})
 
     assert (home / "marketplace" / "loom-code" / "identity").read_text() == "new"
+    installed = home / "marketplace" / "loom-code" / "identity"
+    installed.write_text("tampered", encoding="utf-8")
+    loom_firing_harness._prepare_codex_root(_codex_invocation(roots[-1], home), {})
+    assert installed.read_text(encoding="utf-8") == "new"
+
+
+def test_plugin_tree_fingerprint_frames_file_boundaries(tmp_path):
+    first = tmp_path / "first"; first.mkdir()
+    second = tmp_path / "second"; second.mkdir()
+    (first / "a").write_bytes(b"XF\0b\0Y")
+    (second / "a").write_bytes(b"X")
+    (second / "b").write_bytes(b"Y")
+
+    assert (
+        loom_firing_harness._plugin_tree_fingerprint(first)
+        != loom_firing_harness._plugin_tree_fingerprint(second)
+    )
+
+
+def test_compare_hosts_empty_transcripts_are_inconclusive(tmp_path):
+    result = loom_firing_harness.compare_hosts(
+        [{"query": "same", "expected": "NONE", "notes": "empty"}],
+        tmp_path / "baseline", tmp_path / "candidate", replicates=2,
+        raw_dir=tmp_path / "raw", runner=lambda invocation: "",
+    )
+    assert {item["verdict"] for item in result["comparisons"]} == {"INCONCLUSIVE"}
+
+
+def test_compare_hosts_pairs_duplicate_queries_by_record_index(tmp_path):
+    records = [
+        {"query": "same", "expected": "loom-code:brainstorming", "notes": "first"},
+        {"query": "same", "expected": "loom-code:brainstorming", "notes": "second"},
+    ]
+
+    def runner(invocation):
+        fired = "loom-code:brainstorming"
+        if invocation.root_label == "candidate" and invocation.record["notes"] == "second":
+            fired = "loom-code:other"
+        if invocation.host == "claude":
+            return "\n".join((
+                json.dumps({"type": "assistant", "message": {"content": [{
+                    "type": "tool_use", "name": "Skill", "input": {"skill": fired},
+                }]}}),
+                json.dumps({"type": "result", "subtype": "success", "result": "ok"}),
+            ))
+        return "\n".join((
+            json.dumps({"type": "item.completed", "item": {
+                "type": "command_execution", "command": f"skill {fired}",
+            }}),
+            json.dumps({"type": "turn.completed", "usage": {"input_tokens": 1}}),
+        ))
+
+    result = loom_firing_harness.compare_hosts(
+        records, tmp_path / "baseline", tmp_path / "candidate", replicates=2,
+        raw_dir=tmp_path / "raw", runner=runner,
+    )
+    verdicts = {(item["record_index"], item["host"]): item["verdict"] for item in result["comparisons"]}
+    assert verdicts[(0, "claude")] == "PASS"
+    assert verdicts[(0, "codex")] == "PASS"
+    assert verdicts[(1, "claude")] == "REGRESSION"
+    assert verdicts[(1, "codex")] == "REGRESSION"
 
 
 def test_codex_root_invocation_loads_isolated_plugin_config(tmp_path):
