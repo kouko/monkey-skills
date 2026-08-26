@@ -18,6 +18,14 @@ def _git(repo: Path, *args: str) -> str:
 
 
 def test_exported_baseline_is_revision_bound_and_drift_refuses(tmp_path: Path) -> None:
+    """Ground the Git surfaces used by export_baseline.
+
+    This session verified `git rev-parse -h`, `git cat-file -h`, and
+    `git archive -h`; their durable references are
+    https://git-scm.com/docs/git-rev-parse,
+    https://git-scm.com/docs/git-cat-file, and
+    https://git-scm.com/docs/git-archive.
+    """
     from package_gate import export_baseline, verify_baseline
 
     repo = tmp_path / "repo"
