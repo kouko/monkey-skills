@@ -23,6 +23,7 @@ def test_docs_review_treats_confirmation_limit_as_quality_stop() -> None:
     assert "quality stop, not a new permission boundary" in text
     assert "no second cycle without explicit user authorization" not in text
     assert "on its own authority" not in text
+    assert "on your own authority" not in text
     assert "hands the decision to the user" not in text
 
 
