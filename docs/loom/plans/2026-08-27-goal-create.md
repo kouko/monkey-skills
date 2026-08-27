@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-27-goal-create.md
 Goal: 讓 `loom-workflow:goal-create` 以一個 skill 兩個模式出貨——SESSION 產出四欄目標餵給 `/goal`，ARC 草擬 `PURPOSE.md` 的 Why/Done-when 交使用者拍板——並在輸入不足時拒絕產出。
-Stage: planning
+Stage: review:round-1
 Total tasks: 12
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
@@ -48,7 +48,7 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-2, BI-10
-- **Status**: pending
+- **Status**: done(6736335f)
 - **Gloss**: 先把「一個目標長什麼樣」寫死，後面的 lint 與 SKILL.md 都引用它。
 
 ## Task 2 — 輸入門檻與棒子的參考檔
@@ -74,14 +74,17 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
   - from Task 1: payload: the field names `Outcome` and `Verification`, read from goal-shape.md; owner: Task 1; probe: test_input_floor.py::test_slot_mapping_uses_the_shape_reference_field_names
 - **Independent**: false
 - **Brief item covered**: BI-4, BI-5, BI-8, BI-9
-- **Status**: pending
+- **Status**: done(ca2eb9fb)
 - **Gloss**: 決定什麼時候「不准寫目標」，以及每一欄的來源要怎麼標。
 
 ## Task 3 — lint 的語法地板
 
 - **Description**: Implement the mechanical floor as a script failing only on what is decidable syntactically.
-  - Hard failures: a missing or empty field label, no stop clause, no backticked command inside `Verification`, text over the character limit.
-  - Warnings that never fail: wording that may be undecidable, completion that may depend on a person.
+  - Hard failures, three of them: a missing or empty field label; no backticked command inside `Verification`; text over the character limit.
+  - `Stop-when` is covered by the field check alone. Whether its content actually bounds the run needs intent read, so it is a warning, never a hard failure — a marker-word list false-fails present-day English such as "Halt after 20 turns".
+  - No check may enumerate the words a rule forbids; every list of that shape on this branch has been defeated by a word outside it.
+  - Field parsing is context-aware: a label line inside a fenced code block or an inline span within another field's content is content, not a field boundary.
+  - Warnings that never fail: a `Stop-when` whose content may not bound the run, wording that may be undecidable, completion that may depend on a person.
   - Anything unmechanisable prints as UNCHECKED and is never counted as a pass.
   - Character count, not byte count — the limit is characters, and CJK text makes the two diverge.
 - **Module**: loom-workflow/skills/goal-create/scripts
@@ -91,19 +94,19 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
   - docs/loom/audits/2026-08-27-goal-create-experiments.md
 - **Acceptance**:
   - **RED**: `test_goal_lint.py::test_floor_fails_structure_and_warns_on_judgment` fails — the module does not exist.
-  - **GREEN**: the test passes, asserting a structurally complete goal exits 0, each of the four hard violations exits non-zero, and a judgment-flavoured violation warns while still exiting 0.
+  - **GREEN**: the test passes, asserting a structurally complete goal exits 0, each of the three hard violations exits non-zero, a judgment-flavoured violation warns while still exiting 0, and a field whose content quotes a label line inside a fenced block is parsed whole.
   - Cross-seam probe: `test_goal_lint.py::test_field_labels_match_the_shape_reference` reads `goal-shape.md` and asserts the labels the checker looks for are the labels that file defines.
 - **Dependencies**: Task 1 completes first
 - **Seam**:
   - from Task 1: payload: the four field labels and the character limit, read as literals by the checker; owner: Task 1; probe: test_goal_lint.py::test_field_labels_match_the_shape_reference
 - **Independent**: true
 - **Brief item covered**: BI-13
-- **Status**: pending
+- **Status**: done(305c0621)
 - **Gloss**: 只擋格式，不假裝能判斷品質——擋錯比擋不到更糟。
 
 ## Task 4 — lint 的三語覆蓋
 
-- **Description**: Hold the floor's behaviour on goal text written in Traditional Chinese, English and Japanese.
+- **Description**: Hold the floor's behaviour on goal text written in Traditional Chinese, English and Japanese. The floor carries no word list, so no language needs one added.
   - A language-bound check over goal text fails silently rather than loudly: it passes everything or fails everything, and reports no error either way.
   - One structurally complete and one structurally broken goal per language, judged identically to their English equivalents.
 - **Module**: loom-workflow/skills/goal-create/scripts
@@ -119,7 +122,7 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
   - from Task 3: payload: the checker's public entry point and its exit codes; owner: Task 3; probe: test_goal_lint_languages.py::test_floor_holds_across_zh_en_ja
 - **Independent**: true
 - **Brief item covered**: BI-14
-- **Status**: pending
+- **Status**: done(b32d51c2)
 - **Gloss**: 沒測過的語言等於沒有檢查——它不會報錯，只會整批放行或整批擋掉。
 
 ## Task 5 — SKILL.md 主體
@@ -147,7 +150,7 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
   - from Task 3: payload: the checker's script path, written into SKILL.md as its invocation line; owner: Task 3; probe: test_skill_md.py::test_floor_invocation_line_names_the_script
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-3, BI-7, BI-15
-- **Status**: pending
+- **Status**: done(bc191eff)
 - **Gloss**: 兩個模式的入口；ARC 在沒有 loom 的 repo 要大聲說「不適用」而不是靜靜壞掉。
 
 ## Task 6 — 呼叫契約
@@ -168,7 +171,7 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
   - from Task 5: payload: none
 - **Independent**: false
 - **Brief item covered**: BI-11
-- **Status**: pending
+- **Status**: done(78d98ec9)
 - **Gloss**: 這條是這個 skill 最可能的死因——沒人叫它，所以「在哪裡被提到」要寫死。
 
 ## Task 7 — 三語 README
@@ -189,7 +192,7 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
   - from Task 5: payload: none
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(3bd8bf99)
 - **Gloss**: 跟其他 skill 一致的三語門面。
 
 ## Task 8 — compaction 測試
@@ -210,7 +213,7 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
   - from Task 5: payload: the pinned phrase list, copied verbatim out of SKILL.md; owner: Task 5; probe: test_goal_create_compaction.py::test_entrypoint_preserves_modes_floor_and_invocation
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(5086bd2e)
 - **Gloss**: 防止之後有人壓縮 SKILL.md 時把承重的句子壓掉。
 
 ## Task 9 — manifest 與版本
@@ -219,21 +222,22 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
   - Name the slug `goal-create` in the plugin description, and bump the plugin version.
   - Mirror the manifest for the other host, and keep the marketplace description byte-identical to the plugin manifest's.
   - Record a changelog entry for each plugin this branch changes; Tasks 10 and 11 change loom-code, so both are in scope.
+  - A version bump is one atomic unit with the tests that pin the shipped version. Two tests in loom-code assert the current version literally, one of them in its own function name, and this repository's convention is that whoever bumps rewrites them in the same change.
 - **Module**: loom-workflow
-- **Files touched**: loom-workflow/.claude-plugin/plugin.json, loom-workflow/.codex-plugin/plugin.json, .claude-plugin/marketplace.json, loom-workflow/CHANGELOG.md, loom-code/CHANGELOG.md
+- **Files touched**: loom-workflow/.claude-plugin/plugin.json, loom-workflow/.codex-plugin/plugin.json, .claude-plugin/marketplace.json, loom-workflow/CHANGELOG.md, loom-code/CHANGELOG.md, loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/scripts/test_docs_review_blocking_class.py, loom-code/scripts/test_review_context.py
 - **Context paths**:
   - scripts/check-marketplace-description-sync.py
   - scripts/check-skill-structure.py
   - loom-workflow/.claude-plugin/plugin.json
 - **Acceptance**:
   - **RED**: `scripts/check-skill-structure.py` reports the description naming no `goal-create` folder, or `scripts/check-marketplace-description-sync.py` reports divergence.
-  - **GREEN**: `scripts/check-skill-structure.py` and `scripts/check-marketplace-description-sync.py` both exit 0, and the version-bump check reports a bump for each plugin this branch changed.
+  - **GREEN**: `scripts/check-skill-structure.py` and `scripts/check-marketplace-description-sync.py` both exit 0, the version-bump check reports a bump for each plugin this branch changed, and the full package suite is green with the version-pinning tests updated to the shipped versions.
 - **Dependencies**: Task 5 completes first
 - **Seam**:
   - from Task 5: payload: the skill slug goal-create, which the coherence check resolves to a folder; owner: Task 5; probe: scripts/check-skill-structure.py
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(45e274e6)
 - **Gloss**: 沒 bump 版本的話 marketplace 更新會靜默 no-op，這條踩過很多次。
 
 ## Task 10 — exit-2 訊息指路
@@ -253,7 +257,7 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-12, BI-11
-- **Status**: pending
+- **Status**: done(9e86401b)
 - **Gloss**: 冷啟 repo 唯一會撞到的地方，加一行指路成本近乎零。
 
 ## Task 11 — close-out 邀約指路
@@ -269,7 +273,7 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-6
-- **Status**: pending
+- **Status**: done(6736335f)
 - **Gloss**: 那句「if absent, offer to write one」終於有東西可指。
 
 ## Task 12 — handoff 收尾指路
@@ -286,13 +290,15 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-11
-- **Status**: pending
+- **Status**: done(4d3906bb)
 - **Gloss**: 第二個提名點，選在你最常想起「這輪到底要幹嘛」的時刻。
 
 ## Notes
 
 - Verdict stamped PASS (2026-08-27, round 3 — post-amendment re-review) — stamping the verdict, no re-review.
 - Kickoff decision: Task 10's message mentions the skill conditionally rather than by instruction, because this family's standing decision is that no plugin declares another as a mandatory dependency and standalone installation must work. A reader with only loom-code installed gets complete instructions; a reader with both gets a shortcut. This changed Task 10's Description and Acceptance, so the plan re-reviews.
+- Amendment (2026-08-27, during execution): Task 9's `Files touched` gained loom-code's two manifests and the two tests that pin loom-code's shipped version. The implementer bumped loom-code, found the pinned tests red, and reverted rather than edit files no task owned — correctly, since the plan had assigned the bump's consequences to nobody. A bump and its version pins are one unit; splitting them leaves the suite red or the changelog documenting a version that never shipped. Task 9's Description and Acceptance changed, so the plan re-reviews.
+- Amendment (2026-08-27, after review): Task 3's hard-failure set went from four to three. The stop-clause check was specified as syntactic but is not — a marker-word list false-fails legitimate English such as "Halt after 20 turns" — so `Stop-when` is covered by the field-presence check and any judgement about its content is advisory. Task 3's Description and Acceptance changed, so the plan re-reviews. This also removes the word list Task 4 would otherwise have had to extend from a file outside its declared set.
 - Kickoff decision: `goal_lint.py` stays inside the skill folder, matching handoff, recap-state and cot-explain, so the skill remains self-contained. The day another skill wants the same floor, this choice costs a cross-skill reference or a move with three call sites to update.
 - Tasks 10, 11 and 12 change files outside the new skill folder and carry no dependency on it, so they may run first or last. Their pointers name the skill by its plugin-qualified name, which this plan fixes as `loom-workflow:goal-create`.
 - Task 9 covers both plugins' changelogs because Tasks 10 and 11 change loom-code, so this branch bumps two plugins.
