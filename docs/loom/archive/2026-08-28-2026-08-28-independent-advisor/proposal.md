@@ -1,3 +1,7 @@
+---
+status: closed
+---
+
 # independent-advisor — spec expansion proposal
 
 - change-id: `2026-08-28-independent-advisor`

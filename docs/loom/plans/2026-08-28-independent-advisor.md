@@ -5,7 +5,7 @@ Goal: 一個 `loom-workflow:independent-advisor` skill 能在本機端到端跑�
     依可引用事實路由模式、靜態偵測執行者、單一檢查點取得核准並揭露出境範圍、
     只對已選執行者做活體探針且 frontier 不靜默降級、以雙順序盲審派出三角色腿、
     最後交出以分歧為首並誠實揭露降級與成本的報告。
-Stage: sdd:wave-1
+Stage: finishing
 **Total tasks**: 11
 **Critical-path depth**: 3 (≤5 ✓)
 **Execution order**: parallel-where-possible

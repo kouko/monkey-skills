@@ -66,6 +66,11 @@ Read these before you rely on a result:
   what is deliberately assembled and sent. It does not cover everything the
   external executor can read once it is running. Assume anything reachable
   from its environment is in scope for it.
+- **Blindness is a claim about the packet, not the leg.** The challenger is
+  not shown your proposal — it is kept out of the dispatch packet. But the
+  challenger may still read files inside the range it was authorised to open,
+  and those files can describe your proposal. So the report qualifies the
+  independence claim rather than asserting it.
 - **Agreement is weak evidence.** When two legs read the same material and
   reach the same conclusion, that agreement measures the material, not the
   world. It is not a strong signal, and a report must not present it as one.

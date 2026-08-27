@@ -7,7 +7,9 @@ Assertions per plan Task 8 Acceptance:
   3. Each documents BOTH modes (`explore` / `audit`).
   4. Each carries the honest-framing caveats (privacy scope is the dispatch
      packet only; agreement between legs reading the same material is weak
-     evidence) and never claims complete / comprehensive / exhaustive coverage.
+     evidence; blindness is a claim about the dispatch packet only, so the
+     independence claim is qualified rather than asserted) and never claims
+     complete / comprehensive / exhaustive coverage.
   5. JA and zh-TW READMEs each list >=2 native invocation phrases.
 """
 
@@ -53,6 +55,14 @@ CONCEPT_MATCHERS = {
         # zh-TW
         "同一份材料", "不是強證據", "衡量的是材料",
     ],
+    "caveat-qualified-blindness": [
+        # EN
+        "not the leg", "qualifies the independence claim",
+        # JA
+        "独立性を断定せず", "渡された範囲",
+        # zh-TW
+        "不是直接斷定", "授權範圍內",
+    ],
     "invocation-phrases": [
         # EN
         "second opinion", "ask a stronger model",
@@ -71,6 +81,7 @@ REQUIRED_CONCEPTS = [
     "mode-audit",
     "caveat-privacy-scope",
     "caveat-agreement-weak",
+    "caveat-qualified-blindness",
     "invocation-phrases",
 ]
 
