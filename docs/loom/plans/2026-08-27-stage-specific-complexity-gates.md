@@ -10,7 +10,7 @@ Steps:
 **Total tasks**: 9
 **Critical-path depth**: 3
 **Execution order**: parallel by dependency level
-**Plan-document-reviewer verdict**: PASS (2026-08-27; 19/19 checks, round 3)
+**Plan-document-reviewer verdict**: PASS (2026-08-27; 19/19 checks, round 4)
 
 ## Task-flow diagram
 
@@ -145,15 +145,15 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
   - **RED**: `python3 -m pytest scripts/test_stage_specific_complexity_contract.py::test_stage_contract_owns_each_lens_and_forbids_private_plugin_paths -q` fails because stage ownership, cold fallback, and four-meaning relay coverage are not protected.
   - **GREEN**: The focused test proves cold-package local pointers with no sibling present; the existing install-layout and composition suites prove standalone package layout and public project-artifact handoff. Task 9 separately proves local judgment when optional upstream evidence is absent.
   - **GREEN**: `python3 scripts/check_plugin_boundaries.py loom-code` and the corresponding `loom-design` command reject private sibling paths and pass the shipped packages.
-  - **GREEN**: `stage contract identifies business-value as the owner`; `stage contract preserves eight DESIGN.md sections`; `cold install emits flow fallback without spec-expansion`; `cold install evaluates spec complexity without ui-flows.md`; `cold install evaluates plan complexity without loom-design`; and `cold install reviews complexity without upstream artifacts`.
+  - **GREEN**: `stage contract identifies business-value as the owner`; `stage contract preserves eight DESIGN.md sections`; `cold package contains flow fallback contract without spec-expansion`; `cold package contains spec fallback contract without ui-flows.md`; `cold package contains plan fallback contract without loom-design`; and `cold package contains review fallback contract without upstream artifacts`.
 - **Dependencies**: Tasks 1, 2, 3, 4, 5, 6 complete first
 - **Seam**:
   - from Task 1: payload: business lens and artifact wording; owner: Task 1; probe: `stage contract identifies business-value as the owner`
   - from Task 2: payload: visual lens and canonical placement; owner: Task 2; probe: `stage contract preserves eight DESIGN.md sections`
-  - from Task 3: payload: flow lens and ui-flows handoff; owner: Task 3; probe: `cold install emits flow fallback without spec-expansion`
-  - from Task 4: payload: behavioral lens and missing-upstream fallback; owner: Task 4; probe: `cold install evaluates spec complexity without ui-flows.md`
-  - from Task 5: payload: plan lens and artifact contract; owner: Task 5; probe: `cold install evaluates plan complexity without loom-design`
-  - from Task 6: payload: implemented-delta lens and optional evidence read; owner: Task 6; probe: `cold install reviews complexity without upstream artifacts`
+  - from Task 3: payload: flow lens and ui-flows handoff; owner: Task 3; probe: `cold package contains flow fallback contract without spec-expansion`
+  - from Task 4: payload: behavioral lens and missing-upstream fallback; owner: Task 4; probe: `cold package contains spec fallback contract without ui-flows.md`
+  - from Task 5: payload: plan lens and artifact contract; owner: Task 5; probe: `cold package contains plan fallback contract without loom-design`
+  - from Task 6: payload: implemented-delta lens and optional evidence read; owner: Task 6; probe: `cold package contains review fallback contract without upstream artifacts`
 - **Independent**: false
 - **Brief item covered**: BI-3, BI-4, BI-11, BI-13, BI-14
 - **Status**: pending
