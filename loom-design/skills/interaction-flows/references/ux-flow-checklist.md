@@ -126,6 +126,15 @@ has a small/constrained form factor.
 
 ---
 
+## Complexity handoff (not an eighth dimension)
+
+After the seven surface dimensions, add an addressable `## Complexity handoff`
+section to `ui-flows.md` using `interaction-complexity-lens.md`. It records
+the local flow assessment and is optional evidence for spec-expansion; missing
+upstream evidence never blocks that stage's own assessment.
+
+---
+
 ## Seam to spec-expansion
 
 This checklist produces the **surface**: inventory, flows, layout, transitions

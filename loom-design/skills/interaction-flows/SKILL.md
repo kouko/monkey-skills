@@ -74,6 +74,10 @@ detected modality:
 7. **Information density + mobile flow** — each surface's density and constrained
    form (GUI mobile reflow, TUI narrow terminal, CLI non-TTY/piped output).
 
+After the seven dimensions, write the stable `## Complexity handoff` section
+from `references/interaction-complexity-lens.md`. It is optional upstream
+evidence for spec-expansion, never a behavioral gate: this skill does not author behavioral guards.
+
 **Before drafting a flow, transition, or display convention (color/sign/period)
 not derivable from PRINCIPLES.md or the seed, read
 `references/knowledge-triage.md` and run its classification question FIRST.**
