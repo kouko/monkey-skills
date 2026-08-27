@@ -17,11 +17,26 @@ result; do not fill it in from what you expect the host to have.
 
 Per candidate:
 
-1. **Is the binary on PATH?** Run the candidate's lookup command, e.g.
-   `command -v codex` for Codex, or `command -v claude` for Claude Code.
-   Record the printed path. Empty output → `binary-missing`.
-2. **Is that path executable?** Run `test -x <the path step 1 printed>` and
-   record the exit status. Non-zero → `binary-not-executable`.
+1. **Does the binary resolve to an absolute path?** Run the resolution in a
+   non-interactive POSIX shell: `sh -c 'command -v codex'` for Codex, or
+   `sh -c 'command -v claude'` for Claude Code. Record the resolved value.
+   A bare `command -v` run in the user's own interactive shell is not enough:
+   where the command is aliased there, it prints the alias definition rather
+   than a path, and step 2's `test -x` then fails against text that was never a
+   path at all — recording a working executor as broken. `sh -c` is what
+   removes that failure mode, because a non-interactive `sh`
+   **does not read the user's interactive shell configuration** and so has no
+   aliases to expand; do not "simplify" it back to a bare `command -v`. It is
+   also portable in a way an external resolver is not — `command -v` and `sh`
+   are both POSIX, whereas `which` is a separate program that a minimal host
+   need not ship at all. Judge this step on
+   **whether the resolved value is an absolute path**. Should you ever pipe
+   this check, judge it **never on the pipeline's exit status** — a pipeline
+   exits with its last command's status, so a `| grep | head` chain reports
+   success even when nothing resolved. That is the same policy the live probe
+   runs under below. No absolute path resolved → `binary-missing`.
+2. **Is that path executable?** Run `test -x <the absolute path step 1
+   resolved>` and record the exit status. Non-zero → `binary-not-executable`.
 3. **Does the credential file exist?** Run `ls -l <the candidate's credential
    path>` and record the printed line. For Codex the credential file lives
    under the user's Codex home — `ls -l "${CODEX_HOME:-$HOME/.codex}/auth.json"`.
@@ -48,8 +63,8 @@ them into "unavailable" hands the user a dead end instead of a next action.
 
 | Reason | What was observed | What the user does about it |
 |---|---|---|
-| `binary-missing` | Step 1 printed nothing | Install the executor, or add it to `PATH` |
-| `binary-not-executable` | Step 1 printed a path, step 2 exited non-zero | Fix the file's permissions on that path |
+| `binary-missing` | Step 1 resolved no absolute path | Install the executor, or add it to `PATH` |
+| `binary-not-executable` | Step 1 resolved an absolute path, step 2 exited non-zero | Fix the file's permissions on that path |
 | `credential-missing` | Step 3 found no file at the checked path | Log in / authenticate to create it |
 | `credential-unusable` | Step 3 found the file, step 4 failed or it could not be parsed | Fix permissions on it, or re-authenticate to rewrite it |
 
@@ -70,7 +85,7 @@ evidence: 'ls -l "${CODEX_HOME:-$HOME/.codex}/auth.json"' printed
 ```
 executor: claude
 static_status: statically available, not yet verified
-evidence: 'command -v claude' printed "/usr/local/bin/claude";
+evidence: "sh -c 'command -v claude'" resolved "/usr/local/bin/claude";
   'test -x /usr/local/bin/claude' exited 0;
   credential check exited 0
 ```

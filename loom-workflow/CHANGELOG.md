@@ -4,6 +4,29 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.1] — 2026-08-28 — `independent-advisor` resolves aliased executors
+
+### Fixed
+
+`references/executor-detection.md` told the reader to run `command -v <cmd>`
+and then `test -x` against whatever it printed. On a host where the command is
+shell-aliased, `command -v` prints the alias definition rather than a path —
+measured on macOS/zsh, `command -v codex` prints
+`alias codex='command codex --profile status-line'` — so `test -x` failed
+against text that was never a path and a working executor was recorded as
+`binary-not-executable` and silently dropped from the checkpoint's option
+list. In `explore` mode that starves the candidate set and stops the run, on a
+reason that is simply false.
+
+Step 1 now resolves the executable itself
+(`which -a <cmd> | grep '^/' | head -1`) and is judged on whether the resolved
+value is an absolute path, never on the pipeline's exit status — that pipeline
+exits 0 even when nothing resolved, because `head` succeeded. That is the same
+policy the live probe already ran under, now stated once for both. An empty
+resolution is reclassified `binary-missing`; only a resolved absolute path
+that fails `test -x` is `binary-not-executable`. The exclusion-reason table
+and the worked evidence record follow.
+
 ## [1.1.1] — 2026-08-28 — correct `goal-create`'s vendor attribution
 
 ### Fixed
