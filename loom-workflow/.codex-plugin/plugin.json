@@ -1,6 +1,6 @@
 {
   "name": "loom-workflow",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Loom workflow skills — git memory, decision briefs, critique, recap, handoff, session distill, CoT explainers, goal-create, cross-executor second opinion.",
   "author": {
     "name": "kouko",

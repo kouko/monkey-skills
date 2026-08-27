@@ -121,8 +121,17 @@ def test_static_detection_excludes_and_never_claims_verification():
 
     reference_essence = {
         "checkable invocations": [
-            "command -v codex",
-            "command -v claude",
+            "sh -c 'command -v codex'",
+            "sh -c 'command -v claude'",
+        ],
+        "an alias is not a path, so resolve in a non-interactive shell": [
+            "does not read the user's interactive shell configuration",
+            "whether the resolved value is an absolute path",
+            "never on the pipeline's exit status",
+        ],
+        "an unresolvable command is binary-missing, not not-executable": [
+            "No absolute path resolved → `binary-missing`",
+            "Step 1 resolved no absolute path",
         ],
         "four reasons carry four different fixes": [
             "`binary-missing`",
