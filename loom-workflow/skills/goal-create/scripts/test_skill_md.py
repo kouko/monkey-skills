@@ -18,7 +18,7 @@ Five tests:
      own field text verbatim — that template is the format SSOT.
   5. test_invocation_contract_is_offer_not_trigger — Task 6: the
      description states this skill never auto-fires; an `## Invocation`
-     section names the two offer points where it is surfaced (never
+     section names the three offer points where it is surfaced (never
      invoked) and states the ordering rule against `brainstorming`.
 
 Every polarity-bearing assertion is scoped to a heading section or a
@@ -280,17 +280,19 @@ def test_invocation_contract_is_offer_not_trigger():
 
     invocation_body = _section(text, "Invocation")
 
-    # --- Named at exactly two offer points, both stated as pointers
+    # --- Named at exactly three offer points, each stated as a pointer
     # the caller must actively invoke, never as auto-fire sites. ---
     # Pinned verbatim for the same reason as above.
     offer_points_pin = (
         "It is named as an available\n"
-        "option at exactly two points where the need for a goal is already\n"
+        "option at exactly three points where the need for a goal is already\n"
         "visible: `loom-workflow:handoff`'s Prepare mode, when a user closes a\n"
-        "session without capturing an explicit goal, and the unanswered-purpose\n"
+        "session without capturing an explicit goal; the unanswered-purpose\n"
         "message `loom-code`'s purpose-link check (`check_north_star_link.py`)\n"
-        "prints when `docs/loom/PURPOSE.md` is still template text. Both name\n"
-        "this skill as an option the user can invoke; neither invokes it."
+        "prints when `docs/loom/PURPOSE.md` is still template text; and\n"
+        "`loom-code`'s `finishing-a-development-branch`, which offers it where\n"
+        "`docs/loom/PURPOSE.md` is absent altogether. All three name this skill\n"
+        "as an option the user can invoke; none invokes it."
     )
     assert _normalize_ws(offer_points_pin) in _normalize_ws(invocation_body), (
         "The offer-points sentence changed — if this is a deliberate "
@@ -309,3 +311,76 @@ def test_invocation_contract_is_offer_not_trigger():
         "The brainstorming-ordering sentence changed — if this is a "
         "deliberate reword, update this pin to match (see module docstring)."
     )
+
+
+# The token the Invocation section must contain for each surface that
+# offers this skill. The surfaces themselves are read out of the repo,
+# never from this map; an entry here only says how the section is
+# expected to refer to one. A scanned path missing from this map fails
+# loudly, because a new offer site the section has never heard of is the
+# exact drift this test exists for.
+_OFFER_SITE_MARKERS = {
+    "loom-code/scripts/check_north_star_link.py": "check_north_star_link.py",
+    "loom-code/skills/finishing-a-development-branch/SKILL.md": (
+        "finishing-a-development-branch"
+    ),
+    "loom-workflow/skills/handoff/SKILL.md": "loom-workflow:handoff",
+}
+_COUNT_WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
+
+
+def _scan_offer_sites() -> set[str]:
+    """Every runtime surface outside this skill that names it to a user.
+
+    Every plugin in the repo is scanned, not the two that happen to offer
+    it today — the Invocation section's claim is about the repo, so
+    narrowing the scan to the known answer would make it unfalsifiable.
+    Tests are excluded: a test asserting an offer exists is not itself an
+    offer. So are READMEs and changelogs, which describe rather than run.
+    """
+    root = SKILL_DIR.parent.parent.parent
+    plugins = sorted(p.parent for p in root.glob("*/.claude-plugin"))
+    assert plugins, "no plugin directories found; the scan would pass vacuously"
+    found = set()
+    for plugin in plugins:
+        for path in plugin.rglob("*"):
+            if path.suffix not in {".md", ".py"} or not path.is_file():
+                continue
+            if SKILL_DIR in path.parents or path == SKILL_DIR:
+                continue
+            if path.name.startswith(("README", "CHANGELOG", "test_")):
+                continue
+            if "loom-workflow:goal-create" in path.read_text(encoding="utf-8"):
+                found.add(path.relative_to(root).as_posix())
+    return found
+
+
+def test_invocation_section_counts_the_offer_sites_that_exist():
+    """The stated number of offer points must be the number that exist.
+
+    `test_invocation_contract_is_offer_not_trigger` pins that sentence
+    verbatim, which guards its wording and nothing about its arithmetic.
+    The count went stale the moment a third surface started naming this
+    skill, and a verbatim pin cannot notice that — it is satisfied by the
+    stale sentence surviving unedited. This reads the sites out of the
+    repo instead, so adding one forces the sentence to be re-counted.
+    """
+    sites = _scan_offer_sites()
+    unknown = sites - set(_OFFER_SITE_MARKERS)
+    assert not unknown, (
+        f"{sorted(unknown)} names this skill but the Invocation section has "
+        "never been told about it; name it there and add its marker to "
+        "_OFFER_SITE_MARKERS"
+    )
+
+    invocation_body = _section(_read_skill_md(), "Invocation")
+    assert f"exactly {_COUNT_WORDS[len(sites)]} points" in invocation_body, (
+        f"{len(sites)} surfaces offer this skill "
+        f"({sorted(sites)}), but the Invocation section does not say "
+        f"'exactly {_COUNT_WORDS[len(sites)]} points'"
+    )
+    for site in sorted(sites):
+        assert _OFFER_SITE_MARKERS[site] in invocation_body, (
+            f"{site} offers this skill but the Invocation section never "
+            f"names it (looked for {_OFFER_SITE_MARKERS[site]!r})"
+        )

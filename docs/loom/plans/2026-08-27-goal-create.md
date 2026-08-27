@@ -157,7 +157,7 @@ N/A — no unresolved question: the brief's own Open Questions section is empty;
 
 - **Description**: State in SKILL.md how the skill is reached.
   - It never fires on its own, and the description says so.
-  - It is named as an option at exactly two points where the need is already visible; naming it is not firing it.
+  - It is named as an option at exactly three points where the need is already visible; naming it is not firing it.
   - When brainstorming is already running for the same work, brainstorming keeps discovery and this skill runs after its brief exists.
 - **Module**: loom-workflow/skills/goal-create
 - **Files touched**: loom-workflow/skills/goal-create/SKILL.md, loom-workflow/skills/goal-create/scripts/test_skill_md.py

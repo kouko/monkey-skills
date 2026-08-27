@@ -206,22 +206,25 @@ def test_report_enumerates_any_post_hard_case_instruction_change():
         )
 
 
-def test_delta_anchor_commit_is_reachable_from_this_branch():
-    """The anchor has to survive a fresh clone, which `7af88b70` did not.
+@pytest.mark.parametrize("commit", [BASELINE_COMMIT, DELTA_ANCHOR_COMMIT])
+def test_pinned_commits_are_reachable_from_this_branch(commit):
+    """Every sha this module hands to git must survive a fresh clone.
 
-    That commit lived only in local object stores: every developer checkout
-    passed while CI, cloning from the remote, died with exit 128 before a
-    single assertion ran. Reachability from HEAD is the property that
-    difference turns on, so it is asserted rather than assumed.
+    `7af88b70` did not. It lived only in local object stores: every
+    developer checkout passed while CI, cloning from the remote, died with
+    exit 128 before a single assertion ran. Reachability from HEAD is the
+    property that difference turns on, so both remaining shas assert it —
+    the one `git archive` reconstructs a package from, and the one
+    `git diff` measures the instruction surface against. Depth of checkout
+    does not supply this: a commit behind no ref is fetched by no depth.
     """
     probe = subprocess.run(
-        ["git", "-C", str(ROOT), "merge-base", "--is-ancestor",
-         DELTA_ANCHOR_COMMIT, "HEAD"],
+        ["git", "-C", str(ROOT), "merge-base", "--is-ancestor", commit, "HEAD"],
         capture_output=True,
     )
     assert probe.returncode == 0, (
-        f"{DELTA_ANCHOR_COMMIT} is not an ancestor of HEAD; a fresh clone of this "
-        "branch cannot resolve it, and every git-backed assertion here dies with it"
+        f"{commit} is not an ancestor of HEAD; a fresh clone of this branch "
+        "cannot resolve it, and every git-backed assertion here dies with it"
     )
 
 
