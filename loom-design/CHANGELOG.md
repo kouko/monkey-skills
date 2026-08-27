@@ -11,6 +11,13 @@ The five plugins this one absorbed keep their own histories alongside:
 `CHANGELOG-interface-design.md`, `CHANGELOG-product-principles.md`. Their
 version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
 
+## [0.5.4] — 2026-08-27
+
+### Changed
+
+- Added stage-owned complexity lenses for business, visual, interaction, and
+  behavioral design, with standalone fallback and optional artifact relay.
+
 ## [0.5.3] — 2026-08-27 — restore the deletable-lenses section
 
 ### Fixed
@@ -22,7 +29,6 @@ version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
 - Removed the per-file word-count bounds from the `test_*_compaction.py` files.
   They froze the 0.5.2 compaction's own measurement into a permanent contract
   and could not detect a deleted rule; presence assertions now carry that job.
-
 ## [0.5.2] — 2026-08-26 — behavior-preserving skill compaction
 
 ### Changed

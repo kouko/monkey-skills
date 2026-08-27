@@ -5,6 +5,13 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.101.3] — 2026-08-27
+
+### Changed
+
+- Added plan-time and branch-review complexity lenses with optional upstream
+  evidence, independent local fallback, and standalone-plugin boundary tests.
+
 ## [0.101.2] — 2026-08-27 — conditional-operations stands on its own
 
 ### Fixed
@@ -41,7 +48,6 @@ Versioning: [Semantic Versioning](https://semver.org/).
   hundreds of words of slack cannot see a rule of tens leave, which is how five
   rules were dropped under a green suite. Presence and absence assertions now
   carry that job, and the repo-wide 4,500-word cap remains the ceiling.
-
 ## [0.101.0] — 2026-08-27
 
 ### Changed
