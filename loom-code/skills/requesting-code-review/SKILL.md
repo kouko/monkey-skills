@@ -175,6 +175,10 @@ summary:
 `simplification_ledger` records Step 4's scope-bounded shortcuts; `[]` means none. `marker_valid: false` is a finding per
 [`../subagent-driven-development/standards/deliberate-simplification.md`](../subagent-driven-development/standards/deliberate-simplification.md) §Field Rules.
 
+For the deletion-first dimension, apply
+[`references/implementation-complexity-lens.md`](references/implementation-complexity-lens.md)
+to compare the actual diff with optional planned evidence.
+
 `standards_version` lets downstream readers tell whether a verdict was scored under the rules in effect now or a prior revision; the standards/rubrics/checklists ship together.
 
 **Aggregation rule** (same as SDD's code-quality-reviewer with the added cross-task dimension; aligned with `rubrics/quality-gate.md` §Verdict Rules):
