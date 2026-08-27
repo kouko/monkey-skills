@@ -31,7 +31,7 @@ Use these rules only when `SKILL.md`'s ask policy says a question is warranted:
    anchor.
 
 For the calibrated good/bad example, read `dispatch-hygiene-notes.md` §Worked
-example. For a complex fork, apply `hooks/family-reception.md` §Brief before a
+example. For a complex fork, apply `loom-code/hooks/family-reception.md` §Brief before a
 complex fork.
 
 ### Progress-card delivery
@@ -39,7 +39,7 @@ complex fork.
 `python3 scripts/plan_card.py <plan-path> --set-status
 "T<N>=<status>"` and `--set-stage "<text>"` print the card after the flip. Use
 the repo-root script when present, otherwise the plugin-shipped copy. Relay its
-output in the conversation language using `hooks/family-relay.md` §(a2). If
+output in the conversation language using `loom-code/hooks/family-relay.md` §(a2). If
 neither script or the relay contract exists, render goal, task table, stage,
 and next action inline. Always re-read the plan; never compose the card from
 memory or copy its template here.
@@ -91,8 +91,10 @@ Read when the orchestrator edits after review, runs commands, or handles
 version metadata:
 
 - Before editing a file located through shell inspection, use the host's file
-  read operation on that file; shell output does not satisfy a read-before-edit
-  precondition. See `using-loom-code/references/environment-gotchas.md`.
+  read operation on that file. The edit tool tracks read-tool calls, not bytes
+  that happened to be printed, so `grep` / `sed` / `cat` output does not satisfy
+  the precondition: the first edit fails with a not-yet-read error, and in a
+  batch that failure repeats on every remaining target.
 - Apply `dispatch-hygiene-notes.md` §Environment hygiene to direct commands.
 - For version parsing or manifest work, confirm a library is standard-library
   before importing it; do not add a third-party parser accidentally.
