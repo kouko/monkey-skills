@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-27-stage-specific-complexity-gates.md
 Goal: Add stage-owned complexity judgments to existing Loom checkpoints while preserving standalone plugin operation and optional artifact-only composition.
-Stage: implementing
+Stage: verifying
 Steps:
   1. 為四個設計階段加入各自的複雜度 lens
   2. 為計畫與程式審查加入工程階段 lens
@@ -156,7 +156,7 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
   - from Task 6: payload: implemented-delta lens and optional evidence read; owner: Task 6; probe: `cold package contains review fallback contract without upstream artifacts`
 - **Independent**: false
 - **Brief item covered**: BI-3, BI-4, BI-11, BI-13, BI-14
-- **Status**: pending
+- **Status**: done(9a665c8a)
 - **Gloss**: 用真正移除 sibling plugin 的冷啟動測試，證明交接是可選證據而非隱藏依賴。
 
 ## Task 8 — 套件文件、版本與 changelog
@@ -175,7 +175,7 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
   - from Task 7: payload: final shipped behavior and boundary evidence; owner: Task 7; probe: `changelogs name the independently verified stage-specific complexity contract`
 - **Independent**: true
 - **Brief item covered**: BI-3, BI-4
-- **Status**: pending
+- **Status**: done(7a0a6dd9)
 - **Gloss**: 只更新真正受影響的兩個 plugin 版本與公開說明，不新增制度文件。
 
 ## Task 9 — 行為等價與 hard-case evidence
@@ -195,7 +195,7 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
   - from Task 7: payload: final candidate packages and cold-install probes; owner: Task 7; probe: `behavior report includes the final cold-install candidate bytes`
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2, BI-3, BI-4
-- **Status**: pending
+- **Status**: done(92a3e831)
 - **Gloss**: 以修改前快照對照 hard cases，證明新增判斷沒有犧牲舊行為或誤觸發。
 
 ## Decision Log
