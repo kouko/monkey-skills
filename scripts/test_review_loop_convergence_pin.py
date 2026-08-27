@@ -13,9 +13,7 @@ is gone. This test is that lock.
 The skill is allowed (per the standing word-cap authorization) to push the
 loop's detail into a `references/` file and keep only a summary + pointer
 in SKILL.md — mirroring how `requesting-docs-review/SKILL.md` points at
-`references/convergence-contract.md`. So this test's "present" assertions
-search the UNION of SKILL.md plus any `references/*.md` file it links,
-rather than pinning to one exact file. The "absent" (old rule) and
+`references/convergence-contract.md`. The "absent" (old rule) and
 "retained" (Dead-arm / MALFORMED_PACKET) assertions stay scoped to
 SKILL.md, since those anchors are Step 3 text that this task does not
 move.
@@ -64,6 +62,8 @@ PRESENT_TOKENS = (
     "terminal wrapper",
     # lost-handle restart rule
     "never a ledger flip",
+    # fresh-delta fallback (dead arm / quota-kill / Codex host)
+    "Fresh-delta fallback",
     # anchoring guard wording (rider: pin so it cannot silently weaken)
     "verbatim quote of the post-fix text",
 )

@@ -430,6 +430,22 @@ the dimension it covers. The `rule-sheet-v1` block above embeds the
 cite-on-fire discipline; the §Dimensions table below maps each
 dimension to its standard(s), which is the lookup you use to decide
 which file to Read when a finding fires.
+
+### Post-fix confirmation (present only after a gating round-1 verdict)
+- original_gating_findings: {your own original gating findings, verbatim,
+  each with its `where:`, `source:`, and `note:`}
+- delta_evidence: {the post-fix paths and quoted changes that address each
+  original finding}
+- confirmation_delivery: {claude_same_session_sendmessage | fresh_unnamed_dispatch}
+
+The immutable core (`target_repo`, post-fix `reviewed_sha`, `plugin_version`,
+`resources`) plus these three fields is the complete post-fix confirmation
+packet; Rule R0 treats a packet carrying all of them as well-formed and a
+packet missing any of them as malformed, refused observably per R0. Judge
+each of your own original findings against the delta evidence and reply
+with your ordinary three-valued `verdict:` (role-contract item 8); never
+substitute a live worktree, infer a missing original finding, or
+reconstruct delta evidence yourself.
 ```
 
 The packet may carry an attention list (e.g. `Scrutinize: …`); such a
@@ -807,6 +823,10 @@ returns, flags, orderings and exit codes are the rest.
 - Re-running per-task review under this skill's name — your scope is
   whole-branch; per-task review was already done by SDD's per-task
   reviewer.
+- Accepting a confirmation packet without original gating findings or
+  delta evidence — you would no longer be judging the repair.
+- Re-raising a closed finding in new words — re-litigation, not
+  review.
 
 ## See also
 

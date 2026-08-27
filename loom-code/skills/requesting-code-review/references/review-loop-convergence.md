@@ -10,13 +10,17 @@ unconditional "fresh subagent every round" rule.
 ## 1. Round 1 — two named arms, one ledger
 
 Round 1 is unchanged in scope (whole diff, byte-identical prompts, two
-`code-reviewer` arms per Step 2) except for one addition: each arm is
+`code-reviewer` arms per Step 2) except for two additions: each arm is
 dispatched with a stable `name:` — `code-review-arm-a` and
-`code-review-arm-b` — recorded in the ledger below. This is the sanctioned
-carve-out to Step 2's "must not name async teammates" clause: delta
-confirmation drives an arm via `SendMessage`, which is exactly the case the
-underlying rule (`environment-gotchas.md` A1) exempts — name only an arm you
-intend to confirm.
+`code-review-arm-b` — recorded in the ledger below; and because a named
+dispatch does not auto-return (`environment-gotchas.md` A1), the
+orchestrator actively polls each named arm via `SendMessage` to collect its
+round-1 verdict — this polling IS Step 3's "wait for both" step. This
+naming is the sanctioned carve-out to Step 2's "must not name async
+teammates" clause: A1's actual exemption condition is being "prepared to
+actively poll it via `SendMessage` for the result" — which both this
+round-1 retrieval and the rounds-2+ delta confirmation below satisfy, not a
+rule that only the confirmation round exercises.
 
 A gating verdict opens **one ledger entry per gating finding**:
 
@@ -38,10 +42,13 @@ revisited.
 
 Dispatch only to **arms holding open entries**. This is an inherited delta
 confirmation, not a fresh round: `SendMessage` to the SAME named reviewer
-(`code-review-arm-a` and/or `code-review-arm-b`) with a post-fix packet
-mirroring the docs-review packet fields — post-fix SHA, the original gating
-findings for that arm's open entries verbatim, and delta evidence
-identifying the text changed to address each one.
+(`code-review-arm-a` and/or `code-review-arm-b`) with a post-fix
+confirmation packet binding the **complete immutable context fields** —
+`target_repo`, post-fix `reviewed_sha`, `plugin_version`, and `resources` —
+plus the original gating findings for that arm's open entries verbatim and
+delta evidence identifying the text changed to address each one, mirroring
+`requesting-docs-review` Step 6's enumeration exactly. Without the complete
+immutable core, the arm's Rule R0 refuses the packet as `MALFORMED_PACKET`.
 
 The arm replies with its ordinary three-valued `verdict:`. The orchestrator
 — never the arm — maps it to a confirmation outcome:
@@ -74,27 +81,49 @@ and one `MALFORMED_PACKET` repair are deliveries of the SAME cycle and
 consume none of the cap; their existing Step 3 bounds are unchanged by this
 loop.
 
+**Fresh-delta fallback.** When the named arm cannot be reached — it is
+dead, quota-killed, or its handle is lost mid-cycle — or the host has no
+`SendMessage` (Codex), deliver the confirmation as a labelled fresh,
+unnamed one-shot dispatch of a `code-reviewer` carrying the SAME complete
+confirmation packet (§2), scoped to judging that arm's open entries
+against the delta; delta admissibility rules (§5) are unchanged. This
+fallback covers delivery failure **within** a cycle, before the
+lost-handle restart in §7 triggers — §7's restart is reserved for session
+death or compaction, where the ledger itself is no longer trusted, not for
+an ordinary lost handle mid-cycle that this fallback resolves. The
+fallback is a delivery of the same cycle and consumes none of the cap.
+
 A post-verdict change made with **no open ledger entries** is not a
 confirmation cycle at all: it restarts at round 1 (fresh two-arm panel) and
 consumes no cycle.
 
-**Confirmation rounds are single-arm by design.** Step 3's degraded-evidence
-disclosure (dead-arm rule) applies to round 1 only, never to a confirmation
-delivery — a confirmation dispatched to one named arm is not a degraded
-panel.
+**Confirmation deliveries are per-arm, not single-arm.** Each arm holding
+open entries receives its own packet — possibly both arms in the same
+cycle, each independently. Step 3's degraded-evidence disclosure (dead-arm
+rule) applies to round-1 panel results only, never to a confirmation
+delivery: a per-arm confirmation delivery — whether to one arm or to
+both — is not a degraded panel.
 
 ## 4. Convergence minting
 
 On full convergence, first obtain and `--validate` a **fresh immutable
 context packet at the post-fix SHA** (`review_context.py`), and re-run
 Step 4's `LOOM-SIMPLIFY:` harvest against that fresh snapshot — not the
-round-1 snapshot.
+round-1 snapshot. In a live-gate station, the runner-owned packet is the
+sole packet source: the convergence mint uses the runner-supplied post-fix
+packet and never re-runs `review_context.py` there; the fresh-packet rule
+above applies only to non-live-gate runs.
 
 The orchestrator then builds a schema-valid **terminal wrapper**: current
 `standards_version`, the post-fix `reviewed_sha`, all 11 `dimension_scores`,
 and the aggregation result over what remains open (none, by definition of
-convergence). Any R3 downgrade floor carried by either arm is preserved —
-**never upgraded** — into the wrapper. Mint (`loom_gate_markers.py
+convergence). **Wrapper dimension derivation rule**: each dimension in the
+terminal wrapper is re-aggregated from round 1's union findings (§Process
+Step 3's per-dimension re-aggregation) with every `CONFIRMED_RESOLVED`
+entry removed — a dimension whose gating findings all closed re-scores
+from that dimension's remaining non-gating findings, never simply set to
+`PASS`. Any R3 downgrade floor carried by either arm from any round is
+preserved into the wrapper — **never upgraded**. Mint (`loom_gate_markers.py
 review-pass`) from the wrapper. `CONFIRMED_RESOLVED` is never minted
 directly; only the terminal wrapper is a mintable verdict.
 
@@ -134,10 +163,14 @@ completes → **one fresh whole-diff round 1**, disclosed in the report as
 
 ## 8. Mixed branch
 
-The cap counts **per arm**. The docs arm keeps its own one-cycle bound
-(`requesting-docs-review` Directive 2); a code-arm cycle 2 does not
-re-dispatch the docs arm. The branch verdict joins the docs arm's **last**
-verdict, disclosed as such in the surfaced report.
+The cap counts **per reviewing arm of the branch** — i.e. per the code
+panel as a whole versus the docs arm — not per named panel reviewer:
+`code-review-arm-a` and `code-review-arm-b` share the code arm's two
+delta-confirmation cycles; they are not two separate budgets. The docs arm
+keeps its own one-cycle bound (`requesting-docs-review` Directive 2); a
+code-arm cycle 2 does not re-dispatch the docs arm. The branch verdict
+joins the docs arm's **last** verdict, disclosed as such in the surfaced
+report.
 
 ## Unchanged
 
