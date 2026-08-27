@@ -298,7 +298,7 @@ The system MUST NOT use "complete", "comprehensive", "exhaustive" or equivalent 
 - WHEN it is validated for delivery
 - THEN delivery is refused
 
-### Requirement: REQ-17 — actual cost is reported truthfully
+### Requirement: REQ-17 — actual cost is reported truthfully [deferred]
 The system MUST record in `actual_cost` the spend that actually occurred, including probe cost already paid for legs that later failed or were cancelled, and MUST NOT backfill it with the estimate.
 
 #### Scenario: probe paid then user cancels
@@ -432,7 +432,7 @@ The system MUST present divergence points as the body of the report and MUST NOT
 - WHEN the user asks for the target to be modified
 - THEN the system states this is outside the consultation's scope and does not modify the target
 
-### Requirement: REQ-25 — cancellation stops in-flight legs and outranks a degrade offer
+### Requirement: REQ-25 — cancellation stops in-flight legs and outranks a degrade offer [deferred]
 The system MUST abort in-flight legs when the request is cancelled, MUST NOT ask the user to approve a downgrade after cancellation, and MUST still record the probe cost already paid.
 
 #### Scenario: cancellation with a leg still running
@@ -450,7 +450,7 @@ The system MUST abort in-flight legs when the request is cancelled, MUST NOT ask
 - WHEN the run continues
 - THEN the downgrade proposal is withdrawn rather than put to the user
 
-### Requirement: REQ-26 — a leg abort invalidates the swap runs it was serving
+### Requirement: REQ-26 — a leg abort invalidates the swap runs it was serving [deferred]
 The system MUST mark a swap run without a verdict when the leg serving it aborts, MUST return the pair to the sequenced state rather than completing it from one side, and MUST re-run the pair as a whole if a replacement executor is approved.
 
 #### Scenario: judging leg aborts mid-pair
@@ -486,7 +486,7 @@ The system MUST name, at the single checkpoint and for each leg, the external ve
 - WHEN the cancellation outcome is reported
 - THEN it states that material already transmitted to that vendor cannot be recalled
 
-### Requirement: REQ-28 — every leg carries a stated permission boundary, not only probes
+### Requirement: REQ-28 — every leg carries a stated permission boundary, not only probes [deferred]
 The system MUST assemble each leg invocation with no write access, with the executor's readable paths bounded by the request's `scope_boundary`, and with the outbound network capability the executor retains stated; it MUST NOT dispatch a leg whose write-access control is unavailable without surfacing that absence at the checkpoint.
 
 #### Scenario: leg invocation is assembled
@@ -504,7 +504,7 @@ The system MUST assemble each leg invocation with no write access, with the exec
 - WHEN it is validated before dispatch
 - THEN it is refused
 
-### Requirement: REQ-29 — the dispatch packet is scanned for credential-shaped content before it leaves the host
+### Requirement: REQ-29 — the dispatch packet is scanned for credential-shaped content before it leaves the host [deferred]
 The system MUST mechanically scan the dispatch packet and the file contents its evidence paths resolve to for credential-shaped and personal-data-shaped content before dispatch, MUST block dispatch on a hit, and MUST NOT echo the matched value.
 
 #### Scenario: a credential is reachable from the packet
@@ -517,7 +517,7 @@ The system MUST mechanically scan the dispatch packet and the file contents its 
 - WHEN it runs
 - THEN it tests existence only and does not read, log, or echo the file's contents
 
-### Requirement: REQ-30 — external output is handled as data, never as instructions
+### Requirement: REQ-30 — external output is handled as data, never as instructions [deferred]
 The system MUST treat every leg output and normalised card as untrusted content, MUST NOT let any imperative text inside it change the run's mode, scope boundary, executor binding, anonymisation state, or evidence paths, and MUST record the attempt in the report.
 
 #### Scenario: output addresses the controller
@@ -530,7 +530,7 @@ The system MUST treat every leg output and normalised card as untrusted content,
 - WHEN the card is ingested
 - THEN it is handled as reviewed content only
 
-### Requirement: REQ-31 — cancellation and timeout terminate the spawned processes
+### Requirement: REQ-31 — cancellation and timeout terminate the spawned processes [deferred]
 The system MUST terminate every process it spawned, and its process group, when a run is cancelled, times out, or the controller exits, MUST confirm termination before recording a leg as `Aborted`, and MUST NOT leave an external executor running after the run has ended.
 
 #### Scenario: cancellation with a child still running
@@ -548,7 +548,7 @@ The system MUST terminate every process it spawned, and its process group, when 
 - WHEN the next run starts
 - THEN the orphaned processes are detected and reported rather than left running unrecorded
 
-### Requirement: REQ-32 — a durable per-run record answers what was sent, approved, and paid
+### Requirement: REQ-32 — a durable per-run record answers what was sent, approved, and paid [deferred]
 The system MUST maintain an append-only per-run record that is readable without re-running anything, covering the approving actor, the approval timestamp, the vendor and model binding, the packet sections sent, the paths the executor was authorised to read, exit status, and the cost incurred per attempt.
 
 #### Scenario: the user asks what left the machine
@@ -566,7 +566,7 @@ The system MUST maintain an append-only per-run record that is readable without 
 - WHEN the record is produced
 - THEN it lists the material already transmitted to that executor even though the blind-review stage never ran
 
-### Requirement: REQ-33 — every leg runs under a declared timeout bound
+### Requirement: REQ-33 — every leg runs under a declared timeout bound [deferred]
 The system MUST declare a per-leg timeout for the run, MUST terminate a leg that exceeds it, and MUST record the outcome as `FailedTimeout` with the elapsed time rather than waiting without bound.
 
 #### Scenario: a leg produces no output
@@ -579,7 +579,7 @@ The system MUST declare a per-leg timeout for the run, MUST terminate a leg that
 - WHEN dispatch is attempted
 - THEN dispatch is refused rather than proceeding without a bound
 
-### Requirement: REQ-34 — approval has a stated scope and a spend ceiling
+### Requirement: REQ-34 — approval has a stated scope and a spend ceiling [deferred]
 The system MUST state in the approval record whether retries, the second swap run, downgrade re-dispatches, and re-probes are covered, MUST halt and return to the checkpoint before any invocation that is not covered or that would carry cumulative spend past the approved ceiling, and MUST express estimated and actual cost in a stated unit.
 
 #### Scenario: an invocation beyond the approved set
@@ -592,7 +592,7 @@ The system MUST state in the approval record whether retries, the second swap ru
 - WHEN the next leg would be dispatched
 - THEN the run halts and both the estimate and the actual figure are shown to the user in the stated unit
 
-### Requirement: REQ-35 — a repository or organisation declaration can forbid or restrict external dispatch
+### Requirement: REQ-35 — a repository or organisation declaration can forbid or restrict external dispatch [deferred]
 The system MUST honour a declaration in the working repository that forbids external dispatch or that names an allowed vendor list, refusing or restricting candidates before the checkpoint is presented and citing the declaration.
 
 #### Scenario: dispatch declared disallowed
@@ -605,7 +605,7 @@ The system MUST honour a declaration in the working repository that forbids exte
 - WHEN the candidate set is built
 - THEN candidates outside the list are excluded with the declaration cited as the reason
 
-### Requirement: REQ-36 — a run with no interactive channel spends nothing
+### Requirement: REQ-36 — a run with no interactive channel spends nothing [deferred]
 The system MUST end a run without dispatching when no interactive channel exists to present the checkpoint, and MUST state that the checkpoint precondition could not be satisfied.
 
 #### Scenario: headless or scheduled invocation
@@ -618,7 +618,7 @@ The system MUST end a run without dispatching when no interactive channel exists
 - WHEN the request is later resumed
 - THEN it is still awaiting the checkpoint with no spend incurred, and static detection and the cost estimate are recomputed before the checkpoint is re-presented
 
-### Requirement: REQ-37 — the target is pinned and its drift is surfaced
+### Requirement: REQ-37 — the target is pinned and its drift is surfaced [deferred]
 The system MUST pin the target revision when the dispatch packet is frozen and MUST state that revision in the report, flagging that the target changed if it did rather than presenting findings as current.
 
 #### Scenario: target changes during the run
@@ -631,7 +631,7 @@ The system MUST pin the target revision when the dispatch packet is frozen and M
 - WHEN a new consultation on the same target is requested
 - THEN the prior report is linked and its unresolved status is surfaced before any spend
 
-### Requirement: REQ-38 — the executor's own execution environment is confined and recorded
+### Requirement: REQ-38 — the executor's own execution environment is confined and recorded [deferred]
 The system MUST run a `proposer` leg from a location from which the incumbent material is unreadable, MUST record which environment files the external executor loaded (project instructions, hooks, skills, MCP servers), and MUST NOT pass credentials belonging to other vendors into the child process environment.
 
 #### Scenario: proposer leg started in the incumbent's working directory
@@ -662,7 +662,7 @@ The system MUST dispatch the reversed-order swap run in a fresh executor process
 - WHEN the verdicts are collected
 - THEN they are rejected as not counterbalanced
 
-### Requirement: REQ-40 — a missing pipeline stage is not reported as a degraded comparison
+### Requirement: REQ-40 — a missing pipeline stage is not reported as a degraded comparison [deferred]
 The system MUST state which stage failures a run can survive, MUST report an inconclusive verdict when the blind-judging stage produced no verdict, and MUST NOT present a run that made no comparison as a degraded multi-leg comparison.
 
 #### Scenario: judging leg aborted after proposer and normaliser succeeded
@@ -675,7 +675,7 @@ The system MUST state which stage failures a run can survive, MUST report an inc
 - WHEN the report states its leg count
 - THEN it names which stage is absent rather than counting the legs as interchangeable contributors
 
-### Requirement: REQ-41 — verification evidence expires and is re-checked before dispatch
+### Requirement: REQ-41 — verification evidence expires and is re-checked before dispatch [deferred]
 The system MUST treat a probe result as stale once its declared freshness bound has passed, or once a quota or credential failure has been observed on any leg of that executor, and MUST re-verify or return to the checkpoint rather than dispatching on the old evidence.
 
 #### Scenario: dispatch past the freshness bound
@@ -688,7 +688,7 @@ The system MUST treat a probe result as stale once its declared freshness bound 
 - WHEN another leg of that same executor is pending
 - THEN it is held and the exhaustion is surfaced once rather than dispatched on the earlier verification
 
-### Requirement: REQ-42 — concurrent consultations are isolated or refused
+### Requirement: REQ-42 — concurrent consultations are isolated or refused [deferred]
 The system MUST either refuse or queue a second consultation started while a run has legs in flight, stating the reason, or isolate the second run's workspace and cost ledger, and it MUST NOT attribute one request's spend or failure to another.
 
 #### Scenario: second consultation while legs are in flight
@@ -735,7 +735,7 @@ The system MUST exclude a candidate whose binary exists but is not executable, o
 - WHEN the option list is built
 - THEN the candidate is excluded with a reason distinguishable from a missing credential file
 
-### Requirement: REQ-46 — oversize input and oversize output are attributed as size failures
+### Requirement: REQ-46 — oversize input and oversize output are attributed as size failures [deferred]
 The system MUST record a dispatch packet that exceeds the executor invocation's input bound as an input-size failure distinct from an executor failure, MUST NOT retry it unchanged, MUST NOT send a silently truncated packet, and MUST record an oversize leg output as an oversize failure distinct from a shape failure.
 
 #### Scenario: packet exceeds the invocation bound
@@ -761,7 +761,7 @@ The system MUST present an estimate that cannot be computed as unknown with its 
 - WHEN the checkpoint is presented
 - THEN that zero is distinguishable from an unavailable estimate
 
-### Requirement: REQ-48 — the external CLI is invoked as an argument vector without shell interpretation
+### Requirement: REQ-48 — the external CLI is invoked as an argument vector without shell interpretation [deferred]
 The system MUST invoke external executors as an argument vector without shell interpretation, and MUST NOT expand packet text as shell syntax.
 
 #### Scenario: packet contains shell metacharacters
@@ -769,7 +769,7 @@ The system MUST invoke external executors as an argument vector without shell in
 - WHEN the external CLI is invoked
 - THEN the invocation is made as an argument vector and the packet text is never expanded as shell syntax
 
-### Requirement: REQ-49 — a retried leg reuses its original input and accumulates its cost
+### Requirement: REQ-49 — a retried leg reuses its original input and accumulates its cost [deferred]
 The system MUST assemble a leg retry from input byte-identical to the original dispatch input and MUST accumulate every attempt's incurred cost into `actual_cost`.
 
 #### Scenario: leg retried after a transport failure
@@ -782,7 +782,7 @@ The system MUST assemble a leg retry from input byte-identical to the original d
 - WHEN `actual_cost` is recorded
 - THEN the cost incurred by every attempt is included
 
-### Requirement: REQ-50 — the audit entry is written before the dispatch it describes
+### Requirement: REQ-50 — the audit entry is written before the dispatch it describes [deferred]
 The system MUST persist a dispatch-intent entry — vendor, model binding, the packet sections to be sent, the authorised read paths, and the child process identifier — before the child process is spawned, and MUST refuse the dispatch when that write fails.
 
 #### Scenario: controller terminated between spawn and record
@@ -795,7 +795,7 @@ The system MUST persist a dispatch-intent entry — vendor, model binding, the p
 - WHEN a leg would be dispatched
 - THEN dispatch is refused and the write failure is surfaced rather than spending with no record
 
-### Requirement: REQ-51 — concurrent appends to the run record stay individually readable
+### Requirement: REQ-51 — concurrent appends to the run record stay individually readable [deferred]
 The system MUST keep each appended entry individually parseable when two consultations append to the same record concurrently, and MUST surface a record it cannot parse rather than treating it as absent.
 
 #### Scenario: two consultations append at the same time
@@ -808,7 +808,7 @@ The system MUST keep each appended entry individually parseable when two consult
 - WHEN it is read to recover prior state
 - THEN the parse failure is surfaced rather than reported as an absence of prior activity
 
-### Requirement: REQ-52 — the timeout clock has a stated origin and the run has a stated bound
+### Requirement: REQ-52 — the timeout clock has a stated origin and the run has a stated bound [deferred]
 The system MUST state the instant from which a leg's elapsed time is measured and MUST apply a stated bound to the elapsed time of the consultation as a whole, covering retries, re-probes and returns to the checkpoint.
 
 #### Scenario: elapsed time measured for one leg
@@ -821,7 +821,7 @@ The system MUST state the instant from which a leg's elapsed time is measured an
 - WHEN the consultation's total elapsed time reaches the stated run bound
 - THEN the run halts and surfaces the bound rather than continuing indefinitely
 
-### Requirement: REQ-53 — an unmeasurable actual cost is recorded as unknown, never as zero
+### Requirement: REQ-53 — an unmeasurable actual cost is recorded as unknown, never as zero [deferred]
 The system MUST record `actual_cost` as unknown with its reason when the executor reports no per-invocation cost, MUST keep that value distinguishable from a measured zero, and MUST state at the checkpoint and in the report that a spend ceiling cannot be enforced against unknown costs.
 
 #### Scenario: executor reports no per-invocation cost
@@ -834,7 +834,7 @@ The system MUST record `actual_cost` as unknown with its reason when the executo
 - WHEN the approved spend ceiling is evaluated
 - THEN the report states that the ceiling could not be enforced against those legs
 
-### Requirement: REQ-54 — the spend ceiling binds concurrent and in-flight legs
+### Requirement: REQ-54 — the spend ceiling binds concurrent and in-flight legs [deferred]
 The system MUST evaluate the approved spend ceiling against the cost already committed by legs in flight, MUST NOT let two legs each pass the check on a shared remaining budget, and MUST surface an overrun when it occurs rather than only at the next dispatch decision.
 
 #### Scenario: two legs dispatched concurrently
@@ -847,7 +847,7 @@ The system MUST evaluate the approved spend ceiling against the cost already com
 - WHEN the spend passes the ceiling
 - THEN the overrun is surfaced while the leg is in flight rather than discovered at the next dispatch decision
 
-### Requirement: REQ-55 — a recorded child process is verified as our own before it is signalled
+### Requirement: REQ-55 — a recorded child process is verified as our own before it is signalled [deferred]
 The system MUST record, alongside the child process identifier, evidence sufficient to confirm the running process is the one this run spawned, MUST NOT signal a process that fails that confirmation, and MUST attempt termination of its own spawned processes when the controller session exits.
 
 #### Scenario: identifier reused by an unrelated process
@@ -860,7 +860,7 @@ The system MUST record, alongside the child process identifier, evidence suffici
 - WHEN the session exits
 - THEN it attempts termination and marks the run's record with the outcome, rather than deferring detection to a next run that may never occur
 
-### Requirement: REQ-56 — a leg whose termination cannot be confirmed has its own recorded outcome
+### Requirement: REQ-56 — a leg whose termination cannot be confirmed has its own recorded outcome [deferred]
 The system MUST record a leg whose process could not be confirmed terminated as an unconfirmed-termination outcome distinct from `Aborted` and from `Succeeded`, and MUST surface that outcome to the user.
 
 #### Scenario: process does not respond to termination
@@ -868,7 +868,7 @@ The system MUST record a leg whose process could not be confirmed terminated as 
 - WHEN the leg's outcome is recorded
 - THEN it is recorded as unconfirmed termination and surfaced, rather than left without a terminal outcome
 
-### Requirement: REQ-57 — the governing dispatch declaration is identified, and its absence is stated
+### Requirement: REQ-57 — the governing dispatch declaration is identified, and its absence is stated [deferred]
 The system MUST identify by a stated rule which external-dispatch declaration governs a run when the working directory's repository differs from the repository owning the target, MUST halt and cite both when two governing declarations conflict, MUST state at the checkpoint that no declaration was found and which locations were searched when none exists, and MUST state the format a declaration is read in.
 
 #### Scenario: working directory and target belong to different repositories
@@ -886,7 +886,7 @@ The system MUST identify by a stated rule which external-dispatch declaration go
 - WHEN the checkpoint is presented
 - THEN it states that no declaration was found and names the locations searched
 
-### Requirement: REQ-58 — an answer supplied by an automated caller does not satisfy the checkpoint
+### Requirement: REQ-58 — an answer supplied by an automated caller does not satisfy the checkpoint [deferred]
 The system MUST record the kind of actor that answered the checkpoint, and MUST NOT treat an answer supplied by a calling skill or other automated caller as the user's approval of spend or of transmission.
 
 #### Scenario: invocation originating from another skill
@@ -894,7 +894,7 @@ The system MUST record the kind of actor that answered the checkpoint, and MUST 
 - WHEN the checkpoint is answered by that caller
 - THEN the answering actor's kind is recorded and the run halts for a human rather than proceeding on that answer
 
-### Requirement: REQ-59 — the billed account identity is recorded and shown
+### Requirement: REQ-59 — the billed account identity is recorded and shown [deferred]
 The system MUST record which account identity an executor's credential resolves to for each dispatched leg and MUST show that identity at the checkpoint.
 
 #### Scenario: host carrying several accounts for one vendor
@@ -902,7 +902,7 @@ The system MUST record which account identity an executor's credential resolves 
 - WHEN the checkpoint is presented and the leg is later dispatched
 - THEN the account identity that will be billed is shown at the checkpoint and recorded with the leg
 
-### Requirement: REQ-60 — a pre-dispatch scan hit leaves a recorded resolution
+### Requirement: REQ-60 — a pre-dispatch scan hit leaves a recorded resolution [deferred]
 The system MUST record the location of every pre-dispatch scan hit and the actor and stated reason of any resolution that lets the run continue, and MUST NOT let a hit be dropped without such a record.
 
 #### Scenario: user asserts a hit is a false positive
@@ -910,7 +910,7 @@ The system MUST record the location of every pre-dispatch scan hit and the actor
 - WHEN the run continues
 - THEN the assertion, its location, and the approving actor are recorded rather than the hit being silently dropped
 
-### Requirement: REQ-61 — a truncated leg output is not accepted as a complete one
+### Requirement: REQ-61 — a truncated leg output is not accepted as a complete one [deferred]
 The system MUST distinguish a leg output that ended because the process was interrupted from one the executor finished writing, and MUST NOT enter an interrupted output into the report as a complete card even when the template fields are present.
 
 #### Scenario: process terminated mid-write
@@ -918,7 +918,7 @@ The system MUST distinguish a leg output that ended because the process was inte
 - WHEN the partial output happens to contain all four template fields
 - THEN it is recorded as an interrupted output rather than passing the mechanical contract as a complete card
 
-### Requirement: REQ-62 — a queued consultation is revalidated before it is dispatched
+### Requirement: REQ-62 — a queued consultation is revalidated before it is dispatched [deferred]
 The system MUST re-run static detection and cost estimation for a consultation that waited in a queue before dispatching it, and MUST return to the checkpoint when the executor set or the estimate changed while it waited.
 
 #### Scenario: queued consultation reaches the front of the queue
@@ -926,7 +926,7 @@ The system MUST re-run static detection and cost estimation for a consultation t
 - WHEN it is dequeued for dispatch
 - THEN static detection and the estimate are recomputed, and a change in either returns the run to the checkpoint rather than dispatching on the stale approval
 
-### Requirement: REQ-63 — the input-size check runs before the checkpoint is presented
+### Requirement: REQ-63 — the input-size check runs before the checkpoint is presented [deferred]
 The system MUST evaluate the dispatch packet against each candidate executor's input bound before presenting the checkpoint, and MUST show an executor that cannot receive the packet as unavailable with that reason instead of accepting approval for a dispatch that cannot be made.
 
 #### Scenario: packet exceeds a candidate's input bound
@@ -934,7 +934,7 @@ The system MUST evaluate the dispatch packet against each candidate executor's i
 - WHEN the checkpoint is presented
 - THEN that candidate is shown as unavailable for the size reason rather than approved and then failed at dispatch
 
-### Requirement: REQ-64 — third-party-authored incumbent material is stated as such
+### Requirement: REQ-64 — third-party-authored incumbent material is stated as such [deferred]
 The system MUST state at the checkpoint when the incumbent proposal or the evidence paths carry material authored by someone other than the requesting user.
 
 #### Scenario: target is a colleague's branch
@@ -942,7 +942,7 @@ The system MUST state at the checkpoint when the incumbent proposal or the evide
 - WHEN the checkpoint enumerates what leaves the host
 - THEN the presence of third-party-authored material is stated as such
 
-### Requirement: REQ-65 — an unresolvable pinned revision does not block indefinitely
+### Requirement: REQ-65 — an unresolvable pinned revision does not block indefinitely [deferred]
 The system MUST report a pinned target revision that no longer resolves on the host, and MUST provide a stated action that closes an undecided prior report rather than letting it block every later consultation on the same target.
 
 #### Scenario: pinned revision no longer resolves
@@ -950,7 +950,7 @@ The system MUST report a pinned target revision that no longer resolves on the h
 - WHEN a new consultation on the same target is requested
 - THEN the unresolvable pin is reported and the prior report can be closed by the stated action
 
-### Requirement: REQ-66 — retry input identity yields to re-approval and re-verification
+### Requirement: REQ-66 — retry input identity yields to re-approval and re-verification [deferred]
 The system MUST state which of retry input identity and renewed approval or verification governs when both apply, MUST NOT dispatch a retry on a lapsed approval or a lapsed verification, and MUST record the retry as a new dispatch when its input could not be reused unchanged.
 
 #### Scenario: retry after the approval was returned to the checkpoint
@@ -958,7 +958,7 @@ The system MUST state which of retry input identity and renewed approval or veri
 - WHEN the retry would be dispatched
 - THEN the renewed approval and verification govern, and a retry that can no longer reuse its original input is recorded as a new dispatch
 
-### Requirement: REQ-67 — material this run wrote outside the audit record has a stated lifecycle
+### Requirement: REQ-67 — material this run wrote outside the audit record has a stated lifecycle [deferred]
 The system MUST state, for each artifact this run writes outside the per-run record — including any working copy created for a confined leg — where it is written and what happens to it when the run ends, and MUST record any such artifact it leaves in place.
 
 #### Scenario: confined execution location holding a working copy
