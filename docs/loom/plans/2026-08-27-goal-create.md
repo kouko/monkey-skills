@@ -2,7 +2,7 @@
 
 Source brief: docs/loom/specs/2026-08-27-goal-create.md
 Goal: 讓 `loom-workflow:goal-create` 以一個 skill 兩個模式出貨——SESSION 產出四欄目標餵給 `/goal`，ARC 草擬 `PURPOSE.md` 的 Why/Done-when 交使用者拍板——並在輸入不足時拒絕產出。
-Stage: review:round-1
+Stage: finishing
 Total tasks: 12
 Critical-path depth: 4 (≤5)
 Execution order: parallel-where-possible
