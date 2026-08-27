@@ -178,8 +178,11 @@ def build_purpose_template_question(purpose_path: Path) -> str:
     return (
         f"{purpose_path} still carries the shipped template's placeholder "
         "text (or an unexplained 'not yet'). What is this repo's purpose? "
-        "Write it there, or if you genuinely cannot say yet, record "
-        "'not yet — <reason>' in place of the placeholder."
+        "Write one sentence answering that directly into the file, "
+        "replacing the placeholder — or if you genuinely cannot say yet, "
+        "record 'not yet — <reason>' in place of the placeholder instead. "
+        "If you have the `loom-workflow:goal-create` skill installed, it "
+        "can walk you through answering this."
     )
 
 

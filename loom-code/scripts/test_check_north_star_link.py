@@ -244,6 +244,42 @@ def test_exit_0_when_real_template_why_replaced_with_not_yet_reason(tmp_path):
     assert result.returncode == 0, f"stdout: {result.stdout}\nstderr: {result.stderr}"
 
 
+def test_unanswered_purpose_message_points_somewhere_without_assuming_the_skill(tmp_path):
+    """The unanswered-purpose message is the only surface a repo with
+    only loom-code installed ever reaches — it must carry self-sufficient
+    instructions for answering PURPOSE.md with no skill installed at
+    all, and mention `loom-workflow:goal-create` only as a conditional
+    shortcut, never as an instruction that assumes it (this family's
+    standing decision: no plugin declares another a mandatory
+    dependency)."""
+    store = tmp_path / "docs" / "loom" / "backlog"
+    purpose_path = tmp_path / "docs" / "loom" / "PURPOSE.md"
+    purpose_path.parent.mkdir(parents=True, exist_ok=True)
+    purpose_path.write_text(_TEMPLATE, encoding="utf-8")
+    _write_entry(store, "entry-a", "bet", "ships the thing")
+
+    result = _run(store)
+
+    assert result.returncode == 2, f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    message = result.stderr
+
+    # Self-sufficient: tells the reader, with no skill installed, exactly
+    # what to physically do to answer the file (write directly / replace
+    # the placeholder), not merely "answer the question".
+    assert "placeholder" in message.lower()
+    assert "write" in message.lower()
+
+    # Mentions the skill, but only as a conditional shortcut — the
+    # conditional clause must precede the skill name in the message, so
+    # the skill mention reads as "if installed, this can help" rather
+    # than an instruction assuming its presence.
+    skill_idx = message.find("loom-workflow:goal-create")
+    assert skill_idx != -1, "message never points to the goal-create skill"
+    conditional_idx = message.lower().find("if you have")
+    assert conditional_idx != -1, "skill mention is not wrapped in a conditional clause"
+    assert conditional_idx < skill_idx, "conditional clause must precede the skill mention"
+
+
 def test_unreadable_purpose_file_exits_1_not_a_traceback(tmp_path):
     """Round-4 finding (arm B): round 3 guarded the reads in
     `check_queue_relation.py` and its commit message even cited THIS
