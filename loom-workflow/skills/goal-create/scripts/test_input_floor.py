@@ -110,6 +110,35 @@ def _numbered_list_items(content: str) -> list:
     return items
 
 
+def _bullet_list_items(content: str) -> list:
+    """Split a top-level markdown `- ` bullet list into per-item strings.
+
+    §5's three provenance-tag bullets carry no blank line between them, so
+    paragraph-level splitting merges all three into ONE block — the same
+    shape that motivated `_numbered_list_items()` for §4. That merge let a
+    mutant that inverted ONE bullet (e.g. `proposed`) keep passing, because
+    the OTHER two bullets' unmutated text ("quoted directly", "not ...
+    confirmed", "names the anchor") were still present somewhere in the
+    same merged paragraph and satisfied a bare containment/co-occurrence
+    check meant for the mutated bullet. Splitting at each `- ` line start,
+    the way `_numbered_list_items` splits at each `N. ` line start, binds
+    each bullet's polarity to its own clause only.
+
+    Each chunk is also cut at the next markdown heading, for the same
+    reason `_numbered_list_items` does: without it, the LAST bullet in the
+    list has no following `- ` boundary to stop it and silently absorbs
+    every section after the list.
+    """
+    chunks = re.split(r"\n(?=-\s)", content)
+    items = []
+    for chunk in chunks:
+        if not re.match(r"^-\s", chunk.strip()):
+            continue
+        chunk = re.split(r"\n#", chunk)[0]
+        items.append(re.sub(r"\s+", " ", chunk).strip())
+    return items
+
+
 def _bar_intro(content: str) -> str:
     """The prose intro of §4 'The bar', excluding its three list items.
 
@@ -295,36 +324,102 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "be mechanical — expected 'not ... mechanical' within the intro."
     )
 
-    # --- three provenance tags ---
-    user_said_para = _paragraph_containing("user-said")
-    assert user_said_para and "quoted" in user_said_para, (
+    # --- three provenance tags, each isolated to its own bullet item ---
+    # §5's three bullets carry no blank line between them (see
+    # _bullet_list_items' docstring), so the merged-paragraph checks that
+    # used to live here let a mutation of ONE tag's definition survive on
+    # the strength of the OTHER two tags' unmutated text sharing the same
+    # paragraph. Isolating each tag to its own bullet closes that gap.
+    tag_items = _bullet_list_items(content)
+
+    user_said_item = next(
+        (item for item in tag_items if "`user-said`" in item.lower()), None
+    )
+    assert user_said_item and "quoted" in user_said_item.lower(), (
         "Must define `user-said`: the user's own words, quoted."
     )
-    # Phrase check (not a bare co-occurrence): "quoted directly" must
-    # appear as a contiguous phrase. A mutant reading "...the user's own
-    # words, though never literally quoted" keeps "user-said" and "quoted"
-    # present but inverts the claim; it fails here because that exact
-    # phrase is gone.
-    assert "quoted directly" in user_said_para, (
+    # Phrase check: "quoted directly" must appear as a contiguous phrase.
+    # Bare containment alone is not enough — "...but is never quoted
+    # directly, only paraphrased" still CONTAINS "quoted directly" as a
+    # substring while inverting the claim, so it is paired with a
+    # whole-item negation guard below.
+    assert "quoted directly" in user_said_item.lower(), (
         "The `user-said` tag must state the content is quoted DIRECTLY — "
         "expected the phrase 'quoted directly'."
     )
-    derived_para = _paragraph_containing("derived")
-    assert derived_para and "anchor" in derived_para, (
+    # Item-scoped negation guard: the real `user-said` bullet carries no
+    # "not"/"never" anywhere in it, so requiring the item be free of both
+    # catches the "but is never quoted directly" mutant that the phrase
+    # check alone lets through (the phrase survives as a substring of
+    # "never quoted directly").
+    assert not re.search(r"\b(not|never)\b", user_said_item.lower()), (
+        "The `user-said` tag must not carry a negation of its own claim — "
+        "expected no 'not'/'never' within its own bullet item."
+    )
+
+    derived_item = next(
+        (item for item in tag_items if "`derived`" in item.lower()), None
+    )
+    assert derived_item and "anchor" in derived_item.lower(), (
         "Must define `derived`: names the anchor it was inferred from."
+    )
+    # Positive-obligation check: "was inferred" must appear as a
+    # contiguous phrase. Without this, "the field's content was NOT
+    # inferred, though the tag still names the anchor" keeps "names the
+    # anchor" intact (see next assert) and false-passes on the
+    # `derived`/`anchor` checks alone — the "inferred" half of the
+    # definition was never checked for its own polarity.
+    assert "was inferred" in derived_item.lower(), (
+        "The `derived` tag must state the content WAS INFERRED — expected "
+        "the phrase 'was inferred'."
     )
     # Phrase check: "names the anchor" must appear contiguously. A mutant
     # reading "...the tag does not name the anchor" keeps "anchor" present
     # but inverts the claim; it fails here because that exact phrase is
-    # gone.
-    assert "names the anchor" in derived_para, (
+    # gone (the plural "names" does not survive "does not name").
+    assert "names the anchor" in derived_item.lower(), (
         "The `derived` tag must state the tag NAMES the anchor — expected "
         "the phrase 'names the anchor'."
     )
-    proposed_para = _paragraph_containing("proposed")
-    assert proposed_para and (
-        "not" in proposed_para and "confirm" in proposed_para
+    # Item-scoped negation guard, same rationale as `user-said` above: the
+    # real `derived` bullet carries no "not"/"never" of its own, so any
+    # appearing in the isolated item signals an inversion of one of its
+    # two clauses.
+    assert not re.search(r"\b(not|never)\b", derived_item.lower()), (
+        "The `derived` tag must not carry a negation of its own claim — "
+        "expected no 'not'/'never' within its own bullet item."
+    )
+
+    proposed_item = next(
+        (item for item in tag_items if "`proposed`" in item.lower()), None
+    )
+    assert proposed_item and (
+        "confirm" in proposed_item.lower()
     ), "Must define `proposed`: agent-supplied, user has not confirmed it."
+    # Positive-obligation check: "agent supplied the content itself" must
+    # appear as a contiguous phrase. A mutant reading "the agent did NOT
+    # supply the content itself" drops this exact phrase (the "not"
+    # replaces "supplied" with "supply"), so it fails here even though the
+    # phrase-hunting-only version of this test did not check this clause
+    # at all.
+    assert "agent supplied the content itself" in proposed_item.lower(), (
+        "The `proposed` tag must state the AGENT supplied the content "
+        "itself — expected the phrase 'agent supplied the content itself'."
+    )
+    # Negation-binding check: "not" must sit directly against "confirmed"
+    # (optionally via "yet"), not merely co-occur anywhere in the item. The
+    # reviewer's round-4 inversion — "the agent did not supply the content
+    # itself; the user has already confirmed it" — keeps a bare "not" (now
+    # bound to "supply") and the word "confirm" (inside "confirmed"), which
+    # is exactly what the old unscoped `"not" in ... and "confirm" in ...`
+    # check accepted. Binding "not" immediately to "confirmed" closes that:
+    # the mutant's "not" is nowhere near "confirmed", and its "confirmed"
+    # clause carries no negation at all ("has already confirmed").
+    assert re.search(r"\bnot\b\s+(?:yet\s+)?confirmed\b", proposed_item.lower()), (
+        "The `proposed` tag must state the user has NOT (yet) confirmed "
+        "it — expected 'not [yet] confirmed' bound together within its "
+        "own bullet item, not 'not' and 'confirm' merely co-occurring."
+    )
 
     # --- citation boundary ---
     citation_para = _paragraph_containing("source", "quote")
