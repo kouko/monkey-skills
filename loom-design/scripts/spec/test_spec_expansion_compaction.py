@@ -7,7 +7,7 @@ SKILL = Path(__file__).parents[2] / "skills" / "spec-expansion" / "SKILL.md"
 DETAILS = SKILL.parent / "references" / "execution-details.md"
 
 
-def test_entrypoint_preserves_gates_under_word_ceiling():
+def test_entrypoint_preserves_gates():
     text = SKILL.read_text(encoding="utf-8")
 
     assert DETAILS.is_file(), "phase-conditional execution detail needs a focused reference"

@@ -11,7 +11,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import skill_compaction_preflight as preflight
 
 
-def test_entrypoint_preserves_exemptions_red_green_refactor_and_false_green_within_word_range():
+def test_entrypoint_preserves_exemptions_red_green_refactor_and_false_green():
     text = SKILL.read_text(encoding="utf-8")
 
     required = (

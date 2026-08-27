@@ -8,7 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SKILL = REPO_ROOT / "loom-code" / "skills" / "loom-memory" / "SKILL.md"
 
 
-def test_entrypoint_preserves_conditional_record_recall_prune_contract_within_word_range():
+def test_entrypoint_preserves_conditional_record_recall_prune_contract():
     text = SKILL.read_text(encoding="utf-8")
     flat = re.sub(r"\s+", " ", text)
     violations = []

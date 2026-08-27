@@ -11,7 +11,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import skill_compaction_preflight as preflight
 
 
-def test_entrypoint_preserves_receipt_scope_routing_panel_and_publish_gate_within_word_range():
+def test_entrypoint_preserves_receipt_scope_routing_panel_and_publish_gate():
     text = SKILL.read_text()
 
     required = (

@@ -11,7 +11,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import skill_compaction_preflight as preflight
 
 
-def test_entrypoint_preserves_package_evidence_failure_routing_and_marker_within_word_range():
+def test_entrypoint_preserves_package_evidence_failure_routing_and_marker():
     text = SKILL.read_text(encoding="utf-8")
 
     required = (
@@ -23,11 +23,6 @@ def test_entrypoint_preserves_package_evidence_failure_routing_and_marker_within
         "Orphan tests",
         "Lint passes ≠ tests pass",
         "## When NOT to use",
-        # The revoked exemptions fail by RE-ADDITION, which no presence
-        # assertion can see. Absence assertions over all three READMEs close
-        # the sixth restore's gap; the other five are pinned by presence.
-        # Mutation-checked: re-adding either phrase to any README turns this red.
-
         "No tests exist yet",
         "Pure doc / config / generated regen",
         "Test infrastructure broken",
@@ -74,8 +69,13 @@ def test_entrypoint_preserves_package_evidence_failure_routing_and_marker_within
 
 
 def test_readmes_do_not_readvertise_the_revoked_exemptions():
-    """The #740 follow-up revoked two exemptions in SKILL.md; all three READMEs
-    were re-aligned. Guard the re-addition direction, which presence pins miss."""
+    """Guard the re-addition direction, which presence assertions cannot see.
+
+    The #740 follow-up revoked two exemptions in SKILL.md and re-aligned all
+    three READMEs. A presence pin cannot detect a rule coming back, so the
+    revoked phrasings are asserted absent instead. Mutation-checked: re-adding
+    either phrase to any of the three READMEs turns this red.
+    """
     revoked = {
         "README.md": ("Pure doc / config / generated regen (no runtime behavior change)",
                       "Explicit user override AND change matches exempt category"),

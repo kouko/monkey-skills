@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SKILL = ROOT / "skills" / "dispatching-parallel-agents" / "SKILL.md"
 
 
-def test_entrypoint_preserves_independence_fanout_tdd_and_integration_within_word_range():
+def test_entrypoint_preserves_independence_fanout_tdd_and_integration():
     text = SKILL.read_text(encoding="utf-8")
 
     # Frontmatter, stop behavior, and the portable dispatch dependency stay inline.

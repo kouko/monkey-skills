@@ -9,7 +9,7 @@ SKILL = (
 )
 
 
-def test_entrypoint_preserves_mindset_three_questions_and_verdicts_under_word_ceiling():
+def test_entrypoint_preserves_mindset_three_questions_and_verdicts():
     text = SKILL.read_text(encoding="utf-8")
 
     assert "Load at least one" in text

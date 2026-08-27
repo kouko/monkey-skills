@@ -9,7 +9,7 @@ EXAMPLES_PATH = (
 )
 
 
-def test_entrypoint_preserves_four_modes_and_briefing_contract_under_word_ceiling():
+def test_entrypoint_preserves_four_modes_and_briefing_contract():
     text = SKILL_PATH.read_text(encoding="utf-8")
 
     # These pins protect observable routing, sequencing, and output contracts.

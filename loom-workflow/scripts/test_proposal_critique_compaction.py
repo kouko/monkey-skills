@@ -9,9 +9,8 @@ SKILL = (
 )
 
 
-def test_entrypoint_preserves_axes_matrix_fallthrough_and_output_under_word_ceiling():
+def test_entrypoint_preserves_axes_matrix_fallthrough_and_output():
     text = SKILL.read_text(encoding="utf-8")
-
 
     steps = [
         "1. **ENUMERATE-OR-DECOMPOSE.",

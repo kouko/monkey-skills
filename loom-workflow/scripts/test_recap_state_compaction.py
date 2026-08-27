@@ -9,7 +9,7 @@ SCHEMA_PATH = (
 )
 
 
-def test_entrypoint_preserves_l3_blocks_verbatim_rules_and_synthesis_gate_under_word_ceiling():
+def test_entrypoint_preserves_l3_blocks_verbatim_rules_and_synthesis_gate():
     text = SKILL_PATH.read_text(encoding="utf-8")
 
     essence = {

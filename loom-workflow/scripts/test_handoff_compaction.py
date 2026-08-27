@@ -8,7 +8,7 @@ SCHEMA_PATH = (
 )
 
 
-def test_entrypoint_preserves_prepare_resume_verification_and_stop_under_word_ceiling():
+def test_entrypoint_preserves_prepare_resume_verification_and_stop():
     text = SKILL_PATH.read_text(encoding="utf-8")
 
     essence = {

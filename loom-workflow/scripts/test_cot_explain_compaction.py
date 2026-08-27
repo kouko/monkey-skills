@@ -5,7 +5,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SKILL_PATH = REPO_ROOT / "loom-workflow/skills/cot-explain/SKILL.md"
 
 
-def test_entrypoint_preserves_extraction_render_and_fidelity_gates_under_word_ceiling():
+def test_entrypoint_preserves_extraction_render_and_fidelity_gates():
     text = SKILL_PATH.read_text(encoding="utf-8")
 
     essence = {

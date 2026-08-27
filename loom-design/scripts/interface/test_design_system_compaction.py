@@ -9,7 +9,7 @@ LOW = TEXT.lower()
 FLAT = " ".join(LOW.split())
 
 
-def test_entrypoint_preserves_modality_gui_contract_and_ending_gate_within_word_range():
+def test_entrypoint_preserves_modality_gui_contract_and_ending_gate():
     assert "references/design-md-schema.md" in TEXT
     assert "docs/loom/principles.md" in LOW and "## anchors" in LOW
     assert "3-5 tone & manner adjectives" in LOW and "governing mood" in LOW

@@ -14,9 +14,8 @@ SKILL = (
 CONDITIONAL_OPERATIONS = SKILL.parent / "references" / "conditional-operations.md"
 
 
-def test_entrypoint_preserves_orchestration_under_word_ceiling() -> None:
+def test_entrypoint_preserves_orchestration() -> None:
     text = SKILL.read_text(encoding="utf-8")
-
 
     required = (
         "### Live-gate receipt (SDD only)",

@@ -11,7 +11,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import skill_compaction_preflight as preflight
 
 
-def test_entrypoint_preserves_rules_stage_router_autonomy_and_safety_within_word_range():
+def test_entrypoint_preserves_rules_stage_router_autonomy_and_safety():
     text = SKILL.read_text(encoding="utf-8")
 
     required = (

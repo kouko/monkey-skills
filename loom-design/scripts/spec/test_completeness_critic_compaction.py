@@ -10,7 +10,7 @@ LOW = TEXT.lower()
 FLAT = " ".join(LOW.split())
 
 
-def test_entrypoint_preserves_panel_lenses_synthesis_and_bounded_verdict_within_word_range():
+def test_entrypoint_preserves_panel_lenses_synthesis_and_bounded_verdict():
     assert "omissions" in LOW and "spec" in LOW
     assert "fresh context" in LOW and "general reasoning agent" in LOW
     assert "writer" in LOW and "judge" in LOW

@@ -6,10 +6,9 @@ from pathlib import Path
 SKILL = Path(__file__).parents[1] / "skills" / "brainstorming" / "SKILL.md"
 
 
-def test_entrypoint_preserves_gate_axes_brief_and_handoff_within_word_range():
+def test_entrypoint_preserves_gate_axes_brief_and_handoff():
     text = SKILL.read_text(encoding="utf-8")
     low = text.lower()
-
 
     # Invocation boundary, hard gate, and closed exemptions.
     for phrase in (

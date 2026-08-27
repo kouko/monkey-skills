@@ -9,7 +9,7 @@ RUNTIME_PROTOCOL_PATH = (
 )
 
 
-def test_entrypoint_preserves_essence_under_word_ceiling():
+def test_entrypoint_preserves_essence():
     text = SKILL_PATH.read_text(encoding="utf-8")
 
     # These are observable safety and completion contracts, not prose styling pins.

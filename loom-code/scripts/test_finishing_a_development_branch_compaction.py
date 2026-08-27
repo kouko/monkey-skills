@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SKILL = ROOT / "skills" / "finishing-a-development-branch" / "SKILL.md"
 
 
-def test_entrypoint_preserves_closeout_gates_publish_ci_and_report_within_word_range():
+def test_entrypoint_preserves_closeout_gates_publish_ci_and_report():
     text = SKILL.read_text(encoding="utf-8")
 
     # Loader-visible identity, stop behavior, and reference-consumed headings stay stable.

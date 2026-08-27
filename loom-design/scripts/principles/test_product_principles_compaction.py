@@ -9,7 +9,7 @@ LOW = TEXT.lower()
 FLAT = " ".join(LOW.replace("*", "").split())
 
 
-def test_entrypoint_preserves_elicitation_canon_artifact_and_headless_traceability_within_word_range():
+def test_entrypoint_preserves_elicitation_canon_artifact_and_headless_traceability():
     assert "own words" in LOW and "target user" in LOW
     assert "same-axis" in LOW and "same question" in LOW
     assert "docs/loom/PRINCIPLES.md" in TEXT

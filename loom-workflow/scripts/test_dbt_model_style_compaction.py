@@ -9,9 +9,8 @@ SKILL = (
 )
 
 
-def test_entrypoint_preserves_scope_structure_and_self_check_under_word_ceiling():
+def test_entrypoint_preserves_scope_structure_and_self_check():
     text = SKILL.read_text(encoding="utf-8")
-
 
     essence = {
         "bounded style scope": [

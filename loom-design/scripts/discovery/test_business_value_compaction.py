@@ -6,7 +6,7 @@ from pathlib import Path
 SKILL = Path(__file__).parents[2] / "skills" / "business-value" / "SKILL.md"
 
 
-def test_entrypoint_preserves_firing_axes_verdict_and_validation_within_word_range():
+def test_entrypoint_preserves_firing_axes_verdict_and_validation():
     text = SKILL.read_text(encoding="utf-8")
     low = text.lower()
 

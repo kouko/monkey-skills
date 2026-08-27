@@ -10,7 +10,7 @@ LOW = TEXT.lower()
 FLAT = " ".join(LOW.split())
 
 
-def test_entrypoint_preserves_artifact_guard_panel_nielsen_and_bounded_verdict_within_word_range():
+def test_entrypoint_preserves_artifact_guard_panel_nielsen_and_bounded_verdict():
     assert "design.md" in LOW and "ui-flows.md" in LOW
     assert "wrong-artifact guard" in LOW and "spec" in LOW and "code" in LOW
     assert "surface" in LOW and "writer≠judge" in LOW

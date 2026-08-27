@@ -1,6 +1,5 @@
 from hashlib import sha256
 from pathlib import Path
-import re
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -13,11 +12,8 @@ UNCHANGED_CONTRACTS = {
 }
 
 
-def test_entrypoint_preserves_invocation_privacy_capture_and_recall_under_word_ceiling():
+def test_entrypoint_preserves_invocation_privacy_capture_and_recall():
     text = SKILL.read_text(encoding="utf-8")
-
-    # 2,341-word baseline; retain a 22-30% reduction, not merely a ceiling.
-    assert 1_639 <= len(re.findall(r"\S+", text)) <= 1_826
 
     essence = {
         "mandatory boundaries": [

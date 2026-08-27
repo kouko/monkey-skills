@@ -10,7 +10,7 @@ FLAT = " ".join(LOW.split())
 PLAIN = FLAT.replace("**", "")
 
 
-def test_entrypoint_preserves_reception_station_order_boundaries_and_host_tools_within_word_range():
+def test_entrypoint_preserves_reception_station_order_boundaries_and_host_tools():
     assert "<subagent-stop>" in LOW and "parent orchestrator only" in LOW
     assert "references/design-relay.md" in TEXT
     assert "references/family-relay.md §family relay discipline" in FLAT

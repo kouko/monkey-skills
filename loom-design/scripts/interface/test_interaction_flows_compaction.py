@@ -9,7 +9,7 @@ LOW = TEXT.lower()
 FLAT = " ".join(LOW.split())
 
 
-def test_entrypoint_preserves_intake_dimensions_diagrams_and_ending_gate_within_word_range():
+def test_entrypoint_preserves_intake_dimensions_diagrams_and_ending_gate():
     for reference in (
         "references/ux-flow-checklist.md",
         "references/ascii-ui-patterns.md",
