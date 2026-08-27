@@ -246,10 +246,37 @@ def test_close_out_card_merge_row_matches_step_11():
         if line.startswith("| 💻 Merge |")
     )
     step11 = _step11_slice(_text())
+    # The row escapes its pipe for GFM (`\|`); Step 11 sits in prose where no
+    # escaping applies, so normalize before comparing source to source.
     command = next(
-        part for part in row.split("`") if part.startswith("gh pr view")
+        part for part in row.replace("\\|", "|").split("`") if part.startswith("gh pr view")
     )
     assert command in " ".join(step11.split()), (
         "the close-out card's merge row must quote Step 11's command verbatim; "
         f"the row has {command!r}"
+    )
+
+
+def test_close_out_card_rows_survive_table_rendering():
+    """Every card row must render as one cell, not truncate at a pipe.
+
+    A pipe inside a table cell splits the row before inline parsing, and a code
+    span does not protect it — GFM drops everything after it and leaves the
+    backtick unclosed. The merge command contains a pipe, so the row is correct
+    in source and broken when rendered, which the source-comparing test above
+    cannot see. Measured, not reasoned: an unescaped pipe yields a cell reading
+    "ready `alpha --json body"; escaped, the full command survives.
+    """
+    text = CARD_SSOT.read_text(encoding="utf-8")
+    section = text[text.index("#### Close-out card") :]
+    section = section[: section.index("\n### ")]
+    rows = [
+        line for line in section.splitlines()
+        if line.startswith("| ") and "---" not in line
+    ]
+    assert rows, "the close-out card must have rows"
+    counts = {line.replace("\\|", "").count("|") for line in rows}
+    assert counts == {3}, (
+        "every close-out card row must have exactly two cells; an unescaped `|` "
+        f"inside a cell adds one and truncates the render. Saw {sorted(counts)}"
     )

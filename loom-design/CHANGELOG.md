@@ -16,8 +16,10 @@ version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
 ### Changed
 
 - Synced `using-loom-design/references/family-relay.md` from its SSOT: the
-  close-out card offers one merge path instead of two, and its `🌐 Web merge`
-  row becomes `🔗 PR link` — a link to view the PR, never a way to merge.
+  close-out card offers one merge path instead of two, its `🌐 Web merge` row
+  becomes `🔗 PR link` — a link to view the PR, never a way to merge — and the
+  merge row carries the full command inline, since a design-side install cannot
+  resolve a pointer into loom-code.
 
 ## [0.5.4] — 2026-08-27
 
