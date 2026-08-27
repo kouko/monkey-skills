@@ -1,7 +1,7 @@
 {
   "name": "loom-workflow",
-  "version": "1.1.1",
-  "description": "Loom workflow skills — git memory, decision briefs, critique, recap, handoff, session distill, CoT explainers, goal-create.",
+  "version": "1.2.0",
+  "description": "Loom workflow skills — git memory, decision briefs, critique, recap, handoff, session distill, CoT explainers, goal-create, cross-executor second opinion.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -19,6 +19,7 @@
     "recap-state",
     "handoff",
     "cot-explain",
+    "independent-advisor",
     "dbt-model-style",
     "dbt"
   ],
