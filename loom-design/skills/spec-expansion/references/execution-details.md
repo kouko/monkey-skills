@@ -40,6 +40,13 @@ Read while pruning when a terse discriminator below is insufficient.
 - NFR: retain obligations implied by real scale, security, concurrency,
   network, or timing constraints; ask when implied but unquantified.
 
+## Behavioral complexity lens
+
+Read `behavioral-complexity-lens.md` after applying the Phase ③ lenses. It
+records the retained behavioral burden and its downstream risks in the existing
+matrix, provenance, and blind-spots sections; no upstream complexity note is
+required.
+
 ## Phase ③b combination residue
 
 Read when a stage has four or more co-active objects.

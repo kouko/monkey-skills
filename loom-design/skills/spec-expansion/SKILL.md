@@ -177,6 +177,9 @@ question (`evidence_needed: domain-convention`), never an invented answer.
 **Prune through the lens layer.** Apply these six lenses cell-by-cell; read
 [`references/execution-details.md`](references/execution-details.md)
 §Phase ③ lens discrimination when a decision is ambiguous.
+Read `references/behavioral-complexity-lens.md` after the six lenses to record
+the retained behavioral burden in existing proposal sections; it adds no
+proposal section or universal schema.
 
 - **state-transition legality** — dominates for rich lifecycles; KEEP legal,
   FLAG illegal attempts, DROP impossible ordering.
