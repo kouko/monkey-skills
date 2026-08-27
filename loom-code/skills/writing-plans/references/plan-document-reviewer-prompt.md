@@ -70,7 +70,7 @@ notes:                           # optional; ≤3 bullets
 ### Verdict mapping
 
 - **PASS**: all applicable checks passed. Check 5 is **retired** — always N/A, never applied (see its row above). Check 12 is N/A when the plan is not a BLOCKED-fallback. Checks 13–14 are N/A when no task declares `Independent: true` (the parallel-dispatch markup is opt-in). Check 15 is **advisory and runs regardless** of whether any task is marked `Independent: true` — it can only add a `notes` entry, never a gap, so it can coexist with a `PASS` verdict. Check 16 is N/A when no task declares `Review-weight: mechanical` or `Review-weight: prose` (both opt-in). Check 17 is N/A only when no task carries a `Reuse-adequacy` block and no task's Description instructs reuse (per `plan-format.md` §`Reuse-adequacy`).
-- **NEEDS_REVISION**: any applicable check **1–4, 6–14, 16–20** failed. List EVERY failure, not just the first — writing-plans fixes them in one re-dispatch round. Before returning, re-scan every task against each check that failed anywhere; a check reported on one task but left unreported on another task with the same defect is a contract violation. Check 5 is retired (never contributes) and Check 15 never contributes to NEEDS_REVISION.
+- **NEEDS_REVISION**: any applicable check **1–4, 6–14, 16–21** failed. List EVERY failure, not just the first — writing-plans fixes them in one re-dispatch round. Before returning, re-scan every task against each check that failed anywhere; a check reported on one task but left unreported on another task with the same defect is a contract violation. Check 5 is retired (never contributes) and Check 15 never contributes to NEEDS_REVISION.
 
 ### Anti-patterns the writing-plans orchestrator will reject
 

@@ -46,7 +46,7 @@ PLAN_DOCUMENT_REVIEWER_PROMPT = (
 # likewise an authorized append. Bumped 19 -> 20 when Check 20 (Seam
 # field) shipped (docs/loom/plans/2026-08-25-seam-contracts.md Task 4),
 # likewise an authorized append.
-PRE_EXISTING_MAX_CHECK_NUMBER = 20
+PRE_EXISTING_MAX_CHECK_NUMBER = 21
 
 
 def _read(path: Path) -> str:

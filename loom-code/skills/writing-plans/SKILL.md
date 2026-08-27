@@ -96,9 +96,9 @@ This is Beck's Child Test pattern: split an oversized test into smaller green st
 
 ## Self-review — plan-document-reviewer
 
-`plan-document-reviewer` is a **PROMPT FILE** ([prompt](references/plan-document-reviewer-prompt.md)) dispatched via a generic subagent — NEVER an agent-registry lookup; no other reviewer agent (docs-reviewer included) may substitute. Tier: profile.
+`plan-document-reviewer` is the **PROMPT FILE** ([source](references/plan-document-reviewer-prompt.md)) dispatched via a generic subagent. Tier: profile. NEVER an agent-registry lookup; no other reviewer agent (docs-reviewer included) may substitute.
 
-**Resolve the dispatch profile** in [`dispatch-profile.md`](../using-loom-code/references/dispatch-profile.md) before spawn; it owns translation and escalation.
+Resolve the dispatch profile ([`dispatch-profile.md`](../using-loom-code/references/dispatch-profile.md)) before spawn for host translation/escalation.
 
 Dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-document-reviewer-prompt.md) as an evaluator in a one-shot blocking call. Its checklist is authoritative; host details are in the tool mapping and Claude's naming pitfall in [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1. Pre-screen:
 
@@ -106,14 +106,14 @@ Dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-documen
 - **every brief item covered** — every Smallest End State / Decision item maps to ≥1 task, no orphan tasks;
 - **DAG, no cycles** — `Dependencies` form an acyclic graph with critical-path depth ≤5.
 
-The prompt also enforces parallel-dispatch checks — see it for the complete list.
+It owns parallelism checks.
 
-**Architecture complexity assessment:** for every non-mechanical plan, read
-[`references/architecture-complexity-lens.md`](references/architecture-complexity-lens.md)
-and add the required plan-level assessment before dispatching SDD. Optional
-upstream evidence may inform it; when that evidence is absent, assess locally.
+**Architecture complexity:** every non-mechanical plan reads
+[architecture-complexity lens](references/architecture-complexity-lens.md)
+and records it before SDD. Upstream evidence is optional; otherwise assess
+locally.
 
-**Pre-patch before dispatch:** Read reviewer Checks 1 and 3; add missing top-level `Plan-document-reviewer verdict: PENDING` and per-task `Brief item covered:` fields.
+**Pre-patch:** add `Plan-document-reviewer verdict: PENDING` and per-task `Brief item covered:` fields (Checks 1, 3).
 
 **Coverage gate:** before dispatching the reviewer, run §Consuming a loom-design change-folder — Coverage self-check; brief mode (`--brief`) applies to every brief declaring `BI-` ids.
 
