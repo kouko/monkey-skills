@@ -87,6 +87,13 @@ def _tracked_worktree_fingerprint(plugin: str) -> str:
 
 
 def test_report_binds_baseline_and_final_candidate():
+    """Bind reported bytes to reconstructible Git inputs.
+
+    Grounding (live CLI help, 2026-08-27): `git archive -h` documents
+    `--format <fmt>`, `<tree-ish>`, and optional paths; `git ls-files -h`
+    documents `--stage`, `-z`, and path arguments. Those are the exact Git
+    surfaces used by the reconstruction helpers above.
+    """
     text = REPORT.read_text(encoding="utf-8")
     flat_text = " ".join(text.split())
     assert "immutable pre-edit snapshot" in text

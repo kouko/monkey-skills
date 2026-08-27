@@ -14,7 +14,7 @@ either result and CI does not depend on the machine-local directory.
 - loom-design baseline SHA-256: `0e63efae0f07c92c3e98c657d821b5a03d171d0049570508ad745e0a19aef486`
 - loom-code baseline SHA-256: `e2a861d4028c2837de7a32596a7c4299cd0792fdc27e4b7f278f9856745df6bc`
 - loom-design candidate SHA-256: `805fd790d45fe6dc0e8465daa8322caed4e28d1e3e8b00651a051768c8f4754a`
-- loom-code candidate SHA-256: `32790c3fa1bf19211ac47d8fcf1ef548326a706aef3937db9a8ccb4c2dbc3ee5`
+- loom-code candidate SHA-256: `06dfdc5494819ccac851df34d41c5e46d09377b6c8e07711a61de295df428745`
 
 These are the **final cold-install candidate bytes** for both plugin packages;
 the report and its root-level test do not alter either package tree.
