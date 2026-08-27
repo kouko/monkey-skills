@@ -7,9 +7,8 @@ Three tests:
      issue warns without failing the run; a well-formed English stop
      clause that a marker word list would have rejected still passes.
   2. test_field_parsing_treats_quoted_labels_as_content — a label-shaped
-     line inside a fenced code block, or inside an inline code span that
-     closes on a later line, is content belonging to the open field, not
-     a new field boundary.
+     line inside a *balanced* fenced code block is content belonging to
+     the open field, not a new field boundary.
   3. test_field_labels_match_the_shape_reference — cross-seam probe: the
      field labels goal_lint.py checks for must match the labels defined in
      references/goal-shape.md, so a rename upstream fails here instead of
@@ -145,24 +144,6 @@ Stop-when: The outcome is reached, or stop after 20 turns.
     assert "this is not a real field" in fields["Verification"]
     assert "pytest tests/test_signup.py" in fields["Verification"]
 
-    # A label-shaped line inside an inline code span that opens on one
-    # line and closes on a later line is likewise content, not a
-    # boundary.
-    inline_span_goal = """\
-Outcome: The signup form works.
-Constraints: none
-Verification: Avoid reports shaped like `
-Outcome: this is not a real field
-` — paste the real `pytest tests/test_signup.py` output instead.
-Stop-when: The outcome is reached, or stop after 20 turns.
-"""
-    result = goal_lint.lint_text(inline_span_goal)
-    assert not any(f.code == "no-backtick-command" for f in result.errors)
-    assert not any(f.code == "missing-field" for f in result.errors)
-    assert result.exit_code == 0
-    fields = goal_lint.parse_fields(inline_span_goal)
-    assert "this is not a real field" in fields["Verification"]
-
 
 def test_unmatched_fence_does_not_swallow_the_rest_of_the_document():
     # An opening fence with no matching close is not a delimiter at all —
@@ -195,6 +176,26 @@ Stop-when: The outcome is reached, or stop after 20 turns.
     result = goal_lint.lint_text(stray_backtick_goal)
     assert not any(f.code == "missing-field" for f in result.errors)
     fields = goal_lint.parse_fields(stray_backtick_goal)
+    assert "Stop-when" in fields
+
+
+def test_two_independent_stray_backticks_do_not_pair_across_fields():
+    # Two independently unpaired backticks (one on the Outcome line, and
+    # a three-backtick Verification line — a balanced span plus a typo'd
+    # apostrophe) must never pair with each other across a field
+    # boundary. A stray backtick is just a character; it masks nothing.
+    two_stray_backticks_goal = """\
+Outcome: text with a stray backtick here `
+Constraints: none
+Verification: Run `pytest x` and check the user`s config
+Stop-when: stop after 20 turns
+"""
+    result = goal_lint.lint_text(two_stray_backticks_goal)
+    assert not any(f.code == "missing-field" for f in result.errors)
+    fields = goal_lint.parse_fields(two_stray_backticks_goal)
+    assert "Outcome" in fields
+    assert "Constraints" in fields
+    assert "Verification" in fields
     assert "Stop-when" in fields
 
 
