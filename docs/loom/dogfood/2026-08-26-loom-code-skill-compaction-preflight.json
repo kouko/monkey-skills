@@ -1186,6 +1186,7 @@
         "references/push-trigger-rationalizations.md",
         "references/red-flags.md",
         "references/relay-phrasing.md",
+        "references/review-loop-convergence.md",
         "references/scope-comparison.md",
         "review_context.py",
         "review_scope.py",

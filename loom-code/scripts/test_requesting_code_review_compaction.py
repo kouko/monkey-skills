@@ -72,7 +72,7 @@ def test_entrypoint_preserves_receipt_scope_routing_panel_and_publish_gate():
         "marker_valid: true",
         "review-pass --repo <target_repo>",
         "Do NOT auto-fix",
-        "Re-dispatch if user fixed and wants re-review",
+        "run the ledger-driven convergence loop",
         "## Asking the user",
         "state-anchor-first",
         "family-relay.md §Family relay discipline",
