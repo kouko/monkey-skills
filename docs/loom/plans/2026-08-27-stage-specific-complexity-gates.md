@@ -115,7 +115,7 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2, BI-9, BI-11
-- **Status**: pending
+- **Status**: done(de58e59c)
 - **Gloss**: 在開工前檢查邊界、依賴、遷移與營運負擔，純機械修改可具理由豁免。
 
 ## Task 6 — 實作分支 complexity lens
@@ -131,7 +131,7 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2, BI-10, BI-11, BI-12
-- **Status**: pending
+- **Status**: done(b55a7f22)
 - **Gloss**: 用實際 diff 驗證原先承諾的簡化有落地，並抓出實作時新長出的負擔。
 
 ## Task 7 — plugin 邊界與薄交接契約
