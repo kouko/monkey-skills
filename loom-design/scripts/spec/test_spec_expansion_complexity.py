@@ -25,3 +25,4 @@ def test_pruning_reports_retained_behavioral_complexity():
     assert "deletions" in lens and "downstream risks" in lens
     assert "No upstream complexity note is required" in lens
     assert "eighth proposal section" in lens
+    assert "required user or system outcome" in lens.lower()

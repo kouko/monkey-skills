@@ -9,6 +9,10 @@ deletion. Record the assessment in the plan before execution.
 - **Removed or avoided complexity**: deletions, reuse, or simpler shapes.
 - **Downstream risk**: runtime, operational, or integration burden reaching implementation.
 
+Accept a simpler shape only when it still reaches the brief's required end
+state. If it cannot, record the lost outcome as a scope trade-off rather than a
+complexity reduction.
+
 Optional upstream evidence may inform the assessment. When upstream evidence is
 absent, make the local assessment from the brief and plan. A mechanical edit
 may use the `N/A — mechanical edit: <reasoned exemption>` form only when it

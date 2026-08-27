@@ -24,4 +24,5 @@ def test_flow_lens_emits_stage_native_handoff():
     assert "downstream ambiguity" in lens
     assert "static surface" in lens.lower() and "reasoned N/A" in lens
     assert "optional evidence" in lens
+    assert "required user or operator outcome" in lens.lower()
     assert "does not author behavioral guards" in skill

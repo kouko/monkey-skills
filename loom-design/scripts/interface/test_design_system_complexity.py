@@ -45,6 +45,7 @@ def test_visual_lens_preserves_canonical_eight_sections():
         "deleted or avoided exceptions",
         "downstream component risk",
         "reasoned n/a",
+        "intended visual outcome",
     ):
         assert concern in lens
 

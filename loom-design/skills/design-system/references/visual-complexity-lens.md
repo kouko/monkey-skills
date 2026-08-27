@@ -15,6 +15,10 @@ Ask:
 - What **downstream component risk** remains for implementers when the visual
   rules meet new components or surfaces?
 
+A smaller vocabulary or variant set is a valid simplification only when it
+still delivers the intended visual outcome. Treat any lost outcome as an
+explicit design trade-off rather than avoided complexity.
+
 In `DESIGN.md`, place the assessment in the existing Overview / Brand and Do's
 & Don'ts prose: name the added burden, why the surviving rules are worthwhile,
 what was removed or avoided, and the downstream risk. When the work reuses

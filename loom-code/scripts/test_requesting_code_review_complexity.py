@@ -23,4 +23,6 @@ def test_deletion_first_compares_actual_and_planned_complexity():
     assert "landed deletions" in flat_lens and "simpler alternative" in flat_lens
     assert "downstream operational risk" in lens
     assert "independent local assessment" in lens
+    assert "preserves the required outcome" in lens.lower()
+    assert "scope trade-off" in lens.lower()
     assert "implementation complexity lens" in reviewer.lower()

@@ -10,7 +10,7 @@ Steps:
 **Total tasks**: 9
 **Critical-path depth**: 3
 **Execution order**: parallel by dependency level
-**Plan-document-reviewer verdict**: PASS (2026-08-27; 19/19 checks, round 4)
+**Plan-document-reviewer verdict**: PASS (2026-08-27; 19/19 checks, round 5)
 
 ## Task-flow diagram
 
@@ -34,7 +34,7 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
 
 - **Added complexity**: six local lens references, six stage-contract tests, one cross-plugin contract test, and optional evidence-reading language inside existing checkpoints.
 - **Why it is worthwhile**: each addition exposes domain-specific burden before it hardens downstream while preserving the installed stage's independent judgment.
-- **Removed or avoided complexity**: no universal score, shared orchestrator, common schema, new artifact type, cross-plugin private call, or synchronization mechanism is introduced.
+- **Removed or avoided complexity**: no universal score, shared orchestrator, common schema, new artifact type, cross-plugin private call, or synchronization mechanism is introduced; every claimed simplification must still preserve its stage's required outcome.
 - **Downstream risk**: copied four-question prose could drift, optional evidence could be mistaken for a dependency, and contract tests could false-green without cold-install behavior probes; Tasks 7 and 9 own those risks.
 
 ## Task 1 — 商業規劃 complexity lens
@@ -188,6 +188,7 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
 - **Acceptance**:
   - **RED**: `python3 -m pytest scripts/test_stage_specific_complexity_behavior_evidence.py::test_report_binds_baseline_and_final_candidate -q` fails because the report and candidate/baseline evidence do not exist.
   - **GREEN**: The report binds `/tmp/loom-complexity-baseline.xt9viD` as the immutable baseline, records candidate/baseline outputs for the hard cases, confirms all pre-existing invariants, and shows each new lens fires selectively without requiring sibling plugins.
+  - **GREEN**: Purpose-preservation probes reject a simpler alternative that loses the required stage outcome and classify that loss as a scope trade-off instead.
   - **GREEN**: `behavior report includes the final cold-install candidate bytes`.
 - **Dependencies**: Task 7 completes first
 - **Seam**:

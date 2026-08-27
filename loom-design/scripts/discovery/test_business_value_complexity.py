@@ -23,3 +23,5 @@ def test_business_checkpoint_records_commitment_complexity():
     for meaning in ("burden", "worth", "avoid", "downstream risk"):
         assert meaning in template, f"template must record {meaning}"
     assert "reasoned n/a" in template
+    lens = " ".join(LENS.read_text(encoding="utf-8").lower().split())
+    assert "required business outcome" in lens

@@ -43,7 +43,9 @@ Each in-scope stage extends one checkpoint it already owns with a native
 complexity lens. Every lens states when it applies, asks stage-specific
 questions, records the four thin handoff meanings—added complexity, why it is
 worthwhile, what can be removed or avoided, and downstream risk—and permits a
-reasoned N/A where the stage adds no material complexity. Success means cold
+reasoned N/A where the stage adds no material complexity. A simplification is
+valid only when it preserves that stage's required outcome; otherwise the lost
+outcome is an explicit scope trade-off. Success means cold
 standalone installs still evaluate locally, composition uses only optional
 project-owned `docs/loom/` artifacts, and tests reject private cross-plugin
 paths. A universal score, identical checklist, new orchestration layer, or
@@ -51,7 +53,7 @@ cross-plugin synchronization system is explicitly not a success criterion.
 <!-- narrative: the success and non-success clauses jointly define the smallest mechanism and cannot be separated without making a larger implementation appear compliant -->
 
 - BI-1 — Every in-scope Loom stage owns a stage-specific complexity lens at an existing checkpoint.
-- BI-2 — Every lens communicates added complexity, worth, deletion or avoidance, and downstream risk in stage-native artifact language, with a reasoned N/A path.
+- BI-2 — Every lens communicates added complexity, worth, outcome-preserving deletion or avoidance, and downstream risk in stage-native artifact language, with a reasoned N/A path.
 - BI-3 — Each plugin evaluates independently and composes only through optional project-owned artifacts and public capability detection.
 - BI-4 — Tests protect stage behavior, cold standalone installation, public composition, and the absence of private cross-plugin path dependencies.
 

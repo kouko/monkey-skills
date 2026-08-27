@@ -12,6 +12,9 @@ Record deletions for redundant, impossible, or speculative cells; do not carry
 speculative scope forward. Flag remaining downstream risks or ambiguity for the
 existing blind-spots
 section rather than inventing a new behavioral contract.
+Only `DROP` a cell as simplification when the remaining behavior still achieves
+the required user or system outcome; otherwise expose the lost outcome as a
+scope decision.
 
 Record the assessment in the existing `## Path × edge matrix`, `## Provenance`,
 and `## Blind spots — needs human/field input` proposal sections. Do not add an
