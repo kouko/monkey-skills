@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-27-stage-specific-complexity-gates.md
 Goal: Add stage-owned complexity judgments to existing Loom checkpoints while preserving standalone plugin operation and optional artifact-only composition.
-Stage: review:round-3
+Stage: review:round-4
 Steps:
   1. 為四個設計階段加入各自的複雜度 lens
   2. 為計畫與程式審查加入工程階段 lens
