@@ -45,13 +45,20 @@ start: the next arc that touches more than two compaction tests at once — the 
   this entry originally proposed. All per-file word bounds are removed from all
   33 `test_*_compaction.py` files, floor and ceiling together, rather than the
   floor-drop-plus-family-ceiling this entry sketched. No family-level aggregate
-  replaced them. For `SKILL.md` files the repo-wide 4,500-word cap
-  (`check-skill-structure.py`) is the ceiling — its tightest remaining headroom
-  is 880 words, at `finishing-a-development-branch/SKILL.md`. It is NOT a
-  ceiling for reference files: that script reads `skill_dir / "SKILL.md"` and
-  measures nothing else, so `subagent-driven-development/references/conditional-operations.md`
-  (812 words) now has no size guard at all — the removed package-total bound was
+  replaced them. For a `SKILL.md` the 4,500-word cap in
+  `check-skill-structure.py` is the ceiling, and across the three loom plugins
+  the tightest remaining headroom is 880 words at
+  `finishing-a-development-branch/SKILL.md`. Two limits on that sentence, both
+  measured: the cap is not repo-wide — the script takes one plugin directory
+  per invocation and CI runs it on six, leaving most of the repo's `SKILL.md`
+  files unchecked, and within those six the tightest is 404 words at
+  `domain-teams/skills/copywriting-team/SKILL.md`. It is also not a ceiling for
+  reference files at all: the script reads `skill_dir / "SKILL.md"` and
+  measures nothing else, so
+  `subagent-driven-development/references/conditional-operations.md` (812
+  words) now has no size guard anywhere — the removed package-total bound was
   its only one. Content is carried instead by the presence and absence
   assertions this branch added, each mutation-checked against its rule's
-  deletion or re-addition; those are content guards, not size guards. A family-level aggregate remains available if regrowth
-  is ever measured; nothing in this branch forecloses it.
+  deletion or re-addition; those are content guards, not size guards. A
+  family-level aggregate remains available if regrowth is ever measured;
+  nothing in this branch forecloses it.
