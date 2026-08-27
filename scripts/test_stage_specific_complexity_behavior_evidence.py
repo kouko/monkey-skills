@@ -135,15 +135,6 @@ assert {Path(p).stem for p in _LENS_PATHS} == set(REQUIRED_LENS_EVIDENCE), (
 )
 
 
-# The two collections name the same six lenses — one as paths, one as keys —
-# and nothing reconciles them. `git diff -- <path>` on a path that no longer
-# exists returns no rows instead of erroring, so a lens rename would make this
-# guard quietly stop watching that lens rather than fail. Reconcile them here so
-# the desync is loud.
-assert {Path(p).stem for p in _LENS_PATHS} == set(REQUIRED_LENS_EVIDENCE), (
-    "_LENS_PATHS and REQUIRED_LENS_EVIDENCE must name the same six lenses"
-)
-
 
 def _instruction_surface_delta() -> list[str]:
     """Behaviour-bearing paths that differ between the hard-case surface and now.
