@@ -98,32 +98,47 @@ def test_prepare_mode_names_goal_create():
     assert "loom-workflow:goal-create" in prepare_section
     assert "goal-create" not in text[resume:]
 
-    # Naming it must not slide into firing it. Anchor the check on the
-    # text immediately around the mention, not just anywhere in the
-    # section, so a rewording that keeps the substring but drops the
-    # invariant is caught.
-    mention = prepare_section.index("loom-workflow:goal-create")
-    window = prepare_section[max(0, mention - 200) : mention + 200]
+    # Naming it must not slide into firing it. A fixed character window
+    # is bypassable two ways: (a) a new sentence elsewhere in the window
+    # can name-and-fire the skill with a verb no blacklist enumerated,
+    # riding on an unrelated disclaimer elsewhere in the window; (b) a
+    # content-neutral reorder that keeps the mention and the disclaiming
+    # clause verbatim can push them past a fixed distance and fail
+    # compliant prose. Work at sentence granularity instead: split into
+    # sentences, and require EVERY sentence that mentions the skill to
+    # itself carry the user-agency markers — not "somewhere within N
+    # characters", but within the same sentence. That is invariant to
+    # both reordering (the clause travels with its sentence) and to the
+    # verb used by an injected sentence (an added sentence naming the
+    # skill has to earn its own markers; no verb list to dodge).
+    sentences = re.split(r"(?<=[.!?])\s+", prepare_section)
+    mentioning = [s for s in sentences if "loom-workflow:goal-create" in s]
+    assert mentioning, "expected a sentence mentioning loom-workflow:goal-create"
 
-    # The disclaiming clause — the skill is something the USER invokes,
-    # and Prepare mode explicitly disclaims invoking it — must survive.
-    assert re.search(r"\bthey can invoke\b.{0,20}\bthemselves\b", window), (
-        "expected the 'user invokes it themselves' disclaimer near the "
-        "goal-create mention"
-    )
-    assert re.search(r"\bnever invokes it\b", window), (
-        "expected an explicit 'never invokes it' disclaimer near the "
-        "goal-create mention"
-    )
+    # User-agency markers: the skill must read as an option the USER may
+    # take, not an instruction directed at whoever is reading. Every
+    # sentence that names the skill must carry both.
+    user_invokes = re.compile(r"\bthey can invoke\b.{0,60}\bthemselves\b", re.IGNORECASE)
+    assistant_never = re.compile(r"\bnever invokes it\b", re.IGNORECASE)
 
-    # Reject imperative framing directed at the skill itself (an
-    # instruction to fire it, e.g. "Invoke `loom-workflow:goal-create`
-    # now") rather than at the user ("they can invoke themselves").
-    imperative_at_skill = re.compile(
-        r"\b(invoke|run|call|execute)\b\s*`?\s*loom-workflow:goal-create",
-        re.IGNORECASE,
-    )
-    assert not imperative_at_skill.search(window), (
-        "found an imperative verb directed at goal-create — naming the "
-        "skill must not read as an instruction to fire it"
-    )
+    for sentence in mentioning:
+        assert user_invokes.search(sentence), (
+            "sentence mentioning goal-create lacks the 'user invokes it "
+            f"themselves' marker in the SAME sentence: {sentence!r}"
+        )
+        assert assistant_never.search(sentence), (
+            "sentence mentioning goal-create lacks the 'never invokes it' "
+            f"marker in the SAME sentence: {sentence!r}"
+        )
+
+    # NOTE (residual gap, stated plainly): this still checks membership in
+    # a fixed marker SET ("they can invoke ... themselves" / "never
+    # invokes it") rather than a semantic understanding of user-agency —
+    # it is a whitelist too, just one operating on marker phrases instead
+    # of verbs, and at sentence (not character-window) granularity. A
+    # rewrite of SKILL.md that disclaims agency in different words would
+    # need this test updated. What sentence granularity buys over a
+    # character window is specifically immunity to (a) an added sentence
+    # riding on a distant disclaimer, and (b) reordering that separates
+    # mention from disclaimer beyond a fixed distance — not immunity to
+    # a differently-worded disclaimer.
