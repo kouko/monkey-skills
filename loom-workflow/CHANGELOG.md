@@ -4,6 +4,23 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] — 2026-08-27 — new skill `goal-create`
+
+### Added — `goal-create`: draft a goal or a repo's purpose artifact
+
+New skill (11th in loom-workflow): two named modes invoked explicitly, never
+auto-fired. SESSION mode drafts the four-field goal condition (Outcome /
+Constraints / Verification / Stop-when) a long-running agent run is checked
+against; ARC mode drafts a repository's purpose artifact (`Why` / `Done
+when`) for the user to land. Ships a mechanical lint floor
+(`scripts/goal_lint.py`) that checks structure only — field presence, a
+backticked `Verification` command, the character limit — never whether the
+prose actually reads as decidable.
+
+`handoff`'s Prepare mode now names `goal-create` as a separate option the
+user can invoke themselves when they want this session's intent captured as
+an explicit goal, not only saved state.
+
 ## [1.0.2] — 2026-08-27 — restore routing and governance dropped by 1.0.1
 
 ### Fixed

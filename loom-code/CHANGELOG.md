@@ -37,6 +37,19 @@ Versioning: [Semantic Versioning](https://semver.org/).
   21's failure column decided the same gap on a non-mechanical *task*, so a
   reviewer grading that example returned a gap on a plan the rule declares
   legal; it is now plan-scoped and points at the trigger list.
+## [0.101.4] — 2026-08-27 — point the purpose-file offer at `goal-create`
+
+### Changed
+
+- `check_north_star_link.py`'s unanswered-`PURPOSE.md` message now tells the
+  user to write one sentence directly into the file, and names the
+  `loom-workflow:goal-create` skill as an option that can walk them through
+  answering it, if they have it installed.
+- `finishing-a-development-branch/SKILL.md`'s close-out purpose-linked
+  betting step: the offer to write a missing `PURPOSE.md` now guides the
+  user to answer the repo's purpose in one sentence, and names
+  `loom-workflow:goal-create`'s ARC mode (drafts `Why` / `Done when`) as an
+  alternative path to the same file.
 
 ## [0.101.2] — 2026-08-27 — conditional-operations stands on its own
 

@@ -26,7 +26,7 @@
     },
     {
       "name": "loom-workflow",
-      "description": "Loom workflow skills — git memory, decision briefs, critique, recap, handoff, session distill, CoT explainers.",
+      "description": "Loom workflow skills — git memory, decision briefs, critique, recap, handoff, session distill, CoT explainers, goal-create.",
       "source": "./loom-workflow/"
     },
     {
