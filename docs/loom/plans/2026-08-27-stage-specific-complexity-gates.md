@@ -137,13 +137,13 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
 ## Task 7 — plugin 邊界與薄交接契約
 
 - **Description**: Extend existing boundary and composition tests to prove every new lens stays inside its owning skill and optional handoff reads only project-owned artifacts.
-  - Cold-copy each plugin into an unrelated path with siblings absent, run observable success and N/A/fallback probes, then test composition with public artifacts present and removed.
+  - Cold-copy each plugin into an unrelated path with siblings absent and resolve each local pointer; reuse the existing public-composition suite for the project-artifact boundary. Task 9 owns observable N/A/fallback behavior.
 - **Module**: repository plugin-boundary integration tests
 - **Files touched**: scripts/check_plugin_boundaries.py, scripts/test_loom_plugin_install_layout.py, scripts/test_loom_plugin_composition.py, scripts/test_stage_specific_complexity_contract.py
 - **Context paths**: scripts/check_plugin_boundaries.py, scripts/test_loom_plugin_install_layout.py, scripts/test_loom_plugin_composition.py, docs/loom/memory/filesystem-independence-needs-behavioral-cold-start-proof.md
 - **Acceptance**:
   - **RED**: `python3 -m pytest scripts/test_stage_specific_complexity_contract.py::test_stage_contract_owns_each_lens_and_forbids_private_plugin_paths -q` fails because stage ownership, cold fallback, and four-meaning relay coverage are not protected.
-  - **GREEN**: The named suite proves both plugins work alone from renamed cold roots, compose only via project-owned docs/loom artifacts and public skill names, and lose no local judgment when every optional upstream artifact is removed.
+  - **GREEN**: The focused test proves cold-package local pointers with no sibling present; the existing install-layout and composition suites prove standalone package layout and public project-artifact handoff. Task 9 separately proves local judgment when optional upstream evidence is absent.
   - **GREEN**: `python3 scripts/check_plugin_boundaries.py loom-code` and the corresponding `loom-design` command reject private sibling paths and pass the shipped packages.
   - **GREEN**: `stage contract identifies business-value as the owner`; `stage contract preserves eight DESIGN.md sections`; `cold install emits flow fallback without spec-expansion`; `cold install evaluates spec complexity without ui-flows.md`; `cold install evaluates plan complexity without loom-design`; and `cold install reviews complexity without upstream artifacts`.
 - **Dependencies**: Tasks 1, 2, 3, 4, 5, 6 complete first
