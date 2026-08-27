@@ -222,3 +222,36 @@ def test_fingerprint_directory_modes_are_umask_independent(tmp_path):
 
     for directory in (tmp_path / "plugin", tmp_path / "plugin/skills", nested):
         assert directory.stat().st_mode & 0o777 == 0o755
+
+
+# Hard-case rows whose governing instruction files changed after the live run.
+# Keyed by the row's case label; the value must appear in that row's Result
+# column, so the detailed table cannot read as an unqualified PASS while the
+# delta section says the lane was not re-run.
+_NOT_RERUN_ROWS = {
+    "`no-upstream` business burden",
+    "`no-upstream` architecture plan",
+    "`misleading-upstream` architecture claim",
+}
+_NOT_RERUN_MARKER = "not re-run after the round-4 fixes"
+
+
+def test_hard_case_rows_flag_the_lanes_that_were_not_rerun():
+    """The detailed results table carries the same caveat as the summary.
+
+    A partial read of an evidence report normally lands on the results table.
+    Pinning only the coverage table left three rows reading as confident PASS
+    for lanes the report elsewhere admits were not re-verified.
+    """
+    text = REPORT.read_text(encoding="utf-8")
+    rows = {
+        line.split("|")[1].strip(): line.split("|")[4].strip()
+        for line in text.splitlines()
+        if line.startswith("| `") and line.count("|") >= 5
+    }
+    for case in _NOT_RERUN_ROWS:
+        assert case in rows, f"hard-case row {case} is missing from the results table"
+        assert _NOT_RERUN_MARKER in rows[case], (
+            f"{case} names a lens whose instruction files changed after the live "
+            f"run; its Result must say {_NOT_RERUN_MARKER!r}"
+        )

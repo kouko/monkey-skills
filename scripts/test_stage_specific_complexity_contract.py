@@ -41,7 +41,7 @@ def test_stage_contract_owns_each_lens_and_forbids_private_plugin_paths(tmp_path
 # the implementation lens at 7af88b70 matched no `worth` alternative, which is
 # the drift a whole-branch review caught by hand.
 _HANDOFF_MEANINGS = {
-    "added burden": r"add(ed|s|ing)?\b|introduc|new\b|actual additions",
+    "added burden": r"added complexity|adds?\b|added|introduc|new (vocabulary|decisions|objects|dependenc)|actual additions",
     "worth": r"worth|value that requires|value now|why each survivor|justif",
     "removed or avoided": r"delet|remov|avoid|collaps|drop\b",
     "downstream risk": r"downstream|risk",
