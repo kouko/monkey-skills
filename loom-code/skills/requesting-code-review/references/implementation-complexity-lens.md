@@ -1,6 +1,7 @@
 # Implementation complexity lens
 
-Review actual additions against optional planned complexity evidence. Verify
+Review actual additions against optional planned complexity evidence. Judge
+whether the burden that landed is worth its maintenance cost now. Verify
 landed deletions, identify unplanned implementation burden, and assess
 downstream operational risk. Every concern must name a concrete simpler
 alternative that preserves the required outcome.

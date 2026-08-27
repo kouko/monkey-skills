@@ -427,6 +427,13 @@ Steps:
 
 N/A — no unresolved question: brief left nothing undecided at plan time.
 
+## Complexity assessment
+
+- Added complexity: one renderer module and one query-param branch in an existing handler.
+- Why it is worthwhile: CSV export is the brief's whole end state, and the branch is the smallest seam that serves it.
+- Removed or avoided complexity: no export service, no format registry, no new route — the existing endpoint absorbs the param.
+- Downstream risk: a second format would tempt a registry; that pressure surfaces in the handler, not in the renderer.
+
 ## Task 1 — Add format query param parsing to /reports handler
 
 - **Description**: Accept `format=csv` query param in `GET /reports/:id`; default to `format=json` if absent or unrecognized.
@@ -544,6 +551,10 @@ Stage: planning
 
 N/A — no unresolved question: brief left nothing undecided at plan time.
 
+## Complexity assessment
+
+N/A — mechanical edit: adds one module docstring per existing file; introduces no boundary, dependency, migration, configuration, operational duty, or reuse.
+
 ## Task 1 — Docstring for csv renderer   (Independent: true, Dependencies: none)
 ## Task 2 — Docstring for json renderer  (Independent: true, Dependencies: none)
 ## Task 3 — Docstring for xml renderer   (Independent: true, Dependencies: none)
@@ -627,7 +638,7 @@ Consider a brief whose Smallest End State is *"re-sync `deep-read`'s functional 
 - **Review-weight**: mechanical
 ```
 
-Both tasks' entire output is computed by a deterministic script from a named SSOT — there is no literal string to pre-quote in the Description the way the copyright-year example does, so the RED/GREEN pair names the **verification method** (a checksum comparison or the project's own paired drift-detection test) instead of a literal diff. That verification method is exactly what [`subagent-driven-development`](../../subagent-driven-development/SKILL.md#mechanical-review-weight-exemption)'s mechanical self-check runs for this category — see its **Content match** step. For a straight-copy script like Task 1's, "diff the two existing files" and "re-run the script, diff its output" are the same check by construction (the script's only job is that copy); a script with side effects beyond a straight copy (e.g. one that also reformats or merges) would need the "re-run, diff output" framing specifically — the two framings are not interchangeable in general, only for this shape.
+Both tasks' entire output is computed by a deterministic script from a named SSOT — there is no literal string to pre-quote in the Description the way the copyright-year example does, so the RED/GREEN pair names the **verification method** (a checksum comparison or the project's own paired drift-detection test) instead of a literal diff. That verification method is exactly what [`subagent-driven-development`](../../subagent-driven-development/SKILL.md#process--per-task-triad) §**Mechanical review-weight exemption**'s self-check runs for this category — see its **Content match** step. For a straight-copy script like Task 1's, "diff the two existing files" and "re-run the script, diff its output" are the same check by construction (the script's only job is that copy); a script with side effects beyond a straight copy (e.g. one that also reformats or merges) would need the "re-run, diff output" framing specifically — the two framings are not interchangeable in general, only for this shape.
 
 ## Anti-patterns
 

@@ -36,8 +36,9 @@ alternative it displaces?>
 <Downstream risk: What product, design, or operational risk remains for later
 stages?>
 
-<Reasoned N/A: Use only when this adds no continuing business or operational
-commitment; explain why. A bare N/A is not sufficient.>
+<Reasoned N/A: replaces the four slots above — write this line INSTEAD of
+them, never in addition. Use only when this adds no continuing business or
+operational commitment; explain why. A bare N/A is not sufficient.>
 
 ## Evidence consulted
 

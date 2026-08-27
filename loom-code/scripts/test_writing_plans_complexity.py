@@ -33,3 +33,106 @@ def test_non_mechanical_plan_carries_architecture_complexity():
     assert "required end state" in low_flat_lens
     assert "Complexity assessment" in reviewer
     assert "checks_passed: <N>/<19>" in reviewer
+
+
+def _fenced_plans(text: str) -> list[str]:
+    """Every ```markdown fence in the file that looks like a plan instance."""
+    blocks, current = [], None
+    for line in text.splitlines():
+        if current is None:
+            if line.strip() == "```markdown":
+                current = []
+            continue
+        if line.strip() == "```":
+            blocks.append("\n".join(current))
+            current = None
+            continue
+        current.append(line)
+    return [b for b in blocks if b.lstrip().startswith("# Plan:")]
+
+
+def _slot_between_open_questions_and_task_1(plan: str) -> str:
+    """The text a plan carries between Open Questions and its first task."""
+    lines = plan.splitlines()
+    try:
+        start = next(i for i, l in enumerate(lines) if l.strip() == "## Open Questions")
+        end = next(
+            i for i, l in enumerate(lines) if i > start and l.startswith("## Task 1")
+        )
+    except StopIteration:
+        return ""
+    return "\n".join(lines[start:end])
+
+
+def test_plan_templates_carry_the_complexity_slot_they_mandate():
+    """Every template a plan author copies satisfies the reviewer's Check 21.
+
+    `plan-format.md` §Complexity assessment requires the section between
+    `## Open Questions` and Task 1, and the reviewer prompt gates on it. A
+    template that omits the slot teaches authors to produce plans that fail
+    that gate, so the skeleton and every worked example must carry either the
+    section or the schema's own mechanical-edit exemption line.
+    """
+    skill = SKILL.read_text(encoding="utf-8")
+    plan_format = FORMAT.read_text(encoding="utf-8")
+
+    skeleton_slot = _slot_between_open_questions_and_task_1(skill)
+    assert skeleton_slot, "writing-plans/SKILL.md must show a plan skeleton"
+    assert "## Complexity assessment" in skeleton_slot, (
+        "the SKILL.md plan skeleton must show the `## Complexity assessment` slot "
+        "between `## Open Questions` and Task 1"
+    )
+
+    plans = _fenced_plans(plan_format)
+    assert plans, "plan-format.md must carry at least one worked plan example"
+    for plan in plans:
+        title = plan.splitlines()[0].strip()
+        slot = _slot_between_open_questions_and_task_1(plan)
+        if not slot:
+            continue
+        assert "## Complexity assessment" in slot or "mechanical edit:" in slot, (
+            f"worked example {title!r} must carry `## Complexity assessment` or the "
+            "schema's `N/A — mechanical edit:` exemption before Task 1"
+        )
+
+
+def test_skill_names_where_the_architecture_assessment_is_recorded():
+    """The lens paragraph must name the section, not only the lens file.
+
+    A plan author reading SKILL.md end to end otherwise learns to run the lens
+    but not where its output belongs; the section name lives only in
+    `plan-format.md`, which that paragraph did not reference.
+    """
+    skill = SKILL.read_text(encoding="utf-8")
+    flat = " ".join(skill.split())
+    marker = "architecture-complexity lens"
+    assert marker in flat
+    paragraph = flat[flat.index(marker) : flat.index(marker) + 500]
+    assert "## Complexity assessment" in paragraph or "`## Complexity assessment`" in paragraph, (
+        "the architecture-complexity paragraph must name the `## Complexity "
+        "assessment` section it writes into"
+    )
+
+
+def test_check_21_reconciles_with_the_open_questions_hedge_scan():
+    """Check 21's mandated section sits inside Check 18(b)'s scanned region.
+
+    18(b) scans all prose outside `## Open Questions` for hedge vocabulary on a
+    declared N/A, and its seed list is explicitly non-exhaustive, so a
+    downstream-risk bullet phrased as an unresolved question trips it. Neither
+    row said which wins; without that, an author cannot tell whether the two
+    gates conflict or cooperate.
+    """
+    reviewer = REVIEWER.read_text(encoding="utf-8")
+    flat = " ".join(reviewer.split())
+    marker = "| 21 |"
+    assert marker in flat
+    row = flat[flat.index(marker) : flat.index(marker) + 1200]
+    assert "18(b)" in row, (
+        "Check 21 must say how its mandated section interacts with Check 18(b)'s "
+        "hedge scan, which covers the region the section occupies"
+    )
+    assert "named risk" in row.lower(), (
+        "Check 21 must tell the author to state downstream risk as a named risk "
+        "rather than as an unresolved question"
+    )

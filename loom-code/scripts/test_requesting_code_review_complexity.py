@@ -26,3 +26,42 @@ def test_deletion_first_compares_actual_and_planned_complexity():
     assert "preserves the required outcome" in lens.lower()
     assert "scope trade-off" in lens.lower()
     assert "implementation complexity lens" in reviewer.lower()
+
+
+def test_implementation_lens_carries_all_four_handoff_meanings():
+    """Spec BI-2 requires all four meanings of every stage lens.
+
+    The other five lenses each ask why retained complexity is worthwhile; this
+    one asked only about added burden, deletions, and downstream risk. The
+    branch names copied four-question prose drifting apart as its own downstream
+    risk, so the contract test pins the meaning rather than trusting the copy.
+    """
+    lens = LENS.read_text(encoding="utf-8")
+    flat = " ".join(lens.split()).lower()
+    assert "actual additions" in flat, "added-burden meaning"
+    assert "landed deletions" in flat, "outcome-preserving deletion meaning"
+    assert "downstream operational risk" in flat, "downstream-risk meaning"
+    assert "worth" in flat, (
+        "the implementation lens must ask why the retained complexity is worth "
+        "its cost — the fourth handoff meaning required of every stage lens"
+    )
+
+
+def test_reviewer_fallback_is_not_narrower_than_the_lens():
+    """The agent file must not shrink the no-evidence fallback.
+
+    The reviewer reads `code-reviewer.md` before the lens, so a fallback there
+    that names only downstream risk licenses skipping the added-burden and
+    landed-deletion assessment whenever no plan evidence exists.
+    """
+    reviewer = REVIEWER.read_text(encoding="utf-8")
+    flat = " ".join(reviewer.split())
+    marker = "**Implementation complexity lens.**"
+    assert marker in flat
+    paragraph = flat[flat.index(marker) : flat.index(marker) + 700]
+    lowered = paragraph.lower()
+    assert "when evidence is absent" in lowered or "when planned evidence is absent" in lowered
+    assert "from the diff" in lowered, (
+        "the no-evidence fallback must send the reviewer to the diff for the "
+        "whole assessment, not only for downstream risk"
+    )

@@ -110,8 +110,10 @@ It owns parallelism checks.
 
 **Architecture complexity:** every non-mechanical plan reads
 [architecture-complexity lens](references/architecture-complexity-lens.md)
-and records it before SDD. Upstream evidence is optional; otherwise assess
-locally.
+and records it in `## Complexity assessment`, between `## Open Questions` and
+Task 1 ([plan-format](references/plan-format.md) §Complexity assessment), before
+SDD. Upstream evidence is optional; otherwise assess locally. A mechanical-only
+plan may instead declare that section's reasoned exemption.
 
 **Pre-patch:** add `Plan-document-reviewer verdict: PENDING` and per-task `Brief item covered:` fields (Checks 1, 3).
 
@@ -184,6 +186,16 @@ Plan-document-reviewer verdict: PENDING   ← required; reviewer will flip to PA
 ## Open Questions
 
 N/A — no unresolved question: <one-line reason>
+
+## Complexity assessment
+
+- Added complexity: <what this plan introduces that must be maintained>
+- Why it is worthwhile: <the value that earns it, now>
+- Removed or avoided complexity: <what this plan deletes or declines to build>
+- Downstream risk: <what could go wrong later, and where it surfaces>
+
+<!-- mechanical-only plan: replace the four bullets with the one-line
+     N/A — mechanical edit: <reasoned exemption> -->
 
 ## Task 1 — <short name>
 - Description: <imperative voice, first line only — overflow routes to a nested bullet or table per §Field-value grammar>

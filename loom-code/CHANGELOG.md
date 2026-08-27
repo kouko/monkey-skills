@@ -12,6 +12,25 @@ Versioning: [Semantic Versioning](https://semver.org/).
 - Added plan-time and branch-review complexity lenses with optional upstream
   evidence, independent local fallback, and standalone-plugin boundary tests.
 
+### Fixed
+
+- `writing-plans`: the plan skeleton and both `plan-format.md` worked examples
+  now carry the `## Complexity assessment` section the same release made
+  mandatory, so a plan copied from these templates no longer fails the
+  reviewer's Check 21. The lens paragraph also names that section and links the
+  schema, instead of naming only the lens file.
+- `writing-plans`: Check 21 states how it interacts with Check 18(b), whose
+  hedge scan covers the region the new section occupies. A downstream risk is
+  stated as a named risk; anything genuinely unresolved belongs in
+  `## Open Questions`, which is what 18(b) exists to catch.
+- `requesting-code-review`: the implementation complexity lens asks whether the
+  landed burden is worth its maintenance cost — the one handoff meaning it had
+  dropped — and `agents/code-reviewer.md` no longer narrows that lens's
+  no-planned-evidence fallback to downstream risk alone.
+- `writing-plans`: a `plan-format.md` link fragment matched no heading in
+  `subagent-driven-development/SKILL.md` and silently resolved to the file top;
+  it now points at the section that carries the rule.
+
 ## [0.101.2] — 2026-08-27 — conditional-operations stands on its own
 
 ### Fixed

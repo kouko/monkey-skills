@@ -1,5 +1,6 @@
 """Require reproducible baseline/candidate evidence for complexity behavior."""
 
+import hashlib
 import io
 import re
 import runpy
@@ -17,6 +18,10 @@ FINGERPRINT = runpy.run_path(
     str(ROOT / "loom-code/scripts/loom_firing_harness.py")
 )["_plugin_tree_fingerprint"]
 BASELINE_COMMIT = "0a7dcde2"
+# The last commit whose instruction surface the live hard cases actually
+# observed. Round-4 review fixes landed after it, so the report must either
+# match it or enumerate the delta (see test below).
+HARD_CASE_COMMIT = "7af88b7053c2076b65b98b69217ff32239ab80f8"
 REQUIRED_LENS_EVIDENCE = {
     "business-complexity-lens": "live hard case",
     "visual-complexity-lens": "live hard case",
@@ -86,38 +91,77 @@ def _tracked_worktree_fingerprint(plugin: str) -> str:
         return FINGERPRINT(destination)
 
 
-def test_report_binds_baseline_and_final_candidate():
-    """Bind reported bytes to reconstructible Git inputs.
+def _behavior_paths_at(revision: str, plugin: str) -> list[str]:
+    listing = subprocess.check_output(
+        ["git", "-C", str(ROOT), "ls-tree", "-r", "--name-only", "-z", revision,
+         f"{plugin}/skills", f"{plugin}/agents"]
+    ).decode().split("\0")
+    return sorted(
+        relative
+        for relative in filter(None, listing)
+        if relative.endswith(".md")
+        and not Path(relative).name.startswith(("README", "CHANGELOG"))
+    )
 
-    Grounding (live CLI help, 2026-08-27): `git archive -h` documents
-    `--format <fmt>`, `<tree-ish>`, and optional paths; `git ls-files -h`
-    documents `--stage`, `-z`, and path arguments. Those are the exact Git
-    surfaces used by the reconstruction helpers above.
+
+def _behavior_fingerprint_at(revision: str, plugin: str) -> str:
+    digest = hashlib.sha256()
+    for relative in _behavior_paths_at(revision, plugin):
+        blob = subprocess.check_output(
+            ["git", "-C", str(ROOT), "show", f"{revision}:{relative}"]
+        )
+        digest.update(relative.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(blob)
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _instruction_surface_delta() -> list[str]:
+    """Behaviour-bearing paths that differ between the hard-case commit and now."""
+    changed = subprocess.check_output(
+        ["git", "-C", str(ROOT), "diff", "--name-only", HARD_CASE_COMMIT, "--",
+         "loom-code/skills", "loom-code/agents",
+         "loom-design/skills", "loom-design/agents"]
+    ).decode().splitlines()
+    return sorted(
+        relative
+        for relative in changed
+        if relative.endswith(".md")
+        and not Path(relative).name.startswith(("README", "CHANGELOG"))
+    )
+
+
+def test_report_enumerates_any_post_hard_case_instruction_change():
+    """A changed instruction surface must be enumerated, never re-hashed away.
+
+    The candidate fingerprint moves for a version bump, so matching it proves
+    nothing about behaviour. This test binds the report to the instruction
+    bytes the hard cases actually observed: either nothing has moved since, or
+    the report names every file that did — and the list is checked against git,
+    so recomputing a hash cannot satisfy it.
     """
     text = REPORT.read_text(encoding="utf-8")
-    flat_text = " ".join(text.split())
-    assert "immutable pre-edit snapshot" in text
-    assert "base commit `0a7dcde2`" in text
-    assert "final cold-install candidate bytes" in text
     for plugin in ("loom-design", "loom-code"):
-        baseline_match = re.search(
-            rf"{plugin} baseline SHA-256: `([0-9a-f]{{64}})`", text
+        match = re.search(rf"{plugin} hard-case behavior SHA-256: `([0-9a-f]{{64}})`", text)
+        assert match, (
+            f"report must record the {plugin} instruction-surface fingerprint the "
+            "hard cases ran against"
         )
-        assert baseline_match, f"report must record a full {plugin} baseline fingerprint"
-        assert baseline_match.group(1) == _archive_fingerprint(plugin, BASELINE_COMMIT)
-        assert f"{plugin} candidate SHA-256" in text
-        match = re.search(rf"{plugin} candidate SHA-256: `([0-9a-f]{{64}})`", text)
-        assert match, f"report must record a full {plugin} candidate fingerprint"
-        assert match.group(1) == _tracked_worktree_fingerprint(plugin)
-    for case in ("no-upstream", "misleading-upstream", "trivial-exempt", "over-complex"):
-        assert f"`{case}`" in text
-    coverage_rows = dict(
-        re.findall(r"^\| `([^`]+-complexity-lens)` \| ([^|]+?) \| PASS \|$", text, re.MULTILINE)
+        assert match.group(1) == _behavior_fingerprint_at(HARD_CASE_COMMIT, plugin)
+
+    delta = _instruction_surface_delta()
+    if not delta:
+        return
+    assert "## Instruction-surface changes after the hard cases" in text, (
+        "the instruction surface moved after the hard cases ran; the report must "
+        "carry the delta section rather than restate the old results as current"
     )
-    assert coverage_rows == REQUIRED_LENS_EVIDENCE
-    assert "purpose preservation" in flat_text.lower()
-    assert "scope trade-off" in flat_text.lower()
-    assert "Pre-existing invariant result: PASS" in text
+    for relative in delta:
+        assert relative in text, (
+            f"{relative} changed after the hard cases ran and is not named in the "
+            "report's delta section"
+        )
 
 
 def test_tracked_copy_rejects_symlinks(tmp_path):

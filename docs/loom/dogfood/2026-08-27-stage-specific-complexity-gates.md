@@ -13,29 +13,46 @@ either result and CI does not depend on the machine-local directory.
 
 - loom-design baseline SHA-256: `0e63efae0f07c92c3e98c657d821b5a03d171d0049570508ad745e0a19aef486`
 - loom-code baseline SHA-256: `e2a861d4028c2837de7a32596a7c4299cd0792fdc27e4b7f278f9856745df6bc`
-- loom-design candidate SHA-256: `805fd790d45fe6dc0e8465daa8322caed4e28d1e3e8b00651a051768c8f4754a`
-- loom-code candidate SHA-256: `b126daecfb253a449b88b2e4c7681f72fee63e93a51853a772f6fc7248b5ad4f`
+- loom-design candidate SHA-256: `c47e4ded53d9a1f78c6c1c46e461b5c4801657ac4b4f0299c16832b1bbe14bfa`
+- loom-code candidate SHA-256: `3744f3b952815135a8b6d40d96094a84279004534635a9a28ae4a6806740c3c4`
+- loom-design hard-case behavior SHA-256: `afa3b1dca93ab1a078cd5ddc495bd03c613da81e645c894625bce753a05e6241`
+- loom-code hard-case behavior SHA-256: `6ce0976774f213d4c6e7d4c60727a2fb6e7f2270edafbdf9c43fd41564c415c5`
 
 These are the **final cold-install candidate bytes** for both plugin packages;
 the report and its root-level test do not alter either package tree.
 
-The loom-code candidate fingerprint moved once after the hard cases were run,
-when this branch was rebased onto `f81864b8`. Three inputs changed and none of
-them is a complexity lens:
+The candidate fingerprints cover the whole cold-install package, so they move
+for a release bump that changes no instruction. The **hard-case behavior**
+fingerprints above cover only the instruction surface the hard cases could
+observe — every tracked `.md` under each plugin's `skills/` and `agents/`,
+excluding READMEs and changelogs — measured at commit `7af88b70`, the last
+commit the live runs saw. `scripts/test_stage_specific_complexity_behavior_evidence.py`
+pins them against that commit, so a later re-pin cannot be satisfied by
+recomputing a hash.
 
-- `#745` (upstream, arriving with the new base) rewrote the read-before-edit
-  precondition and two path literals in
-  `subagent-driven-development/references/conditional-operations.md`.
-- The release moved to `0.101.3` in `CHANGELOG.md` and both manifests, because
-  `#745` shipped `0.101.2` first.
-- The shipping-version pin in `test_docs_review_blocking_class.py` and the
-  `plugin_version` assertion in `test_review_context.py` were repinned to match,
-  as their own docstrings require on every bump.
+## Instruction-surface changes after the hard cases
 
-No lens reference, lens-bearing `SKILL.md`, agent contract, or template differs
-between the fingerprint the hard cases ran against and the one recorded above,
-so the results in this report still describe the shipped bytes. The loom-design
-package was untouched by the rebase and both of its fingerprints are unchanged.
+Round-4 whole-branch review returned `NEEDS_REVISION` (two fatal findings) and
+the remediation edited the instruction surface. The hard-case results below
+therefore describe the surface at `7af88b70`, **not** the shipped bytes, for
+these seven files:
+
+- `loom-code/agents/code-reviewer.md` — the no-planned-evidence fallback was widened from downstream risk alone to the whole assessment, and the worth question was added.
+- `loom-code/skills/requesting-code-review/references/implementation-complexity-lens.md` — added the fourth handoff meaning (whether the landed burden is worth its maintenance cost), which this lens alone had dropped.
+- `loom-code/skills/requesting-code-review/references/design-evidence.md` — a heading inserted in an earlier round had orphaned the deletion-first evidence tail; the sections were reordered. Author-facing, not loaded at runtime.
+- `loom-code/skills/writing-plans/SKILL.md` — the plan skeleton gained the `## Complexity assessment` slot it mandates, and the lens paragraph now names that section and links the schema.
+- `loom-code/skills/writing-plans/references/plan-format.md` — both worked examples gained the mandated section (the CSV plan in full, the mechanical backfill plan as the reasoned exemption), and a dangling heading anchor was repointed.
+- `loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md` — Check 21 now states how it interacts with Check 18(b), whose hedge scan covers the region the new section occupies.
+- `loom-design/skills/business-value/assets/business-value-template.md` — the reasoned-N/A placeholder now says it replaces the four slots rather than joining them.
+
+Every one of these adds, widens, or disambiguates an instruction; none removes a
+lens, narrows a verdict enum, or changes a stage's required outcome. That is a
+reason to expect the results below still hold, **not** evidence that they do —
+the live cases were not re-run against the edited surface. Re-running the
+`business` and `architecture` lanes is the open item; the other four lenses'
+rows are unaffected, because `behavioral-complexity-lens` and
+`implementation-complexity-lens` are evidenced by contract test rather than by a
+live case, and the `visual` and `interaction` lenses' files did not change.
 
 Raw transcripts and normalized comparisons are session-local evidence under
 `/tmp/loom-complexity-live.SRPuAf/`. They are intentionally not committed
