@@ -347,14 +347,24 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "The `user-said` tag must state the content is quoted DIRECTLY — "
         "expected the phrase 'quoted directly'."
     )
-    # Item-scoped negation guard: the real `user-said` bullet carries no
-    # "not"/"never" anywhere in it, so requiring the item be free of both
-    # catches the "but is never quoted directly" mutant that the phrase
-    # check alone lets through (the phrase survives as a substring of
-    # "never quoted directly").
-    assert not re.search(r"\b(not|never)\b", user_said_item.lower()), (
-        "The `user-said` tag must not carry a negation of its own claim — "
-        "expected no 'not'/'never' within its own bullet item."
+    # Bound negation guard: "quoted directly" survives as a substring even
+    # when negated ("but is never quoted directly, only paraphrased" still
+    # contains "quoted directly"), so the phrase check alone lets that
+    # mutant through. A blanket "no not/never anywhere in this bullet" ban
+    # over-corrects: it also fails legitimate prose that uses "not" in an
+    # ordinary contrastive clause elsewhere in the same bullet (e.g.
+    # "...quoted directly, not the agent's paraphrase" — a normal way to
+    # write a definition, not a negation of the claim). Bind the negation
+    # check to "quoted" itself: fail only when "not"/"never" sits within a
+    # few words directly BEFORE "quoted" (negating the act of quoting),
+    # not when it appears anywhere else in the bullet.
+    assert not re.search(
+        r"\b(?:not|never)\b(?:\s+\S+){0,3}\s+quoted\b", user_said_item.lower()
+    ), (
+        "The `user-said` tag must not negate 'quoted' — expected no "
+        "'not'/'never' bound directly to 'quoted' within its own bullet "
+        "item (a 'not' elsewhere in the bullet, e.g. a contrastive clause, "
+        "is fine)."
     )
 
     derived_item = next(
@@ -381,13 +391,24 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "The `derived` tag must state the tag NAMES the anchor — expected "
         "the phrase 'names the anchor'."
     )
-    # Item-scoped negation guard, same rationale as `user-said` above: the
-    # real `derived` bullet carries no "not"/"never" of its own, so any
-    # appearing in the isolated item signals an inversion of one of its
-    # two clauses.
-    assert not re.search(r"\b(not|never)\b", derived_item.lower()), (
-        "The `derived` tag must not carry a negation of its own claim — "
-        "expected no 'not'/'never' within its own bullet item."
+    # Bound negation guard, same rationale as `user-said` above: bind the
+    # negation to the specific claims it could invert — "inferred" (e.g.
+    # "was not inferred") and "anchor" (e.g. "does not name the anchor") —
+    # rather than banning "not"/"never" anywhere in the bullet, which would
+    # false-fail a legitimate contrastive rewording elsewhere in the item.
+    assert not re.search(
+        r"\b(?:not|never)\b(?:\s+\S+){0,3}\s+inferred\b", derived_item.lower()
+    ), (
+        "The `derived` tag must not negate 'inferred' — expected no "
+        "'not'/'never' bound directly to 'inferred' within its own bullet "
+        "item."
+    )
+    assert not re.search(
+        r"\b(?:not|never)\b(?:\s+\S+){0,3}\s+anchor\b", derived_item.lower()
+    ), (
+        "The `derived` tag must not negate 'the anchor' — expected no "
+        "'not'/'never' bound directly to 'anchor' within its own bullet "
+        "item."
     )
 
     proposed_item = next(
@@ -502,26 +523,59 @@ def test_slot_mapping_uses_the_shape_reference_field_names() -> None:
     )
 
     content = _read_reference()
-    paragraphs = _paragraphs_normalized(content)
 
-    mapping_para = None
-    for p in paragraphs:
-        p_lower = p.lower()
-        if "current state" in p_lower and verification_name.lower() in p_lower:
-            mapping_para = p
-            break
-    assert mapping_para, (
-        f"Expected a paragraph mapping 'current state' to the "
-        f"'{verification_name}' field (as named in goal-shape.md)."
+    # §2 packs its two mapping bullets back-to-back with no blank line
+    # between them, so `_paragraphs_normalized()` (blank-line splitting)
+    # merges both into ONE block. Scanning that merged block for "current
+    # state ... verification_name" and, separately, "wanted difference ...
+    # outcome_name" only proves the four tokens co-occur somewhere in the
+    # merged text — it does not prove which slot maps to which field. A
+    # mutant that swaps the mapping (current state -> Outcome, wanted
+    # difference -> Verification) leaves all four tokens present in the
+    # same merged block and still passes. Isolating each bullet first, the
+    # way `_bullet_list_items()` isolates §5's tags, binds each slot name
+    # to the field name inside ITS OWN bullet only.
+    section2_match = re.search(
+        r"## 2 — Slot-to-field mapping\n\n(.*?)(?=\n## )", content, re.DOTALL
+    )
+    assert section2_match, "Expected the §2 'Slot-to-field mapping' section."
+    section2_items = _bullet_list_items(section2_match.group(1))
+
+    # Match on the bullet's OWN bolded slot name (its subject), not on
+    # whether the phrase merely appears anywhere in the bullet's prose —
+    # the "current state" bullet's own explanatory clause happens to
+    # mention "the wanted difference" too, which would otherwise pick the
+    # wrong bullet for the "wanted difference" match below.
+    current_state_item = next(
+        (
+            item
+            for item in section2_items
+            if re.match(r"-\s*\*\*current state\*\*", item.lower())
+        ),
+        None,
+    )
+    assert current_state_item, (
+        "Expected a §2 bullet mapping the 'current state' slot to a field."
+    )
+    assert verification_name.lower() in current_state_item.lower(), (
+        f"Expected the 'current state' bullet itself to name the "
+        f"'{verification_name}' field (as named in goal-shape.md), not "
+        f"merely have that name appear elsewhere in §2."
     )
 
-    outcome_mapping_para = None
-    for p in paragraphs:
-        p_lower = p.lower()
-        if "wanted difference" in p_lower and outcome_name.lower() in p_lower:
-            outcome_mapping_para = p
-            break
-    assert outcome_mapping_para, (
-        f"Expected a paragraph mapping 'wanted difference' to the "
-        f"'{outcome_name}' field (as named in goal-shape.md)."
+    wanted_difference_item = next(
+        (
+            item
+            for item in section2_items
+            if re.match(r"-\s*\*\*wanted difference\*\*", item.lower())
+        ),
+        None,
+    )
+    assert wanted_difference_item, (
+        "Expected a §2 bullet mapping the 'wanted difference' slot to a field."
+    )
+    assert outcome_name.lower() in wanted_difference_item.lower(), (
+        f"Expected the 'wanted difference' bullet itself to name the "
+        f"'{outcome_name}' field (as named in goal-shape.md), not merely "
+        f"have that name appear elsewhere in §2."
     )
