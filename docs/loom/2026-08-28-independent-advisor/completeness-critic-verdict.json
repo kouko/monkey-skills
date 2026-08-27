@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "verdict": "PASS_WITH_NOTES",
+  "files": [
+    "proposal.md",
+    "specs/independent-advisor/spec.md"
+  ],
+  "sha256": "bb8e221a2169be0f2218a43cecd16591cefffc46c112c19d8564a6eb5baca82a",
+  "written_at": "2026-08-27T17:54:01.177757+00:00"
+}
