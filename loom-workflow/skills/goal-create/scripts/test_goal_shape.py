@@ -156,15 +156,63 @@ def test_defines_four_fields_budget_and_surfacing() -> None:
                 return p
         return None
 
-    # Fact 1: Outcome, Constraints, and Verification are each named by both
-    # vendors' guidance. "each" disambiguates this claim from the vendor
-    # citation bullets, which merely list the three names without asserting
-    # both vendors document them.
-    assert _paragraph_containing(
-        "outcome", "constraints", "verification", "both vendor", "each"
-    ), (
-        "Must state that Outcome, Constraints, and Verification are each "
-        "named by both vendors' guidance."
+    # Fact 1: which of the three field names each vendor actually uses.
+    # OpenAI's long-running-work names all three; Anthropic's page names only
+    # `Constraints`, and calls the other two "One measurable end state" and
+    # "A stated check".
+    #
+    # Pinned on the EVIDENCE — Anthropic's own three bullet labels — rather
+    # than on the author's connective vocabulary. Those quotes are what makes
+    # the attribution checkable by a reader, so any honest rewrite keeps them,
+    # while "describes" / "labels" / "only OpenAI" are interchangeable
+    # phrasings a copy-edit may legitimately replace. An earlier version of
+    # this pin required those connectives and two reviewers each wrote a
+    # faithful paraphrase that failed it.
+    #
+    # Bound, stated: this catches the paragraph claiming all three names are
+    # shared, and it catches the quotes going missing. It does NOT catch the
+    # opposite overclaim -- denying Anthropic the one label it does use --
+    # because no substring distinguishes that from a correct sentence. What
+    # guards that direction is the quotes sitting in the same paragraph,
+    # where a reader meets "Constraints that matter" next to any claim about
+    # Anthropic not using these words. That is a human guard, not a
+    # mechanical one, and this comment is the honest statement of it.
+    # Selected by the paragraph's own bold lead label, never by keyword
+    # soup: the vendor citation bullets are a single paragraph that already
+    # contains every vendor name, every field name, and every quote below,
+    # so a keyword selector silently binds there instead and every assertion
+    # that follows passes against the wrong text. That is not hypothetical --
+    # an earlier revision of this block did exactly that and survived two
+    # mutations that should have killed it.
+    attribution = next(
+        (p for p in paragraphs_lower if p.startswith("**attribution accuracy**")),
+        None,
+    )
+    assert attribution, (
+        "Must carry a paragraph led by **Attribution accuracy** stating "
+        "which of the three field names each vendor actually uses."
+    )
+    for field in ("outcome", "constraints", "verification"):
+        assert field in attribution, (
+            f"The attribution paragraph must name {field!r}."
+        )
+    for vendor in ("anthropic", "openai"):
+        assert vendor in attribution, (
+            f"The attribution paragraph must name {vendor!r}."
+        )
+    for anthropic_label in (
+        "one measurable end state",
+        "a stated check",
+        "constraints that matter",
+    ):
+        assert anthropic_label in attribution, (
+            f"Must quote Anthropic's own bullet label {anthropic_label!r}, so "
+            "a reader can check for themselves which of the three names that "
+            "page actually uses."
+        )
+    assert not re.search(r"named by both|both vendors name", attribution), (
+        "Must not attribute all three FIELD NAMES to both vendors: Anthropic "
+        "names only `Constraints`."
     )
 
     # Fact 2: Stop-when is first-class in OpenAI's guidance.
