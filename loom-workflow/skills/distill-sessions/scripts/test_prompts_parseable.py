@@ -148,10 +148,10 @@ def test_failure_prompt_structure() -> None:
     )
 
     # Hard constraint: NEVER mention ground truth (Trace2Skill verbatim).
+    # (The looser "ground truth" is not checked separately -- it is implied
+    # by the stricter literal check below and never fails on its own, so it
+    # pinned nothing the stricter check didn't already cover.)
     body_lower = body.lower()
-    assert "never mention ground truth" in body_lower or "ground truth" in body_lower, (
-        "failure-prompt body must reference the ground-truth-blind constraint"
-    )
     assert "never mention ground truth" in body_lower, (
         "failure-prompt must include the literal Trace2Skill hard constraint "
         "'NEVER mention ground truth'"

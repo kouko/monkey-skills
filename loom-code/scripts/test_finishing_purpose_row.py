@@ -125,9 +125,12 @@ def test_check_north_star_link_invocation_uses_plugin_root_form():
     assert '${CLAUDE_PLUGIN_ROOT}/scripts/check_north_star_link.py' in para, (
         "check_north_star_link.py invocation must use the plugin-root form"
     )
-    assert "load-time substitution, not a run-time shell variable" in para, (
-        "missing the load-time-substitution warning parenthetical"
-    )
+    # The "load-time substitution, not a run-time shell variable" parenthetical
+    # was dropped from this test: it is explanatory prose about WHY the form
+    # above is used, not a separate invariant -- the operative behavior (the
+    # invocation must take the plugin-root form) is already pinned by the
+    # assertion directly above and by the bare-path guard below. A paraphrase
+    # of the parenthetical changes no behavior and should not fail this test.
 
     # Guard against a bare repo-relative path anywhere in the paragraph —
     # this is the exact defect being fixed: it only resolves inside

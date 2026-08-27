@@ -30,5 +30,13 @@ def test_plan_format_uses_packaged_requirement_identifier_contract():
     # assertions make replacing the old dependency with a vague filename
     # mention insufficient.
     assert "<change-id> / REQ-<n> / Scenario: <name>" in text
-    assert "A bare `REQ-<n>` (no `/ Scenario:` suffix)" in text
-    assert "covers every scenario under that requirement" in text
+    referent_d_start = text.index("Referent kind (d):")
+    referent_d_end = text.index("\n\n", referent_d_start)
+    referent_d = text[referent_d_start:referent_d_end]
+    assert "A bare `REQ-<n>` (no `/ Scenario:` suffix)" in referent_d
+    # "every" is the semantic pivot -- a regression narrowing scope (e.g.
+    # to "only the first scenario") flips this word; "under that
+    # requirement" is dropped as pure filler around it. Narrowed to the
+    # referent-kind-(d) paragraph, not whole-file, since "every scenario"
+    # also appears in the file's general intro sentence.
+    assert "every scenario" in referent_d

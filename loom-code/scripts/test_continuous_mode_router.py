@@ -122,8 +122,13 @@ def test_default_execution_is_autonomy_by_default():
         "autonomy must start only after human approval of a brief/spec"
     assert "一站一站來" in text, \
         "the explicit per-session human-pumped override must remain available"
-    assert "not required to start autonomous\nexecution" in text, \
-        "an approved entry must auto-advance without a publish endpoint"
+    # Dropped: the removed assertion pinned "not required to start
+    # autonomous\nexecution" -- a hard line-wrap position, not an
+    # invariant. Rewrapping the paragraph would fail this test with no
+    # behavior change. The underlying fact (publish endpoint not required
+    # to start autonomy) is pinned properly, inside its governing window,
+    # by test_router_publish_endpoint_is_not_required in
+    # test_request_derived_authorization.py.
 
 
 def test_autonomy_policy_has_exactly_four_outcomes():

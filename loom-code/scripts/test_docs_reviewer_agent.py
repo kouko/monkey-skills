@@ -316,8 +316,11 @@ def test_convergence_duties_present():
     assert "orchestrator alone maps" in role, (
         "the reviewer must not map terminal confirmation outcomes"
     )
-    text = _text()
-    assert "Assert absence only after reading the full text" in _norm(text), (
+    # narrowed to the role-contract window (not whole-file text): the
+    # phrase must live in the hand-authored behavioral-rules list, not
+    # merely be quoted somewhere else in the file (e.g. a moved
+    # provenance citation), which whole-file presence couldn't rule out.
+    assert "assert absence only after reading the full text" in role, (
         "the full-text-before-absence discipline must be stated inline "
         "(its provenance citation moved to "
         "requesting-docs-review/references/design-evidence.md, plan "

@@ -7,6 +7,28 @@ ROOT = Path(__file__).resolve().parent.parent
 SKILL = ROOT / "skills" / "dispatching-parallel-agents" / "SKILL.md"
 
 
+def _section(text: str, heading: str) -> str:
+    """Window from the line matching `heading` to the next `## `/`### `
+    heading. Used to narrow a pin to the section it actually governs,
+    instead of matching anywhere in the whole file."""
+    lines = text.splitlines(keepends=True)
+    start = None
+    for i, line in enumerate(lines):
+        if line.strip() == heading:
+            start = i
+            break
+    assert start is not None, (
+        f"heading {heading!r} not found -- section renamed or removed"
+    )
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        stripped = lines[j].strip()
+        if stripped.startswith("## ") or stripped.startswith("### "):
+            end = j
+            break
+    return "".join(lines[start:end])
+
+
 def test_entrypoint_preserves_independence_fanout_tdd_and_integration():
     text = SKILL.read_text(encoding="utf-8")
 
@@ -16,7 +38,6 @@ def test_entrypoint_preserves_independence_fanout_tdd_and_integration():
     assert "<SUBAGENT-STOP>" in text
     assert "## When to use vs. when NOT to" in text
     assert "### 3. Dispatch all N subagents in one fan-out step" in text
-    assert "Resolve the dispatch profile" in text
     assert "dispatch-profile.md" in text
 
     # Independence is proven, never guessed: files/symbols/state and data flow matter.
@@ -32,15 +53,30 @@ def test_entrypoint_preserves_independence_fanout_tdd_and_integration():
         assert phrase in text
 
     assert "one domain" in text
-    assert "self-contained paths and reference context" in text
-    assert "explicit paths it must not touch" in text
-    assert "issue all N spawn calls before waiting for any result" in text
-    assert "without an intervening wait" in text
+    assert "### 2. Write domain-focused prompts" in text
+
+    # Two rules the child prompt must carry, pinned inside the section that
+    # governs child-prompt contents. Both change what a dispatcher writes:
+    # a prompt that assumes inherited session context, or that names no
+    # forbidden paths, is a different artifact.
+    prompt_section = _section(text, "### 2. Write domain-focused prompts")
+    assert "self-contained" in prompt_section
+    assert "must not touch" in prompt_section
+
+    # The fan-out concurrency invariant is a named mechanism, not prose:
+    # pin it inside the section that governs it, not anywhere in the file.
+    fanout_section = _section(text, "### 3. Dispatch all N subagents in one fan-out step")
+    # Resolution of the dispatch profile is per-child and precedes spawning;
+    # the filename pin above alone would survive a demotion to "see also".
+    assert "for every child before spawning" in fanout_section
+    assert "issue all N spawn calls before waiting for any result" in fanout_section
+    assert "without an intervening wait" in fanout_section
 
     # Branch discipline and integration discipline are separate mandatory gates.
     assert "tdd-iron-law" in text
     assert "failing test first" in text
-    assert "Run the package-level test suite" in text
+    integrate_section = _section(text, "### 4. Aggregate without smoothing")
+    assert "Run the package-level test suite" in integrate_section
     assert "integration point" in text
 
     # Plans and concurrent sessions retain their collision controls.
@@ -61,9 +97,11 @@ def test_entrypoint_preserves_independence_fanout_tdd_and_integration():
         "NEEDS_CONTEXT",
     ):
         assert verdict in text
-    assert "re-dispatch only that branch" in text
+    # Targeted-retry and partial-replace are named mechanisms of the
+    # aggregation step, pinned inside the section that governs them.
+    assert "re-dispatch only that branch" in integrate_section
     assert "never retry blindly" in text
-    assert "replace only its prior result" in text
+    assert "replace only its prior result" in integrate_section
 
     # Plan proof and the two concurrency modes remain distinct.
     for phrase in (

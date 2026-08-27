@@ -167,16 +167,33 @@ def test_splitting_framework_heading_still_inline():
 
 
 def test_blocked_fallback_five_step_process_and_anti_pattern_stay_inline():
+    # Pins the section's location (still inline, not extracted), not the
+    # wording of any one step -- a reworded step sentence is not the
+    # extraction regression this guard exists to catch.
     text = _skill_text()
-    assert "Applies the splitting framework to produce **child tasks**" in text
+    heading = "## BLOCKED fallback — Beck 2002 Child Test pattern"
+    assert heading in text
     assert "**Anti-pattern**" in text
+    # The section's own body must still carry the numbered fallback
+    # procedure, not just the heading: the step that routes a BLOCKED task
+    # back through the splitting framework into child tasks is what an
+    # orchestrator DOES here. Pinned as the two rule-carrying tokens inside
+    # the section window, not as a full sentence.
+    start = text.index(heading)
+    end = text.index("\n## ", start + len(heading))
+    blocked_section = text[start:end]
+    assert "splitting framework" in blocked_section
+    assert "child tasks" in blocked_section
 
 
 def test_consuming_section_and_detection_rule_sentences_stay_inline():
+    # "resolve the target repo's root" (the prose gloss of the command
+    # below) was dropped: it restates what `git rev-parse --show-toplevel`
+    # already pins as the named mechanism, so a paraphrase of the gloss
+    # alone is not a regression this guard needs to catch.
     text = _skill_text()
     assert "## Consuming a loom-design change-folder" in text
     assert "git rev-parse --show-toplevel" in text
-    assert "resolve the target repo's root" in text
 
 
 def test_plan_size_ceiling_core_rule_stays_inline():
@@ -207,10 +224,20 @@ def test_family_relay_progress_card_pointer_present():
 
 
 def test_inline_fallback_field_list_present():
-    assert (
-        "render the four fields inline: goal, task table, stage, next"
-        in _norm(_skill_text())
-    )
+    # Pins the four field NAMES the fallback must render, not the
+    # connecting prose ("render ... inline") around them -- a reworded
+    # lead-in sentence that still lists all four fields is not the
+    # dropped-field regression this guard exists to catch. Narrowed to
+    # the fallback clause itself so this can't pass on an unrelated
+    # mention of "stage" or "next" elsewhere in the file.
+    norm = _norm(_skill_text())
+    start = norm.find("if family-relay or both scripts are absent")
+    assert start != -1, "fallback clause not found"
+    end = norm.find(".", start)
+    assert end != -1
+    fallback_clause = norm[start:end]
+    for field in ("goal", "task table", "stage", "next"):
+        assert field in fallback_clause, f"fallback clause missing field {field!r}"
 
 
 def test_progress_surface_steps_and_gloss_emit_duty_present():
@@ -253,8 +280,13 @@ def test_layered_language_policy_declared():
 
 
 def test_minimal_structure_block_carries_progress_schema_lines():
+    # The `Goal:` field is pinned by its template syntax (`Goal: <`), not
+    # by the placeholder's descriptive wording -- a reworded placeholder
+    # comment ("<a one-line summary of...>") is not a schema regression.
+    # `Stage: planning` and `- Status: pending` ARE the literal enum
+    # values the template emits, not prose, so their exact text stays.
     text = _skill_text()
-    assert "Goal: <one sentence transcribed from the brief" in _norm(text)
+    assert "Goal: <" in _norm(text)
     assert "Stage: planning" in text
     assert "- Status: pending" in text
 

@@ -137,8 +137,13 @@ def test_rcr_scope_classification():
     assert "record-class" in text and "docs/**" in text
 
     # record-class exemption at any mix (docs arm receives contract-class
-    # files ONLY)
-    assert "exempt from review at any mix" in text
+    # files ONLY) -- narrowed to the Classification section itself, not
+    # whole-file text, so a mutation elsewhere in the file can't keep
+    # this green.
+    classification_section = _section(
+        text, "## Classification: contract-class vs record-class"
+    )
+    assert "exempt from review at any mix" in classification_section
 
     # record-only continuity mechanism, named (Task 14's marker verb)
     assert (
@@ -531,9 +536,23 @@ def test_sdd_prose_weight_record_class_scope():
     norm = _norm(section)
 
     # cites the rcr SSOT heading by name; does not copy its glob
-    # literals into this file (point, don't copy)
+    # literals into this file (point, don't copy). The citation must
+    # agree with rcr's ACTUAL heading text, extracted live from that
+    # file rather than duplicated as a hardcoded literal here -- a
+    # rename on the rcr side that this citation misses is exactly the
+    # cross-file drift this pin exists to catch.
     assert "requesting-code-review" in section
-    assert "Classification: contract-class vs record-class" in section
+    rcr_heading_match = re.search(
+        r"^## (Classification:.*)$", _rcr_text(), re.MULTILINE
+    )
+    assert rcr_heading_match, (
+        "requesting-code-review/SKILL.md no longer has a "
+        "'## Classification: ...' heading for sdd/SKILL.md to cite"
+    )
+    assert rcr_heading_match.group(1).strip() in section, (
+        "sdd/SKILL.md's citation of the rcr Classification heading has "
+        "drifted from rcr's actual heading text"
+    )
     assert "<plugin>/skills/**/*.md" not in section, (
         "must cite the rcr SSOT heading, not copy its glob literals "
         "into SKILL.md"

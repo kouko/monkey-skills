@@ -50,6 +50,20 @@ def _axis0_section() -> str:
     return rest[: end.start()] if end else rest
 
 
+def _framework_section() -> str:
+    """The `## The 5-axis exploration framework` section, up to the next
+    `## ` heading. Narrows the walk-mandate pin to where it lives, same
+    false-green concern as `_axis0_section`."""
+    text = _text()
+    start = re.search(
+        r"^##\s*The 5-axis exploration framework\b.*$", text, re.MULTILINE
+    )
+    assert start is not None, "5-axis framework heading missing"
+    rest = text[start.end():]
+    end = re.search(r"^##\s", rest, re.MULTILINE)
+    return rest[: end.start()] if end else rest
+
+
 # --- presence + position -----------------------------------------------
 
 
@@ -161,14 +175,20 @@ def test_mandate_includes_axis0():
     ('walk all five', 'the 5 axes below') must not structurally exclude
     Axis 0 from the mandatory walk."""
     text = _text()
-    assert "Walk all axes below, starting at Axis 0" in text, \
+    framework = _framework_section()
+    # Narrowed to the framework section: a whole-file match would stay
+    # green even if this exact sentence lived somewhere unrelated, and
+    # would keep failing the negative check below if the old phrase
+    # survived verbatim in some other, irrelevant paragraph.
+    assert "Walk all axes below, starting at Axis 0" in framework, \
         "mandate must be inclusive: 'Walk all axes below, starting at Axis 0'"
     # the frontmatter description must surface the Axis-0 upstream gate too
     frontmatter = text.split("---")[1]
     assert "Axis 0" in frontmatter, \
         "frontmatter description must mention the Axis-0 upstream gate"
-    # the old exclusive count-mandate must be gone
-    assert "Walk all five. Don't skip any." not in text, \
+    # the old exclusive count-mandate must be gone from the section it
+    # used to govern
+    assert "Walk all five. Don't skip any." not in framework, \
         "the old five-only walk mandate must be replaced by the inclusive one"
 
 

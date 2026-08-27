@@ -68,8 +68,14 @@ def test_protocol_carries_modality_table_and_unit_rule():
     for pair in ("must→必須", "should→應", "may→可", "must not→不得", "should not→不應"):
         assert pair in text, f"modality mapping missing: {pair}"
 
-    # unit-1:1 rule — one rendition unit per source unit.
-    assert "one rendition unit per source unit" in text, "unit-1:1 rule missing"
+    # unit-1:1 rule — one rendition unit per source unit. Windowed to its own
+    # section per the file-level convention above: a whole-doc check would
+    # stay green even if the rule were gutted from ## The unit-1:1 rule
+    # while the phrase happened to survive as a passing mention elsewhere.
+    unit_rule_section = _section(text, "The unit-1:1 rule")
+    assert "one rendition unit per source unit" in unit_rule_section, (
+        "unit-1:1 rule missing from its section"
+    )
 
     # units-JSON schema field list.
     assert (

@@ -30,6 +30,14 @@ SKILL = (
     / "SKILL.md"
 )
 
+FAMILY_RECEPTION = (
+    Path(__file__).parents[2]
+    / "skills"
+    / "using-loom-design"
+    / "references"
+    / "family-reception.md"
+)
+
 
 def _text() -> str:
     assert SKILL.is_file(), f"SKILL.md is absent at {SKILL}"
@@ -140,10 +148,28 @@ def test_entry_router_names_bba():
     longer names loom-workflow:brief-before-asking inline (the SSOT
     carries it); this test asserts the pointer invariant T8 established."""
     text = _text()
-    assert "family-reception.md" in text and "Brief before a complex fork" in text, \
-        "router body must point at family-reception.md §Brief before a " \
-        "complex fork for the trigger threshold + brief-first rule " \
-        "(dedup'd SSOT; T8 removed the in-place skill-id + triple copy)"
+    assert "family-reception.md" in text, (
+        "router body must point at family-reception.md for the trigger "
+        "threshold + brief-first rule (dedup'd SSOT; T8 removed the "
+        "in-place skill-id + triple copy)"
+    )
+    # A file-name pointer alone doesn't say the anchor is still real: pin the
+    # heading it names AND confirm that heading still exists in the SSOT it
+    # points at, so a rename on either end -- the router's anchor text, or
+    # the target heading -- fails this test instead of silently unwiring
+    # the pointer.
+    assert "Brief before a complex fork" in text, (
+        "router body must name the §Brief before a complex fork anchor"
+    )
+    assert FAMILY_RECEPTION.is_file(), (
+        f"family-reception.md is absent at {FAMILY_RECEPTION}"
+    )
+    assert "## Brief before a complex fork" in FAMILY_RECEPTION.read_text(
+        encoding="utf-8"
+    ), (
+        "family-reception.md no longer carries the § heading the router "
+        "points at -- the pointer has gone stale"
+    )
 
 
 def test_skill_folder_is_flat():

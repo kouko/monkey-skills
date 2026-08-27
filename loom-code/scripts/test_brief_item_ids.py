@@ -141,8 +141,10 @@ def test_schema_declares_the_identifier_convention() -> None:
     )
 
     # (4) Scope: any outcome-declaring section. Narrowing the scope to
-    # `## Smallest End State` alone removes the "not only" phrasing.
-    assert "every section that declares an outcome" in section, (
+    # `## Smallest End State` alone removes the "not only" phrasing. Scoped
+    # to the single Scope bullet, not the whole section, to cut collision
+    # risk with unrelated text.
+    assert "every section that declares an outcome" in _scope_bullet(), (
         "the identifier section must scope ids to every outcome-declaring "
         "section of the brief"
     )
@@ -151,12 +153,13 @@ def test_schema_declares_the_identifier_convention() -> None:
         "`## Smallest End State`"
     )
 
-    # (5) Rationale A — monotonic-never-reused buys immutability under
-    # insertion.
-    assert "keeps the id immutable" in section, (
-        "the identifier section must state why monotonic-never-reused "
-        "exists: it keeps the id immutable when an item is inserted"
-    )
+    # (5) Rationale A ("keeps the id immutable") is dropped here: it is a
+    # rationale sentence layered on top of the actual invariant, which is
+    # already pinned above by "never renumbered" and "never reused" in this
+    # same function. A reword of the rationale clause alone does not change
+    # whether ids are renumbered or reused, so pinning it produced a false
+    # alarm under the measured mutation set and nothing else in this file
+    # covers a distinct invariant it alone protects.
 
     # (6) Rationale B — authored-not-derived stops the id desyncing on a
     # reword.
@@ -190,20 +193,22 @@ def test_scope_names_the_known_in_scope_sections() -> None:
         )
 
     # The satisfaction rule itself. Negating it ("by adjudicating whether the
-    # section declares an outcome") removes this phrase.
-    assert "by matching a section name" in section, (
+    # section declares an outcome") removes this phrase. Scoped to the Scope
+    # bullet itself, not the whole section.
+    assert "by matching a section name" in _scope_bullet(), (
         "the identifier section must say the scope rule is satisfied by "
         "matching a section name"
     )
 
-    # The general rule survives as an EXTENSION clause, not as a replacement:
-    # a section outside the list is added to it, never treated as exempt. Who
-    # extends it, and what the author does meanwhile, is pinned by
-    # `test_unlisted_in_scope_section_states_an_actionable_mechanism`.
-    assert "Extending the list above" in section, (
-        "the identifier section must keep the general rule as an extension "
-        "clause for sections not on the known list"
-    )
+    # "Extending the list above" is dropped here: it is a topic-setting
+    # phrase, not the rule itself. The rule it introduces -- extending the
+    # list is a maintainer's edit, not something an author does mid-session
+    # -- is already pinned, word for word, by
+    # `test_unlisted_in_scope_section_states_an_actionable_mechanism` against
+    # the same bullet ("a maintainer's edit to this file" / "not something a
+    # brief's author makes mid-session"). This phrase alone protected no
+    # invariant those two did not already cover, and it produced a false
+    # alarm under the measured mutation set.
 
 
 def _scope_bullet() -> str:
@@ -277,11 +282,52 @@ def test_unlisted_in_scope_section_states_an_actionable_mechanism() -> None:
     )
 
 
+def _prose_form_bullet() -> str:
+    """Return the single `- **Prose-form sections declare beneath the
+    prose.**` bullet of the identifier section, narrowing the window the
+    same way `_scope_bullet` does for its own bullet.
+    """
+    section = _identifier_section()
+    bullets = [
+        line
+        for line in section.splitlines()
+        if line.startswith("- **Prose-form sections declare beneath the prose.")
+    ]
+    assert len(bullets) == 1, (
+        "the identifier section must carry exactly one `- **Prose-form "
+        f"sections declare beneath the prose.**` bullet; found {len(bullets)}"
+    )
+    return bullets[0]
+
+
+def _split_merge_bullet() -> str:
+    """Return the single `- **Split and merge retire both sides.**` bullet
+    of the identifier section.
+    """
+    section = _identifier_section()
+    bullets = [
+        line
+        for line in section.splitlines()
+        if line.startswith("- **Split and merge retire both sides.")
+    ]
+    assert len(bullets) == 1, (
+        "the identifier section must carry exactly one `- **Split and merge "
+        f"retire both sides.**` bullet; found {len(bullets)}"
+    )
+    return bullets[0]
+
+
 def test_prose_form_sections_state_how_they_carry_an_identifier() -> None:
     """A section whose declared format is prose has a stated declaration site."""
     section = _identifier_section()
+    bullet = _prose_form_bullet()
 
-    assert "directly beneath the prose" in section, (
+    # Scoped to the bullet itself: this is a positional rule ("directly
+    # beneath", not "somewhere in the section" or "beneath the heading"),
+    # and the same term is defined as a term-of-art elsewhere in the file
+    # (`## Paragraph length`'s "Directly beneath" means...), so it is kept
+    # as the literal anchor rather than shortened further.
+    assert "directly beneath the prose" in bullet, (
         "the identifier section must state where a prose-form section's "
         "identifiers are declared"
     )
@@ -296,7 +342,9 @@ def test_prose_form_sections_state_how_they_carry_an_identifier() -> None:
         "the identifier section must state that a prose-form section's prose "
         "is not restructured"
     )
-    assert "a single umbrella outcome gets a single line" in section, (
+    # The single-outcome case is not covered by any other assertion in this
+    # file, so it is kept, scoped to the bullet that states it.
+    assert "a single umbrella outcome gets a single line" in bullet, (
         "the identifier section must state the single-outcome case for a "
         "prose-form section"
     )
@@ -305,32 +353,35 @@ def test_prose_form_sections_state_how_they_carry_an_identifier() -> None:
 def test_split_and_merge_are_specified() -> None:
     """`never renumbered, never reused` is disambiguated for both cases."""
     section = _identifier_section()
+    bullet = _split_merge_bullet()
 
     # Split. Negating the property ("one half keeps the original number")
-    # removes both phrases.
+    # removes both phrases. Neither is duplicated by another assertion in
+    # this file, so both are kept -- scoped to the bullet that states them,
+    # not the whole section.
     assert "split into two" in section, (
         "the identifier section must state what happens when one item is "
         "split into two"
     )
-    assert "both halves take new numbers" in section, (
+    assert "both halves take new numbers" in bullet, (
         "the identifier section must state that both halves of a split take "
         "new numbers"
     )
-    assert "neither half inherits it" in section, (
+    assert "neither half inherits it" in bullet, (
         "the identifier section must state that neither half of a split "
         "inherits the original number"
     )
 
     # Merge. Negating the property ("the merged item keeps the lower number")
-    # removes both phrases.
+    # removes both phrases. Same rationale as the split pair above.
     assert "merged into one" in section, (
         "the identifier section must state what happens when two items are "
         "merged into one"
     )
-    assert "both numbers are retired" in section, (
+    assert "both numbers are retired" in bullet, (
         "the identifier section must state that a merge retires both numbers"
     )
-    assert "the merged item takes a new number" in section, (
+    assert "the merged item takes a new number" in bullet, (
         "the identifier section must state that the merged item takes a new "
         "number"
     )
