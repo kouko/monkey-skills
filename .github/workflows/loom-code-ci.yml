@@ -79,6 +79,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # scripts/test_stage_specific_complexity_behavior_evidence.py binds the
+          # behaviour report to two historical commits — it reconstructs package
+          # trees with `git archive <sha>` and `git ls-tree <sha>` — so the
+          # default depth-1 checkout makes those shas unresolvable and the tests
+          # die on "fatal: not a tree object" rather than on an assertion.
+          # Those tests exist to catch a re-pin that hides a changed lens; a
+          # shallow checkout would have to skip them, and a guard that skips is
+          # the failure mode they were written against.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
