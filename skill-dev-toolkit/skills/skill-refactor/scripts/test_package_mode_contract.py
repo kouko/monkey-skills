@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -28,7 +29,21 @@ def test_verdict_contract_requires_both_behavior_gates_and_never_reverts() -> No
         .split()
     )
 
-    assert "Q1 and Q3 pass, Q2 marginal" in skill
+    # Pinned on the RESHAPE bullet's control keywords (Q1/Q3/Q2/marginal),
+    # narrowed to that bullet's own window, rather than the exact prose
+    # "Q1 and Q3 pass, Q2 marginal" -- a paraphrase of the same verdict
+    # criteria ("Q1 and Q3 succeed while Q2 is marginal") would preserve
+    # the RESHAPE contract untouched but fail a verbatim pin. Bounded
+    # between the RESHAPE and REJECT bullets so the tokens must actually
+    # co-occur in RESHAPE's own criteria, not just appear anywhere in the
+    # three-way verdict list.
+    reshape_window = re.search(
+        r"\*\*RESHAPE\*\*(.*?)-\s*\*\*REJECT\*\*", skill
+    )
+    assert reshape_window, "RESHAPE verdict bullet not found between PROCEED and REJECT"
+    window = reshape_window.group(1)
+    for token in ("Q1", "Q3", "pass", "Q2", "marginal"):
+        assert token in window, f"RESHAPE bullet must name {token!r}"
     assert "Or revert" not in skill
     assert "overall `PROCEED` verdict" in protocol
 

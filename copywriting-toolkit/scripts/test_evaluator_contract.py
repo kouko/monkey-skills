@@ -75,6 +75,7 @@ AGGREGATION_SHARED = (
 )
 
 ROUND2_SHARED = (
+    "BEFORE raising anything new",
     "Re-raising a closed finding in new words is forbidden",
     "re-litigation, not review",
     "ends the loop",
@@ -137,7 +138,6 @@ def test_prior_findings_check_round2_duty():
     assert "prior_findings_check" in window
     assert "status: fix-verified | not-fixed | resurfaced" in window
     assert "restated verbatim" in window
-    assert "BEFORE raising anything new" in window
     assert "quote:" in window, "prior_findings_check entries must quote current draft text"
     for phrase in ROUND2_SHARED:
         assert phrase in _norm(vocab), f"canonical phrase {phrase!r} missing from CLAUDE.md"

@@ -120,8 +120,16 @@ def test_no_typescript_syntax():
 # --- grade stage guards a null courier result (round-2 fix) -----------------
 
 def test_grade_courier_null_guard_present():
+    # Pinned on the exact `misses: [...]` array literal, not the bare
+    # substring "courier produced no result" -- that substring also occurs
+    # inside the stage's log() line ("grading courier produced no result"),
+    # so a shortened whole-text match would stay green even if the actual
+    # miss-row literal were reworded (a false green per docs/loom/memory --
+    # B1 hard rule 2).
     text = _text()
-    assert "courier produced no result" in text, (
+    assert re.search(
+        r"misses:\s*\['grade: courier produced no result'\]", text
+    ), (
         "grade stage must guard against agent() returning null/skipped for "
         "the grading courier — mirroring the existing Replay-stage guard"
     )

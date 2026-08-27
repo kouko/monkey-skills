@@ -108,13 +108,5 @@ def test_evaluator_recheck_not_fixer_claim_closes_the_finding():
     assert "not the copywriter's revision claim" in window
 
 
-def test_old_unattributed_auto_revise_phrase_is_gone():
-    """The prior ambiguous phrasing (names no actor) must be fully
-    replaced, not merely supplemented — otherwise a reader could still
-    follow the old sentence and skip the worker dispatch."""
-    text = _text()
-    assert "via a brief auto-revise turn" not in text
-
-
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q"]))

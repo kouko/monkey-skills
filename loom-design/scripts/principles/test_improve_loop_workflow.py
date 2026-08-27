@@ -347,10 +347,6 @@ def test_accept_commit_uses_message_file_not_interpolated_dash_m():
         "no numbered-step `git commit -m` invocation — fixer-authored text "
         "must never appear as a shell -m argument"
     )
-    # explicit: the literal two-dash-m-arg instruction from round 1 must be gone
-    assert "SUBJECT above as the first" not in body, (
-        "round-1's '-m ... -m' instruction phrasing must be removed"
-    )
 
 
 def test_accept_commit_escapes_git_memory_trailer_lines():

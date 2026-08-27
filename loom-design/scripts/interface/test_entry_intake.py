@@ -32,6 +32,8 @@ SKILL = (
     / "SKILL.md"
 )
 
+FAMILY_RECEPTION = SKILL.parent / "references" / "family-reception.md"
+
 
 def _text() -> str:
     assert SKILL.is_file(), f"SKILL.md is absent at {SKILL}"
@@ -161,3 +163,15 @@ def test_using_router_names_bba():
         "router body must point at family-reception.md §Brief before a " \
         "complex fork for the trigger threshold (dedup'd SSOT), not " \
         "carry the triple verbatim"
+    # The pointer's own text matching "Brief before a complex fork" only
+    # proves this file NAMES that anchor -- it says nothing about whether
+    # the anchor still exists at the destination. Close the loop the same
+    # way the sibling test_principles_entry_skill.py does: confirm the
+    # heading is still live in family-reception.md itself, so a rename or
+    # deletion there (breaking the pointer) fails HERE too, not only in
+    # that sibling file.
+    assert FAMILY_RECEPTION.is_file(), \
+        f"family-reception.md is absent at {FAMILY_RECEPTION}"
+    assert "## Brief before a complex fork" in FAMILY_RECEPTION.read_text(
+        encoding="utf-8"
+    ), "family-reception.md must still carry the §Brief before a complex fork heading"

@@ -141,21 +141,38 @@ def test_sdd_pointer():
     progress card a "rollup card" — and, instead of re-duplicating
     POINTER_PHRASE there, made it cross-reference the '### ③ How to
     phrase' seam's own Delivery form paragraph. Fix round 2 (same day)
-    reworded that cross-reference from the pseudo-heading "§Delivery
-    form above" to "the **Delivery form** paragraph above" (there is no
-    actual '§Delivery form' heading in the file), which still carries
-    POINTER_PHRASE. No template body is copied in either seam either
-    way.
+    reworded that cross-reference again.
+
+    The invariant these two fix rounds protect is NOT any particular
+    cross-reference wording — that has already changed twice and will
+    likely change again. It is: (a) the pointer phrase appears at least
+    once, in the ③ seam, and (b) the Status handling seam names
+    "Delivery form" as a cross-reference WITHOUT re-duplicating the
+    pointer phrase there. Pinning round 2's exact sentence would fail a
+    round-3 rewording that preserved the cross-reference, so this
+    checks the invariant directly inside the Status handling window
+    instead.
     """
     text = _read(SDD_SKILL)
     assert text.count(POINTER_PHRASE) >= 1, (
         "expected the pointer phrase at least once, in the ③ seam's "
         "Delivery form paragraph"
     )
-    assert "the **Delivery form** paragraph above" in text, (
+
+    status_idx = text.find("## Status handling")
+    assert status_idx != -1, "expected a '## Status handling' seam heading"
+    next_heading_idx = text.find("\n## ", status_idx + 1)
+    assert next_heading_idx != -1, "expected a following '## ' heading"
+    status_window = text[status_idx:next_heading_idx]
+
+    assert POINTER_PHRASE not in status_window, (
+        "the Status handling seam must cross-reference the ③ seam's "
+        "Delivery form paragraph, not re-duplicate the pointer phrase"
+    )
+    assert "Delivery form" in status_window, (
         "expected the Status handling seam to cross-reference the "
-        "Delivery form paragraph (no pseudo-§ heading) instead of "
-        "duplicating the pointer"
+        "Delivery form paragraph by name instead of duplicating the "
+        "pointer or inlining the rule"
     )
 
 

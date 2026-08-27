@@ -157,6 +157,28 @@ def _marker_sweep_section(text: str) -> str:
     )
 
 
+def _packet_handoff_fields(section: str) -> str:
+    """The field list inside 'the same unchanged immutable context packet
+    from Step 1 -- <fields> --'.
+
+    The Docs-only and Mixed branches must hand down the SAME fields.
+    Comparing the two extracted field lists against each other (rather
+    than pinning either branch's wording) is what catches one route
+    drifting from the other -- a rewording applied to both branches alike
+    changes nothing real, while one branch silently forwarding a
+    different or shorter field list is the actual regression."""
+    match = re.search(
+        r"same unchanged immutable context packet from Step 1\s*—\s*"
+        r"([^—]+)—",
+        section,
+    )
+    assert match, (
+        "no 'same unchanged immutable context packet from Step 1 -- "
+        "<fields> --' handoff clause found in this branch's section"
+    )
+    return _norm(match.group(1))
+
+
 def _fenced_code_blocks(section: str) -> list[str]:
     """Every ``` ... ``` fenced block inside a section, contents only."""
     return re.findall(r"```\n?(.*?)```", section, re.DOTALL)
@@ -568,8 +590,14 @@ def test_code_station_routes_scope_and_docs_handoff_through_packet_sha():
     ]
 
     assert "<resources.review_scope> --repo <target_repo> --reviewed-sha <reviewed_sha>" in routing
-    assert "same unchanged immutable context packet" in docs_only
-    assert "same unchanged immutable context packet" in mixed
+    docs_only_fields = _packet_handoff_fields(docs_only)
+    mixed_fields = _packet_handoff_fields(mixed)
+    assert docs_only_fields == mixed_fields, (
+        "the docs-only and mixed branches must hand the SAME packet "
+        "fields down from Step 1 -- a drift means one route silently "
+        f"changed what it forwards\n  docs-only: {docs_only_fields}\n"
+        f"  mixed:     {mixed_fields}"
+    )
     assert "--expected-head <reviewed_sha>" in marker
 
 

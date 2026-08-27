@@ -9,6 +9,13 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[2]
 SKILL_MD = PLUGIN_ROOT / "skills" / "using-loom-pipeline" / "SKILL.md"
 
 
+def _section(body: str, heading: str) -> str:
+    """Window from `heading` to the next `## ` heading (or EOF)."""
+    start = body.index(heading)
+    end = body.find("\n## ", start + len(heading))
+    return body[start:] if end == -1 else body[start:end]
+
+
 def _body(text: str) -> str:
     """Text AFTER the closing frontmatter fence.
 
@@ -60,16 +67,19 @@ def test_segments_gates_prohibitions():
     assert "never merges" in body_lower, \
         "missing 'the pipeline NEVER merges' framing for gate (d) in the body"
 
-    # --- §Driver prohibitions: verbatim ---
-    assert "never edits station artifacts" in body_lower, \
+    # --- §Driver prohibitions: verbatim, window-scoped so these can't be
+    # satisfied by unrelated "never ..." prose elsewhere in the body (e.g.
+    # gate (d)'s own "never merges" sentence above).
+    prohibitions = _section(body, "## §Driver prohibitions").lower()
+    assert "never edits station artifacts" in prohibitions, \
         "missing verbatim prohibition: never edits station artifacts"
-    assert "never produces verdicts" in body_lower, \
+    assert "never produces verdicts" in prohibitions, \
         "missing verbatim prohibition: never produces verdicts"
     # "never merges" alone also matches gate (d)'s sentence — assert the
     # prohibition BULLET's own phrasing so deleting the bullet turns RED.
-    assert "the driver never merges" in body_lower, \
+    assert "the driver never merges" in prohibitions, \
         "missing verbatim prohibition bullet: the driver never merges"
-    assert "cross-plugin delegation contract" in body_lower, \
+    assert "cross-plugin delegation contract" in prohibitions, \
         "missing cross-plugin delegation contract sentence in the body"
 
     # --- stable-prefix dispatch convention ---

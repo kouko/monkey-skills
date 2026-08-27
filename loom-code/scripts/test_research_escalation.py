@@ -21,6 +21,7 @@ neither anchor's neighborhood mentioning "research-escalation.md" at all).
 Stdlib only (pathlib).
 """
 
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -179,15 +180,18 @@ def test_cap_paragraph_window_names_evidence_needed_immediate_trigger():
     )
 
 
+def _evidence_needed_description(text: str) -> str:
+    """The `evidence_needed` (OPTIONAL) field-description paragraph."""
+    m = re.search(r"`evidence_needed` \(OPTIONAL\):.*", text)
+    assert m, "no `evidence_needed` (OPTIONAL): field description found"
+    return m.group(0).strip()
+
+
 def test_code_quality_reviewer_findings_schema_carries_evidence_needed():
     text = _read(CODE_QUALITY_REVIEWER)
     assert _EVIDENCE_NEEDED_FIELD in text, (
         "code-quality-reviewer.md's findings schema must gain the optional "
         "evidence_needed tag (plan task 10)"
-    )
-    assert "never runs the research" in text, (
-        "the schema addition needs its one-sentence flag-don't-search rule "
-        "(reviewer flags, never searches)"
     )
 
 
@@ -197,9 +201,27 @@ def test_code_reviewer_findings_schema_carries_evidence_needed():
         "code-reviewer.md's findings schema must gain the optional "
         "evidence_needed tag (plan task 10)"
     )
-    assert "never runs the research" in text, (
-        "the schema addition needs its one-sentence flag-don't-search rule "
-        "(reviewer flags, never searches)"
+
+
+def test_evidence_needed_flag_dont_search_rule_agrees_across_reviewers():
+    """Both reviewer agents carry the SAME `evidence_needed` field
+    description (a duplicated contract, not independent prose) -- the
+    real invariant is that the two copies say the same thing, in
+    particular that the reviewer flags but never runs the research
+    itself. Comparing the two extracted copies catches drift between
+    them; a deliberate reword applied to both together stays green."""
+    quality_desc = _evidence_needed_description(_read(CODE_QUALITY_REVIEWER))
+    code_desc = _evidence_needed_description(_read(CODE_REVIEWER))
+    assert quality_desc == code_desc, (
+        "the evidence_needed field description has drifted between "
+        "code-quality-reviewer.md and code-reviewer.md -- reword both "
+        "copies together or neither.\n"
+        f"  code-quality-reviewer: {quality_desc}\n"
+        f"  code-reviewer:         {code_desc}"
+    )
+    assert "never runs the research" in quality_desc or "flags" in quality_desc, (
+        "the shared description must state the reviewer flags rather than "
+        "runs the research itself"
     )
 
 

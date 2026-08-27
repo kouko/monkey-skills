@@ -237,10 +237,16 @@ def test_defines_four_fields_budget_and_surfacing() -> None:
     )
 
     # --- negative guard: must not claim both vendors require Stop-when as
-    # shared/mandatory guidance (kept as a cheap extra tripwire; the facts
-    # above are what actually gates this). Matches "require"/"requires"/
-    # "mandatory" as whole words only — "required" (as in "not a required
-    # field", the real reference's own negation) must not false-trigger it.
+    # shared/mandatory guidance. Matches "require"/"requires"/"mandatory" as
+    # whole words only — "required" (as in "not a required field", the real
+    # reference's own negation) must not false-trigger it. This block used
+    # to also carry an exact-phrase sibling ("both vendors document four
+    # fields" not in content_lower): its own comment already said it was
+    # "kept as a cheap extra tripwire; the facts above are what actually
+    # gates this" — it pinned one specific wording of the same inaccuracy
+    # and nothing else, while Facts 2-4 above plus this regex guard gate
+    # the real, wording-independent attribution-accuracy invariant in this
+    # same test. Deleted per B1 hard rule 3.
     for p in paragraphs_lower:
         if "both" in p and "stop-when" in p and re.search(r"\b(requires?|mandatory)\b", p):
             raise AssertionError(
@@ -248,7 +254,3 @@ def test_defines_four_fields_budget_and_surfacing() -> None:
                 "shared/mandatory guidance — Stop-when is this skill's own "
                 f"addition. Offending paragraph: {p!r}"
             )
-    assert "both vendors document four fields" not in content_lower, (
-        "Must not claim both vendors document four fields — Stop-when is this "
-        "skill's own addition, not shared vendor guidance."
-    )
