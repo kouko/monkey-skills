@@ -29,8 +29,9 @@ skill captures the discipline that catches the additive default:
 
 1. **Q1 — smallest end state.** Not the smallest change; the
    smallest *result*.
-2. **Q2 — before/after LOC count.** If after > before, reject the
-   change as proposed.
+2. **Q2 — before/after LOC count.** If after > before, the verdict is
+   RESHAPE or REJECT; PROCEED-WITH-CAVEAT only when the added volume is
+   explicitly justified and costed — never a silent PROCEED.
 3. **Q3 — what becomes obsolete.** Every change makes something
    else available to delete.
 

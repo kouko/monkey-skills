@@ -57,6 +57,11 @@ def test_entrypoint_preserves_orchestration_under_word_ceiling() -> None:
         "## Model selection",
         "## Status handling — implementer states",
         "references/conditional-operations.md",
+        # Restored in the #740 follow-up after the compaction deleted it
+        # outright. Pinned so a re-deletion fails instead of going green:
+        # the word bounds alone cannot see it leave.
+        "**Version / semver work in implementer tasks.**",
+        "external-surface-grounding check and returns `NEEDS_REVISION`",
     )
     for marker in required:
         assert marker in text

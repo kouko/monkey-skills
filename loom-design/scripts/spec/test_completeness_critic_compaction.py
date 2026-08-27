@@ -15,6 +15,12 @@ def test_entrypoint_preserves_panel_lenses_synthesis_and_bounded_verdict_within_
     assert "fresh context" in LOW and "general reasoning agent" in LOW
     assert "writer" in LOW and "judge" in LOW
     assert "review code" in LOW and "run tdd" in LOW and "hard boundary" in LOW
+    # Restored in the #740 follow-up after the compaction deleted the whole
+    # section. Pinned so a re-deletion fails instead of going green: the
+    # word floor has ~480 words of slack and cannot see it leave.
+    assert "### Deletable lenses (Bitter Lesson)" in TEXT
+    assert "state-completeness lens" in TEXT
+    assert "nfr-security" in LOW and "permissions / data-boundary" in LOW
     words = len(TEXT.split())
     # Ceiling raised from 3_203 in the #740 follow-up: the original bound was
     # calibrated on the assumption that the compaction was lossless, but the

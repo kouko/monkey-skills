@@ -26,7 +26,9 @@ default 的紀律凝結下來：
 
 1. **Q1 — smallest end state**：不是 smallest change，是 smallest
    *result*。
-2. **Q2 — before/after LOC count**：若 after > before，拒絕原提案。
+2. **Q2 — before/after LOC count**：若 after > before，verdict 是 RESHAPE
+   或 REJECT；只有在明確說明理由並計算代價時才是 PROCEED-WITH-CAVEAT——
+   不可無聲 PROCEED。
 3. **Q3 — 什麼變 obsolete**：每次改動都讓某個東西可以被刪。
 
 加 50 行刪 200 行的改動是 net win（-150）。為了不寫 2 個 function 而

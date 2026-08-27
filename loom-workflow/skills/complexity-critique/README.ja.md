@@ -29,8 +29,9 @@ skill は additive default を捕まえる規律を凝縮したもの：
 
 1. **Q1 — smallest end state.** smallest change ではなく smallest
    *result*。
-2. **Q2 — before/after LOC count.** after > before なら原提案を
-   拒否する。
+2. **Q2 — before/after LOC count.** after > before の verdict は RESHAPE
+   か REJECT。増えた分を明示的に正当化しコストを示した場合のみ
+   PROCEED-WITH-CAVEAT — 黙って PROCEED は不可。
 3. **Q3 — 何が obsolete になるか.** すべての改動は何かを削除可能に
    する。
 

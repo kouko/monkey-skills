@@ -8,9 +8,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- `cot-explain`: restored the `think-orbit:thinking-session` and
-  `think-orbit:break-assumption` routing destinations. 1.0.1 kept the
-  prohibition on doing the thinking here but removed everywhere to send it.
+- `cot-explain`: restored all three routing destinations 1.0.1 dropped —
+  `think-orbit:thinking-session`, `think-orbit:break-assumption`, and
+  `obsidian:obsidian-mermaid-visualizer`. 1.0.1 kept the prohibition on doing
+  the thinking here but removed everywhere to send it.
 - `complexity-critique`: restored the mindset SSOT rule — edits land in the
   canonical `code-team/standards/` copies first, and a fifth mindset is
   governed by `mindset-extension-standard.md`.
