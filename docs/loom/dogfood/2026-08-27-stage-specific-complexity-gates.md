@@ -14,10 +14,28 @@ either result and CI does not depend on the machine-local directory.
 - loom-design baseline SHA-256: `0e63efae0f07c92c3e98c657d821b5a03d171d0049570508ad745e0a19aef486`
 - loom-code baseline SHA-256: `e2a861d4028c2837de7a32596a7c4299cd0792fdc27e4b7f278f9856745df6bc`
 - loom-design candidate SHA-256: `805fd790d45fe6dc0e8465daa8322caed4e28d1e3e8b00651a051768c8f4754a`
-- loom-code candidate SHA-256: `06dfdc5494819ccac851df34d41c5e46d09377b6c8e07711a61de295df428745`
+- loom-code candidate SHA-256: `b126daecfb253a449b88b2e4c7681f72fee63e93a51853a772f6fc7248b5ad4f`
 
 These are the **final cold-install candidate bytes** for both plugin packages;
 the report and its root-level test do not alter either package tree.
+
+The loom-code candidate fingerprint moved once after the hard cases were run,
+when this branch was rebased onto `f81864b8`. Three inputs changed and none of
+them is a complexity lens:
+
+- `#745` (upstream, arriving with the new base) rewrote the read-before-edit
+  precondition and two path literals in
+  `subagent-driven-development/references/conditional-operations.md`.
+- The release moved to `0.101.3` in `CHANGELOG.md` and both manifests, because
+  `#745` shipped `0.101.2` first.
+- The shipping-version pin in `test_docs_review_blocking_class.py` and the
+  `plugin_version` assertion in `test_review_context.py` were repinned to match,
+  as their own docstrings require on every bump.
+
+No lens reference, lens-bearing `SKILL.md`, agent contract, or template differs
+between the fingerprint the hard cases ran against and the one recorded above,
+so the results in this report still describe the shipped bytes. The loom-design
+package was untouched by the rebase and both of its fingerprints are unchanged.
 
 Raw transcripts and normalized comparisons are session-local evidence under
 `/tmp/loom-complexity-live.SRPuAf/`. They are intentionally not committed
