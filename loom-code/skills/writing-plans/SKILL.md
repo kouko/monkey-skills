@@ -108,6 +108,11 @@ Dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-documen
 
 The prompt also enforces parallel-dispatch checks — see it for the complete list.
 
+**Architecture complexity assessment:** for every non-mechanical plan, read
+[`references/architecture-complexity-lens.md`](references/architecture-complexity-lens.md)
+and add the required plan-level assessment before dispatching SDD. Optional
+upstream evidence may inform it; when that evidence is absent, assess locally.
+
 **Pre-patch before dispatch:** Read reviewer Checks 1 and 3; add missing top-level `Plan-document-reviewer verdict: PENDING` and per-task `Brief item covered:` fields.
 
 **Coverage gate:** before dispatching the reviewer, run §Consuming a loom-design change-folder — Coverage self-check; brief mode (`--brief`) applies to every brief declaring `BI-` ids.

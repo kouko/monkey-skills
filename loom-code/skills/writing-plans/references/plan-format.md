@@ -92,6 +92,19 @@ Entry form: `- OQ-<n> [<TOKEN>] — <question text>`.
 
 This section deliberately carries no owner field, no deadline field, no routing field, and no per-task linkage field — each is a decided omission, not an oversight. An owner or deadline exists in mature closure-tracking practice to let a question stay open *through* a phase; a gate that blocks on any `[OPEN]` entry removes that permission, so the fields that governed it are removed too. A routing field distinguishing "the agent may settle this" from "the user must" is not carried either — that classification is already written down: see `~/.claude/rules/judgment-rubrics.md` §3 for when an agent must stop and ask the user rather than settle a question itself. A per-task `Blocked by: OQ-n` linkage field is likewise not carried — the section-level gate, not the task, is this schema's unit of blocking.
 
+### Complexity assessment (required)
+
+Every non-mechanical plan carries `## Complexity assessment` after `## Open
+Questions` and before Task 1. Use the four bullets from
+`architecture-complexity-lens.md`: added complexity, why it is worthwhile,
+removed or avoided complexity, and downstream risk. Optional upstream evidence
+may inform the assessment; when absent, assess locally.
+
+A plan consisting only of a mechanical edit may instead declare
+`N/A — mechanical edit: <reasoned exemption>`. Do not use this exemption for a
+plan that introduces a boundary, dependency, migration, configuration,
+operational duty, or non-trivial reuse.
+
 ### Per-task block (required, repeats N times)
 
 ```markdown

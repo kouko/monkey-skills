@@ -10,7 +10,7 @@ Steps:
 **Total tasks**: 9
 **Critical-path depth**: 3
 **Execution order**: parallel by dependency level
-**Plan-document-reviewer verdict**: PASS (2026-08-27; 18/18 checks, round 2)
+**Plan-document-reviewer verdict**: PASS (2026-08-27; 19/19 checks, round 3)
 
 ## Task-flow diagram
 
@@ -30,6 +30,13 @@ flowchart LR
 
 N/A — no unresolved question: the source brief fixes stage ownership, thin relay semantics, standalone fallback, exclusions, and testing boundaries
 
+## Complexity assessment
+
+- **Added complexity**: six local lens references, six stage-contract tests, one cross-plugin contract test, and optional evidence-reading language inside existing checkpoints.
+- **Why it is worthwhile**: each addition exposes domain-specific burden before it hardens downstream while preserving the installed stage's independent judgment.
+- **Removed or avoided complexity**: no universal score, shared orchestrator, common schema, new artifact type, cross-plugin private call, or synchronization mechanism is introduced.
+- **Downstream risk**: copied four-question prose could drift, optional evidence could be mistaken for a dependency, and contract tests could false-green without cold-install behavior probes; Tasks 7 and 9 own those risks.
+
 ## Task 1 — 商業規劃 complexity lens
 
 - **Description**: Add a business-owned lens that judges continuing commitments, coordination burden, displaced alternatives, worth, removable work, and downstream risk inside the existing worth-it checkpoint.
@@ -44,7 +51,7 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2, BI-5
-- **Status**: pending
+- **Status**: done(cba68c3d)
 - **Gloss**: 在值得做的判斷裡衡量長期承諾與協作成本，不借用程式碼分數。
 
 ## Task 2 — 視覺系統 complexity lens
@@ -60,7 +67,7 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2, BI-6
-- **Status**: pending
+- **Status**: done(7d84e67f)
 - **Gloss**: 讓視覺詞彙、變體與例外的維護成本留在設計系統內判斷。
 
 ## Task 3 — 互動流程 complexity lens
@@ -76,7 +83,7 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2, BI-7
-- **Status**: pending
+- **Status**: done(cba68c3d)
 - **Gloss**: 在流程階段先減少選擇、狀態與死路，再把剩餘風險交給規格。
 
 ## Task 4 — 行為規格 complexity lens
@@ -92,7 +99,7 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-1, BI-2, BI-8, BI-11
-- **Status**: pending
+- **Status**: done(da55ba81)
 - **Gloss**: 對拓展後留下的物件、角色、狀態與路徑再做一次有理由的保留或刪除。
 
 ## Task 5 — 架構與實作計畫 complexity lens
@@ -100,7 +107,7 @@ N/A — no unresolved question: the source brief fixes stage ownership, thin rel
 - **Description**: Add a plan-time lens for boundaries, dependencies, migrations, configuration, operational duties, reuse, and deletion before tasks execute.
   - Make the brief/plan artifact contract carry intended complexity and independent fallback; retain the existing task-depth ceiling and plan reviewer rather than adding another gate runner.
 - **Module**: loom-code/skills/writing-plans/
-- **Files touched**: loom-code/skills/writing-plans/SKILL.md, loom-code/skills/writing-plans/references/architecture-complexity-lens.md, loom-code/skills/writing-plans/references/plan-format.md, loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md, loom-code/scripts/test_writing_plans_complexity.py
+- **Files touched**: loom-code/skills/writing-plans/SKILL.md, loom-code/skills/writing-plans/references/architecture-complexity-lens.md, loom-code/skills/writing-plans/references/plan-format.md, loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md, loom-code/scripts/test_writing_plans_complexity.py, docs/loom/plans/2026-08-27-stage-specific-complexity-gates.md
 - **Context paths**: loom-code/skills/writing-plans/SKILL.md, loom-code/skills/writing-plans/references/plan-format.md, loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md
 - **Acceptance**:
   - **RED**: `python3 -m pytest loom-code/scripts/test_writing_plans_complexity.py::test_non_mechanical_plan_carries_architecture_complexity -q` fails because planning does not require a stage-native complexity assessment for non-mechanical work.
