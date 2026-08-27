@@ -13,7 +13,11 @@ Versioning: [Semantic Versioning](https://semver.org/).
   `using-loom-code`'s environment-gotchas for the read-before-edit precondition.
   The rule is now stated in full where it is used — what the edit tool actually
   tracks, and that the failure repeats on every remaining target in a batch — so
-  the reference carries no cross-skill dependency.
+  reading it no longer requires opening another skill. One deliberate
+  cross-skill pointer remains at §Prose and record-class routing, delegating the
+  contract-class/record-class definition to `requesting-code-review`, which owns
+  it; that is a peer delegation to an SSOT, not a path this change set out to
+  remove.
 - Two same-plugin pointers in that file named `hooks/…` from a directory the
   path does not resolve against; both now carry the `loom-code/` prefix its
   `SKILL.md` siblings already use. Every path literal in the file now resolves.
