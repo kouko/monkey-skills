@@ -47,11 +47,10 @@ at `docs/loom/PURPOSE.md` — see that file for its exact two-field format;
 this skill does not restate it. ARC never writes that file itself; the
 draft is only ever landed by the user's own confirmation.
 
-ARC is conditional. When the repository has no `docs/loom/PURPOSE.md` — the
-purpose file lives inside the `docs/loom/` store directory, so its absence
-already means the store itself is missing too — ARC reports itself not
-applicable, names the reason, and scaffolds nothing — creating the store is
-`loom-init`'s job, not this skill's.
+ARC is conditional. When the repository has no `docs/loom/` store and no
+`docs/loom/PURPOSE.md` file — nothing yet scaffolded to hold one — ARC
+reports itself not applicable, names the reason, and scaffolds nothing —
+creating the store is `loom-init`'s job, not this skill's.
 
 ## Invocation
 

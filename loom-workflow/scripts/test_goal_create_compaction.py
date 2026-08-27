@@ -29,14 +29,20 @@ def test_entrypoint_preserves_modes_floor_and_invocation():
     # --- ARC's not-applicable path: names the reason, scaffolds nothing ---
     # Bound to the sentence structure (conditional -> names which is
     # missing -> scaffolds nothing -> scaffolding is someone else's job),
-    # not to a character window around it, per constraint 1.
+    # not to a character window around it, per constraint 1. The condition
+    # is a conjunction (no store AND no purpose file) — see
+    # check_north_star_link.py, which checks the two independently.
+    #
+    # NOTE — this exact sentence is also pinned verbatim in
+    # loom-workflow/skills/goal-create/scripts/test_skill_md.py
+    # (`not_applicable_sentence`). A change here requires the same change
+    # there, or that test breaks on its own next run.
     arc_not_applicable = _normalize(
         """
         ARC is conditional. When the repository has no
-        `docs/loom/PURPOSE.md` — the
-        purpose file lives inside the `docs/loom/` store directory, so its
-        absence
-        already means the store itself is missing too — ARC reports itself
+        `docs/loom/` store and no
+        `docs/loom/PURPOSE.md` file — nothing yet scaffolded to hold
+        one — ARC reports itself
         not
         applicable, names the reason, and scaffolds nothing — creating the
         store is

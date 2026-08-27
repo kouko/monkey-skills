@@ -120,33 +120,32 @@ def test_declares_two_modes_and_conditional_arc():
         "if the reword is deliberate."
     )
 
-    # --- The not-applicable path: named condition, named reason, no scaffolding. ---
+    # --- The not-applicable path: named condition, named reason, no
+    # scaffolding. The condition is a CONJUNCTION — no store AND no
+    # purpose file — not "no purpose file" alone: `check_north_star_link.py`
+    # checks `store.is_dir()` and `purpose_path.is_file()` as two
+    # independent conditions with different exits, and `loom-init`
+    # commonly scaffolds the store while leaving the purpose file
+    # unanswered, which is a real, handled, ARC-applicable case, not a
+    # not-applicable one.
+    #
+    # NOTE — this exact sentence is also pinned verbatim in
+    # loom-workflow/scripts/test_goal_create_compaction.py
+    # (`arc_not_applicable`). A change here requires the same change
+    # there, or that test breaks on its own next run.
     not_applicable_sentence = (
         "ARC is conditional. When the repository has no "
-        "`docs/loom/PURPOSE.md` — the\npurpose file lives inside the "
-        "`docs/loom/` store directory, so its absence\nalready means the "
-        "store itself is missing too — ARC reports itself not\n"
+        "`docs/loom/` store and no\n`docs/loom/PURPOSE.md` file — "
+        "nothing yet scaffolded to hold one — ARC\nreports itself not "
         "applicable, names the reason, and scaffolds nothing — creating "
         "the store is\n`loom-init`'s job, not this skill's."
     )
     assert _normalize_ws(not_applicable_sentence) in _normalize_ws(arc_body), (
         "ARC's not-applicable sentence changed — update this pin if the "
-        "reword is deliberate (must still: name the missing-purpose-file "
-        "condition, require naming the reason, and forbid scaffolding)."
-    )
-
-    # --- The not-applicable path must not imply a partial case (store
-    # present but purpose file missing, or vice versa) can occur — the
-    # purpose file lives inside the store, so its absence already implies
-    # the store's absence too. A structural guard: the section must not
-    # contain the word "neither" (the tell-tale of a two-independent-
-    # conditions framing) anywhere near "PURPOSE.md" and "store".
-    assert not re.search(
-        r"\bneither\b.{0,80}`docs/loom/PURPOSE\.md`.{0,80}store", arc_body
-    ), (
-        "ARC's not-applicable wording must not frame the missing purpose "
-        "file and the missing store as two independent conditions — the "
-        "purpose file lives inside the store, so there is no partial case."
+        "reword is deliberate (must still: name the missing-store-AND-"
+        "missing-purpose-file condition as a conjunction, require naming "
+        "the reason, and forbid scaffolding) — and update the twin pin in "
+        "loom-workflow/scripts/test_goal_create_compaction.py."
     )
 
 

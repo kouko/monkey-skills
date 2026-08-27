@@ -155,6 +155,106 @@ def _bar_intro(content: str) -> str:
     return re.sub(r"\s+", " ", match.group(1)).strip()
 
 
+def _negation_binds(text: str, negation: str, target: str, max_gap_words: int = 4) -> bool:
+    """The sanctioned bound form of a negation-to-target polarity check.
+
+    True iff a `negation` token (a regex alternation fragment, e.g.
+    ``"not"`` or ``"never|cannot|can't|not"``) sits within
+    `max_gap_words` words directly BEFORE `target`, word-boundary safe
+    on both ends. This replaces a bare ``<negation>.*<target>`` regex,
+    which a bare, unbounded ``.*`` lets pass on mere co-occurrence
+    anywhere in `text` — including an inversion where the negation's
+    real clause has nothing to do with `target`, and an unrelated
+    occurrence of `target` merely appears somewhere later (or the
+    negation appears somewhere earlier, unrelated to the actual
+    obligation). Capping the gap keeps the match local to the clause
+    the negation actually governs, which a bare ``.*`` does not.
+    """
+    pattern = (
+        r"\b(?:" + negation + r")\b"
+        r"\W*"  # trailing markdown/punctuation glued to the negation word
+        r"(?:\s+\S+){0," + str(max_gap_words) + r"}"
+        r"\s+\b" + target + r"\b"
+    )
+    return re.search(pattern, text) is not None
+
+
+def test_no_unbound_negation_regex_in_this_file() -> None:
+    """Guard against the negation-inversion trap this file has hit
+    repeatedly: a bare ``<negation-token>.*<target-word>`` regex passed
+    directly to `re.search`/`re.match`, which a bare unbounded ``.*``
+    satisfies on mere co-occurrence rather than true binding — even a
+    fresh assertion written by the previous round's own fix for this
+    exact defect class had this shape. `_negation_binds()` above is the
+    sanctioned bound replacement. This guard reads THIS FILE'S OWN
+    SOURCE and fails the moment the unbound shape is written again, in
+    any assertion, including one nobody has written yet.
+
+    What this guard catches: a regex string literal passed directly as
+    the first argument to `re.search(...)` or `re.match(...)`,
+    anywhere in this file's source, that contains a whole-word negation
+    token ('not' / 'never' / 'no' / 'cannot' / "can't") followed later
+    in that SAME literal by a bare, unbounded `.*` — the exact shape
+    every prior instance of this defect had, whether the negation sits
+    directly against a `\\b...\\b` or inside an alternation group like
+    `(never|cannot|can't|not)`.
+
+    What this guard CANNOT catch: (a) an unbound negation-to-target
+    check built by string concatenation, an f-string, or `.format()`
+    instead of a single literal passed straight to `re.search` — a
+    determined rewrite could assemble the same unbound pattern
+    dynamically and dodge this scan; (b) a negation word outside this
+    guard's fixed vocabulary (e.g. 'nor', 'without', 'lacks', 'fails to');
+    (c) the same unbound shape reached through a helper function other
+    than `_negation_binds` that this guard has never heard of — it only
+    inspects `re.search`/`re.match` call sites, not arbitrary helper
+    internals; (d) a bounded-looking gap (e.g. `{0,50}`) that is bound
+    in form but effectively unbound in practice — this guard checks for
+    literal `.*`, not for a suspiciously large finite cap. It is a
+    source-pattern check on THIS file only; it proves nothing about any
+    other file.
+    """
+    source = Path(__file__).read_text(encoding="utf-8")
+
+    call_pattern = re.compile(
+        r"""re\.(?:search|match)\(\s*r(['"])(?P<pat>.*?)\1""", re.DOTALL
+    )
+    negation_word = re.compile(r"\b(?:not|never|no|cannot|can't)\b")
+    dotstar = re.compile(r"\.\*")
+
+    def _is_unbound_negation(pat: str) -> bool:
+        # A pattern literal's own `\b` word-boundary escapes are TWO
+        # characters at the source level — backslash then the letter
+        # 'b' — and that trailing 'b' sits glued directly against the
+        # word it delimits (e.g. `\bnot\b` is the literal characters
+        # `\`, `b`, `n`, `o`, `t`, `\`, `b`). Read as plain text, 'b'
+        # and 'n' are both word characters with no boundary between
+        # them, so a plain `\bnot\b` search against the UNMODIFIED
+        # literal never matches "not" at all. Replacing each literal
+        # `\b` with a space turns it into a real, plain-text word
+        # boundary before running the word/`.*` checks below.
+        cleaned = pat.replace("\\b", " ")
+        dotstar_positions = [m.start() for m in dotstar.finditer(cleaned)]
+        if not dotstar_positions:
+            return False
+        return any(
+            m.start() < pos
+            for m in negation_word.finditer(cleaned)
+            for pos in dotstar_positions
+        )
+
+    offenders = [
+        match.group("pat")
+        for match in call_pattern.finditer(source)
+        if _is_unbound_negation(match.group("pat"))
+    ]
+    assert not offenders, (
+        "Found a bare '<negation>.*<target>' regex passed directly to "
+        "re.search/re.match — route it through _negation_binds() "
+        f"instead: {offenders!r}"
+    )
+
+
 def _field_names_from_shape_reference() -> list:
     """Extract the field names goal-shape.md actually defines, in order.
 
@@ -201,18 +301,19 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
     )
     # This paragraph is a single sentence (verified by inspection of
     # input-floor.md §3), so no separate sentence split is needed — the
-    # paragraph boundary already is the sentence boundary. Bind "no" to
-    # "goal" within the "emit(s)" clause, unbounded by character count: a
-    # mutant that keeps naming the empty slot but swaps the consequence to
-    # emitting a degraded goal (instead of none) still fails, while a
-    # legitimate rewording that inserts a longer clause between the words
-    # (e.g. "emits, given the missing input evidence, no goal") still
-    # passes, because the scope is the whole (single) sentence, not a
-    # character count.
-    assert re.search(r"\bemits?\b.*\bno\b.*\bgoal\b", refusal_para), (
+    # paragraph boundary already is the sentence boundary. "emit(s)" is a
+    # plain presence check (no polarity to invert); "no" must BIND to
+    # "goal" via `_negation_binds` — a mutant like "will emit, no matter
+    # which slot is missing, a goal anyway" keeps "no" and "goal" as bare
+    # co-occurring words but puts several unrelated words between them,
+    # which the bound gap rejects.
+    assert re.search(r"\bemits?\b", refusal_para), (
+        "The refusal rule must state the consequence as an emission."
+    )
+    assert _negation_binds(refusal_para, "no", "goal"), (
         "The refusal rule must state the consequence as emitting NO goal "
-        "(not a degraded/vague one) — expected 'emit(s) ... no ... goal' "
-        "within one sentence."
+        "(not a degraded/vague one) — expected 'no' bound directly to "
+        "'goal', not merely co-occurring somewhere in the same sentence."
     )
     vague_para = _paragraph_containing("vague", "worse")
     assert vague_para, (
@@ -274,25 +375,14 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
     )
     assert false_item, "The bar's 'False when written' item must be a list item."
     false_item_lower = false_item.lower()
-    # Item-scoped negation check: bind "not" to "true" within item 2 only,
-    # unbounded by character count now that the item boundary already does
-    # the isolation §4's three items carry no blank line between them, so
-    # a paragraph-level match would let "not" from item 1 or item 3 satisfy
-    # this clause even if item 2 itself were inverted to "may already be
-    # true; that is fine."
-    assert re.search(r"\bnot\b.*\btrue\b", false_item_lower), (
-        "The 'false when written' clause must state the condition must NOT "
-        "already be true at the moment it is written — expected "
-        "'not ... true' within its own list item."
-    )
-    # Bound negation guard: "not ... true" survives as a bare co-occurrence
-    # even in an INVERTED sentence — "the condition need not be false when
-    # written; it is fine if it is already true" contains "not" (bound to
-    # "false", not "true") followed later by "true" and would false-pass
-    # the co-occurrence check above. Require "not" to sit directly against
-    # "already"/"be" ahead of "true" — the actual obligation clause — and
-    # separately forbid "need not be false" and "already true" appearing
-    # as their own (inverted) phrases in this item.
+    # Bound negation guard: a bare "not ... true" co-occurrence check
+    # survives even in an INVERTED sentence — "the condition need not be
+    # false when written; it is fine if it is already true" contains "not"
+    # (bound to "false", not "true") followed later by "true" and would
+    # false-pass a bare co-occurrence check. Require "not" to sit directly
+    # against "already"/"be" ahead of "true" — the actual obligation
+    # clause — and separately forbid "need not be false" and "already
+    # true" appearing as their own (inverted) phrases in this item.
     assert re.search(r"\bmust\s+not\s+already\s+be\s+true\b", false_item_lower) or (
         re.search(r"\bnot\b\s+(?:already\s+)?be\s+true\b", false_item_lower)
     ), (
@@ -322,26 +412,16 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "acting or answering."
     )
     person_item_lower = person_item.lower()
-    # Item-scoped negation check: bind "not" to "depend" within item 3
-    # only. A mutant reading "the condition may depend on a person acting
-    # or answering; that is acceptable" keeps every asserted keyword
-    # (person, acting, answering) but drops the "must not depend"
-    # obligation — it fails here because no negation binds to "depend".
-    assert re.search(r"\bnot\b.*\bdepend\b", person_item_lower), (
-        "The 'Free of dependence on a person' clause must state the "
-        "condition must NOT depend on a person — expected "
-        "'not ... depend' within its own list item."
-    )
-    # Bound negation guard: "not ... depend" survives as a bare
-    # co-occurrence even in an INVERTED sentence — "the condition may
-    # depend on a person acting or answering, which is fine" contains
-    # "not" only inside an earlier, unrelated clause (e.g. "is not
-    # decidable by the run itself" from item 3's own second sentence) and
-    # "depend" later in the inverted clause — the bare co-occurrence
-    # regex above is satisfied even though the actual "may depend ...
-    # fine" clause carries no negation of its own. Require "not" to sit
-    # directly against "depend" (optionally via "must"), and separately
-    # forbid the inverted phrasing itself.
+    # Bound negation guard: a bare "not ... depend" co-occurrence check
+    # survives even in an INVERTED sentence — "the condition may depend on
+    # a person acting or answering, which is fine" contains "not" only
+    # inside an earlier, unrelated clause (e.g. "is not decidable by the
+    # run itself" from item 3's own second sentence) and "depend" later in
+    # the inverted clause — a bare co-occurrence regex would be satisfied
+    # even though the actual "may depend ... fine" clause carries no
+    # negation of its own. Require "not" to sit directly against "depend"
+    # (optionally via "must"), and separately forbid the inverted phrasing
+    # itself.
     assert re.search(r"\bmust\s+not\s+depend\b", person_item_lower) or re.search(
         r"\bnot\s+depend\b", person_item_lower
     ), (
@@ -363,16 +443,18 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
     # Structurally isolated to §4's prose intro (heading -> first list
     # item), not the merged intro+items paragraph, so a mutant that
     # flips the intro's polarity cannot be rescued by unrelated item text
-    # bled into the same paragraph. Word-boundary + proximity check: "not"
-    # must appear before "mechanical" within that intro, unbounded by
-    # character count now that the intro is already isolated.
+    # bled into the same paragraph. "not" must BIND to "mechanical" (via
+    # `_negation_binds`), not merely co-occur — a mutant claiming the bar
+    # IS mechanical, with an unrelated earlier "not" elsewhere in the
+    # intro, must still fail.
     bar_intro = _bar_intro(content)
     assert "mechanical" in bar_intro.lower(), (
         "The bar section must address whether it is mechanical."
     )
-    assert re.search(r"\bnot\b.*\bmechanical\b", bar_intro.lower()), (
+    assert _negation_binds(bar_intro.lower(), "not", "mechanical"), (
         "The bar must be stated as prose judgment, explicitly NOT claimed to "
-        "be mechanical — expected 'not ... mechanical' within the intro."
+        "be mechanical — expected 'not' bound directly to 'mechanical' "
+        "within the intro, not merely co-occurring."
     )
 
     # --- three provenance tags, each isolated to its own bullet item ---
@@ -516,7 +598,7 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
     assert authority_sentence, (
         "'never' and 'authority' must appear together within one sentence."
     )
-    assert re.search(r"\bnever\b.*\bauthority\b", authority_sentence), (
+    assert _negation_binds(authority_sentence, "never", "authority"), (
         "'never' must be bound to 'authority' within one sentence — expected "
         "'never ... authority', not the two words merely co-occurring."
     )
@@ -527,8 +609,8 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "Must also state a purpose cannot substitute for the user's own "
         "decision, in its own sentence."
     )
-    assert re.search(
-        r"\b(never|cannot|can't|not)\b.*\bsubstitute\b", substitute_sentence
+    assert _negation_binds(
+        substitute_sentence, "never|cannot|can't|not", "substitute"
     ), (
         "Must also state a purpose cannot substitute for the user's own "
         "decision — expected a negation bound to 'substitute' within one "
@@ -604,9 +686,11 @@ def test_constraints_and_stop_when_source_is_stated() -> None:
         "§2 must state the refusal rule's relationship to Constraints/"
         "Stop-when in its own sentence."
     )
-    assert re.search(r"\bnot\b.*\btrigger\b", gate_sentence), (
-        "Expected 'not ... trigger' bound within one sentence: an empty "
-        "Constraints/Stop-when must not by itself trigger refusal."
+    assert _negation_binds(gate_sentence, "not", "trigger"), (
+        "Expected 'not' bound directly to 'trigger' within one sentence: "
+        "an empty Constraints/Stop-when must not by itself trigger "
+        "refusal — not merely co-occur with an unrelated 'not' elsewhere "
+        "in the same sentence."
     )
 
 
