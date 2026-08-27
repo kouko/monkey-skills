@@ -1,6 +1,5 @@
 """Require reproducible baseline/candidate evidence for complexity behavior."""
 
-import hashlib
 import io
 import re
 import runpy
@@ -18,10 +17,31 @@ FINGERPRINT = runpy.run_path(
     str(ROOT / "loom-code/scripts/loom_firing_harness.py")
 )["_plugin_tree_fingerprint"]
 BASELINE_COMMIT = "0a7dcde2"
-# The last commit whose instruction surface the live hard cases actually
-# observed. Round-4 review fixes landed after it, so the report must either
-# match it or enumerate the delta (see test below).
-HARD_CASE_COMMIT = "7af88b7053c2076b65b98b69217ff32239ab80f8"
+# The live hard cases observed the instruction surface of `7af88b70`, a commit
+# on the pre-rebase branch. The rebase replaced it and no reachable commit
+# carries those bytes, so a fresh clone cannot recompute its fingerprints —
+# they are recorded here instead. This test still pins the report against a
+# silent re-pin; it can no longer re-derive these two numbers from git.
+HARD_CASE_BEHAVIOR_FINGERPRINTS = {
+    "loom-design": "afa3b1dca93ab1a078cd5ddc495bd03c613da81e645c894625bce753a05e6241",
+    "loom-code": "6ce0976774f213d4c6e7d4c60727a2fb6e7f2270edafbdf9c43fd41564c415c5",
+}
+# Behaviour-bearing files already known to differ between that surface and the
+# anchor below. Recorded once, because the diff that produced them is no longer
+# computable. Everything after the anchor is still read from git, so a later
+# edit cannot reach the report without being named.
+RECORDED_POST_HARD_CASE_DELTA = (
+    "loom-code/agents/code-reviewer.md",
+    "loom-code/skills/requesting-code-review/references/design-evidence.md",
+    "loom-code/skills/requesting-code-review/references/implementation-complexity-lens.md",
+    "loom-code/skills/writing-plans/SKILL.md",
+    "loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md",
+    "loom-code/skills/writing-plans/references/plan-format.md",
+    "loom-design/skills/business-value/assets/business-value-template.md",
+)
+# The round-4 fixes in their merged form. Reachable from every clone that has
+# this branch's history, which `7af88b70` was not.
+DELTA_ANCHOR_COMMIT = "acd5a846"
 REQUIRED_LENS_EVIDENCE = {
     "business-complexity-lens": "live hard case (pre-fix surface; not re-run)",
     "visual-complexity-lens": "live hard case",
@@ -91,44 +111,26 @@ def _tracked_worktree_fingerprint(plugin: str) -> str:
         return FINGERPRINT(destination)
 
 
-def _behavior_paths_at(revision: str, plugin: str) -> list[str]:
-    listing = subprocess.check_output(
-        ["git", "-C", str(ROOT), "ls-tree", "-r", "--name-only", "-z", revision,
-         f"{plugin}/skills", f"{plugin}/agents"]
-    ).decode().split("\0")
-    return sorted(
-        relative
-        for relative in filter(None, listing)
-        if relative.endswith(".md")
-        and not Path(relative).name.startswith(("README", "CHANGELOG"))
-    )
-
-
-def _behavior_fingerprint_at(revision: str, plugin: str) -> str:
-    digest = hashlib.sha256()
-    for relative in _behavior_paths_at(revision, plugin):
-        blob = subprocess.check_output(
-            ["git", "-C", str(ROOT), "show", f"{revision}:{relative}"]
-        )
-        digest.update(relative.encode("utf-8"))
-        digest.update(b"\0")
-        digest.update(blob)
-        digest.update(b"\0")
-    return digest.hexdigest()
-
-
 def _instruction_surface_delta() -> list[str]:
-    """Behaviour-bearing paths that differ between the hard-case commit and now."""
+    """Behaviour-bearing paths that differ between the hard-case surface and now.
+
+    Two segments: the recorded delta up to the anchor, and everything git
+    reports since. Only the second half is computable, and it is the half that
+    a new edit lands in.
+    """
     changed = subprocess.check_output(
-        ["git", "-C", str(ROOT), "diff", "--name-only", HARD_CASE_COMMIT, "--",
+        ["git", "-C", str(ROOT), "diff", "--name-only", DELTA_ANCHOR_COMMIT, "--",
          "loom-code/skills", "loom-code/agents",
          "loom-design/skills", "loom-design/agents"]
     ).decode().splitlines()
     return sorted(
-        relative
-        for relative in changed
-        if relative.endswith(".md")
-        and not Path(relative).name.startswith(("README", "CHANGELOG"))
+        set(RECORDED_POST_HARD_CASE_DELTA)
+        | {
+            relative
+            for relative in changed
+            if relative.endswith(".md")
+            and not Path(relative).name.startswith(("README", "CHANGELOG"))
+        }
     )
 
 
@@ -176,17 +178,19 @@ def test_report_enumerates_any_post_hard_case_instruction_change():
     The candidate fingerprint moves for a version bump, so matching it proves
     nothing about behaviour. This test binds the report to the instruction
     bytes the hard cases actually observed: either nothing has moved since, or
-    the report names every file that did — and the list is checked against git,
-    so recomputing a hash cannot satisfy it.
+    the report names every file that did. The delta since the anchor is read
+    from git, so recomputing a hash cannot satisfy it; the two fingerprints
+    themselves are compared against the recorded values, because the commit
+    that produced them no longer exists in any clone.
     """
     text = REPORT.read_text(encoding="utf-8")
-    for plugin in ("loom-design", "loom-code"):
+    for plugin, fingerprint in HARD_CASE_BEHAVIOR_FINGERPRINTS.items():
         match = re.search(rf"{plugin} hard-case behavior SHA-256: `([0-9a-f]{{64}})`", text)
         assert match, (
             f"report must record the {plugin} instruction-surface fingerprint the "
             "hard cases ran against"
         )
-        assert match.group(1) == _behavior_fingerprint_at(HARD_CASE_COMMIT, plugin)
+        assert match.group(1) == fingerprint
 
     delta = _instruction_surface_delta()
     if not delta:
@@ -200,6 +204,28 @@ def test_report_enumerates_any_post_hard_case_instruction_change():
             f"{relative} changed after the hard cases ran and is not named in the "
             "report's delta section"
         )
+
+
+@pytest.mark.parametrize("commit", [BASELINE_COMMIT, DELTA_ANCHOR_COMMIT])
+def test_pinned_commits_are_reachable_from_this_branch(commit):
+    """Every sha this module hands to git must survive a fresh clone.
+
+    `7af88b70` did not. It lived only in local object stores: every
+    developer checkout passed while CI, cloning from the remote, died with
+    exit 128 before a single assertion ran. Reachability from HEAD is the
+    property that difference turns on, so both remaining shas assert it —
+    the one `git archive` reconstructs a package from, and the one
+    `git diff` measures the instruction surface against. Depth of checkout
+    does not supply this: a commit behind no ref is fetched by no depth.
+    """
+    probe = subprocess.run(
+        ["git", "-C", str(ROOT), "merge-base", "--is-ancestor", commit, "HEAD"],
+        capture_output=True,
+    )
+    assert probe.returncode == 0, (
+        f"{commit} is not an ancestor of HEAD; a fresh clone of this branch "
+        "cannot resolve it, and every git-backed assertion here dies with it"
+    )
 
 
 def test_tracked_copy_rejects_symlinks(tmp_path):

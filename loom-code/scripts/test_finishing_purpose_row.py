@@ -82,6 +82,19 @@ def test_skill_md_declares_the_purpose_row():
     assert "absent" in para and "offer to write one" in para, "absent-file prompt duty missing"
     assert "never silently skip the print" in para, "absent-file prompt duty missing its loud-not-silent clause"
 
+    # The offer must stand on its own before the skill is named — a reader
+    # with only loom-code installed must still know what to do. Mirrors
+    # test_check_north_star_link.py's
+    # test_unanswered_purpose_message_points_somewhere_without_assuming_the_skill:
+    # assert the conditional clause's index precedes the skill name's index,
+    # not merely that both strings appear (this family's standing decision:
+    # no plugin declares another a mandatory dependency).
+    skill_idx = para.find("loom-workflow:goal-create")
+    assert skill_idx != -1, "purpose paragraph never points to the goal-create skill"
+    conditional_idx = para.lower().find("if you have")
+    assert conditional_idx != -1, "skill mention is not wrapped in a conditional clause"
+    assert conditional_idx < skill_idx, "conditional clause must precede the skill mention"
+
     for duty_phrase in (
         "STOP-and-ask",
         "relay the printed question",

@@ -85,3 +85,56 @@ def test_entrypoint_preserves_prepare_resume_verification_and_stop():
     assert resume_schema <= resume_interpret
 
     assert SCHEMA_PATH.is_file()
+
+
+def test_prepare_mode_names_goal_create():
+    text = SKILL_PATH.read_text(encoding="utf-8")
+
+    prepare = text.index("## Prepare mode")
+    resume = text.index("## Resume mode")
+    prepare_section = text[prepare:resume]
+
+    assert "loom-workflow:goal-create" in prepare_section
+    assert "goal-create" not in text[resume:]
+
+    # Round 2 tried sentence-granularity marker matching ("they can invoke
+    # ... themselves" + "never invokes it" in the same sentence) and it
+    # broke both ways: a sentence can contain both markers and the mention
+    # while "it" grammatically fails to refer to the skill (false PASS —
+    # the check doesn't know what "it" points to), and an abbreviation-
+    # unaware sentence splitter fragments a legitimate insertion like
+    # "(i.e. the goal-capture skill)" into two pieces, separating the
+    # mention from its own markers (false FAILURE). Whether a sentence
+    # actually disclaims agency is a semantic question; no regex or
+    # sentence splitter can decide it. So stop inferring meaning and pin
+    # the sentence this test controls verbatim, exactly as the file's own
+    # sentence-pinning idiom does elsewhere (see
+    # test_entrypoint_preserves_prepare_resume_verification_and_stop).
+    #
+    # Trade-off, accepted deliberately: any rewording of this sentence —
+    # even a faithful one, even inserting a harmless clarifying aside —
+    # now FAILS this test. That is the point, not a defect: the sentence
+    # carries a user-agency contract, so changing its wording must force
+    # a conscious update to this pin rather than silently keep passing.
+    # Nothing except this exact string can satisfy an exact match, so no
+    # pronoun shuffle or rephrasing can pass while failing to say what it
+    # says.
+    disclaimer_sentence = (
+        "If the user also wants this session's intent captured as an "
+        "explicit goal with\nits own acceptance condition rather than "
+        "only saved state, `loom-workflow:goal-create`\nis a separate "
+        "option they can invoke themselves; Prepare mode only names it "
+        "and\nnever invokes it."
+    )
+    # Anchor to the END of the Prepare-mode section (not just "somewhere in
+    # it") so an extra sentence appended after the disclaimer — e.g. an
+    # injected imperative telling the reader to invoke the skill anyway —
+    # also fails: an unanchored substring check would let such trailing
+    # prose ride along after an intact, unmodified pin.
+    assert prepare_section.rstrip().endswith(disclaimer_sentence), (
+        "Prepare mode's goal-create disclaimer sentence no longer matches "
+        "the pinned text verbatim as the last content before Resume mode. "
+        "If this is a deliberate, faithful reword of the disclaimer, "
+        "update the pin above to match; if it isn't, the disclaimer "
+        "regressed or something was appended after it."
+    )

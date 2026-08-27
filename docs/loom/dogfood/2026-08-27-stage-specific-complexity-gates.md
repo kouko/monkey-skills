@@ -14,7 +14,7 @@ either result and CI does not depend on the machine-local directory.
 - loom-design baseline SHA-256: `0e63efae0f07c92c3e98c657d821b5a03d171d0049570508ad745e0a19aef486`
 - loom-code baseline SHA-256: `e2a861d4028c2837de7a32596a7c4299cd0792fdc27e4b7f278f9856745df6bc`
 - loom-design candidate SHA-256: `c47e4ded53d9a1f78c6c1c46e461b5c4801657ac4b4f0299c16832b1bbe14bfa`
-- loom-code candidate SHA-256: `98af4a281e11a7fa4f02b3612c5b68b182bd228766b5a6f56dcd4e5f5cb1085f`
+- loom-code candidate SHA-256: `89f112d208e3f61e74b31fcd3f6c92bb10d2e006731c2864b17053bde1c9c29d`
 - loom-design hard-case behavior SHA-256: `afa3b1dca93ab1a078cd5ddc495bd03c613da81e645c894625bce753a05e6241`
 - loom-code hard-case behavior SHA-256: `6ce0976774f213d4c6e7d4c60727a2fb6e7f2270edafbdf9c43fd41564c415c5`
 
@@ -26,9 +26,17 @@ for a release bump that changes no instruction. The **hard-case behavior**
 fingerprints above cover only the instruction surface the hard cases could
 observe — every tracked `.md` under each plugin's `skills/` and `agents/`,
 excluding READMEs and changelogs — measured at commit `7af88b70`, the last
-commit the live runs saw. `scripts/test_stage_specific_complexity_behavior_evidence.py`
-pins them against that commit, so a later re-pin cannot be satisfied by
-recomputing a hash.
+commit the live runs saw.
+
+`7af88b70` was a commit on the pre-rebase branch. Rebasing this work onto the
+mainline replaced it, and no reachable commit carries those bytes, so the two
+hard-case numbers can no longer be recomputed from a clone; they stand as a
+recorded measurement. What remains checkable is the part that matters going
+forward: `scripts/test_stage_specific_complexity_behavior_evidence.py` records
+the files that had already changed by `acd5a846` (the round-4 fixes as merged)
+and reads every later change straight from git, so an edit landing on the
+instruction surface after that anchor cannot reach this report without being
+named in the section below.
 
 ## Instruction-surface changes after the hard cases
 
@@ -45,7 +53,12 @@ these seven files:
 - `loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md` — Check 21 now states how it interacts with Check 18(b), whose hedge scan covers the region the new section occupies.
 - `loom-design/skills/business-value/assets/business-value-template.md` — the reasoned-N/A placeholder now says it replaces the four slots rather than joining them.
 
-Every one of these adds, widens, or disambiguates an instruction; none removes a
+One later edit, from the `goal-create` branch and outside the complexity work,
+moved the surface once more:
+
+- `loom-code/skills/finishing-a-development-branch/SKILL.md` — the offer made when `docs/loom/PURPOSE.md` is absent now names `loom-workflow:goal-create` as one way to answer it. It adds no lens, changes no verdict enum, and alters no stage's required outcome, so the results below are unaffected by it.
+
+Every one of the round-4 files adds, widens, or disambiguates an instruction; none removes a
 lens, narrows a verdict enum, or changes a stage's required outcome. That is a
 reason to expect the results below still hold, **not** evidence that they do —
 the live cases were not re-run against the edited surface. Re-running the
