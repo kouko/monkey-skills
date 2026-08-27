@@ -33,6 +33,7 @@ Full design rationale: [`docs/skill-evolution-architecture.md`](docs/skill-evolu
 | [`brief-before-asking`](skills/brief-before-asking/) | Structured briefing before (or in response to) a complex engineering decision question. 3 modes: Mode A (agent self-detects an upcoming fork), Mode B (user says 「看不懂」 to a question), Mode C (user says 「跟不上」 to an explanation — retreat to Mental Model + drill menu). 6-block format with Mental Model First as the load-bearing rule. |
 | [`dogfood-skill-testing`](skills/dogfood-skill-testing/) | Behavioral black-box dogfood for skills-in-development — exercises triggers + output quality via fresh subagents, emits a fix-actionable findings report. |
 | [`cot-explain`](skills/cot-explain/) | Render existing reasoning — a document, a folder, or the current conversation — as one self-contained HTML page centred on a chain-of-thought Mermaid diagram: labeled edges, nodes carrying as many bullets as the source gives them, rejected options, open assumptions. One-shot generator, no persistent state. |
+| [`independent-advisor`](skills/independent-advisor/) | Get a second opinion on the current plan or decision from a **different executor** — a stronger model, higher effort, or another vendor. The executor changes, not the critique lens. |
 
 All nine skills are **Active**. Lifecycle states and ownership: [`docs/skill-governance.md`](docs/skill-governance.md).
 
@@ -129,6 +130,7 @@ loom-workflow/
 │   ├── dogfood-skill-testing/
 │   ├── git-memory/
 │   ├── handoff/
+│   ├── independent-advisor/
 │   ├── proposal-critique/
 │   ├── recap-state/
 │   ├── skill-creator-advance/

@@ -33,6 +33,7 @@ plugin 還附帶 `skill-creator-advance`（建立 + 大幅重設計）、`skill-
 | [`brief-before-asking`](skills/brief-before-asking/) | 在 user 面臨複雜 engineering 決策問題前（或反應後）的結構化簡報。3 種模式：Mode A（agent 自覺有複雜 fork 即將要問）、Mode B（user 對問題說「看不懂」）、Mode C（user 對解釋說「跟不上」 — 退回 Mental Model + drill menu）。以 Mental Model First 為最高優先的 6-block 格式。 |
 | [`dogfood-skill-testing`](skills/dogfood-skill-testing/) | 開發中 skill 的 behavioral black-box dogfood — 用 fresh subagent 實測 trigger 與 output 品質，輸出可直接修正的 findings 報告。 |
 | [`cot-explain`](skills/cot-explain/) | 把已經存在的推理——一份文件、一個資料夾、或當前對話——渲染成一份自包含 HTML，主體是 CoT Mermaid 圖：每條邊帶標籤、節點條列數由來源決定（不設配額），另附被否決的選項與未驗證的前提。一次性產出器，不持久化狀態。 |
+| [`independent-advisor`](skills/independent-advisor/) | 對當前的 plan 或決策，向**另一個 executor**——更強的 model、更高的 effort，或另一家廠商——取得 second opinion。換的是 executor，不是 critique 的觀點。 |
 
 九個 skill 全為 **Active**。lifecycle 狀態與所有權：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
@@ -129,6 +130,7 @@ loom-workflow/
 │   ├── dogfood-skill-testing/
 │   ├── git-memory/
 │   ├── handoff/
+│   ├── independent-advisor/
 │   ├── proposal-critique/
 │   ├── recap-state/
 │   ├── skill-creator-advance/

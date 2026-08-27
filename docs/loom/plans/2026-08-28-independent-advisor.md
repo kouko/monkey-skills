@@ -5,11 +5,11 @@ Goal: 一個 `loom-workflow:independent-advisor` skill 能在本機端到端跑�
     依可引用事實路由模式、靜態偵測執行者、單一檢查點取得核准並揭露出境範圍、
     只對已選執行者做活體探針且 frontier 不靜默降級、以雙順序盲審派出三角色腿、
     最後交出以分歧為首並誠實揭露降級與成本的報告。
-Stage: planning
+Stage: sdd:wave-1
 **Total tasks**: 11
 **Critical-path depth**: 3 (≤5 ✓)
 **Execution order**: parallel-where-possible
-**Plan-document-reviewer verdict**: PENDING
+**Plan-document-reviewer verdict**: PASS (2026-08-28, round 2 + author fixes; two standing conditions recorded in Notes)
 
 ## Task-flow diagram
 
@@ -401,6 +401,21 @@ flowchart LR
 ## Notes
 
 Scope cut is an assumption stated by the session, NOT yet explicitly confirmed by the user; the dropped join keys are listed below for confirmation.
+
+Authorisation basis — recorded, never assumed silently. The user set a standing
+session goal to carry this arc through to an opened PR. The scope cut and the
+round-2 author fixes were surfaced to the user twice in plain language, with the
+dropped join keys listed; the standing goal was reaffirmed rather than narrowed.
+Two conditions ride with the PASS verdict and MUST be repeated to the user at
+branch close:
+
+- The dropped join keys below are cut under a session-stated assumption carried
+  by the standing goal directive, not by an itemised user sign-off per key.
+- The four round-2 fixes — the missing `T10 --> T9` edge, the stale parallelism
+  note, Task 7's under-declared dependencies, and the
+  `check-skill-structure.py` invocation missing its plugin argument — were
+  applied after the two-round review cap was reached, so they carry no
+  third-round reviewer verdict.
 
 範圍裁切依 brief 的 `## Smallest End State` 六點與 `## Out of Scope`：持久化／保留／崩潰復原、組織與 repo 層政策宣告與廠商白名單、所有數值門檻（逾時秒數、支出上限、重試上限）、腿與腿之間的未受信任標記（進報告那條路已由 Task 6 涵蓋），本次一律不實作。額外拉進本次的是 proposer 全盲宣稱的口徑限縮（Task 7），brief 原列為 Out of Scope。
 
