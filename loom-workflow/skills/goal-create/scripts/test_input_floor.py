@@ -51,6 +51,23 @@ def _paragraphs_normalized(content: str) -> list:
     return [re.sub(r"\s+", " ", p).strip() for p in re.split(r"\n\s*\n", content)]
 
 
+def _numbered_list_items(content: str) -> list:
+    """Split a top-level markdown numbered list into per-item strings.
+
+    List items with no blank line between them (as in this file's §4)
+    collapse into ONE paragraph under blank-line splitting — which lets a
+    negation written in item 2 be satisfied by a keyword bleeding in from
+    item 1 or item 3. Splitting at each `N. ` line start instead keeps each
+    item's polarity bound to its own clause.
+    """
+    chunks = re.split(r"\n(?=\d+\.\s)", content)
+    return [
+        re.sub(r"\s+", " ", chunk).strip()
+        for chunk in chunks
+        if re.match(r"^\d+\.\s", chunk.strip())
+    ]
+
+
 def _field_names_from_shape_reference() -> list:
     """Extract the field names goal-shape.md actually defines, in order.
 
@@ -95,6 +112,15 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "Must state the refusal rule: when either slot is empty, name the "
         "empty slot and emit no goal."
     )
+    # Proximity + negation check: "no" must bind to "goal" within the same
+    # "emit(s)" clause, so a mutant that keeps naming the empty slot but
+    # swaps the consequence to emitting a degraded goal (instead of none)
+    # does not pass by the naming alone.
+    assert re.search(r"\bemits?\b[^.]{0,30}\bno\b[^.]{0,10}\bgoal\b", refusal_para), (
+        "The refusal rule must state the consequence as emitting NO goal "
+        "(not a degraded/vague one) — expected 'emit(s) ... no ... goal' "
+        "within one sentence."
+    )
     vague_para = _paragraph_containing("vague", "worse")
     assert vague_para, (
         "Must state that emitting a vague goal is worse than emitting none."
@@ -108,6 +134,26 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
     assert decidable_para, "The bar must state the condition must be decidable."
     false_para = _paragraph_containing("false", "written")
     assert false_para, "The bar must state the condition must be false when written."
+    # Item-scoped proximity + negation check: bind "not" to "true" within the
+    # SAME numbered list item, not merely somewhere in the shared paragraph.
+    # §4's three items carry no blank line between them, so a paragraph-level
+    # match would let "not" from item 1 or item 3 satisfy this clause even if
+    # item 2 itself were inverted to "may already be true; that is fine."
+    list_items = _numbered_list_items(content)
+    false_item = next(
+        (
+            item
+            for item in list_items
+            if "false" in item.lower() and "written" in item.lower()
+        ),
+        None,
+    )
+    assert false_item, "The bar's 'False when written' item must be a list item."
+    assert re.search(r"\bnot\b[^.]{0,40}\btrue\b", false_item.lower()), (
+        "The 'false when written' clause must state the condition must NOT "
+        "already be true at the moment it is written — expected "
+        "'not ... true' within its own list item."
+    )
     person_para = _paragraph_containing("person", "acting")
     assert person_para and "answering" in person_para, (
         "The bar must state the condition must not depend on a person acting "
@@ -145,9 +191,27 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "Must state a recorded purpose is a source an agent quotes to "
         "justify an inference."
     )
-    assert _paragraph_containing("never", "authority"), (
+    never_authority_para = _paragraph_containing("never", "authority")
+    assert never_authority_para, (
         "Must state a recorded purpose is never authority to settle a "
         "choice reserved for the user."
+    )
+    # Proximity + negation check: "never" must bind to "authority" within one
+    # clause, and a separate negated "substitute" clause must also be
+    # present — pure keyword co-occurrence lets a mutant that inverts the
+    # boundary (purpose IS authority that can substitute) keep both words
+    # present elsewhere in the paragraph and pass by accident.
+    assert re.search(r"\bnever\b[^.]{0,40}\bauthority\b", never_authority_para), (
+        "'never' must be bound to 'authority' within one sentence — expected "
+        "'never ... authority', not the two words merely co-occurring."
+    )
+    assert re.search(
+        r"\b(never|cannot|can't|not)\b[^.]{0,40}\bsubstitute\b",
+        never_authority_para,
+    ), (
+        "Must also state a purpose cannot substitute for the user's own "
+        "decision — expected a negation bound to 'substitute' within one "
+        "sentence."
     )
     assert _paragraph_containing("irreversible") or _paragraph_containing(
         "outward-facing"
