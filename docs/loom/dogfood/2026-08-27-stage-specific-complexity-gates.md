@@ -6,14 +6,15 @@ Date: 2026-08-27
 
 The immutable pre-edit snapshot at `/tmp/loom-complexity-baseline.xt9viD` was
 captured before lens edits and checked against base commit `0a7dcde2`. It was
-used only to build isolated baseline plugin roots; the durable identities below
-bind the compared trees without making CI depend on that machine-local
-directory.
+used only to run the original comparison. The durable identities below are
+recomputed from that commit's tracked plugin archives; candidate identities are
+recomputed from tracked cold-package files, so ignored caches cannot affect
+either result and CI does not depend on the machine-local directory.
 
-- loom-design baseline SHA-256: `084299e0537bee45a2f2c559472d6a6e4651ce814bebb2755b70daca1a1afe3c`
-- loom-code baseline SHA-256: `73c552397959a13770d61769189e2945a6dba7aff74f46774a44b5fd6c3126f5`
-- loom-design candidate SHA-256: `488849585436c0bf1a7f9c5eba0a904aad9d4683464146a609e43b863492a647`
-- loom-code candidate SHA-256: `0477f88d32c1f48a4d9a9dd74223979be856e2d9dc8cfdae0bb49422a4e64be2`
+- loom-design baseline SHA-256: `0e63efae0f07c92c3e98c657d821b5a03d171d0049570508ad745e0a19aef486`
+- loom-code baseline SHA-256: `e2a861d4028c2837de7a32596a7c4299cd0792fdc27e4b7f278f9856745df6bc`
+- loom-design candidate SHA-256: `805fd790d45fe6dc0e8465daa8322caed4e28d1e3e8b00651a051768c8f4754a`
+- loom-code candidate SHA-256: `32790c3fa1bf19211ac47d8fcf1ef548326a706aef3937db9a8ccb4c2dbc3ee5`
 
 These are the **final cold-install candidate bytes** for both plugin packages;
 the report and its root-level test do not alter either package tree.
