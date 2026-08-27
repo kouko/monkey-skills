@@ -1,7 +1,7 @@
 """
 Structural tests for SKILL.md, the skill's entry point (Task 5).
 
-Four tests:
+Five tests:
   1. test_declares_two_modes_and_conditional_arc — the RED/GREEN driver:
      both mode names (SESSION, ARC) appear as headings; ARC's
      user-lands-it rule; ARC's not-applicable path names its reason
@@ -16,6 +16,10 @@ Four tests:
      cites the purpose artifact's format by pointer (its path, or its
      `Done when:` anchor) and reproduces none of the purpose template's
      own field text verbatim — that template is the format SSOT.
+  5. test_invocation_contract_is_offer_not_trigger — Task 6: the
+     description states this skill never auto-fires; an `## Invocation`
+     section names the two offer points where it is surfaced (never
+     invoked) and states the ordering rule against `brainstorming`.
 
 Every polarity-bearing assertion is scoped to a heading section or a
 sentence, never to a raw character window (a legitimate rewording that
@@ -38,6 +42,14 @@ PURPOSE_TEMPLATE_PATH = (
 def _read_skill_md() -> str:
     assert SKILL_PATH.exists(), f"SKILL.md does not exist at {SKILL_PATH}"
     return SKILL_PATH.read_text(encoding="utf-8")
+
+
+def _frontmatter(text: str) -> str:
+    """Return the YAML frontmatter body (between the two `---` fences).
+    Structural scoping — never a character-distance slice."""
+    match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+    assert match, "No YAML frontmatter found in SKILL.md"
+    return match.group(1)
 
 
 def _section(text: str, heading: str) -> str:
@@ -173,3 +185,48 @@ def test_arc_points_at_the_purpose_template_without_restating_it():
         assert field_line not in arc_body, (
             f"ARC section restates the purpose template's field text verbatim: {field_line!r}"
         )
+
+
+def test_invocation_contract_is_offer_not_trigger():
+    text = _read_skill_md()
+
+    # --- The description states this skill never auto-fires. ---
+    # Pinned verbatim: this is the one sentence standing between this
+    # skill and a description that silently claims auto-fire behavior
+    # it does not have — update this pin if a reword is deliberate.
+    never_fire_description_pin = (
+        "This skill never fires on its own; it must be invoked by name."
+    )
+    assert never_fire_description_pin in _frontmatter(text)
+
+    invocation_body = _section(text, "Invocation")
+
+    # --- Named at exactly two offer points, both stated as pointers
+    # the caller must actively invoke, never as auto-fire sites. ---
+    # Pinned verbatim for the same reason as above.
+    offer_points_pin = (
+        "It is named as an available\n"
+        "option at exactly two points where the need for a goal is already\n"
+        "visible: `loom-workflow:handoff`'s Prepare mode, when a user closes a\n"
+        "session without capturing an explicit goal, and the unanswered-purpose\n"
+        "message `loom-code`'s purpose-link check (`check_north_star_link.py`)\n"
+        "prints when `docs/loom/PURPOSE.md` is still template text. Both name\n"
+        "this skill as an option the user can invoke; neither invokes it."
+    )
+    assert offer_points_pin in invocation_body, (
+        "The offer-points sentence changed — if this is a deliberate "
+        "reword, update this pin to match (see module docstring)."
+    )
+
+    # --- Ordering rule against `brainstorming`: discovery stays with
+    # brainstorming; this skill runs only after its brief exists. ---
+    # Pinned verbatim for the same reason as above.
+    ordering_pin = (
+        "When `brainstorming` is already running for the same work,\n"
+        "brainstorming keeps discovery and this skill runs only after its brief\n"
+        "exists, rather than competing for the same turn."
+    )
+    assert ordering_pin in invocation_body, (
+        "The brainstorming-ordering sentence changed — if this is a "
+        "deliberate reword, update this pin to match (see module docstring)."
+    )

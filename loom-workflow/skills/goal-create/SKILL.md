@@ -2,7 +2,7 @@
 name: goal-create
 version: 0.1.0
 description: |
-  Draft a goal condition — SESSION mode emits the four-field goal (Outcome / Constraints / Verification / Stop-when) a long-running agent run is checked against, ARC mode drafts a repository's purpose artifact `Why` / `Done when` for the user to land. Use for 'set a goal', 'give this run a stopping condition', '設一個目標', 'ゴールを立てて'.
+  Draft a goal condition — SESSION mode emits the four-field goal (Outcome / Constraints / Verification / Stop-when) a long-running agent run is checked against, ARC mode drafts a repository's purpose artifact `Why` / `Done when` for the user to land. Use for 'set a goal', 'give this run a stopping condition', '設一個目標', 'ゴールを立てて'. This skill never fires on its own; it must be invoked by name.
 ---
 
 # Goal Create
@@ -47,6 +47,21 @@ ARC is conditional. When the repository has neither a `docs/loom/PURPOSE.md`
 nor any `docs/loom/` store directory at all, ARC reports itself not
 applicable, names which of the two is missing, and scaffolds nothing —
 creating the store is `loom-init`'s job, not this skill's.
+
+## Invocation
+
+This skill never fires on its own — the description above makes no
+auto-fire claim. It is named as an available
+option at exactly two points where the need for a goal is already
+visible: `loom-workflow:handoff`'s Prepare mode, when a user closes a
+session without capturing an explicit goal, and the unanswered-purpose
+message `loom-code`'s purpose-link check (`check_north_star_link.py`)
+prints when `docs/loom/PURPOSE.md` is still template text. Both name
+this skill as an option the user can invoke; neither invokes it.
+
+When `brainstorming` is already running for the same work,
+brainstorming keeps discovery and this skill runs only after its brief
+exists, rather than competing for the same turn.
 
 ## See also
 
