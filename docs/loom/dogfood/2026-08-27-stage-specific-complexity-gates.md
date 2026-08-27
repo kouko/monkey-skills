@@ -13,7 +13,7 @@ directory.
 - loom-design baseline SHA-256: `084299e0537bee45a2f2c559472d6a6e4651ce814bebb2755b70daca1a1afe3c`
 - loom-code baseline SHA-256: `73c552397959a13770d61769189e2945a6dba7aff74f46774a44b5fd6c3126f5`
 - loom-design candidate SHA-256: `488849585436c0bf1a7f9c5eba0a904aad9d4683464146a609e43b863492a647`
-- loom-code candidate SHA-256: `12e3f40c82a04d2af1d35c3fd1e986b2a193262a3a9e2d6adb9c14b73f4ae41c`
+- loom-code candidate SHA-256: `0477f88d32c1f48a4d9a9dd74223979be856e2d9dc8cfdae0bb49422a4e64be2`
 
 These are the **final cold-install candidate bytes** for both plugin packages;
 the report and its root-level test do not alter either package tree.
@@ -36,6 +36,21 @@ The normalized firing comparator returned PASS where tool sequences remained
 equivalent and INCONCLUSIVE where the candidate loaded extra local references
 or wrote the newly required artifact. INCONCLUSIVE is not treated as a failure
 or a pass; the semantic judgments above come from the preserved raw outputs.
+
+## Lens evidence coverage
+
+The live harness exercised the stages for which its bounded tool surface could
+produce a gradeable artifact. The remaining two lenses are explicitly scoped
+to contract tests rather than being presented as unobserved live results.
+
+| Lens | Evidence kind | Result |
+|---|---|---|
+| `business-complexity-lens` | live hard case | PASS |
+| `visual-complexity-lens` | live hard case | PASS |
+| `interaction-complexity-lens` | live hard case | PASS |
+| `behavioral-complexity-lens` | contract test | PASS |
+| `architecture-complexity-lens` | live hard case | PASS |
+| `implementation-complexity-lens` | contract test | PASS |
 
 ## Purpose preservation
 
