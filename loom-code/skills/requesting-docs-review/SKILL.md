@@ -165,7 +165,7 @@ summary:
 - Does **not** modify any reviewed document — reviewers are verdict-only; remediation is the user's / implementer's.
 - Does **not** review code — any non-`.md` file in the diff routes through `requesting-code-review`.
 - Does **not** replace the citation pre-pass with judgment — `check_doc_citations.py` runs first, mechanically.
-- Does **not** run a second full round or a second delta-confirmation cycle on its own authority — `STILL_BLOCKING` after the one fix cycle STOPs and hands the decision to the user (Directive 2).
+- Does **not** repeat an unchanged full round or delta-confirmation cycle — `STILL_BLOCKING` after the one fix cycle is a quality stop; continue only after scope, intent, or diagnosis changes (Directive 2).
 
 ## See also
 

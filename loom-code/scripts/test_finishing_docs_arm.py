@@ -187,18 +187,15 @@ class TestVerdictRoutingSurfacesCapStop:
         assert "surface" in bullet.lower() and "user" in bullet.lower(), (
             "cap-STOP bullet must surface surviving findings to the user"
         )
-        assert "explicit user authorization" in bullet.lower() or (
-            "explicit" in bullet.lower() and "authoriz" in bullet.lower()
-        ), (
-            "rounds beyond the bounded cap must require explicit user "
-            "authorization"
+        assert "authorization batch" in bullet.lower(), (
+            "cap-STOP bullet must reject another authorization batch"
         )
 
     def test_cap_stop_bullet_states_needs_revision_trigger(self):
         """Re-pinned to the single-round-with-confirmation contract
         (Task 10): the cap-STOP bullet must state the STILL_BLOCKING
         trigger explicitly (after ONE fix cycle), and that no second
-        confirmation cycle runs without explicit user authorization --
+        confirmation cycle or authorization batch runs --
         so no ambiguity survives about how many cycles are allowed."""
         bullet = _norm(_cap_stop_bullet(_step3_window(_text()))).lower()
         assert "still_blocking" in bullet and "one fix cycle" in bullet, (
@@ -254,8 +251,7 @@ def test_cap_stop_routes_on_confirmation_contract():
     single-round-with-confirmation contract by POINTER: it names round 1
     as the only full review, delegates host-specific confirmation mechanics
     to Directive 2 rather than falsely prescribing Claude's SendMessage path,
-    and keeps a
-    second confirmation cycle behind explicit user authorization."""
+    and treats the unchanged-cycle stop as a quality limit, not permission."""
     bullet = _norm(_cap_stop_bullet(_step3_window(_text())))
     low = bullet.lower()
     assert "single-round-with-confirmation" in low, (
@@ -275,9 +271,8 @@ def test_cap_stop_routes_on_confirmation_contract():
         "bullet must point at requesting-docs-review's Directive 2 for "
         "the confirmation mechanics"
     )
-    assert "explicit user authorization" in low, (
-        "bullet must keep a second confirmation cycle behind explicit "
-        "user authorization"
+    assert "authorization batch" in low, (
+        "bullet must reject another authorization batch"
     )
     for copied in ("fix-verified", "at most 2", "once per branch"):
         assert copied not in low, (

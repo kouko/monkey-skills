@@ -84,9 +84,10 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
      into the PR body and the final close-out report as noted debt.
    - If PASS (all 🟢): proceed silently.
    - If the docs arm (`requesting-docs-review`) returns STILL_BLOCKING after one fix cycle,
-     surface the finding and reason to the user; STOP. Its single-round-with-confirmation
-     contract makes round 1 the only full review; host-specific confirmation mechanics
-     stay in Directive 2. Run no second confirmation cycle without explicit user authorization.
+     surface finding and quality-limit diagnosis to user; STOP. Under
+     single-round-with-confirmation, round 1 is only full review; host-specific
+     mechanics: Directive 2. No second confirmation cycle or authorization batch;
+     continue only if scope, intent, or diagnosis changes.
    - If budget/quota prevents reviewer launch, Read the diff; perform identically
      aggregated B2 review labeled "(self-review — code-reviewer unavailable)". Never
      suggest an external command without verifying it via `claude --help`.
