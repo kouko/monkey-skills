@@ -89,7 +89,7 @@ def test_context_uses_script_parent_not_consumer_repo(tmp_path: Path) -> None:
 
     assert context["target_repo"] == str(consumer.resolve())
     assert context["reviewed_sha"] == _git(consumer, "rev-parse", "HEAD")
-    assert context["plugin_version"] == "0.101.5"
+    assert context["plugin_version"] == "0.102.0"
     assert context["resources"]
     for resource in context["resources"].values():
         resource_path = Path(resource)

@@ -5,6 +5,22 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.102.0] — 2026-08-28 — review-loop convergence
+
+### Changed
+
+- `requesting-code-review`'s re-review loop becomes ledger-driven: round 1
+  stays the unchanged whole-branch review with two named arms; rounds 2+
+  become inherited delta-confirmations sent only to arms with open gating
+  findings (via `SendMessage`, with a fresh delta-scoped fallback), capped
+  at two cycles.
+- New-finding admissibility in a confirmation round is delta-scoped, with
+  durable backlog debt recorded for observations outside that delta.
+- A one-shot escalation valve covers a round that cannot converge under
+  the cap. The terminal wrapper now mints at the post-fix SHA.
+- `agents/code-reviewer.md` role-contract item 8 carries the confirmation-
+  round contract. Cold-reader dogfood: 3/3.
+
 ## [0.101.5] — 2026-08-28 — one merge path in the close-out report
 
 ### Fixed

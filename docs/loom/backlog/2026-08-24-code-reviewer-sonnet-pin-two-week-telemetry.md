@@ -24,3 +24,8 @@ Also check while in there: whether any frontier-shaped branch
 (architecture / security-sensitive) was reviewed without an explicit
 `model: opus` override — the silent-downgrade observation both 0.98.0
 docs arms flagged.
+
+2026-08-28 annotation (review-loop-convergence arc): dispatch counts after
+this arc's merge SHA are not comparable to the pre-arc denominator — rounds
+2+ become SendMessage confirmations, not fresh dispatches; re-baseline the
+requested→resolved tally from the merge SHA.

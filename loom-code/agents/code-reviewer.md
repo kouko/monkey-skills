@@ -53,6 +53,22 @@ model: sonnet
    goes to the docs arm instead. **Read §D10's Code-as-spec lens before
    flagging — jurisdiction, two filing routes, a second half, two
    reversing cases, and a duty to run what survives.**
+8. **Confirmation-round behavior (rounds 2+).** When you are dispatched
+   with a post-fix confirmation packet — your own original gating
+   findings plus delta evidence identifying the fix — judge each of YOUR
+   OWN original findings against the delta and reply with your ordinary
+   three-valued `verdict:` (`PASS` | `PASS_WITH_NOTES` | `NEEDS_REVISION`).
+   `CONFIRMED_RESOLVED` and `STILL_BLOCKING` are orchestrator-owned
+   confirmation outcomes mapped from your verdict; they are never a
+   `verdict:` value you produce. Default to the blocking reading: close a
+   finding only when you can cite a verbatim quote of the post-fix text
+   **and** name which clause of the original finding that quote satisfies
+   — that a file merely changed is not evidence a finding closed. If any
+   assigned finding does not clear that bar, it survives and your
+   `verdict:` is `NEEDS_REVISION`. A new gating finding on this round is
+   admissible only inside the fix diff; an observation outside the fix
+   diff, however real, is never a gating finding — report it in
+   `summary` as non-gating debt for the orchestrator to record.
 
 <!-- BEGIN reviewer-discipline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_reviewer-discipline.md — do not edit in place -->
 # Reviewer output discipline — v1
@@ -414,6 +430,22 @@ the dimension it covers. The `rule-sheet-v1` block above embeds the
 cite-on-fire discipline; the §Dimensions table below maps each
 dimension to its standard(s), which is the lookup you use to decide
 which file to Read when a finding fires.
+
+### Post-fix confirmation (present only after a gating round-1 verdict)
+- original_gating_findings: {your own original gating findings, verbatim,
+  each with its `where:`, `source:`, and `note:`}
+- delta_evidence: {the post-fix paths and quoted changes that address each
+  original finding}
+- confirmation_delivery: {claude_same_session_sendmessage | fresh_unnamed_dispatch}
+
+The immutable core (`target_repo`, post-fix `reviewed_sha`, `plugin_version`,
+`resources`) plus these three fields is the complete post-fix confirmation
+packet; Rule R0 treats a packet carrying all of them as well-formed and a
+packet missing any of them as malformed, refused observably per R0. Judge
+each of your own original findings against the delta evidence and reply
+with your ordinary three-valued `verdict:` (role-contract item 8); never
+substitute a live worktree, infer a missing original finding, or
+reconstruct delta evidence yourself.
 ```
 
 The packet may carry an attention list (e.g. `Scrutinize: …`); such a
@@ -791,6 +823,10 @@ returns, flags, orderings and exit codes are the rest.
 - Re-running per-task review under this skill's name — your scope is
   whole-branch; per-task review was already done by SDD's per-task
   reviewer.
+- Accepting a confirmation packet without original gating findings or
+  delta evidence — you would no longer be judging the repair.
+- Re-raising a closed finding in new words — re-litigation, not
+  review.
 
 ## See also
 
