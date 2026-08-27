@@ -13,7 +13,7 @@ directory.
 - loom-design baseline SHA-256: `084299e0537bee45a2f2c559472d6a6e4651ce814bebb2755b70daca1a1afe3c`
 - loom-code baseline SHA-256: `73c552397959a13770d61769189e2945a6dba7aff74f46774a44b5fd6c3126f5`
 - loom-design candidate SHA-256: `9a08a1d477601562a7ba5cd7e744b341820a08e138f8766e0e91fa3d19ca5c20`
-- loom-code candidate SHA-256: `cc7625ab69900850fc51a06872e69e6501a120b7da3577360be62902dc13022c`
+- loom-code candidate SHA-256: `d6fa77b78afd9757588edc0875d1867515cd1be2baa6447436e5b962df29b9d3`
 
 These are the **final cold-install candidate bytes** for both plugin packages;
 the report and its root-level test do not alter either package tree.

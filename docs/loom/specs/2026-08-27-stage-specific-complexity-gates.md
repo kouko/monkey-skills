@@ -59,20 +59,24 @@ cross-plugin synchronization system is explicitly not a success criterion.
 
 ## Current State Evidence
 
-- **Forward**: `loom-design/skills/business-value/SKILL.md` §"The three axes"
+- **Forward**: `loom-design/skills/business-value/SKILL.md` distinctive phrase
+  "Why now? Why now rather than later or never?"
   currently judges `Why now`, `Why me`, and `Opportunity cost`, so business
   complexity belongs there rather than in an engineering reviewer.
   `loom-design/skills/spec-expansion/SKILL.md` §"Phase ③ 自動拓展矩陣" already
   converts surviving paths into requirements, making its prune step the last
   design-side point before behavioral complexity becomes downstream work.
-- **Forward**: `loom-code/skills/writing-plans/SKILL.md` §"Task depth ceiling"
+- **Forward**: `loom-code/skills/writing-plans/SKILL.md`
+  §"Plan size ceiling — critical-path depth ≤5"
   bounds task size before execution. `loom-code/agents/code-reviewer.md`
   §"Deletion-first" already evaluates new abstractions and concrete simpler
   alternatives after implementation; the two stations therefore cover
   architecture/plan intent and actual code delta without another reviewer.
-- **Reverse**: `loom-design/skills/using-loom-design/SKILL.md` §"Routing table"
+- **Reverse**: `loom-design/skills/using-loom-design/SKILL.md`
+  §"Skill priority — decision order for interface-design tasks"
   dispatches business, visual-system, flow, and specification work to the
-  owning skills. `loom-code/skills/using-loom-code/SKILL.md` §"Routing table"
+  owning skills. `loom-code/skills/using-loom-code/SKILL.md`
+  §"Skill priority — decision order for coding tasks"
   dispatches discovery, planning, implementation, and review; these routers
   remain unchanged because the new judgments live inside existing stations.
 - **Error**: `loom-design/skills/spec-expansion/SKILL.md` distinctive phrase
@@ -90,16 +94,17 @@ cross-plugin synchronization system is explicitly not a success criterion.
   `scripts/test_loom_plugin_composition.py` proves optional composition through
   plugin-qualified public skills and `docs/loom/` artifacts.
 - **Evidence paths**:
-  `loom-design/skills/business-value/SKILL.md` §"The three axes";
+  `loom-design/skills/business-value/SKILL.md` distinctive phrase
+  "Why now? Why now rather than later or never?";
   `loom-design/skills/business-value/assets/business-value-template.md`;
   `loom-design/skills/design-system/SKILL.md` §"Scope — visual system only, NOT flows";
-  `loom-design/skills/design-system/references/design-md-schema.md` §"Canonical 8 sections";
+  `loom-design/skills/design-system/references/design-md-schema.md` §"The 8 canonical sections (in order)";
   `loom-design/skills/interaction-flows/SKILL.md`;
   `loom-design/skills/spec-expansion/SKILL.md` §"The three phases";
   `loom-code/skills/brainstorming/SKILL.md` §§"Axis 3" and "Axis 5";
-  `loom-code/skills/writing-plans/SKILL.md` §"Task depth ceiling";
+  `loom-code/skills/writing-plans/SKILL.md` §"Plan size ceiling — critical-path depth ≤5";
   `loom-code/skills/requesting-code-review/SKILL.md` §"Verdict structure";
-  `loom-code/agents/code-reviewer.md` §"Deletion-first";
+  `loom-code/agents/code-reviewer.md` §"D10 — Deletion-First (whole-branch)";
   `scripts/check_plugin_boundaries.py`;
   `scripts/test_loom_plugin_install_layout.py`;
   `scripts/test_loom_plugin_composition.py`.
