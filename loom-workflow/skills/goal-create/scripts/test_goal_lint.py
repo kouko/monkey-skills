@@ -164,6 +164,40 @@ Stop-when: The outcome is reached, or stop after 20 turns.
     assert "this is not a real field" in fields["Verification"]
 
 
+def test_unmatched_fence_does_not_swallow_the_rest_of_the_document():
+    # An opening fence with no matching close is not a delimiter at all —
+    # the text after it, including the real Stop-when label, is ordinary
+    # content and must still be found.
+    unmatched_fence_goal = """\
+Outcome: The signup form submits with zero client-side validation errors.
+Constraints: Do not touch the payment module.
+Verification: Run `pytest tests/test_signup.py`, output shaped like:
+```
+(forgot to close the fence)
+Stop-when: The outcome is reached, or stop after 20 turns.
+"""
+    result = goal_lint.lint_text(unmatched_fence_goal)
+    assert not any(f.code == "missing-field" for f in result.errors)
+    fields = goal_lint.parse_fields(unmatched_fence_goal)
+    assert "Stop-when" in fields
+
+
+def test_odd_backtick_count_does_not_swallow_the_rest_of_the_document():
+    # A line with an odd number of backticks (a stray/typo'd backtick) is
+    # not a delimiter with no match — the real Stop-when label after it
+    # must still be found.
+    stray_backtick_goal = """\
+Outcome: The signup form submits with zero client-side validation errors.
+Constraints: Do not touch the payment module.
+Verification: Run `pytest tests/test_signup.py` and check the user`s config
+Stop-when: The outcome is reached, or stop after 20 turns.
+"""
+    result = goal_lint.lint_text(stray_backtick_goal)
+    assert not any(f.code == "missing-field" for f in result.errors)
+    fields = goal_lint.parse_fields(stray_backtick_goal)
+    assert "Stop-when" in fields
+
+
 def test_field_labels_match_the_shape_reference():
     shape_text = GOAL_SHAPE.read_text(encoding="utf-8")
     labels = re.findall(r"^\d+\.\s+`([^`]+)`$", shape_text, re.MULTILINE)

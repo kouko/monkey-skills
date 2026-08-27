@@ -38,13 +38,17 @@ this floor; the marker lists below are kept as flat, appendable lists
 for exactly that reason — extending them to other languages does not
 change the shape of the checks.
 
-Field parsing is context-aware: a label line inside a fenced code block
-(```) or inside an inline code span (`...`, including one whose closing
-backtick lands on a later line) is content belonging to whichever field
-is currently open, never a new field boundary. Without this, a goal
-that quotes a bad-example report format — itself containing lines that
-look like field labels — would have its real field wrongly truncated at
-the quoted line.
+Field parsing is context-aware: a label line inside a *balanced* fenced
+code block (```...```) or a *balanced* inline code span (`...`,
+including one whose closing backtick lands on a later line) is content
+belonging to whichever field is currently open, never a new field
+boundary. Without this, a goal that quotes a bad-example report format
+— itself containing lines that look like field labels — would have its
+real field wrongly truncated at the quoted line. An *unmatched* opening
+fence or a stray odd-backtick-count line masks nothing: only a
+delimiter with a matching close is a delimiter at all, so a forgotten
+closing fence or a typo'd backtick can never swallow a real field label
+that follows it.
 """
 
 from __future__ import annotations
@@ -101,32 +105,52 @@ class LintResult:
         return 1 if self.errors else 0
 
 
+def _find_masked_lines(lines: list[str]) -> set[int]:
+    """Return line indices that fall inside a *balanced* fence or inline
+    code span and must never be read as a field-label boundary.
+
+    Only a delimiter with a matching close counts as a delimiter at all.
+    An opening fence marker with no later closing marker, or a stray
+    line with an odd backtick count and no later line to pair it with,
+    masks nothing — the text after it is ordinary content, exactly as
+    it would be read outside any code span.
+    """
+    masked: set[int] = set()
+
+    fence_indices = [i for i, line in enumerate(lines) if _FENCE_MARKER_RE.match(line)]
+    for open_i, close_i in zip(fence_indices[0::2], fence_indices[1::2]):
+        masked.update(range(open_i, close_i + 1))
+
+    toggle_indices = [
+        i for i, line in enumerate(lines) if i not in masked and line.count("`") % 2
+    ]
+    for open_i, close_i in zip(toggle_indices[0::2], toggle_indices[1::2]):
+        masked.update(range(open_i + 1, close_i + 1))
+
+    return masked
+
+
 def parse_fields(text: str) -> dict[str, str]:
     """Split goal text into {label: content} by scanning label lines.
 
     A field's content runs from just after its label line to the next
     recognized label line (in any order) or end of text. This is purely
     positional/syntactic — no reading of what the content says — except
-    that a label-shaped line found inside a fenced code block or an open
-    inline code span is treated as content, not a boundary, since that
-    is what a fence/span means in the source text.
+    that a label-shaped line found inside a *balanced* fenced code block
+    or a *balanced* inline code span is treated as content, not a
+    boundary, since that is what a fence/span means in the source text.
+    An unmatched opening delimiter is not a delimiter at all (see
+    `_find_masked_lines`), so it never suppresses a real label after it.
     """
     lines = text.splitlines()
+    masked = _find_masked_lines(lines)
     positions: list[tuple[str, int, str]] = []
-    in_fence = False
-    in_inline_span = False
     for i, line in enumerate(lines):
-        if _FENCE_MARKER_RE.match(line):
-            in_fence = not in_fence
+        if i in masked:
             continue
-        if in_fence:
-            continue
-        if not in_inline_span:
-            match = _LABEL_LINE_RE.match(line)
-            if match:
-                positions.append((match.group(1), i, match.group(2)))
-        if line.count("`") % 2:
-            in_inline_span = not in_inline_span
+        match = _LABEL_LINE_RE.match(line)
+        if match:
+            positions.append((match.group(1), i, match.group(2)))
 
     fields: dict[str, str] = {}
     for idx, (label, start, first_content) in enumerate(positions):
