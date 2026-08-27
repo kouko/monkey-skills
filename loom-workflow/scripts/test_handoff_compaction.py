@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 
 
@@ -98,47 +97,44 @@ def test_prepare_mode_names_goal_create():
     assert "loom-workflow:goal-create" in prepare_section
     assert "goal-create" not in text[resume:]
 
-    # Naming it must not slide into firing it. A fixed character window
-    # is bypassable two ways: (a) a new sentence elsewhere in the window
-    # can name-and-fire the skill with a verb no blacklist enumerated,
-    # riding on an unrelated disclaimer elsewhere in the window; (b) a
-    # content-neutral reorder that keeps the mention and the disclaiming
-    # clause verbatim can push them past a fixed distance and fail
-    # compliant prose. Work at sentence granularity instead: split into
-    # sentences, and require EVERY sentence that mentions the skill to
-    # itself carry the user-agency markers — not "somewhere within N
-    # characters", but within the same sentence. That is invariant to
-    # both reordering (the clause travels with its sentence) and to the
-    # verb used by an injected sentence (an added sentence naming the
-    # skill has to earn its own markers; no verb list to dodge).
-    sentences = re.split(r"(?<=[.!?])\s+", prepare_section)
-    mentioning = [s for s in sentences if "loom-workflow:goal-create" in s]
-    assert mentioning, "expected a sentence mentioning loom-workflow:goal-create"
-
-    # User-agency markers: the skill must read as an option the USER may
-    # take, not an instruction directed at whoever is reading. Every
-    # sentence that names the skill must carry both.
-    user_invokes = re.compile(r"\bthey can invoke\b.{0,60}\bthemselves\b", re.IGNORECASE)
-    assistant_never = re.compile(r"\bnever invokes it\b", re.IGNORECASE)
-
-    for sentence in mentioning:
-        assert user_invokes.search(sentence), (
-            "sentence mentioning goal-create lacks the 'user invokes it "
-            f"themselves' marker in the SAME sentence: {sentence!r}"
-        )
-        assert assistant_never.search(sentence), (
-            "sentence mentioning goal-create lacks the 'never invokes it' "
-            f"marker in the SAME sentence: {sentence!r}"
-        )
-
-    # NOTE (residual gap, stated plainly): this still checks membership in
-    # a fixed marker SET ("they can invoke ... themselves" / "never
-    # invokes it") rather than a semantic understanding of user-agency —
-    # it is a whitelist too, just one operating on marker phrases instead
-    # of verbs, and at sentence (not character-window) granularity. A
-    # rewrite of SKILL.md that disclaims agency in different words would
-    # need this test updated. What sentence granularity buys over a
-    # character window is specifically immunity to (a) an added sentence
-    # riding on a distant disclaimer, and (b) reordering that separates
-    # mention from disclaimer beyond a fixed distance — not immunity to
-    # a differently-worded disclaimer.
+    # Round 2 tried sentence-granularity marker matching ("they can invoke
+    # ... themselves" + "never invokes it" in the same sentence) and it
+    # broke both ways: a sentence can contain both markers and the mention
+    # while "it" grammatically fails to refer to the skill (false PASS —
+    # the check doesn't know what "it" points to), and an abbreviation-
+    # unaware sentence splitter fragments a legitimate insertion like
+    # "(i.e. the goal-capture skill)" into two pieces, separating the
+    # mention from its own markers (false FAILURE). Whether a sentence
+    # actually disclaims agency is a semantic question; no regex or
+    # sentence splitter can decide it. So stop inferring meaning and pin
+    # the sentence this test controls verbatim, exactly as the file's own
+    # sentence-pinning idiom does elsewhere (see
+    # test_entrypoint_preserves_prepare_resume_verification_and_stop).
+    #
+    # Trade-off, accepted deliberately: any rewording of this sentence —
+    # even a faithful one, even inserting a harmless clarifying aside —
+    # now FAILS this test. That is the point, not a defect: the sentence
+    # carries a user-agency contract, so changing its wording must force
+    # a conscious update to this pin rather than silently keep passing.
+    # Nothing except this exact string can satisfy an exact match, so no
+    # pronoun shuffle or rephrasing can pass while failing to say what it
+    # says.
+    disclaimer_sentence = (
+        "If the user also wants this session's intent captured as an "
+        "explicit goal with\nits own acceptance condition rather than "
+        "only saved state, `loom-workflow:goal-create`\nis a separate "
+        "option they can invoke themselves; Prepare mode only names it "
+        "and\nnever invokes it."
+    )
+    # Anchor to the END of the Prepare-mode section (not just "somewhere in
+    # it") so an extra sentence appended after the disclaimer — e.g. an
+    # injected imperative telling the reader to invoke the skill anyway —
+    # also fails: an unanchored substring check would let such trailing
+    # prose ride along after an intact, unmodified pin.
+    assert prepare_section.rstrip().endswith(disclaimer_sentence), (
+        "Prepare mode's goal-create disclaimer sentence no longer matches "
+        "the pinned text verbatim as the last content before Resume mode. "
+        "If this is a deliberate, faithful reword of the disclaimer, "
+        "update the pin above to match; if it isn't, the disclaimer "
+        "regressed or something was appended after it."
+    )
