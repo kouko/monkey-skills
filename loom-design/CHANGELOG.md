@@ -11,6 +11,14 @@ The five plugins this one absorbed keep their own histories alongside:
 `CHANGELOG-interface-design.md`, `CHANGELOG-product-principles.md`. Their
 version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
 
+## [0.5.5] — 2026-08-28
+
+### Changed
+
+- Synced `using-loom-design/references/family-relay.md` from its SSOT: the
+  close-out card offers one merge path instead of two, and its `🌐 Web merge`
+  row becomes `🔗 PR link` — a link to view the PR, never a way to merge.
+
 ## [0.5.4] — 2026-08-27
 
 ### Changed

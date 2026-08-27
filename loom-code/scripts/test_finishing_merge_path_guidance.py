@@ -112,14 +112,20 @@ def test_step11_points_at_the_incident_memory_record():
         f"Step 11 must point at {MEMORY_POINTER}"
 
 
-def test_step13_report_includes_the_cli_merge_command():
-    """Step 13's final-report content list must also require surfacing the
-    CLI merge command when a PR was created — not just the PR URL."""
+def test_step13_report_requires_step11s_merge_command():
+    """Step 13 must require the merge command, by reference to Step 11.
+
+    It used to spell the command out a second time. The command grew a
+    body-reading subshell and a resolved PR number, and two copies of a command
+    that specific drift apart — so Step 13 now points at Step 11's rather than
+    restating it. What it must still carry is the requirement itself.
+    """
     step13 = _step13_slice(_text())
-    assert "gh pr merge" in step13, \
-        "Step 13 must require the CLI merge command in the report"
-    assert "--squash" in step13, \
-        "Step 13's merge command must be a squash merge"
+    low = step13.lower()
+    assert "merge command" in low, \
+        "Step 13 must require the merge command in the report"
+    assert "step 11" in low, \
+        "Step 13 must point at Step 11's command rather than restating it"
 
 
 def test_step13_report_carries_no_prefill_reminder():
@@ -173,10 +179,9 @@ def test_merge_command_carries_body_file():
     composed PR body reaches the squash commit, so the command the report
     hands the user is incomplete without it.
     """
-    for name, slice_fn in (("Step 11", _step11_slice), ("Step 13", _step13_slice)):
-        window = slice_fn(_text())
-        assert "--body-file" in window, \
-            f"{name}'s merge command must pass --body-file, not bare --squash"
+    step11 = _step11_slice(_text())
+    assert "--body-file" in step11, \
+        "Step 11's merge command must pass --body-file, not bare --squash"
 
 
 def test_no_second_merge_path_is_offered():
@@ -194,3 +199,31 @@ def test_no_second_merge_path_is_offered():
         assert "web merge" not in low, \
             f"{name} must not frame the web dialog as a merge path"
 
+
+
+def test_merge_command_reads_the_body_at_merge_time():
+    """The body must come from the PR page, not a file the report wrote.
+
+    The human runs this command on their own schedule — after CI, or the next
+    day — so any path the report quotes may be gone by then: a worktree Step 12
+    offered to remove, or a scratchpad the OS cleared. Naming a location without
+    a lifetime moves the failure from one deleter to another. The PR page is the
+    carrier that survived every recorded occurrence.
+    """
+    step11 = _step11_slice(_text())
+    assert "gh pr view" in step11 and "--json body" in step11, \
+        "the merge command must read the body from the PR at merge time"
+
+
+def test_body_file_mandate_cites_the_record_that_justifies_it():
+    """`--body-file` must be justified by the title-only squash default.
+
+    Removing the editable merge dialog is what distinguishes CLI merge from web
+    merge — bare `--squash` already does that, so it cannot be the reason for
+    the flag. The reason is that GitHub's default squash message for a
+    single-commit PR keeps only the title, which a repo without
+    `squash_merge_commit_message=PR_BODY` gets. This prose ships to such repos.
+    """
+    step11 = _step11_slice(_text())
+    assert "github-squash-merge-single-commit-drops-body.md" in step11, \
+        "the --body-file mandate must cite the title-only-squash record"

@@ -235,19 +235,26 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
         with the helper JSON and actionable evidence. The orchestrator must
         never auto-merge.
     - Merge path in the report: ONE merge path is offered, the ready-to-run
-      `gh pr merge <N> --squash --body-file "$PR_BODY_FILE"` command, framed
-      for the human to run themselves (e.g. via the `!` prefix). `$PR_BODY_FILE`
-      is the same file this step already passed to `gh pr create`; the report
-      quotes its resolved absolute path, never the variable and never a literal
-      placeholder. Write that file outside the worktree (the session scratchpad)
-      so Step 12's optional worktree removal cannot delete the body the command
-      still needs. The command is incomplete without `--body-file`: the merge-time
-      dialog is editable by whoever clicks merge, and passing the body as an
-      argument is what removes that editable surface. Give the PR URL too, as the
-      link to VIEW the PR; never present the web dialog as a second way to merge.
-      Offering both side by side is the defect, not a courtesy: see
-      `docs/loom/memory/squash-dialog-can-drop-entire-pr-body.md`. The
-      orchestrator prepares the command, never runs it — no auto-merge.
+      `gh pr merge <N> --squash --body-file <(gh pr view <N> --json body --jq .body)`
+      command, framed for the human to run themselves (e.g. via the `!` prefix)
+      with `<N>` resolved to the real PR number. It reads the body from the PR
+      page at merge time rather than from a file the report wrote earlier: the
+      human runs this on their own schedule, often after CI or the next day, so
+      any path the report could quote may be gone by then — a worktree Step 12
+      offered to remove, or a scratchpad the OS cleared. The PR page is the one
+      carrier that survived every recorded occurrence.
+      `--body-file` is not optional: GitHub's default squash message for a
+      single-commit PR keeps only the title and drops the body
+      (`docs/loom/memory/github-squash-merge-single-commit-drops-body.md`), and a
+      repo that has not set `squash_merge_commit_message=PR_BODY` gets that
+      default. Passing the body as an argument also leaves no editable merge-time
+      dialog to clear, which is the separate loss recorded in
+      `docs/loom/memory/squash-dialog-can-drop-entire-pr-body.md` — two distinct
+      mechanisms, both closed by the same flag.
+      Give the PR URL too, as the link to VIEW the PR; never present the web
+      dialog as a second way to merge — offering both side by side is the defect,
+      not a courtesy. The orchestrator prepares the command, never runs it — no
+      auto-merge.
 12. ASK user: "Branch was in .worktrees/; remove the worktree? (y/N)"
     - If yes: cd to repo root; git worktree remove .worktrees/<slug>
     - If no: leave it
@@ -258,9 +265,8 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
     Close-out card (not the generic User-rollup card — the close-out
     specialization). Include: PR URL if created, as a link to view the PR and
     never as a second way to merge — and the same single merge path as Step 11,
-    the ready-to-run `gh pr merge <N> --squash --body-file <path>` command
-    quoting the resolved `$PR_BODY_FILE` path from Step 11 — and worktree
-    status. End the report with one line naming the top
+    the ready-to-run Step 11 merge command with `<N>` resolved to the real PR
+    number — and worktree status. End the report with one line naming the top
     of the remaining bet queue ("next bet:
     <name>" — or "bet queue empty"), from
     `python3 scripts/backlog_index.py --ready` (repo-root copy; when
