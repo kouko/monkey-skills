@@ -64,6 +64,8 @@ PRESENT_TOKENS = (
     "terminal wrapper",
     # lost-handle restart rule
     "never a ledger flip",
+    # anchoring guard wording (rider: pin so it cannot silently weaken)
+    "verbatim quote of the post-fix text",
 )
 
 
@@ -95,3 +97,46 @@ def test_skill_carries_ledger_confirmation_loop():
     assert not missing_retained, (
         f"retained Step-3 anchors went missing from SKILL.md: {missing_retained}"
     )
+
+
+# Plan Task 2: the confirmation-round rules must also live in the executing
+# agent contract (loom-code/agents/code-reviewer.md), not only in the SKILL.md
+# orchestration doc — an orchestrator rule the agent never reads is not a
+# behavior guarantee.
+CODE_REVIEWER_AGENT_MD = REPO_ROOT / "loom-code/agents/code-reviewer.md"
+
+# Agent-side confirmation-round rules that must appear in code-reviewer.md.
+AGENT_PRESENT_TOKENS = (
+    # three-valued reply on a confirmation packet (mirrors T1 vocabulary)
+    "PASS_WITH_NOTES",
+    "NEEDS_REVISION",
+    # verbatim-quote closing bar (anchoring guard, agent-side mirror)
+    "verbatim",
+    "which clause of the original finding",
+    # delta admissibility: new findings only inside the fix diff
+    "only inside the fix diff",
+    # debt reporting: out-of-delta observations are non-gating debt, not findings
+    "non-gating debt",
+)
+
+
+def test_code_reviewer_agent_carries_confirmation_contract():
+    agent_text = CODE_REVIEWER_AGENT_MD.read_text(encoding="utf-8")
+
+    missing = [t for t in AGENT_PRESENT_TOKENS if t not in agent_text]
+    assert not missing, f"code-reviewer.md missing confirmation-round tokens: {missing}"
+
+    # CONFIRMED_RESOLVED / STILL_BLOCKING are orchestrator-owned confirmation
+    # outcomes — they must never appear as an agent `verdict:` value. This
+    # repo's convention for a verdict-value line is `verdict: A | B | C`
+    # (see the Output contract's `verdict:` line); assert the two tokens
+    # never sit on such a line.
+    for line in agent_text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("verdict:") or stripped.startswith("verdict :"):
+            assert "CONFIRMED_RESOLVED" not in line, (
+                f"CONFIRMED_RESOLVED appears in a verdict: value line: {line!r}"
+            )
+            assert "STILL_BLOCKING" not in line, (
+                f"STILL_BLOCKING appears in a verdict: value line: {line!r}"
+            )

@@ -53,6 +53,22 @@ model: sonnet
    goes to the docs arm instead. **Read §D10's Code-as-spec lens before
    flagging — jurisdiction, two filing routes, a second half, two
    reversing cases, and a duty to run what survives.**
+8. **Confirmation-round behavior (rounds 2+).** When you are dispatched
+   with a post-fix confirmation packet — your own original gating
+   findings plus delta evidence identifying the fix — judge each of YOUR
+   OWN original findings against the delta and reply with your ordinary
+   three-valued `verdict:` (`PASS` | `PASS_WITH_NOTES` | `NEEDS_REVISION`).
+   `CONFIRMED_RESOLVED` and `STILL_BLOCKING` are orchestrator-owned
+   confirmation outcomes mapped from your verdict; they are never a
+   `verdict:` value you produce. Default to the blocking reading: close a
+   finding only when you can cite a verbatim quote of the post-fix text
+   **and** name which clause of the original finding that quote satisfies
+   — that a file merely changed is not evidence a finding closed. If any
+   assigned finding does not clear that bar, it survives and your
+   `verdict:` is `NEEDS_REVISION`. A new gating finding on this round is
+   admissible only inside the fix diff; an observation outside the fix
+   diff, however real, is never a gating finding — report it in
+   `summary` as non-gating debt for the orchestrator to record.
 
 <!-- BEGIN reviewer-discipline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_reviewer-discipline.md — do not edit in place -->
 # Reviewer output discipline — v1

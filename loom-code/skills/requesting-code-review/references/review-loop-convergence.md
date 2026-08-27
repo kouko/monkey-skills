@@ -54,9 +54,10 @@ Confirmation outcomes are orchestrator-owned; an agent's `verdict:` token is
 never itself `CONFIRMED_RESOLVED` or `STILL_BLOCKING`.
 
 **Anchoring guard.** The arm's default reading of any entry is blocking. An
-entry closes only when the confirmation cites a verbatim quote of the
-post-fix text **and** names which clause of the original finding that quote
-satisfies. That a file changed is not evidence a finding closed.
+entry closes only when the confirmation cites a
+verbatim quote of the post-fix text
+**and** names which clause of the original finding that quote satisfies. That
+a file changed is not evidence a finding closed.
 
 ## 3. Termination and the cap
 
