@@ -1,11 +1,16 @@
 """Tests for the goal-create mechanical lint floor (Task 3).
 
-Two tests:
+Three tests:
   1. test_floor_fails_structure_and_warns_on_judgment — the floor itself:
-     a structurally complete goal passes; each of the four hard failures
+     a structurally complete goal passes; each of the three hard failures
      is exercised as its own single-violation mutant; a judgment-flavoured
-     issue warns without failing the run.
-  2. test_field_labels_match_the_shape_reference — cross-seam probe: the
+     issue warns without failing the run; a well-formed English stop
+     clause that a marker word list would have rejected still passes.
+  2. test_field_parsing_treats_quoted_labels_as_content — a label-shaped
+     line inside a fenced code block, or inside an inline code span that
+     closes on a later line, is content belonging to the open field, not
+     a new field boundary.
+  3. test_field_labels_match_the_shape_reference — cross-seam probe: the
      field labels goal_lint.py checks for must match the labels defined in
      references/goal-shape.md, so a rename upstream fails here instead of
      drifting silently.
@@ -42,7 +47,6 @@ Verification: Run `pytest tests/test_signup.py` and paste the output.
     result = goal_lint.lint_text(missing_field)
     assert result.exit_code != 0
     assert any(f.code == "missing-field" for f in result.errors)
-    assert not any(f.code == "no-stop-clause" for f in result.errors)
     assert not any(f.code == "no-backtick-command" for f in result.errors)
     assert not any(f.code == "length-limit" for f in result.errors)
 
@@ -56,21 +60,7 @@ Stop-when: The outcome is reached, or stop after 20 turns.
     assert result.exit_code != 0
     assert any(f.code == "missing-field" and "Constraints" in f.message for f in result.errors)
 
-    # --- Hard failure 2: no stop clause (Stop-when present but empty of a clause). ---
-    no_stop_clause = """\
-Outcome: The signup form submits with zero client-side validation errors.
-Constraints: Do not touch the payment module.
-Verification: Run `pytest tests/test_signup.py` and paste the output.
-Stop-when: The outcome is reached.
-"""
-    result = goal_lint.lint_text(no_stop_clause)
-    assert result.exit_code != 0
-    assert any(f.code == "no-stop-clause" for f in result.errors)
-    assert not any(f.code == "missing-field" for f in result.errors)
-    assert not any(f.code == "no-backtick-command" for f in result.errors)
-    assert not any(f.code == "length-limit" for f in result.errors)
-
-    # --- Hard failure 3: no backticked command inside Verification. ---
+    # --- Hard failure 2: no backticked command inside Verification. ---
     no_backtick = """\
 Outcome: The signup form submits with zero client-side validation errors.
 Constraints: Do not touch the payment module.
@@ -81,10 +71,9 @@ Stop-when: The outcome is reached, or stop after 20 turns.
     assert result.exit_code != 0
     assert any(f.code == "no-backtick-command" for f in result.errors)
     assert not any(f.code == "missing-field" for f in result.errors)
-    assert not any(f.code == "no-stop-clause" for f in result.errors)
     assert not any(f.code == "length-limit" for f in result.errors)
 
-    # --- Hard failure 4: text over the 4,000-character limit. ---
+    # --- Hard failure 3: text over the 4,000-character limit. ---
     too_long = (
         "Outcome: " + ("x" * 4000) + "\n"
         "Constraints: Do not touch the payment module.\n"
@@ -95,7 +84,6 @@ Stop-when: The outcome is reached, or stop after 20 turns.
     assert result.exit_code != 0
     assert any(f.code == "length-limit" for f in result.errors)
     assert not any(f.code == "missing-field" for f in result.errors)
-    assert not any(f.code == "no-stop-clause" for f in result.errors)
     assert not any(f.code == "no-backtick-command" for f in result.errors)
 
     # --- Characters, not bytes: CJK text must not trip the limit early. ---
@@ -119,6 +107,61 @@ Stop-when: The outcome is reached, or stop after 20 turns.
     assert result.errors == []
     assert result.exit_code == 0
     assert any(w.code == "undecidable-wording" for w in result.warnings)
+
+    # --- No hard failure ever fires for Stop-when's content: a marker-word
+    # list would reject this well-formed English clause because it lacks
+    # the literal substring "stop"; the floor must not reject it either. ---
+    no_marker_word_stop_clause = """\
+Outcome: The signup form submits with zero client-side validation errors.
+Constraints: Do not touch the payment module.
+Verification: Run `pytest tests/test_signup.py` and paste the output.
+Stop-when: Halt after 20 turns regardless of outcome.
+"""
+    result = goal_lint.lint_text(no_marker_word_stop_clause)
+    assert result.errors == []
+    assert result.exit_code == 0
+
+
+def test_field_parsing_treats_quoted_labels_as_content():
+    # A label-shaped line inside a fenced code block is content, not a
+    # boundary — Verification's real backticked command must still be
+    # seen even though a fake "Outcome:" line sits between the label and
+    # the real command.
+    fenced_quote_goal = """\
+Outcome: The signup form works.
+Constraints: none
+Verification: Example of a bad report format to avoid:
+```
+Outcome: this is not a real field
+```
+Now run `pytest tests/test_signup.py` and paste the output.
+Stop-when: The outcome is reached, or stop after 20 turns.
+"""
+    result = goal_lint.lint_text(fenced_quote_goal)
+    assert not any(f.code == "no-backtick-command" for f in result.errors)
+    assert not any(f.code == "missing-field" for f in result.errors)
+    assert result.exit_code == 0
+    fields = goal_lint.parse_fields(fenced_quote_goal)
+    assert "this is not a real field" in fields["Verification"]
+    assert "pytest tests/test_signup.py" in fields["Verification"]
+
+    # A label-shaped line inside an inline code span that opens on one
+    # line and closes on a later line is likewise content, not a
+    # boundary.
+    inline_span_goal = """\
+Outcome: The signup form works.
+Constraints: none
+Verification: Avoid reports shaped like `
+Outcome: this is not a real field
+` — paste the real `pytest tests/test_signup.py` output instead.
+Stop-when: The outcome is reached, or stop after 20 turns.
+"""
+    result = goal_lint.lint_text(inline_span_goal)
+    assert not any(f.code == "no-backtick-command" for f in result.errors)
+    assert not any(f.code == "missing-field" for f in result.errors)
+    assert result.exit_code == 0
+    fields = goal_lint.parse_fields(inline_span_goal)
+    assert "this is not a real field" in fields["Verification"]
 
 
 def test_field_labels_match_the_shape_reference():

@@ -9,20 +9,42 @@ the worst outcome for a gate, because it blocks correct work and teaches
 its user to ignore the gate. So the hard checks below look only for
 syntactic markers (a field label existing with content, a backticked code
 span, a character count) and never at whether the prose reads as
-convincing. Anything that needs reading intent — is this wording vague,
-does finishing depend on a person — is downgraded to an advisory warning
-that never fails the run. Anything that needs the repository's current
-state rather than the goal text (in particular: is the described
-condition actually false right now) cannot be decided by this checker at
-all, and is reported as UNCHECKED rather than silently counted as a pass.
+convincing or bounds the run. Anything that needs reading intent — is
+this wording vague, does finishing depend on a person, does a stop
+clause actually bound the run — is downgraded to an advisory warning
+that never fails the run, or omitted entirely when even an illustrative
+marker list would misrepresent itself as a syntactic check. Anything
+that needs the repository's current state rather than the goal text (in
+particular: is the described condition actually false right now) cannot
+be decided by this checker at all, and is reported as UNCHECKED rather
+than silently counted as a pass.
+
+There are three hard failures: a missing or empty field label; no
+backticked command inside `Verification`; text over the character
+limit. `Stop-when` is covered only by the field-presence check — no
+word list stands in for reading whether its content actually bounds the
+run, because a fixed vocabulary of "stop words" false-fails legitimate
+phrasing the list's author didn't anticipate (e.g. "Halt after 20 turns
+regardless of outcome"). No check in this module enumerates the words
+that make a rule pass or fail; the two marker lists below
+(`UNDECIDABLE_WORDING_MARKERS`, `PERSON_DEPENDENT_MARKERS`) are the
+exception, and only because they are advisory — illustrative, not
+exhaustive, and never able to fail the run.
 
 The four field labels checked here are the ones this skill's own
 goal-shape reference defines, in the same order. A later task adds
 Traditional Chinese, English, and Japanese phrasing coverage on top of
-this floor; the marker lists below (`STOP_CLAUSE_MARKERS`,
-`UNDECIDABLE_WORDING_MARKERS`, `PERSON_DEPENDENT_MARKERS`) are kept as
-flat, appendable lists for exactly that reason — extending them to other
-languages does not change the shape of the checks.
+this floor; the marker lists below are kept as flat, appendable lists
+for exactly that reason — extending them to other languages does not
+change the shape of the checks.
+
+Field parsing is context-aware: a label line inside a fenced code block
+(```) or inside an inline code span (`...`, including one whose closing
+backtick lands on a later line) is content belonging to whichever field
+is currently open, never a new field boundary. Without this, a goal
+that quotes a bad-example report format — itself containing lines that
+look like field labels — would have its real field wrongly truncated at
+the quoted line.
 """
 
 from __future__ import annotations
@@ -35,11 +57,6 @@ from pathlib import Path
 FIELD_LABELS = ["Outcome", "Constraints", "Verification", "Stop-when"]
 
 CHARACTER_LIMIT = 4000
-
-# Hard check #2 operates on the Stop-when field's own content (not the
-# label line), looking for a literal marker word the way the backtick
-# check looks for a literal delimiter — not a whitelist of phrasing.
-STOP_CLAUSE_MARKERS = ["stop"]
 
 # Advisory only: illustrative, not exhaustive. False negatives here are
 # acceptable because these never fail the run.
@@ -64,6 +81,7 @@ _LABEL_LINE_RE = re.compile(
     r"^\s*\*{0,2}(" + "|".join(re.escape(label) for label in FIELD_LABELS) + r")\*{0,2}\s*:\s*(.*)$"
 )
 _BACKTICK_SPAN_RE = re.compile(r"`[^`\n]+`")
+_FENCE_MARKER_RE = re.compile(r"^\s*```")
 
 
 @dataclass
@@ -88,14 +106,27 @@ def parse_fields(text: str) -> dict[str, str]:
 
     A field's content runs from just after its label line to the next
     recognized label line (in any order) or end of text. This is purely
-    positional/syntactic — no reading of what the content says.
+    positional/syntactic — no reading of what the content says — except
+    that a label-shaped line found inside a fenced code block or an open
+    inline code span is treated as content, not a boundary, since that
+    is what a fence/span means in the source text.
     """
     lines = text.splitlines()
     positions: list[tuple[str, int, str]] = []
+    in_fence = False
+    in_inline_span = False
     for i, line in enumerate(lines):
-        match = _LABEL_LINE_RE.match(line)
-        if match:
-            positions.append((match.group(1), i, match.group(2)))
+        if _FENCE_MARKER_RE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if not in_inline_span:
+            match = _LABEL_LINE_RE.match(line)
+            if match:
+                positions.append((match.group(1), i, match.group(2)))
+        if line.count("`") % 2:
+            in_inline_span = not in_inline_span
 
     fields: dict[str, str] = {}
     for idx, (label, start, first_content) in enumerate(positions):
@@ -114,14 +145,6 @@ def lint_text(text: str) -> LintResult:
             result.errors.append(
                 Finding("missing-field", f"Missing or empty field: {label}")
             )
-
-    stop_content = fields.get("Stop-when", "").strip()
-    if stop_content and not any(
-        marker in stop_content.lower() for marker in STOP_CLAUSE_MARKERS
-    ):
-        result.errors.append(
-            Finding("no-stop-clause", "Stop-when has content but no recognizable stop clause")
-        )
 
     verification_content = fields.get("Verification", "").strip()
     if verification_content and not _BACKTICK_SPAN_RE.search(verification_content):
