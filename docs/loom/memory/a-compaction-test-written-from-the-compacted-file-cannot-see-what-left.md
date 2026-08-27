@@ -1,13 +1,13 @@
 ---
 name: a-compaction-test-written-from-the-compacted-file-cannot-see-what-left
-description: A test authored alongside a compaction pins phrases read off the AFTER file, so every rule the compaction dropped is absent from the pin set by construction and the suite goes green over the loss; #740 shipped 26 such tests and four independent audits later found five deleted rules none of them could have caught — the guard against loss is a before/after rule diff, never the post-hoc presence list
+description: A test authored alongside a compaction pins phrases read off the AFTER file, so every rule the compaction dropped is absent from the pin set by construction and the suite goes green over the loss; #740 shipped 33 such tests and four independent audits later found five deleted rules none of them could have caught — the guard against loss is a before/after rule diff, never the post-hoc presence list
 type: gotcha
 origin: fix/740-compaction-followups (2026-08-27) — three per-family audits plus one blind second opinion, all reading `git show <base>^:<path>` rather than the test files, found five rules #740 deleted outright; the compaction suite was green throughout
 ---
 
-PR #740 compacted 33 loom skill entrypoints and shipped 26
-`test_*_compaction.py` files, each pinning ~20 load-bearing phrases plus a
-word-count band. Every one passed. Four independent audits of the same diff
+PR #740 compacted 33 loom skill entrypoints and shipped 33
+`test_*_compaction.py` files, each pinning ~20 load-bearing phrases and all
+but one a word-count band. Every one passed. Four independent audits of the same diff
 then found five rules the compaction had deleted with no successor anywhere:
 `complexity-critique`'s mindset SSOT edit-order rule, `cot-explain`'s
 `think-orbit:*` routing destinations, `completeness-critic`'s deletable-lenses

@@ -171,9 +171,9 @@ ambiguity still fails closed rather than silently narrowing review.
 **Version / semver work in implementer tasks.** Before importing a package for
 version parsing or manifest handling, the implementer must confirm it is stdlib
 (`importlib.metadata`, or a plain `tuple(int(x) for x in v.split('.'))`) rather
-than third-party (e.g. `packaging`). Third-party imports in new code fail the
-code-quality-reviewer's external-surface-grounding check and return
-`NEEDS_REVISION`.
+than third-party (e.g. `packaging`). A third-party import reaching production
+code with no grounding cite fails the code-quality-reviewer's
+external-surface-grounding check and returns `NEEDS_REVISION`.
 
 **Environment hygiene.** Standing rules remain at
 [`references/dispatch-hygiene-notes.md`](references/dispatch-hygiene-notes.md)

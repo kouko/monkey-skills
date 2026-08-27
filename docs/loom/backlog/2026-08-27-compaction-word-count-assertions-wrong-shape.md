@@ -20,7 +20,7 @@ start: the next arc that touches more than two compaction tests at once — the 
   whose calibration assumes the absence of the defect it is now blocking the
   fix for is the wrong shape. The ceiling was raised to 3_300 in that
   follow-up as a local unblock, not as the answer.
-- What: 26 of 34 `test_*_compaction.py` files carry a two-sided word-count
+- What: 32 of the 33 `test_*_compaction.py` files carry a two-sided word-count
   assertion. The two halves do not earn their place equally.
   - **Floor (drop it).** Each of these tests already carries ~20 presence
     assertions pinning load-bearing phrases by name. A word floor is a

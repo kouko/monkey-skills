@@ -20,11 +20,12 @@
 
 ## 不使用時機
 
-[`SKILL.md`](SKILL.md) §When NOT to Use：
+[`SKILL.md`](SKILL.md) §When NOT to Use — 只有這兩類 exempt：
 - 還沒有測試（全新 repo、這次 commit 才加第一個測試）
-- 純 doc / config / 重新生成的 code（無 runtime 行為改變）
 - 測試基礎設施壞掉（runner crash，不是 test failure）
-- 使用者明確 override AND 變更屬於 exempt 類別
+
+純 doc / config / 重新生成的 code 與 使用者明確 override **不是** exempt——
+只要有可執行的 suite 就要驗證；能讓這類變更 N/A 的只有「還沒有測試」。
 
 ## 包什麼
 

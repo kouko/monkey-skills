@@ -20,11 +20,13 @@
 
 ## 使わない場面
 
-[`SKILL.md`](SKILL.md) §When NOT to Use：
+[`SKILL.md`](SKILL.md) §When NOT to Use — exempt はこの 2 つだけ：
 - テストがまだ無い（新規 repo、これが最初のテストを足す commit）
-- 純 doc / config / 生成コード再生成（ランタイム挙動変更なし）
 - テストインフラ自体が壊れている（runner クラッシュ、テスト failure ではない）
-- ユーザの明示的 override AND 変更が exempt カテゴリ該当
+
+純 doc / config / 生成コード再生成 と ユーザの明示的 override は、実行可能な
+suite がある限り **exempt ではない**。それらを N/A にできるのは
+「テストがまだ無い」だけ。
 
 ## 同梱物
 
