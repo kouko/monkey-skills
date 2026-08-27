@@ -91,11 +91,15 @@ guidance, cited here so a reader in any repository can verify it directly:
 - **OpenAI** — <https://learn.chatgpt.com/docs/long-running-work> — names
   the columns Outcome / Constraints / Verification.
 
-**Attribution accuracy**: `Outcome`, `Constraints`, and `Verification` are
-each named by both vendors' guidance above. `Stop-when` is not — it is
-first-class in OpenAI's guidance (the "one stopping condition" in
-`follow-goals`) but only optional, suggested guidance in Anthropic's (the
-"or stop after 20 turns" example, not a required field). Treating
+**Attribution accuracy**: `Outcome`, `Constraints`, and `Verification` each
+name an element both vendors' guidance above describes, but only OpenAI
+labels them with these words — they are the `long-running-work` columns.
+Anthropic describes the same three as one measurable end state, a stated
+check, and the constraints that matter, never as fields carrying these
+names. `Stop-when` is not among them at all — it is first-class in
+OpenAI's guidance (the "one stopping condition" in `follow-goals`) but
+only optional, suggested guidance in Anthropic's (the "or stop after 20
+turns" example, not a required field). Treating
 `Stop-when` as a required fourth field alongside the other three is **this
 skill's own choice** — the vendor sources above ground only the first three
 fields as shared guidance.

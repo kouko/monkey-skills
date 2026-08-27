@@ -156,15 +156,28 @@ def test_defines_four_fields_budget_and_surfacing() -> None:
                 return p
         return None
 
-    # Fact 1: Outcome, Constraints, and Verification are each named by both
-    # vendors' guidance. "each" disambiguates this claim from the vendor
-    # citation bullets, which merely list the three names without asserting
-    # both vendors document them.
-    assert _paragraph_containing(
-        "outcome", "constraints", "verification", "both vendor", "each"
-    ), (
-        "Must state that Outcome, Constraints, and Verification are each "
-        "named by both vendors' guidance."
+    # Fact 1: Outcome, Constraints, and Verification each name an element
+    # both vendors' guidance describes, but only OpenAI labels them with
+    # these words. The earlier, weaker pin accepted "named by both vendors",
+    # which is false: Anthropic's page describes the three elements as one
+    # measurable end state, a stated check, and the constraints that matter,
+    # never as fields carrying these names. A paragraph whose whole subject
+    # is attribution precision does not get to leave that ambiguous, so the
+    # distinction is pinned rather than the looser sentence.
+    attribution = _paragraph_containing(
+        "outcome", "constraints", "verification", "both vendor"
+    )
+    assert attribution, (
+        "Must carry an attribution paragraph covering Outcome, Constraints, "
+        "and Verification against both vendors' guidance."
+    )
+    assert "describe" in attribution, (
+        "Must state that both vendors DESCRIBE the three elements, rather "
+        "than claiming both name them."
+    )
+    assert "only openai" in attribution and "label" in attribution, (
+        "Must state that only OpenAI labels the three with these words; "
+        "Anthropic describes the same elements without naming them as fields."
     )
 
     # Fact 2: Stop-when is first-class in OpenAI's guidance.

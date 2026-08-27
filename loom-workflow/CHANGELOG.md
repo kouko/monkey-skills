@@ -4,6 +4,20 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.1.1] — 2026-08-28 — correct `goal-create`'s vendor attribution
+
+### Fixed
+
+`references/goal-shape.md` said `Outcome`, `Constraints`, and `Verification`
+are "each named by both vendors' guidance". Only OpenAI labels them with
+those words; Anthropic's page describes the same three elements as one
+measurable end state, a stated check, and the constraints that matter, and
+never as named fields. In a paragraph whose subject is attribution
+precision, "named by both" admitted a stronger reading than the sources
+support. The paragraph now states the distinction, and its test pins that
+distinction rather than the looser sentence — the previous wording was
+mutation-checked to confirm it now fails.
+
 ## [1.1.0] — 2026-08-27 — new skill `goal-create`
 
 ### Added — `goal-create`: draft a goal or a repo's purpose artifact
