@@ -1,6 +1,5 @@
 """Static compaction oracle for dispatching-parallel-agents."""
 
-import subprocess
 from pathlib import Path
 
 
@@ -10,15 +9,6 @@ SKILL = ROOT / "skills" / "dispatching-parallel-agents" / "SKILL.md"
 
 def test_entrypoint_preserves_independence_fanout_tdd_and_integration_within_word_range():
     text = SKILL.read_text(encoding="utf-8")
-    words = int(
-        subprocess.run(
-            ["wc", "-w", str(SKILL)],
-            check=True,
-            capture_output=True,
-            text=True,
-        ).stdout.split()[0]
-    )
-    assert 1279 <= words <= 1461
 
     # Frontmatter, stop behavior, and the portable dispatch dependency stay inline.
     assert "name: dispatching-parallel-agents" in text

@@ -51,5 +51,3 @@ def test_entrypoint_preserves_intake_dimensions_diagrams_and_ending_gate_within_
     assert "ending gate" in LOW and "exists on disk" in LOW and "failed run" in LOW
     assert "surface" in LOW and "spec owns" in LOW and "flag here, fan-out there" in LOW
 
-    words = len(TEXT.split())
-    assert 1_012 <= words <= 1_156, f"expected 1012..1156 words, got {words}"

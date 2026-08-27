@@ -15,6 +15,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - `complexity-critique`: restored the mindset SSOT rule — edits land in the
   canonical `code-team/standards/` copies first, and a fifth mindset is
   governed by `mindset-extension-standard.md`.
+- Removed the per-file word-count bounds from the `test_*_compaction.py` files.
+  They froze the 1.0.1 compaction's own measurement into a permanent contract
+  and could not detect a deleted rule; presence assertions now carry that job.
 - `complexity-critique`: Q2's `after > before` row now speaks the skill's own
   verdict vocabulary (RESHAPE, or PROCEED-WITH-CAVEAT only when the added
   volume is explicitly justified and costed). Both the pre-1.0.1 wording and

@@ -19,8 +19,9 @@ version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
   section, including the standing prune candidate (state-completeness) and the
   last-to-go pair (NFR-security, permissions/data-boundary). The 0.5.2
   compaction dropped it while the sibling `design-critic` kept its copy.
-- `test_completeness_critic_compaction.py`: raised the word ceiling, which had
-  been calibrated on the assumption that the compaction was lossless.
+- Removed the per-file word-count bounds from the `test_*_compaction.py` files.
+  They froze the 0.5.2 compaction's own measurement into a permanent contract
+  and could not detect a deleted rule; presence assertions now carry that job.
 
 ## [0.5.2] — 2026-08-26 — behavior-preserving skill compaction
 

@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -7,7 +6,6 @@ SKILL_PATH = REPO_ROOT / "loom-workflow/skills/handoff/SKILL.md"
 SCHEMA_PATH = (
     REPO_ROOT / "loom-workflow/skills/handoff/references/handoff-schema.md"
 )
-BASELINE_WORDS = 1448
 
 
 def test_entrypoint_preserves_prepare_resume_verification_and_stop_under_word_ceiling():
@@ -87,6 +85,3 @@ def test_entrypoint_preserves_prepare_resume_verification_and_stop_under_word_ce
     assert resume_schema <= resume_interpret
 
     assert SCHEMA_PATH.is_file()
-    words = re.findall(r"\S+", text)
-    assert len(words) >= int(BASELINE_WORDS * 0.75), len(words)
-    assert len(words) <= 1187, len(words)

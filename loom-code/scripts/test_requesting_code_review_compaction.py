@@ -2,7 +2,6 @@
 
 from pathlib import Path
 import json
-import subprocess
 import sys
 
 
@@ -14,10 +13,6 @@ import skill_compaction_preflight as preflight
 
 def test_entrypoint_preserves_receipt_scope_routing_panel_and_publish_gate_within_word_range():
     text = SKILL.read_text()
-    words = int(subprocess.run(
-        ["wc", "-w", str(SKILL)], capture_output=True, check=True, text=True
-    ).stdout.split()[0])
-    assert 3148 <= words <= 3596
 
     required = (
         "## Live-gate receipt (CODE / MIXED only)",

@@ -47,7 +47,3 @@ def test_entrypoint_preserves_firing_axes_verdict_and_validation_within_word_ran
     assert "2 attempts" in low
     assert "stop at the worth-it one-pager" in low
 
-    words = len(text.split())
-    assert 904 <= words <= 1032, (
-        f"business-value/SKILL.md is {words} words; expected 904–1,032"
-    )

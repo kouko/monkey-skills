@@ -1,6 +1,5 @@
 """Static compaction oracle for finishing-a-development-branch."""
 
-import subprocess
 from pathlib import Path
 
 
@@ -10,15 +9,6 @@ SKILL = ROOT / "skills" / "finishing-a-development-branch" / "SKILL.md"
 
 def test_entrypoint_preserves_closeout_gates_publish_ci_and_report_within_word_range():
     text = SKILL.read_text(encoding="utf-8")
-    words = int(
-        subprocess.run(
-            ["wc", "-w", str(SKILL)],
-            check=True,
-            capture_output=True,
-            text=True,
-        ).stdout.split()[0]
-    )
-    assert 3129 <= words <= 3620
 
     # Loader-visible identity, stop behavior, and reference-consumed headings stay stable.
     for phrase in (

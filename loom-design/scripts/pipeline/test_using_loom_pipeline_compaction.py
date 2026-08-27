@@ -26,8 +26,6 @@ def test_entrypoint_preserves_availability_driver_gates_and_queue_lifecycle_with
     assert "Codex hosts: N/A by definition" in BODY and "no fallback path" in BODY
     assert "## §Run inputs" in BODY and "## §Segments" in BODY
     assert "## §Human gates" in BODY and "## §Batch mode" in BODY
-    words = len(TEXT.split())
-    assert 1870 <= words <= 2136, f"SKILL.md has {words} words; expected 1870–2136"
 
 
 def test_availability_boundary_and_six_field_driver_contract():

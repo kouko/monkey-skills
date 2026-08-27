@@ -16,10 +16,13 @@ Versioning: [Semantic Versioning](https://semver.org/).
 - `verification-before-completion/README.md`: the "When NOT to use" list still
   advertised the pure-doc/config and explicit-user-override exemptions that
   0.100.1's `SKILL.md` had revoked. README and SKILL.md now agree.
-- `test_sdd_compaction.py`: re-baselined both word bounds and their assertion
-  message. The originals were calibrated on the premise that the compaction was
-  lossless; the package total now lands 8.9% under baseline, a documented weak
-  win rather than the >=10% target, because the shortfall is restored content.
+- Removed the per-file word-count bounds from every `test_*_compaction.py`.
+  They were an artifact of the 0.100.1 compaction — the measured result frozen
+  into a permanent contract — and they never protected content: a bound with
+  hundreds of words of slack cannot see a rule of tens leave, which is how five
+  rules were dropped under a green suite. Presence and absence assertions now
+  carry that job, and the repo-wide 4,500-word cap remains the ceiling.
+
 ## [0.101.0] — 2026-08-27
 
 ### Changed

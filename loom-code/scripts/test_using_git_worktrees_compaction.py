@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-import subprocess
 import sys
 
 
@@ -14,10 +13,6 @@ import skill_compaction_preflight as preflight
 
 def test_entrypoint_preserves_applicability_setup_create_remove_and_isolation_within_word_range():
     text = SKILL.read_text(encoding="utf-8")
-    words = int(subprocess.run(
-        ["wc", "-w", str(SKILL)], capture_output=True, check=True, text=True
-    ).stdout.split()[0])
-    assert 909 <= words <= 1038
 
     required = (
         "<SUBAGENT-STOP>",

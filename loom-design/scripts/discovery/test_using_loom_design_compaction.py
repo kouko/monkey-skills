@@ -37,8 +37,6 @@ def test_entrypoint_preserves_reception_station_order_boundaries_and_host_tools_
     ))
     assert "claude code" in LOW and "codex cli" in LOW
     assert "does not auto-invoke any member" in PLAIN
-    words = len(TEXT.split())
-    assert 1_458 <= words <= 1_665, f"expected 1458..1665 words, got {words}"
 
 
 def test_upstream_and_interface_order_remain_explicit():

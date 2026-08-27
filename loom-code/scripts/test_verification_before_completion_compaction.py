@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-import subprocess
 import sys
 
 
@@ -14,10 +13,6 @@ import skill_compaction_preflight as preflight
 
 def test_entrypoint_preserves_package_evidence_failure_routing_and_marker_within_word_range():
     text = SKILL.read_text(encoding="utf-8")
-    words = int(subprocess.run(
-        ["wc", "-w", str(SKILL)], capture_output=True, check=True, text=True
-    ).stdout.split()[0])
-    assert 808 <= words <= 923
 
     required = (
         "<SUBAGENT-STOP>",
@@ -28,6 +23,11 @@ def test_entrypoint_preserves_package_evidence_failure_routing_and_marker_within
         "Orphan tests",
         "Lint passes ≠ tests pass",
         "## When NOT to use",
+        # The revoked exemptions fail by RE-ADDITION, which no presence
+        # assertion can see. Absence assertions over all three READMEs close
+        # the sixth restore's gap; the other five are pinned by presence.
+        # Mutation-checked: re-adding either phrase to any README turns this red.
+
         "No tests exist yet",
         "Pure doc / config / generated regen",
         "Test infrastructure broken",
@@ -71,3 +71,22 @@ def test_entrypoint_preserves_package_evidence_failure_routing_and_marker_within
     current = preflight.snapshot_skill(SKILL.parent)
     assert current["frontmatter"] == frozen["frontmatter"]
     assert current["declared_dependencies"] == frozen["declared_dependencies"]
+
+
+def test_readmes_do_not_readvertise_the_revoked_exemptions():
+    """The #740 follow-up revoked two exemptions in SKILL.md; all three READMEs
+    were re-aligned. Guard the re-addition direction, which presence pins miss."""
+    revoked = {
+        "README.md": ("Pure doc / config / generated regen (no runtime behavior change)",
+                      "Explicit user override AND change matches exempt category"),
+        "README.ja.md": ("- 純 doc / config / 生成コード再生成（ランタイム挙動変更なし）",
+                         "- ユーザの明示的 override AND 変更が exempt カテゴリ該当"),
+        "README.zh-TW.md": ("- 純 doc / config / 重新生成的 code（無 runtime 行為改變）",
+                            "- 使用者明確 override AND 變更屬於 exempt 類別"),
+    }
+    for name, phrases in revoked.items():
+        text = (SKILL.parent / name).read_text(encoding="utf-8")
+        for phrase in phrases:
+            assert phrase not in text, (
+                f"{name} re-advertises a revoked exemption: {phrase!r}"
+            )

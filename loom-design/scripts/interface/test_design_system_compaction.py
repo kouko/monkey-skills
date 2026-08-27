@@ -38,5 +38,3 @@ def test_entrypoint_preserves_modality_gui_contract_and_ending_gate_within_word_
     assert "docs/loom/" in TEXT and "scripts/interface/validate_design_output.py" in TEXT
     assert "ending gate" in LOW and "exists on disk" in LOW and "failed run" in LOW
     assert "visual system only" in LOW and "not flows" in LOW
-    words = len(TEXT.split())
-    assert 1_388 <= words <= 1_585, f"expected 1388..1585 words, got {words}"

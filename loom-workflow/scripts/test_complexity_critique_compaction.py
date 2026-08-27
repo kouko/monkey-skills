@@ -12,7 +12,6 @@ SKILL = (
 def test_entrypoint_preserves_mindset_three_questions_and_verdicts_under_word_ceiling():
     text = SKILL.read_text(encoding="utf-8")
 
-    assert 1_397 <= len(text.split()) <= 1_612
     assert "Load at least one" in text
     assert "references/" in text
 

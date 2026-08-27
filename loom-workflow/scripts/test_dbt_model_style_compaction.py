@@ -7,14 +7,11 @@ SKILL = (
     / "dbt-model-style"
     / "SKILL.md"
 )
-BASELINE_WORDS = 3_573
 
 
 def test_entrypoint_preserves_scope_structure_and_self_check_under_word_ceiling():
     text = SKILL.read_text(encoding="utf-8")
 
-    # An 18-25% reduction is useful only if the operative contract remains inline.
-    assert int(BASELINE_WORDS * 0.75) + 1 <= len(text.split()) <= 2_929
 
     essence = {
         "bounded style scope": [

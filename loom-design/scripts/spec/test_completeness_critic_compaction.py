@@ -21,11 +21,6 @@ def test_entrypoint_preserves_panel_lenses_synthesis_and_bounded_verdict_within_
     assert "### Deletable lenses (Bitter Lesson)" in TEXT
     assert "state-completeness lens" in TEXT
     assert "nfr-security" in LOW and "permissions / data-boundary" in LOW
-    words = len(TEXT.split())
-    # Ceiling raised from 3_203 in the #740 follow-up: the original bound was
-    # calibrated on the assumption that the compaction was lossless, but the
-    # "Deletable lenses (Bitter Lesson)" section had been dropped by accident.
-    assert 2_803 <= words <= 3_300, f"expected 2803..3300 words, got {words}"
 
 
 def test_targeted_loop_preserves_dry_and_no_skip_semantics():

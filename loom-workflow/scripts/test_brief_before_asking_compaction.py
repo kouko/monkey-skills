@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -8,7 +7,6 @@ EXAMPLES_PATH = (
     REPO_ROOT
     / "loom-workflow/skills/brief-before-asking/references/EXAMPLES.md"
 )
-BASELINE_WORDS = 3072
 
 
 def test_entrypoint_preserves_four_modes_and_briefing_contract_under_word_ceiling():
@@ -76,6 +74,3 @@ def test_entrypoint_preserves_four_modes_and_briefing_contract_under_word_ceilin
     assert block_positions == sorted(block_positions)
 
     assert EXAMPLES_PATH.is_file()
-    words = re.findall(r"\S+", text)
-    assert len(words) >= 2151, len(words)
-    assert len(words) <= 2396, len(words)
