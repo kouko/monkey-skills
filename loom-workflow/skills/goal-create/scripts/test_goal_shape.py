@@ -110,11 +110,64 @@ def test_defines_four_fields_budget_and_surfacing() -> None:
     missing_urls = [url for url in VENDOR_URLS if url not in content]
     assert not missing_urls, f"Missing vendor citation URL(s): {missing_urls}"
 
-    # --- attribution accuracy: do not claim both vendors document four fields ---
+    # --- attribution accuracy: positive checks on the actual facts, so that
+    # reintroducing false vendor attribution in *different* wording fails
+    # too, not just the one hardcoded phrase (see loom-code Rule 9) ---
+    paragraphs_lower = [
+        re.sub(r"\s+", " ", p).lower() for p in re.split(r"\n\s*\n", content)
+    ]
+
+    def _paragraph_containing(*keywords: str):
+        for p in paragraphs_lower:
+            if all(kw in p for kw in keywords):
+                return p
+        return None
+
+    # Fact 1: Outcome, Constraints, and Verification are each named by both
+    # vendors' guidance. "each" disambiguates this claim from the vendor
+    # citation bullets, which merely list the three names without asserting
+    # both vendors document them.
+    assert _paragraph_containing(
+        "outcome", "constraints", "verification", "both vendor", "each"
+    ), (
+        "Must state that Outcome, Constraints, and Verification are each "
+        "named by both vendors' guidance."
+    )
+
+    # Fact 2: Stop-when is first-class in OpenAI's guidance.
+    assert _paragraph_containing("stop-when", "openai", "first-class"), (
+        "Must state that Stop-when is first-class in OpenAI's guidance."
+    )
+
+    # Fact 3: Stop-when is only optional/suggested in Anthropic's guidance —
+    # not a required field there.
+    assert _paragraph_containing(
+        "stop-when", "anthropic", "optional"
+    ) or _paragraph_containing("stop-when", "anthropic", "suggested"), (
+        "Must state that Stop-when is only optional/suggested in Anthropic's "
+        "guidance, not a required field there."
+    )
+
+    # Fact 4: treating Stop-when as a required fourth field is this skill's
+    # own choice, not something either vendor requires.
+    assert _paragraph_containing("stop-when", "this skill", "own choice"), (
+        "Must attribute Stop-when-as-required-fourth-field to this skill's "
+        "own choice, not to either vendor's requirement."
+    )
+
+    # --- negative guard: must not claim both vendors require Stop-when as
+    # shared/mandatory guidance (kept as a cheap extra tripwire; the facts
+    # above are what actually gates this). Matches "require"/"requires"/
+    # "mandatory" as whole words only — "required" (as in "not a required
+    # field", the real reference's own negation) must not false-trigger it.
+    for p in paragraphs_lower:
+        if "both" in p and "stop-when" in p and re.search(r"\b(requires?|mandatory)\b", p):
+            raise AssertionError(
+                "Must not claim both vendors require Stop-when as "
+                "shared/mandatory guidance — Stop-when is this skill's own "
+                f"addition. Offending paragraph: {p!r}"
+            )
     assert "both vendors document four fields" not in content_lower, (
         "Must not claim both vendors document four fields — Stop-when is this "
         "skill's own addition, not shared vendor guidance."
-    )
-    assert "this skill" in content_lower, (
-        "Must attribute Stop-when-as-required-field as this skill's own choice."
     )

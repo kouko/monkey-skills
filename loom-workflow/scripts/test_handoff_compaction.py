@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 
@@ -96,3 +97,33 @@ def test_prepare_mode_names_goal_create():
 
     assert "loom-workflow:goal-create" in prepare_section
     assert "goal-create" not in text[resume:]
+
+    # Naming it must not slide into firing it. Anchor the check on the
+    # text immediately around the mention, not just anywhere in the
+    # section, so a rewording that keeps the substring but drops the
+    # invariant is caught.
+    mention = prepare_section.index("loom-workflow:goal-create")
+    window = prepare_section[max(0, mention - 200) : mention + 200]
+
+    # The disclaiming clause — the skill is something the USER invokes,
+    # and Prepare mode explicitly disclaims invoking it — must survive.
+    assert re.search(r"\bthey can invoke\b.{0,20}\bthemselves\b", window), (
+        "expected the 'user invokes it themselves' disclaimer near the "
+        "goal-create mention"
+    )
+    assert re.search(r"\bnever invokes it\b", window), (
+        "expected an explicit 'never invokes it' disclaimer near the "
+        "goal-create mention"
+    )
+
+    # Reject imperative framing directed at the skill itself (an
+    # instruction to fire it, e.g. "Invoke `loom-workflow:goal-create`
+    # now") rather than at the user ("they can invoke themselves").
+    imperative_at_skill = re.compile(
+        r"\b(invoke|run|call|execute)\b\s*`?\s*loom-workflow:goal-create",
+        re.IGNORECASE,
+    )
+    assert not imperative_at_skill.search(window), (
+        "found an imperative verb directed at goal-create — naming the "
+        "skill must not read as an instruction to fire it"
+    )
