@@ -3,12 +3,13 @@ name: 2026-08-27-skill-reference-path-validation-tooling-landscape
 description: Nothing validates the plain-text file paths loom skills tell agents to open, and the surveyed ecosystem does not yet supply one worth adopting — the official reference validator declines the job, general link checkers deliberately skip inline code, and the one third-party linter that does it is a solo project; revisit when skill-lint gains adoption or the agentskills resolution proposals land
 status: open
 origin: 2026-08-27 fix/conditional-ops-path — three dangling path literals shipped in conditional-operations.md because check-skill-crossrefs.py checks inline markdown links only; a survey of the tooling landscape was run before deciding whether to build a checker, and the answer was to wait
-start: whichever comes first — skill-lint (or an equivalent) shows real adoption beyond its author, the agentskills skill-resolution proposals (#178/#210) reach a spec, or a third dangling-path defect ships from this repo
+start: whichever comes first — skill-lint (or an equivalent) shows real adoption beyond its author, agentskills discussion #210 or a successor reaches an adopted spec (#178 is already closed and is not a live trigger), or a third dangling-path defect ships from this repo
 ---
 
 - Start: whichever comes first — skill-lint (or an equivalent) shows real adoption
-  beyond its author, the agentskills skill-resolution proposals (#178/#210)
-  reach a spec, or a third dangling-path defect ships from this repo
+  beyond its author, agentskills discussion #210 or a successor reaches an
+  adopted spec (#178 is already closed and is not a live trigger), or a
+  third dangling-path defect ships from this repo
 - Origin: 2026-08-27 fix/conditional-ops-path — three dangling path literals shipped
   in conditional-operations.md because check-skill-crossrefs.py checks
   inline markdown links only; a survey of the tooling landscape was run
@@ -44,11 +45,16 @@ either decline the job or are too thin to adopt:
   analysis using `skill-validator` reports broken links as the single most
   common error, 85 instances of which 33 were missing internal files.
   https://dacharycarey.com/2026/02/13/agent-skill-analysis/
-- **The structural fix is proposed but unspecified.** agentskills discussion
-  #210 (a skill package manifest naming dependencies by git URL) and issue #178
-  (a skill resolution protocol explicitly moving off relative paths) would
-  replace path literals with resolvable names. Both are still discussion.
-  https://github.com/agentskills/agentskills/discussions/210
+- **The structural fix is proposed but unspecified.** Replacing path literals
+  with resolvable names is on the table upstream and has not landed. Discussion
+  #210 — a skill package manifest keying dependencies by git URL — is open with
+  no adopted standard. Issue #178, the AgentFile proposal for declarative
+  composition and filesystem-native delivery, was **closed as completed on
+  2026-02-22** without producing a spec this repo could adopt; treat its closure
+  as the proposal being taken off the table in that form, not as the trigger
+  below having fired.
+  https://github.com/agentskills/agentskills/discussions/210 ·
+  https://github.com/agentskills/agentskills/issues/178
 
 ### If it is built here anyway
 
