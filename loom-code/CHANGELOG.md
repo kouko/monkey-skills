@@ -30,6 +30,10 @@ Versioning: [Semantic Versioning](https://semver.org/).
 - `writing-plans`: a `plan-format.md` link fragment matched no heading in
   `subagent-driven-development/SKILL.md` and silently resolved to the file top;
   it now points at the section that carries the rule.
+- `writing-plans`: `plan-format.md` used "mechanical" for two different tests
+  that disagreed about its own backfill example — the plan-level complexity
+  exemption (decided by a trigger list) and the per-task `Review-weight`
+  marker (identical-edit only). The exemption now says which test it is.
 
 ## [0.101.2] — 2026-08-27 — conditional-operations stands on its own
 

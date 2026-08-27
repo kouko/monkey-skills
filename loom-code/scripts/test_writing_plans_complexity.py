@@ -136,3 +136,26 @@ def test_check_21_reconciles_with_the_open_questions_hedge_scan():
         "Check 21 must tell the author to state downstream risk as a named risk "
         "rather than as an unresolved question"
     )
+
+
+def test_complexity_exemption_is_distinguished_from_review_weight_mechanical():
+    """`mechanical` names two different tests in one file; say which applies.
+
+    §Complexity assessment exempts a plan by a trigger list (no boundary,
+    dependency, migration, configuration, operational duty, or reuse), while
+    `Review-weight: mechanical` may only be set for an identical or
+    near-identical edit reproducible from an exact spec. The two disagree about
+    the schema's own backfill example, and Check 21 fails a plan that "claims a
+    mechanical exemption despite a non-mechanical task" — so the exemption must
+    say which test it means.
+    """
+    plan_format = FORMAT.read_text(encoding="utf-8")
+    flat = " ".join(plan_format.split())
+    marker = "A plan consisting only of a mechanical edit may instead declare"
+    assert marker in flat
+    section = flat[flat.index(marker) : flat.index(marker) + 900]
+    assert "Review-weight" in section, (
+        "the complexity exemption must distinguish itself from the "
+        "`Review-weight: mechanical` marker, which uses a stricter and "
+        "differently-scoped eligibility test"
+    )

@@ -23,11 +23,11 @@ BASELINE_COMMIT = "0a7dcde2"
 # match it or enumerate the delta (see test below).
 HARD_CASE_COMMIT = "7af88b7053c2076b65b98b69217ff32239ab80f8"
 REQUIRED_LENS_EVIDENCE = {
-    "business-complexity-lens": "live hard case",
+    "business-complexity-lens": "live hard case (pre-fix surface; not re-run)",
     "visual-complexity-lens": "live hard case",
     "interaction-complexity-lens": "live hard case",
     "behavioral-complexity-lens": "contract test",
-    "architecture-complexity-lens": "live hard case",
+    "architecture-complexity-lens": "live hard case (pre-fix surface; not re-run)",
     "implementation-complexity-lens": "contract test",
 }
 
@@ -130,6 +130,44 @@ def _instruction_surface_delta() -> list[str]:
         if relative.endswith(".md")
         and not Path(relative).name.startswith(("README", "CHANGELOG"))
     )
+
+
+def test_report_binds_baseline_and_final_candidate():
+    """Bind reported bytes to reconstructible Git inputs.
+
+    Grounding (live CLI help, 2026-08-27): `git archive -h` documents
+    `--format <fmt>`, `<tree-ish>`, and optional paths; `git ls-files -h`
+    documents `--stage`, `-z`, and path arguments. Those are the exact Git
+    surfaces used by the reconstruction helpers above.
+
+    The coverage table is pinned including its caveats: a lane whose governing
+    files changed after its live run must say so in the row a reader consults,
+    not only in prose further down.
+    """
+    text = REPORT.read_text(encoding="utf-8")
+    flat_text = " ".join(text.split())
+    assert "immutable pre-edit snapshot" in text
+    assert "base commit `0a7dcde2`" in text
+    assert "final cold-install candidate bytes" in text
+    for plugin in ("loom-design", "loom-code"):
+        baseline_match = re.search(
+            rf"{plugin} baseline SHA-256: `([0-9a-f]{{64}})`", text
+        )
+        assert baseline_match, f"report must record a full {plugin} baseline fingerprint"
+        assert baseline_match.group(1) == _archive_fingerprint(plugin, BASELINE_COMMIT)
+        assert f"{plugin} candidate SHA-256" in text
+        match = re.search(rf"{plugin} candidate SHA-256: `([0-9a-f]{{64}})`", text)
+        assert match, f"report must record a full {plugin} candidate fingerprint"
+        assert match.group(1) == _tracked_worktree_fingerprint(plugin)
+    for case in ("no-upstream", "misleading-upstream", "trivial-exempt", "over-complex"):
+        assert f"`{case}`" in text
+    coverage_rows = dict(
+        re.findall(r"^\| `([^`]+-complexity-lens)` \| ([^|]+?) \| PASS \|$", text, re.MULTILINE)
+    )
+    assert coverage_rows == REQUIRED_LENS_EVIDENCE
+    assert "purpose preservation" in flat_text.lower()
+    assert "scope trade-off" in flat_text.lower()
+    assert "Pre-existing invariant result: PASS" in text
 
 
 def test_report_enumerates_any_post_hard_case_instruction_change():

@@ -105,6 +105,15 @@ A plan consisting only of a mechanical edit may instead declare
 plan that introduces a boundary, dependency, migration, configuration,
 operational duty, or non-trivial reuse.
 
+**This is not the `Review-weight: mechanical` test.** The two words coincide
+and the tests do not: this exemption is plan-level and is decided by the
+trigger list above, while `Review-weight` (§`Review-weight` below) is per-task
+and admits only an identical or near-identical edit reproducible from an exact
+spec. A plan can be exempt here and still carry no `Review-weight` marker on
+any of its tasks — the backfill example below is exactly that shape, six
+different docstrings for six different files. Check 21 judges the plan against
+the trigger list; Check 16 judges each task against the `Review-weight` test.
+
 ### Per-task block (required, repeats N times)
 
 ```markdown
