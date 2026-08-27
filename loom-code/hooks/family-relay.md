@@ -53,8 +53,8 @@ localized-content rule as the rollup card above.
 | Review | reviewer verdicts trajectory |
 | Review focus | where the merge decision deserves attention; MAY merge into the Review row for small PRs |
 | Version | plugin/package bumps |
-| 🌐 Web merge | PR URL + one-line reminder to glance the merge dialog's description prefill before confirming |
-| 💻 CLI merge | the ready `gh pr merge <N> --squash` command, framed for the human to run |
+| 🔗 PR link | the PR URL, as the link to VIEW the PR — never framed as a way to merge |
+| 💻 Merge | the one merge path, verbatim from `finishing-a-development-branch` Step 11: `gh pr view <N> --json body --jq .body \| gh pr merge <N> --squash --body-file -` with `<N>` resolved to the real PR number, framed for the human to run |
 
 Conditional rows (add only when applicable): screenshots (UI changes
 only), rollback plan (irreversible/infra changes only).

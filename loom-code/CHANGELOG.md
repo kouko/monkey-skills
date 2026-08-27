@@ -5,6 +5,34 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.101.5] — 2026-08-28 — one merge path in the close-out report
+
+### Fixed
+
+- `finishing-a-development-branch` told the orchestrator to offer BOTH merge
+  paths — the web dialog and the CLI command — while its own text conceded the
+  dialog's prefill is unreliable. Nine squash bodies were lost across the runs
+  that followed that instruction and two survived on the runs that showed only
+  the CLI command, so co-equal presentation was the defect. The report now
+  gives one merge path; the PR URL stays as a link to VIEW the PR.
+- The CLI command it handed the user carried no `--body-file`, so GitHub's
+  title-only default squash message for a single-commit PR dropped the body in
+  any repo without `squash_merge_commit_message=PR_BODY`. The report now hands
+  over `gh pr view <N> --json body --jq .body \| gh pr merge <N> --squash --body-file -`, which reads the body from the PR at merge time so no file
+  has to survive between the report and the merge.
+- The glance-at-the-prefill reminder is deleted rather than reworded. It asked
+  a human to remember a check at the moment of clicking, and five losses
+  followed its introduction.
+- The close-out card's merge row had fallen behind Step 11's command and is now
+  pinned to it by a test, with its pipe escaped so the table cell does not
+  truncate at the render layer.
+
+### Changed
+
+- `hooks/family-relay.md` §Close-out card: the `🌐 Web merge` row becomes
+  `🔗 PR link` (a link, never a merge path) and `💻 CLI merge` becomes
+  `💻 Merge`, carrying the full command inline.
+
 ## [0.101.4] — 2026-08-27 — point the purpose-file offer at `goal-create`
 
 ### Changed

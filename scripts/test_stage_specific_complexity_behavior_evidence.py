@@ -111,6 +111,31 @@ def _tracked_worktree_fingerprint(plugin: str) -> str:
         return FINGERPRINT(destination)
 
 
+# The files the hard cases actually exercised. Scoped to these six rather than
+# to both plugins' whole skill trees: the report claims results for THESE
+# lenses, so only their drift can invalidate it. The wider scope fired on any
+# branch touching any loom skill prose and demanded that branch add its own
+# filenames to this report's delta list — filling an evidence document with
+# files its hard cases never ran, which is the dishonesty this guard prevents.
+_LENS_PATHS = (
+    "loom-design/skills/business-value/references/business-complexity-lens.md",
+    "loom-design/skills/design-system/references/visual-complexity-lens.md",
+    "loom-design/skills/interaction-flows/references/interaction-complexity-lens.md",
+    "loom-design/skills/spec-expansion/references/behavioral-complexity-lens.md",
+    "loom-code/skills/writing-plans/references/architecture-complexity-lens.md",
+    "loom-code/skills/requesting-code-review/references/implementation-complexity-lens.md",
+)
+
+# The two collections name the same six lenses — one as paths, one as keys —
+# and nothing reconciles them. `git diff -- <path>` on a path that no longer
+# exists returns no rows instead of erroring, so a lens rename would make this
+# guard quietly stop watching that lens rather than fail. Reconcile them here.
+assert {Path(p).stem for p in _LENS_PATHS} == set(REQUIRED_LENS_EVIDENCE), (
+    "_LENS_PATHS and REQUIRED_LENS_EVIDENCE must name the same six lenses"
+)
+
+
+
 def _instruction_surface_delta() -> list[str]:
     """Behaviour-bearing paths that differ between the hard-case surface and now.
 
@@ -119,9 +144,8 @@ def _instruction_surface_delta() -> list[str]:
     a new edit lands in.
     """
     changed = subprocess.check_output(
-        ["git", "-C", str(ROOT), "diff", "--name-only", DELTA_ANCHOR_COMMIT, "--",
-         "loom-code/skills", "loom-code/agents",
-         "loom-design/skills", "loom-design/agents"]
+        ["git", "-C", str(ROOT), "diff", "--name-only", DELTA_ANCHOR_COMMIT,
+         "--", *_LENS_PATHS]
     ).decode().splitlines()
     return sorted(
         set(RECORDED_POST_HARD_CASE_DELTA)
