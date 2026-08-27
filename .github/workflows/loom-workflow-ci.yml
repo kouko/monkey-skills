@@ -8,7 +8,15 @@ name: loom-workflow CI
 # contract. A regression there had no CI gate to catch it.
 #
 # Two jobs: the shell suite (glob over loom-workflow/tests/test-*.sh) and
-# the cot-explain script pytest suite. The post-merge HEAD-body check
+# a pytest job that runs both the cot-explain script suite and every
+# skill's own `scripts/test_*.py` suite (loom-workflow/scripts/ plus each
+# loom-workflow/skills/<skill>/scripts/, discovered by glob — never a
+# named list, so a skill added after this file was written is covered
+# without another edit here). Each directory is its own pytest invocation
+# because two different skills can legitimately ship a same-named test
+# file (e.g. test_readmes.py, test_skill_md.py); running them all in one
+# pytest process would trip Python's module-identity check on the
+# collision. The post-merge HEAD-body check
 # (memory-grep.sh --verify-merged) lives in its own workflow file,
 # memory-verify-merged.yml — it needs an unfiltered push-to-main trigger
 # (a memory-worthy PR usually touches paths OTHER than loom-workflow/**),
@@ -81,3 +89,19 @@ jobs:
         env:
           PYTHONDONTWRITEBYTECODE: '1'
         run: python3 -m pytest loom-workflow/tests/test_cot_explain_scripts.py -v
+
+      # Runs loom-workflow/scripts/test_*.py and every
+      # loom-workflow/skills/<skill>/scripts/test_*.py suite, one pytest
+      # invocation per directory (see header comment for why). Glob-driven
+      # so a skill added later is picked up with no edit to this file.
+      - name: Run loom-workflow skill script tests
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          for d in loom-workflow/scripts loom-workflow/skills/*/scripts; do
+            if find "$d" -maxdepth 1 -name 'test_*.py' -print -quit 2>/dev/null | grep -q .; then
+              echo "::group::pytest $d"
+              python3 -m pytest "$d" -v
+              echo "::endgroup::"
+            fi
+          done

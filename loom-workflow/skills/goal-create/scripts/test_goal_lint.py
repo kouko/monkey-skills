@@ -199,6 +199,26 @@ Stop-when: stop after 20 turns
     assert "Stop-when" in fields
 
 
+def test_cross_line_stray_backticks_do_not_pair_as_a_command_span():
+    # _BACKTICK_SPAN_RE excludes newlines (`[^`\n]+`) precisely so two
+    # independent stray backticks on DIFFERENT lines of the same field
+    # can never be read as one command span crossing the line break.
+    # Here both backticks are apostrophe typos ("user`s", "report`s")
+    # and there is no real backticked command anywhere in Verification —
+    # this must fail with no-backtick-command. A mutant regex that
+    # allows the span to cross lines (`[^`]+`) would instead pair these
+    # two backticks together and wrongly accept this as a command.
+    cross_line_stray_backticks_goal = """\
+Outcome: The signup form submits with zero client-side validation errors.
+Constraints: Do not touch the payment module.
+Verification: Just paste the user`s config and then run the tests
+and check the report`s summary.
+Stop-when: The outcome is reached, or stop after 20 turns.
+"""
+    result = goal_lint.lint_text(cross_line_stray_backticks_goal)
+    assert any(f.code == "no-backtick-command" for f in result.errors)
+
+
 def test_field_labels_match_the_shape_reference():
     shape_text = GOAL_SHAPE.read_text(encoding="utf-8")
     labels = re.findall(r"^\d+\.\s+`([^`]+)`$", shape_text, re.MULTILINE)
