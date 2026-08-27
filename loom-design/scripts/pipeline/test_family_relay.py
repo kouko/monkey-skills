@@ -339,8 +339,8 @@ def test_close_out_card():
         "Impact scope",
         "Verification",
         "Review focus",
-        "🌐 Web merge",
-        "💻 CLI merge",
+        "🔗 PR link",
+        "💻 Merge",
     ):
         assert label in text, f"missing close-out card row label: {label!r}"
 

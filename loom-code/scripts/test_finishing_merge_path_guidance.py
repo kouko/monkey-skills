@@ -81,15 +81,22 @@ def test_step11_offers_cli_merge_alternative():
         "Step 11's CLI alternative must be a squash merge command"
 
 
-def test_step11_reminds_to_glance_the_prefilled_dialog():
-    """Step 11 must remind the user to glance that the web merge dialog's
-    description box is prefilled before confirming — the failure mode
-    that shipped two title-only PRs."""
+def test_step11_carries_no_prefill_reminder():
+    """The glance-the-prefill reminder is deliberately gone.
+
+    This assertion reverses the one it replaces. That reminder was added
+    after four incidents and five more followed it: it asks a human to
+    remember a check at the moment of clicking, which is the
+    judgment-shaped prose this repo has repeatedly measured as unable to
+    hold (docs/loom/memory/a-mechanical-check-can-go-green-by-skipping.md
+    is the sibling shape). The reminder is replaced by removing the second
+    merge path, not by wording it better.
+    """
     step11 = _step11_slice(_text())
-    assert "glance" in step11.lower(), \
-        "Step 11 must include a glance-the-prefill reminder"
-    assert "prefill" in step11.lower(), \
-        "Step 11's reminder must name the prefill failure mode"
+    assert "glance" not in step11.lower(), \
+        "the prefill reminder must not return — remove the path, not reword the caveat"
+    assert "prefill" not in step11.lower(), \
+        "the prefill reminder must not return — remove the path, not reword the caveat"
 
 
 def test_step11_never_auto_merges():
@@ -118,14 +125,13 @@ def test_step13_report_includes_cli_merge_alternative():
         "Step 13's CLI alternative must be a squash merge command"
 
 
-def test_step13_report_reminds_to_glance_the_prefilled_dialog():
-    """Step 13's report requirement must carry the same prefill-glance
-    reminder as Step 11, not just the bare PR URL."""
+def test_step13_report_carries_no_prefill_reminder():
+    """Step 13 mirrors Step 11's reversal — see the note there."""
     step13 = _step13_slice(_text())
-    assert "glance" in step13.lower(), \
-        "Step 13 must include a glance-the-prefill reminder"
-    assert "prefill" in step13.lower(), \
-        "Step 13's reminder must name the prefill failure mode"
+    assert "glance" not in step13.lower(), \
+        "the prefill reminder must not return in the report step either"
+    assert "prefill" not in step13.lower(), \
+        "the prefill reminder must not return in the report step either"
 
 
 def test_step11_carrier_check_precedes_merge_paths_bullet():
@@ -135,9 +141,9 @@ def test_step11_carrier_check_precedes_merge_paths_bullet():
     merge-paths anchor within Step 11."""
     step11 = _step11_slice(_text())
     carrier_idx = step11.find("PR-carrier check")
-    merge_paths_idx = step11.find("Offer BOTH merge paths")
+    merge_paths_idx = step11.find("Merge path in the report")
     assert carrier_idx != -1, "Step 11 must contain the PR-carrier check bullet"
-    assert merge_paths_idx != -1, "Step 11 must contain the merge-paths bullet"
+    assert merge_paths_idx != -1, "Step 11 must contain the merge-path bullet"
     assert carrier_idx < merge_paths_idx, \
         "PR-carrier check bullet must precede the merge-paths bullet in Step 11"
 
@@ -160,3 +166,34 @@ def test_memory_pointer_appears_exactly_once():
     text = _text()
     assert text.count(MEMORY_POINTER) == 1, \
         f"{MEMORY_POINTER} must appear exactly once, found {text.count(MEMORY_POINTER)}"
+
+
+def test_merge_command_carries_body_file():
+    """The CLI command must pass the body explicitly.
+
+    `--squash` alone lets the host compose the squash message, which is the
+    same surface the web dialog drops. Only `--body-file` guarantees the
+    composed PR body reaches the squash commit, so the command the report
+    hands the user is incomplete without it.
+    """
+    for name, slice_fn in (("Step 11", _step11_slice), ("Step 13", _step13_slice)):
+        window = slice_fn(_text())
+        assert "--body-file" in window, \
+            f"{name}'s merge command must pass --body-file, not bare --squash"
+
+
+def test_no_second_merge_path_is_offered():
+    """Exactly one MERGE path is presented; the PR URL is a link, not a path.
+
+    Five squash bodies were lost while both paths were offered side by side
+    and two survived when only the CLI command was shown, so co-equal
+    presentation is the defect. The URL still appears — for viewing the PR —
+    but never framed as a way to merge.
+    """
+    for name, slice_fn in (("Step 11", _step11_slice), ("Step 13", _step13_slice)):
+        low = slice_fn(_text()).lower()
+        assert "both merge paths" not in low, \
+            f"{name} must not offer two merge paths"
+        assert "web merge" not in low, \
+            f"{name} must not frame the web dialog as a merge path"
+
