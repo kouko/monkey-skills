@@ -235,9 +235,12 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
         with the helper JSON and actionable evidence. The orchestrator must
         never auto-merge.
     - Merge path in the report: ONE merge path is offered, the ready-to-run
-      `gh pr merge <N> --squash --body-file <(gh pr view <N> --json body --jq .body)`
+      `gh pr view <N> --json body --jq .body | gh pr merge <N> --squash --body-file -`
       command, framed for the human to run themselves (e.g. via the `!` prefix)
-      with `<N>` resolved to the real PR number. It reads the body from the PR
+      with `<N>` resolved to the real PR number in both places. `--body-file -`
+      reads from standard input, which every shell provides — process
+      substitution would not survive a paste into `sh`, and a syntax error there
+      ends at the web dialog like every other failure this bullet closes. It reads the body from the PR
       page at merge time rather than from a file the report wrote earlier: the
       human runs this on their own schedule, often after CI or the next day, so
       any path the report could quote may be gone by then — a worktree Step 12

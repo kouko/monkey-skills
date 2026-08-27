@@ -28,6 +28,7 @@ Stdlib only (pathlib). Resolve SKILL.md relative to this test file.
 from pathlib import Path
 
 SKILL = Path(__file__).parents[1] / "skills" / "finishing-a-development-branch" / "SKILL.md"
+CARD_SSOT = Path(__file__).parents[2] / "scripts" / "canonical" / "loom-family" / "family-relay.md"
 
 MEMORY_POINTER = "docs/loom/memory/squash-dialog-can-drop-entire-pr-body.md"
 
@@ -227,3 +228,28 @@ def test_body_file_mandate_cites_the_record_that_justifies_it():
     step11 = _step11_slice(_text())
     assert "github-squash-merge-single-commit-drops-body.md" in step11, \
         "the --body-file mandate must cite the title-only-squash record"
+
+
+def test_close_out_card_merge_row_matches_step_11():
+    """The card row and Step 11 must specify the same command.
+
+    They are two copies of one command in files that nothing reconciles:
+    `sync_loom_family_contracts.py --check` compares the functional copies to
+    the SSOT, never the SSOT to this SKILL.md. Step 11's command changed twice
+    while the row kept an older form, every gate exited 0 throughout, and a
+    reviewer found it by reading. The row is also the ONLY specification for
+    seams that render the card without opening Step 11, so a stale row is not a
+    cosmetic mismatch — it is a second, wrong instruction.
+    """
+    row = next(
+        line for line in CARD_SSOT.read_text(encoding="utf-8").splitlines()
+        if line.startswith("| 💻 Merge |")
+    )
+    step11 = _step11_slice(_text())
+    command = next(
+        part for part in row.split("`") if part.startswith("gh pr view")
+    )
+    assert command in " ".join(step11.split()), (
+        "the close-out card's merge row must quote Step 11's command verbatim; "
+        f"the row has {command!r}"
+    )
