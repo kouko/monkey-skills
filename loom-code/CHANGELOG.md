@@ -33,7 +33,10 @@ Versioning: [Semantic Versioning](https://semver.org/).
 - `writing-plans`: `plan-format.md` used "mechanical" for two different tests
   that disagreed about its own backfill example — the plan-level complexity
   exemption (decided by a trigger list) and the per-task `Review-weight`
-  marker (identical-edit only). The exemption now says which test it is.
+  marker (identical-edit only). The exemption now says which test it is. Check
+  21's failure column decided the same gap on a non-mechanical *task*, so a
+  reviewer grading that example returned a gap on a plan the rule declares
+  legal; it is now plan-scoped and points at the trigger list.
 
 ## [0.101.2] — 2026-08-27 — conditional-operations stands on its own
 

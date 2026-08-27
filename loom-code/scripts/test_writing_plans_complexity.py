@@ -159,3 +159,25 @@ def test_complexity_exemption_is_distinguished_from_review_weight_mechanical():
         "`Review-weight: mechanical` marker, which uses a stricter and "
         "differently-scoped eligibility test"
     )
+
+
+def test_check_21_failure_column_is_plan_scoped_like_its_rule():
+    """Check 21's two columns must judge the same thing.
+
+    Its rule column exempts a mechanical-only *plan* by the schema's trigger
+    list, while its failure column fired on a non-mechanical *task* — and the
+    only definition of a mechanical task in that table is Check 16's
+    identical-edit test. A reviewer grading the schema's own backfill example
+    from the failure column returns a gap on a plan the rule declares legal.
+    """
+    reviewer = REVIEWER.read_text(encoding="utf-8")
+    row = next(
+        line for line in reviewer.splitlines() if line.startswith("| 21 |")
+    )
+    failure = row.rsplit("|", 2)[-2]
+    assert "mechanical exemption" in failure, "Check 21 must still gate a false exemption"
+    assert "non-mechanical task" not in failure, (
+        "Check 21's failure column must not decide a plan-scoped exemption on a "
+        "task-scoped reading of `mechanical` — Check 16 owns the task test"
+    )
+    assert "plan" in failure, "the failure column must name the plan-level test it applies"
