@@ -22,6 +22,14 @@ breaks every downstream skill section that assumes this contract. The
 slot-to-field mapping is also a live seam onto goal-shape.md (Task 1): if
 that file renames a field, this file's mapping text must be checked against
 the renamed field, not a frozen copy of the old name.
+
+Every polarity-bearing assertion below binds its negation (or its positive
+obligation) to the object it governs WITHIN a structurally isolated scope —
+one numbered list item, or one sentence — rather than trusting a bare
+character-distance bound. A character cap on top of that scoping buys
+nothing (the scope already prevents cross-item/cross-sentence bleeding) and
+only risks a false failure on a legitimate rewording that happens to be a
+few characters longer. Scope to structure, not to distance.
 """
 
 import re
@@ -51,6 +59,20 @@ def _paragraphs_normalized(content: str) -> list:
     return [re.sub(r"\s+", " ", p).strip() for p in re.split(r"\n\s*\n", content)]
 
 
+def _sentences(text: str) -> list:
+    """Split normalized text into sentences on '. ' boundaries.
+
+    Used to bind a polarity check to the ONE sentence that carries the
+    claim, inside a paragraph that holds several sentences (e.g. §6's
+    citation-boundary paragraph packs the 'never ... authority' claim and
+    the separate 'cannot ... substitute' claim into different sentences of
+    the same paragraph). Sentence-level scoping is structural — it needs no
+    character-distance guess — so it replaces the character caps that used
+    to do this job less precisely.
+    """
+    return [s.strip() for s in re.split(r"(?<=\.)\s+", text) if s.strip()]
+
+
 def _numbered_list_items(content: str) -> list:
     """Split a top-level markdown numbered list into per-item strings.
 
@@ -59,13 +81,49 @@ def _numbered_list_items(content: str) -> list:
     negation written in item 2 be satisfied by a keyword bleeding in from
     item 1 or item 3. Splitting at each `N. ` line start instead keeps each
     item's polarity bound to its own clause.
+
+    Each chunk is also cut at the next markdown heading (a line starting
+    with `#`). Without this, the LAST item in the list (item 3 here) has no
+    following `N. ` boundary to stop it, so it silently absorbs every
+    section after the list — §5 and §6 — into its own text. That bled-in
+    text then lets an item-3 assertion accidentally match on words that
+    live in §5/§6, not in item 3 itself, defeating the isolation this
+    function exists to provide.
+
+    Known, deliberately-left-open gap: a running-prose line that happens to
+    start with `N. ` (e.g. a sentence beginning "3. is the answer...")
+    would be misparsed as a list-item boundary by the lookahead regex
+    below. No such line exists in the current reference — every `N. ` line
+    start in this file is a genuine list item — so this is not fixed here;
+    a general prose-vs-list-item detector is more machinery than the
+    current, controlled file warrants. If a future edit to input-floor.md
+    ever puts a numeral-dot at the start of a running-prose line, this
+    function would need to be revisited.
     """
     chunks = re.split(r"\n(?=\d+\.\s)", content)
-    return [
-        re.sub(r"\s+", " ", chunk).strip()
-        for chunk in chunks
-        if re.match(r"^\d+\.\s", chunk.strip())
-    ]
+    items = []
+    for chunk in chunks:
+        if not re.match(r"^\d+\.\s", chunk.strip()):
+            continue
+        chunk = re.split(r"\n#", chunk)[0]
+        items.append(re.sub(r"\s+", " ", chunk).strip())
+    return items
+
+
+def _bar_intro(content: str) -> str:
+    """The prose intro of §4 'The bar', excluding its three list items.
+
+    §4 has no blank line between its intro and item 1 (see
+    _numbered_list_items' docstring), so paragraph-level splitting merges
+    the intro with all three items into one block. The "not ... mechanical"
+    claim belongs to the intro only; isolating it structurally — from the
+    heading to the first list item — keeps a mutant that flips the intro's
+    polarity from accidentally being rescued by unrelated item text bled
+    into the same paragraph.
+    """
+    match = re.search(r"## 4 — The bar\n\n(.*?)\n1\.\s", content, re.DOTALL)
+    assert match, "Expected the §4 'The bar' heading followed by a prose intro."
+    return re.sub(r"\s+", " ", match.group(1)).strip()
 
 
 def _field_names_from_shape_reference() -> list:
@@ -112,11 +170,17 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "Must state the refusal rule: when either slot is empty, name the "
         "empty slot and emit no goal."
     )
-    # Proximity + negation check: "no" must bind to "goal" within the same
-    # "emit(s)" clause, so a mutant that keeps naming the empty slot but
-    # swaps the consequence to emitting a degraded goal (instead of none)
-    # does not pass by the naming alone.
-    assert re.search(r"\bemits?\b[^.]{0,30}\bno\b[^.]{0,10}\bgoal\b", refusal_para), (
+    # This paragraph is a single sentence (verified by inspection of
+    # input-floor.md §3), so no separate sentence split is needed — the
+    # paragraph boundary already is the sentence boundary. Bind "no" to
+    # "goal" within the "emit(s)" clause, unbounded by character count: a
+    # mutant that keeps naming the empty slot but swaps the consequence to
+    # emitting a degraded goal (instead of none) still fails, while a
+    # legitimate rewording that inserts a longer clause between the words
+    # (e.g. "emits, given the missing input evidence, no goal") still
+    # passes, because the scope is the whole (single) sentence, not a
+    # character count.
+    assert re.search(r"\bemits?\b.*\bno\b.*\bgoal\b", refusal_para), (
         "The refusal rule must state the consequence as emitting NO goal "
         "(not a degraded/vague one) — expected 'emit(s) ... no ... goal' "
         "within one sentence."
@@ -125,21 +189,52 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
     assert vague_para, (
         "Must state that emitting a vague goal is worse than emitting none."
     )
-    assert _paragraph_containing("vague", "satisfied"), (
+    satisfied_sentence = next(
+        (s for s in _sentences(vague_para) if "vague" in s and "satisfied" in s),
+        None,
+    )
+    assert satisfied_sentence, (
         "Must state that a vague condition may be judged satisfied immediately."
     )
+    # Positive-obligation check: "may" must bind, in order, to "judged" and
+    # "satisfied" within that one sentence. A mutant that inverts this to
+    # "a vague condition is never judged satisfied" would still contain
+    # both "vague" and "satisfied" and would false-pass the bare
+    # containment check above; requiring "may ... judged ... satisfied" in
+    # order catches that inversion, since "never" breaks the order-bound
+    # "may" requirement.
+    assert re.search(r"\bmay\b.*\bjudged\b.*\bsatisfied\b", satisfied_sentence), (
+        "The claim that a vague condition may be judged satisfied must use "
+        "'may' (permission), not a negated form — expected "
+        "'may ... judged ... satisfied' within one sentence."
+    )
 
-    # --- the bar: three clauses ---
-    decidable_para = _paragraph_containing("decidable")
-    assert decidable_para, "The bar must state the condition must be decidable."
-    false_para = _paragraph_containing("false", "written")
-    assert false_para, "The bar must state the condition must be false when written."
-    # Item-scoped proximity + negation check: bind "not" to "true" within the
-    # SAME numbered list item, not merely somewhere in the shared paragraph.
-    # §4's three items carry no blank line between them, so a paragraph-level
-    # match would let "not" from item 1 or item 3 satisfy this clause even if
-    # item 2 itself were inverted to "may already be true; that is fine."
+    # --- the bar: three clauses, each isolated to its own list item ---
     list_items = _numbered_list_items(content)
+
+    decidable_item = next(
+        (item for item in list_items if "decidable" in item.lower()), None
+    )
+    assert decidable_item, "The bar must state the condition must be decidable."
+    decidable_item_lower = decidable_item.lower()
+    # Positive-obligation check: "must" bound to "checkable", scoped to
+    # item 1 only. A mutant reading "the condition need not be checkable
+    # true or false against evidence; opinion is fine too" keeps the word
+    # "decidable" (in the item's bold heading) but drops the "must ...
+    # checkable" obligation entirely — it fails here.
+    assert re.search(r"\bmust\s+be\s+checkable\b", decidable_item_lower), (
+        "The 'Decidable' item must state the condition MUST be checkable "
+        "true or false — expected 'must be checkable' within item 1."
+    )
+    # Consequence check: an undecidable condition must FAIL this bar, not
+    # clear it. A mutant reading "...an undecidable condition still clears
+    # this bar" keeps "decidable"/"checkable"-adjacent vocabulary but
+    # inverts the consequence — it fails here because "fails" is absent.
+    assert re.search(r"\bfails\b.*\bbar\b", decidable_item_lower), (
+        "The 'Decidable' item must state that an undecidable condition "
+        "FAILS this bar — expected 'fails ... bar' within item 1."
+    )
+
     false_item = next(
         (
             item
@@ -149,26 +244,55 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         None,
     )
     assert false_item, "The bar's 'False when written' item must be a list item."
-    assert re.search(r"\bnot\b[^.]{0,40}\btrue\b", false_item.lower()), (
+    # Item-scoped negation check: bind "not" to "true" within item 2 only,
+    # unbounded by character count now that the item boundary already does
+    # the isolation §4's three items carry no blank line between them, so
+    # a paragraph-level match would let "not" from item 1 or item 3 satisfy
+    # this clause even if item 2 itself were inverted to "may already be
+    # true; that is fine."
+    assert re.search(r"\bnot\b.*\btrue\b", false_item.lower()), (
         "The 'false when written' clause must state the condition must NOT "
         "already be true at the moment it is written — expected "
         "'not ... true' within its own list item."
     )
-    person_para = _paragraph_containing("person", "acting")
-    assert person_para and "answering" in person_para, (
-        "The bar must state the condition must not depend on a person acting "
-        "or answering."
+
+    person_item = next(
+        (
+            item
+            for item in list_items
+            if "person" in item.lower() and "acting" in item.lower()
+        ),
+        None,
+    )
+    assert person_item and "answering" in person_item.lower(), (
+        "The bar must state the condition must not depend on a person "
+        "acting or answering."
+    )
+    # Item-scoped negation check: bind "not" to "depend" within item 3
+    # only. A mutant reading "the condition may depend on a person acting
+    # or answering; that is acceptable" keeps every asserted keyword
+    # (person, acting, answering) but drops the "must not depend"
+    # obligation — it fails here because no negation binds to "depend".
+    assert re.search(r"\bnot\b.*\bdepend\b", person_item.lower()), (
+        "The 'Free of dependence on a person' clause must state the "
+        "condition must NOT depend on a person — expected "
+        "'not ... depend' within its own list item."
     )
 
     # --- the bar is explicitly NOT claimed to be mechanical ---
-    # Word-boundary + proximity check: "not" must appear close to
-    # "mechanical" within the same paragraph, so a paragraph that merely
-    # contains "mechanical" unqualified does not pass by accident.
-    mechanical_para = _paragraph_containing("mechanical")
-    assert mechanical_para, "The bar section must address whether it is mechanical."
-    assert re.search(r"\bnot\b[^.]{0,60}\bmechanical\b", mechanical_para), (
+    # Structurally isolated to §4's prose intro (heading -> first list
+    # item), not the merged intro+items paragraph, so a mutant that
+    # flips the intro's polarity cannot be rescued by unrelated item text
+    # bled into the same paragraph. Word-boundary + proximity check: "not"
+    # must appear before "mechanical" within that intro, unbounded by
+    # character count now that the intro is already isolated.
+    bar_intro = _bar_intro(content)
+    assert "mechanical" in bar_intro.lower(), (
+        "The bar section must address whether it is mechanical."
+    )
+    assert re.search(r"\bnot\b.*\bmechanical\b", bar_intro.lower()), (
         "The bar must be stated as prose judgment, explicitly NOT claimed to "
-        "be mechanical — expected 'not ... mechanical' within one sentence."
+        "be mechanical — expected 'not ... mechanical' within the intro."
     )
 
     # --- three provenance tags ---
@@ -176,9 +300,26 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
     assert user_said_para and "quoted" in user_said_para, (
         "Must define `user-said`: the user's own words, quoted."
     )
+    # Phrase check (not a bare co-occurrence): "quoted directly" must
+    # appear as a contiguous phrase. A mutant reading "...the user's own
+    # words, though never literally quoted" keeps "user-said" and "quoted"
+    # present but inverts the claim; it fails here because that exact
+    # phrase is gone.
+    assert "quoted directly" in user_said_para, (
+        "The `user-said` tag must state the content is quoted DIRECTLY — "
+        "expected the phrase 'quoted directly'."
+    )
     derived_para = _paragraph_containing("derived")
     assert derived_para and "anchor" in derived_para, (
         "Must define `derived`: names the anchor it was inferred from."
+    )
+    # Phrase check: "names the anchor" must appear contiguously. A mutant
+    # reading "...the tag does not name the anchor" keeps "anchor" present
+    # but inverts the claim; it fails here because that exact phrase is
+    # gone.
+    assert "names the anchor" in derived_para, (
+        "The `derived` tag must state the tag NAMES the anchor — expected "
+        "the phrase 'names the anchor'."
     )
     proposed_para = _paragraph_containing("proposed")
     assert proposed_para and (
@@ -196,18 +337,31 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "Must state a recorded purpose is never authority to settle a "
         "choice reserved for the user."
     )
-    # Proximity + negation check: "never" must bind to "authority" within one
-    # clause, and a separate negated "substitute" clause must also be
-    # present — pure keyword co-occurrence lets a mutant that inverts the
-    # boundary (purpose IS authority that can substitute) keep both words
-    # present elsewhere in the paragraph and pass by accident.
-    assert re.search(r"\bnever\b[^.]{0,40}\bauthority\b", never_authority_para), (
+    # §6 is one paragraph holding three sentences: the "never ... authority"
+    # claim and the "cannot ... substitute" claim are DIFFERENT sentences of
+    # that paragraph. Splitting to sentences (structural) rather than
+    # bounding by character count keeps each negation bound to its own
+    # clause without an arbitrary distance guess.
+    citation_sentences = _sentences(never_authority_para)
+    authority_sentence = next(
+        (s for s in citation_sentences if "never" in s and "authority" in s), None
+    )
+    assert authority_sentence, (
+        "'never' and 'authority' must appear together within one sentence."
+    )
+    assert re.search(r"\bnever\b.*\bauthority\b", authority_sentence), (
         "'never' must be bound to 'authority' within one sentence — expected "
         "'never ... authority', not the two words merely co-occurring."
     )
+    substitute_sentence = next(
+        (s for s in citation_sentences if "substitute" in s), None
+    )
+    assert substitute_sentence, (
+        "Must also state a purpose cannot substitute for the user's own "
+        "decision, in its own sentence."
+    )
     assert re.search(
-        r"\b(never|cannot|can't|not)\b[^.]{0,40}\bsubstitute\b",
-        never_authority_para,
+        r"\b(never|cannot|can't|not)\b.*\bsubstitute\b", substitute_sentence
     ), (
         "Must also state a purpose cannot substitute for the user's own "
         "decision — expected a negation bound to 'substitute' within one "
