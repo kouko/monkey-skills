@@ -85,6 +85,11 @@ Do not reconstruct the schema from this entrypoint. Then:
    first so the launcher survives the current session, then show the identical
    text to the user for immediate copying.
 
+If the user also wants this session's intent captured as an explicit goal with
+its own acceptance condition rather than only saved state, `loom-workflow:goal-create`
+is a separate option they can invoke themselves; Prepare mode only names it and
+never invokes it.
+
 ## Resume mode
 
 **Before interpreting any HANDOFF artifact, read `references/handoff-schema.md` fully.**

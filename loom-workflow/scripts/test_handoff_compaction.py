@@ -85,3 +85,14 @@ def test_entrypoint_preserves_prepare_resume_verification_and_stop():
     assert resume_schema <= resume_interpret
 
     assert SCHEMA_PATH.is_file()
+
+
+def test_prepare_mode_names_goal_create():
+    text = SKILL_PATH.read_text(encoding="utf-8")
+
+    prepare = text.index("## Prepare mode")
+    resume = text.index("## Resume mode")
+    prepare_section = text[prepare:resume]
+
+    assert "loom-workflow:goal-create" in prepare_section
+    assert "goal-create" not in text[resume:]
