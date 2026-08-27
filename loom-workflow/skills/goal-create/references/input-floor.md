@@ -10,8 +10,10 @@
 
 ## 1 — Two input slots
 
-A goal condition is never drafted from nothing. It is drafted from exactly
-two input slots:
+A goal condition is never drafted from nothing. Before drafting may begin at
+all, two input slots must be filled — this is the floor, not the source of
+every field in the four-field shape (§2 states where the other two fields
+come from):
 
 - **Current state** — what is true now, cited to something readable (a file,
   a test run, a log, a message already in the conversation). This is not a
@@ -28,6 +30,16 @@ Each input slot feeds exactly one field of the four-field goal shape:
   starts from what the current state says is true today.
 - **Wanted difference** is what `Outcome` states — the one measurable end
   state the run is finished once it reaches.
+
+### The other two fields
+
+`Constraints` and `Stop-when` are not sourced from either input slot. Both
+are drafted by the agent from the same evidence and conversation context
+that fills the two slots above, and each still carries its own provenance
+tag under §5 like every field of the goal. Because they sit outside the
+floor, an empty or missing `Constraints` or `Stop-when` does not by itself
+trigger the refusal rule in §3 — that rule gates on the two input slots
+only.
 
 ## 3 — Refusal
 

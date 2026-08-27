@@ -67,6 +67,11 @@ instead (the plan, the spec, the design doc) and keeps the goal condition
 itself short enough for the evaluator to hold in view alongside the
 conversation it is checking.
 
+Only Anthropic's guidance documents this cap; OpenAI's guidance states no
+length limit at all. This skill applies the same 4,000-character budget to
+goals drafted for either host, for portability — not because OpenAI
+documents a cap of its own.
+
 ---
 
 ## Provenance and attribution

@@ -122,16 +122,31 @@ def test_declares_two_modes_and_conditional_arc():
 
     # --- The not-applicable path: named condition, named reason, no scaffolding. ---
     not_applicable_sentence = (
-        "ARC is conditional. When the repository has neither a "
-        "`docs/loom/PURPOSE.md`\nnor any `docs/loom/` store directory at "
-        "all, ARC reports itself not\napplicable, names which of the two "
-        "is missing, and scaffolds nothing —\ncreating the store is "
-        "`loom-init`'s job, not this skill's."
+        "ARC is conditional. When the repository has no "
+        "`docs/loom/PURPOSE.md` — the\npurpose file lives inside the "
+        "`docs/loom/` store directory, so its absence\nalready means the "
+        "store itself is missing too — ARC reports itself not\n"
+        "applicable, names the reason, and scaffolds nothing — creating "
+        "the store is\n`loom-init`'s job, not this skill's."
     )
     assert _normalize_ws(not_applicable_sentence) in _normalize_ws(arc_body), (
         "ARC's not-applicable sentence changed — update this pin if the "
-        "reword is deliberate (must still: name the two conditions, "
-        "require naming the missing one, and forbid scaffolding)."
+        "reword is deliberate (must still: name the missing-purpose-file "
+        "condition, require naming the reason, and forbid scaffolding)."
+    )
+
+    # --- The not-applicable path must not imply a partial case (store
+    # present but purpose file missing, or vice versa) can occur — the
+    # purpose file lives inside the store, so its absence already implies
+    # the store's absence too. A structural guard: the section must not
+    # contain the word "neither" (the tell-tale of a two-independent-
+    # conditions framing) anywhere near "PURPOSE.md" and "store".
+    assert not re.search(
+        r"\bneither\b.{0,80}`docs/loom/PURPOSE\.md`.{0,80}store", arc_body
+    ), (
+        "ARC's not-applicable wording must not frame the missing purpose "
+        "file and the missing store as two independent conditions — the "
+        "purpose file lives inside the store, so there is no partial case."
     )
 
 
@@ -182,6 +197,42 @@ def test_floor_invocation_line_names_the_script():
     session_body = _section(text, "SESSION mode")
     assert "structure only" in session_body
     assert "judgement" in session_body or "judgment" in session_body
+
+    # --- Lint-result rule: what to do with the checker's exit code.
+    # Structural: bind the obligation to the ONE sentence that states it,
+    # not to a character-distance window over the whole section.
+    session_sentences = [
+        s.strip()
+        for s in re.split(r"(?<=\.)\s+", re.sub(r"\s+", " ", session_body))
+        if s.strip()
+    ]
+    rewrite_sentence = next(
+        (
+            s
+            for s in session_sentences
+            if "exit 1" in s and "rewritten" in s
+        ),
+        None,
+    )
+    assert rewrite_sentence, (
+        "SESSION mode must state what to do on exit 1: the draft is "
+        "rewritten and re-checked."
+    )
+    # Positive-obligation check: "never" must bind to "shown" within the
+    # sentence that states the user-facing consequence — a mutant that
+    # drops the "never shown until 0" obligation (e.g. "may be shown
+    # anyway") must fail this.
+    never_shown_sentence = next(
+        (s for s in session_sentences if "shown" in s and "0" in s), None
+    )
+    assert never_shown_sentence, (
+        "SESSION mode must state a draft is never shown until the "
+        "checker exits 0."
+    )
+    assert re.search(r"\bnever\b.*\bshown\b", never_shown_sentence), (
+        "Expected 'never ... shown' bound within one sentence — a draft "
+        "must not be presented before the checker exits 0."
+    )
 
 
 def test_arc_points_at_the_purpose_template_without_restating_it():

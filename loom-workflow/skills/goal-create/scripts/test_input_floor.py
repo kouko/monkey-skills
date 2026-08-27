@@ -273,16 +273,40 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         None,
     )
     assert false_item, "The bar's 'False when written' item must be a list item."
+    false_item_lower = false_item.lower()
     # Item-scoped negation check: bind "not" to "true" within item 2 only,
     # unbounded by character count now that the item boundary already does
     # the isolation §4's three items carry no blank line between them, so
     # a paragraph-level match would let "not" from item 1 or item 3 satisfy
     # this clause even if item 2 itself were inverted to "may already be
     # true; that is fine."
-    assert re.search(r"\bnot\b.*\btrue\b", false_item.lower()), (
+    assert re.search(r"\bnot\b.*\btrue\b", false_item_lower), (
         "The 'false when written' clause must state the condition must NOT "
         "already be true at the moment it is written — expected "
         "'not ... true' within its own list item."
+    )
+    # Bound negation guard: "not ... true" survives as a bare co-occurrence
+    # even in an INVERTED sentence — "the condition need not be false when
+    # written; it is fine if it is already true" contains "not" (bound to
+    # "false", not "true") followed later by "true" and would false-pass
+    # the co-occurrence check above. Require "not" to sit directly against
+    # "already"/"be" ahead of "true" — the actual obligation clause — and
+    # separately forbid "need not be false" and "already true" appearing
+    # as their own (inverted) phrases in this item.
+    assert re.search(r"\bmust\s+not\s+already\s+be\s+true\b", false_item_lower) or (
+        re.search(r"\bnot\b\s+(?:already\s+)?be\s+true\b", false_item_lower)
+    ), (
+        "The 'false when written' clause must bind 'not' directly to the "
+        "obligation — expected 'must not (already) be true' as a "
+        "contiguous clause, not 'not' and 'true' merely co-occurring."
+    )
+    assert "need not be false" not in false_item_lower, (
+        "The 'false when written' clause must not read as 'need not be "
+        "false when written' — that inverts the obligation."
+    )
+    assert not re.search(r"\bfine\s+if\s+it\s+is\s+already\s+true\b", false_item_lower), (
+        "The 'false when written' clause must not state it is fine for "
+        "the condition to already be true — that inverts the obligation."
     )
 
     person_item = next(
@@ -297,15 +321,42 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "The bar must state the condition must not depend on a person "
         "acting or answering."
     )
+    person_item_lower = person_item.lower()
     # Item-scoped negation check: bind "not" to "depend" within item 3
     # only. A mutant reading "the condition may depend on a person acting
     # or answering; that is acceptable" keeps every asserted keyword
     # (person, acting, answering) but drops the "must not depend"
     # obligation — it fails here because no negation binds to "depend".
-    assert re.search(r"\bnot\b.*\bdepend\b", person_item.lower()), (
+    assert re.search(r"\bnot\b.*\bdepend\b", person_item_lower), (
         "The 'Free of dependence on a person' clause must state the "
         "condition must NOT depend on a person — expected "
         "'not ... depend' within its own list item."
+    )
+    # Bound negation guard: "not ... depend" survives as a bare
+    # co-occurrence even in an INVERTED sentence — "the condition may
+    # depend on a person acting or answering, which is fine" contains
+    # "not" only inside an earlier, unrelated clause (e.g. "is not
+    # decidable by the run itself" from item 3's own second sentence) and
+    # "depend" later in the inverted clause — the bare co-occurrence
+    # regex above is satisfied even though the actual "may depend ...
+    # fine" clause carries no negation of its own. Require "not" to sit
+    # directly against "depend" (optionally via "must"), and separately
+    # forbid the inverted phrasing itself.
+    assert re.search(r"\bmust\s+not\s+depend\b", person_item_lower) or re.search(
+        r"\bnot\s+depend\b", person_item_lower
+    ), (
+        "The 'Free of dependence on a person' clause must bind 'not' "
+        "directly to 'depend' — expected 'must not depend' as a "
+        "contiguous clause, not 'not' and 'depend' merely co-occurring."
+    )
+    assert not re.search(r"\bmay\s+depend\s+on\s+a\s+person\b", person_item_lower), (
+        "The 'Free of dependence on a person' clause must not state the "
+        "condition MAY depend on a person — that inverts the obligation."
+    )
+    assert "which is fine" not in person_item_lower, (
+        "The 'Free of dependence on a person' clause must not read as "
+        "acceptable ('which is fine') for the condition to depend on a "
+        "person — that inverts the obligation."
     )
 
     # --- the bar is explicitly NOT claimed to be mechanical ---
@@ -500,6 +551,63 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
             raise AssertionError(
                 f"Must not claim the bar 'requires' mechanical checking: {p!r}"
             )
+
+
+def test_constraints_and_stop_when_source_is_stated() -> None:
+    """§1 must not claim the two input slots source every field; §2 must
+    say, honestly, where `Constraints` and `Stop-when` actually come from,
+    and that the refusal rule does not gate on them.
+
+    Structural scoping: the "other two fields" claim is its own paragraph
+    (blank-line-delimited) under §2, isolated from the two mapping bullets
+    above it — so a mutant that inverts this paragraph cannot be rescued
+    by the unrelated bullet text sharing a merged block.
+    """
+    content = _read_reference()
+    paragraphs = _paragraphs_normalized(content)
+    paragraphs_lower = [p.lower() for p in paragraphs]
+
+    def _paragraph_containing(*keywords: str):
+        for p in paragraphs_lower:
+            if all(kw in p for kw in keywords):
+                return p
+        return None
+
+    # --- §1 no longer totalizes: it must call the two slots a floor, not
+    # the source of every field. ---
+    floor_para = _paragraph_containing("floor")
+    assert floor_para, "§1 must name the two input slots as 'the floor'."
+
+    # --- §2 states where `constraints` and `stop-when` come from. ---
+    source_para = _paragraph_containing(
+        "constraints", "stop-when", "not sourced from either input slot"
+    )
+    assert source_para, (
+        "§2 must state that `Constraints` and `Stop-when` are not sourced "
+        "from either input slot."
+    )
+    # Positive-obligation check: the real source (agent, drafted from the
+    # same evidence/context) must be stated in that same paragraph, not
+    # merely the negative half.
+    assert "drafted by the agent" in source_para, (
+        "§2 must state Constraints/Stop-when are drafted by the agent — "
+        "expected the phrase 'drafted by the agent'."
+    )
+
+    # --- The refusal rule must be scoped to the two input slots, not the
+    # other two fields — bind the negation to 'trigger' within the same
+    # paragraph that raises the point. ---
+    gate_sentence = next(
+        (s for s in _sentences(source_para) if "refusal rule" in s), None
+    )
+    assert gate_sentence, (
+        "§2 must state the refusal rule's relationship to Constraints/"
+        "Stop-when in its own sentence."
+    )
+    assert re.search(r"\bnot\b.*\btrigger\b", gate_sentence), (
+        "Expected 'not ... trigger' bound within one sentence: an empty "
+        "Constraints/Stop-when must not by itself trigger refusal."
+    )
 
 
 def test_slot_mapping_uses_the_shape_reference_field_names() -> None:

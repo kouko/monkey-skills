@@ -36,6 +36,10 @@ actually reads as decidable, already-false, or free of a person. The bar
 in `references/input-floor.md` §4 stays a judgement call the agent makes
 each time; no script can pass or fail it on the agent's behalf.
 
+The script exits 1 on any hard failure and 0 otherwise. On exit 1, the
+draft is rewritten to fix what it flagged and the checker is re-run — a
+draft is never shown to the user until it exits 0.
+
 ## ARC mode
 
 ARC drafts a `Why` and a `Done when` for the repository's purpose artifact
@@ -43,10 +47,11 @@ at `docs/loom/PURPOSE.md` — see that file for its exact two-field format;
 this skill does not restate it. ARC never writes that file itself; the
 draft is only ever landed by the user's own confirmation.
 
-ARC is conditional. When the repository has neither a `docs/loom/PURPOSE.md`
-nor any `docs/loom/` store directory at all, ARC reports itself not
-applicable, names which of the two is missing, and scaffolds nothing —
-creating the store is `loom-init`'s job, not this skill's.
+ARC is conditional. When the repository has no `docs/loom/PURPOSE.md` — the
+purpose file lives inside the `docs/loom/` store directory, so its absence
+already means the store itself is missing too — ARC reports itself not
+applicable, names the reason, and scaffolds nothing — creating the store is
+`loom-init`'s job, not this skill's.
 
 ## Invocation
 

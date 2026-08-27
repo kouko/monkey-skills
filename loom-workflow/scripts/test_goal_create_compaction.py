@@ -32,12 +32,15 @@ def test_entrypoint_preserves_modes_floor_and_invocation():
     # not to a character window around it, per constraint 1.
     arc_not_applicable = _normalize(
         """
-        ARC is conditional. When the repository has neither a
-        `docs/loom/PURPOSE.md`
-        nor any `docs/loom/` store directory at all, ARC reports itself not
-        applicable, names which of the two is missing, and scaffolds
-        nothing —
-        creating the store is `loom-init`'s job, not this skill's.
+        ARC is conditional. When the repository has no
+        `docs/loom/PURPOSE.md` — the
+        purpose file lives inside the `docs/loom/` store directory, so its
+        absence
+        already means the store itself is missing too — ARC reports itself
+        not
+        applicable, names the reason, and scaffolds nothing — creating the
+        store is
+        `loom-init`'s job, not this skill's.
         """
     )
     assert arc_not_applicable in normalized, (

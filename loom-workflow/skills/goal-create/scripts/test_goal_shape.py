@@ -106,6 +106,39 @@ def test_defines_four_fields_budget_and_surfacing() -> None:
         "A goal exceeding the budget must point at a file rather than inlining detail."
     )
 
+    # --- the budget's own attribution caveat: only Anthropic documents
+    # this cap; OpenAI does not. Structural: bound to the paragraph that
+    # follows the "## The 4,000-character budget" heading's first
+    # paragraph, so a mutant that drops or inverts the caveat fails here
+    # rather than being rescued by unrelated text elsewhere in the file. ---
+    budget_section_match = re.search(
+        r"## The 4,000-character budget\n\n.*?\n\n(.*?)(?=\n---|\Z)",
+        content,
+        re.DOTALL,
+    )
+    assert budget_section_match, "Expected the budget section's second paragraph."
+    caveat_para = re.sub(r"\s+", " ", budget_section_match.group(1)).strip().lower()
+    assert "openai" in caveat_para and "anthropic" in caveat_para, (
+        "The budget section must name both vendors when caveating the cap."
+    )
+    # Positive-obligation check: OpenAI must be stated as documenting NO
+    # length limit — bind "no" to "limit" within the caveat.
+    assert re.search(r"\bno\b.*\blimit\b", caveat_para), (
+        "Must state OpenAI's guidance documents no length limit — expected "
+        "'no ... limit' within the caveat."
+    )
+    # Bound negation guard: a mutant that drops the "no limit" fact but
+    # keeps both vendor names (e.g. claiming OpenAI documents the same
+    # cap) must fail — require the caveat to also deny OpenAI documents
+    # its own cap.
+    assert re.search(r"\bnot\b.*\bopenai\b.*\bdocuments?\b", caveat_para) or (
+        re.search(r"\bnot\s+because\s+openai\s+documents\b", caveat_para)
+    ), (
+        "Must state the cap is applied for portability, NOT because "
+        "OpenAI documents one — expected a negation bound to 'OpenAI "
+        "documents' within the caveat."
+    )
+
     # --- vendor URLs cited ---
     missing_urls = [url for url in VENDOR_URLS if url not in content]
     assert not missing_urls, f"Missing vendor citation URL(s): {missing_urls}"
