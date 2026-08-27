@@ -1,31 +1,26 @@
-"""Structural grep-test guarding the dual-merge-path guidance in
+"""Structural grep-test guarding the SINGLE-merge-path guidance in
 finishing-a-development-branch/SKILL.md.
 
-Incident: four PRs merged via the GitHub web UI in one session — two
-squash bodies landed fine, two shipped title-only because the web merge
-dialog's description-box prefill silently failed (repo squash settings
-verified correct throughout). `gh pr merge <N> --squash` bypasses the
-dialog and faithfully uses the PR body. The durable lesson already lives
-at docs/loom/memory/squash-dialog-can-drop-entire-pr-body.md — this test
-does not restate the incident, it guards that the orchestrator's PR-open
-step (Step 11) and final report (Step 13) both surface BOTH merge paths:
-the web URL (with a reminder to glance that the dialog's description box
-is prefilled before confirming) and the ready-to-run CLI alternative
-`gh pr merge <N> --squash`, framed for the human to run themselves —
-never auto-merge.
+History, because this file reverses its own earlier assertions: it was first
+written after four PRs merged through the GitHub web UI in one session, two of
+which shipped title-only because the merge dialog's description textarea had
+been cleared. The remedy encoded then was to offer BOTH paths — the web URL
+with a reminder to glance at the prefill, plus the CLI command — and to let the
+human choose. Five more bodies were lost under that rule, and the two runs that
+showed only the CLI command kept theirs. The reminder asked a person to
+remember a check at the moment of clicking, and offering the link beside the
+command meant the link usually won.
 
-Neighborhood-scoped (mirrors test_finishing_archive_step.py): Step 11
-and Step 13 are sliced independently so a whole-file substring check
-can't false-green off one step carrying all the required phrases while
-the other carries none.
+So the assertions below now guard the opposite shape: ONE merge path, the CLI
+command completed with `--body-file` (the merge-time dialog is editable by
+whoever clicks merge; passing the body as an argument removes that surface),
+and the PR URL present only as a link to VIEW the PR. The durable record is
+docs/loom/memory/squash-dialog-can-drop-entire-pr-body.md — this test does not
+restate it.
 
-Grounding for the `gh pr merge <N> --squash` surface: it is not a new
-invention here — the repo already treats it as a checkpoint the guard
-and the memory skill both reason about. See
-loom-code/hooks/git-guard.py:14 (git-guard's own comment lists
-``gh pr create``, ``gh pr merge`` as commands requiring fresh markers)
-and loom-workflow/skills/git-memory/SKILL.md:27 ("`gh pr merge` (esp.
-`--squash`) is the last checkpoint before the branch closes").
+Neighborhood-scoped (mirrors test_finishing_archive_step.py): Step 11 and Step
+13 are sliced independently so a whole-file substring check can't false-green
+off one step carrying all the required phrases while the other carries none.
 
 Stdlib only (pathlib). Resolve SKILL.md relative to this test file.
 """
@@ -71,14 +66,16 @@ def _step13_slice(text: str) -> str:
     )
 
 
-def test_step11_offers_cli_merge_alternative():
-    """Step 11 (gh pr create) must offer the ready-to-run CLI merge command
-    as an alternative to the web merge dialog."""
+def test_step11_offers_the_cli_merge_command():
+    """Step 11 (gh pr create) must carry the ready-to-run CLI merge command.
+
+    Not an alternative to anything — it is the only merge path the report
+    offers, so its absence leaves the reader with no way to merge at all."""
     step11 = _step11_slice(_text())
     assert "gh pr merge" in step11, \
-        "Step 11 must offer the `gh pr merge <N> --squash` CLI alternative"
+        "Step 11 must carry the `gh pr merge <N> --squash` CLI command"
     assert "--squash" in step11, \
-        "Step 11's CLI alternative must be a squash merge command"
+        "Step 11's merge command must be a squash merge"
 
 
 def test_step11_carries_no_prefill_reminder():
@@ -100,7 +97,7 @@ def test_step11_carries_no_prefill_reminder():
 
 
 def test_step11_never_auto_merges():
-    """The CLI alternative must stay human-executed, not orchestrator-run —
+    """The merge command must stay human-executed, not orchestrator-run —
     consistent with this skill's no-auto-merge contract."""
     step11 = _step11_slice(_text())
     assert "human" in step11.lower() or "user" in step11.lower(), \
@@ -115,14 +112,14 @@ def test_step11_points_at_the_incident_memory_record():
         f"Step 11 must point at {MEMORY_POINTER}"
 
 
-def test_step13_report_includes_cli_merge_alternative():
+def test_step13_report_includes_the_cli_merge_command():
     """Step 13's final-report content list must also require surfacing the
-    CLI merge alternative when a PR was created — not just the PR URL."""
+    CLI merge command when a PR was created — not just the PR URL."""
     step13 = _step13_slice(_text())
     assert "gh pr merge" in step13, \
-        "Step 13 must require the CLI merge alternative in the report"
+        "Step 13 must require the CLI merge command in the report"
     assert "--squash" in step13, \
-        "Step 13's CLI alternative must be a squash merge command"
+        "Step 13's merge command must be a squash merge"
 
 
 def test_step13_report_carries_no_prefill_reminder():

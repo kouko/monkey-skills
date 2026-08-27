@@ -235,13 +235,17 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
         with the helper JSON and actionable evidence. The orchestrator must
         never auto-merge.
     - Merge path in the report: ONE merge path is offered, the ready-to-run
-      `gh pr merge <N> --squash --body-file <path-to-the-body-file>` command,
-      framed for the human to run themselves (e.g. via the `!` prefix) and
-      quoting the real body-file path — the command is incomplete without it,
-      because bare `--squash` lets the host compose the squash message and
-      that is the surface that drops the body. Give the PR URL too, as the
-      link to VIEW the PR; never present the web dialog as a second way to
-      merge. Offering both side by side is the defect, not a courtesy: see
+      `gh pr merge <N> --squash --body-file "$PR_BODY_FILE"` command, framed
+      for the human to run themselves (e.g. via the `!` prefix). `$PR_BODY_FILE`
+      is the same file this step already passed to `gh pr create`; the report
+      quotes its resolved absolute path, never the variable and never a literal
+      placeholder. Write that file outside the worktree (the session scratchpad)
+      so Step 12's optional worktree removal cannot delete the body the command
+      still needs. The command is incomplete without `--body-file`: the merge-time
+      dialog is editable by whoever clicks merge, and passing the body as an
+      argument is what removes that editable surface. Give the PR URL too, as the
+      link to VIEW the PR; never present the web dialog as a second way to merge.
+      Offering both side by side is the defect, not a courtesy: see
       `docs/loom/memory/squash-dialog-can-drop-entire-pr-body.md`. The
       orchestrator prepares the command, never runs it — no auto-merge.
 12. ASK user: "Branch was in .worktrees/; remove the worktree? (y/N)"
@@ -252,10 +256,11 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
     status, test counts, and review verdicts sink to sub-lines below that
     headline. Format authority: `loom-code/hooks/family-relay.md` §(a)'s
     Close-out card (not the generic User-rollup card — the close-out
-    specialization). Include: PR URL if created, as a link to view the PR —
-    and the same single merge path as Step 11, the ready-to-run
-    `gh pr merge <N> --squash --body-file <path>` command with its real
-    body-file path — and worktree status. End the report with one line naming the top
+    specialization). Include: PR URL if created, as a link to view the PR and
+    never as a second way to merge — and the same single merge path as Step 11,
+    the ready-to-run `gh pr merge <N> --squash --body-file <path>` command
+    quoting the resolved `$PR_BODY_FILE` path from Step 11 — and worktree
+    status. End the report with one line naming the top
     of the remaining bet queue ("next bet:
     <name>" — or "bet queue empty"), from
     `python3 scripts/backlog_index.py --ready` (repo-root copy; when
