@@ -1,11 +1,14 @@
 ---
 name: 2026-08-27-stage-specific-complexity-gates
 description: Loom stages evaluate the complexity they introduce without coupling independently installable plugins
-status: bet
+status: closed
 origin: user-established Codex goal for the stage-specific complexity mechanism
 start: user explicitly promoted this arc on 2026-08-27
 serves: makes Loom self-correcting against stage-specific accidental complexity while preserving cold standalone plugin adoption
 ---
+
+Shipped on branch `codex/standardize-complexity-gate` (2026-08-27): six stage-owned
+complexity lenses, cold-install boundary tests, and bounded behavioural evidence.
 
 Design and ship stage-specific complexity lenses for business planning,
 process design, interface design, system architecture, and implementation
