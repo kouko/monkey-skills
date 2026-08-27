@@ -110,19 +110,23 @@ weak axis. Two or more weak axes require NEEDS-MORE-RESEARCH, never hopeful GO.
    GO and no file.
 2. Read `assets/business-value-template.md` before writing so its shape and
    verdict enum control the artifact.
-3. Interrogate one question at a time across Why now, Why me, and Opportunity
+3. Read `references/business-complexity-lens.md` and apply its local questions
+   inside this worth-it checkpoint. If prior project-owned artifacts exist,
+   consult them only as optional evidence; their absence still requires a
+   complete local assessment or a reasoned N/A.
+4. Interrogate one question at a time across Why now, Why me, and Opportunity
    cost. If present, consult
    `docs/loom/discovery/<date>-<slug>/user-insights.md`. Verify and cite a
    factual claim when one web search can check it.
-4. Delegate market/GTM/revenue questions to `domain-teams:planning-team` using
+5. Delegate market/GTM/revenue questions to `domain-teams:planning-team` using
    paths and seed context. Invocation forms are in
    `../using-loom-design/references/discovery-claude-code-tools.md` and the
    adjacent `discovery-codex-tools.md`.
-5. Following the template, write
+6. Following the template, write
    `docs/loom/discovery/<date>-<slug>/business-value.md`, where the date is
    today (`YYYY-MM-DD`) and the topic slug is kebab-case. Reuse an existing
    folder for the same topic.
-6. From the consumer project root, resolve the validator to an absolute path
+7. From the consumer project root, resolve the validator to an absolute path
    and pass this argv directly to process execution; never through a shell:
 
    ```text
@@ -133,7 +137,7 @@ weak axis. Two or more weak axes require NEEDS-MORE-RESEARCH, never hopeful GO.
    failure, stop and surface the remaining problems to the user. The validator
    accepts the greenfield first run containing only `business-value.md` before
    `user-insights.md` exists.
-7. For NEEDS-MORE-RESEARCH, hand off to `user-insights` and revisit when evidence
+8. For NEEDS-MORE-RESEARCH, hand off to `user-insights` and revisit when evidence
    improves.
 
 ## Boundary

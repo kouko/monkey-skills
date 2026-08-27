@@ -42,6 +42,11 @@ canonical sections, YAML token keys, and **WCAG-AA contrast**. Follow it and
 confirm the young Google `DESIGN.md` keys/lint against the authoritative spec
 at generation time.
 
+Read **`references/visual-complexity-lens.md`** too. Apply its local questions
+when the visual system introduces material vocabulary, variants, or exceptions;
+record the result only in the existing Overview / Brand and Do's & Don'ts
+prose slots the schema names.
+
 ### Step 2 — Read the governing PRINCIPLES.md
 
 Read **`docs/loom/PRINCIPLES.md`** as the visual system's **governing

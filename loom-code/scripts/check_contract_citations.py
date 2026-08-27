@@ -264,7 +264,6 @@ DEBT_LIST: frozenset[str] = frozenset(
         "loom-code/skills/writing-plans/SKILL.md",
         "loom-code/skills/writing-plans/references/design-evidence.md",
         "loom-code/skills/writing-plans/references/kickoff-briefing.md",
-        "loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md",
         "loom-code/skills/writing-plans/references/plan-format.md",
         "loom-design/skills/completeness-critic/references/consistency-lens.md",
         "loom-design/skills/design-system/references/canon-design-surface.md",

@@ -92,6 +92,28 @@ Entry form: `- OQ-<n> [<TOKEN>] — <question text>`.
 
 This section deliberately carries no owner field, no deadline field, no routing field, and no per-task linkage field — each is a decided omission, not an oversight. An owner or deadline exists in mature closure-tracking practice to let a question stay open *through* a phase; a gate that blocks on any `[OPEN]` entry removes that permission, so the fields that governed it are removed too. A routing field distinguishing "the agent may settle this" from "the user must" is not carried either — that classification is already written down: see `~/.claude/rules/judgment-rubrics.md` §3 for when an agent must stop and ask the user rather than settle a question itself. A per-task `Blocked by: OQ-n` linkage field is likewise not carried — the section-level gate, not the task, is this schema's unit of blocking.
 
+### Complexity assessment (required)
+
+Every non-mechanical plan carries `## Complexity assessment` after `## Open
+Questions` and before Task 1. Use the four bullets from
+`architecture-complexity-lens.md`: added complexity, why it is worthwhile,
+removed or avoided complexity, and downstream risk. Optional upstream evidence
+may inform the assessment; when absent, assess locally.
+
+A plan consisting only of a mechanical edit may instead declare
+`N/A — mechanical edit: <reasoned exemption>`. Do not use this exemption for a
+plan that introduces a boundary, dependency, migration, configuration,
+operational duty, or non-trivial reuse.
+
+**This is not the `Review-weight: mechanical` test.** The two words coincide
+and the tests do not: this exemption is plan-level and is decided by the
+trigger list above, while `Review-weight` (§`Review-weight` below) is per-task
+and admits only an identical or near-identical edit reproducible from an exact
+spec. A plan can be exempt here and still carry no `Review-weight` marker on
+any of its tasks — the backfill example below is exactly that shape, six
+different docstrings for six different files. Check 21 judges the plan against
+the trigger list; Check 16 judges each task against the `Review-weight` test.
+
 ### Per-task block (required, repeats N times)
 
 ```markdown
@@ -414,6 +436,13 @@ Steps:
 
 N/A — no unresolved question: brief left nothing undecided at plan time.
 
+## Complexity assessment
+
+- Added complexity: one renderer module and one query-param branch in an existing handler.
+- Why it is worthwhile: CSV export is the brief's whole end state, and the branch is the smallest seam that serves it.
+- Removed or avoided complexity: no export service, no format registry, no new route — the existing endpoint absorbs the param.
+- Downstream risk: a second format would tempt a registry; that pressure surfaces in the handler, not in the renderer.
+
 ## Task 1 — Add format query param parsing to /reports handler
 
 - **Description**: Accept `format=csv` query param in `GET /reports/:id`; default to `format=json` if absent or unrecognized.
@@ -531,6 +560,10 @@ Stage: planning
 
 N/A — no unresolved question: brief left nothing undecided at plan time.
 
+## Complexity assessment
+
+N/A — mechanical edit: adds one module docstring per existing file; introduces no boundary, dependency, migration, configuration, operational duty, or reuse.
+
 ## Task 1 — Docstring for csv renderer   (Independent: true, Dependencies: none)
 ## Task 2 — Docstring for json renderer  (Independent: true, Dependencies: none)
 ## Task 3 — Docstring for xml renderer   (Independent: true, Dependencies: none)
@@ -614,7 +647,7 @@ Consider a brief whose Smallest End State is *"re-sync `deep-read`'s functional 
 - **Review-weight**: mechanical
 ```
 
-Both tasks' entire output is computed by a deterministic script from a named SSOT — there is no literal string to pre-quote in the Description the way the copyright-year example does, so the RED/GREEN pair names the **verification method** (a checksum comparison or the project's own paired drift-detection test) instead of a literal diff. That verification method is exactly what `subagent-driven-development/SKILL.md`'s mechanical self-check runs for this category — see its **Content match** step. For a straight-copy script like Task 1's, "diff the two existing files" and "re-run the script, diff its output" are the same check by construction (the script's only job is that copy); a script with side effects beyond a straight copy (e.g. one that also reformats or merges) would need the "re-run, diff output" framing specifically — the two framings are not interchangeable in general, only for this shape.
+Both tasks' entire output is computed by a deterministic script from a named SSOT — there is no literal string to pre-quote in the Description the way the copyright-year example does, so the RED/GREEN pair names the **verification method** (a checksum comparison or the project's own paired drift-detection test) instead of a literal diff. That verification method is exactly what [`subagent-driven-development`](../../subagent-driven-development/SKILL.md#process--per-task-triad) §**Mechanical review-weight exemption**'s self-check runs for this category — see its **Content match** step. For a straight-copy script like Task 1's, "diff the two existing files" and "re-run the script, diff its output" are the same check by construction (the script's only job is that copy); a script with side effects beyond a straight copy (e.g. one that also reformats or merges) would need the "re-run, diff output" framing specifically — the two framings are not interchangeable in general, only for this shape.
 
 ## Anti-patterns
 

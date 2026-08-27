@@ -23,6 +23,23 @@ have.>
 <What does this time NOT go to? Name the concrete thing you are giving up to do
 this. If nothing real is displaced, the appetite claim is hollow.>
 
+## Business complexity
+
+<Continuing burden: What must users or operators keep doing, maintaining, or
+coordinating? Who carries that burden?>
+
+<Worth: Why is that continuing commitment worth the value now, given the
+alternative it displaces?>
+
+<Avoidance: Which work, policy, or coordination can be removed or avoided?>
+
+<Downstream risk: What product, design, or operational risk remains for later
+stages?>
+
+<Reasoned N/A: replaces the four slots above — write this line INSTEAD of
+them, never in addition. Use only when this adds no continuing business or
+operational commitment; explain why. A bare N/A is not sufficient.>
+
 ## Evidence consulted
 
 <Links to what informed this call — prior notes, data, prototypes. Cite

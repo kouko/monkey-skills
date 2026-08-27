@@ -84,6 +84,10 @@ Carry, in the **prose body** of this section (the YAML keys below stay thin):
   *generative*: they justify the downstream token choices (e.g. "hierarchy via
   type-scale jumps, not color" → drives the Typography scale + a restrained
   palette).
+- **Visual complexity** — when this system adds material vocabulary, variants,
+  or exceptions, name the burden, why each surviving rule is worthwhile, and
+  the downstream component risk. When no material visual burden is added,
+  record a reasoned N/A instead of silently omitting the assessment.
 
 **Derivation contract:** every token in Colors / Typography / Layout /
 Shapes / Components MUST be derivable from, and defensible against,
@@ -279,6 +283,11 @@ tint large surfaces with `accent`") under two prose lists:
 
 - `dos` — recommended-usage rules, as prose bullets
 - `donts` — discouraged-usage rules, as prose bullets
+
+Use these existing guardrails for the visual complexity assessment: name
+variants that inherit rather than fork, and exceptions deleted or avoided
+rather than encoded as a new rule. Keep that assessment in prose; it does not
+create another canonical section.
 
 This section carries no fenced YAML block.
 

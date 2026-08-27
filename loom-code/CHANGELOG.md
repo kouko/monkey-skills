@@ -5,6 +5,39 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.101.3] — 2026-08-27
+
+### Changed
+
+- Added plan-time and branch-review complexity lenses with optional upstream
+  evidence, independent local fallback, and standalone-plugin boundary tests.
+
+### Fixed
+
+- `writing-plans`: the plan skeleton and both `plan-format.md` worked examples
+  now carry the `## Complexity assessment` section the same release made
+  mandatory, so a plan copied from these templates no longer fails the
+  reviewer's Check 21. The lens paragraph also names that section and links the
+  schema, instead of naming only the lens file.
+- `writing-plans`: Check 21 states how it interacts with Check 18(b), whose
+  hedge scan covers the region the new section occupies. A downstream risk is
+  stated as a named risk; anything genuinely unresolved belongs in
+  `## Open Questions`, which is what 18(b) exists to catch.
+- `requesting-code-review`: the implementation complexity lens asks whether the
+  landed burden is worth its maintenance cost — the one handoff meaning it had
+  dropped — and `agents/code-reviewer.md` no longer narrows that lens's
+  no-planned-evidence fallback to downstream risk alone.
+- `writing-plans`: a `plan-format.md` link fragment matched no heading in
+  `subagent-driven-development/SKILL.md` and silently resolved to the file top;
+  it now points at the section that carries the rule.
+- `writing-plans`: `plan-format.md` used "mechanical" for two different tests
+  that disagreed about its own backfill example — the plan-level complexity
+  exemption (decided by a trigger list) and the per-task `Review-weight`
+  marker (identical-edit only). The exemption now says which test it is. Check
+  21's failure column decided the same gap on a non-mechanical *task*, so a
+  reviewer grading that example returned a gap on a plan the rule declares
+  legal; it is now plan-scoped and points at the trigger list.
+
 ## [0.101.2] — 2026-08-27 — conditional-operations stands on its own
 
 ### Fixed
@@ -41,7 +74,6 @@ Versioning: [Semantic Versioning](https://semver.org/).
   hundreds of words of slack cannot see a rule of tens leave, which is how five
   rules were dropped under a green suite. Presence and absence assertions now
   carry that job, and the repo-wide 4,500-word cap remains the ceiling.
-
 ## [0.101.0] — 2026-08-27
 
 ### Changed

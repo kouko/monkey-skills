@@ -26,6 +26,12 @@ The rule it qualifies ("no cross-arm adjudication layer is needed") stays inline
 
 The rule it qualifies ("a diff that adds or changes any docstring or comment line makes this dimension never a no-op") stays inline in `agents/code-reviewer.md`. Its evidence tail: a measured run on the code arm scored a dimension PASS with no findings in a way indistinguishable from never applying the lens (`docs/loom/specs/2026-08-22-code-as-spec-lens-no-op-bar.md` §Decision).
 
+## Implementation complexity lens
+
+The branch reviewer compares actual complexity with optional planned evidence;
+the operating rule remains local when that evidence is absent. See
+`implementation-complexity-lens.md` for the review prompts.
+
 ## Correctness — runnable-claim precedent (originally `agents/code-reviewer.md`, correctness dimension)
 
 The rule it qualifies ("a stated count is one shape of runnable claim, and returns, flags, orderings and exit codes are the rest") stays inline in `agents/code-reviewer.md`. Its precedent: two reviewers imported a metric a document quoted and ran it (`docs/loom/memory/a-number-in-prose-needs-a-test-that-recomputes-it.md`).
