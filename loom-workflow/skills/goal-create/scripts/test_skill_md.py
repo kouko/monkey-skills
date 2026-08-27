@@ -23,9 +23,19 @@ Five tests:
 
 Every polarity-bearing assertion is scoped to a heading section or a
 sentence, never to a raw character window (a legitimate rewording that
-shifts word count must not flip these). No assertion enumerates the
-words a rule forbids; each binds its negation to the structural section
-it governs instead.
+shifts word count must not flip these). Verbatim pins are compared
+after whitespace normalisation (runs of whitespace collapsed to a
+single space on both the pin and the searched text), so a pure
+re-wrap — line breaks moved, words unchanged — still matches; a
+genuine reword still fails. No assertion enumerates the words a rule
+forbids; each binds its negation to the structural section it governs
+instead.
+
+The reference-path check (`test_reference_pointers_resolve`) finds
+every `references/*` and `scripts/*` path in SKILL.md regardless of
+form — backticked, inside a markdown link (with or without a title),
+or bare in prose — and strips a trailing `#anchor` fragment before
+resolving.
 """
 
 import re
@@ -42,6 +52,14 @@ PURPOSE_TEMPLATE_PATH = (
 def _read_skill_md() -> str:
     assert SKILL_PATH.exists(), f"SKILL.md does not exist at {SKILL_PATH}"
     return SKILL_PATH.read_text(encoding="utf-8")
+
+
+def _normalize_ws(s: str) -> str:
+    """Collapse runs of whitespace to a single space. Used to compare a
+    pinned sentence against SKILL.md prose so a pure re-wrap (line
+    breaks moved, words unchanged) still matches, while a genuine
+    reword (words added/removed/changed) still fails."""
+    return re.sub(r"\s+", " ", s).strip()
 
 
 def _frontmatter(text: str) -> str:
@@ -82,7 +100,7 @@ def test_declares_two_modes_and_conditional_arc():
         "this run, or a purpose for\nthe repository — never by the agent "
         "guessing from context."
     )
-    assert intro_pin in text, (
+    assert _normalize_ws(intro_pin) in _normalize_ws(text), (
         "The mode-choice sentence changed — if this is a deliberate "
         "reword, update this pin to match (see module docstring)."
     )
@@ -97,7 +115,7 @@ def test_declares_two_modes_and_conditional_arc():
         "ARC never writes that file itself; the\ndraft is only ever "
         "landed by the user's own confirmation."
     )
-    assert confirmation_pin in arc_body, (
+    assert _normalize_ws(confirmation_pin) in _normalize_ws(arc_body), (
         "ARC's confirmation-required sentence changed — update this pin "
         "if the reword is deliberate."
     )
@@ -110,7 +128,7 @@ def test_declares_two_modes_and_conditional_arc():
         "is missing, and scaffolds nothing —\ncreating the store is "
         "`loom-init`'s job, not this skill's."
     )
-    assert not_applicable_sentence in arc_body, (
+    assert _normalize_ws(not_applicable_sentence) in _normalize_ws(arc_body), (
         "ARC's not-applicable sentence changed — update this pin if the "
         "reword is deliberate (must still: name the two conditions, "
         "require naming the missing one, and forbid scaffolding)."
@@ -120,10 +138,21 @@ def test_declares_two_modes_and_conditional_arc():
 def test_reference_pointers_resolve():
     text = _read_skill_md()
 
-    # Structural extraction: every backticked `references/...` or
-    # `scripts/...` path token in the document, wherever it appears.
-    paths = re.findall(r"`((?:references|scripts)/[^`\s]+)`", text)
-    assert paths, "No relative reference/script paths found in SKILL.md"
+    # Extraction covers every form the docstring claims: backticked,
+    # inside a markdown link (titled or not), and bare in prose. The
+    # path-character class stops at whitespace, backtick, `)`, or `"` —
+    # the delimiters each of those forms actually uses — so it doesn't
+    # reach past the path into surrounding punctuation.
+    raw_matches = re.findall(r"(?:references|scripts)/[^`\s)\"]+", text)
+    assert raw_matches, "No relative reference/script paths found in SKILL.md"
+
+    paths = []
+    for raw in raw_matches:
+        # Strip a trailing sentence period (paths here never bare-end
+        # in '.') and an #anchor fragment before resolving.
+        candidate = raw[:-1] if raw.endswith(".") else raw
+        candidate = candidate.split("#", 1)[0]
+        paths.append(candidate)
 
     for rel_path in paths:
         resolved = SKILL_DIR / rel_path
@@ -213,7 +242,7 @@ def test_invocation_contract_is_offer_not_trigger():
         "prints when `docs/loom/PURPOSE.md` is still template text. Both name\n"
         "this skill as an option the user can invoke; neither invokes it."
     )
-    assert offer_points_pin in invocation_body, (
+    assert _normalize_ws(offer_points_pin) in _normalize_ws(invocation_body), (
         "The offer-points sentence changed — if this is a deliberate "
         "reword, update this pin to match (see module docstring)."
     )
@@ -226,7 +255,7 @@ def test_invocation_contract_is_offer_not_trigger():
         "brainstorming keeps discovery and this skill runs only after its brief\n"
         "exists, rather than competing for the same turn."
     )
-    assert ordering_pin in invocation_body, (
+    assert _normalize_ws(ordering_pin) in _normalize_ws(invocation_body), (
         "The brainstorming-ordering sentence changed — if this is a "
         "deliberate reword, update this pin to match (see module docstring)."
     )
