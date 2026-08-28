@@ -213,7 +213,7 @@ Five scripts ship under `loom-workflow/skills/decision-map/scripts/`:
 | Script | Purpose |
 |---|---|
 | `map_init.py` | Scaffold a new `docs/loom/maps/<map-id>/` store (MAP.md + empty `tickets/`). |
-| `map_store.py` | Read/write primitives for MAP.md and ticket files, shared by the other four scripts and by skill-text tooling — the only sanctioned parser for this schema. |
+| `map_store.py` | Read/write primitives for MAP.md and ticket files, shared by the other four scripts and by skill-text tooling — the only sanctioned parser for this schema. Also exposes the `validate` CLI entrypoint: `map_store.py validate <target> --repo-root <path>` — the sole check behind the §Live-map criterion's "checker-valid" test — exit 0/1/2 like the rest of §Command surface. |
 | `check_map_links.py` | Verify every Decisions-so-far line links an existing, closed ticket. |
 | `check_map_fog.py` | Verify fog-id monotonicity (§Fog entries): no id reused, no silent disappearance. |
 | `map_parts.py` | The Parts-row flipper: the only script permitted to change a Parts row's Status cell. |
@@ -223,7 +223,11 @@ Five scripts ship under `loom-workflow/skills/decision-map/scripts/`:
 depending on the script), plus an optional `--repo-root` flag (default:
 `git rev-parse --show-toplevel` of the target's directory, falling
 back to cwd — the same resolution precedent as
-`check_onramp_choice.py`'s `--repo-root`).
+`check_onramp_choice.py`'s `--repo-root`). `map_store.py` alone
+prefixes this with a leading subcommand verb before the positional
+`target` — `validate` in v1 — since it is the one script in the table
+exposing more than one operation; the other four scripts take the
+bare positional shape with no verb.
 
 **Exit codes**, shared by every script above:
 

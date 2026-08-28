@@ -90,11 +90,10 @@ one-sitting timebox above applies.
 
 1. **Birth**: a human via charting, or the session proposing during a
    work-through close, types a ticket `prototype`, question in the
-   body. The type is a claim checked at resolution.
+   body. The type is a claim the resolution gate checks at resolution.
 2. **Build**: the session creates the namespace branch; artifacts
    exist nowhere else. TDD iron law's spike exemption applies inside
-   the namespace only; the exemption is scoped to this namespace by
-   the doctrine texts that ship alongside the prototype branch fence.
+   the namespace only.
 3. **React / Measure** (mode fork): design mode — the human drives the
    artifact and reacts; HITL, the agent never answers its own
    question. Feasibility mode — the agent runs the probe and records
