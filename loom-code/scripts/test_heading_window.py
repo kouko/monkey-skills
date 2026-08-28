@@ -1,10 +1,28 @@
 """Behavioural pins for `heading_window.line_leading`.
 
 This helper is the single source for every heading window in THIS IMPORT
-ROOT that used the hand-rolled line-leading idiom. It is not the single
-source for every heading window here: other resolvers in this root scan
-line by line, which is a different and equally correct mechanism, and they
-do not import it. It shipped without a test of its own. A review arm mutated it
+ROOT that used the hand-rolled line-leading idiom, and for nothing wider.
+It is NOT the single source for every heading window here.
+
+What else lives in this root is deliberately not characterised. Four
+attempts to describe it — "other resolvers scan line by line", a two-file
+enumeration, a three-file one — were each refuted by a reviewer, because
+the population is reachable by no single pattern: some sites search a
+string literal, some a module constant, some scan lines, and only reading
+one tells you whether it is correct. An enumeration in a docstring goes
+stale the first time a file is added, and a reader who trusts it stops
+looking.
+
+So: to see what still resolves a heading without this helper in a given
+directory, read the hits of
+
+    grep -rn -e ".find(" -e ".index(" --include='test_*.py' <dir> | grep -i head
+
+and expect false positives. Some hits are correct by another mechanism,
+some are bare searches that happen to work because their heading occurs
+once. Neither this docstring nor a grep can tell them apart.
+
+It shipped without a test of its own. A review arm mutated it
 and found two survivors across the whole consumer suite: replacing
 `max(0, start - 1)` with `start`, and dropping the `start == 0 and` guard.
 Both are the deliberate offset choices that separate this helper from a
@@ -87,10 +105,23 @@ def test_the_first_line_leading_occurrence_wins():
 
 
 def test_start_is_clamped_at_zero():
-    """`max(0, start - 1)` must not let a `start` of 0 become -1, which
-    Python would read as "one character from the end" and make the scan
-    miss everything before it."""
+    """`max(0, start - 1)` must clamp to 0, not to 1 and not to -1.
+
+    -1 would be read by Python as "one character from the end" and make the
+    scan miss everything before it. Clamping to 1 instead loses any heading
+    that begins at offset 1 — which is every heading in a file whose first
+    line is blank, a shape markdown produces constantly.
+
+    The obvious fixture cannot see this: in "intro\n## Beta\n" the heading
+    is found identically from offset 0 or 1, so a test named for the clamp
+    would pin only "not -1". The leading-newline case is the one that
+    separates them, and it is the witness that kills `max(1, start - 1)`."""
     assert line_leading("intro\n## Beta\n", "## Beta", 0) == 6
+    assert line_leading("\n## Alpha\nbody\n", "## Alpha") == 1, (
+        "a heading on line 2 of a file starting with a blank line must be "
+        "found — clamping the scan to 1 skips the newline that proves it"
+    )
+    assert line_leading("\n## Alpha\nbody\n", "## Alpha", 0) == 1
 
 
 def test_a_mid_line_mention_is_not_a_heading():
