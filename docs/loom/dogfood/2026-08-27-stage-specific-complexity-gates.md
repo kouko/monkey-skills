@@ -13,8 +13,8 @@ either result and CI does not depend on the machine-local directory.
 
 - loom-design baseline SHA-256: `0e63efae0f07c92c3e98c657d821b5a03d171d0049570508ad745e0a19aef486`
 - loom-code baseline SHA-256: `e2a861d4028c2837de7a32596a7c4299cd0792fdc27e4b7f278f9856745df6bc`
-- loom-design candidate SHA-256: `8f8ba96660a9d4c3a15c71bdd0e6272fdabe9df1e458dd4aed269a253bdacade`
-- loom-code candidate SHA-256: `3ddce09a24c3d6714fc0324c43a8a034f6add5385c9290a0cfb5f301525e3a97`
+- loom-design candidate SHA-256: `69abc77d53e5faec2e091d5a47ae83950597c164653071261bfe7abf493a4705`
+- loom-code candidate SHA-256: `17b7cb27bb218649ae07a79637501e2c5051085a860cc3b3175b127a6937a6eb`
 - loom-design hard-case behavior SHA-256: `afa3b1dca93ab1a078cd5ddc495bd03c613da81e645c894625bce753a05e6241`
 - loom-code hard-case behavior SHA-256: `6ce0976774f213d4c6e7d4c60727a2fb6e7f2270edafbdf9c43fd41564c415c5`
 
