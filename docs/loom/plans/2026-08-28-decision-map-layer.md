@@ -4,7 +4,7 @@
 Goal: loom-workflow 擁有的決策地圖層出貨——一個 charting／work-through skill、
     docs/loom/maps/ 儲存區與機械閘門；prototype 工作被機械圍欄隔離，
     交付進度在分支收尾時自動回寫。
-Stage: planning
+Stage: sdd:wave-3
 Steps:
   1. 契約層：地圖格式 SSOT、prototype 契約、教義修訂、git-guard 圍欄
   2. 引擎與骨幹：MAP 解析器＋validate、SKILL 主文
@@ -86,7 +86,7 @@ flowchart LR
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(096c3167)
 - **Gloss**: 先立地圖的格式與指令契約——之後所有腳本和文本都引用這一份，不各自發明。
 
 ## Task 2 — Prototype 契約參考文件
@@ -105,7 +105,7 @@ flowchart LR
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-11
-- **Status**: pending
+- **Status**: done(096c3167)
 - **Gloss**: 把使用者簽核的 prototype 教義原文落進 skill 可攜的參考檔，成為票型委派的依據。
 
 ## Task 3 — red-flags.md 教義修訂
@@ -124,7 +124,7 @@ flowchart LR
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(1ea76ed2)
 - **Gloss**: 教義從「一律不准」改成「只有圍欄分支例外」——同 PR 修法，圍欄才不是違章。
 
 ## Task 4 — tdd-iron-law spike 豁免修訂
@@ -142,7 +142,7 @@ flowchart LR
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(8d6ece27)
 - **Gloss**: TDD 鐵律的 spike 豁免收斂到圍欄分支——豁免從散文判斷變成看得見的分支狀態。
 
 ## Task 5 — git-guard prototype 圍欄
@@ -164,7 +164,7 @@ flowchart LR
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(e3a9fea6)
 - **Gloss**: 圍欄的機械執行點——prototype 分支永不進主幹，靠 hook 擋，不靠自律。
 
 ## Task 6 — MAP 解析器與 validate 閘
@@ -187,7 +187,7 @@ flowchart LR
   - from Task 1: payload: MAP.md/ticket schema + validate exit-code contract; owner: Task 1; probe: `test_map_store.py::test_validate_accepts_schema_conformant_fixture`
 - **Independent**: false
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: done(94a3f083)
 - **Gloss**: 唯一的地圖讀取器＋validate 閘——「活地圖」從此有機械定義，schema 版本超過就拒讀。
 
 ## Task 7 — map_init scaffold
@@ -209,7 +209,7 @@ flowchart LR
   - from Task 6: payload: validate CLI semantics; owner: Task 6; probe: `test_map_init.py::test_scaffolded_map_passes_validate`
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: claimed(@check-wayfinder)
 - **Gloss**: 一個指令長出合規的空地圖——scaffold 產物直接過 validate，不靠手抄範本。
 
 ## Task 8 — Decisions 連結檢查器
@@ -229,7 +229,7 @@ flowchart LR
   - from Task 6: payload: parser API (map sections + ticket accessors); owner: Task 6; probe: `test_check_map_links.py::test_flags_decision_line_without_closed_ticket`
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: claimed(@check-wayfinder)
 - **Gloss**: 每條「已決定」都必須指向一張真的關掉的票——決策不能憑空出現。
 
 ## Task 9 — 霧單調性檢查器
@@ -250,7 +250,7 @@ flowchart LR
   - from Task 6: payload: parser API (fog entries with `F-<n>` ids); owner: Task 6; probe: `test_check_map_fog.py::test_flags_vanished_fog_entry`
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: pending
+- **Status**: claimed(@check-wayfinder)
 - **Gloss**: 霧只能變小、變票、或明列出界——不准無聲蒸發，這是 wayfinder 信任模型換成閘門的核心。
 
 ## Task 10 — Parts 回寫翻轉器
@@ -271,7 +271,7 @@ flowchart LR
   - from Task 6: payload: parser API (Parts rows + join keys); owner: Task 6; probe: `test_map_parts.py::test_flip_marks_single_part_shipped`
 - **Independent**: true
 - **Brief item covered**: BI-6
-- **Status**: pending
+- **Status**: claimed(@check-wayfinder)
 - **Gloss**: 交付進度由腳本翻、不由人手抄——kumiko 手抄表漂移 4 次的病根在這裡拔掉。
 
 ## Task 11 — decision-map SKILL.md：charting 與 work-through
@@ -297,7 +297,7 @@ flowchart LR
   - from Task 2: payload: none
 - **Independent**: false
 - **Brief item covered**: BI-2
-- **Status**: pending
+- **Status**: done(94a3f083)
 - **Gloss**: 地圖層的主文本——怎麼開圖、怎麼一票一會做下去，指令引用有 drift 測試釘著。
 
 ## Task 12 — 票型委派段
@@ -318,7 +318,7 @@ flowchart LR
 - **Independent**: false
 - **Review-weight**: prose
 - **Brief item covered**: BI-3
-- **Status**: pending
+- **Status**: claimed(@check-wayfinder)
 - **Gloss**: 四種票各自委派給既有公開 skill——地圖排程決策，不自己執行工作。
 
 ## Task 13 — 風險前置段
@@ -362,7 +362,7 @@ flowchart LR
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-7
-- **Status**: pending
+- **Status**: claimed(@check-wayfinder)
 - **Gloss**: 每次 kickoff 的 Axis 0 會看見活地圖——續圖不再靠人記得有這張圖。
 
 ## Task 15 — family-reception 列＋fan-out 擴充＋預算重議
@@ -389,7 +389,7 @@ flowchart LR
   - from Task 11: payload: the routed skill's public name `loom-workflow:decision-map`; owner: Task 11; probe: `grep -q 'name: decision-map' loom-workflow/skills/decision-map/SKILL.md`
 - **Independent**: true
 - **Brief item covered**: BI-7
-- **Status**: pending
+- **Status**: claimed(@check-wayfinder)
 - **Gloss**: 家族接待表多一列「多會期＋路線起霧→先開圖」，並依章程在同 PR 重議行數上限。
 
 ## Task 16 — finishing 回寫責務列
@@ -433,7 +433,7 @@ flowchart LR
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-8
-- **Status**: pending
+- **Status**: claimed(@check-wayfinder)
 - **Gloss**: 白紙黑字寫下「什麼才配進 loom-workflow」——所有權問題不再換個名字重演。
 
 ## Task 18 — Dogfood：真實地圖
@@ -492,6 +492,10 @@ flowchart LR
 - **Brief item covered**: none — release administration: version bumps and manifest mirroring deliver no brief outcome themselves; skipping the bump would make plugin update a silent no-op (repo precedent).
 - **Status**: pending
 - **Gloss**: 兩個 plugin 版本號進位＋Codex 鏡射同步——不 bump 的話 marketplace 更新會靜默失效。
+
+## Decision Log
+
+1. chose the bare no-verb CLI for map_parts.py (`map_parts.py <map-dir> --part … --sha …`) over Task 10's drafted `flip` verb, because the reviewed command-surface SSOT pins "map_store.py alone carries a subcommand verb" — cost-of-change: the day map_parts needs a second operation, adding a verb then means touching the SSOT sentence, the skill text, and this script's CLI in one PR
 
 ## Notes
 
