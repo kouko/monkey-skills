@@ -45,7 +45,7 @@ The Iron Law has a narrow, enumerated exception list. If your work is **not** on
 
 | Exempt category | What qualifies | What does NOT qualify |
 |---|---|---|
-| **Throwaway / spike** | Code you will delete within the same session, never commit, never reference again. | "I'll clean it up later." That's not throwaway — that's tests-last. |
+| **Throwaway / spike** | Code you will delete within the same session, never commit, never reference again. Committed prototype work is exempt ONLY on `prototype/<map-id>/<ticket-slug>` branches (loom-workflow:decision-map prototype contract) — outside that namespace, "throwaway" still means same-session and never committed. | "I'll clean it up later." That's not throwaway — that's tests-last. |
 | **Pure code generation** | Output of a generator that is regenerated from a spec (protobuf, OpenAPI stubs, ORM migrations). | Hand-written code in a generated-looking style. |
 | **Trivial getter / setter / pure delegation** | One-line field exposure or a method whose body is `return other.method(args)`. | Anything with branching, validation, or transformation. |
 | **Pure configuration** | A `.toml` / `.yaml` / `.env` with no executable behavior. | A "config" file with embedded Python / shell / Jinja logic — that's code. |
