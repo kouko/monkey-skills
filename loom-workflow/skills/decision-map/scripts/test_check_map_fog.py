@@ -284,6 +284,9 @@ def test_origin_only_default_branch_falls_back_to_remote_ref(tmp_path: Path) -> 
 
     local_repo = tmp_path / "local"
     _git(["clone", str(origin_repo), str(local_repo)], tmp_path)
+    # the clone carries no identity config; CI runners have no global one
+    _git(["config", "user.email", "test@example.com"], local_repo)
+    _git(["config", "user.name", "Test"], local_repo)
     _git(["checkout", "-b", "feature"], local_repo)
     _git(["branch", "-D", "main"], local_repo)  # only origin/main remains
 
