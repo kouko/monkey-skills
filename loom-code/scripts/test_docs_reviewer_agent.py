@@ -25,6 +25,21 @@ from pathlib import Path
 
 import distribute
 
+
+def _line_leading(text: str, heading: str, start: int = 0) -> int:
+    """Index of `heading` where it begins a LINE, or -1.
+
+    A bare substring search binds `"### Foo"` to a prose mention of the same
+    words, and `"## Foo"` to an earlier `"### Foo"` — either silently
+    retargets the window to the wrong region and the assertions inside it
+    keep passing. Only a line start is a heading.
+    """
+    if start == 0 and text.startswith(heading):
+        return 0
+    idx = text.find("\n" + heading, max(0, start - 1))
+    return -1 if idx == -1 else idx + 1
+
+
 _ROOT = Path(__file__).parents[1]
 AGENT = _ROOT / "agents" / "docs-reviewer.md"
 
@@ -60,7 +75,10 @@ def _output_contract() -> str:
     # the file can't retarget this window.
     heading = "## Output contract"
     start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
-    end = text.index("### Aggregation rule", start)
+    end = _line_leading(text, "### Aggregation rule", start)
+    # _line_leading returns -1 rather than raising, so assert: a silent -1
+    # would slice to the last character and quietly widen the window.
+    assert end != -1, "expected an '### Aggregation rule' heading after the start"
     return text[start:end]
 
 

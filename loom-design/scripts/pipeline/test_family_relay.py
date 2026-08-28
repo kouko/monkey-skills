@@ -50,6 +50,20 @@ DESIGN_SIDE_FILES = {
 }
 
 
+def _line_leading(text: str, heading: str, start: int = 0) -> int:
+    """Index of `heading` where it begins a LINE, or -1.
+
+    A bare substring search binds `"### Foo"` to a prose mention of the same
+    words, and `"## Foo"` to an earlier `"### Foo"` — either silently
+    retargets the window to the wrong region and the assertions inside it
+    keep passing. Only a line start is a heading.
+    """
+    if start == 0 and text.startswith(heading):
+        return 0
+    idx = text.find("\n" + heading, max(0, start - 1))
+    return -1 if idx == -1 else idx + 1
+
+
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
@@ -115,8 +129,8 @@ def test_relay_progress_card_renderer_is_optional_with_local_fallback():
     anywhere in family-relay.md; the cascade is prose only.
     """
     text = _read(FAMILY_RELAY)
-    a2_idx = text.find("### (a2) Progress card")
-    b_idx = text.find("### (b) Visual defaults")
+    a2_idx = _line_leading(text, "### (a2) Progress card")
+    b_idx = _line_leading(text, "### (b) Visual defaults")
     assert a2_idx != -1 and b_idx != -1
     # whitespace-normalized: the source wraps sentences across lines
     section = " ".join(text[a2_idx:b_idx].split())
@@ -159,7 +173,7 @@ def test_sdd_pointer():
     # that: moving the phrase to the end of the file keeps `count() >= 1`
     # green while the seam that must carry it has lost it. Window first,
     # then assert — the same discipline the (b) half below already used.
-    phrase_idx = text.find("### ③ How to phrase")
+    phrase_idx = _line_leading(text, "### ③ How to phrase")
     assert phrase_idx != -1, "expected a '### ③ How to phrase' seam heading"
     phrase_end = text.find("\n## ", phrase_idx + 1)
     assert phrase_end != -1, "expected a following '## ' heading"
@@ -190,13 +204,27 @@ def test_sdd_pointer():
 def test_review_pointer():
     """
     Task 6 adds the canonical pointer phrase to
-    loom-code/skills/requesting-code-review/SKILL.md ③ (lines ~34-56),
-    signalling the verdict-relay + remediation-option seam now defers
-    to the shared family relay section instead of a locally-copied rule.
-    Marker: POINTER_PHRASE present at least once.
+    loom-code/skills/requesting-code-review/SKILL.md, signalling that the
+    verdict-relay seam defers to the shared family relay section instead
+    of a locally-copied rule.
+
+    The seam is the `## Asking the user` section — the docstring used to
+    say "③ (lines ~34-56)", which was a line range from an older layout
+    and no longer named where the pointer lives. The assertion was
+    whole-file, so it could not have caught the drift either way: the
+    pointer could migrate out of the relay seam entirely and this test
+    would stay green. It is windowed to that section now, matching its
+    sibling `test_sdd_pointer`.
     """
     text = _read(REVIEW_SKILL)
-    assert POINTER_PHRASE in text
+    seam_idx = _line_leading(text, "## Asking the user")
+    assert seam_idx != -1, "expected an '## Asking the user' relay seam heading"
+    seam_end = text.find("\n## ", seam_idx + 1)
+    assert seam_end != -1, "expected a following '## ' heading"
+    assert POINTER_PHRASE in text[seam_idx:seam_end], (
+        "expected the pointer phrase inside the '## Asking the user' relay "
+        "seam, not merely somewhere in the file"
+    )
 
 
 def test_brainstorming_visuals():
@@ -354,7 +382,7 @@ def test_close_out_card():
 
     rollup_idx = text.find("next + decision")
     close_out_idx = text.find("Close-out card")
-    visual_defaults_idx = text.find("### (b) Visual defaults")
+    visual_defaults_idx = _line_leading(text, "### (b) Visual defaults")
     assert rollup_idx != -1 and close_out_idx != -1 and visual_defaults_idx != -1
     assert rollup_idx < close_out_idx < visual_defaults_idx, (
         "Close-out card block must sit after the user-rollup card and "

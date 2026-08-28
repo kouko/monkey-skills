@@ -28,6 +28,20 @@ def _profile() -> str:
     return PROFILE.read_text(encoding="utf-8")
 
 
+def _line_leading(text: str, heading: str, start: int = 0) -> int:
+    """Index of `heading` where it begins a LINE, or -1.
+
+    A bare substring search binds `"### Foo"` to a prose mention of the same
+    words, and `"## Foo"` to an earlier `"### Foo"` — either silently
+    retargets the window to the wrong region and the assertions inside it
+    keep passing. Only a line start is a heading.
+    """
+    if start == 0 and text.startswith(heading):
+        return 0
+    idx = text.find("\n" + heading, max(0, start - 1))
+    return -1 if idx == -1 else idx + 1
+
+
 def _section(text: str, heading: str) -> str:
     """Window from `heading` to the next `## ` heading (or end of file).
 
@@ -150,7 +164,10 @@ def test_profile_precedes_host_spawn_and_replaces_inheritance_evidence():
         ROOT / "skills" / "requesting-code-review" / "references" / "design-evidence.md"
     ).read_text(encoding="utf-8")
 
-    rebinding = codex_tools.index("### Re-binding loom-code's dispatch points")
+    rebinding = _line_leading(codex_tools, "### Re-binding loom-code's dispatch points")
+    # _line_leading returns -1 rather than raising; a silent -1 would make the
+    # two searches below start from the last character and pass vacuously.
+    assert rebinding != -1, "expected a '### Re-binding' heading at a line start"
     profile_resolution = codex_tools.index("resolve the portable profile first", rebinding)
     spawn = codex_tools.index("one `spawn_agent` call per role", rebinding)
     assert profile_resolution < spawn

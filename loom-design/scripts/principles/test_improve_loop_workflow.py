@@ -346,14 +346,22 @@ def test_accept_commit_uses_message_file_not_interpolated_dash_m():
     # one legitimate mention is the prohibition itself, which is allowed by
     # requiring the ban sentence to be the thing carrying it.
     assert "git commit -F" in body, "must commit via git commit -F <message-file>"
-    BAN_SENTENCE = "No untrusted text may ever appear as a"
-    for m in re.finditer(r"git commit[^\n]*?-m\b", body):
-        context = body[max(0, m.start() - 120):m.start()]
-        assert BAN_SENTENCE in context, (
-            "a `git commit ... -m` invocation survives outside the "
-            f"prohibition sentence: {body[m.start():m.end()]!r} -- "
-            "fixer-authored text must never appear as a shell -m argument"
-        )
+    # The ONE legitimate occurrence is named exactly, not admitted by
+    # proximity: a lookback window excuses any invocation placed just after
+    # the prohibition, which is where an author would most plausibly put an
+    # "(example: ...)" and reintroduce the defect.
+    BAN_CLAUSE = (
+        "No untrusted text may ever appear as a \\`git commit -m\\` "
+        "command-line argument"
+    )
+    occurrences = [m.group(0) for m in re.finditer(r"git commit[^\n]*?-m\b", body)]
+    allowed = BAN_CLAUSE.count("git commit -m") if BAN_CLAUSE in body else 0
+    assert len(occurrences) == allowed, (
+        "a `git commit ... -m` invocation survives outside the prohibition "
+        f"clause: found {occurrences!r}, expected only the {allowed} inside "
+        "the ban sentence -- fixer-authored text must never reach a shell "
+        "-m argument"
+    )
 
 
 def test_accept_commit_escapes_git_memory_trailer_lines():
