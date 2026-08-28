@@ -27,6 +27,8 @@ north-star 備忘（queue 層概念上屬家族、實體上被 loom-code 持有�
 - F-2: kumiko-zaiku 等 adopting repos 的遷移由誰觸發、排在搬遷的哪個階段？
 - F-3: marketplace／manifest 對 plugin 間依賴的支援邊界（目前 manifest 測試明文禁止 mandatory sibling dependency）。
 - F-4: loom-memory 的搬遷排序（已定：獨立於 hooks、於 feasibility probe 之後裁定）——殘餘問題只剩它與 queue 層是否同批。
+- F-5: 跨 plugin 介面耦合的降級語意——loom-workflow 缺席時哪些閘變 N/A、哪些流程照跑，要寫成可驗規則而非散文；缺了它，「安裝獨立」會名存實亡（feasibility probe 的 exit-3 優雅降級只證明機制存在，未定義語意）。
+- F-6: 跨 plugin 呼叫的單向性守衛——只允許 loom-code → loom-workflow，反向回呼即循環依賴；由哪個測試層（boundary 測試？contract-citation checker？）機械把守。
 
 ## Out-of-scope
 
