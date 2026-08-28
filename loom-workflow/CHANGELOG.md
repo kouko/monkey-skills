@@ -4,6 +4,15 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] — 2026-08-28 — decision-map layer
+
+### Added
+
+- New `decision-map` skill plus its store schema, five supporting scripts,
+  and a prototype contract for the wayfinder absorption arc.
+- Delivery write-back so a completed decision map lands back on the
+  originating record.
+- A reception on-ramp row and a README refresh describing the new layer.
 ## [1.2.2] — 2026-08-28 — test pins assert invariants, not wording
 
 ### Changed

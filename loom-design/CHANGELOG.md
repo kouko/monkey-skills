@@ -11,6 +11,12 @@ The five plugins this one absorbed keep their own histories alongside:
 `CHANGELOG-interface-design.md`, `CHANGELOG-product-principles.md`. Their
 version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
 
+## [0.5.6] — 2026-08-28
+
+### Changed
+
+- Synced the family-reception copy: the decision-map layer's on-ramp
+  update reached loom-design's own reception surface.
 ## [0.5.6] — 2026-08-28 — test pins assert invariants, not wording
 
 ### Changed

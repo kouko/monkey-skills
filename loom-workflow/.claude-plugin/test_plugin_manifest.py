@@ -41,8 +41,9 @@ def test_version_and_keywords():
         f"version {current_str!r} must be > PRE_BUMP {PRE_BUMP!r}"
     )
 
-    # (c) the hard-cut rename starts a new plugin release line at 1.0.0.
-    assert current == (1, 0, 0), current
+    # (c) the hard-cut rename started a new plugin release line at 1.0.0;
+    # later releases only move forward within it.
+    assert current >= (1, 0, 0), current
 
     # (d) "recap-state" in keywords (renamed v0.1.1 — "recap" collided with built-in slash in some agent UIs)
     keywords = manifest.get("keywords", [])

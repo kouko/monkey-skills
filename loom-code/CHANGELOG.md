@@ -5,6 +5,18 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.103.0] — 2026-08-28 — decision-map arc close-out
+
+### Added
+
+- `git-guard` fences the prototype branch used by the decision-map arc.
+- Axis 0 gains a live-map check; `finishing-a-development-branch` gains a
+  Map-parts check.
+
+### Changed
+
+- Doctrine amendments accompanying the decision-map layer's absorption
+  into the loom family.
 ## [0.102.1] — 2026-08-28 — test pins assert invariants, not wording
 
 ### Changed
