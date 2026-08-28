@@ -74,7 +74,10 @@ A session that works through a ticket does, in order:
    concludes, fill in the ticket's Resolution section per §Ticket
    schema in `references/map-format.md`, including a user-ratified
    line for any HITL resolution, and move `status` to `closed`.
-3. **Append one gist line to MAP.md.** Add exactly one bullet to
+3. **Append one gist line to MAP.md.** Steps 3-4 apply only when step
+   2 closed the ticket this session — a multi-session `research`
+   ticket that did not close has no ticket to gist-link yet, and the
+   session ends after step 2. Add exactly one bullet to
    Decisions-so-far: one gist sentence, ending in the ticket link as
    the line's last parenthesized token —
    `- <gist>. (tickets/<slug>.md)` — per §Sections' Decisions-so-far
@@ -110,7 +113,10 @@ Delegation Contract in this repo's root `CLAUDE.md`.
   May span multiple sessions before it resolves (see Work-through
   mode above).
 - **`task`** — delegate to a backlog entry in this repo's
-  `docs/loom/backlog/` store.
+  `docs/loom/backlog/` store; filing the backlog entry IS the
+  resolution, so the map ticket closes then, while the backlog
+  entry's own lifecycle proceeds independently (decision-map
+  schedules and records, never performs).
 - **`prototype`** — delegate to the protocol in
   `references/prototype-contract.md`. HITL: both prototype modes
   (variant selection and feasibility-conclusion) carry a
