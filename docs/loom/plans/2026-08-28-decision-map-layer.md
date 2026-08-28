@@ -4,7 +4,7 @@
 Goal: loom-workflow 擁有的決策地圖層出貨——一個 charting／work-through skill、
     docs/loom/maps/ 儲存區與機械閘門；prototype 工作被機械圍欄隔離，
     交付進度在分支收尾時自動回寫。
-Stage: finishing
+Stage: review:round-1
 Steps:
   1. 契約層：地圖格式 SSOT、prototype 契約、教義修訂、git-guard 圍欄
   2. 引擎與骨幹：MAP 解析器＋validate、SKILL 主文
