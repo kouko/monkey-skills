@@ -41,16 +41,21 @@ It produces:
 
 ## Risk pass
 
-A risk pass is meant to run before charting closes, and again at every
-work-through close (Work-through step 5's close-time gates do not yet
-list it — see below). Both the trigger contract (front-loading a
-feasibility/prototype ticket onto the frontier) and its applicability
-at both close points are defined in a later revision of this skill;
-this section is a placeholder heading until that contract lands.
+A risk pass runs before charting closes, and again at every
+work-through close (Work-through step 5 lists it among the close-time
+duties — see below). The pass looks over the map's open tickets and
+remaining fog for any unknown matching a front-load trigger in
+§Risk-driven front-loading of `references/prototype-contract.md` (e.g.
+build-to-estimate, an unproven architecturally-significant path, the
+map's highest risk exposure). Any match gets a feasibility/prototype
+ticket created on the frontier immediately — ordered by risk exposure
+(probability × impact), highest first — never deferred until reached.
+The same reference's anti-over-prototyping guardrails apply: no probe
+when a conversation or lookup would settle it, a success criterion
+named before the probe starts, and the one-sitting timebox.
 
-Charting closes only after the risk pass above (once that contract
-lands) and a clean validate run:
-`map_store.py validate <target> --repo-root <path>`.
+Charting closes only after the risk pass above and a clean validate
+run: `map_store.py validate <target> --repo-root <path>`.
 
 A non-zero exit means the map is not yet chartered cleanly — fix the
 reported violation before treating the map as `charting`-state-ready
@@ -90,8 +95,12 @@ A session that works through a ticket does, in order:
    `graduated-from: F-<n>` on the new ticket's frontmatter) before the
    session ends — never leave a surfaced question undocumented for a
    later session to rediscover.
-5. **Run the close-time gates.** All three must pass before the
-   session ends: `map_store.py validate <target> --repo-root <path>`,
+5. **Run the risk pass, then the close-time gates.** Run the risk
+   pass from §Risk pass above first — this is a prose judgment step,
+   not a script, so read the open tickets and fog yourself and front-
+   load any ticket the triggers call for. Only then run the three
+   mechanical gates, all of which must pass before the session ends:
+   `map_store.py validate <target> --repo-root <path>`,
    `check_map_links.py <target> --repo-root <path>`, and
    `check_map_fog.py <target> --repo-root <path>`.
    A non-zero exit from any of the three means the close is not done —
