@@ -1,7 +1,7 @@
 ---
 type: prototype
 status: claimed
-claim: feasibility-probe session, 2026-08-28
+claim: kouko, 2026-08-28
 ---
 
 （feasibility mode；風險前置——Riskiest Assumption Test：此假設若不成
