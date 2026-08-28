@@ -30,6 +30,8 @@ import tempfile
 import pytest
 from pathlib import Path
 
+from heading_window import line_leading as _line_leading
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 POINTER_PHRASE = "family-relay.md §Family relay discipline"
@@ -48,20 +50,6 @@ BRIEF_BEFORE_ASKING_SKILL = REPO_ROOT / "loom-workflow/skills/brief-before-askin
 DESIGN_SIDE_FILES = {
     "using-loom-design": REPO_ROOT / "loom-design/skills/using-loom-design/SKILL.md",
 }
-
-
-def _line_leading(text: str, heading: str, start: int = 0) -> int:
-    """Index of `heading` where it begins a LINE, or -1.
-
-    A bare substring search binds `"### Foo"` to a prose mention of the same
-    words, and `"## Foo"` to an earlier `"### Foo"` — either silently
-    retargets the window to the wrong region and the assertions inside it
-    keep passing. Only a line start is a heading.
-    """
-    if start == 0 and text.startswith(heading):
-        return 0
-    idx = text.find("\n" + heading, max(0, start - 1))
-    return -1 if idx == -1 else idx + 1
 
 
 def _read(path: Path) -> str:

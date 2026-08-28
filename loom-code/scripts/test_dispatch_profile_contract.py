@@ -9,6 +9,7 @@ or a Codex-only TOML role configuration.
 import re
 from pathlib import Path
 
+from heading_window import line_leading as _line_leading
 
 ROOT = Path(__file__).resolve().parent.parent
 PROFILE = ROOT / "skills" / "using-loom-code" / "references" / "dispatch-profile.md"
@@ -28,20 +29,6 @@ def _profile() -> str:
     return PROFILE.read_text(encoding="utf-8")
 
 
-def _line_leading(text: str, heading: str, start: int = 0) -> int:
-    """Index of `heading` where it begins a LINE, or -1.
-
-    A bare substring search binds `"### Foo"` to a prose mention of the same
-    words, and `"## Foo"` to an earlier `"### Foo"` — either silently
-    retargets the window to the wrong region and the assertions inside it
-    keep passing. Only a line start is a heading.
-    """
-    if start == 0 and text.startswith(heading):
-        return 0
-    idx = text.find("\n" + heading, max(0, start - 1))
-    return -1 if idx == -1 else idx + 1
-
-
 def _section(text: str, heading: str) -> str:
     """Window from `heading` to the next `## ` heading (or end of file).
 
@@ -52,7 +39,8 @@ def _section(text: str, heading: str) -> str:
     """
     # Anchor at a line start so a same-named `###` subheading earlier in
     # the file can't retarget this window (a bare substring match would).
-    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
+    start = _line_leading(text, heading)
+    assert start != -1, f"expected an {heading!r} heading"
     rest = text[start + len(heading):]
     next_heading = re.search(r"\n## ", rest)
     end = start + len(heading) + (next_heading.start() if next_heading else len(rest))

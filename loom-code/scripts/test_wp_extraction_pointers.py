@@ -55,6 +55,8 @@ from pathlib import Path
 
 import pytest
 
+from heading_window import line_leading as _line_leading
+
 SKILL_DIR = Path(__file__).resolve().parents[1] / "skills" / "writing-plans"
 SKILL_MD = SKILL_DIR / "SKILL.md"
 REFERENCES = SKILL_DIR / "references"
@@ -181,7 +183,8 @@ def test_blocked_fallback_five_step_process_and_anti_pattern_stay_inline():
     # the section window, not as a full sentence.
     # Anchor at a line start so a same-named `###` subheading earlier in
     # the file can't retarget this window.
-    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
+    start = _line_leading(text, heading)
+    assert start != -1, f"expected {heading!r} heading"
     end = text.index("\n## ", start + len(heading))
     blocked_section = text[start:end]
     assert "splitting framework" in blocked_section

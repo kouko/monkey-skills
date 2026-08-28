@@ -11,6 +11,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from heading_window import line_leading as _line_leading
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDD_SKILL = REPO_ROOT / "loom-code" / "skills" / "subagent-driven-development" / "SKILL.md"
@@ -107,11 +109,8 @@ def test_sdd_per_task_reviewer_scope_uses_declared_task_files() -> None:
     # Anchor at a line start so a same-named `###` subheading earlier in
     # the file can't retarget this window.
     _proc_heading = "## Process — per-task triad"
-    _proc_start = (
-        skill.index(_proc_heading)
-        if skill.startswith(_proc_heading)
-        else skill.index("\n" + _proc_heading) + 1
-    )
+    _proc_start = _line_leading(skill, _proc_heading)
+    assert _proc_start != -1, f"expected {_proc_heading!r} heading"
     process = skill[_proc_start:skill.index("**Parallel dispatch")]
     step1 = process[process.index("1. **Dispatch"):process.index("2. **Read")]
     step3 = process[process.index("3. **If"):process.index("4. **Resolve")]

@@ -24,20 +24,7 @@ import re
 from pathlib import Path
 
 import distribute
-
-
-def _line_leading(text: str, heading: str, start: int = 0) -> int:
-    """Index of `heading` where it begins a LINE, or -1.
-
-    A bare substring search binds `"### Foo"` to a prose mention of the same
-    words, and `"## Foo"` to an earlier `"### Foo"` — either silently
-    retargets the window to the wrong region and the assertions inside it
-    keep passing. Only a line start is a heading.
-    """
-    if start == 0 and text.startswith(heading):
-        return 0
-    idx = text.find("\n" + heading, max(0, start - 1))
-    return -1 if idx == -1 else idx + 1
+from heading_window import line_leading as _line_leading
 
 
 _ROOT = Path(__file__).parents[1]
@@ -74,7 +61,8 @@ def _output_contract() -> str:
     # Anchor at a line start so a same-named `###` subheading earlier in
     # the file can't retarget this window.
     heading = "## Output contract"
-    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
+    start = _line_leading(text, heading)
+    assert start != -1, f"expected an {heading!r} heading"
     end = _line_leading(text, "### Aggregation rule", start)
     # _line_leading returns -1 rather than raising, so assert: a silent -1
     # would slice to the last character and quietly widen the window.
@@ -89,7 +77,8 @@ def _input_contract() -> str:
     # Anchor at a line start so a same-named `###` subheading earlier in
     # the file can't retarget this window (applies to both START and END).
     start_heading = "## Input contract"
-    start = text.index(start_heading) if text.startswith(start_heading) else text.index("\n" + start_heading) + 1
+    start = _line_leading(text, start_heading)
+    assert start != -1, f"expected an {start_heading!r} heading"
     end = text.index("\n## Output contract", start) + 1
     return text[start:end]
 
@@ -106,7 +95,8 @@ def _role_contract_window() -> str:
     # Anchor at a line start so a same-named `###` subheading earlier in
     # the file can't retarget this window.
     heading = "## Role contract"
-    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
+    start = _line_leading(text, heading)
+    assert start != -1, f"expected an {heading!r} heading"
     end = text.index("<!-- BEGIN reviewer-discipline", start)
     return text[start:end]
 

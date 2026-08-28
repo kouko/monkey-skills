@@ -93,6 +93,8 @@ EXEMPT = {
     "living_spec_gitref.py": "helper module, no CLI entry point",
     "living_spec_index.py": "helper module, no CLI entry point",
     "living_spec_tags.py": "helper module, no CLI entry point",
+    "heading_window.py": "helper module, no CLI entry point; reads no store "
+                         "or brief, only an in-memory string a caller passes in",
     "adjudication_lint.py": "renders a document view; reads no store or brief",
     "adjudication_render.py": "renders a document view; reads no store or brief",
     "adjudication_split.py": "renders a document view; reads no store or brief",

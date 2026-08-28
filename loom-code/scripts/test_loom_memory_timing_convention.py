@@ -10,6 +10,8 @@ Source: docs/loom/specs/2026-07-08-loom-memory-same-branch-timing.md
 import re
 from pathlib import Path
 
+from heading_window import line_leading as _line_leading
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 MEMORY_README = REPO_ROOT / "docs/loom/memory/README.md"
@@ -35,7 +37,8 @@ def _when_to_record_section(text: str) -> str:
     # Anchor at a line start so a same-named `###` subheading earlier in
     # the file can't retarget this window.
     heading = "## When to record"
-    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
+    start = _line_leading(text, heading)
+    assert start != -1, f"expected {heading!r} heading"
     rest = text[start + len("## When to record"):]
     end = rest.find("\n## ")
     return _norm(rest if end == -1 else rest[:end])
