@@ -31,31 +31,61 @@ def _normalise(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+def _window(raw: str, start_heading: str, end_heading: str) -> str:
+    """Raw-text slice from `start_heading` up to (not including) `end_heading`."""
+    start = raw.index(start_heading)
+    end = raw.index(end_heading, start)
+    return raw[start:end]
+
+
+def _root_derivation_window() -> str:
+    """The root-derivation half of the adapter section, before the post-fix flow."""
+    return _normalise(
+        _window(_text(), "## Immutable review-context adapter", "After a docs fix,")
+    )
+
+
+def _adapter_window() -> str:
+    """The whole Immutable review-context adapter section."""
+    return _normalise(
+        _window(_text(), "## Immutable review-context adapter", "## Subagent dispatch")
+    )
+
+
 def test_codex_adapter_resolves_and_forwards_immutable_review_context() -> None:
-    """Codex must use the installed plugin root and preserve its packet."""
+    """Codex must use the installed plugin root and preserve its packet.
+
+    "not the target repository" is narrowed to the adapter window: `verbatim`
+    also names an unrelated hook-injection claim elsewhere in this file, so a
+    whole-file match on the bare keyword would stay green even if this
+    section's forwarding rule were deleted.
+    """
     text = _normalise(_text())
+    root_window = _root_derivation_window()
+    adapter_window = _adapter_window()
 
     assert "## Immutable review-context adapter" in _text()
     assert "installed `loom-code` plugin root" in text
-    assert "not the target repository" in text
+    assert "not the target repository" in root_window
     assert (
         "python3 <installed-plugin-root>/scripts/review_context.py "
         "--repo <target_repo>" in text
     )
-    assert "forward the resulting JSON packet verbatim" in text
-    assert "must not derive, replace, or merge packet fields" in text
+    assert "verbatim" in adapter_window
+    assert "must not derive, replace, or merge packet fields" in adapter_window
 
 
 def test_codex_adapter_derives_installed_root_without_cache_guessing() -> None:
     """The loaded reference path, not a cache convention, identifies the plugin."""
     text = _normalise(_text())
+    root_window = _root_derivation_window()
 
     assert "loaded `codex-tools.md` absolute path" in text
     assert "$(cd \"$(dirname \"$canonical_reference\")/../../..\" && pwd -P)" in text
     assert 'test -f "$plugin_root/scripts/review_context.py" || {' in _text()
     assert "exit 1" in _text()
     assert "refuse the review" in text
-    assert "must not infer the root from a cache, marketplace, or consumer path" in text
+    assert "cache, marketplace, or consumer path" in root_window
 
 
 def test_codex_adapter_rejects_an_untrusted_loaded_reference_path() -> None:

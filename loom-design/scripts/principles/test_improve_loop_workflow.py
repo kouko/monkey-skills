@@ -338,18 +338,29 @@ def test_accept_commit_uses_message_file_not_interpolated_dash_m():
     )
     assert "commit-msg-round${round}.txt" in body
 
-    # `git commit -F` must be the actual command instruction, and the
-    # round-1 `-m`/`-m` invocation instruction must be gone (a passing
-    # mention of `-m` in explanatory prose, e.g. "never as a -m argument",
-    # is fine — only an actual `git commit ... -m` invocation is banned)
+    # `git commit -F` must be the actual command instruction, and NO
+    # `git commit ... -m` invocation may survive anywhere -- fixer-authored
+    # text must never reach a shell argument. Scanning only line-leading
+    # numbered steps let a reworded instruction ("Run `git commit -m ...`")
+    # evade the check, so every occurrence is examined instead. The file's
+    # one legitimate mention is the prohibition itself, which is allowed by
+    # requiring the ban sentence to be the thing carrying it.
     assert "git commit -F" in body, "must commit via git commit -F <message-file>"
-    assert not re.search(r"^\d+\.\s*git commit\b[^\n]*-m\b", body, re.MULTILINE), (
-        "no numbered-step `git commit -m` invocation — fixer-authored text "
-        "must never appear as a shell -m argument"
+    # The ONE legitimate occurrence is named exactly, not admitted by
+    # proximity: a lookback window excuses any invocation placed just after
+    # the prohibition, which is where an author would most plausibly put an
+    # "(example: ...)" and reintroduce the defect.
+    BAN_CLAUSE = (
+        "No untrusted text may ever appear as a \\`git commit -m\\` "
+        "command-line argument"
     )
-    # explicit: the literal two-dash-m-arg instruction from round 1 must be gone
-    assert "SUBJECT above as the first" not in body, (
-        "round-1's '-m ... -m' instruction phrasing must be removed"
+    occurrences = [m.group(0) for m in re.finditer(r"git commit[^\n]*?-m\b", body)]
+    allowed = BAN_CLAUSE.count("git commit -m") if BAN_CLAUSE in body else 0
+    assert len(occurrences) == allowed, (
+        "a `git commit ... -m` invocation survives outside the prohibition "
+        f"clause: found {occurrences!r}, expected only the {allowed} inside "
+        "the ban sentence -- fixer-authored text must never reach a shell "
+        "-m argument"
     )
 
 

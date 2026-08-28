@@ -3,6 +3,7 @@
 import re
 from pathlib import Path
 
+from heading_window import line_leading as _line_leading
 
 SKILL = (
     Path(__file__).resolve().parents[2]
@@ -16,13 +17,17 @@ LOWER = BODY.lower()
 
 
 def _section(body: str, heading: str) -> str:
-    start = body.index(heading)
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the body can't retarget this window.
+    start = _line_leading(body, heading)
+    assert start != -1, f"expected {heading!r} heading"
     end = body.find("\n## ", start + len(heading))
     return body[start:] if end == -1 else body[start:end]
 
 
 def test_entrypoint_preserves_availability_driver_gates_and_queue_lifecycle():
-    assert "<SUBAGENT-STOP>" in BODY and "Workflow tool is available" in BODY
+    when_it_fires = _section(BODY, "## §When it fires")
+    assert "<SUBAGENT-STOP>" in BODY and "Workflow tool is available" in when_it_fires
     assert "Codex hosts: N/A by definition" in BODY and "no fallback path" in BODY
     assert "## §Run inputs" in BODY and "## §Segments" in BODY
     assert "## §Human gates" in BODY and "## §Batch mode" in BODY
@@ -32,7 +37,8 @@ def test_availability_boundary_and_six_field_driver_contract():
     assert "do not re-derive" in BODY
     assert "loom-design" in BODY and "loom-code" in BODY
     assert "loom-design: N/A" in BODY
-    assert "never fake the orchestration inline" in BODY
+    when_it_fires = _section(BODY, "## §When it fires")
+    assert "never fake the orchestration inline" in when_it_fires
 
     inputs = _section(BODY, "## §Run inputs")
     assert len(re.findall(r"^\| \*\*[^|]+\*\* \|", inputs, re.MULTILINE)) == 6
@@ -49,7 +55,8 @@ def test_availability_boundary_and_six_field_driver_contract():
     assert "absolute" in invocation
     assert "assets/loom-pipeline.js" in invocation
     assert "one call per segment" in invocation
-    assert "never one call for the whole run" in BODY
+    segments = _section(BODY, "## §Segments")
+    assert "never one call for the whole run" in segments
 
 
 def test_three_segments_and_exactly_four_human_gates():

@@ -112,7 +112,16 @@ def test_design_evidence_header_states_author_facing_no_runtime_load():
 # --- (d) pinned survivors still inline in SKILL.md --------------------------
 
 def test_g4_measured_why_fragment_stays_inline():
-    assert "a single-arm verdict is degraded evidence — G4 measured why" in _skill_text()
+    # "Stays inline" is a boundary invariant, not a wording invariant: the
+    # sibling G4-evidence fragments in section (c) above were audience-
+    # misplaced and moved OUT to design-evidence.md, while this one was a
+    # deliberate keep-inline call. Pin both ends of that boundary decision
+    # -- present in SKILL.md AND absent from design-evidence.md -- so a
+    # future accidental extraction (this fragment migrating alongside its
+    # siblings) fails even though the wording itself would be unchanged.
+    fragment = "a single-arm verdict is degraded evidence — G4 measured why"
+    assert fragment in _skill_text()
+    assert fragment not in _read(REFERENCES / "design-evidence.md")
 
 
 def test_advisory_only_rule_sentence_stays_inline_evidence_tail_gone():
@@ -121,12 +130,21 @@ def test_advisory_only_rule_sentence_stays_inline_evidence_tail_gone():
     assert "Evidence: G4 A/B" not in text
 
 
-def test_profile_driven_review_rule_stays_inline_calibration_parenthetical_gone():
+def test_profile_driven_review_rule_stays_inline():
+    # Of the two "... not in text" assertions this test used to carry, one
+    # was a rationale gloss about where G4's evidence happened to be
+    # measured -- it instructs nobody, so it stays deleted. The other named
+    # a CONFLICTING RULE: "reviewers inherit the session model by design"
+    # tells the orchestrator to skip profile resolution and let both arms
+    # inherit the session model, which is exactly what the positive
+    # assertions below replaced. Kept as a paired absence pin.
     text = _skill_text()
     assert "Resolve the dispatch profile" in text
     assert "profile's dispatch record" in text
-    assert "reviewers inherit the session model by design" not in text
-    assert "G4's evidence was measured on exactly the inherit configuration" not in text
+    assert "reviewers inherit the session model by design" not in text, (
+        "the retired inherit-by-design rule must not reappear alongside the "
+        "profile-driven dispatch rule it was replaced by"
+    )
 
 
 def test_union_evidence_rule_stays_inline_parenthetical_gone():

@@ -86,7 +86,9 @@ def test_gate_paragraph_names_queue_relation_script():
     ):
         assert duty_phrase in para, f"missing exit-2 duty phrase: {duty_phrase!r}"
 
-    # The deleted advisory (and its "prints on every run" sentence) must
-    # not survive the rewrite.
-    assert "prints on every run" not in para
+    # The deleted advisory must not survive the rewrite. Its actual name
+    # ("unlanded-direction-change advisory") is the load-bearing pin; a
+    # generic sentence fragment like "prints on every run" pins nothing
+    # the name-check doesn't already cover, so it was dropped (same
+    # invariant, redundant wording-only assertion).
     assert "unlanded-direction-change advisory" not in para

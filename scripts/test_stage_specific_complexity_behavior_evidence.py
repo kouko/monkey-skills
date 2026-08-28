@@ -174,7 +174,18 @@ def test_report_binds_baseline_and_final_candidate():
     flat_text = " ".join(text.split())
     assert "immutable pre-edit snapshot" in text
     assert "base commit `0a7dcde2`" in text
-    assert "final cold-install candidate bytes" in text
+    # Scope declaration for the candidate numbers, narrowed to the Evidence
+    # binding section and pinned on its two rule-carrying tokens rather than
+    # the full sentence. The recomputation below proves the DIGITS are not
+    # fabricated; it proves nothing about WHICH tree they cover. Without this,
+    # the section can keep the numbers while dropping the statement that they
+    # are the final cold-install package bytes — and a reader can no longer
+    # tell whether a mismatch means a real drift or an intermediate snapshot.
+    binding_section = text.split("## Evidence binding", 1)[1].split("\n## ", 1)[0]
+    assert re.search(r"final[^.\n]{0,40}cold-install", binding_section), (
+        "the Evidence binding section must declare the candidate fingerprints "
+        "are the FINAL COLD-INSTALL package bytes, not an intermediate tree"
+    )
     for plugin in ("loom-design", "loom-code"):
         baseline_match = re.search(
             rf"{plugin} baseline SHA-256: `([0-9a-f]{{64}})`", text

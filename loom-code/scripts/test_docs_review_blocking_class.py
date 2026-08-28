@@ -197,7 +197,7 @@ PLUGIN_JSON = Path(__file__).parents[1] / ".claude-plugin" / "plugin.json"
 CHANGELOG_MD = Path(__file__).parents[1] / "CHANGELOG.md"
 
 
-def test_plugin_version_and_changelog_at_0_102_0():
+def test_plugin_version_and_changelog_at_0_102_1():
     """Originally Task 6 of
     docs/loom/plans/2026-08-02-finding-origin-attribution.md, and rewritten
     by every subsequent bump -- loom-code/CHANGELOG.md is the release
@@ -211,17 +211,32 @@ def test_plugin_version_and_changelog_at_0_102_0():
     (docs/loom/backlog/2026-07-28-plan-stage-fact-grounding-what-0-39-0-does-not-close.md,
     item 2).
 
-    This pin tracks the CURRENT shipping version by design: each bump
-    rewrites it, which is what makes a missing bump fail CI rather than
-    ship a silent marketplace no-op."""
+    This pin tracks the CURRENT shipping version by design, but NOT for
+    the reason it used to claim. It does not catch a missed bump: it reads
+    only the manifest and the changelog, so skill content can change with
+    plugin.json unmoved and both assertions still pass -- that happened on
+    this very branch, where `scripts/heading_window.py` landed while
+    plugin.json sat at 0.102.0 and this test stayed green. Missed-bump
+    detection is `scripts/check_version_bump.py`.
+
+    What the pin actually buys is CHANGELOG-accompanies-bump. Raising the
+    manifest alone reddens it. Getting back to green takes TWO edits, not
+    one -- the literals in this test must be retargeted to the new version
+    AND the matching `## [<version>]` heading must exist; retargeting alone
+    leaves the changelog assert red. Both arms of a review ran that
+    sequence, so the two-step is the tested path, not a guess.
+
+    That friction is the point, and it is why the literal stays hardcoded
+    rather than read from the manifest: touching this test is what forces
+    the changelog entry to be written."""
     plugin_text = PLUGIN_JSON.read_text(encoding="utf-8")
-    assert '"version": "0.102.0"' in plugin_text, (
-        "loom-code/.claude-plugin/plugin.json must read version 0.102.0"
+    assert '"version": "0.102.1"' in plugin_text, (
+        "loom-code/.claude-plugin/plugin.json must read version 0.102.1"
     )
 
     changelog_text = CHANGELOG_MD.read_text(encoding="utf-8")
-    assert "## [0.102.0]" in changelog_text, (
-        "loom-code/CHANGELOG.md must carry a `## [0.102.0]` heading"
+    assert "## [0.102.1]" in changelog_text, (
+        "loom-code/CHANGELOG.md must carry a `## [0.102.1]` heading"
     )
 
 

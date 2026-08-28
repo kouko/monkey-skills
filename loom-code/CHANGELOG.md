@@ -5,6 +5,28 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.102.1] — 2026-08-28 — test pins assert invariants, not wording
+
+### Changed
+
+Structural pin tests across this plugin now assert the invariant each one
+protects instead of the sentence that carried it: a contract written at both
+ends of a protocol is compared between its two copies; a named mechanism is
+pinned by its script name, CLI flag or control keyword inside a narrowed
+window; a required section by its heading or table-row anchor. Retired
+instructions keep an absence pin, deliberately unwindowed, only when paired
+with a positive assertion of the replacement.
+
+`scripts/heading_window.py` is new: one `line_leading()` shared by every
+heading window in this package, replacing a dozen hand-written copies. A bare
+substring binds `"## Foo"` inside an earlier `"### Foo"` and silently
+retargets the window.
+
+No skill instruction text changed — this is a test-side change only.
+
+Measured motivation: over 11 mutation cells on this repo's contract prose,
+wording pins produced 4 false alarms and 0 blind spots.
+
 ## [0.102.0] — 2026-08-28 — review-loop convergence
 
 ### Changed

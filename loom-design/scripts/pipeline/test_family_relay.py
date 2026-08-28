@@ -30,6 +30,8 @@ import tempfile
 import pytest
 from pathlib import Path
 
+from heading_window import line_leading as _line_leading
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 POINTER_PHRASE = "family-relay.md §Family relay discipline"
@@ -115,8 +117,8 @@ def test_relay_progress_card_renderer_is_optional_with_local_fallback():
     anywhere in family-relay.md; the cascade is prose only.
     """
     text = _read(FAMILY_RELAY)
-    a2_idx = text.find("### (a2) Progress card")
-    b_idx = text.find("### (b) Visual defaults")
+    a2_idx = _line_leading(text, "### (a2) Progress card")
+    b_idx = _line_leading(text, "### (b) Visual defaults")
     assert a2_idx != -1 and b_idx != -1
     # whitespace-normalized: the source wraps sentences across lines
     section = " ".join(text[a2_idx:b_idx].split())
@@ -141,34 +143,76 @@ def test_sdd_pointer():
     progress card a "rollup card" — and, instead of re-duplicating
     POINTER_PHRASE there, made it cross-reference the '### ③ How to
     phrase' seam's own Delivery form paragraph. Fix round 2 (same day)
-    reworded that cross-reference from the pseudo-heading "§Delivery
-    form above" to "the **Delivery form** paragraph above" (there is no
-    actual '§Delivery form' heading in the file), which still carries
-    POINTER_PHRASE. No template body is copied in either seam either
-    way.
+    reworded that cross-reference again.
+
+    The invariant these two fix rounds protect is NOT any particular
+    cross-reference wording — that has already changed twice and will
+    likely change again. It is: (a) the pointer phrase appears at least
+    once, in the ③ seam, and (b) the Status handling seam names
+    "Delivery form" as a cross-reference WITHOUT re-duplicating the
+    pointer phrase there. Pinning round 2's exact sentence would fail a
+    round-3 rewording that preserved the cross-reference, so this
+    checks the invariant directly inside the Status handling window
+    instead.
     """
     text = _read(SDD_SKILL)
-    assert text.count(POINTER_PHRASE) >= 1, (
-        "expected the pointer phrase at least once, in the ③ seam's "
-        "Delivery form paragraph"
+
+    # (a) The pointer lives in the ③ seam. A whole-file count cannot say
+    # that: moving the phrase to the end of the file keeps `count() >= 1`
+    # green while the seam that must carry it has lost it. Window first,
+    # then assert — the same discipline the (b) half below already used.
+    phrase_idx = _line_leading(text, "### ③ How to phrase")
+    assert phrase_idx != -1, "expected a '### ③ How to phrase' seam heading"
+    phrase_end = text.find("\n## ", phrase_idx + 1)
+    assert phrase_end != -1, "expected a following '## ' heading"
+    phrase_window = text[phrase_idx:phrase_end]
+
+    assert POINTER_PHRASE in phrase_window, (
+        "expected the pointer phrase in the ③ seam's Delivery form "
+        "paragraph, not merely somewhere in the file"
     )
-    assert "the **Delivery form** paragraph above" in text, (
+
+    status_idx = text.find("\n## Status handling")
+    assert status_idx != -1, "expected a '## Status handling' seam heading"
+    next_heading_idx = text.find("\n## ", status_idx + 1)
+    assert next_heading_idx != -1, "expected a following '## ' heading"
+    status_window = text[status_idx:next_heading_idx]
+
+    assert POINTER_PHRASE not in status_window, (
+        "the Status handling seam must cross-reference the ③ seam's "
+        "Delivery form paragraph, not re-duplicate the pointer phrase"
+    )
+    assert "Delivery form" in status_window, (
         "expected the Status handling seam to cross-reference the "
-        "Delivery form paragraph (no pseudo-§ heading) instead of "
-        "duplicating the pointer"
+        "Delivery form paragraph by name instead of duplicating the "
+        "pointer or inlining the rule"
     )
 
 
 def test_review_pointer():
     """
     Task 6 adds the canonical pointer phrase to
-    loom-code/skills/requesting-code-review/SKILL.md ③ (lines ~34-56),
-    signalling the verdict-relay + remediation-option seam now defers
-    to the shared family relay section instead of a locally-copied rule.
-    Marker: POINTER_PHRASE present at least once.
+    loom-code/skills/requesting-code-review/SKILL.md, signalling that the
+    verdict-relay seam defers to the shared family relay section instead
+    of a locally-copied rule.
+
+    The seam is the `## Asking the user` section — the docstring used to
+    say "③ (lines ~34-56)", which was a line range from an older layout
+    and no longer named where the pointer lives. The assertion was
+    whole-file, so it could not have caught the drift either way: the
+    pointer could migrate out of the relay seam entirely and this test
+    would stay green. It is windowed to that section now, matching its
+    sibling `test_sdd_pointer`.
     """
     text = _read(REVIEW_SKILL)
-    assert POINTER_PHRASE in text
+    seam_idx = _line_leading(text, "## Asking the user")
+    assert seam_idx != -1, "expected an '## Asking the user' relay seam heading"
+    seam_end = text.find("\n## ", seam_idx + 1)
+    assert seam_end != -1, "expected a following '## ' heading"
+    assert POINTER_PHRASE in text[seam_idx:seam_end], (
+        "expected the pointer phrase inside the '## Asking the user' relay "
+        "seam, not merely somewhere in the file"
+    )
 
 
 def test_brainstorming_visuals():
@@ -326,7 +370,7 @@ def test_close_out_card():
 
     rollup_idx = text.find("next + decision")
     close_out_idx = text.find("Close-out card")
-    visual_defaults_idx = text.find("### (b) Visual defaults")
+    visual_defaults_idx = _line_leading(text, "### (b) Visual defaults")
     assert rollup_idx != -1 and close_out_idx != -1 and visual_defaults_idx != -1
     assert rollup_idx < close_out_idx < visual_defaults_idx, (
         "Close-out card block must sit after the user-rollup card and "

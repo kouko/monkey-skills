@@ -24,6 +24,8 @@ import re
 from pathlib import Path
 
 import distribute
+from heading_window import line_leading as _line_leading
+
 
 _ROOT = Path(__file__).parents[1]
 AGENT = _ROOT / "agents" / "docs-reviewer.md"
@@ -56,8 +58,15 @@ def _output_contract() -> str:
     """Isolate the Output contract section (verdict template) — from its
     ## heading to the ### Aggregation rule heading."""
     text = _text()
-    start = text.index("## Output contract")
-    end = text.index("### Aggregation rule", start)
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window.
+    heading = "## Output contract"
+    start = _line_leading(text, heading)
+    assert start != -1, f"expected an {heading!r} heading"
+    end = _line_leading(text, "### Aggregation rule", start)
+    # _line_leading returns -1 rather than raising, so assert: a silent -1
+    # would slice to the last character and quietly widen the window.
+    assert end != -1, "expected an '### Aggregation rule' heading after the start"
     return text[start:end]
 
 
@@ -65,8 +74,12 @@ def _input_contract() -> str:
     """Isolate the Input contract section (dispatch packet shape) — from
     its ## heading to the ## Output contract heading."""
     text = _text()
-    start = text.index("## Input contract")
-    end = text.index("## Output contract", start)
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window (applies to both START and END).
+    start_heading = "## Input contract"
+    start = _line_leading(text, start_heading)
+    assert start != -1, f"expected an {start_heading!r} heading"
+    end = text.index("\n## Output contract", start) + 1
     return text[start:end]
 
 
@@ -79,7 +92,11 @@ def _role_contract_window() -> str:
     hand-authored role-contract sentence can't be masked by injected
     boilerplate re-using the same words elsewhere in the file."""
     text = _text()
-    start = text.index("## Role contract")
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window.
+    heading = "## Role contract"
+    start = _line_leading(text, heading)
+    assert start != -1, f"expected an {heading!r} heading"
     end = text.index("<!-- BEGIN reviewer-discipline", start)
     return text[start:end]
 
@@ -316,8 +333,11 @@ def test_convergence_duties_present():
     assert "orchestrator alone maps" in role, (
         "the reviewer must not map terminal confirmation outcomes"
     )
-    text = _text()
-    assert "Assert absence only after reading the full text" in _norm(text), (
+    # narrowed to the role-contract window (not whole-file text): the
+    # phrase must live in the hand-authored behavioral-rules list, not
+    # merely be quoted somewhere else in the file (e.g. a moved
+    # provenance citation), which whole-file presence couldn't rule out.
+    assert "assert absence only after reading the full text" in role, (
         "the full-text-before-absence discipline must be stated inline "
         "(its provenance citation moved to "
         "requesting-docs-review/references/design-evidence.md, plan "

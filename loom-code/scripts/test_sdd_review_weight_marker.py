@@ -11,6 +11,8 @@ Source: docs/loom/plans/2026-07-08-sdd-mechanical-review-weight-tasks.md
 
 from pathlib import Path
 
+from heading_window import line_leading as _line_leading
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 PLAN_FORMAT = REPO_ROOT / "loom-code/skills/writing-plans/references/plan-format.md"
@@ -26,11 +28,28 @@ def test_plan_format_has_review_weight_field():
     """
     Task 2 adds to loom-code/skills/writing-plans/references/plan-format.md:
       - the literal field name "Review-weight: mechanical"
-      - the co-condition phrase "identical or near-identical edit"
+      - the `Review-weight` reference section (pinned by its heading
+        anchor) AND, inside that section, the eligibility bar the marker
+        gates on -- the exemption's scope, not its prose.
     """
     text = _read(PLAN_FORMAT)
     assert "Review-weight: mechanical" in text
-    assert "identical or near-identical edit" in text
+    heading = "#### `Review-weight` (v0.11.0+, optional)"
+    assert heading in text
+    # The section existing is not the invariant -- the BAR it states is.
+    # `mechanical` skips two reviewer arms, so a section that kept the
+    # heading but loosened (or lost) its eligibility test would silently
+    # widen a review exemption. Pinned as the bar's rule-carrying tokens
+    # inside the section window, not as a full sentence.
+    # Anchor at a line start so a same-named heading at a different level
+    # earlier in the file can't retarget this window.
+    start = _line_leading(text, heading)
+    assert start != -1, f"expected {heading!r} heading"
+    end = text.index("\n#### ", start + len(heading))
+    section = text[start:end]
+    assert "ONLY be set" in section
+    assert "reproducible from an exact spec" in section
+    assert "never for logic, heuristic, hook, or security-surface" in section
 
 
 def test_plan_document_reviewer_has_check_16():

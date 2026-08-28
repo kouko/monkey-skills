@@ -104,4 +104,12 @@ def test_path_resolution_convention_documented():
     assert re.search(r"CONSUMER project", section, re.I)
     assert re.search(r"absolute", section, re.I)
     assert "consumer project root" in section.lower()
-    assert "never pass the command through a shell" in section
+    # Security-load-bearing keyword, not the full sentence: the invocation
+    # must be flagged as running never THROUGH A SHELL (direct argv, no
+    # shell=True/string-interpolation path) -- the exact connective wording
+    # around "never"/"shell" is free to reword, still inside the
+    # already-narrow section window.
+    assert re.search(r"never[^.\n]{0,40}shell", section, re.I), (
+        "the validate-before-fan-out invocation must state it never runs "
+        "the command through a shell"
+    )

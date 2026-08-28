@@ -109,11 +109,15 @@ def test_evaluator_recheck_not_fixer_claim_closes_the_finding():
 
 
 def test_old_unattributed_auto_revise_phrase_is_gone():
-    """The prior ambiguous phrasing (names no actor) must be fully
-    replaced, not merely supplemented — otherwise a reader could still
-    follow the old sentence and skip the worker dispatch."""
-    text = _text()
-    assert "via a brief auto-revise turn" not in text
+    """The prior ambiguous phrasing (names no actor) must be fully replaced,
+    not merely SUPPLEMENTED — otherwise a reader could still follow the old
+    sentence and skip the worker dispatch.
+
+    This is why the positive pins above cannot cover it: every one of them
+    stays green if the retired sentence is re-added alongside the new one.
+    The retired string is a conflicting instruction, so the check is kept and
+    left unnarrowed."""
+    assert "via a brief auto-revise turn" not in _text()
 
 
 if __name__ == "__main__":

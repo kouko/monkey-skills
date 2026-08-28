@@ -27,6 +27,17 @@ def _normalized_text() -> str:
     return " ".join(text.split())
 
 
+def _attached_head_bullet_window() -> str:
+    """Window from the `Attached-HEAD check:` bullet up to (not including)
+    the next `git status --short` bullet -- narrows the STOP-keyword pin
+    below to the bullet it governs instead of the whole file."""
+    normalized = _normalized_text()
+    start = normalized.find("Attached-HEAD check:")
+    end = normalized.find("Run `git status --short` to confirm")
+    assert start != -1 and end != -1 and start < end
+    return normalized[start:end]
+
+
 def test_step8_hygiene_control_phrase_present():
     """Positive-fact control: a pre-existing Step 8 hygiene phrase is
     present — proves the assertions below run against the real file,
@@ -44,13 +55,19 @@ def test_attached_head_bullet_names_the_command():
     assert "`git symbolic-ref -q HEAD`" in _normalized_text()
 
 
-def test_attached_head_bullet_closing_absolute_present():
-    """The bullet ends on the absolute: no close-out commit on a
-    detached HEAD."""
-    assert (
-        "never commit the close-out on a detached HEAD"
-        in _normalized_text()
-    )
+def test_attached_head_bullet_invokes_stop():
+    """The bullet's outcome on a detached/different HEAD is the named
+    STOP mechanism (same control keyword the family uses for a blocking
+    gate), pinned inside the bullet's own window -- not the surrounding
+    prose, which can be paraphrased without changing the mechanism.
+
+    `STOP` alone is the gate; the absolute below is the DISTINCTION the gate
+    exists for -- what must not happen even after a STOP is relayed. Dropping
+    it would leave the bullet telling the reader to stop without saying what
+    stopping forbids, and the STOP pin would stay green."""
+    window = _attached_head_bullet_window()
+    assert "STOP" in window
+    assert "detached HEAD" in window
 
 
 def test_attached_head_check_precedes_status_bullet():

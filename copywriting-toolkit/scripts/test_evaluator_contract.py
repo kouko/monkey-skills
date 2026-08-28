@@ -46,7 +46,14 @@ def _norm(s: str) -> str:
 def _window(heading: str, terminators=("\n## ",)) -> str:
     """Evaluator window: from a unique heading to the next section heading."""
     text = _evaluator()
-    start = text.find(heading)
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window; keep .find's -1-means-absent
+    # contract for the assert below.
+    if text.startswith(heading):
+        start = 0
+    else:
+        _pos = text.find("\n" + heading)
+        start = _pos + 1 if _pos != -1 else -1
     assert start != -1, f"heading {heading!r} absent from copywriter-evaluator.md"
     ends = [
         i
@@ -75,6 +82,7 @@ AGGREGATION_SHARED = (
 )
 
 ROUND2_SHARED = (
+    "BEFORE raising anything new",
     "Re-raising a closed finding in new words is forbidden",
     "re-litigation, not review",
     "ends the loop",
@@ -137,7 +145,6 @@ def test_prior_findings_check_round2_duty():
     assert "prior_findings_check" in window
     assert "status: fix-verified | not-fixed | resurfaced" in window
     assert "restated verbatim" in window
-    assert "BEFORE raising anything new" in window
     assert "quote:" in window, "prior_findings_check entries must quote current draft text"
     for phrase in ROUND2_SHARED:
         assert phrase in _norm(vocab), f"canonical phrase {phrase!r} missing from CLAUDE.md"

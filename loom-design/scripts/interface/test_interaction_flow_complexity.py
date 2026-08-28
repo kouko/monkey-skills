@@ -9,6 +9,21 @@ CHECKLIST = ROOT / "skills" / "interaction-flows" / "references" / "ux-flow-chec
 LENS = ROOT / "skills" / "interaction-flows" / "references" / "interaction-complexity-lens.md"
 
 
+def _complexity_handoff_paragraph(skill: str) -> str:
+    """The paragraph governing `## Complexity handoff`'s status ("After the
+    seven dimensions ... never a behavioral gate ..."), up to the next blank
+    line -- narrower than the whole SKILL.md so this phrase's presence can't
+    be satisfied by an incidental mention elsewhere in the file.
+    """
+    start = skill.find("After the seven dimensions")
+    assert start != -1, (
+        "SKILL.md must carry the 'After the seven dimensions' paragraph "
+        "that governs `## Complexity handoff`'s status"
+    )
+    end = skill.find("\n\n", start)
+    return skill[start : end if end != -1 else None]
+
+
 def test_flow_lens_emits_stage_native_handoff():
     """Flow complexity stays local, is addressable, and never becomes a spec gate."""
     skill = SKILL.read_text(encoding="utf-8")
@@ -25,4 +40,9 @@ def test_flow_lens_emits_stage_native_handoff():
     assert "static surface" in lens.lower() and "reasoned N/A" in lens
     assert "optional evidence" in lens
     assert "required user or operator outcome" in lens.lower()
-    assert "does not author behavioral guards" in skill
+
+    # Scope-boundary control phrase: the lens is evidence, never a gate.
+    # Narrowed to the governing paragraph, not the whole file, so an
+    # incidental mention elsewhere could not keep this green after the
+    # boundary itself was deleted or inverted.
+    assert "does not author behavioral guards" in _complexity_handoff_paragraph(skill)

@@ -65,7 +65,14 @@ def test_counter_enforcement_warnings_point_to_validator():
     # describes the behavior without naming the validator as what actually
     # checks it.
     text = _text()
-    assert "Monotonic — counters only increment" in text  # original prose preserved
+    # anchored to the actual table row (not just the phrase, which is
+    # ALSO quoted verbatim in the ENFORCES section below) -- otherwise
+    # deleting the row while the ENFORCES section still quotes it would
+    # keep this green: a false green on the row's continued existence.
+    assert (
+        "| `retries.*` counters | Router | Monotonic — counters only "
+        "increment"
+    ) in text
     section = text.split("## Envelope Validation", 1)[1].split("\n## ", 1)[0]
     assert "ENFORCES" in section or "enforces" in section
     assert "retries" in section.lower()

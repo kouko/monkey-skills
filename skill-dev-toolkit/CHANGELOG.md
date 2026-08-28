@@ -4,6 +4,15 @@ All notable changes to the `skill-dev-toolkit` plugin are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] — 2026-08-28
+
+### Changed — `skill-refactor` test pins assert invariants, not wording
+
+- The package-mode verdict criteria pin no longer requires one exact sentence.
+  It windows the RESHAPE bullet and asserts the criteria tokens co-occur there,
+  so rewording the bullet does not fail while dropping a criterion does.
+- No skill instruction text changed; this is a test-side change only.
+
 ## [0.4.0] — 2026-08-26
 
 ### Added — `skill-refactor` package-resource mode

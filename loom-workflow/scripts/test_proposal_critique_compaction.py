@@ -9,6 +9,20 @@ SKILL = (
 )
 
 
+def _window(text: str, start_marker: str, end_marker: str) -> str:
+    """Text from `start_marker` up to (not including) `end_marker`.
+
+    Keeps a mechanism/keyword pin scoped to the section that actually
+    governs it, instead of matching anywhere in the whole SKILL.md --
+    a whole-file match is a false green if the rule moves or is
+    deleted from its governing section but the bare words survive
+    elsewhere.
+    """
+    start = text.index(start_marker)
+    end = text.index(end_marker, start)
+    return text[start:end]
+
+
 def test_entrypoint_preserves_axes_matrix_fallthrough_and_output():
     text = SKILL.read_text(encoding="utf-8")
 
@@ -30,9 +44,19 @@ def test_entrypoint_preserves_axes_matrix_fallthrough_and_output():
     assert "The Triage Matrix" in text
     assert "KEEP-WITH-CAVEAT" in text
     assert "articulable re-trigger condition" in text
-    assert "fall through DEFER to DROP" in text
-    assert "three buckets" in text
-    assert "one-line reason per item" in text
+
+    fallthrough_section = _window(text, "### DEFER fall-through", "## Judgment Rules")
+    assert "fall through DEFER to DROP" in fallthrough_section, (
+        "the DEFER-fallthrough rule must live inside its own governing "
+        "'### DEFER fall-through' section"
+    )
+
+    present_step = _window(text, "5. **PRESENT.", "## The Triage Matrix")
+    assert "three buckets" in present_step
+    assert "one-line reason per item" in present_step, (
+        "the one-line-reason-per-item output requirement must live "
+        "inside step 5 (PRESENT), not merely somewhere in the file"
+    )
 
     assert "Single specific change" in text
     assert "complexity-critique" in text

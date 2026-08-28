@@ -21,7 +21,10 @@ neither anchor's neighborhood mentioning "research-escalation.md" at all).
 Stdlib only (pathlib).
 """
 
+import re
 from pathlib import Path
+
+from heading_window import line_leading
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -179,15 +182,18 @@ def test_cap_paragraph_window_names_evidence_needed_immediate_trigger():
     )
 
 
+def _evidence_needed_description(text: str) -> str:
+    """The `evidence_needed` (OPTIONAL) field-description paragraph."""
+    m = re.search(r"`evidence_needed` \(OPTIONAL\):.*", text)
+    assert m, "no `evidence_needed` (OPTIONAL): field description found"
+    return m.group(0).strip()
+
+
 def test_code_quality_reviewer_findings_schema_carries_evidence_needed():
     text = _read(CODE_QUALITY_REVIEWER)
     assert _EVIDENCE_NEEDED_FIELD in text, (
         "code-quality-reviewer.md's findings schema must gain the optional "
         "evidence_needed tag (plan task 10)"
-    )
-    assert "never runs the research" in text, (
-        "the schema addition needs its one-sentence flag-don't-search rule "
-        "(reviewer flags, never searches)"
     )
 
 
@@ -197,9 +203,31 @@ def test_code_reviewer_findings_schema_carries_evidence_needed():
         "code-reviewer.md's findings schema must gain the optional "
         "evidence_needed tag (plan task 10)"
     )
-    assert "never runs the research" in text, (
-        "the schema addition needs its one-sentence flag-don't-search rule "
-        "(reviewer flags, never searches)"
+
+
+def test_evidence_needed_flag_dont_search_rule_agrees_across_reviewers():
+    """Both reviewer agents carry the SAME `evidence_needed` field
+    description (a duplicated contract, not independent prose) -- the
+    real invariant is that the two copies say the same thing, in
+    particular that the reviewer flags but never runs the research
+    itself. Comparing the two extracted copies catches drift between
+    them; a deliberate reword applied to both together stays green."""
+    quality_desc = _evidence_needed_description(_read(CODE_QUALITY_REVIEWER))
+    code_desc = _evidence_needed_description(_read(CODE_REVIEWER))
+    assert quality_desc == code_desc, (
+        "the evidence_needed field description has drifted between "
+        "code-quality-reviewer.md and code-reviewer.md -- reword both "
+        "copies together or neither.\n"
+        f"  code-quality-reviewer: {quality_desc}\n"
+        f"  code-reviewer:         {code_desc}"
+    )
+    # No `or "flags"` fallback: a one-line description of a FLAGGING field
+    # almost always contains "flags", so that disjunct passed for any reword
+    # that dropped the substantive half. Both copies carry the strong clause
+    # today, so requiring it costs nothing and can actually fail.
+    assert "never runs the research" in quality_desc, (
+        "the shared description must state the reviewer flags rather than "
+        "runs the research itself"
     )
 
 
@@ -209,7 +237,11 @@ def test_reference_file_carries_reviewer_tag_supplement_after_existing_sections(
     (docs/loom/memory/pin-shared-wording-in-plan-copies-transcribe-from-pin.md
     supplement-after-pin rule)."""
     text = _read(REFERENCE)
-    cap_idx = text.find("## Cap unchanged")
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this ordering check; keep .find's
+    # -1-means-absent contract for the assert below.
+    cap_heading = "## Cap unchanged"
+    cap_idx = line_leading(text, cap_heading)
     assert cap_idx != -1, "existing '## Cap unchanged' section must survive"
     supplement_idx = text.find("Reviewer-tag trigger")
     assert supplement_idx != -1, (

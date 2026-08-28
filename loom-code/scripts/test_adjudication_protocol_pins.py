@@ -31,9 +31,16 @@ def _section(text: str, heading: str) -> str:
     after the section that owns the claim has been gutted. (Revision
     round 1 found this on the firing condition; revision round 2 found
     the same class on the negation-tier rows -- deleting either tier
-    row left both document-wide assertions green.)"""
-    assert f"## {heading}" in text, f"section missing: ## {heading}"
-    return text.split(f"## {heading}", 1)[1].split("\n## ", 1)[0]
+    row left both document-wide assertions green.)
+
+    Anchored on a line-leading newline + `## ` rather than a bare `## `:
+    `"## Foo"` is a substring of `"### Foo"`, so a same-named `###`
+    subheading appearing earlier would silently retarget the window to the
+    wrong region. No such collision exists in the protocol today; the anchor
+    keeps it from becoming one."""
+    anchor = f"\n## {heading}"
+    assert anchor in text, f"section missing: ## {heading}"
+    return text.split(anchor, 1)[1].split("\n## ", 1)[0]
 
 
 def _table_forms(table: str) -> dict:
@@ -68,8 +75,14 @@ def test_protocol_carries_modality_table_and_unit_rule():
     for pair in ("must→必須", "should→應", "may→可", "must not→不得", "should not→不應"):
         assert pair in text, f"modality mapping missing: {pair}"
 
-    # unit-1:1 rule — one rendition unit per source unit.
-    assert "one rendition unit per source unit" in text, "unit-1:1 rule missing"
+    # unit-1:1 rule — one rendition unit per source unit. Windowed to its own
+    # section per the file-level convention above: a whole-doc check would
+    # stay green even if the rule were gutted from ## The unit-1:1 rule
+    # while the phrase happened to survive as a passing mention elsewhere.
+    unit_rule_section = _section(text, "The unit-1:1 rule")
+    assert "one rendition unit per source unit" in unit_rule_section, (
+        "unit-1:1 rule missing from its section"
+    )
 
     # units-JSON schema field list.
     assert (

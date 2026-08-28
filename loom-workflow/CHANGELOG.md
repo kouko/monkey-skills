@@ -4,6 +4,20 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.2] — 2026-08-28 — test pins assert invariants, not wording
+
+### Changed
+
+Markdown assertions in `distill-sessions` and `goal-create`'s test suites now
+pin the invariant each one protects instead of the sentence that carried it:
+a named mechanism by its script name or control keyword inside a narrowed
+window, a required section by its heading anchor. No skill instruction text
+changed; this is a test-side change only.
+
+Measured motivation: across 11 mutation cells on this repo's contract prose,
+pins on wording produced 4 false alarms — a paraphrase that preserved the rule
+still failed — while catching nothing the mechanism pins missed.
+
 ## [1.2.1] — 2026-08-28 — `independent-advisor` resolves aliased executors
 
 ### Fixed

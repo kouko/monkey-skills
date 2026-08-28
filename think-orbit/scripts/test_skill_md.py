@@ -337,6 +337,23 @@ _FIRST_USE_WINDOW = 400
 # unbounded `.*` under DOTALL matches across the whole file and pins nothing.
 _NEARBY = r".{0,200}"
 
+
+def _section(text: str, heading: str) -> str:
+    """Window from a line starting with `heading` to the next `## ` heading.
+
+    A whole-file search cannot tell a rule apart from an unrelated mention
+    of the same words elsewhere in the document; scoping to the governing
+    section is what keeps a shortened pin from going false-green if the
+    rule itself is deleted from its section but the words linger nearby.
+    """
+    # Anchor at a line start (the docstring's promise) so a same-named
+    # `###` subheading earlier in the file can't retarget this window.
+    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
+    rest = text[start + len(heading):]
+    m = re.search(r"^## ", rest, re.MULTILINE)
+    end = start + len(heading) + (m.start() if m else len(rest))
+    return text[start:end]
+
 NODE_SCHEMA_MD = (
     Path(__file__).resolve().parent.parent
     / "skills"
@@ -499,7 +516,10 @@ def test_thinking_session_keeps_inference_out_of_a_fact_body():
     """FINDING-006 — FACT bodies carried 'this means…' tails."""
     body = _body(SKILL_MD.read_text(encoding="utf-8"))
 
-    assert "restates and contextualizes the quote" in body
+    # The real invariant is the redirect itself (inference goes to a CLAIM,
+    # not the FACT body) -- already pinned below. What a FACT body's own
+    # prose should do is definitional wording with no separate mechanism to
+    # check, so it is not pinned a second time here.
     assert re.search(r"this means.{0,80}CLAIM", body, re.DOTALL | re.IGNORECASE), (
         "the node-types section must send a 'this means…' inference to a CLAIM"
     )
@@ -509,8 +529,17 @@ def test_thinking_session_inlines_the_status_enum_and_defines_load_bearing_at_fi
     """FINDING-008 — a cold reader stalled on `status` and met `load_bearing` unexplained."""
     body = _body(SKILL_MD.read_text(encoding="utf-8"))
 
-    assert "status: current | stale" in body and "only break writes stale" in body, (
-        "the body must inline the status enum a first-time reader needs"
+    # Narrowed to the sentence that introduces `status`, not whole-file: a
+    # whole-file search would stay green even if this sentence -- the one
+    # that actually tells a reader which writes cause staleness -- were cut
+    # while the two words happened to survive somewhere else in the doc.
+    status_intro = re.search(r"Node files carry.{0,160}", body, re.DOTALL)
+    assert status_intro, "no 'Node files carry ...' sentence introduces `status` at all"
+    assert "status: current | stale" in status_intro.group(0) and (
+        "only break writes stale" in status_intro.group(0)
+    ), (
+        "the status-introducing sentence must inline the enum and say only "
+        "break writes cause staleness"
     )
 
     first_use = body.index("load_bearing")
@@ -587,27 +616,36 @@ def test_thinking_session_states_the_transparency_contract():
     flat_body = _flat(body)
     flat_schema = _flat(schema)
 
+    # (a)-(d) all live in the family-contract section. Windowed to that
+    # section so a whole-file match cannot go false-green if the rule is cut
+    # from its governing section while the words happen to survive
+    # elsewhere (e.g. in this very docstring, or a changelog).
+    contract_window = _flat(_section(body, "## The family contract"))
+
     # (a) progress narration stays banned — the one kind of speech that is noise.
-    assert "Progress narration stays banned" in flat_body, (
+    assert "Progress narration stays banned" in contract_window, (
         "the contract must keep progress narration banned"
     )
 
     # (b) reasoning-aloud is required, not merely permitted.
-    assert "Reasoning-aloud is required" in flat_body, (
+    assert "Reasoning-aloud is required" in contract_window, (
         "the contract must REQUIRE reasoning-aloud"
     )
 
     # (c) granularity: before the action, not after the thought; one or two
     # sentences; never awaiting a reply.
-    assert "before the action, not after the thought" in flat_body
-    assert "one or two sentences" in flat_body
-    assert re.search(r"never wait|without waiting|not wait", flat_body), (
+    assert "before the action, not after the thought" in contract_window
+    assert "one or two sentences" in contract_window
+    assert re.search(r"never wait|without waiting|not wait", contract_window), (
         "reasoning-aloud must not turn into a fourth interrupt"
     )
 
-    # (d) the host-preference exception, stated with its reason.
-    assert "deliberate exception to a host-level" in flat_body
-    assert "Transparency is the product" in flat_body
+    # (d) the host-preference exception exists and is framed as deliberate
+    # (an intentional carve-out, not an inconsistency a reader should
+    # "fix"). The *reason* given for it is prose with no separate
+    # mechanism to check, so only the exception-and-deliberateness claim
+    # is pinned, not the specific reason sentence.
+    assert "deliberate exception to a host-level" in contract_window
 
     # (e) the blanket silence rule is gone — no parallel version left standing.
     assert "Everything else is" not in flat_body
@@ -636,9 +674,13 @@ def test_thinking_session_states_the_transparency_contract():
         "node-schema.md must say `input-narration` requires a LOAD-BEARING input's id"
     )
 
+    # (g)/(i) both live in the fork section. Windowed so the pin cannot go
+    # false-green if the rule is cut from where the agent actually reads it.
+    fork_window = _flat(_section(body, "### When the discussion forks"))
+
     # (g) the branch-opening rule — the authoring half of `branch-has-node`.
-    assert "one CLAIM node stating that path's position" in flat_body
-    assert "branch-has-node" in flat_body
+    assert "one CLAIM node stating that path's position" in fork_window
+    assert "branch-has-node" in fork_window
 
     # (h) no placeholder example bodies, and at least one example node carries
     # non-empty `inputs` whose body names one of them.
@@ -649,8 +691,8 @@ def test_thinking_session_states_the_transparency_contract():
     # (i) a fork that becomes visible only after one path is under way — the
     # asymmetric case, where three readings give structurally different graphs
     # and `branch-has-node` cannot arbitrate between them.
-    assert "Open the branch retroactively" in flat_body
-    assert "tag the existing path's nodes" in flat_body
+    assert "Open the branch retroactively" in fork_window
+    assert "tag the existing path's nodes" in fork_window
 
     # (j) the warrant duty does not over-claim for a node with no upstream:
     # it says so and says why, rather than inventing an upstream ref.

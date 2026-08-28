@@ -33,7 +33,9 @@ def _normalized_text() -> str:
 def test_default_flow_control_phrase_present():
     """Positive-fact control: a pre-existing Default flow step 1 phrase
     is present — proves the assertions below run against the real file,
-    not a stub."""
+    not a stub. This is a canary, not a wording pin: it deliberately
+    names an unrelated but reliably-present sentence so a stubbed or
+    emptied SKILL.md cannot make the other assertions vacuously pass."""
     assert (
         "Read branch state — git status + git log main..HEAD"
         in _normalized_text()

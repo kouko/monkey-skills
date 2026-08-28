@@ -318,7 +318,13 @@ def test_entry_reads_current_skill():
         "the read duty must target the installed plugin's file, not any "
         "cached copy"
     )
-    assert "never run the flow from memory or a compacted summary" in para, (
+    # keyword anchor, not the full sentence: "compacted summary" is the
+    # incident-derived term (the post-compaction stale-cached-skill-text
+    # incident) that must survive, while the connective wording around it
+    # ("never run the flow from memory or a ...") is free to reword —
+    # still inside the already-narrow conductor-paragraph window, so a
+    # deleted prohibition (not just a reworded one) still fails.
+    assert "never" in para and "compacted summary" in para, (
         "conductor paragraph must forbid running the flow from memory or "
         "a compacted summary"
     )

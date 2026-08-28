@@ -31,6 +31,24 @@ def _text() -> str:
     return SKILL.read_text(encoding="utf-8")
 
 
+def _phase_window(text: str, start_pattern: str) -> str:
+    """Window from a phase's own start marker to the next `### ` heading or
+    the next `**Phase ` sub-marker, whichever comes first -- narrows an
+    announce-instruction check to the ONE phase it governs, so a check
+    passing because a DIFFERENT phase still carries an announce example is
+    not mistaken for this phase's own instruction surviving."""
+    m = re.search(start_pattern, text)
+    assert m, f"phase start not found: {start_pattern}"
+    tail = text[m.end():]
+    stops = [
+        mm.start()
+        for pat in (r"\n### ", r"\n\*\*Phase ")
+        for mm in re.finditer(pat, tail)
+    ]
+    end = m.end() + (min(stops) if stops else len(tail))
+    return text[m.start():end]
+
+
 def _filesystem_escapes(markdown_file: Path, root: Path) -> list[str]:
     text = markdown_file.read_text(encoding="utf-8")
     targets = re.findall(r"\[[^\]]+\]\(([^)]+)\)", text)
@@ -223,17 +241,23 @@ def test_phases_announced_during_execution():
     # what this step does" instruction carrying a per-phase "next I'll ..." example.
     assert "conversation language" in low, \
         "must instruct announcing each phase in the conversation language"
-    assert "next I'll lay the user-journey backbone" in text, \
-        "Phase ① must carry a conversation-language announce example " \
-        "('next I'll lay the user-journey backbone'), not the verbatim marker"
-    assert "next I'll fan out the object model" in text, \
-        "Phase ② must carry a conversation-language announce example " \
-        "('next I'll fan out the object model'), not the verbatim marker"
-    assert "next I'll build and prune the auto-expansion matrix" in text, \
-        "Phase ③ must carry a conversation-language announce example " \
-        "('next I'll build and prune the auto-expansion matrix'), not the " \
-        "verbatim marker"
     assert "announce" in low, "must instruct the agent to ANNOUNCE each phase"
+    # Each phase's OWN window (not the file globally) must carry the
+    # **Announce:** conversation-language instruction, and must NOT have
+    # reverted to printing the internal phase marker verbatim to chat
+    # (the pre-T12 regression this test exists to catch).
+    for label, start_pattern in (
+        ("①", r"### Phase ① USM"),
+        ("②", r"### Phase ② OOUX"),
+        ("③", r"### Phase ③ "),
+    ):
+        window = _phase_window(text, start_pattern)
+        assert "**Announce:**" in window and "conversation language" in window.lower(), \
+            f"Phase {label} must carry its OWN conversation-language announce " \
+            "instruction, not rely on another phase's"
+        assert not re.search(r"—\s*Phase [①②③][a-z]?\b[^—]*—", window), \
+            f"Phase {label} must not print the internal phase marker " \
+            "verbatim to chat (e.g. '— Phase ① USM backbone —')"
 
 
 def test_three_visible_artifact_sections_per_phase():
@@ -407,14 +431,16 @@ def test_l3_journey_navigation_present():
     identifier stays in the artifact only."""
     text = _text()
     low = text.lower()
-    # the Phase ③c conversation-language announce example (T12 invariant) —
-    # pre-T12 this was a verbatim chat-marker print instruction, which would
-    # NOT contain the "next I'll ..." example phrase; so this assertion is
-    # RED-genuine (fails on pre-T12 SKILL.md).
-    assert "next I'll walk every navigation edge for journey coverage" in text, \
-        "Phase ③c must announce in the conversation language " \
-        "('next I'll walk every navigation edge for journey coverage'), " \
-        "not print the verbatim internal marker to chat"
+    # the Phase ③c conversation-language announce instruction, scoped to
+    # Phase ③c's OWN window — pre-T12 this was a verbatim chat-marker print
+    # instruction instead, so the marker's absence is asserted too (RED-
+    # genuine: fails on pre-T12 SKILL.md).
+    window = _phase_window(text, r"\*\*Phase ③c")
+    assert "**Announce:**" in window and "conversation language" in window.lower(), \
+        "Phase ③c must announce in the conversation language, not print " \
+        "the verbatim internal marker to chat"
+    assert not re.search(r"—\s*Phase ③c[^—]*—", window), \
+        "Phase ③c must not print the internal phase marker verbatim to chat"
     # the visible proposal.md artifact section (exact bytes)
     assert "## Journey navigation" in text, \
         "Phase ③c must emit a visible '## Journey navigation' section"
@@ -463,14 +489,16 @@ def test_l2_cross_object_combinations_present():
     the artifact only."""
     text = _text()
     low = text.lower()
-    # the Phase ③b conversation-language announce example (T12 invariant) —
-    # pre-T12 this was a verbatim chat-marker print instruction, which would
-    # NOT contain the "next I'll ..." example phrase; so this assertion is
-    # RED-genuine (fails on pre-T12 SKILL.md).
-    assert "next I'll enumerate cross-object combinations for interaction-dense stages" in text, \
-        "Phase ③b must announce in the conversation language ('next I'll " \
-        "enumerate cross-object combinations for interaction-dense stages'), " \
-        "not print the verbatim internal marker to chat"
+    # the Phase ③b conversation-language announce instruction, scoped to
+    # Phase ③b's OWN window — pre-T12 this was a verbatim chat-marker print
+    # instruction instead, so the marker's absence is asserted too (RED-
+    # genuine: fails on pre-T12 SKILL.md).
+    window = _phase_window(text, r"\*\*Phase ③b")
+    assert "**Announce:**" in window and "conversation language" in window.lower(), \
+        "Phase ③b must announce in the conversation language, not print " \
+        "the verbatim internal marker to chat"
+    assert not re.search(r"—\s*Phase ③b[^—]*—", window), \
+        "Phase ③b must not print the internal phase marker verbatim to chat"
     # the visible proposal.md artifact section (exact bytes)
     assert "## Cross-object combinations" in text, \
         "Phase ③b must emit a visible '## Cross-object combinations' section"

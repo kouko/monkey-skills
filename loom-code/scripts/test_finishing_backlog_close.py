@@ -56,8 +56,10 @@ def test_backlog_close_flip_vocabulary_present():
 
 def test_backlog_close_same_commit_duty_present():
     """The flip and the index regen land in the same close-out
-    commit — the close moment, not a follow-up chore."""
-    assert "in the same close-out commit" in _normalized_text()
+    commit — the close moment, not a follow-up chore. Narrowed to the
+    Backlog-close row so this can't false-green off an unrelated
+    same-commit phrase elsewhere in the file."""
+    assert "in the same close-out commit" in _backlog_close_row_text()
 
 
 def test_backlog_close_names_regenerate_command():
@@ -70,8 +72,10 @@ def test_backlog_close_names_regenerate_command():
 
 def test_backlog_close_silent_skip_clause_present():
     """No hit, or no store, skips silently — auditable from the diff,
-    same posture as the memory-store bullet."""
-    assert "No hit, or no store → skip silently" in _normalized_text()
+    same posture as the memory-store bullet. Narrowed to the
+    Backlog-close row so this can't false-green off the memory-store
+    row's own silent-skip clause."""
+    assert "No hit, or no store → skip silently" in _backlog_close_row_text()
 
 
 def test_backlog_close_follows_memory_store_integrity_row():
@@ -142,7 +146,13 @@ def test_zero_live_bets_are_reported_without_a_user_prompt():
     row = _backlog_close_row_text()
     assert "bet queue empty" in row
     assert "do not ask" in row
-    assert "surface a betting prompt to the user" not in row
+    # Paired absence pin: the retired duty is an INSTRUCTION whose literal
+    # return would make close-out stop and prompt the user to pick a bet,
+    # directly contradicting the "do not ask" rule pinned above — a
+    # contradictory leftover both clauses could coexist through.
+    assert "surface a betting prompt to the user" not in _normalized_text(), (
+        "the retired betting-prompt duty must not reappear in SKILL.md"
+    )
 
 
 def test_backlog_close_never_auto_promotes():
@@ -157,7 +167,6 @@ def test_close_out_row_reports_empty_store_without_direction():
     row = _backlog_close_row_text()
     assert "zero live `bet` entries" in row
     assert "--direction-write" not in row
-    assert "agents never auto-promote — promotion is never a silent default" in row
 
 
 def test_backlog_charter_and_close_out_agree_on_empty_queue_authority():

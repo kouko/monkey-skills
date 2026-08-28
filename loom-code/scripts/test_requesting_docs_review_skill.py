@@ -1086,24 +1086,35 @@ def test_post_fix_out_of_scope_cannot_suppress_a_new_gating_problem():
 
     `out_of_scope` is reserved for non-gating observations on either host;
     a new gating problem must remain an ordinary scored finding so the
-    orchestrator maps NEEDS_REVISION to STILL_BLOCKING.
+    orchestrator maps NEEDS_REVISION to STILL_BLOCKING. This is a two-ends
+    protocol (the SKILL.md station schema, the docs-reviewer agent prompt),
+    so the same control phrases are checked on BOTH sides from ONE shared
+    constant each, rather than two independently hardcoded literals -- a
+    reword applied to the constant (and both call sites) stays meaningful,
+    while a reword of only one side still fails the other side's assert.
+    Neither .md carries a `§Pinned ...` label to extract a block for a true
+    diff-comparison (unlike the requesting-code-review/docs-review pass-down
+    contract), so a shared literal is the closest available anchor.
     """
+    NO_SUPPRESS_NEW_GATING = "never use for a new gating problem"
+    NON_GATING_OBSERVATION = "non-gating observation"
+
     skill = _norm(_out_of_scope_fence_window(_text())).lower()
     reviewer = _norm(DOCS_REVIEWER_MD.read_text(encoding="utf-8")).lower()
 
-    assert "non-gating observation" in skill, (
+    assert NON_GATING_OBSERVATION in skill, (
         "the station schema must limit out_of_scope to non-gating observations"
     )
-    assert "never use for a new gating problem" in skill, (
+    assert NO_SUPPRESS_NEW_GATING in skill, (
         "the station schema must forbid suppressing a new confirmation blocker"
     )
     assert "scoped to the delta only" not in skill, (
         "the station schema must not impose Claude's delta scope on Codex"
     )
-    assert "non-gating observation" in reviewer, (
+    assert NON_GATING_OBSERVATION in reviewer, (
         "the reviewer schema must share the host-neutral out_of_scope boundary"
     )
-    assert "never use for a new gating problem" in reviewer, (
+    assert NO_SUPPRESS_NEW_GATING in reviewer, (
         "the reviewer must keep a new confirmation blocker in findings[]"
     )
 

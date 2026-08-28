@@ -6,8 +6,10 @@ the host-neutral policy, the two adapters, and every current dispatch station
 bound together so a future station cannot silently revert to model inheritance
 or a Codex-only TOML role configuration.
 """
+import re
 from pathlib import Path
 
+from heading_window import line_leading as _line_leading
 
 ROOT = Path(__file__).resolve().parent.parent
 PROFILE = ROOT / "skills" / "using-loom-code" / "references" / "dispatch-profile.md"
@@ -27,6 +29,30 @@ def _profile() -> str:
     return PROFILE.read_text(encoding="utf-8")
 
 
+def _section(text: str, heading: str) -> str:
+    """Window from `heading` to the next `## ` heading (or end of file).
+
+    Keeps mechanism/keyword pins scoped to the section that actually
+    governs them, instead of matching anywhere in the whole profile --
+    a whole-file match is a false green if the rule moves or is deleted
+    from its governing section but the bare words survive elsewhere.
+    """
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window (a bare substring match would).
+    start = _line_leading(text, heading)
+    assert start != -1, f"expected an {heading!r} heading"
+    rest = text[start + len(heading):]
+    next_heading = re.search(r"\n## ", rest)
+    end = start + len(heading) + (next_heading.start() if next_heading else len(rest))
+    return text[start:end]
+
+
+def _intro_window(text: str) -> str:
+    """Window from the top of the file to the first `## ` heading."""
+    first_heading = re.search(r"\n## ", text)
+    return text[: first_heading.start()] if first_heading else text
+
+
 def test_profile_uses_semantic_tiers_and_has_no_vendor_as_its_ssot():
     text = _profile()
 
@@ -34,7 +60,10 @@ def test_profile_uses_semantic_tiers_and_has_no_vendor_as_its_ssot():
     assert "standard" in text
     assert "frontier" in text
     assert "low" in text and "medium" in text and "high" in text
-    assert "never names a vendor model" in text
+    assert "never names a vendor model" in _intro_window(text), (
+        "the vendor-neutral SSOT policy must be stated in the profile's "
+        "opening statement, not merely present somewhere in the file"
+    )
 
 
 def test_profile_has_explicit_claude_and_codex_adapters():
@@ -45,19 +74,29 @@ def test_profile_has_explicit_claude_and_codex_adapters():
     assert "effort" in text
 
     assert "## Codex adapter" in text
-    assert "spawn_agent" in text
-    assert "model" in text and "reasoning_effort" in text
-    assert ".codex/agents" in text
-    assert "not the loom dispatch mechanism" in text
+    codex_section = _section(text, "## Codex adapter")
+    assert "spawn_agent" in codex_section
+    assert "model" in codex_section and "reasoning_effort" in codex_section
+    assert ".codex/agents" in codex_section
+    assert "not the loom dispatch mechanism" in codex_section, (
+        "the disclaimer that a Codex TOML role is not loom's dispatch "
+        "mechanism must live inside the Codex adapter section"
+    )
 
 
 def test_profile_fails_closed_for_frontier_and_bounds_other_fallbacks():
     text = _profile()
+    fallback_section = _section(text, "## Failure and fallback policy")
 
-    assert "frontier" in text and "fail loud" in text
-    assert "at most one retry" in text
-    assert "must not silently downgrade" in text
-    assert "unverified" in text and "halts the dispatch" in text
+    assert "frontier" in fallback_section and "fail loud" in fallback_section
+    assert "at most one retry" in fallback_section, (
+        "the retry bound must live inside the failure-and-fallback policy section"
+    )
+    assert "must not silently downgrade" in fallback_section, (
+        "the no-silent-downgrade rule must live inside the failure-and-fallback "
+        "policy section"
+    )
+    assert "unverified" in fallback_section and "halts the dispatch" in fallback_section
 
 
 def test_every_dispatch_station_points_to_the_profile_before_spawning():
@@ -113,7 +152,10 @@ def test_profile_precedes_host_spawn_and_replaces_inheritance_evidence():
         ROOT / "skills" / "requesting-code-review" / "references" / "design-evidence.md"
     ).read_text(encoding="utf-8")
 
-    rebinding = codex_tools.index("### Re-binding loom-code's dispatch points")
+    rebinding = _line_leading(codex_tools, "### Re-binding loom-code's dispatch points")
+    # _line_leading returns -1 rather than raising; a silent -1 would make the
+    # two searches below start from the last character and pass vacuously.
+    assert rebinding != -1, "expected a '### Re-binding' heading at a line start"
     profile_resolution = codex_tools.index("resolve the portable profile first", rebinding)
     spawn = codex_tools.index("one `spawn_agent` call per role", rebinding)
     assert profile_resolution < spawn

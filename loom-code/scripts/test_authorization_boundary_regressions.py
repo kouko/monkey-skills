@@ -18,6 +18,19 @@ def test_docs_review_distinguishes_review_only_from_authorized_change() -> None:
 
 
 def test_docs_review_treats_confirmation_limit_as_quality_stop() -> None:
+    """STILL_BLOCKING after the one fix cycle is a quality stop, never a
+    permission boundary that would make the agent wait on the user to
+    authorize continuing.
+
+    The positive assertion carries the rule; it is the primary guard, since
+    an absence check can only catch a LITERAL return of the old text and
+    never a reworded one. The four absence checks below are kept anyway,
+    because each retired string is a CONFLICTING INSTRUCTION rather than a
+    rationale: an executor who found any of them would stop and wait for
+    user authorization, and the positive sentence does not prevent one of
+    them being re-added alongside it. They stay UNNARROWED for the same
+    reason -- a window would let the retired instruction return elsewhere in
+    the file."""
     text = DOCS_REVIEW.read_text(encoding="utf-8")
 
     assert "quality stop, not a new permission boundary" in text
@@ -47,8 +60,16 @@ def test_finishing_enumerates_agent_never_main_mutations() -> None:
 
 
 def test_finishing_allows_sync_only_after_human_merge() -> None:
+    """The ff-to-origin sync is gated on the human merge already happening,
+    and is the fast-forward command, not an agent-performed merge. The
+    third assertion this test used to run ("synchronization, not an
+    agent-performed merge" in text) was deleted: that "this is sync, not a
+    merge" distinction is already pinned twice over in this same file --
+    by the ff-command mechanism kept below, and by
+    `test_finishing_enumerates_agent_never_main_mutations` forbidding
+    `gh pr merge` / merging into `main` outright -- so it protected no
+    invariant not already covered here (Hard rule 3b)."""
     text = " ".join(FINISHING.read_text(encoding="utf-8").split())
 
     assert "After the user has merged the PR" in text
     assert "fast-forward local `main` to `origin/main`" in text
-    assert "synchronization, not an agent-performed merge" in text

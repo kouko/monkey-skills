@@ -50,11 +50,13 @@ def test_step4_push_was_the_request_lead_present():
         "Do not re-ask."
         in _normalized(SKILL_MD)
     )
-
-
-def test_step4_old_reauthorize_ask_absent():
-    """The old post-PASS re-ask ('want me to push now') is deleted."""
-    assert "want me to push now" not in _normalized(SKILL_MD)
+    # Paired absence pin: the retired post-PASS re-ask is an INSTRUCTION whose
+    # literal return (copy-paste from history) would make the agent stop and
+    # re-request authorization the request already granted. Deliberately
+    # unnarrowed — an absence check is only weakened by a window.
+    assert "want me to push now" not in _normalized(SKILL_MD), (
+        "the retired post-PASS re-ask must not reappear anywhere in SKILL.md"
+    )
 
 
 # --- step 6: carry findings, no push-anyway ask ------------------------------
@@ -68,13 +70,12 @@ def test_step6_carry_findings_wording_present():
         "`finishing-a-development-branch` Step 3's auto-proceed. Do NOT fix "
         "findings inline silently." in _normalized(SKILL_MD)
     )
-
-
-def test_step6_old_push_anyway_ask_absent():
-    """The old PASS_WITH_NOTES push-anyway ask is deleted."""
+    # Paired absence pin: the retired "push anyway" ask is an authorization
+    # escape hatch — its literal return would re-open pushing past findings
+    # on the agent's own say-so. Deliberately unnarrowed.
     assert "push anyway (acceptable for non-🔴 findings)" not in _normalized(
         SKILL_MD
-    )
+    ), "the retired PASS_WITH_NOTES push-anyway ask must not reappear"
 
 
 # --- SSOT pointer after step 6 ----------------------------------------------

@@ -11,6 +11,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from heading_window import line_leading
+
 PLUGIN_ROOT = Path(__file__).parents[2]
 SKILL_MD = PLUGIN_ROOT / "skills" / "using-loom-pipeline" / "SKILL.md"
 
@@ -69,7 +71,11 @@ def test_skill_batch_mode_section_contract():
     body = _body(text)
     body_lower = body.lower()
 
-    batch_idx = body_lower.find("## §batch mode")
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the body can't retarget this window; keep .find's -1-means-absent
+    # contract for the assert below (searched lowercased, as before).
+    _batch_heading = "## §batch mode"
+    batch_idx = line_leading(body_lower, _batch_heading)
     assert batch_idx != -1, "missing §Batch mode heading"
     batch_section = body[batch_idx:]
     batch_section_lower = batch_section.lower()
@@ -120,7 +126,11 @@ def test_skill_intake_section_contract():
         f"(after frontmatter/SUBAGENT-STOP); found {headings[0]!r} first"
     )
 
-    intake_idx = body.find("## " + headings[0])
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the body can't retarget this window; keep .find's -1-means-absent
+    # contract (headings[0] is guaranteed present via the regex above).
+    _first_heading = "## " + headings[0]
+    intake_idx = line_leading(body, _first_heading)
     next_idx = body.find("\n## ", intake_idx + 1)
     intake_section = body[intake_idx:next_idx] if next_idx != -1 else body[intake_idx:]
 
@@ -163,10 +173,14 @@ def test_pipeline_public_commands_use_installed_plugin_root_and_preserve_code_ha
     """
     body = _body(SKILL_MD.read_text())
 
-    assert (
-        "**skillsRoot**" in body
-        and "installed loom-design plugin root" in body
-    ), "skillsRoot must be defined as the installed loom-design plugin root"
+    # Pinned on the row's actual resolution mechanism (`${CLAUDE_PLUGIN_ROOT}`),
+    # not the prose describing it -- a reworded description ("the
+    # loom-design plugin's own installed directory") still resolves the
+    # same way and should not fail this test.
+    skills_root_row = re.search(r"\|\s*\*\*skillsRoot\*\*\s*\|.*", body)
+    assert skills_root_row, "missing the **skillsRoot** definition row"
+    assert "${CLAUDE_PLUGIN_ROOT}" in skills_root_row.group(0), \
+        "skillsRoot row must resolve via ${CLAUDE_PLUGIN_ROOT}"
     batch_commands = re.findall(r"batchQueueArgv\s*=\s*\[([^\]]+)\]", body)
     assert len(batch_commands) == 7, \
         "expected every one of the seven public batch argv arrays"
@@ -259,7 +273,28 @@ def test_pipeline_dynamic_values_are_passed_as_literal_argv(tmp_path):
         body,
     )
     assert command_match, "missing the fixed shell-host bridge command"
-    assert "urlsafe_b64encode" in body and "JSON list of strings" in body
+    assert "urlsafe_b64encode" in body
+    # The doc's "JSON list of strings" wire-format claim is checked against
+    # argv_exec.py's actual decode implementation instead of pinning the
+    # doc's prose -- a reworded description of the same format ("a JSON
+    # array of argv strings") should not fail this test, but the doc and
+    # the script disagreeing about the wire format should.
+    assert "JSON" in body, "missing the JSON-encoding step in the wire format"
+    # The payload SHAPE is load-bearing: argv_exec.py refuses anything that
+    # is not a JSON list of strings, so a doc that told an author to encode
+    # some other shape would produce a payload the bridge rejects. Pinned
+    # as the shape tokens inside the encoding sentence.
+    encode_sentence = body[
+        body.index("encode the argv") : body.index("urlsafe_b64encode")
+    ]
+    assert "list of strings" in encode_sentence
+    argv_exec_src = (
+        PLUGIN_ROOT / "scripts" / "pipeline" / "argv_exec.py"
+    ).read_text(encoding="utf-8")
+    assert "json.loads" in argv_exec_src, (
+        "argv_exec.py no longer decodes the payload as JSON -- drifted "
+        "from the doc's wire-format contract"
+    )
     assert "outcome is exactly `done` or `failed`" in body
     assert "omit both elements" in body, \
         "reset must define how its optional reason is omitted"
