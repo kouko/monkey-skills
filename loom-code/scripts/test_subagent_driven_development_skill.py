@@ -92,6 +92,14 @@ def test_sdd_dispatch_uses_sha_bound_scope_and_cross_reads() -> None:
     ]
     assert "REFUSES" in refuse_window
 
+    # The positive pins above say what reviewers MUST read (the snapshot
+    # command, at <reviewed_sha>). None of them forbids ALSO reading the
+    # mutable working tree, which is the way the evidence rule actually
+    # fails -- an agent that runs the git-show command and then reads the
+    # worktree anyway satisfies every assertion above. This prohibition is
+    # its own invariant and is pinned separately.
+    assert "Do not use mutable working-tree reads for reviewer evidence." in text
+
 
 def test_sdd_per_task_reviewer_scope_uses_declared_task_files() -> None:
     """A task triad must review its own declared files, never branch scope."""

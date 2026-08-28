@@ -20,19 +20,24 @@ def test_docs_review_distinguishes_review_only_from_authorized_change() -> None:
 def test_docs_review_treats_confirmation_limit_as_quality_stop() -> None:
     """STILL_BLOCKING after the one fix cycle is a quality stop, never a
     permission boundary that would make the agent wait on the user to
-    authorize continuing. The four sibling `not in text` checks this test
-    used to run (guarding against the exact historical wrong phrasings
-    "no second cycle without explicit user authorization", "on its own
-    authority", "on your own authority", "hands the decision to the user")
-    were deleted: each pinned the ABSENCE of one specific old string, so a
-    regression restated in different words would pass them silently, while
-    a harmless paraphrase of the same old string would fail them for no
-    behavioral reason -- pure phrasing pins with no invariant of their own
-    (Hard rule 3a). The positive assertion below already states the
-    corrected invariant directly."""
+    authorize continuing.
+
+    The positive assertion carries the rule; it is the primary guard, since
+    an absence check can only catch a LITERAL return of the old text and
+    never a reworded one. The four absence checks below are kept anyway,
+    because each retired string is a CONFLICTING INSTRUCTION rather than a
+    rationale: an executor who found any of them would stop and wait for
+    user authorization, and the positive sentence does not prevent one of
+    them being re-added alongside it. They stay UNNARROWED for the same
+    reason -- a window would let the retired instruction return elsewhere in
+    the file."""
     text = DOCS_REVIEW.read_text(encoding="utf-8")
 
     assert "quality stop, not a new permission boundary" in text
+    assert "no second cycle without explicit user authorization" not in text
+    assert "on its own authority" not in text
+    assert "on your own authority" not in text
+    assert "hands the decision to the user" not in text
 
 
 def test_finishing_treats_docs_confirmation_limit_as_quality_stop() -> None:

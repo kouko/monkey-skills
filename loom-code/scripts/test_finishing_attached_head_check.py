@@ -59,8 +59,15 @@ def test_attached_head_bullet_invokes_stop():
     """The bullet's outcome on a detached/different HEAD is the named
     STOP mechanism (same control keyword the family uses for a blocking
     gate), pinned inside the bullet's own window -- not the surrounding
-    prose, which can be paraphrased without changing the mechanism."""
-    assert "STOP" in _attached_head_bullet_window()
+    prose, which can be paraphrased without changing the mechanism.
+
+    `STOP` alone is the gate; the absolute below is the DISTINCTION the gate
+    exists for -- what must not happen even after a STOP is relayed. Dropping
+    it would leave the bullet telling the reader to stop without saying what
+    stopping forbids, and the STOP pin would stay green."""
+    window = _attached_head_bullet_window()
+    assert "STOP" in window
+    assert "detached HEAD" in window
 
 
 def test_attached_head_check_precedes_status_bullet():

@@ -62,25 +62,29 @@ def _post_fix_window() -> str:
 def test_claude_adapter_resolves_and_forwards_immutable_review_context() -> None:
     """Claude resolves its installed script and forwards its packet unchanged.
 
-    The cardinality prose ("once per review attempt") and the packet-property
-    prose ("unchanged immutable context packet") were pure wording pins -- a
-    paraphrase that preserved either rule still failed the test. The real
-    mechanism is the `immutable`/`verbatim` vocabulary this file uses as its
-    term of art for "do not re-derive, do not mutate", pinned inside the
-    adapter window rather than against the whole file.
+    A bare `immutable` or `verbatim` is NOT a usable pin here: inside
+    `_adapter_window()` this file says `immutable` three times and `verbatim`
+    twice, so deleting either rule leaves a sibling occurrence satisfying the
+    check. The anchors below are the shortest phrases that occur exactly once
+    in that window, which is what makes deleting the rule fail the test.
+
+    Cardinality ("once per review attempt") is pinned separately below: it is
+    an invariant, not phrasing -- how many times the resolver runs decides
+    whether every station shares one packet.
     """
     text = _normalized_adapter()
-    window = _adapter_window()
+    window = _norm(_adapter_window())
 
     assert "## Review-context adapter" in text
     assert 'python3 "${derived_plugin_root}/scripts/review_context.py" --repo <target_repo>' in text
-    assert "immutable" in window
+    assert "unchanged immutable context packet" in window
+    assert "once per review attempt" in window
     assert "do not derive plugin paths from `target_repo`" in text.lower()
 
     for field in ("target_repo", "reviewed_sha", "plugin_version", "resources"):
         assert field in text
 
-    assert "verbatim" in window.lower()
+    assert "Copy the packet verbatim into every downstream station" in window
 
 
 def test_claude_same_reviewer_confirmation_uses_full_packet_and_ordinary_verdict() -> None:
@@ -91,7 +95,10 @@ def test_claude_same_reviewer_confirmation_uses_full_packet_and_ordinary_verdict
     assert "SendMessage" in text
     assert "same reviewer" in text
     assert "fresh post-fix SHA" in text
-    assert "fresh" in post_fix and "immutable" in post_fix
+    # `fresh` occurs 5x and `immutable` 2x inside _post_fix_window(), and the
+    # conjunction did not require them to be adjacent -- deleting the rule
+    # left the pair satisfied by unrelated occurrences. This phrase occurs once.
+    assert "fresh immutable context packet" in _norm(post_fix)
     assert "not the pre-fix `reviewed_sha`" in text
     assert "original gating findings" in text
     assert "delta evidence" in text

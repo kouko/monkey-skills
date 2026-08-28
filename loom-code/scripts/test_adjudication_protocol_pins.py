@@ -31,9 +31,16 @@ def _section(text: str, heading: str) -> str:
     after the section that owns the claim has been gutted. (Revision
     round 1 found this on the firing condition; revision round 2 found
     the same class on the negation-tier rows -- deleting either tier
-    row left both document-wide assertions green.)"""
-    assert f"## {heading}" in text, f"section missing: ## {heading}"
-    return text.split(f"## {heading}", 1)[1].split("\n## ", 1)[0]
+    row left both document-wide assertions green.)
+
+    Anchored on a line-leading newline + `## ` rather than a bare `## `:
+    `"## Foo"` is a substring of `"### Foo"`, so a same-named `###`
+    subheading appearing earlier would silently retarget the window to the
+    wrong region. No such collision exists in the protocol today; the anchor
+    keeps it from becoming one."""
+    anchor = f"\n## {heading}"
+    assert anchor in text, f"section missing: ## {heading}"
+    return text.split(anchor, 1)[1].split("\n## ", 1)[0]
 
 
 def _table_forms(table: str) -> dict:

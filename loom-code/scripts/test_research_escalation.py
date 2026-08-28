@@ -219,7 +219,11 @@ def test_evidence_needed_flag_dont_search_rule_agrees_across_reviewers():
         f"  code-quality-reviewer: {quality_desc}\n"
         f"  code-reviewer:         {code_desc}"
     )
-    assert "never runs the research" in quality_desc or "flags" in quality_desc, (
+    # No `or "flags"` fallback: a one-line description of a FLAGGING field
+    # almost always contains "flags", so that disjunct passed for any reword
+    # that dropped the substantive half. Both copies carry the strong clause
+    # today, so requiring it costs nothing and can actually fail.
+    assert "never runs the research" in quality_desc, (
         "the shared description must state the reviewer flags rather than "
         "runs the research itself"
     )
