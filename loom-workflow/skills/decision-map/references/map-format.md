@@ -52,7 +52,15 @@ state: charting
 ### Live-map criterion
 
 **A map is live if and only if it is checker-valid AND its `state` is
-`charting` or `active`.** Directory presence alone is never adoption —
+`charting` or `active`.** "Checker-valid" is pinned to one exact
+check: `map_store.py validate <map-dir> --repo-root <path>`
+(§Command surface) exits `0` against the map. A non-zero exit — `1`
+(operational error) or `2` (a structural/schema-version violation) —
+is not checker-valid. `check_map_links.py` and `check_map_fog.py` are
+not part of this liveness check; they gate a ticket's or fog entry's
+own close-time state (see §MAP.md schema's Decisions-so-far bullet and
+§Fog entries), not whether the map itself is live. Directory presence
+alone is never adoption —
 a directory that exists but fails validation, or that carries `clear`
 or `archived`, is not a live map. Anything that needs to detect "is
 there a map in progress here" (on-ramp detection, brainstorming's
@@ -72,10 +80,13 @@ MAP.md's body carries these sections, in this order:
    recorded.
 3. **Decisions-so-far** — a bulleted list of gist+link lines. Each
    line is one gist sentence followed by a link to the ticket file
-   that produced it: `- <gist>. (tickets/<slug>.md)`. Every line here
-   must link an existing **closed** ticket — a line with no resolvable
-   link, or one linking an open/claimed ticket, is a gate violation
-   (see `check_map_links.py` in §Command surface).
+   that produced it: `- <gist>. (tickets/<slug>.md)`. The gist
+   sentence itself may contain parentheses; the ticket link is always
+   the **last** parenthesized token on the line, and a parser reads
+   the link from the line's final `(...)` group rather than its first.
+   Every line here must link an existing **closed** ticket — a line
+   with no resolvable link, or one linking an open/claimed ticket, is
+   a gate violation (see `check_map_links.py` in §Command surface).
 4. **Not-yet-specified (fog)** — a bulleted list of open questions the
    map has not yet resolved into a ticket. See §Fog entries below for
    the id grammar.
@@ -128,8 +139,8 @@ graduated-from: null
 - `type` — one of `grilling`, `research`, `task`, `prototype`. Selects
   which existing skill resolves the ticket (grilling →
   `loom-code:brainstorming`; research → `research-toolkit:deep-deep-research`;
-  task → a backlog entry; prototype → the `prototype/<map-id>/<slug>`
-  branch protocol).
+  task → a backlog entry; prototype → the
+  `prototype/<map-id>/<ticket-slug>` branch protocol).
 - `status` — one of `open`, `claimed`, `closed`.
 - `claim` — `null` when unclaimed, otherwise a free-text claim marker
   (who/what claimed it) written when `status` moves to `claimed`.
@@ -148,8 +159,15 @@ graduated-from: null
   ratification), the Resolution section carries a **user-ratified
   line**: a line stating that a human, not the agent, made the call,
   in a form a gate can find (e.g. `user-ratified: <name/handle>,
-  <date>`). A HITL ticket closed with no user-ratified line is a gate
-  violation.
+  <date>`). Every ticket with `type: grilling` or `type: prototype` is
+  HITL unconditionally — both prototype modes (variant selection and
+  feasibility-conclusion) close only through ratification, so a
+  checker never has to inspect a prototype ticket's body to decide
+  whether the duty applies; `type` alone decides it. A HITL ticket
+  closed with no user-ratified line is a gate violation. No script
+  under §Command surface enforces this in v1 — it is enforced by
+  review only; a future checker may absorb it, at which point this
+  line names it.
 
 ## Parts section
 
@@ -174,14 +192,19 @@ anti-pattern this section exists to retire.
 
 ## Schema versioning
 
-`schema_version` is an integer on MAP.md's frontmatter (and, by the
-same grammar, on any ticket file that needs to diverge — v1 ships one
-shared version across MAP.md and its tickets). Every checker under
-§Command surface reads `schema_version` before doing anything else:
-if the value is greater than the highest version that checker's own
-code supports, the checker refuses to read further and exits 2 with a
-message naming both the file's version and the checker's supported
-ceiling. A checker never guesses at an unknown schema shape.
+`schema_version` is an integer on MAP.md's frontmatter only — v1 ships
+one shared version across MAP.md and its tickets, so ticket
+frontmatter never repeats the field (see §Ticket schema's example,
+which carries no `schema_version` key). Every checker under §Command
+surface reads `schema_version` before doing anything else. When the
+checker's `target` is a ticket path rather than MAP.md itself, it
+resolves the governing version by walking up from the ticket's
+directory to that map's `MAP.md` and reading the field there — never
+by assuming a version or by requiring the ticket to carry its own
+copy. If the value is greater than the highest version that checker's
+own code supports, the checker refuses to read further and exits 2
+with a message naming both the file's version and the checker's
+supported ceiling. A checker never guesses at an unknown schema shape.
 
 ## Command surface
 
