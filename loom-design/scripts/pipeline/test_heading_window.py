@@ -1,10 +1,14 @@
 """Behavioural pins for `heading_window.line_leading`.
 
-This helper is the single source for every heading window that used the
-hand-rolled line-leading idiom — NOT for every heading window in the
-package: line-scanning helpers elsewhere in this import root resolve
-headings correctly by a different mechanism and do not import it. It
-shipped without a test of its own. A review arm mutated it
+This helper is the single source for every heading window in THIS IMPORT
+ROOT (`pipeline/`) that used the hand-rolled line-leading idiom. Two limits
+are worth naming rather than leaving to a reader who assumes otherwise:
+`interface/` is a separate import root and still holds two live copies of
+the same idiom, unreachable from here; and two resolvers in this root —
+test_family_relay_progress_card.py and test_pipeline_dispatcher_verbs.py —
+still use a BARE substring search, correct today only because each heading
+they seek happens to occur once. They are not a different-mechanism
+exemption; they are unconverted. It shipped without a test of its own. A review arm mutated it
 and found two survivors across the whole consumer suite: replacing
 `max(0, start - 1)` with `start`, and dropping the `start == 0 and` guard.
 Both are the deliberate offset choices that separate this helper from a
@@ -69,6 +73,21 @@ def test_the_result_never_precedes_start():
         assert idx == -1 or idx >= start, (
             f"line_leading returned {idx} for start={start}"
         )
+
+
+def test_the_first_line_leading_occurrence_wins():
+    """Kills `find` → `rfind`. Every window built on this helper takes the
+    FIRST matching heading; binding to the last silently stretches the
+    window across everything between them while the assertions inside it
+    keep passing — the branch's own target defect, reached through its own
+    helper. No live call site has two line-leading matches, so no consumer
+    can reach this: it has to be pinned here."""
+    text = "## A\nfirst\n## A\nsecond\n## A\nthird\n"
+    assert text.count("## A") == 3, "fixture must offer a later match to bind to"
+    assert line_leading(text, "## A") == 0
+    second = line_leading(text, "## A", 1)
+    assert second == text.index("## A", 1), "must take the NEXT match, not the last"
+    assert second != text.rindex("## A")
 
 
 def test_start_is_clamped_at_zero():

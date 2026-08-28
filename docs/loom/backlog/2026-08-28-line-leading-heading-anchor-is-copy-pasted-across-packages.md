@@ -59,9 +59,14 @@ package to see whether any site there still hand-rolls it:
 grep -rn 'startswith(.*heading' --include='test_*.py' <package>
 ```
 
-Zero in `loom-code` and `loom-design/scripts/pipeline` (both on the shared
-helper), and zero in `loom-workflow` — which is the point: loom-workflow
-never adopted the idiom, so this command cannot see its problem.
+Zero in `loom-workflow` — which is the point: it never adopted the idiom,
+so this command cannot see its problem. In `loom-code` it returns three
+hits and in `loom-design` two, and they are NOT residual: the loom-code
+three are line-scanning resolvers (`line.startswith("## ")` inside a loop),
+a different and correct mechanism the pattern cannot distinguish; the
+loom-design two are in `interface/`, a separate import root that
+deliberately keeps them inline. Read the hits — the command surveys, it
+does not adjudicate.
 
 **(B) Bare heading-window starts** — the ORIGINAL defect, which the idiom
 was invented to fix and which this branch did not sweep:
