@@ -19,6 +19,10 @@ plugin 還附帶 `skill-creator-advance`（建立 + 大幅重設計）、`skill-
 
 完整設計理由：[`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md)。運維治理：[`docs/skill-governance.md`](docs/skill-governance.md)。季度健康檢查：[`docs/quarterly-audit-runbook.md`](docs/quarterly-audit-runbook.md)。
 
+## 收錄準則（Admission rule）
+
+一個 skill 屬於 `loom-workflow`，條件是它做的是**跨站（cross-station）、跨 session 的協調** — 不是因為它「被好幾個 plugin 用到」就算數。用得廣不是判準；跨 station 協調工作、或跨 session 攜帶狀態，才是判準。`decision-map` 是這條規則的第一個實例：它把一份 decision map（`MAP.md` + ticket）持久化下來，供多個 station 在一個 project 的生命週期中讀寫，正是這個 plugin 存在的理由所對應的跨站、跨 session 形狀。
+
 ## Skills
 
 | Skill | 角色 |

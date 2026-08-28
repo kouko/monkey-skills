@@ -11,6 +11,7 @@ truth.
 | [`backlog/`](backlog/) | Open items SSOT — cross-plugin debts, parked decisions, re-triggers; one entry per file, format contract in [`backlog/README.md`](backlog/README.md) |
 | [`BACKLOG.md`](BACKLOG.md) | **Generated** index over `backlog/` — never hand-edit it; run `python3 scripts/backlog_index.py --write` (repo-root first, else the loom-code plugin copy) |
 | [`memory/`](memory/) | Practice-memory store — repo-native home for distilled loom-* practices, habits, processes, and recurring gotchas (one fact per file) |
+| [`maps/`](maps/) | Persistent decision maps — `MAP.md` + tickets per run, owned by [`loom-workflow:decision-map`](../../loom-workflow/skills/decision-map/) |
 | [`discovery/`](discovery/) | Problem-space artifacts per run: `user-insights.md` + evidence + research reports; `business-value.md` when the worth-it check fires — see the loom-design discovery station |
 | [`specs/`](specs/) | Brainstorming briefs (5-axis output) |
 | [`plans/`](plans/) | Writing-plans output (atomic task lists) |

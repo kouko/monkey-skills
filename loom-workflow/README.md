@@ -19,6 +19,10 @@ The plugin also bundles `skill-creator-advance` (creation + major redesign), `sk
 
 Full design rationale: [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md). Operational governance: [`docs/skill-governance.md`](docs/skill-governance.md). Quarterly health checks: [`docs/quarterly-audit-runbook.md`](docs/quarterly-audit-runbook.md).
 
+## Admission rule
+
+A skill belongs in `loom-workflow` when it does **cross-station, multi-session coordination** — not merely because it happens to be "used by several plugins." Being widely used is not the test; coordinating work *across* stations, or carrying state *across* sessions, is. `decision-map` is the rule's first instance: it persists a decision map (`MAP.md` + tickets) that multiple stations read and write over the life of a project, which is exactly the cross-station, multi-session shape this plugin exists to hold.
+
 ## Skills
 
 | Skill | Role |

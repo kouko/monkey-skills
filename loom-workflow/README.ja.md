@@ -19,6 +19,10 @@ Claude Code 向けの skill 開発は反復的な作業です。skill を draft 
 
 設計の全体像：[`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md)。運用ガバナンス：[`docs/skill-governance.md`](docs/skill-governance.md)。四半期ヘルスチェック：[`docs/quarterly-audit-runbook.md`](docs/quarterly-audit-runbook.md)。
 
+## 収録基準（Admission rule）
+
+ある skill が `loom-workflow` に属するのは、それが **クロスステーション（複数 station 間）かつ複数 session にまたがる調整** を行う場合です — 単に「複数の plugin から使われている」というだけでは条件を満たしません。広く使われているかどうかはテストではなく、station を横断して作業を調整するか、session をまたいで状態を運ぶかがテストです。`decision-map` がこのルールの最初の実例です：project のライフサイクルを通じて複数の station が読み書きする decision map（`MAP.md` + ticket）を永続化するもので、まさにこの plugin が存在する理由であるクロスステーション・複数 session の形をしています。
+
 ## Skills
 
 | Skill | 役割 |
