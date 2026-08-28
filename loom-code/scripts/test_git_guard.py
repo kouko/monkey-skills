@@ -38,7 +38,8 @@ loom-code/skills/subagent-driven-development/standards/external-surface-groundin
   head/base defaults): source-(a) live verification — ``gh pr merge
   --help`` and ``gh pr create --help`` (gh version 2.88.1, run
   2026-08-28) confirm ``gh pr merge [<number>|<url>|<branch>]
-  [flags]`` (the positional target is gh's FIRST argument only) with
+  [flags]`` (the positional target may sit anywhere among the flags —
+  Cobra/pflag accepts interspersed flags) with
   value-taking flags ``-A``/``--author-email``, ``-b``/``--body``,
   ``-F``/``--body-file``, ``--match-head-commit``,
   ``-t``/``--subject``, and the INHERITED ``-R``/``--repo``
