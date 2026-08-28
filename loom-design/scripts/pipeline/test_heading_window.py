@@ -18,9 +18,14 @@ directory, read the hits of
 
     grep -rn -e ".find(" -e ".index(" --include='test_*.py' <dir> | grep -i head
 
-and expect false positives. Some hits are correct by another mechanism,
+That command is a starting point, not a census, and it errs in BOTH
+directions. It over-reports: some hits are correct by another mechanism,
 some are bare searches that happen to work because their heading occurs
-once. Neither this docstring nor a grep can tell them apart.
+once. It also under-reports — a resolver built on `re.findall(r"^## ...")`
+or `re.search` matches no `.find(`/`.index(` and never appears, and both
+shapes are live in this repo. Neither this docstring nor any single
+pattern can enumerate the population; the hits have to be read, and the
+misses have to be expected.
 
 It shipped without a test of its own. A review arm mutated it
 and found two survivors across the whole consumer suite: replacing
