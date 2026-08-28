@@ -70,14 +70,10 @@ A session that works through a ticket does, in order:
    `claimed`. Never work an unclaimed ticket, and never work a ticket
    another session already claimed.
 2. **Resolve the ticket.** Delegate the actual work by the ticket's
-   `type` (see references/prototype-contract.md for `prototype`; the
-   other three delegate by public skill name — that section of this
-   file lands the delegation table in a later revision of this skill;
-   until it lands, delegate by the type names in
-   `references/map-format.md` §Ticket schema). When the work concludes, fill in
-   the ticket's Resolution section per §Ticket schema in
-   `references/map-format.md`, including a user-ratified line for any
-   HITL resolution, and move `status` to `closed`.
+   `type`, per §Delegation by ticket type below. When the work
+   concludes, fill in the ticket's Resolution section per §Ticket
+   schema in `references/map-format.md`, including a user-ratified
+   line for any HITL resolution, and move `status` to `closed`.
 3. **Append one gist line to MAP.md.** Add exactly one bullet to
    Decisions-so-far: one gist sentence, ending in the ticket link as
    the line's last parenthesized token —
@@ -98,6 +94,28 @@ A session that works through a ticket does, in order:
    A non-zero exit from any of the three means the close is not done —
    fix the reported violation (a bad link, a fog-monotonicity break, a
    schema violation) before ending the session.
+
+### Delegation by ticket type
+
+Each ticket's `type` selects the existing skill (or store) that
+resolves it — decision-map never performs the resolution itself, only
+schedules and records it. Delegation is by public skill name only,
+never by a sibling plugin's internal file path, per the Cross-Plugin
+Delegation Contract in this repo's root `CLAUDE.md`.
+
+- **`grilling`** — delegate to a `loom-code:brainstorming` session.
+  HITL: the ticket's Resolution section carries a user-ratified line
+  (`references/map-format.md` §Ticket schema).
+- **`research`** — delegate to `research-toolkit:deep-deep-research`.
+  May span multiple sessions before it resolves (see Work-through
+  mode above).
+- **`task`** — delegate to a backlog entry in this repo's
+  `docs/loom/backlog/` store.
+- **`prototype`** — delegate to the protocol in
+  `references/prototype-contract.md`. HITL: both prototype modes
+  (variant selection and feasibility-conclusion) carry a
+  user-ratified line in the Resolution section, per §Ticket schema in
+  `references/map-format.md`.
 
 ## See also
 
