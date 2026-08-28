@@ -116,6 +116,23 @@ def test_operational_error_on_missing_map_dir(tmp_path):
     assert result.returncode == 1
 
 
+def test_flags_escaping_ticket_link(tmp_path):
+    # A link that resolves outside <map_dir>/tickets/ (e.g. via `../`)
+    # must never be silently followed and read — it is a violation,
+    # exit 2, naming the offending line — even when the escaped-to
+    # file exists and is a genuinely closed ticket. Without a
+    # containment check this would silently succeed (exit 0).
+    map_dir = _write_map(
+        tmp_path, "- Leaked outside the map. (../outside.md)"
+    )
+    (tmp_path / "outside.md").write_text(_ticket("closed"), encoding="utf-8")
+
+    result = _run(map_dir)
+
+    assert result.returncode == 2
+    assert "../outside.md" in result.stderr
+
+
 def test_check_links_function_directly(tmp_path):
     map_dir = _write_map(
         tmp_path, "- Picked the storage layer. (tickets/storage.md)"
@@ -127,4 +144,4 @@ def test_check_links_function_directly(tmp_path):
     code, message = check_map_links.check_links(map_dir)
 
     assert code == 0
-    assert "0 violation" not in message  # sanity: message is non-empty prose
+    assert "resolve to closed tickets" in message

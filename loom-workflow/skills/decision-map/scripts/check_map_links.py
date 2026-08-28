@@ -50,8 +50,15 @@ def check_links(map_dir: Path) -> tuple[int, str]:
             "refusing to read further"
         )
 
+    tickets_root = (map_dir / "tickets").resolve()
     for decision in doc.decisions:
         ticket_path = map_dir / decision.ticket_link
+        resolved = ticket_path.resolve()
+        if not resolved.is_relative_to(tickets_root):
+            return 2, (
+                f"Decisions-so-far line {decision.gist!r} links outside "
+                f"<map_dir>/tickets/: {decision.ticket_link}"
+            )
         if not ticket_path.is_file():
             return 2, (
                 f"Decisions-so-far line {decision.gist!r} links a "
