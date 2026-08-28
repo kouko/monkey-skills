@@ -37,3 +37,5 @@ start: next cross-plugin primitive change, or the partial-merge evaluation arc o
   primitive that closes the cross-plugin gap. Next step when the start
   condition fires: re-evaluate ownership as part of that change rather
   than adding another accidentally-placed primitive.
+
+- Narrowed 2026-08-28 (branch check-wayfinder): the decision-map arc re-evaluated ownership per this entry's start condition — the new cross-station primitive landed in loom-workflow under a recorded admission rule (cross-station, multi-session coordination; loom-workflow/README.md). Relocating the existing queue/memory/hooks infrastructure stays open as its own deferred arc; a live decision map (docs/loom/maps/family-relocation/) now tracks that question.

@@ -89,9 +89,10 @@ def test_reception_content_contract():
         "family-reception.md managed-copy header changed; update the sync contract"
     )
     body_non_empty = _non_empty_lines(body)
-    assert len(body_non_empty) <= 110, (
+    assert len(body_non_empty) <= 150, (
         f"family-reception.md policy body has {len(body_non_empty)} non-empty lines, "
-        "budget is 110"
+        "budget is 150 (re-argued 2026-08-28 in the canonical header when the "
+        "decision-map on-ramp row landed; was 110)"
     )
 
     # Family map: all five using-loom-* entries present.

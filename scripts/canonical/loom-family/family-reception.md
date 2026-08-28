@@ -1,5 +1,12 @@
 # Loom Family Reception
 
+<!--
+LINE BUDGET: was 100 non-empty lines (2026-08-20 backlog); row 6 below
+pushes it past cap. Re-argued cap: 150. Each on-ramp row is a routing
+decision that prevents a mis-started arc — the marginal row's cost
+(one table line) is cheap next to the arc it redirects before it starts.
+-->
+
 You may have one or more loom plugins available. One rule covers every installed
 member:
 
@@ -79,6 +86,7 @@ This table is the single source of truth — every family entry's §Intake refer
 | Negative guard | The work is a bug fix, a refactor, or a test-covered increment | **Do not interrupt** — proceed directly, skip the recommendation silently |
 | 4 | The work is product-shaped AND no `docs/loom/discovery/<date>-<slug>/user-insights.md` already covers it AND the problem/users cannot yet be articulated with evidence (the user would be guessing at who-needs-what) | Suggest **using-loom-design first** (routes to the discovery station) |
 | 5 | Neither `docs/loom/backlog/` nor `docs/loom/KICKOFF-DEFAULTS.md` in the target repo (the queue layer is not adopted; the verb refuses on either existing) AND the work is loom-family-scoped | If the public **loom-init** capability is available, suggest running it once; otherwise skip this optional recommendation |
+| 6 | The effort spans multiple sessions AND the route is foggy (open questions cannot all be phrased yet) | If the public `loom-workflow:decision-map` capability is available, suggest detouring to charting via **loom-workflow:decision-map** before brainstorming a single brief; otherwise skip this optional recommendation |
 
 When both row 4 and row 1 fire, recommend discovery first — the principles station consumes discovery's value-commitment output.
 

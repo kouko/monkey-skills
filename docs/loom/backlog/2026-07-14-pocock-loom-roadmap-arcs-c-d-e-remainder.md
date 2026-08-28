@@ -32,3 +32,5 @@ start: C rides the next writing-lean.md / compression-catalog touch; D is schedu
   dispatch markup` down to a pointer sentence. Once that arc's Task 4
   lands, this leg should expect to start from a partially-cut file, not
   the current 4,249-word body.
+
+- Arc E shipped 2026-08-28 (branch check-wayfinder): wayfinder's terrain model absorbed as loom-workflow:decision-map (store schema, five scripts, prototype fence, family on-ramp, delivery write-back). Arcs C and D remain as filed.

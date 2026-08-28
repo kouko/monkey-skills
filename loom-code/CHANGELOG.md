@@ -5,6 +5,19 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.103.0] — 2026-08-28 — decision-map arc close-out
+
+### Added
+
+- `git-guard` fences the prototype branch used by the decision-map arc.
+- Axis 0 gains a live-map check; `finishing-a-development-branch` gains a
+  Map-parts check.
+
+### Changed
+
+- Doctrine amendments accompanying the decision-map layer's absorption
+  into the loom family.
+
 ## [0.102.1] — 2026-08-28 — test pins assert invariants, not wording
 
 ### Changed
@@ -154,6 +167,7 @@ wording pins produced 4 false alarms and 0 blind spots.
   hundreds of words of slack cannot see a rule of tens leave, which is how five
   rules were dropped under a green suite. Presence and absence assertions now
   carry that job, and the repo-wide 4,500-word cap remains the ceiling.
+
 ## [0.101.0] — 2026-08-27
 
 ### Changed

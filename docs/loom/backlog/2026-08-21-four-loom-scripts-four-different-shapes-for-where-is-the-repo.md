@@ -49,3 +49,5 @@ start: the next arc that touches two or more of these scripts' argument parsing 
   `check_queue_relation` exempts a repo that never adopted the queue
   layer, `backlog_index` refuses because it was pointed at a store
   explicitly. Do not "unify" that one.
+
+- Start condition fired 2026-08-28 (branch check-wayfinder, plan OQ-1): the decision-map arc folded the SHAPE decision only — its five new scripts share one canonical CLI (positional target + --repo-root, exit 0/1/2, map-format §Command surface). Retrofitting the four existing scripts is explicitly re-deferred; entry stays open.

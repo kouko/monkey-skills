@@ -33,6 +33,21 @@ loom-code/skills/subagent-driven-development/standards/external-surface-groundin
   registered as a PreToolUse hook in ``loom-code/hooks/hooks.json``.
   This suite additionally live-drives the hook via subprocess with
   exactly that stdin/exit contract.
+- ``gh pr merge`` / ``gh pr create`` flag and default semantics
+  (positional-target shape, which flags take a value, and gh's own
+  head/base defaults): source-(a) live verification — ``gh pr merge
+  --help`` and ``gh pr create --help`` (gh version 2.88.1, run
+  2026-08-28) confirm ``gh pr merge [<number>|<url>|<branch>]
+  [flags]`` (the positional target may sit anywhere among the flags —
+  Cobra/pflag accepts interspersed flags) with
+  value-taking flags ``-A``/``--author-email``, ``-b``/``--body``,
+  ``-F``/``--body-file``, ``--match-head-commit``,
+  ``-t``/``--subject``, and the INHERITED ``-R``/``--repo``
+  (``-m``/``--merge``, ``-s``/``--squash``,
+  ``-r``/``--rebase`` are BOOLEAN despite the letters overlapping
+  merge-strategy flags of the same name on ``git merge``); and confirm
+  ``gh pr create``'s ``--head`` defaults to the current branch and
+  ``--base`` defaults to the repository's default branch when unset.
 """
 
 import json
@@ -1025,6 +1040,151 @@ def test_commit_adding_non_ascii_named_plan_is_gated(repo):
     res = run_hook(bash_event("git commit -m x", cwd=repo))
     assert res.returncode == 2
     assert "user chose <detour|direct>" in res.stderr
+
+
+# --- prototype/* branch fence (decision-map retention rule) ----------------
+
+
+def _checkout_branch(repo_path, name):
+    subprocess.run(
+        ["git", "checkout", "-q", "-b", name],
+        cwd=repo_path, check=True, env=_iso_env(),
+    )
+
+
+def test_blocks_merge_of_prototype_branch_into_default(repo):
+    # `repo` is checked out on "main" (the resolved default branch);
+    # merging a prototype/* branch into it must be refused mechanically.
+    res = run_hook(bash_event("git merge prototype/explore-x", cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
+    assert "docs/loom/" not in res.stderr
+
+
+def test_push_of_prototype_branch_stays_allowed(repo):
+    # The retention rule: prototype/* branches MAY be pushed (so the
+    # exploration survives) — only merging/PR-ing them is fenced.
+    write_review_pass(repo, verdict="PASS_WITH_NOTES")
+    write_verified(repo)
+    res = run_hook(bash_event("git push origin prototype/explore-x", cwd=repo))
+    assert res.returncode == 0, res.stderr
+
+
+def test_merge_of_non_prototype_branch_into_default_allowed(repo):
+    res = run_hook(bash_event("git merge feat/normal", cwd=repo))
+    assert res.returncode == 0, res.stderr
+
+
+def test_gh_pr_create_blocked_when_head_is_prototype_targeting_default(repo):
+    _checkout_branch(repo, "prototype/explore-x")
+    res = run_hook(bash_event("gh pr create --title x --body y", cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
+
+
+def test_gh_pr_merge_blocked_when_target_is_prototype_branch(repo):
+    res = run_hook(bash_event("gh pr merge prototype/explore-x", cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
+
+
+def test_gh_pr_create_with_prototype_head_but_non_default_base_allowed(repo):
+    _checkout_branch(repo, "prototype/explore-x")
+    write_review_pass(repo, verdict="PASS_WITH_NOTES")
+    write_verified(repo)
+    res = run_hook(bash_event(
+        "gh pr create --title x --body y --base feat/other", cwd=repo
+    ))
+    assert res.returncode == 0, res.stderr
+
+
+# --- merge/pull value-flag bypass fixes (code-quality-reviewer round 2) ----
+
+
+def test_merge_prototype_blocked_despite_message_flag_value(repo):
+    # `-m`'s VALUE is not dash-prefixed either — the naive first-non-dash
+    # token (before the value-flag-skip fix) mistook it for the real
+    # target and let genuine prototype merges slip through.
+    res = run_hook(bash_event('git merge -m "wip" prototype/x', cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
+
+
+def test_merge_prototype_blocked_despite_strategy_flag_values(repo):
+    res = run_hook(bash_event(
+        "git merge -s ort --no-ff -X theirs prototype/x", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_merge_message_flag_value_not_mistaken_for_prototype_target(repo):
+    # False-positive pin: `-m`'s VALUE happens to look like a prototype
+    # ref, but the REAL target (`feat/a`) is not one — must NOT block.
+    res = run_hook(bash_event('git merge -m prototype/x feat/a', cwd=repo))
+    assert res.returncode == 0, res.stderr
+
+
+def test_merge_similarly_named_branch_not_blocked(repo):
+    # `myprototype/foo` merely starts with the same letters as
+    # `prototype/` — _is_prototype_ref's path-segment boundary must hold
+    # through the merge target scan too.
+    res = run_hook(bash_event("git merge myprototype/foo", cwd=repo))
+    assert res.returncode == 0, res.stderr
+
+
+def test_merge_remote_tracking_prototype_ref_blocked(repo):
+    res = run_hook(bash_event("git merge origin/prototype/x", cwd=repo))
+    assert res.returncode == 2
+
+
+def test_pull_prototype_refspec_blocked_on_default_branch(repo):
+    # `git pull origin prototype/x` performs the same fenced merge as
+    # `git merge prototype/x` but was unfenced before this fix.
+    res = run_hook(bash_event("git pull origin prototype/x", cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
+
+
+def test_gh_pr_merge_prototype_head_blocked_despite_subject_flag_value(repo):
+    # `--subject`'s VALUE ("chore: x") is not dash-prefixed — scanning
+    # every arg (the prior approach) mistook it for the head branch and
+    # fell through to a non-prototype "target". The real head is the
+    # CURRENT branch (gh's own default when no positional/--head is
+    # given), which here IS prototype/*.
+    _checkout_branch(repo, "prototype/explore-x")
+    res = run_hook(bash_event(
+        'gh pr merge --squash --subject "chore: x"', cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
+
+
+# --- gh pr merge: flags BEFORE the positional (round-3 regression) --------
+
+
+def test_gh_pr_merge_prototype_head_blocked_with_flags_before_positional(repo):
+    # Cobra/pflag accepts interspersed flags: the real positional target
+    # can come AFTER other flags, not just at args[0]. The round-2 fix
+    # (args[0]-only) missed this ordering — `--squash` at args[0] made it
+    # fall through to `_current_branch` ("main", not prototype), letting
+    # the actual `prototype/explore-x` positional target slip through
+    # unfenced. `repo` stays on the default branch throughout, so this
+    # can ONLY be caught by finding the real positional target.
+    res = run_hook(bash_event(
+        "gh pr merge --squash prototype/explore-x", cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
+
+
+def test_gh_pr_merge_prototype_head_blocked_with_repo_flag_before_positional(
+    repo
+):
+    # -R/--repo is an INHERITED value-taking flag (gh pr merge --help,
+    # gh 2.88.1) — its value ("o/r") must not be mistaken for the
+    # positional target, and the REAL positional after it must still be
+    # found.
+    res = run_hook(bash_event(
+        "gh pr merge -R o/r prototype/explore-x", cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
 
 
 def test_commit_with_unreadable_kickoff_defaults_file_fails_open_loudly(repo):

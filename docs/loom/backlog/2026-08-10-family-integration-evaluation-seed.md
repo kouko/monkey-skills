@@ -39,3 +39,5 @@ start: user authorizes the family-integration evaluation arc
   with this entry and the queue-layer north-star entry as its seed
   inputs; the arc's job is to weigh the partial-merge option against
   staying multi-plugin with visibility verbs only.
+
+- Note 2026-08-28 (branch check-wayfinder): the decision-map placement honored this entry's adjudication — behavioral pull, not packaging; three plugins kept, name-based coupling only; the full-merge fallback remains the north-star fallback.

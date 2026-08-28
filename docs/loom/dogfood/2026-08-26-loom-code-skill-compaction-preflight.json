@@ -2112,6 +2112,7 @@
         "../../scripts/canonical/README.md",
         "../using-loom-code/SKILL.md",
         "../using-loom-code/references/environment-gotchas.md",
+        "docs/loom/maps/<map-id>/tickets/<ticket-slug>.md",
         "payment_processor.py",
         "references/testing-anti-patterns.md",
         "rubrics/quality-gate.md",

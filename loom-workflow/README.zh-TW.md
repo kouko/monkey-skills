@@ -10,32 +10,37 @@ Read this in: [English](README.md) | [日本語](README.ja.md) | **繁體中文*
 
 為 Claude Code 開發 skill 是反覆的工作。你 draft 一個 skill 後上線，發現它太長、或輸出 tone 偏掉，想改進它 — 但 *如何* 改進取決於變更的種類。**token / structure 的 refactor** 可機械驗證（變更後輸出應相同）。**output quality 的 tuning** 是 taste-sensitive（哪個 variant 比較好只有人類能判斷）。像 `darwin-skill` 那樣把兩者塞進同一個 rubric，會讓 LLM-as-judge 朝著偏離人類偏好的方向 hill-climb（Goodhart drift）。
 
-`loom-workflow` 圍繞兩個架構決定提供一組 skill：
+`loom-workflow` 源自兩個架構決定，其中一個已經搬走：
 
-1. **Two Hats split for skills**（把 Fowler 的 refactor-vs-feature 套用到 skill authoring）— `skill-refactor`（Phase A：behavior-preserving、auto-evaluable）與 `skill-tuning`（Phase B：taste-sensitive、human-judged）分開。
-2. **critique-gate 線** — 在 proposal 變成 commit 之前介入：`proposal-critique`（多項目 triage）→ `complexity-critique`（單一變更 deletion-first gate）→ simplify（實作後 review，存在於 Anthropic 自己的 toolkit）。
+1. **Two Hats split for skills**（把 Fowler 的 refactor-vs-feature 套用到 skill authoring）— `skill-refactor`（Phase A：behavior-preserving、auto-evaluable）與 `skill-tuning`（Phase B：taste-sensitive、human-judged）分開。這兩個 skill，連同 `skill-creator-advance` 與 `skill-judge`，已經搬到 `skill-dev-toolkit`；詳見下方「Skill-evolution architecture（已搬遷）」。
+2. **critique-gate 線** — 在 proposal 變成 commit 之前介入：`proposal-critique`（多項目 triage）→ `complexity-critique`（單一變更 deletion-first gate）→ simplify（實作後 review，存在於 Anthropic 自己的 toolkit）。這個決定仍留在 `loom-workflow`。
 
-plugin 還附帶 `skill-creator-advance`（建立 + 大幅重設計）、`skill-judge`（advisory 八維品質 rubric，不修改）、`git-memory`（寫進 commit trailer 與 PR 內文的可攜 project memory，任何能讀 git 的工具都能還原）。
+plugin 還帶著 `git-memory`（寫進 commit trailer 與 PR 內文的可攜 project memory，任何能讀 git 的工具都能還原）。
 
-完整設計理由：[`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md)。運維治理：[`docs/skill-governance.md`](docs/skill-governance.md)。季度健康檢查：[`docs/quarterly-audit-runbook.md`](docs/quarterly-audit-runbook.md)。
+運維治理：[`docs/skill-governance.md`](docs/skill-governance.md)。季度健康檢查：[`docs/quarterly-audit-runbook.md`](docs/quarterly-audit-runbook.md)。
+
+## 收錄準則（Admission rule）
+
+一個 skill 屬於 `loom-workflow`，條件是它做的是**跨站（cross-station）、跨 session 的協調** — 不是因為它「被好幾個 plugin 用到」就算數。用得廣不是判準；跨 station 協調工作、或跨 session 攜帶狀態，才是判準。`decision-map` 是這條規則的第一個實例：它把一份 decision map（`MAP.md` + ticket）持久化下來，供多個 station 在一個 project 的生命週期中讀寫，正是這個 plugin 存在的理由所對應的跨站、跨 session 形狀。這條規則只 gate **新** 收錄——plugin 裡既有的 utility skill 視為 grandfathered，會在延後的 family-relocation arc 裡一併重新評估。
 
 ## Skills
 
 | Skill | 角色 |
 |---|---|
-| [`skill-creator-advance`](skills/skill-creator-advance/) | 建立新 skill 或對既有 skill 做大幅重設計（新增 / 拆分 / 合併 phase、改 agent 分解、改 input/output contract）。含 description optimization 的反覆 eval-driven development。 |
-| [`skill-refactor`](skills/skill-refactor/) | 既有 skill 的 token / structure refactor，**保留 output behavior**。三道 gate：equivalence（multi-judge ensemble）+ token reduction（≥10%）+ invariant preservation。判定 PROCEED / RESHAPE / REJECT，搭配 git ratchet（失敗自動 revert）。 |
-| [`skill-tuning`](skills/skill-tuning/) | 既有 skill 的 output quality A/B — 產生 variant 並以 blind 方式跑，捕捉人類 preference（A / B / both / neither）。Constitution 是地板，taste 是天花板。preference log 累積為 RLHF-lite 資料集。 |
-| [`skill-judge`](skills/skill-judge/) | Advisory 八維設計 rubric（Knowledge Delta・Mindset+Procedures・Anti-Pattern・Spec Compliance・Progressive Disclosure・Freedom Calibration・Pattern Recognition・Practical Usability），0–120 分 + A–F 等級。不修改。 |
-| [`proposal-critique`](skills/proposal-critique/) | 把多項目 proposal（list / plan / 散文建議）以 evidence grounding 與 YAGNI triage 為 KEEP / DEFER / DROP。 |
-| [`complexity-critique`](skills/complexity-critique/) | 用三個 deletion-first 問題對單一具體提案做 gate：最小可達狀態、before/after LOC、什麼會 obsolete。判定 PROCEED / PROCEED-WITH-CAVEAT / RESHAPE / REJECT。 |
+| [`brief-before-asking`](skills/brief-before-asking/) | 在 user 需要決定一個非顯而易見的 engineering fork 之前，送出 Mental-Model-first 的簡報——這是預設行為，不是可選項。當 user 對問題、解釋或利害關係表現出迷失時也會反應性觸發。 |
+| [`complexity-critique`](skills/complexity-critique/) | 用 deletion-first 的視角評估一個提案變更（refactor / feature / tech-debt）：before/after LOC、什麼會 obsolete。多項目的 proposal → `proposal-critique`。 |
+| [`cot-explain`](skills/cot-explain/) | 把已經存在的推理——user 指名的一份文件、或剛完成的工作——渲染成以 CoT 圖為核心的自包含頁面，每條箭頭都標註「為什麼下一步會這樣接」。 |
+| [`dbt-model-style`](skills/dbt-model-style/) | 強制執行 dbt + Redshift model 的 style & structure contract — CTE 角色、zero-logic 的 final CTE、命名、YAML header、註解、syntax。 |
+| [`decision-map`](skills/decision-map/) | 在 `docs/loom/maps/<map-id>/` 開一張持久化的 decision map 並持續推進——一個目的地、一份不斷成長的 Decisions-so-far 紀錄，以及一份會在多個 session 中逐步畢業成 ticket 的 Not-yet-specified（fog）清單，而非一次性 plan。 |
+| [`distill-sessions`](skills/distill-sessions/) | 從過去的 Claude Code 與 Codex session transcript ＋ `/insights` 中挖掘 friction pattern，整理成逐 skill 的改進提案文件。 |
 | [`git-memory`](skills/git-memory/) | 把決策的 context（不是 diff，而是 **why**）寫進 commit trailer 與 PR 內文，讓未來任何 session — Claude Code、Cursor、Codex、aider 或人類 — 只用 `git log` 就能重建 project knowledge。 |
-| [`brief-before-asking`](skills/brief-before-asking/) | 在 user 面臨複雜 engineering 決策問題前（或反應後）的結構化簡報。3 種模式：Mode A（agent 自覺有複雜 fork 即將要問）、Mode B（user 對問題說「看不懂」）、Mode C（user 對解釋說「跟不上」 — 退回 Mental Model + drill menu）。以 Mental Model First 為最高優先的 6-block 格式。 |
-| [`dogfood-skill-testing`](skills/dogfood-skill-testing/) | 開發中 skill 的 behavioral black-box dogfood — 用 fresh subagent 實測 trigger 與 output 品質，輸出可直接修正的 findings 報告。 |
-| [`cot-explain`](skills/cot-explain/) | 把已經存在的推理——一份文件、一個資料夾、或當前對話——渲染成一份自包含 HTML，主體是 CoT Mermaid 圖：每條邊帶標籤、節點條列數由來源決定（不設配額），另附被否決的選項與未驗證的前提。一次性產出器，不持久化狀態。 |
+| [`goal-create`](skills/goal-create/) | 起草一個 goal condition — SESSION mode 產出長時間執行 agent run 的四欄位停止條件（Outcome / Constraints / Verification / Stop-when）；ARC mode 產出 repository 的 purpose artifact（`Why` / `Done when`）。 |
+| [`handoff`](skills/handoff/) | 把 session 狀態存成結構化的 HANDOFF 檔，讓未來的 agent 能乾淨接手；或讀取／驗證既有的 HANDOFF。 |
 | [`independent-advisor`](skills/independent-advisor/) | 對當前的 plan 或決策，向**另一個 executor**——更強的 model、更高的 effort，或另一家廠商——取得 second opinion。換的是 executor，不是 critique 的觀點。 |
+| [`proposal-critique`](skills/proposal-critique/) | 把 proposal（list / plan / 散文建議）以 evidence grounding 與 YAGNI triage 為 KEEP / DEFER / DROP。 |
+| [`recap-state`](skills/recap-state/) | session 內的重新定向——當 user 跟丟話題時，輸出以 Synthesis-check 收尾的結構化 recap。 |
 
-九個 skill 全為 **Active**。lifecycle 狀態與所有權：[`docs/skill-governance.md`](docs/skill-governance.md)。
+十二個 skill 全為 **Active**。lifecycle 狀態與所有權：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
 ## critique 線
 
@@ -62,26 +67,9 @@ triage：每項判為            gate：三個 deletion-first     上線後的 r
 
 拿到 backlog 或編號 plan 時用 `proposal-critique`。檯面上是一個具體變更時用 `complexity-critique`。變更上線之後用 Anthropic 的 `simplify`。
 
-## skill-evolution architecture
+## Skill-evolution architecture（已搬遷）
 
-`skill-creator-advance`、`skill-refactor`、`skill-tuning`、`skill-judge` 涵蓋一個 skill 的完整生命週期，依 **變更尺寸 × 評估模式** 切分：
-
-```
-size →    small                medium                large                new
-       ┌────────────────┐  ┌────────────────┐  ┌──────────────────────────────┐
-       │ skill-tuning   │  │ skill-refactor │  │ skill-creator-advance        │
-       │                │  │                │  │ (建立 + 大幅重設計)          │
-       │ output quality │  │ token / struct │  │                              │
-       │ A/B variants   │  │ 同樣 behavior  │  │ spec-first 重設計 / 新建     │
-       │                │  │                │  │                              │
-       │ HUMAN judge    │  │ LLM equiv.     │  │ 使用者主導的 iteration loop  │
-       │ each iteration │  │ + git ratchet  │  │ + 可選 AI A/B comparator     │
-       └────────────────┘  └────────────────┘  └──────────────────────────────┘
-
-       skill-judge：advisory 0–120 分，不修改，隨時可跑
-```
-
-這個切分由 evaluation 成本決定：機械性變更（refactor）容許 auto-evaluation，因為 LLM-as-judge 對 binary equivalence 可信；taste-sensitive 變更（tuning）必須由人類判斷，因為 LLM-as-judge 對 style、voice、persuasive force、design feel 並不可靠。選哪個 skill 是「做哪種變更」的問題，不是「要多少自動化」的問題。
+`skill-creator-advance`、`skill-refactor`、`skill-tuning`、`skill-judge` — 本節過去描述的、依變更尺寸 × 評估模式劃分的生命週期模型 — 已經和 `dogfood-skill-testing` 一起搬到 `skill-dev-toolkit`。`loom-workflow` 已不再收錄它們。原始設計理由（Two Hats split、機械性變更容許 auto-evaluation 但 taste-sensitive 變更需要人類判斷的 evaluation 成本論證）封存在 [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md)；目前的所有權與後續設計請見 `skill-dev-toolkit` 自己的 README。
 
 ## git-memory 三大支柱
 
@@ -95,15 +83,13 @@ size →    small                medium                large                new
 
 ## Upstream chain
 
-九個 skill 中有三個源自 MIT-licensed 的 upstream。完整 attribution 在各 skill 的 `NOTICE` 檔案。
+十二個 skill 中有一個源自 MIT-licensed 的 upstream。完整 attribution 在該 skill 的 `NOTICE` 檔案。（`skill-creator-advance` 與 `skill-judge` 的 upstream attribution 已隨它們一起搬到 `skill-dev-toolkit`。）
 
 | Skill | Upstream chain |
 |---|---|
-| `skill-creator-advance` | Anthropic [`skill-creator`](https://github.com/anthropics/skills/tree/main/skills/skill-creator) → AllanYiin（尹相志）[`skill-creator-advanced`](https://github.com/AllanYiin/Amon) → monkey-skills |
-| `skill-judge` | Leonardo Flores [`skill-judge`](https://github.com/softaworks/agent-toolkit) → monkey-skills |
 | `complexity-critique` | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills（`reducing-entropy` 改名為 `complexity-critique`） |
 
-`skill-refactor`、`skill-tuning`、`proposal-critique`、`git-memory` 為原創設計。`skill-refactor` 與 `skill-tuning` 在概念上致謝 `alchaincyf/darwin-skill`（MIT）與 Andrej Karpathy 的 `autoresearch`（MIT）對 autonomous-loop + git-ratchet 模式的啟發，但 architecture、gate function、evaluation rubric 為獨立設計。詳情見各 skill 的 `NOTICE`。
+其餘十一個 skill 為原創設計，沒有外部 upstream 需要 attribution。詳情見各 skill 的 `NOTICE`（若存在）。
 
 ## Repository 結構
 
@@ -111,11 +97,6 @@ size →    small                medium                large                new
 loom-workflow/
 ├── .claude-plugin/
 │   └── plugin.json
-├── commands/
-│   ├── complexity-critique.md
-│   ├── skill-creator-advance.md
-│   ├── skill-refactor.md
-│   └── skill-tuning.md
 ├── docs/
 │   ├── skill-evolution-architecture.md
 │   ├── skill-governance.md
@@ -126,17 +107,14 @@ loom-workflow/
 │   ├── complexity-critique/
 │   ├── cot-explain/
 │   ├── dbt-model-style/
+│   ├── decision-map/
 │   ├── distill-sessions/
-│   ├── dogfood-skill-testing/
 │   ├── git-memory/
+│   ├── goal-create/
 │   ├── handoff/
 │   ├── independent-advisor/
 │   ├── proposal-critique/
-│   ├── recap-state/
-│   ├── skill-creator-advance/
-│   ├── skill-judge/
-│   ├── skill-refactor/
-│   └── skill-tuning/
+│   └── recap-state/
 ├── CHANGELOG.md
 ├── README.md
 ├── README.ja.md
@@ -154,24 +132,20 @@ loom-workflow/
 
 ## 使用
 
-plugin 內附四個 slash command：
+`loom-workflow` 沒有內附 slash command — 十二個 skill 全部由自然語言 auto-trigger。例如：
 
 ```
-/skill-creator-advance      # 新建 或 大幅重設計既有 skill
-/skill-refactor             # token / structure refactor、保留 equivalence
-/skill-tuning               # 由人類判定的輸出 A/B
-/complexity-critique        # 對具體變更執行 deletion-first gate
+「critique 這份 12 項的 plan」                     → proposal-critique
+「值不值得改」/「該不該做這個」                     → complexity-critique
+「我準備 commit — 幫我寫 trailer」                 → git-memory
+「看不懂」/「跟不上」/ agent-about-to-ask-complex-fork → brief-before-asking
+「開一張決策地圖」/「chart a decision map」         → decision-map
+「wrap up」/「save state」                          → handoff
+「where were we」/「我跟丟了」                      → recap-state
+「second opinion」/「換一個模型看看」               → independent-advisor
 ```
 
-其餘四個 skill（`skill-judge`、`proposal-critique`、`git-memory`、`brief-before-asking`）會由自然語言 auto-trigger — 例如：
-
-```
-「用八維 rubric 幫這個 skill 評分」               → skill-judge
-「critique 這份 12 項的 plan」                    → proposal-critique
-「我準備 commit — 幫我寫 trailer」               → git-memory
-```
-
-關於 Two-Hats split（refactor vs tuning）的演練，見 [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md) §2。
+關於 `skill-refactor` vs `skill-tuning` 的 Two-Hats split（已搬遷），見上方「Skill-evolution architecture（已搬遷）」。
 
 ## 貢獻
 
@@ -184,6 +158,6 @@ plugin 內附四個 slash command：
 
 ## License
 
-MIT。具有 MIT-licensed upstream 的 skill（`skill-creator-advance`、`skill-judge`、`complexity-critique`）在各 skill 的 `LICENSE` 與 `NOTICE` 中完整保留 copyright chain。
+MIT。plugin 內唯一具有 MIT-licensed upstream 的 `complexity-critique`，在其 `LICENSE` 與 `NOTICE` 中完整保留 copyright chain。（`skill-creator-advance` 與 `skill-judge` 已搬到 `skill-dev-toolkit`，並在那裡保留各自的 copyright chain。）
 
 repo 根目錄的 umbrella license 見 [LICENSE](https://github.com/kouko/monkey-skills/blob/main/LICENSE)。
