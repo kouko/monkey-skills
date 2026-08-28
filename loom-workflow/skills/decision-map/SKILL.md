@@ -2,7 +2,7 @@
 name: decision-map
 version: 0.1.0
 description: |
-  Chart and work through a persistent decision map at docs/loom/maps/<map-id>/ — a destination, a growing Decisions-so-far log, and a Not-yet-specified (fog) list that graduates into tickets over many sessions instead of a one-shot plan. Use for '開地圖' / '開一張決策地圖' / 'chart a decision map' / 'work through the map' / '推進地圖' / 'デシジョンマップを開く' / 'ワークスルー' when a destination is clear but the path to it is not, and the work will span more sessions than one sitting can hold. Not for a single self-contained task (use loom-code:writing-plans) and not for one factual question (use research-toolkit).
+  Chart and work through a persistent decision map at docs/loom/maps/<map-id>/ — a destination, a growing Decisions-so-far log, and a Not-yet-specified (fog) list that graduates into tickets over many sessions instead of a one-shot plan. Use for '開地圖' / '開一張決策地圖' / 'chart a decision map' / 'work through the map' / '推進地圖' / 'デシジョンマップを開く' / 'ワークスルー' when a destination is clear but the path to it is not, and the work will span more sessions than one sitting can hold. Also use to assess live maps / 地圖還活著嗎 — is there a decision map already in progress for this repo. Not for a single self-contained task (use loom-code:writing-plans) and not for one factual question (use research-toolkit).
 ---
 
 # Decision map
@@ -59,7 +59,10 @@ run: `map_store.py validate <target> --repo-root <path>`.
 
 A non-zero exit means the map is not yet chartered cleanly — fix the
 reported violation before treating the map as `charting`-state-ready
-for work-through.
+for work-through. Once clean, flip `state` from `charting` to `active`
+by hand — this is the final act of the charting close (no script owns
+`state` transitions in v1; see `references/map-format.md`
+§Frontmatter).
 
 ## Work-through mode
 
@@ -105,15 +108,20 @@ A session that works through a ticket does, in order:
    `check_map_fog.py <target> --repo-root <path>`.
    A non-zero exit from any of the three means the close is not done —
    fix the reported violation (a bad link, a fog-monotonicity break, a
-   schema violation) before ending the session.
+   schema violation) before ending the session. If this close leaves
+   zero open tickets and an empty fog section, flip `state` from
+   `active` to `clear` by hand (`references/map-format.md`
+   §Frontmatter) — this is the only close-time trigger for that
+   transition.
 
 ### Delegation by ticket type
 
 Each ticket's `type` selects the existing skill (or store) that
 resolves it — decision-map never performs the resolution itself, only
 schedules and records it. Delegation is by public skill name only,
-never by a sibling plugin's internal file path, per the Cross-Plugin
-Delegation Contract in this repo's root `CLAUDE.md`.
+never by a sibling plugin's internal file path, per loom's
+cross-plugin delegation contract (paths + names, never sibling file
+content).
 
 - **`grilling`** — delegate to a `loom-code:brainstorming` session.
   HITL: the ticket's Resolution section carries a user-ratified line
@@ -132,12 +140,26 @@ Delegation Contract in this repo's root `CLAUDE.md`.
   user-ratified line in the Resolution section, per §Ticket schema in
   `references/map-format.md`.
 
+## Liveness assessment
+
+A caller (e.g. a kickoff flow) invokes this skill to ask "is there a
+live map here": enumerate `docs/loom/maps/*/`, and for each run
+`map_store.py validate <map-dir> --repo-root <path>`. A map is live
+iff that validate exits 0 AND its `state` is `charting` or `active`
+(the exact two-part test pinned in §Live-map criterion of
+`references/map-format.md` — read that section rather than
+re-deriving the rule here). Return either the list of live map-ids,
+each paired with its Destination section's first line, or an explicit
+"no live map" answer when none qualify.
+
 ## Delivery write-back
 
 When a closing plan's own plan-level progress binds to this map through
 a Parts join key (`<map-id> / Part: <name>` — §Parts in
 `references/map-format.md`), a branch's close-out flow flips that Parts
-row's Status cell. The flip runs the map_parts.py flipper against the
+row's Status cell. The closing plan carries that binding as a
+`## Notes` line of the exact form `Map part: <map-id> / Part: <name>`
+(§Parts). The flip runs the map_parts.py flipper against the
 map directory, passing `--part <join-key> --sha <commit> --repo-root
 <path>` (the canonical arg shape pinned in §Command surface of
 `references/map-format.md`). The sha recorded is the branch's **last
@@ -155,3 +177,6 @@ importing map_parts.py directly across the plugin boundary.
   fog-id grammar, schema versioning, §Command surface.
 - `references/prototype-contract.md` — the `prototype` ticket type's
   full contract.
+- `references/family-reception.md` — family intake routing that leads
+  here (the on-ramp row that suggests detouring to charting) is
+  recorded in this file.

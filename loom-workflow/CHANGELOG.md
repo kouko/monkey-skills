@@ -13,6 +13,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Delivery write-back so a completed decision map lands back on the
   originating record.
 - A reception on-ramp row and a README refresh describing the new layer.
+
 ## [1.2.2] — 2026-08-28 — test pins assert invariants, not wording
 
 ### Changed

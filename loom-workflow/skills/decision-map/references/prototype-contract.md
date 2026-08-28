@@ -115,7 +115,10 @@ one-sitting timebox above applies.
    primary source. Stage 4's human ratification is what makes the
    inlined decision citable; the inlined decision, not the branch, is
    what downstream specs and plans cite.
-6. **Death**: the branch never merges (git-guard enforces);
+6. **Death**: the branch never merges — this doctrine binds always;
+   where loom-code is installed, its git-guard fence mechanically
+   blocks merge/pull/PR of a name-matched `prototype/*` branch into
+   the default branch, otherwise the doctrine is review-enforced;
    implementation later re-lands the behavior from the inlined
    decision under full TDD — a validated pure module may be carried
    over as the starting point, but its tests are written first and it

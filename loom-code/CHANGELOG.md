@@ -17,6 +17,7 @@ Versioning: [Semantic Versioning](https://semver.org/).
 
 - Doctrine amendments accompanying the decision-map layer's absorption
   into the loom family.
+
 ## [0.102.1] — 2026-08-28 — test pins assert invariants, not wording
 
 ### Changed
@@ -166,6 +167,7 @@ wording pins produced 4 false alarms and 0 blind spots.
   hundreds of words of slack cannot see a rule of tens leave, which is how five
   rules were dropped under a green suite. Presence and absence assertions now
   carry that job, and the repo-wide 4,500-word cap remains the ceiling.
+
 ## [0.101.0] — 2026-08-27
 
 ### Changed

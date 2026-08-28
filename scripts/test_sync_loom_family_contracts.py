@@ -102,7 +102,9 @@ def test_neutral_family_policy_has_no_mandatory_sibling_skill():
 
 def test_family_reception_fans_out_to_loom_workflow():
     source_rel = "scripts/canonical/loom-family/family-reception.md"
-    destination_rel = "loom-workflow/hooks/family-reception.md"
+    destination_rel = (
+        "loom-workflow/skills/decision-map/references/family-reception.md"
+    )
 
     assert destination_rel in sync.ROUTE[source_rel]
 

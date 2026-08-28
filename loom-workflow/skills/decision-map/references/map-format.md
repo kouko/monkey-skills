@@ -33,6 +33,10 @@ state: charting
 ---
 ```
 
+Frontmatter is parsed as simple `key: value` lines, not YAML — no
+nesting, no quoting, no multi-line values (`map_store.py`'s
+`parse_frontmatter` is the sanctioned parser).
+
 - `map-id` — string, matches the store directory name.
 - `schema_version` — integer. Bumped only on a breaking grammar
   change (a field renamed, removed, or reinterpreted — never on an
@@ -48,6 +52,14 @@ state: charting
   - `archived` — the map is retired. An archived map's Parts rows and
     any surviving prototype branches stay listed for reference, but
     the map no longer accepts new tickets or fog entries.
+
+`state` is hand-edited — no script under §Command surface owns this
+transition in v1. The transitions: `charting → active` is flipped by
+hand as the final act of the charting close, after the risk pass and a
+clean `validate` run. `active → clear` is flipped by the work-through
+close that leaves zero open tickets and an empty fog section.
+`clear → archived` is the repo owner's explicit decision, never an
+agent default.
 
 ### Live-map criterion
 
@@ -104,6 +116,12 @@ whoever adds the entry, never derived from its text or its position
 in the list (mirrors the `BI-<n>` brief-item-identifier grammar this
 store's fog ids are modeled on).
 
+The line itself is pinned to one grammar, mirroring how
+Decisions-so-far pins its own line shape (§MAP.md schema's §Sections):
+`- F-<n>: <text>` — a leading bullet, the id first, then a colon
+separator. Any other shape is invisible to the sanctioned parser
+(`map_store.py`) and to the fog gate (`check_map_fog.py`).
+
 - **Monotonic, never renumbered, never reused.** A new fog entry takes
   the next unused number — the highest `F-<n>` this map has ever used,
   plus one — regardless of where in the Not-yet-specified list it
@@ -145,7 +163,11 @@ graduated-from: null
 - `claim` — `null` when unclaimed, otherwise a free-text claim marker
   (who/what claimed it) written when `status` moves to `claimed`.
   Concurrent-claim discipline beyond this single field is out of scope
-  for v1.
+  for v1. **Stale-claim rule**: a LATER session may reclaim a ticket
+  whose `claim` shows no commit touching that ticket file since the
+  claim date, by overwriting the `claim` line and noting the takeover
+  in the ticket body — this closes the dead-session deadlock without
+  opening concurrency control.
 - `graduated-from` — `null`, or the `F-<n>` fog id this ticket was
   graduated from (see §Fog entries).
 
@@ -184,6 +206,12 @@ map part. No topic-similarity inference is ever used to bind a plan to
 a Parts row; a plan with no matching join key string is not bound to
 any part, however similar its subject looks.
 
+A plan binds itself to a Parts row by carrying, in its own `## Notes`
+section, one line of the exact form `Map part: <map-id> / Part:
+<name>` — no schema change to the plan format elsewhere, no
+topic-similarity inference. The ` / Part: ` infix is the grep literal
+a reader or a future checker matches on.
+
 A Parts row's Status cell is flipped **only** by the `map_parts.py`
 flipper (see §Command surface) — never hand-edited. Status is one of
 `not-started`, `in-progress`, or `done(<sha>)` — the third form
@@ -220,19 +248,34 @@ Five scripts ship under `loom-workflow/skills/decision-map/scripts/`:
 | `map_init.py` | Scaffold a new `docs/loom/maps/<map-id>/` store (MAP.md + empty `tickets/`). |
 | `map_store.py` | Read/write primitives for MAP.md and ticket files, shared by the other four scripts and by skill-text tooling — the only sanctioned parser for this schema. Also exposes the `validate` CLI entrypoint: `map_store.py validate <target> --repo-root <path>` — the sole check behind the §Live-map criterion's "checker-valid" test — exit 0/1/2 like the rest of §Command surface. |
 | `check_map_links.py` | Verify every Decisions-so-far line links an existing, closed ticket. |
-| `check_map_fog.py` | Verify fog-id monotonicity (§Fog entries): no id reused, no silent disappearance. |
+| `check_map_fog.py` | Verify fog-id monotonicity (§Fog entries): silent disappearance is machine-gated (exit 2); id reuse is review-enforced only in v1 — the same disclosure pattern the HITL resolution rule already uses (§Ticket schema). |
 | `map_parts.py` | The Parts-row flipper: the only script permitted to change a Parts row's Status cell. |
 
 **Canonical arg shape**, shared by every script above: a positional
 `target` argument (the map directory, a MAP.md path, or a ticket path,
 depending on the script), plus an optional `--repo-root` flag (default:
 `git rev-parse --show-toplevel` of the target's directory, falling
-back to cwd — the same resolution precedent as
-`check_onramp_choice.py`'s `--repo-root`). `map_store.py` alone
+back to cwd — the `--repo-root` resolution convention loom-code's
+on-ramp checker established). `map_store.py` alone
 prefixes this with a leading subcommand verb before the positional
 `target` — `validate` in v1 — since it is the one script in the table
 exposing more than one operation; the other four scripts take the
 bare positional shape with no verb.
+
+Beyond the shared shape, two scripts carry additional flags:
+`map_parts.py` additionally REQUIRES `--part <join-key>` and `--sha
+<commit>` (the row it flips and the delivering commit); `check_map_fog.py`
+additionally accepts `--base <git-ref>` (default: the merge-base of
+HEAD with the resolved default branch). `check_map_fog.py`'s gate is a
+DIFF against that base, not a full-history scan: fog removed before
+the branch point is invisible to it, and a brand-new map trivially
+passes since it has no base version to compare against.
+
+`map_init.py` is a deliberate writer-script carve-out from the other
+four scripts' reader-script exit semantics: its positional argument is
+a bare map-id slug, not a target path; its exit `1` covers the
+already-exists refusal (an operational error, not a schema violation);
+its exit `2` covers a malformed slug.
 
 **Exit codes**, shared by every script above:
 

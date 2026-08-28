@@ -454,7 +454,10 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     Returns `(exit_code, message)`: 0 clean, 1 operational error
     (target missing/unreadable), 2 a structural or schema-version
     violation — the exit-code split map-format.md §Command surface
-    pins for every checker in the family."""
+    pins for every checker in the family.
+
+    `repo_root` is accepted for arg-shape parity with the other
+    §Command surface scripts; this function does not use it in v1."""
     map_dir = Path(target)
     if not map_dir.is_dir():
         return 1, f"map directory not found: {map_dir}"
@@ -480,7 +483,10 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
 def is_live_map(target: Path, repo_root: Path | None = None) -> bool:
     """map-format.md §Live-map criterion: checker-valid (validate
     exits 0) AND state in {charting, active}. Never a bare
-    directory-existence check."""
+    directory-existence check.
+
+    `repo_root` is accepted for arg-shape parity with the other
+    §Command surface scripts; this function does not use it in v1."""
     code, _ = validate(target, repo_root=repo_root)
     if code != 0:
         return False

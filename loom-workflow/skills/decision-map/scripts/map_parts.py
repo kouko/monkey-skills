@@ -144,6 +144,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     map_dir = Path(args.map_dir)
+    # repo-root is accepted per the canonical arg shape (map-format.md
+    # §Command surface) but this flipper resolves the Parts row relative
+    # to the map directory itself, not the repo root.
     map_store.resolve_repo_root(args.repo_root, map_dir)
 
     map_md = map_dir / "MAP.md"
