@@ -58,12 +58,22 @@ def _is_git_repo(repo_root: Path) -> bool:
 def resolve_default_branch(repo_root: Path) -> str | None:
     """origin/HEAD's symbolic-ref target if set, else the first of a
     local or remote `main`/`master` that exists. None if neither is
-    resolvable."""
+    resolvable.
+
+    When origin/HEAD resolves to a name with no LOCAL branch of that
+    name (e.g. a clone whose local tracking branch was later deleted,
+    leaving only `refs/remotes/origin/<name>`), falls back to the
+    `origin/<name>` form — `merge-base` needs a ref that actually
+    exists, and the bare name is not one."""
     result = _run_git(
         ["symbolic-ref", "refs/remotes/origin/HEAD"], repo_root
     )
     if result.returncode == 0:
-        return result.stdout.strip().rsplit("/", 1)[-1]
+        name = result.stdout.strip().rsplit("/", 1)[-1]
+        local_check = _run_git(["rev-parse", "--verify", f"refs/heads/{name}"], repo_root)
+        if local_check.returncode == 0:
+            return name
+        return f"origin/{name}"
     for candidate in ("main", "master"):
         for ref in (f"refs/heads/{candidate}", f"refs/remotes/origin/{candidate}"):
             check = _run_git(["rev-parse", "--verify", ref], repo_root)
@@ -154,11 +164,15 @@ def check_fog_monotonicity(
         return 2, f"base MAP.md at {resolved_base_ref!r} fails to parse: {exc}"
 
     current_ids = {fog.id for fog in current_doc.fog_entries}
-    graduated_ids = _graduated_ids(map_dir)
     out_of_scope_ids = _out_of_scope_ids(current_doc.out_of_scope)
+    graduated_ids: set[str] | None = None  # built lazily — only on a miss
 
     for fog in base_doc.fog_entries:
-        if fog.id in current_ids or fog.id in graduated_ids or fog.id in out_of_scope_ids:
+        if fog.id in current_ids or fog.id in out_of_scope_ids:
+            continue
+        if graduated_ids is None:
+            graduated_ids = _graduated_ids(map_dir)
+        if fog.id in graduated_ids:
             continue
         return 2, (
             f"fog entry {fog.id!r} present at base ref {resolved_base_ref!r} "
