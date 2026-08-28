@@ -70,6 +70,8 @@ This plugin-only bootstrap uses load-time substitution and refuses if either art
 `Loom-init offer: offered — user chose <scaffold/decline>`. Never write
 it as the value itself; that line accepts only the four canonical forms. When neither copy of `backlog_index.py` resolves, stay N/A as today; the scaffold ships alongside it, so there is no offer to make.
 
+**Live-map check** — if `docs/loom/maps/` exists and holds at least one map dir, invoke `loom-workflow:decision-map` to assess liveness (the liveness criterion and its validate gate are owned by that skill; do not restate its internals here). A live map is surfaced, then routed per the family-reception on-ramp row for a live map. No `docs/loom/maps/` store, or no live map found → a loud N/A line; never a silent skip.
+
 If a criteria row triggers, first read `docs/loom/KICKOFF-DEFAULTS.md` `## On-ramp standing choices`. If every row has a standing choice, record `fired: rows <n> — standing <direct|detour> (KICKOFF-DEFAULTS.md)` and continue. Otherwise record `pending`, then ask **ONCE** in a standalone ask that recommends and names the concrete sequence (for example `using-loom-design`). After the answer, record `fired: rows <n> — user chose <detour|direct>` per `references/handoff-brief-format.md`; never invent a default or re-ask.
 
 ### Axis 1 — Problem
