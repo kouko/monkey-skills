@@ -1027,6 +1027,62 @@ def test_commit_adding_non_ascii_named_plan_is_gated(repo):
     assert "user chose <detour|direct>" in res.stderr
 
 
+# --- prototype/* branch fence (decision-map retention rule) ----------------
+
+
+def _checkout_branch(repo_path, name):
+    subprocess.run(
+        ["git", "checkout", "-q", "-b", name],
+        cwd=repo_path, check=True, env=_iso_env(),
+    )
+
+
+def test_blocks_merge_of_prototype_branch_into_default(repo):
+    # `repo` is checked out on "main" (the resolved default branch);
+    # merging a prototype/* branch into it must be refused mechanically.
+    res = run_hook(bash_event("git merge prototype/explore-x", cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
+    assert "docs/loom/" not in res.stderr
+
+
+def test_push_of_prototype_branch_stays_allowed(repo):
+    # The retention rule: prototype/* branches MAY be pushed (so the
+    # exploration survives) — only merging/PR-ing them is fenced.
+    write_review_pass(repo, verdict="PASS_WITH_NOTES")
+    write_verified(repo)
+    res = run_hook(bash_event("git push origin prototype/explore-x", cwd=repo))
+    assert res.returncode == 0, res.stderr
+
+
+def test_merge_of_non_prototype_branch_into_default_allowed(repo):
+    res = run_hook(bash_event("git merge feat/normal", cwd=repo))
+    assert res.returncode == 0, res.stderr
+
+
+def test_gh_pr_create_blocked_when_head_is_prototype_targeting_default(repo):
+    _checkout_branch(repo, "prototype/explore-x")
+    res = run_hook(bash_event("gh pr create --title x --body y", cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
+
+
+def test_gh_pr_merge_blocked_when_target_is_prototype_branch(repo):
+    res = run_hook(bash_event("gh pr merge prototype/explore-x", cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
+
+
+def test_gh_pr_create_with_prototype_head_but_non_default_base_allowed(repo):
+    _checkout_branch(repo, "prototype/explore-x")
+    write_review_pass(repo, verdict="PASS_WITH_NOTES")
+    write_verified(repo)
+    res = run_hook(bash_event(
+        "gh pr create --title x --body y --base feat/other", cwd=repo
+    ))
+    assert res.returncode == 0, res.stderr
+
+
 def test_commit_with_unreadable_kickoff_defaults_file_fails_open_loudly(repo):
     # WHY: load_standing() reads KICKOFF-DEFAULTS.md once, before the
     # per-plan loop. An undecodable file there must surface as THIS

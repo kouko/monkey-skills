@@ -63,6 +63,13 @@ blocks these families of gate bypass:
    allows, mirroring ``.codex/hooks/git-guard-shim.sh``'s posture; a
    silent allow would recreate the invisible default this gate closes.
 
+4. ``git merge prototype/...`` while the current branch IS (or tracks)
+   the resolved default branch, and ``gh pr create``/``gh pr merge``
+   where the head branch is ``prototype/*`` and the (explicit or
+   gh-defaulted) base is the default branch — the decision-map
+   prototype contract's retention rule: prototype branches never
+   merge. Pushing a ``prototype/*`` branch itself stays allowed.
+
 Escape hatches / fail-open behavior: ``LOOM_CODE_MODE=off`` disables
 the guard; non-Bash tools, non-git/gh segments, ``git push
 --dry-run`` (and its ``-n`` short form — push's ``-n`` IS dry-run,
@@ -162,6 +169,15 @@ MSG_VERIFIED = (
     "loom gate: no fresh verification marker for the current HEAD. Run the "
     "package-level test suite green, then write the marker via "
     "loom-code/scripts/loom_gate_markers.py verified."
+)
+MSG_PROTOTYPE_MERGE = (
+    "What happened: this command would merge or PR a `prototype/*` branch "
+    "into the default branch. Your two options: leave the prototype branch "
+    "as a read-only exploration artifact (pushing it is still fine — that "
+    "is the retention rule), or re-implement its validated approach on a "
+    "normal feature branch and merge that instead. "
+    "loom gate: prototype/* branches never merge into the default branch — "
+    "see loom-workflow:decision-map for the contract."
 )
 
 
@@ -491,6 +507,92 @@ def _repo_globals(git_dir, work_tree, gate_cwd):
     return globals_
 
 
+def _is_prototype_ref(ref):
+    """True when `ref` names a ``prototype/*`` branch, incl. behind a
+    single remote prefix (``origin/prototype/foo``) — checked as a
+    ``/prototype/`` path-segment boundary so ``myprototype/foo`` (a
+    different branch that merely starts with the same letters) is not
+    a false match."""
+    if not ref:
+        return False
+    return "/prototype/" in ("/" + ref)
+
+
+def _current_branch(cwd, git_globals=()):
+    """The current branch's short name, or None when detached/unresolvable."""
+    res = _git(["symbolic-ref", "--short", "-q", "HEAD"], cwd, git_globals)
+    return res.stdout.strip() if res.returncode == 0 else None
+
+
+def _ref_short_name(ref):
+    """Last path segment of a branch/ref string (strips a remote prefix
+    like ``origin/`` from ``_default_branch_ref``'s remote-tracking form)."""
+    return ref.rsplit("/", 1)[-1] if ref else ref
+
+
+def _is_on_default_branch(cwd, git_globals=()):
+    """True when the CURRENT branch is (or tracks) the resolved default
+    branch — used to fence a merge target, not a push."""
+    current = _current_branch(cwd, git_globals)
+    if current is None:
+        return False
+    default_ref = _default_branch_ref(cwd, git_globals)
+    return default_ref is not None and current == _ref_short_name(default_ref)
+
+
+def _pr_head_branch(gtoks, cwd, git_globals):
+    """The head branch a ``gh pr create``/``gh pr merge`` invocation acts
+    on: an explicit ``--head`` value, else (for ``merge``) a positional
+    non-numeric argument (gh accepts a PR number OR a branch name there),
+    else the current checked-out branch (gh's own default for both
+    subcommands when no head/target is named)."""
+    args = gtoks[3:]
+    i = 0
+    while i < len(args):
+        tok = args[i]
+        if tok == "--head" and i + 1 < len(args):
+            return args[i + 1]
+        if tok.startswith("--head="):
+            return tok.split("=", 1)[1]
+        i += 1
+    if gtoks[2] == "merge":
+        for tok in args:
+            if not tok.startswith("-") and not tok.isdigit():
+                return tok
+    return _current_branch(cwd, git_globals)
+
+
+def _pr_base_branch(gtoks):
+    """An explicit ``--base``/``--base=`` value, or None when the PR
+    command names none (gh then defaults the base to the repo's default
+    branch)."""
+    args = gtoks[3:]
+    i = 0
+    while i < len(args):
+        tok = args[i]
+        if tok == "--base" and i + 1 < len(args):
+            return args[i + 1]
+        if tok.startswith("--base="):
+            return tok.split("=", 1)[1]
+        i += 1
+    return None
+
+
+def _blocks_prototype_pr(gtoks, cwd, git_globals):
+    """True when this ``gh pr create``/``gh pr merge`` would PR a
+    ``prototype/*`` head branch INTO the default branch — an explicit
+    non-default ``--base`` opts the command out (a stacked PR onto
+    another feature branch is not this fence's concern)."""
+    head = _pr_head_branch(gtoks, cwd, git_globals)
+    if not _is_prototype_ref(head):
+        return False
+    base = _pr_base_branch(gtoks)
+    if base is None:
+        return True  # gh defaults an unset base to the repo default branch
+    default_ref = _default_branch_ref(cwd, git_globals)
+    return default_ref is not None and _ref_short_name(base) == _ref_short_name(default_ref)
+
+
 def _gate_push(cwd, git_globals=()):
     """Marker gate for one push-family segment → (exit_code, stderr_notes)."""
     notes = []
@@ -746,6 +848,15 @@ def main():
                         print(note, file=sys.stderr)
                     if code != 0:
                         return code
+                if sub == "merge":
+                    merge_cwd = _cwd_for(effective_cwd, c_path)
+                    merge_globals = _repo_globals(git_dir, work_tree, merge_cwd)
+                    target = next((a for a in args if not a.startswith("-")), None)
+                    if _is_prototype_ref(target) and _is_on_default_branch(
+                        merge_cwd, merge_globals
+                    ):
+                        print(MSG_PROTOTYPE_MERGE, file=sys.stderr)
+                        return 2
                 # push's -n means --dry-run (unlike commit's -n = --no-verify)
                 if sub == "push" and "--dry-run" not in args and "-n" not in args:
                     gate_cwd = _cwd_for(effective_cwd, c_path)
@@ -758,6 +869,9 @@ def main():
                 and gtoks[1] == "pr"
                 and gtoks[2] in {"create", "merge"}
             ):
+                if _blocks_prototype_pr(gtoks, effective_cwd, ()):
+                    print(MSG_PROTOTYPE_MERGE, file=sys.stderr)
+                    return 2
                 gate_cwd = effective_cwd
             elif _is_gh_api_merge(gtoks):
                 gate_cwd = effective_cwd
