@@ -31,7 +31,10 @@ all mechanical where possible:
 - the question is written at the top of the artifact itself (a visible
   intro, not a comment), not only in the ticket;
 - **one sitting**: answered in one session; still building a day later
-  means the question was too big — split the ticket;
+  means the question was too big — split the ticket. The timebox
+  bounds the agent's build and probe/measurement work; in design mode
+  it excludes the human's reaction time, which the agent cannot
+  compress;
 - no tests, no error handling beyond what makes it run, no persistence
   (in-memory state only), no speculative abstraction; **the moment you
   harden one (add a test, wire a real database, generalize for later)
@@ -52,7 +55,7 @@ all mechanical where possible:
 - scoped to ONE named question — a whole-app prototype is refused
   ("what is the whole app" is not a question; it has no stopping point
   and becomes production by momentum). Feasibility mode is this
-  contract's extension beyond upstream, whose two branches cover
+  contract's extension beyond upstream, whose two probe shapes cover
   design questions only.
 
 ## Risk-driven front-loading — when a probe is scheduled early
@@ -85,13 +88,13 @@ one-sitting timebox above applies.
 
 ## Lifecycle — six stages
 
-1. **Birth**: charting or a work-through close types a ticket
-   `prototype`, question in the body. The type is a claim the
-   resolution gate checks.
+1. **Birth**: a human via charting, or the session proposing during a
+   work-through close, types a ticket `prototype`, question in the
+   body. The type is a claim checked at resolution.
 2. **Build**: the session creates the namespace branch; artifacts
    exist nowhere else. TDD iron law's spike exemption applies inside
-   the namespace only (the same-PR doctrine amendment of the prototype
-   branch fence).
+   the namespace only; the exemption is scoped to this namespace by
+   the doctrine texts that ship alongside the prototype branch fence.
 3. **React / Measure** (mode fork): design mode — the human drives the
    artifact and reacts; HITL, the agent never answers its own
    question. Feasibility mode — the agent runs the probe and records
@@ -103,12 +106,16 @@ one-sitting timebox above applies.
    the human ratifies the *conclusion drawn from* the measurement (the
    numbers are the machine's; what they mean for the map is a
    decision). Both modes close only through the resolution's
-   user-ratified line (the ratification gate).
-5. **Distill**: the validated decision — state machine, schema,
-   reducer, snippet trimmed to its decision-rich parts — is inlined
-   into the ticket resolution; the branch is linked as the primary
-   source. The inlined decision, not the branch, is what downstream
-   specs and plans cite.
+   user-ratified line (the ratification gate). Birth's resolution gate
+   and Select/Ratify's ratification gate are two distinct checks:
+   type-at-birth is checked when the ticket resolves, and the
+   user-ratified line is checked at close.
+5. **Distill**: the agent inlines the validated decision — state
+   machine, schema, reducer, snippet trimmed to its decision-rich
+   parts — into the ticket resolution; the branch is linked as the
+   primary source. Stage 4's human ratification is what makes the
+   inlined decision citable; the inlined decision, not the branch, is
+   what downstream specs and plans cite.
 6. **Death**: the branch never merges (git-guard enforces);
    implementation later re-lands the behavior from the inlined
    decision under full TDD — a validated pure module may be carried
