@@ -89,7 +89,13 @@ def test_context_uses_script_parent_not_consumer_repo(tmp_path: Path) -> None:
 
     assert context["target_repo"] == str(consumer.resolve())
     assert context["reviewed_sha"] == _git(consumer, "rev-parse", "HEAD")
-    assert context["plugin_version"] == "0.102.0"
+    # Read from the manifest, not hardcoded: this test is about WHERE the
+    # root is resolved from, not which version ships. A literal here turns
+    # every release bump into an unrelated failure in a path-resolution test.
+    expected_version = json.loads(
+        (installed_root / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8")
+    )["version"]
+    assert context["plugin_version"] == expected_version
     assert context["resources"]
     for resource in context["resources"].values():
         resource_path = Path(resource)
