@@ -27,6 +27,33 @@ comparison target must be that fact's own SSOT — here the schema heading's
 re-introduced — never a value that changes on every release. Symptom to grep
 for: a version literal in a prose/contract file that appears in release-bump
 diffs alongside plugin.json. A tag that has moved in 2+ release bumps without
-its underlying rule changing is this failure. Related:
-[[a-cap-raised-at-every-touch-is-not-a-cap]] (the same read-the-sequence
-tell on a different constant).
+its underlying rule changing is this failure.
+
+**The loud twin (2026-08-28, pin-granularity arc).** The failure above is
+silent — the tag is rewritten and nobody notices. A version literal can also
+fail LOUDLY and name the wrong thing, and the two want opposite fixes, so
+sort them before touching either:
+
+- A **deliberate** release pin asserts `plugin.json` reads version X and the
+  changelog carries a `## [X]` heading. Its function is to make a bump
+  expensive enough that the changelog entry gets written. Bumping the
+  manifest reddens it, and green needs TWO edits — retarget the literal AND
+  add the heading. Keep it hardcoded; retargeting is the maintenance it
+  exists to demand. It does NOT catch a missed bump, whatever its docstring
+  says — `check_version_bump.py` does. On this arc a skill-content file
+  landed with plugin.json unmoved and this pin stayed green.
+- An **incidental** literal sits in a test whose subject is not versioning at
+  all — here a path-resolution test whose fixture deliberately installs the
+  plugin under a `0.100.0` directory to prove the directory name is never
+  consulted. A shipping-version literal there turns every release into a red
+  test that names path resolution. Read the version from the manifest the
+  test already copied.
+
+Tell them apart by the test's subject, not by the literal: if the test would
+still be meaningful with no version anywhere in it, the literal is incidental.
+
+Related: [[a-cap-raised-at-every-touch-is-not-a-cap]] (the same
+read-the-sequence tell on a different constant);
+[[a-test-can-pin-behaviour-with-a-false-rationale]] (why the deliberate pin's
+own docstring claimed a guarantee it does not provide, undetected for eleven
+review rounds until an arm ran the scenario the sentence described).
