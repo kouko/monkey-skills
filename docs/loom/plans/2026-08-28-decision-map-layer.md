@@ -4,7 +4,7 @@
 Goal: loom-workflow 擁有的決策地圖層出貨——一個 charting／work-through skill、
     docs/loom/maps/ 儲存區與機械閘門；prototype 工作被機械圍欄隔離，
     交付進度在分支收尾時自動回寫。
-Stage: sdd:wave-3
+Stage: blocked:user-decision
 Steps:
   1. 契約層：地圖格式 SSOT、prototype 契約、教義修訂、git-guard 圍欄
   2. 引擎與骨幹：MAP 解析器＋validate、SKILL 主文
@@ -209,7 +209,7 @@ flowchart LR
   - from Task 6: payload: validate CLI semantics; owner: Task 6; probe: `test_map_init.py::test_scaffolded_map_passes_validate`
 - **Independent**: true
 - **Brief item covered**: BI-1
-- **Status**: claimed(@check-wayfinder)
+- **Status**: done(ed44ef64)
 - **Gloss**: 一個指令長出合規的空地圖——scaffold 產物直接過 validate，不靠手抄範本。
 
 ## Task 8 — Decisions 連結檢查器
@@ -229,7 +229,7 @@ flowchart LR
   - from Task 6: payload: parser API (map sections + ticket accessors); owner: Task 6; probe: `test_check_map_links.py::test_flags_decision_line_without_closed_ticket`
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: claimed(@check-wayfinder)
+- **Status**: done(5df61c2f)
 - **Gloss**: 每條「已決定」都必須指向一張真的關掉的票——決策不能憑空出現。
 
 ## Task 9 — 霧單調性檢查器
@@ -250,7 +250,7 @@ flowchart LR
   - from Task 6: payload: parser API (fog entries with `F-<n>` ids); owner: Task 6; probe: `test_check_map_fog.py::test_flags_vanished_fog_entry`
 - **Independent**: true
 - **Brief item covered**: BI-4
-- **Status**: claimed(@check-wayfinder)
+- **Status**: done(1062a49a)
 - **Gloss**: 霧只能變小、變票、或明列出界——不准無聲蒸發，這是 wayfinder 信任模型換成閘門的核心。
 
 ## Task 10 — Parts 回寫翻轉器
@@ -271,7 +271,7 @@ flowchart LR
   - from Task 6: payload: parser API (Parts rows + join keys); owner: Task 6; probe: `test_map_parts.py::test_flip_marks_single_part_shipped`
 - **Independent**: true
 - **Brief item covered**: BI-6
-- **Status**: claimed(@check-wayfinder)
+- **Status**: done(a4dbc17b)
 - **Gloss**: 交付進度由腳本翻、不由人手抄——kumiko 手抄表漂移 4 次的病根在這裡拔掉。
 
 ## Task 11 — decision-map SKILL.md：charting 與 work-through
@@ -318,7 +318,7 @@ flowchart LR
 - **Independent**: false
 - **Review-weight**: prose
 - **Brief item covered**: BI-3
-- **Status**: claimed(@check-wayfinder)
+- **Status**: done(5107c55c)
 - **Gloss**: 四種票各自委派給既有公開 skill——地圖排程決策，不自己執行工作。
 
 ## Task 13 — 風險前置段
@@ -339,7 +339,7 @@ flowchart LR
 - **Independent**: false
 - **Review-weight**: prose
 - **Brief item covered**: BI-12
-- **Status**: pending
+- **Status**: done(db18a045)
 - **Gloss**: 「研究說大概行」不算證據——高風險項在開圖時就排 probe，不等走到才發現不行。
 
 ## Task 14 — brainstorming Axis 0 偵測列
@@ -362,7 +362,7 @@ flowchart LR
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-7
-- **Status**: claimed(@check-wayfinder)
+- **Status**: done(a603b0ae)
 - **Gloss**: 每次 kickoff 的 Axis 0 會看見活地圖——續圖不再靠人記得有這張圖。
 
 ## Task 15 — family-reception 列＋fan-out 擴充＋預算重議
@@ -389,7 +389,7 @@ flowchart LR
   - from Task 11: payload: the routed skill's public name `loom-workflow:decision-map`; owner: Task 11; probe: `grep -q 'name: decision-map' loom-workflow/skills/decision-map/SKILL.md`
 - **Independent**: true
 - **Brief item covered**: BI-7
-- **Status**: claimed(@check-wayfinder)
+- **Status**: done(dc0bbf51)
 - **Gloss**: 家族接待表多一列「多會期＋路線起霧→先開圖」，並依章程在同 PR 重議行數上限。
 
 ## Task 16 — finishing 回寫責務列
@@ -412,7 +412,7 @@ flowchart LR
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-6
-- **Status**: pending
+- **Status**: done(7a3ecddb)
 - **Gloss**: 收分支時順手把地圖 Parts 翻成 shipped——里程碑層由收尾流程機械維護。
 
 ## Task 17 — admission rule 與 store 目錄列
@@ -433,7 +433,7 @@ flowchart LR
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-8
-- **Status**: claimed(@check-wayfinder)
+- **Status**: done(d5b225cf)
 - **Gloss**: 白紙黑字寫下「什麼才配進 loom-workflow」——所有權問題不再換個名字重演。
 
 ## Task 18 — Dogfood：真實地圖
@@ -490,7 +490,7 @@ flowchart LR
   - from Task 17: payload: none
 - **Independent**: true
 - **Brief item covered**: none — release administration: version bumps and manifest mirroring deliver no brief outcome themselves; skipping the bump would make plugin update a silent no-op (repo precedent).
-- **Status**: pending
+- **Status**: done(5676cb0a)
 - **Gloss**: 兩個 plugin 版本號進位＋Codex 鏡射同步——不 bump 的話 marketplace 更新會靜默失效。
 
 ## Decision Log
