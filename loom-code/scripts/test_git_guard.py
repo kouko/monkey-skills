@@ -41,7 +41,8 @@ loom-code/skills/subagent-driven-development/standards/external-surface-groundin
   [flags]`` (the positional target is gh's FIRST argument only) with
   value-taking flags ``-A``/``--author-email``, ``-b``/``--body``,
   ``-F``/``--body-file``, ``--match-head-commit``,
-  ``-t``/``--subject`` (``-m``/``--merge``, ``-s``/``--squash``,
+  ``-t``/``--subject``, and the INHERITED ``-R``/``--repo``
+  (``-m``/``--merge``, ``-s``/``--squash``,
   ``-r``/``--rebase`` are BOOLEAN despite the letters overlapping
   merge-strategy flags of the same name on ``git merge``); and confirm
   ``gh pr create``'s ``--head`` defaults to the current branch and
@@ -1151,6 +1152,36 @@ def test_gh_pr_merge_prototype_head_blocked_despite_subject_flag_value(repo):
     _checkout_branch(repo, "prototype/explore-x")
     res = run_hook(bash_event(
         'gh pr merge --squash --subject "chore: x"', cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
+
+
+# --- gh pr merge: flags BEFORE the positional (round-3 regression) --------
+
+
+def test_gh_pr_merge_prototype_head_blocked_with_flags_before_positional(repo):
+    # Cobra/pflag accepts interspersed flags: the real positional target
+    # can come AFTER other flags, not just at args[0]. The round-2 fix
+    # (args[0]-only) missed this ordering — `--squash` at args[0] made it
+    # fall through to `_current_branch` ("main", not prototype), letting
+    # the actual `prototype/explore-x` positional target slip through
+    # unfenced. `repo` stays on the default branch throughout, so this
+    # can ONLY be caught by finding the real positional target.
+    res = run_hook(bash_event(
+        "gh pr merge --squash prototype/explore-x", cwd=repo))
+    assert res.returncode == 2
+    assert "loom-workflow:decision-map" in res.stderr
+
+
+def test_gh_pr_merge_prototype_head_blocked_with_repo_flag_before_positional(
+    repo
+):
+    # -R/--repo is an INHERITED value-taking flag (gh pr merge --help,
+    # gh 2.88.1) — its value ("o/r") must not be mistaken for the
+    # positional target, and the REAL positional after it must still be
+    # found.
+    res = run_hook(bash_event(
+        "gh pr merge -R o/r prototype/explore-x", cwd=repo))
     assert res.returncode == 2
     assert "loom-workflow:decision-map" in res.stderr
 

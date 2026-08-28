@@ -75,7 +75,11 @@ blocks these families of gate bypass:
    through the same value-flag-skip discipline ``_parse_git`` applies
    to global flags (``_positional_args``), so a value-taking flag's
    VALUE (e.g. ``-m``'s message text) is never mistaken for the
-   target ref.
+   target ref. This fence matches on the REF'S NAME as written on the
+   command line only — an alias that reaches the same commit without
+   spelling ``prototype/...`` (``FETCH_HEAD`` after a prior fetch, a
+   raw SHA) is outside its reach by construction, same as every other
+   name-based check in this guard.
 
 Escape hatches / fail-open behavior: ``LOOM_CODE_MODE=off`` disables
 the guard; non-Bash tools, non-git/gh segments, ``git push
@@ -576,6 +580,12 @@ def _is_on_default_branch(cwd, git_globals=()):
     return default_ref is not None and current == _ref_short_name(default_ref)
 
 
+GH_PR_MERGE_VALUE_FLAGS = {
+    "-A", "--author-email", "-b", "--body", "-F", "--body-file",
+    "--match-head-commit", "-t", "--subject", "-R", "--repo",
+}
+
+
 def _is_pr_merge_positional(tok):
     """True when `tok` could be `gh pr merge`'s positional target
     (``gh pr merge [<number>|<url>|<branch>] [flags]`` — grounded via
@@ -594,14 +604,19 @@ def _is_pr_merge_positional(tok):
 def _pr_head_branch(gtoks, cwd, git_globals):
     """The head branch a ``gh pr create``/``gh pr merge`` invocation acts
     on: an explicit ``--head`` value, else (for ``merge``) gh's own
-    positional target — which is ONLY the FIRST argument (see
-    ``_is_pr_merge_positional``) — else the current checked-out branch
-    (gh's own default for both subcommands when no head/target is
-    named). Scanning every arg for a non-flag token (the prior
-    approach) mistook a value-taking flag's VALUE — e.g. ``--subject
-    "chore: x"`` (grounded: ``-t``/``--subject``, ``-b``/``--body``,
-    ``-F``/``--body-file``, ``--match-head-commit`` all take a value,
-    per the same live ``gh pr merge --help``) — for the head branch."""
+    positional target, else the current checked-out branch (gh's own
+    default for both subcommands when no head/target is named).
+
+    gh (Cobra/pflag) accepts INTERSPERSED flags, so the positional can
+    sit anywhere among the args — not only at index 0 — while a value-
+    taking flag's VALUE (e.g. ``--subject "chore: x"``, or ``-R``'s
+    ``owner/repo``; grounded: ``-A``/``--author-email``,
+    ``-b``/``--body``, ``-F``/``--body-file``, ``--match-head-commit``,
+    ``-t``/``--subject``, and the inherited ``-R``/``--repo``, per live
+    ``gh pr merge --help``) must never be mistaken for it. The SAME
+    value-flag-skip discipline used for ``git merge``/``pull``
+    (``_positional_args``) resolves both at once: take the first
+    remaining positional, if any."""
     args = gtoks[3:]
     i = 0
     while i < len(args):
@@ -611,8 +626,10 @@ def _pr_head_branch(gtoks, cwd, git_globals):
         if tok.startswith("--head="):
             return tok.split("=", 1)[1]
         i += 1
-    if gtoks[2] == "merge" and args and _is_pr_merge_positional(args[0]):
-        return args[0]
+    if gtoks[2] == "merge":
+        positionals = _positional_args(args, GH_PR_MERGE_VALUE_FLAGS)
+        if positionals and _is_pr_merge_positional(positionals[0]):
+            return positionals[0]
     return _current_branch(cwd, git_globals)
 
 
