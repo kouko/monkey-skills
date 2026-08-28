@@ -1,7 +1,7 @@
 ---
 name: 2026-08-10-loom-lacks-a-milestone-layer-between-plan-stage-and-direction
 description: loom's progress model has a task layer (plan Status/Stage, machine-verified) and a direction layer (DIRECTION.md/BACKLOG.md, generated) but nothing between them — no milestone/roadmap surface that spans multiple plans of one deliverable, which is exactly the layer external repos hand-invent and then let drift
-status: open
+status: closed
 origin: 2026-08-10 kumiko-zaiku-app-icons session 63262433 — the repo hand-maintains a progress.md tracking M1 Parts 1-5 across multiple plans; it drifted from reality four times, each drift surviving every gate because no gate recognizes a hand-copy; the session's own diagnosis ("a hand-copy standing in for the layer loom lacks") was verified against this repo the same day: plan_card.py covers per-plan state only, backlog_index.py covers cross-plan queue/direction only, and no artifact covers milestone-of-one-deliverable
 start: next time a repo (this one or external) needs to answer "how far along is deliverable X" where X spans ≥2 plans — or the first design session on the progress model after the ship-progress-tooling arc merges
 ---
@@ -52,3 +52,5 @@ start: next time a repo (this one or external) needs to answer "how far along is
   the generated `## Now` view, which that arc deleted — the note
   recording what the dissolution foreclosed had itself named a
   foreclosed surface.)
+
+- Closed 2026-08-28: resolved by the decision-map layer's delivery write-back (branch check-wayfinder, plan docs/loom/plans/2026-08-28-decision-map-layer.md BI-6) — MAP.md's Parts section plus the map_parts.py flipper and finishing's Map-parts check replace the hand-kept table; hand-kept multi-plan progress tables are now a declared anti-pattern (map-format §Parts).
