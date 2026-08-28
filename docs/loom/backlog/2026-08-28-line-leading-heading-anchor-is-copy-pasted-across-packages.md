@@ -42,32 +42,40 @@ What is left:
 - **`think-orbit` and `copywriting-toolkit` have one site each**, both already
   correctly anchored, both left inline: one caller does not earn a module.
 
-## No site counts here, on purpose
+## Two populations, two commands — neither is the other
 
-Earlier drafts of this entry stated totals, and three review rounds refuted
-them in a row — the last time by two reviewers who each counted independently
-and got DIFFERENT answers. The reason is that "the same idiom" spans a
-one-line ternary and a five-line if/else, and no draft ever wrote down which
-to count; every total was defensible under one rule and wrong under the other.
+Earlier drafts stated totals, and three review rounds refuted them in a row —
+the last time by two reviewers who each counted independently and got
+DIFFERENT answers, because "the same idiom" spans a one-line ternary and a
+five-line if/else and no draft wrote down which to count. So the numbers are
+replaced by commands. There are TWO populations here and a single command
+cannot express both; a previous draft gave one command for both and it
+returned zero hits in the largest residual bullet.
 
-So the numbers are replaced by the commands that produce them. Run these
-rather than trusting a sentence:
+**(A) The hand-rolled idiom** — what this branch converted. Run inside a
+package to see whether any site there still hand-rolls it:
 
 ```
-# hand-rolled line-leading anchors NOT yet on the shared helper.
-# This is the item's actual population; it reproduces the residual above.
-grep -rn 'startswith(.*heading' --include='test_*.py' .
-
-# sites already on the shared helper
-grep -rn 'from heading_window import' --include='test_*.py' .
+grep -rn 'startswith(.*heading' --include='test_*.py' <package>
 ```
 
-A third grep is deliberately NOT given. Searching for every bare
-`.find("## …")` returns dozens of hits in packages this entry calls done,
-because that pattern also matches end bounds and searches over generated
-output. Sorting a defective one from a correct one there needs reading, not
-grepping — treat that as a separate, unscoped question rather than a
-to-do list this entry hands over.
+Zero in `loom-code` and `loom-design/scripts/pipeline` (both on the shared
+helper), and zero in `loom-workflow` — which is the point: loom-workflow
+never adopted the idiom, so this command cannot see its problem.
+
+**(B) Bare heading-window starts** — the ORIGINAL defect, which the idiom
+was invented to fix and which this branch did not sweep:
+
+```
+grep -rnE '^\s*[a-z_]+ = [a-z_]+(_lower)?\.(find|index)\("#{2,6} ' \
+     --include='test_*.py' <package>
+```
+
+This is what finds loom-workflow's residual. It also returns hits inside
+packages this entry calls done — those are end bounds, searches over
+test-generated output, and windows nobody has examined. Sorting a defective
+hit from a correct one there needs reading, not grepping. Treat (B) as a
+survey, never as a to-do list.
 
 ## What the deferral got wrong, kept visible
 
