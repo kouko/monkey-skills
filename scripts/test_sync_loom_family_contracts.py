@@ -100,6 +100,19 @@ def test_neutral_family_policy_has_no_mandatory_sibling_skill():
     assert "When the public `loom-code:writing-plans` skill is available" in reception
 
 
+def test_family_reception_fans_out_to_loom_workflow():
+    source_rel = "scripts/canonical/loom-family/family-reception.md"
+    destination_rel = "loom-workflow/hooks/family-reception.md"
+
+    assert destination_rel in sync.ROUTE[source_rel]
+
+    source = sync.REPO_ROOT / source_rel
+    expected = _managed_header(source_rel) + source.read_bytes()
+    destination = sync.REPO_ROOT / destination_rel
+    assert destination.is_file(), f"missing copy: {destination_rel}"
+    assert destination.read_bytes() == expected
+
+
 def test_check_detects_byte_drift_without_rewriting(tmp_path, monkeypatch):
     source_rel = "scripts/canonical/loom-family/family-relay.md"
     destination_rels = (
