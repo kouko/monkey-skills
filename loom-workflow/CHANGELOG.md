@@ -12,7 +12,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   and a prototype contract for the wayfinder absorption arc.
 - Delivery write-back so a completed decision map lands back on the
   originating record.
-- A reception on-ramp row and a README refresh describing the new layer.
+- A reception on-ramp row and a README refresh describing the new layer;
+  the family-reception functional copy lives at
+  `skills/decision-map/references/family-reception.md` (this plugin has no
+  hooks-side loader for it).
 
 ## [1.2.2] — 2026-08-28 — test pins assert invariants, not wording
 

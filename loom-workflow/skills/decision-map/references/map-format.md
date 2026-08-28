@@ -160,14 +160,16 @@ graduated-from: null
   task → a backlog entry; prototype → the
   `prototype/<map-id>/<ticket-slug>` branch protocol).
 - `status` — one of `open`, `claimed`, `closed`.
-- `claim` — `null` when unclaimed, otherwise a free-text claim marker
-  (who/what claimed it) written when `status` moves to `claimed`.
+- `claim` — `null` when unclaimed, otherwise a claim marker of the
+  form `<who>, <YYYY-MM-DD>` (the same dated shape the user-ratified
+  line uses), written when `status` moves to `claimed`.
   Concurrent-claim discipline beyond this single field is out of scope
   for v1. **Stale-claim rule**: a LATER session may reclaim a ticket
-  whose `claim` shows no commit touching that ticket file since the
-  claim date, by overwriting the `claim` line and noting the takeover
-  in the ticket body — this closes the dead-session deadlock without
-  opening concurrency control.
+  when no commit has touched that ticket file since the claim marker's
+  date — an observable git fact, not a trust call — by overwriting the
+  `claim` line and noting the takeover in the ticket body. A claim
+  with no date is reclaimable outright. This closes the dead-session
+  deadlock without opening concurrency control.
 - `graduated-from` — `null`, or the `F-<n>` fog id this ticket was
   graduated from (see §Fog entries).
 
@@ -246,9 +248,9 @@ Five scripts ship under `loom-workflow/skills/decision-map/scripts/`:
 | Script | Purpose |
 |---|---|
 | `map_init.py` | Scaffold a new `docs/loom/maps/<map-id>/` store (MAP.md + empty `tickets/`). |
-| `map_store.py` | Read/write primitives for MAP.md and ticket files, shared by the other four scripts and by skill-text tooling — the only sanctioned parser for this schema. Also exposes the `validate` CLI entrypoint: `map_store.py validate <target> --repo-root <path>` — the sole check behind the §Live-map criterion's "checker-valid" test — exit 0/1/2 like the rest of §Command surface. |
+| `map_store.py` | Read/write primitives for MAP.md and ticket files, shared by the other four scripts and by skill-text tooling — the only sanctioned parser for this schema. Also exposes the `validate` CLI entrypoint: `map_store.py validate <map-dir> --repo-root <path>` — the sole check behind the §Live-map criterion's "checker-valid" test — exit 0/1/2 like the rest of §Command surface. |
 | `check_map_links.py` | Verify every Decisions-so-far line links an existing, closed ticket. |
-| `check_map_fog.py` | Verify fog-id monotonicity (§Fog entries): silent disappearance is machine-gated (exit 2); id reuse is review-enforced only in v1 — the same disclosure pattern the HITL resolution rule already uses (§Ticket schema). |
+| `check_map_fog.py` | Verify fog-id monotonicity (§Fog entries): silent disappearance is machine-gated (exit 2); duplicate ids within the current MAP.md are gated by `validate`; reuse of a RETIRED id (graduated or moved to Out-of-scope, then re-issued) is review-enforced only in v1 — the same disclosure pattern the HITL resolution rule already uses (§Ticket schema). |
 | `map_parts.py` | The Parts-row flipper: the only script permitted to change a Parts row's Status cell. |
 
 **Canonical arg shape**, shared by every script above: a positional
@@ -277,7 +279,7 @@ a bare map-id slug, not a target path; its exit `1` covers the
 already-exists refusal (an operational error, not a schema violation);
 its exit `2` covers a malformed slug.
 
-**Exit codes**, shared by every script above:
+**Exit codes**, shared by the four reader scripts (map_init.py's writer carve-out above):
 
 - `0` — clean: no violation found, or the requested write succeeded.
 - `1` — operational error: the target does not exist, is unreadable,

@@ -189,8 +189,9 @@ def check_fog_monotonicity(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Verify fog-id monotonicity: no F-<n> id reused, "
-        "no silent disappearance (map-format.md §Fog entries)."
+        description="Verify fog-id monotonicity: no silent disappearance "
+        "of F-<n> ids; reuse of retired ids is review-enforced "
+        "(map-format.md §Fog entries)."
     )
     parser.add_argument("target", help="path to the map directory")
     parser.add_argument(

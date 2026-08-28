@@ -1,7 +1,7 @@
 ---
 type: grilling
 status: closed
-claim: check-wayfinder (2026-08-28)
+claim: check-wayfinder, 2026-08-28
 ---
 
 搬遷的第一刀怎麼切：queue 層、loom-memory、family hooks 誰先動？還是

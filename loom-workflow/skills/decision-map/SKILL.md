@@ -55,10 +55,11 @@ when a conversation or lookup would settle it, a success criterion
 named before the probe starts, and the one-sitting timebox.
 
 Charting closes only after the risk pass above and a clean validate
-run: `map_store.py validate <target> --repo-root <path>`.
+run: `map_store.py validate <map-dir> --repo-root <path>`.
 
-A non-zero exit means the map is not yet chartered cleanly — fix the
-reported violation before treating the map as `charting`-state-ready
+Exit 2 means the map content is not yet chartered cleanly — fix the
+reported violation; exit 1 means the path or environment is wrong,
+not the map — fix the invocation. Only then treat the map as ready
 for work-through. Once clean, flip `state` from `charting` to `active`
 by hand — this is the final act of the charting close (no script owns
 `state` transitions in v1; see `references/map-format.md`
@@ -103,12 +104,13 @@ A session that works through a ticket does, in order:
    not a script, so read the open tickets and fog yourself and front-
    load any ticket the triggers call for. Only then run the three
    mechanical gates, all of which must pass before the session ends:
-   `map_store.py validate <target> --repo-root <path>`,
-   `check_map_links.py <target> --repo-root <path>`, and
-   `check_map_fog.py <target> --repo-root <path>`.
-   A non-zero exit from any of the three means the close is not done —
-   fix the reported violation (a bad link, a fog-monotonicity break, a
-   schema violation) before ending the session. If this close leaves
+   `map_store.py validate <map-dir> --repo-root <path>`,
+   `check_map_links.py <map-dir> --repo-root <path>`, and
+   `check_map_fog.py <map-dir> --repo-root <path>`.
+   Exit 2 from any of the three means the close is not done — fix the
+   reported violation (a bad link, a fog-monotonicity break, a schema
+   violation) before ending the session. Exit 1 means the path or
+   environment is wrong, not the map — fix the invocation and re-run. If this close leaves
    zero open tickets and an empty fog section, flip `state` from
    `active` to `clear` by hand (`references/map-format.md`
    §Frontmatter) — this is the only close-time trigger for that
@@ -159,7 +161,9 @@ a Parts join key (`<map-id> / Part: <name>` — §Parts in
 `references/map-format.md`), a branch's close-out flow flips that Parts
 row's Status cell. The closing plan carries that binding as a
 `## Notes` line of the exact form `Map part: <map-id> / Part: <name>`
-(§Parts). The flip runs the map_parts.py flipper against the
+(§Parts). Writing that line is part of creating the Parts row: whoever
+adds a row to MAP.md also adds the binding line to the corresponding
+plan's `## Notes` — without it the row can never flip. The flip runs the map_parts.py flipper against the
 map directory, passing `--part <join-key> --sha <commit> --repo-root
 <path>` (the canonical arg shape pinned in §Command surface of
 `references/map-format.md`). The sha recorded is the branch's **last
@@ -177,6 +181,6 @@ importing map_parts.py directly across the plugin boundary.
   fog-id grammar, schema versioning, §Command surface.
 - `references/prototype-contract.md` — the `prototype` ticket type's
   full contract.
-- `references/family-reception.md` — family intake routing that leads
-  here (the on-ramp row that suggests detouring to charting) is
-  recorded in this file.
+- `references/family-reception.md` — the family reception contract,
+  including the on-ramp row that routes work here; read it when a
+  session arrives without having passed through a family entry.
