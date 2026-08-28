@@ -179,7 +179,9 @@ def test_blocked_fallback_five_step_process_and_anti_pattern_stay_inline():
     # back through the splitting framework into child tasks is what an
     # orchestrator DOES here. Pinned as the two rule-carrying tokens inside
     # the section window, not as a full sentence.
-    start = text.index(heading)
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window.
+    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
     end = text.index("\n## ", start + len(heading))
     blocked_section = text[start:end]
     assert "splitting framework" in blocked_section
@@ -514,6 +516,10 @@ def _section(heading: str) -> str:
     the file leaves this slice and fails.
     """
     text = _skill_text()
+    # Already line-leading: every caller passes `heading` pre-prefixed with
+    # "\n## " (see _GATE_SECTION_HEADING / _SELF_REVIEW_HEADING and the
+    # "\n## " + target.group(1) build above), so a bare-substring match on
+    # a same-named `###` subheading cannot occur here.
     start = text.index(heading)
     nxt = text.find("\n## ", start + len(heading))
     return text[start:len(text) if nxt == -1 else nxt]

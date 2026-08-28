@@ -32,6 +32,7 @@ templates, undermining the architecture's borrowed grounding.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -263,7 +264,16 @@ def test_advisory_prompt_structure() -> None:
     ]
     last_pos = -1
     for heading in required_section_headings:
-        idx = body.find(heading, last_pos + 1)
+        # Anchor at a real markdown heading line (a run of `#` at line
+        # start) so an earlier prose mention of the same phrase (e.g. the
+        # §5 fallback instruction above the actual "## New-skill
+        # candidates" heading) can't satisfy this in place of the heading.
+        m = re.search(
+            r"^#{1,6}[ \t]*.*?" + re.escape(heading),
+            body[last_pos + 1:],
+            re.MULTILINE,
+        )
+        idx = (last_pos + 1 + m.start()) if m else -1
         assert idx != -1, (
             f"{ADVISORY_PATH.name}: required section heading "
             f"{heading!r} not found in body output template"

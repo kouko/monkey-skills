@@ -69,7 +69,15 @@ def test_skill_batch_mode_section_contract():
     body = _body(text)
     body_lower = body.lower()
 
-    batch_idx = body_lower.find("## §batch mode")
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the body can't retarget this window; keep .find's -1-means-absent
+    # contract for the assert below (searched lowercased, as before).
+    _batch_heading = "## §batch mode"
+    if body_lower.startswith(_batch_heading):
+        batch_idx = 0
+    else:
+        _pos = body_lower.find("\n" + _batch_heading)
+        batch_idx = _pos + 1 if _pos != -1 else -1
     assert batch_idx != -1, "missing §Batch mode heading"
     batch_section = body[batch_idx:]
     batch_section_lower = batch_section.lower()
@@ -120,7 +128,15 @@ def test_skill_intake_section_contract():
         f"(after frontmatter/SUBAGENT-STOP); found {headings[0]!r} first"
     )
 
-    intake_idx = body.find("## " + headings[0])
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the body can't retarget this window; keep .find's -1-means-absent
+    # contract (headings[0] is guaranteed present via the regex above).
+    _first_heading = "## " + headings[0]
+    if body.startswith(_first_heading):
+        intake_idx = 0
+    else:
+        _pos = body.find("\n" + _first_heading)
+        intake_idx = _pos + 1 if _pos != -1 else -1
     next_idx = body.find("\n## ", intake_idx + 1)
     intake_section = body[intake_idx:next_idx] if next_idx != -1 else body[intake_idx:]
 

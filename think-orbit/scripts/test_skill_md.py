@@ -346,7 +346,9 @@ def _section(text: str, heading: str) -> str:
     section is what keeps a shortened pin from going false-green if the
     rule itself is deleted from its section but the words linger nearby.
     """
-    start = text.index(heading)
+    # Anchor at a line start (the docstring's promise) so a same-named
+    # `###` subheading earlier in the file can't retarget this window.
+    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
     rest = text[start + len(heading):]
     m = re.search(r"^## ", rest, re.MULTILINE)
     end = start + len(heading) + (m.start() if m else len(rest))

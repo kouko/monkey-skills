@@ -154,12 +154,23 @@ def test_sdd_pointer():
     instead.
     """
     text = _read(SDD_SKILL)
-    assert text.count(POINTER_PHRASE) >= 1, (
-        "expected the pointer phrase at least once, in the ③ seam's "
-        "Delivery form paragraph"
+
+    # (a) The pointer lives in the ③ seam. A whole-file count cannot say
+    # that: moving the phrase to the end of the file keeps `count() >= 1`
+    # green while the seam that must carry it has lost it. Window first,
+    # then assert — the same discipline the (b) half below already used.
+    phrase_idx = text.find("### ③ How to phrase")
+    assert phrase_idx != -1, "expected a '### ③ How to phrase' seam heading"
+    phrase_end = text.find("\n## ", phrase_idx + 1)
+    assert phrase_end != -1, "expected a following '## ' heading"
+    phrase_window = text[phrase_idx:phrase_end]
+
+    assert POINTER_PHRASE in phrase_window, (
+        "expected the pointer phrase in the ③ seam's Delivery form "
+        "paragraph, not merely somewhere in the file"
     )
 
-    status_idx = text.find("## Status handling")
+    status_idx = text.find("\n## Status handling")
     assert status_idx != -1, "expected a '## Status handling' seam heading"
     next_heading_idx = text.find("\n## ", status_idx + 1)
     assert next_heading_idx != -1, "expected a following '## ' heading"

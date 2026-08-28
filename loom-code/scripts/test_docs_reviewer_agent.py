@@ -56,7 +56,10 @@ def _output_contract() -> str:
     """Isolate the Output contract section (verdict template) — from its
     ## heading to the ### Aggregation rule heading."""
     text = _text()
-    start = text.index("## Output contract")
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window.
+    heading = "## Output contract"
+    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
     end = text.index("### Aggregation rule", start)
     return text[start:end]
 
@@ -65,8 +68,11 @@ def _input_contract() -> str:
     """Isolate the Input contract section (dispatch packet shape) — from
     its ## heading to the ## Output contract heading."""
     text = _text()
-    start = text.index("## Input contract")
-    end = text.index("## Output contract", start)
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window (applies to both START and END).
+    start_heading = "## Input contract"
+    start = text.index(start_heading) if text.startswith(start_heading) else text.index("\n" + start_heading) + 1
+    end = text.index("\n## Output contract", start) + 1
     return text[start:end]
 
 
@@ -79,7 +85,10 @@ def _role_contract_window() -> str:
     hand-authored role-contract sentence can't be masked by injected
     boilerplate re-using the same words elsewhere in the file."""
     text = _text()
-    start = text.index("## Role contract")
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window.
+    heading = "## Role contract"
+    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
     end = text.index("<!-- BEGIN reviewer-discipline", start)
     return text[start:end]
 

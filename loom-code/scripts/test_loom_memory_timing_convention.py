@@ -32,7 +32,10 @@ def _when_to_record_section(text: str) -> str:
     substring check on that word would stay green even if this section were
     deleted entirely (a false green per B1 hard rule 2). Narrowed to the
     section window instead."""
-    start = text.index("## When to record")
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window.
+    heading = "## When to record"
+    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
     rest = text[start + len("## When to record"):]
     end = rest.find("\n## ")
     return _norm(rest if end == -1 else rest[:end])

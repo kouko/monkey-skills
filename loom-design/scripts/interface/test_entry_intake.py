@@ -65,7 +65,15 @@ def _intake_section() -> str:
     lives in <EXTREMELY-IMPORTANT>, not in §Intake itself.
     """
     body = _body()
-    intake_idx = body.find("## §Intake")
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the body can't retarget this window; keep .find's -1-means-absent
+    # contract for the assert below.
+    _intake_heading = "## §Intake"
+    if body.startswith(_intake_heading):
+        intake_idx = 0
+    else:
+        _pos = body.find("\n" + _intake_heading)
+        intake_idx = _pos + 1 if _pos != -1 else -1
     assert intake_idx != -1, "missing '## §Intake' heading"
     rest = body[intake_idx + len("## §Intake"):]
     heading_idx = rest.find("\n## ")
@@ -82,7 +90,15 @@ def test_intake_heading_present():
 
 def test_intake_is_first_section_after_subagent_stop():
     body = _body()
-    intake_idx = body.find("## §Intake")
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the body can't retarget this ordering check; keep .find's
+    # -1-means-absent contract for the assert below.
+    _intake_heading = "## §Intake"
+    if body.startswith(_intake_heading):
+        intake_idx = 0
+    else:
+        _pos = body.find("\n" + _intake_heading)
+        intake_idx = _pos + 1 if _pos != -1 else -1
     assert intake_idx != -1, "missing '## §Intake' heading"
 
     subagent_stop_idx = body.find("</SUBAGENT-STOP>")

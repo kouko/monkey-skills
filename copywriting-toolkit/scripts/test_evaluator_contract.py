@@ -46,7 +46,14 @@ def _norm(s: str) -> str:
 def _window(heading: str, terminators=("\n## ",)) -> str:
     """Evaluator window: from a unique heading to the next section heading."""
     text = _evaluator()
-    start = text.find(heading)
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window; keep .find's -1-means-absent
+    # contract for the assert below.
+    if text.startswith(heading):
+        start = 0
+    else:
+        _pos = text.find("\n" + heading)
+        start = _pos + 1 if _pos != -1 else -1
     assert start != -1, f"heading {heading!r} absent from copywriter-evaluator.md"
     ends = [
         i

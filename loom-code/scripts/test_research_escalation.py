@@ -235,7 +235,15 @@ def test_reference_file_carries_reviewer_tag_supplement_after_existing_sections(
     (docs/loom/memory/pin-shared-wording-in-plan-copies-transcribe-from-pin.md
     supplement-after-pin rule)."""
     text = _read(REFERENCE)
-    cap_idx = text.find("## Cap unchanged")
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this ordering check; keep .find's
+    # -1-means-absent contract for the assert below.
+    cap_heading = "## Cap unchanged"
+    if text.startswith(cap_heading):
+        cap_idx = 0
+    else:
+        _pos = text.find("\n" + cap_heading)
+        cap_idx = _pos + 1 if _pos != -1 else -1
     assert cap_idx != -1, "existing '## Cap unchanged' section must survive"
     supplement_idx = text.find("Reviewer-tag trigger")
     assert supplement_idx != -1, (

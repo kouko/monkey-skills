@@ -39,7 +39,9 @@ def test_plan_format_has_review_weight_field():
     # heading but loosened (or lost) its eligibility test would silently
     # widen a review exemption. Pinned as the bar's rule-carrying tokens
     # inside the section window, not as a full sentence.
-    start = text.index(heading)
+    # Anchor at a line start so a same-named heading at a different level
+    # earlier in the file can't retarget this window.
+    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
     end = text.index("\n#### ", start + len(heading))
     section = text[start:end]
     assert "ONLY be set" in section

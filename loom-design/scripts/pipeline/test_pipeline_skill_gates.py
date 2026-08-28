@@ -11,7 +11,9 @@ SKILL_MD = PLUGIN_ROOT / "skills" / "using-loom-pipeline" / "SKILL.md"
 
 def _section(body: str, heading: str) -> str:
     """Window from `heading` to the next `## ` heading (or EOF)."""
-    start = body.index(heading)
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the body can't retarget this window.
+    start = body.index(heading) if body.startswith(heading) else body.index("\n" + heading) + 1
     end = body.find("\n## ", start + len(heading))
     return body[start:] if end == -1 else body[start:end]
 

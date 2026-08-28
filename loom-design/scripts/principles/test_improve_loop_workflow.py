@@ -338,15 +338,22 @@ def test_accept_commit_uses_message_file_not_interpolated_dash_m():
     )
     assert "commit-msg-round${round}.txt" in body
 
-    # `git commit -F` must be the actual command instruction, and the
-    # round-1 `-m`/`-m` invocation instruction must be gone (a passing
-    # mention of `-m` in explanatory prose, e.g. "never as a -m argument",
-    # is fine — only an actual `git commit ... -m` invocation is banned)
+    # `git commit -F` must be the actual command instruction, and NO
+    # `git commit ... -m` invocation may survive anywhere -- fixer-authored
+    # text must never reach a shell argument. Scanning only line-leading
+    # numbered steps let a reworded instruction ("Run `git commit -m ...`")
+    # evade the check, so every occurrence is examined instead. The file's
+    # one legitimate mention is the prohibition itself, which is allowed by
+    # requiring the ban sentence to be the thing carrying it.
     assert "git commit -F" in body, "must commit via git commit -F <message-file>"
-    assert not re.search(r"^\d+\.\s*git commit\b[^\n]*-m\b", body, re.MULTILINE), (
-        "no numbered-step `git commit -m` invocation — fixer-authored text "
-        "must never appear as a shell -m argument"
-    )
+    BAN_SENTENCE = "No untrusted text may ever appear as a"
+    for m in re.finditer(r"git commit[^\n]*?-m\b", body):
+        context = body[max(0, m.start() - 120):m.start()]
+        assert BAN_SENTENCE in context, (
+            "a `git commit ... -m` invocation survives outside the "
+            f"prohibition sentence: {body[m.start():m.end()]!r} -- "
+            "fixer-authored text must never appear as a shell -m argument"
+        )
 
 
 def test_accept_commit_escapes_git_memory_trailer_lines():

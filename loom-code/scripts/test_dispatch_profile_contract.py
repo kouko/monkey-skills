@@ -36,7 +36,9 @@ def _section(text: str, heading: str) -> str:
     a whole-file match is a false green if the rule moves or is deleted
     from its governing section but the bare words survive elsewhere.
     """
-    start = text.index(heading)
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window (a bare substring match would).
+    start = text.index(heading) if text.startswith(heading) else text.index("\n" + heading) + 1
     rest = text[start + len(heading):]
     next_heading = re.search(r"\n## ", rest)
     end = start + len(heading) + (next_heading.start() if next_heading else len(rest))

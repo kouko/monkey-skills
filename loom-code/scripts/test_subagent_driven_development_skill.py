@@ -104,7 +104,15 @@ def test_sdd_dispatch_uses_sha_bound_scope_and_cross_reads() -> None:
 def test_sdd_per_task_reviewer_scope_uses_declared_task_files() -> None:
     """A task triad must review its own declared files, never branch scope."""
     skill = SDD_SKILL.read_text(encoding="utf-8")
-    process = skill[skill.index("## Process — per-task triad"):skill.index("**Parallel dispatch")]
+    # Anchor at a line start so a same-named `###` subheading earlier in
+    # the file can't retarget this window.
+    _proc_heading = "## Process — per-task triad"
+    _proc_start = (
+        skill.index(_proc_heading)
+        if skill.startswith(_proc_heading)
+        else skill.index("\n" + _proc_heading) + 1
+    )
+    process = skill[_proc_start:skill.index("**Parallel dispatch")]
     step1 = process[process.index("1. **Dispatch"):process.index("2. **Read")]
     step3 = process[process.index("3. **If"):process.index("4. **Resolve")]
 
