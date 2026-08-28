@@ -208,6 +208,26 @@ def test_validate_operational_error_on_missing_map_dir(tmp_path: Path) -> None:
     assert code == 1
 
 
+def test_validate_accepts_done_sha_status_cell(tmp_path: Path) -> None:
+    """map-format.md §Parts pins `done(<sha>)` as the third Status
+    value (map_parts.py's write-back form) — validate must accept a
+    Parts row already carrying it, not just the bare `in-progress`
+    fixture value (map_parts.py Task 10 revision round 2)."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8").replace(
+            "| Engine | `wayfinder / Part: Engine` | in-progress |",
+            "| Engine | `wayfinder / Part: Engine` | done(096c3167) |",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+    doc = map_store.read_map(map_dir)
+    assert doc.parts[0].status == "done(096c3167)"
+
+
 # --- is_live_map helper ----------------------------------------------------
 
 

@@ -4,11 +4,12 @@
 Task 10 of docs/loom/plans/2026-08-28-decision-map-layer.md. Grammar
 SSOT: `loom-workflow/skills/decision-map/references/map-format.md`
 §Parts and §Command surface. map-format.md §Parts pins the Status cell
-vocabulary as `not-started / in-progress / done` — this flipper writes
-`done(<sha>)` on flip (the plan Task 10 text's `shipped` token is
-superseded by the SSOT per the plan's own Decision Log entry 1) and is
-the ONLY script permitted to change a Parts row's Status cell
-(§Parts). Cell format follows `plan_card.py --set-status`'s
+vocabulary as `not-started / in-progress / done(<sha>)` — the third
+form recording, in parentheses, the commit sha that delivered the
+part — and pins that this flipper is the ONLY script permitted to
+change a Parts row's Status cell, and that an already-`done(<sha>)`
+row is never flipped again (refuse, never overwrite an existing
+delivery record). Cell format follows `plan_card.py --set-status`'s
 `done(<sha>)` grammar (scripts/plan_card.py) — the single-line-rewrite
 precedent this task cites.
 
@@ -19,11 +20,13 @@ bare positional `target` shape with flags.
 
 CLI: `map_parts.py <map-dir> --part <join-key> --sha <commit>
 [--repo-root <path>]`. Rewrites ONLY the one Parts row whose join key
-matches `--part`; every other byte in MAP.md is unchanged. Exit codes
-follow §Command surface: 0 clean write, 1 operational error (map
+matches `--part`; every other byte in MAP.md is unchanged. The write
+is atomic: a sibling temp file is written then `os.replace()`d onto
+MAP.md, so a crash mid-write never leaves a truncated store. Exit
+codes follow §Command surface: 0 clean write, 1 operational error (map
 directory or MAP.md missing/unreadable), 2 violation (no Parts row
-carries the given join key — the target exists and was readable, but
-its content fails the lookup).
+carries the given join key, or the row is already `done(<sha>)` — the
+target exists and was readable, but its content fails the check).
 
 Stdlib only.
 """
@@ -31,6 +34,7 @@ Stdlib only.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -91,12 +95,32 @@ def flip_part(text: str, join_key: str, sha: str) -> tuple[str, str, str]:
         )
 
     c1, c2, c3 = match_cells
+    existing_status = c3.strip()
+    already_done = re.fullmatch(r"done\([^()\s]+\)", existing_status)
+    if already_done is not None:
+        raise ValueError(
+            f"Parts row with join key {join_key!r} is already {existing_status} "
+            "— map_parts.py never overwrites an existing delivery record"
+        )
     leading = c3[: len(c3) - len(c3.lstrip())]
     trailing = c3[len(c3.rstrip()):]
     new_c3 = f"{leading}done({sha}){trailing}"
     new_line = f"|{c1}|{c2}|{new_c3}|"
     end = match_start + len(match_line)
     return text[:match_start] + new_line + text[end:], match_line, new_line
+
+
+def _atomic_write(path: Path, text: str) -> None:
+    """Write `text` to `path` atomically: a sibling temp file is
+    written and flushed, then `os.replace()`d onto `path` — a crash or
+    concurrent read mid-write never observes a truncated MAP.md
+    (quality-gate 🟡 fix: this flipper used to `write_text` in place)."""
+    tmp_path = path.with_name(f"{path.name}.tmp-{os.getpid()}")
+    with open(tmp_path, "w", encoding="utf-8") as handle:
+        handle.write(text)
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(tmp_path, path)
 
 
 # --- CLI -------------------------------------------------------------
@@ -139,7 +163,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     try:
-        map_md.write_text(new_text, encoding="utf-8")
+        _atomic_write(map_md, new_text)
     except OSError as exc:
         print(f"Error: cannot write {map_md}: {exc}", file=sys.stderr)
         return 1

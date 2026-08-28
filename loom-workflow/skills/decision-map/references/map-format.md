@@ -176,7 +176,7 @@ destination decomposes into:
 
 | Part | Join key | Status |
 |---|---|---|
-| <part name> | `<map-id> / Part: <part name>` | not-started / in-progress / done |
+| <part name> | `<map-id> / Part: <part name>` | not-started / in-progress / done(\<sha\>) |
 
 The **join key** — `<map-id> / Part: <name>` — is the explicit,
 literal string a plan's own metadata cites to bind that plan to this
@@ -185,10 +185,15 @@ a Parts row; a plan with no matching join key string is not bound to
 any part, however similar its subject looks.
 
 A Parts row's Status cell is flipped **only** by the `map_parts.py`
-flipper (see §Command surface) — never hand-edited. This section is
-the sanctioned replacement for a hand-kept, manually-updated
-multi-plan progress table: any such hand-kept table is the declared
-anti-pattern this section exists to retire.
+flipper (see §Command surface) — never hand-edited. Status is one of
+`not-started`, `in-progress`, or `done(<sha>)` — the third form
+records, in parentheses, the commit sha that delivered the part; a
+row already carrying a `done(<sha>)` cell is not flipped again
+(`map_parts.py` exits 2 on that target rather than overwrite an
+existing delivery record). This section is the sanctioned replacement
+for a hand-kept, manually-updated multi-plan progress table: any such
+hand-kept table is the declared anti-pattern this section exists to
+retire.
 
 ## Schema versioning
 

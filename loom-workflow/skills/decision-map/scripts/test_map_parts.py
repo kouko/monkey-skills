@@ -1,15 +1,15 @@
 """Tests for map_parts.py — the Parts-row write-back flipper.
 
-Grammar SSOT: references/map-format.md §Parts (the pinned
-`not-started / in-progress / done` Status vocabulary — this flipper
-follows it exactly; the plan Task 10 text's `shipped` token is
-superseded by the SSOT per the plan's own Decision Log entry 1) and
-§Command surface (map_parts.py takes the bare positional `target`
-shape — no subcommand verb, unlike map_store.py).
+Grammar SSOT: references/map-format.md §Parts pins the Status
+vocabulary as `not-started / in-progress / done(<sha>)` — the third
+form recording, in parentheses, the commit sha that delivered the
+part — and pins that an already-`done(<sha>)` row is never flipped
+again. §Command surface pins map_parts.py's bare positional `target`
+shape (no subcommand verb, unlike map_store.py).
 
-Cell-format precedent: `done(<sha>)` — plan_card.py --set-status's
-`done(<sha>)` grammar (loom-code/scripts/plan_card.py), reused here
-since it is the existing single-line-rewrite precedent this task cites.
+Cell-format precedent: `done(<sha>)` reuses plan_card.py
+--set-status's `done(<sha>)` grammar (loom-code/scripts/plan_card.py),
+the existing single-line-rewrite precedent this task cites.
 """
 
 from __future__ import annotations
@@ -100,6 +100,19 @@ def test_flip_unknown_join_key_raises() -> None:
         assert "wayfinder / Part: SKILL.md" in str(exc)
 
 
+def test_reflip_already_done_row_raises() -> None:
+    """map-format.md §Parts: a row already carrying `done(<sha>)` is
+    never flipped again — protects the audit trail of which commit
+    actually delivered the part."""
+    once, _, _ = map_parts.flip_part(MAP_MD, "wayfinder / Part: Engine", "096c3167")
+    try:
+        map_parts.flip_part(once, "wayfinder / Part: Engine", "abcdef1")
+        assert False, "expected ValueError"
+    except ValueError as exc:
+        assert "already done" in str(exc)
+        assert "096c3167" in str(exc)
+
+
 # --- CLI exit-code contract ------------------------------------------------
 
 
@@ -145,6 +158,26 @@ def test_cli_unknown_join_key_exits_2(tmp_path: Path) -> None:
     )
     assert result.returncode == 2
     assert "wayfinder / Part: Engine" in result.stderr
+
+
+def test_cli_reflip_already_done_exits_2(tmp_path: Path) -> None:
+    map_dir = _write_map(tmp_path)
+    args = [
+        sys.executable,
+        str(SCRIPT),
+        str(map_dir),
+        "--part",
+        "wayfinder / Part: Engine",
+        "--sha",
+        "096c3167",
+        "--repo-root",
+        str(tmp_path),
+    ]
+    first = subprocess.run(args, capture_output=True, text=True)
+    assert first.returncode == 0, first.stderr
+    second = subprocess.run(args, capture_output=True, text=True)
+    assert second.returncode == 2
+    assert "already done" in second.stderr
 
 
 def test_cli_missing_map_md_exits_1(tmp_path: Path) -> None:
