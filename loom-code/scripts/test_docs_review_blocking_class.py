@@ -219,10 +219,16 @@ def test_plugin_version_and_changelog_at_0_102_1():
     plugin.json sat at 0.102.0 and this test stayed green. Missed-bump
     detection is `scripts/check_version_bump.py`.
 
-    What the pin actually buys is CHANGELOG-accompanies-bump: raising the
-    manifest alone reddens it, and the only way back to green is adding the
-    matching `## [<version>]` heading. That is worth keeping, and it is why
-    the literal stays hardcoded rather than read from the manifest."""
+    What the pin actually buys is CHANGELOG-accompanies-bump. Raising the
+    manifest alone reddens it. Getting back to green takes TWO edits, not
+    one -- the literals in this test must be retargeted to the new version
+    AND the matching `## [<version>]` heading must exist; retargeting alone
+    leaves the changelog assert red. Both arms of a review ran that
+    sequence, so the two-step is the tested path, not a guess.
+
+    That friction is the point, and it is why the literal stays hardcoded
+    rather than read from the manifest: touching this test is what forces
+    the changelog entry to be written."""
     plugin_text = PLUGIN_JSON.read_text(encoding="utf-8")
     assert '"version": "0.102.1"' in plugin_text, (
         "loom-code/.claude-plugin/plugin.json must read version 0.102.1"

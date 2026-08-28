@@ -10,10 +10,22 @@ start: next time a heading window in loom-workflow or think-orbit needs touching
 
 `loom-code/scripts/heading_window.py` and
 `loom-design/scripts/pipeline/heading_window.py` each hold one
-`line_leading(text, heading, start=0) -> int`, imported by every site in
-their own import root via the sibling-module pattern `loom-code/scripts/`
-already used for `distribute.py` — no `__init__.py`, no conftest, no
-cross-package import. What is left:
+`line_leading(text, heading, start=0) -> int`, via the sibling-module
+pattern `loom-code/scripts/` already used for `distribute.py` — no
+`__init__.py`, no conftest, no cross-package import.
+
+**What "done" means here, precisely.** Every site that had hand-rolled the
+line-leading *idiom* — the ternary or the five-line if/else — now imports
+the helper, in the import roots that have one. It does NOT mean no bare
+heading search remains anywhere: a much larger population of
+`text.find("## Foo")` calls exists across the repo, most of them end
+bounds, searches over test-generated output, or windows nobody has
+examined. This branch never claimed that population, and a reviewer who
+greps for it will find dozens inside packages this entry calls done. Two
+review arms raised exactly that, which is why the distinction is written
+here rather than left to the reader.
+
+What is left:
 
 - **`loom-workflow` heading windows that are still bare substring searches.**
   These carry the original defect: `"## Foo"` matches inside an earlier
@@ -42,15 +54,20 @@ So the numbers are replaced by the commands that produce them. Run these
 rather than trusting a sentence:
 
 ```
-# bare (defective) heading-window starts
-grep -rnE '(find|index)\(\s*f?"#{2,6} ' --include='test_*.py' .
-
-# hand-rolled line-leading anchors not using the shared helper
+# hand-rolled line-leading anchors NOT yet on the shared helper.
+# This is the item's actual population; it reproduces the residual above.
 grep -rn 'startswith(.*heading' --include='test_*.py' .
 
 # sites already on the shared helper
 grep -rn 'from heading_window import' --include='test_*.py' .
 ```
+
+A third grep is deliberately NOT given. Searching for every bare
+`.find("## …")` returns dozens of hits in packages this entry calls done,
+because that pattern also matches end bounds and searches over generated
+output. Sorting a defective one from a correct one there needs reading, not
+grepping — treat that as a separate, unscoped question rather than a
+to-do list this entry hands over.
 
 ## What the deferral got wrong, kept visible
 
