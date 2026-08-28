@@ -27,8 +27,17 @@ import. Two packages are done. What is left:
   `_section` anchors correctly with `r"^##\s+" + re.escape(heading) + r"\s*$"`
   under `re.MULTILINE`, plus an assert — a different mechanism, equally sound.
   So the item is four specific sites, not a package-wide gap.
-- **`think-orbit` has a single site** (`scripts/test_skill_md.py:351`), left
-  inline deliberately: one caller does not earn a module.
+- **`think-orbit` and `copywriting-toolkit` have one site each** —
+  `think-orbit/scripts/test_skill_md.py:351` and
+  `copywriting-toolkit/scripts/test_evaluator_contract.py:52` — both left
+  inline deliberately: one caller does not earn a module. Both are correctly
+  anchored already; what is duplicated there is the idiom, not a defect.
+
+That is the whole remainder: four bare sites in `loom-workflow`, and two
+correctly-anchored single sites that stay inline. The four packages carrying
+the idiom are `loom-code`, `loom-design`, `think-orbit` and
+`copywriting-toolkit` — `loom-workflow` is not among them, which is why its
+four sites are an unconverted item rather than a duplication one.
 
 ## Correction — what this entry said before, and why it was wrong
 
@@ -38,10 +47,13 @@ have to cross the cold-install package boundaries the fingerprint evidence
 depends on. Two review arms measured it independently and both refuted it:
 
 - `loom-workflow` carries **zero** sites, so it was never a boundary case; the
-  real spread was four packages, and **ten of fifteen sites sat inside
-  `loom-code` alone**, where no boundary is crossed at all.
-- The count itself was wrong — twelve inline ternaries plus seven helper call
-  sites, not "twelve, three of which use a helper".
+  real spread was four packages.
+- The denominator: twelve hand-written inline ternaries plus three
+  `_line_leading` definitions is **fifteen sites**, and **ten of them sat
+  inside `loom-code` alone**, where no boundary is crossed at all. (The seven
+  *call sites* of those three definitions are not separate sites — they are
+  uses of one of the fifteen, and counting them as well is what made the first
+  draft's arithmetic irreconcilable.)
 - The fingerprint objection did not survive either: a package-content change
   costs one recomputed candidate hash, and
   `scripts/test_stage_specific_complexity_behavior_evidence.py` verifies that
