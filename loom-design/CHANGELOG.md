@@ -11,6 +11,19 @@ The five plugins this one absorbed keep their own histories alongside:
 `CHANGELOG-interface-design.md`, `CHANGELOG-product-principles.md`. Their
 version numbers do not continue here — `loom-design` starts fresh at 0.1.0.
 
+## [0.5.6] — 2026-08-28 — test pins assert invariants, not wording
+
+### Changed
+
+Structural pin tests across this plugin now assert the invariant each one
+protects rather than the sentence that carried it, matching the loom-code
+change of the same date. `scripts/pipeline/heading_window.py` is new: one
+`line_leading()` shared by this package's heading windows. It is a separate
+copy from loom-code's on purpose — the two plugin trees are hashed
+independently as cold-install packages and must not import across each other.
+
+No skill instruction text changed — this is a test-side change only.
+
 ## [0.5.5] — 2026-08-28
 
 ### Changed
