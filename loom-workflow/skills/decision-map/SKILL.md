@@ -132,6 +132,23 @@ Delegation Contract in this repo's root `CLAUDE.md`.
   user-ratified line in the Resolution section, per §Ticket schema in
   `references/map-format.md`.
 
+## Delivery write-back
+
+When a closing plan's own plan-level progress binds to this map through
+a Parts join key (`<map-id> / Part: <name>` — §Parts in
+`references/map-format.md`), a branch's close-out flow flips that Parts
+row's Status cell. The flip runs the map_parts.py flipper against the
+map directory, passing `--part <join-key> --sha <commit> --repo-root
+<path>` (the canonical arg shape pinned in §Command surface of
+`references/map-format.md`). The sha recorded is the branch's **last
+content commit** — the HEAD as it stands *before* the close-out commit
+that stages the flipped MAP.md is added, not the close-out commit
+itself. A Parts row already carrying `done(<sha>)` is never re-flipped
+— the flipper exits 2 rather than overwrite an existing delivery
+record (§Command surface). Close-out flows in other plugins reach this
+capability by invoking the `decision-map` skill by name — never by
+importing map_parts.py directly across the plugin boundary.
+
 ## See also
 
 - `references/map-format.md` — MAP.md schema, ticket schema,
