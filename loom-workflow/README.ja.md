@@ -10,36 +10,37 @@ Read this in: [English](README.md) | **日本語** | [繁體中文](README.zh-TW
 
 Claude Code 向けの skill 開発は反復的な作業です。skill を draft してリリースしたあと、長すぎる、出力が tone 外れだといった問題を見つけて改善したくなります — ただし *どう* 改善するかは変更の種類によって変わります。**token / structure の refactor** は機械的に検証可能（変更後も output が同じはず）。**output quality の tuning** は taste-sensitive（どの variant が良いかは人間にしか判断できない）。`darwin-skill` 系のアプローチのように両者を 1 つの rubric に混ぜると、LLM-as-judge が人間の選好から離れた方向へ hill-climb してしまいます（Goodhart drift）。
 
-`loom-workflow` は次の 2 つのアーキテクチャ的判断のもとに skill 群を提供します：
+`loom-workflow` は 2 つのアーキテクチャ的判断から育ちましたが、そのうち 1 つはすでに移転しています：
 
-1. **Two Hats split for skills**（Fowler の refactor-vs-feature を skill authoring に適用）— `skill-refactor`（Phase A：behavior-preserving、auto-evaluable）と `skill-tuning`（Phase B：taste-sensitive、human-judged）を分離。
-2. **critique-gate のライン** — proposal が commit になる前に介入する：`proposal-critique`（複数項目の triage）→ `complexity-critique`（単一変更の deletion-first gate）→ simplify（実装後の review、Anthropic 純正 toolkit に存在）。
+1. **Two Hats split for skills**（Fowler の refactor-vs-feature を skill authoring に適用）— `skill-refactor`（Phase A：behavior-preserving、auto-evaluable）と `skill-tuning`（Phase B：taste-sensitive、human-judged）の分離。この 2 つの skill は `skill-creator-advance`・`skill-judge` とともに `skill-dev-toolkit` へ移転済み。詳細は下の「Skill-evolution architecture（移転済み）」参照。
+2. **critique-gate のライン** — proposal が commit になる前に介入する：`proposal-critique`（複数項目の triage）→ `complexity-critique`（単一変更の deletion-first gate）→ simplify（実装後の review、Anthropic 純正 toolkit に存在）。こちらは今も `loom-workflow` に残っています。
 
-この plugin はさらに `skill-creator-advance`（作成 + 大規模再設計）、`skill-judge`（advisory な 8 次元品質 rubric、変更を加えない）、`git-memory`（commit trailer と PR 本文に書き込む可搬な project memory、git を読める任意のツールから復元可能）を同梱しています。
+この plugin はさらに `git-memory`（commit trailer と PR 本文に書き込む可搬な project memory、git を読める任意のツールから復元可能）を保持しています。
 
-設計の全体像：[`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md)。運用ガバナンス：[`docs/skill-governance.md`](docs/skill-governance.md)。四半期ヘルスチェック：[`docs/quarterly-audit-runbook.md`](docs/quarterly-audit-runbook.md)。
+運用ガバナンス：[`docs/skill-governance.md`](docs/skill-governance.md)。四半期ヘルスチェック：[`docs/quarterly-audit-runbook.md`](docs/quarterly-audit-runbook.md)。
 
 ## 収録基準（Admission rule）
 
-ある skill が `loom-workflow` に属するのは、それが **クロスステーション（複数 station 間）かつ複数 session にまたがる調整** を行う場合です — 単に「複数の plugin から使われている」というだけでは条件を満たしません。広く使われているかどうかはテストではなく、station を横断して作業を調整するか、session をまたいで状態を運ぶかがテストです。`decision-map` がこのルールの最初の実例です：project のライフサイクルを通じて複数の station が読み書きする decision map（`MAP.md` + ticket）を永続化するもので、まさにこの plugin が存在する理由であるクロスステーション・複数 session の形をしています。
+ある skill が `loom-workflow` に属するのは、それが **クロスステーション（複数 station 間）かつ複数 session にまたがる調整** を行う場合です — 単に「複数の plugin から使われている」というだけでは条件を満たしません。広く使われているかどうかはテストではなく、station を横断して作業を調整するか、session をまたいで状態を運ぶかがテストです。`decision-map` がこのルールの最初の実例です：project のライフサイクルを通じて複数の station が読み書きする decision map（`MAP.md` + ticket）を永続化するもので、まさにこの plugin が存在する理由であるクロスステーション・複数 session の形をしています。このルールは **新規** の収録のみを gate します — plugin にすでにある既存の utility skill は grandfather 扱いとし、先送りになっている family-relocation arc でまとめて再評価します。
 
 ## Skills
 
 | Skill | 役割 |
 |---|---|
-| [`skill-creator-advance`](skills/skill-creator-advance/) | 新規 skill の作成、または既存 skill の大規模再設計（phase の追加 / 分割 / 統合、agent 分解の変更、input/output contract の変更）。description optimization を含む反復的 eval-driven development。 |
-| [`skill-refactor`](skills/skill-refactor/) | 既存 skill の token / structure refactor、**output behavior を保持**。3 段階 gate：equivalence（multi-judge ensemble）+ token reduction（≥10%）+ invariant preservation。PROCEED / RESHAPE / REJECT を判定し、git ratchet で失敗時に自動 revert。 |
-| [`skill-tuning`](skills/skill-tuning/) | 既存 skill の output quality A/B — variant を生成し blind で実行、人間の preference を捕捉（A / B / both / neither）。Constitution は床、taste は天井。preference log は RLHF-lite データセットとして蓄積。 |
-| [`skill-judge`](skills/skill-judge/) | Advisory な 8 次元設計 rubric（Knowledge Delta・Mindset+Procedures・Anti-Pattern・Spec Compliance・Progressive Disclosure・Freedom Calibration・Pattern Recognition・Practical Usability）、0–120 点 + A–F grade。変更は加えない。 |
-| [`proposal-critique`](skills/proposal-critique/) | 複数項目の proposal（list / plan / 散文の推奨）を evidence grounding と YAGNI で KEEP / DEFER / DROP に triage。 |
-| [`complexity-critique`](skills/complexity-critique/) | 1 つの具体的な提案変更を 3 つの deletion-first 質問で gate：最小到達状態、before/after の LOC、何が obsolete になるか。PROCEED / PROCEED-WITH-CAVEAT / RESHAPE / REJECT。 |
+| [`brief-before-asking`](skills/brief-before-asking/) | user が複雑な engineering の fork を決める前に Mental-Model-first な briefing を届ける — これがデフォルトで、任意ではない。質問・説明・利害について user が迷った時にも反応的に発火する。 |
+| [`complexity-critique`](skills/complexity-critique/) | 1 つの提案変更（refactor / feature / tech-debt）を deletion-first の視点で評価：before/after の LOC、何が obsolete になるか。複数項目の proposal → `proposal-critique`。 |
+| [`cot-explain`](skills/cot-explain/) | すでにある推論——指定されたファイル、あるいは直前の作業——を、CoT 図を中心に据えた自己完結型ページに描き出す。各矢印にはその手順が続く理由がラベル付けされる。 |
+| [`dbt-model-style`](skills/dbt-model-style/) | dbt + Redshift モデルの style & structure contract を強制する — CTE の役割、zero-logic な final CTE、命名、YAML header、comment、syntax。 |
+| [`decision-map`](skills/decision-map/) | `docs/loom/maps/<map-id>/` にある永続的な decision map を作成・推進する — 目的地、育っていく Decisions-so-far ログ、そして複数 session にわたって ticket へ卒業していく Not-yet-specified（fog）list。一発 plan ではない。 |
+| [`distill-sessions`](skills/distill-sessions/) | 過去の Claude Code と Codex の session transcript ＋ `/insights` から friction pattern を掘り出し、skill ごとの改善提案 doc にまとめる。 |
 | [`git-memory`](skills/git-memory/) | 決定の文脈（diff そのものではなく **why**）を commit trailer と PR 本文に書き込み、Claude Code / Cursor / Codex / aider / 人間など将来のあらゆる session が `git log` だけから project knowledge を再構成できるようにする。 |
-| [`brief-before-asking`](skills/brief-before-asking/) | 複雑な engineering 決定の質問を user に投げる前（あるいは反応として）の構造化 briefing。3 モード：Mode A（agent が複雑な fork に気づいて自発 trigger）、Mode B（user が質問に「看不懂」と返す）、Mode C（user が解釈に「跟不上」と返す — Mental Model + drill menu に退く）。Mental Model First を最高優先とする 6-block 形式。 |
-| [`dogfood-skill-testing`](skills/dogfood-skill-testing/) | 開発中 skill の behavioral black-box dogfood — fresh subagent で trigger と output 品質を実地検証し、修正に直結する findings レポートを出力。 |
-| [`cot-explain`](skills/cot-explain/) | すでにある推論——ドキュメント・フォルダ・現在の会話——を、CoT Mermaid 図を中心に据えた自己完結型 HTML 一枚に描き出す：ラベル付きの矢印、原典が示すだけの箇条を持つノード、却下された選択肢、未検証の前提。ワンショット生成器、状態を持たない。 |
+| [`goal-create`](skills/goal-create/) | goal condition を起草する — SESSION mode は長時間実行 agent run のための 4 フィールド停止条件（Outcome / Constraints / Verification / Stop-when）、ARC mode は repository の purpose artifact（`Why` / `Done when`）。 |
+| [`handoff`](skills/handoff/) | session 状態を構造化された HANDOFF ファイルに保存し、将来の agent がきれいに再開できるようにする。あるいは既存の HANDOFF を読み込み・検証する。 |
 | [`independent-advisor`](skills/independent-advisor/) | 現在の plan や決定について、**別の executor**——より強い model、より高い effort、あるいは別ベンダー——から second opinion を取る。変わるのは executor であって、critique の観点ではない。 |
+| [`proposal-critique`](skills/proposal-critique/) | proposal（list / plan / 散文の推奨）を evidence grounding と YAGNI で KEEP / DEFER / DROP に triage。 |
+| [`recap-state`](skills/recap-state/) | session 内での再オリエンテーション — user が話の筋を見失った時、Synthesis-check で締めくくる構造化 recap を出す。 |
 
-9 つの skill はすべて **Active**。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
+12 個の skill はすべて **Active**。lifecycle 状態と所有権：[`docs/skill-governance.md`](docs/skill-governance.md)。
 
 ## critique のライン
 
@@ -66,26 +67,9 @@ evidence + YAGNI で判定     • 最小到達状態
 
 backlog や番号付きの plan を渡されたら `proposal-critique`。1 つの具体的変更が table の上にあるなら `complexity-critique`。変更が出荷された後は Anthropic の `simplify`。
 
-## skill-evolution architecture
+## Skill-evolution architecture（移転済み）
 
-`skill-creator-advance`・`skill-refactor`・`skill-tuning`・`skill-judge` は skill のライフサイクル全体を、**変更のサイズ × 評価モード**でカバーします：
-
-```
-size →    small                medium                large                new
-       ┌────────────────┐  ┌────────────────┐  ┌──────────────────────────────┐
-       │ skill-tuning   │  │ skill-refactor │  │ skill-creator-advance        │
-       │                │  │                │  │ (作成 + 大規模再設計)        │
-       │ output quality │  │ token / struct │  │                              │
-       │ A/B variants   │  │ 同一 behavior  │  │ spec-first 再設計 / 新規     │
-       │                │  │                │  │                              │
-       │ HUMAN judge    │  │ LLM equiv.     │  │ user 主導の iteration loop + │
-       │ each iteration │  │ + git ratchet  │  │ optional な AI A/B 比較      │
-       └────────────────┘  └────────────────┘  └──────────────────────────────┘
-
-       skill-judge：advisory な 0–120 点。変更を加えず、いつでも実行可能
-```
-
-この分割は評価コストによって規定されます：機械的変更（refactor）は LLM-as-judge による binary equivalence の信頼性が高いので auto-evaluation に耐えます。taste-sensitive な変更（tuning）は style・voice・persuasive force・design feel に対する LLM-as-judge が信頼できないため、人間が必要です。どの skill を使うかは「どれくらい自動化したいか」ではなく「どんな種類の変更を行うか」の問題です。
+`skill-creator-advance`・`skill-refactor`・`skill-tuning`・`skill-judge` — この節がかつて説明していた、変更のサイズ × 評価モードによるライフサイクルモデル — は `dogfood-skill-testing` とともに `skill-dev-toolkit` へ移転しました。`loom-workflow` はもうこれらを同梱していません。元の設計理由（Two Hats split、機械的変更は auto-evaluation に耐えるが taste-sensitive な変更には人間が必要という評価コストの議論）は [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md) にアーカイブされています。現在の所有権と継続中の設計は `skill-dev-toolkit` 自身の README を参照してください。
 
 ## git-memory の 3 本柱
 
@@ -99,15 +83,13 @@ size →    small                medium                large                new
 
 ## Upstream chain
 
-9 つの skill のうち 3 つは MIT-licensed な upstream に由来します。完全な attribution は各 skill の `NOTICE` ファイル参照。
+12 個の skill のうち 1 つが MIT-licensed な upstream に由来します。完全な attribution はその skill の `NOTICE` ファイル参照。（`skill-creator-advance` と `skill-judge` の upstream attribution は、移転先の `skill-dev-toolkit` に一緒に移りました。）
 
 | Skill | Upstream chain |
 |---|---|
-| `skill-creator-advance` | Anthropic [`skill-creator`](https://github.com/anthropics/skills/tree/main/skills/skill-creator) → AllanYiin（尹相志）[`skill-creator-advanced`](https://github.com/AllanYiin/Amon) → monkey-skills |
-| `skill-judge` | Leonardo Flores [`skill-judge`](https://github.com/softaworks/agent-toolkit) → monkey-skills |
 | `complexity-critique` | joshuadavidthomas [`reducing-entropy`](https://github.com/joshuadavidthomas/agent-skills/tree/main/skills/reducing-entropy) → softaworks fork → monkey-skills（`reducing-entropy` → `complexity-critique` にリネーム） |
 
-`skill-refactor`・`skill-tuning`・`proposal-critique`・`git-memory` はオリジナル設計。`skill-refactor` と `skill-tuning` は autonomous-loop + git-ratchet パターンの概念的影響源として `alchaincyf/darwin-skill`（MIT）と Andrej Karpathy の `autoresearch`（MIT）に言及しますが、architecture・gate function・evaluation rubric は独立した設計です。詳細は各 skill の `NOTICE` 参照。
+残り 11 個の skill はオリジナル設計で、外部 upstream への attribution はありません。詳細は各 skill の `NOTICE`（存在する場合）参照。
 
 ## Repository 構成
 
@@ -115,11 +97,6 @@ size →    small                medium                large                new
 loom-workflow/
 ├── .claude-plugin/
 │   └── plugin.json
-├── commands/
-│   ├── complexity-critique.md
-│   ├── skill-creator-advance.md
-│   ├── skill-refactor.md
-│   └── skill-tuning.md
 ├── docs/
 │   ├── skill-evolution-architecture.md
 │   ├── skill-governance.md
@@ -130,17 +107,14 @@ loom-workflow/
 │   ├── complexity-critique/
 │   ├── cot-explain/
 │   ├── dbt-model-style/
+│   ├── decision-map/
 │   ├── distill-sessions/
-│   ├── dogfood-skill-testing/
 │   ├── git-memory/
+│   ├── goal-create/
 │   ├── handoff/
 │   ├── independent-advisor/
 │   ├── proposal-critique/
-│   ├── recap-state/
-│   ├── skill-creator-advance/
-│   ├── skill-judge/
-│   ├── skill-refactor/
-│   └── skill-tuning/
+│   └── recap-state/
 ├── CHANGELOG.md
 ├── README.md
 ├── README.ja.md       (このファイル)
@@ -158,24 +132,20 @@ loom-workflow/
 
 ## 使い方
 
-4 つの slash command が plugin に同梱されています：
+`loom-workflow` は slash command を同梱していません — 12 個の skill はすべて自然言語から auto-trigger します。例：
 
 ```
-/skill-creator-advance      # 新規作成 または 既存の大規模再設計
-/skill-refactor             # token / structure refactor、equivalence 保持
-/skill-tuning               # human-judged な出力 A/B
-/complexity-critique        # 具体的変更に対する deletion-first gate
+「この 12 項目の plan を critique して」                  → proposal-critique
+「これは削る価値があるか」/「そもそも作るべきか」          → complexity-critique
+「これから commit する — trailer 書くの手伝って」         → git-memory
+「看不懂」/「跟不上」/ agent-about-to-ask-complex-fork    → brief-before-asking
+「開一張決策地圖」/「デシジョンマップを開く」              → decision-map
+「wrap up」/「save state」                                → handoff
+「where were we」/「我跟丟了」                             → recap-state
+「second opinion」/「換一個模型看看」                      → independent-advisor
 ```
 
-残り 4 つの skill（`skill-judge`・`proposal-critique`・`git-memory`・`brief-before-asking`）は自然言語から auto-trigger します — 例：
-
-```
-「この skill を 8 次元 rubric で採点して」               → skill-judge
-「この 12 項目の plan を critique して」                 → proposal-critique
-「これから commit する — trailer 書くの手伝って」       → git-memory
-```
-
-Two-Hats split（refactor vs tuning）の walk-through は [`docs/skill-evolution-architecture.md`](docs/skill-evolution-architecture.md) §2 参照。
+`skill-refactor` vs `skill-tuning` の Two-Hats split（移転済み）については、上の「Skill-evolution architecture（移転済み）」参照。
 
 ## Contributing
 
@@ -188,6 +158,6 @@ Two-Hats split（refactor vs tuning）の walk-through は [`docs/skill-evolutio
 
 ## License
 
-MIT。MIT-licensed な upstream を持つ skill（`skill-creator-advance`・`skill-judge`・`complexity-critique`）は、各 skill の `LICENSE` と `NOTICE` で完全な copyright chain を保持しています。
+MIT。plugin 内で唯一 MIT-licensed な upstream を持つ `complexity-critique` は、`LICENSE` と `NOTICE` で完全な copyright chain を保持しています。（`skill-creator-advance` と `skill-judge` は `skill-dev-toolkit` へ移転し、そちらで自身の copyright chain を保持しています。）
 
 repo ルートの umbrella license は [LICENSE](https://github.com/kouko/monkey-skills/blob/main/LICENSE) 参照。
