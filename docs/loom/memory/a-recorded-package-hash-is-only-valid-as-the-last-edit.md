@@ -28,3 +28,23 @@ the final edit, not after the last interesting one, and re-run it after the
 commit rather than trusting the pre-commit run. When quoting a test result to a
 reviewer or into a gate marker, the number must come from a run that postdates
 every edit in the commit it describes.
+
+**The digits and their scope are two separate invariants (2026-08-28,
+pin-granularity arc).** The recompute above keeps the NUMBER true. It says
+nothing about WHICH TREE the number measures, and that sentence — "these are
+the final cold-install candidate bytes for both plugin packages" — is a
+second, independently falsifiable claim living beside the first. A batch
+agent deleted it as redundant prose: the hashes were right there, so the
+sentence looked like a gloss. It is not. Recomputation pins the digits;
+nothing pins the scope, and a report whose fingerprints measure a different
+tree than its prose claims is exactly the fabricated-evidence shape the
+fingerprints exist to prevent. An adjudication pass restored it.
+
+The practical corollary, useful whenever a fingerprint is recomputed on a
+branch that also edits packaged files: a candidate hash covering the whole
+cold-install package legitimately MOVES for any change to that tree,
+including a test-only refactor. That is not drift and not something to
+suppress. What must not move is the narrower fingerprint over the instruction
+surface the evidence actually rests on — and the check that reads later
+instruction changes straight from git cannot be satisfied by re-hashing, so
+it stays the honest signal while the candidate hash churns.
