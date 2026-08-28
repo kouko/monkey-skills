@@ -197,7 +197,7 @@ PLUGIN_JSON = Path(__file__).parents[1] / ".claude-plugin" / "plugin.json"
 CHANGELOG_MD = Path(__file__).parents[1] / "CHANGELOG.md"
 
 
-def test_plugin_version_and_changelog_at_0_102_1():
+def test_plugin_version_and_changelog_at_0_103_0():
     """Originally Task 6 of
     docs/loom/plans/2026-08-02-finding-origin-attribution.md, and rewritten
     by every subsequent bump -- loom-code/CHANGELOG.md is the release
@@ -230,13 +230,13 @@ def test_plugin_version_and_changelog_at_0_102_1():
     rather than read from the manifest: touching this test is what forces
     the changelog entry to be written."""
     plugin_text = PLUGIN_JSON.read_text(encoding="utf-8")
-    assert '"version": "0.102.1"' in plugin_text, (
-        "loom-code/.claude-plugin/plugin.json must read version 0.102.1"
+    assert '"version": "0.103.0"' in plugin_text, (
+        "loom-code/.claude-plugin/plugin.json must read version 0.103.0"
     )
 
     changelog_text = CHANGELOG_MD.read_text(encoding="utf-8")
-    assert "## [0.102.1]" in changelog_text, (
-        "loom-code/CHANGELOG.md must carry a `## [0.102.1]` heading"
+    assert "## [0.103.0]" in changelog_text, (
+        "loom-code/CHANGELOG.md must carry a `## [0.103.0]` heading"
     )
 
 
