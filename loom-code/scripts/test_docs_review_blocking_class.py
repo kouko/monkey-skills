@@ -211,9 +211,18 @@ def test_plugin_version_and_changelog_at_0_102_1():
     (docs/loom/backlog/2026-07-28-plan-stage-fact-grounding-what-0-39-0-does-not-close.md,
     item 2).
 
-    This pin tracks the CURRENT shipping version by design: each bump
-    rewrites it, which is what makes a missing bump fail CI rather than
-    ship a silent marketplace no-op."""
+    This pin tracks the CURRENT shipping version by design, but NOT for
+    the reason it used to claim. It does not catch a missed bump: it reads
+    only the manifest and the changelog, so skill content can change with
+    plugin.json unmoved and both assertions still pass -- that happened on
+    this very branch, where `scripts/heading_window.py` landed while
+    plugin.json sat at 0.102.0 and this test stayed green. Missed-bump
+    detection is `scripts/check_version_bump.py`.
+
+    What the pin actually buys is CHANGELOG-accompanies-bump: raising the
+    manifest alone reddens it, and the only way back to green is adding the
+    matching `## [<version>]` heading. That is worth keeping, and it is why
+    the literal stays hardcoded rather than read from the manifest."""
     plugin_text = PLUGIN_JSON.read_text(encoding="utf-8")
     assert '"version": "0.102.1"' in plugin_text, (
         "loom-code/.claude-plugin/plugin.json must read version 0.102.1"

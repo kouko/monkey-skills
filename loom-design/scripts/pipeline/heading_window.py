@@ -1,8 +1,9 @@
 """Shared line-leading heading-anchor helper for loom-design's structural
-pin tests -- one copy of `_line_leading` lived in this package's test
-files and several more sites inlined the same ternary by hand; this
-module is the single in-package source so a fix to the anchor logic
-lands once instead of at every site. Sibling-module import (no `__init__.py`,
+pin tests -- this module is the single in-package source, so a fix to the
+anchor logic lands once instead of at every site that used to hand-roll
+it. Scope note: `scripts/` here is split into per-subdirectory import
+roots, so this module serves `pipeline/` only -- `interface/` keeps its
+two sites inline rather than take a third copy of four lines. Sibling-module import (no `__init__.py`,
 no conftest), following the existing sibling-import pattern already used
 in this scripts/pipeline/ directory.
 """

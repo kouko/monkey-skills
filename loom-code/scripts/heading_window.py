@@ -1,8 +1,11 @@
 """Shared line-leading heading-anchor helper for loom-code's structural
-pin tests -- two byte-identical copies of `_line_leading` lived in this
-package's test files and a dozen more sites inlined the same ternary by
-hand; this module is the single in-package source so a fix to the anchor
-logic lands once instead of at every site. Sibling-module import (no `__init__.py`,
+pin tests -- this module is the single in-package source, so a fix to the
+anchor logic lands once instead of at every site that used to hand-roll
+it. The exact number of those sites is deliberately not stated here: two
+reviewers counting them independently got different totals, because
+"the same idiom" spans a one-line ternary and a five-line if/else and the
+rule for which to count was never written down. `git log -S` on the
+removed form is the reproducible answer. Sibling-module import (no `__init__.py`,
 no conftest), following the existing `import distribute` precedent in
 this same scripts/ directory.
 """

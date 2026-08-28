@@ -24,6 +24,8 @@ Stdlib only (pathlib).
 import re
 from pathlib import Path
 
+from heading_window import line_leading
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 REFERENCE = (
@@ -239,11 +241,7 @@ def test_reference_file_carries_reviewer_tag_supplement_after_existing_sections(
     # the file can't retarget this ordering check; keep .find's
     # -1-means-absent contract for the assert below.
     cap_heading = "## Cap unchanged"
-    if text.startswith(cap_heading):
-        cap_idx = 0
-    else:
-        _pos = text.find("\n" + cap_heading)
-        cap_idx = _pos + 1 if _pos != -1 else -1
+    cap_idx = line_leading(text, cap_heading)
     assert cap_idx != -1, "existing '## Cap unchanged' section must survive"
     supplement_idx = text.find("Reviewer-tag trigger")
     assert supplement_idx != -1, (
