@@ -63,12 +63,19 @@ blocks these families of gate bypass:
    allows, mirroring ``.codex/hooks/git-guard-shim.sh``'s posture; a
    silent allow would recreate the invisible default this gate closes.
 
-4. ``git merge prototype/...`` while the current branch IS (or tracks)
-   the resolved default branch, and ``gh pr create``/``gh pr merge``
-   where the head branch is ``prototype/*`` and the (explicit or
-   gh-defaulted) base is the default branch — the decision-map
-   prototype contract's retention rule: prototype branches never
-   merge. Pushing a ``prototype/*`` branch itself stays allowed.
+4. ``git merge prototype/...`` (and ``git pull <remote>
+   prototype/...`` — pull performs the same merge, so its refspec
+   positionals, remote name excluded, are fenced identically) while
+   the current branch IS the resolved default branch, and ``gh pr
+   create``/``gh pr merge`` where the head branch is ``prototype/*``
+   and the (explicit or gh-defaulted) base is the default branch — the
+   decision-map prototype contract's retention rule: prototype
+   branches never merge. Pushing a ``prototype/*`` branch itself stays
+   allowed. Both ``merge`` and ``pull`` scan their positional args
+   through the same value-flag-skip discipline ``_parse_git`` applies
+   to global flags (``_positional_args``), so a value-taking flag's
+   VALUE (e.g. ``-m``'s message text) is never mistaken for the
+   target ref.
 
 Escape hatches / fail-open behavior: ``LOOM_CODE_MODE=off`` disables
 the guard; non-Bash tools, non-git/gh segments, ``git push
@@ -507,6 +514,35 @@ def _repo_globals(git_dir, work_tree, gate_cwd):
     return globals_
 
 
+MERGE_VALUE_FLAGS = {
+    "-m", "--message", "-s", "--strategy", "-X", "--strategy-option",
+    "-S", "--gpg-sign", "-F", "--file", "--into-name",
+}
+
+
+def _positional_args(args, value_flags):
+    """Tokens from a git subcommand's args that are neither a known
+    VALUE-taking flag's name nor its value (the next token) nor any
+    other dash-prefixed flag — the same value-flag-skip discipline
+    ``_parse_git`` applies to global flags (see its docstring),
+    generalized so ``merge``/``pull`` args can be scanned for their
+    REAL positional refs without a flag's value (e.g. the message text
+    of ``-m``) being mistaken for one."""
+    out = []
+    i = 0
+    while i < len(args):
+        tok = args[i]
+        if tok in value_flags and i + 1 < len(args):
+            i += 2
+            continue
+        if tok.startswith("-"):
+            i += 1
+            continue
+        out.append(tok)
+        i += 1
+    return out
+
+
 def _is_prototype_ref(ref):
     """True when `ref` names a ``prototype/*`` branch, incl. behind a
     single remote prefix (``origin/prototype/foo``) — checked as a
@@ -531,8 +567,8 @@ def _ref_short_name(ref):
 
 
 def _is_on_default_branch(cwd, git_globals=()):
-    """True when the CURRENT branch is (or tracks) the resolved default
-    branch — used to fence a merge target, not a push."""
+    """True when the CURRENT branch IS the resolved default branch —
+    used to fence a merge target, not a push."""
     current = _current_branch(cwd, git_globals)
     if current is None:
         return False
@@ -540,12 +576,32 @@ def _is_on_default_branch(cwd, git_globals=()):
     return default_ref is not None and current == _ref_short_name(default_ref)
 
 
+def _is_pr_merge_positional(tok):
+    """True when `tok` could be `gh pr merge`'s positional target
+    (``gh pr merge [<number>|<url>|<branch>] [flags]`` — grounded via
+    live ``gh pr merge --help``, gh 2.88.1): not a flag, not a PR
+    number, not a PR URL. A number/URL is excluded because this guard
+    cannot resolve it to a branch name without a GitHub API call — it
+    falls through to the current branch instead, same as no positional
+    at all."""
+    return (
+        not tok.startswith("-")
+        and not tok.isdigit()
+        and not re.match(r"^https?://", tok)
+    )
+
+
 def _pr_head_branch(gtoks, cwd, git_globals):
     """The head branch a ``gh pr create``/``gh pr merge`` invocation acts
-    on: an explicit ``--head`` value, else (for ``merge``) a positional
-    non-numeric argument (gh accepts a PR number OR a branch name there),
-    else the current checked-out branch (gh's own default for both
-    subcommands when no head/target is named)."""
+    on: an explicit ``--head`` value, else (for ``merge``) gh's own
+    positional target — which is ONLY the FIRST argument (see
+    ``_is_pr_merge_positional``) — else the current checked-out branch
+    (gh's own default for both subcommands when no head/target is
+    named). Scanning every arg for a non-flag token (the prior
+    approach) mistook a value-taking flag's VALUE — e.g. ``--subject
+    "chore: x"`` (grounded: ``-t``/``--subject``, ``-b``/``--body``,
+    ``-F``/``--body-file``, ``--match-head-commit`` all take a value,
+    per the same live ``gh pr merge --help``) — for the head branch."""
     args = gtoks[3:]
     i = 0
     while i < len(args):
@@ -555,10 +611,8 @@ def _pr_head_branch(gtoks, cwd, git_globals):
         if tok.startswith("--head="):
             return tok.split("=", 1)[1]
         i += 1
-    if gtoks[2] == "merge":
-        for tok in args:
-            if not tok.startswith("-") and not tok.isdigit():
-                return tok
+    if gtoks[2] == "merge" and args and _is_pr_merge_positional(args[0]):
+        return args[0]
     return _current_branch(cwd, git_globals)
 
 
@@ -851,10 +905,22 @@ def main():
                 if sub == "merge":
                     merge_cwd = _cwd_for(effective_cwd, c_path)
                     merge_globals = _repo_globals(git_dir, work_tree, merge_cwd)
-                    target = next((a for a in args if not a.startswith("-")), None)
-                    if _is_prototype_ref(target) and _is_on_default_branch(
-                        merge_cwd, merge_globals
-                    ):
+                    targets = _positional_args(args, MERGE_VALUE_FLAGS)
+                    if any(
+                        _is_prototype_ref(t) for t in targets
+                    ) and _is_on_default_branch(merge_cwd, merge_globals):
+                        print(MSG_PROTOTYPE_MERGE, file=sys.stderr)
+                        return 2
+                if sub == "pull":
+                    pull_cwd = _cwd_for(effective_cwd, c_path)
+                    pull_globals = _repo_globals(git_dir, work_tree, pull_cwd)
+                    # `git pull <remote> <refspec>...`: positionals[0] (if
+                    # any) is the remote, not a ref — only the refspecs
+                    # after it matter to this fence.
+                    refspecs = _positional_args(args, MERGE_VALUE_FLAGS)[1:]
+                    if any(
+                        _is_prototype_ref(r) for r in refspecs
+                    ) and _is_on_default_branch(pull_cwd, pull_globals):
                         print(MSG_PROTOTYPE_MERGE, file=sys.stderr)
                         return 2
                 # push's -n means --dry-run (unlike commit's -n = --no-verify)
