@@ -143,8 +143,12 @@ def _parse_map_frontmatter(fields: dict[str, str]) -> MapFrontmatter:
 
 def _split_sections(body: str) -> dict[str, str]:
     """Split MAP.md's body on `## <name>` headings into {name: raw
-    body-text}, in document order (order enforcement happens in
-    `validate`, not here — the parser stays permissive)."""
+    body-text}. Dict insertion order mirrors document order (Python
+    dicts preserve insertion order), which `validate`'s order check
+    relies on — the parser stays permissive about which sections may
+    appear, but never silently folds a repeated heading (last-wins),
+    since that would hide real content under a name a reader would
+    assume is unique."""
     lines = body.splitlines()
     sections: dict[str, str] = {}
     current: str | None = None
@@ -154,7 +158,12 @@ def _split_sections(body: str) -> dict[str, str]:
         if match:
             if current is not None:
                 sections[current] = "\n".join(buf).strip()
-            current = match.group(1).strip()
+            name = match.group(1).strip()
+            if name in sections:
+                raise SchemaViolation(
+                    f"MAP.md has a duplicate '## {name}' heading"
+                )
+            current = name
             buf = []
         elif current is not None:
             buf.append(line)
@@ -398,9 +407,19 @@ def _check_map_structure(doc: MapDocument) -> None:
         raise SchemaViolation(
             f"MAP.md is missing required section(s): {', '.join(missing)}"
         )
+    present_order = [name for name in doc.sections if name in REQUIRED_SECTIONS]
+    if present_order != REQUIRED_SECTIONS:
+        raise SchemaViolation(
+            "MAP.md sections are out of order: map-format.md pins "
+            f"{REQUIRED_SECTIONS}, found {present_order}"
+        )
+    seen_fog_ids: set[str] = set()
     for fog in doc.fog_entries:
-        if not re.fullmatch(r"F-\d+", fog.id):
+        if not re.fullmatch(r"F-[0-9]+", fog.id):
             raise SchemaViolation(f"malformed fog id: {fog.id!r}")
+        if fog.id in seen_fog_ids:
+            raise SchemaViolation(f"duplicate fog id reused: {fog.id!r}")
+        seen_fog_ids.add(fog.id)
     for part in doc.parts:
         expected_prefix = f"{doc.frontmatter.map_id} / Part: "
         if not part.join_key.startswith(expected_prefix):

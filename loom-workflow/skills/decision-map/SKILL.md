@@ -41,14 +41,16 @@ It produces:
 
 ## Risk pass
 
-A risk pass runs before charting closes, and again at every
-work-through close. Its trigger contract (front-loading a
-feasibility/prototype ticket onto the frontier) is defined in a later
-revision of this skill; this section is a placeholder heading until
-that contract lands.
+A risk pass is meant to run before charting closes, and again at every
+work-through close (Work-through step 5's close-time gates do not yet
+list it — see below). Both the trigger contract (front-loading a
+feasibility/prototype ticket onto the frontier) and its applicability
+at both close points are defined in a later revision of this skill;
+this section is a placeholder heading until that contract lands.
 
-Charting closes only after the risk pass above and a clean validate
-run: `map_store.py validate <target> --repo-root <path>`.
+Charting closes only after the risk pass above (once that contract
+lands) and a clean validate run:
+`map_store.py validate <target> --repo-root <path>`.
 
 A non-zero exit means the map is not yet chartered cleanly — fix the
 reported violation before treating the map as `charting`-state-ready
@@ -70,7 +72,9 @@ A session that works through a ticket does, in order:
 2. **Resolve the ticket.** Delegate the actual work by the ticket's
    `type` (see references/prototype-contract.md for `prototype`; the
    other three delegate by public skill name — that section of this
-   file lands the delegation table). When the work concludes, fill in
+   file lands the delegation table in a later revision of this skill;
+   until it lands, delegate by the type names in
+   `references/map-format.md` §Ticket schema). When the work concludes, fill in
    the ticket's Resolution section per §Ticket schema in
    `references/map-format.md`, including a user-ratified line for any
    HITL resolution, and move `status` to `closed`.

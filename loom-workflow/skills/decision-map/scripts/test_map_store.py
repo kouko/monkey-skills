@@ -234,6 +234,78 @@ def test_is_live_map_false_when_not_checker_valid(tmp_path: Path) -> None:
     assert map_store.is_live_map(map_dir, repo_root=tmp_path) is False
 
 
+# --- review round 2 findings ------------------------------------------------
+
+
+def test_validate_rejects_out_of_order_sections(tmp_path: Path) -> None:
+    """map-format.md pins the six sections 'in this order' — Parts
+    moved to the front of the body must not still validate clean."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    text = map_md.read_text(encoding="utf-8")
+    parts_block = (
+        "## Parts\n\n"
+        "| Part | Join key | Status |\n"
+        "|---|---|---|\n"
+        "| Engine | `wayfinder / Part: Engine` | in-progress |\n"
+    )
+    destination_block = "## Destination\n\nChart the decision-map layer.\n"
+    assert parts_block in text
+    assert destination_block in text
+    reordered = text.replace(parts_block, "\0").replace(
+        destination_block, parts_block
+    ).replace("\0", destination_block)
+    map_md.write_text(reordered, encoding="utf-8")
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "order" in message.lower()
+
+
+def test_split_sections_rejects_duplicate_heading(tmp_path: Path) -> None:
+    """Two `## Destination` headings must not silently last-win."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    text = map_md.read_text(encoding="utf-8").replace(
+        "## Notes",
+        "## Destination\n\nDuplicate.\n\n## Notes",
+    )
+    map_md.write_text(text, encoding="utf-8")
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "duplicate" in message.lower()
+    assert "Destination" in message
+
+
+def test_validate_rejects_duplicate_fog_id(tmp_path: Path) -> None:
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    text = map_md.read_text(encoding="utf-8").replace(
+        "- F-1: how does the fog id survive a rename?",
+        "- F-1: how does the fog id survive a rename?\n"
+        "- F-1: a second entry reusing the same id",
+    )
+    map_md.write_text(text, encoding="utf-8")
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "F-1" in message
+
+
+def test_validate_rejects_non_ascii_digit_fog_id(tmp_path: Path) -> None:
+    """`re.fullmatch(r"F-\\d+")` accepts unicode digits (e.g. Arabic-indic
+    ٥) since `\\d` is unicode-aware by default — the id grammar is
+    ASCII-digit only."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    text = map_md.read_text(encoding="utf-8").replace(
+        "- F-1: how does the fog id survive a rename?",
+        "- F-٥: unicode-digit id must be rejected",
+    )
+    map_md.write_text(text, encoding="utf-8")
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "malformed fog id" in message.lower()
+
+
 # --- CLI --------------------------------------------------------------------
 
 
