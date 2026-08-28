@@ -37,7 +37,7 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
 - Added complexity: two new optional ticket-frontmatter fields (`blocked-by`, `ratification`), three new validate rules (dangling/cycle/HITL-presence), and six new prose duties in the skill text — all must be maintained with the schema.
 - Why it is worthwhile: the first dogfood session showed every blank becomes a silent agent default; the two fields make the judgment-critical rules (selection, ratification) checkable instead of prose-only.
 - Removed or avoided complexity: no status-vocabulary change, no supersession machinery, no frontier UI, no schema_version bump — old checkers keep working on new stores by construction.
-- Downstream risk: validate tightening could reject legacy closed tickets missing user-ratified lines; surfaces in `map_store.py validate` runs on existing maps — T7's acceptance explicitly guards the family-relocation map staying valid.
+- Downstream risk: validate tightening rejects any map/ticket missing its HITL line; the only pre-rule map was user-ratified in this branch, so the first exposure is the next repo adopting maps with a hand-rolled (non-map_init) MAP.md — the checker's exit-2 message must name the missing line plainly.
 
 ## Task 1 — map-format 票層文法（blocked-by／ratification／尺寸）
 
@@ -175,11 +175,10 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
 
 ## Task 7 — validate HITL 存在檢查
 
-- **Description**: In `scripts/map_store.py`, extend `validate` with two additive HITL presence checks; in `map_init.py`, stamp a destination-ratification placeholder into scaffolded MAP.md.
-  - Ticket check (unconditional): a `closed` ticket of type `grilling` or `prototype` must contain a `user-ratified` line in its Resolution — missing → exit 2.
-  - Map check (fail-open on legacy): a map whose `state` is `active` or `clear` should carry the destination ratification line per map-format §Sections.
-  - Legacy discrimination is mechanical: a map scaffolded WITH the placeholder (post-rule) that lacks the line → exit 2; a pre-rule map lacking both placeholder and line → warning on stderr, exit 0.
-  - Rationale: the family-relocation map predates the rule and must stay valid unmodified (additive-only constitution, Task 2).
+- **Description**: In `scripts/map_store.py`, extend `validate` with two additive, unconditional HITL presence checks; in `map_init.py`, stamp the destination-ratification line slot into scaffolded MAP.md.
+  - Ticket check: a `closed` ticket of type `grilling` or `prototype` must contain a `user-ratified` line in its Resolution — missing → exit 2.
+  - Map check: a map whose `state` is `active` or `clear` must carry the destination `user-ratified` line per map-format §Sections — missing → exit 2. No legacy branch: the one pre-rule map (family-relocation) was ratified in-branch by the user (kouko 2026-08-29), so the legacy population is empty.
+  - User ruling 2026-08-29: missing required store content is filled by the user on the spot, never tolerated by a permanent legacy mechanism.
 - **Module**: loom-workflow/skills/decision-map/scripts/map_store.py
 - **Files touched**: loom-workflow/skills/decision-map/scripts/map_store.py, loom-workflow/skills/decision-map/scripts/test_map_store.py, loom-workflow/skills/decision-map/scripts/map_init.py
 - **Context paths**:
@@ -188,7 +187,7 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
   - /Users/kouko/.herdr/worktrees/monkey-skills/decision-map-protocol-hardening/docs/loom/maps/family-relocation/
 - **Acceptance**:
   - **RED**: `test_map_store.py::test_validate_hitl_presence` — a fixture closed grilling ticket without a user-ratified line makes validate exit 2; a fresh map_init-scaffolded map ratified per the new rule validates 0. Fails today because validate never reads Resolution content.
-  - **GREEN**: new tests pass; `map_store.py validate docs/loom/maps/family-relocation --repo-root .` still exits 0 on the real map in this repo; all pre-existing tests pass unchanged.
+  - **GREEN**: new tests pass; `map_store.py validate docs/loom/maps/family-relocation --repo-root .` exits 0 on the real map (its destination line was user-signed in this branch); all pre-existing tests pass unchanged.
 - **Dependencies**: Tasks 2, 6 complete first
 - **Seam**:
   - from Task 2: payload: none
