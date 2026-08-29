@@ -3,7 +3,7 @@
 
 Grammar SSOT: `loom-workflow/skills/decision-map/references/
 map-format.md` §MAP.md schema, §Command surface. Writes a
-schema-conformant, empty MAP.md (the six pinned sections in order,
+schema-conformant, empty MAP.md (the five pinned sections in order,
 `state: charting`) plus an empty `tickets/` directory — the sanctioned
 replacement for hand-copying an existing map as a template.
 
