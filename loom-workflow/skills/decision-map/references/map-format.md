@@ -28,7 +28,7 @@ every join key and every ticket's location is anchored to it.
 ```yaml
 ---
 map-id: <slug>
-schema_version: 1
+schema_version: 2
 state: charting
 ---
 ```
@@ -53,7 +53,7 @@ nesting, no quoting, no multi-line values (`map_store.py`'s
     or fog entries.
 
 `state` is hand-edited — no script under §Command surface owns this
-transition in v1. The transitions: `charting → active` is flipped by
+transition in v2. The transitions: `charting → active` is flipped by
 hand as the final act of the charting close, after the risk pass and a
 clean `validate` run. `active → clear` is flipped by the work-through
 close that satisfies the clear condition in §Ticket boundary contract.
@@ -164,7 +164,7 @@ graduated-from: null
   form `<who>, <YYYY-MM-DD>` (the same dated shape the user-ratified
   line uses), written when `status` moves to `claimed`.
   Concurrent-claim discipline beyond this single field is out of scope
-  for v1. **Stale-claim rule**: a LATER session may reclaim a ticket
+  for v2. **Stale-claim rule**: a LATER session may reclaim a ticket
   when no commit has touched that ticket file since the claim marker's
   date — an observable git fact, not a trust call — by overwriting the
   `claim` line and noting the takeover in the ticket body. A claim
@@ -248,39 +248,26 @@ Duplicate task tickets for the same work violate this contract.
 Promotion is close-and-cite: close the backlog entry and write
 `origin: promoted to <ticket>` before creating the map ticket. There is
 no blocked state, standing bidirectional link, or close-on-delivery
-step.
+step. Map-to-backlog travel is release-only. A destination artifact is
+optional discovery context, never a live or standing link.
+
+## Measurement note
+
+134/26 is a live-store composition ratio, never a close rate.
+Cohort rates come from review-due data, not archaeology.
 
 ## Schema versioning
 
-`schema_version` is an integer on MAP.md's frontmatter only — v1 ships
-one shared version across MAP.md and its tickets, so ticket
-frontmatter never repeats the field (see §Ticket schema's example,
-which carries no `schema_version` key). Every checker under §Command
-surface reads `schema_version` before doing anything else. When the
-checker's `target` is a ticket path rather than MAP.md itself, it
-resolves the governing version by walking up from the ticket's
-directory to that map's `MAP.md` and reading the field there — never
-by assuming a version or by requiring the ticket to carry its own
-copy. If the value is greater than the highest version that checker's
-own code supports, the checker refuses to read further and exits 2
-with a message naming both the file's version and the checker's
-supported ceiling. A checker never guesses at an unknown schema shape.
-
-Mechanism revisions to this store are additive-only. A revision may
-add new optional fields, and may tighten a check only so that content
-written under the new rules can newly fail — never so that an
-untouched pre-existing store starts failing. One narrow exception —
-the migration clause: a check MAY tighten beyond new-rule writes
-only when the same revision migrates every known pre-existing store
-and records that migration, so no untouched store is left to fail.
-The destination-ratification gate (§Sections' Destination bullet) is
-this clause's first instance: its one pre-existing map was ratified
-in the same revision that introduced the check, emptying the legacy
-population. Under this constitution
-an older checker never mis-rejects a newer store, and a newer checker
-never mis-rejects an untouched older store. The rationale is
-operational, not hypothetical: cross-host plugin version skew is a
-measured normal state, not an edge case.
+`schema_version` is an integer on MAP.md's frontmatter only. The
+current contract is version 2, shared across MAP.md and its tickets,
+so ticket frontmatter never repeats the field (see §Ticket schema's
+example, which carries no `schema_version` key). Every checker under
+§Command surface reads `schema_version` before doing anything else.
+When the checker's `target` is a ticket path rather than MAP.md itself,
+it resolves the governing version by walking up from the ticket's
+directory to that map's `MAP.md` and reading the field there. A checker
+accepts only version 2; every other value exits 2 with migration
+guidance rather than guessing at an unknown schema shape.
 
 ## Command surface
 
@@ -291,7 +278,7 @@ Four scripts ship under `loom-workflow/skills/decision-map/scripts/`:
 | `map_init.py` | Scaffold a new `docs/loom/maps/<map-id>/` store (MAP.md + empty `tickets/`). |
 | `map_store.py` | Read/write primitives for MAP.md and ticket files, shared by the other three scripts and by skill-text tooling — the only sanctioned parser for this schema. Also exposes the `validate` CLI entrypoint: `map_store.py validate <map-dir> --repo-root <path>` — the sole check behind the §Live-map criterion's liveness check — exit 0/1/2 like the rest of §Command surface. |
 | `check_map_links.py` | Verify every Decisions-so-far line links an existing, closed ticket. |
-| `check_map_fog.py` | Verify fog-id monotonicity (§Fog entries): silent disappearance is machine-gated (exit 2); duplicate ids within the current MAP.md are gated by `validate`; reuse of a RETIRED id (graduated or moved to Out-of-scope, then re-issued) is review-enforced only in v1 — the same disclosure pattern the HITL resolution rule already uses (§Ticket schema). |
+| `check_map_fog.py` | Verify fog-id monotonicity (§Fog entries): silent disappearance is machine-gated (exit 2); duplicate ids within the current MAP.md are gated by `validate`; reuse of a RETIRED id (graduated or moved to Out-of-scope, then re-issued) is review-enforced — the same disclosure pattern the HITL resolution rule already uses (§Ticket schema). |
 
 **Canonical arg shape**, shared by every script above: a positional
 `target` argument (the map directory, a MAP.md path, or a ticket path,
@@ -300,7 +287,7 @@ depending on the script), plus an optional `--repo-root` flag (default:
 back to cwd — the `--repo-root` resolution convention loom-code's
 on-ramp checker established). `map_store.py` alone
 prefixes this with a leading subcommand verb before the positional
-`target` — `validate` in v1 — since it is the one script in the table
+`target` — `validate` in v2 — since it is the one script in the table
 exposing more than one operation; the other three scripts take the
 bare positional shape with no verb.
 

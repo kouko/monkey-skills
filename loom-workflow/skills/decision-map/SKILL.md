@@ -71,7 +71,7 @@ reported violation; exit 1 means the path or environment is wrong,
 not the map — fix the invocation. Only then treat the map as ready
 for work-through. Once clean, flip `state` from `charting` to `active`
 by hand — this is the final act of the charting close (no script owns
-`state` transitions in v1; see `references/map-format.md`
+state transitions in v2; see `references/map-format.md`
 §Frontmatter).
 
 ## Work-through mode

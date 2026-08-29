@@ -122,3 +122,17 @@ def test_v2_contract_rejects_relay_and_parts_language():
     ]
 
     assert not offenders, "retired v2 contract wording remains:\n" + "\n".join(offenders)
+
+
+def test_v2_contract_pins_release_boundary_and_metric_definition():
+    """Current map instructions retain the v2 boundary and metric facts."""
+    map_format_text = MAP_FORMAT_MD.read_text(encoding="utf-8")
+    skill_text = SKILL_MD.read_text(encoding="utf-8")
+
+    assert "schema_version: 2" in map_format_text
+    assert "v1" not in map_format_text
+    assert "state transitions in v2" in skill_text
+    assert "Map-to-backlog travel is release-only." in map_format_text
+    assert "optional discovery context, never a live or standing link" in map_format_text
+    assert "134/26 is a live-store composition ratio, never a close rate" in map_format_text
+    assert "Cohort rates come from review-due data, not archaeology." in map_format_text
