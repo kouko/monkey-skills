@@ -20,6 +20,13 @@ from pathlib import Path
 SKILL_DIR = Path(__file__).resolve().parent.parent
 SKILL_MD = SKILL_DIR / "SKILL.md"
 MAP_FORMAT_MD = SKILL_DIR / "references" / "map-format.md"
+FINISHING_SKILL_MD = (
+    Path(__file__).resolve().parents[4]
+    / "loom-code"
+    / "skills"
+    / "finishing-a-development-branch"
+    / "SKILL.md"
+)
 
 SCRIPT_NAMES = (
     "map_init.py",
@@ -147,3 +154,13 @@ def test_no_live_contract_or_command_surface_references_map_parts():
     for path in (SKILL_MD, MAP_FORMAT_MD):
         text = path.read_text(encoding="utf-8").lower()
         assert "map_parts.py" not in text, f"{path} still references map_parts.py"
+
+
+def test_no_live_finishing_skill_map_parts_writeback_instruction():
+    """Close-out instructions must not invoke the retired Parts flipper."""
+    text = FINISHING_SKILL_MD.read_text(encoding="utf-8").lower()
+    assert "map delivery-progress check" in text
+    assert "map-parts check" not in text
+    assert "parts flipper" not in text
+    assert "map_parts.py" not in text
+    assert "flip that part's parts row" not in text
