@@ -1,6 +1,6 @@
 ---
 type: prototype
-status: claimed
+status: closed
 claim: kouko, 2026-08-28
 ---
 
@@ -23,3 +23,14 @@ naive 版本 glob 有 7～33 路歧義，判不可用。kouko 2026-08-28 裁定�
 查完官方文件面後再裁**——本票維持 claimed，不關。
 
 ## Resolution
+
+user-ratified: kouko, 2026-08-29 — FEASIBLE-with-reservation
+
+- 2026-08-29 kouko 裁定（user-ratified）：**FEASIBLE-with-reservation**。
+  Claude Code 側機制夠格作為搬遷地基——量測全過，且文件面查證
+  （tickets/research-plugin-root-primitives.md）僅 installed_plugins.json
+  一項屬內部 API，其餘原語皆有文件。但 Codex 側尚無執行期 sibling-root
+  探索的對等解法（F-7），補齊前列為搬遷完成的必要條件：hooks 第一刀
+  可動工，搬遷整體不因 Claude Code 側走通即視為完成。
+- 承襲兩條件（research 報告 §Implications）：解析器遇結構變異必須大聲
+  失敗、每次 session 重新解析；CLI 大版本升級時重跑本 probe。
