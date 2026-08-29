@@ -34,7 +34,8 @@ Goal: <one sentence transcribed from the brief's Smallest End State at
     plan time, no nested body — see §Field-value grammar; frozen with
     the plan (wrap continuation lines WITH indentation — unindented
     wraps silently truncate the rendered goal); never edited
-    afterward>
+    afterward> — serves <PURPOSE | map <map-id>>: <short relation>, or
+    the honest escape — off-direction: <reason>
 Stage: <planning | sdd:wave-N | review:round-N | blocked:user-decision |
     finishing — updated by the orchestrator at each transition,
     committed with the nearest ledger or close-out commit>
@@ -195,7 +196,12 @@ mechanical checker decides it the same way every time.
   into the card's single `end-state:` line, so a nested body there is
   silently flattened rather than rendered. One sentence is brevity
   guidance, not a mechanical rule — no check enforces sentence
-  counting on this field.
+  counting on this field. The line ends with a direction-relation
+  clause, written once at plan birth and frozen with the rest of the
+  line under the same never-edited-afterward rule above: either
+  `— serves <PURPOSE | map <map-id>>: <short relation>` when the plan
+  serves a recorded direction, or the honest escape
+  `— off-direction: <reason>` when it does not.
 
 See the Worked example section below for a before/after rewrite of an
 over-long `Description` under this rule.

@@ -170,7 +170,9 @@ Schema in [`references/plan-format.md`](references/plan-format.md). Plan lives a
 
 Source brief: docs/loom/specs/<date>-<topic>.md
 Goal: <one sentence transcribed from the brief's Smallest End State at
-    plan time — frozen with the plan; never edited afterward>
+    plan time — frozen with the plan; never edited afterward> — serves
+    <PURPOSE | map <map-id>>: <short relation>, or the honest escape —
+    off-direction: <reason>
 Stage: planning   ← at emit; enum planning | sdd:wave-N | review:round-N |
     blocked:user-decision | finishing — orchestrator updates it at each
     transition
