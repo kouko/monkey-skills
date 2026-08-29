@@ -70,6 +70,13 @@ def test_backlog_close_names_regenerate_command():
     )
 
 
+def test_backlog_review_due_reminder_is_manual_not_ci_wired():
+    """Close-out reminds operators to run the explicit-date review query."""
+    text = _normalized_text()
+    assert "`python3 scripts/backlog_index.py --review-due --as-of YYYY-MM-DD`" in text
+    assert "No CI wiring" in text
+
+
 def test_backlog_close_silent_skip_clause_present():
     """No hit, or no store, skips silently — auditable from the diff,
     same posture as the memory-store bullet. Narrowed to the

@@ -78,6 +78,36 @@ def _charter_table_status_words(section: str) -> set[str]:
     return set(_STATUS_TABLE_ROW.findall(section))
 
 
+def _v2_operating_policy(path: Path) -> str:
+    text = path.read_text(encoding="utf-8")
+    _, marker, after = text.partition("## V2 operating policy\n")
+    assert marker, f"{path} has no V2 operating policy section"
+    policy, _, _ = after.partition("\n## ")
+    return " ".join(policy.split())
+
+
+def test_backlog_v2_contract_surfaces_are_synchronized():
+    """The shipped charter and this repo's copy carry one v2 policy."""
+    template_policy = _v2_operating_policy(TEMPLATE_PATH)
+    charter_policy = _v2_operating_policy(CHARTER_PATH)
+
+    assert template_policy == charter_policy
+    for required in (
+        "start: date — YYYY-MM-DD",
+        "start: event — <observable condition>",
+        "`start: now` is invalid",
+        "90 days",
+        "--review-due --as-of YYYY-MM-DD",
+        "origin: supersedes <old-entry>",
+        "origin: promoted to <ticket>",
+        "check-umbrella",
+        "check-queue",
+        "amnesty-2026-08-30",
+        "134/26 is a live-store composition ratio, never a close rate",
+    ):
+        assert required in template_policy
+
+
 @pytest.mark.parametrize("path", [CHARTER_PATH, TEMPLATE_PATH])
 def test_charter_documents_the_closed_status_vocabulary(path):
     """The status-word table (in both the live charter AND its BI-11

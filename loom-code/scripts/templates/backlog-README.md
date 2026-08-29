@@ -9,6 +9,36 @@
 > format SSOT: derive the entry format from this file alone, without
 > opening any other file.
 
+## V2 operating policy
+
+Every live `open` entry carries exactly one start condition:
+`start: date — YYYY-MM-DD` or `start: event — <observable condition>`.
+`start: now` is invalid. There is no backward compatibility: validation
+applies this grammar to every live `open` entry.
+
+An entry is review-due 90 days after its immutable filename date. Run
+`python3 scripts/backlog_index.py --review-due --as-of YYYY-MM-DD` with
+an explicit date; ordinary validation does not read the clock. When work
+re-triggers, close the old entry as superseded, open a newly dated
+successor, and write `origin: supersedes <old-entry>` on that successor.
+
+Backlog-to-map promotion is close-and-cite: close the backlog entry and
+write `origin: promoted to <ticket>` before creating the ticket. No
+standing bidirectional link or close-on-delivery step exists. If a map
+is archived with unclosed tickets, reopen the entries promoted to those
+tickets.
+
+Run `check-umbrella` when creating a backlog entry and again at pickup;
+run `check-queue` when charting a map and when creating a task ticket.
+The umbrella test is the live map's clear condition, not topical overlap.
+
+Amnesty is bulk cleanup, not per-entry adjudication: the human names
+rescues, and every unrescued entry closes with
+`amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)`.
+
+134/26 is a live-store composition ratio, never a close rate. Cohort
+rates come from review-due data, not archaeology.
+
 ## Frontmatter contract
 
 Every entry — live or under `archive/` — carries this frontmatter:
