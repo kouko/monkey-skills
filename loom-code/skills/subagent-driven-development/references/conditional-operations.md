@@ -24,9 +24,10 @@ Use these rules only when `SKILL.md`'s ask policy says a question is warranted:
    Put that anchor inside the structured question field. Never offer a CLI
    command before confirming it exists. For a mid-arc question (SDD gate ③
    asks, kickoff-briefing escalations, complex-fork briefs), extend that same
-   line into a direction anchor: name the remote goal (`PURPOSE.md`'s
-   `**Why:**` line, or the governing map's Destination when the plan carries
-   a `Map part:` key), the near goal (the plan's `Goal:` line), and this
+   line into a direction anchor: name the remote goal (`docs/loom/PURPOSE.md`'s
+   `**Why:**` line, or the governing map's Destination when the plan's
+   `## Notes` carries a `Map part: <map-id> / Part: <name>` line), the near
+   goal (the plan's `Goal:` line), and this
    decision's relation to them — one sentence, not a new field.
    Discovery-phase (brainstorming) questions are exempt: direction is itself
    the topic there.
