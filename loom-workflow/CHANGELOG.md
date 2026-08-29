@@ -10,7 +10,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 - Ticket frontmatter gains two optional fields: `blocked-by` (makes the
   frontier computable — validate rejects dangling references and cycles)
-  and `ratification` (records who ratified a graduated decision).
+  and `ratification` (sole value `pending` — marks a prototype ticket
+  whose measurement finished while the user's ratification of its
+  conclusion is still deferred).
 - `validate` now checks destination ratification and HITL presence — a
   map or ticket missing its human-in-the-loop line is rejected with a
   plain exit-2 message naming the missing line.
@@ -35,8 +37,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - The prototype fence is re-attributed: the prototype contract no longer
   carries upstream naming it never owned.
 
-`schema_version` stays 1; every existing map remains checker-valid
-unmodified.
+`schema_version` stays 1. The two ticket fields are fully additive — a
+store not using them validates exactly as before. The destination
+ratification gate is the one deliberate tightening (map-format's
+migration clause, first instance): a map charted before 1.4.0 whose
+state is `active` or `clear` needs its one-line destination
+`user-ratified:` entry added on upgrade before `validate` passes.
 
 ## [1.3.0] — 2026-08-28 — decision-map layer
 

@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-29-decision-map-protocol-hardening.md
 Goal: the decision-map skill text answers the eight dogfooded blanks and four additive mechanism guards back the judgment-critical ones, shipping loom-workflow 1.4.0 with schema_version 1 unchanged and every existing map still checker-valid unmodified
-Stage: planning
+Stage: review:round-1
 Steps:
   1. 權威檔票層文法先落地＋三件獨立雜項（撤掛名、關 backlog、版本）
   2. 權威檔圖層規則＋parser 機制跟上
@@ -57,7 +57,7 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-9
-- **Status**: pending
+- **Status**: done(8f02ae00)
 - **Gloss**: 票之間的依賴、待批准狀態、票的大小上限從此有官方文法可查——後面所有機制與規則都指向這裡。
 
 ## Task 2 — map-format 圖層規則（Destination 批准行＋全加法憲法）
@@ -78,7 +78,7 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-11
-- **Status**: pending
+- **Status**: done(eacf4187)
 - **Gloss**: 整張圖的方向要有人簽名批准、未來所有機制修訂都必須「只加不破」——這兩條憲法從此寫死在 schema 權威檔。
 
 ## Task 3 — SKILL charting 規則（無霧即停＋Destination 批准義務）
@@ -100,7 +100,7 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-5
-- **Status**: pending
+- **Status**: done(5ffcc6c8)
 - **Gloss**: 沒有霧就不開圖、開圖的方向必須經你簽名——charting 的兩個把關從此明文。
 
 ## Task 4 — SKILL work-through 規則（選擇權／fog 時機／保留慣例／路由判準）
@@ -127,7 +127,7 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
 - **Independent**: false
 - **Review-weight**: prose
 - **Brief item covered**: BI-1
-- **Status**: pending
+- **Status**: done(3db79d8c)
 - **Gloss**: 「誰選圖、誰選票、中途裁定記在哪、教訓歸哪個倉」四個 dogfood 撞過的洞在 work-through 章全部補上明文答案。
 
 ## Task 5 — prototype-contract 撤上游掛名
@@ -146,7 +146,7 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: BI-8
-- **Status**: pending
+- **Status**: done(c137277b)
 - **Gloss**: 查證不到的上游出處撤下來，圍欄教義改掛 loom 自己的名——規則不變，出處誠實。
 
 ## Task 6 — map_store parser＋blocked-by 檢查
@@ -170,7 +170,7 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
   - from Task 1: payload: the documented `blocked-by`/`ratification` field grammar; owner: Task 1; probe: `test_map_store.py::test_blocked_by_documented_grammar`
 - **Independent**: true
 - **Brief item covered**: BI-9
-- **Status**: pending
+- **Status**: done(32f917cd)
 - **Gloss**: 票的依賴鏈從文法變成可驗——寫錯（懸空、繞圈）的依賴在 validate 就被擋下，frontier 從此可機械計算。
 
 ## Task 7 — validate HITL 存在檢查
@@ -194,7 +194,7 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
   - from Task 6: payload: parsed ticket frontmatter plus validate's rule-walk structure; owner: Task 6; probe: `test_map_store.py::test_validate_hitl_presence`
 - **Independent**: true
 - **Brief item covered**: BI-10
-- **Status**: pending
+- **Status**: done(02b027a3)
 - **Gloss**: 「人批准過」從散文義務變成存在檢查——忘了簽的關票和沒批准的圖直接過不了 validate，既有的 family-relocation 圖保證不被誤殺。
 
 ## Task 8 — 關閉 ticket-selection backlog 條目
@@ -215,7 +215,7 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
 - **Independent**: true
 - **Review-weight**: mechanical
 - **Brief item covered**: BI-13
-- **Status**: pending
+- **Status**: done(dee0d994)
 - **Gloss**: 上一輪 dogfood 立的「票選擇權」債，在規則落地的同一個 PR 裡關帳。
 
 ## Task 9 — 版本 1.4.0＋Codex 鏡射＋CHANGELOG
@@ -235,7 +235,7 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: none — release administration: the bump delivers no brief outcome itself; marketplace publishing requires it.
-- **Status**: pending
+- **Status**: done(d2029fe5)
 - **Gloss**: 版本不 bump，marketplace 更新就靜默 no-op——這是讓所有修訂真正到達裝置的行政步驟。
 
 ## Notes
@@ -244,3 +244,11 @@ N/A — no unresolved question: scope, schema stance, and batch composition were
 - 執行順序建議：T1、T5、T8、T9 可先行（L1 並行）；T2、T6 次之；T3、T7 第三層；T4 收尾。
 - 收尾（finishing）時的補充驗證：對修訂後的 SKILL＋references 跑一次 cold-reader dogfood（fresh agent 只讀修訂文本，回答八個 blank 的情境題）——brief 成功判準的一部分，屬 finishing 階段而非本計畫任務。
 - 本 repo CI：loom-workflow lane 觸發於 `loom-workflow/**`，per-directory pytest 會跑 `skills/decision-map/scripts/test_*.py`；plugin version bump job 由 T9 滿足。
+
+## Notes (post-review)
+
+- 全分支審查更正：plan Goal 的「every existing map still checker-valid unmodified」對下游 repo 不精確——正確語意見 CHANGELOG 1.4.0 尾段（兩票欄位全加法；destination 閘是遷移條款下的刻意收緊，pre-1.4.0 active/clear 圖升級時需補一行批准）。Goal 依規凍結不改，以此註記為準。
+
+## Decision Log
+
+1. chose an unconditional destination-ratification gate with a same-revision migration clause in the constitution (over a permanent legacy-discrimination mechanism) because the only pre-existing map was user-ratified in this branch — cost-of-change: the day an unmigratable legacy store appears in another repo, this choice costs writing the discrimination mechanism after all
