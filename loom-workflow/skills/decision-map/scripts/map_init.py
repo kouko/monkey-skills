@@ -30,7 +30,7 @@ _MAP_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
 MAP_MD_TEMPLATE = """---
 map-id: {map_id}
-schema_version: 1
+schema_version: 2
 state: charting
 ---
 
@@ -50,10 +50,6 @@ ratification line, exact shape `user-ratified: <name/handle>, <date>`
 
 ## Out-of-scope
 
-## Parts
-
-| Part | Join key | Status |
-|---|---|---|
 """
 
 
