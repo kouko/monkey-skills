@@ -82,12 +82,27 @@ One session works through **one ticket** — except a `research` ticket,
 which may span multiple sessions before it resolves, since the lookup
 itself can take longer than one sitting.
 
+### Selecting the map and the ticket
+
+The MAP is human-named — never agent-picked. Work-through starts on a
+map the user named, or on one a recorded signal designates (e.g. the
+session's worktree or branch name matching a ticket slug in that map).
+With more than one live map and no such signal, ask the user which map
+to work — never infer the map from topic similarity. The TICKET within
+the named map is agent-picked: prefer a frontier ticket (§Ticket
+schema in `references/map-format.md` defines the frontier test). The
+claim records the selection basis — step 1 below says where.
+
 A session that works through a ticket does, in order:
 
 1. **Claim before work.** Before touching the ticket's question, set
    its frontmatter `claim` field and move `status` from `open` to
    `claimed`. Never work an unclaimed ticket, and never work a ticket
-   another session already claimed.
+   another session already claimed. In the same claim edit, write one
+   selection-basis line into the ticket body: who or what named the
+   map (the user, or the recorded signal, quoted) and why this ticket
+   was picked (e.g. the only frontier ticket, or the highest-risk
+   frontier ticket).
 2. **Resolve the ticket.** Delegate the actual work by the ticket's
    `type`, per §Delegation by ticket type below. When the work
    concludes, fill in the ticket's Resolution section per §Ticket
@@ -108,7 +123,16 @@ A session that works through a ticket does, in order:
    graduate an existing fog entry into a new ticket (recording
    `graduated-from: F-<n>` on the new ticket's frontmatter) before the
    session ends — never leave a surfaced question undocumented for a
-   later session to rediscover.
+   later session to rediscover. Recording need not wait for the
+   close: a question surfaced mid-ticket is recorded as fog (or
+   graduated) when surfaced — this step is the deadline, never a
+   reason to park a known question until close. Route what surfaces
+   by where it binds: an unknown blocking THIS map's destination goes
+   to this map's fog; a lesson or unknown that outlives every map
+   goes to the repo's backlog store (`docs/loom/backlog/`) instead.
+   The agent routes without asking, but the entry it files records
+   the routing basis — one line stating which of the two criteria
+   placed it there.
 5. **Run the risk pass, then the close-time gates.** Run the risk
    pass from §Risk pass above first — this is a prose judgment step,
    not a script, so read the open tickets and fog yourself and front-
@@ -150,7 +174,11 @@ content).
   `references/prototype-contract.md`. HITL: both prototype modes
   (variant selection and feasibility-conclusion) carry a
   user-ratified line in the Resolution section, per §Ticket schema in
-  `references/map-format.md`.
+  `references/map-format.md`. When the measurement finished but the
+  user deferred ratifying the conclusion, the ticket stays `claimed`,
+  records a progress note in its body, and may set
+  `ratification: pending` (§Ticket schema owns the field); it closes
+  only when the deferred ratification lands.
 
 ## Liveness assessment
 
