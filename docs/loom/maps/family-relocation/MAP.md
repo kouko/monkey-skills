@@ -12,6 +12,8 @@ state: active
 north-star 備忘（queue 層概念上屬家族、實體上被 loom-code 持有，因為
 跨 plugin 原語缺口）與 integration-seed 的「行為拉力、非打包」裁定。
 
+user-ratified: kouko, 2026-08-29
+
 ## Notes
 
 - 本圖是 decision-map 層的第一張 dogfood 圖（arc E 交付的實地驗證）。

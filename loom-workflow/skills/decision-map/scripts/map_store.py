@@ -33,6 +33,8 @@ SUPPORTED_SCHEMA_VERSION = 1
 VALID_MAP_STATES = {"charting", "active", "clear", "archived"}
 LIVE_MAP_STATES = {"charting", "active"}
 VALID_TICKET_TYPES = {"grilling", "research", "task", "prototype"}
+HITL_TICKET_TYPES = {"grilling", "prototype"}
+RATIFIED_MAP_STATES = {"active", "clear"}
 VALID_TICKET_STATUSES = {"open", "claimed", "closed"}
 
 REQUIRED_SECTIONS = [
@@ -263,6 +265,8 @@ class TicketFrontmatter:
     status: str
     claim: str | None
     graduated_from: str | None
+    blocked_by: list[str] = field(default_factory=list)
+    ratification: str | None = None
 
 
 @dataclass
@@ -280,11 +284,21 @@ def _parse_ticket_frontmatter(fields: dict[str, str]) -> TicketFrontmatter:
     for key in ("type", "status"):
         if key not in fields:
             raise SchemaViolation(f"ticket frontmatter is missing '{key}'")
+    # `blocked-by` is one line of comma-separated sibling ticket slugs
+    # (map-format.md §Ticket schema — frontmatter has no YAML lists);
+    # absent means no blockers, exactly the pre-field behavior.
+    blocked_by = [
+        slug.strip()
+        for slug in fields.get("blocked-by", "").split(",")
+        if slug.strip()
+    ]
     return TicketFrontmatter(
         type=fields["type"],
         status=fields["status"],
         claim=_null_or(fields.get("claim", "null")),
         graduated_from=_null_or(fields.get("graduated-from", "null")),
+        blocked_by=blocked_by,
+        ratification=_null_or(fields.get("ratification", "null")),
     )
 
 
@@ -396,6 +410,13 @@ def _check_schema_version(schema_version: int) -> None:
         )
 
 
+def _has_user_ratified_line(text: str) -> bool:
+    return any(
+        line.strip().startswith("user-ratified:")
+        for line in text.splitlines()
+    )
+
+
 def _check_map_structure(doc: MapDocument) -> None:
     if doc.frontmatter.state not in VALID_MAP_STATES:
         raise SchemaViolation(
@@ -420,6 +441,14 @@ def _check_map_structure(doc: MapDocument) -> None:
         if fog.id in seen_fog_ids:
             raise SchemaViolation(f"duplicate fog id reused: {fog.id!r}")
         seen_fog_ids.add(fog.id)
+    if doc.frontmatter.state in RATIFIED_MAP_STATES and not _has_user_ratified_line(
+        doc.sections.get("Destination", "")
+    ):
+        raise SchemaViolation(
+            f"{doc.path}: state {doc.frontmatter.state!r} requires a "
+            "'user-ratified:' line in the Destination section "
+            "(map-format.md §Sections)"
+        )
     for part in doc.parts:
         expected_prefix = f"{doc.frontmatter.map_id} / Part: "
         if not part.join_key.startswith(expected_prefix):
@@ -434,6 +463,7 @@ def _check_tickets(map_dir: Path) -> None:
     tickets_dir = Path(map_dir) / "tickets"
     if not tickets_dir.is_dir():
         return
+    blocked_by_graph: dict[str, list[str]] = {}
     for ticket_path in sorted(tickets_dir.glob("*.md")):
         ticket = read_ticket(ticket_path)
         if ticket.frontmatter.type not in VALID_TICKET_TYPES:
@@ -446,6 +476,65 @@ def _check_tickets(map_dir: Path) -> None:
                 f"{ticket_path}: status {ticket.frontmatter.status!r} is "
                 f"not one of {sorted(VALID_TICKET_STATUSES)}"
             )
+        if (
+            ticket.frontmatter.status == "closed"
+            and ticket.frontmatter.type in HITL_TICKET_TYPES
+            and not _has_user_ratified_line(ticket.resolution or "")
+        ):
+            raise SchemaViolation(
+                f"{ticket_path}: closed {ticket.frontmatter.type} ticket "
+                "is missing a 'user-ratified:' line in its Resolution "
+                "(map-format.md §Ticket schema HITL rule)"
+            )
+        blocked_by_graph[ticket_path.stem] = ticket.frontmatter.blocked_by
+    _check_blocked_by(blocked_by_graph, tickets_dir)
+
+
+def _check_blocked_by(
+    graph: dict[str, list[str]], tickets_dir: Path
+) -> None:
+    """map-format.md §Ticket schema's blocked-by bullet: every slug
+    names an existing sibling ticket file, and the blocked-by graph is
+    acyclic — dangling slugs and cycles exit 2."""
+    for slug, blockers in graph.items():
+        for blocker in blockers:
+            if blocker not in graph:
+                raise SchemaViolation(
+                    f"{tickets_dir / (slug + '.md')}: blocked-by names "
+                    f"{blocker!r}, but no ticket file "
+                    f"'{blocker}.md' exists in {tickets_dir}"
+                )
+    # cycle detection: iterative DFS with three-color marking
+    WHITE, GRAY, BLACK = 0, 1, 2
+    color = {slug: WHITE for slug in graph}
+    for start in sorted(graph):
+        if color[start] != WHITE:
+            continue
+        stack: list[tuple[str, int]] = [(start, 0)]
+        path: list[str] = []
+        while stack:
+            slug, edge_index = stack.pop()
+            if edge_index == 0:
+                color[slug] = GRAY
+                path.append(slug)
+            blockers = graph[slug]
+            advanced = False
+            for i in range(edge_index, len(blockers)):
+                nxt = blockers[i]
+                if color[nxt] == GRAY:
+                    cycle = path[path.index(nxt):] + [nxt]
+                    raise SchemaViolation(
+                        "blocked-by graph has a cycle: "
+                        + " -> ".join(cycle)
+                    )
+                if color[nxt] == WHITE:
+                    stack.append((slug, i + 1))
+                    stack.append((nxt, 0))
+                    advanced = True
+                    break
+            if not advanced:
+                color[slug] = BLACK
+                path.pop()
 
 
 def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:

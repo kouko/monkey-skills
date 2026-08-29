@@ -71,3 +71,38 @@ def test_cli_bare_positional_shape(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     map_dir = tmp_path / "docs" / "loom" / "maps" / "wayfinder"
     assert (map_dir / "MAP.md").is_file()
+
+
+# --- destination ratification slot (map-format.md §Sections) ---------------
+
+
+def test_scaffold_destination_ratification_slot_is_not_a_valid_line(
+    tmp_path: Path,
+) -> None:
+    """map-format.md §Sections: map_init scaffolds the destination
+    ratification SLOT — a visible placeholder the charting close
+    replaces — which must NOT read as a real `user-ratified:` line:
+    the scaffold validates 0 in `charting`, but hand-flipping state to
+    `active` without a real ratification line is exit 2."""
+    _git_init(tmp_path)
+    assert map_init.init_map("wayfinder", repo_root=tmp_path) == 0
+    map_dir = tmp_path / "docs" / "loom" / "maps" / "wayfinder"
+    map_md = map_dir / "MAP.md"
+    text = map_md.read_text(encoding="utf-8")
+    # the slot is visible in the Destination section...
+    assert "user-ratified" in text
+    # ...but no line is a real ratification line
+    assert not any(
+        line.strip().startswith("user-ratified:")
+        for line in text.splitlines()
+    )
+    # charting scaffold validates clean
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+    # hand-flipped to active with only the placeholder: exit 2
+    map_md.write_text(
+        text.replace("state: charting", "state: active"), encoding="utf-8"
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "user-ratified:" in message

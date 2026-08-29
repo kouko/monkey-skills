@@ -84,7 +84,15 @@ applies this exact two-part test, never a bare existence check.
 MAP.md's body carries these sections, in this order:
 
 1. **Destination** — prose: what this map is charting toward. The
-   single paragraph a session re-reads to re-orient.
+   single paragraph a session re-reads to re-orient. From the charting
+   close onward, an `active` or `clear` map's Destination section also
+   carries a destination ratification line — exact shape
+   `user-ratified: <name/handle>, <date>` (the same dated shape
+   §Ticket schema's HITL rule uses) — recording that a human ratified
+   the map's direction. `map_store.py validate` machine-gates its
+   presence on `active` and `clear` maps (exit 2 when missing), and
+   `map_init.py` scaffolds the line slot. This gate tightens beyond
+   new-rule writes under §Schema versioning's migration clause.
 2. **Notes** — free-form prose; anything that does not fit the
    structured sections below. Never a substitute for a Decisions-so-far
    line or a fog entry — a decision or an open question written only
@@ -172,6 +180,26 @@ graduated-from: null
   deadlock without opening concurrency control.
 - `graduated-from` — `null`, or the `F-<n>` fog id this ticket was
   graduated from (see §Fog entries).
+- `blocked-by` — optional. Absent means no blockers — exactly today's
+  meaning. When present, one line of comma-separated ticket slugs
+  (frontmatter is simple `key: value` — no YAML lists, so the slugs
+  share a single line); every slug names a sibling ticket file in the
+  same map's `tickets/` directory. The blocked-by graph must be
+  acyclic. Dangling slugs and cycles are machine-gated by
+  `map_store.py validate` (§Command surface), exit 2.
+- `ratification` — optional; sole defined value `pending`. Marks a
+  prototype ticket whose measurement finished but whose conclusion
+  the user deferred ratifying; the ticket stays `claimed` while the
+  field is `pending`. Absent means no deferred ratification —
+  exactly today's meaning. The field records measurement state, not
+  claimant state, so it survives a stale-claim reclaim unchanged; the
+  new claimant inherits the pending ratification duty.
+
+**Frontier.** A ticket is on the frontier iff its `status` is `open`,
+every ticket named in its `blocked-by` line is `closed`, and it is
+unclaimed. A ticket with no `blocked-by` field is frontier-eligible
+whenever it is open and unclaimed — the pre-`blocked-by` behavior,
+unchanged.
 
 ### Body sections
 
@@ -188,10 +216,18 @@ graduated-from: null
   feasibility-conclusion) close only through ratification, so a
   checker never has to inspect a prototype ticket's body to decide
   whether the duty applies; `type` alone decides it. A HITL ticket
-  closed with no user-ratified line is a gate violation. No script
-  under §Command surface enforces this in v1 — it is enforced by
-  review only; a future checker may absorb it, at which point this
-  line names it.
+  closed with no user-ratified line is a gate violation.
+  `map_store.py validate` (§Command surface) enforces it: a `closed`
+  grilling or prototype ticket whose Resolution carries no
+  `user-ratified:` line exits 2.
+
+### Ticket sizing
+
+One ticket's question is sized to one agent session. A research
+ticket may span several sessions resolving, but the QUESTION itself
+stays one-session-sized — a question too large for one sitting is
+split into multiple tickets (or returned to fog) rather than
+stretched across one oversized ticket.
 
 ## Parts section
 
@@ -240,6 +276,22 @@ copy. If the value is greater than the highest version that checker's
 own code supports, the checker refuses to read further and exits 2
 with a message naming both the file's version and the checker's
 supported ceiling. A checker never guesses at an unknown schema shape.
+
+Mechanism revisions to this store are additive-only. A revision may
+add new optional fields, and may tighten a check only so that content
+written under the new rules can newly fail — never so that an
+untouched pre-existing store starts failing. One narrow exception —
+the migration clause: a check MAY tighten beyond new-rule writes
+only when the same revision migrates every known pre-existing store
+and records that migration, so no untouched store is left to fail.
+The destination-ratification gate (§Sections' Destination bullet) is
+this clause's first instance: its one pre-existing map was ratified
+in the same revision that introduced the check, emptying the legacy
+population. Under this constitution
+an older checker never mis-rejects a newer store, and a newer checker
+never mis-rejects an untouched older store. The rationale is
+operational, not hypothetical: cross-host plugin version skew is a
+measured normal state, not an edge case.
 
 ## Command surface
 

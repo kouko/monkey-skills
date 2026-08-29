@@ -4,6 +4,46 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] — 2026-08-29 — decision-map protocol hardening
+
+### Added
+
+- Ticket frontmatter gains two optional fields: `blocked-by` (makes the
+  frontier computable — validate rejects dangling references and cycles)
+  and `ratification` (sole value `pending` — marks a prototype ticket
+  whose measurement finished while the user's ratification of its
+  conclusion is still deferred).
+- `validate` now checks destination ratification and HITL presence — a
+  map or ticket missing its human-in-the-loop line is rejected with a
+  plain exit-2 message naming the missing line.
+
+### Changed
+
+- The decision-map skill text answers the blanks the first dogfood
+  session showed become silent agent defaults: a selection-authority
+  rule (the map is human-named, or taken from a recorded signal; the
+  ticket within a map is agent-picked, with the selection basis
+  recorded in the ticket body at claim time), a destination-ratification
+  rule (charting close writes a user-ratified line on MAP.md), a
+  measured-pending-ratification convention (a prototype ticket whose
+  probe finished but whose conclusion the user deferred stays
+  `status: claimed`, records a progress note, and may carry
+  `ratification: pending`), explicit legality of mid-ticket fog
+  additions (surfaced questions are recorded as fog when surfaced, not
+  deferred to ticket close), a no-fog STOP
+  (charting halts instead of inventing fog items), a ticket sizing rule,
+  a store-routing criterion for where records land, and an additive-only
+  revision constitution for map edits.
+- The prototype fence is re-attributed: the prototype contract no longer
+  carries upstream naming it never owned.
+
+`schema_version` stays 1. The two ticket fields are fully additive — a
+store not using them validates exactly as before. The destination
+ratification gate is the one deliberate tightening (map-format's
+migration clause, first instance): a map charted before 1.4.0 whose
+state is `active` or `clear` needs its one-line destination
+`user-ratified:` entry added on upgrade before `validate` passes.
+
 ## [1.3.0] — 2026-08-28 — decision-map layer
 
 ### Added

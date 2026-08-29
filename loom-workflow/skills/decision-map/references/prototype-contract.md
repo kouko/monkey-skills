@@ -23,11 +23,10 @@ capability, integration fit — feasibility mode; the resolution records
 the measured numbers or pass/fail, not an impression). Constraints,
 all mechanical where possible:
 
-- lives only on its `prototype/<map-id>/<ticket-slug>` branch (the
-  prototype branch fence; upstream wayfinder independently converged
-  on `prototype/<name>` never-merged branches after reversing its own
-  delete-it doctrine — "a prose summary of a prototype loses the thing
-  that made it convincing");
+- lives only on its `prototype/<map-id>/<ticket-slug>` branch, never
+  merged (the prototype branch fence; the branch is kept because a
+  prose summary of a prototype loses the evidence that made it
+  convincing);
 - the question is written at the top of the artifact itself (a visible
   intro, not a comment), not only in the ticket;
 - **one sitting**: answered in one session; still building a day later

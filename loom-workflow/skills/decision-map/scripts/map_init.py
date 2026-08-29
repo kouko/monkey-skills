@@ -38,6 +38,10 @@ state: charting
 
 TODO: what this map is charting toward.
 
+<!-- charting close: replace this comment with the destination
+ratification line, exact shape `user-ratified: <name/handle>, <date>`
+(map-format.md §Sections) -->
+
 ## Notes
 
 ## Decisions-so-far
