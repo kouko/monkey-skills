@@ -13,12 +13,11 @@ survives across sessions: a map is opened once (charting), then
 advanced one ticket at a time over however many sessions it takes
 (work-through), until the fog is empty and every ticket is closed.
 
-Full schema authority for MAP.md and ticket files —
-frontmatter fields, section order, the fog-id grammar, the ticket
-schema, schema versioning, and the pinned command surface — lives in
+Full schema authority for MAP.md and ticket files — including the
+ticket boundary contract and command surface — lives in
 `references/map-format.md`. Read it before charting or working through
-a map; this file does not restate the schema, only the protocol for
-using it. The prototype ticket type's full contract — when-to-use,
+a map; this file does not restate the schema or its boundary rules.
+The prototype ticket type's full contract — when-to-use,
 both modes, the six-stage lifecycle — lives in
 `references/prototype-contract.md`; read it before delegating a
 `prototype` ticket.
@@ -144,11 +143,10 @@ A session that works through a ticket does, in order:
    Exit 2 from any of the three means the close is not done — fix the
    reported violation (a bad link, a fog-monotonicity break, a schema
    violation) before ending the session. Exit 1 means the path or
-   environment is wrong, not the map — fix the invocation and re-run. If this close leaves
-   zero open tickets and an empty fog section, flip `state` from
-   `active` to `clear` by hand (`references/map-format.md`
-   §Frontmatter) — this is the only close-time trigger for that
-   transition.
+   environment is wrong, not the map — fix the invocation and re-run.
+   If this close satisfies the clear condition in
+   `references/map-format.md` §Ticket boundary contract, flip `state`
+   from `active` to `clear` by hand.
 
 ### Delegation by ticket type
 
@@ -165,11 +163,8 @@ content).
 - **`research`** — delegate to `research-toolkit:deep-deep-research`.
   May span multiple sessions before it resolves (see Work-through
   mode above).
-- **`task`** — delegate to a backlog entry in this repo's
-  `docs/loom/backlog/` store; filing the backlog entry IS the
-  resolution, so the map ticket closes then, while the backlog
-  entry's own lifecycle proceeds independently (decision-map
-  schedules and records, never performs).
+- **`task`** — follow `references/map-format.md` §Ticket boundary
+  contract.
 - **`prototype`** — delegate to the protocol in
   `references/prototype-contract.md`. HITL: both prototype modes
   (variant selection and feasibility-conclusion) carry a
@@ -183,35 +178,11 @@ content).
 ## Liveness assessment
 
 A caller (e.g. a kickoff flow) invokes this skill to ask "is there a
-live map here": enumerate `docs/loom/maps/*/`, and for each run
-`map_store.py validate <map-dir> --repo-root <path>`. A map is live
-iff that validate exits 0 AND its `state` is `charting` or `active`
-(the exact two-part test pinned in §Live-map criterion of
-`references/map-format.md` — read that section rather than
-re-deriving the rule here). Return either the list of live map-ids,
-each paired with its Destination section's first line, or an explicit
-"no live map" answer when none qualify.
-
-## Delivery write-back
-
-When a closing plan's own plan-level progress binds to this map through
-a Parts join key (`<map-id> / Part: <name>` — §Parts in
-`references/map-format.md`), a branch's close-out flow flips that Parts
-row's Status cell. The closing plan carries that binding as a
-`## Notes` line of the exact form `Map part: <map-id> / Part: <name>`
-(§Parts). Writing that line is part of creating the Parts row: whoever
-adds a row to MAP.md also adds the binding line to the corresponding
-plan's `## Notes` — without it the row can never flip. The flip runs the map_parts.py flipper against the
-map directory, passing `--part <join-key> --sha <commit> --repo-root
-<path>` (the canonical arg shape pinned in §Command surface of
-`references/map-format.md`). The sha recorded is the branch's **last
-content commit** — the HEAD as it stands *before* the close-out commit
-that stages the flipped MAP.md is added, not the close-out commit
-itself. A Parts row already carrying `done(<sha>)` is never re-flipped
-— the flipper exits 2 rather than overwrite an existing delivery
-record (§Command surface). Close-out flows in other plugins reach this
-capability by invoking the `decision-map` skill by name — never by
-importing map_parts.py directly across the plugin boundary.
+live map here": enumerate `docs/loom/maps/*/`, then apply
+`references/map-format.md` §Live-map criterion. Return the live
+map-ids paired with each Destination section's first line, an explicit
+"no live map" answer, or refuse until a broken map is repaired, as the
+criterion requires.
 
 ## See also
 

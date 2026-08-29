@@ -4,7 +4,7 @@
 map-format.md quotes only one full invocation literally — the
 `map_store.py validate <target> --repo-root <path>` example — so a
 citation of that script is checked by exact (whitespace-normalized)
-substring match against map-format.md. The other four scripts are
+substring match against map-format.md. The other three scripts are
 never spelled out as full invocations in map-format.md; instead it
 pins their shape in prose (§Command surface's "canonical arg shape"
 paragraph): a bare positional `target` plus `--repo-root <path>`,
@@ -26,7 +26,17 @@ SCRIPT_NAMES = (
     "map_store.py",
     "check_map_links.py",
     "check_map_fog.py",
+)
+
+V2_RETIRED_WRITEBACK_PHRASES = (
+    "delegate to a backlog entry",
+    "task → a backlog entry",
+    "filing the backlog entry IS the resolution",
+    "Parts section",
+    "Parts row",
+    "Map part:",
     "map_parts.py",
+    "Delivery write-back",
 )
 
 INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
@@ -46,7 +56,7 @@ def _normalize(command: str) -> str:
 
 
 def _script_commands(text: str) -> list[str]:
-    """Every inline-code span that opens with one of the five script names."""
+    """Every inline-code span that opens with one of the four script names."""
     commands = []
     for span in INLINE_CODE_RE.findall(text):
         stripped = span.strip()
@@ -99,3 +109,16 @@ def test_skill_commands_match_command_surface():
         "references/map-format.md §Command surface:\n" + "\n".join(
             f"  {quote!r}: {reason}" for quote, reason in offenders
         )
+
+
+def test_v2_contract_rejects_relay_and_parts_language():
+    """The v2 contract has no backlog relay or mutable Parts write-back."""
+    contract_files = (MAP_FORMAT_MD, SKILL_MD)
+    offenders = [
+        f"{path}: {phrase}"
+        for path in contract_files
+        for phrase in V2_RETIRED_WRITEBACK_PHRASES
+        if phrase.lower() in path.read_text(encoding="utf-8").lower()
+    ]
+
+    assert not offenders, "retired v2 contract wording remains:\n" + "\n".join(offenders)
