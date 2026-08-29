@@ -39,6 +39,10 @@ It produces:
 3. **Fog** — the initial Not-yet-specified list, each entry an
    authored `F-<n>` id per §Fog entries in `references/map-format.md`.
 
+**No-fog STOP.** If charting surfaces no fog entry at all, stop and
+ask the user before opening a map: an effort whose open questions can
+all be stated now needs a plan (`loom-code:writing-plans`), not a map.
+
 ## Risk pass
 
 A risk pass runs before charting closes, and again at every
@@ -56,6 +60,12 @@ named before the probe starts, and the one-sitting timebox.
 
 Charting closes only after the risk pass above and a clean validate
 run: `map_store.py validate <map-dir> --repo-root <path>`.
+Between those two steps, write the destination ratification line into
+the Destination section — the user-ratified line whose exact shape and
+validate gate are pinned in §Sections of `references/map-format.md`
+(cite that section; do not re-derive the grammar here). The close
+order therefore reads: risk pass → ratification line → validate →
+the hand-flip to `active` below.
 
 Exit 2 means the map content is not yet chartered cleanly — fix the
 reported violation; exit 1 means the path or environment is wrong,
