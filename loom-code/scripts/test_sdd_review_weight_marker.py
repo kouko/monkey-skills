@@ -57,11 +57,12 @@ def test_plan_document_reviewer_has_check_16():
     loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md carries:
       - a "Check 16" row (Review-weight: mechanical)
       - the field name "Review-weight: mechanical" (referenced by the check)
-      - the current applicable-checks denominator "<19>" — Check 5 (time-box,
+      - the current applicable-checks denominator "<20>" — Check 5 (time-box,
         retired when writing-plans dropped the time criterion) and Check 15
-        (advisory) are both excluded from the 21-check total, leaving 19
+        (advisory) are both excluded from the 22-check total, leaving 20
         checks that can actually fail. (Bumped from <18> to <19> when
-        Check 21 (complexity assessment) shipped; the
+        Check 21 (complexity assessment) shipped, and from <19> to <20>
+        when Check 22 (Goal-line direction clause) shipped; the
         table-derived total is independently re-checked by
         test_plan_reviewer_output_contract_count.py, which does not
         hardcode this number.)
@@ -69,7 +70,7 @@ def test_plan_document_reviewer_has_check_16():
     text = _read(PLAN_DOCUMENT_REVIEWER_PROMPT)
     assert "Check 16" in text
     assert "Review-weight: mechanical" in text
-    assert "<19>" in text
+    assert "<20>" in text
 
 
 def test_sdd_skill_has_mechanical_skip_branch():

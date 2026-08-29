@@ -47,7 +47,7 @@ PLAN_DOCUMENT_REVIEWER_PROMPT = (
 # field) shipped (docs/loom/plans/2026-08-25-seam-contracts.md Task 4),
 # likewise an authorized append. Bumped 20 -> 21 when Check 21 (plan-time
 # complexity assessment) shipped, likewise an authorized append.
-PRE_EXISTING_MAX_CHECK_NUMBER = 21
+PRE_EXISTING_MAX_CHECK_NUMBER = 22
 
 
 def _read(path: Path) -> str:
@@ -65,7 +65,7 @@ def test_check8_sweeps_brief_obligations():
         (e.g. modal-obligation words and deferred-verification phrases),
         so the reviewer can classify a sentence without judgment.
     And the checks table as a whole must show no renumbering: no row number
-    exceeds the table's current legitimate maximum (21, since Check 21 shipped).
+    exceeds the table's current legitimate maximum (22, since Check 22 shipped in 0.104.0).
     """
     text = _read(PLAN_DOCUMENT_REVIEWER_PROMPT)
 

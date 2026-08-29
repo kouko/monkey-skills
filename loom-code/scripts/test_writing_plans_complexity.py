@@ -32,7 +32,7 @@ def test_non_mechanical_plan_carries_architecture_complexity():
     assert "upstream evidence is absent" in low_flat_lens
     assert "required end state" in low_flat_lens
     assert "Complexity assessment" in reviewer
-    assert "checks_passed: <N>/<19>" in reviewer
+    assert "checks_passed: <N>/<20>" in reviewer
 
 
 def _fenced_plans(text: str) -> list[str]:

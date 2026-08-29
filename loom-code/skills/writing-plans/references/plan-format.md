@@ -213,8 +213,8 @@ never-edited-afterward rule: either
 serves a recorded direction, or the honest escape
 `— off-direction: <reason>` when it does not. One of the two forms is
 always present — a bare Goal line with neither clause is invalid. No
-script enforces this clause; the plan-document-reviewer reads it as
-prose. `plan_card.py` prints `Goal:` verbatim, so every progress card
+script enforces this clause; the plan-document-reviewer's Check 22 is
+its gate. `plan_card.py` prints `Goal:` verbatim, so every progress card
 inherits the direction clause with no script change.
 
 #### `Files touched` and `Independent` (v0.8.0+)
