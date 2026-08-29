@@ -90,9 +90,9 @@ MAP.md's body carries these sections, in this order:
    `user-ratified: <name/handle>, <date>` (the same dated shape
    §Ticket schema's HITL rule uses) — recording that a human ratified
    the map's direction. `map_store.py validate` machine-gates its
-   presence on `active` and `clear` maps (exit 2 when missing; the
-   check ships in this same 1.4.0 revision), and `map_init.py`
-   scaffolds the line slot.
+   presence on `active` and `clear` maps (exit 2 when missing), and
+   `map_init.py` scaffolds the line slot. This gate tightens beyond
+   new-rule writes under §Schema versioning's migration clause.
 2. **Notes** — free-form prose; anything that does not fit the
    structured sections below. Never a substitute for a Decisions-so-far
    line or a fog entry — a decision or an open question written only
@@ -280,7 +280,14 @@ supported ceiling. A checker never guesses at an unknown schema shape.
 Mechanism revisions to this store are additive-only. A revision may
 add new optional fields, and may tighten a check only so that content
 written under the new rules can newly fail — never so that an
-untouched pre-existing store starts failing. Under this constitution
+untouched pre-existing store starts failing. One narrow exception —
+the migration clause: a check MAY tighten beyond new-rule writes
+only when the same revision migrates every known pre-existing store
+and records that migration, so no untouched store is left to fail.
+The destination-ratification gate (§Sections' Destination bullet) is
+this clause's first instance: its one pre-existing map was ratified
+in the same revision that introduced the check, emptying the legacy
+population. Under this constitution
 an older checker never mis-rejects a newer store, and a newer checker
 never mis-rejects an untouched older store. The rationale is
 operational, not hypothetical: cross-host plugin version skew is a
