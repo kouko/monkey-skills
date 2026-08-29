@@ -1075,6 +1075,74 @@ def _run_ready(store: Path) -> subprocess.CompletedProcess:
     )
 
 
+def test_review_due_uses_filename_age_and_explicit_as_of_only(
+    tmp_path: Path,
+) -> None:
+    store = tmp_path / "backlog"
+    store.mkdir()
+    _write(store, "2026-06-01-due.md", _entry("2026-06-01-due", "open"))
+    _write(store, "2026-06-02-not-due.md", _entry("2026-06-02-not-due", "open"))
+    _write(store, "2026-05-01-bet.md", _entry("2026-05-01-bet", "bet"))
+    _write(store, "2026-05-02-closed.md", _entry("2026-05-02-closed", "closed"))
+
+    due = subprocess.run(
+        [
+            sys.executable,
+            str(BACKLOG_SCRIPT),
+            "--review-due",
+            "--as-of",
+            "2026-08-30",
+            "--store",
+            str(store),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert due.returncode == 0, due.stdout + due.stderr
+    assert "2026-06-01-due" in due.stdout
+    assert "2026-06-02-not-due" not in due.stdout
+    assert "2026-05-01-bet" not in due.stdout
+    assert "2026-05-02-closed" not in due.stdout
+
+    missing_as_of = subprocess.run(
+        [sys.executable, str(BACKLOG_SCRIPT), "--review-due", "--store", str(store)],
+        capture_output=True,
+        text=True,
+    )
+    assert missing_as_of.returncode != 0
+    assert "--as-of" in missing_as_of.stderr
+
+    for invalid_value in ("2026-02-30", "20260830"):
+        invalid_as_of = subprocess.run(
+            [
+                sys.executable,
+                str(BACKLOG_SCRIPT),
+                "--review-due",
+                "--as-of",
+                invalid_value,
+                "--store",
+                str(store),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        assert invalid_as_of.returncode != 0
+        assert "invalid --as-of" in (invalid_as_of.stdout + invalid_as_of.stderr)
+
+    help_result = subprocess.run(
+        [sys.executable, str(BACKLOG_SCRIPT), "--help"],
+        capture_output=True,
+        text=True,
+    )
+    assert help_result.returncode == 0
+    assert "--review-due" in help_result.stdout
+    assert "--as-of" in help_result.stdout
+
+    validate = _run_validate(store)
+    assert validate.returncode == 0, validate.stdout + validate.stderr
+    assert "date.today(" not in BACKLOG_SCRIPT.read_text(encoding="utf-8")
+
+
 def test_ready_prints_bet_section_before_open(tmp_path):
     """(a) `bet` is the 'now' queue — it must render before `open`, and
     each section must actually contain its own entries (section-scoped,
