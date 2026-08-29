@@ -1,10 +1,12 @@
 ---
 name: 2026-07-06-sibling-plugin-skill-md-frontmatter-versions-lag-plugin-json
 description: Sibling plugin SKILL.md frontmatter versions lag plugin.json
-status: open
+status: closed
 origin: PR #490 loom-interface-design agent flag — drift lives in SKILL.md frontmatter, not READMEs, so #490's README pass left it unfixed
 start: next version bump of any sibling plugin, or next touch of the manifest-drift tooling (.claude/hooks/check-codex-manifest-drift.sh)
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: next version bump of any sibling plugin, or next touch of the
   manifest-drift tooling (.claude/hooks/check-codex-manifest-drift.sh)

@@ -1,8 +1,10 @@
 ---
 name: 2026-07-26-investing-toolkit-the-reconstruct-verb-inverts-the-pack-layering
 description: investing-toolkit — the `reconstruct` verb inverts the pack layering
-status: open
+status: closed
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - **What.** `pack_us.py` is a Layer-1 I/O module, and the `reconstruct` verb
   there imports an analysis-layer function (`kpi_us_statement_shape.statements_for`)

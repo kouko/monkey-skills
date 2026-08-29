@@ -1,10 +1,12 @@
 ---
 name: 2026-08-10-design-system-leads-with-adjectives-where-the-format-says-lead-with-a-reference
 description: design-system makes 3-5 inherited tone-and-manner adjectives the governing mood and ships six NEVER rules, but DESIGN.md's own PHILOSOPHY.md says adjectives describe a region while a specific reference describes a point, and that a long don't-list signals a description too vague to carry its own constraints
-status: open
+status: closed
 origin: 2026-08-08..10 DESIGN.md spec-conformance research — reading google-labs-code/design.md PHILOSOPHY.md (repo root, 110 lines; missed on the first pass because only docs/spec.md was read). Split out of docs/loom/specs/2026-08-08-design-md-spec-conformance.md so a mechanical token-shape fix would not be bundled with a taste decision about the station's generative layer.
 start: next substantive edit to design-system's Overview / Brand section or its Anti-patterns list, or the first real run of design-system that produces a DESIGN.md worth judging
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: next substantive edit to design-system's Overview / Brand section or its Anti-patterns list, or the first real run of design-system that produces a DESIGN.md worth judging
 - Origin: 2026-08-08..10 DESIGN.md spec-conformance research — reading google-labs-code/design.md PHILOSOPHY.md (repo root, 110 lines; missed on the first pass because only docs/spec.md was read). Split out of docs/loom/specs/2026-08-08-design-md-spec-conformance.md so a mechanical token-shape fix would not be bundled with a taste decision about the station's generative layer.

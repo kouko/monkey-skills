@@ -1,10 +1,12 @@
 ---
 name: 2026-08-13-adopting-bi-ids-forces-a-whole-plan-migration-in-one-pass
 description: the first brief to declare a BI- identifier makes every task in its plan illegal at once — brief mode treats any value naming no declared id as a defect, so adoption is all-or-nothing per plan with no incremental path
-status: open
+status: closed
 origin: 2026-08-13 brief-item-addressability arc, Task 11 spec review — running brief mode against this arc's own brief with one id injected produced ten unresolvable-citation errors, one per task, because every task in that plan cites by quote
 start: the first brief that declares a BI- identifier is authored, OR a second arc adopts the convention — whichever comes first
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: the first brief that declares a BI- identifier is authored, OR a
   second arc adopts the convention — whichever comes first

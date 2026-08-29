@@ -1,10 +1,12 @@
 ---
 name: 2026-07-14-pocock-loom-roadmap-arcs-c-d-e-remainder
 description: Pocock loom roadmap — arcs C/D/E remainder
-status: open
+status: closed
 origin: 2026-07-14 Pocock loom-* design review (5-option roadmap, user-approved order T8→B→C→D→E); arcs A (#565/#566/#568) and B (#569, loom-code 0.31.0 AFK research lane) shipped.
 start: C rides the next writing-lean.md / compression-catalog touch; D is schedulable any time (equivalence-gated slim round 2); E needs its own brainstorm arc.
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: C rides the next writing-lean.md / compression-catalog touch;
   D is schedulable any time (equivalence-gated slim round 2); E needs

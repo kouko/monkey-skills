@@ -1,8 +1,10 @@
 ---
 name: 2026-07-26-investing-toolkit-kpi-id-identity-2-37-0-post-ship-follow-ups
 description: investing-toolkit kpi_id identity 2.37.0 — post-ship follow-ups
-status: open
+status: closed
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - (a) 🟡 **No committed dogfood HARNESS.** The close-out dogfood (real
   `ingest_pack` → `kpi_store.append` over 47 cached live packs) is what caught the

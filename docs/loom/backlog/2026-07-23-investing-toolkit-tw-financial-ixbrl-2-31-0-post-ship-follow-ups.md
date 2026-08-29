@@ -1,9 +1,11 @@
 ---
 name: 2026-07-23-investing-toolkit-tw-financial-ixbrl-2-31-0-post-ship-follow-ups
 description: investing-toolkit TW financial iXBRL 2.31.0 — post-ship follow-ups
-status: open
+status: closed
 origin: TW financial-sector iXBRL (branch feat-tw-ixbrl-fh, 2026-07-23, 2.31.0); whole-branch review PASS with carried 🟢 debt.
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Origin: TW financial-sector iXBRL (branch feat-tw-ixbrl-fh, 2026-07-23, 2.31.0);
   whole-branch review PASS with carried 🟢 debt.

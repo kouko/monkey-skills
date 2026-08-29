@@ -4,6 +4,16 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [2.0.0] — 2026-08-30 — decision-map schema v2
+
+### Changed
+
+- Decision maps now use schema v2: the retired `Parts` write-back model is
+  removed, and liveness is the fail-closed three-state result `live`,
+  `not-present`, or `broken`.
+- Delivery progress is a public read-only query derived from plan bindings and
+  ledger state; it never writes `MAP.md`.
+
 ## [1.4.0] — 2026-08-29 — decision-map protocol hardening
 
 ### Added

@@ -1,10 +1,12 @@
 ---
 name: 2026-08-22-revert-condition-for-the-code-as-spec-no-op-bar
 description: the no-op bar shipped in loom-code 0.94.0 is provisional — its benefit is 2/2 on a single run against a baseline that draws zeros 2 times in 5, and the same run drew the exercise's first control false positive, so this entry names in advance what evidence retires it rather than leaving a one-sentence rule to accumulate unexamined
-status: open
+status: closed
 origin: 2026-08-22 code-as-spec-lens-no-op-bar arc — shipped with the author's own assessment that the effect is unproven and the cost is real; recorded so the rule cannot survive on inertia
 start: the second real-branch review in which a reviewer files a finding against an intent or absence sentence under deletion-first, or four real-branch reviews with no such finding — whichever comes first
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - What shipped: one sentence in each reviewer arm's code-as-spec lens barring
   the reviewer from declaring the `deletion-first` dimension not applicable,

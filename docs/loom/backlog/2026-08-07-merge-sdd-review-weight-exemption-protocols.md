@@ -1,11 +1,12 @@
 ---
 name: 2026-08-07-merge-sdd-review-weight-exemption-protocols
 description: SDD carries two parallel review-weight exemption protocols that could be one table
-status: open
-blocked: waiting on a third review-weight exemption shape, or a semantic edit to either protocol
+status: closed
 origin: 2026-08-07 family complexity audit (docs/loom/audits/2026-08-07-family-complexity-audit.md, item A4)
 start: a third review-weight exemption shape appears, or either protocol needs a semantic edit anyway
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 subagent-driven-development/SKILL.md:94-110 specifies two separately
 written exemption protocols that fork the reviewer triad: the mechanical

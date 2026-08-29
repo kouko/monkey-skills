@@ -1,10 +1,12 @@
 ---
 name: 2026-08-13-a-widened-field-grammar-has-no-mechanical-consumer-enumeration
 description: the consumer census a plan owes when it widens a field's grammar is performed from memory, so it misses consumers nobody thought of — the same arc missed one consumer its own brief named first, then missed three more of the same class in a second file set; the field-value-microstructure arc (2026-08-19) is a worked instance of the census done in the "Reverse" line of a brief's Current State Evidence
-status: open
+status: closed
 origin: brief-item-addressability arc (2026-08-13) — two independent misses of one class; the practice exists as prose in docs/loom/memory but has no enumeration step
 start: next arc that widens or narrows a value grammar in a loom contract file, or the next touch of writing-plans' plan-document-reviewer prompt
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 The arc widened `Brief item covered` to accept two new referent forms. It owed
 every consumer of that field's grammar either a task or a recorded reason it

@@ -1,10 +1,12 @@
 ---
 name: 2026-08-04-a-rule-can-ship-into-a-skill-and-never-reach-its-agent-contract
 description: a reviewer-behaviour rule written into a SKILL.md is not carried by the agent contract that executes it, and nothing mechanical pairs the two
-status: open
+status: closed
 origin: PR #644 round 1 (read-context), PR #645 round 1 and its verification round (delta-scope clause (b)) — four recurrences across two branches
 start: before the next branch that adds or edits a rule constraining `docs-reviewer` or `code-reviewer` behaviour
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 ## The item
 

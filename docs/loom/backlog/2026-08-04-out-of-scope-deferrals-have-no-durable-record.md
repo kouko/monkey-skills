@@ -1,10 +1,12 @@
 ---
 name: 2026-08-04-out-of-scope-deferrals-have-no-durable-record
 description: an out_of_scope finding is surfaced once in chat and persisted nowhere -- nothing re-injects it into a later round, so a deferred defect is silently dropped the moment nobody acts on the verdict in the same session
-status: open
+status: closed
 origin: loom-code 0.50.0 -- D5 retracted the "deferred on the record" overclaim; this entry is the retraction's follow-up, proposing the mechanism the honest wording says does not yet exist
 start: when a docs-review out_of_scope finding is lost across a session boundary in practice, or when the next branch touches requesting-docs-review's Aggregation rule / Verdict structure sections
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 ## Dependency retired 2026-08-24
 

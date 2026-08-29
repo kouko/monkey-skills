@@ -1,10 +1,12 @@
 ---
 name: 2026-08-21-kumiko-zaiku-app-icons-queue-layer-migration
 description: kumiko-zaiku-app-icons still carries a live DIRECTION.md with two COMMITTED-NEXT entries; docs/loom/plans/2026-08-21-dissolve-direction-layer.md deleted the direction layer from loom-code, so that repo needs a guided migration to the backlog store's bet/open/closed vocabulary
-status: open
+status: closed
 origin: this repo's own dissolve-direction-layer arc (docs/loom/plans/2026-08-21-dissolve-direction-layer.md) deleted DIRECTION.md, its generator verbs, charter, and template; kumiko-zaiku-app-icons is an external repo that adopted the now-retired direction layer and has not migrated
 start: the next time kumiko-zaiku-app-icons runs a loom gate against its DIRECTION.md — check_queue_relation.py (this arc's renamed queue gate) fails loudly there and fails loudly on the first entry whose status is outside the closed vocabulary, naming that entry and its status, so the migration is guided rather than guessed
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Origin: this repo's own dissolve-direction-layer arc (docs/loom/plans/2026-08-21-dissolve-direction-layer.md) deleted DIRECTION.md, its generator verbs, charter, and template; kumiko-zaiku-app-icons is an external repo that adopted the now-retired direction layer and has not migrated
 - Start: the next time kumiko-zaiku-app-icons runs a loom gate against its DIRECTION.md — check_queue_relation.py (this arc's renamed queue gate) fails loudly there and fails loudly on the first entry whose status is outside the closed vocabulary, naming that entry and its status, so the migration is guided rather than guessed

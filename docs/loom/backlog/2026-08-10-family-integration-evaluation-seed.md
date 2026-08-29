@@ -1,10 +1,12 @@
 ---
 name: 2026-08-10-family-integration-evaluation-seed
 description: adjudicated direction for loom family integration — behavioral pull, not packaging; seed for the evaluation arc that decides how the loom-* plugins grow together
-status: open
+status: closed
 origin: 2026-08-10 cheap-hardening-batch arc — adjudicated in conversation; filed so the direction is citable instead of re-litigated
 start: user authorizes the family-integration evaluation arc
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: user authorizes the family-integration evaluation arc
 
