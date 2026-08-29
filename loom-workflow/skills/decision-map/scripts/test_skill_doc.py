@@ -35,7 +35,6 @@ V2_RETIRED_WRITEBACK_PHRASES = (
     "Parts section",
     "Parts row",
     "Map part:",
-    "map_parts.py",
     "Delivery write-back",
 )
 
@@ -136,3 +135,15 @@ def test_v2_contract_pins_release_boundary_and_metric_definition():
     assert "optional discovery context, never a live or standing link" in map_format_text
     assert "134/26 is a live-store composition ratio, never a close rate" in map_format_text
     assert "Cohort rates come from review-due data, not archaeology." in map_format_text
+
+
+def test_no_live_contract_or_command_surface_references_map_parts():
+    """The retired Parts flipper and its tests must not remain live."""
+    retired_script = SKILL_DIR / "scripts" / "map_parts.py"
+    retired_test = SKILL_DIR / "scripts" / "test_map_parts.py"
+    assert not retired_script.exists(), retired_script
+    assert not retired_test.exists(), retired_test
+
+    for path in (SKILL_MD, MAP_FORMAT_MD):
+        text = path.read_text(encoding="utf-8").lower()
+        assert "map_parts.py" not in text, f"{path} still references map_parts.py"
