@@ -19,7 +19,16 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 - The decision-map skill text answers the blanks the first dogfood
   session showed become silent agent defaults: a selection-authority
-  rule (the user picks the next ticket, never the agent), a no-fog STOP
+  rule (the map is human-named, or taken from a recorded signal; the
+  ticket within a map is agent-picked, with the selection basis
+  recorded in the ticket body at claim time), a destination-ratification
+  rule (charting close writes a user-ratified line on MAP.md), a
+  measured-pending-ratification convention (a prototype ticket whose
+  probe finished but whose conclusion the user deferred stays
+  `status: claimed`, records a progress note, and may carry
+  `ratification: pending`), explicit legality of mid-ticket fog
+  additions (surfaced questions are recorded as fog when surfaced, not
+  deferred to ticket close), a no-fog STOP
   (charting halts instead of inventing fog items), a ticket sizing rule,
   a store-routing criterion for where records land, and an additive-only
   revision constitution for map edits.
