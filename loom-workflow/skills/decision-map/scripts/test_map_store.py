@@ -65,6 +65,7 @@ Decide the parser's stdlib-only constraint.
 ## Resolution
 
 stdlib only, no third-party imports.
+delivery-evidence: commit 0123456
 """
 
 
@@ -125,6 +126,45 @@ def test_validate_accepts_schema_conformant_fixture(tmp_path: Path) -> None:
     map_dir = _make_conformant_map(tmp_path)
     code, message = map_store.validate(map_dir, repo_root=tmp_path)
     assert code == 0, message
+
+
+def test_closed_task_requires_resolution_and_delivery_evidence(
+    tmp_path: Path,
+) -> None:
+    """A closed task names concrete delivery evidence, not merely a
+    prose claim that work finished."""
+    map_dir = _make_conformant_map(tmp_path)
+    ticket_path = map_dir / "tickets" / "decision-a.md"
+
+    def ticket_with_resolution(resolution: str | None) -> str:
+        ticket_without_resolution = TICKET_CLOSED.split("## Resolution", 1)[0]
+        if resolution is None:
+            return ticket_without_resolution
+        return ticket_without_resolution + "## Resolution\n\n" + resolution + "\n"
+
+    accepted = (
+        "Implemented.\n\ndelivery-evidence: commit 0123456",
+        "Implemented.\n\ndelivery-evidence: PR #123",
+        "Implemented.\n\ndelivery-evidence: docs/loom/results/probe.md",
+    )
+    for resolution in accepted:
+        _write(
+            ticket_path,
+            ticket_with_resolution(resolution),
+        )
+        code, message = map_store.validate(map_dir, repo_root=tmp_path)
+        assert code == 0, message
+
+    rejected = (
+        ticket_with_resolution(None),
+        ticket_with_resolution("Implemented, but no evidence is named."),
+        ticket_with_resolution("delivery-evidence: finished locally"),
+    )
+    for ticket_text in rejected:
+        _write(ticket_path, ticket_text)
+        code, message = map_store.validate(map_dir, repo_root=tmp_path)
+        assert code == 2
+        assert "delivery-evidence" in message
 
 
 # --- parser API ------------------------------------------------------------

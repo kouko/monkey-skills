@@ -275,6 +275,14 @@ def _parse_ticket_frontmatter(fields: dict[str, str]) -> TicketFrontmatter:
 
 
 _RESOLUTION_HEADING = re.compile(r"^##\s+Resolution\s*$")
+_COMMIT_EVIDENCE = re.compile(r"(?:commit\s+)?[0-9a-fA-F]{7,40}")
+_PR_EVIDENCE = re.compile(
+    r"(?:PR\s*)?#\d+|(?:PR\s+)?https?://\S+/pull/\d+",
+    re.IGNORECASE,
+)
+_ARTIFACT_PATH_EVIDENCE = re.compile(
+    r"(?:\.{1,2}/|/)?[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+"
+)
 
 
 def _parse_resolution(body: str) -> str | None:
@@ -290,6 +298,26 @@ def _parse_resolution(body: str) -> str | None:
             text = "\n".join(rest[:end]).strip()
             return text or None
     return None
+
+
+def _has_delivery_evidence(text: str) -> bool:
+    """Recognize the three delivery-evidence shapes pinned by the
+    ticket contract: commit SHA, PR reference, or artifact path."""
+    for line in text.splitlines():
+        key, separator, value = line.strip().partition(":")
+        if separator != ":" or key != "delivery-evidence":
+            continue
+        evidence = value.strip()
+        if any(
+            pattern.fullmatch(evidence)
+            for pattern in (
+                _COMMIT_EVIDENCE,
+                _PR_EVIDENCE,
+                _ARTIFACT_PATH_EVIDENCE,
+            )
+        ):
+            return True
+    return False
 
 
 def parse_ticket_document(text: str, path: Path) -> TicketDocument:
@@ -460,6 +488,16 @@ def _check_tickets(map_dir: Path, state: str) -> None:
                 f"{ticket_path}: closed {ticket.frontmatter.type} ticket "
                 "is missing a 'user-ratified:' line in its Resolution "
                 "(map-format.md §Ticket schema HITL rule)"
+            )
+        if (
+            ticket.frontmatter.status == "closed"
+            and ticket.frontmatter.type == "task"
+            and not _has_delivery_evidence(ticket.resolution or "")
+        ):
+            raise SchemaViolation(
+                f"{ticket_path}: closed task ticket requires a non-empty "
+                "Resolution with 'delivery-evidence: <commit SHA | PR | "
+                "artifact path>' (map-format.md §Ticket schema)"
             )
         if ticket.frontmatter.status != "closed":
             non_closed.append(
