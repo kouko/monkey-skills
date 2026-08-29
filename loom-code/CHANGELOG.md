@@ -5,6 +5,28 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.104.0] — 2026-08-29 — direction surfacing at kickoff, decision points, and the plan Goal line
+
+### Added
+
+- `brainstorming`'s Direction banner prints direction at kickoff, always —
+  never a silent skip. It quotes `docs/loom/PURPOSE.md`'s `**Why:**` line
+  verbatim, or a loud line naming the absence (no `PURPOSE.md`, or a
+  `PURPOSE.md` with no `**Why:**` line), then one line per live map pairing
+  map-id with its Destination.
+- `subagent-driven-development`'s User-question delivery rules extend the
+  existing state-and-stakes anchor for a mid-arc question (SDD gate ③ asks,
+  kickoff-briefing escalations, complex-fork briefs): the anchor now also
+  names the remote goal and the near goal and states this decision's relation
+  to them, in the same one sentence — discovery-phase (brainstorming)
+  questions stay exempt, since direction is itself the topic there.
+- `writing-plans`' plan-format spec fixes the `Goal:` line's grammar: written
+  once at plan birth and frozen, it ends with a direction-relation clause —
+  either `— serves <PURPOSE | map <map-id>>: <short relation>` or the honest
+  escape `— off-direction: <reason>`; a bare `Goal:` line with neither form is
+  invalid. `plan_card.py` prints `Goal:` verbatim, so every progress card
+  inherits the direction clause with no script change.
+
 ## [0.103.0] — 2026-08-28 — decision-map arc close-out
 
 ### Added

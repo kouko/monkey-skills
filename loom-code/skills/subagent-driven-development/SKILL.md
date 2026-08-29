@@ -62,8 +62,9 @@ use the host's structured question tool for non-trivial choices. Read
 §User-question delivery when a question or progress card must be rendered.
 Each option says what the user gets, not which agent mechanism runs. Translate
 internal verdict and wave labels, expand unfamiliar acronyms, and explain a
-number's meaning before its machine token. Keep the state-and-stakes anchor in
-the rendered question, not only the surrounding prose. Offer at most four
+number's meaning before its machine token. Keep the state-and-stakes anchor —
+including its direction anchor — in the rendered question, not only the
+surrounding prose. Offer at most four
 options and let the tool provide “Other”. Split unrelated decisions; combine
 only jointly judgeable questions. A prose fallback must carry the same anchor
 in its first line.

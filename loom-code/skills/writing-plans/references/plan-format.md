@@ -34,7 +34,8 @@ Goal: <one sentence transcribed from the brief's Smallest End State at
     plan time, no nested body — see §Field-value grammar; frozen with
     the plan (wrap continuation lines WITH indentation — unindented
     wraps silently truncate the rendered goal); never edited
-    afterward>
+    afterward> — serves <PURPOSE | map <map-id>>: <short relation>, or
+    the honest escape — off-direction: <reason>
 Stage: <planning | sdd:wave-N | review:round-N | blocked:user-decision |
     finishing — updated by the orchestrator at each transition,
     committed with the nearest ledger or close-out commit>
@@ -195,10 +196,26 @@ mechanical checker decides it the same way every time.
   into the card's single `end-state:` line, so a nested body there is
   silently flattened rather than rendered. One sentence is brevity
   guidance, not a mechanical rule — no check enforces sentence
-  counting on this field.
+  counting on this field. The direction-relation clause the line ends
+  with is a schema duty, not a grammar rule — it lives in
+  §Goal-line direction relation below, outside this section's
+  script-decided scope.
 
 See the Worked example section below for a before/after rewrite of an
 over-long `Description` under this rule.
+
+#### Goal-line direction relation (v0.104.0+)
+
+The `Goal:` line ends with a direction-relation clause, written once at
+plan birth and frozen with the rest of the line under the same
+never-edited-afterward rule: either
+`— serves <PURPOSE | map <map-id>>: <short relation>` when the plan
+serves a recorded direction, or the honest escape
+`— off-direction: <reason>` when it does not. One of the two forms is
+always present — a bare Goal line with neither clause is invalid. No
+script enforces this clause; the plan-document-reviewer's Check 22 is
+its gate. `plan_card.py` prints `Goal:` verbatim, so every progress card
+inherits the direction clause with no script change.
 
 #### `Files touched` and `Independent` (v0.8.0+)
 
@@ -418,7 +435,7 @@ For a brief at `docs/loom/specs/2026-05-16-csv-export.md` whose Smallest End Sta
 # Plan: CSV export query param
 
 **Source brief**: docs/loom/specs/2026-05-16-csv-export.md
-Goal: users can export the orders list as CSV with the same filters the list view applies
+Goal: users can export the orders list as CSV with the same filters the list view applies — serves PURPOSE: self-serve data access without engineering pulls
 Stage: planning
 Steps:
   1. Understand the CSV request and produce the file format
@@ -546,7 +563,7 @@ A high `Total tasks` count is **not** a discovery failure when the tasks fan out
 # Plan: backfill renderer module docstrings
 
 **Source brief**: docs/loom/specs/2026-05-20-renderer-docstrings.md
-Goal: every renderer file carries a one-line module docstring so the lint gate stops flagging them
+Goal: every renderer file carries a one-line module docstring so the lint gate stops flagging them — off-direction: lint hygiene, no PURPOSE/map bearing
 Stage: planning
 **Total tasks**: 8
 **Critical-path depth**: 2 (≤5 ✓)
