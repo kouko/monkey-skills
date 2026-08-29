@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-29-decision-map-protocol-hardening.md
 Goal: the decision-map skill text answers the eight dogfooded blanks and four additive mechanism guards back the judgment-critical ones, shipping loom-workflow 1.4.0 with schema_version 1 unchanged and every existing map still checker-valid unmodified
-Stage: review:round-1
+Stage: finishing
 Steps:
   1. 權威檔票層文法先落地＋三件獨立雜項（撤掛名、關 backlog、版本）
   2. 權威檔圖層規則＋parser 機制跟上
