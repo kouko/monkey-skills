@@ -177,12 +177,15 @@ graduated-from: null
   (frontmatter is simple `key: value` — no YAML lists, so the slugs
   share a single line); every slug names a sibling ticket file in the
   same map's `tickets/` directory. The blocked-by graph must be
-  acyclic.
+  acyclic. Dangling slugs and cycles are machine-gated by
+  `map_store.py validate` (§Command surface), exit 2.
 - `ratification` — optional; sole defined value `pending`. Marks a
   prototype ticket whose measurement finished but whose conclusion
   the user deferred ratifying; the ticket stays `claimed` while the
   field is `pending`. Absent means no deferred ratification —
-  exactly today's meaning.
+  exactly today's meaning. The field records measurement state, not
+  claimant state, so it survives a stale-claim reclaim unchanged; the
+  new claimant inherits the pending ratification duty.
 
 **Frontier.** A ticket is on the frontier iff its `status` is `open`,
 every ticket named in its `blocked-by` line is `closed`, and it is
