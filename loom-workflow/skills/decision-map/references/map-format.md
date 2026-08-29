@@ -251,6 +251,10 @@ no blocked state, standing bidirectional link, or close-on-delivery
 step. Map-to-backlog travel is release-only. A destination artifact is
 optional discovery context, never a live or standing link.
 
+Plan delivery progress is derived read-only from the plan's Notes
+binding and task ledger; it is never written into MAP.md or retained as
+a second progress table.
+
 ## Measurement note
 
 134/26 is a live-store composition ratio, never a close rate.
@@ -271,7 +275,7 @@ guidance rather than guessing at an unknown schema shape.
 
 ## Command surface
 
-Four scripts ship under `loom-workflow/skills/decision-map/scripts/`:
+Five scripts ship under `loom-workflow/skills/decision-map/scripts/`:
 
 | Script | Purpose |
 |---|---|
@@ -279,16 +283,17 @@ Four scripts ship under `loom-workflow/skills/decision-map/scripts/`:
 | `map_store.py` | Read/write primitives for MAP.md and ticket files, shared by the other three scripts and by skill-text tooling — the only sanctioned parser for this schema. Also exposes the `validate` CLI entrypoint: `map_store.py validate <map-dir> --repo-root <path>` — the sole check behind the §Live-map criterion's liveness check — exit 0/1/2 like the rest of §Command surface. |
 | `check_map_links.py` | Verify every Decisions-so-far line links an existing, closed ticket. |
 | `check_map_fog.py` | Verify fog-id monotonicity (§Fog entries): silent disappearance is machine-gated (exit 2); duplicate ids within the current MAP.md are gated by `validate`; reuse of a RETIRED id (graduated or moved to Out-of-scope, then re-issued) is review-enforced — the same disclosure pattern the HITL resolution rule already uses (§Ticket schema). |
+| `map_progress.py` | Read one plan's Notes binding and task ledger to report its map delivery-progress state without writing MAP.md. |
 
-**Canonical arg shape**, shared by every script above: a positional
-`target` argument (the map directory, a MAP.md path, or a ticket path,
-depending on the script), plus an optional `--repo-root` flag (default:
+**Canonical arg shape**, shared by every reader script above: a positional
+`target` argument (a map directory, a MAP.md path, a ticket path, or a
+plan path for `map_progress.py`), plus an optional `--repo-root` flag (default:
 `git rev-parse --show-toplevel` of the target's directory, falling
 back to cwd — the `--repo-root` resolution convention loom-code's
 on-ramp checker established). `map_store.py` alone
 prefixes this with a leading subcommand verb before the positional
 `target` — `validate` in v2 — since it is the one script in the table
-exposing more than one operation; the other three scripts take the
+exposing more than one operation; the other three map readers take the
 bare positional shape with no verb.
 
 Beyond the shared shape, `check_map_fog.py` additionally accepts
@@ -298,8 +303,8 @@ DIFF against that base, not a full-history scan: fog removed before
 the branch point is invisible to it, and a brand-new map trivially
 passes since it has no base version to compare against.
 
-`map_init.py` is a deliberate writer-script carve-out from the other
-three scripts' reader-script exit semantics: its positional argument is
+`map_init.py` is a deliberate writer-script carve-out from the four
+reader scripts' exit semantics: its positional argument is
 a bare map-id slug, not a target path; its exit `1` covers the
 already-exists refusal (an operational error, not a schema violation);
 its exit `2` covers a malformed slug.

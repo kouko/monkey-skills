@@ -184,6 +184,13 @@ map-ids paired with each Destination section's first line, an explicit
 "no live map" answer, or refuse until a broken map is repaired, as the
 criterion requires.
 
+## Delivery-progress query
+
+For a closing plan with a delivery binding, run
+`map_progress.py <plan-path> --repo-root <path>`. It reports the
+plan-derived state only; the binding grammar and read-only guarantee
+remain in `references/map-format.md` §Ticket boundary contract.
+
 ## See also
 
 - `references/map-format.md` — MAP.md schema, ticket schema,
