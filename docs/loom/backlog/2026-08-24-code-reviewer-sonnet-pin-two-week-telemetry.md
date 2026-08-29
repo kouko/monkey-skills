@@ -1,10 +1,12 @@
 ---
 name: 2026-08-24-code-reviewer-sonnet-pin-two-week-telemetry
 description: re-run the requested→resolved dispatch tally for loom-code:code-reviewer to verify the 0.98.0 model-sonnet frontmatter pin holds in organic sessions, and check the conditional-reversal clause against any post-merge defect a sonnet panel PASSed
-status: open
+status: closed
 origin: PR #734 (loom-code 0.98.0) — decision brief docs/loom/specs/2026-08-24-code-reviewer-sonnet-default.md schedules this telemetry; user confirmed "讓遙測說話" 2026-08-24
 start: 2026-09-07 or later, once ~2 weeks of organic dispatches exist after the 0.98.0 device sync (2026-08-24)
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 Method (same scan as the 2026-08-24 tally): join Agent tool_use records in
 `~/.claude/projects/*/*.jsonl` (requested `subagent_type` + `model` param)

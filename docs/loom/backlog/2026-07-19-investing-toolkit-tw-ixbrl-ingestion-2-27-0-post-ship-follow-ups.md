@@ -1,10 +1,12 @@
 ---
 name: 2026-07-19-investing-toolkit-tw-ixbrl-ingestion-2-27-0-post-ship-follow-ups
 description: investing-toolkit TW iXBRL ingestion 2.27.0 — post-ship follow-ups
-status: open
+status: closed
 origin: TW iXBRL ingestion (branch xbrl-tw, PR #592, 2026-07-19); brief/plan Decision Log + whole-branch review ship-as-debt rulings.
 start: next touch of `investing-toolkit/skills/data-markets/scripts/twse_ixbrl_*.py` or `pack_tw.py` memo-fetch.
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: next touch of `investing-toolkit/skills/data-markets/scripts/twse_ixbrl_*.py`
   or `pack_tw.py` memo-fetch.

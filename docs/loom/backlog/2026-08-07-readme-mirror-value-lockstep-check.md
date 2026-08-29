@@ -1,9 +1,11 @@
 ---
 name: 2026-08-07-readme-mirror-value-lockstep-check
 description: Tri-language README mirrors keep shipping stale counts/versions after English-only sweeps; a lockstep check on shared factual values (version, skill count, agent counts) would make the class unwritable
-status: open
+status: closed
 origin: arc-1 + arc-2 whole-branch docs reviews (2026-08-07) — the same sweep-miss class gated twice in one day; requesting-docs-review Directive 1's corollary says prefer a standing mechanism over extra review rounds
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 Both complexity-governance arcs hit the same defect class: a factual value
 (dimension count, plugin version, skill count, reviewer-agent count) was

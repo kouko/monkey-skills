@@ -1,10 +1,12 @@
 ---
 name: 2026-08-21-fail-loud-contract-covers-only-the-four-store-brief-gates
 description: the unreadable-input fail-loud contract binds only the four store/brief gates; 27 other modules in loom-code/scripts/ are EXEMPT, and 16 of them are leaky by the contract's own metric today (measured, not estimated — the count is pinned by test_exempt_leak_count_matches_the_filed_ledger)
-status: open
+status: closed
 origin: 2026-08-21 dissolve-direction-layer round-7 review — the EXEMPT block claimed this widening was already filed as backlog work when no such entry existed; the reviewer caught the overclaim and this entry is the filing that comment now points at
 start: the next time a non-gate script in loom-code/scripts/ dies on a raw traceback in front of a user, or the next arc that touches ANY of the 16 leaky modules the pinned metric names for any other reason
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: the next time a non-gate script in loom-code/scripts/ dies on a
   raw traceback in front of a user, or the next arc that touches ANY of the

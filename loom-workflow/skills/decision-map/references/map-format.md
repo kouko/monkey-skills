@@ -1,7 +1,7 @@
 # MAP.md and ticket format — decision-map layer
 
 > SSOT for the decision-map store's schema: MAP.md's frontmatter and
-> sections, the ticket file schema, the fog-id and join-key grammars,
+> sections, the ticket file schema, the fog-id grammar,
 > schema versioning, and the pinned command surface. Every checker,
 > flipper, and skill-text reference in this skill cites this file
 > instead of restating the grammar.
@@ -28,7 +28,7 @@ every join key and every ticket's location is anchored to it.
 ```yaml
 ---
 map-id: <slug>
-schema_version: 1
+schema_version: 2
 state: charting
 ---
 ```
@@ -47,37 +47,30 @@ nesting, no quoting, no multi-line values (`map_store.py`'s
     tickets + fog); not yet a stable work-through loop.
   - `active` — the work-through loop is live; tickets are being
     claimed and resolved.
-  - `clear` — every ticket is closed and the fog is empty or fully
-    moved to Out-of-scope; the map has nothing left to work through.
-  - `archived` — the map is retired. An archived map's Parts rows and
-    any surviving prototype branches stay listed for reference, but
-    the map no longer accepts new tickets or fog entries.
+  - `clear` — the clear condition in §Ticket boundary contract holds:
+    zero non-closed tickets and an empty fog section.
+  - `archived` — the map is retired and no longer accepts new tickets
+    or fog entries.
 
 `state` is hand-edited — no script under §Command surface owns this
-transition in v1. The transitions: `charting → active` is flipped by
+transition in v2. The transitions: `charting → active` is flipped by
 hand as the final act of the charting close, after the risk pass and a
 clean `validate` run. `active → clear` is flipped by the work-through
-close that leaves zero open tickets and an empty fog section.
+close that satisfies the clear condition in §Ticket boundary contract.
 `clear → archived` is the repo owner's explicit decision, never an
-agent default.
+agent default. On archive, reopen every backlog entry whose ticket is
+still non-closed and whose frontmatter says `origin: promoted to
+<ticket>`; the map then remains a historical record, not a stranded
+promotion target.
 
 ### Live-map criterion
 
-**A map is live if and only if it is checker-valid AND its `state` is
-`charting` or `active`.** "Checker-valid" is pinned to one exact
-check: `map_store.py validate <map-dir> --repo-root <path>`
-(§Command surface) exits `0` against the map. A non-zero exit — `1`
-(operational error) or `2` (a structural/schema-version violation) —
-is not checker-valid. `check_map_links.py` and `check_map_fog.py` are
-not part of this liveness check; they gate a ticket's or fog entry's
-own close-time state (see §MAP.md schema's Decisions-so-far bullet and
-§Fog entries), not whether the map itself is live. Directory presence
-alone is never adoption —
-a directory that exists but fails validation, or that carries `clear`
-or `archived`, is not a live map. Anything that needs to detect "is
-there a map in progress here" (on-ramp detection, brainstorming's
-upstream-artifact walk, a work-through session's own resume check)
-applies this exact two-part test, never a bare existence check.
+`is_live_map` has exactly three results: `live` when `map_store.py
+validate <map-dir> --repo-root <path>` exits `0` and the state is
+`charting` or `active`; `not-present` when no map exists; and `broken`
+for every existing map that is not live. Any consumer, including
+umbrella checks and reception, must refuse until a `broken` map is
+repaired — it must never treat `broken` as `not-present`.
 
 ### Sections
 
@@ -113,8 +106,6 @@ MAP.md's body carries these sections, in this order:
 5. **Out-of-scope** — a bulleted list of things this map explicitly
    will not chart. A fog entry may graduate here instead of into a
    ticket (see §Fog monotonicity).
-6. **Parts** — a table tracking plan-level delivery progress against
-   this map. See §Parts section below.
 
 ## Fog entries
 
@@ -162,17 +153,18 @@ graduated-from: null
 ---
 ```
 
-- `type` — one of `grilling`, `research`, `task`, `prototype`. Selects
-  which existing skill resolves the ticket (grilling →
-  `loom-code:brainstorming`; research → `research-toolkit:deep-deep-research`;
-  task → a backlog entry; prototype → the
-  `prototype/<map-id>/<ticket-slug>` branch protocol).
+- `type` — one of `grilling`, `research`, `task`, `prototype`. A
+  `task` is decision-unblocking work: it produces an artifact or answer
+  needed to decide the map's next move and never delivers the
+  Destination. Its Resolution records that artifact or answer, never a
+  backlog-entry filing. The other types select their resolver as
+  described by their own contracts.
 - `status` — one of `open`, `claimed`, `closed`.
 - `claim` — `null` when unclaimed, otherwise a claim marker of the
   form `<who>, <YYYY-MM-DD>` (the same dated shape the user-ratified
   line uses), written when `status` moves to `claimed`.
   Concurrent-claim discipline beyond this single field is out of scope
-  for v1. **Stale-claim rule**: a LATER session may reclaim a ticket
+  for v2. **Stale-claim rule**: a LATER session may reclaim a ticket
   when no commit has touched that ticket file since the claim marker's
   date — an observable git fact, not a trust call — by overwriting the
   `claim` line and noting the takeover in the ticket body. A claim
@@ -220,6 +212,9 @@ unchanged.
   `map_store.py validate` (§Command surface) enforces it: a `closed`
   grilling or prototype ticket whose Resolution carries no
   `user-ratified:` line exits 2.
+  Every closed `task` ticket additionally has a non-empty Resolution
+  and one `delivery-evidence: <commit SHA | PR | artifact path>` line;
+  `map_store.py validate` rejects either omission.
 
 ### Ticket sizing
 
@@ -229,69 +224,59 @@ stays one-session-sized — a question too large for one sitting is
 split into multiple tickets (or returned to fog) rather than
 stretched across one oversized ticket.
 
-## Parts section
+## Ticket boundary contract
 
-MAP.md's Parts section is a table, one row per plan part this map's
-destination decomposes into:
+This section is the sole authority for D2–D9; protocol text cites it
+instead of paraphrasing its rules.
 
-| Part | Join key | Status |
-|---|---|---|
-| <part name> | `<map-id> / Part: <part name>` | not-started / in-progress / done(\<sha\>) |
+The **clear condition** is zero non-closed tickets (`open` and
+`claimed` both count as non-closed) and an empty fog section.
 
-The **join key** — `<map-id> / Part: <name>` — is the explicit,
-literal string a plan's own metadata cites to bind that plan to this
-map part. No topic-similarity inference is ever used to bind a plan to
-a Parts row; a plan with no matching join key string is not bound to
-any part, however similar its subject looks.
+**Umbrella checks** use two exact judgment primitives, not CLI commands.
+`check-umbrella` asks
+whether a live map's clear condition requires the work; run it when a
+backlog entry is created and again at pickup before work. `check-queue`
+asks whether the backlog already tracks similar work; run it when a
+map is charted and whenever a task ticket is created. Neither primitive
+uses topical-overlap matching or `map-scope-check:` evidence lines.
 
-A plan binds itself to a Parts row by carrying, in its own `## Notes`
-section, one line of the exact form `Map part: <map-id> / Part:
-<name>` — no schema change to the plan format elsewhere, no
-topic-similarity inference. The ` / Part: ` infix is the grep literal
-a reader or a future checker matches on.
+When work belongs to more than one live map Destination, halt for human
+adjudication. The selected map uniquely owns the ticket; every other
+map records one `Out-of-scope` line citing the ticket's join key. A
+ticket's join key is its literal `tickets/<slug>.md` path.
+Duplicate task tickets for the same work violate this contract.
 
-A Parts row's Status cell is flipped **only** by the `map_parts.py`
-flipper (see §Command surface) — never hand-edited. Status is one of
-`not-started`, `in-progress`, or `done(<sha>)` — the third form
-records, in parentheses, the commit sha that delivered the part; a
-row already carrying a `done(<sha>)` cell is not flipped again
-(`map_parts.py` exits 2 on that target rather than overwrite an
-existing delivery record). This section is the sanctioned replacement
-for a hand-kept, manually-updated multi-plan progress table: any such
-hand-kept table is the declared anti-pattern this section exists to
-retire.
+Promotion is close-and-cite: close the backlog entry and write
+`origin: promoted to <ticket>` before creating the map ticket. There is
+no blocked state, standing bidirectional link, or close-on-delivery
+step. Map-to-backlog travel is release-only. A destination artifact is
+optional discovery context, never a live or standing link.
+
+Plan delivery progress is derived read-only from the plan's `## Notes`
+binding and task ledger. The binding is exactly one line shaped
+`Map part: <map-id> / Part: <part>`; `<map-id>` names the directory under
+`docs/loom/maps/`, and `<part>` is the delivery label reported by the query.
+The derived state is never written into MAP.md or retained as a second
+progress table.
+
+## Measurement note
+
+At the ratification snapshot, 134 open entries / 26 closed entries was a
+live-store composition ratio, never a close rate. Cohort rates come from
+review-due data, not archaeology.
 
 ## Schema versioning
 
-`schema_version` is an integer on MAP.md's frontmatter only — v1 ships
-one shared version across MAP.md and its tickets, so ticket
-frontmatter never repeats the field (see §Ticket schema's example,
-which carries no `schema_version` key). Every checker under §Command
-surface reads `schema_version` before doing anything else. When the
-checker's `target` is a ticket path rather than MAP.md itself, it
-resolves the governing version by walking up from the ticket's
-directory to that map's `MAP.md` and reading the field there — never
-by assuming a version or by requiring the ticket to carry its own
-copy. If the value is greater than the highest version that checker's
-own code supports, the checker refuses to read further and exits 2
-with a message naming both the file's version and the checker's
-supported ceiling. A checker never guesses at an unknown schema shape.
-
-Mechanism revisions to this store are additive-only. A revision may
-add new optional fields, and may tighten a check only so that content
-written under the new rules can newly fail — never so that an
-untouched pre-existing store starts failing. One narrow exception —
-the migration clause: a check MAY tighten beyond new-rule writes
-only when the same revision migrates every known pre-existing store
-and records that migration, so no untouched store is left to fail.
-The destination-ratification gate (§Sections' Destination bullet) is
-this clause's first instance: its one pre-existing map was ratified
-in the same revision that introduced the check, emptying the legacy
-population. Under this constitution
-an older checker never mis-rejects a newer store, and a newer checker
-never mis-rejects an untouched older store. The rationale is
-operational, not hypothetical: cross-host plugin version skew is a
-measured normal state, not an edge case.
+`schema_version` is an integer on MAP.md's frontmatter only. The
+current contract is version 2, shared across MAP.md and its tickets,
+so ticket frontmatter never repeats the field (see §Ticket schema's
+example, which carries no `schema_version` key). Every checker under
+§Command surface reads `schema_version` before doing anything else.
+When the checker's `target` is a ticket path rather than MAP.md itself,
+it resolves the governing version by walking up from the ticket's
+directory to that map's `MAP.md` and reading the field there. A checker
+accepts only version 2; every other value exits 2 with migration
+guidance rather than guessing at an unknown schema shape.
 
 ## Command surface
 
@@ -300,33 +285,31 @@ Five scripts ship under `loom-workflow/skills/decision-map/scripts/`:
 | Script | Purpose |
 |---|---|
 | `map_init.py` | Scaffold a new `docs/loom/maps/<map-id>/` store (MAP.md + empty `tickets/`). |
-| `map_store.py` | Read/write primitives for MAP.md and ticket files, shared by the other four scripts and by skill-text tooling — the only sanctioned parser for this schema. Also exposes the `validate` CLI entrypoint: `map_store.py validate <map-dir> --repo-root <path>` — the sole check behind the §Live-map criterion's "checker-valid" test — exit 0/1/2 like the rest of §Command surface. |
+| `map_store.py` | Read/write primitives for MAP.md and ticket files, shared by the other three scripts and by skill-text tooling — the only sanctioned parser for this schema. Also exposes the `validate` CLI entrypoint: `map_store.py validate <map-dir> --repo-root <path>` — the sole check behind the §Live-map criterion's liveness check — exit 0/1/2 like the rest of §Command surface. |
 | `check_map_links.py` | Verify every Decisions-so-far line links an existing, closed ticket. |
-| `check_map_fog.py` | Verify fog-id monotonicity (§Fog entries): silent disappearance is machine-gated (exit 2); duplicate ids within the current MAP.md are gated by `validate`; reuse of a RETIRED id (graduated or moved to Out-of-scope, then re-issued) is review-enforced only in v1 — the same disclosure pattern the HITL resolution rule already uses (§Ticket schema). |
-| `map_parts.py` | The Parts-row flipper: the only script permitted to change a Parts row's Status cell. |
+| `check_map_fog.py` | Verify fog-id monotonicity (§Fog entries): silent disappearance is machine-gated (exit 2); duplicate ids within the current MAP.md are gated by `validate`; reuse of a RETIRED id (graduated or moved to Out-of-scope, then re-issued) is review-enforced — the same disclosure pattern the HITL resolution rule already uses (§Ticket schema). |
+| `map_progress.py` | Read one plan's Notes binding and task ledger to report its map delivery-progress state without writing MAP.md. |
 
-**Canonical arg shape**, shared by every script above: a positional
-`target` argument (the map directory, a MAP.md path, or a ticket path,
-depending on the script), plus an optional `--repo-root` flag (default:
+**Canonical arg shape**, shared by every reader script above: a positional
+`target` argument (a map directory, a MAP.md path, a ticket path, or a
+plan path for `map_progress.py`), plus an optional `--repo-root` flag (default:
 `git rev-parse --show-toplevel` of the target's directory, falling
 back to cwd — the `--repo-root` resolution convention loom-code's
 on-ramp checker established). `map_store.py` alone
 prefixes this with a leading subcommand verb before the positional
-`target` — `validate` in v1 — since it is the one script in the table
-exposing more than one operation; the other four scripts take the
+`target` — `validate` in v2 — since it is the one script in the table
+exposing more than one operation; the other three map readers take the
 bare positional shape with no verb.
 
-Beyond the shared shape, two scripts carry additional flags:
-`map_parts.py` additionally REQUIRES `--part <join-key>` and `--sha
-<commit>` (the row it flips and the delivering commit); `check_map_fog.py`
-additionally accepts `--base <git-ref>` (default: the merge-base of
+Beyond the shared shape, `check_map_fog.py` additionally accepts
+`--base <git-ref>` (default: the merge-base of
 HEAD with the resolved default branch). `check_map_fog.py`'s gate is a
 DIFF against that base, not a full-history scan: fog removed before
 the branch point is invisible to it, and a brand-new map trivially
 passes since it has no base version to compare against.
 
-`map_init.py` is a deliberate writer-script carve-out from the other
-four scripts' reader-script exit semantics: its positional argument is
+`map_init.py` is a deliberate writer-script carve-out from the four
+reader scripts' exit semantics: its positional argument is
 a bare map-id slug, not a target path; its exit `1` covers the
 already-exists refusal (an operational error, not a schema violation);
 its exit `2` covers a malformed slug.

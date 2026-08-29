@@ -1,10 +1,12 @@
 ---
 name: 2026-07-06-goal-oriented-firing-corpus-expected-narrower-than-design
 description: Goal-oriented firing-corpus `expected` narrower than design
-status: open
+status: closed
 origin: PR #489 residual; transcript-check requirement documented as trap #6 in the loom-code/scripts/loom_firing_harness.py module docstring
 start: next reuse of docs/loom/firing-corpus/goal-oriented.jsonl, or next firing-harness touch
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: next reuse of docs/loom/firing-corpus/goal-oriented.jsonl, or
   next firing-harness touch

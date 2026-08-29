@@ -1,10 +1,12 @@
 ---
 name: 2026-08-18-per-unit-cot-diagram-in-the-adjudication-view
 description: the adjudication view's translate step should emit one 譯注-tagged mermaid CoT diagram per unit, rendered directly beneath that unit's target-language rendition — no renderer change (measured), no new skill, three guardrails; the diagram never enters the agent-consumed artifact; its start condition (the staleness arc merging) is now met, and the field-value-microstructure arc (2026-08-19) measured the (N)-slice this diagram targets, narrowing this entry's scope
-status: open
+status: closed
 origin: kouko, 2026-08-18 — raised during the adjudication_render staleness arc after asking whether per-paragraph CoT diagrams (as used in the Obsidian vault's references/ notes) belong in the source markdown or the view
 start: after the adjudication_render staleness arc (docs/loom/specs/2026-08-18-adjudication-render-staleness-visible.md) merges
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 # Per-unit CoT diagram in the adjudication view
 

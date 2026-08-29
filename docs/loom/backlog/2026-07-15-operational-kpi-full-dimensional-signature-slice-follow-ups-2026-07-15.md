@@ -1,8 +1,10 @@
 ---
 name: 2026-07-15-operational-kpi-full-dimensional-signature-slice-follow-ups-2026-07-15
 description: operational-kpi full-dimensional-signature slice — follow-ups (2026-07-15)
-status: open
+status: closed
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 Context: docs/loom/{specs,plans}/2026-07-15-operational-kpi-full-dimensional-signature.md
 (branch feat-operational-kpi-xbrl-pilot). All non-blocking review notes, deferred by

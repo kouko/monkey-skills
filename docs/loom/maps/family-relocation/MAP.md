@@ -1,6 +1,6 @@
 ---
 map-id: family-relocation
-schema_version: 1
+schema_version: 2
 state: active
 ---
 
@@ -39,8 +39,3 @@ user-ratified: kouko, 2026-08-29
 
 - 三 plugin 全併（north-star fallback；本圖不重開此案）。
 - decision-map 層本身的歸屬（已決：loom-workflow，admission rule 已入 README）。
-
-## Parts
-
-| Part | Join key | Status |
-|---|---|---|

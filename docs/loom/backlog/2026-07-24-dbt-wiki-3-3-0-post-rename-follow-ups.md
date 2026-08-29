@@ -1,10 +1,12 @@
 ---
 name: 2026-07-24-dbt-wiki-3-3-0-post-rename-follow-ups
 description: dbt-wiki 3.3.0 — post-rename follow-ups
-status: open
+status: closed
 origin: PR for `feat-dbt-wiki-update-rename` (dbt-wiki 3.3.0, sync→update rename + `using-dbt-wiki` router + first CI); whole-branch review round-2 findings N2 and the disclosed pre-existing overage.
 start: next substantive touch of dbt-wiki's `query` / `init` / `ingest` SKILL.md, or the next dbt-wiki arc — whichever comes first.
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: next substantive touch of dbt-wiki's `query` / `init` / `ingest`
   SKILL.md, or the next dbt-wiki arc — whichever comes first.

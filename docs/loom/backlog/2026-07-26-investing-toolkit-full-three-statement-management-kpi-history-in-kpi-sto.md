@@ -1,9 +1,11 @@
 ---
 name: 2026-07-26-investing-toolkit-full-three-statement-management-kpi-history-in-kpi-sto
 description: investing-toolkit — full three-statement + management-KPI history in kpi_store
-status: open
+status: closed
 start: READY. The `kpi_id` identity arc it depended on shipped as 2.37.0 (branch `feat-kpi-id-consolidation-axis`); that ordering was a real dependency, not politeness — see §Sequencing.
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: READY. The `kpi_id` identity arc it depended on shipped as 2.37.0
   (branch `feat-kpi-id-consolidation-axis`); that ordering was a real dependency,

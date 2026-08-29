@@ -2,7 +2,7 @@
 """Validate + (later) generate the loom family backlog store's index.
 
 `docs/loom/backlog/README.md` is the store's format SSOT (charter). This
-script's `--validate` mode enforces the six invariants the charter's
+script's `--validate` mode enforces the seven invariants the charter's
 frontmatter contract implies, over every entry file under `--store`
 (default `docs/loom/backlog`, both the live tier and its `archive/`
 subdirectory):
@@ -32,7 +32,10 @@ subdirectory):
         all is a migration-completeness gap (GAP 1), not an agreement gap,
         and is deliberately out of this invariant's scope. See
         `_find_body_bullet` for the extraction rule.
-  (vi)  `description` is present and non-blank. The charter's frontmatter
+  (vi)  every live `open` entry carries a `start:` value in exactly one of
+        the two closed forms: `date — YYYY-MM-DD` (a real calendar date) or
+        `event — <non-empty observable condition>`.
+  (vii) `description` is present and non-blank. The charter's frontmatter
         contract (docs/loom/backlog/README.md:16) lists `description` with
         no `<optional; ...>` marker — it is contractual like `name`/
         `status`. Without this check a missing OR blank value passed
@@ -97,6 +100,7 @@ Usage:
     python3 scripts/backlog_index.py --write [--store docs/loom/backlog] [--output docs/loom/BACKLOG.md]
     python3 scripts/backlog_index.py --check [--store docs/loom/backlog] [--output docs/loom/BACKLOG.md]
     python3 scripts/backlog_index.py --ready [--store docs/loom/backlog]
+    python3 scripts/backlog_index.py --review-due --as-of YYYY-MM-DD [--store docs/loom/backlog]
 
 Exit codes: 0 = clean/written/matches, 1 = at least one invariant violation
 (--validate, flagless), a build error (--write, --check, --ready), or
@@ -110,6 +114,7 @@ import difflib
 import re
 import sys
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 # Collapsed vocabulary (plan docs/loom/plans/2026-08-21-dissolve-
@@ -135,7 +140,7 @@ STATUS_SECTION_ORDER = [
 
 @dataclass(frozen=True)
 class Violation:
-    kind: str  # "name" | "status" | "archive-tier" | "blocked" | "description" | "field-agreement" | "serves"
+    kind: str  # "name" | "status" | "archive-tier" | "blocked" | "start" | "description" | "field-agreement" | "serves"
     file: str
     detail: str
 
@@ -356,6 +361,43 @@ def _check_blocked(display: str, frontmatter: dict[str, str], status: str | None
     return []
 
 
+_START_DATE_RE = re.compile(r"^date — (\d{4}-\d{2}-\d{2})$")
+_START_EVENT_RE = re.compile(r"^event — \S(?:.*\S)?$")
+
+
+def _is_well_formed_start(value: str) -> bool:
+    """Closed grammar for an open entry's actionable start condition."""
+    date_match = _START_DATE_RE.fullmatch(value)
+    if date_match is not None:
+        try:
+            date.fromisoformat(date_match.group(1))
+        except ValueError:
+            return False
+        return True
+    return _START_EVENT_RE.fullmatch(value) is not None
+
+
+def _check_start(
+    display: str, frontmatter: dict[str, str], status: str | None, is_archived: bool
+) -> list[Violation]:
+    """Live open entries require a dated start or a non-empty event condition."""
+    if is_archived or status != "open":
+        return []
+    start = frontmatter.get("start")
+    if start is None:
+        return [Violation("start", display, "'open' entry missing required 'start' field")]
+    if not _is_well_formed_start(start):
+        return [
+            Violation(
+                "start",
+                display,
+                f"'start: {start}' is not well-formed — use 'start: date — YYYY-MM-DD' "
+                "or 'start: event — <non-empty observable condition>'",
+            )
+        ]
+    return []
+
+
 def _check_description(display: str, frontmatter: dict[str, str]) -> list[Violation]:
     """(vi) description is a required, non-blank field (charter:
     docs/loom/backlog/README.md:16 lists it with no <optional; ...> marker).
@@ -463,6 +505,7 @@ def find_violations(store: Path) -> list[Violation]:
         violations.extend(_check_status(display, status))
         violations.extend(_check_archive_tier(display, status, is_archived))
         violations.extend(_check_blocked(display, frontmatter, status))
+        violations.extend(_check_start(display, frontmatter, status, is_archived))
         violations.extend(_check_description(display, frontmatter))
         violations.extend(_check_serves(display, frontmatter, status, store))
         violations.extend(_check_field_agreement(display, frontmatter, _body_text(text)))
@@ -641,6 +684,50 @@ def build_ready(store: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
+_FILENAME_DATE_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})-")
+REVIEW_AGE_DAYS = 90
+
+
+def build_review_due(store: Path, as_of: date) -> str:
+    """List live open entries at least ``REVIEW_AGE_DAYS`` old.
+
+    Age is derived only from the immutable date prefix in each filename
+    and the caller-supplied ``as_of`` date; this function never reads the
+    wall clock.
+    """
+    lines = ["## review-due"]
+    count = 0
+    for path, is_archived, frontmatter in iter_validated_entries(store):
+        if is_archived or frontmatter.get("status") != "open":
+            continue
+        match = _FILENAME_DATE_RE.match(path.name)
+        if match is None:
+            raise ValueError(
+                f"{path.name}: live open entry filename has no YYYY-MM-DD date prefix"
+            )
+        try:
+            entry_date = date.fromisoformat(match.group(1))
+        except ValueError as exc:
+            raise ValueError(
+                f"{path.name}: live open entry filename has an invalid date prefix"
+            ) from exc
+        if (as_of - entry_date).days < REVIEW_AGE_DAYS:
+            continue
+        count += 1
+        name = frontmatter.get("name", path.stem)
+        description = frontmatter.get("description", "")
+        lines.append(f"- {name} — {description}")
+        start = frontmatter.get("start")
+        if start:
+            lines.append(f"  start: {start}")
+    lines.append("")
+    lines.append(
+        f"review-due: {count} open entries as of {as_of.isoformat()} "
+        f"(age >= {REVIEW_AGE_DAYS} days)"
+    )
+    return "\n".join(lines) + "\n"
+
+
 def _run_validate(args: argparse.Namespace) -> int:
     """--validate (also the flagless default): check every entry's
     frontmatter against the store's invariants."""
@@ -749,6 +836,20 @@ def _run_ready(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_review_due(args: argparse.Namespace) -> int:
+    """--review-due: list aged live open entries using explicit --as-of."""
+    try:
+        review_text = build_review_due(Path(args.store), args.as_of_date)
+    except OSError as exc:
+        print(f"backlog_index --review-due: FAIL — store is unreadable ({exc}).")
+        return 1
+    except ValueError as exc:
+        print(f"backlog_index --review-due: FAIL — {exc}")
+        return 1
+    sys.stdout.write(review_text)
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -777,12 +878,38 @@ def main() -> int:
         help="print the actionable queue (bet then open) with a closing count line",
     )
     parser.add_argument(
+        "--review-due",
+        action="store_true",
+        help="list live open entries aged at least 90 days from filename date",
+    )
+    parser.add_argument(
+        "--as-of",
+        default=None,
+        help="explicit YYYY-MM-DD reference date required by --review-due",
+    )
+    parser.add_argument(
         "--output",
         default=None,
         help="path to write (--write) or compare against (--check) the "
              "generated index (default: BACKLOG.md beside --store's parent)",
     )
     args = parser.parse_args()
+
+    if args.review_due and args.as_of is None:
+        parser.error("--review-due requires --as-of YYYY-MM-DD")
+    if args.as_of is not None and not args.review_due:
+        parser.error("--as-of is only valid with --review-due")
+    if args.review_due:
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", args.as_of) is None:
+            parser.error(
+                f"invalid --as-of date {args.as_of!r}; expected YYYY-MM-DD"
+            )
+        try:
+            args.as_of_date = date.fromisoformat(args.as_of)
+        except ValueError:
+            parser.error(
+                f"invalid --as-of date {args.as_of!r}; expected YYYY-MM-DD"
+            )
 
     # The index belongs beside ITS OWN store, not beside whatever directory
     # the process happens to stand in. A cwd-relative default let
@@ -826,6 +953,7 @@ def main() -> int:
             args.write,
             args.check,
             args.ready,
+            args.review_due,
         )
     ):
         # Flagless invocation defaults to validate, mirroring
@@ -850,6 +978,11 @@ def main() -> int:
 
     if args.ready:
         result = _run_ready(args)
+        if result != 0:
+            return result
+
+    if args.review_due:
+        result = _run_review_due(args)
         if result != 0:
             return result
 

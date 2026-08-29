@@ -1,9 +1,11 @@
 ---
 name: 2026-08-21-leaky-scopes-cannot-see-a-guard-over-a-cross-module-delegating-helper
 description: leaky_scopes in test_gate_scripts_fail_loud_on_unreadable_input.py parses one file at a time, so it cannot see a guard around a top-level helper whose own body delegates the filesystem read to a symbol imported from another module
-status: open
+status: closed
 origin: 2026-08-21 code-as-spec-writing-rule arc, Task 5's mutation run over test_oracle_capability_claims.py
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - The gap: `leaky_scopes` (in
   `loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py`)

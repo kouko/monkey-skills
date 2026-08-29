@@ -1,10 +1,12 @@
 ---
 name: 2026-07-02-468-reviewer-next-touch-nits-loom-code-tech-spec-ci
 description: #468 reviewer next-touch nits (loom-code TECH-SPEC + CI)
-status: open
+status: closed
 origin: PR #468 whole-branch reviewer 🟢 next-touch nits (2026-07-02)
 start: next loom-code/TECH-SPEC.md touch
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: next loom-code/TECH-SPEC.md touch
 - Origin: PR #468 whole-branch reviewer 🟢 next-touch nits (2026-07-02)

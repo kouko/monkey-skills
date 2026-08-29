@@ -1,10 +1,12 @@
 ---
 name: 2026-07-18-investing-toolkit-memo-wiring-2-23-0-post-ship-follow-ups
 description: investing-toolkit memo-wiring 2.23.0 — post-ship follow-ups
-status: open
+status: closed
 origin: memo quarterly-KPI wiring slice (branch feat-memo-quarterly-kpi-wiring, 2026-07-18); per-task + whole-branch review ship-as-debt rulings.
 start: next touch of `report-equity-memo/references/schema-phase4-input-bundle.json`, `analysis-kpi/scripts/kpi_memo_feed.py`, or `data-markets/scripts/pack.py`.
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: next touch of `report-equity-memo/references/schema-phase4-input-bundle.json`,
   `analysis-kpi/scripts/kpi_memo_feed.py`, or `data-markets/scripts/pack.py`.

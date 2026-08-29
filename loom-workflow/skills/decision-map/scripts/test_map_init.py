@@ -36,6 +36,9 @@ def test_scaffolded_map_passes_validate(tmp_path: Path) -> None:
     assert code == 0
 
     map_dir = tmp_path / "docs" / "loom" / "maps" / "wayfinder"
+    map_text = (map_dir / "MAP.md").read_text(encoding="utf-8")
+    assert "schema_version: 2" in map_text
+    assert "## Parts" not in map_text
     validate_code, message = map_store.validate(map_dir, repo_root=tmp_path)
     assert validate_code == 0, message
 

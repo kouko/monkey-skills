@@ -1,8 +1,10 @@
 ---
 name: 2026-07-26-investing-toolkit-us-as-reported-statement-lane-post-ship-follow-ups
 description: investing-toolkit US as-reported statement lane — post-ship follow-ups
-status: open
+status: closed
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - (a) 🟢 **ACCEPTED RESIDUAL — a silent-NCI filer can still be falsely flagged by the
   balance-sheet identity.** `kpi_spine_view._minority_interest_term` reads an absent

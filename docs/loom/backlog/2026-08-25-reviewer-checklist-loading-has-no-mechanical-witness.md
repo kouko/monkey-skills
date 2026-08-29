@@ -1,10 +1,12 @@
 ---
 name: 2026-08-25-reviewer-checklist-loading-has-no-mechanical-witness
 description: a reviewer can emit a correct verdict without ever opening the checklist/rubric its contract says it MUST Read — tool-trace inspection caught a spec-reviewer doing exactly that (1 tool call total), and nothing mechanical witnesses the load
-status: open
+status: closed
 origin: 2026-08-25 live dispatch tests during the reviewer packet fail-closed arc — valid-packet spec-reviewer PASSed with a single git-show call, checklist never Read; compliance across the session's later dispatches was 2/3
 start: a second observed instance of a reviewer verdict shipping without its mandated resource load, or the next arc that touches the reviewer resource-loading contract
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 Candidate mechanism sketched at filing time (not decided): embed a
 per-file witness token in each checklist/rubric under `resources`, require

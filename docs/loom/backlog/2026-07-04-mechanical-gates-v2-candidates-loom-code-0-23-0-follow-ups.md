@@ -1,10 +1,12 @@
 ---
 name: 2026-07-04-mechanical-gates-v2-candidates-loom-code-0-23-0-follow-ups
 description: Mechanical-gates v2 candidates (loom-code 0.23.0 follow-ups)
-status: open
+status: closed
 origin: PR #492 final verdict (2 🟢 next-touch) + its Decision trailers
 start: first fatigue evidence from daily use of the push gate, or next git-guard touch — whichever comes first
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: first fatigue evidence from daily use of the push gate, or next
   git-guard touch — whichever comes first

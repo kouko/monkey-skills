@@ -1,8 +1,10 @@
 ---
 name: 2026-07-26-loom-docs-two-stale-change-folders-belong-to-shipped-arcs
 description: loom docs — two stale change-folders belong to shipped arcs
-status: open
+status: closed
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - **What.** `docs/loom/2026-07-12-us-sec-primary-source-layer` and
   `docs/loom/2026-07-19-8k-prose-kpi-intake` sit un-archived at the top level of

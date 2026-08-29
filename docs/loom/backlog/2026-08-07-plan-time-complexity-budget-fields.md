@@ -1,11 +1,12 @@
 ---
 name: 2026-08-07-plan-time-complexity-budget-fields
 description: writing-plans could record a per-task complexity budget (new abstractions / new files) for reviewers to check overshoot
-status: open
-blocked: waiting on the deletion-first review dimension demonstrably failing to catch over-engineering across two or more arcs
+status: closed
 origin: 2026-08-07 family complexity audit (docs/loom/audits/2026-08-07-family-complexity-audit.md, item E2)
 start: the deletion-first review dimension (audit item E1) demonstrably fails to catch over-engineering — complexity findings recur across two or more arcs despite it
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 Research grounding: autoregressive models optimize local coherence and
 nothing tracks accumulated complexity at inference time, which argues

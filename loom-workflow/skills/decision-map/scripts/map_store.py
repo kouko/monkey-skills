@@ -4,7 +4,7 @@
 Grammar SSOT: `loom-workflow/skills/decision-map/references/
 map-format.md` — this module is the ONLY sanctioned parser of the
 store's bytes (§Command surface); every sibling checker
-(`check_map_links.py`, `check_map_fog.py`, `map_parts.py`) and
+(`check_map_links.py`, `check_map_fog.py`) and
 `map_init.py` import this module rather than re-reading MAP.md or a
 ticket file itself.
 
@@ -26,9 +26,10 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 
-SUPPORTED_SCHEMA_VERSION = 1
+SUPPORTED_SCHEMA_VERSION = 2
 
 VALID_MAP_STATES = {"charting", "active", "clear", "archived"}
 LIVE_MAP_STATES = {"charting", "active"}
@@ -37,19 +38,23 @@ HITL_TICKET_TYPES = {"grilling", "prototype"}
 RATIFIED_MAP_STATES = {"active", "clear"}
 VALID_TICKET_STATUSES = {"open", "claimed", "closed"}
 
+
+class LiveMapResult(str, Enum):
+    LIVE = "live"
+    NOT_PRESENT = "not-present"
+    BROKEN = "broken"
+
 REQUIRED_SECTIONS = [
     "Destination",
     "Notes",
     "Decisions-so-far",
     "Not-yet-specified (fog)",
     "Out-of-scope",
-    "Parts",
 ]
 
 _SECTION_HEADING = re.compile(r"^##\s+(.+?)\s*$")
 _FOG_ENTRY = re.compile(r"^-\s*(?P<id>F-(?P<n>\d+))\s*:\s*(?P<text>.*)$")
 _DECISION_LINE = re.compile(r"^-\s*(?P<gist>.*)\((?P<link>[^()]*)\)\s*$")
-_TABLE_ROW = re.compile(r"^\|(.+)\|\s*$")
 
 
 class MapStoreError(Exception):
@@ -109,13 +114,6 @@ class DecisionLine:
 
 
 @dataclass
-class PartRow:
-    name: str
-    join_key: str
-    status: str
-
-
-@dataclass
 class MapDocument:
     path: Path
     frontmatter: MapFrontmatter
@@ -123,7 +121,6 @@ class MapDocument:
     fog_entries: list[FogEntry] = field(default_factory=list)
     decisions: list[DecisionLine] = field(default_factory=list)
     out_of_scope: list[str] = field(default_factory=list)
-    parts: list[PartRow] = field(default_factory=list)
 
 
 def _parse_map_frontmatter(fields: dict[str, str]) -> MapFrontmatter:
@@ -214,23 +211,6 @@ def _parse_out_of_scope(section_text: str) -> list[str]:
     ]
 
 
-def _parse_parts(section_text: str) -> list[PartRow]:
-    rows = []
-    for line in section_text.splitlines():
-        match = _TABLE_ROW.match(line.strip())
-        if not match:
-            continue
-        cells = [c.strip() for c in match.group(1).split("|")]
-        if len(cells) != 3:
-            continue
-        name, join_key, status = cells
-        if name in ("Part", "") or set(name) <= {"-"}:
-            continue  # header / separator row
-        join_key = join_key.strip("`").strip()
-        rows.append(PartRow(name=name, join_key=join_key, status=status))
-    return rows
-
-
 def parse_map_document(text: str, path: Path) -> MapDocument:
     fields, body = parse_frontmatter(text)
     frontmatter = _parse_map_frontmatter(fields)
@@ -241,7 +221,6 @@ def parse_map_document(text: str, path: Path) -> MapDocument:
     )
     doc.decisions = _parse_decisions(sections.get("Decisions-so-far", ""))
     doc.out_of_scope = _parse_out_of_scope(sections.get("Out-of-scope", ""))
-    doc.parts = _parse_parts(sections.get("Parts", ""))
     return doc
 
 
@@ -303,6 +282,14 @@ def _parse_ticket_frontmatter(fields: dict[str, str]) -> TicketFrontmatter:
 
 
 _RESOLUTION_HEADING = re.compile(r"^##\s+Resolution\s*$")
+_COMMIT_EVIDENCE = re.compile(r"(?:commit\s+)?[0-9a-fA-F]{7,40}")
+_PR_EVIDENCE = re.compile(
+    r"(?:PR\s*)?#\d+|(?:PR\s+)?https?://\S+/pull/\d+",
+    re.IGNORECASE,
+)
+_ARTIFACT_PATH_EVIDENCE = re.compile(
+    r"(?:\.{1,2}/|/)?[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+"
+)
 
 
 def _parse_resolution(body: str) -> str | None:
@@ -318,6 +305,26 @@ def _parse_resolution(body: str) -> str | None:
             text = "\n".join(rest[:end]).strip()
             return text or None
     return None
+
+
+def _has_delivery_evidence(text: str) -> bool:
+    """Recognize the three delivery-evidence shapes pinned by the
+    ticket contract: commit SHA, PR reference, or artifact path."""
+    for line in text.splitlines():
+        key, separator, value = line.strip().partition(":")
+        if separator != ":" or key != "delivery-evidence":
+            continue
+        evidence = value.strip()
+        if any(
+            pattern.fullmatch(evidence)
+            for pattern in (
+                _COMMIT_EVIDENCE,
+                _PR_EVIDENCE,
+                _ARTIFACT_PATH_EVIDENCE,
+            )
+        ):
+            return True
+    return False
 
 
 def parse_ticket_document(text: str, path: Path) -> TicketDocument:
@@ -402,6 +409,11 @@ def resolve_repo_root(explicit: str | Path | None, start_dir: Path) -> Path:
 
 
 def _check_schema_version(schema_version: int) -> None:
+    if schema_version < SUPPORTED_SCHEMA_VERSION:
+        raise SchemaViolation(
+            f"schema_version {schema_version} is retired; migrate MAP.md "
+            f"to schema_version {SUPPORTED_SCHEMA_VERSION}"
+        )
     if schema_version > SUPPORTED_SCHEMA_VERSION:
         raise SchemaViolation(
             f"schema_version {schema_version} is newer than the "
@@ -449,21 +461,19 @@ def _check_map_structure(doc: MapDocument) -> None:
             "'user-ratified:' line in the Destination section "
             "(map-format.md §Sections)"
         )
-    for part in doc.parts:
-        expected_prefix = f"{doc.frontmatter.map_id} / Part: "
-        if not part.join_key.startswith(expected_prefix):
-            raise SchemaViolation(
-                f"Parts row {part.name!r} join key {part.join_key!r} does "
-                f"not match '<map-id> / Part: <name>' for map-id "
-                f"{doc.frontmatter.map_id!r}"
-            )
+    if doc.frontmatter.state == "clear" and doc.fog_entries:
+        raise SchemaViolation(
+            f"{doc.path}: clear map has non-empty fog "
+            "(map-format.md §Ticket boundary contract)"
+        )
 
 
-def _check_tickets(map_dir: Path) -> None:
+def _check_tickets(map_dir: Path, state: str) -> None:
     tickets_dir = Path(map_dir) / "tickets"
     if not tickets_dir.is_dir():
         return
     blocked_by_graph: dict[str, list[str]] = {}
+    non_closed: list[str] = []
     for ticket_path in sorted(tickets_dir.glob("*.md")):
         ticket = read_ticket(ticket_path)
         if ticket.frontmatter.type not in VALID_TICKET_TYPES:
@@ -486,8 +496,26 @@ def _check_tickets(map_dir: Path) -> None:
                 "is missing a 'user-ratified:' line in its Resolution "
                 "(map-format.md §Ticket schema HITL rule)"
             )
+        if (
+            ticket.frontmatter.status == "closed"
+            and ticket.frontmatter.type == "task"
+            and not _has_delivery_evidence(ticket.resolution or "")
+        ):
+            raise SchemaViolation(
+                f"{ticket_path}: closed task ticket requires a non-empty "
+                "Resolution with 'delivery-evidence: <commit SHA | PR | "
+                "artifact path>' (map-format.md §Ticket schema)"
+            )
+        if ticket.frontmatter.status != "closed":
+            non_closed.append(
+                f"{ticket_path.name} ({ticket.frontmatter.status})"
+            )
         blocked_by_graph[ticket_path.stem] = ticket.frontmatter.blocked_by
     _check_blocked_by(blocked_by_graph, tickets_dir)
+    if state == "clear" and non_closed:
+        raise SchemaViolation(
+            "clear map has non-closed ticket(s): " + ", ".join(non_closed)
+        )
 
 
 def _check_blocked_by(
@@ -546,7 +574,7 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     pins for every checker in the family.
 
     `repo_root` is accepted for arg-shape parity with the other
-    §Command surface scripts; this function does not use it in v1."""
+    §Command surface scripts; this function does not use it."""
     map_dir = Path(target)
     if not map_dir.is_dir():
         return 1, f"map directory not found: {map_dir}"
@@ -560,7 +588,7 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     try:
         _check_schema_version(doc.frontmatter.schema_version)
         _check_map_structure(doc)
-        _check_tickets(map_dir)
+        _check_tickets(map_dir, doc.frontmatter.state)
     except SchemaViolation as exc:
         return 2, str(exc)
     except MapStoreError as exc:
@@ -569,18 +597,26 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     return 0, f"{map_dir} is a valid decision-map store"
 
 
-def is_live_map(target: Path, repo_root: Path | None = None) -> bool:
-    """map-format.md §Live-map criterion: checker-valid (validate
-    exits 0) AND state in {charting, active}. Never a bare
-    directory-existence check.
+def is_live_map(
+    target: Path, repo_root: Path | None = None
+) -> LiveMapResult:
+    """Return the explicit map-format.md §Live-map result.
+
+    Only an absent target is ``not-present``. Any existing target that
+    fails validation, or whose valid state is not live, is ``broken``
+    so callers cannot silently treat malformed maps as absent.
 
     `repo_root` is accepted for arg-shape parity with the other
-    §Command surface scripts; this function does not use it in v1."""
+    §Command surface scripts; this function does not use it."""
+    if not Path(target).exists():
+        return LiveMapResult.NOT_PRESENT
     code, _ = validate(target, repo_root=repo_root)
     if code != 0:
-        return False
+        return LiveMapResult.BROKEN
     doc = read_map(target)
-    return doc.frontmatter.state in LIVE_MAP_STATES
+    if doc.frontmatter.state in LIVE_MAP_STATES:
+        return LiveMapResult.LIVE
+    return LiveMapResult.BROKEN
 
 
 # --- CLI -------------------------------------------------------------
