@@ -505,6 +505,41 @@ def test_validate_rejects_clear_map_without_destination_ratification(
     assert "user-ratified:" in message
 
 
+def test_clear_rejects_non_closed_tickets_and_fog(tmp_path: Path) -> None:
+    """Clear means every ticket is closed and fog is empty, not merely
+    ratified."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    clear_text = (
+        map_md.read_text(encoding="utf-8")
+        .replace("state: charting", "state: clear")
+        .replace(
+            "Chart the decision-map layer.",
+            "Chart the decision-map layer.\n\nuser-ratified: kouko, 2026-08-29",
+        )
+    )
+
+    map_md.write_text(clear_text, encoding="utf-8")
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "fog" in message.lower()
+
+    empty_fog_text = clear_text.replace("- F-1: how does the fog id survive a rename?\n", "")
+    map_md.write_text(empty_fog_text, encoding="utf-8")
+    for status in ("open", "claimed"):
+        _write(
+            map_dir / "tickets" / f"{status}.md",
+            TICKET_CLOSED.replace("status: closed", f"status: {status}"),
+        )
+        code, message = map_store.validate(map_dir, repo_root=tmp_path)
+        assert code == 2
+        assert status in message
+        (map_dir / "tickets" / f"{status}.md").unlink()
+
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+
 def test_validate_accepts_active_map_with_destination_ratification(
     tmp_path: Path,
 ) -> None:

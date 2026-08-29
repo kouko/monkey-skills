@@ -426,11 +426,19 @@ def _check_map_structure(doc: MapDocument) -> None:
             "'user-ratified:' line in the Destination section "
             "(map-format.md §Sections)"
         )
-def _check_tickets(map_dir: Path) -> None:
+    if doc.frontmatter.state == "clear" and doc.fog_entries:
+        raise SchemaViolation(
+            f"{doc.path}: clear map has non-empty fog "
+            "(map-format.md §Ticket boundary contract)"
+        )
+
+
+def _check_tickets(map_dir: Path, state: str) -> None:
     tickets_dir = Path(map_dir) / "tickets"
     if not tickets_dir.is_dir():
         return
     blocked_by_graph: dict[str, list[str]] = {}
+    non_closed: list[str] = []
     for ticket_path in sorted(tickets_dir.glob("*.md")):
         ticket = read_ticket(ticket_path)
         if ticket.frontmatter.type not in VALID_TICKET_TYPES:
@@ -453,8 +461,16 @@ def _check_tickets(map_dir: Path) -> None:
                 "is missing a 'user-ratified:' line in its Resolution "
                 "(map-format.md §Ticket schema HITL rule)"
             )
+        if ticket.frontmatter.status != "closed":
+            non_closed.append(
+                f"{ticket_path.name} ({ticket.frontmatter.status})"
+            )
         blocked_by_graph[ticket_path.stem] = ticket.frontmatter.blocked_by
     _check_blocked_by(blocked_by_graph, tickets_dir)
+    if state == "clear" and non_closed:
+        raise SchemaViolation(
+            "clear map has non-closed ticket(s): " + ", ".join(non_closed)
+        )
 
 
 def _check_blocked_by(
@@ -513,7 +529,7 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     pins for every checker in the family.
 
     `repo_root` is accepted for arg-shape parity with the other
-    §Command surface scripts; this function does not use it in v1."""
+    §Command surface scripts; this function does not use it."""
     map_dir = Path(target)
     if not map_dir.is_dir():
         return 1, f"map directory not found: {map_dir}"
@@ -527,7 +543,7 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     try:
         _check_schema_version(doc.frontmatter.schema_version)
         _check_map_structure(doc)
-        _check_tickets(map_dir)
+        _check_tickets(map_dir, doc.frontmatter.state)
     except SchemaViolation as exc:
         return 2, str(exc)
     except MapStoreError as exc:
@@ -542,7 +558,7 @@ def is_live_map(target: Path, repo_root: Path | None = None) -> bool:
     directory-existence check.
 
     `repo_root` is accepted for arg-shape parity with the other
-    §Command surface scripts; this function does not use it in v1."""
+    §Command surface scripts; this function does not use it."""
     code, _ = validate(target, repo_root=repo_root)
     if code != 0:
         return False
