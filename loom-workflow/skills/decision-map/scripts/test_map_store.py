@@ -324,6 +324,102 @@ def test_validate_rejects_non_ascii_digit_fog_id(tmp_path: Path) -> None:
     assert "malformed fog id" in message.lower()
 
 
+# --- blocked-by / ratification grammar (map-format.md §Ticket schema) -------
+
+
+TICKET_BLOCKED = """---
+type: task
+status: open
+claim: null
+graduated-from: null
+blocked-by: decision-a, decision-b
+ratification: pending
+---
+
+Waits on both siblings.
+"""
+
+TICKET_OPEN_B = """---
+type: task
+status: open
+claim: null
+graduated-from: null
+---
+
+A second sibling ticket.
+"""
+
+
+def test_blocked_by_documented_grammar(tmp_path: Path) -> None:
+    """map-format.md §Ticket schema: `blocked-by: a, b` is one line of
+    comma-separated sibling slugs and `ratification: pending` marks a
+    deferred ratification — both optional, both parsed; absent fields
+    behave exactly as today (no blockers / no pending ratification)."""
+    map_dir = _make_conformant_map(tmp_path)
+    _write(map_dir / "tickets" / "decision-b.md", TICKET_OPEN_B)
+    _write(map_dir / "tickets" / "blocked.md", TICKET_BLOCKED)
+    ticket = map_store.read_ticket(map_dir / "tickets" / "blocked.md")
+    assert ticket.frontmatter.blocked_by == ["decision-a", "decision-b"]
+    assert ticket.frontmatter.ratification == "pending"
+    # absent fields keep today's meaning
+    plain = map_store.read_ticket(map_dir / "tickets" / "decision-a.md")
+    assert plain.frontmatter.blocked_by == []
+    assert plain.frontmatter.ratification is None
+    # a store using the new grammar correctly still validates clean
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+
+def test_validate_rejects_dangling_blocked_by_slug(tmp_path: Path) -> None:
+    """A blocked-by slug naming no ticket file in the same map's
+    tickets/ dir is exit 2, naming the ticket and the missing slug."""
+    map_dir = _make_conformant_map(tmp_path)
+    _write(
+        map_dir / "tickets" / "blocked.md",
+        TICKET_BLOCKED.replace(
+            "blocked-by: decision-a, decision-b",
+            "blocked-by: decision-a, no-such-ticket",
+        ),
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "blocked.md" in message
+    assert "no-such-ticket" in message
+
+
+def test_validate_rejects_blocked_by_cycle(tmp_path: Path) -> None:
+    """The blocked-by graph must be acyclic — a cycle is exit 2 with a
+    message naming the cycle."""
+    map_dir = _make_conformant_map(tmp_path)
+    _write(
+        map_dir / "tickets" / "ring-a.md",
+        TICKET_OPEN_B.replace(
+            "graduated-from: null",
+            "graduated-from: null\nblocked-by: ring-b",
+        ),
+    )
+    _write(
+        map_dir / "tickets" / "ring-b.md",
+        TICKET_OPEN_B.replace(
+            "graduated-from: null",
+            "graduated-from: null\nblocked-by: ring-a",
+        ),
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "cycle" in message.lower()
+    assert "ring-a" in message
+    assert "ring-b" in message
+
+
+def test_validate_unchanged_without_blocked_by_anywhere(tmp_path: Path) -> None:
+    """Regression guard: a store carrying no blocked-by / ratification
+    field anywhere validates exactly as before the grammar landed."""
+    map_dir = _make_conformant_map(tmp_path)
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+
 # --- CLI --------------------------------------------------------------------
 
 
