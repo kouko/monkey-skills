@@ -4,6 +4,31 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] — 2026-08-29 — decision-map protocol hardening
+
+### Added
+
+- Ticket frontmatter gains two optional fields: `blocked-by` (makes the
+  frontier computable — validate rejects dangling references and cycles)
+  and `ratification` (records who ratified a graduated decision).
+- `validate` now checks destination ratification and HITL presence — a
+  map or ticket missing its human-in-the-loop line is rejected with a
+  plain exit-2 message naming the missing line.
+
+### Changed
+
+- The decision-map skill text answers the blanks the first dogfood
+  session showed become silent agent defaults: a selection-authority
+  rule (the user picks the next ticket, never the agent), a no-fog STOP
+  (charting halts instead of inventing fog items), a ticket sizing rule,
+  a store-routing criterion for where records land, and an additive-only
+  revision constitution for map edits.
+- The prototype fence is re-attributed: the prototype contract no longer
+  carries upstream naming it never owned.
+
+`schema_version` stays 1; every existing map remains checker-valid
+unmodified.
+
 ## [1.3.0] — 2026-08-28 — decision-map layer
 
 ### Added
