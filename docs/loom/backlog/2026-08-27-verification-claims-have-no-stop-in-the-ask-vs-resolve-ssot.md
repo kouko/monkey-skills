@@ -1,10 +1,12 @@
 ---
 name: 2026-08-27-verification-claims-have-no-stop-in-the-ask-vs-resolve-ssot
 description: loom's ask-vs-resolve SSOT tiers every pause point by reversibility and cost, so an agent asserting its own work is done or verified always lands in the just-do-it tier — the failure mode measured most consistently across six corpora is the one tier ① cannot see
-status: open
+status: closed
 origin: 2026-08-27 codex/standardize-complexity-gate — a fingerprint re-pin passed every existing stop rule (reversible, local, evidence-backed) and was still the riskiest call of the session; a six-agent survey of this repo's records and five projects' session transcripts was run before deciding whether to change the SSOT
 start: the next arc that touches subagent-driven-development SKILL.md §Asking the user, or a third recorded instance of a self-graded completion claim shipping unchallenged
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 ## What the gap is
 

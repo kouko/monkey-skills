@@ -1,10 +1,12 @@
 ---
 name: 2026-08-20-loom-codex-port-line
 description: loom 機制 Codex 移植線——把 loom-code 目前綁定 Claude Code 的機制搬到 Codex host
-status: open
+status: closed
 origin: docs/loom/DIRECTION.md `## Later` cleanup（north-star-serves-link 弧，2026-08-20）
 start: 下次有 Codex-only 或跨 host 的具體需求出現時，評估是否值得起這條弧
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 loom-code 的多個機制（git-guard、hooks、skill 派工慣例）目前是 Claude Code
 專屬設計，Codex 只有部分 shim 或鏡射（例如 on-ramp 弧的 Codex shim、

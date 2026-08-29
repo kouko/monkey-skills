@@ -1,10 +1,12 @@
 ---
 name: 2026-08-28-line-leading-heading-anchor-is-copy-pasted-across-packages
 description: The line-leading heading-anchor idiom is now a shared helper in loom-code and loom-design/pipeline; loom-workflow still has bare unanchored heading windows carrying the original defect, and three single-site packages stay inline — the entry gives the grep commands rather than a site count, because three review rounds refuted three different totals
-status: open
+status: closed
 origin: pin-granularity branch (2026-08-28) — filed as a deferral, then rewritten after two review arms independently measured the deferral's premises and found them wrong
 start: next time a heading window in loom-workflow or think-orbit needs touching
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 ## What actually remains
 

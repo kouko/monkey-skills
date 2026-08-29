@@ -1,10 +1,12 @@
 ---
 name: 2026-08-28-decide-whether-the-prose-assertion-volume-itself-should-shrink
 description: The pin-granularity branch made the ~740 markdown assertions accurate but not fewer; the original concern was that there are too many of them, and that question is still open
-status: open
+status: closed
 origin: pin-granularity migration (2026-08-28) — the branch answered "are these pins accurate?" and left "are there too many of them?" untouched
 start: next time the prose-test suite feels expensive to maintain, or before adding a new class of prose test
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 ## What is open
 

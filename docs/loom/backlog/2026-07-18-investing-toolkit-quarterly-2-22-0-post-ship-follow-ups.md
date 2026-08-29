@@ -1,10 +1,12 @@
 ---
 name: 2026-07-18-investing-toolkit-quarterly-2-22-0-post-ship-follow-ups
 description: investing-toolkit quarterly 2.22.0 — post-ship follow-ups
-status: open
+status: closed
 origin: scope-B quarterly rebuild (branch feat-operational-kpi-quarterly, 2026-07-18); whole-branch review PASS_WITH_NOTES ship-as-debt rulings + T9 spec-reviewer follow-up.
 start: next touch of `investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py` or `analysis-kpi/scripts/kpi_xbrl.py`.
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: next touch of `investing-toolkit/skills/data-markets/scripts/sec_edgar_client.py`
   or `analysis-kpi/scripts/kpi_xbrl.py`.

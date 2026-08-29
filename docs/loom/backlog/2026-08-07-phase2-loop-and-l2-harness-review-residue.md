@@ -1,10 +1,12 @@
 ---
 name: 2026-08-07-phase2-loop-and-l2-harness-review-residue
 description: deferred whole-branch review findings from the Phase 2 loop + L2 e2e harness branch
-status: open
+status: closed
 origin: whole-branch review of `feat/u1-nightly-phase2-loop` (2026-08-07, loom-code 0.64.0 panel — 2 code-reviewer + 2 docs-reviewer arms). The branch fixed the 2 fatal findings and the highest-value should-fix cluster; the items below were deliberately left, each with its reason.
 start: next substantive touch of `scripts/phase2-loop/` or `dbt-wiki/tests/`
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 Each item below is a real finding with a `where:` cite, deferred rather
 than dismissed. None is a correctness defect in shipped behavior; they are

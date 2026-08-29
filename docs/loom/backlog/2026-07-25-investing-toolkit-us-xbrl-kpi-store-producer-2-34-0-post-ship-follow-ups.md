@@ -1,10 +1,12 @@
 ---
 name: 2026-07-25-investing-toolkit-us-xbrl-kpi-store-producer-2-34-0-post-ship-follow-ups
 description: investing-toolkit US XBRL→kpi_store producer 2.34.0 — post-ship follow-ups
-status: open
+status: closed
 origin: arc (d) US XBRL→kpi_store producer (branch feat-kpi-xbrl-store-producer, 2.34.0, 2026-07-25); whole-branch review PASS_WITH_NOTES + per-task 🟢 findings, logged not fixed. Brief/plan `docs/loom/{specs,plans}/2026-07-24-kpi-xbrl-store-producer.md`.
 start: next substantive touch of `analysis-kpi/scripts/kpi_xbrl_ingest.py` or the next US-XBRL-lane arc.
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: next substantive touch of `analysis-kpi/scripts/kpi_xbrl_ingest.py` or the
   next US-XBRL-lane arc.

@@ -1,10 +1,12 @@
 ---
 name: 2026-08-21-loom-queue-layer-complexity-audit-three-cuts
 description: a complexity audit of the dissolve-direction-layer arc measured concept count 7 to 5 (not the brief's claimed 6 to 1) and named three cuts — delete BACKLOG.md plus its --write/--check pair as the same materialized-view-plus-drift-guard the arc set out to kill, delete the archive tier, and put bet/serves:/PURPOSE.md on probation as zero-instance concepts
-status: open
+status: closed
 origin: 2026-08-21 dissolve-direction-layer close-out — kouko asked for a complexity critique alongside the whole-branch review fixes; its verdict was PROCEED-WITH-CAVEAT and the three cuts were deliberately not acted on inside that branch
 start: the next time this repo actually places a bet (which makes the zero-instance concepts real and settles the probation), or the next arc that touches backlog_index.py's --write/--check pair for any other reason
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: the next time this repo actually places a bet (which makes the
   zero-instance concepts real and settles the probation), or the next arc

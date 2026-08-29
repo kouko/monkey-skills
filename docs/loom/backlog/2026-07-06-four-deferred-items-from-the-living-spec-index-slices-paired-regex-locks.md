@@ -1,10 +1,12 @@
 ---
 name: 2026-07-06-four-deferred-items-from-the-living-spec-index-slices-paired-regex-locks
 description: four deferred items from the living-spec index slices — paired-regex lockstep, drift-lane tokenization, a Rule-of-Three extraction, and ready-signal binding for both merge-boundary gates
-status: open
+status: closed
 origin: living-spec index slices 1–4 + capstone G (#447–#455) deferred-debt ledger
 start: next living-spec script touch (loom-code/scripts/living_spec_*.py or check-living-spec-index.py)
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: next living-spec script touch
   (loom-code/scripts/living_spec_*.py or check-living-spec-index.py)
