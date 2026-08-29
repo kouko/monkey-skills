@@ -201,7 +201,10 @@ mechanical checker decides it the same way every time.
   line under the same never-edited-afterward rule above: either
   `— serves <PURPOSE | map <map-id>>: <short relation>` when the plan
   serves a recorded direction, or the honest escape
-  `— off-direction: <reason>` when it does not.
+  `— off-direction: <reason>` when it does not. One of the two forms
+  is always present — a bare Goal line with neither clause is invalid.
+  `plan_card.py` prints `Goal:` verbatim, so every progress card
+  inherits the direction clause with no script change.
 
 See the Worked example section below for a before/after rewrite of an
 over-long `Description` under this rule.
@@ -424,7 +427,7 @@ For a brief at `docs/loom/specs/2026-05-16-csv-export.md` whose Smallest End Sta
 # Plan: CSV export query param
 
 **Source brief**: docs/loom/specs/2026-05-16-csv-export.md
-Goal: users can export the orders list as CSV with the same filters the list view applies
+Goal: users can export the orders list as CSV with the same filters the list view applies — serves PURPOSE: self-serve data access without engineering pulls
 Stage: planning
 Steps:
   1. Understand the CSV request and produce the file format
@@ -552,7 +555,7 @@ A high `Total tasks` count is **not** a discovery failure when the tasks fan out
 # Plan: backfill renderer module docstrings
 
 **Source brief**: docs/loom/specs/2026-05-20-renderer-docstrings.md
-Goal: every renderer file carries a one-line module docstring so the lint gate stops flagging them
+Goal: every renderer file carries a one-line module docstring so the lint gate stops flagging them — off-direction: lint hygiene, no PURPOSE/map bearing
 Stage: planning
 **Total tasks**: 8
 **Critical-path depth**: 2 (≤5 ✓)

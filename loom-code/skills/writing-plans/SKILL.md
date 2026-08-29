@@ -145,7 +145,7 @@ A qualifying amendment records a one-line skip note in the plan's `Notes` naming
 
 After PASS and before SDD, kickoff is mandatory even for a small or obvious plan. Never skip it. Follow [`references/kickoff-briefing.md`](references/kickoff-briefing.md): batch-brief 1–3 one-way-door decisions and forks; route others to the Decision Log. Show the plan through [`adjudication-view`](../using-loom-code/protocols/adjudication-view.md) doc mode per its firing conditions.
 
-**Progress surface.** From birth, the plan carries `Goal:`, `Stage:`, per-task `Status:`, an optional `Steps:` title block, and per-task `Gloss:` lines. Steps titles and Gloss lines are written at plan time in the user's conversation language per §Language policy. After PASS, run repo-root `scripts/plan_card.py` as `python3 scripts/plan_card.py <plan-path>`,
+**Progress surface.** From birth, the plan carries `Goal:`, `Stage:`, per-task `Status:`, an optional `Steps:` title block, and per-task `Gloss:` lines. Steps titles and Gloss lines are written at plan time in the user's conversation language per §Language policy. plan_card.py prints `Goal:` verbatim, so every progress card inherits the direction clause with no script change. After PASS, run repo-root `scripts/plan_card.py` as `python3 scripts/plan_card.py <plan-path>`,
 otherwise `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path>`. Relay it — fire-and-continue, not a new pause — per `loom-code/hooks/family-relay.md §(a2) Progress card`; if family-relay or both scripts are absent, render the four fields inline: goal, task table, stage, next. Apply [`../using-loom-code/protocols/adjudication-view.md`](../using-loom-code/protocols/adjudication-view.md) doc mode per its firing conditions.
 
 ## Language policy
