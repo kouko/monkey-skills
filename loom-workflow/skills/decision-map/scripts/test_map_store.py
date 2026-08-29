@@ -27,7 +27,7 @@ def _write(path: Path, text: str) -> None:
 
 MAP_MD_CONFORMANT = """---
 map-id: wayfinder
-schema_version: 1
+schema_version: 2
 state: charting
 ---
 
@@ -51,11 +51,6 @@ Nothing special.
 
 - F-2: retrofitting the four legacy scripts
 
-## Parts
-
-| Part | Join key | Status |
-|---|---|---|
-| Engine | `wayfinder / Part: Engine` | in-progress |
 """
 
 TICKET_CLOSED = """---
@@ -84,6 +79,28 @@ def _make_conformant_map(tmp_path: Path) -> Path:
 # --- RED acceptance test -------------------------------------------------
 
 
+def test_validate_requires_schema_v2_without_parts(tmp_path: Path) -> None:
+    """Only v2 maps without a Parts section are accepted; v1 maps must
+    fail loudly with migration guidance, and the parser exposes no Parts
+    state to consumers."""
+    map_dir = _make_conformant_map(tmp_path)
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+    assert "Parts" not in map_store.REQUIRED_SECTIONS
+    assert not hasattr(map_store.read_map(map_dir), "parts")
+
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8").replace(
+            "schema_version: 2", "schema_version: 1"
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "migrate" in message.lower()
+
+
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
     """A schema_version above map_store's supported ceiling is exit 2,
     naming both versions — never a silent read-past."""
@@ -91,7 +108,7 @@ def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
     map_md = map_dir / "MAP.md"
     map_md.write_text(
         map_md.read_text(encoding="utf-8").replace(
-            "schema_version: 1", "schema_version: 999"
+            "schema_version: 2", "schema_version: 999"
         ),
         encoding="utf-8",
     )
@@ -117,7 +134,7 @@ def test_read_map_parses_frontmatter_and_sections(tmp_path: Path) -> None:
     map_dir = _make_conformant_map(tmp_path)
     doc = map_store.read_map(map_dir)
     assert doc.frontmatter.map_id == "wayfinder"
-    assert doc.frontmatter.schema_version == 1
+    assert doc.frontmatter.schema_version == 2
     assert doc.frontmatter.state == "charting"
     assert "Chart the decision-map layer." in doc.sections["Destination"]
 
@@ -146,14 +163,6 @@ def test_read_map_parses_decisions_last_parenthesized_token(
     assert "(see also PEP 8)" in doc.decisions[0].gist
 
 
-def test_read_map_parses_parts_join_keys(tmp_path: Path) -> None:
-    map_dir = _make_conformant_map(tmp_path)
-    doc = map_store.read_map(map_dir)
-    assert doc.parts[0].name == "Engine"
-    assert doc.parts[0].join_key == "wayfinder / Part: Engine"
-    assert doc.parts[0].status == "in-progress"
-
-
 def test_read_ticket_parses_frontmatter_and_resolution(tmp_path: Path) -> None:
     map_dir = _make_conformant_map(tmp_path)
     ticket = map_store.read_ticket(map_dir / "tickets" / "decision-a.md")
@@ -171,7 +180,7 @@ def test_resolve_schema_version_walks_up_from_ticket_path(
     version = map_store.resolve_schema_version(
         map_dir / "tickets" / "decision-a.md"
     )
-    assert version == 1
+    assert version == 2
 
 
 # --- validate: structural violations --------------------------------------
@@ -194,36 +203,16 @@ def test_validate_rejects_bad_state_enum(tmp_path: Path) -> None:
 def test_validate_rejects_missing_section(tmp_path: Path) -> None:
     map_dir = _make_conformant_map(tmp_path)
     map_md = map_dir / "MAP.md"
-    text = map_md.read_text(encoding="utf-8").replace("## Parts\n", "")
+    text = map_md.read_text(encoding="utf-8").replace("## Out-of-scope\n", "")
     map_md.write_text(text, encoding="utf-8")
     code, message = map_store.validate(map_dir, repo_root=tmp_path)
     assert code == 2
-    assert "Parts" in message
+    assert "Out-of-scope" in message
 
 
 def test_validate_operational_error_on_missing_map_dir(tmp_path: Path) -> None:
     code, message = map_store.validate(tmp_path / "does-not-exist", repo_root=tmp_path)
     assert code == 1
-
-
-def test_validate_accepts_done_sha_status_cell(tmp_path: Path) -> None:
-    """map-format.md §Parts pins `done(<sha>)` as the third Status
-    value (map_parts.py's write-back form) — validate must accept a
-    Parts row already carrying it, not just the bare `in-progress`
-    fixture value (map_parts.py Task 10 revision round 2)."""
-    map_dir = _make_conformant_map(tmp_path)
-    map_md = map_dir / "MAP.md"
-    map_md.write_text(
-        map_md.read_text(encoding="utf-8").replace(
-            "| Engine | `wayfinder / Part: Engine` | in-progress |",
-            "| Engine | `wayfinder / Part: Engine` | done(096c3167) |",
-        ),
-        encoding="utf-8",
-    )
-    code, message = map_store.validate(map_dir, repo_root=tmp_path)
-    assert code == 0, message
-    doc = map_store.read_map(map_dir)
-    assert doc.parts[0].status == "done(096c3167)"
 
 
 # --- is_live_map helper ----------------------------------------------------
@@ -247,7 +236,7 @@ def test_is_live_map_false_for_clear_state(tmp_path: Path) -> None:
 def test_is_live_map_false_when_not_checker_valid(tmp_path: Path) -> None:
     map_dir = _make_conformant_map(tmp_path)
     map_md = map_dir / "MAP.md"
-    text = map_md.read_text(encoding="utf-8").replace("## Parts\n", "")
+    text = map_md.read_text(encoding="utf-8").replace("## Out-of-scope\n", "")
     map_md.write_text(text, encoding="utf-8")
     assert map_store.is_live_map(map_dir, repo_root=tmp_path) is False
 
@@ -256,22 +245,17 @@ def test_is_live_map_false_when_not_checker_valid(tmp_path: Path) -> None:
 
 
 def test_validate_rejects_out_of_order_sections(tmp_path: Path) -> None:
-    """map-format.md pins the six sections 'in this order' — Parts
-    moved to the front of the body must not still validate clean."""
+    """The required sections are order-sensitive — Out-of-scope moved
+    to the front of the body must not still validate clean."""
     map_dir = _make_conformant_map(tmp_path)
     map_md = map_dir / "MAP.md"
     text = map_md.read_text(encoding="utf-8")
-    parts_block = (
-        "## Parts\n\n"
-        "| Part | Join key | Status |\n"
-        "|---|---|---|\n"
-        "| Engine | `wayfinder / Part: Engine` | in-progress |\n"
-    )
+    out_of_scope_block = "## Out-of-scope\n\n- F-2: retrofitting the four legacy scripts\n"
     destination_block = "## Destination\n\nChart the decision-map layer.\n"
-    assert parts_block in text
+    assert out_of_scope_block in text
     assert destination_block in text
-    reordered = text.replace(parts_block, "\0").replace(
-        destination_block, parts_block
+    reordered = text.replace(out_of_scope_block, "\0").replace(
+        destination_block, out_of_scope_block
     ).replace("\0", destination_block)
     map_md.write_text(reordered, encoding="utf-8")
     code, message = map_store.validate(map_dir, repo_root=tmp_path)
@@ -567,7 +551,7 @@ def test_cli_validate_exits_2_on_future_schema_version(tmp_path: Path) -> None:
     map_md = map_dir / "MAP.md"
     map_md.write_text(
         map_md.read_text(encoding="utf-8").replace(
-            "schema_version: 1", "schema_version: 999"
+            "schema_version: 2", "schema_version: 999"
         ),
         encoding="utf-8",
     )

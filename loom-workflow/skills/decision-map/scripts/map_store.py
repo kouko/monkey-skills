@@ -4,7 +4,7 @@
 Grammar SSOT: `loom-workflow/skills/decision-map/references/
 map-format.md` — this module is the ONLY sanctioned parser of the
 store's bytes (§Command surface); every sibling checker
-(`check_map_links.py`, `check_map_fog.py`, `map_parts.py`) and
+(`check_map_links.py`, `check_map_fog.py`) and
 `map_init.py` import this module rather than re-reading MAP.md or a
 ticket file itself.
 
@@ -28,7 +28,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-SUPPORTED_SCHEMA_VERSION = 1
+SUPPORTED_SCHEMA_VERSION = 2
 
 VALID_MAP_STATES = {"charting", "active", "clear", "archived"}
 LIVE_MAP_STATES = {"charting", "active"}
@@ -43,13 +43,11 @@ REQUIRED_SECTIONS = [
     "Decisions-so-far",
     "Not-yet-specified (fog)",
     "Out-of-scope",
-    "Parts",
 ]
 
 _SECTION_HEADING = re.compile(r"^##\s+(.+?)\s*$")
 _FOG_ENTRY = re.compile(r"^-\s*(?P<id>F-(?P<n>\d+))\s*:\s*(?P<text>.*)$")
 _DECISION_LINE = re.compile(r"^-\s*(?P<gist>.*)\((?P<link>[^()]*)\)\s*$")
-_TABLE_ROW = re.compile(r"^\|(.+)\|\s*$")
 
 
 class MapStoreError(Exception):
@@ -109,13 +107,6 @@ class DecisionLine:
 
 
 @dataclass
-class PartRow:
-    name: str
-    join_key: str
-    status: str
-
-
-@dataclass
 class MapDocument:
     path: Path
     frontmatter: MapFrontmatter
@@ -123,7 +114,6 @@ class MapDocument:
     fog_entries: list[FogEntry] = field(default_factory=list)
     decisions: list[DecisionLine] = field(default_factory=list)
     out_of_scope: list[str] = field(default_factory=list)
-    parts: list[PartRow] = field(default_factory=list)
 
 
 def _parse_map_frontmatter(fields: dict[str, str]) -> MapFrontmatter:
@@ -214,23 +204,6 @@ def _parse_out_of_scope(section_text: str) -> list[str]:
     ]
 
 
-def _parse_parts(section_text: str) -> list[PartRow]:
-    rows = []
-    for line in section_text.splitlines():
-        match = _TABLE_ROW.match(line.strip())
-        if not match:
-            continue
-        cells = [c.strip() for c in match.group(1).split("|")]
-        if len(cells) != 3:
-            continue
-        name, join_key, status = cells
-        if name in ("Part", "") or set(name) <= {"-"}:
-            continue  # header / separator row
-        join_key = join_key.strip("`").strip()
-        rows.append(PartRow(name=name, join_key=join_key, status=status))
-    return rows
-
-
 def parse_map_document(text: str, path: Path) -> MapDocument:
     fields, body = parse_frontmatter(text)
     frontmatter = _parse_map_frontmatter(fields)
@@ -241,7 +214,6 @@ def parse_map_document(text: str, path: Path) -> MapDocument:
     )
     doc.decisions = _parse_decisions(sections.get("Decisions-so-far", ""))
     doc.out_of_scope = _parse_out_of_scope(sections.get("Out-of-scope", ""))
-    doc.parts = _parse_parts(sections.get("Parts", ""))
     return doc
 
 
@@ -402,6 +374,11 @@ def resolve_repo_root(explicit: str | Path | None, start_dir: Path) -> Path:
 
 
 def _check_schema_version(schema_version: int) -> None:
+    if schema_version < SUPPORTED_SCHEMA_VERSION:
+        raise SchemaViolation(
+            f"schema_version {schema_version} is retired; migrate MAP.md "
+            f"to schema_version {SUPPORTED_SCHEMA_VERSION}"
+        )
     if schema_version > SUPPORTED_SCHEMA_VERSION:
         raise SchemaViolation(
             f"schema_version {schema_version} is newer than the "
@@ -449,16 +426,6 @@ def _check_map_structure(doc: MapDocument) -> None:
             "'user-ratified:' line in the Destination section "
             "(map-format.md §Sections)"
         )
-    for part in doc.parts:
-        expected_prefix = f"{doc.frontmatter.map_id} / Part: "
-        if not part.join_key.startswith(expected_prefix):
-            raise SchemaViolation(
-                f"Parts row {part.name!r} join key {part.join_key!r} does "
-                f"not match '<map-id> / Part: <name>' for map-id "
-                f"{doc.frontmatter.map_id!r}"
-            )
-
-
 def _check_tickets(map_dir: Path) -> None:
     tickets_dir = Path(map_dir) / "tickets"
     if not tickets_dir.is_dir():
