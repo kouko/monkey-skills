@@ -23,6 +23,7 @@ user-ratified: kouko, 2026-08-29
 
 - 第一刀＝hooks 先動；queue 與 loom-memory 的順序掛 feasibility probe 量測後再裁。 (tickets/grilling-first-cut.md)
 - 官方文件面查證完成：cache 佈局／placeholder 語意／路徑逃逸守衛／install-time plugin-dependencies 皆已是文件化表面，但 installed_plugins.json（現行版本唯一 oracle）與「執行期 sibling root 探索」兩者無任何文件化原語——量測基準交付 feasibility 票。 (tickets/research-plugin-root-primitives.md)
+- feasibility 裁定（user-ratified 2026-08-29）：**FEASIBLE-with-reservation**——Claude Code 側機制夠格作地基，但 Codex 側對等解法（F-7）補齊前，搬遷不視為完成；hooks 第一刀解凍可動工。 (tickets/feasibility-cross-plugin-store-access.md)
 
 ## Not-yet-specified (fog)
 
