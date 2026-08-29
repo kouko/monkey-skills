@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/specs/2026-08-30-backlog-map-boundary-v2.md
 Goal: 讓 decision-map ticket 只承載 live purpose 下已承諾的決策工作，讓 backlog entry 只承載具啟動條件的機會型工作，並以單向 close-and-cite 完成兩者轉換 — serves PURPOSE: 讓 loom 的規劃與證據契約可以機械驗證且不保存重複狀態
-Stage: review:round-1
+Stage: finishing
 Steps:
   1. 建立兩側的新語法與契約
   2. 收緊 decision-map 驗證並移除 Parts
