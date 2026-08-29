@@ -172,6 +172,23 @@ graduated-from: null
   deadlock without opening concurrency control.
 - `graduated-from` — `null`, or the `F-<n>` fog id this ticket was
   graduated from (see §Fog entries).
+- `blocked-by` — optional. Absent means no blockers — exactly today's
+  meaning. When present, one line of comma-separated ticket slugs
+  (frontmatter is simple `key: value` — no YAML lists, so the slugs
+  share a single line); every slug names a sibling ticket file in the
+  same map's `tickets/` directory. The blocked-by graph must be
+  acyclic.
+- `ratification` — optional; sole defined value `pending`. Marks a
+  prototype ticket whose measurement finished but whose conclusion
+  the user deferred ratifying; the ticket stays `claimed` while the
+  field is `pending`. Absent means no deferred ratification —
+  exactly today's meaning.
+
+**Frontier.** A ticket is on the frontier iff its `status` is `open`,
+every ticket named in its `blocked-by` line is `closed`, and it is
+unclaimed. A ticket with no `blocked-by` field is frontier-eligible
+whenever it is open and unclaimed — the pre-`blocked-by` behavior,
+unchanged.
 
 ### Body sections
 
@@ -192,6 +209,14 @@ graduated-from: null
   under §Command surface enforces this in v1 — it is enforced by
   review only; a future checker may absorb it, at which point this
   line names it.
+
+### Ticket sizing
+
+One ticket's question is sized to one agent session. A research
+ticket may span several sessions resolving, but the QUESTION itself
+stays one-session-sized — a question too large for one sitting is
+split into multiple tickets (or returned to fog) rather than
+stretched across one oversized ticket.
 
 ## Parts section
 
