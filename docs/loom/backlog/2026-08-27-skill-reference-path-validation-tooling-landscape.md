@@ -1,10 +1,12 @@
 ---
 name: 2026-08-27-skill-reference-path-validation-tooling-landscape
 description: Nothing validates the plain-text file paths loom skills tell agents to open, and the surveyed ecosystem does not yet supply one worth adopting — the official reference validator declines the job, general link checkers deliberately skip inline code, and the one third-party linter that does it is a solo project; revisit when skill-lint gains adoption or the agentskills resolution proposals land
-status: open
+status: closed
 origin: 2026-08-27 fix/conditional-ops-path — three dangling path literals shipped in conditional-operations.md because check-skill-crossrefs.py checks inline markdown links only; a survey of the tooling landscape was run before deciding whether to build a checker, and the answer was to wait
 start: whichever comes first — skill-lint (or an equivalent) shows real adoption beyond its author, agentskills discussion #210 or a successor reaches an adopted spec (#178 is already closed and is not a live trigger), or a third dangling-path defect ships from this repo
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: whichever comes first — skill-lint (or an equivalent) shows real adoption
   beyond its author, agentskills discussion #210 or a successor reaches an

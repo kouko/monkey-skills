@@ -1,10 +1,12 @@
 ---
 name: 2026-08-22-check-19-version-tag-carries-two-meanings-in-one-table
 description: the plan-document-reviewer prompt's check table uses one `(vX.Y.Z+)` notation for two different things — every other row means "introduced in" and never moves, while row 19 alone is bound by a live test to the current shipping version, so after every bump row 19 falsely asserts the check did not apply at the previous version
-status: open
+status: closed
 origin: 2026-08-22 code-as-spec-lens-no-op-bar arc — the 0.93.0 → 0.94.0 bump made row 19 read `(v0.94.0+)`, and a whole-branch docs reviewer filed the notation collision as an evidence-class finding
 start: the next touch of plan-document-reviewer-prompt.md's check table, or of test_check19_version_tag_matches_shipping_version
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - The collision. In `loom-code/skills/writing-plans/references/plan-document-reviewer-prompt.md`,
   rows 5, 13, 14, 17 and 18 carry tags like `(v0.13.0+)`, `(v0.8.0+)`,

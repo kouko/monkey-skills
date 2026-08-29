@@ -1,10 +1,12 @@
 ---
 name: 2026-08-13-close-out-open-question-gate-is-prose-orchestrated-not-hook-enforced
 description: close-out enforcement for an unresolved OQ-<n> ships as a Step 8 prose table row, not a hook-mechanized check
-status: open
+status: closed
 origin: 2026-08-13 open-question-dispatch-gate arc kickoff decision, recorded in docs/loom/plans/2026-08-13-open-question-dispatch-gate.md §Notes
 start: the first branch that closes with an unresolved OQ-<n> despite the Step 8 table row, or the next loom_gate_markers.py touch, whichever comes first
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: the first branch that closes with an unresolved OQ-<n> despite the
   Step 8 table row, or the next loom_gate_markers.py touch, whichever comes

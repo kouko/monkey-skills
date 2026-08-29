@@ -1,10 +1,12 @@
 ---
 name: 2026-07-04-tdd-guard-pilot-tdd-mining-tightenings
 description: TDD Guard pilot + TDD-mining tightenings
-status: open
+status: closed
 origin: harness-engineering audit rec 4 (docs/loom/audits/2026-07-04-harness-engineering-audit.md) + the 2026-07-04 three-route TDD-miss mining
 start: first real SDD venue — same trigger as G4 / Segment-3 (komado-Viewfinder batch6)
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: first real SDD venue — same trigger as G4 / Segment-3
   (komado-Viewfinder batch6)

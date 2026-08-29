@@ -1,10 +1,12 @@
 ---
 name: 2026-07-15-afk-research-lane-569-next-touches
 description: AFK research lane (#569) next-touches
-status: open
+status: closed
 origin: PR #569 per-task + whole-branch reviews (all 🟢).
 start: next kickoff-briefing.md touch.
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: next kickoff-briefing.md touch.
 - Origin: PR #569 per-task + whole-branch reviews (all 🟢).

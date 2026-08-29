@@ -1,10 +1,12 @@
 ---
 name: 2026-08-20-investing-operational-kpi-narrative-line
 description: 投資線營運指標敘事層（非金錢 KPI）——用敘事性的營運指標補足純財務數字的判讀
-status: open
+status: closed
 origin: docs/loom/DIRECTION.md `## Later` cleanup（north-star-serves-link 弧，2026-08-20）
 start: 下次規劃 investing-toolkit 相關弧時，評估是否把這條納入該弧的範圍
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 investing-toolkit 現有的分析層（DCF、comps、screener 等）都以金錢化財務數字
 為核心輸出。這條 Later 項是想在其上加一層「非金錢 KPI 的敘事」——例如產品面

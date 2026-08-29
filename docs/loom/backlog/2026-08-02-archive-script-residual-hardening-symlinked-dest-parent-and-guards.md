@@ -1,10 +1,12 @@
 ---
 name: 2026-08-02-archive-script-residual-hardening-symlinked-dest-parent-and-guards
 description: three residual guard gaps in loom-code/scripts/archive_change_folder.py that the two-unit generalization left behind
-status: open
+status: closed
 origin: whole-branch review of the docs-backlog-one-entry-per-file arc, 2026-08-02 — all three were raised as green-level findings and deliberately deferred rather than fixed in that branch
 start: the next time anyone edits archive_change_folder.py for any reason
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 `loom-code/scripts/archive_change_folder.py` was generalized from
 archiving a change-folder to also archiving a single store entry file.

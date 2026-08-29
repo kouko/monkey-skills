@@ -1,10 +1,12 @@
 ---
 name: 2026-08-24-planning-file-boundaries-vs-data-flow-boundaries
 description: decide when loom plans should split work by files versus packet and contract data flow
-status: open
+status: closed
 origin: cross-host review-gate hardening part 2 and part 3 replanning
 start: discuss before the next loom planning task after the current cross-host review-gate hardening arc
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 This is the highest-priority planning discussion after the current arc. Compare
 two task-boundary strategies:

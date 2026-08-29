@@ -1,7 +1,7 @@
 ---
 type: task
-status: open
-claim: null
+status: claimed
+claim: relocation-family-hooks, 2026-08-29
 ---
 
 盤點 queue 層（backlog_index、plan_card、loom_gate_markers 等）與

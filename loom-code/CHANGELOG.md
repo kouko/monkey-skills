@@ -5,6 +5,24 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.105.0] — 2026-08-30 — explicit backlog triggers and aging review
+
+### Added
+
+- `backlog_index.py --review-due --as-of YYYY-MM-DD` lists live open
+  entries aged at least 90 days from their immutable filename date, without
+  introducing an implicit clock read into validation.
+
+### Changed
+
+- Live open backlog entries now require `start: date — YYYY-MM-DD` or
+  `start: event — <observable condition>`; the former `now` and unprefixed
+  forms are rejected. The shipped charter and this repository's charter
+  document the same grammar and aging checkpoint.
+- Existing open entries receive a one-time amnesty migration: retained entries
+  adopt the new trigger grammar and the remainder close under the recorded
+  bulk-cleanup reason.
+
 ## [0.104.0] — 2026-08-29 — direction surfacing at kickoff, decision points, and the plan Goal line
 
 ### Added

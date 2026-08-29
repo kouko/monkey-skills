@@ -1,10 +1,12 @@
 ---
 name: 2026-08-19-cjk-space-indented-bullet-vanishes-from-both-parsers
 description: a nested bullet indented with NBSP or an ideographic space is dropped by BOTH the field-microstructure checker and plan_card, so the gate exits 0 and the rendered card silently loses the bullet — no checker/renderer divergence exists to detect it, and a CJK IME produces these characters without the author seeing anything unusual
-status: open
+status: closed
 origin: whole-branch review of the field-value-microstructure arc (2026-08-19, round 2) — found by a differential probe over 1152 indent/marker/separator shapes; recorded as pre-existing and out of that arc's scope
 start: next touch of `_bullet_lines` in loom-code/scripts/plan_card.py, or the first real report of a bullet missing from a rendered plan card
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 `plan_card._bullet_lines` collects a field's continuation lines only while the
 line's first character is exactly `" "` or `"\t"`, and BREAKS out of the field

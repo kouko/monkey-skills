@@ -1,10 +1,12 @@
 ---
 name: 2026-08-21-code-as-spec-writing-rule-and-its-deferred-ab
 description: the standing recommendation for this defect class is the code-as-spec writing rule (Ousterhout's interface-vs-implementation split), replacing the superseded entry's two checkers; its direction-changing layer — applying the rule to skill bodies — is deferred to a pre-designed A/B experiment
-status: open
+status: closed
 origin: 2026-08-21 code-as-spec-writing-rule arc — supersedes docs/loom/backlog/2026-08-21-checkers-for-load-bearing-superlatives-and-existence-claims.md, whose two checkers this arc did not build
 start: the pre-designed A/B experiment on whether the writing rule extends to skill bodies, run against writing-plans's queue-relation-gate paragraph (loom-code/skills/writing-plans/SKILL.md) as the test case
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Recommendation, superseding the entry this replaces: the code-as-spec
   writing rule, in Ousterhout's interface-versus-implementation

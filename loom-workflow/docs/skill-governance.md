@@ -159,9 +159,8 @@ Examples from loom-workflow history:
 - v1.5.0 (PR #159): added complexity-critique → minor
 - v1.6.0 (PR-2): added skill-refactor → minor
 - v1.7.0 (PR-3): added skill-tuning → minor
-- (future) v2.0.0: would be reserved for a breaking change such as
-  removing skill-creator-advance description optimization or
-  dropping a slash command
+- v2.0.0: decision-map schema v2 removes the public `Parts` write-back
+  protocol, so it is a major bump
 
 Each bump must be accompanied by a corresponding CHANGELOG.md
 entry in Keep a Changelog format.

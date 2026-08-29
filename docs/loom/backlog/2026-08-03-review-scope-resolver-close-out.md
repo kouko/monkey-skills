@@ -1,10 +1,12 @@
 ---
 name: 2026-08-03-review-scope-resolver-close-out
 description: what the review-scope-resolver arc shipped, and the queue that came out of it — recorded here because the session's own diagnosis was that a queue living only in conversation evaporates; the arc itself merged as PR #641, so only the queue is still live
-status: open
+status: closed
 origin: the review-scope-resolver arc (loom-code 0.46.0), merged as PR #641, squash 2b8785d3
 start: before the next arc begins — the queue below is what remains; the push gate this entry originally carried is spent
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 ## What shipped
 

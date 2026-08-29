@@ -1,10 +1,12 @@
 ---
 name: 2026-08-21-four-loom-scripts-four-different-shapes-for-where-is-the-repo
 description: the loom script family answers "where is the repo/store" four different ways — backlog_index takes --store with no --repo-root and resolves it against the CWD, the two brief gates take a positional path plus --repo-root with git auto-detection, check_north_star_link takes a bare positional store path, and archive_change_folder takes a positional identifier plus an optional positional root; a newcomer guessing the wrong flag gets an argparse error rather than a pointer
-status: open
+status: closed
 origin: 2026-08-21 dissolve-direction-layer end-to-end dogfood, finding #4 — a cold agent walking the whole queue lifecycle hit the inconsistency five scripts in a row and guessed --root for backlog_index before finding --store
 start: the next arc that touches two or more of these scripts' argument parsing for any other reason, or the first time a consuming repo other than kumiko adopts the queue layer
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: the next arc that touches two or more of these scripts' argument
   parsing for any other reason, or the first time a consuming repo other

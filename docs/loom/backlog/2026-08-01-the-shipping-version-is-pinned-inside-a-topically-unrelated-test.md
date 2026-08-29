@@ -1,10 +1,12 @@
 ---
 name: 2026-08-01-the-shipping-version-is-pinned-inside-a-topically-unrelated-test
 description: The shipping version is pinned inside a topically unrelated test
-status: open
+status: closed
 origin: PR #629 (docs-review standalone skill), carried forward through three subsequent bumps.
 start: the next version bump that has to edit this file, if the edit is ever missed or lands in the wrong file.
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: the next version bump that has to edit this file, if the edit is ever
   missed or lands in the wrong file.

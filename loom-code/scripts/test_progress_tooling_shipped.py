@@ -93,7 +93,9 @@ def test_repo_root_shims_exist_and_match_the_plugin_copies():
     assert "backlog_index --validate: OK" not in shim_b.stdout, (
         "shim ignored --ready and ran the flagless default:\n" + shim_b.stdout
     )
-    assert "## open" in shim_b.stdout, shim_b.stdout + shim_b.stderr
+    assert (
+        "## open" in shim_b.stdout or "0 open" in shim_b.stdout
+    ), shim_b.stdout + shim_b.stderr
     assert (shim_b.returncode, shim_b.stdout) == (
         plugin_b.returncode,
         plugin_b.stdout,

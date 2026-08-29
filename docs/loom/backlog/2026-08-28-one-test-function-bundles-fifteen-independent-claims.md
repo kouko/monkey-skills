@@ -1,10 +1,12 @@
 ---
 name: 2026-08-28-one-test-function-bundles-fifteen-independent-claims
 description: goal-create's input-floor test bundles ~15 independently-checkable claims behind one name, so a failure anywhere inside it names nothing
-status: open
+status: closed
 origin: 2026-08-27 PR #748 whole-branch review, code arm A, which scored naming PASS_WITH_NOTES on loom-workflow/skills/goal-create/scripts/test_input_floor.py's test_defines_slots_refusal_bar_and_provenance — 359 lines, roughly 3x the largest pre-existing test-function outlier in this repo (test_check_scenario_coverage.py's 127 lines, measured at acd5a846), with no in-comment rationale for the length, against naming-and-functions.md's soft target of 20 lines and hard ceiling of 50. Deferred by the user's explicit call on 2026-08-28: the CI-repair branch it surfaced on had no business also restructuring 773 lines of pre-existing test file that earlier review rounds had already passed.
 start: the next arc that touches goal-create's input-floor contract for any other reason, because splitting is cheap while the claims are already in context and expensive as a standalone errand.
 ---
+
+Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
 
 - Start: the next arc that touches goal-create's input-floor contract for any
   other reason, because splitting is cheap while the claims are already in
