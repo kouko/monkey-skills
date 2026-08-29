@@ -22,7 +22,14 @@ Use these rules only when `SKILL.md`'s ask policy says a question is warranted:
    showing machine detail.
 4. Open with one line stating the current state and what the choice changes.
    Put that anchor inside the structured question field. Never offer a CLI
-   command before confirming it exists.
+   command before confirming it exists. For a mid-arc question (SDD gate ③
+   asks, kickoff-briefing escalations, complex-fork briefs), extend that same
+   line into a direction anchor: name the remote goal (`PURPOSE.md`'s
+   `**Why:**` line, or the governing map's Destination when the plan carries
+   a `Map part:` key), the near goal (the plan's `Goal:` line), and this
+   decision's relation to them — one sentence, not a new field.
+   Discovery-phase (brainstorming) questions are exempt: direction is itself
+   the topic there.
 5. Offer at most four options; do not add an explicit “Other”. Invite free-form
    input for open design questions, not closed factual questions.
 6. Combine questions only when they share one topic and can be judged together.
