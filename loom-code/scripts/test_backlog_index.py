@@ -106,10 +106,12 @@ def test_charter_documents_the_closed_status_vocabulary(path):
 
 
 def _entry(name: str, status: str, description: str = "A fixture entry for backlog_index tests.") -> str:
+    start = "start: event — fixture condition\n" if status == "open" else ""
     return (
         "---\n"
         f"name: {name}\n"
         f"description: {description}\n"
+        f"{start}"
         f"status: {status}\n"
         "---\n\n"
         "Body text.\n"
@@ -228,6 +230,79 @@ def test_status_outside_the_closed_vocabulary_is_rejected(tmp_path):
 
     assert result.returncode == 1
     assert "2026-08-01-alpha.md" in result.stdout
+
+
+def test_validate_enforces_closed_start_grammar_on_live_open_status(tmp_path):
+    """Live open entries need an actionable date or observable event.
+
+    `blocked:` does not change the entry's status, so blocked-open entries
+    must meet the same grammar.  Closed and bet entries remain outside this
+    gate.
+    """
+    store = tmp_path / "backlog"
+    store.mkdir()
+
+    valid_date = _entry("2026-08-01-valid-date", "open").replace(
+        "status: open\n", "status: open\nstart: date — 2026-08-30\n"
+    )
+    valid_event = _entry("2026-08-02-valid-event", "open").replace(
+        "status: open\n",
+        "status: open\nblocked: waiting on a visible release\n"
+        "start: event — the release notes name this change\n",
+    )
+    _write(store, "2026-08-01-valid-date.md", valid_date)
+    _write(store, "2026-08-02-valid-event.md", valid_event)
+    _write(
+        store,
+        "2026-08-03-missing.md",
+        _entry("2026-08-03-missing", "open").replace(
+            "start: event — fixture condition\n", ""
+        ),
+    )
+    _write(
+        store,
+        "2026-08-04-now.md",
+        _entry("2026-08-04-now", "open").replace("status: open\n", "status: open\nstart: now\n"),
+    )
+    _write(
+        store,
+        "2026-08-05-malformed-date.md",
+        _entry("2026-08-05-malformed-date", "open").replace(
+            "status: open\n", "status: open\nstart: date — 2026-8-30\n"
+        ),
+    )
+    _write(
+        store,
+        "2026-08-06-empty-event.md",
+        _entry("2026-08-06-empty-event", "open").replace(
+            "status: open\n", "status: open\nstart: event — \n"
+        ),
+    )
+    _write(
+        store,
+        "2026-08-07-impossible-date.md",
+        _entry("2026-08-07-impossible-date", "open").replace(
+            "status: open\n", "status: open\nstart: date — 2026-02-30\n"
+        ),
+    )
+    _write(store, "2026-08-08-bet.md", _entry("2026-08-08-bet", "bet"))
+    _write(store, "2026-08-09-closed.md", _entry("2026-08-09-closed", "closed"))
+
+    result = _run_validate(store)
+
+    assert result.returncode == 1
+    for name in (
+        "2026-08-03-missing.md",
+        "2026-08-04-now.md",
+        "2026-08-05-malformed-date.md",
+        "2026-08-06-empty-event.md",
+        "2026-08-07-impossible-date.md",
+    ):
+        assert name in result.stdout
+    assert "2026-08-01-valid-date.md" not in result.stdout
+    assert "2026-08-02-valid-event.md" not in result.stdout
+    assert "2026-08-08-bet.md" not in result.stdout
+    assert "2026-08-09-closed.md" not in result.stdout
 
 
 # ---------------------------------------------------------------------------
@@ -765,10 +840,12 @@ def test_real_store_entries_with_a_body_bullet_have_the_matching_frontmatter_fie
 
 
 def _entry_with_body(name: str, status: str, extra_frontmatter: str, body: str) -> str:
+    start = "start: event — fixture condition\n" if status == "open" else ""
     return (
         "---\n"
         f"name: {name}\n"
         "description: A fixture entry for field-agreement tests.\n"
+        f"{start}"
         f"status: {status}\n"
         f"{extra_frontmatter}"
         "---\n\n"
@@ -822,8 +899,8 @@ def test_start_field_matching_body_bullet_ignoring_parenthetical_qualifier_is_ac
     text = _entry_with_body(
         "2026-08-01-alpha",
         "open",
-        "start: a third real thing happens (Rule of Three).\n",
-        "- Start (re-trigger): a third real thing happens\n  (Rule of Three).",
+        "start: event — a third real thing happens (Rule of Three).\n",
+        "- Start (re-trigger): event — a third real thing happens\n  (Rule of Three).",
     )
     _write(store, "2026-08-01-alpha.md", text)
 
@@ -952,8 +1029,7 @@ def test_agreement_check_is_a_noop_when_body_has_no_matching_bullet(tmp_path):
 
 
 def _ready_store(tmp_path: Path) -> Path:
-    """One entry per shape — an OPEN entry with and without `start:` (so
-    assertion (c) can check both the rendered and the absent case), a
+    """One entry per shape — two OPEN entries with valid `start:` values, a
     `bet` entry, a `blocked` open entry, a `closed` entry, and one
     archive-tier entry. Shared by all five --ready assertions."""
     store = tmp_path / "backlog"
@@ -968,7 +1044,7 @@ def _ready_store(tmp_path: Path) -> Path:
         "2026-08-02-open-with-start.md",
         _entry(
             "2026-08-02-open-with-start", "open", description="Open-with-start marker."
-        ).replace("status: open\n", "status: open\nstart: a third real thing happens\n"),
+        ).replace("status: open\n", "status: open\nstart: event — a third real thing happens\n"),
     )
     _write(
         store,
@@ -1043,8 +1119,8 @@ def test_ready_start_line_rendered_only_for_entries_that_have_the_field(tmp_path
     assert result.returncode == 0, result.stdout + result.stderr
     lines = result.stdout.splitlines()
     idx = lines.index("- 2026-08-02-open-with-start — Open-with-start marker.")
-    assert lines[idx + 1] == "  start: a third real thing happens", lines[idx + 1]
-    assert result.stdout.count("  start:") == 1, result.stdout
+    assert lines[idx + 1] == "  start: event — a third real thing happens", lines[idx + 1]
+    assert result.stdout.count("  start:") == 2, result.stdout
 
 
 def test_ready_count_line_reports_exact_numbers(tmp_path):

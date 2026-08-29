@@ -110,6 +110,7 @@ import difflib
 import re
 import sys
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 # Collapsed vocabulary (plan docs/loom/plans/2026-08-21-dissolve-
@@ -135,7 +136,7 @@ STATUS_SECTION_ORDER = [
 
 @dataclass(frozen=True)
 class Violation:
-    kind: str  # "name" | "status" | "archive-tier" | "blocked" | "description" | "field-agreement" | "serves"
+    kind: str  # "name" | "status" | "archive-tier" | "blocked" | "start" | "description" | "field-agreement" | "serves"
     file: str
     detail: str
 
@@ -356,6 +357,43 @@ def _check_blocked(display: str, frontmatter: dict[str, str], status: str | None
     return []
 
 
+_START_DATE_RE = re.compile(r"^date — (\d{4}-\d{2}-\d{2})$")
+_START_EVENT_RE = re.compile(r"^event — \S(?:.*\S)?$")
+
+
+def _is_well_formed_start(value: str) -> bool:
+    """Closed grammar for an open entry's actionable start condition."""
+    date_match = _START_DATE_RE.fullmatch(value)
+    if date_match is not None:
+        try:
+            date.fromisoformat(date_match.group(1))
+        except ValueError:
+            return False
+        return True
+    return _START_EVENT_RE.fullmatch(value) is not None
+
+
+def _check_start(
+    display: str, frontmatter: dict[str, str], status: str | None, is_archived: bool
+) -> list[Violation]:
+    """Live open entries require a dated start or a non-empty event condition."""
+    if is_archived or status != "open":
+        return []
+    start = frontmatter.get("start")
+    if start is None:
+        return [Violation("start", display, "'open' entry missing required 'start' field")]
+    if not _is_well_formed_start(start):
+        return [
+            Violation(
+                "start",
+                display,
+                f"'start: {start}' is not well-formed — use 'start: date — YYYY-MM-DD' "
+                "or 'start: event — <non-empty observable condition>'",
+            )
+        ]
+    return []
+
+
 def _check_description(display: str, frontmatter: dict[str, str]) -> list[Violation]:
     """(vi) description is a required, non-blank field (charter:
     docs/loom/backlog/README.md:16 lists it with no <optional; ...> marker).
@@ -463,6 +501,7 @@ def find_violations(store: Path) -> list[Violation]:
         violations.extend(_check_status(display, status))
         violations.extend(_check_archive_tier(display, status, is_archived))
         violations.extend(_check_blocked(display, frontmatter, status))
+        violations.extend(_check_start(display, frontmatter, status, is_archived))
         violations.extend(_check_description(display, frontmatter))
         violations.extend(_check_serves(display, frontmatter, status, store))
         violations.extend(_check_field_agreement(display, frontmatter, _body_text(text)))
