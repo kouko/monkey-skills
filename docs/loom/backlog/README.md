@@ -24,16 +24,19 @@ standing bidirectional link or close-on-delivery step exists. If a map
 is archived with unclosed tickets, reopen the entries promoted to those
 tickets.
 
-Run `check-umbrella` when creating a backlog entry and again at pickup;
-run `check-queue` when charting a map and when creating a task ticket.
+Apply the `check-umbrella` judgment when creating a backlog entry and
+again at pickup; apply the `check-queue` judgment when charting a map and
+when creating a task ticket. These are named human/agent judgment checks,
+not CLI commands.
 The umbrella test is the live map's clear condition, not topical overlap.
 
 Amnesty is bulk cleanup, not per-entry adjudication: the human names
 rescues, and every unrescued entry closes with
 `amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)`.
 
-134/26 is a live-store composition ratio, never a close rate. Cohort
-rates come from review-due data, not archaeology.
+At the ratification snapshot, 134 open entries / 26 closed entries was a
+live-store composition ratio, never a close rate. Cohort rates come from
+review-due data, not archaeology.
 
 ## Frontmatter contract
 
@@ -89,11 +92,11 @@ re-trigger condition), and a fixed section schema would over-constrain
 content that legitimately varies.
 
 **The one exception, machine-enforced by `scripts/backlog_index.py
---validate`:** if the body repeats `Origin` or `Start` as a top-level
+--validate`:** if the body repeats `Origin`, `Start`, or `Serves` as a top-level
 bullet — the *label* may vary (`- Origin: …`, `- **Origin**: …`,
 `- Start (re-trigger): …`, or a similar parenthetical-qualifier on the
 label) — **and** the frontmatter also carries the matching
-`origin`/`start` field, the two must agree after whitespace
+`origin`/`start`/`serves` field, the two must agree after whitespace
 normalization (line wraps and indentation collapsed to single
 spaces). A qualifier written *after* the colon is part of the value,
 not the label, and is compared as part of it.
@@ -110,8 +113,8 @@ still fails. Put a blank line between the bullet and whatever follows.
 A bullet that disagrees with its frontmatter twin fails `--validate`
 with a `[field-agreement]` violation. This fires **only when both
 copies exist**: a body with no such bullet is untouched by this rule,
-and so is a bullet naming any field other than `Origin`/`Start`. If an
-entry doesn't need the constraint, don't restate `Origin`/`Start` as a
+and so is a bullet naming any field other than `Origin`/`Start`/`Serves`. If an
+entry doesn't need the constraint, don't restate `Origin`/`Start`/`Serves` as a
 labelled bullet at all — fold the same information into ordinary
 prose instead.
 
@@ -131,7 +134,7 @@ this block; none paraphrases it.
 
 | Word | Means | Set by | Flips when | Duties attached |
 |---|---|---|---|---|
-| `open` | Recorded, not chosen. The default at creation; may stay open forever. | Anyone filing an entry | → `bet` only by an explicit user request to choose or promote; → `closed` when shipped/superseded/abandoned | Optional `start:` memo (prose trigger, never machine-read). Optional `blocked: <reason>` — present ⇒ excluded from `--ready`. |
+| `open` | Recorded, not chosen. The default at creation; may stay open forever. | Anyone filing an entry | → `bet` only by an explicit user request to choose or promote; → `closed` when shipped/superseded/abandoned | Required `start:` trigger in the closed grammar above; `--validate` enforces it. Optional `blocked: <reason>` — present ⇒ excluded from `--ready`. |
 | `bet` | Chosen by the user as what the repo works on next. An empty queue at close-out is notification-only, not a betting moment. A bet can be lost — dropping one back to `open` is legal and carries no ceremony beyond removing the promotion. | **User only** — agents never promote | → `closed` at that arc's close-out; → `open` if the user withdraws it | Must carry a well-formed `serves:` line (`check_north_star_link.py`); the queue-relation gate resolves `in-queue:`/`displaces:` against live bets. |
 | `closed` | This line ended — shipped, superseded, or deliberately abandoned. The reason is one body line naming the evidence (branch/PR/decision), not a status variant. | Agent at close-out, per the user's instruction | Terminal (an entry under `archive/` is `closed` by construction) | Body line naming the evidence. |
 | `blocked:` (field, not a status) | Why this `open` entry cannot be picked right now. | Whoever knows the fact | Delete the line when the impediment lifts — the entry re-enters `--ready` | Legal only on an `open` entry — `--validate` rejects it elsewhere (`_check_blocked`); otherwise a filter flag, `--ready` is its only reader. |

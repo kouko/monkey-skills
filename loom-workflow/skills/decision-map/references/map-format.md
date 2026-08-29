@@ -232,7 +232,8 @@ instead of paraphrasing its rules.
 The **clear condition** is zero non-closed tickets (`open` and
 `claimed` both count as non-closed) and an empty fog section.
 
-**Umbrella checks** use two exact primitives. `check-umbrella` asks
+**Umbrella checks** use two exact judgment primitives, not CLI commands.
+`check-umbrella` asks
 whether a live map's clear condition requires the work; run it when a
 backlog entry is created and again at pickup before work. `check-queue`
 asks whether the backlog already tracks similar work; run it when a
@@ -251,14 +252,18 @@ no blocked state, standing bidirectional link, or close-on-delivery
 step. Map-to-backlog travel is release-only. A destination artifact is
 optional discovery context, never a live or standing link.
 
-Plan delivery progress is derived read-only from the plan's Notes
-binding and task ledger; it is never written into MAP.md or retained as
-a second progress table.
+Plan delivery progress is derived read-only from the plan's `## Notes`
+binding and task ledger. The binding is exactly one line shaped
+`Map part: <map-id> / Part: <part>`; `<map-id>` names the directory under
+`docs/loom/maps/`, and `<part>` is the delivery label reported by the query.
+The derived state is never written into MAP.md or retained as a second
+progress table.
 
 ## Measurement note
 
-134/26 is a live-store composition ratio, never a close rate.
-Cohort rates come from review-due data, not archaeology.
+At the ratification snapshot, 134 open entries / 26 closed entries was a
+live-store composition ratio, never a close rate. Cohort rates come from
+review-due data, not archaeology.
 
 ## Schema versioning
 

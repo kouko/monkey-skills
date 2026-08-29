@@ -127,8 +127,9 @@ A session that works through a ticket does, in order:
    graduated) when surfaced — this step is the deadline, never a
    reason to park a known question until close. Route what surfaces
    by where it binds: an unknown blocking THIS map's destination goes
-   to this map's fog; a lesson or unknown that outlives every map
-   goes to the repo's backlog store (`docs/loom/backlog/`) instead.
+   to this map's fog. A lesson or unknown that outlives every map stays
+   recorded in fog during ordinary work-through; only the release/archive
+   flow may move it to the repo's backlog store (`docs/loom/backlog/`).
    The agent routes without asking, but the entry it files records
    the routing basis — one line stating which of the two criteria
    placed it there.

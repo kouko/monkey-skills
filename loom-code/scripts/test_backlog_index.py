@@ -103,7 +103,7 @@ def test_backlog_v2_contract_surfaces_are_synchronized():
         "check-umbrella",
         "check-queue",
         "amnesty-2026-08-30",
-        "134/26 is a live-store composition ratio, never a close rate",
+        "134 open entries / 26 closed entries was a live-store composition ratio, never a close rate",
     ):
         assert required in template_policy
 
