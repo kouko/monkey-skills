@@ -84,7 +84,15 @@ applies this exact two-part test, never a bare existence check.
 MAP.md's body carries these sections, in this order:
 
 1. **Destination** — prose: what this map is charting toward. The
-   single paragraph a session re-reads to re-orient.
+   single paragraph a session re-reads to re-orient. From the charting
+   close onward, an `active` or `clear` map's Destination section also
+   carries a destination ratification line — exact shape
+   `user-ratified: <name/handle>, <date>` (the same dated shape
+   §Ticket schema's HITL rule uses) — recording that a human ratified
+   the map's direction. `map_store.py validate` machine-gates its
+   presence on `active` and `clear` maps (exit 2 when missing; the
+   check ships in this same 1.4.0 revision), and `map_init.py`
+   scaffolds the line slot.
 2. **Notes** — free-form prose; anything that does not fit the
    structured sections below. Never a substitute for a Decisions-so-far
    line or a fog entry — a decision or an open question written only
@@ -268,6 +276,15 @@ copy. If the value is greater than the highest version that checker's
 own code supports, the checker refuses to read further and exits 2
 with a message naming both the file's version and the checker's
 supported ceiling. A checker never guesses at an unknown schema shape.
+
+Mechanism revisions to this store are additive-only. A revision may
+add new optional fields, and may tighten a check only so that content
+written under the new rules can newly fail — never so that an
+untouched pre-existing store starts failing. Under this constitution
+an older checker never mis-rejects a newer store, and a newer checker
+never mis-rejects an untouched older store. The rationale is
+operational, not hypothetical: cross-host plugin version skew is a
+measured normal state, not an edge case.
 
 ## Command surface
 
