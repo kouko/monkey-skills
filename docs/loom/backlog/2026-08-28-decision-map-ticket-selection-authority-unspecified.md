@@ -1,7 +1,7 @@
 ---
 name: 2026-08-28-decision-map-ticket-selection-authority-unspecified
 description: decision-map work-through never says who picks the ticket — agent inference vs explicit user choice is a protocol blank
-status: open
+status: closed
 origin: family-relocation map dogfood, 2026-08-28 — the session inferred the ticket from a worktree branch name matching a ticket slug; the user expected to be offered the choice
 ---
 
@@ -27,3 +27,5 @@ origin: family-relocation map dogfood, 2026-08-28 — the session inferred the t
 
 下一次修訂 decision-map SKILL.md／map-format.md 時一併裁定；或下一次
 work-through session 再度遇到多票無訊號的選擇時。
+
+Closed by the decision-map protocol-hardening arc (brief BI-1): SKILL.md §Work-through mode now assigns map selection to the human and ticket selection to the agent with a recorded basis.
