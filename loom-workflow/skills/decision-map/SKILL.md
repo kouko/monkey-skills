@@ -63,7 +63,7 @@ run: `map_store.py validate <map-dir> --repo-root <path>`.
 Between those two steps, write the destination ratification line into
 the Destination section — the user-ratified line whose exact shape and
 validate gate are pinned in §Sections of `references/map-format.md`
-(cite that section; do not re-derive the grammar here). The close
+(read that section for the shape rather than re-deriving it here). The close
 order therefore reads: risk pass → ratification line → validate →
 the hand-flip to `active` below.
 

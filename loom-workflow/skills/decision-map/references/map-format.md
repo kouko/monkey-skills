@@ -216,10 +216,10 @@ unchanged.
   feasibility-conclusion) close only through ratification, so a
   checker never has to inspect a prototype ticket's body to decide
   whether the duty applies; `type` alone decides it. A HITL ticket
-  closed with no user-ratified line is a gate violation. No script
-  under §Command surface enforces this in v1 — it is enforced by
-  review only; a future checker may absorb it, at which point this
-  line names it.
+  closed with no user-ratified line is a gate violation.
+  `map_store.py validate` (§Command surface) enforces it: a `closed`
+  grilling or prototype ticket whose Resolution carries no
+  `user-ratified:` line exits 2.
 
 ### Ticket sizing
 
