@@ -33,6 +33,8 @@ SUPPORTED_SCHEMA_VERSION = 1
 VALID_MAP_STATES = {"charting", "active", "clear", "archived"}
 LIVE_MAP_STATES = {"charting", "active"}
 VALID_TICKET_TYPES = {"grilling", "research", "task", "prototype"}
+HITL_TICKET_TYPES = {"grilling", "prototype"}
+RATIFIED_MAP_STATES = {"active", "clear"}
 VALID_TICKET_STATUSES = {"open", "claimed", "closed"}
 
 REQUIRED_SECTIONS = [
@@ -408,6 +410,13 @@ def _check_schema_version(schema_version: int) -> None:
         )
 
 
+def _has_user_ratified_line(text: str) -> bool:
+    return any(
+        line.strip().startswith("user-ratified:")
+        for line in text.splitlines()
+    )
+
+
 def _check_map_structure(doc: MapDocument) -> None:
     if doc.frontmatter.state not in VALID_MAP_STATES:
         raise SchemaViolation(
@@ -432,6 +441,14 @@ def _check_map_structure(doc: MapDocument) -> None:
         if fog.id in seen_fog_ids:
             raise SchemaViolation(f"duplicate fog id reused: {fog.id!r}")
         seen_fog_ids.add(fog.id)
+    if doc.frontmatter.state in RATIFIED_MAP_STATES and not _has_user_ratified_line(
+        doc.sections.get("Destination", "")
+    ):
+        raise SchemaViolation(
+            f"{doc.path}: state {doc.frontmatter.state!r} requires a "
+            "'user-ratified:' line in the Destination section "
+            "(map-format.md §Sections)"
+        )
     for part in doc.parts:
         expected_prefix = f"{doc.frontmatter.map_id} / Part: "
         if not part.join_key.startswith(expected_prefix):
@@ -458,6 +475,16 @@ def _check_tickets(map_dir: Path) -> None:
             raise SchemaViolation(
                 f"{ticket_path}: status {ticket.frontmatter.status!r} is "
                 f"not one of {sorted(VALID_TICKET_STATUSES)}"
+            )
+        if (
+            ticket.frontmatter.status == "closed"
+            and ticket.frontmatter.type in HITL_TICKET_TYPES
+            and not _has_user_ratified_line(ticket.resolution or "")
+        ):
+            raise SchemaViolation(
+                f"{ticket_path}: closed {ticket.frontmatter.type} ticket "
+                "is missing a 'user-ratified:' line in its Resolution "
+                "(map-format.md §Ticket schema HITL rule)"
             )
         blocked_by_graph[ticket_path.stem] = ticket.frontmatter.blocked_by
     _check_blocked_by(blocked_by_graph, tickets_dir)

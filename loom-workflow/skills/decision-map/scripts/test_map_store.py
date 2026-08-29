@@ -420,6 +420,135 @@ def test_validate_unchanged_without_blocked_by_anywhere(tmp_path: Path) -> None:
     assert code == 0, message
 
 
+# --- HITL user-ratified presence (map-format.md §Ticket schema / §Sections) --
+
+
+TICKET_GRILLING_CLOSED_UNRATIFIED = """---
+type: grilling
+status: closed
+claim: null
+graduated-from: null
+---
+
+Which cut goes first?
+
+## Resolution
+
+Decided: hooks first.
+"""
+
+
+def test_validate_rejects_closed_hitl_ticket_without_user_ratified(
+    tmp_path: Path,
+) -> None:
+    """map-format.md §Ticket schema: every `grilling`/`prototype`
+    ticket is HITL unconditionally — closed with no `user-ratified:`
+    line in its Resolution is exit 2, naming the ticket file and the
+    missing line."""
+    map_dir = _make_conformant_map(tmp_path)
+    _write(
+        map_dir / "tickets" / "grilling-cut.md",
+        TICKET_GRILLING_CLOSED_UNRATIFIED,
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "grilling-cut.md" in message
+    assert "user-ratified:" in message
+
+
+def test_validate_accepts_closed_hitl_ticket_with_user_ratified(
+    tmp_path: Path,
+) -> None:
+    map_dir = _make_conformant_map(tmp_path)
+    _write(
+        map_dir / "tickets" / "proto-probe.md",
+        TICKET_GRILLING_CLOSED_UNRATIFIED.replace(
+            "type: grilling", "type: prototype"
+        ).replace(
+            "Decided: hooks first.",
+            "Decided: hooks first.\n\nuser-ratified: kouko, 2026-08-29",
+        ),
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+
+def test_validate_hitl_presence_ignores_open_hitl_ticket(tmp_path: Path) -> None:
+    """The duty fires on CLOSE — an open grilling ticket with no
+    Resolution at all still validates clean."""
+    map_dir = _make_conformant_map(tmp_path)
+    _write(
+        map_dir / "tickets" / "grilling-open.md",
+        TICKET_OPEN_B.replace("type: task", "type: grilling"),
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+
+def test_validate_rejects_active_map_without_destination_ratification(
+    tmp_path: Path,
+) -> None:
+    """map-format.md §Sections: an `active` map's Destination must
+    carry a `user-ratified:` line — missing is exit 2, unconditional
+    (no legacy branch), pointing the reader at §Sections."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8").replace(
+            "state: charting", "state: active"
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "user-ratified:" in message
+    assert "Sections" in message
+
+
+def test_validate_rejects_clear_map_without_destination_ratification(
+    tmp_path: Path,
+) -> None:
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8").replace(
+            "state: charting", "state: clear"
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "user-ratified:" in message
+
+
+def test_validate_accepts_active_map_with_destination_ratification(
+    tmp_path: Path,
+) -> None:
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8")
+        .replace("state: charting", "state: active")
+        .replace(
+            "Chart the decision-map layer.",
+            "Chart the decision-map layer.\n\nuser-ratified: kouko, 2026-08-29",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+
+def test_validate_charting_map_needs_no_destination_ratification(
+    tmp_path: Path,
+) -> None:
+    """A `charting` map (the scaffold state) carries no ratification
+    yet — that is the designed pre-close window, exit 0."""
+    map_dir = _make_conformant_map(tmp_path)
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+
 # --- CLI --------------------------------------------------------------------
 
 
