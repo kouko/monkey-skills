@@ -26,6 +26,7 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 
 SUPPORTED_SCHEMA_VERSION = 2
@@ -36,6 +37,12 @@ VALID_TICKET_TYPES = {"grilling", "research", "task", "prototype"}
 HITL_TICKET_TYPES = {"grilling", "prototype"}
 RATIFIED_MAP_STATES = {"active", "clear"}
 VALID_TICKET_STATUSES = {"open", "claimed", "closed"}
+
+
+class LiveMapResult(str, Enum):
+    LIVE = "live"
+    NOT_PRESENT = "not-present"
+    BROKEN = "broken"
 
 REQUIRED_SECTIONS = [
     "Destination",
@@ -590,18 +597,26 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     return 0, f"{map_dir} is a valid decision-map store"
 
 
-def is_live_map(target: Path, repo_root: Path | None = None) -> bool:
-    """map-format.md §Live-map criterion: checker-valid (validate
-    exits 0) AND state in {charting, active}. Never a bare
-    directory-existence check.
+def is_live_map(
+    target: Path, repo_root: Path | None = None
+) -> LiveMapResult:
+    """Return the explicit map-format.md §Live-map result.
+
+    Only an absent target is ``not-present``. Any existing target that
+    fails validation, or whose valid state is not live, is ``broken``
+    so callers cannot silently treat malformed maps as absent.
 
     `repo_root` is accepted for arg-shape parity with the other
     §Command surface scripts; this function does not use it."""
+    if not Path(target).exists():
+        return LiveMapResult.NOT_PRESENT
     code, _ = validate(target, repo_root=repo_root)
     if code != 0:
-        return False
+        return LiveMapResult.BROKEN
     doc = read_map(target)
-    return doc.frontmatter.state in LIVE_MAP_STATES
+    if doc.frontmatter.state in LIVE_MAP_STATES:
+        return LiveMapResult.LIVE
+    return LiveMapResult.BROKEN
 
 
 # --- CLI -------------------------------------------------------------

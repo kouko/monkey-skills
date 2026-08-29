@@ -258,9 +258,33 @@ def test_validate_operational_error_on_missing_map_dir(tmp_path: Path) -> None:
 # --- is_live_map helper ----------------------------------------------------
 
 
+def test_live_map_result_distinguishes_broken_from_not_present(
+    tmp_path: Path,
+) -> None:
+    absent = tmp_path / "no-map"
+    assert (
+        map_store.is_live_map(absent, repo_root=tmp_path)
+        is map_store.LiveMapResult.NOT_PRESENT
+    )
+
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8").replace("## Out-of-scope\n", ""),
+        encoding="utf-8",
+    )
+    assert (
+        map_store.is_live_map(map_dir, repo_root=tmp_path)
+        is map_store.LiveMapResult.BROKEN
+    )
+
+
 def test_is_live_map_true_for_charting(tmp_path: Path) -> None:
     map_dir = _make_conformant_map(tmp_path)
-    assert map_store.is_live_map(map_dir, repo_root=tmp_path) is True
+    assert (
+        map_store.is_live_map(map_dir, repo_root=tmp_path)
+        is map_store.LiveMapResult.LIVE
+    )
 
 
 def test_is_live_map_false_for_clear_state(tmp_path: Path) -> None:
@@ -270,7 +294,10 @@ def test_is_live_map_false_for_clear_state(tmp_path: Path) -> None:
         map_md.read_text(encoding="utf-8").replace("state: charting", "state: clear"),
         encoding="utf-8",
     )
-    assert map_store.is_live_map(map_dir, repo_root=tmp_path) is False
+    assert (
+        map_store.is_live_map(map_dir, repo_root=tmp_path)
+        is map_store.LiveMapResult.BROKEN
+    )
 
 
 def test_is_live_map_false_when_not_checker_valid(tmp_path: Path) -> None:
@@ -278,7 +305,10 @@ def test_is_live_map_false_when_not_checker_valid(tmp_path: Path) -> None:
     map_md = map_dir / "MAP.md"
     text = map_md.read_text(encoding="utf-8").replace("## Out-of-scope\n", "")
     map_md.write_text(text, encoding="utf-8")
-    assert map_store.is_live_map(map_dir, repo_root=tmp_path) is False
+    assert (
+        map_store.is_live_map(map_dir, repo_root=tmp_path)
+        is map_store.LiveMapResult.BROKEN
+    )
 
 
 # --- review round 2 findings ------------------------------------------------
