@@ -11,6 +11,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent))
 
 import delivery_binding  # noqa: E402
+import map_store  # noqa: E402
 import start_delivery  # noqa: E402
 
 
@@ -116,6 +117,77 @@ def test_start_delivery_refuses_ineligible_ticket_without_writes(
 
     assert code == 2
     assert ticket.read_bytes() == before
+    assert not brief.exists()
+
+
+def test_start_delivery_refuses_retired_map_without_writes(tmp_path: Path) -> None:
+    # @req: REQ-86
+    """An archived Map cannot acquire a new Brief relationship."""
+    ticket, brief = _ticket(tmp_path)
+    map_path = ticket.parent.parent / "MAP.md"
+    _write(
+        map_path,
+        """---
+map-id: wayfinder
+schema_version: 3
+state: active
+---
+
+## Destination
+
+Preserve immutable delivery history.
+user-ratified: kouko, 2026-08-30
+
+## Notes
+
+## Decisions-so-far
+
+## Not-yet-specified (fog)
+
+- F-1: decide whether renewed work is worthwhile
+
+## Out-of-scope
+
+""",
+    )
+    map_store.retire_active_map(
+        map_path.parent,
+        ratified_by="kouko",
+        ratified_on="2026-08-30",
+        reason="The outcome is no longer worth pursuing.",
+    )
+    before = (map_path.read_bytes(), ticket.read_bytes())
+
+    code, message = start_delivery.start_delivery(
+        ticket, brief.relative_to(tmp_path).as_posix(), repo_root=tmp_path
+    )
+
+    assert code != 0, message
+    assert (map_path.read_bytes(), ticket.read_bytes()) == before
+    assert not brief.exists()
+
+
+@pytest.mark.parametrize("map_state", ["charting", "clear"])
+def test_start_delivery_requires_active_map_without_writes(
+    tmp_path: Path, map_state: str
+) -> None:
+    # @req: REQ-86
+    ticket, brief = _ticket(tmp_path)
+    map_path = ticket.parent.parent / "MAP.md"
+    _write(
+        map_path,
+        map_path.read_text(encoding="utf-8").replace(
+            "state: active", f"state: {map_state}"
+        ),
+    )
+    before = (map_path.read_bytes(), ticket.read_bytes())
+
+    code, message = start_delivery.start_delivery(
+        ticket, brief.relative_to(tmp_path).as_posix(), repo_root=tmp_path
+    )
+
+    assert code != 0, message
+    assert (map_path.read_bytes(), ticket.read_bytes()) == before
     assert not brief.exists()
 
 

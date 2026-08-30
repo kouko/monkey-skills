@@ -241,6 +241,9 @@ def _prepare(ticket_path: Path, brief_path: str, repo_root: Path | None) -> _Pre
     assert map_text is not None
     if _schema_version(map_text) != 3:
         raise StartDeliveryError("Start delivery requires a schema-v3 ticket")
+    map_doc = map_store.parse_map_document(map_text, root / map_path)
+    if map_doc.frontmatter.state != "active":
+        raise StartDeliveryError("Start delivery requires an active Map")
     if fields.get("type") != "delivery" or fields.get("status") != "claimed":
         raise StartDeliveryError("Start delivery requires a claimed delivery ticket")
     if fields.get("blocked-by", "").strip():
