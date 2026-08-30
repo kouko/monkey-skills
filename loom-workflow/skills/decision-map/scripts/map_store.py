@@ -22,7 +22,11 @@ Stdlib only.
 from __future__ import annotations
 
 import argparse
+import ctypes
+import errno
+import json
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -78,6 +82,14 @@ class MapStoreError(Exception):
 
 class SchemaViolation(Exception):
     """Structural/schema-version violation — exit 2."""
+
+
+class AtomicExchangeUnsupported(SchemaViolation):
+    """The local filesystem cannot provide an atomic pathname exchange."""
+
+
+class AtomicExchangeBroken(SchemaViolation):
+    """An exchanged target could not be restored after a CAS mismatch."""
 
 
 # --- generic frontmatter -----------------------------------------------
@@ -463,6 +475,83 @@ def _assert_contained(root: Path, candidate: Path) -> None:
         raise SchemaViolation(f"path escapes repository root: {candidate}") from exc
 
 
+def _before_atomic_exchange(path: Path, temporary: Path) -> None:
+    """Test seam immediately before the atomic pathname exchange."""
+
+
+def _exchange_paths(first: Path, second: Path) -> None:
+    """Atomically exchange two existing same-filesystem pathnames."""
+    libc = ctypes.CDLL(None, use_errno=True)
+    system = platform.system()
+    first_bytes = os.fsencode(first)
+    second_bytes = os.fsencode(second)
+    if system == "Darwin" and hasattr(libc, "renamex_np"):
+        rename = libc.renamex_np
+        rename.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+        rename.restype = ctypes.c_int
+        result = rename(first_bytes, second_bytes, 0x00000002)  # RENAME_SWAP
+    elif system == "Linux" and hasattr(libc, "renameat2"):
+        rename = libc.renameat2
+        rename.argtypes = [
+            ctypes.c_int,
+            ctypes.c_char_p,
+            ctypes.c_int,
+            ctypes.c_char_p,
+            ctypes.c_uint,
+        ]
+        rename.restype = ctypes.c_int
+        result = rename(-100, first_bytes, -100, second_bytes, 0x00000002)
+    else:
+        raise AtomicExchangeUnsupported(
+            f"atomic exchange is unsupported on {system or 'this platform'}"
+        )
+    if result == 0:
+        return
+    error = ctypes.get_errno()
+    if error in {
+        errno.ENOSYS,
+        errno.EINVAL,
+        errno.EXDEV,
+        getattr(errno, "ENOTSUP", errno.EINVAL),
+        getattr(errno, "EOPNOTSUPP", errno.EINVAL),
+    }:
+        raise AtomicExchangeUnsupported(
+            f"atomic exchange is unsupported for {first.parent}: {os.strerror(error)}"
+        )
+    raise OSError(error, os.strerror(error), first)
+
+
+def _fsync_directory(directory: Path) -> None:
+    descriptor = os.open(directory, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def _record_exchange_recovery(
+    path: Path, temporary: Path, restore_error: BaseException
+) -> Path:
+    evidence_path = path.parent / f".{path.name}.cas-recovery.json"
+    evidence = {
+        "action": "recovery-required",
+        "candidate_path": str(path),
+        "displaced_path": str(temporary),
+        "restore_error": str(restore_error),
+        "status": "BROKEN",
+    }
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    descriptor = os.open(evidence_path, flags, 0o600)
+    try:
+        payload = (json.dumps(evidence, indent=2, sort_keys=True) + "\n").encode()
+        os.write(descriptor, payload)
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+    _fsync_directory(path.parent)
+    return evidence_path
+
+
 def _atomic_write(
     path: Path, text: str, *, expected: bytes | None = None
 ) -> None:
@@ -472,22 +561,65 @@ def _atomic_write(
     multi-artifact conflict detection and recovery remain owned by REQ-87.
     """
     _assert_no_symlink_components(path)
-    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", dir=path.parent
+    )
+    temporary = Path(temporary_name)
+    keep_temporary = False
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
             handle.write(text)
             handle.flush()
             os.fsync(handle.fileno())
-        if expected is not None and path.read_bytes() != expected:
-            raise SchemaViolation(
-                f"refusing compare-and-swap because {path} changed before replacement"
-            )
-        os.replace(temporary, path)
-    except BaseException:
+        if expected is None:
+            os.replace(temporary, path)
+            _fsync_directory(path.parent)
+            return
+        _before_atomic_exchange(path, temporary)
         try:
-            os.unlink(temporary)
-        except FileNotFoundError:
-            pass
+            _exchange_paths(temporary, path)
+        except AtomicExchangeUnsupported:
+            raise
+        except OSError as exc:
+            raise SchemaViolation(
+                f"atomic compare-and-swap could not exchange {path}: {exc}"
+            ) from exc
+        displaced = temporary.read_bytes()
+        if displaced == expected:
+            temporary.unlink()
+            _fsync_directory(path.parent)
+            return
+        try:
+            _exchange_paths(temporary, path)
+        except BaseException as restore_error:
+            keep_temporary = True
+            evidence_error: BaseException | None = None
+            evidence_path: Path | None = None
+            try:
+                evidence_path = _record_exchange_recovery(
+                    path, temporary, restore_error
+                )
+            except BaseException as exc:
+                evidence_error = exc
+            detail = (
+                f"evidence: {evidence_path}"
+                if evidence_path is not None
+                else f"recovery evidence unavailable: {evidence_error}"
+            )
+            raise AtomicExchangeBroken(
+                "BROKEN recovery-required: atomic CAS restore failed; " + detail
+            ) from restore_error
+        temporary.unlink()
+        _fsync_directory(path.parent)
+        raise SchemaViolation(
+            f"refusing atomic compare-and-swap because {path} changed"
+        )
+    except BaseException:
+        if not keep_temporary:
+            try:
+                temporary.unlink()
+            except FileNotFoundError:
+                pass
         raise
 
 

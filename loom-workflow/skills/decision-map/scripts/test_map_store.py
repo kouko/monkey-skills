@@ -747,6 +747,56 @@ def test_archive_uses_stable_readiness_and_refuses_late_binding_break(
     assert "state: archived" not in map_path.read_text(encoding="utf-8")
 
 
+def test_atomic_exchange_cas_restores_immediate_concurrent_replacement(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # @req: REQ-97
+    # @req: REQ-98
+    target = tmp_path / "ticket.md"
+    target.write_bytes(b"audited\n")
+
+    def replace_immediately_before_exchange(path: Path, temporary: Path) -> None:
+        replacement = tmp_path / "concurrent.md"
+        replacement.write_bytes(b"concurrent\n")
+        replacement.replace(path)
+
+    monkeypatch.setattr(
+        map_store, "_before_atomic_exchange", replace_immediately_before_exchange
+    )
+    try:
+        map_store._atomic_write(target, "candidate\n", expected=b"audited\n")
+    except map_store.SchemaViolation as exc:
+        assert "changed" in str(exc)
+    else:
+        raise AssertionError("CAS accepted a target replaced immediately before exchange")
+
+    assert target.read_bytes() == b"concurrent\n"
+    assert not list(tmp_path.glob(".ticket.md.*"))
+
+
+def test_atomic_exchange_cas_refuses_unsupported_platform_without_replace(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # @req: REQ-97
+    # @req: REQ-98
+    target = tmp_path / "MAP.md"
+    target.write_bytes(b"original\n")
+
+    def unsupported(first: Path, second: Path) -> None:
+        raise map_store.AtomicExchangeUnsupported("simulated unsupported filesystem")
+
+    monkeypatch.setattr(map_store, "_exchange_paths", unsupported)
+    try:
+        map_store._atomic_write(target, "candidate\n", expected=b"original\n")
+    except map_store.SchemaViolation as exc:
+        assert "unsupported" in str(exc)
+    else:
+        raise AssertionError("CAS fell back after unsupported atomic exchange")
+
+    assert target.read_bytes() == b"original\n"
+    assert not list(tmp_path.glob(".MAP.md.*"))
+
+
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
     """A schema_version above map_store's supported ceiling is exit 2,
     naming both versions — never a silent read-past."""

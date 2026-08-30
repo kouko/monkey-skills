@@ -11,7 +11,6 @@ import json
 import os
 import re
 import stat
-import tempfile
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
@@ -64,23 +63,10 @@ def _atomic_write(
     path: Path, text: str, *, expected: bytes | None = None
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
     try:
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            handle.write(text)
-            handle.flush()
-            os.fsync(handle.fileno())
-        if expected is not None and path.read_bytes() != expected:
-            raise CloseTransactionError(
-                f"refusing compare-and-swap because {path} changed before replacement"
-            )
-        os.replace(temporary, path)
-    except BaseException:
-        try:
-            os.unlink(temporary)
-        except FileNotFoundError:
-            pass
-        raise
+        map_store._atomic_write(path, text, expected=expected)
+    except map_store.SchemaViolation as exc:
+        raise CloseTransactionError(str(exc)) from exc
 
 
 def _section_bounds(lines: list[str], name: str) -> tuple[int, int]:
