@@ -117,6 +117,9 @@ EXEMPT = {
     "loom_gate_markers.py": "mints and verifies gate markers",
     "review_batch.py": "pure in-memory helper with no CLI, store, backlog, "
                        "brief, or file input to classify",
+    "task_batch_replay.py": "compares three explicitly named replay JSON "
+                            "inputs, not a backlog store or handoff brief; "
+                            "its own CLI test pins unreadable-input handling",
     "review_context.py": "resolves a review packet from local git and plugin files",
     "review_scope.py": "resolves a review's changed-file set from git",
     "live_gate_station_receipt.py": "writes a live-gate receipt; its own atomic "

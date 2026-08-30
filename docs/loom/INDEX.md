@@ -374,6 +374,11 @@
 - test_untrusted_aggregate_verification_matrix
 - test_untrusted_batch_field_matrix
 
+### REQ-111
+
+- test_baseline_candidate_comparison_is_same_corpus_and_safety_gated
+- test_malformed_types_paths_and_duplicate_keys_fail_closed
+
 ### REQ-99
 
 - test_plan_contract_matrix
@@ -392,7 +397,6 @@
 - REQ-108
 - REQ-109
 - REQ-110
-- REQ-111
 - REQ-17
 - REQ-25
 - REQ-26
