@@ -19,6 +19,7 @@ _DELIVERY_CLOSURE = re.compile(
     r"^## Delivery closure\s*$\n(?P<body>.*?)(?=^## |\Z)", re.MULTILINE | re.DOTALL
 )
 _POLICY = re.compile(r"^policy:\s*(?P<value>\S+)\s*$", re.MULTILINE)
+_POLICY_FIELD = re.compile(r"^(?P<key>[a-z][a-z-]*): (?P<value>\S.*)$")
 _ACCEPTANCE = re.compile(
     r"^## Acceptance\s*$\n(?P<body>.*?)(?=^## |\Z)", re.MULTILINE | re.DOTALL
 )
@@ -51,6 +52,14 @@ class PRRole:
     verification_head: str
 
 
+@dataclass(frozen=True)
+class ArtifactProbeEvidence:
+    artifact: str
+    probe: str
+    succeeded: bool
+    current: bool
+
+
 def _refuse(
     reason: str, head: str | None = None, evidence_state: str = "invalid"
 ) -> ClosureReadiness:
@@ -80,12 +89,15 @@ def validate_closure_policy(brief_text: str) -> tuple[str | None, str | None]:
     assert section is not None
     fields: dict[str, str] = {}
     for line in section.group("body").splitlines():
-        if ":" not in line:
+        if not line:
             continue
-        key, value = line.split(":", 1)
+        match = _POLICY_FIELD.fullmatch(line)
+        if match is None:
+            return None, f"delivery policy has malformed field: {line!r}"
+        key, value = match.group("key"), match.group("value")
         if key in fields:
             return None, f"delivery policy evidence field {key!r} is duplicated"
-        fields[key] = value.strip()
+        fields[key] = value
     required = {
         "pr-ci": ("review-evidence", "verification-evidence"),
         "merged": ("pr", "merge-evidence"),
@@ -93,10 +105,24 @@ def validate_closure_policy(brief_text: str) -> tuple[str | None, str | None]:
     }
     if policy not in required:
         return None, f"delivery policy {policy!r} is unsupported"
+    allowed = {"policy", *required[policy]}
+    unknown = sorted(set(fields) - allowed)
+    if unknown:
+        return None, f"delivery policy {policy!r} has unknown field(s): {', '.join(unknown)}"
     missing = [key for key in required[policy] if not fields.get(key, "").strip()]
     if missing:
         return None, f"delivery policy {policy!r} is missing required evidence: {', '.join(missing)}"
     return policy, None
+
+
+def _policy_fields(brief_text: str) -> dict[str, str]:
+    section = _DELIVERY_CLOSURE.search(brief_text)
+    assert section is not None
+    return {
+        match.group("key"): match.group("value")
+        for line in section.group("body").splitlines() if line
+        for match in [_POLICY_FIELD.fullmatch(line)] if match is not None
+    }
 
 
 def validate_pr_ownership(
@@ -219,11 +245,16 @@ def _evaluate_pr(
         )
     if payload.get("state") not in {"OPEN", "MERGED"}:
         return _refuse("current PR is not open or merged", head)
+    state, merged_at = payload["state"], payload.get("mergedAt")
+    if state == "OPEN" and merged_at is not None:
+        return _refuse("open PR has contradictory mergedAt evidence", head, "contradictory")
+    if state == "MERGED" and (not isinstance(merged_at, str) or not merged_at):
+        return _refuse("merged PR has contradictory mergedAt evidence", head, "contradictory")
     checks = _checks_state(payload.get("statusCheckRollup"))
     if checks != "valid":
         return _refuse("current exact-head checks are missing, pending, or non-green", head, checks)
     if policy == "merged":
-        if payload.get("state") != "MERGED" or not isinstance(payload.get("mergedAt"), str):
+        if state != "MERGED":
             return _refuse("current PR is not merged", head, "pending")
     return ClosureReadiness(True, "ready", "current formal delivery evidence passes", head, "valid")
 
@@ -240,7 +271,7 @@ def evaluate_closure(
     ticket: str | None = None,
     pr_owners: dict[str, str] | None = None,
     ownership_complete: bool = False,
-    artifact_probe: bool | None = None,
+    artifact_probe: ArtifactProbeEvidence | None = None,
     run: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> ClosureReadiness:
     """Return read-only closure readiness for the current PR-CI delivery arc."""
@@ -253,11 +284,17 @@ def evaluate_closure(
     if not _plan_is_terminal(plan_text):
         return _refuse("delivery requires a terminal Plan before closure")
     if policy == "artifact":
-        if artifact_probe is not True:
+        fields = _policy_fields(brief_text)
+        if artifact_probe is None:
             return _refuse(
-                "artifact acceptance probe is missing or did not pass",
-                evidence_state="unavailable" if artifact_probe is None else "invalid",
+                "artifact acceptance probe evidence is unavailable", evidence_state="unavailable"
             )
+        if artifact_probe.artifact != fields["artifact"] or artifact_probe.probe != fields["acceptance-probe"]:
+            return _refuse("artifact probe evidence disagrees with authored artifact or probe", evidence_state="contradictory")
+        if not artifact_probe.current:
+            return _refuse("artifact probe evidence is stale", evidence_state="stale")
+        if not artifact_probe.succeeded:
+            return _refuse("artifact acceptance probe failed", evidence_state="invalid")
         return ClosureReadiness(True, "ready", "current artifact evidence passes", evidence_state="valid")
     if policy == "pr-ci" and not review_head and pr_roles is None:
         return _refuse("whole-branch review evidence is missing")
@@ -269,12 +306,11 @@ def evaluate_closure(
     roles = pr_roles or (PRRole(pr, "delivery", review_head, verification_head),)
     if not roles or any(not role.pr or not role.role for role in roles):
         return _refuse("PR evidence is missing")
-    if pr_roles is not None:
-        ownership_error, ownership_state = validate_pr_ownership(
-            roles, ticket, pr_owners, ownership_complete
-        )
-        if ownership_error:
-            return _refuse(ownership_error, evidence_state=ownership_state)
+    ownership_error, ownership_state = validate_pr_ownership(
+        roles, ticket, pr_owners, ownership_complete
+    )
+    if ownership_error:
+        return _refuse(ownership_error, evidence_state=ownership_state)
     last_head: str | None = None
     for role in roles:
         result = _evaluate_pr(role, run, policy)

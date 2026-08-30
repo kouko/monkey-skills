@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import errno
 import os
+import re
 import stat
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -180,26 +181,52 @@ def _validate_brief_policy_and_plan_count(repo_root: Path, brief: PurePosixPath,
         return
     if not plans_root.is_dir():
         raise _OperationalFailure(f"plans directory is not a directory: {plans_root}")
+    if plans_root.is_symlink():
+        raise _BindingFailure("plans directory contains a symlink")
     source = brief.as_posix()
     matches: list[str] = []
     for candidate in sorted(plans_root.rglob("*.md")):
-        if candidate.is_symlink():
+        relative = candidate.relative_to(plans_root)
+        component = plans_root
+        if candidate.is_symlink() or any((component := component / part).is_symlink() for part in relative.parts):
             raise _BindingFailure(f"Plan path contains a symlink: {candidate.relative_to(repo_root).as_posix()}")
+        if not candidate.is_file():
+            raise _OperationalFailure(f"Plan path is not a regular file: {candidate.relative_to(repo_root).as_posix()}")
         try:
             text = candidate.read_text(encoding="utf-8")
         except OSError as exc:
             raise _OperationalFailure(f"cannot read Plan {candidate}: {exc}") from exc
-        declarations = [line for line in text.splitlines() if line.startswith("**Source brief**:")]
-        if declarations == [f"**Source brief**: {source}"] and "Superseded by:" not in text:
+        lines = _structural_plan_lines(text)
+        declarations = [line for line in lines if line.startswith("**Source brief**:")]
+        superseded = [line for line in lines if line.startswith("Superseded by:")]
+        if any(not re.fullmatch(r"Superseded by: \S+", line) for line in superseded):
+            raise _BindingFailure(f"Plan {candidate.relative_to(repo_root).as_posix()} has malformed Superseded by field")
+        if declarations == [f"**Source brief**: {source}"] and not superseded:
             matches.append(candidate.relative_to(repo_root).as_posix())
     if len(matches) > 1:
         raise _BindingFailure(f"delivery Brief {source} has multiple Plans: {', '.join(matches)}")
     if matches:
         plan_text = (repo_root / matches[0]).read_text(encoding="utf-8")
-        if "Stage: abandoned" in plan_text or "Stage: unusable" in plan_text:
+        lines = _structural_plan_lines(plan_text)
+        stages = [line for line in lines if line.startswith("Stage:")]
+        tasks = [line for line in lines if re.fullmatch(r"## Task \d+ — .+", line)]
+        if len(stages) != 1 or not tasks or stages[0] in {"Stage: abandoned", "Stage: unusable"}:
             raise _BindingFailure(
                 "sole Plan is unusable; withdraw the delivery ticket and create a replacement delivery"
             )
+
+
+def _structural_plan_lines(text: str) -> list[str]:
+    """Return non-fenced plan lines; only exact top-level fields are structural."""
+    lines: list[str] = []
+    fenced = False
+    for line in text.splitlines():
+        if line.startswith("```"):
+            fenced = not fenced
+            continue
+        if not fenced:
+            lines.append(line)
+    return lines
 
 
 def snapshot_delivery_migration_binding(

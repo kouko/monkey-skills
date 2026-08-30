@@ -313,7 +313,7 @@ def test_brief_declares_one_closure_policy_and_one_plan(tmp_path: Path) -> None:
     )
     _write(
         tmp_path / "docs/loom/plans/search.md",
-        "# Plan\n\n**Source brief**: docs/loom/specs/deliver-search.md\n",
+        "# Plan\n\n**Source brief**: docs/loom/specs/deliver-search.md\nStage: planning\n\n## Task 1 — Deliver\n",
     )
 
     code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
@@ -321,7 +321,7 @@ def test_brief_declares_one_closure_policy_and_one_plan(tmp_path: Path) -> None:
 
     _write(
         tmp_path / "docs/loom/plans/second.md",
-        "# Plan\n\n**Source brief**: docs/loom/specs/deliver-search.md\n",
+        "# Plan\n\n**Source brief**: docs/loom/specs/deliver-search.md\nStage: planning\n\n## Task 1 — Deliver\n",
     )
     code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
     assert code == 2

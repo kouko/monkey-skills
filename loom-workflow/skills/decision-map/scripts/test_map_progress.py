@@ -30,7 +30,7 @@ def _arc(tmp_path: Path, *, status: str = "claimed", with_plan: bool = True) -> 
     ticket_relative = ticket.relative_to(tmp_path).as_posix()
     brief_relative = brief.relative_to(tmp_path).as_posix()
     _write(ticket, f"---\ntype: delivery\nstatus: {status}\nbrief: {brief_relative}\n---\n")
-    _write(brief, f"## Delivery closure\n\npolicy: pr-ci\nreview-evidence: review.md\nverification-evidence: pytest -q\n\nOutcome Map ticket: {ticket_relative}\n")
+    _write(brief, f"Outcome Map ticket: {ticket_relative}\n\n## Delivery closure\n\npolicy: pr-ci\nreview-evidence: review.md\nverification-evidence: pytest -q\n")
     if with_plan:
         _write(plan, """# Plan: deliver
 
@@ -60,7 +60,7 @@ def test_progress_resolves_ticket_brief_plan_without_writes(
         ticket,
         f"---\ntype: delivery\nstatus: claimed\nbrief: {brief_relative}\n---\n",
     )
-    _write(brief, f"# Deliver search\n\n## Delivery closure\n\npolicy: pr-ci\nreview-evidence: review.md\nverification-evidence: pytest -q\n\nOutcome Map ticket: {ticket_relative}\n")
+    _write(brief, f"# Deliver search\n\nOutcome Map ticket: {ticket_relative}\n\n## Delivery closure\n\npolicy: pr-ci\nreview-evidence: review.md\nverification-evidence: pytest -q\n")
     _write(
         plan,
         """# Plan: delivery
@@ -153,7 +153,7 @@ def test_progress_reports_closed_delivery_as_delivered_with_its_arc(
     ticket_relative = ticket.relative_to(tmp_path).as_posix()
     brief_relative = brief.relative_to(tmp_path).as_posix()
     _write(ticket, f"---\ntype: delivery\nstatus: closed\nbrief: {brief_relative}\n---\n")
-    _write(brief, f"## Delivery closure\n\npolicy: pr-ci\nreview-evidence: review.md\nverification-evidence: pytest -q\n\nOutcome Map ticket: {ticket_relative}\n")
+    _write(brief, f"Outcome Map ticket: {ticket_relative}\n\n## Delivery closure\n\npolicy: pr-ci\nreview-evidence: review.md\nverification-evidence: pytest -q\n")
     _write(
         plan,
         """# Plan: deliver
