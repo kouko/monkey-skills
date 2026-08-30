@@ -132,7 +132,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Independent**: false
 - **Brief item covered**: REQ-105
 - **Brief item covered**: BI-4, BI-9
-- **Status**: pending
+- **Status**: done(feedfce2)
 - **Gloss**: 聚合 packet 是一次 review 的不可變輸入，不是新 ledger。
 
 ## Task 5 — Define aggregate reviewer resolution and attribution
