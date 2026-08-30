@@ -141,3 +141,122 @@ def test_invalid_closure_evidence_is_rejected_before_any_write(
     assert (map_dir / "MAP.md").read_bytes() == before_map
     assert ticket.read_bytes() == before_ticket
     assert not (map_dir / ".transactions").exists()
+
+
+def test_symlinked_tickets_directory_refuses_without_any_mutation(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-84
+    map_dir, ticket = _make_map(tmp_path)
+    external = tmp_path / "external-tickets"
+    ticket.parent.rename(external)
+    ticket.parent.symlink_to(external, target_is_directory=True)
+    external_ticket = external / ticket.name
+    before_map = (map_dir / "MAP.md").read_bytes()
+    before_external = external_ticket.read_bytes()
+
+    with pytest.raises(map_transaction.CloseTransactionError, match="symlink"):
+        map_transaction.close_and_rechart(
+            map_dir,
+            "ship-slice",
+            gist="Slice shipped.",
+            resolution="delivery-evidence: commit 0123456",
+            unknowns=[],
+        )
+
+    assert (map_dir / "MAP.md").read_bytes() == before_map
+    assert external_ticket.read_bytes() == before_external
+    assert not (map_dir / ".transactions").exists()
+
+
+def test_closed_source_without_prepared_journal_cannot_bootstrap_resume(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-84
+    map_dir, ticket = _make_map(tmp_path)
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8").replace(
+            "status: claimed",
+            "status: closed",
+        ).rstrip()
+        + "\n\n## Resolution\n\ndelivery-evidence: commit 0123456\n",
+        encoding="utf-8",
+    )
+    before_map = (map_dir / "MAP.md").read_bytes()
+    before_ticket = ticket.read_bytes()
+
+    with pytest.raises(map_transaction.CloseTransactionError, match="prepared"):
+        map_transaction.close_and_rechart(
+            map_dir,
+            "ship-slice",
+            gist="Slice shipped.",
+            resolution="delivery-evidence: commit 0123456",
+            unknowns=[],
+        )
+
+    assert (map_dir / "MAP.md").read_bytes() == before_map
+    assert ticket.read_bytes() == before_ticket
+    assert not (map_dir / ".transactions").exists()
+
+
+def test_duplicate_ticket_route_slugs_refuse_before_any_write(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-84
+    map_dir, ticket = _make_map(tmp_path)
+    before_map = (map_dir / "MAP.md").read_bytes()
+    before_ticket = ticket.read_bytes()
+    routes = [
+        map_transaction.UnknownRoute(
+            text="Measure retention",
+            destination="ticket",
+            ticket_slug="measure-next",
+            ticket_type="research",
+        ),
+        map_transaction.UnknownRoute(
+            text="Deliver retention report",
+            destination="ticket",
+            ticket_slug="measure-next",
+            ticket_type="delivery",
+        ),
+    ]
+
+    with pytest.raises(map_transaction.CloseTransactionError, match="ticket_slug"):
+        map_transaction.close_and_rechart(
+            map_dir,
+            "ship-slice",
+            gist="Slice shipped.",
+            resolution="delivery-evidence: commit 0123456",
+            unknowns=routes,
+        )
+
+    assert (map_dir / "MAP.md").read_bytes() == before_map
+    assert ticket.read_bytes() == before_ticket
+    assert not (map_dir / ".transactions").exists()
+
+
+def test_closed_retry_revalidates_authoritative_v3_source(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-84
+    map_dir, ticket = _make_map(tmp_path)
+    request = dict(
+        gist="Slice shipped.",
+        resolution="delivery-evidence: commit 0123456",
+        unknowns=[],
+    )
+    map_transaction.close_and_rechart(map_dir, "ship-slice", **request)
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8").replace(
+            "type: delivery", "type: task"
+        ),
+        encoding="utf-8",
+    )
+    before_map = (map_dir / "MAP.md").read_bytes()
+    before_ticket = ticket.read_bytes()
+
+    with pytest.raises(map_transaction.CloseTransactionError, match="schema-v3"):
+        map_transaction.close_and_rechart(map_dir, "ship-slice", **request)
+
+    assert (map_dir / "MAP.md").read_bytes() == before_map
+    assert ticket.read_bytes() == before_ticket

@@ -83,6 +83,13 @@ def _append_section_line(text: str, section: str, line: str) -> str:
 def _validate_routes(unknowns: list[UnknownRoute]) -> None:
     if len({(route.destination, route.text, route.ticket_slug) for route in unknowns}) != len(unknowns):
         raise CloseTransactionError("duplicate unknown route in one close request")
+    ticket_slugs = [
+        route.ticket_slug for route in unknowns if route.destination == "ticket"
+    ]
+    if len(set(ticket_slugs)) != len(ticket_slugs):
+        raise CloseTransactionError(
+            "duplicate ticket_slug in one close request"
+        )
     for route in unknowns:
         if not route.text.strip():
             raise CloseTransactionError("unknown route text must not be empty")
@@ -101,6 +108,69 @@ def _validate_routes(unknowns: list[UnknownRoute]) -> None:
             raise CloseTransactionError(
                 "only a ticket route may carry ticket_slug or ticket_type"
             )
+
+
+def _assert_no_symlink_components(path: Path) -> None:
+    absolute = path.absolute()
+    current = Path(absolute.anchor)
+    for part in absolute.parts[1:]:
+        current /= part
+        if current.is_symlink():
+            raise CloseTransactionError(
+                f"refusing path with symlink component: {current}"
+            )
+        if not current.exists():
+            break
+
+
+def _assert_contained(map_dir: Path, candidate: Path) -> None:
+    try:
+        candidate.resolve(strict=False).relative_to(map_dir.resolve(strict=True))
+    except (OSError, ValueError) as exc:
+        raise CloseTransactionError(
+            f"path escapes the map directory: {candidate}"
+        ) from exc
+
+
+def _validate_paths(
+    map_dir: Path, ticket_slug: str, unknowns: list[UnknownRoute]
+) -> tuple[Path, Path]:
+    tickets_dir = map_dir / "tickets"
+    source = tickets_dir / f"{ticket_slug}.md"
+    journal = map_dir / ".transactions" / f"close-{ticket_slug}.json"
+    candidates = [map_dir, map_dir / "MAP.md", tickets_dir, source,
+                  map_dir / ".transactions", journal]
+    candidates.extend(
+        tickets_dir / f"{route.ticket_slug}.md"
+        for route in unknowns
+        if route.destination == "ticket"
+    )
+    for candidate in candidates:
+        _assert_no_symlink_components(candidate)
+        _assert_contained(map_dir, candidate)
+    return source, journal
+
+
+def _validate_authoritative_ticket(
+    ticket: map_store.TicketDocument, *, closed: bool
+) -> None:
+    expected_status = "closed" if closed else "claimed"
+    if ticket.frontmatter.type not in map_store.V3_TICKET_TYPES:
+        raise CloseTransactionError(
+            "source is not an allowed schema-v3 ticket type"
+        )
+    if ticket.frontmatter.status != expected_status:
+        raise CloseTransactionError(
+            f"source ticket must be {expected_status}"
+        )
+    try:
+        map_store._check_v3_ticket_frontmatter(ticket)
+        if closed:
+            map_store._check_v3_ticket_closure_evidence(ticket)
+    except map_store.SchemaViolation as exc:
+        raise CloseTransactionError(
+            f"invalid authoritative schema-v3 source: {exc}"
+        ) from exc
 
 
 def _intent(
@@ -253,16 +323,23 @@ def close_and_rechart(
     if not gist.strip() or not resolution.strip():
         raise CloseTransactionError("gist and resolution must not be empty")
     _validate_routes(unknowns)
+    ticket_path, journal_path = _validate_paths(map_dir, ticket_slug, unknowns)
     map_doc = map_store.read_map(map_dir)
     if map_doc.frontmatter.schema_version != 3 or map_doc.frontmatter.state != "active":
         raise CloseTransactionError("close-and-rechart requires an active schema-v3 map")
-    ticket_path = map_dir / "tickets" / f"{ticket_slug}.md"
     ticket = map_store.read_ticket(ticket_path)
     terminal: str | None = None
     if ticket.frontmatter.status == "claimed":
+        _validate_authoritative_ticket(ticket, closed=False)
         terminal = _terminal_text(ticket_path.read_text(encoding="utf-8"), resolution)
         _validate_terminal_candidate(ticket_path, terminal)
-    elif ticket.frontmatter.status != "closed":
+    elif ticket.frontmatter.status == "closed":
+        if not journal_path.is_file():
+            raise CloseTransactionError(
+                "closed source may resume only from an existing prepared journal"
+            )
+        _validate_authoritative_ticket(ticket, closed=True)
+    else:
         raise CloseTransactionError("source ticket must be claimed before close")
 
     _, prepared = _load_or_prepare_intent(
