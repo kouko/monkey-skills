@@ -89,7 +89,10 @@ Start a new Map with the installed `map_init.py` command above. Start a
 claimed delivery arc with
 `start_delivery.start_delivery(ticket_path, brief_path, repo_root=repo_root)`.
 It creates or recovers one reciprocal Ticket-to-Brief binding; loom-code owns
-the Brief, Plan, implementation, review, PR, and CI thereafter.
+the Brief, Plan, implementation, review, PR, and CI thereafter. If Ticket
+binding fails after publishing the expected Brief, the operation preserves it
+as a recoverable orphan. Retry with the same Ticket and Brief path binds it;
+a changed or concurrently replaced Brief is refused and never deleted.
 
 ### Resume
 

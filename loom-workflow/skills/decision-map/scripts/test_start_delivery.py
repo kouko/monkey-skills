@@ -263,7 +263,7 @@ def test_start_delivery_refuses_inconsistent_existing_binding(tmp_path: Path) ->
 
 
 @pytest.mark.parametrize("failure_point", ["brief", "ticket"])
-def test_start_delivery_rolls_back_partial_writes(
+def test_start_delivery_preserves_recoverable_orphan_on_partial_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure_point: str
 ) -> None:
     # @req: REQ-80
@@ -288,7 +288,10 @@ def test_start_delivery_rolls_back_partial_writes(
 
     assert code in {1, 2}, message
     assert ticket.read_bytes() == original_ticket
-    assert not brief.exists()
+    assert brief.read_text(encoding="utf-8") == start_delivery._brief_text(
+        PurePosixPath(ticket.relative_to(tmp_path).as_posix()),
+        "Deliver searchable outcome-map references.",
+    )
 
 
 def test_start_delivery_recovers_an_orphaned_expected_brief(tmp_path: Path) -> None:
@@ -391,7 +394,10 @@ def test_start_delivery_refuses_concurrent_ticket_or_map_change(
     )
     assert code != 0
     assert map_path.read_bytes() != original_map
-    assert not brief.exists()
+    assert brief.read_text(encoding="utf-8") == start_delivery._brief_text(
+        PurePosixPath(ticket.relative_to(tmp_path / "map").as_posix()),
+        "Deliver searchable outcome-map references.",
+    )
 
 
 def test_start_delivery_ticket_replace_is_compare_and_swap(
@@ -414,7 +420,10 @@ def test_start_delivery_ticket_replace_is_compare_and_swap(
 
     assert code != 0, message
     assert ticket.read_text(encoding="utf-8") == concurrent
-    assert not brief.exists()
+    assert brief.read_text(encoding="utf-8") == start_delivery._brief_text(
+        PurePosixPath(ticket.relative_to(tmp_path).as_posix()),
+        "Deliver searchable outcome-map references.",
+    )
 
 
 def test_start_delivery_never_replaces_a_concurrently_created_brief(
@@ -458,7 +467,7 @@ def test_start_delivery_does_not_remove_a_replaced_brief_during_rollback(
     )
 
     assert code == 1
-    assert "rollback" in message
+    assert "concurrent change" in message
     assert brief.read_text(encoding="utf-8") == concurrent
 
 

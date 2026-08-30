@@ -88,6 +88,11 @@ The decision-map workflow MUST provide a Start delivery operation that creates o
 - WHEN Start delivery is invoked with a valid new Brief path
 - THEN the Ticket and Brief receive reciprocal canonical pointers and the rest of the delivery work is delegated to loom-code
 
+#### Scenario: Recover a partially published Brief
+- GIVEN Start delivery published its expected Brief but could not bind the Ticket
+- WHEN the operation fails or is retried
+- THEN it preserves the Brief as a recoverable orphan, binds it on a valid retry, and never deletes a concurrent replacement
+
 ### Requirement: REQ-81 — Delivery progress is read-only
 The system MUST resolve delivery progress through Ticket to Brief to Plan and MUST NOT store mutable Plan, Git, PR, or CI state in the Map or Ticket.
 

@@ -185,6 +185,10 @@ the signature requires it and reuse `operation_id` on retry.
 
 - Start delivery:
   `start_delivery.start_delivery(ticket_path, brief_path, repo_root=repo_root)`
+  If Ticket binding fails after the expected Brief is published, that Brief
+  remains as a recoverable orphan. Retry with the same Ticket and Brief path
+  binds it; a changed or concurrently replaced Brief is refused and never
+  deleted.
 - Claim:
   `map_transaction.claim_ticket(map_dir, ticket_slug, owner=owner, claimed_on=date, operation_id=operation_id, expected_revision=revision)`
 - Update blockers:

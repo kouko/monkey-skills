@@ -149,14 +149,12 @@ def _replace_at(parent_fd: int, leaf: str, text: str) -> None:
         raise
 
 
-def _publish_new_at(parent_fd: int, leaf: str, text: str) -> tuple[int, int]:
+def _publish_new_at(parent_fd: int, leaf: str, text: str) -> None:
     temporary = f".{leaf}.{secrets.token_hex(12)}"
     _replace_at(parent_fd, temporary, text)
     try:
         os.link(temporary, leaf, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
-        owned = os.stat(leaf, dir_fd=parent_fd, follow_symlinks=False)
         os.fsync(parent_fd)
-        return owned.st_dev, owned.st_ino
     finally:
         try:
             os.unlink(temporary, dir_fd=parent_fd)
@@ -286,8 +284,8 @@ def _replace_ticket(prepared: _Prepared, candidate: str) -> None:
     )
 
 
-def _rollback(prepared: _Prepared, ticket_replaced: bool, ticket_candidate: str,
-              brief_parent: int, owned_brief: tuple[int, int] | None) -> list[Exception]:
+def _rollback(prepared: _Prepared, ticket_replaced: bool,
+              ticket_candidate: str) -> list[Exception]:
     errors: list[Exception] = []
     if ticket_replaced:
         try:
@@ -297,15 +295,6 @@ def _rollback(prepared: _Prepared, ticket_replaced: bool, ticket_candidate: str,
                 expected=ticket_candidate.encode("utf-8"),
             )
         except (OSError, map_store.SchemaViolation) as exc:
-            errors.append(exc)
-    if owned_brief is not None:
-        try:
-            current = os.stat(prepared.brief.name, dir_fd=brief_parent, follow_symlinks=False)
-            if (current.st_dev, current.st_ino) != owned_brief:
-                raise OSError("rollback conflict: Brief was replaced concurrently")
-            os.unlink(prepared.brief.name, dir_fd=brief_parent)
-            os.fsync(brief_parent)
-        except OSError as exc:
             errors.append(exc)
     return errors
 
@@ -317,7 +306,6 @@ def _apply(prepared: _Prepared) -> None:
     brief_parent = -1
     ticket_replaced = False
     ticket_candidate = _ticket_with_brief(prepared.ticket_text, prepared.brief)
-    owned_brief: tuple[int, int] | None = None
     try:
         _before_first_write()
         _same_snapshot(prepared.root, prepared.ticket, prepared.ticket_text)
@@ -325,7 +313,7 @@ def _apply(prepared: _Prepared) -> None:
         if not prepared.brief_exists:
             brief_parent, brief_leaf = _open_parent(root_fd, prepared.brief, True)
             _before_brief_write(brief_parent, brief_leaf)
-            owned_brief = _publish_new_at(brief_parent, brief_leaf, prepared.brief_text)
+            _publish_new_at(brief_parent, brief_leaf, prepared.brief_text)
         _before_ticket_publish()
         _same_snapshot(prepared.root, prepared.ticket, prepared.ticket_text)
         _same_snapshot(prepared.root, prepared.map_path, prepared.map_text)
@@ -337,9 +325,7 @@ def _apply(prepared: _Prepared) -> None:
         if code != 0:
             raise StartDeliveryError(f"created binding did not validate: {message}")
     except (OSError, StartDeliveryError, map_store.SchemaViolation) as exc:
-        rollback_errors = _rollback(
-            prepared, ticket_replaced, ticket_candidate, brief_parent, owned_brief
-        )
+        rollback_errors = _rollback(prepared, ticket_replaced, ticket_candidate)
         if rollback_errors:
             raise _OperationalError(f"Start delivery failed and rollback failed: {rollback_errors[0]}") from exc
         raise _OperationalError(f"Start delivery failed: {exc}") from exc

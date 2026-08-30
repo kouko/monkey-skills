@@ -194,6 +194,7 @@
 - test_start_delivery_never_replaces_a_concurrently_created_brief
 - test_start_delivery_parent_swap_never_writes_outside_repo
 - test_start_delivery_preserves_binding_operational_errors
+- test_start_delivery_preserves_recoverable_orphan_on_partial_failure
 - test_start_delivery_recovers_an_orphaned_expected_brief
 - test_start_delivery_refuses_concurrent_ticket_or_map_change
 - test_start_delivery_refuses_inconsistent_existing_binding
@@ -201,7 +202,6 @@
 - test_start_delivery_refuses_symlink_parent_collision_and_empty_slice
 - test_start_delivery_refuses_unsafe_or_colliding_brief_path
 - test_start_delivery_returns_operational_error_for_missing_ticket
-- test_start_delivery_rolls_back_partial_writes
 - test_start_delivery_ticket_replace_is_compare_and_swap
 
 ### REQ-81
