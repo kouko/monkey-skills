@@ -531,8 +531,8 @@ def test_retirement_rollback_failure_records_broken_recovery_state(
     assert "simulated rollback I/O failure" in evidence["rollback_error"]
 
 
-def test_transactions_detect_conflicts_and_recover_partial_effects(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+def test_claim_and_topology_transactions_detect_revision_conflicts(
+    tmp_path: Path,
 ) -> None:
     # @req: REQ-87
     map_dir, ticket = _make_map(tmp_path)
@@ -593,6 +593,12 @@ def test_transactions_detect_conflicts_and_recover_partial_effects(
             expected_revision=topology_revision,
         )
 
+
+def test_transaction_retry_recovers_partial_claim_effect(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-87
+    map_dir, _ = _make_map(tmp_path)
     recovering = map_dir / "tickets" / "recovering.md"
     _write(
         recovering,
@@ -635,6 +641,12 @@ def test_transactions_detect_conflicts_and_recover_partial_effects(
     )
     assert recovered.applied is True and recovered.reused is False
 
+
+def test_filesystem_probe_cleans_partial_probe_creation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-87
+    map_dir, _ = _make_map(tmp_path)
     real_mkstemp = map_transaction.tempfile.mkstemp
     probe_calls = 0
 
@@ -651,6 +663,10 @@ def test_transactions_detect_conflicts_and_recover_partial_effects(
     assert not list(map_dir.glob(".map-cas-probe-*"))
     monkeypatch.setattr(map_transaction.tempfile, "mkstemp", real_mkstemp)
 
+
+def test_revision_capture_refuses_symlinked_ticket_topology(tmp_path: Path) -> None:
+    # @req: REQ-87
+    map_dir, _ = _make_map(tmp_path)
     unsafe_map = tmp_path / "unsafe-map"
     unsafe_map.mkdir()
     (unsafe_map / "MAP.md").write_bytes((map_dir / "MAP.md").read_bytes())
@@ -662,6 +678,18 @@ def test_transactions_detect_conflicts_and_recover_partial_effects(
     ):
         map_transaction.capture_revision(unsafe_map)
 
+
+def test_unsupported_filesystem_refuses_before_mutation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-87
+    map_dir, ticket = _make_map(tmp_path)
+    blocker = map_dir / "tickets" / "blocker.md"
+    _write(
+        blocker,
+        "---\ntype: research\nstatus: open\nclaim: null\n"
+        "graduated-from: null\n---\n\nMeasure the blocker.\n",
+    )
     before = {path: path.read_bytes() for path in (map_dir / "MAP.md", ticket, blocker)}
     monkeypatch.setattr(
         map_transaction,

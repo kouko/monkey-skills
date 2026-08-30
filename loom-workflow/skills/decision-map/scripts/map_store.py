@@ -77,7 +77,9 @@ _DECISION_LINE = re.compile(r"^-\s*(?P<gist>.*)\((?P<link>[^()]*)\)\s*$")
 _DA_ENTRY = re.compile(
     r"^-\s*(?P<id>DA-(?P<n>[0-9]+))\s*:\s*(?P<body>.*)$"
 )
-_DA_SHAPED_BULLET = re.compile(r"^[-*+]\s*DA(?:-?\d|\s+-?\d)")
+_DA_SHAPED_BULLET = re.compile(
+    r"^[-*+]\s*DA(?:-[^\s:]*|[0-9][^\s:]*|\s+[^\s:]+)?\s*:"
+)
 _RETIRED_DA = re.compile(r"^retired-da:\s*(?P<id>DA-[0-9]+)\s*\|")
 
 

@@ -574,11 +574,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"phase: {phase}")
             return 0
         if len(parts) >= 4 and parts[:3] == ("docs", "loom", "plans"):
-            try:
-                text = target.read_text(encoding="utf-8")
-            except OSError as exc:
-                raise ProgressUnavailable(f"cannot read {target}: {exc}") from exc
-            map_id, part, state = derive_progress(text)
+            _, plan_text = _read_source(absolute_root, target, "Plan")
+            map_id, part, state = derive_progress(plan_text)
             print(f"map delivery-progress: {map_id} / {part}")
             print(f"plan: {target.name}")
             print(f"state: {state}")

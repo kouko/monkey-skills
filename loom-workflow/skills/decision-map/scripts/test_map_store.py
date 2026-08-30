@@ -1677,6 +1677,37 @@ def test_da_ids_states_evidence_and_evaluative_ratification(tmp_path: Path) -> N
     assert "malformed destination acceptance" in message.lower()
 
 
+def test_da_shaped_bullets_require_exact_numeric_canonical_ids(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-90
+    map_dir = _make_v3_active_map(tmp_path)
+    map_path = map_dir / "MAP.md"
+    original = map_path.read_text(encoding="utf-8")
+    marker = "user-ratified: kouko, 2026-08-30"
+
+    map_path.write_text(
+        original.replace(
+            marker,
+            marker + "\n- DA-X: Not numeric | state: open | kind: objective",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "malformed destination acceptance" in message.lower()
+
+    map_path.write_text(
+        original.replace(
+            marker,
+            marker + "\n- DATABASE compatibility remains an ordinary note.",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+
 def test_v3_monotonic_ids_and_exactly_one_closed_ticket_gist(
     tmp_path: Path,
 ) -> None:

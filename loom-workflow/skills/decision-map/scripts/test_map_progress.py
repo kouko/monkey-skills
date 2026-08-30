@@ -143,6 +143,51 @@ Map part: wayfinder / Part: delivery
     )
 
 
+def test_cli_direct_plan_refuses_nested_ancestor_symlink_escape(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-88
+    plans_root = tmp_path / "docs/loom/plans"
+    plans_root.mkdir(parents=True)
+    external = tmp_path.parent / f"{tmp_path.name}-external-plans"
+    external_plan = external / "delivery.md"
+    _write(
+        external_plan,
+        """# Plan: external
+
+Goal: Stay outside the repository.
+Stage: sdd:wave-1
+
+## Task 1 — wait
+
+- Status: pending
+
+## Notes
+
+Map part: wayfinder / Part: delivery
+""",
+    )
+    (plans_root / "nested").symlink_to(external, target_is_directory=True)
+    direct_plan = plans_root / "nested" / "delivery.md"
+    before = external_plan.read_bytes()
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            str(direct_plan),
+            "--repo-root",
+            str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 2
+    assert "symlink" in result.stderr.lower()
+    assert external_plan.read_bytes() == before
+
+
 def test_progress_reports_closed_delivery_as_delivered_with_its_arc(
     tmp_path: Path,
 ) -> None:
