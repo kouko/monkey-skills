@@ -1,5 +1,5 @@
 ---
-type: task
+type: research
 status: claimed
 claim: relocation-family-hooks, 2026-08-29
 ---

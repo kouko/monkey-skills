@@ -51,7 +51,9 @@ def check_links(map_dir: Path) -> tuple[int, str]:
         )
 
     tickets_root = (map_dir / "tickets").resolve()
+    counts: dict[str, int] = {}
     for decision in doc.decisions:
+        counts[decision.ticket_link] = counts.get(decision.ticket_link, 0) + 1
         ticket_path = map_dir / decision.ticket_link
         resolved = ticket_path.resolve()
         if not resolved.is_relative_to(tickets_root):
@@ -75,6 +77,22 @@ def check_links(map_dir: Path) -> tuple[int, str]:
                 f"Decisions-so-far line {decision.gist!r} links ticket "
                 f"{decision.ticket_link} whose status is "
                 f"{ticket.frontmatter.status!r}, not 'closed'"
+            )
+
+    for ticket_path in sorted((map_dir / "tickets").glob("*.md")):
+        try:
+            ticket = map_store.read_ticket(ticket_path)
+        except map_store.MapStoreError as exc:
+            return 1, str(exc)
+        except map_store.SchemaViolation as exc:
+            return 2, str(exc)
+        if ticket.frontmatter.status != "closed":
+            continue
+        link = f"tickets/{ticket_path.name}"
+        if counts.get(link, 0) != 1:
+            return 2, (
+                f"closed ticket {ticket_path.name} requires exactly one "
+                "Decisions-so-far gist link"
             )
 
     return 0, f"{map_dir} — all Decisions-so-far links resolve to closed tickets"

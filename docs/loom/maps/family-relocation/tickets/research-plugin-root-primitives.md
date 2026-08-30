@@ -13,6 +13,9 @@ selection-basis: map and ticket both user-named — kouko listed the open items 
 
 ## Resolution
 
+factual-answer: documented plugin-root primitives and their runtime-discovery gaps
+inspectable-evidence: docs/loom/research/2026-08-29-plugin-root-primitives.md
+
 Report delivered: docs/loom/research/2026-08-29-plugin-root-primitives.md
 (deep-deep-research pipeline: 22 sources, 25 claims adversarially verified,
 22 confirmed / 3 killed). Key verified findings: the cache location/layout,

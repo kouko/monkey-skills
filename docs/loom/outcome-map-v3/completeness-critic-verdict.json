@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "verdict": "PASS_WITH_NOTES",
+  "files": [
+    "proposal.md",
+    "specs/outcome-map/spec.md"
+  ],
+  "sha256": "86dd6b4ffb2ba0d3617600ebd31b09e68a65383f6ae25746134529c1b9056c42",
+  "written_at": "2026-08-30T03:00:28.137939+00:00"
+}

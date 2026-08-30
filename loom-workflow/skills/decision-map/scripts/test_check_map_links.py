@@ -145,3 +145,25 @@ def test_check_links_function_directly(tmp_path):
 
     assert code == 0
     assert "resolve to closed tickets" in message
+
+
+def test_each_closed_ticket_has_exactly_one_gist(tmp_path):
+    # @req: REQ-92
+    map_dir = _write_map(tmp_path, "")
+    (map_dir / "tickets" / "storage.md").write_text(
+        _ticket("closed"), encoding="utf-8"
+    )
+    code, message = check_map_links.check_links(map_dir)
+    assert code == 2
+    assert "exactly one" in message
+
+    (map_dir / "MAP.md").write_text(
+        _map_md(
+            "- First gist. (tickets/storage.md)\n"
+            "- Duplicate gist. (tickets/storage.md)"
+        ),
+        encoding="utf-8",
+    )
+    code, message = check_map_links.check_links(map_dir)
+    assert code == 2
+    assert "exactly one" in message

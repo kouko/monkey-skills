@@ -4,6 +4,39 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [3.0.0] — 2026-08-30 — Outcome Map v3
+
+### Breaking
+
+- Decision maps are now long-term outcome-control loops that can close
+  multiple delivery arcs without treating one delivered slice as Map
+  completion.
+- Schema v3 replaces generic `task` tickets with exactly four closure types:
+  `grilling`, `research`, `prototype`, and `delivery`; adds `withdrawn`, stable
+  Destination acceptance ids, typed closure evidence, reciprocal delivery
+  bindings, and same-Map acyclic blockers.
+- Schema v2 stores require the zero-write classification preview before an
+  idempotent apply. Ambiguous closure evidence refuses migration.
+
+### Added
+
+- Public Start, Resume, Claim, Update blockers, Close and re-chart, Migrate,
+  and Archive operations, with conflict-safe Map-local transactions and
+  fail-closed filesystem assumptions.
+- Read-only re-entry identifies absent, broken, blocked, claimed,
+  Destination-acceptance-gap, and delivery states with the authoritative owner
+  and next CTA.
+- Map clear now requires terminal Tickets, empty fog, and satisfied auditable
+  Destination acceptance. Retirement preserves stable Map and Ticket paths.
+
+### Changed
+
+- Delivery progress remains owned by Brief, Plan, Git, PR, and CI artifacts;
+  MAP.md and Tickets store durable outcome truth without copying a progress
+  ledger.
+- Prototype now means a human-evaluated candidate. Machine-measured
+  feasibility closes as research.
+
 ## [2.0.0] — 2026-08-30 — decision-map schema v2
 
 ### Changed

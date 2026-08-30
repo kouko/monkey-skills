@@ -1,6 +1,6 @@
 ---
 map-id: family-relocation
-schema_version: 2
+schema_version: 3
 state: active
 ---
 

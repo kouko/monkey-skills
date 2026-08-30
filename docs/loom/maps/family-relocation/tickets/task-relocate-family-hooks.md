@@ -1,5 +1,5 @@
 ---
-type: task
+type: delivery
 status: open
 claim: null
 graduated-from: null

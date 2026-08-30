@@ -6,6 +6,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+sys.path.insert(0, str(Path(__file__).parent))
+import map_progress  # noqa: E402
+
 
 SCRIPT = Path(__file__).parent / "map_progress.py"
 SKILL_DIR = Path(__file__).parent.parent
@@ -18,12 +23,87 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-def test_map_progress_derives_bound_plan_state_without_writing_map(
+def _arc(tmp_path: Path, *, status: str = "claimed", with_plan: bool = True) -> tuple[Path, Path, Path]:
+    ticket = tmp_path / "docs/loom/maps/wayfinder/tickets/deliver.md"
+    brief = tmp_path / "docs/loom/specs/deliver.md"
+    plan = tmp_path / "docs/loom/plans/deliver.md"
+    ticket_relative = ticket.relative_to(tmp_path).as_posix()
+    brief_relative = brief.relative_to(tmp_path).as_posix()
+    _write(ticket, f"---\ntype: delivery\nstatus: {status}\nbrief: {brief_relative}\n---\n")
+    _write(brief, f"Outcome Map ticket: {ticket_relative}\n\n## Delivery closure\n\npolicy: pr-ci\nreview-evidence: review.md\nverification-evidence: pytest -q\n")
+    if with_plan:
+        _write(plan, """# Plan: deliver
+
+**Source brief**: docs/loom/specs/deliver.md
+Goal: Ship.
+Stage: sdd:wave-1
+
+## Task 1 — ship
+
+- Status: pending
+""")
+    return ticket, brief, plan
+
+
+def test_progress_resolves_ticket_brief_plan_without_writes(
     tmp_path: Path,
 ) -> None:
+    # @req: REQ-81
     map_md = tmp_path / "docs" / "loom" / "maps" / "wayfinder" / "MAP.md"
     _write(map_md, "original map bytes\n")
-    before = map_md.read_bytes()
+    ticket = map_md.parent / "tickets" / "deliver-search.md"
+    brief = tmp_path / "docs" / "loom" / "specs" / "deliver-search.md"
+    plan = tmp_path / "docs" / "loom" / "plans" / "delivery.md"
+    ticket_relative = ticket.relative_to(tmp_path).as_posix()
+    brief_relative = brief.relative_to(tmp_path).as_posix()
+    _write(
+        ticket,
+        f"---\ntype: delivery\nstatus: claimed\nbrief: {brief_relative}\n---\n",
+    )
+    _write(brief, f"# Deliver search\n\nOutcome Map ticket: {ticket_relative}\n\n## Delivery closure\n\npolicy: pr-ci\nreview-evidence: review.md\nverification-evidence: pytest -q\n")
+    _write(
+        plan,
+        """# Plan: delivery
+
+**Source brief**: docs/loom/specs/deliver-search.md
+
+Goal: Ship the delivery.
+Stage: sdd:wave-1
+
+## Task 1 — finish it
+
+- Status: done(abc1234)
+
+## Task 2 — review it
+
+- Status: claimed(@worker)
+
+""",
+    )
+    sources = (map_md, ticket, brief, plan)
+    before = {path: path.read_bytes() for path in sources}
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(ticket), "--repo-root", str(tmp_path)],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert f"ticket: {ticket_relative}" in result.stdout
+    assert f"brief: {brief_relative}" in result.stdout
+    assert "plan: docs/loom/plans/delivery.md" in result.stdout
+    assert "phase: implementing" in result.stdout
+    assert {path: path.read_bytes() for path in sources} == before
+    assert "map_progress.py" in MAP_FORMAT_MD.read_text(encoding="utf-8")
+    assert (
+        'python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_progress.py" '
+        '"<target>" --repo-root "<path>"'
+        in SKILL_MD.read_text(encoding="utf-8")
+    )
+
+
+def test_map_progress_preserves_legacy_plan_query_output(tmp_path: Path) -> None:
     plan = tmp_path / "docs" / "loom" / "plans" / "delivery.md"
     _write(
         plan,
@@ -38,13 +118,14 @@ Stage: sdd:wave-1
 
 ## Task 2 — review it
 
-- Status: claimed(@worker)
+- Status: blocked(needs human decision)
 
 ## Notes
 
 Map part: wayfinder / Part: delivery
 """,
     )
+    before = plan.read_bytes()
 
     result = subprocess.run(
         [sys.executable, str(SCRIPT), str(plan), "--repo-root", str(tmp_path)],
@@ -53,10 +134,390 @@ Map part: wayfinder / Part: delivery
     )
 
     assert result.returncode == 0, result.stderr
-    assert "wayfinder / delivery" in result.stdout
-    assert "state: claimed" in result.stdout
-    assert map_md.read_bytes() == before
-    assert "map_progress.py" in MAP_FORMAT_MD.read_text(encoding="utf-8")
-    assert "map_progress.py <plan-path> --repo-root <path>" in SKILL_MD.read_text(
-        encoding="utf-8"
+    assert "map delivery-progress: wayfinder / delivery" in result.stdout
+    assert "plan: delivery.md" in result.stdout
+    assert "state: blocked" in result.stdout
+    assert plan.read_bytes() == before
+    assert map_progress.derive_progress(plan.read_text(encoding="utf-8")) == (
+        "wayfinder",
+        "delivery",
+        "blocked",
     )
+
+
+def test_cli_direct_plan_refuses_nested_ancestor_symlink_escape(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-88
+    plans_root = tmp_path / "docs/loom/plans"
+    plans_root.mkdir(parents=True)
+    external = tmp_path.parent / f"{tmp_path.name}-external-plans"
+    external_plan = external / "delivery.md"
+    _write(
+        external_plan,
+        """# Plan: external
+
+Goal: Stay outside the repository.
+Stage: sdd:wave-1
+
+## Task 1 — wait
+
+- Status: pending
+
+## Notes
+
+Map part: wayfinder / Part: delivery
+""",
+    )
+    (plans_root / "nested").symlink_to(external, target_is_directory=True)
+    direct_plan = plans_root / "nested" / "delivery.md"
+    before = external_plan.read_bytes()
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            str(direct_plan),
+            "--repo-root",
+            str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 2
+    assert "symlink" in result.stderr.lower()
+    assert external_plan.read_bytes() == before
+
+
+def test_progress_reports_closed_delivery_as_delivered_with_its_arc(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-81
+    ticket = tmp_path / "docs/loom/maps/wayfinder/tickets/deliver.md"
+    brief = tmp_path / "docs/loom/specs/deliver.md"
+    plan = tmp_path / "docs/loom/plans/deliver.md"
+    ticket_relative = ticket.relative_to(tmp_path).as_posix()
+    brief_relative = brief.relative_to(tmp_path).as_posix()
+    _write(ticket, f"---\ntype: delivery\nstatus: closed\nbrief: {brief_relative}\n---\n")
+    _write(brief, f"Outcome Map ticket: {ticket_relative}\n\n## Delivery closure\n\npolicy: pr-ci\nreview-evidence: review.md\nverification-evidence: pytest -q\n")
+    _write(
+        plan,
+        """# Plan: deliver
+
+**Source brief**: docs/loom/specs/deliver.md
+Goal: Ship.
+Stage: finishing
+
+## Task 1 — ship
+
+- Status: done(abc1234)
+""",
+    )
+    sources = (ticket, brief, plan)
+    before = {path: path.read_bytes() for path in sources}
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(ticket), "--repo-root", str(tmp_path)],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert f"brief: {brief_relative}" in result.stdout
+    assert "plan: docs/loom/plans/deliver.md" in result.stdout
+    assert "phase: delivered" in result.stdout
+    assert {path: path.read_bytes() for path in sources} == before
+
+
+def test_progress_reports_unbriefed_and_briefed_without_writes(tmp_path: Path) -> None:
+    # @req: REQ-81
+    unbriefed = tmp_path / "docs/loom/maps/wayfinder/tickets/unbriefed.md"
+    _write(unbriefed, "---\ntype: delivery\nstatus: claimed\n---\n")
+    before = unbriefed.read_bytes()
+    unbriefed_result = subprocess.run([sys.executable, str(SCRIPT), str(unbriefed), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert unbriefed_result.returncode == 0, unbriefed_result.stderr
+    assert "phase: unbriefed" in unbriefed_result.stdout
+    assert unbriefed.read_bytes() == before
+
+    ticket, brief, plan = _arc(tmp_path, with_plan=False)
+    before = {path: path.read_bytes() for path in (ticket, brief)}
+    briefed_result = subprocess.run([sys.executable, str(SCRIPT), str(ticket), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert briefed_result.returncode == 0, briefed_result.stderr
+    assert "phase: briefed" in briefed_result.stdout
+    assert {path: path.read_bytes() for path in (ticket, brief)} == before
+
+
+@pytest.mark.parametrize(
+    ("stage", "status", "phase"),
+    [("planning", "pending", "planning"), ("sdd:wave-1", "pending", "implementing"), ("review:round-1", "claimed(@reviewer)", "reviewing"), ("finishing", "done(abc1234)", "finishing"), ("sdd:wave-1", "blocked", "repair-required")],
+)
+def test_progress_derives_plan_phases_without_writes(tmp_path: Path, stage: str, status: str, phase: str) -> None:
+    # @req: REQ-81
+    ticket, brief, plan = _arc(tmp_path)
+    _write(plan, plan.read_text(encoding="utf-8").replace("Stage: sdd:wave-1", f"Stage: {stage}").replace("- Status: pending", f"- Status: {status}"))
+    sources = (ticket, brief, plan)
+    before = {path: path.read_bytes() for path in sources}
+    result = subprocess.run([sys.executable, str(SCRIPT), str(ticket), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert f"phase: {phase}" in result.stdout
+    assert {path: path.read_bytes() for path in sources} == before
+
+
+@pytest.mark.parametrize("fault", ["malformed", "multiple", "binding", "unreadable"])
+def test_progress_refuses_broken_delivery_arc_without_writes(tmp_path: Path, fault: str) -> None:
+    # @req: REQ-81
+    ticket, brief, plan = _arc(tmp_path)
+    if fault == "malformed":
+        _write(plan, plan.read_text(encoding="utf-8").replace("Stage: sdd:wave-1", "Stage: unknown"))
+    elif fault == "multiple":
+        _write(tmp_path / "docs/loom/plans/another.md", plan.read_text(encoding="utf-8"))
+    elif fault == "unreadable":
+        plan.unlink()
+        plan.mkdir()
+    else:
+        _write(brief, "# broken reciprocal binding\n")
+    sources = tuple(path for path in (ticket, brief, plan, tmp_path / "docs/loom/plans/another.md") if path.is_file())
+    before = {path: path.read_bytes() for path in sources}
+    result = subprocess.run([sys.executable, str(SCRIPT), str(ticket), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert result.returncode == (1 if fault == "unreadable" else 2)
+    assert result.stderr.startswith("Error: ")
+    assert {path: path.read_bytes() for path in sources} == before
+    if fault == "unreadable":
+        assert plan.is_dir()
+
+
+def test_progress_refuses_duplicate_source_brief_without_writes(tmp_path: Path) -> None:
+    # @req: REQ-81
+    ticket, brief, plan = _arc(tmp_path)
+    _write(
+        plan,
+        plan.read_text(encoding="utf-8").replace(
+            "Goal: Ship.", "**Source brief**: docs/loom/specs/deliver.md\nGoal: Ship."
+        ),
+    )
+    sources = (ticket, brief, plan)
+    before = {path: path.read_bytes() for path in sources}
+    result = subprocess.run([sys.executable, str(SCRIPT), str(ticket), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert result.returncode == 2
+    assert "Source brief" in result.stderr
+    assert {path: path.read_bytes() for path in sources} == before
+
+
+def test_progress_ignores_unrelated_legacy_plan_without_source_brief(tmp_path: Path) -> None:
+    # @req: REQ-81
+    ticket, brief, plan = _arc(tmp_path)
+    legacy = tmp_path / "docs/loom/plans/legacy.md"
+    _write(
+        legacy,
+        """# Plan: legacy
+
+Goal: Preserve an older plan.
+Stage: finishing
+
+## Task 1 — preserve it
+
+- Status: done(abc1234)
+""",
+    )
+    sources = (ticket, brief, plan, legacy)
+    before = {path: path.read_bytes() for path in sources}
+    result = subprocess.run([sys.executable, str(SCRIPT), str(ticket), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert "plan: docs/loom/plans/deliver.md" in result.stdout
+    assert {path: path.read_bytes() for path in sources} == before
+
+
+def test_progress_refuses_symlinked_plans_directory_without_writes(tmp_path: Path) -> None:
+    # @req: REQ-81
+    ticket, brief, plan = _arc(tmp_path, with_plan=False)
+    plans_dir = plan.parent
+    external = tmp_path.parent / "external-plans"
+    _write(external / "delivery.md", "external plan bytes\n")
+    plans_dir.symlink_to(external, target_is_directory=True)
+    before = {path: path.read_bytes() for path in (ticket, brief, external / "delivery.md")}
+    result = subprocess.run([sys.executable, str(SCRIPT), str(ticket), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert result.returncode == 2
+    assert "symlink" in result.stderr
+    assert {path: path.read_bytes() for path in before} == before
+
+
+def test_progress_refuses_missing_and_symlink_targets_without_writes(tmp_path: Path) -> None:
+    # @req: REQ-81
+    missing = tmp_path / "docs/loom/maps/wayfinder/tickets/missing.md"
+    missing_result = subprocess.run([sys.executable, str(SCRIPT), str(missing), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert missing_result.returncode == 1
+
+    ticket, brief, plan = _arc(tmp_path)
+    ticket_link = ticket.with_name("ticket-link.md")
+    ticket_link.symlink_to(ticket)
+    plan_link = plan.with_name("plan-link.md")
+    plan_link.symlink_to(plan)
+    sources = (ticket, brief, plan)
+    before = {path: path.read_bytes() for path in sources}
+    ticket_result = subprocess.run([sys.executable, str(SCRIPT), str(ticket_link), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert ticket_result.returncode == 2
+    plan_result = subprocess.run([sys.executable, str(SCRIPT), str(plan_link), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert plan_result.returncode == 2
+    assert {path: path.read_bytes() for path in sources} == before
+
+
+def test_reentry_distinguishes_map_and_frontier_states_with_next_cta(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-88
+    maps_root = tmp_path / "docs/loom/maps"
+    absent = map_progress.assess_reentry(tmp_path)
+    assert (absent.state, absent.owner, absent.next_cta) == (
+        "absent",
+        "docs/loom/maps",
+        "chart a new Outcome Map",
+    )
+
+    map_dir = maps_root / "wayfinder"
+    map_md = map_dir / "MAP.md"
+    _write(map_md, "broken map bytes\n")
+    broken_before = map_md.read_bytes()
+    broken = map_progress.assess_reentry(tmp_path)
+    assert broken.state == "broken"
+    assert broken.owner.endswith("/MAP.md")
+    assert "repair" in broken.next_cta
+    assert map_md.read_bytes() == broken_before
+
+    _write(
+        map_md,
+        "---\nmap-id: wayfinder\nschema_version: 3\nstate: active\n---\n\n"
+        "## Destination\n\nImprove search.\nuser-ratified: kouko, 2026-08-30\n"
+        "- DA-1: Search succeeds | state: open | kind: objective\n\n"
+        "## Notes\n\nKeep charting.\n\n## Decisions-so-far\n\n"
+        "## Not-yet-specified (fog)\n\n## Out-of-scope\n",
+    )
+    frontier_ticket = map_dir / "tickets/research-query.md"
+    _write(
+        frontier_ticket,
+        "---\ntype: research\nstatus: open\nclaim: null\n"
+        "graduated-from: null\n---\n\nMeasure query quality.\n",
+    )
+    sources = (map_md, frontier_ticket)
+    before = {path: path.read_bytes() for path in sources}
+    frontier = map_progress.assess_reentry(tmp_path)
+    assert frontier.state == "live"
+    assert frontier.owner.endswith("tickets/research-query.md")
+    assert frontier.next_cta == "claim frontier ticket research-query"
+    assert {path: path.read_bytes() for path in sources} == before
+
+    blocker = map_dir / "tickets/blocker.md"
+    _write(
+        blocker,
+        "---\ntype: research\nstatus: claimed\nclaim: alice, 2026-08-30\n"
+        "graduated-from: null\n---\n\nMeasure blocker.\n",
+    )
+    claimed = map_progress.assess_reentry(tmp_path)
+    assert claimed.state == "claimed"
+    assert claimed.owner.endswith("tickets/blocker.md")
+    assert "resume research" in claimed.next_cta
+
+    frontier_ticket.write_text(
+        frontier_ticket.read_text(encoding="utf-8").replace(
+            "graduated-from: null", "graduated-from: null\nblocked-by: blocker"
+        ),
+        encoding="utf-8",
+    )
+    blocked = map_progress.assess_reentry(tmp_path)
+    assert blocked.state == "blocked"
+    assert "blocker" in blocked.owner
+    assert "resolve blockers" in blocked.next_cta
+
+    blocker.unlink()
+    frontier_ticket.unlink()
+    gap = map_progress.assess_reentry(tmp_path)
+    assert gap.state == "da-gap"
+    assert gap.owner.endswith("/MAP.md#Destination")
+    assert gap.next_cta == "satisfy Destination acceptance DA-1"
+
+    ticket, brief, plan = _arc(tmp_path)
+    delivery = map_progress.assess_reentry(tmp_path, map_id="wayfinder")
+    assert delivery.state == "claimed"
+    assert delivery.phase == "implementing"
+    assert delivery.owner == plan.relative_to(tmp_path).as_posix()
+    assert delivery.next_cta == "resume implementation in the owning Plan"
+    assert ticket.is_file() and brief.is_file() and plan.is_file()
+
+    cli = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            str(tmp_path),
+            "--repo-root",
+            str(tmp_path),
+            "--map-id",
+            "wayfinder",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert cli.returncode == 0, cli.stderr
+    assert "state: claimed" in cli.stdout
+    assert "phase: implementing" in cli.stdout
+    assert "owner: docs/loom/plans/deliver.md" in cli.stdout
+    assert "next-cta: resume implementation in the owning Plan" in cli.stdout
+
+
+def test_reentry_refuses_nested_plan_directory_symlink_escape(tmp_path: Path) -> None:
+    # @req: REQ-88
+    ticket, _, plan = _arc(tmp_path)
+    plan_text = plan.read_text(encoding="utf-8")
+    plan.unlink()
+    outside = tmp_path / "outside-plans"
+    _write(outside / "deliver.md", plan_text)
+    nested = tmp_path / "docs" / "loom" / "plans" / "nested"
+    nested.symlink_to(outside, target_is_directory=True)
+
+    with pytest.raises(map_progress.ProgressError, match="symlink"):
+        map_progress.resolve_progress(ticket, tmp_path)
+
+
+def test_reentry_refuses_ticket_symlink_swap_before_its_own_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-88
+    ticket, _, _ = _arc(tmp_path)
+    outside = tmp_path / "outside-ticket.md"
+    outside.write_bytes(ticket.read_bytes())
+    real_validate = map_progress.delivery_binding.validate
+
+    def validate_then_swap(*args, **kwargs):
+        result = real_validate(*args, **kwargs)
+        ticket.unlink()
+        ticket.symlink_to(outside)
+        return result
+
+    monkeypatch.setattr(
+        map_progress.delivery_binding, "validate", validate_then_swap
+    )
+    with pytest.raises(map_progress.ProgressError, match="symlink"):
+        map_progress.resolve_progress(ticket, tmp_path)
+
+
+def test_reentry_refuses_map_directory_symlink_before_store_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-88
+    external = tmp_path / "external-map"
+    _write(
+        external / "MAP.md",
+        "---\nmap-id: wayfinder\nschema_version: 3\nstate: charting\n---\n\n"
+        "## Destination\n\nChoose.\n\n## Notes\n\nNone.\n\n"
+        "## Decisions-so-far\n\n## Not-yet-specified (fog)\n\n"
+        "## Out-of-scope\n",
+    )
+    maps_root = tmp_path / "docs/loom/maps"
+    maps_root.mkdir(parents=True)
+    (maps_root / "wayfinder").symlink_to(external, target_is_directory=True)
+
+    def unexpected_store_read(*_args, **_kwargs):
+        pytest.fail("map_progress read through a Map directory symlink")
+
+    monkeypatch.setattr(map_progress.map_store, "is_live_map", unexpected_store_read)
+    with pytest.raises(map_progress.ProgressError, match="symlink"):
+        map_progress.assess_reentry(tmp_path)
