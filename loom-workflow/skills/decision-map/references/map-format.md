@@ -21,6 +21,13 @@ docs/loom/maps/<map-id>/
 `<map-id>` is a stable slug chosen at charting time and never renamed —
 every join key and every ticket's location is anchored to it.
 
+## Outcome-control loop
+
+One MAP.md is one persistent outcome-control loop with multiple
+independently closed delivery arcs. Closing a delivery arc must not clear
+the Map. A delivery arc closes only its own bounded slice; other open tickets
+or fog entries keep the Map active and expose its next frontier work.
+
 ## MAP.md schema
 
 ### Frontmatter

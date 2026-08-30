@@ -130,6 +130,17 @@ def test_v2_contract_rejects_relay_and_parts_language():
     assert not offenders, "retired v2 contract wording remains:\n" + "\n".join(offenders)
 
 
+def test_v3_contract_defines_multi_delivery_outcome_loop():
+    # @req: REQ-75
+    """A delivery closes one arc without completing or clearing its Map."""
+    contract_files = (SKILL_MD, MAP_FORMAT_MD)
+    for path in contract_files:
+        text = _normalize(path.read_text(encoding="utf-8"))
+        assert "one persistent outcome-control loop" in text
+        assert "multiple independently closed delivery arcs" in text
+        assert "Closing a delivery arc must not clear the Map." in text
+
+
 def test_v2_contract_pins_release_boundary_and_metric_definition():
     """Current map instructions retain the v2 boundary and metric facts."""
     map_format_text = MAP_FORMAT_MD.read_text(encoding="utf-8")

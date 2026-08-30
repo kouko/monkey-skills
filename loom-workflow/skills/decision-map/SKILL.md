@@ -13,6 +13,9 @@ survives across sessions: a map is opened once (charting), then
 advanced one ticket at a time over however many sessions it takes
 (work-through), until the fog is empty and every ticket is closed.
 
+A Map is one persistent outcome-control loop with multiple independently
+closed delivery arcs. Closing a delivery arc must not clear the Map.
+
 Full schema authority for MAP.md and ticket files — including the
 ticket boundary contract and command surface — lives in
 `references/map-format.md`. Read it before charting or working through
