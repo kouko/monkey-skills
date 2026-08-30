@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -211,3 +212,36 @@ def test_rejects_non_normalized_duplicate_candidate_alias(tmp_path: Path) -> Non
 
     assert code == 2
     assert "not normalized" in message
+
+
+@pytest.mark.skipif(
+    not os.path.samefile("/var", "/private/var"),
+    reason="macOS /var alias is unavailable",
+)
+def test_accepts_ticket_in_callers_var_repo_root_namespace(tmp_path: Path) -> None:
+    # @req: REQ-79
+    ticket, _ = _bound_ticket(tmp_path)
+    private_var = Path("/private/var")
+    alias_root = Path("/var") / tmp_path.relative_to(private_var)
+    alias_ticket = Path("/var") / ticket.relative_to(private_var)
+
+    code, message = delivery_binding.validate(alias_ticket, repo_root=alias_root)
+
+    assert code == 0, message
+
+
+@pytest.mark.parametrize("target_kind", ["missing", "directory"])
+def test_requested_missing_or_directory_ticket_is_operational(
+    tmp_path: Path, target_kind: str
+) -> None:
+    # @req: REQ-79
+    ticket, _ = _bound_ticket(tmp_path)
+    if target_kind == "missing":
+        ticket.unlink()
+    else:
+        ticket.unlink()
+        ticket.mkdir()
+
+    code, _ = delivery_binding.validate(ticket, repo_root=tmp_path)
+
+    assert code == 1

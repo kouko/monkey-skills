@@ -32,15 +32,23 @@ def _canonical_relative(value: str, label: str) -> PurePosixPath:
     return path
 
 
-def _open_failure(exc: OSError, label: str, relative: PurePosixPath) -> None:
+def _open_failure(
+    exc: OSError, label: str, relative: PurePosixPath, requested: bool
+) -> None:
     if exc.errno == errno.ELOOP:
         raise _BindingFailure(f"{label} path contains a symlink component: {relative.as_posix()}") from exc
     if exc.errno in {errno.ENOENT, errno.ENOTDIR}:
+        if requested:
+            raise _OperationalFailure(
+                f"requested {label} is missing or not a regular file: {relative.as_posix()}"
+            ) from exc
         raise _BindingFailure(f"{label} target does not exist or is not a regular file: {relative.as_posix()}") from exc
     raise _OperationalFailure(f"cannot open {label} target {relative.as_posix()}: {exc}") from exc
 
 
-def _read_repo_file(repo_root: Path, relative: PurePosixPath, label: str) -> str:
+def _read_repo_file(
+    repo_root: Path, relative: PurePosixPath, label: str, requested: bool = False
+) -> str:
     """Open a canonical relative regular file without following any symlink."""
     if not hasattr(os, "O_NOFOLLOW"):
         raise _OperationalFailure("platform lacks O_NOFOLLOW; cannot safely validate bindings")
@@ -56,11 +64,15 @@ def _read_repo_file(repo_root: Path, relative: PurePosixPath, label: str) -> str
                     raise _BindingFailure(f"{label} path contains a symlink component: {relative.as_posix()}")
                 next_fd = os.open(part, flags, dir_fd=fd)
             except OSError as exc:
-                _open_failure(exc, label, relative)
+                _open_failure(exc, label, relative, requested)
             if fd != directory:
                 os.close(fd)
             fd = next_fd
         if not stat.S_ISREG(os.fstat(fd).st_mode):
+            if requested:
+                raise _OperationalFailure(
+                    f"requested {label} is not a regular file: {relative.as_posix()}"
+                )
             raise _BindingFailure(f"{label} target is not a regular file: {relative.as_posix()}")
         try:
             with os.fdopen(fd, "r", encoding="utf-8") as stream:
@@ -74,9 +86,13 @@ def _read_repo_file(repo_root: Path, relative: PurePosixPath, label: str) -> str
         os.close(directory)
 
 
-def _ticket_fields(repo_root: Path, relative: PurePosixPath, label: str) -> dict[str, str]:
+def _ticket_fields(
+    repo_root: Path, relative: PurePosixPath, label: str, requested: bool = False
+) -> dict[str, str]:
     try:
-        fields, _ = map_store.parse_frontmatter(_read_repo_file(repo_root, relative, label))
+        fields, _ = map_store.parse_frontmatter(
+            _read_repo_file(repo_root, relative, label, requested)
+        )
     except map_store.SchemaViolation as exc:
         raise _BindingFailure(f"{label} {relative.as_posix()} has invalid frontmatter: {exc}") from exc
     missing = [key for key in ("type", "status") if key not in fields]
@@ -103,7 +119,7 @@ def _assert_reciprocal(brief_text: str, brief: PurePosixPath, ticket: PurePosixP
 
 
 def _candidate_brief(repo_root: Path, candidate: PurePosixPath) -> PurePosixPath | None:
-    fields = _ticket_fields(repo_root, candidate, "candidate ticket")
+    fields = _ticket_fields(repo_root, candidate, "candidate ticket", requested=True)
     brief = fields.get("brief")
     if brief is None:
         return None
@@ -133,11 +149,12 @@ def _duplicate_owner(repo_root: Path, ticket: PurePosixPath, brief: PurePosixPat
 def validate(ticket_path: Path, repo_root: Path | None = None) -> tuple[int, str]:
     """Validate one Ticket's optional, reciprocal delivery Brief binding; writes nothing."""
     try:
-        root = (Path(repo_root) if repo_root is not None else map_store.resolve_repo_root(None, Path(ticket_path).parent)).resolve(strict=True)
+        lexical_root = Path(os.path.abspath(repo_root if repo_root is not None else map_store.resolve_repo_root(None, Path(ticket_path).parent)))
+        root = lexical_root.resolve(strict=True)
         if not root.is_dir():
             raise _OperationalFailure(f"repository root is not a directory: {root}")
-        ticket = _ticket_relative(root, Path(ticket_path))
-        fields = _ticket_fields(root, ticket, "ticket")
+        ticket = _ticket_relative(lexical_root, Path(ticket_path))
+        fields = _ticket_fields(root, ticket, "ticket", requested=True)
         if fields["type"] != "delivery":
             if "brief" in fields:
                 raise _BindingFailure("only delivery tickets may declare a 'brief' field")
