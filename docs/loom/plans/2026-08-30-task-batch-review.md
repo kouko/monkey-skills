@@ -63,7 +63,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-101
 - **Brief item covered**: REQ-102
 - **Brief item covered**: BI-1, BI-2, BI-6, BI-7
-- **Status**: claimed(@main)
+- **Status**: done(73372083)
 - **Gloss**: 只增加一個衍生檢查器，不建立第二套管理資料。
 
 ## Task 2 — Make writing-plans produce the second-pass grouping
