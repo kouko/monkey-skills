@@ -3,7 +3,7 @@
 Source brief: `docs/loom/specs/2026-08-30-task-batch-review.md`
 Source change-folder: `docs/loom/task-batch-review/`
 Goal: Add fail-closed Task Batch Review without enlarging Tasks or creating a second workflow ledger — serves PURPOSE: makes review evidence cheaper while keeping every claim mechanically traceable.
-Stage: sdd:wave-1
+Stage: review:round-1
 Critical-path depth: 5 (≤5)
 Total tasks: 9
 Execution order: T1 → T2; T3, T4, and T5 after T2; T6 after T3 and T5; T7 and T8 after T4 and T6; T9 after T4 and T6
