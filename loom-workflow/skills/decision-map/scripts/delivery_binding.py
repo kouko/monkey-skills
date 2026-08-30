@@ -185,13 +185,7 @@ def _validate_brief_policy_and_plan_count(repo_root: Path, brief: PurePosixPath,
         raise _BindingFailure("plans directory contains a symlink")
     source = brief.as_posix()
     matches: list[str] = []
-    for candidate in sorted(plans_root.rglob("*.md")):
-        relative = candidate.relative_to(plans_root)
-        component = plans_root
-        if candidate.is_symlink() or any((component := component / part).is_symlink() for part in relative.parts):
-            raise _BindingFailure(f"Plan path contains a symlink: {candidate.relative_to(repo_root).as_posix()}")
-        if not candidate.is_file():
-            raise _OperationalFailure(f"Plan path is not a regular file: {candidate.relative_to(repo_root).as_posix()}")
+    for candidate in _plan_files(plans_root, repo_root):
         try:
             text = candidate.read_text(encoding="utf-8")
         except OSError as exc:
@@ -201,7 +195,7 @@ def _validate_brief_policy_and_plan_count(repo_root: Path, brief: PurePosixPath,
         superseded = [line for line in lines if line.startswith("Superseded by:")]
         if any(not re.fullmatch(r"Superseded by: \S+", line) for line in superseded):
             raise _BindingFailure(f"Plan {candidate.relative_to(repo_root).as_posix()} has malformed Superseded by field")
-        if declarations == [f"**Source brief**: {source}"] and not superseded:
+        if declarations == [f"**Source brief**: {source}"]:
             matches.append(candidate.relative_to(repo_root).as_posix())
     if len(matches) > 1:
         raise _BindingFailure(f"delivery Brief {source} has multiple Plans: {', '.join(matches)}")
@@ -219,14 +213,46 @@ def _validate_brief_policy_and_plan_count(repo_root: Path, brief: PurePosixPath,
 def _structural_plan_lines(text: str) -> list[str]:
     """Return non-fenced plan lines; only exact top-level fields are structural."""
     lines: list[str] = []
-    fenced = False
+    fence: tuple[str, int] | None = None
     for line in text.splitlines():
-        if line.startswith("```"):
-            fenced = not fenced
+        opener = re.match(r"^(?P<char>`|~)(?P=char){2,}", line)
+        if fence is None and opener:
+            fence = (opener.group("char"), len(opener.group(0)))
             continue
-        if not fenced:
+        if fence is not None:
+            char, length = fence
+            if re.fullmatch(re.escape(char) + "{" + str(length) + ",}\\s*", line):
+                fence = None
+            continue
+        if fence is None:
             lines.append(line)
     return lines
+
+
+def _plan_files(plans_root: Path, repo_root: Path) -> list[Path]:
+    """Enumerate only regular plan files, refusing links and special entries."""
+    files: list[Path] = []
+
+    def walk(directory: Path) -> None:
+        try:
+            entries = sorted(os.scandir(directory), key=lambda entry: entry.name)
+        except OSError as exc:
+            raise _OperationalFailure(f"cannot enumerate plans directory {directory}: {exc}") from exc
+        for entry in entries:
+            path = Path(entry.path)
+            relative = path.relative_to(repo_root).as_posix()
+            if entry.is_symlink():
+                raise _BindingFailure(f"Plan path contains a symlink: {relative}")
+            if entry.is_dir(follow_symlinks=False):
+                walk(path)
+            elif entry.is_file(follow_symlinks=False):
+                if path.suffix == ".md":
+                    files.append(path)
+            else:
+                raise _BindingFailure(f"Plan path is not a regular file: {relative}")
+
+    walk(plans_root)
+    return files
 
 
 def snapshot_delivery_migration_binding(

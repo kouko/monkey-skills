@@ -337,3 +337,38 @@ def test_v3_delivery_brief_without_authored_closure_policy_is_rejected(tmp_path:
 
     assert code == 2
     assert "Delivery closure policy" in message
+
+
+def test_plan_scan_refuses_nested_symlink_and_never_exempts_superseded_plan(tmp_path: Path) -> None:
+    # @req: REQ-96
+    ticket, brief = _bound_ticket(tmp_path)
+    source = brief.relative_to(tmp_path).as_posix()
+    plan = "# Plan\n\n**Source brief**: " + source + "\nStage: planning\n\n## Task 1 — Deliver\n"
+    plans = tmp_path / "docs/loom/plans"
+    _write(plans / "first.md", plan)
+    _write(plans / "second.md", plan + "Superseded by: docs/loom/plans/replacement.md\n")
+
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+    assert code == 2
+    assert "multiple Plans" in message
+
+    (plans / "second.md").unlink()
+    outside = tmp_path.parent / "outside-plans"
+    _write(outside / "matching.md", plan)
+    (plans / "nested").symlink_to(outside, target_is_directory=True)
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+    assert code == 2
+    assert "symlink" in message
+
+
+def test_tilde_fenced_plan_text_is_not_structural(tmp_path: Path) -> None:
+    # @req: REQ-96
+    ticket, brief = _bound_ticket(tmp_path)
+    source = brief.relative_to(tmp_path).as_posix()
+    _write(
+        tmp_path / "docs/loom/plans/fenced.md",
+        "# Plan\n\n**Source brief**: " + source + "\n~~~markdown\nStage: planning\n## Task 1 — Hidden\n~~~\n",
+    )
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+    assert code == 2
+    assert "sole Plan is unusable" in message
