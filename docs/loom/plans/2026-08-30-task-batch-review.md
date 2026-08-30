@@ -63,6 +63,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-101
 - **Brief item covered**: REQ-102
 - **Brief item covered**: BI-1, BI-2, BI-6, BI-7
+- **Review disposition**: individual
 - **Status**: done(73372083)
 - **Gloss**: 只增加一個衍生檢查器，不建立第二套管理資料。
 
@@ -86,6 +87,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-101
 - **Brief item covered**: REQ-102
 - **Brief item covered**: BI-1, BI-2, BI-6, BI-7
+- **Review disposition**: individual
 - **Status**: done(8a95fc48)
 - **Gloss**: 規劃仍先拆原子 Task，再於同一流程做第二輪分組。
 
@@ -110,6 +112,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-104
 - **Brief item covered**: REQ-108
 - **Brief item covered**: BI-3, BI-8, BI-11
+- **Review disposition**: individual
 - **Status**: done(1e475415)
 - **Gloss**: Task 多一個暫態，但仍由原本的 plan ledger 管理。
 
@@ -132,6 +135,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Independent**: false
 - **Brief item covered**: REQ-105
 - **Brief item covered**: BI-4, BI-9
+- **Review disposition**: individual
 - **Status**: done(feedfce2)
 - **Gloss**: 聚合 packet 是一次 review 的不可變輸入，不是新 ledger。
 
@@ -154,14 +158,15 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-106
 - **Brief item covered**: REQ-107
 - **Brief item covered**: BI-9
+- **Review disposition**: individual
 - **Status**: done(e6ff43df)
 - **Gloss**: 無法可靠歸屬的 finding 直接降級，不猜測 owner。
 
 ## Task 6 — Integrate one Batch fan-out into SDD
 
 - **Description**: Update SDD to stop after mechanical verification at implemented, dispatch one aggregate review for an eligible ready Batch, and otherwise reuse the existing individual loop.
-- **Module**: `loom-code/skills/subagent-driven-development`
-- **Files touched**: `loom-code/skills/subagent-driven-development/SKILL.md`, `loom-code/skills/subagent-driven-development/references/plan-ledger-notes.md`, `loom-code/skills/subagent-driven-development/references/conditional-operations.md`, `loom-code/scripts/test_subagent_driven_development_batch_review.py`
+- **Module**: `loom-code`
+- **Files touched**: `loom-code/skills/subagent-driven-development/SKILL.md`, `loom-code/skills/subagent-driven-development/references/plan-ledger-notes.md`, `loom-code/skills/subagent-driven-development/references/conditional-operations.md`, `loom-code/scripts/check_review_batches.py`, `loom-code/scripts/review_batch.py`, `loom-code/scripts/plan_card.py`, `loom-code/scripts/test_review_batch.py`, `loom-code/scripts/test_review_batch_resolution.py`, `loom-code/scripts/test_plan_card_batch_states.py`, `loom-code/scripts/test_subagent_driven_development_batch_review.py`
 - **Context paths**:
   - `loom-code/scripts/review_batch.py`
   - `loom-code/scripts/plan_card.py`
@@ -186,7 +191,8 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Reuse-adequacy**:
   - Observed: the individual Task loop validates one immutable SHA-bound packet and refuses reviewer fan-out when that packet or its declared committed scope is invalid — `read loom-code/skills/subagent-driven-development/SKILL.md:125`
   - Intended: reuse that validation and refusal behavior unchanged when Batch eligibility or aggregate attribution selects individual fallback; the fallback still receives a fresh per-Task packet and introduces no Batch state.
-- **Status**: pending
+- **Review disposition**: batch(sdd-review-loop)
+- **Status**: claimed(@main)
 - **Gloss**: 合格時聚合 review，不合格時沿用原本逐 Task 流程。
 
 ## Task 7 — Enforce new-plan-only SDD intake
@@ -206,6 +212,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Independent**: false
 - **Brief item covered**: REQ-109
 - **Brief item covered**: BI-12
+- **Review disposition**: batch(sdd-review-loop)
 - **Status**: pending
 - **Gloss**: 舊 plan 不做相容層；Batch pass 也不取代整個 branch 的最後審查。
 
@@ -227,6 +234,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Independent**: false
 - **Brief item covered**: REQ-110
 - **Brief item covered**: BI-4
+- **Review disposition**: individual
 - **Status**: pending
 - **Gloss**: Batch review 降低中途成本，但不取代 branch 最後防線。
 
@@ -248,12 +256,23 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Independent**: false
 - **Brief item covered**: REQ-111
 - **Brief item covered**: BI-1, BI-2, BI-3, BI-4
+- **Review disposition**: individual
 - **Status**: pending
 - **Gloss**: 只有 review 次數下降且安全性不退步，才算有效。
+
+## Review Batches
+
+### Review Batch: sdd-review-loop
+- **Members**: Task 6, Task 7
+- **Verdict question**: Does SDD accept only validated new-plan review dispositions and perform one fail-closed aggregate review transition?
+- **Review lane**: full
+- **Aggregate verification**: Run the Task 6 Batch-dispatch contract and Task 7 new-plan intake contract together with their adjacent Packet and plan-ledger tests.
+- **Boundary**: capability: SDD Batch review intake and dispatch; exclusions: none; consumable: yes
 
 ## Decision Log
 
 - 2026-08-30 — Use the current plan schema for this bootstrap plan; the plan implements, but does not pretend to already possess, the future Review Batch fields.
+- 2026-08-31 — Amend the still-active bootstrap plan after the schema became executable: completed Tasks retain their actual individual disposition, Tasks 6 and 7 share the SDD review-loop Batch, and the distinct close-out and replay boundaries remain individual.
 - 2026-08-30 — Omit legacy-plan compatibility per the user's latest decision; historical plans are not execution inputs.
 - 2026-08-30 — Centralize runtime Batch predicates in one pure helper and keep `plan_card.py` as the only ledger writer to avoid a second state system.
 - 2026-08-30 — T1 package gate discovered two repository-owned integration surfaces: classify the new checker and regenerate the living-spec index; remove the redundant `CLAUDE.md` command copy because `AGENTS.md` is the existing command SSOT.
