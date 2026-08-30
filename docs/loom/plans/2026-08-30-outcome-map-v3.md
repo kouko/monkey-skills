@@ -371,7 +371,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 11: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-91`
-- **Status**: done(pending-batch-b-commit)
+- **Status**: done(0bf1a5db0f2cd22e85724a50bf8462296ad6c0d4)
 - **Gloss**: schema v2 升級可以先看結果，來源變動或重跑都不會破壞歷史。
 
 ## Task 18 — Enforce monotonic fog DA and gist relations
@@ -526,7 +526,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 6: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-85`
-- **Status**: done(pending-batch-b-commit)
+- **Status**: done(0bf1a5db0f2cd22e85724a50bf8462296ad6c0d4)
 - **Gloss**: 現有 family relocation 地圖成為新機制的真實相容性證明。
 
 ## Task 26 — Publish the complete v3 public surface
