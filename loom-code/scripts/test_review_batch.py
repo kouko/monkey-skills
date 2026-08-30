@@ -398,6 +398,7 @@ def _assert_publication_and_mutation_matrix() -> None:
 
 
 def test_packet_readiness_and_immutability_matrix() -> None:
+    # @req: REQ-105
     _assert_identity_matrix()
     _assert_readiness_matrix()
     _assert_scope_matrix()

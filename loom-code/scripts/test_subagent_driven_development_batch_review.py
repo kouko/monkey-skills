@@ -46,6 +46,7 @@ def _window(text: str, start: str, end: str) -> str:
 
 
 def test_batch_dispatch_and_fallback_contract() -> None:
+    # @req: REQ-106
     skill = _normalized(SDD_ROOT / "SKILL.md")
     ledger = _normalized(SDD_ROOT / "references" / "plan-ledger-notes.md")
     conditional = _normalized(

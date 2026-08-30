@@ -96,10 +96,6 @@ def _run(tmp_path: Path, plan: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-# @req: REQ-99
-# @req: REQ-100
-# @req: REQ-101
-# @req: REQ-102
 @pytest.mark.parametrize(
     ("case", "mutate", "expected_fragment"),
     [
@@ -196,6 +192,8 @@ def test_plan_contract_matrix(
     mutate,
     expected_fragment: str,
 ) -> None:
+    # @req: REQ-100
+    # @req: REQ-102
     result = _run(tmp_path, mutate(_valid_plan()))
     if case == "valid":
         assert result.returncode == 0, result.stderr

@@ -21,6 +21,7 @@ def _check(plan: Path) -> subprocess.CompletedProcess[str]:
 
 
 def test_historical_plan_is_refused(tmp_path: Path) -> None:
+    # @req: REQ-109
     historical = tmp_path / "historical-plan.md"
     historical.write_text(
         """# Historical plan

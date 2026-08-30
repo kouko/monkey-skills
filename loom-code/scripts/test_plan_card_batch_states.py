@@ -206,6 +206,9 @@ def _blocking_atomic_worker(path, expected, entered, release, results):
 
 
 def test_batch_ledger_transition_matrix(tmp_path):
+    # @req: REQ-103
+    # @req: REQ-104
+    # @req: REQ-108
     implemented = {1: I1, 2: I2}
     assert plan_card._classify(implemented[1]) == "implemented"
     changed, _, _ = plan_card.set_status(

@@ -35,6 +35,7 @@ def _normalized(text: str) -> str:
 
 def test_batch_pass_does_not_skip_whole_branch_review() -> None:
     """A completed Batch still enters fresh, authoritative branch review."""
+    # @req: REQ-110
     finishing = _read(FINISHING)
     requesting = _read(REQUESTING)
     sdd = _read(SDD)

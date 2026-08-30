@@ -359,6 +359,7 @@ def _assert_immutable_resolution(packet) -> None:
 
 
 def test_aggregate_resolution_matrix() -> None:
+    # @req: REQ-107
     packet = _packet()
     spec_pass = _result(packet, "spec-reviewer")
     quality_pass = _result(packet, "code-quality-reviewer")
