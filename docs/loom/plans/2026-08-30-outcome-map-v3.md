@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/outcome-map-v3
 Goal: ship the full Outcome Map v3 mechanism so one Map controls many outcome-advancing delivery arcs without duplicating their progress — serves map family-relocation: turns its mixed task/prototype records into closure-exclusive tickets and canonical delivery arcs
-Stage: implementation: T7 derived delivery progress
+Stage: implementation: T8 current delivery closure evidence
 **Total tasks**: 26
 **Critical-path depth**: 5 (≤5 ✓)
 **Execution order**: sequential
@@ -177,7 +177,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 5: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-81`
-- **Status**: claimed(@codex)
+- **Status**: done(7bbe6316bd3e901612cb9e8e8dc9de04c5b1e003)
 - **Gloss**: Map 能看見 delivery 在哪裡，但不複製它的進度。
 
 ## Task 8 — Evaluate current delivery closure evidence
@@ -198,7 +198,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 5: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-82`
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: delivery 只會在目前有效的正式證據下關閉。
 
 ## Task 9 — Enforce exclusive ordered PR ownership
