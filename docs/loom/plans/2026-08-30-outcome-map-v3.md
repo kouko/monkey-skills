@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/outcome-map-v3
 Goal: ship the full Outcome Map v3 mechanism so one Map controls many outcome-advancing delivery arcs without duplicating their progress — serves map family-relocation: turns its mixed task/prototype records into closure-exclusive tickets and canonical delivery arcs
-Stage: implementation: T4 Map clear gate
+Stage: implementation: T5 delivery binding
 **Total tasks**: 26
 **Critical-path depth**: 5 (≤5 ✓)
 **Execution order**: sequential
@@ -120,7 +120,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 3: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-78`
-- **Status**: claimed(@codex)
+- **Status**: done(9ad0552a3c4d29f7acb444d76d526bbc49990065)
 - **Gloss**: 清空工作清單不再被誤認為達成長期成果。
 
 ## Task 5 — Validate reciprocal delivery bindings
@@ -139,7 +139,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 2: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-79`
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: delivery 與 Brief 有穩定且可驗證的雙向關係。
 
 ## Task 6 — Implement Start delivery
