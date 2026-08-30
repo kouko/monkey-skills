@@ -245,3 +245,29 @@ def test_requested_missing_or_directory_ticket_is_operational(
     code, _ = delivery_binding.validate(ticket, repo_root=tmp_path)
 
     assert code == 1
+
+
+def test_rejects_repo_root_replaced_by_symlink_before_open(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-79
+    repo_root = tmp_path / "repo"
+    ticket, _ = _bound_ticket(repo_root)
+    original_open = delivery_binding.os.open
+    replacement = tmp_path / "repo-original"
+    replaced = False
+
+    def replace_before_root_open(path: object, flags: int, *args: object, **kwargs: object) -> int:
+        nonlocal replaced
+        if not replaced and Path(path) == repo_root and "dir_fd" not in kwargs:
+            repo_root.rename(replacement)
+            repo_root.symlink_to(replacement, target_is_directory=True)
+            replaced = True
+        return original_open(path, flags, *args, **kwargs)
+
+    monkeypatch.setattr(delivery_binding.os, "open", replace_before_root_open)
+
+    code, message = delivery_binding.validate(ticket, repo_root=repo_root)
+
+    assert code == 2
+    assert "repository root" in message

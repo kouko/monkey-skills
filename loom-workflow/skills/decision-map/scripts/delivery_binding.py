@@ -52,7 +52,16 @@ def _read_repo_file(
     """Open a canonical relative regular file without following any symlink."""
     if not hasattr(os, "O_NOFOLLOW"):
         raise _OperationalFailure("platform lacks O_NOFOLLOW; cannot safely validate bindings")
-    directory = os.open(repo_root, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+    try:
+        directory = os.open(
+            repo_root, os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_DIRECTORY", 0)
+        )
+    except OSError as exc:
+        if exc.errno == errno.ELOOP or (
+            exc.errno == errno.ENOTDIR and stat.S_ISLNK(os.lstat(repo_root).st_mode)
+        ):
+            raise _BindingFailure("repository root was replaced by a symlink before open") from exc
+        raise _OperationalFailure(f"cannot open repository root {repo_root}: {exc}") from exc
     fd = directory
     try:
         for index, part in enumerate(relative.parts):
@@ -150,7 +159,10 @@ def validate(ticket_path: Path, repo_root: Path | None = None) -> tuple[int, str
     """Validate one Ticket's optional, reciprocal delivery Brief binding; writes nothing."""
     try:
         lexical_root = Path(os.path.abspath(repo_root if repo_root is not None else map_store.resolve_repo_root(None, Path(ticket_path).parent)))
-        root = lexical_root.resolve(strict=True)
+        # Keep the caller's lexical root for the descriptor-relative walk.
+        # Resolving it here would follow a replaceable root symlink before
+        # _read_repo_file gets a chance to enforce O_NOFOLLOW.
+        root = lexical_root
         if not root.is_dir():
             raise _OperationalFailure(f"repository root is not a directory: {root}")
         ticket = _ticket_relative(lexical_root, Path(ticket_path))
