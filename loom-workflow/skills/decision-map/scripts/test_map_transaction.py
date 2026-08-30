@@ -260,3 +260,61 @@ def test_closed_retry_revalidates_authoritative_v3_source(
 
     assert (map_dir / "MAP.md").read_bytes() == before_map
     assert ticket.read_bytes() == before_ticket
+
+
+def test_closed_retry_resolution_conflict_refuses_before_repairing_map(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-84
+    map_dir, ticket = _make_map(tmp_path)
+    request = dict(
+        gist="Slice shipped.",
+        resolution="delivery-evidence: commit 0123456",
+        unknowns=[],
+    )
+    map_transaction.close_and_rechart(map_dir, "ship-slice", **request)
+    map_path = map_dir / "MAP.md"
+    map_path.write_text(
+        map_path.read_text(encoding="utf-8").replace(
+            "- Slice shipped. (tickets/ship-slice.md)\n", ""
+        ),
+        encoding="utf-8",
+    )
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8").replace(
+            "commit 0123456", "commit abcdef0"
+        ),
+        encoding="utf-8",
+    )
+    journal = map_dir / ".transactions" / "close-ship-slice.json"
+    before = (map_path.read_bytes(), ticket.read_bytes(), journal.read_bytes())
+
+    with pytest.raises(map_transaction.CloseTransactionError, match="conflicts"):
+        map_transaction.close_and_rechart(map_dir, "ship-slice", **request)
+
+    assert (map_path.read_bytes(), ticket.read_bytes(), journal.read_bytes()) == before
+
+
+def test_clear_assessment_reuses_req_78_acceptance_validation(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-84
+    map_dir, _ = _make_map(tmp_path)
+    map_path = map_dir / "MAP.md"
+    map_path.write_text(
+        map_path.read_text(encoding="utf-8").replace(
+            "acceptance: Slice works | open | docs/loom/evidence.md",
+            "acceptance: | satisfied | docs/loom/evidence.md",
+        ),
+        encoding="utf-8",
+    )
+
+    result = map_transaction.close_and_rechart(
+        map_dir,
+        "ship-slice",
+        gist="Slice shipped.",
+        resolution="delivery-evidence: commit 0123456",
+        unknowns=[],
+    )
+
+    assert result.map_clear_eligible is False

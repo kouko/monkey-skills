@@ -11,7 +11,7 @@ import json
 import os
 import re
 import tempfile
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 import map_store
@@ -292,20 +292,21 @@ def _validate_terminal_candidate(ticket_path: Path, text: str) -> None:
 
 def _assess_clear(map_dir: Path) -> bool:
     doc = map_store.read_map(map_dir)
-    if doc.fog_entries:
-        return False
-    tickets = [map_store.read_ticket(path) for path in sorted((map_dir / "tickets").glob("*.md"))]
-    if any(ticket.frontmatter.status not in {"closed", "withdrawn"} for ticket in tickets):
-        return False
-    acceptance = [
-        [part.strip() for part in line.split("|")]
-        for line in doc.sections["Destination"].splitlines()
-        if line.strip().startswith("acceptance:")
-    ]
-    return bool(acceptance) and all(
-        len(parts) == 3 and parts[1] == "satisfied" and bool(parts[2])
-        for parts in acceptance
+    candidate = replace(
+        doc,
+        frontmatter=replace(doc.frontmatter, state="clear"),
     )
+    try:
+        map_store._check_map_structure(candidate)
+        map_store._check_v3_clear_acceptance(candidate)
+        map_store._check_tickets(
+            map_dir,
+            state="clear",
+            schema_version=candidate.frontmatter.schema_version,
+        )
+    except (map_store.SchemaViolation, map_store.MapStoreError):
+        return False
+    return True
 
 
 def close_and_rechart(
@@ -339,6 +340,10 @@ def close_and_rechart(
                 "closed source may resume only from an existing prepared journal"
             )
         _validate_authoritative_ticket(ticket, closed=True)
+        if (ticket.resolution or "").strip() != resolution.strip():
+            raise CloseTransactionError(
+                "closed source resolution conflicts with the prepared request"
+            )
     else:
         raise CloseTransactionError("source ticket must be claimed before close")
 
