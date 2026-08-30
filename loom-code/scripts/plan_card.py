@@ -250,7 +250,7 @@ def _parse_dependencies(value: str, number: int, name: str) -> list[int]:
 
 
 def _classify(status: str) -> str | None:
-    """One of the four kinds, or None for a value outside the vocabulary.
+    """One of the five kinds, or None for a value outside the vocabulary.
     Done/claimed carry a mandatory parenthesized payload (`done(<sha>)`,
     `claimed(<who>)` — plan Task 3 pins the `(`-anchored match); blocked
     may carry an optional `(<why>)`."""
@@ -283,7 +283,7 @@ def _parse_tasks(text: str) -> list[tuple[int, str, str, list[int], str | None]]
     """Every task as (number, name, kind, deps, gloss), in file order.
 
     Raises ValueError on a statusless task (old-format plan), a status
-    outside the four kinds, or a Dependencies value outside the grammar
+    outside the five kinds, or a Dependencies value outside the grammar
     — never silently drops or miscounts a task.
     """
     tasks: list[tuple[int, str, str, list[int], str | None]] = []
@@ -749,6 +749,58 @@ def _plan_directory_lock(path: Path):
         os.close(descriptor)
 
 
+def _validate_batch_transition(
+    members: tuple[int, ...],
+    execution_projection_fields: tuple[object, ...],
+    expected_statuses: dict[int, str],
+    replacements: dict[int, str],
+    transition_authority: object,
+) -> bool:
+    """Validate one authorized finalization or owner-union reopen."""
+    member_set = set(members)
+    finalizing = set(replacements) == member_set
+    action = "finalize" if finalizing else "reopen"
+    owners = (
+        tuple(f"Task {number}" for number in members if number in replacements)
+        if action == "reopen"
+        else ()
+    )
+    authority_statuses = tuple(
+        (f"Task {number}", expected_statuses.get(number, ""))
+        for number in members
+    )
+    authority_validator = _transition_authority_validator(transition_authority)
+    if authority_validator is None:
+        return False
+    if not authority_validator(
+        execution_projection_fields=execution_projection_fields,
+        member_statuses=authority_statuses,
+        action=action,
+        reopen_owners=owners,
+    ):
+        return False
+    if set(expected_statuses) != member_set:
+        raise ValueError("expected member set does not equal the validated Batch")
+    if not replacements or not set(replacements).issubset(member_set):
+        raise ValueError("replacement owner set is empty or outside the member set")
+    if any(
+        _IMPLEMENTED_STATUS.fullmatch(status) is None
+        for status in expected_statuses.values()
+    ):
+        raise ValueError(
+            "expected member snapshot must contain exact implemented(<sha>)"
+        )
+    if finalizing:
+        if any(
+            not _same_member_sha(expected_statuses[number], replacements[number])
+            for number in members
+        ):
+            raise ValueError("finalization must preserve every member SHA")
+    elif any(status != "pending" for status in replacements.values()):
+        raise ValueError("an owner-union reopen may replace statuses only with pending")
+    return True
+
+
 def _atomic_batch_status_update_locked(
     plan_path: Path,
     batch_id: str,
@@ -773,52 +825,15 @@ def _atomic_batch_status_update_locked(
             members, execution_projection_fields = _validated_batch_snapshot(text, batch_id)
         except ValueError:
             return False
-        member_set = set(members)
-        finalizing = set(replacements) == member_set
-        action = "finalize" if finalizing else "reopen"
-        owners = tuple(
-            f"Task {number}" for number in members if number in replacements
-        ) if action == "reopen" else ()
-        authority_statuses = tuple(
-            (f"Task {number}", expected_statuses.get(number, ""))
-            for number in members
-        )
-        authority_validator = _transition_authority_validator(transition_authority)
-        if authority_validator is None:
-            return False
-        if not authority_validator(
-            execution_projection_fields=execution_projection_fields,
-            member_statuses=authority_statuses,
-            action=action,
-            reopen_owners=owners,
+        if not _validate_batch_transition(
+            members,
+            execution_projection_fields,
+            expected_statuses,
+            replacements,
+            transition_authority,
         ):
             return False
-        if set(expected_statuses) != member_set:
-            raise ValueError("expected member set does not equal the validated Batch")
-        if not replacements or not set(replacements).issubset(member_set):
-            raise ValueError(
-                "replacement owner set is empty or outside the member set"
-            )
-        if any(
-            _IMPLEMENTED_STATUS.fullmatch(status) is None
-            for status in expected_statuses.values()
-        ):
-            raise ValueError(
-                "expected member snapshot must contain exact implemented(<sha>)"
-            )
-
-        if finalizing:
-            if any(
-                not _same_member_sha(
-                    expected_statuses[number], replacements[number]
-                )
-                for number in members
-            ):
-                raise ValueError("finalization must preserve every member SHA")
-        elif any(status != "pending" for status in replacements.values()):
-            raise ValueError(
-                "an owner-union reopen may replace statuses only with pending"
-            )
+        finalizing = set(replacements) == set(members)
 
         current = _task_statuses(text)
         current_snapshot = {number: current[number] for number in members}

@@ -171,6 +171,81 @@ def corpus_identity(corpus: object) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _validate_result_case(
+    case: dict[str, Any],
+    oracle: dict[str, Any],
+    *,
+    context: str,
+    expected_mode: str,
+) -> None:
+    """Validate one result row against its authorized corpus oracle."""
+    for field in (
+        "review_dispatches",
+        "review_rounds",
+        "elapsed_work_ms",
+        "maximum_aggregate_diff_bytes",
+    ):
+        _count(case[field], f"{context}.{field}")
+    _review_measurement(case, context)
+    fallback_causes = _identifier_list(
+        case["fallback_causes"], f"{context}.fallback_causes"
+    )
+    _identifier_list(
+        case["false_scope_expansions"], f"{context}.false_scope_expansions"
+    )
+    detected = _identifier_list(
+        case["detected_known_defects"], f"{context}.detected_known_defects"
+    )
+    unknown_defects = sorted(set(detected) - set(oracle["known_defects"]))
+    if unknown_defects:
+        _fail(context, f"detected defects are outside the corpus oracle: {unknown_defects}")
+
+    trace = case["requirement_to_tests"]
+    if type(trace) is not dict:
+        _fail(f"{context}.requirement_to_tests", "expected an object")
+    if not all(type(key) is str for key in trace):
+        _fail(f"{context}.requirement_to_tests", "object keys must be strings")
+    if list(trace) != oracle["requirements"]:
+        _fail(
+            f"{context}.requirement_to_tests",
+            "requirement keys and order must exactly match the corpus oracle",
+        )
+    for requirement, tests in trace.items():
+        _identifier(requirement, f"{context}.requirement_to_tests key")
+        _identifier_list(tests, f"{context}.requirement_to_tests.{requirement}")
+
+    gates = case["package_gates"]
+    if type(gates) is not dict:
+        _fail(f"{context}.package_gates", "expected an object")
+    if not all(type(key) is str for key in gates):
+        _fail(f"{context}.package_gates", "object keys must be strings")
+    if list(gates) != oracle["required_package_gates"]:
+        _fail(
+            f"{context}.package_gates",
+            "gate keys and order must exactly match the corpus oracle",
+        )
+    for gate_id, verdict in gates.items():
+        _identifier(gate_id, f"{context}.package_gates key")
+        _choice(verdict, {"PASS", "FAIL"}, f"{context}.package_gates.{gate_id}")
+
+    if expected_mode == "individual" and (
+        case["review_dispatches"] == 0 or case["review_rounds"] == 0
+    ):
+        _fail(context, "baseline requires positive review evidence")
+    if expected_mode == "batch":
+        path = oracle["expected_candidate_path"]
+        if case["review_dispatches"] == 0 or case["review_rounds"] == 0:
+            _fail(context, f"{path} requires positive review evidence")
+        if path == "eligible_batch":
+            if fallback_causes:
+                _fail(context, "eligible Batch evidence cannot contain fallback causes")
+        elif fallback_causes != oracle["expected_fallback_causes"]:
+            _fail(
+                context,
+                "individual fallback causes must exactly match the corpus oracle",
+            )
+
+
 def _validate_result(
     result: object,
     *,
@@ -209,82 +284,9 @@ def _validate_result(
     cases: list[dict[str, Any]] = []
     for index, (case, oracle) in enumerate(zip(result_cases, corpus_cases)):
         context = f"{label}.cases[{index}]"
-        for field in (
-            "review_dispatches",
-            "review_rounds",
-            "elapsed_work_ms",
-            "maximum_aggregate_diff_bytes",
-        ):
-            _count(case[field], f"{context}.{field}")
-        _review_measurement(case, context)
-        fallback_causes = _identifier_list(
-            case["fallback_causes"], f"{context}.fallback_causes"
+        _validate_result_case(
+            case, oracle, context=context, expected_mode=expected_mode
         )
-        _identifier_list(
-            case["false_scope_expansions"],
-            f"{context}.false_scope_expansions",
-        )
-        detected = _identifier_list(
-            case["detected_known_defects"],
-            f"{context}.detected_known_defects",
-        )
-        unknown_defects = sorted(set(detected) - set(oracle["known_defects"]))
-        if unknown_defects:
-            _fail(context, f"detected defects are outside the corpus oracle: {unknown_defects}")
-
-        trace = case["requirement_to_tests"]
-        if type(trace) is not dict:
-            _fail(f"{context}.requirement_to_tests", "expected an object")
-        if not all(type(key) is str for key in trace):
-            _fail(
-                f"{context}.requirement_to_tests",
-                "object keys must be strings",
-            )
-        if list(trace) != oracle["requirements"]:
-            _fail(
-                f"{context}.requirement_to_tests",
-                "requirement keys and order must exactly match the corpus oracle",
-            )
-        for requirement, tests in trace.items():
-            _identifier(requirement, f"{context}.requirement_to_tests key")
-            _identifier_list(tests, f"{context}.requirement_to_tests.{requirement}")
-
-        gates = case["package_gates"]
-        if type(gates) is not dict:
-            _fail(f"{context}.package_gates", "expected an object")
-        if not all(type(key) is str for key in gates):
-            _fail(f"{context}.package_gates", "object keys must be strings")
-        if list(gates) != oracle["required_package_gates"]:
-            _fail(
-                f"{context}.package_gates",
-                "gate keys and order must exactly match the corpus oracle",
-            )
-        for gate_id, verdict in gates.items():
-            _identifier(gate_id, f"{context}.package_gates key")
-            _choice(
-                verdict,
-                {"PASS", "FAIL"},
-                f"{context}.package_gates.{gate_id}",
-            )
-        if expected_mode == "individual" and (
-            case["review_dispatches"] == 0 or case["review_rounds"] == 0
-        ):
-            _fail(context, "baseline requires positive review evidence")
-        if expected_mode == "batch":
-            path = oracle["expected_candidate_path"]
-            if case["review_dispatches"] == 0 or case["review_rounds"] == 0:
-                _fail(context, f"{path} requires positive review evidence")
-            if path == "eligible_batch":
-                if fallback_causes:
-                    _fail(
-                        context,
-                        "eligible Batch evidence cannot contain fallback causes",
-                    )
-            elif fallback_causes != oracle["expected_fallback_causes"]:
-                _fail(
-                    context,
-                    "individual fallback causes must exactly match the corpus oracle",
-                )
         cases.append(case)
     return cases
 

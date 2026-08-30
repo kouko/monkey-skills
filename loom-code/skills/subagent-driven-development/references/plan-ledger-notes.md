@@ -5,7 +5,7 @@ CHK-SKL-010 word cap. It carries the Progress ledger and Decision Log
 maintenance guidance in full — the section itself is the rule; the
 SKILL.md body pointer is the route to it.
 
-## Progress ledger — maintain `Status` per task + resume from it (v0.10.0+; default-on since v0.60.0 — old plans opt-in by presence)
+## Progress ledger — maintain `Status` per task + resume from it
 
 When the plan carries the per-task `Status` field (see `writing-plans/references/plan-format.md` §Progress ledger), the orchestrator **writes it back into the plan as it executes** so the plan becomes a durable, shared progress record:
 

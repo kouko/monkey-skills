@@ -155,9 +155,10 @@ the trigger list; Check 16 judges each task against the `Review-weight` test.
     authored in the second pass after every atomic Task and dependency edge is
     complete. A batched Task names exactly one declared Review Batch.>
 - **Status**: <runtime ledger field, DEFAULT-ON — see §Progress ledger. One of:
-    "pending" | "claimed(@<agent>)" | "done(<sha>)" | "blocked". writing-plans emits
-    "pending" at plan time; an old plan without Status fields behaves exactly as
-    before — fully backward compatible. NOT authoring content beyond the initial
+    "pending" | "claimed(@<agent>)" | "implemented(<sha>)" | "done(<sha>)" |
+    "blocked". writing-plans emits
+    "pending" at plan time. Historical plans lacking the required review
+    disposition are not valid new SDD inputs. NOT authoring content beyond the initial
     "pending"; SDD writes the transitions, the plan-document-reviewer ignores it.>
 - **Gloss**: <one line in the user's conversation language stating
     the task's user-visible effect and why it matters to the goal —
@@ -251,12 +252,13 @@ ledger**. It is **runtime state**, not plan-authoring content: `writing-plans` e
 value (`Status: pending` on every task at plan time — see below), `subagent-driven-development`
 **maintains** it as it executes, and `plan-document-reviewer` **ignores** it.
 
-Vocabulary (exactly these four):
+Vocabulary (exactly these five):
 
 | Value | Meaning | Set by SDD when |
 |---|---|---|
 | `pending` | not started (omission = old-plan opt-in only; new plans write it) | — |
 | `claimed(@<agent>)` | an agent is working it; `<agent>` is the worktree branch name (unique per agent) | the implementer is dispatched |
+| `implemented(<sha>)` | Task-local implementation and mechanical proof passed; `<sha>` is the task's commit, but its required review checkpoint has not finalized | the Task is parked for Batch aggregate review, or before its individual full review |
 | `done(<sha>)` | resolved + committed; `<sha>` is the task's commit | reviewers PASS and the task is committed |
 | `blocked` | stuck (NEEDS_CONTEXT / BLOCKED / 3-round cap) | the task cannot proceed |
 
@@ -269,9 +271,8 @@ Why it earns its place:
   the ledger coordinates *who does what*.
 
 The ledger is DEFAULT-ON: writing-plans emits `Status: pending` on
-every task at plan time. A plan without `Status` fields (written
-before this default) behaves exactly as before — the ledger stays
-opt-in-by-presence for old plans.
+every task at plan time. New SDD intake requires the complete current plan
+schema; it does not infer ledger or review state for historical plans.
 
 Every ledger flip routes through `python3 scripts/plan_card.py
 <plan-path> --set-status "T<N>=<status>"` when `scripts/plan_card.py`
@@ -523,6 +524,7 @@ N/A — no unresolved question: brief left nothing undecided at plan time.
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: "minimum shippable change: `?format=csv` query param to existing report URL (no UI work)"
+- **Review disposition**: individual
 - **Status**: pending
 - **Gloss**: The report URL starts understanding a CSV request — until it does, no export can be asked for at all.
 
@@ -540,6 +542,7 @@ N/A — no unresolved question: brief left nothing undecided at plan time.
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: "minimum shippable change: CSV output that downstream pipeline can ingest"
+- **Review disposition**: individual
 - **Status**: pending
 - **Gloss**: Report data turns into a spreadsheet-ready file other tools can ingest — the thing the export exists to hand over.
 
@@ -560,8 +563,11 @@ N/A — no unresolved question: brief left nothing undecided at plan time.
   - from Task 2: payload: CSV string; owner: Task 2; probe: `reports.test.ts > GET /reports/:id?format=csv returns text/csv body matching renderer output`
 - **Independent**: false  # touches files Task 1 also touches; must run after Task 1
 - **Brief item covered**: "minimum shippable change: end-to-end CSV download path"
+- **Review disposition**: individual
 - **Status**: pending
 - **Gloss**: Asking for CSV now actually downloads one — the moment the goal's export works end to end for a user.
+
+## Review Batches
 
 ## Notes
 

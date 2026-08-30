@@ -1062,6 +1062,42 @@ def _finding_attributable(
     return False
 
 
+def _classify_findings(
+    ordered: tuple[ReviewerTerminalResult, ...],
+    packet: ReviewPacket,
+) -> tuple[list[BlockingFinding], bool, bool]:
+    """Classify result findings while preserving their authority checks."""
+    finding_ids: set[str] = set()
+    blocking: list[BlockingFinding] = []
+    unassignable = False
+    unsafe_provenance = False
+    for result in ordered:
+        for finding in result.findings:
+            if not _complete_instance(finding, BlockingFinding):
+                unassignable = True
+                unsafe_provenance = True
+                continue
+            if type(finding.owners) is not tuple:
+                unsafe_provenance = True
+            if finding.finding_id in finding_ids:
+                unassignable = True
+            finding_ids.add(finding.finding_id)
+            if not _finding_attributable(finding, packet=packet, result=result):
+                unassignable = True
+                unsafe_provenance = True
+            elif finding.blocking:
+                blocking.append(finding)
+        has_blocking = any(
+            _complete_instance(finding, BlockingFinding) and finding.blocking
+            for finding in result.findings
+        )
+        if result.verdict == "NEEDS_REVISION" and not has_blocking:
+            unassignable = True
+        if result.verdict != "NEEDS_REVISION" and has_blocking:
+            unassignable = True
+    return blocking, unassignable, unsafe_provenance
+
+
 def resolve_aggregate_review(
     *,
     packet: object,
@@ -1123,36 +1159,9 @@ def resolve_aggregate_review(
     ):
         return _resolution("wait_refuse", reasons=("ambiguous_result_identity",))
 
-    finding_ids: set[str] = set()
-    blocking: list[BlockingFinding] = []
-    unassignable = False
-    unsafe_provenance = False
-    for result in ordered:
-        for finding in result.findings:
-            if not _complete_instance(finding, BlockingFinding):
-                unassignable = True
-                unsafe_provenance = True
-                continue
-            if type(finding.owners) is not tuple:
-                unsafe_provenance = True
-            if finding.finding_id in finding_ids:
-                unassignable = True
-            finding_ids.add(finding.finding_id)
-            if not _finding_attributable(finding, packet=packet, result=result):
-                unassignable = True
-                unsafe_provenance = True
-            elif finding.blocking:
-                blocking.append(finding)
-        if result.verdict == "NEEDS_REVISION" and not any(
-            _complete_instance(finding, BlockingFinding) and finding.blocking
-            for finding in result.findings
-        ):
-            unassignable = True
-        if result.verdict != "NEEDS_REVISION" and any(
-            _complete_instance(finding, BlockingFinding) and finding.blocking
-            for finding in result.findings
-        ):
-            unassignable = True
+    blocking, unassignable, unsafe_provenance = _classify_findings(
+        ordered, packet
+    )
 
     if unassignable:
         return _resolution(

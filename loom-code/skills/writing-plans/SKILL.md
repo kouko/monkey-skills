@@ -28,9 +28,11 @@ brainstorming → brief (docs/loom/specs/<topic>.md)
               plan + plan-document-reviewer self-review
                   ↓ (PASS) → kickoff briefing (one-way-door decisions)
               subagent-driven-development
-                  ↓ (per task: implementer → spec-reviewer + code-quality-reviewer)
-              tdd-iron-law (inside each implementer)
                   ↓
+              per-Task implementation (tdd-iron-law + mechanical proof)
+                  ↓
+              derived review checkpoint
+                  ↓ (eligible Batch: one aggregate review; otherwise individual review)
               finishing-a-development-branch (Phase 3)
 ```
 

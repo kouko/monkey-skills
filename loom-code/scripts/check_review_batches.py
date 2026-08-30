@@ -16,8 +16,9 @@ owns the ID):
     - **Boundary**: capability: <name>; exclusions: none; consumable: yes
 
 The boundary suffix is deliberately closed. Anything other than ``none`` and
-``yes`` fails back to individual review instead of asking this structural
-oracle to infer eligibility from prose. The script stores no Batch state.
+``yes`` is rejected; writing-plans must emit an individual disposition instead
+of asking this structural oracle to infer eligibility from prose. The script
+stores no Batch state.
 """
 
 from __future__ import annotations
