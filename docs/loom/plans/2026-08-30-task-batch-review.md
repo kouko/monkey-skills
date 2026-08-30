@@ -86,7 +86,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-101
 - **Brief item covered**: REQ-102
 - **Brief item covered**: BI-1, BI-2, BI-6, BI-7
-- **Status**: pending
+- **Status**: done(8a95fc48)
 - **Gloss**: 規劃仍先拆原子 Task，再於同一流程做第二輪分組。
 
 ## Task 3 — Add implemented state and Batch-aware readiness
