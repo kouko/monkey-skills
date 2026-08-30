@@ -479,6 +479,10 @@ def _before_atomic_exchange(path: Path, temporary: Path) -> None:
     """Test seam immediately before the atomic pathname exchange."""
 
 
+def _before_atomic_restore(path: Path, temporary: Path) -> None:
+    """Test seam after mismatch detection and before the restore exchange."""
+
+
 def _exchange_paths(first: Path, second: Path) -> None:
     """Atomically exchange two existing same-filesystem pathnames."""
     libc = ctypes.CDLL(None, use_errno=True)
@@ -530,13 +534,18 @@ def _fsync_directory(directory: Path) -> None:
 
 
 def _record_exchange_recovery(
-    path: Path, temporary: Path, restore_error: BaseException
+    path: Path,
+    temporary: Path,
+    restore_error: BaseException,
+    *,
+    retained_role: str,
 ) -> Path:
     evidence_path = path.parent / f".{path.name}.cas-recovery.json"
     evidence = {
         "action": "recovery-required",
         "candidate_path": str(path),
-        "displaced_path": str(temporary),
+        "retained_path": str(temporary),
+        "retained_role": retained_role,
         "restore_error": str(restore_error),
         "status": "BROKEN",
     }
@@ -544,7 +553,12 @@ def _record_exchange_recovery(
     descriptor = os.open(evidence_path, flags, 0o600)
     try:
         payload = (json.dumps(evidence, indent=2, sort_keys=True) + "\n").encode()
-        os.write(descriptor, payload)
+        remaining = memoryview(payload)
+        while remaining:
+            written = os.write(descriptor, remaining)
+            if written == 0:
+                raise OSError("short write while recording CAS recovery evidence")
+            remaining = remaining[written:]
         os.fsync(descriptor)
     finally:
         os.close(descriptor)
@@ -589,6 +603,8 @@ def _atomic_write(
             temporary.unlink()
             _fsync_directory(path.parent)
             return
+        candidate = text.encode("utf-8")
+        _before_atomic_restore(path, temporary)
         try:
             _exchange_paths(temporary, path)
         except BaseException as restore_error:
@@ -597,18 +613,75 @@ def _atomic_write(
             evidence_path: Path | None = None
             try:
                 evidence_path = _record_exchange_recovery(
-                    path, temporary, restore_error
+                    path,
+                    temporary,
+                    restore_error,
+                    retained_role="pre-first-exchange concurrent version",
                 )
             except BaseException as exc:
                 evidence_error = exc
             detail = (
                 f"evidence: {evidence_path}"
                 if evidence_path is not None
-                else f"recovery evidence unavailable: {evidence_error}"
+                else f"retained temp: {temporary}; recovery evidence unavailable: "
+                f"{evidence_error}"
             )
             raise AtomicExchangeBroken(
                 "BROKEN recovery-required: atomic CAS restore failed; " + detail
             ) from restore_error
+        restore_displaced = temporary.read_bytes()
+        if restore_displaced != candidate:
+            try:
+                _exchange_paths(temporary, path)
+            except BaseException as third_exchange_error:
+                keep_temporary = True
+                evidence_error: BaseException | None = None
+                evidence_path: Path | None = None
+                try:
+                    evidence_path = _record_exchange_recovery(
+                        path,
+                        temporary,
+                        third_exchange_error,
+                        retained_role="newest concurrent version; restore incomplete",
+                    )
+                except BaseException as exc:
+                    evidence_error = exc
+                detail = (
+                    f"evidence: {evidence_path}"
+                    if evidence_path is not None
+                    else f"retained temp: {temporary}; recovery evidence unavailable: "
+                    f"{evidence_error}"
+                )
+                raise AtomicExchangeBroken(
+                    "BROKEN recovery-required: newest concurrent version could "
+                    "not be returned to target; "
+                    + detail
+                ) from third_exchange_error
+            keep_temporary = True
+            evidence_error = None
+            evidence_path = None
+            interleaving = RuntimeError(
+                "target changed again between mismatch detection and restore"
+            )
+            try:
+                evidence_path = _record_exchange_recovery(
+                    path,
+                    temporary,
+                    interleaving,
+                    retained_role="pre-first-exchange concurrent version",
+                )
+            except BaseException as exc:
+                evidence_error = exc
+            detail = (
+                f"evidence: {evidence_path}"
+                if evidence_path is not None
+                else f"retained temp: {temporary}; recovery evidence unavailable: "
+                f"{evidence_error}"
+            )
+            raise AtomicExchangeBroken(
+                "BROKEN recovery-required: target changed during CAS restore; "
+                + detail
+            ) from interleaving
         temporary.unlink()
         _fsync_directory(path.parent)
         raise SchemaViolation(

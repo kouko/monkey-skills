@@ -9,6 +9,7 @@ relies on.
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -795,6 +796,98 @@ def test_atomic_exchange_cas_refuses_unsupported_platform_without_replace(
 
     assert target.read_bytes() == b"original\n"
     assert not list(tmp_path.glob(".MAP.md.*"))
+
+
+def test_atomic_exchange_restore_preserves_newest_concurrent_replacement(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # @req: REQ-97
+    # @req: REQ-98
+    target = tmp_path / "ticket.md"
+    target.write_bytes(b"expected-E\n")
+
+    def install_b_before_first_exchange(path: Path, temporary: Path) -> None:
+        replacement = tmp_path / "B.md"
+        replacement.write_bytes(b"concurrent-B\n")
+        replacement.replace(path)
+
+    def install_c_before_restore(path: Path, temporary: Path) -> None:
+        replacement = tmp_path / "C.md"
+        replacement.write_bytes(b"newest-C\n")
+        replacement.replace(path)
+
+    monkeypatch.setattr(
+        map_store, "_before_atomic_exchange", install_b_before_first_exchange
+    )
+    monkeypatch.setattr(
+        map_store, "_before_atomic_restore", install_c_before_restore
+    )
+
+    try:
+        map_store._atomic_write(
+            target, "candidate-A\n", expected=b"expected-E\n"
+        )
+    except map_store.AtomicExchangeBroken as exc:
+        assert "BROKEN" in str(exc)
+        assert "recovery-required" in str(exc)
+    else:
+        raise AssertionError("restore race was reported as an ordinary mismatch")
+
+    assert target.read_bytes() == b"newest-C\n"
+    evidence_path = tmp_path / ".ticket.md.cas-recovery.json"
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    retained = Path(evidence["retained_path"])
+    assert retained.read_bytes() == b"concurrent-B\n"
+    assert evidence["retained_role"] == "pre-first-exchange concurrent version"
+
+
+def test_atomic_exchange_third_swap_failure_retains_newest_recovery_bytes(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # @req: REQ-97
+    # @req: REQ-98
+    target = tmp_path / "ticket.md"
+    target.write_bytes(b"expected-E\n")
+
+    def install_b(path: Path, temporary: Path) -> None:
+        replacement = tmp_path / "B.md"
+        replacement.write_bytes(b"concurrent-B\n")
+        replacement.replace(path)
+
+    def install_c(path: Path, temporary: Path) -> None:
+        replacement = tmp_path / "C.md"
+        replacement.write_bytes(b"newest-C\n")
+        replacement.replace(path)
+
+    real_exchange = map_store._exchange_paths
+    exchange_count = 0
+
+    def fail_third(first: Path, second: Path) -> None:
+        nonlocal exchange_count
+        exchange_count += 1
+        if exchange_count == 3:
+            raise OSError("simulated third-exchange failure")
+        real_exchange(first, second)
+
+    monkeypatch.setattr(map_store, "_before_atomic_exchange", install_b)
+    monkeypatch.setattr(map_store, "_before_atomic_restore", install_c)
+    monkeypatch.setattr(map_store, "_exchange_paths", fail_third)
+    try:
+        map_store._atomic_write(
+            target, "candidate-A\n", expected=b"expected-E\n"
+        )
+    except map_store.AtomicExchangeBroken as exc:
+        assert "newest concurrent version" in str(exc)
+    else:
+        raise AssertionError("third-exchange failure was reported as success")
+
+    assert target.read_bytes() == b"concurrent-B\n"
+    evidence = json.loads(
+        (tmp_path / ".ticket.md.cas-recovery.json").read_text(encoding="utf-8")
+    )
+    retained = Path(evidence["retained_path"])
+    assert retained.read_bytes() == b"newest-C\n"
+    assert evidence["retained_role"] == "newest concurrent version; restore incomplete"
 
 
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
