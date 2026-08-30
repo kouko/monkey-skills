@@ -55,9 +55,14 @@ The system MUST require every Review Batch to declare its identity, members, sha
 - THEN validation fails with an actionable reason and no reviewer is dispatched
 
 #### Scenario: Batch fields are untrusted data
-- GIVEN a Batch field contains control characters, executable instructions, an unsafe path, or an identifier that cannot be parsed without ambiguity
+- GIVEN a structural Batch field contains control characters, executable instructions, an unsafe path, or an identifier that cannot be parsed without ambiguity
 - WHEN the declaration is validated
 - THEN validation treats the value only as data, executes none of it, makes no normalization guess, and rejects the declaration with a field-specific diagnostic
+
+#### Scenario: Aggregate verification is an inert requirement
+- GIVEN Aggregate verification describes a reproducible check and may contain command-shaped prose
+- WHEN the declaration is validated or later consumed by SDD
+- THEN the value remains opaque data, is never executed as plan text, and SDD resolves the actual test command through its existing declared-first verification contract
 
 #### Scenario: Validated declaration amendment requires revalidation
 - GIVEN a Batch declaration has passed plan validation
@@ -175,6 +180,21 @@ The system MUST bind each Batch review to one immutable Packet containing the ex
 - GIVEN a Packet's member SHA and bytes still match but that member no longer has the corresponding `implemented(<sha>)` status
 - WHEN dispatch or verdict reuse is attempted
 - THEN the Packet is ineligible for review or reuse until current readiness is proven again
+
+#### Scenario: Trusted aggregate command cannot be resolved or proven
+- GIVEN Aggregate verification remains inert plan data
+- WHEN SDD cannot uniquely resolve an applicable command through the existing declared-first contract, command execution fails, or the evidence does not satisfy the declared aggregate requirement
+- THEN SDD executes no plan text, materializes no Packet, dispatches no reviewer, changes no Task status, and reports the failure through the existing verification recovery path
+
+#### Scenario: Packet identity binds resolved aggregate verification
+- GIVEN SDD resolves and executes the trusted aggregate verification command
+- WHEN the Packet and its evidence identity are materialized
+- THEN identity includes the resolution source, unambiguous command arguments, execution scope, and result, and any drift makes the Packet and prior verdict stale
+
+#### Scenario: Verification identity persists no secret material
+- GIVEN resolved command arguments or resolution context contains a secret, expanded credential, or credential path that cannot be persisted safely
+- WHEN Packet identity is materialized
+- THEN SDD stores no secret-bearing value, performs no redaction or equivalence guess, and fails closed without creating or reusing a Batch Packet
 
 ### Requirement: REQ-106 — One full reviewer fan-out per eligible Batch
 The system MUST dispatch the applicable full-review arms once for an exact eligible Batch Packet instead of once per member Task.

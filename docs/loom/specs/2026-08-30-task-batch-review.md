@@ -72,6 +72,8 @@ Build Review Batch as a derived checkpoint, not as a larger Task or a second wor
 - BI-8 — Same-Batch dependencies may consume `implemented`; cross-Batch dependencies require `done`.
 - BI-9 — Failed Batch findings reopen only attributable members while unchanged members remain `implemented`; changed aggregate bytes require a fresh Batch packet.
 
+`Aggregate verification` is an inert description of the required Batch check, not a shell program. Plan validation never executes it; SDD resolves the runnable test command independently through the existing declared-first verification contract.
+
 ## Out of Scope
 
 - Merging requirements, tests, or Tasks into larger implementation units.

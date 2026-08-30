@@ -55,6 +55,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Acceptance**:
   - **RED**: `loom-code/scripts/test_check_review_batches.py::test_plan_contract_matrix` fails because no parser rejects incomplete DAGs, cycles, duplicate membership, dangling dispositions, missing fields, or invalid eligibility.
   - **GREEN**: The table-driven test passes, the documented command runs successfully, and each Task has exactly one Batch-or-individual disposition while each accepted Batch has all six fields.
+    - Aggregate verification accepts inert command-shaped prose without executing it; executable instructions in structural fields and every unsafe path still fail closed.
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: REQ-99
@@ -120,7 +121,9 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
   - `loom-code/scripts/check_review_batches.py`
 - **Acceptance**:
   - **RED**: `loom-code/scripts/test_review_batch.py::test_packet_readiness_and_immutability_matrix` fails because no helper refuses unready members, undeclared scope, authority drift, partial publication, or packet mutation.
-  - **GREEN**: The matrix passes and packet identity changes whenever any member SHA, scope, ownership, lane, verification, or validated Batch declaration changes; `implemented(<sha>)` is required for every packet member.
+  - **GREEN**: The matrix passes and packet identity changes whenever any authoritative input changes; `implemented(<sha>)` is required for every packet member.
+    - Identity binds trusted resolution source, unambiguous arguments, execution scope, and result; any drift invalidates the Packet.
+    - Secret-bearing arguments or context create no Packet and trigger no redaction, hashing, or equivalence guess.
 - **Dependencies**: Task 2 completes first
 - **Seam**:
   - from Task 2: payload: validated Batch membership; owner: Task 2; probe: `implemented(<sha>)` is required for every packet member
@@ -162,7 +165,10 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
   - `loom-code/scripts/plan_card.py`
 - **Acceptance**:
   - **RED**: `loom-code/scripts/test_subagent_driven_development_batch_review.py::test_batch_dispatch_and_fallback_contract` fails because SDD still launches a full reviewer fan-out for every non-mechanical Task.
-  - **GREEN**: The test passes and pins `one fan-out per ready Batch`, lane-specific arms, fresh packets after repair, individual fallback, `implemented(<sha>)` is required before Batch dispatch, `unassignable finding selects individual review without ledger mutation`, and SDD-only ledger mutation.
+  - **GREEN**: The test passes and pins one fan-out per ready Batch, lane-specific arms, fresh packets after repair, individual fallback, and SDD-only ledger mutation.
+    - SDD resolves the runnable command through declared-first verification and never executes Aggregate verification plan text.
+    - Resolution, execution, evidence, or safe-identity failure creates no Packet, reviewer dispatch, or status mutation and uses the existing verification recovery path.
+    - `implemented(<sha>)` is required before Batch dispatch; `unassignable finding selects individual review without ledger mutation`.
 - **Dependencies**: Tasks 3, 5 complete first
 - **Seam**:
   - from Task 3: payload: implemented/readiness/atomic ledger verbs; owner: Task 3; probe: `implemented(<sha>)` is required before Batch dispatch
@@ -249,6 +255,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - 2026-08-30 — Omit legacy-plan compatibility per the user's latest decision; historical plans are not execution inputs.
 - 2026-08-30 — Centralize runtime Batch predicates in one pure helper and keep `plan_card.py` as the only ledger writer to avoid a second state system.
 - 2026-08-30 — T1 package gate discovered two repository-owned integration surfaces: classify the new checker and regenerate the living-spec index; remove the redundant `CLAUDE.md` command copy because `AGENTS.md` is the existing command SSOT.
+- 2026-08-30 — User chose inert aggregate verification: the plan field describes the required check, while SDD resolves and runs the trusted command through its existing declared-first contract; the validator never becomes a shell parser.
 
 ## Notes
 
