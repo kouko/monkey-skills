@@ -235,6 +235,18 @@ def test_v3_ticket_statuses_and_withdrawal_contract(tmp_path: Path) -> None:
 
     _write(
         ticket_path,
+        withdrawn.replace(
+            "graduated-from: null",
+            "graduated-from: null\nphase: review",
+        ),
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "phase" in message
+    assert "derived" in message.lower()
+
+    _write(
+        ticket_path,
         withdrawn.replace("reason: replaced by narrower work", "reason: "),
     )
     code, message = map_store.validate(map_dir, repo_root=tmp_path)

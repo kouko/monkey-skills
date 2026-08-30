@@ -40,12 +40,15 @@ HITL_TICKET_TYPES = {"grilling", "prototype"}
 RATIFIED_MAP_STATES = {"active", "clear"}
 V2_TICKET_STATUSES = {"open", "claimed", "closed"}
 V3_TICKET_STATUSES = {"open", "claimed", "closed", "withdrawn"}
-V3_FORBIDDEN_PHASE_FIELDS = {
-    "delivery-phase",
-    "brief-phase",
-    "plan-phase",
-    "pr-phase",
-    "ci-phase",
+V3_TICKET_FRONTMATTER_FIELDS = {
+    "type",
+    "status",
+    "claim",
+    "graduated-from",
+    "blocked-by",
+    "ratification",
+    "withdrawn-from",
+    "brief",
 }
 
 
@@ -536,13 +539,14 @@ def _check_v3_ticket_withdrawal(ticket: TicketDocument) -> None:
         )
 
 
-def _check_v3_ticket_derived_phases(ticket: TicketDocument) -> None:
-    """Reject persisted workflow phases; delivery artifacts derive them."""
-    persisted = sorted(ticket.frontmatter_keys & V3_FORBIDDEN_PHASE_FIELDS)
-    if persisted:
+def _check_v3_ticket_frontmatter(ticket: TicketDocument) -> None:
+    """Keep v3 progress derived from artifacts, not ticket fields."""
+    unknown = sorted(ticket.frontmatter_keys - V3_TICKET_FRONTMATTER_FIELDS)
+    if unknown:
         raise SchemaViolation(
-            f"{ticket.path}: v3 ticket must not persist workflow phase field(s) "
-            f"{', '.join(persisted)}; phases are derived from owning artifacts"
+            f"{ticket.path}: v3 ticket has unsupported frontmatter field(s) "
+            f"{', '.join(unknown)}; persisted progress is derived from owning "
+            "artifacts, not ticket fields"
         )
 
 
@@ -617,7 +621,7 @@ def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
                 f"not one of {sorted(valid_ticket_statuses)}"
             )
         if schema_version == 3:
-            _check_v3_ticket_derived_phases(ticket)
+            _check_v3_ticket_frontmatter(ticket)
         if schema_version == 3 and ticket.frontmatter.status == "closed":
             _check_v3_ticket_closure_evidence(ticket)
         if schema_version == 3 and ticket.frontmatter.status == "withdrawn":
