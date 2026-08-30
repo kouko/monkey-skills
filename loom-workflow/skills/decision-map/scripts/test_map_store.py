@@ -72,8 +72,14 @@ delivery-evidence: commit 0123456
 
 def _make_conformant_map(tmp_path: Path) -> Path:
     map_dir = tmp_path / "docs" / "loom" / "maps" / "wayfinder"
-    _write(map_dir / "MAP.md", MAP_MD_CONFORMANT)
-    _write(map_dir / "tickets" / "decision-a.md", TICKET_CLOSED)
+    _write(
+        map_dir / "MAP.md",
+        MAP_MD_CONFORMANT.replace("schema_version: 2", "schema_version: 3"),
+    )
+    _write(
+        map_dir / "tickets" / "decision-a.md",
+        TICKET_CLOSED.replace("type: task", "type: delivery"),
+    )
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
     return map_dir
 
@@ -81,8 +87,25 @@ def _make_conformant_map(tmp_path: Path) -> Path:
 # --- RED acceptance test -------------------------------------------------
 
 
-def test_validate_requires_schema_v2_without_parts(tmp_path: Path) -> None:
-    """Only v2 maps without a Parts section are accepted; v1 maps must
+def test_validate_rejects_schema_v2_with_migration_guidance(tmp_path: Path) -> None:
+    # @req: REQ-85
+    """V2 is readable by migration tooling but not a valid live Map."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_path = map_dir / "MAP.md"
+    _write(
+        map_path,
+        map_path.read_text(encoding="utf-8").replace(
+            "schema_version: 3", "schema_version: 2"
+        ),
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "migrat" in message.lower()
+    assert "3" in message
+
+
+def test_validate_requires_schema_v3_without_parts(tmp_path: Path) -> None:
+    """Only v3 maps without a Parts section are accepted; v1 maps must
     fail loudly with migration guidance, and the parser exposes no Parts
     state to consumers."""
     map_dir = _make_conformant_map(tmp_path)
@@ -94,7 +117,7 @@ def test_validate_requires_schema_v2_without_parts(tmp_path: Path) -> None:
     map_md = map_dir / "MAP.md"
     map_md.write_text(
         map_md.read_text(encoding="utf-8").replace(
-            "schema_version: 2", "schema_version: 1"
+            "schema_version: 3", "schema_version: 1"
         ),
         encoding="utf-8",
     )
@@ -290,7 +313,7 @@ def test_v3_ticket_statuses_and_withdrawal_contract(tmp_path: Path) -> None:
     _write(ticket_path, withdrawn.replace("type: delivery", "type: task"))
     code, message = map_store.validate(map_dir, repo_root=tmp_path)
     assert code == 2
-    assert "withdrawn" in message
+    assert "migrat" in message.lower()
 
 
 def test_clear_requires_terminal_tickets_empty_fog_and_satisfied_da(
@@ -395,6 +418,7 @@ reason: replaced by narrower work
     v2_map_md = v2_map_dir / "MAP.md"
     v2_map_md.write_text(
         v2_map_md.read_text(encoding="utf-8")
+        .replace("schema_version: 3", "schema_version: 2")
         .replace("state: charting", "state: clear")
         .replace(
             "Chart the decision-map layer.",
@@ -404,7 +428,8 @@ reason: replaced by narrower work
         encoding="utf-8",
     )
     code, message = map_store.validate(v2_map_dir, repo_root=tmp_path)
-    assert code == 0, message
+    assert code == 2
+    assert "migrat" in message.lower()
 
 
 def _make_v3_active_map(tmp_path: Path) -> Path:
@@ -988,7 +1013,7 @@ def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
     map_md = map_dir / "MAP.md"
     map_md.write_text(
         map_md.read_text(encoding="utf-8").replace(
-            "schema_version: 2", "schema_version: 999"
+            "schema_version: 3", "schema_version: 999"
         ),
         encoding="utf-8",
     )
@@ -1016,7 +1041,9 @@ def test_closed_task_requires_resolution_and_delivery_evidence(
     ticket_path = map_dir / "tickets" / "decision-a.md"
 
     def ticket_with_resolution(resolution: str | None) -> str:
-        ticket_without_resolution = TICKET_CLOSED.split("## Resolution", 1)[0]
+        ticket_without_resolution = TICKET_CLOSED.replace(
+            "type: task", "type: delivery"
+        ).split("## Resolution", 1)[0]
         if resolution is None:
             return ticket_without_resolution
         return ticket_without_resolution + "## Resolution\n\n" + resolution + "\n"
@@ -1053,7 +1080,7 @@ def test_read_map_parses_frontmatter_and_sections(tmp_path: Path) -> None:
     map_dir = _make_conformant_map(tmp_path)
     doc = map_store.read_map(map_dir)
     assert doc.frontmatter.map_id == "wayfinder"
-    assert doc.frontmatter.schema_version == 2
+    assert doc.frontmatter.schema_version == 3
     assert doc.frontmatter.state == "charting"
     assert "Chart the decision-map layer." in doc.sections["Destination"]
 
@@ -1085,7 +1112,7 @@ def test_read_map_parses_decisions_last_parenthesized_token(
 def test_read_ticket_parses_frontmatter_and_resolution(tmp_path: Path) -> None:
     map_dir = _make_conformant_map(tmp_path)
     ticket = map_store.read_ticket(map_dir / "tickets" / "decision-a.md")
-    assert ticket.frontmatter.type == "task"
+    assert ticket.frontmatter.type == "delivery"
     assert ticket.frontmatter.status == "closed"
     assert ticket.frontmatter.claim is None
     assert ticket.frontmatter.graduated_from is None
@@ -1099,7 +1126,7 @@ def test_resolve_schema_version_walks_up_from_ticket_path(
     version = map_store.resolve_schema_version(
         map_dir / "tickets" / "decision-a.md"
     )
-    assert version == 2
+    assert version == 3
 
 
 # --- validate: structural violations --------------------------------------
@@ -1289,8 +1316,8 @@ def test_blocked_by_documented_grammar(tmp_path: Path) -> None:
     deferred ratification — both optional, both parsed; absent fields
     behave exactly as today (no blockers / no pending ratification)."""
     map_dir = _make_conformant_map(tmp_path)
-    _write(map_dir / "tickets" / "decision-b.md", TICKET_OPEN_B)
-    _write(map_dir / "tickets" / "blocked.md", TICKET_BLOCKED)
+    _write(map_dir / "tickets" / "decision-b.md", TICKET_OPEN_B.replace("type: task", "type: delivery"))
+    _write(map_dir / "tickets" / "blocked.md", TICKET_BLOCKED.replace("type: task", "type: delivery"))
     ticket = map_store.read_ticket(map_dir / "tickets" / "blocked.md")
     assert ticket.frontmatter.blocked_by == ["decision-a", "decision-b"]
     assert ticket.frontmatter.ratification == "pending"
@@ -1309,7 +1336,7 @@ def test_validate_rejects_dangling_blocked_by_slug(tmp_path: Path) -> None:
     map_dir = _make_conformant_map(tmp_path)
     _write(
         map_dir / "tickets" / "blocked.md",
-        TICKET_BLOCKED.replace(
+            TICKET_BLOCKED.replace("type: task", "type: delivery").replace(
             "blocked-by: decision-a, decision-b",
             "blocked-by: decision-a, no-such-ticket",
         ),
@@ -1326,14 +1353,14 @@ def test_validate_rejects_blocked_by_cycle(tmp_path: Path) -> None:
     map_dir = _make_conformant_map(tmp_path)
     _write(
         map_dir / "tickets" / "ring-a.md",
-        TICKET_OPEN_B.replace(
+            TICKET_OPEN_B.replace("type: task", "type: delivery").replace(
             "graduated-from: null",
             "graduated-from: null\nblocked-by: ring-b",
         ),
     )
     _write(
         map_dir / "tickets" / "ring-b.md",
-        TICKET_OPEN_B.replace(
+            TICKET_OPEN_B.replace("type: task", "type: delivery").replace(
             "graduated-from: null",
             "graduated-from: null\nblocked-by: ring-a",
         ),
@@ -1399,7 +1426,9 @@ def test_validate_accepts_closed_hitl_ticket_with_user_ratified(
             "type: grilling", "type: prototype"
         ).replace(
             "Decided: hooks first.",
-            "Decided: hooks first.\n\nuser-ratified: kouko, 2026-08-29",
+            "candidate-artifact: docs/loom/prototypes/hooks.md\n"
+            "evaluation: selected by kouko\n"
+            "user-ratified: kouko, 2026-08-29",
         ),
     )
     code, message = map_store.validate(map_dir, repo_root=tmp_path)
@@ -1464,7 +1493,8 @@ def test_clear_rejects_non_closed_tickets_and_fog(tmp_path: Path) -> None:
         .replace("state: charting", "state: clear")
         .replace(
             "Chart the decision-map layer.",
-            "Chart the decision-map layer.\n\nuser-ratified: kouko, 2026-08-29",
+            "Chart the decision-map layer.\n\nuser-ratified: kouko, 2026-08-29\n\n"
+            "acceptance: parser remains stdlib-only | satisfied | docs/loom/results/probe.md",
         )
     )
 
@@ -1478,7 +1508,9 @@ def test_clear_rejects_non_closed_tickets_and_fog(tmp_path: Path) -> None:
     for status in ("open", "claimed"):
         _write(
             map_dir / "tickets" / f"{status}.md",
-            TICKET_CLOSED.replace("status: closed", f"status: {status}"),
+            TICKET_CLOSED.replace("type: task", "type: delivery").replace(
+                "status: closed", f"status: {status}"
+            ),
         )
         code, message = map_store.validate(map_dir, repo_root=tmp_path)
         assert code == 2
@@ -1535,7 +1567,7 @@ def test_cli_validate_exits_2_on_future_schema_version(tmp_path: Path) -> None:
     map_md = map_dir / "MAP.md"
     map_md.write_text(
         map_md.read_text(encoding="utf-8").replace(
-            "schema_version: 2", "schema_version: 999"
+            "schema_version: 3", "schema_version: 999"
         ),
         encoding="utf-8",
     )

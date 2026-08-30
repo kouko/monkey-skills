@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/outcome-map-v3
 Goal: ship the full Outcome Map v3 mechanism so one Map controls many outcome-advancing delivery arcs without duplicating their progress — serves map family-relocation: turns its mixed task/prototype records into closure-exclusive tickets and canonical delivery arcs
-Stage: implementation batch A: history and mutation boundaries
+Stage: batch B verification and review
 **Total tasks**: 26
 **Critical-path depth**: 5 (≤5 ✓)
 **Execution order**: sequential
@@ -371,7 +371,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 11: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-91`
-- **Status**: pending
+- **Status**: done(pending-batch-b-commit)
 - **Gloss**: schema v2 升級可以先看結果，來源變動或重跑都不會破壞歷史。
 
 ## Task 18 — Enforce monotonic fog DA and gist relations
@@ -409,7 +409,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 3: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-93`
-- **Status**: claimed(@codex)
+- **Status**: done(0d656967361c03a77a9f4962c18909298273ee31)
 - **Gloss**: 尚未定形與已成歷史的資料都有清楚不可越過的邊界。
 
 ## Task 20 — Strengthen blocker graph and claim guards
@@ -447,7 +447,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 12: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-95`
-- **Status**: claimed(@codex)
+- **Status**: done(0d656967361c03a77a9f4962c18909298273ee31)
 - **Gloss**: 封存不會搬動路徑或切斷 delivery 歷史。
 
 ## Task 22 — Validate authored delivery closure policy
@@ -487,7 +487,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 3: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-97`
-- **Status**: claimed(@codex)
+- **Status**: done(0d656967361c03a77a9f4962c18909298273ee31)
 - **Gloss**: 舊 claim 可安全接手，但不會搶走仍在進行的工作。
 
 ## Task 24 — Gate retirement on one valid stable snapshot
@@ -506,14 +506,14 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 10: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-98`
-- **Status**: claimed(@codex)
+- **Status**: done(0d656967361c03a77a9f4962c18909298273ee31)
 - **Gloss**: 地圖不會在修復一半時被封存成永久壞歷史。
 
 ## Task 25 — Migrate the family-relocation dogfood Map
 
 - **Description**: Implement migrate the family-relocation dogfood map at the named module boundary, preserving existing behavior outside schema-v3 inputs.
 - **Module**: `family-relocation v3 fixture`
-- **Files touched**: `docs/loom/maps/family-relocation/MAP.md`, `docs/loom/maps/family-relocation/tickets/grilling-first-cut.md`, `docs/loom/maps/family-relocation/tickets/research-plugin-root-primitives.md`, `docs/loom/maps/family-relocation/tickets/feasibility-cross-plugin-store-access.md`, `docs/loom/maps/family-relocation/tickets/task-inventory-consumers.md`, `docs/loom/maps/family-relocation/tickets/task-relocate-family-hooks.md`
+- **Files touched**: `docs/loom/maps/family-relocation/MAP.md`, `docs/loom/maps/family-relocation/tickets/grilling-first-cut.md`, `docs/loom/maps/family-relocation/tickets/research-plugin-root-primitives.md`, `docs/loom/maps/family-relocation/tickets/feasibility-cross-plugin-store-access.md`, `docs/loom/maps/family-relocation/tickets/task-inventory-consumers.md`, `docs/loom/maps/family-relocation/tickets/task-relocate-family-hooks.md`, `loom-workflow/skills/decision-map/scripts/map_init.py`, `loom-workflow/skills/decision-map/scripts/map_store.py`, `loom-workflow/skills/decision-map/scripts/test_map_init.py`, `loom-workflow/skills/decision-map/scripts/test_map_store.py`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/docs/loom/outcome-map-v3/specs/outcome-map/spec.md`
   - `/Users/kouko/GitHub/monkey-skills/docs/loom/maps/family-relocation/MAP.md`
@@ -526,7 +526,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 6: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-85`
-- **Status**: pending
+- **Status**: done(pending-batch-b-commit)
 - **Gloss**: 現有 family relocation 地圖成為新機制的真實相容性證明。
 
 ## Task 26 — Publish the complete v3 public surface

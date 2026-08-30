@@ -8,11 +8,64 @@ source evidence and classify it without changing source files.
 from __future__ import annotations
 
 import sys
+from hashlib import sha256
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
 import migrate_map_v3  # noqa: E402
+
+
+def test_migration_preview_digest_apply_and_retry_are_safe(tmp_path: Path) -> None:
+    # @req: REQ-91
+    """Preview is read-only and a stale or repeated apply cannot duplicate work."""
+    map_dir = tmp_path / "family-relocation"
+    tickets = map_dir / "tickets"
+    tickets.mkdir(parents=True)
+    map_path = map_dir / "MAP.md"
+    ticket_path = tickets / "inventory.md"
+    map_path.write_text(
+        "---\nmap-id: family-relocation\nschema_version: 2\nstate: active\n---\n"
+        "\n## Destination\n\nA durable outcome.\n\n## Notes\n\n\n"
+        "## Decisions-so-far\n\n\n## Not-yet-specified (fog)\n\n\n"
+        "## Out-of-scope\n",
+        encoding="utf-8",
+    )
+    ticket_path.write_text(
+        "---\ntype: task\nstatus: closed\n---\n\nInventory consumers.\n"
+        "\n## Resolution\n\nfactual-answer: seven consumers\n"
+        "inspectable-evidence: docs/loom/research/consumers.md\n",
+        encoding="utf-8",
+    )
+
+    before = {path: path.read_bytes() for path in (map_path, ticket_path)}
+    preview = migrate_map_v3.preview_migration(map_dir)
+    assert {path: path.read_bytes() for path in (map_path, ticket_path)} == before
+    assert preview.classifications["tickets/inventory.md"].target_type == "research"
+    assert preview.source_digests["MAP.md"] == sha256(before[map_path]).hexdigest()
+
+    ticket_path.write_text(ticket_path.read_text(encoding="utf-8") + "changed\n", encoding="utf-8")
+    try:
+        migrate_map_v3.apply_migration(map_dir, preview)
+    except migrate_map_v3.MigrationConflict:
+        pass
+    else:
+        raise AssertionError("apply must refuse a changed preview source")
+
+    preview = migrate_map_v3.preview_migration(map_dir)
+    result = migrate_map_v3.apply_migration(map_dir, preview)
+    assert result.applied is True
+    assert "schema_version: 3" in map_path.read_text(encoding="utf-8")
+    migrated_ticket = ticket_path.read_text(encoding="utf-8")
+    assert "type: research" in migrated_ticket
+    assert "factual-answer: seven consumers" in migrated_ticket
+    assert "inspectable-evidence: docs/loom/research/consumers.md" in migrated_ticket
+
+    retry = migrate_map_v3.preview_migration(map_dir)
+    retried = migrate_map_v3.apply_migration(map_dir, retry)
+    assert retry.already_applied is True
+    assert retried.applied is False
+    assert ticket_path.read_text(encoding="utf-8") == migrated_ticket
 
 
 def test_v2_classification_routes_task_and_feasibility_by_closure() -> None:

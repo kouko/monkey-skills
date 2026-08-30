@@ -35,7 +35,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
-MIN_SUPPORTED_SCHEMA_VERSION = 2
+MIN_SUPPORTED_SCHEMA_VERSION = 3
 SUPPORTED_SCHEMA_VERSION = 3
 
 VALID_MAP_STATES = {"charting", "active", "clear", "archived"}

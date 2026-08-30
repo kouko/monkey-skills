@@ -1,5 +1,5 @@
 ---
-type: prototype
+type: research
 status: closed
 claim: kouko, 2026-08-28
 ---
@@ -23,6 +23,9 @@ naive 版本 glob 有 7～33 路歧義，判不可用。kouko 2026-08-28 裁定�
 查完官方文件面後再裁**——本票維持 claimed，不關。
 
 ## Resolution
+
+factual-answer: Claude Code cold-install cross-plugin store access is feasible with reservation
+inspectable-evidence: prototype/family-relocation/feasibility-cross-plugin-store-access/prototype-probe/PROTOTYPE_MEASUREMENTS.md
 
 user-ratified: kouko, 2026-08-29 — FEASIBLE-with-reservation
 

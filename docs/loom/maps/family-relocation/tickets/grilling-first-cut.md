@@ -10,6 +10,9 @@ claim: check-wayfinder, 2026-08-28
 
 ## Resolution
 
+decision: hooks first
+user-ratified: kouko, 2026-08-28
+
 裁定：**hooks 先動**。family hooks 是純散文契約，canonical fan-out 機制
 已就位（loom-workflow/hooks 本弧已成為同步目標），完全不依賴「跨
 plugin 腳本解析」這個未驗證的死穴假設——最小真步進、風險隔離。queue
@@ -18,4 +21,5 @@ tickets/feasibility-cross-plugin-store-access.md 的量測結果之後再裁。
 整批評估先行被否決（前置成本最重，且盤點已由
 tickets/task-inventory-consumers.md 獨立排程）。
 
-user-ratified: kouko 2026-08-28 — 選項「hooks 先動」經 AskUserQuestion 裁定。
+Historical ratification: kouko 2026-08-28 — 選項「hooks 先動」經
+AskUserQuestion 裁定。
