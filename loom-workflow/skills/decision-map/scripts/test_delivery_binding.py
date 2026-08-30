@@ -48,6 +48,26 @@ def test_reciprocal_ticket_brief_binding_is_canonical_and_contained(
     assert _snapshot(ticket, brief) == before
 
 
+def test_delivery_migration_snapshot_records_brief_and_candidate_population(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-85
+    """Migration can CAS-cover every file inspected for a delivery binding."""
+    ticket, brief = _bound_ticket(tmp_path)
+    other = tmp_path / "docs/loom/maps/other/tickets/other.md"
+    _write(other, "---\ntype: research\nstatus: open\n---\n")
+
+    snapshot = delivery_binding.snapshot_delivery_migration_binding(
+        ticket, repo_root=tmp_path
+    )
+
+    ticket_key = ticket.relative_to(tmp_path).as_posix()
+    brief_key = brief.relative_to(tmp_path).as_posix()
+    other_key = other.relative_to(tmp_path).as_posix()
+    assert set(snapshot.texts) >= {ticket_key, brief_key, other_key}
+    assert snapshot.ticket_membership == tuple(sorted((ticket_key, other_key)))
+
+
 @pytest.mark.parametrize(
     "brief_path",
     [

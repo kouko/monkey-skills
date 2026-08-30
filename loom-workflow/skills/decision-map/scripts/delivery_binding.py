@@ -6,6 +6,7 @@ from __future__ import annotations
 import errno
 import os
 import stat
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 import map_store
@@ -17,6 +18,19 @@ class _OperationalFailure(Exception):
 
 class _BindingFailure(Exception):
     pass
+
+
+@dataclass(frozen=True)
+class DeliveryMigrationBindingSnapshot:
+    """Read-only CAS evidence for a v2 ticket becoming a delivery Ticket.
+
+    The snapshot covers the canonical Brief and every candidate Ticket the
+    reciprocal-binding contract consults, so a migration can revalidate the
+    same population immediately before it writes.
+    """
+
+    texts: dict[str, str]
+    ticket_membership: tuple[str, ...]
 
 
 def _canonical_relative(value: str, label: str) -> PurePosixPath:
@@ -153,6 +167,72 @@ def _duplicate_owner(repo_root: Path, ticket: PurePosixPath, brief: PurePosixPat
         if candidate_brief is not None:
             _assert_reciprocal(_read_repo_file(repo_root, candidate_brief, "candidate Brief"), candidate_brief, candidate)
     return None
+
+
+def snapshot_delivery_migration_binding(
+    ticket_path: Path, repo_root: Path | None = None
+) -> DeliveryMigrationBindingSnapshot:
+    """Validate the existing reciprocal Brief required before migration.
+
+    Unlike :func:`validate`, this accepts a schema-v2 source ticket that is
+    *about to become* delivery. It writes nothing and returns every source
+    text consulted by the canonical reciprocal-binding and duplicate-owner
+    checks, keyed by canonical repository-relative path.
+    """
+    try:
+        root = Path(os.path.abspath(repo_root if repo_root is not None else map_store.resolve_repo_root(None, Path(ticket_path).parent)))
+        ticket = _ticket_relative(root, Path(ticket_path))
+        texts: dict[str, str] = {}
+
+        def read(relative: PurePosixPath, label: str, requested: bool = False) -> str:
+            text = _read_repo_file(root, relative, label, requested)
+            texts[relative.as_posix()] = text
+            return text
+
+        fields, _ = map_store.parse_frontmatter(read(ticket, "ticket", requested=True))
+        brief_value = fields.get("brief")
+        if brief_value is None:
+            raise _BindingFailure("delivery migration requires an existing 'brief:' field")
+        brief = _canonical_relative(brief_value, "Ticket brief")
+        _assert_reciprocal(read(brief, "Brief"), brief, ticket)
+
+        maps_root = root / "docs" / "loom" / "maps"
+        candidates: list[PurePosixPath] = []
+        if maps_root.is_dir():
+            for path in maps_root.rglob("*.md"):
+                if path.parent.name != "tickets":
+                    continue
+                candidate = _canonical_relative(
+                    path.relative_to(root).as_posix(), "candidate Ticket"
+                )
+                candidates.append(candidate)
+        membership = tuple(sorted(candidate.as_posix() for candidate in candidates))
+        for candidate in candidates:
+            candidate_fields, _ = map_store.parse_frontmatter(
+                read(candidate, "candidate ticket", requested=True)
+            )
+            candidate_brief_value = candidate_fields.get("brief")
+            if candidate == ticket or candidate_brief_value is None:
+                continue
+            if candidate_fields.get("type") != "delivery":
+                raise _BindingFailure(
+                    f"candidate ticket {candidate.as_posix()}: only delivery tickets may declare a 'brief' field"
+                )
+            candidate_brief = _canonical_relative(
+                candidate_brief_value, "candidate Ticket brief"
+            )
+            if candidate_brief == brief:
+                raise _BindingFailure(
+                    f"Brief {brief.as_posix()} is already owned by another Ticket: {candidate.as_posix()}"
+                )
+            _assert_reciprocal(
+                read(candidate_brief, "candidate Brief"), candidate_brief, candidate
+            )
+        return DeliveryMigrationBindingSnapshot(texts, membership)
+    except _OperationalFailure as exc:
+        raise ValueError(str(exc)) from exc
+    except _BindingFailure as exc:
+        raise ValueError(f"delivery binding invalid: {exc}") from exc
 
 
 def validate(ticket_path: Path, repo_root: Path | None = None) -> tuple[int, str]:

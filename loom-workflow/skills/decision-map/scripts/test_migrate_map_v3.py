@@ -100,6 +100,72 @@ def test_migration_apply_rejects_forged_preview_key_without_writes(tmp_path: Pat
     assert {path: path.read_bytes() for path in before} == before
 
 
+def _write_v2_delivery_map(tmp_path: Path) -> tuple[Path, Path, Path]:
+    map_dir = tmp_path / "docs/loom/maps/family-relocation"
+    map_path, ticket_path = _write_v2_research_map(map_dir)
+    ticket_relative = ticket_path.relative_to(tmp_path).as_posix()
+    brief = tmp_path / "docs/loom/specs/relocate-hooks.md"
+    brief.parent.mkdir(parents=True)
+    brief.write_text(f"# Brief\n\nOutcome Map ticket: {ticket_relative}\n", encoding="utf-8")
+    ticket_path.write_text(
+        ticket_path.read_text(encoding="utf-8")
+        .replace("type: task", "type: task\nbrief: docs/loom/specs/relocate-hooks.md")
+        .replace("factual-answer: seven consumers\ninspectable-evidence: docs/loom/research/consumers.md", "delivery-evidence: commit 0123456"),
+        encoding="utf-8",
+    )
+    return map_path, ticket_path, brief
+
+
+def test_delivery_migration_accepts_canonical_brief_with_relative_map_dir(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # @req: REQ-85
+    """A valid existing join migrates when the caller supplies a relative map path."""
+    map_path, ticket_path, brief = _write_v2_delivery_map(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    relative_map = map_path.parent.relative_to(tmp_path)
+    preview = migrate_map_v3.preview_migration(relative_map)
+    result = migrate_map_v3.apply_migration(relative_map, preview)
+    assert result.applied is True
+    assert "type: delivery" in ticket_path.read_text(encoding="utf-8")
+    assert brief.read_text(encoding="utf-8").startswith("# Brief")
+
+
+def test_delivery_migration_refuses_changed_brief_or_candidate_population(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-91
+    """Binding evidence and every inspected candidate ticket remain CAS-covered."""
+    map_path, ticket_path, brief = _write_v2_delivery_map(tmp_path)
+    preview = migrate_map_v3.preview_migration(map_path.parent)
+    brief.write_text("# Changed\n", encoding="utf-8")
+    before = {path: path.read_bytes() for path in (map_path, ticket_path, brief)}
+    try:
+        migrate_map_v3.apply_migration(map_path.parent, preview)
+    except migrate_map_v3.MigrationConflict as exc:
+        assert "binding" in str(exc).lower()
+    else:
+        raise AssertionError("changed Brief must invalidate preview")
+    assert {path: path.read_bytes() for path in before} == before
+
+    brief.write_text(
+        f"# Brief\n\nOutcome Map ticket: {ticket_path.relative_to(tmp_path).as_posix()}\n",
+        encoding="utf-8",
+    )
+    preview = migrate_map_v3.preview_migration(map_path.parent)
+    other = tmp_path / "docs/loom/maps/other/tickets/other.md"
+    other.parent.mkdir(parents=True)
+    other.write_text("---\ntype: research\nstatus: open\n---\n", encoding="utf-8")
+    before = {path: path.read_bytes() for path in (map_path, ticket_path, brief, other)}
+    try:
+        migrate_map_v3.apply_migration(map_path.parent, preview)
+    except migrate_map_v3.MigrationConflict as exc:
+        assert "binding" in str(exc).lower()
+    else:
+        raise AssertionError("candidate membership must invalidate preview")
+    assert {path: path.read_bytes() for path in before} == before
+
+
 def test_migration_preview_digest_apply_and_retry_are_safe(tmp_path: Path) -> None:
     # @req: REQ-91
     """Preview is read-only and a stale or repeated apply cannot duplicate work."""

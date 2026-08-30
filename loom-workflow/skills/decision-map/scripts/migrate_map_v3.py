@@ -43,6 +43,8 @@ class MigrationPreview:
     classifications: dict[str, V2TicketClassification]
     candidates: dict[str, str]
     ticket_membership: tuple[str, ...]
+    binding_texts: dict[str, str]
+    binding_membership: tuple[str, ...]
     already_applied: bool = False
 
 
@@ -100,6 +102,21 @@ def _ticket_membership(map_dir: Path) -> tuple[str, ...]:
     return keys
 
 
+def _safe_binding_dependency(repo_root: Path, key: str) -> Path:
+    candidate = Path(key)
+    if candidate.is_absolute() or any(part in {"", ".", ".."} for part in candidate.parts):
+        raise MigrationConflict(f"invalid binding dependency key: {key!r}")
+    path = repo_root / candidate
+    try:
+        map_store._assert_no_symlink_components(path)
+        if not path.is_file() or path.is_symlink():
+            raise MigrationConflict(f"binding dependency is not a regular file: {key}")
+        path.resolve(strict=True).relative_to(repo_root.resolve(strict=True))
+    except (OSError, ValueError) as exc:
+        raise MigrationConflict(f"binding dependency escapes repository: {key!r}") from exc
+    return path
+
+
 def _repo_root_for_map(map_dir: Path) -> Path:
     try:
         docs, loom, maps = map_dir.parents[2], map_dir.parents[1], map_dir.parents[0]
@@ -107,33 +124,15 @@ def _repo_root_for_map(map_dir: Path) -> Path:
         raise MigrationConflict(f"map directory has no repository layout: {map_dir}") from exc
     if (docs.name, loom.name, maps.name) != ("docs", "loom", "maps"):
         raise MigrationConflict(f"map directory is not under docs/loom/maps: {map_dir}")
-    return map_dir.parents[3]
+    return map_dir.parents[3].absolute()
 
 
-def _require_delivery_brief(map_dir: Path, ticket_path: Path, ticket_text: str) -> None:
-    """Validate a v2 ticket's retained Brief field as its v3 delivery join."""
-    fields, _ = map_store.parse_frontmatter(ticket_text)
-    brief_value = fields.get("brief")
-    if brief_value is None:
-        raise MigrationConflict(
-            f"{_relative_key(map_dir, ticket_path)}: delivery migration requires "
-            "an existing canonical reciprocal Brief relationship (brief: ...)"
-        )
-    root = _repo_root_for_map(map_dir)
+def _delivery_binding_snapshot(map_dir: Path, ticket_path: Path) -> delivery_binding.DeliveryMigrationBindingSnapshot:
     try:
-        ticket = delivery_binding._ticket_relative(root, ticket_path)
-        brief = delivery_binding._canonical_relative(brief_value, "Ticket brief")
-        delivery_binding._assert_reciprocal(
-            delivery_binding._read_repo_file(root, brief, "Brief"), brief, ticket
+        return delivery_binding.snapshot_delivery_migration_binding(
+            ticket_path, repo_root=_repo_root_for_map(map_dir)
         )
-        duplicate = delivery_binding._duplicate_owner(root, ticket, brief)
-        if duplicate is not None:
-            raise MigrationConflict(
-                f"{_relative_key(map_dir, ticket_path)}: Brief is already owned by {duplicate.as_posix()}"
-            )
-    except MigrationConflict:
-        raise
-    except Exception as exc:
+    except ValueError as exc:
         raise MigrationConflict(
             f"{_relative_key(map_dir, ticket_path)}: delivery migration requires "
             f"an existing canonical reciprocal Brief relationship: {exc}"
@@ -142,13 +141,13 @@ def _require_delivery_brief(map_dir: Path, ticket_path: Path, ticket_text: str) 
 
 def preview_migration(map_dir: Path) -> MigrationPreview:
     """Build a zero-write v2 candidate and pin every source byte digest."""
-    map_dir = Path(map_dir)
+    map_dir = Path(map_dir).absolute()
     map_path = map_dir / "MAP.md"
     _safe_preview_path(map_dir, "MAP.md")
     map_text = map_path.read_text(encoding="utf-8")
     map_document = map_store.parse_map_document(map_text, map_path)
     if map_document.frontmatter.schema_version == 3:
-        return MigrationPreview(map_dir, {}, {}, {}, {}, (), already_applied=True)
+        return MigrationPreview(map_dir, {}, {}, {}, {}, (), {}, (), already_applied=True)
     if map_document.frontmatter.schema_version != 2:
         raise MigrationConflict("migration accepts schema_version 2 maps only")
 
@@ -160,6 +159,8 @@ def preview_migration(map_dir: Path) -> MigrationPreview:
         )
     }
     classifications: dict[str, V2TicketClassification] = {}
+    binding_texts: dict[str, str] = {}
+    binding_membership: set[str] = set()
     membership = _ticket_membership(map_dir)
     for key in membership:
         ticket_path = _safe_preview_path(map_dir, key)
@@ -172,14 +173,17 @@ def preview_migration(map_dir: Path) -> MigrationPreview:
         if classification.refusal is not None:
             raise MigrationConflict(f"{key}: {classification.refusal}")
         if classification.target_type == "delivery":
-            _require_delivery_brief(map_dir, ticket_path, ticket_text)
+            snapshot = _delivery_binding_snapshot(map_dir, ticket_path)
+            binding_texts.update(snapshot.texts)
+            binding_membership.update(snapshot.ticket_membership)
         digests[key] = _source_digest(ticket_text)
         source_texts[key] = ticket_text
         candidates[key] = _replace_frontmatter_value(
             ticket_text, "type", classification.target_type or ""
         )
     return MigrationPreview(
-        map_dir, digests, source_texts, classifications, candidates, membership
+        map_dir, digests, source_texts, classifications, candidates, membership,
+        binding_texts, tuple(sorted(binding_membership))
     )
 
 
@@ -190,7 +194,7 @@ def apply_migration(map_dir: Path, preview: MigrationPreview) -> MigrationResult
     map and converges on the same type replacements.  The map flip is last,
     so a complete map is never reported as v3 with v2 ticket types.
     """
-    map_dir = Path(map_dir)
+    map_dir = Path(map_dir).absolute()
     if map_dir != preview.map_dir:
         raise MigrationConflict("preview belongs to a different map directory")
     if preview.already_applied:
@@ -208,6 +212,23 @@ def apply_migration(map_dir: Path, preview: MigrationPreview) -> MigrationResult
         _safe_preview_path(map_dir, key)
     if _ticket_membership(map_dir) != preview.ticket_membership:
         raise MigrationConflict("ticket membership changed after preview")
+    for key, text in preview.binding_texts.items():
+        root = _repo_root_for_map(map_dir)
+        try:
+            current = _safe_binding_dependency(root, key).read_text(encoding="utf-8")
+        except OSError as exc:
+            raise MigrationConflict(f"binding dependency changed after preview: {key}") from exc
+        if current != text:
+            raise MigrationConflict(f"binding dependency changed after preview: {key}")
+    current_binding_membership: set[str] = set()
+    for key in preview.ticket_membership:
+        if preview.classifications[key].target_type == "delivery":
+            snapshot = _delivery_binding_snapshot(map_dir, _safe_preview_path(map_dir, key))
+            if snapshot.texts != preview.binding_texts:
+                raise MigrationConflict("binding dependency changed after preview")
+            current_binding_membership.update(snapshot.ticket_membership)
+    if tuple(sorted(current_binding_membership)) != preview.binding_membership:
+        raise MigrationConflict("binding candidate membership changed after preview")
     for key, digest in preview.source_digests.items():
         current = _safe_preview_path(map_dir, key).read_text(encoding="utf-8")
         if _source_digest(current) != digest:
