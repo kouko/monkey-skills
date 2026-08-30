@@ -192,7 +192,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
   - Observed: the individual Task loop validates one immutable SHA-bound packet and refuses reviewer fan-out when that packet or its declared committed scope is invalid — `read loom-code/skills/subagent-driven-development/SKILL.md:125`
   - Intended: reuse that validation and refusal behavior unchanged when Batch eligibility or aggregate attribution selects individual fallback; the fallback still receives a fresh per-Task packet and introduces no Batch state.
 - **Review disposition**: batch(sdd-review-loop)
-- **Status**: claimed(@main)
+- **Status**: implemented(a5a4aaf2)
 - **Gloss**: 合格時聚合 review，不合格時沿用原本逐 Task 流程。
 
 ## Task 7 — Enforce new-plan-only SDD intake
