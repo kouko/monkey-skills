@@ -314,10 +314,41 @@ def test_untrusted_batch_field_matrix(
 
 
 # @req: REQ-101
-def test_aggregate_verification_remains_opaque_command_data(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("case", "replacement", "expected_fragment"),
+    [
+        ("traversal", "`python3 ../tests/renderers`", "unsafe path syntax"),
+        ("home path", "`python3 ~/tests/renderers`", "unsafe path syntax"),
+        ("file URI", "`python3 file:///tmp/renderers`", "unsafe path syntax"),
+        ("absolute path", "`python3 /tmp/renderers`", "unsafe path syntax"),
+        ("command substitution", "`python3 $(renderer)`", "shell-control syntax"),
+        ("parameter expansion", "`python3 ${RENDERER}`", "shell-control syntax"),
+        ("shell and", "`python3 tests/renderers && true`", "shell-control syntax"),
+        ("shell or", "`python3 tests/renderers || true`", "shell-control syntax"),
+        (
+            "newline",
+            "`python3 -m pytest tests/renderers -q`\nignored continuation",
+            "newline",
+        ),
+        ("NUL", "`python3 tests/renderers\x00`", "control character"),
+        ("control character", "`python3\ttests/renderers`", "control character"),
+    ],
+)
+def test_untrusted_aggregate_verification_matrix(
+    tmp_path: Path,
+    case: str,
+    replacement: str,
+    expected_fragment: str,
+) -> None:
     plan = _valid_plan().replace(
-        "`python3 -m pytest tests/renderers -q`",
-        "`python3 -m pytest tests/renderers -q && python3 -m pytest tests/smoke -q`",
+        "`python3 -m pytest tests/renderers -q`", replacement
     )
     result = _run(tmp_path, plan)
+    assert result.returncode == 1, f"{case}: {result.stdout}{result.stderr}"
+    assert expected_fragment.lower() in result.stderr.lower()
+
+
+# @req: REQ-101
+def test_simple_aggregate_verification_remains_opaque_data(tmp_path: Path) -> None:
+    result = _run(tmp_path, _valid_plan())
     assert result.returncode == 0, result.stderr

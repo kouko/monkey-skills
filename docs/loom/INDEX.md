@@ -371,6 +371,7 @@
 ### REQ-101
 
 - test_review_batch_section_scope
+- test_untrusted_aggregate_verification_matrix
 - test_untrusted_batch_field_matrix
 
 ### REQ-99

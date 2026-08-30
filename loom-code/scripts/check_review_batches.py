@@ -109,8 +109,6 @@ def _validate_untrusted_value(
     name: str,
     owner: str,
     errors: list[str],
-    *,
-    free_text: bool,
 ) -> None:
     if (
         "../" in value
@@ -120,7 +118,7 @@ def _validate_untrusted_value(
         or _ABSOLUTE_PATH_TOKEN.search(value)
     ):
         errors.append(f"{owner} {name} contains unsafe path syntax")
-    if free_text and any(token in value for token in ("$(", "${", "&&", "||")):
+    if any(token in value for token in ("$(", "${", "&&", "||")):
         errors.append(f"{owner} {name} contains shell-control syntax")
 
 
@@ -235,7 +233,6 @@ def _parse_batches(batch_body: str, errors: list[str]) -> dict[str, Batch]:
                 name,
                 owner,
                 errors,
-                free_text=name in {"Verdict question", "Boundary"},
             )
         members = _member_numbers(values["Members"], owner, errors)
         verdict = values["Verdict question"]
