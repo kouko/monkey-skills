@@ -6,6 +6,7 @@ read, write, or apply a map migration.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 
@@ -38,9 +39,11 @@ def _evidence_fields(source_evidence: str) -> set[str]:
 
 
 def _has_ratification(source_evidence: str) -> bool:
+    ratification = re.compile(
+        r"^user-ratified:\s*[^,\s][^,]*,\s*\d{4}-\d{2}-\d{2}\s*$",
+    )
     return any(
-        line.strip().lower().startswith("user-ratified:")
-        and bool(line.partition(":")[2].strip())
+        ratification.fullmatch(line.strip()) is not None
         for line in source_evidence.splitlines()
     )
 

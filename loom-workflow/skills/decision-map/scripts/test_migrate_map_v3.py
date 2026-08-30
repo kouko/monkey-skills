@@ -65,3 +65,37 @@ def test_v2_classification_routes_task_and_feasibility_by_closure() -> None:
     assert ambiguous.target_type is None
     assert ambiguous.source_evidence == "Resolution completed without a closure contract."
     assert ambiguous.refusal == migrate_map_v3.CLASSIFICATION_EVIDENCE_GUIDANCE
+
+
+def test_v2_classification_refuses_malformed_or_competing_closure_evidence() -> None:
+    # @req: REQ-85
+    """A v2 migration does not treat malformed human approval as closure."""
+    malformed_ratifications = (
+        (
+            "prototype",
+            "candidate-artifact: docs/loom/prototypes/resolver.md\n"
+            "evaluation: selected by maintainer\nuser-ratified: yes",
+        ),
+        (
+            "grilling",
+            "decision: hooks first\nuser-ratified: kouko, 2026-8-30",
+        ),
+        (
+            "grilling",
+            "decision: hooks first\nUser-ratified: kouko, 2026-08-30",
+        ),
+    )
+    for source_type, source_evidence in malformed_ratifications:
+        result = migrate_map_v3.classify_v2_ticket(source_type, source_evidence)
+        assert result.target_type is None
+        assert result.source_evidence == source_evidence
+        assert result.refusal == migrate_map_v3.CLASSIFICATION_EVIDENCE_GUIDANCE
+
+    competing = migrate_map_v3.classify_v2_ticket(
+        "task",
+        "factual-answer: seven consumers\n"
+        "inspectable-evidence: docs/loom/research/consumers.md\n"
+        "delivery-evidence: commit 0123456",
+    )
+    assert competing.target_type is None
+    assert competing.refusal == migrate_map_v3.CLASSIFICATION_EVIDENCE_GUIDANCE
