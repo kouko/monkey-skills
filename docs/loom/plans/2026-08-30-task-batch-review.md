@@ -110,7 +110,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-104
 - **Brief item covered**: REQ-108
 - **Brief item covered**: BI-3, BI-8, BI-11
-- **Status**: claimed(@main)
+- **Status**: done(1e475415)
 - **Gloss**: Task 多一個暫態，但仍由原本的 plan ledger 管理。
 
 ## Task 4 — Materialize immutable aggregate Review Packets
