@@ -80,7 +80,43 @@ def test_rejects_symlink_escape_brief_path(tmp_path: Path) -> None:
     code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
 
     assert code == 2
-    assert "escapes repository" in message
+    assert "symlink" in message
+
+
+def test_rejects_in_repository_final_symlink_brief_path(tmp_path: Path) -> None:
+    # @req: REQ-79
+    ticket, brief = _bound_ticket(tmp_path, "docs/loom/specs/link.md")
+    link = brief.with_name("link.md")
+    link.symlink_to(brief)
+
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+
+    assert code == 2
+    assert "symlink" in message
+
+
+def test_rejects_in_repository_symlink_directory_component(tmp_path: Path) -> None:
+    # @req: REQ-79
+    ticket, brief = _bound_ticket(tmp_path, "docs/loom/linked-specs/deliver-search.md")
+    link_dir = brief.parent.parent / "linked-specs"
+    link_dir.symlink_to(brief.parent, target_is_directory=True)
+
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+
+    assert code == 2
+    assert "symlink" in message
+
+
+def test_rejects_in_repository_final_symlink_ticket_path(tmp_path: Path) -> None:
+    # @req: REQ-79
+    ticket, _ = _bound_ticket(tmp_path)
+    link = ticket.with_name("linked-ticket.md")
+    link.symlink_to(ticket)
+
+    code, message = delivery_binding.validate(link, repo_root=tmp_path)
+
+    assert code == 2
+    assert "symlink" in message
 
 
 @pytest.mark.parametrize("target_kind", ["missing", "directory"])
@@ -148,3 +184,30 @@ def test_rejects_duplicate_brief_ownership(tmp_path: Path) -> None:
 
     assert code == 2
     assert "already owned" in message
+
+
+def test_rejects_malformed_duplicate_candidate_ticket(tmp_path: Path) -> None:
+    # @req: REQ-79
+    ticket, _ = _bound_ticket(tmp_path)
+    _write(ticket.with_name("broken.md"), "not frontmatter\n")
+
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+
+    assert code == 2
+    assert "candidate ticket" in message
+
+
+def test_rejects_non_normalized_duplicate_candidate_alias(tmp_path: Path) -> None:
+    # @req: REQ-79
+    ticket, brief = _bound_ticket(tmp_path)
+    alias = ticket.with_name("deliver-alias.md")
+    _write(
+        alias,
+        "---\ntype: delivery\nstatus: claimed\n"
+        f"brief: {brief.relative_to(tmp_path).as_posix().replace('specs/', 'specs//')}\n---\n",
+    )
+
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+
+    assert code == 2
+    assert "not normalized" in message
