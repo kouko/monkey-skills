@@ -185,9 +185,11 @@ def _validate_brief_policy_and_plan_count(repo_root: Path, brief: PurePosixPath,
         raise _BindingFailure("plans directory contains a symlink")
     source = brief.as_posix()
     matches: list[str] = []
-    for candidate in _plan_files(plans_root, repo_root):
+    candidates = _plan_files(plans_root, repo_root)
+    membership = tuple(path.relative_to(repo_root).as_posix() for path in candidates)
+    for candidate in candidates:
         try:
-            text = candidate.read_text(encoding="utf-8")
+            text = _read_plan_text(repo_root, candidate)
         except OSError as exc:
             raise _OperationalFailure(f"cannot read Plan {candidate}: {exc}") from exc
         lines = _structural_plan_lines(text)
@@ -200,7 +202,7 @@ def _validate_brief_policy_and_plan_count(repo_root: Path, brief: PurePosixPath,
     if len(matches) > 1:
         raise _BindingFailure(f"delivery Brief {source} has multiple Plans: {', '.join(matches)}")
     if matches:
-        plan_text = (repo_root / matches[0]).read_text(encoding="utf-8")
+        plan_text = _read_plan_text(repo_root, repo_root / matches[0])
         lines = _structural_plan_lines(plan_text)
         stages = [line for line in lines if line.startswith("Stage:")]
         tasks = [line for line in lines if re.fullmatch(r"## Task \d+ — .+", line)]
@@ -208,6 +210,8 @@ def _validate_brief_policy_and_plan_count(repo_root: Path, brief: PurePosixPath,
             raise _BindingFailure(
                 "sole Plan is unusable; withdraw the delivery ticket and create a replacement delivery"
             )
+    if membership != tuple(path.relative_to(repo_root).as_posix() for path in _plan_files(plans_root, repo_root)):
+        raise _BindingFailure("Plan membership changed during validation; re-read authoritative delivery state")
 
 
 def _structural_plan_lines(text: str) -> list[str]:
@@ -253,6 +257,50 @@ def _plan_files(plans_root: Path, repo_root: Path) -> list[Path]:
 
     walk(plans_root)
     return files
+
+
+def _before_plan_read(path: Path) -> None:
+    """Test seam between membership enumeration and descriptor-safe open."""
+
+
+def _read_plan_text(repo_root: Path, path: Path) -> str:
+    """Read one enumerated Plan without following links, refusing pathname swaps."""
+    if not hasattr(os, "O_NOFOLLOW"):
+        raise _OperationalFailure("platform lacks O_NOFOLLOW; cannot safely read Plans")
+    relative = path.relative_to(repo_root)
+    root_fd = os.open(repo_root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    directory_fd = root_fd
+    fd = -1
+    try:
+        for part in relative.parts[:-1]:
+            next_fd = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory_fd)
+            if directory_fd != root_fd:
+                os.close(directory_fd)
+            directory_fd = next_fd
+        _before_plan_read(path)
+        fd = os.open(relative.name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=directory_fd)
+        opened = os.fstat(fd)
+        if not stat.S_ISREG(opened.st_mode):
+            raise _BindingFailure(f"Plan path is not a regular file: {relative.as_posix()}")
+        with os.fdopen(fd, "r", encoding="utf-8") as stream:
+            fd = -1
+            text = stream.read()
+        current = os.stat(relative.name, dir_fd=directory_fd, follow_symlinks=False)
+        if (current.st_dev, current.st_ino) != (opened.st_dev, opened.st_ino):
+            raise _BindingFailure(f"Plan path changed during read: {relative.as_posix()}")
+        if stat.S_ISLNK(current.st_mode):
+            raise _BindingFailure(f"Plan path contains a symlink: {relative.as_posix()}")
+        return text
+    except OSError as exc:
+        if exc.errno == errno.ELOOP:
+            raise _BindingFailure(f"Plan path contains a symlink: {relative.as_posix()}") from exc
+        raise
+    finally:
+        if fd >= 0:
+            os.close(fd)
+        if directory_fd != root_fd:
+            os.close(directory_fd)
+        os.close(root_fd)
 
 
 def snapshot_delivery_migration_binding(

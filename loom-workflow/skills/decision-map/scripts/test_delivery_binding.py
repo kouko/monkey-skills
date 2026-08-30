@@ -372,3 +372,25 @@ def test_tilde_fenced_plan_text_is_not_structural(tmp_path: Path) -> None:
     code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
     assert code == 2
     assert "sole Plan is unusable" in message
+
+
+def test_plan_scan_refuses_a_plan_swapped_to_symlink_before_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-96
+    ticket, brief = _bound_ticket(tmp_path)
+    source = brief.relative_to(tmp_path).as_posix()
+    candidate = tmp_path / "docs/loom/plans/delivery.md"
+    _write(candidate, f"# Plan\n\n**Source brief**: {source}\nStage: planning\n\n## Task 1 — Deliver\n")
+    outside = tmp_path.parent / "outside-plan.md"
+    _write(outside, "outside\n")
+
+    def swap(path: Path) -> None:
+        if path == candidate:
+            candidate.unlink()
+            candidate.symlink_to(outside)
+
+    monkeypatch.setattr(delivery_binding, "_before_plan_read", swap)
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+    assert code == 2
+    assert "symlink" in message
