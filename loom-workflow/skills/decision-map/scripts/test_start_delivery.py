@@ -364,3 +364,41 @@ def test_start_delivery_does_not_remove_a_replaced_brief_during_rollback(
     assert code == 1
     assert "rollback" in message
     assert brief.read_text(encoding="utf-8") == concurrent
+
+
+def test_orphan_recovery_refuses_a_brief_replaced_before_ticket_bind(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-80
+    ticket, brief = _ticket(tmp_path)
+    _write(
+        brief,
+        start_delivery._brief_text(
+            PurePosixPath(ticket.relative_to(tmp_path).as_posix()),
+            "Deliver searchable outcome-map references.",
+        ),
+    )
+    original_ticket = ticket.read_bytes()
+    concurrent = "# Replaced orphan\n"
+    ticket_writes: list[str] = []
+    original_replace = start_delivery._replace_at
+
+    def replace_orphan() -> None:
+        brief.unlink()
+        _write(brief, concurrent)
+
+    monkeypatch.setattr(start_delivery, "_before_ticket_publish", replace_orphan)
+    def record_ticket_write(parent_fd: int, leaf: str, text: str) -> None:
+        if leaf == ticket.name:
+            ticket_writes.append(text)
+        original_replace(parent_fd, leaf, text)
+
+    monkeypatch.setattr(start_delivery, "_replace_at", record_ticket_write)
+    code, _ = start_delivery.start_delivery(
+        ticket, brief.relative_to(tmp_path).as_posix(), repo_root=tmp_path
+    )
+
+    assert code != 0
+    assert ticket_writes == []
+    assert ticket.read_bytes() == original_ticket
+    assert brief.read_text(encoding="utf-8") == concurrent

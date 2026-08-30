@@ -106,6 +106,26 @@ def _read_file(root: Path, relative: PurePosixPath, *, missing_ok: bool = False)
         os.close(root_fd)
 
 
+def _read_snapshot(root: Path, relative: PurePosixPath) -> tuple[str, tuple[int, int]]:
+    root_fd = _open_root(root)
+    parent_fd = fd = -1
+    try:
+        parent_fd, leaf = _open_parent(root_fd, relative, False)
+        fd = os.open(leaf, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parent_fd)
+        metadata = os.fstat(fd)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise StartDeliveryError(f"path is not a regular file: {relative.as_posix()}")
+        with os.fdopen(fd, "r", encoding="utf-8") as stream:
+            fd = -1
+            return stream.read(), (metadata.st_dev, metadata.st_ino)
+    finally:
+        if fd >= 0:
+            os.close(fd)
+        if parent_fd >= 0:
+            os.close(parent_fd)
+        os.close(root_fd)
+
+
 def _replace_at(parent_fd: int, leaf: str, text: str) -> None:
     temporary = f".{leaf}.{secrets.token_hex(12)}"
     fd = -1
@@ -147,6 +167,12 @@ def _same_snapshot(root: Path, relative: PurePosixPath, expected: str) -> None:
     actual = _read_file(root, relative)
     if actual != expected:
         raise StartDeliveryError(f"concurrent change detected for {relative.as_posix()}")
+
+
+def _same_orphan(prepared: _Prepared) -> None:
+    if prepared.orphan_snapshot is not None:
+        if _read_snapshot(prepared.root, prepared.brief) != prepared.orphan_snapshot:
+            raise StartDeliveryError(f"concurrent change detected for {prepared.brief.as_posix()}")
 
 
 def _before_brief_write(_parent_fd: int, _leaf: str) -> None:
@@ -198,6 +224,7 @@ class _Prepared:
     brief_text: str
     brief_exists: bool
     already_bound: bool
+    orphan_snapshot: tuple[str, tuple[int, int]] | None
 
 
 def _prepare(ticket_path: Path, brief_path: str, repo_root: Path | None) -> _Prepared:
@@ -230,11 +257,14 @@ def _prepare(ticket_path: Path, brief_path: str, repo_root: Path | None) -> _Pre
             raise _OperationalError(f"ticket binding could not be read: {message}")
         if code != 0:
             raise StartDeliveryError(f"ticket has an inconsistent Brief binding: {message}")
-        return _Prepared(root, ticket, map_path, brief, ticket_text, map_text, expected, True, True)
+        return _Prepared(root, ticket, map_path, brief, ticket_text, map_text, expected, True, True, None)
     existing = _read_file(root, brief, missing_ok=True)
     if existing is not None and existing != expected:
         raise StartDeliveryError(f"requested Brief path already exists: {brief.as_posix()}")
-    return _Prepared(root, ticket, map_path, brief, ticket_text, map_text, expected, existing is not None, False)
+    orphan = _read_snapshot(root, brief) if existing is not None else None
+    if orphan is not None and orphan[0] != expected:
+        raise StartDeliveryError(f"requested Brief path already exists: {brief.as_posix()}")
+    return _Prepared(root, ticket, map_path, brief, ticket_text, map_text, expected, existing is not None, False, orphan)
 
 
 def _rollback(prepared: _Prepared, ticket_parent: int, ticket_replaced: bool,
@@ -275,6 +305,7 @@ def _apply(prepared: _Prepared) -> None:
         _before_ticket_publish()
         _same_snapshot(prepared.root, prepared.ticket, prepared.ticket_text)
         _same_snapshot(prepared.root, prepared.map_path, prepared.map_text)
+        _same_orphan(prepared)
         ticket_parent, ticket_leaf = _open_parent(root_fd, prepared.ticket, False)
         _replace_at(ticket_parent, ticket_leaf, _ticket_with_brief(prepared.ticket_text, prepared.brief))
         ticket_replaced = True
