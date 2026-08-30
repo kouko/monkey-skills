@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 
+import delivery_binding
 import map_store
 
 
@@ -41,6 +42,7 @@ class MigrationPreview:
     source_texts: dict[str, str]
     classifications: dict[str, V2TicketClassification]
     candidates: dict[str, str]
+    ticket_membership: tuple[str, ...]
     already_applied: bool = False
 
 
@@ -73,14 +75,80 @@ def _source_digest(text: str) -> str:
     return sha256(text.encode("utf-8")).hexdigest()
 
 
+_TICKET_KEY = re.compile(r"^tickets/[a-z0-9]+(?:-[a-z0-9]+)*\.md$")
+
+
+def _safe_preview_path(map_dir: Path, key: str) -> Path:
+    """Return one allowed regular source path without following symlinks."""
+    if key != "MAP.md" and _TICKET_KEY.fullmatch(key) is None:
+        raise MigrationConflict(f"invalid preview key: {key!r}")
+    path = map_dir / key
+    try:
+        map_store._assert_no_symlink_components(path)
+        if not path.is_file() or path.is_symlink():
+            raise MigrationConflict(f"preview key is not a regular file: {key}")
+        path.resolve(strict=True).relative_to(map_dir.resolve(strict=True))
+    except (OSError, ValueError) as exc:
+        raise MigrationConflict(f"preview key escapes map directory: {key!r}") from exc
+    return path
+
+
+def _ticket_membership(map_dir: Path) -> tuple[str, ...]:
+    keys = tuple(_relative_key(map_dir, path) for path in _ticket_paths(map_dir))
+    for key in keys:
+        _safe_preview_path(map_dir, key)
+    return keys
+
+
+def _repo_root_for_map(map_dir: Path) -> Path:
+    try:
+        docs, loom, maps = map_dir.parents[2], map_dir.parents[1], map_dir.parents[0]
+    except IndexError as exc:
+        raise MigrationConflict(f"map directory has no repository layout: {map_dir}") from exc
+    if (docs.name, loom.name, maps.name) != ("docs", "loom", "maps"):
+        raise MigrationConflict(f"map directory is not under docs/loom/maps: {map_dir}")
+    return map_dir.parents[3]
+
+
+def _require_delivery_brief(map_dir: Path, ticket_path: Path, ticket_text: str) -> None:
+    """Validate a v2 ticket's retained Brief field as its v3 delivery join."""
+    fields, _ = map_store.parse_frontmatter(ticket_text)
+    brief_value = fields.get("brief")
+    if brief_value is None:
+        raise MigrationConflict(
+            f"{_relative_key(map_dir, ticket_path)}: delivery migration requires "
+            "an existing canonical reciprocal Brief relationship (brief: ...)"
+        )
+    root = _repo_root_for_map(map_dir)
+    try:
+        ticket = delivery_binding._ticket_relative(root, ticket_path)
+        brief = delivery_binding._canonical_relative(brief_value, "Ticket brief")
+        delivery_binding._assert_reciprocal(
+            delivery_binding._read_repo_file(root, brief, "Brief"), brief, ticket
+        )
+        duplicate = delivery_binding._duplicate_owner(root, ticket, brief)
+        if duplicate is not None:
+            raise MigrationConflict(
+                f"{_relative_key(map_dir, ticket_path)}: Brief is already owned by {duplicate.as_posix()}"
+            )
+    except MigrationConflict:
+        raise
+    except Exception as exc:
+        raise MigrationConflict(
+            f"{_relative_key(map_dir, ticket_path)}: delivery migration requires "
+            f"an existing canonical reciprocal Brief relationship: {exc}"
+        ) from exc
+
+
 def preview_migration(map_dir: Path) -> MigrationPreview:
     """Build a zero-write v2 candidate and pin every source byte digest."""
     map_dir = Path(map_dir)
     map_path = map_dir / "MAP.md"
+    _safe_preview_path(map_dir, "MAP.md")
     map_text = map_path.read_text(encoding="utf-8")
     map_document = map_store.parse_map_document(map_text, map_path)
     if map_document.frontmatter.schema_version == 3:
-        return MigrationPreview(map_dir, {}, {}, {}, {}, already_applied=True)
+        return MigrationPreview(map_dir, {}, {}, {}, {}, (), already_applied=True)
     if map_document.frontmatter.schema_version != 2:
         raise MigrationConflict("migration accepts schema_version 2 maps only")
 
@@ -92,23 +160,26 @@ def preview_migration(map_dir: Path) -> MigrationPreview:
         )
     }
     classifications: dict[str, V2TicketClassification] = {}
-    for ticket_path in _ticket_paths(map_dir):
+    membership = _ticket_membership(map_dir)
+    for key in membership:
+        ticket_path = _safe_preview_path(map_dir, key)
         ticket_text = ticket_path.read_text(encoding="utf-8")
         ticket = map_store.parse_ticket_document(ticket_text, ticket_path)
         classification = classify_v2_ticket(
             ticket.frontmatter.type, ticket.resolution or ""
         )
-        key = _relative_key(map_dir, ticket_path)
         classifications[key] = classification
         if classification.refusal is not None:
             raise MigrationConflict(f"{key}: {classification.refusal}")
+        if classification.target_type == "delivery":
+            _require_delivery_brief(map_dir, ticket_path, ticket_text)
         digests[key] = _source_digest(ticket_text)
         source_texts[key] = ticket_text
         candidates[key] = _replace_frontmatter_value(
             ticket_text, "type", classification.target_type or ""
         )
     return MigrationPreview(
-        map_dir, digests, source_texts, classifications, candidates
+        map_dir, digests, source_texts, classifications, candidates, membership
     )
 
 
@@ -124,13 +195,26 @@ def apply_migration(map_dir: Path, preview: MigrationPreview) -> MigrationResult
         raise MigrationConflict("preview belongs to a different map directory")
     if preview.already_applied:
         return MigrationResult(applied=False)
+    expected_keys = {"MAP.md", *preview.ticket_membership}
+    preview_keys = set(preview.source_digests)
+    if (
+        preview_keys != expected_keys
+        or set(preview.source_texts) != expected_keys
+        or set(preview.candidates) != expected_keys
+        or set(preview.classifications) != set(preview.ticket_membership)
+    ):
+        raise MigrationConflict("invalid preview key set")
+    for key in expected_keys:
+        _safe_preview_path(map_dir, key)
+    if _ticket_membership(map_dir) != preview.ticket_membership:
+        raise MigrationConflict("ticket membership changed after preview")
     for key, digest in preview.source_digests.items():
-        current = (map_dir / key).read_text(encoding="utf-8")
+        current = _safe_preview_path(map_dir, key).read_text(encoding="utf-8")
         if _source_digest(current) != digest:
             raise MigrationConflict(f"source changed after preview: {key}")
     ordered_keys = sorted(key for key in preview.candidates if key != "MAP.md")
     for key in ordered_keys + ["MAP.md"]:
-        path = map_dir / key
+        path = _safe_preview_path(map_dir, key)
         map_store._atomic_write(
             path,
             preview.candidates[key],

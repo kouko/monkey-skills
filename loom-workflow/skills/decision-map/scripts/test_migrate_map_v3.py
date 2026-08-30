@@ -8,12 +8,96 @@ source evidence and classify it without changing source files.
 from __future__ import annotations
 
 import sys
+from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
 import migrate_map_v3  # noqa: E402
+
+
+def _write_v2_research_map(map_dir: Path) -> tuple[Path, Path]:
+    tickets = map_dir / "tickets"
+    tickets.mkdir(parents=True)
+    map_path = map_dir / "MAP.md"
+    ticket_path = tickets / "inventory.md"
+    map_path.write_text(
+        "---\nmap-id: family-relocation\nschema_version: 2\nstate: active\n---\n"
+        "\n## Destination\n\nA durable outcome.\n\n## Notes\n\n\n"
+        "## Decisions-so-far\n\n\n## Not-yet-specified (fog)\n\n\n"
+        "## Out-of-scope\n",
+        encoding="utf-8",
+    )
+    ticket_path.write_text(
+        "---\ntype: task\nstatus: closed\n---\n\nInventory consumers.\n"
+        "\n## Resolution\n\nfactual-answer: seven consumers\n"
+        "inspectable-evidence: docs/loom/research/consumers.md\n",
+        encoding="utf-8",
+    )
+    return map_path, ticket_path
+
+
+def test_migration_delivery_requires_existing_reciprocal_brief(tmp_path: Path) -> None:
+    # @req: REQ-85
+    """A delivery classification refuses absent or non-reciprocal Brief evidence."""
+    map_dir = tmp_path / "docs" / "loom" / "maps" / "family-relocation"
+    map_path, ticket_path = _write_v2_research_map(map_dir)
+    ticket_path.write_text(
+        ticket_path.read_text(encoding="utf-8")
+        .replace("factual-answer: seven consumers\ninspectable-evidence: docs/loom/research/consumers.md", "delivery-evidence: commit 0123456"),
+        encoding="utf-8",
+    )
+    before = {path: path.read_bytes() for path in (map_path, ticket_path)}
+    try:
+        migrate_map_v3.preview_migration(map_dir)
+    except migrate_map_v3.MigrationConflict as exc:
+        assert "brief" in str(exc).lower()
+    else:
+        raise AssertionError("delivery migration must require a canonical Brief")
+    assert {path: path.read_bytes() for path in (map_path, ticket_path)} == before
+
+
+def test_migration_apply_refuses_ticket_membership_drift_without_writes(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-91
+    """Adding a ticket after preview invalidates the whole read set."""
+    map_path, ticket_path = _write_v2_research_map(tmp_path / "family-relocation")
+    preview = migrate_map_v3.preview_migration(map_path.parent)
+    added = ticket_path.parent / "later.md"
+    added.write_text(ticket_path.read_text(encoding="utf-8"), encoding="utf-8")
+    before = {path: path.read_bytes() for path in (map_path, ticket_path, added)}
+    try:
+        migrate_map_v3.apply_migration(map_path.parent, preview)
+    except migrate_map_v3.MigrationConflict as exc:
+        assert "membership" in str(exc).lower()
+    else:
+        raise AssertionError("apply must refuse a changed tickets read set")
+    assert {path: path.read_bytes() for path in before} == before
+
+
+def test_migration_apply_rejects_forged_preview_key_without_writes(tmp_path: Path) -> None:
+    # @req: REQ-91
+    """A preview cannot smuggle a path outside MAP.md or tickets/<slug>.md."""
+    map_path, ticket_path = _write_v2_research_map(tmp_path / "family-relocation")
+    preview = migrate_map_v3.preview_migration(map_path.parent)
+    outside = tmp_path / "outside.md"
+    outside.write_text("unchanged\n", encoding="utf-8")
+    forged = replace(
+        preview,
+        source_digests={**preview.source_digests, "../outside.md": "forged"},
+        source_texts={**preview.source_texts, "../outside.md": "unchanged\n"},
+        candidates={**preview.candidates, "../outside.md": "mutated\n"},
+    )
+    before = {path: path.read_bytes() for path in (map_path, ticket_path, outside)}
+    try:
+        migrate_map_v3.apply_migration(map_path.parent, forged)
+    except migrate_map_v3.MigrationConflict as exc:
+        assert "preview key" in str(exc).lower()
+    else:
+        raise AssertionError("forged preview key must be rejected")
+    assert {path: path.read_bytes() for path in before} == before
 
 
 def test_migration_preview_digest_apply_and_retry_are_safe(tmp_path: Path) -> None:
