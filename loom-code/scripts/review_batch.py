@@ -497,6 +497,296 @@ class ReviewPacket:
     member_shas: tuple[tuple[str, str], ...]
 
 
+@dataclass(frozen=True)
+class ReviewerArmBinding:
+    """One expected reviewer arm bound to one exact Packet dispatch."""
+
+    packet_identity: str
+    arm: str
+    dispatch_identity: str
+    evidence_identity: str
+
+
+@dataclass(frozen=True)
+class BlockingFinding:
+    """Reviewer-owned finding provenance; the reducer never rewrites it."""
+
+    finding_id: str
+    packet_identity: str
+    arm: str
+    dispatch_identity: str
+    evidence_identity: str
+    owners: tuple[str, ...]
+    blocking: bool
+    ground: str
+    ground_ref: str
+    location: str
+    severity: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class ReviewerTerminalResult:
+    """One terminal result returned by a dispatch-bound reviewer arm."""
+
+    packet_identity: str
+    arm: str
+    dispatch_identity: str
+    dispatch_evidence_identity: str
+    result_identity: str
+    evidence_identity: str
+    terminal: str
+    verdict: str
+    findings: tuple[BlockingFinding, ...]
+
+
+@dataclass(frozen=True)
+class AggregateReviewResolution:
+    """Closed reducer output consumed by the later SDD integration."""
+
+    action: str
+    reopen_owners: tuple[str, ...]
+    ledger_mutation_allowed: bool
+    terminal_results: tuple[ReviewerTerminalResult, ...]
+    reasons: tuple[str, ...]
+
+
+_LANE_ARMS = {
+    "full": ("spec-reviewer", "code-quality-reviewer"),
+    "prose": ("spec-reviewer", "docs-reviewer"),
+}
+
+
+def expected_reviewer_arms(review_lane: object) -> tuple[str, ...]:
+    """Resolve the existing non-mechanical review-lane substitutions."""
+    if type(review_lane) is not str or review_lane not in _LANE_ARMS:
+        return ()
+    return _LANE_ARMS[review_lane]
+
+
+def _arms_apply_to_lane(lane: object, arms: object) -> bool:
+    if lane == "full":
+        return arms == _LANE_ARMS["full"]
+    if lane == "prose":
+        # Existing record-class narrowing occupies the code-quality slot with
+        # N/A, leaving only the spec arm; authored prose uses docs-reviewer.
+        return arms in (_LANE_ARMS["prose"], ("spec-reviewer",))
+    return False
+
+
+def _resolution(
+    action: str,
+    *,
+    results: tuple[ReviewerTerminalResult, ...] = (),
+    owners: tuple[str, ...] = (),
+    reasons: tuple[str, ...] = (),
+) -> AggregateReviewResolution:
+    return AggregateReviewResolution(
+        action=action,
+        reopen_owners=owners,
+        ledger_mutation_allowed=action in {"finalize", "reopen"},
+        terminal_results=results,
+        reasons=reasons,
+    )
+
+
+def _valid_binding(
+    binding: object, packet_identity: str, arm: str
+) -> bool:
+    return (
+        _complete_instance(binding, ReviewerArmBinding)
+        and _exact_text(binding.packet_identity)
+        and binding.packet_identity == packet_identity
+        and _exact_text(binding.arm)
+        and binding.arm == arm
+        and _exact_text(binding.dispatch_identity)
+        and _exact_text(binding.evidence_identity)
+    )
+
+
+def _result_matches_binding(
+    result: object, binding: ReviewerArmBinding
+) -> bool:
+    return (
+        _complete_instance(result, ReviewerTerminalResult)
+        and _exact_text(result.packet_identity)
+        and result.packet_identity == binding.packet_identity
+        and _exact_text(result.arm)
+        and result.arm == binding.arm
+        and _exact_text(result.dispatch_identity)
+        and result.dispatch_identity == binding.dispatch_identity
+        and _exact_text(result.dispatch_evidence_identity)
+        and result.dispatch_evidence_identity == binding.evidence_identity
+        and _exact_text(result.result_identity)
+        and _exact_text(result.evidence_identity)
+        and _exact_text(result.terminal)
+        and result.terminal == "completed"
+        and _exact_text(result.verdict)
+        and result.verdict in {"PASS", "PASS_WITH_NOTES", "NEEDS_REVISION"}
+        and type(result.findings) is tuple
+    )
+
+
+def _finding_attributable(
+    finding: object,
+    *,
+    packet: ReviewPacket,
+    result: ReviewerTerminalResult,
+) -> bool:
+    if not (
+        _complete_instance(finding, BlockingFinding)
+        and _exact_text(finding.finding_id)
+        and _exact_text(finding.packet_identity)
+        and finding.packet_identity == packet.identity
+        and _exact_text(finding.arm)
+        and finding.arm == result.arm
+        and _exact_text(finding.dispatch_identity)
+        and finding.dispatch_identity == result.dispatch_identity
+        and _exact_text(finding.evidence_identity)
+        and finding.evidence_identity == result.evidence_identity
+        and type(finding.owners) is tuple
+        and bool(finding.owners)
+        and all(_exact_text(owner) for owner in finding.owners)
+        and len(set(finding.owners)) == len(finding.owners)
+        and type(finding.blocking) is bool
+        and _exact_text(finding.ground)
+        and _exact_text(finding.ground_ref)
+        and _exact_text(finding.location)
+        and _exact_text(finding.severity)
+        and _exact_text(finding.reason)
+    ):
+        return False
+    members = {member.task_id: member for member in packet.members}
+    if any(owner not in members for owner in finding.owners):
+        return False
+    owner_members = tuple(members[owner] for owner in finding.owners)
+    if finding.ground == "owned_requirement":
+        return any(
+            finding.ground_ref in member.owned_requirements
+            for member in owner_members
+        )
+    if finding.ground == "stated_acceptance":
+        return any(
+            finding.ground_ref in member.acceptance for member in owner_members
+        )
+    if finding.ground in {"direct_regression", "safety_defect"}:
+        return any(
+            finding.ground_ref in member.declared_files
+            for member in owner_members
+        )
+    return False
+
+
+def resolve_aggregate_review(
+    *,
+    packet: object,
+    declared_lane: object,
+    expected_arms: object,
+    arm_bindings: object,
+    terminal_results: object,
+) -> AggregateReviewResolution:
+    """Reduce exact Packet-bound terminal results without side effects."""
+    if validate_packet(packet) != ():
+        return _resolution("wait_refuse", reasons=("invalid_packet",))
+    if not (
+        _exact_text(declared_lane)
+        and declared_lane == packet.declaration.review_lane
+        and type(expected_arms) is tuple
+        and bool(expected_arms)
+        and all(_exact_text(arm) for arm in expected_arms)
+        and len(set(expected_arms)) == len(expected_arms)
+        and _arms_apply_to_lane(declared_lane, expected_arms)
+        and type(arm_bindings) is tuple
+        and len(arm_bindings) == len(expected_arms)
+    ):
+        return _resolution("wait_refuse", reasons=("invalid_expected_arms",))
+
+    bindings: dict[str, ReviewerArmBinding] = {}
+    for arm, binding in zip(expected_arms, arm_bindings, strict=True):
+        if not _valid_binding(binding, packet.identity, arm):
+            return _resolution("wait_refuse", reasons=("invalid_arm_binding",))
+        bindings[arm] = binding
+    if (
+        len({binding.dispatch_identity for binding in bindings.values()})
+        != len(bindings)
+        or len({binding.evidence_identity for binding in bindings.values()})
+        != len(bindings)
+    ):
+        return _resolution("wait_refuse", reasons=("ambiguous_arm_binding",))
+    if type(terminal_results) is not tuple:
+        return _resolution("wait_refuse", reasons=("invalid_results",))
+
+    by_arm: dict[str, list[object]] = {arm: [] for arm in expected_arms}
+    for result in terminal_results:
+        if not _complete_instance(result, ReviewerTerminalResult):
+            return _resolution("wait_refuse", reasons=("invalid_result",))
+        if result.arm not in by_arm:
+            return _resolution("wait_refuse", reasons=("unexpected_result_arm",))
+        by_arm[result.arm].append(result)
+    if any(len(results) != 1 for results in by_arm.values()):
+        return _resolution("wait_refuse", reasons=("non_authoritative_results",))
+
+    ordered = tuple(by_arm[arm][0] for arm in expected_arms)
+    if not all(
+        _result_matches_binding(result, bindings[result.arm])
+        for result in ordered
+    ):
+        return _resolution("wait_refuse", reasons=("invalid_result_provenance",))
+    if (
+        len({result.result_identity for result in ordered}) != len(ordered)
+        or len({result.evidence_identity for result in ordered}) != len(ordered)
+    ):
+        return _resolution("wait_refuse", reasons=("ambiguous_result_identity",))
+
+    finding_ids: set[str] = set()
+    blocking: list[BlockingFinding] = []
+    unassignable = False
+    unsafe_provenance = False
+    for result in ordered:
+        for finding in result.findings:
+            if not _complete_instance(finding, BlockingFinding):
+                unassignable = True
+                unsafe_provenance = True
+                continue
+            if type(finding.owners) is not tuple:
+                unsafe_provenance = True
+            if finding.finding_id in finding_ids:
+                unassignable = True
+            finding_ids.add(finding.finding_id)
+            if not _finding_attributable(finding, packet=packet, result=result):
+                unassignable = True
+                unsafe_provenance = True
+            elif finding.blocking:
+                blocking.append(finding)
+        if result.verdict == "NEEDS_REVISION" and not any(
+            _complete_instance(finding, BlockingFinding) and finding.blocking
+            for finding in result.findings
+        ):
+            unassignable = True
+        if result.verdict != "NEEDS_REVISION" and any(
+            _complete_instance(finding, BlockingFinding) and finding.blocking
+            for finding in result.findings
+        ):
+            unassignable = True
+
+    if unassignable:
+        return _resolution(
+            "individual_fallback",
+            results=() if unsafe_provenance else ordered,
+            reasons=("unassignable_finding",),
+        )
+    if blocking:
+        owner_set = {owner for finding in blocking for owner in finding.owners}
+        owners = tuple(
+            member.task_id for member in packet.members
+            if member.task_id in owner_set
+        )
+        return _resolution("reopen", results=ordered, owners=owners)
+    if all(result.verdict in {"PASS", "PASS_WITH_NOTES"} for result in ordered):
+        return _resolution("finalize", results=ordered)
+    return _resolution("wait_refuse", results=ordered, reasons=("invalid_verdict_set",))
+
+
 _CANONICAL_TYPES = (
     ReviewedFile,
     ScopeEntryProof,
