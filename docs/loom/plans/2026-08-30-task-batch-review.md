@@ -99,7 +99,9 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
   - `scripts/plan_card.py`
 - **Acceptance**:
   - **RED**: `loom-code/scripts/test_plan_card_batch_states.py::test_batch_ledger_transition_matrix` fails because the ledger cannot record implemented commits, enforce same-Batch versus cross-Batch readiness, or atomically update an expected member set.
-  - **GREEN**: The matrix passes for valid transitions, stale snapshots, owner-union reopen, all-member finalize, idempotent retry, and interruption-safe file replacement; `check_review_batches.py` is the mandatory schema oracle.
+  - **GREEN**:
+    - The matrix passes for valid transitions, stale snapshots, owner-union reopen, all-member finalize, idempotent retry, and interruption-safe file replacement; `check_review_batches.py` is the mandatory schema oracle.
+    - Every participating `plan_card` writer uses one stable plan-directory advisory lock. Direct writers that bypass it are outside the transaction and may not run concurrently with SDD.
 - **Dependencies**: Task 2 completes first
 - **Seam**:
   - from Task 2: payload: validated membership and disposition; owner: Task 2; probe: `check_review_batches.py` is the mandatory schema oracle
@@ -108,7 +110,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-104
 - **Brief item covered**: REQ-108
 - **Brief item covered**: BI-3, BI-8, BI-11
-- **Status**: pending
+- **Status**: claimed(@main)
 - **Gloss**: Task 多一個暫態，但仍由原本的 plan ledger 管理。
 
 ## Task 4 — Materialize immutable aggregate Review Packets

@@ -285,6 +285,14 @@ The system MUST bind every blocking Batch finding to a non-empty subset of the e
 ### Requirement: REQ-108 — Atomic Batch finalization
 The system MUST finalize a passing Batch by atomically replacing every reviewed member's `implemented(<sha>)` with `done(<same-sha>)`.
 
+The compare-and-swap guarantee covers every participating Loom writer: SDD and
+`plan_card` mutations MUST acquire one stable plan-directory advisory lock
+before reading the precondition and keep it through publication. Direct file
+writers that bypass this protocol are not transaction participants and MUST
+NOT be run concurrently with SDD; portable filesystem replacement cannot
+serialize an actor that ignores the shared lock. This is one write protocol,
+not a Batch lock manager or a second ledger.
+
 #### Scenario: Exact passing snapshot finalizes all members
 - GIVEN every applicable review arm passed one exact Packet and every member still equals the Packet's `implemented(<sha>)`
 - WHEN SDD finalizes the Batch
@@ -311,9 +319,14 @@ The system MUST finalize a passing Batch by atomically replacing every reviewed 
 - THEN the operation fails loudly rather than filling the remaining statuses
 
 #### Scenario: Finalization compares the entire authoritative decision
-- GIVEN finalization races with a plan amendment, finding application, fallback, or another SDD session
+- GIVEN finalization races with a plan amendment, finding application, fallback, or another SDD session that uses the shared Loom write protocol
 - WHEN the atomic replacement is attempted
 - THEN its compare-and-swap precondition includes the exact Packet, Batch disposition, member statuses and SHAs, all authoritative arm outcomes, and absence of open findings; the losing operation performs zero writes
+
+#### Scenario: A writer that bypasses the shared lock is outside the transaction
+- GIVEN a direct editor or filesystem tool can replace the plan without acquiring the Loom write lock
+- WHEN SDD is about to mutate the same plan
+- THEN the orchestrator prevents those operations from running concurrently rather than claiming cross-process CAS against a non-participating writer
 
 ### Requirement: REQ-109 — New-plan-only execution contract
 The system MUST refuse execution of a newly invoked plan that lacks an explicit Batch-or-individual review disposition.

@@ -80,6 +80,7 @@ Build Review Batch as a derived checkpoint, not as a larger Task or a second wor
 - Runtime compatibility for plans authored before the Task Batch Review schema; those files remain historical records only.
 - Replacing the whole-branch code/docs review at branch close-out.
 - Adding an arbitrary maximum Batch size, configurable heuristics, scoring, or a separate Batch queue/ledger.
+- Serializing direct editors or filesystem tools that bypass Loom's shared plan-write lock; the orchestrator must not run those non-participating writers concurrently with SDD.
 - Solving the sibling requirement-ownership backlog entry unless a minimal packet field is strictly necessary for finding attribution.
 - Changing agent models, reviewer disciplines, or review quality rubrics unrelated to aggregate scope.
 
