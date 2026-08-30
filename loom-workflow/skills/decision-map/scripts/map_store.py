@@ -22,9 +22,11 @@ Stdlib only.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -432,6 +434,239 @@ def resolve_repo_root(explicit: str | Path | None, start_dir: Path) -> Path:
         return Path(out.stdout.strip())
     except (subprocess.CalledProcessError, FileNotFoundError, OSError):
         return Path.cwd()
+
+
+# --- historical-state operations --------------------------------------
+
+
+_SAFE_SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+_DATED_HUMAN = re.compile(r"^[^,\s][^,]*,\s*\d{4}-\d{2}-\d{2}$")
+
+
+def _assert_no_symlink_components(path: Path) -> None:
+    absolute = path.absolute()
+    current = Path(absolute.anchor)
+    for part in absolute.parts[1:]:
+        current /= part
+        if current.is_symlink():
+            raise SchemaViolation(
+                f"refusing mutation through symlink component: {current}"
+            )
+        if not current.exists():
+            break
+
+
+def _assert_contained(root: Path, candidate: Path) -> None:
+    try:
+        candidate.resolve(strict=False).relative_to(root.resolve(strict=True))
+    except (OSError, ValueError) as exc:
+        raise SchemaViolation(f"path escapes repository root: {candidate}") from exc
+
+
+def _atomic_write(path: Path, text: str) -> None:
+    """Replace one regular file without exposing partially written bytes.
+
+    This is the single-file safety floor used by REQ-86 operations.  Full
+    multi-artifact conflict detection and recovery remain owned by REQ-87.
+    """
+    _assert_no_symlink_components(path)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    except BaseException:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def _append_section_fields(text: str, section: str, fields: list[str]) -> str:
+    lines = text.splitlines()
+    heading = f"## {section}"
+    matches = [index for index, line in enumerate(lines) if line.strip() == heading]
+    if len(matches) != 1:
+        raise SchemaViolation(f"MAP.md must contain exactly one {heading!r}")
+    start = matches[0] + 1
+    end = next(
+        (index for index in range(start, len(lines)) if lines[index].startswith("## ")),
+        len(lines),
+    )
+    while end > start and not lines[end - 1].strip():
+        end -= 1
+    insertion = ([] if end == start else [""]) + fields
+    lines[end:end] = insertion
+    return "\n".join(lines) + ("\n" if text.endswith("\n") else "")
+
+
+def require_work_mutable(map_dir: Path, operation: str) -> MapDocument:
+    """Guard a work-through mutation against immutable historical Maps."""
+    if operation not in {"add", "claim", "bind", "resolve", "graduate"}:
+        raise SchemaViolation(f"unsupported work mutation: {operation!r}")
+    doc = read_map(Path(map_dir))
+    if doc.frontmatter.schema_version != 3:
+        raise SchemaViolation("historical-state operations require schema_version 3")
+    if doc.frontmatter.state in {"clear", "archived"}:
+        raise SchemaViolation(
+            f"cannot {operation} work in immutable {doc.frontmatter.state} Map"
+        )
+    return doc
+
+
+def record_active_regression(
+    map_dir: Path,
+    closed_delivery_slug: str,
+    *,
+    summary: str,
+    followup_type: str,
+    followup_slug: str,
+) -> Path:
+    """Record an active-Map regression as a new typed follow-up ticket."""
+    map_dir = Path(map_dir)
+    doc = require_work_mutable(map_dir, "add")
+    if doc.frontmatter.state != "active":
+        raise SchemaViolation("regression follow-up requires an active Map")
+    if not summary.strip():
+        raise SchemaViolation("regression summary must not be empty")
+    if followup_type not in V3_TICKET_TYPES:
+        raise SchemaViolation(
+            f"follow-up type must be one of {sorted(V3_TICKET_TYPES)}"
+        )
+    if not _SAFE_SLUG.fullmatch(closed_delivery_slug) or not _SAFE_SLUG.fullmatch(
+        followup_slug
+    ):
+        raise SchemaViolation("ticket slugs must use lowercase letters, digits, and hyphens")
+
+    tickets_dir = map_dir / "tickets"
+    source_path = tickets_dir / f"{closed_delivery_slug}.md"
+    followup_path = tickets_dir / f"{followup_slug}.md"
+    for path in (map_dir, tickets_dir, source_path, followup_path):
+        _assert_no_symlink_components(path)
+        try:
+            path.resolve(strict=False).relative_to(map_dir.resolve(strict=True))
+        except (OSError, ValueError) as exc:
+            raise SchemaViolation(f"ticket path escapes Map: {path}") from exc
+    source = read_ticket(source_path)
+    if (
+        source.frontmatter.type != "delivery"
+        or source.frontmatter.status != "closed"
+    ):
+        raise SchemaViolation("regression source must be a closed delivery ticket")
+    if followup_path.exists():
+        raise SchemaViolation(f"follow-up ticket already exists: {followup_path.name}")
+
+    ticket_text = (
+        "---\n"
+        f"type: {followup_type}\n"
+        "status: open\n"
+        "claim: null\n"
+        "graduated-from: null\n"
+        "---\n\n"
+        f"Regression follow-up to tickets/{closed_delivery_slug}.md.\n\n"
+        f"{summary.strip()}\n\n"
+        "## Resolution\n\n"
+    )
+    _atomic_write(followup_path, ticket_text)
+    return followup_path
+
+
+def retire_active_map(
+    map_dir: Path,
+    *,
+    ratified_by: str,
+    ratified_on: str,
+    reason: str,
+) -> None:
+    """Archive an unresolved active Map without representing it as clear."""
+    map_dir = Path(map_dir)
+    code, message = validate(map_dir)
+    if code != 0:
+        raise SchemaViolation(f"cannot retire invalid Map: {message}")
+    doc = read_map(map_dir)
+    if doc.frontmatter.schema_version != 3 or doc.frontmatter.state != "active":
+        raise SchemaViolation("ratified retirement requires an active schema-v3 Map")
+    human_and_date = f"{ratified_by.strip()}, {ratified_on.strip()}"
+    if not _DATED_HUMAN.fullmatch(human_and_date):
+        raise SchemaViolation("retirement requires a named human and YYYY-MM-DD date")
+    if not reason.strip():
+        raise SchemaViolation("retirement requires a non-empty reason")
+
+    map_md = map_dir / "MAP.md"
+    _assert_no_symlink_components(map_md)
+    text = map_md.read_text(encoding="utf-8")
+    if text.count("state: active") != 1:
+        raise SchemaViolation("MAP.md must contain exactly one active state field")
+    archived = text.replace("state: active", "state: archived", 1)
+    archived = _append_section_fields(
+        archived,
+        "Notes",
+        [
+            f"retirement-ratified: {human_and_date}",
+            f"retirement-reason: {reason.strip()}",
+        ],
+    )
+    _atomic_write(map_md, archived)
+
+
+def create_successor_map(
+    predecessor_dir: Path,
+    successor_map_id: str,
+    *,
+    reason: str,
+    repo_root: Path,
+) -> Path:
+    """Create new charting work while preserving a clear/archived predecessor."""
+    predecessor_dir = Path(predecessor_dir)
+    repo_root = Path(repo_root)
+    if not _SAFE_SLUG.fullmatch(successor_map_id):
+        raise SchemaViolation("successor map-id must be a safe lowercase slug")
+    if not reason.strip():
+        raise SchemaViolation("successor reason must not be empty")
+    code, message = validate(predecessor_dir, repo_root=repo_root)
+    if code != 0:
+        raise SchemaViolation(f"cannot continue from invalid predecessor: {message}")
+    predecessor = read_map(predecessor_dir)
+    if predecessor.frontmatter.schema_version != 3 or predecessor.frontmatter.state not in {
+        "clear",
+        "archived",
+    }:
+        raise SchemaViolation("successor requires a clear or archived schema-v3 predecessor")
+
+    maps_dir = repo_root / "docs" / "loom" / "maps"
+    successor = maps_dir / successor_map_id
+    predecessor_map = predecessor_dir / "MAP.md"
+    for path in (repo_root, maps_dir, successor, predecessor_map):
+        _assert_no_symlink_components(path)
+        _assert_contained(repo_root, path)
+    if successor.exists():
+        raise SchemaViolation(f"successor Map already exists: {successor_map_id}")
+    predecessor_ref = predecessor_map.resolve(strict=True).relative_to(
+        repo_root.resolve(strict=True)
+    ).as_posix()
+    map_text = (
+        "---\n"
+        f"map-id: {successor_map_id}\n"
+        "schema_version: 3\n"
+        "state: charting\n"
+        "---\n\n"
+        "## Destination\n\n"
+        f"Continue the outcome after renewed work: {reason.strip()}\n\n"
+        "## Notes\n\n"
+        f"predecessor-map: {predecessor_ref}\n\n"
+        "## Decisions-so-far\n\n"
+        "## Not-yet-specified (fog)\n\n"
+        f"- F-1: {reason.strip()}\n\n"
+        "## Out-of-scope\n\n"
+    )
+    successor.mkdir(parents=False)
+    (successor / "tickets").mkdir()
+    _atomic_write(successor / "tickets" / ".gitkeep", "")
+    _atomic_write(successor / "MAP.md", map_text)
+    return successor
 
 
 # --- validate ---------------------------------------------------------

@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/outcome-map-v3
 Goal: ship the full Outcome Map v3 mechanism so one Map controls many outcome-advancing delivery arcs without duplicating their progress — serves map family-relocation: turns its mixed task/prototype records into closure-exclusive tickets and canonical delivery arcs
-Stage: implementation: T10 recoverable close and rechart
+Stage: implementation: T12 immutable clear history
 **Total tasks**: 26
 **Critical-path depth**: 5 (≤5 ✓)
 **Execution order**: sequential
@@ -236,7 +236,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 3: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-84`
-- **Status**: claimed(@codex)
+- **Status**: done(4fb1a07631f0a5097e26ae5fbad6975ea9d67e6d)
 - **Gloss**: 每次關閉都回到地圖重新選擇下一步。
 
 ## Task 11 — Classify schema-v2 tickets by evidence
@@ -274,7 +274,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 3: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-86`
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 歷史交付保持真實，新的退化用新的工作表示。
 
 ## Task 13 — Add optimistic and recoverable transactions

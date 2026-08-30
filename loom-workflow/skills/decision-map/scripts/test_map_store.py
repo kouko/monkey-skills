@@ -406,6 +406,159 @@ reason: replaced by narrower work
     assert code == 0, message
 
 
+def _make_v3_active_map(tmp_path: Path) -> Path:
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8")
+        .replace("schema_version: 2", "schema_version: 3")
+        .replace("state: charting", "state: active")
+        .replace(
+            "Chart the decision-map layer.",
+            "Chart the decision-map layer.\n\n"
+            "user-ratified: kouko, 2026-08-30",
+        ),
+        encoding="utf-8",
+    )
+    _write(
+        map_dir / "tickets" / "decision-a.md",
+        TICKET_CLOSED.replace("type: task", "type: delivery"),
+    )
+    return map_dir
+
+
+def test_clear_history_is_immutable_and_active_regression_is_followup(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-86
+    """Later regressions never rewrite historical closure evidence."""
+    active = _make_v3_active_map(tmp_path)
+    closed_ticket = active / "tickets" / "decision-a.md"
+    closed_before = closed_ticket.read_bytes()
+
+    created = map_store.record_active_regression(
+        active,
+        "decision-a",
+        summary="The delivered parser now rejects a supported input.",
+        followup_type="delivery",
+        followup_slug="repair-parser-regression",
+    )
+
+    assert created == active / "tickets" / "repair-parser-regression.md"
+    assert closed_ticket.read_bytes() == closed_before
+    followup = map_store.read_ticket(created)
+    assert followup.frontmatter.type == "delivery"
+    assert followup.frontmatter.status == "open"
+    assert "decision-a" in created.read_text(encoding="utf-8")
+
+    map_md = active / "MAP.md"
+    clear_text = (
+        map_md.read_text(encoding="utf-8")
+        .replace("state: active", "state: clear")
+        .replace(
+            "user-ratified: kouko, 2026-08-30",
+            "user-ratified: kouko, 2026-08-30\n"
+            "acceptance: Supported inputs parse | satisfied | "
+            "docs/loom/results/parser.md",
+        )
+        .replace("- F-1: how does the fog id survive a rename?\n", "")
+    )
+    map_md.write_text(clear_text, encoding="utf-8")
+    created.unlink()
+    predecessor_before = {
+        path.relative_to(active): path.read_bytes()
+        for path in sorted(active.rglob("*"))
+        if path.is_file()
+    }
+
+    successor = map_store.create_successor_map(
+        active,
+        "wayfinder-regression",
+        reason="The delivered parser regressed on supported input.",
+        repo_root=tmp_path,
+    )
+
+    assert {
+        path.relative_to(active): path.read_bytes()
+        for path in sorted(active.rglob("*"))
+        if path.is_file()
+    } == predecessor_before
+    successor_text = (successor / "MAP.md").read_text(encoding="utf-8")
+    assert "predecessor-map: docs/loom/maps/wayfinder/MAP.md" in successor_text
+    assert "state: charting" in successor_text
+    code, message = map_store.validate(successor, repo_root=tmp_path)
+    assert code == 0, message
+
+
+def test_active_retirement_requires_named_ratification_and_reason(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-86
+    map_dir = _make_v3_active_map(tmp_path)
+    for ratified_by, reason in (("", "superseded"), ("kouko", "")):
+        before = (map_dir / "MAP.md").read_bytes()
+        try:
+            map_store.retire_active_map(
+                map_dir,
+                ratified_by=ratified_by,
+                ratified_on="2026-08-30",
+                reason=reason,
+            )
+        except map_store.SchemaViolation:
+            pass
+        else:
+            raise AssertionError("invalid retirement evidence was accepted")
+        assert (map_dir / "MAP.md").read_bytes() == before
+
+    map_store.retire_active_map(
+        map_dir,
+        ratified_by="kouko",
+        ratified_on="2026-08-30",
+        reason="The outcome is no longer worth pursuing.",
+    )
+    text = (map_dir / "MAP.md").read_text(encoding="utf-8")
+    assert "state: archived" in text
+    assert "state: clear" not in text
+    assert "retirement-ratified: kouko, 2026-08-30" in text
+    assert "retirement-reason: The outcome is no longer worth pursuing." in text
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+
+def test_archived_map_rejects_every_work_mutation_without_writing(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-86
+    map_dir = _make_v3_active_map(tmp_path)
+    map_store.retire_active_map(
+        map_dir,
+        ratified_by="kouko",
+        ratified_on="2026-08-30",
+        reason="The outcome is no longer worth pursuing.",
+    )
+    before = {
+        path.relative_to(map_dir): path.read_bytes()
+        for path in sorted(map_dir.rglob("*"))
+        if path.is_file()
+    }
+
+    for operation in ("add", "claim", "bind", "resolve", "graduate"):
+        try:
+            map_store.require_work_mutable(map_dir, operation)
+        except map_store.SchemaViolation as exc:
+            assert "archived" in str(exc)
+            assert operation in str(exc)
+        else:
+            raise AssertionError(f"archived Map accepted {operation}")
+
+    after = {
+        path.relative_to(map_dir): path.read_bytes()
+        for path in sorted(map_dir.rglob("*"))
+        if path.is_file()
+    }
+    assert after == before
+
+
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
     """A schema_version above map_store's supported ceiling is exit 2,
     naming both versions — never a silent read-past."""
