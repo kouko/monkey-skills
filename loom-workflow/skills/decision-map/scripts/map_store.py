@@ -745,8 +745,38 @@ def _atomic_write(
                 "BROKEN recovery-required: target changed during CAS restore; "
                 + detail
             ) from interleaving
-        temporary.unlink()
-        _fsync_directory(path.parent)
+        try:
+            _fsync_directory(path.parent)
+        except OSError as durability_error:
+            keep_temporary = True
+            evidence_path: Path | None = None
+            evidence_error: BaseException | None = None
+            try:
+                evidence_path = _record_exchange_recovery(
+                    path,
+                    temporary,
+                    durability_error,
+                    retained_role="candidate retained after mismatch restore",
+                )
+            except BaseException as exc:
+                evidence_error = exc
+            detail = (
+                f"evidence: {evidence_path}"
+                if evidence_path is not None
+                else f"retained temp: {temporary}; recovery evidence unavailable: "
+                f"{evidence_error}"
+            )
+            raise AtomicExchangeBroken(
+                "BROKEN recovery-required: mismatch restore durability failed; "
+                + detail
+            ) from durability_error
+        try:
+            temporary.unlink()
+            _fsync_directory(path.parent)
+        except OSError:
+            # Concurrent authority is already durably restored. Candidate
+            # cleanup cannot change the refusal outcome.
+            pass
         raise SchemaViolation(
             f"refusing atomic compare-and-swap because {path} changed"
         )

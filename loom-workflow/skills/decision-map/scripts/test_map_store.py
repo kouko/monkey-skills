@@ -933,6 +933,54 @@ def test_atomic_exchange_fsync_failure_restores_authority_with_truthful_evidence
     assert evidence["retained_role"] == "candidate retained after durability failure"
 
 
+def test_atomic_mismatch_restore_fsync_failure_retains_candidate_evidence(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # @req: REQ-97
+    # @req: REQ-98
+    target = tmp_path / "ticket.md"
+    target.write_bytes(b"expected-E\n")
+
+    def install_b(path: Path, temporary: Path) -> None:
+        replacement = tmp_path / "B.md"
+        replacement.write_bytes(b"concurrent-B\n")
+        replacement.replace(path)
+
+    real_fsync_directory = map_store._fsync_directory
+    fsync_calls = 0
+
+    def fail_first_directory_fsync(directory: Path) -> None:
+        nonlocal fsync_calls
+        fsync_calls += 1
+        if fsync_calls == 1:
+            raise OSError("simulated restore durability failure")
+        real_fsync_directory(directory)
+
+    monkeypatch.setattr(map_store, "_before_atomic_exchange", install_b)
+    monkeypatch.setattr(
+        map_store, "_fsync_directory", fail_first_directory_fsync
+    )
+    try:
+        map_store._atomic_write(
+            target, "candidate-A\n", expected=b"expected-E\n"
+        )
+    except map_store.AtomicExchangeBroken as exc:
+        assert "BROKEN" in str(exc)
+        assert "restore durability" in str(exc)
+    except OSError as exc:
+        raise AssertionError(f"raw OSError escaped: {exc}") from exc
+    else:
+        raise AssertionError("restore durability failure was ordinary refusal")
+
+    assert target.read_bytes() == b"concurrent-B\n"
+    evidence = json.loads(
+        (tmp_path / ".ticket.md.cas-recovery.json").read_text(encoding="utf-8")
+    )
+    retained = Path(evidence["retained_path"])
+    assert retained.read_bytes() == b"candidate-A\n"
+    assert evidence["retained_role"] == "candidate retained after mismatch restore"
+
+
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
     """A schema_version above map_store's supported ceiling is exit 2,
     naming both versions — never a silent read-past."""
