@@ -154,7 +154,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-106
 - **Brief item covered**: REQ-107
 - **Brief item covered**: BI-9
-- **Status**: pending
+- **Status**: done(e6ff43df)
 - **Gloss**: 無法可靠歸屬的 finding 直接降級，不猜測 owner。
 
 ## Task 6 — Integrate one Batch fan-out into SDD
