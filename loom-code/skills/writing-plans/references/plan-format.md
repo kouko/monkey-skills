@@ -388,8 +388,9 @@ metadata.
 The Batch is derived metadata, not a work object: there is no Batch queue,
 Batch ledger, Batch lifecycle, claim, score, configurable size limit, or
 independent transition. `Aggregate verification` is inert descriptive plan
-data. writing-plans and plan validation do not parse or execute it; SDD later
-resolves the executable command from trusted Task declarations.
+data. Plan validation checks that the field is present and non-placeholder, but
+never interprets or executes it as a shell command; SDD later resolves the
+executable command from trusted Task declarations.
 
 Run `python3 loom-code/scripts/check_review_batches.py <plan-path>` after the
 second pass. It is the mandatory schema oracle for DAG completeness, exact

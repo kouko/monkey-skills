@@ -1,7 +1,7 @@
 ---
 name: subagent-driven-development
 description: |
-  Use when a task takes >1 hour OR touches >1 module — splits work into atomic one-failing-test units, three subagents each (implementer / spec-reviewer / code-quality-reviewer).
+  Use when a task takes >1 hour OR touches >1 module — splits work into atomic one-failing-test units, then applies the Task's selected individual, mechanical, prose, or aggregate Batch review path.
 version: 0.12.0
 ---
 
@@ -296,11 +296,15 @@ A second, unrelated tier floor applies to `plan-document-reviewer`'s Check 17 (c
 ## Status handling — implementer states
 
 ```
-DONE                 → dispatch reviewers
-DONE_WITH_CONCERNS   → dispatch reviewers; surface concerns to user in final summary
+DONE                 → commit + mechanical proof; then route by disposition/lane
+DONE_WITH_CONCERNS   → same routing; surface concerns to user in final summary
 NEEDS_CONTEXT        → surface specific question to user; do NOT dispatch reviewers
 BLOCKED              → apply unblock_step if orchestrator can; else surface to user
 ```
+
+After `DONE`, an eligible Batch member parks at `implemented(<sha>)` and waits
+for the Batch checkpoint. An individual Task follows its selected review lane;
+the mechanical lane uses its self-check instead of reviewer dispatch.
 
 The orchestrator never silently dismisses a `BLOCKED` — even if the unblock step is trivial, log what was done so the final summary names it. A `NEEDS_CONTEXT` question with product stakes goes through the same two-axis framing (§Asking the user ①) before it reaches the user.
 

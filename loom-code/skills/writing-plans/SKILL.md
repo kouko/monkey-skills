@@ -121,7 +121,8 @@ decision, external wait, deferred test, independent release point, or failure
 boundary between members makes the group ineligible. When any eligibility fact
 cannot be proved, fail closed by assigning the affected Tasks to individual
 review. Batch metadata is a derived review checkpoint only: add no Batch queue,
-Batch ledger, Batch lifecycle, score, configured size limit, or parser/executor.
+Batch ledger, Batch lifecycle, score, configured size limit, or command
+parser/executor for `Aggregate verification`.
 
 The unconditional Review-Batch gate below is the single execution point; use
 [`references/plan-format.md`](references/plan-format.md) as the grammar SSOT.
