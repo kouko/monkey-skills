@@ -1,0 +1,143 @@
+"""Tests for the recoverable schema-v3 close-and-rechart operation."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).parent))
+
+import map_transaction  # noqa: E402
+
+
+def _write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def _make_map(tmp_path: Path) -> tuple[Path, Path]:
+    map_dir = tmp_path / "docs" / "loom" / "maps" / "outcome"
+    _write(
+        map_dir / "MAP.md",
+        """---
+map-id: outcome
+schema_version: 3
+state: active
+---
+
+## Destination
+
+Improve the outcome.
+user-ratified: kouko, 2026-08-30
+acceptance: Slice works | open | docs/loom/evidence.md
+
+## Notes
+
+Keep charting.
+
+## Decisions-so-far
+
+## Not-yet-specified (fog)
+
+## Out-of-scope
+""",
+    )
+    ticket = map_dir / "tickets" / "ship-slice.md"
+    _write(
+        ticket,
+        """---
+type: delivery
+status: claimed
+claim: codex, 2026-08-30
+graduated-from: null
+---
+
+Ship one bounded slice.
+""",
+    )
+    return map_dir, ticket
+
+
+def test_close_records_gist_routes_unknowns_and_terminalizes_last(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-84
+    map_dir, ticket = _make_map(tmp_path)
+    routes = [
+        map_transaction.UnknownRoute(
+            text="Which cohort should be next?", destination="fog"
+        ),
+        map_transaction.UnknownRoute(
+            text="Measure cohort retention",
+            destination="ticket",
+            ticket_slug="measure-retention",
+            ticket_type="research",
+        ),
+        map_transaction.UnknownRoute(
+            text="A mobile rewrite", destination="out-of-scope"
+        ),
+    ]
+
+    def interrupt_before_terminalize() -> None:
+        assert "- Slice shipped. (tickets/ship-slice.md)" in (
+            map_dir / "MAP.md"
+        ).read_text(encoding="utf-8")
+        assert "- F-1: Which cohort should be next?" in (
+            map_dir / "MAP.md"
+        ).read_text(encoding="utf-8")
+        assert (map_dir / "tickets" / "measure-retention.md").is_file()
+        assert "status: claimed" in ticket.read_text(encoding="utf-8")
+        raise RuntimeError("simulated interruption")
+
+    monkeypatch.setattr(
+        map_transaction, "_before_terminalize", interrupt_before_terminalize
+    )
+    with pytest.raises(RuntimeError, match="simulated interruption"):
+        map_transaction.close_and_rechart(
+            map_dir,
+            "ship-slice",
+            gist="Slice shipped.",
+            resolution="delivery-evidence: commit 0123456",
+            unknowns=routes,
+        )
+
+    monkeypatch.setattr(map_transaction, "_before_terminalize", lambda: None)
+    result = map_transaction.close_and_rechart(
+        map_dir,
+        "ship-slice",
+        gist="Slice shipped.",
+        resolution="delivery-evidence: commit 0123456",
+        unknowns=routes,
+    )
+
+    map_text = (map_dir / "MAP.md").read_text(encoding="utf-8")
+    assert map_text.count("- Slice shipped. (tickets/ship-slice.md)") == 1
+    assert map_text.count("- F-1: Which cohort should be next?") == 1
+    assert map_text.count("- A mobile rewrite") == 1
+    assert "status: closed" in ticket.read_text(encoding="utf-8")
+    assert result.map_clear_eligible is False
+    assert result.routed == 3
+
+
+def test_invalid_closure_evidence_is_rejected_before_any_write(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-84
+    map_dir, ticket = _make_map(tmp_path)
+    before_map = (map_dir / "MAP.md").read_bytes()
+    before_ticket = ticket.read_bytes()
+
+    with pytest.raises(map_transaction.CloseTransactionError, match="evidence"):
+        map_transaction.close_and_rechart(
+            map_dir,
+            "ship-slice",
+            gist="Slice shipped.",
+            resolution="delivery-evidence: merely claimed",
+            unknowns=[],
+        )
+
+    assert (map_dir / "MAP.md").read_bytes() == before_map
+    assert ticket.read_bytes() == before_ticket
+    assert not (map_dir / ".transactions").exists()
