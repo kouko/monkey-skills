@@ -235,7 +235,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-110
 - **Brief item covered**: BI-4
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: claimed(@t8-closeout)
 - **Gloss**: Batch review 降低中途成本，但不取代 branch 最後防線。
 
 ## Task 9 — Prove cost reduction without hiding defects
@@ -257,7 +257,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-111
 - **Brief item covered**: BI-1, BI-2, BI-3, BI-4
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: claimed(@t9-replay)
 - **Gloss**: 只有 review 次數下降且安全性不退步，才算有效。
 
 ## Review Batches
