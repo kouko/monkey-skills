@@ -1,7 +1,7 @@
 ---
 name: 2026-08-30-implementation-task-and-review-checkpoint-granularity
 description: Loom planning has no size control separating fine requirements from implementation and review checkpoints
-status: open
+status: closed
 origin: Outcome Map v3 implementation on branch codex/outcome-map-v3-design
 start: event — writing-plans or subagent-driven-development next changes task sizing or review checkpoint policy
 ---
@@ -35,3 +35,8 @@ on the same corpus. Measure review rounds, reviewer setup calls, false scope
 expansions, escaped defects, total elapsed work, and maximum diff size. Adopt a
 mechanical heuristic only if it reduces review cost without lowering defect
 detection or making requirement-to-test traceability weaker.
+
+Closed by the Task Batch Review implementation on local `main`: atomic Tasks
+remain small, while eligible capability groups share one aggregate review;
+the authorized replay reduced dispatches from 12 to 8 with no safety,
+traceability, scope, or package-gate regression.
