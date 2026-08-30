@@ -277,6 +277,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - 2026-08-30 — Centralize runtime Batch predicates in one pure helper and keep `plan_card.py` as the only ledger writer to avoid a second state system.
 - 2026-08-30 — T1 package gate discovered two repository-owned integration surfaces: classify the new checker and regenerate the living-spec index; remove the redundant `CLAUDE.md` command copy because `AGENTS.md` is the existing command SSOT.
 - 2026-08-30 — User chose inert aggregate verification: the plan field describes the required check, while SDD resolves and runs the trusted command through its existing declared-first contract; the validator never becomes a shell parser.
+- 2026-08-31 — Close the arc with atomic Tasks unchanged and Review Batch retained only as a derived, fail-closed full-review checkpoint; historical plans remain refused rather than gaining a compatibility layer.
 
 ## Notes
 
