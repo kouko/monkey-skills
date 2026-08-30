@@ -28,6 +28,15 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def test_store_writer_lock_dependency_is_one_way() -> None:
+    # @req: REQ-87
+    store_source = SCRIPT.read_text(encoding="utf-8")
+    lifecycle_source = (SCRIPT.parent / "map_lifecycle.py").read_text(encoding="utf-8")
+    assert "import map_lock" in store_source
+    assert "import map_transaction" not in store_source
+    assert "import map_transaction" not in lifecycle_source
+
+
 MAP_MD_CONFORMANT = """---
 map-id: wayfinder
 schema_version: 2
@@ -104,6 +113,21 @@ def test_validate_rejects_schema_v2_with_migration_guidance(tmp_path: Path) -> N
     assert code == 2
     assert "migrat" in message.lower()
     assert "3" in message
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "---\nmap-id: wayfinder\nmap-id: replacement\nschema_version: 3\nstate: active\n---\n\nbody\n",
+        "---\ntype: delivery\nstatus: open\nstatus: claimed\n---\n\nbody\n",
+        "---\nmap-id: wayfinder\nthis is not a key\nschema_version: 3\nstate: active\n---\n\nbody\n",
+        "---\ntype: delivery\nmalformed ticket metadata\nstatus: open\n---\n\nbody\n",
+    ],
+)
+def test_frontmatter_rejects_duplicate_keys_and_malformed_lines(text: str) -> None:
+    # @req: REQ-77
+    with pytest.raises(map_store.SchemaViolation, match="frontmatter|duplicate|malformed"):
+        map_store.parse_frontmatter(text)
 
 
 def test_validate_requires_schema_v3_without_parts(tmp_path: Path) -> None:
@@ -756,14 +780,14 @@ def test_archive_uses_stable_readiness_and_refuses_late_binding_break(
     assert map_path.read_bytes() == map_before
 
     transaction.unlink()
-    import map_transaction
+    import map_lifecycle
 
     def break_binding_before_replace() -> None:
         brief_path.write_text("# Broken reciprocal binding\n", encoding="utf-8")
 
     monkeypatch.setattr(
-        map_transaction,
-        "_before_archive_state_replace",
+        map_lifecycle,
+        "_before_state_replace",
         break_binding_before_replace,
     )
     try:
@@ -784,13 +808,13 @@ def test_archive_uses_stable_readiness_and_refuses_late_binding_break(
         brief_path.write_text("# Broken after state replacement\n", encoding="utf-8")
 
     monkeypatch.setattr(
-        map_transaction,
-        "_before_archive_state_replace",
+        map_lifecycle,
+        "_before_state_replace",
         lambda: None,
     )
     monkeypatch.setattr(
-        map_transaction,
-        "_after_archive_state_replace",
+        map_lifecycle,
+        "_after_state_replace",
         break_binding_after_replace,
     )
     try:

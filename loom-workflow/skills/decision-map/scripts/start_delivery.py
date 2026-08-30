@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 import delivery_binding
+import map_lock
 import map_store
 
 
@@ -187,6 +188,10 @@ def _before_ticket_publish() -> None:
     """Test seam after Brief publication and before Ticket publication."""
 
 
+def _before_ticket_replace() -> None:
+    """Test seam after final validation and before the guarded Ticket write."""
+
+
 def _brief_text(ticket: PurePosixPath, promised_slice: str) -> str:
     return (f"# {ticket.stem.replace('-', ' ')} — delivery brief\n\n"
             f"## Smallest End State\n\n{promised_slice}\n\n"
@@ -273,13 +278,25 @@ def _prepare(ticket_path: Path, brief_path: str, repo_root: Path | None) -> _Pre
     return _Prepared(root, ticket, map_path, brief, ticket_text, map_text, expected, existing is not None, False, orphan)
 
 
-def _rollback(prepared: _Prepared, ticket_parent: int, ticket_replaced: bool,
-              brief_parent: int, owned_brief: tuple[int, int] | None) -> list[OSError]:
-    errors = []
+def _replace_ticket(prepared: _Prepared, candidate: str) -> None:
+    map_store._atomic_write(
+        prepared.root / prepared.ticket,
+        candidate,
+        expected=prepared.ticket_text.encode("utf-8"),
+    )
+
+
+def _rollback(prepared: _Prepared, ticket_replaced: bool, ticket_candidate: str,
+              brief_parent: int, owned_brief: tuple[int, int] | None) -> list[Exception]:
+    errors: list[Exception] = []
     if ticket_replaced:
         try:
-            _replace_at(ticket_parent, prepared.ticket.name, prepared.ticket_text)
-        except OSError as exc:
+            map_store._atomic_write(
+                prepared.root / prepared.ticket,
+                prepared.ticket_text,
+                expected=ticket_candidate.encode("utf-8"),
+            )
+        except (OSError, map_store.SchemaViolation) as exc:
             errors.append(exc)
     if owned_brief is not None:
         try:
@@ -297,8 +314,9 @@ def _apply(prepared: _Prepared) -> None:
     if prepared.already_bound:
         return
     root_fd = _open_root(prepared.root)
-    brief_parent = ticket_parent = -1
+    brief_parent = -1
     ticket_replaced = False
+    ticket_candidate = _ticket_with_brief(prepared.ticket_text, prepared.brief)
     owned_brief: tuple[int, int] | None = None
     try:
         _before_first_write()
@@ -312,20 +330,20 @@ def _apply(prepared: _Prepared) -> None:
         _same_snapshot(prepared.root, prepared.ticket, prepared.ticket_text)
         _same_snapshot(prepared.root, prepared.map_path, prepared.map_text)
         _same_orphan(prepared)
-        ticket_parent, ticket_leaf = _open_parent(root_fd, prepared.ticket, False)
-        _replace_at(ticket_parent, ticket_leaf, _ticket_with_brief(prepared.ticket_text, prepared.brief))
+        _before_ticket_replace()
+        _replace_ticket(prepared, ticket_candidate)
         ticket_replaced = True
         code, message = delivery_binding.validate(prepared.root / prepared.ticket, repo_root=prepared.root)
         if code != 0:
             raise StartDeliveryError(f"created binding did not validate: {message}")
-    except (OSError, StartDeliveryError) as exc:
-        rollback_errors = _rollback(prepared, ticket_parent, ticket_replaced, brief_parent, owned_brief)
+    except (OSError, StartDeliveryError, map_store.SchemaViolation) as exc:
+        rollback_errors = _rollback(
+            prepared, ticket_replaced, ticket_candidate, brief_parent, owned_brief
+        )
         if rollback_errors:
             raise _OperationalError(f"Start delivery failed and rollback failed: {rollback_errors[0]}") from exc
         raise _OperationalError(f"Start delivery failed: {exc}") from exc
     finally:
-        if ticket_parent >= 0:
-            os.close(ticket_parent)
         if brief_parent >= 0:
             os.close(brief_parent)
         os.close(root_fd)
@@ -334,11 +352,20 @@ def _apply(prepared: _Prepared) -> None:
 def start_delivery(ticket_path: Path, brief_path: str, repo_root: Path | None = None) -> tuple[int, str]:
     """Create or recover one reciprocal Brief for a claimed v3 delivery."""
     try:
-        prepared = _prepare(ticket_path, brief_path, repo_root)
-        _apply(prepared)
+        initial = _prepare(ticket_path, brief_path, repo_root)
+        map_dir = initial.root / initial.ticket.parent.parent
+        with map_lock.map_writer_lock(map_dir):
+            prepared = _prepare(ticket_path, brief_path, repo_root)
+            _apply(prepared)
         action = "reused" if prepared.brief_exists else "created"
         return 0, f"Start delivery {action} {prepared.brief.as_posix()}"
     except StartDeliveryError as exc:
         return 2, f"Start delivery refused: {exc}"
-    except (_OperationalError, OSError, map_store.MapStoreError, map_store.SchemaViolation) as exc:
+    except (
+        _OperationalError,
+        OSError,
+        map_lock.MapLockError,
+        map_store.MapStoreError,
+        map_store.SchemaViolation,
+    ) as exc:
         return 1, f"Start delivery failed: {exc}"

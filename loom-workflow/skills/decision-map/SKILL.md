@@ -117,10 +117,17 @@ and cycles are refused.
 
 Call `map_transaction.close_and_rechart(map_dir, ticket_slug, gist=gist,
 resolution=resolution, unknowns=unknowns)`. Closure evidence is checked by
-ticket type. The same transaction records exactly one Decisions-so-far gist,
-routes every exposed unknown to fog, a typed ticket, or Out-of-scope, and
-writes the terminal Ticket last. Its result reports Map-clear eligibility; it
-does not equate one closed delivery with Map completion.
+ticket type. Closing preserves one durable Decisions-so-far gist and routes
+every exposed unknown to fog, a typed ticket, or Out-of-scope, so the next
+session can see why the result matters and what remains. Its result reports
+Map-clear eligibility; it does not equate one closed delivery with Map
+completion.
+
+For a `delivery` Ticket, also pass
+`delivery_closure=map_transaction.DeliveryClosureInputs(...)` with the current
+Brief, terminal Plan, acceptance result, exact reviewed/verified heads, PR
+roles, and the complete PR-owner population. Closure re-queries current PR and
+check state; unavailable or stale evidence leaves the Ticket claimed.
 
 Each item in `unknowns` is a `map_transaction.UnknownRoute`; use the exact
 field and destination grammar in `references/map-format.md`. For example:

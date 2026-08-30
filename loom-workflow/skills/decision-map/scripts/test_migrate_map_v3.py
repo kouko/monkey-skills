@@ -77,6 +77,32 @@ def test_migration_apply_refuses_ticket_membership_drift_without_writes(
     assert {path: path.read_bytes() for path in before} == before
 
 
+def test_migration_revalidates_ticket_batch_before_schema_flip(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # @req: REQ-91
+    map_path, ticket_path = _write_v2_research_map(tmp_path / "family-relocation")
+    original_ticket = ticket_path.read_bytes()
+    original_map = map_path.read_bytes()
+    preview = migrate_map_v3.preview_migration(map_path.parent)
+
+    def restore_v2_ticket() -> None:
+        ticket_path.write_bytes(original_ticket)
+
+    monkeypatch.setattr(
+        migrate_map_v3, "_before_schema_flip", restore_v2_ticket, raising=False
+    )
+    try:
+        migrate_map_v3.apply_migration(map_path.parent, preview)
+    except migrate_map_v3.MigrationConflict as exc:
+        assert "changed" in str(exc).lower() or "conflict" in str(exc).lower()
+    else:
+        raise AssertionError("schema flip must refuse a concurrently restored v2 ticket")
+
+    assert map_path.read_bytes() == original_map
+    assert ticket_path.read_bytes() == original_ticket
+
+
 def test_migration_apply_rejects_forged_preview_key_without_writes(tmp_path: Path) -> None:
     # @req: REQ-91
     """A preview cannot smuggle a path outside MAP.md or tickets/<slug>.md."""

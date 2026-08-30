@@ -7,23 +7,22 @@ primitives with full-read-set conflicts, idempotent retries, and safe recovery.
 
 from __future__ import annotations
 
-import errno
 import hashlib
 import json
 import os
 import re
 import stat
+import subprocess
 import tempfile
+from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
+import delivery_evidence
+import map_lifecycle
+import map_lock
 import map_store
-
-try:
-    import fcntl
-except ImportError:  # pragma: no cover - exercised only on unsupported hosts
-    fcntl = None
 
 
 class CloseTransactionError(ValueError):
@@ -55,28 +54,25 @@ class MutationResult:
     reused: bool
 
 
+@dataclass(frozen=True)
+class DeliveryClosureInputs:
+    """Current authoritative inputs re-evaluated immediately before close."""
+
+    brief_text: str
+    plan_text: str
+    acceptance_satisfied: bool
+    review_head: str
+    verification_head: str
+    pr: str
+    pr_roles: tuple[delivery_evidence.PRRole, ...] | None = None
+    pr_owners: dict[str, str] | None = None
+    ownership_complete: bool = False
+    artifact_probe: delivery_evidence.ArtifactProbeEvidence | None = None
+    run: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run
+
+
 def _before_terminalize() -> None:
     """Test seam immediately before the final, terminal ticket write."""
-
-
-def _before_retirement_stability_check() -> None:
-    """Test seam after retirement validation and before snapshot comparison."""
-
-
-def _before_retirement_transition() -> None:
-    """Test seam between readiness preparation and transition commit."""
-
-
-def _before_archive_state_replace() -> None:
-    """Test seam immediately before the archive commit-boundary check."""
-
-
-def _after_archive_state_replace() -> None:
-    """Test seam before post-write validation and possible MAP rollback."""
-
-
-def _before_retirement_replace() -> None:
-    """Test seam immediately before the MAP compare-and-swap write."""
 
 
 def capture_revision(map_dir: Path) -> StoreRevision:
@@ -134,122 +130,14 @@ def _require_valid_store(map_dir: Path) -> None:
         )
 
 
-def _before_lock_file_open() -> None:
-    """Test seam after opening the lock directory by descriptor."""
-
-
-def _open_lock_file(directory_fd: int) -> int:
-    flags = os.O_RDWR | os.O_NOFOLLOW
-    if hasattr(os, "O_CLOEXEC"):
-        flags |= os.O_CLOEXEC
-    for _ in range(3):
-        try:
-            return os.open(".map.lock", flags, dir_fd=directory_fd)
-        except OSError as exc:
-            if exc.errno != errno.ENOENT:
-                raise
-        try:
-            return os.open(
-                ".map.lock",
-                flags | os.O_CREAT | os.O_EXCL,
-                0o600,
-                dir_fd=directory_fd,
-            )
-        except FileExistsError:
-            continue
-    raise OSError(errno.EAGAIN, "transaction lock creation did not stabilize")
-
-
-def _prepare_lock_directory(map_dir: Path) -> tuple[Path, Path]:
-    transactions = map_dir / ".transactions"
-    lock_path = transactions / ".map.lock"
-    _assert_no_symlink_components(map_dir)
-    try:
-        if not stat.S_ISDIR(map_dir.lstat().st_mode):
-            raise CloseTransactionError(
-                f"transaction lock Map is not a directory: {map_dir}"
-            )
-        transactions.mkdir(mode=0o700, exist_ok=True)
-        if not stat.S_ISDIR(transactions.lstat().st_mode):
-            raise CloseTransactionError(
-                f"transaction lock directory is not regular: {transactions}"
-            )
-    except OSError as exc:
-        raise CloseTransactionError(f"cannot prepare transaction lock: {exc}") from exc
-    _assert_no_symlink_components(transactions)
-    _assert_contained(map_dir, lock_path)
-    return transactions, lock_path
-
-
-def _open_transaction_lock(map_dir: Path) -> int:
-    """Return one verified lock descriptor without following parent aliases."""
-    map_dir = Path(map_dir)
-    if (
-        fcntl is None
-        or not hasattr(fcntl, "flock")
-        or not hasattr(os, "O_NOFOLLOW")
-        or not hasattr(os, "O_DIRECTORY")
-    ):
-        raise CloseTransactionError(
-            "transaction lock assumptions are unsupported on this host"
-        )
-    transactions, _ = _prepare_lock_directory(map_dir)
-    directory_fd = -1
-    try:
-        directory_fd = os.open(
-            transactions, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
-        )
-        opened_directory = os.fstat(directory_fd)
-        linked_directory = transactions.lstat()
-        if (opened_directory.st_dev, opened_directory.st_ino) != (
-            linked_directory.st_dev,
-            linked_directory.st_ino,
-        ):
-            raise CloseTransactionError("transaction lock directory changed")
-        _before_lock_file_open()
-        linked_directory = transactions.lstat()
-        if (opened_directory.st_dev, opened_directory.st_ino) != (
-            linked_directory.st_dev,
-            linked_directory.st_ino,
-        ):
-            raise CloseTransactionError("transaction lock directory changed")
-        descriptor = _open_lock_file(directory_fd)
-    except OSError as exc:
-        raise CloseTransactionError(f"cannot open transaction lock: {exc}") from exc
-    finally:
-        if directory_fd >= 0:
-            os.close(directory_fd)
-    return descriptor
-
-
 @contextmanager
 def _transaction_lock(map_dir: Path):
-    """Serialize one Map's writers through a descriptor-verified local lock."""
-    lock_path = Path(map_dir) / ".transactions" / ".map.lock"
-    descriptor = _open_transaction_lock(map_dir)
+    """Translate the shared lock's refusal into this operation's domain."""
     try:
-        opened = os.fstat(descriptor)
-        linked = lock_path.lstat()
-        if (
-            not stat.S_ISREG(opened.st_mode)
-            or opened.st_nlink != 1
-            or (opened.st_dev, opened.st_ino) != (linked.st_dev, linked.st_ino)
-        ):
-            raise CloseTransactionError(
-                f"transaction lock is not one contained regular file: {lock_path}"
-            )
-        try:
-            fcntl.flock(descriptor, fcntl.LOCK_EX)
-        except OSError as exc:
-            raise CloseTransactionError(f"cannot acquire transaction lock: {exc}") from exc
-        try:
+        with map_lock.map_writer_lock(map_dir):
             yield
-        finally:
-            fcntl.flock(descriptor, fcntl.LOCK_UN)
-    except OSError as exc:
-        raise CloseTransactionError(f"cannot verify transaction lock: {exc}") from exc
-    finally:
-        os.close(descriptor)
+    except map_lock.MapLockError as exc:
+        raise CloseTransactionError(str(exc)) from exc
 
 
 @contextmanager
@@ -809,6 +697,39 @@ def _validate_terminal_candidate(ticket_path: Path, text: str) -> None:
         raise CloseTransactionError(f"invalid closure evidence: {exc}") from exc
 
 
+def _require_current_delivery_evidence(
+    ticket_slug: str,
+    ticket: map_store.TicketDocument,
+    inputs: DeliveryClosureInputs | None,
+) -> None:
+    if ticket.frontmatter.type != "delivery":
+        return
+    if inputs is None:
+        raise CloseTransactionError(
+            "current delivery policy evidence is required before closure"
+        )
+    ticket_identity = f"tickets/{ticket_slug}.md"
+    readiness = delivery_evidence.evaluate_closure(
+        brief_text=inputs.brief_text,
+        plan_text=inputs.plan_text,
+        acceptance_satisfied=inputs.acceptance_satisfied,
+        review_head=inputs.review_head,
+        verification_head=inputs.verification_head,
+        pr=inputs.pr,
+        pr_roles=inputs.pr_roles,
+        ticket=ticket_identity,
+        pr_owners=inputs.pr_owners,
+        ownership_complete=inputs.ownership_complete,
+        artifact_probe=inputs.artifact_probe,
+        run=inputs.run,
+    )
+    if not readiness.ready:
+        raise CloseTransactionError(
+            f"current delivery evidence is {readiness.evidence_state}: "
+            f"{readiness.reason}"
+        )
+
+
 def _assess_clear(map_dir: Path) -> bool:
     doc = map_store.read_map(map_dir)
     candidate = replace(
@@ -828,318 +749,23 @@ def _assess_clear(map_dir: Path) -> bool:
     return True
 
 
-def _store_snapshot(map_dir: Path) -> dict[str, bytes]:
-    """Read every regular descendant without accepting filesystem aliases."""
-    snapshot: dict[str, bytes] = {}
-    for root, directories, files in os.walk(map_dir, followlinks=False):
-        root_path = Path(root)
-        for name in list(directories):
-            candidate = root_path / name
-            if stat.S_ISLNK(candidate.lstat().st_mode):
-                raise CloseTransactionError(
-                    f"retirement read set contains a symlink: {candidate}"
-                )
-        for name in files:
-            candidate = root_path / name
-            mode = candidate.lstat().st_mode
-            if not stat.S_ISREG(mode):
-                raise CloseTransactionError(
-                    f"retirement read set contains a non-regular file: {candidate}"
-                )
-            snapshot[candidate.relative_to(map_dir).as_posix()] = candidate.read_bytes()
-    return snapshot
-
-
-def _retirement_snapshot(map_dir: Path, repo_root: Path) -> dict[str, bytes]:
-    """Snapshot Map descendants plus reciprocal Briefs in the validation read set."""
-    snapshot = {
-        str((map_dir / relative).resolve(strict=False)): content
-        for relative, content in _store_snapshot(map_dir).items()
-    }
-    tickets_dir = map_dir / "tickets"
-    for ticket_path in sorted(tickets_dir.glob("*.md")):
-        try:
-            fields, _ = map_store.parse_frontmatter(
-                ticket_path.read_text(encoding="utf-8")
-            )
-        except (OSError, map_store.SchemaViolation) as exc:
-            raise CloseTransactionError(f"cannot snapshot ticket binding: {exc}") from exc
-        brief = fields.get("brief")
-        if brief is None:
-            continue
-        brief_path = repo_root / brief
-        try:
-            map_store._assert_no_symlink_components(brief_path)
-            map_store._assert_contained(repo_root, brief_path)
-            snapshot[str(brief_path.resolve(strict=True))] = brief_path.read_bytes()
-        except (OSError, map_store.SchemaViolation) as exc:
-            raise CloseTransactionError(f"cannot snapshot reciprocal Brief: {exc}") from exc
-    return snapshot
-
-
-def _close_journal_is_complete(map_dir: Path, journal: Path) -> bool:
-    """Return whether a retained close journal's complete effects are visible."""
-    try:
-        intent = json.loads(journal.read_text(encoding="utf-8"))
-        if intent.get("kind") == "claim":
-            ticket = map_store.read_ticket(
-                map_dir / "tickets" / f"{intent['ticket_slug']}.md"
-            )
-            return (
-                intent.get("version") == 1
-                and ticket.frontmatter.status == "claimed"
-                and ticket.frontmatter.claim
-                == f"{intent['owner']}, {intent['claimed_on']}"
-            )
-        if intent.get("kind") == "update-blockers":
-            ticket = map_store.read_ticket(
-                map_dir / "tickets" / f"{intent['ticket_slug']}.md"
-            )
-            return (
-                intent.get("version") == 1
-                and ticket.frontmatter.blocked_by == intent.get("blockers")
-            )
-        slug = intent["ticket_slug"]
-        gist = intent["gist"]
-        resolution = intent["resolution"]
-        routes = intent["routes"]
-        if (
-            intent.get("version") != 1
-            or intent.get("prepared") is not True
-            or not isinstance(slug, str)
-            or not isinstance(gist, str)
-            or not isinstance(resolution, str)
-            or not isinstance(routes, list)
-            or journal.name != f"close-{slug}.json"
-        ):
-            return False
-        ticket = map_store.read_ticket(map_dir / "tickets" / f"{slug}.md")
-        if ticket.frontmatter.status != "closed" or (
-            ticket.resolution or ""
-        ).strip() != resolution.strip():
-            return False
-        map_text = (map_dir / "MAP.md").read_text(encoding="utf-8")
-        if f"- {gist.strip()} (tickets/{slug}.md)" not in map_text:
-            return False
-        for route in routes:
-            if not isinstance(route, dict):
-                return False
-            destination = route.get("destination")
-            text = route.get("text")
-            if not isinstance(text, str):
-                return False
-            if destination == "fog":
-                if f"- {route.get('fog_id')}: {text}" not in map_text:
-                    return False
-            elif destination == "out-of-scope":
-                if f"- {text}" not in map_text:
-                    return False
-            elif destination == "ticket":
-                routed = map_dir / "tickets" / f"{route.get('ticket_slug')}.md"
-                if not routed.is_file() or routed.read_text(encoding="utf-8") != _open_ticket_text(route):
-                    return False
-            else:
-                return False
-        return True
-    except (KeyError, OSError, json.JSONDecodeError, map_store.MapStoreError, map_store.SchemaViolation):
-        return False
-
-
-def _validate_retirement_snapshot(map_dir: Path, repo_root: Path) -> None:
-    """Apply all currently public store invariants to one retirement read set."""
-    import check_map_links
-    import delivery_binding
-
-    transaction_dir = map_dir / ".transactions"
-    if transaction_dir.exists():
-        incomplete = [
-            path.name
-            for path in sorted(transaction_dir.iterdir())
-            if path.name != ".map.lock"
-            if not path.is_file() or not _close_journal_is_complete(map_dir, path)
-        ]
-        if incomplete:
-            raise CloseTransactionError(
-                "retirement refuses incomplete recoverable operation(s) "
-                + ", ".join(incomplete)
-                + "; repair them first"
-            )
-    code, message = map_store.validate(map_dir, repo_root=repo_root)
-    if code != 0:
-        raise CloseTransactionError(f"retirement refuses broken Map invariants: {message}")
-    link_code, link_message = check_map_links.check_links(map_dir)
-    if link_code != 0:
-        raise CloseTransactionError(
-            f"retirement refuses broken gist relationships: {link_message}"
-        )
-
-    doc = map_store.read_map(map_dir)
-    fog_ids = {entry.id for entry in doc.fog_entries}
-    graduated: dict[str, list[str]] = {}
-    closed_links: dict[str, int] = {}
-    for decision in doc.decisions:
-        closed_links[decision.ticket_link] = closed_links.get(decision.ticket_link, 0) + 1
-    for ticket_path in sorted((map_dir / "tickets").glob("*.md")):
-        ticket = map_store.read_ticket(ticket_path)
-        if ticket.frontmatter.graduated_from:
-            graduated.setdefault(ticket.frontmatter.graduated_from, []).append(
-                ticket_path.name
-            )
-        if ticket.frontmatter.status == "closed":
-            link = f"tickets/{ticket_path.name}"
-            if closed_links.get(link, 0) != 1:
-                raise CloseTransactionError(
-                    f"retirement requires exactly one gist for closed ticket {ticket_path.name}"
-                )
-        if ticket.frontmatter.type == "delivery":
-            binding_code, binding_message = delivery_binding.validate(
-                ticket_path, repo_root=repo_root
-            )
-            if binding_code != 0:
-                raise CloseTransactionError(
-                    f"retirement refuses broken delivery binding: {binding_message}"
-                )
-    overlap = sorted(fog_ids.intersection(graduated))
-    if overlap:
-        raise CloseTransactionError(
-            "retirement refuses partial fog graduation for " + ", ".join(overlap)
-        )
-    duplicates = sorted(key for key, owners in graduated.items() if len(owners) != 1)
-    if duplicates:
-        raise CloseTransactionError(
-            "retirement refuses duplicated fog graduation for "
-            + ", ".join(duplicates)
-        )
-
-
-@dataclass(frozen=True)
-class RetirementReadiness:
-    """Validated immutable read-set token for one archive transition."""
-
-    map_dir: Path
-    repo_root: Path
-    snapshot: tuple[tuple[str, bytes], ...]
+RetirementReadiness = map_lifecycle.RetirementReadiness
 
 
 def prepare_retirement(map_dir: Path, repo_root: Path) -> RetirementReadiness:
-    """Validate all retirement invariants and bind them to one stable read set."""
-    map_dir = Path(map_dir)
-    repo_root = Path(repo_root)
-    for path in (repo_root, map_dir, map_dir / "MAP.md", map_dir / "tickets"):
-        _assert_no_symlink_components(path)
-        try:
-            path.resolve(strict=False).relative_to(repo_root.resolve(strict=True))
-        except (OSError, ValueError) as exc:
-            raise CloseTransactionError(
-                f"retirement path escapes repository: {path}"
-            ) from exc
-    initial = _retirement_snapshot(map_dir, repo_root)
-    _validate_retirement_snapshot(map_dir, repo_root)
-    _before_retirement_stability_check()
-    if _retirement_snapshot(map_dir, repo_root) != initial:
-        raise CloseTransactionError(
-            "retirement requires one stable snapshot; a read-set file changed"
-        )
-    return RetirementReadiness(map_dir, repo_root, tuple(sorted(initial.items())))
-
-
-def _commit_retirement(
-    readiness: RetirementReadiness,
-    *,
-    ratified_by: str | None,
-    ratified_on: str | None,
-    reason: str | None,
-) -> None:
-    map_dir = readiness.map_dir
-    repo_root = readiness.repo_root
-    _before_retirement_transition()
-    doc = map_store.read_map(map_dir)
-    if doc.frontmatter.state == "clear":
-        _before_archive_state_replace()
-    expected = dict(readiness.snapshot)
-    if _retirement_snapshot(map_dir, repo_root) != expected:
-        raise CloseTransactionError(
-            "retirement requires one stable snapshot at the transition boundary"
-        )
-
-    map_path = map_dir / "MAP.md"
-    original = map_path.read_text(encoding="utf-8")
+    """Validate retirement through the independent lifecycle orchestrator."""
     try:
-        if doc.frontmatter.state == "clear":
-            candidate = map_store.archive_candidate(original)
-        else:
-            candidate = map_store.retirement_candidate(
-                original,
-                current_state=doc.frontmatter.state,
-                ratified_by=ratified_by or "",
-                ratified_on=ratified_on or "",
-                reason=reason or "",
-            )
-    except map_store.SchemaViolation as exc:
+        return map_lifecycle.prepare_retirement(map_dir, repo_root)
+    except map_lifecycle.LifecycleError as exc:
         raise CloseTransactionError(str(exc)) from exc
-    _before_retirement_replace()
-    _atomic_write(map_path, candidate, expected=original.encode("utf-8"))
-    try:
-        if doc.frontmatter.state == "clear":
-            _after_archive_state_replace()
-        committed = dict(readiness.snapshot)
-        committed[str(map_path.resolve(strict=True))] = candidate.encode("utf-8")
-        if _retirement_snapshot(map_dir, repo_root) != committed:
-            raise CloseTransactionError(
-                "retirement read set changed during state replacement"
-            )
-        _validate_retirement_snapshot(map_dir, repo_root)
-    except Exception as exc:
-        try:
-            _atomic_write(
-                map_path,
-                original,
-                expected=candidate.encode("utf-8"),
-            )
-        except Exception as rollback_exc:
-            evidence = {
-                "action": "recovery-required",
-                "cause": str(exc),
-                "map_path": "MAP.md",
-                "rollback_error": str(rollback_exc),
-                "status": "BROKEN",
-            }
-            evidence_path = map_dir / ".transactions" / "retirement-recovery.json"
-            evidence_error: str | None = None
-            try:
-                map_store._atomic_write(
-                    evidence_path,
-                    json.dumps(evidence, indent=2, sort_keys=True) + "\n",
-                )
-            except Exception as evidence_exc:
-                evidence_error = str(evidence_exc)
-            suffix = (
-                f"; durable evidence unavailable: {evidence_error}"
-                if evidence_error is not None
-                else f"; evidence: {evidence_path}"
-            )
-            raise CloseTransactionError(
-                "BROKEN recovery-required: archive state could not be rolled back"
-                + suffix
-            ) from rollback_exc
-        if isinstance(exc, CloseTransactionError):
-            raise
-        raise CloseTransactionError(
-            f"archive post-write validation failed; MAP state restored: {exc}"
-        ) from exc
 
 
 def archive_map_transition(map_dir: Path, *, repo_root: Path) -> None:
-    """Archive a clear Map through the same stable-readiness transaction."""
-    with _transaction_lock(map_dir):
-        readiness = prepare_retirement(map_dir, repo_root)
-        if map_store.read_map(map_dir).frontmatter.state != "clear":
-            raise CloseTransactionError(
-                "archive transition requires a clear schema-v3 Map"
-            )
-        _commit_retirement(
-            readiness, ratified_by=None, ratified_on=None, reason=None
-        )
+    """Archive a clear Map through the shared lifecycle orchestrator."""
+    try:
+        map_lifecycle.archive_map_transition(map_dir, repo_root=repo_root)
+    except map_lifecycle.LifecycleError as exc:
+        raise CloseTransactionError(str(exc)) from exc
 
 
 def retire_map(
@@ -1150,15 +776,17 @@ def retire_map(
     reason: str,
     repo_root: Path,
 ) -> None:
-    """Retire one Map only if its complete validated read set stays stable."""
-    with _transaction_lock(map_dir):
-        readiness = prepare_retirement(map_dir, repo_root)
-        _commit_retirement(
-            readiness,
+    """Retire a Map through the shared lifecycle orchestrator."""
+    try:
+        map_lifecycle.retire_map(
+            map_dir,
             ratified_by=ratified_by,
             ratified_on=ratified_on,
             reason=reason,
+            repo_root=repo_root,
         )
+    except map_lifecycle.LifecycleError as exc:
+        raise CloseTransactionError(str(exc)) from exc
 
 
 def close_and_rechart(
@@ -1168,6 +796,7 @@ def close_and_rechart(
     gist: str,
     resolution: str,
     unknowns: list[UnknownRoute],
+    delivery_closure: DeliveryClosureInputs | None = None,
 ) -> CloseResult:
     """Close and re-chart under the Map writer lock."""
     with _transaction_lock(map_dir):
@@ -1177,6 +806,7 @@ def close_and_rechart(
             gist=gist,
             resolution=resolution,
             unknowns=unknowns,
+            delivery_closure=delivery_closure,
         )
 
 
@@ -1187,6 +817,7 @@ def _close_and_rechart_locked(
     gist: str,
     resolution: str,
     unknowns: list[UnknownRoute],
+    delivery_closure: DeliveryClosureInputs | None,
 ) -> CloseResult:
     """Close after the caller acquires the Map writer lock."""
     map_dir = Path(map_dir)
@@ -1223,6 +854,10 @@ def _close_and_rechart_locked(
     else:
         raise CloseTransactionError("source ticket must be claimed before close")
 
+    _require_current_delivery_evidence(
+        ticket_slug, ticket, delivery_closure
+    )
+
     _assert_supported_filesystem(map_dir)
     _require_revision(map_dir, observed)
 
@@ -1241,6 +876,9 @@ def _close_and_rechart_locked(
         _require_valid_store(map_dir)
         return CloseResult(len(unknowns), _assess_clear(map_dir))
     assert terminal is not None
+    _require_current_delivery_evidence(
+        ticket_slug, ticket, delivery_closure
+    )
     _before_terminalize()
     _atomic_write(ticket_path, terminal, expected=ticket_original)
     _require_valid_store(map_dir)

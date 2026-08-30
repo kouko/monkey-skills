@@ -35,6 +35,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
+import map_lock
+
 MIN_SUPPORTED_SCHEMA_VERSION = 3
 SUPPORTED_SCHEMA_VERSION = 3
 
@@ -114,9 +116,16 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
     i = 1
     while i < len(lines) and lines[i].strip() != "---":
         line = lines[i]
-        if line.strip() and ":" in line:
-            key, _, value = line.partition(":")
-            fields[key.strip()] = value.strip()
+        if line.strip():
+            match = re.fullmatch(
+                r"(?P<key>[A-Za-z0-9][A-Za-z0-9_-]*):\s*(?P<value>.*)", line
+            )
+            if match is None:
+                raise SchemaViolation(f"malformed frontmatter line: {line!r}")
+            key = match.group("key")
+            if key in fields:
+                raise SchemaViolation(f"duplicate frontmatter key: {key!r}")
+            fields[key] = match.group("value").strip()
         i += 1
     if i >= len(lines):
         raise SchemaViolation("missing frontmatter closing '---' fence")
@@ -653,6 +662,127 @@ def _record_exchange_recovery(
     return evidence_path
 
 
+def _recovery_detail(
+    path: Path,
+    temporary: Path,
+    error: BaseException,
+    retained_role: str,
+) -> str:
+    try:
+        evidence_path = _record_exchange_recovery(
+            path, temporary, error, retained_role=retained_role
+        )
+    except BaseException as evidence_error:
+        return (
+            f"retained temp: {temporary}; recovery evidence unavailable: "
+            f"{evidence_error}"
+        )
+    return f"evidence: {evidence_path}"
+
+
+def _cleanup_exchanged_temporary(path: Path, temporary: Path) -> None:
+    try:
+        temporary.unlink()
+        _fsync_directory(path.parent)
+    except OSError:
+        pass
+
+
+def _commit_exchanged_candidate(path: Path, temporary: Path) -> None:
+    try:
+        _fsync_directory(path.parent)
+    except OSError as durability_error:
+        try:
+            _exchange_paths(temporary, path)
+        except BaseException as restore_error:
+            detail = _recovery_detail(
+                path,
+                temporary,
+                restore_error,
+                "expected authority retained after durability failure",
+            )
+            raise AtomicExchangeBroken(
+                "BROKEN recovery-required: exchange durability failed and "
+                "authority could not be restored; " + detail
+            ) from restore_error
+        restoration_error: BaseException = durability_error
+        try:
+            _fsync_directory(path.parent)
+        except OSError as exc:
+            restoration_error = exc
+        detail = _recovery_detail(
+            path,
+            temporary,
+            restoration_error,
+            "candidate retained after durability failure",
+        )
+        raise AtomicExchangeBroken(
+            "BROKEN recovery-required: exchange durability failed; expected "
+            "authority was restored and candidate retained; " + detail
+        ) from durability_error
+    _cleanup_exchanged_temporary(path, temporary)
+
+
+def _restore_cas_mismatch(path: Path, temporary: Path, candidate: bytes) -> None:
+    _before_atomic_restore(path, temporary)
+    try:
+        _exchange_paths(temporary, path)
+    except BaseException as restore_error:
+        detail = _recovery_detail(
+            path,
+            temporary,
+            restore_error,
+            "concurrent version retained during restore",
+        )
+        raise AtomicExchangeBroken(
+            "BROKEN recovery-required: atomic CAS restore failed; " + detail
+        ) from restore_error
+    if temporary.read_bytes() != candidate:
+        _handle_restore_interleaving(path, temporary)
+    try:
+        _fsync_directory(path.parent)
+    except OSError as durability_error:
+        detail = _recovery_detail(
+            path,
+            temporary,
+            durability_error,
+            "candidate retained after mismatch restore",
+        )
+        raise AtomicExchangeBroken(
+            "BROKEN recovery-required: mismatch restore durability failed; " + detail
+        ) from durability_error
+    _cleanup_exchanged_temporary(path, temporary)
+    raise SchemaViolation(f"refusing atomic compare-and-swap because {path} changed")
+
+
+def _handle_restore_interleaving(path: Path, temporary: Path) -> None:
+    try:
+        _exchange_paths(temporary, path)
+    except BaseException as third_exchange_error:
+        detail = _recovery_detail(
+            path,
+            temporary,
+            third_exchange_error,
+            "newest concurrent version; restore incomplete",
+        )
+        raise AtomicExchangeBroken(
+            "BROKEN recovery-required: newest concurrent version could not be "
+            "returned to target; " + detail
+        ) from third_exchange_error
+    interleaving = RuntimeError(
+        "target changed again between mismatch detection and restore"
+    )
+    detail = _recovery_detail(
+        path,
+        temporary,
+        interleaving,
+        "concurrent version retained during restore",
+    )
+    raise AtomicExchangeBroken(
+        "BROKEN recovery-required: target changed during CAS restore; " + detail
+    ) from interleaving
+
+
 def _atomic_write(
     path: Path, text: str, *, expected: bytes | None = None
 ) -> None:
@@ -666,7 +796,6 @@ def _atomic_write(
         prefix=f".{path.name}.", dir=path.parent
     )
     temporary = Path(temporary_name)
-    keep_temporary = False
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
             handle.write(text)
@@ -687,188 +816,11 @@ def _atomic_write(
             ) from exc
         displaced = temporary.read_bytes()
         if displaced == expected:
-            try:
-                _fsync_directory(path.parent)
-            except OSError as durability_error:
-                try:
-                    _exchange_paths(temporary, path)
-                except BaseException as restore_error:
-                    keep_temporary = True
-                    evidence_path: Path | None = None
-                    evidence_error: BaseException | None = None
-                    try:
-                        evidence_path = _record_exchange_recovery(
-                            path,
-                            temporary,
-                            restore_error,
-                            retained_role="expected authority retained after durability failure",
-                        )
-                    except BaseException as exc:
-                        evidence_error = exc
-                    detail = (
-                        f"evidence: {evidence_path}"
-                        if evidence_path is not None
-                        else f"retained temp: {temporary}; recovery evidence unavailable: "
-                        f"{evidence_error}"
-                    )
-                    raise AtomicExchangeBroken(
-                        "BROKEN recovery-required: exchange durability failed and "
-                        "authority could not be restored; "
-                        + detail
-                    ) from restore_error
-                keep_temporary = True
-                restoration_error: BaseException = durability_error
-                try:
-                    _fsync_directory(path.parent)
-                except OSError as exc:
-                    restoration_error = exc
-                evidence_path = None
-                evidence_error = None
-                try:
-                    evidence_path = _record_exchange_recovery(
-                        path,
-                        temporary,
-                        restoration_error,
-                        retained_role="candidate retained after durability failure",
-                    )
-                except BaseException as exc:
-                    evidence_error = exc
-                detail = (
-                    f"evidence: {evidence_path}"
-                    if evidence_path is not None
-                    else f"retained temp: {temporary}; recovery evidence unavailable: "
-                    f"{evidence_error}"
-                )
-                raise AtomicExchangeBroken(
-                    "BROKEN recovery-required: exchange durability failed; "
-                    "expected authority was restored and candidate retained; "
-                    + detail
-                ) from durability_error
-            try:
-                temporary.unlink()
-                _fsync_directory(path.parent)
-            except OSError:
-                # The candidate commit was durably established by the first fsync.
-                # Cleanup failure may retain a duplicate expected version, but must
-                # not turn a committed mutation into an ambiguous failed result.
-                pass
+            _commit_exchanged_candidate(path, temporary)
             return
-        candidate = text.encode("utf-8")
-        _before_atomic_restore(path, temporary)
-        try:
-            _exchange_paths(temporary, path)
-        except BaseException as restore_error:
-            keep_temporary = True
-            evidence_error: BaseException | None = None
-            evidence_path: Path | None = None
-            try:
-                evidence_path = _record_exchange_recovery(
-                    path,
-                    temporary,
-                    restore_error,
-                    retained_role="concurrent version retained during restore",
-                )
-            except BaseException as exc:
-                evidence_error = exc
-            detail = (
-                f"evidence: {evidence_path}"
-                if evidence_path is not None
-                else f"retained temp: {temporary}; recovery evidence unavailable: "
-                f"{evidence_error}"
-            )
-            raise AtomicExchangeBroken(
-                "BROKEN recovery-required: atomic CAS restore failed; " + detail
-            ) from restore_error
-        restore_displaced = temporary.read_bytes()
-        if restore_displaced != candidate:
-            try:
-                _exchange_paths(temporary, path)
-            except BaseException as third_exchange_error:
-                keep_temporary = True
-                evidence_error: BaseException | None = None
-                evidence_path: Path | None = None
-                try:
-                    evidence_path = _record_exchange_recovery(
-                        path,
-                        temporary,
-                        third_exchange_error,
-                        retained_role="newest concurrent version; restore incomplete",
-                    )
-                except BaseException as exc:
-                    evidence_error = exc
-                detail = (
-                    f"evidence: {evidence_path}"
-                    if evidence_path is not None
-                    else f"retained temp: {temporary}; recovery evidence unavailable: "
-                    f"{evidence_error}"
-                )
-                raise AtomicExchangeBroken(
-                    "BROKEN recovery-required: newest concurrent version could "
-                    "not be returned to target; "
-                    + detail
-                ) from third_exchange_error
-            keep_temporary = True
-            evidence_error = None
-            evidence_path = None
-            interleaving = RuntimeError(
-                "target changed again between mismatch detection and restore"
-            )
-            try:
-                evidence_path = _record_exchange_recovery(
-                    path,
-                    temporary,
-                    interleaving,
-                    retained_role="concurrent version retained during restore",
-                )
-            except BaseException as exc:
-                evidence_error = exc
-            detail = (
-                f"evidence: {evidence_path}"
-                if evidence_path is not None
-                else f"retained temp: {temporary}; recovery evidence unavailable: "
-                f"{evidence_error}"
-            )
-            raise AtomicExchangeBroken(
-                "BROKEN recovery-required: target changed during CAS restore; "
-                + detail
-            ) from interleaving
-        try:
-            _fsync_directory(path.parent)
-        except OSError as durability_error:
-            keep_temporary = True
-            evidence_path: Path | None = None
-            evidence_error: BaseException | None = None
-            try:
-                evidence_path = _record_exchange_recovery(
-                    path,
-                    temporary,
-                    durability_error,
-                    retained_role="candidate retained after mismatch restore",
-                )
-            except BaseException as exc:
-                evidence_error = exc
-            detail = (
-                f"evidence: {evidence_path}"
-                if evidence_path is not None
-                else f"retained temp: {temporary}; recovery evidence unavailable: "
-                f"{evidence_error}"
-            )
-            raise AtomicExchangeBroken(
-                "BROKEN recovery-required: mismatch restore durability failed; "
-                + detail
-            ) from durability_error
-        try:
-            temporary.unlink()
-            _fsync_directory(path.parent)
-        except OSError:
-            # Concurrent authority is already durably restored. Candidate
-            # cleanup cannot change the refusal outcome.
-            pass
-        raise SchemaViolation(
-            f"refusing atomic compare-and-swap because {path} changed"
-        )
-    except BaseException:
-        if not keep_temporary:
+        _restore_cas_mismatch(path, temporary, text.encode("utf-8"))
+    except BaseException as exc:
+        if not isinstance(exc, AtomicExchangeBroken):
             try:
                 temporary.unlink()
             except FileNotFoundError:
@@ -948,10 +900,8 @@ def record_active_regression(
     followup_slug: str,
 ) -> Path:
     """Record an active regression under the shared Map writer lock."""
-    import map_transaction
-
     try:
-        with map_transaction.serialize_map_mutation(map_dir):
+        with map_lock.map_writer_lock(map_dir):
             return _record_active_regression_locked(
                 map_dir,
                 closed_delivery_slug,
@@ -959,7 +909,7 @@ def record_active_regression(
                 followup_type=followup_type,
                 followup_slug=followup_slug,
             )
-    except map_transaction.CloseTransactionError as exc:
+    except map_lock.MapLockError as exc:
         raise SchemaViolation(str(exc)) from exc
 
 
@@ -1028,7 +978,7 @@ def retire_active_map(
     reason: str,
 ) -> None:
     """Archive charting/active work through the shared stable-readiness gate."""
-    import map_transaction
+    import map_lifecycle
 
     map_dir = Path(map_dir)
     repo_root = resolve_repo_root(None, map_dir)
@@ -1041,14 +991,14 @@ def retire_active_map(
     ):
         repo_root = map_dir.parent.parent.parent.parent
     try:
-        map_transaction.retire_map(
+        map_lifecycle.retire_map(
             map_dir,
             ratified_by=ratified_by,
             ratified_on=ratified_on,
             reason=reason,
             repo_root=repo_root,
         )
-    except map_transaction.CloseTransactionError as exc:
+    except map_lifecycle.LifecycleError as exc:
         raise SchemaViolation(str(exc)) from exc
 
 
@@ -1091,13 +1041,13 @@ def archive_candidate(text: str) -> str:
 
 def archive_map(map_dir: Path, *, repo_root: Path) -> None:
     """Archive one clear v3 Map through the shared stable-readiness gate."""
-    import map_transaction
+    import map_lifecycle
 
     try:
-        map_transaction.archive_map_transition(
+        map_lifecycle.archive_map_transition(
             Path(map_dir), repo_root=Path(repo_root)
         )
-    except map_transaction.CloseTransactionError as exc:
+    except map_lifecycle.LifecycleError as exc:
         raise SchemaViolation(str(exc)) from exc
 
 

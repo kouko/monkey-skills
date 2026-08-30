@@ -8,6 +8,7 @@ from hashlib import sha256
 from pathlib import Path
 
 import delivery_binding
+import map_lock
 import map_store
 
 
@@ -199,6 +200,14 @@ def apply_migration(map_dir: Path, preview: MigrationPreview) -> MigrationResult
         raise MigrationConflict("preview belongs to a different map directory")
     if preview.already_applied:
         return MigrationResult(applied=False)
+    try:
+        with map_lock.map_writer_lock(map_dir):
+            return _apply_migration_locked(map_dir, preview)
+    except map_lock.MapLockError as exc:
+        raise MigrationConflict(str(exc)) from exc
+
+
+def _validate_preview_shape(map_dir: Path, preview: MigrationPreview) -> set[str]:
     expected_keys = {"MAP.md", *preview.ticket_membership}
     preview_keys = set(preview.source_digests)
     if (
@@ -210,6 +219,12 @@ def apply_migration(map_dir: Path, preview: MigrationPreview) -> MigrationResult
         raise MigrationConflict("invalid preview key set")
     for key in expected_keys:
         _safe_preview_path(map_dir, key)
+    return expected_keys
+
+
+def _validate_binding_read_set(
+    map_dir: Path, preview: MigrationPreview, *, prepared: bool = False
+) -> None:
     if _ticket_membership(map_dir) != preview.ticket_membership:
         raise MigrationConflict("ticket membership changed after preview")
     for key, text in preview.binding_texts.items():
@@ -218,29 +233,86 @@ def apply_migration(map_dir: Path, preview: MigrationPreview) -> MigrationResult
             current = _safe_binding_dependency(root, key).read_text(encoding="utf-8")
         except OSError as exc:
             raise MigrationConflict(f"binding dependency changed after preview: {key}") from exc
-        if current != text:
+        expected = text
+        if prepared:
+            try:
+                relative = _safe_binding_dependency(root, key).relative_to(map_dir)
+            except ValueError:
+                relative = None
+            if relative is not None and relative.as_posix() in preview.candidates:
+                expected = preview.candidates[relative.as_posix()]
+        if current != expected:
             raise MigrationConflict(f"binding dependency changed after preview: {key}")
     current_binding_membership: set[str] = set()
+    expected_binding_texts = dict(preview.binding_texts)
+    if prepared and expected_binding_texts:
+        root = _repo_root_for_map(map_dir)
+        for dependency in tuple(expected_binding_texts):
+            try:
+                relative = (root / dependency).relative_to(map_dir).as_posix()
+            except ValueError:
+                continue
+            if relative in preview.candidates:
+                expected_binding_texts[dependency] = preview.candidates[relative]
     for key in preview.ticket_membership:
         if preview.classifications[key].target_type == "delivery":
             snapshot = _delivery_binding_snapshot(map_dir, _safe_preview_path(map_dir, key))
-            if snapshot.texts != preview.binding_texts:
+            if any(
+                expected_binding_texts.get(path) != text
+                for path, text in snapshot.texts.items()
+            ):
                 raise MigrationConflict("binding dependency changed after preview")
             current_binding_membership.update(snapshot.ticket_membership)
     if tuple(sorted(current_binding_membership)) != preview.binding_membership:
         raise MigrationConflict("binding candidate membership changed after preview")
+
+
+def _validate_source_read_set(map_dir: Path, preview: MigrationPreview) -> None:
     for key, digest in preview.source_digests.items():
         current = _safe_preview_path(map_dir, key).read_text(encoding="utf-8")
         if _source_digest(current) != digest:
             raise MigrationConflict(f"source changed after preview: {key}")
+
+
+def _before_schema_flip() -> None:
+    """Test seam after ticket candidates and before the terminal Map flip."""
+
+
+def _validate_prepared_batch(map_dir: Path, preview: MigrationPreview) -> None:
+    if _ticket_membership(map_dir) != preview.ticket_membership:
+        raise MigrationConflict("ticket membership changed during migration")
+    for key in preview.ticket_membership:
+        current = _safe_preview_path(map_dir, key).read_text(encoding="utf-8")
+        if current != preview.candidates[key]:
+            raise MigrationConflict(f"ticket changed during migration: {key}")
+    map_text = _safe_preview_path(map_dir, "MAP.md").read_text(encoding="utf-8")
+    if map_text != preview.source_texts["MAP.md"]:
+        raise MigrationConflict("MAP.md changed during migration")
+    _validate_binding_read_set(map_dir, preview, prepared=True)
+
+
+def _apply_migration_locked(
+    map_dir: Path, preview: MigrationPreview
+) -> MigrationResult:
+    _validate_preview_shape(map_dir, preview)
+    _validate_binding_read_set(map_dir, preview)
+    _validate_source_read_set(map_dir, preview)
     ordered_keys = sorted(key for key in preview.candidates if key != "MAP.md")
-    for key in ordered_keys + ["MAP.md"]:
+    for key in ordered_keys:
         path = _safe_preview_path(map_dir, key)
         map_store._atomic_write(
             path,
             preview.candidates[key],
             expected=preview.source_texts[key].encode("utf-8"),
         )
+    _before_schema_flip()
+    _validate_prepared_batch(map_dir, preview)
+    map_path = _safe_preview_path(map_dir, "MAP.md")
+    map_store._atomic_write(
+        map_path,
+        preview.candidates["MAP.md"],
+        expected=preview.source_texts["MAP.md"].encode("utf-8"),
+    )
     return MigrationResult(applied=True)
 
 

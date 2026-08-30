@@ -1,4 +1,10 @@
-"""Tests for conservative stale-claim recovery."""
+"""Tests for conservative stale-claim recovery.
+
+External CLI grounding: local Git 2.50.1 ``git status -h`` documents
+``--porcelain[=<version>]`` as machine-readable output. ``git help log``
+documents ``--format=<format>``, and the real repository fixtures exercise
+``git log -1 --format=%cI`` as the strict ISO committer-date query.
+"""
 
 from __future__ import annotations
 
@@ -165,7 +171,7 @@ def test_reclaim_reads_exactly_one_authoritative_frontmatter_claim(
     )
     _commit(duplicate_repo, "duplicate claim", "2026-07-01")
     duplicate_before = duplicate.read_bytes()
-    with pytest.raises(claim_ticket.ClaimRecoveryError, match="exactly one"):
+    with pytest.raises(claim_ticket.ClaimRecoveryError, match="duplicate frontmatter"):
         claim_ticket.reclaim(
             duplicate,
             new_owner="bob",

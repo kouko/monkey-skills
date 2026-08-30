@@ -177,10 +177,11 @@ one or more ordered PRs, and exclusive ownership of every cited PR.
 
 ## Public operations
 
-Mutations run under the Map-local descriptor-safe lock and refuse unsupported
-filesystem assumptions. The exact Python call templates below match the
-implemented scripts; capture a fresh revision when the signature requires it
-and reuse `operation_id` on retry.
+Concurrent mutations refuse when authoritative Map or Ticket state changes,
+so a caller re-reads instead of overwriting another session. Unsupported
+filesystem safety assumptions refuse before mutation. The exact Python call
+templates below match the implemented scripts; capture a fresh revision when
+the signature requires it and reuse `operation_id` on retry.
 
 - Start delivery:
   `start_delivery.start_delivery(ticket_path, brief_path, repo_root=repo_root)`
@@ -190,6 +191,23 @@ and reuse `operation_id` on retry.
   `map_transaction.update_blockers(map_dir, ticket_slug, blockers, operation_id=operation_id, expected_revision=revision)`
 - Close and re-chart:
   `map_transaction.close_and_rechart(map_dir, ticket_slug, gist=gist, resolution=resolution, unknowns=unknowns)`
+  A delivery also passes current inputs:
+
+  ```python
+  delivery_closure=map_transaction.DeliveryClosureInputs(
+      brief_text=brief_text,
+      plan_text=plan_text,
+      acceptance_satisfied=acceptance_satisfied,
+      review_head=review_head,
+      verification_head=verification_head,
+      pr=pr,
+      pr_roles=pr_roles,
+      pr_owners=pr_owners,
+      ownership_complete=True,
+  )
+  ```
+
+  Current PR/check evidence is re-evaluated before closure.
 - Archive a clear Map:
   `map_transaction.archive_map_transition(map_dir, repo_root=repo_root)`
 - Retire charting or active work:

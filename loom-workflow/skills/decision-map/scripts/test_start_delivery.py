@@ -267,15 +267,14 @@ def test_start_delivery_rolls_back_partial_writes(
     # @req: REQ-80
     ticket, brief = _ticket(tmp_path)
     original_ticket = ticket.read_bytes()
-    original_replace = start_delivery._replace_at
-
     if failure_point == "brief":
-        def fail_ticket(parent_fd: int, leaf: str, text: str) -> None:
-            if leaf == ticket.name:
-                raise OSError("injected ticket replacement failure")
-            original_replace(parent_fd, leaf, text)
-
-        monkeypatch.setattr(start_delivery, "_replace_at", fail_ticket)
+        monkeypatch.setattr(
+            start_delivery,
+            "_replace_ticket",
+            lambda *_args: (_ for _ in ()).throw(
+                OSError("injected ticket replacement failure")
+            ),
+        )
     else:
         monkeypatch.setattr(
             delivery_binding, "validate", lambda *_args, **_kwargs: (2, "injected validation failure")
@@ -390,6 +389,29 @@ def test_start_delivery_refuses_concurrent_ticket_or_map_change(
     )
     assert code != 0
     assert map_path.read_bytes() != original_map
+    assert not brief.exists()
+
+
+def test_start_delivery_ticket_replace_is_compare_and_swap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-80
+    ticket, brief = _ticket(tmp_path)
+    original = ticket.read_text(encoding="utf-8")
+    concurrent = original + "\nconcurrent final edit\n"
+
+    def change_after_final_check() -> None:
+        _write(ticket, concurrent)
+
+    monkeypatch.setattr(
+        start_delivery, "_before_ticket_replace", change_after_final_check, raising=False
+    )
+    code, message = start_delivery.start_delivery(
+        ticket, brief.relative_to(tmp_path).as_posix(), repo_root=tmp_path
+    )
+
+    assert code != 0, message
+    assert ticket.read_text(encoding="utf-8") == concurrent
     assert not brief.exists()
 
 

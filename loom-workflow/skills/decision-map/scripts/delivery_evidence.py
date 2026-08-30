@@ -141,6 +141,12 @@ def validate_pr_ownership(
         seen_roles.add(role.role)
         if owners.get(role.pr) != ticket:
             return f"PR {role.pr} is already owned by delivery ticket {owners.get(role.pr)!r}", "contradictory"
+    owned_prs = {pr for pr, owner in owners.items() if owner == ticket}
+    if owned_prs != seen_prs:
+        return (
+            "declared PR roles do not equal the authoritative owned-PR population",
+            "contradictory",
+        )
     return None, "valid"
 
 

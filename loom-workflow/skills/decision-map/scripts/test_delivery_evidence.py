@@ -1,4 +1,10 @@
-"""Tests for current formal evidence required to close one delivery slice."""
+"""Tests for current formal evidence required to close one delivery slice.
+
+External CLI grounding: local ``gh pr view --help`` from gh 2.88.1 lists
+``--json fields`` and the fields ``headRefOid``, ``state``,
+``statusCheckRollup``, and ``mergedAt``.  The exercised argv therefore uses
+the documented ``gh pr view <pr> --json <fields>`` shape exactly.
+"""
 
 from __future__ import annotations
 
@@ -388,6 +394,9 @@ def test_pr_roles_require_complete_unique_ownership_and_exercise_all_states() ->
     assert delivery_evidence.validate_pr_ownership(roles, "ticket", None, False)[1] == "contradictory"
     assert delivery_evidence.validate_pr_ownership((roles[0], roles[0]), "ticket", {"42": "ticket"}, True)[1] == "contradictory"
     assert delivery_evidence.validate_pr_ownership(roles, "ticket", {"42": "other"}, True)[1] == "contradictory"
+    assert delivery_evidence.validate_pr_ownership(
+        roles, "ticket", {"42": "ticket", "43": "ticket"}, True
+    )[1] == "contradictory"
     assert delivery_evidence.validate_pr_ownership(roles, "ticket", {"42": "ticket"}, True) == (None, "valid")
 
 

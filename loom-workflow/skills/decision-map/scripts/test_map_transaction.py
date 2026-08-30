@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import threading
 from pathlib import Path
@@ -12,6 +13,13 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent))
 
 import map_transaction  # noqa: E402
+import map_lifecycle  # noqa: E402
+import map_lock  # noqa: E402
+
+RESEARCH_RESOLUTION = (
+    "factual-answer: slice shipped\n"
+    "inspectable-evidence: docs/loom/results/slice.md"
+)
 
 
 def _write(path: Path, text: str) -> None:
@@ -56,7 +64,7 @@ Keep charting.
     _write(
         ticket,
         """---
-type: delivery
+type: research
 status: claimed
 claim: codex, 2026-08-30
 graduated-from: null
@@ -107,7 +115,7 @@ def test_close_records_gist_routes_unknowns_and_terminalizes_last(
             map_dir,
             "ship-slice",
             gist="Slice shipped.",
-            resolution="delivery-evidence: commit 0123456",
+            resolution=RESEARCH_RESOLUTION,
             unknowns=routes,
         )
 
@@ -116,7 +124,7 @@ def test_close_records_gist_routes_unknowns_and_terminalizes_last(
         map_dir,
         "ship-slice",
         gist="Slice shipped.",
-        resolution="delivery-evidence: commit 0123456",
+        resolution=RESEARCH_RESOLUTION,
         unknowns=routes,
     )
 
@@ -151,6 +159,104 @@ def test_invalid_closure_evidence_is_rejected_before_any_write(
     _assert_only_lock_artifact(map_dir)
 
 
+def test_delivery_close_requires_current_policy_evidence_before_any_write(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-83
+    map_dir, ticket = _make_map(tmp_path)
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8").replace("type: research", "type: delivery"),
+        encoding="utf-8",
+    )
+    before_map = (map_dir / "MAP.md").read_bytes()
+    before_ticket = ticket.read_bytes()
+
+    with pytest.raises(map_transaction.CloseTransactionError, match="evidence|policy"):
+        map_transaction.close_and_rechart(
+            map_dir,
+            "ship-slice",
+            gist="Slice shipped.",
+            resolution="delivery-evidence: commit 0123456",
+            unknowns=[],
+        )
+
+    assert (map_dir / "MAP.md").read_bytes() == before_map
+    assert ticket.read_bytes() == before_ticket
+    _assert_only_lock_artifact(map_dir)
+
+
+def test_delivery_close_rechecks_current_policy_before_terminal_write(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-82
+    map_dir, ticket = _make_map(tmp_path)
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8").replace("type: research", "type: delivery"),
+        encoding="utf-8",
+    )
+    brief = """# Delivery
+
+## Acceptance
+
+- [x] Slice is shipped.
+
+## Delivery closure
+
+policy: pr-ci
+review-evidence: reviewed abc1234
+verification-evidence: verified abc1234
+"""
+    plan = """# Plan
+
+Stage: finishing
+
+## Task 1 — Ship
+
+- Status: done(abc1234)
+"""
+
+    def current_pr(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        assert command == [
+            "gh", "pr", "view", "42", "--json",
+            "headRefOid,state,statusCheckRollup,mergedAt",
+        ]
+        payload = {
+            "headRefOid": "abc1234",
+            "state": "OPEN",
+            "mergedAt": None,
+            "statusCheckRollup": [
+                {
+                    "__typename": "CheckRun",
+                    "status": "COMPLETED",
+                    "conclusion": "SUCCESS",
+                }
+            ],
+        }
+        return subprocess.CompletedProcess(command, 0, stdout=json.dumps(payload), stderr="")
+
+    result = map_transaction.close_and_rechart(
+        map_dir,
+        "ship-slice",
+        gist="Slice shipped.",
+        resolution="delivery-evidence: PR #42",
+        unknowns=[],
+        delivery_closure=map_transaction.DeliveryClosureInputs(
+            brief_text=brief,
+            plan_text=plan,
+            acceptance_satisfied=True,
+            review_head="abc1234",
+            verification_head="abc1234",
+            pr="42",
+            pr_owners={"42": "tickets/ship-slice.md"},
+            ownership_complete=True,
+            run=current_pr,
+        ),
+    )
+
+    assert result.routed == 0
+    assert "status: closed" in ticket.read_text(encoding="utf-8")
+
+
 def test_symlinked_tickets_directory_refuses_without_any_mutation(
     tmp_path: Path,
 ) -> None:
@@ -168,7 +274,7 @@ def test_symlinked_tickets_directory_refuses_without_any_mutation(
             map_dir,
             "ship-slice",
             gist="Slice shipped.",
-            resolution="delivery-evidence: commit 0123456",
+            resolution=RESEARCH_RESOLUTION,
             unknowns=[],
         )
 
@@ -187,7 +293,7 @@ def test_closed_source_without_prepared_journal_cannot_bootstrap_resume(
             "status: claimed",
             "status: closed",
         ).rstrip()
-        + "\n\n## Resolution\n\ndelivery-evidence: commit 0123456\n",
+        + f"\n\n## Resolution\n\n{RESEARCH_RESOLUTION}\n",
         encoding="utf-8",
     )
     before_map = (map_dir / "MAP.md").read_bytes()
@@ -198,7 +304,7 @@ def test_closed_source_without_prepared_journal_cannot_bootstrap_resume(
             map_dir,
             "ship-slice",
             gist="Slice shipped.",
-            resolution="delivery-evidence: commit 0123456",
+            resolution=RESEARCH_RESOLUTION,
             unknowns=[],
         )
 
@@ -234,7 +340,7 @@ def test_duplicate_ticket_route_slugs_refuse_before_any_write(
             map_dir,
             "ship-slice",
             gist="Slice shipped.",
-            resolution="delivery-evidence: commit 0123456",
+            resolution=RESEARCH_RESOLUTION,
             unknowns=routes,
         )
 
@@ -250,13 +356,13 @@ def test_closed_retry_revalidates_authoritative_v3_source(
     map_dir, ticket = _make_map(tmp_path)
     request = dict(
         gist="Slice shipped.",
-        resolution="delivery-evidence: commit 0123456",
+        resolution=RESEARCH_RESOLUTION,
         unknowns=[],
     )
     map_transaction.close_and_rechart(map_dir, "ship-slice", **request)
     ticket.write_text(
         ticket.read_text(encoding="utf-8").replace(
-            "type: delivery", "type: task"
+            "type: research", "type: task"
         ),
         encoding="utf-8",
     )
@@ -277,7 +383,7 @@ def test_closed_retry_resolution_conflict_refuses_before_repairing_map(
     map_dir, ticket = _make_map(tmp_path)
     request = dict(
         gist="Slice shipped.",
-        resolution="delivery-evidence: commit 0123456",
+        resolution=RESEARCH_RESOLUTION,
         unknowns=[],
     )
     map_transaction.close_and_rechart(map_dir, "ship-slice", **request)
@@ -290,7 +396,7 @@ def test_closed_retry_resolution_conflict_refuses_before_repairing_map(
     )
     ticket.write_text(
         ticket.read_text(encoding="utf-8").replace(
-            "commit 0123456", "commit abcdef0"
+            "factual-answer: slice shipped", "factual-answer: changed"
         ),
         encoding="utf-8",
     )
@@ -328,7 +434,7 @@ def test_clear_assessment_reuses_req_78_acceptance_validation(
             map_dir,
             "ship-slice",
             gist="Slice shipped.",
-            resolution="delivery-evidence: commit 0123456",
+            resolution=RESEARCH_RESOLUTION,
             unknowns=[],
         )
     assert {path: path.read_bytes() for path in before} == before
@@ -374,7 +480,7 @@ def test_retirement_refuses_partial_operations_and_descendant_races(
         )
 
     monkeypatch.setattr(
-        map_transaction, "_before_retirement_stability_check", mutate_descendant
+        map_lifecycle, "_before_stability_check", mutate_descendant
     )
     with pytest.raises(map_transaction.CloseTransactionError, match="stable snapshot"):
         map_transaction.retire_map(
@@ -391,12 +497,12 @@ def test_retirement_refuses_partial_operations_and_descendant_races(
         clean_map,
         "ship-slice",
         gist="Slice shipped.",
-        resolution="delivery-evidence: commit 0123456",
+        resolution=RESEARCH_RESOLUTION,
         unknowns=[],
     )
     assert (clean_map / ".transactions" / "close-ship-slice.json").is_file()
     monkeypatch.setattr(
-        map_transaction, "_before_retirement_stability_check", lambda: None
+        map_lifecycle, "_before_stability_check", lambda: None
     )
     map_transaction.retire_map(
         clean_map,
@@ -424,8 +530,8 @@ def test_retirement_rechecks_descendants_at_transition_call_boundary(
         )
 
     monkeypatch.setattr(
-        map_transaction,
-        "_before_retirement_transition",
+        map_lifecycle,
+        "_before_transition",
         mutate_after_validated_snapshot,
     )
     with pytest.raises(map_transaction.CloseTransactionError, match="stable snapshot"):
@@ -454,7 +560,7 @@ def test_retirement_map_replace_is_compare_and_swap(
         map_path.write_bytes(concurrent)
 
     monkeypatch.setattr(
-        map_transaction, "_before_retirement_replace", edit_at_replace_boundary
+        map_lifecycle, "_before_state_replace", edit_at_replace_boundary
     )
     with pytest.raises(map_transaction.CloseTransactionError, match="changed"):
         map_transaction.retire_map(
@@ -479,7 +585,7 @@ def test_retirement_rollback_failure_records_broken_recovery_state(
         map_dir,
         "ship-slice",
         gist="Slice shipped.",
-        resolution="delivery-evidence: commit 0123456",
+        resolution=RESEARCH_RESOLUTION,
         unknowns=[],
     )
     map_path = map_dir / "MAP.md"
@@ -503,9 +609,9 @@ def test_retirement_rollback_failure_records_broken_recovery_state(
         )
 
     monkeypatch.setattr(
-        map_transaction, "_after_archive_state_replace", break_ticket_after_archive_write
+        map_lifecycle, "_after_state_replace", break_ticket_after_archive_write
     )
-    real_atomic_write = map_transaction._atomic_write
+    real_atomic_write = map_lifecycle._atomic_write
     calls = 0
 
     def fail_only_rollback(path, text, *, expected=None) -> None:
@@ -515,7 +621,7 @@ def test_retirement_rollback_failure_records_broken_recovery_state(
             raise OSError("simulated rollback I/O failure")
         real_atomic_write(path, text, expected=expected)
 
-    monkeypatch.setattr(map_transaction, "_atomic_write", fail_only_rollback)
+    monkeypatch.setattr(map_lifecycle, "_atomic_write", fail_only_rollback)
     with pytest.raises(
         map_transaction.CloseTransactionError,
         match="BROKEN.*recovery-required",
@@ -802,7 +908,7 @@ def test_unrelated_read_set_change_after_prepare_refuses_write(
                 map_dir,
                 "ship-slice",
                 gist="Slice shipped.",
-                resolution="delivery-evidence: commit 0123456",
+                resolution=RESEARCH_RESOLUTION,
                 unknowns=[],
             )
         assert "status: claimed" in ticket.read_text(encoding="utf-8")
@@ -899,7 +1005,7 @@ def test_transaction_lock_refuses_parent_directory_swap(
         transactions.symlink_to(outside, target_is_directory=True)
 
     monkeypatch.setattr(
-        map_transaction, "_before_lock_file_open", swap_parent, raising=False
+        map_lock, "_before_lock_file_open", swap_parent
     )
     observed = map_transaction.capture_revision(map_dir)
     with pytest.raises(map_transaction.CloseTransactionError, match="lock"):
@@ -928,7 +1034,7 @@ def test_transaction_lock_fails_closed_without_directory_open_primitive(
         encoding="utf-8",
     )
     observed = map_transaction.capture_revision(map_dir)
-    monkeypatch.delattr(map_transaction.os, "O_DIRECTORY")
+    monkeypatch.delattr(map_lock.os, "O_DIRECTORY")
 
     with pytest.raises(map_transaction.CloseTransactionError, match="unsupported"):
         map_transaction.claim_ticket(
@@ -1005,7 +1111,7 @@ def test_transaction_runs_final_validation_after_its_effect(
             map_dir,
             "ship-slice",
             gist="Slice shipped.",
-            resolution="delivery-evidence: commit 0123456",
+            resolution=RESEARCH_RESOLUTION,
             unknowns=[],
         )
         expected = "status: closed"
