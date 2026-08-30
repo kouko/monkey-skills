@@ -44,6 +44,18 @@ def _before_retirement_stability_check() -> None:
     """Test seam after retirement validation and before snapshot comparison."""
 
 
+def _before_retirement_transition() -> None:
+    """Test seam between readiness preparation and transition commit."""
+
+
+def _before_archive_state_replace() -> None:
+    """Test seam immediately before the archive commit-boundary check."""
+
+
+def _after_archive_state_replace() -> None:
+    """Test seam before post-write validation and possible MAP rollback."""
+
+
 def _atomic_write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
@@ -336,6 +348,33 @@ def _store_snapshot(map_dir: Path) -> dict[str, bytes]:
     return snapshot
 
 
+def _retirement_snapshot(map_dir: Path, repo_root: Path) -> dict[str, bytes]:
+    """Snapshot Map descendants plus reciprocal Briefs in the validation read set."""
+    snapshot = {
+        str((map_dir / relative).resolve(strict=False)): content
+        for relative, content in _store_snapshot(map_dir).items()
+    }
+    tickets_dir = map_dir / "tickets"
+    for ticket_path in sorted(tickets_dir.glob("*.md")):
+        try:
+            fields, _ = map_store.parse_frontmatter(
+                ticket_path.read_text(encoding="utf-8")
+            )
+        except (OSError, map_store.SchemaViolation) as exc:
+            raise CloseTransactionError(f"cannot snapshot ticket binding: {exc}") from exc
+        brief = fields.get("brief")
+        if brief is None:
+            continue
+        brief_path = repo_root / brief
+        try:
+            map_store._assert_no_symlink_components(brief_path)
+            map_store._assert_contained(repo_root, brief_path)
+            snapshot[str(brief_path.resolve(strict=True))] = brief_path.read_bytes()
+        except (OSError, map_store.SchemaViolation) as exc:
+            raise CloseTransactionError(f"cannot snapshot reciprocal Brief: {exc}") from exc
+    return snapshot
+
+
 def _close_journal_is_complete(map_dir: Path, journal: Path) -> bool:
     """Return whether a retained close journal's complete effects are visible."""
     try:
@@ -452,15 +491,17 @@ def _validate_retirement_snapshot(map_dir: Path, repo_root: Path) -> None:
         )
 
 
-def retire_map(
-    map_dir: Path,
-    *,
-    ratified_by: str,
-    ratified_on: str,
-    reason: str,
-    repo_root: Path,
-) -> None:
-    """Retire one Map only if its complete validated read set stays stable."""
+@dataclass(frozen=True)
+class RetirementReadiness:
+    """Validated immutable read-set token for one archive transition."""
+
+    map_dir: Path
+    repo_root: Path
+    snapshot: tuple[tuple[str, bytes], ...]
+
+
+def prepare_retirement(map_dir: Path, repo_root: Path) -> RetirementReadiness:
+    """Validate all retirement invariants and bind them to one stable read set."""
     map_dir = Path(map_dir)
     repo_root = Path(repo_root)
     for path in (repo_root, map_dir, map_dir / "MAP.md", map_dir / "tickets"):
@@ -471,22 +512,96 @@ def retire_map(
             raise CloseTransactionError(
                 f"retirement path escapes repository: {path}"
             ) from exc
-    initial = _store_snapshot(map_dir)
+    initial = _retirement_snapshot(map_dir, repo_root)
     _validate_retirement_snapshot(map_dir, repo_root)
     _before_retirement_stability_check()
-    if _store_snapshot(map_dir) != initial:
+    if _retirement_snapshot(map_dir, repo_root) != initial:
         raise CloseTransactionError(
-            "retirement requires one stable snapshot; a descendant changed"
+            "retirement requires one stable snapshot; a read-set file changed"
         )
+    return RetirementReadiness(map_dir, repo_root, tuple(sorted(initial.items())))
+
+
+def _commit_retirement(
+    readiness: RetirementReadiness,
+    *,
+    ratified_by: str | None,
+    ratified_on: str | None,
+    reason: str | None,
+) -> None:
+    map_dir = readiness.map_dir
+    repo_root = readiness.repo_root
+    _before_retirement_transition()
+    doc = map_store.read_map(map_dir)
+    if doc.frontmatter.state == "clear":
+        _before_archive_state_replace()
+    expected = dict(readiness.snapshot)
+    if _retirement_snapshot(map_dir, repo_root) != expected:
+        raise CloseTransactionError(
+            "retirement requires one stable snapshot at the transition boundary"
+        )
+
+    map_path = map_dir / "MAP.md"
+    original = map_path.read_text(encoding="utf-8")
     try:
-        map_store.retire_active_map(
-            map_dir,
-            ratified_by=ratified_by,
-            ratified_on=ratified_on,
-            reason=reason,
-        )
+        if doc.frontmatter.state == "clear":
+            candidate = map_store.archive_candidate(original)
+        else:
+            candidate = map_store.retirement_candidate(
+                original,
+                current_state=doc.frontmatter.state,
+                ratified_by=ratified_by or "",
+                ratified_on=ratified_on or "",
+                reason=reason or "",
+            )
     except map_store.SchemaViolation as exc:
         raise CloseTransactionError(str(exc)) from exc
+    _atomic_write(map_path, candidate)
+    try:
+        if doc.frontmatter.state == "clear":
+            _after_archive_state_replace()
+        committed = dict(readiness.snapshot)
+        committed[str(map_path.resolve(strict=True))] = candidate.encode("utf-8")
+        if _retirement_snapshot(map_dir, repo_root) != committed:
+            raise CloseTransactionError(
+                "retirement read set changed during state replacement"
+            )
+        _validate_retirement_snapshot(map_dir, repo_root)
+    except Exception as exc:
+        _atomic_write(map_path, original)
+        if isinstance(exc, CloseTransactionError):
+            raise
+        raise CloseTransactionError(
+            f"archive post-write validation failed; MAP state restored: {exc}"
+        ) from exc
+
+
+def archive_map_transition(map_dir: Path, *, repo_root: Path) -> None:
+    """Archive a clear Map through the same stable-readiness transaction."""
+    readiness = prepare_retirement(map_dir, repo_root)
+    if map_store.read_map(map_dir).frontmatter.state != "clear":
+        raise CloseTransactionError("archive transition requires a clear schema-v3 Map")
+    _commit_retirement(
+        readiness, ratified_by=None, ratified_on=None, reason=None
+    )
+
+
+def retire_map(
+    map_dir: Path,
+    *,
+    ratified_by: str,
+    ratified_on: str,
+    reason: str,
+    repo_root: Path,
+) -> None:
+    """Retire one Map only if its complete validated read set stays stable."""
+    readiness = prepare_retirement(map_dir, repo_root)
+    _commit_retirement(
+        readiness,
+        ratified_by=ratified_by,
+        ratified_on=ratified_on,
+        reason=reason,
+    )
 
 
 def close_and_rechart(

@@ -393,3 +393,35 @@ def test_retirement_refuses_partial_operations_and_descendant_races(
     )
     assert "state: archived" in (clean_map / "MAP.md").read_text(encoding="utf-8")
     assert (clean_map / ".transactions" / "close-ship-slice.json").is_file()
+
+
+def test_retirement_rechecks_descendants_at_transition_call_boundary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-98
+    map_dir, ticket = _make_map(tmp_path)
+    map_path = map_dir / "MAP.md"
+    map_before = map_path.read_bytes()
+
+    def mutate_after_validated_snapshot() -> None:
+        ticket.write_text(
+            ticket.read_text(encoding="utf-8") + "\nLate descendant edit.\n",
+            encoding="utf-8",
+        )
+
+    monkeypatch.setattr(
+        map_transaction,
+        "_before_retirement_transition",
+        mutate_after_validated_snapshot,
+    )
+    with pytest.raises(map_transaction.CloseTransactionError, match="stable snapshot"):
+        map_transaction.retire_map(
+            map_dir,
+            ratified_by="kouko",
+            ratified_on="2026-08-30",
+            reason="Stop this outcome.",
+            repo_root=tmp_path,
+        )
+
+    assert map_path.read_bytes() == map_before
+    assert "state: archived" not in map_path.read_text(encoding="utf-8")

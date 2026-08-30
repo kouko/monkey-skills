@@ -612,33 +612,52 @@ def retire_active_map(
     ratified_on: str,
     reason: str,
 ) -> None:
-    """Archive an unresolved active Map without representing it as clear."""
+    """Archive charting/active work through the shared stable-readiness gate."""
+    import map_transaction
+
     map_dir = Path(map_dir)
-    code, message = validate(map_dir)
-    if code != 0:
-        raise SchemaViolation(f"cannot retire invalid Map: {message}")
-    doc = read_map(map_dir)
-    if doc.frontmatter.schema_version != 3 or doc.frontmatter.state not in {
-        "charting",
-        "active",
-    }:
-        raise SchemaViolation(
-            "ratified retirement requires a charting or active schema-v3 Map"
+    repo_root = resolve_repo_root(None, map_dir)
+    if not map_dir.resolve(strict=False).is_relative_to(
+        repo_root.resolve(strict=False)
+    ) and (
+        map_dir.parent.name == "maps"
+        and map_dir.parent.parent.name == "loom"
+        and map_dir.parent.parent.parent.name == "docs"
+    ):
+        repo_root = map_dir.parent.parent.parent.parent
+    try:
+        map_transaction.retire_map(
+            map_dir,
+            ratified_by=ratified_by,
+            ratified_on=ratified_on,
+            reason=reason,
+            repo_root=repo_root,
         )
+    except map_transaction.CloseTransactionError as exc:
+        raise SchemaViolation(str(exc)) from exc
+
+
+def retirement_candidate(
+    text: str,
+    *,
+    current_state: str,
+    ratified_by: str,
+    ratified_on: str,
+    reason: str,
+) -> str:
+    """Build the ratified charting/active retirement bytes without writing."""
+    if current_state not in {"charting", "active"}:
+        raise SchemaViolation("ratified retirement requires charting or active state")
     human_and_date = f"{ratified_by.strip()}, {ratified_on.strip()}"
     if not _DATED_HUMAN.fullmatch(human_and_date):
         raise SchemaViolation("retirement requires a named human and YYYY-MM-DD date")
     if not reason.strip():
         raise SchemaViolation("retirement requires a non-empty reason")
-
-    map_md = map_dir / "MAP.md"
-    _assert_no_symlink_components(map_md)
-    text = map_md.read_text(encoding="utf-8")
-    state_field = f"state: {doc.frontmatter.state}"
+    state_field = f"state: {current_state}"
     if text.count(state_field) != 1:
         raise SchemaViolation("MAP.md must contain exactly one current state field")
     archived = text.replace(state_field, "state: archived", 1)
-    archived = _append_section_fields(
+    return _append_section_fields(
         archived,
         "Notes",
         [
@@ -646,41 +665,25 @@ def retire_active_map(
             f"retirement-reason: {reason.strip()}",
         ],
     )
-    _atomic_write(map_md, archived)
+
+
+def archive_candidate(text: str) -> str:
+    """Build the clear-to-archived MAP.md bytes without moving identity."""
+    if text.count("state: clear") != 1:
+        raise SchemaViolation("MAP.md must contain exactly one clear state field")
+    return text.replace("state: clear", "state: archived", 1)
 
 
 def archive_map(map_dir: Path, *, repo_root: Path) -> None:
-    """Archive one clear v3 Map in place after validating reciprocal links."""
-    import delivery_binding
+    """Archive one clear v3 Map through the shared stable-readiness gate."""
+    import map_transaction
 
-    map_dir = Path(map_dir)
-    repo_root = Path(repo_root)
-    for path in (repo_root, map_dir, map_dir / "MAP.md", map_dir / "tickets"):
-        _assert_no_symlink_components(path)
-        _assert_contained(repo_root, path)
-    code, message = validate(map_dir, repo_root=repo_root)
-    if code != 0:
-        raise SchemaViolation(f"cannot archive invalid Map: {message}")
-    doc = read_map(map_dir)
-    if doc.frontmatter.schema_version != 3 or doc.frontmatter.state != "clear":
-        raise SchemaViolation("archive transition requires a clear schema-v3 Map")
-    for ticket_path in sorted((map_dir / "tickets").glob("*.md")):
-        ticket = read_ticket(ticket_path)
-        if ticket.frontmatter.type != "delivery":
-            continue
-        binding_code, binding_message = delivery_binding.validate(
-            ticket_path, repo_root=repo_root
+    try:
+        map_transaction.archive_map_transition(
+            Path(map_dir), repo_root=Path(repo_root)
         )
-        if binding_code != 0:
-            raise SchemaViolation(
-                f"cannot archive Map with invalid reciprocal Brief link: {binding_message}"
-            )
-
-    map_path = map_dir / "MAP.md"
-    text = map_path.read_text(encoding="utf-8")
-    if text.count("state: clear") != 1:
-        raise SchemaViolation("MAP.md must contain exactly one clear state field")
-    _atomic_write(map_path, text.replace("state: clear", "state: archived", 1))
+    except map_transaction.CloseTransactionError as exc:
+        raise SchemaViolation(str(exc)) from exc
 
 
 def create_successor_map(

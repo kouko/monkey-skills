@@ -567,7 +567,9 @@ def test_charting_rejects_work_and_terminal_records_are_byte_immutable(
     map_path = map_dir / "MAP.md"
     ticket_path = map_dir / "tickets" / "decision-a.md"
     map_path.write_text(
-        map_path.read_text(encoding="utf-8").replace("state: active", "state: charting"),
+        map_path.read_text(encoding="utf-8")
+        .replace("state: active", "state: charting")
+        .replace("- We chose stdlib-only parsing (tickets/decision-a.md)\n", ""),
         encoding="utf-8",
     )
     ticket_path.write_text(
@@ -653,6 +655,96 @@ def test_archive_transition_keeps_map_and_ticket_paths_stable(tmp_path: Path) ->
 
     code, message = delivery_binding.validate(ticket_path, repo_root=tmp_path)
     assert code == 0, message
+
+
+def test_archive_uses_stable_readiness_and_refuses_late_binding_break(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # @req: REQ-95
+    # @req: REQ-98
+    map_dir = _make_v3_active_map(tmp_path)
+    map_path = map_dir / "MAP.md"
+    ticket_path = map_dir / "tickets" / "decision-a.md"
+    brief_path = tmp_path / "docs" / "loom" / "specs" / "deliver-parser.md"
+    ticket_relative = ticket_path.relative_to(tmp_path).as_posix()
+    brief_relative = brief_path.relative_to(tmp_path).as_posix()
+    _write(brief_path, f"# Deliver parser\n\nOutcome Map ticket: {ticket_relative}\n")
+    ticket_path.write_text(
+        ticket_path.read_text(encoding="utf-8").replace(
+            "graduated-from: null", f"graduated-from: null\nbrief: {brief_relative}"
+        ),
+        encoding="utf-8",
+    )
+    map_path.write_text(
+        map_path.read_text(encoding="utf-8")
+        .replace("state: active", "state: clear")
+        .replace(
+            "user-ratified: kouko, 2026-08-30",
+            "user-ratified: kouko, 2026-08-30\n"
+            "acceptance: Parser delivered | satisfied | docs/loom/results/parser.md",
+        )
+        .replace("- F-1: how does the fog id survive a rename?\n", ""),
+        encoding="utf-8",
+    )
+    map_before = map_path.read_bytes()
+    transaction = map_dir / ".transactions" / "broken.json"
+    _write(transaction, "{\"prepared\": true}\n")
+
+    try:
+        map_store.archive_map(map_dir, repo_root=tmp_path)
+    except map_store.SchemaViolation as exc:
+        assert "incomplete" in str(exc)
+    else:
+        raise AssertionError("archive accepted an incomplete operation")
+    assert map_path.read_bytes() == map_before
+
+    transaction.unlink()
+    transaction.parent.rmdir()
+    import map_transaction
+
+    def break_binding_before_replace() -> None:
+        brief_path.write_text("# Broken reciprocal binding\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        map_transaction,
+        "_before_archive_state_replace",
+        break_binding_before_replace,
+    )
+    try:
+        map_store.archive_map(map_dir, repo_root=tmp_path)
+    except map_store.SchemaViolation as exc:
+        assert "stable snapshot" in str(exc) or "binding" in str(exc)
+    else:
+        raise AssertionError("archive committed after a late Brief-link break")
+    assert map_path.read_bytes() == map_before
+    assert "state: archived" not in map_path.read_text(encoding="utf-8")
+
+    brief_path.write_text(
+        f"# Deliver parser\n\nOutcome Map ticket: {ticket_relative}\n",
+        encoding="utf-8",
+    )
+
+    def break_binding_after_replace() -> None:
+        brief_path.write_text("# Broken after state replacement\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        map_transaction,
+        "_before_archive_state_replace",
+        lambda: None,
+    )
+    monkeypatch.setattr(
+        map_transaction,
+        "_after_archive_state_replace",
+        break_binding_after_replace,
+    )
+    try:
+        map_store.archive_map(map_dir, repo_root=tmp_path)
+    except map_store.SchemaViolation as exc:
+        assert "changed" in str(exc) or "binding" in str(exc)
+    else:
+        raise AssertionError("archive kept an invalid post-write binding")
+    assert map_path.read_bytes() == map_before
+    assert "state: archived" not in map_path.read_text(encoding="utf-8")
 
 
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:

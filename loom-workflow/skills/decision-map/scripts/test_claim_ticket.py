@@ -19,16 +19,22 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-def _commit(repo: Path, message: str, date: str) -> None:
+def _commit(repo: Path, message: str, date: str, time: str = "12:00:00") -> None:
     subprocess.run(["git", "add", "."], cwd=repo, check=True)
     env = os.environ | {
-        "GIT_AUTHOR_DATE": f"{date}T12:00:00+00:00",
-        "GIT_COMMITTER_DATE": f"{date}T12:00:00+00:00",
+        "GIT_AUTHOR_DATE": f"{date}T{time}+00:00",
+        "GIT_COMMITTER_DATE": f"{date}T{time}+00:00",
     }
     subprocess.run(["git", "commit", "-qm", message], cwd=repo, env=env, check=True)
 
 
-def _repo(tmp_path: Path, claim: str) -> tuple[Path, Path]:
+def _repo(
+    tmp_path: Path,
+    claim: str,
+    *,
+    commit_date: str = "2026-07-01",
+    commit_time: str = "12:00:00",
+) -> tuple[Path, Path]:
     tmp_path.mkdir(parents=True)
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
     subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
@@ -43,7 +49,7 @@ def _repo(tmp_path: Path, claim: str) -> tuple[Path, Path]:
         "graduated-from: null\n"
         "---\n\nShip a slice.\n",
     )
-    _commit(tmp_path, "record claim", "2026-07-01")
+    _commit(tmp_path, "record claim", commit_date, commit_time)
     return tmp_path, ticket
 
 
@@ -94,3 +100,32 @@ def test_reclaim_requires_dated_claim_and_no_post_claim_git_change(
     assert "claim: bob, 2026-08-30" in text
     assert text.count("takeover: alice -> bob") == 1
     assert "basis: claim dated 2026-08-01; no post-claim Git change" in text
+
+
+def test_reclaim_preserves_owner_when_last_change_is_on_claim_date(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-97
+    repo, ticket = _repo(
+        tmp_path / "repo",
+        "alice, 2026-08-01",
+        commit_date="2026-08-01",
+        commit_time="09:00:00",
+    )
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8") + "\nChanged at 18:00 on claim day.\n",
+        encoding="utf-8",
+    )
+    _commit(repo, "same-day work", "2026-08-01", "18:00:00")
+    before = ticket.read_bytes()
+
+    with pytest.raises(claim_ticket.ClaimRecoveryError, match="ambiguous"):
+        claim_ticket.reclaim(
+            ticket,
+            new_owner="bob",
+            takeover_date="2026-08-30",
+            stale_before="2026-08-15",
+            repo_root=repo,
+        )
+
+    assert ticket.read_bytes() == before

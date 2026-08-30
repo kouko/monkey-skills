@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 import subprocess
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 import map_store
@@ -93,14 +93,22 @@ def reclaim(
         raise ClaimRecoveryError(
             "ticket has uncommitted post-claim evidence; preserving the current owner"
         )
-    last_change = _git(repo_root, "log", "-1", "--format=%cs", "--", relative)
+    last_change = _git(repo_root, "log", "-1", "--format=%cI", "--", relative)
     if not last_change:
         raise ClaimRecoveryError(
             "repository evidence is unavailable; preserving the current owner"
         )
-    if _parse_date(last_change, "last Git change date") > claimed_on:
+    try:
+        last_change_at = datetime.fromisoformat(last_change)
+    except ValueError as exc:
         raise ClaimRecoveryError(
-            "ticket has a post-claim Git change; preserving the current owner"
+            "precise Git timestamp is unavailable; preserving the current owner"
+        ) from exc
+    if last_change_at.date() >= claimed_on:
+        raise ClaimRecoveryError(
+            f"ticket has a post-claim or same-day ambiguous Git change at "
+            f"{last_change_at.isoformat()}; "
+            "preserving the current owner"
         )
 
     replacement = f"claim: {new_owner.strip()}, {takeover.isoformat()}"
