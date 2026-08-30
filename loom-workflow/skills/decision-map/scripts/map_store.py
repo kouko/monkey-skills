@@ -40,6 +40,13 @@ HITL_TICKET_TYPES = {"grilling", "prototype"}
 RATIFIED_MAP_STATES = {"active", "clear"}
 V2_TICKET_STATUSES = {"open", "claimed", "closed"}
 V3_TICKET_STATUSES = {"open", "claimed", "closed", "withdrawn"}
+V3_FORBIDDEN_PHASE_FIELDS = {
+    "delivery-phase",
+    "brief-phase",
+    "plan-phase",
+    "pr-phase",
+    "ci-phase",
+}
 
 
 class LiveMapResult(str, Enum):
@@ -256,6 +263,7 @@ class TicketFrontmatter:
 class TicketDocument:
     path: Path
     frontmatter: TicketFrontmatter
+    frontmatter_keys: set[str]
     resolution: str | None
     withdrawal: str | None
 
@@ -346,6 +354,7 @@ def parse_ticket_document(text: str, path: Path) -> TicketDocument:
     return TicketDocument(
         path=path,
         frontmatter=frontmatter,
+        frontmatter_keys=set(fields),
         resolution=resolution,
         withdrawal=withdrawal,
     )
@@ -510,6 +519,11 @@ def _check_v3_ticket_withdrawal(ticket: TicketDocument) -> None:
             "or 'withdrawn-from: claimed'"
         )
     withdrawal = ticket.withdrawal or ""
+    if ticket.resolution is not None:
+        raise SchemaViolation(
+            f"{ticket.path}: withdrawn ticket must not carry a Resolution; "
+            "withdrawal does not satisfy subtype closure evidence"
+        )
     if not _has_named_dated_user_ratification(withdrawal):
         raise SchemaViolation(
             f"{ticket.path}: withdrawn ticket requires named/date "
@@ -519,6 +533,16 @@ def _check_v3_ticket_withdrawal(ticket: TicketDocument) -> None:
         raise SchemaViolation(
             f"{ticket.path}: withdrawn ticket requires a non-empty "
             "'reason:' line in its Withdrawal"
+        )
+
+
+def _check_v3_ticket_derived_phases(ticket: TicketDocument) -> None:
+    """Reject persisted workflow phases; delivery artifacts derive them."""
+    persisted = sorted(ticket.frontmatter_keys & V3_FORBIDDEN_PHASE_FIELDS)
+    if persisted:
+        raise SchemaViolation(
+            f"{ticket.path}: v3 ticket must not persist workflow phase field(s) "
+            f"{', '.join(persisted)}; phases are derived from owning artifacts"
         )
 
 
@@ -592,6 +616,8 @@ def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
                 f"{ticket_path}: status {ticket.frontmatter.status!r} is "
                 f"not one of {sorted(valid_ticket_statuses)}"
             )
+        if schema_version == 3:
+            _check_v3_ticket_derived_phases(ticket)
         if schema_version == 3 and ticket.frontmatter.status == "closed":
             _check_v3_ticket_closure_evidence(ticket)
         if schema_version == 3 and ticket.frontmatter.status == "withdrawn":
