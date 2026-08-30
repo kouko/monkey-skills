@@ -1,0 +1,40 @@
+{
+  "name": "hermes-tweet",
+  "version": "0.1.12",
+  "description": "Native Hermes Agent X/Twitter plugin for Xquik automation with read-first workflows and approval-gated actions. Not affiliated with X Corp.",
+  "author": {
+    "name": "Xquik",
+    "url": "https://github.com/Xquik-dev"
+  },
+  "homepage": "https://github.com/Xquik-dev/hermes-tweet#readme",
+  "repository": "https://github.com/Xquik-dev/hermes-tweet",
+  "license": "MIT",
+  "keywords": [
+    "hermes-agent",
+    "hermes-plugin",
+    "xquik",
+    "twitter",
+    "x",
+    "social-media",
+    "automation"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Hermes Tweet",
+    "shortDescription": "Read-first X research and gated actions through Hermes Agent",
+    "longDescription": "Route public X/Twitter research, support triage, monitoring plans, private reads, persistent resources, media operations, and account actions through the native Hermes Tweet plugin. Public reads stay read-only; every private, persistent, metered, media, or account action requires an explicit approval gate.",
+    "developerName": "Xquik",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Research these public X posts through Hermes Tweet.",
+      "Prepare a read-only social-signal brief with source links.",
+      "Plan this X account action and stop before the approval gate."
+    ],
+    "websiteURL": "https://github.com/Xquik-dev/hermes-tweet#readme"
+  }
+}

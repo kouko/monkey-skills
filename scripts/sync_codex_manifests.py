@@ -64,6 +64,7 @@ CODEX_ELIGIBLE = (
     "domain-teams",
     "four-dx-coach",
     "gws-toolkit",
+    "hermes-tweet",
     "investing-toolkit",
     "legal-toolkit",
     "loom-design",
