@@ -14,9 +14,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields
 import hashlib
+import importlib.util
 import json
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 import re
+import sys
 from typing import Mapping
 
 
@@ -95,6 +97,35 @@ class OwnershipRecord:
     acceptance: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class ExecutionMemberProjection:
+    task_id: str
+    dependencies: tuple[str, ...]
+    review_disposition: str
+    review_lane: str
+    acceptance: tuple[str, ...]
+    declared_files: tuple[str, ...]
+    brief_references: tuple[str, ...]
+    owned_requirements: tuple[str, ...]
+    future_requirements: tuple[str, ...]
+
+
+@dataclass(frozen=True, init=False)
+class ExecutionAuthorityProjection:
+    issuer: str
+    source_identity: str
+    source_digest: str
+    plan_identity: str
+    spec_identity: str
+    ownership_digest: str
+    declaration: "BatchDeclaration"
+    members: tuple[ExecutionMemberProjection, ...]
+    _receipt_seal: object
+
+    def __new__(cls, *args: object, **kwargs: object):
+        raise PacketRefused("execution authority projection is issuer-only")
+
+
 @dataclass(frozen=True, init=False)
 class CommittedScopeProof:
     issuer: str
@@ -115,6 +146,7 @@ class OwnershipProof:
     plan_identity: str
     spec_identity: str
     records: tuple[OwnershipRecord, ...]
+    execution_projection: ExecutionAuthorityProjection
 
 
 @dataclass(frozen=True, init=False)
@@ -159,6 +191,129 @@ def _sealed(cls: type, seal: object, **values: object):
     return instance
 
 
+def _ownership_records_digest(records: tuple[OwnershipRecord, ...]) -> str:
+    payload = [
+        [record.task_id, list(record.owned_requirements),
+         list(record.future_requirements), list(record.acceptance)]
+        for record in records
+    ]
+    return hashlib.sha256(json.dumps(payload, separators=(",", ":")).encode()).hexdigest()
+
+
+def _valid_execution_projection_receipt(value: object) -> bool:
+    return (
+        _complete_instance(value, ExecutionAuthorityProjection)
+        and value._receipt_seal is _SEAL
+        and _exact_text(value.issuer)
+        and _exact_text(value.source_identity)
+        and _exact_digest(value.source_digest)
+        and _exact_text(value.plan_identity)
+        and _exact_text(value.spec_identity)
+        and _exact_digest(value.ownership_digest)
+    )
+
+
+@dataclass(frozen=True, init=False)
+class ExecutionProjectionIssuer:
+    """Trusted seam entered only after the mandatory plan schema checker."""
+
+    issuer: str
+    source_identity: str
+    source_digest: str
+
+    def issue(
+        self, *, plan_identity: str, spec_identity: str,
+        records: tuple[OwnershipRecord, ...], projection_fields: object,
+    ) -> ExecutionAuthorityProjection:
+        """Seal only checker-derived current-plan projection fields."""
+        if not (
+            _complete_instance(self, ExecutionProjectionIssuer)
+            and _exact_text(self.issuer) and _exact_text(self.source_identity)
+            and _exact_digest(self.source_digest) and _exact_text(plan_identity)
+            and _exact_text(spec_identity) and type(records) is tuple and bool(records)
+            and all(type(record) is OwnershipRecord for record in records)
+        ):
+            raise PacketRefused("execution projection issuance input is invalid")
+        try:
+            if not (
+                type(projection_fields) is dict
+                and set(projection_fields) == {"declaration", "members"}
+                and type(projection_fields["declaration"]) is dict
+                and type(projection_fields["members"]) is tuple
+                and all(type(member) is dict for member in projection_fields["members"])
+            ):
+                raise TypeError
+            declaration = BatchDeclaration(**projection_fields["declaration"])
+            members = tuple(
+                ExecutionMemberProjection(**member)
+                for member in projection_fields["members"]
+            )
+        except (KeyError, TypeError, ValueError):
+            raise PacketRefused("execution projection is not checker-derived") from None
+        receipt = _sealed(
+            ExecutionAuthorityProjection, seal=_SEAL, issuer=self.issuer,
+            source_identity=self.source_identity, source_digest=self.source_digest,
+            plan_identity=plan_identity, spec_identity=spec_identity,
+            ownership_digest=_ownership_records_digest(records),
+            declaration=declaration, members=members, _receipt_seal=_SEAL,
+        )
+        receipt = _validate_execution_projection(receipt)
+        if not _projection_matches_ownership_records(receipt, records):
+            raise PacketRefused("execution projection conflicts with ownership records")
+        return receipt
+
+
+def _trusted_execution_projection_issuer(
+    *, issuer: str, source_identity: str, source_digest: str,
+) -> ExecutionProjectionIssuer:
+    if not (_exact_text(issuer) and _exact_text(source_identity) and _exact_digest(source_digest)):
+        raise PacketRefused("trusted execution projection provenance is invalid")
+    return _sealed(
+        ExecutionProjectionIssuer, seal=_SEAL, issuer=issuer,
+        source_identity=source_identity, source_digest=source_digest,
+    )
+
+
+def _review_batch_oracle():
+    """Load the mandatory sibling checker without cwd or sys.path coupling."""
+    path = Path(__file__).with_name("check_review_batches.py")
+    spec = importlib.util.spec_from_file_location("review_batch_schema_oracle", path)
+    if spec is None or spec.loader is None:
+        raise PacketRefused("Review Batch schema oracle cannot be loaded")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _issue_execution_projection_from_validated_plan(
+    *,
+    plan_text: str,
+    batch_id: str,
+    plan_identity: str,
+    spec_identity: str,
+    records: tuple[OwnershipRecord, ...],
+    issuer: str,
+    source_identity: str,
+    source_digest: str,
+) -> ExecutionAuthorityProjection:
+    """Trusted plan/schema boundary for the required sealed projection."""
+    if not (type(plan_text) is str and _exact_text(batch_id)):
+        raise PacketRefused("current plan projection input is invalid")
+    try:
+        fields = _review_batch_oracle().execution_projection_fields(plan_text, batch_id)
+    except (OSError, ValueError):
+        raise PacketRefused("current plan cannot issue an execution projection") from None
+    return _trusted_execution_projection_issuer(
+        issuer=issuer, source_identity=source_identity, source_digest=source_digest,
+    ).issue(
+        plan_identity=plan_identity,
+        spec_identity=spec_identity,
+        records=records,
+        projection_fields=fields,
+    )
+
+
 @dataclass(frozen=True, init=False)
 class ProofIssuer:
     """Sealed role receipt used only at an already-trusted SDD boundary."""
@@ -173,6 +328,7 @@ class ProofIssuer:
         plan_identity: str,
         spec_identity: str,
         records: tuple[OwnershipRecord, ...],
+        execution_projection: ExecutionAuthorityProjection,
     ) -> OwnershipProof:
         if not (
             _complete_instance(self, ProofIssuer)
@@ -184,6 +340,11 @@ class ProofIssuer:
             and type(records) is tuple
             and bool(records)
             and all(type(record) is OwnershipRecord for record in records)
+            and _valid_execution_projection_receipt(execution_projection)
+            and execution_projection.plan_identity == plan_identity
+            and execution_projection.spec_identity == spec_identity
+            and execution_projection.ownership_digest == _ownership_records_digest(records)
+            and _projection_matches_ownership_records(execution_projection, records)
         ):
             raise PacketRefused("ownership proof input is invalid")
         return _sealed(
@@ -195,6 +356,7 @@ class ProofIssuer:
             plan_identity=plan_identity,
             spec_identity=spec_identity,
             records=records,
+            execution_projection=execution_projection,
         )
 
     def issue_verification(self, resolution: object) -> VerificationProof:
@@ -549,6 +711,52 @@ class AggregateReviewResolution:
     ledger_mutation_allowed: bool
     terminal_results: tuple[ReviewerTerminalResult, ...]
     reasons: tuple[str, ...]
+    transition_authority: TransitionAuthority | None
+
+
+@dataclass(frozen=True, init=False)
+class TransitionAuthority:
+    """Sealed authority for one exact reducer-owned ledger transition."""
+
+    packet_identity: str
+    batch_id: str
+    execution_authority_digest: str
+    authority_context: tuple[str, ...]
+    execution_projection: ExecutionAuthorityProjection
+    member_statuses: tuple[tuple[str, str], ...]
+    action: str
+    reopen_owners: tuple[str, ...]
+    outcome_digest: str
+    decision_identity: str
+    _receipt_seal: object
+
+    def _validate_for_plan_card(
+        self,
+        *,
+        execution_projection_fields: dict[str, object],
+        member_statuses: object,
+        action: object,
+        reopen_owners: object,
+    ) -> bool:
+        """Keep validation in the exact issuer module across host adapters."""
+        try:
+            projection = _validate_execution_projection(self.execution_projection)
+            declaration = BatchDeclaration(**execution_projection_fields["declaration"])
+            members = tuple(
+                ExecutionMemberProjection(**member)
+                for member in execution_projection_fields["members"]
+            )
+        except (KeyError, TypeError, ValueError, PacketRefused):
+            return False
+        if projection.declaration != declaration or projection.members != members:
+            return False
+        return validate_transition_authority(
+            self,
+            execution_projection=projection,
+            member_statuses=member_statuses,
+            action=action,
+            reopen_owners=reopen_owners,
+        )
 
 
 _LANE_ARMS = {
@@ -577,16 +785,193 @@ def _arms_apply_to_lane(lane: object, arms: object) -> bool:
 def _resolution(
     action: str,
     *,
+    packet: ReviewPacket | None = None,
     results: tuple[ReviewerTerminalResult, ...] = (),
     owners: tuple[str, ...] = (),
     reasons: tuple[str, ...] = (),
 ) -> AggregateReviewResolution:
+    authority = None
+    if action in {"finalize", "reopen"}:
+        if packet is None:
+            raise PacketRefused("a mutating resolution requires its exact Packet")
+        authority = _issue_transition_authority(
+            packet=packet,
+            action=action,
+            results=results,
+            owners=owners,
+        )
     return AggregateReviewResolution(
         action=action,
         reopen_owners=owners,
         ledger_mutation_allowed=action in {"finalize", "reopen"},
         terminal_results=results,
         reasons=reasons,
+        transition_authority=authority,
+    )
+
+
+def execution_authority_digest(
+    projection: ExecutionAuthorityProjection, context: tuple[str, ...]
+) -> str:
+    encoded = json.dumps(
+        {"projection": _canonical(projection), "context": _canonical(context)},
+        sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _finding_authority_payload(finding: BlockingFinding) -> dict[str, object]:
+    return {
+        "finding_id": finding.finding_id,
+        "packet_identity": finding.packet_identity,
+        "arm": finding.arm,
+        "dispatch_identity": finding.dispatch_identity,
+        "evidence_identity": finding.evidence_identity,
+        "owners": finding.owners,
+        "blocking": finding.blocking,
+        "ground": finding.ground,
+        "ground_ref": finding.ground_ref,
+        "location": finding.location,
+        "severity": finding.severity,
+        "reason": finding.reason,
+    }
+
+
+def _outcome_digest(results: tuple[ReviewerTerminalResult, ...]) -> str:
+    payload = [
+        {
+            "packet_identity": result.packet_identity,
+            "arm": result.arm,
+            "dispatch_identity": result.dispatch_identity,
+            "dispatch_evidence_identity": result.dispatch_evidence_identity,
+            "result_identity": result.result_identity,
+            "evidence_identity": result.evidence_identity,
+            "terminal": result.terminal,
+            "verdict": result.verdict,
+            "findings": [
+                _finding_authority_payload(finding) for finding in result.findings
+            ],
+        }
+        for result in results
+    ]
+    encoded = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _authority_identity(fields: dict[str, object]) -> str:
+    encoded = json.dumps(
+        {key: _canonical(value) for key, value in fields.items()},
+        sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _issue_transition_authority(
+    *,
+    packet: ReviewPacket,
+    action: str,
+    results: tuple[ReviewerTerminalResult, ...],
+    owners: tuple[str, ...],
+) -> TransitionAuthority:
+    if action not in {"finalize", "reopen"} or not results:
+        raise PacketRefused("transition authority input is incomplete")
+    members = tuple((member.task_id, member.status) for member in packet.members)
+    projection = packet.ownership.execution_projection
+    if projection is None:
+        raise PacketRefused("mutating review requires Packet-bound execution authority")
+    context = (
+        projection.issuer,
+        projection.source_identity,
+        projection.source_digest,
+        packet.ownership.plan_identity,
+        packet.ownership.spec_identity,
+        packet.ownership.execution_projection.ownership_digest,
+    )
+    fields: dict[str, object] = {
+        "packet_identity": packet.identity,
+        "batch_id": packet.declaration.batch_id,
+        "execution_authority_digest": execution_authority_digest(projection, context),
+        "authority_context": context,
+        "execution_projection": projection,
+        "member_statuses": members,
+        "action": action,
+        "reopen_owners": owners,
+        "outcome_digest": _outcome_digest(results),
+    }
+    return _sealed(
+        TransitionAuthority,
+        seal=_SEAL,
+        **fields,
+        decision_identity=_authority_identity(fields),
+        _receipt_seal=_SEAL,
+    )
+
+
+def validate_transition_authority(
+    authority: object,
+    *,
+    execution_projection: object,
+    member_statuses: object,
+    action: object,
+    reopen_owners: object,
+) -> bool:
+    """Validate one sealed reducer decision against a current plan snapshot."""
+    if not (
+        _complete_instance(authority, TransitionAuthority)
+        and authority._receipt_seal is _SEAL
+        and _exact_text(authority.packet_identity)
+        and _exact_text(authority.batch_id)
+        and _exact_digest(authority.execution_authority_digest)
+        and type(authority.authority_context) is tuple
+        and len(authority.authority_context) == 6
+        and all(_exact_text(value) for value in (
+            authority.authority_context[0], authority.authority_context[1],
+            authority.authority_context[3], authority.authority_context[4]))
+        and _exact_digest(authority.authority_context[2])
+        and _exact_digest(authority.authority_context[5])
+        and _valid_execution_projection_receipt(authority.execution_projection)
+        and type(authority.member_statuses) is tuple
+        and bool(authority.member_statuses)
+        and all(
+            type(item) is tuple
+            and len(item) == 2
+            and _exact_text(item[0])
+            and _exact_text(item[1])
+            for item in authority.member_statuses
+        )
+        and authority.action in {"finalize", "reopen"}
+        and type(authority.reopen_owners) is tuple
+        and all(_exact_text(owner) for owner in authority.reopen_owners)
+        and _exact_digest(authority.outcome_digest)
+        and _exact_digest(authority.decision_identity)
+    ):
+        return False
+    try:
+        current = _validate_execution_projection(execution_projection)
+    except PacketRefused:
+        return False
+    fields = {
+        "packet_identity": authority.packet_identity,
+        "batch_id": authority.batch_id,
+        "execution_authority_digest": authority.execution_authority_digest,
+        "authority_context": authority.authority_context,
+        "execution_projection": authority.execution_projection,
+        "member_statuses": authority.member_statuses,
+        "action": authority.action,
+        "reopen_owners": authority.reopen_owners,
+        "outcome_digest": authority.outcome_digest,
+    }
+    return (
+        authority.decision_identity == _authority_identity(fields)
+        and authority.batch_id == current.declaration.batch_id
+        and authority.execution_projection == current
+        and authority.execution_authority_digest
+        == execution_authority_digest(current, authority.authority_context)
+        and member_statuses == authority.member_statuses
+        and action == authority.action
+        and reopen_owners == authority.reopen_owners
     )
 
 
@@ -781,9 +1166,11 @@ def resolve_aggregate_review(
             member.task_id for member in packet.members
             if member.task_id in owner_set
         )
-        return _resolution("reopen", results=ordered, owners=owners)
+        return _resolution(
+            "reopen", packet=packet, results=ordered, owners=owners
+        )
     if all(result.verdict in {"PASS", "PASS_WITH_NOTES"} for result in ordered):
-        return _resolution("finalize", results=ordered)
+        return _resolution("finalize", packet=packet, results=ordered)
     return _resolution("wait_refuse", results=ordered, reasons=("invalid_verdict_set",))
 
 
@@ -791,6 +1178,8 @@ _CANONICAL_TYPES = (
     ReviewedFile,
     ScopeEntryProof,
     OwnershipRecord,
+    ExecutionMemberProjection,
+    ExecutionAuthorityProjection,
     CommittedScopeProof,
     OwnershipProof,
     ApprovedSafeResolution,
@@ -832,6 +1221,58 @@ def _validate_declaration(declaration: object) -> BatchDeclaration:
     ):
         raise PacketRefused("Batch declaration is incomplete or malformed")
     return declaration
+
+
+def _validate_execution_projection(projection: object) -> ExecutionAuthorityProjection:
+    if not _valid_execution_projection_receipt(projection):
+        raise PacketRefused("execution authority projection has an invalid type")
+    declaration = _validate_declaration(projection.declaration)
+    if not (
+        type(projection.members) is tuple
+        and tuple(member.task_id for member in projection.members) == declaration.members
+    ):
+        raise PacketRefused("execution authority members do not match Batch")
+    for member in projection.members:
+        if not (
+            _complete_instance(member, ExecutionMemberProjection)
+            and _exact_text(member.task_id)
+            and _exact_text_tuple(member.dependencies, nonempty=False)
+            and _exact_text(member.review_disposition)
+            and member.review_disposition == f"batch({declaration.batch_id})"
+            and member.review_lane == declaration.review_lane
+            and _exact_text_tuple(member.acceptance)
+            and _exact_text_tuple(member.declared_files)
+            and _exact_text_tuple(member.brief_references)
+            and _exact_text_tuple(member.owned_requirements)
+            and _exact_text_tuple(member.future_requirements, nonempty=False)
+            and len(set(member.owned_requirements)) == len(member.owned_requirements)
+            and len(set(member.future_requirements)) == len(member.future_requirements)
+            and not set(member.owned_requirements) & set(member.future_requirements)
+            and all(
+                _exact_text(reference) and reference.startswith("REQ-")
+                for reference in member.owned_requirements
+            )
+        ):
+            raise PacketRefused("execution authority member is malformed")
+    return projection
+
+
+def _projection_matches_ownership_records(
+    projection: ExecutionAuthorityProjection,
+    records: tuple[OwnershipRecord, ...],
+) -> bool:
+    """Require the plan-derived receipt and trusted ownership boundary agree."""
+    if len(records) != len(projection.members):
+        return False
+    for member, record in zip(projection.members, records, strict=True):
+        if not (
+            record.task_id == member.task_id
+            and record.acceptance == member.acceptance
+            and record.owned_requirements == member.owned_requirements
+            and record.future_requirements == member.future_requirements
+        ):
+            return False
+    return True
 
 
 def _validate_scope(member: MemberSnapshot) -> None:
@@ -918,6 +1359,7 @@ def _validate_ownership(
         and type(proof.records) is tuple
         and len(proof.records) == len(members)
         and all(_complete_instance(record, OwnershipRecord) for record in proof.records)
+        and _valid_execution_projection_receipt(proof.execution_projection)
     ):
         raise PacketRefused("ownership proof is incomplete")
     requirements: list[str] = []
@@ -945,6 +1387,23 @@ def _validate_ownership(
         requirements.extend(record.future_requirements)
     if len(set(requirements)) != len(requirements):
         raise PacketRefused("ownership proof contains duplicate requirement authority")
+    projection = _validate_execution_projection(proof.execution_projection)
+    if (
+        projection.plan_identity != proof.plan_identity
+        or projection.spec_identity != proof.spec_identity
+        or projection.ownership_digest != _ownership_records_digest(proof.records)
+        or not _projection_matches_ownership_records(projection, proof.records)
+    ):
+        raise PacketRefused("execution authority context conflicts with ownership")
+    for member, projected in zip(members, projection.members, strict=True):
+        if (
+            projected.task_id != member.task_id
+            or projected.acceptance != member.acceptance
+            or projected.declared_files != member.declared_files
+            or projected.owned_requirements != member.owned_requirements
+            or projected.future_requirements != member.future_requirements
+        ):
+            raise PacketRefused("execution authority conflicts with member authority")
     return proof
 
 

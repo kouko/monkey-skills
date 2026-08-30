@@ -11,10 +11,133 @@ import pytest
 
 
 SCRIPT = Path(__file__).with_name("plan_card.py")
+REVIEW_SCRIPT = Path(__file__).with_name("review_batch.py")
+REVIEW_SPEC = importlib.util.spec_from_file_location("review_batch", REVIEW_SCRIPT)
+assert REVIEW_SPEC and REVIEW_SPEC.loader
+review_batch = importlib.util.module_from_spec(REVIEW_SPEC)
+sys.modules[REVIEW_SPEC.name] = review_batch
+REVIEW_SPEC.loader.exec_module(review_batch)
 SPEC = importlib.util.spec_from_file_location("plan_card_batch_states", SCRIPT)
 plan_card = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = plan_card
 SPEC.loader.exec_module(plan_card)
+
+A_SHA = "a" * 40
+B_SHA = "b" * 40
+I1 = f"implemented({A_SHA})"
+I2 = f"implemented({B_SHA})"
+D1 = f"done({A_SHA})"
+D2 = f"done({B_SHA})"
+
+
+def _transition_authority(replacements):
+    declaration = review_batch.BatchDeclaration(
+        "capability",
+        ("Task 1", "Task 2"),
+        "Does the capability work?",
+        "full",
+        "package test suite",
+        "capability: fixture; exclusions: none; consumable: yes",
+    )
+    scope_issuer = review_batch._trusted_scope_issuer(
+        issuer="git-scope-resolver",
+        source_identity="git:sha1:v1",
+        hash_algorithm="sha1",
+    )
+    members = []
+    for number, sha in ((1, A_SHA), (2, B_SHA)):
+        files = (review_batch.ReviewedFile(f"src/{number}.py", b"fixture"),)
+        members.append(
+            review_batch.MemberSnapshot(
+                f"Task {number}", f"implemented({sha})", sha,
+                (f"src/{number}.py",), files, (f"REQ-{number}",), (),
+                (f"accept-{number}",),
+                scope_issuer.issue(
+                    repository_identity="e" * 64,
+                    commit_sha=sha,
+                    tree_identity=sha,
+                    files=files,
+                ),
+            )
+        )
+    members = tuple(members)
+    issuer = review_batch._trusted_proof_issuer(
+        issuer="sdd:declared-first",
+        source_identity="authority:v1",
+        source_digest="c" * 64,
+    )
+    records = tuple(
+        review_batch.OwnershipRecord(
+            member.task_id, member.owned_requirements,
+            member.future_requirements, member.acceptance,
+        )
+        for member in members
+    )
+    ownership = issuer.issue_ownership(
+        plan_identity="plan:fixture",
+        spec_identity="spec:fixture",
+        records=records,
+        execution_projection=review_batch._issue_execution_projection_from_validated_plan(
+            plan_text=_plan({1: I1, 2: I2, 3: "pending"}),
+            batch_id="capability",
+            plan_identity="plan:fixture",
+            spec_identity="spec:fixture",
+            records=records,
+            issuer="plan-card:validated-schema",
+            source_identity="plan:current",
+            source_digest="8" * 64,
+        ),
+    )
+    approved = review_batch._approved_safe_resolution(
+        declaration_digest=review_batch.text_digest("package test suite"),
+        argv=("python3", "-m", "pytest"),
+        execution_scope=("src",),
+        result="exit=0",
+        scanner_receipt_identity="scanner:fixture",
+        scanner_input_digest="d" * 64,
+    )
+    receipt = review_batch._trusted_resolution_issuer(
+        issuer="declared-first-resolver",
+        source_identity="resolver:v1",
+        source_digest="f" * 64,
+    ).issue(approved)
+    packet = review_batch.materialize_packet(
+        declaration, members, ownership, issuer.issue_verification(receipt)
+    )
+    arms = ("spec-reviewer", "code-quality-reviewer")
+    bindings = tuple(
+        review_batch.ReviewerArmBinding(
+            packet.identity, arm, f"dispatch:{arm}", f"dispatch-proof:{arm}"
+        )
+        for arm in arms
+    )
+    reopening = set(replacements) != {1, 2}
+    owner = next(iter(replacements)) if reopening else None
+    finding = review_batch.BlockingFinding(
+        "finding:owner", packet.identity, "spec-reviewer",
+        "dispatch:spec-reviewer", "result-proof:spec-reviewer",
+        (f"Task {owner}",) if owner else ("Task 1",), True,
+        "owned_requirement", f"REQ-{owner or 1}", f"src/{owner or 1}.py",
+        "fatal", "fixture regression",
+    )
+    results = tuple(
+        review_batch.ReviewerTerminalResult(
+            packet.identity, arm, f"dispatch:{arm}", f"dispatch-proof:{arm}",
+            f"result:{arm}", f"result-proof:{arm}", "completed",
+            "NEEDS_REVISION" if reopening and arm == "spec-reviewer" else "PASS",
+            (finding,) if reopening and arm == "spec-reviewer" else (),
+        )
+        for arm in arms
+    )
+    resolution = review_batch.resolve_aggregate_review(
+        packet=packet,
+        declared_lane="full",
+        expected_arms=arms,
+        arm_bindings=bindings,
+        terminal_results=results,
+    )
+    assert resolution.transition_authority is not None
+    return resolution.transition_authority
 
 
 def _plan(statuses: dict[int, str]) -> str:
@@ -28,6 +151,9 @@ def _plan(statuses: dict[int, str]) -> str:
             f"## Task {number} — task {number}\n\n"
             "- **Description**: fixture\n"
             f"- **Dependencies**: {dependency}\n"
+            f"- **Files touched**: src/{number}.py\n"
+            f"- **Acceptance**: accept-{number}\n"
+            f"- **Brief item covered**: REQ-{number}\n"
             "- **Review-weight**: full\n"
             f"- **Review disposition**: {disposition}\n"
             f"- **Status**: {statuses[number]}\n"
@@ -51,7 +177,8 @@ def _atomic_update_worker(path, expected, replacements, start, results):
     start.wait()
     try:
         changed = plan_card.atomic_batch_status_update(
-            Path(path), "capability", expected, replacements
+            Path(path), "capability", expected, replacements,
+            transition_authority=_transition_authority(replacements),
         )
         results.put(("ok", changed))
     except Exception as exc:  # pragma: no cover - surfaced through the queue
@@ -69,7 +196,8 @@ def _blocking_atomic_worker(path, expected, entered, release, results):
             Path(path),
             "capability",
             expected,
-            {1: "done(a111111)", 2: "done(b222222)"},
+            {1: D1, 2: D2},
+            transition_authority=_transition_authority({1: D1, 2: D2}),
             before_replace=block_before_publish,
         )
         results.put(("ok", changed))
@@ -78,23 +206,20 @@ def _blocking_atomic_worker(path, expected, entered, release, results):
 
 
 def test_batch_ledger_transition_matrix(tmp_path):
-    implemented = {
-        1: "implemented(a111111)",
-        2: "implemented(b222222)",
-    }
+    implemented = {1: I1, 2: I2}
     assert plan_card._classify(implemented[1]) == "implemented"
     changed, _, _ = plan_card.set_status(
         _plan({1: "claimed(@main)", 2: "pending", 3: "pending"}),
         1,
         implemented[1],
     )
-    assert "- **Status**: implemented(a111111)" in changed
+    assert f"- **Status**: {I1}" in changed
 
     assert plan_card.dependency_is_ready(implemented[1], "capability", "capability")
     assert not plan_card.dependency_is_ready(
         implemented[1], "capability", None
     )
-    assert plan_card.dependency_is_ready("done(a111111)", "capability", None)
+    assert plan_card.dependency_is_ready(D1, "capability", None)
     assert not plan_card.dependency_is_ready("claimed(@main)", "capability", "capability")
     assert not plan_card.dependency_is_ready(implemented[1], None, None)
     for malformed in (
@@ -116,18 +241,20 @@ def test_batch_ledger_transition_matrix(tmp_path):
         plan_path,
         "capability",
         implemented,
-        {1: "done(a111111)", 2: "done(b222222)"},
+        {1: D1, 2: D2},
+        transition_authority=_transition_authority({1: D1, 2: D2}),
     )
     assert finalized is True
-    assert "- **Status**: done(a111111)" in plan_path.read_text(encoding="utf-8")
-    assert "- **Status**: done(b222222)" in plan_path.read_text(encoding="utf-8")
+    assert f"- **Status**: {D1}" in plan_path.read_text(encoding="utf-8")
+    assert f"- **Status**: {D2}" in plan_path.read_text(encoding="utf-8")
 
     before_retry = plan_path.read_bytes()
     assert plan_card.atomic_batch_status_update(
         plan_path,
         "capability",
         implemented,
-        {1: "done(a111111)", 2: "done(b222222)"},
+        {1: D1, 2: D2},
+        transition_authority=_transition_authority({1: D1, 2: D2}),
     )
     assert plan_path.read_bytes() == before_retry
 
@@ -136,7 +263,8 @@ def test_batch_ledger_transition_matrix(tmp_path):
         plan_path,
         "capability",
         {1: "implemented(stale)", 2: implemented[2]},
-        {1: "done(stale)", 2: "done(b222222)"},
+        {1: "done(stale)", 2: D2},
+        transition_authority=_transition_authority({1: D1, 2: D2}),
     )
     assert plan_path.read_text(encoding="utf-8") == original
 
@@ -145,18 +273,19 @@ def test_batch_ledger_transition_matrix(tmp_path):
         "capability",
         implemented,
         {2: "pending"},
+        transition_authority=_transition_authority({2: "pending"}),
     )
     reopened = plan_path.read_text(encoding="utf-8")
-    assert "- **Status**: implemented(a111111)" in reopened
+    assert f"- **Status**: {I1}" in reopened
     assert "- **Status**: pending" in reopened
 
     plan_path.write_text(original, encoding="utf-8")
-    with pytest.raises(ValueError, match="member set"):
-        plan_card.atomic_batch_status_update(
+    assert not plan_card.atomic_batch_status_update(
             plan_path,
             "capability",
             implemented,
             {3: "pending"},
+            transition_authority=object(),
         )
     assert plan_path.read_text(encoding="utf-8") == original
 
@@ -168,19 +297,20 @@ def test_batch_ledger_transition_matrix(tmp_path):
             plan_path,
             "capability",
             implemented,
-            {1: "done(a111111)", 2: "done(b222222)"},
+            {1: D1, 2: D2},
+            transition_authority=_transition_authority({1: D1, 2: D2}),
             before_replace=interrupt,
         )
     assert plan_path.read_text(encoding="utf-8") == original
 
     invalid = original.replace("- **Members**: Task 1, Task 2", "- **Members**: Task 1")
     plan_path.write_text(invalid, encoding="utf-8")
-    with pytest.raises(ValueError, match="Review Batch schema"):
-        plan_card.atomic_batch_status_update(
+    assert not plan_card.atomic_batch_status_update(
             plan_path,
             "capability",
             implemented,
-            {1: "done(a111111)", 2: "done(b222222)"},
+            {1: D1, 2: D2},
+            transition_authority=_transition_authority({1: D1, 2: D2}),
         )
     assert plan_path.read_text(encoding="utf-8") == invalid
 
@@ -192,12 +322,12 @@ def test_batch_ledger_transition_matrix(tmp_path):
         "implemented((abc))",
     ):
         malformed_snapshot = {**implemented, 1: malformed}
-        with pytest.raises(ValueError, match="exact implemented"):
-            plan_card.atomic_batch_status_update(
+        assert not plan_card.atomic_batch_status_update(
                 plan_path,
                 "capability",
                 malformed_snapshot,
                 {1: "pending"},
+                transition_authority=_transition_authority({1: "pending"}),
             )
         assert plan_path.read_text(encoding="utf-8") == original
 
@@ -210,11 +340,12 @@ def test_locked_reader_releases_descriptor_after_invalid_utf8(tmp_path):
         plan_card.atomic_batch_status_update(
             plan_path,
             "capability",
-            {1: "implemented(a111111)", 2: "implemented(b222222)"},
+            {1: I1, 2: I2},
             {1: "pending"},
+            transition_authority=_transition_authority({1: "pending"}),
         )
 
-    expected = {1: "implemented(a111111)", 2: "implemented(b222222)"}
+    expected = {1: I1, 2: I2}
     plan_path.write_text(_plan({**expected, 3: "pending"}), encoding="utf-8")
     context = multiprocessing.get_context("spawn")
     start = context.Event()
@@ -235,7 +366,7 @@ def test_locked_reader_releases_descriptor_after_invalid_utf8(tmp_path):
 
 
 def test_two_process_batch_cas_has_one_atomic_winner(tmp_path):
-    expected = {1: "implemented(a111111)", 2: "implemented(b222222)"}
+    expected = {1: I1, 2: I2}
     plan_path = tmp_path / "plan.md"
     plan_path.write_text(_plan({**expected, 3: "pending"}), encoding="utf-8")
     context = multiprocessing.get_context("spawn")
@@ -253,7 +384,7 @@ def test_two_process_batch_cas_has_one_atomic_winner(tmp_path):
             ),
         )
         for replacements in (
-            {1: "done(a111111)", 2: "done(b222222)"},
+            {1: D1, 2: D2},
             {2: "pending"},
         )
     ]
@@ -273,14 +404,14 @@ def test_two_process_batch_cas_has_one_atomic_winner(tmp_path):
     final = plan_path.read_text(encoding="utf-8")
     states = plan_card._task_statuses(final)
     assert (states[1], states[2]) in {
-        ("done(a111111)", "done(b222222)"),
-        ("implemented(a111111)", "pending"),
+        (D1, D2),
+        (I1, "pending"),
     }
 
 
 def test_external_replace_before_cas_publish_is_stale_and_preserved(tmp_path):
     """Best-effort detection for a non-participating direct filesystem writer."""
-    expected = {1: "implemented(a111111)", 2: "implemented(b222222)"}
+    expected = {1: I1, 2: I2}
     plan_path = tmp_path / "plan.md"
     original = _plan({**expected, 3: "pending"})
     external = original.replace("Stage: sdd:wave-1", "Stage: external-writer")
@@ -295,7 +426,8 @@ def test_external_replace_before_cas_publish_is_stale_and_preserved(tmp_path):
         plan_path,
         "capability",
         expected,
-        {1: "done(a111111)", 2: "done(b222222)"},
+        {1: D1, 2: D2},
+        transition_authority=_transition_authority({1: D1, 2: D2}),
         before_replace=replace_from_external_actor,
     )
 
@@ -314,7 +446,7 @@ def test_external_replace_before_cas_publish_is_stale_and_preserved(tmp_path):
 def test_cli_writer_waits_for_batch_publish_and_rereads_current_plan(
     tmp_path, cli_args, assertion
 ):
-    expected = {1: "implemented(a111111)", 2: "implemented(b222222)"}
+    expected = {1: I1, 2: I2}
     plan_path = tmp_path / "plan.md"
     plan_path.write_text(_plan({**expected, 3: "pending"}), encoding="utf-8")
     context = multiprocessing.get_context("spawn")
@@ -344,7 +476,7 @@ def test_cli_writer_waits_for_batch_publish_and_rereads_current_plan(
     assert results.get(timeout=1) == ("ok", True)
     assert cli_writer.returncode == 0, stdout + stderr
     final = plan_path.read_text(encoding="utf-8")
-    assert "- **Status**: done(a111111)" in final
-    assert "- **Status**: done(b222222)" in final
+    assert f"- **Status**: {D1}" in final
+    assert f"- **Status**: {D2}" in final
     assert assertion in final
     assert sorted(path.name for path in tmp_path.iterdir()) == ["plan.md"]

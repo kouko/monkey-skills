@@ -70,6 +70,9 @@ Participating Loom writers acquire an advisory lock on the plan's stable
 parent directory before reading mutation preconditions and hold it through
 atomic replacement plus directory fsync. Batch CAS, `--set-status`, and
 `--set-stage` share that protocol; read-only card/detail paths do not lock.
+Batch CAS additionally requires the sealed transition authority issued by
+`review_batch.resolve_aggregate_review` and compares the current declaration,
+disposition, complete member snapshot, action, and owner union before writing.
 Direct editors and filesystem tools that bypass the advisory lock are not
 participants, so the pre-publish inode check detects their replacement only
 best-effort and never claims to exclude an uncooperative concurrent writer.
@@ -618,21 +621,32 @@ def _review_batch_oracle():
     return module
 
 
-def _validated_batch_members(text: str, batch_id: str) -> tuple[int, ...]:
-    """Exact members after the mandatory schema oracle accepts the plan."""
+def _validated_batch_snapshot(
+    text: str, batch_id: str
+) -> tuple[tuple[int, ...], dict[str, object]]:
+    """Exact members and declaration after the schema oracle accepts plan."""
     oracle = _review_batch_oracle()
-    errors = oracle.validate_plan(text)
-    if errors:
-        raise ValueError("Review Batch schema invalid — " + "; ".join(errors))
-    body_errors: list[str] = []
-    body = oracle._review_batch_body(text, body_errors)
-    batches = oracle._parse_batches(body, body_errors)
-    if body_errors:
-        raise ValueError("Review Batch schema invalid — " + "; ".join(body_errors))
-    batch = batches.get(batch_id)
-    if batch is None:
-        raise ValueError(f"Review Batch schema has no Batch '{batch_id}'")
-    return batch.members
+    fields = oracle.execution_projection_fields(text, batch_id)
+    return tuple(
+        int(member["task_id"].split()[1])
+        for member in fields["members"]
+    ), fields
+
+
+def _transition_authority_validator(authority: object):
+    """Resolve only a validator implemented by the sibling authority class."""
+    validator = getattr(authority, "_validate_for_plan_card", None)
+    function = getattr(validator, "__func__", None)
+    code = getattr(function, "__code__", None)
+    if code is None:
+        return None
+    try:
+        exact_path = Path(code.co_filename).resolve()
+    except OSError:
+        return None
+    if exact_path != Path(__file__).with_name("review_batch.py").resolve():
+        return None
+    return validator
 
 
 def _task_statuses(text: str) -> dict[int, str]:
@@ -741,6 +755,7 @@ def _atomic_batch_status_update_locked(
     expected_statuses: dict[int, str],
     replacements: dict[int, str],
     *,
+    transition_authority: object,
     before_replace: Callable[[], None] | None = None,
 ) -> bool:
     """Compare and atomically replace one validated Batch status snapshot.
@@ -754,8 +769,30 @@ def _atomic_batch_status_update_locked(
     path = Path(plan_path)
     descriptor, text, opened = _open_locked_current(path)
     try:
-        members = _validated_batch_members(text, batch_id)
+        try:
+            members, execution_projection_fields = _validated_batch_snapshot(text, batch_id)
+        except ValueError:
+            return False
         member_set = set(members)
+        finalizing = set(replacements) == member_set
+        action = "finalize" if finalizing else "reopen"
+        owners = tuple(
+            f"Task {number}" for number in members if number in replacements
+        ) if action == "reopen" else ()
+        authority_statuses = tuple(
+            (f"Task {number}", expected_statuses.get(number, ""))
+            for number in members
+        )
+        authority_validator = _transition_authority_validator(transition_authority)
+        if authority_validator is None:
+            return False
+        if not authority_validator(
+            execution_projection_fields=execution_projection_fields,
+            member_statuses=authority_statuses,
+            action=action,
+            reopen_owners=owners,
+        ):
+            return False
         if set(expected_statuses) != member_set:
             raise ValueError("expected member set does not equal the validated Batch")
         if not replacements or not set(replacements).issubset(member_set):
@@ -770,7 +807,6 @@ def _atomic_batch_status_update_locked(
                 "expected member snapshot must contain exact implemented(<sha>)"
             )
 
-        finalizing = set(replacements) == member_set
         if finalizing:
             if any(
                 not _same_member_sha(
@@ -786,7 +822,11 @@ def _atomic_batch_status_update_locked(
 
         current = _task_statuses(text)
         current_snapshot = {number: current[number] for number in members}
-        if finalizing and current_snapshot == replacements:
+        target_snapshot = {
+            number: replacements.get(number, expected_statuses[number])
+            for number in members
+        }
+        if current_snapshot == target_snapshot:
             return True
         if current_snapshot != expected_statuses:
             if finalizing and all(
@@ -826,6 +866,7 @@ def atomic_batch_status_update(
     expected_statuses: dict[int, str],
     replacements: dict[int, str],
     *,
+    transition_authority: object,
     before_replace: Callable[[], None] | None = None,
 ) -> bool:
     """Run Batch CAS while holding the shared Loom plan-directory lock."""
@@ -836,6 +877,7 @@ def atomic_batch_status_update(
             batch_id,
             expected_statuses,
             replacements,
+            transition_authority=transition_authority,
             before_replace=before_replace,
         )
 

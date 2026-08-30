@@ -23,7 +23,7 @@ oracle to infer eligibility from prose. The script stores no Batch state.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import sys
 
@@ -59,6 +59,11 @@ _REQUIRED_BATCH_FIELDS = (
     "Aggregate verification",
     "Boundary",
 )
+_PROJECTION_FIELD = re.compile(
+    r"^-\s*(?:\*\*)?(?P<name>[A-Za-z][A-Za-z -]*?)(?:\*\*)?"
+    r"\s*:[ \t]*(?P<value>[^\n]*)$"
+)
+_REQ_REFERENCE = re.compile(r"^REQ-\d+$")
 
 
 @dataclass(frozen=True)
@@ -322,6 +327,174 @@ def _validate_membership(
             errors.append(f"Task {number} batch disposition has no exact membership")
         if task.disposition == "individual" and memberships:
             errors.append(f"individual Task {number} cannot be a Batch member")
+
+
+def _projection_field_block(
+    block: str, name: str, owner: str, errors: list[str]
+) -> tuple[str, ...]:
+    """Return one field's exact logical lines without crossing Markdown rows."""
+    lines = block.splitlines()
+    matches = [
+        index for index, line in enumerate(lines)
+        if (match := _PROJECTION_FIELD.fullmatch(line))
+        and match.group("name").strip() == name
+    ]
+    if len(matches) != 1:
+        errors.append(f"{owner} must declare exactly one non-empty {name} field")
+        return ()
+    index = matches[0]
+    match = _PROJECTION_FIELD.fullmatch(lines[index])
+    assert match is not None
+    values = [match.group("value").strip()]
+    for line in lines[index + 1:]:
+        if _PROJECTION_FIELD.fullmatch(line) is not None:
+            break
+        if line.strip():
+            # Preserve indentation, list markers, table separators, and all
+            # text; only trailing presentation whitespace is non-semantic.
+            values.append(line.rstrip())
+    if not any(values):
+        errors.append(f"{owner} must declare exactly one non-empty {name} field")
+        return ()
+    return tuple(value for value in values if value)
+
+
+def _safe_projection_path(path: str) -> bool:
+    if not path or "\\" in path or "\x00" in path:
+        return False
+    if any(part in {"", ".", ".."} for part in path.split("/")):
+        return False
+    parsed = PurePosixPath(path)
+    return not parsed.is_absolute() and parsed.as_posix() == path
+
+
+def _projection_files(value: str, owner: str, errors: list[str]) -> tuple[str, ...]:
+    parts = tuple(part.strip() for part in value.split(","))
+    code_spans = all(
+        len(part) >= 3 and part.startswith("`") and part.endswith("`")
+        and "`" not in part[1:-1]
+        for part in parts
+    )
+    plain = all("`" not in part for part in parts)
+    if not parts or not all(parts) or (not code_spans and not plain):
+        errors.append(f"{owner} Files touched must be one uniform safe path list")
+        return ()
+    paths = tuple(part[1:-1] if code_spans else part for part in parts)
+    if len(set(paths)) != len(paths) or not all(_safe_projection_path(path) for path in paths):
+        errors.append(f"{owner} Files touched contains an unsafe or duplicate path")
+        return ()
+    return paths
+
+
+def _projection_references(
+    block: str, owner: str, errors: list[str]
+) -> tuple[str, ...]:
+    references: list[str] = []
+    lines = block.splitlines()
+    for line in lines:
+        match = _PROJECTION_FIELD.fullmatch(line)
+        if match is None or match.group("name").strip() != "Brief item covered":
+            continue
+        values = tuple(part.strip() for part in match.group("value").split(","))
+        if not values or not all(values):
+            errors.append(f"{owner} has an empty Brief item covered reference")
+            return ()
+        references.extend(values)
+    if not references:
+        errors.append(f"{owner} lacks execution-authority plan fields")
+        return ()
+    if len(set(references)) != len(references):
+        errors.append(f"{owner} has duplicate Brief item covered references")
+        return ()
+    return tuple(references)
+
+
+def execution_projection_fields(text: str, batch_id: str) -> dict[str, object]:
+    """Return the canonical current-plan authority payload for one Batch.
+
+    This is deliberately downstream of the mandatory schema validation: callers
+    receive no partial projection for an invalid plan.  The payload contains
+    only plan-owned fields; the trusted review boundary later binds it to the
+    independently issued plan/spec/ownership receipts.
+    """
+    if type(text) is not str or type(batch_id) is not str:
+        raise ValueError("Review Batch projection input has an invalid type")
+    errors = validate_plan(text)
+    if errors:
+        raise ValueError("Review Batch schema invalid — " + "; ".join(errors))
+    body_errors: list[str] = []
+    body = _review_batch_body(text, body_errors)
+    batches = _parse_batches(body, body_errors)
+    batch = batches.get(batch_id)
+    if batch is None:
+        raise ValueError(f"Review Batch schema has no Batch '{batch_id}'")
+    declaration_block = next(
+        (
+            block for heading, block in _blocks(_BATCH_HEADING, body)
+            if heading.group(1).strip() == batch_id
+        ),
+        None,
+    )
+    if declaration_block is None:
+        raise ValueError(f"Review Batch schema has no Batch '{batch_id}'")
+    declaration = {
+        "batch_id": batch_id,
+        "members": tuple(f"Task {number}" for number in batch.members),
+        "verdict_question": _one_field(
+            declaration_block, "Verdict question", f"Batch '{batch_id}'", body_errors
+        ),
+        "review_lane": _one_field(
+            declaration_block, "Review lane", f"Batch '{batch_id}'", body_errors
+        ),
+        "aggregate_verification": _one_field(
+            declaration_block,
+            "Aggregate verification",
+            f"Batch '{batch_id}'",
+            body_errors,
+        ),
+        "boundary": _one_field(
+            declaration_block, "Boundary", f"Batch '{batch_id}'", body_errors
+        ),
+    }
+    parsed_tasks = _parse_tasks(text, body_errors)
+    task_blocks: dict[int, str] = {}
+    for match, block in _blocks(_TASK_HEADING, text):
+        task_blocks[int(match.group(1))] = block
+    members: list[dict[str, object]] = []
+    for number in batch.members:
+        task = parsed_tasks[number]
+        block = task_blocks[number]
+        acceptance = _projection_field_block(
+            block, "Acceptance", f"Task {number}", body_errors
+        )
+        files = _projection_field_block(
+            block, "Files touched", f"Task {number}", body_errors
+        )
+        file_paths = _projection_files(
+            files[0] if len(files) == 1 else "", f"Task {number}", body_errors
+        )
+        briefs = _projection_references(block, f"Task {number}", body_errors)
+        # The existing executable plan schema has one authority source:
+        # Brief item covered.  Its REQ identifiers are the owned requirements;
+        # BI identifiers remain traceability references, and there is no
+        # separate future-requirement field to infer or invent.  Therefore the
+        # canonical future mapping is the empty tuple until that schema grows a
+        # validated source for it.
+        owned = tuple(reference for reference in briefs if _REQ_REFERENCE.fullmatch(reference))
+        members.append({
+            "task_id": f"Task {number}",
+            "dependencies": tuple(f"Task {dep}" for dep in task.dependencies),
+            "review_disposition": task.disposition,
+            "review_lane": task.review_lane,
+            "acceptance": acceptance,
+            "declared_files": file_paths,
+            "brief_references": briefs,
+            "owned_requirements": owned,
+            "future_requirements": (),
+        })
+    if body_errors:
+        raise ValueError("Review Batch schema invalid — " + "; ".join(body_errors))
+    return {"declaration": declaration, "members": tuple(members)}
 
 
 def validate_plan(text: str) -> list[str]:

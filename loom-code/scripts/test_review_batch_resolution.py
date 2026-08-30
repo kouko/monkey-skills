@@ -16,6 +16,34 @@ sys.modules[SPEC.name] = review_batch
 SPEC.loader.exec_module(review_batch)
 
 
+def _authority_plan(declaration, records) -> str:
+    tasks = []
+    for number, record in enumerate(records, 1):
+        dependency = "none" if number == 1 else f"Task {number - 1} completes first"
+        tasks.append(
+            f"## Task {number} — fixture\n\n"
+            "- **Description**: fixture\n"
+            f"- **Dependencies**: {dependency}\n"
+            f"- **Files touched**: src/{number}.py\n"
+            f"- **Acceptance**: {record.acceptance[0]}\n"
+            f"- **Brief item covered**: {record.owned_requirements[0]}\n"
+            f"- **Review-weight**: {declaration.review_lane}\n"
+            f"- **Review disposition**: batch({declaration.batch_id})\n"
+            "- **Status**: pending\n"
+        )
+    return (
+        "# Plan\n\nGoal: fixture.\nStage: sdd:wave-1\n\n"
+        + "\n".join(tasks)
+        + "\n## Review Batches\n\n"
+        + f"### Review Batch: {declaration.batch_id}\n"
+        + f"- **Members**: {', '.join(declaration.members)}\n"
+        + f"- **Verdict question**: {declaration.verdict_question}\n"
+        + f"- **Review lane**: {declaration.review_lane}\n"
+        + f"- **Aggregate verification**: {declaration.aggregate_verification}\n"
+        + f"- **Boundary**: {declaration.boundary}\n"
+    )
+
+
 def _packet(lane="full"):
     declaration = review_batch.BatchDeclaration(
         batch_id="batch-a",
@@ -44,7 +72,7 @@ def _packet(lane="full"):
                 declared_files=(path,),
                 files=files,
                 owned_requirements=(f"REQ-{number}",),
-                future_requirements=(f"FUTURE-{number}",),
+                future_requirements=(),
                 acceptance=(f"accept-{number}",),
                 scope_proof=scope_issuer.issue(
                     repository_identity="e" * 64,
@@ -60,17 +88,28 @@ def _packet(lane="full"):
         source_identity="authority:v1",
         source_digest="a" * 64,
     )
+    records = tuple(
+        review_batch.OwnershipRecord(
+            member.task_id,
+            member.owned_requirements,
+            member.future_requirements,
+            member.acceptance,
+        )
+        for member in members
+    )
     ownership = issuer.issue_ownership(
         plan_identity="plan:batch",
         spec_identity="spec:REQ-106-107",
-        records=tuple(
-            review_batch.OwnershipRecord(
-                member.task_id,
-                member.owned_requirements,
-                member.future_requirements,
-                member.acceptance,
-            )
-            for member in members
+        records=records,
+        execution_projection=review_batch._issue_execution_projection_from_validated_plan(
+            plan_text=_authority_plan(declaration, records),
+            batch_id=declaration.batch_id,
+            plan_identity="plan:batch",
+            spec_identity="spec:REQ-106-107",
+            records=records,
+            issuer="plan-card:validated-schema",
+            source_identity="plan:current",
+            source_digest="8" * 64,
         ),
     )
     approved = review_batch._approved_safe_resolution(
@@ -255,6 +294,7 @@ def _assert_verdict_and_finding_matrix(packet, spec_pass, quality_pass) -> None:
         assert fallback.action == "individual_fallback"
         assert fallback.reopen_owners == ()
         assert fallback.ledger_mutation_allowed is False
+        assert fallback.transition_authority is None
 
     mixed = replace(spec_block, findings=(single, replace(single, owners=())))
     fallback = _resolve(packet, (mixed, quality_pass))
@@ -283,6 +323,34 @@ def _assert_immutable_resolution(packet) -> None:
         raise AssertionError("resolution was mutable")
     except (FrozenInstanceError, AttributeError, TypeError):
         pass
+    authority = final.transition_authority
+    assert authority is not None
+    assert authority.action == "finalize"
+    assert authority.packet_identity == packet.identity
+    try:
+        authority.action = "reopen"
+        raise AssertionError("transition authority was mutable")
+    except (FrozenInstanceError, AttributeError, TypeError):
+        pass
+    blank = review_batch.TransitionAuthority()
+    assert not review_batch.validate_transition_authority(
+        blank,
+        execution_projection=packet.ownership.execution_projection,
+        member_statuses=tuple(
+            (member.task_id, member.status) for member in packet.members
+        ),
+        action="finalize",
+        reopen_owners=(),
+    )
+    noted = _resolve(
+        packet,
+        (
+            _result(packet, "spec-reviewer"),
+            _result(packet, "code-quality-reviewer", verdict="PASS_WITH_NOTES"),
+        ),
+    )
+    assert noted.transition_authority is not None
+    assert noted.transition_authority.outcome_digest != authority.outcome_digest
     try:
         final.terminal_results[0].verdict = "NEEDS_REVISION"
         raise AssertionError("terminal provenance was mutable")

@@ -34,7 +34,7 @@ def _member(task_id: str, sha: str, path: str, requirement: str):
         declared_files=(path,),
         files=reviewed,
         owned_requirements=(requirement,),
-        future_requirements=(f"future-{requirement}",),
+        future_requirements=(),
         acceptance=(f"accept-{task_id}",),
         scope_proof=scope,
     )
@@ -84,8 +84,42 @@ def _resnapshot(member, *, sha=None, path=None, content=None):
     )
 
 
+def _authority_plan(declaration, records) -> str:
+    tasks = []
+    for index, (task_id, record) in enumerate(
+        zip(declaration.members, records, strict=True)
+    ):
+        number = int(task_id.split()[1])
+        path = "src/one.py" if number == 1 else "src/two.py"
+        dependency = (
+            "none" if index == 0 else f"{declaration.members[index - 1]} completes first"
+        )
+        tasks.append(
+            f"## Task {number} — fixture\n\n"
+            "- **Description**: fixture\n"
+            f"- **Dependencies**: {dependency}\n"
+            f"- **Files touched**: {path}\n"
+            f"- **Acceptance**: {record.acceptance[0]}\n"
+            f"- **Brief item covered**: {record.owned_requirements[0]}\n"
+            f"- **Review-weight**: {declaration.review_lane}\n"
+            f"- **Review disposition**: batch({declaration.batch_id})\n"
+            "- **Status**: pending\n"
+        )
+    return (
+        "# Plan\n\nGoal: fixture.\nStage: sdd:wave-1\n\n"
+        + "\n".join(tasks)
+        + "\n## Review Batches\n\n"
+        + f"### Review Batch: {declaration.batch_id}\n"
+        + f"- **Members**: {', '.join(declaration.members)}\n"
+        + f"- **Verdict question**: {declaration.verdict_question}\n"
+        + f"- **Review lane**: {declaration.review_lane}\n"
+        + f"- **Aggregate verification**: {declaration.aggregate_verification}\n"
+        + f"- **Boundary**: {declaration.boundary}\n"
+    )
+
+
 def _ownership(
-    records,
+    records, declaration,
     *,
     plan="plan:task-batch-review",
     source="authority:v1",
@@ -97,6 +131,20 @@ def _ownership(
         plan_identity=plan,
         spec_identity="spec:REQ-105",
         records=records,
+        execution_projection=_execution_projection(records, declaration, plan=plan),
+    )
+
+
+def _execution_projection(records, declaration, *, plan="plan:task-batch-review"):
+    return review_batch._issue_execution_projection_from_validated_plan(
+        plan_text=_authority_plan(declaration, records),
+        batch_id=declaration.batch_id,
+        plan_identity=plan,
+        spec_identity="spec:REQ-105",
+        records=records,
+        issuer="plan-card:validated-schema",
+        source_identity="plan:current",
+        source_digest="8" * 64,
     )
 
 
@@ -143,7 +191,7 @@ def _inputs():
             )
             for member in members
     )
-    authority = _ownership(records)
+    authority = _ownership(records, declaration)
     evidence = _verification(declaration, safety="resolver-safety-receipt:1")
     return declaration, members, authority, evidence
 
@@ -181,9 +229,12 @@ def _assert_identity_matrix() -> None:
     )
     for changed in identity_drifts:
         assert _packet(declaration=changed).identity != packet.identity
-    reversed_authority = _ownership(tuple(reversed(authority.records)))
+    reversed_declaration = replace(declaration, members=("Task 2", "Task 1"))
+    reversed_authority = _ownership(
+        tuple(reversed(authority.records)), reversed_declaration
+    )
     assert review_batch.materialize_packet(
-        replace(declaration, members=("Task 2", "Task 1")),
+        reversed_declaration,
         tuple(reversed(members)),
         reversed_authority,
         evidence,
@@ -192,16 +243,18 @@ def _assert_identity_matrix() -> None:
     changed_sha = _resnapshot(members[0], sha="3" * 40)
     changed_bytes = _resnapshot(members[0], content=b"changed")
     changed_scope = _resnapshot(members[0], path="src/renamed.py")
-    for changed in (changed_sha, changed_bytes, changed_scope):
+    for changed in (changed_sha, changed_bytes):
         assert _packet(members=(changed, members[1])).identity != packet.identity
+    with pytest.raises(review_batch.PacketRefused, match="execution authority"):
+        _packet(members=(changed_scope, members[1]))
 
     changed_owner = replace(
-        authority.records[0], owned_requirements=("REQ-1-amended",)
+        authority.records[0], owned_requirements=("REQ-3",)
     )
-    changed_member = replace(members[0], owned_requirements=("REQ-1-amended",))
+    changed_member = replace(members[0], owned_requirements=("REQ-3",))
     assert _packet(
         members=(changed_member, members[1]),
-        authority=_ownership((changed_owner, authority.records[1])),
+        authority=_ownership((changed_owner, authority.records[1]), declaration),
     ).identity != packet.identity
 
     aggregate_changed = replace(
@@ -225,9 +278,9 @@ def _assert_identity_matrix() -> None:
         assert _packet(evidence=changed).identity != packet.identity
 
     for changed_authority in (
-        _ownership(authority.records, source="authority:v2"),
-        _ownership(authority.records, plan="plan:amended"),
-        _ownership(authority.records, source_digest="b" * 64),
+        _ownership(authority.records, declaration, source="authority:v2"),
+        _ownership(authority.records, declaration, plan="plan:amended"),
+        _ownership(authority.records, declaration, source_digest="b" * 64),
     ):
         assert _packet(authority=changed_authority).identity != packet.identity
 
@@ -292,20 +345,14 @@ def _assert_ownership_matrix() -> None:
     bad_authorities = (
         None,
         object(),
-        _ownership(authority.records[:1]),
-        _ownership((*authority.records, authority.records[0])),
-        _ownership(
-            (
-                replace(authority.records[0], task_id="Task 99"),
-                authority.records[1],
-            ),
-        ),
-        _ownership(
-            (
-                replace(authority.records[0], owned_requirements=("REQ-2",)),
-                authority.records[1],
-            ),
-        ),
+        _tamper(authority, records=authority.records[:1]),
+        _tamper(authority, records=(*authority.records, authority.records[0])),
+        _tamper(authority, records=(
+            replace(authority.records[0], task_id="Task 99"), authority.records[1],
+        )),
+        _tamper(authority, records=(
+            replace(authority.records[0], owned_requirements=("REQ-2",)), authority.records[1],
+        )),
     )
     for bad in bad_authorities:
         with pytest.raises(review_batch.PacketRefused, match="ownership proof"):
@@ -376,14 +423,60 @@ def test_packet_rejects_forged_or_mutable_authority_inputs() -> None:
     record = review_batch.OwnershipRecord(
         task_id="Task 1",
         owned_requirements=("REQ-1",),
-        future_requirements=("future-REQ-1",),
+        future_requirements=(),
         acceptance=("accept-Task 1",),
+    )
+    declaration = review_batch.BatchDeclaration(
+        batch_id="batch-a",
+        members=("Task 1",),
+        verdict_question="Does it satisfy the contract?",
+        review_lane="full",
+        aggregate_verification="python3 -m pytest tests -q",
+        boundary="capability: aggregate; exclusions: none; consumable: yes",
     )
     ownership = issuer.issue_ownership(
         plan_identity="plan:task-batch-review",
         spec_identity="spec:REQ-105",
         records=(record,),
+        execution_projection=_execution_projection((record,), declaration),
     )
+    with pytest.raises(review_batch.PacketRefused):
+        review_batch.ExecutionAuthorityProjection()
+
+    class ProjectionSubclass(review_batch.ExecutionAuthorityProjection):
+        pass
+
+    for fake in (None, {"projection": "literal"}, "literal", ProjectionSubclass):
+        with pytest.raises(review_batch.PacketRefused):
+            issuer.issue_ownership(
+                plan_identity="plan:task-batch-review",
+                spec_identity="spec:REQ-105",
+                records=(record,),
+                execution_projection=fake,
+            )
+    with pytest.raises(TypeError):
+        issuer.issue_ownership(
+            plan_identity="plan:task-batch-review",
+            spec_identity="spec:REQ-105",
+            records=(record,),
+        )
+    projection = ownership.execution_projection
+    for plan_identity, spec_identity, records in (
+        ("plan:amended", "spec:REQ-105", (record,)),
+        ("plan:task-batch-review", "spec:amended", (record,)),
+        (
+            "plan:task-batch-review",
+            "spec:REQ-105",
+            (replace(record, owned_requirements=("REQ-2",)),),
+        ),
+    ):
+        with pytest.raises(review_batch.PacketRefused):
+            issuer.issue_ownership(
+                plan_identity=plan_identity,
+                spec_identity=spec_identity,
+                records=records,
+                execution_projection=projection,
+            )
     approved = review_batch._approved_safe_resolution(
         declaration_digest=review_batch.text_digest("python3 -m pytest tests -q"),
         argv=("python3", "-m", "pytest", "tests", "-q"),
@@ -409,18 +502,20 @@ def test_packet_rejects_forged_or_mutable_authority_inputs() -> None:
         acceptance=record.acceptance,
         scope_proof=scope,
     )
-    declaration = review_batch.BatchDeclaration(
-        batch_id="batch-a",
-        members=("Task 1",),
-        verdict_question="Does it satisfy the contract?",
-        review_lane="full",
-        aggregate_verification="python3 -m pytest tests -q",
-        boundary="capability: aggregate; exclusions: none; consumable: yes",
-    )
     packet = review_batch.materialize_packet(
         declaration, (member,), ownership, verification
     )
     assert review_batch.validate_packet(packet) == ()
+    assert review_batch.validate_packet(
+        replace(packet, ownership=_tamper(ownership, execution_projection=None))
+    ) == ("packet authority is invalid",)
+    assert review_batch.resolve_aggregate_review(
+        packet=replace(packet, ownership=_tamper(ownership, execution_projection=None)),
+        declared_lane="full",
+        expected_arms=(),
+        arm_bindings=(),
+        terminal_results=(),
+    ).action == "wait_refuse"
 
     # Old self-attested booleans and arbitrary objects are not API inputs.
     assert "tracked" not in review_batch.ReviewedFile.__dataclass_fields__
@@ -487,6 +582,9 @@ def test_packet_rejects_forged_or_mutable_authority_inputs() -> None:
         plan_identity="plan:amended",
         spec_identity="spec:REQ-105",
         records=(record,),
+        execution_projection=_execution_projection(
+            (record,), declaration, plan="plan:amended"
+        ),
     ) != ownership
     assert _verification(declaration, safety="resolver-safety-receipt:2") != verification
 
@@ -505,6 +603,7 @@ def test_packet_rejects_forged_or_mutable_authority_inputs() -> None:
             plan_identity="plan:task-batch-review",
             spec_identity="spec:REQ-105",
             records=[record],
+            execution_projection=ownership.execution_projection,
         )
 
     malformed = object.__new__(review_batch.VerificationProof)
