@@ -217,7 +217,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 8: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-83`
-- **Status**: done(pending-batch-c-commit)
+- **Status**: done(ca81009689b402ff2ad890b9c23351f761fe8f67)
 - **Gloss**: 多 PR delivery 可追蹤，但每個 PR 只有一個 closure owner。
 
 ## Task 10 — Make close-and-rechart recoverable
@@ -333,7 +333,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 8: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-89`
-- **Status**: done(pending-batch-c-commit)
+- **Status**: done(ca81009689b402ff2ad890b9c23351f761fe8f67)
 - **Gloss**: API 暫時不可用不會被誤判成失敗或通過。
 
 ## Task 16 — Parse stable Destination acceptance records
@@ -466,7 +466,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 8: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-96`
-- **Status**: done(pending-batch-c-commit)
+- **Status**: done(ca81009689b402ff2ad890b9c23351f761fe8f67)
 - **Gloss**: 每個 delivery 自己明定何時算正式交付，不由工具偷偷降級。
 
 ## Task 23 — Implement conservative stale-claim recovery
