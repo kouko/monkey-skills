@@ -242,7 +242,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 
 - **Description**: Add an authorized replay corpus and one comparison command that reports review dispatches, fallback causes, safety outcomes, and package gates for baseline versus candidate.
 - **Module**: `loom-code/scripts/task_batch_replay.py`
-- **Files touched**: `loom-code/scripts/task_batch_replay.py`, `loom-code/scripts/test_task_batch_replay.py`, `loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py`, `AGENTS.md`
+- **Files touched**: `loom-code/scripts/task_batch_replay.py`, `loom-code/scripts/test_task_batch_replay.py`, `loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py`, `docs/loom/INDEX.md`, `AGENTS.md`
 - **Context paths**:
   - `loom-code/scripts/loom_firing_harness.py`
   - `docs/loom/specs/2026-08-30-task-batch-review.md`
@@ -257,7 +257,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-111
 - **Brief item covered**: BI-1, BI-2, BI-3, BI-4
 - **Review disposition**: individual
-- **Status**: claimed(@t9-replay)
+- **Status**: done(b454089ad449f3832638bc44b6dfa0ea3e060e2d)
 - **Gloss**: 只有 review 次數下降且安全性不退步，才算有效。
 
 ## Review Batches
