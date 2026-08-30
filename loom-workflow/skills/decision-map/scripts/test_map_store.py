@@ -102,6 +102,39 @@ def test_validate_requires_schema_v2_without_parts(tmp_path: Path) -> None:
     assert "migrate" in message.lower()
 
 
+def test_v3_accepts_only_four_closure_exclusive_ticket_types(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-76
+    """Schema v3 replaces generic task work with closure-evidence types."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8").replace(
+            "schema_version: 2", "schema_version: 3"
+        ),
+        encoding="utf-8",
+    )
+    ticket_path = map_dir / "tickets" / "decision-a.md"
+
+    for ticket_type in ("grilling", "research", "prototype", "delivery"):
+        ticket = TICKET_CLOSED.replace("type: task", f"type: {ticket_type}")
+        if ticket_type in {"grilling", "prototype"}:
+            ticket += "\nuser-ratified: kouko, 2026-08-30\n"
+        _write(ticket_path, ticket)
+        code, message = map_store.validate(map_dir, repo_root=tmp_path)
+        assert code == 0, message
+
+    for ticket_type in ("task", "unblock"):
+        _write(
+            ticket_path,
+            TICKET_CLOSED.replace("type: task", f"type: {ticket_type}"),
+        )
+        code, message = map_store.validate(map_dir, repo_root=tmp_path)
+        assert code == 2
+        assert "classif" in message.lower()
+
+
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
     """A schema_version above map_store's supported ceiling is exit 2,
     naming both versions — never a silent read-past."""

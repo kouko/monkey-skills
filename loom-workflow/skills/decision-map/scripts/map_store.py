@@ -29,11 +29,13 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
-SUPPORTED_SCHEMA_VERSION = 2
+MIN_SUPPORTED_SCHEMA_VERSION = 2
+SUPPORTED_SCHEMA_VERSION = 3
 
 VALID_MAP_STATES = {"charting", "active", "clear", "archived"}
 LIVE_MAP_STATES = {"charting", "active"}
-VALID_TICKET_TYPES = {"grilling", "research", "task", "prototype"}
+V2_TICKET_TYPES = {"grilling", "research", "task", "prototype"}
+V3_TICKET_TYPES = {"grilling", "research", "prototype", "delivery"}
 HITL_TICKET_TYPES = {"grilling", "prototype"}
 RATIFIED_MAP_STATES = {"active", "clear"}
 VALID_TICKET_STATUSES = {"open", "claimed", "closed"}
@@ -409,10 +411,10 @@ def resolve_repo_root(explicit: str | Path | None, start_dir: Path) -> Path:
 
 
 def _check_schema_version(schema_version: int) -> None:
-    if schema_version < SUPPORTED_SCHEMA_VERSION:
+    if schema_version < MIN_SUPPORTED_SCHEMA_VERSION:
         raise SchemaViolation(
             f"schema_version {schema_version} is retired; migrate MAP.md "
-            f"to schema_version {SUPPORTED_SCHEMA_VERSION}"
+            f"to schema_version {MIN_SUPPORTED_SCHEMA_VERSION} or later"
         )
     if schema_version > SUPPORTED_SCHEMA_VERSION:
         raise SchemaViolation(
@@ -468,18 +470,27 @@ def _check_map_structure(doc: MapDocument) -> None:
         )
 
 
-def _check_tickets(map_dir: Path, state: str) -> None:
+def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
     tickets_dir = Path(map_dir) / "tickets"
     if not tickets_dir.is_dir():
         return
+    valid_ticket_types = (
+        V3_TICKET_TYPES if schema_version == 3 else V2_TICKET_TYPES
+    )
     blocked_by_graph: dict[str, list[str]] = {}
     non_closed: list[str] = []
     for ticket_path in sorted(tickets_dir.glob("*.md")):
         ticket = read_ticket(ticket_path)
-        if ticket.frontmatter.type not in VALID_TICKET_TYPES:
+        if ticket.frontmatter.type not in valid_ticket_types:
+            guidance = (
+                "; classify the ticket by its closure evidence as one of "
+                f"{sorted(valid_ticket_types)}"
+                if schema_version == 3
+                else ""
+            )
             raise SchemaViolation(
                 f"{ticket_path}: type {ticket.frontmatter.type!r} is not "
-                f"one of {sorted(VALID_TICKET_TYPES)}"
+                f"one of {sorted(valid_ticket_types)}{guidance}"
             )
         if ticket.frontmatter.status not in VALID_TICKET_STATUSES:
             raise SchemaViolation(
@@ -498,6 +509,7 @@ def _check_tickets(map_dir: Path, state: str) -> None:
             )
         if (
             ticket.frontmatter.status == "closed"
+            and schema_version == 2
             and ticket.frontmatter.type == "task"
             and not _has_delivery_evidence(ticket.resolution or "")
         ):
@@ -588,7 +600,9 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     try:
         _check_schema_version(doc.frontmatter.schema_version)
         _check_map_structure(doc)
-        _check_tickets(map_dir, doc.frontmatter.state)
+        _check_tickets(
+            map_dir, doc.frontmatter.state, doc.frontmatter.schema_version
+        )
     except SchemaViolation as exc:
         return 2, str(exc)
     except MapStoreError as exc:
