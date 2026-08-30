@@ -118,7 +118,9 @@ def _validate_untrusted_value(
         or _ABSOLUTE_PATH_TOKEN.search(value)
     ):
         errors.append(f"{owner} {name} contains unsafe path syntax")
-    if any(token in value for token in ("$(", "${", "&&", "||")):
+    if name != "Aggregate verification" and any(
+        token in value for token in ("$(", "${", "&&", "||")
+    ):
         errors.append(f"{owner} {name} contains shell-control syntax")
 
 

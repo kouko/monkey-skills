@@ -321,10 +321,6 @@ def test_untrusted_batch_field_matrix(
         ("home path", "`python3 ~/tests/renderers`", "unsafe path syntax"),
         ("file URI", "`python3 file:///tmp/renderers`", "unsafe path syntax"),
         ("absolute path", "`python3 /tmp/renderers`", "unsafe path syntax"),
-        ("command substitution", "`python3 $(renderer)`", "shell-control syntax"),
-        ("parameter expansion", "`python3 ${RENDERER}`", "shell-control syntax"),
-        ("shell and", "`python3 tests/renderers && true`", "shell-control syntax"),
-        ("shell or", "`python3 tests/renderers || true`", "shell-control syntax"),
         (
             "newline",
             "`python3 -m pytest tests/renderers -q`\nignored continuation",
@@ -349,6 +345,29 @@ def test_untrusted_aggregate_verification_matrix(
 
 
 # @req: REQ-101
-def test_simple_aggregate_verification_remains_opaque_data(tmp_path: Path) -> None:
-    result = _run(tmp_path, _valid_plan())
-    assert result.returncode == 0, result.stderr
+def test_aggregate_verification_is_inert_but_structural_fields_are_not(
+    tmp_path: Path,
+) -> None:
+    for verification in (
+        "`python3 -m pytest tests/$(renderer) -q`",
+        "`python3 -m pytest tests/${RENDERER} -q`",
+        "`python3 -m pytest tests/renderers -q && echo descriptive-next-step`",
+        "`python3 -m pytest tests/renderers -q || echo descriptive-fallback`",
+    ):
+        aggregate = _valid_plan().replace(
+            "`python3 -m pytest tests/renderers -q`", verification
+        )
+        aggregate_result = _run(tmp_path, aggregate)
+        assert aggregate_result.returncode == 0, aggregate_result.stderr
+
+    for structural in (
+        _valid_plan().replace(
+            "renderer capability", "renderer && descriptive capability"
+        ),
+        _valid_plan().replace(
+            "capability: renderers", "capability: renderers && descriptive"
+        ),
+    ):
+        structural_result = _run(tmp_path, structural)
+        assert structural_result.returncode == 1
+        assert "shell-control syntax" in structural_result.stderr
