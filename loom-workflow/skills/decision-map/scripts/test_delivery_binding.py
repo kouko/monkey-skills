@@ -413,3 +413,21 @@ def test_plan_scan_refuses_same_path_regular_file_replacement_before_final_snaps
     code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
     assert code == 2
     assert "Plan snapshot changed" in message
+
+
+def test_plan_scan_refuses_second_plan_added_before_final_snapshot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-96
+    ticket, brief = _bound_ticket(tmp_path)
+    source = brief.relative_to(tmp_path).as_posix()
+    plan = f"# Plan\n\n**Source brief**: {source}\nStage: planning\n\n## Task 1 — Deliver\n"
+    _write(tmp_path / "docs/loom/plans/first.md", plan)
+
+    def add_second() -> None:
+        _write(tmp_path / "docs/loom/plans/second.md", plan)
+
+    monkeypatch.setattr(delivery_binding, "_before_plan_final_snapshot", add_second)
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+    assert code == 2
+    assert "Plan membership changed" in message

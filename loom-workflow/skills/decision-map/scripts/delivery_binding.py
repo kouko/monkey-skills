@@ -221,12 +221,14 @@ def _validate_brief_policy_and_plan_count(repo_root: Path, brief: PurePosixPath,
             raise _BindingFailure(
                 "sole Plan is unusable; withdraw the delivery ticket and create a replacement delivery"
             )
-    if membership != tuple(path.relative_to(repo_root).as_posix() for path in _plan_files(plans_root, repo_root)):
-        raise _BindingFailure("Plan membership changed during validation; re-read authoritative delivery state")
     _before_plan_final_snapshot()
+    final_candidates = _plan_files(plans_root, repo_root)
+    final_membership = tuple(path.relative_to(repo_root).as_posix() for path in final_candidates)
+    if membership != final_membership:
+        raise _BindingFailure("Plan membership changed during validation; re-read authoritative delivery state")
     final = {
         fingerprint.path: fingerprint
-        for _, fingerprint in (_read_plan_text(repo_root, candidate) for candidate in candidates)
+        for _, fingerprint in (_read_plan_text(repo_root, candidate) for candidate in final_candidates)
     }
     if final != fingerprints:
         raise _BindingFailure("Plan snapshot changed during validation; re-read authoritative delivery state")
@@ -395,7 +397,12 @@ def snapshot_delivery_migration_binding(
 
 
 def validate(ticket_path: Path, repo_root: Path | None = None) -> tuple[int, str]:
-    """Validate one Ticket's optional, reciprocal delivery Brief binding; writes nothing."""
+    """Validate one delivery binding without writes.
+
+    The Plan snapshot guarantee ends when its final re-enumeration and
+    descriptor-backed fingerprint comparison completes; later mutations belong
+    to the next state or transaction authority check.
+    """
     try:
         lexical_root = Path(os.path.abspath(repo_root if repo_root is not None else map_store.resolve_repo_root(None, Path(ticket_path).parent)))
         # Keep the caller's lexical root for the descriptor-relative walk.
