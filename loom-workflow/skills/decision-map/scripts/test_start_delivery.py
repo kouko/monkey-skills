@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 
@@ -194,15 +194,15 @@ def test_start_delivery_rolls_back_partial_writes(
     # @req: REQ-80
     ticket, brief = _ticket(tmp_path)
     original_ticket = ticket.read_bytes()
-    original_replace = start_delivery._replace_atomically
+    original_replace = start_delivery._replace_at
 
     if failure_point == "brief":
-        def fail_ticket(path: Path, text: str) -> None:
-            if path == ticket:
+        def fail_ticket(parent_fd: int, leaf: str, text: str) -> None:
+            if leaf == ticket.name:
                 raise OSError("injected ticket replacement failure")
-            original_replace(path, text)
+            original_replace(parent_fd, leaf, text)
 
-        monkeypatch.setattr(start_delivery, "_replace_atomically", fail_ticket)
+        monkeypatch.setattr(start_delivery, "_replace_at", fail_ticket)
     else:
         monkeypatch.setattr(
             delivery_binding, "validate", lambda *_args, **_kwargs: (2, "injected validation failure")
@@ -215,3 +215,71 @@ def test_start_delivery_rolls_back_partial_writes(
     assert code in {1, 2}, message
     assert ticket.read_bytes() == original_ticket
     assert not brief.exists()
+
+
+def test_start_delivery_recovers_an_orphaned_expected_brief(tmp_path: Path) -> None:
+    # @req: REQ-80
+    ticket, brief = _ticket(tmp_path)
+    ticket_relative = ticket.relative_to(tmp_path).as_posix()
+    _write(
+        brief,
+        start_delivery._brief_text(
+            PurePosixPath(ticket_relative), "Deliver searchable outcome-map references."
+        ),
+    )
+    before = brief.read_bytes()
+
+    code, message = start_delivery.start_delivery(
+        ticket, brief.relative_to(tmp_path).as_posix(), repo_root=tmp_path
+    )
+
+    assert code == 0, message
+    assert brief.read_bytes() == before
+    assert delivery_binding.validate(ticket, repo_root=tmp_path)[0] == 0
+
+
+def test_start_delivery_returns_operational_error_for_missing_ticket(tmp_path: Path) -> None:
+    # @req: REQ-80
+    missing = tmp_path / "docs/loom/maps/wayfinder/tickets/missing.md"
+
+    code, _ = start_delivery.start_delivery(
+        missing, "docs/loom/specs/missing.md", repo_root=tmp_path
+    )
+
+    assert code == 1
+
+
+def test_start_delivery_preserves_binding_operational_errors(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # @req: REQ-80
+    ticket, brief = _ticket(tmp_path)
+    assert start_delivery.start_delivery(ticket, brief.relative_to(tmp_path).as_posix(), repo_root=tmp_path)[0] == 0
+    monkeypatch.setattr(delivery_binding, "validate", lambda *_args, **_kwargs: (1, "injected unavailable binding"))
+
+    code, _ = start_delivery.start_delivery(
+        ticket, brief.relative_to(tmp_path).as_posix(), repo_root=tmp_path
+    )
+
+    assert code == 1
+
+
+def test_start_delivery_parent_swap_never_writes_outside_repo(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-80
+    ticket, brief = _ticket(tmp_path)
+    outside = tmp_path.parent / "outside-race"
+    outside.mkdir(exist_ok=True)
+    original_parent = brief.parent
+    moved_parent = brief.parent.with_name("specs-before-swap")
+
+    def swap_parent(_parent_fd: int, _leaf: str) -> None:
+        original_parent.rename(moved_parent)
+        original_parent.symlink_to(outside, target_is_directory=True)
+
+    monkeypatch.setattr(start_delivery, "_before_brief_write", swap_parent)
+    code, _ = start_delivery.start_delivery(
+        ticket, brief.relative_to(tmp_path).as_posix(), repo_root=tmp_path
+    )
+
+    assert code != 0
+    assert not (outside / brief.name).exists()
