@@ -5,10 +5,15 @@ bytes (map-format.md §Command surface). These tests pin the schema
 conformance the parser must accept, the schema_version refusal, and
 the validate CLI's 0/1/2 exit-code contract every sibling checker
 relies on.
+
+External CLI grounding: local Git 2.50.1 ``git help rev-parse`` documents
+``git rev-parse --show-toplevel`` as returning the working tree's top-level
+path, absolute by default, and reporting an error when no working tree exists.
 """
 
 from __future__ import annotations
 
+import ast
 import json
 import subprocess
 import sys
@@ -19,6 +24,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent))
 
 import map_store  # noqa: E402
+import map_transaction  # noqa: E402
 
 SCRIPT = Path(__file__).parent / "map_store.py"
 
@@ -32,9 +38,27 @@ def test_store_writer_lock_dependency_is_one_way() -> None:
     # @req: REQ-87
     store_source = SCRIPT.read_text(encoding="utf-8")
     lifecycle_source = (SCRIPT.parent / "map_lifecycle.py").read_text(encoding="utf-8")
+    tree = ast.parse(store_source)
+    imported_modules = {
+        alias.name.split(".", 1)[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    } | {
+        (node.module or "").split(".", 1)[0]
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+    }
     assert "import map_lock" in store_source
-    assert "import map_transaction" not in store_source
+    assert {"map_lifecycle", "map_transaction"}.isdisjoint(imported_modules)
     assert "import map_transaction" not in lifecycle_source
+    assert "def retire_active_map(" not in store_source
+    assert "def archive_map(" not in store_source
+
+
+def test_repo_root_cli_shape_has_exact_local_git_grounding() -> None:
+    assert "git rev-parse --show-toplevel" in (__doc__ or "")
+    assert "Git 2.50.1" in (__doc__ or "")
 
 
 MAP_MD_CONFORMANT = """---
@@ -571,23 +595,25 @@ def test_active_retirement_requires_named_ratification_and_reason(
     for ratified_by, reason in (("", "superseded"), ("kouko", "")):
         before = (map_dir / "MAP.md").read_bytes()
         try:
-            map_store.retire_active_map(
+            map_transaction.retire_map(
                 map_dir,
                 ratified_by=ratified_by,
                 ratified_on="2026-08-30",
                 reason=reason,
+                repo_root=tmp_path,
             )
-        except map_store.SchemaViolation:
+        except map_transaction.CloseTransactionError:
             pass
         else:
             raise AssertionError("invalid retirement evidence was accepted")
         assert (map_dir / "MAP.md").read_bytes() == before
 
-    map_store.retire_active_map(
+    map_transaction.retire_map(
         map_dir,
         ratified_by="kouko",
         ratified_on="2026-08-30",
         reason="The outcome is no longer worth pursuing.",
+        repo_root=tmp_path,
     )
     text = (map_dir / "MAP.md").read_text(encoding="utf-8")
     assert "state: archived" in text
@@ -603,11 +629,12 @@ def test_archived_map_rejects_every_work_mutation_without_writing(
 ) -> None:
     # @req: REQ-86
     map_dir = _make_v3_active_map(tmp_path)
-    map_store.retire_active_map(
+    map_transaction.retire_map(
         map_dir,
         ratified_by="kouko",
         ratified_on="2026-08-30",
         reason="The outcome is no longer worth pursuing.",
+        repo_root=tmp_path,
     )
     before = {
         path.relative_to(map_dir): path.read_bytes()
@@ -660,11 +687,12 @@ def test_charting_rejects_work_and_terminal_records_are_byte_immutable(
             raise AssertionError(f"charting Map accepted {operation}")
         assert (map_path.read_bytes(), ticket_path.read_bytes()) == before
 
-    map_store.retire_active_map(
+    map_transaction.retire_map(
         map_dir,
         ratified_by="kouko",
         ratified_on="2026-08-30",
         reason="The chart will not be activated.",
+        repo_root=tmp_path,
     )
     assert "state: archived" in map_path.read_text(encoding="utf-8")
     assert "state: clear" not in map_path.read_text(encoding="utf-8")
@@ -719,7 +747,7 @@ def test_archive_transition_keeps_map_and_ticket_paths_stable(tmp_path: Path) ->
     before_paths = {path.relative_to(tmp_path) for path in tmp_path.rglob("*")}
     ticket_before = ticket_path.read_bytes()
 
-    map_store.archive_map(map_dir, repo_root=tmp_path)
+    map_transaction.archive_map_transition(map_dir, repo_root=tmp_path)
 
     assert map_dir.is_dir()
     assert ticket_path.read_bytes() == ticket_before
@@ -772,8 +800,8 @@ def test_archive_uses_stable_readiness_and_refuses_late_binding_break(
     _write(transaction, "{\"prepared\": true}\n")
 
     try:
-        map_store.archive_map(map_dir, repo_root=tmp_path)
-    except map_store.SchemaViolation as exc:
+        map_transaction.archive_map_transition(map_dir, repo_root=tmp_path)
+    except map_transaction.CloseTransactionError as exc:
         assert "incomplete" in str(exc)
     else:
         raise AssertionError("archive accepted an incomplete operation")
@@ -791,8 +819,8 @@ def test_archive_uses_stable_readiness_and_refuses_late_binding_break(
         break_binding_before_replace,
     )
     try:
-        map_store.archive_map(map_dir, repo_root=tmp_path)
-    except map_store.SchemaViolation as exc:
+        map_transaction.archive_map_transition(map_dir, repo_root=tmp_path)
+    except map_transaction.CloseTransactionError as exc:
         assert "stable snapshot" in str(exc) or "binding" in str(exc)
     else:
         raise AssertionError("archive committed after a late Brief-link break")
@@ -818,8 +846,8 @@ def test_archive_uses_stable_readiness_and_refuses_late_binding_break(
         break_binding_after_replace,
     )
     try:
-        map_store.archive_map(map_dir, repo_root=tmp_path)
-    except map_store.SchemaViolation as exc:
+        map_transaction.archive_map_transition(map_dir, repo_root=tmp_path)
+    except map_transaction.CloseTransactionError as exc:
         assert "changed" in str(exc) or "binding" in str(exc)
     else:
         raise AssertionError("archive kept an invalid post-write binding")

@@ -970,38 +970,6 @@ def _record_active_regression_locked(
     return followup_path
 
 
-def retire_active_map(
-    map_dir: Path,
-    *,
-    ratified_by: str,
-    ratified_on: str,
-    reason: str,
-) -> None:
-    """Archive charting/active work through the shared stable-readiness gate."""
-    import map_lifecycle
-
-    map_dir = Path(map_dir)
-    repo_root = resolve_repo_root(None, map_dir)
-    if not map_dir.resolve(strict=False).is_relative_to(
-        repo_root.resolve(strict=False)
-    ) and (
-        map_dir.parent.name == "maps"
-        and map_dir.parent.parent.name == "loom"
-        and map_dir.parent.parent.parent.name == "docs"
-    ):
-        repo_root = map_dir.parent.parent.parent.parent
-    try:
-        map_lifecycle.retire_map(
-            map_dir,
-            ratified_by=ratified_by,
-            ratified_on=ratified_on,
-            reason=reason,
-            repo_root=repo_root,
-        )
-    except map_lifecycle.LifecycleError as exc:
-        raise SchemaViolation(str(exc)) from exc
-
-
 def retirement_candidate(
     text: str,
     *,
@@ -1037,18 +1005,6 @@ def archive_candidate(text: str) -> str:
     if text.count("state: clear") != 1:
         raise SchemaViolation("MAP.md must contain exactly one clear state field")
     return text.replace("state: clear", "state: archived", 1)
-
-
-def archive_map(map_dir: Path, *, repo_root: Path) -> None:
-    """Archive one clear v3 Map through the shared stable-readiness gate."""
-    import map_lifecycle
-
-    try:
-        map_lifecycle.archive_map_transition(
-            Path(map_dir), repo_root=Path(repo_root)
-        )
-    except map_lifecycle.LifecycleError as exc:
-        raise SchemaViolation(str(exc)) from exc
 
 
 def create_successor_map(

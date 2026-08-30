@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import delivery_binding  # noqa: E402
 import map_store  # noqa: E402
+import map_transaction  # noqa: E402
 import start_delivery  # noqa: E402
 
 
@@ -150,11 +151,12 @@ user-ratified: kouko, 2026-08-30
 
 """,
     )
-    map_store.retire_active_map(
+    map_transaction.retire_map(
         map_path.parent,
         ratified_by="kouko",
         ratified_on="2026-08-30",
         reason="The outcome is no longer worth pursuing.",
+        repo_root=tmp_path,
     )
     before = (map_path.read_bytes(), ticket.read_bytes())
 
