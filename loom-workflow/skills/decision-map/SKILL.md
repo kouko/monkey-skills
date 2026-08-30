@@ -46,8 +46,10 @@ work creates a successor Map that cites its predecessor.
 
 ## Chart
 
-Use `map_init.py <map-id> --repo-root <path>` to create the schema-v3
-`MAP.md` template and empty `tickets/` directory. Fill the Destination,
+Use `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_init.py" "<map-id>" --repo-root "<path>"`
+to create the schema-v3 `MAP.md` template and empty `tickets/` directory.
+`${CLAUDE_PLUGIN_ROOT}` is replaced when the skill is loaded; it is not a
+run-time shell variable. Fill the Destination,
 author at least one stable Destination acceptance criterion, add the first
 closure-typed tickets, and record genuine fog.
 
@@ -55,17 +57,20 @@ If every open question can already be stated and there is no fog, stop: the
 work needs `loom-code:writing-plans`, not an Outcome Map. Before activation,
 run the risk pass from `references/prototype-contract.md`, record
 `user-ratified: <name/handle>, <YYYY-MM-DD>`, run
-`map_store.py validate <map-dir> --repo-root <path>`, then make the explicit
+`python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_store.py" validate "<map-dir>" --repo-root "<path>"`, then make the explicit
 `charting` to `active` state transition and validate again.
 
 ## Re-enter and select
 
 The Map is human-named or selected by an explicit recorded signal; topic
 similarity never chooses it. Run
-`map_progress.py <target> --repo-root <path>` with a repository root, Ticket,
-or Plan. Add `--map-id <map-id>` when several live Maps exist. The report
-distinguishes absent, broken, live, blocked, claimed, acceptance-gap, and
-delivery phases, names the authoritative owner, and gives the next CTA.
+`python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_progress.py" "<target>" --repo-root "<path>"`
+with a repository root, Ticket, or Plan. Add `--map-id <map-id>` when several
+live Maps exist. Top-level re-entry states are exactly `absent`, `broken`,
+`ambiguous-live`, `live`, `blocked`, `claimed`, and `da-gap`. Delivery phase
+values are separate: `unbriefed`, `briefed`, `planning`, `implementing`,
+`reviewing`, `finishing`, `repair-required`, and `delivered`. The report names
+the authoritative owner and gives the next CTA.
 
 Broken is not absent. Repair a broken store before initialization or work.
 Within the selected Map, prefer an open ticket whose `blocked-by` targets are
@@ -80,18 +85,18 @@ retry, and surface conflicts rather than weakening the write.
 
 ### Start
 
-Start a new Map with `map_init.py <map-id> --repo-root <path>`. Start a claimed
-delivery arc with
+Start a new Map with the installed `map_init.py` command above. Start a
+claimed delivery arc with
 `start_delivery.start_delivery(ticket_path, brief_path, repo_root=repo_root)`.
 It creates or recovers one reciprocal Ticket-to-Brief binding; loom-code owns
 the Brief, Plan, implementation, review, PR, and CI thereafter.
 
 ### Resume
 
-Resume with `map_progress.py <target> --repo-root <path>`. This operation is
+Resume with the installed `map_progress.py` command above. This operation is
 read-only and reports the owning artifact plus a concrete next CTA. For a
-direct Plan query, the concrete form is
-`map_progress.py <plan-path> --repo-root <path>`.
+direct Plan query, replace `<target>` with the contained repository-relative
+or absolute Plan path.
 
 ### Claim
 
@@ -116,6 +121,10 @@ ticket type. The same transaction records exactly one Decisions-so-far gist,
 routes every exposed unknown to fog, a typed ticket, or Out-of-scope, and
 writes the terminal Ticket last. Its result reports Map-clear eligibility; it
 does not equate one closed delivery with Map completion.
+
+Each item in `unknowns` is a `map_transaction.UnknownRoute`; use the exact
+field and destination grammar in `references/map-format.md`. For example:
+`map_transaction.UnknownRoute(text="Measure parser latency", destination="ticket", ticket_slug="measure-latency", ticket_type="research")`.
 
 ### Migrate v2 to v3
 
@@ -155,11 +164,15 @@ new fog or follow-up tickets.
 
 ## Close-time checks
 
-After re-charting, run all three gates:
+Before every close-time gate, run the risk-front-loading pass in
+`references/prototype-contract.md` over the unknowns exposed by this closure.
+If the highest-risk assumption requires human reaction to a candidate, route
+it to a one-sitting prototype Ticket; machine-measured feasibility remains
+research. Then run all three gates:
 
-- `map_store.py validate <map-dir> --repo-root <path>`
-- `check_map_links.py <map-dir> --repo-root <path>`
-- `check_map_fog.py <map-dir> --repo-root <path>`
+- `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_store.py" validate "<map-dir>" --repo-root "<path>"`
+- `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/check_map_links.py" "<map-dir>" --repo-root "<path>"`
+- `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/check_map_fog.py" "<map-dir>" --repo-root "<path>"`
 
 Exit `0` is clean, `1` is an operational failure, and `2` is a contract
 violation. Fix every nonzero result before ending the session. Use

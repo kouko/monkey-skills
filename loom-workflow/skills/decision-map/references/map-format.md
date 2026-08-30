@@ -199,6 +199,26 @@ Close and re-chart records Map-side effects before terminalizing the Ticket,
 routes every newly exposed unknown, and reports Map-clear eligibility. It does
 not silently perform or claim whole-Map acceptance.
 
+`unknowns` is a list of `map_transaction.UnknownRoute` values. Construct one
+as `map_transaction.UnknownRoute(text="Measure parser latency", destination="ticket", ticket_slug="measure-latency", ticket_type="research")`.
+The exact grammar is:
+
+- `text` is non-empty after trimming.
+- `destination` is exactly `fog`, `ticket`, or `out-of-scope`.
+- A `ticket` destination requires `ticket_slug` matching
+  `[a-z0-9]+(?:-[a-z0-9]+)*` and `ticket_type` equal to `grilling`, `research`,
+  `prototype`, or `delivery`.
+- Only a `ticket` route may carry `ticket_slug` or `ticket_type`; both are
+  `None` for `fog` and `out-of-scope`.
+- The tuple `(destination, text, ticket_slug)` is unique within one close, and
+  every ticket route also has a unique `ticket_slug`.
+
+Before every close-time gate, run the risk-front-loading pass in
+`prototype-contract.md` over newly exposed unknowns. A high-risk assumption
+that needs human reaction to a candidate becomes a one-sitting prototype
+Ticket; a machine-measured feasibility question remains research. Then run
+validate, link, and fog gates in that order.
+
 ## Schema-v2 migration
 
 Migration is evidence-based, previewable, and idempotent. First run the
@@ -217,15 +237,25 @@ preview refuses apply. Repeating an applied migration produces no duplicates.
 
 These exact runnable templates match the shipped CLI parsers:
 
-- `map_init.py <map-id> --repo-root <path>`
-- `map_store.py validate <map-dir> --repo-root <path>`
-- `check_map_links.py <map-dir> --repo-root <path>`
-- `check_map_fog.py <map-dir> --repo-root <path>`
-- `map_progress.py <target> --repo-root <path>`
+- `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_init.py" "<map-id>" --repo-root "<path>"`
+- `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_store.py" validate "<map-dir>" --repo-root "<path>"`
+- `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/check_map_links.py" "<map-dir>" --repo-root "<path>"`
+- `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/check_map_fog.py" "<map-dir>" --repo-root "<path>"`
+- `python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_progress.py" "<target>" --repo-root "<path>"`
+
+`${CLAUDE_PLUGIN_ROOT}` is a load-time substitution performed when Claude or
+Codex renders the skill, not a run-time shell variable. Quoting the installed
+script and path placeholders keeps the rendered argv safe when paths contain
+spaces.
 
 `map_progress.py` accepts a repository root, Ticket, or Plan and optionally
 `--map-id <map-id>`. It is read-only. `check_map_fog.py` optionally accepts
 `--base <git-ref>`; otherwise it resolves the default comparison base.
+
+Top-level re-entry states are exactly `absent`, `broken`, `ambiguous-live`,
+`live`, `blocked`, `claimed`, and `da-gap`. Delivery phase values are separate:
+`unbriefed`, `briefed`, `planning`, `implementing`, `reviewing`, `finishing`,
+`repair-required`, and `delivered`.
 
 `map_init.py` is the writer carve-out: exit `0` creates, exit `1` refuses an
 existing store or reports an operational error, and exit `2` rejects the slug.

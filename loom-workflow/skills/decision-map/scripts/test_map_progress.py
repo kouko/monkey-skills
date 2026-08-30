@@ -96,8 +96,10 @@ Stage: sdd:wave-1
     assert "phase: implementing" in result.stdout
     assert {path: path.read_bytes() for path in sources} == before
     assert "map_progress.py" in MAP_FORMAT_MD.read_text(encoding="utf-8")
-    assert "map_progress.py <plan-path> --repo-root <path>" in SKILL_MD.read_text(
-        encoding="utf-8"
+    assert (
+        'python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_progress.py" '
+        '"<target>" --repo-root "<path>"'
+        in SKILL_MD.read_text(encoding="utf-8")
     )
 
 

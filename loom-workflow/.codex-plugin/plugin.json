@@ -27,7 +27,7 @@
   "interface": {
     "displayName": "loom-workflow",
     "shortDescription": "Process skills for the work around the code",
-    "longDescription": "Skills for the engineering work that surrounds writing code — git-memory (record why a decision was made into commit/PR memory trailers, then recall it later), brief-before-asking (a 6-block briefing before a hard fork question), proposal-critique and complexity-critique (triage a plan or a single change by a deletion-first, YAGNI lens), recap-state and handoff (re-orient mid-session or save state for the next session), distill-sessions (mine past transcripts for friction patterns), and dbt-model-style (a dbt + Redshift model style contract). Use them to decide well, remember why, and hand off cleanly. Bundles a PostToolUse hook that validates skill folder structure on edit.",
+    "longDescription": "Skills for the engineering work that surrounds writing code — decision-map (start or resume a persistent Outcome Map v3 across delivery arcs), git-memory (record why a decision was made into commit/PR memory trailers, then recall it later), brief-before-asking (a 6-block briefing before a hard fork question), proposal-critique and complexity-critique (triage a plan or a single change by a deletion-first, YAGNI lens), recap-state and handoff (re-orient mid-session or save state for the next session), distill-sessions (mine past transcripts for friction patterns), and dbt-model-style (a dbt + Redshift model style contract). Use them to decide well, remember why, and hand off cleanly. Bundles a PostToolUse hook that validates skill folder structure on edit.",
     "developerName": "kouko",
     "category": "Coding",
     "capabilities": [
@@ -36,6 +36,7 @@
       "Write"
     ],
     "defaultPrompt": [
+      "Use decision-map to start or resume an Outcome Map v3 for this repo.",
       "Before I commit to this approach, give me a briefing on the trade-offs.",
       "Critique this plan — what can we drop or defer?",
       "Record why we chose this design into git memory so we can recall it later."

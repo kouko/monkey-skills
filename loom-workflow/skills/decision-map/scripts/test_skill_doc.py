@@ -1,23 +1,10 @@
-"""Doc-drift test: every script command SKILL.md cites must match the
-§Command surface SSOT in references/map-format.md.
+"""Public-contract drift tests for the decision-map skill."""
 
-map-format.md quotes only one full invocation literally — the
-`map_store.py validate <target> --repo-root <path>` example — so a
-citation of that script is checked by exact (whitespace-normalized)
-substring match against map-format.md. The other four scripts are
-never spelled out as full invocations in map-format.md; instead it
-pins their shape in prose (§Command surface's "canonical arg shape"
-paragraph): a bare positional `target` plus `--repo-root <path>`,
-with NO leading verb — only map_store.py carries a verb (`validate`).
-So a citation of those four is checked structurally against that
-pinned shape. Either check failing means SKILL.md drifted from the
-SSOT; the assertion names the offending quote.
-"""
-
+import ast
 import json
 import re
+import shlex
 import subprocess
-import sys
 from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
@@ -59,11 +46,12 @@ V2_RETIRED_WRITEBACK_PHRASES = (
 INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
 
 # script[.py] [verb] <target> --repo-root <path>
-COMMAND_SHAPE_RE = re.compile(
-    r"^(?P<script>[a-z_]+\.py)"
-    r"(?:\s+(?P<verb>[a-z_]+))?"
-    r"\s+(?P<target><[^>]+>)"
-    r"\s+--repo-root\s+(?P<repo><[^>]+>)$"
+DOCUMENTED_COMMANDS = (
+    'python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_init.py" "<map-id>" --repo-root "<path>"',
+    'python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_store.py" validate "<map-dir>" --repo-root "<path>"',
+    'python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/check_map_links.py" "<map-dir>" --repo-root "<path>"',
+    'python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/check_map_fog.py" "<map-dir>" --repo-root "<path>"',
+    'python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/map_progress.py" "<target>" --repo-root "<path>"',
 )
 
 
@@ -73,13 +61,87 @@ def _normalize(command: str) -> str:
 
 
 def _script_commands(text: str) -> list[str]:
-    """Every inline-code span that opens with one of the four script names."""
+    """Return installed-plugin decision-map command spans."""
     commands = []
     for span in INLINE_CODE_RE.findall(text):
         stripped = span.strip()
-        if stripped.startswith(SCRIPT_NAMES):
+        if stripped.startswith(
+            'python3 "${CLAUDE_PLUGIN_ROOT}/skills/decision-map/scripts/'
+        ):
             commands.append(stripped)
     return commands
+
+
+def _implemented_reentry_states() -> set[str]:
+    tree = ast.parse((SCRIPTS_DIR / "map_progress.py").read_text(encoding="utf-8"))
+    states: set[str] = set()
+
+    def state_literals(expression: ast.expr) -> set[str]:
+        if isinstance(expression, ast.Constant) and isinstance(expression.value, str):
+            return {expression.value}
+        if isinstance(expression, ast.IfExp):
+            return state_literals(expression.body) | state_literals(expression.orelse)
+        return set()
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not node.args:
+            continue
+        if not isinstance(node.func, ast.Name) or node.func.id != "ReentryReport":
+            continue
+        states.update(state_literals(node.args[0]))
+    return states
+
+
+def _implemented_delivery_phases() -> set[str]:
+    tree = ast.parse((SCRIPTS_DIR / "map_progress.py").read_text(encoding="utf-8"))
+    phases: set[str] = set()
+    for function in (
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef)
+        and node.name in {"_plan_phase", "resolve_progress"}
+    ):
+        for returned in (
+            node for node in ast.walk(function) if isinstance(node, ast.Return)
+        ):
+            value = returned.value
+            if function.name == "_plan_phase" and isinstance(value, ast.Constant):
+                if isinstance(value.value, str):
+                    phases.add(value.value)
+            elif isinstance(value, ast.Tuple) and value.elts:
+                phase = value.elts[-1]
+                if isinstance(phase, ast.Constant) and isinstance(phase.value, str):
+                    phases.add(phase.value)
+    return phases
+
+
+def _run_documented_commands(tmp_path: Path, commands: list[str]) -> None:
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=tmp_path, check=True)
+    subprocess.run(
+        ["git", "-c", "user.name=Doc Test", "-c", "user.email=doc@example.invalid",
+         "commit", "--allow-empty", "-qm", "base"],
+        cwd=tmp_path,
+        check=True,
+    )
+    map_dir = tmp_path / "docs" / "loom" / "maps" / "public-contract"
+    substitutions = {
+        "${CLAUDE_PLUGIN_ROOT}": str(PLUGIN_ROOT),
+        "<map-id>": "public-contract",
+        "<map-dir>": str(map_dir),
+        "<target>": str(tmp_path),
+        "<path>": str(tmp_path),
+    }
+    for documented in commands:
+        rendered = documented
+        for placeholder, value in substitutions.items():
+            rendered = rendered.replace(placeholder, value)
+        result = subprocess.run(
+            shlex.split(rendered), cwd=tmp_path, capture_output=True, text=True
+        )
+        assert result.returncode == 0, (
+            f"documented command failed: {documented}\n"
+            f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        )
 
 
 def test_skill_commands_match_command_surface():
@@ -88,44 +150,13 @@ def test_skill_commands_match_command_surface():
 
     skill_text = SKILL_MD.read_text(encoding="utf-8")
     surface_text = MAP_FORMAT_MD.read_text(encoding="utf-8")
-    normalized_surface = _normalize(surface_text)
-
     skill_commands = _script_commands(skill_text)
-    assert skill_commands, (
-        "SKILL.md cites no script commands from the pinned command surface "
-        f"({', '.join(SCRIPT_NAMES)}) — expected at least one"
-    )
-
-    offenders = []
-    for quote in skill_commands:
-        normalized = _normalize(quote)
-        match = COMMAND_SHAPE_RE.match(normalized)
-        if not match:
-            offenders.append((quote, "does not match canonical arg shape "
-                              "'<script>.py [verb] <target> --repo-root <path>'"))
-            continue
-        script = match.group("script")
-        verb = match.group("verb")
-        if script == "map_store.py":
-            # The one script with a literal full-invocation quote in the
-            # SSOT — require exact (whitespace-normalized) substring match.
-            if verb != "validate":
-                offenders.append((quote, "map_store.py must carry the "
-                                  "'validate' verb — no other verb is pinned"))
-            elif normalized not in normalized_surface:
-                offenders.append((quote, "not found verbatim in "
-                                  "references/map-format.md §Command surface"))
-        else:
-            # The other four take the bare positional shape — no verb.
-            if verb is not None:
-                offenders.append((quote, f"{script} takes no verb "
-                                  f"(§Command surface pins a bare positional "
-                                  f"shape) — found verb {verb!r}"))
-
-    assert not offenders, "SKILL.md command citation(s) drifted from " \
-        "references/map-format.md §Command surface:\n" + "\n".join(
-            f"  {quote!r}: {reason}" for quote, reason in offenders
-        )
+    surface_commands = _script_commands(surface_text)
+    assert set(skill_commands) == set(DOCUMENTED_COMMANDS)
+    assert set(surface_commands) == set(DOCUMENTED_COMMANDS)
+    for text in (skill_text, surface_text):
+        for script in SCRIPT_NAMES:
+            assert re.search(rf"`{re.escape(script)}\s+<", text) is None
 
 
 def test_v2_contract_rejects_relay_and_parts_language():
@@ -152,10 +183,14 @@ def test_v3_contract_defines_multi_delivery_outcome_loop():
         assert "Closing a delivery arc must not clear the Map." in text
 
 
-def test_v3_public_surface_commands_templates_and_version_are_synchronized():
+def test_v3_public_surface_commands_templates_and_version_are_synchronized(
+    tmp_path: Path,
+):
     # @req: REQ-75
-    skill = _normalize(SKILL_MD.read_text(encoding="utf-8"))
-    map_format = _normalize(MAP_FORMAT_MD.read_text(encoding="utf-8"))
+    skill_source = SKILL_MD.read_text(encoding="utf-8")
+    map_format_source = MAP_FORMAT_MD.read_text(encoding="utf-8")
+    skill = _normalize(skill_source)
+    map_format = _normalize(map_format_source)
     prototype = _normalize(PROTOTYPE_CONTRACT_MD.read_text(encoding="utf-8"))
     family = _normalize(FAMILY_RECEPTION_MD.read_text(encoding="utf-8"))
     changelog = CHANGELOG_MD.read_text(encoding="utf-8")
@@ -168,6 +203,14 @@ def test_v3_public_surface_commands_templates_and_version_are_synchronized():
     for manifest in (claude_manifest, codex_manifest):
         assert "Outcome Map" in manifest["description"]
         assert "decision-map" in manifest["keywords"]
+    codex_interface = codex_manifest["interface"]
+    assert "Outcome Map" in codex_interface["longDescription"]
+    assert "decision-map" in codex_interface["longDescription"]
+    assert "v3" in codex_interface["longDescription"]
+    assert (
+        "Use decision-map to start or resume an Outcome Map v3 for this repo."
+        in codex_interface["defaultPrompt"]
+    )
     assert "## [3.0.0]" in changelog
     assert "v3.0.0" in governance
 
@@ -203,22 +246,51 @@ def test_v3_public_surface_commands_templates_and_version_are_synchronized():
     assert "apply_migration(map_dir, preview)" in skill
     assert "zero-write preview" in skill
 
-    commands = {
-        "map_init.py <map-id> --repo-root <path>": "map_init.py",
-        "map_store.py validate <map-dir> --repo-root <path>": "map_store.py",
-        "check_map_links.py <map-dir> --repo-root <path>": "check_map_links.py",
-        "check_map_fog.py <map-dir> --repo-root <path>": "check_map_fog.py",
-        "map_progress.py <target> --repo-root <path>": "map_progress.py",
-    }
-    for command, script in commands.items():
+    for command in DOCUMENTED_COMMANDS:
         assert command in skill
         assert command in map_format
-        result = subprocess.run(
-            [sys.executable, str(SCRIPTS_DIR / script), "--help"],
-            capture_output=True,
-            text=True,
-        )
-        assert result.returncode == 0, result.stderr
+    extracted_commands = list(dict.fromkeys(_script_commands(skill_source)))
+    assert set(extracted_commands) == set(DOCUMENTED_COMMANDS)
+    _run_documented_commands(tmp_path, extracted_commands)
+
+    expected_reentry_states = {
+        "absent", "broken", "ambiguous-live", "live", "blocked", "claimed", "da-gap"
+    }
+    expected_delivery_phases = {
+        "unbriefed", "briefed", "planning", "implementing", "reviewing",
+        "finishing", "repair-required", "delivered",
+    }
+    assert _implemented_reentry_states() == expected_reentry_states
+    assert _implemented_delivery_phases() == expected_delivery_phases
+    state_sentence = (
+        "Top-level re-entry states are exactly `absent`, `broken`, "
+        "`ambiguous-live`, `live`, `blocked`, `claimed`, and `da-gap`."
+    )
+    phase_sentence = (
+        "Delivery phase values are separate: `unbriefed`, `briefed`, "
+        "`planning`, `implementing`, `reviewing`, `finishing`, "
+        "`repair-required`, and `delivered`."
+    )
+    for public_contract in (skill, map_format):
+        assert state_sentence in public_contract
+        assert phase_sentence in public_contract
+
+    assert "map_transaction.UnknownRoute" in skill
+    assert "map_transaction.UnknownRoute" in map_format
+    assert "`destination` is exactly `fog`, `ticket`, or `out-of-scope`" in map_format
+    assert "`text` is non-empty after trimming" in map_format
+    assert "ticket_slug" in map_format and "ticket_type" in map_format
+    assert "only a `ticket` route may carry" in map_format.lower()
+    assert "[a-z0-9]+(?:-[a-z0-9]+)*" in map_format
+    assert "`grilling`, `research`, `prototype`, or `delivery`" in map_format
+    assert "`(destination, text, ticket_slug)` is unique" in map_format
+    assert "unique `ticket_slug`" in map_format
+
+    risk_step = "Before every close-time gate, run the risk-front-loading pass"
+    assert risk_step in skill
+    assert risk_step in map_format
+    close_checks = skill_source.split("## Close-time checks", 1)[1]
+    assert close_checks.index(risk_step) < close_checks.index(DOCUMENTED_COMMANDS[1])
 
     ticket_template = (
         "type: <grilling|research|prototype|delivery> status: open "
