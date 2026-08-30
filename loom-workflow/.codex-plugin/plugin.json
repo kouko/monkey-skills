@@ -1,7 +1,7 @@
 {
   "name": "loom-workflow",
-  "version": "2.0.0",
-  "description": "Loom workflow skills — git memory, decision briefs, critique, recap, handoff, session distill, CoT explainers, goal-create, cross-executor second opinion.",
+  "version": "3.0.0",
+  "description": "Loom workflow skills — persistent Outcome Maps, git memory, decision briefs, critique, recap, handoff, session distill, CoT explainers, goal-create, cross-executor second opinion.",
   "author": {
     "name": "kouko",
     "url": "https://github.com/kouko"
@@ -10,6 +10,7 @@
   "repository": "https://github.com/kouko/monkey-skills",
   "license": "MIT",
   "keywords": [
+    "decision-map",
     "git-memory",
     "brief-before-asking",
     "proposal-critique",

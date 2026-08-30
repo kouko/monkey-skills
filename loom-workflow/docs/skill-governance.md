@@ -161,6 +161,9 @@ Examples from loom-workflow history:
 - v1.7.0 (PR-3): added skill-tuning → minor
 - v2.0.0: decision-map schema v2 removes the public `Parts` write-back
   protocol, so it is a major bump
+- v3.0.0: Outcome Map schema v3 replaces generic task closure with four
+  evidence-exclusive types and adds explicit migration, delivery-arc, and
+  stable-retirement operations, so it is a major bump
 
 Each bump must be accompanied by a corresponding CHANGELOG.md
 entry in Keep a Changelog format.

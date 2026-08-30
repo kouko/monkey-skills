@@ -14,12 +14,23 @@ pinned shape. Either check failing means SKILL.md drifted from the
 SSOT; the assertion names the offending quote.
 """
 
+import json
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 SKILL_MD = SKILL_DIR / "SKILL.md"
 MAP_FORMAT_MD = SKILL_DIR / "references" / "map-format.md"
+PROTOTYPE_CONTRACT_MD = SKILL_DIR / "references" / "prototype-contract.md"
+FAMILY_RECEPTION_MD = SKILL_DIR / "references" / "family-reception.md"
+PLUGIN_ROOT = SKILL_DIR.parents[1]
+CHANGELOG_MD = PLUGIN_ROOT / "CHANGELOG.md"
+GOVERNANCE_MD = PLUGIN_ROOT / "docs" / "skill-governance.md"
+CLAUDE_MANIFEST = PLUGIN_ROOT / ".claude-plugin" / "plugin.json"
+CODEX_MANIFEST = PLUGIN_ROOT / ".codex-plugin" / "plugin.json"
+SCRIPTS_DIR = SKILL_DIR / "scripts"
 FINISHING_SKILL_MD = (
     Path(__file__).resolve().parents[4]
     / "loom-code"
@@ -141,21 +152,91 @@ def test_v3_contract_defines_multi_delivery_outcome_loop():
         assert "Closing a delivery arc must not clear the Map." in text
 
 
-def test_v2_contract_pins_release_boundary_and_metric_definition():
-    """Current map instructions retain the v2 boundary and metric facts."""
+def test_v3_public_surface_commands_templates_and_version_are_synchronized():
+    # @req: REQ-75
+    skill = _normalize(SKILL_MD.read_text(encoding="utf-8"))
+    map_format = _normalize(MAP_FORMAT_MD.read_text(encoding="utf-8"))
+    prototype = _normalize(PROTOTYPE_CONTRACT_MD.read_text(encoding="utf-8"))
+    family = _normalize(FAMILY_RECEPTION_MD.read_text(encoding="utf-8"))
+    changelog = CHANGELOG_MD.read_text(encoding="utf-8")
+    governance = _normalize(GOVERNANCE_MD.read_text(encoding="utf-8"))
+    claude_manifest = json.loads(CLAUDE_MANIFEST.read_text(encoding="utf-8"))
+    codex_manifest = json.loads(CODEX_MANIFEST.read_text(encoding="utf-8"))
+
+    assert claude_manifest["version"] == "3.0.0"
+    assert codex_manifest["version"] == "3.0.0"
+    for manifest in (claude_manifest, codex_manifest):
+        assert "Outcome Map" in manifest["description"]
+        assert "decision-map" in manifest["keywords"]
+    assert "## [3.0.0]" in changelog
+    assert "v3.0.0" in governance
+
+    for public_contract in (skill, map_format):
+        assert "one persistent outcome-control loop" in public_contract
+        assert "multiple independently closed delivery arcs" in public_contract
+        assert "exactly four closure types" in public_contract.lower()
+        assert "`grilling`, `research`, `prototype`, and `delivery`" in public_contract
+        assert "one outcome-advancing slice" in public_contract
+        assert "source of truth" in public_contract
+        assert "Map clear" in public_contract
+        assert "retirement" in public_contract.lower()
+        assert "schema_version: 3" in public_contract
+
+    assert "machine-measured feasibility" in prototype
+    assert "research" in prototype
+    assert "human evaluates" in prototype
+    assert "prototype" in prototype
+    assert "multiple sessions" in family and "decision-map" in family
+
+    operations = (
+        "Start",
+        "Resume",
+        "Claim",
+        "Update blockers",
+        "Close and re-chart",
+        "Migrate v2 to v3",
+        "Archive",
+    )
+    for operation in operations:
+        assert operation in skill
+    assert "preview_migration(map_dir)" in skill
+    assert "apply_migration(map_dir, preview)" in skill
+    assert "zero-write preview" in skill
+
+    commands = {
+        "map_init.py <map-id> --repo-root <path>": "map_init.py",
+        "map_store.py validate <map-dir> --repo-root <path>": "map_store.py",
+        "check_map_links.py <map-dir> --repo-root <path>": "check_map_links.py",
+        "check_map_fog.py <map-dir> --repo-root <path>": "check_map_fog.py",
+        "map_progress.py <target> --repo-root <path>": "map_progress.py",
+    }
+    for command, script in commands.items():
+        assert command in skill
+        assert command in map_format
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / script), "--help"],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
+
+    ticket_template = (
+        "type: <grilling|research|prototype|delivery> status: open "
+        "claim: null graduated-from: null"
+    )
+    assert ticket_template in map_format
+
+
+def test_v3_contract_pins_release_boundary_and_metric_definition():
+    """Current map instructions retain the v3 boundary and metric facts."""
     map_format_text = MAP_FORMAT_MD.read_text(encoding="utf-8")
     skill_text = SKILL_MD.read_text(encoding="utf-8")
 
-    assert "schema_version: 2" in map_format_text
+    assert "schema_version: 3" in map_format_text
     assert "v1" not in map_format_text
-    assert "state transitions in v2" in skill_text
-    assert "Map-to-backlog travel is release-only." in map_format_text
-    assert "optional discovery context, never a live or standing link" in map_format_text
-    assert (
-        "134 open entries / 26 closed entries was a live-store composition ratio, "
-        "never a close rate" in _normalize(map_format_text)
-    )
-    assert "Cohort rates come from review-due data, not archaeology." in _normalize(map_format_text)
+    assert "Exactly four closure types exist" in skill_text
+    assert "Dependencies are graph edges, not ticket types" in map_format_text
+    assert "A closed delivery alone is never a clear transition" in map_format_text
 
 
 def test_no_live_contract_or_command_surface_references_map_parts():
