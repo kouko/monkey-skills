@@ -366,6 +366,63 @@
 - test_retirement_refuses_partial_operations_and_descendant_races
 - test_retirement_rollback_failure_records_broken_recovery_state
 
+## review-batching
+
+### REQ-100
+
+- test_plan_contract_matrix
+
+### REQ-101
+
+- test_review_batch_section_scope
+- test_untrusted_aggregate_verification_matrix
+- test_untrusted_batch_field_matrix
+
+### REQ-102
+
+- test_plan_contract_matrix
+
+### REQ-103
+
+- test_batch_ledger_transition_matrix
+
+### REQ-104
+
+- test_batch_ledger_transition_matrix
+
+### REQ-105
+
+- test_packet_readiness_and_immutability_matrix
+
+### REQ-106
+
+- test_batch_dispatch_and_fallback_contract
+
+### REQ-107
+
+- test_aggregate_resolution_matrix
+
+### REQ-108
+
+- test_batch_ledger_transition_matrix
+
+### REQ-109
+
+- test_historical_plan_is_refused
+
+### REQ-110
+
+- test_batch_pass_does_not_skip_whole_branch_review
+
+### REQ-111
+
+- test_baseline_candidate_comparison_is_same_corpus_and_safety_gated
+- test_malformed_types_paths_and_duplicate_keys_fail_closed
+
+### REQ-99
+
+- test_plan_contract_matrix
+
 ## Orphans
 
 ### reqs with no tests

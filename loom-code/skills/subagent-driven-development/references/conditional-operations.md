@@ -93,6 +93,64 @@ spec-reviewer and records `code-quality slot: N/A — record-class prose`; mixed
 work sends only the contract-class subset to docs-reviewer. The record-only
 lane resolves from spec-reviewer's verdict alone.
 
+## Batch review and individual fallback
+
+Read when a validated new plan assigns a Task to a Review Batch. Apply this
+ordered fail-closed sequence; do not skip ahead after a failure:
+
+1. Require each member's committed final bytes to pass its resolved Task-local
+   mechanical verification, then let only SDD write `implemented(<sha>)`.
+2. When some members are not implemented but the common boundary is still
+   valid and the current closable window can still finish, park the implemented
+   member: keep its status unchanged, create no Packet, dispatch no reviewer,
+   and perform no additional ledger mutation. Advance to the next runnable Task
+   in the same Batch. Temporary incompleteness is not individual fallback and
+   introduces no timeout, size threshold, configuration, or Batch state.
+3. Once the complete member set is implemented, run the mandatory
+   `check_review_batches.py` checker and require Batch readiness under its
+   validated DAG, lane, boundary, and current closable window. Revalidate
+   after any member or plan change. Only an invalid boundary or proof that this
+   window cannot close selects individual fallback.
+4. Issue the exact sealed `ExecutionAuthorityProjection` from the checker's
+   canonical current-plan payload and the trusted plan, spec, and ownership
+   records. A caller-created, missing, or context-mismatched projection stops
+   here: zero Packet, dispatch, and mutation.
+5. Resolve an executable aggregate command through verification-before-
+   completion's declared-first rule. `Aggregate verification` in the plan is
+   inert identity-bearing description; never parse or execute it as shell.
+6. Execute only the resolver's argument vector in its approved scope. Require
+   successful evidence and a persistable safe identity, then issue the exact
+   `SafeResolutionReceipt` consumed by `review_batch.py`.
+7. Materialize one immutable aggregate Packet from the complete implemented
+   snapshot, exact committed bytes, validated ownership and boundary, and that
+   receipt. Only after `validate_packet` accepts it may reviewer dispatch occur.
+8. Select the existing lane arms: full is spec plus code-quality; authored
+   prose is spec plus docs; all-record-class prose is spec only. Mechanical is
+   not an aggregate full-review lane. Dispatch each selected arm exactly once
+   against the same Packet and require one authoritative terminal result each.
+9. Reduce with `resolve_aggregate_review`. A finalize or reopen result must
+   carry the reducer-issued sealed transition authority for the exact Packet,
+   declaration and dispositions, complete member snapshot, complete arm
+   outcomes and findings, action, owner union, and closed finding set. Under
+   the shared plan lock, plan-card re-reads the current declaration and member
+   statuses and requires an exact match before writing. All-pass atomically
+   finalizes; attributable blocking findings atomically reopen the owner union;
+   a repaired owner repeats Task-local verification and forces a fresh Packet;
+   missing authority, any authority/current-plan drift, or wait/refuse performs
+   zero mutation. The receipt is passed directly and is never persisted as
+   Batch state.
+10. On `individual_fallback`, perform zero Batch ledger mutation and route every
+   member through the existing individual path, including a fresh per-Task
+   immutable context packet and the existing lane-specific reviewer loop. This
+   individual fallback does not create Batch state, retry state, or another
+   queue.
+
+Any failure in checker, projection issuance, resolution, execution, evidence,
+or safe identity creates no Packet, dispatches no reviewer, mutates no status,
+and uses the existing verification recovery path. An ineligible boundary or
+unassignable finding selects individual fallback; it is not permission to guess
+a smaller group.
+
 ## Orchestrator command hygiene
 
 Read when the orchestrator edits after review, runs commands, or handles

@@ -5,6 +5,23 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.105.1] — 2026-08-31 — fail-closed Task Batch Review
+
+### Added
+
+- Writing plans may derive Review Batches after the atomic Task DAG is
+  complete, while invalid or ineligible groupings retain individual review.
+- Subagent-driven development validates Batch membership, materializes
+  immutable aggregate review packets, and applies implemented/done status
+  transitions atomically through the existing plan ledger.
+- Deterministic replay tooling compares individual and batched review costs
+  without allowing safety regressions, escaped defects, or scope expansion.
+
+### Changed
+
+- Historical plans without the new review-disposition schema are refused
+  instead of receiving a compatibility layer.
+
 ## [0.105.0] — 2026-08-30 — explicit backlog triggers and aging review
 
 ### Added

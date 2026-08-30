@@ -72,6 +72,17 @@ Role boundaries enforced by behavior, not reading restrictions:
   identifier no task cites warned and a coverage count printed. A brief
   declaring no identifiers is announced as legacy mode — that run
   resolved nothing, and says so rather than exiting 0 silently.
+- **Check Review Batch plan metadata**:
+  `python3 loom-code/scripts/check_review_batches.py <plan-path>` — validates
+  the completed acyclic Task DAG, each Task's explicit individual-or-Batch
+  disposition, and every Batch's closed six-field eligibility contract; exits
+  1 with actionable errors when grouping is incomplete or ambiguous.
+- **Compare individual and Task Batch Review evidence**:
+  `python3 loom-code/scripts/task_batch_replay.py compare --corpus <authorized-corpus.json> --baseline <individual-results.json> --candidate <batch-results.json>`
+  — compares both modes against one exact, explicitly supplied local corpus;
+  emits closed JSON with cost and safety evidence, exits 0 only when reviewer
+  dispatches fall without a safety regression, exits 1 for a valid FAIL
+  comparison, and exits 2 for unreadable, mismatched, or invalid inputs.
 - **Check a plan's Open Questions gate** (writing-plans self-check):
   `python3 loom-code/scripts/check_open_questions.py <plan-path>` —
   scopes the scan to the plan's `## Open Questions` section only

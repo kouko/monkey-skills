@@ -105,6 +105,8 @@ EXEMPT = {
     "check_field_microstructure.py": "checks field shape in a brief or plan, "
                                      "not the store",
     "check_open_questions.py": "checks a plan's Open Questions section",
+    "check_review_batches.py": "checks one plan's Review Batch metadata, "
+                               "not a backlog store or handoff brief",
     "check_scenario_coverage.py": "checks a change-folder's scenarios",
     "check_seam_coverage.py": "checks a plan's Seam field coverage against "
                               "its Dependencies edges",
@@ -113,6 +115,11 @@ EXEMPT = {
     "distribute.py": "packaging helper",
     "loom_firing_harness.py": "probes skill firing; reads no store or brief",
     "loom_gate_markers.py": "mints and verifies gate markers",
+    "review_batch.py": "pure in-memory helper with no CLI, store, backlog, "
+                       "brief, or file input to classify",
+    "task_batch_replay.py": "compares three explicitly named replay JSON "
+                            "inputs, not a backlog store or handoff brief; "
+                            "its own CLI test pins unreadable-input handling",
     "review_context.py": "resolves a review packet from local git and plugin files",
     "review_scope.py": "resolves a review's changed-file set from git",
     "live_gate_station_receipt.py": "writes a live-gate receipt; its own atomic "

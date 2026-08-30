@@ -71,10 +71,9 @@ DEFAULT_ON_SENTENCE = (
     "every task at plan time."
 )
 
-OLD_PLAN_COMPAT_SENTENCE = (
-    "A plan without `Status` fields (written "
-    "before this default) behaves exactly as before — the ledger stays "
-    "opt-in-by-presence for old plans."
+NEW_PLAN_ONLY_SENTENCE = (
+    "New SDD intake requires the complete current plan schema; it does not "
+    "infer ledger or review state for historical plans."
 )
 
 STEPS_SCHEMA_BLOCK = (
@@ -159,10 +158,9 @@ def test_status_ledger_default_on_sentence_present():
     assert _normalize(DEFAULT_ON_SENTENCE) in _normalized_text()
 
 
-def test_old_plan_compatibility_sentence_present():
-    """Task 1(b): §Progress ledger carries the old-plan compatibility
-    sentence (N1b) — a plan without `Status` fields behaves as before."""
-    assert _normalize(OLD_PLAN_COMPAT_SENTENCE) in _normalized_text()
+def test_new_plan_only_sentence_present():
+    """The ledger refuses to infer state for historical plan formats."""
+    assert _normalize(NEW_PLAN_ONLY_SENTENCE) in _normalized_text()
 
 
 def _worked_example_text() -> str:

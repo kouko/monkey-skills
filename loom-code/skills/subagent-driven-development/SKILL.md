@@ -1,7 +1,7 @@
 ---
 name: subagent-driven-development
 description: |
-  Use when a task takes >1 hour OR touches >1 module — splits work into atomic one-failing-test units, three subagents each (implementer / spec-reviewer / code-quality-reviewer).
+  Use when a task takes >1 hour OR touches >1 module — splits work into atomic one-failing-test units, then applies the Task's selected individual, mechanical, prose, or aggregate Batch review path.
 version: 0.12.0
 ---
 
@@ -112,6 +112,26 @@ Flowchart of this trigger + the per-task loop below: [`references/dispatch-hygie
 
 If neither trigger fires, the user goes straight to `tdd-iron-law` for implementation. SDD's overhead is not free; do not dispatch three subagents for a one-line change.
 
+## Mandatory new-plan intake
+
+Every newly invoked SDD run first invokes `check_review_batches.py` against the
+unchanged plan path so the oracle reads the exact current plan bytes. This gate
+runs before any Task claim, implementer dispatch, Packet construction, reviewer
+dispatch, or status mutation. A missing `## Review Batches` section; a missing,
+duplicate, contradictory, or invalid Task disposition; a dangling or invalid
+Batch; an unreadable plan; a checker error; or any non-zero checker exit refuses
+the plan as unsupported with zero side effects. The orchestrator must never infer
+that an omitted disposition means `individual`, and never add a compatibility
+adapter.
+
+Only a checker-approved plan enters the execution flow. Its validated
+dispositions select the existing paths. A ready Batch follows
+checker → trusted projection → Packet → reviewer dispatch and receives one
+reviewer fan-out for that exact Packet, while an `individual` disposition
+follows the existing per-Task reviewer loop. The later ready-group recheck
+remains mandatory because the plan may change after intake; intake approval is
+not stored as Batch state.
+
 ## Process — per-task triad
 
 Dispatch every subagent call below as a one-shot, blocking call that waits for and returns its result directly — see your host's tool-mapping reference under `using-loom-code/references/` (`claude-code-tools.md` / `codex-tools.md`) for the exact call shape, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid (Codex has no equivalent).
@@ -122,7 +142,8 @@ For each atomic task in the plan:
 
 1. **Dispatch an `implementer` subagent** (role identifier `loom-code:implementer`; input contract defined in the plugin-level agent at [`loom-code/agents/implementer.md`](../../agents/implementer.md), which also carries the 12-rule engineering baseline from [`loom-code/scripts/_baseline.md`](../../scripts/_baseline.md)) with the task description + context paths + resource paths. Carry the plan task's existing `Files touched` declaration unchanged into the task packet for the later reviewer fan-out. Carry the adjacent `Seam` bullets verbatim (`plan-format.md` `#### Seam`) — its incoming bullets plus any bullet naming it `owner:` — with the owner's parser/schema path for payload-bearing seams; never the whole plan. Before dispatching, the orchestrator resolves the project's test command once via `verification-before-completion`'s declared-first rule (trust the declared surface only if it runs and emits a test count; else detect), caches it **session-scoped** (re-resolve across sessions — declarations rot), and passes it into the implementer dispatch as a **`Resolved test command`** line so the implementer runs it instead of re-detecting. Relevant `Kickoff decision:` lines from the plan's `## Notes` ride the implementer's task packet. Wait for return.
 2. **Read the implementer's output.** If `status: NEEDS_CONTEXT` → do not dispatch reviewers; triage the relayed question FIRST per gate ①: a task-scoped checkable fact → resolve it yourself and re-dispatch the implementer (no user ask); a researchable design fork → research per gate ②, then surface with the cited recommendation; otherwise surface directly, phrased per [§Asking the user](#asking-the-user). A surfaced question with product stakes also applies gate ①'s two-axis framing to decide the escalation format. **NEEDS_CONTEXT re-dispatch cap:** task-scoped-fact re-dispatches on the same task are capped at 2 rounds; if the re-dispatched implementer returns NEEDS_CONTEXT a 3rd time on that task, the spec/plan is missing information, not a resolvable fact — stop re-dispatching and surface to the user per §Asking the user, mirroring the 3-round NEEDS_REVISION escalation below (a separate, independent counter — the two budgets never share rounds). If `status: BLOCKED` → apply the unblock step or surface to user.
-3. **If `status: DONE` or `DONE_WITH_CONCERNS`**, resolve the installed root through the active host adapter; run `python3 "<installed-plugin-root>/scripts/review_context.py" --repo <target_repo>` **once per reviewer fan-out**. Treat its output as one unchanged immutable context packet: `target_repo`, `reviewed_sha`, `plugin_version`, and `resources`. `resources` maps approved absolute paths; never derive plugin paths from `target_repo`, the working directory, or a consumer checkout. Copy it verbatim into dispatches; retries use a fresh fan-out packet. Write the packet JSON to a file; run `python3 "<installed-plugin-root>/scripts/review_context.py" --validate <packet-file>`; any non-zero exit REFUSES the fan-out: dispatch no reviewer — fix the packet first. In a live-gate station, SKIP `--validate`: `live_gate_station_receipt.py` already validated the runner-owned packet (same key-set + SHA checks) per that section's "Never re-run `review_context.py`" rule. Require a non-empty repository-relative `Files touched` list; otherwise REFUSE the fan-out. The only reviewer artifact scope is the repository-relative file list declared in the task packet's `Files touched` field; do not derive a base or recompute a diff. For every declared `<path>`, run `git -C "<target_repo>" cat-file -e "<reviewed_sha>:<path>"` before dispatching. Any failure REFUSES the fan-out: do not dispatch any reviewer. Do not run `review_scope.py` for a per-task fan-out; whole-branch review only. Give every spec-reviewer, code-quality-reviewer, and docs-reviewer prompt the SHA-bound task scope, the same packet, and the immutable repository citation cross-read contract: `git -C "<target_repo>" show <reviewed_sha>:<path>`. Read evidence from paths at `<reviewed_sha>`, never a later mutable HEAD. Do not use mutable working-tree reads for reviewer evidence. Dispatch **`spec-reviewer`** and **`code-quality-reviewer`** **in parallel**, `loom-code:spec-reviewer` and `loom-code:code-quality-reviewer`. Wait for both. Worktree isolation: [`references/dispatch-hygiene-notes.md`](references/dispatch-hygiene-notes.md).
+   For a Task with a validated Batch disposition, SDD first requires committed final bytes and re-runs the resolved Task-local mechanical verification against that member commit. Only SDD may then write `implemented(<sha>)`. Apply **Batch review checkpoint** below instead of step 3; a Task with individual disposition, or one routed to individual fallback, continues to step 3 unchanged.
+3. **If `status: DONE` or `DONE_WITH_CONCERNS` and the Task is on the individual path**, resolve the installed root through the active host adapter; run `python3 "<installed-plugin-root>/scripts/review_context.py" --repo <target_repo>` **once per reviewer fan-out**. Treat its output as one unchanged immutable context packet: `target_repo`, `reviewed_sha`, `plugin_version`, and `resources`. `resources` maps approved absolute paths; never derive plugin paths from `target_repo`, the working directory, or a consumer checkout. Copy it verbatim into dispatches; retries use a fresh fan-out packet. Write the packet JSON to a file; run `python3 "<installed-plugin-root>/scripts/review_context.py" --validate <packet-file>`; any non-zero exit REFUSES the fan-out: dispatch no reviewer — fix the packet first. In a live-gate station, SKIP `--validate`: `live_gate_station_receipt.py` already validated the runner-owned packet (same key-set + SHA checks) per that section's "Never re-run `review_context.py`" rule. Require a non-empty repository-relative `Files touched` list; otherwise REFUSE the fan-out. The only reviewer artifact scope is the repository-relative file list declared in the task packet's `Files touched` field; do not derive a base or recompute a diff. For every declared `<path>`, run `git -C "<target_repo>" cat-file -e "<reviewed_sha>:<path>"` before dispatching. Any failure REFUSES the fan-out: do not dispatch any reviewer. Do not run `review_scope.py` for a per-task fan-out; whole-branch review only. Give every spec-reviewer, code-quality-reviewer, and docs-reviewer prompt the SHA-bound task scope, the same packet, and the immutable repository citation cross-read contract: `git -C "<target_repo>" show <reviewed_sha>:<path>`. Read evidence from paths at `<reviewed_sha>`, never a later mutable HEAD. Do not use mutable working-tree reads for reviewer evidence. Dispatch **`spec-reviewer`** and **`code-quality-reviewer`** **in parallel**, `loom-code:spec-reviewer` and `loom-code:code-quality-reviewer`. Wait for both. Worktree isolation: [`references/dispatch-hygiene-notes.md`](references/dispatch-hygiene-notes.md).
 4. **Resolve verdicts** per the rule below.
 5. **Move to the next task** unless the resolution requires re-dispatch.
 
@@ -164,6 +185,63 @@ model as the mechanical lane and does not re-validate its plan marker. Runtime
 ambiguity still fails closed rather than silently narrowing review.
 
 **Record-class scope narrowing.** Classify the task's `Files touched` per `requesting-code-review`'s [§Classification: contract-class vs record-class](../requesting-code-review/SKILL.md) — cite the SSOT there, never re-derive its globs here. When every file is record-class, the docs-reviewer substitution is N/A: dispatch spec-reviewer only, and record "code-quality slot: N/A — record-class prose" in the task summary. Contract-class prose keeps the substitution unchanged. A mixed contract-class + record-class task routes the docs-reviewer to the contract-class subset only — consistent with `requesting-code-review`'s own mixed-branch routing. On this path the task resolves on spec-reviewer's verdict alone — its `PASS` → `DONE`, its `NEEDS_REVISION` → the table's re-dispatch row; the `code-quality-reviewer` column is N/A by construction.
+
+**Batch review checkpoint.** This is a review checkpoint over atomic Tasks, not
+a larger Task or a Batch lifecycle. After every member is exactly
+`implemented(<sha>)`, SDD revalidates the declared boundary and Batch-ready
+window. Same-Batch dependencies may consume `implemented`; cross-Batch
+dependencies require `done`. If the complete member set is not implemented but
+the boundary remains valid and this closable window can still finish, park the
+implemented member without another mutation and run the next ready same-Batch
+Task. Only a boundary that is invalid, ambiguous, or provably unable to close
+in this window takes the existing individual reviewer loop with a fresh
+per-Task immutable packet and no Batch state. Temporary incompleteness is not
+individual fallback, and it creates no timeout, size limit, or setting.
+
+For a ready group, SDD first runs the mandatory `check_review_batches.py`
+checker, then issues the sealed current-plan `ExecutionAuthorityProjection`
+from that canonical schema payload plus the trusted plan, spec, and ownership
+records. Only this order may continue to Packet construction: checker →
+projection issuance → Packet → reviewer dispatch. For the Packet evidence, SDD
+uses the declared-first verification resolver to obtain the trusted executable
+command. It never executes plan prose: in particular, never execute the plan's
+`Aggregate verification` text. The resolved command, execution scope, result,
+and safe persistence identity must produce the exact `SafeResolutionReceipt`
+required by `review_batch.py`; only then may SDD materialize its immutable
+`ReviewPacket`. A checker, projection, resolution, execution, evidence, or
+safe-identity failure means no Packet, no reviewer dispatch, and no status
+mutation; use the existing verification recovery path. Read
+[`references/conditional-operations.md`](references/conditional-operations.md)
+§Batch review and individual fallback for the ordered fail-closed sequence.
+
+Dispatch one reviewer fan-out for the whole Batch, never one fan-out per
+member. The full lane uses spec-reviewer plus code-quality-reviewer. The prose
+lane uses the existing record-class narrowing: spec-reviewer alone for an
+all-record-class Batch, otherwise spec-reviewer plus docs-reviewer over the
+contract-class prose scope. A mechanical lane never receives an aggregate full
+review; it uses the existing mechanical disposition or fails closed to the
+individual path. Zero applicable arms cannot pass.
+
+Feed exactly one authoritative terminal result per expected arm to
+`resolve_aggregate_review`. A mutating result carries its sealed transition
+authority, binding the exact Packet, declaration and disposition, member
+snapshot, complete arm outcomes and findings, action, owner union, and the
+absence of an unresolved finding. Under the shared plan lock, the atomic
+plan-card write re-reads the current declaration and statuses and requires an
+exact authority match. Any drift in membership, boundary, lane, member SHA or
+status, outcome, finding, action, or owner union performs zero writes. This is
+a decision receipt for the existing Task ledger, not stored Batch state.
+
+The closed result mapping remains: `finalize` permits the existing atomic Batch
+status update from every member's `implemented(<sha>)` to `done(<same-sha>)`;
+`reopen` permits one atomic owner union back to pending while non-owners remain
+implemented; and `individual_fallback` means zero Batch ledger mutation
+followed by the existing individual reviewer loop.
+After `reopen`, each repaired owner must commit new bytes, pass fresh mechanical
+verification, return to `implemented(<new-sha>)`, and enter review only through
+a fresh Packet. `wait_refuse` changes nothing and waits or follows the failure's
+existing recovery rule. The SDD orchestrator is the only ledger writer;
+reviewers and implementers never mutate the ledger.
 
 **Progress ledger.** SDD writes the plan's per-task `Status` field back as it executes and resumes from it after interruption: [`references/plan-ledger-notes.md`](references/plan-ledger-notes.md) §Progress ledger. Perform every ledger flip via `python3 scripts/plan_card.py <plan-path> --set-status "T<N>=<status>"` when `scripts/plan_card.py` exists at the repo root — it validates the task, the status grammar, and refuses duplicate or missing `Status` lines; hand-edit only when the script is absent. When only the repo-root copy is missing, run the plugin-shipped copy instead — `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan_card.py" <plan-path> --set-status "T<N>=<status>"` — "absent" means neither copy is present.
 
@@ -218,11 +296,15 @@ A second, unrelated tier floor applies to `plan-document-reviewer`'s Check 17 (c
 ## Status handling — implementer states
 
 ```
-DONE                 → dispatch reviewers
-DONE_WITH_CONCERNS   → dispatch reviewers; surface concerns to user in final summary
+DONE                 → commit + mechanical proof; then route by disposition/lane
+DONE_WITH_CONCERNS   → same routing; surface concerns to user in final summary
 NEEDS_CONTEXT        → surface specific question to user; do NOT dispatch reviewers
 BLOCKED              → apply unblock_step if orchestrator can; else surface to user
 ```
+
+After `DONE`, an eligible Batch member parks at `implemented(<sha>)` and waits
+for the Batch checkpoint. An individual Task follows its selected review lane;
+the mechanical lane uses its self-check instead of reviewer dispatch.
 
 The orchestrator never silently dismisses a `BLOCKED` — even if the unblock step is trivial, log what was done so the final summary names it. A `NEEDS_CONTEXT` question with product stakes goes through the same two-axis framing (§Asking the user ①) before it reaches the user.
 

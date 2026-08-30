@@ -12,6 +12,8 @@ SDD dispatches three subagents per task (implementer + spec-reviewer + code-qual
 - **Acceptance** — for tdd-iron-law's RED-GREEN-REFACTOR cycle (failing test name + GREEN condition).
 - **Dependencies** — for sequencing / parallelization.
 - **Seam** — the inter-task payload contract SDD carries into dispatch packets (see §Seam).
+- **Review disposition** — the second-pass choice between individual review and
+  one derived Review Batch, after the complete Task DAG exists.
 
 Free-form plans force SDD to re-parse; this schema makes the parse trivial.
 
@@ -149,10 +151,14 @@ the trigger list; Check 16 judges each task against the `Review-weight` test.
     names rather than copying their prose. One no-requirement value is legal: `none — <reason>`.
     See §`Brief item covered` below for kind (c), that value, and the tie-break rule.>
 - **Seam**: <v0.100.0+ — required when this task's `Dependencies` is not "none"; one bullet per incoming dependency edge. See §Seam below. Omit field entirely when `Dependencies` is "none".>
+- **Review disposition**: <exactly one of `individual` or `batch(<id>)`;
+    authored in the second pass after every atomic Task and dependency edge is
+    complete. A batched Task names exactly one declared Review Batch.>
 - **Status**: <runtime ledger field, DEFAULT-ON — see §Progress ledger. One of:
-    "pending" | "claimed(@<agent>)" | "done(<sha>)" | "blocked". writing-plans emits
-    "pending" at plan time; an old plan without Status fields behaves exactly as
-    before — fully backward compatible. NOT authoring content beyond the initial
+    "pending" | "claimed(@<agent>)" | "implemented(<sha>)" | "done(<sha>)" |
+    "blocked". writing-plans emits
+    "pending" at plan time. Historical plans lacking the required review
+    disposition are not valid new SDD inputs. NOT authoring content beyond the initial
     "pending"; SDD writes the transitions, the plan-document-reviewer ignores it.>
 - **Gloss**: <one line in the user's conversation language stating
     the task's user-visible effect and why it matters to the goal —
@@ -246,12 +252,13 @@ ledger**. It is **runtime state**, not plan-authoring content: `writing-plans` e
 value (`Status: pending` on every task at plan time — see below), `subagent-driven-development`
 **maintains** it as it executes, and `plan-document-reviewer` **ignores** it.
 
-Vocabulary (exactly these four):
+Vocabulary (exactly these five):
 
 | Value | Meaning | Set by SDD when |
 |---|---|---|
 | `pending` | not started (omission = old-plan opt-in only; new plans write it) | — |
 | `claimed(@<agent>)` | an agent is working it; `<agent>` is the worktree branch name (unique per agent) | the implementer is dispatched |
+| `implemented(<sha>)` | A Batch member's Task-local implementation and mechanical proof passed; `<sha>` is the task's commit, but aggregate review has not finalized | the validated Batch member is parked for aggregate review |
 | `done(<sha>)` | resolved + committed; `<sha>` is the task's commit | reviewers PASS and the task is committed |
 | `blocked` | stuck (NEEDS_CONTEXT / BLOCKED / 3-round cap) | the task cannot proceed |
 
@@ -264,9 +271,8 @@ Why it earns its place:
   the ledger coordinates *who does what*.
 
 The ledger is DEFAULT-ON: writing-plans emits `Status: pending` on
-every task at plan time. A plan without `Status` fields (written
-before this default) behaves exactly as before — the ledger stays
-opt-in-by-presence for old plans.
+every task at plan time. New SDD intake requires the complete current plan
+schema; it does not infer ledger or review state for historical plans.
 
 Every ledger flip routes through `python3 scripts/plan_card.py
 <plan-path> --set-status "T<N>=<status>"` when `scripts/plan_card.py`
@@ -344,6 +350,51 @@ Each bullet takes one of exactly two forms:
 Why: a seam owned by no task is how two individually green tasks integrate red — each side's `Acceptance` passes against its own assumption of the shape crossing the edge, and nothing in either task's RED/GREEN pair ever runs the other side's code against it.
 
 A payload-bearing seam obligates two things on top of the bullet itself: (a) one executed cross-seam probe, named in the consumer task's `Acceptance` — the `probe:` value appears verbatim inside that task's `Acceptance` block (substring containment, the checker's rule) — not a same-task unit test that only exercises the consumer's own assumption of the shape; (b) both tasks import one shared parser or schema defined by the `owner` task — never two hand-rolled readers of the same bytes, since two independent readers can each pass while agreeing on nothing. Enforcement splits: `check_seam_coverage.py` — run as writing-plans' unconditional Seam-coverage gate before the plan-document-reviewer dispatch — mechanically checks field presence, per-edge coverage by `from Task <N>` identity, and the `probe:`↔`Acceptance` containment; Check 20 re-checks the same ground at plan review; whether the named probe is actually adequate — whether it would catch a real shape mismatch — stays the reviewers' judgment, not something either check can decide.
+
+### Review Batches — second-pass review checkpoints
+
+Author the complete set of atomic Tasks and their acyclic dependency graph
+first. Only then derive `Review disposition` values and append one
+`## Review Batches` section after the last Task. This second pass never merges,
+enlarges, renumbers, or removes a Task; each Task retains its own requirement
+traceability, RED/GREEN acceptance, module, files, dependencies, and
+`Review-weight` lane.
+
+Every executable Task declares exactly one disposition. An eligible Batch has
+this closed six-field shape; its heading owns the Batch ID:
+
+```markdown
+## Review Batches
+
+### Review Batch: <id>
+- **Members**: Task 1, Task 2
+- **Verdict question**: <one shared end-to-end question?>
+- **Review lane**: <full | prose>
+- **Aggregate verification**: <inert description of the reproducible Batch check>
+- **Boundary**: capability: <name>; exclusions: none; consumable: yes
+```
+
+Tasks declaring `individual` do not appear in a Batch. A plan with no eligible
+Batch still carries the `## Review Batches` heading and explicitly assigns every
+Task to individual review.
+
+Grouping is eligible only when all members have the same review lane, can be
+judged by one end-to-end verdict question, and share one closable review window.
+Any user decision, external wait, deferred test, independent release point, or
+failure boundary between members disqualifies the group. Missing or ambiguous
+proof fails closed to individual review; never infer eligibility from absent
+metadata.
+
+The Batch is derived metadata, not a work object: there is no Batch queue,
+Batch ledger, Batch lifecycle, claim, score, configurable size limit, or
+independent transition. `Aggregate verification` is inert descriptive plan
+data. Plan validation checks that the field is present and non-placeholder, but
+never interprets or executes it as a shell command; SDD later resolves the
+executable command from trusted Task declarations.
+
+Run `python3 loom-code/scripts/check_review_batches.py <plan-path>` after the
+second pass. It is the mandatory schema oracle for DAG completeness, exact
+dispositions, membership, lane agreement, and the six Batch fields.
 
 ### Stated facts — the pointer-not-copy rule (v0.39.0+)
 
@@ -474,6 +525,7 @@ N/A — no unresolved question: brief left nothing undecided at plan time.
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: "minimum shippable change: `?format=csv` query param to existing report URL (no UI work)"
+- **Review disposition**: individual
 - **Status**: pending
 - **Gloss**: The report URL starts understanding a CSV request — until it does, no export can be asked for at all.
 
@@ -491,6 +543,7 @@ N/A — no unresolved question: brief left nothing undecided at plan time.
 - **Dependencies**: none
 - **Independent**: true
 - **Brief item covered**: "minimum shippable change: CSV output that downstream pipeline can ingest"
+- **Review disposition**: individual
 - **Status**: pending
 - **Gloss**: Report data turns into a spreadsheet-ready file other tools can ingest — the thing the export exists to hand over.
 
@@ -511,8 +564,11 @@ N/A — no unresolved question: brief left nothing undecided at plan time.
   - from Task 2: payload: CSV string; owner: Task 2; probe: `reports.test.ts > GET /reports/:id?format=csv returns text/csv body matching renderer output`
 - **Independent**: false  # touches files Task 1 also touches; must run after Task 1
 - **Brief item covered**: "minimum shippable change: end-to-end CSV download path"
+- **Review disposition**: individual
 - **Status**: pending
 - **Gloss**: Asking for CSV now actually downloads one — the moment the goal's export works end to end for a user.
+
+## Review Batches
 
 ## Notes
 
