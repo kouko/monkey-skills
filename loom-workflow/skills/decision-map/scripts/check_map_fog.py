@@ -107,6 +107,41 @@ def read_base_map_text(repo_root: Path, base_ref: str, map_md_path: Path) -> str
     return result.stdout
 
 
+def read_base_graduated_ids(
+    repo_root: Path, base_ref: str, map_md_path: Path
+) -> set[str]:
+    """Read immutable fog-graduation relations from base Ticket blobs."""
+    tickets = map_md_path.parent / "tickets"
+    relative = tickets.resolve(strict=False).relative_to(repo_root.resolve())
+    listing = _run_git(
+        ["ls-tree", "-r", "--name-only", base_ref, "--", relative.as_posix()],
+        repo_root,
+    )
+    if listing.returncode != 0:
+        raise map_store.SchemaViolation(
+            f"cannot enumerate base Ticket history at {base_ref!r}"
+        )
+    graduated: set[str] = set()
+    for name in listing.stdout.splitlines():
+        if not name.endswith(".md"):
+            continue
+        blob = _run_git(["show", f"{base_ref}:{name}"], repo_root)
+        if blob.returncode != 0:
+            raise map_store.SchemaViolation(
+                f"cannot read base Ticket history {name!r} at {base_ref!r}"
+            )
+        try:
+            fields, _ = map_store.parse_frontmatter(blob.stdout)
+        except map_store.SchemaViolation as exc:
+            raise map_store.SchemaViolation(
+                f"base Ticket history {name!r} fails to parse: {exc}"
+            ) from exc
+        fog_id = fields.get("graduated-from")
+        if fog_id and fog_id != "null":
+            graduated.add(fog_id)
+    return graduated
+
+
 def _out_of_scope_ids(out_of_scope_lines: list[str]) -> set[str]:
     ids: set[str] = set()
     for line in out_of_scope_lines:
@@ -162,8 +197,11 @@ def check_fog_monotonicity(
 
     try:
         base_doc = map_store.parse_map_document(base_text, current_doc.path)
+        base_graduated_ids = read_base_graduated_ids(
+            repo_root, resolved_base_ref, current_doc.path
+        )
     except map_store.SchemaViolation as exc:
-        return 2, f"base MAP.md at {resolved_base_ref!r} fails to parse: {exc}"
+        return 2, f"base history at {resolved_base_ref!r} fails to parse: {exc}"
 
     current_ids = {fog.id for fog in current_doc.fog_entries}
     out_of_scope_ids = _out_of_scope_ids(current_doc.out_of_scope)
@@ -185,11 +223,18 @@ def check_fog_monotonicity(
         )
 
     base_out_of_scope_ids = _out_of_scope_ids(base_doc.out_of_scope)
-    reused_retired = sorted(current_ids.intersection(base_out_of_scope_ids))
+    reused_retired = sorted(
+        current_ids.intersection(base_out_of_scope_ids | base_graduated_ids)
+    )
     if reused_retired:
         return 2, (
-            "fog id reuses base Out-of-scope history: "
+            "fog id reuses base graduated/Out-of-scope history: "
             + ", ".join(reused_retired)
+        )
+    vanished_graduations = sorted(base_graduated_ids - graduated_ids)
+    if vanished_graduations:
+        return 2, (
+            "graduated fog history vanished: " + ", ".join(vanished_graduations)
         )
     vanished_history = sorted(base_out_of_scope_ids - out_of_scope_ids)
     if vanished_history:
@@ -200,7 +245,9 @@ def check_fog_monotonicity(
     max_base_fog = max(
         (
             int(fog_id.removeprefix("F-"))
-            for fog_id in base_fog_ids | base_out_of_scope_ids
+            for fog_id in base_fog_ids
+            | base_out_of_scope_ids
+            | base_graduated_ids
         ),
         default=-1,
     )
@@ -216,6 +263,20 @@ def check_fog_monotonicity(
 
     base_da = {item.id: item for item in base_doc.destination_acceptance}
     current_da = {item.id: item for item in current_doc.destination_acceptance}
+    vanished_retired_da = sorted(
+        base_doc.retired_da_ids - current_doc.retired_da_ids
+    )
+    if vanished_retired_da:
+        return 2, (
+            "retired Destination acceptance history vanished: "
+            + ", ".join(vanished_retired_da)
+        )
+    reused_retired_da = sorted(set(current_da).intersection(base_doc.retired_da_ids))
+    if reused_retired_da:
+        return 2, (
+            "Destination acceptance id reuses base retired history: "
+            + ", ".join(reused_retired_da)
+        )
     for da_id, old in base_da.items():
         current = current_da.get(da_id)
         if current is not None and current.text != old.text:
@@ -226,7 +287,14 @@ def check_fog_monotonicity(
             return 2, (
                 f"Destination acceptance id {da_id} vanished without retired-da history"
             )
-    max_base_da = max((item.number for item in base_doc.destination_acceptance), default=0)
+    max_base_da = max(
+        [item.number for item in base_doc.destination_acceptance]
+        + [
+            int(da_id.removeprefix("DA-"))
+            for da_id in base_doc.retired_da_ids
+        ],
+        default=0,
+    )
     non_monotonic_da = sorted(
         item.id
         for item in current_doc.destination_acceptance

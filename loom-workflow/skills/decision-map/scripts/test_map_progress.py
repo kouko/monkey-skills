@@ -414,3 +414,63 @@ def test_reentry_distinguishes_map_and_frontier_states_with_next_cta(
     assert "phase: implementing" in cli.stdout
     assert "owner: docs/loom/plans/deliver.md" in cli.stdout
     assert "next-cta: resume implementation in the owning Plan" in cli.stdout
+
+
+def test_reentry_refuses_nested_plan_directory_symlink_escape(tmp_path: Path) -> None:
+    # @req: REQ-88
+    ticket, _, plan = _arc(tmp_path)
+    plan_text = plan.read_text(encoding="utf-8")
+    plan.unlink()
+    outside = tmp_path / "outside-plans"
+    _write(outside / "deliver.md", plan_text)
+    nested = tmp_path / "docs" / "loom" / "plans" / "nested"
+    nested.symlink_to(outside, target_is_directory=True)
+
+    with pytest.raises(map_progress.ProgressError, match="symlink"):
+        map_progress.resolve_progress(ticket, tmp_path)
+
+
+def test_reentry_refuses_ticket_symlink_swap_before_its_own_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-88
+    ticket, _, _ = _arc(tmp_path)
+    outside = tmp_path / "outside-ticket.md"
+    outside.write_bytes(ticket.read_bytes())
+    real_validate = map_progress.delivery_binding.validate
+
+    def validate_then_swap(*args, **kwargs):
+        result = real_validate(*args, **kwargs)
+        ticket.unlink()
+        ticket.symlink_to(outside)
+        return result
+
+    monkeypatch.setattr(
+        map_progress.delivery_binding, "validate", validate_then_swap
+    )
+    with pytest.raises(map_progress.ProgressError, match="symlink"):
+        map_progress.resolve_progress(ticket, tmp_path)
+
+
+def test_reentry_refuses_map_directory_symlink_before_store_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-88
+    external = tmp_path / "external-map"
+    _write(
+        external / "MAP.md",
+        "---\nmap-id: wayfinder\nschema_version: 3\nstate: charting\n---\n\n"
+        "## Destination\n\nChoose.\n\n## Notes\n\nNone.\n\n"
+        "## Decisions-so-far\n\n## Not-yet-specified (fog)\n\n"
+        "## Out-of-scope\n",
+    )
+    maps_root = tmp_path / "docs/loom/maps"
+    maps_root.mkdir(parents=True)
+    (maps_root / "wayfinder").symlink_to(external, target_is_directory=True)
+
+    def unexpected_store_read(*_args, **_kwargs):
+        pytest.fail("map_progress read through a Map directory symlink")
+
+    monkeypatch.setattr(map_progress.map_store, "is_live_map", unexpected_store_read)
+    with pytest.raises(map_progress.ProgressError, match="symlink"):
+        map_progress.assess_reentry(tmp_path)

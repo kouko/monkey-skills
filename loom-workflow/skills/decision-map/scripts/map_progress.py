@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import errno
 import os
 import re
+import stat
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -96,11 +98,70 @@ def _relative(root: Path, path: Path, label: str) -> str:
         raise ProgressError(f"{label} escapes repository: {path}") from exc
 
 
-def _ticket_fields(ticket: Path) -> dict[str, str]:
+def _raise_source_error(exc: OSError, label: str, relative: str) -> None:
+    if exc.errno == errno.ELOOP:
+        raise ProgressError(
+            f"{label} path contains a symlink: {relative}"
+        ) from exc
+    raise ProgressUnavailable(f"cannot read {label} {relative}: {exc}") from exc
+
+
+def _read_source(root: Path, path: Path, label: str) -> tuple[str, str]:
+    relative = _relative(root, path, label)
+    if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_DIRECTORY"):
+        raise ProgressUnavailable(
+            "platform cannot safely read progress sources without O_NOFOLLOW"
+        )
+    root_fd = -1
+    directory_fd = -1
+    source_fd = -1
     try:
-        fields, _ = map_store.parse_frontmatter(ticket.read_text(encoding="utf-8"))
+        root_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        directory_fd = root_fd
+        parts = Path(relative).parts
+        for part in parts[:-1]:
+            metadata = os.stat(part, dir_fd=directory_fd, follow_symlinks=False)
+            if stat.S_ISLNK(metadata.st_mode):
+                raise ProgressError(f"{label} path contains a symlink: {relative}")
+            next_fd = os.open(
+                part,
+                os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                dir_fd=directory_fd,
+            )
+            if directory_fd != root_fd:
+                os.close(directory_fd)
+            directory_fd = next_fd
+        metadata = os.stat(parts[-1], dir_fd=directory_fd, follow_symlinks=False)
+        if stat.S_ISLNK(metadata.st_mode):
+            raise ProgressError(f"{label} path contains a symlink: {relative}")
+        source_fd = os.open(
+            parts[-1], os.O_RDONLY | os.O_NOFOLLOW, dir_fd=directory_fd
+        )
+        opened = os.fstat(source_fd)
+        if not stat.S_ISREG(opened.st_mode):
+            raise ProgressUnavailable(
+                f"{label} is not a regular file: {relative}"
+            )
+        with os.fdopen(source_fd, "r", encoding="utf-8") as handle:
+            source_fd = -1
+            return relative, handle.read()
+    except ProgressError:
+        raise
     except OSError as exc:
-        raise ProgressUnavailable(f"cannot read ticket {ticket}: {exc}") from exc
+        _raise_source_error(exc, label, relative)
+    finally:
+        if source_fd >= 0:
+            os.close(source_fd)
+        if directory_fd >= 0 and directory_fd != root_fd:
+            os.close(directory_fd)
+        if root_fd >= 0:
+            os.close(root_fd)
+
+
+def _ticket_fields(root: Path, ticket: Path) -> dict[str, str]:
+    try:
+        relative, text = _read_source(root, ticket, "Ticket")
+        fields, _ = map_store.parse_frontmatter(text)
     except map_store.SchemaViolation as exc:
         raise ProgressError(f"ticket has invalid frontmatter: {exc}") from exc
     return fields
@@ -130,10 +191,7 @@ def _sole_plan(root: Path, brief: str) -> tuple[str, str] | None:
             for part in relative_candidate.parts
         ):
             raise ProgressError(f"Plan path contains a symlink: {_relative(root, candidate, 'Plan')}")
-        try:
-            text = candidate.read_text(encoding="utf-8")
-        except OSError as exc:
-            raise ProgressUnavailable(f"cannot read Plan {candidate}: {exc}") from exc
+        _, text = _read_source(root, candidate, "Plan")
         source_lines = [line for line in text.splitlines() if line.startswith("**Source brief")]
         source_matches = [match for match in _SOURCE_BRIEF.finditer(text)]
         matching = [match for match in source_matches if match.group("brief") == brief]
@@ -193,7 +251,7 @@ def resolve_progress(ticket_path: Path, repo_root: Path | None = None) -> tuple[
         raise ProgressUnavailable(message)
     if code == 2:
         raise ProgressError(message)
-    fields = _ticket_fields(ticket)
+    fields = _ticket_fields(root, ticket)
     if fields.get("type") != "delivery":
         raise ProgressError("progress is available only for delivery tickets")
     brief = fields.get("brief")
@@ -214,24 +272,49 @@ def resolve_progress(ticket_path: Path, repo_root: Path | None = None) -> tuple[
 
 def _live_maps(root: Path) -> tuple[list[Path], list[Path]]:
     maps_root = root / "docs" / "loom" / "maps"
-    if not maps_root.exists():
-        return [], []
-    if not maps_root.is_dir() or maps_root.is_symlink():
-        return [], [maps_root]
+    current = root
+    for part in ("docs", "loom", "maps"):
+        current /= part
+        try:
+            mode = current.lstat().st_mode
+        except FileNotFoundError:
+            return [], []
+        except OSError as exc:
+            raise ProgressUnavailable(f"cannot inspect Maps path: {exc}") from exc
+        if stat.S_ISLNK(mode):
+            raise ProgressError(f"Maps path contains a symlink: {_relative(root, current, 'Maps')}")
+        if not stat.S_ISDIR(mode):
+            raise ProgressUnavailable(f"Maps path is not a directory: {current}")
     live: list[Path] = []
     broken: list[Path] = []
-    for candidate in sorted(path for path in maps_root.iterdir() if path.is_dir()):
+    try:
+        entries = sorted(os.scandir(maps_root), key=lambda entry: entry.name)
+    except OSError as exc:
+        raise ProgressUnavailable(f"cannot enumerate Maps: {exc}") from exc
+    for entry in entries:
+        candidate = Path(entry.path)
+        if entry.is_symlink():
+            raise ProgressError(
+                f"Map path contains a symlink: {_relative(root, candidate, 'Map')}"
+            )
+        if not entry.is_dir(follow_symlinks=False):
+            continue
+        map_path = candidate / "MAP.md"
+        if not map_path.exists():
+            continue
+        try:
+            _, text = _read_source(root, map_path, "Map")
+            doc = map_store.parse_map_document(text, map_path)
+        except (ProgressUnavailable, map_store.SchemaViolation):
+            broken.append(candidate)
+            continue
+        if doc.frontmatter.state not in map_store.LIVE_MAP_STATES:
+            continue
         result = map_store.is_live_map(candidate, repo_root=root)
         if result is map_store.LiveMapResult.LIVE:
             live.append(candidate)
-        elif (candidate / "MAP.md").exists():
-            try:
-                doc = map_store.read_map(candidate)
-            except (map_store.MapStoreError, map_store.SchemaViolation):
-                broken.append(candidate)
-            else:
-                if doc.frontmatter.state in map_store.LIVE_MAP_STATES:
-                    broken.append(candidate)
+        else:
+            broken.append(candidate)
     return live, broken
 
 
@@ -260,14 +343,15 @@ def _delivery_reentry(
     )
 
 
-def assess_reentry(repo_root: Path, map_id: str | None = None) -> ReentryReport:
-    """Report one Map's authoritative re-entry owner without writing sources."""
-    root = Path(os.path.abspath(repo_root))
+def _select_reentry_map(
+    root: Path, map_id: str | None
+) -> tuple[Path | None, ReentryReport | None]:
+    """Select one live Map or return the terminal selection report."""
     live, broken = _live_maps(root)
     if map_id is not None:
         selected = root / "docs" / "loom" / "maps" / map_id
         if selected in broken:
-            return ReentryReport(
+            return None, ReentryReport(
                 "broken",
                 f"docs/loom/maps/{map_id}/MAP.md",
                 "repair the Map validation error before resuming",
@@ -275,45 +359,59 @@ def assess_reentry(repo_root: Path, map_id: str | None = None) -> ReentryReport:
             )
         live = [path for path in live if path.name == map_id]
         if not live:
-            return ReentryReport(
+            return None, ReentryReport(
                 "absent",
                 "docs/loom/maps",
                 "chart a new Outcome Map",
             )
     elif broken:
         selected = broken[0]
-        return ReentryReport(
+        return None, ReentryReport(
             "broken",
             f"docs/loom/maps/{selected.name}/MAP.md",
             "repair the Map validation error before resuming",
             map_id=selected.name,
         )
     if not live:
-        return ReentryReport(
+        return None, ReentryReport(
             "absent", "docs/loom/maps", "chart a new Outcome Map"
         )
     if len(live) > 1:
-        return ReentryReport(
+        return None, ReentryReport(
             "ambiguous-live",
             "docs/loom/maps",
             "select one live Outcome Map by map-id",
         )
-    map_dir = live[0]
-    doc = map_store.read_map(map_dir)
-    map_owner = f"docs/loom/maps/{map_dir.name}/MAP.md"
-    if doc.frontmatter.state == "charting":
-        return ReentryReport(
-            "live",
-            map_owner,
-            "ratify the Destination and activate the Map",
-            map_id=map_dir.name,
-        )
-    tickets = [
-        map_store.read_ticket(path)
-        for path in sorted((map_dir / "tickets").glob("*.md"))
-    ]
-    statuses = {ticket.path.stem: ticket.frontmatter.status for ticket in tickets}
-    claimed = [ticket for ticket in tickets if ticket.frontmatter.status == "claimed"]
+    return live[0], None
+
+
+def _read_frontier_tickets(
+    root: Path, map_dir: Path
+) -> list[map_store.TicketDocument]:
+    tickets_dir = map_dir / "tickets"
+    if not tickets_dir.exists():
+        return []
+    if tickets_dir.is_symlink() or not tickets_dir.is_dir():
+        raise ProgressError("Ticket directory is not a contained regular directory")
+    tickets: list[map_store.TicketDocument] = []
+    try:
+        candidates = sorted(tickets_dir.glob("*.md"))
+    except OSError as exc:
+        raise ProgressUnavailable(f"cannot enumerate Tickets: {exc}") from exc
+    for path in candidates:
+        _, text = _read_source(root, path, "Ticket")
+        try:
+            tickets.append(map_store.parse_ticket_document(text, path))
+        except map_store.SchemaViolation as exc:
+            raise ProgressError(f"Ticket {path.name} is invalid: {exc}") from exc
+    return tickets
+
+
+def _blocked_reentry(
+    map_dir: Path,
+    tickets: list[map_store.TicketDocument],
+    statuses: dict[str, str],
+) -> ReentryReport | None:
     blocked_open = [
         ticket
         for ticket in tickets
@@ -325,19 +423,30 @@ def assess_reentry(repo_root: Path, map_id: str | None = None) -> ReentryReport:
     ]
     if blocked_open:
         owners = sorted(
-            {
-                blocker
-                for ticket in blocked_open
-                for blocker in ticket.frontmatter.blocked_by
-                if statuses.get(blocker) != "closed"
-            }
+            blocker
+            for ticket in blocked_open
+            for blocker in ticket.frontmatter.blocked_by
+            if statuses.get(blocker) != "closed"
         )
         return ReentryReport(
             "blocked",
-            ", ".join(f"docs/loom/maps/{map_dir.name}/tickets/{slug}.md" for slug in owners),
+            ", ".join(
+                f"docs/loom/maps/{map_dir.name}/tickets/{slug}.md"
+                for slug in owners
+            ),
             "resolve blockers or resume their current owners",
             map_id=map_dir.name,
         )
+    return None
+
+
+def _owned_or_frontier_reentry(
+    root: Path,
+    map_dir: Path,
+    tickets: list[map_store.TicketDocument],
+    statuses: dict[str, str],
+) -> ReentryReport | None:
+    claimed = [ticket for ticket in tickets if ticket.frontmatter.status == "claimed"]
     if claimed:
         ticket = claimed[0]
         if ticket.frontmatter.type == "delivery":
@@ -354,34 +463,79 @@ def assess_reentry(repo_root: Path, map_id: str | None = None) -> ReentryReport:
         ticket
         for ticket in tickets
         if ticket.frontmatter.status == "open"
-        and all(statuses.get(blocker) == "closed" for blocker in ticket.frontmatter.blocked_by)
-    ]
-    if frontier:
-        ticket = frontier[0]
-        relative = ticket.path.relative_to(root).as_posix()
-        return ReentryReport(
-            "live",
-            relative,
-            f"claim frontier ticket {ticket.path.stem}",
-            map_id=map_dir.name,
-            ticket=relative,
+        and all(
+            statuses.get(blocker) == "closed"
+            for blocker in ticket.frontmatter.blocked_by
         )
+    ]
+    if not frontier:
+        return None
+    ticket = frontier[0]
+    relative = ticket.path.relative_to(root).as_posix()
+    return ReentryReport(
+        "live",
+        relative,
+        f"claim frontier ticket {ticket.path.stem}",
+        map_id=map_dir.name,
+        ticket=relative,
+    )
+
+
+def _ticket_frontier_reentry(
+    root: Path, map_dir: Path
+) -> ReentryReport | None:
+    tickets = _read_frontier_tickets(root, map_dir)
+    statuses = {ticket.path.stem: ticket.frontmatter.status for ticket in tickets}
+    return _blocked_reentry(map_dir, tickets, statuses) or _owned_or_frontier_reentry(
+        root, map_dir, tickets, statuses
+    )
+
+
+def _acceptance_reentry(
+    doc: map_store.MapDocument, map_owner: str
+) -> ReentryReport:
     open_da = [
-        criterion for criterion in doc.destination_acceptance if criterion.state == "open"
+        criterion
+        for criterion in doc.destination_acceptance
+        if criterion.state == "open"
     ]
     if open_da:
         return ReentryReport(
             "da-gap",
             map_owner + "#Destination",
             f"satisfy Destination acceptance {open_da[0].id}",
-            map_id=map_dir.name,
+            map_id=doc.frontmatter.map_id,
         )
     return ReentryReport(
         "live",
         map_owner,
         "assess Map clear or re-chart the next unknown",
-        map_id=map_dir.name,
+        map_id=doc.frontmatter.map_id,
     )
+
+
+def assess_reentry(repo_root: Path, map_id: str | None = None) -> ReentryReport:
+    """Report one Map's authoritative re-entry owner without writing sources."""
+    root = Path(os.path.abspath(repo_root))
+    map_dir, selection = _select_reentry_map(root, map_id)
+    if selection is not None:
+        return selection
+    assert map_dir is not None
+    _, map_text = _read_source(root, map_dir / "MAP.md", "Map")
+    try:
+        doc = map_store.parse_map_document(map_text, map_dir / "MAP.md")
+    except map_store.SchemaViolation as exc:
+        raise ProgressError(f"Map became invalid during re-entry: {exc}") from exc
+    map_owner = f"docs/loom/maps/{map_dir.name}/MAP.md"
+    if doc.frontmatter.state == "charting":
+        return ReentryReport(
+            "live",
+            map_owner,
+            "ratify the Destination and activate the Map",
+            map_id=map_dir.name,
+        )
+    ticket_report = _ticket_frontier_reentry(root, map_dir)
+    return ticket_report or _acceptance_reentry(doc, map_owner)
 
 
 def main(argv: list[str] | None = None) -> int:

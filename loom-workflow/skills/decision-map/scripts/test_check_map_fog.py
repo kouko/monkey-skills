@@ -284,6 +284,79 @@ def test_rejects_nonmonotonic_new_fog_id(tmp_path: Path) -> None:
     assert "F-0" in message and "monotonic" in message
 
 
+def test_base_history_is_immutable_and_sets_id_high_water(tmp_path: Path) -> None:
+    # @req: REQ-92
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    _init_repo(repo_root)
+    base = _rewrite_fog_section(
+        BASE_MAP_MD,
+        "- F-1: how does the fog id survive a rename?\n",
+    ).replace(
+        "Nothing special.",
+        "Nothing special.\nretired-da: DA-10 | Retired criterion",
+    )
+    _write(
+        _map_dir(repo_root) / "tickets" / "graduated-ten.md",
+        TICKET_GRADUATED.replace("F-2", "F-10"),
+    )
+    _commit_base(repo_root, base)
+    _branch_and_commit_current(
+        repo_root,
+        base.replace(
+            "- F-1: how does the fog id survive a rename?",
+            "- F-1: how does the fog id survive a rename?\n"
+            "- F-2: minted below graduated history",
+        ),
+    )
+
+    code, message = check_map_fog.check_fog_monotonicity(
+        _map_dir(repo_root), repo_root, base_ref=None
+    )
+    assert code == 2
+    assert "F-2" in message and "monotonic" in message
+
+    da_below_high_water = base.replace(
+        "Chart the decision-map layer.",
+        "Chart the decision-map layer.\n"
+        "- DA-2: Minted below retirement history | state: open | kind: objective",
+    )
+    _write(_map_dir(repo_root) / "MAP.md", da_below_high_water)
+    code, message = check_map_fog.check_fog_monotonicity(
+        _map_dir(repo_root), repo_root, base_ref=None
+    )
+    assert code == 2
+    assert "DA-2" in message and "monotonic" in message
+
+    reused_da = base.replace(
+        "retired-da: DA-10 | Retired criterion",
+        "",
+    ).replace(
+        "Chart the decision-map layer.",
+        "Chart the decision-map layer.\n"
+        "- DA-10: Reissued criterion | state: open | kind: objective",
+    )
+    _write(_map_dir(repo_root) / "MAP.md", reused_da)
+    code, message = check_map_fog.check_fog_monotonicity(
+        _map_dir(repo_root), repo_root, base_ref=None
+    )
+    assert code == 2
+    assert "DA-10" in message and "retired" in message.lower()
+
+    (_map_dir(repo_root) / "tickets" / "graduated-ten.md").unlink()
+    reused_fog = base.replace(
+        "- F-1: how does the fog id survive a rename?",
+        "- F-1: how does the fog id survive a rename?\n"
+        "- F-10: reissued after graduation history",
+    )
+    _write(_map_dir(repo_root) / "MAP.md", reused_fog)
+    code, message = check_map_fog.check_fog_monotonicity(
+        _map_dir(repo_root), repo_root, base_ref=None
+    )
+    assert code == 2
+    assert "F-10" in message and "graduated" in message.lower()
+
+
 def test_out_of_scope_move_is_clean(tmp_path: Path) -> None:
     repo_root = tmp_path / "repo"
     repo_root.mkdir()

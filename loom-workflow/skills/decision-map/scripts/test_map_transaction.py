@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+import threading
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,12 @@ import map_transaction  # noqa: E402
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+
+
+def _assert_only_lock_artifact(map_dir: Path) -> None:
+    assert sorted(path.name for path in (map_dir / ".transactions").iterdir()) == [
+        ".map.lock"
+    ]
 
 
 def _make_map(tmp_path: Path) -> tuple[Path, Path]:
@@ -141,7 +148,7 @@ def test_invalid_closure_evidence_is_rejected_before_any_write(
 
     assert (map_dir / "MAP.md").read_bytes() == before_map
     assert ticket.read_bytes() == before_ticket
-    assert not (map_dir / ".transactions").exists()
+    _assert_only_lock_artifact(map_dir)
 
 
 def test_symlinked_tickets_directory_refuses_without_any_mutation(
@@ -167,7 +174,7 @@ def test_symlinked_tickets_directory_refuses_without_any_mutation(
 
     assert (map_dir / "MAP.md").read_bytes() == before_map
     assert external_ticket.read_bytes() == before_external
-    assert not (map_dir / ".transactions").exists()
+    _assert_only_lock_artifact(map_dir)
 
 
 def test_closed_source_without_prepared_journal_cannot_bootstrap_resume(
@@ -197,7 +204,7 @@ def test_closed_source_without_prepared_journal_cannot_bootstrap_resume(
 
     assert (map_dir / "MAP.md").read_bytes() == before_map
     assert ticket.read_bytes() == before_ticket
-    assert not (map_dir / ".transactions").exists()
+    _assert_only_lock_artifact(map_dir)
 
 
 def test_duplicate_ticket_route_slugs_refuse_before_any_write(
@@ -233,7 +240,7 @@ def test_duplicate_ticket_route_slugs_refuse_before_any_write(
 
     assert (map_dir / "MAP.md").read_bytes() == before_map
     assert ticket.read_bytes() == before_ticket
-    assert not (map_dir / ".transactions").exists()
+    _assert_only_lock_artifact(map_dir)
 
 
 def test_closed_retry_revalidates_authoritative_v3_source(
@@ -310,15 +317,21 @@ def test_clear_assessment_reuses_req_78_acceptance_validation(
         encoding="utf-8",
     )
 
-    result = map_transaction.close_and_rechart(
-        map_dir,
-        "ship-slice",
-        gist="Slice shipped.",
-        resolution="delivery-evidence: commit 0123456",
-        unknowns=[],
-    )
-
-    assert result.map_clear_eligible is False
+    before = {
+        map_dir / "MAP.md": (map_dir / "MAP.md").read_bytes(),
+        map_dir / "tickets/ship-slice.md": (
+            map_dir / "tickets/ship-slice.md"
+        ).read_bytes(),
+    }
+    with pytest.raises(map_transaction.CloseTransactionError, match="broken Map"):
+        map_transaction.close_and_rechart(
+            map_dir,
+            "ship-slice",
+            gist="Slice shipped.",
+            resolution="delivery-evidence: commit 0123456",
+            unknowns=[],
+        )
+    assert {path: path.read_bytes() for path in before} == before
 
 
 def test_retirement_refuses_partial_operations_and_descendant_races(
@@ -668,3 +681,305 @@ def test_transactions_detect_conflicts_and_recover_partial_effects(
             expected_revision=map_transaction.capture_revision(map_dir),
         )
     assert {path: path.read_bytes() for path in before} == before
+
+
+def test_concurrent_opposing_blocker_updates_serialize_one_winner(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-87
+    map_dir, _ = _make_map(tmp_path)
+    for slug in ("first", "second"):
+        _write(
+            map_dir / "tickets" / f"{slug}.md",
+            "---\ntype: research\nstatus: open\nclaim: null\n"
+            "graduated-from: null\n---\n\nResearch this edge.\n",
+        )
+    observed = map_transaction.capture_revision(map_dir)
+    barrier = threading.Barrier(2)
+    real_prepare = map_transaction._prepare_mutation
+
+    def prepare_then_rendezvous(*args, **kwargs):
+        result = real_prepare(*args, **kwargs)
+        try:
+            barrier.wait(timeout=0.25)
+        except threading.BrokenBarrierError:
+            pass
+        return result
+
+    monkeypatch.setattr(map_transaction, "_prepare_mutation", prepare_then_rendezvous)
+    outcomes: list[tuple[str, str]] = []
+
+    def update(ticket: str, blocker: str) -> None:
+        try:
+            map_transaction.update_blockers(
+                map_dir,
+                ticket,
+                [blocker],
+                operation_id=f"block-{ticket}",
+                expected_revision=observed,
+            )
+        except map_transaction.CloseTransactionError as exc:
+            outcomes.append((ticket, str(exc)))
+        else:
+            outcomes.append((ticket, "applied"))
+
+    workers = [
+        threading.Thread(target=update, args=("first", "second")),
+        threading.Thread(target=update, args=("second", "first")),
+    ]
+    for worker in workers:
+        worker.start()
+    for worker in workers:
+        worker.join(timeout=2)
+
+    assert all(not worker.is_alive() for worker in workers)
+    assert sum(result == "applied" for _, result in outcomes) == 1, outcomes
+    assert sum("conflict" in result for _, result in outcomes) == 1, outcomes
+    code, message = map_transaction.map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+
+@pytest.mark.parametrize("operation", ["claim", "blockers", "close"])
+def test_unrelated_read_set_change_after_prepare_refuses_write(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, operation: str
+) -> None:
+    # @req: REQ-87
+    map_dir, ticket = _make_map(tmp_path)
+    unrelated = map_dir / "tickets" / "unrelated.md"
+    _write(
+        unrelated,
+        "---\ntype: research\nstatus: open\nclaim: null\n"
+        "graduated-from: null\n---\n\nUnrelated evidence.\n",
+    )
+
+    def mutate_unrelated() -> None:
+        unrelated.write_text(
+            unrelated.read_text(encoding="utf-8") + "Concurrent note.\n",
+            encoding="utf-8",
+        )
+
+    if operation == "close":
+        real_prepare_close = map_transaction._load_or_prepare_intent
+
+        def prepare_close_then_change(*args, **kwargs):
+            result = real_prepare_close(*args, **kwargs)
+            mutate_unrelated()
+            return result
+
+        monkeypatch.setattr(
+            map_transaction, "_load_or_prepare_intent", prepare_close_then_change
+        )
+        with pytest.raises(map_transaction.CloseTransactionError, match="conflict"):
+            map_transaction.close_and_rechart(
+                map_dir,
+                "ship-slice",
+                gist="Slice shipped.",
+                resolution="delivery-evidence: commit 0123456",
+                unknowns=[],
+            )
+        assert "status: claimed" in ticket.read_text(encoding="utf-8")
+        assert "Slice shipped" not in (map_dir / "MAP.md").read_text(encoding="utf-8")
+        return
+
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8").replace(
+            "status: claimed\nclaim: codex, 2026-08-30",
+            "status: open\nclaim: null",
+        ),
+        encoding="utf-8",
+    )
+    observed = map_transaction.capture_revision(map_dir)
+    real_prepare = map_transaction._prepare_mutation
+
+    def prepare_then_change(*args, **kwargs):
+        result = real_prepare(*args, **kwargs)
+        mutate_unrelated()
+        return result
+
+    monkeypatch.setattr(map_transaction, "_prepare_mutation", prepare_then_change)
+    with pytest.raises(map_transaction.CloseTransactionError, match="conflict"):
+        if operation == "claim":
+            map_transaction.claim_ticket(
+                map_dir,
+                "ship-slice",
+                owner="alice",
+                claimed_on="2026-08-30",
+                operation_id="claim-after-prepare",
+                expected_revision=observed,
+            )
+        else:
+            map_transaction.update_blockers(
+                map_dir,
+                "ship-slice",
+                [],
+                operation_id="block-after-prepare",
+                expected_revision=observed,
+            )
+    assert "status: open" in ticket.read_text(encoding="utf-8")
+
+
+def test_transaction_lock_refuses_symlink_alias(tmp_path: Path) -> None:
+    # @req: REQ-87
+    map_dir, ticket = _make_map(tmp_path)
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8").replace(
+            "status: claimed\nclaim: codex, 2026-08-30",
+            "status: open\nclaim: null",
+        ),
+        encoding="utf-8",
+    )
+    transactions = map_dir / ".transactions"
+    transactions.mkdir()
+    outside = tmp_path / "outside.lock"
+    outside.write_text("outside\n", encoding="utf-8")
+    (transactions / ".map.lock").symlink_to(outside)
+    observed = map_transaction.capture_revision(map_dir)
+
+    with pytest.raises(map_transaction.CloseTransactionError, match="lock"):
+        map_transaction.claim_ticket(
+            map_dir,
+            "ship-slice",
+            owner="alice",
+            claimed_on="2026-08-30",
+            operation_id="claim-lock-alias",
+            expected_revision=observed,
+        )
+    assert outside.read_text(encoding="utf-8") == "outside\n"
+    assert "status: open" in ticket.read_text(encoding="utf-8")
+
+
+def test_transaction_lock_refuses_parent_directory_swap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-87
+    map_dir, ticket = _make_map(tmp_path)
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8").replace(
+            "status: claimed\nclaim: codex, 2026-08-30",
+            "status: open\nclaim: null",
+        ),
+        encoding="utf-8",
+    )
+    transactions = map_dir / ".transactions"
+    transactions.mkdir()
+    parked = map_dir / ".transactions-parked"
+    outside = tmp_path / "outside-transactions"
+    outside.mkdir()
+
+    def swap_parent() -> None:
+        transactions.rename(parked)
+        transactions.symlink_to(outside, target_is_directory=True)
+
+    monkeypatch.setattr(
+        map_transaction, "_before_lock_file_open", swap_parent, raising=False
+    )
+    observed = map_transaction.capture_revision(map_dir)
+    with pytest.raises(map_transaction.CloseTransactionError, match="lock"):
+        map_transaction.claim_ticket(
+            map_dir,
+            "ship-slice",
+            owner="alice",
+            claimed_on="2026-08-30",
+            operation_id="claim-parent-swap",
+            expected_revision=observed,
+        )
+    assert not (outside / ".map.lock").exists()
+    assert "status: open" in ticket.read_text(encoding="utf-8")
+
+
+def test_transaction_lock_fails_closed_without_directory_open_primitive(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-87
+    map_dir, ticket = _make_map(tmp_path)
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8").replace(
+            "status: claimed\nclaim: codex, 2026-08-30",
+            "status: open\nclaim: null",
+        ),
+        encoding="utf-8",
+    )
+    observed = map_transaction.capture_revision(map_dir)
+    monkeypatch.delattr(map_transaction.os, "O_DIRECTORY")
+
+    with pytest.raises(map_transaction.CloseTransactionError, match="unsupported"):
+        map_transaction.claim_ticket(
+            map_dir,
+            "ship-slice",
+            owner="alice",
+            claimed_on="2026-08-30",
+            operation_id="claim-no-directory-open",
+            expected_revision=observed,
+        )
+    assert "status: open" in ticket.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("operation", ["claim", "blockers", "close"])
+def test_transaction_runs_final_validation_after_its_effect(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, operation: str
+) -> None:
+    # @req: REQ-87
+    map_dir, ticket = _make_map(tmp_path)
+    if operation != "close":
+        ticket.write_text(
+            ticket.read_text(encoding="utf-8").replace(
+                "status: claimed\nclaim: codex, 2026-08-30",
+                "status: open\nclaim: null",
+            ),
+            encoding="utf-8",
+        )
+    if operation == "blockers":
+        _write(
+            map_dir / "tickets/done.md",
+            "---\ntype: research\nstatus: closed\nclaim: null\n"
+            "graduated-from: null\n---\n\nDone.\n\n## Resolution\n\n"
+            "factual-answer: Done.\ninspectable-evidence: evidence.md\n",
+        )
+        (map_dir / "MAP.md").write_text(
+            (map_dir / "MAP.md").read_text(encoding="utf-8").replace(
+                "## Decisions-so-far\n",
+                "## Decisions-so-far\n\n- Done. (tickets/done.md)\n",
+            ),
+            encoding="utf-8",
+        )
+    validated_effects: list[str] = []
+    real_validate = map_transaction.map_store.validate
+
+    def record_validation(*args, **kwargs):
+        validated_effects.append(
+            ticket.read_text(encoding="utf-8")
+            + (map_dir / "MAP.md").read_text(encoding="utf-8")
+        )
+        return real_validate(*args, **kwargs)
+
+    monkeypatch.setattr(map_transaction.map_store, "validate", record_validation)
+    if operation == "claim":
+        map_transaction.claim_ticket(
+            map_dir,
+            "ship-slice",
+            owner="alice",
+            claimed_on="2026-08-30",
+            operation_id="claim-final-validation",
+            expected_revision=map_transaction.capture_revision(map_dir),
+        )
+        expected = "status: claimed"
+    elif operation == "blockers":
+        map_transaction.update_blockers(
+            map_dir,
+            "ship-slice",
+            ["done"],
+            operation_id="block-final-validation",
+            expected_revision=map_transaction.capture_revision(map_dir),
+        )
+        expected = "blocked-by: done"
+    else:
+        map_transaction.close_and_rechart(
+            map_dir,
+            "ship-slice",
+            gist="Slice shipped.",
+            resolution="delivery-evidence: commit 0123456",
+            unknowns=[],
+        )
+        expected = "status: closed"
+    assert validated_effects
+    assert expected in validated_effects[-1]

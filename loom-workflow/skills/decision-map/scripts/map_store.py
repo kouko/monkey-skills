@@ -77,6 +77,7 @@ _DECISION_LINE = re.compile(r"^-\s*(?P<gist>.*)\((?P<link>[^()]*)\)\s*$")
 _DA_ENTRY = re.compile(
     r"^-\s*(?P<id>DA-(?P<n>[0-9]+))\s*:\s*(?P<body>.*)$"
 )
+_DA_SHAPED_BULLET = re.compile(r"^[-*+]\s*DA(?:-?\d|\s+-?\d)")
 _RETIRED_DA = re.compile(r"^retired-da:\s*(?P<id>DA-[0-9]+)\s*\|")
 
 
@@ -263,7 +264,7 @@ def _parse_destination_acceptance(
     criteria: list[DestinationAcceptance] = []
     for line in section_text.splitlines():
         stripped = line.strip()
-        if not stripped.startswith("- DA-"):
+        if not _DA_SHAPED_BULLET.match(stripped):
             continue
         match = _DA_ENTRY.fullmatch(stripped)
         if match is None:
@@ -944,7 +945,31 @@ def record_active_regression(
     followup_type: str,
     followup_slug: str,
 ) -> Path:
-    """Record an active-Map regression as a new typed follow-up ticket."""
+    """Record an active regression under the shared Map writer lock."""
+    import map_transaction
+
+    try:
+        with map_transaction.serialize_map_mutation(map_dir):
+            return _record_active_regression_locked(
+                map_dir,
+                closed_delivery_slug,
+                summary=summary,
+                followup_type=followup_type,
+                followup_slug=followup_slug,
+            )
+    except map_transaction.CloseTransactionError as exc:
+        raise SchemaViolation(str(exc)) from exc
+
+
+def _record_active_regression_locked(
+    map_dir: Path,
+    closed_delivery_slug: str,
+    *,
+    summary: str,
+    followup_type: str,
+    followup_slug: str,
+) -> Path:
+    """Create the follow-up after the caller acquires the writer lock."""
     map_dir = Path(map_dir)
     doc = require_work_mutable(map_dir, "add")
     if doc.frontmatter.state != "active":

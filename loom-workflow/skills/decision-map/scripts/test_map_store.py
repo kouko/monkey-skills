@@ -14,6 +14,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent))
 
 import map_store  # noqa: E402
@@ -516,6 +518,27 @@ def test_clear_history_is_immutable_and_active_regression_is_followup(
     assert code == 0, message
 
 
+def test_active_regression_uses_shared_map_transaction_lock(tmp_path: Path) -> None:
+    # @req: REQ-87
+    map_dir = _make_v3_active_map(tmp_path)
+    transactions = map_dir / ".transactions"
+    transactions.mkdir()
+    outside = tmp_path / "outside.lock"
+    outside.write_text("outside\n", encoding="utf-8")
+    (transactions / ".map.lock").symlink_to(outside)
+
+    with pytest.raises(map_store.SchemaViolation, match="lock"):
+        map_store.record_active_regression(
+            map_dir,
+            "decision-a",
+            summary="The parser regressed.",
+            followup_type="delivery",
+            followup_slug="repair-regression",
+        )
+    assert not (map_dir / "tickets/repair-regression.md").exists()
+    assert outside.read_text(encoding="utf-8") == "outside\n"
+
+
 def test_active_retirement_requires_named_ratification_and_reason(
     tmp_path: Path,
 ) -> None:
@@ -676,7 +699,13 @@ def test_archive_transition_keeps_map_and_ticket_paths_stable(tmp_path: Path) ->
 
     assert map_dir.is_dir()
     assert ticket_path.read_bytes() == ticket_before
-    assert {path.relative_to(tmp_path) for path in tmp_path.rglob("*")} == before_paths
+    assert {path.relative_to(tmp_path) for path in tmp_path.rglob("*")} == (
+        before_paths
+        | {
+            (map_dir / ".transactions").relative_to(tmp_path),
+            (map_dir / ".transactions/.map.lock").relative_to(tmp_path),
+        }
+    )
     assert "state: archived" in map_path.read_text(encoding="utf-8")
     import delivery_binding
 
@@ -727,7 +756,6 @@ def test_archive_uses_stable_readiness_and_refuses_late_binding_break(
     assert map_path.read_bytes() == map_before
 
     transaction.unlink()
-    transaction.parent.rmdir()
     import map_transaction
 
     def break_binding_before_replace() -> None:
@@ -1635,6 +1663,18 @@ def test_da_ids_states_evidence_and_evaluative_ratification(tmp_path: Path) -> N
         code, message = map_store.validate(map_dir, repo_root=tmp_path)
         assert code == 2
         assert expected in message.lower()
+
+    map_path.write_text(
+        original.replace(
+            destination,
+            destination
+            + "\n- DA1: Almost canonical | state: open | kind: objective",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "malformed destination acceptance" in message.lower()
 
 
 def test_v3_monotonic_ids_and_exactly_one_closed_ticket_gist(

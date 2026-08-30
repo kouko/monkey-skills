@@ -7,16 +7,23 @@ primitives with full-read-set conflicts, idempotent retries, and safe recovery.
 
 from __future__ import annotations
 
+import errno
 import hashlib
 import json
 import os
 import re
 import stat
 import tempfile
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 import map_store
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - exercised only on unsupported hosts
+    fcntl = None
 
 
 class CloseTransactionError(ValueError):
@@ -117,6 +124,139 @@ def _require_revision(map_dir: Path, expected: StoreRevision) -> None:
             "transaction conflict: the authoritative Map or Ticket read set "
             "changed; re-read before retry"
         )
+
+
+def _require_valid_store(map_dir: Path) -> None:
+    code, message = map_store.validate(map_dir)
+    if code != 0:
+        raise CloseTransactionError(
+            f"transaction final validation failed: {message}"
+        )
+
+
+def _before_lock_file_open() -> None:
+    """Test seam after opening the lock directory by descriptor."""
+
+
+def _open_lock_file(directory_fd: int) -> int:
+    flags = os.O_RDWR | os.O_NOFOLLOW
+    if hasattr(os, "O_CLOEXEC"):
+        flags |= os.O_CLOEXEC
+    for _ in range(3):
+        try:
+            return os.open(".map.lock", flags, dir_fd=directory_fd)
+        except OSError as exc:
+            if exc.errno != errno.ENOENT:
+                raise
+        try:
+            return os.open(
+                ".map.lock",
+                flags | os.O_CREAT | os.O_EXCL,
+                0o600,
+                dir_fd=directory_fd,
+            )
+        except FileExistsError:
+            continue
+    raise OSError(errno.EAGAIN, "transaction lock creation did not stabilize")
+
+
+def _prepare_lock_directory(map_dir: Path) -> tuple[Path, Path]:
+    transactions = map_dir / ".transactions"
+    lock_path = transactions / ".map.lock"
+    _assert_no_symlink_components(map_dir)
+    try:
+        if not stat.S_ISDIR(map_dir.lstat().st_mode):
+            raise CloseTransactionError(
+                f"transaction lock Map is not a directory: {map_dir}"
+            )
+        transactions.mkdir(mode=0o700, exist_ok=True)
+        if not stat.S_ISDIR(transactions.lstat().st_mode):
+            raise CloseTransactionError(
+                f"transaction lock directory is not regular: {transactions}"
+            )
+    except OSError as exc:
+        raise CloseTransactionError(f"cannot prepare transaction lock: {exc}") from exc
+    _assert_no_symlink_components(transactions)
+    _assert_contained(map_dir, lock_path)
+    return transactions, lock_path
+
+
+def _open_transaction_lock(map_dir: Path) -> int:
+    """Return one verified lock descriptor without following parent aliases."""
+    map_dir = Path(map_dir)
+    if (
+        fcntl is None
+        or not hasattr(fcntl, "flock")
+        or not hasattr(os, "O_NOFOLLOW")
+        or not hasattr(os, "O_DIRECTORY")
+    ):
+        raise CloseTransactionError(
+            "transaction lock assumptions are unsupported on this host"
+        )
+    transactions, _ = _prepare_lock_directory(map_dir)
+    directory_fd = -1
+    try:
+        directory_fd = os.open(
+            transactions, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        )
+        opened_directory = os.fstat(directory_fd)
+        linked_directory = transactions.lstat()
+        if (opened_directory.st_dev, opened_directory.st_ino) != (
+            linked_directory.st_dev,
+            linked_directory.st_ino,
+        ):
+            raise CloseTransactionError("transaction lock directory changed")
+        _before_lock_file_open()
+        linked_directory = transactions.lstat()
+        if (opened_directory.st_dev, opened_directory.st_ino) != (
+            linked_directory.st_dev,
+            linked_directory.st_ino,
+        ):
+            raise CloseTransactionError("transaction lock directory changed")
+        descriptor = _open_lock_file(directory_fd)
+    except OSError as exc:
+        raise CloseTransactionError(f"cannot open transaction lock: {exc}") from exc
+    finally:
+        if directory_fd >= 0:
+            os.close(directory_fd)
+    return descriptor
+
+
+@contextmanager
+def _transaction_lock(map_dir: Path):
+    """Serialize one Map's writers through a descriptor-verified local lock."""
+    lock_path = Path(map_dir) / ".transactions" / ".map.lock"
+    descriptor = _open_transaction_lock(map_dir)
+    try:
+        opened = os.fstat(descriptor)
+        linked = lock_path.lstat()
+        if (
+            not stat.S_ISREG(opened.st_mode)
+            or opened.st_nlink != 1
+            or (opened.st_dev, opened.st_ino) != (linked.st_dev, linked.st_ino)
+        ):
+            raise CloseTransactionError(
+                f"transaction lock is not one contained regular file: {lock_path}"
+            )
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX)
+        except OSError as exc:
+            raise CloseTransactionError(f"cannot acquire transaction lock: {exc}") from exc
+        try:
+            yield
+        finally:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+    except OSError as exc:
+        raise CloseTransactionError(f"cannot verify transaction lock: {exc}") from exc
+    finally:
+        os.close(descriptor)
+
+
+@contextmanager
+def serialize_map_mutation(map_dir: Path):
+    """Expose the shared writer boundary to map_store topology mutations."""
+    with _transaction_lock(map_dir):
+        yield
 
 
 def _assert_supported_filesystem(directory: Path) -> None:
@@ -239,7 +379,28 @@ def claim_ticket(
     operation_id: str,
     expected_revision: StoreRevision,
 ) -> MutationResult:
-    """Claim one unblocked frontier ticket against a full store revision."""
+    """Claim one unblocked frontier ticket under the Map writer lock."""
+    with _transaction_lock(map_dir):
+        return _claim_ticket_locked(
+            map_dir,
+            ticket_slug,
+            owner=owner,
+            claimed_on=claimed_on,
+            operation_id=operation_id,
+            expected_revision=expected_revision,
+        )
+
+
+def _claim_ticket_locked(
+    map_dir: Path,
+    ticket_slug: str,
+    *,
+    owner: str,
+    claimed_on: str,
+    operation_id: str,
+    expected_revision: StoreRevision,
+) -> MutationResult:
+    """Claim after the caller acquires the Map writer lock."""
     map_dir = Path(map_dir)
     if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", ticket_slug):
         raise CloseTransactionError("ticket_slug is not a safe slug")
@@ -263,6 +424,7 @@ def claim_ticket(
         ticket = map_store.read_ticket(ticket_path)
         desired = f"{owner.strip()}, {claimed_on}"
         if ticket.frontmatter.status == "claimed" and ticket.frontmatter.claim == desired:
+            _require_valid_store(map_dir)
             return MutationResult(False, True)
     _require_revision(map_dir, expected_revision)
     try:
@@ -293,10 +455,12 @@ def claim_ticket(
         _require_revision(map_dir, expected_revision)
     else:
         _prepare_mutation(map_dir, operation_id, intent, expected_revision)
+        _require_revision(map_dir, expected_revision)
     try:
         map_store._atomic_write(ticket_path, updated, expected=original)
     except (OSError, map_store.SchemaViolation) as exc:
         raise CloseTransactionError(str(exc)) from exc
+    _require_valid_store(map_dir)
     return MutationResult(True, False)
 
 
@@ -308,7 +472,26 @@ def update_blockers(
     operation_id: str,
     expected_revision: StoreRevision,
 ) -> MutationResult:
-    """Replace blocker edges only after validating the current whole graph."""
+    """Replace blocker edges under the Map writer lock."""
+    with _transaction_lock(map_dir):
+        return _update_blockers_locked(
+            map_dir,
+            ticket_slug,
+            blockers,
+            operation_id=operation_id,
+            expected_revision=expected_revision,
+        )
+
+
+def _update_blockers_locked(
+    map_dir: Path,
+    ticket_slug: str,
+    blockers: list[str],
+    *,
+    operation_id: str,
+    expected_revision: StoreRevision,
+) -> MutationResult:
+    """Replace blocker edges after the caller acquires the writer lock."""
     map_dir = Path(map_dir)
     intent = {
         "version": 1,
@@ -323,8 +506,9 @@ def update_blockers(
     if operation_prepared:
         current = map_store.read_ticket(ticket_path)
         if current.frontmatter.blocked_by == blockers:
+            _require_valid_store(map_dir)
             return MutationResult(False, True)
-        _require_revision(map_dir, expected_revision)
+    _require_revision(map_dir, expected_revision)
     try:
         map_store.require_ticket_mutable(map_dir, ticket_slug, "edit")
     except (map_store.MapStoreError, map_store.SchemaViolation) as exc:
@@ -357,10 +541,12 @@ def update_blockers(
         _require_revision(map_dir, expected_revision)
     else:
         _prepare_mutation(map_dir, operation_id, intent, expected_revision)
+        _require_revision(map_dir, expected_revision)
     try:
         map_store._atomic_write(ticket_path, updated, expected=original)
     except (OSError, map_store.SchemaViolation) as exc:
         raise CloseTransactionError(str(exc)) from exc
+    _require_valid_store(map_dir)
     return MutationResult(True, False)
 
 
@@ -769,6 +955,7 @@ def _validate_retirement_snapshot(map_dir: Path, repo_root: Path) -> None:
         incomplete = [
             path.name
             for path in sorted(transaction_dir.iterdir())
+            if path.name != ".map.lock"
             if not path.is_file() or not _close_journal_is_complete(map_dir, path)
         ]
         if incomplete:
@@ -944,12 +1131,15 @@ def _commit_retirement(
 
 def archive_map_transition(map_dir: Path, *, repo_root: Path) -> None:
     """Archive a clear Map through the same stable-readiness transaction."""
-    readiness = prepare_retirement(map_dir, repo_root)
-    if map_store.read_map(map_dir).frontmatter.state != "clear":
-        raise CloseTransactionError("archive transition requires a clear schema-v3 Map")
-    _commit_retirement(
-        readiness, ratified_by=None, ratified_on=None, reason=None
-    )
+    with _transaction_lock(map_dir):
+        readiness = prepare_retirement(map_dir, repo_root)
+        if map_store.read_map(map_dir).frontmatter.state != "clear":
+            raise CloseTransactionError(
+                "archive transition requires a clear schema-v3 Map"
+            )
+        _commit_retirement(
+            readiness, ratified_by=None, ratified_on=None, reason=None
+        )
 
 
 def retire_map(
@@ -961,13 +1151,14 @@ def retire_map(
     repo_root: Path,
 ) -> None:
     """Retire one Map only if its complete validated read set stays stable."""
-    readiness = prepare_retirement(map_dir, repo_root)
-    _commit_retirement(
-        readiness,
-        ratified_by=ratified_by,
-        ratified_on=ratified_on,
-        reason=reason,
-    )
+    with _transaction_lock(map_dir):
+        readiness = prepare_retirement(map_dir, repo_root)
+        _commit_retirement(
+            readiness,
+            ratified_by=ratified_by,
+            ratified_on=ratified_on,
+            reason=reason,
+        )
 
 
 def close_and_rechart(
@@ -978,7 +1169,26 @@ def close_and_rechart(
     resolution: str,
     unknowns: list[UnknownRoute],
 ) -> CloseResult:
-    """Close one claimed v3 ticket after making all chart effects recoverable."""
+    """Close and re-chart under the Map writer lock."""
+    with _transaction_lock(map_dir):
+        return _close_and_rechart_locked(
+            map_dir,
+            ticket_slug,
+            gist=gist,
+            resolution=resolution,
+            unknowns=unknowns,
+        )
+
+
+def _close_and_rechart_locked(
+    map_dir: Path,
+    ticket_slug: str,
+    *,
+    gist: str,
+    resolution: str,
+    unknowns: list[UnknownRoute],
+) -> CloseResult:
+    """Close after the caller acquires the Map writer lock."""
     map_dir = Path(map_dir)
     if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", ticket_slug):
         raise CloseTransactionError("ticket_slug is not a safe slug")
@@ -986,6 +1196,7 @@ def close_and_rechart(
         raise CloseTransactionError("gist and resolution must not be empty")
     _validate_routes(unknowns)
     ticket_path, journal_path = _validate_paths(map_dir, ticket_slug, unknowns)
+    observed = capture_revision(map_dir)
     map_doc = map_store.read_map(map_dir)
     if map_doc.frontmatter.schema_version != 3 or map_doc.frontmatter.state != "active":
         raise CloseTransactionError("close-and-rechart requires an active schema-v3 map")
@@ -993,6 +1204,9 @@ def close_and_rechart(
     ticket_original = ticket_path.read_bytes()
     terminal: str | None = None
     if ticket.frontmatter.status == "claimed":
+        code, message = map_store.validate(map_dir)
+        if code != 0:
+            raise CloseTransactionError(f"cannot close from broken Map: {message}")
         _validate_authoritative_ticket(ticket, closed=False)
         terminal = _terminal_text(ticket_path.read_text(encoding="utf-8"), resolution)
         _validate_terminal_candidate(ticket_path, terminal)
@@ -1009,15 +1223,13 @@ def close_and_rechart(
     else:
         raise CloseTransactionError("source ticket must be claimed before close")
 
-    new_operation = not journal_path.exists()
-    observed = capture_revision(map_dir) if new_operation else None
     _assert_supported_filesystem(map_dir)
-    if observed is not None:
-        _require_revision(map_dir, observed)
+    _require_revision(map_dir, observed)
 
     _, prepared = _load_or_prepare_intent(
         map_dir, ticket_slug, gist.strip(), resolution.strip(), unknowns, map_doc
     )
+    _require_revision(map_dir, observed)
     routes = prepared["routes"]
     assert isinstance(routes, list)
     _apply_map_effects(map_dir, ticket_slug, gist.strip(), routes)
@@ -1026,8 +1238,10 @@ def close_and_rechart(
         expected_resolution = resolution.strip()
         if (ticket.resolution or "").strip() != expected_resolution:
             raise CloseTransactionError("closed source ticket conflicts with retry")
+        _require_valid_store(map_dir)
         return CloseResult(len(unknowns), _assess_clear(map_dir))
     assert terminal is not None
     _before_terminalize()
     _atomic_write(ticket_path, terminal, expected=ticket_original)
+    _require_valid_store(map_dir)
     return CloseResult(len(unknowns), _assess_clear(map_dir))
