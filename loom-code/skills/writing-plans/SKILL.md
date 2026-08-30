@@ -106,6 +106,27 @@ Dispatch [`references/plan-document-reviewer-prompt.md`](references/plan-documen
 - **every brief item covered** — every Smallest End State / Decision item maps to ≥1 task, no orphan tasks;
 - **DAG, no cycles** — `Dependencies` form an acyclic graph with critical-path depth ≤5.
 
+**Review grouping is a second pass.** First author every atomic Task and the
+complete acyclic Task DAG, including each Task's requirement traceability,
+RED/GREEN acceptance, module, files, dependencies, and review lane. Only after
+that graph is complete, derive review dispositions without merging or enlarging
+Tasks. Every Task declares exactly one `Review disposition`: `individual` or
+`batch(<id>)`.
+
+A Review Batch is eligible only when all members share the same review lane, one
+end-to-end verdict question, and the same closable review window. A user
+decision, external wait, deferred test, independent release point, or failure
+boundary between members makes the group ineligible. When any eligibility fact
+cannot be proved, fail closed by assigning the affected Tasks to individual
+review. Batch metadata is a derived review checkpoint only: add no Batch queue,
+Batch ledger, Batch lifecycle, score, configured size limit, or parser/executor.
+
+The unconditional Review-Batch gate below is the single execution point; use
+[`references/plan-format.md`](references/plan-format.md) as the grammar SSOT.
+`Aggregate verification` remains inert descriptive plan data: writing-plans
+does not execute it, and neither does the schema oracle. SDD later resolves a
+runnable command from trusted Task declarations.
+
 It owns parallelism checks.
 
 **Architecture complexity:** every non-mechanical plan reads
@@ -128,6 +149,12 @@ plan may instead declare that section's reasoned exemption.
 **Field-microstructure gate (unconditional):** brief mode fires at intake, before drafting Task 1: run `python3 loom-code/scripts/check_field_microstructure.py --brief <brief-path>`; a non-zero exit blocks drafting. Before review run `python3 loom-code/scripts/check_field_microstructure.py <plan-path>`; a non-zero exit blocks the plan-document-reviewer dispatch. Exit 1: fix the flagged field or paragraph, re-run. Exit 2: structurally empty (no `## Task` headings, or no `## ` sections) — supply the missing structure, not a field fix.
 
 **Seam-coverage gate (unconditional):** before review run `python3 loom-code/scripts/check_seam_coverage.py <plan-path>`; non-zero blocks. Fix and rerun; the script owns seam-edge coverage.
+
+**Review-Batch gate (unconditional):** after every Task and dependency edge is
+authored and the second-pass dispositions are derived, run
+`python3 loom-code/scripts/check_review_batches.py <plan-path>` before review.
+This mandatory schema oracle must exit 0; otherwise assign uncertain groups to
+individual review or repair the closed Batch metadata, then rerun it.
 
 If reviewer returns `NEEDS_REVISION`, writing-plans **fixes the plan** and re-runs the reviewer. Before that re-dispatch, re-run the **Pre-patch before dispatch** self-screen on the revision delta itself — every line the fix added or changed — because three consecutive arcs' round-2 findings were defects the round-2 revision itself introduced. Up to 2 rounds; if still NEEDS_REVISION after round 2, escalate to user (likely the brief itself needs revisiting).
 
@@ -218,11 +245,26 @@ N/A — no unresolved question: <one-line reason>
 - Independent: <true | false>  # opt-in marker for dispatching-parallel-agents
 - Brief item covered: <quote or close paraphrase from brief's Smallest End State /
     Decision section — required; plan-document-reviewer Check 3 blocks on this field>
+- Review disposition: <individual | batch(<id>) — authored only after the complete
+    Task DAG exists; exactly one per Task>
 - Status: pending   ← default-on ledger field; SDD maintains it —
     semantics in `references/plan-format.md` §Progress ledger
 - Gloss: <one line, user's conversation language — effect + goal relation>
 
 ## Task 2 — ...
+
+## Review Batches
+
+<!-- This section is the second pass over the completed Task DAG. Tasks with
+     individual disposition are intentionally absent. Zero eligible Batches is
+     valid when every Task explicitly declares individual review. -->
+
+### Review Batch: <id>
+- **Members**: Task 1, Task 2
+- **Verdict question**: <one shared end-to-end question?>
+- **Review lane**: <full | prose>
+- **Aggregate verification**: <inert description of the reproducible Batch check>
+- **Boundary**: capability: <name>; exclusions: none; consumable: yes
 ```
 
 Worked examples — including an `Independent: true` pair (disjoint files, no semantic dependency) and a wide-but-shallow 8-task depth-2 plan — live in [`references/plan-format.md`](references/plan-format.md) §Worked example.

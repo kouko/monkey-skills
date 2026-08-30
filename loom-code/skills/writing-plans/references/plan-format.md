@@ -12,6 +12,8 @@ SDD dispatches three subagents per task (implementer + spec-reviewer + code-qual
 - **Acceptance** — for tdd-iron-law's RED-GREEN-REFACTOR cycle (failing test name + GREEN condition).
 - **Dependencies** — for sequencing / parallelization.
 - **Seam** — the inter-task payload contract SDD carries into dispatch packets (see §Seam).
+- **Review disposition** — the second-pass choice between individual review and
+  one derived Review Batch, after the complete Task DAG exists.
 
 Free-form plans force SDD to re-parse; this schema makes the parse trivial.
 
@@ -149,6 +151,9 @@ the trigger list; Check 16 judges each task against the `Review-weight` test.
     names rather than copying their prose. One no-requirement value is legal: `none — <reason>`.
     See §`Brief item covered` below for kind (c), that value, and the tie-break rule.>
 - **Seam**: <v0.100.0+ — required when this task's `Dependencies` is not "none"; one bullet per incoming dependency edge. See §Seam below. Omit field entirely when `Dependencies` is "none".>
+- **Review disposition**: <exactly one of `individual` or `batch(<id>)`;
+    authored in the second pass after every atomic Task and dependency edge is
+    complete. A batched Task names exactly one declared Review Batch.>
 - **Status**: <runtime ledger field, DEFAULT-ON — see §Progress ledger. One of:
     "pending" | "claimed(@<agent>)" | "done(<sha>)" | "blocked". writing-plans emits
     "pending" at plan time; an old plan without Status fields behaves exactly as
@@ -344,6 +349,50 @@ Each bullet takes one of exactly two forms:
 Why: a seam owned by no task is how two individually green tasks integrate red — each side's `Acceptance` passes against its own assumption of the shape crossing the edge, and nothing in either task's RED/GREEN pair ever runs the other side's code against it.
 
 A payload-bearing seam obligates two things on top of the bullet itself: (a) one executed cross-seam probe, named in the consumer task's `Acceptance` — the `probe:` value appears verbatim inside that task's `Acceptance` block (substring containment, the checker's rule) — not a same-task unit test that only exercises the consumer's own assumption of the shape; (b) both tasks import one shared parser or schema defined by the `owner` task — never two hand-rolled readers of the same bytes, since two independent readers can each pass while agreeing on nothing. Enforcement splits: `check_seam_coverage.py` — run as writing-plans' unconditional Seam-coverage gate before the plan-document-reviewer dispatch — mechanically checks field presence, per-edge coverage by `from Task <N>` identity, and the `probe:`↔`Acceptance` containment; Check 20 re-checks the same ground at plan review; whether the named probe is actually adequate — whether it would catch a real shape mismatch — stays the reviewers' judgment, not something either check can decide.
+
+### Review Batches — second-pass review checkpoints
+
+Author the complete set of atomic Tasks and their acyclic dependency graph
+first. Only then derive `Review disposition` values and append one
+`## Review Batches` section after the last Task. This second pass never merges,
+enlarges, renumbers, or removes a Task; each Task retains its own requirement
+traceability, RED/GREEN acceptance, module, files, dependencies, and
+`Review-weight` lane.
+
+Every executable Task declares exactly one disposition. An eligible Batch has
+this closed six-field shape; its heading owns the Batch ID:
+
+```markdown
+## Review Batches
+
+### Review Batch: <id>
+- **Members**: Task 1, Task 2
+- **Verdict question**: <one shared end-to-end question?>
+- **Review lane**: <full | prose>
+- **Aggregate verification**: <inert description of the reproducible Batch check>
+- **Boundary**: capability: <name>; exclusions: none; consumable: yes
+```
+
+Tasks declaring `individual` do not appear in a Batch. A plan with no eligible
+Batch still carries the `## Review Batches` heading and explicitly assigns every
+Task to individual review.
+
+Grouping is eligible only when all members have the same review lane, can be
+judged by one end-to-end verdict question, and share one closable review window.
+Any user decision, external wait, deferred test, independent release point, or
+failure boundary between members disqualifies the group. Missing or ambiguous
+proof fails closed to individual review; never infer eligibility from absent
+metadata.
+
+The Batch is derived metadata, not a work object: there is no Batch queue,
+Batch ledger, Batch lifecycle, claim, score, configurable size limit, or
+independent transition. `Aggregate verification` is inert descriptive plan
+data. writing-plans and plan validation do not parse or execute it; SDD later
+resolves the executable command from trusted Task declarations.
+
+Run `python3 loom-code/scripts/check_review_batches.py <plan-path>` after the
+second pass. It is the mandatory schema oracle for DAG completeness, exact
+dispositions, membership, lane agreement, and the six Batch fields.
 
 ### Stated facts — the pointer-not-copy rule (v0.39.0+)
 
