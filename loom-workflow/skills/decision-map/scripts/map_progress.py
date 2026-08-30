@@ -123,25 +123,18 @@ def _sole_plan(root: Path, brief: str) -> tuple[str, str] | None:
             text = candidate.read_text(encoding="utf-8")
         except OSError as exc:
             raise ProgressUnavailable(f"cannot read Plan {candidate}: {exc}") from exc
-        # A Plan is allowed exactly one source declaration, regardless of
-        # which Brief the caller is resolving.  Otherwise a Plan mentioning
-        # the requested Brief plus an escaped/second Brief could be accepted
-        # by the matching-only path below.
         source_lines = [line for line in text.splitlines() if line.startswith("**Source brief")]
         source_matches = [match for match in _SOURCE_BRIEF.finditer(text)]
+        matching = [match for match in source_matches if match.group("brief") == brief]
+        if not matching:
+            # Legacy plans with no Source brief (and plans bound to a
+            # different Brief) are not candidates for this delivery arc.
+            continue
         if len(source_lines) != 1 or len(source_matches) != 1:
-            # This also catches malformed declarations (which do not match
-            # _SOURCE_BRIEF) instead of silently treating them as unbound.
             raise ProgressError(
                 f"Plan {_relative(root, candidate, 'Plan')} must contain exactly one '**Source brief**:' declaration"
             )
-        source_brief = source_matches[0].group("brief")
-        try:
-            delivery_binding._canonical_relative(source_brief, "Plan Source brief")
-        except delivery_binding._BindingFailure as exc:
-            raise ProgressError(str(exc)) from exc
-        if source_brief == brief:
-            matches.append((_relative(root, candidate, "Plan"), text))
+        matches.append((_relative(root, candidate, "Plan"), text))
     if len(matches) > 1:
         raise ProgressError(
             f"delivery Brief {brief} has multiple Plans: "

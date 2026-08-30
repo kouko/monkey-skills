@@ -257,6 +257,30 @@ def test_progress_refuses_duplicate_source_brief_without_writes(tmp_path: Path) 
     assert {path: path.read_bytes() for path in sources} == before
 
 
+def test_progress_ignores_unrelated_legacy_plan_without_source_brief(tmp_path: Path) -> None:
+    # @req: REQ-81
+    ticket, brief, plan = _arc(tmp_path)
+    legacy = tmp_path / "docs/loom/plans/legacy.md"
+    _write(
+        legacy,
+        """# Plan: legacy
+
+Goal: Preserve an older plan.
+Stage: finishing
+
+## Task 1 — preserve it
+
+- Status: done(abc1234)
+""",
+    )
+    sources = (ticket, brief, plan, legacy)
+    before = {path: path.read_bytes() for path in sources}
+    result = subprocess.run([sys.executable, str(SCRIPT), str(ticket), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert "plan: docs/loom/plans/deliver.md" in result.stdout
+    assert {path: path.read_bytes() for path in sources} == before
+
+
 def test_progress_refuses_symlinked_plans_directory_without_writes(tmp_path: Path) -> None:
     # @req: REQ-81
     ticket, brief, plan = _arc(tmp_path, with_plan=False)
