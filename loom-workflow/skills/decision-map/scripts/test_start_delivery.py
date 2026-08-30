@@ -1,7 +1,8 @@
-"""Tests for entering a claimed delivery arc through its canonical Brief."""
+"""Tests for a canonical delivery Brief; binding contract: delivery_binding.py::validate."""
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path, PurePosixPath
 
@@ -283,3 +284,83 @@ def test_start_delivery_parent_swap_never_writes_outside_repo(
 
     assert code != 0
     assert not (outside / brief.name).exists()
+
+
+def test_start_delivery_refuses_concurrent_ticket_or_map_change(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-80
+    ticket, brief = _ticket(tmp_path)
+    original_ticket = ticket.read_bytes()
+
+    def change_ticket() -> None:
+        _write(ticket, original_ticket.decode("utf-8") + "concurrent ticket change\n")
+
+    monkeypatch.setattr(start_delivery, "_before_first_write", change_ticket)
+    code, _ = start_delivery.start_delivery(
+        ticket, brief.relative_to(tmp_path).as_posix(), repo_root=tmp_path
+    )
+    assert code != 0
+    assert ticket.read_bytes() != original_ticket
+    assert not brief.exists()
+
+    ticket, brief = _ticket(tmp_path / "map")
+    map_path = ticket.parent.parent / "MAP.md"
+    original_map = map_path.read_bytes()
+
+    def change_map() -> None:
+        _write(map_path, original_map.decode("utf-8") + "concurrent map change\n")
+
+    monkeypatch.setattr(start_delivery, "_before_first_write", lambda: None)
+    monkeypatch.setattr(start_delivery, "_before_ticket_publish", change_map)
+    code, _ = start_delivery.start_delivery(
+        ticket, brief.relative_to(tmp_path / "map").as_posix(), repo_root=tmp_path / "map"
+    )
+    assert code != 0
+    assert map_path.read_bytes() != original_map
+    assert not brief.exists()
+
+
+def test_start_delivery_never_replaces_a_concurrently_created_brief(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-80
+    ticket, brief = _ticket(tmp_path)
+    concurrent = "# Concurrent Brief\n"
+
+    def create_competitor(parent_fd: int, leaf: str) -> None:
+        fd = os.open(leaf, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600, dir_fd=parent_fd)
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(concurrent)
+
+    monkeypatch.setattr(start_delivery, "_before_brief_write", create_competitor)
+    code, _ = start_delivery.start_delivery(
+        ticket, brief.relative_to(tmp_path).as_posix(), repo_root=tmp_path
+    )
+
+    assert code != 0
+    assert brief.read_text(encoding="utf-8") == concurrent
+    assert "brief:" not in ticket.read_text(encoding="utf-8")
+
+
+def test_start_delivery_does_not_remove_a_replaced_brief_during_rollback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-80
+    ticket, brief = _ticket(tmp_path)
+    concurrent = "# Concurrent replacement\n"
+    map_path = ticket.parent.parent / "MAP.md"
+
+    def replace_brief_then_change_map() -> None:
+        brief.unlink()
+        _write(brief, concurrent)
+        _write(map_path, map_path.read_text(encoding="utf-8") + "changed\n")
+
+    monkeypatch.setattr(start_delivery, "_before_ticket_publish", replace_brief_then_change_map)
+    code, message = start_delivery.start_delivery(
+        ticket, brief.relative_to(tmp_path).as_posix(), repo_root=tmp_path
+    )
+
+    assert code == 1
+    assert "rollback" in message
+    assert brief.read_text(encoding="utf-8") == concurrent

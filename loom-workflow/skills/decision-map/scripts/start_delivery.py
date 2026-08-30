@@ -128,8 +128,37 @@ def _replace_at(parent_fd: int, leaf: str, text: str) -> None:
         raise
 
 
+def _publish_new_at(parent_fd: int, leaf: str, text: str) -> tuple[int, int]:
+    temporary = f".{leaf}.{secrets.token_hex(12)}"
+    _replace_at(parent_fd, temporary, text)
+    try:
+        os.link(temporary, leaf, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+        owned = os.stat(leaf, dir_fd=parent_fd, follow_symlinks=False)
+        os.fsync(parent_fd)
+        return owned.st_dev, owned.st_ino
+    finally:
+        try:
+            os.unlink(temporary, dir_fd=parent_fd)
+        except FileNotFoundError:
+            pass
+
+
+def _same_snapshot(root: Path, relative: PurePosixPath, expected: str) -> None:
+    actual = _read_file(root, relative)
+    if actual != expected:
+        raise StartDeliveryError(f"concurrent change detected for {relative.as_posix()}")
+
+
 def _before_brief_write(_parent_fd: int, _leaf: str) -> None:
     """Test seam invoked only after the Brief parent descriptor is held."""
+
+
+def _before_first_write() -> None:
+    """Test seam after the optimistic read-set and before Brief publication."""
+
+
+def _before_ticket_publish() -> None:
+    """Test seam after Brief publication and before Ticket publication."""
 
 
 def _brief_text(ticket: PurePosixPath, promised_slice: str) -> str:
@@ -150,9 +179,7 @@ def _ticket_with_brief(ticket_text: str, brief: PurePosixPath) -> str:
     raise StartDeliveryError("ticket has invalid frontmatter")
 
 
-def _schema_version(root: Path, ticket: PurePosixPath) -> int:
-    text = _read_file(root, ticket.parent.parent / "MAP.md")
-    assert text is not None
+def _schema_version(text: str) -> int:
     fields, _ = map_store.parse_frontmatter(text)
     try:
         return int(fields["schema_version"])
@@ -164,8 +191,10 @@ def _schema_version(root: Path, ticket: PurePosixPath) -> int:
 class _Prepared:
     root: Path
     ticket: PurePosixPath
+    map_path: PurePosixPath
     brief: PurePosixPath
     ticket_text: str
+    map_text: str
     brief_text: str
     brief_exists: bool
     already_bound: bool
@@ -176,11 +205,14 @@ def _prepare(ticket_path: Path, brief_path: str, repo_root: Path | None) -> _Pre
     if not root.is_dir():
         raise _OperationalError(f"repository root is not a directory: {root}")
     ticket = _ticket_relative(root, Path(ticket_path))
+    map_path = ticket.parent.parent / "MAP.md"
     brief = _canonical(brief_path, "Brief path")
     ticket_text = _read_file(root, ticket)
     assert ticket_text is not None
     fields, body = map_store.parse_frontmatter(ticket_text)
-    if _schema_version(root, ticket) != 3:
+    map_text = _read_file(root, map_path)
+    assert map_text is not None
+    if _schema_version(map_text) != 3:
         raise StartDeliveryError("Start delivery requires a schema-v3 ticket")
     if fields.get("type") != "delivery" or fields.get("status") != "claimed":
         raise StartDeliveryError("Start delivery requires a claimed delivery ticket")
@@ -198,11 +230,31 @@ def _prepare(ticket_path: Path, brief_path: str, repo_root: Path | None) -> _Pre
             raise _OperationalError(f"ticket binding could not be read: {message}")
         if code != 0:
             raise StartDeliveryError(f"ticket has an inconsistent Brief binding: {message}")
-        return _Prepared(root, ticket, brief, ticket_text, expected, True, True)
+        return _Prepared(root, ticket, map_path, brief, ticket_text, map_text, expected, True, True)
     existing = _read_file(root, brief, missing_ok=True)
     if existing is not None and existing != expected:
         raise StartDeliveryError(f"requested Brief path already exists: {brief.as_posix()}")
-    return _Prepared(root, ticket, brief, ticket_text, expected, existing is not None, False)
+    return _Prepared(root, ticket, map_path, brief, ticket_text, map_text, expected, existing is not None, False)
+
+
+def _rollback(prepared: _Prepared, ticket_parent: int, ticket_replaced: bool,
+              brief_parent: int, owned_brief: tuple[int, int] | None) -> list[OSError]:
+    errors = []
+    if ticket_replaced:
+        try:
+            _replace_at(ticket_parent, prepared.ticket.name, prepared.ticket_text)
+        except OSError as exc:
+            errors.append(exc)
+    if owned_brief is not None:
+        try:
+            current = os.stat(prepared.brief.name, dir_fd=brief_parent, follow_symlinks=False)
+            if (current.st_dev, current.st_ino) != owned_brief:
+                raise OSError("rollback conflict: Brief was replaced concurrently")
+            os.unlink(prepared.brief.name, dir_fd=brief_parent)
+            os.fsync(brief_parent)
+        except OSError as exc:
+            errors.append(exc)
+    return errors
 
 
 def _apply(prepared: _Prepared) -> None:
@@ -210,13 +262,19 @@ def _apply(prepared: _Prepared) -> None:
         return
     root_fd = _open_root(prepared.root)
     brief_parent = ticket_parent = -1
-    brief_created = ticket_replaced = False
+    ticket_replaced = False
+    owned_brief: tuple[int, int] | None = None
     try:
+        _before_first_write()
+        _same_snapshot(prepared.root, prepared.ticket, prepared.ticket_text)
+        _same_snapshot(prepared.root, prepared.map_path, prepared.map_text)
         if not prepared.brief_exists:
             brief_parent, brief_leaf = _open_parent(root_fd, prepared.brief, True)
             _before_brief_write(brief_parent, brief_leaf)
-            _replace_at(brief_parent, brief_leaf, prepared.brief_text)
-            brief_created = True
+            owned_brief = _publish_new_at(brief_parent, brief_leaf, prepared.brief_text)
+        _before_ticket_publish()
+        _same_snapshot(prepared.root, prepared.ticket, prepared.ticket_text)
+        _same_snapshot(prepared.root, prepared.map_path, prepared.map_text)
         ticket_parent, ticket_leaf = _open_parent(root_fd, prepared.ticket, False)
         _replace_at(ticket_parent, ticket_leaf, _ticket_with_brief(prepared.ticket_text, prepared.brief))
         ticket_replaced = True
@@ -224,18 +282,7 @@ def _apply(prepared: _Prepared) -> None:
         if code != 0:
             raise StartDeliveryError(f"created binding did not validate: {message}")
     except (OSError, StartDeliveryError) as exc:
-        rollback_errors = []
-        if ticket_replaced:
-            try:
-                _replace_at(ticket_parent, prepared.ticket.name, prepared.ticket_text)
-            except OSError as rollback_exc:
-                rollback_errors.append(rollback_exc)
-        if brief_created:
-            try:
-                os.unlink(prepared.brief.name, dir_fd=brief_parent)
-                os.fsync(brief_parent)
-            except OSError as rollback_exc:
-                rollback_errors.append(rollback_exc)
+        rollback_errors = _rollback(prepared, ticket_parent, ticket_replaced, brief_parent, owned_brief)
         if rollback_errors:
             raise _OperationalError(f"Start delivery failed and rollback failed: {rollback_errors[0]}") from exc
         raise _OperationalError(f"Start delivery failed: {exc}") from exc
