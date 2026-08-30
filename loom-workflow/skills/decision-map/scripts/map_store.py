@@ -600,8 +600,71 @@ def _atomic_write(
             ) from exc
         displaced = temporary.read_bytes()
         if displaced == expected:
-            temporary.unlink()
-            _fsync_directory(path.parent)
+            try:
+                _fsync_directory(path.parent)
+            except OSError as durability_error:
+                try:
+                    _exchange_paths(temporary, path)
+                except BaseException as restore_error:
+                    keep_temporary = True
+                    evidence_path: Path | None = None
+                    evidence_error: BaseException | None = None
+                    try:
+                        evidence_path = _record_exchange_recovery(
+                            path,
+                            temporary,
+                            restore_error,
+                            retained_role="expected authority retained after durability failure",
+                        )
+                    except BaseException as exc:
+                        evidence_error = exc
+                    detail = (
+                        f"evidence: {evidence_path}"
+                        if evidence_path is not None
+                        else f"retained temp: {temporary}; recovery evidence unavailable: "
+                        f"{evidence_error}"
+                    )
+                    raise AtomicExchangeBroken(
+                        "BROKEN recovery-required: exchange durability failed and "
+                        "authority could not be restored; "
+                        + detail
+                    ) from restore_error
+                keep_temporary = True
+                restoration_error: BaseException = durability_error
+                try:
+                    _fsync_directory(path.parent)
+                except OSError as exc:
+                    restoration_error = exc
+                evidence_path = None
+                evidence_error = None
+                try:
+                    evidence_path = _record_exchange_recovery(
+                        path,
+                        temporary,
+                        restoration_error,
+                        retained_role="candidate retained after durability failure",
+                    )
+                except BaseException as exc:
+                    evidence_error = exc
+                detail = (
+                    f"evidence: {evidence_path}"
+                    if evidence_path is not None
+                    else f"retained temp: {temporary}; recovery evidence unavailable: "
+                    f"{evidence_error}"
+                )
+                raise AtomicExchangeBroken(
+                    "BROKEN recovery-required: exchange durability failed; "
+                    "expected authority was restored and candidate retained; "
+                    + detail
+                ) from durability_error
+            try:
+                temporary.unlink()
+                _fsync_directory(path.parent)
+            except OSError:
+                # The candidate commit was durably established by the first fsync.
+                # Cleanup failure may retain a duplicate expected version, but must
+                # not turn a committed mutation into an ambiguous failed result.
+                pass
             return
         candidate = text.encode("utf-8")
         _before_atomic_restore(path, temporary)
@@ -616,7 +679,7 @@ def _atomic_write(
                     path,
                     temporary,
                     restore_error,
-                    retained_role="pre-first-exchange concurrent version",
+                    retained_role="concurrent version retained during restore",
                 )
             except BaseException as exc:
                 evidence_error = exc
@@ -668,7 +731,7 @@ def _atomic_write(
                     path,
                     temporary,
                     interleaving,
-                    retained_role="pre-first-exchange concurrent version",
+                    retained_role="concurrent version retained during restore",
                 )
             except BaseException as exc:
                 evidence_error = exc

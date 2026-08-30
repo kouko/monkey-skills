@@ -838,7 +838,7 @@ def test_atomic_exchange_restore_preserves_newest_concurrent_replacement(
     evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
     retained = Path(evidence["retained_path"])
     assert retained.read_bytes() == b"concurrent-B\n"
-    assert evidence["retained_role"] == "pre-first-exchange concurrent version"
+    assert evidence["retained_role"] == "concurrent version retained during restore"
 
 
 def test_atomic_exchange_third_swap_failure_retains_newest_recovery_bytes(
@@ -888,6 +888,49 @@ def test_atomic_exchange_third_swap_failure_retains_newest_recovery_bytes(
     retained = Path(evidence["retained_path"])
     assert retained.read_bytes() == b"newest-C\n"
     assert evidence["retained_role"] == "newest concurrent version; restore incomplete"
+
+
+def test_atomic_exchange_fsync_failure_restores_authority_with_truthful_evidence(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # @req: REQ-97
+    # @req: REQ-98
+    target = tmp_path / "ticket.md"
+    target.write_bytes(b"expected-authority\n")
+    real_fsync_directory = map_store._fsync_directory
+    fsync_calls = 0
+
+    def fail_first_directory_fsync(directory: Path) -> None:
+        nonlocal fsync_calls
+        fsync_calls += 1
+        if fsync_calls == 1:
+            raise OSError("simulated exchange durability failure")
+        real_fsync_directory(directory)
+
+    monkeypatch.setattr(
+        map_store, "_fsync_directory", fail_first_directory_fsync
+    )
+    try:
+        map_store._atomic_write(
+            target,
+            "candidate-version\n",
+            expected=b"expected-authority\n",
+        )
+    except map_store.AtomicExchangeBroken as exc:
+        assert "BROKEN" in str(exc)
+        assert "durability" in str(exc)
+    except OSError as exc:
+        raise AssertionError(f"raw OSError escaped: {exc}") from exc
+    else:
+        raise AssertionError("failed exchange durability was reported as success")
+
+    assert target.read_bytes() == b"expected-authority\n"
+    evidence = json.loads(
+        (tmp_path / ".ticket.md.cas-recovery.json").read_text(encoding="utf-8")
+    )
+    retained = Path(evidence["retained_path"])
+    assert retained.read_bytes() == b"candidate-version\n"
+    assert evidence["retained_role"] == "candidate retained after durability failure"
 
 
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
