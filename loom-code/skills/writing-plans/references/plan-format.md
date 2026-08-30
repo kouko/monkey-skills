@@ -258,7 +258,7 @@ Vocabulary (exactly these five):
 |---|---|---|
 | `pending` | not started (omission = old-plan opt-in only; new plans write it) | — |
 | `claimed(@<agent>)` | an agent is working it; `<agent>` is the worktree branch name (unique per agent) | the implementer is dispatched |
-| `implemented(<sha>)` | Task-local implementation and mechanical proof passed; `<sha>` is the task's commit, but its required review checkpoint has not finalized | the Task is parked for Batch aggregate review, or before its individual full review |
+| `implemented(<sha>)` | A Batch member's Task-local implementation and mechanical proof passed; `<sha>` is the task's commit, but aggregate review has not finalized | the validated Batch member is parked for aggregate review |
 | `done(<sha>)` | resolved + committed; `<sha>` is the task's commit | reviewers PASS and the task is committed |
 | `blocked` | stuck (NEEDS_CONTEXT / BLOCKED / 3-round cap) | the task cannot proceed |
 
