@@ -505,16 +505,47 @@ def _append_section_fields(text: str, section: str, fields: list[str]) -> str:
 
 def require_work_mutable(map_dir: Path, operation: str) -> MapDocument:
     """Guard a work-through mutation against immutable historical Maps."""
-    if operation not in {"add", "claim", "bind", "resolve", "graduate"}:
+    if operation not in {
+        "add", "claim", "bind", "resolve", "graduate", "close", "clear", "withdraw", "edit"
+    }:
         raise SchemaViolation(f"unsupported work mutation: {operation!r}")
     doc = read_map(Path(map_dir))
     if doc.frontmatter.schema_version != 3:
         raise SchemaViolation("historical-state operations require schema_version 3")
+    if doc.frontmatter.state == "charting":
+        raise SchemaViolation(
+            f"cannot {operation} work while Map is charting; ratify and activate "
+            "the Destination first"
+        )
     if doc.frontmatter.state in {"clear", "archived"}:
         raise SchemaViolation(
             f"cannot {operation} work in immutable {doc.frontmatter.state} Map"
         )
     return doc
+
+
+def require_ticket_mutable(
+    map_dir: Path, ticket_slug: str, operation: str
+) -> TicketDocument:
+    """Guard one ticket mutation without changing any persisted bytes."""
+    map_dir = Path(map_dir)
+    if not _SAFE_SLUG.fullmatch(ticket_slug):
+        raise SchemaViolation("ticket slug must use lowercase letters, digits, and hyphens")
+    ticket_path = map_dir / "tickets" / f"{ticket_slug}.md"
+    for path in (map_dir, map_dir / "tickets", ticket_path):
+        _assert_no_symlink_components(path)
+        try:
+            path.resolve(strict=False).relative_to(map_dir.resolve(strict=True))
+        except (OSError, ValueError) as exc:
+            raise SchemaViolation(f"ticket path escapes Map: {path}") from exc
+    ticket = read_ticket(ticket_path)
+    if ticket.frontmatter.status in {"closed", "withdrawn"}:
+        raise SchemaViolation(
+            f"cannot {operation} {ticket.frontmatter.status} ticket; preserve it "
+            "byte-identically and record corrections in new fog or a follow-up ticket"
+        )
+    require_work_mutable(map_dir, operation)
+    return ticket
 
 
 def record_active_regression(
@@ -587,8 +618,13 @@ def retire_active_map(
     if code != 0:
         raise SchemaViolation(f"cannot retire invalid Map: {message}")
     doc = read_map(map_dir)
-    if doc.frontmatter.schema_version != 3 or doc.frontmatter.state != "active":
-        raise SchemaViolation("ratified retirement requires an active schema-v3 Map")
+    if doc.frontmatter.schema_version != 3 or doc.frontmatter.state not in {
+        "charting",
+        "active",
+    }:
+        raise SchemaViolation(
+            "ratified retirement requires a charting or active schema-v3 Map"
+        )
     human_and_date = f"{ratified_by.strip()}, {ratified_on.strip()}"
     if not _DATED_HUMAN.fullmatch(human_and_date):
         raise SchemaViolation("retirement requires a named human and YYYY-MM-DD date")
@@ -598,9 +634,10 @@ def retire_active_map(
     map_md = map_dir / "MAP.md"
     _assert_no_symlink_components(map_md)
     text = map_md.read_text(encoding="utf-8")
-    if text.count("state: active") != 1:
-        raise SchemaViolation("MAP.md must contain exactly one active state field")
-    archived = text.replace("state: active", "state: archived", 1)
+    state_field = f"state: {doc.frontmatter.state}"
+    if text.count(state_field) != 1:
+        raise SchemaViolation("MAP.md must contain exactly one current state field")
+    archived = text.replace(state_field, "state: archived", 1)
     archived = _append_section_fields(
         archived,
         "Notes",
@@ -610,6 +647,40 @@ def retire_active_map(
         ],
     )
     _atomic_write(map_md, archived)
+
+
+def archive_map(map_dir: Path, *, repo_root: Path) -> None:
+    """Archive one clear v3 Map in place after validating reciprocal links."""
+    import delivery_binding
+
+    map_dir = Path(map_dir)
+    repo_root = Path(repo_root)
+    for path in (repo_root, map_dir, map_dir / "MAP.md", map_dir / "tickets"):
+        _assert_no_symlink_components(path)
+        _assert_contained(repo_root, path)
+    code, message = validate(map_dir, repo_root=repo_root)
+    if code != 0:
+        raise SchemaViolation(f"cannot archive invalid Map: {message}")
+    doc = read_map(map_dir)
+    if doc.frontmatter.schema_version != 3 or doc.frontmatter.state != "clear":
+        raise SchemaViolation("archive transition requires a clear schema-v3 Map")
+    for ticket_path in sorted((map_dir / "tickets").glob("*.md")):
+        ticket = read_ticket(ticket_path)
+        if ticket.frontmatter.type != "delivery":
+            continue
+        binding_code, binding_message = delivery_binding.validate(
+            ticket_path, repo_root=repo_root
+        )
+        if binding_code != 0:
+            raise SchemaViolation(
+                f"cannot archive Map with invalid reciprocal Brief link: {binding_message}"
+            )
+
+    map_path = map_dir / "MAP.md"
+    text = map_path.read_text(encoding="utf-8")
+    if text.count("state: clear") != 1:
+        raise SchemaViolation("MAP.md must contain exactly one clear state field")
+    _atomic_write(map_path, text.replace("state: clear", "state: archived", 1))
 
 
 def create_successor_map(

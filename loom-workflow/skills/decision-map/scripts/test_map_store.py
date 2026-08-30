@@ -559,6 +559,102 @@ def test_archived_map_rejects_every_work_mutation_without_writing(
     assert after == before
 
 
+def test_charting_rejects_work_and_terminal_records_are_byte_immutable(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-93
+    map_dir = _make_v3_active_map(tmp_path)
+    map_path = map_dir / "MAP.md"
+    ticket_path = map_dir / "tickets" / "decision-a.md"
+    map_path.write_text(
+        map_path.read_text(encoding="utf-8").replace("state: active", "state: charting"),
+        encoding="utf-8",
+    )
+    ticket_path.write_text(
+        ticket_path.read_text(encoding="utf-8").replace("status: closed", "status: open"),
+        encoding="utf-8",
+    )
+    before = (map_path.read_bytes(), ticket_path.read_bytes())
+
+    for operation in ("claim", "bind", "resolve", "close", "clear"):
+        try:
+            map_store.require_ticket_mutable(map_dir, "decision-a", operation)
+        except map_store.SchemaViolation as exc:
+            assert "activate" in str(exc).lower()
+        else:
+            raise AssertionError(f"charting Map accepted {operation}")
+        assert (map_path.read_bytes(), ticket_path.read_bytes()) == before
+
+    map_store.retire_active_map(
+        map_dir,
+        ratified_by="kouko",
+        ratified_on="2026-08-30",
+        reason="The chart will not be activated.",
+    )
+    assert "state: archived" in map_path.read_text(encoding="utf-8")
+    assert "state: clear" not in map_path.read_text(encoding="utf-8")
+
+    terminal_base = ticket_path.read_text(encoding="utf-8")
+    for terminal_status in ("closed", "withdrawn"):
+        terminal = terminal_base
+        terminal = terminal.replace("status: open", f"status: {terminal_status}")
+        ticket_path.write_text(terminal, encoding="utf-8")
+        terminal_before = ticket_path.read_bytes()
+        for operation in ("claim", "bind", "resolve", "close", "withdraw", "edit"):
+            try:
+                map_store.require_ticket_mutable(map_dir, "decision-a", operation)
+            except map_store.SchemaViolation as exc:
+                assert terminal_status in str(exc)
+                assert "follow-up" in str(exc).lower() or "fog" in str(exc).lower()
+            else:
+                raise AssertionError(f"{terminal_status} ticket accepted {operation}")
+            assert ticket_path.read_bytes() == terminal_before
+
+
+def test_archive_transition_keeps_map_and_ticket_paths_stable(tmp_path: Path) -> None:
+    # @req: REQ-95
+    map_dir = _make_v3_active_map(tmp_path)
+    map_path = map_dir / "MAP.md"
+    ticket_path = map_dir / "tickets" / "decision-a.md"
+    brief_path = tmp_path / "docs" / "loom" / "specs" / "deliver-parser.md"
+    ticket_relative = ticket_path.relative_to(tmp_path).as_posix()
+    brief_relative = brief_path.relative_to(tmp_path).as_posix()
+    _write(
+        brief_path,
+        f"# Deliver parser\n\nOutcome Map ticket: {ticket_relative}\n",
+    )
+    ticket_path.write_text(
+        ticket_path.read_text(encoding="utf-8").replace(
+            "graduated-from: null", f"graduated-from: null\nbrief: {brief_relative}"
+        ),
+        encoding="utf-8",
+    )
+    map_path.write_text(
+        map_path.read_text(encoding="utf-8")
+        .replace("state: active", "state: clear")
+        .replace(
+            "user-ratified: kouko, 2026-08-30",
+            "user-ratified: kouko, 2026-08-30\n"
+            "acceptance: Parser delivered | satisfied | docs/loom/results/parser.md",
+        )
+        .replace("- F-1: how does the fog id survive a rename?\n", ""),
+        encoding="utf-8",
+    )
+    before_paths = {path.relative_to(tmp_path) for path in tmp_path.rglob("*")}
+    ticket_before = ticket_path.read_bytes()
+
+    map_store.archive_map(map_dir, repo_root=tmp_path)
+
+    assert map_dir.is_dir()
+    assert ticket_path.read_bytes() == ticket_before
+    assert {path.relative_to(tmp_path) for path in tmp_path.rglob("*")} == before_paths
+    assert "state: archived" in map_path.read_text(encoding="utf-8")
+    import delivery_binding
+
+    code, message = delivery_binding.validate(ticket_path, repo_root=tmp_path)
+    assert code == 0, message
+
+
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
     """A schema_version above map_store's supported ceiling is exit 2,
     naming both versions — never a silent read-past."""

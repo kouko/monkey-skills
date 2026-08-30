@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import stat
 import tempfile
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
@@ -37,6 +38,10 @@ class CloseResult:
 
 def _before_terminalize() -> None:
     """Test seam immediately before the final, terminal ticket write."""
+
+
+def _before_retirement_stability_check() -> None:
+    """Test seam after retirement validation and before snapshot comparison."""
 
 
 def _atomic_write(path: Path, text: str) -> None:
@@ -307,6 +312,181 @@ def _assess_clear(map_dir: Path) -> bool:
     except (map_store.SchemaViolation, map_store.MapStoreError):
         return False
     return True
+
+
+def _store_snapshot(map_dir: Path) -> dict[str, bytes]:
+    """Read every regular descendant without accepting filesystem aliases."""
+    snapshot: dict[str, bytes] = {}
+    for root, directories, files in os.walk(map_dir, followlinks=False):
+        root_path = Path(root)
+        for name in list(directories):
+            candidate = root_path / name
+            if stat.S_ISLNK(candidate.lstat().st_mode):
+                raise CloseTransactionError(
+                    f"retirement read set contains a symlink: {candidate}"
+                )
+        for name in files:
+            candidate = root_path / name
+            mode = candidate.lstat().st_mode
+            if not stat.S_ISREG(mode):
+                raise CloseTransactionError(
+                    f"retirement read set contains a non-regular file: {candidate}"
+                )
+            snapshot[candidate.relative_to(map_dir).as_posix()] = candidate.read_bytes()
+    return snapshot
+
+
+def _close_journal_is_complete(map_dir: Path, journal: Path) -> bool:
+    """Return whether a retained close journal's complete effects are visible."""
+    try:
+        intent = json.loads(journal.read_text(encoding="utf-8"))
+        slug = intent["ticket_slug"]
+        gist = intent["gist"]
+        resolution = intent["resolution"]
+        routes = intent["routes"]
+        if (
+            intent.get("version") != 1
+            or intent.get("prepared") is not True
+            or not isinstance(slug, str)
+            or not isinstance(gist, str)
+            or not isinstance(resolution, str)
+            or not isinstance(routes, list)
+            or journal.name != f"close-{slug}.json"
+        ):
+            return False
+        ticket = map_store.read_ticket(map_dir / "tickets" / f"{slug}.md")
+        if ticket.frontmatter.status != "closed" or (
+            ticket.resolution or ""
+        ).strip() != resolution.strip():
+            return False
+        map_text = (map_dir / "MAP.md").read_text(encoding="utf-8")
+        if f"- {gist.strip()} (tickets/{slug}.md)" not in map_text:
+            return False
+        for route in routes:
+            if not isinstance(route, dict):
+                return False
+            destination = route.get("destination")
+            text = route.get("text")
+            if not isinstance(text, str):
+                return False
+            if destination == "fog":
+                if f"- {route.get('fog_id')}: {text}" not in map_text:
+                    return False
+            elif destination == "out-of-scope":
+                if f"- {text}" not in map_text:
+                    return False
+            elif destination == "ticket":
+                routed = map_dir / "tickets" / f"{route.get('ticket_slug')}.md"
+                if not routed.is_file() or routed.read_text(encoding="utf-8") != _open_ticket_text(route):
+                    return False
+            else:
+                return False
+        return True
+    except (KeyError, OSError, json.JSONDecodeError, map_store.MapStoreError, map_store.SchemaViolation):
+        return False
+
+
+def _validate_retirement_snapshot(map_dir: Path, repo_root: Path) -> None:
+    """Apply all currently public store invariants to one retirement read set."""
+    import check_map_links
+    import delivery_binding
+
+    transaction_dir = map_dir / ".transactions"
+    if transaction_dir.exists():
+        incomplete = [
+            path.name
+            for path in sorted(transaction_dir.iterdir())
+            if not path.is_file() or not _close_journal_is_complete(map_dir, path)
+        ]
+        if incomplete:
+            raise CloseTransactionError(
+                "retirement refuses incomplete recoverable operation(s) "
+                + ", ".join(incomplete)
+                + "; repair them first"
+            )
+    code, message = map_store.validate(map_dir, repo_root=repo_root)
+    if code != 0:
+        raise CloseTransactionError(f"retirement refuses broken Map invariants: {message}")
+    link_code, link_message = check_map_links.check_links(map_dir)
+    if link_code != 0:
+        raise CloseTransactionError(
+            f"retirement refuses broken gist relationships: {link_message}"
+        )
+
+    doc = map_store.read_map(map_dir)
+    fog_ids = {entry.id for entry in doc.fog_entries}
+    graduated: dict[str, list[str]] = {}
+    closed_links: dict[str, int] = {}
+    for decision in doc.decisions:
+        closed_links[decision.ticket_link] = closed_links.get(decision.ticket_link, 0) + 1
+    for ticket_path in sorted((map_dir / "tickets").glob("*.md")):
+        ticket = map_store.read_ticket(ticket_path)
+        if ticket.frontmatter.graduated_from:
+            graduated.setdefault(ticket.frontmatter.graduated_from, []).append(
+                ticket_path.name
+            )
+        if ticket.frontmatter.status == "closed":
+            link = f"tickets/{ticket_path.name}"
+            if closed_links.get(link, 0) != 1:
+                raise CloseTransactionError(
+                    f"retirement requires exactly one gist for closed ticket {ticket_path.name}"
+                )
+        if ticket.frontmatter.type == "delivery":
+            binding_code, binding_message = delivery_binding.validate(
+                ticket_path, repo_root=repo_root
+            )
+            if binding_code != 0:
+                raise CloseTransactionError(
+                    f"retirement refuses broken delivery binding: {binding_message}"
+                )
+    overlap = sorted(fog_ids.intersection(graduated))
+    if overlap:
+        raise CloseTransactionError(
+            "retirement refuses partial fog graduation for " + ", ".join(overlap)
+        )
+    duplicates = sorted(key for key, owners in graduated.items() if len(owners) != 1)
+    if duplicates:
+        raise CloseTransactionError(
+            "retirement refuses duplicated fog graduation for "
+            + ", ".join(duplicates)
+        )
+
+
+def retire_map(
+    map_dir: Path,
+    *,
+    ratified_by: str,
+    ratified_on: str,
+    reason: str,
+    repo_root: Path,
+) -> None:
+    """Retire one Map only if its complete validated read set stays stable."""
+    map_dir = Path(map_dir)
+    repo_root = Path(repo_root)
+    for path in (repo_root, map_dir, map_dir / "MAP.md", map_dir / "tickets"):
+        _assert_no_symlink_components(path)
+        try:
+            path.resolve(strict=False).relative_to(repo_root.resolve(strict=True))
+        except (OSError, ValueError) as exc:
+            raise CloseTransactionError(
+                f"retirement path escapes repository: {path}"
+            ) from exc
+    initial = _store_snapshot(map_dir)
+    _validate_retirement_snapshot(map_dir, repo_root)
+    _before_retirement_stability_check()
+    if _store_snapshot(map_dir) != initial:
+        raise CloseTransactionError(
+            "retirement requires one stable snapshot; a descendant changed"
+        )
+    try:
+        map_store.retire_active_map(
+            map_dir,
+            ratified_by=ratified_by,
+            ratified_on=ratified_on,
+            reason=reason,
+        )
+    except map_store.SchemaViolation as exc:
+        raise CloseTransactionError(str(exc)) from exc
 
 
 def close_and_rechart(

@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/outcome-map-v3
 Goal: ship the full Outcome Map v3 mechanism so one Map controls many outcome-advancing delivery arcs without duplicating their progress — serves map family-relocation: turns its mixed task/prototype records into closure-exclusive tickets and canonical delivery arcs
-Stage: implementation: T12 immutable clear history
+Stage: implementation batch A: history and mutation boundaries
 **Total tasks**: 26
 **Critical-path depth**: 5 (≤5 ✓)
 **Execution order**: sequential
@@ -274,7 +274,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 3: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-86`
-- **Status**: claimed(@codex)
+- **Status**: done(401e3483e97c212f194d67a0674c6fa09baefbac)
 - **Gloss**: 歷史交付保持真實，新的退化用新的工作表示。
 
 ## Task 13 — Add optimistic and recoverable transactions
@@ -409,7 +409,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 3: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-93`
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 尚未定形與已成歷史的資料都有清楚不可越過的邊界。
 
 ## Task 20 — Strengthen blocker graph and claim guards
@@ -447,7 +447,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 12: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-95`
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 封存不會搬動路徑或切斷 delivery 歷史。
 
 ## Task 22 — Validate authored delivery closure policy
@@ -487,7 +487,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 3: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-97`
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 舊 claim 可安全接手，但不會搶走仍在進行的工作。
 
 ## Task 24 — Gate retirement on one valid stable snapshot
@@ -506,7 +506,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 10: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-98`
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 地圖不會在修復一半時被封存成永久壞歷史。
 
 ## Task 25 — Migrate the family-relocation dogfood Map

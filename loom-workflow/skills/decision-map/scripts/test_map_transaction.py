@@ -318,3 +318,78 @@ def test_clear_assessment_reuses_req_78_acceptance_validation(
     )
 
     assert result.map_clear_eligible is False
+
+
+def test_retirement_refuses_partial_operations_and_descendant_races(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-98
+    partial_map, partial_ticket = _make_map(tmp_path / "partial")
+    partial_map_path = partial_map / "MAP.md"
+    partial_map_path.write_text(
+        partial_map_path.read_text(encoding="utf-8").replace(
+            "## Not-yet-specified (fog)\n\n",
+            "## Not-yet-specified (fog)\n\n- F-1: Which slice should ship?\n",
+        ),
+        encoding="utf-8",
+    )
+    partial_ticket.write_text(
+        partial_ticket.read_text(encoding="utf-8").replace(
+            "graduated-from: null", "graduated-from: F-1"
+        ),
+        encoding="utf-8",
+    )
+    partial_before = partial_map_path.read_bytes()
+    with pytest.raises(map_transaction.CloseTransactionError, match="partial.*graduation"):
+        map_transaction.retire_map(
+            partial_map,
+            ratified_by="kouko",
+            ratified_on="2026-08-30",
+            reason="Stop this outcome.",
+            repo_root=tmp_path / "partial",
+        )
+    assert partial_map_path.read_bytes() == partial_before
+
+    raced_map, raced_ticket = _make_map(tmp_path / "raced")
+    raced_map_before = (raced_map / "MAP.md").read_bytes()
+
+    def mutate_descendant() -> None:
+        raced_ticket.write_text(
+            raced_ticket.read_text(encoding="utf-8") + "\nConcurrent edit.\n",
+            encoding="utf-8",
+        )
+
+    monkeypatch.setattr(
+        map_transaction, "_before_retirement_stability_check", mutate_descendant
+    )
+    with pytest.raises(map_transaction.CloseTransactionError, match="stable snapshot"):
+        map_transaction.retire_map(
+            raced_map,
+            ratified_by="kouko",
+            ratified_on="2026-08-30",
+            reason="Stop this outcome.",
+            repo_root=tmp_path / "raced",
+        )
+    assert (raced_map / "MAP.md").read_bytes() == raced_map_before
+
+    clean_map, _ = _make_map(tmp_path / "clean")
+    map_transaction.close_and_rechart(
+        clean_map,
+        "ship-slice",
+        gist="Slice shipped.",
+        resolution="delivery-evidence: commit 0123456",
+        unknowns=[],
+    )
+    assert (clean_map / ".transactions" / "close-ship-slice.json").is_file()
+    monkeypatch.setattr(
+        map_transaction, "_before_retirement_stability_check", lambda: None
+    )
+    map_transaction.retire_map(
+        clean_map,
+        ratified_by="kouko",
+        ratified_on="2026-08-30",
+        reason="Stop this outcome.",
+        repo_root=tmp_path / "clean",
+    )
+    assert "state: archived" in (clean_map / "MAP.md").read_text(encoding="utf-8")
+    assert (clean_map / ".transactions" / "close-ship-slice.json").is_file()
