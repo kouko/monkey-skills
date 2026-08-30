@@ -240,7 +240,11 @@ def test_rejects_non_normalized_duplicate_candidate_alias(tmp_path: Path) -> Non
 
 
 @pytest.mark.skipif(
-    not os.path.samefile("/var", "/private/var"),
+    not (
+        Path("/var").exists()
+        and Path("/private/var").exists()
+        and os.path.samefile("/var", "/private/var")
+    ),
     reason="macOS /var alias is unavailable",
 )
 def test_accepts_ticket_in_callers_var_repo_root_namespace(tmp_path: Path) -> None:
