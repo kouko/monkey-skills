@@ -356,6 +356,55 @@ reason: replaced by narrower work
     assert "acceptance" in message.lower()
     assert "evidence" in message.lower()
 
+    map_md.write_text(
+        clear_map.replace(
+            "acceptance: The parser remains stdlib-only | satisfied | "
+            "docs/loom/results/probe.md",
+            "",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "acceptance" in message.lower()
+
+    map_md.write_text(
+        clear_map.replace(
+            "docs/loom/results/probe.md",
+            "docs/loom/results/probe.md | trailing field",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "acceptance" in message.lower()
+
+    map_md.write_text(
+        clear_map.replace(
+            "## Not-yet-specified (fog)\n\n",
+            "## Not-yet-specified (fog)\n\nunfinished prose\n",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "fog" in message.lower()
+
+    v2_map_dir = _make_conformant_map(tmp_path / "v2")
+    v2_map_md = v2_map_dir / "MAP.md"
+    v2_map_md.write_text(
+        v2_map_md.read_text(encoding="utf-8")
+        .replace("state: charting", "state: clear")
+        .replace(
+            "Chart the decision-map layer.",
+            "Chart the decision-map layer.\n\nuser-ratified: kouko, 2026-08-30",
+        )
+        .replace("- F-1: how does the fog id survive a rename?\n", ""),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(v2_map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
 
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
     """A schema_version above map_store's supported ceiling is exit 2,

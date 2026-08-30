@@ -598,10 +598,16 @@ def _check_v3_clear_acceptance(doc: MapDocument) -> None:
     """
     if doc.frontmatter.schema_version != 3 or doc.frontmatter.state != "clear":
         return
+    if doc.sections["Not-yet-specified (fog)"].strip():
+        raise SchemaViolation(
+            f"{doc.path}: clear v3 map requires an empty fog section"
+        )
+    criteria_found = False
     for line in doc.sections["Destination"].splitlines():
         if not line.strip().startswith("acceptance:"):
             continue
-        parts = [part.strip() for part in line.split("|", 2)]
+        criteria_found = True
+        parts = [part.strip() for part in line.split("|")]
         if len(parts) != 3 or not parts[0][len("acceptance:"):].strip() or (
             parts[1] != "satisfied" or not parts[2]
         ):
@@ -609,6 +615,10 @@ def _check_v3_clear_acceptance(doc: MapDocument) -> None:
                 f"{doc.path}: clear map requires every Destination acceptance "
                 "criterion to be satisfied with valid evidence"
             )
+    if not criteria_found:
+        raise SchemaViolation(
+            f"{doc.path}: clear v3 map requires a Destination acceptance criterion"
+        )
 
 
 def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
