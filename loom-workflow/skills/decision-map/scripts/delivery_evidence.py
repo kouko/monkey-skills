@@ -24,7 +24,11 @@ _ACCEPTANCE = re.compile(
 )
 _TASK = re.compile(r"^## Task \d+ \u2014 .+?$", re.MULTILINE)
 _NEXT_HEADING = re.compile(r"^## ", re.MULTILINE)
-_DONE = re.compile(r"^- \*{0,2}Status\*{0,2}:\s*done\([^()\s]+\)\s*$", re.MULTILINE)
+_STAGE_LINE = re.compile(r"^Stage:\s*(?P<value>\S.*?)\s*$", re.MULTILINE)
+_STATUS_LINE = re.compile(
+    r"^- \*{0,2}Status\*{0,2}:\s*(?P<value>\S.*?)\s*$", re.MULTILINE
+)
+_DONE_VALUE = re.compile(r"done\([^()\s]+\)")
 _PASS_CONCLUSIONS = {"SUCCESS", "NEUTRAL", "SKIPPED"}
 
 
@@ -51,7 +55,8 @@ def _authored_policy(brief_text: str) -> tuple[str | None, str | None]:
 
 
 def _plan_is_terminal(plan_text: str) -> bool:
-    if not re.search(r"^Stage:\s*finishing\s*$", plan_text, re.MULTILINE):
+    stages = [match.group("value") for match in _STAGE_LINE.finditer(plan_text)]
+    if stages != ["finishing"]:
         return False
     tasks = list(_TASK.finditer(plan_text))
     if not tasks:
@@ -59,7 +64,8 @@ def _plan_is_terminal(plan_text: str) -> bool:
     for task in tasks:
         following = _NEXT_HEADING.search(plan_text, task.end())
         block = plan_text[task.end() : following.start() if following else len(plan_text)]
-        if _DONE.search(block) is None:
+        statuses = [match.group("value") for match in _STATUS_LINE.finditer(block)]
+        if len(statuses) != 1 or _DONE_VALUE.fullmatch(statuses[0]) is None:
             return False
     return True
 
@@ -100,13 +106,16 @@ def _checks_are_green(value: Any) -> bool:
     for check in value:
         if not isinstance(check, dict):
             return False
-        if check.get("__typename") == "StatusContext":
+        kind = check.get("__typename")
+        if kind == "StatusContext":
             if check.get("state") != "SUCCESS":
                 return False
-        elif not (
+        elif kind == "CheckRun" and not (
             check.get("status") == "COMPLETED"
             and check.get("conclusion") in _PASS_CONCLUSIONS
         ):
+            return False
+        elif kind != "CheckRun":
             return False
     return True
 

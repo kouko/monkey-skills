@@ -182,3 +182,68 @@ def test_non_green_or_incomplete_exact_head_checks_refuse_closure(
     assert result.ready is False
     assert result.phase == "repair-required"
     assert "checks" in result.reason
+
+
+# @req: REQ-82
+@pytest.mark.parametrize(
+    "plan_text",
+    [
+        TERMINAL_PLAN.replace(
+            "- **Status**: done(abc1234)",
+            "- **Status**: done(abc1234)\n- **Status**: pending",
+        ),
+        TERMINAL_PLAN.replace("Stage: finishing", "Stage: finishing\nStage: reviewing"),
+    ],
+)
+def test_conflicting_terminal_plan_evidence_refuses_closure(plan_text: str) -> None:
+    result = delivery_evidence.evaluate_closure(
+        brief_text=BRIEF,
+        plan_text=plan_text,
+        acceptance_satisfied=True,
+        review_head="abc1234",
+        verification_head="abc1234",
+        pr="42",
+        run=_gh(),
+    )
+
+    assert result.ready is False
+    assert result.phase == "repair-required"
+    assert "terminal Plan" in result.reason
+
+
+# @req: REQ-82
+def test_unknown_check_rollup_shape_fails_closed() -> None:
+    def run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            command,
+            0,
+            stdout=json.dumps(
+                {
+                    "headRefOid": "abc1234",
+                    "state": "OPEN",
+                    "mergedAt": None,
+                    "statusCheckRollup": [
+                        {
+                            "__typename": "FutureCheckType",
+                            "status": "COMPLETED",
+                            "conclusion": "SUCCESS",
+                        }
+                    ],
+                }
+            ),
+            stderr="",
+        )
+
+    result = delivery_evidence.evaluate_closure(
+        brief_text=BRIEF,
+        plan_text=TERMINAL_PLAN,
+        acceptance_satisfied=True,
+        review_head="abc1234",
+        verification_head="abc1234",
+        pr="42",
+        run=run,
+    )
+
+    assert result.ready is False
+    assert result.phase == "repair-required"
+    assert "checks" in result.reason
