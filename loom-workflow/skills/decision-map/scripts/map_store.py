@@ -431,6 +431,62 @@ def _has_user_ratified_line(text: str) -> bool:
     )
 
 
+def _has_resolution_field(text: str, field: str) -> bool:
+    """Whether a Resolution contains a non-empty `field: value` line."""
+    return any(
+        line.strip().partition(":")[0] == field
+        and bool(line.strip().partition(":")[2].strip())
+        for line in text.splitlines()
+    )
+
+
+def _has_named_dated_user_ratification(text: str) -> bool:
+    return any(
+        re.fullmatch(
+            r"user-ratified:\s*[^,\s][^,]*,\s*\d{4}-\d{2}-\d{2}",
+            line.strip(),
+        )
+        for line in text.splitlines()
+    )
+
+
+def _check_v3_ticket_closure_evidence(ticket: TicketDocument) -> None:
+    """Require each schema-v3 ticket type's distinct closure record."""
+    resolution = ticket.resolution or ""
+    ticket_type = ticket.frontmatter.type
+    requirements = {
+        "grilling": (
+            ("decision",),
+            "a non-empty 'decision:' line and named/date "
+            "'user-ratified: <name>, YYYY-MM-DD'",
+        ),
+        "research": (
+            ("factual-answer", "inspectable-evidence"),
+            "non-empty 'factual-answer:' and 'inspectable-evidence:' lines",
+        ),
+        "prototype": (
+            ("candidate-artifact", "evaluation"),
+            "non-empty 'candidate-artifact:' and 'evaluation:' lines and "
+            "named/date 'user-ratified: <name>, YYYY-MM-DD'",
+        ),
+    }
+    if ticket_type == "delivery":
+        if not _has_delivery_evidence(resolution):
+            raise SchemaViolation(
+                f"{ticket.path}: closed delivery ticket requires "
+                "'delivery-evidence: <commit SHA | PR | artifact path>'"
+            )
+        return
+    fields, guidance = requirements[ticket_type]
+    needs_ratification = ticket_type in HITL_TICKET_TYPES
+    if not all(_has_resolution_field(resolution, field) for field in fields) or (
+        needs_ratification and not _has_named_dated_user_ratification(resolution)
+    ):
+        raise SchemaViolation(
+            f"{ticket.path}: closed {ticket_type} ticket requires {guidance}"
+        )
+
+
 def _check_map_structure(doc: MapDocument) -> None:
     if doc.frontmatter.state not in VALID_MAP_STATES:
         raise SchemaViolation(
@@ -497,6 +553,8 @@ def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
                 f"{ticket_path}: status {ticket.frontmatter.status!r} is "
                 f"not one of {sorted(VALID_TICKET_STATUSES)}"
             )
+        if schema_version == 3 and ticket.frontmatter.status == "closed":
+            _check_v3_ticket_closure_evidence(ticket)
         if (
             ticket.frontmatter.status == "closed"
             and ticket.frontmatter.type in HITL_TICKET_TYPES

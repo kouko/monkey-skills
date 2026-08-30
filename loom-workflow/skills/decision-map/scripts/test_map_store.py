@@ -117,15 +117,20 @@ def test_v3_accepts_only_four_closure_exclusive_ticket_types(
     )
     ticket_path = map_dir / "tickets" / "decision-a.md"
 
-    for ticket_type in ("grilling", "research", "prototype", "delivery"):
+    evidence_by_type = {
+        "grilling": "decision: adopt stdlib parsing\nuser-ratified: kouko, 2026-08-30",
+        "research": "factual-answer: stdlib parsing is sufficient\ninspectable-evidence: docs/loom/results/probe.md",
+        "prototype": "candidate-artifact: docs/loom/prototypes/parser.md\nevaluation: selected by the maintainer\nuser-ratified: kouko, 2026-08-30",
+        "delivery": "delivery-evidence: commit 0123456",
+    }
+    for ticket_type, evidence in evidence_by_type.items():
         ticket = TICKET_CLOSED.replace("type: task", f"type: {ticket_type}")
-        if ticket_type in {"grilling", "prototype"}:
-            ticket += "\nuser-ratified: kouko, 2026-08-30\n"
+        ticket = ticket.split("## Resolution", 1)[0] + "## Resolution\n\n" + evidence + "\n"
         _write(ticket_path, ticket)
         code, message = map_store.validate(map_dir, repo_root=tmp_path)
         assert code == 0, message
 
-    for ticket_type in ("task", "unblock"):
+    for ticket_type in ("task", "unblock", "future-type"):
         _write(
             ticket_path,
             TICKET_CLOSED.replace("type: task", f"type: {ticket_type}"),
@@ -133,6 +138,40 @@ def test_v3_accepts_only_four_closure_exclusive_ticket_types(
         code, message = map_store.validate(map_dir, repo_root=tmp_path)
         assert code == 2
         assert "classif" in message.lower()
+        assert "grilling" in message
+        assert "research" in message
+        assert "prototype" in message
+        assert "delivery" in message
+
+
+def test_v3_closed_ticket_requires_subtype_closure_evidence(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-76
+    """Every v3 closure type needs its own inspectable closure record."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8").replace(
+            "schema_version: 2", "schema_version: 3"
+        ),
+        encoding="utf-8",
+    )
+    ticket_path = map_dir / "tickets" / "decision-a.md"
+
+    incomplete_evidence = {
+        "grilling": "decision: adopt stdlib parsing",
+        "research": "factual-answer: stdlib parsing is sufficient",
+        "prototype": "candidate-artifact: docs/loom/prototypes/parser.md\nevaluation: selected by the maintainer",
+        "delivery": "delivery-evidence: completed locally",
+    }
+    for ticket_type, evidence in incomplete_evidence.items():
+        ticket = TICKET_CLOSED.replace("type: task", f"type: {ticket_type}")
+        ticket = ticket.split("## Resolution", 1)[0] + "## Resolution\n\n" + evidence + "\n"
+        _write(ticket_path, ticket)
+        code, message = map_store.validate(map_dir, repo_root=tmp_path)
+        assert code == 2
+        assert ticket_type in message
 
 
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
