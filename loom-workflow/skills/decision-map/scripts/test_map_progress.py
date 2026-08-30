@@ -8,6 +8,9 @@ from pathlib import Path
 
 import pytest
 
+sys.path.insert(0, str(Path(__file__).parent))
+import map_progress  # noqa: E402
+
 
 SCRIPT = Path(__file__).parent / "map_progress.py"
 SKILL_DIR = Path(__file__).parent.parent
@@ -113,7 +116,7 @@ Stage: sdd:wave-1
 
 ## Task 2 — review it
 
-- Status: claimed(@worker)
+- Status: blocked(needs human decision)
 
 ## Notes
 
@@ -131,8 +134,13 @@ Map part: wayfinder / Part: delivery
     assert result.returncode == 0, result.stderr
     assert "map delivery-progress: wayfinder / delivery" in result.stdout
     assert "plan: delivery.md" in result.stdout
-    assert "state: claimed" in result.stdout
+    assert "state: blocked" in result.stdout
     assert plan.read_bytes() == before
+    assert map_progress.derive_progress(plan.read_text(encoding="utf-8")) == (
+        "wayfinder",
+        "delivery",
+        "blocked",
+    )
 
 
 def test_progress_reports_closed_delivery_as_delivered_with_its_arc(
@@ -230,6 +238,37 @@ def test_progress_refuses_broken_delivery_arc_without_writes(tmp_path: Path, fau
     assert {path: path.read_bytes() for path in sources} == before
     if fault == "unreadable":
         assert plan.is_dir()
+
+
+def test_progress_refuses_duplicate_source_brief_without_writes(tmp_path: Path) -> None:
+    # @req: REQ-81
+    ticket, brief, plan = _arc(tmp_path)
+    _write(
+        plan,
+        plan.read_text(encoding="utf-8").replace(
+            "Goal: Ship.", "**Source brief**: docs/loom/specs/deliver.md\nGoal: Ship."
+        ),
+    )
+    sources = (ticket, brief, plan)
+    before = {path: path.read_bytes() for path in sources}
+    result = subprocess.run([sys.executable, str(SCRIPT), str(ticket), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert result.returncode == 2
+    assert "Source brief" in result.stderr
+    assert {path: path.read_bytes() for path in sources} == before
+
+
+def test_progress_refuses_symlinked_plans_directory_without_writes(tmp_path: Path) -> None:
+    # @req: REQ-81
+    ticket, brief, plan = _arc(tmp_path, with_plan=False)
+    plans_dir = plan.parent
+    external = tmp_path.parent / "external-plans"
+    _write(external / "delivery.md", "external plan bytes\n")
+    plans_dir.symlink_to(external, target_is_directory=True)
+    before = {path: path.read_bytes() for path in (ticket, brief, external / "delivery.md")}
+    result = subprocess.run([sys.executable, str(SCRIPT), str(ticket), "--repo-root", str(tmp_path)], capture_output=True, text=True)
+    assert result.returncode == 2
+    assert "symlink" in result.stderr
+    assert {path: path.read_bytes() for path in before} == before
 
 
 def test_progress_refuses_missing_and_symlink_targets_without_writes(tmp_path: Path) -> None:

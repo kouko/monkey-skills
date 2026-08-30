@@ -27,6 +27,12 @@ _STATUS = re.compile(
     r"(?P<status>done\([^()\s]+\)|claimed\(@[^()\s]+\)|pending|blocked)\s*$",
     re.MULTILINE,
 )
+_LEGACY_STATUS = re.compile(
+    r"^- \*{0,2}Status\*{0,2}:\s*"
+    r"(?P<status>done\([^()\s]+\)|claimed\(@[^()\s]+\)|pending|blocked"
+    r"(?:\([^()\n]*\))?)\s*$",
+    re.MULTILINE,
+)
 
 
 class ProgressError(Exception):
@@ -57,11 +63,11 @@ def derive_progress(text: str) -> tuple[str, str, str]:
     for task in task_matches:
         next_heading = _NEXT_HEADING.search(text, task.end())
         block = text[task.end() : next_heading.start() if next_heading else len(text)]
-        status = _STATUS.search(block)
+        status = _LEGACY_STATUS.search(block)
         if status is None:
             raise ProgressError("plan task has no recognized '- Status:' line")
         states.append(status.group("status"))
-    if "blocked" in states:
+    if any(state.startswith("blocked") for state in states):
         return matches[0].group("map_id").strip(), matches[0].group("part").strip(), "blocked"
     if any(state.startswith("claimed(") for state in states):
         state = "claimed"
@@ -91,6 +97,11 @@ def _ticket_fields(ticket: Path) -> dict[str, str]:
 
 def _sole_plan(root: Path, brief: str) -> tuple[str, str] | None:
     plans_dir = root / "docs" / "loom" / "plans"
+    current = root
+    for part in ("docs", "loom", "plans"):
+        current = current / part
+        if current.is_symlink():
+            raise ProgressError(f"plans path contains a symlink component: {_relative(root, current, 'plans')}")
     if not plans_dir.exists():
         return None
     if not plans_dir.is_dir():
@@ -101,14 +112,35 @@ def _sole_plan(root: Path, brief: str) -> tuple[str, str] | None:
     except OSError as exc:
         raise ProgressUnavailable(f"cannot enumerate plans directory {plans_dir}: {exc}") from exc
     for candidate in candidates:
-        if candidate.is_symlink():
+        relative_candidate = candidate.relative_to(plans_dir)
+        component = plans_dir
+        if candidate.is_symlink() or any(
+            (component := component / part).is_symlink()
+            for part in relative_candidate.parts
+        ):
             raise ProgressError(f"Plan path contains a symlink: {_relative(root, candidate, 'Plan')}")
         try:
             text = candidate.read_text(encoding="utf-8")
         except OSError as exc:
             raise ProgressUnavailable(f"cannot read Plan {candidate}: {exc}") from exc
-        source = _SOURCE_BRIEF.search(text)
-        if source is not None and source.group("brief") == brief:
+        # A Plan is allowed exactly one source declaration, regardless of
+        # which Brief the caller is resolving.  Otherwise a Plan mentioning
+        # the requested Brief plus an escaped/second Brief could be accepted
+        # by the matching-only path below.
+        source_lines = [line for line in text.splitlines() if line.startswith("**Source brief")]
+        source_matches = [match for match in _SOURCE_BRIEF.finditer(text)]
+        if len(source_lines) != 1 or len(source_matches) != 1:
+            # This also catches malformed declarations (which do not match
+            # _SOURCE_BRIEF) instead of silently treating them as unbound.
+            raise ProgressError(
+                f"Plan {_relative(root, candidate, 'Plan')} must contain exactly one '**Source brief**:' declaration"
+            )
+        source_brief = source_matches[0].group("brief")
+        try:
+            delivery_binding._canonical_relative(source_brief, "Plan Source brief")
+        except delivery_binding._BindingFailure as exc:
+            raise ProgressError(str(exc)) from exc
+        if source_brief == brief:
             matches.append((_relative(root, candidate, "Plan"), text))
     if len(matches) > 1:
         raise ProgressError(
