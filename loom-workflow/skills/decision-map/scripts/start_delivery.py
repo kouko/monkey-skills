@@ -191,6 +191,9 @@ def _brief_text(ticket: PurePosixPath, promised_slice: str) -> str:
     return (f"# {ticket.stem.replace('-', ' ')} — delivery brief\n\n"
             f"## Smallest End State\n\n{promised_slice}\n\n"
             f"## Acceptance\n\n- [ ] Promised slice: {promised_slice}\n\n"
+            f"## Delivery closure\n\npolicy: pr-ci\n"
+            "review-evidence: required before closure\n"
+            "verification-evidence: required before closure\n\n"
             f"Outcome Map ticket: {ticket.as_posix()}\n")
 
 

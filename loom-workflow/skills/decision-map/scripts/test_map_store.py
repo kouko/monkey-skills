@@ -649,7 +649,7 @@ def test_archive_transition_keeps_map_and_ticket_paths_stable(tmp_path: Path) ->
     brief_relative = brief_path.relative_to(tmp_path).as_posix()
     _write(
         brief_path,
-        f"# Deliver parser\n\nOutcome Map ticket: {ticket_relative}\n",
+            f"# Deliver parser\n\n## Delivery closure\n\npolicy: pr-ci\nreview-evidence: review.md\nverification-evidence: pytest -q\n\nOutcome Map ticket: {ticket_relative}\n",
     )
     ticket_path.write_text(
         ticket_path.read_text(encoding="utf-8").replace(

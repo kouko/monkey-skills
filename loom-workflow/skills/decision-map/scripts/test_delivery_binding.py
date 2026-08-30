@@ -27,7 +27,12 @@ def _bound_ticket(tmp_path: Path, brief_path: str | None = None) -> tuple[Path, 
         ticket,
         f"---\ntype: delivery\nstatus: claimed\nbrief: {brief_path or brief_relative}\n---\n",
     )
-    _write(brief, f"# Deliver search\n\nOutcome Map ticket: {ticket_relative}\n")
+    _write(
+        brief,
+        f"# Deliver search\n\nOutcome Map ticket: {ticket_relative}\n\n"
+        "## Delivery closure\n\npolicy: pr-ci\n"
+        "review-evidence: review.md\nverification-evidence: pytest -q\n",
+    )
     return ticket, brief
 
 
@@ -291,3 +296,44 @@ def test_rejects_repo_root_replaced_by_symlink_before_open(
 
     assert code == 2
     assert "repository root" in message
+
+
+def test_brief_declares_one_closure_policy_and_one_plan(tmp_path: Path) -> None:
+    # @req: REQ-96
+    ticket, brief = _bound_ticket(tmp_path)
+    ticket_relative = ticket.relative_to(tmp_path).as_posix()
+    _write(
+        brief,
+        "# Deliver search\n\n"
+        f"Outcome Map ticket: {ticket_relative}\n\n"
+        "## Delivery closure\n\n"
+        "policy: artifact\n"
+        "artifact: dist/search.zip\n"
+        "acceptance-probe: python3 -m pytest tests/search.py -q\n",
+    )
+    _write(
+        tmp_path / "docs/loom/plans/search.md",
+        "# Plan\n\n**Source brief**: docs/loom/specs/deliver-search.md\n",
+    )
+
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+    assert code == 0, message
+
+    _write(
+        tmp_path / "docs/loom/plans/second.md",
+        "# Plan\n\n**Source brief**: docs/loom/specs/deliver-search.md\n",
+    )
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+    assert code == 2
+    assert "multiple Plans" in message
+
+
+def test_v3_delivery_brief_without_authored_closure_policy_is_rejected(tmp_path: Path) -> None:
+    # @req: REQ-96
+    ticket, brief = _bound_ticket(tmp_path)
+    _write(brief, f"Outcome Map ticket: {ticket.relative_to(tmp_path).as_posix()}\n")
+
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+
+    assert code == 2
+    assert "Delivery closure policy" in message

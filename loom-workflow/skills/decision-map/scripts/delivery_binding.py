@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 import map_store
+import delivery_evidence
 
 
 class _OperationalFailure(Exception):
@@ -169,6 +170,38 @@ def _duplicate_owner(repo_root: Path, ticket: PurePosixPath, brief: PurePosixPat
     return None
 
 
+def _validate_brief_policy_and_plan_count(repo_root: Path, brief: PurePosixPath, brief_text: str) -> None:
+    policy, error = delivery_evidence.validate_closure_policy(brief_text)
+    if error:
+        raise _BindingFailure(error)
+    assert policy is not None
+    plans_root = repo_root / "docs" / "loom" / "plans"
+    if not plans_root.exists():
+        return
+    if not plans_root.is_dir():
+        raise _OperationalFailure(f"plans directory is not a directory: {plans_root}")
+    source = brief.as_posix()
+    matches: list[str] = []
+    for candidate in sorted(plans_root.rglob("*.md")):
+        if candidate.is_symlink():
+            raise _BindingFailure(f"Plan path contains a symlink: {candidate.relative_to(repo_root).as_posix()}")
+        try:
+            text = candidate.read_text(encoding="utf-8")
+        except OSError as exc:
+            raise _OperationalFailure(f"cannot read Plan {candidate}: {exc}") from exc
+        declarations = [line for line in text.splitlines() if line.startswith("**Source brief**:")]
+        if declarations == [f"**Source brief**: {source}"] and "Superseded by:" not in text:
+            matches.append(candidate.relative_to(repo_root).as_posix())
+    if len(matches) > 1:
+        raise _BindingFailure(f"delivery Brief {source} has multiple Plans: {', '.join(matches)}")
+    if matches:
+        plan_text = (repo_root / matches[0]).read_text(encoding="utf-8")
+        if "Stage: abandoned" in plan_text or "Stage: unusable" in plan_text:
+            raise _BindingFailure(
+                "sole Plan is unusable; withdraw the delivery ticket and create a replacement delivery"
+            )
+
+
 def snapshot_delivery_migration_binding(
     ticket_path: Path, repo_root: Path | None = None
 ) -> DeliveryMigrationBindingSnapshot:
@@ -254,7 +287,9 @@ def validate(ticket_path: Path, repo_root: Path | None = None) -> tuple[int, str
         if "brief" not in fields:
             return 0, f"{ticket.as_posix()}: delivery ticket is unbriefed"
         brief = _canonical_relative(fields["brief"], "Ticket brief")
-        _assert_reciprocal(_read_repo_file(root, brief, "Brief"), brief, ticket)
+        brief_text = _read_repo_file(root, brief, "Brief")
+        _assert_reciprocal(brief_text, brief, ticket)
+        _validate_brief_policy_and_plan_count(root, brief, brief_text)
         duplicate = _duplicate_owner(root, ticket, brief)
         if duplicate is not None:
             raise _BindingFailure(f"Brief {brief.as_posix()} is already owned by another Ticket: {duplicate.as_posix()}")

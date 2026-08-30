@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/outcome-map-v3
 Goal: ship the full Outcome Map v3 mechanism so one Map controls many outcome-advancing delivery arcs without duplicating their progress — serves map family-relocation: turns its mixed task/prototype records into closure-exclusive tickets and canonical delivery arcs
-Stage: batch B verification and review
+Stage: batch C verification and review
 **Total tasks**: 26
 **Critical-path depth**: 5 (≤5 ✓)
 **Execution order**: sequential
@@ -127,7 +127,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
 
 - **Description**: Implement validate reciprocal delivery bindings at the named module boundary, preserving existing behavior outside schema-v3 inputs.
 - **Module**: `delivery_binding.py`
-- **Files touched**: `loom-workflow/skills/decision-map/scripts/delivery_binding.py`, `loom-workflow/skills/decision-map/scripts/test_delivery_binding.py`
+- **Files touched**: `loom-workflow/skills/decision-map/scripts/delivery_binding.py`, `loom-workflow/skills/decision-map/scripts/test_delivery_binding.py`, `loom-workflow/skills/decision-map/scripts/start_delivery.py`, `loom-workflow/skills/decision-map/scripts/test_map_progress.py`, `loom-workflow/skills/decision-map/scripts/test_map_store.py`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/docs/loom/outcome-map-v3/specs/outcome-map/spec.md`
   - `/Users/kouko/GitHub/monkey-skills/loom-workflow/skills/decision-map/scripts/delivery_binding.py`
@@ -217,7 +217,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 8: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-83`
-- **Status**: pending
+- **Status**: done(pending-batch-c-commit)
 - **Gloss**: 多 PR delivery 可追蹤，但每個 PR 只有一個 closure owner。
 
 ## Task 10 — Make close-and-rechart recoverable
@@ -333,7 +333,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 8: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-89`
-- **Status**: pending
+- **Status**: done(pending-batch-c-commit)
 - **Gloss**: API 暫時不可用不會被誤判成失敗或通過。
 
 ## Task 16 — Parse stable Destination acceptance records
@@ -466,7 +466,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 8: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-96`
-- **Status**: pending
+- **Status**: done(pending-batch-c-commit)
 - **Gloss**: 每個 delivery 自己明定何時算正式交付，不由工具偷偷降級。
 
 ## Task 23 — Implement conservative stale-claim recovery
