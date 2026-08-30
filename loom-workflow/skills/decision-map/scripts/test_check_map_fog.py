@@ -211,6 +211,79 @@ def test_graduation_is_clean(tmp_path: Path) -> None:
     assert code == 0
 
 
+def test_rejects_reused_and_multiply_graduated_fog_history(tmp_path: Path) -> None:
+    # @req: REQ-92
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    _init_repo(repo_root)
+    _commit_base(repo_root, BASE_MAP_MD)
+    _branch_and_commit_current(
+        repo_root,
+        BASE_MAP_MD,
+        ticket=("decision-b", TICKET_GRADUATED),
+    )
+    code, message = check_map_fog.check_fog_monotonicity(
+        _map_dir(repo_root), repo_root, base_ref=None
+    )
+    assert code == 2
+    assert "F-2" in message and "reused" in message
+
+    _write(
+        _map_dir(repo_root) / "tickets" / "decision-c.md",
+        TICKET_GRADUATED.replace("What happens", "Recheck what happens"),
+    )
+    current = _rewrite_fog_section(
+        BASE_MAP_MD,
+        "- F-1: how does the fog id survive a rename?\n"
+        "- F-3: does out-of-scope need its own section?\n",
+    )
+    _write(_map_dir(repo_root) / "MAP.md", current)
+    code, message = check_map_fog.check_fog_monotonicity(
+        _map_dir(repo_root), repo_root, base_ref=None
+    )
+    assert code == 2
+    assert "more than once" in message
+
+
+def test_rejects_reused_destination_acceptance_identity(tmp_path: Path) -> None:
+    # @req: REQ-92
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    _init_repo(repo_root)
+    base = BASE_MAP_MD.replace(
+        "Chart the decision-map layer.",
+        "Chart the decision-map layer.\n"
+        "- DA-1: Original criterion | state: open | kind: objective",
+    )
+    _commit_base(repo_root, base)
+    current = base.replace("DA-1: Original criterion", "DA-1: Reused criterion")
+    _branch_and_commit_current(repo_root, current)
+    code, message = check_map_fog.check_fog_monotonicity(
+        _map_dir(repo_root), repo_root, base_ref=None
+    )
+    assert code == 2
+    assert "DA-1" in message and "reused" in message
+
+
+def test_rejects_nonmonotonic_new_fog_id(tmp_path: Path) -> None:
+    # @req: REQ-92
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    _init_repo(repo_root)
+    _commit_base(repo_root, BASE_MAP_MD)
+    current = BASE_MAP_MD.replace(
+        "- F-3: does out-of-scope need its own section?",
+        "- F-3: does out-of-scope need its own section?\n"
+        "- F-0: an id minted below the historical maximum",
+    )
+    _branch_and_commit_current(repo_root, current)
+    code, message = check_map_fog.check_fog_monotonicity(
+        _map_dir(repo_root), repo_root, base_ref=None
+    )
+    assert code == 2
+    assert "F-0" in message and "monotonic" in message
+
+
 def test_out_of_scope_move_is_clean(tmp_path: Path) -> None:
     repo_root = tmp_path / "repo"
     repo_root.mkdir()

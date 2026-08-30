@@ -333,8 +333,8 @@ def test_clear_requires_terminal_tickets_empty_fog_and_satisfied_da(
             "Chart the decision-map layer.",
             "Chart the decision-map layer.\n\n"
             "user-ratified: kouko, 2026-08-30\n\n"
-            "acceptance: The parser remains stdlib-only | satisfied | "
-            "docs/loom/results/probe.md",
+            "- DA-1: The parser remains stdlib-only | state: satisfied | "
+            "kind: objective | evidence: docs/loom/results/probe.md",
         )
         .replace("- F-1: how does the fog id survive a rename?\n", "")
     )
@@ -365,7 +365,7 @@ reason: replaced by narrower work
     assert code == 0, message
 
     map_md.write_text(
-        clear_map.replace("| satisfied |", "| open |"), encoding="utf-8"
+        clear_map.replace("state: satisfied", "state: open"), encoding="utf-8"
     )
     code, message = map_store.validate(map_dir, repo_root=tmp_path)
     assert code == 2
@@ -373,7 +373,7 @@ reason: replaced by narrower work
     assert "satisfied" in message.lower()
 
     map_md.write_text(
-        clear_map.replace("docs/loom/results/probe.md", ""), encoding="utf-8"
+        clear_map.replace(" | evidence: docs/loom/results/probe.md", ""), encoding="utf-8"
     )
     code, message = map_store.validate(map_dir, repo_root=tmp_path)
     assert code == 2
@@ -382,8 +382,8 @@ reason: replaced by narrower work
 
     map_md.write_text(
         clear_map.replace(
-            "acceptance: The parser remains stdlib-only | satisfied | "
-            "docs/loom/results/probe.md",
+            "- DA-1: The parser remains stdlib-only | state: satisfied | "
+            "kind: objective | evidence: docs/loom/results/probe.md",
             "",
         ),
         encoding="utf-8",
@@ -484,8 +484,8 @@ def test_clear_history_is_immutable_and_active_regression_is_followup(
         .replace(
             "user-ratified: kouko, 2026-08-30",
             "user-ratified: kouko, 2026-08-30\n"
-            "acceptance: Supported inputs parse | satisfied | "
-            "docs/loom/results/parser.md",
+            "- DA-1: Supported inputs parse | state: satisfied | "
+            "kind: objective | evidence: docs/loom/results/parser.md",
         )
         .replace("- F-1: how does the fog id survive a rename?\n", "")
     )
@@ -663,7 +663,8 @@ def test_archive_transition_keeps_map_and_ticket_paths_stable(tmp_path: Path) ->
         .replace(
             "user-ratified: kouko, 2026-08-30",
             "user-ratified: kouko, 2026-08-30\n"
-            "acceptance: Parser delivered | satisfied | docs/loom/results/parser.md",
+            "- DA-1: Parser delivered | state: satisfied | kind: objective | "
+            "evidence: docs/loom/results/parser.md",
         )
         .replace("- F-1: how does the fog id survive a rename?\n", ""),
         encoding="utf-8",
@@ -707,7 +708,8 @@ def test_archive_uses_stable_readiness_and_refuses_late_binding_break(
         .replace(
             "user-ratified: kouko, 2026-08-30",
             "user-ratified: kouko, 2026-08-30\n"
-            "acceptance: Parser delivered | satisfied | docs/loom/results/parser.md",
+            "- DA-1: Parser delivered | state: satisfied | kind: objective | "
+            "evidence: docs/loom/results/parser.md",
         )
         .replace("- F-1: how does the fog id survive a rename?\n", ""),
         encoding="utf-8",
@@ -1431,6 +1433,15 @@ def test_validate_accepts_closed_hitl_ticket_with_user_ratified(
             "user-ratified: kouko, 2026-08-29",
         ),
     )
+    map_path = map_dir / "MAP.md"
+    map_path.write_text(
+        map_path.read_text(encoding="utf-8").replace(
+            "- We chose stdlib-only parsing (tickets/decision-a.md)",
+            "- We chose stdlib-only parsing (tickets/decision-a.md)\n"
+            "- Prototype selected. (tickets/proto-probe.md)",
+        ),
+        encoding="utf-8",
+    )
     code, message = map_store.validate(map_dir, repo_root=tmp_path)
     assert code == 0, message
 
@@ -1494,7 +1505,8 @@ def test_clear_rejects_non_closed_tickets_and_fog(tmp_path: Path) -> None:
         .replace(
             "Chart the decision-map layer.",
             "Chart the decision-map layer.\n\nuser-ratified: kouko, 2026-08-29\n\n"
-            "acceptance: parser remains stdlib-only | satisfied | docs/loom/results/probe.md",
+            "- DA-1: parser remains stdlib-only | state: satisfied | "
+            "kind: objective | evidence: docs/loom/results/probe.md",
         )
     )
 
@@ -1578,3 +1590,191 @@ def test_cli_validate_exits_2_on_future_schema_version(tmp_path: Path) -> None:
     )
     assert result.returncode == 2
     assert "999" in result.stderr
+
+
+def test_da_ids_states_evidence_and_evaluative_ratification(tmp_path: Path) -> None:
+    # @req: REQ-90
+    map_dir = _make_v3_active_map(tmp_path)
+    map_path = map_dir / "MAP.md"
+    destination = (
+        "- DA-1: Parser remains stdlib-only | state: open | kind: objective\n"
+        "- DA-2: Maintainer accepts the workflow | state: satisfied | "
+        "kind: evaluative | evidence: docs/loom/evidence.md | "
+        "user-ratified: kouko, 2026-08-30"
+    )
+    map_path.write_text(
+        map_path.read_text(encoding="utf-8").replace(
+            "user-ratified: kouko, 2026-08-30",
+            "user-ratified: kouko, 2026-08-30\n" + destination,
+        ),
+        encoding="utf-8",
+    )
+    doc = map_store.read_map(map_dir)
+    assert [criterion.id for criterion in doc.destination_acceptance] == [
+        "DA-1",
+        "DA-2",
+    ]
+    assert doc.destination_acceptance[0].state == "open"
+    assert doc.destination_acceptance[1].evidence == "docs/loom/evidence.md"
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+    invalid = {
+        "duplicate": destination + "\n- DA-2: Reused | state: open | kind: objective",
+        "state": destination.replace("state: open", "state: pending", 1),
+        "evidence": destination.replace(
+            " | evidence: docs/loom/evidence.md", ""
+        ),
+        "ratification": destination.replace(
+            " | user-ratified: kouko, 2026-08-30", ""
+        ),
+    }
+    original = map_path.read_text(encoding="utf-8")
+    for expected, replacement in invalid.items():
+        map_path.write_text(original.replace(destination, replacement), encoding="utf-8")
+        code, message = map_store.validate(map_dir, repo_root=tmp_path)
+        assert code == 2
+        assert expected in message.lower()
+
+
+def test_v3_monotonic_ids_and_exactly_one_closed_ticket_gist(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-92
+    map_dir = _make_v3_active_map(tmp_path)
+    map_path = map_dir / "MAP.md"
+    map_path.write_text(
+        map_path.read_text(encoding="utf-8")
+        .replace(
+            "user-ratified: kouko, 2026-08-30",
+            "user-ratified: kouko, 2026-08-30\n"
+            "- DA-3: Parser remains reliable | state: open | kind: objective",
+        )
+        .replace(
+            "Nothing special.",
+            "Nothing special.\nretired-da: DA-2 | Old criterion",
+        )
+        .replace(
+            "- F-1: how does the fog id survive a rename?",
+            "- F-3: current question",
+        )
+        .replace(
+            "- F-2: retrofitting the four legacy scripts",
+            "- F-2: retrofitting the four legacy scripts",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+    monotonic = map_path.read_text(encoding="utf-8")
+    map_path.write_text(
+        monotonic.replace(
+            "- F-3: current question",
+            "- F-4: later question\n- F-3: current question",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2 and "monotonic" in message.lower()
+    map_path.write_text(monotonic, encoding="utf-8")
+
+    duplicate_gist = map_path.read_text(encoding="utf-8").replace(
+        "- We chose stdlib-only parsing (tickets/decision-a.md)",
+        "- We chose stdlib-only parsing (tickets/decision-a.md)\n"
+        "- Duplicate gist (tickets/decision-a.md)",
+    )
+    map_path.write_text(duplicate_gist, encoding="utf-8")
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2 and "exactly one" in message.lower()
+
+    map_path.write_text(
+        duplicate_gist.replace("\n- Duplicate gist (tickets/decision-a.md)", "")
+        .replace("- F-3: current question", "- F-2: reused retired id"),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2 and "F-2" in message
+
+    map_path.write_text(
+        map_path.read_text(encoding="utf-8")
+        .replace("- F-2: reused retired id", "- F-3: current question")
+        .replace("DA-3: Parser remains reliable", "DA-2: Reused criterion"),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2 and "DA-2" in message
+
+
+def test_blockers_reject_cross_map_self_duplicate_cycle_and_early_claim(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-94
+    map_dir = _make_v3_active_map(tmp_path)
+    closed = map_dir / "tickets/decision-a.md"
+    first = map_dir / "tickets/first.md"
+    second = map_dir / "tickets/second.md"
+    _write(first, TICKET_OPEN_B.replace("type: task", "type: research"))
+    _write(second, TICKET_OPEN_B.replace("type: task", "type: delivery"))
+
+    cases = {
+        "cross-map": "../other/tickets/work",
+        "self": "first",
+        "duplicate": "decision-a, decision-a",
+        "missing": "not-here",
+    }
+    original = first.read_text(encoding="utf-8")
+    for expected, blockers in cases.items():
+        first.write_text(
+            original.replace(
+                "graduated-from: null",
+                f"graduated-from: null\nblocked-by: {blockers}",
+            ),
+            encoding="utf-8",
+        )
+        code, message = map_store.validate(map_dir, repo_root=tmp_path)
+        assert code == 2
+        assert expected in message.lower()
+
+    first.write_text(
+        original.replace(
+            "graduated-from: null", "graduated-from: null\nblocked-by: second"
+        ),
+        encoding="utf-8",
+    )
+    second.write_text(
+        second.read_text(encoding="utf-8").replace(
+            "graduated-from: null", "graduated-from: null\nblocked-by: first"
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2 and "cycle" in message.lower()
+
+    second.write_text(TICKET_OPEN_B.replace("type: task", "type: delivery"), encoding="utf-8")
+    first.write_text(
+        original.replace("status: open", "status: claimed")
+        .replace("claim: null", "claim: alice, 2026-08-30")
+        .replace(
+            "graduated-from: null", "graduated-from: null\nblocked-by: second"
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2 and "second" in message and "closed" in message.lower()
+
+    second.write_text(
+        TICKET_CLOSED.replace("type: task", "type: delivery"), encoding="utf-8"
+    )
+    map_path = map_dir / "MAP.md"
+    map_path.write_text(
+        map_path.read_text(encoding="utf-8").replace(
+            "- We chose stdlib-only parsing (tickets/decision-a.md)",
+            "- We chose stdlib-only parsing (tickets/decision-a.md)\n"
+            "- Second blocker closed. (tickets/second.md)",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+    assert closed.is_file()

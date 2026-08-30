@@ -116,19 +116,21 @@ def _out_of_scope_ids(out_of_scope_lines: list[str]) -> set[str]:
     return ids
 
 
-def _graduated_ids(map_dir: Path) -> set[str]:
+def _graduated_owners(map_dir: Path) -> dict[str, list[str]]:
+    owners: dict[str, list[str]] = {}
     tickets_dir = map_dir / "tickets"
     if not tickets_dir.is_dir():
-        return set()
-    ids: set[str] = set()
+        return owners
     for ticket_path in sorted(tickets_dir.glob("*.md")):
         try:
             ticket = map_store.read_ticket(ticket_path)
         except (map_store.MapStoreError, map_store.SchemaViolation):
-            continue  # malformed ticket — not this gate's concern
+            continue
         if ticket.frontmatter.graduated_from:
-            ids.add(ticket.frontmatter.graduated_from)
-    return ids
+            owners.setdefault(ticket.frontmatter.graduated_from, []).append(
+                ticket_path.name
+            )
+    return owners
 
 
 def check_fog_monotonicity(
@@ -165,13 +167,80 @@ def check_fog_monotonicity(
 
     current_ids = {fog.id for fog in current_doc.fog_entries}
     out_of_scope_ids = _out_of_scope_ids(current_doc.out_of_scope)
-    graduated_ids: set[str] | None = None  # built lazily — only on a miss
+    graduated_owners = _graduated_owners(map_dir)
+    graduated_ids = set(graduated_owners)
+    overlap = sorted(current_ids.intersection(out_of_scope_ids | graduated_ids))
+    if overlap:
+        return 2, (
+            "fog id is reused while its graduated/Out-of-scope history remains: "
+            + ", ".join(overlap)
+        )
+    duplicate_graduations = sorted(
+        fog_id for fog_id, owners in graduated_owners.items() if len(owners) > 1
+    )
+    if duplicate_graduations:
+        return 2, (
+            "fog entry graduated more than once: "
+            + ", ".join(duplicate_graduations)
+        )
+
+    base_out_of_scope_ids = _out_of_scope_ids(base_doc.out_of_scope)
+    reused_retired = sorted(current_ids.intersection(base_out_of_scope_ids))
+    if reused_retired:
+        return 2, (
+            "fog id reuses base Out-of-scope history: "
+            + ", ".join(reused_retired)
+        )
+    vanished_history = sorted(base_out_of_scope_ids - out_of_scope_ids)
+    if vanished_history:
+        return 2, (
+            "Out-of-scope fog history vanished: " + ", ".join(vanished_history)
+        )
+    base_fog_ids = {fog.id for fog in base_doc.fog_entries}
+    max_base_fog = max(
+        (
+            int(fog_id.removeprefix("F-"))
+            for fog_id in base_fog_ids | base_out_of_scope_ids
+        ),
+        default=-1,
+    )
+    non_monotonic_fog = sorted(
+        fog_id
+        for fog_id in current_ids - base_fog_ids
+        if int(fog_id.removeprefix("F-")) <= max_base_fog
+    )
+    if non_monotonic_fog:
+        return 2, (
+            "new fog id is not monotonic: " + ", ".join(non_monotonic_fog)
+        )
+
+    base_da = {item.id: item for item in base_doc.destination_acceptance}
+    current_da = {item.id: item for item in current_doc.destination_acceptance}
+    for da_id, old in base_da.items():
+        current = current_da.get(da_id)
+        if current is not None and current.text != old.text:
+            return 2, (
+                f"Destination acceptance id {da_id} was reused for different text"
+            )
+        if current is None and da_id not in current_doc.retired_da_ids:
+            return 2, (
+                f"Destination acceptance id {da_id} vanished without retired-da history"
+            )
+    max_base_da = max((item.number for item in base_doc.destination_acceptance), default=0)
+    non_monotonic_da = sorted(
+        item.id
+        for item in current_doc.destination_acceptance
+        if item.id not in base_da and item.number <= max_base_da
+    )
+    if non_monotonic_da:
+        return 2, (
+            "new Destination acceptance id is not monotonic: "
+            + ", ".join(non_monotonic_da)
+        )
 
     for fog in base_doc.fog_entries:
         if fog.id in current_ids or fog.id in out_of_scope_ids:
             continue
-        if graduated_ids is None:
-            graduated_ids = _graduated_ids(map_dir)
         if fog.id in graduated_ids:
             continue
         return 2, (

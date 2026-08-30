@@ -313,3 +313,104 @@ def test_progress_refuses_missing_and_symlink_targets_without_writes(tmp_path: P
     plan_result = subprocess.run([sys.executable, str(SCRIPT), str(plan_link), "--repo-root", str(tmp_path)], capture_output=True, text=True)
     assert plan_result.returncode == 2
     assert {path: path.read_bytes() for path in sources} == before
+
+
+def test_reentry_distinguishes_map_and_frontier_states_with_next_cta(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-88
+    maps_root = tmp_path / "docs/loom/maps"
+    absent = map_progress.assess_reentry(tmp_path)
+    assert (absent.state, absent.owner, absent.next_cta) == (
+        "absent",
+        "docs/loom/maps",
+        "chart a new Outcome Map",
+    )
+
+    map_dir = maps_root / "wayfinder"
+    map_md = map_dir / "MAP.md"
+    _write(map_md, "broken map bytes\n")
+    broken_before = map_md.read_bytes()
+    broken = map_progress.assess_reentry(tmp_path)
+    assert broken.state == "broken"
+    assert broken.owner.endswith("/MAP.md")
+    assert "repair" in broken.next_cta
+    assert map_md.read_bytes() == broken_before
+
+    _write(
+        map_md,
+        "---\nmap-id: wayfinder\nschema_version: 3\nstate: active\n---\n\n"
+        "## Destination\n\nImprove search.\nuser-ratified: kouko, 2026-08-30\n"
+        "- DA-1: Search succeeds | state: open | kind: objective\n\n"
+        "## Notes\n\nKeep charting.\n\n## Decisions-so-far\n\n"
+        "## Not-yet-specified (fog)\n\n## Out-of-scope\n",
+    )
+    frontier_ticket = map_dir / "tickets/research-query.md"
+    _write(
+        frontier_ticket,
+        "---\ntype: research\nstatus: open\nclaim: null\n"
+        "graduated-from: null\n---\n\nMeasure query quality.\n",
+    )
+    sources = (map_md, frontier_ticket)
+    before = {path: path.read_bytes() for path in sources}
+    frontier = map_progress.assess_reentry(tmp_path)
+    assert frontier.state == "live"
+    assert frontier.owner.endswith("tickets/research-query.md")
+    assert frontier.next_cta == "claim frontier ticket research-query"
+    assert {path: path.read_bytes() for path in sources} == before
+
+    blocker = map_dir / "tickets/blocker.md"
+    _write(
+        blocker,
+        "---\ntype: research\nstatus: claimed\nclaim: alice, 2026-08-30\n"
+        "graduated-from: null\n---\n\nMeasure blocker.\n",
+    )
+    claimed = map_progress.assess_reentry(tmp_path)
+    assert claimed.state == "claimed"
+    assert claimed.owner.endswith("tickets/blocker.md")
+    assert "resume research" in claimed.next_cta
+
+    frontier_ticket.write_text(
+        frontier_ticket.read_text(encoding="utf-8").replace(
+            "graduated-from: null", "graduated-from: null\nblocked-by: blocker"
+        ),
+        encoding="utf-8",
+    )
+    blocked = map_progress.assess_reentry(tmp_path)
+    assert blocked.state == "blocked"
+    assert "blocker" in blocked.owner
+    assert "resolve blockers" in blocked.next_cta
+
+    blocker.unlink()
+    frontier_ticket.unlink()
+    gap = map_progress.assess_reentry(tmp_path)
+    assert gap.state == "da-gap"
+    assert gap.owner.endswith("/MAP.md#Destination")
+    assert gap.next_cta == "satisfy Destination acceptance DA-1"
+
+    ticket, brief, plan = _arc(tmp_path)
+    delivery = map_progress.assess_reentry(tmp_path, map_id="wayfinder")
+    assert delivery.state == "claimed"
+    assert delivery.phase == "implementing"
+    assert delivery.owner == plan.relative_to(tmp_path).as_posix()
+    assert delivery.next_cta == "resume implementation in the owning Plan"
+    assert ticket.is_file() and brief.is_file() and plan.is_file()
+
+    cli = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            str(tmp_path),
+            "--repo-root",
+            str(tmp_path),
+            "--map-id",
+            "wayfinder",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert cli.returncode == 0, cli.stderr
+    assert "state: claimed" in cli.stdout
+    assert "phase: implementing" in cli.stdout
+    assert "owner: docs/loom/plans/deliver.md" in cli.stdout
+    assert "next-cta: resume implementation in the owning Plan" in cli.stdout

@@ -7,6 +7,7 @@ import argparse
 import os
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import delivery_binding
@@ -41,6 +42,16 @@ class ProgressError(Exception):
 
 class ProgressUnavailable(Exception):
     """Unreadable delivery source — exit 1."""
+
+
+@dataclass(frozen=True)
+class ReentryReport:
+    state: str
+    owner: str
+    next_cta: str
+    map_id: str | None = None
+    ticket: str | None = None
+    phase: str | None = None
 
 
 def _notes_section(text: str) -> str:
@@ -201,14 +212,200 @@ def resolve_progress(ticket_path: Path, repo_root: Path | None = None) -> tuple[
     return ticket_relative, brief, plan_relative, _plan_phase(plan_text)
 
 
+def _live_maps(root: Path) -> tuple[list[Path], list[Path]]:
+    maps_root = root / "docs" / "loom" / "maps"
+    if not maps_root.exists():
+        return [], []
+    if not maps_root.is_dir() or maps_root.is_symlink():
+        return [], [maps_root]
+    live: list[Path] = []
+    broken: list[Path] = []
+    for candidate in sorted(path for path in maps_root.iterdir() if path.is_dir()):
+        result = map_store.is_live_map(candidate, repo_root=root)
+        if result is map_store.LiveMapResult.LIVE:
+            live.append(candidate)
+        elif (candidate / "MAP.md").exists():
+            try:
+                doc = map_store.read_map(candidate)
+            except (map_store.MapStoreError, map_store.SchemaViolation):
+                broken.append(candidate)
+            else:
+                if doc.frontmatter.state in map_store.LIVE_MAP_STATES:
+                    broken.append(candidate)
+    return live, broken
+
+
+def _delivery_reentry(
+    root: Path, map_id: str, ticket_path: Path
+) -> ReentryReport:
+    ticket, brief, plan, phase = resolve_progress(ticket_path, root)
+    ctas = {
+        "unbriefed": (ticket, "start delivery and bind its Brief"),
+        "briefed": (brief or ticket, "create the one owning Plan from the Brief"),
+        "planning": (plan or brief or ticket, "finish planning in the owning Plan"),
+        "implementing": (plan or ticket, "resume implementation in the owning Plan"),
+        "reviewing": (plan or ticket, "resume whole-branch review in the owning Plan"),
+        "finishing": (plan or ticket, "resume finishing and exact-head checks"),
+        "repair-required": (plan or ticket, "repair the owning Plan and re-verify"),
+        "delivered": (ticket, "re-enter charting from the closed delivery gist"),
+    }
+    owner, cta = ctas[phase]
+    return ReentryReport(
+        "claimed" if phase != "delivered" else "live",
+        owner or ticket,
+        cta,
+        map_id=map_id,
+        ticket=ticket,
+        phase=phase,
+    )
+
+
+def assess_reentry(repo_root: Path, map_id: str | None = None) -> ReentryReport:
+    """Report one Map's authoritative re-entry owner without writing sources."""
+    root = Path(os.path.abspath(repo_root))
+    live, broken = _live_maps(root)
+    if map_id is not None:
+        selected = root / "docs" / "loom" / "maps" / map_id
+        if selected in broken:
+            return ReentryReport(
+                "broken",
+                f"docs/loom/maps/{map_id}/MAP.md",
+                "repair the Map validation error before resuming",
+                map_id=map_id,
+            )
+        live = [path for path in live if path.name == map_id]
+        if not live:
+            return ReentryReport(
+                "absent",
+                "docs/loom/maps",
+                "chart a new Outcome Map",
+            )
+    elif broken:
+        selected = broken[0]
+        return ReentryReport(
+            "broken",
+            f"docs/loom/maps/{selected.name}/MAP.md",
+            "repair the Map validation error before resuming",
+            map_id=selected.name,
+        )
+    if not live:
+        return ReentryReport(
+            "absent", "docs/loom/maps", "chart a new Outcome Map"
+        )
+    if len(live) > 1:
+        return ReentryReport(
+            "ambiguous-live",
+            "docs/loom/maps",
+            "select one live Outcome Map by map-id",
+        )
+    map_dir = live[0]
+    doc = map_store.read_map(map_dir)
+    map_owner = f"docs/loom/maps/{map_dir.name}/MAP.md"
+    if doc.frontmatter.state == "charting":
+        return ReentryReport(
+            "live",
+            map_owner,
+            "ratify the Destination and activate the Map",
+            map_id=map_dir.name,
+        )
+    tickets = [
+        map_store.read_ticket(path)
+        for path in sorted((map_dir / "tickets").glob("*.md"))
+    ]
+    statuses = {ticket.path.stem: ticket.frontmatter.status for ticket in tickets}
+    claimed = [ticket for ticket in tickets if ticket.frontmatter.status == "claimed"]
+    blocked_open = [
+        ticket
+        for ticket in tickets
+        if ticket.frontmatter.status == "open"
+        and any(
+            statuses.get(blocker) != "closed"
+            for blocker in ticket.frontmatter.blocked_by
+        )
+    ]
+    if blocked_open:
+        owners = sorted(
+            {
+                blocker
+                for ticket in blocked_open
+                for blocker in ticket.frontmatter.blocked_by
+                if statuses.get(blocker) != "closed"
+            }
+        )
+        return ReentryReport(
+            "blocked",
+            ", ".join(f"docs/loom/maps/{map_dir.name}/tickets/{slug}.md" for slug in owners),
+            "resolve blockers or resume their current owners",
+            map_id=map_dir.name,
+        )
+    if claimed:
+        ticket = claimed[0]
+        if ticket.frontmatter.type == "delivery":
+            return _delivery_reentry(root, map_dir.name, ticket.path)
+        relative = ticket.path.relative_to(root).as_posix()
+        return ReentryReport(
+            "claimed",
+            relative,
+            f"resume {ticket.frontmatter.type} ticket {ticket.path.stem}",
+            map_id=map_dir.name,
+            ticket=relative,
+        )
+    frontier = [
+        ticket
+        for ticket in tickets
+        if ticket.frontmatter.status == "open"
+        and all(statuses.get(blocker) == "closed" for blocker in ticket.frontmatter.blocked_by)
+    ]
+    if frontier:
+        ticket = frontier[0]
+        relative = ticket.path.relative_to(root).as_posix()
+        return ReentryReport(
+            "live",
+            relative,
+            f"claim frontier ticket {ticket.path.stem}",
+            map_id=map_dir.name,
+            ticket=relative,
+        )
+    open_da = [
+        criterion for criterion in doc.destination_acceptance if criterion.state == "open"
+    ]
+    if open_da:
+        return ReentryReport(
+            "da-gap",
+            map_owner + "#Destination",
+            f"satisfy Destination acceptance {open_da[0].id}",
+            map_id=map_dir.name,
+        )
+    return ReentryReport(
+        "live",
+        map_owner,
+        "assess Map clear or re-chart the next unknown",
+        map_id=map_dir.name,
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Resolve a delivery Ticket's read-only progress.")
-    parser.add_argument("target", help="delivery Ticket path")
+    parser.add_argument("target", help="repository root, delivery Ticket, or Plan path")
     parser.add_argument("--repo-root", help="repository root")
+    parser.add_argument("--map-id", help="select one live Outcome Map for re-entry")
     args = parser.parse_args(argv)
     target = Path(args.target)
     root = Path(args.repo_root) if args.repo_root else map_store.resolve_repo_root(None, target.parent)
     try:
+        absolute_root = Path(os.path.abspath(root))
+        if Path(os.path.abspath(target)) == absolute_root:
+            report = assess_reentry(absolute_root, map_id=args.map_id)
+            print(f"state: {report.state}")
+            if report.map_id is not None:
+                print(f"map-id: {report.map_id}")
+            print(f"owner: {report.owner}")
+            if report.ticket is not None:
+                print(f"ticket: {report.ticket}")
+            if report.phase is not None:
+                print(f"phase: {report.phase}")
+            print(f"next-cta: {report.next_cta}")
+            return 0
         relative = _relative(Path(os.path.abspath(root)), target, "target")
         parts = Path(relative).parts
         if target.is_symlink():

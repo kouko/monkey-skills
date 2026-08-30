@@ -32,7 +32,7 @@ state: active
 
 Improve the outcome.
 user-ratified: kouko, 2026-08-30
-acceptance: Slice works | open | docs/loom/evidence.md
+- DA-1: Slice works | state: open | kind: objective
 
 ## Notes
 
@@ -303,10 +303,10 @@ def test_clear_assessment_reuses_req_78_acceptance_validation(
     map_dir, _ = _make_map(tmp_path)
     map_path = map_dir / "MAP.md"
     map_path.write_text(
-        map_path.read_text(encoding="utf-8").replace(
-            "acceptance: Slice works | open | docs/loom/evidence.md",
-            "acceptance: | satisfied | docs/loom/evidence.md",
-        ),
+            map_path.read_text(encoding="utf-8").replace(
+                "- DA-1: Slice works | state: open | kind: objective",
+                "- DA-1: Slice works | state: satisfied | kind: objective",
+            ),
         encoding="utf-8",
     )
 
@@ -474,8 +474,9 @@ def test_retirement_rollback_failure_records_broken_recovery_state(
         map_path.read_text(encoding="utf-8")
         .replace("state: active", "state: clear")
         .replace(
-            "acceptance: Slice works | open | docs/loom/evidence.md",
-            "acceptance: Slice works | satisfied | docs/loom/evidence.md",
+            "- DA-1: Slice works | state: open | kind: objective",
+            "- DA-1: Slice works | state: satisfied | kind: objective | "
+            "evidence: docs/loom/evidence.md",
         ),
         encoding="utf-8",
     )
@@ -515,3 +516,155 @@ def test_retirement_rollback_failure_records_broken_recovery_state(
     assert evidence["action"] == "recovery-required"
     assert evidence["map_path"] == "MAP.md"
     assert "simulated rollback I/O failure" in evidence["rollback_error"]
+
+
+def test_transactions_detect_conflicts_and_recover_partial_effects(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-87
+    map_dir, ticket = _make_map(tmp_path)
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8").replace(
+            "status: claimed\nclaim: codex, 2026-08-30",
+            "status: open\nclaim: null",
+        ),
+        encoding="utf-8",
+    )
+    observed = map_transaction.capture_revision(map_dir)
+    first = map_transaction.claim_ticket(
+        map_dir,
+        "ship-slice",
+        owner="alice",
+        claimed_on="2026-08-30",
+        operation_id="claim-alice",
+        expected_revision=observed,
+    )
+    assert first.applied is True and first.reused is False
+    retry = map_transaction.claim_ticket(
+        map_dir,
+        "ship-slice",
+        owner="alice",
+        claimed_on="2026-08-30",
+        operation_id="claim-alice",
+        expected_revision=observed,
+    )
+    assert retry.applied is False and retry.reused is True
+    with pytest.raises(map_transaction.CloseTransactionError, match="conflict.*re-read"):
+        map_transaction.claim_ticket(
+            map_dir,
+            "ship-slice",
+            owner="bob",
+            claimed_on="2026-08-30",
+            operation_id="claim-bob",
+            expected_revision=observed,
+        )
+
+    blocker = map_dir / "tickets" / "blocker.md"
+    _write(
+        blocker,
+        "---\ntype: research\nstatus: open\nclaim: null\n"
+        "graduated-from: null\n---\n\nMeasure the blocker.\n",
+    )
+    topology_revision = map_transaction.capture_revision(map_dir)
+    (map_dir / "MAP.md").write_text(
+        (map_dir / "MAP.md").read_text(encoding="utf-8")
+        + "\nConcurrent topology note.\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(map_transaction.CloseTransactionError, match="conflict.*re-read"):
+        map_transaction.update_blockers(
+            map_dir,
+            "blocker",
+            [],
+            operation_id="block-ship",
+            expected_revision=topology_revision,
+        )
+
+    recovering = map_dir / "tickets" / "recovering.md"
+    _write(
+        recovering,
+        "---\ntype: research\nstatus: open\nclaim: null\n"
+        "graduated-from: null\n---\n\nRecover this claim.\n",
+    )
+    recovery_revision = map_transaction.capture_revision(map_dir)
+    real_atomic_write = map_transaction.map_store._atomic_write
+    calls = 0
+
+    def fail_first_effect(path, text, *, expected=None) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise OSError("simulated effect interruption")
+        real_atomic_write(path, text, expected=expected)
+
+    monkeypatch.setattr(
+        map_transaction.map_store, "_atomic_write", fail_first_effect
+    )
+    with pytest.raises(map_transaction.CloseTransactionError, match="interruption"):
+        map_transaction.claim_ticket(
+            map_dir,
+            "recovering",
+            owner="alice",
+            claimed_on="2026-08-30",
+            operation_id="claim-recovering",
+            expected_revision=recovery_revision,
+        )
+    monkeypatch.setattr(
+        map_transaction.map_store, "_atomic_write", real_atomic_write
+    )
+    recovered = map_transaction.claim_ticket(
+        map_dir,
+        "recovering",
+        owner="alice",
+        claimed_on="2026-08-30",
+        operation_id="claim-recovering",
+        expected_revision=recovery_revision,
+    )
+    assert recovered.applied is True and recovered.reused is False
+
+    real_mkstemp = map_transaction.tempfile.mkstemp
+    probe_calls = 0
+
+    def fail_second_probe(*args, **kwargs):
+        nonlocal probe_calls
+        probe_calls += 1
+        if probe_calls == 2:
+            raise OSError("simulated probe interruption")
+        return real_mkstemp(*args, **kwargs)
+
+    monkeypatch.setattr(map_transaction.tempfile, "mkstemp", fail_second_probe)
+    with pytest.raises(map_transaction.CloseTransactionError, match="unsupported"):
+        map_transaction._assert_supported_filesystem(map_dir)
+    assert not list(map_dir.glob(".map-cas-probe-*"))
+    monkeypatch.setattr(map_transaction.tempfile, "mkstemp", real_mkstemp)
+
+    unsafe_map = tmp_path / "unsafe-map"
+    unsafe_map.mkdir()
+    (unsafe_map / "MAP.md").write_bytes((map_dir / "MAP.md").read_bytes())
+    (unsafe_map / "tickets").symlink_to(
+        map_dir / "tickets", target_is_directory=True
+    )
+    with pytest.raises(
+        map_transaction.CloseTransactionError, match="non-regular.*tickets"
+    ):
+        map_transaction.capture_revision(unsafe_map)
+
+    before = {path: path.read_bytes() for path in (map_dir / "MAP.md", ticket, blocker)}
+    monkeypatch.setattr(
+        map_transaction,
+        "_assert_supported_filesystem",
+        lambda _directory: (_ for _ in ()).throw(
+            map_transaction.CloseTransactionError(
+                "unsupported atomic-replacement assumption"
+            )
+        ),
+    )
+    with pytest.raises(map_transaction.CloseTransactionError, match="unsupported"):
+        map_transaction.update_blockers(
+            map_dir,
+            "blocker",
+            [],
+            operation_id="unsupported-block",
+            expected_revision=map_transaction.capture_revision(map_dir),
+        )
+    assert {path: path.read_bytes() for path in before} == before

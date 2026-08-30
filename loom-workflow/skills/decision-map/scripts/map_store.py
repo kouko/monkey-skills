@@ -74,6 +74,10 @@ REQUIRED_SECTIONS = [
 _SECTION_HEADING = re.compile(r"^##\s+(.+?)\s*$")
 _FOG_ENTRY = re.compile(r"^-\s*(?P<id>F-(?P<n>\d+))\s*:\s*(?P<text>.*)$")
 _DECISION_LINE = re.compile(r"^-\s*(?P<gist>.*)\((?P<link>[^()]*)\)\s*$")
+_DA_ENTRY = re.compile(
+    r"^-\s*(?P<id>DA-(?P<n>[0-9]+))\s*:\s*(?P<body>.*)$"
+)
+_RETIRED_DA = re.compile(r"^retired-da:\s*(?P<id>DA-[0-9]+)\s*\|")
 
 
 class MapStoreError(Exception):
@@ -141,6 +145,17 @@ class DecisionLine:
 
 
 @dataclass
+class DestinationAcceptance:
+    id: str
+    number: int
+    text: str
+    state: str
+    kind: str
+    evidence: str | None
+    ratification: str | None
+
+
+@dataclass
 class MapDocument:
     path: Path
     frontmatter: MapFrontmatter
@@ -148,6 +163,10 @@ class MapDocument:
     fog_entries: list[FogEntry] = field(default_factory=list)
     decisions: list[DecisionLine] = field(default_factory=list)
     out_of_scope: list[str] = field(default_factory=list)
+    destination_acceptance: list[DestinationAcceptance] = field(
+        default_factory=list
+    )
+    retired_da_ids: set[str] = field(default_factory=set)
 
 
 def _parse_map_frontmatter(fields: dict[str, str]) -> MapFrontmatter:
@@ -238,6 +257,67 @@ def _parse_out_of_scope(section_text: str) -> list[str]:
     ]
 
 
+def _parse_destination_acceptance(
+    section_text: str,
+) -> list[DestinationAcceptance]:
+    criteria: list[DestinationAcceptance] = []
+    for line in section_text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("- DA-"):
+            continue
+        match = _DA_ENTRY.fullmatch(stripped)
+        if match is None:
+            raise SchemaViolation(
+                f"malformed Destination acceptance entry: {stripped!r}"
+            )
+        parts = [part.strip() for part in match.group("body").split("|")]
+        if not parts or not parts[0]:
+            raise SchemaViolation(
+                f"Destination acceptance {match.group('id')} has empty criterion text"
+            )
+        values: dict[str, str] = {}
+        for part in parts[1:]:
+            key, separator, value = part.partition(":")
+            key = key.strip()
+            value = value.strip()
+            if separator != ":" or key not in {
+                "state",
+                "kind",
+                "evidence",
+                "user-ratified",
+            }:
+                raise SchemaViolation(
+                    f"Destination acceptance {match.group('id')} has "
+                    f"unsupported field {part!r}"
+                )
+            if key in values:
+                raise SchemaViolation(
+                    f"Destination acceptance {match.group('id')} has duplicate "
+                    f"field {key!r}"
+                )
+            values[key] = value
+        criteria.append(
+            DestinationAcceptance(
+                id=match.group("id"),
+                number=int(match.group("n")),
+                text=parts[0],
+                state=values.get("state", ""),
+                kind=values.get("kind", ""),
+                evidence=values.get("evidence") or None,
+                ratification=values.get("user-ratified") or None,
+            )
+        )
+    return criteria
+
+
+def _parse_retired_da_ids(notes: str) -> set[str]:
+    return {
+        match.group("id")
+        for line in notes.splitlines()
+        if (match := _RETIRED_DA.match(line.strip())) is not None
+    }
+
+
 def parse_map_document(text: str, path: Path) -> MapDocument:
     fields, body = parse_frontmatter(text)
     frontmatter = _parse_map_frontmatter(fields)
@@ -248,6 +328,10 @@ def parse_map_document(text: str, path: Path) -> MapDocument:
     )
     doc.decisions = _parse_decisions(sections.get("Decisions-so-far", ""))
     doc.out_of_scope = _parse_out_of_scope(sections.get("Out-of-scope", ""))
+    doc.destination_acceptance = _parse_destination_acceptance(
+        sections.get("Destination", "")
+    )
+    doc.retired_da_ids = _parse_retired_da_ids(sections.get("Notes", ""))
     return doc
 
 
@@ -1181,12 +1265,16 @@ def _check_map_structure(doc: MapDocument) -> None:
             f"{REQUIRED_SECTIONS}, found {present_order}"
         )
     seen_fog_ids: set[str] = set()
+    previous_fog_number = 0
     for fog in doc.fog_entries:
         if not re.fullmatch(r"F-[0-9]+", fog.id):
             raise SchemaViolation(f"malformed fog id: {fog.id!r}")
         if fog.id in seen_fog_ids:
             raise SchemaViolation(f"duplicate fog id reused: {fog.id!r}")
+        if fog.number <= previous_fog_number:
+            raise SchemaViolation("fog ids must be monotonic in document order")
         seen_fog_ids.add(fog.id)
+        previous_fog_number = fog.number
     if doc.frontmatter.state in RATIFIED_MAP_STATES and not _has_user_ratified_line(
         doc.sections.get("Destination", "")
     ):
@@ -1202,35 +1290,79 @@ def _check_map_structure(doc: MapDocument) -> None:
         )
 
 
-def _check_v3_clear_acceptance(doc: MapDocument) -> None:
-    """Gate clear on the interim authored Destination acceptance form.
+def _check_destination_acceptance(doc: MapDocument) -> None:
+    if doc.frontmatter.schema_version != 3:
+        return
+    if any(
+        line.strip().startswith("acceptance:")
+        for line in doc.sections.get("Destination", "").splitlines()
+    ):
+        raise SchemaViolation(
+            "schema-v3 Destination acceptance requires stable DA-<n> entries"
+        )
+    seen: set[str] = set()
+    previous = 0
+    for criterion in doc.destination_acceptance:
+        if criterion.id in seen:
+            raise SchemaViolation(
+                f"duplicate Destination acceptance id reused: {criterion.id}"
+            )
+        if criterion.number <= previous:
+            raise SchemaViolation(
+                "Destination acceptance ids must be monotonic in document order"
+            )
+        seen.add(criterion.id)
+        previous = criterion.number
+        if criterion.state not in {"open", "satisfied"}:
+            raise SchemaViolation(
+                f"Destination acceptance {criterion.id} state must be open or satisfied"
+            )
+        if criterion.kind not in {"objective", "evaluative"}:
+            raise SchemaViolation(
+                f"Destination acceptance {criterion.id} kind must be objective or evaluative"
+            )
+        if criterion.state == "satisfied" and criterion.evidence is None:
+            raise SchemaViolation(
+                f"satisfied Destination acceptance {criterion.id} requires evidence"
+            )
+        if criterion.kind == "evaluative" and criterion.state == "satisfied":
+            if criterion.ratification is None or not _DATED_HUMAN.fullmatch(
+                criterion.ratification
+            ):
+                raise SchemaViolation(
+                    f"satisfied evaluative Destination acceptance {criterion.id} "
+                    "requires named dated user ratification"
+                )
+    reused = sorted(seen.intersection(doc.retired_da_ids))
+    if reused:
+        raise SchemaViolation(
+            "Destination acceptance id reused from retirement history: "
+            + ", ".join(reused)
+        )
 
-    Stable DA identities and their fuller grammar belong to REQ-90; REQ-78
-    only needs every currently authored criterion to be satisfied with a
-    non-empty evidence pointer before a v3 map can be clear.
-    """
+
+def _check_v3_clear_acceptance(doc: MapDocument) -> None:
+    """Gate clear on stable, satisfied Destination acceptance criteria."""
     if doc.frontmatter.schema_version != 3 or doc.frontmatter.state != "clear":
         return
     if doc.sections["Not-yet-specified (fog)"].strip():
         raise SchemaViolation(
             f"{doc.path}: clear v3 map requires an empty fog section"
         )
-    criteria_found = False
-    for line in doc.sections["Destination"].splitlines():
-        if not line.strip().startswith("acceptance:"):
-            continue
-        criteria_found = True
-        parts = [part.strip() for part in line.split("|")]
-        if len(parts) != 3 or not parts[0][len("acceptance:"):].strip() or (
-            parts[1] != "satisfied" or not parts[2]
-        ):
-            raise SchemaViolation(
-                f"{doc.path}: clear map requires every Destination acceptance "
-                "criterion to be satisfied with valid evidence"
-            )
-    if not criteria_found:
+    if not doc.destination_acceptance:
         raise SchemaViolation(
             f"{doc.path}: clear v3 map requires a Destination acceptance criterion"
+        )
+    unsatisfied = [
+        criterion.id
+        for criterion in doc.destination_acceptance
+        if criterion.state != "satisfied" or criterion.evidence is None
+    ]
+    if unsatisfied:
+        raise SchemaViolation(
+            f"{doc.path}: clear map requires every Destination acceptance "
+            "criterion satisfied with evidence; open/invalid: "
+            + ", ".join(unsatisfied)
         )
 
 
@@ -1299,6 +1431,15 @@ def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
         blocked_by_graph[ticket_path.stem] = ticket.frontmatter.blocked_by
         statuses[ticket_path.stem] = ticket.frontmatter.status
     _check_blocked_by(blocked_by_graph, tickets_dir)
+    for slug, blockers in blocked_by_graph.items():
+        if statuses[slug] != "claimed":
+            continue
+        unclosed = [blocker for blocker in blockers if statuses[blocker] != "closed"]
+        if unclosed:
+            raise SchemaViolation(
+                f"{tickets_dir / (slug + '.md')}: claimed ticket requires every "
+                "blocker closed; still blocking: " + ", ".join(unclosed)
+            )
     for slug, status in statuses.items():
         if status != "withdrawn":
             continue
@@ -1326,10 +1467,28 @@ def _check_blocked_by(
     names an existing sibling ticket file, and the blocked-by graph is
     acyclic — dangling slugs and cycles exit 2."""
     for slug, blockers in graph.items():
+        invalid = [blocker for blocker in blockers if not _SAFE_SLUG.fullmatch(blocker)]
+        if invalid:
+            raise SchemaViolation(
+                f"{tickets_dir / (slug + '.md')}: blocked-by cross-Map or malformed "
+                "target(s): " + ", ".join(invalid)
+            )
+        if slug in blockers:
+            raise SchemaViolation(
+                f"{tickets_dir / (slug + '.md')}: blocked-by self edge is forbidden"
+            )
+        duplicates = sorted(
+            blocker for blocker in set(blockers) if blockers.count(blocker) > 1
+        )
+        if duplicates:
+            raise SchemaViolation(
+                f"{tickets_dir / (slug + '.md')}: duplicate blocked-by edge(s): "
+                + ", ".join(duplicates)
+            )
         for blocker in blockers:
             if blocker not in graph:
                 raise SchemaViolation(
-                    f"{tickets_dir / (slug + '.md')}: blocked-by names "
+                    f"{tickets_dir / (slug + '.md')}: blocked-by missing target; names "
                     f"{blocker!r}, but no ticket file "
                     f"'{blocker}.md' exists in {tickets_dir}"
                 )
@@ -1366,6 +1525,54 @@ def _check_blocked_by(
                 path.pop()
 
 
+def _check_monotonic_relations(map_dir: Path, doc: MapDocument) -> None:
+    if doc.frontmatter.schema_version != 3:
+        return
+    out_of_scope_ids = {
+        match.group("id")
+        for line in doc.out_of_scope
+        if (match := re.match(r"^(?P<id>F-[0-9]+)\s*:", line)) is not None
+    }
+    graduated: dict[str, list[str]] = {}
+    closed_tickets: list[str] = []
+    for ticket_path in sorted((Path(map_dir) / "tickets").glob("*.md")):
+        ticket = read_ticket(ticket_path)
+        if ticket.frontmatter.graduated_from:
+            graduated.setdefault(ticket.frontmatter.graduated_from, []).append(
+                ticket_path.name
+            )
+        if ticket.frontmatter.status == "closed":
+            closed_tickets.append(ticket_path.name)
+    current_fog = {entry.id for entry in doc.fog_entries}
+    reused_fog = sorted(current_fog.intersection(out_of_scope_ids | set(graduated)))
+    if reused_fog:
+        raise SchemaViolation(
+            "partial fog graduation or fog id reused from graduated or "
+            "Out-of-scope history: "
+            + ", ".join(reused_fog)
+        )
+    duplicate_graduations = sorted(
+        fog_id for fog_id, tickets in graduated.items() if len(tickets) > 1
+    )
+    if duplicate_graduations:
+        raise SchemaViolation(
+            "fog entry graduated more than once: " + ", ".join(duplicate_graduations)
+        )
+    gist_counts: dict[str, int] = {}
+    for decision in doc.decisions:
+        gist_counts[decision.ticket_link] = gist_counts.get(decision.ticket_link, 0) + 1
+    bad_gists = [
+        ticket
+        for ticket in closed_tickets
+        if gist_counts.get(f"tickets/{ticket}", 0) != 1
+    ]
+    if bad_gists:
+        raise SchemaViolation(
+            "every closed ticket requires exactly one Decisions-so-far gist: "
+            + ", ".join(bad_gists)
+        )
+
+
 def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     """Validate a decision-map store at `target` (a map directory).
 
@@ -1389,10 +1596,12 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     try:
         _check_schema_version(doc.frontmatter.schema_version)
         _check_map_structure(doc)
+        _check_destination_acceptance(doc)
         _check_v3_clear_acceptance(doc)
         _check_tickets(
             map_dir, doc.frontmatter.state, doc.frontmatter.schema_version
         )
+        _check_monotonic_relations(map_dir, doc)
     except SchemaViolation as exc:
         return 2, str(exc)
     except MapStoreError as exc:

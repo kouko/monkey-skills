@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""Recoverable schema-v3 ticket close-and-rechart operation.
+"""Recoverable schema-v3 Map transactions.
 
-This module owns only REQ-84's ordered close operation.  The broader
-read-set conflict and filesystem-assumption contract belongs to REQ-87.
+REQ-84 defines ordered close-and-rechart. REQ-87 extends the same atomic
+primitives with full-read-set conflicts, idempotent retries, and safe recovery.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
 import stat
+import tempfile
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
@@ -35,6 +37,17 @@ class CloseResult:
     map_clear_eligible: bool
 
 
+@dataclass(frozen=True)
+class StoreRevision:
+    entries: tuple[tuple[str, str], ...]
+
+
+@dataclass(frozen=True)
+class MutationResult:
+    applied: bool
+    reused: bool
+
+
 def _before_terminalize() -> None:
     """Test seam immediately before the final, terminal ticket write."""
 
@@ -57,6 +70,298 @@ def _after_archive_state_replace() -> None:
 
 def _before_retirement_replace() -> None:
     """Test seam immediately before the MAP compare-and-swap write."""
+
+
+def capture_revision(map_dir: Path) -> StoreRevision:
+    """Digest the complete Map-and-Ticket topology read set."""
+    map_dir = Path(map_dir)
+    paths = [map_dir / "MAP.md"]
+    tickets_dir = map_dir / "tickets"
+    try:
+        tickets_mode = tickets_dir.lstat().st_mode
+    except OSError as exc:
+        raise CloseTransactionError(
+            f"cannot read transaction revision for {tickets_dir}: {exc}"
+        ) from exc
+    if not stat.S_ISDIR(tickets_mode):
+        raise CloseTransactionError(
+            f"transaction read set contains a non-regular tickets directory: "
+            f"{tickets_dir}"
+        )
+    paths.extend(sorted(tickets_dir.glob("*.md")))
+    entries: list[tuple[str, str]] = []
+    for path in paths:
+        try:
+            mode = path.lstat().st_mode
+            if not stat.S_ISREG(mode):
+                raise CloseTransactionError(
+                    f"transaction read set contains a non-regular file: {path}"
+                )
+            payload = path.read_bytes()
+        except OSError as exc:
+            raise CloseTransactionError(
+                f"cannot read transaction revision for {path}: {exc}"
+            ) from exc
+        entries.append(
+            (
+                path.relative_to(map_dir).as_posix(),
+                hashlib.sha256(payload).hexdigest(),
+            )
+        )
+    return StoreRevision(tuple(entries))
+
+
+def _require_revision(map_dir: Path, expected: StoreRevision) -> None:
+    if capture_revision(map_dir) != expected:
+        raise CloseTransactionError(
+            "transaction conflict: the authoritative Map or Ticket read set "
+            "changed; re-read before retry"
+        )
+
+
+def _assert_supported_filesystem(directory: Path) -> None:
+    """Probe the same directory's atomic exchange before artifact mutation."""
+    descriptors: list[int] = []
+    paths: list[Path] = []
+    try:
+        for prefix in (".map-cas-probe-a.", ".map-cas-probe-b."):
+            descriptor, name = tempfile.mkstemp(prefix=prefix, dir=directory)
+            descriptors.append(descriptor)
+            paths.append(Path(name))
+        for descriptor in descriptors:
+            os.close(descriptor)
+        descriptors.clear()
+        map_store._exchange_paths(paths[0], paths[1])
+        map_store._fsync_directory(directory)
+    except (OSError, map_store.SchemaViolation) as exc:
+        raise CloseTransactionError(
+            f"unsupported atomic-replacement assumption for {directory}: {exc}"
+        ) from exc
+    finally:
+        for descriptor in descriptors:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+        for path in paths:
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
+
+
+def _exclusive_write(path: Path, text: str) -> None:
+    try:
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        map_store._fsync_directory(path.parent)
+    except FileExistsError as exc:
+        raise CloseTransactionError(
+            f"transaction conflict: {path} already exists; re-read before retry"
+        ) from exc
+    except OSError as exc:
+        raise CloseTransactionError(
+            f"cannot create transaction artifact {path}: {exc}"
+        ) from exc
+
+
+def _operation_path(map_dir: Path, operation_id: str) -> Path:
+    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", operation_id):
+        raise CloseTransactionError("operation_id must be a safe lowercase slug")
+    path = map_dir / ".transactions" / f"{operation_id}.json"
+    _assert_no_symlink_components(path)
+    _assert_contained(map_dir, path)
+    return path
+
+
+def _load_operation(path: Path, intent: dict[str, object]) -> bool:
+    if not path.exists():
+        return False
+    try:
+        saved = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise CloseTransactionError(f"cannot recover operation record: {exc}") from exc
+    if saved != intent:
+        raise CloseTransactionError(
+            "operation retry conflicts with the authoritative operation record"
+        )
+    return True
+
+
+def _replace_frontmatter_field(
+    text: str, field: str, value: str | None
+) -> str:
+    lines = text.splitlines()
+    try:
+        end = lines[1:].index("---") + 1
+    except ValueError as exc:
+        raise CloseTransactionError("ticket has invalid frontmatter") from exc
+    matches = [index for index in range(1, end) if lines[index].startswith(f"{field}:")]
+    if len(matches) > 1:
+        raise CloseTransactionError(f"ticket has duplicate {field!r} frontmatter")
+    replacement = f"{field}: {value}" if value is not None else None
+    if matches and replacement is None:
+        lines.pop(matches[0])
+    elif matches:
+        assert replacement is not None
+        lines[matches[0]] = replacement
+    elif replacement is not None:
+        lines.insert(end, replacement)
+    return "\n".join(lines) + ("\n" if text.endswith("\n") else "")
+
+
+def _prepare_mutation(
+    map_dir: Path,
+    operation_id: str,
+    intent: dict[str, object],
+    expected_revision: StoreRevision,
+) -> tuple[Path, bool]:
+    _require_revision(map_dir, expected_revision)
+    _assert_supported_filesystem(map_dir)
+    operation = _operation_path(map_dir, operation_id)
+    if _load_operation(operation, intent):
+        return operation, True
+    operation.parent.mkdir(mode=0o700, exist_ok=True)
+    _require_revision(map_dir, expected_revision)
+    _exclusive_write(operation, json.dumps(intent, indent=2, sort_keys=True) + "\n")
+    return operation, False
+
+
+def claim_ticket(
+    map_dir: Path,
+    ticket_slug: str,
+    *,
+    owner: str,
+    claimed_on: str,
+    operation_id: str,
+    expected_revision: StoreRevision,
+) -> MutationResult:
+    """Claim one unblocked frontier ticket against a full store revision."""
+    map_dir = Path(map_dir)
+    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", ticket_slug):
+        raise CloseTransactionError("ticket_slug is not a safe slug")
+    if (
+        not owner.strip()
+        or "," in owner
+        or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", claimed_on)
+    ):
+        raise CloseTransactionError("claim requires an owner and YYYY-MM-DD date")
+    intent = {
+        "version": 1,
+        "kind": "claim",
+        "ticket_slug": ticket_slug,
+        "owner": owner.strip(),
+        "claimed_on": claimed_on,
+    }
+    operation = _operation_path(map_dir, operation_id)
+    ticket_path = map_dir / "tickets" / f"{ticket_slug}.md"
+    operation_prepared = _load_operation(operation, intent)
+    if operation_prepared:
+        ticket = map_store.read_ticket(ticket_path)
+        desired = f"{owner.strip()}, {claimed_on}"
+        if ticket.frontmatter.status == "claimed" and ticket.frontmatter.claim == desired:
+            return MutationResult(False, True)
+    _require_revision(map_dir, expected_revision)
+    try:
+        ticket = map_store.require_ticket_mutable(map_dir, ticket_slug, "claim")
+        code, message = map_store.validate(map_dir)
+    except (map_store.MapStoreError, map_store.SchemaViolation) as exc:
+        raise CloseTransactionError(str(exc)) from exc
+    if code != 0:
+        raise CloseTransactionError(f"cannot claim from broken Map: {message}")
+    if ticket.frontmatter.status != "open":
+        raise CloseTransactionError("ticket must be open before claim")
+    statuses = {
+        path.stem: map_store.read_ticket(path).frontmatter.status
+        for path in sorted((map_dir / "tickets").glob("*.md"))
+    }
+    unclosed = [
+        slug for slug in ticket.frontmatter.blocked_by if statuses.get(slug) != "closed"
+    ]
+    if unclosed:
+        raise CloseTransactionError("ticket is blocked by " + ", ".join(unclosed))
+    original = ticket_path.read_bytes()
+    updated = _replace_frontmatter_field(original.decode("utf-8"), "status", "claimed")
+    updated = _replace_frontmatter_field(
+        updated, "claim", f"{owner.strip()}, {claimed_on}"
+    )
+    if operation_prepared:
+        _assert_supported_filesystem(map_dir)
+        _require_revision(map_dir, expected_revision)
+    else:
+        _prepare_mutation(map_dir, operation_id, intent, expected_revision)
+    try:
+        map_store._atomic_write(ticket_path, updated, expected=original)
+    except (OSError, map_store.SchemaViolation) as exc:
+        raise CloseTransactionError(str(exc)) from exc
+    return MutationResult(True, False)
+
+
+def update_blockers(
+    map_dir: Path,
+    ticket_slug: str,
+    blockers: list[str],
+    *,
+    operation_id: str,
+    expected_revision: StoreRevision,
+) -> MutationResult:
+    """Replace blocker edges only after validating the current whole graph."""
+    map_dir = Path(map_dir)
+    intent = {
+        "version": 1,
+        "kind": "update-blockers",
+        "ticket_slug": ticket_slug,
+        "blockers": blockers,
+    }
+    operation = _operation_path(map_dir, operation_id)
+    ticket_path = map_dir / "tickets" / f"{ticket_slug}.md"
+    desired_value = ", ".join(blockers)
+    operation_prepared = _load_operation(operation, intent)
+    if operation_prepared:
+        current = map_store.read_ticket(ticket_path)
+        if current.frontmatter.blocked_by == blockers:
+            return MutationResult(False, True)
+        _require_revision(map_dir, expected_revision)
+    try:
+        map_store.require_ticket_mutable(map_dir, ticket_slug, "edit")
+    except (map_store.MapStoreError, map_store.SchemaViolation) as exc:
+        raise CloseTransactionError(str(exc)) from exc
+    graph = {
+        path.stem: map_store.read_ticket(path).frontmatter.blocked_by
+        for path in sorted((map_dir / "tickets").glob("*.md"))
+    }
+    graph[ticket_slug] = blockers
+    try:
+        map_store._check_blocked_by(graph, map_dir / "tickets")
+    except map_store.SchemaViolation as exc:
+        raise CloseTransactionError(str(exc)) from exc
+    statuses = {
+        path.stem: map_store.read_ticket(path).frontmatter.status
+        for path in sorted((map_dir / "tickets").glob("*.md"))
+    }
+    if statuses.get(ticket_slug) == "claimed":
+        unclosed = [slug for slug in blockers if statuses.get(slug) != "closed"]
+        if unclosed:
+            raise CloseTransactionError(
+                "claimed ticket requires closed blockers: " + ", ".join(unclosed)
+            )
+    original = ticket_path.read_bytes()
+    updated = _replace_frontmatter_field(
+        original.decode("utf-8"), "blocked-by", desired_value or None
+    )
+    if operation_prepared:
+        _assert_supported_filesystem(map_dir)
+        _require_revision(map_dir, expected_revision)
+    else:
+        _prepare_mutation(map_dir, operation_id, intent, expected_revision)
+    try:
+        map_store._atomic_write(ticket_path, updated, expected=original)
+    except (OSError, map_store.SchemaViolation) as exc:
+        raise CloseTransactionError(str(exc)) from exc
+    return MutationResult(True, False)
 
 
 def _atomic_write(
@@ -94,7 +399,10 @@ def _append_section_line(text: str, section: str, line: str) -> str:
 
 
 def _validate_routes(unknowns: list[UnknownRoute]) -> None:
-    if len({(route.destination, route.text, route.ticket_slug) for route in unknowns}) != len(unknowns):
+    route_keys = {
+        (route.destination, route.text, route.ticket_slug) for route in unknowns
+    }
+    if len(route_keys) != len(unknowns):
         raise CloseTransactionError("duplicate unknown route in one close request")
     ticket_slugs = [
         route.ticket_slug for route in unknowns if route.destination == "ticket"
@@ -111,7 +419,9 @@ def _validate_routes(unknowns: list[UnknownRoute]) -> None:
                 "unknown destination must be fog, ticket, or out-of-scope"
             )
         if route.destination == "ticket":
-            if not route.ticket_slug or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", route.ticket_slug):
+            if not route.ticket_slug or not re.fullmatch(
+                r"[a-z0-9]+(?:-[a-z0-9]+)*", route.ticket_slug
+            ):
                 raise CloseTransactionError("ticket route requires a safe ticket_slug")
             if route.ticket_type not in map_store.V3_TICKET_TYPES:
                 raise CloseTransactionError(
@@ -151,8 +461,14 @@ def _validate_paths(
     tickets_dir = map_dir / "tickets"
     source = tickets_dir / f"{ticket_slug}.md"
     journal = map_dir / ".transactions" / f"close-{ticket_slug}.json"
-    candidates = [map_dir, map_dir / "MAP.md", tickets_dir, source,
-                  map_dir / ".transactions", journal]
+    candidates = [
+        map_dir,
+        map_dir / "MAP.md",
+        tickets_dir,
+        source,
+        map_dir / ".transactions",
+        journal,
+    ]
     candidates.extend(
         tickets_dir / f"{route.ticket_slug}.md"
         for route in unknowns
@@ -239,7 +555,10 @@ def _load_or_prepare_intent(
         else:
             fog_ids.append(None)
     prepared = _intent(ticket_slug, gist, resolution, unknowns, fog_ids)
-    _atomic_write(journal, json.dumps(prepared, indent=2, sort_keys=True) + "\n")
+    journal.parent.mkdir(mode=0o700, exist_ok=True)
+    _exclusive_write(
+        journal, json.dumps(prepared, indent=2, sort_keys=True) + "\n"
+    )
     return journal, prepared
 
 
@@ -262,7 +581,8 @@ def _apply_map_effects(
     routes: list[dict[str, object]],
 ) -> None:
     map_path = map_dir / "MAP.md"
-    text = map_path.read_text(encoding="utf-8")
+    original = map_path.read_bytes()
+    text = original.decode("utf-8")
     decision = f"- {gist} (tickets/{ticket_slug}.md)"
     text = _append_section_line(text, "Decisions-so-far", decision)
     for route in routes:
@@ -283,9 +603,9 @@ def _apply_map_effects(
                         f"ticket route conflicts with existing {ticket_path.name}"
                     )
             else:
-                _atomic_write(ticket_path, expected)
-    if map_path.read_text(encoding="utf-8") != text:
-        _atomic_write(map_path, text)
+                _exclusive_write(ticket_path, expected)
+    if original.decode("utf-8") != text:
+        _atomic_write(map_path, text, expected=original)
 
 
 def _terminal_text(text: str, resolution: str) -> str:
@@ -375,6 +695,24 @@ def _close_journal_is_complete(map_dir: Path, journal: Path) -> bool:
     """Return whether a retained close journal's complete effects are visible."""
     try:
         intent = json.loads(journal.read_text(encoding="utf-8"))
+        if intent.get("kind") == "claim":
+            ticket = map_store.read_ticket(
+                map_dir / "tickets" / f"{intent['ticket_slug']}.md"
+            )
+            return (
+                intent.get("version") == 1
+                and ticket.frontmatter.status == "claimed"
+                and ticket.frontmatter.claim
+                == f"{intent['owner']}, {intent['claimed_on']}"
+            )
+        if intent.get("kind") == "update-blockers":
+            ticket = map_store.read_ticket(
+                map_dir / "tickets" / f"{intent['ticket_slug']}.md"
+            )
+            return (
+                intent.get("version") == 1
+                and ticket.frontmatter.blocked_by == intent.get("blockers")
+            )
         slug = intent["ticket_slug"]
         gist = intent["gist"]
         resolution = intent["resolution"]
@@ -652,6 +990,7 @@ def close_and_rechart(
     if map_doc.frontmatter.schema_version != 3 or map_doc.frontmatter.state != "active":
         raise CloseTransactionError("close-and-rechart requires an active schema-v3 map")
     ticket = map_store.read_ticket(ticket_path)
+    ticket_original = ticket_path.read_bytes()
     terminal: str | None = None
     if ticket.frontmatter.status == "claimed":
         _validate_authoritative_ticket(ticket, closed=False)
@@ -670,6 +1009,12 @@ def close_and_rechart(
     else:
         raise CloseTransactionError("source ticket must be claimed before close")
 
+    new_operation = not journal_path.exists()
+    observed = capture_revision(map_dir) if new_operation else None
+    _assert_supported_filesystem(map_dir)
+    if observed is not None:
+        _require_revision(map_dir, observed)
+
     _, prepared = _load_or_prepare_intent(
         map_dir, ticket_slug, gist.strip(), resolution.strip(), unknowns, map_doc
     )
@@ -684,5 +1029,5 @@ def close_and_rechart(
         return CloseResult(len(unknowns), _assess_clear(map_dir))
     assert terminal is not None
     _before_terminalize()
-    _atomic_write(ticket_path, terminal)
+    _atomic_write(ticket_path, terminal, expected=ticket_original)
     return CloseResult(len(unknowns), _assess_clear(map_dir))

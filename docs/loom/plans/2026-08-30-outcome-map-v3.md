@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/outcome-map-v3
 Goal: ship the full Outcome Map v3 mechanism so one Map controls many outcome-advancing delivery arcs without duplicating their progress — serves map family-relocation: turns its mixed task/prototype records into closure-exclusive tickets and canonical delivery arcs
-Stage: batch C verification and review
+Stage: batch D verification and review
 **Total tasks**: 26
 **Critical-path depth**: 5 (≤5 ✓)
 **Execution order**: sequential
@@ -293,7 +293,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 10: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-87`
-- **Status**: pending
+- **Status**: done(pending-batch-d-commit)
 - **Gloss**: 同時操作與中斷不會留下假的成功或重複關係。
 
 ## Task 14 — Report liveness frontier and resume CTA
@@ -312,7 +312,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 7: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-88`
-- **Status**: pending
+- **Status**: done(pending-batch-d-commit)
 - **Gloss**: 重新進場時能直接知道真相來源與下一步。
 
 ## Task 15 — Model fail-closed evidence states
@@ -352,7 +352,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 4: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-90`
-- **Status**: pending
+- **Status**: done(pending-batch-d-commit)
 - **Gloss**: Map clear 的長期成果判準有穩定而可稽核的格式。
 
 ## Task 17 — Make migration previewable and idempotent
@@ -390,7 +390,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 4: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-92`
-- **Status**: pending
+- **Status**: done(pending-batch-d-commit)
 - **Gloss**: 地圖的問題與結論不會靜默消失或重複。
 
 ## Task 19 — Guard charting and terminal mutations
@@ -428,7 +428,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 3: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-94`
-- **Status**: pending
+- **Status**: done(pending-batch-d-commit)
 - **Gloss**: 依賴只控制可執行順序，不再產生死鎖或第五種 ticket。
 
 ## Task 21 — Archive Maps without moving identity
