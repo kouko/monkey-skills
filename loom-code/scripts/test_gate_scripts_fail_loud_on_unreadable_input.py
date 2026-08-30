@@ -105,6 +105,8 @@ EXEMPT = {
     "check_field_microstructure.py": "checks field shape in a brief or plan, "
                                      "not the store",
     "check_open_questions.py": "checks a plan's Open Questions section",
+    "check_review_batches.py": "checks one plan's Review Batch metadata, "
+                               "not a backlog store or handoff brief",
     "check_scenario_coverage.py": "checks a change-folder's scenarios",
     "check_seam_coverage.py": "checks a plan's Seam field coverage against "
                               "its Dependencies edges",
