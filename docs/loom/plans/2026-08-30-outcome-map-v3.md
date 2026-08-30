@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/outcome-map-v3
 Goal: ship the full Outcome Map v3 mechanism so one Map controls many outcome-advancing delivery arcs without duplicating their progress — serves map family-relocation: turns its mixed task/prototype records into closure-exclusive tickets and canonical delivery arcs
-Stage: batch E public surface implementation
+Stage: batch E verification and review
 **Total tasks**: 26
 **Critical-path depth**: 5 (≤5 ✓)
 **Execution order**: sequential
@@ -555,7 +555,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 25: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-75`
-- **Status**: claimed(@batch_e_implementer)
+- **Status**: done(69c33918)
 - **Gloss**: 安裝後讀到與實作一致的完整 Outcome Map v3，而不是散落的內部功能。
 
 ## Decision Log
