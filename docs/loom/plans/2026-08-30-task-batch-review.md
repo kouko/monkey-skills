@@ -213,7 +213,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-109
 - **Brief item covered**: BI-12
 - **Review disposition**: batch(sdd-review-loop)
-- **Status**: pending
+- **Status**: implemented(35040f7b)
 - **Gloss**: 舊 plan 不做相容層；Batch pass 也不取代整個 branch 的最後審查。
 
 ## Task 8 — Preserve whole-branch close-out review
