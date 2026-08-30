@@ -231,7 +231,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Seam**:
   - from Task 4: payload: immutable aggregate packet contract; owner: Task 4; probe: whole-branch review remains mandatory
   - from Task 6: payload: Batch pass result; owner: Task 6; probe: one fan-out per ready Batch
-- **Independent**: false
+- **Independent**: true
 - **Brief item covered**: REQ-110
 - **Brief item covered**: BI-4
 - **Review disposition**: individual
@@ -253,7 +253,7 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Seam**:
   - from Task 4: payload: immutable aggregate packet contract; owner: Task 4; probe: one authorized corpus
   - from Task 6: payload: aggregate dispatch behavior; owner: Task 6; probe: review dispatches
-- **Independent**: false
+- **Independent**: true
 - **Brief item covered**: REQ-111
 - **Brief item covered**: BI-1, BI-2, BI-3, BI-4
 - **Review disposition**: individual
