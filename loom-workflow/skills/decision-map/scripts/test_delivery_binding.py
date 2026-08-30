@@ -394,3 +394,22 @@ def test_plan_scan_refuses_a_plan_swapped_to_symlink_before_read(
     code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
     assert code == 2
     assert "symlink" in message
+
+
+def test_plan_scan_refuses_same_path_regular_file_replacement_before_final_snapshot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-96
+    ticket, brief = _bound_ticket(tmp_path)
+    source = brief.relative_to(tmp_path).as_posix()
+    plan = tmp_path / "docs/loom/plans/delivery.md"
+    _write(plan, f"# Plan\n\n**Source brief**: {source}\nStage: planning\n\n## Task 1 — Deliver\n")
+
+    def replace() -> None:
+        plan.unlink()
+        _write(plan, "# replacement\n")
+
+    monkeypatch.setattr(delivery_binding, "_before_plan_final_snapshot", replace)
+    code, message = delivery_binding.validate(ticket, repo_root=tmp_path)
+    assert code == 2
+    assert "Plan snapshot changed" in message

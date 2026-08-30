@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import errno
+import hashlib
 import os
 import re
 import stat
@@ -33,6 +34,14 @@ class DeliveryMigrationBindingSnapshot:
 
     texts: dict[str, str]
     ticket_membership: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class PlanFingerprint:
+    path: str
+    device: int
+    inode: int
+    digest: str
 
 
 def _canonical_relative(value: str, label: str) -> PurePosixPath:
@@ -187,11 +196,13 @@ def _validate_brief_policy_and_plan_count(repo_root: Path, brief: PurePosixPath,
     matches: list[str] = []
     candidates = _plan_files(plans_root, repo_root)
     membership = tuple(path.relative_to(repo_root).as_posix() for path in candidates)
+    fingerprints: dict[str, PlanFingerprint] = {}
     for candidate in candidates:
         try:
-            text = _read_plan_text(repo_root, candidate)
+            text, fingerprint = _read_plan_text(repo_root, candidate)
         except OSError as exc:
             raise _OperationalFailure(f"cannot read Plan {candidate}: {exc}") from exc
+        fingerprints[fingerprint.path] = fingerprint
         lines = _structural_plan_lines(text)
         declarations = [line for line in lines if line.startswith("**Source brief**:")]
         superseded = [line for line in lines if line.startswith("Superseded by:")]
@@ -202,7 +213,7 @@ def _validate_brief_policy_and_plan_count(repo_root: Path, brief: PurePosixPath,
     if len(matches) > 1:
         raise _BindingFailure(f"delivery Brief {source} has multiple Plans: {', '.join(matches)}")
     if matches:
-        plan_text = _read_plan_text(repo_root, repo_root / matches[0])
+        plan_text, _ = _read_plan_text(repo_root, repo_root / matches[0])
         lines = _structural_plan_lines(plan_text)
         stages = [line for line in lines if line.startswith("Stage:")]
         tasks = [line for line in lines if re.fullmatch(r"## Task \d+ — .+", line)]
@@ -212,6 +223,13 @@ def _validate_brief_policy_and_plan_count(repo_root: Path, brief: PurePosixPath,
             )
     if membership != tuple(path.relative_to(repo_root).as_posix() for path in _plan_files(plans_root, repo_root)):
         raise _BindingFailure("Plan membership changed during validation; re-read authoritative delivery state")
+    _before_plan_final_snapshot()
+    final = {
+        fingerprint.path: fingerprint
+        for _, fingerprint in (_read_plan_text(repo_root, candidate) for candidate in candidates)
+    }
+    if final != fingerprints:
+        raise _BindingFailure("Plan snapshot changed during validation; re-read authoritative delivery state")
 
 
 def _structural_plan_lines(text: str) -> list[str]:
@@ -263,7 +281,11 @@ def _before_plan_read(path: Path) -> None:
     """Test seam between membership enumeration and descriptor-safe open."""
 
 
-def _read_plan_text(repo_root: Path, path: Path) -> str:
+def _before_plan_final_snapshot() -> None:
+    """Test seam before the final complete Plan authority check."""
+
+
+def _read_plan_text(repo_root: Path, path: Path) -> tuple[str, PlanFingerprint]:
     """Read one enumerated Plan without following links, refusing pathname swaps."""
     if not hasattr(os, "O_NOFOLLOW"):
         raise _OperationalFailure("platform lacks O_NOFOLLOW; cannot safely read Plans")
@@ -290,7 +312,10 @@ def _read_plan_text(repo_root: Path, path: Path) -> str:
             raise _BindingFailure(f"Plan path changed during read: {relative.as_posix()}")
         if stat.S_ISLNK(current.st_mode):
             raise _BindingFailure(f"Plan path contains a symlink: {relative.as_posix()}")
-        return text
+        return text, PlanFingerprint(
+            relative.as_posix(), opened.st_dev, opened.st_ino,
+            hashlib.sha256(text.encode("utf-8")).hexdigest(),
+        )
     except OSError as exc:
         if exc.errno == errno.ELOOP:
             raise _BindingFailure(f"Plan path contains a symlink: {relative.as_posix()}") from exc
