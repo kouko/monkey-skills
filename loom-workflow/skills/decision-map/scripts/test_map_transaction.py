@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -425,3 +426,92 @@ def test_retirement_rechecks_descendants_at_transition_call_boundary(
 
     assert map_path.read_bytes() == map_before
     assert "state: archived" not in map_path.read_text(encoding="utf-8")
+
+
+def test_retirement_map_replace_is_compare_and_swap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-98
+    map_dir, _ = _make_map(tmp_path)
+    map_path = map_dir / "MAP.md"
+    original = map_path.read_bytes()
+    concurrent = original + b"\nConcurrent MAP edit.\n"
+
+    def edit_at_replace_boundary() -> None:
+        map_path.write_bytes(concurrent)
+
+    monkeypatch.setattr(
+        map_transaction, "_before_retirement_replace", edit_at_replace_boundary
+    )
+    with pytest.raises(map_transaction.CloseTransactionError, match="changed"):
+        map_transaction.retire_map(
+            map_dir,
+            ratified_by="kouko",
+            ratified_on="2026-08-30",
+            reason="Stop this outcome.",
+            repo_root=tmp_path,
+        )
+
+    assert map_path.read_bytes() == concurrent
+    assert b"state: archived" not in map_path.read_bytes()
+
+
+def test_retirement_rollback_failure_records_broken_recovery_state(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-95
+    # @req: REQ-98
+    map_dir, ticket = _make_map(tmp_path)
+    map_transaction.close_and_rechart(
+        map_dir,
+        "ship-slice",
+        gist="Slice shipped.",
+        resolution="delivery-evidence: commit 0123456",
+        unknowns=[],
+    )
+    map_path = map_dir / "MAP.md"
+    map_path.write_text(
+        map_path.read_text(encoding="utf-8")
+        .replace("state: active", "state: clear")
+        .replace(
+            "acceptance: Slice works | open | docs/loom/evidence.md",
+            "acceptance: Slice works | satisfied | docs/loom/evidence.md",
+        ),
+        encoding="utf-8",
+    )
+
+    def break_ticket_after_archive_write() -> None:
+        ticket.write_text(
+            ticket.read_text(encoding="utf-8").replace(
+                "graduated-from: null", "graduated-from: null\nphase: invalid"
+            ),
+            encoding="utf-8",
+        )
+
+    monkeypatch.setattr(
+        map_transaction, "_after_archive_state_replace", break_ticket_after_archive_write
+    )
+    real_atomic_write = map_transaction._atomic_write
+    calls = 0
+
+    def fail_only_rollback(path, text, *, expected=None) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise OSError("simulated rollback I/O failure")
+        real_atomic_write(path, text, expected=expected)
+
+    monkeypatch.setattr(map_transaction, "_atomic_write", fail_only_rollback)
+    with pytest.raises(
+        map_transaction.CloseTransactionError,
+        match="BROKEN.*recovery-required",
+    ):
+        map_transaction.archive_map_transition(map_dir, repo_root=tmp_path)
+
+    assert "state: archived" in map_path.read_text(encoding="utf-8")
+    recovery = map_dir / ".transactions" / "retirement-recovery.json"
+    evidence = json.loads(recovery.read_text(encoding="utf-8"))
+    assert evidence["status"] == "BROKEN"
+    assert evidence["action"] == "recovery-required"
+    assert evidence["map_path"] == "MAP.md"
+    assert "simulated rollback I/O failure" in evidence["rollback_error"]

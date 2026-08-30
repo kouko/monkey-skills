@@ -56,7 +56,13 @@ def _after_archive_state_replace() -> None:
     """Test seam before post-write validation and possible MAP rollback."""
 
 
-def _atomic_write(path: Path, text: str) -> None:
+def _before_retirement_replace() -> None:
+    """Test seam immediately before the MAP compare-and-swap write."""
+
+
+def _atomic_write(
+    path: Path, text: str, *, expected: bytes | None = None
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
     try:
@@ -64,6 +70,10 @@ def _atomic_write(path: Path, text: str) -> None:
             handle.write(text)
             handle.flush()
             os.fsync(handle.fileno())
+        if expected is not None and path.read_bytes() != expected:
+            raise CloseTransactionError(
+                f"refusing compare-and-swap because {path} changed before replacement"
+            )
         os.replace(temporary, path)
     except BaseException:
         try:
@@ -556,7 +566,8 @@ def _commit_retirement(
             )
     except map_store.SchemaViolation as exc:
         raise CloseTransactionError(str(exc)) from exc
-    _atomic_write(map_path, candidate)
+    _before_retirement_replace()
+    _atomic_write(map_path, candidate, expected=original.encode("utf-8"))
     try:
         if doc.frontmatter.state == "clear":
             _after_archive_state_replace()
@@ -568,7 +579,38 @@ def _commit_retirement(
             )
         _validate_retirement_snapshot(map_dir, repo_root)
     except Exception as exc:
-        _atomic_write(map_path, original)
+        try:
+            _atomic_write(
+                map_path,
+                original,
+                expected=candidate.encode("utf-8"),
+            )
+        except Exception as rollback_exc:
+            evidence = {
+                "action": "recovery-required",
+                "cause": str(exc),
+                "map_path": "MAP.md",
+                "rollback_error": str(rollback_exc),
+                "status": "BROKEN",
+            }
+            evidence_path = map_dir / ".transactions" / "retirement-recovery.json"
+            evidence_error: str | None = None
+            try:
+                map_store._atomic_write(
+                    evidence_path,
+                    json.dumps(evidence, indent=2, sort_keys=True) + "\n",
+                )
+            except Exception as evidence_exc:
+                evidence_error = str(evidence_exc)
+            suffix = (
+                f"; durable evidence unavailable: {evidence_error}"
+                if evidence_error is not None
+                else f"; evidence: {evidence_path}"
+            )
+            raise CloseTransactionError(
+                "BROKEN recovery-required: archive state could not be rolled back"
+                + suffix
+            ) from rollback_exc
         if isinstance(exc, CloseTransactionError):
             raise
         raise CloseTransactionError(

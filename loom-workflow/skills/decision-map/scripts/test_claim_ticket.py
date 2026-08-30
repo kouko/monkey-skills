@@ -129,3 +129,72 @@ def test_reclaim_preserves_owner_when_last_change_is_on_claim_date(
         )
 
     assert ticket.read_bytes() == before
+
+
+def test_reclaim_reads_exactly_one_authoritative_frontmatter_claim(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-97
+    repo, ticket = _repo(tmp_path / "null", "null")
+    ticket.write_text(
+        ticket.read_text(encoding="utf-8")
+        + "\nA body example must not become authority:\nclaim: alice, 2026-08-01\n",
+        encoding="utf-8",
+    )
+    _commit(repo, "body example", "2026-07-01")
+    before = ticket.read_bytes()
+    with pytest.raises(claim_ticket.ClaimRecoveryError, match="frontmatter"):
+        claim_ticket.reclaim(
+            ticket,
+            new_owner="bob",
+            takeover_date="2026-08-30",
+            stale_before="2026-08-15",
+            repo_root=repo,
+        )
+    assert ticket.read_bytes() == before
+
+    duplicate_repo, duplicate = _repo(
+        tmp_path / "duplicate", "alice, 2026-08-01"
+    )
+    duplicate.write_text(
+        duplicate.read_text(encoding="utf-8").replace(
+            "claim: alice, 2026-08-01",
+            "claim: alice, 2026-08-01\nclaim: carol, 2026-07-01",
+        ),
+        encoding="utf-8",
+    )
+    _commit(duplicate_repo, "duplicate claim", "2026-07-01")
+    duplicate_before = duplicate.read_bytes()
+    with pytest.raises(claim_ticket.ClaimRecoveryError, match="exactly one"):
+        claim_ticket.reclaim(
+            duplicate,
+            new_owner="bob",
+            takeover_date="2026-08-30",
+            stale_before="2026-08-15",
+            repo_root=duplicate_repo,
+        )
+    assert duplicate.read_bytes() == duplicate_before
+
+
+def test_reclaim_cas_preserves_concurrent_ticket_edit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # @req: REQ-97
+    repo, ticket = _repo(tmp_path / "repo", "alice, 2026-08-01")
+    audited = ticket.read_bytes()
+
+    def concurrent_edit() -> None:
+        ticket.write_bytes(audited + b"\nConcurrent body edit.\n")
+
+    monkeypatch.setattr(claim_ticket, "_before_claim_replace", concurrent_edit)
+    with pytest.raises(claim_ticket.ClaimRecoveryError, match="changed"):
+        claim_ticket.reclaim(
+            ticket,
+            new_owner="bob",
+            takeover_date="2026-08-30",
+            stale_before="2026-08-15",
+            repo_root=repo,
+        )
+
+    assert ticket.read_bytes() == audited + b"\nConcurrent body edit.\n"
+    assert b"claim: alice, 2026-08-01" in ticket.read_bytes()

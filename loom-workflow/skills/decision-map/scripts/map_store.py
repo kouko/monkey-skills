@@ -463,7 +463,9 @@ def _assert_contained(root: Path, candidate: Path) -> None:
         raise SchemaViolation(f"path escapes repository root: {candidate}") from exc
 
 
-def _atomic_write(path: Path, text: str) -> None:
+def _atomic_write(
+    path: Path, text: str, *, expected: bytes | None = None
+) -> None:
     """Replace one regular file without exposing partially written bytes.
 
     This is the single-file safety floor used by REQ-86 operations.  Full
@@ -476,6 +478,10 @@ def _atomic_write(path: Path, text: str) -> None:
             handle.write(text)
             handle.flush()
             os.fsync(handle.fileno())
+        if expected is not None and path.read_bytes() != expected:
+            raise SchemaViolation(
+                f"refusing compare-and-swap because {path} changed before replacement"
+            )
         os.replace(temporary, path)
     except BaseException:
         try:

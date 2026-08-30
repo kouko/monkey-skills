@@ -20,6 +20,12 @@ _CLAIM = re.compile(
     re.MULTILINE,
 )
 _OWNER = re.compile(r"^[^,\n]+$")
+_FRONTMATTER = re.compile(r"\A---\r?\n(?P<body>.*?)\r?\n---(?:\r?\n|\Z)", re.DOTALL)
+_CLAIM_LINE = re.compile(r"^claim:\s*(?P<value>.*)\s*$", re.MULTILINE)
+
+
+def _before_claim_replace() -> None:
+    """Test seam after Git audit and before the compare-and-swap write."""
 
 
 def _parse_date(value: str, label: str) -> date:
@@ -67,19 +73,33 @@ def reclaim(
         except map_store.SchemaViolation as exc:
             raise ClaimRecoveryError(str(exc)) from exc
     try:
-        text = ticket_path.read_text(encoding="utf-8")
+        original = ticket_path.read_bytes()
+        text = original.decode("utf-8")
         ticket = map_store.parse_ticket_document(text, ticket_path)
-    except (OSError, map_store.SchemaViolation) as exc:
+    except (OSError, UnicodeDecodeError, map_store.SchemaViolation) as exc:
         raise ClaimRecoveryError(f"cannot read a valid ticket: {exc}") from exc
     if ticket.frontmatter.status != "claimed":
         raise ClaimRecoveryError("ticket must remain claimed before reclaim")
-    claims = list(_CLAIM.finditer(text))
-    if len(claims) != 1:
+    frontmatter = _FRONTMATTER.match(text)
+    if frontmatter is None:
+        raise ClaimRecoveryError("ticket has invalid frontmatter")
+    claim_lines = list(_CLAIM_LINE.finditer(frontmatter.group("body")))
+    if len(claim_lines) != 1:
         raise ClaimRecoveryError(
-            "reclaim requires exactly one dated claim; preserving the current owner"
+            "reclaim requires exactly one frontmatter claim; preserving the current owner"
         )
-    old_owner = claims[0].group("owner").strip()
-    claim_value = claims[0].group("date")
+    authoritative = claim_lines[0].group("value").strip()
+    claim_match = _CLAIM.fullmatch(f"claim: {authoritative}")
+    if (
+        claim_match is None
+        or ticket.frontmatter.claim is None
+        or authoritative != ticket.frontmatter.claim
+    ):
+        raise ClaimRecoveryError(
+            "frontmatter claim must equal the parsed non-null dated claim"
+        )
+    old_owner = claim_match.group("owner").strip()
+    claim_value = claim_match.group("date")
     claimed_on = _parse_date(claim_value, "claim date")
     if claimed_on > cutoff:
         raise ClaimRecoveryError("claim is not observably stale at the requested cutoff")
@@ -112,7 +132,9 @@ def reclaim(
         )
 
     replacement = f"claim: {new_owner.strip()}, {takeover.isoformat()}"
-    updated = text[: claims[0].start()] + replacement + text[claims[0].end() :]
+    claim_start = frontmatter.start("body") + claim_lines[0].start()
+    claim_end = frontmatter.start("body") + claim_lines[0].end()
+    updated = text[:claim_start] + replacement + text[claim_end:]
     history = (
         f"- takeover: {old_owner} -> {new_owner.strip()} | "
         f"{takeover.isoformat()} | basis: claim dated {claimed_on.isoformat()}; "
@@ -122,4 +144,8 @@ def reclaim(
         updated = updated.rstrip() + "\n" + history + "\n"
     else:
         updated = updated.rstrip() + "\n\n## Claim history\n\n" + history + "\n"
-    map_store._atomic_write(ticket_path, updated)
+    _before_claim_replace()
+    try:
+        map_store._atomic_write(ticket_path, updated, expected=original)
+    except (OSError, map_store.SchemaViolation) as exc:
+        raise ClaimRecoveryError(str(exc)) from exc
