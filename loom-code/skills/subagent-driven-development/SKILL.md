@@ -112,6 +112,26 @@ Flowchart of this trigger + the per-task loop below: [`references/dispatch-hygie
 
 If neither trigger fires, the user goes straight to `tdd-iron-law` for implementation. SDD's overhead is not free; do not dispatch three subagents for a one-line change.
 
+## Mandatory new-plan intake
+
+Every newly invoked SDD run first invokes `check_review_batches.py` against the
+unchanged plan path so the oracle reads the exact current plan bytes. This gate
+runs before any Task claim, implementer dispatch, Packet construction, reviewer
+dispatch, or status mutation. A missing `## Review Batches` section; a missing,
+duplicate, contradictory, or invalid Task disposition; a dangling or invalid
+Batch; an unreadable plan; a checker error; or any non-zero checker exit refuses
+the plan as unsupported with zero side effects. The orchestrator must never infer
+that an omitted disposition means `individual`, and never add a compatibility
+adapter.
+
+Only a checker-approved plan enters the execution flow. Its validated
+dispositions select the existing paths. A ready Batch follows
+checker → trusted projection → Packet → reviewer dispatch and receives one
+reviewer fan-out for that exact Packet, while an `individual` disposition
+follows the existing per-Task reviewer loop. The later ready-group recheck
+remains mandatory because the plan may change after intake; intake approval is
+not stored as Batch state.
+
 ## Process — per-task triad
 
 Dispatch every subagent call below as a one-shot, blocking call that waits for and returns its result directly — see your host's tool-mapping reference under `using-loom-code/references/` (`claude-code-tools.md` / `codex-tools.md`) for the exact call shape, and [environment-gotchas](../using-loom-code/references/environment-gotchas.md) §A1 for a Claude-Code-specific naming pitfall to avoid (Codex has no equivalent).
