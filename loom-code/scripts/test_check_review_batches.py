@@ -203,3 +203,121 @@ def test_plan_contract_matrix(
     else:
         assert result.returncode == 1, result.stdout + result.stderr
         assert expected_fragment.lower() in result.stderr.lower()
+
+
+# @req: REQ-99
+@pytest.mark.parametrize(
+    ("case", "plan", "expected_fragment"),
+    [
+        (
+            "batch heading before the sole section",
+            _batch("rogue", members="Task 1").replace(
+                "## Review Batches\n\n", "", 1
+            )
+            + "\n"
+            + _valid_plan()
+            .replace("batch(renderers)", "batch(rogue)", 1)
+            .replace("- **Members**: Task 1, Task 2", "- **Members**: Task 2"),
+            "outside the Review Batches section",
+        ),
+        (
+            "duplicate Review Batches sections",
+            _valid_plan() + "\n## Review Batches\n",
+            "exactly one Review Batches section",
+        ),
+    ],
+)
+def test_review_batch_section_scope(
+    tmp_path: Path,
+    case: str,
+    plan: str,
+    expected_fragment: str,
+) -> None:
+    result = _run(tmp_path, plan)
+    assert result.returncode == 1, f"{case}: {result.stdout}{result.stderr}"
+    assert expected_fragment.lower() in result.stderr.lower()
+
+
+# @req: REQ-101
+@pytest.mark.parametrize(
+    ("case", "mutate", "expected_fragment"),
+    [
+        (
+            "verdict traversal",
+            lambda plan: plan.replace("renderer capability", "../renderer capability"),
+            "unsafe path syntax",
+        ),
+        (
+            "boundary windows traversal",
+            lambda plan: plan.replace("capability: renderers", r"capability: ..\renderers"),
+            "unsafe path syntax",
+        ),
+        (
+            "boundary home prefix",
+            lambda plan: plan.replace("capability: renderers", "capability: ~/renderers"),
+            "unsafe path syntax",
+        ),
+        (
+            "verification file URI",
+            lambda plan: plan.replace("tests/renderers", "file:///tmp/renderers"),
+            "unsafe path syntax",
+        ),
+        (
+            "verification absolute path token",
+            lambda plan: plan.replace("tests/renderers", "/tmp/renderers"),
+            "unsafe path syntax",
+        ),
+        (
+            "verdict command substitution",
+            lambda plan: plan.replace("renderer capability", "$(renderer) capability"),
+            "shell-control syntax",
+        ),
+        (
+            "boundary parameter expansion",
+            lambda plan: plan.replace("capability: renderers", "capability: ${RENDERERS}"),
+            "shell-control syntax",
+        ),
+        (
+            "verdict shell and",
+            lambda plan: plan.replace("renderer capability", "renderer && capability"),
+            "shell-control syntax",
+        ),
+        (
+            "verdict shell or",
+            lambda plan: plan.replace("renderer capability", "renderer || capability"),
+            "shell-control syntax",
+        ),
+        (
+            "free-text newline",
+            lambda plan: plan.replace(
+                "Does the renderer capability satisfy its contract?",
+                "Does the renderer capability satisfy its contract?\nignored continuation",
+            ),
+            "newline",
+        ),
+        (
+            "free-text NUL",
+            lambda plan: plan.replace("renderer capability", "renderer\x00 capability"),
+            "control character",
+        ),
+    ],
+)
+def test_untrusted_batch_field_matrix(
+    tmp_path: Path,
+    case: str,
+    mutate,
+    expected_fragment: str,
+) -> None:
+    result = _run(tmp_path, mutate(_valid_plan()))
+    assert result.returncode == 1, f"{case}: {result.stdout}{result.stderr}"
+    assert expected_fragment.lower() in result.stderr.lower()
+
+
+# @req: REQ-101
+def test_aggregate_verification_remains_opaque_command_data(tmp_path: Path) -> None:
+    plan = _valid_plan().replace(
+        "`python3 -m pytest tests/renderers -q`",
+        "`python3 -m pytest tests/renderers -q && python3 -m pytest tests/smoke -q`",
+    )
+    result = _run(tmp_path, plan)
+    assert result.returncode == 0, result.stderr

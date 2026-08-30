@@ -366,12 +366,22 @@
 - test_retirement_refuses_partial_operations_and_descendant_races
 - test_retirement_rollback_failure_records_broken_recovery_state
 
+## review-batching
+
+### REQ-101
+
+- test_review_batch_section_scope
+- test_untrusted_batch_field_matrix
+
+### REQ-99
+
+- test_plan_contract_matrix
+
 ## Orphans
 
 ### reqs with no tests
 
 - REQ-100
-- REQ-101
 - REQ-102
 - REQ-103
 - REQ-104
@@ -420,4 +430,3 @@
 - REQ-65
 - REQ-66
 - REQ-67
-- REQ-99

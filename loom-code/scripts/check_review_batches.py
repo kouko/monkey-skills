@@ -31,6 +31,7 @@ import sys
 _TASK_HEADING = re.compile(r"^## Task (\d+)\b.*$", re.MULTILINE)
 _BATCH_SECTION = re.compile(r"^## Review Batches\s*$", re.MULTILINE)
 _BATCH_HEADING = re.compile(r"^### Review Batch:\s*(.*?)\s*$", re.MULTILINE)
+_H2_HEADING = re.compile(r"^##\s+", re.MULTILINE)
 _FIELD = re.compile(
     r"^\s*-\s*(?:\*\*)?(?P<name>[A-Za-z][A-Za-z -]*?)(?:\*\*)?\s*:\s*(?P<value>.*)$",
     re.MULTILINE,
@@ -48,6 +49,9 @@ _BOUNDARY = re.compile(
     r"exclusions:\s*none;\s*consumable:\s*yes$"
 )
 _PLACEHOLDER = re.compile(r"^(?:tbd|todo|unknown|n/?a|none)\b", re.IGNORECASE)
+_ABSOLUTE_PATH_TOKEN = re.compile(
+    r"(?:^|[\s`'\"=])(?:/(?!/)|[A-Za-z]:[\\/])"
+)
 _REQUIRED_BATCH_FIELDS = (
     "Members",
     "Verdict question",
@@ -94,10 +98,30 @@ def _one_field(block: str, name: str, owner: str, errors: list[str]) -> str:
     if len(values) != 1 or not values[0]:
         errors.append(f"{owner} must declare exactly one non-empty {name} field")
         return ""
-    if any(ord(char) < 32 and char not in "\t" for char in values[0]):
+    if any(ord(char) < 32 for char in values[0]):
         errors.append(f"{owner} {name} contains a control character")
         return ""
     return values[0]
+
+
+def _validate_untrusted_value(
+    value: str,
+    name: str,
+    owner: str,
+    errors: list[str],
+    *,
+    free_text: bool,
+) -> None:
+    if (
+        "../" in value
+        or "..\\" in value
+        or "~/" in value
+        or "file://" in value.lower()
+        or _ABSOLUTE_PATH_TOKEN.search(value)
+    ):
+        errors.append(f"{owner} {name} contains unsafe path syntax")
+    if free_text and any(token in value for token in ("$(", "${", "&&", "||")):
+        errors.append(f"{owner} {name} contains shell-control syntax")
 
 
 def _parse_dependencies(value: str, task_number: int, errors: list[str]) -> tuple[int, ...]:
@@ -165,9 +189,27 @@ def _member_numbers(value: str, owner: str, errors: list[str]) -> tuple[int, ...
     return members
 
 
-def _parse_batches(text: str, errors: list[str]) -> dict[str, Batch]:
+def _review_batch_body(text: str, errors: list[str]) -> str:
+    sections = list(_BATCH_SECTION.finditer(text))
+    if len(sections) != 1:
+        errors.append("plan must declare exactly one Review Batches section")
+    if not sections:
+        return ""
+    section = sections[0]
+    next_h2 = _H2_HEADING.search(text, section.end())
+    end = next_h2.start() if next_h2 is not None else len(text)
+    for heading in _BATCH_HEADING.finditer(text):
+        if not section.end() <= heading.start() < end:
+            errors.append(
+                f"Review Batch {heading.group(1).strip() or '(empty ID)'} "
+                "is outside the Review Batches section"
+            )
+    return text[section.end():end]
+
+
+def _parse_batches(batch_body: str, errors: list[str]) -> dict[str, Batch]:
     batches: dict[str, Batch] = {}
-    for match, block in _blocks(_BATCH_HEADING, text):
+    for match, block in _blocks(_BATCH_HEADING, batch_body):
         batch_id = match.group(1).strip()
         owner = f"Review Batch {batch_id or '(empty ID)'}"
         if _BATCH_ID.fullmatch(batch_id) is None:
@@ -179,6 +221,22 @@ def _parse_batches(text: str, errors: list[str]) -> dict[str, Batch]:
             name: _one_field(block, name, owner, errors)
             for name in _REQUIRED_BATCH_FIELDS
         }
+        field_spans = [field.span() for field in _FIELD.finditer(block)]
+        residue = list(block)
+        for start, end in field_spans:
+            residue[start:end] = " " * (end - start)
+        if "".join(residue).strip():
+            errors.append(
+                f"{owner} contains a newline continuation or undeclared content"
+            )
+        for name, value in values.items():
+            _validate_untrusted_value(
+                value,
+                name,
+                owner,
+                errors,
+                free_text=name in {"Verdict question", "Boundary"},
+            )
         members = _member_numbers(values["Members"], owner, errors)
         verdict = values["Verdict question"]
         if verdict and (not verdict.endswith("?") or _PLACEHOLDER.match(verdict)):
@@ -270,7 +328,8 @@ def _validate_membership(
 def validate_plan(text: str) -> list[str]:
     errors: list[str] = []
     tasks = _parse_tasks(text, errors)
-    batches = _parse_batches(text, errors)
+    batch_body = _review_batch_body(text, errors)
+    batches = _parse_batches(batch_body, errors)
     _validate_dag(tasks, errors)
     _validate_membership(tasks, batches, errors)
     return errors
