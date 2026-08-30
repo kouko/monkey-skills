@@ -14,13 +14,14 @@ per N1's wrapped-schema shape); the body must carry at least one
 `## Task N — <name>` heading, and every task must carry a
 `- Status: <value>` bullet where <value> is one of:
 
-    done(<sha>) | claimed(@<agent>) | pending | blocked[(<why>)]
+    done(<sha>) | implemented(<sha>) | claimed(@<agent>) | pending |
+    blocked[(<why>)]
 
 Output (stdout), field order fixed by N5:
 
     end-state: <goal>
-    tasks: D done / C claimed / P pending / B blocked
-    [v]|[~]|[ ]|[!] T<N> <name>    (ASCII marks: done/claimed/pending/blocked)
+    tasks: D done / I implemented / C claimed / P pending / B blocked
+    [v]|[i]|[~]|[ ]|[!] T<N> <name>
     <mark> T<N> <name>              (one row per task, file order)
     stage: <stage>
     next: T<N> <name>               (first not-done task in roadmap
@@ -53,8 +54,9 @@ the old line then the new line. The rewrite preserves the matched
 line's own markup — a bold `- **Status**:` line stays bold, a plain
 `- Status:` line stays plain; the writer never adds or strips bolding.
 The writer's status grammar is exactly
-the schema's four kinds — `pending` | `claimed(@<agent>)` |
-`done(<sha>)` | `blocked` — parenthetical REQUIRED for claimed/done,
+the schema's five kinds — `pending` | `claimed(@<agent>)` |
+`implemented(<sha>)` | `done(<sha>)` | `blocked` — parenthetical REQUIRED
+for claimed/implemented/done,
 FORBIDDEN for pending/blocked (stricter than the renderer's
 `blocked(<why>)` tolerance: the writer never authors the optional
 form). Loud exit 1, file untouched, on: task not found, malformed
@@ -63,6 +65,14 @@ line in the block (the 0.62.0 duplicate-field incident becomes
 detectable instead of survivable — the writer refuses, never repairs).
 The file is modified only on that one line. `--set-status` and
 `--detail` are mutually exclusive.
+
+Participating Loom writers acquire an advisory lock on the plan's stable
+parent directory before reading mutation preconditions and hold it through
+atomic replacement plus directory fsync. Batch CAS, `--set-status`, and
+`--set-stage` share that protocol; read-only card/detail paths do not lock.
+Direct editors and filesystem tools that bypass the advisory lock are not
+participants, so the pre-publish inode check detects their replacement only
+best-effort and never claims to exclude an uncooperative concurrent writer.
 
 Stale scan (Task 1 of docs/loom/plans/2026-08-10-terminal-state-gates.md):
 `--stale-scan <plans-dir>` walks every `*.md` in the directory
@@ -103,9 +113,15 @@ rewrite, or missing plans directory, 2 = usage error.
 
 from __future__ import annotations
 
+import importlib.util
+import fcntl
+import os
 import re
 import sys
+import tempfile
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Callable
 
 _TASK_HEADING = re.compile(r"^## Task (\d+) — (.+?)\s*$", re.MULTILINE)
 _STATUS_BULLET = re.compile(r"^- \*{0,2}Status\*{0,2}:\s*(\S.*?)\s*$", re.MULTILINE)
@@ -121,7 +137,17 @@ _DEP_FORMS = (
 )
 
 # Kind -> mark, in the N5-pinned counts-line order.
-_MARKS = {"done": "[v]", "claimed": "[~]", "pending": "[ ]", "blocked": "[!]"}
+_MARKS = {
+    "done": "[v]",
+    "implemented": "[i]",
+    "claimed": "[~]",
+    "pending": "[ ]",
+    "blocked": "[!]",
+}
+_DONE_STATUS = re.compile(r"done\([^()\s]+\)")
+_IMPLEMENTED_STATUS = re.compile(r"implemented\([^()\s]+\)")
+_CLAIMED_STATUS = re.compile(r"claimed\([^()\s]+\)")
+_BLOCKED_STATUS = re.compile(r"blocked(?:\([^()\s]+\))?")
 
 
 def _header_value(header: str, key: str) -> str | None:
@@ -225,13 +251,15 @@ def _classify(status: str) -> str | None:
     Done/claimed carry a mandatory parenthesized payload (`done(<sha>)`,
     `claimed(<who>)` — plan Task 3 pins the `(`-anchored match); blocked
     may carry an optional `(<why>)`."""
-    if status.startswith("done("):
+    if _DONE_STATUS.fullmatch(status) is not None:
         return "done"
-    if status.startswith("claimed("):
+    if _IMPLEMENTED_STATUS.fullmatch(status) is not None:
+        return "implemented"
+    if _CLAIMED_STATUS.fullmatch(status) is not None:
         return "claimed"
     if status == "pending":
         return "pending"
-    if status == "blocked" or status.startswith("blocked("):
+    if _BLOCKED_STATUS.fullmatch(status) is not None:
         return "blocked"
     return None
 
@@ -269,7 +297,7 @@ def _parse_tasks(text: str) -> list[tuple[int, str, str, list[int], str | None]]
             raise ValueError(
                 f"task T{number} ({name}) has status "
                 f"'{status_match.group(1)}', outside "
-                "done(...)/claimed(...)/pending/blocked"
+                "done(...)/implemented(...)/claimed(...)/pending/blocked"
             )
         deps_value = _bullet_value(block, "Dependencies")
         deps = (
@@ -356,7 +384,11 @@ def build_card(text: str) -> str:
     lines = [
         f"end-state: {goal}",
         "tasks: "
-        + " / ".join(f"{counts[kind]} {kind}" for kind in _MARKS),
+        + " / ".join(
+            f"{counts[kind]} {kind}"
+            for kind in _MARKS
+            if kind != "implemented" or counts[kind]
+        ),
     ]
 
     def rows(subset: list) -> list[str]:
@@ -500,7 +532,8 @@ def build_detail(text: str, task_number: int) -> str:
 # parens; claimed's payload is `@<agent>`), FORBIDDEN for pending/blocked.
 # Stricter than _classify: the writer never authors `blocked(<why>)`.
 _SET_STATUS_GRAMMAR = re.compile(
-    r"pending|blocked|done\([^()\s]+\)|claimed\(@[^()\s]+\)"
+    rf"pending|blocked|{_DONE_STATUS.pattern}|{_IMPLEMENTED_STATUS.pattern}|"
+    r"claimed\(@[^()\s]+\)"
 )
 
 
@@ -514,8 +547,9 @@ def set_status(text: str, task_number: int, status: str) -> tuple[str, str, str]
     if _SET_STATUS_GRAMMAR.fullmatch(status) is None:
         raise ValueError(
             f"--set-status: status '{status}' outside pending / "
-            "claimed(@<agent>) / done(<sha>) / blocked — parenthetical "
-            "REQUIRED for claimed/done, FORBIDDEN for pending/blocked"
+            "claimed(@<agent>) / implemented(<sha>) / done(<sha>) / "
+            "blocked — parenthetical REQUIRED for claimed/implemented/done, "
+            "FORBIDDEN for pending/blocked"
         )
     for heading in _TASK_HEADING.finditer(text):
         if int(heading.group(1)) == task_number:
@@ -550,6 +584,284 @@ def set_status(text: str, task_number: int, status: str) -> tuple[str, str, str]
     label = "- **Status**:" if old_line.startswith("- **Status**:") else "- Status:"
     new_line = f"{label} {status}"
     return text[:start] + new_line + text[end:], old_line, new_line
+
+
+def dependency_is_ready(
+    producer_status: str,
+    producer_batch: str | None,
+    consumer_batch: str | None,
+) -> bool:
+    """Whether one dependency edge releases its consumer.
+
+    ``done`` releases every edge. ``implemented`` releases only when both
+    endpoints have the same explicit Batch identity; absent/uncertain identity
+    therefore fails closed to requiring ``done``.
+    """
+    if _DONE_STATUS.fullmatch(producer_status) is not None:
+        return True
+    return (
+        _IMPLEMENTED_STATUS.fullmatch(producer_status) is not None
+        and producer_batch is not None
+        and producer_batch == consumer_batch
+    )
+
+
+def _review_batch_oracle():
+    """Load the sibling schema oracle without relying on cwd/sys.path."""
+    path = Path(__file__).with_name("check_review_batches.py")
+    spec = importlib.util.spec_from_file_location("plan_card_review_batch_oracle", path)
+    if spec is None or spec.loader is None:
+        raise ValueError("Review Batch schema oracle cannot be loaded")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _validated_batch_members(text: str, batch_id: str) -> tuple[int, ...]:
+    """Exact members after the mandatory schema oracle accepts the plan."""
+    oracle = _review_batch_oracle()
+    errors = oracle.validate_plan(text)
+    if errors:
+        raise ValueError("Review Batch schema invalid — " + "; ".join(errors))
+    body_errors: list[str] = []
+    body = oracle._review_batch_body(text, body_errors)
+    batches = oracle._parse_batches(body, body_errors)
+    if body_errors:
+        raise ValueError("Review Batch schema invalid — " + "; ".join(body_errors))
+    batch = batches.get(batch_id)
+    if batch is None:
+        raise ValueError(f"Review Batch schema has no Batch '{batch_id}'")
+    return batch.members
+
+
+def _task_statuses(text: str) -> dict[int, str]:
+    statuses: dict[int, str] = {}
+    for number, name, block in _task_blocks(text):
+        matches = list(_STATUS_BULLET.finditer(block))
+        if len(matches) != 1:
+            raise ValueError(
+                f"task T{number} ({name}) must have exactly one '- Status:' line"
+            )
+        statuses[number] = matches[0].group(1)
+    return statuses
+
+
+def _same_member_sha(implemented: str, done: str) -> bool:
+    return (
+        _IMPLEMENTED_STATUS.fullmatch(implemented) is not None
+        and _DONE_STATUS.fullmatch(done) is not None
+        and implemented[len("implemented(") : -1] == done[len("done(") : -1]
+    )
+
+
+def _atomic_replace_text(
+    path: Path,
+    text: str,
+    before_replace: Callable[[], None] | None,
+    mode: int,
+    expected_identity: tuple[int, int],
+) -> bool:
+    """Durably stage bytes beside ``path``, then expose them in one replace."""
+    descriptor, temporary_name = tempfile.mkstemp(
+        dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
+    )
+    temporary = Path(temporary_name)
+    try:
+        os.fchmod(descriptor, mode)
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+        if before_replace is not None:
+            before_replace()
+        try:
+            current = path.stat()
+        except OSError:
+            return False
+        if (current.st_dev, current.st_ino) != expected_identity:
+            return False
+        os.replace(temporary, path)
+        directory_fd = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+        return True
+    finally:
+        try:
+            temporary.unlink()
+        except FileNotFoundError:
+            pass
+
+
+def _open_locked_current(path: Path) -> tuple[int, str, os.stat_result]:
+    """Lock and read the inode currently named by ``path``.
+
+    A waiter may have opened the old inode just before another caller's
+    ``os.replace``. Rechecking device/inode after the lock is acquired makes
+    that waiter retry against the replacement instead of applying stale bytes.
+    """
+    while True:
+        descriptor = os.open(path, os.O_RDONLY)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX)
+            opened = os.fstat(descriptor)
+            current = path.stat()
+            if (opened.st_dev, opened.st_ino) == (
+                current.st_dev,
+                current.st_ino,
+            ):
+                chunks: list[bytes] = []
+                while chunk := os.read(descriptor, 1024 * 1024):
+                    chunks.append(chunk)
+                text = b"".join(chunks).decode("utf-8")
+                return descriptor, text, opened
+        except BaseException:
+            os.close(descriptor)
+            raise
+        os.close(descriptor)
+
+
+@contextmanager
+def _plan_directory_lock(path: Path):
+    """Serialize participating Loom plan writers on the stable parent dir."""
+    descriptor = os.open(path.parent, os.O_RDONLY)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+        os.close(descriptor)
+
+
+def _atomic_batch_status_update_locked(
+    plan_path: Path,
+    batch_id: str,
+    expected_statuses: dict[int, str],
+    replacements: dict[int, str],
+    *,
+    before_replace: Callable[[], None] | None = None,
+) -> bool:
+    """Compare and atomically replace one validated Batch status snapshot.
+
+    ``expected_statuses`` must be the Batch's complete implemented member set.
+    ``replacements`` is either every member's member-SHA-preserving ``done``
+    status (PASS finalization), or a non-empty owner subset changed to
+    ``pending`` (attributable finding union). A stale snapshot returns False
+    with zero mutation; malformed sets or transitions raise ValueError.
+    """
+    path = Path(plan_path)
+    descriptor, text, opened = _open_locked_current(path)
+    try:
+        members = _validated_batch_members(text, batch_id)
+        member_set = set(members)
+        if set(expected_statuses) != member_set:
+            raise ValueError("expected member set does not equal the validated Batch")
+        if not replacements or not set(replacements).issubset(member_set):
+            raise ValueError(
+                "replacement owner set is empty or outside the member set"
+            )
+        if any(
+            _IMPLEMENTED_STATUS.fullmatch(status) is None
+            for status in expected_statuses.values()
+        ):
+            raise ValueError(
+                "expected member snapshot must contain exact implemented(<sha>)"
+            )
+
+        finalizing = set(replacements) == member_set
+        if finalizing:
+            if any(
+                not _same_member_sha(
+                    expected_statuses[number], replacements[number]
+                )
+                for number in members
+            ):
+                raise ValueError("finalization must preserve every member SHA")
+        elif any(status != "pending" for status in replacements.values()):
+            raise ValueError(
+                "an owner-union reopen may replace statuses only with pending"
+            )
+
+        current = _task_statuses(text)
+        current_snapshot = {number: current[number] for number in members}
+        if finalizing and current_snapshot == replacements:
+            return True
+        if current_snapshot != expected_statuses:
+            if finalizing and all(
+                current_snapshot[number]
+                in {expected_statuses[number], replacements[number]}
+                for number in members
+            ) and any(
+                current_snapshot[number] == replacements[number]
+                for number in members
+            ):
+                raise ValueError(
+                    "torn Batch state mixes implemented and done members"
+                )
+            return False
+
+        new_text = text
+        for number in members:
+            if number in replacements:
+                new_text, _, _ = set_status(
+                    new_text, number, replacements[number]
+                )
+        return _atomic_replace_text(
+            path,
+            new_text,
+            before_replace,
+            opened.st_mode & 0o7777,
+            (opened.st_dev, opened.st_ino),
+        )
+    finally:
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+        os.close(descriptor)
+
+
+def atomic_batch_status_update(
+    plan_path: Path,
+    batch_id: str,
+    expected_statuses: dict[int, str],
+    replacements: dict[int, str],
+    *,
+    before_replace: Callable[[], None] | None = None,
+) -> bool:
+    """Run Batch CAS while holding the shared Loom plan-directory lock."""
+    path = Path(plan_path)
+    with _plan_directory_lock(path):
+        return _atomic_batch_status_update_locked(
+            path,
+            batch_id,
+            expected_statuses,
+            replacements,
+            before_replace=before_replace,
+        )
+
+
+def _publish_cli_mutation(
+    path: Path,
+    mutation: Callable[[str], tuple[str, str, str]],
+) -> tuple[str, str, str]:
+    """Read and atomically publish one CLI mutation under the shared lock."""
+    with _plan_directory_lock(path):
+        descriptor, text, opened = _open_locked_current(path)
+        try:
+            new_text, old_line, new_line = mutation(text)
+            published = _atomic_replace_text(
+                path,
+                new_text,
+                None,
+                opened.st_mode & 0o7777,
+                (opened.st_dev, opened.st_ino),
+            )
+            if not published:
+                raise ValueError("plan changed before CLI mutation publish")
+            return new_text, old_line, new_line
+        finally:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+            os.close(descriptor)
 
 
 def set_stage(text: str, new_value: str) -> tuple[str, str, str]:
@@ -700,21 +1012,25 @@ def main() -> int:
         return 1
 
     try:
-        text = plan_path.read_text(encoding="utf-8")
         if set_status_ref is not None:
-            new_text, old_line, new_line = set_status(text, *set_status_ref)
-            plan_path.write_text(new_text, encoding="utf-8")
+            new_text, old_line, new_line = _publish_cli_mutation(
+                plan_path,
+                lambda current: set_status(current, *set_status_ref),
+            )
             print(f"old: {old_line}")
             print(f"new: {new_line}")
             _print_card_or_degrade(new_text)
             return 0
         if set_stage_ref is not None:
-            new_text, old_line, new_line = set_stage(text, set_stage_ref)
-            plan_path.write_text(new_text, encoding="utf-8")
+            new_text, old_line, new_line = _publish_cli_mutation(
+                plan_path,
+                lambda current: set_stage(current, set_stage_ref),
+            )
             print(f"old: {old_line}")
             print(f"new: {new_line}")
             _print_card_or_degrade(new_text)
             return 0
+        text = plan_path.read_text(encoding="utf-8")
         card = (
             build_card(text)
             if detail_number is None

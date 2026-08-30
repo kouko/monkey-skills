@@ -156,6 +156,21 @@ def test_all_done_plan_renders_next_close_out(tmp_path):
     )
 
 
+def test_implemented_status_renders_as_review_pending(tmp_path):
+    """A locally verified Batch member is visible but not terminal."""
+    plan_path = _write_plan(
+        tmp_path,
+        _plan_text(tasks=[("parser", "implemented(abc1234)")]),
+    )
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "tasks: 0 done / 1 implemented / 0 claimed / 0 pending / 0 blocked\n" in result.stdout
+    assert "[i] T1 parser\n" in result.stdout
+    assert "next: T1 parser\n" in result.stdout
+
+
 def test_next_follows_roadmap_order_not_file_order(tmp_path):
     """`next:` names the first not-done task in ROADMAP order (earliest
     dependency level, then file order within that level) — not the
@@ -296,6 +311,31 @@ def test_status_value_outside_the_four_kinds_exits_1_naming_it(tmp_path):
     assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
     assert "wip-maybe" in result.stdout
     assert "end-state:" not in result.stdout, "must never render a partial card"
+
+
+@pytest.mark.parametrize(
+    "malformed",
+    [
+        "done(abc1234)junk",
+        "done()",
+        "done((abc1234))",
+        "implemented(abc1234)junk",
+        "implemented()",
+        "implemented(a b)",
+        "claimed(@main)junk",
+        "claimed()",
+    ],
+)
+def test_renderer_rejects_malformed_payload_statuses(tmp_path, malformed):
+    """Renderer status recognition is exact, not startswith-based."""
+    plan_path = _write_plan(tmp_path, _plan_text(tasks=[("parser", malformed)]))
+
+    result = _run_card(plan_path)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert malformed in result.stdout
+    assert "end-state:" not in result.stdout
 
 
 # --- roadmap view: steps, glosses, --detail ---------------------------------

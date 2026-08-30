@@ -1,0 +1,350 @@
+"""Task Batch Review ledger transitions (plan Task 3)."""
+
+import importlib.util
+import multiprocessing
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import pytest
+
+
+SCRIPT = Path(__file__).with_name("plan_card.py")
+SPEC = importlib.util.spec_from_file_location("plan_card_batch_states", SCRIPT)
+plan_card = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = plan_card
+SPEC.loader.exec_module(plan_card)
+
+
+def _plan(statuses: dict[int, str]) -> str:
+    tasks = []
+    for number, dependency, disposition in (
+        (1, "none", "batch(capability)"),
+        (2, "Task 1 completes first", "batch(capability)"),
+        (3, "Task 2 completes first", "individual"),
+    ):
+        tasks.append(
+            f"## Task {number} — task {number}\n\n"
+            "- **Description**: fixture\n"
+            f"- **Dependencies**: {dependency}\n"
+            "- **Review-weight**: full\n"
+            f"- **Review disposition**: {disposition}\n"
+            f"- **Status**: {statuses[number]}\n"
+        )
+    return (
+        "# Plan: fixture\n\n"
+        "Goal: exercise Batch ledger transitions.\n"
+        "Stage: sdd:wave-1\n\n"
+        + "\n".join(tasks)
+        + "\n## Review Batches\n\n"
+        "### Review Batch: capability\n"
+        "- **Members**: Task 1, Task 2\n"
+        "- **Verdict question**: Does the capability work?\n"
+        "- **Review lane**: full\n"
+        "- **Aggregate verification**: package test suite\n"
+        "- **Boundary**: capability: fixture; exclusions: none; consumable: yes\n"
+    )
+
+
+def _atomic_update_worker(path, expected, replacements, start, results):
+    start.wait()
+    try:
+        changed = plan_card.atomic_batch_status_update(
+            Path(path), "capability", expected, replacements
+        )
+        results.put(("ok", changed))
+    except Exception as exc:  # pragma: no cover - surfaced through the queue
+        results.put(("error", type(exc).__name__, str(exc)))
+
+
+def _blocking_atomic_worker(path, expected, entered, release, results):
+    def block_before_publish():
+        entered.set()
+        if not release.wait(5):
+            raise RuntimeError("test release timeout")
+
+    try:
+        changed = plan_card.atomic_batch_status_update(
+            Path(path),
+            "capability",
+            expected,
+            {1: "done(a111111)", 2: "done(b222222)"},
+            before_replace=block_before_publish,
+        )
+        results.put(("ok", changed))
+    except Exception as exc:  # pragma: no cover - surfaced through the queue
+        results.put(("error", type(exc).__name__, str(exc)))
+
+
+def test_batch_ledger_transition_matrix(tmp_path):
+    implemented = {
+        1: "implemented(a111111)",
+        2: "implemented(b222222)",
+    }
+    assert plan_card._classify(implemented[1]) == "implemented"
+    changed, _, _ = plan_card.set_status(
+        _plan({1: "claimed(@main)", 2: "pending", 3: "pending"}),
+        1,
+        implemented[1],
+    )
+    assert "- **Status**: implemented(a111111)" in changed
+
+    assert plan_card.dependency_is_ready(implemented[1], "capability", "capability")
+    assert not plan_card.dependency_is_ready(
+        implemented[1], "capability", None
+    )
+    assert plan_card.dependency_is_ready("done(a111111)", "capability", None)
+    assert not plan_card.dependency_is_ready("claimed(@main)", "capability", "capability")
+    assert not plan_card.dependency_is_ready(implemented[1], None, None)
+    for malformed in (
+        "implemented(stale",
+        "implemented()",
+        "implemented(a b)",
+        "implemented((abc))",
+        "done(a111111)junk",
+    ):
+        assert not plan_card.dependency_is_ready(
+            malformed, "capability", "capability"
+        )
+
+    plan_path = tmp_path / "plan.md"
+    original = _plan({**implemented, 3: "pending"})
+    plan_path.write_text(original, encoding="utf-8")
+
+    finalized = plan_card.atomic_batch_status_update(
+        plan_path,
+        "capability",
+        implemented,
+        {1: "done(a111111)", 2: "done(b222222)"},
+    )
+    assert finalized is True
+    assert "- **Status**: done(a111111)" in plan_path.read_text(encoding="utf-8")
+    assert "- **Status**: done(b222222)" in plan_path.read_text(encoding="utf-8")
+
+    before_retry = plan_path.read_bytes()
+    assert plan_card.atomic_batch_status_update(
+        plan_path,
+        "capability",
+        implemented,
+        {1: "done(a111111)", 2: "done(b222222)"},
+    )
+    assert plan_path.read_bytes() == before_retry
+
+    plan_path.write_text(original, encoding="utf-8")
+    assert not plan_card.atomic_batch_status_update(
+        plan_path,
+        "capability",
+        {1: "implemented(stale)", 2: implemented[2]},
+        {1: "done(stale)", 2: "done(b222222)"},
+    )
+    assert plan_path.read_text(encoding="utf-8") == original
+
+    assert plan_card.atomic_batch_status_update(
+        plan_path,
+        "capability",
+        implemented,
+        {2: "pending"},
+    )
+    reopened = plan_path.read_text(encoding="utf-8")
+    assert "- **Status**: implemented(a111111)" in reopened
+    assert "- **Status**: pending" in reopened
+
+    plan_path.write_text(original, encoding="utf-8")
+    with pytest.raises(ValueError, match="member set"):
+        plan_card.atomic_batch_status_update(
+            plan_path,
+            "capability",
+            implemented,
+            {3: "pending"},
+        )
+    assert plan_path.read_text(encoding="utf-8") == original
+
+    def interrupt():
+        raise RuntimeError("injected interruption")
+
+    with pytest.raises(RuntimeError, match="injected interruption"):
+        plan_card.atomic_batch_status_update(
+            plan_path,
+            "capability",
+            implemented,
+            {1: "done(a111111)", 2: "done(b222222)"},
+            before_replace=interrupt,
+        )
+    assert plan_path.read_text(encoding="utf-8") == original
+
+    invalid = original.replace("- **Members**: Task 1, Task 2", "- **Members**: Task 1")
+    plan_path.write_text(invalid, encoding="utf-8")
+    with pytest.raises(ValueError, match="Review Batch schema"):
+        plan_card.atomic_batch_status_update(
+            plan_path,
+            "capability",
+            implemented,
+            {1: "done(a111111)", 2: "done(b222222)"},
+        )
+    assert plan_path.read_text(encoding="utf-8") == invalid
+
+    plan_path.write_text(original, encoding="utf-8")
+    for malformed in (
+        "implemented(stale",
+        "implemented()",
+        "implemented(a b)",
+        "implemented((abc))",
+    ):
+        malformed_snapshot = {**implemented, 1: malformed}
+        with pytest.raises(ValueError, match="exact implemented"):
+            plan_card.atomic_batch_status_update(
+                plan_path,
+                "capability",
+                malformed_snapshot,
+                {1: "pending"},
+            )
+        assert plan_path.read_text(encoding="utf-8") == original
+
+
+def test_locked_reader_releases_descriptor_after_invalid_utf8(tmp_path):
+    plan_path = tmp_path / "plan.md"
+    plan_path.write_bytes(b"\xff\xfe")
+
+    with pytest.raises(UnicodeDecodeError):
+        plan_card.atomic_batch_status_update(
+            plan_path,
+            "capability",
+            {1: "implemented(a111111)", 2: "implemented(b222222)"},
+            {1: "pending"},
+        )
+
+    expected = {1: "implemented(a111111)", 2: "implemented(b222222)"}
+    plan_path.write_text(_plan({**expected, 3: "pending"}), encoding="utf-8")
+    context = multiprocessing.get_context("spawn")
+    start = context.Event()
+    results = context.Queue()
+    process = context.Process(
+        target=_atomic_update_worker,
+        args=(plan_path, expected, {1: "pending"}, start, results),
+    )
+    process.start()
+    start.set()
+    process.join(5)
+    if process.is_alive():
+        process.terminate()
+        process.join()
+        pytest.fail("a leaked descriptor kept the plan lock held")
+    assert process.exitcode == 0
+    assert results.get(timeout=1) == ("ok", True)
+
+
+def test_two_process_batch_cas_has_one_atomic_winner(tmp_path):
+    expected = {1: "implemented(a111111)", 2: "implemented(b222222)"}
+    plan_path = tmp_path / "plan.md"
+    plan_path.write_text(_plan({**expected, 3: "pending"}), encoding="utf-8")
+    context = multiprocessing.get_context("spawn")
+    start = context.Event()
+    results = context.Queue()
+    processes = [
+        context.Process(
+            target=_atomic_update_worker,
+            args=(
+                plan_path,
+                expected,
+                replacements,
+                start,
+                results,
+            ),
+        )
+        for replacements in (
+            {1: "done(a111111)", 2: "done(b222222)"},
+            {2: "pending"},
+        )
+    ]
+    for process in processes:
+        process.start()
+    start.set()
+    for process in processes:
+        process.join(5)
+        if process.is_alive():
+            process.terminate()
+            process.join()
+            pytest.fail("competing Batch CAS did not terminate")
+        assert process.exitcode == 0
+
+    outcomes = [results.get(timeout=1), results.get(timeout=1)]
+    assert sorted(outcomes) == [("ok", False), ("ok", True)]
+    final = plan_path.read_text(encoding="utf-8")
+    states = plan_card._task_statuses(final)
+    assert (states[1], states[2]) in {
+        ("done(a111111)", "done(b222222)"),
+        ("implemented(a111111)", "pending"),
+    }
+
+
+def test_external_replace_before_cas_publish_is_stale_and_preserved(tmp_path):
+    """Best-effort detection for a non-participating direct filesystem writer."""
+    expected = {1: "implemented(a111111)", 2: "implemented(b222222)"}
+    plan_path = tmp_path / "plan.md"
+    original = _plan({**expected, 3: "pending"})
+    external = original.replace("Stage: sdd:wave-1", "Stage: external-writer")
+    plan_path.write_text(original, encoding="utf-8")
+
+    def replace_from_external_actor():
+        external_path = tmp_path / "external.md"
+        external_path.write_text(external, encoding="utf-8")
+        external_path.replace(plan_path)
+
+    changed = plan_card.atomic_batch_status_update(
+        plan_path,
+        "capability",
+        expected,
+        {1: "done(a111111)", 2: "done(b222222)"},
+        before_replace=replace_from_external_actor,
+    )
+
+    assert changed is False
+    assert plan_path.read_text(encoding="utf-8") == external
+    assert list(tmp_path.glob(f".{plan_path.name}.*.tmp")) == []
+
+
+@pytest.mark.parametrize(
+    ("cli_args", "assertion"),
+    [
+        (("--set-stage", "review:done"), "Stage: review:done"),
+        (("--set-status", "T3=blocked"), "- **Status**: blocked"),
+    ],
+)
+def test_cli_writer_waits_for_batch_publish_and_rereads_current_plan(
+    tmp_path, cli_args, assertion
+):
+    expected = {1: "implemented(a111111)", 2: "implemented(b222222)"}
+    plan_path = tmp_path / "plan.md"
+    plan_path.write_text(_plan({**expected, 3: "pending"}), encoding="utf-8")
+    context = multiprocessing.get_context("spawn")
+    entered = context.Event()
+    release = context.Event()
+    results = context.Queue()
+    batch_writer = context.Process(
+        target=_blocking_atomic_worker,
+        args=(plan_path, expected, entered, release, results),
+    )
+    batch_writer.start()
+    assert entered.wait(5), "Batch writer never reached its locked publish seam"
+
+    cli_writer = subprocess.Popen(
+        [sys.executable, str(SCRIPT), str(plan_path), *cli_args],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    time.sleep(0.2)
+    assert cli_writer.poll() is None, "CLI writer did not wait for directory lock"
+
+    release.set()
+    batch_writer.join(5)
+    stdout, stderr = cli_writer.communicate(timeout=5)
+    assert batch_writer.exitcode == 0
+    assert results.get(timeout=1) == ("ok", True)
+    assert cli_writer.returncode == 0, stdout + stderr
+    final = plan_path.read_text(encoding="utf-8")
+    assert "- **Status**: done(a111111)" in final
+    assert "- **Status**: done(b222222)" in final
+    assert assertion in final
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["plan.md"]
