@@ -292,6 +292,71 @@ def test_v3_ticket_statuses_and_withdrawal_contract(tmp_path: Path) -> None:
     assert "withdrawn" in message
 
 
+def test_clear_requires_terminal_tickets_empty_fog_and_satisfied_da(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-78
+    """A v3 Map clears only after each authored outcome criterion has
+    both a satisfied state and an evidence pointer; terminal tickets and
+    empty fog alone describe finished work, not the achieved outcome."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    clear_map = (
+        map_md.read_text(encoding="utf-8")
+        .replace("schema_version: 2", "schema_version: 3")
+        .replace("state: charting", "state: clear")
+        .replace(
+            "Chart the decision-map layer.",
+            "Chart the decision-map layer.\n\n"
+            "user-ratified: kouko, 2026-08-30\n\n"
+            "acceptance: The parser remains stdlib-only | satisfied | "
+            "docs/loom/results/probe.md",
+        )
+        .replace("- F-1: how does the fog id survive a rename?\n", "")
+    )
+    map_md.write_text(clear_map, encoding="utf-8")
+    ticket_path = map_dir / "tickets" / "decision-a.md"
+    _write(ticket_path, TICKET_CLOSED.replace("type: task", "type: delivery"))
+
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+    _write(
+        ticket_path,
+        """---
+type: delivery
+status: withdrawn
+claim: null
+graduated-from: null
+withdrawn-from: claimed
+---
+
+## Withdrawal
+
+user-ratified: kouko, 2026-08-30
+reason: replaced by narrower work
+""",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+    map_md.write_text(
+        clear_map.replace("| satisfied |", "| open |"), encoding="utf-8"
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "acceptance" in message.lower()
+    assert "satisfied" in message.lower()
+
+    map_md.write_text(
+        clear_map.replace("docs/loom/results/probe.md", ""), encoding="utf-8"
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "acceptance" in message.lower()
+    assert "evidence" in message.lower()
+
+
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
     """A schema_version above map_store's supported ceiling is exit 2,
     naming both versions — never a silent read-past."""

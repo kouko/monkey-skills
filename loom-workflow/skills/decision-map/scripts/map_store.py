@@ -589,6 +589,28 @@ def _check_map_structure(doc: MapDocument) -> None:
         )
 
 
+def _check_v3_clear_acceptance(doc: MapDocument) -> None:
+    """Gate clear on the interim authored Destination acceptance form.
+
+    Stable DA identities and their fuller grammar belong to REQ-90; REQ-78
+    only needs every currently authored criterion to be satisfied with a
+    non-empty evidence pointer before a v3 map can be clear.
+    """
+    if doc.frontmatter.schema_version != 3 or doc.frontmatter.state != "clear":
+        return
+    for line in doc.sections["Destination"].splitlines():
+        if not line.strip().startswith("acceptance:"):
+            continue
+        parts = [part.strip() for part in line.split("|", 2)]
+        if len(parts) != 3 or not parts[0][len("acceptance:"):].strip() or (
+            parts[1] != "satisfied" or not parts[2]
+        ):
+            raise SchemaViolation(
+                f"{doc.path}: clear map requires every Destination acceptance "
+                "criterion to be satisfied with valid evidence"
+            )
+
+
 def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
     tickets_dir = Path(map_dir) / "tickets"
     if not tickets_dir.is_dir():
@@ -744,6 +766,7 @@ def validate(target: Path, repo_root: Path | None = None) -> tuple[int, str]:
     try:
         _check_schema_version(doc.frontmatter.schema_version)
         _check_map_structure(doc)
+        _check_v3_clear_acceptance(doc)
         _check_tickets(
             map_dir, doc.frontmatter.state, doc.frontmatter.schema_version
         )
