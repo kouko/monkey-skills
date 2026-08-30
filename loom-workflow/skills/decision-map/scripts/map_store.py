@@ -38,7 +38,8 @@ V2_TICKET_TYPES = {"grilling", "research", "task", "prototype"}
 V3_TICKET_TYPES = {"grilling", "research", "prototype", "delivery"}
 HITL_TICKET_TYPES = {"grilling", "prototype"}
 RATIFIED_MAP_STATES = {"active", "clear"}
-VALID_TICKET_STATUSES = {"open", "claimed", "closed"}
+V2_TICKET_STATUSES = {"open", "claimed", "closed"}
+V3_TICKET_STATUSES = {"open", "claimed", "closed", "withdrawn"}
 
 
 class LiveMapResult(str, Enum):
@@ -246,6 +247,7 @@ class TicketFrontmatter:
     status: str
     claim: str | None
     graduated_from: str | None
+    withdrawn_from: str | None
     blocked_by: list[str] = field(default_factory=list)
     ratification: str | None = None
 
@@ -255,6 +257,7 @@ class TicketDocument:
     path: Path
     frontmatter: TicketFrontmatter
     resolution: str | None
+    withdrawal: str | None
 
 
 def _null_or(value: str) -> str | None:
@@ -278,12 +281,13 @@ def _parse_ticket_frontmatter(fields: dict[str, str]) -> TicketFrontmatter:
         status=fields["status"],
         claim=_null_or(fields.get("claim", "null")),
         graduated_from=_null_or(fields.get("graduated-from", "null")),
+        withdrawn_from=_null_or(fields.get("withdrawn-from", "null")),
         blocked_by=blocked_by,
         ratification=_null_or(fields.get("ratification", "null")),
     )
 
 
-_RESOLUTION_HEADING = re.compile(r"^##\s+Resolution\s*$")
+_SECTION_HEADING_TEMPLATE = r"^##\s+{name}\s*$"
 _COMMIT_EVIDENCE = re.compile(r"(?:commit\s+)?[0-9a-fA-F]{7,40}")
 _PR_EVIDENCE = re.compile(
     r"(?:PR\s*)?#\d+|(?:PR\s+)?https?://\S+/pull/\d+",
@@ -294,10 +298,11 @@ _ARTIFACT_PATH_EVIDENCE = re.compile(
 )
 
 
-def _parse_resolution(body: str) -> str | None:
+def _parse_ticket_section(body: str, name: str) -> str | None:
+    heading = re.compile(_SECTION_HEADING_TEMPLATE.format(name=re.escape(name)))
     lines = body.splitlines()
     for i, line in enumerate(lines):
-        if _RESOLUTION_HEADING.match(line.strip()):
+        if heading.match(line.strip()):
             rest = lines[i + 1:]
             end = len(rest)
             for j, nxt in enumerate(rest):
@@ -307,6 +312,10 @@ def _parse_resolution(body: str) -> str | None:
             text = "\n".join(rest[:end]).strip()
             return text or None
     return None
+
+
+def _parse_resolution(body: str) -> str | None:
+    return _parse_ticket_section(body, "Resolution")
 
 
 def _has_delivery_evidence(text: str) -> bool:
@@ -333,7 +342,13 @@ def parse_ticket_document(text: str, path: Path) -> TicketDocument:
     fields, body = parse_frontmatter(text)
     frontmatter = _parse_ticket_frontmatter(fields)
     resolution = _parse_resolution(body)
-    return TicketDocument(path=path, frontmatter=frontmatter, resolution=resolution)
+    withdrawal = _parse_ticket_section(body, "Withdrawal")
+    return TicketDocument(
+        path=path,
+        frontmatter=frontmatter,
+        resolution=resolution,
+        withdrawal=withdrawal,
+    )
 
 
 def read_ticket(ticket_path: Path) -> TicketDocument:
@@ -487,6 +502,26 @@ def _check_v3_ticket_closure_evidence(ticket: TicketDocument) -> None:
         )
 
 
+def _check_v3_ticket_withdrawal(ticket: TicketDocument) -> None:
+    """Require a ratified disposition without treating it as closure."""
+    if ticket.frontmatter.withdrawn_from not in {"open", "claimed"}:
+        raise SchemaViolation(
+            f"{ticket.path}: withdrawn ticket must name 'withdrawn-from: open' "
+            "or 'withdrawn-from: claimed'"
+        )
+    withdrawal = ticket.withdrawal or ""
+    if not _has_named_dated_user_ratification(withdrawal):
+        raise SchemaViolation(
+            f"{ticket.path}: withdrawn ticket requires named/date "
+            "'user-ratified: <name>, YYYY-MM-DD' in its Withdrawal"
+        )
+    if not _has_resolution_field(withdrawal, "reason"):
+        raise SchemaViolation(
+            f"{ticket.path}: withdrawn ticket requires a non-empty "
+            "'reason:' line in its Withdrawal"
+        )
+
+
 def _check_map_structure(doc: MapDocument) -> None:
     if doc.frontmatter.state not in VALID_MAP_STATES:
         raise SchemaViolation(
@@ -533,7 +568,11 @@ def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
     valid_ticket_types = (
         V3_TICKET_TYPES if schema_version == 3 else V2_TICKET_TYPES
     )
+    valid_ticket_statuses = (
+        V3_TICKET_STATUSES if schema_version == 3 else V2_TICKET_STATUSES
+    )
     blocked_by_graph: dict[str, list[str]] = {}
+    statuses: dict[str, str] = {}
     non_closed: list[str] = []
     for ticket_path in sorted(tickets_dir.glob("*.md")):
         ticket = read_ticket(ticket_path)
@@ -548,13 +587,15 @@ def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
                 f"{ticket_path}: type {ticket.frontmatter.type!r} is not "
                 f"one of {sorted(valid_ticket_types)}{guidance}"
             )
-        if ticket.frontmatter.status not in VALID_TICKET_STATUSES:
+        if ticket.frontmatter.status not in valid_ticket_statuses:
             raise SchemaViolation(
                 f"{ticket_path}: status {ticket.frontmatter.status!r} is "
-                f"not one of {sorted(VALID_TICKET_STATUSES)}"
+                f"not one of {sorted(valid_ticket_statuses)}"
             )
         if schema_version == 3 and ticket.frontmatter.status == "closed":
             _check_v3_ticket_closure_evidence(ticket)
+        if schema_version == 3 and ticket.frontmatter.status == "withdrawn":
+            _check_v3_ticket_withdrawal(ticket)
         if (
             ticket.frontmatter.status == "closed"
             and ticket.frontmatter.type in HITL_TICKET_TYPES
@@ -576,12 +617,27 @@ def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
                 "Resolution with 'delivery-evidence: <commit SHA | PR | "
                 "artifact path>' (map-format.md §Ticket schema)"
             )
-        if ticket.frontmatter.status != "closed":
+        if ticket.frontmatter.status in {"open", "claimed"}:
             non_closed.append(
                 f"{ticket_path.name} ({ticket.frontmatter.status})"
             )
         blocked_by_graph[ticket_path.stem] = ticket.frontmatter.blocked_by
+        statuses[ticket_path.stem] = ticket.frontmatter.status
     _check_blocked_by(blocked_by_graph, tickets_dir)
+    for slug, status in statuses.items():
+        if status != "withdrawn":
+            continue
+        stranded = [
+            dependent
+            for dependent, blockers in blocked_by_graph.items()
+            if slug in blockers and statuses[dependent] in {"open", "claimed"}
+        ]
+        if stranded:
+            raise SchemaViolation(
+                f"{tickets_dir / (slug + '.md')}: withdrawn ticket would strand "
+                "nonterminal dependent(s): "
+                + ", ".join(f"{dependent}.md" for dependent in stranded)
+            )
     if state == "clear" and non_closed:
         raise SchemaViolation(
             "clear map has non-closed ticket(s): " + ", ".join(non_closed)

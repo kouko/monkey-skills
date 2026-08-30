@@ -174,6 +174,91 @@ def test_v3_closed_ticket_requires_subtype_closure_evidence(
         assert ticket_type in message
 
 
+def test_v3_ticket_statuses_and_withdrawal_contract(tmp_path: Path) -> None:
+    # @req: REQ-77
+    """V3 persists only lifecycle states; withdrawal is ratified, terminal,
+    and distinct from subtype closure."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8").replace(
+            "schema_version: 2", "schema_version: 3"
+        ),
+        encoding="utf-8",
+    )
+    ticket_path = map_dir / "tickets" / "decision-a.md"
+
+    delivery = TICKET_CLOSED.replace("type: task", "type: delivery")
+    for status in ("open", "claimed", "closed"):
+        _write(ticket_path, delivery.replace("status: closed", f"status: {status}"))
+        code, message = map_store.validate(map_dir, repo_root=tmp_path)
+        assert code == 0, message
+
+    withdrawn = delivery.replace(
+        "status: closed",
+        "status: withdrawn\nwithdrawn-from: claimed",
+    ).replace(
+        "## Resolution\n\nstdlib only, no third-party imports.\ndelivery-evidence: commit 0123456",
+        "## Withdrawal\n\nuser-ratified: kouko, 2026-08-30\nreason: replaced by narrower work\nreplacement-ticket: successor",
+    )
+    _write(ticket_path, withdrawn)
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+    _write(
+        ticket_path,
+        withdrawn.replace("withdrawn-from: claimed", "withdrawn-from: open"),
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+    _write(
+        ticket_path,
+        withdrawn.replace("reason: replaced by narrower work", "reason: "),
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "reason" in message.lower()
+
+    _write(ticket_path, withdrawn.replace("withdrawn-from: claimed", "withdrawn-from: closed"))
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "open" in message
+    assert "claimed" in message
+
+    _write(ticket_path, withdrawn)
+    _write(
+        map_dir / "tickets" / "dependent.md",
+        TICKET_OPEN_B.replace(
+            "type: task", "type: delivery"
+        ).replace("graduated-from: null", "graduated-from: null\nblocked-by: decision-a"),
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "dependent.md" in message
+    assert "withdrawn" in message
+
+    _write(
+        map_dir / "tickets" / "dependent.md",
+        TICKET_OPEN_B.replace("type: task", "type: delivery"),
+    )
+    _write(ticket_path, withdrawn.replace("status: withdrawn", "status: reviewing"))
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "reviewing" in message
+
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8").replace(
+            "schema_version: 3", "schema_version: 2"
+        ),
+        encoding="utf-8",
+    )
+    _write(ticket_path, withdrawn.replace("type: delivery", "type: task"))
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "withdrawn" in message
+
+
 def test_validate_refuses_future_schema_version(tmp_path: Path) -> None:
     """A schema_version above map_store's supported ceiling is exit 2,
     naming both versions — never a silent read-past."""

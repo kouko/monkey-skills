@@ -2,7 +2,7 @@
 
 **Source brief**: docs/loom/outcome-map-v3
 Goal: ship the full Outcome Map v3 mechanism so one Map controls many outcome-advancing delivery arcs without duplicating their progress — serves map family-relocation: turns its mixed task/prototype records into closure-exclusive tickets and canonical delivery arcs
-Stage: implementation: T2 schema core
+Stage: implementation: T3 withdrawn lifecycle
 **Total tasks**: 26
 **Critical-path depth**: 5 (≤5 ✓)
 **Execution order**: sequential
@@ -82,7 +82,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
 - **Dependencies**: none
 - **Independent**: false
 - **Brief item covered**: `REQ-76`
-- **Status**: claimed(@codex)
+- **Status**: done(32de9424cacda4d5805a94ca533ef6f079208a62)
 - **Gloss**: 每張 ticket 依關閉證據歸入唯一類型。
 
 ## Task 3 — Add withdrawn terminal lifecycle
@@ -101,7 +101,7 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
   - from Task 2: payload: none
 - **Independent**: false
 - **Brief item covered**: `REQ-77`
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 不再需要的工作能誠實退出，不會假裝已完成。
 
 ## Task 4 — Gate Map clear on Destination acceptance
