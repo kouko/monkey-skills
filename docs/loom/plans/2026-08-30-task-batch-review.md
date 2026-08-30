@@ -235,14 +235,14 @@ N/A — no unresolved question: the B design, fail-closed fallback, and new-plan
 - **Brief item covered**: REQ-110
 - **Brief item covered**: BI-4
 - **Review disposition**: individual
-- **Status**: claimed(@t8-closeout)
+- **Status**: done(e548ce74a1fd2dd375a76a90836098bfafc5765c)
 - **Gloss**: Batch review 降低中途成本，但不取代 branch 最後防線。
 
 ## Task 9 — Prove cost reduction without hiding defects
 
 - **Description**: Add an authorized replay corpus and one comparison command that reports review dispatches, fallback causes, safety outcomes, and package gates for baseline versus candidate.
 - **Module**: `loom-code/scripts/task_batch_replay.py`
-- **Files touched**: `loom-code/scripts/task_batch_replay.py`, `loom-code/scripts/test_task_batch_replay.py`, `CLAUDE.md`, `AGENTS.md`
+- **Files touched**: `loom-code/scripts/task_batch_replay.py`, `loom-code/scripts/test_task_batch_replay.py`, `loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py`, `AGENTS.md`
 - **Context paths**:
   - `loom-code/scripts/loom_firing_harness.py`
   - `docs/loom/specs/2026-08-30-task-batch-review.md`
