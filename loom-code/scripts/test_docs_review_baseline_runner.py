@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+import sqlite3
+
 import pytest
 
 import docs_review_baseline_runner as runner
@@ -592,9 +594,21 @@ def test_req_115_actual_model_identity_is_verified_twice() -> None:
 
 def test_req_114_dispatch_and_capture_are_crash_safe(tmp_path) -> None:
     # @req: REQ-114
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    linked_root = tmp_path / "linked-store"
+    linked_root.symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ValueError, match="store root must not be a symlink"):
+        runner.claim_dispatch(linked_root, "escaped-attempt", "escaped-owner")
+    assert list(outside.iterdir()) == []
+
+    concurrent_root = tmp_path / "concurrent"
+
     def claim(owner: str):
         try:
-            return runner.claim_dispatch(tmp_path, "attempt-r1", owner)
+            return runner.claim_dispatch(
+                concurrent_root, "attempt-concurrent", owner
+            )
         except ValueError as error:
             return str(error)
 
@@ -605,53 +619,217 @@ def test_req_114_dispatch_and_capture_are_crash_safe(tmp_path) -> None:
     assert len(leases) == 1
     assert len(refusals) == 1
     assert "already has an active owner" in refusals[0]
+    winning_owner = leases[0]["owner_id"]
+    refused_owner = ({"owner-a", "owner-b"} - {winning_owner}).pop()
+    assert runner.read_dispatch_events(
+        concurrent_root, "attempt-concurrent"
+    ) == [
+        {
+            "event_sequence": 1,
+            "event": "claim-won",
+            "fence_generation": 1,
+            "owner_id": winning_owner,
+            "reason": None,
+            "state": "active",
+        },
+        {
+            "event_sequence": 2,
+            "event": "claim-refused",
+            "fence_generation": 1,
+            "owner_id": refused_owner,
+            "reason": "attempt already has an active owner",
+            "state": "active",
+        },
+    ]
 
-    first = leases[0]
-    partial = runner.capture_dispatch_bytes(
+    first = runner.claim_dispatch(tmp_path, "attempt-takeover", "owner-a")
+    acknowledgement_unknown = runner.capture_dispatch_bytes(
         tmp_path,
-        attempt_id="attempt-r1",
+        attempt_id="attempt-takeover",
         owner_id=first["owner_id"],
         fence_generation=first["fence_generation"],
-        raw_bytes=b"partial bytes",
-        outcome="cancellation-uncertain",
+        raw_bytes=b"",
+        completeness="none",
+        outcome="acknowledgement-uncertain",
     )
-    assert partial["scoreable"] is False
-    assert partial["late"] is False
+    assert acknowledgement_unknown["terminal_status"] == (
+        "acknowledgement-uncertain"
+    )
+    assert acknowledgement_unknown["scoreability_status"] == (
+        "ineligible-uncertain"
+    )
 
     second = runner.claim_dispatch(
         tmp_path,
-        "attempt-r1",
+        "attempt-takeover",
         "owner-c",
         takeover_expected_generation=first["fence_generation"],
     )
     assert second["fence_generation"] == first["fence_generation"] + 1
 
-    late = runner.capture_dispatch_bytes(
+    revived = runner.capture_dispatch_bytes(
         tmp_path,
-        attempt_id="attempt-r1",
+        attempt_id="attempt-takeover",
         owner_id=first["owner_id"],
         fence_generation=first["fence_generation"],
-        raw_bytes=b"late complete bytes",
+        raw_bytes=b"revived owner bytes",
+        completeness="complete",
         outcome="completed",
     )
-    assert late["late"] is True
-    assert late["scoreable"] is False
+    assert revived["late"] is True
+    assert revived["scoreable"] is False
+    assert revived["terminal_status"] == "late-evidence"
+    assert revived["scoreability_status"] == "ineligible-late-evidence"
 
     final = runner.capture_dispatch_bytes(
         tmp_path,
-        attempt_id="attempt-r1",
+        attempt_id="attempt-takeover",
         owner_id="owner-c",
         fence_generation=second["fence_generation"],
         raw_bytes=b"authoritative complete bytes",
+        completeness="complete",
         outcome="completed",
     )
     assert final["late"] is False
     assert final["scoreable"] is True
+    assert final["terminal_status"] == "completed"
+    assert final["scoreability_status"] == "eligible"
 
-    captures = runner.read_dispatch_captures(tmp_path, "attempt-r1")
+    takeover_captures = runner.read_dispatch_captures(
+        tmp_path, "attempt-takeover"
+    )
+    assert [item["raw_bytes"] for item in takeover_captures] == [
+        b"",
+        b"revived owner bytes",
+        b"authoritative complete bytes",
+    ]
+    assert [item["completeness"] for item in takeover_captures] == [
+        "none",
+        "complete",
+        "complete",
+    ]
+    assert len({item["raw_digest"] for item in takeover_captures}) == 3
+
+    partial_owner = runner.claim_dispatch(
+        tmp_path, "attempt-partial", "owner-partial"
+    )
+    partial = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id="attempt-partial",
+        owner_id=partial_owner["owner_id"],
+        fence_generation=partial_owner["fence_generation"],
+        raw_bytes=b"partial bytes",
+        completeness="partial",
+        outcome="partial",
+    )
+    assert partial["terminal_status"] == "partial"
+    assert partial["scoreability_status"] == "ineligible-incomplete"
+    late = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id="attempt-partial",
+        owner_id=partial_owner["owner_id"],
+        fence_generation=partial_owner["fence_generation"],
+        raw_bytes=b"late complete bytes",
+        completeness="complete",
+        outcome="completed",
+    )
+    assert late["terminal_status"] == "late-evidence"
+    assert late["scoreability_status"] == "ineligible-late-evidence"
+    assert runner.read_dispatch_state(tmp_path, "attempt-partial") == {
+        "attempt_id": "attempt-partial",
+        "fence_generation": 1,
+        "owner_id": "owner-partial",
+        "state": "partial",
+    }
+
+    captures = runner.read_dispatch_captures(tmp_path, "attempt-partial")
     assert [item["raw_bytes"] for item in captures] == [
         b"partial bytes",
         b"late complete bytes",
-        b"authoritative complete bytes",
     ]
-    assert len({item["raw_digest"] for item in captures}) == 3
+    assert len({item["raw_digest"] for item in captures}) == 2
+
+    cancelled_owner = runner.claim_dispatch(
+        tmp_path, "attempt-cancelled", "owner-cancelled"
+    )
+    cancelled = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id="attempt-cancelled",
+        owner_id=cancelled_owner["owner_id"],
+        fence_generation=cancelled_owner["fence_generation"],
+        raw_bytes=b"bytes before uncertain cancellation",
+        completeness="partial",
+        outcome="cancellation-uncertain",
+    )
+    assert cancelled["terminal_status"] == "cancellation-uncertain"
+    assert cancelled["scoreability_status"] == "ineligible-uncertain"
+    with pytest.raises(ValueError, match="uncertain lease"):
+        runner.claim_dispatch(
+            tmp_path,
+            "attempt-cancelled",
+            "owner-retry",
+            takeover_expected_generation=cancelled_owner["fence_generation"],
+        )
+    assert runner.read_dispatch_state(tmp_path, "attempt-cancelled")[
+        "state"
+    ] == "cancellation-uncertain"
+    retry_owner = runner.claim_dispatch(
+        tmp_path, "attempt-retry", "owner-retry"
+    )
+    retry = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id="attempt-retry",
+        owner_id=retry_owner["owner_id"],
+        fence_generation=retry_owner["fence_generation"],
+        raw_bytes=b"retry bytes",
+        completeness="complete",
+        outcome="completed",
+    )
+    assert retry["scoreability_status"] == "eligible"
+    cancelled_late = runner.capture_dispatch_bytes(
+        tmp_path,
+        attempt_id="attempt-cancelled",
+        owner_id=cancelled_owner["owner_id"],
+        fence_generation=cancelled_owner["fence_generation"],
+        raw_bytes=b"late original response",
+        completeness="complete",
+        outcome="completed",
+    )
+    assert cancelled_late["scoreability_status"] == "ineligible-late-evidence"
+    assert runner.read_dispatch_state(tmp_path, "attempt-cancelled")[
+        "state"
+    ] == "cancellation-uncertain"
+    assert [
+        item["raw_bytes"]
+        for item in runner.read_dispatch_captures(tmp_path, "attempt-cancelled")
+    ] == [b"bytes before uncertain cancellation", b"late original response"]
+    assert [
+        item["raw_bytes"]
+        for item in runner.read_dispatch_captures(tmp_path, "attempt-retry")
+    ] == [b"retry bytes"]
+
+    atomic_owner = runner.claim_dispatch(
+        tmp_path, "attempt-atomic", "owner-atomic"
+    )
+    database = tmp_path / "dispatch-state.sqlite3"
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "CREATE TRIGGER abort_capture BEFORE INSERT ON dispatch_captures "
+            "BEGIN SELECT RAISE(ABORT, 'capture interrupted'); END"
+        )
+    with pytest.raises(sqlite3.IntegrityError, match="capture interrupted"):
+        runner.capture_dispatch_bytes(
+            tmp_path,
+            attempt_id="attempt-atomic",
+            owner_id=atomic_owner["owner_id"],
+            fence_generation=atomic_owner["fence_generation"],
+            raw_bytes=b"must not half-commit",
+            completeness="complete",
+            outcome="completed",
+        )
+    with sqlite3.connect(database) as connection:
+        connection.execute("DROP TRIGGER abort_capture")
+    assert runner.read_dispatch_captures(tmp_path, "attempt-atomic") == []
+    assert runner.read_dispatch_state(tmp_path, "attempt-atomic")["state"] == (
+        "active"
+    )
