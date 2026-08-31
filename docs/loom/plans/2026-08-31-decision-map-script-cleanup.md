@@ -68,7 +68,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-1
 - **Review disposition**: batch(symlink-guard)
-- **Status**: implemented(b50433ffc861b47221bb49c501b50eba1e22d56a)
+- **Status**: claimed(@loom-script-refactor-phase2)
 - **Gloss**: 守衛本體只剩這一份，要丟哪種例外由呼叫者說了算。
 
 ## Task 2 — map_store 的守衛改成一行委派
