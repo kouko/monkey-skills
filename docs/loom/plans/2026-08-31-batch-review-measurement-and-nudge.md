@@ -23,6 +23,8 @@ T3[T3 identity refusal cause] --> T4[T4 receipt applied_action] --> T5
 T5 --> T6[T6 compare refuses declared] --> T11
 T5 --> T10[T10 close-out observed line] --> T11
 T5 --> T12[T12 pilot: observe this branch] --> T11
+T4 --> T12
+T8 --> T12
 T7[T7 propose batches] --> T8[T8 --check reasons] --> T9[T9 plan-format + gates + Check 23] --> T11
 ```
 
@@ -35,7 +37,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - Added complexity: one append in `review_context.py`; one new key in the dispatch receipt; an `observe` subcommand and a `v2` result schema in `task_batch_replay.py`; one new script `propose_review_batches.py` (propose + `--check`); two plan fields, one reviewer check row, one writing-plans gate line, one close-out row.
 - Why it is worthwhile: the only existing cost number was typed by hand; after this arc the number is recorded by the harness at the contractual once-per-fan-out call, and the planner's silent choice not to batch — the reason −19% was all the strict rule ever reached — must be written down where the reviewer reads it.
 - Removed or avoided complexity: `task-batch-replay-result/v1` stops being an accepted comparison input; no automatic fallback, no runtime batch size setting, no arm changes; the edge rule and cap are two constants in one script.
-- Downstream risk: a plan authored before this arc has no `Not batched because` lines and would fail the new check — the check applies only to plans whose header postdates the gate (it keys on the `## Review Batches` section plus a `Total tasks:` header, both present in every batch-era plan; older plans are not re-reviewed); a worktree removed before close-out loses its log — the close-out row prints N/A loudly.
+- Downstream risk: a sealed batch packet freezes this plan's bytes, so any ledger flip or Notes edit between `packet` and `apply-result` — Task 12's edit, or a non-member `done` flip — trips the identity refusal Task 3 rewords; the orchestrator holds all plan writes while a packet is sealed (accepted, discipline not mechanism); a plan authored before this arc has no `Not batched because` lines and would fail the new check — the check applies only to plans whose header postdates the gate (it keys on the `## Review Batches` section plus a `Total tasks:` header, both present in every batch-era plan; older plans are not re-reviewed); a worktree removed before close-out loses its log — the close-out row prints N/A loudly.
 
 ## Task 1 — 補 #769 欠的 memory 條目：非 ASCII 路徑跨程序邊界兩次
 - **Description**: Add `docs/loom/memory/a-non-ascii-path-crosses-the-process-boundary-twice.md` (type gotcha) and regenerate the store index.
@@ -131,6 +133,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
   - v2 = the v1 case shape plus top-level `provenance: "observed"` and per-case `batch_reopens`.
   - Counts: `review_dispatches` = log lines whose `branch` matches; `review_rounds` = distinct `reviewed_sha` among them; `batch_reopens` = receipts under `--receipts` with `applied_action == "reopen"` (0 without the flag).
   - Log lines are parsed with a shared reader `read_dispatch_log(path)` that validates each line against the `review-dispatch-log/v1` schema Task 2 writes (malformed line → non-zero exit naming the line number); the corpus's single case receives the counts (multi-case attribution is out of scope).
+  - `--summary` (makes `--corpus`/`--out` optional) prints exactly one line `observed reviewer fan-outs: N (rounds R, batch reopens B)` and writes no result file — the line the finishing close-out row (Task 10) relays.
 - **Module**: loom-code/scripts (task_batch_replay observe)
 - **Files touched**: loom-code/scripts/task_batch_replay.py, loom-code/scripts/test_task_batch_replay.py
 - **Context paths**:
@@ -140,7 +143,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Acceptance**:
   - **RED**: `test_observe_counts_dispatches_rounds_and_reopens_from_log_and_receipts` — a log with 3 lines for branch `b` (2 distinct shas) plus 1 line for branch `other`, and a receipts dir with one `applied_action: reopen` and one `finalize`: today the subcommand does not exist.
     - After the fix the result file has `review_dispatches == 3`, `review_rounds == 2`, `batch_reopens == 1`, `provenance == "observed"`, schema v2.
-  - **GREEN**: a malformed log line refuses naming the line; `--receipts` omitted → `batch_reopens == 0`; `read_dispatch_log` is the only parser of the log in the module.
+  - **GREEN**: a malformed log line refuses naming the line; `--receipts` omitted → `batch_reopens == 0`; `read_dispatch_log` is the only parser of the log in the module; `observe … --summary` on the same fixture prints exactly `observed reviewer fan-outs: 3 (rounds 2, batch reopens 1)` and writes no result file.
 - **External surfaces**: stdlib only.
 - **Dependencies**: Tasks 2, 4 complete first
 - **Seam**:
@@ -184,11 +187,14 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Context paths**:
   - loom-code/scripts/check_review_batches.py (`def _parse_tasks`, `def _projection_files`, `_projection_field_block` — reuse, do not re-implement the grammar)
   - docs/loom/dogfood/2026-08-31-batch-knob-simulation.py (the clustering the simulation ran — the proposer must reproduce variant C at cap 4 on the same input)
-  - docs/loom/dogfood/2026-08-31-batch-knob-simulation-per-plan.csv (expected `fanouts_k2_C_cap4`-style counts for named plans)
+  - docs/loom/dogfood/2026-08-31-batch-knob-simulation-per-plan.csv (column `fanouts_k2_cap4` — the module rule at cap 4; the us-sec xval plan's value is 6)
 - **Acceptance**:
-  - **RED**: `test_propose_reproduces_simulation_on_us_sec_xval_plan` — running the proposer on `docs/loom/plans/2026-07-13-us-sec-financial-table-xval.md` yields the batch count the simulation CSV records for that plan under the module rule at cap 4; today the script does not exist.
+  - **RED**: `test_propose_reproduces_simulation_on_us_sec_xval_plan` — running the proposer on `docs/loom/plans/2026-07-13-us-sec-financial-table-xval.md` yields `len(batches) + len(singletons) == 6`, the `fanouts_k2_cap4` value the simulation CSV records for that plan; today the script does not exist.
   - **GREEN**: a 5-task same-module component splits 4+1 in dependency order (a task never precedes one of its dependencies in a later batch); mechanical tasks are excluded; two tasks with different lanes never share a batch; a plan with no `Module` lines still clusters by dependency edges.
 - **External surfaces**: stdlib only.
+- **Reuse-adequacy**:
+  - **Observed**: `_parse_tasks(text, errors)` slices the plan into per-Task blocks by heading, appends schema errors (missing Task headings, missing or misplaced `## Review Batches`, duplicate numbers) and returns `dict[int, Task]`; `_projection_files(value, owner, errors)` turns one `Files touched` value into a tuple of safe, de-duplicated repo-relative paths, appending an error and returning `()` on an unsafe list — both exist to validate a declared batch's projection, not to cluster — read loom-code/scripts/check_review_batches.py:156 and read loom-code/scripts/check_review_batches.py:382
+  - **Intended**: the proposer imports the sibling module by file path (as `plan_card.py`'s `_review_batch_oracle()` does), calls `_parse_tasks` once on the plan text and reads each `Task`'s lane, dependencies, `Module` and `Files touched` from the returned objects to build the clustering graph; it never re-implements the heading or field grammar, and it treats a non-empty `errors` list as a refusal (non-zero exit naming the errors) rather than clustering a plan the oracle would reject.
 - **Dependencies**: none
 - **Seam**: payload: none
 - **Independent**: true
@@ -244,39 +250,37 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
   - from Task 8: payload: the two field-name constants and the `--check` CLI contract; owner: Task 8; probe: test_writing_plans_documents_batch_nudge_fields_and_gate
 - **Independent**: false
 - **Brief item covered**: BI-3
-- **Review-weight**: prose
-- **Review disposition**: individual
+- **Review disposition**: batch(proposer)
 - **Status**: pending
 - **Gloss**: 規劃者和 reviewer 讀的契約裡有這兩個欄位和這一道閘。
 
 ## Task 10 — finishing 收尾卡片印 observed reviewer fan-outs 並蓋進 plan Notes
 - **Description**: Add one close-out sub-check row to finishing-a-development-branch that prints the branch's observed reviewer fan-outs from the dispatch log and stamps the line into the plan's `## Notes` before the close-out commit.
-  - Mechanism: a new `--summary` flag on `observe` printing one line `observed reviewer fan-outs: N (rounds R, batch reopens B)`; the row runs `python3 loom-code/scripts/task_batch_replay.py observe --log <git-dir>/loom/review-dispatches.jsonl --branch <branch> --summary`.
+  - Mechanism: the row runs `python3 loom-code/scripts/task_batch_replay.py observe --log <git-dir>/loom/review-dispatches.jsonl --branch <branch> --summary` (the flag ships in Task 5) and relays its one line verbatim.
   - Absent log → the row prints `observed reviewer fan-outs: N/A — no dispatch log` loudly, never silently.
   - Word budget: finishing SKILL.md is at 4,025 words — net growth ≤ 80 words.
-- **Module**: loom-code/skills/finishing-a-development-branch (prose) + task_batch_replay `--summary`
-- **Files touched**: loom-code/skills/finishing-a-development-branch/SKILL.md, loom-code/scripts/task_batch_replay.py, loom-code/scripts/test_task_batch_replay.py, loom-code/scripts/test_finishing_observed_fanouts_contract.py
+- **Module**: loom-code/skills/finishing-a-development-branch (prose contract)
+- **Files touched**: loom-code/skills/finishing-a-development-branch/SKILL.md, loom-code/scripts/test_finishing_observed_fanouts_contract.py
 - **Context paths**:
   - loom-code/skills/finishing-a-development-branch/SKILL.md (close-out sub-checks table — the `Stale-scan relay` row as the shape to copy)
-  - loom-code/scripts/task_batch_replay.py (post Task 5 — `observe`)
+  - loom-code/scripts/task_batch_replay.py (post Task 5 — `observe --summary`, the exact line format)
 - **Acceptance**:
-  - **RED**: `test_observe_summary_prints_one_line` — `observe … --summary` prints exactly `observed reviewer fan-outs: 3 (rounds 2, batch reopens 1)` for the Task 5 fixture (today no flag).
-    - Second RED: `test_finishing_documents_observed_fanouts_row` — the SKILL.md table has a row naming `review-dispatches.jsonl` and the N/A line (today absent).
-  - **GREEN**: `wc -w` finishing SKILL.md ≤ 4,500; `check_contract_citations.py` exit 0; `--summary` without `--out` writes no result file.
+  - **RED**: `test_finishing_documents_observed_fanouts_row` — the SKILL.md close-out table has a row naming `review-dispatches.jsonl`, the `--summary` invocation and the N/A line (today absent).
+  - **GREEN**: `wc -w` finishing SKILL.md ≤ 4,500; `check_contract_citations.py` exit 0; the row's invocation string matches the argv Task 5 accepts (the contract test runs it against an empty temp log and expects the N/A line).
 - **External surfaces**: none.
 - **Dependencies**: Task 5 completes first
 - **Seam**:
-  - from Task 5: payload: the `observe` subcommand's argv contract and counts; owner: Task 5; probe: test_observe_summary_prints_one_line
+  - from Task 5: payload: the `observe --summary` argv contract and its one-line format; owner: Task 5; probe: test_finishing_documents_observed_fanouts_row
 - **Independent**: false
 - **Brief item covered**: BI-5
-- **Review disposition**: individual
+- **Review disposition**: batch(replay-observed)
 - **Status**: pending
 - **Gloss**: 每個弧收尾時都印出真實的派工次數，並留在 plan 裡。
 
 ## Task 11 — loom-code 版本 bump 0.107.1→0.108.0＋dogfood 指紋刷新
 - **Description**: Bump loom-code to 0.108.0 on every version surface and refresh the dogfood record's `loom-code candidate SHA-256` line at this task's HEAD.
   - Surfaces: `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, `CHANGELOG.md` (entry summarising Tasks 1–10, citing the simulation record), the version-pin test; fingerprint via `_tracked_worktree_fingerprint('loom-code')`; `sync_codex_manifests.py` for the mirror.
-- **Module**: loom-code (version surfaces) + docs/loom/dogfood (fingerprint)
+- **Module**: loom-code plugin manifest (version surfaces; the dogfood fingerprint line rides the same release commit)
 - **Files touched**: loom-code/.claude-plugin/plugin.json, loom-code/.codex-plugin/plugin.json, loom-code/CHANGELOG.md, loom-code/scripts/test_docs_review_blocking_class.py, docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md
 - **Context paths**:
   - scripts/check_version_bump.py, scripts/sync_codex_manifests.py
@@ -304,7 +308,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Description**: Run the new observer and proposer on this arc's own artifacts and record the outcome in this plan's `## Notes` — the first harness-observed number.
   - `task_batch_replay.py observe` against this worktree's `<git-dir>/loom/review-dispatches.jsonl` for branch `batch-review-measurement-and-nudge` (the log Task 2 started writing the moment it landed).
   - `propose_review_batches.py` on this plan: record whether its declared batches match the proposal (they were authored under the same rule) and any `Not batched because` lines it demanded.
-  - This task edits only the plan's `## Notes`; it must run AFTER the plan's batches have been reviewed (so the log has fan-outs to count) and BEFORE the version bump.
+  - This task edits only the plan's `## Notes`; it must run AFTER all three review batches have closed (a sealed packet freezes the plan text, and the log needs fan-outs to count) and BEFORE the version bump.
 - **Module**: docs/loom/plans (this plan's Notes)
 - **Files touched**: docs/loom/plans/2026-08-31-batch-review-measurement-and-nudge.md
 - **Context paths**:
@@ -316,10 +320,12 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
     - Impossible before Tasks 2 and 5 exist; second RED: `propose_review_batches.py --check docs/loom/plans/2026-08-31-batch-review-measurement-and-nudge.md` exits 0.
   - **GREEN**: the plan's Notes carry the observed line (`observed reviewer fan-outs: N (rounds R, batch reopens B)`) and the propose/check outcome; no other file changes.
 - **External surfaces**: none.
-- **Dependencies**: Tasks 5, 8 complete first
+- **Dependencies**: Tasks 4, 5, 8 complete first
 - **Seam**:
+  - from Task 4: payload: none
   - from Task 5: payload: the `observe` result file (`task-batch-replay-result/v2`); owner: Task 5; probe: task_batch_replay.py observe
   - from Task 8: payload: none
+  - (ordering only: each edge is the last-closing member of one batch — cross-batch `done` means that batch's packet is no longer sealed, so this task's plan edit cannot collide with a sealed packet)
 - **Independent**: false
 - **Brief item covered**: BI-7
 - **Review-weight**: prose
@@ -337,21 +343,21 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Boundary**: capability: batch-review receipt provenance; exclusions: none; consumable: yes
 
 ### Review Batch: replay-observed
-- **Members**: Task 5, Task 6
-- **Verdict question**: Does `task_batch_replay.py` now produce its numbers only from harness-written records — `observe` counting dispatches, rounds and reopens from the log and receipts through one shared reader, and `compare` refusing any result that is v1 or not `provenance: observed` — with the pilot's typed v1 shape provably refused?
+- **Members**: Task 5, Task 6, Task 10
+- **Verdict question**: Does `task_batch_replay.py` now produce its numbers only from harness-written records — `observe` counting dispatches, rounds and reopens from the log and receipts through one shared reader, `--summary` printing the one line the finishing close-out row relays verbatim, and `compare` refusing any result that is v1 or not `provenance: observed` — with the pilot's typed v1 shape provably refused?
 - **Review lane**: full
-- **Aggregate verification**: inert description — run the replay test module and confirm the observe and refusal tests pass alongside the ported v2 compare fixtures, then feed the historical v1 pilot files to compare and observe the refusal.
+- **Aggregate verification**: inert description — run the replay test module and the finishing contract test and confirm the observe, summary and refusal tests pass alongside the ported v2 compare fixtures, then feed the historical v1 pilot files to compare and observe the refusal.
 - **Boundary**: capability: replay observed provenance; exclusions: none; consumable: yes
 
 ### Review Batch: proposer
-- **Members**: Task 7, Task 8
-- **Verdict question**: Does `propose_review_batches.py` reproduce the simulation's module-rule clustering at cap 4 in dependency order on real plans, and does `--check` refuse exactly the two deviations the brief names — an unbatched proposed pair without a reason line and an oversized declared batch without one — while exiting 0 on a conforming plan?
+- **Members**: Task 7, Task 8, Task 9
+- **Verdict question**: Does `propose_review_batches.py` reproduce the simulation's module-rule clustering at cap 4 in dependency order on real plans, does `--check` refuse exactly the two deviations the brief names — an unbatched proposed pair without a reason line and an oversized declared batch without one — while exiting 0 on a conforming plan, and do plan-format, the writing-plans gate list and reviewer Check 23 name exactly those fields and that command?
 - **Review lane**: full
-- **Aggregate verification**: inert description — run the proposer test module, then run the script on three named historical plans and compare batch counts with the simulation CSV, and run `--check` on this plan itself.
+- **Aggregate verification**: inert description — run the proposer test module and the writing-plans contract test, then run the script on three named historical plans and compare batch counts with the simulation CSV, and run `--check` on this plan itself.
 - **Boundary**: capability: review-batch proposer and nudge check; exclusions: none; consumable: yes
 
 ## Notes
 
 - Change-folder binding: none — no non-archived `docs/loom/<change-id>/` folder matches branch `batch-review-measurement-and-nudge`; the caller handed a brainstorming brief; the plan derives from the brief (BI- ids).
-- Review disposition rationale (authored under the brief's own rule — same lane AND (dependency edge OR same Module), cap 4): Tasks 3+4 (batch_review_cli), 5+6 (task_batch_replay), 7+8 (propose_review_batches) are same-module dependency chains and batch; Task 2 is a one-task module; Tasks 9, 10, 12 are prose lane in three different skill/doc trees; Task 1 is record-class; Task 11 is release administration. Tasks 5 and 10 share task_batch_replay.py but Task 10's lane is prose (mixed files) — `Not batched because`: Task 10's Files touched span a prose contract and a code flag, so its lane is not the same as Task 5's full lane. Planned fan-outs: 9 for 12 tasks.
+- Review disposition rationale (authored under the brief's own rule — same lane AND (dependency edge OR same Module), cap 4): Tasks 3+4 (batch_review_cli), 5+6+10 (task_batch_replay and the finishing row that relays its `--summary` line, dependency edge 5→10) and 7+8+9 (propose_review_batches and the writing-plans contract that names it, dependency edge 8→9) are same-lane dependency chains and batch; Task 2 is a one-task module; Task 12 is prose lane with no same-lane neighbour; Task 1 is record-class; Task 11 is release administration. Tasks 9 and 10 carry a `.py` contract test in Files touched, so they run the full lane rather than `Review-weight: prose` (plan-format: prose requires every file to be `.md`). Planned fan-outs: 7 for 12 tasks.
 - BI-8 (Decision umbrella), BI-10 (hand-counted Notes line pattern obsolete), BI-11 (simulation record, already committed with the brief at 96af10c9) are delivered by the sum of Tasks 5–12 and by the brief commit; the coverage checker reports them as warnings by design.
