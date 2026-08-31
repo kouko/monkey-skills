@@ -353,7 +353,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-114
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: claimed(@codex)
+- **Status**: implemented(2d4892d36a96a9d9d07ebf6677fd61002bfcd716)
 - **Gloss**: 當 host 斷線或回應晚到，每筆成本與輸出仍有正確落點。
 
 ## Task 18 — 在 dispatch 與 capture 驗證實際 model identity
@@ -372,7 +372,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-115
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 記錄的弱模型必須和真正跑的一樣，否則只保留不計分。
 
 ## Task 19 — 分開 zero 與 partial populations
