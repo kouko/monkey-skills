@@ -6,7 +6,7 @@ Goal: Repair the defects #765/#766 introduced without reverting either —
     invariants, restored cross-store boundary, unblocked live plans, and the
     batch-review adapter entrypoint — serves map family-relocation: its live
     tickets and map are the repaired artifacts (R5)
-Stage: sdd:wave-1
+Stage: review:round-1
 Total tasks: 19
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
@@ -360,7 +360,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     loom-code (skill/scripts content changed in both; codex mirror manifests
     via the existing sync script)"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(dd66cee21b26507f161d0e8169204d0c17d4c188)
 - **Gloss**: 版本三表面同步：plugin.json、CHANGELOG、README 版本列。
 ## Task 14 — Referent grammar widened for batch projections (R11a)
 - **Description**: `owned_requirements` accepts every `Brief item covered` referent plan-format admits — REQ-<n>, BI-<n>, or a quote — with non-empty as the only rule, in both the checker's projection and review_batch's projection validator.
@@ -481,7 +481,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     finalize … _repository_identity anchored on the member sha … one shared
     TimeoutExpired→PacketRefused wrapper; _member_statuses computed once"
 - **Review disposition**: individual
-- **Status**: implemented(48175952bdd01e5272ea1a7282cb83aae5a57b58)
+- **Status**: done(48175952bdd01e5272ea1a7282cb83aae5a57b58)
 - **Gloss**: 把審查抓到的 adapter 殘缺一次補齊，讓冪等保護與崩潰恢復在兩條路徑上對稱。
 
 ## Task 19 — Hygiene sweep from per-task review notes (R12b)
