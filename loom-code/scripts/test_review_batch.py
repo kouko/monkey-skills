@@ -795,3 +795,23 @@ def test_execution_projection_still_refuses_empty_owned_requirements() -> None:
                 _receipt_seal=review_batch._SEAL,
             )
         )
+
+
+def test_review_batch_oracle_keeps_name_and_exception_type(monkeypatch) -> None:
+    """`_review_batch_oracle` must delegate to `sibling_import.load_sibling`,
+    still register the sibling module under the existing unique name, and
+    still translate a load failure into `PacketRefused` with the existing
+    message -- callers only catch `PacketRefused`, never `ImportError`."""
+    from sibling_import import load_sibling as real_load_sibling
+
+    def _boom(*args, **kwargs):
+        raise ImportError("cannot load check_review_batches.py")
+
+    monkeypatch.setattr(review_batch, "load_sibling", _boom)
+    with pytest.raises(review_batch.PacketRefused, match="Review Batch schema oracle cannot be loaded"):
+        review_batch._review_batch_oracle()
+
+    monkeypatch.setattr(review_batch, "load_sibling", real_load_sibling)
+    sys.modules.pop("review_batch_schema_oracle", None)
+    module = review_batch._review_batch_oracle()
+    assert sys.modules["review_batch_schema_oracle"] is module
