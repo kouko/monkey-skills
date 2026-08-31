@@ -325,27 +325,46 @@ def _field_names_from_shape_reference() -> list:
     return names
 
 
-def test_defines_slots_refusal_bar_and_provenance() -> None:
+def _paragraph_containing(paragraphs_lower: list, *keywords: str):
+    """Return the first paragraph containing every keyword, or None.
+
+    Shared across the split-out claim tests below so each keeps the
+    file's single search semantics instead of redefining its own closure.
+    """
+    for p in paragraphs_lower:
+        if all(kw in p for kw in keywords):
+            return p
+    return None
+
+
+def _paragraphs_lower_of_reference() -> list:
+    """Read input-floor.md and return its paragraphs, lowercased/normalized."""
+    return [p.lower() for p in _paragraphs_normalized(_read_reference())]
+
+
+def _list_items_of_reference() -> list:
+    """Read input-floor.md and return its top-level numbered list items."""
+    return _numbered_list_items(_read_reference())
+
+
+def _tag_items_of_reference() -> list:
+    """Read input-floor.md and return its top-level bullet list items."""
+    return _bullet_list_items(_read_reference())
+
+
+def test_input_floor_names_two_slots() -> None:
     content = _read_reference()
-    paragraphs = _paragraphs_normalized(content)
-    paragraphs_lower = [p.lower() for p in paragraphs]
-
-    def _paragraph_containing(*keywords: str):
-        for p in paragraphs_lower:
-            if all(kw in p for kw in keywords):
-                return p
-        return None
-
-    # --- two input slot names ---
     assert "current state" in content.lower(), "Must name the 'current state' slot."
     assert "wanted difference" in content.lower(), (
         "Must name the 'wanted difference' slot."
     )
 
-    # --- refusal rule ---
-    refusal_para = _paragraph_containing("empty", "names the empty slot") or (
-        _paragraph_containing("empty slot", "emits no goal")
-    )
+
+def test_refusal_rule_states_empty_slot_and_no_goal() -> None:
+    paragraphs_lower = _paragraphs_lower_of_reference()
+    refusal_para = _paragraph_containing(
+        paragraphs_lower, "empty", "names the empty slot"
+    ) or (_paragraph_containing(paragraphs_lower, "empty slot", "emits no goal"))
     assert refusal_para, (
         "Must state the refusal rule: when either slot is empty, name the "
         "empty slot and emit no goal."
@@ -366,7 +385,11 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "(not a degraded/vague one) — expected 'no' bound directly to "
         "'goal', not merely co-occurring somewhere in the same sentence."
     )
-    vague_para = _paragraph_containing("vague", "worse")
+
+
+def test_vague_goal_is_worse_than_none() -> None:
+    paragraphs_lower = _paragraphs_lower_of_reference()
+    vague_para = _paragraph_containing(paragraphs_lower, "vague", "worse")
     assert vague_para, (
         "Must state that emitting a vague goal is worse than emitting none."
     )
@@ -390,9 +413,9 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "'may ... judged ... satisfied' within one sentence."
     )
 
-    # --- the bar: three clauses, each isolated to its own list item ---
-    list_items = _numbered_list_items(content)
 
+def test_bar_clause_decidable() -> None:
+    list_items = _list_items_of_reference()
     decidable_item = next(
         (item for item in list_items if "decidable" in item.lower()), None
     )
@@ -416,6 +439,9 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "FAILS this bar — expected 'fails ... bar' within item 1."
     )
 
+
+def test_bar_clause_false_when_written() -> None:
+    list_items = _list_items_of_reference()
     false_item = next(
         (
             item
@@ -450,6 +476,9 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "the condition to already be true — that inverts the obligation."
     )
 
+
+def test_bar_clause_free_of_person_dependence() -> None:
+    list_items = _list_items_of_reference()
     person_item = next(
         (
             item
@@ -490,7 +519,8 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "person — that inverts the obligation."
     )
 
-    # --- the bar is explicitly NOT claimed to be mechanical ---
+
+def test_bar_is_not_claimed_mechanical() -> None:
     # Structurally isolated to §4's prose intro (heading -> first list
     # item), not the merged intro+items paragraph, so a mutant that
     # flips the intro's polarity cannot be rescued by unrelated item text
@@ -498,7 +528,7 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
     # `_negation_binds`), not merely co-occur — a mutant claiming the bar
     # IS mechanical, with an unrelated earlier "not" elsewhere in the
     # intro, must still fail.
-    bar_intro = _bar_intro(content)
+    bar_intro = _bar_intro(_read_reference())
     assert "mechanical" in bar_intro.lower(), (
         "The bar section must address whether it is mechanical."
     )
@@ -508,14 +538,9 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "within the intro, not merely co-occurring."
     )
 
-    # --- three provenance tags, each isolated to its own bullet item ---
-    # §5's three bullets carry no blank line between them (see
-    # _bullet_list_items' docstring), so the merged-paragraph checks that
-    # used to live here let a mutation of ONE tag's definition survive on
-    # the strength of the OTHER two tags' unmutated text sharing the same
-    # paragraph. Isolating each tag to its own bullet closes that gap.
-    tag_items = _bullet_list_items(content)
 
+def test_provenance_tag_user_said() -> None:
+    tag_items = _tag_items_of_reference()
     user_said_item = next(
         (item for item in tag_items if "`user-said`" in item.lower()), None
     )
@@ -551,6 +576,9 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "is fine)."
     )
 
+
+def test_provenance_tag_derived() -> None:
+    tag_items = _tag_items_of_reference()
     derived_item = next(
         (item for item in tag_items if "`derived`" in item.lower()), None
     )
@@ -595,6 +623,9 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "item."
     )
 
+
+def test_provenance_tag_proposed() -> None:
+    tag_items = _tag_items_of_reference()
     proposed_item = next(
         (item for item in tag_items if "`proposed`" in item.lower()), None
     )
@@ -626,13 +657,15 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "own bullet item, not 'not' and 'confirm' merely co-occurring."
     )
 
-    # --- citation boundary ---
-    citation_para = _paragraph_containing("source", "quote")
+
+def test_citation_boundary() -> None:
+    paragraphs_lower = _paragraphs_lower_of_reference()
+    citation_para = _paragraph_containing(paragraphs_lower, "source", "quote")
     assert citation_para, (
         "Must state a recorded purpose is a source an agent quotes to "
         "justify an inference."
     )
-    never_authority_para = _paragraph_containing("never", "authority")
+    never_authority_para = _paragraph_containing(paragraphs_lower, "never", "authority")
     assert never_authority_para, (
         "Must state a recorded purpose is never authority to settle a "
         "choice reserved for the user."
@@ -667,18 +700,20 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "decision — expected a negation bound to 'substitute' within one "
         "sentence."
     )
-    assert _paragraph_containing("irreversible") or _paragraph_containing(
-        "outward-facing"
-    ), (
+    assert _paragraph_containing(
+        paragraphs_lower, "irreversible"
+    ) or _paragraph_containing(paragraphs_lower, "outward-facing"), (
         "The citation boundary must name at least one example of a choice "
         "reserved for the user, e.g. an irreversible or outward-facing action."
     )
 
-    # --- negative guard: "required"/"require" collision with word 'bar' ---
+
+def test_bar_negative_guard_required_vs_mechanical() -> None:
     # (regression guard per known trap: a bare substring match on 'require'
     # would false-positive inside 'required'.) Nothing in this reference
     # should claim the bar is REQUIRED to be mechanical — that would
     # contradict the "not ... mechanical" assertion above.
+    paragraphs_lower = _paragraphs_lower_of_reference()
     for p in paragraphs_lower:
         if "mechanical" in p and re.search(r"\brequires?\b", p):
             raise AssertionError(
