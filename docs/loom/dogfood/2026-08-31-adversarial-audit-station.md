@@ -126,6 +126,16 @@ code block must NOT be read as the header) at `09bb3c4a`
 fenced mentions`); the store line was pinned at `18ce4e72`
 (`docs(loom): ATTACK-CATALOGUE pins the indented-header vector`).
 
+A fourth `safety_bearing` self-exemption variant was found by the fix's
+SECOND review: an unclosed code fence before a misplaced-header line hides
+every later line from the misplaced-header scan, so the mismatch is never
+flagged. It is pinned by `test_unclosed_fence_before_misplaced_header_fails_loud`,
+fixed together with `test_tilde_fenced_safety_bearing_mention_is_ignored`
+(`~~~`-fenced mentions ignored the same as ```` ``` ````-fenced ones) at
+`51724162` (`fix(loom-code): plan_card fails loud on an unclosed fence and
+recognizes ~~~ fences`); the store line was pinned at `29477ac4`
+(`docs(loom): ATTACK-CATALOGUE pins the unclosed-fence vector`).
+
 The one un-pinnable `reproduced` vector — `check_attack_catalogue.py`
 `pinned by` resolution (relevance): "a name that exists proves nothing
 about whether the named test actually exercises the vector" — is recorded
@@ -193,10 +203,10 @@ on this branch:
 | point | sha256 |
 |---|---|
 | `5721b1fe` (before the station fired) | `565ac1fb41242ddf52d32bd8f8a69196008c26ce7962fbbf2d4f78760578ed1a` |
-| `HEAD` (after) | `4e3cc9ae00b7e7e7a2904fb1f829e46bf489b7b137b2e6c8e3cec4bd1d363cdf` |
+| `HEAD` (after) | `c817aaa8a4697f9bd82032ca096de18d1b2f23d55983a6370681ee11c4b75332` |
 
 `check_attack_catalogue.py … --repo .` at both points: `exit=0`,
-`10 guarded path(s)`; instance count `6` (`5721b1fe`) → `12` (`HEAD`).
+`10 guarded path(s)`; instance count `6` (`5721b1fe`) → `13` (`HEAD`).
 
 ## 8. Dispatch tiers and cost
 
