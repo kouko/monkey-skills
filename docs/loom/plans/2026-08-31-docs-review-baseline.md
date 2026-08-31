@@ -181,7 +181,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-105
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: claimed(@codex)
+- **Status**: implemented(48e2281a10c1cb5a19d9d6ad6527282e25e13b89)
 - **Gloss**: 只有同模型、同設定的重跑才能回答 reviewer 穩不穩。
 
 ## Task 9 — 計算帶 population 的 metrics
@@ -296,7 +296,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-111
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 歷史文件裡的指令只是待審內容，不能操作電腦或外送資料。
 
 ## Task 15 — 執行 authority 與 ratifier independence
