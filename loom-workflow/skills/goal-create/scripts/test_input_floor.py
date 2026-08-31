@@ -32,6 +32,7 @@ only risks a false failure on a legitimate rewording that happens to be a
 few characters longer. Scope to structure, not to distance.
 """
 
+import ast
 import re
 from pathlib import Path
 
@@ -169,12 +170,17 @@ def _negation_binds(text: str, negation: str, target: str, max_gap_words: int = 
     negation appears somewhere earlier, unrelated to the actual
     obligation). Capping the gap keeps the match local to the clause
     the negation actually governs, which a bare ``.*`` does not.
+
+    Markdown punctuation glued to the front of `target` (a backtick or
+    emphasis marker, as in ``never a `Stop-when` branch``) is tolerated,
+    so prose can keep its code-span convention without bending to the
+    regex.
     """
     pattern = (
         r"\b(?:" + negation + r")\b"
         r"\W*"  # trailing markdown/punctuation glued to the negation word
         r"(?:\s+\S+){0," + str(max_gap_words) + r"}"
-        r"\s+\b" + target + r"\b"
+        r"\s+[`*_]*\b" + target + r"\b"
     )
     return re.search(pattern, text) is not None
 
@@ -255,6 +261,56 @@ def test_no_unbound_negation_regex_in_this_file() -> None:
     )
 
 
+def _code_line_count(node: ast.FunctionDef, lines: list) -> int:
+    """Count a function's body lines, excluding its docstring, comments,
+    and blank lines.
+
+    This is the measure that matches naming-and-functions.md's 50-line
+    hard ceiling, which is about CODE complexity, not the prose that
+    documents a regex trap or a structural rationale — a function like
+    `test_no_unbound_negation_regex_in_this_file` carries a long,
+    load-bearing docstring but little actual code, and should not be
+    flagged on docstring length alone.
+    """
+    body = node.body
+    has_docstring = (
+        bool(body)
+        and isinstance(body[0], ast.Expr)
+        and isinstance(getattr(body[0], "value", None), ast.Constant)
+        and isinstance(body[0].value.value, str)
+    )
+    if has_docstring:
+        start = body[1].lineno if len(body) > 1 else body[0].end_lineno + 1
+    else:
+        start = body[0].lineno if body else node.lineno + 1
+    segment = lines[start - 1 : node.end_lineno]
+    return sum(1 for line in segment if line.strip() and not line.strip().startswith("#"))
+
+
+def test_no_test_function_exceeds_fifty_lines() -> None:
+    """Guard against reproducing the bundled-claims defect this file hit
+    once already (`test_defines_slots_refusal_bar_and_provenance` grew to
+    359 lines bundling ~15 independent claims behind one name, so a
+    failure inside named nothing). This guard reads THIS FILE'S OWN
+    SOURCE and fails the moment any `def test_...` function's code body
+    (docstring/comments/blank lines excluded — see `_code_line_count`)
+    exceeds the 50-line hard ceiling (naming-and-functions.md).
+    """
+    source = Path(__file__).read_text(encoding="utf-8")
+    lines = source.splitlines()
+    tree = ast.parse(source)
+    offenders = [
+        (node.name, code_len)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+        for code_len in [_code_line_count(node, lines)]
+        if code_len > 50
+    ]
+    assert not offenders, (
+        f"Test function(s) exceed the 50-line hard ceiling: {offenders!r}"
+    )
+
+
 def _field_names_from_shape_reference() -> list:
     """Extract the field names goal-shape.md actually defines, in order.
 
@@ -274,27 +330,46 @@ def _field_names_from_shape_reference() -> list:
     return names
 
 
-def test_defines_slots_refusal_bar_and_provenance() -> None:
+def _paragraph_containing(paragraphs_lower: list, *keywords: str):
+    """Return the first paragraph containing every keyword, or None.
+
+    Shared across the split-out claim tests below so each keeps the
+    file's single search semantics instead of redefining its own closure.
+    """
+    for p in paragraphs_lower:
+        if all(kw in p for kw in keywords):
+            return p
+    return None
+
+
+def _paragraphs_lower_of_reference() -> list:
+    """Read input-floor.md and return its paragraphs, lowercased/normalized."""
+    return [p.lower() for p in _paragraphs_normalized(_read_reference())]
+
+
+def _list_items_of_reference() -> list:
+    """Read input-floor.md and return its top-level numbered list items."""
+    return _numbered_list_items(_read_reference())
+
+
+def _tag_items_of_reference() -> list:
+    """Read input-floor.md and return its top-level bullet list items."""
+    return _bullet_list_items(_read_reference())
+
+
+def test_input_floor_names_two_slots() -> None:
     content = _read_reference()
-    paragraphs = _paragraphs_normalized(content)
-    paragraphs_lower = [p.lower() for p in paragraphs]
-
-    def _paragraph_containing(*keywords: str):
-        for p in paragraphs_lower:
-            if all(kw in p for kw in keywords):
-                return p
-        return None
-
-    # --- two input slot names ---
     assert "current state" in content.lower(), "Must name the 'current state' slot."
     assert "wanted difference" in content.lower(), (
         "Must name the 'wanted difference' slot."
     )
 
-    # --- refusal rule ---
-    refusal_para = _paragraph_containing("empty", "names the empty slot") or (
-        _paragraph_containing("empty slot", "emits no goal")
-    )
+
+def test_refusal_rule_states_empty_slot_and_no_goal() -> None:
+    paragraphs_lower = _paragraphs_lower_of_reference()
+    refusal_para = _paragraph_containing(
+        paragraphs_lower, "empty", "names the empty slot"
+    ) or (_paragraph_containing(paragraphs_lower, "empty slot", "emits no goal"))
     assert refusal_para, (
         "Must state the refusal rule: when either slot is empty, name the "
         "empty slot and emit no goal."
@@ -315,7 +390,11 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "(not a degraded/vague one) — expected 'no' bound directly to "
         "'goal', not merely co-occurring somewhere in the same sentence."
     )
-    vague_para = _paragraph_containing("vague", "worse")
+
+
+def test_vague_goal_is_worse_than_none() -> None:
+    paragraphs_lower = _paragraphs_lower_of_reference()
+    vague_para = _paragraph_containing(paragraphs_lower, "vague", "worse")
     assert vague_para, (
         "Must state that emitting a vague goal is worse than emitting none."
     )
@@ -339,9 +418,9 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "'may ... judged ... satisfied' within one sentence."
     )
 
-    # --- the bar: three clauses, each isolated to its own list item ---
-    list_items = _numbered_list_items(content)
 
+def test_bar_clause_decidable() -> None:
+    list_items = _list_items_of_reference()
     decidable_item = next(
         (item for item in list_items if "decidable" in item.lower()), None
     )
@@ -365,6 +444,9 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "FAILS this bar — expected 'fails ... bar' within item 1."
     )
 
+
+def test_bar_clause_false_when_written() -> None:
+    list_items = _list_items_of_reference()
     false_item = next(
         (
             item
@@ -399,6 +481,9 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "the condition to already be true — that inverts the obligation."
     )
 
+
+def test_bar_clause_free_of_person_dependence() -> None:
+    list_items = _list_items_of_reference()
     person_item = next(
         (
             item
@@ -439,7 +524,8 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "person — that inverts the obligation."
     )
 
-    # --- the bar is explicitly NOT claimed to be mechanical ---
+
+def test_bar_is_not_claimed_mechanical() -> None:
     # Structurally isolated to §4's prose intro (heading -> first list
     # item), not the merged intro+items paragraph, so a mutant that
     # flips the intro's polarity cannot be rescued by unrelated item text
@@ -447,7 +533,7 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
     # `_negation_binds`), not merely co-occur — a mutant claiming the bar
     # IS mechanical, with an unrelated earlier "not" elsewhere in the
     # intro, must still fail.
-    bar_intro = _bar_intro(content)
+    bar_intro = _bar_intro(_read_reference())
     assert "mechanical" in bar_intro.lower(), (
         "The bar section must address whether it is mechanical."
     )
@@ -457,14 +543,9 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "within the intro, not merely co-occurring."
     )
 
-    # --- three provenance tags, each isolated to its own bullet item ---
-    # §5's three bullets carry no blank line between them (see
-    # _bullet_list_items' docstring), so the merged-paragraph checks that
-    # used to live here let a mutation of ONE tag's definition survive on
-    # the strength of the OTHER two tags' unmutated text sharing the same
-    # paragraph. Isolating each tag to its own bullet closes that gap.
-    tag_items = _bullet_list_items(content)
 
+def test_provenance_tag_user_said() -> None:
+    tag_items = _tag_items_of_reference()
     user_said_item = next(
         (item for item in tag_items if "`user-said`" in item.lower()), None
     )
@@ -500,6 +581,9 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "is fine)."
     )
 
+
+def test_provenance_tag_derived() -> None:
+    tag_items = _tag_items_of_reference()
     derived_item = next(
         (item for item in tag_items if "`derived`" in item.lower()), None
     )
@@ -544,6 +628,9 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "item."
     )
 
+
+def test_provenance_tag_proposed() -> None:
+    tag_items = _tag_items_of_reference()
     proposed_item = next(
         (item for item in tag_items if "`proposed`" in item.lower()), None
     )
@@ -575,13 +662,15 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "own bullet item, not 'not' and 'confirm' merely co-occurring."
     )
 
-    # --- citation boundary ---
-    citation_para = _paragraph_containing("source", "quote")
+
+def test_citation_boundary() -> None:
+    paragraphs_lower = _paragraphs_lower_of_reference()
+    citation_para = _paragraph_containing(paragraphs_lower, "source", "quote")
     assert citation_para, (
         "Must state a recorded purpose is a source an agent quotes to "
         "justify an inference."
     )
-    never_authority_para = _paragraph_containing("never", "authority")
+    never_authority_para = _paragraph_containing(paragraphs_lower, "never", "authority")
     assert never_authority_para, (
         "Must state a recorded purpose is never authority to settle a "
         "choice reserved for the user."
@@ -616,18 +705,20 @@ def test_defines_slots_refusal_bar_and_provenance() -> None:
         "decision — expected a negation bound to 'substitute' within one "
         "sentence."
     )
-    assert _paragraph_containing("irreversible") or _paragraph_containing(
-        "outward-facing"
-    ), (
+    assert _paragraph_containing(
+        paragraphs_lower, "irreversible"
+    ) or _paragraph_containing(paragraphs_lower, "outward-facing"), (
         "The citation boundary must name at least one example of a choice "
         "reserved for the user, e.g. an irreversible or outward-facing action."
     )
 
-    # --- negative guard: "required"/"require" collision with word 'bar' ---
+
+def test_bar_negative_guard_required_vs_mechanical() -> None:
     # (regression guard per known trap: a bare substring match on 'require'
     # would false-positive inside 'required'.) Nothing in this reference
     # should claim the bar is REQUIRED to be mechanical — that would
     # contradict the "not ... mechanical" assertion above.
+    paragraphs_lower = _paragraphs_lower_of_reference()
     for p in paragraphs_lower:
         if "mechanical" in p and re.search(r"\brequires?\b", p):
             raise AssertionError(
@@ -770,4 +861,80 @@ def test_slot_mapping_uses_the_shape_reference_field_names() -> None:
         f"Expected the 'wanted difference' bullet itself to name the "
         f"'{outcome_name}' field (as named in goal-shape.md), not merely "
         f"have that name appear elsewhere in §2."
+    )
+
+
+def _section_content(content: str, heading_number: int) -> str:
+    """Extract one '## N — ...' section's body, up to the next '## ' heading.
+
+    Used to scope the search for the standing decision rule's name to §2
+    only, rather than scanning the whole file for a bold lead.
+    """
+    pattern = rf"^## {heading_number} — .*?\n(.*?)(?=^## |\Z)"
+    match = re.search(pattern, content, re.MULTILINE | re.DOTALL)
+    assert match, f"Section {heading_number} not found in goal-shape.md"
+    return match.group(1)
+
+
+def _standing_rule_name_from_shape_reference() -> str:
+    """Read the standing decision rule's bold-lead name from goal-shape.md §2.
+
+    §2 has two bold leads — "**Definition**" and the rule's own name. The
+    rule's name is whichever bold lead is not "Definition", found
+    structurally rather than hardcoded, so a rename by Task 2 (or any
+    later edit) flows through instead of drifting silently between the
+    two files.
+    """
+    assert SHAPE_REFERENCE_PATH.exists(), (
+        f"Upstream reference not found: {SHAPE_REFERENCE_PATH}"
+    )
+    shape_content = SHAPE_REFERENCE_PATH.read_text(encoding="utf-8")
+    section2 = _section_content(shape_content, 2)
+    bold_leads = re.findall(r"\*\*([^*]+)\*\*:", section2)
+    rule_names = [name.strip() for name in bold_leads if name.strip().lower() != "definition"]
+    assert rule_names, (
+        f"Expected a bold-lead rule name (other than 'Definition') in "
+        f"goal-shape.md §2, found bold leads: {bold_leads}"
+    )
+    return rule_names[0]
+
+
+def test_person_dependence_names_its_two_destinations() -> None:
+    """Item 3's remedy must name both destinations for a person-dependent
+    fork and forbid it from ever becoming a Stop-when branch.
+
+    A person-dependent condition left with nowhere to go is exactly what
+    let drafting agents park such conditions in Stop-when as an exit
+    branch — item 3 must close that gap by naming where it goes instead.
+    """
+    content = _read_reference()
+    list_items = _numbered_list_items(content)
+    person_item = next(
+        (
+            item
+            for item in list_items
+            if "person" in item.lower() and "acting" in item.lower()
+        ),
+        None,
+    )
+    assert person_item, "The bar must state the condition must not depend on a person."
+    person_item_lower = person_item.lower()
+
+    # "never" must bind directly to "Stop-when" (bound negation, not mere
+    # co-occurrence) — a mutant reading "such a condition may still become
+    # a Stop-when branch" would keep both words present but drop the
+    # binding this assertion requires.
+    assert _negation_binds(person_item_lower, "never", "stop-when"), (
+        "Item 3 must state such a condition is NEVER a Stop-when branch — "
+        "expected 'never' bound directly to 'Stop-when' within item 3."
+    )
+    assert "constraints" in person_item_lower, (
+        "Item 3 must name 'Constraints' as one destination for a "
+        "person-dependent condition (the goal pre-decides it there)."
+    )
+    rule_name = _standing_rule_name_from_shape_reference()
+    assert rule_name in person_item, (
+        f"Item 3 must name the standing decision rule from goal-shape.md "
+        f"§2 verbatim ({rule_name!r}) as the run's delegated destination, "
+        f"rather than restating the rule."
     )

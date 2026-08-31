@@ -254,3 +254,187 @@ def test_defines_four_fields_budget_and_surfacing() -> None:
                 "shared/mandatory guidance — Stop-when is this skill's own "
                 f"addition. Offending paragraph: {p!r}"
             )
+
+
+def _section_four(content: str) -> str:
+    """Extract '## 4 — `Stop-when`' section's own text, heading-scoped.
+
+    Bounded to the text between that heading and the next `---` rule (the
+    "## The 4,000-character budget" section starts after it) — so an
+    assertion below can only be satisfied by §4's own words, never by
+    unrelated text living in §2 or the budget/attribution sections.
+    """
+    match = re.search(
+        r"## 4 — `Stop-when`\n\n(.*?)(?=\n---|\Z)",
+        content,
+        re.DOTALL,
+    )
+    assert match, "Expected to find the '## 4 — `Stop-when`' section."
+    return match.group(1)
+
+
+def _negation_binds(text: str, negation: str, target: str, max_gap_words: int = 6) -> bool:
+    """Bound negation-to-target polarity check (word-boundary safe on
+    BOTH ends — same regex body as test_input_floor.py's sanctioned copy;
+    only the default gap differs).
+
+    True iff a `negation` alternation sits within `max_gap_words` words
+    directly BEFORE `target`. See
+    docs/loom/memory/a-list-of-forbidden-words-is-defeated-by-the-word-outside-it.md
+    — a bare `negation.*target` is satisfied by unrelated co-occurrence
+    anywhere in the text; this keeps the match local to the clause the
+    negation actually governs. Punctuation glued to the negation (`never,`)
+    and markdown glued to the target (`` `Stop-when` ``) are tolerated; a
+    trailing word boundary stops `ask` matching inside `asked`.
+    """
+    pattern = (
+        r"\b(?:" + negation + r")\b"
+        r"\W*"
+        r"(?:\s+\S+){0," + str(max_gap_words) + r"}"
+        r"\s+[`*_]*\b" + target + r"\b"
+    )
+    return re.search(pattern, text) is not None
+
+
+def _section_two(content: str) -> str:
+    """Extract '## 2 — `Constraints`' section's own text, heading-scoped.
+
+    Bounded to the text between that heading and the next `## 3` heading (no
+    `---` rule separates §2 from §3), so an assertion below can only be
+    satisfied by §2's own words, never by unrelated text in §4, the budget
+    section, or the attribution paragraph.
+    """
+    match = re.search(
+        r"## 2 — `Constraints`\n\n(.*?)(?=\n## 3|\Z)",
+        content,
+        re.DOTALL,
+    )
+    assert match, "Expected to find the '## 2 — `Constraints`' section."
+    return match.group(1)
+
+
+def test_constraints_carries_the_standing_decision_rule() -> None:
+    content = _read_reference()
+    section_lower = _section_two(content).lower()
+
+    # --- obligation 1: choices the goal does not pre-decide are the run's
+    # to make ---
+    assert re.search(r"does\s+not\s+pre-decide", section_lower), (
+        "Must state choices the goal does not pre-decide are the run's to "
+        "make."
+    )
+    assert re.search(r"run'?s?\s+to\s+make", section_lower), (
+        "Must bind those undecided choices to being the run's to make."
+    )
+
+    # --- obligation 2: the run searches first, decides, and records
+    # decision + candidates + sources in a named file ---
+    for word in ("search", "decide", "record"):
+        assert word in section_lower, (
+            f"Must state the run must {word} as part of the sequence."
+        )
+    assert "candidate" in section_lower, (
+        "Must state the record includes candidates considered."
+    )
+    assert "source" in section_lower, (
+        "Must state the record includes sources."
+    )
+    assert re.search(r"named\s+file", section_lower), (
+        "Must state the decision is recorded in a named file (the goal "
+        "names the file)."
+    )
+
+    # --- obligation 3: the run never stops to ask — negation bound to the
+    # asking itself, not to a stray nearby word (see
+    # docs/loom/memory/a-list-of-forbidden-words-is-defeated-by-the-word-outside-it.md)
+    # ---
+    assert _negation_binds(section_lower, "never", r"(?:stops?\s+to\s+)?ask"), (
+        "Must state the run never stops to ask, with the negation bound "
+        "to the asking."
+    )
+
+    # --- obligation 4: SESSION mode emits this entry by default, tagged
+    # `derived` per input-floor.md §5 ---
+    assert "by default" in section_lower, (
+        "Must state SESSION mode emits this entry by default."
+    )
+    assert "derived" in section_lower, (
+        "Must state the entry carries the `derived` provenance tag."
+    )
+
+    # --- obligation 5: what stays outside the run — an irreversible or
+    # outward-facing act, where `Outcome` ends ---
+    assert "irreversible" in section_lower and "outward-facing" in section_lower, (
+        "Must name an irreversible or outward-facing act as staying "
+        "outside the run."
+    )
+    assert re.search(r"merge|deploy|send", section_lower), (
+        "Must give an example of an irreversible or outward-facing act "
+        "(merge, deploy, send)."
+    )
+    assert "outcome" in section_lower, (
+        "Must state that outward-facing boundary is where `Outcome` ends."
+    )
+
+
+def test_stop_when_is_one_bound_written_as_completion() -> None:
+    content = _read_reference()
+    section_lower = _section_four(content).lower()
+
+    # --- count: exactly one bound (turn count or wall-clock limit), never
+    # a list of exit conditions ---
+    assert re.search(r"\bone\b", section_lower) and "bound" in section_lower, (
+        "Stop-when must state exactly one bound."
+    )
+    assert _negation_binds(section_lower, r"never|not", r"a\s+list\s+of"), (
+        "Stop-when must state it is never a list of exit conditions, with "
+        "the negation bound to 'a list of'."
+    )
+
+    # --- completion: reaching the bound with a status report posted in the
+    # conversation counts as the run completing, as a failure report ---
+    assert re.search(r"\breport\b(?:\s+\S+){0,10}\s+\bcomplet\w*", section_lower) or re.search(
+        r"\bcomplet\w*(?:\s+\S+){0,10}\s+\breport\b", section_lower
+    ), (
+        "Stop-when must bind a status report posted to the run completing."
+    )
+    assert "failure report" in section_lower, (
+        "Must state reaching the bound with a report posted counts as a "
+        "failure report."
+    )
+
+    # --- why: a bare 'stop after N turns' is read by the evaluator as
+    # permission to stop, not as the condition being met, so it neither
+    # releases the run nor bounds it ---
+    assert "permission" in section_lower, (
+        "Must state the evaluator reads a bare stop clause as permission "
+        "to stop."
+    )
+    assert _negation_binds(section_lower, "not", r"the\s+condition"), (
+        "Must state this is NOT the condition being met, with the "
+        "negation bound to 'the condition'."
+    )
+    assert _negation_binds(section_lower, "neither", r"releases?\s+the\s+run"), (
+        "Must state it neither releases the run — negation bound to "
+        "'releases the run'."
+    )
+
+    # --- forks: a human-dependent fork is never a Stop-when branch — pointer
+    # to input-floor.md §4 item 3 (same term "branch" as that item uses) ---
+    assert _negation_binds(section_lower, "never|not", r"a\s+`?stop-when`?\s+branch"), (
+        "Must state a human-dependent fork is never a Stop-when branch, "
+        "negation bound to 'a Stop-when branch'."
+    )
+    assert "human" in section_lower, (
+        "Must name the human-dependent fork explicitly."
+    )
+    assert "input-floor" in section_lower, (
+        "Must point at input-floor.md for where a human-dependent fork "
+        "goes instead."
+    )
+
+    # --- example: one canonical example, still containing 'turn' (existing
+    # pin: "turn" in content_lower must keep holding) ---
+    assert "turn" in section_lower, (
+        "Stop-when's example must contain 'turn' (existing whole-file pin)."
+    )

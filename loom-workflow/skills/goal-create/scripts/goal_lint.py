@@ -21,7 +21,8 @@ than silently counted as a pass.
 
 There are three hard failures: a missing or empty field label; no
 backticked command inside `Verification`; text over the character
-limit. `Stop-when` is covered only by the field-presence check — no
+limit. `Stop-when` is covered by the field-presence check plus one
+advisory digit-presence warning (no digit anywhere in its content) — no
 word list stands in for reading whether its content actually bounds the
 run, because a fixed vocabulary of "stop words" false-fails legitimate
 phrasing the list's author didn't anticipate (e.g. "Halt after 20 turns
@@ -207,6 +208,15 @@ def lint_text(text: str) -> LintResult:
                     )
                 )
                 break
+
+    stop_when_content = fields.get("Stop-when", "")
+    if stop_when_content and not re.search(r"\d", stop_when_content):
+        result.warnings.append(
+            Finding(
+                "no-numeric-bound",
+                "Stop-when names no numeric bound (turn count or time limit)",
+            )
+        )
 
     result.unchecked.append(
         Finding(

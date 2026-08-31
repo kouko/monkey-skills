@@ -36,3 +36,4 @@ Closed: amnesty-2026-08-30 (bulk cleanup, not per-entry adjudicated)
   source document* rather than by *claim* would reproduce the same problem at
   a smaller size. The unit is the thing a reader would want named when it
   fails.
+- Closed for real on branch `goal-cerate-r2` (goal-create Stop-when repair, 2026-08-31): `test_defines_slots_refusal_bar_and_provenance` split into 12 claim-named tests plus a 50-code-line guard (`test_no_test_function_exceeds_fifty_lines`); assert count 62 → 63 (+1 = the guard), no assertion weakened.
