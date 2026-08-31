@@ -39,6 +39,7 @@ import importlib.util
 import json
 from pathlib import Path
 import re
+import subprocess
 import sys
 
 
@@ -56,14 +57,72 @@ def _load(name: str, filename: str):
 rb = _load("review_batch_for_batch_review_cli", "review_batch.py")
 
 
-PLAN_IDENTITY = "plan:batch-review-cli"
-SPEC_IDENTITY = "spec:batch-review-cli"
-REPOSITORY_IDENTITY = "e" * 64
-
 _TASK_HEADING = re.compile(r"^## Task (\d+)\b.*$", re.MULTILINE)
 _H2_HEADING = re.compile(r"^##\s+", re.MULTILINE)
-_STATUS_FIELD = re.compile(r"^\s*-\s*\*\*Status\*\*:\s*(.+?)\s*$", re.MULTILINE)
+# `\*{0,2}` mirrors plan_card.py's own `_STATUS_BULLET` tolerance for both a
+# bolded `- **Status**:` and a plain `- Status:` line.
+_STATUS_FIELD = re.compile(r"^\s*-\s*\*{0,2}Status\*{0,2}:\s*(.+?)\s*$", re.MULTILINE)
 _IMPLEMENTED = re.compile(r"^implemented\(([0-9a-f]{40})\)$")
+_IMPLEMENTED_ANY_SHA = re.compile(r"^implemented\((.*)\)$")
+
+
+def _run_git(repo_root: Path, *args: str) -> str:
+    """Run git in repo_root; fail loud with stderr on any non-zero exit."""
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), *args],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        raise rb.PacketRefused(
+            f"git {' '.join(args)} failed: {result.stderr.strip()}"
+        )
+    return result.stdout
+
+
+def _committed_bytes(repo_root: Path, sha: str, path: str) -> bytes:
+    """Read one declared file's exact committed bytes at <sha> — never the
+    live worktree, so a post-commit edit cannot change what gets sealed."""
+    if not rb._safe_repo_path(path):
+        raise rb.PacketRefused(f"{path} is not a safe repo-relative path")
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), "show", f"{sha}:{path}"],
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise rb.PacketRefused(f"{path} is not present at commit {sha}")
+    return result.stdout
+
+
+def _tree_identity(repo_root: Path, sha: str) -> str:
+    return _run_git(repo_root, "rev-parse", f"{sha}^{{tree}}").strip()
+
+
+def _repository_identity(repo_root: Path) -> str:
+    """Deterministic repository identity: a sha256 digest over the repo's
+    sorted root-commit sha(s) (git rev-list --max-parents=0 HEAD). A repo
+    with one linear history has exactly one root commit, so this is stable
+    across invocations without depending on a remote URL or local config."""
+    roots = sorted(_run_git(repo_root, "rev-list", "--max-parents=0", "HEAD").split())
+    if not roots:
+        raise rb.PacketRefused("repository has no root commit")
+    return rb.text_digest(",".join(roots))
+
+
+def _repo_relative(path: Path, repo_root: Path) -> str:
+    try:
+        return Path(path).resolve().relative_to(Path(repo_root).resolve()).as_posix()
+    except ValueError:
+        return Path(path).name
+
+
+def _plan_identity(plan_path: Path, repo_root: Path) -> str:
+    """Derived from the repo-relative plan path so packet/apply-result on
+    the same --plan/--repo-root pair always reconstruct the same identity."""
+    return f"plan:{_repo_relative(plan_path, repo_root)}"
+
+
+def _spec_identity(plan_path: Path, repo_root: Path) -> str:
+    return f"spec:{_repo_relative(plan_path, repo_root)}"
 
 
 def _fail(payload: dict) -> int:
@@ -119,9 +178,17 @@ def _readiness(plan_text: str, fields: dict) -> tuple[bool, list[dict], list[str
     ]
     reasons = []
     for member in members:
-        if _IMPLEMENTED.fullmatch(member["status"]) is None:
+        status = member["status"]
+        if _IMPLEMENTED.fullmatch(status) is not None:
+            continue
+        if _IMPLEMENTED_ANY_SHA.fullmatch(status) is not None:
             reasons.append(
-                f"{member['task_id']} is not exactly implemented(<sha>)"
+                f"{member['task_id']} implemented SHA is not the 40-hex form "
+                "review_batch requires; expand it with git rev-parse"
+            )
+        else:
+            reasons.append(
+                f"{member['task_id']} status is not implemented(<sha>)"
             )
     # Multi-batch membership is already refused by the schema oracle; there is
     # no member participating in another non-terminal batch on a valid plan.
@@ -147,11 +214,16 @@ def build_packet(
     plan_text: str,
     fields: dict,
     receipt: dict,
+    receipt_text: str,
     repo_root: Path,
+    plan_path: Path,
 ) -> rb.ReviewPacket:
     """Materialize the sealed packet via review_batch's own trusted chain."""
     declaration = rb.BatchDeclaration(**fields["declaration"])
     root = Path(repo_root)
+    plan_identity = _plan_identity(plan_path, root)
+    spec_identity = _spec_identity(plan_path, root)
+    repository_identity = _repository_identity(root)
     scope_issuer = rb._trusted_scope_issuer(
         issuer="git-scope-resolver",
         source_identity="git:sha1:v1",
@@ -168,7 +240,7 @@ def build_packet(
             )
         sha = match.group(1)
         files = tuple(
-            rb.ReviewedFile(path, (root / path).read_bytes())
+            rb.ReviewedFile(path, _committed_bytes(root, sha, path))
             for path in projected["declared_files"]
         )
         members.append(rb.MemberSnapshot(
@@ -181,9 +253,9 @@ def build_packet(
             future_requirements=projected["future_requirements"],
             acceptance=projected["acceptance"],
             scope_proof=scope_issuer.issue(
-                repository_identity=REPOSITORY_IDENTITY,
+                repository_identity=repository_identity,
                 commit_sha=sha,
-                tree_identity=sha,
+                tree_identity=_tree_identity(root, sha),
                 files=files,
             ),
         ))
@@ -201,14 +273,14 @@ def build_packet(
         source_digest=rb.text_digest(plan_text),
     )
     ownership = issuer.issue_ownership(
-        plan_identity=PLAN_IDENTITY,
-        spec_identity=SPEC_IDENTITY,
+        plan_identity=plan_identity,
+        spec_identity=spec_identity,
         records=records,
         execution_projection=rb._issue_execution_projection_from_validated_plan(
             plan_text=plan_text,
             batch_id=declaration.batch_id,
-            plan_identity=PLAN_IDENTITY,
-            spec_identity=SPEC_IDENTITY,
+            plan_identity=plan_identity,
+            spec_identity=spec_identity,
             records=records,
             issuer="plan-card:validated-schema",
             source_identity="plan:current",
@@ -218,7 +290,7 @@ def build_packet(
     receipt_sealed = rb._trusted_resolution_issuer(
         issuer="declared-first-resolver",
         source_identity="resolver:v1",
-        source_digest="f" * 64,
+        source_digest=rb.text_digest(receipt_text),
     ).issue(rb._approved_safe_resolution(
         declaration_digest=rb.text_digest(declaration.aggregate_verification),
         argv=tuple(receipt["argv"]),
@@ -285,7 +357,9 @@ def _build_from_args(args):
         plan_text=plan_text,
         fields=fields,
         receipt=_read_receipt(args.verification_receipt),
+        receipt_text=Path(args.verification_receipt).read_text(encoding="utf-8"),
         repo_root=Path(args.repo_root),
+        plan_path=Path(args.plan),
     )
 
 
@@ -333,15 +407,20 @@ def _cmd_record_dispatch(args) -> int:
                 "with no terminal result yet; re-collect the reviewer result "
                 "(apply-result) instead of re-sending the dispatch"
             ]})
-    receipt = {
-        "schema": "batch-dispatch-receipt-v1",
-        "batch_id": packet["declaration"]["batch_id"],
-        "packet_identity": packet["identity"],
-        "arms": packet.get("expected_arms", []),
-        "members": [
-            member["task_id"] for member in packet.get("members", [])
-        ],
-    }
+    try:
+        receipt = {
+            "schema": "batch-dispatch-receipt-v1",
+            "batch_id": packet["declaration"]["batch_id"],
+            "packet_identity": packet["identity"],
+            "arms": packet.get("expected_arms", []),
+            "members": [
+                member["task_id"] for member in packet.get("members", [])
+            ],
+        }
+    except (KeyError, TypeError) as exc:
+        return _fail({"recorded": False, "reasons": [
+            f"packet file is malformed: {exc}"
+        ]})
     out_path.write_text(json.dumps(receipt, sort_keys=True), encoding="utf-8")
     print(json.dumps({**receipt, "recorded": True}, sort_keys=True))
     return 0
@@ -400,7 +479,10 @@ def _cmd_apply_result(args) -> int:
             arm_bindings=bindings,
             terminal_results=results,
         )
-        if getattr(args, "receipt", None):
+        if getattr(args, "receipt", None) and resolution.ledger_mutation_allowed:
+            # Only finalize/reopen (the mutating actions) may flip the
+            # dispatch receipt; a wait_refuse resolution must leave it
+            # unset so a fresh dispatch cycle stays possible.
             stored = _read_dispatch_receipt(args.receipt)
             stored["result_applied"] = True
             Path(args.receipt).write_text(
@@ -437,7 +519,11 @@ def main(argv: list[str] | None = None) -> int:
 
     record = sub.add_parser("record-dispatch")
     record.add_argument("--packet-file", required=True)
-    record.add_argument("--out", required=True)
+    record.add_argument("--out", required=True, help=(
+        "dispatch receipt path; the idempotency refusal keys off this exact "
+        "file, not off batch_id — the caller MUST reuse the same --out path "
+        "for every record-dispatch/apply-result pair on one batch"
+    ))
     record.set_defaults(handler=_cmd_record_dispatch)
 
     apply_result = sub.add_parser("apply-result")

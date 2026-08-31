@@ -11,6 +11,7 @@ from __future__ import annotations
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import sys
 
 import pytest
@@ -84,14 +85,63 @@ def _write_workspace(tmp_path: Path, *, status_2: str = _IMPLEMENTED_2) -> tuple
     plan_path = repo_root / "plan.md"
     plan_path.write_text(_plan_text(_IMPLEMENTED_1, status_2), encoding="utf-8")
     receipt_path = tmp_path / "verification-receipt.json"
-    receipt_path.write_text(json.dumps({
+    receipt_path.write_text(_receipt_json(), encoding="utf-8")
+    return plan_path, repo_root
+
+
+def _receipt_json() -> str:
+    return json.dumps({
         "argv": ["python3", "-m", "pytest"],
         "execution_scope": ["src"],
         "result": "exit=0",
         "scanner_receipt_identity": "scanner:fixture",
         "scanner_input_digest": "d" * 64,
-    }), encoding="utf-8")
-    return plan_path, repo_root
+    })
+
+
+def _init_git_repo(repo_root: Path) -> None:
+    repo_root.mkdir(parents=True)
+    subprocess.run(["git", "-C", str(repo_root), "init", "-q"], check=True)
+    subprocess.run(
+        ["git", "-C", str(repo_root), "config", "user.email", "t@example.com"],
+        check=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(repo_root), "config", "user.name", "T"], check=True,
+    )
+
+
+def _git_commit_file(repo_root: Path, rel_path: str, content: bytes) -> str:
+    path = repo_root / rel_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(content)
+    subprocess.run(["git", "-C", str(repo_root), "add", rel_path], check=True)
+    subprocess.run(
+        ["git", "-C", str(repo_root), "commit", "-q", "-m", f"add {rel_path}"],
+        check=True,
+    )
+    return subprocess.run(
+        ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
+        capture_output=True, text=True, check=True,
+    ).stdout.strip()
+
+
+def _write_git_workspace(tmp_path: Path) -> tuple[Path, Path, str, str]:
+    """Real git-backed repo: two commits; plan.md declares each member's
+    actual commit sha — the shape build_packet must read committed bytes
+    from (not the live worktree)."""
+    repo_root = tmp_path / "repo"
+    _init_git_repo(repo_root)
+    sha1 = _git_commit_file(repo_root, "src/1.py", b"member 1")
+    sha2 = _git_commit_file(repo_root, "src/2.py", b"member 2")
+    plan_path = repo_root / "plan.md"
+    plan_path.write_text(
+        _plan_text(f"implemented({sha1})", f"implemented({sha2})"),
+        encoding="utf-8",
+    )
+    receipt_path = tmp_path / "verification-receipt.json"
+    receipt_path.write_text(_receipt_json(), encoding="utf-8")
+    return plan_path, repo_root, sha1, sha2
 
 
 def _run(main_argv: list[str]) -> tuple[int, dict]:
@@ -201,8 +251,11 @@ def test_ready_refuses_schema_invalid_plan(tmp_path, capsys) -> None:
 def test_packet_is_sealed_and_library_shaped(tmp_path, capsys) -> None:
     # The CLI's packet must equal the library's own chain on the same inputs;
     # identity is the digest of the entire authority payload, so an identity
-    # match proves shape equality.
-    plan_path, repo_root = _write_workspace(tmp_path)
+    # match proves shape equality. Every provenance value below is derived
+    # independently of the CLI module (raw git subprocess calls / known
+    # fixture bytes), not imported from it, so this also pins the actual
+    # provenance values (T8 fatal fix), not just structural agreement.
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
     emitted = _packet_json(plan_path, repo_root, receipt_path, capsys)
 
@@ -214,9 +267,18 @@ def test_packet_is_sealed_and_library_shaped(tmp_path, capsys) -> None:
         issuer="git-scope-resolver", source_identity="git:sha1:v1",
         hash_algorithm="sha1",
     )
+    root_shas = sorted(subprocess.run(
+        ["git", "-C", str(repo_root), "rev-list", "--max-parents=0", "HEAD"],
+        capture_output=True, text=True, check=True,
+    ).stdout.split())
+    repository_identity = review_batch.text_digest(",".join(root_shas))
     members = []
-    for number, sha, content in ((1, "a" * 40, b"member 1"), (2, "b" * 40, b"member 2")):
+    for number, sha, content in ((1, sha1, b"member 1"), (2, sha2, b"member 2")):
         path = f"src/{number}.py"
+        tree_identity = subprocess.run(
+            ["git", "-C", str(repo_root), "rev-parse", f"{sha}^{{tree}}"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
         files = (review_batch.ReviewedFile(path, content),)
         members.append(review_batch.MemberSnapshot(
             task_id=f"Task {number}",
@@ -228,8 +290,8 @@ def test_packet_is_sealed_and_library_shaped(tmp_path, capsys) -> None:
             future_requirements=(),
             acceptance=(f"accept-{number}",),
             scope_proof=scope_issuer.issue(
-                repository_identity=cli.REPOSITORY_IDENTITY,
-                commit_sha=sha, tree_identity=sha, files=files,
+                repository_identity=repository_identity,
+                commit_sha=sha, tree_identity=tree_identity, files=files,
             ),
         ))
     members = tuple(members)
@@ -237,24 +299,26 @@ def test_packet_is_sealed_and_library_shaped(tmp_path, capsys) -> None:
         member.task_id, member.owned_requirements,
         member.future_requirements, member.acceptance,
     ) for member in members)
+    plan_identity, spec_identity = "plan:plan.md", "spec:plan.md"
     issuer = review_batch._trusted_proof_issuer(
         issuer="sdd:declared-first", source_identity="authority:v1",
         source_digest=review_batch.text_digest(plan_text),
     )
     ownership = issuer.issue_ownership(
-        plan_identity=cli.PLAN_IDENTITY, spec_identity=cli.SPEC_IDENTITY,
+        plan_identity=plan_identity, spec_identity=spec_identity,
         records=records,
         execution_projection=review_batch._issue_execution_projection_from_validated_plan(
             plan_text=plan_text, batch_id="capability",
-            plan_identity=cli.PLAN_IDENTITY, spec_identity=cli.SPEC_IDENTITY,
+            plan_identity=plan_identity, spec_identity=spec_identity,
             records=records, issuer="plan-card:validated-schema",
             source_identity="plan:current",
             source_digest=review_batch.text_digest(plan_text),
         ),
     )
+    receipt_text = receipt_path.read_text(encoding="utf-8")
     receipt = review_batch._trusted_resolution_issuer(
         issuer="declared-first-resolver", source_identity="resolver:v1",
-        source_digest="f" * 64,
+        source_digest=review_batch.text_digest(receipt_text),
     ).issue(review_batch._approved_safe_resolution(
         declaration_digest=review_batch.text_digest(declaration.aggregate_verification),
         argv=("python3", "-m", "pytest"),
@@ -269,9 +333,50 @@ def test_packet_is_sealed_and_library_shaped(tmp_path, capsys) -> None:
     assert review_batch.validate_packet(packet) == ()
     assert emitted["identity"] == packet.identity
     assert emitted["member_shas"] == [
-        ["Task 1", "a" * 40], ["Task 2", "b" * 40],
+        ["Task 1", sha1], ["Task 2", sha2],
     ]
     assert emitted["expected_arms"] == ["spec-reviewer", "code-quality-reviewer"]
+
+
+def test_packet_reads_committed_bytes_not_worktree_edits(tmp_path, capsys) -> None:
+    """A post-commit worktree edit to a member's declared file must not
+    change the emitted packet identity — the packet seals the commit's
+    content, never whatever currently sits in the working tree (T8 fatal)."""
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    baseline = _packet_json(plan_path, repo_root, receipt_path, capsys)
+
+    (repo_root / "src" / "2.py").write_bytes(b"tampered after commit")
+
+    after_edit = _packet_json(plan_path, repo_root, receipt_path, capsys)
+    assert after_edit["identity"] == baseline["identity"]
+
+
+def test_packet_refuses_missing_committed_file(tmp_path, capsys) -> None:
+    """A declared file absent from the member's commit refuses (T8 fatal)."""
+    repo_root = tmp_path / "repo"
+    _init_git_repo(repo_root)
+    sha1 = _git_commit_file(repo_root, "src/1.py", b"member 1")
+    sha2 = _git_commit_file(repo_root, "src/2.py", b"member 2")
+    plan_text = _plan_text(
+        f"implemented({sha1})", f"implemented({sha2})",
+    ).replace(
+        "- **Files touched**: src/2.py",
+        "- **Files touched**: src/2.py, src/missing.py",
+    )
+    plan_path = repo_root / "plan.md"
+    plan_path.write_text(plan_text, encoding="utf-8")
+    receipt_path = tmp_path / "verification-receipt.json"
+    receipt_path.write_text(_receipt_json(), encoding="utf-8")
+    code = cli.main([
+        "packet", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+    ])
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert out["packet"] is None
+    assert "missing.py" in " ".join(out["reasons"])
 
 
 def test_packet_refuses_when_not_ready(tmp_path, capsys) -> None:
@@ -287,7 +392,7 @@ def test_packet_refuses_when_not_ready(tmp_path, capsys) -> None:
 
 
 def test_record_dispatch_writes_receipt(tmp_path, capsys) -> None:
-    plan_path, repo_root = _write_workspace(tmp_path)
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
     packet_file = tmp_path / "packet.json"
     packet_file.write_text(json.dumps(
@@ -311,7 +416,7 @@ def test_record_dispatch_writes_receipt(tmp_path, capsys) -> None:
 def test_record_dispatch_refuses_second_dispatch_without_terminal_result(
     tmp_path, capsys,
 ) -> None:
-    plan_path, repo_root = _write_workspace(tmp_path)
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
     packet_file = tmp_path / "packet.json"
     packet_file.write_text(json.dumps(
@@ -334,7 +439,7 @@ def test_record_dispatch_refuses_second_dispatch_without_terminal_result(
 def test_record_dispatch_allows_new_cycle_after_result_applied(
     tmp_path, capsys,
 ) -> None:
-    plan_path, repo_root = _write_workspace(tmp_path)
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
     result_path = _result_file(tmp_path)
     packet_file = tmp_path / "packet.json"
@@ -409,7 +514,7 @@ def test_ready_is_ready_for_clean_batch(tmp_path, capsys) -> None:
 
 
 def test_apply_result_finalizes(tmp_path, capsys) -> None:
-    plan_path, repo_root = _write_workspace(tmp_path)
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
     result_path = _result_file(tmp_path)
     code = cli.main([
@@ -426,7 +531,7 @@ def test_apply_result_finalizes(tmp_path, capsys) -> None:
 
 
 def test_apply_result_reopens_with_owner_union(tmp_path, capsys) -> None:
-    plan_path, repo_root = _write_workspace(tmp_path)
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
     result_path = _result_file(tmp_path, reopen=True)
     code = cli.main([
@@ -439,3 +544,122 @@ def test_apply_result_reopens_with_owner_union(tmp_path, capsys) -> None:
     assert code == 0
     assert out["action"] == "reopen"
     assert out["reopen_owners"] == ["Task 2"]
+
+
+def _incomplete_result_file(tmp_path: Path) -> Path:
+    """Only one of the two expected arms carries a terminal result —
+    resolve_aggregate_review returns a non-mutating wait_refuse."""
+    payload = {
+        "arm_bindings": [
+            {"arm": "spec-reviewer",
+             "dispatch_identity": "dispatch:spec-reviewer",
+             "evidence_identity": "dispatch-proof:spec-reviewer"},
+            {"arm": "code-quality-reviewer",
+             "dispatch_identity": "dispatch:code-quality-reviewer",
+             "evidence_identity": "dispatch-proof:code-quality-reviewer"},
+        ],
+        "terminal_results": [
+            {"arm": "spec-reviewer",
+             "dispatch_identity": "dispatch:spec-reviewer",
+             "dispatch_evidence_identity": "dispatch-proof:spec-reviewer",
+             "result_identity": "result:spec-reviewer:only",
+             "evidence_identity": "result-proof:spec-reviewer",
+             "terminal": "completed", "verdict": "PASS", "findings": []},
+        ],
+    }
+    path = tmp_path / "incomplete-reviewer-results.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
+
+
+def test_apply_result_does_not_flip_receipt_on_non_terminal_resolution(
+    tmp_path, capsys,
+) -> None:
+    """apply-result's receipt flip must gate on
+    resolution.ledger_mutation_allowed, not merely on reaching
+    resolve_aggregate_review — a wait_refuse (non-terminal aggregate) must
+    leave the dispatch receipt's result_applied unset (T9 spec gap)."""
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    result_path = _incomplete_result_file(tmp_path)
+    packet_file = tmp_path / "packet.json"
+    packet_file.write_text(json.dumps(
+        _packet_json(plan_path, repo_root, receipt_path, capsys)
+    ), encoding="utf-8")
+    dispatch_receipt = tmp_path / "dispatch-receipt.json"
+    assert cli.main([
+        "record-dispatch", "--packet-file", str(packet_file),
+        "--out", str(dispatch_receipt),
+    ]) == 0
+    capsys.readouterr()
+    code = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
+    ])
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert out["action"] == "wait_refuse"
+    assert out["ledger_mutation_allowed"] is False
+    stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    assert stored.get("result_applied", False) is False
+
+def test_record_dispatch_refuses_malformed_packet_missing_batch_id(
+    tmp_path, capsys,
+) -> None:
+    """A malformed packet file (missing declaration.batch_id) must emit the
+    JSON refusal, not an uncaught KeyError traceback (T8 quality fix)."""
+    packet_file = tmp_path / "packet.json"
+    packet_file.write_text(json.dumps({
+        "identity": "packet:malformed", "declaration": {}, "members": [],
+    }), encoding="utf-8")
+    dispatch_receipt = tmp_path / "dispatch-receipt.json"
+    code, out = _run([
+        "record-dispatch", "--packet-file", str(packet_file),
+        "--out", str(dispatch_receipt),
+    ])
+    capsys.readouterr()
+    assert code != 0
+    assert out["recorded"] is False
+    assert not dispatch_receipt.exists()
+
+
+def test_ready_reports_short_sha_message(tmp_path, capsys) -> None:
+    """A short (non-40-hex) SHA in an implemented(...) status gets its own
+    refusal message pointing at git rev-parse expansion (T8 quality fix)."""
+    plan_path, repo_root = _write_workspace(tmp_path, status_2="implemented(abc123)")
+    code, out = _run(["ready", "--plan", str(plan_path)])
+    capsys.readouterr()
+    assert code != 0
+    reason = " ".join(out["reasons"])
+    assert "40-hex" in reason
+    assert "git rev-parse" in reason
+
+
+def test_ready_reports_non_implemented_status_message(tmp_path, capsys) -> None:
+    """A status that is not implemented(...) at all gets the other message,
+    distinct from the short-SHA case (T8 quality fix)."""
+    plan_path, repo_root = _write_workspace(tmp_path, status_2="pending")
+    code, out = _run(["ready", "--plan", str(plan_path)])
+    capsys.readouterr()
+    assert code != 0
+    reason = " ".join(out["reasons"])
+    assert "40-hex" not in reason
+    assert "not implemented" in reason
+
+
+def test_ready_accepts_unbolded_status_field(tmp_path, capsys) -> None:
+    """plan_card.py tolerates an unbolded `- Status:` line
+    (`\\*{0,2}Status\\*{0,2}`); the CLI's own field parser must match that
+    same tolerance (T8 quality fix)."""
+    plan_path, repo_root = _write_workspace(tmp_path)
+    unbolded = _plan_text(_IMPLEMENTED_1, _IMPLEMENTED_2).replace(
+        "- **Status**:", "- Status:"
+    )
+    plan_path.write_text(unbolded, encoding="utf-8")
+    code, out = _run(["ready", "--plan", str(plan_path)])
+    capsys.readouterr()
+    assert code == 0
+    assert out["ready"] is True
