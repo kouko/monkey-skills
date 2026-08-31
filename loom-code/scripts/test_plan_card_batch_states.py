@@ -502,6 +502,136 @@ def test_set_status_refuses_done_when_disposition_missing_but_batches_declared(
     assert plan_path.read_text(encoding="utf-8") == original
 
 
+def test_set_status_refuses_done_when_disposition_is_malformed(tmp_path):
+    """A `- Review disposition:` value that does not fullmatch the
+    oracle's disposition grammar (e.g. trailing junk) is schema-invalid
+    — refuse a `done(<sha>)` write rather than let a malformed
+    disposition through the guard undetected."""
+    plan_path = tmp_path / "plan.md"
+    original = (
+        "# Plan: fixture\n\n"
+        "Goal: exercise malformed-disposition fail-closed.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — task 1\n\n"
+        "- **Description**: fixture\n"
+        "- **Dependencies**: none\n"
+        "- **Files touched**: src/1.py\n"
+        "- **Acceptance**: accept-1\n"
+        "- **Brief item covered**: REQ-1\n"
+        "- **Review-weight**: full\n"
+        "- **Review disposition**: batch(capability) (paused)\n"
+        f"- **Status**: {I1}\n"
+        "\n## Review Batches\n\n"
+        "### Review Batch: capability\n"
+        "- **Members**: Task 1\n"
+        "- **Verdict question**: Does the capability work?\n"
+        "- **Review lane**: full\n"
+        "- **Aggregate verification**: package test suite\n"
+        "- **Boundary**: capability: fixture; exclusions: none; consumable: yes\n"
+    )
+    plan_path.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(plan_path), "--set-status", f"T1={D1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert plan_path.read_text(encoding="utf-8") == original
+
+
+def test_set_status_refuses_done_when_batch_omits_task(tmp_path):
+    """A task's disposition names a batch whose `**Members**` list does
+    not include it — schema-invalid, refuse a `done(<sha>)` write
+    rather than trust a disposition the batch itself disagrees with."""
+    plan_path = tmp_path / "plan.md"
+    original = (
+        "# Plan: fixture\n\n"
+        "Goal: exercise batch/disposition mismatch fail-closed.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — task 1\n\n"
+        "- **Description**: fixture\n"
+        "- **Dependencies**: none\n"
+        "- **Files touched**: src/1.py\n"
+        "- **Acceptance**: accept-1\n"
+        "- **Brief item covered**: REQ-1\n"
+        "- **Review-weight**: full\n"
+        "- **Review disposition**: batch(capability)\n"
+        f"- **Status**: {I1}\n\n"
+        "## Task 2 — task 2\n\n"
+        "- **Description**: fixture\n"
+        "- **Dependencies**: none\n"
+        "- **Files touched**: src/2.py\n"
+        "- **Acceptance**: accept-2\n"
+        "- **Brief item covered**: REQ-2\n"
+        "- **Review-weight**: full\n"
+        "- **Review disposition**: batch(capability)\n"
+        f"- **Status**: {I2}\n"
+        "\n## Review Batches\n\n"
+        "### Review Batch: capability\n"
+        "- **Members**: Task 2\n"
+        "- **Verdict question**: Does the capability work?\n"
+        "- **Review lane**: full\n"
+        "- **Aggregate verification**: package test suite\n"
+        "- **Boundary**: capability: fixture; exclusions: none; consumable: yes\n"
+    )
+    plan_path.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(plan_path), "--set-status", f"T1={D1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert plan_path.read_text(encoding="utf-8") == original
+
+
+def test_set_status_refuses_done_when_disposition_duplicated(tmp_path):
+    """Two `- Review disposition:` lines on the same task — the first
+    `individual`, the second `batch(capability)` — is schema-invalid.
+    `_bullet_value` (single-first-match) would otherwise see only the
+    `individual` line and let a `done(<sha>)` write through a hidden
+    batch member (whole-branch review finding, arm A)."""
+    plan_path = tmp_path / "plan.md"
+    original = (
+        "# Plan: fixture\n\n"
+        "Goal: exercise duplicate-disposition fail-closed.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — task 1\n\n"
+        "- **Description**: fixture\n"
+        "- **Dependencies**: none\n"
+        "- **Files touched**: src/1.py\n"
+        "- **Acceptance**: accept-1\n"
+        "- **Brief item covered**: REQ-1\n"
+        "- **Review-weight**: full\n"
+        "- **Review disposition**: individual\n"
+        "- **Review disposition**: batch(capability)\n"
+        f"- **Status**: {I1}\n"
+        "\n## Review Batches\n\n"
+        "### Review Batch: capability\n"
+        "- **Members**: Task 1\n"
+        "- **Verdict question**: Does the capability work?\n"
+        "- **Review lane**: full\n"
+        "- **Aggregate verification**: package test suite\n"
+        "- **Boundary**: capability: fixture; exclusions: none; consumable: yes\n"
+    )
+    plan_path.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(plan_path), "--set-status", f"T1={D1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert plan_path.read_text(encoding="utf-8") == original
+
+
 def test_set_status_allows_implemented_for_declared_batch_member(tmp_path):
     """`implemented(<sha>)` on a declared batch member still succeeds —
     only `done(<sha>)` is a batch member's exclusive apply-result write
