@@ -379,6 +379,57 @@ def test_packet_refuses_missing_committed_file(tmp_path, capsys) -> None:
     assert "missing.py" in " ".join(out["reasons"])
 
 
+def test_packet_refuses_directory_path(tmp_path, capsys) -> None:
+    """A declared 'file' that is actually a directory at <sha> must refuse,
+    not be sealed as a blob — `git show <sha>:<dir>` exits 0 with a tree
+    listing, which _committed_bytes would otherwise happily seal (T8 round-2
+    🟡 hardening)."""
+    repo_root = tmp_path / "repo"
+    _init_git_repo(repo_root)
+    sha1 = _git_commit_file(repo_root, "src/1.py", b"member 1")
+    sha2 = _git_commit_file(repo_root, "src/dir/inner.py", b"nested")
+    plan_text = _plan_text(
+        f"implemented({sha1})", f"implemented({sha2})",
+    ).replace(
+        "- **Files touched**: src/2.py",
+        "- **Files touched**: src/dir",
+    )
+    plan_path = repo_root / "plan.md"
+    plan_path.write_text(plan_text, encoding="utf-8")
+    receipt_path = tmp_path / "verification-receipt.json"
+    receipt_path.write_text(_receipt_json(), encoding="utf-8")
+    code = cli.main([
+        "packet", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+    ])
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert out["packet"] is None
+    assert "not a committed blob" in " ".join(out["reasons"])
+
+
+def test_git_timeout_refuses_instead_of_raising(tmp_path, capsys, monkeypatch) -> None:
+    """A hung git subprocess must surface as a PacketRefused-driven CLI
+    refusal, not an uncaught TimeoutExpired traceback (T8 round-2 🟢)."""
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+
+    def _hangs(*args, **kwargs):
+        raise subprocess.TimeoutExpired(cmd=args[0] if args else "git", timeout=30)
+
+    monkeypatch.setattr(cli.subprocess, "run", _hangs)
+    code = cli.main([
+        "packet", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+    ])
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert out["packet"] is None
+    assert "timed out" in " ".join(out["reasons"]).lower()
+
+
 def test_packet_refuses_when_not_ready(tmp_path, capsys) -> None:
     plan_path, repo_root = _write_workspace(tmp_path, status_2="pending")
     receipt_path = tmp_path / "verification-receipt.json"
@@ -544,6 +595,66 @@ def test_apply_result_reopens_with_owner_union(tmp_path, capsys) -> None:
     assert code == 0
     assert out["action"] == "reopen"
     assert out["reopen_owners"] == ["Task 2"]
+
+
+def test_apply_result_writes_ledger_on_finalize(tmp_path, capsys) -> None:
+    """After the fix, a finalize resolution writes done(<same sha>) for
+    every member under the plan lock — today it leaves implemented(<sha>)
+    and a human flips the ledger by hand (R11c)."""
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    result_path = _result_file(tmp_path)
+    code = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+    ])
+    capsys.readouterr()
+    assert code == 0
+    plan_text = plan_path.read_text(encoding="utf-8")
+    assert f"- **Status**: done({sha1})" in plan_text
+    assert f"- **Status**: done({sha2})" in plan_text
+    assert f"implemented({sha1})" not in plan_text
+    assert f"implemented({sha2})" not in plan_text
+
+
+def test_apply_result_writes_ledger_on_reopen(tmp_path, capsys) -> None:
+    """A reopen resolution flips only the owning member's status to
+    pending; the non-owning member's implemented(<sha>) is unchanged."""
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    result_path = _result_file(tmp_path, reopen=True)
+    code = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+    ])
+    capsys.readouterr()
+    assert code == 0
+    plan_text = plan_path.read_text(encoding="utf-8")
+    assert f"- **Status**: implemented({sha1})" in plan_text
+    task_2_block = plan_text.split("## Task 2")[1].split("## Review Batches")[0]
+    assert "- **Status**: pending" in task_2_block
+
+
+def test_apply_result_wait_refuse_writes_nothing(tmp_path, capsys) -> None:
+    """A wait_refuse resolution (incomplete result set) must not touch the
+    plan file at all."""
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    result_path = _incomplete_result_file(tmp_path)
+    before = plan_path.read_text(encoding="utf-8")
+    code = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+    ])
+    capsys.readouterr()
+    assert code != 0
+    assert plan_path.read_text(encoding="utf-8") == before
 
 
 def _incomplete_result_file(tmp_path: Path) -> Path:

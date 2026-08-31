@@ -55,6 +55,9 @@ def _load(name: str, filename: str):
 
 
 rb = _load("review_batch_for_batch_review_cli", "review_batch.py")
+plan_card = _load("plan_card_for_batch_review_cli", "plan_card.py")
+
+_GIT_TIMEOUT_SECONDS = 30
 
 
 _TASK_HEADING = re.compile(r"^## Task (\d+)\b.*$", re.MULTILINE)
@@ -68,10 +71,13 @@ _IMPLEMENTED_ANY_SHA = re.compile(r"^implemented\((.*)\)$")
 
 def _run_git(repo_root: Path, *args: str) -> str:
     """Run git in repo_root; fail loud with stderr on any non-zero exit."""
-    result = subprocess.run(
-        ["git", "-C", str(repo_root), *args],
-        capture_output=True, text=True,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), *args],
+            capture_output=True, text=True, timeout=_GIT_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired:
+        raise rb.PacketRefused(f"git {' '.join(args)} timed out")
     if result.returncode != 0:
         raise rb.PacketRefused(
             f"git {' '.join(args)} failed: {result.stderr.strip()}"
@@ -84,10 +90,22 @@ def _committed_bytes(repo_root: Path, sha: str, path: str) -> bytes:
     live worktree, so a post-commit edit cannot change what gets sealed."""
     if not rb._safe_repo_path(path):
         raise rb.PacketRefused(f"{path} is not a safe repo-relative path")
-    result = subprocess.run(
-        ["git", "-C", str(repo_root), "show", f"{sha}:{path}"],
-        capture_output=True,
-    )
+    try:
+        kind = subprocess.run(
+            ["git", "-C", str(repo_root), "cat-file", "-t", f"{sha}:{path}"],
+            capture_output=True, text=True, timeout=_GIT_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired:
+        raise rb.PacketRefused(f"git cat-file -t {sha}:{path} timed out")
+    if kind.returncode != 0 or kind.stdout.strip() != "blob":
+        raise rb.PacketRefused(f"{path} is not a committed blob at {sha}")
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "show", f"{sha}:{path}"],
+            capture_output=True, timeout=_GIT_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired:
+        raise rb.PacketRefused(f"git show {sha}:{path} timed out")
     if result.returncode != 0:
         raise rb.PacketRefused(f"{path} is not present at commit {sha}")
     return result.stdout
@@ -426,6 +444,29 @@ def _cmd_record_dispatch(args) -> int:
     return 0
 
 
+def _ledger_expected_and_replacements(
+    packet: rb.ReviewPacket, resolution: rb.AggregateReviewResolution,
+) -> tuple[dict[int, str], dict[int, str]]:
+    """Build plan_card's expected_statuses/replacements from the Packet's
+    member snapshot and the resolution action (finalize -> every member
+    SHA-preserving done(<sha>); reopen -> owners only -> pending)."""
+    expected_statuses = {
+        int(member.task_id.split()[1]): member.status
+        for member in packet.members
+    }
+    if resolution.action == "finalize":
+        replacements = {
+            int(member.task_id.split()[1]): f"done({member.sha})"
+            for member in packet.members
+        }
+    else:
+        replacements = {
+            int(owner.split()[1]): "pending"
+            for owner in resolution.reopen_owners
+        }
+    return expected_statuses, replacements
+
+
 def _cmd_apply_result(args) -> int:
     try:
         packet = _build_from_args(args)
@@ -479,10 +520,28 @@ def _cmd_apply_result(args) -> int:
             arm_bindings=bindings,
             terminal_results=results,
         )
-        if getattr(args, "receipt", None) and resolution.ledger_mutation_allowed:
-            # Only finalize/reopen (the mutating actions) may flip the
-            # dispatch receipt; a wait_refuse resolution must leave it
-            # unset so a fresh dispatch cycle stays possible.
+        ledger_written = True
+        if resolution.ledger_mutation_allowed:
+            # Only finalize/reopen (the mutating actions) touch the ledger;
+            # a wait_refuse resolution writes nothing.
+            expected_statuses, replacements = _ledger_expected_and_replacements(
+                packet, resolution
+            )
+            ledger_written = plan_card.atomic_batch_status_update(
+                Path(args.plan),
+                packet.declaration.batch_id,
+                expected_statuses,
+                replacements,
+                transition_authority=resolution.transition_authority,
+            )
+        if (
+            getattr(args, "receipt", None)
+            and resolution.ledger_mutation_allowed
+            and ledger_written
+        ):
+            # Only a successfully-written ledger transition may flip the
+            # dispatch receipt; a wait_refuse resolution, or a CAS decline,
+            # must leave it unset so a fresh dispatch cycle stays possible.
             stored = _read_dispatch_receipt(args.receipt)
             stored["result_applied"] = True
             Path(args.receipt).write_text(
@@ -494,10 +553,11 @@ def _cmd_apply_result(args) -> int:
         "action": resolution.action,
         "reopen_owners": list(resolution.reopen_owners),
         "ledger_mutation_allowed": resolution.ledger_mutation_allowed,
+        "ledger_written": ledger_written,
         "reasons": list(resolution.reasons),
         "transition_authority_present": resolution.transition_authority is not None,
     }, sort_keys=True))
-    return 0 if resolution.ledger_mutation_allowed else 1
+    return 0 if resolution.ledger_mutation_allowed and ledger_written else 1
 
 
 def main(argv: list[str] | None = None) -> int:
