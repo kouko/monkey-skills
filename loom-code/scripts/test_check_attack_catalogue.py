@@ -974,3 +974,107 @@ def test_defined_function_names_is_memoized_per_path_and_mtime(tmp_path):
 
     info = _defined_function_names_cached.cache_info()
     assert info.hits >= 1, info
+
+
+# ---------------------------------------------------------------------------
+# t35b-audit-verdicts / wb-verdict-arm-a-r2 N1,C5 / wb-verdict-arm-b-r2 N2 —
+# prose-contract globs must follow requesting-code-review's §Classification
+# plus rules/**/*.md; parse_store must be fence-aware; signal must guard
+# itself; future-date slack.
+# ---------------------------------------------------------------------------
+
+
+def test_prose_contract_globs_match_nested_contract_files_and_exclude_readme(
+    tmp_path,
+):
+    from check_attack_catalogue import _is_prose_contract_hit
+
+    # a references file nested under a skill
+    assert _is_prose_contract_hit("skills/foo/references/packet.md")
+    # an agents file one level deeper than the old **/agents/*.md allowed
+    assert _is_prose_contract_hit("agents/nested/worker.md")
+    # a rules file nested under rules/
+    assert _is_prose_contract_hit("rules/nested/r.md")
+    # a top-level CHANGELOG is never a prose-contract hit
+    assert not _is_prose_contract_hit("loom-code/CHANGELOG.md")
+    # a README under a covered subtree is excluded by basename
+    assert not _is_prose_contract_hit("loom-code/skills/foo/README.md")
+
+
+def test_parse_store_ignores_fenced_bullet_and_refuses_unguarded(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    store = tmp_path / "store.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "```\n"
+        "- loom-code/scripts/**\n"
+        "```\n\n"
+        "## Instances\n"
+        "- F1 x | y | not-applicable — reason\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+
+    result = _run(store, repo)
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert "unguarded" in result.stderr
+
+
+def test_signal_warns_when_store_itself_is_not_guarded(tmp_path):
+    repo = _init_repo(tmp_path)
+    base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    store_dir = repo / "docs"
+    store_dir.mkdir(parents=True, exist_ok=True)
+    (store_dir / "ATTACK-CATALOGUE.md").write_text(_SIGNAL_STORE, encoding="utf-8")
+    _git(repo, "add", "docs/ATTACK-CATALOGUE.md")
+    _git(repo, "commit", "-q", "-m", "add store")
+
+    result = _run_signal(repo, store_dir / "ATTACK-CATALOGUE.md", base=base_sha)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "WARNING: the store itself is not guarded" in result.stderr
+    assert "docs/ATTACK-CATALOGUE.md" in result.stderr
+
+
+def test_future_date_slack_accepts_utc_tomorrow_refuses_utc_plus_two(tmp_path):
+    """`_is_future_date` must give one day of slack against the UTC
+    calendar date — a UTC+8 author stamping their own local "today"
+    between 00:00 and 08:00 Taipei time writes a date that is UTC's
+    tomorrow; refusing it points at the wrong culprit (the grammar,
+    not the clock)."""
+    import datetime
+
+    repo = tmp_path / "repo"
+    tests_dir = repo / "tests_fixture"
+    tests_dir.mkdir(parents=True)
+    (tests_dir / "test_x.py").write_text(
+        "def test_future():\n    pass\n", encoding="utf-8"
+    )
+
+    today = datetime.datetime.now(datetime.timezone.utc).date()
+    tomorrow = (today + datetime.timedelta(days=1)).isoformat()
+    plus_two = (today + datetime.timedelta(days=2)).isoformat()
+
+    store_ok = tmp_path / "store_ok.md"
+    store_ok.write_text(
+        "## Guarded paths\n- loom-code/scripts/**\n\n"
+        f"## Instances\n- F1 x | y | reproduced {tomorrow} — pinned by test_future\n\n"
+        "## Prose temptations\n- none\n",
+        encoding="utf-8",
+    )
+    result_ok = _run(store_ok, repo)
+    assert result_ok.returncode == 0, result_ok.stdout + result_ok.stderr
+
+    store_bad = tmp_path / "store_bad.md"
+    store_bad.write_text(
+        "## Guarded paths\n- loom-code/scripts/**\n\n"
+        f"## Instances\n- F1 x | y | reproduced {plus_two} — pinned by test_future\n\n"
+        "## Prose temptations\n- none\n",
+        encoding="utf-8",
+    )
+    result_bad = _run(store_bad, repo)
+    assert result_bad.returncode != 0, result_bad.stdout + result_bad.stderr
+    assert f"date {plus_two} is in the future" in result_bad.stderr

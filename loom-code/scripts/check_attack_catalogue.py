@@ -37,7 +37,7 @@ command Step 3.5 of `finishing-a-development-branch/SKILL.md` runs. An
 ABSENT store (path does not exist — the adopting-repo-without-a-store
 case) is not an error: `signal` prints stderr `attack catalogue:
 absent` and degrades both stdout lines to N/A (guarded-hits=0;
-prose-hits is still computed from the six built-in prose-contract
+prose-hits is still computed from the five built-in prose-contract
 globs below, independent of the store), exit 0. A store that EXISTS
 but is unreadable, or fails the grammar OR any `check_store` refusal
 below (`unpinned` / `dangling` / `undated` / `unguarded` /
@@ -125,6 +125,16 @@ try:
 except ImportError:
     plan_card = None
 
+# Same idiom for the CommonMark fence-toggle rule, shared with plan_card's
+# own fence scan (loom_gate_markers._fence_toggle docstring) so the store
+# parser and plan_card never re-derive divergent fence rules. A store
+# parsed without its sibling loom_gate_markers.py fails loud below rather
+# than silently treating every line as unfenced.
+try:
+    from loom_gate_markers import _fence_toggle
+except ImportError:
+    _fence_toggle = None
+
 _SECTION_NAMES = ("Guarded paths", "Instances", "Prose temptations")
 
 _HEADING_2_LINE = re.compile(r"^##\s+(.*?)\s*$")
@@ -154,6 +164,7 @@ class Instance:
     date: str | None = None
     pinned_by: str | None = None
     reason: str | None = None
+    malformed_reason: str | None = None  # e.g. "future-date"
 
 
 @dataclass
@@ -180,7 +191,21 @@ def _find_sections(text: str) -> dict[str, list[str]]:
     Raises `StoreError("malformed", …)` if any of `_SECTION_NAMES`
     appears as a `## ` heading more than once — a dict-assignment
     `sections[name] = bullets` would otherwise let the later heading
-    silently replace the earlier one's bullets rather than refusing."""
+    silently replace the earlier one's bullets rather than refusing.
+
+    Fence-aware within each section body via the shared
+    `loom_gate_markers._fence_toggle`: a line inside (or opening/
+    closing) a ``` / ~~~ fence is never treated as a bullet, and an
+    unclosed fence at the end of a section's body is `malformed` —
+    otherwise a fenced-out guarded-path bullet would silently vanish
+    from the count instead of tripping `unguarded`."""
+    if _fence_toggle is None:
+        raise StoreError(
+            "malformed",
+            "Error: check_attack_catalogue.py needs loom_gate_markers.py "
+            "beside it for fence-aware parsing (copy both, or run the "
+            "plugin form)",
+        )
     lines = text.splitlines()
     heading_idxs = []
     for i, line in enumerate(lines):
@@ -202,10 +227,23 @@ def _find_sections(text: str) -> dict[str, list[str]]:
             )
         body = lines[idx + 1:end]
         bullets = []
+        fence: tuple[str, int] | None = None
         for line in body:
+            fence_before = fence
+            fence = _fence_toggle(line, fence)
+            if fence_before is not None or fence is not None:
+                # already inside a fence, or this line just opened/closed
+                # one — never a bullet either way.
+                continue
             m = _BULLET_LINE.match(line.strip())
             if m:
                 bullets.append(m.group(1).strip())
+        if fence is not None:
+            raise StoreError(
+                "malformed",
+                f"Error: malformed — unclosed code fence in '## {name}' "
+                "section",
+            )
         sections[name] = bullets
     return sections
 
@@ -222,13 +260,18 @@ def _is_iso_date(value: str) -> bool:
 
 
 def _is_future_date(value: str) -> bool:
-    """True when `value` (already confirmed `_is_iso_date`) is strictly
-    after today's UTC calendar date — a `reproduced`/`held` date has no
-    business being in the future; without this a typo'd year makes an
-    entry look freshly re-verified forever."""
+    """True when `value` (already confirmed `_is_iso_date`) is more than
+    one day after today's UTC calendar date — a `reproduced`/`held` date
+    has no business being in the future; without this a typo'd year
+    makes an entry look freshly re-verified forever. One day of slack
+    against a bare UTC comparison: a UTC+8 author stamping their own
+    local "today" between 00:00 and 08:00 Taipei time writes a date that
+    IS UTC's tomorrow, and CI (running in UTC) would refuse their own
+    honest entry."""
     return (
         datetime.date.fromisoformat(value)
         > datetime.datetime.now(datetime.timezone.utc).date()
+        + datetime.timedelta(days=1)
     )
 
 
@@ -262,16 +305,31 @@ def parse_store(text: str) -> Store:
 
         if status.startswith("reproduced"):
             rm = _REPRODUCED_STATUS.match(status)
+            if (
+                rm is not None
+                and rm.group("test") != ""
+                and _is_iso_date(rm.group("date"))
+                and _is_future_date(rm.group("date"))
+            ):
+                store.instances.append(
+                    Instance(
+                        klass=klass,
+                        target=target,
+                        verdict="malformed",
+                        line=raw,
+                        date=rm.group("date"),
+                        malformed_reason="future-date",
+                    )
+                )
             # `test` is None when "— pinned by" was never attempted (the
             # legal unpinned case check_store flags separately), "" when
             # "pinned by" was attempted but named nothing (a bypass CQ-2
             # closes: that must never resolve as a legal unpinned entry),
             # and a real value otherwise.
-            if (
+            elif (
                 rm is None
                 or rm.group("test") == ""
                 or not _is_iso_date(rm.group("date"))
-                or _is_future_date(rm.group("date"))
             ):
                 store.instances.append(
                     Instance(klass=klass, target=target, verdict="malformed", line=raw)
@@ -291,12 +349,24 @@ def parse_store(text: str) -> Store:
 
         if status.startswith("held"):
             hm = _HELD_STATUS.match(status)
-            if hm is None or (
-                hm.group("date") is not None
-                and (
-                    not _is_iso_date(hm.group("date"))
-                    or _is_future_date(hm.group("date"))
+            if (
+                hm is not None
+                and hm.group("date") is not None
+                and _is_iso_date(hm.group("date"))
+                and _is_future_date(hm.group("date"))
+            ):
+                store.instances.append(
+                    Instance(
+                        klass=klass,
+                        target=target,
+                        verdict="malformed",
+                        line=raw,
+                        date=hm.group("date"),
+                        malformed_reason="future-date",
+                    )
                 )
+            elif hm is None or (
+                hm.group("date") is not None and not _is_iso_date(hm.group("date"))
             ):
                 store.instances.append(
                     Instance(klass=klass, target=target, verdict="malformed", line=raw)
@@ -478,14 +548,23 @@ def check_store(store: Store, repo: Path) -> list[StoreError]:
 
     for inst in store.instances:
         if inst.verdict == "malformed":
-            errors.append(
-                StoreError(
-                    "malformed",
-                    f"Error: malformed — status does not match the "
-                    f"reproduced/held/not-applicable grammar "
-                    f"— line: '{inst.line}'",
+            if inst.malformed_reason == "future-date":
+                errors.append(
+                    StoreError(
+                        "malformed",
+                        f"Error: malformed — date {inst.date} is in the "
+                        f"future — line: '{inst.line}'",
+                    )
                 )
-            )
+            else:
+                errors.append(
+                    StoreError(
+                        "malformed",
+                        f"Error: malformed — status does not match the "
+                        f"reproduced/held/not-applicable grammar "
+                        f"— line: '{inst.line}'",
+                    )
+                )
         elif inst.verdict == "reproduced":
             if not inst.pinned_by:
                 errors.append(
@@ -516,18 +595,60 @@ def check_store(store: Store, repo: Path) -> list[StoreError]:
     return errors
 
 
-# The six prose-contract globs `signal` checks `changed` paths against,
+# The five prose-contract globs `signal` checks `changed` paths against,
 # independent of anything the store's `## Guarded paths` section names
-# (module docstring "signal" paragraph). Every entry here has a `**/`
-# prefix except the last, which is deliberately root-anchored.
+# (module docstring "signal" paragraph) — following
+# requesting-code-review's §Classification plus `rules/**/*.md`. Every
+# entry here has a `**/` prefix except the last, which is deliberately
+# root-anchored. `**` matches zero or more whole path segments
+# (including none — matches the root); a lone `*` never crosses `/`.
+# A basename starting `README` or `CHANGELOG` is never a hit, even when
+# its path otherwise matches one of these globs.
 _PROSE_CONTRACT_GLOBS = (
-    "**/SKILL.md",
-    "**/agents/*.md",
-    "**/hooks/*.md",
-    "**/references/*-packet.md",
-    "**/references/*-prompt.md",
-    "rules/*.md",
+    "**/skills/**/*.md",
+    "**/agents/**/*.md",
+    "**/hooks/**/*.md",
+    "**/scripts/*.md",
+    "rules/**/*.md",
 )
+
+_PROSE_EXCLUDED_BASENAME_PREFIXES = ("README", "CHANGELOG")
+
+
+def _prose_glob_to_regex(glob: str) -> re.Pattern[str]:
+    """Translate one `_PROSE_CONTRACT_GLOBS` entry into a fullmatch
+    regex. `**/` matches zero or more whole path segments (so
+    `**/agents/**/*.md` matches `agents/nested/worker.md` — a single
+    level deeper than the old `**/agents/*.md` allowed, see
+    wb-verdict-arm-a-r2 N1's cold-reader probe); a lone `*` matches
+    within one segment only."""
+    out: list[str] = ["^"]
+    i = 0
+    n = len(glob)
+    while i < n:
+        if glob[i:i + 3] == "**/":
+            out.append(r"(?:[^/]+/)*")
+            i += 3
+            continue
+        ch = glob[i]
+        out.append("[^/]*" if ch == "*" else re.escape(ch))
+        i += 1
+    out.append("$")
+    return re.compile("".join(out))
+
+
+_PROSE_CONTRACT_REGEXES = tuple(
+    _prose_glob_to_regex(g) for g in _PROSE_CONTRACT_GLOBS
+)
+
+
+def _is_prose_contract_hit(path: str) -> bool:
+    """True when `path` matches one of `_PROSE_CONTRACT_GLOBS` and its
+    basename is not a `README*`/`CHANGELOG*` exemption."""
+    basename = path.rsplit("/", 1)[-1]
+    if basename.startswith(_PROSE_EXCLUDED_BASENAME_PREFIXES):
+        return False
+    return any(regex.match(path) for regex in _PROSE_CONTRACT_REGEXES)
 
 
 def _glob_matches(glob: str, path: str) -> bool:
@@ -660,11 +781,7 @@ def _run_signal(
     except GitError as exc:
         print(f"attack catalogue: git failed — {exc.stderr}", file=sys.stderr)
         return 2
-    prose_hits = [
-        path
-        for path in changed
-        if any(_glob_matches(g, path) for g in _PROSE_CONTRACT_GLOBS)
-    ]
+    prose_hits = [path for path in changed if _is_prose_contract_hit(path)]
 
     header = "absent"
     if plan_path is not None:
@@ -733,6 +850,24 @@ def _run_signal(
             print(err.message, file=sys.stderr)
         return 1
     guarded_globs = guarded_path_globs(store)
+
+    # Self-protection: the store's own path is itself not a guarded path
+    # unless a bullet names it — an emptied-heading or narrowed store is
+    # otherwise invisible to both `signal` lines it degrades
+    # (wb-verdict-arm-b-r2 N2). `check_store`'s `unguarded` refusal above
+    # already refuses a store that parses to zero globs entirely.
+    try:
+        store_rel = store_path.resolve().relative_to(repo.resolve()).as_posix()
+    except ValueError:
+        store_rel = None
+    if store_rel is not None and not any(
+        _glob_matches(g, store_rel) for g in guarded_globs
+    ):
+        print(
+            "WARNING: the store itself is not guarded — add "
+            f"{store_rel} to ## Guarded paths",
+            file=sys.stderr,
+        )
 
     try:
         tracked = _tracked_paths(repo)
