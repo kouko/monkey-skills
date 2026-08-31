@@ -557,7 +557,7 @@ GOVERNED_ACTION_ROLES = {
     "ratify_oracle": "oracle_ratifier",
     "ratify_attribution": "attribution_ratifier",
     "ratify_defect_origin": "attribution_ratifier",
-    "dispatch_replay_run": "run_dispatcher",
+    "dispatch_review": "run_dispatcher",
     "adjudicate_finding": "dispute_adjudicator",
     "freeze_evidence_population": "evidence_freezer",
     "invalidate_run": "run_invalidator",
@@ -1379,16 +1379,19 @@ def prepare_dispatch_attempt(
     store_root: Path,
     attempt_id: str,
     *,
+    authorization_receipt: AuthorizationReceipt,
+    actor: str,
     sequence: int,
     profile_id: str,
     corpus_id: str,
     case_id: str,
 ) -> PublishedRecord:
-    """Persist an attempt's immutable bindings before reviewer dispatch."""
+    """Consume exact dispatch authority, then persist immutable bindings."""
     if not isinstance(sequence, int) or isinstance(sequence, bool) or sequence < 1:
         raise ValueError("sequence must be a positive integer")
+    attempt_id = _required_text(attempt_id, "attempt_id")
     record: dict[str, object] = {
-        "attempt_id": _required_text(attempt_id, "attempt_id"),
+        "attempt_id": attempt_id,
         "case_id": _required_text(case_id, "case_id"),
         "corpus_id": _required_text(corpus_id, "corpus_id"),
         "kind": "dispatch_attempt",
@@ -1397,6 +1400,13 @@ def prepare_dispatch_attempt(
         "sequence": sequence,
         "status": "prepared",
     }
+    consume_authorization_receipt(
+        Path(store_root),
+        authorization_receipt,
+        action="dispatch_review",
+        actor=actor,
+        target=attempt_id,
+    )
     return publish_record(store_root, attempt_id, record)
 
 

@@ -13,6 +13,7 @@
 ### REQ-103
 
 - test_req_103_attempt_ledger_preserves_failures
+- test_req_103_req_112_dispatch_requires_one_exact_authorization
 
 ### REQ-104
 
@@ -24,6 +25,7 @@
 
 ### REQ-112
 
+- test_req_103_req_112_dispatch_requires_one_exact_authorization
 - test_req_112_authority_and_independence_are_explicit
 - test_req_112_bootstrap_capability_and_single_purpose_receipt
 

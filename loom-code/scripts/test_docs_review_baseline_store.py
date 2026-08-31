@@ -26,7 +26,7 @@ _CAMPAIGN_ACTION_ROLES = {
     "ratify_oracle": "oracle_ratifier",
     "ratify_attribution": "attribution_ratifier",
     "ratify_defect_origin": "attribution_ratifier",
-    "dispatch_replay_run": "run_dispatcher",
+    "dispatch_review": "run_dispatcher",
     "adjudicate_finding": "dispute_adjudicator",
     "freeze_evidence_population": "evidence_freezer",
     "invalidate_run": "run_invalidator",
@@ -59,6 +59,32 @@ def _campaign_action_authorities(roles: dict[str, str]) -> dict[str, list[str]]:
         action: [roles[role]]
         for action, role in _CAMPAIGN_ACTION_ROLES.items()
     }
+
+
+def _bootstrap_dispatch_authority(store_root):
+    roles = _campaign_roles()
+    _authority, capability = store.bootstrap_campaign_authority(
+        store_root,
+        "authority-dispatch-r1",
+        campaign_policy_revision_id="policy-r1",
+        role_identities=roles,
+        action_authorities=_campaign_action_authorities(roles),
+        allowed_self_ratification=[],
+    )
+    return roles, capability
+
+
+def _authorize_dispatch(store_root, attempt_id: str):
+    roles, capability = _bootstrap_dispatch_authority(store_root)
+    actor = roles["run_dispatcher"]
+    receipt = store.authorize_governed_action_with_capability(
+        store_root,
+        capability=capability,
+        action="dispatch_review",
+        actor=actor,
+        target=attempt_id,
+    )
+    return actor, receipt
 
 
 def test_req_99_historical_case_admission(tmp_path) -> None:
@@ -193,7 +219,7 @@ def test_req_99_historical_case_admission(tmp_path) -> None:
     other_action_receipt = store.authorize_governed_action_with_capability(
         tmp_path,
         capability=capability,
-        action="dispatch_replay_run",
+        action="dispatch_review",
         actor=roles["run_dispatcher"],
         target="case-other-action",
     )
@@ -490,9 +516,12 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
 def test_req_103_attempt_ledger_preserves_failures(tmp_path) -> None:
     # @req: REQ-103
     """Every dispatch is counted even when it never yields usable findings."""
+    actor, receipt = _authorize_dispatch(tmp_path, "attempt-1")
     prepared = store.prepare_dispatch_attempt(
         tmp_path,
         "attempt-1",
+        authorization_receipt=receipt,
+        actor=actor,
         sequence=1,
         profile_id="codex:gpt-5.6-luna:economy",
         corpus_id="corpus-abc",
@@ -526,11 +555,14 @@ def test_req_103_attempt_ledger_preserves_failures(tmp_path) -> None:
     assert failed.record["resource_telemetry"]["dispatches"] == 1
     assert "findings" not in failed.record
 
+    actor_2, receipt_2 = _authorize_dispatch(tmp_path, "attempt-2")
     usable = store.record_dispatch_outcome(
         tmp_path,
         store.prepare_dispatch_attempt(
             tmp_path,
             "attempt-2",
+            authorization_receipt=receipt_2,
+            actor=actor_2,
             sequence=2,
             profile_id="codex:gpt-5.6-luna:economy",
             corpus_id="corpus-abc",
@@ -545,19 +577,25 @@ def test_req_103_attempt_ledger_preserves_failures(tmp_path) -> None:
     )
     assert "findings" not in usable.record
 
+    actor_3, receipt_3 = _authorize_dispatch(tmp_path, "attempt-3")
     retry = store.prepare_dispatch_attempt(
         tmp_path,
         "attempt-3",
+        authorization_receipt=receipt_3,
+        actor=actor_3,
         sequence=3,
         profile_id="codex:gpt-5.6-luna:economy",
         corpus_id="corpus-abc",
         case_id="case-1",
     )
     assert retry.record_id != prepared.record_id
+    conflict_actor, conflict_receipt = _authorize_dispatch(tmp_path, "attempt-1")
     with pytest.raises(RecordConflictError):
         store.prepare_dispatch_attempt(
             tmp_path,
             "attempt-1",
+            authorization_receipt=conflict_receipt,
+            actor=conflict_actor,
             sequence=4,
             profile_id="codex:gpt-5.6-luna:economy",
             corpus_id="corpus-abc",
@@ -587,9 +625,13 @@ def test_req_103_attempt_ledger_preserves_failures(tmp_path) -> None:
         ("transport_failure", "interruption", "quota_exhaustion", "parse_failure"),
         start=4,
     ):
+        attempt_id = f"attempt-{sequence}"
+        attempt_actor, attempt_receipt = _authorize_dispatch(tmp_path, attempt_id)
         attempt = store.prepare_dispatch_attempt(
             tmp_path,
-            f"attempt-{sequence}",
+            attempt_id,
+            authorization_receipt=attempt_receipt,
+            actor=attempt_actor,
             sequence=sequence,
             profile_id="codex:gpt-5.6-luna:economy",
             corpus_id="corpus-abc",
@@ -617,12 +659,142 @@ def test_req_103_attempt_ledger_preserves_failures(tmp_path) -> None:
         )
 
 
+def test_req_103_req_112_dispatch_requires_one_exact_authorization(tmp_path) -> None:
+    # @req: REQ-103
+    # @req: REQ-112
+    """Attempt publication consumes one trust-root-bound dispatch receipt."""
+    actor, receipt = _authorize_dispatch(tmp_path, "attempt-authorized")
+    authorized = store.prepare_dispatch_attempt(
+        tmp_path,
+        "attempt-authorized",
+        authorization_receipt=receipt,
+        actor=actor,
+        sequence=1,
+        profile_id="codex:gpt-5.6-luna:economy",
+        corpus_id="corpus-abc",
+        case_id="case-1",
+    )
+    assert authorized.record["status"] == "prepared"
+
+    stale_actor, stale_receipt = _authorize_dispatch(tmp_path, "attempt-stale")
+    store.consume_authorization_receipt(
+        tmp_path,
+        stale_receipt,
+        action="dispatch_review",
+        actor=stale_actor,
+        target="attempt-stale",
+    )
+    with pytest.raises(ValueError, match="consumed|stale"):
+        store.prepare_dispatch_attempt(
+            tmp_path,
+            "attempt-stale",
+            authorization_receipt=stale_receipt,
+            actor=stale_actor,
+            sequence=1,
+            profile_id="codex:gpt-5.6-luna:economy",
+            corpus_id="corpus-abc",
+            case_id="case-1",
+        )
+    with pytest.raises(ValueError, match="does not exist"):
+        read_record(tmp_path, "attempt-stale")
+
+    with pytest.raises(TypeError, match="authorization_receipt"):
+        store.prepare_dispatch_attempt(
+            tmp_path,
+            "attempt-missing-receipt",
+            actor=actor,
+            sequence=1,
+            profile_id="codex:gpt-5.6-luna:economy",
+            corpus_id="corpus-abc",
+            case_id="case-1",
+        )
+    with pytest.raises(ValueError, match="does not exist"):
+        read_record(tmp_path, "attempt-missing-receipt")
+
+    roles, capability = _bootstrap_dispatch_authority(tmp_path)
+    cases = []
+    wrong_target = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="dispatch_review",
+        actor=actor,
+        target="some-other-attempt",
+    )
+    cases.append(("attempt-wrong-target", wrong_target, actor, "target"))
+    wrong_actor = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="dispatch_review",
+        actor=actor,
+        target="attempt-wrong-actor",
+    )
+    cases.append(("attempt-wrong-actor", wrong_actor, "operator:intruder", "actor"))
+    wrong_action = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="nominate_historical_case",
+        actor=roles["case_nominator"],
+        target="attempt-wrong-action",
+    )
+    cases.append(
+        ("attempt-wrong-action", wrong_action, roles["case_nominator"], "action")
+    )
+    for attempt_id, bad_receipt, supplied_actor, error in cases:
+        with pytest.raises(ValueError, match=error):
+            store.prepare_dispatch_attempt(
+                tmp_path,
+                attempt_id,
+                authorization_receipt=bad_receipt,
+                actor=supplied_actor,
+                sequence=2,
+                profile_id="codex:gpt-5.6-luna:economy",
+                corpus_id="corpus-abc",
+                case_id="case-1",
+            )
+        with pytest.raises(ValueError, match="does not exist"):
+            read_record(tmp_path, attempt_id)
+
+    with pytest.raises(TypeError, match="receipt"):
+        store.prepare_dispatch_attempt(
+            tmp_path,
+            "attempt-forged",
+            authorization_receipt=object(),
+            actor=actor,
+            sequence=3,
+            profile_id="codex:gpt-5.6-luna:economy",
+            corpus_id="corpus-abc",
+            case_id="case-1",
+        )
+    with pytest.raises(ValueError, match="does not exist"):
+        read_record(tmp_path, "attempt-forged")
+
+    other_store = tmp_path / "other-store"
+    other_actor, other_receipt = _authorize_dispatch(
+        other_store, "attempt-wrong-store"
+    )
+    with pytest.raises(ValueError, match="different store"):
+        store.prepare_dispatch_attempt(
+            tmp_path,
+            "attempt-wrong-store",
+            authorization_receipt=other_receipt,
+            actor=other_actor,
+            sequence=4,
+            profile_id="codex:gpt-5.6-luna:economy",
+            corpus_id="corpus-abc",
+            case_id="case-1",
+        )
+    with pytest.raises(ValueError, match="does not exist"):
+        read_record(tmp_path, "attempt-wrong-store")
+
 def test_req_104_observation_and_attribution_are_separate(tmp_path) -> None:
     # @req: REQ-104
     """Model claims stay lossless; only named humans ratify judgments."""
+    actor, receipt = _authorize_dispatch(tmp_path, "attempt-observation-1")
     attempt = store.prepare_dispatch_attempt(
         tmp_path,
         "attempt-observation-1",
+        authorization_receipt=receipt,
+        actor=actor,
         sequence=1,
         profile_id="codex:gpt-5.6-luna:economy",
         corpus_id="corpus-abc",
@@ -969,13 +1141,13 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
     authorized_dispatch = store.authorize_governed_action(
         tmp_path,
         authority_revision_id=authority.record_id,
-        action="dispatch_replay_run",
+        action="dispatch_review",
         actor=roles["run_dispatcher"],
         target="run-not-created-yet",
         trusted_authority_revision_digest=authority.digest,
     )
     assert authorized_dispatch.record == {
-        "action": "dispatch_replay_run",
+        "action": "dispatch_review",
         "actor": roles["run_dispatcher"],
         "authority_revision_digest": authority.digest,
         "authority_revision_id": authority.record_id,
@@ -991,7 +1163,7 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
     refused_dispatch = store.authorize_governed_action(
         tmp_path,
         authority_revision_id=authority.record_id,
-        action="dispatch_replay_run",
+        action="dispatch_review",
         actor="operator:intruder",
         target="run-still-not-created",
         trusted_authority_revision_digest=authority.digest,
@@ -1156,7 +1328,7 @@ def test_req_112_bootstrap_capability_and_single_purpose_receipt(tmp_path) -> No
         store.consume_authorization_receipt(
             tmp_path,
             fresh,
-            action="dispatch_replay_run",
+            action="dispatch_review",
             actor=roles["case_nominator"],
             target="case-other",
         )
