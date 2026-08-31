@@ -483,6 +483,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 ## Notes
 
+- User-approved intervention boundary: checklist-enabled authoring starts after `2026-08-31T14:20:27Z`; the untreated baseline corpus may include only exact document snapshots and authoring/review events at or before that UTC cutoff, bounded by repository commit `82b6adf798b4d3745242669b2885c0ee92a56869`. Any first-authored or modified document after the cutoff belongs to a treated/post-intervention population. Task 21 must persist this cutoff and boundary commit in the frozen corpus/report rather than relying on session memory.
 - Kickoff decision: tracked-byte fingerprint re-pin → after each Task's final `loom-code/` edit, recompute the `loom-code candidate SHA-256` with `scripts/test_stage_specific_complexity_behavior_evidence.py::_tracked_worktree_fingerprint` and update `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md` in the same commit; source: `docs/loom/memory/tracked-byte-pin-tests-repin-in-the-same-commit-as-the-bytes.md` phrase `re-pin belongs in the wave's final content commit`.
 - Tasks 2–20 remain sequential for implementation because they share one of three module/test-file pairs, but their atomic commits park at `implemented(<sha>)` until the corresponding module-level review Batch is complete.
 - Task 1 and Task 21 remain individual checkpoints: the first establishes the shared storage seam, while the last crosses all three modules plus external command boundaries.
