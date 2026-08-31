@@ -73,6 +73,8 @@ import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
+import git_exec
+
 ALLOWED_VERDICTS = {"PASS", "PASS_WITH_NOTES", "NEEDS_REVISION"}
 # A reviewer's explicit refusal of a malformed dispatch packet.
 # NEVER added to ALLOWED_VERDICTS: the refusal is machine-readable but
@@ -128,17 +130,7 @@ _SUITE_REJECT_RE = re.compile(r"\b(failed|errors?)\b")
 
 def _git(repo: Path, *args: str) -> str | None:
     """Run git in `repo`; return stripped stdout, or None on any failure."""
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(repo), *args],
-            capture_output=True,
-            text=True,
-        )
-    except OSError:
-        return None
-    if result.returncode != 0:
-        return None
-    return result.stdout.strip()
+    return git_exec.run_git(repo, *args, check=False)
 
 
 _SHA_UNRESOLVABLE = "sha-unresolvable"
