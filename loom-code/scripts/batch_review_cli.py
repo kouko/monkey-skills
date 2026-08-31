@@ -84,10 +84,27 @@ def _run_subprocess(args: list[str], *, text: bool = True) -> subprocess.Complet
     """Shared subprocess.run wrapper: one place translates a hung external
     process into the fail-loud PacketRefused every git call in this module
     must surface as (Task 18d — folds what were three separate
-    TimeoutExpired->PacketRefused copies)."""
+    TimeoutExpired->PacketRefused copies).
+
+    Explicit encoding="utf-8", errors="surrogateescape" (subprocess.run
+    docs: both are passed straight to the underlying io.TextIOWrapper)
+    rather than the locale-dependent default `text=True` picks up
+    (locale.getencoding(), fixed at THIS interpreter's startup from
+    LC_ALL/LANG — not the child's). git's own path output is raw bytes
+    that are valid UTF-8 whenever core.quotePath is left at its default
+    (quoted/escaped otherwise; git-config(1)) — decoding as UTF-8
+    unconditionally, with surrogateescape to still tolerate a stray
+    non-UTF-8 byte, keeps a non-ASCII path from raising
+    UnicodeDecodeError under a non-UTF-8 process locale. Applied only
+    when text=True: passing encoding=/errors= at all — even under
+    text=False — forces subprocess.run into text mode regardless, which
+    would hand `_committed_bytes`'s `text=False` git-show call a `str`
+    where its caller (the scope issuer) requires raw `bytes`."""
+    text_kwargs = {"encoding": "utf-8", "errors": "surrogateescape"} if text else {}
     try:
         return subprocess.run(
             args, capture_output=True, text=text, timeout=_GIT_TIMEOUT_SECONDS,
+            **text_kwargs,
         )
     except subprocess.TimeoutExpired:
         raise rb.PacketRefused(f"{' '.join(args)} timed out")
