@@ -68,3 +68,27 @@ No sibling-baseline-corpus cases. Reviewer prompts unmodified in both arms.
 Only rule 14's output framing varied. Raw drafts / blind copies / judge
 verdicts / tally input in this session's scratchpad (`.../scratchpad/ab/`),
 session-local, not committed.
+
+## Dogfood of the reworded action (a) — n=1, blind, artifact-checked
+
+After rewording action (a) (commit c31f1553), one implementer was run under the
+current contract on the case-1 discovery task (task names only the primary
+cause fix; the 替代方案/單向門判定/出典 dependents must be discovered). A blind
+docs-reviewer then checked the artifact — not the implementer's self-report —
+per dependent statement:
+
+| dependent | reconciled? |
+|---|---|
+| 替代方案 | yes (minor ditto ambiguity) |
+| 出典 | yes |
+| 單向門判定 | **no — left stale** |
+
+Reading: the reworded action (a) is a real behavioral improvement — the agent
+quoted the new "restated OR depended on" wording and caught 2 of 3 semantic
+dependents that the earlier literal-grep-and-stop behaviour missed — but n=1
+and incomplete (one dependent still stale; verdict PASS_WITH_NOTES). The
+dogfood also re-confirmed [[a-weak-model-reporting-it-ran-a-silent-self-check-is-not-evidence-the-check-worked]]:
+the implementer's note claimed it "touched the alternatives and 出典 and reasoned
+about dependents" but never mentioned 單向門判定, which the blind artifact check
+found stale — the self-report was more thorough than the output. Not a
+statistical result; a "does the change fire as intended" behavioral check.
