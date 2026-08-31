@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "verdict": "PASS_WITH_NOTES",
+  "files": [
+    "proposal.md",
+    "specs/docs-review-baseline/spec.md"
+  ],
+  "sha256": "a863f57666bf969cdbc974d4c37b18bfda53ee48f0a4e0ab65340a6ca14d24d4",
+  "written_at": "2026-08-31T02:25:43.445097+00:00"
+}

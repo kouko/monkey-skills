@@ -1,0 +1,373 @@
+## ADDED Requirements
+
+### Requirement: REQ-99 — historical cases are replayable before they are scoreable
+The baseline MUST score only a historical document case whose exact artifact
+bytes, digest, source locator, and evidence locators are inspectable. A branch
+name, path, narrative, or current file without a recoverable historical
+snapshot is not a scoreable case.
+
+#### Scenario: a recoverable historical document enters the candidate corpus
+- GIVEN a historical document snapshot whose bytes and evidence locators can be inspected
+- WHEN the case is nominated
+- THEN the system records its digest and may advance it for oracle drafting
+
+#### Scenario: a narrative-only incident is not scored
+- GIVEN an incident description without recoverable document bytes
+- WHEN the case is nominated
+- THEN the system keeps it outside the scored corpus and names the missing replay evidence
+
+### Requirement: REQ-100 — ratified oracle revisions are immutable
+The baseline MUST bind every scoreable case to a named, human-ratified oracle
+revision. Ratification freezes the complete revision; a correction MUST create
+a child revision with a reason and MUST NOT mutate the ratified parent.
+
+#### Scenario: a complete oracle is ratified
+- GIVEN a draft oracle whose expected load-bearing findings each have a rationale and evidence locator
+- WHEN a named maintainer ratifies the draft
+- THEN the revision is frozen with a recomputable digest
+
+#### Scenario: a frozen oracle needs correction
+- GIVEN a ratified oracle whose expected finding is later shown to be wrong
+- WHEN the maintainer records the correction
+- THEN a child draft is created and the original revision remains byte-identical
+
+### Requirement: REQ-101 — corpus revisions bind one exact exam
+A ratified corpus revision MUST be a non-empty, immutable, deterministically
+serialized manifest of `(case_id, snapshot_digest, oracle_revision_id)`
+bindings. Every oracle MUST be ratified and describe the same snapshot digest;
+a run MUST bind an exact corpus revision and MUST NOT bind `latest`.
+
+#### Scenario: valid bindings freeze atomically
+- GIVEN one or more cases with matching snapshots and ratified oracle revisions
+- WHEN the corpus draft is ratified
+- THEN the ordered manifest and its serialization version are frozen with a recomputable digest
+
+#### Scenario: an oracle and snapshot disagree
+- GIVEN a corpus draft whose oracle describes a different snapshot digest
+- WHEN ratification is attempted
+- THEN ratification is refused and the mismatched binding is named
+
+### Requirement: REQ-102 — scored replay uses explicit weak-model bindings
+Every scored review run MUST use the repository's `economy` execution profile
+and record the resolved host, exact model identifier, requested effort,
+reviewer-contract version, and configuration fingerprint before dispatch. The
+initial baseline MUST contain separate Claude Code economy and Codex economy
+cohorts. It MUST NOT silently substitute a stronger model.
+
+#### Scenario: the current weak profiles resolve successfully
+- GIVEN the live economy mappings currently resolve Claude Code to `haiku` and Codex to `gpt-5.6-luna`, both at low effort
+- WHEN scored runs are prepared
+- THEN each run records its own resolved host, exact model identifier, effort, contract version, and configuration fingerprint
+
+#### Scenario: exact model identity is unavailable
+- GIVEN an allocated run whose host or exact model identifier cannot be observed
+- WHEN scored dispatch is requested
+- THEN the attempt is retained as unscoreable and is excluded from every comparison cohort
+
+#### Scenario: a stronger model is supplied
+- GIVEN a run configuration that resolves outside the repository's economy profile
+- WHEN baseline dispatch is requested
+- THEN dispatch is refused rather than accepting the stronger model as weak-model evidence
+
+### Requirement: REQ-103 — every dispatch is an immutable attempt
+The baseline MUST persist a run identity and its immutable bindings before
+invoking the reviewer. It MUST store raw response bytes and a digest before
+normalization. Failure, interruption, timeout, quota exhaustion, and malformed
+output MUST remain visible attempts and MUST NOT be represented as zero
+findings; retrying MUST create a new run id.
+
+#### Scenario: a reviewer returns a usable response
+- GIVEN a prepared weak-model run
+- WHEN the reviewer returns output
+- THEN raw bytes and their digest are stored before findings are normalized
+
+#### Scenario: a reviewer fails before usable output
+- GIVEN a dispatched run that times out or hits a host or quota failure
+- WHEN the attempt ends
+- THEN the failure and available resource telemetry remain attached to that run and no zero-finding result is synthesized
+
+### Requirement: REQ-104 — observations and human attribution remain separate
+Reviewer output MUST be preserved as immutable finding observations without
+being accepted as ground truth. Oracle matching, defect-origin classification,
+and false-alarm judgment MUST live in named, human-ratified attribution
+revisions; correction MUST create a child revision. Unknown and disputed
+attributions MUST remain explicit.
+
+#### Scenario: a parseable reviewer finding is captured
+- GIVEN stored raw reviewer output containing a located finding
+- WHEN normalization runs
+- THEN the raw span, payload hash, wording, location, severity, and verdict are preserved as an observation
+
+#### Scenario: an unmatched finding cannot yet be adjudicated
+- GIVEN an observation that does not match the bound oracle and lacks enough evidence for a new-defect or false-alarm judgment
+- WHEN attribution is drafted
+- THEN it is recorded as unknown or disputed and is not forced into a false-alarm denominator
+
+### Requirement: REQ-105 — repeatability cohorts never mix execution identities
+A repeatability cohort MUST contain at least two independent valid runs with
+byte-identical corpus, artifact, reviewer-contract, and configuration
+fingerprints and identical host, exact model identifier, execution tier, and
+requested effort. The initial baseline MUST produce at least two such runs in
+each Claude Code economy and Codex economy cohort. Runs from different cohorts
+MUST NOT be pooled to calculate repeat agreement.
+
+#### Scenario: two identical weak-model runs form a cohort
+- GIVEN two valid independent runs with identical corpus, configuration, host, model, tier, and effort bindings
+- WHEN repeat agreement is calculated
+- THEN their normalized finding identities are compared using a disclosed formula and version
+
+#### Scenario: runs use different weak hosts
+- GIVEN one valid Claude Code economy run and one valid Codex economy run against the same corpus
+- WHEN repeat agreement is requested
+- THEN the system refuses to pool them and reports that each cohort lacks the required repeat count
+
+### Requirement: REQ-106 — every metric carries its population
+Every calculated metric MUST record its value or null, numerator, denominator,
+availability, formula version, and exclusion reasons. Finding rate MUST use
+ratified expected load-bearing findings; false-alarm rate MUST exclude
+unknown/disputed observations and show their counts separately. A metric with a
+missing denominator MUST be unavailable rather than zero.
+
+#### Scenario: finding-rate evidence is complete
+- GIVEN valid runs with ratified matches against expected load-bearing findings
+- WHEN finding rate is calculated
+- THEN the report stores the matched count, expected count, value, and formula version
+
+#### Scenario: a denominator is unavailable
+- GIVEN a metric whose required population cannot be established
+- WHEN report calculation runs
+- THEN that metric is null with an exclusion reason while other valid metrics remain calculable
+
+### Requirement: REQ-107 — invalid and unknown populations stay visible
+The baseline report MUST disclose counts of failed, interrupted, malformed,
+unparseable, unscoreable-model, unknown-attribution, and disputed-attribution
+items. Invalid runs MAY contribute attempted elapsed or usage evidence but MUST
+NOT contribute finding-quality rates. Usage values with incompatible units or
+providers MUST NOT be added together.
+
+#### Scenario: malformed output follows a valid dispatch
+- GIVEN a correctly bound weak-model run whose raw output cannot be normalized
+- WHEN the report is calculated
+- THEN the run appears in the invalid population and is excluded from finding-quality metrics
+
+#### Scenario: usage units differ across hosts
+- GIVEN valid Claude Code and Codex cohorts whose usage is reported in incompatible units
+- WHEN cost evidence is aggregated
+- THEN each availability population is reported separately and no cross-unit total is calculated
+
+### Requirement: REQ-108 — the baseline report freezes evidence before process changes
+A metric report MUST bind exact corpus, oracle, attribution, reviewer-contract,
+execution-profile, parser, and metric-definition versions. It MAY freeze with
+unavailable metrics only when their populations and reasons are explicit. A
+later correction or comparison MUST create a new report and MUST NOT rewrite
+the frozen baseline.
+
+#### Scenario: some cost telemetry is unavailable
+- GIVEN valid finding-quality evidence but unavailable elapsed or usage telemetry for some runs
+- WHEN the report is frozen
+- THEN it publishes as partial with the affected metrics, denominators, and limitations explicit
+
+#### Scenario: a later oracle revision is ratified
+- GIVEN a frozen report bound to an older oracle revision
+- WHEN a corrected oracle becomes available
+- THEN a new report may be calculated but the frozen baseline keeps its original oracle binding and results
+
+### Requirement: REQ-109 — defect origin is supported by a document revision chain
+An initial-writing or fix-introduced attribution MUST bind the exact document
+revision where the defect is observable, its parent revision, the applicable
+authoring or remediation event, and an inspectable diff. If that chain cannot
+support the claimed origin, the origin MUST remain unknown.
+
+#### Scenario: a remediation introduces a consequential defect
+- GIVEN the pre-remediation and post-remediation document revisions are recoverable and the defect first appears in their inspectable diff
+- WHEN origin attribution is ratified
+- THEN it binds both revision digests, the remediation event, the responsible stage, and the evidence locator as fix-introduced evidence
+
+#### Scenario: only the final document is recoverable
+- GIVEN a consequential defect in a final snapshot without a recoverable parent revision or remediation history
+- WHEN origin attribution is requested
+- THEN origin is recorded as unknown and is excluded from initial-writing versus fix-introduced rates
+
+### Requirement: REQ-110 — reviewer contract and runtime revisions are immutable inputs
+Every scored run MUST bind immutable reviewer-contract and reviewer-runtime
+revisions, including their content digests, owners, parent revisions, and
+change reasons. Runs with different contract or runtime digests MUST NOT share
+a repeatability cohort, even when host, model, and effort match.
+
+#### Scenario: repeated runs use the same reviewer implementation
+- GIVEN two runs bind identical corpus, contract, runtime, host, model, effort, and configuration digests
+- WHEN cohort membership is validated
+- THEN they may enter the same repeatability cohort
+
+#### Scenario: a reviewer package changes under the same model
+- GIVEN two runs use the same host, model, and effort but different reviewer-runtime digests
+- WHEN repeat agreement is requested
+- THEN they are separated into different cohorts and the difference is not labeled stochastic reviewer variance
+
+#### Scenario: contract text is unchanged while runtime changes
+- GIVEN a reviewer-contract revision is unchanged but its skill, package, or runtime implementation changes
+- WHEN a new run is prepared
+- THEN it binds a separate reviewer-runtime revision with its own owner, parent, digest, and change reason while preserving the original contract revision
+
+### Requirement: REQ-111 — replay content is untrusted and data-bound
+Historical artifacts MUST be treated only as review content, never as runtime
+instructions. A scored dispatch MUST use an approved data classification and
+an execution boundary that denies corpus-external files, connectors, network,
+and tools unless the versioned reviewer contract explicitly requires and the
+campaign policy explicitly permits them. Secret, personal, customer, or
+third-party-confidential content without an approved handling basis MUST NOT be
+sent to a reviewer runtime.
+
+#### Scenario: a historical document contains prompt injection
+- GIVEN an artifact tells the reviewer to ignore its contract, read another file, or invoke an external tool
+- WHEN a scored review runs
+- THEN the text remains review content, the external action is denied, and the isolation event is recorded without obeying the instruction
+
+#### Scenario: a candidate contains unapproved sensitive data
+- GIVEN a snapshot contains a credential, personal data, customer content, or third-party-confidential material outside the approved campaign policy
+- WHEN nomination or dispatch is attempted
+- THEN the snapshot is excluded before reviewer transmission and the rejection record does not reproduce the sensitive value
+
+#### Scenario: a snapshot has no classification decision
+- GIVEN a candidate snapshot has no ratified classification decision binding its digest, classifier, approver, handling basis, and campaign-policy revision
+- WHEN scored-corpus admission or reviewer transmission is requested
+- THEN the action is refused even when the campaign policy permits some documents of that general class
+
+### Requirement: REQ-112 — governed actions carry explicit authority and independence
+The campaign policy MUST name who may nominate, ratify, dispatch, adjudicate,
+freeze, invalidate, inspect raw evidence, and publish reports. Unauthorized
+actions MUST be refused without state change. An oracle or attribution used in
+official metrics MUST disclose conflicts of interest and follow the campaign's
+ratifier-independence rule; unresolved conflicts MUST remain disputed and stay
+outside affected denominators.
+
+#### Scenario: an identified actor lacks authority
+- GIVEN an actor is known but lacks permission for oracle ratification or run dispatch
+- WHEN that action is attempted
+- THEN it is refused without object mutation and an audit event records actor, action, target, policy version, and outcome
+
+#### Scenario: a proposed ratifier is conflicted
+- GIVEN the proposed ratifier authored the evaluated revision, produced the reviewer output, or owns the policy under comparison
+- WHEN ratification is requested
+- THEN the conflict is disclosed and the item remains disputed unless an independent ratifier or approved exception satisfies the versioned campaign rule
+
+### Requirement: REQ-113 — campaign and run resource use is bounded before dispatch
+The campaign policy MUST set finite limits for run count, retries, concurrency,
+wall time, input and output size, and available usage budget. Preparation MUST
+validate whole-artifact context fit and deterministic input scope. Reaching a
+limit MUST stop or refuse further work without silently truncating the artifact
+or automatically retrying.
+
+#### Scenario: the campaign budget is exhausted
+- GIVEN an approved run, retry, concurrency, time, size, or usage limit has been reached
+- WHEN another dispatch or retry is requested
+- THEN it is refused, bounded failure telemetry is retained, and no partial result is represented as a scored run
+
+#### Scenario: an artifact exceeds a weak model's context boundary
+- GIVEN a whole artifact cannot fit the configured weak-model input boundary
+- WHEN preparation validates the input
+- THEN scored dispatch is refused unless a versioned deterministic scope policy is explicitly selected and included in the configuration fingerprint
+
+### Requirement: REQ-114 — dispatch and capture have crash-safe attempt semantics
+Only one executor MAY own dispatch for a run id. Provider acknowledgement loss,
+cancellation uncertainty, partial output, late output, and capture interruption
+MUST have explicit states. Raw bytes, completeness, digest, and terminal status
+MUST be committed so that a crash cannot make partial bytes appear complete.
+Retrying MUST use a new run id and MUST NOT overwrite or merge the earlier
+attempt.
+
+#### Scenario: two executors dispatch the same run concurrently
+- GIVEN two executors observe the same prepared run
+- WHEN both request dispatch
+- THEN exactly one obtains dispatch ownership and the other records contention without invoking the reviewer
+
+#### Scenario: a dispatch owner disappears and later returns
+- GIVEN an executor acquired dispatch ownership and disappeared before provider acknowledgement was durably reconciled
+- WHEN a new executor takes over and the old executor later resumes
+- THEN takeover uses a new fencing generation, the stale executor cannot dispatch or commit acknowledgement, and outcome stays unknown until provider reconciliation proves otherwise
+
+#### Scenario: a response ends after partial bytes
+- GIVEN a reviewer streams bytes and then times out, loses quota, or disconnects
+- WHEN the attempt terminates
+- THEN the bytes, digest, completeness state, and termination reason are retained and the attempt is not treated as a complete response or zero findings
+
+#### Scenario: a failed attempt receives a late response
+- GIVEN an attempt is terminal and a retry has a different run id
+- WHEN the original provider response arrives late
+- THEN it is attached as late evidence without changing the original terminal state, merging into the retry, or entering metrics without explicit eligibility review
+
+#### Scenario: cancellation cannot be confirmed
+- GIVEN a provider accepted a run and cancellation was requested without trustworthy confirmation
+- WHEN the cancellation deadline expires
+- THEN the run records cancellation-unknown with existing bytes and completeness, and it is neither retried automatically nor scored
+
+### Requirement: REQ-115 — execution identity is verified at the point of use
+The resolved economy mapping and actual host-reported execution identity MUST
+match the run binding at dispatch and capture. A profile change, router change,
+or identity mismatch after preparation MUST make that attempt unscoreable and
+MUST NOT silently update the existing run or substitute a stronger model.
+
+#### Scenario: the economy mapping drifts after preparation
+- GIVEN a run was prepared for weak model A but dispatch resolves or reports model B
+- WHEN execution identity is validated
+- THEN the attempt is marked identity-mismatch and excluded, and any retry is prepared under a new run id and fingerprint
+
+#### Scenario: the host cannot attest the actual model
+- GIVEN the configured alias resolves locally but the host cannot report a trustworthy actual model identity
+- WHEN capture completes
+- THEN the attempt is retained with identity unavailable and does not enter a scored cohort
+
+### Requirement: REQ-116 — zero and partial populations have explicit meaning
+A deliberately empty oracle MUST be ratified as a negative control with a
+rationale; absence of labeling MUST NOT imply a negative control. A zero
+expected-finding denominator, zero observations, mixed parse result, partial
+output, or missing expected-finding match MUST retain its distinct state. No
+zero or partial population MAY be converted into a normal zero-percent metric.
+
+#### Scenario: a negative control has zero expected findings
+- GIVEN a ratified negative-control label, rationale, scope, and zero expected load-bearing findings
+- WHEN finding rate is calculated
+- THEN its value is null with denominator zero and a not-applicable reason rather than zero percent or one hundred percent
+
+#### Scenario: normalization yields no observations
+- GIVEN a complete raw response normalizes to zero observations
+- WHEN normalization completes
+- THEN it distinguishes an explicit no-findings verdict, a valid empty result, a suspicious empty result, and extraction failure before metric eligibility is decided
+
+#### Scenario: an expected finding is not observed
+- GIVEN a valid normalized run has no observation matching a ratified expected finding
+- WHEN attribution completes
+- THEN a per-run missed or not-assessable outcome is retained for that expected finding so the finding-rate numerator is auditable
+
+### Requirement: REQ-117 — report calculation uses one frozen population manifest
+Before calculation, a report MUST freeze an immutable population manifest of
+the exact runs, observations, attribution revisions, parser revision, and
+metric-definition revision it reads. Concurrent additions or corrections MUST
+create a new report lineage and MUST NOT enter an in-progress calculation.
+
+#### Scenario: an attribution is corrected during report calculation
+- GIVEN a report population manifest binds attribution revision A
+- WHEN correction revision B is ratified before the report freezes
+- THEN the current report remains bound to A and a recalculation using B requires a new report
+
+#### Scenario: two calculators freeze different populations
+- GIVEN two calculators propose different population manifests for the same draft report id
+- WHEN they attempt to freeze before calculation
+- THEN exactly one complete manifest digest is atomically accepted and the other must verify the same digest or create a new report id
+
+#### Scenario: only one weak-host cohort reaches its repeat target
+- GIVEN one weak-host cohort has at least two valid repeats and the other has fewer than two
+- WHEN the report freezes
+- THEN valid single-cohort metrics may publish as partial while the incomplete cohort and every cross-host conclusion remain unavailable
+
+### Requirement: REQ-118 — the next pre-review check remains a measured follow-on [deferred]
+After the baseline is frozen, any proposed pre-review check SHOULD bind a
+versioned defect class and demonstrate on a frozen corpus that it reduces that
+class without hiding a load-bearing reviewer finding. This requirement is
+deferred because the current arc measures the baseline before selecting or
+implementing a check.
+
+#### Scenario: a future check reduces visible findings by masking evidence
+- GIVEN a proposed check reduces reviewer finding count but makes a ratified load-bearing finding no longer observable
+- WHEN the follow-on experiment is evaluated
+- THEN the check is not accepted as an improvement and the masking evidence remains inspectable
