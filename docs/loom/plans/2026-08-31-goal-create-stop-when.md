@@ -13,7 +13,7 @@ Stage: planning
 Total tasks: 6
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
-Plan-document-reviewer verdict: PENDING
+Plan-document-reviewer verdict: PASS (2026-08-31, round 2)
 
 ## Task-flow diagram
 
@@ -58,7 +58,7 @@ N/A — no unresolved question: the shape (keep four fields), the bound-as-compl
   - **GREEN**: that test and the whole file pass (`python3 -m pytest loom-workflow/skills/goal-create/scripts/test_goal_shape.py -q`); the five clauses above are each asserted within §4's own section text (scoped by heading, not whole-file containment).
 - **Dependencies**: none
 - **Independent**: false
-- **Brief item covered**: BI-1
+- **Brief item covered**: BI-1, BI-5, BI-6
 - **Review disposition**: batch(shape-prose)
 - **Status**: pending
 - **Gloss**: 讓評估器把「上限到了」讀成「run 完成」，run 才會真的在上限停下——這是今天實驗證明有效的那個措辭。
@@ -204,5 +204,7 @@ N/A — no unresolved question: the shape (keep four fields), the bound-as-compl
 
 - Change-folder binding: none — no non-archived `docs/loom/<change-id>/` folder matches branch `goal-cerate-r2`; the caller handed a brainstorming brief; the plan derives from the brief (BI- ids).
 - Review disposition rationale (same lane AND (dependency edge OR same Module), cap 4): Tasks 1+2+3 are one dependency chain over the two reference files and batch; Task 4 is a one-task module with no edge; Task 5 shares a file with Task 3 but carries a different verdict question (see its `Not batched because`); Task 6 is release administration. Planned fan-outs: 4 for 6 tasks.
-- BI-5 (evidence — the 2026-08-31 experiment) is delivered by the brief itself; BI-6 (Decision umbrella) and BI-7 (the exit-branch pattern becoming obsolete) are delivered by the sum of Tasks 1–3; the coverage checker reports them as warnings by design.
+- BI-5 (evidence — the 2026-08-31 experiment) and BI-6 (Decision umbrella) are cited on Task 1 only: Task 1's "why" clause is where the experiment's finding lands in the contract, and the umbrella is owned by one batch member on purpose — `batch_review_cli.py packet` refuses a batch whose members cite the same requirement twice, so the umbrella cannot be repeated on Tasks 2–3 (precedent: the 2026-08-31 batch-review-measurement plan's BI-3 collision). BI-7 (the exit-branch pattern becoming obsolete) is delivered by the sum of Tasks 1–3 and is outside Check 8's scope; the coverage checker reports it as a warning by design.
+- Plan-review round 1 (2026-08-31): NEEDS_REVISION — one gap (Check 8: BI-5/BI-6 uncited); fixed by the Task 1 citation above. Round 2: PASS 21/21. Verdict stamped — stamping the verdict, no re-review. Reviewer notes recorded for schema follow-up (not this plan's defects): `plan-format.md`'s two worked examples count critical-path depth by different conventions (nodes vs edges); Task 6's conceptual `Module` name differs from the one-concrete-path precedent.
+- Kickoff sweep (2026-08-31, kickoff-briefing §a/§b): no one-way-door decision found — the rule's name, the digit warning, and the default-emitted Constraints entry are each reversible by a prose edit; no researchable fork left open (Axis 4 already researched the bound-phrasing alternatives). No kickoff briefing beyond the progress card and document view.
 - Language: task titles, Gloss and Notes in zh-Hant per the session; Description / Acceptance in English per writing-plans §Language policy.
