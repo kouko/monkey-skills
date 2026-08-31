@@ -294,6 +294,7 @@
 
 - test_da_ids_states_evidence_and_evaluative_ratification
 - test_da_shaped_bullets_require_exact_numeric_canonical_ids
+- test_objective_da_evidence_must_be_a_resolvable_pointer
 
 ### REQ-91
 
