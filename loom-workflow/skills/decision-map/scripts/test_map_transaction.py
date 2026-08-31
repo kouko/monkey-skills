@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import threading
@@ -1117,3 +1118,26 @@ def test_transaction_runs_final_validation_after_its_effect(
         expected = "status: closed"
     assert validated_effects
     assert expected in validated_effects[-1]
+
+
+def test_symlink_guard_delegates_to_map_lock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """map_transaction._assert_no_symlink_components must delegate to
+    map_lock.assert_no_symlink_components (Task 1's public seam) rather than
+    re-implementing the symlink walk, so both callers share one behavior."""
+    real = tmp_path / "real"
+    real.mkdir()
+    link = tmp_path / "link"
+    os.symlink(real, link)
+
+    with pytest.raises(map_transaction.CloseTransactionError):
+        map_transaction._assert_no_symlink_components(link / "x")
+
+    def _fake(path: Path, error: type[Exception] = map_lock.MapLockError) -> None:
+        raise RuntimeError("delegated")
+
+    monkeypatch.setattr(map_lock, "assert_no_symlink_components", _fake)
+
+    with pytest.raises(RuntimeError, match="delegated"):
+        map_transaction._assert_no_symlink_components(link / "x")
