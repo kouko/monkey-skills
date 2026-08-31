@@ -24,7 +24,8 @@ Two non-mechanical tasks are joined when they share a review lane AND
 normalized ``Module`` value). Each connected component is split into
 batches of at most ``BATCH_CAP`` tasks in dependency (topological) order,
 so a task never precedes one of its dependencies in a later batch.
-One-task components are reported as ``singletons``.
+One-task components, and a one-task tail chunk of a split component, are
+reported as ``singletons``.
 
 The plan grammar is owned by the sibling ``check_review_batches.py``
 oracle, imported by file path; this script never re-implements it.
@@ -189,6 +190,10 @@ def propose(text: str) -> tuple[dict[str, object], list[str]]:
         order = _topological(component, tasks)
         for start in range(0, len(order), BATCH_CAP):
             members = order[start:start + BATCH_CAP]
+            if len(members) == 1:
+                # A one-task tail chunk buys nothing for the batch ceremony.
+                singletons.append(members[0])
+                continue
             batches.append({
                 "members": members,
                 "lane": tasks[members[0]].review_lane,
@@ -231,17 +236,21 @@ def check(text: str) -> tuple[list[str], list[str]]:
     for batch in proposal["batches"]:
         members = sorted(batch["members"])
         for index, later in enumerate(members):
-            for earlier in members[:index]:
-                same = membership.get(earlier) is not None and (
-                    membership.get(earlier) == membership.get(later)
-                )
-                if same or _has_reason(oracle, task_blocks.get(later, ""), NOT_BATCHED_FIELD):
-                    continue
-                violations.append(
-                    f"Task {earlier}, Task {later}: proposed as one batch but not "
-                    f"declared in the same Review Batch; Task {later} lacks a "
-                    f"non-empty '- **{NOT_BATCHED_FIELD}**: <reason>' line"
-                )
+            if _has_reason(oracle, task_blocks.get(later, ""), NOT_BATCHED_FIELD):
+                continue
+            unbatched = [
+                earlier for earlier in members[:index]
+                if membership.get(earlier) is None
+                or membership.get(earlier) != membership.get(later)
+            ]
+            if not unbatched:
+                continue
+            named = ", ".join(f"Task {earlier}" for earlier in unbatched)
+            violations.append(
+                f"Task {later}: proposed with {named} but not declared in the "
+                f"same Review Batch; lacks a non-empty "
+                f"'- **{NOT_BATCHED_FIELD}**: <reason>' line"
+            )
     for batch_id, batch in batches.items():
         if len(batch.members) <= BATCH_CAP:
             continue

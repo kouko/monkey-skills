@@ -120,12 +120,15 @@ def test_same_module_component_of_five_splits_four_plus_one_in_dependency_order(
         ),
         tmp_path,
     )
+    # A one-member tail chunk buys nothing for the batch ceremony: it is a
+    # singleton, never a `batches[]` entry.
     members = _member_lists(proposal)
-    assert [len(batch) for batch in members] == [4, 1]
-    assert proposal["singletons"] == []
+    assert [len(batch) for batch in members] == [4]
+    assert proposal["singletons"] == [5]
     position = {
         task: index for index, batch in enumerate(members) for task in batch
     }
+    position[5] = len(members)
     for later, earlier in ((1, 2), (2, 3), (4, 3), (5, 4)):
         assert position[earlier] <= position[later]
     assert proposal["batches"][0]["reason"] == "module:pkg/core.py"
@@ -203,8 +206,17 @@ def test_check_flags_unbatched_proposed_pair_without_reason(tmp_path):
     # with no reason is the silent conservatism the check exists to refuse.
     result = _check(_plan(_task(1), _task(2)), tmp_path)
     assert result.returncode != 0
-    assert "Task 1, Task 2" in result.stdout
+    assert "Task 2: proposed with Task 1" in result.stdout
     assert "Not batched because" in result.stdout
+
+    # One line per later task, naming every earlier task it was proposed
+    # with -- not one line per (earlier, later) pair.
+    three = _check(_plan(_task(1), _task(2), _task(3)), tmp_path)
+    assert three.returncode != 0
+    lines = three.stdout.splitlines()
+    assert len(lines) == 2, three.stdout
+    assert lines[0].startswith("Task 2: proposed with Task 1 but not declared")
+    assert lines[1].startswith("Task 3: proposed with Task 1, Task 2 but not declared")
 
     with_reason = _check(
         _plan(_task(1), _task(2, not_batched_because="separate release points")),
