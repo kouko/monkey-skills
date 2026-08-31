@@ -1620,6 +1620,33 @@ def test_validate_rejects_empty_value_da_user_ratified_field(
     assert "user-ratified" in message
 
 
+def test_validate_rejects_closed_ticket_with_empty_value_user_ratified(
+    tmp_path: Path,
+) -> None:
+    """R3b: a closed grilling ticket's Resolution `user-ratified:` line
+    with an empty value is exit 2, naming the ticket file.
+
+    Pins the schema-v3 path end-to-end: for schema_version 3 this is
+    caught by `_check_v3_ticket_closure_evidence` (via
+    `_has_named_dated_user_ratification`'s named/dated regex, which an
+    empty value can never match) — it runs before, and shadows,
+    `_has_user_ratified_line`'s own separate check further down
+    `_check_tickets`.
+    """
+    map_dir = _make_conformant_map(tmp_path)
+    _write(
+        map_dir / "tickets" / "grilling-cut.md",
+        TICKET_GRILLING_CLOSED_UNRATIFIED.replace(
+            "Decided: hooks first.",
+            "decision: hooks first.\nuser-ratified:",
+        ),
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "grilling-cut.md" in message
+    assert "user-ratified" in message
+
+
 def test_clear_rejects_non_closed_tickets_and_fog(tmp_path: Path) -> None:
     """Clear means every ticket is closed and fog is empty, not merely
     ratified."""
