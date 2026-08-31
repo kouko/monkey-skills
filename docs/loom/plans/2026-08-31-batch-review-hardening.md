@@ -10,7 +10,7 @@ Stage: sdd:wave-1
 Total tasks: 7
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
-Plan-document-reviewer verdict: PASS (2026-08-31, round 3)
+Plan-document-reviewer verdict: PASS (2026-08-31, round 3; T3-batch amendment PASS)
 
 ## Task-flow diagram
 
@@ -206,7 +206,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Verdict question**: Do `packet` and `apply-result` together refuse everything not bound to the reviewed bytes — a member commit touching undeclared files at packet time, and at apply time a drifted member sha, a foreign receipt, a missing receipt, or a result file whose packet identity is absent or belongs to another packet — with no ledger write and no receipt flip on refusal, each pinned by a RED test that reproduces the audit's attack?
 - **Review lane**: full
 - **Aggregate verification**: inert description — run the batch CLI test module and confirm the five new refusal tests plus the pre-existing finalize, reopen and recovery tests pass, then re-run the audit's F1, F2 and F5 reproduction steps against the fixed CLI and observe non-zero exits.
-- **Boundary**: capability: batch-review apply-result binding; exclusions: none; consumable: yes
+- **Boundary**: capability: batch-review packet+apply-result binding; exclusions: none; consumable: yes
 
 ## Notes
 
