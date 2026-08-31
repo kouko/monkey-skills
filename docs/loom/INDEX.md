@@ -1,5 +1,11 @@
 # Living-spec index
 
+## docs-review-baseline
+
+### REQ-99
+
+- test_req_99_historical_case_admission
+
 ## independent-advisor
 
 ### REQ-1
@@ -483,4 +489,3 @@
 - REQ-65
 - REQ-66
 - REQ-67
-- REQ-99

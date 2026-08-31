@@ -1,6 +1,7 @@
 """Immutable JSON record primitives for the docs-review baseline."""
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
 import hashlib
 import json
@@ -209,6 +210,46 @@ def read_record(store_root: Path, record_id: str) -> PublishedRecord:
     finally:
         os.close(records_fd)
     return _published(record_id, path, payload)
+
+
+def admit_historical_case(
+    store_root: Path,
+    case_id: str,
+    *,
+    snapshot_bytes: bytes | None,
+    source_locator: str,
+    evidence_locators: list[str],
+) -> PublishedRecord:
+    """Publish an inspectable historical case without reading its locators.
+
+    ``snapshot_bytes`` is the caller's explicit trusted snapshot input.  The
+    locators are retained as provenance only and are never treated as paths.
+    """
+    if not isinstance(source_locator, str) or not source_locator:
+        raise ValueError("source_locator must be a non-empty string")
+    if not isinstance(evidence_locators, list) or not evidence_locators:
+        raise ValueError("evidence_locators must be a non-empty list")
+    if any(not isinstance(locator, str) or not locator for locator in evidence_locators):
+        raise ValueError("evidence_locators must contain non-empty strings")
+    record: dict[str, object] = {
+        "case_id": case_id,
+        "evidence_locators": evidence_locators,
+        "kind": "historical_case",
+        "schema_version": 1,
+        "source_locator": source_locator,
+    }
+    if snapshot_bytes is None:
+        record["missing_replay_evidence"] = ["snapshot_bytes"]
+        record["status"] = "unscoreable"
+    elif isinstance(snapshot_bytes, bytes):
+        record["snapshot"] = {
+            "bytes_base64": base64.b64encode(snapshot_bytes).decode("ascii"),
+            "digest": hashlib.sha256(snapshot_bytes).hexdigest(),
+        }
+        record["status"] = "candidate"
+    else:
+        raise ValueError("snapshot_bytes must be bytes or None")
+    return publish_record(store_root, case_id, record)
 
 
 def append_revision(

@@ -10,12 +10,60 @@ import pytest
 import docs_review_baseline_store as store
 from docs_review_baseline_store import (
     RecordConflictError,
+    admit_historical_case,
     append_revision,
     canonical_json_bytes,
     publish_record,
     read_record,
     record_digest,
 )
+
+
+def test_req_99_historical_case_admission(tmp_path) -> None:
+    # @req: REQ-99
+    """Only explicit snapshot bytes can admit a scoreable replay candidate."""
+    snapshot = b"# Historical draft\n\nThe original document bytes.\n"
+    candidate = admit_historical_case(
+        tmp_path,
+        "case-2026-08-27",
+        snapshot_bytes=snapshot,
+        source_locator="git:abc123:docs/example.md",
+        evidence_locators=["review:2026-08-27#finding-4"],
+    )
+
+    assert candidate.record == {
+        "case_id": "case-2026-08-27",
+        "evidence_locators": ["review:2026-08-27#finding-4"],
+        "kind": "historical_case",
+        "schema_version": 1,
+        "snapshot": {
+            "bytes_base64": "IyBIaXN0b3JpY2FsIGRyYWZ0CgpUaGUgb3JpZ2luYWwgZG9jdW1lbnQgYnl0ZXMuCg==",
+            "digest": "2c30de42ffe3d2b9ecd4b8d0e87c2e88f7b837fd0f5429365b2e5aff5a09b29d",
+        },
+        "source_locator": "git:abc123:docs/example.md",
+        "status": "candidate",
+    }
+    assert candidate.digest == record_digest(candidate.record)
+    assert read_record(tmp_path, candidate.record_id) == candidate
+
+    unscoreable = admit_historical_case(
+        tmp_path,
+        "case-narrative-only",
+        snapshot_bytes=None,
+        source_locator="issue:2026-08-27-incident",
+        evidence_locators=["issue:2026-08-27-incident#description"],
+    )
+
+    assert unscoreable.record == {
+        "case_id": "case-narrative-only",
+        "evidence_locators": ["issue:2026-08-27-incident#description"],
+        "kind": "historical_case",
+        "missing_replay_evidence": ["snapshot_bytes"],
+        "schema_version": 1,
+        "source_locator": "issue:2026-08-27-incident",
+        "status": "unscoreable",
+    }
+    assert "snapshot" not in unscoreable.record
 
 
 def test_canonical_record_publish_is_atomic_and_content_addressed(tmp_path) -> None:
