@@ -7,7 +7,7 @@ Goal: Every reviewer fan-out leaves a harness-written record, the replay
     say why, and the packet-identity refusal names its cause — serves
     PURPOSE: a cost claim about review cannot ship unverified, and a
     silent conservative default must pay for itself in one sentence
-Stage: sdd:wave-1
+Stage: review:round-1
 Total tasks: 12
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
@@ -308,7 +308,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Brief item covered**: none — release administration (version bump + fingerprint refresh) delivers no brief outcome
 - **Review disposition**: individual
 - **Not batched because**: release administration — version bump plus dogfood fingerprint, reviewed individually; it is the dependency sink of every chain (1, 6, 9, 10, 12), so its proposed pairs with Tasks 9 and 10 exist only because it closes the branch, not because they share a verdict question
-- **Status**: pending
+- **Status**: done(3bcc140bbfd3e0f5016492c241bab061025dcda8)
 - **Gloss**: 版本與指紋收尾，plugin update 拿得到新機制。
 
 ## Task 12 — Pilot：用本分支自己的派工紀錄跑 observe，並對本 plan 跑 propose
