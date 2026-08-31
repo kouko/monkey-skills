@@ -151,6 +151,42 @@ and uses the existing verification recovery path. An ineligible boundary or
 unassignable finding selects individual fallback; it is not permission to guess
 a smaller group.
 
+### Result file for `apply-result`
+
+`batch_review_cli.py apply-result --result-file <json>` reads one JSON object
+the orchestrator assembles from the reviewer arms' terminal results. No script
+emits it (`task_batch_replay.py` consumes comparison files; it never writes a
+result file). Its keys are exactly what `_cmd_apply_result` reads:
+
+- top level: `{arm_bindings, terminal_results}` — no other key.
+- each `arm_bindings` entry: `{packet_identity, arm, dispatch_identity,
+  evidence_identity}`.
+- each `terminal_results` entry: `{packet_identity, arm, dispatch_identity,
+  dispatch_evidence_identity, result_identity, evidence_identity, terminal,
+  verdict, findings}`.
+- each `findings` entry: `{finding_id, packet_identity, owners, blocking,
+  ground, ground_ref, location, severity, reason}`.
+
+`packet_identity` is required on every binding, result and finding, and must
+equal the identity the `packet` subcommand emitted for this Batch. A missing
+or mismatched value refuses the whole file before any finding is interpreted;
+a result given for another packet means re-send the dispatch.
+
+A finding's `ground_ref` must equal the referent its `ground` names
+**verbatim**: for `owned_requirement`, one string of the owner's
+`owned_requirements` exactly as the plan ledger states it; for
+`stated_acceptance`, one `acceptance` entry; for `direct_regression` or
+`safety_defect`, one `declared_files` path. A shorthand (`R3c` where the
+ledger carries the full requirement string) does not match, so the finding is
+`unassignable_finding` and the reducer selects `individual_fallback` — the
+Batch's saving is lost exactly when a defect was found.
+
+The CLI's seal binds bytes and identities, not reviewer authenticity. A
+hand-written PASS whose identities match the right packet is
+indistinguishable from a real reviewer's result; the orchestrator's dispatch
+discipline (one fan-out per Batch, results copied from the reviewers'
+returns) owns that property, and the CLI cannot check it.
+
 ## Orchestrator command hygiene
 
 Read when the orchestrator edits after review, runs commands, or handles

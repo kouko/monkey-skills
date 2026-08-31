@@ -225,8 +225,12 @@ of hand-assembling `review_batch.py` library calls; its call contract is
 `packet --plan <p> --repo-root <r> --verification-receipt <resolver json>`,
 `record-dispatch --packet-file <json> --out <json>`, and `apply-result --plan
 <p> --repo-root <r> --verification-receipt <json> --result-file <json>
---receipt <this-batch receipt>` — always pass `--receipt`: it is the
-idempotency record that refuses a re-send and recovers a crash.
+--receipt <this-batch receipt>`. The `--result-file` shape and the verbatim
+`ground_ref` rule are in
+[`references/conditional-operations.md`](references/conditional-operations.md)
+§Batch review and individual fallback. `--receipt` (required by argparse) is
+the idempotency record: a second apply for the same Batch is refused, and a
+crash after the ledger write is recovered from it.
 
 Dispatch one reviewer fan-out for the whole Batch, never one fan-out per
 member. The full lane uses spec-reviewer plus code-quality-reviewer. The prose
