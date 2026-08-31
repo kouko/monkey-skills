@@ -1808,6 +1808,75 @@ def test_da_shaped_bullets_require_exact_numeric_canonical_ids(
     assert code == 0, message
 
 
+def test_objective_da_evidence_must_be_a_resolvable_pointer(
+    tmp_path: Path,
+) -> None:
+    # @req: REQ-90
+    """A satisfied objective criterion points at something a reviewer can
+    open: a repo commit, a PR reference, or an artifact inside the repo.
+    A bare non-empty string is an unauditable claim, not evidence."""
+    map_dir = _make_v3_active_map(tmp_path)
+    map_path = map_dir / "MAP.md"
+    original = map_path.read_text(encoding="utf-8")
+    open_line = "- DA-1: Parser remains stdlib-only | state: open | kind: objective"
+
+    def da_with(evidence: str) -> None:
+        map_path.write_text(
+            original.replace(
+                open_line,
+                "- DA-1: Parser remains stdlib-only | state: satisfied | "
+                f"kind: objective | evidence: {evidence}",
+            ),
+            encoding="utf-8",
+        )
+
+    da_with("looks done")
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "DA-1" in message
+    assert "resolvable" in message.lower()
+
+    da_with("PR #123")
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+    (tmp_path / "docs" / "loom" / "results").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "loom" / "results" / "probe.md").write_text(
+        "probe evidence\n", encoding="utf-8"
+    )
+    da_with("docs/loom/results/probe.md")
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+    da_with("docs/loom/results/missing.md")
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "DA-1" in message
+    assert "resolvable" in message.lower()
+
+    subprocess.run(
+        ["git", "commit", "-q", "--allow-empty", "-m", "evidence anchor"],
+        cwd=tmp_path,
+        check=True,
+    )
+    sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    da_with(sha)
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 0, message
+
+    da_with("0" * 40)
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "DA-1" in message
+    assert "resolvable" in message.lower()
+
+
 def test_v3_monotonic_ids_and_exactly_one_closed_ticket_gist(
     tmp_path: Path,
 ) -> None:
