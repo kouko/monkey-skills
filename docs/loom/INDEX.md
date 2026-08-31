@@ -18,6 +18,10 @@
 
 - test_req_104_observation_and_attribution_are_separate
 
+### REQ-109
+
+- test_req_109_origin_requires_document_revision_evidence
+
 ### REQ-99
 
 - test_req_99_historical_case_admission
@@ -453,7 +457,6 @@
 - REQ-106
 - REQ-107
 - REQ-108
-- REQ-109
 - REQ-110
 - REQ-111
 - REQ-112

@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import base64
+import binascii
 from dataclasses import dataclass
+import difflib
 import hashlib
 import json
 import os
@@ -250,6 +252,193 @@ def admit_historical_case(
     else:
         raise ValueError("snapshot_bytes must be bytes or None")
     return publish_record(store_root, case_id, record)
+
+
+def _snapshot_value(snapshot_bytes: bytes) -> dict[str, str]:
+    if not isinstance(snapshot_bytes, bytes):
+        raise ValueError("snapshot_bytes must be bytes")
+    return {
+        "bytes_base64": base64.b64encode(snapshot_bytes).decode("ascii"),
+        "digest": hashlib.sha256(snapshot_bytes).hexdigest(),
+    }
+
+
+def _snapshot_bytes(record: Mapping[str, object]) -> bytes:
+    snapshot = record.get("snapshot")
+    if not isinstance(snapshot, Mapping):
+        raise ValueError("document revision must retain snapshot bytes")
+    encoded = snapshot.get("bytes_base64")
+    digest = snapshot.get("digest")
+    if not isinstance(encoded, str) or not isinstance(digest, str):
+        raise ValueError("document revision snapshot is malformed")
+    try:
+        payload = base64.b64decode(encoded, validate=True)
+    except (ValueError, binascii.Error) as error:
+        raise ValueError("document revision snapshot is malformed") from error
+    if hashlib.sha256(payload).hexdigest() != digest:
+        raise ValueError("document revision snapshot digest does not match bytes")
+    return payload
+
+
+def _diff_value(parent: bytes, child: bytes) -> dict[str, str]:
+    try:
+        parent_text = parent.decode("utf-8").splitlines(keepends=True)
+        child_text = child.decode("utf-8").splitlines(keepends=True)
+    except UnicodeDecodeError as error:
+        raise ValueError("document revision snapshots must be UTF-8") from error
+    diff_bytes = "".join(
+        difflib.unified_diff(
+            parent_text,
+            child_text,
+            fromfile="parent",
+            tofile="child",
+            lineterm="\n",
+        )
+    ).encode("utf-8")
+    return {
+        "algorithm": "unified-diff-utf8-v1",
+        "bytes_base64": base64.b64encode(diff_bytes).decode("ascii"),
+        "digest": hashlib.sha256(diff_bytes).hexdigest(),
+    }
+
+
+def publish_document_revision(
+    store_root: Path,
+    revision_id: str,
+    *,
+    snapshot_bytes: bytes,
+    event_locator: str,
+    responsible_stage: str,
+    lineage_available: bool = True,
+) -> PublishedRecord:
+    """Freeze an initial document snapshot and its authoring evidence."""
+    if not isinstance(lineage_available, bool):
+        raise ValueError("lineage_available must be a boolean")
+    record: dict[str, object] = {
+        "event_locator": _required_text(event_locator, "event_locator"),
+        "kind": "document_revision",
+        "responsible_stage": _required_text(
+            responsible_stage, "responsible_stage"
+        ),
+        "schema_version": 1,
+        "snapshot": _snapshot_value(snapshot_bytes),
+    }
+    if lineage_available:
+        record["diff"] = _diff_value(b"", snapshot_bytes)
+        record["lineage_status"] = "root"
+    else:
+        record["lineage_status"] = "unavailable"
+    return publish_record(store_root, revision_id, record)
+
+
+def correct_document_revision(
+    store_root: Path,
+    parent_revision_id: str,
+    *,
+    snapshot_bytes: bytes,
+    event_locator: str,
+    responsible_stage: str,
+) -> PublishedRecord:
+    """Freeze a child document snapshot with a reproducible parent diff."""
+    parent = read_record(store_root, parent_revision_id)
+    if parent.record.get("kind") != "document_revision":
+        raise ValueError("document revision parent must be a document revision")
+    parent_snapshot = _snapshot_bytes(parent.record)
+    child: dict[str, object] = {
+        "diff": _diff_value(parent_snapshot, snapshot_bytes),
+        "event_locator": _required_text(event_locator, "event_locator"),
+        "kind": "document_revision",
+        "lineage_status": "child",
+        "parent_revision_id": parent_revision_id,
+        "responsible_stage": _required_text(
+            responsible_stage, "responsible_stage"
+        ),
+        "schema_version": 1,
+        "snapshot": _snapshot_value(snapshot_bytes),
+    }
+    return append_revision(store_root, parent_revision_id, child)
+
+
+def ratify_defect_origin(
+    store_root: Path,
+    revision_id: str,
+    *,
+    observable_revision_id: str,
+    defect_evidence: bytes,
+    evidence_locator: str,
+    claimed_origin: str,
+    ratifier: str,
+) -> PublishedRecord:
+    """Ratify origin only when immutable revision evidence supports it."""
+    if claimed_origin not in {"initial_writing", "fix_introduced", "unknown"}:
+        raise ValueError(f"unsupported claimed_origin: {claimed_origin!r}")
+    if not isinstance(defect_evidence, bytes) or not defect_evidence:
+        raise ValueError("defect_evidence must be non-empty bytes")
+    observable = read_record(store_root, observable_revision_id)
+    if observable.record.get("kind") != "document_revision":
+        raise ValueError("observable revision must be a document revision")
+    child_bytes = _snapshot_bytes(observable.record)
+    if defect_evidence not in child_bytes:
+        raise ValueError("defect_evidence is not observable in the document revision")
+
+    record: dict[str, object] = {
+        "claimed_origin": claimed_origin,
+        "defect_evidence": _snapshot_value(defect_evidence),
+        "evidence_locator": _required_text(evidence_locator, "evidence_locator"),
+        "kind": "defect_origin_attribution",
+        "observable_revision_digest": observable.digest,
+        "observable_revision_id": observable.record_id,
+        "ratifier": _human_ratifier(ratifier),
+        "schema_version": 1,
+    }
+    diff = observable.record.get("diff")
+    parent_revision_id = observable.record.get("parent_revision_id")
+    missing: list[str] = []
+    if not isinstance(parent_revision_id, str):
+        missing.append("parent_revision")
+    if not isinstance(diff, Mapping):
+        missing.append("inspectable_diff")
+
+    supported = claimed_origin == "unknown"
+    parent: PublishedRecord | None = None
+    if not missing and isinstance(parent_revision_id, str):
+        parent = read_record(store_root, parent_revision_id)
+        parent_bytes = _snapshot_bytes(parent.record)
+        expected_diff = _diff_value(parent_bytes, child_bytes)
+        expected_stage = {
+            "fix_introduced": "remediation",
+            "initial_writing": "initial_authoring",
+        }.get(claimed_origin)
+        supported = (
+            expected_stage is not None
+            and observable.record.get("parent_digest") == parent.digest
+            and diff == expected_diff
+            and defect_evidence not in parent_bytes
+            and observable.record.get("responsible_stage") == expected_stage
+        )
+    if supported and claimed_origin != "unknown" and parent is not None:
+        record.update(
+            {
+                "defect_origin": claimed_origin,
+                "diff_digest": diff["digest"],
+                "excluded_from_origin_rates": False,
+                "origin_event_locator": observable.record["event_locator"],
+                "parent_revision_digest": parent.digest,
+                "parent_revision_id": parent.record_id,
+                "responsible_stage": observable.record["responsible_stage"],
+            }
+        )
+        if claimed_origin == "fix_introduced":
+            record["remediation_event_locator"] = observable.record[
+                "event_locator"
+            ]
+    else:
+        record["defect_origin"] = "unknown"
+        record["excluded_from_origin_rates"] = True
+        record["missing_revision_evidence"] = missing or [
+            "origin_not_supported_by_revision_diff"
+        ]
+    return publish_record(store_root, revision_id, record)
 
 
 def _required_text(value: object, field: str) -> str:

@@ -481,6 +481,100 @@ def test_req_104_observation_and_attribution_are_separate(tmp_path) -> None:
         "review-note:second-rater",
     ]
 
+
+def test_req_109_origin_requires_document_revision_evidence(tmp_path) -> None:
+    # @req: REQ-109
+    """Origin uses recoverable before/after bytes, never narrative alone."""
+    parent = store.publish_document_revision(
+        tmp_path,
+        "document-case-1-r1",
+        snapshot_bytes=b"# Rollout\n\nShip to one bounded cohort.\n",
+        event_locator="git:aaa111:docs/strategy.md",
+        responsible_stage="initial_authoring",
+    )
+    parent_bytes = parent.path.read_bytes()
+    child = store.correct_document_revision(
+        tmp_path,
+        parent.record_id,
+        snapshot_bytes=b"# Rollout\n\nShip globally without a rollback trigger.\n",
+        event_locator="review-fix:round-2",
+        responsible_stage="remediation",
+    )
+
+    introduced = store.ratify_defect_origin(
+        tmp_path,
+        "origin-case-1-risk-r1",
+        observable_revision_id=child.record_id,
+        defect_evidence=b"without a rollback trigger",
+        evidence_locator="git:bbb222:docs/strategy.md#rollout",
+        claimed_origin="fix_introduced",
+        ratifier="human:maintainer",
+    )
+
+    assert introduced.record["defect_origin"] == "fix_introduced"
+    assert introduced.record["observable_revision_digest"] == child.digest
+    assert introduced.record["parent_revision_id"] == parent.record_id
+    assert introduced.record["parent_revision_digest"] == parent.digest
+    assert introduced.record["remediation_event_locator"] == "review-fix:round-2"
+    assert introduced.record["responsible_stage"] == "remediation"
+    assert introduced.record["diff_digest"] == child.record["diff"]["digest"]
+    assert introduced.record["excluded_from_origin_rates"] is False
+    assert parent.path.read_bytes() == parent_bytes
+
+    empty = store.publish_document_revision(
+        tmp_path,
+        "document-case-2-empty",
+        snapshot_bytes=b"",
+        event_locator="workspace:new-file",
+        responsible_stage="pre_authoring",
+    )
+    first_draft = store.correct_document_revision(
+        tmp_path,
+        empty.record_id,
+        snapshot_bytes=b"# Strategy\n\nLaunch with no rollback trigger.\n",
+        event_locator="git:ccc333:docs/strategy.md",
+        responsible_stage="initial_authoring",
+    )
+    initial = store.ratify_defect_origin(
+        tmp_path,
+        "origin-case-2-risk-r1",
+        observable_revision_id=first_draft.record_id,
+        defect_evidence=b"no rollback trigger",
+        evidence_locator="git:ccc333:docs/strategy.md#strategy",
+        claimed_origin="initial_writing",
+        ratifier="human:maintainer",
+    )
+    assert initial.record["defect_origin"] == "initial_writing"
+    assert initial.record["parent_revision_id"] == empty.record_id
+    assert initial.record["responsible_stage"] == "initial_authoring"
+    assert initial.record["excluded_from_origin_rates"] is False
+
+    final_only = store.publish_document_revision(
+        tmp_path,
+        "document-final-only",
+        snapshot_bytes=b"# Final\n\nAn observable consequential defect.\n",
+        event_locator="archive:final-only",
+        responsible_stage="unknown",
+        lineage_available=False,
+    )
+    unknown = store.ratify_defect_origin(
+        tmp_path,
+        "origin-final-only-r1",
+        observable_revision_id=final_only.record_id,
+        defect_evidence=b"consequential defect",
+        evidence_locator="archive:final-only#defect",
+        claimed_origin="initial_writing",
+        ratifier="human:maintainer",
+    )
+
+    assert unknown.record["defect_origin"] == "unknown"
+    assert unknown.record["missing_revision_evidence"] == [
+        "parent_revision",
+        "inspectable_diff",
+    ]
+    assert unknown.record["excluded_from_origin_rates"] is True
+    assert "parent_revision_id" not in unknown.record
+
 def test_canonical_record_publish_is_atomic_and_content_addressed(tmp_path) -> None:
     """A record ID chooses one canonical payload without rewriting history."""
     first = {"kind": "oracle", "labels": ["a"], "version": 1}
