@@ -200,7 +200,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: true
 - **Brief item covered**: BI-3
 - **Review disposition**: batch(proposer)
-- **Status**: implemented(441c9ecfc429fbb6a088ba965560738234a67e59)
+- **Status**: done(441c9ecfc429fbb6a088ba965560738234a67e59)
 - **Gloss**: 腳本先提議怎麼分批，規劃者從提議出發而不是從全拆出發。
 
 ## Task 8 — propose_review_batches.py --check：沒合批與超大批次都要一行理由
@@ -225,7 +225,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: "its `--check` mode exits non-zero when (a) a proposed pair is not in the same declared batch and the later task lacks a `- **Not batched because**: <reason>` line, or (b) a declared batch has more than 4 members and lacks an `- **Oversized because**: <reason>` line" (BI-3 clause)
 - **Review disposition**: batch(proposer)
-- **Status**: implemented(7964ade9b8091b45cb5e8f9cf29e1a759c990c0b)
+- **Status**: done(7964ade9b8091b45cb5e8f9cf29e1a759c990c0b)
 - **Gloss**: 保守不再免費：不合批要說為什麼，合太大也要說為什麼。
 
 ## Task 9 — plan-format 兩個欄位、writing-plans 閘門行、reviewer Check 23
@@ -251,7 +251,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: "writing-plans' gate list runs `--check` before review; plan-format documents both fields and the cap" (BI-3 clause)
 - **Review disposition**: batch(proposer)
-- **Status**: implemented(c7d7553220e158b29f96766d9d8b2e62016e9b23)
+- **Status**: done(c7d7553220e158b29f96766d9d8b2e62016e9b23)
 - **Gloss**: 規劃者和 reviewer 讀的契約裡有這兩個欄位和這一道閘。
 
 ## Task 10 — finishing 收尾卡片印 observed reviewer fan-outs 並蓋進 plan Notes
