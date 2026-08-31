@@ -199,7 +199,7 @@ def propose(text: str) -> tuple[dict[str, object], list[str]]:
                 "lane": tasks[members[0]].review_lane,
                 "reason": _reason(members, modules),
             })
-    return {"batches": batches, "singletons": singletons}, []
+    return {"batches": batches, "singletons": sorted(singletons)}, []
 
 
 def _declared_batches(oracle, text: str) -> tuple[dict[str, object], dict[str, str], list[str]]:

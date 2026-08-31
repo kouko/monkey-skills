@@ -661,6 +661,11 @@ def test_module_docstring_scopes_exit_zero_to_the_cost_claim() -> None:
     doc = replay.__doc__
     assert "without a safety regression" not in doc
     assert "does not yet collect" in doc
+    # compare gates review_dispatches only; rounds and reopens are reported,
+    # never compared, so exit 0 may not claim they fell.
+    assert "rounds and reopens fell" not in doc
+    assert "review dispatches fell" in doc
+    assert "never compared" in doc
 
 
 def _v1_results(corpus: dict) -> tuple[dict, dict]:

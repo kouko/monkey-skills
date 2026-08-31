@@ -135,6 +135,24 @@ def test_same_module_component_of_five_splits_four_plus_one_in_dependency_order(
     assert proposal["batches"][0]["lane"] == "full"
 
 
+def test_singletons_are_sorted_when_a_tail_chunk_precedes_a_standalone_task(tmp_path):
+    # A five-task chain (1,2,4,5,6) yields a tail singleton 6 while the
+    # standalone Task 3 is its own component; consumers get one sorted list.
+    proposal = _propose(
+        _plan(
+            _task(1, dependencies="Task 2 completes first"),
+            _task(2, dependencies="Task 4 completes first"),
+            _task(3, module="pkg/other.py"),
+            _task(4),
+            _task(5, dependencies="Task 4 completes first"),
+            _task(6, dependencies="Task 5 completes first"),
+        ),
+        tmp_path,
+    )
+    assert proposal["singletons"] == sorted(proposal["singletons"])
+    assert sorted(proposal["singletons"]) == [3, 6]
+
+
 def test_mechanical_tasks_are_excluded_from_batches_and_singletons(tmp_path):
     proposal = _propose(
         _plan(

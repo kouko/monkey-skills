@@ -6,9 +6,9 @@ discovers sessions, plans, repositories, or other paths.  The corpus contains
 identifiers and measurement oracles, not source content; both result files
 must bind to its exact canonical digest before any comparison is made.
 
-Exit 0 proves the cost claim (dispatches, rounds and reopens fell); the safety
-checks run only over evidence ``observe`` does not yet collect, so they cannot
-fire on the sanctioned path.  Exit 1 is a valid FAIL comparison, and exit 2
+Exit 0 proves the cost claim (review dispatches fell; rounds and reopens are
+reported, never compared); the safety checks run only over evidence
+``observe`` does not yet collect, so they cannot fire on the sanctioned path.  Exit 1 is a valid FAIL comparison, and exit 2
 means an input could not be read or validate.
 
 ``observe`` derives a ``task-batch-replay-result/v2`` file from the dispatch
