@@ -5,6 +5,47 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.108.0] — 2026-08-31 — Batch review measurement + batching nudge
+
+Replaces the hand-typed reviewer fan-out counts of 0.106.0's pilot with
+harness-observed ones, and makes the plan author justify every batch they
+did not form. The batching knob itself (module rule, cap 4) was chosen on
+the read-only simulation over 7 repos' historical plans recorded in
+`docs/loom/dogfood/2026-08-31-batch-knob-simulation.md`.
+
+### Added
+
+- `review_context.py` appends one `review-dispatch-log/v1` line per built
+  packet to `<git-dir>/loom/review-dispatches.jsonl` — the dispatch is
+  recorded the moment it happens, with nothing for a human to fill in.
+- `task_batch_replay.py observe` derives a `task-batch-replay-result/v2`
+  file (`provenance: observed`) from that log plus the dispatch receipts;
+  `--summary` prints the fan-out / rounds / batch-reopen counts.
+- `propose_review_batches.py`: clusters a plan's tasks by the module rule
+  at cap 4 in dependency order and proposes batches; `--check` refuses a
+  plan that lacks a `Not batched because` line for every proposed pair it
+  left unbatched, or an `Oversized because` line for every batch above cap.
+- `batch_review_cli.py apply-result` records `applied_action` in the
+  dispatch receipt (on the crash-recovery flip too), so batch reopens can
+  be counted from receipts alone.
+- `finishing-a-development-branch` close-out card carries an
+  `Observed fan-outs` row relayed from `observe` and stamped into the
+  plan's `## Notes`.
+- Memory entry `a-non-ascii-path-crosses-the-process-boundary-twice` — the
+  lesson #769 owed.
+
+### Changed
+
+- `task_batch_replay.py compare` refuses a v1 result file or a v2 file
+  whose provenance is not `observed`: a hand-typed number can no longer be
+  compared.
+- `batch_review_cli.py apply-result` identity refusal names whether a
+  member commit changed or the plan's other text drifted, so the message
+  says what to restore.
+- `plan-format.md` gains the `Not batched because` / `Oversized because`
+  fields; `writing-plans` SKILL.md gates on `propose_review_batches.py
+  --check`; the plan-document reviewer prompt adds Check 23 for them.
+
 ## [0.107.1] — 2026-08-31 — Hotfix: git argv as UTF-8 bytes under a C locale
 
 ### Fixed
