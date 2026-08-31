@@ -54,7 +54,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Implement historical case admission with immutable bytes, source and evidence locators, digest verification, and explicit unscoreable reasons.
 - **Module**: `loom-code/scripts/docs_review_baseline_store.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md`
 - **Acceptance**:
@@ -66,7 +66,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-99
 - **Review disposition**: batch(store-records)
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 只有真的找得回當時文件的案例，才能成為考題。
 
 ## Task 3 — 凍結人工 oracle revision
