@@ -207,7 +207,7 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
     )
     snapshot_digest = case.record["snapshot"]["digest"]
     roles = _campaign_roles()
-    authority = store.publish_authority_assignment(
+    authority, capability = store.bootstrap_campaign_authority(
         tmp_path,
         "authority-corpus-r1",
         campaign_policy_revision_id="policy-r1",
@@ -230,15 +230,14 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
         ],
         negative_control_intent="Do not reward generic requests for detail.",
         ratifier="maintainer:oracle-ratifier",
-        authority_revision_id=authority.record_id,
-        trusted_authority_revision_digest=authority.digest,
+        capability=capability,
     )
     bindings = [("case-1", snapshot_digest, oracle.record_id)]
 
     manifest = store.freeze_corpus_manifest(
         tmp_path,
         bindings,
-        trusted_authority_revision_digests=[authority.digest],
+        capability=capability,
     )
     frozen_bytes = manifest.path.read_bytes()
 
@@ -259,31 +258,31 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
     assert store.freeze_corpus_manifest(
         tmp_path,
         bindings,
-        trusted_authority_revision_digests=[authority.digest],
+        capability=capability,
     ) == manifest
     assert manifest.path.read_bytes() == frozen_bytes
 
     with pytest.raises(ValueError, match="non-empty"):
         store.freeze_corpus_manifest(
-            tmp_path, [], trusted_authority_revision_digests=[authority.digest]
+            tmp_path, [], capability=capability
         )
     with pytest.raises(ValueError, match="latest"):
         store.freeze_corpus_manifest(
             tmp_path,
             [("case-1", snapshot_digest, "latest")],
-            trusted_authority_revision_digests=[authority.digest],
+            capability=capability,
         )
     with pytest.raises(ValueError, match="ratified"):
         store.freeze_corpus_manifest(
             tmp_path,
             [("case-1", snapshot_digest, case.record_id)],
-            trusted_authority_revision_digests=[authority.digest],
+            capability=capability,
         )
     with pytest.raises(ValueError, match="snapshot digest"):
         store.freeze_corpus_manifest(
             tmp_path,
             [("case-1", "b" * 64, oracle.record_id)],
-            trusted_authority_revision_digests=[authority.digest],
+            capability=capability,
         )
 
     unbound = ratify_oracle(
@@ -299,7 +298,7 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
         store.freeze_corpus_manifest(
             tmp_path,
             [("case-1", snapshot_digest, unbound.record_id)],
-            trusted_authority_revision_digests=[authority.digest],
+            capability=capability,
         )
 
     ineligible_record = dict(oracle.record)
@@ -311,7 +310,7 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
         store.freeze_corpus_manifest(
             tmp_path,
             [("case-1", snapshot_digest, ineligible.record_id)],
-            trusted_authority_revision_digests=[authority.digest],
+            capability=capability,
         )
 
     forged_record = dict(oracle.record)
@@ -336,7 +335,7 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
         store.freeze_corpus_manifest(
             tmp_path,
             [("case-1", snapshot_digest, forged.record_id)],
-            trusted_authority_revision_digests=[authority.digest],
+            capability=capability,
         )
 
 
@@ -710,7 +709,7 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
     # @req: REQ-112
     """Official human judgments bind authority and fail closed on conflicts."""
     roles = _campaign_roles()
-    authority = store.publish_authority_assignment(
+    authority, capability = store.bootstrap_campaign_authority(
         tmp_path,
         "authority-r1",
         campaign_policy_revision_id="policy-r1",
@@ -733,8 +732,7 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
         ],
         negative_control_intent="Do not reward generic detail requests.",
         ratifier="maintainer:oracle-ratifier",
-        authority_revision_id=authority.record_id,
-        trusted_authority_revision_digest=authority.digest,
+        capability=capability,
     )
 
     assert oracle.record["authority_revision_id"] == authority.record_id
@@ -750,7 +748,7 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
     manifest = store.freeze_corpus_manifest(
         tmp_path,
         [("case-governed", "a" * 64, oracle.record_id)],
-        trusted_authority_revision_digests=[authority.digest],
+        capability=capability,
     )
     assert manifest.record["bindings"] == [
         {
@@ -776,7 +774,7 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
         store.freeze_corpus_manifest(
             tmp_path,
             [("case-governed", "a" * 64, legacy_oracle.record_id)],
-            trusted_authority_revision_digests=[authority.digest],
+            capability=capability,
         )
 
     denied = store.ratify_governed_oracle(
@@ -787,8 +785,7 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
         findings=oracle.record["findings"],
         negative_control_intent="Do not reward generic detail requests.",
         ratifier="maintainer:intruder",
-        authority_revision_id=authority.record_id,
-        trusted_authority_revision_digest=authority.digest,
+        capability=capability,
     )
     assert denied.record["kind"] == "governance_audit_event"
     assert denied.record["outcome"] == "refused_unauthorized"
@@ -858,8 +855,9 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
 
     conflicted_roles = dict(roles)
     conflicted_roles["oracle_ratifier"] = conflicted_roles["document_author"]
-    conflicted = store.publish_authority_assignment(
-        tmp_path,
+    conflicted_store = tmp_path / "conflicted"
+    conflicted, conflicted_capability = store.bootstrap_campaign_authority(
+        conflicted_store,
         "authority-conflicted-r1",
         campaign_policy_revision_id="policy-r1",
         role_identities=conflicted_roles,
@@ -870,15 +868,14 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
         allowed_self_ratification=[],
     )
     disputed = store.ratify_governed_oracle(
-        tmp_path,
+        conflicted_store,
         "oracle-conflicted-r1",
         case_id="case-governed",
         snapshot_digest="a" * 64,
         findings=oracle.record["findings"],
         negative_control_intent="Do not reward generic detail requests.",
         ratifier=conflicted_roles["oracle_ratifier"],
-        authority_revision_id=conflicted.record_id,
-        trusted_authority_revision_digest=conflicted.digest,
+        capability=conflicted_capability,
     )
     assert disputed.record["status"] == "disputed"
     assert disputed.record["excluded_from_affected_denominators"] is True
@@ -886,9 +883,9 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
     assert disputed.record["independence_evidence"]["status"] == "insufficient"
     with pytest.raises(ValueError, match="oracle revision is not ratified"):
         store.freeze_corpus_manifest(
-            tmp_path,
+            conflicted_store,
             [("case-governed", "a" * 64, disputed.record_id)],
-            trusted_authority_revision_digests=[conflicted.digest],
+            capability=conflicted_capability,
         )
 
     forged_roles = dict(roles)
@@ -908,7 +905,7 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
     records_before_refusal = sorted(
         path.name for path in (tmp_path / "records").iterdir()
     )
-    with pytest.raises(ValueError, match="trusted authority revision digest"):
+    with pytest.raises((TypeError, ValueError), match="capability"):
         store.ratify_governed_oracle(
             tmp_path,
             "oracle-self-authorized-r1",
@@ -917,17 +914,16 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
             findings=oracle.record["findings"],
             negative_control_intent="Do not reward generic detail requests.",
             ratifier="maintainer:self-authorizer",
-            authority_revision_id=forged_authority.record_id,
-            trusted_authority_revision_digest=authority.digest,
+            capability=forged_authority.digest,
         )
     assert sorted(path.name for path in (tmp_path / "records").iterdir()) == (
         records_before_refusal
     )
-    with pytest.raises(ValueError, match="trusted authority revision digest"):
+    with pytest.raises((TypeError, ValueError), match="capability"):
         store.freeze_corpus_manifest(
             tmp_path,
             [("case-governed", "a" * 64, oracle.record_id)],
-            trusted_authority_revision_digests=[forged_authority.digest],
+            capability=forged_authority.digest,
         )
 
     revised = store.revise_authority_assignment(
@@ -942,6 +938,122 @@ def test_req_112_authority_and_independence_are_explicit(tmp_path) -> None:
     assert revised.record["parent_digest"] == authority.digest
     assert revised.record["revision_reason"]
     assert read_record(tmp_path, authority.record_id) == authority
+
+
+def test_req_112_bootstrap_capability_and_single_purpose_receipt(tmp_path) -> None:
+    # @req: REQ-112
+    """Only the campaign trust root can authorize a bound mutation."""
+    roles = _campaign_roles()
+    action_authorities = _campaign_action_authorities(roles)
+    authority, capability = store.bootstrap_campaign_authority(
+        tmp_path,
+        "authority-bootstrap-r1",
+        campaign_policy_revision_id="policy-r1",
+        role_identities=roles,
+        action_authorities=action_authorities,
+        allowed_self_ratification=[],
+    )
+
+    assert authority.record["trust_root_digest"] == capability.trust_root_digest
+    assert capability.authority_revision_digest == authority.digest
+    assert (tmp_path / "campaign-trust-root.json").is_file()
+    assert not (tmp_path / "records" / "campaign-trust-root.json").exists()
+
+    receipt = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="nominate_historical_case",
+        actor=roles["case_nominator"],
+        target="case-bootstrap",
+    )
+    assert receipt.trust_root_digest == capability.trust_root_digest
+    assert receipt.authority_revision_digest == authority.digest
+    audit = read_record(tmp_path, receipt.audit_record_id)
+    assert audit.record["outcome"] == "authorized"
+    assert audit.record["actor"] == roles["case_nominator"]
+    assert audit.record["target"] == "case-bootstrap"
+
+    store.consume_authorization_receipt(
+        tmp_path,
+        receipt,
+        action="nominate_historical_case",
+        actor=roles["case_nominator"],
+        target="case-bootstrap",
+    )
+    with pytest.raises(ValueError, match="consumed|stale"):
+        store.consume_authorization_receipt(
+            tmp_path,
+            receipt,
+            action="nominate_historical_case",
+            actor=roles["case_nominator"],
+            target="case-bootstrap",
+        )
+
+    fresh = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="nominate_historical_case",
+        actor=roles["case_nominator"],
+        target="case-other",
+    )
+    with pytest.raises(ValueError, match="target"):
+        store.consume_authorization_receipt(
+            tmp_path,
+            fresh,
+            action="nominate_historical_case",
+            actor=roles["case_nominator"],
+            target="case-bootstrap",
+        )
+    with pytest.raises(ValueError, match="action"):
+        store.consume_authorization_receipt(
+            tmp_path,
+            fresh,
+            action="dispatch_replay_run",
+            actor=roles["case_nominator"],
+            target="case-other",
+        )
+
+    forged_authority = store.publish_authority_assignment(
+        tmp_path,
+        "authority-self-published-r1",
+        campaign_policy_revision_id="policy-forged-r1",
+        role_identities=roles,
+        action_authorities=action_authorities,
+        allowed_self_ratification=[],
+    )
+    with pytest.raises((TypeError, ValueError), match="capability"):
+        store.authorize_governed_action_with_capability(
+            tmp_path,
+            capability=forged_authority.digest,
+            action="nominate_historical_case",
+            actor=roles["case_nominator"],
+            target="case-forged",
+        )
+    with pytest.raises((TypeError, ValueError), match="receipt"):
+        store.consume_authorization_receipt(
+            tmp_path,
+            object(),
+            action="nominate_historical_case",
+            actor=roles["case_nominator"],
+            target="case-forged",
+        )
+    with pytest.raises(PermissionError, match="not authorized"):
+        store.authorize_governed_action_with_capability(
+            tmp_path,
+            capability=capability,
+            action="nominate_historical_case",
+            actor="maintainer:intruder",
+            target="case-denied",
+        )
+    denied = [
+        path
+        for path in (tmp_path / "records").glob("audit-*.json")
+        if b'"target":"case-denied"' in path.read_bytes()
+    ]
+    assert len(denied) == 1
+    assert b'"outcome":"refused_unauthorized"' in denied[0].read_bytes()
+    with pytest.raises(ValueError, match="does not exist"):
+        read_record(tmp_path, "case-denied")
 
 def test_canonical_record_publish_is_atomic_and_content_addressed(tmp_path) -> None:
     """A record ID chooses one canonical payload without rewriting history."""

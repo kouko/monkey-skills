@@ -16,6 +16,9 @@ from typing import Any, Mapping
 
 
 _RECORD_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+_CAPABILITY_SEAL = object()
+_RECEIPT_SEAL = object()
+_CONSUMED_RECEIPTS: set[str] = set()
 
 
 class RecordConflictError(ValueError):
@@ -30,6 +33,33 @@ class PublishedRecord:
     digest: str
     record: dict[str, Any]
     path: Path
+
+
+@dataclass(frozen=True, init=False)
+class CampaignCapability:
+    """An in-process proof that authority came from campaign bootstrap."""
+
+    store_identity: str
+    trust_root_digest: str
+    authority_revision_id: str
+    authority_revision_digest: str
+    _seal: object
+
+
+@dataclass(frozen=True, init=False)
+class AuthorizationReceipt:
+    """A sealed, single-use authorization for one exact mutation."""
+
+    store_identity: str
+    trust_root_digest: str
+    authority_revision_id: str
+    authority_revision_digest: str
+    actor: str
+    action: str
+    target: str
+    audit_record_id: str
+    nonce: str
+    _seal: object
 
 
 def canonical_json_bytes(record: object) -> bytes:
@@ -452,17 +482,15 @@ def ratify_governed_defect_origin(
     evidence_locator: str,
     claimed_origin: str,
     ratifier: str,
-    authority_revision_id: str,
-    trusted_authority_revision_digest: str,
+    capability: CampaignCapability,
 ) -> PublishedRecord:
     """Bind an origin judgment to frozen authority before it becomes official."""
     governance = _ratification_governance(
         store_root,
-        authority_revision_id=authority_revision_id,
+        capability=capability,
         action="ratify_defect_origin",
         actor=ratifier,
         target=revision_id,
-        trusted_authority_revision_digest=trusted_authority_revision_digest,
     )
     if isinstance(governance, PublishedRecord):
         return governance
@@ -528,6 +556,8 @@ GOVERNED_ACTION_ROLES = {
     "publish_metric_report": "report_publisher",
 }
 
+_TRUST_ROOT_NAME = "campaign-trust-root.json"
+
 _CONFLICT_ROLES = {
     "document_author",
     "oracle_author",
@@ -586,6 +616,152 @@ def _authority_fields(
         "role_identities": roles,
         "schema_version": 1,
     }
+
+
+def _store_identity(store_root: Path) -> str:
+    return os.path.abspath(os.fspath(Path(store_root)))
+
+
+def _publish_campaign_trust_root(
+    store_root: Path, record: Mapping[str, object]
+) -> PublishedRecord:
+    """Create/load the one immutable root outside the generic record namespace."""
+    store_root = Path(store_root)
+    payload = canonical_json_bytes(record)
+    root_fd = _open_directory_path(store_root, create=True)
+    temporary_name = f".campaign-trust-root.{uuid.uuid4().hex}.tmp"
+    temporary_fd: int | None = None
+    temporary_created = False
+    path = store_root / _TRUST_ROOT_NAME
+    try:
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
+        temporary_fd = os.open(temporary_name, flags, 0o600, dir_fd=root_fd)
+        temporary_created = True
+        _write_all(temporary_fd, payload)
+        os.fsync(temporary_fd)
+        os.close(temporary_fd)
+        temporary_fd = None
+        try:
+            os.link(
+                temporary_name,
+                _TRUST_ROOT_NAME,
+                src_dir_fd=root_fd,
+                dst_dir_fd=root_fd,
+                follow_symlinks=False,
+            )
+        except FileExistsError:
+            existing = _read_regular_file(root_fd, _TRUST_ROOT_NAME, path)
+            if existing != payload:
+                raise RecordConflictError(
+                    "campaign trust root already has different immutable bytes"
+                )
+        else:
+            os.fsync(root_fd)
+    finally:
+        if temporary_fd is not None:
+            os.close(temporary_fd)
+        if temporary_created:
+            try:
+                os.unlink(temporary_name, dir_fd=root_fd)
+            except FileNotFoundError:
+                pass
+            else:
+                os.fsync(root_fd)
+        os.close(root_fd)
+    return _published("campaign-trust-root", path, payload)
+
+
+def _read_campaign_trust_root(store_root: Path) -> PublishedRecord:
+    store_root = Path(store_root)
+    root_fd = _open_directory_path(store_root, create=False)
+    path = store_root / _TRUST_ROOT_NAME
+    try:
+        try:
+            payload = _read_regular_file(root_fd, _TRUST_ROOT_NAME, path)
+        except FileNotFoundError as error:
+            raise ValueError("campaign trust root does not exist") from error
+    finally:
+        os.close(root_fd)
+    return _published("campaign-trust-root", path, payload)
+
+
+def _make_capability(
+    store_root: Path, trust_root: PublishedRecord, authority: PublishedRecord
+) -> CampaignCapability:
+    capability = object.__new__(CampaignCapability)
+    for field, value in {
+        "store_identity": _store_identity(store_root),
+        "trust_root_digest": trust_root.digest,
+        "authority_revision_id": authority.record_id,
+        "authority_revision_digest": authority.digest,
+        "_seal": _CAPABILITY_SEAL,
+    }.items():
+        object.__setattr__(capability, field, value)
+    return capability
+
+
+def bootstrap_campaign_authority(
+    store_root: Path,
+    revision_id: str,
+    *,
+    campaign_policy_revision_id: str,
+    role_identities: Mapping[str, str],
+    action_authorities: Mapping[str, list[str]],
+    allowed_self_ratification: list[str],
+) -> tuple[PublishedRecord, CampaignCapability]:
+    """Create/load the unique trust root and return its sealed live authority."""
+    authority_fields = _authority_fields(
+        campaign_policy_revision_id=campaign_policy_revision_id,
+        role_identities=role_identities,
+        action_authorities=action_authorities,
+        allowed_self_ratification=allowed_self_ratification,
+    )
+    trust_root = _publish_campaign_trust_root(
+        Path(store_root),
+        {
+            "authority_fields_digest": record_digest(authority_fields),
+            "authority_revision_id": _required_text(revision_id, "revision_id"),
+            "kind": "campaign_trust_root",
+            "schema_version": 1,
+        },
+    )
+    bound_authority = dict(authority_fields)
+    bound_authority["trust_root_digest"] = trust_root.digest
+    authority = publish_record(Path(store_root), revision_id, bound_authority)
+    return authority, _make_capability(Path(store_root), trust_root, authority)
+
+
+def load_campaign_capability(store_root: Path) -> CampaignCapability:
+    """Load the immutable root and mint a capability only from its binding."""
+    trust_root = _read_campaign_trust_root(Path(store_root))
+    authority_id = _required_text(
+        trust_root.record.get("authority_revision_id"), "authority_revision_id"
+    )
+    authority = read_record(Path(store_root), authority_id)
+    expected_fields = dict(authority.record)
+    root_digest = expected_fields.pop("trust_root_digest", None)
+    if root_digest != trust_root.digest or record_digest(expected_fields) != (
+        trust_root.record.get("authority_fields_digest")
+    ):
+        raise ValueError("campaign authority does not match the trust root")
+    return _make_capability(Path(store_root), trust_root, authority)
+
+
+def _validate_capability(
+    store_root: Path, capability: object
+) -> tuple[CampaignCapability, PublishedRecord]:
+    if not isinstance(capability, CampaignCapability) or capability._seal is not _CAPABILITY_SEAL:
+        raise TypeError("capability must come from campaign bootstrap")
+    if capability.store_identity != _store_identity(store_root):
+        raise ValueError("capability belongs to a different store")
+    loaded = load_campaign_capability(Path(store_root))
+    if (
+        loaded.trust_root_digest != capability.trust_root_digest
+        or loaded.authority_revision_id != capability.authority_revision_id
+        or loaded.authority_revision_digest != capability.authority_revision_digest
+    ):
+        raise ValueError("capability is stale")
+    return capability, read_record(Path(store_root), capability.authority_revision_id)
 
 
 def publish_authority_assignment(
@@ -751,21 +927,139 @@ def authorize_governed_action(
     return publish_record(store_root, f"audit-{record_digest(audit)}", audit)
 
 
-def _ratification_governance(
+def _make_receipt(
+    capability: CampaignCapability,
+    *,
+    actor: str,
+    action: str,
+    target: str,
+    audit_record_id: str,
+) -> AuthorizationReceipt:
+    receipt = object.__new__(AuthorizationReceipt)
+    for field, value in {
+        "store_identity": capability.store_identity,
+        "trust_root_digest": capability.trust_root_digest,
+        "authority_revision_id": capability.authority_revision_id,
+        "authority_revision_digest": capability.authority_revision_digest,
+        "actor": actor,
+        "action": action,
+        "target": target,
+        "audit_record_id": audit_record_id,
+        "nonce": uuid.uuid4().hex,
+        "_seal": _RECEIPT_SEAL,
+    }.items():
+        object.__setattr__(receipt, field, value)
+    return receipt
+
+
+def authorize_governed_action_with_capability(
     store_root: Path,
     *,
-    authority_revision_id: str,
+    capability: CampaignCapability,
     action: str,
     actor: str,
     target: str,
-    trusted_authority_revision_digest: str,
-) -> tuple[PublishedRecord, dict[str, object]] | PublishedRecord:
-    authority, evidence, authorized = _ratification_authority_evidence(
-        store_root,
-        authority_revision_id=authority_revision_id,
+) -> AuthorizationReceipt:
+    """Audit a decision and return a sealed receipt only on authorization."""
+    capability, authority = _validate_capability(Path(store_root), capability)
+    authority, _assignment, actor, authorized = _governed_action_authority(
+        Path(store_root),
+        authority_revision_id=authority.record_id,
         action=action,
         actor=actor,
-        trusted_authority_revision_digest=trusted_authority_revision_digest,
+        trusted_authority_revision_digest=authority.digest,
+    )
+    target = _required_text(target, "target")
+    audit = {
+        "action": action,
+        "actor": actor,
+        "authority_revision_digest": authority.digest,
+        "authority_revision_id": authority.record_id,
+        "campaign_policy_revision_id": authority.record[
+            "campaign_policy_revision_id"
+        ],
+        "kind": "governance_audit_event",
+        "outcome": "authorized" if authorized else "refused_unauthorized",
+        "schema_version": 1,
+        "target": target,
+        "trust_root_digest": capability.trust_root_digest,
+    }
+    audit_record = publish_record(
+        Path(store_root), f"audit-{record_digest(audit)}", audit
+    )
+    if not authorized:
+        raise PermissionError(f"actor is not authorized for {action}")
+    return _make_receipt(
+        capability,
+        actor=actor,
+        action=action,
+        target=target,
+        audit_record_id=audit_record.record_id,
+    )
+
+
+def consume_authorization_receipt(
+    store_root: Path,
+    receipt: AuthorizationReceipt,
+    *,
+    action: str,
+    actor: str,
+    target: str,
+) -> None:
+    """Validate and consume one receipt before its exact target mutation."""
+    if not isinstance(receipt, AuthorizationReceipt) or receipt._seal is not _RECEIPT_SEAL:
+        raise TypeError("receipt must come from governed action authorization")
+    if receipt.store_identity != _store_identity(store_root):
+        raise ValueError("receipt belongs to a different store")
+    if receipt.action != action:
+        raise ValueError("receipt action does not match")
+    if receipt.actor != actor:
+        raise ValueError("receipt actor does not match")
+    if receipt.target != target:
+        raise ValueError("receipt target does not match")
+    if receipt.nonce in _CONSUMED_RECEIPTS:
+        raise ValueError("receipt is already consumed or stale")
+    capability = object.__new__(CampaignCapability)
+    for field, value in {
+        "store_identity": receipt.store_identity,
+        "trust_root_digest": receipt.trust_root_digest,
+        "authority_revision_id": receipt.authority_revision_id,
+        "authority_revision_digest": receipt.authority_revision_digest,
+        "_seal": _CAPABILITY_SEAL,
+    }.items():
+        object.__setattr__(capability, field, value)
+    _validate_capability(Path(store_root), capability)
+    audit = read_record(Path(store_root), receipt.audit_record_id)
+    if audit.record.get("outcome") != "authorized" or any(
+        audit.record.get(field) != value
+        for field, value in {
+            "action": receipt.action,
+            "actor": receipt.actor,
+            "authority_revision_digest": receipt.authority_revision_digest,
+            "authority_revision_id": receipt.authority_revision_id,
+            "target": receipt.target,
+            "trust_root_digest": receipt.trust_root_digest,
+        }.items()
+    ):
+        raise ValueError("receipt audit binding is invalid")
+    _CONSUMED_RECEIPTS.add(receipt.nonce)
+
+
+def _ratification_governance(
+    store_root: Path,
+    *,
+    capability: CampaignCapability,
+    action: str,
+    actor: str,
+    target: str,
+) -> tuple[PublishedRecord, dict[str, object]] | PublishedRecord:
+    capability, authority = _validate_capability(Path(store_root), capability)
+    authority, evidence, authorized = _ratification_authority_evidence(
+        store_root,
+        authority_revision_id=authority.record_id,
+        action=action,
+        actor=actor,
+        trusted_authority_revision_digest=authority.digest,
     )
     if not authorized:
         audit = {
@@ -856,17 +1150,15 @@ def ratify_governed_oracle(
     findings: list[Mapping[str, object]],
     negative_control_intent: str,
     ratifier: str,
-    authority_revision_id: str,
-    trusted_authority_revision_digest: str,
+    capability: CampaignCapability,
 ) -> PublishedRecord:
     """Ratify an oracle only through frozen authority and independence rules."""
     governance = _ratification_governance(
         store_root,
-        authority_revision_id=authority_revision_id,
+        capability=capability,
         action="ratify_oracle",
         actor=ratifier,
         target=revision_id,
-        trusted_authority_revision_digest=trusted_authority_revision_digest,
     )
     if isinstance(governance, PublishedRecord):
         return governance
@@ -915,23 +1207,11 @@ def freeze_corpus_manifest(
     store_root: Path,
     bindings: list[tuple[str, str, str]],
     *,
-    trusted_authority_revision_digests: list[str],
+    capability: CampaignCapability,
 ) -> PublishedRecord:
     """Freeze an exact ordered corpus and return its digest-bound revision."""
-    if not isinstance(trusted_authority_revision_digests, list) or not (
-        trusted_authority_revision_digests
-    ):
-        raise ValueError("trusted_authority_revision_digests must be a non-empty list")
-    trusted_digests = sorted(
-        {
-            _required_text(digest, "trusted_authority_revision_digests")
-            for digest in trusted_authority_revision_digests
-        }
-    )
-    if any(re.fullmatch(r"[0-9a-f]{64}", digest) is None for digest in trusted_digests):
-        raise ValueError(
-            "trusted_authority_revision_digests must contain lowercase SHA-256 digests"
-        )
+    capability, trusted_authority = _validate_capability(Path(store_root), capability)
+    trusted_digests = [trusted_authority.digest]
     if not isinstance(bindings, list) or not bindings:
         raise ValueError("corpus bindings must be a non-empty list")
     manifest_bindings: list[dict[str, str]] = []
@@ -1375,17 +1655,15 @@ def ratify_governed_attribution(
     rationale: str,
     dispute_evidence: list[str],
     ratifier: str,
-    authority_revision_id: str,
-    trusted_authority_revision_digest: str,
+    capability: CampaignCapability,
 ) -> PublishedRecord:
     """Ratify an attribution through the same frozen campaign authority."""
     governance = _ratification_governance(
         store_root,
-        authority_revision_id=authority_revision_id,
+        capability=capability,
         action="ratify_attribution",
         actor=ratifier,
         target=revision_id,
-        trusted_authority_revision_digest=trusted_authority_revision_digest,
     )
     if isinstance(governance, PublishedRecord):
         return governance

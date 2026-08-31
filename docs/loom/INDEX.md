@@ -25,6 +25,7 @@
 ### REQ-112
 
 - test_req_112_authority_and_independence_are_explicit
+- test_req_112_bootstrap_capability_and_single_purpose_receipt
 
 ### REQ-99
 
