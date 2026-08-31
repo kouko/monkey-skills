@@ -328,7 +328,7 @@ def _under_excluded_dir(path: Path, repo: Path) -> bool:
     except ValueError:
         rel_dir_parts = path.parts[:-1]
     return any(
-        part in _EXCLUDED_DIR_NAMES or part.startswith(".")
+        part.lower() in _EXCLUDED_DIR_NAMES or part.startswith(".")
         for part in rel_dir_parts
     )
 

@@ -433,6 +433,30 @@ def test_checker_refuses_pin_defined_only_under_a_vendored_dir(tmp_path):
     assert "test_gate_refuses_the_forgery" in result.stderr
 
 
+def test_checker_refuses_pin_under_a_differently_cased_vendored_dir(tmp_path):
+    repo = tmp_path / "repo"
+    vendor_dir = repo / "fake" / "Vendor" / "tests"
+    vendor_dir.mkdir(parents=True)
+    (vendor_dir / "test_c.py").write_text(
+        "def test_case_forgery():\n    pass\n",
+        encoding="utf-8",
+    )
+    store = tmp_path / "ATTACK-CATALOGUE.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Instances\n"
+        "- F1 x | y | reproduced 2026-08-31 — pinned by test_case_forgery\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store, repo)
+    assert result.returncode != 0
+    assert "dangling" in result.stderr
+    assert "test_case_forgery" in result.stderr
+
+
 def test_parse_store_round_trips_fixture_and_guarded_path_globs_order():
     store = parse_store(_VALID_STORE)
     assert guarded_path_globs(store) == [
