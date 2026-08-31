@@ -373,7 +373,7 @@ def test_req_111_replay_content_is_untrusted_and_data_bound(tmp_path) -> None:
         )
 
 
-def test_req_113_campaign_resource_use_is_bounded() -> None:
+def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
     # @req: REQ-113
     policy = {
         "max_runs": 4,
@@ -385,63 +385,178 @@ def test_req_113_campaign_resource_use_is_bounded() -> None:
         "max_usage_units": 1000,
     }
     admitted = runner.admit_bounded_run(
+        store_root=tmp_path,
+        campaign_id="campaign-r1",
+        attempt_id="attempt-r1",
+        case_id="case-r1",
+        is_retry=False,
         artifact=b"complete historical document",
         policy=policy,
-        usage={
-            "runs_started": 1,
-            "case_retries": 0,
-            "active_runs": 0,
-            "usage_units": 100,
-        },
         requested_wall_seconds=60,
         requested_output_bytes=150,
         reserved_usage_units=200,
     )
-    assert admitted == {
+    assert admitted["artifact_bytes"] == 28
+    assert admitted["whole_artifact"] is True
+    assert admitted["reservation_id"]
+    assert runner.read_resource_events(tmp_path, "campaign-r1") == [{
+        "actual_output_bytes": None,
+        "actual_usage_units": None,
+        "actual_wall_seconds": None,
         "artifact_bytes": 28,
-        "limits": policy,
-        "whole_artifact": True,
-    }
+        "artifact_digest": runner.bytes_digest(b"complete historical document"),
+        "attempt_id": "attempt-r1",
+        "case_id": "case-r1",
+        "event": "reserved",
+        "is_retry": False,
+        "reason": None,
+        "requested_output_bytes": 150,
+        "requested_wall_seconds": 60,
+        "reservation_id": admitted["reservation_id"],
+        "reserved_usage_units": 200,
+    }]
 
-    exhausted = [
-        ({"runs_started": 4, "case_retries": 0, "active_runs": 0,
-          "usage_units": 0}, "run budget exhausted"),
-        ({"runs_started": 0, "case_retries": 1, "active_runs": 0,
-          "usage_units": 0}, "retry budget exhausted"),
-        ({"runs_started": 0, "case_retries": 0, "active_runs": 2,
-          "usage_units": 0}, "concurrency budget exhausted"),
-        ({"runs_started": 0, "case_retries": 0, "active_runs": 0,
-          "usage_units": 900}, "usage budget exhausted"),
-    ]
-    for usage, reason in exhausted:
-        with pytest.raises(ValueError, match=reason):
-            runner.admit_bounded_run(
+    concurrent_root = tmp_path / "concurrent"
+    concurrent_policy = {**policy, "max_runs": 1, "max_usage_units": 200}
+
+    def concurrent_admission(attempt_id: str):
+        try:
+            return runner.admit_bounded_run(
+                store_root=concurrent_root,
+                campaign_id="campaign-concurrent",
+                attempt_id=attempt_id,
+                case_id="case-concurrent",
+                is_retry=False,
                 artifact=b"whole",
-                policy=policy,
-                usage=usage,
+                policy=concurrent_policy,
                 requested_wall_seconds=60,
                 requested_output_bytes=150,
                 reserved_usage_units=200,
             )
+        except ValueError as error:
+            return str(error)
 
-    with pytest.raises(ValueError, match="whole artifact exceeds input limit"):
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        concurrent = list(executor.map(
+            concurrent_admission, ("attempt-a", "attempt-b")
+        ))
+    reservations = [item for item in concurrent if isinstance(item, dict)]
+    refusals = [item for item in concurrent if isinstance(item, str)]
+    assert len(reservations) == 1
+    assert refusals == ["run budget exhausted"]
+    concurrent_events = runner.read_resource_events(
+        concurrent_root, "campaign-concurrent"
+    )
+    assert [event["event"] for event in concurrent_events] == [
+        "reserved", "refused"
+    ]
+    assert concurrent_events[0]["reservation_id"] == reservations[0][
+        "reservation_id"
+    ]
+    assert concurrent_events[1]["reason"] == "run budget exhausted"
+
+    runner.finish_bounded_run(
+        store_root=concurrent_root,
+        reservation_id=reservations[0]["reservation_id"],
+        outcome="failed",
+        reason="provider timeout",
+        actual_wall_seconds=60,
+        actual_output_bytes=11,
+        actual_usage_units=125,
+    )
+    failed = runner.read_resource_events(
+        concurrent_root, "campaign-concurrent"
+    )[-1]
+    assert failed["event"] == "failed"
+    assert failed["reason"] == "provider timeout"
+    assert failed["actual_wall_seconds"] == 60
+    assert failed["actual_output_bytes"] == 11
+    assert failed["actual_usage_units"] == 125
+
+    def refused(
+        campaign_id: str,
+        *,
+        policy_override: dict[str, int] | None = None,
+        artifact: bytes = b"whole",
+        is_retry: bool = False,
+        wall: int = 60,
+        output: int = 150,
+        usage: int = 200,
+    ) -> str:
+        selected = {**policy, **(policy_override or {})}
+        with pytest.raises(ValueError) as error:
+            runner.admit_bounded_run(
+                store_root=tmp_path,
+                campaign_id=campaign_id,
+                attempt_id=f"{campaign_id}-attempt",
+                case_id=f"{campaign_id}-case",
+                is_retry=is_retry,
+                artifact=artifact,
+                policy=selected,
+                requested_wall_seconds=wall,
+                requested_output_bytes=output,
+                reserved_usage_units=usage,
+            )
+        event = runner.read_resource_events(tmp_path, campaign_id)[-1]
+        assert event["event"] == "refused"
+        assert event["artifact_bytes"] == len(artifact)
+        assert event["reason"] == str(error.value)
+        return str(error.value)
+
+    assert refused(
+        "retry-limit", policy_override={"max_retries_per_case": 0},
+        is_retry=True,
+    ) == "retry budget exhausted"
+    assert refused("wall-limit", wall=121) == "wall-time request exceeds limit"
+    assert refused("input-limit", artifact=b"x" * 101) == (
+        "whole artifact exceeds input limit; truncation is forbidden"
+    )
+    assert refused("output-limit", output=201) == "output request exceeds limit"
+    assert refused("usage-limit", usage=1001) == "usage budget exhausted"
+
+    run_root = tmp_path / "run-limit"
+    run_policy = {**policy, "max_runs": 1}
+    runner.admit_bounded_run(
+        store_root=run_root,
+        campaign_id="campaign-run-limit",
+        attempt_id="run-1",
+        case_id="case-1",
+        is_retry=False,
+        artifact=b"whole",
+        policy=run_policy,
+        requested_wall_seconds=60,
+        requested_output_bytes=150,
+        reserved_usage_units=200,
+    )
+    with pytest.raises(ValueError, match="run budget exhausted"):
         runner.admit_bounded_run(
-            artifact=b"x" * 101,
-            policy=policy,
-            usage={"runs_started": 0, "case_retries": 0,
-                   "active_runs": 0, "usage_units": 0},
+            store_root=run_root,
+            campaign_id="campaign-run-limit",
+            attempt_id="run-2",
+            case_id="case-2",
+            is_retry=False,
+            artifact=b"whole",
+            policy=run_policy,
             requested_wall_seconds=60,
             requested_output_bytes=150,
             reserved_usage_units=200,
         )
-    with pytest.raises(ValueError, match="wall-time request exceeds limit"):
-        runner.admit_bounded_run(
-            artifact=b"whole", policy=policy,
-            usage={"runs_started": 0, "case_retries": 0,
-                   "active_runs": 0, "usage_units": 0},
-            requested_wall_seconds=121, requested_output_bytes=150,
-            reserved_usage_units=200,
-        )
+
+    for field in runner._RESOURCE_LIMIT_FIELDS:
+        invalid = {**policy, field: None}
+        with pytest.raises(ValueError, match=f"finite integer {field}"):
+            runner.admit_bounded_run(
+                store_root=tmp_path,
+                campaign_id=f"invalid-{field}",
+                attempt_id=f"invalid-{field}-attempt",
+                case_id="case-invalid",
+                is_retry=False,
+                artifact=b"whole",
+                policy=invalid,
+                requested_wall_seconds=60,
+                requested_output_bytes=150,
+                reserved_usage_units=200,
+            )
 
 
 def test_req_115_actual_model_identity_is_verified_twice() -> None:

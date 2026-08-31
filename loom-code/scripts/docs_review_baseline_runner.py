@@ -566,54 +566,468 @@ def run_isolated_reviewer(
     }
 
 
-def admit_bounded_run(
+def _resource_database(store_root: Path) -> sqlite3.Connection:
+    store_root.mkdir(parents=True, exist_ok=True)
+    database = store_root / "campaign-resources.sqlite3"
+    if database.is_symlink():
+        raise ValueError("campaign resource database must not be a symlink")
+    connection = sqlite3.connect(database, timeout=30, isolation_level=None)
+    connection.execute("PRAGMA busy_timeout=30000")
+    connection.execute("PRAGMA synchronous=FULL")
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS resource_campaigns (
+            campaign_id TEXT PRIMARY KEY,
+            policy_digest TEXT NOT NULL,
+            policy_json TEXT NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS resource_reservations (
+            reservation_id TEXT PRIMARY KEY,
+            campaign_id TEXT NOT NULL,
+            attempt_id TEXT NOT NULL UNIQUE,
+            case_id TEXT NOT NULL,
+            is_retry INTEGER NOT NULL,
+            artifact_bytes INTEGER NOT NULL,
+            artifact_digest TEXT NOT NULL,
+            requested_wall_seconds INTEGER NOT NULL,
+            requested_output_bytes INTEGER NOT NULL,
+            reserved_usage_units INTEGER NOT NULL,
+            actual_wall_seconds INTEGER,
+            actual_output_bytes INTEGER,
+            actual_usage_units INTEGER,
+            state TEXT NOT NULL,
+            reason TEXT
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS resource_events (
+            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+            campaign_id TEXT NOT NULL,
+            reservation_id TEXT NOT NULL,
+            attempt_id TEXT NOT NULL,
+            case_id TEXT NOT NULL,
+            is_retry INTEGER NOT NULL,
+            event TEXT NOT NULL,
+            reason TEXT,
+            artifact_bytes INTEGER NOT NULL,
+            artifact_digest TEXT NOT NULL,
+            requested_wall_seconds INTEGER NOT NULL,
+            requested_output_bytes INTEGER NOT NULL,
+            reserved_usage_units INTEGER NOT NULL,
+            actual_wall_seconds INTEGER,
+            actual_output_bytes INTEGER,
+            actual_usage_units INTEGER
+        )
+        """
+    )
+    return connection
+
+
+def _resource_limits(policy: Mapping[str, object]) -> dict[str, int]:
+    limits: dict[str, int] = {}
+    for field in _RESOURCE_LIMIT_FIELDS:
+        value = policy.get(field)
+        minimum = 0 if field == "max_retries_per_case" else 1
+        if (
+            not isinstance(value, int)
+            or isinstance(value, bool)
+            or value < minimum
+        ):
+            raise ValueError(f"resource policy requires finite integer {field}")
+        limits[field] = value
+    return limits
+
+
+def _resource_identity(value: object, name: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{name} must be a non-empty string")
+    return value.strip()
+
+
+def _positive_resource_value(value: object, name: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+        raise ValueError(f"{name} must be a positive integer")
+    return value
+
+
+def _append_resource_event(
+    connection: sqlite3.Connection,
     *,
+    campaign_id: str,
+    reservation_id: str,
+    attempt_id: str,
+    case_id: str,
+    is_retry: bool,
+    event: str,
+    reason: str | None,
+    artifact_bytes: int,
+    artifact_digest: str,
+    requested_wall_seconds: int,
+    requested_output_bytes: int,
+    reserved_usage_units: int,
+    actual_wall_seconds: int | None = None,
+    actual_output_bytes: int | None = None,
+    actual_usage_units: int | None = None,
+) -> None:
+    connection.execute(
+        """
+        INSERT INTO resource_events (
+            campaign_id, reservation_id, attempt_id, case_id, is_retry,
+            event, reason, artifact_bytes, artifact_digest,
+            requested_wall_seconds, requested_output_bytes,
+            reserved_usage_units, actual_wall_seconds, actual_output_bytes,
+            actual_usage_units
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            campaign_id, reservation_id, attempt_id, case_id, int(is_retry),
+            event, reason, artifact_bytes, artifact_digest,
+            requested_wall_seconds, requested_output_bytes,
+            reserved_usage_units, actual_wall_seconds, actual_output_bytes,
+            actual_usage_units,
+        ),
+    )
+
+
+def _resource_request(
+    *,
+    campaign_id: str,
+    attempt_id: str,
+    case_id: str,
+    is_retry: bool,
     artifact: bytes,
-    policy: Mapping[str, object],
-    usage: Mapping[str, object],
+    policy_digest: str,
     requested_wall_seconds: int,
     requested_output_bytes: int,
     reserved_usage_units: int,
 ) -> dict[str, object]:
-    """Admit one whole-artifact run only within every finite campaign limit."""
-    limits: dict[str, int] = {}
-    for field in _RESOURCE_LIMIT_FIELDS:
-        value = policy.get(field)
-        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
-            raise ValueError(f"resource policy requires positive integer {field}")
-        limits[field] = value
-    counters: dict[str, int] = {}
-    for field in ("runs_started", "case_retries", "active_runs", "usage_units"):
-        value = usage.get(field)
-        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
-            raise ValueError(f"resource usage requires non-negative integer {field}")
-        counters[field] = value
-    for name, value in (
-        ("requested_wall_seconds", requested_wall_seconds),
-        ("requested_output_bytes", requested_output_bytes),
-        ("reserved_usage_units", reserved_usage_units),
-    ):
-        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
-            raise ValueError(f"{name} must be a positive integer")
-    if counters["runs_started"] >= limits["max_runs"]:
-        raise ValueError("run budget exhausted")
-    if counters["case_retries"] >= limits["max_retries_per_case"]:
-        raise ValueError("retry budget exhausted")
-    if counters["active_runs"] >= limits["max_concurrency"]:
-        raise ValueError("concurrency budget exhausted")
-    if counters["usage_units"] + reserved_usage_units > limits["max_usage_units"]:
-        raise ValueError("usage budget exhausted")
-    if requested_wall_seconds > limits["max_wall_seconds_per_run"]:
-        raise ValueError("wall-time request exceeds limit")
-    if requested_output_bytes > limits["max_output_bytes"]:
-        raise ValueError("output request exceeds limit")
-    if len(artifact) > limits["max_input_bytes"]:
-        raise ValueError("whole artifact exceeds input limit; truncation is forbidden")
-    return {
+    if not isinstance(is_retry, bool):
+        raise ValueError("is_retry must be a boolean")
+    if not isinstance(artifact, bytes):
+        raise TypeError("artifact must be bytes")
+    request: dict[str, object] = {
+        "campaign_id": _resource_identity(campaign_id, "campaign_id"),
+        "attempt_id": _resource_identity(attempt_id, "attempt_id"),
+        "case_id": _resource_identity(case_id, "case_id"),
+        "is_retry": is_retry,
         "artifact_bytes": len(artifact),
-        "limits": dict(policy),
+        "artifact_digest": bytes_digest(artifact),
+        "requested_wall_seconds": _positive_resource_value(
+            requested_wall_seconds, "requested_wall_seconds"
+        ),
+        "requested_output_bytes": _positive_resource_value(
+            requested_output_bytes, "requested_output_bytes"
+        ),
+        "reserved_usage_units": _positive_resource_value(
+            reserved_usage_units, "reserved_usage_units"
+        ),
+    }
+    request["reservation_id"] = _identity({
+        **request,
+        "policy_digest": policy_digest,
+    })
+    return request
+
+
+def _resource_counters(
+    connection: sqlite3.Connection, campaign_id: str, case_id: str
+) -> tuple[int, int, int, int]:
+    row = connection.execute(
+        """
+        SELECT COUNT(*),
+               COALESCE(SUM(CASE WHEN case_id = ? AND is_retry = 1
+                                 THEN 1 ELSE 0 END), 0),
+               COALESCE(SUM(CASE WHEN state = 'active' THEN 1 ELSE 0 END), 0),
+               COALESCE(SUM(CASE WHEN state = 'active'
+                                 THEN reserved_usage_units
+                                 ELSE actual_usage_units END), 0)
+        FROM resource_reservations WHERE campaign_id = ?
+        """,
+        (case_id, campaign_id),
+    ).fetchone()
+    assert row is not None
+    return row
+
+
+def _resource_refusal_reason(
+    limits: Mapping[str, int],
+    counters: tuple[int, int, int, int],
+    request: Mapping[str, object],
+    *,
+    policy_changed: bool,
+    attempt_exists: bool,
+) -> str | None:
+    checks = (
+        (policy_changed, "campaign resource policy changed"),
+        (counters[0] >= limits["max_runs"], "run budget exhausted"),
+        (request["is_retry"] and counters[1] >= limits["max_retries_per_case"],
+         "retry budget exhausted"),
+        (counters[2] >= limits["max_concurrency"],
+         "concurrency budget exhausted"),
+        (counters[3] + request["reserved_usage_units"]
+         > limits["max_usage_units"], "usage budget exhausted"),
+        (request["requested_wall_seconds"]
+         > limits["max_wall_seconds_per_run"],
+         "wall-time request exceeds limit"),
+        (request["requested_output_bytes"] > limits["max_output_bytes"],
+         "output request exceeds limit"),
+        (request["artifact_bytes"] > limits["max_input_bytes"],
+         "whole artifact exceeds input limit; truncation is forbidden"),
+        (attempt_exists, "attempt already has resource reservation"),
+    )
+    return next((reason for refused, reason in checks if refused), None)
+
+
+def _append_request_event(
+    connection: sqlite3.Connection,
+    request: Mapping[str, object],
+    event: str,
+    reason: str | None,
+) -> None:
+    _append_resource_event(
+        connection,
+        **{name: request[name] for name in (
+            "campaign_id", "reservation_id", "attempt_id", "case_id",
+            "is_retry", "artifact_bytes", "artifact_digest",
+            "requested_wall_seconds", "requested_output_bytes",
+            "reserved_usage_units",
+        )},
+        event=event,
+        reason=reason,
+    )
+
+
+def _reserve_resource_request(
+    connection: sqlite3.Connection,
+    request: Mapping[str, object],
+    limits: Mapping[str, int],
+    policy_digest: str,
+    policy_json: str,
+) -> str | None:
+    campaign_id = str(request["campaign_id"])
+    existing_policy = connection.execute(
+        "SELECT policy_digest FROM resource_campaigns WHERE campaign_id = ?",
+        (campaign_id,),
+    ).fetchone()
+    if existing_policy is None:
+        connection.execute(
+            "INSERT INTO resource_campaigns VALUES (?, ?, ?)",
+            (campaign_id, policy_digest, policy_json),
+        )
+    attempt_exists = connection.execute(
+        "SELECT 1 FROM resource_reservations WHERE attempt_id = ?",
+        (request["attempt_id"],),
+    ).fetchone() is not None
+    reason = _resource_refusal_reason(
+        limits,
+        _resource_counters(connection, campaign_id, str(request["case_id"])),
+        request,
+        policy_changed=(
+            existing_policy is not None and existing_policy[0] != policy_digest
+        ),
+        attempt_exists=attempt_exists,
+    )
+    if reason is not None:
+        _append_request_event(connection, request, "refused", reason)
+        return reason
+    connection.execute(
+        """
+        INSERT INTO resource_reservations (
+            reservation_id, campaign_id, attempt_id, case_id, is_retry,
+            artifact_bytes, artifact_digest, requested_wall_seconds,
+            requested_output_bytes, reserved_usage_units, state
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+        """,
+        tuple(request[name] for name in (
+            "reservation_id", "campaign_id", "attempt_id", "case_id",
+            "is_retry", "artifact_bytes", "artifact_digest",
+            "requested_wall_seconds", "requested_output_bytes",
+            "reserved_usage_units",
+        )),
+    )
+    _append_request_event(connection, request, "reserved", None)
+    return None
+
+
+def admit_bounded_run(
+    *,
+    store_root: Path,
+    campaign_id: str,
+    attempt_id: str,
+    case_id: str,
+    is_retry: bool,
+    artifact: bytes,
+    policy: Mapping[str, object],
+    requested_wall_seconds: int,
+    requested_output_bytes: int,
+    reserved_usage_units: int,
+) -> dict[str, object]:
+    """Atomically reserve finite campaign resources for one whole artifact."""
+    limits = _resource_limits(policy)
+    policy_json = json.dumps(limits, separators=(",", ":"), sort_keys=True)
+    policy_digest = bytes_digest(policy_json.encode("utf-8"))
+    request = _resource_request(
+        campaign_id=campaign_id,
+        attempt_id=attempt_id,
+        case_id=case_id,
+        is_retry=is_retry,
+        artifact=artifact,
+        policy_digest=policy_digest,
+        requested_wall_seconds=requested_wall_seconds,
+        requested_output_bytes=requested_output_bytes,
+        reserved_usage_units=reserved_usage_units,
+    )
+    connection = _resource_database(store_root)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        reason = _reserve_resource_request(
+            connection, request, limits, policy_digest, policy_json
+        )
+        connection.execute("COMMIT")
+    except Exception:
+        if connection.in_transaction:
+            connection.execute("ROLLBACK")
+        raise
+    finally:
+        connection.close()
+    if reason is not None:
+        raise ValueError(reason)
+    return {
+        "artifact_bytes": request["artifact_bytes"],
+        "limits": limits,
+        "reservation_id": request["reservation_id"],
         "whole_artifact": True,
     }
+
+
+def _actual_resource_values(
+    actual_wall_seconds: int,
+    actual_output_bytes: int,
+    actual_usage_units: int,
+) -> dict[str, int]:
+    values: dict[str, int] = {}
+    for name, value in (
+        ("actual_wall_seconds", actual_wall_seconds),
+        ("actual_output_bytes", actual_output_bytes),
+        ("actual_usage_units", actual_usage_units),
+    ):
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise ValueError(f"{name} must be a non-negative integer")
+        values[name] = value
+    return values
+
+
+def _close_resource_reservation(
+    connection: sqlite3.Connection,
+    reservation_id: str,
+    outcome: str,
+    reason: str | None,
+    values: Mapping[str, int],
+) -> None:
+    row = connection.execute(
+        """
+        SELECT campaign_id, attempt_id, case_id, is_retry, artifact_bytes,
+               artifact_digest, requested_wall_seconds,
+               requested_output_bytes, reserved_usage_units, state
+        FROM resource_reservations WHERE reservation_id = ?
+        """,
+        (reservation_id,),
+    ).fetchone()
+    if row is None:
+        raise ValueError("resource reservation does not exist")
+    if row[9] != "active":
+        raise ValueError("resource reservation is already terminal")
+    for actual, maximum, message in (
+        (values["actual_wall_seconds"], row[6], "actual wall time"),
+        (values["actual_output_bytes"], row[7], "actual output"),
+        (values["actual_usage_units"], row[8], "actual usage"),
+    ):
+        if actual > maximum:
+            raise ValueError(f"{message} exceeds reservation")
+    connection.execute(
+        """
+        UPDATE resource_reservations
+        SET actual_wall_seconds = ?, actual_output_bytes = ?,
+            actual_usage_units = ?, state = ?, reason = ?
+        WHERE reservation_id = ? AND state = 'active'
+        """,
+        (*values.values(), outcome, reason, reservation_id),
+    )
+    _append_resource_event(
+        connection,
+        campaign_id=row[0], reservation_id=reservation_id, attempt_id=row[1],
+        case_id=row[2], is_retry=bool(row[3]), event=outcome, reason=reason,
+        artifact_bytes=row[4], artifact_digest=row[5],
+        requested_wall_seconds=row[6], requested_output_bytes=row[7],
+        reserved_usage_units=row[8], **values,
+    )
+
+
+def finish_bounded_run(
+    *,
+    store_root: Path,
+    reservation_id: str,
+    outcome: str,
+    reason: str | None,
+    actual_wall_seconds: int,
+    actual_output_bytes: int,
+    actual_usage_units: int,
+) -> None:
+    """Durably close one reservation with bounded completion telemetry."""
+    reservation_id = _resource_identity(reservation_id, "reservation_id")
+    if outcome not in {"completed", "failed"}:
+        raise ValueError("resource outcome must be completed or failed")
+    if outcome == "failed" and (not isinstance(reason, str) or not reason.strip()):
+        raise ValueError("failed resource outcome requires a reason")
+    values = _actual_resource_values(
+        actual_wall_seconds, actual_output_bytes, actual_usage_units
+    )
+    connection = _resource_database(store_root)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        _close_resource_reservation(
+            connection, reservation_id, outcome, reason, values
+        )
+        connection.execute("COMMIT")
+    except Exception:
+        if connection.in_transaction:
+            connection.execute("ROLLBACK")
+        raise
+    finally:
+        connection.close()
+
+
+def read_resource_events(
+    store_root: Path, campaign_id: str
+) -> list[dict[str, object]]:
+    """Read durable resource telemetry in append order."""
+    campaign_id = _resource_identity(campaign_id, "campaign_id")
+    connection = _resource_database(store_root)
+    connection.row_factory = sqlite3.Row
+    try:
+        rows = connection.execute(
+            """
+            SELECT reservation_id, attempt_id, case_id, is_retry, event,
+                   reason, artifact_bytes, artifact_digest,
+                   requested_wall_seconds, requested_output_bytes,
+                   reserved_usage_units, actual_wall_seconds,
+                   actual_output_bytes, actual_usage_units
+            FROM resource_events WHERE campaign_id = ? ORDER BY sequence
+            """,
+            (campaign_id,),
+        ).fetchall()
+    finally:
+        connection.close()
+    return [
+        {**dict(row), "is_retry": bool(row["is_retry"])}
+        for row in rows
+    ]
 
 
 def verify_execution_identity(
