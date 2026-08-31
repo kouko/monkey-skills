@@ -733,6 +733,20 @@ def _batch_member_done_refusal(
     reimplemented) so a grammar change there cannot silently widen what
     this guard accepts.
 
+    The oracle (`_review_batch_oracle`, a sibling-file import of
+    `check_review_batches.py`) is loaded only once the literal string
+    `## Review Batches` is seen in `text` — a plan without that heading
+    never reaches the oracle call at all (plan Task 5 invariant), so a
+    `plan_card.py` copied standalone without its sibling (a documented
+    use of this repo's plan-card shim/standalone convention) still
+    works for every batch-free plan. That presence check is a plain
+    substring test, not the batch-id GRAMMAR — the grammar itself stays
+    with the oracle, mirrored nowhere else. When the heading IS present
+    but the sibling is missing or unreadable, the oracle load raises
+    OSError; this guard turns that into a ValueError so `main()`'s
+    existing `except ValueError` prints `plan_card: FAIL —` instead of
+    an uncaught traceback — failing closed rather than crashing.
+
     Callers pass the SAME `text` they are about to mutate, evaluated
     from inside `_publish_cli_mutation`'s lock (the `mutation`
     callable idiom already used by `set_status`/`set_stage`) — the
@@ -747,7 +761,18 @@ def _batch_member_done_refusal(
             break
     else:
         return None
-    oracle = _review_batch_oracle()
+    # Literal-string presence test, not the oracle's `_BATCH_SECTION`
+    # grammar: a standalone `plan_card.py` copy (documented sibling-free
+    # use, this repo's plan-card shim/standalone convention) must never
+    # reach the oracle call for a plan with no `## Review Batches`
+    # section at all (plan Task 5 invariant) — the batch-id GRAMMAR
+    # itself still lives only with the oracle, mirrored nowhere else.
+    if "## Review Batches" not in text:
+        return None
+    try:
+        oracle = _review_batch_oracle()
+    except OSError as exc:
+        raise ValueError(f"Review Batch schema oracle cannot be loaded: {exc}") from exc
     has_batches_section = oracle._BATCH_SECTION.search(text) is not None
     if disposition is None or disposition_count != 1:
         if has_batches_section:
