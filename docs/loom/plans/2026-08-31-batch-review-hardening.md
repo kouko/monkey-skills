@@ -196,7 +196,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: none — release administration (version bump + fingerprint refresh) delivers no brief outcome
 - **Review disposition**: individual
-- **Status**: claimed(@implementer-t7)
+- **Status**: done(97b43e9b35482ffd4baed511740c711878abe41d)
 - **Gloss**: 版本與指紋收尾，讓 plugin update 拿得到修好的版本。
 
 ## Review Batches
