@@ -172,14 +172,45 @@ def _header_value(header: str, key: str) -> str | None:
     return None
 
 
+_SAFETY_BEARING_KEY_CI = re.compile(r"^(safety-bearing):", re.IGNORECASE)
+
+
 def safety_bearing(plan_text: str) -> tuple[str, str] | None:
     """The parsed `Safety-bearing:` header value as (kind, reason), where
     kind is `"yes"` or `"no"` — None when the header is absent (Task 6 of
     docs/loom/plans/2026-08-31-adversarial-audit-station.md; consumed by
     `finishing-a-development-branch`'s trigger). Raises ValueError, naming
     the accepted forms, when the header is present but its value does not
-    start with `yes — ` or `no — `."""
-    header, _, _ = plan_text.partition("\n## ")
+    start with `yes — ` or `no — `.
+
+    Fail-loud guard against a self-exemption vector (live adversarial
+    audit, review-driven fix round): a `safety-bearing:` line (any case)
+    written OUTSIDE the header block — e.g. under a later `## ` section —
+    used to be invisible to `_header_value`'s header-only scan and
+    silently rendered as an absent header (N/A, exit 0); same for a
+    miscased key (`safety-bearing:`) INSIDE the header block, which
+    `_header_value`'s exact-case `startswith` also silently missed. Both
+    now raise here, the one helper both `build_card` and direct callers
+    share, so neither surface can be exempted by a misplaced or miscased
+    line."""
+    header, sep, rest = plan_text.partition("\n## ")
+    outside = sep + rest
+    outside_match = re.search(
+        r"^safety-bearing:.*$", outside, re.IGNORECASE | re.MULTILINE
+    )
+    if outside_match is not None:
+        raise ValueError(
+            f"'{outside_match.group(0)}' is outside the plan's header "
+            "block — the 'Safety-bearing:' header belongs above the first "
+            "'## ' section"
+        )
+    for line in header.splitlines():
+        key_match = _SAFETY_BEARING_KEY_CI.match(line)
+        if key_match is not None and key_match.group(1) != "Safety-bearing":
+            raise ValueError(
+                f"'{line.strip()}' uses a miscased key — the accepted "
+                "spelling is 'Safety-bearing:'"
+            )
     value = _header_value(header, "Safety-bearing")
     if value is None:
         return None

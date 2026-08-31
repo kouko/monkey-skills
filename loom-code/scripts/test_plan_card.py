@@ -171,6 +171,49 @@ def test_card_renders_safety_bearing_header_and_na_when_absent(tmp_path):
         )
 
 
+def test_safety_bearing_line_outside_header_or_miscased_fails_loud(tmp_path):
+    """(review-driven fix, live adversarial audit) A `Safety-bearing:`
+    line written OUTSIDE the header block (e.g. under a later `## `
+    section) or with a miscased key inside the header block must never
+    silently render `safety-bearing: N/A — header absent` at exit 0 —
+    that is a self-exemption vector for a safety-relevant field. Both
+    forms fail loud, naming the offending line, from both the CLI card
+    render and the pure `safety_bearing()` helper directly."""
+    misplaced_text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "## Notes\n\nFixture notes — never a task.\n",
+        "## Notes\n\nFixture notes — never a task.\n"
+        "Safety-bearing: yes — touches git-guard\n",
+    )
+    misplaced_path = _write_plan(tmp_path, misplaced_text)
+
+    misplaced_result = _run_card(misplaced_path)
+
+    assert misplaced_result.returncode == 1, misplaced_result.stdout + misplaced_result.stderr
+    assert misplaced_result.stdout.startswith("plan_card: FAIL —"), misplaced_result.stdout
+    assert "Safety-bearing: yes — touches git-guard" in misplaced_result.stdout
+    assert "header" in misplaced_result.stdout
+    assert misplaced_result.stdout.count("\n") == 1, "message must be one line"
+    with pytest.raises(ValueError, match="header"):
+        plan_card.safety_bearing(misplaced_text)
+
+    miscased_dir = tmp_path / "miscased"
+    miscased_dir.mkdir()
+    miscased_text = _plan_text(tasks=[("parser", "pending")]).replace(
+        "Stage: sdd:wave-1\n",
+        "Stage: sdd:wave-1\nsafety-bearing: yes — touches git-guard\n",
+    )
+    miscased_path = _write_plan(miscased_dir, miscased_text)
+
+    miscased_result = _run_card(miscased_path)
+
+    assert miscased_result.returncode == 1, miscased_result.stdout + miscased_result.stderr
+    assert miscased_result.stdout.startswith("plan_card: FAIL —"), miscased_result.stdout
+    assert "Safety-bearing:" in miscased_result.stdout
+    assert miscased_result.stdout.count("\n") == 1, "message must be one line"
+    with pytest.raises(ValueError, match="Safety-bearing:"):
+        plan_card.safety_bearing(miscased_text)
+
+
 def test_all_done_plan_renders_next_close_out(tmp_path):
     """(2) When every task's status is done(...), the next line points at
     close-out, not at any task."""
