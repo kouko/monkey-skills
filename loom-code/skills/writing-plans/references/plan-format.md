@@ -252,9 +252,13 @@ than silently accepting it or rendering it as absent:
   swallow the header block itself;
 - a plan whose very first line is a `## ` heading (no `# ` title line
   first) — the header block is then empty, so `plan_card.py` refuses
-  loud on the missing `Goal:` line before `Safety-bearing:` is ever
-  evaluated, rather than silently reading that first section as the
-  header (the hole a live adversarial audit found and this fix closes).
+  loud rather than silently reading that first section as the header
+  (the hole a live adversarial audit found and this fix closes): via
+  `build_card` it is the missing `Goal:` line that fires first, before
+  `Safety-bearing:` is ever evaluated; via `safety_bearing()` on its
+  own, a `Safety-bearing:` line written inside that now-headerless first
+  section is caught as "outside the plan's header block", the same
+  message any other misplaced line gets.
 
 A `no` header is a plan author's declared judgment call, not a
 mechanical guarantee — it does not silence a guarded-path hit.
