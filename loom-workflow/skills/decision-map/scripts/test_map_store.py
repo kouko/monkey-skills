@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -2112,3 +2113,19 @@ def test_validate_rejects_active_map_without_destination_acceptance(
     assert code == 2
     assert "wayfinder" in message
     assert "Destination acceptance" in message
+
+
+def test_symlink_guard_delegates_to_map_lock(tmp_path: Path) -> None:
+    """map_store._assert_no_symlink_components must delegate to
+    map_lock.assert_no_symlink_components (Task 1's public seam) rather
+    than re-implementing the symlink walk, so both callers share one
+    behavior and one message."""
+    real = tmp_path / "real"
+    real.mkdir()
+    link = tmp_path / "link"
+    os.symlink(real, link)
+
+    with pytest.raises(map_store.SchemaViolation) as excinfo:
+        map_store._assert_no_symlink_components(link / "x")
+
+    assert "refusing path with symlink component" in str(excinfo.value)

@@ -558,16 +558,7 @@ _DATED_HUMAN = re.compile(r"^[^,\s][^,]*,\s*\d{4}-\d{2}-\d{2}$")
 
 
 def _assert_no_symlink_components(path: Path) -> None:
-    absolute = path.absolute()
-    current = Path(absolute.anchor)
-    for part in absolute.parts[1:]:
-        current /= part
-        if current.is_symlink():
-            raise SchemaViolation(
-                f"refusing mutation through symlink component: {current}"
-            )
-        if not current.exists():
-            break
+    map_lock.assert_no_symlink_components(path, error=SchemaViolation)
 
 
 def _assert_contained(root: Path, candidate: Path) -> None:
