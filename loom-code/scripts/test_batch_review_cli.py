@@ -308,6 +308,106 @@ def test_record_dispatch_writes_receipt(tmp_path, capsys) -> None:
     assert stored["arms"] == ["spec-reviewer", "code-quality-reviewer"]
 
 
+def test_record_dispatch_refuses_second_dispatch_without_terminal_result(
+    tmp_path, capsys,
+) -> None:
+    plan_path, repo_root = _write_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    packet_file = tmp_path / "packet.json"
+    packet_file.write_text(json.dumps(
+        _packet_json(plan_path, repo_root, receipt_path, capsys)
+    ), encoding="utf-8")
+    dispatch_receipt = tmp_path / "dispatch-receipt.json"
+    argv = [
+        "record-dispatch", "--packet-file", str(packet_file),
+        "--out", str(dispatch_receipt),
+    ]
+    assert cli.main(argv) == 0
+    capsys.readouterr()
+    code, out = _run(argv)
+    capsys.readouterr()
+    assert code != 0
+    assert out["recorded"] is False
+    assert "re-collect" in " ".join(out["reasons"])
+
+
+def test_record_dispatch_allows_new_cycle_after_result_applied(
+    tmp_path, capsys,
+) -> None:
+    plan_path, repo_root = _write_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    result_path = _result_file(tmp_path)
+    packet_file = tmp_path / "packet.json"
+    packet_file.write_text(json.dumps(
+        _packet_json(plan_path, repo_root, receipt_path, capsys)
+    ), encoding="utf-8")
+    dispatch_receipt = tmp_path / "dispatch-receipt.json"
+    argv = [
+        "record-dispatch", "--packet-file", str(packet_file),
+        "--out", str(dispatch_receipt),
+    ]
+    assert cli.main(argv) == 0
+    capsys.readouterr()
+    apply_code = cli.main([
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
+    ])
+    capsys.readouterr()
+    assert apply_code == 0
+    stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    assert stored["result_applied"] is True
+    code, out = _run(argv)
+    capsys.readouterr()
+    assert code == 0
+    assert out["recorded"] is True
+
+
+def _other_batch_receipt(tmp_path: Path, *, applied: bool) -> Path:
+    receipt = {
+        "schema": "batch-dispatch-receipt-v1",
+        "batch_id": "other-capability",
+        "packet_identity": "packet:other",
+        "arms": ["spec-reviewer"],
+        "members": ["Task 2"],
+    }
+    if applied:
+        receipt["result_applied"] = True
+    path = tmp_path / "other-dispatch-receipt.json"
+    path.write_text(json.dumps(receipt), encoding="utf-8")
+    return path
+
+
+def test_ready_refuses_member_in_second_non_terminal_batch(
+    tmp_path, capsys,
+) -> None:
+    plan_path, repo_root = _write_workspace(tmp_path)
+    other = _other_batch_receipt(tmp_path, applied=False)
+    code, out = _run([
+        "ready", "--plan", str(plan_path), "--receipt", str(other),
+    ])
+    capsys.readouterr()
+    assert code != 0
+    assert out["ready"] is False
+    reason = " ".join(out["reasons"])
+    assert "Task 2" in reason
+    assert "other-capability" in reason
+
+
+def test_ready_is_ready_for_clean_batch(tmp_path, capsys) -> None:
+    plan_path, repo_root = _write_workspace(tmp_path)
+    other = _other_batch_receipt(tmp_path, applied=True)
+    code, out = _run([
+        "ready", "--plan", str(plan_path), "--receipt", str(other),
+    ])
+    capsys.readouterr()
+    assert code == 0
+    assert out["ready"] is True
+    assert out["reasons"] == []
+
+
 def test_apply_result_finalizes(tmp_path, capsys) -> None:
     plan_path, repo_root = _write_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
