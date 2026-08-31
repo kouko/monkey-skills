@@ -35,6 +35,24 @@ cli = _load("batch_review_cli", "batch_review_cli.py")
 review_batch = _load("review_batch_cli_lib", "review_batch.py")
 
 
+def test_batch_review_cli_load_delegates_to_load_sibling(monkeypatch) -> None:
+    """`_load` delegates to `sibling_import.load_sibling` (Task 14 of
+    docs/loom/plans/2026-08-31-loom-code-script-helper-extraction.md)
+    instead of hand-rolling `importlib.util.spec_from_file_location`."""
+    import sibling_import
+
+    sentinel = object()
+
+    def _fake(filename, *, name=None, anchor=None):
+        assert filename == "review_batch.py"
+        assert name == "x"
+        return sentinel
+
+    monkeypatch.setattr(sibling_import, "load_sibling", _fake)
+
+    assert cli._load("x", "review_batch.py") is sentinel
+
+
 _IMPLEMENTED_1 = "implemented(" + "a" * 40 + ")"
 _IMPLEMENTED_2 = "implemented(" + "b" * 40 + ")"
 
