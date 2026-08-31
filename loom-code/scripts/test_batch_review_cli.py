@@ -425,6 +425,74 @@ def test_packet_refuses_directory_path(tmp_path, capsys) -> None:
     assert "not a committed blob" in " ".join(out["reasons"])
 
 
+def _git_commit_files(repo_root: Path, files: dict[str, bytes]) -> str:
+    """One commit touching several paths — the shape a smuggling member
+    commit has (its declared file plus an undeclared one)."""
+    for rel_path, content in files.items():
+        path = repo_root / rel_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+        subprocess.run(["git", "-C", str(repo_root), "add", rel_path], check=True)
+    subprocess.run(
+        ["git", "-C", str(repo_root), "commit", "-q", "-m", "multi"], check=True,
+    )
+    return subprocess.run(
+        ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
+        capture_output=True, text=True, check=True,
+    ).stdout.strip()
+
+
+def test_packet_refuses_member_commit_touching_undeclared_file(tmp_path, capsys) -> None:
+    """F5: a member commit that also changes an undeclared path must not seal
+    the declared file alone — the batch reviewer would never see the smuggled
+    change that the individual lane's scope self-check (git diff --name-only
+    subset of Files touched) catches. Refusal names the member and the path."""
+    repo_root = tmp_path / "repo"
+    _init_git_repo(repo_root)
+    _git_commit_file(repo_root, "seed.txt", b"seed")  # sha1 is NOT a root commit
+    sha1 = _git_commit_files(
+        repo_root, {"src/1.py": b"member 1", "src/backdoor.py": b"smuggled"},
+    )
+    sha2 = _git_commit_file(repo_root, "src/2.py", b"member 2")
+    plan_path = repo_root / "plan.md"
+    plan_path.write_text(
+        _plan_text(f"implemented({sha1})", f"implemented({sha2})"),
+        encoding="utf-8",
+    )
+    receipt_path = tmp_path / "verification-receipt.json"
+    receipt_path.write_text(_receipt_json(), encoding="utf-8")
+    code = cli.main([
+        "packet", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+    ])
+    out = json.loads(capsys.readouterr().out)
+    assert code != 0
+    assert out["packet"] is None
+    reasons = " ".join(out["reasons"])
+    assert "Task 1" in reasons
+    assert "src/backdoor.py" in reasons
+
+
+def test_packet_seals_root_commit_member_touching_exactly_declared_files(
+    tmp_path, capsys,
+) -> None:
+    """The scope check must not error on a root commit (`<sha>^` does not
+    resolve): the fixture's first member IS the root commit and touches exactly
+    its declared file, so it seals as before."""
+    plan_path, repo_root, sha1, _ = _write_git_workspace(tmp_path)
+    root_shas = subprocess.run(
+        ["git", "-C", str(repo_root), "rev-list", "--max-parents=0", "HEAD"],
+        capture_output=True, text=True, check=True,
+    ).stdout.split()
+    assert root_shas == [sha1]
+    receipt_path = tmp_path / "verification-receipt.json"
+    emitted = _packet_json(plan_path, repo_root, receipt_path, capsys)
+    member_1 = emitted["members"][0]
+    assert member_1["sha"] == sha1
+    assert [f["path"] for f in member_1["files"]] == ["src/1.py"]
+
+
 def test_git_timeout_refuses_instead_of_raising(tmp_path, capsys, monkeypatch) -> None:
     """A hung git subprocess must surface as a PacketRefused-driven CLI
     refusal, not an uncaught TimeoutExpired traceback (T8 round-2 🟢)."""
