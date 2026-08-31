@@ -208,6 +208,14 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Aggregate verification**: inert description — run the batch CLI test module and confirm the five new refusal tests plus the pre-existing finalize, reopen and recovery tests pass, then re-run the audit's F1, F2 and F5 reproduction steps against the fixed CLI and observe non-zero exits.
 - **Boundary**: capability: batch-review packet+apply-result binding; exclusions: none; consumable: yes
 
+## Decision Log
+
+### DL-1 — Task 5 refusal goes to stdout, not stderr (2026-08-31, SDD wave 1, review round 1)
+- Class: implementation-discovered, below kickoff threshold (no product consequence; reversal cost: one print target).
+- Trigger: the code-quality reviewer found every other `plan_card: FAIL —` line in plan_card.py prints to stdout and `test_plan_card.py`'s module docstring pins that as the file's convention; Task 5's Acceptance RED said "stderr names `b1` and `apply-result`" — a wording the plan author chose without checking the convention.
+- Decision: the refusal prints to stdout with the file's prefix; the RED test asserts stdout. The Acceptance's "stderr" is superseded by this entry, not edited (an Acceptance edit would re-review; the assertion content — batch id + `apply-result` named, plan bytes unchanged, non-zero exit — is unchanged).
+- Also folded into the same round: the guard's plan read moves under `_publish_cli_mutation`'s lock (TOCTOU 🟡); a plan with a `## Review Batches` section whose target task lacks a `Review disposition` line refuses (fail-closed, closes the 🟢); a test pins `implemented(<sha>)` on a batch member succeeding (GREEN was untested).
+
 ## Notes
 
 - Change-folder binding: none — no non-archived `docs/loom/<change-id>/` folder matches branch `batch-review-hardening`, and the caller handed a brainstorming brief; the plan derives from the brief (BI- ids).
