@@ -76,7 +76,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(apply-result-binding)
-- **Status**: claimed(@implementer-t2)
+- **Status**: implemented(84e4b795dfbd344b703a6acecc1cee69ac698d86)
 - **Gloss**: 手寫或搬來的 PASS 檔換一個 plan 就失效；密封不再由 CLI 自己補上。
 
 ## Task 3 — build_packet 檢查成員 commit 實際改動檔案 ⊆ 宣告檔案
@@ -99,7 +99,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: BI-5
 - **Review disposition**: batch(apply-result-binding)
-- **Status**: pending
+- **Status**: claimed(@implementer-t3)
 - **Gloss**: 批次審查看得到成員 commit 偷改的檔案，不比逐任務審查弱。
 
 ## Task 4 — 結果檔格式與 ground_ref 逐字規則寫進契約；SKILL.md 改指向
@@ -124,7 +124,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: BI-6
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: claimed(@implementer-t4)
 - **Gloss**: orchestrator 照文件就能寫出正確的結果檔，不會因猜錯格式退回逐任務審查。
 
 ## Task 5 — plan_card --set-status 對批次成員拒寫 done(...)
@@ -215,6 +215,11 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - Trigger: the code-quality reviewer found every other `plan_card: FAIL —` line in plan_card.py prints to stdout and `test_plan_card.py`'s module docstring pins that as the file's convention; Task 5's Acceptance RED said "stderr names `b1` and `apply-result`" — a wording the plan author chose without checking the convention.
 - Decision: the refusal prints to stdout with the file's prefix; the RED test asserts stdout. The Acceptance's "stderr" is superseded by this entry, not edited (an Acceptance edit would re-review; the assertion content — batch id + `apply-result` named, plan bytes unchanged, non-zero exit — is unchanged).
 - Also folded into the same round: the guard's plan read moves under `_publish_cli_mutation`'s lock (TOCTOU 🟡); a plan with a `## Review Batches` section whose target task lacks a `Review disposition` line refuses (fail-closed, closes the 🟢); a test pins `implemented(<sha>)` on a batch member succeeding (GREEN was untested).
+
+### DL-2 — Task 2's replay-emitter premise is false (2026-08-31, SDD wave 2)
+- Class: implementation-discovered stated-fact drift, below kickoff threshold (scope shrinks; no product consequence).
+- Fact (Task 2 implementer, verified by grep): `task_batch_replay.py` consumes `task-batch-replay-result/v1` comparison files and never emits an apply-result result file; the only `arm_bindings` emitters are the CLI tests. The plan's Task 2 Context/GREEN line "its emitted result files carry the field" has nothing to act on.
+- Decision: Task 2 delivers without touching replay; Task 4's schema paragraph must not claim replay emits the field. Parsed key set for Task 4 (from the implementer): top-level {arm_bindings, terminal_results}; binding {packet_identity, arm, dispatch_identity, evidence_identity}; result {packet_identity, arm, dispatch_identity, dispatch_evidence_identity, result_identity, evidence_identity, terminal, verdict, findings}; finding {finding_id, packet_identity, owners, blocking, ground, ground_ref, location, severity, reason}.
 
 ## Notes
 
