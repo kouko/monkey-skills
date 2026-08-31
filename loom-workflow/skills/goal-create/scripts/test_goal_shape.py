@@ -254,3 +254,104 @@ def test_defines_four_fields_budget_and_surfacing() -> None:
                 "shared/mandatory guidance — Stop-when is this skill's own "
                 f"addition. Offending paragraph: {p!r}"
             )
+
+
+def _section_four(content: str) -> str:
+    """Extract '## 4 — `Stop-when`' section's own text, heading-scoped.
+
+    Bounded to the text between that heading and the next `---` rule (the
+    "## The 4,000-character budget" section starts after it) — so an
+    assertion below can only be satisfied by §4's own words, never by
+    unrelated text living in §2 or the budget/attribution sections.
+    """
+    match = re.search(
+        r"## 4 — `Stop-when`\n\n(.*?)(?=\n---|\Z)",
+        content,
+        re.DOTALL,
+    )
+    assert match, "Expected to find the '## 4 — `Stop-when`' section."
+    return match.group(1)
+
+
+def _negation_binds(text: str, negation: str, target: str, max_gap_words: int = 6) -> bool:
+    """Bound negation-to-target polarity check (word-boundary safe).
+
+    True iff a `negation` alternation sits within `max_gap_words` words
+    directly BEFORE `target`. See
+    docs/loom/memory/a-list-of-forbidden-words-is-defeated-by-the-word-outside-it.md
+    — a bare `negation.*target` is satisfied by unrelated co-occurrence
+    anywhere in the text; this keeps the match local to the clause the
+    negation actually governs.
+    """
+    pattern = (
+        r"\b(?:"
+        + negation
+        + r")\b(?:\s+\S+){0,"
+        + str(max_gap_words)
+        + r"}\s+"
+        + target
+    )
+    return re.search(pattern, text) is not None
+
+
+def test_stop_when_is_one_bound_written_as_completion() -> None:
+    content = _read_reference()
+    section_lower = _section_four(content).lower()
+
+    # --- count: exactly one bound (turn count or wall-clock limit), never
+    # a list of exit conditions ---
+    assert re.search(r"\bone\b", section_lower) and "bound" in section_lower, (
+        "Stop-when must state exactly one bound."
+    )
+    assert _negation_binds(section_lower, r"never|not", r"a\s+list\s+of"), (
+        "Stop-when must state it is never a list of exit conditions, with "
+        "the negation bound to 'a list of'."
+    )
+
+    # --- completion: reaching the bound with a status report posted in the
+    # conversation counts as the run completing, as a failure report ---
+    assert re.search(r"\breport\b(?:\s+\S+){0,10}\s+\bcomplet\w*", section_lower) or re.search(
+        r"\bcomplet\w*(?:\s+\S+){0,10}\s+\breport\b", section_lower
+    ), (
+        "Stop-when must bind a status report posted to the run completing."
+    )
+    assert "failure report" in section_lower, (
+        "Must state reaching the bound with a report posted counts as a "
+        "failure report."
+    )
+
+    # --- why: a bare 'stop after N turns' is read by the evaluator as
+    # permission to stop, not as the condition being met, so it neither
+    # releases the run nor bounds it ---
+    assert "permission" in section_lower, (
+        "Must state the evaluator reads a bare stop clause as permission "
+        "to stop."
+    )
+    assert _negation_binds(section_lower, "not", r"the\s+condition"), (
+        "Must state this is NOT the condition being met, with the "
+        "negation bound to 'the condition'."
+    )
+    assert _negation_binds(section_lower, "neither", r"releases?\s+the\s+run"), (
+        "Must state it neither releases the run — negation bound to "
+        "'releases the run'."
+    )
+
+    # --- forks: human-dependent forks are not Stop-when material — pointer
+    # to input-floor.md §4 item 3 ---
+    assert _negation_binds(section_lower, "never|not", r"stop-when\s+material"), (
+        "Must state a human-dependent fork is never Stop-when material, "
+        "negation bound to 'Stop-when material'."
+    )
+    assert "human" in section_lower, (
+        "Must name the human-dependent fork explicitly."
+    )
+    assert "input-floor" in section_lower, (
+        "Must point at input-floor.md for where a human-dependent fork "
+        "goes instead."
+    )
+
+    # --- example: one canonical example, still containing 'turn' (existing
+    # pin: "turn" in content_lower must keep holding) ---
+    assert "turn" in section_lower, (
+        "Stop-when's example must contain 'turn' (existing whole-file pin)."
+    )
