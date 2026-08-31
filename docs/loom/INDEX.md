@@ -467,3 +467,7 @@
 - REQ-65
 - REQ-66
 - REQ-67
+
+### dangling @req (not in namespace)
+
+- none

@@ -8,17 +8,18 @@ Goal: One conditional close-out station fires on a guarded-path hit or a
     pinned by a named test — serves PURPOSE: a claim that a gate prevents
     something cannot ship unverified, and a hole found once cannot be
     silently re-lost
-Stage: planning
+Stage: sdd:wave-1
+Safety-bearing: yes — this arc adds check_attack_catalogue.py, edits plan_card.py and finishing-a-development-branch/SKILL.md (guarded paths)
 Steps:
   1. 目錄、checker、header、兩份派工包、關票——彼此獨立的地基
   2. 本 repo 種子 store、骨架、文法說明、Step 3.5、reviewer 讀目錄
   3. CI 接線與收尾卡兩行
   4. 站對自己開火：種一條假 reproduced、真派 opus 與 sonnet
   5. 版本 0.109.0 與指紋
-Total tasks: 15
+Total tasks: 16
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
-Plan-document-reviewer verdict: PASS (2026-08-31, round 4)
+Plan-document-reviewer verdict: PASS (2026-08-31, round 8)
 
 ## Task-flow diagram
 
@@ -35,6 +36,7 @@ T6 --> T10
 T8[T8 audit packet] --> T10
 T10 --> T11[T11 close-out card lines] --> T14 --> T15
 T13[T13 close ticket + memory + new entries] --> T15
+T16[T16 plan_card full-reopen CAS fix] --> T15
 ```
 
 ## Open Questions
@@ -54,7 +56,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
   - Classes: forge an artifact the gate trusts; bypass a gate by editing its input; replay a stale artifact; cross a trust boundary (repo / worktree / process); self-exempt via a prose condition; race a concurrent writer.
   - A `## Verdict vocabulary` section defines `reproduced` / `held` / `not-applicable` and states that `held` is a dated record, never coverage; a `## Repo store` section points at `docs/loom/ATTACK-CATALOGUE.md` as the adopting repo's instance file (a loom-scaffolded store path, not a citation).
 - **Module**: loom-code/skills/requesting-code-review/references (attack-catalogue)
-- **Files touched**: loom-code/skills/requesting-code-review/references/attack-catalogue.md, loom-code/scripts/test_attack_catalogue_reference.py
+- **Files touched**: loom-code/skills/requesting-code-review/references/attack-catalogue.md, loom-code/scripts/test_attack_catalogue_reference.py, loom-code/scripts/check_contract_citations.py
 - **Context paths**:
   - loom-code/skills/requesting-code-review/references/design-evidence.md (sibling reference shape)
   - docs/loom/memory/cold-read-and-adversarial-review-catch-different-failures.md ("touches an exemption, a gate, a self-check" — the class list's origin)
@@ -67,7 +69,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Independent**: true
 - **Brief item covered**: BI-1
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(ca76d2fe09a884cd8d12e9af87a3a1f303147427)
 - **Gloss**: 攻擊者要問的六類問題寫成 plugin 隨附檔，任何 repo 裝了 loom 就有同一份起點。
 
 ## Task 2 — store 文法與 check_attack_catalogue.py
@@ -84,7 +86,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
     | incomplete | any of the three sections is missing |
   - Expose `parse_store(text) -> Store` and `guarded_path_globs(store)` for `finishing-a-development-branch`'s trigger and Task 4's scaffold test.
 - **Module**: loom-code/scripts (check_attack_catalogue)
-- **Files touched**: loom-code/scripts/check_attack_catalogue.py, loom-code/scripts/test_check_attack_catalogue.py
+- **Files touched**: loom-code/scripts/check_attack_catalogue.py, loom-code/scripts/test_check_attack_catalogue.py, loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py
 - **Context paths**:
   - loom-code/scripts/check_open_questions.py (`_find_open_questions_sections` — section-locating shape; exit-code and stderr conventions)
   - loom-code/scripts/check_scenario_coverage.py (`def main` — catalogue-vs-names diff shape)
@@ -99,7 +101,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Brief item covered**: BI-3
 - **Review disposition**: batch(store-grammar)
 - **Not batched because**: proposer pairs it with Task 1 — no dependency edge and a different Module (checker script vs a prose reference file); they meet only at the Task 10 sink, the sink-chunking shape recorded in backlog `2026-08-31-proposer-chunks-components-linked-only-through-a-sink`. Batched with Task 4, its direct dependant that must satisfy its grammar, in store-grammar
-- **Status**: pending
+- **Status**: done(a552dba7c35125e37cc6e5abf1d64933a09efb92)
 - **Gloss**: 寫了「打穿」就必須有一條真實存在的測試，否則機器直接拒絕——「試過擋住」變不成打勾。
 
 ## Task 3 — 本 repo 的 store：受保護路徑與 F1–F6 實例
@@ -136,14 +138,14 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Review-weight**: prose
 - **Brief item covered**: BI-8
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(5721b1fed590ec9ece9a9049c313fe54d514752a)
 - **Gloss**: 08-31 抓到的六個洞第一次有名字對到測試，下次審計不必再打同一扇門。
 
 ## Task 4 — loom_init.py 為接受方 repo 骨架化 store
 
 - **Description**: `loom_init.py` scaffolds `docs/loom/ATTACK-CATALOGUE.md` with the prose-contract globs pre-filled in `## Guarded paths`, empty `## Instances`, and one example line in `## Prose temptations`, stamped with the same vintage as its siblings; it refuses to overwrite an existing store.
 - **Module**: loom-code/scripts (loom_init)
-- **Files touched**: loom-code/scripts/loom_init.py, loom-code/scripts/test_loom_init.py
+- **Files touched**: loom-code/scripts/loom_init.py, loom-code/scripts/test_loom_init.py, loom-code/scripts/templates/ATTACK-CATALOGUE.md
 - **Context paths**:
   - loom-code/scripts/loom_init.py (module docstring list of scaffolded files; the existing refuse-if-exists branch)
   - loom-code/scripts/test_loom_init.py (`test_scaffold_creates_all_artifacts_with_vintage_stamps`)
@@ -159,7 +161,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(store-grammar)
 - **Not batched because**: proposer pairs it with Task 1 — no dependency edge and a different Module (loom_init vs a prose reference file); joined only through the Task 10/15 sinks. Batched with Task 2, whose grammar its scaffold must pass, in store-grammar
-- **Status**: pending
+- **Status**: done(4555b45495b00a1510387996556ec2fb98cf5ea7)
 - **Gloss**: 新 repo 一 init 就有 store，且預設守住散文契約，不會因為空清單而永遠不觸發。
 
 ## Task 5 — CI 跑 checker 守本 repo 的 store
@@ -181,7 +183,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Review-weight**: mechanical
 - **Brief item covered**: BI-3
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(e188620a376f6acd627b7d924173d28b6a942196)
 - **Gloss**: 有人把 reproduced 的測試名改掉或刪測試，CI 紅燈，不靠人記得。
 
 ## Task 6 — plan_card.py 讀取並渲染 Safety-bearing header
@@ -202,7 +204,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Brief item covered**: BI-4
 - **Review disposition**: individual
 - **Not batched because**: proposer pairs it with Tasks 1, 2, 4 — no dependency edge to any of them and a different Module (plan_card header parsing); the only link is the Task 10 sink. Its own verdict question (does the header parse and render, does absence render N/A) has no member to share it with
-- **Status**: pending
+- **Status**: done(2d4f0f52cb99622b5326ae3e57f15ffb72189319)
 - **Gloss**: plan 自己宣告「這弧動到守門機制」，進度卡上看得到，收尾流程讀得到。
 
 ## Task 7 — plan-format 文法：Safety-bearing 一行
@@ -224,7 +226,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Review-weight**: prose
 - **Brief item covered**: BI-4
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(22204efbab82e22f0ed6674d9f07612fccec1f8d)
 - **Gloss**: 寫 plan 的人知道這行怎麼寫、不寫會怎樣、寫 no 也壓不掉路徑訊號。
 
 ## Task 8 — adversarial-audit-packet.md 派工包
@@ -247,7 +249,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Review-weight**: prose
 - **Brief item covered**: BI-5
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(a643c1d4c30a6113c46cd178e9bc82b768ac9e42)
 - **Gloss**: 攻擊者拿到的只有路徑和目錄，沒有作者的說法，跑過才算打穿。
 
 ## Task 9 — cold-reader-packet.md 派工包
@@ -270,7 +272,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Review-weight**: prose
 - **Brief item covered**: BI-6
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(d2fffe8fe6afeb3ad338270eb11faf8e2f2e83ea)
 - **Gloss**: 冷讀者被給一個抄捷徑的機會；它抄了，就和程式被打穿一樣處理。
 
 ## Task 10 — finishing-a-development-branch 加 Step 3.5
@@ -303,7 +305,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Independent**: false
 - **Brief item covered**: BI-5
 - **Review disposition**: batch(station-prose)
-- **Status**: pending
+- **Status**: done(38c11e50351b08e6417eeb26cb27e1f0afda06d8)
 - **Gloss**: 收尾流程多一個條件站：動到守門機制或散文契約才開火，打穿就擋到有測試為止。
 
 ## Task 11 — 收尾卡兩行與 N/A 慣例
@@ -325,7 +327,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Independent**: false
 - **Brief item covered**: BI-7
 - **Review disposition**: batch(station-prose)
-- **Status**: pending
+- **Status**: done(8dbf771a1ceb6573175eb1e0e62d2101dd900f21)
 - **Gloss**: 每次收尾卡上一眼看到：站有沒有開、打穿幾個、被哪條測試釘住。
 
 ## Task 12 — code-reviewer 順帶讀目錄，security 維度標類別
@@ -348,7 +350,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Brief item covered**: BI-9
 - **Review disposition**: individual
 - **Not batched because**: proposer pairs it with Tasks 10, 11 — no dependency edge (it depends on Task 1 only) and a different Module (the code-reviewer agent contract vs finishing-branch's SKILL.md); the link is the Task 14/15 sink. Its verdict question (does the reviewer tag the class) is not the station's
-- **Status**: pending
+- **Status**: done(04ecd67376632c75c64fe88d3426f0e4001375fe)
 - **Gloss**: 整分支審查者不再抽象讀 OWASP，而是問「這個 diff 碰到目錄哪一類」。
 
 ## Task 13 — 關票、追加記憶、開三張範圍外的票
@@ -373,7 +375,7 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Review-weight**: prose
 - **Brief item covered**: BI-12; BI-13; BI-14
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(7d9f3c912771324b95166114877c58dc0edd836c)
 - **Gloss**: 這張票關掉、教訓接上機制、三件明說不做的事各留一張票不遺失。
 
 ## Task 14 — 站對自己開火：假 reproduced、真 opus、真 sonnet
@@ -422,9 +424,10 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
   - **RED**: `python3 scripts/check_version_bump.py` non-zero on the branch diff and `test_report_binds_baseline_and_final_candidate` red on the stale fingerprint.
   - **GREEN**: `check_version_bump.py` exit 0, `sync_codex_manifests.py --check loom-code` exit 0, full floor `python3 -m pytest loom-code/scripts/ scripts/ .claude/hooks/ -q` 0 failures.
 - **External surfaces**: none.
-- **Dependencies**: Tasks 4, 7, 12, 13, 14 complete first
+- **Dependencies**: Tasks 4, 7, 12, 13, 14, 16 complete first
 - **Seam**:
   - from Task 4: payload: none
+  - from Task 16: payload: none
   - from Task 7: payload: none
   - from Task 12: payload: none
   - from Task 13: payload: none
@@ -434,6 +437,28 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - **Review disposition**: individual
 - **Status**: pending
 - **Gloss**: 版本進位讓 marketplace 真的發佈；指紋跟著最後的樹一起刷。
+
+## Task 16 — plan_card：整批全員 reopen 被誤判成 finalize
+
+- **Description**: In `plan_card.py`'s Batch CAS, derive `finalizing` from the replacement VALUES (every replacement is `done(<sha>)`) instead of from `set(replacements) == set(members)`, so a reopen whose owner union is the whole membership is validated as a reopen.
+  - Live failure: `batch_review_cli.py apply-result` on batch `station-prose` (both members owners) returned `action: reopen, ledger_mutation_allowed: true, ledger_written: false` — the authority validator was handed `finalize` for a reopen resolution and refused, leaving the batch unrecoverable.
+- **Module**: loom-code/scripts (plan_card Batch CAS)
+- **Files touched**: loom-code/scripts/plan_card.py, loom-code/scripts/test_plan_card_batch_states.py
+- **Context paths**:
+  - loom-code/scripts/plan_card.py (`def _validate_batch_transition`, `def _atomic_batch_status_update_locked` — the two `finalizing = set(replacements) == set(members)` sites)
+  - loom-code/scripts/test_plan_card_batch_states.py (existing reopen / finalize CAS tests and their transition-authority fixtures)
+  - loom-code/scripts/batch_review_cli.py (`_ledger_expected_and_replacements` — how reopen replacements are shaped)
+- **Acceptance**:
+  - **RED**: `test_reopen_of_every_member_is_validated_as_reopen_not_finalize` — a two-member batch with both members in `reopen_owners` and replacements `{n: "pending"}` for both: today `atomic_batch_status_update` returns False; after the fix it writes both to `pending` and returns True.
+  - **GREEN**: a finalize (all replacements `done(<sha>)`) still validates as finalize; a partial reopen still validates as reopen; the torn-state ValueError branch still fires on a mixed implemented/done snapshot; every existing `test_plan_card*.py` stays green.
+- **External surfaces**: none.
+- **Dependencies**: none
+- **Independent**: false
+- **Brief item covered**: none — plan_card.py Batch CAS repair surfaced by running this arc's own SDD execution, not an attack-catalogue-station deliverable
+- **Review disposition**: individual
+- **Not batched because**: discovered mid-arc from the station-prose reopen; a CAS bug in a guarded path reviewed on its own — its verdict question (is the finalize/reopen discriminator correct) is not shared with any batch
+- **Status**: claimed(@adversarial-auditing)
+- **Gloss**: 一批裡每個成員都被打回時也能真的打回，不會卡成永遠寫不進帳的狀態。
 
 ## Review Batches
 
@@ -464,3 +489,12 @@ N/A — no unresolved question: the trigger authority (header + guarded paths) a
 - Kickoff decision: store path and plan header naming → A: `docs/loom/ATTACK-CATALOGUE.md` (uppercase, matching the `docs/loom/` root-level scaffold convention BACKLOG.md / KICKOFF-DEFAULTS.md / PURPOSE.md; kouko 2026-08-31) and `Safety-bearing:`; the plugin reference stays lowercase `references/attack-catalogue.md` like every other references file. Rejected: threat-model naming (B), folding instances into memory (C).
 - Amendment after PASS (2026-08-31, kickoff): the repo store path was re-cased to `docs/loom/ATTACK-CATALOGUE.md` in every task (22 occurrences) — a cited-path change, re-reviewed as round 4.
 - Plan-document-reviewer verdict re-stamped PASS (2026-08-31, round 4) after the re-casing amendment — stamping the verdict, no re-review.
+- Amendment during SDD wave 1 (2026-08-31): Task 1 `Files touched` gains `loom-code/scripts/check_contract_citations.py` — the catalogue names `docs/loom/ATTACK-CATALOGUE.md`, which the citation checker must recognise as a scaffolded-store basename (`_PROTOCOL_BASENAMES`, same precedent as `BACKLOG.md`); Task 2 `Files touched` gains `loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py` — the new store checker is classified EXEMPT there (that oracle's FAMILY is the backlog store and handoff brief readers only, per its docstring), and Task 2's own test file pins the same fail-loud-on-unreadable-input contract for the attack store. Scope changes re-review (round 5).
+- Wave-1 shared-index race (2026-08-31): Task 8's implementer committed the shared index while Task 1's files were staged, so `ca76d2fe` carries both tasks' artifacts; the working tree at HEAD matches each author's intent (verified by empty `git diff HEAD`). Recorded as debt for whole-branch review; future packets say `git commit -- <paths>`.
+- Wave-1 shared-index incident, resolved (2026-08-31): a sibling `git commit` without pathspec swept Task 1's staged files into `ca76d2fe` (message names Task 8; content is Task 1's — reword at close-out); a later `git reset --soft HEAD~1` un-committed Task 13's `710ff268` instead of the resetter's own commit; the orchestrator re-committed Task 13's staged files verbatim as `7d9f3c91` (`git diff 710ff268 HEAD` on its paths is empty). Rule for every later packet: commit with `git commit --only -- <paths>` and NEVER run `git reset` on a shared worktree.
+- Plan-document-reviewer verdict re-stamped PASS (2026-08-31, round 6) after the wave-1 Files-touched amendments — stamping the verdict, no re-review.
+- Amendment during SDD wave 2 (2026-08-31): Task 4 `Files touched` gains `loom-code/scripts/templates/ATTACK-CATALOGUE.md` — the scaffold text lives beside loom_init's other templates rather than inline in the script (same shape as its siblings). Scope change recorded; reviewed with the store-grammar batch.
+- Amendment during SDD (2026-08-31): Task 16 added — the station-prose reopen exposed a `plan_card.py` Batch CAS bug (a full-membership reopen is classified as finalize by `set(replacements) == set(members)` and refused). Cited under BI-10 (the station exercised end to end on this branch) because the defect surfaced only by running the mechanism; re-reviewed as round 7.
+- Round-7 fixes (2026-08-31): Task 16 cites `none — …`, is `Independent: false` (shares plan_card.py with done Task 6), appears in the task-flow diagram, and is a dependency of Task 15's release sink (ordering only).
+- Plan-document-reviewer verdict re-stamped PASS (2026-08-31, round 8) after Task 16 — stamping the verdict, no re-review.
+- Safety-bearing header filled (2026-08-31) — filling a schema field with the wording the Notes already carried, no re-review.
