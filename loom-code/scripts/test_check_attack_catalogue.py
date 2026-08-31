@@ -17,6 +17,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from check_attack_catalogue import parse_store, guarded_path_globs
 
 SCRIPT = Path(__file__).parent / "check_attack_catalogue.py"
@@ -555,7 +557,7 @@ _SIGNAL_STORE = """\
 
 def test_signal_base_unresolved_exits_2(tmp_path):
     repo = _init_repo(tmp_path)
-    store = tmp_path / "store.md"
+    store = repo / "store.md"
     store.write_text(_SIGNAL_STORE, encoding="utf-8")
 
     result = _run_signal(repo, store, base="not-a-real-ref")
@@ -570,9 +572,9 @@ def test_signal_no_header_but_guarded_hit_exits_3(tmp_path):
     _commit_file(
         repo, "loom-code/hooks/git-guard.py", "# guard\n", "touch guarded path"
     )
-    store = tmp_path / "store.md"
+    store = repo / "store.md"
     store.write_text(_SIGNAL_STORE, encoding="utf-8")
-    plan = tmp_path / "plan.md"
+    plan = repo / "plan.md"
     plan.write_text(
         "Goal: g\nStage: s\nSafety-bearing: no — routine\n\n"
         "## Task 1 — t\n\n- Status: pending\n",
@@ -591,7 +593,7 @@ def test_signal_double_star_prefix_matches_nested_and_root_skill_md(tmp_path):
     base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
     _commit_file(repo, "a/b/SKILL.md", "nested\n", "nested SKILL.md")
     _commit_file(repo, "SKILL.md", "root\n", "root SKILL.md")
-    store = tmp_path / "store.md"
+    store = repo / "store.md"
     store.write_text(_SIGNAL_STORE, encoding="utf-8")
 
     result = _run_signal(repo, store, base=base_sha)
@@ -612,7 +614,7 @@ def test_signal_exact_path_matches_only_that_path(tmp_path):
         "# not it\n",
         "similar but not exact",
     )
-    store = tmp_path / "store.md"
+    store = repo / "store.md"
     store.write_text(_SIGNAL_STORE, encoding="utf-8")
 
     result = _run_signal(repo, store, base=base_sha)
@@ -625,7 +627,7 @@ def test_signal_output_lines_exact_shape_absent_plan(tmp_path):
     repo = _init_repo(tmp_path)
     base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
     _commit_file(repo, "docs/notes.md", "notes\n", "unrelated docs change")
-    store = tmp_path / "store.md"
+    store = repo / "store.md"
     store.write_text(_SIGNAL_STORE, encoding="utf-8")
 
     result = _run_signal(repo, store, base=base_sha)
@@ -643,7 +645,7 @@ def test_signal_prose_hit_fires_cold_reader(tmp_path):
     repo = _init_repo(tmp_path)
     base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
     _commit_file(repo, "some-plugin/agents/worker.md", "worker\n", "agent prose file")
-    store = tmp_path / "store.md"
+    store = repo / "store.md"
     store.write_text(_SIGNAL_STORE, encoding="utf-8")
 
     result = _run_signal(repo, store, base=base_sha)
@@ -661,7 +663,7 @@ def test_signal_absent_store_reports_na_lines_and_exits_zero(tmp_path):
     repo = _init_repo(tmp_path)
     base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
     _commit_file(repo, "some-plugin/agents/worker.md", "worker\n", "agent prose file")
-    store = tmp_path / "does-not-exist.md"
+    store = repo / "does-not-exist.md"
 
     result = _run_signal(repo, store, base=base_sha)
 
@@ -683,7 +685,8 @@ def test_signal_malformed_store_exits_one(tmp_path):
     skip the station the way an absent one legitimately does."""
     repo = _init_repo(tmp_path)
     base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
-    store = tmp_path / "store.md"
+    _commit_file(repo, "docs/notes.md", "notes\n", "advance HEAD past base")
+    store = repo / "store.md"
     store.write_text(
         "## Guarded paths\n"
         "- loom-code/scripts/**\n\n"
@@ -712,7 +715,7 @@ def test_signal_refuses_unpinned_reproduced_like_the_legacy_form(tmp_path):
     _commit_file(
         repo, "loom-code/hooks/git-guard.py", "# guard\n", "touch guarded path"
     )
-    store = tmp_path / "store.md"
+    store = repo / "store.md"
     store.write_text(
         "## Guarded paths\n"
         "- loom-code/hooks/git-guard.py\n\n"
@@ -732,9 +735,10 @@ def test_signal_refuses_unpinned_reproduced_like_the_legacy_form(tmp_path):
 def test_signal_bad_plan_header_names_plan_path(tmp_path):
     repo = _init_repo(tmp_path)
     base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
-    store = tmp_path / "store.md"
+    _commit_file(repo, "docs/notes.md", "notes\n", "advance HEAD past base")
+    store = repo / "store.md"
     store.write_text(_SIGNAL_STORE, encoding="utf-8")
-    plan = tmp_path / "plan.md"
+    plan = repo / "plan.md"
     plan.write_text(
         "Goal: g\nStage: s\nSafety-bearing: bogus\n\n## Task 1 — t\n",
         encoding="utf-8",
@@ -759,9 +763,10 @@ def test_signal_missing_plan_card_module_fails_loud(tmp_path):
 
     repo = _init_repo(tmp_path)
     base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
-    store = tmp_path / "store.md"
+    _commit_file(repo, "docs/notes.md", "notes\n", "advance HEAD past base")
+    store = repo / "store.md"
     store.write_text(_SIGNAL_STORE, encoding="utf-8")
-    plan = tmp_path / "plan.md"
+    plan = repo / "plan.md"
     plan.write_text(
         "Goal: g\nStage: s\nSafety-bearing: no — routine\n\n## Task 1 — t\n",
         encoding="utf-8",
@@ -790,6 +795,75 @@ def test_signal_missing_plan_card_module_fails_loud(tmp_path):
     assert "ModuleNotFoundError" not in result.stderr
     assert "Traceback" not in result.stderr
     assert "plan_card.py beside check_attack_catalogue.py" in result.stderr
+
+
+# ---------------------------------------------------------------------------
+# t35b-audit-verdicts / wb-verdict-arm-a-r2 N1 / wb-verdict-arm-b-r2 N1,C5 —
+# `--base` must be a strict ancestor commit of HEAD; a `git` failure inside
+# `_changed_paths`/`_tracked_paths` must never silently become an empty
+# list; `--store`/`--plan` must resolve inside `--repo`.
+# ---------------------------------------------------------------------------
+
+
+def test_signal_base_must_be_a_strict_ancestor_commit(tmp_path):
+    """A `--base` equal to HEAD, or a tree/blob object rather than a
+    commit, must never be accepted — either one silently empties the
+    diff range and the station goes quiet (wb-verdict-arm-a-r2 N1)."""
+    repo = _init_repo(tmp_path)
+    head_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    tree_sha = _git(repo, "rev-parse", "HEAD^{tree}").stdout.strip()
+    store = repo / "store.md"
+    store.write_text(_SIGNAL_STORE, encoding="utf-8")
+
+    result_head = _run_signal(repo, store, base="HEAD")
+    assert result_head.returncode == 2, result_head.stdout + result_head.stderr
+    assert (
+        "attack catalogue: base unresolved — HEAD is not a strict ancestor "
+        "commit of HEAD" in result_head.stderr
+    )
+
+    result_tree = _run_signal(repo, store, base=tree_sha)
+    assert result_tree.returncode == 2, result_tree.stdout + result_tree.stderr
+    assert (
+        f"attack catalogue: base unresolved — {tree_sha} is not a strict "
+        "ancestor commit of HEAD" in result_tree.stderr
+    )
+    assert head_sha  # sanity: repo really has a commit
+
+
+def test_changed_paths_and_tracked_paths_raise_on_git_failure(tmp_path):
+    """`_changed_paths`/`_tracked_paths` must raise on any nonzero `git`
+    rather than returning `[]` — an empty list is indistinguishable from
+    a clean diff, so a git failure would silently read as N/A
+    (wb-verdict-arm-b-r2 N1)."""
+    from check_attack_catalogue import GitError, _changed_paths, _tracked_paths
+
+    not_repo = tmp_path / "not-a-repo"
+    not_repo.mkdir()
+
+    with pytest.raises(GitError):
+        _changed_paths(not_repo, "HEAD")
+    with pytest.raises(GitError):
+        _tracked_paths(not_repo)
+
+
+def test_signal_refuses_store_outside_repo(tmp_path):
+    """A `--store` (or `--plan`) resolving outside `--repo` must be
+    refused — nothing currently checks that the store actually lives in
+    the repo being diffed."""
+    repo = _init_repo(tmp_path)
+    base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    other_repo = tmp_path / "other"
+    other_repo.mkdir()
+    store = other_repo / "store.md"
+    store.write_text(_SIGNAL_STORE, encoding="utf-8")
+
+    result = _run_signal(repo, store, base=base_sha)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert str(store) in result.stderr
+    assert str(repo) in result.stderr
+    assert "outside --repo" in result.stderr
 
 
 # ---------------------------------------------------------------------------

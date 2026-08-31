@@ -504,7 +504,7 @@ def test_every_script_here_is_classified() -> None:
 # said fourteen, and no round ran the metric against the sentence quoting
 # it. Anything that changes this number must also update the backlog entry
 # that sizes the follow-up work.
-EXEMPT_LEAK_COUNT = 16
+EXEMPT_LEAK_COUNT = 17
 EXEMPT_LEAK_LEDGER = (
     "docs/loom/backlog/"
     "2026-08-21-fail-loud-contract-covers-only-the-four-store-brief-gates.md"

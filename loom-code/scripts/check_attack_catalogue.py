@@ -553,6 +553,17 @@ def _match_single_glob(glob: str, path: str) -> bool:
     return re.fullmatch(regex, path) is not None
 
 
+class GitError(Exception):
+    """A `git` invocation exited nonzero. `_changed_paths`/`_tracked_paths`
+    raise this rather than returning `[]` — an empty list is
+    indistinguishable from a clean diff/empty repo, so a git failure
+    would otherwise silently read as N/A (wb-verdict-arm-b-r2 N1)."""
+
+    def __init__(self, stderr: str) -> None:
+        super().__init__(stderr)
+        self.stderr = stderr
+
+
 def _git_run(repo: Path, *args: str) -> "subprocess.CompletedProcess[str]":
     return subprocess.run(
         ["git", "-C", str(repo), *args], capture_output=True, text=True
@@ -560,14 +571,30 @@ def _git_run(repo: Path, *args: str) -> "subprocess.CompletedProcess[str]":
 
 
 def _resolve_base(repo: Path, explicit: str | None) -> str | None:
-    """base=`--base` resolved to a real sha via `rev-parse` when given;
-    else `merge-base HEAD origin/main`, falling back to `merge-base HEAD
-    main`. None (never an empty string) on every failure — the caller
-    fails CLOSED rather than diffing an empty range (module docstring)."""
+    """base=`--base` resolved to a real sha via `rev-parse` when given,
+    then required to be a commit (not a tree/blob) that is a STRICT
+    ancestor of HEAD (`merge-base --is-ancestor` true AND not HEAD
+    itself) — a base equal to HEAD, or a tree object that happens to
+    `rev-parse` cleanly, would otherwise silently empty the diff range
+    (wb-verdict-arm-a-r2 N1, t35b-audit). Falls back to `merge-base HEAD
+    origin/main`, then `merge-base HEAD main`, when no `--base` is given.
+    None (never an empty string) on every failure — the caller fails
+    CLOSED rather than diffing an empty range (module docstring)."""
     if explicit:
         result = _git_run(repo, "rev-parse", explicit)
         sha = result.stdout.strip()
-        return sha if result.returncode == 0 and sha else None
+        if result.returncode != 0 or not sha:
+            return None
+        kind = _git_run(repo, "cat-file", "-t", sha).stdout.strip()
+        if kind != "commit":
+            return None
+        head = _git_run(repo, "rev-parse", "HEAD").stdout.strip()
+        if not head or sha == head:
+            return None
+        ancestor = _git_run(repo, "merge-base", "--is-ancestor", sha, "HEAD")
+        if ancestor.returncode != 0:
+            return None
+        return sha
     for other in ("origin/main", "main"):
         result = _git_run(repo, "merge-base", "HEAD", other)
         sha = result.stdout.strip()
@@ -581,26 +608,58 @@ def _changed_paths(repo: Path, base: str) -> list[str]:
     dirty worktree contributes nothing extra (module docstring)."""
     result = _git_run(repo, "diff", "--name-only", f"{base}..HEAD")
     if result.returncode != 0:
-        return []
+        raise GitError(result.stderr.strip())
     return [line for line in result.stdout.splitlines() if line]
 
 
 def _tracked_paths(repo: Path) -> list[str]:
     result = _git_run(repo, "ls-files")
     if result.returncode != 0:
-        return []
+        raise GitError(result.stderr.strip())
     return [line for line in result.stdout.splitlines() if line]
+
+
+def _outside_repo_error(path: Path, repo: Path, label: str) -> str | None:
+    """None when `path` resolves inside `repo`; else the exact `Error:
+    … is outside --repo …` line — `--store`/`--plan` living outside the
+    repo being diffed lets an attacker point the station at a foreign,
+    friendlier catalogue while the real one goes unread
+    (wb-verdict-arm-a-r2 N1, cross-trust-boundary class)."""
+    try:
+        path.resolve().relative_to(repo.resolve())
+    except ValueError:
+        return f"Error: {label} '{path}' is outside --repo '{repo}'"
+    return None
 
 
 def _run_signal(
     repo: Path, store_path: Path, plan_path: Path | None, base_override: str | None
 ) -> int:
+    for path, label in ((store_path, "store"), (plan_path, "plan")):
+        if path is None:
+            continue
+        err = _outside_repo_error(path, repo, label)
+        if err is not None:
+            print(err, file=sys.stderr)
+            return 1
+
     base = _resolve_base(repo, base_override)
     if base is None:
-        print("attack catalogue: base unresolved", file=sys.stderr)
+        if base_override:
+            print(
+                "attack catalogue: base unresolved — "
+                f"{base_override} is not a strict ancestor commit of HEAD",
+                file=sys.stderr,
+            )
+        else:
+            print("attack catalogue: base unresolved", file=sys.stderr)
         return 2
 
-    changed = _changed_paths(repo, base)
+    try:
+        changed = _changed_paths(repo, base)
+    except GitError as exc:
+        print(f"attack catalogue: git failed — {exc.stderr}", file=sys.stderr)
+        return 2
     prose_hits = [
         path
         for path in changed
@@ -675,7 +734,11 @@ def _run_signal(
         return 1
     guarded_globs = guarded_path_globs(store)
 
-    tracked = _tracked_paths(repo)
+    try:
+        tracked = _tracked_paths(repo)
+    except GitError as exc:
+        print(f"attack catalogue: git failed — {exc.stderr}", file=sys.stderr)
+        return 2
     for glob in guarded_globs:
         if not any(_glob_matches(glob, path) for path in tracked):
             print(
