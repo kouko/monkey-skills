@@ -103,7 +103,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: BI-4
 - **Review disposition**: batch(cli-receipt)
-- **Status**: implemented(fef328581d510398528e616daaef982103c20909)
+- **Status**: done(fef328581d510398528e616daaef982103c20909)
 - **Gloss**: 被拒時一眼看出是誰動了什麼，照訊息做就能復原。
 
 ## Task 4 — apply-result 把套用的動作寫進收據（applied_action）
@@ -125,7 +125,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Independent**: false
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(cli-receipt)
-- **Status**: implemented(dcf936bda342b7e2087a6b3cc7cb98f04eec5cfd)
+- **Status**: done(dcf936bda342b7e2087a6b3cc7cb98f04eec5cfd)
 - **Gloss**: 收據記下「這批最後是通過還是退回」，reopen 次數就能算。
 
 ## Task 5 — task_batch_replay.py observe：從 log 與收據產出 v2 結果檔
