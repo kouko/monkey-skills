@@ -138,15 +138,24 @@ def _commit_changed_paths(repo_root: Path, sha: str) -> tuple[str, ...]:
     the first parent and the commit; a root commit has no `<sha>^`, so
     git-diff(1) fails there and the fallback `git diff-tree --no-commit-id
     --name-only -r <sha>` (git-diff-tree(1)) compares a root commit against
-    the empty tree, listing every path it introduced."""
+    the empty tree, listing every path it introduced. Both invocations pass
+    `-c core.quotePath=false` ahead of the subcommand: git-config(1)
+    documents `core.quotePath` as defaulting to true, under which "bytes
+    higher than 0x80 ... are quoted" — so a non-ASCII path (e.g. `日本.py`)
+    would otherwise list as an octal-escaped, double-quoted string
+    (`"\346\227\245\346\234\254.py"`) instead of its literal repo-relative
+    form, and never match a declared Files-touched entry."""
     parent_probe = _run_subprocess(
         ["git", "-C", str(repo_root), "rev-parse", "--verify", "--quiet", f"{sha}^"]
     )
     if parent_probe.returncode == 0:
-        listing = _run_git(repo_root, "diff", "--name-only", f"{sha}^", sha)
+        listing = _run_git(
+            repo_root, "-c", "core.quotePath=false", "diff", "--name-only", f"{sha}^", sha
+        )
     else:
         listing = _run_git(
-            repo_root, "diff-tree", "--no-commit-id", "--name-only", "-r", sha
+            repo_root, "-c", "core.quotePath=false", "diff-tree",
+            "--no-commit-id", "--name-only", "-r", sha,
         )
     return tuple(line for line in listing.splitlines() if line)
 
