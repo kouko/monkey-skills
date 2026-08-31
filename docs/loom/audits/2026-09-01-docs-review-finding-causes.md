@@ -161,12 +161,15 @@ again on newly-introduced sibling-drift, rather than settling in round 2.
 **dotfiles — PR#40 (claude-omlx alias) 10-round case**: 10 rounds, 2
 reviewers/round, final verdict PASS. Rounds 1–3 found real code defects
 (race condition, `pgrep | head -1`, untested branches — not prose).
-Rounds 4–10 found ONLY prose defects (a `.zshrc` alias comment,
-cause-B/H throughout — see Appendix §A.2 rows #6–#12): each fix planting
-the next false claim, until the fix pattern shifted from correcting facts
-to removing all checkable facts from the comment entirely. This is the
-single most-rounds case across all four projects' mining and the
-concrete instance the brief cites for "rounds 4–10 prose-only."
+Rounds 4–8 (explicitly labelled in Appendix §A.2 rows #6–#11), plus one
+further unresolved finding carried forward with no round number attached
+(row #12), found ONLY prose defects (a `.zshrc` alias comment, cause-B/H
+throughout): each fix planting the next false claim, until the fix
+pattern shifted from correcting facts to removing all checkable facts
+from the comment entirely. This is the single most-rounds case across
+all four projects' mining and the concrete instance the brief cites for
+"rounds 4–10 prose-only," with the 10-round total coming from the rounds
+count stated above, not from a round number on every cited row.
 
 ## Limits
 
@@ -234,7 +237,7 @@ concrete instance the brief cites for "rounds 4–10 prose-only."
   walk, and instruction-schema checking rather than an omission
   checklist. This document does not measure rule 14's effect — it
   predates the rule and records only the pre-existing distribution.
-- The A/B protocol under `docs/loom/dogfood/2026-08-31-prose-selfsweep-ab/`
+- The A/B protocol under `docs/loom/dogfood/2026-09-01-prose-selfsweep-ab/`
   — its historical case selection and its `cause` field values (the
   closed A–K set validated by `prose_selfsweep_tally.py`) are grounded in
   the taxonomy defined in this document's Method section.
