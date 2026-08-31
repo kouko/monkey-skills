@@ -1024,6 +1024,54 @@ def _stuck_finalized_plan(plan_path: Path, sha1: str, sha2: str) -> None:
     plan_path.write_text(plan_text, encoding="utf-8")
 
 
+def test_apply_result_recovery_records_applied_action(
+    tmp_path, capsys, monkeypatch,
+) -> None:
+    """The crash-recovery flip must record `applied_action` exactly like the
+    normal flip does: a reopen recovered after a ledger crash would
+    otherwise be invisible to an observer counting reopens from receipts
+    alone (BI-2)."""
+    plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
+    receipt_path = tmp_path / "verification-receipt.json"
+    packet_file = tmp_path / "packet.json"
+    packet_file.write_text(json.dumps(
+        _packet_json(plan_path, repo_root, receipt_path, capsys)
+    ), encoding="utf-8")
+    result_path = _result_file(tmp_path, _packet_identity(tmp_path), reopen=True)
+    dispatch_receipt = tmp_path / "dispatch-receipt.json"
+    assert cli.main([
+        "record-dispatch", "--packet-file", str(packet_file),
+        "--out", str(dispatch_receipt),
+    ]) == 0
+    capsys.readouterr()
+    argv = [
+        "apply-result", "--plan", str(plan_path),
+        "--repo-root", str(repo_root),
+        "--verification-receipt", str(receipt_path),
+        "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
+    ]
+    real_write_text = Path.write_text
+
+    def _crash_on_receipt_write(self, *call_args, **call_kwargs):
+        if self == dispatch_receipt:
+            raise OSError("simulated crash before receipt flip")
+        return real_write_text(self, *call_args, **call_kwargs)
+
+    monkeypatch.setattr(Path, "write_text", _crash_on_receipt_write)
+    assert cli.main(argv) != 0
+    capsys.readouterr()
+    monkeypatch.setattr(Path, "write_text", real_write_text)
+    code = cli.main(argv)
+    out = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert out["recovered"] is True
+    assert out["action"] == "reopen"
+    stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    assert stored["result_applied"] is True
+    assert stored["applied_action"] == "reopen"
+
+
 def test_apply_result_recovery_refuses_wrong_batch_receipt(tmp_path, capsys) -> None:
     """A stuck receipt for a DIFFERENT batch_id than the one apply-result
     resolves must not be flipped by borrowing this batch's done() statuses

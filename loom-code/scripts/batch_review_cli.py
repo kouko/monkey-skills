@@ -699,6 +699,7 @@ def _recover_settled_receipt(args) -> dict | None:
         action = "reopen"
 
     stored["result_applied"] = True
+    stored["applied_action"] = action
     Path(receipt_path).write_text(
         json.dumps(stored, sort_keys=True), encoding="utf-8"
     )
