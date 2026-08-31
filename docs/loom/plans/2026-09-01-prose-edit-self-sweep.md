@@ -66,8 +66,9 @@ N/A — no unresolved question: the brief's two Open Questions are both resolved
 - **Independent**: true
 - **Review-weight**: prose
 - **Brief item covered**: "Build (1): evidence doc `docs/loom/audits/2026-08-31-docs-review-finding-causes.md` consolidating the 4-project cause distribution."
-- **Review disposition**: batch(prose-artifacts)
-- **Status**: claimed(@sonnet-implementer-w1a)
+- **Review disposition**: individual
+- **Not batched because**: all-record-class prose batch cannot resolve through batch_review_cli apply-result (backlog 2026-09-01-apply-result-cannot-take-record-class-narrowed-arms; DL-2 individual fallback)
+- **Status**: claimed(@sonnet-implementer-repair)
 - **Gloss**: 把四專案挖出的缺陷成因分布落成 repo 內可引用的證據文件。
 
 ## Task 2 — implementer 規則 14「Prose-edit self-sweep」＋釘住測試
@@ -100,7 +101,7 @@ N/A — no unresolved question: the brief's two Open Questions are both resolved
 - **Independent**: true
 - **Brief item covered**: "Build (2): rule 14 \"Prose-edit self-sweep\" in `loom-code/agents/implementer.md` hand-written section, TDD-first via a pinned case in `loom-code/scripts/test_agent_contract.py`."
 - **Review disposition**: individual
-- **Status**: implemented(3291e4d1bf1fa48f975bb6e67be060ed5df5973f)
+- **Status**: done(3291e4d1bf1fa48f975bb6e67be060ed5df5973f)
 - **Gloss**: 契約本體：prose 任務收尾時的靜默五動作自掃，加上釘住位置與措辭的測試。
 
 ## Task 3 — A/B 計分腳本 prose_selfsweep_tally.py
@@ -121,7 +122,7 @@ N/A — no unresolved question: the brief's two Open Questions are both resolved
 - **Independent**: true
 - **Brief item covered**: "Build (3): A/B harness under `docs/loom/dogfood/2026-08-31-prose-selfsweep-ab/` — protocol, 4 historical prose-task cases, tally script `loom-code/scripts/prose_selfsweep_tally.py` + test"
 - **Review disposition**: individual
-- **Status**: implemented(6e4f44ff3ed41fae4e15069fc45bcc07520e1953)
+- **Status**: done(6e4f44ff3ed41fae4e15069fc45bcc07520e1953)
 - **Gloss**: 把 A/B 結果算成表的計分器——只算數，不下判斷。
 - **Notes**: fail-loud gate — if `loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py` classifies new scripts/ modules, register the new module there per its own convention (DL-1 precedent in the 2026-08-31 helper-extraction plan).
 
@@ -153,8 +154,9 @@ N/A — no unresolved question: the brief's two Open Questions are both resolved
 - **Independent**: false
 - **Review-weight**: prose
 - **Brief item covered**: "Build (3): A/B harness under `docs/loom/dogfood/2026-08-31-prose-selfsweep-ab/` — protocol, 4 historical prose-task cases, tally script `loom-code/scripts/prose_selfsweep_tally.py` + test; dispatch runs from the session (implementer arms A/B × 2 reps, sonnet; judge = unchanged `docs-reviewer`; blind cause labelling)."
-- **Review disposition**: batch(prose-artifacts)
-- **Status**: pending
+- **Review disposition**: individual
+- **Not batched because**: all-record-class prose batch cannot resolve through batch_review_cli apply-result (backlog 2026-09-01-apply-result-cannot-take-record-class-narrowed-arms; DL-2 individual fallback)
+- **Status**: done(e81d4e887c3b18216724e17c1f4f13a7b5d7314f)
 - **Gloss**: 實驗協定與案例：誰跑、怎麼盲、量什麼、什麼不算贏，全部先登記。
 
 ## Task 5 — 版本 bump（兩個 manifest 表面）
@@ -198,23 +200,25 @@ N/A — no unresolved question: the brief's two Open Questions are both resolved
 - **Independent**: false
 - **Review-weight**: prose
 - **Brief item covered**: "Build (4): CHANGELOG + version bump."
-- **Review disposition**: batch(prose-artifacts)
-- **Status**: pending
+- **Review disposition**: individual
+- **Not batched because**: all-record-class prose batch cannot resolve through batch_review_cli apply-result (backlog 2026-09-01-apply-result-cannot-take-record-class-narrowed-arms; DL-2 individual fallback)
+- **Status**: done(f8bddbd23803b70ac2c7103c2e82c3710c480f53)
 - **Gloss**: CHANGELOG 條目是編輯性散文——prose lane，明文不宣稱有效。
 
 ## Review Batches
 
-Tasks 2, 3, 5 stay individual: Task 2 is the security-adjacent contract edit needing its own full-triad verdict, Task 3 is standalone code, Task 5 is mechanical (self-check lane, no reviewer dispatch).
-
-### Review Batch: prose-artifacts
-- **Members**: Task 1, Task 4, Task 6
-- **Verdict question**: Do the three prose artifacts (evidence doc, A/B protocol + cases, CHANGELOG entry) describe the same shipped mechanism consistently — counts recomputable from the appendix, registered metrics matching the brief, entry naming all five artifacts — with zero effectiveness claims anywhere?
-- **Review lane**: prose
-- **Aggregate verification**: inert description — grep all three artifacts for effectiveness-claim wording ("reduces", "improves", "cuts rounds", "有效"); hand-recount one distribution-table column against the appendix rows; run protocol.md's quoted tally invocation against its inline fixture and confirm exit 0.
-- **Boundary**: capability: prose record of the self-sweep arc; exclusions: none; consumable: yes
+Zero eligible Batches. Tasks 1, 4, 6 were originally declared batch(prose-artifacts); the batch was abandoned to individual fallback on 2026-09-01 (see Decision Log DL-2 and backlog entry 2026-09-01-apply-result-cannot-take-record-class-narrowed-arms) — all-record-class members cannot resolve through batch_review_cli's two-arm prose expectation. Tasks 2, 3 were always individual; Task 5 is mechanical (self-check lane, no reviewer dispatch).
 
 ## Notes
 
 - The A/B run itself (16 implementer + judge dispatches) is session work AFTER this plan's tasks complete and is not an SDD task; its results land in the dogfood directory in a follow-up commit on this branch.
 - Terminal for this arc: branch complete + whole-branch review PASS + local commits; NO push, NO PR, NO merge until the user releases the isolation hold (sibling worktree baseline).
 - The brief names the evidence doc and dogfood dir with date 2026-08-31; actual artifacts use 2026-09-01 (authoring date) — same artifacts, date drift only.
+
+## Decision Log
+
+### DL-1 — Tally hardening beyond Task 3 acceptance (2026-09-01, post-review)
+T3 code-quality 🟡: fixture test asserts only header strings, so an aggregation mutant (all records folded into arm A) survives; also a record with unknown `arm` is silently dropped. Both fixed in a follow-up commit (value-level assertions on per-arm totals; unknown arm → fail-loud, consistent with the A–K cause validation). Below-threshold engineering decision — logged, not asked; the tally is the instrument for this arc's own A/B, so instrument correctness is treated as cheap mandatory hardening.
+
+### DL-2 — prose-artifacts batch abandoned to individual fallback (2026-09-01)
+The batch's docs-reviewer arm refused to mint a verdict: all three members are record-class (requesting-code-review §Classification), so SKILL's record-class narrowing makes the docs slot N/A by construction — but `batch_review_cli.py apply-result` hardcodes the two-arm prose set and cannot accept the spec-only result `review_batch.py`'s `_arms_apply_to_lane` permits. The refusal is upheld (fabricating a verdict into an N/A slot would be a wrong terminal result); the CLI gap is filed as backlog `2026-09-01-apply-result-cannot-take-record-class-narrowed-arms`. Resolution: zero batch ledger mutation; Tasks 1, 4, 6 route through the individual path — spec-reviewer alone per task, "code-quality slot: N/A — record-class prose" recorded per task. The batch spec arm's blocking finding on Task 1 (stale `2026-08-31` directory date in ## Consumers) is carried into Task 1's repair dispatch, together with the docs arm's informational "Rounds 4–10 outruns its cited rows" observation.
