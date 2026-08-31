@@ -26,6 +26,24 @@ def _load():
 replay = _load()
 
 
+def test_task_batch_replay_load_delegates_to_load_sibling(monkeypatch):
+    """`_load` delegates to `sibling_import.load_sibling` (Task 15 of
+    docs/loom/plans/2026-08-31-loom-code-script-helper-extraction.md)
+    instead of hand-rolling `importlib.util.spec_from_file_location`."""
+    import sibling_import
+
+    sentinel = object()
+
+    def _fake(filename, *, name=None, anchor=None):
+        assert filename == "review_batch.py"
+        assert name == "x"
+        return sentinel
+
+    monkeypatch.setattr(sibling_import, "load_sibling", _fake)
+
+    assert replay._load("x", "review_batch.py") is sentinel
+
+
 def _corpus() -> dict:
     return {
         "schema": "task-batch-replay-corpus/v1",
