@@ -219,6 +219,25 @@ def test_field_name_constants_are_exported():
     assert module.OVERSIZED_FIELD == "Oversized because"
 
 
+def test_propose_review_batches_oracle_keeps_name_and_exception_type(monkeypatch):
+    import propose_review_batches
+
+    def _raise_import_error(*args, **kwargs):
+        raise ImportError("boom")
+
+    monkeypatch.setattr(propose_review_batches, "load_sibling", _raise_import_error)
+    with pytest.raises(ValueError):
+        propose_review_batches._oracle()
+
+    monkeypatch.undo()
+    sys.modules.pop("propose_review_batch_oracle", None)
+    try:
+        module = propose_review_batches._oracle()
+        assert sys.modules["propose_review_batch_oracle"] is module
+    finally:
+        sys.modules.pop("propose_review_batch_oracle", None)
+
+
 def test_check_flags_unbatched_proposed_pair_without_reason(tmp_path):
     # Same lane + same Module -> proposed together; both declared individual
     # with no reason is the silent conservatism the check exists to refuse.
