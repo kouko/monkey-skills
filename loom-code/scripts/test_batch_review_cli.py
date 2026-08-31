@@ -1307,6 +1307,49 @@ def test_apply_result_refuses_receipt_bound_to_another_batch(
         assert stored["result_applied"] is False
 
 
+def test_apply_result_refuses_receipt_unpinned_variants(tmp_path, capsys) -> None:
+    """_bind_receipt_to_packet's remaining branches, each pinned: a
+    members-set mismatch, an absent member_shas, a member_shas superset
+    (extra key not in the packet's members — the same set-equality check
+    `_recover_settled_receipt` already applies, per this function's own
+    docstring claim the two paths never disagree), and — the one genuinely
+    missing refusal — a receipt already marked applied, which today is
+    silently reused instead of refused (F1/F6 residue: 'run record-dispatch
+    for a fresh cycle')."""
+    plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
+    base = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+    packet_identity = base["packet_identity"]
+    before = plan_path.read_text(encoding="utf-8")
+    result_path = _result_file(tmp_path, packet_identity)
+    variants = {
+        "members_subset": {**base, "members": ["Task 1"]},
+        "member_shas_absent": {
+            key: value for key, value in base.items() if key != "member_shas"
+        },
+        "member_shas_superset": {
+            **base,
+            "member_shas": {**base["member_shas"], "Task 3": "c" * 40},
+        },
+        "already_applied": {**base, "result_applied": True},
+    }
+    for name, receipt in variants.items():
+        dispatch_receipt.write_text(json.dumps(receipt), encoding="utf-8")
+        code = cli.main(_apply_result_argv(
+            plan_path, repo_root, tmp_path, result_path, dispatch_receipt,
+        ))
+        out = json.loads(capsys.readouterr().out)
+        assert code != 0, name
+        assert out["action"] is None, name
+        assert plan_path.read_text(encoding="utf-8") == before, name
+        stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
+        assert stored.get("result_applied", False) == receipt.get(
+            "result_applied", False
+        ), name
+
+
 def test_apply_result_requires_receipt_flag(tmp_path, capsys) -> None:
     """F3: apply-result without --receipt is an argparse usage error
     (exit 2) — there is nothing to bind the result to."""
