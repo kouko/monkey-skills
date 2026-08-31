@@ -5,6 +5,35 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.109.0] — 2026-08-31 — Adversarial audit station
+
+Ships an attack-catalogue store and a fail-loud checker for it, a
+`Safety-bearing:` header for plan cards, and the branch-close-out step
+that dispatches an adversarial audit before a security-relevant branch
+merges. Findings are recorded in
+`docs/loom/dogfood/2026-08-31-adversarial-audit-station.md` (13 instances
+pinned, 7 reproduced live on the branch that built the station).
+
+### Added
+
+- `docs/loom/ATTACK-CATALOGUE.md` reference + the `loom_init` scaffold
+  that seeds it in an adopting repo.
+- `check_attack_catalogue.py` + a CI step: refuses duplicate section
+  headings, non-ISO dates, vendored version pins, an entry whose `def`
+  cannot be AST-resolved, and strips `.sh` comments before scanning so a
+  commented-out example doesn't count as a live entry.
+- `plan_card.py` gains a `Safety-bearing:` header, fail-loud on a
+  misplaced, indented, miscased, or unclosed-fence header.
+- `finishing-a-development-branch` Step 3.5 plus two close-out card rows
+  and two new packets — `adversarial-audit-packet.md` and
+  `cold-reader-packet.md`.
+- `code-reviewer` gains a `class:` tag; `plan-format.md` documents the
+  `Safety-bearing` grammar.
+
+### Fixed
+
+- Batch-CAS full-reopen fix in `batch_review_cli.py`.
+
 ## [0.108.1] — 2026-08-31 — Shared git body and sibling loader (Phase 1 script helper extraction)
 
 Collapses two duplicated shapes across `scripts/` onto two new shared
