@@ -85,7 +85,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-100
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(63e6b37a0f1807441cd4663bd1b8b7b3df882ca7)
+- **Status**: pending
 - **Gloss**: 人工答案先凍結，實驗後才不會因結果而改題。
 
 ## Task 4 — 凍結 corpus manifest
@@ -104,7 +104,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-101
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(4b2767af4a76f4ed88a53fe86e64028b98c2cda9)
+- **Status**: pending
 - **Gloss**: 每次弱模型重跑都面對同一份不會漂移的考卷。
 
 ## Task 5 — 綁定弱模型 execution profile
@@ -315,7 +315,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-112
 - **Review disposition**: batch(store-records)
-- **Status**: implemented(4e0ef9da622ed16ac854ccad39d1f159910c39ab)
+- **Status**: pending
 - **Gloss**: 寫文件、寫答案與裁決的人是誰會被記錄，避免自己給自己過關。
 
 ## Task 16 — 限制 run 與 campaign 成本
