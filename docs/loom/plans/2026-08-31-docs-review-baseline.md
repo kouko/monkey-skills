@@ -73,7 +73,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Implement named oracle ratification, correction-child lineage, negative-control intent, and refusal of in-place frozen edits.
 - **Module**: `loom-code/scripts/docs_review_baseline_store.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md`
 - **Acceptance**:
@@ -92,7 +92,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Implement non-empty corpus manifests that bind one case, snapshot digest, and ratified oracle revision per deterministic entry.
 - **Module**: `loom-code/scripts/docs_review_baseline_store.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md`
 - **Acceptance**:
@@ -111,7 +111,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Resolve and record economy host, exact model, effort, contract, runtime, and configuration identities; refuse stronger or unknown scored bindings.
 - **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/skills/using-loom-code/references/dispatch-profile.md`
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/scripts/loom_firing_harness.py`
@@ -131,7 +131,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Persist run identity before dispatch and preserve raw bytes, digest, failure, interruption, malformed output, and new-id retry semantics.
 - **Module**: `loom-code/scripts/docs_review_baseline_store.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md`
 - **Acceptance**:
@@ -150,7 +150,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Preserve reviewer observations losslessly and implement append-only human attribution revisions with unknown and disputed exclusions.
 - **Module**: `loom-code/scripts/docs_review_baseline_store.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md`
 - **Acceptance**:
@@ -169,7 +169,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Admit at least two runs only when corpus, contract, runtime, configuration, host, model, tier, and effort identities are identical.
 - **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md`
 - **Acceptance**:
@@ -188,7 +188,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Calculate finding and false-alarm metrics as value-or-null records with numerator, denominator, formula version, availability, and exclusions.
 - **Module**: `loom-code/scripts/docs_review_baseline_metrics.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_metrics.py`, `loom-code/scripts/test_docs_review_baseline_metrics.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_metrics.py`, `loom-code/scripts/test_docs_review_baseline_metrics.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md`
 - **Acceptance**:
@@ -207,7 +207,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Report failed, interrupted, malformed, unparseable, unscoreable-model, unknown, and disputed counts without mixing incompatible usage units.
 - **Module**: `loom-code/scripts/docs_review_baseline_metrics.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_metrics.py`, `loom-code/scripts/test_docs_review_baseline_metrics.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_metrics.py`, `loom-code/scripts/test_docs_review_baseline_metrics.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md`
 - **Acceptance**:
@@ -226,7 +226,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Freeze reports against exact corpus, oracle, attribution, contract, runtime, parser, execution-profile, and metric-definition revisions.
 - **Module**: `loom-code/scripts/docs_review_baseline_metrics.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_metrics.py`, `loom-code/scripts/test_docs_review_baseline_metrics.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_metrics.py`, `loom-code/scripts/test_docs_review_baseline_metrics.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md`
 - **Acceptance**:
@@ -245,7 +245,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Represent document revisions and remediation events so origin claims require exact parent, child, diff, actor-stage, and evidence bindings.
 - **Module**: `loom-code/scripts/docs_review_baseline_store.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/discovery/2026-08-31-docs-review-cost/research/writer-versus-reviewer-attribution.md`
 - **Acceptance**:
@@ -264,7 +264,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Version reviewer instructions independently from skill, package, and runtime implementation; separate cohorts whenever either digest changes.
 - **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/skills/requesting-docs-review/SKILL.md`
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/agents/docs-reviewer.md`
@@ -284,7 +284,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Enforce per-snapshot classification and deny artifact instructions, secrets, external files, tools, connectors, and network outside the approved boundary.
 - **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/agents/docs-reviewer.md`
 - **Acceptance**:
@@ -303,7 +303,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Validate campaign action authority, conflicts, independent ratification, denial audit events, and disputed exclusion without building generalized RBAC.
 - **Module**: `loom-code/scripts/docs_review_baseline_store.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_store.py`, `loom-code/scripts/test_docs_review_baseline_store.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/proposal.md`
 - **Acceptance**:
@@ -322,7 +322,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Enforce finite run, retry, concurrency, wall-time, input, output, and usage limits with deterministic whole-artifact fit checks.
 - **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/scripts/loom_firing_harness.py`
 - **Acceptance**:
@@ -341,7 +341,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Implement single-owner dispatch, fencing takeover, acknowledgement uncertainty, partial and late bytes, cancellation uncertainty, and atomic capture.
 - **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/proposal.md`
 - **Acceptance**:
@@ -360,7 +360,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Compare prepared economy identity with dispatch-time and host-reported execution identity; preserve mismatches and unknown attestations as unscoreable.
 - **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/skills/using-loom-code/references/dispatch-profile.md`
 - **Acceptance**:
@@ -379,7 +379,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Model negative controls, zero expected findings, explicit no-findings, suspicious empty, extraction failure, mixed parse, partial output, and missed findings distinctly.
 - **Module**: `loom-code/scripts/docs_review_baseline_metrics.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_metrics.py`, `loom-code/scripts/test_docs_review_baseline_metrics.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_metrics.py`, `loom-code/scripts/test_docs_review_baseline_metrics.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/specs/docs-review-baseline/spec.md`
 - **Acceptance**:
@@ -398,7 +398,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Freeze one single-winner manifest of exact runs, observations, attributions, parser, and metric definitions before report calculation.
 - **Module**: `loom-code/scripts/docs_review_baseline_metrics.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_metrics.py`, `loom-code/scripts/test_docs_review_baseline_metrics.py`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_metrics.py`, `loom-code/scripts/test_docs_review_baseline_metrics.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/docs/loom/2026-08-31-docs-review-baseline/proposal.md`
 - **Acceptance**:
@@ -417,7 +417,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Add a thin stdlib CLI that validates a campaign directory, dispatches configured weak-host commands, captures attempts, and emits a frozen JSON and Markdown report.
 - **Module**: `loom-code/scripts/docs_review_baseline.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline.py`, `loom-code/scripts/test_docs_review_baseline.py`, `claude/.claude/CLAUDE.md`, `AGENTS.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline.py`, `loom-code/scripts/test_docs_review_baseline.py`, `claude/.claude/CLAUDE.md`, `AGENTS.md`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/scripts/docs_review_baseline_store.py`
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/scripts/docs_review_baseline_runner.py`
