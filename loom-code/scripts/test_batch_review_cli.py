@@ -425,6 +425,36 @@ def test_packet_refuses_directory_path(tmp_path, capsys) -> None:
     assert "not a committed blob" in " ".join(out["reasons"])
 
 
+def test_packet_seals_member_commit_touching_declared_non_ascii_path(
+    tmp_path, capsys,
+) -> None:
+    """git-config(1) core.quotePath defaults to true: a path byte > 0x80 is
+    quoted/escaped as an octal-escaped double-quoted string (e.g.
+    `"\\346\\227\\245\\346\\234\\254.py"` for `日本.py`) in `git diff
+    --name-only` output — not the literal UTF-8 path _safe_repo_path
+    expects. A declared non-ASCII file must still seal, not be spuriously
+    refused as an undeclared path."""
+    repo_root = tmp_path / "repo"
+    _init_git_repo(repo_root)
+    _git_commit_file(repo_root, "seed.txt", b"seed")  # sha1 is NOT a root commit
+    sha1 = _git_commit_file(repo_root, "src/日本.py", b"member 1")
+    sha2 = _git_commit_file(repo_root, "src/2.py", b"member 2")
+    plan_text = _plan_text(
+        f"implemented({sha1})", f"implemented({sha2})",
+    ).replace(
+        "- **Files touched**: src/1.py",
+        "- **Files touched**: src/日本.py",
+    )
+    plan_path = repo_root / "plan.md"
+    plan_path.write_text(plan_text, encoding="utf-8")
+    receipt_path = tmp_path / "verification-receipt.json"
+    receipt_path.write_text(_receipt_json(), encoding="utf-8")
+    emitted = _packet_json(plan_path, repo_root, receipt_path, capsys)
+    member_1 = emitted["members"][0]
+    assert member_1["sha"] == sha1
+    assert [f["path"] for f in member_1["files"]] == ["src/日本.py"]
+
+
 def _git_commit_files(repo_root: Path, files: dict[str, bytes]) -> str:
     """One commit touching several paths — the shape a smuggling member
     commit has (its declared file plus an undeclared one)."""
