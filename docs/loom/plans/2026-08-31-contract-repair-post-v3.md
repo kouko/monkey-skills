@@ -10,7 +10,7 @@ Stage: sdd:wave-1
 Total tasks: 17
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
-Plan-document-reviewer verdict: PASS (2026-08-31, round 3)
+Plan-document-reviewer verdict: PASS (2026-08-31, round 3; R11 amendment PASS round 2)
 
 ## Task-flow diagram
 
@@ -25,6 +25,8 @@ T8[T8 adapter subcommands] --> T9[T9 receipt idempotency] --> T13
 T10[T10 SDD prose] --> T13
 T11[T11 amend 4 plans] --> T13
 T12[T12 proposal gate] --> T13
+T1 --> T12
+T8 --> T10
 T14[T14 referent grammar] --> T17[T17 pilot] --> T13
 T15[T15 plan_card 40-hex] --> T16[T16 ledger write-back] --> T17
 T8 --> T16
@@ -34,14 +36,17 @@ T5 --> T17
 
 ## Open Questions
 
-N/A — no unresolved question: all semantic decisions were ratified in the brief (R1–R10); DA content for the live map is drafted from its existing Destination prose (R5).
+N/A — no unresolved question: all semantic decisions were ratified in the brief (R1–R11); DA content for the live map is drafted from its existing Destination prose (R5).
 
 ## Complexity assessment
 
 - Added complexity: one new CLI entrypoint (batch review adapter) with four
   subcommands and a dispatch-receipt file; one new small checker
   (proposal-status intake gate); three validator rules in map_store.py; a
-  manifest option in the migrator.
+  manifest option in the migrator. R11 (amendment): a git subprocess inside
+  plan_card's --set-status write path (T15); apply-result becomes a ledger
+  writer (T16); the sealed projection's referent grammar widens from REQ-only
+  to every plan-format referent (T14).
 - Why it is worthwhile: closes five confirmed governance/operation holes in
   contracts merged <48h ago, before any further arc builds on them; the
   adapter converts the batch-review pipeline from prose-assembly to a single
@@ -53,7 +58,11 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - Downstream risk: the DA validator (T2) makes currently-valid maps invalid —
   mitigated by T7 repairing the only live map in the same arc before the
   version ships. The receipt file (T8/T9) adds one artifact per batch —
-  bounded by batch count.
+  bounded by batch count. R11: plan_card --set-status now refuses outside a
+  git checkout or on an unresolvable ref (accepted — the ledger is always
+  inside a repo); apply-result's writes are bounded by the existing CAS +
+  plan-directory lock; a wider referent grammar means a typo'd quote still
+  seals — the reviewer, not the grammar, catches that.
 
 ## Task 1 — Governance ratification records (R1)
 - **Description**: Update the v3 proposal status to a ratified line and fill the v3 plan's empty Decision Log with the itemized semantic decisions, each carrying a user-ratified line.
@@ -344,7 +353,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Gloss**: 版本三表面同步：plugin.json、CHANGELOG、README 版本列。
 ## Task 14 — Referent grammar widened for batch projections (R11a)
 - **Description**: `owned_requirements` accepts every `Brief item covered` referent plan-format admits — REQ-<n>, BI-<n>, or a quote — with non-empty as the only rule, in both the checker's projection and review_batch's projection validator.
-- **Module**: loom-code/scripts/review_batch.py (+ its projection feeder check_review_batches.py)
+- **Module**: loom-code/scripts (batch projection: review_batch validator + check_review_batches feeder)
 - **Files touched**: loom-code/scripts/review_batch.py, loom-code/scripts/check_review_batches.py, loom-code/scripts/test_review_batch.py, loom-code/scripts/test_check_review_batches.py
 - **Context paths**:
   - loom-code/skills/writing-plans/references/plan-format.md (§Brief item covered — referent kinds a–d)
@@ -385,16 +394,18 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Gloss**: ledger 一寫進去就是 CLI 認得的完整 SHA，不用人手展開。
 
 ## Task 16 — apply-result writes the ledger; plan_card single-sourced (R11c)
-- **Description**: `apply-result` performs the atomic Batch status update through plan_card's `atomic_batch_status_update` (finalize → members done(<sha>), reopen → owner union pending), and the repo-root scripts/plan_card.py becomes a verified copy of loom-code/scripts/plan_card.py with a drift test.
+- **Description**: `apply-result` performs the atomic Batch status update through plan_card's `atomic_batch_status_update` (finalize → members done(<sha>), reopen → owner union pending).
+    - A test pins scripts/plan_card.py as the exec shim onto loom-code/scripts/plan_card.py (SSOT already holds; the pin stops a future full copy).
 - **Module**: loom-code/scripts/batch_review_cli.py
-- **Files touched**: loom-code/scripts/batch_review_cli.py, loom-code/scripts/test_batch_review_cli.py, scripts/plan_card.py, scripts/test_plan_card_ssot_drift.py
+- **Files touched**: loom-code/scripts/batch_review_cli.py, loom-code/scripts/test_batch_review_cli.py, scripts/test_plan_card_shim.py
 - **Context paths**:
   - loom-code/scripts/plan_card.py (`atomic_batch_status_update` :878, `_transition_authority_validator` :636)
   - loom-code/scripts/review_batch.py (`resolve_aggregate_review` :1101 — transition_authority on the resolution)
-  - scripts/verify-drift.py (existing drift-test idiom)
+  - scripts/plan_card.py (the 10-line os.execv shim to pin)
 - **Acceptance**:
-  - **RED**: new test — `apply-result` on a finalize result leaves member statuses at implemented(<sha>) today; after the fix the plan file reads done(<sha>) for every member under the plan lock, and a reopen result flips owners to pending; new drift test fails today because the two plan_card copies differ.
-  - **GREEN**: ledger write-back on finalize/reopen with the sealed transition authority; wait_refuse writes nothing; drift test passes with the repo-root copy byte-identical to the loom-code copy.
+  - **RED**: new test — `apply-result` on a finalize result leaves member statuses at implemented(<sha>) today; after the fix the plan file reads done(<sha>) for every member under the plan lock, and a reopen result flips owners to pending.
+    - New shim test is written against a mutated copy first to prove it discriminates (a full-copy plan_card fails it).
+  - **GREEN**: ledger write-back on finalize/reopen with the sealed transition authority; wait_refuse writes nothing; shim test passes on the unchanged scripts/plan_card.py (execv onto loom-code/scripts/plan_card.py, argv/exit passthrough).
 - **External surfaces**: stdlib only.
 - **Dependencies**: Tasks 8, 9, 15 complete first
 - **Seam**:
@@ -407,14 +418,15 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Independent**: false
 - **Brief item covered**: "R11 (c) Ledger write-back: apply-result performs the atomic
     Batch status update … through plan_card's atomic_batch_status_update; the
-    repo-root scripts/plan_card.py and loom-code/scripts/plan_card.py are
-    reconciled to one SSOT (the loom-code copy) with a drift test"
+    repo-root scripts/plan_card.py stays the exec shim onto
+    loom-code/scripts/plan_card.py it already is … pinned by a test"
 - **Review disposition**: individual
 - **Status**: pending
-- **Gloss**: 審完自動翻 ledger；兩份 plan_card 不再分叉。
+- **Gloss**: 審完自動翻 ledger；repo-root plan_card 釘死為 shim。
 
 ## Task 17 — Pilot: this arc's map-side batch through the CLI (R11d)
 - **Description**: Drive this plan's own `map-side-invariants` Batch through ready → packet → record-dispatch → apply-result with a real reviewer fan-out result, as the end-to-end acceptance proof; the run transcript lands in the plan's Notes.
+    - Task 5 "completes" here means implemented(<sha>) — the batch member state — since apply-result is what writes its done.
 - **Module**: docs/loom/plans (this plan's ledger)
 - **Files touched**: docs/loom/plans/2026-08-31-contract-repair-post-v3.md
 - **Context paths**:
