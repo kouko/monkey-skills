@@ -9,7 +9,7 @@ Goal: One symlink-guard body in `map_lock.py` parameterized by exception
     loom-workflow bumped to 3.1.1 — serves PURPOSE: a path-safety fix lands
     once instead of drifting across three copies, and a documented behavior
     nothing implements stops being a promise a session could act on
-Stage: sdd:wave-2
+Stage: sdd:wave-3
 Steps:
     1. 守衛三合一：map_lock 公開版本、map_store 與 map_transaction 各改一行委派
     2. 拆掉 reclaim：刪 claim_ticket、改寫 map-format 與 REQ-97、補 REQ-97 的真實測試
@@ -191,7 +191,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: false
 - **Brief item covered**: BI-12
 - **Review disposition**: individual
-- **Status**: claimed(@loom-script-refactor-phase2)
+- **Status**: done(a3b0b43d19641e83ba54f152e5c18446ccf57c9f)
 - **Gloss**: 讓 REQ-97 有一個真的在測「不可轉手」的測試，不是靠別的測試順帶掛名。
 
 ## Task 8 — backlog：loom_gate_markers 拆分
@@ -324,7 +324,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Brief item covered**: BI-7
 - **Not batched because**: the proposer paired it with Task 7 by dependency, but release administration closes after every other task and shares no verdict question with the REQ-97 test.
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: claimed(@loom-script-refactor-phase2)
 - **Gloss**: 收尾：版本號兩個表面同步、CHANGELOG 記下這次交付、活規格索引重生。
 
 ## Review Batches
