@@ -590,6 +590,42 @@ def build_isolated_replay_envelope(
     )
 
 
+def _codex_reviewer_command(run_root: str) -> list[str]:
+    return [
+        "codex",
+        "exec",
+        "--model",
+        "gpt-5.6-luna",
+        "--ephemeral",
+        "--ignore-user-config",
+        "--ignore-rules",
+        "--skip-git-repo-check",
+        "--json",
+        "--color",
+        "never",
+        "--sandbox",
+        "read-only",
+        "--strict-config",
+        "--config",
+        "project_doc_max_bytes=0",
+        "--config",
+        'web_search="disabled"',
+        "--config",
+        "apps._default.enabled=false",
+        "--disable",
+        "shell_tool",
+        "--disable",
+        "unified_exec",
+        "--disable",
+        "multi_agent",
+        "--disable",
+        "apps",
+        "--cd",
+        run_root,
+        ISOLATED_REVIEWER_PROMPT,
+    ]
+
+
 def run_isolated_reviewer(
     boundary: ReplayBoundary,
     *,
@@ -614,39 +650,7 @@ def run_isolated_reviewer(
         ["codex", "--version"], capture_output=True, check=True
     ).stdout.decode("utf-8", errors="replace").strip()
     with tempfile.TemporaryDirectory(prefix="docs-review-replay-") as run_root:
-        command = [
-            "codex",
-            "exec",
-            "--model",
-            "gpt-5.6-luna",
-            "--ephemeral",
-            "--ignore-user-config",
-            "--ignore-rules",
-            "--skip-git-repo-check",
-            "--json",
-            "--color",
-            "never",
-            "--sandbox",
-            "read-only",
-            "--strict-config",
-            "--config",
-            "project_doc_max_bytes=0",
-            "--config",
-            'web_search="disabled"',
-            "--config",
-            "apps._default.enabled=false",
-            "--disable",
-            "shell_tool",
-            "--disable",
-            "unified_exec",
-            "--disable",
-            "multi_agent",
-            "--disable",
-            "apps",
-            "--cd",
-            run_root,
-            ISOLATED_REVIEWER_PROMPT,
-        ]
+        command = _codex_reviewer_command(run_root)
         completed = subprocess.run(
             command,
             input=boundary.content,
@@ -1278,33 +1282,6 @@ def verify_execution_identity(
     }
 
 
-def _invocation_receipt_reason(
-    receipt: object,
-    *,
-    attempt_id: str,
-    prepared: Mapping[str, object],
-    raw_bytes: bytes,
-) -> str | None:
-    if (
-        not isinstance(receipt, CodexInvocationReceipt)
-        or receipt._seal is not _CODEX_INVOCATION_RECEIPT_SEAL
-    ):
-        return "runner invocation receipt unavailable"
-    if receipt.attempt_id != attempt_id:
-        return "runner invocation receipt attempt_id mismatch"
-    if receipt.returncode != 0:
-        return "runner invocation subprocess failed"
-    if receipt.raw_jsonl != raw_bytes:
-        return "runner invocation raw JSONL mismatch"
-    if not receipt.cli_version:
-        return "runner invocation Codex CLI version unavailable"
-    if prepared.get("host") != "codex":
-        return "runner invocation host mismatch"
-    if prepared.get("model") != "gpt-5.6-luna":
-        return "runner invocation model mismatch"
-    return None
-
-
 def _invocation_receipt_record(
     receipt: CodexInvocationReceipt,
 ) -> dict[str, object]:
@@ -1627,6 +1604,32 @@ def _dispatch_database(
         )
         """
     )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS dispatch_inputs (
+            attempt_id TEXT PRIMARY KEY,
+            input_digest TEXT NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS dispatch_invocations (
+            attempt_id TEXT PRIMARY KEY,
+            input_digest TEXT NOT NULL,
+            argv_json TEXT NOT NULL,
+            cli_version TEXT NOT NULL,
+            returncode INTEGER,
+            stderr BLOB,
+            raw_bytes BLOB,
+            raw_digest TEXT,
+            identity_evidence TEXT NOT NULL,
+            backend_model_identity TEXT,
+            identity_limitation TEXT NOT NULL,
+            state TEXT NOT NULL
+        )
+        """
+    )
     return _DispatchDatabase(
         connection=connection,
         database_fd=database_fd,
@@ -1692,6 +1695,7 @@ def claim_dispatch(
     takeover_expected_generation: int | None = None,
     prepared_profile: Mapping[str, object] | None = None,
     dispatch_attestation: Mapping[str, object] | None = None,
+    dispatch_input_digest: str | None = None,
 ) -> dict[str, object]:
     """Claim one dispatch owner or fence an explicitly uncertain predecessor."""
     if not attempt_id.strip() or not owner_id.strip():
@@ -1729,6 +1733,11 @@ def claim_dispatch(
                         _identity_json(dispatch_attestation),
                     ),
                 )
+                if dispatch_input_digest is not None:
+                    connection.execute(
+                        "INSERT INTO dispatch_inputs VALUES (?, ?)",
+                        (attempt_id, dispatch_input_digest),
+                    )
                 connection.execute(
                     "INSERT INTO dispatch_leases VALUES (?, ?, ?, 'active')",
                     (attempt_id, owner_id, generation),
@@ -1819,9 +1828,10 @@ def claim_dispatch(
         _close_dispatch_database(database)
 
 
-def capture_dispatch_bytes(
-    store_root: Path,
+def _record_dispatch_capture(
+    connection: sqlite3.Connection,
     *,
+    store_root: Path,
     approved_root: Path,
     attempt_id: str,
     owner_id: str,
@@ -1829,10 +1839,11 @@ def capture_dispatch_bytes(
     raw_bytes: bytes,
     completeness: str,
     outcome: str,
-    capture_attestation: Mapping[str, object] | None = None,
-    invocation_receipt: CodexInvocationReceipt | None = None,
+    capture_attestation: Mapping[str, object] | None,
+    execution_identity_reason: str | None,
+    execution_record: Mapping[str, object] | None = None,
+    invocation_receipt: object = None,
 ) -> dict[str, object]:
-    """Atomically retain every byte stream while fencing stale owners."""
     if outcome not in _DISPATCH_OUTCOMES:
         raise ValueError(f"unsupported dispatch outcome: {outcome}")
     if not isinstance(raw_bytes, bytes):
@@ -1845,129 +1856,360 @@ def capture_dispatch_bytes(
         raise ValueError("completed capture requires complete bytes")
     if outcome == "partial" and completeness != "partial":
         raise ValueError("partial outcome requires partial bytes")
+    row = connection.execute(
+        "SELECT owner_id, fence_generation, state FROM dispatch_leases "
+        "WHERE attempt_id = ?",
+        (attempt_id,),
+    ).fetchone()
+    if row is None:
+        raise ValueError("dispatch attempt has no lease")
+    current_owner, current_generation, state = row
+    authoritative = (
+        owner_id == current_owner
+        and fence_generation == current_generation
+        and state == "active"
+    )
+    late = not authoritative
+    prepared_profile, dispatch_attestation = _read_identity_binding(
+        connection, attempt_id
+    )
+    captured_identity = dict(capture_attestation or {})
+    identity = verify_execution_identity(
+        attempt_id=attempt_id,
+        prepared=prepared_profile,
+        dispatch_attestation=dispatch_attestation,
+        capture_attestation=captured_identity,
+    )
+    identity_reason = identity["reason"] or execution_identity_reason
+    if execution_record is not None:
+        captured_identity["runner_invocation_record"] = dict(execution_record)
+    if (
+        isinstance(invocation_receipt, CodexInvocationReceipt)
+        and invocation_receipt._seal is _CODEX_INVOCATION_RECEIPT_SEAL
+    ):
+        captured_identity["runner_invocation_receipt"] = (
+            _invocation_receipt_record(invocation_receipt)
+        )
+    output_ceiling = _reserved_output_ceiling(
+        store_root, attempt_id, approved_root=approved_root
+    )
+    output_within_limit = (
+        output_ceiling is None or len(raw_bytes) <= output_ceiling
+    )
+    scoreable = (
+        authoritative
+        and outcome == "completed"
+        and identity_reason is None
+        and output_within_limit
+    )
+    if late:
+        terminal_status = "late-evidence"
+        scoreability_status = "ineligible-late-evidence"
+    else:
+        terminal_status = outcome
+        if scoreable:
+            scoreability_status = "eligible"
+        elif outcome == "completed" and not output_within_limit:
+            scoreability_status = "ineligible-output-limit"
+        elif outcome == "completed" and identity_reason is not None:
+            scoreability_status = "ineligible-identity"
+        elif outcome in {"acknowledgement-uncertain", "cancellation-uncertain"}:
+            scoreability_status = "ineligible-uncertain"
+        elif outcome == "partial":
+            scoreability_status = "ineligible-incomplete"
+        else:
+            scoreability_status = "ineligible-terminal"
+    digest = bytes_digest(raw_bytes)
+    cursor = connection.execute(
+        "INSERT INTO dispatch_captures "
+        "(attempt_id, owner_id, fence_generation, outcome, raw_bytes, "
+        "raw_digest, completeness, terminal_status, late, scoreable, "
+        "scoreability_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            attempt_id,
+            owner_id,
+            fence_generation,
+            outcome,
+            raw_bytes,
+            digest,
+            completeness,
+            terminal_status,
+            int(late),
+            int(scoreable),
+            scoreability_status,
+        ),
+    )
+    connection.execute(
+        "INSERT INTO dispatch_capture_identities VALUES (?, ?, ?, ?)",
+        (
+            cursor.lastrowid,
+            attempt_id,
+            _identity_json(captured_identity),
+            identity_reason,
+        ),
+    )
+    if authoritative:
+        connection.execute(
+            "UPDATE dispatch_leases SET state = ? WHERE attempt_id = ?",
+            (terminal_status, attempt_id),
+        )
+    result = {
+        "capture_sequence": cursor.lastrowid,
+        "completeness": completeness,
+        "capture_attestation": captured_identity,
+        "identity_reason": identity_reason,
+        "late": late,
+        "outcome": outcome,
+        "raw_digest": digest,
+        "scoreable": scoreable,
+        "scoreability_status": scoreability_status,
+        "terminal_status": terminal_status,
+    }
+    if execution_record is not None:
+        result.update(
+            {
+                "backend_model_identity": execution_record[
+                    "backend_model_identity"
+                ],
+                "identity_evidence": execution_record["identity_evidence"],
+                "identity_limitation": execution_record["identity_limitation"],
+            }
+        )
+    return result
+
+
+def _dispatch_invocation_record(
+    connection: sqlite3.Connection, attempt_id: str
+) -> dict[str, object] | None:
+    row = connection.execute(
+        "SELECT input_digest, argv_json, cli_version, returncode, stderr, "
+        "raw_bytes, raw_digest, identity_evidence, backend_model_identity, "
+        "identity_limitation, state FROM dispatch_invocations "
+        "WHERE attempt_id = ?",
+        (attempt_id,),
+    ).fetchone()
+    if row is None:
+        return None
+    return {
+        "attempt_id": attempt_id,
+        "input_digest": row[0],
+        "argv": json.loads(row[1]),
+        "cli_version": row[2],
+        "returncode": row[3],
+        "stderr": bytes(row[4]) if row[4] is not None else None,
+        "raw_bytes": bytes(row[5]) if row[5] is not None else None,
+        "raw_digest": row[6],
+        "identity_evidence": row[7],
+        "backend_model_identity": row[8],
+        "identity_limitation": row[9],
+        "state": row[10],
+    }
+
+
+def _invocation_identity_record(
+    record: Mapping[str, object],
+) -> dict[str, object]:
+    return {
+        key: record[key]
+        for key in (
+            "argv",
+            "attempt_id",
+            "backend_model_identity",
+            "cli_version",
+            "identity_evidence",
+            "identity_limitation",
+            "input_digest",
+            "raw_digest",
+            "returncode",
+            "state",
+        )
+    }
+
+
+def invoke_and_capture_dispatch(
+    store_root: Path,
+    *,
+    approved_root: Path,
+    boundary: ReplayBoundary,
+    attempt_id: str,
+    owner_id: str,
+    fence_generation: int,
+) -> dict[str, object]:
+    """Consume one lease in a store-local Codex invocation and capture."""
+    if (
+        not isinstance(boundary, ReplayBoundary)
+        or boundary._seal is not _REPLAY_BOUNDARY_SEAL
+    ):
+        raise TypeError("replay boundary must come from governed construction")
     database = _dispatch_database(store_root, approved_root=approved_root)
     connection = database.connection
     try:
-        connection.execute("BEGIN IMMEDIATE")
-        row = connection.execute(
+        if _dispatch_invocation_record(connection, attempt_id) is not None:
+            raise ValueError("dispatch invocation already consumed")
+        lease = connection.execute(
             "SELECT owner_id, fence_generation, state FROM dispatch_leases "
             "WHERE attempt_id = ?",
             (attempt_id,),
         ).fetchone()
-        if row is None:
+        if lease is None:
             raise ValueError("dispatch attempt has no lease")
-        current_owner, current_generation, state = row
-        authoritative = (
-            owner_id == current_owner
-            and fence_generation == current_generation
-            and state == "active"
-        )
-        late = not authoritative
-        prepared_profile, dispatch_attestation = _read_identity_binding(
+        if lease != (owner_id, fence_generation, "active"):
+            raise ValueError("dispatch lease is not active for this owner")
+        input_row = connection.execute(
+            "SELECT input_digest FROM dispatch_inputs WHERE attempt_id = ?",
+            (attempt_id,),
+        ).fetchone()
+        if input_row is None:
+            raise ValueError("dispatch input digest unavailable")
+        if input_row[0] != boundary.snapshot_digest:
+            raise ValueError("dispatch input digest mismatch")
+        prepared, dispatch_attestation = _read_identity_binding(
             connection, attempt_id
         )
-        captured_identity = dict(capture_attestation or {})
-        identity = verify_execution_identity(
+        dispatch_reason = _identity_stage_reason(
+            prepared=prepared,
+            attestation=dispatch_attestation,
+            stage="dispatch",
             attempt_id=attempt_id,
-            prepared=prepared_profile,
-            dispatch_attestation=dispatch_attestation,
-            capture_attestation=captured_identity,
         )
-        identity_reason = identity["reason"]
-        receipt_reason = _invocation_receipt_reason(
-            invocation_receipt,
-            attempt_id=attempt_id,
-            prepared=prepared_profile,
-            raw_bytes=raw_bytes,
-        )
-        if identity_reason is None:
-            identity_reason = receipt_reason
-        if (
-            isinstance(invocation_receipt, CodexInvocationReceipt)
-            and invocation_receipt._seal is _CODEX_INVOCATION_RECEIPT_SEAL
-        ):
-            captured_identity["runner_invocation_receipt"] = (
-                _invocation_receipt_record(invocation_receipt)
-            )
-        output_ceiling = _reserved_output_ceiling(
-            store_root, attempt_id, approved_root=approved_root
-        )
-        output_within_limit = (
-            output_ceiling is None or len(raw_bytes) <= output_ceiling
-        )
-        scoreable = (
-            authoritative
-            and outcome == "completed"
-            and identity_reason is None
-            and output_within_limit
-        )
-        if late:
-            terminal_status = "late-evidence"
-            scoreability_status = "ineligible-late-evidence"
-        else:
-            terminal_status = outcome
-            if scoreable:
-                scoreability_status = "eligible"
-            elif outcome == "completed" and not output_within_limit:
-                scoreability_status = "ineligible-output-limit"
-            elif outcome == "completed" and identity_reason is not None:
-                scoreability_status = "ineligible-identity"
-            elif outcome in {
-                "acknowledgement-uncertain",
-                "cancellation-uncertain",
-            }:
-                scoreability_status = "ineligible-uncertain"
-            elif outcome == "partial":
-                scoreability_status = "ineligible-incomplete"
-            else:
-                scoreability_status = "ineligible-terminal"
-        digest = bytes_digest(raw_bytes)
-        cursor = connection.execute(
-            "INSERT INTO dispatch_captures "
-            "(attempt_id, owner_id, fence_generation, outcome, raw_bytes, "
-            "raw_digest, completeness, terminal_status, late, scoreable, "
-            "scoreability_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                attempt_id,
-                owner_id,
-                fence_generation,
-                outcome,
-                raw_bytes,
-                digest,
-                completeness,
-                terminal_status,
-                int(late),
-                int(scoreable),
-                scoreability_status,
-            ),
-        )
-        connection.execute(
-            "INSERT INTO dispatch_capture_identities VALUES (?, ?, ?, ?)",
-            (
-                cursor.lastrowid,
-                attempt_id,
-                _identity_json(captured_identity),
-                identity_reason,
-            ),
-        )
-        if authoritative:
+        if dispatch_reason is not None:
+            raise ValueError(dispatch_reason)
+        if prepared.get("host") != "codex":
+            raise ValueError("runner invocation host mismatch")
+        if prepared.get("model") != "gpt-5.6-luna":
+            raise ValueError("runner invocation model mismatch")
+
+        version = subprocess.run(
+            ["codex", "--version"], capture_output=True, check=True
+        ).stdout.decode("utf-8", errors="replace").strip()
+        if not version:
+            raise ValueError("Codex CLI version unavailable")
+        with tempfile.TemporaryDirectory(
+            prefix="docs-review-dispatch-"
+        ) as run_root:
+            command = _codex_reviewer_command(run_root)
+            connection.execute("BEGIN IMMEDIATE")
             connection.execute(
-                "UPDATE dispatch_leases SET state = ? WHERE attempt_id = ?",
-                (terminal_status, attempt_id),
+                "INSERT INTO dispatch_invocations VALUES "
+                "(?, ?, ?, ?, NULL, NULL, NULL, NULL, ?, NULL, ?, 'started')",
+                (
+                    attempt_id,
+                    boundary.snapshot_digest,
+                    json.dumps(command, separators=(",", ":")),
+                    version,
+                    "requested-model-cli",
+                    "Codex backend did not directly attest the actual model",
+                ),
             )
+            connection.execute("COMMIT")
+            _persist_dispatch_image(database.handle, connection.serialize())
+            try:
+                completed = subprocess.run(
+                    command,
+                    input=boundary.content,
+                    capture_output=True,
+                    check=False,
+                    cwd=run_root,
+                )
+            except BaseException as error:
+                connection.execute("BEGIN IMMEDIATE")
+                connection.execute(
+                    "UPDATE dispatch_invocations SET returncode = -1, "
+                    "stderr = ?, raw_bytes = ?, raw_digest = ?, "
+                    "state = 'launch-failed' WHERE attempt_id = ?",
+                    (
+                        str(error).encode("utf-8", errors="replace"),
+                        b"",
+                        bytes_digest(b""),
+                        attempt_id,
+                    ),
+                )
+                connection.execute("COMMIT")
+                raise
+
+            raw_bytes = completed.stdout
+            raw_digest = bytes_digest(raw_bytes)
+            state = "completed" if completed.returncode == 0 else "failed"
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                "UPDATE dispatch_invocations SET returncode = ?, stderr = ?, "
+                "raw_bytes = ?, raw_digest = ?, state = ? WHERE attempt_id = ?",
+                (
+                    completed.returncode,
+                    completed.stderr,
+                    raw_bytes,
+                    raw_digest,
+                    state,
+                    attempt_id,
+                ),
+            )
+            record = _dispatch_invocation_record(connection, attempt_id)
+            assert record is not None
+            identity_reason = None
+            if completed.returncode != 0:
+                identity_reason = "runner invocation subprocess failed"
+            result = _record_dispatch_capture(
+                connection,
+                store_root=store_root,
+                approved_root=approved_root,
+                attempt_id=attempt_id,
+                owner_id=owner_id,
+                fence_generation=fence_generation,
+                raw_bytes=raw_bytes,
+                completeness=("complete" if completed.returncode == 0 else (
+                    "partial" if raw_bytes else "none"
+                )),
+                outcome=("completed" if completed.returncode == 0 else "failed"),
+                capture_attestation={"attempt_id": attempt_id, **prepared},
+                execution_identity_reason=identity_reason,
+                execution_record=_invocation_identity_record(record),
+            )
+            connection.execute("COMMIT")
+            return result
+    except BaseException:
+        if connection.in_transaction:
+            connection.execute("ROLLBACK")
+        raise
+    finally:
+        _close_dispatch_database(database)
+
+
+def capture_dispatch_bytes(
+    store_root: Path,
+    *,
+    approved_root: Path,
+    attempt_id: str,
+    owner_id: str,
+    fence_generation: int,
+    raw_bytes: bytes,
+    completeness: str,
+    outcome: str,
+    capture_attestation: Mapping[str, object] | None = None,
+    invocation_receipt: object = None,
+) -> dict[str, object]:
+    """Retain caller-supplied bytes without granting scoreability authority."""
+    database = _dispatch_database(store_root, approved_root=approved_root)
+    connection = database.connection
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        result = _record_dispatch_capture(
+            connection,
+            store_root=store_root,
+            approved_root=approved_root,
+            attempt_id=attempt_id,
+            owner_id=owner_id,
+            fence_generation=fence_generation,
+            raw_bytes=raw_bytes,
+            completeness=completeness,
+            outcome=outcome,
+            capture_attestation=capture_attestation,
+            execution_identity_reason=(
+                "store-local invocation record unavailable"
+            ),
+            invocation_receipt=invocation_receipt,
+        )
         connection.execute("COMMIT")
-        return {
-            "capture_sequence": cursor.lastrowid,
-            "completeness": completeness,
-            "capture_attestation": captured_identity,
-            "identity_reason": identity_reason,
-            "late": late,
-            "outcome": outcome,
-            "raw_digest": digest,
-            "scoreable": scoreable,
-            "scoreability_status": scoreability_status,
-            "terminal_status": terminal_status,
-        }
+        return result
     except BaseException:
         if connection.in_transaction:
             connection.execute("ROLLBACK")
@@ -2038,6 +2280,20 @@ def read_dispatch_identity(
         "dispatch_attestation": json.loads(row[1]),
         "prepared_profile": json.loads(row[0]),
     }
+
+
+def read_dispatch_invocation(
+    store_root: Path, attempt_id: str, *, approved_root: Path
+) -> dict[str, object]:
+    """Read the immutable store-local invocation evidence for one attempt."""
+    database = _dispatch_database(store_root, approved_root=approved_root)
+    try:
+        record = _dispatch_invocation_record(database.connection, attempt_id)
+    finally:
+        _close_dispatch_database(database)
+    if record is None:
+        raise ValueError("dispatch attempt has no invocation record")
+    return record
 
 
 def read_dispatch_events(

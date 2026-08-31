@@ -28,13 +28,7 @@ def _binding(host: str, model: str) -> dict[str, str]:
     }
 
 
-def _codex_receipt(monkeypatch, attempt_id: str, raw_jsonl: bytes):
-    boundary = runner._seal_replay_boundary(
-        b"review input",
-        classification="internal-project",
-        required_capabilities=[],
-    )
-
+def _mock_codex_output(monkeypatch, raw_jsonl: bytes):
     def fake_run(command, **kwargs):
         if command == ["codex", "--version"]:
             return subprocess.CompletedProcess(
@@ -45,9 +39,14 @@ def _codex_receipt(monkeypatch, attempt_id: str, raw_jsonl: bytes):
         )
 
     monkeypatch.setattr(subprocess, "run", fake_run)
-    return runner.run_isolated_reviewer(
-        boundary, attempt_id=attempt_id
-    )["invocation_receipt"]
+
+
+def _review_boundary(content: bytes = b"review input"):
+    return runner._seal_replay_boundary(
+        content,
+        classification="internal-project",
+        required_capabilities=[],
+    )
 
 
 def _replay_authority(store_root):
@@ -190,6 +189,7 @@ def _scoreable_codex_run(
     )
     prepared = _binding("codex", "gpt-5.6-luna")
     attestation = {"attempt_id": run_id, **prepared}
+    boundary = _review_boundary(f"{run_id} input".encode())
     lease = runner.claim_dispatch(
         tmp_path,
         run_id,
@@ -197,19 +197,17 @@ def _scoreable_codex_run(
         approved_root=tmp_path,
         prepared_profile=prepared,
         dispatch_attestation=attestation,
+        dispatch_input_digest=boundary.snapshot_digest,
     )
     raw_bytes = f"{run_id} response".encode()
-    capture = runner.capture_dispatch_bytes(
+    _mock_codex_output(monkeypatch, raw_bytes)
+    capture = runner.invoke_and_capture_dispatch(
         tmp_path,
         approved_root=tmp_path,
+        boundary=boundary,
         attempt_id=run_id,
         owner_id=lease["owner_id"],
         fence_generation=lease["fence_generation"],
-        raw_bytes=raw_bytes,
-        completeness="complete",
-        outcome="completed",
-        capture_attestation=attestation,
-        invocation_receipt=_codex_receipt(monkeypatch, run_id, raw_bytes),
     )
     assert capture["scoreable"] is True
     return published
@@ -903,6 +901,7 @@ def test_req_115_actual_model_identity_is_verified_twice(
 
     exact_attempt = "attempt-exact"
     exact = attestation(exact_attempt)
+    exact_boundary = _review_boundary(b"exact input")
     lease = runner.claim_dispatch(
         tmp_path,
         exact_attempt,
@@ -910,6 +909,7 @@ def test_req_115_actual_model_identity_is_verified_twice(
         approved_root=tmp_path,
         prepared_profile=prepared,
         dispatch_attestation=exact,
+        dispatch_input_digest=exact_boundary.snapshot_digest,
     )
     assert lease["identity_verified"] is True
     assert lease["identity_reason"] is None
@@ -920,19 +920,14 @@ def test_req_115_actual_model_identity_is_verified_twice(
         "dispatch_attestation": exact,
         "prepared_profile": prepared,
     }
-    verified = runner.capture_dispatch_bytes(
+    _mock_codex_output(monkeypatch, b"exact response")
+    verified = runner.invoke_and_capture_dispatch(
         tmp_path,
         approved_root=tmp_path,
+        boundary=exact_boundary,
         attempt_id=exact_attempt,
         owner_id=lease["owner_id"],
         fence_generation=lease["fence_generation"],
-        raw_bytes=b"exact response",
-        completeness="complete",
-        outcome="completed",
-        capture_attestation=exact,
-        invocation_receipt=_codex_receipt(
-            monkeypatch, exact_attempt, b"exact response"
-        ),
     )
     assert verified["scoreable"] is True
     assert verified["identity_reason"] is None
@@ -940,11 +935,11 @@ def test_req_115_actual_model_identity_is_verified_twice(
         tmp_path, exact_attempt, approved_root=tmp_path
     )[0]["capture_attestation"]
     assert {field: stored_identity[field] for field in exact} == exact
-    assert stored_identity["runner_invocation_receipt"][
+    assert stored_identity["runner_invocation_record"][
         "backend_model_identity"
     ] is None
-    assert "does not directly echo model identity" in stored_identity[
-        "runner_invocation_receipt"
+    assert "did not directly attest the actual model" in stored_identity[
+        "runner_invocation_record"
     ]["identity_limitation"]
 
     mismatch_values = {
@@ -1083,34 +1078,137 @@ def test_req_115_actual_model_identity_is_verified_twice(
     assert unattested["scoreability_status"] == "ineligible-identity"
 
 
-def test_req_115_execution_identity_is_verified_at_point_of_use(tmp_path) -> None:
+def test_req_115_execution_identity_is_verified_at_point_of_use(
+    tmp_path, monkeypatch
+) -> None:
     # @req: REQ-115
-    attempt_id = "attempt-fabricated-identity"
+    attempt_id = "attempt-atomic-identity"
     prepared = _binding("codex", "gpt-5.6-luna")
-    fabricated = {"attempt_id": attempt_id, **prepared}
+    stdin = b"immutable reviewer input"
+    raw_output = b'{"type":"item.completed","text":"review"}\n'
+    boundary = runner._seal_replay_boundary(
+        stdin,
+        classification="internal-project",
+        required_capabilities=[],
+    )
+    reviewer_runs = []
+
+    def fake_run(command, **kwargs):
+        if command == ["codex", "--version"]:
+            return subprocess.CompletedProcess(
+                command, 0, stdout=b"codex-cli 1.2.3\n", stderr=b""
+            )
+        reviewer_runs.append((command, kwargs))
+        return subprocess.CompletedProcess(
+            command, 0, stdout=raw_output, stderr=b""
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
     lease = runner.claim_dispatch(
         tmp_path,
         attempt_id,
-        "owner-fabricated",
+        "owner-atomic",
         approved_root=tmp_path,
         prepared_profile=prepared,
-        dispatch_attestation=fabricated,
+        dispatch_attestation={"attempt_id": attempt_id, **prepared},
+        dispatch_input_digest=boundary.snapshot_digest,
     )
 
-    captured = runner.capture_dispatch_bytes(
+    captured = runner.invoke_and_capture_dispatch(
         tmp_path,
         approved_root=tmp_path,
+        boundary=boundary,
         attempt_id=attempt_id,
         owner_id=lease["owner_id"],
         fence_generation=lease["fence_generation"],
-        raw_bytes=b"caller-controlled bytes",
+    )
+    assert captured["scoreable"] is True
+    assert captured["identity_evidence"] == "requested-model-cli"
+    assert captured["backend_model_identity"] is None
+    assert captured["identity_limitation"] == (
+        "Codex backend did not directly attest the actual model"
+    )
+    invocation = runner.read_dispatch_invocation(
+        tmp_path, attempt_id, approved_root=tmp_path
+    )
+    assert invocation == {
+        "attempt_id": attempt_id,
+        "argv": reviewer_runs[0][0],
+        "backend_model_identity": None,
+        "cli_version": "codex-cli 1.2.3",
+        "identity_evidence": "requested-model-cli",
+        "identity_limitation": (
+            "Codex backend did not directly attest the actual model"
+        ),
+        "input_digest": runner.bytes_digest(stdin),
+        "raw_bytes": raw_output,
+        "raw_digest": runner.bytes_digest(raw_output),
+        "returncode": 0,
+        "state": "completed",
+        "stderr": b"",
+    }
+    assert reviewer_runs[0][1]["input"] == stdin
+    assert reviewer_runs[0][1]["capture_output"] is True
+    assert reviewer_runs[0][1]["check"] is False
+
+    with pytest.raises(ValueError, match="already consumed"):
+        runner.invoke_and_capture_dispatch(
+            tmp_path,
+            approved_root=tmp_path,
+            boundary=boundary,
+            attempt_id=attempt_id,
+            owner_id=lease["owner_id"],
+            fence_generation=lease["fence_generation"],
+        )
+    assert len(reviewer_runs) == 1
+
+    replay_root = tmp_path / "cross-store"
+    replay_lease = runner.claim_dispatch(
+        replay_root,
+        attempt_id,
+        "owner-cross-store",
+        approved_root=tmp_path,
+        prepared_profile=prepared,
+        dispatch_attestation={"attempt_id": attempt_id, **prepared},
+        dispatch_input_digest=boundary.snapshot_digest,
+    )
+    replayed = runner.capture_dispatch_bytes(
+        replay_root,
+        approved_root=tmp_path,
+        attempt_id=attempt_id,
+        owner_id=replay_lease["owner_id"],
+        fence_generation=replay_lease["fence_generation"],
+        raw_bytes=raw_output,
         completeness="complete",
         outcome="completed",
-        capture_attestation=fabricated,
+        capture_attestation={"attempt_id": attempt_id, **prepared},
+        invocation_receipt=invocation,
+    )
+    assert replayed["scoreable"] is False
+    assert replayed["identity_reason"] == (
+        "store-local invocation record unavailable"
     )
 
-    assert captured["scoreable"] is False
-    assert captured["identity_reason"] == "runner invocation receipt unavailable"
+    drift_attempt = "attempt-drifted-input"
+    drift_lease = runner.claim_dispatch(
+        tmp_path,
+        drift_attempt,
+        "owner-drift",
+        approved_root=tmp_path,
+        prepared_profile=prepared,
+        dispatch_attestation={"attempt_id": drift_attempt, **prepared},
+        dispatch_input_digest=runner.bytes_digest(b"expected input"),
+    )
+    with pytest.raises(ValueError, match="input digest mismatch"):
+        runner.invoke_and_capture_dispatch(
+            tmp_path,
+            approved_root=tmp_path,
+            boundary=boundary,
+            attempt_id=drift_attempt,
+            owner_id=drift_lease["owner_id"],
+            fence_generation=drift_lease["fence_generation"],
+        )
+    assert len(reviewer_runs) == 1
 
 
 def test_req_114_dispatch_and_capture_are_crash_safe(
@@ -1178,6 +1276,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
         },
     ]
 
+    takeover_boundary = _review_boundary(b"authoritative review input")
     first = runner.claim_dispatch(
         tmp_path,
         "attempt-takeover",
@@ -1185,6 +1284,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
         approved_root=tmp_path,
         prepared_profile=prepared,
         dispatch_attestation=attestation("attempt-takeover"),
+        dispatch_input_digest=takeover_boundary.snapshot_digest,
     )
     acknowledgement_unknown = runner.capture_dispatch_bytes(
         tmp_path,
@@ -1227,21 +1327,14 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     assert revived["terminal_status"] == "late-evidence"
     assert revived["scoreability_status"] == "ineligible-late-evidence"
 
-    final = runner.capture_dispatch_bytes(
+    _mock_codex_output(monkeypatch, b"authoritative complete bytes")
+    final = runner.invoke_and_capture_dispatch(
         tmp_path,
         approved_root=tmp_path,
+        boundary=takeover_boundary,
         attempt_id="attempt-takeover",
         owner_id="owner-c",
         fence_generation=second["fence_generation"],
-        raw_bytes=b"authoritative complete bytes",
-        completeness="complete",
-        outcome="completed",
-        capture_attestation=attestation("attempt-takeover"),
-        invocation_receipt=_codex_receipt(
-            monkeypatch,
-            "attempt-takeover",
-            b"authoritative complete bytes",
-        ),
     )
     assert final["late"] is False
     assert final["scoreable"] is True
@@ -1340,6 +1433,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     assert runner.read_dispatch_state(
         tmp_path, "attempt-cancelled", approved_root=tmp_path
     )["state"] == "cancellation-uncertain"
+    retry_boundary = _review_boundary(b"retry review input")
     retry_owner = runner.claim_dispatch(
         tmp_path,
         "attempt-retry",
@@ -1347,20 +1441,16 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
         approved_root=tmp_path,
         prepared_profile=prepared,
         dispatch_attestation=attestation("attempt-retry"),
+        dispatch_input_digest=retry_boundary.snapshot_digest,
     )
-    retry = runner.capture_dispatch_bytes(
+    _mock_codex_output(monkeypatch, b"retry bytes")
+    retry = runner.invoke_and_capture_dispatch(
         tmp_path,
         approved_root=tmp_path,
+        boundary=retry_boundary,
         attempt_id="attempt-retry",
         owner_id=retry_owner["owner_id"],
         fence_generation=retry_owner["fence_generation"],
-        raw_bytes=b"retry bytes",
-        completeness="complete",
-        outcome="completed",
-        capture_attestation=attestation("attempt-retry"),
-        invocation_receipt=_codex_receipt(
-            monkeypatch, "attempt-retry", b"retry bytes"
-        ),
     )
     assert retry["scoreability_status"] == "eligible"
     cancelled_late = runner.capture_dispatch_bytes(
