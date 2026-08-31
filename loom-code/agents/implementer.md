@@ -169,8 +169,8 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     silently in the same generation before returning — no checklist
     output, no tick marks, no self-score, no PASS claim:
     - (a) grep the exact key phrases/strings of each changed claim,
-      scoped to this task's own file plus its declared sibling docs
-      (the exemplar list: same-file preamble, frontmatter description,
+      scoped to this task's own file plus the sibling docs in the
+      exemplar list (same-file preamble, frontmatter description,
       index line, CHANGELOG, sibling docs) — never the whole repo —
       and update or delete each copy found.
     - (b) for every sentence asserting your own work ("verified",
