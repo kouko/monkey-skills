@@ -52,7 +52,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: BI-1
 - **Review disposition**: batch(apply-result-binding)
-- **Status**: implemented(61c633fed0b302ece85f2a59e63934bf1d3dfd78)
+- **Status**: done(61c633fed0b302ece85f2a59e63934bf1d3dfd78)
 - **Gloss**: 讓 reviewer 的 PASS 只能套在它當初看到的那組 commit 上；沒收據就不准套。
 
 ## Task 2 — apply-result 從結果檔讀 packet_identity 比對，CLI 不再自行注入
@@ -76,7 +76,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(apply-result-binding)
-- **Status**: implemented(84e4b795dfbd344b703a6acecc1cee69ac698d86)
+- **Status**: done(84e4b795dfbd344b703a6acecc1cee69ac698d86)
 - **Gloss**: 手寫或搬來的 PASS 檔換一個 plan 就失效；密封不再由 CLI 自己補上。
 
 ## Task 3 — build_packet 檢查成員 commit 實際改動檔案 ⊆ 宣告檔案
@@ -99,7 +99,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: BI-5
 - **Review disposition**: batch(apply-result-binding)
-- **Status**: implemented(5e467c47f6bbd9b7f6eff4b0ac1d6321527e610c)
+- **Status**: done(5e467c47f6bbd9b7f6eff4b0ac1d6321527e610c)
 - **Gloss**: 批次審查看得到成員 commit 偷改的檔案，不比逐任務審查弱。
 
 ## Task 4 — 結果檔格式與 ground_ref 逐字規則寫進契約；SKILL.md 改指向
