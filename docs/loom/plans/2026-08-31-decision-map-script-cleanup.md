@@ -91,7 +91,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: false
 - **Brief item covered**: BI-2
 - **Review disposition**: batch(symlink-guard)
-- **Status**: claimed(@loom-script-refactor-phase2)
+- **Status**: implemented(88ef209f09366cb6420333ebde86c997d7880796)
 - **Gloss**: map_store 不再自己走路徑，交給 map_lock，丟的還是 SchemaViolation。
 
 ## Task 3 — map_transaction 的守衛改成一行委派
@@ -130,7 +130,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Brief item covered**: BI-4
 - **Not batched because**: the proposer paired it with Tasks 1–3 by lane and module directory, but a deletion of an orphan module shares no verdict question with the guard extraction.
 - **Review disposition**: individual
-- **Status**: claimed(@loom-script-refactor-phase2)
+- **Status**: done(eacf7c95740d8f735c4328f236d23ae90c859027)
 - **Gloss**: 拿掉沒人呼叫、也不可能成功的搶票工具。
 
 ## Task 5 — map-format.md：認領不可轉手
@@ -149,7 +149,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-10
 - **Review disposition**: batch(reclaim-prose)
-- **Status**: implemented(39efd994f34ac00f49fed878d51e37a2129a6fb6)
+- **Status**: done(39efd994f34ac00f49fed878d51e37a2129a6fb6)
 - **Gloss**: 格式文件不再承諾搶票；棄票只有 Withdrawal 一條路。
 
 ## Task 6 — 活規格 REQ-97 改寫
@@ -169,7 +169,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: true
 - **Brief item covered**: BI-11
 - **Review disposition**: batch(reclaim-prose)
-- **Status**: implemented(383d53090ed76da7f267ba94754cbc7d8d014b70)
+- **Status**: done(383d53090ed76da7f267ba94754cbc7d8d014b70)
 - **Gloss**: 活規格跟著改：REQ-97 從「可保守搶回」變成「不可轉手」。
 
 ## Task 7 — REQ-97 的真實測試
