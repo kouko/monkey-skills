@@ -7,11 +7,11 @@ Goal: Every reviewer fan-out leaves a harness-written record, the replay
     say why, and the packet-identity refusal names its cause — serves
     PURPOSE: a cost claim about review cannot ship unverified, and a
     silent conservative default must pay for itself in one sentence
-Stage: planning
+Stage: sdd:wave-1
 Total tasks: 12
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
-Plan-document-reviewer verdict: PENDING
+Plan-document-reviewer verdict: PASS (2026-08-31, round 2)
 
 ## Task-flow diagram
 
@@ -361,3 +361,4 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - Change-folder binding: none — no non-archived `docs/loom/<change-id>/` folder matches branch `batch-review-measurement-and-nudge`; the caller handed a brainstorming brief; the plan derives from the brief (BI- ids).
 - Review disposition rationale (authored under the brief's own rule — same lane AND (dependency edge OR same Module), cap 4): Tasks 3+4 (batch_review_cli), 5+6+10 (task_batch_replay and the finishing row that relays its `--summary` line, dependency edge 5→10) and 7+8+9 (propose_review_batches and the writing-plans contract that names it, dependency edge 8→9) are same-lane dependency chains and batch; Task 2 is a one-task module; Task 12 is prose lane with no same-lane neighbour; Task 1 is record-class; Task 11 is release administration. Tasks 9 and 10 carry a `.py` contract test in Files touched, so they run the full lane rather than `Review-weight: prose` (plan-format: prose requires every file to be `.md`). Planned fan-outs: 7 for 12 tasks.
 - BI-8 (Decision umbrella), BI-10 (hand-counted Notes line pattern obsolete), BI-11 (simulation record, already committed with the brief at 96af10c9) are delivered by the sum of Tasks 5–12 and by the brief commit; the coverage checker reports them as warnings by design.
+- Plan-review round count: round 1 NEEDS_REVISION (4 ⚠️ — double Module values, prose weight with a `.py` test, Task 7 Reuse-adequacy, Task 12 sealed-plan race — plus the CSV note that exposed the uncommitted variant-C run), round 2 PASS at 0cf007e2. Verdict stamped — stamping the verdict, no re-review.
