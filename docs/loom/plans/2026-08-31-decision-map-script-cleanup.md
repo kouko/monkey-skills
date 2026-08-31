@@ -9,7 +9,7 @@ Goal: One symlink-guard body in `map_lock.py` parameterized by exception
     loom-workflow bumped to 3.1.1 — serves PURPOSE: a path-safety fix lands
     once instead of drifting across three copies, and a documented behavior
     nothing implements stops being a promise a session could act on
-Stage: sdd:wave-1
+Stage: sdd:wave-2
 Steps:
     1. 守衛三合一：map_lock 公開版本、map_store 與 map_transaction 各改一行委派
     2. 拆掉 reclaim：刪 claim_ticket、改寫 map-format 與 REQ-97、補 REQ-97 的真實測試
@@ -293,7 +293,7 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 - **Independent**: false
 - **Brief item covered**: BI-17
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(1b9fca5c0d65202481203d645296c3d44f8659ef)
 - **Gloss**: 索引是產生出來的，四條新條目進去後跑一次腳本。
 
 ## Task 13 — loom-workflow 3.1.1 版本 bump、CHANGELOG、INDEX 重生
