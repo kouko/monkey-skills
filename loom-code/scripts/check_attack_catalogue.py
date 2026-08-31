@@ -54,6 +54,12 @@ Exit codes:
                        with no name after it), or matches none of the
                        three tokens at all
 
+A `pinned by` name resolving to a real, collected test proves only that
+the name EXISTS somewhere a runner would find it — this module never
+checks whether that test actually exercises the named vector. That
+relevance judgment is out of scope for a machine check; the
+spec-reviewer judges it by reading the test body against the vector.
+
 Stdlib only.
 """
 
@@ -61,6 +67,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import datetime
 import re
 import sys
 from dataclasses import dataclass, field
@@ -116,7 +123,12 @@ class StoreError(Exception):
 
 def _find_sections(text: str) -> dict[str, list[str]]:
     """Map section name -> list of bullet-content lines. A section
-    heading not among `_SECTION_NAMES` is ignored."""
+    heading not among `_SECTION_NAMES` is ignored.
+
+    Raises `StoreError("malformed", …)` if any of `_SECTION_NAMES`
+    appears as a `## ` heading more than once — a dict-assignment
+    `sections[name] = bullets` would otherwise let the later heading
+    silently replace the earlier one's bullets rather than refusing."""
     lines = text.splitlines()
     heading_idxs = []
     for i, line in enumerate(lines):
@@ -129,6 +141,13 @@ def _find_sections(text: str) -> dict[str, list[str]]:
         end = heading_idxs[pos + 1][0] if pos + 1 < len(heading_idxs) else len(lines)
         if name not in _SECTION_NAMES:
             continue
+        if name in sections:
+            raise StoreError(
+                "malformed",
+                f"Error: malformed — duplicate '## {name}' section heading "
+                f"— a later '## {name}' would silently replace the earlier "
+                f"one's bullets.",
+            )
         body = lines[idx + 1:end]
         bullets = []
         for line in body:
@@ -137,6 +156,17 @@ def _find_sections(text: str) -> dict[str, list[str]]:
                 bullets.append(m.group(1).strip())
         sections[name] = bullets
     return sections
+
+
+def _is_iso_date(value: str) -> bool:
+    """True only for a real ISO calendar date (`YYYY-MM-DD`, no
+    out-of-range month/day) — `\\S+` in `_REPRODUCED_STATUS` /
+    `_HELD_STATUS` would otherwise accept any non-space token."""
+    try:
+        datetime.date.fromisoformat(value)
+    except ValueError:
+        return False
+    return True
 
 
 def parse_store(text: str) -> Store:
@@ -169,7 +199,7 @@ def parse_store(text: str) -> Store:
             # "pinned by" was attempted but named nothing (a bypass CQ-2
             # closes: that must never resolve as a legal unpinned entry),
             # and a real value otherwise.
-            if rm is None or rm.group("test") == "":
+            if rm is None or rm.group("test") == "" or not _is_iso_date(rm.group("date")):
                 store.instances.append(
                     Instance(klass=klass, target=target, verdict="malformed", line=raw)
                 )
@@ -188,7 +218,7 @@ def parse_store(text: str) -> Store:
 
         if status.startswith("held"):
             hm = _HELD_STATUS.match(status)
-            if hm is None:
+            if hm is None or (hm.group("date") is not None and not _is_iso_date(hm.group("date"))):
                 store.instances.append(
                     Instance(klass=klass, target=target, verdict="malformed", line=raw)
                 )
@@ -276,13 +306,44 @@ def _strip_sh_comments(text: str) -> str:
     return "\n".join(kept_lines)
 
 
+# Path components a runner never collects tests from — a pin resolved
+# only under one of these (or any hidden dir, "." prefix) is dangling
+# even when the `def`/name literally exists on disk.
+_EXCLUDED_DIR_NAMES = {
+    "vendor",
+    "node_modules",
+    ".git",
+    "__pycache__",
+    "site-packages",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+}
+
+
+def _under_excluded_dir(path: Path, repo: Path) -> bool:
+    try:
+        rel_dir_parts = path.relative_to(repo).parts[:-1]
+    except ValueError:
+        rel_dir_parts = path.parts[:-1]
+    return any(
+        part in _EXCLUDED_DIR_NAMES or part.startswith(".")
+        for part in rel_dir_parts
+    )
+
+
 def _test_name_defined_under_repo(name: str, repo: Path) -> bool:
     for path in repo.rglob("test_*.py"):
+        if _under_excluded_dir(path, repo):
+            continue
         if name in _defined_function_names(path):
             return True
 
     for tests_dir in repo.rglob("tests"):
         if not tests_dir.is_dir():
+            continue
+        if _under_excluded_dir(tests_dir / "x", repo):
             continue
         for sh_path in tests_dir.glob("*.sh"):
             try:
@@ -380,7 +441,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: cannot read store '{args.store}': {exc}", file=sys.stderr)
         return 1
 
-    store = parse_store(text)
+    try:
+        store = parse_store(text)
+    except StoreError as exc:
+        print(exc.message, file=sys.stderr)
+        return 1
+
     try:
         errors = check_store(store, args.repo)
     except OSError as exc:

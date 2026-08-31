@@ -328,6 +328,111 @@ def test_checker_fails_loud_on_unreadable_store_path(tmp_path):
 # might introduce (e.g. a stat() call added to the walk).
 
 
+def test_checker_refuses_duplicate_section_heading(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    # Instances-shadow: a later '## Instances' would silently replace the
+    # earlier one, dropping whatever bullets it held.
+    store_instances = tmp_path / "instances-shadow.md"
+    store_instances.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Instances\n"
+        "- F1 x | y | not-applicable — reason\n\n"
+        "## Instances\n"
+        "- F2 x | y | not-applicable — reason\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store_instances, repo)
+    assert result.returncode != 0, result.stderr
+    assert "malformed" in result.stderr
+    assert "Instances" in result.stderr
+
+    # Guarded-paths-shadow: a later '## Guarded paths' would silently
+    # replace the earlier globs.
+    store_guarded = tmp_path / "guarded-shadow.md"
+    store_guarded.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Guarded paths\n"
+        "- nothing/that/exists/**\n\n"
+        "## Instances\n"
+        "- F1 x | y | not-applicable — reason\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store_guarded, repo)
+    assert result.returncode != 0, result.stderr
+    assert "malformed" in result.stderr
+    assert "Guarded paths" in result.stderr
+
+
+def test_checker_refuses_non_iso_or_impossible_dates(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _write_pinning_test(repo, "test_some_pin")
+
+    bad_dates = ["yesterday-ish", "banana", "2026-13-45"]
+
+    for i, bad_date in enumerate(bad_dates):
+        store = tmp_path / f"reproduced-{i}.md"
+        store.write_text(
+            "## Guarded paths\n"
+            "- loom-code/scripts/**\n\n"
+            "## Instances\n"
+            f"- F1 x | y | reproduced {bad_date} — pinned by test_some_pin\n\n"
+            "## Prose temptations\n"
+            "- none\n",
+            encoding="utf-8",
+        )
+        result = _run(store, repo)
+        assert result.returncode != 0, bad_date
+        assert "malformed" in result.stderr, (bad_date, result.stderr)
+
+    for i, bad_date in enumerate(bad_dates):
+        store = tmp_path / f"held-{i}.md"
+        store.write_text(
+            "## Guarded paths\n"
+            "- loom-code/scripts/**\n\n"
+            "## Instances\n"
+            f"- F1 x | y | held {bad_date}\n\n"
+            "## Prose temptations\n"
+            "- none\n",
+            encoding="utf-8",
+        )
+        result = _run(store, repo)
+        assert result.returncode != 0, bad_date
+        assert "malformed" in result.stderr, (bad_date, result.stderr)
+
+
+def test_checker_refuses_pin_defined_only_under_a_vendored_dir(tmp_path):
+    repo = tmp_path / "repo"
+    vendor_dir = repo / "vendor" / "node_modules" / "junk"
+    vendor_dir.mkdir(parents=True)
+    (vendor_dir / "test_forged.py").write_text(
+        "def test_gate_refuses_the_forgery():\n    pass\n",
+        encoding="utf-8",
+    )
+    store = tmp_path / "ATTACK-CATALOGUE.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Instances\n"
+        "- F1 x | y | reproduced 2026-08-31 — pinned by test_gate_refuses_the_forgery\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+    result = _run(store, repo)
+    assert result.returncode != 0
+    assert "dangling" in result.stderr
+    assert "test_gate_refuses_the_forgery" in result.stderr
+
+
 def test_parse_store_round_trips_fixture_and_guarded_path_globs_order():
     store = parse_store(_VALID_STORE)
     assert guarded_path_globs(store) == [
