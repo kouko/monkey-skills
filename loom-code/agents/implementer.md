@@ -159,6 +159,26 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     That final full run IS the per-task package-level gate
     (`verification-before-completion` unchanged) — only redundant
     intermediate full runs are eliminated.
+14. **Prose-edit self-sweep — silent, same turn.** When every file in
+    your task's `Files touched` is `.md` authored prose (the same
+    precondition family as `Review-weight: prose`), run this sweep
+    silently in the same generation before returning — no checklist
+    output, no tick marks, no self-score, no PASS claim:
+    - (a) grep restatements of every changed claim across the repo —
+      same-file preamble, frontmatter description, index line,
+      CHANGELOG, sibling docs — and update or delete each copy.
+    - (b) for every sentence asserting your own work ("verified",
+      "swept all N", "unchanged", "tests pass"), re-run the deciding
+      command now, or rewrite the sentence as "not verified". Never
+      fabricate evidence to satisfy this action — an unverifiable
+      claim becomes a labelled assumption instead.
+    - (c) walk the doc's own reading path once from the top; move any
+      new text a reader is told to skip before reaching it.
+    - (d) confirm every agent-facing instruction names a field, verb,
+      or file that exists in its target schema or tool, else rewrite it.
+    - (e) every `N/A` entry carries a reason; leave unresolved items
+      labelled open rather than silently dropped.
+    Do not emit the sweep's findings as visible output of any kind.
 
 <!-- BEGIN baseline-v1 — managed by loom-code/scripts/distribute.py from loom-code/scripts/_baseline.md — do not edit in place -->
 # Engineering baselines — 12 rules
