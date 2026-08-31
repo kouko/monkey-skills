@@ -35,6 +35,16 @@ budgets it must stay under. Without this field an agent optimizing purely
 for the outcome may take a path that silently breaks something the outcome
 statement never mentioned.
 
+**Standing decision rule**: choices the goal does not pre-decide are the
+run's to make — it searches first, decides, and records the decision,
+its candidates, and its sources in a named file, and never stops to ask.
+
+SESSION mode emits this by default, tagged `derived` per
+`input-floor.md` §5, so a user need not write it each time.
+
+Outside the run: an irreversible or outward-facing act — merge, deploy,
+send — where `Outcome` already ends.
+
 ## 3 — `Verification`
 
 **Definition**: Names a check, and requires that check's output be surfaced
