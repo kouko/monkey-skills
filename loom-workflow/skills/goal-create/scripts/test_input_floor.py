@@ -771,3 +771,79 @@ def test_slot_mapping_uses_the_shape_reference_field_names() -> None:
         f"'{outcome_name}' field (as named in goal-shape.md), not merely "
         f"have that name appear elsewhere in §2."
     )
+
+
+def _section_content(content: str, heading_number: int) -> str:
+    """Extract one '## N — ...' section's body, up to the next '## ' heading.
+
+    Used to scope the search for the standing decision rule's name to §2
+    only, rather than scanning the whole file for a bold lead.
+    """
+    pattern = rf"^## {heading_number} — .*?\n(.*?)(?=^## |\Z)"
+    match = re.search(pattern, content, re.MULTILINE | re.DOTALL)
+    assert match, f"Section {heading_number} not found in goal-shape.md"
+    return match.group(1)
+
+
+def _standing_rule_name_from_shape_reference() -> str:
+    """Read the standing decision rule's bold-lead name from goal-shape.md §2.
+
+    §2 has two bold leads — "**Definition**" and the rule's own name. The
+    rule's name is whichever bold lead is not "Definition", found
+    structurally rather than hardcoded, so a rename by Task 2 (or any
+    later edit) flows through instead of drifting silently between the
+    two files.
+    """
+    assert SHAPE_REFERENCE_PATH.exists(), (
+        f"Upstream reference not found: {SHAPE_REFERENCE_PATH}"
+    )
+    shape_content = SHAPE_REFERENCE_PATH.read_text(encoding="utf-8")
+    section2 = _section_content(shape_content, 2)
+    bold_leads = re.findall(r"\*\*([^*]+)\*\*:", section2)
+    rule_names = [name.strip() for name in bold_leads if name.strip().lower() != "definition"]
+    assert rule_names, (
+        f"Expected a bold-lead rule name (other than 'Definition') in "
+        f"goal-shape.md §2, found bold leads: {bold_leads}"
+    )
+    return rule_names[0]
+
+
+def test_person_dependence_names_its_two_destinations() -> None:
+    """Item 3's remedy must name both destinations for a person-dependent
+    fork and forbid it from ever becoming a Stop-when branch.
+
+    A person-dependent condition left with nowhere to go is exactly what
+    let drafting agents park such conditions in Stop-when as an exit
+    branch — item 3 must close that gap by naming where it goes instead.
+    """
+    content = _read_reference()
+    list_items = _numbered_list_items(content)
+    person_item = next(
+        (
+            item
+            for item in list_items
+            if "person" in item.lower() and "acting" in item.lower()
+        ),
+        None,
+    )
+    assert person_item, "The bar must state the condition must not depend on a person."
+    person_item_lower = person_item.lower()
+
+    # "never" must bind directly to "Stop-when" (bound negation, not mere
+    # co-occurrence) — a mutant reading "such a condition may still become
+    # a Stop-when branch" would keep both words present but drop the
+    # binding this assertion requires.
+    assert _negation_binds(person_item_lower, "never", "stop-when"), (
+        "Item 3 must state such a condition is NEVER a Stop-when branch — "
+        "expected 'never' bound directly to 'Stop-when' within item 3."
+    )
+    assert "constraints" in person_item_lower, (
+        "Item 3 must name 'Constraints' as one destination for a "
+        "person-dependent condition (the goal pre-decides it there)."
+    )
+    rule_name = _standing_rule_name_from_shape_reference()
+    assert rule_name in person_item, (
+        f"Item 3 must name the standing decision rule from goal-shape.md "
+        f"§2 verbatim ({rule_name!r}) as the run's delegated destination, "
+        f"rather than restating the rule."
+    )
