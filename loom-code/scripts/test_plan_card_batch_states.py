@@ -30,7 +30,7 @@ D1 = f"done({A_SHA})"
 D2 = f"done({B_SHA})"
 
 
-def _transition_authority(replacements):
+def _transition_authority(replacements, *, force_reopen_owners=None):
     declaration = review_batch.BatchDeclaration(
         "capability",
         ("Task 1", "Task 2"),
@@ -111,12 +111,17 @@ def _transition_authority(replacements):
         )
         for arm in arms
     )
-    reopening = set(replacements) != {1, 2}
+    reopening = force_reopen_owners is not None or set(replacements) != {1, 2}
     owner = next(iter(replacements)) if reopening else None
+    finding_owners = (
+        force_reopen_owners
+        if force_reopen_owners is not None
+        else ((f"Task {owner}",) if owner else ("Task 1",))
+    )
     finding = review_batch.BlockingFinding(
         "finding:owner", packet.identity, "spec-reviewer",
         "dispatch:spec-reviewer", "result-proof:spec-reviewer",
-        (f"Task {owner}",) if owner else ("Task 1",), True,
+        finding_owners, True,
         "owned_requirement", f"REQ-{owner or 1}", f"src/{owner or 1}.py",
         "fatal", "fixture regression",
     )
@@ -333,6 +338,31 @@ def test_batch_ledger_transition_matrix(tmp_path):
                 transition_authority=_transition_authority({1: "pending"}),
             )
         assert plan_path.read_text(encoding="utf-8") == original
+
+
+def test_reopen_of_every_member_is_validated_as_reopen_not_finalize(tmp_path):
+    # A reopen whose owner union is the whole membership (every member's
+    # replacement is "pending") must still be validated against a reopen
+    # authority, not misclassified as a finalize by
+    # set(replacements) == member_set (station-prose live failure).
+    implemented = {1: I1, 2: I2}
+    plan_path = tmp_path / "plan.md"
+    original = _plan({**implemented, 3: "pending"})
+    plan_path.write_text(original, encoding="utf-8")
+
+    full_reopen = {1: "pending", 2: "pending"}
+    changed = plan_card.atomic_batch_status_update(
+        plan_path,
+        "capability",
+        implemented,
+        full_reopen,
+        transition_authority=_transition_authority(
+            full_reopen, force_reopen_owners=("Task 1", "Task 2")
+        ),
+    )
+    assert changed is True
+    text = plan_path.read_text(encoding="utf-8")
+    assert text.count("- **Status**: pending") == 3
 
 
 def test_locked_reader_releases_descriptor_after_invalid_utf8(tmp_path):
