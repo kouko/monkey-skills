@@ -779,7 +779,7 @@ def _cmd_apply_result(args) -> int:
                 print(json.dumps(recovered, sort_keys=True))
                 return 0
             raise
-        _bind_receipt_to_packet(args.receipt, packet)
+        stored = _bind_receipt_to_packet(args.receipt, packet)
         payload = json.loads(Path(args.result_file).read_text(encoding="utf-8"))
         if not (type(payload) is dict and set(payload) == {
             "arm_bindings", "terminal_results",
@@ -848,7 +848,9 @@ def _cmd_apply_result(args) -> int:
             # Only a successfully-written ledger transition may flip the
             # dispatch receipt; a wait_refuse resolution, or a CAS decline,
             # must leave it unset so a fresh dispatch cycle stays possible.
-            stored = _read_dispatch_receipt(args.receipt)
+            # Single parse: reuse `stored`, `_bind_receipt_to_packet`'s
+            # already-validated dict, instead of re-reading the receipt file
+            # a second time (residue of F1/F6).
             stored["result_applied"] = True
             Path(args.receipt).write_text(
                 json.dumps(stored, sort_keys=True), encoding="utf-8"
