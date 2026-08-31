@@ -442,7 +442,9 @@ def test_external_replace_before_cas_publish_is_stale_and_preserved(tmp_path):
 def test_set_status_refuses_done_for_declared_batch_member(tmp_path):
     """A task declared `batch(capability)` cannot have its `done(<sha>)`
     hand-set through `--set-status` — apply-result is the only writer,
-    so crash recovery can trust a `done` it finds (plan Task 5)."""
+    so crash recovery can trust a `done` it finds (plan Task 5). The
+    refusal prints on stdout with the same `plan_card: FAIL —` prefix
+    every other failure uses (Decision Log DL-1)."""
     plan_path = tmp_path / "plan.md"
     original = _plan({1: I1, 2: I2, 3: "pending"})
     plan_path.write_text(original, encoding="utf-8")
@@ -455,8 +457,68 @@ def test_set_status_refuses_done_for_declared_batch_member(tmp_path):
 
     assert result.returncode != 0, result.stdout + result.stderr
     assert plan_path.read_text(encoding="utf-8") == original
-    assert "capability" in result.stderr, result.stderr
-    assert "apply-result" in result.stderr, result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert "capability" in result.stdout, result.stdout
+    assert "apply-result" in result.stdout, result.stdout
+
+
+def test_set_status_refuses_done_when_disposition_missing_but_batches_declared(
+    tmp_path,
+):
+    """A task with no `- Review disposition:` line is schema-invalid
+    when the plan declares `## Review Batches` — refuse a `done(<sha>)`
+    write rather than risk a hidden batch member (fail-closed, plan
+    Task 5 review round 1 finding 3)."""
+    plan_path = tmp_path / "plan.md"
+    original = (
+        "# Plan: fixture\n\n"
+        "Goal: exercise missing-disposition fail-closed.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — task 1\n\n"
+        "- **Description**: fixture\n"
+        "- **Dependencies**: none\n"
+        "- **Files touched**: src/1.py\n"
+        "- **Acceptance**: accept-1\n"
+        "- **Brief item covered**: REQ-1\n"
+        "- **Review-weight**: full\n"
+        f"- **Status**: {I1}\n"
+        "\n## Review Batches\n\n"
+        "### Review Batch: capability\n"
+        "- **Members**: Task 1\n"
+        "- **Verdict question**: Does the capability work?\n"
+        "- **Review lane**: full\n"
+        "- **Aggregate verification**: package test suite\n"
+        "- **Boundary**: capability: fixture; exclusions: none; consumable: yes\n"
+    )
+    plan_path.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(plan_path), "--set-status", f"T1={D1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert plan_path.read_text(encoding="utf-8") == original
+
+
+def test_set_status_allows_implemented_for_declared_batch_member(tmp_path):
+    """`implemented(<sha>)` on a declared batch member still succeeds —
+    only `done(<sha>)` is a batch member's exclusive apply-result write
+    (plan Task 5 review round 1 finding 4)."""
+    plan_path = tmp_path / "plan.md"
+    plan_path.write_text(
+        _plan({1: "pending", 2: I2, 3: "pending"}), encoding="utf-8"
+    )
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(plan_path), "--set-status", f"T1={I1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert f"- **Status**: {I1}" in plan_path.read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize(
