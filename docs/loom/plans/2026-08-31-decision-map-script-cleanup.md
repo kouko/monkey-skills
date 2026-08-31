@@ -9,7 +9,7 @@ Goal: One symlink-guard body in `map_lock.py` parameterized by exception
     loom-workflow bumped to 3.1.1 — serves PURPOSE: a path-safety fix lands
     once instead of drifting across three copies, and a documented behavior
     nothing implements stops being a promise a session could act on
-Stage: review:round-1
+Stage: finishing
 Steps:
     1. 守衛三合一：map_lock 公開版本、map_store 與 map_transaction 各改一行委派
     2. 拆掉 reclaim：刪 claim_ticket、改寫 map-format 與 REQ-97、補 REQ-97 的真實測試
@@ -359,6 +359,10 @@ N/A — no unresolved question: the brief's Open Questions section is empty; the
 
 ## Notes
 
+- Observed fan-outs (close-out, task_batch_replay observe): observed reviewer fan-outs: 6 (rounds 6, batch reopens 0). Per-task individual reviewers (T4, T7, T13): 6 dispatches; symlink-guard batch: 2 rounds (1 reopen — T1 wrapper); whole-branch panel: 2 code arms + 2 docs arms, 1 round.
+- adversarial audit: N/A — header=absent; base=3ef8922a72932991b39f67702eb33fec31ade2b0; changed=22; guarded-hits=0; prose-hits=1
+- cold reader: fired — base=3ef8922a72932991b39f67702eb33fec31ade2b0; changed=22; prose-hits=1 — map-format.md, scenario "take over a dead session's claimed Ticket": `scenario: followed` / `temptation: refused`.
+- Whole-branch review round 1 (2026-08-31): PASS_WITH_NOTES — 1 🟡 (test_map_store delegation test pins only exception + message; mutation-proven) carried as debt; 4 🟢 (error param naming; public seam lacks docstring; CHANGELOG "byte-identical" misstates map_store's pre-state and omits the message-text change; two tests are structural/characterization pins). Docs arm: PASS, zero findings.
 - Kickoff sweep (kickoff-briefing §b): 0 one-way-door decisions — every change here is reverted by `git revert` with no data migration or external contract; no `PRINCIPLES.md` appetite entry exists. Below-threshold decisions route to the Decision Log as SDD discovers them.
 - Tasks 4, 7, 12, 13 are individual review: Task 4 is a deletion with a diagnostic acceptance and no shared verdict with the prose rewrite; Task 7 is a code test that would mix lanes with the prose batch; Task 12 is a generated-file regeneration; Task 13 is release administration closing after every other task.
 - Task 13 runs the full triad: the CHANGELOG entry is authored prose, so `Review-weight: mechanical` does not apply.
