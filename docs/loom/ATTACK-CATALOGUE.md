@@ -29,6 +29,7 @@ check. Seeded from the 2026-08-31 adversarial audit's six findings.
 - forge an artifact the gate trusts | check_attack_catalogue.py date field accepts any token | reproduced 2026-08-31 — pinned by test_checker_refuses_non_iso_or_impossible_dates
 - replay a stale artifact | check_attack_catalogue.py `held` accepts an impossible date as a dated record | reproduced 2026-08-31 — pinned by test_checker_refuses_non_iso_or_impossible_dates
 - cross a trust boundary (repo / worktree / process) | check_attack_catalogue.py `pinned by` resolved under a vendored dir no runner collects | reproduced 2026-08-31 — pinned by test_checker_refuses_pin_defined_only_under_a_vendored_dir
+- self-exempt via a prose condition | plan_card.py safety_bearing: header written below the first section or miscased renders N/A silently | reproduced 2026-08-31 — pinned by test_safety_bearing_line_outside_header_or_miscased_fails_loud
 
 ## Prose temptations
 
