@@ -224,3 +224,32 @@ def test_field_labels_match_the_shape_reference():
     labels = re.findall(r"^\d+\.\s+`([^`]+)`$", shape_text, re.MULTILINE)
     assert labels, "expected the numbered field list in goal-shape.md to be parseable"
     assert list(goal_lint.FIELD_LABELS) == labels
+
+
+def test_stop_when_without_a_numeric_bound_warns_but_never_fails():
+    # A syntactic digit check, not a word list: Stop-when with no digit
+    # anywhere warns advisory-only; it must never raise exit_code above 0.
+    no_number_goal = """\
+Outcome: The signup form submits with zero client-side validation errors.
+Constraints: Do not touch the payment module.
+Verification: Run `pytest tests/test_signup.py` and paste the output.
+Stop-when: Stop when the work is done.
+"""
+    result = goal_lint.lint_text(no_number_goal)
+    assert result.errors == []
+    assert result.exit_code == 0
+    assert [f.code for f in result.warnings].count("no-numeric-bound") == 1
+
+    # A CJK numeric bound must not trigger the warning.
+    cjk_bound_goal = """\
+Outcome: The signup form submits with zero client-side validation errors.
+Constraints: Do not touch the payment module.
+Verification: Run `pytest tests/test_signup.py` and paste the output.
+Stop-when: 6 輪到達且已回報——視為完成
+"""
+    result = goal_lint.lint_text(cjk_bound_goal)
+    assert not any(f.code == "no-numeric-bound" for f in result.warnings)
+
+    # The existing English 20-turn fixture must also stay warning-free.
+    result = goal_lint.lint_text(COMPLETE_GOAL)
+    assert not any(f.code == "no-numeric-bound" for f in result.warnings)
