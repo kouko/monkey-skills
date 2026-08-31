@@ -474,3 +474,181 @@ def test_parse_store_round_trips_fixture_and_guarded_path_globs_order():
     assert store.instances[2].verdict == "not-applicable"
     assert store.instances[2].reason == "no such surface exists"
     assert store.prose_temptations == ['"trust the docstring" shortcut']
+
+
+# ---------------------------------------------------------------------------
+# `signal` subcommand — Step 3.5's single runnable command over a real git
+# repo's committed diff.
+# ---------------------------------------------------------------------------
+
+
+def _iso_env() -> dict:
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+    env.pop("GIT_DIR", None)
+    env.pop("GIT_WORK_TREE", None)
+    env["GIT_CONFIG_GLOBAL"] = ""
+    env["GIT_CONFIG_SYSTEM"] = ""
+    return env
+
+
+def _git(repo: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", "-C", str(repo), *args],
+        capture_output=True,
+        text=True,
+        env=_iso_env(),
+        check=True,
+    )
+
+
+def _init_repo(tmp_path: Path, name: str = "repo") -> Path:
+    repo = tmp_path / name
+    repo.mkdir()
+    _git(repo, "init", "-q", "-b", "main")
+    _git(repo, "config", "user.email", "signal@example.test")
+    _git(repo, "config", "user.name", "Signal Test")
+    (repo / "README.md").write_text("# repo\n", encoding="utf-8")
+    _git(repo, "add", "README.md")
+    _git(repo, "commit", "-q", "-m", "initial")
+    return repo
+
+
+def _commit_file(repo: Path, rel: str, content: str, message: str) -> None:
+    path = repo / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+    _git(repo, "add", rel)
+    _git(repo, "commit", "-q", "-m", message)
+
+
+def _run_signal(
+    repo: Path, store: Path, plan: Path | None = None, base: str | None = None
+) -> subprocess.CompletedProcess:
+    argv = [
+        sys.executable,
+        str(SCRIPT),
+        "signal",
+        "--repo",
+        str(repo),
+        "--store",
+        str(store),
+    ]
+    if plan is not None:
+        argv += ["--plan", str(plan)]
+    if base is not None:
+        argv += ["--base", base]
+    return subprocess.run(argv, capture_output=True, text=True, env=_iso_env())
+
+
+_SIGNAL_STORE = """\
+## Guarded paths
+- loom-code/hooks/git-guard.py
+- **/SKILL.md
+
+## Instances
+- F1 x | y | not-applicable — reason
+
+## Prose temptations
+- none
+"""
+
+
+def test_signal_base_unresolved_exits_2(tmp_path):
+    repo = _init_repo(tmp_path)
+    store = tmp_path / "store.md"
+    store.write_text(_SIGNAL_STORE, encoding="utf-8")
+
+    result = _run_signal(repo, store, base="not-a-real-ref")
+
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "attack catalogue: base unresolved" in result.stderr
+
+
+def test_signal_no_header_but_guarded_hit_exits_3(tmp_path):
+    repo = _init_repo(tmp_path)
+    base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    _commit_file(
+        repo, "loom-code/hooks/git-guard.py", "# guard\n", "touch guarded path"
+    )
+    store = tmp_path / "store.md"
+    store.write_text(_SIGNAL_STORE, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "Goal: g\nStage: s\nSafety-bearing: no — routine\n\n"
+        "## Task 1 — t\n\n- Status: pending\n",
+        encoding="utf-8",
+    )
+
+    result = _run_signal(repo, store, plan=plan, base=base_sha)
+
+    assert result.returncode == 3, result.stdout + result.stderr
+    assert "attack catalogue: STOP — Safety-bearing: no but" in result.stderr
+    assert "loom-code/hooks/git-guard.py" in result.stderr
+
+
+def test_signal_double_star_prefix_matches_nested_and_root_skill_md(tmp_path):
+    repo = _init_repo(tmp_path)
+    base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    _commit_file(repo, "a/b/SKILL.md", "nested\n", "nested SKILL.md")
+    _commit_file(repo, "SKILL.md", "root\n", "root SKILL.md")
+    store = tmp_path / "store.md"
+    store.write_text(_SIGNAL_STORE, encoding="utf-8")
+
+    result = _run_signal(repo, store, base=base_sha)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "guarded-hits=2" in result.stdout
+
+
+def test_signal_exact_path_matches_only_that_path(tmp_path):
+    repo = _init_repo(tmp_path)
+    base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    _commit_file(
+        repo, "loom-code/hooks/git-guard.py", "# guard\n", "exact guarded path"
+    )
+    _commit_file(
+        repo,
+        "loom-code/hooks/git-guard-other.py",
+        "# not it\n",
+        "similar but not exact",
+    )
+    store = tmp_path / "store.md"
+    store.write_text(_SIGNAL_STORE, encoding="utf-8")
+
+    result = _run_signal(repo, store, base=base_sha)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "guarded-hits=1" in result.stdout
+
+
+def test_signal_output_lines_exact_shape_absent_plan(tmp_path):
+    repo = _init_repo(tmp_path)
+    base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    _commit_file(repo, "docs/notes.md", "notes\n", "unrelated docs change")
+    store = tmp_path / "store.md"
+    store.write_text(_SIGNAL_STORE, encoding="utf-8")
+
+    result = _run_signal(repo, store, base=base_sha)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    lines = result.stdout.splitlines()
+    assert lines == [
+        "adversarial audit: N/A — header=absent; base="
+        f"{base_sha}; changed=1; guarded-hits=0; prose-hits=0",
+        f"cold reader: N/A — base={base_sha}; changed=1; prose-hits=0",
+    ]
+
+
+def test_signal_prose_hit_fires_cold_reader(tmp_path):
+    repo = _init_repo(tmp_path)
+    base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    _commit_file(repo, "some-plugin/agents/worker.md", "worker\n", "agent prose file")
+    store = tmp_path / "store.md"
+    store.write_text(_SIGNAL_STORE, encoding="utf-8")
+
+    result = _run_signal(repo, store, base=base_sha)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert f"cold reader: fired — base={base_sha}; changed=1; prose-hits=1" in (
+        result.stdout
+    )

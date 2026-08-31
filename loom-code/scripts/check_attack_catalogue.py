@@ -23,6 +23,34 @@ Grammar — three level-2 sections, in any order, each required:
 Usage:
 
     check_attack_catalogue.py <store> --repo <root>
+    check_attack_catalogue.py signal --repo <root> --store <store-path>
+        [--plan <plan-path>] [--base <ref>]
+
+The legacy positional form (no subcommand) checks the store itself —
+grammar, pinning, dating — as described below. `signal` is a second,
+independent verb: it does not check the store's grammar (a malformed
+store still degrades to zero guarded-path globs rather than refusing),
+and answers a different question — "did THIS branch's committed diff
+against `--base` touch a guarded path, or a prose-contract file, and
+does the plan's `Safety-bearing:` header cover that?" — the single
+command Step 3.5 of `finishing-a-development-branch/SKILL.md` runs.
+`--base` defaults to `git merge-base HEAD origin/main`, falling back to
+`git merge-base HEAD main`; if neither resolves, `signal` fails CLOSED
+(exit 2) rather than silently diffing an empty range. Only the
+COMMITTED diff is considered — a dirty worktree contributes nothing
+extra to `changed`. Exit 3 when the plan declares `Safety-bearing: no`
+but a guarded path was hit anyway (a `reproduced` vector per this
+module's own grammar, until a RED test lands and `## Instances` names
+it). See `signal`'s own `--help` for the exact flag list.
+
+One `## Instances` bullet is exactly one `<class> | <target> | <status>`
+line — a well-formed line MUST have both `|` separators; a line with
+zero or one `|` (or an unrecognized `<status>`) is `malformed`, never
+silently dropped from the count. `pinned by` resolution proves only
+that the named test EXISTS somewhere a runner would collect it, never
+that it actually exercises the class/target it is pinned to — that
+relevance judgment is for a human (or the spec-reviewer) reading the
+test body, not this parser.
 
 Exit codes:
 
@@ -69,9 +97,14 @@ import argparse
 import ast
 import datetime
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+
+# Sibling resolves off sys.path[0], its own directory (same idiom as
+# check_scenario_coverage.py's `from adjudication_split import ...`).
+import plan_card
 
 _SECTION_NAMES = ("Guarded paths", "Instances", "Prose temptations")
 
@@ -422,7 +455,191 @@ def check_store(store: Store, repo: Path) -> list[StoreError]:
     return errors
 
 
-def main(argv: list[str] | None = None) -> int:
+# The six prose-contract globs `signal` checks `changed` paths against,
+# independent of anything the store's `## Guarded paths` section names
+# (module docstring "signal" paragraph). Every entry here has a `**/`
+# prefix except the last, which is deliberately root-anchored.
+_PROSE_CONTRACT_GLOBS = (
+    "**/SKILL.md",
+    "**/agents/*.md",
+    "**/hooks/*.md",
+    "**/references/*-packet.md",
+    "**/references/*-prompt.md",
+    "rules/*.md",
+)
+
+
+def _glob_matches(glob: str, path: str) -> bool:
+    """True when `path` (a `/`-separated repo-relative path) matches
+    `glob`. Two shapes only — the repo's real guarded-path globs never
+    use any other (module docstring): a `**/` prefix matches its
+    remainder as a basename pattern at any depth AND at the root; any
+    other glob matches `path` in full, with `*` never crossing `/`."""
+    if glob.startswith("**/"):
+        rest = glob[3:]
+        rest_segment_count = len(rest.split("/"))
+        path_segments = path.split("/")
+        if rest_segment_count > len(path_segments):
+            return False
+        candidate = "/".join(path_segments[-rest_segment_count:])
+        return _match_single_glob(rest, candidate)
+    return _match_single_glob(glob, path)
+
+
+def _match_single_glob(glob: str, path: str) -> bool:
+    """`glob` against `path` in full, `*` translated to "not a `/`"."""
+    regex = "".join("[^/]*" if ch == "*" else re.escape(ch) for ch in glob)
+    return re.fullmatch(regex, path) is not None
+
+
+def _git_run(repo: Path, *args: str) -> "subprocess.CompletedProcess[str]":
+    return subprocess.run(
+        ["git", "-C", str(repo), *args], capture_output=True, text=True
+    )
+
+
+def _resolve_base(repo: Path, explicit: str | None) -> str | None:
+    """base=`--base` resolved to a real sha via `rev-parse` when given;
+    else `merge-base HEAD origin/main`, falling back to `merge-base HEAD
+    main`. None (never an empty string) on every failure — the caller
+    fails CLOSED rather than diffing an empty range (module docstring)."""
+    if explicit:
+        result = _git_run(repo, "rev-parse", explicit)
+        sha = result.stdout.strip()
+        return sha if result.returncode == 0 and sha else None
+    for other in ("origin/main", "main"):
+        result = _git_run(repo, "merge-base", "HEAD", other)
+        sha = result.stdout.strip()
+        if result.returncode == 0 and sha:
+            return sha
+    return None
+
+
+def _changed_paths(repo: Path, base: str) -> list[str]:
+    """`git diff --name-only <base>..HEAD` — the committed diff only; a
+    dirty worktree contributes nothing extra (module docstring)."""
+    result = _git_run(repo, "diff", "--name-only", f"{base}..HEAD")
+    if result.returncode != 0:
+        return []
+    return [line for line in result.stdout.splitlines() if line]
+
+
+def _tracked_paths(repo: Path) -> list[str]:
+    result = _git_run(repo, "ls-files")
+    if result.returncode != 0:
+        return []
+    return [line for line in result.stdout.splitlines() if line]
+
+
+def _run_signal(
+    repo: Path, store_path: Path, plan_path: Path | None, base_override: str | None
+) -> int:
+    base = _resolve_base(repo, base_override)
+    if base is None:
+        print("attack catalogue: base unresolved", file=sys.stderr)
+        return 2
+
+    changed = _changed_paths(repo, base)
+
+    try:
+        store_text = store_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        print(f"Error: cannot read store '{store_path}': {exc}", file=sys.stderr)
+        return 1
+    try:
+        store = parse_store(store_text)
+    except StoreError as exc:
+        print(exc.message, file=sys.stderr)
+        return 1
+    guarded_globs = guarded_path_globs(store)
+
+    tracked = _tracked_paths(repo)
+    for glob in guarded_globs:
+        if not any(_glob_matches(glob, path) for path in tracked):
+            print(
+                f"WARNING: guarded-path glob matches no tracked file: "
+                f"'{glob}'",
+                file=sys.stderr,
+            )
+
+    guarded_hits = [
+        path for path in changed if any(_glob_matches(g, path) for g in guarded_globs)
+    ]
+    prose_hits = [
+        path
+        for path in changed
+        if any(_glob_matches(g, path) for g in _PROSE_CONTRACT_GLOBS)
+    ]
+
+    header = "absent"
+    if plan_path is not None:
+        try:
+            plan_text = plan_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            print(f"Error: cannot read plan '{plan_path}': {exc}", file=sys.stderr)
+            return 1
+        try:
+            parsed = plan_card.safety_bearing(plan_text)
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        header = "absent" if parsed is None else parsed[0]
+
+    audit_status = "fired —" if (header == "yes" or guarded_hits) else "N/A —"
+    print(
+        f"adversarial audit: {audit_status} header={header}; base={base}; "
+        f"changed={len(changed)}; guarded-hits={len(guarded_hits)}; "
+        f"prose-hits={len(prose_hits)}"
+    )
+    reader_status = "fired —" if prose_hits else "N/A —"
+    print(
+        f"cold reader: {reader_status} base={base}; changed={len(changed)}; "
+        f"prose-hits={len(prose_hits)}"
+    )
+
+    if header == "no" and guarded_hits:
+        print(
+            "attack catalogue: STOP — Safety-bearing: no but "
+            f"{len(guarded_hits)} guarded path(s) hit: {', '.join(guarded_hits)}",
+            file=sys.stderr,
+        )
+        return 3
+
+    return 0
+
+
+def _main_signal(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(
+        prog="check_attack_catalogue.py signal",
+        description=(
+            "Emit the Step 3.5 attack-catalogue and cold-reader signal "
+            "lines for this branch's committed diff against a merge-base "
+            "(module docstring 'signal' paragraph)."
+        ),
+    )
+    parser.add_argument("--repo", type=Path, required=True, help="Repo root.")
+    parser.add_argument(
+        "--store", type=Path, required=True, help="Path to the store markdown file."
+    )
+    parser.add_argument(
+        "--plan",
+        type=Path,
+        default=None,
+        help="Path to the plan file, for its Safety-bearing header.",
+    )
+    parser.add_argument(
+        "--base",
+        default=None,
+        help=(
+            "Base ref/sha; default: git merge-base HEAD origin/main, else "
+            "git merge-base HEAD main."
+        ),
+    )
+    args = parser.parse_args(argv)
+    return _run_signal(args.repo, args.store, args.plan, args.base)
+
+
+def _main_legacy(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Parse and check the repo attack-catalogue store "
@@ -437,7 +654,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         text = args.store.read_text(encoding="utf-8")
-    except OSError as exc:
+    except (OSError, UnicodeDecodeError) as exc:
         print(f"Error: cannot read store '{args.store}': {exc}", file=sys.stderr)
         return 1
 
@@ -464,6 +681,16 @@ def main(argv: list[str] | None = None) -> int:
         f"{len(store.prose_temptations)} prose temptation(s)."
     )
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Dispatch to the `signal` subcommand, or the legacy `<store>
+    --repo <root>` form — whichever `argv[0]` names (module docstring
+    Usage)."""
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "signal":
+        return _main_signal(argv[1:])
+    return _main_legacy(argv)
 
 
 if __name__ == "__main__":
