@@ -560,6 +560,78 @@ N/A — no unresolved question: the validated change-folder freezes types, lifec
 
 ## Decision Log
 
+Ratification basis: the v3 arc merged on 2026-08-30 without a signed
+decision trail. kouko ratified the itemized semantic decisions below
+retroactively on 2026-08-31 in the contract-repair arc
+(docs/loom/specs/2026-08-31-contract-repair-post-v3.md, item R1). Each entry
+cites the proposal section that carries the decision
+(docs/loom/outcome-map-v3/proposal.md).
+
+### D1 — Ticket types are closure-exclusive and four in number
+
+The generic `task` and `feasibility`-prototype types are abolished; every
+ticket is exactly one of grilling, research, prototype, or delivery, chosen
+by its closure evidence — grilling closes on a ratified value/direction
+decision, research on an inspectable factual answer, prototype on a human
+evaluation of a new candidate artifact, delivery on formal delivery
+evidence. Source: proposal §Closure decision tree, §Ticket ORCA.
+user-ratified: kouko, 2026-08-31
+
+### D2 — Withdrawn is a ratified terminal disposition, not a failed closure
+
+Open or claimed tickets that are no longer needed are withdrawn with a
+ratified disposition recording why they stopped participating in the
+frontier, without pretending the subtype closure contract was satisfied.
+Terminal records (closed/withdrawn) are immutable; corrections and
+regressions become new fog or follow-up tickets. Source: proposal
+§Ticket ORCA.
+user-ratified: kouko, 2026-08-31
+
+### D3 — Map clear is gated on Destination Acceptance, not on an empty work list
+
+A Map may move active → clear only when fog is empty, every ticket is
+terminal, and every stable `DA-<n>` criterion is satisfied with evidence;
+evaluative criteria additionally require dated human ratification. Closing
+any single ticket — including a delivery — never sets the Map clear.
+Source: proposal §Outcome Map ORCA, §Path × edge matrix (Assess clear).
+user-ratified: kouko, 2026-08-31
+
+### D4 — Delivery binds one reciprocal Brief; the Map keeps no writable progress fields
+
+A delivery ticket owns exactly one Brief via byte-exact reciprocal
+repo-relative paths (`brief:` frontmatter ↔ `Outcome Map ticket:` in the
+Brief); free-text `Map part:` and all writable delivery-progress fields are
+deleted in favor of read-only derivation Ticket → Brief → Plan. Source:
+proposal §Delivery Arc ORCA, §Pruning results.
+user-ratified: kouko, 2026-08-31
+
+### D5 — Closure policy is authored per Brief; PR ownership is exclusive
+
+Each Brief declares one formal delivery policy — `pr-ci`, `merged`, or
+`artifact` — with the evidence it requires, never a default. A delivery may
+span several ordered PRs, but one PR belongs to only one delivery ticket.
+Source: proposal §Delivery Arc ORCA (Closure policy, Cardinality).
+user-ratified: kouko, 2026-08-31
+
+### D6 — Delivery phases are derived, never persisted ticket statuses
+
+`briefed`/`planning`/`implementing`/`reviewing`/`pr-checking`/`ready` are
+derived Delivery Arc phases computed read-only from the owning artifacts;
+the ticket persists only type, status, claim, blockers, and closure
+contract. Start delivery is a mode of decision-map, not a separate
+map-to-task skill and not a fifth ticket type. Source: proposal §Ticket
+ORCA, §Backbone invariants.
+user-ratified: kouko, 2026-08-31
+
+### D7 — History is preserved in place: clear conclusions are immutable, archiving never moves paths
+
+A clear conclusion stands under its recorded evidence; regressions open a
+successor Map citing the predecessor. Archiving is a state transition in the
+stable Map directory, keeping reciprocal Brief links valid; active
+retirement requires an explicit human-ratified reason and is never labeled
+clear. Source: proposal §Outcome Map ORCA, §Ticket ORCA.
+user-ratified: kouko, 2026-08-31
+
 ## Notes
 
 - Approved entry: `docs/loom/outcome-map-v3/`; its structural validator and fresh completeness-critic verdict passed before planning.
