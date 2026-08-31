@@ -111,7 +111,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 
 - **Description**: Resolve and record economy host, exact model, effort, contract, runtime, and configuration identities; refuse stronger or unknown scored bindings.
 - **Module**: `loom-code/scripts/docs_review_baseline_runner.py`
-- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
+- **Files touched**: `loom-code/scripts/docs_review_baseline_runner.py`, `loom-code/scripts/test_docs_review_baseline_runner.py`, `loom-code/scripts/test_gate_scripts_fail_loud_on_unreadable_input.py`, `docs/loom/INDEX.md`, `docs/loom/dogfood/2026-08-27-stage-specific-complexity-gates.md`
 - **Context paths**:
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/skills/using-loom-code/references/dispatch-profile.md`
   - `/Users/kouko/GitHub/monkey-skills/.worktrees/codex-docs-review-baseline/loom-code/scripts/loom_firing_harness.py`
@@ -124,7 +124,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-102
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 實驗只比較真正可確認的弱模型，不讓強模型偷混進來。
 
 ## Task 6 — 保留每一次 dispatch attempt
