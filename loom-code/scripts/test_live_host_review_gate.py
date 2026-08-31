@@ -33,7 +33,7 @@ def _named_claude_test_profile(
 def _candidate(tmp_path: Path) -> Path:
     root = tmp_path / "source" / "loom-code"
     source_root = Path(__file__).resolve().parents[1]
-    for relative in {"scripts/review_context.py", *gate.RESOURCE_RELATIVE_PATHS.values()}:
+    for relative in {"scripts/review_context.py", "scripts/git_exec.py", *gate.RESOURCE_RELATIVE_PATHS.values()}:
         target = root / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source_root / relative, target)
