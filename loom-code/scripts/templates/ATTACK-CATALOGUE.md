@@ -11,6 +11,7 @@ Grammar owned by the loom-code plugin's `check_attack_catalogue.py`
 
 ## Guarded paths
 
+- docs/loom/ATTACK-CATALOGUE.md
 - **/SKILL.md
 - **/agents/*.md
 - **/hooks/*.md

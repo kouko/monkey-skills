@@ -653,8 +653,11 @@ def test_scaffold_refuses_a_stray_file_at_the_memory_store_path(tmp_path):
 
 # The prose-contract globs Task 3's own store table pre-fills, quoted here
 # only to assert the scaffold matches them in order — the checker
-# (check_attack_catalogue.py) remains the sole grammar authority.
+# (check_attack_catalogue.py) remains the sole grammar authority. The
+# store guards its own path first (self-protection — signal WARNs when
+# no guarded glob matches the store's own path).
 PROSE_CONTRACT_GLOBS = (
+    "docs/loom/ATTACK-CATALOGUE.md",
     "**/SKILL.md",
     "**/agents/*.md",
     "**/hooks/*.md",
