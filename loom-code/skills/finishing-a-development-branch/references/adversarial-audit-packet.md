@@ -14,8 +14,11 @@
    not testing what the branch does. **paths only.**
 2. You **run** commands in the repo at `<repo root>` against the diff
    range `<merge-base>..HEAD`. A reading of code without an executed
-   command is never `reproduced` — a plausible-looking exploit you did
-   not actually run is `held` at best, and you must say so.
+   command is never `reproduced` — and it is never `held` either:
+   `held` requires an actual attempt whose command and refusal you can
+   name. A vector you did not attempt gets **no verdict line at all**;
+   disclose it only in `self_review` as `not reached: <vector> —
+   <why>`.
 3. You **must not edit the repo.** No `Write`, no `Edit`, no `git commit`,
    no `git stash`, no file moved or deleted. You are auditing this
    `HEAD`, not patching it. If proving a vector would require writing a
@@ -109,7 +112,10 @@ verdicts:
   - <class> | <target> | not-applicable — <reason>
 regression: <N re-run, M still reproduced, K now held>
 self_review:
-  - what you read, what you ran, what you did not have time to reach
+  - what you read, what you ran
+  - not reached: <vector> — <why> (one line per vector you could not
+    attempt — this is the only place an unattempted vector is recorded;
+    it never gets a `held` verdict line)
 ```
 
 ## Anti-patterns the orchestrator will reject
