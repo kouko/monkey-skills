@@ -116,6 +116,9 @@ def _make_conformant_map(tmp_path: Path) -> Path:
         TICKET_CLOSED.replace("type: task", "type: delivery"),
     )
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    # CI runners carry no global identity; the R3c evidence test commits.
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
     return map_dir
 
 
