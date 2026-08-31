@@ -296,7 +296,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-111
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(c243d128b0d4fd28dad718ec48048f21a9c2b4d5)
+- **Status**: implemented(c243d12818b5b8997dfbb1d999e88eaa1203194a)
 - **Gloss**: 歷史文件裡的指令只是待審內容，不能操作電腦或外送資料。
 
 ## Task 15 — 執行 authority 與 ratifier independence
@@ -334,7 +334,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-113
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(0aaa8a08454ef892a2d0d9f07be3ed95dd418033)
+- **Status**: implemented(0aaa8a08fc25ed41df00378165f91942f41b42db)
 - **Gloss**: 重跑不會因超時、無限 retry 或過長文件變成無底洞。
 
 ## Task 17 — 保證 crash-safe dispatch 與 capture
@@ -353,7 +353,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-114
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(2d4892d36a96a9d9d07ebf6677fd61002bfcd716)
+- **Status**: implemented(2d4892d3da3feb77512cd60fc1c043da3cd6f7db)
 - **Gloss**: 當 host 斷線或回應晚到，每筆成本與輸出仍有正確落點。
 
 ## Task 18 — 在 dispatch 與 capture 驗證實際 model identity
@@ -372,7 +372,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-115
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(ce93a4a909c96fba7f5d51d1ccbfb0fc8c79716d)
+- **Status**: implemented(ce93a4a94bf88c9220f4497123e308aa4526b3cf)
 - **Gloss**: 記錄的弱模型必須和真正跑的一樣，否則只保留不計分。
 
 ## Task 19 — 分開 zero 與 partial populations
