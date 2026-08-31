@@ -338,7 +338,7 @@ def test_stop_when_is_one_bound_written_as_completion() -> None:
 
     # --- forks: human-dependent forks are not Stop-when material — pointer
     # to input-floor.md §4 item 3 ---
-    assert _negation_binds(section_lower, "never|not", r"stop-when\s+material"), (
+    assert _negation_binds(section_lower, "never|not", r"`?stop-when`?\s+material"), (
         "Must state a human-dependent fork is never Stop-when material, "
         "negation bound to 'Stop-when material'."
     )

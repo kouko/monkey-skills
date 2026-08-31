@@ -50,12 +50,23 @@ merely claim the check passed.
 
 ## 4 — `Stop-when`
 
-**Definition**: Bounds the run.
+**Definition**: Exactly one mechanical bound — a turn count or a
+wall-clock limit — phrased as a completion condition, never a list of
+exit conditions.
 
-`Stop-when` gives the run an explicit stopping condition beyond "when the
-outcome is reached" — for example a turn clause such as "or stop after 20
-turns." Without a bound, a run that cannot reach the outcome has no signal
-to stop and report back instead of continuing indefinitely.
+Reaching that bound, with a status report posted in the conversation,
+counts as the run completing — as a failure report: the outcome was not
+reached, but the run is done. A bare "stop after 20 turns" is read by
+Claude Code's goal evaluator as permission to stop, not as the condition
+having been met, so it neither releases the run nor bounds it.
+
+For example: "Stop when the outcome above is reached, or when 20 turns
+have passed and a status report has been posted — either way is the run
+completing."
+
+A human-dependent fork — a choice only a person can make — is never
+`Stop-when` material; see `input-floor.md` §4 item 3 for where it goes
+instead.
 
 ---
 
