@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import re
 import sqlite3
+import stat
 import subprocess
 import tempfile
 from typing import Mapping
@@ -669,13 +670,55 @@ def run_isolated_reviewer(
     }
 
 
-def _resource_database(store_root: Path) -> sqlite3.Connection:
-    if store_root.is_symlink():
-        raise ValueError("campaign resource store root must not be a symlink")
-    store_root.mkdir(parents=True, exist_ok=True)
-    if store_root.is_symlink() or not store_root.is_dir():
-        raise ValueError("campaign resource store root must be a real directory")
-    database = store_root / "campaign-resources.sqlite3"
+def _approved_store_directory(
+    store_root: Path, approved_root: Path, *, label: str
+) -> Path:
+    approved_path = Path(approved_root).absolute()
+    try:
+        approved_identity = approved_path.resolve(strict=True)
+    except OSError as error:
+        raise ValueError(f"{label} approved root must be a real directory") from error
+    if not approved_identity.is_dir():
+        raise ValueError(f"{label} approved root must be a real directory")
+
+    store_path = Path(store_root).absolute()
+    for root_spelling in (approved_path, approved_identity):
+        try:
+            relative_store = store_path.relative_to(root_spelling)
+            break
+        except ValueError:
+            continue
+    else:
+        raise ValueError(f"{label} store path must remain beneath approved root")
+
+    current = approved_identity
+    for component in relative_store.parts:
+        if component in {".", ".."}:
+            raise ValueError(f"{label} store path must remain beneath approved root")
+        current = current / component
+        try:
+            component_mode = current.lstat().st_mode
+        except FileNotFoundError:
+            current.mkdir()
+            component_mode = current.lstat().st_mode
+        if stat.S_ISLNK(component_mode):
+            raise ValueError(f"{label} store path must not traverse symlinks")
+        if not stat.S_ISDIR(component_mode):
+            raise ValueError(f"{label} store path must contain only directories")
+
+    resolved_store = current.resolve(strict=True)
+    if not resolved_store.is_relative_to(approved_identity):
+        raise ValueError(f"{label} store path must remain beneath approved root")
+    return resolved_store
+
+
+def _resource_database(
+    store_root: Path, *, approved_root: Path
+) -> sqlite3.Connection:
+    validated_root = _approved_store_directory(
+        store_root, approved_root, label="campaign resource"
+    )
+    database = validated_root / "campaign-resources.sqlite3"
     if database.is_symlink():
         raise ValueError("campaign resource database must not be a symlink")
     connection = sqlite3.connect(database, timeout=30, isolation_level=None)
@@ -964,6 +1007,7 @@ def _reserve_resource_request(
 
 def admit_bounded_run(
     *,
+    approved_root: Path,
     store_root: Path,
     campaign_id: str,
     attempt_id: str,
@@ -990,7 +1034,7 @@ def admit_bounded_run(
         requested_output_bytes=requested_output_bytes,
         reserved_usage_units=reserved_usage_units,
     )
-    connection = _resource_database(store_root)
+    connection = _resource_database(store_root, approved_root=approved_root)
     try:
         connection.execute("BEGIN IMMEDIATE")
         reason = _reserve_resource_request(
@@ -1078,6 +1122,7 @@ def _close_resource_reservation(
 
 def finish_bounded_run(
     *,
+    approved_root: Path,
     store_root: Path,
     reservation_id: str,
     outcome: str,
@@ -1095,7 +1140,7 @@ def finish_bounded_run(
     values = _actual_resource_values(
         actual_wall_seconds, actual_output_bytes, actual_usage_units
     )
-    connection = _resource_database(store_root)
+    connection = _resource_database(store_root, approved_root=approved_root)
     try:
         connection.execute("BEGIN IMMEDIATE")
         _close_resource_reservation(
@@ -1111,12 +1156,15 @@ def finish_bounded_run(
 
 
 def _reserved_output_ceiling(
-    store_root: Path, attempt_id: str
+    store_root: Path, attempt_id: str, *, approved_root: Path
 ) -> int | None:
-    database = store_root / "campaign-resources.sqlite3"
+    validated_root = _approved_store_directory(
+        store_root, approved_root, label="campaign resource"
+    )
+    database = validated_root / "campaign-resources.sqlite3"
     if not database.exists():
         return None
-    connection = _resource_database(store_root)
+    connection = _resource_database(validated_root, approved_root=approved_root)
     try:
         row = connection.execute(
             "SELECT requested_output_bytes FROM resource_reservations "
@@ -1129,11 +1177,11 @@ def _reserved_output_ceiling(
 
 
 def read_resource_events(
-    store_root: Path, campaign_id: str
+    store_root: Path, campaign_id: str, *, approved_root: Path
 ) -> list[dict[str, object]]:
     """Read durable resource telemetry in append order."""
     campaign_id = _resource_identity(campaign_id, "campaign_id")
-    connection = _resource_database(store_root)
+    connection = _resource_database(store_root, approved_root=approved_root)
     connection.row_factory = sqlite3.Row
     try:
         rows = connection.execute(
@@ -1519,6 +1567,7 @@ def claim_dispatch(
 def capture_dispatch_bytes(
     store_root: Path,
     *,
+    approved_root: Path,
     attempt_id: str,
     owner_id: str,
     fence_generation: int,
@@ -1584,7 +1633,9 @@ def capture_dispatch_bytes(
             captured_identity["runner_invocation_receipt"] = (
                 _invocation_receipt_record(invocation_receipt)
             )
-        output_ceiling = _reserved_output_ceiling(store_root, attempt_id)
+        output_ceiling = _reserved_output_ceiling(
+            store_root, attempt_id, approved_root=approved_root
+        )
         output_within_limit = (
             output_ceiling is None or len(raw_bytes) <= output_ceiling
         )

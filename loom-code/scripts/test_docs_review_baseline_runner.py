@@ -199,6 +199,7 @@ def _scoreable_codex_run(
     raw_bytes = f"{run_id} response".encode()
     capture = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id=run_id,
         owner_id=lease["owner_id"],
         fence_generation=lease["fence_generation"],
@@ -282,6 +283,7 @@ def test_req_105_repeat_cohorts_require_scoreable_runner_captures(
         )
         runner.capture_dispatch_bytes(
             tmp_path,
+            approved_root=tmp_path,
             attempt_id=run_id,
             owner_id=lease["owner_id"],
             fence_generation=lease["fence_generation"],
@@ -555,6 +557,7 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
         "max_usage_units": 1000,
     }
     admitted = runner.admit_bounded_run(
+        approved_root=tmp_path,
         store_root=tmp_path,
         campaign_id="campaign-r1",
         attempt_id="attempt-r1",
@@ -569,7 +572,9 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
     assert admitted["artifact_bytes"] == 28
     assert admitted["whole_artifact"] is True
     assert admitted["reservation_id"]
-    assert runner.read_resource_events(tmp_path, "campaign-r1") == [{
+    assert runner.read_resource_events(
+        tmp_path, "campaign-r1", approved_root=tmp_path
+    ) == [{
         "actual_output_bytes": None,
         "actual_usage_units": None,
         "actual_wall_seconds": None,
@@ -592,6 +597,7 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
     def concurrent_admission(attempt_id: str):
         try:
             return runner.admit_bounded_run(
+                approved_root=tmp_path,
                 store_root=concurrent_root,
                 campaign_id="campaign-concurrent",
                 attempt_id=attempt_id,
@@ -615,7 +621,7 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
     assert len(reservations) == 1
     assert refusals == ["run budget exhausted"]
     concurrent_events = runner.read_resource_events(
-        concurrent_root, "campaign-concurrent"
+        concurrent_root, "campaign-concurrent", approved_root=tmp_path
     )
     assert [event["event"] for event in concurrent_events] == [
         "reserved", "refused"
@@ -626,6 +632,7 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
     assert concurrent_events[1]["reason"] == "run budget exhausted"
 
     runner.finish_bounded_run(
+        approved_root=tmp_path,
         store_root=concurrent_root,
         reservation_id=reservations[0]["reservation_id"],
         outcome="failed",
@@ -635,7 +642,7 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
         actual_usage_units=125,
     )
     failed = runner.read_resource_events(
-        concurrent_root, "campaign-concurrent"
+        concurrent_root, "campaign-concurrent", approved_root=tmp_path
     )[-1]
     assert failed["event"] == "failed"
     assert failed["reason"] == "provider timeout"
@@ -656,6 +663,7 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
         selected = {**policy, **(policy_override or {})}
         with pytest.raises(ValueError) as error:
             runner.admit_bounded_run(
+                approved_root=tmp_path,
                 store_root=tmp_path,
                 campaign_id=campaign_id,
                 attempt_id=f"{campaign_id}-attempt",
@@ -667,7 +675,9 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
                 requested_output_bytes=output,
                 reserved_usage_units=usage,
             )
-        event = runner.read_resource_events(tmp_path, campaign_id)[-1]
+        event = runner.read_resource_events(
+            tmp_path, campaign_id, approved_root=tmp_path
+        )[-1]
         assert event["event"] == "refused"
         assert event["artifact_bytes"] == len(artifact)
         assert event["reason"] == str(error.value)
@@ -687,6 +697,7 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
     run_root = tmp_path / "run-limit"
     run_policy = {**policy, "max_runs": 1}
     runner.admit_bounded_run(
+        approved_root=tmp_path,
         store_root=run_root,
         campaign_id="campaign-run-limit",
         attempt_id="run-1",
@@ -700,6 +711,7 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
     )
     with pytest.raises(ValueError, match="run budget exhausted"):
         runner.admit_bounded_run(
+            approved_root=tmp_path,
             store_root=run_root,
             campaign_id="campaign-run-limit",
             attempt_id="run-2",
@@ -716,6 +728,7 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
         invalid = {**policy, field: None}
         with pytest.raises(ValueError, match=f"finite integer {field}"):
             runner.admit_bounded_run(
+                approved_root=tmp_path,
                 store_root=tmp_path,
                 campaign_id=f"invalid-{field}",
                 attempt_id=f"invalid-{field}-attempt",
@@ -736,9 +749,30 @@ def test_req_113_campaign_resource_store_rejects_symlink_root(tmp_path) -> None:
     linked_root = tmp_path / "linked-store"
     linked_root.symlink_to(outside, target_is_directory=True)
 
-    with pytest.raises(ValueError, match="store root must not be a symlink"):
-        runner.read_resource_events(linked_root, "campaign-r1")
+    with pytest.raises(ValueError, match="store path must not traverse symlinks"):
+        runner.read_resource_events(
+            linked_root, "campaign-r1", approved_root=tmp_path
+        )
     assert list(outside.iterdir()) == []
+
+
+def test_req_113_campaign_resource_store_rejects_symlinked_ancestor(
+    tmp_path,
+) -> None:
+    # @req: REQ-113
+    outside = tmp_path / "outside"
+    nested_store = outside / "nested-store"
+    nested_store.mkdir(parents=True)
+    linked_ancestor = tmp_path / "linked-ancestor"
+    linked_ancestor.symlink_to(outside, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="store path must not traverse symlinks"):
+        runner.read_resource_events(
+            linked_ancestor / nested_store.name,
+            "campaign-r1",
+            approved_root=tmp_path,
+        )
+    assert list(nested_store.iterdir()) == []
 
 
 def test_req_113_captured_output_cannot_bypass_reserved_ceiling(
@@ -748,6 +782,7 @@ def test_req_113_captured_output_cannot_bypass_reserved_ceiling(
     attempt_id = "attempt-output-ceiling"
     prepared = _binding("codex", "gpt-5.6-luna")
     runner.admit_bounded_run(
+        approved_root=tmp_path,
         store_root=tmp_path,
         campaign_id="campaign-output-ceiling",
         attempt_id=attempt_id,
@@ -777,6 +812,7 @@ def test_req_113_captured_output_cannot_bypass_reserved_ceiling(
     raw_bytes = b"x" * 4096
     capture = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id=attempt_id,
         owner_id=lease["owner_id"],
         fence_generation=lease["fence_generation"],
@@ -831,6 +867,7 @@ def test_req_115_actual_model_identity_is_verified_twice(
     }
     verified = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id=exact_attempt,
         owner_id=lease["owner_id"],
         fence_generation=lease["fence_generation"],
@@ -893,6 +930,7 @@ def test_req_115_actual_model_identity_is_verified_twice(
                     assert lease["identity_reason"] is None
                 result = runner.capture_dispatch_bytes(
                     tmp_path,
+                    approved_root=tmp_path,
                     attempt_id=attempt_id,
                     owner_id=lease["owner_id"],
                     fence_generation=lease["fence_generation"],
@@ -927,6 +965,7 @@ def test_req_115_actual_model_identity_is_verified_twice(
     )
     dispatch_replayed = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id=dispatch_replay_attempt,
         owner_id=dispatch_replay_lease["owner_id"],
         fence_generation=dispatch_replay_lease["fence_generation"],
@@ -950,6 +989,7 @@ def test_req_115_actual_model_identity_is_verified_twice(
     )
     replayed = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id=replay_attempt,
         owner_id=replay_lease["owner_id"],
         fence_generation=replay_lease["fence_generation"],
@@ -967,6 +1007,7 @@ def test_req_115_actual_model_identity_is_verified_twice(
     )
     unattested = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id=unattested_attempt,
         owner_id=unattested_lease["owner_id"],
         fence_generation=unattested_lease["fence_generation"],
@@ -994,6 +1035,7 @@ def test_req_115_execution_identity_is_verified_at_point_of_use(tmp_path) -> Non
 
     captured = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id=attempt_id,
         owner_id=lease["owner_id"],
         fence_generation=lease["fence_generation"],
@@ -1073,6 +1115,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     )
     acknowledgement_unknown = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id="attempt-takeover",
         owner_id=first["owner_id"],
         fence_generation=first["fence_generation"],
@@ -1097,6 +1140,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
 
     revived = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id="attempt-takeover",
         owner_id=first["owner_id"],
         fence_generation=first["fence_generation"],
@@ -1111,6 +1155,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
 
     final = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id="attempt-takeover",
         owner_id="owner-c",
         fence_generation=second["fence_generation"],
@@ -1149,6 +1194,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     )
     partial = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id="attempt-partial",
         owner_id=partial_owner["owner_id"],
         fence_generation=partial_owner["fence_generation"],
@@ -1160,6 +1206,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     assert partial["scoreability_status"] == "ineligible-incomplete"
     late = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id="attempt-partial",
         owner_id=partial_owner["owner_id"],
         fence_generation=partial_owner["fence_generation"],
@@ -1188,6 +1235,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     )
     cancelled = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id="attempt-cancelled",
         owner_id=cancelled_owner["owner_id"],
         fence_generation=cancelled_owner["fence_generation"],
@@ -1216,6 +1264,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     )
     retry = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id="attempt-retry",
         owner_id=retry_owner["owner_id"],
         fence_generation=retry_owner["fence_generation"],
@@ -1230,6 +1279,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     assert retry["scoreability_status"] == "eligible"
     cancelled_late = runner.capture_dispatch_bytes(
         tmp_path,
+        approved_root=tmp_path,
         attempt_id="attempt-cancelled",
         owner_id=cancelled_owner["owner_id"],
         fence_generation=cancelled_owner["fence_generation"],
@@ -1262,6 +1312,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     with pytest.raises(sqlite3.IntegrityError, match="capture interrupted"):
         runner.capture_dispatch_bytes(
             tmp_path,
+            approved_root=tmp_path,
             attempt_id="attempt-atomic",
             owner_id=atomic_owner["owner_id"],
             fence_generation=atomic_owner["fence_generation"],

@@ -57,6 +57,7 @@
 ### REQ-113
 
 - test_req_113_campaign_resource_store_rejects_symlink_root
+- test_req_113_campaign_resource_store_rejects_symlinked_ancestor
 - test_req_113_campaign_resource_use_is_bounded
 - test_req_113_captured_output_cannot_bypass_reserved_ceiling
 
