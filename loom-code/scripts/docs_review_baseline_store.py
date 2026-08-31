@@ -248,6 +248,8 @@ def admit_historical_case(
     store_root: Path,
     case_id: str,
     *,
+    authorization_receipt: AuthorizationReceipt,
+    actor: str,
     snapshot_bytes: bytes | None,
     source_locator: str,
     evidence_locators: list[str],
@@ -281,6 +283,13 @@ def admit_historical_case(
         record["status"] = "candidate"
     else:
         raise ValueError("snapshot_bytes must be bytes or None")
+    consume_authorization_receipt(
+        Path(store_root),
+        authorization_receipt,
+        action="nominate_historical_case",
+        actor=actor,
+        target=case_id,
+    )
     return publish_record(store_root, case_id, record)
 
 
@@ -1007,7 +1016,10 @@ def consume_authorization_receipt(
     target: str,
 ) -> None:
     """Validate and consume one receipt before its exact target mutation."""
-    if not isinstance(receipt, AuthorizationReceipt) or receipt._seal is not _RECEIPT_SEAL:
+    if (
+        not isinstance(receipt, AuthorizationReceipt)
+        or getattr(receipt, "_seal", None) is not _RECEIPT_SEAL
+    ):
         raise TypeError("receipt must come from governed action authorization")
     if receipt.store_identity != _store_identity(store_root):
         raise ValueError("receipt belongs to a different store")

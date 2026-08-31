@@ -63,11 +63,30 @@ def _campaign_action_authorities(roles: dict[str, str]) -> dict[str, list[str]]:
 
 def test_req_99_historical_case_admission(tmp_path) -> None:
     # @req: REQ-99
-    """Only explicit snapshot bytes can admit a scoreable replay candidate."""
+    """Governed nomination admits only explicit bytes or named missing evidence."""
+    roles = _campaign_roles()
+    _authority, capability = store.bootstrap_campaign_authority(
+        tmp_path,
+        "authority-case-admission-r1",
+        campaign_policy_revision_id="policy-r1",
+        role_identities=roles,
+        action_authorities=_campaign_action_authorities(roles),
+        allowed_self_ratification=[],
+    )
+    actor = roles["case_nominator"]
     snapshot = b"# Historical draft\n\nThe original document bytes.\n"
+    candidate_receipt = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="nominate_historical_case",
+        actor=actor,
+        target="case-2026-08-27",
+    )
     candidate = admit_historical_case(
         tmp_path,
         "case-2026-08-27",
+        authorization_receipt=candidate_receipt,
+        actor=actor,
         snapshot_bytes=snapshot,
         source_locator="git:abc123:docs/example.md",
         evidence_locators=["review:2026-08-27#finding-4"],
@@ -88,9 +107,18 @@ def test_req_99_historical_case_admission(tmp_path) -> None:
     assert candidate.digest == record_digest(candidate.record)
     assert read_record(tmp_path, candidate.record_id) == candidate
 
+    unscoreable_receipt = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="nominate_historical_case",
+        actor=actor,
+        target="case-narrative-only",
+    )
     unscoreable = admit_historical_case(
         tmp_path,
         "case-narrative-only",
+        authorization_receipt=unscoreable_receipt,
+        actor=actor,
         snapshot_bytes=None,
         source_locator="issue:2026-08-27-incident",
         evidence_locators=["issue:2026-08-27-incident#description"],
@@ -106,6 +134,117 @@ def test_req_99_historical_case_admission(tmp_path) -> None:
         "status": "unscoreable",
     }
     assert "snapshot" not in unscoreable.record
+
+    records_before_refusal = sorted((tmp_path / "records").glob("case-*.json"))
+    with pytest.raises(TypeError, match="authorization_receipt"):
+        admit_historical_case(
+            tmp_path,
+            "case-direct",
+            actor=actor,
+            snapshot_bytes=snapshot,
+            source_locator="git:abc123:docs/example.md",
+            evidence_locators=["review:2026-08-27#finding-4"],
+        )
+    forged_receipt = object.__new__(store.AuthorizationReceipt)
+    with pytest.raises((TypeError, ValueError), match="receipt"):
+        admit_historical_case(
+            tmp_path,
+            "case-forged",
+            authorization_receipt=forged_receipt,
+            actor=actor,
+            snapshot_bytes=snapshot,
+            source_locator="git:abc123:docs/example.md",
+            evidence_locators=["review:2026-08-27#finding-4"],
+        )
+    wrong_target_receipt = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="nominate_historical_case",
+        actor=actor,
+        target="case-other",
+    )
+    with pytest.raises(ValueError, match="target"):
+        admit_historical_case(
+            tmp_path,
+            "case-wrong-target",
+            authorization_receipt=wrong_target_receipt,
+            actor=actor,
+            snapshot_bytes=snapshot,
+            source_locator="git:abc123:docs/example.md",
+            evidence_locators=["review:2026-08-27#finding-4"],
+        )
+    wrong_actor_receipt = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="nominate_historical_case",
+        actor=actor,
+        target="case-wrong-actor",
+    )
+    with pytest.raises(ValueError, match="actor"):
+        admit_historical_case(
+            tmp_path,
+            "case-wrong-actor",
+            authorization_receipt=wrong_actor_receipt,
+            actor="maintainer:intruder",
+            snapshot_bytes=snapshot,
+            source_locator="git:abc123:docs/example.md",
+            evidence_locators=["review:2026-08-27#finding-4"],
+        )
+    other_action_receipt = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="dispatch_replay_run",
+        actor=roles["run_dispatcher"],
+        target="case-other-action",
+    )
+    with pytest.raises(ValueError, match="action"):
+        admit_historical_case(
+            tmp_path,
+            "case-other-action",
+            authorization_receipt=other_action_receipt,
+            actor=roles["run_dispatcher"],
+            snapshot_bytes=snapshot,
+            source_locator="git:abc123:docs/example.md",
+            evidence_locators=["review:2026-08-27#finding-4"],
+        )
+    other_store = tmp_path / "other-store"
+    other_roles = _campaign_roles()
+    _other_authority, other_capability = store.bootstrap_campaign_authority(
+        other_store,
+        "authority-other-store-r1",
+        campaign_policy_revision_id="policy-r1",
+        role_identities=other_roles,
+        action_authorities=_campaign_action_authorities(other_roles),
+        allowed_self_ratification=[],
+    )
+    other_store_receipt = store.authorize_governed_action_with_capability(
+        other_store,
+        capability=other_capability,
+        action="nominate_historical_case",
+        actor=other_roles["case_nominator"],
+        target="case-other-store",
+    )
+    with pytest.raises(ValueError, match="different store"):
+        admit_historical_case(
+            tmp_path,
+            "case-other-store",
+            authorization_receipt=other_store_receipt,
+            actor=other_roles["case_nominator"],
+            snapshot_bytes=snapshot,
+            source_locator="git:abc123:docs/example.md",
+            evidence_locators=["review:2026-08-27#finding-4"],
+        )
+    with pytest.raises(ValueError, match="consumed|stale"):
+        admit_historical_case(
+            tmp_path,
+            "case-2026-08-27",
+            authorization_receipt=candidate_receipt,
+            actor=actor,
+            snapshot_bytes=snapshot,
+            source_locator="git:abc123:docs/example.md",
+            evidence_locators=["review:2026-08-27#finding-4"],
+        )
+    assert sorted((tmp_path / "records").glob("case-*.json")) == records_before_refusal
 
 
 def test_req_100_oracle_ratification_is_immutable(tmp_path) -> None:
@@ -198,14 +337,6 @@ def test_req_100_oracle_ratification_is_immutable(tmp_path) -> None:
 def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
     # @req: REQ-101
     """A run-facing corpus ID freezes exact, ratified snapshot bindings."""
-    case = admit_historical_case(
-        tmp_path,
-        "case-1",
-        snapshot_bytes=b"# Exact historical draft\n",
-        source_locator="git:abc123:docs/strategy.md",
-        evidence_locators=["review:abc123#finding-1"],
-    )
-    snapshot_digest = case.record["snapshot"]["digest"]
     roles = _campaign_roles()
     authority, capability = store.bootstrap_campaign_authority(
         tmp_path,
@@ -215,6 +346,23 @@ def test_req_101_corpus_manifest_is_exact_and_immutable(tmp_path) -> None:
         action_authorities=_campaign_action_authorities(roles),
         allowed_self_ratification=[],
     )
+    case_receipt = store.authorize_governed_action_with_capability(
+        tmp_path,
+        capability=capability,
+        action="nominate_historical_case",
+        actor=roles["case_nominator"],
+        target="case-1",
+    )
+    case = admit_historical_case(
+        tmp_path,
+        "case-1",
+        authorization_receipt=case_receipt,
+        actor=roles["case_nominator"],
+        snapshot_bytes=b"# Exact historical draft\n",
+        source_locator="git:abc123:docs/strategy.md",
+        evidence_locators=["review:abc123#finding-1"],
+    )
+    snapshot_digest = case.record["snapshot"]["digest"]
     oracle = store.ratify_governed_oracle(
         tmp_path,
         "oracle-case-1-r1",
