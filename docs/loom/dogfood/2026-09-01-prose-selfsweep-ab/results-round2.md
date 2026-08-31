@@ -92,3 +92,28 @@ the implementer's note claimed it "touched the alternatives and 出典 and reaso
 about dependents" but never mentioned 單向門判定, which the blind artifact check
 found stale — the self-report was more thorough than the output. Not a
 statistical result; a "does the change fire as intended" behavioral check.
+
+## Confirmation A/B: does the action-(a) reword actually help? (n=4/arm, single variable)
+
+Prompted by "confirm the last change has an effect." Clean single-variable
+comparison: OLD (literal-grep action a) vs NEW (semantic-dependent action a),
+built by swapping ONLY action (a) on the current HEAD contract (everything else
+byte-identical). Same case-1 discovery task, 4 reps each, blind judge scores
+each draft's dependents-reconciled out of 3 (替代方案 / 單向門判定 / 出典).
+
+| arm | per-draft scores /3 | mean |
+|---|---|---|
+| OLD (grep exact phrases) | 0, 1, 2, 3 | 1.50 |
+| NEW (restated OR depended on) | 1, 2, 3, 3 | 2.25 |
+
+**Δ mean = +0.75/3, in the intended direction.** This is the first change in
+the whole arc to show a measurable positive effect — the two earlier A/B rounds
+varied the OUTPUT FORM (none/silent/written) and were null, while this varies
+the ACTION (a) CONTENT and moves the needle. It confirms the lever is the
+action's wording (literal-grep → semantic-dependent), not the output framing.
+
+Honest limits: n=4/arm, distributions overlap (OLD has a 3, NEW has a 1), so
+this is a directional shift in the distribution, not a firm effect size and not
+a fix — NEW's worst draft still reconciled only 1/3. Single case, single task
+shape; generalization untested. The reworded action (a) makes a weak model MORE
+LIKELY to catch semantic dependents, not reliably catch all of them.
