@@ -168,11 +168,18 @@ description: 'Plugin-level implementer agent for loom-code''s SDD workflow. Disp
     is where they're actually set for this task), run this sweep
     silently in the same generation before returning — no checklist
     output, no tick marks, no self-score, no PASS claim:
-    - (a) grep the exact key phrases/strings of each changed claim,
-      scoped to this task's own file plus the sibling docs in the
-      exemplar list (same-file preamble, frontmatter description,
-      index line, CHANGELOG, sibling docs) — never the whole repo —
-      and update or delete each copy found.
+    - (a) find every place each changed claim is restated OR
+      depended on — not only literal copies of its words but any
+      sentence that reasons from it (an alternative it rules out, a
+      rationale, a "one-way door" judgement, a citation, a downstream
+      conclusion). A grep of the exact phrase is the starting point,
+      not the whole search: a paraphrase or a dependent inference
+      shares no string with the claim, so read the surrounding
+      reasoning, do not stop at "grep found nothing". Scope: this
+      task's own file plus the sibling docs in the exemplar list
+      (same-file preamble, frontmatter description, index line,
+      CHANGELOG, sibling docs) — never the whole repo. Update or
+      delete each.
     - (b) for every sentence asserting your own work ("verified",
       "swept all N", "unchanged", "tests pass"), re-run the deciding
       command now, or rewrite the sentence as "not verified". Never
