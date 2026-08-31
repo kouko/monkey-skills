@@ -155,8 +155,9 @@ a smaller group.
 
 `batch_review_cli.py apply-result --result-file <json>` reads one JSON object
 the orchestrator assembles from the reviewer arms' terminal results. No script
-emits it (`task_batch_replay.py` consumes comparison files; it never writes a
-result file). Its keys are exactly what `_cmd_apply_result` reads:
+emits it. (The replay result `task_batch_replay.py observe --out` writes is a
+different artifact — the observed fan-out counts `compare` reads — never this
+file.) Its keys are exactly what `_cmd_apply_result` reads:
 
 - top level: `{arm_bindings, terminal_results}` — no other key.
 - each `arm_bindings` entry: `{packet_identity, arm, dispatch_identity,

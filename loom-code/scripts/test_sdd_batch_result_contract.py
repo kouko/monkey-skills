@@ -49,3 +49,11 @@ def test_conditional_operations_documents_batch_result_file():
     ):
         assert needle in section, f"batch section lacks {needle!r}"
     assert "conditional-operations.md" in _call_contract_paragraph()
+
+
+def test_result_file_section_distinguishes_replay_observe_output():
+    # `task_batch_replay.py observe --out` now writes a replay result file;
+    # the apply-result section must not claim the script never writes one.
+    section = _batch_section()
+    assert "never writes a result file" not in section
+    assert "observe --out" in section
