@@ -4,6 +4,12 @@
 
 ## open
 - [2026-08-30-task-review-packets-lack-requirement-ownership](backlog/2026-08-30-task-review-packets-lack-requirement-ownership.md) — Per-task review packets cannot distinguish owned requirements from later-task requirements
+- [2026-08-31-adversarial-audit-as-a-loom-mechanism](backlog/2026-08-31-adversarial-audit-as-a-loom-mechanism.md) — Decide whether a post-merge adversarial audit (break-it, zero-context, reproduce-or-hold) becomes a loom-code mechanism for safety-bearing changes, or stays an ad-hoc dispatch
+- [2026-08-31-batch-cost-numbers-are-declared-not-observed](backlog/2026-08-31-batch-cost-numbers-are-declared-not-observed.md) — task_batch_replay.py compares declared review_dispatches/review_rounds numbers typed into JSON, not anything the harness observed, so compare PASSes on an unfalsifiable input
+- [2026-08-31-batch-eligibility-should-push-toward-batching](backlog/2026-08-31-batch-eligibility-should-push-toward-batching.md) — Review Batch eligibility only refuses, never nudges — make the planner pay for NOT batching homogeneous tasks, via three escalating knobs (reverse check, default flip, mechanical criterion) evaluated in that order with observed dispatch counts
+- [2026-08-31-batch-ready-accepts-what-packet-refuses](backlog/2026-08-31-batch-ready-accepts-what-packet-refuses.md) — ready and check_review_batches.py pass plans that packet refuses at dispatch time, with opaque errors that land on whoever runs packet instead of whoever authored the plan
+- [2026-08-31-orphan-dispatch-receipt-jams-batch](backlog/2026-08-31-orphan-dispatch-receipt-jams-batch.md) — A duplicate receipt with result_applied false for the same batch blocks record-dispatch forever, and the flag is unsigned so hand-editing it unblocks a re-send
+- [2026-08-31-packet-identity-binds-whole-plan-text](backlog/2026-08-31-packet-identity-binds-whole-plan-text.md) — A sealed ReviewPacket's source_digest covers the entire plan file, so any ledger flip on a NON-member task between `packet` and `apply-result` invalidates the packet and the receipt binding refuses — correct but a trap for an orchestrator running other waves concurrently
 
 ## closed
 - [2026-07-02-468-reviewer-next-touch-nits-loom-code-tech-spec-ci](backlog/2026-07-02-468-reviewer-next-touch-nits-loom-code-tech-spec-ci.md) — #468 reviewer next-touch nits (loom-code TECH-SPEC + CI)

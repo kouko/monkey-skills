@@ -5,6 +5,47 @@ All notable changes to the `loom-code` plugin (formerly `code-toolkit`) will be 
 Format: [Keep a Changelog](https://keepachangelog.com/).
 Versioning: [Semantic Versioning](https://semver.org/).
 
+## [0.107.0] — 2026-08-31 — Batch review hardening
+
+Closes the 2026-08-31 adversarial audit's F1–F6 and F8 findings against
+`batch_review_cli.py`; F7, F9 and F10 are declined and filed as backlog
+entries instead.
+
+### Added
+
+- `apply-result --receipt` is now `required=True` (F3): there is always a
+  receipt to bind the applied result to.
+
+### Changed
+
+- `apply-result` refuses (non-zero exit, no ledger write, no receipt flip)
+  unless the rebuilt packet's `identity` equals the dispatch receipt's
+  stored `packet_identity` and every member's rebuilt sha equals the
+  receipt's `member_shas[member]` (F1, F6): a receipt from another batch,
+  or a batch with a since-edited member commit, can no longer be applied.
+- `apply-result` reads `packet_identity` from the result file's arm
+  bindings, terminal results and blocking findings and compares it to the
+  rebuilt packet instead of injecting `packet.identity` into those
+  constructors itself (F2): a hand-written or copied result file that
+  does not carry the packet's own identity is refused.
+- `build_packet` lists each member commit's actually-changed paths and
+  refuses the packet when any changed path is not in that member's
+  `declared_files`, mirroring the individual review lane's self-check
+  step 2 (F5): batch review can no longer miss a member commit that
+  touched an undeclared file.
+- `plan_card.py --set-status` refuses to hand-write `done(<sha>)` for a
+  task the plan's `## Review Batches` section declares as a batch member;
+  only `batch_review_cli.py apply-result` can transition a batch member to
+  `done`/`implemented` (F4).
+
+### Fixed
+
+- `references/conditional-operations.md` §Batch review and individual
+  fallback documents the `--result-file` JSON shape (`arm_bindings`,
+  `terminal_results`, per-finding fields) and the verbatim-`ground_ref`
+  rule; SKILL.md's call-contract paragraph now points at it instead of
+  restating it (F8).
+
 ## [0.106.0] — 2026-08-31 — Task Batch Review adapter + review debt cleared
 
 ### Added

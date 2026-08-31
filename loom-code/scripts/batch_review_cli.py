@@ -18,12 +18,14 @@ Usage:
     python3 batch_review_cli.py record-dispatch --packet-file <json> --out <json>
     python3 batch_review_cli.py apply-result --plan <plan-path> \
         --repo-root <root> --verification-receipt <json> --result-file <json> \
-        [--batch <id>] [--receipt <dispatch-receipt.json>]
+        --receipt <dispatch-receipt.json> [--batch <id>]
 
 ``ready --receipt`` (repeatable) reports not-ready when a member also sits in
-another batch whose dispatch receipt has no terminal result applied yet;
-``apply-result --receipt`` marks that receipt's result applied, which unblocks
-both the next ``ready`` and a fresh dispatch cycle.  ``record-dispatch`` refuses
+another batch whose dispatch receipt has no terminal result applied yet.
+``apply-result`` requires ``--receipt`` to bind the reviewer result to the
+dispatch receipt it was collected against; on success it also marks that
+receipt's result applied, which unblocks both the next ``ready`` and a fresh
+dispatch cycle.  ``record-dispatch`` refuses
 (fail-loud) a second dispatch for a batch whose receipt exists without an
 applied terminal result — re-collect instead of re-send, keyed on the
 batch_id across every receipt file in ``--out``'s directory, not merely the
@@ -82,10 +84,27 @@ def _run_subprocess(args: list[str], *, text: bool = True) -> subprocess.Complet
     """Shared subprocess.run wrapper: one place translates a hung external
     process into the fail-loud PacketRefused every git call in this module
     must surface as (Task 18d — folds what were three separate
-    TimeoutExpired->PacketRefused copies)."""
+    TimeoutExpired->PacketRefused copies).
+
+    Explicit encoding="utf-8", errors="surrogateescape" (subprocess.run
+    docs: both are passed straight to the underlying io.TextIOWrapper)
+    rather than the locale-dependent default `text=True` picks up
+    (locale.getencoding(), fixed at THIS interpreter's startup from
+    LC_ALL/LANG — not the child's). git's own path output is raw bytes
+    that are valid UTF-8 whenever core.quotePath is left at its default
+    (quoted/escaped otherwise; git-config(1)) — decoding as UTF-8
+    unconditionally, with surrogateescape to still tolerate a stray
+    non-UTF-8 byte, keeps a non-ASCII path from raising
+    UnicodeDecodeError under a non-UTF-8 process locale. Applied only
+    when text=True: passing encoding=/errors= at all — even under
+    text=False — forces subprocess.run into text mode regardless, which
+    would hand `_committed_bytes`'s `text=False` git-show call a `str`
+    where its caller (the scope issuer) requires raw `bytes`."""
+    text_kwargs = {"encoding": "utf-8", "errors": "surrogateescape"} if text else {}
     try:
         return subprocess.run(
             args, capture_output=True, text=text, timeout=_GIT_TIMEOUT_SECONDS,
+            **text_kwargs,
         )
     except subprocess.TimeoutExpired:
         raise rb.PacketRefused(f"{' '.join(args)} timed out")
@@ -124,6 +143,44 @@ def _committed_bytes(repo_root: Path, sha: str, path: str) -> bytes:
     if result.returncode != 0:
         raise rb.PacketRefused(f"{path} is not present at commit {sha}")
     return result.stdout
+
+
+def _commit_changed_paths(repo_root: Path, sha: str) -> tuple[str, ...]:
+    """Paths the member commit <sha> actually changed, so build_packet can
+    refuse a commit that touches anything outside its declared files — the
+    batch-lane mirror of the individual lane's self-check step 2 ("Scope
+    match. `git diff --name-only` for the task commit must be a subset of
+    its declared Files touched", subagent-driven-development/SKILL.md).
+
+    Grounding (external-surface category 4, CLI flag): `git diff
+    --name-only <sha>^ <sha>` (git-diff(1)) lists the paths changed between
+    the first parent and the commit; a root commit has no `<sha>^`, so
+    git-diff(1) fails there and the fallback uses `git diff-tree --no-commit-id
+    --name-only -r --root <sha>` (git-diff-tree(1)) instead — without
+    `--root` a root commit is not diffed against anything and the listing
+    is silently empty (fail-open); git-diff-tree(1) documents `--root`:
+    "when --root is specified the initial commit will be shown as a big
+    creation event", i.e. compared against the empty tree, listing every
+    path it introduced. Both invocations pass
+    `-c core.quotePath=false` ahead of the subcommand: git-config(1)
+    documents `core.quotePath` as defaulting to true, under which "bytes
+    higher than 0x80 ... are quoted" — so a non-ASCII path (e.g. `日本.py`)
+    would otherwise list as an octal-escaped, double-quoted string
+    (`"\346\227\245\346\234\254.py"`) instead of its literal repo-relative
+    form, and never match a declared Files-touched entry."""
+    parent_probe = _run_subprocess(
+        ["git", "-C", str(repo_root), "rev-parse", "--verify", "--quiet", f"{sha}^"]
+    )
+    if parent_probe.returncode == 0:
+        listing = _run_git(
+            repo_root, "-c", "core.quotePath=false", "diff", "--name-only", f"{sha}^", sha
+        )
+    else:
+        listing = _run_git(
+            repo_root, "-c", "core.quotePath=false", "diff-tree",
+            "--no-commit-id", "--name-only", "-r", "--root", sha,
+        )
+    return tuple(line for line in listing.splitlines() if line)
 
 
 def _tree_identity(repo_root: Path, sha: str) -> str:
@@ -288,6 +345,15 @@ def build_packet(
             rb.ReviewedFile(path, _committed_bytes(root, sha, path))
             for path in projected["declared_files"]
         )
+        undeclared = [
+            path for path in _commit_changed_paths(root, sha)
+            if path not in projected["declared_files"]
+        ]
+        if undeclared:
+            raise rb.PacketRefused(
+                f"{projected['task_id']} commit {sha} changes undeclared "
+                f"path(s): {', '.join(undeclared)}"
+            )
         members.append(rb.MemberSnapshot(
             task_id=projected["task_id"],
             status=f"implemented({sha})",
@@ -562,7 +628,7 @@ def _recover_settled_receipt(args) -> dict | None:
     found), which this recovery does not attempt to distinguish from a
     recovered reopen with zero owners — an impossible resolution shape, so
     it is refused rather than guessed at."""
-    receipt_path = getattr(args, "receipt", None)
+    receipt_path = args.receipt
     if not receipt_path or not Path(receipt_path).exists():
         return None
     try:
@@ -633,6 +699,97 @@ def _recover_settled_receipt(args) -> dict | None:
     }
 
 
+def _bind_receipt_to_packet(receipt_path: str, packet: rb.ReviewPacket) -> dict:
+    """Refuse unless the dispatch receipt is the one issued for THIS packet:
+    same batch_id, same member set, `member_shas` present and keyed exactly
+    to that member set, every member's rebuilt sha equal to the receipt's
+    recorded `member_shas[member]`, the same `packet_identity`, and not
+    already applied. Raises ValueError naming the first drifted member (the
+    audit's F1 shape: a PASS given for commit A applied after the ledger
+    moved to commit B), the foreign identity (F6: a receipt from another
+    batch flipped), or the already-applied receipt (F1/F6 residue: without
+    this check a stale, already-flipped receipt could still bind and be
+    reused, its `result_applied` clobbered back to true with no new dispatch
+    cycle behind it).
+
+    Ordering: this runs after the packet is rebuilt and BEFORE the reviewer
+    result file is parsed, so an unbound receipt is refused without reading
+    the result at all — the same batch_id -> members -> member_shas check
+    order `_recover_settled_receipt` already uses on the crash-recovery
+    path; the two paths must never disagree about what "this receipt
+    belongs to this batch" means."""
+    stored = _read_dispatch_receipt(receipt_path)
+    batch_id = packet.declaration.batch_id
+    if stored["batch_id"] != batch_id:
+        raise ValueError(
+            f"dispatch receipt {receipt_path} belongs to batch "
+            f"{stored['batch_id']!r}, not {batch_id!r}"
+        )
+    rebuilt = dict(packet.member_shas)
+    if set(stored["members"]) != set(rebuilt):
+        raise ValueError(
+            f"dispatch receipt {receipt_path} members {sorted(stored['members'])} "
+            f"do not match batch {batch_id!r} members {sorted(rebuilt)}"
+        )
+    member_shas = stored.get("member_shas")
+    if type(member_shas) is not dict or set(member_shas) != set(rebuilt):
+        raise ValueError(
+            f"dispatch receipt {receipt_path} has no member_shas matching "
+            f"batch {batch_id!r} members; re-send the dispatch (record-dispatch) "
+            "so the result can be bound to it"
+        )
+    for member_id, sha in rebuilt.items():
+        if member_shas.get(member_id) != sha:
+            raise ValueError(
+                f"{member_id} drifted after dispatch: receipt recorded "
+                f"{member_shas.get(member_id)}, ledger now {sha}; the reviewer "
+                "never saw this commit — re-send the dispatch"
+            )
+    if stored["packet_identity"] != packet.identity:
+        raise ValueError(
+            f"dispatch receipt {receipt_path} packet_identity does not match "
+            "the rebuilt packet; re-send the dispatch"
+        )
+    if stored["result_applied"]:
+        raise ValueError(
+            f"dispatch receipt {receipt_path} already applied; run "
+            "record-dispatch for a fresh cycle"
+        )
+    return stored
+
+
+def _result_packet_identity(record: dict, packet: rb.ReviewPacket) -> str:
+    """Return the result file's OWN `packet_identity` for one arm binding,
+    terminal result or blocking finding, refusing unless it equals the
+    rebuilt packet's identity. Absence raises naming the offending record —
+    distinct from the top-level shape refusal "reviewer result file is
+    malformed": a record that cannot say which packet it answers is not a
+    result. The value returned is what gets constructed, so the library's
+    `_valid_binding` / `_result_matches_binding` / `_finding_attributable`
+    checks in review_batch.py compare the reviewer's claim, never the
+    packet to itself (the audit's F2: one hand-written PASS finalized any
+    plan because the CLI injected `packet.identity`).
+
+    Ordering: runs after `_bind_receipt_to_packet` (receipt -> packet) and
+    after the top-level shape check, before any dataclass is built — the
+    same outside-in order that function uses (identity before payload), so
+    a foreign file is refused before its findings are interpreted. Same
+    invariant as GitHub's "dismiss stale approvals": an approval binds to
+    the exact reviewed artifact, not to whichever plan is applied next."""
+    if "packet_identity" not in record:
+        raise ValueError(
+            f"reviewer result file record has no packet_identity: {record}"
+        )
+    identity = record["packet_identity"]
+    if identity != packet.identity:
+        raise ValueError(
+            f"reviewer result file packet_identity {identity!r} does not "
+            "match the rebuilt packet; the result was given for another "
+            "packet — re-send the dispatch"
+        )
+    return identity
+
+
 def _cmd_apply_result(args) -> int:
     try:
         try:
@@ -643,6 +800,7 @@ def _cmd_apply_result(args) -> int:
                 print(json.dumps(recovered, sort_keys=True))
                 return 0
             raise
+        stored = _bind_receipt_to_packet(args.receipt, packet)
         payload = json.loads(Path(args.result_file).read_text(encoding="utf-8"))
         if not (type(payload) is dict and set(payload) == {
             "arm_bindings", "terminal_results",
@@ -651,14 +809,14 @@ def _cmd_apply_result(args) -> int:
         expected_arms = rb.expected_reviewer_arms(packet.declaration.review_lane)
         bindings = tuple(
             rb.ReviewerArmBinding(
-                packet.identity, binding["arm"],
+                _result_packet_identity(binding, packet), binding["arm"],
                 binding["dispatch_identity"], binding["evidence_identity"],
             )
             for binding in payload["arm_bindings"]
         )
         results = tuple(
             rb.ReviewerTerminalResult(
-                packet_identity=packet.identity,
+                packet_identity=_result_packet_identity(result, packet),
                 arm=result["arm"],
                 dispatch_identity=result["dispatch_identity"],
                 dispatch_evidence_identity=result["dispatch_evidence_identity"],
@@ -669,7 +827,7 @@ def _cmd_apply_result(args) -> int:
                 findings=tuple(
                     rb.BlockingFinding(
                         finding_id=finding["finding_id"],
-                        packet_identity=packet.identity,
+                        packet_identity=_result_packet_identity(finding, packet),
                         arm=result["arm"],
                         dispatch_identity=result["dispatch_identity"],
                         evidence_identity=result["evidence_identity"],
@@ -707,15 +865,13 @@ def _cmd_apply_result(args) -> int:
                 replacements,
                 transition_authority=resolution.transition_authority,
             )
-        if (
-            getattr(args, "receipt", None)
-            and resolution.ledger_mutation_allowed
-            and ledger_written
-        ):
+        if resolution.ledger_mutation_allowed and ledger_written:
             # Only a successfully-written ledger transition may flip the
             # dispatch receipt; a wait_refuse resolution, or a CAS decline,
             # must leave it unset so a fresh dispatch cycle stays possible.
-            stored = _read_dispatch_receipt(args.receipt)
+            # Single parse: reuse `stored`, `_bind_receipt_to_packet`'s
+            # already-validated dict, instead of re-reading the receipt file
+            # a second time (residue of F1/F6).
             stored["result_applied"] = True
             Path(args.receipt).write_text(
                 json.dumps(stored, sort_keys=True), encoding="utf-8"
@@ -764,7 +920,11 @@ def main(argv: list[str] | None = None) -> int:
     apply_result.add_argument("--repo-root", required=True)
     apply_result.add_argument("--verification-receipt", required=True)
     apply_result.add_argument("--result-file", required=True)
-    apply_result.add_argument("--receipt")
+    apply_result.add_argument("--receipt", required=True, help=(
+        "dispatch receipt written by record-dispatch; the result is applied "
+        "only if the rebuilt packet still matches its packet_identity and "
+        "every member sha it recorded"
+    ))
     apply_result.add_argument("--batch")
     apply_result.set_defaults(handler=_cmd_apply_result)
 

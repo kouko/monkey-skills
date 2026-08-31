@@ -439,6 +439,218 @@ def test_external_replace_before_cas_publish_is_stale_and_preserved(tmp_path):
     assert list(tmp_path.glob(f".{plan_path.name}.*.tmp")) == []
 
 
+def test_set_status_refuses_done_for_declared_batch_member(tmp_path):
+    """A task declared `batch(capability)` cannot have its `done(<sha>)`
+    hand-set through `--set-status` — apply-result is the only writer,
+    so crash recovery can trust a `done` it finds (plan Task 5). The
+    refusal prints on stdout with the same `plan_card: FAIL —` prefix
+    every other failure uses (Decision Log DL-1)."""
+    plan_path = tmp_path / "plan.md"
+    original = _plan({1: I1, 2: I2, 3: "pending"})
+    plan_path.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(plan_path), "--set-status", f"T1={D1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert plan_path.read_text(encoding="utf-8") == original
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert "capability" in result.stdout, result.stdout
+    assert "apply-result" in result.stdout, result.stdout
+
+
+def test_set_status_refuses_done_when_disposition_missing_but_batches_declared(
+    tmp_path,
+):
+    """A task with no `- Review disposition:` line is schema-invalid
+    when the plan declares `## Review Batches` — refuse a `done(<sha>)`
+    write rather than risk a hidden batch member (fail-closed, plan
+    Task 5 review round 1 finding 3)."""
+    plan_path = tmp_path / "plan.md"
+    original = (
+        "# Plan: fixture\n\n"
+        "Goal: exercise missing-disposition fail-closed.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — task 1\n\n"
+        "- **Description**: fixture\n"
+        "- **Dependencies**: none\n"
+        "- **Files touched**: src/1.py\n"
+        "- **Acceptance**: accept-1\n"
+        "- **Brief item covered**: REQ-1\n"
+        "- **Review-weight**: full\n"
+        f"- **Status**: {I1}\n"
+        "\n## Review Batches\n\n"
+        "### Review Batch: capability\n"
+        "- **Members**: Task 1\n"
+        "- **Verdict question**: Does the capability work?\n"
+        "- **Review lane**: full\n"
+        "- **Aggregate verification**: package test suite\n"
+        "- **Boundary**: capability: fixture; exclusions: none; consumable: yes\n"
+    )
+    plan_path.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(plan_path), "--set-status", f"T1={D1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert plan_path.read_text(encoding="utf-8") == original
+
+
+def test_set_status_refuses_done_when_disposition_is_malformed(tmp_path):
+    """A `- Review disposition:` value that does not fullmatch the
+    oracle's disposition grammar (e.g. trailing junk) is schema-invalid
+    — refuse a `done(<sha>)` write rather than let a malformed
+    disposition through the guard undetected."""
+    plan_path = tmp_path / "plan.md"
+    original = (
+        "# Plan: fixture\n\n"
+        "Goal: exercise malformed-disposition fail-closed.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — task 1\n\n"
+        "- **Description**: fixture\n"
+        "- **Dependencies**: none\n"
+        "- **Files touched**: src/1.py\n"
+        "- **Acceptance**: accept-1\n"
+        "- **Brief item covered**: REQ-1\n"
+        "- **Review-weight**: full\n"
+        "- **Review disposition**: batch(capability) (paused)\n"
+        f"- **Status**: {I1}\n"
+        "\n## Review Batches\n\n"
+        "### Review Batch: capability\n"
+        "- **Members**: Task 1\n"
+        "- **Verdict question**: Does the capability work?\n"
+        "- **Review lane**: full\n"
+        "- **Aggregate verification**: package test suite\n"
+        "- **Boundary**: capability: fixture; exclusions: none; consumable: yes\n"
+    )
+    plan_path.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(plan_path), "--set-status", f"T1={D1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert plan_path.read_text(encoding="utf-8") == original
+
+
+def test_set_status_refuses_done_when_batch_omits_task(tmp_path):
+    """A task's disposition names a batch whose `**Members**` list does
+    not include it — schema-invalid, refuse a `done(<sha>)` write
+    rather than trust a disposition the batch itself disagrees with."""
+    plan_path = tmp_path / "plan.md"
+    original = (
+        "# Plan: fixture\n\n"
+        "Goal: exercise batch/disposition mismatch fail-closed.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — task 1\n\n"
+        "- **Description**: fixture\n"
+        "- **Dependencies**: none\n"
+        "- **Files touched**: src/1.py\n"
+        "- **Acceptance**: accept-1\n"
+        "- **Brief item covered**: REQ-1\n"
+        "- **Review-weight**: full\n"
+        "- **Review disposition**: batch(capability)\n"
+        f"- **Status**: {I1}\n\n"
+        "## Task 2 — task 2\n\n"
+        "- **Description**: fixture\n"
+        "- **Dependencies**: none\n"
+        "- **Files touched**: src/2.py\n"
+        "- **Acceptance**: accept-2\n"
+        "- **Brief item covered**: REQ-2\n"
+        "- **Review-weight**: full\n"
+        "- **Review disposition**: batch(capability)\n"
+        f"- **Status**: {I2}\n"
+        "\n## Review Batches\n\n"
+        "### Review Batch: capability\n"
+        "- **Members**: Task 2\n"
+        "- **Verdict question**: Does the capability work?\n"
+        "- **Review lane**: full\n"
+        "- **Aggregate verification**: package test suite\n"
+        "- **Boundary**: capability: fixture; exclusions: none; consumable: yes\n"
+    )
+    plan_path.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(plan_path), "--set-status", f"T1={D1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert plan_path.read_text(encoding="utf-8") == original
+
+
+def test_set_status_refuses_done_when_disposition_duplicated(tmp_path):
+    """Two `- Review disposition:` lines on the same task — the first
+    `individual`, the second `batch(capability)` — is schema-invalid.
+    `_bullet_value` (single-first-match) would otherwise see only the
+    `individual` line and let a `done(<sha>)` write through a hidden
+    batch member (whole-branch review finding, arm A)."""
+    plan_path = tmp_path / "plan.md"
+    original = (
+        "# Plan: fixture\n\n"
+        "Goal: exercise duplicate-disposition fail-closed.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — task 1\n\n"
+        "- **Description**: fixture\n"
+        "- **Dependencies**: none\n"
+        "- **Files touched**: src/1.py\n"
+        "- **Acceptance**: accept-1\n"
+        "- **Brief item covered**: REQ-1\n"
+        "- **Review-weight**: full\n"
+        "- **Review disposition**: individual\n"
+        "- **Review disposition**: batch(capability)\n"
+        f"- **Status**: {I1}\n"
+        "\n## Review Batches\n\n"
+        "### Review Batch: capability\n"
+        "- **Members**: Task 1\n"
+        "- **Verdict question**: Does the capability work?\n"
+        "- **Review lane**: full\n"
+        "- **Aggregate verification**: package test suite\n"
+        "- **Boundary**: capability: fixture; exclusions: none; consumable: yes\n"
+    )
+    plan_path.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(plan_path), "--set-status", f"T1={D1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert plan_path.read_text(encoding="utf-8") == original
+
+
+def test_set_status_allows_implemented_for_declared_batch_member(tmp_path):
+    """`implemented(<sha>)` on a declared batch member still succeeds —
+    only `done(<sha>)` is a batch member's exclusive apply-result write
+    (plan Task 5 review round 1 finding 4)."""
+    plan_path = tmp_path / "plan.md"
+    plan_path.write_text(
+        _plan({1: "pending", 2: I2, 3: "pending"}), encoding="utf-8"
+    )
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(plan_path), "--set-status", f"T1={I1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert f"- **Status**: {I1}" in plan_path.read_text(encoding="utf-8")
+
+
 @pytest.mark.parametrize(
     ("cli_args", "assertion"),
     [
@@ -483,3 +695,88 @@ def test_cli_writer_waits_for_batch_publish_and_rereads_current_plan(
     assert f"- **Status**: {D2}" in final
     assert assertion in final
     assert sorted(path.name for path in tmp_path.iterdir()) == ["plan.md"]
+
+
+def _standalone_plan_card_copy(tmp_path):
+    """Copy plan_card.py alone (no check_review_batches.py sibling) into
+    an isolated directory — the standalone use this repo's plan-card
+    shim/standalone convention documents (CLAUDE.md Contract Citations
+    exempts loom-scaffolded standalone copies)."""
+    standalone_dir = tmp_path / "standalone"
+    standalone_dir.mkdir()
+    standalone_script = standalone_dir / "plan_card.py"
+    standalone_script.write_text(SCRIPT.read_text(encoding="utf-8"), encoding="utf-8")
+    return standalone_script
+
+
+def test_set_status_done_on_batch_free_plan_does_not_need_oracle(tmp_path):
+    """A plan with no `## Review Batches` section must never reach the
+    oracle call (plan Task 5 invariant) — even when `plan_card.py` is
+    copied standalone without its sibling `check_review_batches.py`.
+    Before the fix, `_batch_member_done_refusal` loaded the oracle
+    unconditionally and crashed with an uncaught FileNotFoundError."""
+    standalone_script = _standalone_plan_card_copy(tmp_path)
+    plan_path = tmp_path / "plan.md"
+    original = (
+        "# Plan: fixture\n\n"
+        "Goal: exercise batch-free standalone plan_card.py.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — task 1\n\n"
+        "- **Description**: fixture\n"
+        "- **Dependencies**: none\n"
+        "- **Files touched**: src/1.py\n"
+        "- **Acceptance**: accept-1\n"
+        "- **Brief item covered**: REQ-1\n"
+        "- **Review-weight**: full\n"
+        f"- **Status**: {I1}\n"
+    )
+    plan_path.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(standalone_script), str(plan_path), "--set-status", f"T1={D1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert f"- **Status**: {D1}" in plan_path.read_text(encoding="utf-8")
+
+
+def test_set_status_done_refuses_when_oracle_missing_but_batches_declared(tmp_path):
+    """A plan declaring `## Review Batches` DOES need the oracle; when the
+    standalone copy is missing its sibling `check_review_batches.py`, the
+    guard must fail closed with a `plan_card: FAIL —` message rather than
+    crash uncaught and rather than silently allow the write."""
+    standalone_script = _standalone_plan_card_copy(tmp_path)
+    plan_path = tmp_path / "plan.md"
+    original = (
+        "# Plan: fixture\n\n"
+        "Goal: exercise batch-declared standalone plan_card.py.\n"
+        "Stage: sdd:wave-1\n\n"
+        "## Task 1 — task 1\n\n"
+        "- **Description**: fixture\n"
+        "- **Dependencies**: none\n"
+        "- **Files touched**: src/1.py\n"
+        "- **Acceptance**: accept-1\n"
+        "- **Brief item covered**: REQ-1\n"
+        "- **Review-weight**: full\n"
+        f"- **Status**: {I1}\n"
+        "\n## Review Batches\n\n"
+        "### Review Batch: capability\n"
+        "- **Members**: Task 1\n"
+        "- **Verdict question**: Does the capability work?\n"
+        "- **Review lane**: full\n"
+        "- **Aggregate verification**: package test suite\n"
+        "- **Boundary**: capability: fixture; exclusions: none; consumable: yes\n"
+    )
+    plan_path.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(standalone_script), str(plan_path), "--set-status", f"T1={D1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert result.stdout.startswith("plan_card: FAIL —"), result.stdout
+    assert plan_path.read_text(encoding="utf-8") == original
