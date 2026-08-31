@@ -126,6 +126,31 @@ def _committed_bytes(repo_root: Path, sha: str, path: str) -> bytes:
     return result.stdout
 
 
+def _commit_changed_paths(repo_root: Path, sha: str) -> tuple[str, ...]:
+    """Paths the member commit <sha> actually changed, so build_packet can
+    refuse a commit that touches anything outside its declared files — the
+    batch-lane mirror of the individual lane's self-check step 2 ("Scope
+    match. `git diff --name-only` for the task commit must be a subset of
+    its declared Files touched", subagent-driven-development/SKILL.md).
+
+    Grounding (external-surface category 4, CLI flag): `git diff
+    --name-only <sha>^ <sha>` (git-diff(1)) lists the paths changed between
+    the first parent and the commit; a root commit has no `<sha>^`, so
+    git-diff(1) fails there and the fallback `git diff-tree --no-commit-id
+    --name-only -r <sha>` (git-diff-tree(1)) compares a root commit against
+    the empty tree, listing every path it introduced."""
+    parent_probe = _run_subprocess(
+        ["git", "-C", str(repo_root), "rev-parse", "--verify", "--quiet", f"{sha}^"]
+    )
+    if parent_probe.returncode == 0:
+        listing = _run_git(repo_root, "diff", "--name-only", f"{sha}^", sha)
+    else:
+        listing = _run_git(
+            repo_root, "diff-tree", "--no-commit-id", "--name-only", "-r", sha
+        )
+    return tuple(line for line in listing.splitlines() if line)
+
+
 def _tree_identity(repo_root: Path, sha: str) -> str:
     return _run_git(repo_root, "rev-parse", f"{sha}^{{tree}}").strip()
 
@@ -288,6 +313,15 @@ def build_packet(
             rb.ReviewedFile(path, _committed_bytes(root, sha, path))
             for path in projected["declared_files"]
         )
+        undeclared = [
+            path for path in _commit_changed_paths(root, sha)
+            if path not in projected["declared_files"]
+        ]
+        if undeclared:
+            raise rb.PacketRefused(
+                f"{projected['task_id']} commit {sha} changes undeclared "
+                f"path(s): {', '.join(undeclared)}"
+            )
         members.append(rb.MemberSnapshot(
             task_id=projected["task_id"],
             status=f"implemented({sha})",
