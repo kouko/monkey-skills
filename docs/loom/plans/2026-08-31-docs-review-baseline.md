@@ -124,7 +124,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-102
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(39929652d1204f0fbb5a0f85a08065d5e5222076)
+- **Status**: pending
 - **Gloss**: 實驗只比較真正可確認的弱模型，不讓強模型偷混進來。
 
 ## Task 6 — 保留每一次 dispatch attempt
@@ -181,7 +181,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-105
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(6477d52b2a3a9a04de77a29f7cc19f0129850f39)
+- **Status**: pending
 - **Gloss**: 只有同模型、同設定的重跑才能回答 reviewer 穩不穩。
 
 ## Task 9 — 計算帶 population 的 metrics
@@ -296,7 +296,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-111
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(6757c9542f4684fe251070ed1e388ae19557fb54)
+- **Status**: pending
 - **Gloss**: 歷史文件裡的指令只是待審內容，不能操作電腦或外送資料。
 
 ## Task 15 — 執行 authority 與 ratifier independence
@@ -334,7 +334,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-113
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(c040e73cf8159f412a058c9d2d5068cab1d8cbf7)
+- **Status**: pending
 - **Gloss**: 重跑不會因超時、無限 retry 或過長文件變成無底洞。
 
 ## Task 17 — 保證 crash-safe dispatch 與 capture
@@ -353,7 +353,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-114
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(8429f9382c5ba0264797e01b2728b5b06c35dd2b)
+- **Status**: pending
 - **Gloss**: 當 host 斷線或回應晚到，每筆成本與輸出仍有正確落點。
 
 ## Task 18 — 在 dispatch 與 capture 驗證實際 model identity
@@ -372,7 +372,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-115
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: implemented(f22a05c0a9bde7f9c830d73c4fc88fdd2fd3ecb6)
+- **Status**: pending
 - **Gloss**: 記錄的弱模型必須和真正跑的一樣，否則只保留不計分。
 
 ## Task 19 — 分開 zero 與 partial populations
