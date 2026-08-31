@@ -337,7 +337,7 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Brief item covered**: BI-7
 - **Review-weight**: prose
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(2a5bd1bbfbfcec6e103fbf65a5704a923f8a2c03)
 - **Gloss**: 本弧自己就是第一個被真實量測的弧。
 
 ## Review Batches
