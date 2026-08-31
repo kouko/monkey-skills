@@ -3,10 +3,13 @@ from __future__ import annotations
 
 import base64
 from dataclasses import dataclass
+import fcntl
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
+import secrets
 import sqlite3
 import stat
 import subprocess
@@ -184,7 +187,10 @@ def resolve_scored_execution_profile(
 
 
 def build_repeat_cohorts(
-    store_root: Path, runs: list[Mapping[str, object]]
+    store_root: Path,
+    runs: list[Mapping[str, object]],
+    *,
+    approved_root: Path,
 ) -> dict[str, object]:
     """Partition runs only after resolving distinct immutable attempts."""
     groups: dict[str, dict[str, object]] = {}
@@ -260,7 +266,9 @@ def build_repeat_cohorts(
             identity[field] = value.strip()
         if not any(
             capture["scoreable"] is True
-            for capture in read_dispatch_captures(store_root, run_id)
+            for capture in read_dispatch_captures(
+                store_root, run_id, approved_root=approved_root
+            )
         ):
             excluded.append(
                 {
@@ -699,7 +707,10 @@ def _approved_store_directory(
         try:
             component_mode = current.lstat().st_mode
         except FileNotFoundError:
-            current.mkdir()
+            try:
+                current.mkdir()
+            except FileExistsError:
+                pass
             component_mode = current.lstat().st_mode
         if stat.S_ISLNK(component_mode):
             raise ValueError(f"{label} store path must not traverse symlinks")
@@ -1307,16 +1318,253 @@ def _invocation_receipt_record(
     }
 
 
-def _dispatch_database(store_root: Path) -> sqlite3.Connection:
-    if store_root.is_symlink():
-        raise ValueError("dispatch store root must not be a symlink")
-    store_root.mkdir(parents=True, exist_ok=True)
-    if store_root.is_symlink() or not store_root.is_dir():
-        raise ValueError("dispatch store root must be a real directory")
-    database = store_root / "dispatch-state.sqlite3"
-    if database.is_symlink():
-        raise ValueError("dispatch state database must not be a symlink")
-    connection = sqlite3.connect(database, timeout=30, isolation_level=None)
+@dataclass(frozen=True)
+class _DispatchStoreHandle:
+    approved_fd: int
+    store_fd: int
+    relative_parts: tuple[str, ...]
+    store_identity: tuple[int, int]
+
+
+def _open_dispatch_store(
+    store_root: Path, *, approved_root: Path
+) -> _DispatchStoreHandle:
+    approved_path = Path(approved_root).absolute()
+    try:
+        approved_identity = approved_path.resolve(strict=True)
+        approved_stat = approved_identity.stat()
+    except OSError as error:
+        raise ValueError(
+            "dispatch approved root must be a real directory"
+        ) from error
+    if not stat.S_ISDIR(approved_stat.st_mode):
+        raise ValueError("dispatch approved root must be a real directory")
+
+    store_path = Path(store_root).absolute()
+    for root_spelling in (approved_path, approved_identity):
+        try:
+            relative_store = store_path.relative_to(root_spelling)
+            break
+        except ValueError:
+            continue
+    else:
+        raise ValueError("dispatch store path must remain beneath approved root")
+    if any(part in {".", ".."} for part in relative_store.parts):
+        raise ValueError("dispatch store path must remain beneath approved root")
+
+    directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    try:
+        approved_fd = os.open(approved_identity, directory_flags)
+    except OSError as error:
+        raise ValueError(
+            "dispatch approved root must be a real directory"
+        ) from error
+    opened_approved = os.fstat(approved_fd)
+    if (opened_approved.st_dev, opened_approved.st_ino) != (
+        approved_stat.st_dev,
+        approved_stat.st_ino,
+    ):
+        os.close(approved_fd)
+        raise ValueError("dispatch approved root identity changed during open")
+
+    current_fd = os.dup(approved_fd)
+    try:
+        for component in relative_store.parts:
+            try:
+                next_fd = os.open(component, directory_flags, dir_fd=current_fd)
+            except FileNotFoundError:
+                try:
+                    os.mkdir(component, mode=0o700, dir_fd=current_fd)
+                except FileExistsError:
+                    pass
+                try:
+                    next_fd = os.open(
+                        component, directory_flags, dir_fd=current_fd
+                    )
+                except OSError as error:
+                    raise ValueError(
+                        "dispatch store path must contain only real directories"
+                    ) from error
+            except OSError as error:
+                try:
+                    component_mode = os.stat(
+                        component, dir_fd=current_fd, follow_symlinks=False
+                    ).st_mode
+                except OSError:
+                    component_mode = 0
+                if stat.S_ISLNK(component_mode):
+                    raise ValueError(
+                        "dispatch store root must not be a symlink"
+                    ) from error
+                raise ValueError(
+                    "dispatch store path must contain only real directories"
+                ) from error
+            os.close(current_fd)
+            current_fd = next_fd
+        opened_store = os.fstat(current_fd)
+        return _DispatchStoreHandle(
+            approved_fd=approved_fd,
+            store_fd=current_fd,
+            relative_parts=tuple(relative_store.parts),
+            store_identity=(opened_store.st_dev, opened_store.st_ino),
+        )
+    except BaseException:
+        os.close(current_fd)
+        os.close(approved_fd)
+        raise
+
+
+def _assert_dispatch_store_identity(handle: _DispatchStoreHandle) -> None:
+    current_fd = os.dup(handle.approved_fd)
+    try:
+        for component in handle.relative_parts:
+            next_fd = os.open(
+                component,
+                os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                dir_fd=current_fd,
+            )
+            os.close(current_fd)
+            current_fd = next_fd
+        current = os.fstat(current_fd)
+    except OSError as error:
+        raise ValueError("dispatch store identity changed during open") from error
+    finally:
+        os.close(current_fd)
+    if (current.st_dev, current.st_ino) != handle.store_identity:
+        raise ValueError("dispatch store identity changed during open")
+
+
+def _read_file_descriptor(file_descriptor: int) -> bytes:
+    os.lseek(file_descriptor, 0, os.SEEK_SET)
+    chunks: list[bytes] = []
+    while chunk := os.read(file_descriptor, 1024 * 1024):
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+def _open_or_create_nofollow(name: str, *, dir_fd: int) -> int:
+    flags = os.O_RDWR | os.O_NOFOLLOW
+    try:
+        return os.open(name, flags, dir_fd=dir_fd)
+    except FileNotFoundError:
+        try:
+            return os.open(
+                name,
+                flags | os.O_CREAT | os.O_EXCL,
+                0o600,
+                dir_fd=dir_fd,
+            )
+        except FileExistsError:
+            return os.open(name, flags, dir_fd=dir_fd)
+
+
+def _persist_dispatch_image(
+    handle: _DispatchStoreHandle, image: bytes
+) -> None:
+    temporary_name = f".dispatch-state.{secrets.token_hex(12)}.tmp"
+    temporary_fd = os.open(
+        temporary_name,
+        os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+        0o600,
+        dir_fd=handle.store_fd,
+    )
+    try:
+        view = memoryview(image)
+        while view:
+            written = os.write(temporary_fd, view)
+            view = view[written:]
+        os.fsync(temporary_fd)
+    except BaseException:
+        os.close(temporary_fd)
+        os.unlink(temporary_name, dir_fd=handle.store_fd)
+        raise
+    os.close(temporary_fd)
+    try:
+        os.replace(
+            temporary_name,
+            "dispatch-state.sqlite3",
+            src_dir_fd=handle.store_fd,
+            dst_dir_fd=handle.store_fd,
+        )
+        os.fsync(handle.store_fd)
+    except BaseException:
+        try:
+            os.unlink(temporary_name, dir_fd=handle.store_fd)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+@dataclass(frozen=True)
+class _DispatchDatabase:
+    connection: sqlite3.Connection
+    database_fd: int
+    handle: _DispatchStoreHandle
+    lock_fd: int
+
+
+def _close_dispatch_database(database: _DispatchDatabase) -> None:
+    connection = database.connection
+    try:
+        if connection.in_transaction:
+            connection.rollback()
+        _assert_dispatch_store_identity(database.handle)
+        _persist_dispatch_image(database.handle, connection.serialize())
+    finally:
+        connection.close()
+        os.close(database.database_fd)
+        fcntl.flock(database.lock_fd, fcntl.LOCK_UN)
+        os.close(database.lock_fd)
+        os.close(database.handle.store_fd)
+        os.close(database.handle.approved_fd)
+
+
+def _dispatch_database(
+    store_root: Path, *, approved_root: Path
+) -> _DispatchDatabase:
+    """Load one locked SQLite image without giving SQLite a raceable path.
+
+    Python's SQLite cannot open a descriptor-relative database with its journal
+    files on macOS. The connection therefore runs in memory and close replaces
+    the descriptor-anchored image only after fsync, while the store lock is held.
+    """
+    handle = _open_dispatch_store(store_root, approved_root=approved_root)
+    lock_fd: int | None = None
+    database_fd: int | None = None
+    connection: sqlite3.Connection | None = None
+    try:
+        lock_fd = _open_or_create_nofollow(
+            ".dispatch-state.lock", dir_fd=handle.store_fd
+        )
+        if not stat.S_ISREG(os.fstat(lock_fd).st_mode):
+            raise ValueError("dispatch store lock must be a regular file")
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        _assert_dispatch_store_identity(handle)
+        database_fd = _open_or_create_nofollow(
+            "dispatch-state.sqlite3", dir_fd=handle.store_fd
+        )
+        if not stat.S_ISREG(os.fstat(database_fd).st_mode):
+            raise ValueError("dispatch state database must be a regular file")
+        database_image = _read_file_descriptor(database_fd)
+        connection = sqlite3.connect(
+            ":memory:",
+            timeout=30,
+            isolation_level=None,
+        )
+        _assert_dispatch_store_identity(handle)
+        if database_image:
+            connection.deserialize(database_image)
+    except BaseException:
+        if connection is not None:
+            sqlite3.Connection.close(connection)
+        if database_fd is not None:
+            os.close(database_fd)
+        if lock_fd is not None:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            os.close(lock_fd)
+        os.close(handle.store_fd)
+        os.close(handle.approved_fd)
+        raise
     connection.execute("PRAGMA busy_timeout=30000")
     connection.execute("PRAGMA synchronous=FULL")
     connection.execute(
@@ -1379,7 +1627,12 @@ def _dispatch_database(store_root: Path) -> sqlite3.Connection:
         )
         """
     )
-    return connection
+    return _DispatchDatabase(
+        connection=connection,
+        database_fd=database_fd,
+        handle=handle,
+        lock_fd=lock_fd,
+    )
 
 
 def _identity_json(value: Mapping[str, object] | None) -> str:
@@ -1435,6 +1688,7 @@ def claim_dispatch(
     attempt_id: str,
     owner_id: str,
     *,
+    approved_root: Path,
     takeover_expected_generation: int | None = None,
     prepared_profile: Mapping[str, object] | None = None,
     dispatch_attestation: Mapping[str, object] | None = None,
@@ -1442,7 +1696,8 @@ def claim_dispatch(
     """Claim one dispatch owner or fence an explicitly uncertain predecessor."""
     if not attempt_id.strip() or not owner_id.strip():
         raise ValueError("attempt_id and owner_id are required")
-    connection = _dispatch_database(store_root)
+    database = _dispatch_database(store_root, approved_root=approved_root)
+    connection = database.connection
     try:
         connection.execute("BEGIN IMMEDIATE")
         row = connection.execute(
@@ -1561,7 +1816,7 @@ def claim_dispatch(
             connection.execute("ROLLBACK")
         raise
     finally:
-        connection.close()
+        _close_dispatch_database(database)
 
 
 def capture_dispatch_bytes(
@@ -1590,7 +1845,8 @@ def capture_dispatch_bytes(
         raise ValueError("completed capture requires complete bytes")
     if outcome == "partial" and completeness != "partial":
         raise ValueError("partial outcome requires partial bytes")
-    connection = _dispatch_database(store_root)
+    database = _dispatch_database(store_root, approved_root=approved_root)
+    connection = database.connection
     try:
         connection.execute("BEGIN IMMEDIATE")
         row = connection.execute(
@@ -1717,14 +1973,15 @@ def capture_dispatch_bytes(
             connection.execute("ROLLBACK")
         raise
     finally:
-        connection.close()
+        _close_dispatch_database(database)
 
 
 def read_dispatch_captures(
-    store_root: Path, attempt_id: str
+    store_root: Path, attempt_id: str, *, approved_root: Path
 ) -> list[dict[str, object]]:
     """Read immutable capture evidence in commit order."""
-    connection = _dispatch_database(store_root)
+    database = _dispatch_database(store_root, approved_root=approved_root)
+    connection = database.connection
     try:
         rows = connection.execute(
             "SELECT captures.sequence, captures.owner_id, "
@@ -1739,7 +1996,7 @@ def read_dispatch_captures(
             (attempt_id,),
         ).fetchall()
     finally:
-        connection.close()
+        _close_dispatch_database(database)
     return [
         {
             "capture_sequence": row[0],
@@ -1761,10 +2018,11 @@ def read_dispatch_captures(
 
 
 def read_dispatch_identity(
-    store_root: Path, attempt_id: str
+    store_root: Path, attempt_id: str, *, approved_root: Path
 ) -> dict[str, object]:
     """Read the immutable prepared and dispatch-time identity binding."""
-    connection = _dispatch_database(store_root)
+    database = _dispatch_database(store_root, approved_root=approved_root)
+    connection = database.connection
     try:
         row = connection.execute(
             "SELECT prepared_profile, dispatch_attestation "
@@ -1772,7 +2030,7 @@ def read_dispatch_identity(
             (attempt_id,),
         ).fetchone()
     finally:
-        connection.close()
+        _close_dispatch_database(database)
     if row is None:
         raise ValueError("dispatch attempt has no identity binding")
     return {
@@ -1783,10 +2041,11 @@ def read_dispatch_identity(
 
 
 def read_dispatch_events(
-    store_root: Path, attempt_id: str
+    store_root: Path, attempt_id: str, *, approved_root: Path
 ) -> list[dict[str, object]]:
     """Read the durable ownership decision ledger in commit order."""
-    connection = _dispatch_database(store_root)
+    database = _dispatch_database(store_root, approved_root=approved_root)
+    connection = database.connection
     try:
         rows = connection.execute(
             "SELECT sequence, owner_id, fence_generation, event, reason, state "
@@ -1794,7 +2053,7 @@ def read_dispatch_events(
             (attempt_id,),
         ).fetchall()
     finally:
-        connection.close()
+        _close_dispatch_database(database)
     return [
         {
             "event_sequence": row[0],
@@ -1808,9 +2067,12 @@ def read_dispatch_events(
     ]
 
 
-def read_dispatch_state(store_root: Path, attempt_id: str) -> dict[str, object]:
+def read_dispatch_state(
+    store_root: Path, attempt_id: str, *, approved_root: Path
+) -> dict[str, object]:
     """Read the current fenced owner without deriving it from capture rows."""
-    connection = _dispatch_database(store_root)
+    database = _dispatch_database(store_root, approved_root=approved_root)
+    connection = database.connection
     try:
         row = connection.execute(
             "SELECT owner_id, fence_generation, state FROM dispatch_leases "
@@ -1818,7 +2080,7 @@ def read_dispatch_state(store_root: Path, attempt_id: str) -> dict[str, object]:
             (attempt_id,),
         ).fetchone()
     finally:
-        connection.close()
+        _close_dispatch_database(database)
     if row is None:
         raise ValueError("dispatch attempt has no lease")
     return {

@@ -6,6 +6,7 @@ import inspect
 from pathlib import Path
 import sqlite3
 import subprocess
+import threading
 
 import pytest
 
@@ -193,6 +194,7 @@ def _scoreable_codex_run(
         tmp_path,
         run_id,
         f"owner-{run_id}",
+        approved_root=tmp_path,
         prepared_profile=prepared,
         dispatch_attestation=attestation,
     )
@@ -223,6 +225,7 @@ def test_req_105_repeat_cohorts_never_mix_execution_identities(
             _scoreable_codex_run(tmp_path, monkeypatch, "codex-1"),
             _scoreable_codex_run(tmp_path, monkeypatch, "codex-2"),
         ],
+        approved_root=tmp_path,
     )
     assert len(codex["cohorts"]) == 1
     assert codex["cohorts"][0]["run_ids"] == ["codex-1", "codex-2"]
@@ -235,6 +238,7 @@ def test_req_105_repeat_cohorts_never_mix_execution_identities(
             _run(split_root, "claude-1", "claude-code", "haiku"),
             _scoreable_codex_run(split_root, monkeypatch, "codex-1"),
         ],
+        approved_root=tmp_path,
     )
     assert split["cohorts"] == []
     assert split["excluded"] == [
@@ -249,11 +253,20 @@ def test_req_105_repeat_cohorts_never_mix_execution_identities(
     )
 
     excluded_root = tmp_path / "excluded"
-    excluded = runner.build_repeat_cohorts(excluded_root, [
-        _run(excluded_root, "bad-1", "codex", "gpt-5.6-luna",
-             outcome="parse_failure"),
-        _scoreable_codex_run(excluded_root, monkeypatch, "codex-2"),
-    ])
+    excluded = runner.build_repeat_cohorts(
+        excluded_root,
+        [
+            _run(
+                excluded_root,
+                "bad-1",
+                "codex",
+                "gpt-5.6-luna",
+                outcome="parse_failure",
+            ),
+            _scoreable_codex_run(excluded_root, monkeypatch, "codex-2"),
+        ],
+        approved_root=tmp_path,
+    )
     assert excluded["excluded"] == [
         {"run_id": "bad-1", "reason": "run is not valid and scoreable"}
     ]
@@ -264,6 +277,7 @@ def test_req_105_repeat_cohorts_never_mix_execution_identities(
         runner.build_repeat_cohorts(
             tmp_path / "clone",
             [cloned, {**cloned, "run_id": "renamed-copy"}],
+            approved_root=tmp_path,
         )
 
 
@@ -278,6 +292,7 @@ def test_req_105_repeat_cohorts_require_scoreable_runner_captures(
             tmp_path,
             run_id,
             f"owner-{run_id}",
+            approved_root=tmp_path,
             prepared_profile=prepared,
             dispatch_attestation={"attempt_id": run_id, **prepared},
         )
@@ -294,7 +309,9 @@ def test_req_105_repeat_cohorts_require_scoreable_runner_captures(
         )
         runs.append(_run(tmp_path, run_id, "codex", "gpt-5.6-luna"))
 
-    assert runner.build_repeat_cohorts(tmp_path, runs) == {
+    assert runner.build_repeat_cohorts(
+        tmp_path, runs, approved_root=tmp_path
+    ) == {
         "cohorts": [],
         "excluded": [
             {
@@ -358,10 +375,9 @@ def test_req_110_contract_and_runtime_are_independent_inputs(
         "run-2",
         contract_digest=contract.digest, runtime_digest=runtime_2.digest,
     )
-    separated = runner.build_repeat_cohorts(tmp_path, [
-        base,
-        run_2,
-    ])
+    separated = runner.build_repeat_cohorts(
+        tmp_path, [base, run_2], approved_root=tmp_path
+    )
     assert separated["cohorts"] == []
     assert len(separated["insufficient"]) == 2
 
@@ -756,6 +772,41 @@ def test_req_113_campaign_resource_store_rejects_symlink_root(tmp_path) -> None:
     assert list(outside.iterdir()) == []
 
 
+def test_req_113_concurrent_resource_store_first_create_is_safe(
+    tmp_path, monkeypatch
+) -> None:
+    # @req: REQ-113
+    store_root = tmp_path / "concurrent-first-create"
+    first_lstat = threading.Barrier(2)
+    observed_threads: set[int] = set()
+    observation_lock = threading.Lock()
+    real_lstat = Path.lstat
+
+    def synchronize_missing_store(path: Path):
+        thread_id = threading.get_ident()
+        if path == store_root:
+            with observation_lock:
+                first_observation = thread_id not in observed_threads
+                observed_threads.add(thread_id)
+            if first_observation:
+                first_lstat.wait()
+                raise FileNotFoundError(store_root)
+        return real_lstat(path)
+
+    monkeypatch.setattr(Path, "lstat", synchronize_missing_store)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        reads = list(
+            executor.map(
+                lambda _: runner.read_resource_events(
+                    store_root, "campaign-r1", approved_root=tmp_path
+                ),
+                range(2),
+            )
+        )
+
+    assert reads == [[], []]
+
+
 def test_req_113_campaign_resource_store_rejects_symlinked_ancestor(
     tmp_path,
 ) -> None:
@@ -806,6 +857,7 @@ def test_req_113_captured_output_cannot_bypass_reserved_ceiling(
         tmp_path,
         attempt_id,
         "owner-output-ceiling",
+        approved_root=tmp_path,
         prepared_profile=prepared,
         dispatch_attestation={"attempt_id": attempt_id, **prepared},
     )
@@ -825,11 +877,11 @@ def test_req_113_captured_output_cannot_bypass_reserved_ceiling(
     assert {
         "capture_scoreable": capture["scoreable"],
         "capture_status": capture["scoreability_status"],
-        "stored_bytes": runner.read_dispatch_captures(tmp_path, attempt_id)[0][
-            "raw_bytes"
-        ],
+        "stored_bytes": runner.read_dispatch_captures(
+            tmp_path, attempt_id, approved_root=tmp_path
+        )[0]["raw_bytes"],
         "stored_scoreable": runner.read_dispatch_captures(
-            tmp_path, attempt_id
+            tmp_path, attempt_id, approved_root=tmp_path
         )[0]["scoreable"],
     } == {
         "capture_scoreable": False,
@@ -855,12 +907,15 @@ def test_req_115_actual_model_identity_is_verified_twice(
         tmp_path,
         exact_attempt,
         "owner-exact",
+        approved_root=tmp_path,
         prepared_profile=prepared,
         dispatch_attestation=exact,
     )
     assert lease["identity_verified"] is True
     assert lease["identity_reason"] is None
-    assert runner.read_dispatch_identity(tmp_path, exact_attempt) == {
+    assert runner.read_dispatch_identity(
+        tmp_path, exact_attempt, approved_root=tmp_path
+    ) == {
         "attempt_id": exact_attempt,
         "dispatch_attestation": exact,
         "prepared_profile": prepared,
@@ -882,7 +937,7 @@ def test_req_115_actual_model_identity_is_verified_twice(
     assert verified["scoreable"] is True
     assert verified["identity_reason"] is None
     stored_identity = runner.read_dispatch_captures(
-        tmp_path, exact_attempt
+        tmp_path, exact_attempt, approved_root=tmp_path
     )[0]["capture_attestation"]
     assert {field: stored_identity[field] for field in exact} == exact
     assert stored_identity["runner_invocation_receipt"][
@@ -917,6 +972,7 @@ def test_req_115_actual_model_identity_is_verified_twice(
                     tmp_path,
                     attempt_id,
                     f"owner-{attempt_id}",
+                    approved_root=tmp_path,
                     prepared_profile=prepared,
                     dispatch_attestation=dispatch,
                 )
@@ -943,10 +999,12 @@ def test_req_115_actual_model_identity_is_verified_twice(
                 assert result["identity_reason"] == (
                     f"{stage} {field} {condition}"
                 )
-                assert runner.read_dispatch_identity(tmp_path, attempt_id)[
-                    "dispatch_attestation"
-                ] == dispatch
-                stored = runner.read_dispatch_captures(tmp_path, attempt_id)[0]
+                assert runner.read_dispatch_identity(
+                    tmp_path, attempt_id, approved_root=tmp_path
+                )["dispatch_attestation"] == dispatch
+                stored = runner.read_dispatch_captures(
+                    tmp_path, attempt_id, approved_root=tmp_path
+                )[0]
                 assert stored["raw_bytes"] == b"preserved response"
                 assert stored["capture_attestation"] == capture
                 assert stored["identity_reason"] == result["identity_reason"]
@@ -956,6 +1014,7 @@ def test_req_115_actual_model_identity_is_verified_twice(
         tmp_path,
         dispatch_replay_attempt,
         "owner-dispatch-replay",
+        approved_root=tmp_path,
         prepared_profile=prepared,
         dispatch_attestation=attestation("attempt-exact"),
     )
@@ -984,6 +1043,7 @@ def test_req_115_actual_model_identity_is_verified_twice(
         tmp_path,
         replay_attempt,
         "owner-replay",
+        approved_root=tmp_path,
         prepared_profile=prepared,
         dispatch_attestation=attestation(replay_attempt),
     )
@@ -1003,7 +1063,10 @@ def test_req_115_actual_model_identity_is_verified_twice(
 
     unattested_attempt = "attempt-unattested"
     unattested_lease = runner.claim_dispatch(
-        tmp_path, unattested_attempt, "owner-unattested"
+        tmp_path,
+        unattested_attempt,
+        "owner-unattested",
+        approved_root=tmp_path,
     )
     unattested = runner.capture_dispatch_bytes(
         tmp_path,
@@ -1029,6 +1092,7 @@ def test_req_115_execution_identity_is_verified_at_point_of_use(tmp_path) -> Non
         tmp_path,
         attempt_id,
         "owner-fabricated",
+        approved_root=tmp_path,
         prepared_profile=prepared,
         dispatch_attestation=fabricated,
     )
@@ -1063,7 +1127,12 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     linked_root = tmp_path / "linked-store"
     linked_root.symlink_to(outside, target_is_directory=True)
     with pytest.raises(ValueError, match="store root must not be a symlink"):
-        runner.claim_dispatch(linked_root, "escaped-attempt", "escaped-owner")
+        runner.claim_dispatch(
+            linked_root,
+            "escaped-attempt",
+            "escaped-owner",
+            approved_root=tmp_path,
+        )
     assert list(outside.iterdir()) == []
 
     concurrent_root = tmp_path / "concurrent"
@@ -1071,7 +1140,10 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     def claim(owner: str):
         try:
             return runner.claim_dispatch(
-                concurrent_root, "attempt-concurrent", owner
+                concurrent_root,
+                "attempt-concurrent",
+                owner,
+                approved_root=tmp_path,
             )
         except ValueError as error:
             return str(error)
@@ -1086,7 +1158,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     winning_owner = leases[0]["owner_id"]
     refused_owner = ({"owner-a", "owner-b"} - {winning_owner}).pop()
     assert runner.read_dispatch_events(
-        concurrent_root, "attempt-concurrent"
+        concurrent_root, "attempt-concurrent", approved_root=tmp_path
     ) == [
         {
             "event_sequence": 1,
@@ -1110,6 +1182,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
         tmp_path,
         "attempt-takeover",
         "owner-a",
+        approved_root=tmp_path,
         prepared_profile=prepared,
         dispatch_attestation=attestation("attempt-takeover"),
     )
@@ -1134,6 +1207,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
         tmp_path,
         "attempt-takeover",
         "owner-c",
+        approved_root=tmp_path,
         takeover_expected_generation=first["fence_generation"],
     )
     assert second["fence_generation"] == first["fence_generation"] + 1
@@ -1175,7 +1249,7 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     assert final["scoreability_status"] == "eligible"
 
     takeover_captures = runner.read_dispatch_captures(
-        tmp_path, "attempt-takeover"
+        tmp_path, "attempt-takeover", approved_root=tmp_path
     )
     assert [item["raw_bytes"] for item in takeover_captures] == [
         b"",
@@ -1190,7 +1264,10 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     assert len({item["raw_digest"] for item in takeover_captures}) == 3
 
     partial_owner = runner.claim_dispatch(
-        tmp_path, "attempt-partial", "owner-partial"
+        tmp_path,
+        "attempt-partial",
+        "owner-partial",
+        approved_root=tmp_path,
     )
     partial = runner.capture_dispatch_bytes(
         tmp_path,
@@ -1216,14 +1293,18 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     )
     assert late["terminal_status"] == "late-evidence"
     assert late["scoreability_status"] == "ineligible-late-evidence"
-    assert runner.read_dispatch_state(tmp_path, "attempt-partial") == {
+    assert runner.read_dispatch_state(
+        tmp_path, "attempt-partial", approved_root=tmp_path
+    ) == {
         "attempt_id": "attempt-partial",
         "fence_generation": 1,
         "owner_id": "owner-partial",
         "state": "partial",
     }
 
-    captures = runner.read_dispatch_captures(tmp_path, "attempt-partial")
+    captures = runner.read_dispatch_captures(
+        tmp_path, "attempt-partial", approved_root=tmp_path
+    )
     assert [item["raw_bytes"] for item in captures] == [
         b"partial bytes",
         b"late complete bytes",
@@ -1231,7 +1312,10 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
     assert len({item["raw_digest"] for item in captures}) == 2
 
     cancelled_owner = runner.claim_dispatch(
-        tmp_path, "attempt-cancelled", "owner-cancelled"
+        tmp_path,
+        "attempt-cancelled",
+        "owner-cancelled",
+        approved_root=tmp_path,
     )
     cancelled = runner.capture_dispatch_bytes(
         tmp_path,
@@ -1250,15 +1334,17 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
             tmp_path,
             "attempt-cancelled",
             "owner-retry",
+            approved_root=tmp_path,
             takeover_expected_generation=cancelled_owner["fence_generation"],
         )
-    assert runner.read_dispatch_state(tmp_path, "attempt-cancelled")[
-        "state"
-    ] == "cancellation-uncertain"
+    assert runner.read_dispatch_state(
+        tmp_path, "attempt-cancelled", approved_root=tmp_path
+    )["state"] == "cancellation-uncertain"
     retry_owner = runner.claim_dispatch(
         tmp_path,
         "attempt-retry",
         "owner-retry",
+        approved_root=tmp_path,
         prepared_profile=prepared,
         dispatch_attestation=attestation("attempt-retry"),
     )
@@ -1288,20 +1374,27 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
         outcome="completed",
     )
     assert cancelled_late["scoreability_status"] == "ineligible-late-evidence"
-    assert runner.read_dispatch_state(tmp_path, "attempt-cancelled")[
-        "state"
-    ] == "cancellation-uncertain"
+    assert runner.read_dispatch_state(
+        tmp_path, "attempt-cancelled", approved_root=tmp_path
+    )["state"] == "cancellation-uncertain"
     assert [
         item["raw_bytes"]
-        for item in runner.read_dispatch_captures(tmp_path, "attempt-cancelled")
+        for item in runner.read_dispatch_captures(
+            tmp_path, "attempt-cancelled", approved_root=tmp_path
+        )
     ] == [b"bytes before uncertain cancellation", b"late original response"]
     assert [
         item["raw_bytes"]
-        for item in runner.read_dispatch_captures(tmp_path, "attempt-retry")
+        for item in runner.read_dispatch_captures(
+            tmp_path, "attempt-retry", approved_root=tmp_path
+        )
     ] == [b"retry bytes"]
 
     atomic_owner = runner.claim_dispatch(
-        tmp_path, "attempt-atomic", "owner-atomic"
+        tmp_path,
+        "attempt-atomic",
+        "owner-atomic",
+        approved_root=tmp_path,
     )
     database = tmp_path / "dispatch-state.sqlite3"
     with sqlite3.connect(database) as connection:
@@ -1322,7 +1415,48 @@ def test_req_114_dispatch_and_capture_are_crash_safe(
         )
     with sqlite3.connect(database) as connection:
         connection.execute("DROP TRIGGER abort_capture")
-    assert runner.read_dispatch_captures(tmp_path, "attempt-atomic") == []
-    assert runner.read_dispatch_state(tmp_path, "attempt-atomic")["state"] == (
-        "active"
-    )
+    assert runner.read_dispatch_captures(
+        tmp_path, "attempt-atomic", approved_root=tmp_path
+    ) == []
+    assert runner.read_dispatch_state(
+        tmp_path, "attempt-atomic", approved_root=tmp_path
+    )["state"] == "active"
+
+
+def test_req_114_dispatch_store_swap_cannot_escape_approved_root(
+    tmp_path, monkeypatch
+) -> None:
+    # @req: REQ-114
+    approved = tmp_path / "approved"
+    approved.mkdir()
+    store = approved / "dispatch-store"
+    store.mkdir()
+    displaced = approved / "displaced-store"
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    real_connect = sqlite3.connect
+    swapped = False
+
+    def swap_store_before_connect(database, *args, **kwargs):
+        nonlocal swapped
+        if not swapped:
+            swapped = True
+            store.rename(displaced)
+            store.symlink_to(outside, target_is_directory=True)
+        return real_connect(database, *args, **kwargs)
+
+    monkeypatch.setattr(runner.sqlite3, "connect", swap_store_before_connect)
+    refusal = None
+    try:
+        runner.claim_dispatch(
+            store,
+            "attempt-race",
+            "owner-race",
+            approved_root=approved,
+        )
+    except ValueError as error:
+        refusal = str(error)
+
+    assert swapped is True
+    assert not (outside / "dispatch-state.sqlite3").exists()
+    assert refusal == "dispatch store identity changed during open"

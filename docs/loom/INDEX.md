@@ -60,10 +60,12 @@
 - test_req_113_campaign_resource_store_rejects_symlinked_ancestor
 - test_req_113_campaign_resource_use_is_bounded
 - test_req_113_captured_output_cannot_bypass_reserved_ceiling
+- test_req_113_concurrent_resource_store_first_create_is_safe
 
 ### REQ-114
 
 - test_req_114_dispatch_and_capture_are_crash_safe
+- test_req_114_dispatch_store_swap_cannot_escape_approved_root
 
 ### REQ-115
 
