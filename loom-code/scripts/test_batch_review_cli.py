@@ -775,7 +775,7 @@ def test_apply_result_recovers_receipt_stuck_after_ledger_crash(
     assert code2 == 0
     assert out2["ledger_written"] is True
     assert out2["recovered"] is True
-    assert out2.get("transition_authority_present") is None
+    assert out2.get("transition_authority_present") is False
     stored_after_recovery = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
     assert stored_after_recovery["result_applied"] is True
     assert plan_path.read_text(encoding="utf-8") == plan_after_crash

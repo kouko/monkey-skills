@@ -629,7 +629,7 @@ def _recover_settled_receipt(args) -> dict | None:
             "receipt now applied",
         ],
         "recovered": True,
-        "transition_authority_present": None,
+        "transition_authority_present": False,  # not computed on the recovery path (see recovered: true)
     }
 
 
@@ -753,9 +753,9 @@ def main(argv: list[str] | None = None) -> int:
     record = sub.add_parser("record-dispatch")
     record.add_argument("--packet-file", required=True)
     record.add_argument("--out", required=True, help=(
-        "dispatch receipt path; the idempotency refusal keys off this exact "
-        "file, not off batch_id — the caller MUST reuse the same --out path "
-        "for every record-dispatch/apply-result pair on one batch"
+        "dispatch receipt path; the idempotency refusal keys off batch_id "
+        "across every receipt file in this path's directory, so an unapplied "
+        "receipt for the same batch blocks a re-send regardless of filename"
     ))
     record.set_defaults(handler=_cmd_record_dispatch)
 
