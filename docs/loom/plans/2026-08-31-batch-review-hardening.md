@@ -52,7 +52,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: BI-1
 - **Review disposition**: batch(apply-result-binding)
-- **Status**: pending
+- **Status**: claimed(@implementer-t1)
 - **Gloss**: 讓 reviewer 的 PASS 只能套在它當初看到的那組 commit 上；沒收據就不准套。
 
 ## Task 2 — apply-result 從結果檔讀 packet_identity 比對，CLI 不再自行注入
@@ -148,7 +148,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: true
 - **Brief item covered**: BI-4
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: claimed(@implementer-t5)
 - **Gloss**: 批次成員的 done 只能由 apply-result 寫，手標會被擋，崩潰恢復因此可信。
 
 ## Task 6 — F7／F9／F10 立 backlog 三條
@@ -171,7 +171,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: true
 - **Brief item covered**: BI-11
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: claimed(@implementer-t6)
 - **Gloss**: 三條沒修的發現有案可查，不會被遺忘。
 
 ## Task 7 — loom-code 版本 bump 0.106.0→0.107.0＋dogfood 指紋刷新
