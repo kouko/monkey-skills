@@ -4,6 +4,36 @@ All notable changes to the dev-workflow plugin will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [3.2.0] — 2026-08-31 — goal-create Stop-when repair
+
+### Changed
+
+- `goal-shape.md` §4 — `Stop-when` is now exactly one mechanical bound
+  (turn count or wall-clock) phrased as a completion condition: reaching
+  it counts as the run completing, with a status report posted as a
+  failure report. A bare "stop after N turns" was read by the `/goal`
+  evaluator as permission to stop, not as the condition being met.
+- `input-floor.md` §4 item 3 — a person-dependent condition never
+  becomes a `Stop-when` branch; it is pre-decided in `Constraints` or
+  delegated under the Standing decision rule below.
+- `test_input_floor.py` — the 359-line bundled test split into one test
+  per claim plus a 50-code-line guard (backlog
+  `2026-08-28-one-test-function-bundles-fifteen-independent-claims`).
+
+### Added
+
+- `goal-shape.md` §2 — a **Standing decision rule** that SESSION mode
+  emits by default (tagged `derived`): choices the goal does not
+  pre-decide are the run's to make — search first, decide, record
+  decision/candidates/sources in a named file, never stop to ask; only
+  an irreversible or outward-facing act stays outside the run.
+- `goal_lint.py` advisory `no-numeric-bound` warning (a `Stop-when`
+  with no digit); never fails the run; no word list.
+
+Grounding: seven real SESSION goals had inflated `Stop-when` into 3–6
+exit branches; a two-run `/goal` experiment on 2026-08-31 validated the
+new phrasing and the standing rule.
+
 ## [3.1.1] — 2026-08-31 — decision-map script cleanup
 
 ### Changed

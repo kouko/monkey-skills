@@ -198,8 +198,8 @@ def test_v3_public_surface_commands_templates_and_version_are_synchronized(
     claude_manifest = json.loads(CLAUDE_MANIFEST.read_text(encoding="utf-8"))
     codex_manifest = json.loads(CODEX_MANIFEST.read_text(encoding="utf-8"))
 
-    assert claude_manifest["version"] == "3.1.1"
-    assert codex_manifest["version"] == "3.1.1"
+    assert claude_manifest["version"] == "3.2.0"
+    assert codex_manifest["version"] == "3.2.0"
     for manifest in (claude_manifest, codex_manifest):
         assert "Outcome Map" in manifest["description"]
         assert "decision-map" in manifest["keywords"]
