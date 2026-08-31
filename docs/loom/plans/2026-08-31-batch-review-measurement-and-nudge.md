@@ -38,7 +38,8 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - Downstream risk: a plan authored before this arc has no `Not batched because` lines and would fail the new check — the check applies only to plans whose header postdates the gate (it keys on the `## Review Batches` section plus a `Total tasks:` header, both present in every batch-era plan; older plans are not re-reviewed); a worktree removed before close-out loses its log — the close-out row prints N/A loudly.
 
 ## Task 1 — 補 #769 欠的 memory 條目：非 ASCII 路徑跨程序邊界兩次
-- **Description**: Add `docs/loom/memory/a-non-ascii-path-crosses-the-process-boundary-twice.md` (type gotcha) stating that pipes decode with the locale encoding while argv encodes with the filesystem encoding, that fixing one says nothing about the other, and that only Linux under a C locale exposes the argv half; regenerate the store index.
+- **Description**: Add `docs/loom/memory/a-non-ascii-path-crosses-the-process-boundary-twice.md` (type gotcha) and regenerate the store index.
+  - Content: pipes decode with the locale encoding while argv encodes with the filesystem encoding; fixing one says nothing about the other; only Linux under a C locale exposes the argv half.
 - **Module**: docs/loom/memory (store)
 - **Files touched**: docs/loom/memory/a-non-ascii-path-crosses-the-process-boundary-twice.md, docs/loom/memory/README.md
 - **Context paths**:
@@ -58,7 +59,8 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Gloss**: 把 hotfix 學到的教訓寫進持久記憶，下次不用再在 CI 上發現。
 
 ## Task 2 — review_context.py 每次派工在 git-dir 追加一行記錄
-- **Description**: In `review_context.py` `main`, after a successful `resolve_context` (never on `--validate`), append one JSON line `{"schema": "review-dispatch-log/v1", "recorded_at": <UTC ISO>, "branch": <symbolic-ref short name or "DETACHED">, "reviewed_sha": …, "plugin_version": …}` to `<git-dir>/loom/review-dispatches.jsonl`, creating the directory as `loom_gate_markers.py` does; stdout is byte-identical to today.
+- **Description**: In `review_context.py` `main`, after a successful `resolve_context` (never on `--validate`), append one JSON line to `<git-dir>/loom/review-dispatches.jsonl`; stdout is byte-identical to today.
+  - Line shape: `{"schema": "review-dispatch-log/v1", "recorded_at": <UTC ISO>, "branch": <symbolic-ref short name or "DETACHED">, "reviewed_sha": …, "plugin_version": …}`; the directory is created as `loom_gate_markers.py` does.
   - The git dir is resolved with `git rev-parse --git-dir` relative to `--repo` (the idiom in `loom_gate_markers.py`), so a worktree logs into its own git dir; an append failure (read-only dir) is reported on stderr and does not change the exit code — the packet still prints.
 - **Module**: loom-code/scripts (review_context)
 - **Files touched**: loom-code/scripts/review_context.py, loom-code/scripts/test_review_context.py
@@ -67,8 +69,10 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
   - loom-code/scripts/loom_gate_markers.py (`"""Return \`<git-dir>/loom\` for \`repo\`, or None if not a git repo."""` — the directory idiom to mirror)
   - loom-code/scripts/test_review_context.py (existing fixtures building a git repo and calling `main`)
 - **Acceptance**:
-  - **RED**: `test_main_appends_one_dispatch_log_line_per_invocation` — run `main(["--repo", repo])` twice on a fixture repo on branch `feat/x`; today no file exists under `<git-dir>/loom/`; after the fix the log has exactly two lines, each parsing to the schema above with `branch == "feat/x"` and `reviewed_sha == HEAD`.
-  - **GREEN**: `main(["--validate", packet])` appends nothing; stdout of `--repo` is unchanged (existing `test_review_context.py` assertions on the printed packet stay green); a detached HEAD logs `branch: "DETACHED"`; the docstring carries the grounding cite for `git rev-parse --git-dir` (git-rev-parse(1)) and names the SDD "once per reviewer fan-out" contract as the reason this is the observation point.
+  - **RED**: `test_main_appends_one_dispatch_log_line_per_invocation` — run `main(["--repo", repo])` twice on a fixture repo on branch `feat/x`; today no file exists under `<git-dir>/loom/`.
+    - After the fix the log has exactly two lines, each parsing to the schema above with `branch == "feat/x"` and `reviewed_sha == HEAD`.
+  - **GREEN**: `main(["--validate", packet])` appends nothing; stdout of `--repo` is unchanged (existing `test_review_context.py` assertions on the printed packet stay green); a detached HEAD logs `branch: "DETACHED"`.
+    - The docstring carries the grounding cite for `git rev-parse --git-dir` (git-rev-parse(1)) and names the SDD "once per reviewer fan-out" contract as the reason this is the observation point.
 - **External surfaces**: git CLI (`rev-parse --git-dir`, `symbolic-ref --short HEAD`) via the module's existing `_git` helper; stdlib json/datetime.
 - **Dependencies**: none
 - **Seam**: payload: none
@@ -79,7 +83,8 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Gloss**: 派工發生的那一刻自動留一行紀錄，沒人需要手填。
 
 ## Task 3 — identity 拒絕訊息分辨「成員變了」與「plan 其他文字變了」
-- **Description**: In `_bind_receipt_to_packet`, when every member sha still equals the receipt's `member_shas` but `packet_identity` differs, refuse with a message that says the plan text changed outside the batch members (ledger flip or notes edit) and names the recovery — re-seal (`packet`), re-record the dispatch, rebind the unchanged reviewer results; keep the existing per-member "drifted after dispatch" message for the sha case.
+- **Description**: In `_bind_receipt_to_packet`, when every member sha still equals the receipt's `member_shas` but `packet_identity` differs, refuse with a message that names the cause and the recovery.
+  - Message: the plan text changed outside the batch members (ledger flip or notes edit); recovery: re-seal (`packet`), re-record the dispatch, rebind the unchanged reviewer results. The existing per-member "drifted after dispatch" message stays for the sha case.
 - **Module**: loom-code/scripts (batch_review_cli apply-result binding)
 - **Files touched**: loom-code/scripts/batch_review_cli.py, loom-code/scripts/test_batch_review_cli.py
 - **Context paths**:
@@ -87,7 +92,8 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
   - loom-code/skills/subagent-driven-development/references/conditional-operations.md (§Result file — the recovery sentence the message must agree with)
   - loom-code/scripts/test_batch_review_cli.py (`test_apply_result_refuses_when_member_sha_drifted_after_dispatch`, `_recorded_dispatch_receipt`)
 - **Acceptance**:
-  - **RED**: `test_apply_result_names_plan_text_drift_when_members_unchanged` — packet + record-dispatch, then append a Notes line to the plan (no ledger change), then `apply-result`: today the reason is the generic "packet_identity does not match"; after the fix the reason contains "changed outside the batch members" and "re-seal", exit stays non-zero, plan bytes and receipt unchanged.
+  - **RED**: `test_apply_result_names_plan_text_drift_when_members_unchanged` — packet + record-dispatch, then append a Notes line to the plan (no ledger change), then `apply-result`: today the reason is the generic "packet_identity does not match".
+    - After the fix the reason contains "changed outside the batch members" and "re-seal"; exit stays non-zero; plan bytes and receipt unchanged.
   - **GREEN**: the member-drift test still yields the "drifted after dispatch" message naming the member; the ordering docstring gains the new branch with its cite (the conditional-operations.md recovery paragraph).
 - **External surfaces**: stdlib only.
 - **Dependencies**: none
@@ -99,7 +105,8 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Gloss**: 被拒時一眼看出是誰動了什麼，照訊息做就能復原。
 
 ## Task 4 — apply-result 把套用的動作寫進收據（applied_action）
-- **Description**: When `apply-result` flips a receipt to `result_applied: true`, also write `applied_action` (`finalize` or `reopen`, the resolution's action) into the same receipt dict, so an observer can count reopens from receipts alone; `_read_dispatch_receipt` tolerates the key's absence (older receipts) and `_bind_receipt_to_packet`'s already-applied refusal quotes it when present.
+- **Description**: When `apply-result` flips a receipt to `result_applied: true`, also write `applied_action` (`finalize` or `reopen`, the resolution's action) into the same receipt dict, so an observer can count reopens from receipts alone.
+  - `_read_dispatch_receipt` tolerates the key's absence (older receipts); `_bind_receipt_to_packet`'s already-applied refusal quotes it when present.
 - **Module**: loom-code/scripts (batch_review_cli receipt)
 - **Files touched**: loom-code/scripts/batch_review_cli.py, loom-code/scripts/test_batch_review_cli.py
 - **Context paths**:
@@ -120,7 +127,9 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - **Gloss**: 收據記下「這批最後是通過還是退回」，reopen 次數就能算。
 
 ## Task 5 — task_batch_replay.py observe：從 log 與收據產出 v2 結果檔
-- **Description**: Add subcommand `observe --log <jsonl> --branch <name> --corpus <corpus> --out <result> [--receipts <dir>]` that writes a `task-batch-replay-result/v2` file — same case shape as v1 plus top-level `provenance: "observed"` and per-case `batch_reopens` — where `review_dispatches` = count of log lines whose `branch` matches, `review_rounds` = count of distinct `reviewed_sha` among them, `batch_reopens` = count of receipts under `--receipts` with `applied_action == "reopen"` (0 without the flag).
+- **Description**: Add subcommand `observe --log <jsonl> --branch <name> --corpus <corpus> --out <result> [--receipts <dir>]` that writes a `task-batch-replay-result/v2` file from the dispatch log and receipts.
+  - v2 = the v1 case shape plus top-level `provenance: "observed"` and per-case `batch_reopens`.
+  - Counts: `review_dispatches` = log lines whose `branch` matches; `review_rounds` = distinct `reviewed_sha` among them; `batch_reopens` = receipts under `--receipts` with `applied_action == "reopen"` (0 without the flag).
   - Log lines are parsed with a shared reader `read_dispatch_log(path)` that validates each line against the `review-dispatch-log/v1` schema Task 2 writes (malformed line → non-zero exit naming the line number); the corpus's single case receives the counts (multi-case attribution is out of scope).
 - **Module**: loom-code/scripts (task_batch_replay observe)
 - **Files touched**: loom-code/scripts/task_batch_replay.py, loom-code/scripts/test_task_batch_replay.py
@@ -129,7 +138,8 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
   - loom-code/scripts/review_context.py (post Task 2 — the log line schema and its writer)
   - loom-code/scripts/batch_review_cli.py (post Task 4 — `applied_action` in the receipt)
 - **Acceptance**:
-  - **RED**: `test_observe_counts_dispatches_rounds_and_reopens_from_log_and_receipts` — a log with 3 lines for branch `b` (2 distinct shas) plus 1 line for branch `other`, and a receipts dir with one `applied_action: reopen` and one `finalize`: today the subcommand does not exist; after the fix the result file has `review_dispatches == 3`, `review_rounds == 2`, `batch_reopens == 1`, `provenance == "observed"`, schema v2.
+  - **RED**: `test_observe_counts_dispatches_rounds_and_reopens_from_log_and_receipts` — a log with 3 lines for branch `b` (2 distinct shas) plus 1 line for branch `other`, and a receipts dir with one `applied_action: reopen` and one `finalize`: today the subcommand does not exist.
+    - After the fix the result file has `review_dispatches == 3`, `review_rounds == 2`, `batch_reopens == 1`, `provenance == "observed"`, schema v2.
   - **GREEN**: a malformed log line refuses naming the line; `--receipts` omitted → `batch_reopens == 0`; `read_dispatch_log` is the only parser of the log in the module.
 - **External surfaces**: stdlib only.
 - **Dependencies**: Tasks 2, 4 complete first
