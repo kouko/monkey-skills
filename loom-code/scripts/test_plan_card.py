@@ -1432,6 +1432,7 @@ def test_set_status_full_forty_hex_sha_passes_through_unchanged(tmp_path):
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert f"new: - Status: done({sha})\n" in result.stdout
+    assert f"- Status: done({sha})" in plan_path.read_text(encoding="utf-8")
 
 
 def test_set_status_bogus_ref_exits_1_naming_it(tmp_path):

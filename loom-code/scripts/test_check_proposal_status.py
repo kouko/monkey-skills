@@ -45,8 +45,17 @@ def _write_proposal(tmp_path: Path, status_line: str | None) -> Path:
         ("Status: draft", 2),
         (None, 2),
         ("Status: ratified — kouko, 2026-08-31", 0),
+        ("Status: ratified", 2),
+        ("Status: ratified - kouko, 2026-08-31", 2),
     ],
-    ids=["exploration", "draft", "missing", "ratified"],
+    ids=[
+        "exploration",
+        "draft",
+        "missing",
+        "ratified",
+        "ratified-bare",
+        "ratified-hyphen",
+    ],
 )
 def test_non_ratified_status_exits_2(tmp_path, status_line, expected_exit):
     proposal = _write_proposal(tmp_path, status_line)

@@ -25,8 +25,9 @@ Schema and operation authority lives in `references/map-format.md`. The
 prototype boundary lives in `references/prototype-contract.md`. The
 map↔backlog boundary rules live in the `## Backlog boundary contract`
 section of `references/map-format.md` — cite that section, never restate
-its rules here or elsewhere. Read all three
-before charting or mutating a Map.
+its rules here or elsewhere. Read `map-format.md`, `prototype-contract.md`,
+and that `## Backlog boundary contract` section before charting or
+mutating a Map.
 
 ## Store and lifecycle
 

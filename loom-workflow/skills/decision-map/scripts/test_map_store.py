@@ -1904,6 +1904,47 @@ def test_objective_da_evidence_must_be_a_resolvable_pointer(
     assert "resolvable" in message.lower()
 
 
+def test_objective_da_evidence_artifact_path_rejects_symlink_and_absolute_escape(
+    tmp_path: Path,
+) -> None:
+    """The artifact-path branch of `_da_evidence_is_resolvable` routes
+    through `_assert_contained`: a relative-looking evidence path that
+    is actually a symlink pointing outside the repo, and a bare
+    absolute path, must both be refused — not silently followed."""
+    map_dir = _make_v3_active_map(tmp_path)
+    map_path = map_dir / "MAP.md"
+    original = map_path.read_text(encoding="utf-8")
+    open_line = "- DA-1: Parser remains stdlib-only | state: open | kind: objective"
+
+    def da_with(evidence: str) -> None:
+        map_path.write_text(
+            original.replace(
+                open_line,
+                "- DA-1: Parser remains stdlib-only | state: satisfied | "
+                f"kind: objective | evidence: {evidence}",
+            ),
+            encoding="utf-8",
+        )
+
+    outside = tmp_path.parent / "outside-secret.md"
+    outside.write_text("not part of this repo\n", encoding="utf-8")
+    escape_link = tmp_path / "docs" / "loom" / "results" / "escape.md"
+    escape_link.parent.mkdir(parents=True, exist_ok=True)
+    escape_link.symlink_to(outside)
+
+    da_with("docs/loom/results/escape.md")
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "DA-1" in message
+    assert "resolvable" in message.lower()
+
+    da_with(str(outside))
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "DA-1" in message
+    assert "resolvable" in message.lower()
+
+
 def test_v3_monotonic_ids_and_exactly_one_closed_ticket_gist(
     tmp_path: Path,
 ) -> None:
