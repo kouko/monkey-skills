@@ -633,6 +633,54 @@ def _recover_settled_receipt(args) -> dict | None:
     }
 
 
+def _bind_receipt_to_packet(receipt_path: str, packet: rb.ReviewPacket) -> dict:
+    """Refuse unless the dispatch receipt is the one issued for THIS packet:
+    same batch_id, same member set, every member's rebuilt sha equal to the
+    receipt's recorded `member_shas[member]`, and the same `packet_identity`.
+    Raises ValueError naming the first drifted member (the audit's F1 shape:
+    a PASS given for commit A applied after the ledger moved to commit B)
+    or the foreign identity (F6: a receipt from another batch flipped).
+
+    Ordering: this runs after the packet is rebuilt and BEFORE the reviewer
+    result file is parsed, so an unbound receipt is refused without reading
+    the result at all — the same batch_id -> members -> member_shas check
+    order `_recover_settled_receipt` already uses on the crash-recovery
+    path; the two paths must never disagree about what "this receipt
+    belongs to this batch" means."""
+    stored = _read_dispatch_receipt(receipt_path)
+    batch_id = packet.declaration.batch_id
+    if stored["batch_id"] != batch_id:
+        raise ValueError(
+            f"dispatch receipt {receipt_path} belongs to batch "
+            f"{stored['batch_id']!r}, not {batch_id!r}"
+        )
+    rebuilt = dict(packet.member_shas)
+    if set(stored["members"]) != set(rebuilt):
+        raise ValueError(
+            f"dispatch receipt {receipt_path} members {sorted(stored['members'])} "
+            f"do not match batch {batch_id!r} members {sorted(rebuilt)}"
+        )
+    member_shas = stored.get("member_shas")
+    if type(member_shas) is not dict:
+        raise ValueError(
+            f"dispatch receipt {receipt_path} has no member_shas; re-send the "
+            "dispatch (record-dispatch) so the result can be bound to it"
+        )
+    for member_id, sha in rebuilt.items():
+        if member_shas.get(member_id) != sha:
+            raise ValueError(
+                f"{member_id} drifted after dispatch: receipt recorded "
+                f"{member_shas.get(member_id)}, ledger now {sha}; the reviewer "
+                "never saw this commit — re-send the dispatch"
+            )
+    if stored["packet_identity"] != packet.identity:
+        raise ValueError(
+            f"dispatch receipt {receipt_path} packet_identity does not match "
+            "the rebuilt packet; re-send the dispatch"
+        )
+    return stored
+
+
 def _cmd_apply_result(args) -> int:
     try:
         try:
@@ -643,6 +691,7 @@ def _cmd_apply_result(args) -> int:
                 print(json.dumps(recovered, sort_keys=True))
                 return 0
             raise
+        _bind_receipt_to_packet(args.receipt, packet)
         payload = json.loads(Path(args.result_file).read_text(encoding="utf-8"))
         if not (type(payload) is dict and set(payload) == {
             "arm_bindings", "terminal_results",
@@ -707,11 +756,7 @@ def _cmd_apply_result(args) -> int:
                 replacements,
                 transition_authority=resolution.transition_authority,
             )
-        if (
-            getattr(args, "receipt", None)
-            and resolution.ledger_mutation_allowed
-            and ledger_written
-        ):
+        if resolution.ledger_mutation_allowed and ledger_written:
             # Only a successfully-written ledger transition may flip the
             # dispatch receipt; a wait_refuse resolution, or a CAS decline,
             # must leave it unset so a fresh dispatch cycle stays possible.
@@ -764,7 +809,11 @@ def main(argv: list[str] | None = None) -> int:
     apply_result.add_argument("--repo-root", required=True)
     apply_result.add_argument("--verification-receipt", required=True)
     apply_result.add_argument("--result-file", required=True)
-    apply_result.add_argument("--receipt")
+    apply_result.add_argument("--receipt", required=True, help=(
+        "dispatch receipt written by record-dispatch; the result is applied "
+        "only if the rebuilt packet still matches its packet_identity and "
+        "every member sha it recorded"
+    ))
     apply_result.add_argument("--batch")
     apply_result.set_defaults(handler=_cmd_apply_result)
 

@@ -567,12 +567,16 @@ def test_ready_is_ready_for_clean_batch(tmp_path, capsys) -> None:
 def test_apply_result_finalizes(tmp_path, capsys) -> None:
     plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
     result_path = _result_file(tmp_path)
     code = cli.main([
         "apply-result", "--plan", str(plan_path),
         "--repo-root", str(repo_root),
         "--verification-receipt", str(receipt_path),
         "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
     ])
     out = json.loads(capsys.readouterr().out)
     assert code == 0
@@ -584,12 +588,16 @@ def test_apply_result_finalizes(tmp_path, capsys) -> None:
 def test_apply_result_reopens_with_owner_union(tmp_path, capsys) -> None:
     plan_path, repo_root, _sha1, _sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
     result_path = _result_file(tmp_path, reopen=True)
     code = cli.main([
         "apply-result", "--plan", str(plan_path),
         "--repo-root", str(repo_root),
         "--verification-receipt", str(receipt_path),
         "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
     ])
     out = json.loads(capsys.readouterr().out)
     assert code == 0
@@ -603,12 +611,16 @@ def test_apply_result_writes_ledger_on_finalize(tmp_path, capsys) -> None:
     and a human flips the ledger by hand (R11c)."""
     plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
     result_path = _result_file(tmp_path)
     code = cli.main([
         "apply-result", "--plan", str(plan_path),
         "--repo-root", str(repo_root),
         "--verification-receipt", str(receipt_path),
         "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
     ])
     capsys.readouterr()
     assert code == 0
@@ -624,12 +636,16 @@ def test_apply_result_writes_ledger_on_reopen(tmp_path, capsys) -> None:
     pending; the non-owning member's implemented(<sha>) is unchanged."""
     plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
     result_path = _result_file(tmp_path, reopen=True)
     code = cli.main([
         "apply-result", "--plan", str(plan_path),
         "--repo-root", str(repo_root),
         "--verification-receipt", str(receipt_path),
         "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
     ])
     capsys.readouterr()
     assert code == 0
@@ -644,6 +660,9 @@ def test_apply_result_wait_refuse_writes_nothing(tmp_path, capsys) -> None:
     plan file at all."""
     plan_path, repo_root, sha1, sha2 = _write_git_workspace(tmp_path)
     receipt_path = tmp_path / "verification-receipt.json"
+    dispatch_receipt = _recorded_dispatch_receipt(
+        tmp_path, plan_path, repo_root, capsys,
+    )
     result_path = _incomplete_result_file(tmp_path)
     before = plan_path.read_text(encoding="utf-8")
     code = cli.main([
@@ -651,6 +670,7 @@ def test_apply_result_wait_refuse_writes_nothing(tmp_path, capsys) -> None:
         "--repo-root", str(repo_root),
         "--verification-receipt", str(receipt_path),
         "--result-file", str(result_path),
+        "--receipt", str(dispatch_receipt),
     ])
     capsys.readouterr()
     assert code != 0
@@ -1100,7 +1120,7 @@ def test_apply_result_refuses_when_member_sha_drifted_after_dispatch(
     assert "Task 2" in " ".join(out["reasons"])
     assert plan_path.read_text(encoding="utf-8") == before
     stored = json.loads(dispatch_receipt.read_text(encoding="utf-8"))
-    assert stored["result_applied"] is False
+    assert stored.get("result_applied", False) is False
 
 
 def test_apply_result_refuses_receipt_bound_to_another_batch(
