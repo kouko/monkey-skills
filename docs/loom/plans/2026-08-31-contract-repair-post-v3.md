@@ -432,7 +432,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     repo-root scripts/plan_card.py stays the exec shim onto
     loom-code/scripts/plan_card.py it already is … pinned by a test"
 - **Review disposition**: individual
-- **Status**: implemented(e3becda489a3cd949b0a54ef797b36e37d2111fb)
+- **Status**: done(e9bac058ffd4438562d0223afb03e1b061c9dff5)
 - **Gloss**: 審完自動翻 ledger；repo-root plan_card 釘死為 shim。
 
 ## Task 17 — Pilot: this arc's map-side batch through the CLI (R11d)
@@ -458,7 +458,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Brief item covered**: "R11 (d) Pilot: this arc's own map-side-invariants Batch is
     driven through the four CLI steps end to end as the acceptance proof"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(303eccbb7ead0198f5d83dfb6fda6625a8748693)
 - **Gloss**: 用本弧自己的批次真跑一遍，證明省成本的路走得通。
 
 ## Task 18 — Adapter hardening: batch_id-keyed refusal, reopen recovery, identity anchor (R12a)
@@ -481,7 +481,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     finalize … _repository_identity anchored on the member sha … one shared
     TimeoutExpired→PacketRefused wrapper; _member_statuses computed once"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: implemented(48175952bdd01e5272ea1a7282cb83aae5a57b58)
 - **Gloss**: 把審查抓到的 adapter 殘缺一次補齊，讓冪等保護與崩潰恢復在兩條路徑上對稱。
 
 ## Task 19 — Hygiene sweep from per-task review notes (R12b)
@@ -541,3 +541,15 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - Class: implementation-discovered stated-fact drift, below kickoff threshold (no product consequence; scope shrinks).
 - Fact (Task 5 spec-reviewer, verified by the orchestrator): docs/loom/maps/family-relocation/MAP.md is already `schema_version: 3` and every ticket carries a v3 type (task-inventory-consumers = research/claimed, task-relocate-family-hooks = delivery/open) — #765 shipped them migrated. `preview_migration` short-circuits on already-applied maps, so R5's "the two live tickets migrate under R4's manifest" has nothing to act on.
 - Decision: Task 7 delivers the two live defects that remain — zero DA entries on an active map (validate exit 2 today) and the retired relay sentence in task-inventory-consumers.md. R4's manifest path stays shipped and tested (Task 5) for the next v2 map. Task 7's RED/GREEN as written still hold (validate fails today → passes; relay grep empty).
+
+## Notes
+### Task 17 pilot record (2026-08-31)
+- Pilot reset: Tasks 2–5 `done` → `implemented(<same sha>)` via plan_card (not hand-edited) so the batch path could be exercised on real members.
+- Commands and exit codes (plan = this file, batch = map-side-invariants):
+  1. `batch_review_cli.py ready --plan <plan> --batch map-side-invariants` → 0 (ready: true)
+  2. `batch_review_cli.py packet --plan <plan> --repo-root . --batch map-side-invariants --verification-receipt <receipt>` → 0 (identity adf0e0df…, members 7715c6c7/b9e791b0/ab217ef0/401d8731)
+  3. `batch_review_cli.py record-dispatch --packet-file <packet> --out <dispatch-receipt>` → 0
+  4. `batch_review_cli.py apply-result … --result-file <results> --receipt <dispatch-receipt>` → 0, action finalize, ledger_written true; Tasks 2–5 flipped to `done(<sha>)` by apply-result; receipt result_applied true.
+- Aggregate fan-out: ONE spec-reviewer (PASS) + ONE code-quality-reviewer (PASS_WITH_NOTES, 1 nit on Task 4) = 2 dispatches.
+- Contract fact learned: a finding's `ground_ref` must equal the packet member's `owned_requirements` referent verbatim (the brief-quote text), not a shorthand like `R3c` — the first apply-result was fail-closed to `individual_fallback` (`unassignable_finding`) until the referent was copied from the packet.
+- `task_batch_replay.py compare` verdict **PASS**: review_dispatches 10 → 2, review_rounds 6 → 1, saved_review_dispatches 8; safety_regressions []; cost_regressions []. Baseline = the individual path this arc actually ran for T2–T5 (2+3+3+2 dispatches over 6 rounds); candidate = the pilot.
