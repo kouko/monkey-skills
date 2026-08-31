@@ -334,7 +334,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-113
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: claimed(@codex)
+- **Status**: implemented(0aaa8a08454ef892a2d0d9f07be3ed95dd418033)
 - **Gloss**: 重跑不會因超時、無限 retry 或過長文件變成無底洞。
 
 ## Task 17 — 保證 crash-safe dispatch 與 capture
@@ -353,7 +353,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-114
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: pending
+- **Status**: claimed(@codex)
 - **Gloss**: 當 host 斷線或回應晚到，每筆成本與輸出仍有正確落點。
 
 ## Task 18 — 在 dispatch 與 capture 驗證實際 model identity
