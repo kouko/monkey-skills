@@ -446,6 +446,8 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
 - **Acceptance**:
   - **RED**: `batch_review_cli.py packet --batch map-side-invariants` on this plan refuses today (referent grammar, T14) or the ledger is not written after apply-result (T16).
   - **GREEN**: all four subcommands exit 0 in sequence on this plan; the plan's Task 2–5 statuses read done(<sha>) written by apply-result, not by hand; a `## Notes` entry records the four command lines and their exit codes.
+    - Cost measurement (kouko, 2026-08-31 "好"): Tasks 2–5 reset to implemented(<same sha>) (Notes records the pilot reset); ONE aggregate fan-out (spec + quality = 2 dispatches) reviews the sealed Packet.
+    - `task_batch_replay.py compare` scores baseline individual path (8 dispatches) vs candidate batch path (2); its PASS report is pasted into Notes and the PR body.
 - **Dependencies**: Tasks 5, 14, 15, 16 complete first
 - **Seam**:
   - from Task 5: payload: none
@@ -507,7 +509,7 @@ N/A — no unresolved question: all semantic decisions were ratified in the brie
     extractor; decision-map SKILL.md Read all three → names the two files and
     the boundary section"
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(0d638cebc22a30c04ea04472f83856007a82d9e8)
 - **Gloss**: 把每個任務審查留下的小備註一次掃乾淨，不留給下一弧。
 
 ## Review Batches
