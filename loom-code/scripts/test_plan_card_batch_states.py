@@ -439,6 +439,26 @@ def test_external_replace_before_cas_publish_is_stale_and_preserved(tmp_path):
     assert list(tmp_path.glob(f".{plan_path.name}.*.tmp")) == []
 
 
+def test_set_status_refuses_done_for_declared_batch_member(tmp_path):
+    """A task declared `batch(capability)` cannot have its `done(<sha>)`
+    hand-set through `--set-status` — apply-result is the only writer,
+    so crash recovery can trust a `done` it finds (plan Task 5)."""
+    plan_path = tmp_path / "plan.md"
+    original = _plan({1: I1, 2: I2, 3: "pending"})
+    plan_path.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(plan_path), "--set-status", f"T1={D1}"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert plan_path.read_text(encoding="utf-8") == original
+    assert "capability" in result.stderr, result.stderr
+    assert "apply-result" in result.stderr, result.stderr
+
+
 @pytest.mark.parametrize(
     ("cli_args", "assertion"),
     [
