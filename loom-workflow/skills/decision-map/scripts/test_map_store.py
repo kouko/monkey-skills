@@ -1572,6 +1572,54 @@ def test_validate_rejects_clear_map_without_destination_ratification(
     assert "user-ratified:" in message
 
 
+def test_validate_rejects_empty_value_destination_ratification(
+    tmp_path: Path,
+) -> None:
+    """R3b: a bare `user-ratified:` token is not a ratification — an
+    active map's Destination must carry a value, exit 2 naming the file
+    and what a valid line looks like."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8")
+        .replace("state: charting", "state: active")
+        .replace(
+            "Chart the decision-map layer.\n",
+            "Chart the decision-map layer.\n\n"
+            "- DA-1: parser shipped. | state: open | kind: objective\n"
+            "user-ratified:\n",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "MAP.md" in message
+    assert "user-ratified" in message
+    assert "YYYY-MM-DD" in message
+
+
+def test_validate_rejects_empty_value_da_user_ratified_field(
+    tmp_path: Path,
+) -> None:
+    """R3b: a DA entry's `user-ratified:` field with an empty value is
+    rejected at parse time, not silently treated as unratified."""
+    map_dir = _make_conformant_map(tmp_path)
+    map_md = map_dir / "MAP.md"
+    map_md.write_text(
+        map_md.read_text(encoding="utf-8").replace(
+            "Chart the decision-map layer.\n",
+            "Chart the decision-map layer.\n\n"
+            "- DA-1: parser shipped. | state: open | kind: objective "
+            "| user-ratified:\n",
+        ),
+        encoding="utf-8",
+    )
+    code, message = map_store.validate(map_dir, repo_root=tmp_path)
+    assert code == 2
+    assert "DA-1" in message
+    assert "user-ratified" in message
+
+
 def test_clear_rejects_non_closed_tickets_and_fog(tmp_path: Path) -> None:
     """Clear means every ticket is closed and fog is empty, not merely
     ratified."""

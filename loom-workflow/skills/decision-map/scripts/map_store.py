@@ -307,6 +307,12 @@ def _parse_destination_acceptance(
                     f"Destination acceptance {match.group('id')} has duplicate "
                     f"field {key!r}"
                 )
+            if key == "user-ratified" and not value:
+                raise SchemaViolation(
+                    f"Destination acceptance {match.group('id')} user-ratified "
+                    "field requires a non-empty value like "
+                    "'user-ratified: <name>, YYYY-MM-DD'"
+                )
             values[key] = value
         criteria.append(
             DestinationAcceptance(
@@ -1082,8 +1088,14 @@ def _check_schema_version(schema_version: int) -> None:
 
 
 def _has_user_ratified_line(text: str) -> bool:
+    """Whether a `user-ratified:` line carries a non-empty value.
+
+    A bare `user-ratified:` token is not a ratification (R3b): a
+    ratified decision must carry a name/date value.
+    """
     return any(
-        line.strip().startswith("user-ratified:")
+        line.strip().partition(":")[0] == "user-ratified"
+        and bool(line.strip().partition(":")[2].strip())
         for line in text.splitlines()
     )
 
@@ -1213,7 +1225,8 @@ def _check_map_structure(doc: MapDocument) -> None:
     ):
         raise SchemaViolation(
             f"{doc.path}: state {doc.frontmatter.state!r} requires a "
-            "'user-ratified:' line in the Destination section "
+            "non-empty 'user-ratified:' line like "
+            "'user-ratified: <name>, YYYY-MM-DD' in the Destination section "
             "(map-format.md §Sections)"
         )
     if doc.frontmatter.state == "clear" and doc.fog_entries:
@@ -1349,7 +1362,8 @@ def _check_tickets(map_dir: Path, state: str, schema_version: int) -> None:
         ):
             raise SchemaViolation(
                 f"{ticket_path}: closed {ticket.frontmatter.type} ticket "
-                "is missing a 'user-ratified:' line in its Resolution "
+                "is missing a non-empty 'user-ratified: <name>, YYYY-MM-DD' "
+                "line in its Resolution "
                 "(map-format.md §Ticket schema HITL rule)"
             )
         if (
