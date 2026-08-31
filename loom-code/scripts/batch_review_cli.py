@@ -138,7 +138,15 @@ def _repository_identity(repo_root: Path, sha: str) -> str:
     was committed cannot change that member's already-issued identity
     (Task 18c). A repo with one linear history has exactly one root commit,
     so this is stable across invocations without depending on a remote URL
-    or local config."""
+    or local config.
+
+    Grounding (external-surface category 4, CLI flag): `git rev-list
+    --max-parents=0 <rev>` lists commits with no parents, i.e. the root
+    commit(s) reachable from <rev> — git-rev-list(1) §Commit Limiting
+    ("--max-parents=<number>: show only commits which have at most that
+    many parent commits"), verified live in-session (`git rev-list --max-parents=0 HEAD` → this repo's single root)
+    2026-08-31; the same idiom already backs review_batch's repository
+    binding tests."""
     roots = sorted(_run_git(repo_root, "rev-list", "--max-parents=0", sha).split())
     if not roots:
         raise rb.PacketRefused("repository has no root commit")
