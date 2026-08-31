@@ -58,6 +58,7 @@ and reasoned **explicit overrides**. They waive close-out but **NEVER
 |---|---|
 | 1 | `requesting-code-review` four-way dispatch; docs-only → `requesting-docs-review` |
 | 2/2b | `verification-before-completion`; conditional `ui-verification` |
+| 3.5 | `adversarial-audit-packet.md` (code signal, `opus`) / `cold-reader-packet.md` (prose signal, `sonnet`) — orchestrator-run |
 | 3 | `loom-workflow:git-memory` |
 | 7 | Post-PR CI: `post_pr_ci.py` + `systematic-debugging` |
 | 8 | `using-git-worktrees` |
@@ -100,6 +101,29 @@ Boundaries: [`references/delegation-boundaries.md`](references/delegation-bounda
    In prose contracts, place fixes in their OWN sentence or governed placeholder;
    never spliced into pinned/enumerated sentences (memory:
    splicing-into-a-pinned-sentence-creates-false-readings).
+3.5. Adversarial-audit station (CONDITIONAL). Look up `docs/loom/ATTACK-CATALOGUE.md`
+   in the target repo. Absent → print `attack catalogue: absent` loudly, no
+   dispatch, continue to Step 4.
+   - Code signal: `safety_bearing(plan_text)` (`scripts/plan_card.py`) says `yes`,
+     OR any path in `git diff --name-only <merge-base>..HEAD` (merge-base against
+     the default branch) matches a `## Guarded paths` glob via `guarded_path_globs`
+     (`scripts/check_attack_catalogue.py`). A `no` header does not override a
+     guarded-path hit — that combination is a STOP naming both facts.
+   - Prose signal: any changed path matches the prose-contract globs the store
+     lists (`**/SKILL.md`, `**/agents/*.md`, `**/hooks/*.md`,
+     `**/references/*-packet.md`, `**/references/*-prompt.md`, `rules/*.md`).
+   - Dispatch is **orchestrator-run**, never nested inside a subagent (stalls):
+     code signal → `references/adversarial-audit-packet.md` (fresh context,
+     `opus` default, paths only); prose signal → `references/cold-reader-packet.md`
+     (fresh context, `sonnet` default; one scenario you derive from the changed
+     contract + one temptation from the store's `## Prose temptations`).
+   - Verdict routing: `reproduced` (or a cold reader's `taken`) → STOP until a RED
+     test is committed and `## Instances` reads `reproduced <date> — pinned by
+     <test>`; then `python3 scripts/check_attack_catalogue.py
+     docs/loom/ATTACK-CATALOGUE.md --repo <root>` must exit 0 before continuing —
+     Step 5's review-driven-fixes re-run rule then applies. `held` → append
+     `held <date>` to `## Instances`. `not-applicable` → Step 11's close-out card
+     only (no `## Instances` line).
 5. Dispatch verification-before-completion
    - MANDATORY even if tests were run immediately before invoking this skill. Step 3
      fix-ups may have modified files; a pre-invocation test run does NOT satisfy this gate.
