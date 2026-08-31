@@ -57,6 +57,10 @@
 
 - test_req_113_campaign_resource_use_is_bounded
 
+### REQ-115
+
+- test_req_115_actual_model_identity_is_verified_twice
+
 ### REQ-99
 
 - test_req_99_concurrent_admission_consumes_receipt_once
@@ -495,7 +499,6 @@
 - REQ-107
 - REQ-108
 - REQ-114
-- REQ-115
 - REQ-116
 - REQ-117
 - REQ-118

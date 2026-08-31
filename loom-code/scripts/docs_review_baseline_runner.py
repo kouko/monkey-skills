@@ -320,3 +320,37 @@ def admit_bounded_run(
         "limits": dict(policy),
         "whole_artifact": True,
     }
+
+
+def verify_execution_identity(
+    *,
+    prepared: Mapping[str, object],
+    dispatch_attestation: Mapping[str, object],
+    capture_attestation: Mapping[str, object],
+) -> dict[str, object]:
+    """Verify prepared weak identity at dispatch and again at capture."""
+    expected = {field: prepared.get(field) for field in ("host", "model", "tier")}
+
+    def verdict(
+        stage: str, attestation: Mapping[str, object]
+    ) -> str | None:
+        if any(
+            not isinstance(attestation.get(field), str)
+            or not str(attestation[field]).strip()
+            for field in expected
+        ):
+            return f"{stage} identity unavailable"
+        if any(attestation[field] != expected[field] for field in expected):
+            return f"{stage} identity mismatch"
+        return None
+
+    reason = verdict("dispatch", dispatch_attestation)
+    if reason is None:
+        reason = verdict("capture", capture_attestation)
+    return {
+        "capture_attestation": dict(capture_attestation),
+        "dispatch_attestation": dict(dispatch_attestation),
+        "prepared_identity": expected,
+        "reason": reason,
+        "scoreable": reason is None,
+    }

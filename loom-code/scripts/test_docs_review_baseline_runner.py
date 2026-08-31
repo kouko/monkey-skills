@@ -292,3 +292,34 @@ def test_req_113_campaign_resource_use_is_bounded() -> None:
             requested_wall_seconds=121, requested_output_bytes=150,
             reserved_usage_units=200,
         )
+
+
+def test_req_115_actual_model_identity_is_verified_twice() -> None:
+    # @req: REQ-115
+    prepared = _binding("codex", "gpt-5.6-luna")
+    exact = {"host": "codex", "model": "gpt-5.6-luna", "tier": "economy"}
+    verified = runner.verify_execution_identity(
+        prepared=prepared,
+        dispatch_attestation=exact,
+        capture_attestation=exact,
+    )
+    assert verified["scoreable"] is True
+    assert verified["reason"] is None
+
+    for dispatch, capture, reason in (
+        ({"host": "codex", "model": "gpt-5.6-sol", "tier": "frontier"},
+         exact, "dispatch identity mismatch"),
+        (exact, {"host": "codex", "model": "gpt-5.6-sol",
+                 "tier": "frontier"}, "capture identity mismatch"),
+        (exact, {"host": "codex", "model": None, "tier": "economy"},
+         "capture identity unavailable"),
+    ):
+        result = runner.verify_execution_identity(
+            prepared=prepared,
+            dispatch_attestation=dispatch,
+            capture_attestation=capture,
+        )
+        assert result["scoreable"] is False
+        assert result["reason"] == reason
+        assert result["dispatch_attestation"] == dispatch
+        assert result["capture_attestation"] == capture
