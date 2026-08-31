@@ -384,7 +384,9 @@ def ratify_defect_origin(
     record: dict[str, object] = {
         "claimed_origin": claimed_origin,
         "defect_evidence": _snapshot_value(defect_evidence),
+        "eligible_for_official_metrics": False,
         "evidence_locator": _required_text(evidence_locator, "evidence_locator"),
+        "governance_status": "unbound",
         "kind": "defect_origin_attribution",
         "observable_revision_digest": observable.digest,
         "observable_revision_id": observable.record_id,
@@ -441,10 +443,228 @@ def ratify_defect_origin(
     return publish_record(store_root, revision_id, record)
 
 
+def ratify_governed_defect_origin(
+    store_root: Path,
+    revision_id: str,
+    *,
+    observable_revision_id: str,
+    defect_evidence: bytes,
+    evidence_locator: str,
+    claimed_origin: str,
+    ratifier: str,
+    authority_revision_id: str,
+) -> PublishedRecord:
+    """Bind an origin judgment to frozen authority before it becomes official."""
+    governance = _ratification_governance(
+        store_root,
+        authority_revision_id=authority_revision_id,
+        action="ratify_defect_origin",
+        actor=ratifier,
+        target=revision_id,
+    )
+    if isinstance(governance, PublishedRecord):
+        return governance
+    authority, independence = governance
+    draft = ratify_defect_origin(
+        store_root,
+        f"{revision_id}--ungoverned-draft",
+        observable_revision_id=observable_revision_id,
+        defect_evidence=defect_evidence,
+        evidence_locator=evidence_locator,
+        claimed_origin=claimed_origin,
+        ratifier=ratifier,
+    )
+    record = dict(draft.record)
+    record["governance_source_record_id"] = draft.record_id
+    _bind_governance(record, authority, independence)
+    if independence["status"] != "satisfied":
+        record["defect_origin"] = "unknown"
+        record["excluded_from_origin_rates"] = True
+        record["status"] = "disputed"
+    else:
+        record["status"] = (
+            "ratified"
+            if record.get("defect_origin") != "unknown"
+            else "unscoreable"
+        )
+    return publish_record(store_root, revision_id, record)
+
+
 def _required_text(value: object, field: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field} must be a non-empty string")
     return value
+
+
+_AUTHORITY_ROLES = {
+    "execution_actor",
+    "document_author",
+    "oracle_author",
+    "oracle_ratifier",
+    "attribution_ratifier",
+    "reviewer_output_author",
+    "policy_owner",
+}
+
+_RATIFICATION_ROLE = {
+    "ratify_oracle": "oracle_ratifier",
+    "ratify_attribution": "attribution_ratifier",
+    "ratify_defect_origin": "attribution_ratifier",
+}
+
+_CONFLICT_ROLES = {
+    "document_author",
+    "oracle_author",
+    "reviewer_output_author",
+    "policy_owner",
+}
+
+
+def _authority_fields(
+    *,
+    campaign_policy_revision_id: object,
+    role_identities: object,
+    action_authorities: object,
+    allowed_self_ratification: object,
+) -> dict[str, object]:
+    if not isinstance(role_identities, Mapping):
+        raise ValueError("role_identities must be an object")
+    roles = {
+        _required_text(role, "role name"): _required_text(identity, f"role {role}")
+        for role, identity in role_identities.items()
+    }
+    missing_roles = sorted(_AUTHORITY_ROLES - roles.keys())
+    if missing_roles:
+        raise ValueError(f"role_identities missing required roles: {missing_roles}")
+    if not isinstance(action_authorities, Mapping):
+        raise ValueError("action_authorities must be an object")
+    actions: dict[str, list[str]] = {}
+    for action, identities in action_authorities.items():
+        action = _required_text(action, "action")
+        if action not in _RATIFICATION_ROLE:
+            raise ValueError(f"unsupported governed action: {action!r}")
+        if not isinstance(identities, list) or not identities:
+            raise ValueError(f"action_authorities.{action} must be a non-empty list")
+        actions[action] = sorted(
+            {_required_text(identity, f"action_authorities.{action}") for identity in identities}
+        )
+    if not isinstance(allowed_self_ratification, list) or any(
+        not isinstance(item, str) or "=" not in item
+        for item in allowed_self_ratification
+    ):
+        raise ValueError(
+            "allowed_self_ratification must be a list of role=conflict_role rules"
+        )
+    return {
+        "action_authorities": actions,
+        "allowed_self_ratification": sorted(set(allowed_self_ratification)),
+        "campaign_policy_revision_id": _required_text(
+            campaign_policy_revision_id, "campaign_policy_revision_id"
+        ),
+        "kind": "authority_assignment",
+        "role_identities": roles,
+        "schema_version": 1,
+    }
+
+
+def publish_authority_assignment(
+    store_root: Path,
+    revision_id: str,
+    *,
+    campaign_policy_revision_id: str,
+    role_identities: Mapping[str, str],
+    action_authorities: Mapping[str, list[str]],
+    allowed_self_ratification: list[str],
+) -> PublishedRecord:
+    """Freeze campaign roles, action authority, and independence exceptions."""
+    return publish_record(
+        store_root,
+        revision_id,
+        _authority_fields(
+            campaign_policy_revision_id=campaign_policy_revision_id,
+            role_identities=role_identities,
+            action_authorities=action_authorities,
+            allowed_self_ratification=allowed_self_ratification,
+        ),
+    )
+
+
+def revise_authority_assignment(
+    store_root: Path,
+    parent_revision_id: str,
+    *,
+    role_identities: Mapping[str, str],
+    action_authorities: Mapping[str, list[str]],
+    allowed_self_ratification: list[str],
+    reason: str,
+) -> PublishedRecord:
+    """Record a reason-bearing role change as a child authority revision."""
+    parent = read_record(store_root, parent_revision_id)
+    if parent.record.get("kind") != "authority_assignment":
+        raise ValueError("authority revision parent must be an authority assignment")
+    child = _authority_fields(
+        campaign_policy_revision_id=parent.record.get(
+            "campaign_policy_revision_id"
+        ),
+        role_identities=role_identities,
+        action_authorities=action_authorities,
+        allowed_self_ratification=allowed_self_ratification,
+    )
+    child["parent_revision_id"] = parent_revision_id
+    child["revision_reason"] = _required_text(reason, "reason")
+    return append_revision(store_root, parent_revision_id, child)
+
+
+def _ratification_governance(
+    store_root: Path,
+    *,
+    authority_revision_id: str,
+    action: str,
+    actor: str,
+    target: str,
+) -> tuple[PublishedRecord, dict[str, object]] | PublishedRecord:
+    authority = read_record(store_root, authority_revision_id)
+    if authority.record.get("kind") != "authority_assignment":
+        raise ValueError("authority_revision_id must name an authority assignment")
+    actor = _human_ratifier(actor)
+    actions = authority.record.get("action_authorities")
+    roles = authority.record.get("role_identities")
+    exceptions = authority.record.get("allowed_self_ratification")
+    if not isinstance(actions, Mapping) or not isinstance(roles, Mapping) or not isinstance(
+        exceptions, list
+    ):
+        raise ValueError("authority assignment is malformed")
+    permitted = actions.get(action, [])
+    if actor not in permitted:
+        audit = {
+            "action": action,
+            "actor": actor,
+            "authority_revision_digest": authority.digest,
+            "authority_revision_id": authority.record_id,
+            "campaign_policy_revision_id": authority.record[
+                "campaign_policy_revision_id"
+            ],
+            "kind": "governance_audit_event",
+            "outcome": "refused_unauthorized",
+            "schema_version": 1,
+            "target": target,
+        }
+        return publish_record(store_root, f"audit-{record_digest(audit)}", audit)
+    ratifier_role = _RATIFICATION_ROLE[action]
+    conflicts = sorted(
+        role
+        for role in _CONFLICT_ROLES
+        if roles.get(role) == actor
+        and f"{ratifier_role}={role}" not in exceptions
+    )
+    evidence = {
+        "allowed_exceptions": list(exceptions),
+        "conflicting_roles": conflicts,
+        "ratifier_role": ratifier_role,
+        "rule": "distinct-role-identity-v1",
+        "status": "insufficient" if conflicts else "satisfied",
+    }
+    return authority, evidence
 
 
 def _validated_findings(findings: object) -> list[dict[str, object]]:
@@ -474,7 +694,9 @@ def _oracle_fields(
         raise ValueError("snapshot_digest must be a lowercase SHA-256 digest")
     return {
         "case_id": _required_text(case_id, "case_id"),
+        "eligible_for_official_metrics": False,
         "findings": _validated_findings(findings),
+        "governance_status": "unbound",
         "kind": "ratified_oracle",
         "negative_control_intent": _required_text(
             negative_control_intent, "negative_control_intent"
@@ -504,6 +726,41 @@ def ratify_oracle(
         negative_control_intent=negative_control_intent,
         ratifier=ratifier,
     )
+    return publish_record(store_root, revision_id, record)
+
+
+def ratify_governed_oracle(
+    store_root: Path,
+    revision_id: str,
+    *,
+    case_id: str,
+    snapshot_digest: str,
+    findings: list[Mapping[str, object]],
+    negative_control_intent: str,
+    ratifier: str,
+    authority_revision_id: str,
+) -> PublishedRecord:
+    """Ratify an oracle only through frozen authority and independence rules."""
+    governance = _ratification_governance(
+        store_root,
+        authority_revision_id=authority_revision_id,
+        action="ratify_oracle",
+        actor=ratifier,
+        target=revision_id,
+    )
+    if isinstance(governance, PublishedRecord):
+        return governance
+    authority, independence = governance
+    record = _oracle_fields(
+        case_id=case_id,
+        snapshot_digest=snapshot_digest,
+        findings=findings,
+        negative_control_intent=negative_control_intent,
+        ratifier=ratifier,
+    )
+    _bind_governance(record, authority, independence)
+    if independence["status"] != "satisfied":
+        record["status"] = "disputed"
     return publish_record(store_root, revision_id, record)
 
 
@@ -854,7 +1111,9 @@ def _attribution_fields(
     return {
         "defect_origin": origin,
         "dispute_evidence": list(dispute_evidence),
+        "eligible_for_official_metrics": False,
         "excluded_from_false_alarm_denominator": verdict in {"unknown", "disputed"},
+        "governance_status": "unbound",
         "human_verdict": verdict,
         "kind": "attribution_revision",
         "observation_digest": observation.digest,
@@ -896,6 +1155,76 @@ def ratify_attribution(
         ratifier=ratifier,
     )
     return publish_record(store_root, revision_id, record)
+
+
+def ratify_governed_attribution(
+    store_root: Path,
+    revision_id: str,
+    *,
+    observation_id: str,
+    oracle_revision_id: str,
+    oracle_matches: list[str],
+    human_verdict: str,
+    defect_origin: str,
+    rationale: str,
+    dispute_evidence: list[str],
+    ratifier: str,
+    authority_revision_id: str,
+) -> PublishedRecord:
+    """Ratify an attribution through the same frozen campaign authority."""
+    governance = _ratification_governance(
+        store_root,
+        authority_revision_id=authority_revision_id,
+        action="ratify_attribution",
+        actor=ratifier,
+        target=revision_id,
+    )
+    if isinstance(governance, PublishedRecord):
+        return governance
+    authority, independence = governance
+    observation = read_record(store_root, observation_id)
+    if observation.record.get("kind") != "finding_observation":
+        raise ValueError("attribution target must be a finding observation")
+    record = _attribution_fields(
+        observation=observation,
+        oracle_revision_id=oracle_revision_id,
+        oracle_matches=oracle_matches,
+        human_verdict=human_verdict,
+        defect_origin=defect_origin,
+        rationale=rationale,
+        dispute_evidence=dispute_evidence,
+        ratifier=ratifier,
+    )
+    _bind_governance(record, authority, independence)
+    if independence["status"] != "satisfied":
+        record["status"] = "disputed"
+        record["human_verdict"] = "disputed"
+    return publish_record(store_root, revision_id, record)
+
+
+def _bind_governance(
+    record: dict[str, object],
+    authority: PublishedRecord,
+    independence: Mapping[str, object],
+) -> None:
+    record.update(
+        {
+            "authority_revision_digest": authority.digest,
+            "authority_revision_id": authority.record_id,
+            "campaign_policy_revision_id": authority.record[
+                "campaign_policy_revision_id"
+            ],
+            "excluded_from_affected_denominators": (
+                independence.get("status") != "satisfied"
+            ),
+            "eligible_for_official_metrics": (
+                independence.get("status") == "satisfied"
+            ),
+            "governance_status": "bound",
+            "independence_evidence": dict(independence),
+            "role_identities": authority.record["role_identities"],
+        }
+    )
 
 
 def correct_attribution(

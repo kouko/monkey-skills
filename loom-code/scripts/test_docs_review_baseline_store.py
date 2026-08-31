@@ -575,6 +575,110 @@ def test_req_109_origin_requires_document_revision_evidence(tmp_path) -> None:
     assert unknown.record["excluded_from_origin_rates"] is True
     assert "parent_revision_id" not in unknown.record
 
+
+def test_req_112_authority_and_ratifier_independence(tmp_path) -> None:
+    # @req: REQ-112
+    """Official human judgments bind authority and fail closed on conflicts."""
+    roles = {
+        "execution_actor": "executor:weak-runner",
+        "document_author": "author:writer",
+        "oracle_author": "author:oracle-drafter",
+        "oracle_ratifier": "maintainer:oracle-ratifier",
+        "attribution_ratifier": "maintainer:attribution-ratifier",
+        "reviewer_output_author": "model:weak-reviewer",
+        "policy_owner": "maintainer:campaign-owner",
+    }
+    authority = store.publish_authority_assignment(
+        tmp_path,
+        "authority-r1",
+        campaign_policy_revision_id="policy-r1",
+        role_identities=roles,
+        action_authorities={
+            "ratify_oracle": ["maintainer:oracle-ratifier"],
+            "ratify_attribution": ["maintainer:attribution-ratifier"],
+            "ratify_defect_origin": ["maintainer:attribution-ratifier"],
+        },
+        allowed_self_ratification=[],
+    )
+    oracle = store.ratify_governed_oracle(
+        tmp_path,
+        "oracle-governed-r1",
+        case_id="case-governed",
+        snapshot_digest="a" * 64,
+        findings=[
+            {
+                "finding_id": "missing-risk",
+                "expectation": "The review names the risk.",
+                "rationale": "The risk changes the decision.",
+                "evidence_locator": "git:abc:docs/strategy.md#risk",
+            }
+        ],
+        negative_control_intent="Do not reward generic detail requests.",
+        ratifier="maintainer:oracle-ratifier",
+        authority_revision_id=authority.record_id,
+    )
+
+    assert oracle.record["authority_revision_id"] == authority.record_id
+    assert oracle.record["authority_revision_digest"] == authority.digest
+    assert oracle.record["role_identities"] == roles
+    assert oracle.record["independence_evidence"]["status"] == "satisfied"
+    assert oracle.record["eligible_for_official_metrics"] is True
+    assert oracle.record["status"] == "ratified"
+
+    denied = store.ratify_governed_oracle(
+        tmp_path,
+        "oracle-unauthorized-r1",
+        case_id="case-governed",
+        snapshot_digest="a" * 64,
+        findings=oracle.record["findings"],
+        negative_control_intent="Do not reward generic detail requests.",
+        ratifier="maintainer:intruder",
+        authority_revision_id=authority.record_id,
+    )
+    assert denied.record["kind"] == "governance_audit_event"
+    assert denied.record["outcome"] == "refused_unauthorized"
+    assert denied.record["actor"] == "maintainer:intruder"
+    with pytest.raises(ValueError, match="does not exist"):
+        read_record(tmp_path, "oracle-unauthorized-r1")
+
+    conflicted_roles = dict(roles)
+    conflicted_roles["oracle_ratifier"] = conflicted_roles["document_author"]
+    conflicted = store.publish_authority_assignment(
+        tmp_path,
+        "authority-conflicted-r1",
+        campaign_policy_revision_id="policy-r1",
+        role_identities=conflicted_roles,
+        action_authorities={"ratify_oracle": [conflicted_roles["oracle_ratifier"]]},
+        allowed_self_ratification=[],
+    )
+    disputed = store.ratify_governed_oracle(
+        tmp_path,
+        "oracle-conflicted-r1",
+        case_id="case-governed",
+        snapshot_digest="a" * 64,
+        findings=oracle.record["findings"],
+        negative_control_intent="Do not reward generic detail requests.",
+        ratifier=conflicted_roles["oracle_ratifier"],
+        authority_revision_id=conflicted.record_id,
+    )
+    assert disputed.record["status"] == "disputed"
+    assert disputed.record["excluded_from_affected_denominators"] is True
+    assert disputed.record["eligible_for_official_metrics"] is False
+    assert disputed.record["independence_evidence"]["status"] == "insufficient"
+
+    revised = store.revise_authority_assignment(
+        tmp_path,
+        authority.record_id,
+        role_identities={**roles, "execution_actor": "executor:replacement"},
+        action_authorities=authority.record["action_authorities"],
+        allowed_self_ratification=[],
+        reason="The original executor rotated out of the campaign.",
+    )
+    assert revised.record["parent_revision_id"] == authority.record_id
+    assert revised.record["parent_digest"] == authority.digest
+    assert revised.record["revision_reason"]
+    assert read_record(tmp_path, authority.record_id) == authority
+
 def test_canonical_record_publish_is_atomic_and_content_addressed(tmp_path) -> None:
     """A record ID chooses one canonical payload without rewriting history."""
     first = {"kind": "oracle", "labels": ["a"], "version": 1}

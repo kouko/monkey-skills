@@ -22,6 +22,10 @@
 
 - test_req_109_origin_requires_document_revision_evidence
 
+### REQ-112
+
+- test_req_112_authority_and_ratifier_independence
+
 ### REQ-99
 
 - test_req_99_historical_case_admission
@@ -459,7 +463,6 @@
 - REQ-108
 - REQ-110
 - REQ-111
-- REQ-112
 - REQ-113
 - REQ-114
 - REQ-115
