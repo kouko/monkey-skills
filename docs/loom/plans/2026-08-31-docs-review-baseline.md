@@ -372,7 +372,7 @@ N/A — no unresolved question: 實驗政策中必須由人裁定的值會作為
 - **Independent**: false
 - **Brief item covered**: REQ-115
 - **Review disposition**: batch(runner-boundaries)
-- **Status**: claimed(@codex)
+- **Status**: implemented(ce93a4a909c96fba7f5d51d1ccbfb0fc8c79716d)
 - **Gloss**: 記錄的弱模型必須和真正跑的一樣，否則只保留不計分。
 
 ## Task 19 — 分開 zero 與 partial populations
