@@ -13,6 +13,9 @@ comparison, and exit 2 means an input could not be read or validate.
 log ``review_context.py`` appends per reviewer fan-out and from the dispatch
 receipts ``batch_review_cli.py`` writes, so the review counts are observed,
 never typed.  ``--summary`` prints the one-line count instead of writing.
+``compare`` reads only those observed v2 files: a ``task-batch-replay-result/v1``
+file (the hand-typed pilot shape) or any file whose ``provenance`` is not
+``"observed"`` is refused by name.
 """
 
 from __future__ import annotations
@@ -65,6 +68,7 @@ _CORPUS_CASE_KEYS = {
     "expected_fallback_causes",
 }
 _RESULT_KEYS = {"schema", "mode", "corpus_identity", "cases"}
+_RESULT_KEYS_V2 = {"schema", "provenance", "corpus_identity", "branch", "cases"}
 _RESULT_CASE_KEYS = {
     "case_id",
     "review_dispatches",
@@ -77,6 +81,7 @@ _RESULT_CASE_KEYS = {
     "requirement_to_tests",
     "package_gates",
 }
+_RESULT_CASE_KEYS_V2 = _RESULT_CASE_KEYS | {"batch_reopens"}
 
 
 class ReplayInputError(ValueError):
@@ -206,6 +211,7 @@ def _validate_result_case(
     for field in (
         "review_dispatches",
         "review_rounds",
+        "batch_reopens",
         "elapsed_work_ms",
         "maximum_aggregate_diff_bytes",
     ):
@@ -243,7 +249,9 @@ def _validate_result_case(
         _fail(f"{context}.package_gates", "expected an object")
     if not all(type(key) is str for key in gates):
         _fail(f"{context}.package_gates", "object keys must be strings")
-    if list(gates) != oracle["required_package_gates"]:
+    # `observe` writes no gate verdicts (it measures only review counts), so an
+    # empty object means "unmeasured"; anything else must match the oracle.
+    if gates and list(gates) != oracle["required_package_gates"]:
         _fail(
             f"{context}.package_gates",
             "gate keys and order must exactly match the corpus oracle",
@@ -270,6 +278,31 @@ def _validate_result_case(
             )
 
 
+def _refuse_unobserved(result: object, label: str) -> None:
+    """Refuse any result that is not an `observe`-written v2 file, by name.
+
+    Checked before the closed-schema comparison so a declared v1 pilot file
+    (or a v2 file with edited provenance) is refused on `schema` /
+    `provenance` rather than on a generic key mismatch.
+    """
+    if type(result) is not dict:
+        _fail(label, "expected an object")
+    schema = result.get("schema", "<missing>")
+    if schema != RESULT_SCHEMA_V2:
+        _fail(
+            f"{label}.schema",
+            f"refused {schema!r}; compare accepts only {RESULT_SCHEMA_V2!r} "
+            f"results written by observe (provenance {OBSERVED_PROVENANCE!r})",
+        )
+    provenance = result.get("provenance", "<missing>")
+    if provenance != OBSERVED_PROVENANCE:
+        _fail(
+            f"{label}.provenance",
+            f"refused {provenance!r}; compare accepts only provenance "
+            f"{OBSERVED_PROVENANCE!r} results written by observe",
+        )
+
+
 def _validate_result(
     result: object,
     *,
@@ -278,9 +311,10 @@ def _validate_result(
     identity: str,
     corpus_cases: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    root = _object(result, _RESULT_KEYS, label)
-    _choice(root["schema"], {RESULT_SCHEMA}, f"{label}.schema")
-    _choice(root["mode"], {expected_mode}, f"{label}.mode")
+    _refuse_unobserved(result, label)
+    root = _object(result, _RESULT_KEYS_V2, label)
+    if type(root["branch"]) is not str or not root["branch"]:
+        _fail(f"{label}.branch", "expected a non-empty branch name")
     if type(root["corpus_identity"]) is not str or _DIGEST.fullmatch(
         root["corpus_identity"]
     ) is None:
@@ -291,7 +325,7 @@ def _validate_result(
         _fail(f"{label}.cases", "expected a list")
 
     result_cases = [
-        _object(raw_case, _RESULT_CASE_KEYS, f"{label}.cases[{index}]")
+        _object(raw_case, _RESULT_CASE_KEYS_V2, f"{label}.cases[{index}]")
         for index, raw_case in enumerate(root["cases"])
     ]
     expected_case_ids = [case["case_id"] for case in corpus_cases]
@@ -460,9 +494,11 @@ def compare(corpus: object, baseline: object, candidate: object) -> dict[str, An
             )
         )
         for gate_id in oracle["required_package_gates"]:
-            if before["package_gates"][gate_id] != "PASS":
+            # An unmeasured gate (empty object from observe) is neither PASS
+            # nor FAIL; only a recorded verdict can regress.
+            if before["package_gates"].get(gate_id, "PASS") == "FAIL":
                 safety.append(f"baseline_package_gate_failure:{case_id}:{gate_id}")
-            if after["package_gates"][gate_id] != "PASS":
+            if after["package_gates"].get(gate_id, "PASS") == "FAIL":
                 safety.append(f"package_gate_failure:{case_id}:{gate_id}")
         if oracle["expected_candidate_path"] == "individual_fallback":
             missing = set(oracle["expected_fallback_causes"]) - set(

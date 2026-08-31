@@ -92,15 +92,17 @@ def _case(
             for requirement in requirements
         },
         "package_gates": {"package": package},
+        "batch_reopens": 0,
     }
 
 
 def _results(corpus: dict) -> tuple[dict, dict]:
     identity = replay.corpus_identity(corpus)
     baseline = {
-        "schema": "task-batch-replay-result/v1",
-        "mode": "individual",
+        "schema": "task-batch-replay-result/v2",
+        "provenance": "observed",
         "corpus_identity": identity,
+        "branch": "baseline-branch",
         "cases": [
             _case("eligible-capability", dispatches=4, requirements=("REQ-1", "REQ-2")),
             _case("invalid-boundary", dispatches=4, requirements=("REQ-3", "REQ-4")),
@@ -113,9 +115,10 @@ def _results(corpus: dict) -> tuple[dict, dict]:
         ],
     }
     candidate = {
-        "schema": "task-batch-replay-result/v1",
-        "mode": "batch",
+        "schema": "task-batch-replay-result/v2",
+        "provenance": "observed",
         "corpus_identity": identity,
+        "branch": "candidate-branch",
         "cases": [
             _case("eligible-capability", dispatches=2, requirements=("REQ-1", "REQ-2")),
             _case(
@@ -630,3 +633,95 @@ def test_observe_refuses_malformed_log_and_summarizes_without_writing(
     )
     assert replay.main(["observe", "--log", str(log), "--branch", "b", "--summary"]) == 0
     assert capsys.readouterr().out == "observed reviewer fan-outs: 1 (rounds 1, batch reopens 0)\n"
+
+
+def _v1_results(corpus: dict) -> tuple[dict, dict]:
+    """The declared v1 pilot shape: hand-typed counts under `mode`, no provenance."""
+    baseline, candidate = _results(corpus)
+    declared = []
+    for mode, result in (("individual", baseline), ("batch", candidate)):
+        cases = [
+            {key: value for key, value in case.items() if key != "batch_reopens"}
+            for case in result["cases"]
+        ]
+        declared.append(
+            {
+                "schema": "task-batch-replay-result/v1",
+                "mode": mode,
+                "corpus_identity": result["corpus_identity"],
+                "cases": cases,
+            }
+        )
+    return declared[0], declared[1]
+
+
+# No registered REQ-id in this dispatch (plan carries none); tag omitted.
+def test_compare_refuses_declared_v1_results(tmp_path: Path) -> None:
+    corpus = _corpus()
+    baseline, candidate = _results(corpus)
+    v1_baseline, v1_candidate = _v1_results(corpus)
+
+    # The historical pilot shape (contract-repair-post-v3 Task 17) is refused
+    # by name: hand-typed numbers can no longer produce a PASS.
+    with pytest.raises(replay.ReplayInputError) as refused:
+        replay.compare(corpus, v1_baseline, candidate)
+    assert "baseline.schema" in str(refused.value)
+    assert "task-batch-replay-result/v1" in str(refused.value)
+    with pytest.raises(replay.ReplayInputError, match="candidate.schema"):
+        replay.compare(corpus, baseline, v1_candidate)
+
+    # A v2 file whose provenance is not "observed" is refused naming the value.
+    declared = json.loads(json.dumps(candidate))
+    declared["provenance"] = "declared"
+    with pytest.raises(replay.ReplayInputError) as refused:
+        replay.compare(corpus, baseline, declared)
+    assert "candidate.provenance" in str(refused.value)
+    assert "declared" in str(refused.value)
+
+    # A v2-schema file with no provenance at all is refused on provenance, not
+    # on a generic closed-schema mismatch.
+    unprovenanced = json.loads(json.dumps(baseline))
+    del unprovenanced["provenance"]
+    with pytest.raises(replay.ReplayInputError, match="baseline.provenance"):
+        replay.compare(corpus, unprovenanced, candidate)
+
+    # CLI: the v1 pilot files exit 2 with the same refusal on stderr.
+    completed = _run_cli(
+        tmp_path, json.dumps(corpus), json.dumps(v1_baseline), json.dumps(v1_candidate)
+    )
+    assert completed.returncode == 2
+    assert completed.stdout == ""
+    assert "Traceback" not in completed.stderr
+    assert "baseline.schema" in completed.stderr
+    assert "task-batch-replay-result/v1" in completed.stderr
+
+
+# No registered REQ-id in this dispatch (plan carries none); tag omitted.
+def test_compare_accepts_two_observe_written_results(tmp_path: Path) -> None:
+    log, receipts, corpus_path = _observe_fixture(tmp_path)
+    corpus = _single_case_corpus()
+    baseline_path = tmp_path / "baseline.json"
+    candidate_path = tmp_path / "candidate.json"
+    # Baseline branch "b": 3 dispatches over 2 rounds; candidate "other": 1/1.
+    assert replay.main(
+        ["observe", "--log", str(log), "--branch", "b",
+         "--corpus", str(corpus_path), "--out", str(baseline_path)]
+    ) == 0
+    assert replay.main(
+        ["observe", "--log", str(log), "--branch", "other",
+         "--corpus", str(corpus_path), "--out", str(candidate_path),
+         "--receipts", str(receipts)]
+    ) == 0
+
+    report = replay.compare(
+        corpus,
+        json.loads(baseline_path.read_text(encoding="utf-8")),
+        json.loads(candidate_path.read_text(encoding="utf-8")),
+    )
+    assert report["verdict"] == "PASS"
+    assert report["baseline"]["review_dispatches"] == 3
+    assert report["candidate"]["review_dispatches"] == 1
+    assert report["cost_attribution"]["eligible_batch"]["saved_review_dispatches"] == 2
+    # Unmeasured fields stay unmeasured: no gate verdict is invented either way.
+    assert report["safety_regressions"] == []
+    assert report["candidate"]["package_gates"] == {"eligible-capability": {}}
