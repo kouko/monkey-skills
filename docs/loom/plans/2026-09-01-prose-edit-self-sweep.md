@@ -8,7 +8,7 @@ Goal: One new silent self-sweep rule in the implementer contract for all-`.md`
     serves PURPOSE: a claim in a plan, spec, or contract cannot ship
     unverified — the sweep makes the writer verify or downgrade claims in the
     same turn instead of shipping them to review
-Stage: sdd:wave-1
+Stage: finishing
 Steps:
     1. 證據落地：四專案 docs-review 缺陷成因文件
     2. 契約：implementer 規則 14 + 釘住測試
@@ -37,7 +37,7 @@ N/A — no unresolved question: the brief's two Open Questions are both resolved
 ## Complexity assessment
 
 - Added complexity: one more numbered rule in the implementer contract (attention budget of every prose-task dispatch), one new scripts/ module (`prose_selfsweep_tally.py`) with a test, and a dogfood directory whose protocol future sessions must keep consistent with the tally script's CLI.
-- Why it is worthwhile: 4-project mining (98 findings) shows 75%+ of docs-review findings are edit-consistency defects the writer can catch in the same turn; kumiko branches reached 8 review rounds and dotfiles PR#40 reached 10 — one standing writer-side rule is the audit-prescribed shape (`2026-08-04` audit: a standing mechanism outranks another review round) and costs zero extra model calls.
+- Why it is worthwhile: 4-project mining (104 findings, audit post-recount total) shows 72% (75 of 104) of docs-review findings are edit-consistency defects the writer can catch in the same turn; kumiko branches reached 8 review rounds and dotfiles PR#40 reached 10 — one standing writer-side rule is the audit-prescribed shape (`2026-08-04` audit: a standing mechanism outranks another review round) and costs zero extra model calls.
 - Removed or avoided complexity: avoids a second review stage, a weak-model pre-review, and any new mechanical section gate (existing validators already cover section presence / N/A); supersedes the user's original 5-item omission checklist for this lane.
 - Downstream risk: rule 14 may under-fire (attention decay at list position 14 — measured by the A/B, with placement-variant (e) recorded in the protocol as the follow-up experiment) or induce hedging ("not verified" spam — counted by the tally's hedge metric); the tally script's cause taxonomy could drift from the evidence doc's — mitigated by Task 4's probe running the tally on a fixture derived from the evidence doc's categories.
 
@@ -68,7 +68,7 @@ N/A — no unresolved question: the brief's two Open Questions are both resolved
 - **Brief item covered**: "Build (1): evidence doc `docs/loom/audits/2026-08-31-docs-review-finding-causes.md` consolidating the 4-project cause distribution."
 - **Review disposition**: individual
 - **Not batched because**: all-record-class prose batch cannot resolve through batch_review_cli apply-result (backlog 2026-09-01-apply-result-cannot-take-record-class-narrowed-arms; DL-2 individual fallback)
-- **Status**: claimed(@sonnet-implementer-repair)
+- **Status**: done(53261d0b062efd42008ac75af5aa7acf7e650a8d)
 - **Gloss**: 把四專案挖出的缺陷成因分布落成 repo 內可引用的證據文件。
 
 ## Task 2 — implementer 規則 14「Prose-edit self-sweep」＋釘住測試
@@ -177,7 +177,7 @@ N/A — no unresolved question: the brief's two Open Questions are both resolved
 - **Review-weight**: mechanical
 - **Brief item covered**: "Build (4): CHANGELOG + version bump."
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: done(414b203705726f06d30ac8e5ccf3b0a1634a5be0)
 - **Gloss**: 兩個 manifest 表面照字面 bump（codex 鏡射走 sync 腳本）。
 
 ## Task 6 — CHANGELOG 0.110.0 條目
@@ -222,3 +222,13 @@ T3 code-quality 🟡: fixture test asserts only header strings, so an aggregatio
 
 ### DL-2 — prose-artifacts batch abandoned to individual fallback (2026-09-01)
 The batch's docs-reviewer arm refused to mint a verdict: all three members are record-class (requesting-code-review §Classification), so SKILL's record-class narrowing makes the docs slot N/A by construction — but `batch_review_cli.py apply-result` hardcodes the two-arm prose set and cannot accept the spec-only result `review_batch.py`'s `_arms_apply_to_lane` permits. The refusal is upheld (fabricating a verdict into an N/A slot would be a wrong terminal result); the CLI gap is filed as backlog `2026-09-01-apply-result-cannot-take-record-class-narrowed-arms`. Resolution: zero batch ledger mutation; Tasks 1, 4, 6 route through the individual path — spec-reviewer alone per task, "code-quality slot: N/A — record-class prose" recorded per task. The batch spec arm's blocking finding on Task 1 (stale `2026-08-31` directory date in ## Consumers) is carried into Task 1's repair dispatch, together with the docs arm's informational "Rounds 4–10 outruns its cited rows" observation.
+
+### DL-3 — version pin test is a fourth bump surface this plan missed (2026-09-01)
+`loom-code/scripts/test_docs_review_blocking_class.py::test_plugin_version_and_changelog_at_0_109_0` pins the shipping version by design (its docstring: touching this test is what forces the changelog entry). Task 5's Files touched listed only the two manifests + CHANGELOG; the pin test reddened the suite after the bump and was updated to 0.110.0 in commit 5e6169b3 (mechanical follow-up, below-threshold — logged, not asked).
+
+### DL-4 — whole-branch review + adversarial audit fixes (2026-09-01)
+Finishing Step 3 whole-branch (opus) returned NEEDS_REVISION (3🟡+3🟢) and Step 3.5 adversarial audit (opus) reproduced 8 vectors. All three 🟡 were the branch's own catalogued A/B-class defects (stale restatement + two false self-claims) — the strongest available argument for the whole-branch cross-artifact sweep's shape, shipped in the branch that introduces rule 14. Fixes, each RED-first: tally instrument (0cd76bb8 — class filtering so metric 1 counts only instruction-class per protocol, rep-type uniqueness hole, fail-loud on malformed JSON/missing fields, dead-guard delete); rule 14 prose (4cce9c6b — plan-format.md out-link for Files touched/Review-weight, action (c) disambiguated to placement class C, action (a) scope tightened); record-prose (b7dc9087 — CHANGELOG "second test" false claim, brief 98→104/75%+→72%, audit hard-wrapped path); this plan's own 98/75%+ restatement corrected here.
+
+### DL-5 — pre-existing gate holes surfaced, not fixed here (2026-09-01)
+The adversarial audit's other 4 reproduced vectors (signal blind to new-gate self-exemption; Safety-bearing absent-header dodges exit-3 STOP; forged empty-test pin; non-recursive classification glob) are loom gate-infrastructure holes the audit marks as predating this branch. Filed as backlog 2026-09-01-adversarial-audit-surfaced-preexisting-gate-holes (open) rather than fixed — gate-infra hardening is a separate arc; each needs its own RED test before a reproduced-and-pinned ATTACK-CATALOGUE ## Instances entry.
+
