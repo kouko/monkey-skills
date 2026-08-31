@@ -1,7 +1,7 @@
 ---
 name: 2026-08-31-batch-cost-numbers-are-declared-not-observed
 description: task_batch_replay.py compares declared review_dispatches/review_rounds numbers typed into JSON, not anything the harness observed, so compare PASSes on an unfalsifiable input
-status: open
+status: closed
 origin: 2026-08-31 — independent adversarial audit of main 96a56d8b (loom-code 0.106.0) after PR #767; finding F10, declined from the batch-review-hardening arc (docs/loom/specs/2026-08-31-batch-review-hardening.md §Out of Scope)
 start: event — the next batch pilot is run, or the 10→2 number is cited as evidence outside its plan
 ---
@@ -27,3 +27,5 @@ review-round totals come from the orchestrator's own log, not typed
 JSON), at least 5 batches, and at least one reopen cycle exercised on
 both the baseline and candidate arms so the comparison isn't
 first-try-vs-retried by construction.
+
+Closed 2026-08-31 — `review_context.py` now writes `review-dispatch-log/v1` per fan-out, `task_batch_replay.py observe` derives v2 results with `provenance: observed`, and `compare` refuses v1 or non-observed input — branch batch-review-measurement-and-nudge (loom-code 0.108.0); the safety half still lacks observed evidence (docstring narrowed accordingly)

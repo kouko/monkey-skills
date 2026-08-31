@@ -7,7 +7,7 @@ Goal: Every reviewer fan-out leaves a harness-written record, the replay
     say why, and the packet-identity refusal names its cause — serves
     PURPOSE: a cost claim about review cannot ship unverified, and a
     silent conservative default must pay for itself in one sentence
-Stage: review:round-3
+Stage: finishing
 Total tasks: 12
 Critical-path depth: 5 (≤5)
 Execution order: parallel-where-possible
@@ -377,3 +377,4 @@ N/A — no unresolved question: the edge rule (module), the cap (4), the untrack
 - Task 12 pilot, proposer vs declaration: `propose_review_batches.py` on this plan proposes `[1,2,3,4]`, `[5,6,7,8]`, `[9,10,11]` (all lane `full`, reason `dependency`) plus singleton Task 12. Declared: `cli-receipt` (3, 4), `replay-observed` (5, 6, 10), `proposer` (7, 8, 9), singletons 1, 2, 11, 12. The two disagree because the proposer treats the eleven full-lane tasks as one connected component and cuts it into 4-chunks in dependency order — and for several pairs (1↔2/3/4, 5/6↔7/8, 9↔10) the only path joining them is the Task 11 release sink, which depends on Tasks 1, 6, 9, 10 and 12. That is the finding: an edge rule that walks transitive dependencies lets a version-bump sink glue unrelated modules into one batch.
   - `--check` before: 12 lines (7 tasks owing a reason), exit 1. Seven `Not batched because` lines added (Tasks 2, 3, 4, 7, 8, 10, 11), each naming the missing edge / different Module or the sink-only link; `--check` after: 0 lines, exit 0.
 - Task 12 pilot, packet-refusal collision: `batch_review_cli.py packet` refused batch `proposer` with `ownership proof contains duplicate requirement authority` because Tasks 7, 8 and 9 all cited `BI-3`; the resolution (BI-3 clauses cited verbatim per task) is recorded in the `Tasks 8 and 9 Brief item covered amended` bullet above — not repeated here.
+- Close-out (finishing `Observed fan-outs` row, 2026-08-31): `observed reviewer fan-outs: 7 (rounds 7, batch reopens 0)` — the verbatim `--summary` line with `--receipts` over the three applied receipts; without `--receipts` the same run prints `batch reopens unmeasured`. Planned 7 fan-outs for 12 tasks; the 7 observed lines are T2's individual fan-out, three batch fan-outs, T11's and T12's individual fan-outs, and the whole-branch context packet — T1's fan-out predates the log (installed 0.107.1 `review_context.py`), so the harness saw 7 of the 8 real fan-outs; whole-branch review ran round 1 + two delta cycles (NEEDS_REVISION → PASS).
