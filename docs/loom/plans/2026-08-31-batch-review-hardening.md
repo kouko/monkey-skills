@@ -124,7 +124,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: BI-6
 - **Review disposition**: individual
-- **Status**: claimed(@implementer-t4)
+- **Status**: done(1de131227b9c15870f49581a233ac51b72a0d543)
 - **Gloss**: orchestrator 照文件就能寫出正確的結果檔，不會因猜錯格式退回逐任務審查。
 
 ## Task 5 — plan_card --set-status 對批次成員拒寫 done(...)
@@ -196,7 +196,7 @@ N/A — no unresolved question: every finding carries a reproduced attack and a 
 - **Independent**: false
 - **Brief item covered**: none — release administration (version bump + fingerprint refresh) delivers no brief outcome
 - **Review disposition**: individual
-- **Status**: pending
+- **Status**: claimed(@implementer-t7)
 - **Gloss**: 版本與指紋收尾，讓 plugin update 拿得到修好的版本。
 
 ## Review Batches
