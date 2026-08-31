@@ -1141,3 +1141,24 @@ def test_symlink_guard_delegates_to_map_lock(
 
     with pytest.raises(RuntimeError, match="delegated"):
         map_transaction._assert_no_symlink_components(link / "x")
+
+
+def test_claim_ticket_refuses_already_claimed_ticket(tmp_path: Path) -> None:
+    # @req: REQ-97
+    map_dir, ticket = _make_map(tmp_path)
+    before = ticket.read_bytes()
+    observed = map_transaction.capture_revision(map_dir)
+
+    with pytest.raises(
+        map_transaction.CloseTransactionError, match="ticket must be open before claim"
+    ):
+        map_transaction.claim_ticket(
+            map_dir,
+            "ship-slice",
+            owner="bob",
+            claimed_on="2026-08-30",
+            operation_id="claim-bob",
+            expected_revision=observed,
+        )
+
+    assert ticket.read_bytes() == before
