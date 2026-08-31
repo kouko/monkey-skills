@@ -608,7 +608,11 @@ def run_isolated_reviewer(
 
 
 def _resource_database(store_root: Path) -> sqlite3.Connection:
+    if store_root.is_symlink():
+        raise ValueError("campaign resource store root must not be a symlink")
     store_root.mkdir(parents=True, exist_ok=True)
+    if store_root.is_symlink() or not store_root.is_dir():
+        raise ValueError("campaign resource store root must be a real directory")
     database = store_root / "campaign-resources.sqlite3"
     if database.is_symlink():
         raise ValueError("campaign resource database must not be a symlink")

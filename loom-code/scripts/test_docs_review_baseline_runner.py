@@ -603,6 +603,18 @@ def test_req_113_campaign_resource_use_is_bounded(tmp_path) -> None:
             )
 
 
+def test_req_113_campaign_resource_store_rejects_symlink_root(tmp_path) -> None:
+    # @req: REQ-113
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    linked_root = tmp_path / "linked-store"
+    linked_root.symlink_to(outside, target_is_directory=True)
+
+    with pytest.raises(ValueError, match="store root must not be a symlink"):
+        runner.read_resource_events(linked_root, "campaign-r1")
+    assert list(outside.iterdir()) == []
+
+
 def test_req_113_captured_output_cannot_bypass_reserved_ceiling(
     tmp_path,
 ) -> None:
