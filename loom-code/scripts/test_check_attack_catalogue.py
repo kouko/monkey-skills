@@ -654,6 +654,144 @@ def test_signal_prose_hit_fires_cold_reader(tmp_path):
     )
 
 
+def test_signal_absent_store_reports_na_lines_and_exits_zero(tmp_path):
+    """An absent store (the adopting-repo-without-a-store case) must never
+    be treated the same as a present-but-broken one — it degrades to an
+    N/A pair on stdout and exits 0, never STOP-blocking Step 5."""
+    repo = _init_repo(tmp_path)
+    base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    _commit_file(repo, "some-plugin/agents/worker.md", "worker\n", "agent prose file")
+    store = tmp_path / "does-not-exist.md"
+
+    result = _run_signal(repo, store, base=base_sha)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "attack catalogue: absent" in result.stderr
+    lines = result.stdout.splitlines()
+    assert lines == [
+        "adversarial audit: N/A — attack catalogue: absent; header=absent; "
+        f"base={base_sha}; changed=1; guarded-hits=0; prose-hits=1",
+        "cold reader: N/A — attack catalogue: absent; "
+        f"base={base_sha}; changed=1; prose-hits=1",
+    ]
+
+
+def test_signal_malformed_store_exits_one(tmp_path):
+    """A store that EXISTS but is malformed (here: a duplicate '## Guarded
+    paths' heading) is never degraded to N/A — it must still exit 1 with
+    the family's Error: line, so a deliberately-corrupted store cannot
+    skip the station the way an absent one legitimately does."""
+    repo = _init_repo(tmp_path)
+    base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    store = tmp_path / "store.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/scripts/**\n\n"
+        "## Guarded paths\n"
+        "- loom-code/scripts/other/**\n\n"
+        "## Instances\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+
+    result = _run_signal(repo, store, base=base_sha)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert result.stderr.startswith("Error: malformed")
+    assert "attack catalogue: absent" not in result.stderr
+
+
+def test_signal_refuses_unpinned_reproduced_like_the_legacy_form(tmp_path):
+    """`signal` must run the same `check_store` the legacy form runs — an
+    unpinned `reproduced` entry is a refusal there, so it cannot be a
+    silent `fired`/exit-0 in `signal` (that gap would let a store ship a
+    live vector nobody actually pinned)."""
+    repo = _init_repo(tmp_path)
+    base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    _commit_file(
+        repo, "loom-code/hooks/git-guard.py", "# guard\n", "touch guarded path"
+    )
+    store = tmp_path / "store.md"
+    store.write_text(
+        "## Guarded paths\n"
+        "- loom-code/hooks/git-guard.py\n\n"
+        "## Instances\n"
+        "- F1 x | y | reproduced 2020-01-01\n\n"
+        "## Prose temptations\n"
+        "- none\n",
+        encoding="utf-8",
+    )
+
+    result = _run_signal(repo, store, base=base_sha)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "Error: unpinned" in result.stderr
+
+
+def test_signal_bad_plan_header_names_plan_path(tmp_path):
+    repo = _init_repo(tmp_path)
+    base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    store = tmp_path / "store.md"
+    store.write_text(_SIGNAL_STORE, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "Goal: g\nStage: s\nSafety-bearing: bogus\n\n## Task 1 — t\n",
+        encoding="utf-8",
+    )
+
+    result = _run_signal(repo, store, plan=plan, base=base_sha)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert str(plan) in result.stderr
+    assert "Safety-bearing" in result.stderr
+
+
+def test_signal_missing_plan_card_module_fails_loud(tmp_path):
+    """When only `check_attack_catalogue.py` is copied to a repo root
+    (no sibling `plan_card.py`), a `--plan` invocation must fail with a
+    named, actionable error — never a raw `ModuleNotFoundError`
+    traceback."""
+    isolated_dir = tmp_path / "isolated"
+    isolated_dir.mkdir()
+    isolated_script = isolated_dir / "check_attack_catalogue.py"
+    isolated_script.write_text(SCRIPT.read_text(encoding="utf-8"), encoding="utf-8")
+
+    repo = _init_repo(tmp_path)
+    base_sha = _git(repo, "rev-parse", "HEAD").stdout.strip()
+    store = tmp_path / "store.md"
+    store.write_text(_SIGNAL_STORE, encoding="utf-8")
+    plan = tmp_path / "plan.md"
+    plan.write_text(
+        "Goal: g\nStage: s\nSafety-bearing: no — routine\n\n## Task 1 — t\n",
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(isolated_script),
+            "signal",
+            "--repo",
+            str(repo),
+            "--store",
+            str(store),
+            "--plan",
+            str(plan),
+            "--base",
+            base_sha,
+        ],
+        capture_output=True,
+        text=True,
+        env=_iso_env(),
+    )
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "ModuleNotFoundError" not in result.stderr
+    assert "Traceback" not in result.stderr
+    assert "plan_card.py beside check_attack_catalogue.py" in result.stderr
+
+
 # ---------------------------------------------------------------------------
 # F2 — a malformed `## Instances` bullet must never silently vanish; C8 —
 # a future reproduced/held date; F3 — a non-UTF-8 store; C9 — memoized AST

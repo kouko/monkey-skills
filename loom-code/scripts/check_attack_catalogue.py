@@ -28,13 +28,25 @@ Usage:
 
 The legacy positional form (no subcommand) checks the store itself —
 grammar, pinning, dating — as described below. `signal` is a second,
-independent verb: it does not check the store's grammar (a malformed
-store still degrades to zero guarded-path globs rather than refusing),
-and answers a different question — "did THIS branch's committed diff
+verb layered on the SAME `check_store` — a present store runs the
+identical grammar/pinning/dating checks the legacy form runs, before
+`signal` answers its own question: "did THIS branch's committed diff
 against `--base` touch a guarded path, or a prose-contract file, and
 does the plan's `Safety-bearing:` header cover that?" — the single
-command Step 3.5 of `finishing-a-development-branch/SKILL.md` runs.
-`--base` defaults to `git merge-base HEAD origin/main`, falling back to
+command Step 3.5 of `finishing-a-development-branch/SKILL.md` runs. An
+ABSENT store (path does not exist — the adopting-repo-without-a-store
+case) is not an error: `signal` prints stderr `attack catalogue:
+absent` and degrades both stdout lines to N/A (guarded-hits=0;
+prose-hits is still computed from the six built-in prose-contract
+globs below, independent of the store), exit 0. A store that EXISTS
+but is unreadable, or fails the grammar OR any `check_store` refusal
+below (`unpinned` / `dangling` / `undated` / `unguarded` /
+`incomplete` / `malformed`), is never degraded this way — it exits 1
+with the family's `Error: …` line, exactly like the legacy form; so
+does a `--plan` whose `Safety-bearing:` header itself raises
+(misplaced / miscased / indented / unclosed fence), naming the plan
+path and the parser's message. `--base`
+defaults to `git merge-base HEAD origin/main`, falling back to
 `git merge-base HEAD main`; if neither resolves, `signal` fails CLOSED
 (exit 2) rather than silently diffing an empty range. Only the
 COMMITTED diff is considered — a dirty worktree contributes nothing
@@ -105,7 +117,13 @@ from pathlib import Path
 
 # Sibling resolves off sys.path[0], its own directory (same idiom as
 # check_scenario_coverage.py's `from adjudication_split import ...`).
-import plan_card
+# Copying this script alone (no sibling plan_card.py) is a real shape —
+# `signal`'s `--plan` handling fails loud on it below rather than
+# letting a raw ModuleNotFoundError traceback surface.
+try:
+    import plan_card
+except ImportError:
+    plan_card = None
 
 _SECTION_NAMES = ("Guarded paths", "Instances", "Prose temptations")
 
@@ -583,6 +601,54 @@ def _run_signal(
         return 2
 
     changed = _changed_paths(repo, base)
+    prose_hits = [
+        path
+        for path in changed
+        if any(_glob_matches(g, path) for g in _PROSE_CONTRACT_GLOBS)
+    ]
+
+    header = "absent"
+    if plan_path is not None:
+        if plan_card is None:
+            print(
+                "Error: signal needs plan_card.py beside "
+                "check_attack_catalogue.py (copy both, or run the plugin "
+                "form)",
+                file=sys.stderr,
+            )
+            return 1
+        try:
+            plan_text = plan_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            print(f"Error: cannot read plan '{plan_path}': {exc}", file=sys.stderr)
+            return 1
+        try:
+            parsed = plan_card.safety_bearing(plan_text)
+        except ValueError as exc:
+            print(
+                f"Error: bad 'Safety-bearing:' header in plan '{plan_path}': "
+                f"{exc}",
+                file=sys.stderr,
+            )
+            return 1
+        header = "absent" if parsed is None else parsed[0]
+
+    if not store_path.exists():
+        # An absent store is the adopting-repo-without-a-store case, not a
+        # refusal — degrade to N/A on both lines (guarded paths are simply
+        # unknowable) rather than exit 1, which is reserved for a store
+        # that EXISTS but is unreadable/malformed (module docstring).
+        print("attack catalogue: absent", file=sys.stderr)
+        print(
+            "adversarial audit: N/A — attack catalogue: absent; "
+            f"header={header}; base={base}; changed={len(changed)}; "
+            f"guarded-hits=0; prose-hits={len(prose_hits)}"
+        )
+        print(
+            "cold reader: N/A — attack catalogue: absent; "
+            f"base={base}; changed={len(changed)}; prose-hits={len(prose_hits)}"
+        )
+        return 0
 
     try:
         store_text = store_path.read_text(encoding="utf-8")
@@ -593,6 +659,19 @@ def _run_signal(
         store = parse_store(store_text)
     except StoreError as exc:
         print(exc.message, file=sys.stderr)
+        return 1
+    try:
+        store_errors = check_store(store, repo)
+    except OSError as exc:
+        print(f"Error: cannot scan repo '{repo}': {exc}", file=sys.stderr)
+        return 1
+    if store_errors:
+        # A present store never degrades to N/A — the same refusals the
+        # legacy form runs (unpinned/dangling/undated/unguarded/
+        # incomplete/malformed) apply here too, so a corrupted store
+        # cannot skip the station by looking superficially well-formed.
+        for err in store_errors:
+            print(err.message, file=sys.stderr)
         return 1
     guarded_globs = guarded_path_globs(store)
 
@@ -608,25 +687,6 @@ def _run_signal(
     guarded_hits = [
         path for path in changed if any(_glob_matches(g, path) for g in guarded_globs)
     ]
-    prose_hits = [
-        path
-        for path in changed
-        if any(_glob_matches(g, path) for g in _PROSE_CONTRACT_GLOBS)
-    ]
-
-    header = "absent"
-    if plan_path is not None:
-        try:
-            plan_text = plan_path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError) as exc:
-            print(f"Error: cannot read plan '{plan_path}': {exc}", file=sys.stderr)
-            return 1
-        try:
-            parsed = plan_card.safety_bearing(plan_text)
-        except ValueError as exc:
-            print(str(exc), file=sys.stderr)
-            return 1
-        header = "absent" if parsed is None else parsed[0]
 
     audit_status = "fired —" if (header == "yes" or guarded_hits) else "N/A —"
     print(
