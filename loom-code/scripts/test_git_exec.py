@@ -69,9 +69,10 @@ def test_run_git_check_false_returns_none_on_non_repo(tmp_path) -> None:
 
 
 def test_run_git_check_false_returns_none_on_bad_ref(tmp_path) -> None:
-    _init_git_repo(tmp_path)
-    _git_commit_file(tmp_path, "a.txt", b"a")
-    assert git_exec.run_git(tmp_path, "show", "not-a-ref") is None
+    repo_root = tmp_path / "repo"
+    _init_git_repo(repo_root)
+    _git_commit_file(repo_root, "a.txt", b"a")
+    assert git_exec.run_git(repo_root, "show", "not-a-ref") is None
 
 
 def test_run_git_check_false_returns_none_on_oserror(monkeypatch, tmp_path) -> None:
@@ -91,10 +92,11 @@ def test_run_git_check_false_returns_none_on_timeout(monkeypatch, tmp_path) -> N
 
 
 def test_run_git_check_true_raises_calledprocesserror_on_bad_ref(tmp_path) -> None:
-    _init_git_repo(tmp_path)
-    _git_commit_file(tmp_path, "a.txt", b"a")
+    repo_root = tmp_path / "repo"
+    _init_git_repo(repo_root)
+    _git_commit_file(repo_root, "a.txt", b"a")
     with pytest.raises(subprocess.CalledProcessError):
-        git_exec.run_git(tmp_path, "show", "not-a-ref", check=True)
+        git_exec.run_git(repo_root, "show", "not-a-ref", check=True)
 
 
 def test_run_git_check_true_propagates_oserror(monkeypatch, tmp_path) -> None:
@@ -107,16 +109,18 @@ def test_run_git_check_true_propagates_oserror(monkeypatch, tmp_path) -> None:
 
 
 def test_run_git_text_false_returns_bytes(tmp_path) -> None:
-    _init_git_repo(tmp_path)
-    sha = _git_commit_file(tmp_path, "a.txt", b"hello")
-    result = git_exec.run_git(tmp_path, "show", f"{sha}:a.txt", text=False)
+    repo_root = tmp_path / "repo"
+    _init_git_repo(repo_root)
+    sha = _git_commit_file(repo_root, "a.txt", b"hello")
+    result = git_exec.run_git(repo_root, "show", f"{sha}:a.txt", text=False)
     assert result == b"hello"
 
 
 def test_run_git_strip_false_keeps_trailing_whitespace(tmp_path) -> None:
-    _init_git_repo(tmp_path)
-    _git_commit_file(tmp_path, "a.txt", b"a")
-    result = git_exec.run_git(tmp_path, "log", "-1", "--format=%H%n", strip=False)
+    repo_root = tmp_path / "repo"
+    _init_git_repo(repo_root)
+    _git_commit_file(repo_root, "a.txt", b"a")
+    result = git_exec.run_git(repo_root, "log", "-1", "--format=%H%n", strip=False)
     assert result.endswith("\n")
 
 
